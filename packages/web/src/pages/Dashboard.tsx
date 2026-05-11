@@ -99,7 +99,19 @@ export function Dashboard() {
               >
                 <span className="font-mono text-xs text-text-dim">{c.id.slice(0, 8)}</span>
                 <span className="text-xs text-glow">[{shortProject(c.projectPath)}]</span>
-                <span className="flex-1 truncate text-sm text-text-primary">{c.title}</span>
+                <span className="flex-1 truncate text-sm text-text-primary">
+                  {c.title.startsWith("/") ? (() => {
+                    const spaceIdx = c.title.indexOf(" ");
+                    const cmd = spaceIdx === -1 ? c.title : c.title.slice(0, spaceIdx);
+                    const args = spaceIdx === -1 ? "" : c.title.slice(spaceIdx + 1);
+                    return (
+                      <>
+                        <span className="text-glow font-mono">{cmd}</span>
+                        {args && <span> {args}</span>}
+                      </>
+                    );
+                  })() : c.title}
+                </span>
                 <span className="text-xs text-text-dim">{c.messageCount} msgs</span>
                 <span className="text-xs text-text-dim">{new Date(c.updatedAt).toLocaleDateString()}</span>
               </button>

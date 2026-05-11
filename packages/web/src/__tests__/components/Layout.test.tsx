@@ -19,10 +19,10 @@ describe("Layout", () => {
         <Layout />
       </MemoryRouter>,
     );
-    expect(screen.getByText("Dashboard")).toBeInTheDocument();
-    expect(screen.getByText("Search")).toBeInTheDocument();
-    expect(screen.getByText("Browse")).toBeInTheDocument();
+    expect(screen.getByText("Explore")).toBeInTheDocument();
     expect(screen.getByText("Datasets")).toBeInTheDocument();
+    expect(screen.getByText("Prompts")).toBeInTheDocument();
+    expect(screen.getByText("Projects")).toBeInTheDocument();
   });
 
   test("renders Settings link separated from main nav", () => {

@@ -1,5 +1,33 @@
 import Database from "better-sqlite3";
 import type { Conversation, ThreadEdit, EditedMessage, Dataset, DatasetEntry, QualityLabel } from "@claude-assist/shared";
+
+export interface TagMeta {
+  name: string;
+  color: string;
+  description: string;
+  createdAt: Date;
+}
+
+export interface ProjectMeta {
+  projectPath: string;
+  title: string | null;
+  description: string | null;
+  tags: string[];
+  updatedAt: Date;
+}
+
+export interface SavedPrompt {
+  id: string;
+  title: string;
+  content: string;
+  role: string;
+  tags: string[];
+  evals: Record<string, unknown> | null;
+  sourceConversationId?: string;
+  sourceMessageIndex?: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
 import { createHash } from "node:crypto";
 import * as sqliteVec from "sqlite-vec";
 
@@ -129,6 +157,40 @@ export class StorageService {
       );
 
       CREATE INDEX IF NOT EXISTS idx_entries_dataset ON dataset_entries(dataset_name);
+    `);
+
+    this.db.exec(`
+      CREATE TABLE IF NOT EXISTS saved_prompts (
+        id TEXT PRIMARY KEY,
+        title TEXT NOT NULL,
+        content TEXT NOT NULL,
+        role TEXT NOT NULL DEFAULT 'user',
+        tags TEXT NOT NULL DEFAULT '[]',
+        evals TEXT,
+        source_conversation_id TEXT,
+        source_message_index INTEGER,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      );
+    `);
+
+    this.db.exec(`
+      CREATE TABLE IF NOT EXISTS project_metadata (
+        project_path TEXT PRIMARY KEY,
+        title TEXT,
+        description TEXT,
+        tags TEXT NOT NULL DEFAULT '[]',
+        updated_at TEXT NOT NULL
+      );
+    `);
+
+    this.db.exec(`
+      CREATE TABLE IF NOT EXISTS tag_metadata (
+        name TEXT PRIMARY KEY,
+        color TEXT NOT NULL DEFAULT '#06B6D4',
+        description TEXT NOT NULL DEFAULT '',
+        created_at TEXT NOT NULL
+      );
     `);
 
     this.initVectorTable();
@@ -417,6 +479,156 @@ export class StorageService {
     return row ? rowToEdit(row) : null;
   }
 
+  async createPrompt(prompt: {
+    title: string;
+    content: string;
+    role: string;
+    tags?: string[];
+    sourceConversationId?: string;
+    sourceMessageIndex?: number;
+  }): Promise<SavedPrompt> {
+    const db = this.getDb();
+    const id = createHash("sha256").update(`${prompt.title}:${prompt.content}:${Date.now()}`).digest("hex").slice(0, 16);
+    const now = new Date().toISOString();
+    db.prepare(
+      "INSERT INTO saved_prompts (id, title, content, role, tags, source_conversation_id, source_message_index, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+    ).run(
+      id,
+      prompt.title,
+      prompt.content,
+      prompt.role,
+      JSON.stringify(prompt.tags ?? []),
+      prompt.sourceConversationId ?? null,
+      prompt.sourceMessageIndex ?? null,
+      now,
+      now,
+    );
+    return {
+      id,
+      title: prompt.title,
+      content: prompt.content,
+      role: prompt.role,
+      tags: prompt.tags ?? [],
+      evals: null,
+      sourceConversationId: prompt.sourceConversationId,
+      sourceMessageIndex: prompt.sourceMessageIndex,
+      createdAt: new Date(now),
+      updatedAt: new Date(now),
+    };
+  }
+
+  async getPrompts(): Promise<SavedPrompt[]> {
+    const db = this.getDb();
+    const rows = db.prepare("SELECT * FROM saved_prompts ORDER BY updated_at DESC").all() as SavedPromptRow[];
+    return rows.map(rowToSavedPrompt);
+  }
+
+  async getPrompt(id: string): Promise<SavedPrompt | null> {
+    const db = this.getDb();
+    const row = db.prepare("SELECT * FROM saved_prompts WHERE id = ?").get(id) as SavedPromptRow | undefined;
+    return row ? rowToSavedPrompt(row) : null;
+  }
+
+  async updatePrompt(id: string, updates: { title?: string; content?: string; tags?: string[]; evals?: Record<string, unknown> | null }): Promise<void> {
+    const db = this.getDb();
+    const now = new Date().toISOString();
+    if (updates.title !== undefined) db.prepare("UPDATE saved_prompts SET title = ?, updated_at = ? WHERE id = ?").run(updates.title, now, id);
+    if (updates.content !== undefined) db.prepare("UPDATE saved_prompts SET content = ?, updated_at = ? WHERE id = ?").run(updates.content, now, id);
+    if (updates.tags !== undefined) db.prepare("UPDATE saved_prompts SET tags = ?, updated_at = ? WHERE id = ?").run(JSON.stringify(updates.tags), now, id);
+    if (updates.evals !== undefined) db.prepare("UPDATE saved_prompts SET evals = ?, updated_at = ? WHERE id = ?").run(updates.evals ? JSON.stringify(updates.evals) : null, now, id);
+  }
+
+  async deletePrompt(id: string): Promise<void> {
+    const db = this.getDb();
+    db.prepare("DELETE FROM saved_prompts WHERE id = ?").run(id);
+  }
+
+  async getProjectMeta(projectPath: string): Promise<ProjectMeta | null> {
+    const db = this.getDb();
+    const row = db.prepare("SELECT * FROM project_metadata WHERE project_path = ?").get(projectPath) as ProjectMetaRow | undefined;
+    return row ? rowToProjectMeta(row) : null;
+  }
+
+  async getAllProjectMeta(): Promise<ProjectMeta[]> {
+    const db = this.getDb();
+    const rows = db.prepare("SELECT * FROM project_metadata ORDER BY updated_at DESC").all() as ProjectMetaRow[];
+    return rows.map(rowToProjectMeta);
+  }
+
+  async upsertProjectMeta(meta: { projectPath: string; title?: string; description?: string; tags?: string[] }): Promise<void> {
+    const db = this.getDb();
+    const now = new Date().toISOString();
+    const existing = db.prepare("SELECT * FROM project_metadata WHERE project_path = ?").get(meta.projectPath) as ProjectMetaRow | undefined;
+    if (existing) {
+      db.prepare(`
+        UPDATE project_metadata SET
+          title = ?,
+          description = ?,
+          tags = ?,
+          updated_at = ?
+        WHERE project_path = ?
+      `).run(
+        meta.title !== undefined ? meta.title : existing.title,
+        meta.description !== undefined ? meta.description : existing.description,
+        meta.tags !== undefined ? JSON.stringify(meta.tags) : existing.tags,
+        now,
+        meta.projectPath,
+      );
+    } else {
+      db.prepare(`
+        INSERT INTO project_metadata (project_path, title, description, tags, updated_at)
+        VALUES (?, ?, ?, ?, ?)
+      `).run(
+        meta.projectPath,
+        meta.title ?? null,
+        meta.description ?? null,
+        JSON.stringify(meta.tags ?? []),
+        now,
+      );
+    }
+  }
+
+  async getTagMeta(name: string): Promise<TagMeta | null> {
+    const db = this.getDb();
+    const row = db.prepare("SELECT * FROM tag_metadata WHERE name = ?").get(name) as TagMetaRow | undefined;
+    return row ? rowToTagMeta(row) : null;
+  }
+
+  async getAllTagMeta(): Promise<TagMeta[]> {
+    const db = this.getDb();
+    const rows = db.prepare("SELECT * FROM tag_metadata ORDER BY name ASC").all() as TagMetaRow[];
+    return rows.map(rowToTagMeta);
+  }
+
+  async upsertTagMeta(meta: { name: string; color?: string; description?: string }): Promise<void> {
+    const db = this.getDb();
+    const now = new Date().toISOString();
+    const existing = db.prepare("SELECT * FROM tag_metadata WHERE name = ?").get(meta.name) as TagMetaRow | undefined;
+    if (existing) {
+      db.prepare(`
+        UPDATE tag_metadata SET color = ?, description = ? WHERE name = ?
+      `).run(
+        meta.color !== undefined ? meta.color : existing.color,
+        meta.description !== undefined ? meta.description : existing.description,
+        meta.name,
+      );
+    } else {
+      db.prepare(`
+        INSERT INTO tag_metadata (name, color, description, created_at) VALUES (?, ?, ?, ?)
+      `).run(
+        meta.name,
+        meta.color ?? '#06B6D4',
+        meta.description ?? '',
+        now,
+      );
+    }
+  }
+
+  async deleteTagMeta(name: string): Promise<void> {
+    const db = this.getDb();
+    db.prepare("DELETE FROM tag_metadata WHERE name = ?").run(name);
+  }
+
   close(): void {
     this.db?.close();
     this.db = null;
@@ -517,6 +729,68 @@ function rowToDatasetEntry(row: DatasetEntryRow): DatasetEntry {
     quality: row.quality as QualityLabel,
     systemPrompt: row.system_prompt ?? undefined,
     messages: JSON.parse(row.messages),
+    createdAt: new Date(row.created_at),
+  };
+}
+
+interface SavedPromptRow {
+  id: string;
+  title: string;
+  content: string;
+  role: string;
+  tags: string;
+  evals: string | null;
+  source_conversation_id: string | null;
+  source_message_index: number | null;
+  created_at: string;
+  updated_at: string;
+}
+
+function rowToSavedPrompt(row: SavedPromptRow): SavedPrompt {
+  return {
+    id: row.id,
+    title: row.title,
+    content: row.content,
+    role: row.role,
+    tags: JSON.parse(row.tags),
+    evals: row.evals ? JSON.parse(row.evals) : null,
+    sourceConversationId: row.source_conversation_id ?? undefined,
+    sourceMessageIndex: row.source_message_index ?? undefined,
+    createdAt: new Date(row.created_at),
+    updatedAt: new Date(row.updated_at),
+  };
+}
+
+interface ProjectMetaRow {
+  project_path: string;
+  title: string | null;
+  description: string | null;
+  tags: string;
+  updated_at: string;
+}
+
+function rowToProjectMeta(row: ProjectMetaRow): ProjectMeta {
+  return {
+    projectPath: row.project_path,
+    title: row.title,
+    description: row.description,
+    tags: JSON.parse(row.tags),
+    updatedAt: new Date(row.updated_at),
+  };
+}
+
+interface TagMetaRow {
+  name: string;
+  color: string;
+  description: string;
+  created_at: string;
+}
+
+function rowToTagMeta(row: TagMetaRow): TagMeta {
+  return {
+    name: row.name,
+    color: row.color,
+    description: row.description,
     createdAt: new Date(row.created_at),
   };
 }

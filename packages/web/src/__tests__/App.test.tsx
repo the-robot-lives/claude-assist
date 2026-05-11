@@ -31,31 +31,31 @@ beforeEach(() => {
 });
 
 describe("App routing", () => {
-  test("renders Dashboard at root route '/'", () => {
+  test("renders Explore at root route '/'", async () => {
     render(
       <MemoryRouter initialEntries={["/"]}>
         <App />
       </MemoryRouter>,
     );
-    expect(screen.getByText("Recent Conversations")).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("Search conversations...")).toBeInTheDocument();
   });
 
-  test("renders Search at '/search' route", () => {
+  test("renders Explore at '/search' route", async () => {
     render(
       <MemoryRouter initialEntries={["/search"]}>
         <App />
       </MemoryRouter>,
     );
-    expect(screen.getByRole("heading", { name: "Search" })).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("Search conversations...")).toBeInTheDocument();
   });
 
-  test("renders Browse at '/browse' route", () => {
+  test("renders Explore at '/browse' route", async () => {
     render(
       <MemoryRouter initialEntries={["/browse"]}>
         <App />
       </MemoryRouter>,
     );
-    expect(screen.getByRole("heading", { name: "Browse" })).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("Search conversations...")).toBeInTheDocument();
   });
 
   test("renders Settings at '/settings' route", async () => {

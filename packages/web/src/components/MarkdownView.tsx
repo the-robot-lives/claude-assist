@@ -27,32 +27,35 @@ interface MarkdownViewProps {
 
 export function MarkdownView({ content }: MarkdownViewProps) {
   const [mode, setMode] = useState<"rendered" | "source">("rendered");
+  const hasRichContent = /[#*`\[|>~]|^\d+\./m.test(content);
 
   return (
     <div>
-      {/* Tab bar */}
-      <div className="flex gap-1 mb-2">
-        <button
-          onClick={() => setMode("rendered")}
-          className={`rounded px-2 py-0.5 text-xs ${
-            mode === "rendered"
-              ? "bg-glow/20 text-glow"
-              : "text-text-dim hover:text-text-muted"
-          }`}
-        >
-          Rendered
-        </button>
-        <button
-          onClick={() => setMode("source")}
-          className={`rounded px-2 py-0.5 text-xs ${
-            mode === "source"
-              ? "bg-glow/20 text-glow"
-              : "text-text-dim hover:text-text-muted"
-          }`}
-        >
-          Source
-        </button>
-      </div>
+      {/* Tab bar — only show when content has actual markdown formatting */}
+      {hasRichContent && (
+        <div className="flex gap-1 mb-2">
+          <button
+            onClick={() => setMode("rendered")}
+            className={`rounded-md px-2 py-0.5 text-xs transition-colors ${
+              mode === "rendered"
+                ? "bg-glow/15 text-glow"
+                : "text-text-dim hover:text-text-muted"
+            }`}
+          >
+            Rendered
+          </button>
+          <button
+            onClick={() => setMode("source")}
+            className={`rounded-md px-2 py-0.5 text-xs transition-colors ${
+              mode === "source"
+                ? "bg-glow/15 text-glow"
+                : "text-text-dim hover:text-text-muted"
+            }`}
+          >
+            Source
+          </button>
+        </div>
+      )}
 
       {mode === "source" ? (
         <SyntaxHighlighter
@@ -62,18 +65,18 @@ export function MarkdownView({ content }: MarkdownViewProps) {
             margin: 0,
             borderRadius: "0.375rem",
             fontSize: "0.75rem",
-            background: "#0f172a",
+            background: "#0E0E12",
           }}
           wrapLongLines
         >
           {content}
         </SyntaxHighlighter>
       ) : (
-        <div className="prose prose-invert prose-sm max-w-none text-text-primary
-          prose-headings:text-text-bright prose-headings:font-medium prose-headings:mt-4 prose-headings:mb-2
-          prose-p:my-1.5 prose-p:leading-relaxed
+        <div className="prose prose-invert prose-base max-w-none text-text-bright
+          prose-headings:text-white prose-headings:font-medium prose-headings:mt-5 prose-headings:mb-2
+          prose-p:my-2 prose-p:leading-relaxed
           prose-a:text-glow prose-a:no-underline hover:prose-a:underline
-          prose-strong:text-text-bright prose-strong:font-semibold
+          prose-strong:text-white prose-strong:font-semibold
           prose-code:text-glow prose-code:bg-surface prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:text-xs prose-code:before:content-none prose-code:after:content-none
           prose-pre:my-2 prose-pre:p-0 prose-pre:bg-transparent
           prose-ul:my-1.5 prose-ol:my-1.5 prose-li:my-0.5
@@ -103,7 +106,7 @@ export function MarkdownView({ content }: MarkdownViewProps) {
                           margin: 0,
                           borderRadius: "0.375rem",
                           fontSize: "0.75rem",
-                          background: "#0f172a",
+                          background: "#0E0E12",
                         }}
                         wrapLongLines
                       >

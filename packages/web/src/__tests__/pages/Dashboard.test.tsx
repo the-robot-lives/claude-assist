@@ -1,7 +1,7 @@
 import { describe, test, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
-import { Dashboard } from "../../pages/Dashboard.tsx";
+import { Explore } from "../../pages/Explore.tsx";
 
 beforeEach(() => {
   vi.stubGlobal("fetch", vi.fn(() =>
@@ -16,31 +16,22 @@ function renderWithRouter(ui: React.ReactElement) {
   return render(<MemoryRouter>{ui}</MemoryRouter>);
 }
 
-describe("Dashboard", () => {
-  test("renders search input with placeholder 'Search conversations...'", () => {
-    renderWithRouter(<Dashboard />);
-    expect(
-      screen.getByPlaceholderText("Search conversations..."),
-    ).toBeInTheDocument();
+describe("Explore", () => {
+  test("renders search input", () => {
+    renderWithRouter(<Explore />);
+    expect(screen.getByPlaceholderText("Search conversations...")).toBeInTheDocument();
   });
 
-  test("renders four stat cards", () => {
-    renderWithRouter(<Dashboard />);
+  test("renders stat cards", () => {
+    renderWithRouter(<Explore />);
     expect(screen.getByText("Conversations")).toBeInTheDocument();
-    expect(screen.getByText("Projects")).toBeInTheDocument();
-    expect(screen.getByText("Dataset Entries")).toBeInTheDocument();
+    expect(screen.getByText("Indexed")).toBeInTheDocument();
     expect(screen.getByText("Last Indexed")).toBeInTheDocument();
   });
 
-  test("renders 'Recent Conversations' heading", () => {
-    renderWithRouter(<Dashboard />);
-    expect(screen.getByText("Recent Conversations")).toBeInTheDocument();
-  });
-
-  test("shows index instruction when no conversations", async () => {
-    renderWithRouter(<Dashboard />);
-    await waitFor(() => {
-      expect(screen.getByText("claude-assist index")).toBeInTheDocument();
-    });
+  test("renders text/semantic mode toggle", () => {
+    renderWithRouter(<Explore />);
+    expect(screen.getByText("Text")).toBeInTheDocument();
+    expect(screen.getByText("Semantic")).toBeInTheDocument();
   });
 });

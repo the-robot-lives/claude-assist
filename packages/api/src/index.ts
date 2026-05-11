@@ -9,6 +9,9 @@ import { createSearchRoutes } from "./routes/search.ts";
 import { createDatasetRoutes } from "./routes/datasets.ts";
 import { configRoutes } from "./routes/config.ts";
 import { createIndexRoutes } from "./routes/index-routes.ts";
+import { createPromptRoutes } from "./routes/prompts.ts";
+import { createProjectRoutes } from "./routes/projects.ts";
+import { createTagRoutes } from "./routes/tags.ts";
 import { StorageService } from "./services/storage.ts";
 import { IndexerService } from "./services/indexer.ts";
 import { SearchService } from "./services/search.ts";
@@ -39,6 +42,9 @@ app.route("/api/search", createSearchRoutes(searchService));
 app.route("/api/datasets", createDatasetRoutes(storage));
 app.route("/api/config", configRoutes);
 app.route("/api/index", createIndexRoutes(indexer));
+app.route("/api/prompts", createPromptRoutes(storage));
+app.route("/api/projects", createProjectRoutes(storage));
+app.route("/api/tags", createTagRoutes(storage));
 
 const port = Number(process.env.PORT) || 3100;
 

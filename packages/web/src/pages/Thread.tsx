@@ -10,7 +10,7 @@ interface ContentBlock {
   name?: string;
   id?: string;
   input?: Record<string, unknown>;
-  content?: string;
+  content?: string | Array<{ type: string; text?: string }> | Record<string, unknown>;
   is_error?: boolean;
 }
 
@@ -53,6 +53,8 @@ export function Thread() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [actionMsg, setActionMsg] = useState<string | null>(null);
+  const [tagInput, setTagInput] = useState("");
+  const [showTagInput, setShowTagInput] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -109,9 +111,57 @@ export function Thread() {
     }
   };
 
+  const handleAddTag = async (tag: string) => {
+    if (!id || !meta || !tag.trim()) return;
+    const newTags = [...new Set([...meta.tags, tag.trim()])];
+    try {
+      await apiFetch(`/conversations/${id}/tag`, {
+        method: "POST",
+        body: JSON.stringify({ tags: newTags }),
+      });
+      setMeta({ ...meta, tags: newTags });
+      setTagInput("");
+      setShowTagInput(false);
+    } catch (err) {
+      setActionMsg(`Tag failed: ${err instanceof Error ? err.message : "unknown error"}`);
+    }
+  };
+
+  const handleRemoveTag = async (tag: string) => {
+    if (!id || !meta) return;
+    const newTags = meta.tags.filter((t) => t !== tag);
+    try {
+      await apiFetch(`/conversations/${id}/tag`, {
+        method: "POST",
+        body: JSON.stringify({ tags: newTags }),
+      });
+      setMeta({ ...meta, tags: newTags });
+    } catch (err) {
+      setActionMsg(`Tag removal failed: ${err instanceof Error ? err.message : "unknown error"}`);
+    }
+  };
+
+  const handleSavePrompt = async (record: ThreadRecord) => {
+    const content = typeof record.message.content === "string"
+      ? record.message.content
+      : record.message.content.filter((b) => b.type === "text").map((b) => b.text ?? "").join("\n");
+    const title = prompt("Save as prompt — enter a title:", content.slice(0, 60));
+    if (!title) return;
+    try {
+      await apiFetch("/prompts", {
+        method: "POST",
+        body: JSON.stringify({ title, content, role: record.type, sourceConversationId: id }),
+      });
+      setActionMsg("Prompt saved");
+      setTimeout(() => setActionMsg(null), 2000);
+    } catch (err) {
+      setActionMsg(`Save failed: ${err instanceof Error ? err.message : "unknown error"}`);
+    }
+  };
+
   if (loading) {
     return (
-      <div className="mx-auto max-w-4xl">
+      <div className="mx-auto max-w-4xl py-12">
         <p className="text-sm text-text-muted">Loading thread...</p>
       </div>
     );
@@ -119,166 +169,225 @@ export function Thread() {
 
   if (error || !meta) {
     return (
-      <div className="mx-auto max-w-4xl">
+      <div className="mx-auto max-w-4xl py-12">
         <p className="text-sm text-red-400">{error ?? "Thread not found"}</p>
-        <button onClick={() => navigate(-1)} className="mt-2 text-xs text-glow hover:underline">
-          Go back
-        </button>
+        <button onClick={() => navigate(-1)} className="mt-3 btn-action">Go back</button>
       </div>
     );
   }
 
-  return (
-    <div className="mx-auto max-w-4xl space-y-6">
-      {/* Header */}
-      <div className="rounded-md border border-border-subtle bg-surface p-4">
-        <h1 className="text-lg font-medium text-text-bright">{meta.title}</h1>
+  const sessionId = extractSessionId(meta.sourcePath);
+  const dir = meta.projectPath;
+  const resumeCmd = sessionId ? `pushd ${dir} && claude --resume ${sessionId}` : null;
 
-        <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-text-dim">
-          <span>
-            Project: <span className="text-glow">{shortProject(meta.projectPath)}</span>
+  return (
+    <div className="mx-auto max-w-4xl space-y-6 pb-16">
+
+      {/* ── Header Card ── */}
+      <div className="rounded-lg border border-border-strong bg-surface-raised p-5">
+
+        {/* Title + date */}
+        <h1 className="text-xl font-medium text-white leading-snug">{meta.title}</h1>
+
+        <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-text-dim">
+          <span title="Project working directory">
+            <span className="text-glow font-medium">{shortProject(meta.projectPath)}</span>
           </span>
+          <span className="text-border-strong">|</span>
           <span>{meta.messageCount} messages</span>
+          <span className="text-border-strong">|</span>
           <span>{new Date(meta.startedAt).toLocaleDateString()}</span>
           {meta.status !== "active" && (
-            <span className="rounded-full bg-surface-active px-2 py-0.5 text-text-dim">{meta.status}</span>
-          )}
-          {meta.tags.length > 0 && (
-            <span>Tags: {meta.tags.join(", ")}</span>
+            <>
+              <span className="text-border-strong">|</span>
+              <span className="rounded bg-surface-active px-1.5 py-0.5">{meta.status}</span>
+            </>
           )}
         </div>
 
-        {/* Source info */}
-        {(() => {
-          const { dir, sessionId, resumeCmd } = parseSourcePath(meta.sourcePath);
-          return (
-            <div className="mt-2 space-y-1.5">
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-text-dim" title="The working directory this conversation was started from">Directory:</span>
-                <code className="rounded bg-canvas px-2 py-0.5 text-xs text-glow font-mono select-all" title={`Project working directory: ${dir}`}>
-                  {dir}
-                </code>
-                <button
-                  onClick={() => navigator.clipboard.writeText(dir)}
-                  className="text-xs text-text-dim hover:text-text-muted"
-                  title="Copy directory path to clipboard"
-                >
-                  Copy
-                </button>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-text-dim" title="Path to the raw JSONL conversation file on disk">Source:</span>
-                <code className="rounded bg-canvas px-2 py-0.5 text-xs text-text-muted font-mono select-all truncate max-w-lg" title={meta.sourcePath}>
-                  {meta.sourcePath}
-                </code>
-                <button
-                  onClick={() => navigator.clipboard.writeText(meta.sourcePath)}
-                  className="text-xs text-text-dim hover:text-text-muted"
-                  title="Copy full source file path to clipboard"
-                >
-                  Copy
-                </button>
-              </div>
-              {resumeCmd && (
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-text-dim" title="Shell command to resume this conversation in Claude Code">Resume:</span>
-                  <code className="rounded bg-canvas px-2 py-0.5 text-xs text-text-muted font-mono select-all" title="Paste this into your terminal to resume the conversation">
-                    {resumeCmd}
-                  </code>
-                  <button
-                    onClick={() => navigator.clipboard.writeText(resumeCmd)}
-                    className="text-xs text-text-dim hover:text-text-muted"
-                    title="Copy resume command to clipboard"
-                  >
-                    Copy
-                  </button>
-                </div>
-              )}
+        {/* Tags */}
+        <div className="mt-3 flex flex-wrap items-center gap-1.5">
+          {meta.tags.map((tag) => (
+            <span key={tag} className="tag-chip group">
+              {tag}
+              <button
+                onClick={() => handleRemoveTag(tag)}
+                className="ml-0.5 opacity-0 group-hover:opacity-100 hover:text-red-400 transition-opacity"
+                title={`Remove tag "${tag}"`}
+              >
+                &times;
+              </button>
+            </span>
+          ))}
+          {showTagInput ? (
+            <form
+              onSubmit={(e) => { e.preventDefault(); handleAddTag(tagInput); }}
+              className="flex items-center gap-1"
+            >
+              <input
+                type="text"
+                value={tagInput}
+                onChange={(e) => setTagInput(e.target.value)}
+                placeholder="tag..."
+                className="w-20 rounded-full bg-canvas px-2.5 py-0.5 text-xs text-text-primary placeholder:text-text-dim outline-none border border-border-subtle focus:border-glow transition-colors"
+                autoFocus
+                onKeyDown={(e) => { if (e.key === "Escape") { setShowTagInput(false); setTagInput(""); } }}
+              />
+              <button type="submit" className="text-xs text-glow hover:text-glow-bright" title="Add tag">+</button>
+              <button type="button" onClick={() => { setShowTagInput(false); setTagInput(""); }} className="text-xs text-text-dim hover:text-text-muted" title="Cancel">&times;</button>
+            </form>
+          ) : (
+            <button
+              onClick={() => setShowTagInput(true)}
+              className="rounded-full border border-dashed border-border-subtle px-2 py-0.5 text-xs text-text-dim hover:text-glow hover:border-glow/30 transition-colors"
+              title="Add a tag to this conversation"
+            >
+              + tag
+            </button>
+          )}
+        </div>
+
+        {/* Divider */}
+        <div className="my-4 border-t border-border-subtle" />
+
+        {/* Source metadata */}
+        <div className="space-y-2">
+          <div className="meta-row">
+            <span className="meta-label" title="The working directory this conversation was started from">Dir</span>
+            <code className="meta-value text-glow" title={dir}>{dir}</code>
+            <button onClick={() => navigator.clipboard.writeText(dir)} className="meta-copy" title="Copy directory path">Copy</button>
+          </div>
+          <div className="meta-row">
+            <span className="meta-label" title="Path to the raw JSONL file on disk">Source</span>
+            <code className="meta-value truncate max-w-md" title={meta.sourcePath}>{meta.sourcePath}</code>
+            <button onClick={() => navigator.clipboard.writeText(meta.sourcePath)} className="meta-copy" title="Copy source path">Copy</button>
+          </div>
+          {resumeCmd && (
+            <div className="meta-row">
+              <span className="meta-label" title="Shell command to resume this session in Claude Code">Resume</span>
+              <code className="meta-value truncate max-w-md text-xs" title={resumeCmd}>{resumeCmd}</code>
+              <button onClick={() => navigator.clipboard.writeText(resumeCmd)} className="meta-copy" title="Copy resume command">Copy</button>
             </div>
-          );
-        })()}
+          )}
+        </div>
+
+        {/* Divider */}
+        <div className="my-4 border-t border-border-subtle" />
 
         {/* Actions */}
-        <div className="mt-3 flex flex-wrap gap-2">
-          <button onClick={() => navigate(-1)} title="Go back to the previous page" className="rounded bg-surface-active px-3 py-1 text-xs text-text-muted hover:text-text-primary">
-            Back
-          </button>
-          <button onClick={() => navigate(`/thread/${id}/edit`)} title="Edit this thread — collapse, remove, reorder, or inject messages (non-destructive)" className="rounded bg-surface-active px-3 py-1 text-xs text-text-muted hover:text-text-primary">
-            Edit
-          </button>
-          <button onClick={() => navigate(`/thread/${id}/convert`)} title="Extract a reusable artifact — agent, skill, command, snippet, or runbook" className="rounded bg-surface-active px-3 py-1 text-xs text-text-muted hover:text-text-primary">
-            Convert
-          </button>
-          <div className="w-px bg-border-subtle" />
-          <button onClick={handleClone} title="Create a duplicate of this conversation with a new ID" className="rounded bg-surface-active px-3 py-1 text-xs text-text-muted hover:text-text-primary">
-            Clone
-          </button>
-          <button onClick={handleRehome} title="Move this conversation to a different project directory" className="rounded bg-surface-active px-3 py-1 text-xs text-text-muted hover:text-text-primary">
-            Rehome
-          </button>
-          <button onClick={handleArchive} title="Mark this conversation as archived — hides it from default listings" className="rounded bg-surface-active px-3 py-1 text-xs text-text-muted hover:text-text-primary">
-            Archive
-          </button>
+        <div className="flex flex-wrap items-center gap-2">
+          <button onClick={() => navigate(-1)} className="btn-action" title="Go back to the previous page">Back</button>
+          <button onClick={() => navigate(`/thread/${id}/edit`)} className="btn-action-primary" title="Edit this thread — collapse, remove, reorder, or inject messages (non-destructive)">Edit</button>
+          <button onClick={() => navigate(`/thread/${id}/convert`)} className="btn-action-primary" title="Extract a reusable artifact — agent, skill, command, snippet, or runbook">Convert</button>
+          <div className="mx-1 h-5 w-px bg-border-subtle" />
+          <button onClick={handleClone} className="btn-action" title="Create a duplicate of this conversation with a new ID">Clone</button>
+          <button onClick={handleRehome} className="btn-action" title="Move this conversation's JSONL file to a different project directory">Rehome</button>
+          <button onClick={handleArchive} className="btn-action-danger" title="Mark this conversation as archived — hides it from default listings">Archive</button>
         </div>
 
         {actionMsg && (
-          <p className="mt-2 text-xs text-glow">{actionMsg}</p>
+          <p className="mt-3 rounded bg-glow/10 border border-glow/20 px-3 py-1.5 text-xs text-glow">{actionMsg}</p>
         )}
       </div>
 
-      {/* Messages */}
-      <div className="space-y-4">
+      {/* ── Messages ── */}
+      <div className="space-y-3">
         {records.map((record, i) => (
-          <MessageBlock key={record.uuid ?? i} record={record} />
+          <MessageBlock key={record.uuid ?? i} record={record} onSavePrompt={handleSavePrompt} />
         ))}
       </div>
 
-      <p className="text-center text-xs text-text-dim">
-        End of thread ({records.length} messages)
+      <p className="py-6 text-center text-xs text-text-dim">
+        End of thread &middot; {records.length} messages
       </p>
     </div>
   );
 }
 
-function MessageBlock({ record }: { record: ThreadRecord }) {
+function MessageBlock({ record, onSavePrompt }: { record: ThreadRecord; onSavePrompt: (record: ThreadRecord) => void }) {
   const isUser = record.type === "user";
   const content = record.message.content;
   const usage = record.message.usage;
+  const [showRaw, setShowRaw] = useState(false);
+
+  const textContent = typeof content === "string"
+    ? content
+    : content.filter((b) => b.type === "text").map((b) => b.text ?? "").join("\n");
+  const special = detectSpecialMessage(textContent);
+
+  const borderClass = special
+    ? special.borderClass
+    : isUser ? "border-glow/20" : "border-border-subtle";
+
+  const bgStyle = special
+    ? undefined
+    : isUser
+      ? { background: "#162028", borderLeft: "3px solid #06B6D4" }
+      : { background: "#28222E", borderLeft: "3px solid #9333EA" };
 
   return (
-    <div className={`rounded-md border p-4 ${
-      isUser
-        ? "border-glow/20 bg-glow-bg/30"
-        : "border-border-subtle bg-surface"
-    } ${record.isSidechain ? "opacity-60 border-dashed" : ""}`}>
+    <div className={`rounded-lg border p-5 ${borderClass} ${record.isSidechain ? "opacity-50 border-dashed" : ""}`} style={bgStyle}>
+
       {/* Role header */}
-      <div className="mb-2 flex items-center gap-2">
-        <span className={`text-xs font-medium ${isUser ? "text-glow" : "text-text-primary"}`}>
-          {isUser ? "You" : "Assistant"}
-        </span>
-        {record.message.model && record.message.model !== "<synthetic>" && (
-          <span className="text-xs text-text-dim">{record.message.model}</span>
-        )}
-        {record.timestamp && (
-          <span className="text-xs text-text-dim">{record.timestamp.slice(11, 19)}</span>
-        )}
-        {record.isSidechain && (
-          <span className="rounded-full bg-surface-active px-2 py-0.5 text-xs text-text-dim">sidechain</span>
-        )}
-        {usage && (
-          <span className="ml-auto text-xs text-text-dim">
-            {usage.input_tokens + usage.output_tokens} tokens
+      <div className="mb-3 flex items-center gap-2">
+        {special ? (
+          <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ${special.badgeClass}`}>
+            {special.label}
+          </span>
+        ) : (
+          <span className={isUser ? "role-user" : "role-assistant"}>
+            {isUser ? "You" : "Assistant"}
           </span>
         )}
+        {record.message.model && record.message.model !== "<synthetic>" && (
+          <span className="text-xs text-text-dim font-mono">{record.message.model}</span>
+        )}
+        {record.timestamp && (
+          <span className="text-xs text-text-dim">{formatTime(record.timestamp)}</span>
+        )}
+        {record.isSidechain && (
+          <span className="rounded bg-surface-active px-1.5 py-0.5 text-xs text-text-dim">sidechain</span>
+        )}
+        <div className="ml-auto flex items-center gap-2">
+          {usage && (
+            <span className="text-xs text-text-dim font-mono" title={`In: ${usage.input_tokens} Out: ${usage.output_tokens}`}>
+              {(usage.input_tokens + usage.output_tokens).toLocaleString()} tok
+            </span>
+          )}
+          <button
+            onClick={() => onSavePrompt(record)}
+            className="rounded px-1.5 py-0.5 text-sm transition-colors text-text-muted hover:text-glow"
+            title="Save this message as a reusable prompt"
+          >
+            ✦
+          </button>
+          <button
+            onClick={() => setShowRaw(!showRaw)}
+            className={`rounded px-1.5 py-0.5 text-xs transition-colors ${showRaw ? "bg-surface-active text-text-primary" : "text-text-dim hover:text-text-muted"}`}
+            title="Toggle raw JSONL record"
+          >
+            {showRaw ? "Rendered" : "Raw"}
+          </button>
+        </div>
       </div>
 
-      {/* Content */}
-      {typeof content === "string" ? (
-        <MarkdownView content={content} />
+      {/* Raw JSONL view */}
+      {showRaw ? (
+        <pre className="overflow-x-auto whitespace-pre-wrap rounded bg-void p-3 text-xs text-text-muted font-mono leading-relaxed max-h-[600px] overflow-y-auto">
+          {JSON.stringify(record, null, 2)}
+        </pre>
+      ) : special ? (
+        <SpecialMessageView special={special} content={textContent} />
+      ) : typeof content === "string" ? (
+        isUser ? (
+          <div className="text-[15px] text-text-bright leading-relaxed whitespace-pre-wrap">{content}</div>
+        ) : (
+          <MarkdownView content={content} />
+        )
       ) : (
-        <div className="space-y-2">
+        <div className="space-y-3">
           {content.map((block, j) => (
-            <ContentBlockView key={j} block={block} />
+            <ContentBlockView key={j} block={block} isAssistant={!isUser} />
           ))}
         </div>
       )}
@@ -286,85 +395,209 @@ function MessageBlock({ record }: { record: ThreadRecord }) {
   );
 }
 
-function ContentBlockView({ block }: { block: ContentBlock }) {
+interface SpecialMessage {
+  type: "skill-invoke" | "skill-definition" | "system-reminder" | "command";
+  label: string;
+  badgeClass: string;
+  borderClass: string;
+  summary: string;
+  body: string;
+}
+
+function detectSpecialMessage(text: string): SpecialMessage | null {
+  if (!text) return null;
+
+  // Skill invocation: <command-message>...<command-name>/...<command-args>...
+  const cmdMatch = text.match(/<command-name>(.*?)<\/command-name>/);
+  const argsMatch = text.match(/<command-args>([\s\S]*?)<\/command-args>/);
+  if (cmdMatch) {
+    return {
+      type: "skill-invoke",
+      label: `/${cmdMatch[1]}`,
+      badgeClass: "bg-purple-500/15 text-purple-400",
+      borderClass: "border-purple-500/20 bg-surface-raised",
+      summary: argsMatch?.[1]?.trim() ?? "",
+      body: text,
+    };
+  }
+
+  // Skill/system definition: starts with "Base directory for this skill:"
+  if (text.startsWith("Base directory for this skill:") || text.startsWith("Base directory for")) {
+    const lines = text.split("\n");
+    const dirLine = lines[0];
+    const restStart = text.indexOf("\n\n");
+    const body = restStart > 0 ? text.slice(restStart + 2) : "";
+    const titleMatch = body.match(/^#\s+(.+)/m);
+    return {
+      type: "skill-definition",
+      label: "Skill Definition",
+      badgeClass: "bg-amber-500/15 text-amber-400",
+      borderClass: "border-amber-500/15 bg-surface-raised",
+      summary: titleMatch?.[1] ?? dirLine,
+      body,
+    };
+  }
+
+  // System reminder
+  if (text.includes("<system-reminder>")) {
+    const inner = text.replace(/<\/?system-reminder>/g, "").trim();
+    return {
+      type: "system-reminder",
+      label: "System",
+      badgeClass: "bg-text-dim/20 text-text-muted",
+      borderClass: "border-border-subtle bg-surface",
+      summary: inner.split("\n")[0].slice(0, 80),
+      body: inner,
+    };
+  }
+
+  return null;
+}
+
+function SpecialMessageView({ special, content }: { special: SpecialMessage; content: string }) {
   const [expanded, setExpanded] = useState(false);
 
-  switch (block.type) {
-    case "text":
-      return <MarkdownView content={block.text ?? ""} />;
+  if (special.type === "skill-invoke") {
+    return (
+      <div className="space-y-2">
+        <div className="flex items-center gap-2">
+          <span className="font-mono text-sm text-purple-400 font-medium">{special.label}</span>
+          {special.summary && (
+            <span className="text-sm text-text-primary">{special.summary}</span>
+          )}
+        </div>
+      </div>
+    );
+  }
 
-    case "thinking":
-      return (
-        <div className="rounded border border-border-subtle">
-          <button
-            onClick={() => setExpanded(!expanded)}
-            className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-xs text-text-dim hover:text-text-muted"
-          >
-            <span>{expanded ? "▾" : "▸"}</span>
-            <span>Thinking</span>
-            {!expanded && block.thinking && (
-              <span className="flex-1 truncate opacity-50">{block.thinking.slice(0, 80)}...</span>
-            )}
+  if (special.type === "skill-definition") {
+    const dirMatch = content.match(/Base directory.*?:\s*(.*)/);
+    const dir = dirMatch?.[1]?.trim() ?? "";
+    return (
+      <div className="space-y-2">
+        {dir && (
+          <div className="flex items-center gap-2 text-xs">
+            <span className="text-text-muted">Base dir:</span>
+            <code className="rounded bg-void px-2 py-0.5 font-mono text-amber-400/80 select-all">{dir}</code>
+          </div>
+        )}
+        <div className="rounded-md border border-border-subtle">
+          <button onClick={() => setExpanded(!expanded)} className="collapse-toggle text-text-muted">
+            <span className="opacity-60">{expanded ? "▾" : "▸"}</span>
+            <span className="font-medium">{special.summary || "Skill definition"}</span>
+            <span className="ml-1 text-text-dim text-xs">({special.body.length.toLocaleString()} chars)</span>
           </button>
           {expanded && (
-            <div className="border-t border-border-subtle px-3 py-2">
-              <MarkdownView content={block.thinking ?? ""} />
+            <div className="border-t border-border-subtle px-4 py-3 max-h-96 overflow-y-auto">
+              <MarkdownView content={special.body} />
             </div>
           )}
         </div>
-      );
-
-    case "tool_use":
-      return (
-        <div className="rounded border border-border-subtle">
-          <button
-            onClick={() => setExpanded(!expanded)}
-            className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-xs hover:bg-surface-active"
-          >
-            <span className="text-text-dim">{expanded ? "▾" : "▸"}</span>
-            <span className="font-mono text-glow">{block.name}</span>
-            {block.input?.description && (
-              <span className="flex-1 truncate text-text-dim">{String(block.input.description)}</span>
-            )}
-          </button>
-          {expanded && block.input && (
-            <div className="border-t border-border-subtle px-3 py-2">
-              <pre className="overflow-x-auto text-xs text-text-muted">
-                {JSON.stringify(block.input, null, 2)}
-              </pre>
-            </div>
-          )}
-        </div>
-      );
-
-    case "tool_result":
-      return (
-        <div className="rounded border border-border-subtle">
-          <button
-            onClick={() => setExpanded(!expanded)}
-            className={`flex w-full items-center gap-2 px-3 py-1.5 text-left text-xs hover:bg-surface-active ${
-              block.is_error ? "text-red-400" : "text-text-dim"
-            }`}
-          >
-            <span>{expanded ? "▾" : "▸"}</span>
-            <span>{block.is_error ? "Error" : "Output"}</span>
-            {!expanded && block.content && (
-              <span className="flex-1 truncate opacity-50">{block.content.slice(0, 100)}</span>
-            )}
-          </button>
-          {expanded && block.content && (
-            <div className="border-t border-border-subtle px-3 py-2">
-              <pre className="overflow-x-auto whitespace-pre-wrap text-xs text-text-muted max-h-96 overflow-y-auto">
-                {block.content}
-              </pre>
-            </div>
-          )}
-        </div>
-      );
-
-    default:
-      return null;
+      </div>
+    );
   }
+
+  if (special.type === "system-reminder") {
+    return (
+      <div className="rounded-md border border-border-subtle">
+        <button onClick={() => setExpanded(!expanded)} className="collapse-toggle text-text-dim">
+          <span className="opacity-60">{expanded ? "▾" : "▸"}</span>
+          <span className="font-medium">System reminder</span>
+          {!expanded && <span className="ml-1 flex-1 truncate opacity-50">{special.summary}</span>}
+        </button>
+        {expanded && (
+          <div className="border-t border-border-subtle px-4 py-3 max-h-96 overflow-y-auto">
+            <MarkdownView content={special.body} />
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  return <div className="text-sm text-text-primary whitespace-pre-wrap">{content}</div>;
+}
+
+function ContentBlockView({ block, isAssistant }: { block: ContentBlock; isAssistant: boolean }) {
+  const [expanded, setExpanded] = useState(false);
+
+  if (block.type === "text") {
+    return isAssistant ? (
+      <MarkdownView content={block.text ?? ""} />
+    ) : (
+      <div className="text-[15px] text-text-bright leading-relaxed whitespace-pre-wrap">{block.text}</div>
+    );
+  }
+
+  if (block.type === "thinking") {
+    return (
+      <div className="rounded-md border border-border-subtle bg-void/30">
+        <button onClick={() => setExpanded(!expanded)} className="collapse-toggle text-text-dim">
+          <span className="text-text-dim/60">{expanded ? "▾" : "▸"}</span>
+          <span className="font-medium">Thinking</span>
+          {!expanded && block.thinking && (
+            <span className="ml-1 flex-1 truncate text-text-dim/60">{block.thinking.slice(0, 100)}</span>
+          )}
+        </button>
+        {expanded && (
+          <div className="border-t border-border-subtle px-4 py-3">
+            <MarkdownView content={block.thinking ?? ""} />
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  if (block.type === "tool_use") {
+    const isBash = block.name === "Bash";
+    const command = isBash ? String(block.input?.command ?? "") : null;
+    const description = block.input?.description ? String(block.input.description) : null;
+    return (
+      <div className="rounded-md border border-border-subtle bg-void/30">
+        <div className="flex items-center gap-2 px-3 py-2 text-xs">
+          <span className="font-mono text-glow font-medium">{block.name}</span>
+          {description && <span className="text-text-muted">{description}</span>}
+        </div>
+        {command ? (
+          <div className="border-t border-border-subtle px-3 py-2">
+            <pre className="overflow-x-auto rounded bg-void p-3 text-xs text-text-bright font-mono leading-relaxed">{command}</pre>
+          </div>
+        ) : block.input ? (
+          <div className="border-t border-border-subtle px-3 py-2">
+            <pre className="overflow-x-auto rounded bg-void p-3 text-xs text-text-muted font-mono leading-relaxed">
+              {JSON.stringify(block.input, null, 2)}
+            </pre>
+          </div>
+        ) : null}
+      </div>
+    );
+  }
+
+  if (block.type === "tool_result") {
+    const resultText = safeText(block.content);
+    return (
+      <div className="rounded-md border border-border-subtle bg-void/30">
+        <button
+          onClick={() => setExpanded(!expanded)}
+          className={`collapse-toggle ${block.is_error ? "text-red-400" : "text-text-dim"}`}
+        >
+          <span className="opacity-60">{expanded ? "▾" : "▸"}</span>
+          <span className="font-medium">{block.is_error ? "Error" : "Output"}</span>
+          {!expanded && resultText && (
+            <span className="ml-1 flex-1 truncate opacity-50">{resultText.slice(0, 120)}</span>
+          )}
+        </button>
+        {expanded && resultText && (
+          <div className="border-t border-border-subtle px-4 py-3">
+            <pre className="overflow-x-auto whitespace-pre-wrap rounded bg-void/50 p-3 text-xs text-text-muted font-mono leading-relaxed max-h-96 overflow-y-auto">
+              {resultText}
+            </pre>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  return null;
 }
 
 function shortProject(path: string): string {
@@ -372,23 +605,31 @@ function shortProject(path: string): string {
   return parts.length > 2 ? parts.slice(-2).join("/") : path;
 }
 
-function parseSourcePath(sourcePath: string): { dir: string; sessionId: string; resumeCmd: string | null } {
-  // Source: /Users/x/.claude/projects/-Users-x-Github-infra-k8/0827e6e5-110c-4724-952b-0b4038aea494.jsonl
-  // Dir name like -Users-x-Github-infra-k8 decodes to /Users/x/Github/infra/k8
-  const parts = sourcePath.split("/");
-  const fileName = parts[parts.length - 1] ?? "";
-  const dirName = parts[parts.length - 2] ?? "";
+function extractSessionId(sourcePath: string): string {
+  const fileName = sourcePath.split("/").pop() ?? "";
+  return fileName.replace(/\.jsonl$/, "");
+}
 
-  const sessionId = fileName.replace(/\.jsonl$/, "");
-
-  let dir = dirName;
-  if (dirName.startsWith("-")) {
-    dir = dirName.replace(/^-/, "/").replace(/-/g, "/");
+function formatTime(timestamp: string): string {
+  try {
+    return new Date(timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  } catch {
+    return timestamp.slice(11, 19);
   }
+}
 
-  const resumeCmd = sessionId
-    ? `pushd ${dir} && claude --resume ${sessionId}`
-    : null;
+function safeText(content: ContentBlock["content"]): string {
+  if (content == null) return "";
+  if (typeof content === "string") return content;
+  if (Array.isArray(content)) {
+    return content.map((c) => c.text ?? "").join("\n");
+  }
+  return JSON.stringify(content, null, 2);
+}
 
-  return { dir, sessionId, resumeCmd };
+function contentHasMarkdown(content: string | ContentBlock[]): boolean {
+  const text = typeof content === "string"
+    ? content
+    : content.filter((b) => b.type === "text").map((b) => b.text ?? "").join("");
+  return /[#*`\[|>]/.test(text);
 }

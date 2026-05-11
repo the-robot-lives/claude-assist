@@ -1,4 +1,4 @@
-import { readFileSync, readdirSync, statSync } from "node:fs";
+import { readFileSync, readdirSync, statSync, existsSync } from "node:fs";
 import { join, basename, dirname } from "node:path";
 import {
   parseJsonlFile,
@@ -81,6 +81,7 @@ export class IndexerService {
     const projectPath = decodeProjectPath(dirname(filePath));
     const title = generateTitle(contentRecords);
 
+    const existing = await this.storage.getConversation(conversationId);
     await this.storage.upsertConversation({
       id: conversationId,
       projectPath,
@@ -88,6 +89,8 @@ export class IndexerService {
       updatedAt: lastTimestamp,
       messageCount: contentRecords.length,
       title,
+      tags: existing?.tags,
+      status: existing?.status,
       sourcePath: filePath,
     });
 
@@ -176,19 +179,76 @@ function findJsonlFiles(dir: string): string[] {
   return results;
 }
 
+/**
+ * Decode a Claude Code encoded directory name back to a real filesystem path.
+ *
+ * Claude Code encodes /Users/foo/noizu-infra as -Users-foo-noizu-infra,
+ * which is ambiguous: -noizu-infra could mean /noizu/infra or /noizu-infra.
+ *
+ * Resolution: greedy left-to-right, preferring hyphenated directory names
+ * (literal hyphens) over nested directories at each step. Falls back to
+ * treating hyphens as path separators when neither exists.
+ */
 function decodeProjectPath(dirPath: string): string {
   const dirName = basename(dirPath);
-  if (dirName.startsWith("-")) {
-    return dirName.replace(/^-/, "/").replace(/-/g, "/");
-  }
-  return dirName;
+  if (!dirName.startsWith("-")) return dirName;
+
+  // Strip leading - (always represents root /)
+  const segments = dirName.slice(1).split("-");
+  if (segments.length === 0) return "/";
+
+  return resolveEncodedSegments(segments);
 }
+
+function resolveEncodedSegments(segments: string[]): string {
+  let resolved = "/";
+  let i = 0;
+
+  while (i < segments.length) {
+    // Try greedily joining as many segments as possible with hyphens,
+    // longest match first — prefer "noizu-infra-k8" over "noizu-infra" + "/k8"
+    let matched = false;
+    for (let end = segments.length; end > i + 1; end--) {
+      const candidate = segments.slice(i, end).join("-");
+      const candidatePath = join(resolved, candidate);
+      if (existsSync(candidatePath)) {
+        resolved = candidatePath;
+        i = end;
+        matched = true;
+        break;
+      }
+    }
+
+    if (!matched) {
+      // No multi-segment hyphenated match — use single segment as directory
+      resolved = join(resolved, segments[i]);
+      i++;
+    }
+  }
+
+  return resolved;
+}
+
+// Re-export for use by operations.ts
+export { decodeProjectPath, resolveEncodedSegments };
 
 function generateTitle(records: (UserMessage | AssistantMessage)[]): string {
   const firstUser = records.find((r): r is UserMessage => r.type === "user");
   if (!firstUser) return "Untitled conversation";
 
   const text = extractTextContent(firstUser);
+
+  // Detect skill/command invocations: extract <command-name> and <command-args> tags
+  const commandNameMatch = text.match(/<command-name>([^<]+)<\/command-name>/);
+  if (commandNameMatch) {
+    const commandName = commandNameMatch[1].trim();
+    const argsMatch = text.match(/<command-args>([^<]*)<\/command-args>/);
+    const args = argsMatch ? argsMatch[1].trim() : "";
+    const title = args ? `${commandName} ${args}` : commandName;
+    if (title.length <= 80) return title;
+    return title.slice(0, 77) + "...";
+  }
+
   const firstLine = text.split("\n")[0].trim();
   if (firstLine.length <= 80) return firstLine;
   return firstLine.slice(0, 77) + "...";

@@ -40,14 +40,17 @@ export function Datasets() {
 
   return (
     <div className="mx-auto max-w-4xl space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-medium text-text-bright">Datasets</h1>
-        <button
+      <div>
+        <div className="flex items-center justify-between">
+          <h1 className="text-xl font-medium text-white">Datasets</h1>
+          <button
           onClick={() => setShowCreate(!showCreate)}
           className="rounded bg-glow px-4 py-1.5 text-sm font-medium text-void hover:bg-glow/90"
         >
           New Dataset
         </button>
+        </div>
+        <p className="mt-1 text-sm text-text-muted">Tag message ranges from conversations as fine-tuning data. Curate quality labels and export in OpenAI, Anthropic, or JSONL formats.</p>
       </div>
 
       {showCreate && (
