@@ -11,12 +11,14 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.39.0",
     "@claude-assist/shared": "workspace:*",
     "@hono/node-server": "^1.14.0",
     "@huggingface/transformers": "^4.2.0",
     "better-sqlite3": "^12.9.0",
     "chokidar": "^5.0.0",
     "hono": "^4.7.0",
+    "openai": "^4.73.0",
     "sqlite-vec": "^0.1.9"
   },
   "devDependencies": {

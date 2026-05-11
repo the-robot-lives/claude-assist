@@ -38,4 +38,6 @@ All clients (web, CLI) communicate with the API via HTTP `fetch` to `localhost:3
 
 Source JSONL records: `permission-mode`, `user`, `assistant`, `attachment`, `system`, `file-history-snapshot`, `last-prompt`, `queue-operation`.
 
-Derived entities: `Conversation`, `SearchResult`, `ThreadEdit`, `Artifact`, `Dataset`, `DatasetEntry`, `SavedPrompt`.
+Derived entities: `Conversation`, `SearchResult`, `ThreadEdit`, `Artifact`, `Dataset`, `DatasetEntry`, `SavedPrompt`, `TagMeta`, `ProjectMeta`, `IndexStatus`, `ConversionCandidate`, `AppConfig`.
+
+Supporting types: `SearchOptions` (mode: fts|semantic, filters), `TokenUsage` (input/output/cache tokens), `QualityLabel` (gold|silver|bronze), `ArtifactType` (agent|skill|command|snippet|runbook).

@@ -15,16 +15,25 @@ Single SQLite file at `~/.claude-assist/claude-assist.db` (configurable via `CLA
 
 ## Tables (Logical)
 
+### Core Tables
+
 | Table | Purpose |
 |-------|---------|
 | conversations | Indexed conversation metadata (path, dates, title, tags, status) |
 | messages | Individual messages with role, content, timestamp |
-| message_embeddings | sqlite-vec virtual table for semantic search vectors |
-| thread_edits | Edited conversation threads (injected/collapsed messages) |
+| thread_edits | Edited conversation threads (injected/collapsed messages, status, updated_at) |
 | datasets | Named dataset collections for fine-tuning |
 | dataset_entries | Individual training examples linked to conversations |
 | prompts | Saved/extracted prompts with tags and evals |
-| projects | Project metadata derived from conversation paths |
+| project_metadata | User-editable project metadata (title, description, tags as JSON array) |
+| tag_metadata | Tag display metadata (name, color defaulting to `#06B6D4`, description) |
+
+### Virtual Tables
+
+| Table | Type | Purpose |
+|-------|------|---------|
+| messages_fts | FTS5 | Full-text search over `messages.content`, synced via insert/delete/update triggers |
+| conversation_vectors | vec0 (sqlite-vec) | 384-dim float32 embeddings for semantic search; created only if sqlite-vec loads successfully |
 
 ## Content Hashing
 

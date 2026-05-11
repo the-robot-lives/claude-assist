@@ -22,6 +22,15 @@ export function createConversationRoutes(storage: StorageService): Hono {
     return c.json({ data: conversations, meta: { total, limit } });
   });
 
+  routes.get("/by-slug/:slug", async (c) => {
+    const slug = c.req.param("slug");
+    const conversation = await storage.getConversationBySlug(slug);
+    if (!conversation) {
+      return c.json({ data: null, error: "not found" }, 404);
+    }
+    return c.json({ data: conversation });
+  });
+
   routes.get("/:id", async (c) => {
     const id = c.req.param("id");
     const conversation = await storage.getConversation(id);
@@ -102,6 +111,79 @@ export function createConversationRoutes(storage: StorageService): Hono {
     return c.json({ data: edit }, 201);
   });
 
+  routes.get("/:id/draft", async (c) => {
+    const id = c.req.param("id");
+    const draft = await storage.getDraftEdit(id);
+    if (!draft) {
+      return c.json({ data: null });
+    }
+    return c.json({ data: draft });
+  });
+
+  routes.post("/:id/draft", async (c) => {
+    const id = c.req.param("id");
+    const conversation = await storage.getConversation(id);
+    if (!conversation) {
+      return c.json({ data: null, error: "conversation not found" }, 404);
+    }
+
+    const existing = await storage.getDraftEdit(id);
+    if (existing) {
+      return c.json({ data: existing });
+    }
+
+    const body = await c.req.json() as { messages: Array<{ role: string; content: string }> };
+    const editedMessages = (body.messages ?? []).map((m, i) => ({
+      originalIndex: i,
+      role: m.role as "user" | "assistant" | "system",
+      content: m.content,
+    }));
+    const draft = await storage.createEdit(id, "Draft edit", editedMessages, "draft");
+    return c.json({ data: draft }, 201);
+  });
+
+  routes.patch("/:id/draft", async (c) => {
+    const id = c.req.param("id");
+    const draft = await storage.getDraftEdit(id);
+    if (!draft) {
+      return c.json({ data: null, error: "no draft found" }, 404);
+    }
+    const body = await c.req.json() as { messages: Array<{ originalIndex?: number; role: string; content: string; injected?: boolean; collapsed?: boolean }>; description?: string };
+    const messages = body.messages.map((m) => ({
+      originalIndex: m.originalIndex,
+      role: m.role as "user" | "assistant" | "system",
+      content: m.content,
+      injected: m.injected,
+      collapsed: m.collapsed,
+    }));
+    await storage.updateEdit(draft.id, messages, body.description);
+    return c.json({ success: true });
+  });
+
+  routes.post("/:id/draft/finalize", async (c) => {
+    const id = c.req.param("id");
+    const draft = await storage.getDraftEdit(id);
+    if (!draft) {
+      return c.json({ data: null, error: "no draft found" }, 404);
+    }
+    const body = await c.req.json().catch(() => ({})) as { description?: string };
+    if (body.description) {
+      await storage.updateEdit(draft.id, draft.messages, body.description);
+    }
+    await storage.finalizeEdit(draft.id);
+    return c.json({ success: true, data: { editId: draft.id } });
+  });
+
+  routes.delete("/:id/draft", async (c) => {
+    const id = c.req.param("id");
+    const draft = await storage.getDraftEdit(id);
+    if (!draft) {
+      return c.json({ success: true });
+    }
+    await storage.deleteEdit(draft.id);
+    return c.json({ success: true });
+  });
+
   routes.get("/:id/candidates", async (c) => {
     const id = c.req.param("id");
     const messages = await storage.getMessages(id);
@@ -124,6 +206,28 @@ export function createConversationRoutes(storage: StorageService): Hono {
 
   const ops = new OperationsService(storage);
 
+  routes.post("/:id/save-edit", async (c) => {
+    const id = c.req.param("id");
+    const body = await c.req.json() as {
+      messages: Array<{ role: string; content: string }>;
+      mode: "new" | "overwrite";
+      description?: string;
+    };
+    if (!body.messages?.length || !body.mode) {
+      return c.json({ error: "messages and mode required" }, 400);
+    }
+    try {
+      const editMessages = body.messages.map((m) => ({
+        role: m.role as "user" | "assistant" | "system",
+        content: m.content,
+      }));
+      const result = await ops.saveEdit(id, editMessages, body.mode, body.description);
+      return c.json({ data: result });
+    } catch (err) {
+      return c.json({ error: err instanceof Error ? err.message : "Save failed" }, 500);
+    }
+  });
+
   routes.post("/:id/archive", async (c) => {
     const id = c.req.param("id");
     await ops.archive(id);
@@ -135,6 +239,31 @@ export function createConversationRoutes(storage: StorageService): Hono {
     const body = await c.req.json() as { tags: string[] };
     await ops.tag(id, body.tags);
     return c.json({ success: true });
+  });
+
+  routes.patch("/:id/meta", async (c) => {
+    const id = c.req.param("id");
+    const conversation = await storage.getConversation(id);
+    if (!conversation) {
+      return c.json({ data: null, error: "conversation not found" }, 404);
+    }
+
+    const body = await c.req.json() as { slug?: string | null; description?: string | null; title?: string };
+
+    if (body.slug !== undefined && body.slug !== null) {
+      const slugRe = /^[a-z0-9][a-z0-9-]*[a-z0-9]$|^[a-z0-9]$/;
+      if (!slugRe.test(body.slug)) {
+        return c.json({ error: "slug must be lowercase alphanumeric with hyphens, no leading/trailing hyphens" }, 400);
+      }
+      const existing = await storage.getConversationBySlug(body.slug);
+      if (existing && existing.id !== id) {
+        return c.json({ error: `slug "${body.slug}" is already in use` }, 409);
+      }
+    }
+
+    await storage.updateConversationMeta(id, body);
+    const updated = await storage.getConversation(id);
+    return c.json({ data: updated });
   });
 
   routes.post("/:id/clone", async (c) => {

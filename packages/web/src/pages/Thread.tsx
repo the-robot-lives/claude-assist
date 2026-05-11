@@ -36,6 +36,8 @@ interface ThreadRecord {
 interface ConversationMeta {
   id: string;
   title: string;
+  slug: string | null;
+  description: string | null;
   projectPath: string;
   messageCount: number;
   startedAt: string;
@@ -55,6 +57,12 @@ export function Thread() {
   const [actionMsg, setActionMsg] = useState<string | null>(null);
   const [tagInput, setTagInput] = useState("");
   const [showTagInput, setShowTagInput] = useState(false);
+  const [editingTitle, setEditingTitle] = useState(false);
+  const [editingSlug, setEditingSlug] = useState(false);
+  const [editingDesc, setEditingDesc] = useState(false);
+  const [titleDraft, setTitleDraft] = useState("");
+  const [slugDraft, setSlugDraft] = useState("");
+  const [descDraft, setDescDraft] = useState("");
 
   useEffect(() => {
     if (!id) return;
@@ -159,6 +167,32 @@ export function Thread() {
     }
   };
 
+  const handleSaveMeta = async (field: "title" | "slug" | "description", value: string) => {
+    if (!id) return;
+    const body: Record<string, string | null> = {};
+    if (field === "slug") {
+      body.slug = value.trim() || null;
+    } else if (field === "description") {
+      body.description = value.trim() || null;
+    } else {
+      body.title = value.trim();
+    }
+    try {
+      const res = await apiFetch<{ data: ConversationMeta; error?: string }>(`/conversations/${id}/meta`, {
+        method: "PATCH",
+        body: JSON.stringify(body),
+      });
+      if (res.data && meta) {
+        setMeta({ ...meta, ...res.data });
+      }
+      setEditingTitle(false);
+      setEditingSlug(false);
+      setEditingDesc(false);
+    } catch (err) {
+      setActionMsg(`Save failed: ${err instanceof Error ? err.message : "unknown error"}`);
+    }
+  };
+
   if (loading) {
     return (
       <div className="mx-auto max-w-4xl py-12">
@@ -186,10 +220,58 @@ export function Thread() {
       {/* ── Header Card ── */}
       <div className="rounded-lg border border-border-strong bg-surface-raised p-5">
 
-        {/* Title + date */}
-        <h1 className="text-xl font-medium text-white leading-snug">{meta.title}</h1>
+        {/* Title (click to edit) */}
+        {editingTitle ? (
+          <form onSubmit={(e) => { e.preventDefault(); handleSaveMeta("title", titleDraft); }} className="flex items-center gap-2">
+            <input
+              type="text"
+              value={titleDraft}
+              onChange={(e) => setTitleDraft(e.target.value)}
+              className="flex-1 rounded-md border border-glow/30 bg-canvas px-3 py-1.5 text-xl font-medium text-white outline-none"
+              autoFocus
+              onKeyDown={(e) => { if (e.key === "Escape") setEditingTitle(false); }}
+            />
+            <button type="submit" className="btn-action text-xs">Save</button>
+            <button type="button" onClick={() => setEditingTitle(false)} className="btn-action text-xs">Cancel</button>
+          </form>
+        ) : (
+          <h1
+            className="text-xl font-medium text-white leading-snug cursor-pointer hover:text-glow transition-colors"
+            onClick={() => { setTitleDraft(meta.title); setEditingTitle(true); }}
+            title="Click to rename"
+          >
+            {meta.title}
+          </h1>
+        )}
 
+        {/* Slug + Description */}
         <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-text-dim">
+          {/* Slug */}
+          {editingSlug ? (
+            <form onSubmit={(e) => { e.preventDefault(); handleSaveMeta("slug", slugDraft); }} className="flex items-center gap-1">
+              <input
+                type="text"
+                value={slugDraft}
+                onChange={(e) => setSlugDraft(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))}
+                placeholder="my-slug"
+                className="w-32 rounded border border-glow/30 bg-canvas px-2 py-0.5 text-xs font-mono text-glow outline-none"
+                autoFocus
+                onKeyDown={(e) => { if (e.key === "Escape") setEditingSlug(false); }}
+              />
+              <button type="submit" className="text-xs text-glow hover:text-glow-bright">Save</button>
+              <button type="button" onClick={() => setEditingSlug(false)} className="text-xs text-text-dim">&times;</button>
+            </form>
+          ) : (
+            <span
+              className="cursor-pointer font-mono text-glow hover:text-glow-bright transition-colors"
+              onClick={() => { setSlugDraft(meta.slug ?? ""); setEditingSlug(true); }}
+              title="Click to set/change slug"
+            >
+              {meta.slug ? `@${meta.slug}` : meta.id.slice(0, 8)}
+            </span>
+          )}
+
+          <span className="text-border-strong">|</span>
           <span title="Project working directory">
             <span className="text-glow font-medium">{shortProject(meta.projectPath)}</span>
           </span>
@@ -202,6 +284,33 @@ export function Thread() {
               <span className="text-border-strong">|</span>
               <span className="rounded bg-surface-active px-1.5 py-0.5">{meta.status}</span>
             </>
+          )}
+        </div>
+
+        {/* Description (click to edit) */}
+        <div className="mt-1.5">
+          {editingDesc ? (
+            <form onSubmit={(e) => { e.preventDefault(); handleSaveMeta("description", descDraft); }} className="flex items-center gap-2">
+              <input
+                type="text"
+                value={descDraft}
+                onChange={(e) => setDescDraft(e.target.value)}
+                placeholder="Add a description..."
+                className="flex-1 rounded border border-border-subtle bg-canvas px-2 py-1 text-xs text-text-primary outline-none"
+                autoFocus
+                onKeyDown={(e) => { if (e.key === "Escape") setEditingDesc(false); }}
+              />
+              <button type="submit" className="text-xs text-glow">Save</button>
+              <button type="button" onClick={() => setEditingDesc(false)} className="text-xs text-text-dim">&times;</button>
+            </form>
+          ) : (
+            <p
+              className="cursor-pointer text-xs text-text-muted italic hover:text-text-primary transition-colors"
+              onClick={() => { setDescDraft(meta.description ?? ""); setEditingDesc(true); }}
+              title="Click to edit description"
+            >
+              {meta.description ?? "No description — click to add"}
+            </p>
           )}
         </div>
 

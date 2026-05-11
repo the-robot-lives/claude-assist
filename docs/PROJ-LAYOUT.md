@@ -13,6 +13,13 @@ claude-assist/
 │   ├── SITEMAP.md                  #   Information architecture
 │   ├── style-guide.md              #   Design system tokens and rules
 │   └── README.md                   #   Design overview
+├── docs/                           # Project documentation
+│   ├── arch/                      #   Architecture detail pages
+│   ├── layout/                    #   Layout detail pages
+│   ├── PROJ-ARCH.md               #   Architecture overview
+│   ├── PROJ-ARCH.summary.md       #   Architecture summary
+│   ├── PROJ-LAYOUT.md             #   This file — project structure
+│   └── PROJ-LAYOUT.summary.md     #   Layout summary
 ├── .gitignore                      # Ignored files
 ├── INSTALL.md                      # Setup and installation guide
 ├── package.json                    # Root workspace — scripts: dev:api, dev:web, dev:cli

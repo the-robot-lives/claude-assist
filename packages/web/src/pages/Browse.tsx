@@ -135,8 +135,11 @@ export function Browse() {
                 onClick={() => navigate(`/thread/${c.id}`)}
                 className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-left hover:bg-surface-active transition-colors"
               >
-                <span className="font-mono text-xs text-text-dim">{c.id.slice(0, 8)}</span>
+                <span className="font-mono text-xs text-text-dim">{c.slug ?? c.id.slice(0, 8)}</span>
                 <span className="flex-1 truncate text-sm text-text-primary">{c.title}</span>
+                {c.description && (
+                  <span className="max-w-[200px] truncate text-xs text-text-muted italic">{c.description}</span>
+                )}
                 <span className="text-xs text-text-dim">{c.messageCount} msgs</span>
                 <span className="text-xs text-text-dim">{new Date(c.updatedAt).toLocaleDateString()}</span>
                 {c.status !== "active" && (

@@ -1,7 +1,8 @@
-import { createHash } from "node:crypto";
-import { renameSync, mkdirSync, existsSync, readdirSync } from "node:fs";
+import { createHash, randomUUID } from "node:crypto";
+import { renameSync, mkdirSync, existsSync, readdirSync, writeFileSync, readFileSync } from "node:fs";
 import { join, basename, dirname } from "node:path";
 import type { StorageService } from "./storage.ts";
+import type { EditedMessage } from "@claude-assist/shared";
 
 export class OperationsService {
   constructor(private storage: StorageService) {}
@@ -37,6 +38,82 @@ export class OperationsService {
     const clonedMessages = messages.map((m) => ({ ...m, conversationId: newId }));
     await this.storage.insertMessages(newId, clonedMessages);
     return newId;
+  }
+
+  async saveEdit(
+    conversationId: string,
+    editMessages: EditedMessage[],
+    mode: "new" | "overwrite",
+    description?: string,
+  ): Promise<{ id: string; sourcePath: string }> {
+    const conv = await this.storage.getConversation(conversationId);
+    if (!conv) throw new Error("Conversation not found");
+
+    const sessionId = mode === "new" ? randomUUID() : basename(conv.sourcePath, ".jsonl");
+    const dir = dirname(conv.sourcePath);
+    const filePath = mode === "new" ? join(dir, `${sessionId}.jsonl`) : conv.sourcePath;
+
+    const lines: string[] = [];
+
+    lines.push(JSON.stringify({
+      type: "permission-mode",
+      permissionMode: "default",
+      sessionId,
+    }));
+
+    const now = new Date().toISOString();
+    for (let i = 0; i < editMessages.length; i++) {
+      const msg = editMessages[i];
+      const uuid = randomUUID();
+      const record: Record<string, unknown> = {
+        parentUuid: i === 0 ? null : undefined,
+        isSidechain: false,
+        type: msg.role === "user" ? "user" : "assistant",
+        message: {
+          role: msg.role,
+          content: msg.role === "assistant"
+            ? [{ type: "text", text: msg.content }]
+            : msg.content,
+          ...(msg.role === "assistant" ? { model: "<edited>", stop_reason: "end_turn" } : {}),
+        },
+        uuid,
+        timestamp: now,
+        sessionId,
+      };
+      lines.push(JSON.stringify(record));
+    }
+
+    if (description) {
+      lines.push(JSON.stringify({ type: "customTitle", customTitle: description }));
+    }
+
+    writeFileSync(filePath, lines.join("\n") + "\n", "utf-8");
+
+    const newId = mode === "new"
+      ? createHash("sha256").update(`${filePath}:${now}`).digest("hex").slice(0, 16)
+      : conversationId;
+
+    await this.storage.upsertConversation({
+      id: newId,
+      projectPath: conv.projectPath,
+      startedAt: now,
+      updatedAt: now,
+      messageCount: editMessages.length,
+      title: description ?? conv.title,
+      tags: conv.tags,
+      status: "active",
+      sourcePath: filePath,
+    });
+
+    const storedMessages = editMessages.map((m) => ({
+      conversationId: newId,
+      role: m.role,
+      content: m.content,
+      timestamp: now,
+    }));
+    await this.storage.insertMessages(newId, storedMessages);
+
+    return { id: newId, sourcePath: filePath };
   }
 
   async rehome(conversationId: string, targetProject: string): Promise<void> {

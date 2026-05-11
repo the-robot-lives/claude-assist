@@ -4,13 +4,22 @@ import {
   parseJsonlFile,
   isUserMessage,
   isAssistantMessage,
+  isCustomTitle,
   extractTextContent,
   type BaseRecord,
   type UserMessage,
   type AssistantMessage,
+  type CustomTitleRecord,
 } from "@claude-assist/shared";
 import { StorageService, type StoredMessage } from "./storage.ts";
 import type { EmbeddingService } from "./embeddings.ts";
+
+export interface IndexProgress {
+  phase: "idle" | "scanning" | "indexing" | "embedding";
+  current: number;
+  total: number;
+  currentFile?: string;
+}
 
 export class IndexerService {
   private storage: StorageService;
@@ -19,6 +28,7 @@ export class IndexerService {
   private watcher: unknown = null;
   private debounceTimer: ReturnType<typeof setTimeout> | null = null;
   private fileModTimes = new Map<string, number>();
+  private _progress: IndexProgress = { phase: "idle", current: 0, total: 0 };
 
   constructor(storage: StorageService, watchPaths: string[] = [], embeddings?: EmbeddingService) {
     this.storage = storage;
@@ -26,49 +36,69 @@ export class IndexerService {
     this.watchPaths = watchPaths;
   }
 
+  get progress(): IndexProgress {
+    return { ...this._progress };
+  }
+
   async indexAll(): Promise<{ indexed: number; errors: number; skipped: number }> {
     this.storage.setIndexStatus("indexing");
+    this._progress = { phase: "scanning", current: 0, total: 0 };
+
+    const allFiles: string[] = [];
+    for (const watchPath of this.watchPaths) {
+      allFiles.push(...findJsonlFiles(watchPath));
+    }
+
+    this._progress = { phase: "indexing", current: 0, total: allFiles.length };
     let indexed = 0;
     let errors = 0;
     let skipped = 0;
 
-    for (const watchPath of this.watchPaths) {
-      const jsonlFiles = findJsonlFiles(watchPath);
-      for (const filePath of jsonlFiles) {
-        try {
-          const mtime = statSync(filePath).mtimeMs;
-          const prevMtime = this.fileModTimes.get(filePath);
-          if (prevMtime && prevMtime >= mtime) {
-            skipped++;
-            continue;
-          }
-          await this.indexFile(filePath);
-          this.fileModTimes.set(filePath, mtime);
-          indexed++;
-        } catch (e) {
-          errors++;
-          console.error(`Failed to index ${filePath}:`, e instanceof Error ? e.message : e);
+    for (let i = 0; i < allFiles.length; i++) {
+      const filePath = allFiles[i];
+      this._progress = { phase: "indexing", current: i + 1, total: allFiles.length, currentFile: basename(filePath) };
+      try {
+        const mtime = statSync(filePath).mtimeMs;
+        const prevMtime = this.fileModTimes.get(filePath);
+        if (prevMtime && prevMtime >= mtime) {
+          skipped++;
+          continue;
         }
+        await this.indexFile(filePath);
+        this.fileModTimes.set(filePath, mtime);
+        indexed++;
+      } catch (e) {
+        errors++;
+        console.error(`Failed to index ${filePath}:`, e instanceof Error ? e.message : e);
       }
     }
 
+    this._progress = { phase: "idle", current: 0, total: 0 };
     this.storage.setIndexStatus("idle");
     return { indexed, errors, skipped };
   }
 
   async indexFile(filePath: string): Promise<void> {
     const content = readFileSync(filePath, "utf-8");
-    const records: BaseRecord[] = [];
+    const allRecords: Array<BaseRecord | CustomTitleRecord> = [];
     for (const record of parseJsonlFile(content)) {
-      records.push(record);
+      allRecords.push(record);
     }
 
-    if (records.length === 0) return;
+    if (allRecords.length === 0) return;
 
-    const contentRecords = records.filter(
+    const contentRecords = allRecords.filter(
       (r): r is UserMessage | AssistantMessage =>
         isUserMessage(r) || isAssistantMessage(r),
     );
+
+    // Extract the last custom-title metadata line (Claude Code appends these)
+    let customTitle: string | null = null;
+    for (const record of allRecords) {
+      if (isCustomTitle(record) && record.customTitle) {
+        customTitle = record.customTitle;
+      }
+    }
 
     if (contentRecords.length === 0) return;
 
@@ -79,7 +109,8 @@ export class IndexerService {
 
     const conversationId = StorageService.generateId(filePath, firstTimestamp);
     const projectPath = decodeProjectPath(dirname(filePath));
-    const title = generateTitle(contentRecords);
+    const generatedTitle = generateTitle(contentRecords);
+    const title = customTitle ?? generatedTitle;
 
     const existing = await this.storage.getConversation(conversationId);
     await this.storage.upsertConversation({
@@ -159,6 +190,74 @@ export class IndexerService {
   getStatus(): { status: string; lastIndexed: string | null; conversationCount: number } {
     return this.storage.getIndexStatus();
   }
+
+  async scanPreview(): Promise<ScanPreview> {
+    const projects: ScanProject[] = [];
+    let totalFiles = 0;
+    let totalNewFiles = 0;
+
+    for (const watchPath of this.watchPaths) {
+      const dirEntries = new Map<string, string[]>();
+
+      const jsonlFiles = findJsonlFiles(watchPath);
+      for (const filePath of jsonlFiles) {
+        const dirName = basename(dirname(filePath));
+        if (!dirEntries.has(dirName)) dirEntries.set(dirName, []);
+        dirEntries.get(dirName)!.push(filePath);
+      }
+
+      for (const [dirName, files] of dirEntries) {
+        const projectPath = decodeProjectPath(join(watchPath, dirName));
+        let newCount = 0;
+        for (const f of files) {
+          const mtime = statSync(f).mtimeMs;
+          const prev = this.fileModTimes.get(f);
+          if (!prev || prev < mtime) newCount++;
+        }
+        projects.push({
+          projectPath,
+          encodedDir: dirName,
+          fileCount: files.length,
+          newOrChanged: newCount,
+        });
+        totalFiles += files.length;
+        totalNewFiles += newCount;
+      }
+    }
+
+    projects.sort((a, b) => b.fileCount - a.fileCount);
+
+    const embeddingProvider = this.embeddings?.ready ? "local" : "none";
+    const estimatedTokens = totalNewFiles * 2000;
+    const estimatedCost = embeddingProvider === "local" ? 0 : estimatedTokens * 0.00001;
+
+    return {
+      watchPaths: this.watchPaths,
+      projects,
+      totalFiles,
+      totalNewFiles,
+      embeddingProvider,
+      estimatedTokens,
+      estimatedCost,
+    };
+  }
+}
+
+export interface ScanProject {
+  projectPath: string;
+  encodedDir: string;
+  fileCount: number;
+  newOrChanged: number;
+}
+
+export interface ScanPreview {
+  watchPaths: string[];
+  projects: ScanProject[];
+  totalFiles: number;
+  totalNewFiles: number;
+  embeddingProvider: string;
+  estimatedTokens: number;
+  estimatedCost: number;
 }
 
 function findJsonlFiles(dir: string): string[] {

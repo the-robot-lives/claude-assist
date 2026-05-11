@@ -37,20 +37,20 @@ graph TB
 | IndexerService | api | Scans JSONL files, parses conversations, watches for changes |
 | EmbeddingService | api | Local embeddings via `all-MiniLM-L6-v2` (384-dim) |
 | SearchService | api | Full-text search (FTS5) + semantic search (cosine similarity) |
-| Hono routes | api | REST endpoints for conversations, search, datasets, prompts, projects |
-| Web UI | web | React SPA with routing, markdown rendering, Tailwind styling |
+| Hono routes | api | REST endpoints for conversations, search, datasets, prompts, projects, tags |
+| Web UI | web | React SPA — Explore (unified search/browse), thread viewer, editor, project detail |
 | CLI | cli | Ink-based TUI — search, list, show, index commands |
 | Shared types | shared | TypeScript types, JSONL parsers, API launcher utility |
 
 ## Data Flow
 
-Conversation JSONL files are discovered by the IndexerService, parsed into structured records, and stored in SQLite. Messages are optionally embedded for semantic search. Clients query via REST.
+Conversation JSONL files are discovered by the IndexerService, parsed into structured records, and stored in SQLite. Messages are embedded for semantic search via `all-MiniLM-L6-v2`. Clients query via REST. File watching (chokidar) enables incremental re-indexing.
 
 -> *See [arch/data-flow.md](arch/data-flow.md) for details*
 
 ## Storage
 
-Single SQLite database at `~/.claude-assist/claude-assist.db`. WAL journal mode for concurrent reads. sqlite-vec extension for vector similarity search.
+Single SQLite database at `~/.claude-assist/claude-assist.db`. WAL journal mode for concurrent reads. sqlite-vec extension for vector similarity search (graceful degradation if unavailable). Six core tables plus FTS5 and vec0 virtual tables.
 
 -> *See [arch/storage.md](arch/storage.md) for details*
 
@@ -70,6 +70,7 @@ Single SQLite database at `~/.claude-assist/claude-assist.db`. WAL journal mode 
 | API framework | Hono |
 | Database | better-sqlite3 + sqlite-vec |
 | Embeddings | @huggingface/transformers (all-MiniLM-L6-v2) |
+| File watching | chokidar |
 | Web framework | React 18 + React Router |
 | Build tool | Vite |
 | Styling | Tailwind CSS |

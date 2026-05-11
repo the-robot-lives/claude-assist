@@ -7,7 +7,9 @@ export type RecordType =
   | "system"
   | "file-history-snapshot"
   | "last-prompt"
-  | "queue-operation";
+  | "queue-operation"
+  | "custom-title"
+  | "agent-name";
 
 export interface BaseRecord {
   uuid: string;
@@ -69,6 +71,8 @@ export interface Conversation {
   updatedAt: Date;
   messageCount: number;
   title: string;
+  slug: string | null;
+  description: string | null;
   summary: string | null;
   tags: string[];
   status: "active" | "archived" | "edited";
@@ -172,6 +176,25 @@ export interface ApiError {
 }
 
 // Config
+export type LlmProvider =
+  | "anthropic"
+  | "openai"
+  | "ollama"
+  | "litellm"
+  | "groq"
+  | "cerebras"
+  | "deepseek"
+  | "zai"
+  | "custom";
+
+export interface LlmConfig {
+  provider: LlmProvider;
+  model?: string;
+  apiKey?: string;
+  baseUrl?: string;
+  apiType?: "openai" | "anthropic";
+}
+
 export interface AppConfig {
   indexPaths: string[];
   embedding: {
@@ -179,13 +202,28 @@ export interface AppConfig {
     model?: string;
     apiKey?: string;
   };
-  llm?: {
-    provider: string;
-    model?: string;
-    apiKey?: string;
-  };
+  llm?: LlmConfig;
   server: {
     port: number;
     host: string;
   };
+}
+
+// LLM inference
+export interface LlmCompletionRequest {
+  messages: Array<{ role: "system" | "user" | "assistant"; content: string }>;
+  model?: string;
+  maxTokens?: number;
+  temperature?: number;
+}
+
+export interface LlmCompletionResponse {
+  content: string;
+  model: string;
+  provider: string;
+  usage?: {
+    inputTokens: number;
+    outputTokens: number;
+  };
+  finishReason: string;
 }

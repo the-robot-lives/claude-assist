@@ -5,9 +5,9 @@ import { ensureApi } from "@claude-assist/shared";
 import { App } from "./src/app.tsx";
 
 const args = process.argv.slice(2);
-const command = args[0] ?? "interactive";
+const command = args[0] ?? "help";
 
-const NEEDS_API = new Set(["search", "list", "show", "edit", "convert", "dataset", "serve", "merge", "rehome", "index"]);
+const NEEDS_API = new Set(["search", "list", "show", "edit", "convert", "dataset", "serve", "merge", "rehome", "index", "interactive"]);
 
 async function main() {
   if (NEEDS_API.has(command)) {

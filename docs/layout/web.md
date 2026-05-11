@@ -17,6 +17,8 @@ web/
 │   │   ├── DatasetDetail.tsx   #   Single dataset view
 │   │   ├── Datasets.tsx        #   Dataset listing
 │   │   ├── Edit.tsx            #   Conversation editor
+│   │   ├── Explore.tsx         #   Exploratory conversation browser
+│   │   ├── ProjectDetail.tsx   #   Single project detail view
 │   │   ├── Projects.tsx        #   Project browser
 │   │   ├── Prompts.tsx         #   Prompt extraction view
 │   │   ├── Search.tsx          #   Full-text + semantic search

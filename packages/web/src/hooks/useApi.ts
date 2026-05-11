@@ -53,6 +53,8 @@ interface ConversationsResponse {
   data: Array<{
     id: string;
     title: string;
+    slug: string | null;
+    description: string | null;
     projectPath: string;
     messageCount: number;
     startedAt: string;

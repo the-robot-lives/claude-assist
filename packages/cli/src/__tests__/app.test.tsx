@@ -31,11 +31,10 @@ beforeEach(() => {
 });
 
 describe("App", () => {
-  test("renders help screen for 'interactive' command", () => {
+  test("renders interactive TUI for 'interactive' command", () => {
     const { lastFrame } = render(<App command="interactive" args={[]} />);
     const output = lastFrame() ?? "";
     expect(output).toContain("claude-assist");
-    expect(output).toContain("Commands:");
   });
 
   test("renders error for unknown command", () => {

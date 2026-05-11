@@ -16,7 +16,13 @@ export function createIndexRoutes(indexer: IndexerService): Hono {
 
   routes.get("/status", async (c) => {
     const status = indexer.getStatus();
-    return c.json({ data: status });
+    const progress = indexer.progress;
+    return c.json({ data: { ...status, progress } });
+  });
+
+  routes.get("/preview", async (c) => {
+    const preview = await indexer.scanPreview();
+    return c.json({ data: preview });
   });
 
   return routes;

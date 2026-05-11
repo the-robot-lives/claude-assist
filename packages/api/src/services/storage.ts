@@ -73,6 +73,8 @@ export class StorageService {
         updated_at    TEXT NOT NULL,
         message_count INTEGER NOT NULL DEFAULT 0,
         title         TEXT NOT NULL DEFAULT '',
+        slug          TEXT UNIQUE,
+        description   TEXT,
         summary       TEXT,
         tags          TEXT NOT NULL DEFAULT '[]',
         status        TEXT NOT NULL DEFAULT 'active',
@@ -123,7 +125,9 @@ export class StorageService {
         id          TEXT PRIMARY KEY,
         source_id   TEXT NOT NULL,
         created_at  TEXT NOT NULL,
+        updated_at  TEXT NOT NULL DEFAULT '',
         description TEXT NOT NULL DEFAULT '',
+        status      TEXT NOT NULL DEFAULT 'finalized',
         messages    TEXT NOT NULL DEFAULT '[]',
         FOREIGN KEY (source_id) REFERENCES conversations(id)
       );
@@ -193,7 +197,42 @@ export class StorageService {
       );
     `);
 
+    this.db.exec(`
+      CREATE TABLE IF NOT EXISTS settings (
+        key        TEXT PRIMARY KEY,
+        value      TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      );
+    `);
+
+    this.migrateThreadEdits();
+    this.migrateConversationsMeta();
     this.initVectorTable();
+  }
+
+  private migrateThreadEdits(): void {
+    const db = this.getDb();
+    const cols = db.prepare("PRAGMA table_info(thread_edits)").all() as Array<{ name: string }>;
+    const colNames = new Set(cols.map((c) => c.name));
+    if (!colNames.has("status")) {
+      db.exec("ALTER TABLE thread_edits ADD COLUMN status TEXT NOT NULL DEFAULT 'finalized'");
+    }
+    if (!colNames.has("updated_at")) {
+      db.exec("ALTER TABLE thread_edits ADD COLUMN updated_at TEXT NOT NULL DEFAULT ''");
+    }
+  }
+
+  private migrateConversationsMeta(): void {
+    const db = this.getDb();
+    const cols = db.prepare("PRAGMA table_info(conversations)").all() as Array<{ name: string }>;
+    const colNames = new Set(cols.map((c) => c.name));
+    if (!colNames.has("slug")) {
+      db.exec("ALTER TABLE conversations ADD COLUMN slug TEXT");
+      db.exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_conversations_slug ON conversations(slug)");
+    }
+    if (!colNames.has("description")) {
+      db.exec("ALTER TABLE conversations ADD COLUMN description TEXT");
+    }
   }
 
   private initVectorTable(): void {
@@ -329,6 +368,33 @@ export class StorageService {
     );
   }
 
+  async updateConversationMeta(id: string, updates: { slug?: string | null; description?: string | null; title?: string }): Promise<void> {
+    const db = this.getDb();
+    const sets: string[] = [];
+    const params: unknown[] = [];
+    if (updates.slug !== undefined) {
+      sets.push("slug = ?");
+      params.push(updates.slug);
+    }
+    if (updates.description !== undefined) {
+      sets.push("description = ?");
+      params.push(updates.description);
+    }
+    if (updates.title !== undefined) {
+      sets.push("title = ?");
+      params.push(updates.title);
+    }
+    if (sets.length === 0) return;
+    params.push(id);
+    db.prepare(`UPDATE conversations SET ${sets.join(", ")} WHERE id = ?`).run(...params);
+  }
+
+  async getConversationBySlug(slug: string): Promise<Conversation | null> {
+    const db = this.getDb();
+    const row = db.prepare("SELECT * FROM conversations WHERE slug = ?").get(slug) as ConversationRow | undefined;
+    return row ? rowToConversation(row) : null;
+  }
+
   async insertMessages(conversationId: string, messages: StoredMessage[]): Promise<void> {
     const db = this.getDb();
     db.prepare("DELETE FROM messages WHERE conversation_id = ?").run(conversationId);
@@ -455,20 +521,20 @@ export class StorageService {
     }
   }
 
-  async createEdit(sourceId: string, description: string, messages: EditedMessage[]): Promise<ThreadEdit> {
+  async createEdit(sourceId: string, description: string, messages: EditedMessage[], status: "draft" | "finalized" = "finalized"): Promise<ThreadEdit> {
     const db = this.getDb();
     const id = createHash("sha256").update(`${sourceId}:${Date.now()}`).digest("hex").slice(0, 16);
-    const createdAt = new Date().toISOString();
+    const now = new Date().toISOString();
     db.prepare(
-      "INSERT INTO thread_edits (id, source_id, created_at, description, messages) VALUES (?, ?, ?, ?, ?)",
-    ).run(id, sourceId, createdAt, description, JSON.stringify(messages));
-    return { id, sourceId, createdAt: new Date(createdAt), description, messages };
+      "INSERT INTO thread_edits (id, source_id, created_at, updated_at, description, status, messages) VALUES (?, ?, ?, ?, ?, ?, ?)",
+    ).run(id, sourceId, now, now, description, status, JSON.stringify(messages));
+    return { id, sourceId, createdAt: new Date(now), description, messages };
   }
 
   async getEdits(conversationId: string): Promise<ThreadEdit[]> {
     const db = this.getDb();
     const rows = db.prepare(
-      "SELECT * FROM thread_edits WHERE source_id = ? ORDER BY created_at DESC",
+      "SELECT * FROM thread_edits WHERE source_id = ? AND status = 'finalized' ORDER BY created_at DESC",
     ).all(conversationId) as EditRow[];
     return rows.map(rowToEdit);
   }
@@ -477,6 +543,37 @@ export class StorageService {
     const db = this.getDb();
     const row = db.prepare("SELECT * FROM thread_edits WHERE id = ?").get(editId) as EditRow | undefined;
     return row ? rowToEdit(row) : null;
+  }
+
+  async getDraftEdit(conversationId: string): Promise<ThreadEdit | null> {
+    const db = this.getDb();
+    const row = db.prepare(
+      "SELECT * FROM thread_edits WHERE source_id = ? AND status = 'draft' ORDER BY updated_at DESC LIMIT 1",
+    ).get(conversationId) as EditRow | undefined;
+    return row ? rowToEdit(row) : null;
+  }
+
+  async updateEdit(editId: string, messages: EditedMessage[], description?: string): Promise<void> {
+    const db = this.getDb();
+    const now = new Date().toISOString();
+    if (description !== undefined) {
+      db.prepare("UPDATE thread_edits SET messages = ?, description = ?, updated_at = ? WHERE id = ?")
+        .run(JSON.stringify(messages), description, now, editId);
+    } else {
+      db.prepare("UPDATE thread_edits SET messages = ?, updated_at = ? WHERE id = ?")
+        .run(JSON.stringify(messages), now, editId);
+    }
+  }
+
+  async finalizeEdit(editId: string): Promise<void> {
+    const db = this.getDb();
+    const now = new Date().toISOString();
+    db.prepare("UPDATE thread_edits SET status = 'finalized', updated_at = ? WHERE id = ?").run(now, editId);
+  }
+
+  async deleteEdit(editId: string): Promise<void> {
+    const db = this.getDb();
+    db.prepare("DELETE FROM thread_edits WHERE id = ?").run(editId);
   }
 
   async createPrompt(prompt: {
@@ -629,6 +726,28 @@ export class StorageService {
     db.prepare("DELETE FROM tag_metadata WHERE name = ?").run(name);
   }
 
+  getSetting(key: string): string | null {
+    const db = this.getDb();
+    const row = db.prepare("SELECT value FROM settings WHERE key = ?").get(key) as { value: string } | undefined;
+    return row?.value ?? null;
+  }
+
+  setSetting(key: string, value: string): void {
+    const db = this.getDb();
+    const now = new Date().toISOString();
+    db.prepare(
+      "INSERT INTO settings (key, value, updated_at) VALUES (?, ?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at",
+    ).run(key, value, now);
+  }
+
+  getAllSettings(): Record<string, string> {
+    const db = this.getDb();
+    const rows = db.prepare("SELECT key, value FROM settings").all() as Array<{ key: string; value: string }>;
+    const result: Record<string, string> = {};
+    for (const row of rows) result[row.key] = row.value;
+    return result;
+  }
+
   close(): void {
     this.db?.close();
     this.db = null;
@@ -646,6 +765,8 @@ interface ConversationRow {
   updated_at: string;
   message_count: number;
   title: string;
+  slug: string | null;
+  description: string | null;
   summary: string | null;
   tags: string;
   status: string;
@@ -660,6 +781,8 @@ function rowToConversation(row: ConversationRow): Conversation {
     updatedAt: new Date(row.updated_at),
     messageCount: row.message_count,
     title: row.title,
+    slug: row.slug,
+    description: row.description,
     summary: row.summary,
     tags: JSON.parse(row.tags),
     status: row.status as Conversation["status"],
@@ -671,7 +794,9 @@ interface EditRow {
   id: string;
   source_id: string;
   created_at: string;
+  updated_at: string;
   description: string;
+  status: string;
   messages: string;
 }
 

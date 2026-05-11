@@ -1,54 +1,139 @@
 import { Hono } from "hono";
-import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
-import { join, dirname } from "node:path";
+import { readFileSync, existsSync } from "node:fs";
+import { join } from "node:path";
 import { homedir } from "node:os";
 import type { AppConfig } from "@claude-assist/shared";
+import type { StorageService } from "../services/storage.ts";
+import type { LlmService } from "../services/llm.ts";
 
-function getConfigPath(): string {
-  const configDir = process.env.CLAUDE_ASSIST_DATA_DIR ?? join(homedir(), ".claude-assist");
-  return join(configDir, "config.json");
-}
+const CONFIG_KEY = "app_config";
 
-function loadConfig(): AppConfig {
-  const defaults: AppConfig = {
-    indexPaths: [join(homedir(), ".claude", "projects")],
-    embedding: { provider: "local", model: "all-MiniLM-L6-v2" },
-    server: { port: 3100, host: "localhost" },
-  };
+const DEFAULTS: AppConfig = {
+  indexPaths: [join(homedir(), ".claude", "projects")],
+  embedding: { provider: "local", model: "all-MiniLM-L6-v2" },
+  server: { port: 3100, host: "localhost" },
+};
 
-  try {
-    if (existsSync(getConfigPath())) {
-      const raw = JSON.parse(readFileSync(getConfigPath(), "utf-8"));
-      return { ...defaults, ...raw };
-    }
-  } catch {
-    // Fall through to defaults
+const LLM_ENV_KEYS: Record<string, string> = {
+  anthropic: "ANTHROPIC_API_KEY",
+  openai: "OPENAI_API_KEY",
+  groq: "GROQ_API_KEY",
+  cerebras: "CEREBRAS_API_KEY",
+  deepseek: "DEEPSEEK_API_KEY",
+  zai: "ZAI_API_KEY",
+  litellm: "LITELLM_API_KEY",
+};
+
+function applyEnvOverlays(config: AppConfig): AppConfig {
+  // Embedding key overlays
+  const embeddingEnvKey = LLM_ENV_KEYS[config.embedding.provider];
+  if (embeddingEnvKey && process.env[embeddingEnvKey]) {
+    config.embedding.apiKey = process.env[embeddingEnvKey];
   }
-  return defaults;
+
+  // LLM key + URL overlays
+  if (config.llm?.provider) {
+    const llmEnvKey = LLM_ENV_KEYS[config.llm.provider];
+    if (llmEnvKey && process.env[llmEnvKey]) {
+      config.llm.apiKey = process.env[llmEnvKey];
+    }
+    if (config.llm.provider === "litellm" && !config.llm.apiKey && process.env.OPENAI_API_KEY) {
+      config.llm.apiKey = process.env.OPENAI_API_KEY;
+    }
+    if (config.llm.provider === "ollama" && process.env.OLLAMA_BASE_URL) {
+      config.llm.baseUrl = process.env.OLLAMA_BASE_URL;
+    }
+    if (config.llm.provider === "litellm" && process.env.LITELLM_BASE_URL) {
+      config.llm.baseUrl = process.env.LITELLM_BASE_URL;
+    }
+  }
+
+  return config;
 }
 
-function saveConfig(config: AppConfig): void {
-  const configFile = getConfigPath();
-  mkdirSync(dirname(configFile), { recursive: true });
-  writeFileSync(configFile, JSON.stringify(config, null, 2), "utf-8");
+function maskKey(key: string | undefined): string | undefined {
+  if (!key || key.length < 8) return key ? "***" : undefined;
+  return key.slice(0, 3) + "..." + key.slice(-4);
 }
 
-export const configRoutes = new Hono();
+function sanitizeForResponse(config: AppConfig): AppConfig {
+  const safe = structuredClone(config);
+  safe.embedding.apiKey = maskKey(safe.embedding.apiKey);
+  if (safe.llm) safe.llm.apiKey = maskKey(safe.llm.apiKey);
+  return safe;
+}
 
-configRoutes.get("/", async (c) => {
-  const config = loadConfig();
-  return c.json({ data: config });
-});
+function migrateLegacyConfig(storage: StorageService): Partial<AppConfig> {
+  const legacyPath = join(
+    process.env.CLAUDE_ASSIST_DATA_DIR ?? join(homedir(), ".claude-assist"),
+    "config.json",
+  );
+  if (!existsSync(legacyPath)) return {};
+  try {
+    const raw = JSON.parse(readFileSync(legacyPath, "utf-8")) as Partial<AppConfig>;
+    storage.setSetting(CONFIG_KEY, JSON.stringify(raw));
+    return raw;
+  } catch {
+    return {};
+  }
+}
 
-configRoutes.patch("/", async (c) => {
-  const current = loadConfig();
-  const updates = await c.req.json() as Partial<AppConfig>;
+function loadConfig(storage: StorageService): AppConfig {
+  let dbConfig: Partial<AppConfig> = {};
+  const raw = storage.getSetting(CONFIG_KEY);
+  if (raw) {
+    dbConfig = JSON.parse(raw);
+  } else {
+    dbConfig = migrateLegacyConfig(storage);
+  }
 
-  if (updates.indexPaths) current.indexPaths = updates.indexPaths;
-  if (updates.embedding) current.embedding = { ...current.embedding, ...updates.embedding };
-  if (updates.server) current.server = { ...current.server, ...updates.server };
-  if (updates.llm) current.llm = { ...current.llm, ...updates.llm };
+  const merged: AppConfig = {
+    ...DEFAULTS,
+    ...dbConfig,
+    embedding: { ...DEFAULTS.embedding, ...dbConfig.embedding },
+    server: { ...DEFAULTS.server, ...dbConfig.server },
+  };
+  if (dbConfig.llm) merged.llm = dbConfig.llm;
 
-  saveConfig(current);
-  return c.json({ data: current });
-});
+  return applyEnvOverlays(merged);
+}
+
+export function createConfigRoutes(storage: StorageService, llmService: LlmService): Hono {
+  const routes = new Hono();
+
+  routes.get("/", (c) => {
+    const config = loadConfig(storage);
+    return c.json({ data: sanitizeForResponse(config) });
+  });
+
+  routes.patch("/", async (c) => {
+    const current = loadConfig(storage);
+    const updates = await c.req.json() as Partial<AppConfig>;
+
+    if (updates.indexPaths) current.indexPaths = updates.indexPaths;
+    if (updates.embedding) current.embedding = { ...current.embedding, ...updates.embedding };
+    if (updates.server) current.server = { ...current.server, ...updates.server };
+    if (updates.llm) current.llm = { ...current.llm, ...updates.llm };
+
+    // Persist to SQLite (strip env-overlay keys so they don't leak into DB)
+    const toStore = structuredClone(current);
+    const embEnvKey = LLM_ENV_KEYS[toStore.embedding.provider];
+    if (embEnvKey && process.env[embEnvKey]) delete toStore.embedding.apiKey;
+    if (toStore.llm?.provider) {
+      const llmEnvKey = LLM_ENV_KEYS[toStore.llm.provider];
+      if (llmEnvKey && process.env[llmEnvKey]) delete toStore.llm.apiKey;
+    }
+    storage.setSetting(CONFIG_KEY, JSON.stringify(toStore));
+
+    // Hot-reconfigure LLM service if LLM config changed
+    if (updates.llm) {
+      await llmService.reconfigure(current.llm);
+    }
+
+    return c.json({ data: sanitizeForResponse(current) });
+  });
+
+  return routes;
+}
+
+export { loadConfig };

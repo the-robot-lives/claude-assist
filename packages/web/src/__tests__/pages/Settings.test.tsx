@@ -27,10 +27,10 @@ describe("Settings", () => {
     });
   });
 
-  test("renders 'Index Configuration' section", async () => {
+  test("renders 'Index & Embeddings' section", async () => {
     render(<MemoryRouter><Settings /></MemoryRouter>);
     await waitFor(() => {
-      expect(screen.getByText("Index Configuration")).toBeInTheDocument();
+      expect(screen.getByText("Index & Embeddings")).toBeInTheDocument();
     });
   });
 

@@ -12,7 +12,8 @@ api/
 │   │   ├── index-routes.ts     #   /index — trigger re-indexing
 │   │   ├── projects.ts         #   /projects — project metadata
 │   │   ├── prompts.ts          #   /prompts — prompt extraction
-│   │   └── search.ts           #   /search — full-text + semantic search
+│   │   ├── search.ts           #   /search — full-text + semantic search
+│   │   └── tags.ts             #   /tags — tag management
 │   ├── services/               # Core business logic
 │   │   ├── converter.ts        #   JSONL → structured conversation objects
 │   │   ├── editor.ts           #   Conversation editing operations
