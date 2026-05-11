@@ -1,0 +1,27 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --void: #09090B;
+    --canvas: #0F0F14;
+    --surface: #18181F;
+    --surface-raised: #22222E;
+    --surface-active: #2A2A38;
+    --border-subtle: #2A2A3A;
+    --border-strong: #3A3A4F;
+    --text-dim: #5C5C72;
+    --text-muted: #7A7A94;
+    --text-secondary: #9898B0;
+    --text-primary: #CDCDE0;
+    --text-bright: #EDEDF4;
+    --glow: #06B6D4;
+    --glow-bright: #22D3EE;
+  }
+
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-subtle) var(--canvas);
+  }
+}

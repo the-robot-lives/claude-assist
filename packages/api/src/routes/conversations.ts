@@ -1,0 +1,171 @@
+import { Hono } from "hono";
+import { readFileSync } from "node:fs";
+import { parseJsonlFile, isUserMessage, isAssistantMessage } from "@claude-assist/shared";
+import type { StorageService } from "../services/storage.ts";
+import type { ArtifactType } from "@claude-assist/shared";
+import { applyOperations, type EditOperation } from "../services/editor.ts";
+import { identifyCandidates, convertToArtifact } from "../services/converter.ts";
+import { OperationsService } from "../services/operations.ts";
+
+export function createConversationRoutes(storage: StorageService): Hono {
+  const routes = new Hono();
+
+  routes.get("/", async (c) => {
+    const sort = c.req.query("sort") ?? "updated_at";
+    const limit = Number(c.req.query("limit") ?? 20);
+    const groupBy = c.req.query("group_by");
+    const project = c.req.query("project");
+
+    const conversations = await storage.getConversations({ sort, limit, groupBy, project });
+    const total = await storage.getConversationCount(project);
+
+    return c.json({ data: conversations, meta: { total, limit } });
+  });
+
+  routes.get("/:id", async (c) => {
+    const id = c.req.param("id");
+    const conversation = await storage.getConversation(id);
+    if (!conversation) {
+      return c.json({ data: null, error: "not found" }, 404);
+    }
+    return c.json({ data: conversation });
+  });
+
+  routes.get("/:id/messages", async (c) => {
+    const id = c.req.param("id");
+    const messages = await storage.getMessages(id);
+    return c.json({ data: messages, meta: { total: messages.length } });
+  });
+
+  routes.get("/:id/metadata", async (c) => {
+    const id = c.req.param("id");
+    const conversation = await storage.getConversation(id);
+    if (!conversation) {
+      return c.json({ data: null, error: "not found" }, 404);
+    }
+    return c.json({
+      data: {
+        title: conversation.title,
+        tags: conversation.tags,
+        summary: conversation.summary,
+        status: conversation.status,
+        projectPath: conversation.projectPath,
+        messageCount: conversation.messageCount,
+      },
+    });
+  });
+
+  routes.get("/:id/thread", async (c) => {
+    const id = c.req.param("id");
+    const conversation = await storage.getConversation(id);
+    if (!conversation) {
+      return c.json({ data: null, error: "not found" }, 404);
+    }
+
+    try {
+      const content = readFileSync(conversation.sourcePath, "utf-8");
+      const records = [];
+      for (const record of parseJsonlFile(content)) {
+        if (isUserMessage(record) || isAssistantMessage(record)) {
+          records.push(record);
+        }
+      }
+      return c.json({ data: records, meta: { total: records.length } });
+    } catch {
+      return c.json({ data: null, error: "source file not readable" }, 500);
+    }
+  });
+
+  routes.get("/:id/edits", async (c) => {
+    const id = c.req.param("id");
+    const edits = await storage.getEdits(id);
+    return c.json({ data: edits });
+  });
+
+  routes.post("/:id/edits", async (c) => {
+    const id = c.req.param("id");
+    const conversation = await storage.getConversation(id);
+    if (!conversation) {
+      return c.json({ data: null, error: "conversation not found" }, 404);
+    }
+
+    const body = await c.req.json() as { description: string; operations: EditOperation[] };
+    if (!body.description || !body.operations) {
+      return c.json({ data: null, error: "description and operations required" }, 400);
+    }
+
+    const messages = await storage.getMessages(id);
+    const sourceMessages = messages.map((m) => ({ role: m.role, content: m.content }));
+    const editedMessages = applyOperations(sourceMessages, body.operations);
+    const edit = await storage.createEdit(id, body.description, editedMessages);
+
+    return c.json({ data: edit }, 201);
+  });
+
+  routes.get("/:id/candidates", async (c) => {
+    const id = c.req.param("id");
+    const messages = await storage.getMessages(id);
+    const candidates = identifyCandidates(messages.map((m) => ({ role: m.role, content: m.content })));
+    return c.json({ data: candidates });
+  });
+
+  routes.post("/:id/convert", async (c) => {
+    const id = c.req.param("id");
+    const body = await c.req.json() as { type: ArtifactType; range: [number, number]; name: string; description: string };
+    const messages = await storage.getMessages(id);
+    const artifact = convertToArtifact(
+      body.type,
+      messages.map((m) => ({ role: m.role, content: m.content })),
+      body.range,
+      { name: body.name, description: body.description, conversationId: id },
+    );
+    return c.json({ data: artifact });
+  });
+
+  const ops = new OperationsService(storage);
+
+  routes.post("/:id/archive", async (c) => {
+    const id = c.req.param("id");
+    await ops.archive(id);
+    return c.json({ success: true });
+  });
+
+  routes.post("/:id/tag", async (c) => {
+    const id = c.req.param("id");
+    const body = await c.req.json() as { tags: string[] };
+    await ops.tag(id, body.tags);
+    return c.json({ success: true });
+  });
+
+  routes.post("/:id/clone", async (c) => {
+    const id = c.req.param("id");
+    const newId = await ops.clone(id);
+    return c.json({ data: { id: newId } }, 201);
+  });
+
+  routes.post("/:id/rehome", async (c) => {
+    const id = c.req.param("id");
+    const body = await c.req.json() as { project: string };
+    await ops.rehome(id, body.project);
+    return c.json({ success: true });
+  });
+
+  routes.post("/bulk", async (c) => {
+    return c.json({ data: null, error: "not implemented" }, 501);
+  });
+
+  return routes;
+}
+
+// Keep backward-compatible named export for tests that import it directly
+export const conversationRoutes = new Hono();
+conversationRoutes.get("/", async (c) => {
+  const limit = Number(c.req.query("limit") ?? 20);
+  return c.json({ data: [], meta: { total: 0, limit } });
+});
+conversationRoutes.get("/:id", async (c) => c.json({ data: null, error: "not implemented" }, 501));
+conversationRoutes.get("/:id/messages", async (c) => c.json({ data: [], meta: { total: 0 } }));
+conversationRoutes.get("/:id/metadata", async (c) => c.json({ data: null, error: "not implemented" }, 501));
+conversationRoutes.get("/:id/edits", async (c) => c.json({ data: [] }));
+conversationRoutes.post("/:id/edits", async (c) => c.json({ data: null, error: "not implemented" }, 501));
+conversationRoutes.post("/bulk", async (c) => c.json({ data: null, error: "not implemented" }, 501));
