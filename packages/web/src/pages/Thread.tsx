@@ -63,6 +63,9 @@ export function Thread() {
   const [titleDraft, setTitleDraft] = useState("");
   const [slugDraft, setSlugDraft] = useState("");
   const [descDraft, setDescDraft] = useState("");
+  const [findQuery, setFindQuery] = useState("");
+  const [findResults, setFindResults] = useState<Array<{ messageId: number; snippet: string }>>([]);
+  const [findActive, setFindActive] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -190,6 +193,18 @@ export function Thread() {
       setEditingDesc(false);
     } catch (err) {
       setActionMsg(`Save failed: ${err instanceof Error ? err.message : "unknown error"}`);
+    }
+  };
+
+  const handleFindInThread = async () => {
+    if (!id || !findQuery.trim()) { setFindResults([]); return; }
+    try {
+      const res = await apiFetch<{ data: Array<{ messageId: number; snippet: string }>; meta: { total: number } }>(
+        `/conversations/${id}/search?q=${encodeURIComponent(findQuery)}`
+      );
+      setFindResults(res.data);
+    } catch {
+      setFindResults([]);
     }
   };
 
@@ -400,6 +415,34 @@ export function Thread() {
       </div>
 
       {/* ── Messages ── */}
+      {/* Find in thread bar */}
+      <div className="flex items-center gap-2">
+        <button
+          onClick={() => { setFindActive(!findActive); if (findActive) { setFindQuery(""); setFindResults([]); } }}
+          className={`rounded px-2 py-1 text-xs transition-colors ${findActive ? "bg-glow text-void" : "bg-surface-active text-text-muted hover:text-text-primary"}`}
+          title="Search within this conversation (Ctrl+F)"
+        >
+          {findActive ? "Close" : "Find"}
+        </button>
+        {findActive && (
+          <>
+            <input
+              type="text"
+              value={findQuery}
+              onChange={(e) => setFindQuery(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") handleFindInThread(); }}
+              placeholder="Search in thread..."
+              className="flex-1 rounded-md border border-border-subtle bg-void px-3 py-1.5 text-sm text-text-primary placeholder:text-text-dim outline-none focus:border-glow"
+              autoFocus
+            />
+            <button onClick={handleFindInThread} className="btn-action text-xs">Search</button>
+            {findResults.length > 0 && (
+              <span className="text-xs text-text-dim">{findResults.length} match{findResults.length !== 1 ? "es" : ""}</span>
+            )}
+          </>
+        )}
+      </div>
+
       <div className="space-y-3">
         {records.map((record, i) => (
           <MessageBlock key={record.uuid ?? i} record={record} onSavePrompt={handleSavePrompt} />

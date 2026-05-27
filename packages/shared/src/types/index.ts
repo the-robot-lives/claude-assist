@@ -77,6 +77,8 @@ export interface Conversation {
   tags: string[];
   status: "active" | "archived" | "edited";
   sourcePath: string;
+  firstMessage?: string;
+  lastMessage?: string;
 }
 
 export interface SearchResult {

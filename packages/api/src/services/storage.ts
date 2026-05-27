@@ -282,12 +282,14 @@ export class StorageService {
   async getConversations(options?: {
     sort?: string;
     limit?: number;
+    offset?: number;
     groupBy?: string;
     project?: string;
   }): Promise<Conversation[]> {
     const db = this.getDb();
     const sort = options?.sort ?? "updated_at";
     const limit = options?.limit ?? 20;
+    const offset = options?.offset ?? 0;
 
     const allowedSorts: Record<string, string> = {
       updated_at: "updated_at DESC",
@@ -297,16 +299,19 @@ export class StorageService {
     };
     const orderClause = allowedSorts[sort] ?? "updated_at DESC";
 
-    let query = `SELECT * FROM conversations`;
+    let query = `SELECT c.*,
+      (SELECT substr(content, 1, 200) FROM messages m WHERE m.conversation_id = c.id ORDER BY m.id ASC LIMIT 1) as first_message,
+      (SELECT substr(content, 1, 200) FROM messages m WHERE m.conversation_id = c.id ORDER BY m.id DESC LIMIT 1) as last_message
+      FROM conversations c`;
     const params: unknown[] = [];
 
     if (options?.project) {
-      query += ` WHERE project_path = ?`;
+      query += ` WHERE c.project_path = ?`;
       params.push(options.project);
     }
 
-    query += ` ORDER BY ${orderClause} LIMIT ?`;
-    params.push(limit);
+    query += ` ORDER BY ${orderClause} LIMIT ? OFFSET ?`;
+    params.push(limit, offset);
 
     const rows = db.prepare(query).all(...params) as ConversationRow[];
     return rows.map(rowToConversation);
@@ -771,6 +776,8 @@ interface ConversationRow {
   tags: string;
   status: string;
   source_path: string;
+  first_message?: string | null;
+  last_message?: string | null;
 }
 
 function rowToConversation(row: ConversationRow): Conversation {
@@ -787,6 +794,8 @@ function rowToConversation(row: ConversationRow): Conversation {
     tags: JSON.parse(row.tags),
     status: row.status as Conversation["status"],
     sourcePath: row.source_path,
+    firstMessage: row.first_message ?? undefined,
+    lastMessage: row.last_message ?? undefined,
   };
 }
 

@@ -5,6 +5,7 @@ import { apiFetch } from "../hooks/useApi.js";
 interface ProjectEntry {
   projectPath: string;
   title: string | null;
+  displayName?: string;
   description: string | null;
   tags: string[];
   conversationCount: number;
@@ -208,7 +209,7 @@ export function Projects() {
                   <div className="text-sm font-medium text-text-primary">
                     <InlineEdit
                       value={proj.title}
-                      placeholder="Add title…"
+                      placeholder={proj.displayName ?? shortProject(proj.projectPath)}
                       onSave={(val) => patchProject(proj.projectPath, { title: val })}
                       className="text-sm font-medium text-text-primary"
                     />

@@ -25,6 +25,10 @@
     scrollbar-color: var(--border-subtle) var(--canvas);
   }
 
+  html {
+    scroll-behavior: smooth;
+  }
+
   body {
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
     -webkit-font-smoothing: antialiased;

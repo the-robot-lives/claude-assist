@@ -70,7 +70,8 @@ export function SearchCommand({ query, semantic, project }: SearchCommandProps) 
           <Text>
             <Text dimColor>{r.conversation.id.slice(0, 8)}</Text>{" "}
             <Text color="cyan" dimColor>[{shortProject(r.conversation.projectPath)}]</Text>{" "}
-            <Text bold>{r.conversation.title}</Text>
+            <Text bold>{r.conversation.title}</Text>{" "}
+            <Text dimColor>{new Date(r.conversation.updatedAt).toLocaleDateString()}</Text>
           </Text>
           <Text dimColor>  {cleanSnippet(r.snippet)}</Text>
         </Box>

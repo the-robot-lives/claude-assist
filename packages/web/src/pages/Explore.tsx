@@ -3,6 +3,8 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { useConversations, useSearch, useIndexStatus } from "../hooks/useApi.js";
 
 type SortOption = "updated_at" | "started_at" | "message_count" | "title";
+type PreviewMode = "both" | "first" | "last" | "none";
+type GroupMode = "grouped" | "flat";
 
 function parseTagInput(raw: string): string[] {
   return raw.split(",").map((t) => t.trim().toLowerCase()).filter(Boolean);
@@ -23,11 +25,14 @@ export function Explore() {
   const [excludeTags, setExcludeTags] = useState("");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
+  const [previewMode, setPreviewMode] = useState<PreviewMode>("both");
+  const [groupMode, setGroupMode] = useState<GroupMode>("grouped");
 
   const isSearching = query.trim().length > 0;
+  const offset = (page - 1) * pageSize;
 
-  // Fetch conversations (browse mode) or search results
-  const { data: convData, loading: convLoading } = useConversations({ sort, limit: 500 });
+  // Server-side pagination
+  const { data: convData, loading: convLoading } = useConversations({ sort, limit: pageSize, offset });
   const { data: searchData, loading: searchLoading } = useSearch(query, mode);
   const { data: idxData } = useIndexStatus();
 
@@ -39,7 +44,7 @@ export function Explore() {
   const includeList = parseTagInput(includeTags);
   const excludeList = parseTagInput(excludeTags);
 
-  // Apply tag filters
+  // Apply tag filters (client-side for search, server handles browse)
   const filterByTags = <T extends { tags?: string[] }>(items: T[], getConvTags: (item: T) => string[]): T[] => {
     return items.filter((item) => {
       const tags = getConvTags(item).map((t) => t.toLowerCase());
@@ -49,23 +54,14 @@ export function Explore() {
     });
   };
 
-  const filteredConvos = filterByTags(conversations, (c) => c.tags ?? []);
   const filteredResults = filterByTags(searchResults, (r) => (r as any).conversation?.tags ?? []);
 
-  // Pagination (browse mode only)
-  const totalFiltered = isSearching ? filteredResults.length : filteredConvos.length;
+  // Pagination — server-side for browse, client-side for search
+  const totalFiltered = isSearching ? filteredResults.length : totalConvos;
   const totalPages = Math.max(1, Math.ceil(totalFiltered / pageSize));
   const safePage = Math.min(page, totalPages);
 
-  const paginatedConvos = filteredConvos.slice((safePage - 1) * pageSize, safePage * pageSize);
-
-  // Group conversations by project for browse mode
-  const groups = new Map<string, typeof conversations>();
-  for (const c of paginatedConvos) {
-    const key = c.projectPath;
-    if (!groups.has(key)) groups.set(key, []);
-    groups.get(key)!.push(c);
-  }
+  const paginatedSearchResults = filteredResults.slice((safePage - 1) * pageSize, safePage * pageSize);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -91,10 +87,57 @@ export function Explore() {
     ? new Date(indexStatus.lastIndexed).toLocaleString()
     : "Never";
 
+  // Group conversations by project for browse mode
+  const groups = new Map<string, typeof conversations>();
+  if (groupMode === "grouped") {
+    for (const c of conversations) {
+      const key = c.projectPath;
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key)!.push(c);
+    }
+  }
+
+  const renderPreview = (c: { firstMessage?: string; lastMessage?: string }) => {
+    if (previewMode === "none") return null;
+    return (
+      <div className="mt-0.5 space-y-0">
+        {(previewMode === "both" || previewMode === "first") && c.firstMessage && (
+          <p className="text-xs text-text-dim truncate"><span className="text-text-muted mr-1">▸</span>{stripToolUse(c.firstMessage)}</p>
+        )}
+        {(previewMode === "both" || previewMode === "last") && c.lastMessage && (
+          <p className="text-xs text-text-dim truncate"><span className="text-text-muted mr-1">◂</span>{stripToolUse(c.lastMessage)}</p>
+        )}
+      </div>
+    );
+  };
+
+  const renderConversationRow = (c: typeof conversations[0]) => (
+    <button
+      key={c.id}
+      onClick={() => navigate(`/thread/${c.id}`)}
+      className="flex w-full items-start gap-3 rounded-md px-3 py-2.5 text-left hover:bg-surface-active transition-colors"
+    >
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2">
+          <span className="font-mono text-xs text-text-dim">{c.id.slice(0, 8)}</span>
+          <span className="flex-1 truncate text-sm text-text-primary">
+            <ConversationTitle title={c.title} />
+          </span>
+          <span className="text-xs text-text-dim shrink-0">{c.messageCount} msgs</span>
+          <span className="text-xs text-text-dim shrink-0">{new Date(c.updatedAt).toLocaleDateString()}</span>
+          {c.status !== "active" && (
+            <span className="rounded-full bg-surface-active px-2 py-0.5 text-xs text-text-dim shrink-0">{c.status}</span>
+          )}
+        </div>
+        {renderPreview(c)}
+      </div>
+    </button>
+  );
+
   return (
     <div className="mx-auto max-w-5xl space-y-5">
 
-      {/* ── Search bar ── */}
+      {/* Search bar */}
       <form onSubmit={handleSearch} className="flex h-12 items-center rounded-lg border border-border-subtle bg-surface-raised px-4 focus-within:border-glow focus-within:shadow-[0_0_8px_rgba(6,182,212,0.1)]">
         <span className="mr-3 text-text-muted">⌕</span>
         <input
@@ -130,7 +173,7 @@ export function Explore() {
         </div>
       </form>
 
-      {/* ── Stats row ── */}
+      {/* Stats row */}
       <div className="grid grid-cols-3 gap-3">
         <div className="rounded-lg border border-border-subtle bg-surface-raised p-3">
           <p className="font-mono text-lg font-medium text-white">{totalConvos}</p>
@@ -146,7 +189,7 @@ export function Explore() {
         </div>
       </div>
 
-      {/* ── Filters + sort row ── */}
+      {/* Filters + sort + toggles row */}
       <div className="flex flex-wrap items-center gap-3">
         {!isSearching && (
           <select
@@ -180,6 +223,43 @@ export function Explore() {
             className="w-28 rounded-md border border-border-subtle bg-void px-2 py-1 text-xs text-text-primary outline-none placeholder:text-text-dim"
           />
         </div>
+
+        {/* Preview toggle */}
+        {!isSearching && (
+          <div className="flex items-center gap-0.5">
+            {(["both", "first", "last", "none"] as PreviewMode[]).map((pm) => (
+              <button
+                key={pm}
+                type="button"
+                onClick={() => setPreviewMode(pm)}
+                className={`rounded-full px-2 py-0.5 text-xs font-medium transition-colors ${
+                  previewMode === pm ? "bg-glow text-void" : "bg-surface-active text-text-muted hover:text-text-primary"
+                }`}
+              >
+                {pm === "both" ? "Preview" : pm.charAt(0).toUpperCase() + pm.slice(1)}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Group toggle */}
+        {!isSearching && (
+          <div className="flex items-center gap-0.5">
+            {(["grouped", "flat"] as GroupMode[]).map((gm) => (
+              <button
+                key={gm}
+                type="button"
+                onClick={() => setGroupMode(gm)}
+                className={`rounded-full px-2.5 py-0.5 text-xs font-medium transition-colors ${
+                  groupMode === gm ? "bg-glow text-void" : "bg-surface-active text-text-muted hover:text-text-primary"
+                }`}
+              >
+                {gm === "grouped" ? "Grouped" : "Flat"}
+              </button>
+            ))}
+          </div>
+        )}
+
         <div className="ml-auto flex items-center gap-2">
           <span className="text-xs text-text-dim">{totalFiltered} results</span>
           {!isSearching && (
@@ -196,7 +276,7 @@ export function Explore() {
         </div>
       </div>
 
-      {/* ── Loading / empty ── */}
+      {/* Loading / empty */}
       {loading && <p className="text-sm text-text-muted py-4">Loading...</p>}
 
       {!loading && totalFiltered === 0 && (
@@ -207,10 +287,10 @@ export function Explore() {
         </p>
       )}
 
-      {/* ── Search results ── */}
-      {isSearching && !loading && filteredResults.length > 0 && (
+      {/* Search results */}
+      {isSearching && !loading && paginatedSearchResults.length > 0 && (
         <div className="space-y-2">
-          {filteredResults.map((r: any, i: number) => (
+          {paginatedSearchResults.map((r: any, i: number) => (
             <button
               key={i}
               onClick={() => navigate(`/thread/${r.conversation.id}`)}
@@ -231,36 +311,26 @@ export function Explore() {
         </div>
       )}
 
-      {/* ── Browse results (grouped by project) ── */}
+      {/* Browse results */}
       {!isSearching && !loading && (
         <>
-          {[...groups.entries()].map(([project, convs]) => (
-            <div key={project}>
-              <div className="flex items-center gap-2 mb-2">
-                <button onClick={() => navigate(`/projects/${encodeURIComponent(project)}`)} className="text-sm font-medium text-glow hover:text-glow-bright hover:underline transition-colors" title={project}>{shortProject(project)}</button>
-                <span className="text-xs text-text-dim">({convs.length})</span>
+          {groupMode === "grouped" ? (
+            [...groups.entries()].map(([project, convs]) => (
+              <div key={project}>
+                <div className="flex items-center gap-2 mb-2">
+                  <button onClick={() => navigate(`/projects/${encodeURIComponent(project)}`)} className="text-sm font-medium text-glow hover:text-glow-bright hover:underline transition-colors" title={project}>{shortProject(project)}</button>
+                  <span className="text-xs text-text-dim">({convs.length})</span>
+                </div>
+                <div className="space-y-1 mb-4">
+                  {convs.map((c) => renderConversationRow(c))}
+                </div>
               </div>
-              <div className="space-y-1 mb-4">
-                {convs.map((c) => (
-                  <button
-                    key={c.id}
-                    onClick={() => navigate(`/thread/${c.id}`)}
-                    className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-left hover:bg-surface-active transition-colors"
-                  >
-                    <span className="font-mono text-xs text-text-dim">{c.id.slice(0, 8)}</span>
-                    <span className="flex-1 truncate text-sm text-text-primary">
-                      <ConversationTitle title={c.title} />
-                    </span>
-                    <span className="text-xs text-text-dim">{c.messageCount} msgs</span>
-                    <span className="text-xs text-text-dim">{new Date(c.updatedAt).toLocaleDateString()}</span>
-                    {c.status !== "active" && (
-                      <span className="rounded-full bg-surface-active px-2 py-0.5 text-xs text-text-dim">{c.status}</span>
-                    )}
-                  </button>
-                ))}
-              </div>
+            ))
+          ) : (
+            <div className="space-y-1">
+              {conversations.map((c) => renderConversationRow(c))}
             </div>
-          ))}
+          )}
 
           {/* Pagination */}
           {totalPages > 1 && (
@@ -276,6 +346,12 @@ export function Explore() {
       )}
     </div>
   );
+}
+
+function stripToolUse(text: string): string {
+  // Strip common tool-use JSON prefixes from message previews
+  const cleaned = text.replace(/^\{"type":"tool_use".*?"name":"[^"]*","input":\{.*?\}\}/, "").trim();
+  return cleaned || text.slice(0, 100);
 }
 
 function ConversationTitle({ title }: { title: string }) {

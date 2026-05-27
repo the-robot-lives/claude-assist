@@ -13,6 +13,8 @@ import { Pagination } from "../components/Pagination.js";
 type SortOption = "updated_at" | "started_at" | "message_count" | "title";
 type SearchMode = "fts" | "semantic";
 type UIMode = "browse" | "search" | "sort";
+type PreviewMode = "both" | "first" | "last" | "none";
+type GroupMode = "grouped" | "flat";
 
 const SORT_OPTIONS = [
   { label: "Last Updated", value: "updated_at" },
@@ -20,6 +22,8 @@ const SORT_OPTIONS = [
   { label: "Message Count", value: "message_count" },
   { label: "Title", value: "title" },
 ];
+
+const PREVIEW_CYCLE: PreviewMode[] = ["both", "first", "last", "none"];
 
 export function ExplorePage() {
   const { navigate } = useRouter();
@@ -30,12 +34,15 @@ export function ExplorePage() {
   const [searchMode, setSearchMode] = useState<SearchMode>("fts");
   const [sort, setSort] = useState<SortOption>("updated_at");
   const [page, setPage] = useState(1);
+  const [previewMode, setPreviewMode] = useState<PreviewMode>("both");
+  const [groupMode, setGroupMode] = useState<GroupMode>("grouped");
   const pageSize = 25;
 
   const debouncedQuery = useDebouncedValue(searchInput, 300);
   const isSearching = debouncedQuery.trim().length > 0;
+  const offset = (page - 1) * pageSize;
 
-  const { data: convData, loading: convLoading } = useConversations({ sort, limit: 500 });
+  const { data: convData, loading: convLoading } = useConversations({ sort, limit: pageSize, offset });
   const { data: searchData, loading: searchLoading } = useSearch(debouncedQuery, searchMode);
   const { data: idxData } = useIndexStatus();
 
@@ -44,11 +51,10 @@ export function ExplorePage() {
   const totalConvos = convData?.meta?.total ?? 0;
   const indexStatus = idxData?.data;
 
-  const totalFiltered = isSearching ? searchResults.length : conversations.length;
+  const totalFiltered = isSearching ? searchResults.length : totalConvos;
   const totalPages = Math.max(1, Math.ceil(totalFiltered / pageSize));
   const safePage = Math.min(page, totalPages);
-  const paginatedConvos = conversations.slice((safePage - 1) * pageSize, safePage * pageSize);
-  const pageItemCount = isSearching ? searchResults.length : paginatedConvos.length;
+  const pageItemCount = isSearching ? searchResults.length : conversations.length;
 
   const contentHeight = Math.max(5, rows - 10);
   const scroll = useScroll({
@@ -78,12 +84,19 @@ export function ExplorePage() {
       setUiMode("search");
     } else if (input === "o") {
       setUiMode("sort");
+    } else if (input === "v") {
+      setPreviewMode((m) => {
+        const idx = PREVIEW_CYCLE.indexOf(m);
+        return PREVIEW_CYCLE[(idx + 1) % PREVIEW_CYCLE.length];
+      });
+    } else if (input === "g" && !isSearching) {
+      setGroupMode((m) => m === "grouped" ? "flat" : "grouped");
     } else if (input === "n" && !isSearching) {
       setPage((p) => Math.min(totalPages, p + 1));
     } else if (input === "p" && !isSearching) {
       setPage((p) => Math.max(1, p - 1));
     } else if (key.return) {
-      const items: any[] = isSearching ? searchResults : paginatedConvos;
+      const items: any[] = isSearching ? searchResults : conversations;
       const item = items[scroll.cursor];
       if (item) {
         const id = isSearching ? (item as any).conversation.id : (item as any).id;
@@ -114,7 +127,7 @@ export function ExplorePage() {
           </Box>
         ) : (
           <Text dimColor>
-            {searchInput ? `⌕ "${searchInput}" [${searchMode}]` : "/:search"} | o:sort | {isSearching ? "" : "n/p:page"}
+            {searchInput ? `⌕ "${searchInput}" [${searchMode}]` : "/:search"} | o:sort | v:preview({previewMode}) | g:{groupMode}{isSearching ? "" : " | n/p:page"}
           </Text>
         )}
       </Box>
@@ -184,9 +197,9 @@ export function ExplorePage() {
         />
       )}
 
-      {!loading && !isSearching && paginatedConvos.length > 0 && (
+      {!loading && !isSearching && conversations.length > 0 && (
         <SelectableList
-          items={paginatedConvos}
+          items={conversations}
           cursor={scroll.cursor}
           visibleRange={scroll.visibleRange}
           renderItem={(item, _index, isCursor) => (
@@ -197,6 +210,9 @@ export function ExplorePage() {
               messageCount={item.messageCount}
               updatedAt={item.updatedAt}
               status={item.status}
+              firstMessage={item.firstMessage}
+              lastMessage={item.lastMessage}
+              previewMode={previewMode}
               isCursor={isCursor}
             />
           )}

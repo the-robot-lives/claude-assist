@@ -18,6 +18,31 @@ export class SearchService {
     return this.fullTextSearch(options);
   }
 
+  async searchInConversation(conversationId: string, query: string, limit = 50): Promise<Array<{ messageId: number; role: string; content: string; snippet: string }>> {
+    if (!this.storage) return [];
+
+    const db = this.storage.getDb();
+    const matchQuery = sanitizeFtsQuery(query);
+    if (!matchQuery) return [];
+
+    const rows = db.prepare(`
+      SELECT m.id, m.role, m.content,
+        snippet(messages_fts, 0, '<<<', '>>>', '...', 40) as snippet
+      FROM messages_fts
+      JOIN messages m ON messages_fts.rowid = m.id
+      WHERE messages_fts MATCH ? AND m.conversation_id = ?
+      ORDER BY m.id
+      LIMIT ?
+    `).all(matchQuery, conversationId, limit) as Array<{ id: number; role: string; content: string; snippet: string }>;
+
+    return rows.map((r) => ({
+      messageId: r.id,
+      role: r.role,
+      content: r.content,
+      snippet: r.snippet,
+    }));
+  }
+
   private async fullTextSearch(options: SearchOptions): Promise<SearchResult[]> {
     if (!this.storage) return [];
 

@@ -9,6 +9,7 @@ interface ProjectEntry {
   tags: string[];
   conversationCount: number;
   lastActive: string | null;
+  displayName?: string;
 }
 
 interface Conversation {
@@ -20,7 +21,11 @@ interface Conversation {
   updatedAt: string;
   status: string;
   tags: string[];
+  firstMessage?: string;
+  lastMessage?: string;
 }
+
+type PreviewMode = "both" | "first" | "last" | "none";
 
 export function ProjectDetail() {
   const { slug } = useParams<{ slug: string }>();
@@ -29,22 +34,38 @@ export function ProjectDetail() {
 
   const [project, setProject] = useState<ProjectEntry | null>(null);
   const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [totalConvos, setTotalConvos] = useState(0);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("");
   const [sort, setSort] = useState<"updated_at" | "started_at" | "message_count" | "title">("updated_at");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
+  const [previewMode, setPreviewMode] = useState<PreviewMode>("both");
+
+  const offset = (page - 1) * pageSize;
 
   useEffect(() => {
     if (!projectPath) return;
     const encoded = encodeURIComponent(projectPath);
-    Promise.all([
-      apiFetch<ProjectEntry>(`/projects/${encoded}`).catch(() => null),
-      apiFetch<{ data: Conversation[] }>(`/conversations?limit=500&project=${encoded}`),
-    ]).then(([proj, convRes]) => {
-      setProject(proj ?? { projectPath, title: null, description: null, tags: [], conversationCount: 0, lastActive: null });
-      setConversations(convRes.data ?? []);
+    apiFetch<ProjectEntry>(`/projects/${encoded}`).then((proj) => {
+      setProject(proj);
       setLoading(false);
     }).catch(() => setLoading(false));
   }, [projectPath]);
+
+  useEffect(() => {
+    if (!projectPath) return;
+    const encoded = encodeURIComponent(projectPath);
+    apiFetch<{ data: Conversation[]; meta: { total: number } }>(
+      `/conversations?limit=${pageSize}&offset=${offset}&project=${encoded}&sort=${sort}`
+    ).then((res) => {
+      setConversations(res.data);
+      setTotalConvos(res.meta.total);
+    }).catch(() => {});
+  }, [projectPath, sort, page, pageSize]);
+
+  const totalPages = Math.max(1, Math.ceil(totalConvos / pageSize));
+  const safePage = Math.min(page, totalPages);
 
   const handlePatch = async (updates: { title?: string | null; description?: string | null; tags?: string[] }) => {
     const encoded = encodeURIComponent(projectPath);
@@ -55,28 +76,31 @@ export function ProjectDetail() {
     setProject((prev) => prev ? { ...prev, ...updates } : prev);
   };
 
-  // Filter + sort
   const filtered = conversations.filter((c) => {
     if (!filter) return true;
     const q = filter.toLowerCase();
     return c.title.toLowerCase().includes(q) || c.tags.some((t) => t.toLowerCase().includes(q));
   });
 
-  const sorted = [...filtered].sort((a, b) => {
-    switch (sort) {
-      case "updated_at": return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
-      case "started_at": return new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime();
-      case "message_count": return b.messageCount - a.messageCount;
-      case "title": return a.title.localeCompare(b.title);
-      default: return 0;
-    }
-  });
-
   if (loading) {
     return <div className="mx-auto max-w-4xl py-12"><p className="text-sm text-text-muted">Loading...</p></div>;
   }
 
-  const displayName = project?.title || shortProject(projectPath);
+  const displayName = project?.title || project?.displayName || shortProject(projectPath);
+
+  const renderPreview = (c: Conversation) => {
+    if (previewMode === "none") return null;
+    return (
+      <div className="mt-0.5 space-y-0">
+        {(previewMode === "both" || previewMode === "first") && c.firstMessage && (
+          <p className="text-xs text-text-dim truncate"><span className="text-text-muted mr-1">▸</span>{stripToolUse(c.firstMessage)}</p>
+        )}
+        {(previewMode === "both" || previewMode === "last") && c.lastMessage && (
+          <p className="text-xs text-text-dim truncate"><span className="text-text-muted mr-1">◂</span>{stripToolUse(c.lastMessage)}</p>
+        )}
+      </div>
+    );
+  };
 
   return (
     <div className="mx-auto max-w-4xl space-y-6">
@@ -104,7 +128,7 @@ export function ProjectDetail() {
             </div>
           </div>
           <div className="ml-4 flex flex-col items-end gap-1 shrink-0">
-            <span className="text-sm text-text-primary">{conversations.length} conversations</span>
+            <span className="text-sm text-text-primary">{totalConvos} conversations</span>
             {project?.lastActive && (
               <span className="text-xs text-text-muted">Last active {new Date(project.lastActive).toLocaleDateString()}</span>
             )}
@@ -128,7 +152,7 @@ export function ProjectDetail() {
         <button onClick={() => navigate("/projects")} className="btn-action text-xs">Back to Projects</button>
       </div>
 
-      {/* Search + sort */}
+      {/* Search + sort + preview toggle */}
       <div className="flex items-center gap-3">
         <input
           type="text"
@@ -139,7 +163,7 @@ export function ProjectDetail() {
         />
         <select
           value={sort}
-          onChange={(e) => setSort(e.target.value as typeof sort)}
+          onChange={(e) => { setSort(e.target.value as typeof sort); setPage(1); }}
           className="rounded-md border border-border-subtle bg-surface-raised px-2 py-1.5 text-xs text-text-primary outline-none"
         >
           <option value="updated_at">Last Updated</option>
@@ -147,40 +171,75 @@ export function ProjectDetail() {
           <option value="message_count">Message Count</option>
           <option value="title">Title</option>
         </select>
-        <span className="text-xs text-text-dim">{sorted.length} of {conversations.length}</span>
+        <div className="flex items-center gap-0.5">
+          {(["both", "first", "last", "none"] as PreviewMode[]).map((pm) => (
+            <button
+              key={pm}
+              type="button"
+              onClick={() => setPreviewMode(pm)}
+              className={`rounded-full px-2 py-0.5 text-xs font-medium transition-colors ${
+                previewMode === pm ? "bg-glow text-void" : "bg-surface-active text-text-muted hover:text-text-primary"
+              }`}
+            >
+              {pm === "both" ? "Preview" : pm.charAt(0).toUpperCase() + pm.slice(1)}
+            </button>
+          ))}
+        </div>
+        <span className="text-xs text-text-dim">{filtered.length} shown</span>
       </div>
 
       {/* Conversation list */}
-      {sorted.length === 0 ? (
+      {filtered.length === 0 ? (
         <p className="text-sm text-text-muted py-4">
           {filter ? "No conversations match your filter." : "No conversations in this project."}
         </p>
       ) : (
         <div className="space-y-1">
-          {sorted.map((c) => (
+          {filtered.map((c) => (
             <button
               key={c.id}
               onClick={() => navigate(`/thread/${c.id}`)}
-              className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left hover:bg-surface-active transition-colors"
+              className="flex w-full items-start gap-3 rounded-md px-3 py-2.5 text-left hover:bg-surface-active transition-colors"
             >
-              <span className="font-mono text-xs text-text-dim">{c.id.slice(0, 8)}</span>
-              <span className="flex-1 truncate text-sm text-text-primary">
-                <ConversationTitle title={c.title} />
-              </span>
-              {c.tags.length > 0 && (
-                <span className="text-xs text-glow">{c.tags.slice(0, 2).join(", ")}</span>
-              )}
-              <span className="text-xs text-text-dim">{c.messageCount} msgs</span>
-              <span className="text-xs text-text-dim">{new Date(c.updatedAt).toLocaleDateString()}</span>
-              {c.status !== "active" && (
-                <span className="rounded-full bg-surface-active px-2 py-0.5 text-xs text-text-dim">{c.status}</span>
-              )}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="font-mono text-xs text-text-dim">{c.id.slice(0, 8)}</span>
+                  <span className="flex-1 truncate text-sm text-text-primary">
+                    <ConversationTitle title={c.title} />
+                  </span>
+                  {c.tags.length > 0 && (
+                    <span className="text-xs text-glow">{c.tags.slice(0, 2).join(", ")}</span>
+                  )}
+                  <span className="text-xs text-text-dim shrink-0">{c.messageCount} msgs</span>
+                  <span className="text-xs text-text-dim shrink-0">{new Date(c.updatedAt).toLocaleDateString()}</span>
+                  {c.status !== "active" && (
+                    <span className="rounded-full bg-surface-active px-2 py-0.5 text-xs text-text-dim">{c.status}</span>
+                  )}
+                </div>
+                {renderPreview(c)}
+              </div>
             </button>
           ))}
         </div>
       )}
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between pt-2 border-t border-border-subtle">
+          <span className="text-xs text-text-muted">Page {safePage} of {totalPages}</span>
+          <div className="flex items-center gap-2">
+            <button className="btn-action" disabled={safePage <= 1} onClick={() => setPage((p) => p - 1)}>Prev</button>
+            <button className="btn-action" disabled={safePage >= totalPages} onClick={() => setPage((p) => p + 1)}>Next</button>
+          </div>
+        </div>
+      )}
     </div>
   );
+}
+
+function stripToolUse(text: string): string {
+  const cleaned = text.replace(/^\{"type":"tool_use".*?"name":"[^"]*","input":\{.*?\}\}/, "").trim();
+  return cleaned || text.slice(0, 100);
 }
 
 function ConversationTitle({ title }: { title: string }) {

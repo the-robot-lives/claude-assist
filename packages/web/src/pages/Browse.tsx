@@ -19,8 +19,10 @@ export function Browse() {
   const [pageSize, setPageSize] = useState(25);
   const navigate = useNavigate();
 
-  const { data, loading, error } = useConversations({ sort, limit: 500 });
+  const offset = (page - 1) * pageSize;
+  const { data, loading, error } = useConversations({ sort, limit: pageSize, offset });
   const conversations = data?.data ?? [];
+  const totalConvos = data?.meta.total ?? 0;
 
   const includeList = parseTagInput(includeTags);
   const excludeList = parseTagInput(excludeTags);
@@ -33,14 +35,13 @@ export function Browse() {
     return true;
   });
 
-  const totalCount = filtered.length;
+  const totalCount = totalConvos;
   const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
   const safePage = Math.min(page, totalPages);
-  const paginated = filtered.slice((safePage - 1) * pageSize, safePage * pageSize);
 
   // Group by project
   const groups = new Map<string, typeof conversations>();
-  for (const c of paginated) {
+  for (const c of filtered) {
     const key = c.projectPath;
     if (!groups.has(key)) groups.set(key, []);
     groups.get(key)!.push(c);
@@ -97,7 +98,7 @@ export function Browse() {
 
       {error && <p className="text-sm text-red-400">Error: {error}</p>}
 
-      {!loading && conversations.length === 0 && (
+      {!loading && totalCount === 0 && (
         <p className="text-sm text-text-muted">
           No conversations indexed. Run <code className="text-glow">claude-assist index</code> to get started.
         </p>

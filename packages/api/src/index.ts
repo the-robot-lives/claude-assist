@@ -41,7 +41,7 @@ app.use("*", cors({ origin: "http://localhost:5173" }));
 
 app.get("/api/health", (c) => c.json({ status: "ok" }));
 
-app.route("/api/conversations", createConversationRoutes(storage));
+app.route("/api/conversations", createConversationRoutes(storage, searchService));
 app.route("/api/search", createSearchRoutes(searchService));
 app.route("/api/datasets", createDatasetRoutes(storage));
 app.route("/api/config", createConfigRoutes(storage, llmService));

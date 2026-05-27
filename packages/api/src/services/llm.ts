@@ -122,13 +122,18 @@ class OpenAICompatibleProvider implements LlmProvider {
   }
 
   async listModels(): Promise<string[]> {
-    const client = await this.getClient();
-    const page = await client.models.list();
-    const models: string[] = [];
-    for await (const model of page) {
-      models.push(model.id);
+    try {
+      const client = await this.getClient();
+      const page = await client.models.list();
+      const models: string[] = [];
+      for await (const model of page) {
+        models.push(model.id);
+      }
+      return models.sort();
+    } catch {
+      // Many OpenAI-compatible providers don't support the models endpoint
+      return [];
     }
-    return models.sort();
   }
 }
 
@@ -248,7 +253,6 @@ export class LlmService {
         }
         const key = config.apiKey
           ?? (defaults.envKey ? process.env[defaults.envKey] : undefined)
-          ?? (config.provider === "litellm" ? process.env.OPENAI_API_KEY : undefined)
           ?? "";
         if (!key && config.provider !== "litellm") {
           console.warn(`${defaults.label} API key not configured — inference unavailable.`);

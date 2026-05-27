@@ -61,14 +61,17 @@ interface ConversationsResponse {
     updatedAt: string;
     status: string;
     tags: string[];
+    firstMessage?: string;
+    lastMessage?: string;
   }>;
-  meta: { total: number; limit: number };
+  meta: { total: number; limit: number; offset: number };
 }
 
-export function useConversations(options?: { sort?: string; limit?: number; project?: string }) {
+export function useConversations(options?: { sort?: string; limit?: number; offset?: number; project?: string }) {
   const params = new URLSearchParams();
   if (options?.sort) params.set("sort", options.sort);
   if (options?.limit) params.set("limit", String(options.limit));
+  if (options?.offset) params.set("offset", String(options.offset));
   if (options?.project) params.set("project", options.project);
   const query = params.toString();
   return useApiQuery<ConversationsResponse>(`/conversations${query ? `?${query}` : ""}`);

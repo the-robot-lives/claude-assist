@@ -1,6 +1,8 @@
 import React from "react";
 import { Box, Text } from "ink";
 
+type PreviewMode = "both" | "first" | "last" | "none";
+
 interface ConversationRowProps {
   id: string;
   title: string;
@@ -9,7 +11,15 @@ interface ConversationRowProps {
   updatedAt?: string;
   status?: string;
   snippet?: string;
+  firstMessage?: string;
+  lastMessage?: string;
+  previewMode?: PreviewMode;
   isCursor: boolean;
+}
+
+function stripToolUse(text: string): string {
+  const cleaned = text.replace(/^\{"type":"tool_use".*?"name":"[^"]*","input":\{.*?\}\}/, "").trim();
+  return cleaned || text.slice(0, 80);
 }
 
 export function ConversationRow({
@@ -20,6 +30,9 @@ export function ConversationRow({
   updatedAt,
   status,
   snippet,
+  firstMessage,
+  lastMessage,
+  previewMode = "none",
   isCursor,
 }: ConversationRowProps) {
   const shortProject = projectPath.split("/").filter(Boolean).slice(-2).join("/");
@@ -48,6 +61,20 @@ export function ConversationRow({
         <Text dimColor wrap="truncate-end">
           {"    "}{snippet.replace(/<<</g, "").replace(/>>>/g, "")}
         </Text>
+      )}
+      {!snippet && previewMode !== "none" && (
+        <>
+          {(previewMode === "both" || previewMode === "first") && firstMessage && (
+            <Text dimColor wrap="truncate-end">
+              {"    ▸ "}{stripToolUse(firstMessage)}
+            </Text>
+          )}
+          {(previewMode === "both" || previewMode === "last") && lastMessage && (
+            <Text dimColor wrap="truncate-end">
+              {"    ◂ "}{stripToolUse(lastMessage)}
+            </Text>
+          )}
+        </>
       )}
     </Box>
   );

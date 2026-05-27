@@ -68,7 +68,8 @@ export function ListCommand({ args }: ListCommandProps) {
             <Text dimColor>{c.id.slice(0, 8)}</Text>{" "}
             <Text color="cyan" dimColor>[{shortProject(c.projectPath)}]</Text>{" "}
             <Text>{c.title}</Text>{" "}
-            <Text dimColor>({c.messageCount} msgs)</Text>
+            <Text dimColor>({c.messageCount} msgs)</Text>{" "}
+            <Text dimColor>{new Date(c.updatedAt).toLocaleDateString()}</Text>
           </Text>
         </Box>
       ))}

@@ -6,20 +6,22 @@ import type { ArtifactType } from "@claude-assist/shared";
 import { applyOperations, type EditOperation } from "../services/editor.ts";
 import { identifyCandidates, convertToArtifact } from "../services/converter.ts";
 import { OperationsService } from "../services/operations.ts";
+import type { SearchService } from "../services/search.ts";
 
-export function createConversationRoutes(storage: StorageService): Hono {
+export function createConversationRoutes(storage: StorageService, searchService?: SearchService): Hono {
   const routes = new Hono();
 
   routes.get("/", async (c) => {
     const sort = c.req.query("sort") ?? "updated_at";
     const limit = Number(c.req.query("limit") ?? 20);
+    const offset = Number(c.req.query("offset") ?? 0);
     const groupBy = c.req.query("group_by");
     const project = c.req.query("project");
 
-    const conversations = await storage.getConversations({ sort, limit, groupBy, project });
+    const conversations = await storage.getConversations({ sort, limit, offset, groupBy, project });
     const total = await storage.getConversationCount(project);
 
-    return c.json({ data: conversations, meta: { total, limit } });
+    return c.json({ data: conversations, meta: { total, limit, offset } });
   });
 
   routes.get("/by-slug/:slug", async (c) => {
@@ -62,6 +64,16 @@ export function createConversationRoutes(storage: StorageService): Hono {
         messageCount: conversation.messageCount,
       },
     });
+  });
+
+  routes.get("/:id/search", async (c) => {
+    const id = c.req.param("id");
+    const q = c.req.query("q") ?? "";
+    if (!q.trim() || !searchService) {
+      return c.json({ data: [], meta: { total: 0 } });
+    }
+    const results = await searchService.searchInConversation(id, q);
+    return c.json({ data: results, meta: { total: results.length } });
   });
 
   routes.get("/:id/thread", async (c) => {

@@ -7,6 +7,13 @@ interface ProjectRow {
   last_active: string;
 }
 
+function deriveProjectName(projectPath: string): string {
+  const parts = projectPath.split("/").filter(Boolean);
+  // Skip common long prefixes like Users/username — take last 2 meaningful segments
+  if (parts.length > 2) return parts.slice(-2).join("/");
+  return projectPath;
+}
+
 export function createProjectRoutes(storage: StorageService): Hono {
   const routes = new Hono();
 
@@ -32,6 +39,7 @@ export function createProjectRoutes(storage: StorageService): Hono {
       return {
         projectPath: row.project_path,
         title: meta?.title ?? null,
+        displayName: meta?.title ?? deriveProjectName(row.project_path),
         description: meta?.description ?? null,
         tags: meta?.tags ?? [],
         conversationCount: row.conversation_count,
@@ -57,6 +65,7 @@ export function createProjectRoutes(storage: StorageService): Hono {
     return c.json({
       projectPath,
       title: meta?.title ?? null,
+      displayName: meta?.title ?? deriveProjectName(projectPath),
       description: meta?.description ?? null,
       tags: meta?.tags ?? [],
       conversationCount: statsRow.conversation_count,
