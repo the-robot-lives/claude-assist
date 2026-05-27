@@ -1,4 +1,5 @@
-import type { LlmConfig, LlmCompletionRequest, LlmCompletionResponse } from "@claude-assist/shared";
+import type { LlmConfig, LlmCompletionRequest, LlmCompletionResponse, ContentBlock } from "@claude-assist/shared";
+import { standardizeContentBlocks } from "@claude-assist/shared";
 
 interface LlmProvider {
   complete(req: LlmCompletionRequest): Promise<LlmCompletionResponse>;
@@ -44,7 +45,12 @@ class AnthropicProvider implements LlmProvider {
     const systemMsg = req.messages.find((m) => m.role === "system");
     const msgs = req.messages
       .filter((m) => m.role !== "system")
-      .map((m) => ({ role: m.role as "user" | "assistant", content: m.content }));
+      .map((m) => ({
+        role: m.role as "user" | "assistant",
+        content: typeof m.content === "string"
+          ? m.content
+          : standardizeContentBlocks(m.content as ContentBlock[]),
+      }));
 
     const response = await client.messages.create({
       model: req.model ?? this.defaultModel,
@@ -102,11 +108,24 @@ class OpenAICompatibleProvider implements LlmProvider {
 
   async complete(req: LlmCompletionRequest): Promise<LlmCompletionResponse> {
     const client = await this.getClient();
+    // OpenAI-compatible APIs only understand text messages; strip thinking/tool blocks
+    const messages = req.messages
+      .filter((m) => typeof m.content === "string" || !Array.isArray(m.content))
+      .map((m) => {
+        if (typeof m.content === "string") return { role: m.role, content: m.content };
+        const blocks = standardizeContentBlocks(m.content as ContentBlock[]);
+        const text = blocks
+          .filter((b) => b.type === "text")
+          .map((b) => b.text ?? "")
+          .join("\n");
+        return { role: m.role, content: text };
+      });
+
     const response = await client.chat.completions.create({
       model: req.model ?? this.defaultModel,
       max_tokens: req.maxTokens ?? 1024,
       temperature: req.temperature,
-      messages: req.messages,
+      messages,
     });
 
     const choice = response.choices[0];
@@ -115,7 +134,7 @@ class OpenAICompatibleProvider implements LlmProvider {
       model: response.model,
       provider: this.providerLabel,
       usage: response.usage
-        ? { inputTokens: response.usage.prompt_tokens, outputTokens: response.usage.completion_tokens }
+        ? { inputTokens: response.usage.prompt_tokens ?? 0, outputTokens: response.usage.completion_tokens ?? 0 }
         : undefined,
       finishReason: choice?.finish_reason ?? "stop",
     };

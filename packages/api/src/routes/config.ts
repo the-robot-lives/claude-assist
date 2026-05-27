@@ -56,6 +56,11 @@ function maskKey(key: string | undefined): string | undefined {
   return key.slice(0, 3) + "..." + key.slice(-4);
 }
 
+function isMaskedKey(key: string | undefined): boolean {
+  if (!key) return false;
+  return key === "***" || /^.{3}\.\.\..{4}$/.test(key);
+}
+
 function sanitizeForResponse(config: AppConfig): AppConfig {
   const safe = structuredClone(config);
   safe.embedding.apiKey = maskKey(safe.embedding.apiKey);
@@ -111,9 +116,15 @@ export function createConfigRoutes(storage: StorageService, llmService: LlmServi
     const updates = await c.req.json() as Partial<AppConfig>;
 
     if (updates.indexPaths) current.indexPaths = updates.indexPaths;
-    if (updates.embedding) current.embedding = { ...current.embedding, ...updates.embedding };
+    if (updates.embedding) {
+      if (isMaskedKey(updates.embedding.apiKey)) delete updates.embedding.apiKey;
+      current.embedding = { ...current.embedding, ...updates.embedding };
+    }
     if (updates.server) current.server = { ...current.server, ...updates.server };
-    if (updates.llm) current.llm = { ...current.llm, ...updates.llm };
+    if (updates.llm) {
+      if (isMaskedKey(updates.llm.apiKey)) delete updates.llm.apiKey;
+      current.llm = { ...current.llm, ...updates.llm };
+    }
 
     // Persist to SQLite (strip env-overlay keys so they don't leak into DB)
     const toStore = structuredClone(current);

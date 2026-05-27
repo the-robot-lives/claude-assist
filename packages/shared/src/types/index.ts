@@ -37,12 +37,61 @@ export interface ContentBlock {
   type: "text" | "tool_result" | "tool_use" | "thinking";
   text?: string;
   thinking?: string;
+  signature?: string;
   tool_use_id?: string;
   content?: string;
   is_error?: boolean;
   id?: string;
   name?: string;
   input?: Record<string, unknown>;
+  [key: string]: unknown;
+}
+
+/**
+ * Deep-clone a content block array and strip provider-specific fields
+ * so the result is safe to send to any LLM provider.
+ */
+export function standardizeContentBlocks(blocks: ContentBlock[]): ContentBlock[] {
+  return blocks.map((block) => {
+    const clean: ContentBlock = { type: block.type };
+
+    switch (block.type) {
+      case "text":
+        clean.text = block.text ?? "";
+        break;
+      case "thinking":
+        clean.thinking = block.thinking ?? "";
+        // signature is Anthropic-specific; drop it
+        break;
+      case "tool_use":
+        clean.id = block.id;
+        clean.name = block.name;
+        clean.input = block.input ? structuredClone(block.input) : {};
+        break;
+      case "tool_result":
+        clean.tool_use_id = block.tool_use_id;
+        clean.content = block.content;
+        clean.is_error = block.is_error;
+        break;
+    }
+
+    return clean;
+  });
+}
+
+/**
+ * Clone a full message array (user/assistant), standardizing content blocks
+ * and stripping provider-specific fields for cross-model compatibility.
+ */
+export function standardizeMessages(
+  messages: Array<{ role: string; content: string | ContentBlock[]; [k: string]: unknown }>,
+): Array<{ role: string; content: string | ContentBlock[] }> {
+  return messages.map((msg) => ({
+    role: msg.role,
+    content: typeof msg.content === "string"
+      ? msg.content
+      : standardizeContentBlocks(msg.content),
+  }));
 }
 
 export interface AssistantMessage extends BaseRecord {
@@ -213,7 +262,7 @@ export interface AppConfig {
 
 // LLM inference
 export interface LlmCompletionRequest {
-  messages: Array<{ role: "system" | "user" | "assistant"; content: string }>;
+  messages: Array<{ role: "system" | "user" | "assistant"; content: string | ContentBlock[] }>;
   model?: string;
   maxTokens?: number;
   temperature?: number;
