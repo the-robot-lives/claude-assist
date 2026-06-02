@@ -1,5 +1,15 @@
 import Database from "better-sqlite3";
-import type { AgentHarness, Conversation, ThreadEdit, EditedMessage, Dataset, DatasetEntry, QualityLabel } from "@claude-assist/shared";
+import type {
+  AgentHarness,
+  Conversation,
+  RawTranscriptEvent,
+  ThreadEdit,
+  EditedMessage,
+  UniversalMessage,
+  Dataset,
+  DatasetEntry,
+  QualityLabel,
+} from "@claude-assist/shared";
 
 export interface TagMeta {
   name: string;
@@ -36,6 +46,10 @@ export interface StoredMessage {
   role: string;
   content: string;
   timestamp: string;
+}
+
+export interface StoredUniversalMessage extends UniversalMessage {
+  conversationId: string;
 }
 
 export interface IndexStatus {
@@ -98,6 +112,33 @@ export class StorageService {
       );
 
       CREATE INDEX IF NOT EXISTS idx_messages_conversation ON messages(conversation_id);
+    `);
+
+    this.db.exec(`
+      CREATE TABLE IF NOT EXISTS universal_messages (
+        id              TEXT PRIMARY KEY,
+        conversation_id TEXT NOT NULL,
+        role            TEXT NOT NULL,
+        timestamp       TEXT NOT NULL,
+        payload         TEXT NOT NULL,
+        FOREIGN KEY (conversation_id) REFERENCES conversations(id)
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_universal_messages_conversation ON universal_messages(conversation_id);
+    `);
+
+    this.db.exec(`
+      CREATE TABLE IF NOT EXISTS raw_transcript_events (
+        id              TEXT PRIMARY KEY,
+        conversation_id TEXT NOT NULL,
+        timestamp       TEXT NOT NULL,
+        harness         TEXT NOT NULL,
+        event_type      TEXT NOT NULL,
+        payload         TEXT NOT NULL,
+        FOREIGN KEY (conversation_id) REFERENCES conversations(id)
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_raw_events_conversation ON raw_transcript_events(conversation_id);
     `);
 
     this.db.exec(`
@@ -447,6 +488,58 @@ export class StorageService {
       }
     });
     batch(messages);
+  }
+
+  async insertUniversalMessages(conversationId: string, messages: UniversalMessage[]): Promise<void> {
+    const db = this.getDb();
+    db.prepare("DELETE FROM universal_messages WHERE conversation_id = ?").run(conversationId);
+
+    const insert = db.prepare(
+      "INSERT INTO universal_messages (id, conversation_id, role, timestamp, payload) VALUES (?, ?, ?, ?, ?)",
+    );
+    const batch = db.transaction((msgs: UniversalMessage[]) => {
+      for (const msg of msgs) {
+        insert.run(msg.id, conversationId, msg.role, msg.timestamp, JSON.stringify(msg));
+      }
+    });
+    batch(messages);
+  }
+
+  async getUniversalMessages(conversationId: string): Promise<StoredUniversalMessage[]> {
+    const db = this.getDb();
+    const rows = db
+      .prepare("SELECT conversation_id as conversationId, payload FROM universal_messages WHERE conversation_id = ? ORDER BY timestamp, id")
+      .all(conversationId) as Array<{ conversationId: string; payload: string }>;
+    return rows.map((row) => ({ ...JSON.parse(row.payload), conversationId }));
+  }
+
+  async insertRawTranscriptEvents(conversationId: string, events: RawTranscriptEvent[]): Promise<void> {
+    const db = this.getDb();
+    db.prepare("DELETE FROM raw_transcript_events WHERE conversation_id = ?").run(conversationId);
+
+    const insert = db.prepare(
+      "INSERT INTO raw_transcript_events (id, conversation_id, timestamp, harness, event_type, payload) VALUES (?, ?, ?, ?, ?, ?)",
+    );
+    const batch = db.transaction((items: RawTranscriptEvent[]) => {
+      for (const event of items) {
+        insert.run(event.id, conversationId, event.timestamp, event.harness, event.eventType, JSON.stringify(event.raw));
+      }
+    });
+    batch(events);
+  }
+
+  async getRawTranscriptEvents(conversationId: string): Promise<RawTranscriptEvent[]> {
+    const db = this.getDb();
+    const rows = db
+      .prepare("SELECT id, timestamp, harness, event_type as eventType, payload FROM raw_transcript_events WHERE conversation_id = ? ORDER BY timestamp, id")
+      .all(conversationId) as Array<{ id: string; timestamp: string; harness: AgentHarness; eventType: string; payload: string }>;
+    return rows.map((row) => ({
+      id: row.id,
+      timestamp: row.timestamp,
+      harness: row.harness,
+      eventType: row.eventType,
+      raw: JSON.parse(row.payload),
+    }));
   }
 
   async getMessages(conversationId: string): Promise<StoredMessage[]> {

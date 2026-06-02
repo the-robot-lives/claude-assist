@@ -85,6 +85,8 @@ describe("parseJsonlLine", () => {
   test("parses a valid JSON line into a BaseRecord", () => {
     const line = JSON.stringify(userMessageFixture);
     const result = parseJsonlLine(line);
+    expect(isUserMessage(result)).toBe(true);
+    if (!isUserMessage(result)) throw new Error("expected user message");
     expect(result.uuid).toBe("abc-123");
     expect(result.type).toBe("user");
     expect(result.sessionId).toBe("sess-001");

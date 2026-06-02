@@ -21,6 +21,8 @@ Single SQLite file at `~/.claude-assist/claude-assist.db` (configurable via `CLA
 |-------|---------|
 | conversations | Indexed conversation metadata (path, dates, title, tags, status) |
 | messages | Individual messages with role, content, timestamp |
+| universal_messages | Structured cross-harness messages used for transfer, memory hooks, and continuation |
+| raw_transcript_events | Harness-specific raw records retained for audit, replay, and future re-parsing |
 | thread_edits | Edited conversation threads (injected/collapsed messages, status, updated_at) |
 | datasets | Named dataset collections for fine-tuning |
 | dataset_entries | Individual training examples linked to conversations |
@@ -38,6 +40,18 @@ Single SQLite file at `~/.claude-assist/claude-assist.db` (configurable via `CLA
 ## Content Hashing
 
 Files are hashed on index to skip re-processing unchanged conversations. Only new or modified JSONL files trigger re-indexing.
+
+## Harness Retention Model
+
+`messages` is intentionally lossy and optimized for search. `universal_messages` keeps structured roles, content blocks, provenance, and provider hints. `raw_transcript_events` preserves original harness records so adapters can be improved without losing information.
+
+Harness transfer should flow through the universal layer:
+
+```text
+Harness -> raw_transcript_events -> universal_messages -> target harness exporter
+```
+
+Gemini, OpenCode, Aider, and Other adapters are accepted as harness values but remain stubbed until sample transcripts are captured and validated.
 
 ## Configuration
 

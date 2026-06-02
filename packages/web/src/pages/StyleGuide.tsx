@@ -5,7 +5,7 @@ import { MarkdownView } from "../components/MarkdownView.js";
 const STYLE_GUIDES: Record<string, { title: string; content: string }> = {
   "2026-Q2-1": {
     title: "Claude Assist Style Guide — 2026 Q2",
-    content: GUIDE_2026_Q2_1,
+    content: "",
   },
 };
 
@@ -35,7 +35,6 @@ export function StyleGuide() {
   );
 }
 
-function GUIDE_2026_Q2_1() { return ""; }
 // The actual content is below — assigned as a template literal to keep it in one file.
 
 Object.assign(STYLE_GUIDES["2026-Q2-1"]!, {

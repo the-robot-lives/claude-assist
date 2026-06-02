@@ -114,6 +114,12 @@ interface IndexStatusResponse {
     status: string;
     lastIndexed: string | null;
     conversationCount: number;
+    progress?: {
+      phase: string;
+      current: number;
+      total: number;
+      currentFile?: string;
+    };
   };
 }
 

@@ -7,6 +7,7 @@ import { applyOperations, type EditOperation } from "../services/editor.ts";
 import { identifyCandidates, convertToArtifact } from "../services/converter.ts";
 import { OperationsService } from "../services/operations.ts";
 import type { SearchService } from "../services/search.ts";
+import { prepareContinuationPayload } from "../services/session-workflow.ts";
 
 export function createConversationRoutes(storage: StorageService, searchService?: SearchService): Hono {
   const routes = new Hono();
@@ -113,6 +114,74 @@ export function createConversationRoutes(storage: StorageService, searchService?
     } catch {
       return c.json({ data: null, error: "source file not readable" }, 500);
     }
+  });
+
+  routes.get("/:id/universal", async (c) => {
+    const id = c.req.param("id");
+    const includeRaw = c.req.query("raw") === "true";
+    const conversation = await storage.getConversation(id);
+    if (!conversation) {
+      return c.json({ data: null, error: "not found" }, 404);
+    }
+
+    const messages = await storage.getUniversalMessages(id);
+    const rawEvents = includeRaw ? await storage.getRawTranscriptEvents(id) : undefined;
+    return c.json({
+      data: {
+        id: conversation.id,
+        harness: conversation.harness,
+        sourcePath: conversation.sourcePath,
+        projectPath: conversation.projectPath,
+        title: conversation.title,
+        startedAt: conversation.startedAt.toISOString(),
+        updatedAt: conversation.updatedAt.toISOString(),
+        messages,
+        rawEvents,
+      },
+      meta: { total: messages.length, raw: rawEvents?.length ?? 0 },
+    });
+  });
+
+  routes.get("/:id/continuation", async (c) => {
+    const id = c.req.param("id");
+    const targetHarness = c.req.query("target") as AgentHarness | undefined;
+    const conversation = await storage.getConversation(id);
+    if (!conversation) {
+      return c.json({ data: null, error: "not found" }, 404);
+    }
+
+    const messages = await storage.getUniversalMessages(id);
+    const payload = prepareContinuationPayload({
+      sourceHarness: conversation.harness,
+      targetHarness,
+      title: conversation.title,
+      messages,
+      intent: targetHarness && targetHarness !== conversation.harness ? "transfer" : "continue",
+    });
+    return c.json({ data: payload, meta: { total: messages.length } });
+  });
+
+  routes.post("/:id/transfer", async (c) => {
+    const id = c.req.param("id");
+    const body = await c.req.json().catch(() => ({})) as { targetHarness?: AgentHarness };
+    if (!body.targetHarness) {
+      return c.json({ data: null, error: "targetHarness required" }, 400);
+    }
+
+    const conversation = await storage.getConversation(id);
+    if (!conversation) {
+      return c.json({ data: null, error: "not found" }, 404);
+    }
+
+    const messages = await storage.getUniversalMessages(id);
+    const payload = prepareContinuationPayload({
+      sourceHarness: conversation.harness,
+      targetHarness: body.targetHarness,
+      title: conversation.title,
+      messages,
+      intent: "transfer",
+    });
+    return c.json({ data: payload, meta: { total: messages.length } });
   });
 
   routes.get("/:id/edits", async (c) => {

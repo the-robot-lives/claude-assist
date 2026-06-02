@@ -1,5 +1,6 @@
 import type { LlmConfig, LlmCompletionRequest, LlmCompletionResponse, ContentBlock } from "@claude-assist/shared";
 import { standardizeContentBlocks } from "@claude-assist/shared";
+import type { MessageParam } from "@anthropic-ai/sdk/resources/messages";
 
 interface LlmProvider {
   complete(req: LlmCompletionRequest): Promise<LlmCompletionResponse>;
@@ -43,20 +44,23 @@ class AnthropicProvider implements LlmProvider {
   async complete(req: LlmCompletionRequest): Promise<LlmCompletionResponse> {
     const client = await this.getClient();
     const systemMsg = req.messages.find((m) => m.role === "system");
-    const msgs = req.messages
+    const system = typeof systemMsg?.content === "string"
+      ? systemMsg.content
+      : undefined;
+    const msgs: MessageParam[] = req.messages
       .filter((m) => m.role !== "system")
       .map((m) => ({
         role: m.role as "user" | "assistant",
         content: typeof m.content === "string"
           ? m.content
-          : standardizeContentBlocks(m.content as ContentBlock[]),
+          : standardizeContentBlocks(m.content as ContentBlock[]) as MessageParam["content"],
       }));
 
     const response = await client.messages.create({
       model: req.model ?? this.defaultModel,
       max_tokens: req.maxTokens ?? 1024,
       temperature: req.temperature,
-      system: systemMsg?.content,
+      system,
       messages: msgs,
     });
 

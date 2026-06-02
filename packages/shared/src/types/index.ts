@@ -11,13 +11,130 @@ export type RecordType =
   | "custom-title"
   | "agent-name";
 
-export type AgentHarness = "claude" | "codex" | "gemini" | "other";
+export type AgentHarness = "claude" | "codex" | "gemini" | "opencode" | "aider" | "other";
 
 export interface IndexSource {
   harness: AgentHarness;
   path: string;
   format?: "jsonl" | "auto";
   label?: string;
+}
+
+export type UniversalRole = "system" | "developer" | "user" | "assistant" | "tool";
+
+export type UniversalContentBlock =
+  | UniversalTextBlock
+  | UniversalThinkingBlock
+  | UniversalRedactedThinkingBlock
+  | UniversalToolUseBlock
+  | UniversalToolResultBlock
+  | UniversalImageBlock
+  | UniversalAudioBlock
+  | UniversalDocumentBlock
+  | UniversalUnknownBlock;
+
+export interface UniversalBlockBase {
+  id?: string;
+  providerType?: string;
+  providerHints?: Record<string, unknown>;
+}
+
+export interface UniversalTextBlock extends UniversalBlockBase {
+  type: "text";
+  text: string;
+  system?: boolean;
+}
+
+export interface UniversalThinkingBlock extends UniversalBlockBase {
+  type: "thinking";
+  thinking: string;
+  signature?: string;
+}
+
+export interface UniversalRedactedThinkingBlock extends UniversalBlockBase {
+  type: "redacted_thinking";
+  data?: string;
+}
+
+export interface UniversalToolUseBlock extends UniversalBlockBase {
+  type: "tool_use";
+  toolCallId: string;
+  name: string;
+  input: Record<string, unknown>;
+}
+
+export interface UniversalToolResultBlock extends UniversalBlockBase {
+  type: "tool_result";
+  toolCallId: string;
+  content: string | UniversalContentBlock[];
+  isError?: boolean;
+}
+
+export interface UniversalImageBlock extends UniversalBlockBase {
+  type: "image";
+  mediaType?: string;
+  source?: string;
+  data?: string;
+}
+
+export interface UniversalAudioBlock extends UniversalBlockBase {
+  type: "audio";
+  mediaType?: string;
+  source?: string;
+  data?: string;
+  transcript?: string;
+}
+
+export interface UniversalDocumentBlock extends UniversalBlockBase {
+  type: "document";
+  mediaType?: string;
+  source?: string;
+  data?: string;
+  text?: string;
+}
+
+export interface UniversalUnknownBlock extends UniversalBlockBase {
+  type: "unknown";
+  raw: unknown;
+}
+
+export interface UniversalMessage {
+  id: string;
+  role: UniversalRole;
+  timestamp: string;
+  content: UniversalContentBlock[];
+  providerMessageId?: string;
+  model?: string;
+  stopReason?: string | null;
+  usage?: TokenUsage;
+  provenance?: {
+    harness: AgentHarness;
+    sourcePath: string;
+    rawIndex?: number;
+    parentId?: string | null;
+  };
+  providerHints?: Record<string, unknown>;
+}
+
+export interface RawTranscriptEvent {
+  id: string;
+  timestamp: string;
+  harness: AgentHarness;
+  eventType: string;
+  raw: unknown;
+}
+
+export interface UniversalThread {
+  id: string;
+  harness: AgentHarness;
+  sourcePath: string;
+  projectPath: string;
+  title: string;
+  startedAt: string;
+  updatedAt: string;
+  messages: UniversalMessage[];
+  rawEvents?: RawTranscriptEvent[];
+  providerMetadata?: Record<string, unknown>;
 }
 
 export interface BaseRecord {

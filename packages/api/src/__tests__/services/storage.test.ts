@@ -210,6 +210,32 @@ describe("StorageService", () => {
     expect(messages[1].content).toBe("Hi there!");
   });
 
+  test("insertUniversalMessages + getUniversalMessages round-trip", async () => {
+    await storage.upsertConversation({
+      id: "universal-1",
+      harness: "codex",
+      projectPath: "/project",
+      startedAt: "2026-05-12T00:00:00Z",
+      updatedAt: "2026-05-12T00:00:00Z",
+      messageCount: 1,
+      title: "Universal",
+      sourcePath: "/file.jsonl",
+    });
+
+    await storage.insertUniversalMessages("universal-1", [{
+      id: "msg-1",
+      role: "assistant",
+      timestamp: "2026-05-12T00:00:00Z",
+      content: [{ type: "thinking", thinking: "private reasoning", providerType: "thinking" }],
+      provenance: { harness: "codex", sourcePath: "/file.jsonl", rawIndex: 1 },
+    }]);
+
+    const messages = await storage.getUniversalMessages("universal-1");
+    expect(messages).toHaveLength(1);
+    expect(messages[0].conversationId).toBe("universal-1");
+    expect(messages[0].content[0].type).toBe("thinking");
+  });
+
   test("getStats returns correct counts", async () => {
     const empty = await storage.getStats();
     expect(empty.conversationCount).toBe(0);

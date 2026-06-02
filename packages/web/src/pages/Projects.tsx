@@ -18,6 +18,10 @@ function formatDate(iso: string | null): string {
   return d.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
 }
 
+function shortProject(path: string): string {
+  return path.split("/").filter(Boolean).slice(-2).join("/") || path;
+}
+
 function TagList({
   tags,
   onAdd,

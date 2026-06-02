@@ -4,18 +4,25 @@
 
 ```mermaid
 flowchart LR
-    A["JSONL files"] -->|glob scan| B[IndexerService]
-    B -->|parse lines| C[Structured records]
-    C -->|upsert| D[(SQLite)]
-    C -->|embed text| E[EmbeddingService]
+    A["Harness transcript files"] -->|glob scan| B[IndexerService]
+    B -->|parse by harness| C[Raw transcript events]
+    C -->|normalize| U[UniversalMessage records]
+    U -->|flatten| M[Search messages]
+    C -->|retain| D[(SQLite)]
+    U -->|upsert| D
+    M -->|upsert| D
+    M -->|embed text| E[EmbeddingService]
     E -->|384-dim vectors| D
 ```
 
-1. **Discovery** — IndexerService scans configured watch paths (default: `~/.claude/projects/`) for `*.jsonl` files
-2. **Parsing** — Each JSONL line becomes a typed record: `user`, `assistant`, `system`, `attachment`, etc.
-3. **Storage** — Conversations and messages are upserted into SQLite with content hashing to skip unchanged files
-4. **Embedding** — Message text is embedded via `all-MiniLM-L6-v2` and stored as 384-dimensional float vectors in sqlite-vec virtual tables
-5. **Watching** — File watcher detects new/changed JSONL files and re-indexes incrementally
+1. **Discovery** — IndexerService scans configured harness sources for `*.jsonl` files. Defaults include Claude Code and Codex.
+2. **Raw retention** — Source records are retained as provider-specific raw transcript events.
+3. **Normalization** — Supported importers convert records into `UniversalMessage` blocks for transfer, memory, and continuation workflows.
+4. **Search flattening** — Universal messages are flattened into text messages for FTS and semantic search.
+5. **Embedding** — Message text is embedded via `all-MiniLM-L6-v2` and stored as 384-dimensional float vectors in sqlite-vec virtual tables.
+6. **Watching** — File watcher detects new/changed JSONL files and re-indexes incrementally.
+
+Gemini, OpenCode, Aider, and Other source ids are accepted but importer behavior is stubbed until real transcripts are available for validation.
 
 ## Search Pipeline
 
@@ -36,7 +43,9 @@ All clients (web, CLI) communicate with the API via HTTP `fetch` to `localhost:3
 
 ## Record Types
 
-Source JSONL records: `permission-mode`, `user`, `assistant`, `attachment`, `system`, `file-history-snapshot`, `last-prompt`, `queue-operation`.
+Claude source JSONL records: `permission-mode`, `user`, `assistant`, `attachment`, `system`, `file-history-snapshot`, `last-prompt`, `queue-operation`.
+
+Canonical records: `RawTranscriptEvent`, `UniversalThread`, `UniversalMessage`, and `UniversalContentBlock`.
 
 Derived entities: `Conversation`, `SearchResult`, `ThreadEdit`, `Artifact`, `Dataset`, `DatasetEntry`, `SavedPrompt`, `TagMeta`, `ProjectMeta`, `IndexStatus`, `ConversionCandidate`, `AppConfig`.
 

@@ -11,7 +11,14 @@ import {
   type CustomTitleRecord,
   type UserMessage,
 } from "@claude-assist/shared";
-import type { AgentHarness, IndexSource } from "@claude-assist/shared";
+import type {
+  AgentHarness,
+  IndexSource,
+  RawTranscriptEvent,
+  UniversalContentBlock,
+  UniversalMessage,
+  UniversalRole,
+} from "@claude-assist/shared";
 import { StorageService, type StoredMessage } from "./storage.ts";
 import type { EmbeddingService } from "./embeddings.ts";
 
@@ -35,6 +42,9 @@ interface ParsedConversation {
   updatedAt: string;
   title?: string;
   messages: ParsedMessage[];
+  universalMessages: UniversalMessage[];
+  rawEvents: RawTranscriptEvent[];
+  providerMetadata?: Record<string, unknown>;
 }
 
 interface CodexRecord {
@@ -108,9 +118,7 @@ export class IndexerService {
 
   async indexFile(filePath: string, source?: IndexSource): Promise<void> {
     const resolvedSource = source ?? this.sourceForFile(filePath) ?? { harness: "claude", path: dirname(filePath), format: "jsonl" };
-    const parsed = resolvedSource.harness === "codex"
-      ? parseCodexFile(filePath)
-      : parseClaudeFile(filePath);
+    const parsed = parseHarnessFile(resolvedSource.harness, filePath);
 
     await this.indexParsedFile(parsed, filePath, resolvedSource.harness);
   }
@@ -228,6 +236,8 @@ export class IndexerService {
     }));
 
     await this.storage.insertMessages(conversationId, messages);
+    await this.storage.insertUniversalMessages(conversationId, parsed.universalMessages);
+    await this.storage.insertRawTranscriptEvents(conversationId, parsed.rawEvents);
 
     if (this.embeddings?.ready && this.storage.vecAvailable) {
       try {
@@ -281,6 +291,29 @@ export interface ScanPreview {
   estimatedCost: number;
 }
 
+function parseHarnessFile(harness: AgentHarness, filePath: string): ParsedConversation | null {
+  switch (harness) {
+    case "claude":
+      return parseClaudeFile(filePath);
+    case "codex":
+      return parseCodexFile(filePath);
+    case "gemini":
+    case "opencode":
+    case "aider":
+    case "other":
+      return parsePendingHarnessFile(harness, filePath);
+  }
+}
+
+function parsePendingHarnessFile(harness: AgentHarness, _filePath: string): ParsedConversation | null {
+  // TODO(agent-watch-dog): validate real transcripts before implementing this
+  // importer. Gemini, OpenCode, Aider, and user-defined "other" sources should
+  // preserve raw provider events and normalize into UniversalMessage records
+  // only after sample transcript formats are captured.
+  console.warn(`${harness} transcript import is stubbed until real transcript samples are available`);
+  return null;
+}
+
 function parseClaudeFile(filePath: string): ParsedConversation | null {
   const content = readFileSync(filePath, "utf-8");
   const allRecords: Array<BaseRecord | CustomTitleRecord> = [];
@@ -308,17 +341,16 @@ function parseClaudeFile(filePath: string): ParsedConversation | null {
   const lastRecord = contentRecords[contentRecords.length - 1];
   const firstTimestamp = firstRecord.timestamp ?? new Date().toISOString();
   const lastTimestamp = lastRecord.timestamp ?? firstTimestamp;
+  const universalMessages = contentRecords.map((record, index) => claudeRecordToUniversalMessage(record, filePath, index));
 
   return {
     startedAt: firstTimestamp,
     updatedAt: lastTimestamp,
     projectPath: decodeProjectPath(dirname(filePath)),
     title: customTitle ?? generateTitle(contentRecords),
-    messages: contentRecords.map((record) => ({
-      role: record.type === "user" ? "user" : "assistant",
-      content: extractTextContent(record),
-      timestamp: record.timestamp ?? "",
-    })),
+    messages: universalMessages.map(universalToSearchMessage),
+    universalMessages,
+    rawEvents: allRecords.map((record, index) => rawEventFromRecord("claude", record, filePath, index)),
   };
 }
 
@@ -333,9 +365,10 @@ function parseCodexFile(filePath: string): ParsedConversation | null {
   let sessionId: string | null = null;
   let projectPath: string | null = null;
   let title: string | null = null;
-  const messages: ParsedMessage[] = [];
+  const universalMessages: UniversalMessage[] = [];
 
-  for (const record of records) {
+  for (let index = 0; index < records.length; index++) {
+    const record = records[index];
     if (record.type === "session_meta") {
       sessionId = stringOrNull(record.payload?.id) ?? sessionId;
       projectPath = stringOrNull(record.payload?.cwd) ?? projectPath;
@@ -346,15 +379,12 @@ function parseCodexFile(filePath: string): ParsedConversation | null {
     if (payload?.type !== "message") continue;
     if (payload.role !== "user" && payload.role !== "assistant") continue;
 
-    const content = extractCodexContent(payload.content);
-    if (!content.trim()) continue;
-    messages.push({
-      role: payload.role,
-      content,
-      timestamp: record.timestamp ?? new Date().toISOString(),
-    });
+    const message = codexRecordToUniversalMessage(record, filePath, index);
+    if (message.content.length === 0) continue;
+    universalMessages.push(message);
   }
 
+  const messages = universalMessages.map(universalToSearchMessage);
   if (messages.length === 0) return null;
   if (sessionId) title = loadCodexTitle(filePath, sessionId);
 
@@ -365,6 +395,9 @@ function parseCodexFile(filePath: string): ParsedConversation | null {
     projectPath: projectPath ?? dirname(filePath),
     title: title ?? generateTitleFromMessages(messages),
     messages,
+    universalMessages,
+    rawEvents: records.map((record, index) => rawEventFromRecord("codex", record, filePath, index)),
+    providerMetadata: sessionId ? { sessionId } : undefined,
   };
 }
 
@@ -380,6 +413,160 @@ function extractCodexContent(content: unknown): string {
     })
     .filter(Boolean)
     .join("\n");
+}
+
+function claudeRecordToUniversalMessage(record: UserMessage | AssistantMessage, sourcePath: string, rawIndex: number): UniversalMessage {
+  const role: UniversalRole = record.type === "assistant" ? "assistant" : "user";
+  const content = record.type === "assistant"
+    ? record.message.content.map((block) => claudeBlockToUniversal(block))
+    : claudeUserContentToUniversal(record.message.content);
+
+  return {
+    id: record.uuid,
+    role,
+    timestamp: record.timestamp ?? "",
+    content,
+    providerMessageId: record.uuid,
+    model: record.type === "assistant" ? record.message.model : undefined,
+    stopReason: record.type === "assistant" ? record.message.stop_reason : undefined,
+    usage: record.type === "assistant" ? record.message.usage : undefined,
+    provenance: {
+      harness: "claude",
+      sourcePath,
+      rawIndex,
+      parentId: record.parentUuid,
+    },
+    providerHints: {
+      sessionId: record.sessionId,
+      isSidechain: record.isSidechain,
+    },
+  };
+}
+
+function claudeUserContentToUniversal(content: string | Array<Record<string, unknown>>): UniversalContentBlock[] {
+  if (typeof content === "string") return [{ type: "text", text: content }];
+  return content.map((block) => claudeBlockToUniversal(block));
+}
+
+function claudeBlockToUniversal(block: Record<string, unknown>): UniversalContentBlock {
+  switch (block.type) {
+    case "text":
+      return { type: "text", text: stringOrEmpty(block.text), providerType: "text" };
+    case "thinking":
+      return {
+        type: "thinking",
+        thinking: stringOrEmpty(block.thinking),
+        signature: stringOrUndefined(block.signature),
+        providerType: "thinking",
+      };
+    case "tool_use":
+      return {
+        type: "tool_use",
+        toolCallId: stringOrEmpty(block.id),
+        name: stringOrEmpty(block.name),
+        input: objectOrEmpty(block.input),
+        providerType: "tool_use",
+      };
+    case "tool_result":
+      return {
+        type: "tool_result",
+        toolCallId: stringOrEmpty(block.tool_use_id),
+        content: typeof block.content === "string" ? block.content : JSON.stringify(block.content ?? ""),
+        isError: typeof block.is_error === "boolean" ? block.is_error : undefined,
+        providerType: "tool_result",
+      };
+    default:
+      return { type: "unknown", raw: block, providerType: typeof block.type === "string" ? block.type : undefined };
+  }
+}
+
+function codexRecordToUniversalMessage(record: CodexRecord, sourcePath: string, rawIndex: number): UniversalMessage {
+  const role = normalizeRole(record.payload?.role);
+  return {
+    id: `${sourcePath}:${rawIndex}`,
+    role,
+    timestamp: record.timestamp ?? "",
+    content: codexContentToUniversal(record.payload?.content),
+    provenance: {
+      harness: "codex",
+      sourcePath,
+      rawIndex,
+    },
+    providerHints: {
+      payloadType: record.payload?.type,
+    },
+  };
+}
+
+function codexContentToUniversal(content: unknown): UniversalContentBlock[] {
+  if (typeof content === "string") return [{ type: "text", text: content }];
+  if (!Array.isArray(content)) return [];
+  return content.map((block) => {
+    if (!block || typeof block !== "object") {
+      return { type: "unknown", raw: block } satisfies UniversalContentBlock;
+    }
+    const typed = block as Record<string, unknown>;
+    switch (typed.type) {
+      case "input_text":
+      case "output_text":
+      case "text":
+        return { type: "text", text: stringOrEmpty(typed.text), providerType: String(typed.type) };
+      default:
+        return { type: "unknown", raw: typed, providerType: typeof typed.type === "string" ? typed.type : undefined };
+    }
+  });
+}
+
+function universalToSearchMessage(message: UniversalMessage): ParsedMessage {
+  return {
+    role: message.role,
+    content: universalContentToText(message.content),
+    timestamp: message.timestamp,
+  };
+}
+
+function universalContentToText(blocks: UniversalContentBlock[]): string {
+  return blocks
+    .map((block) => {
+      switch (block.type) {
+        case "text":
+          return block.text;
+        case "thinking":
+          return block.thinking;
+        case "tool_use":
+          return JSON.stringify({ tool_use: block.name, input: block.input });
+        case "tool_result":
+          return typeof block.content === "string" ? block.content : universalContentToText(block.content);
+        case "audio":
+          return block.transcript ?? "";
+        case "document":
+          return block.text ?? "";
+        default:
+          return "";
+      }
+    })
+    .filter(Boolean)
+    .join("\n");
+}
+
+function rawEventFromRecord(harness: AgentHarness, raw: unknown, sourcePath: string, index: number): RawTranscriptEvent {
+  const typed = raw && typeof raw === "object" ? raw as Record<string, unknown> : {};
+  const timestamp = typeof typed.timestamp === "string" ? typed.timestamp : new Date(0).toISOString();
+  const eventType = typeof typed.type === "string" ? typed.type : "unknown";
+  return {
+    id: StorageService.generateId(sourcePath, `${timestamp}:${index}:${eventType}`, harness),
+    timestamp,
+    harness,
+    eventType,
+    raw,
+  };
+}
+
+function normalizeRole(role: unknown): UniversalRole {
+  if (role === "system" || role === "developer" || role === "user" || role === "assistant" || role === "tool") {
+    return role;
+  }
+  return "user";
 }
 
 function loadCodexTitle(filePath: string, sessionId: string): string | null {
@@ -515,4 +702,17 @@ function truncateTitle(title: string): string {
 
 function stringOrNull(value: unknown): string | null {
   return typeof value === "string" ? value : null;
+}
+
+function stringOrUndefined(value: unknown): string | undefined {
+  return typeof value === "string" ? value : undefined;
+}
+
+function stringOrEmpty(value: unknown): string {
+  return typeof value === "string" ? value : "";
+}
+
+function objectOrEmpty(value: unknown): Record<string, unknown> {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+  return value as Record<string, unknown>;
 }

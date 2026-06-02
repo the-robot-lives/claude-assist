@@ -3,6 +3,7 @@ import { Routes, Route } from "react-router-dom";
 import { Layout } from "./components/Layout.js";
 import { Explore } from "./pages/Explore.js";
 import { Thread } from "./pages/Thread.js";
+import { ContinueSession } from "./pages/ContinueSession.js";
 import { Edit } from "./pages/Edit.js";
 import { Convert } from "./pages/Convert.js";
 import { Datasets } from "./pages/Datasets.js";
@@ -24,6 +25,7 @@ export function App() {
         <Route path="browse" element={<Explore />} />
         <Route path="safety-watch" element={<SafetyWatch />} />
         <Route path="thread/:id" element={<Thread />} />
+        <Route path="thread/:id/continue" element={<ContinueSession />} />
         <Route path="thread/:id/edit" element={<Edit />} />
         <Route path="thread/:id/convert" element={<Convert />} />
         <Route path="datasets" element={<Datasets />} />
