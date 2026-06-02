@@ -1,11 +1,13 @@
 import React from "react";
 import { Outlet, NavLink } from "react-router-dom";
+import { HarnessProvider, useHarness, type AgentHarness } from "../context/HarnessContext.js";
 
 const navGroups = [
   {
     label: null,
     items: [
       { to: "/", label: "Explore", icon: "⊘" },
+      { to: "/safety-watch", label: "Safety Watch", icon: "◇" },
     ],
   },
   {
@@ -21,10 +23,37 @@ const navGroups = [
 
 export function Layout() {
   return (
+    <HarnessProvider>
+      <LayoutShell />
+    </HarnessProvider>
+  );
+}
+
+function LayoutShell() {
+  const { harness, setHarness } = useHarness();
+
+  return (
     <div className="flex h-screen flex-col bg-void">
       {/* Navbar — same family as sidebar, slightly lifted */}
       <header className="flex h-14 shrink-0 items-center border-b border-border-subtle bg-canvas px-5">
-        <span className="font-mono text-sm font-medium text-glow tracking-wide">claude-assist</span>
+        <span className="font-mono text-sm font-medium text-glow tracking-wide">agent-watch-dog</span>
+        <div className="ml-6 flex h-8 items-center rounded-md border border-border-subtle bg-void p-0.5">
+          {(["claude", "codex", "gemini", "other"] as AgentHarness[]).map((item) => (
+            <button
+              key={item}
+              type="button"
+              onClick={() => setHarness(item)}
+              className={`h-7 px-3 text-xs font-medium capitalize transition-colors ${
+                harness === item
+                  ? "rounded bg-glow text-void"
+                  : "text-text-muted hover:text-text-bright"
+              }`}
+              title={`Show ${item} sessions`}
+            >
+              {item}
+            </button>
+          ))}
+        </div>
         <div className="ml-auto flex items-center gap-3">
           <div className="flex h-8 w-64 items-center rounded-md border border-border-subtle bg-void px-3">
             <span className="text-sm text-text-muted">Search conversations...</span>

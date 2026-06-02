@@ -2,7 +2,7 @@ import { Hono } from "hono";
 import { readFileSync } from "node:fs";
 import { parseJsonlFile, isUserMessage, isAssistantMessage } from "@claude-assist/shared";
 import type { StorageService } from "../services/storage.ts";
-import type { ArtifactType } from "@claude-assist/shared";
+import type { AgentHarness, ArtifactType } from "@claude-assist/shared";
 import { applyOperations, type EditOperation } from "../services/editor.ts";
 import { identifyCandidates, convertToArtifact } from "../services/converter.ts";
 import { OperationsService } from "../services/operations.ts";
@@ -17,9 +17,10 @@ export function createConversationRoutes(storage: StorageService, searchService?
     const offset = Number(c.req.query("offset") ?? 0);
     const groupBy = c.req.query("group_by");
     const project = c.req.query("project");
+    const harness = c.req.query("harness") as AgentHarness | undefined;
 
-    const conversations = await storage.getConversations({ sort, limit, offset, groupBy, project });
-    const total = await storage.getConversationCount(project);
+    const conversations = await storage.getConversations({ sort, limit, offset, groupBy, project, harness });
+    const total = await storage.getConversationCount(project, harness);
 
     return c.json({ data: conversations, meta: { total, limit, offset } });
   });
@@ -60,6 +61,7 @@ export function createConversationRoutes(storage: StorageService, searchService?
         tags: conversation.tags,
         summary: conversation.summary,
         status: conversation.status,
+        harness: conversation.harness,
         projectPath: conversation.projectPath,
         messageCount: conversation.messageCount,
       },
@@ -81,6 +83,22 @@ export function createConversationRoutes(storage: StorageService, searchService?
     const conversation = await storage.getConversation(id);
     if (!conversation) {
       return c.json({ data: null, error: "not found" }, 404);
+    }
+
+    if (conversation.harness !== "claude") {
+      const messages = await storage.getMessages(id);
+      return c.json({
+        data: messages.map((message, index) => ({
+          type: message.role === "assistant" ? "assistant" : "user",
+          uuid: `${id}:${index}`,
+          timestamp: message.timestamp,
+          message: {
+            role: message.role,
+            content: message.content,
+          },
+        })),
+        meta: { total: messages.length },
+      });
     }
 
     try {

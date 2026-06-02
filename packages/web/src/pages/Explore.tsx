@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useConversations, useSearch, useIndexStatus } from "../hooks/useApi.js";
+import { useHarness } from "../context/HarnessContext.js";
 
 type SortOption = "updated_at" | "started_at" | "message_count" | "title";
 type PreviewMode = "both" | "first" | "last" | "none";
@@ -13,6 +14,7 @@ function parseTagInput(raw: string): string[] {
 export function Explore() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  const { harness } = useHarness();
 
   const initialQuery = searchParams.get("q") ?? "";
   const initialMode = (searchParams.get("mode") ?? "fts") as "fts" | "semantic";
@@ -31,9 +33,13 @@ export function Explore() {
   const isSearching = query.trim().length > 0;
   const offset = (page - 1) * pageSize;
 
+  useEffect(() => {
+    setPage(1);
+  }, [harness]);
+
   // Server-side pagination
-  const { data: convData, loading: convLoading } = useConversations({ sort, limit: pageSize, offset });
-  const { data: searchData, loading: searchLoading } = useSearch(query, mode);
+  const { data: convData, loading: convLoading } = useConversations({ sort, limit: pageSize, offset, harness });
+  const { data: searchData, loading: searchLoading } = useSearch(query, mode, { harness });
   const { data: idxData } = useIndexStatus();
 
   const indexStatus = idxData?.data;
@@ -45,7 +51,7 @@ export function Explore() {
   const excludeList = parseTagInput(excludeTags);
 
   // Apply tag filters (client-side for search, server handles browse)
-  const filterByTags = <T extends { tags?: string[] }>(items: T[], getConvTags: (item: T) => string[]): T[] => {
+  const filterByTags = <T,>(items: T[], getConvTags: (item: T) => string[]): T[] => {
     return items.filter((item) => {
       const tags = getConvTags(item).map((t) => t.toLowerCase());
       if (includeList.length > 0 && !includeList.every((t) => tags.includes(t))) return false;
@@ -120,6 +126,7 @@ export function Explore() {
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
           <span className="font-mono text-xs text-text-dim">{c.id.slice(0, 8)}</span>
+          <span className="rounded border border-border-subtle px-1.5 py-0.5 text-[10px] uppercase text-text-dim">{c.harness}</span>
           <span className="flex-1 truncate text-sm text-text-primary">
             <ConversationTitle title={c.title} />
           </span>
@@ -298,6 +305,7 @@ export function Explore() {
             >
               <div className="flex items-center gap-2 mb-1">
                 <span className="font-mono text-xs text-text-dim">{r.conversation.id.slice(0, 8)}</span>
+                <span className="rounded border border-border-subtle px-1.5 py-0.5 text-[10px] uppercase text-text-dim">{r.conversation.harness}</span>
                 <span className="text-xs text-glow">[{shortProject(r.conversation.projectPath)}]</span>
                 <span className="flex-1 truncate text-sm font-medium text-white">
                   <ConversationTitle title={r.conversation.title} />

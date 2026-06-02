@@ -4,13 +4,13 @@ import { MemoryRouter } from "react-router-dom";
 import { Layout } from "../../components/Layout.tsx";
 
 describe("Layout", () => {
-  test("renders navbar with 'claude-assist' branding", () => {
+  test("renders navbar with agent-watch-dog branding", () => {
     render(
       <MemoryRouter>
         <Layout />
       </MemoryRouter>,
     );
-    expect(screen.getByText("claude-assist")).toBeInTheDocument();
+    expect(screen.getByText("agent-watch-dog")).toBeInTheDocument();
   });
 
   test("renders sidebar navigation items", () => {

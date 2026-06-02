@@ -8,6 +8,7 @@ export function createSearchRoutes(searchService: SearchService): Hono {
   routes.get("/", async (c) => {
     const query = c.req.query("q") ?? "";
     const mode = (c.req.query("mode") ?? "fts") as "fts" | "semantic";
+    const harness = c.req.query("harness") as SearchOptions["harness"];
     const project = c.req.query("project");
     const from = c.req.query("from");
     const to = c.req.query("to");
@@ -18,6 +19,7 @@ export function createSearchRoutes(searchService: SearchService): Hono {
     const options: SearchOptions = {
       query,
       mode,
+      harness: harness ?? undefined,
       project: project ?? undefined,
       dateFrom: from ? new Date(from) : undefined,
       dateTo: to ? new Date(to) : undefined,

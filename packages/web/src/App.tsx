@@ -13,6 +13,7 @@ import { Projects } from "./pages/Projects.js";
 import { ProjectDetail } from "./pages/ProjectDetail.js";
 import { Settings } from "./pages/Settings.js";
 import { StyleGuide } from "./pages/StyleGuide.js";
+import { SafetyWatch } from "./pages/SafetyWatch.js";
 
 export function App() {
   return (
@@ -21,6 +22,7 @@ export function App() {
         <Route index element={<Explore />} />
         <Route path="search" element={<Explore />} />
         <Route path="browse" element={<Explore />} />
+        <Route path="safety-watch" element={<SafetyWatch />} />
         <Route path="thread/:id" element={<Thread />} />
         <Route path="thread/:id/edit" element={<Edit />} />
         <Route path="thread/:id/convert" element={<Convert />} />

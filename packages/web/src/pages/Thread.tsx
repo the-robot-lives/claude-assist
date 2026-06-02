@@ -35,6 +35,7 @@ interface ThreadRecord {
 
 interface ConversationMeta {
   id: string;
+  harness: string;
   title: string;
   slug: string | null;
   description: string | null;
@@ -227,7 +228,7 @@ export function Thread() {
 
   const sessionId = extractSessionId(meta.sourcePath);
   const dir = meta.projectPath;
-  const resumeCmd = sessionId ? `pushd ${dir} && claude --resume ${sessionId}` : null;
+  const resumeCmd = meta.harness === "claude" && sessionId ? `pushd ${dir} && claude --resume ${sessionId}` : null;
 
   return (
     <div className="mx-auto max-w-4xl space-y-6 pb-16">
@@ -286,6 +287,8 @@ export function Thread() {
             </span>
           )}
 
+          <span className="text-border-strong">|</span>
+          <span className="rounded border border-border-subtle px-1.5 py-0.5 uppercase">{meta.harness}</span>
           <span className="text-border-strong">|</span>
           <span title="Project working directory">
             <span className="text-glow font-medium">{shortProject(meta.projectPath)}</span>

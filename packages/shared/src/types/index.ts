@@ -11,6 +11,15 @@ export type RecordType =
   | "custom-title"
   | "agent-name";
 
+export type AgentHarness = "claude" | "codex" | "gemini" | "other";
+
+export interface IndexSource {
+  harness: AgentHarness;
+  path: string;
+  format?: "jsonl" | "auto";
+  label?: string;
+}
+
 export interface BaseRecord {
   uuid: string;
   parentUuid: string | null;
@@ -115,6 +124,7 @@ export interface TokenUsage {
 // Index database types
 export interface Conversation {
   id: string;
+  harness: AgentHarness;
   projectPath: string;
   startedAt: Date;
   updatedAt: Date;
@@ -140,6 +150,7 @@ export interface SearchResult {
 export interface SearchOptions {
   query: string;
   mode: "fts" | "semantic";
+  harness?: AgentHarness;
   project?: string;
   dateFrom?: Date;
   dateTo?: Date;
@@ -248,6 +259,7 @@ export interface LlmConfig {
 
 export interface AppConfig {
   indexPaths: string[];
+  indexSources?: IndexSource[];
   embedding: {
     provider: "local" | "openai" | "voyage" | "anthropic";
     model?: string;

@@ -93,6 +93,7 @@ export class SearchService {
       const conv = conversations.get(row.conversation_id);
       if (!conv) continue;
 
+      if (options.harness && conv.harness !== options.harness) continue;
       if (options.project && conv.projectPath !== options.project) continue;
       if (options.dateFrom && conv.startedAt < options.dateFrom) continue;
       if (options.dateTo && conv.startedAt > options.dateTo) continue;
@@ -120,6 +121,7 @@ export class SearchService {
       const conv = await this.storage.getConversation(knn.id);
       if (!conv) continue;
 
+      if (options.harness && conv.harness !== options.harness) continue;
       if (options.project && conv.projectPath !== options.project) continue;
       if (options.dateFrom && conv.startedAt < options.dateFrom) continue;
       if (options.dateTo && conv.startedAt > options.dateTo) continue;

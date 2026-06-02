@@ -4,7 +4,7 @@ import { logger } from "hono/logger";
 import { serve } from "@hono/node-server";
 import { join } from "node:path";
 import { homedir } from "node:os";
-import type { AppConfig } from "@claude-assist/shared";
+import type { IndexSource } from "@claude-assist/shared";
 import { createConversationRoutes } from "./routes/conversations.ts";
 import { createSearchRoutes } from "./routes/search.ts";
 import { createDatasetRoutes } from "./routes/datasets.ts";
@@ -23,14 +23,17 @@ import { LlmService } from "./services/llm.ts";
 const dataDir = process.env.CLAUDE_ASSIST_DATA_DIR ?? join(homedir(), ".claude-assist");
 const dbPath = join(dataDir, "claude-assist.db");
 
-const defaultWatchPaths = [join(homedir(), ".claude", "projects")];
-const watchPaths = process.env.CLAUDE_ASSIST_WATCH_PATHS
-  ? process.env.CLAUDE_ASSIST_WATCH_PATHS.split(":")
-  : defaultWatchPaths;
+const defaultIndexSources: IndexSource[] = [
+  { harness: "claude", path: join(homedir(), ".claude", "projects"), format: "jsonl", label: "Claude Code" },
+  { harness: "codex", path: join(homedir(), ".codex", "sessions"), format: "jsonl", label: "Codex" },
+];
+const indexSources = process.env.CLAUDE_ASSIST_WATCH_PATHS
+  ? process.env.CLAUDE_ASSIST_WATCH_PATHS.split(":").map((path) => ({ harness: "claude" as const, path, format: "jsonl" as const }))
+  : defaultIndexSources;
 
 const embeddings = new EmbeddingService();
 const storage = new StorageService(dbPath);
-const indexer = new IndexerService(storage, watchPaths, embeddings);
+const indexer = new IndexerService(storage, indexSources, embeddings);
 const searchService = new SearchService(storage, embeddings);
 const llmService = new LlmService();
 
@@ -78,7 +81,7 @@ async function start() {
 
   serve({ fetch: app.fetch, port }, async () => {
     console.log(`claude-assist api listening on http://localhost:${port}`);
-    console.log(`Watching: ${watchPaths.join(", ")}`);
+    console.log(`Watching: ${indexSources.map((source) => `${source.harness}:${source.path}`).join(", ")}`);
 
     const stats = await storage.getStats();
     if (stats.conversationCount === 0) {

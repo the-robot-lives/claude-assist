@@ -10,6 +10,10 @@ const CONFIG_KEY = "app_config";
 
 const DEFAULTS: AppConfig = {
   indexPaths: [join(homedir(), ".claude", "projects")],
+  indexSources: [
+    { harness: "claude", path: join(homedir(), ".claude", "projects"), format: "jsonl", label: "Claude Code" },
+    { harness: "codex", path: join(homedir(), ".codex", "sessions"), format: "jsonl", label: "Codex" },
+  ],
   embedding: { provider: "local", model: "all-MiniLM-L6-v2" },
   server: { port: 3100, host: "localhost" },
 };
@@ -98,6 +102,9 @@ function loadConfig(storage: StorageService): AppConfig {
     embedding: { ...DEFAULTS.embedding, ...dbConfig.embedding },
     server: { ...DEFAULTS.server, ...dbConfig.server },
   };
+  if (!merged.indexSources && merged.indexPaths) {
+    merged.indexSources = merged.indexPaths.map((path) => ({ harness: "claude", path, format: "jsonl" }));
+  }
   if (dbConfig.llm) merged.llm = dbConfig.llm;
 
   return applyEnvOverlays(merged);
@@ -116,6 +123,7 @@ export function createConfigRoutes(storage: StorageService, llmService: LlmServi
     const updates = await c.req.json() as Partial<AppConfig>;
 
     if (updates.indexPaths) current.indexPaths = updates.indexPaths;
+    if (updates.indexSources) current.indexSources = updates.indexSources;
     if (updates.embedding) {
       if (isMaskedKey(updates.embedding.apiKey)) delete updates.embedding.apiKey;
       current.embedding = { ...current.embedding, ...updates.embedding };

@@ -157,6 +157,35 @@ describe("StorageService", () => {
     expect(filtered[0].id).toBe("proj-a");
   });
 
+  test("getConversations filters by harness", async () => {
+    await storage.upsertConversation({
+      id: "claude-1",
+      harness: "claude",
+      projectPath: "/project",
+      startedAt: "2026-05-12T00:00:00Z",
+      updatedAt: "2026-05-12T00:00:00Z",
+      messageCount: 1,
+      title: "Claude",
+      sourcePath: "/claude.jsonl",
+    });
+
+    await storage.upsertConversation({
+      id: "codex-1",
+      harness: "codex",
+      projectPath: "/project",
+      startedAt: "2026-05-12T00:00:00Z",
+      updatedAt: "2026-05-12T00:00:00Z",
+      messageCount: 1,
+      title: "Codex",
+      sourcePath: "/codex.jsonl",
+    });
+
+    const filtered = await storage.getConversations({ harness: "codex" });
+    expect(filtered).toHaveLength(1);
+    expect(filtered[0].id).toBe("codex-1");
+    expect(filtered[0].harness).toBe("codex");
+  });
+
   test("insertMessages + getMessages round-trip", async () => {
     await storage.upsertConversation({
       id: "conv-1",

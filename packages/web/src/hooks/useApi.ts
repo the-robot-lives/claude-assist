@@ -57,6 +57,7 @@ function useApiQuery<T>(path: string | null): UseApiState<T> {
 interface ConversationsResponse {
   data: Array<{
     id: string;
+    harness: string;
     title: string;
     slug: string | null;
     description: string | null;
@@ -72,12 +73,13 @@ interface ConversationsResponse {
   meta: { total: number; limit: number; offset: number };
 }
 
-export function useConversations(options?: { sort?: string; limit?: number; offset?: number; project?: string }) {
+export function useConversations(options?: { sort?: string; limit?: number; offset?: number; project?: string; harness?: string }) {
   const params = new URLSearchParams();
   if (options?.sort) params.set("sort", options.sort);
   if (options?.limit) params.set("limit", String(options.limit));
   if (options?.offset) params.set("offset", String(options.offset));
   if (options?.project) params.set("project", options.project);
+  if (options?.harness) params.set("harness", options.harness);
   const query = params.toString();
   return useApiQuery<ConversationsResponse>(`/conversations${query ? `?${query}` : ""}`);
 }
@@ -86,10 +88,12 @@ interface SearchResponse {
   data: Array<{
     conversation: {
       id: string;
+      harness: string;
       title: string;
       projectPath: string;
       updatedAt: string;
       messageCount: number;
+      tags?: string[];
     };
     snippet: string;
     relevance: number;
@@ -97,9 +101,10 @@ interface SearchResponse {
   meta: { total: number; query: string; mode: string };
 }
 
-export function useSearch(query: string, mode: "fts" | "semantic" = "fts", filters?: { project?: string }) {
+export function useSearch(query: string, mode: "fts" | "semantic" = "fts", filters?: { project?: string; harness?: string }) {
   const params = new URLSearchParams({ q: query, mode });
   if (filters?.project) params.set("project", filters.project);
+  if (filters?.harness) params.set("harness", filters.harness);
   const path = query ? `/search?${params}` : null;
   return useApiQuery<SearchResponse>(path);
 }

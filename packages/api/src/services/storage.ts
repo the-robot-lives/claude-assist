@@ -1,5 +1,5 @@
 import Database from "better-sqlite3";
-import type { Conversation, ThreadEdit, EditedMessage, Dataset, DatasetEntry, QualityLabel } from "@claude-assist/shared";
+import type { AgentHarness, Conversation, ThreadEdit, EditedMessage, Dataset, DatasetEntry, QualityLabel } from "@claude-assist/shared";
 
 export interface TagMeta {
   name: string;
@@ -68,6 +68,7 @@ export class StorageService {
     this.db.exec(`
       CREATE TABLE IF NOT EXISTS conversations (
         id            TEXT PRIMARY KEY,
+        harness       TEXT NOT NULL DEFAULT 'claude',
         project_path  TEXT NOT NULL,
         started_at    TEXT NOT NULL,
         updated_at    TEXT NOT NULL,
@@ -82,6 +83,7 @@ export class StorageService {
       );
 
       CREATE INDEX IF NOT EXISTS idx_conversations_project ON conversations(project_path);
+      CREATE INDEX IF NOT EXISTS idx_conversations_harness ON conversations(harness);
       CREATE INDEX IF NOT EXISTS idx_conversations_updated ON conversations(updated_at);
     `);
 
@@ -207,6 +209,7 @@ export class StorageService {
 
     this.migrateThreadEdits();
     this.migrateConversationsMeta();
+    this.migrateConversationHarness();
     this.initVectorTable();
   }
 
@@ -233,6 +236,16 @@ export class StorageService {
     if (!colNames.has("description")) {
       db.exec("ALTER TABLE conversations ADD COLUMN description TEXT");
     }
+  }
+
+  private migrateConversationHarness(): void {
+    const db = this.getDb();
+    const cols = db.prepare("PRAGMA table_info(conversations)").all() as Array<{ name: string }>;
+    const colNames = new Set(cols.map((c) => c.name));
+    if (!colNames.has("harness")) {
+      db.exec("ALTER TABLE conversations ADD COLUMN harness TEXT NOT NULL DEFAULT 'claude'");
+    }
+    db.exec("CREATE INDEX IF NOT EXISTS idx_conversations_harness ON conversations(harness)");
   }
 
   private initVectorTable(): void {
@@ -284,6 +297,7 @@ export class StorageService {
     limit?: number;
     offset?: number;
     groupBy?: string;
+    harness?: AgentHarness;
     project?: string;
   }): Promise<Conversation[]> {
     const db = this.getDb();
@@ -304,10 +318,20 @@ export class StorageService {
       (SELECT substr(content, 1, 200) FROM messages m WHERE m.conversation_id = c.id ORDER BY m.id DESC LIMIT 1) as last_message
       FROM conversations c`;
     const params: unknown[] = [];
+    const wheres: string[] = [];
+
+    if (options?.harness) {
+      wheres.push("c.harness = ?");
+      params.push(options.harness);
+    }
 
     if (options?.project) {
-      query += ` WHERE c.project_path = ?`;
+      wheres.push("c.project_path = ?");
       params.push(options.project);
+    }
+
+    if (wheres.length > 0) {
+      query += ` WHERE ${wheres.join(" AND ")}`;
     }
 
     query += ` ORDER BY ${orderClause} LIMIT ? OFFSET ?`;
@@ -317,13 +341,20 @@ export class StorageService {
     return rows.map(rowToConversation);
   }
 
-  async getConversationCount(project?: string): Promise<number> {
+  async getConversationCount(project?: string, harness?: AgentHarness): Promise<number> {
     const db = this.getDb();
+    const wheres: string[] = [];
+    const params: unknown[] = [];
     if (project) {
-      const row = db.prepare("SELECT COUNT(*) as count FROM conversations WHERE project_path = ?").get(project) as { count: number };
-      return row.count;
+      wheres.push("project_path = ?");
+      params.push(project);
     }
-    const row = db.prepare("SELECT COUNT(*) as count FROM conversations").get() as { count: number };
+    if (harness) {
+      wheres.push("harness = ?");
+      params.push(harness);
+    }
+    const whereClause = wheres.length > 0 ? ` WHERE ${wheres.join(" AND ")}` : "";
+    const row = db.prepare(`SELECT COUNT(*) as count FROM conversations${whereClause}`).get(...params) as { count: number };
     return row.count;
   }
 
@@ -335,6 +366,7 @@ export class StorageService {
 
   async upsertConversation(conv: {
     id: string;
+    harness?: AgentHarness;
     projectPath: string;
     startedAt: string;
     updatedAt: string;
@@ -347,9 +379,10 @@ export class StorageService {
   }): Promise<void> {
     const db = this.getDb();
     db.prepare(`
-      INSERT INTO conversations (id, project_path, started_at, updated_at, message_count, title, summary, tags, status, source_path)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO conversations (id, harness, project_path, started_at, updated_at, message_count, title, summary, tags, status, source_path)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT(id) DO UPDATE SET
+        harness = excluded.harness,
         project_path = excluded.project_path,
         started_at = excluded.started_at,
         updated_at = excluded.updated_at,
@@ -361,6 +394,7 @@ export class StorageService {
         source_path = excluded.source_path
     `).run(
       conv.id,
+      conv.harness ?? "claude",
       conv.projectPath,
       conv.startedAt,
       conv.updatedAt,
@@ -758,13 +792,15 @@ export class StorageService {
     this.db = null;
   }
 
-  static generateId(sourcePath: string, firstTimestamp: string): string {
-    return createHash("sha256").update(`${sourcePath}:${firstTimestamp}`).digest("hex").slice(0, 16);
+  static generateId(sourcePath: string, firstTimestamp: string, harness: AgentHarness = "claude"): string {
+    const seed = harness === "claude" ? `${sourcePath}:${firstTimestamp}` : `${harness}:${sourcePath}:${firstTimestamp}`;
+    return createHash("sha256").update(seed).digest("hex").slice(0, 16);
   }
 }
 
 interface ConversationRow {
   id: string;
+  harness: string;
   project_path: string;
   started_at: string;
   updated_at: string;
@@ -783,6 +819,7 @@ interface ConversationRow {
 function rowToConversation(row: ConversationRow): Conversation {
   return {
     id: row.id,
+    harness: (row.harness ?? "claude") as AgentHarness,
     projectPath: row.project_path,
     startedAt: new Date(row.started_at),
     updatedAt: new Date(row.updated_at),
