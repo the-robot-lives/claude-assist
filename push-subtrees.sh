@@ -31,7 +31,7 @@ push_subtree 3rd-party/chartdb                    noizu-forks-chartdb           
 push_subtree 3rd-party/clickhouse                  noizu-forks-clickhouse           master
 push_subtree 3rd-party/directus                    noizu-forks-directus             main
 push_subtree 3rd-party/drawio                      noizu-forks-drawio               dev
-/push_subtree 3rd-party/excalidraw                  noizu-forks-excalidraw           master
+push_subtree 3rd-party/excalidraw                  noizu-forks-excalidraw           master
 push_subtree 3rd-party/excalidraw-room             noizu-forks-excalidraw-room      master
 push_subtree 3rd-party/kroki                       noizu-forks-kroki                main
 push_subtree 3rd-party/mermaid-live-editor         noizu-forks-mermaid-live-editor  develop
