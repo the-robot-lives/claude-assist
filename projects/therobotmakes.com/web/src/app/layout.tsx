@@ -1,23 +1,37 @@
 import type { Metadata } from "next";
-import { Space_Grotesk, IBM_Plex_Mono } from "next/font/google";
+import { IBM_Plex_Mono, Barlow_Condensed, Barlow } from "next/font/google";
 import "./globals.css";
-
-const spaceGrotesk = Space_Grotesk({
-  variable: "--font-space-grotesk",
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
-});
 
 const ibmPlexMono = IBM_Plex_Mono({
   variable: "--font-ibm-plex-mono",
   subsets: ["latin"],
-  weight: ["300", "400", "500", "600"],
+  weight: ["300", "400", "500", "600", "700"],
   style: ["normal", "italic"],
 });
 
+const barlowCondensed = Barlow_Condensed({
+  variable: "--font-barlow-condensed",
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700"],
+});
+
+const barlow = Barlow({
+  variable: "--font-barlow",
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+});
+
 export const metadata: Metadata = {
-  title: "noizu.ink — Put your pen down.",
-  description: "First stroke to finished product. A guided pipeline from rough idea to deployed application.",
+  title: "TheRobotMakes — From Pitch to Product and Beyond",
+  description:
+    "Robot-assisted product development. You steer. The robots build.",
+  openGraph: {
+    title: "TheRobotMakes — From Pitch to Product and Beyond",
+    description: "You steer. The robots build.",
+    url: "https://therobotmakes.com",
+    siteName: "TheRobotMakes",
+    type: "website",
+  },
 };
 
 export default function RootLayout({
@@ -28,7 +42,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${spaceGrotesk.variable} ${ibmPlexMono.variable} antialiased`}
+        className={`${ibmPlexMono.variable} ${barlowCondensed.variable} ${barlow.variable} antialiased`}
       >
         {children}
       </body>

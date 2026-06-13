@@ -2,7 +2,7 @@ static-site:
   nameOverride: therobotmakes
   fullnameOverride: therobotmakes
   domain: therobotmakes.com
-  image: ops.noizu.com/noizu-ink-landing:latest
+  image: ops.noizu.com/therobotmakes.com/web:latest
   port: 80
   imagePullSecrets:
     - name: ops-registry-secret

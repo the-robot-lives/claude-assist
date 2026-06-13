@@ -2,7 +2,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-IMAGE="ops.noizu.com/noizu-ink-landing"
+IMAGE="ops.noizu.com/therobotmakes.com/web"
 TAG="${1:-latest}"
 
 echo "Compiling"
