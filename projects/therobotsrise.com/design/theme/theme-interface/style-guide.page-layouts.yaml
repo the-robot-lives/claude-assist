@@ -1,0 +1,30 @@
+page-layouts:
+  - name: "standard"
+    title: "Standard (Sidebar + Content)"
+    selector: ".content"
+    vars:
+      max-width: "1200px"
+    chrome:
+      navbar: true
+      sidebar: true
+      footer: true
+
+  - name: "protocol"
+    title: "Protocol View"
+    selector: ".content.content--protocol"
+    vars:
+      max-width: "65ch"
+    chrome:
+      navbar: true
+      sidebar: true
+      footer: true
+
+  - name: "data"
+    title: "Data View (Wide)"
+    selector: ".content.content--data"
+    vars:
+      max-width: "100%"
+    chrome:
+      navbar: true
+      sidebar: true
+      footer: true

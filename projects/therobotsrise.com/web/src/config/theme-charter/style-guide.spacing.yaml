@@ -1,0 +1,12 @@
+spacing-contexts:
+  grid:
+    columns: 12
+    gutter-token: "--space-6"
+    margin-token: "--space-8"
+  container:
+    page-max-width: "1100px"
+    content-max-width: "42.5rem"
+  rhythm:
+    section-spacing: "--space-16"
+    component-spacing: "--space-8"
+    element-spacing: "--space-3"

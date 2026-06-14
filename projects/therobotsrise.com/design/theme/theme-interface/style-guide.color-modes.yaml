@@ -1,0 +1,26 @@
+color-modes:
+  light:
+    surface-base: "#0C0C0C"
+    surface-raised: "#141414"
+    surface-overlay: "#1C1C1C"
+    text-primary: "#E0E0E0"
+    text-secondary: "#707070"
+    text-tertiary: "#505050"
+    border-default: "#252525"
+    border-subtle: "#1C1C1C"
+    accent-primary: "#00D4AA"
+    accent-secondary: "#6366F1"
+    focus-ring: "#00D4AA"
+
+  dark:
+    surface-base: "#0C0C0C"
+    surface-raised: "#141414"
+    surface-overlay: "#1C1C1C"
+    text-primary: "#E0E0E0"
+    text-secondary: "#707070"
+    text-tertiary: "#505050"
+    border-default: "#252525"
+    border-subtle: "#1C1C1C"
+    accent-primary: "#00D4AA"
+    accent-secondary: "#6366F1"
+    focus-ring: "#00D4AA"

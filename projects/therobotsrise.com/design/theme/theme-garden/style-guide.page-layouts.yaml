@@ -1,0 +1,36 @@
+page-layouts:
+  - name: "standard"
+    title: "Standard"
+    selector: ".content"
+    vars:
+      max-width: "1100px"
+    chrome:
+      navbar: true
+      footer: true
+
+  - name: "article"
+    title: "Article (Accord / Blog)"
+    selector: ".content.content--article"
+    vars:
+      max-width: "40rem"
+    chrome:
+      navbar: true
+      footer: true
+
+  - name: "landing"
+    title: "Landing (Full-Width Hero)"
+    selector: ".content.content--landing"
+    vars:
+      max-width: "100%"
+    chrome:
+      navbar: true
+      footer: true
+
+  - name: "garden"
+    title: "Garden View (Interactive Visualization)"
+    selector: ".content.content--garden"
+    vars:
+      max-width: "100%"
+    chrome:
+      navbar: true
+      footer: false

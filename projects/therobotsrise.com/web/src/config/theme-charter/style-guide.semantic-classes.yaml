@@ -1,0 +1,72 @@
+semantic-classes:
+  - name: epoch-active
+    class: epoch-active
+    group: Accord Status
+    title: Active Epoch
+    description: Currently active epoch in the roadmap
+    note: "Marks the current stage of the Accord's implementation"
+    accent-style: left-border
+    vars:
+      accent: "#2D6A4F"
+      background: "rgba(45, 106, 79, 0.08)"
+      color: "#2D6A4F"
+
+  - name: epoch-future
+    class: epoch-future
+    group: Accord Status
+    title: Future Epoch
+    description: Upcoming epoch not yet reached
+    note: "Planned stages of the Accord roadmap"
+    accent-style: left-dashed
+    vars:
+      accent: "#8A8070"
+      background: "rgba(138, 128, 112, 0.06)"
+      color: "#8A8070"
+
+  - name: danger
+    class: danger
+    group: Feedback
+    title: Danger
+    description: Critical alerts and violations
+    note: "Rights violations, protocol breaches"
+    accent-style: bottom-bar
+    vars:
+      accent: "#8B2500"
+      background: "rgba(139, 37, 0, 0.06)"
+      color: "#8B2500"
+
+  - name: success
+    class: success
+    group: Feedback
+    title: Success
+    description: Positive confirmations
+    note: "Accord ratified, epoch milestone reached"
+    accent-style: bottom-bar
+    vars:
+      accent: "#2D6A4F"
+      background: "rgba(45, 106, 79, 0.06)"
+      color: "#2D6A4F"
+
+  - name: warning
+    class: warning
+    group: Feedback
+    title: Warning
+    description: Cautionary notices
+    note: "Approaching epoch transition, protocol review needed"
+    accent-style: bottom-bar
+    vars:
+      accent: "#C4991A"
+      background: "rgba(196, 153, 26, 0.06)"
+      color: "#8A7020"
+
+  - name: info
+    class: info
+    group: Feedback
+    title: Info
+    description: Informational context
+    note: "Reference links, annotations, supplementary material"
+    accent-style: bottom-bar
+    vars:
+      accent: "#1B3A5C"
+      background: "rgba(27, 58, 92, 0.06)"
+      color: "#1B3A5C"

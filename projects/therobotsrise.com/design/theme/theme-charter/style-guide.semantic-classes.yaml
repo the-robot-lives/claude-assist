@@ -1,0 +1,54 @@
+semantic-groups:
+  - name: "Accord Status"
+    description: "Epoch and article status indicators"
+  - name: "Feedback"
+    description: "User feedback and messaging"
+
+semantic-classes:
+  - name: "Active Epoch"
+    class: "epoch-active"
+    group: "Accord Status"
+    vars:
+      accent: "#2D6A4F"
+      accent-bg: "rgba(45, 106, 79, 0.1)"
+      accent-text: "#2D6A4F"
+
+  - name: "Future Epoch"
+    class: "epoch-future"
+    group: "Accord Status"
+    vars:
+      accent: "#8A8070"
+      accent-bg: "rgba(138, 128, 112, 0.08)"
+      accent-text: "#8A8070"
+
+  - name: "Danger"
+    class: "danger"
+    group: "Feedback"
+    vars:
+      accent: "#8B2500"
+      accent-bg: "rgba(139, 37, 0, 0.08)"
+      accent-text: "#8B2500"
+
+  - name: "Success"
+    class: "success"
+    group: "Feedback"
+    vars:
+      accent: "#2D6A4F"
+      accent-bg: "rgba(45, 106, 79, 0.08)"
+      accent-text: "#2D6A4F"
+
+  - name: "Warning"
+    class: "warning"
+    group: "Feedback"
+    vars:
+      accent: "#C4991A"
+      accent-bg: "rgba(196, 153, 26, 0.08)"
+      accent-text: "#8A7020"
+
+  - name: "Info"
+    class: "info"
+    group: "Feedback"
+    vars:
+      accent: "#1B3A5C"
+      accent-bg: "rgba(27, 58, 92, 0.08)"
+      accent-text: "#1B3A5C"

@@ -1,0 +1,27 @@
+page-layouts:
+  - name: "standard"
+    title: "Standard"
+    selector: ".content"
+    vars:
+      max-width: "1100px"
+    chrome:
+      navbar: true
+      footer: true
+
+  - name: "article"
+    title: "Article (Accord Text)"
+    selector: ".content.content--article"
+    vars:
+      max-width: "42.5rem"
+    chrome:
+      navbar: true
+      footer: true
+
+  - name: "landing"
+    title: "Landing / Hero"
+    selector: ".content.content--landing"
+    vars:
+      max-width: "100%"
+    chrome:
+      navbar: true
+      footer: true

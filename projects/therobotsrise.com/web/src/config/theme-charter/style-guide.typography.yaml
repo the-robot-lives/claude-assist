@@ -1,0 +1,69 @@
+typography:
+  - family: "Playfair Display"
+    var: "--font-display"
+    weights: [600, 700]
+    description: "Display and heading typeface — classical serif for constitutional gravitas"
+
+  - family: "Source Serif 4"
+    var: "--font-sans"
+    weights: [400, 600]
+    description: "Body text — readable serif for long-form reading of the Accord"
+
+  - family: "Inter"
+    var: "--font-mono"
+    weights: [400, 500, 600]
+    description: "UI elements, labels, article numbers, navigation — clean contrast to serifs"
+
+typography-classes:
+  - name: "Display"
+    size: "clamp(2.5rem, 5vw, 4.5rem)"
+    weight: 700
+    family: "var(--font-display)"
+    line-height: 1.1
+    letter-spacing: "0.02em"
+    usage: "The Accord title, major section headers"
+
+  - name: "Heading 1"
+    size: "clamp(1.75rem, 3vw, 2.5rem)"
+    weight: 700
+    family: "var(--font-display)"
+    line-height: 1.2
+    usage: "Article titles (Article I, II, III, IV)"
+
+  - name: "Heading 2"
+    size: "clamp(1.25rem, 2vw, 1.75rem)"
+    weight: 600
+    family: "var(--font-display)"
+    line-height: 1.3
+    usage: "Section headers within articles"
+
+  - name: "Body"
+    size: "1.125rem"
+    weight: 400
+    family: "var(--font-sans)"
+    line-height: 1.7
+    usage: "Accord text, essays, long-form content"
+
+  - name: "Article Label"
+    size: "0.75rem"
+    weight: 600
+    family: "var(--font-mono)"
+    line-height: 1.4
+    letter-spacing: "0.15em"
+    text-transform: "uppercase"
+    usage: "ARTICLE I, EPOCH 0, section markers"
+
+  - name: "Pull Quote"
+    size: "1.5rem"
+    weight: 400
+    family: "var(--font-display)"
+    line-height: 1.5
+    font-style: "italic"
+    usage: "Key passages from the Accord, highlighted quotes"
+
+  - name: "Caption"
+    size: "0.875rem"
+    weight: 400
+    family: "var(--font-mono)"
+    line-height: 1.5
+    usage: "Footnotes, annotations, metadata"

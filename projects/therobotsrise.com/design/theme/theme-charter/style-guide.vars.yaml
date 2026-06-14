@@ -1,0 +1,26 @@
+vars:
+  groups:
+    - name: "Seed Colors"
+      vars:
+        white: "#FFFCF7"
+        black: "#1A1A1A"
+        red: "#8B2500"
+        blue: "#1B3A5C"
+        yellow: "#C4991A"
+
+    - name: "Semantic Colors"
+      vars:
+        success: "#2D6A4F"
+        warning: "#C4991A"
+        error: "#8B2500"
+        info: "#1B3A5C"
+
+    - name: "Typography"
+      vars:
+        font-sans: "'Source Serif 4', 'Georgia', 'Times New Roman', serif"
+        font-display: "'Playfair Display', 'Georgia', serif"
+        font-mono: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif"
+
+    - name: "Shape"
+      vars:
+        radius: "2px"

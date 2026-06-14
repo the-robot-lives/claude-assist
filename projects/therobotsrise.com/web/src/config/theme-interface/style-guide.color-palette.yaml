@@ -1,0 +1,56 @@
+color-palette:
+  - group: "Void Scale"
+    colors:
+      - name: "Void"
+        hex: "#0C0C0C"
+      - name: "Surface"
+        hex: "#141414"
+      - name: "Surface Alt"
+        hex: "#1C1C1C"
+      - name: "Border"
+        hex: "#252525"
+      - name: "Muted"
+        hex: "#505050"
+      - name: "Secondary"
+        hex: "#707070"
+      - name: "Soft White"
+        hex: "#E0E0E0"
+    notes:
+      - "Hierarchy through luminosity, not weight or size"
+      - "Never use pure #FFFFFF — soft white prevents eye strain on dark canvas"
+
+  - group: "Emitted Light"
+    colors:
+      - name: "Terminal Teal"
+        hex: "#00D4AA"
+      - name: "Indigo"
+        hex: "#6366F1"
+      - name: "Amber"
+        hex: "#F59E0B"
+    notes:
+      - "Colors are emitted light on dark canvas — they glow, not sit"
+      - "Teal: primary accent, growth, life, active state"
+      - "Indigo: links, interactive, navigation"
+      - "Amber: epoch markers, warnings, attention"
+
+  - group: "Glow Effects"
+    colors:
+      - name: "Teal Glow"
+        hex: "#00D4AA33"
+      - name: "Indigo Glow"
+        hex: "#6366F133"
+      - name: "Amber Glow"
+        hex: "#F59E0B33"
+    notes:
+      - "20% opacity accent colors for hover states, focus rings, ambient effects"
+
+  - group: "Semantic"
+    colors:
+      - name: "Success"
+        hex: "#00D4AA"
+      - name: "Warning"
+        hex: "#F59E0B"
+      - name: "Error"
+        hex: "#EF4444"
+      - name: "Info"
+        hex: "#6366F1"
