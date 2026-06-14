@@ -5,7 +5,7 @@ start-app*tgz
 .envrc
 backend/.env
 frontend/.env
-
+.npmrc
 # OS
 .DS_Store
 

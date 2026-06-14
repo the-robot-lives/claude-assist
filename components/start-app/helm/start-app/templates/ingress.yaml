@@ -1,4 +1,5 @@
 {{- if .Values.ingress.enabled }}
+{{- $svcName := ternary (printf "%s-sandbox" (include "start-app.fullname" .)) (include "start-app.fullname" .) (.Values.sandbox.enabled | default false) }}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -24,35 +25,35 @@ spec:
         pathType: Prefix
         backend:
           service:
-            name: {{ include "start-app.fullname" . }}
+            name: {{ $svcName }}
             port:
               number: {{ .Values.backend.port }}
       - path: /health
         pathType: Exact
         backend:
           service:
-            name: {{ include "start-app.fullname" . }}
+            name: {{ $svcName }}
             port:
               number: {{ .Values.backend.port }}
       - path: /auth
         pathType: Prefix
         backend:
           service:
-            name: {{ include "start-app.fullname" . }}
+            name: {{ $svcName }}
             port:
               number: {{ .Values.backend.port }}
       - path: /sso
         pathType: Prefix
         backend:
           service:
-            name: {{ include "start-app.fullname" . }}
+            name: {{ $svcName }}
             port:
               number: {{ .Values.backend.port }}
       - path: /
         pathType: Prefix
         backend:
           service:
-            name: {{ include "start-app.fullname" . }}
+            name: {{ $svcName }}
             port:
               number: {{ .Values.frontend.port }}
 {{- end }}

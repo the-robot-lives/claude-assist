@@ -141,3 +141,20 @@ autoscaling:
 podDisruptionBudget:
   enabled: false
   minAvailable: 1
+
+sandbox:
+  enabled: false
+  image: ops.noizu.com/start-app/sandbox:latest
+  resources:
+    requests:
+      cpu: 200m
+      memory: 512Mi
+    limits:
+      cpu: "1"
+      memory: 1Gi
+  persistence:
+    enabled: false
+    size: 5Gi
+    storageClass: ""
+  service:
+    type: ClusterIP

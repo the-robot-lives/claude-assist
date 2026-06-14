@@ -30,7 +30,10 @@ PORT_MAP := \
   robots-unite.com=8088 \
   therobotknows.com=8089 \
   therobotlives.com=8090 \
-  therobotmakes.com=8091
+  therobotmakes.com=8091 \
+  therobotplans.com=8092 \
+  noizu.com=8093 \
+  tobornalp.com=8094
 
 # ── Redis DB assignment ──────────────────────────────────────────
 REDIS_DB_MAP := \
@@ -45,7 +48,10 @@ REDIS_DB_MAP := \
   robots-unite.com=8 \
   therobotknows.com=9 \
   therobotlives.com=10 \
-  therobotmakes.com=11
+  therobotmakes.com=11 \
+  therobotplans.com=12 \
+  noizu.com=13 \
+  tobornalp.com=14
 
 # ── Slug derivation ─────────────────────────────────────────────
 SLUG_MAP := \
@@ -60,7 +66,10 @@ SLUG_MAP := \
   robots-unite.com=robots_unite \
   therobotknows.com=therobotknows \
   therobotlives.com=therobotlives \
-  therobotmakes.com=therobotmakes
+  therobotmakes.com=therobotmakes \
+  therobotplans.com=therobotplans \
+  noizu.com=noizu_site \
+  tobornalp.com=tobornalp
 
 PROJECT_SLUG = $(or $(patsubst $(PROJECT_DIR)=%,%,$(filter $(PROJECT_DIR)=%,$(SLUG_MAP))),starter)
 REDIS_DB     = $(or $(patsubst $(PROJECT_DIR)=%,%,$(filter $(PROJECT_DIR)=%,$(REDIS_DB_MAP))),0)
@@ -91,6 +100,8 @@ HELM_OCI_REGISTRY = oci://ghcr.io/the-robot-lives/charts
 	run-dev run-dev-d stop-dev logs-dev \
 	dev-setup dev-migrate dev-regen dev-seed \
 	dev-shell-backend dev-shell-frontend dev-clean \
+	sandbox sandbox-no-cache run-sandbox run-sandbox-d \
+	stop-sandbox logs-sandbox sandbox-shell sandbox-clean sandbox-mount \
 	migrate migrate-status migrate-rollback migrate-validate \
 	helm-package helm-publish helm-lint \
 	helm-bump-patch helm-bump-minor helm-bump-major
@@ -211,6 +222,50 @@ dev-shell-frontend: ## Open shell in frontend container
 dev-clean: ## Remove dev containers and dependency volumes
 	$(DEV_COMPOSE) down -v
 	@echo "Cleaned dev containers and dependency volumes."
+
+# ── Live sandbox ───────────────────────────────────────────────
+
+IMAGE_SANDBOX  = $(REGISTRY)/$(PROJECT_DIR)/sandbox:$(TAG)
+SANDBOX_COMPOSE = docker compose -p $(COMPOSE_NAME) -f docker-compose.yaml -f docker-compose.sandbox.yaml
+
+sandbox: .env ## Build sandbox image (combined frontend+backend+samba)
+	docker buildx build --load -t $(IMAGE_SANDBOX) -f Dockerfile.sandbox .
+
+sandbox-no-cache: .env ## Build sandbox image (no cache)
+	docker buildx build --no-cache --load -t $(IMAGE_SANDBOX) -f Dockerfile.sandbox .
+
+run-sandbox: .env ## Start sandbox (foreground) — Samba :445, frontend :3000, backend :4000
+	$(SANDBOX_COMPOSE) up --build
+
+run-sandbox-d: .env ## Start sandbox (detached)
+	$(SANDBOX_COMPOSE) up --build -d
+	@echo ""
+	@echo "Sandbox running."
+	@echo "  SMB share: smb://localhost:$${SANDBOX_SMB_PORT:-445}/workspace"
+	@echo "  Frontend:  http://localhost:$${SANDBOX_FRONTEND_PORT:-3000}"
+	@echo "  Backend:   http://localhost:$${SANDBOX_BACKEND_PORT:-4000}"
+	@echo ""
+	@echo "Mount (macOS):  make sandbox-mount"
+	@echo "Logs:           make logs-sandbox"
+
+stop-sandbox: ## Stop sandbox containers
+	$(SANDBOX_COMPOSE) down
+
+logs-sandbox: ## Tail sandbox logs
+	$(SANDBOX_COMPOSE) logs -f sandbox
+
+sandbox-shell: ## Open shell in sandbox container
+	$(SANDBOX_COMPOSE) exec sandbox bash
+
+sandbox-clean: ## Remove sandbox containers and volumes
+	$(SANDBOX_COMPOSE) down -v
+	@echo "Cleaned sandbox containers and volumes."
+
+sandbox-mount: ## Mount sandbox workspace via SMB (macOS)
+	@MOUNT_POINT="$${HOME}/sandbox-$(PROJECT_DIR)" && \
+	  mkdir -p "$$MOUNT_POINT" && \
+	  mount_smbfs "//dev:dev@localhost:$${SANDBOX_SMB_PORT:-445}/workspace" "$$MOUNT_POINT" && \
+	  echo "Mounted at $$MOUNT_POINT"
 
 # ── Liquibase migrations ───────────────────────────────────────
 

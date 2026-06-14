@@ -48,6 +48,13 @@ app.kubernetes.io/instance: {{ .Release.Name }}
       key: {{ .Values.secrets.keys.dbPassword }}
 - name: DB_NAME
   value: {{ .Values.database.name | quote }}
+{{- if .Values.secrets.keys.databaseUrl }}
+- name: DATABASE_URL
+  valueFrom:
+    secretKeyRef:
+      name: {{ .Values.secrets.name }}
+      key: {{ .Values.secrets.keys.databaseUrl }}
+{{- end }}
 - name: SECRET_KEY_BASE
   valueFrom:
     secretKeyRef:
