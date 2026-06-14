@@ -1,22 +1,111 @@
 replicas: 1
 domain: therobotlives.com
 
-image: ops.noizu.com/therobotlives.com/web:v0.1.0
-port: 3000
+backend:
+  image: ops.noizu.com/therobotlives.com/backend:v1.0.edge
+  port: 4000
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
 
-resources:
-  requests:
-    cpu: 50m
-    memory: 128Mi
-  limits:
-    cpu: 200m
-    memory: 256Mi
+frontend:
+  image: ops.noizu.com/therobotlives.com/frontend:v1.0.edge
+  port: 80
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+
+migrate:
+  enabled: true
+  command: ["bin/therobotlives", "eval", "Therobotlives.Release.migrate()"]
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+
+database:
+  host: shared-postgres.data-ns.svc.cluster.local
+  port: 5432
+  name: therobotlives
+
+redis:
+  host: shared-redis.data-ns.svc.cluster.local
+  port: 6379
+  db: 10
+
+secrets:
+  name: therobotlives-secrets
+  keys:
+    dbUser: THEROBOTLIVES_DB_USER
+    dbPassword: THEROBOTLIVES_DB_PASSWORD
+    secretKeyBase: THEROBOTLIVES_SECRET_KEY_BASE
+    guardianSecretKey: THEROBOTLIVES_GUARDIAN_SECRET_KEY
+    redisUrl: THEROBOTLIVES_REDIS_URL
+    databaseUrl: THEROBOTLIVES_DATABASE_URL
+    sendgridApiKey: ""
+    oidcClientId: ""
+    oidcClientSecret: ""
+    googleClientId: ""
+    googleClientSecret: ""
+    facebookClientId: ""
+    facebookClientSecret: ""
+    githubClientId: ""
+    githubClientSecret: ""
+    linkedinClientId: ""
+    linkedinClientSecret: ""
+    samlSpCert: ""
+    samlSpKey: ""
+
+  infisical:
+    enabled: true
+    hostAPI: https://infisical.noizu.com/api
+    resyncInterval: 120
+    credentialsSecret: universal-auth-credentials
+    credentialsNamespace: infra
+    projectSlug: k8-infra
+    envSlug: prod
+    secretsPath: "/apps/therobotlives"
+
+mail:
+  fromName: ""
+  fromAddress: "noreply@therobotlives.com"
+
+sso:
+  requireInvite: false
+  oidc:
+    issuer: ""
+  saml:
+    idpMetadataUrl: ""
+    spEntityId: ""
+
+extraEnv: []
+
+configMap:
+  enabled: false
+  data: {}
 
 imagePullSecrets:
   - name: ops-registry-secret
 
+analytics:
+  ga:
+    measurementId: ""
+  posthog:
+    key: ""
+    host: "https://us.i.posthog.com"
+
 ingress:
-  enabled: true
   className: nginx
   annotations:
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
@@ -24,16 +113,37 @@ ingress:
   cloudflareOnly: true
 
 tls:
-  enabled: true
-  secretName: therobotlives-tls
+  secretName: therobotlives-com-tls
   infisical:
     enabled: true
     resyncInterval: 300
     credentialsSecret: universal-auth-credentials
-    credentialsNamespace: infra
+    credentialsNamespace: infisical-operator-system
     projectSlug: k8-infra
     envSlug: prod
-    hostAPI: https://infisical.noizu.com/api
     secretsPath: "/apps/tls/therobotlives"
     crtKey: THEROBOTLIVES_TLS_CRT
     keyKey: THEROBOTLIVES_TLS_KEY
+
+otel:
+  enabled: false
+  collectorEndpoint: "otel-collector.observability-ns.svc.cluster.local:4317"
+  collectorHttpEndpoint: "http://otel-collector.observability-ns.svc.cluster.local:4318"
+  serviceName: "therobotlives"
+
+storage:
+  enabled: false
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 80
+
+podDisruptionBudget:
+  enabled: false
+  minAvailable: 1
+
+sandbox:
+  enabled: false
