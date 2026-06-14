@@ -72,7 +72,7 @@ resource "kubernetes_deployment_v1" "signoz" {
           }
           env {
             name  = "SIGNOZ_TELEMETRYSTORE_CLICKHOUSE_DSN"
-            value = "tcp://infra-clickhouse.${local.ns}.svc.cluster.local:9000"
+            value = "tcp://signoz:LjUC3BkVCuB0F6IVkBXzT04w@infra-clickhouse.${local.ns}.svc.cluster.local:9000"
           }
           env {
             name  = "SIGNOZ_SQLSTORE_SQLITE_PATH"

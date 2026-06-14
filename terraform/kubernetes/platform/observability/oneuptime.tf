@@ -158,7 +158,7 @@ resource "kubernetes_deployment_v1" "oneuptime" {
           }
           env {
             name  = "CLICKHOUSE_USER"
-            value = "default"
+            value = "oneuptime"
           }
           env {
             name  = "REDIS_HOST"
@@ -167,6 +167,23 @@ resource "kubernetes_deployment_v1" "oneuptime" {
           env {
             name  = "REDIS_PORT"
             value = "6379"
+          }
+          env {
+            name  = "REDIS_DB"
+            value = "0"
+          }
+          env {
+            name  = "REDIS_USERNAME"
+            value = "default"
+          }
+          env {
+            name = "REDIS_PASSWORD"
+            value_from {
+              secret_key_ref {
+                name = var.managed_secret_name
+                key  = "ONEUPTIME_REDIS_PASSWORD"
+              }
+            }
           }
           env {
             name  = "LOG_LEVEL"
@@ -191,6 +208,14 @@ resource "kubernetes_deployment_v1" "oneuptime" {
           env {
             name  = "NODE_ENV"
             value = "production"
+          }
+          env {
+            name  = "APP_PORT"
+            value = "3002"
+          }
+          env {
+            name  = "PORT"
+            value = "3002"
           }
 
           # Secrets from Infisical-managed K8s Secret
@@ -260,8 +285,9 @@ resource "kubernetes_deployment_v1" "oneuptime" {
               path = "/api/status"
               port = 3002
             }
-            initial_delay_seconds = 120
+            initial_delay_seconds = 600
             period_seconds        = 30
+            failure_threshold     = 40
             timeout_seconds       = 10
           }
           readiness_probe {
@@ -269,8 +295,9 @@ resource "kubernetes_deployment_v1" "oneuptime" {
               path = "/api/status"
               port = 3002
             }
-            initial_delay_seconds = 60
+            initial_delay_seconds = 120
             period_seconds        = 10
+            failure_threshold     = 30
             timeout_seconds       = 5
           }
         }

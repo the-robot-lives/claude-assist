@@ -82,6 +82,10 @@ resource "kubernetes_deployment_v1" "roundcube" {
             value = "front"
           }
           env {
+            name  = "SMTP_PORT"
+            value = "587"
+          }
+          env {
             name  = "FRONT_ADDRESS"
             value = "front"
           }

@@ -106,7 +106,7 @@ resource "kubernetes_deployment_v1" "postgres" {
           # CMD. With no args the base entrypoint's "$1" != "postgres", so it
           # neither initializes nor starts the server and exits 0 immediately.
           # Supply "postgres" so it boots the server (and runs initdb.d/bootdb.d).
-          args = ["postgres"]
+          args = ["postgres", "-c", "max_connections=200"]
 
           port {
             name           = "postgresql"

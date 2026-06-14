@@ -1,6 +1,18 @@
 # ---------------------------------------------------------------------------
 # Verdaccio — private npm registry, served at npm.noizu.com.
 # ---------------------------------------------------------------------------
+# The htpasswd secret was migrated from SealedSecret to a Terraform-managed
+# resource with ignore_changes on data. Update the htpasswd via kubectl:
+#   htpasswd -nbBC 10 <user> <password> | kubectl create secret generic \
+#     verdaccio-htpasswd --from-literal=htpasswd="$(cat -)" -n infra \
+#     --dry-run=client -o yaml | kubectl apply -f -
+#   kubectl rollout restart deployment/verdaccio -n infra
+
+import {
+  to = kubernetes_secret_v1.verdaccio_htpasswd
+  id = "infra/verdaccio-htpasswd"
+}
+
 locals {
   verdaccio_host = "npm.noizu.com"
 }
@@ -29,6 +41,20 @@ resource "kubernetes_config_map_v1" "verdaccio" {
   }
   data = {
     "config.yaml" = file("${path.module}/files/verdaccio/config.yaml")
+  }
+}
+
+resource "kubernetes_secret_v1" "verdaccio_htpasswd" {
+  metadata {
+    name      = "verdaccio-htpasswd"
+    namespace = local.ns
+    labels    = merge(local.common_labels, { "app.kubernetes.io/name" = "verdaccio" })
+  }
+  data = {
+    htpasswd = var.verdaccio_htpasswd
+  }
+  lifecycle {
+    ignore_changes = [data]
   }
 }
 
@@ -128,14 +154,14 @@ resource "kubernetes_deployment_v1" "verdaccio" {
         volume {
           name = "htpasswd"
           secret {
-            secret_name = "verdaccio-htpasswd"
+            secret_name = kubernetes_secret_v1.verdaccio_htpasswd.metadata[0].name
           }
         }
       }
     }
   }
 
-  depends_on = [kubectl_manifest.sealed]
+  depends_on = [kubernetes_secret_v1.verdaccio_htpasswd]
 }
 
 resource "kubernetes_service_v1" "verdaccio" {

@@ -6,7 +6,7 @@ locals {
     echo "front postStart: no-op"
   EOT
 
-  # Mail protocol ports exposed by both front Services.
+  # Mail protocol ports exposed on the internal ClusterIP Service.
   front_mail_ports = {
     smtp       = 25
     smtps      = 465
@@ -14,6 +14,15 @@ locals {
     imaps      = 993
     pop3s      = 995
     sieve      = 4190
+  }
+
+  # Ports exposed on the public IP. Submission (465/587) and Sieve (4190) are
+  # intentionally excluded — outbound mail goes through webmail (Roundcube)
+  # only, which reaches front via the internal ClusterIP service.
+  front_external_ports = {
+    smtp  = 25
+    imaps = 993
+    pop3s = 995
   }
 
   # Additional internal proxy ports on the ClusterIP Service only.
@@ -226,7 +235,7 @@ resource "kubernetes_service_v1" "front_external" {
     selector     = { app = "front" }
 
     dynamic "port" {
-      for_each = local.front_mail_ports
+      for_each = local.front_external_ports
       content {
         name        = port.key
         port        = port.value

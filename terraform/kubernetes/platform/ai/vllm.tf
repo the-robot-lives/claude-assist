@@ -84,7 +84,7 @@ resource "kubernetes_deployment_v1" "vllm" {
         enable_service_links = false
         container {
           name              = "vllm"
-          image             = "vllm/vllm-openai:latest"
+          image             = "vllm/vllm-openai:v0.11.2"
           image_pull_policy = "IfNotPresent"
           args = [
             "--model", "intfloat/e5-mistral-7b-instruct",

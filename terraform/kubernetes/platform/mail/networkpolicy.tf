@@ -38,3 +38,80 @@ resource "kubernetes_network_policy_v1" "postfix_ingress_restrict" {
     }
   }
 }
+
+# =============================================================================
+# NetworkPolicy — restrict SMTP submission on front to namespace-internal pods.
+# =============================================================================
+# Submission ports (465/587) on front are only reachable from within the
+# platform-mail namespace (roundcube, admin). Inbound MX (port 25) and
+# IMAP/POP3 remain open to all sources.
+# =============================================================================
+resource "kubernetes_network_policy_v1" "front_submission_restrict" {
+  metadata {
+    name      = "front-submission-restrict"
+    namespace = local.ns
+    labels    = local.common_labels
+  }
+  spec {
+    pod_selector {
+      match_labels = { app = "front" }
+    }
+    policy_types = ["Ingress"]
+
+    # Allow submission (465/587) only from pods in this namespace.
+    ingress {
+      from {
+        namespace_selector {
+          match_labels = {
+            "kubernetes.io/metadata.name" = local.ns
+          }
+        }
+      }
+      ports {
+        protocol = "TCP"
+        port     = 465
+      }
+      ports {
+        protocol = "TCP"
+        port     = 587
+      }
+    }
+
+    # Allow all sources on non-submission ports (25, 80, 993, 995, 10025,
+    # 10143, 2525, 4190) so inbound MX delivery and IMAP/POP3 still work.
+    ingress {
+      ports {
+        protocol = "TCP"
+        port     = 25
+      }
+      ports {
+        protocol = "TCP"
+        port     = 80
+      }
+      ports {
+        protocol = "TCP"
+        port     = 993
+      }
+      ports {
+        protocol = "TCP"
+        port     = 995
+      }
+      ports {
+        protocol = "TCP"
+        port     = 10025
+      }
+      ports {
+        protocol = "TCP"
+        port     = 10143
+      }
+      ports {
+        protocol = "TCP"
+        port     = 2525
+      }
+      ports {
+        protocol = "TCP"
+        port     = 4190
+      }
+    }
+  }
+}

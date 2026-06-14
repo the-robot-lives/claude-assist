@@ -32,6 +32,14 @@ variable "init_state_path" {
   default     = ""
 }
 
+# --- Verdaccio -------------------------------------------------------------
+variable "verdaccio_htpasswd" {
+  description = "htpasswd file content for Verdaccio basic auth (user:bcrypt-hash, one per line). Only used on initial creation; data changes are ignored after import."
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
 # --- ArgoCD ----------------------------------------------------------------
 variable "argocd_chart_version" {
   description = "argo-cd helm chart version."

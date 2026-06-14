@@ -16,7 +16,6 @@
 #   infisical-core-secrets ENCRYPTION_KEY + AUTH_SECRET + shared-DB URL (REDIS_URL
 #                          is built in Terraform from init's valkey password)
 #   signoz-secrets         SIGNOZ_TOKENIZER_JWT_SECRET
-#   verdaccio-htpasswd     htpasswd (basic auth)
 #   cloudflare-tls-synced  *.noizu.com wildcard TLS (recovered from backup)
 #   derobotis-tls          *.derobot.is wildcard TLS (recovered from backup)
 # NOT here: authentik-valkey / posthog-valkey come from valkey-users.tf (init).
