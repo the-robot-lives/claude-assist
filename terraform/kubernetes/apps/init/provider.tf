@@ -3,15 +3,15 @@ terraform {
 
   required_providers {
     kubernetes = {
-      source  = "registry.terraform.io/hashicorp/kubernetes"
+      source  = "hashicorp/kubernetes"
       version = "~> 3.2"
     }
     kubectl = {
-      source  = "registry.terraform.io/alekc/kubectl"
+      source  = "alekc/kubectl"
       version = "~> 2.1"
     }
     helm = {
-      source  = "registry.terraform.io/hashicorp/helm"
+      source  = "hashicorp/helm"
       version = "~> 3.2"
     }
   }

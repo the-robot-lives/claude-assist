@@ -3,18 +3,7 @@
 # =============================================================================
 locals {
   front_poststart = <<-EOT
-    # Patch nginx resolver to include public DNS for external rDNS lookups.
-    # Kube-dns alone returns SERVFAIL for in-addr.arpa queries.
-    # Wait for nginx PID file (means config.py finished and nginx started).
-    for i in $(seq 1 90); do
-      if [ -f /var/run/nginx.pid ] && [ -s /var/run/nginx.pid ]; then
-        sleep 1
-        sed -i 's/resolver \([0-9.]*\) valid/resolver \1 1.1.1.1 valid/g' /etc/nginx/nginx.conf
-        nginx -s reload 2>/dev/null || true
-        break
-      fi
-      sleep 1
-    done
+    echo "front postStart: no-op"
   EOT
 
   # Mail protocol ports exposed by both front Services.

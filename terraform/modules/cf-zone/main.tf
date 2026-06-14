@@ -1,12 +1,3 @@
-terraform {
-  required_providers {
-    cloudflare = {
-      source  = "cloudflare/cloudflare"
-      version = "~> 5.0"
-    }
-  }
-}
-
 resource "cloudflare_zone" "this" {
   account = { id = var.account_id }
   name    = var.domain
@@ -28,5 +19,25 @@ resource "cloudflare_dns_record" "www" {
   type    = "CNAME"
   content = var.domain
   proxied = var.proxied
+  ttl     = 1
+}
+
+resource "cloudflare_dns_record" "stage" {
+  count   = var.add_stage ? 1 : 0
+  zone_id = cloudflare_zone.this.id
+  name    = "stage"
+  type    = "A"
+  content = var.server_ip
+  proxied = var.proxied
+  ttl     = 1
+}
+
+resource "cloudflare_dns_record" "wildcard" {
+  count   = var.add_wildcard ? 1 : 0
+  zone_id = cloudflare_zone.this.id
+  name    = "*"
+  type    = "CNAME"
+  content = var.wildcard_target
+  proxied = true
   ttl     = 1
 }

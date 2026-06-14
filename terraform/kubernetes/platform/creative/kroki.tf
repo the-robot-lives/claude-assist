@@ -86,7 +86,7 @@ resource "kubernetes_deployment_v1" "kroki" {
       }
     }
   }
-  depends_on = [kubectl_manifest.infisical_ops_pull]
+  depends_on = [module.infisical_base]
 }
 
 resource "kubernetes_service_v1" "kroki" {

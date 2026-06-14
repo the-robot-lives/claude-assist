@@ -98,7 +98,7 @@ resource "kubernetes_deployment_v1" "mermaid" {
           }
           liveness_probe {
             http_get {
-              path = "/healthz"
+              path = "/"
               port = 8080
             }
             initial_delay_seconds = 15
@@ -108,7 +108,7 @@ resource "kubernetes_deployment_v1" "mermaid" {
           }
           readiness_probe {
             http_get {
-              path = "/readyz"
+              path = "/"
               port = 8080
             }
             initial_delay_seconds = 5
@@ -122,7 +122,7 @@ resource "kubernetes_deployment_v1" "mermaid" {
   }
   depends_on = [
     kubectl_manifest.infisical_app,
-    kubectl_manifest.infisical_ops_pull,
+    module.infisical_base,
   ]
 }
 

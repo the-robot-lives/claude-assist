@@ -21,23 +21,24 @@ include "root" {
 }
 
 terraform {
-  before_hook "mark_fresh_infisical_service" {
-    commands = ["apply"]
-    execute = [
-      "bash",
-      "-c",
-      "marker='${get_terragrunt_dir()}/.terragrunt-infisical-service-fresh'; ${get_env("TERRAGRUNT_TFPATH", "terraform")} state show kubernetes_service_v1.infisical >/dev/null 2>&1 || touch \"$marker\"",
-    ]
-  }
-
-  after_hook "populate_infisical_secrets_on_fresh_service" {
-    commands = ["apply"]
-    execute = [
-      "bash",
-      "-c",
-      "marker='${get_terragrunt_dir()}/.terragrunt-infisical-service-fresh'; if [ -f \"$marker\" ]; then kubectl rollout status deployment/infisical -n \"${get_env("INFISICAL_NAMESPACE", "infra")}\" --timeout=10m; infisical-populate-secrets --env=\"${get_env("INFISICAL_ENV", "prod")}\"; rm -f \"$marker\"; fi",
-    ]
-  }
+  # --- Infisical populate hooks (disabled — re-enable by uncommenting) ---
+  # before_hook "mark_fresh_infisical_service" {
+  #   commands = ["apply"]
+  #   execute = [
+  #     "bash",
+  #     "-c",
+  #     "marker='${get_terragrunt_dir()}/.terragrunt-infisical-service-fresh'; ${get_env("TERRAGRUNT_TFPATH", "terraform")} state show kubernetes_service_v1.infisical >/dev/null 2>&1 || touch \"$marker\"",
+  #   ]
+  # }
+  #
+  # after_hook "populate_infisical_secrets_on_fresh_service" {
+  #   commands = ["apply"]
+  #   execute = [
+  #     "bash",
+  #     "-c",
+  #     "marker='${get_terragrunt_dir()}/.terragrunt-infisical-service-fresh'; if [ -f \"$marker\" ]; then kubectl rollout status deployment/infisical -n \"${get_env("INFISICAL_NAMESPACE", "infra")}\" --timeout=10m; infisical-populate-secrets --env=\"${get_env("INFISICAL_ENV", "prod")}\"; rm -f \"$marker\"; fi",
+  #   ]
+  # }
 }
 
 dependencies {

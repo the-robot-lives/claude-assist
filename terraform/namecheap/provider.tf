@@ -1,5 +1,5 @@
 terraform {
-  required_version = ">= 1.4.0"
+  required_version = ">= 1.10"
 
   required_providers {
     namecheap = {
@@ -9,7 +9,7 @@ terraform {
   }
 
   backend "s3" {
-    bucket = "tf-state"
+    bucket = "tfstate"
     key    = "namecheap/terraform.tfstate"
     region = "us-east-1"
 
@@ -22,6 +22,7 @@ terraform {
     skip_region_validation      = true
     skip_requesting_account_id  = true
     use_path_style              = true
+    use_lockfile                = true
   }
 }
 

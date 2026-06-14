@@ -83,7 +83,7 @@ resource "kubernetes_deployment_v1" "livecodes" {
 
   depends_on = [
     kubectl_manifest.infisical_app_secrets,
-    kubectl_manifest.infisical_ops_pull,
+    module.infisical_base,
   ]
 }
 

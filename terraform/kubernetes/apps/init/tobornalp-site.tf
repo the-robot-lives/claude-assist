@@ -2,7 +2,7 @@
 # tobornalp.com — Phoenix API + Next.js frontend (start-app scaffold).
 # ---------------------------------------------------------------------------
 
-# App secrets (/apps/start-app) -> start-app-secrets.
+# App secrets (/apps/tobornalp) -> tobornalp-secrets.
 resource "kubectl_manifest" "infisical_tobornalp_secrets" {
   yaml_body = yamlencode({
     apiVersion = "secrets.infisical.com/v1alpha1"
@@ -11,7 +11,7 @@ resource "kubectl_manifest" "infisical_tobornalp_secrets" {
       name      = "infisical-tobornalp-secrets"
       namespace = kubernetes_namespace_v1.apps.metadata[0].name
       labels = {
-        "app.kubernetes.io/name"       = "start-app-secrets"
+        "app.kubernetes.io/name"       = "tobornalp-secrets"
         "app.kubernetes.io/component"  = "tobornalp"
         "app.kubernetes.io/managed-by" = "terraform"
       }
@@ -28,12 +28,12 @@ resource "kubectl_manifest" "infisical_tobornalp_secrets" {
           secretsScope = {
             projectSlug = local.infisical_base.project_slug
             envSlug     = local.infisical_base.env_slug
-            secretsPath = "/apps/start-app"
+            secretsPath = "/apps/tobornalp"
           }
         }
       }
       managedSecretReference = {
-        secretName      = "start-app-secrets"
+        secretName      = "tobornalp-secrets"
         secretNamespace = kubernetes_namespace_v1.apps.metadata[0].name
         creationPolicy  = "Owner"
         template = {
@@ -85,14 +85,14 @@ resource "helm_release" "tobornalp_site" {
       }
 
       secrets = {
-        name = "start-app-secrets"
+        name = "tobornalp-secrets"
         keys = {
-          dbUser           = "START_APP_DB_USER"
-          dbPassword       = "START_APP_DB_PASSWORD"
-          secretKeyBase    = "START_APP_SECRET_KEY_BASE"
-          guardianSecretKey = "START_APP_GUARDIAN_SECRET_KEY"
-          redisUrl         = "START_APP_REDIS_URL"
-          databaseUrl      = "START_APP_DATABASE_URL"
+          dbUser           = "TOBORNALP_DB_USER"
+          dbPassword       = "TOBORNALP_DB_PASSWORD"
+          secretKeyBase    = "TOBORNALP_SECRET_KEY_BASE"
+          guardianSecretKey = "TOBORNALP_GUARDIAN_SECRET_KEY"
+          redisUrl         = "TOBORNALP_REDIS_URL"
+          databaseUrl      = "TOBORNALP_DATABASE_URL"
         }
       }
 

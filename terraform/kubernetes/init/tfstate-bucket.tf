@@ -100,18 +100,3 @@ resource "kubernetes_job_v1" "tfstate_bucket" {
   ]
 }
 
-removed {
-  from = aws_s3_bucket.tfstate
-
-  lifecycle {
-    destroy = false
-  }
-}
-
-removed {
-  from = aws_s3_bucket_versioning.tfstate
-
-  lifecycle {
-    destroy = false
-  }
-}

@@ -47,6 +47,10 @@ resource "kubernetes_persistent_volume_claim_v1" "postgres" {
     }
   }
   wait_until_bound = false
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 resource "kubernetes_config_map_v1" "postgres_init" {

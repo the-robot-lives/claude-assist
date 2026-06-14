@@ -11,7 +11,7 @@ locals {
     DBUSER             = var.bottlecrm_db_user
     DBHOST             = var.postgres_host
     DBPORT             = "5432"
-    ENV_TYPE           = "prod"
+    ENV_TYPE           = "dev"
     DEBUG              = "False"
     ALLOWED_HOSTS      = "${var.bottlecrm_domain},bottlecrm,localhost,*"
     DOMAIN_NAME        = "https://${var.bottlecrm_domain}"
@@ -280,7 +280,7 @@ resource "kubernetes_deployment_v1" "bottlecrm" {
 
   depends_on = [
     kubectl_manifest.infisical_app_secrets,
-    kubectl_manifest.infisical_ops_pull,
+    module.infisical_base,
   ]
 }
 

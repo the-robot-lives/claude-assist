@@ -16,6 +16,19 @@ include "root" {
   path = find_in_parent_folders("root.hcl")
 }
 
+terraform {
+  source = "${get_terragrunt_dir()}/../..//platform/seo"
+
+  exclude_from_copy = [
+    "cluster-backup-noizu-*",
+    "infra",
+    "infra-services",
+    "init",
+    "apps",
+    "docs",
+  ]
+}
+
 dependencies {
   paths = ["../../init", "../../infra", "../../infra-services", "../init"]
 }

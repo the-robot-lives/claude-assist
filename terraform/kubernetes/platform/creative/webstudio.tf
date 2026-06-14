@@ -64,7 +64,7 @@ resource "kubernetes_deployment_v1" "webstudio_builder" {
         container {
           name              = "builder"
           image             = var.webstudio_builder_image
-          image_pull_policy = "IfNotPresent"
+          image_pull_policy = "Always"
           port {
             container_port = 3000
             name           = "http"
@@ -134,8 +134,7 @@ resource "kubernetes_deployment_v1" "webstudio_builder" {
             mount_path = "/tmp"
           }
           liveness_probe {
-            http_get {
-              path = "/healthz"
+            tcp_socket {
               port = 3000
             }
             initial_delay_seconds = 10
@@ -143,8 +142,7 @@ resource "kubernetes_deployment_v1" "webstudio_builder" {
             timeout_seconds       = 5
           }
           readiness_probe {
-            http_get {
-              path = "/healthz"
+            tcp_socket {
               port = 3000
             }
             initial_delay_seconds = 5
@@ -152,8 +150,7 @@ resource "kubernetes_deployment_v1" "webstudio_builder" {
             timeout_seconds       = 5
           }
           startup_probe {
-            http_get {
-              path = "/healthz"
+            tcp_socket {
               port = 3000
             }
             period_seconds    = 5
@@ -184,7 +181,7 @@ resource "kubernetes_deployment_v1" "webstudio_builder" {
   }
   depends_on = [
     kubectl_manifest.infisical_app,
-    kubectl_manifest.infisical_ops_pull,
+    module.infisical_base,
   ]
 }
 

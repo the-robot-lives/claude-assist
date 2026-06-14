@@ -32,6 +32,10 @@ resource "kubernetes_persistent_volume_claim_v1" "clickhouse_data" {
     }
   }
   wait_until_bound = false
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 resource "kubernetes_persistent_volume_claim_v1" "clickhouse_logs" {

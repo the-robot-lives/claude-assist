@@ -107,6 +107,10 @@ resource "kubernetes_persistent_volume_claim_v1" "minio" {
   # longhorn binds immediately; don't block apply waiting for first consumer.
   wait_until_bound = false
 
+  lifecycle {
+    prevent_destroy = true
+  }
+
   depends_on = [helm_release.longhorn]
 }
 
@@ -297,6 +301,13 @@ locals {
     "nginx.ingress.kubernetes.io/proxy-send-timeout" = "600"
     "nginx.ingress.kubernetes.io/ssl-redirect"       = "true"
   }
+
+  # Console gets rate limiting since it's an admin UI exposed to the internet.
+  # The S3 API skips rate limiting to avoid breaking programmatic access.
+  minio_console_annotations = merge(local.minio_ingress_annotations, {
+    "nginx.ingress.kubernetes.io/limit-rps"        = "10"
+    "nginx.ingress.kubernetes.io/limit-connections" = "5"
+  })
 }
 
 resource "kubernetes_ingress_v1" "minio_api" {
@@ -342,7 +353,7 @@ resource "kubernetes_ingress_v1" "minio_console" {
   metadata {
     name        = "minio-console-ingress"
     namespace   = kubernetes_namespace_v1.infra.metadata[0].name
-    annotations = local.minio_ingress_annotations
+    annotations = local.minio_console_annotations
     labels = {
       "app.kubernetes.io/name" = "minio"
     }

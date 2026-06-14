@@ -42,6 +42,10 @@ resource "kubernetes_persistent_volume_claim_v1" "valkey" {
     }
   }
   wait_until_bound = false
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 resource "kubernetes_deployment_v1" "valkey" {

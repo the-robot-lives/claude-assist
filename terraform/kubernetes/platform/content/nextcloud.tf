@@ -145,9 +145,10 @@ resource "kubernetes_deployment_v1" "nextcloud" {
                 value = var.nextcloud_domain
               }
             }
-            initial_delay_seconds = 120
+            initial_delay_seconds = 180
             period_seconds        = 30
             timeout_seconds       = 10
+            failure_threshold     = 5
           }
           readiness_probe {
             http_get {

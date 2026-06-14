@@ -405,12 +405,12 @@ variable "tobornalp_domain" {
 
 variable "tobornalp_backend_image" {
   type    = string
-  default = "ops.noizu.com/tobornalp.com/backend:latest"
+  default = "ops.noizu.com/tobornalp.com/backend:v1.0.0"
 }
 
 variable "tobornalp_frontend_image" {
   type    = string
-  default = "ops.noizu.com/tobornalp.com/frontend:latest"
+  default = "ops.noizu.com/tobornalp.com/frontend:v1.0.0"
 }
 
 variable "tobornalp_tls_secret_name" {

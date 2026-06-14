@@ -1,7 +1,7 @@
 # ---------------------------------------------------------------------------
 # Chatterbox TTS — OpenAI-compatible GPU text-to-speech, at chatterbox-tts.noizu.com.
-# Requires an nvidia GPU node + runtimeClass "nvidia". Model cache + voices on PVCs.
-# (ops-registry-secret is managed in this namespace by weaviate.tf.)
+# Requires runtimeClass "nvidia" + nvidia.com/gpu resource. Model cache + voices
+# on PVCs. (ops-registry-secret is managed in this namespace by weaviate.tf.)
 # ---------------------------------------------------------------------------
 resource "kubernetes_persistent_volume_claim_v1" "chatterbox_model_cache" {
   metadata {
@@ -56,6 +56,9 @@ resource "kubernetes_deployment_v1" "chatterbox_tts" {
           name = "ops-registry-secret"
         }
         runtime_class_name = "nvidia"
+        node_selector = {
+          "kubernetes.io/hostname" = "noizu-server"
+        }
         container {
           name              = "chatterbox-tts"
           image             = var.chatterbox_image
