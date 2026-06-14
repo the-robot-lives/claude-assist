@@ -200,29 +200,43 @@ Maintain an idea backlog with: source, priority, demand signals, competition lev
 
 ## Media & Visualization Library
 
-This skill bundles a comprehensive **FIM (Fill-in-the-Middle) reference library** with detailed instructions for 173 visualization tools, document formats, and media processing solutions across 13 categories:
+This skill bundles a comprehensive **FIM (Fill-in-the-Middle) reference library** with detailed instructions for 190+ visualization tools, document formats, and media processing solutions across 14 categories:
 
 | Category | Solutions | Examples |
 |----------|-----------|---------|
 | Data Visualization | 18 | D3.js, Chart.js, Plotly, Vega-Lite, Matplotlib |
 | 3D Graphics | 8 | Three.js, Babylon.js, A-Frame, React Three Fiber |
-| Diagramming & UML | 15 | Mermaid, PlantUML, Graphviz, C4, Structurizr |
+| Diagramming & UML | 17 | Mermaid, PlantUML, Graphviz, C4, D2, Excalidraw |
 | Networks & Graphs | 11 | Cytoscape.js, Sigma.js, NetworkX, D3-Force |
 | Animation & Creative | 13 | GSAP, Anime.js, P5.js, Lottie, Paper.js |
 | Geospatial & Mapping | 11 | Leaflet, Mapbox GL, Deck.gl, OpenLayers |
-| Document Processing | 12 | Pandoc, LaTeX, Typst, Sphinx, MkDocs |
+| Document Processing | 15 | Pandoc, LaTeX, Typst, MDX, Org-mode, MediaWiki |
 | Mathematics | 12 | KaTeX, MathJax, SymPy, TikZ, SageMath |
 | Music Notation | 13 | VexFlow, ABC.js, LilyPond, MusicXML |
 | Engineering | 11 | WaveDrom, CircuiTikZ, KiCad, SchemDraw |
 | Media Processing | 10 | Sharp, FFmpeg-WASM, PDFKit, SheetJS |
 | Elixir Livebook | 8 | Kino-VegaLite, Kino-JS, Kino-Plotly |
 | Specialized | 10 | Streamlit, Panel, ipywidgets, VTK.js |
+| Publishing & Distribution | 19 | EPUB, reveal.js/Marp/Slidev, python-docx/pptx, MJML, RSS/Atom, OG images, Jupyter, Livebook, Remotion, Manim, asciinema |
 
 Each solution file includes: installation, API overview, code examples, and use-case mappings. Use-case files provide cross-cutting guides (concise + verbose versions) for choosing between solutions.
 
 > For the full media reference index with decision trees, see [references/media-reference.md](references/media-reference.md).
 > For the complete inventory, see [references/fim/INVENTORY.md](references/fim/INVENTORY.md).
 > For any specific tool, see `references/fim/solution/<tool>.md`.
+
+**Publishing & distribution output formats** (added for end-to-end deliverables, not just in-article media):
+- **Docs/markup**: `mdx` (interactive dev-blog Markdown), `org-mode`, `mediawiki`, plus existing Markdown/AsciiDoc/reStructuredText/Typst/LaTeX
+- **Ebooks**: `epub` (+ Kindle MOBI derivation)
+- **Slides from Markdown**: `revealjs`, `marp`, `slidev`
+- **Office authoring**: `python-docx` (editable Word), `python-pptx` (editable PowerPoint) — complements read-only `mammoth_js`
+- **Email**: `mjml` (responsive newsletter/transactional HTML)
+- **Syndication**: `rss-atom` (RSS 2.0 / Atom / JSON Feed, incl. podcast)
+- **Social images**: `og-image` (Satori/@vercel/og cards, Silicon/Carbon code shots)
+- **Runnable notebooks**: `jupyter-notebook` (.ipynb), `livebook` (.livemd)
+- **Programmatic video**: `remotion` (React→MP4), `manim` (math/explainer animation)
+- **Terminal demos**: `asciinema` (.cast → player/SVG/GIF)
+- **Modern diagrams**: `d2`, `excalidraw`
 
 ## Quick Start Guides
 
@@ -282,9 +296,9 @@ Each solution file includes: installation, API overview, code examples, and use-
 
 ### FIM Library (references/fim/)
 Detailed implementation guides for visualization tools, document formats, and media processing:
-- [fim/INVENTORY.md](references/fim/INVENTORY.md) — Complete inventory of 208 files with categories and completion status
+- [fim/INVENTORY.md](references/fim/INVENTORY.md) — Complete inventory with categories and completion status
 - `fim/use-case/*.md` — 15 concise + 10 verbose cross-cutting use-case guides
-- `fim/solution/*.md` — 173 individual tool/library reference files with API details and code examples
+- `fim/solution/*.md` — 190+ individual tool/library reference files with API details and code examples (incl. publishing & distribution output formats)
 
 ### Assets
 - [content-brief.md](assets/content-brief.md) — Fillable intake form for capturing content requirements, niche, audience, and goals

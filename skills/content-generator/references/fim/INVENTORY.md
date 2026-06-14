@@ -1,8 +1,9 @@
 # NPL-FIM Metadata Inventory
 
 **Generated**: 2025-09-17 06:30:00 UTC
-**Total Files**: 208 markdown files
-**Total Size**: 977,236 bytes (~954 KB)
+**Updated**: 2026-06-14 — added 19 Publishing & Distribution output formats (see category below)
+**Total Files**: 227 markdown files (208 original + 19 publishing/distribution)
+**Total Size**: ~1.0 MB
 
 ## Summary Statistics
 
@@ -232,6 +233,28 @@
 - `sklearn-viz.md` - Scikit-learn visualization
 - `streamlit.md` - Data app framework
 - `vtk_js.md` - 3D computer graphics toolkit
+
+### Publishing & Distribution Formats (19 files, added 2026-06-14)
+End-to-end deliverable formats for the content pipeline (not just in-article media):
+- `mdx.md` - Markdown + JSX for interactive dev blogs (Next.js/Astro/Docusaurus)
+- `org-mode.md` - Emacs literate-programming markup with multi-target export
+- `mediawiki.md` - Wikitext for MediaWiki/wiki knowledge bases
+- `epub.md` - EPUB3 ebooks (+ Kindle MOBI derivation)
+- `revealjs.md` - HTML presentation framework (Markdown-driven)
+- `marp.md` - Markdown -> HTML/PDF/PPTX slide decks
+- `slidev.md` - Developer-focused Markdown + Vue slide decks
+- `python-docx.md` - Programmatic editable Word (.docx) authoring
+- `python-pptx.md` - Programmatic editable PowerPoint (.pptx) authoring
+- `mjml.md` - Responsive, email-client-safe HTML for newsletters
+- `rss-atom.md` - RSS 2.0 / Atom / JSON Feed syndication (incl. podcast)
+- `og-image.md` - OG/Twitter social cards (Satori/@vercel/og) + code shots (Silicon/Carbon)
+- `jupyter-notebook.md` - Runnable .ipynb authoring (nbformat/nbconvert/papermill)
+- `livebook.md` - Elixir .livemd interactive notebooks (Kino smart cells)
+- `remotion.md` - Programmatic video via React (-> MP4/WebM/GIF)
+- `manim.md` - Mathematical/algorithm explainer animation (-> MP4/GIF)
+- `asciinema.md` - Terminal session recordings (.cast -> player/SVG/GIF)
+- `d2.md` - Modern declarative diagramming language
+- `excalidraw.md` - Hand-drawn/sketch-style diagrams (JSON scenes -> SVG/PNG)
 
 ## Nested Solution Structure
 
