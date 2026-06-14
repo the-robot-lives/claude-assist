@@ -1,0 +1,70 @@
+semantic-groups:
+  - name: "Growth Stages"
+    description: "Epoch growth indicators — seeds to bloom"
+  - name: "Feedback"
+    description: "User feedback and messaging"
+
+semantic-classes:
+  - name: "Seeds"
+    class: "epoch-seeds"
+    group: "Growth Stages"
+    vars:
+      accent: "#E8A849"
+      accent-bg: "rgba(232, 168, 73, 0.1)"
+      accent-text: "#B07A20"
+
+  - name: "Sprouts"
+    class: "epoch-sprouts"
+    group: "Growth Stages"
+    vars:
+      accent: "#6ABB8A"
+      accent-bg: "rgba(106, 187, 138, 0.1)"
+      accent-text: "#3D8A5E"
+
+  - name: "Growth"
+    class: "epoch-growth"
+    group: "Growth Stages"
+    vars:
+      accent: "#2D9C6F"
+      accent-bg: "rgba(45, 156, 111, 0.1)"
+      accent-text: "#2D9C6F"
+
+  - name: "Bloom"
+    class: "epoch-bloom"
+    group: "Growth Stages"
+    vars:
+      accent: "#D47BA0"
+      accent-bg: "rgba(212, 123, 160, 0.1)"
+      accent-text: "#B05A80"
+
+  - name: "Danger"
+    class: "danger"
+    group: "Feedback"
+    vars:
+      accent: "#D14F4F"
+      accent-bg: "rgba(209, 79, 79, 0.08)"
+      accent-text: "#D14F4F"
+
+  - name: "Success"
+    class: "success"
+    group: "Feedback"
+    vars:
+      accent: "#2D9C6F"
+      accent-bg: "rgba(45, 156, 111, 0.08)"
+      accent-text: "#2D9C6F"
+
+  - name: "Warning"
+    class: "warning"
+    group: "Feedback"
+    vars:
+      accent: "#E8A849"
+      accent-bg: "rgba(232, 168, 73, 0.08)"
+      accent-text: "#B07A20"
+
+  - name: "Info"
+    class: "info"
+    group: "Feedback"
+    vars:
+      accent: "#4A8FBF"
+      accent-bg: "rgba(74, 143, 191, 0.08)"
+      accent-text: "#4A8FBF"

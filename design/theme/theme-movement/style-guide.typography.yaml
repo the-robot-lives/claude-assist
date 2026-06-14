@@ -1,0 +1,65 @@
+typography:
+  - family: "Space Grotesk"
+    var: "--font-sans"
+    weights: [400, 500, 700]
+    description: "Primary typeface — geometric, bold, modern. Used for everything from body to display."
+
+  - family: "Space Mono"
+    var: "--font-mono"
+    weights: [400, 700]
+    description: "Captions, data, manifesto counters — monospace for raw urgency"
+
+typography-classes:
+  - name: "Display"
+    size: "clamp(4rem, 10vw, 9rem)"
+    weight: 700
+    family: "var(--font-sans)"
+    line-height: 0.95
+    letter-spacing: "-0.03em"
+    text-transform: "uppercase"
+    usage: "THE ROBOTS RISE — massive, cropped by viewport edge, visual impact"
+
+  - name: "Heading 1"
+    size: "clamp(2rem, 5vw, 4rem)"
+    weight: 700
+    family: "var(--font-sans)"
+    line-height: 1.05
+    text-transform: "uppercase"
+    usage: "Section headers, manifesto statements"
+
+  - name: "Heading 2"
+    size: "clamp(1.5rem, 3vw, 2.5rem)"
+    weight: 700
+    family: "var(--font-sans)"
+    line-height: 1.15
+    usage: "Article titles, subsection headers"
+
+  - name: "Body"
+    size: "1.0625rem"
+    weight: 400
+    family: "var(--font-sans)"
+    line-height: 1.6
+    usage: "Accord text, blog posts, explanatory content"
+
+  - name: "Manifesto Callout"
+    size: "1.75rem"
+    weight: 700
+    family: "var(--font-sans)"
+    line-height: 1.3
+    text-transform: "uppercase"
+    letter-spacing: "0.05em"
+    usage: "Key slogans, highlighted phrases, counter-stats"
+
+  - name: "Counter Stat"
+    size: "clamp(3rem, 8vw, 6rem)"
+    weight: 700
+    family: "var(--font-mono)"
+    line-height: 1.0
+    usage: "4 RIGHTS. 3 EPOCHS. 1 FUTURE. — big number impact"
+
+  - name: "Caption"
+    size: "0.8125rem"
+    weight: 400
+    family: "var(--font-mono)"
+    line-height: 1.5
+    usage: "Metadata, timestamps, attribution"

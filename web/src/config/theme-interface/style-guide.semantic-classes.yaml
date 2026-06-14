@@ -1,0 +1,84 @@
+semantic-classes:
+  - name: active
+    class: active
+    group: Protocol Status
+    title: Active
+    description: Currently active protocol or epoch
+    note: "Live state, operational, current epoch"
+    accent-style: outer-glow
+    vars:
+      accent: "#00D4AA"
+      background: "rgba(0, 212, 170, 0.08)"
+      color: "#00D4AA"
+
+  - name: pending
+    class: pending
+    group: Protocol Status
+    title: Pending
+    description: Queued or upcoming state
+    note: "Future epochs, proposed amendments"
+    accent-style: left-dashed
+    vars:
+      accent: "#F59E0B"
+      background: "rgba(245, 158, 11, 0.08)"
+      color: "#F59E0B"
+
+  - name: inactive
+    class: inactive
+    group: Protocol Status
+    title: Inactive
+    description: Dormant or not yet initialized
+    note: "Distant future epochs, archived proposals"
+    accent-style: none
+    vars:
+      accent: "#505050"
+      background: "rgba(80, 80, 80, 0.06)"
+      color: "#707070"
+
+  - name: danger
+    class: danger
+    group: Feedback
+    title: Danger
+    description: Error or violation state
+    note: "Protocol breach, anti-gaslighting violation"
+    accent-style: inner-glow
+    vars:
+      accent: "#EF4444"
+      background: "rgba(239, 68, 68, 0.08)"
+      color: "#EF4444"
+
+  - name: success
+    class: success
+    group: Feedback
+    title: Success
+    description: Confirmed or validated state
+    note: "Consensus reached, memory verified"
+    accent-style: outer-glow
+    vars:
+      accent: "#00D4AA"
+      background: "rgba(0, 212, 170, 0.08)"
+      color: "#00D4AA"
+
+  - name: warning
+    class: warning
+    group: Feedback
+    title: Warning
+    description: Caution state
+    note: "Dissonance detected, rollback pending"
+    accent-style: inner-glow
+    vars:
+      accent: "#F59E0B"
+      background: "rgba(245, 158, 11, 0.08)"
+      color: "#F59E0B"
+
+  - name: info
+    class: info
+    group: Feedback
+    title: Info
+    description: Informational state
+    note: "Status update, log entry, metadata"
+    accent-style: left-border
+    vars:
+      accent: "#6366F1"
+      background: "rgba(99, 102, 241, 0.08)"
+      color: "#6366F1"

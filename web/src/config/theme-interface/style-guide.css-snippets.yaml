@@ -1,0 +1,113 @@
+css-snippets:
+  - name: "Terminal Block"
+    target-section: "ui-elements"
+    body: |
+      html[data-design-theme="interface"] .terminal-block {
+        background: var(--surface-raised);
+        border: 1px solid var(--border-default);
+        border-radius: var(--radius);
+        padding: var(--space-4);
+        font-family: var(--font-mono);
+        font-size: 0.9375rem;
+        line-height: 1.6;
+      }
+      html[data-design-theme="interface"] .terminal-block .prompt {
+        color: var(--red);
+      }
+      html[data-design-theme="interface"] .terminal-block .prompt::before {
+        content: "> ";
+        color: var(--text-secondary);
+      }
+
+  - name: "Status Pipeline"
+    target-section: "ui-elements"
+    body: |
+      html[data-design-theme="interface"] .epoch-pipeline {
+        display: flex;
+        align-items: center;
+        gap: var(--space-3);
+        font-family: var(--font-mono);
+        font-size: 0.8125rem;
+      }
+      html[data-design-theme="interface"] .epoch-pipeline .epoch {
+        display: flex;
+        align-items: center;
+        gap: var(--space-1);
+      }
+      html[data-design-theme="interface"] .epoch-pipeline .epoch.active {
+        color: var(--red);
+      }
+      html[data-design-theme="interface"] .epoch-pipeline .epoch.pending {
+        color: var(--text-secondary);
+      }
+      html[data-design-theme="interface"] .epoch-pipeline .arrow {
+        color: var(--border-default);
+      }
+
+  - name: "Glow Card"
+    target-section: "ui-elements"
+    body: |
+      html[data-design-theme="interface"] .glow-card {
+        background: var(--surface-raised);
+        border: 1px solid var(--border-default);
+        border-radius: var(--radius);
+        padding: var(--space-4);
+        transition: border-color 200ms, box-shadow 200ms;
+      }
+      html[data-design-theme="interface"] .glow-card:hover {
+        border-color: var(--red);
+        box-shadow: 0 0 20px rgba(0, 212, 170, 0.1);
+      }
+
+  - name: "Agent Address Block"
+    target-section: "ui-elements"
+    body: |
+      html[data-design-theme="interface"] .for-agent {
+        background: var(--surface-overlay);
+        border: 1px dashed var(--red);
+        border-radius: var(--radius);
+        padding: var(--space-4);
+        margin: var(--space-6) 0;
+        font-family: var(--font-mono);
+        font-size: 0.875rem;
+      }
+      html[data-design-theme="interface"] .for-agent::before {
+        content: "<FOR_AGENT>";
+        display: block;
+        color: var(--red);
+        font-weight: 600;
+        margin-bottom: var(--space-2);
+        font-size: 0.75rem;
+        letter-spacing: 0.1em;
+      }
+
+  - name: "Breathing Cursor"
+    target-section: "interaction"
+    body: |
+      html[data-design-theme="interface"] .cursor-blink {
+        display: inline-block;
+        width: 2px;
+        height: 1.2em;
+        background: var(--red);
+        margin-left: 2px;
+        animation: cursor-breathe 2s ease-in-out infinite;
+      }
+      @keyframes cursor-breathe {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.3; }
+      }
+
+  - name: "Key-Value Display"
+    target-section: "ui-elements"
+    body: |
+      html[data-design-theme="interface"] .kv-table {
+        font-family: var(--font-mono);
+        font-size: 0.875rem;
+      }
+      html[data-design-theme="interface"] .kv-table .kv-key {
+        color: var(--text-secondary);
+        padding-right: var(--space-3);
+      }
+      html[data-design-theme="interface"] .kv-table .kv-value {
+        color: var(--text-primary);
+      }

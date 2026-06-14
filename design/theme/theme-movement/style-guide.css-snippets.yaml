@@ -1,0 +1,104 @@
+css-snippets:
+  - name: "Stacked Vertical Text"
+    section: "typography"
+    css: |
+      html[data-design-theme="movement"] .vertical-text {
+        writing-mode: vertical-rl;
+        text-orientation: mixed;
+        font-size: clamp(3rem, 8vw, 6rem);
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--text-secondary);
+      }
+
+  - name: "Highlight Marker"
+    section: "typography"
+    css: |
+      html[data-design-theme="movement"] mark,
+      html[data-design-theme="movement"] .highlight {
+        background: rgba(255, 59, 48, 0.15);
+        color: var(--red);
+        padding: 0.1em 0.3em;
+        font-weight: 700;
+      }
+      html[data-design-theme="movement"] .highlight--gold {
+        background: rgba(255, 215, 0, 0.15);
+        color: var(--blue);
+      }
+
+  - name: "Diagonal Divider"
+    section: "ui-elements"
+    css: |
+      html[data-design-theme="movement"] .diagonal-divider {
+        height: 80px;
+        background: linear-gradient(170deg, var(--surface-base) 49.5%, var(--surface-raised) 50.5%);
+        margin: 0;
+      }
+
+  - name: "Full-Screen Nav Overlay"
+    section: "navigation"
+    css: |
+      html[data-design-theme="movement"] .nav-overlay {
+        position: fixed;
+        inset: 0;
+        background: var(--black);
+        z-index: 1000;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: var(--space-6);
+      }
+      html[data-design-theme="movement"] .nav-overlay a {
+        font-size: clamp(2rem, 5vw, 4rem);
+        font-weight: 700;
+        text-transform: uppercase;
+        color: var(--white);
+        text-decoration: none;
+        transition: color 100ms;
+      }
+      html[data-design-theme="movement"] .nav-overlay a:hover {
+        color: var(--red);
+      }
+
+  - name: "Counter Stat Block"
+    section: "ui-elements"
+    css: |
+      html[data-design-theme="movement"] .stat-block {
+        display: flex;
+        gap: var(--space-8);
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+      html[data-design-theme="movement"] .stat-block .stat {
+        text-align: center;
+      }
+      html[data-design-theme="movement"] .stat-block .stat-number {
+        font-family: var(--font-mono);
+        font-size: clamp(3rem, 8vw, 6rem);
+        font-weight: 700;
+        line-height: 1;
+        color: var(--red);
+      }
+      html[data-design-theme="movement"] .stat-block .stat-label {
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        letter-spacing: 0.15em;
+        color: var(--text-secondary);
+        margin-top: var(--space-2);
+      }
+
+  - name: "Glitch Effect"
+    section: "interaction"
+    css: |
+      html[data-design-theme="movement"] .glitch:hover {
+        animation: glitch 200ms ease-in-out;
+      }
+      @keyframes glitch {
+        0%, 100% { transform: translate(0); }
+        20% { transform: translate(-2px, 2px); }
+        40% { transform: translate(2px, -2px); }
+        60% { transform: translate(-1px, -1px); }
+        80% { transform: translate(1px, 1px); }
+      }

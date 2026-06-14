@@ -1,0 +1,16 @@
+shell-layouts:
+  - name: "interface-shell"
+    chrome:
+      navbar:
+        height: "48px"
+        position: "sticky"
+      sidebar:
+        width: "220px"
+        position: "fixed"
+      footer:
+        height: "auto"
+    zones:
+      - name: "sidebar"
+        selector: ".shell-sidebar"
+      - name: "main"
+        selector: ".shell-main"

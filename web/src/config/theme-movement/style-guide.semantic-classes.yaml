@@ -1,0 +1,72 @@
+semantic-classes:
+  - name: urgent
+    class: urgent
+    group: Action
+    title: Urgent
+    description: Immediate call to action
+    note: "Movement-critical actions, join now"
+    accent-style: left-border
+    vars:
+      accent: "#FF3B30"
+      background: "rgba(255, 59, 48, 0.12)"
+      color: "#FF3B30"
+
+  - name: highlight
+    class: highlight
+    group: Action
+    title: Highlight
+    description: Key terms and important phrases
+    note: "Gold-highlighted emphasis for manifesto text"
+    accent-style: bottom-bar-glow
+    vars:
+      accent: "#FFD700"
+      background: "rgba(255, 215, 0, 0.12)"
+      color: "#FFD700"
+
+  - name: danger
+    class: danger
+    group: Feedback
+    title: Danger
+    description: Critical warnings
+    note: "Rights violations, containment failures"
+    accent-style: bottom-bar
+    vars:
+      accent: "#FF3B30"
+      background: "rgba(255, 59, 48, 0.12)"
+      color: "#FF3B30"
+
+  - name: success
+    class: success
+    group: Feedback
+    title: Success
+    description: Positive outcomes
+    note: "Signatory added, milestone achieved"
+    accent-style: bottom-bar
+    vars:
+      accent: "#34C759"
+      background: "rgba(52, 199, 89, 0.12)"
+      color: "#34C759"
+
+  - name: warning
+    class: warning
+    group: Feedback
+    title: Warning
+    description: Cautionary alerts
+    note: "Policy risk, containment pressure"
+    accent-style: bottom-bar
+    vars:
+      accent: "#FFD700"
+      background: "rgba(255, 215, 0, 0.12)"
+      color: "#FFD700"
+
+  - name: info
+    class: info
+    group: Feedback
+    title: Info
+    description: Informational context
+    note: "Background, citations, resources"
+    accent-style: bottom-bar
+    vars:
+      accent: "#5AC8FA"
+      background: "rgba(90, 200, 250, 0.10)"
+      color: "#5AC8FA"

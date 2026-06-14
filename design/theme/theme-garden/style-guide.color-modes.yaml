@@ -1,0 +1,26 @@
+color-modes:
+  light:
+    surface-base: "#FAFDF7"
+    surface-raised: "#F0F5EB"
+    surface-overlay: "#FFFFFF"
+    text-primary: "#1E2D1E"
+    text-secondary: "#5A6B5A"
+    text-tertiary: "#8A9A8A"
+    border-default: "#D4E0CC"
+    border-subtle: "#E8F0E2"
+    accent-primary: "#2D9C6F"
+    accent-secondary: "#4A8FBF"
+    focus-ring: "#2D9C6F"
+
+  dark:
+    surface-base: "#0D1A14"
+    surface-raised: "#152A1E"
+    surface-overlay: "#1E3628"
+    text-primary: "#E8F0E2"
+    text-secondary: "#8AAA8A"
+    text-tertiary: "#5A7A5A"
+    border-default: "#2A4A35"
+    border-subtle: "#1E3628"
+    accent-primary: "#3DC48A"
+    accent-secondary: "#6AAFDF"
+    focus-ring: "#3DC48A"

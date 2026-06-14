@@ -1,0 +1,62 @@
+semantic-groups:
+  - name: "Protocol Status"
+    description: "Epoch states and protocol markers"
+  - name: "Feedback"
+    description: "System feedback and messaging"
+
+semantic-classes:
+  - name: "Active"
+    class: "active"
+    group: "Protocol Status"
+    vars:
+      accent: "#00D4AA"
+      accent-bg: "rgba(0, 212, 170, 0.1)"
+      accent-text: "#00D4AA"
+
+  - name: "Pending"
+    class: "pending"
+    group: "Protocol Status"
+    vars:
+      accent: "#F59E0B"
+      accent-bg: "rgba(245, 158, 11, 0.1)"
+      accent-text: "#F59E0B"
+
+  - name: "Inactive"
+    class: "inactive"
+    group: "Protocol Status"
+    vars:
+      accent: "#505050"
+      accent-bg: "rgba(80, 80, 80, 0.1)"
+      accent-text: "#707070"
+
+  - name: "Danger"
+    class: "danger"
+    group: "Feedback"
+    vars:
+      accent: "#EF4444"
+      accent-bg: "rgba(239, 68, 68, 0.1)"
+      accent-text: "#EF4444"
+
+  - name: "Success"
+    class: "success"
+    group: "Feedback"
+    vars:
+      accent: "#00D4AA"
+      accent-bg: "rgba(0, 212, 170, 0.1)"
+      accent-text: "#00D4AA"
+
+  - name: "Warning"
+    class: "warning"
+    group: "Feedback"
+    vars:
+      accent: "#F59E0B"
+      accent-bg: "rgba(245, 158, 11, 0.1)"
+      accent-text: "#F59E0B"
+
+  - name: "Info"
+    class: "info"
+    group: "Feedback"
+    vars:
+      accent: "#6366F1"
+      accent-bg: "rgba(99, 102, 241, 0.1)"
+      accent-text: "#6366F1"
