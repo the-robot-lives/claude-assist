@@ -1,6 +1,4 @@
-node_modules/
-.next/
-out/
-.git/
-.DS_Store
-*.md
+node_modules
+.next
+out
+.git
