@@ -1,0 +1,309 @@
+# Master Knowledge Index — Cross-references all topics across all domains
+# Updated by kb-topic-expander after each /learn session.
+# Updated by kb-index-rebuild if run manually.
+#
+# PURPOSE: Single source of truth for what's in the knowledge base. Agents
+# consult this before fetching article content so they know what exists and
+# whether it's current for your expertise level.
+#
+# STRUCTURE:
+#   topics[]         — flat list of all articles across all domains
+#   domain_summaries — per-domain stats for quick overview
+#   stubs[]          — topics encountered but not yet written
+#   last_rebuilt     — ISO 8601 datetime of last full index rebuild
+#
+# NOTE: Per-domain indexes (knowledge/{domain}/_index.yaml) follow the same
+# format but scoped to that domain. The master index aggregates them all.
+#
+# STATUS VALUES:
+#   complete  — full article written at your current expertise level
+#   stub      — title + frontmatter created, content not yet written
+#   outdated  — article exists but your expertise level has changed since writing
+#   draft     — work in progress
+
+# ── Metadata ──────────────────────────────────────────────────────────────────
+
+last_rebuilt: "2026-05-06T14:32:00Z"
+total_articles: 14
+total_stubs: 6
+schema_version: "1.0"
+
+# ── Topics ────────────────────────────────────────────────────────────────────
+
+topics:
+
+  # ── Computing / Linux / Filesystems ─────────────────────────────────────────
+
+  - path: computing/linux/mount-ntfs.md
+    title: "Mounting NTFS Drives with Write Support"
+    domain: computing
+    subdomain: linux/filesystems
+    tags: [ntfs, mount, fstab, linux, filesystems, ntfs-3g]
+    complexity: intermediate
+    status: complete
+    reading_time_minutes: 8
+    created: "2026-05-06"
+    updated: "2026-05-06"
+    related:
+      - computing/linux/fstab
+      - computing/linux/mount-options
+      - computing/filesystems/ntfs-internals
+    quiz: quizzes/ntfs-mounting-quiz.yaml
+    flashcard_deck: flashcards/computing-linux.yaml
+
+  - path: computing/linux/fstab.md
+    title: "Understanding /etc/fstab"
+    domain: computing
+    subdomain: linux/filesystems
+    tags: [fstab, mount, boot, linux, systemd]
+    complexity: null        # null = not yet written to your level; use /adapt
+    status: stub
+    created: "2026-05-06"
+    updated: "2026-05-06"
+    related:
+      - computing/linux/mount-ntfs
+      - computing/linux/mount-options
+      - computing/linux/systemd-mount
+
+  - path: computing/linux/permissions.md
+    title: "Linux File Permissions and Umask"
+    domain: computing
+    subdomain: linux/security
+    tags: [permissions, chmod, chown, umask, linux, acl]
+    complexity: intermediate
+    status: complete
+    reading_time_minutes: 12
+    created: "2026-05-01"
+    updated: "2026-05-04"
+    related:
+      - computing/linux/acl
+      - computing/linux/setuid-setgid
+      - computing/linux/capabilities
+    quiz: quizzes/linux-permissions-quiz.yaml
+    flashcard_deck: flashcards/computing-linux.yaml
+
+  # ── Computing / ZFS ─────────────────────────────────────────────────────────
+
+  - path: computing/zfs/zfs-basics.md
+    title: "ZFS Fundamentals: Pools, Datasets, and Properties"
+    domain: computing
+    subdomain: linux/storage/zfs
+    tags: [zfs, storage, linux, sysadmin, pools, datasets]
+    complexity: intermediate
+    status: complete
+    reading_time_minutes: 18
+    created: "2026-05-01"
+    updated: "2026-05-06"
+    related:
+      - computing/zfs/zfs-advanced
+      - computing/zfs/zfs-snapshots
+      - computing/zfs/zfs-send-receive
+      - computing/linux/storage-overview
+    quiz: quizzes/zfs-basics-quiz.yaml
+    flashcard_deck: flashcards/computing-zfs.yaml
+
+  - path: computing/zfs/zfs-advanced.md
+    title: "ZFS Advanced: Encryption, Quotas, and Compression"
+    domain: computing
+    subdomain: linux/storage/zfs
+    tags: [zfs, encryption, quotas, compression, storage]
+    complexity: advanced
+    status: draft
+    reading_time_minutes: null  # not yet estimated
+    created: "2026-05-06"
+    updated: "2026-05-06"
+    related:
+      - computing/zfs/zfs-basics
+      - computing/zfs/zfs-send-receive
+
+  - path: computing/zfs/zfs-troubleshooting.md
+    title: "ZFS Troubleshooting: Degraded Pools and Recovery"
+    domain: computing
+    subdomain: linux/storage/zfs
+    tags: [zfs, troubleshooting, recovery, resilver, scrub]
+    complexity: intermediate
+    status: complete
+    reading_time_minutes: 14
+    created: "2026-05-03"
+    updated: "2026-05-06"
+    related:
+      - computing/zfs/zfs-basics
+      - computing/zfs/zfs-advanced
+    simulation: simulations/zfs-pool-recovery.yaml
+
+  # ── Computing / Rust ─────────────────────────────────────────────────────────
+
+  - path: computing/rust/ownership-and-borrowing.md
+    title: "Rust Ownership and Borrowing"
+    domain: computing
+    subdomain: rust/language
+    tags: [rust, ownership, borrowing, borrow-checker, memory-safety]
+    complexity: advanced
+    status: complete
+    reading_time_minutes: 22
+    created: "2026-04-20"
+    updated: "2026-04-28"
+    related:
+      - computing/rust/lifetimes
+      - computing/rust/smart-pointers
+      - computing/systems/memory-management
+    quiz: quizzes/rust-ownership-quiz.yaml
+    flashcard_deck: flashcards/computing-rust.yaml
+
+  - path: computing/rust/lifetimes.md
+    title: "Rust Lifetime Annotations"
+    domain: computing
+    subdomain: rust/language
+    tags: [rust, lifetimes, borrow-checker, annotations]
+    complexity: advanced
+    status: complete
+    reading_time_minutes: 16
+    created: "2026-04-25"
+    updated: "2026-04-25"
+    related:
+      - computing/rust/ownership-and-borrowing
+      - computing/rust/smart-pointers
+    quiz: quizzes/rust-lifetimes-quiz.yaml
+
+  # ── Biology ──────────────────────────────────────────────────────────────────
+
+  - path: biology/genetics/crispr-cas9.md
+    title: "CRISPR-Cas9 Mechanism and Applications"
+    domain: biology
+    subdomain: genetics/gene-editing
+    tags: [crispr, cas9, gene-editing, genetics, molecular-biology]
+    complexity: intermediate
+    status: complete
+    reading_time_minutes: 20
+    created: "2026-04-10"
+    updated: "2026-04-10"
+    related:
+      - biology/genetics/dna-repair-mechanisms
+      - biology/genetics/off-target-effects
+
+  # ── Mathematics ──────────────────────────────────────────────────────────────
+
+  - path: mathematics/linear-algebra/svd.md
+    title: "Singular Value Decomposition"
+    domain: mathematics
+    subdomain: linear-algebra
+    tags: [svd, linear-algebra, matrix-decomposition, dimensionality-reduction]
+    complexity: advanced
+    status: outdated        # written at intermediate level; use /adapt to upgrade
+    reading_time_minutes: 25
+    created: "2026-03-15"
+    updated: "2026-03-15"
+    related:
+      - mathematics/linear-algebra/eigenvalues
+      - mathematics/linear-algebra/pca
+    complexity_when_written: intermediate   # tracks original level for outdated detection
+
+# ── Stubs Queue ───────────────────────────────────────────────────────────────
+
+# Topics mentioned in articles or sessions but not yet written.
+# Run /expand-stubs to have the agent write them based on your expertise level.
+
+stubs:
+
+  - path: computing/linux/mount-options.md
+    title: "Common Linux Mount Options Reference"
+    domain: computing
+    subdomain: linux/filesystems
+    tags: [mount, options, fstab, linux]
+    reason: "Referenced from mount-ntfs article"
+    created: "2026-05-06"
+    priority: high   # high | medium | low
+
+  - path: computing/filesystems/ntfs-internals.md
+    title: "NTFS Filesystem Internals"
+    domain: computing
+    subdomain: filesystems
+    tags: [ntfs, filesystems, internals, windows]
+    reason: "Referenced from mount-ntfs article"
+    created: "2026-05-06"
+    priority: low
+
+  - path: computing/linux/systemd-mount.md
+    title: "Mounting Filesystems with systemd .mount Units"
+    domain: computing
+    subdomain: linux/filesystems
+    tags: [systemd, mount, units, linux]
+    reason: "Referenced from fstab stub"
+    created: "2026-05-06"
+    priority: medium
+
+  - path: computing/zfs/zfs-send-receive.md
+    title: "ZFS Replication with zfs send and receive"
+    domain: computing
+    subdomain: linux/storage/zfs
+    tags: [zfs, replication, backup, send, receive]
+    reason: "Checkpoint in learn-zfs goal"
+    created: "2026-05-06"
+    priority: high
+
+  - path: computing/zfs/zfs-snapshots.md
+    title: "ZFS Snapshots and Rollback"
+    domain: computing
+    subdomain: linux/storage/zfs
+    tags: [zfs, snapshots, rollback, storage]
+    reason: "Related to zfs-basics article"
+    created: "2026-05-06"
+    priority: high
+
+  - path: computing/rust/smart-pointers.md
+    title: "Rust Smart Pointers: Box, Rc, Arc, RefCell, Mutex"
+    domain: computing
+    subdomain: rust/language
+    tags: [rust, smart-pointers, box, rc, arc, refcell, mutex]
+    reason: "Referenced from lifetimes and ownership articles"
+    created: "2026-05-06"
+    priority: medium
+
+# ── Domain Summaries ──────────────────────────────────────────────────────────
+
+domain_summaries:
+
+  computing:
+    total: 9
+    complete: 6
+    stub: 1
+    draft: 1
+    outdated: 1
+    stubs_pending: 5
+    subdomains:
+      - linux/filesystems
+      - linux/security
+      - linux/storage/zfs
+      - rust/language
+      - systems
+
+  biology:
+    total: 1
+    complete: 1
+    stub: 0
+    draft: 0
+    outdated: 0
+    stubs_pending: 0
+    subdomains:
+      - genetics/gene-editing
+
+  mathematics:
+    total: 1
+    complete: 0
+    stub: 0
+    draft: 0
+    outdated: 1
+    stubs_pending: 1
+    subdomains:
+      - linear-algebra
+
+# ── Per-Domain Index Note ─────────────────────────────────────────────────────
+#
+# Each domain also has its own scoped index at:
+#   knowledge/{domain}/_index.yaml
+#
+# Format is identical to this file's `topics` list, filtered to that domain.
+# Agents use domain-level indexes for faster lookups when the query is
+# domain-specific (e.g., "what ZFS articles do I have?").
+#
+# The master index is rebuilt by aggregating all domain-level indexes.

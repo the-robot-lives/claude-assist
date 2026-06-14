@@ -1,0 +1,110 @@
+# User Profile — Personal knowledge base configuration
+# Created by /knowledge-base-setup, editable anytime
+#
+# This file tells agents how to calibrate explanations, complexity,
+# and domain depth for you specifically. Edit freely — agents re-read
+# this at the start of each session.
+
+# ── Identity ──────────────────────────────────────────────────────────────────
+
+name: "Jane Developer"
+
+# Free-text biography. Include professional history, education, and any context
+# that helps the agent understand your background. No required format.
+background: "Senior software engineer, 8 years experience. CS degree from MIT.
+  Previously worked in biotech informatics; now at a fintech startup. Strong in
+  distributed systems and data pipelines. Weaker in frontend and mobile."
+
+# ── Learning Style ────────────────────────────────────────────────────────────
+
+# How do you best absorb new information?
+# Options: visual | auditory | reading | kinesthetic | mixed
+#   visual      — diagrams, charts, flowcharts preferred
+#   auditory    — spoken-style explanations, summaries aloud
+#   reading     — dense text, documentation, reference material
+#   kinesthetic — learn by doing, hands-on labs and exercises
+#   mixed       — agent varies format based on topic
+learning_style: mixed
+
+# ── Interests ─────────────────────────────────────────────────────────────────
+
+# Topics you want the knowledge base to grow toward over time.
+# The kb-topic-expander agent creates stubs for related topics it encounters.
+interests:
+  - systems programming
+  - machine learning
+  - marine biology
+  - home automation
+  - distributed systems
+  - compilers
+
+# ── Domain Expertise ──────────────────────────────────────────────────────────
+
+# Calibrates explanation depth per domain. Add entries as new domains appear.
+# Agents will ask before writing a topic in a domain not listed here.
+#
+# level options:    beginner | intermediate | advanced | expert | postgrad
+# detail options:   overview | standard | detailed | comprehensive
+#
+#   overview      — high-level concepts only, no implementation depth
+#   standard      — balanced theory and practice
+#   detailed      — thorough coverage including edge cases
+#   comprehensive — exhaustive; assume this is a reference you'll cite later
+
+domain_expertise:
+
+  computing:
+    level: expert
+    detail: comprehensive
+    notes: "Strong in systems programming, distributed systems, and data pipelines.
+      Weaker in frontend frameworks (React, Vue) and mobile development. Comfortable
+      reading kernel code and RFCs."
+
+  biology:
+    level: intermediate
+    detail: detailed
+    notes: "Biotech background — familiar with genetics, molecular biology, and
+      bioinformatics toolchains (BLAST, BWA, samtools). No clinical background."
+
+  mathematics:
+    level: advanced
+    detail: standard
+    notes: "Strong linear algebra and probability. Calculus is rusty beyond
+      multivariable. Category theory: beginner."
+
+  physics:
+    level: intermediate
+    detail: standard
+    notes: "Undergrad-level classical mechanics and electromagnetism. No QM beyond
+      conceptual understanding."
+
+  marine_biology:
+    level: beginner
+    detail: overview
+    notes: "Personal interest only — no formal training. Interested in cetacean
+      cognition and deep-sea ecosystems."
+
+  # Add domains as needed. If a topic falls outside all listed domains,
+  # the agent will ask you before writing or will use default_complexity.
+
+# ── Fallback Settings ─────────────────────────────────────────────────────────
+
+# Used when a topic's domain is not listed above.
+default_complexity: standard  # overview | standard | detailed | comprehensive
+
+# Output language for generated content (ISO 639-1 code).
+preferred_language: en
+
+# ── Quiz and Review Preferences ───────────────────────────────────────────────
+
+# How the agent should surface knowledge gaps during review sessions.
+review_style: socratic  # socratic | direct | mixed
+#   socratic — agent asks questions to probe understanding
+#   direct   — agent tells you what you got wrong immediately
+#   mixed    — socratic for new material, direct for review
+
+# Whether the agent should suggest related topics after explaining something.
+suggest_related: true
+
+# Minimum quiz score before marking a topic "mastered".
+mastery_threshold: 85  # percent (0–100)

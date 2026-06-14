@@ -1,0 +1,21 @@
+type: image
+style: chalk drawing on green board
+aspect: 1:1
+resolution: 1024x1024
+
+prompt: |
+  A robot drawn entirely in chalk on a dark green chalkboard.
+  The robot is in a professor pose: wearing a chalk-drawn mortarboard cap,
+  holding a pointer stick, standing next to a small chalk-drawn easel.
+  On the easel: a simple diagram with boxes and arrows labeled "LEARN".
+  The robot's expression is warm and encouraging — round eyes, slight smile.
+  Drawn in white chalk with yellow chalk accents (the cap tassel, the pointer tip).
+  Blue chalk used for the diagram on the easel.
+  The style should look like it was ACTUALLY drawn in chalk:
+  - Slightly uneven lines, varying pressure
+  - Faint dust around stroke edges
+  - Some areas brighter (fresh chalk) vs. lighter (older strokes)
+  Green chalkboard background (#2d4a2d). No digital perfection.
+  The feeling: a beloved teacher drew this during an especially good lecture.
+
+usage: Mascot for the Chalkboard theme — onboarding, section dividers, progress milestones.

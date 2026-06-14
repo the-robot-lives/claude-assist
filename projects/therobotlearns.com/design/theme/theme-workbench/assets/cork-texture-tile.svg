@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
+  <rect width="200" height="200" fill="#c4a574"/>
+  <filter id="cork">
+    <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="4" seed="2" stitchTiles="stitch"/>
+    <feColorMatrix type="saturate" values="0"/>
+  </filter>
+  <rect width="200" height="200" filter="url(#cork)" opacity="0.1"/>
+  <!-- Pinholes -->
+  <circle cx="45" cy="35" r="2" fill="#8b7355" opacity="0.3"/>
+  <circle cx="160" cy="80" r="1.5" fill="#8b7355" opacity="0.25"/>
+  <circle cx="90" cy="155" r="2" fill="#8b7355" opacity="0.2"/>
+  <circle cx="170" cy="170" r="1" fill="#8b7355" opacity="0.3"/>
+</svg>

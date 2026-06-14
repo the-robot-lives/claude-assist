@@ -1,0 +1,35 @@
+{
+  "name": "the-robot-learns",
+  "version": "0.1.0",
+  "description": "Agent-powered personal knowledge base and learning system for Claude Code",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/the-robot-lives/lets-go.git",
+    "directory": "projects/my-knowledge-base"
+  },
+  "bin": {
+    "robot-learns": "./bin/robot-learns.js",
+    "the-robot-learns": "./bin/robot-learns.js"
+  },
+  "files": [
+    "bin/",
+    "template/",
+    "quiz-app/dist/",
+    "quiz-cli/dist/",
+    "schemas/"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "knowledge-base",
+    "learning",
+    "flashcards",
+    "anki",
+    "spaced-repetition",
+    "claude-code",
+    "ai-agent",
+    "quiz"
+  ]
+}

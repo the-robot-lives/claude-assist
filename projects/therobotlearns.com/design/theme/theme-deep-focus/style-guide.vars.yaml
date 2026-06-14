@@ -1,0 +1,25 @@
+vars:
+  groups:
+    - name: "Seed Colors"
+      vars:
+        white: "#e2e8f0"
+        black: "#0a0e1a"
+        red: "#14b8a6"
+        blue: "#38bdf8"
+        yellow: "#fbbf24"
+
+    - name: "Semantic Colors"
+      vars:
+        success: "#34d399"
+        warning: "#fbbf24"
+        error: "#fb7185"
+        info: "#38bdf8"
+
+    - name: "Typography"
+      vars:
+        font-sans: "'IBM Plex Sans', -apple-system, BlinkMacSystemFont, sans-serif"
+        font-mono: "'IBM Plex Mono', 'Menlo', monospace"
+
+    - name: "Shape"
+      vars:
+        radius: "6px"

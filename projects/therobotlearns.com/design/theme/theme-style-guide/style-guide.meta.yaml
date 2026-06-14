@@ -1,0 +1,4 @@
+name: style-guide
+slug: style-guide
+title: The Robot Learns — Base Style Guide
+description: Foundation design system for The Robot Learns education platform. Provides shared tokens, layouts, and components inherited by all child themes.

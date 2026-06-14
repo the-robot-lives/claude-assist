@@ -1,0 +1,75 @@
+typography:
+  - var: font-sans
+    name: Nunito
+    description: "Primary typeface. Rounded, friendly sans — the 'friendly narrator' voice of the comic. Highly readable, never stuffy."
+    usage: "Body text, speech bubble content, descriptions, UI labels"
+    weights: [400, 600, 700, 800]
+
+  - var: font-mono
+    name: Fira Code
+    description: "Monospace typeface with programming ligatures. Code blocks look polished and modern."
+    usage: "Code blocks, terminal output, technical annotations"
+    weights: [400, 500]
+
+  - var: font-display
+    name: Bangers
+    description: "Display typeface. Comic book title lettering — BIG, BOLD, DRAMATIC. Used for headings, callouts, and POW moments."
+    usage: "Page titles, action callouts, emphasis headings, sound effects"
+    weights: [400]
+    colors:
+      - label: "Action Red"
+        value: "#ff3366"
+        background: "#ffcc00"
+        note: "POW! BAM! — action emphasis on yellow burst backgrounds."
+      - label: "Hero Blue"
+        value: "#3366ff"
+        background: "#fffef5"
+        note: "Primary heading color — heroic, trustworthy blue."
+      - label: "Alert"
+        value: "#1a1a1a"
+        background: "#ff3366"
+        note: "Dark on hot pink — maximum urgency callouts."
+
+typography-classes:
+  - name: Display
+    class: typography-display
+    font-family: "var(--font-display)"
+    font-size: "var(--font-size-display)"
+    font-weight: "400"
+    line-height: "0.95"
+    letter-spacing: "0.04em"
+    text-transform: "uppercase"
+
+  - name: H1
+    class: typography-h1
+    font-family: "var(--font-display)"
+    font-size: "var(--font-size-3xl)"
+    font-weight: "400"
+    line-height: "1.0"
+    letter-spacing: "0.03em"
+    text-transform: "uppercase"
+
+  - name: H2
+    class: typography-h2
+    font-family: "var(--font-display)"
+    font-size: "var(--font-size-2xl)"
+    font-weight: "400"
+    line-height: "1.05"
+    letter-spacing: "0.02em"
+    text-transform: "uppercase"
+
+  - name: Body
+    class: typography-body
+    font-family: "var(--font-sans)"
+    font-size: "var(--font-size-md)"
+    font-weight: "400"
+    line-height: "1.7"
+
+  - name: Label
+    class: typography-label
+    font-family: "var(--font-display)"
+    font-size: "var(--font-size-xs)"
+    font-weight: "400"
+    line-height: "1.2"
+    letter-spacing: "0.06em"
+    text-transform: "uppercase"

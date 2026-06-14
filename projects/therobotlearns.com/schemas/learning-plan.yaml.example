@@ -1,0 +1,188 @@
+# Learning Plan — SMART goals with checkpoints and progress tracking
+# Created by /knowledge-base-learning-plan
+#
+# PURPOSE: Tracks active learning goals, their sub-checkpoints, and overall
+# progress. Agents update status and score fields as you complete activities.
+#
+# CHECKPOINT TYPES:
+#   quiz            — multiple-choice / fill-in-blank / matching quiz
+#   flashcard-review — spaced repetition session targeting a retention %
+#   simulation      — agent role-plays a broken system; you diagnose it
+#   project         — hands-on build task with completion criteria
+#   exam            — comprehensive multi-topic assessment
+#   reading         — assigned article or reference material with comprehension check
+#
+# STATUS VALUES (goal and checkpoint level):
+#   not_started | in_progress | completed | abandoned | deferred
+
+goals:
+
+  # ── Goal 1: ZFS Administration ─────────────────────────────────────────────
+
+  - id: learn-zfs
+    title: "Master ZFS administration"
+
+    # SMART breakdown — helps agents keep checkpoints on-target
+    smart:
+      specific: "Configure and manage ZFS pools, snapshots, send/receive replication,
+        encryption, and quota management on Linux"
+      measurable: "Pass all 5 simulation scenarios with 85%+ score; complete the
+        ZFS mirror project on physical hardware"
+      achievable: "Already comfortable with Linux administration and storage
+        concepts (LVM, mdadm, ext4/xfs)"
+      relevant: "Migrating home NAS infrastructure from ext4 to ZFS for better
+        data integrity and snapshot support"
+      time_bound: "2026-06-15"
+
+    checkpoints:
+
+      - id: zfs-basics-quiz
+        type: quiz
+        topic: computing/zfs/zfs-basics
+        title: "ZFS fundamentals quiz"
+        target_score: 80      # minimum passing score (0–100)
+        due: "2026-05-15"
+        status: completed
+        score: 88
+        completed_at: "2026-05-12"
+        notes: "Strong on pool creation and properties. Missed scrub vs. resilver timing."
+
+      - id: zfs-flashcards-round1
+        type: flashcard-review
+        deck: computing-zfs
+        title: "ZFS terminology deck — first pass"
+        target_retention: 85  # % of cards answered correctly in session
+        due: "2026-05-20"
+        status: pending
+        notes: null
+
+      - id: zfs-pool-recovery-sim
+        type: simulation
+        scenario: zfs-pool-recovery
+        title: "Recover a degraded ZFS mirror pool"
+        target_score: 80
+        due: "2026-05-25"
+        status: pending
+        notes: null
+
+      - id: zfs-send-receive-sim
+        type: simulation
+        scenario: zfs-send-receive
+        title: "Set up incremental ZFS replication to a remote host"
+        target_score: 75
+        due: "2026-06-01"
+        status: pending
+        notes: null
+
+      - id: zfs-mirror-project
+        type: project
+        project: setup-zfs-mirror
+        title: "Build a ZFS mirror pool on the home NAS"
+        due: "2026-06-10"
+        status: pending
+        completion_criteria:
+          - "Pool created with two drives in mirror configuration"
+          - "Weekly snapshot schedule configured via cron"
+          - "Replication to backup host tested with zfs send/receive"
+          - "Pool encryption enabled with passphrase"
+        notes: null
+
+      - id: zfs-comprehensive-exam
+        type: exam
+        topics:
+          - computing/zfs/zfs-basics
+          - computing/zfs/zfs-advanced
+          - computing/zfs/zfs-troubleshooting
+        title: "ZFS comprehensive assessment"
+        target_score: 85
+        due: "2026-06-15"
+        status: pending
+        notes: null
+
+    status: in_progress
+    progress: 20              # rough % complete across all checkpoints
+    created: "2026-05-01"
+    updated: "2026-05-12"
+
+  # ── Goal 2: Rust Ownership Model ───────────────────────────────────────────
+
+  - id: rust-ownership
+    title: "Deeply understand Rust ownership, borrowing, and lifetimes"
+
+    smart:
+      specific: "Understand ownership rules, borrow checker mechanics, lifetime
+        annotations, and common patterns (Rc/RefCell, Arc/Mutex)"
+      measurable: "Complete all 3 quizzes with 90%+ and implement a lock-free
+        ring buffer in safe Rust without compiler errors"
+      achievable: "Already know C and have basic Rust syntax knowledge"
+      relevant: "Evaluating Rust for a high-performance data pipeline component"
+      time_bound: "2026-07-01"
+
+    checkpoints:
+
+      - id: rust-ownership-reading
+        type: reading
+        article: computing/rust/ownership-and-borrowing
+        title: "Read: Ownership and Borrowing in Rust"
+        due: "2026-05-18"
+        status: not_started
+        notes: null
+
+      - id: rust-ownership-quiz
+        type: quiz
+        topic: computing/rust/ownership-and-borrowing
+        title: "Ownership and borrowing quiz"
+        target_score: 90
+        due: "2026-05-22"
+        status: not_started
+        notes: null
+
+      - id: rust-lifetimes-quiz
+        type: quiz
+        topic: computing/rust/lifetimes
+        title: "Lifetime annotation quiz"
+        target_score: 85
+        due: "2026-06-01"
+        status: not_started
+        notes: null
+
+      - id: rust-ring-buffer-project
+        type: project
+        project: rust-ring-buffer
+        title: "Implement a lock-free ring buffer in safe Rust"
+        due: "2026-06-20"
+        status: not_started
+        completion_criteria:
+          - "Compiles with no unsafe blocks"
+          - "Passes a suite of concurrent read/write tests"
+          - "Documents borrow checker decisions in comments"
+        notes: null
+
+    status: not_started
+    progress: 0
+    created: "2026-05-06"
+    updated: "2026-05-06"
+
+  # ── Goal 3: Deferred ────────────────────────────────────────────────────────
+
+  - id: learn-kubernetes
+    title: "Kubernetes cluster administration"
+    status: deferred
+    deferred_reason: "Not needed until Q3 infrastructure migration. Revisit 2026-08-01."
+    progress: 0
+    created: "2026-04-10"
+    updated: "2026-05-01"
+    smart: null
+    checkpoints: []
+
+# ── Aggregate Stats ──────────────────────────────────────────────────────────
+
+# Maintained automatically by agents — do not edit manually.
+stats:
+  goals_total: 3
+  goals_active: 1
+  goals_completed: 0
+  goals_deferred: 1
+  checkpoints_completed: 1
+  checkpoints_total: 10
+  last_activity: "2026-05-12"

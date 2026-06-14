@@ -1,0 +1,14 @@
+name: "The Robot Learns — Chalkboard"
+logo-text: "THE ROBOT LEARNS"
+font-url: "https://fonts.googleapis.com/css2?family=Architects+Daughter&family=Patrick+Hand:wght@400&family=Roboto+Slab:wght@400;500;600;700&family=Roboto+Mono:wght@400;500&display=swap"
+intent: "Capture the magic of a brilliant lecture. The chalkboard after a great teacher finishes — diagrams, equations, arrows connecting ideas, margin notes, the 'aha' moment drawn in colored chalk."
+perception: "Warm, academic, personal. Like sitting in the front row of the best class you ever took, where the professor draws everything out and makes it click."
+audience: "Students, academics, anyone nostalgic for great classroom teaching. People who learn from explanation and demonstration."
+tone: "Professorial but warm. Think-aloud style. 'Now watch what happens when we...' Underlines for emphasis. Arrows connecting ideas."
+keywords:
+  - Chalk
+  - Lecture
+  - Diagram
+  - Underline
+  - Explain
+  - Blackboard

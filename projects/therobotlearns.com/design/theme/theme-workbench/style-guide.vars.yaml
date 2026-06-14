@@ -1,0 +1,71 @@
+vars:
+  groups:
+    - name: "Seed Colors"
+      vars:
+        white: "#f5f0e8"
+        black: "#2c2416"
+        red: "#e74c3c"
+        blue: "#2980b9"
+        yellow: "#f1c40f"
+
+    - name: "Primaries"
+      vars:
+        brand-red: "#e74c3c"
+        brand-blue: "#2980b9"
+        brand-yellow: "#f1c40f"
+
+    - name: "Palette"
+      vars:
+        rose: "#e74c3c"
+        rose-light: "color-mix(in srgb, #e74c3c 12%, var(--surface))"
+        orange: "#e67e22"
+        orange-light: "color-mix(in srgb, #e67e22 12%, var(--surface))"
+        amber: "#f39c12"
+        amber-light: "color-mix(in srgb, #f39c12 15%, var(--surface))"
+        lime: "#27ae60"
+        lime-light: "color-mix(in srgb, #27ae60 12%, var(--surface))"
+        emerald: "#2ecc71"
+        emerald-light: "color-mix(in srgb, #2ecc71 12%, var(--surface))"
+        teal: "#1abc9c"
+        teal-light: "color-mix(in srgb, #1abc9c 12%, var(--surface))"
+        cyan: "#00bcd4"
+        cyan-light: "color-mix(in srgb, #00bcd4 12%, var(--surface))"
+        sky: "#3498db"
+        sky-light: "color-mix(in srgb, #3498db 12%, var(--surface))"
+        indigo: "#5c6bc0"
+        indigo-light: "color-mix(in srgb, #5c6bc0 12%, var(--surface))"
+        violet: "#9b59b6"
+        violet-light: "color-mix(in srgb, #9b59b6 12%, var(--surface))"
+        purple: "#8e44ad"
+        purple-light: "color-mix(in srgb, #8e44ad 12%, var(--surface))"
+        fuchsia: "#e91e63"
+        fuchsia-light: "color-mix(in srgb, #e91e63 12%, var(--surface))"
+        pink: "#ec407a"
+        pink-light: "color-mix(in srgb, #ec407a 12%, var(--surface))"
+
+    - name: "Semantic Colors"
+      vars:
+        success: "#27ae60"
+        warning: "#f39c12"
+        error: "#e74c3c"
+        info: "#2980b9"
+
+    - name: "Typography"
+      vars:
+        font-sans: "'Outfit', -apple-system, BlinkMacSystemFont, sans-serif"
+        font-mono: "'Source Code Pro', 'Menlo', monospace"
+        font-display: "'Caveat', 'Comic Sans MS', cursive"
+
+    - name: "Shape"
+      vars:
+        radius: "3px"
+
+    - name: "Cards"
+      vars:
+        card-separator-style: "none"
+        card-footer-font-size: "var(--font-size-xs)"
+        card-footer-font-weight: "var(--font-weight-bold)"
+
+    - name: "Buttons"
+      vars:
+        btn-font-size: "15px"

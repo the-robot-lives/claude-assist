@@ -1,0 +1,26 @@
+vars:
+  groups:
+    - name: "Seed Colors"
+      vars:
+        white: "#faf8f5"
+        black: "#1c1917"
+        red: "#b45309"
+        blue: "#1e40af"
+        yellow: "#d97706"
+
+    - name: "Semantic Colors"
+      vars:
+        success: "#15803d"
+        warning: "#a16207"
+        error: "#b91c1c"
+        info: "#1d4ed8"
+
+    - name: "Typography"
+      vars:
+        font-sans: "'Source Serif 4', 'Georgia', 'Times New Roman', serif"
+        font-mono: "'IBM Plex Mono', 'Menlo', monospace"
+        font-display: "'Fraunces', 'Georgia', serif"
+
+    - name: "Shape"
+      vars:
+        radius: "2px"

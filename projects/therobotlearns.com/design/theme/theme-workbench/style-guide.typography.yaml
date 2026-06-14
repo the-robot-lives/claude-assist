@@ -1,0 +1,62 @@
+typography:
+  - var: font-sans
+    name: Outfit
+    description: "Primary typeface. Clean geometric sans — the 'typed label' on your project. Readable, modern, no-nonsense."
+    usage: "Body text, UI labels, buttons, descriptions"
+    weights: [400, 500, 600, 700]
+
+  - var: font-mono
+    name: Source Code Pro
+    description: "Monospace typeface. Clean developer mono for code and technical content."
+    usage: "Code blocks, token values, metadata"
+    weights: [400, 500, 600]
+
+  - var: font-display
+    name: Caveat
+    description: "Display typeface. Hand-written marker pen — like someone scrawled the heading on a whiteboard during a brainstorm."
+    usage: "Page titles, sticky note text, annotations, callout labels"
+    weights: [400, 500, 600, 700]
+    colors:
+      - label: "Marker Blue"
+        value: "#2980b9"
+        background: "#f5f0e8"
+        note: "Blue dry-erase marker — primary headings and labels."
+      - label: "Marker Red"
+        value: "#e74c3c"
+        background: "#f5f0e8"
+        note: "Red marker — important callouts, 'don't forget!' annotations."
+      - label: "Marker Green"
+        value: "#27ae60"
+        background: "#f5f0e8"
+        note: "Green marker — success states, 'done!' checkmarks."
+
+typography-classes:
+  - name: Display
+    class: typography-display
+    font-family: "var(--font-display)"
+    font-size: "var(--font-size-display)"
+    font-weight: "700"
+    line-height: "1.1"
+    letter-spacing: "-0.01em"
+
+  - name: H1
+    class: typography-h1
+    font-family: "var(--font-display)"
+    font-size: "var(--font-size-3xl)"
+    font-weight: "600"
+    line-height: "1.15"
+
+  - name: H2
+    class: typography-h2
+    font-family: "var(--font-display)"
+    font-size: "var(--font-size-2xl)"
+    font-weight: "600"
+    line-height: "1.2"
+
+  - name: Label
+    class: typography-label
+    font-family: "var(--font-display)"
+    font-size: "var(--font-size-sm)"
+    font-weight: "500"
+    line-height: "1.3"
+    letter-spacing: "0.01em"

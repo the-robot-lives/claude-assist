@@ -1,0 +1,25 @@
+vars:
+  groups:
+    - name: "Seed Colors"
+      vars:
+        white: "#ffffff"
+        black: "#1a1a2e"
+        red: "#f43f5e"
+        blue: "#8b5cf6"
+        yellow: "#fbbf24"
+
+    - name: "Semantic Colors"
+      vars:
+        success: "#10b981"
+        warning: "#f59e0b"
+        error: "#ef4444"
+        info: "#6366f1"
+
+    - name: "Typography"
+      vars:
+        font-sans: "'Nunito', 'Quicksand', -apple-system, sans-serif"
+        font-mono: "'Fira Code', 'JetBrains Mono', monospace"
+
+    - name: "Shape"
+      vars:
+        radius: "12px"

@@ -1,0 +1,66 @@
+typography:
+  - var: font-sans
+    name: Patrick Hand
+    description: "Primary typeface. Neat handwriting — like careful chalk lettering on a blackboard. Readable but personal."
+    usage: "Body text, explanations, descriptions, UI labels"
+    weights: [400]
+
+  - var: font-mono
+    name: Roboto Mono
+    description: "Monospace typeface. Clean, precise mono — like typed formulas and code printed on handouts."
+    usage: "Code blocks, equations, technical values"
+    weights: [400, 500]
+
+  - var: font-display
+    name: Architects Daughter
+    description: "Display typeface. Casual architectural handwriting — like the professor's bold chalk headings, confident and slightly uneven."
+    usage: "Page titles, section headings, board labels, diagram annotations"
+    weights: [400]
+    colors:
+      - label: "White Chalk"
+        value: "#e8e4d8"
+        background: "#2d4a2d"
+        note: "Standard white chalk on green board — primary text."
+      - label: "Yellow Chalk"
+        value: "#e8d44c"
+        background: "#2d4a2d"
+        note: "Yellow chalk — emphasis, key terms, important underlines."
+      - label: "Blue Chalk"
+        value: "#6cb4dc"
+        background: "#2d4a2d"
+        note: "Blue chalk — links, references, diagram connections."
+      - label: "Pink Chalk"
+        value: "#e06060"
+        background: "#2d4a2d"
+        note: "Pink chalk — warnings, corrections, 'watch out for this'."
+
+typography-classes:
+  - name: Display
+    class: typography-display
+    font-family: "var(--font-display)"
+    font-size: "var(--font-size-display)"
+    font-weight: "400"
+    line-height: "1.15"
+    letter-spacing: "0.01em"
+
+  - name: H1
+    class: typography-h1
+    font-family: "var(--font-display)"
+    font-size: "var(--font-size-3xl)"
+    font-weight: "400"
+    line-height: "1.2"
+
+  - name: Body
+    class: typography-body
+    font-family: "var(--font-sans)"
+    font-size: "18px"
+    font-weight: "400"
+    line-height: "1.65"
+
+  - name: Label
+    class: typography-label
+    font-family: "var(--font-display)"
+    font-size: "var(--font-size-sm)"
+    font-weight: "400"
+    line-height: "1.3"
+    letter-spacing: "0.02em"

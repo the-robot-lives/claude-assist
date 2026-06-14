@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
+  <!-- Starburst / explosion shape -->
+  <polygon points="100,5 115,55 155,20 125,65 185,50 135,80 200,100 135,120 185,150 125,135 155,180 115,145 100,195 85,145 45,180 75,135 15,150 65,120 0,100 65,80 15,50 75,65 45,20 85,55"
+    fill="#ffcc00" stroke="#1a1a1a" stroke-width="3" stroke-linejoin="round"/>
+</svg>

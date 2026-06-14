@@ -1,0 +1,72 @@
+vars:
+  groups:
+    - name: "Seed Colors"
+      vars:
+        white: "#e8e4d8"
+        black: "#1e2a1e"
+        red: "#e06060"
+        blue: "#6cb4dc"
+        yellow: "#e8d44c"
+
+    - name: "Primaries"
+      vars:
+        brand-red: "#e06060"
+        brand-blue: "#6cb4dc"
+        brand-yellow: "#e8d44c"
+
+    - name: "Palette"
+      vars:
+        rose: "#e06060"
+        rose-light: "color-mix(in srgb, #e06060 12%, var(--surface))"
+        orange: "#d89050"
+        orange-light: "color-mix(in srgb, #d89050 12%, var(--surface))"
+        amber: "#d8b840"
+        amber-light: "color-mix(in srgb, #d8b840 15%, var(--surface))"
+        lime: "#88c040"
+        lime-light: "color-mix(in srgb, #88c040 12%, var(--surface))"
+        emerald: "#50b878"
+        emerald-light: "color-mix(in srgb, #50b878 12%, var(--surface))"
+        teal: "#48a8a0"
+        teal-light: "color-mix(in srgb, #48a8a0 12%, var(--surface))"
+        cyan: "#50b8d8"
+        cyan-light: "color-mix(in srgb, #50b8d8 12%, var(--surface))"
+        sky: "#6ca8d8"
+        sky-light: "color-mix(in srgb, #6ca8d8 12%, var(--surface))"
+        indigo: "#7888c8"
+        indigo-light: "color-mix(in srgb, #7888c8 12%, var(--surface))"
+        violet: "#9878b8"
+        violet-light: "color-mix(in srgb, #9878b8 12%, var(--surface))"
+        purple: "#a868b8"
+        purple-light: "color-mix(in srgb, #a868b8 12%, var(--surface))"
+        fuchsia: "#c060a0"
+        fuchsia-light: "color-mix(in srgb, #c060a0 12%, var(--surface))"
+        pink: "#d870a0"
+        pink-light: "color-mix(in srgb, #d870a0 12%, var(--surface))"
+
+    - name: "Semantic Colors"
+      vars:
+        success: "#50b878"
+        warning: "#d8b840"
+        error: "#e06060"
+        info: "#6cb4dc"
+
+    - name: "Typography"
+      vars:
+        font-sans: "'Patrick Hand', 'Architects Daughter', cursive"
+        font-mono: "'Roboto Mono', 'Courier New', monospace"
+        font-display: "'Architects Daughter', 'Patrick Hand', cursive"
+        font-size-base: "18px"
+        line-height-base: "1.65"
+
+    - name: "Shape"
+      vars:
+        radius: "0px"
+
+    - name: "Cards"
+      vars:
+        card-separator-style: "dashed"
+        card-separator-color: "rgba(232,228,216,0.3)"
+
+    - name: "Buttons"
+      vars:
+        btn-font-size: "16px"
