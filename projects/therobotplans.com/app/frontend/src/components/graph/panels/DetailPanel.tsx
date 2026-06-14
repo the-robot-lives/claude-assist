@@ -81,7 +81,7 @@ function statusColor(status?: string): string {
 export function DetailPanel({ node, onClose, onNavigate, side = "right" }: DetailPanelProps) {
   if (!node) return null;
 
-  const data = node.data as Record<string, unknown>;
+  const data = node.data as unknown as Record<string, unknown>;
   const nodeStatus = (data.status as string) ?? undefined;
 
   return (

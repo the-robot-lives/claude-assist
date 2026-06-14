@@ -21,7 +21,7 @@ interface VoiceCaptureButtonProps {
 export function VoiceCaptureButton({ onTranscript, language = "en-US", maxDuration = 30, disabled = false }: VoiceCaptureButtonProps) {
   const [recording, setRecording] = useState(false);
   const [seconds, setSeconds] = useState(0);
-  const timerRef = useRef<ReturnType<typeof setInterval>>();
+  const timerRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
   const recognitionRef = useRef<any>(null);
 
   const start = () => {

@@ -153,7 +153,7 @@ export function QuickCaptureOverlay({
   // ── Voice capture button (inline render, no import to avoid circular) ──
   const [recording, setRecording] = useState(false);
   const [recSeconds, setRecSeconds] = useState(0);
-  const timerRef = useRef<ReturnType<typeof setInterval>>();
+  const timerRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
   const recognitionRef = useRef<any>(null);
 
   const startVoice = () => {

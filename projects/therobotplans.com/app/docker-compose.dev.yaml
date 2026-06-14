@@ -6,52 +6,49 @@
 # First run: deps install (~1-2 min). Subsequent starts are fast (named volumes).
 
 services:
-  # ── Backend not yet implemented ──────────────────────────────────
-  # Uncomment migrations + backend once Phoenix code exists.
+  migrations:
+    build:
+      context: ./backend/db
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+      - backend/.env
+    environment:
+      DB_HOST: db
+    networks:
+      - infra
+    restart: "no"
 
-  # migrations:
-  #   build:
-  #     context: ./backend/db
-  #     dockerfile: Dockerfile
-  #   env_file:
-  #     - .env
-  #     - backend/.env
-  #   environment:
-  #     DB_HOST: db
-  #   networks:
-  #     - infra
-  #   restart: "no"
-
-  # backend:
-  #   build:
-  #     context: ./backend
-  #     dockerfile: Dockerfile.dev
-  #   image: ${PROJECT_DIR:-therobotplans.com}/backend:dev
-  #   depends_on:
-  #     migrations:
-  #       condition: service_completed_successfully
-  #   command: >
-  #     bash -c "mix deps.get && mix ecto.migrate && mix phx.server"
-  #   working_dir: /app
-  #   volumes:
-  #     - ./backend:/app
-  #     - backend_build:/app/_build
-  #     - backend_deps:/app/deps
-  #   env_file:
-  #     - .env
-  #     - backend/.env
-  #   environment:
-  #     MIX_ENV: dev
-  #     PHX_SERVER: "true"
-  #     PHX_IP: "0.0.0.0"
-  #     PORT: "4000"
-  #     DB_HOST: db
-  #   expose:
-  #     - "4000"
-  #   networks:
-  #     - app
-  #     - infra
-  #   restart: "no"
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    image: ${PROJECT_DIR:-therobotplans.com}/backend:dev
+    depends_on:
+      migrations:
+        condition: service_completed_successfully
+    command: >
+      bash -c "mix deps.get && mix ecto.migrate && mix phx.server"
+    working_dir: /app
+    volumes:
+      - ./backend:/app
+      - backend_build:/app/_build
+      - backend_deps:/app/deps
+    env_file:
+      - .env
+      - backend/.env
+    environment:
+      MIX_ENV: dev
+      PHX_SERVER: "true"
+      PHX_IP: "0.0.0.0"
+      PORT: "4000"
+      DB_HOST: db
+    expose:
+      - "4000"
+    networks:
+      - app
+      - infra
+    restart: "no"
 
   frontend:
     build:
@@ -91,6 +88,6 @@ services:
       - "${PORT:-8093}:80"
 
 volumes:
-  # backend_build:    # uncomment when backend is ready
-  # backend_deps:     # uncomment when backend is ready
+  backend_build:
+  backend_deps:
   frontend_node_modules:

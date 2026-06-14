@@ -41,7 +41,7 @@ RUN --mount=type=cache,target=/app/.next/cache \
     npm run build
 
 # ── Stage 3: Runtime ─────────────────────────────────────────────────────────
-FROM node:${NODE_VERSION} AS runtime
+FROM node:${NODE_VERSION} AS production
 WORKDIR /app
 
 ENV NODE_ENV=production

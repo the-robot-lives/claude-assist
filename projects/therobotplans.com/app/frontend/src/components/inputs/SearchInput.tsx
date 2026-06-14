@@ -27,7 +27,7 @@ export function SearchInput({ placeholder = "Search...", onSearch, onSelect, deb
   const [results, setResults] = useState<SearchResult[]>([]);
   const [focused, setFocused] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
-  const timerRef = useRef<ReturnType<typeof setTimeout>>();
+  const timerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const search = useCallback(async (q: string) => {

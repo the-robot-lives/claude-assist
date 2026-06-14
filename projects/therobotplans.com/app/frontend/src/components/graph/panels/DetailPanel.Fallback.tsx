@@ -35,7 +35,7 @@ const kvValue: React.CSSProperties = {
 };
 
 export function DetailPanelFallback({ node }: DetailPanelFallbackProps) {
-  const data = node.data as Record<string, unknown>;
+  const data = node.data as unknown as Record<string, unknown>;
 
   // Render known fields as readable KV pairs, skip complex objects for now
   const entries = Object.entries(data).filter(([, v]) => {

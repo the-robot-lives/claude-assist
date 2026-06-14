@@ -49,7 +49,7 @@ function gridLayout(nodes: GraphNode[]): Node[] {
       x: (i % cols) * 300,
       y: Math.floor(i / cols) * 160,
     },
-    data: n.data as Record<string, unknown>,
+    data: n.data as unknown as Record<string, unknown>,
   }));
 }
 
@@ -95,7 +95,7 @@ async function computeDagre(
         x: (pos?.x ?? 0) - w / 2,
         y: (pos?.y ?? 0) - h / 2,
       },
-      data: n.data as Record<string, unknown>,
+      data: n.data as unknown as Record<string, unknown>,
     };
   });
 }
@@ -115,7 +115,7 @@ function computeForce(nodes: GraphNode[]): Node[] {
       x: Math.cos(i * angleStep) * radius + radius,
       y: Math.sin(i * angleStep) * radius + radius,
     },
-    data: n.data as Record<string, unknown>,
+    data: n.data as unknown as Record<string, unknown>,
   }));
 }
 
@@ -157,7 +157,7 @@ function computeRadial(nodes: GraphNode[]): Node[] {
           x: centerX + Math.cos(i * angleStep) * r - (NODE_WIDTH[n.type] ?? 180) / 2,
           y: centerY + Math.sin(i * angleStep) * r - (NODE_HEIGHT[n.type] ?? 60) / 2,
         },
-        data: n.data as Record<string, unknown>,
+        data: n.data as unknown as Record<string, unknown>,
       });
     }
   }
@@ -174,7 +174,7 @@ function mapEdges(edges: GraphEdge[]): Edge[] {
     target: e.target,
     type: e.type,
     animated: e.animated,
-    data: e.data as Record<string, unknown>,
+    data: e.data as unknown as Record<string, unknown>,
   }));
 }
 

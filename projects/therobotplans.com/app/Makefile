@@ -31,8 +31,9 @@ PORT_MAP := \
   therobotknows.com=8089 \
   therobotlives.com=8090 \
   therobotmakes.com=8091 \
-  therobotlearns.com=8092 \
-  therobotplans.com=8093
+  therobotplans.com=8092 \
+  noizu.com=8093 \
+  tobornalp.com=8094
 
 # ── Redis DB assignment ──────────────────────────────────────────
 REDIS_DB_MAP := \
@@ -48,7 +49,9 @@ REDIS_DB_MAP := \
   therobotknows.com=9 \
   therobotlives.com=10 \
   therobotmakes.com=11 \
-  therobotplans.com=12
+  therobotplans.com=12 \
+  noizu.com=13 \
+  tobornalp.com=14
 
 # ── Slug derivation ─────────────────────────────────────────────
 SLUG_MAP := \
@@ -64,7 +67,9 @@ SLUG_MAP := \
   therobotknows.com=therobotknows \
   therobotlives.com=therobotlives \
   therobotmakes.com=therobotmakes \
-  therobotplans.com=tobornalp
+  therobotplans.com=therobotplans \
+  noizu.com=noizu_site \
+  tobornalp.com=tobornalp
 
 PROJECT_SLUG = $(or $(patsubst $(PROJECT_DIR)=%,%,$(filter $(PROJECT_DIR)=%,$(SLUG_MAP))),starter)
 REDIS_DB     = $(or $(patsubst $(PROJECT_DIR)=%,%,$(filter $(PROJECT_DIR)=%,$(REDIS_DB_MAP))),0)
@@ -74,14 +79,12 @@ DB_NAME      = $(subst .,_,$(subst -,_,$(PROJECT_DIR)))_dev
 # ── Shared build fragments ──────────────────────────────────────
 FRONTEND_BUILD_ARGS = \
 	--build-arg NEXT_PUBLIC_API_URL=$$(grep NEXT_PUBLIC_API_URL .env 2>/dev/null | cut -d= -f2- || echo "") \
-	--secret id=github_token,env=GITHUB_TOKEN \
-	--secret id=verdaccio_token,env=VERDACCIO_TOKEN
+	--secret id=github_token,env=GITHUB_TOKEN
 
 # ══════════════════════════════════════════════════════════════════
 
 # ── Dev compose shorthand ──────────────────────────────────────
-LOCAL_OVERLAY := $(wildcard docker-compose.local.yaml)
-DEV_COMPOSE = docker compose -p $(COMPOSE_NAME) -f docker-compose.yaml -f docker-compose.dev.yaml $(if $(LOCAL_OVERLAY),-f $(LOCAL_OVERLAY))
+DEV_COMPOSE = docker compose -p $(COMPOSE_NAME) -f docker-compose.yaml -f docker-compose.dev.yaml
 
 IMAGE_MIGRATIONS = $(PROJECT_DIR)/migrations:$(TAG)
 
@@ -97,6 +100,8 @@ HELM_OCI_REGISTRY = oci://ghcr.io/the-robot-lives/charts
 	run-dev run-dev-d stop-dev logs-dev \
 	dev-setup dev-migrate dev-regen dev-seed \
 	dev-shell-backend dev-shell-frontend dev-clean \
+	sandbox sandbox-no-cache run-sandbox run-sandbox-d \
+	stop-sandbox logs-sandbox sandbox-shell sandbox-clean sandbox-mount \
 	migrate migrate-status migrate-rollback migrate-validate \
 	helm-package helm-publish helm-lint \
 	helm-bump-patch helm-bump-minor helm-bump-major
@@ -114,12 +119,11 @@ init: ## Generate .env + backend/.env + frontend/.env with secrets
 
 # ── Per-service builds ───────────────────────────────────────────
 
-backend: ## Build backend image (not yet implemented)
-	@echo "Backend not yet implemented — skipping."
-	@echo "Once Phoenix code exists, this will build $(IMAGE_BACKEND)"
+backend: ## Build backend image
+	docker buildx build --load -t $(IMAGE_BACKEND) ./backend
 
-backend-no-cache: ## Build backend image, no cache (not yet implemented)
-	@echo "Backend not yet implemented — skipping."
+backend-no-cache: ## Build backend image (no cache)
+	docker buildx build --no-cache --load -t $(IMAGE_BACKEND) ./backend
 
 frontend: .env ## Build frontend image
 	GITHUB_TOKEN=$${GITHUB_TOKEN} docker buildx build --load -t $(IMAGE_FRONTEND) \
@@ -137,22 +141,21 @@ nginx-no-cache: ## Build nginx image (no cache)
 
 # ── Aggregate builds ─────────────────────────────────────────────
 
-build: frontend nginx ## Build all images (backend skipped — not yet implemented)
+build: backend frontend nginx ## Build all images
 	@echo ""
-	@echo "Built: $(IMAGE_FRONTEND) $(IMAGE_NGINX)"
-	@echo "Note: backend not yet implemented"
+	@echo "Built: $(IMAGE_BACKEND) $(IMAGE_FRONTEND) $(IMAGE_NGINX)"
 
-build-no-cache: frontend-no-cache nginx-no-cache ## Build all images, no cache
+build-no-cache: backend-no-cache frontend-no-cache nginx-no-cache ## Build all images (no cache)
 	@echo ""
-	@echo "Built (no cache): $(IMAGE_FRONTEND) $(IMAGE_NGINX)"
+	@echo "Built (no cache): $(IMAGE_BACKEND) $(IMAGE_FRONTEND) $(IMAGE_NGINX)"
 
 build-push: .env ## Build multi-arch (amd64+arm64) and push to registry
+	docker buildx build --platform $(PLATFORMS) --push -t $(IMAGE_BACKEND) ./backend
 	GITHUB_TOKEN=$${GITHUB_TOKEN} docker buildx build --platform $(PLATFORMS) --push -t $(IMAGE_FRONTEND) \
 		$(FRONTEND_BUILD_ARGS) ./frontend
 	docker buildx build --platform $(PLATFORMS) --push -t $(IMAGE_NGINX) ./nginx
 	@echo ""
-	@echo "Pushed: $(IMAGE_FRONTEND) $(IMAGE_NGINX)"
-	@echo "Note: backend not yet implemented"
+	@echo "Pushed: $(IMAGE_BACKEND) $(IMAGE_FRONTEND) $(IMAGE_NGINX)"
 
 # ── Run / lifecycle ──────────────────────────────────────────────
 
@@ -160,12 +163,13 @@ restart: stop build run ## Stop, rebuild, and start all containers
 
 PROD_COMPOSE = docker compose -p $(COMPOSE_NAME)
 
-run: .env ## Start all containers (nginx + frontend)
+run: .env ## Start all containers (nginx + backend + frontend)
 	$(PROD_COMPOSE) up -d
 	@echo ""
 	@echo "App: http://localhost:$$(grep '^PORT=' .env | cut -d= -f2)"
 	@echo "  /        → frontend"
-	@echo "  /api/*   → backend (not yet implemented)"
+	@echo "  /api/*   → backend"
+	@echo "  /health  → backend"
 
 stop: ## Stop containers
 	$(PROD_COMPOSE) down
@@ -178,6 +182,7 @@ clean: ## Remove containers, volumes, and local images
 	@echo "Cleaned containers, volumes, and local images."
 
 push: ## Push pre-built images to registry
+	docker push $(IMAGE_BACKEND)
 	docker push $(IMAGE_FRONTEND)
 	docker push $(IMAGE_NGINX)
 
@@ -198,8 +203,18 @@ stop-dev: ## Stop dev containers
 logs-dev: ## Tail dev container logs
 	$(DEV_COMPOSE) logs -f
 
+dev-setup: migrate dev-seed ## Run migrations + seeds in dev
+
+dev-migrate: migrate ## Run pending Liquibase migrations in dev
+
+dev-seed: ## Run seeds in dev backend
+	$(DEV_COMPOSE) exec backend mix run priv/repo/seeds.exs
+
 dev-regen: ## Regenerate CSS inside dev frontend container
 	$(DEV_COMPOSE) exec frontend npm run regen
+
+dev-shell-backend: ## Open IEx shell in backend container
+	$(DEV_COMPOSE) exec backend iex -S mix
 
 dev-shell-frontend: ## Open shell in frontend container
 	$(DEV_COMPOSE) exec frontend sh
@@ -208,31 +223,85 @@ dev-clean: ## Remove dev containers and dependency volumes
 	$(DEV_COMPOSE) down -v
 	@echo "Cleaned dev containers and dependency volumes."
 
-# ── Backend-dependent targets (not yet implemented) ─────────────
+# ── Live sandbox ───────────────────────────────────────────────
 
-dev-setup: ## Run migrations + seeds in dev (requires backend)
-	@echo "Backend not yet implemented — skipping dev-setup."
+IMAGE_SANDBOX  = $(REGISTRY)/$(PROJECT_DIR)/sandbox:$(TAG)
+SANDBOX_COMPOSE = docker compose -p $(COMPOSE_NAME) -f docker-compose.yaml -f docker-compose.sandbox.yaml
 
-dev-migrate: ## Run pending Liquibase migrations (requires backend)
-	@echo "Backend not yet implemented — skipping dev-migrate."
+sandbox: .env ## Build sandbox image (combined frontend+backend+samba)
+	docker buildx build --load -t $(IMAGE_SANDBOX) -f Dockerfile.sandbox .
 
-dev-seed: ## Run seeds in dev backend (requires backend)
-	@echo "Backend not yet implemented — skipping dev-seed."
+sandbox-no-cache: .env ## Build sandbox image (no cache)
+	docker buildx build --no-cache --load -t $(IMAGE_SANDBOX) -f Dockerfile.sandbox .
 
-dev-shell-backend: ## Open IEx shell in backend container (requires backend)
-	@echo "Backend not yet implemented."
+run-sandbox: .env ## Start sandbox (foreground) — Samba :445, frontend :3000, backend :4000
+	$(SANDBOX_COMPOSE) up --build
 
-migrate: ## Run Liquibase migrations (requires backend)
-	@echo "Backend not yet implemented — skipping migrate."
+run-sandbox-d: .env ## Start sandbox (detached)
+	$(SANDBOX_COMPOSE) up --build -d
+	@echo ""
+	@echo "Sandbox running."
+	@echo "  SMB share: smb://localhost:$${SANDBOX_SMB_PORT:-445}/workspace"
+	@echo "  Frontend:  http://localhost:$${SANDBOX_FRONTEND_PORT:-3000}"
+	@echo "  Backend:   http://localhost:$${SANDBOX_BACKEND_PORT:-4000}"
+	@echo ""
+	@echo "Mount (macOS):  make sandbox-mount"
+	@echo "Logs:           make logs-sandbox"
 
-migrate-status: ## Show pending Liquibase changesets (requires backend)
-	@echo "Backend not yet implemented."
+stop-sandbox: ## Stop sandbox containers
+	$(SANDBOX_COMPOSE) down
 
-migrate-rollback: ## Roll back last Liquibase changeset (requires backend)
-	@echo "Backend not yet implemented."
+logs-sandbox: ## Tail sandbox logs
+	$(SANDBOX_COMPOSE) logs -f sandbox
 
-migrate-validate: ## Validate Liquibase changelog YAML (requires backend)
-	@echo "Backend not yet implemented."
+sandbox-shell: ## Open shell in sandbox container
+	$(SANDBOX_COMPOSE) exec sandbox bash
+
+sandbox-clean: ## Remove sandbox containers and volumes
+	$(SANDBOX_COMPOSE) down -v
+	@echo "Cleaned sandbox containers and volumes."
+
+sandbox-mount: ## Mount sandbox workspace via SMB (macOS)
+	@MOUNT_POINT="$${HOME}/sandbox-$(PROJECT_DIR)" && \
+	  mkdir -p "$$MOUNT_POINT" && \
+	  mount_smbfs "//dev:dev@localhost:$${SANDBOX_SMB_PORT:-445}/workspace" "$$MOUNT_POINT" && \
+	  echo "Mounted at $$MOUNT_POINT"
+
+# ── Liquibase migrations ───────────────────────────────────────
+
+migrate: .env ## Run Liquibase migrations (docker sidecar or host CLI)
+	@if command -v liquibase >/dev/null 2>&1; then \
+		echo "Running Liquibase via host CLI..."; \
+		cd backend/db && liquibase update; \
+	else \
+		echo "Running Liquibase via Docker..."; \
+		docker buildx build --load -t $(IMAGE_MIGRATIONS) ./backend/db && \
+		docker run --rm --env-file .env --network lets-go_default $(IMAGE_MIGRATIONS); \
+	fi
+
+migrate-status: .env ## Show pending Liquibase changesets
+	@if command -v liquibase >/dev/null 2>&1; then \
+		cd backend/db && liquibase status; \
+	else \
+		docker buildx build --load -t $(IMAGE_MIGRATIONS) ./backend/db && \
+		docker run --rm --env-file .env --network lets-go_default $(IMAGE_MIGRATIONS) liquibase status; \
+	fi
+
+migrate-rollback: .env ## Roll back last Liquibase changeset
+	@if command -v liquibase >/dev/null 2>&1; then \
+		cd backend/db && liquibase rollback-count 1; \
+	else \
+		docker buildx build --load -t $(IMAGE_MIGRATIONS) ./backend/db && \
+		docker run --rm --env-file .env --network lets-go_default $(IMAGE_MIGRATIONS) liquibase rollback-count 1; \
+	fi
+
+migrate-validate: ## Validate Liquibase changelog YAML
+	@if command -v liquibase >/dev/null 2>&1; then \
+		cd backend/db && liquibase validate; \
+	else \
+		docker buildx build --load -t $(IMAGE_MIGRATIONS) ./backend/db && \
+		docker run --rm $(IMAGE_MIGRATIONS) liquibase validate; \
+	fi
 
 # ── Helm ────────────────────────────────────────────────────────
 

@@ -48,7 +48,7 @@ export function useGraphHighlights(
       const blockedNodeIds = new Set(
         nodes
           .filter((n) => {
-            const data = n.data as Record<string, unknown>;
+            const data = n.data as unknown as Record<string, unknown>;
             return data.status === "blocked";
           })
           .map((n) => n.id),

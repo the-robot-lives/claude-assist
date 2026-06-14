@@ -40,7 +40,7 @@ export function useGraphFilters(
 
       // Status filter (applies to story, subtask)
       if (filters.status && filters.status.length > 0) {
-        const data = node.data as Record<string, unknown>;
+        const data = node.data as unknown as Record<string, unknown>;
         if ("status" in data && typeof data.status === "string") {
           if (!filters.status.includes(data.status as any)) return false;
         }
@@ -48,7 +48,7 @@ export function useGraphFilters(
 
       // Priority filter (applies to story)
       if (filters.priority && filters.priority.length > 0) {
-        const data = node.data as Record<string, unknown>;
+        const data = node.data as unknown as Record<string, unknown>;
         if ("priority" in data && typeof data.priority === "string") {
           if (!filters.priority.includes(data.priority as any)) return false;
         }
@@ -56,7 +56,7 @@ export function useGraphFilters(
 
       // Assignee filter (applies to role)
       if (filters.assigneeId) {
-        const data = node.data as Record<string, unknown>;
+        const data = node.data as unknown as Record<string, unknown>;
         if ("assignee" in data) {
           const assignee = data.assignee as { id: string } | undefined;
           if (!assignee || assignee.id !== filters.assigneeId) return false;
@@ -65,7 +65,7 @@ export function useGraphFilters(
 
       // Epic filter (applies to story)
       if (filters.epicId) {
-        const data = node.data as Record<string, unknown>;
+        const data = node.data as unknown as Record<string, unknown>;
         if ("epicId" in data && data.epicId !== filters.epicId) return false;
       }
 
