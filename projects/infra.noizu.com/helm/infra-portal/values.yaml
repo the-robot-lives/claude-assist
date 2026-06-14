@@ -2,7 +2,7 @@ static-site:
   nameOverride: infra-portal
   fullnameOverride: infra-portal
   domain: infra.noizu.com
-  image: ops.noizu.com/infra.noizu.com/web:latest
+  image: ops.noizu.com/infra.noizu.com/web:v1.0.2
   port: 80
   imagePullSecrets:
     - name: ops-registry-secret
