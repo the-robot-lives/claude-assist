@@ -3,6 +3,7 @@ import path from "path";
 import yaml from "js-yaml";
 import type { SimpleStyleGuideConfig, PageSectionGroup } from "@styleguide-engine/lib/types";
 import { normalizeConfig } from "@styleguide-engine/lib/normalizer";
+import { validateConfig } from "@styleguide-engine/lib/validate-config";
 import type { StyleGuideConfig } from "@styleguide-engine/lib/types";
 
 const CONFIG_ROOT = process.env.STYLEGUIDE_CONFIG_ROOT || path.join(process.cwd(), "src", "config");
@@ -262,7 +263,15 @@ function loadConfigFromDir(dir: string): StyleGuideConfig {
   if (allCssLoads.length) (merged as Record<string, unknown>)["css-load"] = allCssLoads;
   if (allJsxLoads.length) (merged as Record<string, unknown>)["jsx-load"] = allJsxLoads;
 
-  return normalizeConfig(merged as unknown as SimpleStyleGuideConfig, dir);
+  const metaFile = path.join(dir, "style-guide.meta.yaml");
+  const themeSlug = fs.existsSync(metaFile)
+    ? ((yaml.load(fs.readFileSync(metaFile, "utf-8")) as { slug?: string })?.slug || path.basename(dir))
+    : path.basename(dir);
+  const warnings = validateConfig(merged, themeSlug);
+
+  const config = normalizeConfig(merged as unknown as SimpleStyleGuideConfig, dir);
+  if (warnings.length > 0) config.warnings = warnings;
+  return config;
 }
 
 function applyFileDefaults(

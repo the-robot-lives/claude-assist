@@ -15,6 +15,7 @@ interface Props {
 
 const SS_TAB_KEY = "sg-subsection-tab";
 function loadSubTab(parentId: string): string | null {
+  if (typeof window === "undefined") return null;
   try {
     const all = JSON.parse(localStorage.getItem(SS_TAB_KEY) || "{}");
     return all[parentId] || null;
@@ -30,19 +31,21 @@ function persistSubTab(parentId: string, tabId: string) {
 
 export function SubsectionTabs({ tabs, initialTab }: Props) {
   const parentId = tabs.map((t) => t.id).join(",");
+  const defaultTab = (initialTab && tabs.find((t) => t.id === initialTab)) ? initialTab : (tabs[0]?.id || "");
 
-  const [active, setActive] = useState(() => {
-    if (initialTab && tabs.find((t) => t.id === initialTab)) return initialTab;
-    const stored = loadSubTab(parentId);
-    if (stored && tabs.find((t) => t.id === stored)) return stored;
-    return tabs[0]?.id || "";
-  });
+  const [active, setActive] = useState(defaultTab);
 
+  // Restore persisted tab after hydration
   useEffect(() => {
     if (initialTab && tabs.find((t) => t.id === initialTab)) {
       setActive(initialTab);
+      return;
     }
-  }, [initialTab, tabs]);
+    const stored = loadSubTab(parentId);
+    if (stored && tabs.find((t) => t.id === stored)) {
+      setActive(stored);
+    }
+  }, [initialTab, tabs, parentId]);
 
   // Listen for hash changes targeting our tabs
   useEffect(() => {
@@ -59,7 +62,6 @@ export function SubsectionTabs({ tabs, initialTab }: Props) {
   const select = (id: string) => {
     setActive(id);
     persistSubTab(parentId, id);
-    // Update URL hash for deep linking without triggering a scroll
     history.replaceState(null, "", `#${id}`);
   };
 
@@ -67,12 +69,13 @@ export function SubsectionTabs({ tabs, initialTab }: Props) {
 
   return (
     <>
-      <div className="hui tab-list" style={{ fontSize: "var(--font-size-xs)" }}>
+      <div className="hui tab-list" style={{ fontSize: "var(--font-size-xs)" }} suppressHydrationWarning>
         {tabs.map((t, i) => (
           <button
             key={t.id || `tab-${i}`}
             className="hui tab"
             data-selected={active === t.id ? "" : undefined}
+            suppressHydrationWarning
             onClick={() => select(t.id)}
           >
             {t.title}
@@ -95,11 +98,13 @@ export function SubsectionTabs({ tabs, initialTab }: Props) {
           </button>
         ))}
       </div>
-      {activeTab && (
-        <div id={activeTab.id} style={{ paddingTop: "var(--space-2)" }}>
-          {activeTab.content}
-        </div>
-      )}
+      <div suppressHydrationWarning>
+        {activeTab && (
+          <div id={activeTab.id} style={{ paddingTop: "var(--space-2)" }}>
+            {activeTab.content}
+          </div>
+        )}
+      </div>
     </>
   );
 }

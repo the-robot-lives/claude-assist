@@ -1,10 +1,10 @@
 "use client";
 
-import { ThemeConfigProvider } from "@noizu/styleguide/viewer";
-import { ThemeAwareSections } from "@noizu/styleguide/viewer";
-import { PageContent } from "@noizu/styleguide/viewer";
-import { ShellChrome } from "@noizu/styleguide/viewer";
-import { LayoutBar } from "@noizu/styleguide/viewer";
+import { ThemeConfigProvider } from "@noizu/styleguide/providers";
+import { ThemeAwareSections } from "@noizu/styleguide/layout";
+import { PageContent } from "@noizu/styleguide/layout";
+import { ShellChrome } from "@noizu/styleguide/layout";
+import { LayoutBar } from "@noizu/styleguide/layout";
 
 export default function StyleGuideViewer(props: {
   config: any; branding: any; allConfigs: any; allBrandings: any;

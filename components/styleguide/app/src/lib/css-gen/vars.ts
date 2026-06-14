@@ -31,7 +31,8 @@ function groupSortKey(name: string): number {
 }
 
 export function generateVarsCSS(config: StyleGuideConfig): string {
-  const resolved = resolveDefaults(config.flatVars);
+  if (!config.vars?.groups) return "";
+  const resolved = resolveDefaults(config.flatVars || {});
 
   // Collect var names already emitted by YAML groups
   const yamlVarNames = new Set<string>();

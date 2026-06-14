@@ -20,6 +20,7 @@ function shellVars(shell: SimpleShellLayout): string {
 }
 
 export function generateShellCSS(config: StyleGuideConfig): string {
+  if (!config.shellLayouts?.length) return "";
   const perShell = config.shellLayouts
     .map((shell) => {
       const vars = shellVars(shell);

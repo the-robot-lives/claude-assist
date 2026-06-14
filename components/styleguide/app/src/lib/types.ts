@@ -357,6 +357,12 @@ export interface JsxLoad {
   force?: boolean;
 }
 
+export interface ConfigWarning {
+  level: "warn" | "error";
+  section: string;
+  message: string;
+}
+
 export interface StyleGuideConfig {
   name: string;
   slug: string;
@@ -384,4 +390,5 @@ export interface StyleGuideConfig {
   jsxLoads: JsxLoad[];
   toast: ToastSettings;
   globals: string;
+  warnings?: ConfigWarning[];
 }

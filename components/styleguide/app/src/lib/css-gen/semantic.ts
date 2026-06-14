@@ -23,7 +23,9 @@ function resolveAccent(sc: { vars: { name: string; value: string }[] }, flatVars
 }
 
 export function generateSemanticCSS(config: StyleGuideConfig): string {
+  if (!config.semanticClasses?.length) return "";
   return config.semanticClasses
+    .filter((sc) => sc.name && sc.class)
     .map((sc) => {
       const accentStyle = sc.accentStyle;
       const accentColor = `var(--semantic-${sc.name}-accent)`;

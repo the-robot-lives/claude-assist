@@ -4,6 +4,7 @@ import { CoreTokensSection, HUITokensSection, ExtendedTokensSection } from "@sty
 import { CssViewer } from "@styleguide-engine/components/CssViewer";
 import { YamlConfigViewer } from "@styleguide-engine/components/YamlConfigViewer";
 import { OverrideManager } from "@styleguide-engine/components/OverrideManager";
+import { ThemeManager } from "@styleguide-engine/components/ThemeManager";
 import { CssSnippetsPanel, JsxSnippetsPanel } from "@styleguide-engine/components/SnippetShowcase";
 import type { SectionProps } from "./section-props";
 
@@ -65,6 +66,14 @@ export function OverridesSection({ number, id, title, desc }: SectionProps) {
   return (
     <CollapsibleSection number={number} id={id} title={title} desc={desc} defaultOpen={true}>
       <OverrideManager />
+    </CollapsibleSection>
+  );
+}
+
+export function ThemeManagerSection({ number, id, title, desc }: SectionProps) {
+  return (
+    <CollapsibleSection number={number} id={id} title={title} desc={desc} defaultOpen={true}>
+      <ThemeManager />
     </CollapsibleSection>
   );
 }

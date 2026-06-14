@@ -5,7 +5,7 @@ import { SemanticClassesSection, StatusIndicatorsSection, UIElementsSection, Cus
 import { InkEffectsSection } from "./ink-effects";
 import { ScreensSection } from "./screens";
 import { TailwindPlusSection } from "./tailwind-plus";
-import { DesignTokensSection, GeneratedCssSection, ThemeConfigSection, SnippetsSection, OverridesSection } from "./reference";
+import { DesignTokensSection, GeneratedCssSection, ThemeConfigSection, SnippetsSection, OverridesSection, ThemeManagerSection } from "./reference";
 import { ComponentBrowserSection } from "./component-browser";
 
 export type { SectionProps } from "./section-props";
@@ -35,4 +35,5 @@ export const sectionRegistry: Record<string, (props: SectionProps) => React.Reac
   "ink-effects": InkEffectsSection,
   "screens": ScreensSection,
   "component-browser": ComponentBrowserSection,
+  "theme-manager": ThemeManagerSection,
 };

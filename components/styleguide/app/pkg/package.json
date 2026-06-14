@@ -1,11 +1,11 @@
 {
   "name": "@noizu/styleguide",
-  "version": "0.1.4",
+  "version": "0.1.14",
   "description": "Design system components and CSS generation from styleguide-engine",
   "type": "module",
   "repository": {
     "type": "git",
-    "url": "https://github.com/the-robot-lives/styleguide.git",
+    "url": "git+https://github.com/the-robot-lives/styleguide.git",
     "directory": "app/pkg"
   },
   "publishConfig": {
@@ -28,7 +28,7 @@
     "./viewer-tailwind-css": "./dist/viewer.tailwind.css"
   },
   "bin": {
-    "styleguide-serve": "./bin/styleguide-serve.mjs"
+    "styleguide-serve": "bin/styleguide-serve.mjs"
   },
   "files": [
     "src/",
@@ -37,11 +37,16 @@
     "dist/viewer.css",
     "dist/viewer.tailwind.css"
   ],
+  "dependencies": {
+    "@headlessui/react": "^2.2.9",
+    "@heroicons/react": "^2.2.0",
+    "@monaco-editor/react": "^4.7.0",
+    "monaco-editor": ">=0.52.0 <1",
+    "js-yaml": "^4.1.0",
+    "sonner": "^2.0.7"
+  },
   "peerDependencies": {
     "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "@headlessui/react": "^2.2.0",
-    "sonner": "^2.0.0",
-    "js-yaml": "^4.1.0"
+    "react-dom": "^19.0.0"
   }
 }

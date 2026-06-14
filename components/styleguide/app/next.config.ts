@@ -2,6 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   output: "export",
+  turbopack: {},
   webpack: (config) => {
     config.module.rules.push({
       test: /\.yaml$/,

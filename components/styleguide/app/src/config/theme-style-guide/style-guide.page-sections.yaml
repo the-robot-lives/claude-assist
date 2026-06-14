@@ -17,6 +17,9 @@ page-sections:
       - id: overrides
         title: Overrides
         desc: "Select which variant to use per section. Set to base to disable an override."
+      - id: theme-manager
+        title: Theme Manager
+        desc: "Clone, edit, and upload style guide themes. Create new themes from existing ones or import YAML files."
 
   - group: Visual Foundation
     desc: "The raw materials — type, color, space, and glyphs that every component is built from."

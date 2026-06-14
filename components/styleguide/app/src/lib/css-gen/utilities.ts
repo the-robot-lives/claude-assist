@@ -76,7 +76,8 @@ function colorVariants(name: string, varRef: string, textOnColor: string, darkTe
 }
 
 export function generateUtilityCSS(config: StyleGuideConfig): string {
-  const textUtils = config.semanticClasses
+  const textUtils = (config.semanticClasses || [])
+    .filter((sc) => sc.name && sc.class && sc.vars)
     .map((sc) => {
       const declarations = sc.vars
         .filter((v) => v.name in TEXT_PROPS)
@@ -98,8 +99,8 @@ export function generateUtilityCSS(config: StyleGuideConfig): string {
 
   // Full color variants for every color var
   const seen = new Set<string>();
-  const varColorUtils = config.vars.groups
-    .flatMap((g) => g.vars)
+  const varColorUtils = (config.vars?.groups || [])
+    .flatMap((g) => g.vars || [])
     .filter((v) => isColorValue(v.value))
     .map((v) => {
       seen.add(v.name);
@@ -109,8 +110,8 @@ export function generateUtilityCSS(config: StyleGuideConfig): string {
 
   // Full color variants for semantic classes (skip if already covered by a raw var)
   // Compute text-on contrast for BOTH light and dark mode
-  const semanticColorUtils = config.semanticClasses
-    .filter((sc) => !seen.has(sc.class))
+  const semanticColorUtils = (config.semanticClasses || [])
+    .filter((sc) => sc.name && sc.class && sc.vars && !seen.has(sc.class))
     .map((sc) => {
       const accentVar = sc.vars.find((v) => v.name === "accent");
       const resolved = accentVar ? config.flatVars[accentVar.value.replace(/var\(--/, "").replace(/\)/, "")] : undefined;
@@ -124,8 +125,8 @@ export function generateUtilityCSS(config: StyleGuideConfig): string {
 
   // Color variants for foundation vars (slate-*, semantic surfaces)
   // Merge resolved defaults + color mode light values for full lookup
-  const allResolved = resolveDefaults(config.flatVars);
-  if (config.colorModes) {
+  const allResolved = resolveDefaults(config.flatVars || {});
+  if (config.colorModes?.light) {
     for (const [k, v] of Object.entries(config.colorModes.light)) {
       allResolved[k] = v;
     }
@@ -143,7 +144,7 @@ export function generateUtilityCSS(config: StyleGuideConfig): string {
 
   // Also build a dark-mode lookup for semantic surface tokens
   const darkResolved = { ...allResolved };
-  if (config.colorModes) {
+  if (config.colorModes?.dark) {
     for (const [k, v] of Object.entries(config.colorModes.dark)) {
       darkResolved[k] = v;
     }
@@ -164,7 +165,7 @@ export function generateUtilityCSS(config: StyleGuideConfig): string {
       || name.endsWith("-light") || name.endsWith("-mid") || name.endsWith("-tint");
   });
   // Also add color-mode keys not yet covered
-  if (config.colorModes) {
+  if (config.colorModes?.light) {
     for (const name of Object.keys(config.colorModes.light)) {
       if (!seen.has(name) && !foundationColorNames.includes(name)) {
         foundationColorNames.push(name);

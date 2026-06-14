@@ -270,7 +270,10 @@ function ensureViewerApp() {
   fs.mkdirSync(CACHE_DIR, { recursive: true });
   fs.cpSync(SCAFFOLD_DIR, CACHE_DIR, {
     recursive: true,
-    filter: (src) => !src.includes("node_modules") && !src.includes(".next"),
+    filter: (src) => {
+      const rel = path.relative(SCAFFOLD_DIR, src);
+      return !rel.includes("node_modules") && !rel.includes(".next");
+    },
   });
 
   if (needsInstall) {

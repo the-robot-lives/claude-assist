@@ -36,7 +36,7 @@ export function UIElementsShowcase({ semanticClasses, formsSection, colorPalette
             key={t.id}
             className={`hui tab${tab === t.id ? " hui-tab-selected" : ""}`}
             onClick={() => setTab(t.id)}
-            data-selected={tab === t.id || undefined}
+            data-selected={tab === t.id ? "" : undefined}
           >
             {t.label}
           </button>

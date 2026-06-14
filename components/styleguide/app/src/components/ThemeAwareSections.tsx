@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useThemeConfig } from "./ThemeConfigContext";
 import { sectionRegistry } from "./sections";
 import type { CssSection } from "@styleguide-engine/lib/css-gen";
@@ -9,6 +9,7 @@ import { ThemeLogo } from "./ThemeLogo";
 import { StyleGuideProductBranding } from "./pkg/product-branding";
 import { SearchFilter } from "./SearchFilter";
 import type { PageSectionDef, StyleGuideConfig } from "@styleguide-engine/lib/types";
+import { ConfigWarnings } from "./ConfigWarnings";
 
 const TAB_STORAGE_KEY = "sg-active-tabs";
 function loadPersistedTabs(): { group?: string; section?: string } {
@@ -46,13 +47,25 @@ function SectionTabs({ group, config, cssSections, styleGuideFiles, brandingYaml
   initialSection?: string;
   onSectionChange?: (id: string) => void;
 }) {
-  const [activeSection, setActiveSection] = useState(
-    initialSection && group.sections.find((s) => s.id === initialSection)
-      ? initialSection
-      : group.sections[0]?.id || ""
-  );
+  const defaultSection = group.sections[0]?.id || "";
+  const [activeSection, setActiveSection] = useState(defaultSection);
+  const mounted = useRef(false);
 
-  // Reset section tab when group changes
+  // Apply initialSection after mount (avoids hydration mismatch)
+  useEffect(() => {
+    if (!mounted.current) {
+      mounted.current = true;
+      if (initialSection && group.sections.find((s) => s.id === initialSection)) {
+        setActiveSection(initialSection);
+      }
+      return;
+    }
+    if (initialSection && group.sections.find((s) => s.id === initialSection)) {
+      setActiveSection(initialSection);
+    }
+  }, [initialSection, group]);
+
+  // Reset section tab when group changes and current section isn't in new group
   useEffect(() => {
     if (!group.sections.find((s) => s.id === activeSection)) {
       const next = group.sections[0]?.id || "";
@@ -60,13 +73,6 @@ function SectionTabs({ group, config, cssSections, styleGuideFiles, brandingYaml
       onSectionChange?.(next);
     }
   }, [group, activeSection, onSectionChange]);
-
-  // Respond to external initialSection changes (hash navigation)
-  useEffect(() => {
-    if (initialSection && group.sections.find((s) => s.id === initialSection)) {
-      setActiveSection(initialSection);
-    }
-  }, [initialSection, group]);
 
   const selectSection = useCallback((id: string) => {
     setActiveSection(id);
@@ -84,6 +90,7 @@ function SectionTabs({ group, config, cssSections, styleGuideFiles, brandingYaml
             key={s.id || `section-${i}`}
             className="hui tab"
             data-selected={activeSection === s.id ? "" : undefined}
+            suppressHydrationWarning
             onClick={() => selectSection(s.id)}
           >
             <span style={{ opacity: 0.4, marginRight: "var(--space-half)" }}>{s.number}</span>
@@ -91,18 +98,20 @@ function SectionTabs({ group, config, cssSections, styleGuideFiles, brandingYaml
           </button>
         ))}
       </div>
-      {section && Section && (
-        <Section
-          number={section.number}
-          id={section.id}
-          title={section.title}
-          desc={section.desc}
-          config={config}
-          cssSections={cssSections}
-          styleGuideFiles={styleGuideFiles}
-          brandingYaml={brandingYaml}
-        />
-      )}
+      <div suppressHydrationWarning>
+        {section && Section && (
+          <Section
+            number={section.number}
+            id={section.id}
+            title={section.title}
+            desc={section.desc}
+            config={config}
+            cssSections={cssSections}
+            styleGuideFiles={styleGuideFiles}
+            brandingYaml={brandingYaml}
+          />
+        )}
+      </div>
     </>
   );
 }
@@ -114,10 +123,12 @@ export function ThemeAwareSections({ numberedGroups, allNumberedGroups, allCssSe
 
   const [activeTab, setActiveTab] = useState(activeGroups[0]?.group || "");
   const [targetSection, setTargetSection] = useState<string | undefined>(undefined);
-  const [hydrated, setHydrated] = useState(false);
 
+  // Restore persisted tabs after mount to avoid hydration mismatch
+  const [hydrated, setHydrated] = useState(false);
   useEffect(() => {
     if (hydrated) return;
+    setHydrated(true);
     const persisted = loadPersistedTabs();
     if (persisted.group && activeGroups.find((g) => g.group === persisted.group)) {
       setActiveTab(persisted.group);
@@ -125,7 +136,6 @@ export function ThemeAwareSections({ numberedGroups, allNumberedGroups, allCssSe
     if (persisted.section) {
       setTargetSection(persisted.section);
     }
-    setHydrated(true);
   }, [hydrated, activeGroups]);
 
   // Subsection prefix → parent section id mapping
@@ -137,14 +147,11 @@ export function ThemeAwareSections({ numberedGroups, allNumberedGroups, allCssSe
     "btn-": "ui-elements",
   };
 
-  // Find the section (group + section) that owns a given anchor
   const findSection = useCallback((hash: string): { group: NumberedGroup; section: NumberedSection } | null => {
-    // Direct section match: hash is a section id or "section-{id}"
     for (const g of activeGroups) {
       const match = g.sections.find((s) => s.id === hash || `section-${s.id}` === hash);
       if (match) return { group: g, section: match };
     }
-    // Subsection match: hash has a known prefix → find parent section
     for (const [prefix, parentId] of Object.entries(SUBSECTION_PARENTS)) {
       if (hash.startsWith(prefix)) {
         for (const g of activeGroups) {
@@ -156,7 +163,6 @@ export function ThemeAwareSections({ numberedGroups, allNumberedGroups, allCssSe
     return null;
   }, [activeGroups]);
 
-  // Scroll to element after render
   const scrollToHash = useCallback((hash: string) => {
     const tryScroll = (attempts: number) => {
       const el = document.getElementById(hash);
@@ -169,7 +175,6 @@ export function ThemeAwareSections({ numberedGroups, allNumberedGroups, allCssSe
     requestAnimationFrame(() => tryScroll(5));
   }, []);
 
-  // Resolve hash → select correct group + section tab
   const resolveHash = useCallback(() => {
     const raw = window.location.hash.slice(1);
     if (!raw) return;
@@ -182,14 +187,12 @@ export function ThemeAwareSections({ numberedGroups, allNumberedGroups, allCssSe
     }
   }, [findSection, scrollToHash]);
 
-  // On mount + hashchange
   useEffect(() => {
     resolveHash();
     window.addEventListener("hashchange", resolveHash);
     return () => window.removeEventListener("hashchange", resolveHash);
   }, [resolveHash]);
 
-  // Sync active tab when theme changes and groups differ
   useEffect(() => {
     if (!activeGroups.find((g) => g.group === activeTab)) {
       setActiveTab(activeGroups[0]?.group || "");
@@ -198,7 +201,7 @@ export function ThemeAwareSections({ numberedGroups, allNumberedGroups, allCssSe
 
   const handleGroupChange = useCallback((group: string) => {
     setActiveTab(group);
-    setTargetSection(undefined); // let SectionTabs pick default
+    setTargetSection(undefined);
     persistTabs(group, "");
   }, []);
 
@@ -210,13 +213,15 @@ export function ThemeAwareSections({ numberedGroups, allNumberedGroups, allCssSe
 
   return (
     <>
+      <ConfigWarnings />
+
       <IntroHero brandings={allBrandings} />
 
       <div className="hr section" />
 
       <StyleGuideProductBranding
         actions={null}
-        name={branding.name}
+        name={branding?.name || ""}
         logo={
           <ThemeLogo
             brandings={allBrandings}
@@ -232,29 +237,30 @@ export function ThemeAwareSections({ numberedGroups, allNumberedGroups, allCssSe
                   fontSize="22"
                   letterSpacing="0.12em"
                 >
-                  {branding["logo-text"]}
+                  {branding?.["logo-text"] || ""}
                 </text>
                 <line x1="16" y1="50" x2="184" y2="50" className="stroke-red" strokeWidth="2" opacity="0.6" />
               </svg>
             }
           />
         }
-        intent={branding.intent}
-        perception={branding.perception}
-        audience={branding.audience}
-        tone={branding.tone}
-        keywords={branding.keywords}
+        intent={branding?.intent || ""}
+        perception={branding?.perception || ""}
+        audience={branding?.audience || ""}
+        tone={branding?.tone || ""}
+        keywords={branding?.keywords || []}
       />
 
       <SearchFilter />
 
-      {/* ─── Group tabs (level 1) ─── */}
-      <div className="hui tab-list">
+      {/* Group tabs (level 1) */}
+      <div className="hui tab-list" suppressHydrationWarning>
         {activeGroups.map((group, i) => (
           <button
             key={group.group || `group-${i}`}
             className="hui tab"
             data-selected={activeTab === group.group ? "" : undefined}
+            suppressHydrationWarning
             onClick={() => handleGroupChange(group.group)}
           >
             {group.group}
@@ -262,9 +268,9 @@ export function ThemeAwareSections({ numberedGroups, allNumberedGroups, allCssSe
         ))}
       </div>
 
-      {/* ─── Group description ─── */}
+      {/* Group description */}
       {activeGroup?.desc && (
-        <p style={{
+        <p suppressHydrationWarning style={{
           margin: "var(--space-2) 0 0",
           fontSize: "var(--font-size-sm)",
           color: "var(--text-muted)",
@@ -274,8 +280,18 @@ export function ThemeAwareSections({ numberedGroups, allNumberedGroups, allCssSe
         </p>
       )}
 
-      {/* ─── Section tabs (level 2) + content ─── */}
-      {activeGroup && <SectionTabs group={activeGroup} config={config} cssSections={cssSections} styleGuideFiles={styleGuideFiles} brandingYaml={brandingYaml} initialSection={targetSection} onSectionChange={handleSectionChange} />}
+      {/* Section tabs (level 2) + content */}
+      {activeGroup && (
+        <SectionTabs
+          group={activeGroup}
+          config={config}
+          cssSections={cssSections}
+          styleGuideFiles={styleGuideFiles}
+          brandingYaml={brandingYaml}
+          initialSection={targetSection}
+          onSectionChange={handleSectionChange}
+        />
+      )}
     </>
   );
 }

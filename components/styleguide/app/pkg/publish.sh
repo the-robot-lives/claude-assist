@@ -1,10 +1,27 @@
 #!/usr/bin/env bash
-# Publish @noizu/styleguide to Verdaccio (https://npm.noizu.com).
+# Publish (or pack) @noizu/styleguide to Verdaccio (https://npm.noizu.com).
 # Copies engine source into pkg/ for npm, rewrites @styleguide-engine/ to relative paths.
+#
+# Usage:
+#   ./publish.sh           # build + npm publish
+#   ./publish.sh pack      # build + npm pack (local tarball, no publish) — used for pre-publish testing
 set -euo pipefail
 
 cd "$(dirname "$0")"
 ENGINE_SRC="../src"
+ACTION="${1:-publish}"
+
+# Every barrel that references engine source via ../../src/ must be rewritten to
+# ../dist/engine-src/ at publish time, then restored. Keep this list in sync with src/*.ts.
+BARREL_FILES=(
+  src/components.ts src/viewer.ts src/css-gen.ts src/types.ts src/index.ts
+  src/demos.ts src/layout.ts src/providers.ts src/primitives.ts
+  src/showcases.ts src/sections.ts src/viewers.ts
+)
+
+restore_barrels() {
+  sed -i '' 's|../dist/engine-src/|../../src/|g' "${BARREL_FILES[@]}" 2>/dev/null || true
+}
 
 echo "=== Preparing package ==="
 
@@ -30,16 +47,24 @@ done
 
 echo "Rewrote @styleguide-engine/ to relative paths in dist/"
 
-# Rewrite barrel exports to point at dist/engine-src/ instead of ../../src/
-sed -i '' 's|../../src/|../dist/engine-src/|g' src/components.ts src/viewer.ts src/css-gen.ts src/types.ts src/index.ts
+# Rewrite barrel exports to point at dist/engine-src/ instead of ../../src/.
+# Always restore them afterwards, even if publish/pack fails midway.
+trap restore_barrels EXIT
+sed -i '' 's|../../src/|../dist/engine-src/|g' "${BARREL_FILES[@]}"
 
 echo "Rewrote barrel exports"
 echo ""
-echo "=== Publishing ==="
-npm publish
 
-echo ""
-echo "=== Restoring barrel exports ==="
-sed -i '' 's|../dist/engine-src/|../../src/|g' src/components.ts src/viewer.ts src/css-gen.ts src/types.ts src/index.ts
+if [ "$ACTION" = "pack" ]; then
+  echo "=== Packing (local tarball, no publish) ==="
+  npm pack
+  echo ""
+  echo "Done. Packed @noizu/styleguide tarball (not published)."
+else
+  echo "=== Publishing ==="
+  npm publish
+  echo ""
+  echo "Done. Published @noizu/styleguide to Verdaccio (https://npm.noizu.com)."
+fi
 
-echo "Done. Published @noizu/styleguide to Verdaccio (https://npm.noizu.com)."
+# restore_barrels runs automatically via the EXIT trap.

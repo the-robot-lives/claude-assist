@@ -29,6 +29,7 @@ export interface CssSection {
 }
 
 export function generateCSSSections(config: StyleGuideConfig): CssSection[] {
+  if (!config) return [];
   const s = (name: string) => `style-guide.${name}.yaml`;
   return [
     { name: "vars", css: generateVarsCSS(config), sources: [s("vars"), s("color-palette"), s("color-modes")] },
