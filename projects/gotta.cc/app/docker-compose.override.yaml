@@ -1,0 +1,5 @@
+# Port overlay — unique host port for this project
+services:
+  nginx:
+    ports:
+      - "8084:80"
