@@ -1,3 +1,4 @@
+liquibase.properties
 .infisical-secrets.yaml
 infisical-secrets.yaml
 .venv/
