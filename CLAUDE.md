@@ -61,11 +61,35 @@ deploy-service <image-key> --dry-run   # Preview
 deploy-service backend frontend        # Batch multiple images
 ```
 
-### Secrets Management (Infisical)
+### Secrets Management (dc + Infisical)
+
+See `docs/secret-management.md` for full reference with examples.
+
 ```bash
+# Populate / bootstrap
 infisical-populate-secrets             # Seed secrets from .infisical-secrets.yaml into Infisical
 infisical-bootstrap                    # Bootstrap tier-0 K8s Secrets
 hydrate-envrc                          # Populate .envrc from Infisical
+
+# Lookup & search
+dc infisical get <NAME>                # Find dc source for an Infisical secret (masked)
+dc bat --all --flat --filter-key <regex>  # Search dc configs by key path (line:path, no values)
+dc config get <subject> <path>         # Find where a secret is defined in .envrc.dc
+
+# Set secrets
+dc infisical set <NAME> --value <V>    # Set via Infisical name (edits .envrc.dc, encrypts)
+dc config set <subject> <path> --value <V>  # Set directly by dc subject/path
+dc get <subject> <path> --auto password 32  # Auto-generate if missing
+
+# Compare without exposing values
+dc compare <subject> <path> --to "infisical:///<path>/<KEY>"
+
+# Capture to variable (no screen output)
+VAR=$(dc get <subject> <path> --reveal --raw 2>/dev/null)
+
+# Agent-safe file operations (no value output)
+secret-bucket diff envrc:.envrc dcfile:.envrc.dc:secrets
+secret-bucket copy <source-address> <dest-address>
 ```
 
 ### Terraform / Terragrunt
