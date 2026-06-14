@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useAuth } from "@/context/auth";
 import { Logo } from "@/components/logo";
 import { VerbCycle } from "@/components/verb-cycle";
+import { startLogin } from "@/lib/auth-pkce";
 
 export function Navbar() {
   const { user, loading, logout } = useAuth();
@@ -20,13 +21,19 @@ export function Navbar() {
         <div />
 
         {/* Right: nav links */}
-        <div className="sg-navbar__links" style={{ justifySelf: "end" }}>
+        <div className="sg-navbar__links" style={{ justifySelf: "end", display: "flex", alignItems: "center", gap: 16 }}>
           <Link href="/portfolio" className="sg-navbar__link">Portfolio</Link>
           <Link href="/process" className="sg-navbar__link">Process</Link>
           <Link href="/about" className="sg-navbar__link">About</Link>
           <Link href="/contact" className="sg-btn sg-btn--outline sg-btn--sm">
             Contact
           </Link>
+          <button
+            onClick={() => startLogin()}
+            style={{ fontFamily: "var(--font-mono)", fontSize: "0.6875rem", textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--text-link)", background: "none", border: "none", cursor: "pointer", padding: "6px 12px" }}
+          >
+            Sign In
+          </button>
         </div>
       </div>
     </nav>

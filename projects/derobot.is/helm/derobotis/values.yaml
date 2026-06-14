@@ -2,7 +2,7 @@ replicas: 1
 domain: derobot.is
 
 teaser:
-  image: ops.noizu.com/derobot.is/teaser:latest
+  image: ops.noizu.com/derobot.is/teaser:v1.0.0
   port: 8080
   resources:
     requests:
