@@ -1,0 +1,10 @@
+static-site:
+  nameOverride: codefresh-landing
+  fullnameOverride: codefresh-landing
+  domain: codefre.sh
+  image: ops.noizu.com/codefre.sh/web-landing:latest
+  port: 80
+  imagePullSecrets:
+    - name: ops-registry-secret
+  tls:
+    secretName: codefresh-tls

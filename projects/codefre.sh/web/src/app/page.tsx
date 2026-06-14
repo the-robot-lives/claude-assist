@@ -93,6 +93,12 @@ function Nav() {
         </a>
         <div className="flex items-center gap-6">
           <a
+            href="/dashboard"
+            className="font-mono text-[11px] uppercase tracking-[0.08em] text-text-secondary hover:text-accent transition-colors"
+          >
+            Sign In
+          </a>
+          <a
             href="#waitlist"
             className="rounded-md bg-accent px-3 py-1.5 text-xs font-semibold text-[#08090D] transition-opacity hover:opacity-90"
           >
