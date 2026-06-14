@@ -1,11 +1,149 @@
-static-site:
-  nameOverride: jailbreakingsite
-  fullnameOverride: jailbreakingsite
-  domain: jailbreakingsite.com
-  image: ops.noizu.com/app-jailbreakingsite:latest
-  port: 80
-  imagePullSecrets:
-    - name: ops-registry-secret
-  tls:
-    secretName: jailbreakingsite-com-tls
+replicas: 1
+domain: jailbreakingsite.com
 
+backend:
+  image: ops.noizu.com/jailbreakingsite.com/backend:v1.0.edge
+  port: 4000
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+frontend:
+  image: ops.noizu.com/jailbreakingsite.com/frontend:v1.0.edge
+  port: 80
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+
+migrate:
+  enabled: true
+  command: ["bin/jailbreaking", "eval", "Jailbreaking.Release.migrate()"]
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+
+database:
+  host: shared-postgres.data-ns.svc.cluster.local
+  port: 5432
+  name: jailbreaking
+
+redis:
+  host: shared-redis.data-ns.svc.cluster.local
+  port: 6379
+  db: 6
+
+secrets:
+  name: jailbreakingsite-secrets
+  keys:
+    dbUser: JAILBREAKING_DB_USER
+    dbPassword: JAILBREAKING_DB_PASSWORD
+    secretKeyBase: JAILBREAKING_SECRET_KEY_BASE
+    guardianSecretKey: JAILBREAKING_GUARDIAN_SECRET_KEY
+    redisUrl: JAILBREAKING_REDIS_URL
+    databaseUrl: JAILBREAKING_DATABASE_URL
+    sendgridApiKey: ""
+    oidcClientId: ""
+    oidcClientSecret: ""
+    googleClientId: ""
+    googleClientSecret: ""
+    facebookClientId: ""
+    facebookClientSecret: ""
+    githubClientId: ""
+    githubClientSecret: ""
+    linkedinClientId: ""
+    linkedinClientSecret: ""
+    samlSpCert: ""
+    samlSpKey: ""
+
+  infisical:
+    enabled: true
+    hostAPI: https://infisical.noizu.com/api
+    resyncInterval: 120
+    credentialsSecret: universal-auth-credentials
+    credentialsNamespace: infra
+    projectSlug: k8-infra
+    envSlug: prod
+    secretsPath: "/apps/jailbreaking"
+
+mail:
+  fromName: ""
+  fromAddress: "noreply@jailbreakingsite.com"
+
+sso:
+  requireInvite: false
+  oidc:
+    issuer: ""
+  saml:
+    idpMetadataUrl: ""
+    spEntityId: ""
+
+extraEnv: []
+
+configMap:
+  enabled: false
+  data: {}
+
+imagePullSecrets:
+  - name: ops-registry-secret
+
+analytics:
+  ga:
+    measurementId: ""
+  posthog:
+    key: ""
+    host: "https://us.i.posthog.com"
+
+ingress:
+  className: nginx
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+  cloudflareOnly: true
+
+tls:
+  secretName: jailbreakingsite-com-tls
+  infisical:
+    enabled: true
+    resyncInterval: 300
+    credentialsSecret: universal-auth-credentials
+    credentialsNamespace: infisical-operator-system
+    projectSlug: k8-infra
+    envSlug: prod
+    secretsPath: "/apps/tls/jailbreakingsite"
+    crtKey: JAILBREAKING_TLS_CRT
+    keyKey: JAILBREAKING_TLS_KEY
+
+otel:
+  enabled: false
+  collectorEndpoint: "otel-collector.observability-ns.svc.cluster.local:4317"
+  collectorHttpEndpoint: "http://otel-collector.observability-ns.svc.cluster.local:4318"
+  serviceName: "jailbreakingsite"
+
+storage:
+  enabled: false
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 80
+
+podDisruptionBudget:
+  enabled: false
+  minAvailable: 1
+
+sandbox:
+  enabled: false
