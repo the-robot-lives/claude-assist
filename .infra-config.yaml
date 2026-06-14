@@ -45,6 +45,7 @@ tiers:
       - otel-collector
       - phoenix
       - posthog
+      - oneuptime
       - metabase
 
   - name: "Platform & Admin"
@@ -79,11 +80,12 @@ tiers:
       - hakatime
       - n8n
       - portal
+      - infra-portal
       - coming-soon
       - aifighter
       - bladeofeternity
       - derobotis
-      - gottacc
+      - gotta-cc
       - iotgo
       - jailbreakingsite
       - mcphost
@@ -96,6 +98,7 @@ tiers:
       - therobotlives
       - therobotmakes
       - start-app
+      - therobotplans
       - tobornalp
 
   - name: "User-Facing & Creative"
@@ -152,6 +155,7 @@ namespace_overrides:
   otel-collector: observability-ns
   phoenix: observability-ns
   posthog: observability-ns
+  oneuptime: platform-observability
   metabase: observability-ns
   # Tier 2 — Platform
   cockpit: platform-ns
@@ -162,6 +166,7 @@ namespace_overrides:
   keygen: platform-ns
   authentik: platform-ns
   minio: platform-ns
+  infra-portal: apps
   health-tests: platform-ns
   # Tier 3-4 — Apps
   codefresh: apps-ns
@@ -191,7 +196,7 @@ namespace_overrides:
   aifighter: apps-ns
   bladeofeternity: apps-ns
   derobotis: apps-ns
-  gottacc: apps-ns
+  gotta-cc: apps-ns
   iotgo: apps-ns
   jailbreakingsite: apps-ns
   mcphost: apps-ns
@@ -204,6 +209,7 @@ namespace_overrides:
   therobotlives: apps-ns
   therobotmakes: apps-ns
   start-app: apps-ns
+  therobotplans: apps-ns
   tobornalp: apps-ns
   # Tier 4 — Creative
   penpot: creative-ns
@@ -239,7 +245,19 @@ helm_scan_dirs:
   - kubernetes/helm/mail
 
 # --- Chart Path Overrides -----------------------------------------------------
-chart_path_overrides: {}
+chart_path_overrides:
+  infra-portal: projects/infra.noizu.com/helm/infra-portal
+  aifighter: projects/aifighter.com/helm/aifighter
+  therobotknows: projects/therobotknows.com/helm/therobotknows
+  codefresh-landing: projects/codefre.sh/helm/codefresh-landing
+  gotta-cc: projects/gotta.cc/helm/gotta-cc
+  derobotis: projects/derobot.is/helm/derobotis
+  iotgo: projects/iotgo.io/helm/iotgo
+  jailbreakingsite: projects/jailbreakingsite.com/helm/jailbreakingsite
+  noizu-site: projects/noizu.com/helm/noizu-site
+  therobotlives: projects/therobotlives.com/helm/therobotlives
+  therobotplans: projects/therobotplans.com/helm/therobotplans
+  tobornalp: projects/tobornalp.com/helm/therobotplans
 
 # --- Timeout Overrides --------------------------------------------------------
 timeout_overrides:
@@ -250,6 +268,7 @@ timeout_overrides:
   vllm: 120m
   mailu: 10m
   chatterbox-tts: 10m
+  oneuptime: 10m
   penpot: 10m
   plane: 10m
 
@@ -369,6 +388,127 @@ liquibase_targets:
     changelog_dir: repos/3rd/mermaid-live-editor/db
     changelog_file: changelog/db.changelog-master.yaml
 
+  # --- Portfolio app databases (shared-postgres via ExternalName) ---
+  aifighter:
+    description: "AiFighter app database"
+    namespace: data-ns
+    service: svc/shared-postgres
+    remote_port: 5432
+    local_port: 54330
+    db_type: postgresql
+    db_name: aifighter
+    schema: public
+    secret_name: aifighter-secrets
+    secret_namespace: apps-ns
+    username_key: AIFIGHTER_DB_USER
+    secret_key: AIFIGHTER_DB_PASSWORD
+    changelog_dir: projects/aifighter.com/app/backend/priv/repo/migrations
+
+  gotta-cc:
+    description: "GottaCC app database"
+    namespace: data-ns
+    service: svc/shared-postgres
+    remote_port: 5432
+    local_port: 54331
+    db_type: postgresql
+    db_name: gotta_cc
+    schema: public
+    secret_name: gotta-cc-secrets
+    secret_namespace: apps-ns
+    username_key: GOTTA_CC_DB_USER
+    secret_key: GOTTA_CC_DB_PASSWORD
+    changelog_dir: projects/gotta.cc/app/backend/priv/repo/migrations
+
+  iotgo:
+    description: "IoTGo app database"
+    namespace: data-ns
+    service: svc/shared-postgres
+    remote_port: 5432
+    local_port: 54332
+    db_type: postgresql
+    db_name: iotgo
+    schema: public
+    secret_name: iotgo-secrets
+    secret_namespace: apps-ns
+    username_key: IOTGO_DB_USER
+    secret_key: IOTGO_DB_PASSWORD
+    changelog_dir: projects/iotgo.io/app/backend/priv/repo/migrations
+
+  jailbreaking:
+    description: "JailbreakingSite app database"
+    namespace: data-ns
+    service: svc/shared-postgres
+    remote_port: 5432
+    local_port: 54333
+    db_type: postgresql
+    db_name: jailbreaking
+    schema: public
+    secret_name: jailbreakingsite-secrets
+    secret_namespace: apps-ns
+    username_key: JAILBREAKING_DB_USER
+    secret_key: JAILBREAKING_DB_PASSWORD
+    changelog_dir: projects/jailbreakingsite.com/app/backend/priv/repo/migrations
+
+  therobotknows:
+    description: "TheRobotKnows app database"
+    namespace: data-ns
+    service: svc/shared-postgres
+    remote_port: 5432
+    local_port: 54334
+    db_type: postgresql
+    db_name: therobotknows
+    schema: public
+    secret_name: therobotknows-secrets
+    secret_namespace: apps-ns
+    username_key: THEROBOTKNOWS_DB_USER
+    secret_key: THEROBOTKNOWS_DB_PASSWORD
+    changelog_dir: projects/therobotknows.com/app/backend/priv/repo/migrations
+
+  therobotlives:
+    description: "TheRobotLives app database"
+    namespace: data-ns
+    service: svc/shared-postgres
+    remote_port: 5432
+    local_port: 54335
+    db_type: postgresql
+    db_name: therobotlives
+    schema: public
+    secret_name: therobotlives-secrets
+    secret_namespace: apps-ns
+    username_key: THEROBOTLIVES_DB_USER
+    secret_key: THEROBOTLIVES_DB_PASSWORD
+    changelog_dir: projects/therobotlives.com/app/backend/priv/repo/migrations
+
+  noizu-site:
+    description: "NoizuSite app database"
+    namespace: data-ns
+    service: svc/shared-postgres
+    remote_port: 5432
+    local_port: 54336
+    db_type: postgresql
+    db_name: noizu_site
+    schema: public
+    secret_name: noizu-site-secrets
+    secret_namespace: apps-ns
+    username_key: NOIZU_SITE_DB_USER
+    secret_key: NOIZU_SITE_DB_PASSWORD
+    changelog_dir: projects/noizu.com/app/backend/priv/repo/migrations
+
+  therobotplans:
+    description: "TheRobotPlans app database"
+    namespace: data-ns
+    service: svc/shared-postgres
+    remote_port: 5432
+    local_port: 54337
+    db_type: postgresql
+    db_name: therobotplans
+    schema: public
+    secret_name: therobotplans-secrets
+    secret_namespace: apps-ns
+    username_key: THEROBOTPLANS_DB_USER
+    secret_key: THEROBOTPLANS_DB_PASSWORD
+    changelog_dir: projects/therobotplans.com/app/backend/priv/repo/migrations
+
 # =============================================================================
 # Project Registry — build/deploy metadata for portfolio projects
 # =============================================================================
@@ -401,6 +541,15 @@ project:
           helm:
             chart_path: kubernetes/helm/apps/codefresh
             values_path: .codefresh.frontend.image
+            format: image
+        - name: web-landing
+          dockerfile: web/Dockerfile
+          context: web
+          registry_path: codefre.sh/web-landing
+          auto_detect: false
+          helm:
+            chart_path: projects/codefre.sh/helm/codefresh-landing
+            values_path: .static-site.image
             format: image
       helm:
         charts:
@@ -437,20 +586,69 @@ project:
             path: kubernetes/helm/apps/start-app
     - domain: noizu.com
       services:
+        - name: backend
+          dockerfile: app/backend/Dockerfile
+          context: app/backend
+          registry_path: noizu.com/backend
+          auto_detect: false
+          helm:
+            chart_path: projects/noizu.com/helm/noizu-site
+            values_path: .backend.image
+            format: image
+        - name: frontend
+          dockerfile: app/frontend/Dockerfile
+          context: app/frontend
+          registry_path: noizu.com/frontend
+          build_args:
+            NEXT_PUBLIC_API_URL: https://api.noizu.com
+          auto_detect: false
+          helm:
+            chart_path: projects/noizu.com/helm/noizu-site
+            values_path: .frontend.image
+            format: image
+      helm:
+        charts:
+          - name: noizu-site
+            path: projects/noizu.com/helm/noizu-site
+    - domain: infra.noizu.com
+      base_path: projects/infra.noizu.com
+      services:
         - name: web
           dockerfile: Dockerfile
           context: .
-          registry_path: noizu-website
+          registry_path: infra.noizu.com/web
+          platform: linux/amd64
           auto_detect: false
           helm:
-            chart_path: projects/apps/apps-infra
-            values_path: .noizuWebsite.image
+            chart_path: projects/infra.noizu.com/helm/infra-portal
+            values_path: .static-site.image
             format: image
     - domain: aifighter.com
       services:
-        - name: web
-          dockerfile: web/Dockerfile
-          context: web
+        - name: backend
+          dockerfile: app/backend/Dockerfile
+          context: app/backend
+          registry_path: aifighter.com/backend
+          auto_detect: false
+          helm:
+            chart_path: projects/aifighter.com/helm/aifighter
+            values_path: .backend.image
+            format: image
+        - name: frontend
+          dockerfile: app/frontend/Dockerfile
+          context: app/frontend
+          registry_path: aifighter.com/frontend
+          build_args:
+            NEXT_PUBLIC_API_URL: https://api.aifighter.com
+          auto_detect: false
+          helm:
+            chart_path: projects/aifighter.com/helm/aifighter
+            values_path: .frontend.image
+            format: image
+      helm:
+        charts:
+          - name: aifighter
+            path: projects/aifighter.com/helm/aifighter
     - domain: bladeofeternity.com
       services:
         - name: backend
@@ -472,6 +670,84 @@ project:
         charts:
           - name: derobotis
             path: kubernetes/helm/apps/derobotis
+    - domain: gotta.cc
+      services:
+        - name: backend
+          dockerfile: app/backend/Dockerfile
+          context: app/backend
+          registry_path: gotta.cc/backend
+          auto_detect: false
+          helm:
+            chart_path: projects/gotta.cc/helm/gotta-cc
+            values_path: .backend.image
+            format: image
+        - name: frontend
+          dockerfile: app/frontend/Dockerfile
+          context: app/frontend
+          registry_path: gotta.cc/frontend
+          build_args:
+            NEXT_PUBLIC_API_URL: https://api.gotta.cc
+          auto_detect: false
+          helm:
+            chart_path: projects/gotta.cc/helm/gotta-cc
+            values_path: .frontend.image
+            format: image
+      helm:
+        charts:
+          - name: gotta-cc
+            path: projects/gotta.cc/helm/gotta-cc
+    - domain: iotgo.io
+      services:
+        - name: backend
+          dockerfile: app/backend/Dockerfile
+          context: app/backend
+          registry_path: iotgo.io/backend
+          auto_detect: false
+          helm:
+            chart_path: projects/iotgo.io/helm/iotgo
+            values_path: .backend.image
+            format: image
+        - name: frontend
+          dockerfile: app/frontend/Dockerfile
+          context: app/frontend
+          registry_path: iotgo.io/frontend
+          build_args:
+            NEXT_PUBLIC_API_URL: https://api.iotgo.io
+          auto_detect: false
+          helm:
+            chart_path: projects/iotgo.io/helm/iotgo
+            values_path: .frontend.image
+            format: image
+      helm:
+        charts:
+          - name: iotgo
+            path: projects/iotgo.io/helm/iotgo
+    - domain: jailbreakingsite.com
+      services:
+        - name: backend
+          dockerfile: app/backend/Dockerfile
+          context: app/backend
+          registry_path: jailbreakingsite.com/backend
+          auto_detect: false
+          helm:
+            chart_path: projects/jailbreakingsite.com/helm/jailbreakingsite
+            values_path: .backend.image
+            format: image
+        - name: frontend
+          dockerfile: app/frontend/Dockerfile
+          context: app/frontend
+          registry_path: jailbreakingsite.com/frontend
+          build_args:
+            NEXT_PUBLIC_API_URL: https://api.jailbreakingsite.com
+          auto_detect: false
+          helm:
+            chart_path: projects/jailbreakingsite.com/helm/jailbreakingsite
+            values_path: .frontend.image
+            format: image
+      helm:
+        charts:
+          - name: jailbreakingsite
+            path: projects/jailbreakingsite.com/helm/jailbreakingsite
     - domain: noizurpg.com
       services:
         - name: web
@@ -484,18 +760,56 @@ project:
           context: web
     - domain: therobotknows.com
       services:
-        - name: web
-          dockerfile: web/Dockerfile
-          context: web
+        - name: backend
+          dockerfile: app/backend/Dockerfile
+          context: app/backend
+          registry_path: therobotknows.com/backend
+          auto_detect: false
+          helm:
+            chart_path: projects/therobotknows.com/helm/therobotknows
+            values_path: .backend.image
+            format: image
+        - name: frontend
+          dockerfile: app/frontend/Dockerfile
+          context: app/frontend
+          registry_path: therobotknows.com/frontend
+          build_args:
+            NEXT_PUBLIC_API_URL: https://api.therobotknows.com
+          auto_detect: false
+          helm:
+            chart_path: projects/therobotknows.com/helm/therobotknows
+            values_path: .frontend.image
+            format: image
+      helm:
+        charts:
+          - name: therobotknows
+            path: projects/therobotknows.com/helm/therobotknows
     - domain: therobotlives.com
       services:
-        - name: web
-          dockerfile: web/Dockerfile
-          context: web
+        - name: backend
+          dockerfile: app/backend/Dockerfile
+          context: app/backend
+          registry_path: therobotlives.com/backend
+          auto_detect: false
+          helm:
+            chart_path: projects/therobotlives.com/helm/therobotlives
+            values_path: .backend.image
+            format: image
+        - name: frontend
+          dockerfile: app/frontend/Dockerfile
+          context: app/frontend
+          registry_path: therobotlives.com/frontend
+          build_args:
+            NEXT_PUBLIC_API_URL: https://api.therobotlives.com
+          auto_detect: false
+          helm:
+            chart_path: projects/therobotlives.com/helm/therobotlives
+            values_path: .frontend.image
+            format: image
       helm:
         charts:
           - name: therobotlives
-            path: kubernetes/helm/apps/therobotlives
+            path: projects/therobotlives.com/helm/therobotlives
     - domain: therobotmakes.com
       services:
         - name: web
@@ -504,6 +818,32 @@ project:
         - name: web-sumi-e
           dockerfile: web.sumi-e/Dockerfile
           context: web.sumi-e
+    - domain: therobotplans.com
+      services:
+        - name: backend
+          dockerfile: app/backend/Dockerfile
+          context: app/backend
+          registry_path: therobotplans.com/backend
+          auto_detect: false
+          helm:
+            chart_path: projects/therobotplans.com/helm/therobotplans
+            values_path: .backend.image
+            format: image
+        - name: frontend
+          dockerfile: app/frontend/Dockerfile
+          context: app/frontend
+          registry_path: therobotplans.com/frontend
+          build_args:
+            NEXT_PUBLIC_API_URL: https://api.therobotplans.com
+          auto_detect: false
+          helm:
+            chart_path: projects/therobotplans.com/helm/therobotplans
+            values_path: .frontend.image
+            format: image
+      helm:
+        charts:
+          - name: therobotplans
+            path: projects/therobotplans.com/helm/therobotplans
     - domain: tobornalp.com
       services:
         - name: backend
@@ -512,7 +852,7 @@ project:
           registry_path: tobornalp.com/backend
           auto_detect: false
           helm:
-            chart_path: kubernetes/helm/apps/tobornalp
+            chart_path: projects/tobornalp.com/helm/therobotplans
             values_path: .backend.image
             format: image
         - name: frontend
@@ -523,26 +863,35 @@ project:
             NEXT_PUBLIC_API_URL: "https://tobornalp.com/api"
           auto_detect: false
           helm:
-            chart_path: kubernetes/helm/apps/tobornalp
+            chart_path: projects/tobornalp.com/helm/therobotplans
             values_path: .frontend.image
             format: image
     - domain: npl-mcp
-      name: mcp.derobot.is 
-      base_path: projects/NoizuPromptLingo
+      name: mcp.derobot.is
+      base_path: incubator/projects/NoizuPromptLingo
       services:
         - name: server
           dockerfile: Dockerfile
           context: .
-          registry_path: npl-mcp
+          registry_path: npl-mcp/server
           auto_detect: false
           helm:
-            chart_path: kubernetes/helm/apps/npl-mcp
-            values_path: .npl-mcp.image.tag
-            format: tag
+            chart_path: projects/NoizuPromptLingo/helm/npl-mcp
+            values_path: .backend.image
+            format: image
+        - name: frontend
+          dockerfile: Dockerfile.nextjs
+          context: web
+          registry_path: npl-mcp/frontend
+          auto_detect: false
+          helm:
+            chart_path: projects/NoizuPromptLingo/helm/npl-mcp
+            values_path: .frontend.image
+            format: image
       helm:
         charts:
           - name: npl-mcp
-            path: charts/npl-mcp
+            path: projects/NoizuPromptLingo/helm/npl-mcp
     - domain: robotwars
       base_path: projects/game-workshop/stage/robotwars
       services:
@@ -582,6 +931,18 @@ project:
   # ===========================================================================
   docker:
     images:
+      - name: bottlecrm
+        context: 3rd-party/bottlecrm
+        dockerfile: Dockerfile.prod
+        registry_path: bottlecrm
+        single_stage: true
+
+      - name: bottlecrm-frontend
+        context: 3rd-party/bottlecrm/frontend
+        dockerfile: Dockerfile.prod
+        registry_path: bottlecrm-frontend
+        single_stage: true
+
       - name: chartdb
         context: 3rd-party/chartdb
         dockerfile: Dockerfile
