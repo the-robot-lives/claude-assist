@@ -19,14 +19,15 @@ This document is the primary integration path between the UX Engineer skill and 
 
 > **CRITICAL — Theme Hosting Rules:**
 >
-> Themes are **NEVER** manually copied or symlinked into `styleguide-engine/app/src/config/`. There are exactly two supported workflows:
+> Themes are **NEVER** manually copied or symlinked into `styleguide-engine/app/src/config/`. Prefer the **npx launcher** — it manages its own cached viewer and needs neither a cloned engine nor a scaffolded app:
 >
 > | Workflow | Theme YAML lives at | How it runs | When to use |
 > |----------|-------------------|-------------|-------------|
-> | **A: Engine Viewer** | `projects/{domain}/design/theme/theme-{slug}/` | `./serve-project.sh {domain}` (auto-symlinks) | Design exploration, no project frontend yet |
-> | **B: Project-Local** | `projects/{domain}/app/frontend/src/config/theme-{slug}/` | `npm run dev` inside the project frontend | Project has its own Next.js app (e.g., codefre.sh) |
+> | **A: npx Launcher** (default) | any dir of `theme-{slug}/` (e.g. `projects/{domain}/design/theme/`) | `npx @noizu/styleguide serve ./design/theme/` | **Default.** Design, iteration, review — no engine/app setup |
+> | **B: Engine Viewer** | `projects/{domain}/design/theme/theme-{slug}/` | `./serve-project.sh {domain}` (auto-symlinks) | The engine repo is cloned and you want repo-integrated symlink previews |
+> | **C: Project-Local** | `projects/{domain}/app/frontend/src/config/theme-{slug}/` | `npm run dev` inside the project frontend | Project has its own Next.js app (e.g., codefre.sh) |
 >
-> `serve-project.sh` manages symlinks automatically — you never touch the engine's `src/config/` directory. For Workflow B, the project imports `@the-robot-lives/styleguide` as an npm dependency and generates CSS locally. See [styleguide-setup-guide.md](styleguide-setup-guide.md) for full details.
+> The npx launcher (A) also **auto-copies the canonical base theme** (`theme-style-guide`) into your config dir — never hand-author a base; set `base-theme: "theme-style-guide"` on each custom theme and override only deltas. `serve-project.sh` (B) manages symlinks automatically — you never touch the engine's `src/config/` directory. For Workflow C, the project imports `@noizu/styleguide` as an npm dependency and generates CSS locally. See [styleguide-setup-guide.md](styleguide-setup-guide.md) §2 for full details, required fields, and reading the validation output.
 
 ---
 
@@ -618,7 +619,16 @@ Each direction gets its own theme. The engine's theme picker lets you compare th
 
 ## 8. Connecting to the Engine
 
-### Via serve-project.sh (engine viewer)
+### Via the npx launcher (preferred — no engine/app setup)
+
+```bash
+# Point it at the directory holding your theme-* folders:
+npx @noizu/styleguide serve ./design/theme/
+# Auto-copies the base theme, symlinks your themes, generates CSS, starts the viewer.
+# Add --clean to rebuild a stale cache after a package upgrade.
+```
+
+### Via serve-project.sh (engine viewer — requires cloned engine)
 
 ```bash
 # From repo root:
@@ -641,13 +651,15 @@ npm install && npm run regen && npm run dev
 
 After generating YAML:
 
-- [ ] `style-guide.meta.yaml` has unique slug
-- [ ] `style-guide.vars.yaml` has at minimum: white, black, one accent color, font-sans, radius
+- [ ] `style-guide.meta.yaml` has `name` **and** a unique `slug` (required — without them the theme won't render / route)
+- [ ] `style-guide.meta.yaml` sets `base-theme: "theme-style-guide"` (inherit the base; never hand-author one)
+- [ ] `style-guide.vars.yaml` has a **non-empty `vars.groups`** with at minimum: white, black, one accent color, font-sans, radius (required — empty = unstyled page)
 - [ ] `branding.yaml` has name and logo-text
 - [ ] All hex values are valid (6-digit with #)
 - [ ] Font families in vars match those in typography.yaml
 - [ ] Semantic colors (success/warning/error/info) are defined if semantic-classes.yaml is provided
 - [ ] slug in meta.yaml matches the theme directory name (without `theme-` prefix)
+- [ ] `serve`/`regen` run shows **no `✗` errors and no `⚠` warnings** in the console or the in-viewer alert card (each `⚠`/`✗` names the section + fix; the common one is a snippet `target-section` missing from `page-sections`)
 
 ---
 

@@ -1,39 +1,158 @@
 # Style Guide Setup Guide
 
-> End-to-end instructions for setting up an interactive style guide using the styleguide-engine. Covers both workflows: the centralized engine viewer and project-local hosting.
+> End-to-end instructions for previewing and hosting an interactive style guide with `@noizu/styleguide`.
+>
+> **Default to the npx launcher (§2).** It needs no cloned engine and no scaffolded app — point it at a theme directory and it spins up the viewer. Reach for the heavier workflows (§3 engine viewer, §4 project-local hosting) only when the style guide must live inside a project's own Next.js app, or you are integrating `/styleguide` into a shipping frontend.
 
 ---
 
 ## 1. Overview
 
-The styleguide-engine is a Next.js 15 app that generates interactive HTML style guides from YAML configuration files. It provides:
+`@noizu/styleguide` generates interactive HTML style guides from YAML configuration files. It provides:
 
 - **4-pass defaults cascade:** ~12 seed values expand to ~300 CSS custom properties
 - **Theme auto-discovery:** any `theme-*` directory with a `style-guide.meta.yaml` is registered
+- **Theme inheritance:** a theme sets `base-theme: "theme-style-guide"` and inherits every facet it does not override
 - **Per-theme CSS scoping:** `html[data-design-theme="{slug}"]` isolates themes
 - **Live previews:** color modes, component showcases, typography specimens, theme switching
+- **Config validation:** missing required fields and broken cross-references are reported as console warnings **and** a static alert card in the viewer (see §2.4)
 
-There are **two workflows** for using the engine, described in §2 and §3. Choose one based on your project's needs.
+### Three ways to use it
+
+| Approach | When | Section |
+|---|---|---|
+| **npx launcher** (`@noizu/styleguide serve`) | **Default.** Design exploration, iteration, review, direction comparison. No project frontend required. | **§2 — start here** |
+| **Engine viewer** (`serve-project.sh`) | The styleguide-engine repo is cloned and you want repo-integrated symlink previews | §3 |
+| **Project-local hosting** | The project ships its own Next.js app and `/styleguide` lives alongside product pages (e.g. codefre.sh) | §4 |
 
 ### When to Read This vs. Other Docs
 
 | You want to... | Read this |
 |---|---|
-| Set up a new project's style guide from scratch | **This document** (§2 or §3) |
+| Preview a theme right now with zero setup | **§2 of this document** |
+| Set up a new project's style guide from scratch | **This document** (§2, then §3 or §4 if hosting in-app) |
 | Convert a completed markdown style guide to YAML | [engine-styleguide.md](engine-styleguide.md) §5-6 |
 | Understand the YAML schema in depth | [engine-styleguide.md](engine-styleguide.md) §6 + engine `docs/arch/yaml-configuration.md` |
 | Build the markdown style guide itself | [style-guide-construction.md](../process/style-guide-construction.md) |
-| Compare design directions (A/B/C/D) | §4 of this document |
+| Compare design directions (A/B/C/D) | §5 of this document |
 | Understand the CSS cascade | Engine `docs/reference/cascade.md` |
 | Use components in your app | [engine-styleguide.md](engine-styleguide.md) §10 |
 
 ---
 
-## 2. Workflow A: Engine Viewer (`serve-project.sh`)
+## 2. Workflow A: npx Launcher (Recommended)
 
-Use this workflow when you want to preview themes in the centralized styleguide-engine viewer — useful during design exploration, direction comparison, and early-stage work before the project has its own frontend.
+The fastest, most reliable way to render a style guide. No cloned engine, no scaffolded app — the launcher caches a viewer app under `~/.cache/styleguide-viewer/`, symlinks your themes into it, generates CSS, and starts the dev server.
 
-### 2.1 Directory Structure
+### 2.1 One command
+
+```bash
+# Via npx (no install required — pulls the latest published package)
+npx @noizu/styleguide serve ./design/theme/
+
+# Or, if installed globally / as a dependency
+styleguide-serve ./design/theme/ --port 3001
+```
+
+The argument is a directory containing one or more `theme-*` subdirectories. On run, the launcher:
+
+1. **Ensures the base theme is present** — copies the canonical `theme-style-guide` from the package if your directory doesn't already contain it (see §2.2)
+2. Symlinks every `theme-*` directory into the cached viewer
+3. Generates per-theme CSS (and prints validation warnings — see §2.4)
+4. Starts Next.js on `http://localhost:3000` (override with `--port`)
+
+Useful flags: `--port <n>`, `--clean` (wipe and rebuild the viewer cache — use after upgrades or if the cache is stale), `--help`, `--version`.
+
+> First run installs the viewer's dependencies (~20s). Subsequent runs start in ~3s. The launcher declares its full dependency closure, so you do **not** need to install React, heroicons, monaco, etc. yourself.
+
+### 2.2 The base theme is provided for you — do not hand-author it
+
+Every theme inherits from a complete **base theme** (`theme-style-guide`, ~20 facet files) that supplies the cascade defaults, the full section list, semantic classes, shell/page layouts, glyphs, and more. **The launcher copies the correct, complete base into your theme directory automatically** if it isn't already there — you do not write it from scratch.
+
+Hand-rolling a partial base is the **#1 cause of broken renders** (no centered content, missing sections, generic styling). Instead:
+
+- Let the launcher provide `theme-style-guide`, **or** copy the canonical base out of the package: `node_modules/@noizu/styleguide/dist/engine-src/config/theme-style-guide/`.
+- In each **custom** theme's `style-guide.meta.yaml`, set `base-theme: "theme-style-guide"` (this is the directory name, with the `theme-` prefix; it is also the default if omitted).
+- Override **only the facets that differ** from the base. Everything else inherits. Five keys *accumulate* with the base instead of replacing it: `css-snippets`, `jsx-snippets`, `scoped-vars`, `css-load`, `jsx-load`.
+
+```
+./design/theme/
+  theme-style-guide/        ← canonical base (auto-copied by the launcher; leave it)
+  theme-my-brand/           ← your theme; inherits via base-theme
+    style-guide.meta.yaml   #   base-theme: "theme-style-guide"
+    style-guide.vars.yaml   #   override seeds
+    branding.yaml           #   your identity
+    style-guide.color-modes.yaml
+```
+
+### 2.3 Required fields — or the theme will not render
+
+The validator emits **errors** (`✗`, red) for fields whose absence breaks rendering. Fix every error before anything else:
+
+| Field (file) | If missing | Minimum |
+|---|---|---|
+| `name` (`style-guide.meta.yaml`) | Theme renders without a display name | `name: "My Brand"` |
+| `slug` (`style-guide.meta.yaml`) | **Theme selector and URL routing break** (`html[data-design-theme]` has no target) | `slug: "my-brand"` — must match the directory suffix (`theme-my-brand/` → `my-brand`) |
+| `vars.groups` (`style-guide.vars.yaml`) | **No design tokens are generated — nothing cascades, the page is unstyled** | at least one group with real `vars:` (white, black, one accent, `font-sans`, `radius`) |
+
+Strongly recommended (warned if absent — see §2.4): `branding.yaml` identity, `style-guide.color-modes.yaml` (light + dark), `semantic-classes`, `page-layouts`. For a custom theme these are inherited from the base if you omit them, but a production theme should define its own.
+
+### 2.4 Read the launcher's warning output
+
+Both CSS generation (console) and the running viewer (a static alert card at the top of the page) report config problems. **Treat them as a punch list.**
+
+**Console format** — every line names the theme slug, the section, and the consequence:
+
+```
+✗ [my-brand] meta:  Missing 'slug' — theme selector and URL routing will break        (red = error, breaks rendering)
+⚠ [my-brand] vars:  vars.groups[3] (Cards) has no variables                            (amber = warning, degrades rendering)
+⚠ [my-brand] css-snippets: css-snippets 'card-glow' targets section 'cards' which is not defined in page-sections
+```
+
+**In the browser:** a non-dismissable **ConfigWarnings alert card** renders above the hero, grouped by section, color-coded (errors red, warnings amber), collapsible. Same information as the console, visible to anyone reviewing the rendered guide.
+
+Common warnings and their fixes:
+
+| Warning | Meaning | Fix |
+|---|---|---|
+| `vars.groups[N] (X) has no variables` | A declared token group is empty | Add `vars:` to the group, or delete the empty group |
+| `No semantic classes defined — cards, buttons, and form variants won't render` | `semantic-classes` is empty/absent and not inherited | Define `semantic-classes` (or inherit from base) |
+| `... targets section 'X' which is not defined in page-sections` | A css/jsx snippet's `target-section` doesn't exist | Add the section id to `style-guide.page-sections.yaml`, or fix the snippet's `target-section` |
+| `color-modes missing 'light'/'dark' map` | Only one mode defined | Populate both `color-modes.light` and `color-modes.dark` |
+| `page-sections[i].sections[j] missing 'id'` | A nav entry has no id | Add an `id` so the section links/renders |
+| `semantic-classes[i] (...) missing 'class'/'accent-style'/vars.accent` | Incomplete semantic class | Fill `class`, `accent-style`, and `vars.accent` |
+
+**Goal: a clean run shows no `✗` and ideally no `⚠`.** Resolve errors first (they break rendering), then warnings (they degrade it).
+
+### 2.5 Directory structure the launcher expects
+
+```
+<theme-directory>/                  ← the path you pass to `serve`
+  theme-style-guide/                ← base (auto-added if missing)
+    style-guide.meta.yaml
+  theme-my-brand/
+    style-guide.meta.yaml           (required — registers the theme)
+    style-guide.vars.yaml
+    branding.yaml
+    style-guide.color-modes.yaml
+    ...                             (optional facets — override only what differs)
+```
+
+A `theme-*` directory missing `style-guide.meta.yaml` is skipped (with a warning). If no valid themes are found, the launcher exits with an explanation.
+
+### 2.6 Requirements
+
+- Node 18+ (22+ recommended) and npm on `PATH`
+- For `npx @noizu/styleguide`, `.npmrc` must resolve the `@noizu` scope to Verdaccio (`npm.noizu.com`); set `NPM_TOKEN` if the registry requires auth
+- No other manual dependency setup — the launcher's cached app installs everything it needs
+
+---
+
+## 3. Workflow B: Engine Viewer (`serve-project.sh`)
+
+Use this when the styleguide-engine repo is cloned locally and you want repo-integrated previews driven by symlinks. The npx launcher (§2) is simpler and preferred for most work; reach for this when you specifically need the engine checkout (e.g. editing engine internals).
+
+### 3.1 Directory Structure
 
 ```
 projects/{domain}/
@@ -51,12 +170,10 @@ projects/{domain}/
         ...                            # Optional facets
       theme-{slug-b}/
         style-guide.meta.yaml
-        style-guide.vars.yaml
-        branding.yaml
-        style-guide.color-modes.yaml
+        ...
 ```
 
-### 2.2 Setup Steps
+### 3.2 Setup Steps
 
 **Step 1: Create the design directory**
 
@@ -71,22 +188,9 @@ cp skills/user-experience-engineer/assets/theme-template/* \
    projects/{domain}/design/theme/theme-{slug}/
 ```
 
-This copies skeleton YAML files with documented placeholders. At minimum, populate:
+This copies skeleton YAML files with documented placeholders. At minimum, populate `style-guide.meta.yaml` (`name`, `slug`, `title`, `description`, `base-theme`), `style-guide.vars.yaml` (seed colors, fonts, radius), and `branding.yaml` (`name`, `logo-text`, `font-url`). See §2.3 for the hard requirements.
 
-| File | What to fill in |
-|---|---|
-| `style-guide.meta.yaml` | `name`, `slug`, `title`, `description` |
-| `style-guide.vars.yaml` | Seed colors (`white`, `black`, accent colors), fonts, radius |
-| `branding.yaml` | `name`, `logo-text`, `font-url`, brand identity fields |
-
-**Step 3: Verify slug consistency**
-
-The `slug` in `style-guide.meta.yaml` must match the directory suffix:
-
-```
-theme-codefresh-minimal/  →  slug: codefresh-minimal
-theme-codefresh-forge/    →  slug: codefresh-forge
-```
+**Step 3: Verify slug consistency** — the `slug` in `style-guide.meta.yaml` must match the directory suffix (`theme-codefresh-forge/` → `slug: codefresh-forge`).
 
 **Step 4: Preview in the engine**
 
@@ -94,27 +198,23 @@ theme-codefresh-forge/    →  slug: codefresh-forge
 ./serve-project.sh {domain}
 ```
 
-This script:
-1. Removes all symlinked themes from the engine's `src/config/`
-2. Symlinks your `design/theme/theme-*` directories into the engine
-3. Runs `regen.sh` (CSS generation) and starts the dev server
+This removes stale theme symlinks from the engine's `src/config/`, symlinks your `design/theme/theme-*` directories in, runs CSS generation, and starts the dev server. Open `http://localhost:3000`.
 
-Open http://localhost:3000 — the theme picker shows your theme(s) alongside the base theme.
+### 3.3 Requirements
 
-### 2.3 Requirements
-
-- The engine must be cloned (`styleguide-engine/` submodule initialized)
-- Node 22+, npm installed
-- `.npmrc` configured for Verdaccio (`npm.noizu.com`) for the `@noizu/styleguide` dependency
+- The engine is cloned (`styleguide-engine/` submodule initialized)
+- Node 22+, npm installed; `.npmrc` configured for Verdaccio (`npm.noizu.com`)
 - Engine dependencies installed: `cd styleguide-engine/app && npm install`
+
+> Even with the engine cloned, you can still preview any theme directory directly with `npx @noizu/styleguide serve ./design/theme/` — no symlinking required.
 
 ---
 
-## 3. Workflow B: Project-Local Hosting (Starter)
+## 4. Workflow C: Project-Local Hosting (Starter)
 
-Use this workflow when the project has its own frontend and you want the style guide as part of the project's web app — the `/styleguide` route lives alongside your product pages.
+Use this when the project has its own frontend and you want the style guide as part of the project's web app — the `/styleguide` route lives alongside your product pages.
 
-### 3.1 Directory Structure
+### 4.1 Directory Structure
 
 This is the codefre.sh pattern:
 
@@ -124,39 +224,25 @@ projects/{domain}/
     frontend/
       src/
         config/
-          theme-style-guide/             # Base theme (rename or customize in place)
+          theme-style-guide/             # Base theme (canonical — keep complete)
             style-guide.meta.yaml
             style-guide.vars.yaml
             branding.yaml
             style-guide.color-modes.yaml
-            style-guide.color-palette.yaml
-            style-guide.css-snippets.yaml
-            style-guide.design-sections.yaml
-            style-guide.globals.yaml
-            style-guide.glyphs.yaml
-            style-guide.page-layouts.yaml
-            style-guide.page-sections.yaml
-            style-guide.scoped-vars.yaml
-            style-guide.semantic-classes.yaml
-            style-guide.semantic-groups.yaml
-            style-guide.shell-layouts.yaml
-            style-guide.spacing.yaml
-            style-guide.typography.yaml
-            style-guide.vars.yaml
+            ...                           # full facet set
         app/
           styleguide/
             page.tsx                      # Full interactive viewer
           design-system.generated.css     # Generated (gitignored)
 ```
 
-### 3.2 Setup Steps
+### 4.2 Setup Steps
 
 **Option A: From starter tarball**
 
 ```bash
 tar xzf skills/user-experience-engineer/assets/styleguide-starter.tar.gz \
   -C projects/{domain}/web
-
 cd projects/{domain}/web
 npm install
 npm run regen
@@ -173,18 +259,20 @@ make init && make build && make run
 
 The scaffold includes `frontend/src/config/theme-style-guide/` with all YAML facets pre-populated with documented placeholders. Edit them in place.
 
-**Option C: Manual setup** (when integrating into an existing Next.js project)
+**Option C: Manual setup** (integrating into an existing Next.js project)
 
 1. Add `@noizu/styleguide` to `package.json`
-2. Add webpack alias and tsconfig paths for `@styleguide-engine/`
-3. Create `src/config/theme-{slug}/` with the 3 required files
+2. Add the webpack alias + tsconfig paths for `@styleguide-engine/`
+3. Create `src/config/theme-{slug}/` with the required files (§2.3) and `base-theme: "theme-style-guide"`
 4. Add `src/scripts/generate-css.ts` (calls `generateCSS()` from the package)
 5. Add `src/app/styleguide/page.tsx` (renders the viewer)
-6. Import generated CSS in `globals.css`
+6. Import the generated CSS in `globals.css`
 
-### 3.3 Customizing the Theme
+> Whatever the hosting option, you can sanity-check the YAML at any time without the full app by running `npx @noizu/styleguide serve <config-dir>` against the directory holding your `theme-*` folders.
 
-**Minimum viable theme** — 3 files + color modes:
+### 4.3 Customizing the Theme
+
+**Minimum viable custom theme** — inherit the base, override seeds + color modes:
 
 ```yaml
 # style-guide.meta.yaml
@@ -192,6 +280,7 @@ name: "CodeFresh"
 slug: "codefresh"
 title: "CodeFresh — Style Guide"
 description: "Eval-driven AI development platform."
+base-theme: "theme-style-guide"   # inherit everything not overridden
 ```
 
 ```yaml
@@ -249,7 +338,7 @@ color-modes:
 
 Everything else inherits from the base theme. Add facet files only to override.
 
-### 3.4 Regenerate and Preview
+### 4.4 Regenerate and Preview
 
 ```bash
 npm run regen    # or: ./regen.sh
@@ -260,58 +349,48 @@ npm run dev      # → http://localhost:3000/styleguide
 
 ---
 
-## 4. Multiple Design Directions
+## 5. Multiple Design Directions
 
-For projects exploring multiple visual directions (like codefre.sh with 4 directions), create a separate theme per direction.
+For projects exploring multiple visual directions (like codefre.sh with 4 directions), create a separate theme per direction, all inheriting the same base. Preview them together with `npx @noizu/styleguide serve ./design/theme/` (or `./serve-project.sh {domain}`) — the theme picker shows every `theme-*` for side-by-side comparison.
 
-### 4.1 Design Directory Layout
+### 5.1 Design Directory Layout
 
 ```
 projects/{domain}/design/
   README.md                            # Comparison table + decision framework
   direction-a-{name}.md              # Full markdown style guide for direction A
-  direction-a-{name}.html            # Optional rendered preview
   direction-b-{name}.md
-  direction-c-{name}.md
   logo.svg
   theme/
+    theme-style-guide/                 # shared base
     theme-{domain}-{direction-a}/
     theme-{domain}-{direction-b}/
     theme-{domain}-{direction-c}/
 ```
 
-### 4.2 Naming Convention
+### 5.2 Naming Convention
 
-Theme directories follow: `theme-{project}-{direction-name}`
-
-Examples from codefre.sh:
+Theme directories follow `theme-{project}-{direction-name}`. Examples from codefre.sh:
 - `theme-codefresh-minimal` (Direction A: Minimal Tech 100%)
 - `theme-codefresh-editorial` (Direction B: MT 80% + Editorial 20%)
 - `theme-codefresh-brutalist` (Direction C: Neo-Brutalist)
 - `theme-codefresh-forge` (Direction D: Forge)
 
-### 4.3 Design README Template
+### 5.3 Design README Template
 
-The design README should include (see `projects/codefre.sh/design/README.md` as reference):
+The design README should include (see `projects/codefre.sh/design/README.md`):
 
-1. **At-a-glance comparison table** — columns per direction, rows for: name, style system, primary font, accent color, border radius, motion, risk level
-2. **Decision framework** — flowchart or decision tree for choosing between directions
-3. **Mixing guidance** — which directions can be combined, how
+1. **At-a-glance comparison table** — columns per direction; rows for name, style system, primary font, accent color, border radius, motion, risk level
+2. **Decision framework** — flowchart/decision tree for choosing between directions
+3. **Mixing guidance** — which directions combine, and how
 4. **What's not covered** — explicit scope boundaries
 5. **Next steps** — what to do after selection
 
-### 4.4 Preview All Directions
-
-```bash
-./serve-project.sh {domain}
-# Theme picker shows all theme-* directories — compare side by side
-```
-
 ---
 
-## 5. Reference Implementation: codefre.sh
+## 6. Reference Implementation: codefre.sh
 
-codefre.sh demonstrates the recommended setup pattern. Key aspects:
+codefre.sh demonstrates the recommended setup pattern.
 
 ### What codefre.sh Does Well
 
@@ -321,99 +400,84 @@ codefre.sh demonstrates the recommended setup pattern. Key aspects:
 | **Decision framework** | Flowchart in README for choosing between directions |
 | **Complete vars.yaml** | All component-level overrides (cards, buttons, HUI controls, toggles) |
 | **Color modes** | Distinct light and dark modes with semantic token mapping |
-| **Full facet coverage** | All 17 YAML facet files populated (not just the required 4) |
+| **Full facet coverage** | All facet files populated (not just the required ones) |
 | **Font loading** | Google Fonts URL in branding.yaml, matching font-sans/font-mono in vars |
 | **Project-local hosting** | Themes in `app/frontend/src/config/` for integrated dev experience |
 
-### codefre.sh File Inventory
-
-| File | Status | Key Content |
-|---|---|---|
-| `style-guide.meta.yaml` | Placeholder | Needs project name/slug |
-| `branding.yaml` | Placeholder | Needs brand identity, logo, intro hero |
-| `style-guide.vars.yaml` | **Customized** | Space Grotesk + IBM Plex Mono, full gray ramp, 17 var groups |
-| `style-guide.color-modes.yaml` | **Customized** | Light: white ground, cool gray. Dark: warm charcoal, soft contrast |
-| `style-guide.color-palette.yaml` | Customized | Brand reds, blues, yellows + semantic colors |
-| `style-guide.css-snippets.yaml` | Customized | Custom component CSS |
-| `style-guide.scoped-vars.yaml` | Customized | Selector-level overrides for dark mode |
-| `style-guide.semantic-classes.yaml` | Customized | Danger/success/warning/info classes |
-| `style-guide.typography.yaml` | Customized | Space Grotesk + IBM Plex Mono declarations |
-| `style-guide.spacing.yaml` | Customized | 8px base unit, 12-col grid |
-| `style-guide.page-layouts.yaml` | Customized | Standard + article layouts |
-| `style-guide.shell-layouts.yaml` | Customized | Navbar + sidebar + footer shells |
-| `style-guide.globals.yaml` | Customized | Base element resets |
-| `style-guide.page-sections.yaml` | Customized | Viewer section ordering |
-| `style-guide.design-sections.yaml` | Customized | Design principle rows |
-| `style-guide.glyphs.yaml` | Customized | Unicode glyph browser entries |
-| `style-guide.semantic-groups.yaml` | Customized | Semantic class groupings |
-
 ### Lessons from codefre.sh
 
-1. **Start with vars.yaml** — the cascade derives everything from seeds, so this is the highest-leverage file
-2. **Populate all facet files** — even optional ones. The base theme defaults are generic; project-specific values make the style guide useful
+1. **Start with vars.yaml** — the cascade derives everything from seeds, so this is the highest-leverage file (and `vars.groups` is a hard requirement, §2.3)
+2. **Inherit, then override** — set `base-theme` and populate only the facets that differ; the base fills the rest
 3. **Color modes are not optional** — every production theme needs real light and dark modes
 4. **Design directions as markdown first** — write full style guides as markdown, then extract to YAML (see [engine-styleguide.md](engine-styleguide.md) §5)
-5. **Component overrides matter** — codefre.sh defines 17 var groups including HUI controls, toggles, and cards. Without these, components use generic base theme styling
+5. **Component overrides matter** — codefre.sh defines many var groups including HUI controls, toggles, and cards. Without these, components use generic base styling
+6. **Watch the validation output** — a clean `serve`/`regen` run with no `✗`/`⚠` is part of "done" (§2.4)
 
 ---
 
-## 6. Complete Setup Checklist
+## 7. Complete Setup Checklist
 
 ### Prerequisites
 
-- [ ] Node 22+ and npm installed
-- [ ] `.npmrc` configured for Verdaccio (`npm.noizu.com`)
-- [ ] Engine submodule initialized (Workflow A) or starter extracted (Workflow B)
-- [ ] Engine dependencies installed (`npm install` in engine/app or project/web)
+- [ ] Node 18+ (22+ recommended) and npm installed
+- [ ] `.npmrc` configured for Verdaccio (`npm.noizu.com`) for the `@noizu` scope
+- [ ] For §3/§4 only: engine submodule initialized or starter extracted, and dependencies installed
 
-### Required Files (Minimum Viable Theme)
+### Required Fields (theme will not render without these — §2.3)
 
-- [ ] `style-guide.meta.yaml` — name, slug, title, description
-- [ ] `style-guide.vars.yaml` — at minimum: white, black, one accent, font-sans, radius
-- [ ] `branding.yaml` — name, logo-text, font-url
-- [ ] `style-guide.color-modes.yaml` — light and dark modes with semantic tokens
+- [ ] `style-guide.meta.yaml` — `name` **and** `slug` (slug matches directory suffix)
+- [ ] `style-guide.vars.yaml` — non-empty `vars.groups` with at least one real group (white, black, one accent, `font-sans`, `radius`)
+- [ ] `base-theme: "theme-style-guide"` set (or omitted to use the default base) so inheritance fills the rest
+- [ ] The base theme (`theme-style-guide`) is present in the config directory — let the launcher copy it; do not hand-author one (§2.2)
+
+### Strongly Recommended (warned if absent)
+
+- [ ] `branding.yaml` — `name`, `logo-text`, `font-url`, identity fields
+- [ ] `style-guide.color-modes.yaml` — distinct `light` and `dark` maps
+- [ ] `semantic-classes` defined (danger/success/warning/info) — or inherited from base
+- [ ] `page-layouts` defined — or inherited from base
 
 ### Validation
 
-- [ ] Slug in meta.yaml matches directory suffix (`theme-foo/` → `slug: foo`)
-- [ ] All hex values are valid 6-digit with `#` prefix
+- [ ] `npx @noizu/styleguide serve <config-dir>` (or `npm run regen`) completes with **no `✗` errors**
+- [ ] **No `⚠` warnings** in the console or the in-viewer alert card — or each remaining one is understood and intentional (§2.4)
+- [ ] No snippet `target-section` references a section absent from `page-sections`
+- [ ] All hex values are valid (`#` + 6 digits); semantic colors (success/warning/error/info) defined
 - [ ] Font families in vars.yaml match those loaded via branding.yaml `font-url`
-- [ ] Semantic colors (success/warning/error/info) are defined
-- [ ] `npm run regen` completes without errors
-- [ ] `/styleguide` renders with correct colors, fonts, and components
-- [ ] Dark mode toggle works and produces distinct light/dark rendering
-- [ ] Theme appears in the theme picker (if multiple themes exist)
+- [ ] `/styleguide` (or `http://localhost:3000`) renders with correct colors, fonts, centered content, and components
+- [ ] Dark mode toggle produces distinct light/dark rendering
+- [ ] The theme appears in the theme picker (if multiple themes exist)
 
 ### Production Completeness
 
-- [ ] All 17 YAML facet files populated (not just the required 4)
+- [ ] All relevant YAML facet files populated (not just the required ones)
 - [ ] Brand identity fields filled in branding.yaml (intent, perception, audience, tone, keywords)
 - [ ] Intro hero configured with project-specific title, subtitle, color bar, meta cards
-- [ ] Logo HTML in branding.yaml renders correctly
-- [ ] Custom CSS snippets added for project-specific components
+- [ ] Logo renders correctly
+- [ ] Custom CSS snippets added for project-specific components (each with a valid `target-section`)
 - [ ] Semantic classes configured for project states (danger, success, warning, info)
-- [ ] Page layouts defined for project content types (standard, article, dashboard, etc.)
-- [ ] Shell layouts defined for project navigation patterns
+- [ ] Page + shell layouts defined for project content/navigation patterns
 
 ---
 
-## 7. YAML Facet Reference (Quick)
+## 8. YAML Facet Reference (Quick)
 
 All files live in the theme directory (`theme-{slug}/`). For full schema details, see [engine-styleguide.md](engine-styleguide.md) §6 and engine `docs/arch/yaml-configuration.md`.
 
 | File | Top-Level Key | Purpose | Required? |
 |---|---|---|---|
-| `style-guide.meta.yaml` | `name`, `slug`, `title`, `description` | Theme identity | **Yes** |
-| `style-guide.vars.yaml` | `vars.groups[]` | CSS custom properties (seed values → cascade) | **Yes** |
-| `branding.yaml` | (standalone) | Brand identity, logo, intro hero | **Yes** |
-| `style-guide.color-modes.yaml` | `color-modes.light`, `color-modes.dark` | Semantic surface/text/border overrides per mode | **Yes** |
+| `style-guide.meta.yaml` | `name`, `slug`, `title`, `description`, `base-theme` | Theme identity + inheritance | **Yes** (`name`, `slug`) |
+| `style-guide.vars.yaml` | `vars.groups[]` | CSS custom properties (seed values → cascade) | **Yes** (non-empty) |
+| `branding.yaml` | (standalone) | Brand identity, logo, intro hero | Recommended |
+| `style-guide.color-modes.yaml` | `color-modes.light`, `color-modes.dark` | Semantic surface/text/border overrides per mode | Recommended |
 | `style-guide.color-palette.yaml` | `color-palette[]` | Color groups for the palette viewer | No |
 | `style-guide.typography.yaml` | `typography[]`, `typography-classes[]` | Font declarations and type scale | No |
 | `style-guide.spacing.yaml` | `spacing-contexts` | Grid, container, rhythm settings | No |
 | `style-guide.page-layouts.yaml` | `page-layouts[]` | Content width presets with chrome | No |
 | `style-guide.shell-layouts.yaml` | `shell-layouts[]` | Page shell wireframes (navbar/sidebar/footer) | No |
 | `style-guide.css-snippets.yaml` | `css-snippets[]` | Custom CSS rules (accumulated with base) | No |
-| `style-guide.scoped-vars.yaml` | `scoped-vars[]` | Selector-scoped vars (accumulated with base) | No |
+| `style-guide.jsx-snippets.yaml` | `jsx-snippets[]` | Custom JSX demos (accumulated with base) | No |
+| `style-guide.scoped-vars.yaml` | `scoped-vars` | Selector-scoped vars (accumulated with base) | No |
 | `style-guide.semantic-classes.yaml` | `semantic-classes[]` | Contextual modifier classes (danger, success, etc.) | No |
 | `style-guide.semantic-groups.yaml` | `semantic-groups[]` | Groupings for semantic classes | No |
 | `style-guide.globals.yaml` | `globals` | Raw CSS injected last (resets, base elements) | No |
@@ -423,7 +487,7 @@ All files live in the theme directory (`theme-{slug}/`). For full schema details
 
 ### Merge Behavior
 
-Most files **replace** the base theme's equivalent when present. These 5 keys **accumulate** (entries from both theme and base are merged):
+Most files **replace** the base theme's equivalent when present. These keys **accumulate** (entries from both theme and base are merged):
 
 - `css-snippets`
 - `jsx-snippets`
@@ -433,22 +497,26 @@ Most files **replace** the base theme's equivalent when present. These 5 keys **
 
 ---
 
-## 8. Common Pitfalls
+## 9. Common Pitfalls
 
 | Problem | Cause | Fix |
 |---|---|---|
+| **No centered content / generic styling / missing sections** | Hand-authored or incomplete base theme; base theme absent | Let the launcher copy the canonical `theme-style-guide` (§2.2); set `base-theme: "theme-style-guide"` and override only deltas |
+| **Page renders unstyled** | `vars.groups` missing or empty (a hard error) | Add at least one var group with real seed tokens (§2.3); check console for `✗ vars:` |
 | Theme not appearing in picker | Directory doesn't start with `theme-` or missing `style-guide.meta.yaml` | Rename directory, add meta.yaml |
 | CSS not scoped correctly | Slug mismatch between meta.yaml and directory name | Ensure `theme-foo/` has `slug: foo` |
-| Fonts not loading | `font-url` in branding.yaml doesn't match font families in vars.yaml | Verify Google Fonts URL includes all declared weights |
-| Dark mode looks identical to light | Color modes not defined or both set to same values | Populate `style-guide.color-modes.yaml` with distinct light/dark values |
+| `... targets section 'X' which is not defined in page-sections` | Snippet `target-section` doesn't exist | Add the section id to `page-sections`, or fix the snippet (§2.4) |
+| Warnings ignored | Not reading console / the in-viewer alert card | Treat every `✗`/`⚠` as a punch-list item (§2.4) |
+| Fonts not loading | `font-url` in branding.yaml doesn't match font families in vars.yaml | Verify the Google Fonts URL includes all declared weights |
+| Dark mode looks identical to light | Color modes not defined or both set to same values | Populate `color-modes` with distinct light/dark values |
 | Components look generic | Only seed vars defined, no component overrides | Add component-level vars (card-\*, btn-\*, etc.) to vars.yaml |
-| `serve-project.sh` fails | No `design/theme/` directory or no `theme-*` subdirs | Create the expected directory structure |
-| CSS snippets not scoped | Snippet body missing `html[data-design-theme="slug"]` prefix | Snippets are emitted verbatim — you must self-scope |
-| `npm run regen` fails | npm not configured for Verdaccio registry | Ensure `.npmrc` points to `npm.noizu.com` for `@noizu` scope |
+| Stale viewer after upgrading the package | Cached viewer app out of date | Re-run with `npx @noizu/styleguide serve <dir> --clean` |
+| `serve-project.sh` fails | No `design/theme/` directory or no `theme-*` subdirs | Create the expected structure (or just use the npx launcher) |
+| `npm run regen` fails | npm not configured for Verdaccio registry | Ensure `.npmrc` points to `npm.noizu.com` for the `@noizu` scope |
 
 ---
 
-## 9. Recommended Order of Operations
+## 10. Recommended Order of Operations
 
 For a new project in the incubator:
 
@@ -466,22 +534,24 @@ For a new project in the incubator:
 4. Extract YAML from selected direction
    └── engine-styleguide.md §5-6 → section-to-YAML mapping
 
-5. Create theme directory
-   └── Workflow A: projects/{domain}/design/theme/theme-{slug}/
-   └── Workflow B: projects/{domain}/app/frontend/src/config/theme-{slug}/
+5. Create the theme directory + custom theme
+   └── projects/{domain}/design/theme/theme-{slug}/
+   └── Set base-theme: "theme-style-guide"; do NOT hand-author the base (§2.2)
 
-6. Populate required files first
-   └── meta.yaml → vars.yaml → branding.yaml → color-modes.yaml
+6. Populate required fields first
+   └── meta (name, slug) → vars.groups → branding → color-modes (§2.3)
 
-7. Regenerate and preview
-   └── Workflow A: ./serve-project.sh {domain}
-   └── Workflow B: npm run regen && npm run dev
+7. Preview with the npx launcher (default)
+   └── npx @noizu/styleguide serve ./design/theme/
+   └── (Workflow B/C: ./serve-project.sh {domain}  or  npm run regen && npm run dev)
 
-8. Iterate on optional facets
-   └── typography, spacing, snippets, semantic classes, etc.
+8. Clear the validation punch list
+   └── Resolve every ✗, then every ⚠, in the console + in-viewer alert card (§2.4)
 
-9. Validate
-   └── §6 checklist above
+9. Iterate on optional facets
+   └── typography, spacing, snippets, semantic classes, layouts, etc.
+
+10. Validate against the §7 checklist
 ```
 
 ---

@@ -149,21 +149,27 @@ Backward-compatible catch-alls (`./components`, `./viewer`) still work but pull 
 
 > For the full component reference with every export listed, see [outputs/engine-styleguide.md](references/outputs/engine-styleguide.md) §10.
 
-### CLI: `styleguide-serve`
+### CLI: `styleguide-serve` (preferred way to render a style guide)
 
-Preview theme YAML in the interactive viewer without setting up a full project:
+**Default to the npx launcher.** It needs no cloned engine and no scaffolded app — point it at a theme directory and it caches a viewer, symlinks your themes, generates CSS, and starts the dev server:
 
 ```bash
-# Via npx (no install required)
-npx @noizu/styleguide serve ./path/to/themes/
+# Via npx (no install required — pulls the latest published package)
+npx @noizu/styleguide serve ./design/theme/
 
-# With custom port
-styleguide-serve ./path/to/themes/ --port 3001
+# Custom port; --clean rebuilds a stale viewer cache (e.g. after a package upgrade)
+npx @noizu/styleguide serve ./design/theme/ --port 3001 --clean
 ```
 
-The theme directory must contain `theme-*` subdirectories, each with `style-guide.meta.yaml` at minimum. The base theme (`theme-style-guide`) is auto-included if not present. First run installs dependencies (~20s); subsequent runs start in ~3s.
+The theme directory must contain `theme-*` subdirectories, each with `style-guide.meta.yaml`. First run installs dependencies (~20s); subsequent runs start in ~3s. Prefer this over `./serve-project.sh {domain}` (which requires the cloned engine) and over scaffolding a full app — use those only when the style guide must live inside a project's own Next.js frontend.
 
-**For project-integrated previews**, use `./serve-project.sh {domain}` from the repo root — it symlinks project themes into the engine and starts the dev server.
+#### Improperly set up themes are the most common failure — guard against it
+
+1. **Don't hand-author the base theme.** The launcher copies the canonical, complete `theme-style-guide` (the correct base, shipped in the package) into your config dir automatically. Each custom theme sets `base-theme: "theme-style-guide"` and overrides **only the facets that differ** — everything else inherits. A hand-rolled/partial base is the #1 cause of broken renders (no centered content, missing sections, generic styling). To inspect the canonical base, copy it from `node_modules/@noizu/styleguide/dist/engine-src/config/theme-style-guide/`.
+2. **Fill the required fields, or it won't render:** `name` + `slug` in `style-guide.meta.yaml` (slug must match the dir suffix), and a non-empty `vars.groups` in `style-guide.vars.yaml`. Strongly recommended: `branding.yaml`, `color-modes` (light + dark), `semantic-classes`, `page-layouts` (these inherit from base if omitted but should be set for production).
+3. **Read the validation output.** Both CSS generation (console) and the running viewer (a static **alert card** at the top of the page) report problems as `✗ [slug] section: msg` (red = error, breaks rendering) and `⚠ [slug] section: msg` (amber = warning, degrades it). Treat them as a punch list: resolve every `✗`, then every `⚠`. The most common warning is a css/jsx snippet whose `target-section` isn't defined in `page-sections` — add the section id or fix the snippet.
+
+See [outputs/styleguide-setup-guide.md](references/outputs/styleguide-setup-guide.md) §2 for the full launcher workflow, required-fields table, and warning reference.
 
 ## Component & Pattern Library
 
@@ -355,7 +361,7 @@ Quick preview: `npx @noizu/styleguide serve ./design/theme/`
 2. `cd projects/<domain>/app && make init`
 3. Generate product management artifacts: personas → stories → screens → components (see [outputs/product-management-artifacts.md](references/outputs/product-management-artifacts.md))
 4. Set up themes in `frontend/src/config/` → `make regen`
-5. Preview with `./serve-project.sh <domain>` (from repo root)
+5. Preview with `npx @noizu/styleguide serve ./design/theme/` (preferred; or `./serve-project.sh <domain>` if the engine is cloned)
 6. `make build && make run` for full Docker stack
 7. See [outputs/project-scaffold.md](references/outputs/project-scaffold.md) for full details (includes agent runbook)
 
