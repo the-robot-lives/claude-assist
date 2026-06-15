@@ -10,8 +10,33 @@ APP_BIN="$APP_MACOS/queue-populator"
 PLIST_DST="$HOME/Library/LaunchAgents/com.noizu.queue-populator.plist"
 DOMAIN="gui/$UID"
 
+if pgrep -f "[q]ueue-populator" >/dev/null 2>&1; then
+    echo "Queue Populator is currently running."
+    printf "Stop it and continue with install? [y/N] "
+    read -r answer
+    case "$answer" in
+        [yY]|[yY][eE][sS])
+            pkill -f "queue-populator" 2>/dev/null || true
+            sleep 1
+            echo "Process stopped."
+            ;;
+        *)
+            echo "Install cancelled. Stop Queue Populator first, then re-run."
+            exit 0
+            ;;
+    esac
+fi
+
 echo "Building queue-populator..."
 cd "$SCRIPT_DIR"
+
+BUILD_TS="$(date -u '+%Y-%m-%d %H:%M:%S UTC')"
+cat > Sources/Config/BuildInfo.swift <<SWIFT
+enum BuildInfo {
+    static let timestamp = "$BUILD_TS"
+}
+SWIFT
+
 swift build -c release
 
 BINARY="$(swift build -c release --show-bin-path)/queue-populator"

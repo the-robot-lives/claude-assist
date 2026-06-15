@@ -602,15 +602,37 @@ final class Coordinator: SpeechEngineDelegate {
     }
 
     private func showConfig() {
-        log("queue-populator: show config requested")
+        DebugLog.log("[CONFIG] showConfig() entered")
+        DebugLog.log("[CONFIG] current: provider=\(config.llm.provider) model=\(config.llm.effectiveModel) apiKey=\(config.llm.apiKey == nil ? "nil" : "\(config.llm.apiKey!.count)chars") alias=\(config.llm.apiKeyAlias ?? "nil")")
         defer { transcriptWindow.show() }
-        guard let updated = showConfigDialog(config: config) else { return }
-        saveConfig(updated)
+        DebugLog.log("[CONFIG] opening dialog...")
+        guard let updated = showConfigDialog(config: config) else {
+            DebugLog.log("[CONFIG] dialog cancelled")
+            return
+        }
+        DebugLog.log("[CONFIG] dialog OK: provider=\(updated.llm.provider) model=\(updated.llm.model ?? "nil") apiKey=\(updated.llm.apiKey == nil ? "nil" : "\(updated.llm.apiKey!.count)chars") alias=\(updated.llm.apiKeyAlias ?? "nil")")
+        DebugLog.log("[CONFIG] queueBasePath=\(updated.queueBasePath)")
+        DebugLog.log("[CONFIG] calling saveConfig...")
+        do {
+            try saveConfig(updated)
+            DebugLog.log("[CONFIG] saveConfig succeeded")
+        } catch {
+            let msg = "Config save failed: \(error.localizedDescription)"
+            DebugLog.log("[CONFIG] saveConfig FAILED: \(error)")
+            overlay.show(message: "Save failed — check permissions", icon: "✗")
+            transcriptWindow.appendEvent(msg)
+            let alert = NSAlert()
+            alert.messageText = "Configuration Save Failed"
+            alert.informativeText = error.localizedDescription
+            alert.alertStyle = .warning
+            alert.addButton(withTitle: "OK")
+            alert.runModal()
+            return
+        }
         applyConfig(updated)
         overlay.show(message: "Configuration saved", icon: "✓")
         transcriptWindow.appendEvent("Configuration saved")
-        log("━━━ CONFIG UPDATED ━━━")
-        log("  llm: \(config.llm.provider) / \(config.llm.effectiveModel)")
+        DebugLog.log("[CONFIG] done: provider=\(config.llm.provider) model=\(config.llm.effectiveModel)")
     }
 
     private func applyConfig(_ updated: QueuePopulatorConfig) {

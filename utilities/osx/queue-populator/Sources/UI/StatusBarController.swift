@@ -76,6 +76,23 @@ final class StatusBarController {
         showTranscriptItem.target = self
         windowMenu.addItem(showTranscriptItem)
 
+        let editItem = NSMenuItem()
+        mainMenu.addItem(editItem)
+        let editMenu = NSMenu(title: "Edit")
+        editMenu.addItem(withTitle: "Cut", action: #selector(NSText.cut(_:)), keyEquivalent: "x")
+        editMenu.addItem(withTitle: "Copy", action: #selector(NSText.copy(_:)), keyEquivalent: "c")
+        editMenu.addItem(withTitle: "Paste", action: #selector(NSText.paste(_:)), keyEquivalent: "v")
+        editMenu.addItem(withTitle: "Select All", action: #selector(NSText.selectAll(_:)), keyEquivalent: "a")
+        editItem.submenu = editMenu
+
+        let helpItem = NSMenuItem()
+        mainMenu.addItem(helpItem)
+        let helpMenu = NSMenu(title: "Help")
+        let buildItem = NSMenuItem(title: "Build: \(BuildInfo.timestamp)", action: nil, keyEquivalent: "")
+        buildItem.isEnabled = false
+        helpMenu.addItem(buildItem)
+        helpItem.submenu = helpMenu
+
         NSApplication.shared.mainMenu = mainMenu
         NSApplication.shared.windowsMenu = windowMenu
     }

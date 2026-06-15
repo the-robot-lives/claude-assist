@@ -4,6 +4,7 @@ struct LlmConfig: Codable, Sendable {
     var provider: String = "anthropic"
     var model: String?
     var apiKey: String?
+    var apiKeyAlias: String?
     var baseUrl: String?
     var apiType: String?
 
@@ -32,8 +33,19 @@ struct LlmConfig: Codable, Sendable {
     ]
 
     static let defaultBaseUrls: [String: String] = [
+        "anthropic": "https://api.anthropic.com/v1",
+        "openai": "https://api.openai.com/v1",
+        "groq": "https://api.groq.com/openai/v1",
+        "cerebras": "https://api.cerebras.ai/v1",
+        "deepseek": "https://api.deepseek.com/v1",
+        "zai": "https://api.z.ai/api/paas/v4",
         "ollama": "http://localhost:11434",
         "litellm": "https://inference.noizu.com/v1",
+    ]
+
+    static let envVarFallbacks: [String: [String]] = [
+        "zai": ["ZAI_API_KEY", "ZHIPU_API_KEY"],
+        "litellm": ["LITELLM_API_KEY", "OPENAI_API_KEY"],
     ]
 
     static let needsApiKey: Set<String> = ["anthropic", "openai", "groq", "cerebras", "deepseek", "zai", "litellm", "custom"]
@@ -44,12 +56,22 @@ struct LlmConfig: Codable, Sendable {
     }
 
     var effectiveApiKey: String? {
-        if let key = apiKey, !key.isEmpty { return key }
-        if let envVar = LlmConfig.envVarKeys[provider] {
-            if let val = ProcessInfo.processInfo.environment[envVar], !val.isEmpty { return val }
+        if let key = apiKey, !key.isEmpty {
+            if key.lowercased().hasPrefix("env:") {
+                let varName = String(key.dropFirst(4)).trimmingCharacters(in: .whitespaces)
+                return EnvResolver.resolve(varName)
+            }
+            if SecretStore.isEncrypted(key) {
+                return SecretStore.decrypt(key)
+            }
+            return key
         }
-        if provider == "litellm" {
-            return ProcessInfo.processInfo.environment["OPENAI_API_KEY"]
+        if let fallbacks = LlmConfig.envVarFallbacks[provider] {
+            for varName in fallbacks {
+                if let val = EnvResolver.resolve(varName) { return val }
+            }
+        } else if let envVar = LlmConfig.envVarKeys[provider] {
+            if let val = EnvResolver.resolve(envVar) { return val }
         }
         return nil
     }

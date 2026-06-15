@@ -2,6 +2,48 @@ import AppKit
 import AVFoundation
 
 @MainActor
+private final class TextChangeDelegate: NSObject, NSTextFieldDelegate {
+    let onChange: () -> Void
+    init(onChange: @escaping () -> Void) { self.onChange = onChange }
+    func controlTextDidChange(_ obj: Notification) { onChange() }
+}
+
+@MainActor
+private final class _TextViewShim {
+    let textView: NSTextView
+    nonisolated(unsafe) var observer: NSObjectProtocol?
+
+    init(textView: NSTextView) { self.textView = textView }
+
+    var stringValue: String {
+        get { textView.string }
+        set { textView.string = newValue }
+    }
+
+    func setChangeDelegate(_ d: TextChangeDelegate) {
+        let callback = d.onChange
+        observer = NotificationCenter.default.addObserver(
+            forName: NSText.didChangeNotification,
+            object: textView,
+            queue: .main
+        ) { _ in callback() }
+    }
+}
+
+extension NSTextView {
+    func setPlaceholder(_ text: String) {
+        // NSTextView placeholder via attributed string when empty
+        if string.isEmpty && !text.isEmpty {
+            let attrs: [NSAttributedString.Key: Any] = [
+                .foregroundColor: NSColor.placeholderTextColor,
+                .font: font ?? NSFont.systemFont(ofSize: 12),
+            ]
+            textStorage?.setAttributedString(NSAttributedString(string: text, attributes: attrs))
+        }
+    }
+}
+
+@MainActor
 private final class ModalCloseDelegate: NSObject, NSWindowDelegate {
     private let close: () -> Void
 
@@ -21,7 +63,7 @@ func showConfigDialog(config: QueuePopulatorConfig) -> QueuePopulatorConfig? {
     fputs("queue-populator: config dialog opening\n", stderr)
 
     let panel = NSPanel(
-        contentRect: NSRect(x: 0, y: 0, width: 480, height: 612),
+        contentRect: NSRect(x: 0, y: 0, width: 480, height: 680),
         styleMask: [.titled, .closable],
         backing: .buffered,
         defer: false
@@ -38,7 +80,7 @@ func showConfigDialog(config: QueuePopulatorConfig) -> QueuePopulatorConfig? {
     let fieldWidth: CGFloat = 330
     let rowHeight: CGFloat = 32
     let sectionGap: CGFloat = 12
-    var y: CGFloat = 577
+    var y: CGFloat = 645
     let audioDevices = AVCaptureDevice.DiscoverySession(
         deviceTypes: [.microphone, .external],
         mediaType: .audio,
@@ -120,8 +162,135 @@ func showConfigDialog(config: QueuePopulatorConfig) -> QueuePopulatorConfig? {
     contentView.addSubview(providerPopup)
     y -= rowHeight
 
-    let apiKeyField = addRow(label: "API Key:", value: config.llm.apiKey ?? "", placeholder: "env: ANTHROPIC_API_KEY")
-    let baseUrlField = addRow(label: "Base URL:", value: config.llm.baseUrl ?? "", placeholder: "https://api.example.com/v1")
+    let hasEncryptedKey = config.llm.apiKey.map { SecretStore.isEncrypted($0) } ?? false
+    let apiKeyDisplayValue: String
+    if hasEncryptedKey {
+        apiKeyDisplayValue = ""
+    } else {
+        apiKeyDisplayValue = config.llm.apiKey ?? ""
+    }
+
+    let apiKeyLabel = makeLabel("API Key:")
+    apiKeyLabel.frame = NSRect(x: 12, y: y - 60 + 6, width: 100, height: 20)
+    contentView.addSubview(apiKeyLabel)
+
+    let apiKeyScrollHeight: CGFloat = 56
+    let apiKeyScroll = NSScrollView(frame: NSRect(x: fieldX, y: y - apiKeyScrollHeight, width: fieldWidth, height: apiKeyScrollHeight))
+    apiKeyScroll.hasVerticalScroller = true
+    apiKeyScroll.borderType = .bezelBorder
+    let apiKeyTextView = NSTextView(frame: NSRect(x: 0, y: 0, width: fieldWidth - 16, height: apiKeyScrollHeight))
+    apiKeyTextView.isRichText = false
+    apiKeyTextView.font = NSFont.monospacedSystemFont(ofSize: 12, weight: .regular)
+    apiKeyTextView.string = apiKeyDisplayValue
+    apiKeyTextView.isVerticallyResizable = true
+    apiKeyTextView.isHorizontallyResizable = false
+    apiKeyTextView.textContainer?.widthTracksTextView = true
+    apiKeyTextView.textContainer?.containerSize = NSSize(width: fieldWidth - 16, height: .greatestFiniteMagnitude)
+    apiKeyScroll.documentView = apiKeyTextView
+    contentView.addSubview(apiKeyScroll)
+    y -= apiKeyScrollHeight + 4
+
+    // Shim so the rest of the code can read .stringValue like an NSTextField
+    let apiKeyField = _TextViewShim(textView: apiKeyTextView)
+
+    let aliasLabel = NSTextField(labelWithString: "")
+    aliasLabel.frame = NSRect(x: fieldX, y: y - 16, width: fieldWidth, height: 14)
+    aliasLabel.font = NSFont.systemFont(ofSize: 11)
+    aliasLabel.textColor = .systemGreen
+    if hasEncryptedKey, let alias = config.llm.apiKeyAlias {
+        aliasLabel.stringValue = "🔑 \(alias) (encrypted) — enter new key to replace"
+    }
+    contentView.addSubview(aliasLabel)
+    y -= (hasEncryptedKey ? 18 : 0)
+
+    let envHintButton = NSButton(frame: NSRect(x: fieldX, y: y - 18, width: fieldWidth, height: 16))
+    envHintButton.isBordered = false
+    envHintButton.setButtonType(.momentaryLight)
+    envHintButton.alignment = .left
+    envHintButton.font = NSFont.systemFont(ofSize: 11)
+    envHintButton.title = ""
+    contentView.addSubview(envHintButton)
+
+    func resolveEnvCandidates(_ prov: String) -> (varName: String, value: String)? {
+        let candidates = LlmConfig.envVarFallbacks[prov]
+            ?? LlmConfig.envVarKeys[prov].map { [$0] }
+            ?? []
+        for varName in candidates {
+            if let val = EnvResolver.resolve(varName) { return (varName, val) }
+        }
+        return nil
+    }
+
+    func updateEnvHint() {
+        let prov = providerPopup.titleOfSelectedItem ?? "anthropic"
+        let fieldText = apiKeyField.stringValue.trimmingCharacters(in: .whitespaces)
+
+        if fieldText.lowercased().hasPrefix("env:") {
+            let varName = String(fieldText.dropFirst(4)).trimmingCharacters(in: .whitespaces)
+            if let val = EnvResolver.resolve(varName) {
+                let last4 = String(val.suffix(4))
+                envHintButton.title = "\u{2705} \(varName) resolved (…\(last4)) — click to fill"
+                envHintButton.contentTintColor = .systemGreen
+            } else {
+                envHintButton.title = "\u{274C} \(varName) not found in environment"
+                envHintButton.contentTintColor = .systemRed
+            }
+            return
+        }
+
+        if !fieldText.isEmpty {
+            envHintButton.title = ""
+            return
+        }
+
+        if hasEncryptedKey && fieldText.isEmpty {
+            envHintButton.title = ""
+            return
+        }
+
+        let candidates = LlmConfig.envVarFallbacks[prov]
+            ?? LlmConfig.envVarKeys[prov].map { [$0] }
+            ?? []
+        if candidates.isEmpty {
+            envHintButton.title = ""
+            return
+        }
+        if let found = resolveEnvCandidates(prov) {
+            let last4 = String(found.value.suffix(4))
+            envHintButton.title = "\u{2705} \(found.varName) available (…\(last4)) — click to use"
+            envHintButton.contentTintColor = .systemGreen
+        } else {
+            let names = candidates.joined(separator: " / ")
+            envHintButton.title = "\u{274C} \(names) not set"
+            envHintButton.contentTintColor = .systemRed
+        }
+    }
+    updateEnvHint()
+
+    let apiKeyDelegate = TextChangeDelegate(onChange: { updateEnvHint() })
+    apiKeyField.setChangeDelegate(apiKeyDelegate)
+
+    let envHintTarget = BlockTarget {
+        let prov = providerPopup.titleOfSelectedItem ?? "anthropic"
+        let fieldText = apiKeyField.stringValue.trimmingCharacters(in: .whitespaces)
+        if fieldText.lowercased().hasPrefix("env:") {
+            let varName = String(fieldText.dropFirst(4)).trimmingCharacters(in: .whitespaces)
+            if let val = EnvResolver.resolve(varName) {
+                apiKeyField.stringValue = val
+                updateEnvHint()
+            }
+            return
+        }
+        if let found = resolveEnvCandidates(prov) {
+            apiKeyField.stringValue = found.value
+            updateEnvHint()
+        }
+    }
+    envHintButton.target = envHintTarget
+    envHintButton.action = #selector(BlockTarget.invoke)
+    y -= 20
+
+    let baseUrlField = addRow(label: "Base URL:", value: config.llm.baseUrl ?? "", placeholder: LlmConfig.defaultBaseUrls[config.llm.provider] ?? "https://api.example.com/v1")
 
     let modelLabel = makeLabel("Model:")
     modelLabel.frame = NSRect(x: 12, y: y - rowHeight + 6, width: 100, height: 20)
@@ -149,11 +318,43 @@ func showConfigDialog(config: QueuePopulatorConfig) -> QueuePopulatorConfig? {
     statusLabel.textColor = .secondaryLabelColor
     contentView.addSubview(statusLabel)
 
+    let providerChangeTarget = BlockTarget {
+        let prov = providerPopup.titleOfSelectedItem ?? "anthropic"
+        updateEnvHint()
+
+        baseUrlField.stringValue = ""
+        if let placeholder = LlmConfig.defaultBaseUrls[prov] {
+            baseUrlField.placeholderString = placeholder
+        } else {
+            baseUrlField.placeholderString = "https://api.example.com/v1"
+        }
+
+        let primaryEnvVar = LlmConfig.envVarFallbacks[prov]?.first
+            ?? LlmConfig.envVarKeys[prov]
+        if let envVar = primaryEnvVar {
+            apiKeyField.textView.setPlaceholder("env: \(envVar)")
+        } else {
+            apiKeyField.textView.setPlaceholder("")
+        }
+
+        modelPopup.removeAllItems()
+        modelPopup.addItem(withTitle: LlmConfig.defaultModels[prov] ?? "—")
+    }
+    providerPopup.target = providerChangeTarget
+    providerPopup.action = #selector(BlockTarget.invoke)
+
     func currentLlmConfig() -> LlmConfig {
         var llm = LlmConfig()
         llm.provider = providerPopup.titleOfSelectedItem ?? "anthropic"
         let apiKey = apiKeyField.stringValue.trimmingCharacters(in: .whitespaces)
-        llm.apiKey = apiKey.isEmpty ? nil : apiKey
+        if apiKey.isEmpty && hasEncryptedKey {
+            // User didn't enter a new key — keep existing encrypted key
+            llm.apiKey = config.llm.apiKey
+            llm.apiKeyAlias = config.llm.apiKeyAlias
+        } else {
+            llm.apiKey = apiKey.isEmpty ? nil : apiKey
+            llm.apiKeyAlias = nil
+        }
         let baseUrl = baseUrlField.stringValue.trimmingCharacters(in: .whitespaces)
         llm.baseUrl = baseUrl.isEmpty ? nil : baseUrl
         llm.model = modelPopup.titleOfSelectedItem
@@ -168,7 +369,7 @@ func showConfigDialog(config: QueuePopulatorConfig) -> QueuePopulatorConfig? {
 
         let effectiveKey: String? = key.isEmpty ? {
             if let envVar = LlmConfig.envVarKeys[prov] {
-                return ProcessInfo.processInfo.environment[envVar]
+                return EnvResolver.resolve(envVar)
             }
             return nil
         }() : key
@@ -245,10 +446,12 @@ func showConfigDialog(config: QueuePopulatorConfig) -> QueuePopulatorConfig? {
     contentView.addSubview(cancelButton)
 
     let saveTarget = BlockTarget {
+        DebugLog.log("[DIALOG] Save button pressed")
         panel.orderOut(nil)
         app.stopModal(withCode: .OK)
     }
     let cancelTarget = BlockTarget {
+        DebugLog.log("[DIALOG] Cancel button pressed")
         panel.orderOut(nil)
         app.stopModal(withCode: .cancel)
     }
@@ -264,13 +467,14 @@ func showConfigDialog(config: QueuePopulatorConfig) -> QueuePopulatorConfig? {
 
     panel.center()
     showInteractiveWindow(panel)
+    DebugLog.log("[DIALOG] running modal...")
     let response = app.runModal(for: panel)
+    DebugLog.log("[DIALOG] modal returned: \(response.rawValue)")
     panel.orderOut(nil)
     panel.delegate = nil
     panel.close()
-    fputs("queue-populator: config dialog closed response=\(response.rawValue)\n", stderr)
 
-    _ = (fetchTarget, testTarget, saveTarget, cancelTarget, closeDelegate)
+    _ = (fetchTarget, testTarget, saveTarget, cancelTarget, closeDelegate, providerChangeTarget, envHintTarget, apiKeyDelegate, apiKeyField)
 
     guard response == .OK else { return nil }
 

@@ -41,6 +41,8 @@ func printUsage() {
 
     Configuration is stored at ~/.config/queue-populator/config.json
     Queue files are written to ~/personal-development/queue/
+
+    Build: \(BuildInfo.timestamp)
     """
     fputs(usage, stderr)
 }

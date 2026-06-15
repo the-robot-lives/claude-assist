@@ -83,7 +83,9 @@ actor LlmClient {
     }
 
     private func sendAnthropic(system: String, user: String, apiKey: String) async throws -> String {
-        let url = URL(string: "https://api.anthropic.com/v1/messages")!
+        let baseUrl = config.effectiveBaseUrl ?? "https://api.anthropic.com/v1"
+        let endpoint = baseUrl.hasSuffix("/") ? baseUrl + "messages" : baseUrl + "/messages"
+        let url = URL(string: endpoint)!
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.timeoutInterval = timeoutSeconds
