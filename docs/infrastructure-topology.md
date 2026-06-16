@@ -40,7 +40,7 @@ flowchart TB
     end
 
     subgraph "apps-ns"
-        Apps["40+ App Pods\n(Docmost, Taiga, Plane,\nGhost, N8N, Nextcloud,\nPortfolio sites, etc.)"]
+        Apps["Portfolio Apps\n(codefre.sh, aifighter,\ntherobotknows, etc.)"]
     end
 
     subgraph "creative-ns"
@@ -80,7 +80,7 @@ flowchart LR
 
     subgraph "Tier 1 — Data & Observability"
         direction TB
-        T1D["PostgreSQL\nValkey\nClickHouse\nZooKeeper\nMySQL\nMongoDB"]
+        T1D["infra-postgres + infra-valkey\nClickHouse + ZooKeeper\nplatform-postgres + platform-valkey\napp-postgres + app-valkey"]
         T1O["SigNoz\nOTel Collector\nPhoenix\nPostHog\nMetabase\nOneUptime"]
     end
 
@@ -89,7 +89,7 @@ flowchart LR
     end
 
     subgraph "Tier 3 — Core Apps"
-        T3["40+ applications\n(apps-ns)"]
+        T3["Portfolio sites\n(apps-ns)"]
     end
 
     subgraph "Tier 4 — Creative & DevTools"
@@ -109,114 +109,99 @@ flowchart LR
 
 ---
 
-## 3. PostgreSQL Connections
+## 3. PostgreSQL — 3-Tier Split
 
-All applications share a single `infra-timescaledb` instance (TimescaleDB-HA + Apache AGE) in `data-ns` on port 5432. Each app has its own database.
-
-```mermaid
-flowchart LR
-    PG["infra-timescaledb\n(data-ns:5432)\nTimescaleDB-HA + AGE\n20Gi Longhorn"]
-
-    subgraph "infisical"
-        Infisical["Infisical\ndb: infisical"]
-    end
-
-    subgraph "platform-ns"
-        Authentik["Authentik\ndb: authentik"]
-    end
-
-    subgraph "observability-ns"
-        Phoenix["Phoenix\ndb: phoenix"]
-        PostHog_PG["PostHog\ndb: posthog"]
-        Langfuse_O["Langfuse\ndb: langfuse"]
-    end
-
-    subgraph "apps-ns"
-        Docmost["Docmost\ndb: docmost"]
-        Taiga["Taiga\ndb: taiga"]
-        Plane["Plane\ndb: plane"]
-        Ghost["Ghost\ndb: ghost"]
-        N8N["N8N\ndb: n8n"]
-        Nextcloud["Nextcloud\ndb: nextcloud"]
-        Listmonk["Listmonk\ndb: listmonk"]
-        Postiz["Postiz\ndb: postiz"]
-        BottleCRM["BottleCRM\ndb: bottlecrm"]
-        PortfolioApps["Portfolio Apps\n(aifighter, gotta_cc,\niotgo, noizu_site,\njailbreaking, etc.)"]
-    end
-
-    subgraph "creative-ns"
-        Penpot["Penpot\ndb: penpot"]
-        Webstudio["Webstudio\ndb: webstudio"]
-        Mermaid_App["Mermaid\ndb: mermaid"]
-    end
-
-    subgraph "ai-ns"
-        Langfuse_AI["Langfuse\ndb: langfuse"]
-    end
-
-    Infisical --> PG
-    Authentik --> PG
-    Phoenix --> PG
-    PostHog_PG --> PG
-    Docmost & Taiga & Plane --> PG
-    Ghost & N8N & Nextcloud --> PG
-    Listmonk & Postiz & BottleCRM --> PG
-    PortfolioApps --> PG
-    Penpot & Webstudio & Mermaid_App --> PG
-    Langfuse_AI --> PG
-```
-
-Mailu runs a **dedicated PostgreSQL** instance within `mail-ns` — it does not share the infra database.
-
----
-
-## 4. Redis / Valkey Connections
-
-Three distinct Redis-compatible instances serve different consumers.
+Three independent PostgreSQL (TimescaleDB-HA + Apache AGE) instances, one per fixture group.
 
 ```mermaid
 flowchart TB
-    subgraph "data-ns"
-        Valkey["infra-valkey\n(Valkey 8.1-alpine)\nPort 6379 · ACL-enabled\n5Gi Longhorn"]
-        SharedRedis["shared-redis\n(legacy Redis)\nPort 6379"]
+    subgraph "infra ns"
+        InfraPG["infra-postgres\n:5432 · 20Gi\nApps: authentik, infisical,\nphoenix, posthog"]
+    end
+
+    subgraph "platform ns"
+        PlatPG["platform-postgres\n:5432\nApps: bottlecrm, docmost,\nghost, keygen, langfuse,\nlistmonk, mermaid, n8n,\nnextcloud, penpot, plane,\npostiz, taiga, webstudio"]
+    end
+
+    subgraph "apps ns"
+        AppPG["app-postgres\n:5432\nApps: aifighter, codefresh,\nderobotis, gotta_cc, iotgo,\njailbreaking, noizu_site,\nstartapp, therobotknows,\ntherobotlives, therobotplans,\ntobornalp"]
+    end
+
+    subgraph "Infra Services (infra-services)"
+        Authentik["Authentik"] --> InfraPG
+        Infisical["Infisical"] --> InfraPG
+        Phoenix["Phoenix"] --> InfraPG
+        PostHog["PostHog"] --> InfraPG
+    end
+
+    subgraph "Platform Services (platform/*)"
+        Docmost["Docmost"] --> PlatPG
+        Penpot["Penpot"] --> PlatPG
+        Taiga["Taiga"] --> PlatPG
+        Plane["Plane"] --> PlatPG
+        OtherPlat["Ghost, N8N, Langfuse,\nNextcloud, etc."] --> PlatPG
+    end
+
+    subgraph "App Services (apps/init)"
+        AiFighter["AiFighter"] --> AppPG
+        Codefresh["Codefre.sh"] --> AppPG
+        OtherApps["Portfolio sites\n(8 more)"] --> AppPG
+    end
+```
+
+Mailu and accounting run **dedicated** databases within their own namespaces.
+
+### Infisical Secret Paths
+
+| Tier | PostgreSQL Path | Valkey Path | Managed Secret |
+|------|----------------|-------------|----------------|
+| Infra | `/data/postgres` | `/data/valkey` | `postgres-secrets` |
+| Platform | `/platform/postgres` | `/platform/valkey` | `platform-postgres-secrets` |
+| Apps | `/apps/postgres` | `/apps/valkey` | `app-postgres-secrets` |
+
+---
+
+## 4. Valkey — 3-Tier Split
+
+Three Valkey instances provide per-tier caching. No legacy Redis.
+
+```mermaid
+flowchart TB
+    subgraph "infra ns"
+        InfraVK["infra-valkey\nValkey 8.1 · ACL-enabled\n:6379 · 5Gi\nUsers: authentik, infisical, posthog"]
+    end
+
+    subgraph "platform ns"
+        PlatVK["platform-valkey\nValkey 8.1 · password auth\n:6379 · 5Gi"]
+    end
+
+    subgraph "apps ns"
+        AppVK["app-valkey\nValkey 8.1 · password auth\n:6379 · 5Gi"]
     end
 
     subgraph "observability-ns"
-        PostHogRedis["posthog-redis\n(Redis 7-alpine)\nPort 6379 · No password\n5Gi Longhorn"]
+        PostHogRedis["posthog-redis\nRedis 7 · passwordless\n:6379 · 5Gi\n(ioredis ACL limitation)"]
     end
 
-    subgraph "Valkey ACL Users"
-        direction TB
-        VU1["posthog → infra-valkey"]
-        VU2["authentik → infra-valkey"]
-        VU3["infisical → infra-valkey"]
-    end
+    Authentik["Authentik"] -->|"ACL user"| InfraVK
+    Infisical["Infisical"] -->|"ACL user"| InfraVK
+    PostHog_V["PostHog"] -->|"ACL user"| InfraVK
+    PostHog_R["PostHog"] -->|"dedicated"| PostHogRedis
 
-    subgraph "PostHog Redis Consumer"
-        PostHog["PostHog\n(observability-ns)"]
-    end
+    PlatApps["Docmost, Penpot,\nBottleCRM, Excalidraw,\nNextcloud, Plane, etc."] --> PlatVK
 
-    subgraph "Apps using shared-redis"
-        AppRedis["General app caching\n(apps-ns pods referencing\nshared-redis.data-ns)"]
-    end
-
-    Infisical_V["Infisical\n(infisical ns)"] -->|"ACL user: infisical"| Valkey
-    Authentik_V["Authentik\n(platform-ns)"] -->|"ACL user: authentik"| Valkey
-    PostHog_V["PostHog\n(observability-ns)"] -->|"ACL user: posthog"| Valkey
-
-    PostHog -->|"passwordless\n(ioredis ACL limitation)"| PostHogRedis
-
-    AppRedis --> SharedRedis
+    AppApps["AiFighter, Codefre.sh,\nPortfolio sites"] --> AppVK
 ```
 
 ### Summary Table
 
-| Instance | Namespace | Image | Auth | Consumers |
-|----------|-----------|-------|------|-----------|
-| `infra-valkey` | data-ns | valkey/valkey:8.1-alpine | ACL per-user passwords | Infisical, Authentik, PostHog |
-| `shared-redis` | data-ns | redis (legacy) | Password | General app caching (apps-ns) |
-| `posthog-redis` | observability-ns | redis:7-alpine | None (passwordless) | PostHog only |
-| ArgoCD embedded | platform-ns | Built into ArgoCD chart | Internal | ArgoCD state only |
+| Instance | Namespace | Auth | Consumers |
+|----------|-----------|------|-----------|
+| `infra-valkey` | infra | ACL per-user | Infisical, Authentik, PostHog |
+| `platform-valkey` | platform | Password | Platform-tier apps (14 apps) |
+| `app-valkey` | apps | Password | Portfolio sites (12 apps) |
+| `posthog-redis` | observability-ns | None | PostHog only |
+| ArgoCD embedded | platform-ns | Internal | ArgoCD state only |
 
 ---
 
@@ -226,7 +211,7 @@ Two separate ClickHouse instances — shared infra and PostHog-dedicated — eac
 
 ```mermaid
 flowchart TB
-    subgraph "data-ns"
+    subgraph "infra ns"
         CH["infra-clickhouse\nCH 25.5.6\nPorts: 9000/8123/9363\n50Gi data + 10Gi logs"]
         ZK["infra-zookeeper\nZK 3.7.1\nPort 2181\n5Gi"]
     end
@@ -276,37 +261,47 @@ flowchart LR
 
 ## 7. Full Data Layer Summary
 
-End-to-end view of all data services and their consumers.
+End-to-end view of all data services across the 3-tier model.
 
 ```mermaid
 flowchart TB
-    subgraph "data-ns — Shared Data Layer"
-        PG["infra-timescaledb\nPostgreSQL 17 + AGE\n:5432 · 20Gi"]
-        VK["infra-valkey\nValkey 8.1\n:6379 · 5Gi"]
-        SR["shared-redis\nRedis (legacy)\n:6379"]
-        CH["infra-clickhouse\nClickHouse 25.5\n:8123/:9000 · 50Gi"]
-        ZK["infra-zookeeper\nZK 3.7.1\n:2181 · 5Gi"]
-        MinIO_D["MinIO\n(infra ns)\nS3 · 100Gi"]
+    subgraph "infra ns — Infrastructure Data"
+        IPG["infra-postgres\n:5432 · 20Gi"]
+        IVK["infra-valkey\n:6379 · 5Gi · ACL"]
+        CH["infra-clickhouse\n:8123/:9000 · 50Gi"]
+        ZK["infra-zookeeper\n:2181 · 5Gi"]
+        MinIO_D["MinIO · S3 · 100Gi"]
     end
 
-    subgraph "observability-ns — Dedicated PostHog Stack"
-        PHR["posthog-redis\n:6379 · 5Gi"]
-        PHCH["posthog-clickhouse\nCH 22.8 · :8123"]
-        PHZK["posthog-zookeeper\n:2181"]
-        PHK["posthog-kafka\nRedpanda · :9092 · 20Gi"]
+    subgraph "platform ns — Platform Data"
+        PPG["platform-postgres\n:5432"]
+        PVK["platform-valkey\n:6379 · 5Gi"]
+        PMD["platform-mariadb\n:3306"]
+        PMG["platform-mongodb\n:27017"]
+    end
+
+    subgraph "apps ns — App Data"
+        APG["app-postgres\n:5432"]
+        AVK["app-valkey\n:6379 · 5Gi"]
+    end
+
+    subgraph "observability-ns — Dedicated PostHog"
+        PHR["posthog-redis · :6379"]
+        PHCH["posthog-clickhouse · :8123"]
+        PHZK["posthog-zookeeper · :2181"]
+        PHK["posthog-kafka · :9092"]
     end
 
     subgraph "Consumers"
-        Infisical_C["Infisical"] -->|PG + Valkey| PG & VK
-        Authentik_C["Authentik"] -->|PG + Valkey| PG & VK
-        SigNoz_C["SigNoz"] -->|ClickHouse| CH
-        PostHog_C["PostHog"] -->|dedicated stack| PHR & PHCH & PHK
-        PostHog_C -->|Valkey ACL| VK
-        Apps_C["40+ Apps"] -->|PostgreSQL| PG
-        Apps_C -->|"shared-redis"| SR
-        Creative_C["Creative Apps"] -->|PostgreSQL| PG
-        AI_C["AI Services"] -->|PostgreSQL| PG
-        TF_C["Terraform"] -->|S3 state| MinIO_D
+        IC["Infra Services\n(authentik, infisical,\nphoenix, posthog)"] --> IPG & IVK
+        SC["SigNoz"] --> CH
+        PC["PostHog"] --> PHR & PHCH & PHK
+        PC -->|"ACL"| IVK
+        PlatC["Platform Apps\n(14 apps)"] --> PPG & PVK
+        PlatMC["MariaDB Apps\n(espocrm, ghost,\nmatomo, mautic, seonaut)"] --> PMD
+        PlatGC["GrowthBook"] --> PMG
+        AC["Portfolio Apps\n(12 apps)"] --> APG & AVK
+        TFC["Terraform"] --> MinIO_D
     end
 
     CH --- ZK
@@ -334,9 +329,9 @@ flowchart LR
         OneUptime["OneUptime\n(uptime monitoring)"]
     end
 
-    subgraph "data-ns"
+    subgraph "infra ns"
         CH["infra-clickhouse"]
-        PG["infra-timescaledb"]
+        PG["infra-postgres"]
     end
 
     Pods -->|"OTLP"| OTel --> SigNoz --> CH
@@ -360,8 +355,8 @@ flowchart TB
         Authentik["Authentik\nauth.noizu.com\nauth.derobot.is"]
     end
 
-    subgraph "data-ns"
-        PG["infra-timescaledb"]
+    subgraph "infra ns"
+        PG["infra-postgres"]
         VK["infra-valkey"]
     end
 

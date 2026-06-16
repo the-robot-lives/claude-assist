@@ -1,7 +1,7 @@
 # ---------------------------------------------------------------------------
 # Infisical — secrets manager, served at infisical.noizu.com.
 # ---------------------------------------------------------------------------
-# Uses the SHARED data tier (infra module): Postgres on infra-timescaledb and
+# Uses the SHARED data tier (infra module): Postgres on infra-postgres and
 # Redis on infra-valkey — no dedicated DBs. The infisical Postgres role/DB is
 # provisioned by infra (postgres.tf local.pg_app_dbs + files/postgres/initdb.d/)
 # and its password lives in the sealed postgres-secrets. The infisical Valkey ACL

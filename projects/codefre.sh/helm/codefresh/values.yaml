@@ -34,7 +34,7 @@ migrate:
       memory: 256Mi
 
 database:
-  host: app-timescaledb
+  host: app-postgres
   port: 5432
   name: codefresh
 

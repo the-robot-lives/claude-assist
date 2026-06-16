@@ -37,6 +37,7 @@ resource "helm_release" "jailbreakingsite_site" {
           }
         }
       }
+      migrate = { enabled = false }
     })
   ]
 

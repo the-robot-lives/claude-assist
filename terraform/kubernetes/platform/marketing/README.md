@@ -6,7 +6,7 @@
 | mautic   | `mautic/mautic:5-apache` | shared MariaDB + PVC        | mautic.noizu.com   |
 
 ## Data tier (platform/init)
-- listmonk → **platform-timescaledb** (db `listmonk`, `files/postgres/initdb.d/listmonk`)
+- listmonk → **platform-postgres** (db `listmonk`, `files/postgres/initdb.d/listmonk`)
 - mautic → **platform-mariadb** (db `mautic`, `files/mariadb/initdb.d/mautic`)
 
 ## Secrets (`/marketing` → `marketing-app-secrets`)

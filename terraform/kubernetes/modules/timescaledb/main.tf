@@ -18,6 +18,13 @@ locals {
   app_dbs       = [for f in local.app_scripts : upper(dirname(f))]
   app_env_keys  = flatten([for a in local.app_dbs : ["${a}_DB_USER", "${a}_DB_PASSWORD"]])
   app_db_secret = var.app_db_secret_name != "" ? var.app_db_secret_name : var.managed_secret_name
+  use_per_app_secrets = length(var.app_db_secrets_map) > 0
+  app_env_entries = local.use_per_app_secrets ? flatten([
+    for a in local.app_dbs : [
+      { name = "${a}_DB_USER",     secret = lookup(var.app_db_secrets_map, a, local.app_db_secret), key = "${a}_DB_USER" },
+      { name = "${a}_DB_PASSWORD", secret = lookup(var.app_db_secrets_map, a, local.app_db_secret), key = "${a}_DB_PASSWORD" },
+    ]
+  ]) : []
 
   # uuid-ossp + pgcrypto are commonly needed; timescaledb/age are preloaded. The
   # shared lib is "_lib" (no .sh) so the base runner ignores it; per-app scripts
@@ -170,14 +177,28 @@ resource "kubernetes_deployment_v1" "timescaledb" {
           }
 
           # Per-app DB users/passwords consumed by the initdb.d scripts.
+          # When app_db_secrets_map is set each app reads from its own secret;
+          # otherwise all keys come from the single app_db_secret.
           dynamic "env" {
-            for_each = toset(local.app_env_keys)
+            for_each = local.use_per_app_secrets ? [] : toset(local.app_env_keys)
             content {
               name = env.value
               value_from {
                 secret_key_ref {
                   name = local.app_db_secret
                   key  = env.value
+                }
+              }
+            }
+          }
+          dynamic "env" {
+            for_each = local.use_per_app_secrets ? { for e in local.app_env_entries : e.name => e } : {}
+            content {
+              name = env.value.name
+              value_from {
+                secret_key_ref {
+                  name = env.value.secret
+                  key  = env.value.key
                 }
               }
             }

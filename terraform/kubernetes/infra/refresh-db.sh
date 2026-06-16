@@ -41,13 +41,13 @@ echo "Namespace: $NS  |  target: $TARGET  |  wipe: $WIPE"
 
 refresh_postgres() {
   if [[ "$WIPE" == 1 ]]; then
-    echo "==> WIPING Postgres/Timescale data (infra-timescaledb-data)"
-    kubectl -n "$NS" scale deploy/infra-timescaledb --replicas=0
-    kubectl -n "$NS" delete pvc infra-timescaledb-data --ignore-not-found
+    echo "==> WIPING Postgres/Timescale data (infra-postgres-data)"
+    kubectl -n "$NS" scale deploy/infra-postgres --replicas=0
+    kubectl -n "$NS" delete pvc infra-postgres-data --ignore-not-found
     echo "    PVC deleted. Run: terraform -chdir=$HERE apply"
   else
-    echo "==> Re-running init-db.sh on infra-timescaledb (idempotent, keeps data)"
-    kubectl -n "$NS" exec deploy/infra-timescaledb -c timescaledb -- \
+    echo "==> Re-running init-db.sh on infra-postgres (idempotent, keeps data)"
+    kubectl -n "$NS" exec deploy/infra-postgres -c timescaledb -- \
       bash /docker-entrypoint-initdb.d/init-db.sh
   fi
 }

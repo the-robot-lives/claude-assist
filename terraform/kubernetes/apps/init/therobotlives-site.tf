@@ -32,6 +32,10 @@ resource "helm_release" "therobotlives_site" {
           keyKey               = "THEROBOTLIVES_TLS_KEY"
         }
       }
+
+      migrate = {
+        enabled = false
+      }
     })
   ]
 

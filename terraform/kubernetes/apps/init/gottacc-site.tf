@@ -37,6 +37,7 @@ resource "helm_release" "gottacc_site" {
           }
         }
       }
+      migrate = { enabled = false }
     })
   ]
 

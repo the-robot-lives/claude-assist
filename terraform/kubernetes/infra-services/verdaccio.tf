@@ -8,10 +8,6 @@
 #     --dry-run=client -o yaml | kubectl apply -f -
 #   kubectl rollout restart deployment/verdaccio -n infra
 
-import {
-  to = kubernetes_secret_v1.verdaccio_htpasswd
-  id = "infra/verdaccio-htpasswd"
-}
 
 locals {
   verdaccio_host = "npm.noizu.com"

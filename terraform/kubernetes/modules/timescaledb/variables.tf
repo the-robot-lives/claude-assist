@@ -1,5 +1,5 @@
 variable "name" {
-  description = "Workload/service name (e.g. platform-timescaledb)."
+  description = "Workload/service name (e.g. platform-postgres)."
   type        = string
 }
 
@@ -75,9 +75,15 @@ variable "initdb_scripts_dir" {
 }
 
 variable "app_db_secret_name" {
-  description = "Secret holding the per-app <APP>_DB_USER / <APP>_DB_PASSWORD keys. Empty falls back to managed_secret_name."
+  description = "Secret holding the per-app <APP>_DB_USER / <APP>_DB_PASSWORD keys. Empty falls back to managed_secret_name. Ignored when app_db_secrets_map is set."
   type        = string
   default     = ""
+}
+
+variable "app_db_secrets_map" {
+  description = "Map of UPPER(app_dir) to the K8s Secret name holding that app's DB_USER/DB_PASSWORD keys. When set, each app's env vars are sourced from its own secret instead of from a shared one."
+  type        = map(string)
+  default     = {}
 }
 
 # --- Infisical secret management -------------------------------------------

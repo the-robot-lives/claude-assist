@@ -1,6 +1,6 @@
 # ---------------------------------------------------------------------------
 # OneUptime — uptime monitoring + incident management, served at uptime.noizu.com.
-# Uses the shared infra-clickhouse (25.x) and infra-timescaledb (PostgreSQL).
+# Uses the shared infra-clickhouse (25.x) and infra-postgres (PostgreSQL).
 # A local Redis sidecar handles caching.
 # ---------------------------------------------------------------------------
 
@@ -177,13 +177,8 @@ resource "kubernetes_deployment_v1" "oneuptime" {
             value = "default"
           }
           env {
-            name = "REDIS_PASSWORD"
-            value_from {
-              secret_key_ref {
-                name = var.managed_secret_name
-                key  = "ONEUPTIME_REDIS_PASSWORD"
-              }
-            }
+            name  = "REDIS_PASSWORD"
+            value = ""
           }
           env {
             name  = "LOG_LEVEL"

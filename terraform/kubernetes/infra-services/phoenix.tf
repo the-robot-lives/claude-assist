@@ -55,7 +55,7 @@ resource "kubernetes_deployment_v1" "phoenix" {
         init_container {
           name    = "wait-for-postgres"
           image   = "busybox:1.36"
-          command = ["sh", "-c", "until nc -z infra-timescaledb.${local.ns}.svc.cluster.local 5432; do echo 'Waiting for PostgreSQL...'; sleep 5; done"]
+          command = ["sh", "-c", "until nc -z infra-postgres.${local.ns}.svc.cluster.local 5432; do echo 'Waiting for PostgreSQL...'; sleep 5; done"]
         }
         container {
           name  = "phoenix"

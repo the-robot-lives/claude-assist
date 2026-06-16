@@ -37,6 +37,7 @@ resource "helm_release" "therobotknows_site" {
           }
         }
       }
+      migrate = { enabled = false }
     })
   ]
 

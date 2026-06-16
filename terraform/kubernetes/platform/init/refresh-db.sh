@@ -27,7 +27,7 @@ HERE="$(cd "$(dirname "$0")" && pwd)"
 # Platform tier lives in the `platform` namespace (platform/init variables.tf).
 NS="${NS:-platform}"
 
-PG_DEPLOY="platform-timescaledb"
+PG_DEPLOY="platform-postgres"
 VALKEY_DEPLOY="platform-valkey"
 
 WIPE=0

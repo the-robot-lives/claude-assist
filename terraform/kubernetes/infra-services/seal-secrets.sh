@@ -51,7 +51,7 @@ DEROBOT_TLS_DIR="$REPO_ROOT/.secrets/tls/derobot.is"       # *.derobot.is
 # Cluster backup to recover the wildcard cert from.
 BACKUP_DIR="${BACKUP_DIR:-$(ls -d "$HERE"/../cluster-backup-noizu-* 2>/dev/null | sort | tail -1)}"
 
-PG_HOST="infra-timescaledb.${NS}.svc.cluster.local"
+PG_HOST="infra-postgres.${NS}.svc.cluster.local"
 
 rand() { LC_ALL=C tr -dc 'A-Za-z0-9' < /dev/urandom | head -c "$1"; }
 
@@ -233,7 +233,7 @@ seal posthog-secrets \
   --from-literal=POSTHOG_DATABASE_URL="postgresql://${POSTHOG_DB_USER:-posthog}:${POSTHOG_DB_PASSWORD}@${PG_HOST}:5432/posthog" \
   --from-literal=POSTHOG_SECRET_KEY="$POSTHOG_SECRET_KEY"
 
-# Infisical uses the shared infra-timescaledb (DB "infisical"). REDIS_URL is NOT
+# Infisical uses the shared infra-postgres (DB "infisical"). REDIS_URL is NOT
 # sealed here — it's built in Terraform (infisical.tf) from init's valkey password.
 seal infisical-core-secrets \
   --from-literal=ENCRYPTION_KEY="$INFISICAL_ENCRYPTION_KEY" \

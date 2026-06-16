@@ -35,7 +35,7 @@ locals {
 
 resource "kubernetes_persistent_volume_claim_v1" "postgres" {
   metadata {
-    name      = "infra-timescaledb-data"
+    name      = "infra-postgres-data"
     namespace = local.ns
     labels    = merge(local.common_labels, { "app.kubernetes.io/name" = "postgres" })
   }
@@ -55,7 +55,7 @@ resource "kubernetes_persistent_volume_claim_v1" "postgres" {
 
 resource "kubernetes_config_map_v1" "postgres_init" {
   metadata {
-    name      = "infra-timescaledb-init"
+    name      = "infra-postgres-init"
     namespace = local.ns
     labels    = merge(local.common_labels, { "app.kubernetes.io/name" = "postgres" })
   }
@@ -64,7 +64,7 @@ resource "kubernetes_config_map_v1" "postgres_init" {
 
 resource "kubernetes_deployment_v1" "postgres" {
   metadata {
-    name      = "infra-timescaledb"
+    name      = "infra-postgres"
     namespace = local.ns
     labels    = merge(local.common_labels, { "app.kubernetes.io/name" = "postgres" })
   }
@@ -206,7 +206,7 @@ resource "kubernetes_deployment_v1" "postgres" {
 
 resource "kubernetes_service_v1" "postgres" {
   metadata {
-    name      = "infra-timescaledb"
+    name      = "infra-postgres"
     namespace = local.ns
     labels    = merge(local.common_labels, { "app.kubernetes.io/name" = "postgres" })
   }

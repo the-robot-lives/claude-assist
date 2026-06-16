@@ -15,7 +15,7 @@ Diagram + design tools in the `platform-creative` namespace.
 | webstudio  | `ops.noizu.com/webstudio/builder` + PostgREST | shared Postgres        | webstudio.noizu.com |
 
 ## Data tier (platform/init)
-- Postgres (`platform-timescaledb`): mermaid, penpot, webstudio — DBs provisioned by
+- Postgres (`platform-postgres`): mermaid, penpot, webstudio — DBs provisioned by
   `files/postgres/initdb.d/{mermaid,penpot,webstudio}`.
 - Valkey (`platform-valkey`): excalidraw (db 1), penpot (db 0).
 - penpot also runs its own embedded MinIO (`penpot-minio`) for asset storage.

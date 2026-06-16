@@ -7,9 +7,9 @@
 | nextcloud | `nextcloud:29-apache`| shared Postgres + Valkey + PVC (100Gi)| nextcloud.noizu.com |
 
 ## Data tier (platform/init)
-- docmost → **platform-timescaledb** (`files/postgres/initdb.d/docmost`) + **platform-valkey**
+- docmost → **platform-postgres** (`files/postgres/initdb.d/docmost`) + **platform-valkey**
 - ghost → **platform-mariadb** (`files/mariadb/initdb.d/ghost`)
-- nextcloud → **platform-timescaledb** (`files/postgres/initdb.d/nextcloud`) + **platform-valkey**
+- nextcloud → **platform-postgres** (`files/postgres/initdb.d/nextcloud`) + **platform-valkey**
 
 ## Secrets (`/content` → `content-app-secrets`)
 - docmost: `DOCMOST_DATABASE_URL`, `DOCMOST_REDIS_URL`, `DOCMOST_JWT_SECRET`, `SMTP_HOST/PORT/USER/PASSWORD/FROM`

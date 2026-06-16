@@ -14,7 +14,7 @@ everything else to the frontend (3000).
 ## Data tier (platform/init)
 
 - espocrm → **platform-mariadb**, DB provisioned by `files/mariadb/initdb.d/espocrm`.
-- bottlecrm → **platform-timescaledb** (db `bottlecrm`, see `files/postgres/initdb.d/bottlecrm`) + **platform-valkey**.
+- bottlecrm → **platform-postgres** (db `bottlecrm`, see `files/postgres/initdb.d/bottlecrm`) + **platform-valkey**.
 
 ## Secrets (Infisical, project `k8-infra`, env `prod`)
 

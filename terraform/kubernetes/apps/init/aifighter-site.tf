@@ -7,6 +7,7 @@ resource "helm_release" "aifighter_site" {
   namespace = kubernetes_namespace_v1.apps.metadata[0].name
   chart     = var.aifighter_site_chart_path != "" ? var.aifighter_site_chart_path : abspath("${path.module}/../../../../projects/aifighter.com/helm/aifighter")
 
+
   values = [
     yamlencode({
       "static-site" = {
@@ -37,6 +38,7 @@ resource "helm_release" "aifighter_site" {
           }
         }
       }
+      migrate = { enabled = false }
     })
   ]
 

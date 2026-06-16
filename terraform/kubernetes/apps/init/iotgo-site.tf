@@ -32,6 +32,10 @@ resource "helm_release" "iotgo_site" {
           keyKey               = "IOTGO_TLS_KEY"
         }
       }
+
+      migrate = {
+        enabled = false
+      }
     })
   ]
 

@@ -1,7 +1,7 @@
 # `apps/init` — apps-tier shared data services and app publishing
 
 Deploys the apps tier's shared **Valkey** (`app-valkey`) and **TimescaleDB**
-(`app-timescaledb`) into the `apps` namespace, via the reusable
+(`app-postgres`) into the `apps` namespace, via the reusable
 `../../modules/{valkey,timescaledb}` modules.
 
 Also publishes static websites through local Helm charts:
@@ -14,7 +14,7 @@ Also publishes static websites through local Helm charts:
 Credentials come from **Infisical** via the operator: each module creates an
 `InfisicalSecret` CR syncing `/apps/valkey`, `/apps/postgres`, `/shared/tls`,
 and `/shared/registry` from the `k8-infra` project (env `prod`) into the
-managed Secrets (`app-valkey-secrets`, `app-timescaledb-secrets`,
+managed Secrets (`app-valkey-secrets`, `app-postgres-secrets`,
 `noizu-com-tls`, `aifighter-com-tls`, and `ops-registry-secret`).
 
 Prerequisites (from `infra-services`): the Infisical operator + the

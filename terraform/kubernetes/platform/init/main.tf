@@ -1,5 +1,5 @@
 # ---------------------------------------------------------------------------
-# Platform-tier shared data services: platform-valkey + platform-timescaledb.
+# Platform-tier shared data services: platform-valkey + platform-postgres.
 # ---------------------------------------------------------------------------
 # Credentials are managed by Infisical (the operator syncs them from
 # /platform/* into the managed Secrets these workloads consume). Requires the
@@ -25,16 +25,16 @@ module "platform_valkey" {
 module "platform_timescaledb" {
   source = "../../modules/timescaledb"
 
-  name                = "platform-timescaledb"
+  name                = "platform-postgres"
   namespace           = kubernetes_namespace_v1.platform.metadata[0].name
   storage_class       = local.storage_class
   node_selector       = local.node_selector
-  managed_secret_name = "platform-timescaledb-secrets"
+  managed_secret_name = "platform-postgres-secrets"
 
   # Per-app DB provisioning, mirroring infra/postgres.tf: drop an
   # initdb.d/<app>/init-db.sh folder and add its <APP>_DB_USER / <APP>_DB_PASSWORD
   # keys to the Infisical /platform/postgres path (synced into
-  # platform-timescaledb-secrets).
+  # platform-postgres-secrets).
   initdb_scripts_dir = "${path.module}/files/postgres/initdb.d"
 
   infisical = merge(local.infisical_base, { secrets_path = "/platform/postgres" })

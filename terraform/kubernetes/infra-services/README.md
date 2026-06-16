@@ -14,7 +14,7 @@ infra-services/ state in MinIO  the apps below
 
 | App | File | Host | Notes |
 |---|---|---|---|
-| Infisical | `infisical.tf` | infisical.noizu.com | shared infra-timescaledb + infra-valkey |
+| Infisical | `infisical.tf` | infisical.noizu.com | shared infra-postgres + infra-valkey |
 | Infisical operator | `infisical-operator.tf` | — | secrets.infisical.com CRDs, ns `infisical-operator-system` |
 | Verdaccio | `verdaccio.tf` | npm.noizu.com | private npm registry |
 | Headlamp | `headlamp.tf` | headlamp.noizu.com | k8s dashboard (cluster-admin SA) |

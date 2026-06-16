@@ -42,7 +42,7 @@ variable "mariadb_host" {
 variable "postgres_host" {
   description = "Shared Postgres/TimescaleDB service DNS (platform/init)."
   type        = string
-  default     = "platform-timescaledb.platform.svc.cluster.local"
+  default     = "platform-postgres.platform.svc.cluster.local"
 }
 
 # --- espocrm ---------------------------------------------------------------

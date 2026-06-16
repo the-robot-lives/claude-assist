@@ -33,6 +33,7 @@ resource "helm_release" "noizu_site" {
           caKey                = "CLOUDFLARE_CA_CRT"
         }
       }
+      migrate = { enabled = false }
     })
   ]
 
