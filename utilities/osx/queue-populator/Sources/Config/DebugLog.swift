@@ -25,6 +25,7 @@ enum DebugLog {
         fputs(line, stderr)
         if let data = line.data(using: .utf8) {
             handle?.write(data)
+            handle?.synchronizeFile()
         }
     }
 }

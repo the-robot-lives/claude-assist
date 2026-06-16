@@ -11,10 +11,18 @@ final class TranscriptWindow {
     private var phrases = PhrasesConfig()
     private var onConfigure: (() -> Void)?
     private var onBrowseQueue: (() -> Void)?
+    private var onInlineSave: ((QueuePopulatorConfig) -> Void)?
     private var commandsTarget: BlockTarget?
     private var configureTarget: BlockTarget?
     private var eventLogTarget: BlockTarget?
     private var browseQueueTarget: BlockTarget?
+    private var inlineSaveTarget: BlockTarget?
+    private var inlineProviderPopup: NSPopUpButton?
+    private var inlineModelField: NSTextField?
+    private var inlineBaseUrlField: NSTextField?
+    private var inlineQueuePathField: NSTextField?
+    private var inlineConfigPanel: NSView?
+    private var currentConfig: QueuePopulatorConfig?
 
     init() {
         window = NSWindow(
@@ -119,7 +127,67 @@ final class TranscriptWindow {
         liveScroll.autoresizingMask = [.width, .height]
         livePanel.addSubview(liveScroll)
 
-        let eventPanel = panel(frame: NSRect(x: 16, y: 16, width: container.bounds.width - 32, height: container.bounds.height - 266))
+        // --- Inline config (bypasses modal) ---
+        let inlineCfgPanel = panel(frame: NSRect(x: 16, y: container.bounds.height - 370, width: container.bounds.width - 32, height: 120))
+        inlineCfgPanel.autoresizingMask = [.width, .minYMargin]
+        container.addSubview(inlineCfgPanel)
+        self.inlineConfigPanel = inlineCfgPanel
+
+        let cfgTitle = sectionLabel("Quick config")
+        cfgTitle.frame = NSRect(x: 14, y: inlineCfgPanel.bounds.height - 26, width: 200, height: 18)
+        inlineCfgPanel.addSubview(cfgTitle)
+
+        let cfgLabelX: CGFloat = 14
+        let cfgFieldX: CGFloat = 90
+        let cfgFieldW: CGFloat = inlineCfgPanel.bounds.width - cfgFieldX - 130
+
+        let provLbl = NSTextField(labelWithString: "Provider:")
+        provLbl.font = NSFont.systemFont(ofSize: 11)
+        provLbl.frame = NSRect(x: cfgLabelX, y: 66, width: 70, height: 16)
+        inlineCfgPanel.addSubview(provLbl)
+
+        let provPopup = NSPopUpButton(frame: NSRect(x: cfgFieldX, y: 62, width: cfgFieldW, height: 22), pullsDown: false)
+        provPopup.font = NSFont.systemFont(ofSize: 11)
+        provPopup.addItems(withTitles: LlmConfig.providers)
+        provPopup.autoresizingMask = [.width]
+        inlineCfgPanel.addSubview(provPopup)
+        self.inlineProviderPopup = provPopup
+
+        let modelLbl = NSTextField(labelWithString: "Model:")
+        modelLbl.font = NSFont.systemFont(ofSize: 11)
+        modelLbl.frame = NSRect(x: cfgLabelX, y: 42, width: 70, height: 16)
+        inlineCfgPanel.addSubview(modelLbl)
+
+        let modelFld = NSTextField(frame: NSRect(x: cfgFieldX, y: 40, width: cfgFieldW, height: 20))
+        modelFld.font = NSFont.monospacedSystemFont(ofSize: 11, weight: .regular)
+        modelFld.placeholderString = "model name"
+        modelFld.autoresizingMask = [.width]
+        inlineCfgPanel.addSubview(modelFld)
+        self.inlineModelField = modelFld
+
+        let urlLbl = NSTextField(labelWithString: "Base URL:")
+        urlLbl.font = NSFont.systemFont(ofSize: 11)
+        urlLbl.frame = NSRect(x: cfgLabelX, y: 18, width: 70, height: 16)
+        inlineCfgPanel.addSubview(urlLbl)
+
+        let urlFld = NSTextField(frame: NSRect(x: cfgFieldX, y: 16, width: cfgFieldW, height: 20))
+        urlFld.font = NSFont.monospacedSystemFont(ofSize: 11, weight: .regular)
+        urlFld.placeholderString = "https://api.example.com/v1"
+        urlFld.autoresizingMask = [.width]
+        inlineCfgPanel.addSubview(urlFld)
+        self.inlineBaseUrlField = urlFld
+
+        let inlineSaveBtn = NSButton(frame: NSRect(x: inlineCfgPanel.bounds.width - 120, y: 60, width: 108, height: 48))
+        inlineSaveBtn.title = "Save"
+        inlineSaveBtn.bezelStyle = .rounded
+        inlineSaveBtn.autoresizingMask = [.minXMargin]
+        let saveTgt = BlockTarget { [weak self] in self?.handleInlineSave() }
+        inlineSaveBtn.target = saveTgt
+        inlineSaveBtn.action = #selector(BlockTarget.invoke)
+        self.inlineSaveTarget = saveTgt
+        inlineCfgPanel.addSubview(inlineSaveBtn)
+
+        let eventPanel = panel(frame: NSRect(x: 16, y: 16, width: container.bounds.width - 32, height: container.bounds.height - 402))
         eventPanel.autoresizingMask = [.width, .height]
         container.addSubview(eventPanel)
 
@@ -148,6 +216,45 @@ final class TranscriptWindow {
 
     func setOnBrowseQueue(_ handler: @escaping () -> Void) {
         onBrowseQueue = handler
+    }
+
+    func setOnInlineSave(_ handler: @escaping (QueuePopulatorConfig) -> Void) {
+        onInlineSave = handler
+    }
+
+    func updateInlineConfig(_ config: QueuePopulatorConfig) {
+        currentConfig = config
+        inlineProviderPopup?.selectItem(withTitle: config.llm.provider)
+        inlineModelField?.stringValue = config.llm.model ?? ""
+        inlineModelField?.placeholderString = LlmConfig.defaultModels[config.llm.provider] ?? "model"
+        inlineBaseUrlField?.stringValue = config.llm.baseUrl ?? ""
+        inlineBaseUrlField?.placeholderString = LlmConfig.defaultBaseUrls[config.llm.provider] ?? "https://..."
+    }
+
+    private func handleInlineSave() {
+        guard var config = currentConfig else {
+            DebugLog.log("[INLINE] no config to save")
+            return
+        }
+        let provider = inlineProviderPopup?.titleOfSelectedItem ?? config.llm.provider
+        let model = inlineModelField?.stringValue.trimmingCharacters(in: .whitespaces) ?? ""
+        let baseUrl = inlineBaseUrlField?.stringValue.trimmingCharacters(in: .whitespaces) ?? ""
+
+        config.llm.provider = provider
+        config.llm.model = model.isEmpty ? nil : model
+        config.llm.baseUrl = baseUrl.isEmpty ? nil : baseUrl
+
+        DebugLog.log("[INLINE] saving: provider=\(provider) model=\(model) baseUrl=\(baseUrl)")
+
+        do {
+            try saveConfig(config)
+            DebugLog.log("[INLINE] save succeeded")
+            appendEvent("Inline config saved: \(provider) / \(config.llm.effectiveModel)")
+            onInlineSave?(config)
+        } catch {
+            DebugLog.log("[INLINE] save FAILED: \(error)")
+            appendEvent("Inline save failed: \(error.localizedDescription)")
+        }
     }
 
     func updateCommands(phrases: PhrasesConfig) {

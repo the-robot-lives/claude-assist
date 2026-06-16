@@ -41,7 +41,9 @@ final class Coordinator: SpeechEngineDelegate {
         wireMicRouting()
         transcriptWindow.setOnConfigure { [weak self] in self?.showConfig() }
         transcriptWindow.setOnBrowseQueue { [weak self] in self?.browseQueueFolder() }
+        transcriptWindow.setOnInlineSave { [weak self] updated in self?.applyConfig(updated) }
         transcriptWindow.updateCommands(phrases: config.phrases)
+        transcriptWindow.updateInlineConfig(config)
     }
 
     /// Feed the speech engine's captured mic buffers into the virtual-mic router.
@@ -608,6 +610,8 @@ final class Coordinator: SpeechEngineDelegate {
         DebugLog.log("[CONFIG] opening dialog...")
         guard let updated = showConfigDialog(config: config) else {
             DebugLog.log("[CONFIG] dialog cancelled")
+            overlay.show(message: "Configuration unchanged", icon: "—")
+            transcriptWindow.appendEvent("Configuration cancelled")
             return
         }
         DebugLog.log("[CONFIG] dialog OK: provider=\(updated.llm.provider) model=\(updated.llm.model ?? "nil") apiKey=\(updated.llm.apiKey == nil ? "nil" : "\(updated.llm.apiKey!.count)chars") alias=\(updated.llm.apiKeyAlias ?? "nil")")
@@ -630,6 +634,7 @@ final class Coordinator: SpeechEngineDelegate {
             return
         }
         applyConfig(updated)
+        transcriptWindow.updateInlineConfig(config)
         overlay.show(message: "Configuration saved", icon: "✓")
         transcriptWindow.appendEvent("Configuration saved")
         DebugLog.log("[CONFIG] done: provider=\(config.llm.provider) model=\(config.llm.effectiveModel)")

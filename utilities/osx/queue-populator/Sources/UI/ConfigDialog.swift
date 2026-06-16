@@ -9,58 +9,26 @@ private final class TextChangeDelegate: NSObject, NSTextFieldDelegate {
 }
 
 @MainActor
-private final class _TextViewShim {
-    let textView: NSTextView
-    nonisolated(unsafe) var observer: NSObjectProtocol?
-
-    init(textView: NSTextView) { self.textView = textView }
-
-    var stringValue: String {
-        get { textView.string }
-        set { textView.string = newValue }
-    }
-
-    func setChangeDelegate(_ d: TextChangeDelegate) {
-        let callback = d.onChange
-        observer = NotificationCenter.default.addObserver(
-            forName: NSText.didChangeNotification,
-            object: textView,
-            queue: .main
-        ) { _ in callback() }
-    }
-}
-
-extension NSTextView {
-    func setPlaceholder(_ text: String) {
-        // NSTextView placeholder via attributed string when empty
-        if string.isEmpty && !text.isEmpty {
-            let attrs: [NSAttributedString.Key: Any] = [
-                .foregroundColor: NSColor.placeholderTextColor,
-                .font: font ?? NSFont.systemFont(ofSize: 12),
-            ]
-            textStorage?.setAttributedString(NSAttributedString(string: text, attributes: attrs))
-        }
-    }
-}
-
-@MainActor
 private final class ModalCloseDelegate: NSObject, NSWindowDelegate {
-    private let close: () -> Void
+    private let onClose: () -> Void
 
-    init(close: @escaping () -> Void) {
-        self.close = close
+    init(onClose: @escaping () -> Void) {
+        self.onClose = onClose
     }
 
     func windowShouldClose(_ sender: NSWindow) -> Bool {
-        close()
-        return false
+        return true
+    }
+
+    func windowWillClose(_ notification: Notification) {
+        onClose()
     }
 }
 
 @MainActor
 func showConfigDialog(config: QueuePopulatorConfig) -> QueuePopulatorConfig? {
     let app = NSApplication.shared
-    fputs("queue-populator: config dialog opening\n", stderr)
+    DebugLog.log("[DIALOG] opening")
 
     let panel = NSPanel(
         contentRect: NSRect(x: 0, y: 0, width: 480, height: 680),
@@ -69,8 +37,6 @@ func showConfigDialog(config: QueuePopulatorConfig) -> QueuePopulatorConfig? {
         defer: false
     )
     panel.title = "Queue Populator — Configuration"
-    panel.isFloatingPanel = true
-    panel.level = .floating
 
     let contentView = NSView(frame: panel.contentView!.bounds)
     contentView.autoresizingMask = [.width, .height]
@@ -162,46 +128,29 @@ func showConfigDialog(config: QueuePopulatorConfig) -> QueuePopulatorConfig? {
     contentView.addSubview(providerPopup)
     y -= rowHeight
 
+    // API key — plain NSTextField, monospaced so long keys are readable
     let hasEncryptedKey = config.llm.apiKey.map { SecretStore.isEncrypted($0) } ?? false
     let apiKeyDisplayValue: String
-    if hasEncryptedKey {
+    let apiKeyPlaceholder: String
+    if hasEncryptedKey, let alias = config.llm.apiKeyAlias {
         apiKeyDisplayValue = ""
+        apiKeyPlaceholder = "🔑 \(alias) — enter new key to replace"
     } else {
         apiKeyDisplayValue = config.llm.apiKey ?? ""
+        apiKeyPlaceholder = "env: ANTHROPIC_API_KEY"
     }
 
-    let apiKeyLabel = makeLabel("API Key:")
-    apiKeyLabel.frame = NSRect(x: 12, y: y - 60 + 6, width: 100, height: 20)
-    contentView.addSubview(apiKeyLabel)
+    let apiKeyLbl = makeLabel("API Key:")
+    apiKeyLbl.frame = NSRect(x: 12, y: y - rowHeight + 6, width: 100, height: 20)
+    contentView.addSubview(apiKeyLbl)
 
-    let apiKeyScrollHeight: CGFloat = 56
-    let apiKeyScroll = NSScrollView(frame: NSRect(x: fieldX, y: y - apiKeyScrollHeight, width: fieldWidth, height: apiKeyScrollHeight))
-    apiKeyScroll.hasVerticalScroller = true
-    apiKeyScroll.borderType = .bezelBorder
-    let apiKeyTextView = NSTextView(frame: NSRect(x: 0, y: 0, width: fieldWidth - 16, height: apiKeyScrollHeight))
-    apiKeyTextView.isRichText = false
-    apiKeyTextView.font = NSFont.monospacedSystemFont(ofSize: 12, weight: .regular)
-    apiKeyTextView.string = apiKeyDisplayValue
-    apiKeyTextView.isVerticallyResizable = true
-    apiKeyTextView.isHorizontallyResizable = false
-    apiKeyTextView.textContainer?.widthTracksTextView = true
-    apiKeyTextView.textContainer?.containerSize = NSSize(width: fieldWidth - 16, height: .greatestFiniteMagnitude)
-    apiKeyScroll.documentView = apiKeyTextView
-    contentView.addSubview(apiKeyScroll)
-    y -= apiKeyScrollHeight + 4
-
-    // Shim so the rest of the code can read .stringValue like an NSTextField
-    let apiKeyField = _TextViewShim(textView: apiKeyTextView)
-
-    let aliasLabel = NSTextField(labelWithString: "")
-    aliasLabel.frame = NSRect(x: fieldX, y: y - 16, width: fieldWidth, height: 14)
-    aliasLabel.font = NSFont.systemFont(ofSize: 11)
-    aliasLabel.textColor = .systemGreen
-    if hasEncryptedKey, let alias = config.llm.apiKeyAlias {
-        aliasLabel.stringValue = "🔑 \(alias) (encrypted) — enter new key to replace"
-    }
-    contentView.addSubview(aliasLabel)
-    y -= (hasEncryptedKey ? 18 : 0)
+    let apiKeyField = NSTextField(frame: NSRect(x: fieldX, y: y - rowHeight + 4, width: fieldWidth, height: 24))
+    apiKeyField.stringValue = apiKeyDisplayValue
+    apiKeyField.placeholderString = apiKeyPlaceholder
+    apiKeyField.font = NSFont.monospacedSystemFont(ofSize: 12, weight: .regular)
+    apiKeyField.lineBreakMode = .byTruncatingMiddle
+    contentView.addSubview(apiKeyField)
+    y -= rowHeight
 
     let envHintButton = NSButton(frame: NSRect(x: fieldX, y: y - 18, width: fieldWidth, height: 16))
     envHintButton.isBordered = false
@@ -238,12 +187,7 @@ func showConfigDialog(config: QueuePopulatorConfig) -> QueuePopulatorConfig? {
             return
         }
 
-        if !fieldText.isEmpty {
-            envHintButton.title = ""
-            return
-        }
-
-        if hasEncryptedKey && fieldText.isEmpty {
+        if !fieldText.isEmpty || (hasEncryptedKey && fieldText.isEmpty) {
             envHintButton.title = ""
             return
         }
@@ -268,7 +212,7 @@ func showConfigDialog(config: QueuePopulatorConfig) -> QueuePopulatorConfig? {
     updateEnvHint()
 
     let apiKeyDelegate = TextChangeDelegate(onChange: { updateEnvHint() })
-    apiKeyField.setChangeDelegate(apiKeyDelegate)
+    apiKeyField.delegate = apiKeyDelegate
 
     let envHintTarget = BlockTarget {
         let prov = providerPopup.titleOfSelectedItem ?? "anthropic"
@@ -332,9 +276,9 @@ func showConfigDialog(config: QueuePopulatorConfig) -> QueuePopulatorConfig? {
         let primaryEnvVar = LlmConfig.envVarFallbacks[prov]?.first
             ?? LlmConfig.envVarKeys[prov]
         if let envVar = primaryEnvVar {
-            apiKeyField.textView.setPlaceholder("env: \(envVar)")
+            apiKeyField.placeholderString = "env: \(envVar)"
         } else {
-            apiKeyField.textView.setPlaceholder("")
+            apiKeyField.placeholderString = ""
         }
 
         modelPopup.removeAllItems()
@@ -348,7 +292,6 @@ func showConfigDialog(config: QueuePopulatorConfig) -> QueuePopulatorConfig? {
         llm.provider = providerPopup.titleOfSelectedItem ?? "anthropic"
         let apiKey = apiKeyField.stringValue.trimmingCharacters(in: .whitespaces)
         if apiKey.isEmpty && hasEncryptedKey {
-            // User didn't enter a new key — keep existing encrypted key
             llm.apiKey = config.llm.apiKey
             llm.apiKeyAlias = config.llm.apiKeyAlias
         } else {
@@ -446,35 +389,36 @@ func showConfigDialog(config: QueuePopulatorConfig) -> QueuePopulatorConfig? {
     contentView.addSubview(cancelButton)
 
     let saveTarget = BlockTarget {
-        DebugLog.log("[DIALOG] Save button pressed")
-        panel.orderOut(nil)
+        DebugLog.log("[DIALOG] save pressed")
         app.stopModal(withCode: .OK)
     }
     let cancelTarget = BlockTarget {
-        DebugLog.log("[DIALOG] Cancel button pressed")
-        panel.orderOut(nil)
+        DebugLog.log("[DIALOG] cancel pressed")
         app.stopModal(withCode: .cancel)
     }
-    let closeDelegate = ModalCloseDelegate {
-        panel.orderOut(nil)
+    let closeDelegate = ModalCloseDelegate(onClose: {
+        DebugLog.log("[DIALOG] window close (willClose)")
         app.stopModal(withCode: .cancel)
-    }
+    })
     panel.delegate = closeDelegate
     saveButton.target = saveTarget
     saveButton.action = #selector(BlockTarget.invoke)
     cancelButton.target = cancelTarget
     cancelButton.action = #selector(BlockTarget.invoke)
 
+    DebugLog.log("[DIALOG] setup complete, launching modal")
     panel.center()
-    showInteractiveWindow(panel)
-    DebugLog.log("[DIALOG] running modal...")
+    panel.makeKeyAndOrderFront(nil)
+    app.activate(ignoringOtherApps: true)
+    DebugLog.log("[DIALOG] calling runModal")
     let response = app.runModal(for: panel)
-    DebugLog.log("[DIALOG] modal returned: \(response.rawValue)")
+    DebugLog.log("[DIALOG] runModal returned \(response.rawValue)")
     panel.orderOut(nil)
     panel.delegate = nil
     panel.close()
+    DebugLog.log("[DIALOG] panel closed")
 
-    _ = (fetchTarget, testTarget, saveTarget, cancelTarget, closeDelegate, providerChangeTarget, envHintTarget, apiKeyDelegate, apiKeyField)
+    _ = (fetchTarget, testTarget, saveTarget, cancelTarget, closeDelegate, providerChangeTarget, envHintTarget, apiKeyDelegate)
 
     guard response == .OK else { return nil }
 
@@ -489,5 +433,6 @@ func showConfigDialog(config: QueuePopulatorConfig) -> QueuePopulatorConfig? {
     updated.recognition.inputDeviceId = devicePopup.selectedItem?.representedObject as? String
     updated.llm = currentLlmConfig()
 
+    DebugLog.log("[DIALOG] returning updated config")
     return updated
 }
