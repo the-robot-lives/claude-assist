@@ -6,7 +6,7 @@ FSTAB_STUB := osx-fstab.stub
 FSTAB_DST  := /etc/osx-fstab
 SUDO       ?= sudo
 
-.PHONY: install uninstall status logs
+.PHONY: install uninstall status logs install-ntfs check-ntfs
 
 install:
 	@echo "==> Installing fstab-remount"
@@ -38,3 +38,25 @@ status:
 
 logs:
 	@$(SUDO) tail -50 /var/log/fstab-remount.log
+
+install-ntfs:
+	@echo "==> Installing NTFS read-write support (fuse-t + ntfs-3g)"
+	@if ! brew list --cask fuse-t &>/dev/null; then \
+		echo "==> Installing FUSE-T (kext-less FUSE)"; \
+		brew install --cask fuse-t; \
+	else \
+		echo "==> FUSE-T already installed"; \
+	fi
+	@if ! command -v ntfs-3g &>/dev/null; then \
+		echo "==> Installing ntfs-3g"; \
+		brew install ntfs-3g; \
+	else \
+		echo "==> ntfs-3g already installed"; \
+	fi
+	@echo "==> NTFS read-write support ready"
+	@echo "    Add ntfs entries to $(FSTAB_DST) and reboot or run:"
+	@echo "    sudo launchctl kickstart system/com.keithbrings.fstab-remount"
+
+check-ntfs:
+	@echo "FUSE-T:  $$(brew list --cask fuse-t &>/dev/null && echo 'installed' || echo 'NOT installed')"
+	@echo "ntfs-3g: $$(command -v ntfs-3g &>/dev/null && echo "$$(ntfs-3g --version 2>&1 | head -1)" || echo 'NOT installed')"

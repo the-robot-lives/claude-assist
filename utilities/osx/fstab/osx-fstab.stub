@@ -1,4 +1,4 @@
-# /etc/osx-fstab — custom mount point declarations for macOS APFS volumes
+# /etc/osx-fstab — custom mount point declarations for macOS volumes
 #
 # Format:
 #   uuid=<UUID>  label=<Label>  disk=<device>  <mountpoint>  <fstype>  <options>  <dump>  <fsck>
@@ -6,9 +6,20 @@
 # Mount attempt order: UUID → label → disk (first success wins)
 # Use - for unknown/unavailable identifiers
 # options: noauto = skip entirely, rw = read-write, auto = mount at boot, owners = enable ownership
-# dump/fsck: always 0 0 for APFS
+# dump/fsck: always 0 0
+#
+# Supported fstypes:
+#   apfs        — native macOS, mounted via diskutil
+#   ntfs        — NTFS read-write via ntfs-3g + FUSE-T (requires: brew install --cask fuse-t && brew install ntfs-3g)
+#   ntfs-ro     — NTFS read-only via native macOS mount_ntfs (no extra deps)
 #
 # Managed by fstab-remount LaunchDaemon
 #
-# Example:
+# APFS example:
 # uuid=82B4F581-31F5-4B9F-AFF0-BEC7F79372D1  label=config  disk=/dev/disk9s2  /Users/you/.config  apfs  rw,auto  0  0
+#
+# NTFS read-write example (requires fuse-t + ntfs-3g):
+# uuid=A1B2C3D4E5F6A7B8  label=BackupDrive  disk=/dev/disk4s1  /Volumes/BackupDrive  ntfs  rw,auto  0  0
+#
+# NTFS read-only example (native, no deps):
+# uuid=A1B2C3D4E5F6A7B8  label=BackupDrive  disk=/dev/disk4s1  /Volumes/BackupDrive  ntfs-ro  ro,auto  0  0
