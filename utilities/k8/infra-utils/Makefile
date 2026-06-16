@@ -10,7 +10,7 @@ test:
 
 install:
 	@mkdir -p $(INSTALL_DIR)
-	@for f in infra-init deploy-one-off deploy-service open-dashboard add-import-permissions; do \
+	@for f in infra-init deploy-one-off deploy-service open-dashboard add-import-permissions infra-config; do \
 		install -m 755 "bin/$$f" "$(INSTALL_DIR)/$$f"; \
 		echo "✓ Installed $$f"; \
 	done

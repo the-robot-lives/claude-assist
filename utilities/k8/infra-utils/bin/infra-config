@@ -1,0 +1,786 @@
+#!/usr/bin/env bash
+set -euo pipefail
+# =============================================================================
+# infra-config — Manage .infra-config.yaml for k8-lib infrastructure tools
+#
+# Usage:
+#   infra-config list <resource>
+#   infra-config add <resource> <args...> [flags]
+#   infra-config remove <resource> <args...> [flags]
+#   infra-config --help
+#
+# Resources:
+#   helm-dir         Helm scan directories (helm_scan_dirs[])
+#   helm-alias       Chart path overrides (chart_path_overrides)
+#   namespace        Namespace overrides (namespace_overrides)
+#   timeout          Timeout overrides (timeout_overrides)
+#   tier-chart       Charts within deployment tiers (tiers[].charts[])
+#   docker-image     Standalone Docker image entries (project.docker.images[])
+#   docker-dir       Shorthand: add standalone image from a directory path
+#   project          Composite project entries (project.projects[])
+#   service          Services within a composite project
+#   docker-group     Shorthand: add project + multiple services at once
+#
+# Flags:
+#   --config PATH    Path to .infra-config.yaml
+#   --dry-run        Preview changes without writing
+#   --yes, -y        Skip confirmation prompt
+#   --assist "Q"     AI-assisted help
+#   -h, --help       Show this help
+# =============================================================================
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+K8_LIB_DIR="${K8_LIB_DIR:-${HOME}/.local/share/k8-lib}"
+INFRA_ROOT="${INFRA_ROOT:-$(pwd)}"
+
+# Pre-parse --config (must resolve before k8-lib sourcing)
+for _k8_arg in "$@"; do
+  case "$_k8_arg" in
+    --config=*) export K8_CONFIG="${_k8_arg#--config=}" ;;
+  esac
+done
+_k8_prev=""
+for _k8_arg in "$@"; do
+  [[ "$_k8_prev" == "--config" ]] && export K8_CONFIG="$_k8_arg"
+  _k8_prev="$_k8_arg"
+done
+unset _k8_arg _k8_prev
+
+source "$K8_LIB_DIR/bin/common.sh"
+source "$K8_LIB_DIR/bin/config-resolver.sh"
+source "$K8_LIB_DIR/bin/assist.sh"
+_k8_check_assist "$0" "$@"
+
+# =============================================================================
+# GLOBALS
+# =============================================================================
+DRY_RUN=false
+YES=false
+CONFIG=""
+
+# =============================================================================
+# USAGE
+# =============================================================================
+_usage() {
+  cat <<'USAGE'
+Usage: infra-config <action> <resource> [args...] [flags]
+
+Actions:
+  list       Show current values for a resource
+  add        Add an entry
+  remove     Remove an entry
+
+Resources:
+  helm-dir             helm_scan_dirs[] array
+  helm-alias           chart_path_overrides map (chart-name → path)
+  namespace            namespace_overrides map (chart → namespace)
+  timeout              timeout_overrides map (chart → duration)
+  tier-chart           Charts within deployment tiers
+  docker-image         Standalone Docker image entries
+  docker-dir           Shorthand: add image from directory (derives name)
+  project              Composite project entries (by domain)
+  service              Services within a composite project
+  docker-group         Shorthand: add project + services in one command
+
+Flags:
+  --config PATH        Path to .infra-config.yaml
+  --dry-run            Preview changes without writing
+  --yes, -y            Skip confirmation prompt
+  --assist "Q"         AI-assisted help
+  -h, --help           Show this help
+
+Examples:
+  infra-config list helm-dir
+  infra-config add helm-dir kubernetes/helm/creative
+  infra-config remove helm-dir kubernetes/helm/creative
+
+  infra-config add helm-alias my-app projects/my-app/helm/my-app
+  infra-config remove helm-alias my-app
+
+  infra-config add namespace my-app apps-ns
+  infra-config add timeout my-app 10m
+
+  infra-config add tier-chart my-app --tier 3
+  infra-config remove tier-chart my-app
+
+  infra-config add docker-image bottlecrm --context 3rd-party/bottlecrm \
+    --dockerfile Dockerfile.prod --single-stage
+  infra-config add docker-dir 3rd-party/bottlecrm
+
+  infra-config add project mysite.com --base-path projects/mysite.com
+  infra-config add service mysite.com backend \
+    --dockerfile app/backend/Dockerfile --context app/backend
+  infra-config add docker-group projects/mysite.com frontend backend nginx
+USAGE
+  exit "${1:-0}"
+}
+
+# =============================================================================
+# HELPERS
+# =============================================================================
+
+# Apply a yq expression with dry-run / confirmation support.
+# Usage: _safe_write <yq-expression> [description]
+_safe_write() {
+  local expr="$1"
+  local desc="${2:-}"
+  local tmp=""
+  tmp="$(mktemp)"
+
+  cp "$CONFIG" "$tmp"
+  yq -i "$expr" "$tmp"
+
+  local has_diff=true
+  if diff -q "$CONFIG" "$tmp" &>/dev/null; then
+    has_diff=false
+  fi
+
+  if ! $has_diff; then
+    rm -f "$tmp"
+    info "No changes needed."
+    return 0
+  fi
+
+  if $DRY_RUN; then
+    [[ -n "$desc" ]] && step "$desc"
+    diff --color=auto -u "$CONFIG" "$tmp" || true
+    echo ""
+    rm -f "$tmp"
+    info "[dry-run] No changes written."
+    return 0
+  fi
+
+  if ! $YES; then
+    [[ -n "$desc" ]] && step "$desc"
+    diff --color=auto -u "$CONFIG" "$tmp" || true
+    echo ""
+    read -rp "  Apply this change? [y/N] " answer
+    if ! [[ "$answer" =~ ^[Yy] ]]; then
+      rm -f "$tmp"
+      info "Aborted."
+      return 1
+    fi
+  fi
+
+  yq -i "$expr" "$CONFIG"
+  rm -f "$tmp"
+  ok "${desc:-Updated config}"
+}
+
+# Confirm and apply a pre-built temp file over the config.
+# Usage: _confirm_and_apply <tmp-file> <description>
+_confirm_and_apply() {
+  local tmp="$1" desc="$2"
+
+  if diff -q "$CONFIG" "$tmp" &>/dev/null; then
+    rm -f "$tmp"
+    info "No changes needed."
+    return 0
+  fi
+
+  if $DRY_RUN; then
+    step "$desc"
+    diff --color=auto -u "$CONFIG" "$tmp" || true
+    echo ""
+    rm -f "$tmp"
+    info "[dry-run] No changes written."
+    return 0
+  fi
+
+  if ! $YES; then
+    step "$desc"
+    diff --color=auto -u "$CONFIG" "$tmp" || true
+    echo ""
+    read -rp "  Apply these changes? [y/N] " answer
+    if ! [[ "$answer" =~ ^[Yy] ]]; then
+      rm -f "$tmp"
+      info "Aborted."
+      return 1
+    fi
+  fi
+
+  cp "$tmp" "$CONFIG"
+  rm -f "$tmp"
+  ok "$desc"
+}
+
+# =============================================================================
+# HELM-DIR
+# =============================================================================
+cmd_list_helm_dir() {
+  step "helm_scan_dirs"
+  yq -r '.helm_scan_dirs[]' "$CONFIG" 2>/dev/null || info "No helm scan dirs configured."
+}
+
+cmd_add_helm_dir() {
+  local path="${1:-}"
+  [[ -z "$path" ]] && die "Usage: infra-config add helm-dir <path>"
+
+  if yq -e ".helm_scan_dirs[] | select(. == \"$path\")" "$CONFIG" &>/dev/null; then
+    info "Already present: $path"
+    return 0
+  fi
+
+  if [[ ! -d "$INFRA_ROOT/$path" ]]; then
+    warn "Directory does not exist: $INFRA_ROOT/$path"
+  fi
+
+  local yq_path="$path"
+  yq_path="$yq_path" _safe_write '.helm_scan_dirs += [env(yq_path)]' "Add helm scan dir: $path"
+}
+
+cmd_remove_helm_dir() {
+  local path="${1:-}"
+  [[ -z "$path" ]] && die "Usage: infra-config remove helm-dir <path>"
+
+  if ! yq -e ".helm_scan_dirs[] | select(. == \"$path\")" "$CONFIG" &>/dev/null; then
+    warn "Not found: $path"
+    return 0
+  fi
+
+  local yq_path="$path"
+  yq_path="$yq_path" _safe_write 'del(.helm_scan_dirs[] | select(. == env(yq_path)))' "Remove helm scan dir: $path"
+}
+
+# =============================================================================
+# HELM-ALIAS
+# =============================================================================
+cmd_list_helm_alias() {
+  step "chart_path_overrides"
+  local output
+  output="$(yq -r '.chart_path_overrides | to_entries[] | .key + "\t" + .value' "$CONFIG" 2>/dev/null)" || true
+  if [[ -z "$output" ]]; then
+    info "No chart path overrides configured."
+  else
+    printf "  %-25s %s\n" "CHART" "PATH"
+    printf "  %-25s %s\n" "─────" "────"
+    echo "$output" | while IFS=$'\t' read -r k v; do
+      printf "  %-25s %s\n" "$k" "$v"
+    done
+  fi
+}
+
+cmd_add_helm_alias() {
+  local chart="${1:-}" path="${2:-}"
+  [[ -z "$chart" || -z "$path" ]] && die "Usage: infra-config add helm-alias <chart-name> <path>"
+
+  if [[ -d "$INFRA_ROOT/$path" && ! -f "$INFRA_ROOT/$path/Chart.yaml" ]]; then
+    warn "No Chart.yaml found in $INFRA_ROOT/$path"
+  fi
+
+  export yq_chart="$chart" yq_path="$path"
+  _safe_write '.chart_path_overrides.[env(yq_chart)] = env(yq_path)' "Set helm alias: $chart → $path"
+}
+
+cmd_remove_helm_alias() {
+  local chart="${1:-}"
+  [[ -z "$chart" ]] && die "Usage: infra-config remove helm-alias <chart-name>"
+
+  local existing
+  existing="$(yq -r ".chart_path_overrides.\"$chart\" // \"\"" "$CONFIG" 2>/dev/null)"
+  if [[ -z "$existing" ]]; then
+    warn "Not found: $chart"
+    return 0
+  fi
+
+  export yq_chart="$chart"
+  _safe_write 'del(.chart_path_overrides.[env(yq_chart)])' "Remove helm alias: $chart"
+}
+
+# =============================================================================
+# NAMESPACE
+# =============================================================================
+cmd_list_namespace() {
+  step "namespace_overrides"
+  local output
+  output="$(yq -r '.namespace_overrides | to_entries[] | .key + "\t" + .value' "$CONFIG" 2>/dev/null)" || true
+  if [[ -z "$output" ]]; then
+    info "No namespace overrides configured."
+  else
+    printf "  %-30s %s\n" "CHART" "NAMESPACE"
+    printf "  %-30s %s\n" "─────" "─────────"
+    echo "$output" | while IFS=$'\t' read -r k v; do
+      printf "  %-30s %s\n" "$k" "$v"
+    done
+  fi
+}
+
+cmd_add_namespace() {
+  local chart="${1:-}" ns="${2:-}"
+  [[ -z "$chart" || -z "$ns" ]] && die "Usage: infra-config add namespace <chart-name> <namespace>"
+
+  export yq_chart="$chart" yq_ns="$ns"
+  _safe_write '.namespace_overrides.[env(yq_chart)] = env(yq_ns)' "Set namespace: $chart → $ns"
+}
+
+cmd_remove_namespace() {
+  local chart="${1:-}"
+  [[ -z "$chart" ]] && die "Usage: infra-config remove namespace <chart-name>"
+
+  local existing
+  existing="$(yq -r ".namespace_overrides.\"$chart\" // \"\"" "$CONFIG" 2>/dev/null)"
+  if [[ -z "$existing" ]]; then
+    warn "Not found: $chart"
+    return 0
+  fi
+
+  export yq_chart="$chart"
+  _safe_write 'del(.namespace_overrides.[env(yq_chart)])' "Remove namespace override: $chart"
+}
+
+# =============================================================================
+# TIMEOUT
+# =============================================================================
+cmd_list_timeout() {
+  step "timeout_overrides"
+  local output
+  output="$(yq -r '.timeout_overrides | to_entries[] | .key + "\t" + .value' "$CONFIG" 2>/dev/null)" || true
+  if [[ -z "$output" ]]; then
+    info "No timeout overrides configured."
+  else
+    printf "  %-30s %s\n" "CHART" "TIMEOUT"
+    printf "  %-30s %s\n" "─────" "───────"
+    echo "$output" | while IFS=$'\t' read -r k v; do
+      printf "  %-30s %s\n" "$k" "$v"
+    done
+  fi
+}
+
+cmd_add_timeout() {
+  local chart="${1:-}" dur="${2:-}"
+  [[ -z "$chart" || -z "$dur" ]] && die "Usage: infra-config add timeout <chart-name> <duration>"
+
+  if ! [[ "$dur" =~ ^[0-9]+[msh]$ ]]; then
+    die "Invalid duration: $dur (expected format: 10m, 300s, 1h)"
+  fi
+
+  export yq_chart="$chart" yq_dur="$dur"
+  _safe_write '.timeout_overrides.[env(yq_chart)] = env(yq_dur)' "Set timeout: $chart → $dur"
+}
+
+cmd_remove_timeout() {
+  local chart="${1:-}"
+  [[ -z "$chart" ]] && die "Usage: infra-config remove timeout <chart-name>"
+
+  local existing
+  existing="$(yq -r ".timeout_overrides.\"$chart\" // \"\"" "$CONFIG" 2>/dev/null)"
+  if [[ -z "$existing" ]]; then
+    warn "Not found: $chart"
+    return 0
+  fi
+
+  export yq_chart="$chart"
+  _safe_write 'del(.timeout_overrides.[env(yq_chart)])' "Remove timeout override: $chart"
+}
+
+# =============================================================================
+# TIER-CHART
+# =============================================================================
+cmd_list_tier_chart() {
+  step "Deployment tiers"
+  yq -r '.tiers[] | "  Tier " + (.tier | tostring) + " (" + .name + "): " + (.charts | join(", "))' "$CONFIG" 2>/dev/null \
+    || info "No tiers configured."
+}
+
+cmd_add_tier_chart() {
+  local chart="" tier_num=""
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --tier) tier_num="$2"; shift 2 ;;
+      --config|--config=*) shift; [[ "$1" != --* ]] && shift 2>/dev/null || true ;;
+      --dry-run|--yes|-y) shift ;;
+      -*) die "Unknown flag: $1" ;;
+      *) chart="$1"; shift ;;
+    esac
+  done
+
+  [[ -z "$chart" ]] && die "Usage: infra-config add tier-chart <chart-name> --tier <N>"
+  [[ -z "$tier_num" ]] && die "Missing --tier flag"
+
+  if ! yq -e ".tiers[] | select(.tier == $tier_num)" "$CONFIG" &>/dev/null; then
+    die "Tier $tier_num does not exist. Available tiers:"$'\n'"$(yq -r '.tiers[] | "  " + (.tier | tostring) + ": " + .name' "$CONFIG")"
+  fi
+
+  local existing_tier
+  existing_tier="$(yq -r ".tiers[] | select(.charts[] == \"$chart\") | .tier" "$CONFIG" 2>/dev/null)" || true
+  if [[ -n "$existing_tier" ]]; then
+    warn "Chart '$chart' already in tier $existing_tier"
+    return 0
+  fi
+
+  export yq_chart="$chart"
+  _safe_write "(.tiers[] | select(.tier == $tier_num) | .charts) += [env(yq_chart)]" "Add $chart to tier $tier_num"
+}
+
+cmd_remove_tier_chart() {
+  local chart="${1:-}"
+  [[ -z "$chart" ]] && die "Usage: infra-config remove tier-chart <chart-name>"
+
+  local existing_tier
+  existing_tier="$(yq -r ".tiers[] | select(.charts[] == \"$chart\") | .tier" "$CONFIG" 2>/dev/null)" || true
+  if [[ -z "$existing_tier" ]]; then
+    warn "Chart '$chart' not found in any tier"
+    return 0
+  fi
+
+  export yq_chart="$chart"
+  _safe_write 'del(.tiers[].charts[] | select(. == env(yq_chart)))' "Remove $chart from tier $existing_tier"
+}
+
+# =============================================================================
+# DOCKER-IMAGE
+# =============================================================================
+cmd_list_docker_image() {
+  step "Standalone Docker images (project.docker.images)"
+  local output
+  output="$(yq -r '.project.docker.images[] | .name + "\t" + .context + "\t" + (.dockerfile // "Dockerfile")' "$CONFIG" 2>/dev/null)" || true
+  if [[ -z "$output" ]]; then
+    info "No standalone Docker images configured."
+  else
+    printf "  %-20s %-35s %s\n" "NAME" "CONTEXT" "DOCKERFILE"
+    printf "  %-20s %-35s %s\n" "────" "───────" "──────────"
+    echo "$output" | while IFS=$'\t' read -r n c d; do
+      printf "  %-20s %-35s %s\n" "$n" "$c" "$d"
+    done
+  fi
+}
+
+cmd_add_docker_image() {
+  local name="" context="" dockerfile="Dockerfile" registry_path="" single_stage="false"
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --context)        context="$2"; shift 2 ;;
+      --dockerfile)     dockerfile="$2"; shift 2 ;;
+      --registry-path)  registry_path="$2"; shift 2 ;;
+      --single-stage)   single_stage="true"; shift ;;
+      --config|--config=*) shift; [[ "${1:-}" != --* ]] 2>/dev/null && shift || true ;;
+      --dry-run|--yes|-y) shift ;;
+      -*) die "Unknown flag: $1" ;;
+      *) name="$1"; shift ;;
+    esac
+  done
+
+  [[ -z "$name" ]] && die "Usage: infra-config add docker-image <name> --context <path> [--dockerfile F] [--registry-path P] [--single-stage]"
+  [[ -z "$context" ]] && die "Missing --context flag"
+
+  if yq -e ".project.docker.images[] | select(.name == \"$name\")" "$CONFIG" &>/dev/null; then
+    warn "Docker image '$name' already exists"
+    return 0
+  fi
+
+  [[ -z "$registry_path" ]] && registry_path="$name"
+
+  export yq_name="$name" yq_context="$context" yq_dockerfile="$dockerfile" yq_regpath="$registry_path" yq_single="$single_stage"
+
+  local expr
+  if [[ "$single_stage" == "true" ]]; then
+    expr='.project.docker.images += [{"name": env(yq_name), "context": env(yq_context), "dockerfile": env(yq_dockerfile), "registry_path": env(yq_regpath), "single_stage": true}]'
+  else
+    expr='.project.docker.images += [{"name": env(yq_name), "context": env(yq_context), "dockerfile": env(yq_dockerfile), "registry_path": env(yq_regpath)}]'
+  fi
+
+  _safe_write "$expr" "Add docker image: $name"
+}
+
+cmd_remove_docker_image() {
+  local name="${1:-}"
+  [[ -z "$name" ]] && die "Usage: infra-config remove docker-image <name>"
+
+  if ! yq -e ".project.docker.images[] | select(.name == \"$name\")" "$CONFIG" &>/dev/null; then
+    warn "Docker image '$name' not found"
+    return 0
+  fi
+
+  export yq_name="$name"
+  _safe_write 'del(.project.docker.images[] | select(.name == env(yq_name)))' "Remove docker image: $name"
+}
+
+# =============================================================================
+# DOCKER-DIR (shorthand for docker-image)
+# =============================================================================
+cmd_add_docker_dir() {
+  local path="" name="" dockerfile="Dockerfile"
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --name)       name="$2"; shift 2 ;;
+      --dockerfile) dockerfile="$2"; shift 2 ;;
+      --config|--config=*) shift; [[ "${1:-}" != --* ]] 2>/dev/null && shift || true ;;
+      --dry-run|--yes|-y) shift ;;
+      -*) die "Unknown flag: $1" ;;
+      *) path="$1"; shift ;;
+    esac
+  done
+
+  [[ -z "$path" ]] && die "Usage: infra-config add docker-dir <path> [--name N] [--dockerfile F]"
+  path="${path%/}"
+  [[ -z "$name" ]] && name="$(basename "$path")"
+
+  cmd_add_docker_image "$name" --context "$path" --dockerfile "$dockerfile"
+}
+
+# =============================================================================
+# PROJECT
+# =============================================================================
+cmd_list_project() {
+  step "Composite projects (project.projects)"
+  local output
+  output="$(yq -r '.project.projects[] | .domain + "\t" + (.base_path // "-") + "\t" + ((.services | length | tostring) + " services")' "$CONFIG" 2>/dev/null)" || true
+  if [[ -z "$output" ]]; then
+    info "No composite projects configured."
+  else
+    printf "  %-25s %-30s %s\n" "DOMAIN" "BASE PATH" "SERVICES"
+    printf "  %-25s %-30s %s\n" "──────" "─────────" "────────"
+    echo "$output" | while IFS=$'\t' read -r d b s; do
+      printf "  %-25s %-30s %s\n" "$d" "$b" "$s"
+    done
+  fi
+}
+
+cmd_add_project() {
+  local domain="" base_path=""
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --base-path)  base_path="$2"; shift 2 ;;
+      --config|--config=*) shift; [[ "${1:-}" != --* ]] 2>/dev/null && shift || true ;;
+      --dry-run|--yes|-y) shift ;;
+      -*) die "Unknown flag: $1" ;;
+      *) domain="$1"; shift ;;
+    esac
+  done
+
+  [[ -z "$domain" ]] && die "Usage: infra-config add project <domain> [--base-path P]"
+
+  if yq -e ".project.projects[] | select(.domain == \"$domain\")" "$CONFIG" &>/dev/null; then
+    warn "Project '$domain' already exists"
+    return 0
+  fi
+
+  export yq_domain="$domain"
+
+  local expr
+  if [[ -n "$base_path" ]]; then
+    export yq_base="$base_path"
+    expr='.project.projects += [{"domain": env(yq_domain), "base_path": env(yq_base), "services": []}]'
+  else
+    expr='.project.projects += [{"domain": env(yq_domain), "services": []}]'
+  fi
+
+  _safe_write "$expr" "Add project: $domain"
+}
+
+cmd_remove_project() {
+  local domain="${1:-}"
+  [[ -z "$domain" ]] && die "Usage: infra-config remove project <domain>"
+
+  if ! yq -e ".project.projects[] | select(.domain == \"$domain\")" "$CONFIG" &>/dev/null; then
+    warn "Project '$domain' not found"
+    return 0
+  fi
+
+  export yq_domain="$domain"
+  _safe_write 'del(.project.projects[] | select(.domain == env(yq_domain)))' "Remove project: $domain"
+}
+
+# =============================================================================
+# SERVICE
+# =============================================================================
+cmd_list_service() {
+  local domain="${1:-}"
+  if [[ -z "$domain" ]]; then
+    step "All project services"
+    local output
+    output="$(yq -r '.project.projects[] | .domain as $d | .services[] | $d + "\t" + .name + "\t" + (.context // "-") + "\t" + (.dockerfile // "Dockerfile")' "$CONFIG" 2>/dev/null)" || true
+    if [[ -z "$output" ]]; then
+      info "No services configured."
+    else
+      printf "  %-20s %-15s %-25s %s\n" "DOMAIN" "SERVICE" "CONTEXT" "DOCKERFILE"
+      printf "  %-20s %-15s %-25s %s\n" "──────" "───────" "───────" "──────────"
+      echo "$output" | while IFS=$'\t' read -r d n c df; do
+        printf "  %-20s %-15s %-25s %s\n" "$d" "$n" "$c" "$df"
+      done
+    fi
+  else
+    step "Services for $domain"
+    local output
+    output="$(yq -r ".project.projects[] | select(.domain == \"$domain\") | .services[] | .name + \"\t\" + (.context // \"-\") + \"\t\" + (.dockerfile // \"Dockerfile\")" "$CONFIG" 2>/dev/null)" || true
+    if [[ -z "$output" ]]; then
+      info "No services for $domain."
+    else
+      printf "  %-15s %-25s %s\n" "SERVICE" "CONTEXT" "DOCKERFILE"
+      printf "  %-15s %-25s %s\n" "───────" "───────" "──────────"
+      echo "$output" | while IFS=$'\t' read -r n c df; do
+        printf "  %-15s %-25s %s\n" "$n" "$c" "$df"
+      done
+    fi
+  fi
+}
+
+cmd_add_service() {
+  local domain="" svc_name="" dockerfile="" context="" registry_path=""
+  local positional=()
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --dockerfile)     dockerfile="$2"; shift 2 ;;
+      --context)        context="$2"; shift 2 ;;
+      --registry-path)  registry_path="$2"; shift 2 ;;
+      --config|--config=*) shift; [[ "${1:-}" != --* ]] 2>/dev/null && shift || true ;;
+      --dry-run|--yes|-y) shift ;;
+      -*) die "Unknown flag: $1" ;;
+      *) positional+=("$1"); shift ;;
+    esac
+  done
+
+  domain="${positional[0]:-}"
+  svc_name="${positional[1]:-}"
+  [[ -z "$domain" || -z "$svc_name" ]] && die "Usage: infra-config add service <domain> <service-name> --dockerfile F --context C [--registry-path P]"
+
+  if ! yq -e ".project.projects[] | select(.domain == \"$domain\")" "$CONFIG" &>/dev/null; then
+    die "Project '$domain' not found. Add it first: infra-config add project $domain"
+  fi
+
+  if yq -e ".project.projects[] | select(.domain == \"$domain\") | .services[] | select(.name == \"$svc_name\")" "$CONFIG" &>/dev/null; then
+    warn "Service '$svc_name' already exists in $domain"
+    return 0
+  fi
+
+  [[ -z "$dockerfile" ]] && dockerfile="$svc_name/Dockerfile"
+  [[ -z "$context" ]] && context="$svc_name"
+  [[ -z "$registry_path" ]] && registry_path="$domain/$svc_name"
+
+  export yq_domain="$domain" yq_svc="$svc_name" yq_df="$dockerfile" yq_ctx="$context" yq_reg="$registry_path"
+  _safe_write '(.project.projects[] | select(.domain == env(yq_domain)) | .services) += [{"name": env(yq_svc), "dockerfile": env(yq_df), "context": env(yq_ctx), "registry_path": env(yq_reg), "auto_detect": false}]' \
+    "Add service $svc_name to $domain"
+}
+
+cmd_remove_service() {
+  local domain="${1:-}" svc_name="${2:-}"
+  [[ -z "$domain" || -z "$svc_name" ]] && die "Usage: infra-config remove service <domain> <service-name>"
+
+  if ! yq -e ".project.projects[] | select(.domain == \"$domain\") | .services[] | select(.name == \"$svc_name\")" "$CONFIG" &>/dev/null; then
+    warn "Service '$svc_name' not found in $domain"
+    return 0
+  fi
+
+  export yq_domain="$domain" yq_svc="$svc_name"
+  _safe_write 'del(.project.projects[] | select(.domain == env(yq_domain)) | .services[] | select(.name == env(yq_svc)))' \
+    "Remove service $svc_name from $domain"
+}
+
+# =============================================================================
+# DOCKER-GROUP (compound: project + services)
+# =============================================================================
+cmd_add_docker_group() {
+  local base_path="" domain=""
+  local services=()
+  local positional=()
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --domain)   domain="$2"; shift 2 ;;
+      --config|--config=*) shift; [[ "${1:-}" != --* ]] 2>/dev/null && shift || true ;;
+      --dry-run|--yes|-y) shift ;;
+      -*) die "Unknown flag: $1" ;;
+      *) positional+=("$1"); shift ;;
+    esac
+  done
+
+  base_path="${positional[0]:-}"
+  [[ -z "$base_path" ]] && die "Usage: infra-config add docker-group <base-path> <svc1> [svc2...] [--domain D]"
+  base_path="${base_path%/}"
+
+  services=("${positional[@]:1}")
+  (( ${#services[@]} == 0 )) && die "At least one service name is required"
+
+  [[ -z "$domain" ]] && domain="$(basename "$base_path")"
+
+  local tmp=""
+  tmp="$(mktemp)"
+  cp "$CONFIG" "$tmp"
+
+  # Add project if it doesn't exist
+  if ! yq -e ".project.projects[] | select(.domain == \"$domain\")" "$tmp" &>/dev/null; then
+    export yq_domain="$domain" yq_base="$base_path"
+    yq -i '.project.projects += [{"domain": env(yq_domain), "base_path": env(yq_base), "services": []}]' "$tmp"
+  fi
+
+  # Add each service (env vars are current per iteration)
+  for svc in "${services[@]}"; do
+    if yq -e ".project.projects[] | select(.domain == \"$domain\") | .services[] | select(.name == \"$svc\")" "$tmp" &>/dev/null; then
+      warn "Service '$svc' already exists in $domain, skipping"
+      continue
+    fi
+
+    export yq_domain="$domain" yq_svc="$svc" yq_df="${svc}/Dockerfile" yq_ctx="$svc" yq_reg="${domain}/${svc}"
+    yq -i '(.project.projects[] | select(.domain == env(yq_domain)) | .services) += [{"name": env(yq_svc), "dockerfile": env(yq_df), "context": env(yq_ctx), "registry_path": env(yq_reg), "auto_detect": false}]' "$tmp"
+  done
+
+  _confirm_and_apply "$tmp" "Add docker group: $domain (${services[*]})"
+}
+
+# =============================================================================
+# MAIN DISPATCH
+# =============================================================================
+main() {
+  local action="" resource=""
+  local pass_args=()
+
+  # Parse global flags and extract action/resource
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --config)   shift 2 ;;
+      --config=*) shift ;;
+      --dry-run)  DRY_RUN=true; shift ;;
+      --yes|-y)   YES=true; shift ;;
+      -h|--help)  _usage 0 ;;
+      -*)         pass_args+=("$1"); shift ;;
+      *)
+        if [[ -z "$action" ]]; then
+          action="$1"
+        elif [[ -z "$resource" ]]; then
+          resource="$1"
+        else
+          pass_args+=("$1")
+        fi
+        shift
+        ;;
+    esac
+  done
+
+  [[ -z "$action" ]] && _usage 1
+
+  # Resolve config
+  _k8_require_yq
+  _resolve_config
+  CONFIG="$_K8_MERGED_CONFIG"
+
+  # Handle bare "list" with no resource
+  if [[ "$action" == "list" && -z "$resource" ]]; then
+    cmd_list_helm_dir
+    echo ""
+    cmd_list_helm_alias
+    echo ""
+    cmd_list_namespace
+    echo ""
+    cmd_list_timeout
+    echo ""
+    cmd_list_tier_chart
+    echo ""
+    cmd_list_docker_image
+    echo ""
+    cmd_list_project
+    return 0
+  fi
+
+  [[ -z "$resource" ]] && die "Missing resource. Run: infra-config --help"
+
+  # Normalize resource name to function suffix
+  local fn_resource="${resource//-/_}"
+  local fn_name="cmd_${action}_${fn_resource}"
+
+  if ! declare -f "$fn_name" &>/dev/null; then
+    die "Unknown command: infra-config $action $resource"$'\n'"Run: infra-config --help"
+  fi
+
+  "$fn_name" "${pass_args[@]}"
+}
+
+main "$@"
