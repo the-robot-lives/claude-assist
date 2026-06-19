@@ -1,0 +1,62 @@
+#!/usr/bin/env bash
+# Rebuilds start-app.tar.gz from the live start-app template directory.
+# Rebuilds only when source files are newer than the tarball (use -f to force).
+#
+# Usage: build-start-app-tarball [-f]
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+TEMPLATE="$REPO_ROOT/start-app"
+TARBALL="$TEMPLATE/start-app.tar.gz"
+
+if [[ ! -d "$TEMPLATE" ]]; then
+  echo "Error: start-app not found at $TEMPLATE"
+  exit 1
+fi
+
+FORCE=false
+[[ "${1:-}" == "-f" ]] && FORCE=true
+
+build_tarball() {
+  echo "Building tarball from $TEMPLATE ..."
+  tar czf "$TARBALL" \
+    --exclude='.git' \
+    --exclude='node_modules' \
+    --exclude='.next' \
+    --exclude='out' \
+    --exclude='.cache' \
+    --exclude='_build' \
+    --exclude='deps' \
+    --exclude='.elixir_ls' \
+    --exclude='src/app/design-system.generated.css' \
+    --exclude='public/themes/*.css' \
+    --exclude='package-lock.json' \
+    --exclude='mix.lock' \
+    --exclude='next-env.d.ts' \
+    --exclude='*.tsbuildinfo' \
+    --exclude='.DS_Store' \
+    --exclude='.env' \
+    --exclude='backend/.env' \
+    --exclude='frontend/.env' \
+    --exclude='start-app.tar.gz' \
+    -C "$TEMPLATE" .
+  echo "Built: $TARBALL ($(du -h "$TARBALL" | cut -f1))"
+}
+
+if $FORCE || [[ ! -f "$TARBALL" ]]; then
+  build_tarball
+else
+  NEWER=$(find "$TEMPLATE" \
+    -not -path '*/node_modules/*' \
+    -not -path '*/_build/*' \
+    -not -path '*/deps/*' \
+    -not -path '*/.next/*' \
+    -not -name 'start-app.tar.gz' \
+    -newer "$TARBALL" -type f | head -1)
+  if [[ -n "$NEWER" ]]; then
+    build_tarball
+  else
+    echo "Tarball up to date."
+  fi
+fi

@@ -1,6 +1,6 @@
 {
   "name": "@noizu/styleguide",
-  "version": "0.1.14",
+  "version": "0.1.15",
   "description": "Design system components and CSS generation from styleguide-engine",
   "type": "module",
   "repository": {

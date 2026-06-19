@@ -1,0 +1,202 @@
+#!/usr/bin/env bash
+# Creates a new portfolio project from the start-app template.
+#
+# Usage: init-proj-scaffold <project_dir> <slug> <elixir_module> [options]
+# Example: init-proj-scaffold therobotlives.com trl Trl
+#
+# - project_dir:    project identity (default: becomes dir under projects/<project_dir>/app).
+# - slug:           short name for DB user, Redis prefix, npm package
+# - elixir_module:  PascalCase Elixir module name (e.g. Trl, TheRobotLives)
+#
+# Options:
+#   --target <dir>   Extract the app into <dir> instead of projects/<project_dir>/app.
+#   --no-helm        Skip the Helm wrapper-chart prompt
+#   --helm           Force the Helm wrapper-chart step
+
+set -euo pipefail
+
+# ── Locate repo root ──────────────────────────────────────────────
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+
+# Find the actual repo root by searching for .git directory
+while [[ "$REPO_ROOT" != "/" ]]; do
+  if [[ -d "$REPO_ROOT/.git" ]]; then break; fi
+  REPO_ROOT="$(dirname "$REPO_ROOT")"
+done
+
+TEMPLATE="$REPO_ROOT/components/start-app"
+TARBALL="$TEMPLATE/start-app.tar.gz"
+PROJECTS="$REPO_ROOT/projects"
+
+# ── Parse flags + positionals ─────────────────────────────────────
+TARGET_OVERRIDE=""
+HELM_MODE="ask"   # ask | skip | force
+POSITIONAL=()
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --target)   TARGET_OVERRIDE="$2"; shift 2 ;;
+    --target=*) TARGET_OVERRIDE="${1#*=}"; shift ;;
+    --no-helm)  HELM_MODE="skip"; shift ;;
+    --helm)     HELM_MODE="force"; shift ;;
+    -h|--help)
+      grep -E '^# ' "$0" | sed 's/^# \{0,1\}//'
+      exit 0 ;;
+    -*) echo "Error: unknown option '$1'"; exit 1 ;;
+    *)  POSITIONAL+=("$1"); shift ;;
+  esac
+done
+set -- "${POSITIONAL[@]}"
+
+if [[ $# -lt 3 ]]; then
+  echo "Usage: init-proj-scaffold <project_dir> <slug> <elixir_module> [--target <dir>] [--no-helm]"
+  echo "Example: init-proj-scaffold therobotlives.com trl Trl"
+  echo "Example: init-proj-scaffold robotwars trw TheRobotWars --target ./stage/robotwars/app --no-helm"
+  exit 1
+fi
+
+PROJECT_DIR="$1"
+SLUG="$2"
+ELIXIR_MODULE="$3"
+
+[[ "$ELIXIR_MODULE" =~ ^[A-Z] ]] || { echo "Error: elixir_module must be PascalCase (got '$ELIXIR_MODULE')"; exit 1; }
+
+# ── Resolve extraction target ─────────────────────────────────────
+if [[ -n "$TARGET_OVERRIDE" ]]; then
+  [[ "$TARGET_OVERRIDE" = /* ]] || TARGET_OVERRIDE="$PWD/$TARGET_OVERRIDE"
+  TARGET="$TARGET_OVERRIDE"
+  PROJECT_ROOT="$(dirname "$TARGET")"
+else
+  PROJECT_ROOT="$PROJECTS/$PROJECT_DIR"
+  TARGET="$PROJECT_ROOT/app"
+fi
+[[ ! -d "$TARGET" ]] || { echo "Error: $TARGET already exists (app already scaffolded)"; exit 1; }
+
+# ── Derive names ──────────────────────────────────────────────────
+OTP_APP=$(echo "$ELIXIR_MODULE" | sed 's/\([A-Z]\)/_\1/g' | sed 's/^_//' | tr '[:upper:]' '[:lower:]')
+OTP_APP_WEB="${OTP_APP}_web"
+WEB_MODULE="${ELIXIR_MODULE}Web"
+DB_NAME=$(echo "$PROJECT_DIR" | tr '.-' '__')_dev
+DB_NAME_TEST=$(echo "$PROJECT_DIR" | tr '.-' '__')_test
+FRONTEND_NAME="${SLUG}-frontend"
+
+# ── Use default port (docker registry to be implemented later) ─────
+HOST_PORT=8080
+echo ""
+
+echo "Creating project: $PROJECT_DIR"
+echo "  Slug:           $SLUG"
+echo "  Elixir module:  $ELIXIR_MODULE / $WEB_MODULE"
+echo "  OTP app:        $OTP_APP"
+echo "  DB name:        $DB_NAME"
+echo "  DB user:        $SLUG"
+echo "  Host port:      $HOST_PORT"
+echo "  Frontend pkg:   $FRONTEND_NAME"
+echo ""
+
+# ── Step 1: Build tarball ────────────────────────────────────────
+echo "Building start-app tarball..."
+tar czf "$TARBALL" \
+  --exclude='.git' \
+  --exclude='node_modules' \
+  --exclude='.next' \
+  --exclude='out' \
+  --exclude='.cache' \
+  --exclude='_build' \
+  --exclude='deps' \
+  --exclude='.elixir_ls' \
+  --exclude='src/app/design-system.generated.css' \
+  --exclude='public/themes/*.css' \
+  --exclude='package-lock.json' \
+  --exclude='mix.lock' \
+  --exclude='next-env.d.ts' \
+  --exclude='*.tsbuildinfo' \
+  --exclude='.DS_Store' \
+  --exclude='.env' \
+  --exclude='backend/.env' \
+  --exclude='frontend/.env' \
+  --exclude='start-app.tar.gz' \
+  -C "$TEMPLATE" .
+echo "Built: $TARBALL"
+
+# ── Step 2: Extract ───────────────────────────────────────────────
+echo "Extracting to $TARGET ..."
+mkdir -p "$TARGET"
+tar xzf "$TARBALL" -C "$TARGET"
+
+# ── Step 3: Hydrate — content replacements ────────────────────────
+echo "Hydrating Elixir files ..."
+
+find "$TARGET/backend" -type f \( -name '*.ex' -o -name '*.exs' \) \
+  -exec sed -i '' \
+    -e "s/StarterWeb/${WEB_MODULE}/g" \
+    -e "s/Starter/${ELIXIR_MODULE}/g" \
+    -e "s/:starter/:${OTP_APP}/g" \
+    -e "s/\"starter\"/\"${OTP_APP}\"/g" \
+    -e "s/starter_dev/${SLUG}_dev/g" \
+    {} +
+
+echo "Hydrating Dockerfile ..."
+sed -i '' \
+  -e "s|rel/starter|rel/${OTP_APP}|g" \
+  -e "s|bin/starter|bin/${OTP_APP}|g" \
+  "$TARGET/backend/Dockerfile"
+
+echo "Hydrating frontend package.json ..."
+sed -i '' \
+  -e "s/starter-frontend/${FRONTEND_NAME}/g" \
+  "$TARGET/frontend/package.json"
+
+# ── Step 3b: Hydrate — file/directory renames (bottom-up) ─────────
+echo "Renaming files and directories ..."
+
+[[ -f "$TARGET/backend/lib/starter.ex" ]] && \
+  mv "$TARGET/backend/lib/starter.ex" "$TARGET/backend/lib/${OTP_APP}.ex"
+
+[[ -f "$TARGET/backend/lib/starter_web.ex" ]] && \
+  mv "$TARGET/backend/lib/starter_web.ex" "$TARGET/backend/lib/${OTP_APP_WEB}.ex"
+
+[[ -d "$TARGET/backend/lib/starter_web" ]] && \
+  mv "$TARGET/backend/lib/starter_web" "$TARGET/backend/lib/${OTP_APP_WEB}"
+
+[[ -d "$TARGET/backend/lib/starter" ]] && \
+  mv "$TARGET/backend/lib/starter" "$TARGET/backend/lib/${OTP_APP}"
+
+# ── Step 3c: Verify no remnants ───────────────────────────────────
+REMNANT_FILES=$(grep -rl 'Starter\|:starter' "$TARGET/backend" --include='*.ex' --include='*.exs' 2>/dev/null || true)
+REMNANTS=0
+[[ -n "$REMNANT_FILES" ]] && REMNANTS=$(echo "$REMNANT_FILES" | wc -l | tr -d ' ')
+if [[ "$REMNANTS" -gt 0 ]]; then
+  echo ""
+  echo "WARNING: $REMNANTS file(s) still contain Starter/:starter references:"
+  grep -rl 'Starter\|:starter' "$TARGET/backend" --include='*.ex' --include='*.exs' 2>/dev/null
+  echo ""
+fi
+
+# ── Step 3d: Generate docker-compose overlay ────────────────────
+echo "Generating docker-compose.override.yaml (port $HOST_PORT) ..."
+cat > "$TARGET/docker-compose.override.yaml" <<OVERLAY
+# Port overlay — unique host port for this project
+services:
+  nginx:
+    ports:
+      - "${HOST_PORT}:80"
+OVERLAY
+
+# ── Step 5: Summary ───────────────────────────────────────────────
+echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "Project created: $TARGET"
+echo ""
+echo "  Module:   $ELIXIR_MODULE / $WEB_MODULE"
+echo "  OTP app:  $OTP_APP"
+echo "  DB:       $DB_NAME (${SLUG}/${SLUG}_dev)"
+echo "  Port:     $HOST_PORT"
+echo "  Frontend: $FRONTEND_NAME"
+echo ""
+echo "Next steps:"
+echo "  cd $TARGET"
+echo "  make init"
+echo "  make build"
+echo "  make run"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" SCRIPT_EOF
