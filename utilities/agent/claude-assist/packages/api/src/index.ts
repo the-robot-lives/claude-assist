@@ -52,7 +52,7 @@ app.route("/api/index", createIndexRoutes(indexer));
 app.route("/api/prompts", createPromptRoutes(storage));
 app.route("/api/projects", createProjectRoutes(storage));
 app.route("/api/tags", createTagRoutes(storage));
-app.route("/api/llm", createLlmRoutes(llmService));
+app.route("/api/llm", createLlmRoutes(llmService, storage));
 
 const port = Number(process.env.PORT) || 3100;
 

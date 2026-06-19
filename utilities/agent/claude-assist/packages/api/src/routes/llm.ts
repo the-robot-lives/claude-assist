@@ -1,8 +1,47 @@
 import { Hono } from "hono";
 import type { LlmService } from "../services/llm.ts";
+import type { StorageService } from "../services/storage.ts";
 import type { LlmCompletionRequest, LlmConfig } from "@claude-assist/shared";
 
-export function createLlmRoutes(llmService: LlmService): Hono {
+const LLM_ENV_KEYS: Record<string, string> = {
+  anthropic: "ANTHROPIC_API_KEY",
+  openai: "OPENAI_API_KEY",
+  groq: "GROQ_API_KEY",
+  cerebras: "CEREBRAS_API_KEY",
+  deepseek: "DEEPSEEK_API_KEY",
+  zai: "ZAI_API_KEY",
+  litellm: "LITELLM_API_KEY",
+};
+
+function isMaskedKey(key: string | undefined): boolean {
+  if (!key) return false;
+  return key === "***" || /^.{3}\.\.\..{4}$/.test(key);
+}
+
+function resolveApiKey(config: LlmConfig, storage: StorageService): LlmConfig {
+  if (config.apiKey && !isMaskedKey(config.apiKey)) return config;
+
+  const resolved = { ...config };
+
+  const envKey = LLM_ENV_KEYS[config.provider];
+  if (envKey && process.env[envKey]) {
+    resolved.apiKey = process.env[envKey];
+    return resolved;
+  }
+
+  const raw = storage.getSetting("app_config");
+  if (raw) {
+    try {
+      const stored = JSON.parse(raw) as { llm?: LlmConfig };
+      if (stored.llm?.apiKey && !isMaskedKey(stored.llm.apiKey)) {
+        resolved.apiKey = stored.llm.apiKey;
+      }
+    } catch {}
+  }
+  return resolved;
+}
+
+export function createLlmRoutes(llmService: LlmService, storage: StorageService): Hono {
   const routes = new Hono();
 
   routes.get("/status", (c) => {
@@ -31,8 +70,9 @@ export function createLlmRoutes(llmService: LlmService): Hono {
     if (!config?.provider) {
       return c.json({ data: [] });
     }
+    const resolved = resolveApiKey(config, storage);
     const ephemeral = new (await import("../services/llm.ts")).LlmService();
-    await ephemeral.initialize(config);
+    await ephemeral.initialize(resolved);
     if (!ephemeral.available) {
       return c.json({ data: [] });
     }

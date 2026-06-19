@@ -10,7 +10,7 @@ test:
 	@true
 
 install: ## Install deps + symlink claude-assist to ~/.local/bin
-	@if [ -d "$(PROJ_DIR)/node_modules" ]; then \
+	@if [ -d "$(PROJ_DIR)/node_modules/.bin" ]; then \
 		echo "==> pnpm dependencies already present; skipping refresh."; \
 	elif ! command -v curl >/dev/null 2>&1 || ! curl -fsS --max-time 3 https://registry.npmjs.org >/dev/null 2>&1; then \
 		echo "==> Fatal: registry.npmjs.org not reachable and node_modules is missing."; \

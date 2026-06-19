@@ -19,7 +19,7 @@ const PROVIDER_DEFAULTS: Record<string, { envKey?: string; baseUrl?: string; mod
   litellm: { envKey: "LITELLM_API_KEY", baseUrl: "https://inference.noizu.com/v1", model: "claude-sonnet-4-6", label: "litellm" },
   groq: { envKey: "GROQ_API_KEY", baseUrl: "https://api.groq.com/openai/v1", model: "llama-3.3-70b", label: "groq" },
   cerebras: { envKey: "CEREBRAS_API_KEY", baseUrl: "https://api.cerebras.ai/v1", model: "llama-3.3-70b", label: "cerebras" },
-  deepseek: { envKey: "DEEPSEEK_API_KEY", baseUrl: "https://api.deepseek.com/v1", model: "deepseek-chat", label: "deepseek" },
+  deepseek: { envKey: "DEEPSEEK_API_KEY", baseUrl: "https://api.deepseek.com", model: "deepseek-chat", label: "deepseek" },
   zai: { envKey: "ZAI_API_KEY", baseUrl: "https://open.bigmodel.cn/api/paas/v4", model: "glm-4", label: "zai" },
 };
 

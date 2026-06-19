@@ -336,20 +336,21 @@ liquibase_targets:
     safety: destructive
 
   npl-mcp:
-    description: "NPL MCP TimescaleDB instance in apps-ns"
-    namespace: apps-ns
-    service: svc/npl-mcp-postgresql
+    description: "NPL MCP database on app-timescaledb"
+    namespace: apps
+    service: svc/app-timescaledb
     remote_port: 5432
     local_port: 54326
     db_type: postgresql
-    db_name: npl
+    db_name: tobor_locker
     schema: public
     secret_name: npl-mcp-secrets
-    username: npl
-    secret_key: NPL_DB_PASSWORD
+    secret_namespace: apps-ns
+    username: tobor_locker
+    secret_key: DB_PASSWORD
     safety: destructive
-    changelog_dir: incubator/projects/NoizuPromptLingo/liquibase
-    changelog_file: changelogs/changelog.yaml
+    changelog_dir: projects/NoizuPromptLingo/db
+    changelog_file: changelog/db.changelog-master.yaml
 
   # App-level targets with concrete Liquibase changelogs.
   start-app:
@@ -868,7 +869,7 @@ project:
             format: image
     - domain: npl-mcp
       name: mcp.derobot.is
-      base_path: incubator/projects/NoizuPromptLingo
+      base_path: projects/NoizuPromptLingo
       services:
         - name: server
           dockerfile: Dockerfile

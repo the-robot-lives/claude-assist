@@ -480,8 +480,9 @@ export function Settings() {
                   if (!val) {
                     setConfig({ ...config, llm: undefined });
                   } else {
-                    setConfig({ ...config, llm: { ...config.llm, provider: val, model: undefined } });
+                    setConfig({ ...config, llm: { provider: val, apiKey: config.llm?.apiKey } });
                   }
+                  setAvailableModels([]);
                 }}
                 className="rounded bg-canvas px-3 py-1.5 text-sm text-text-primary border border-border-subtle outline-none"
               >

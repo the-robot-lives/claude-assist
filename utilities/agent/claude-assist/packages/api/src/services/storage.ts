@@ -97,7 +97,6 @@ export class StorageService {
       );
 
       CREATE INDEX IF NOT EXISTS idx_conversations_project ON conversations(project_path);
-      CREATE INDEX IF NOT EXISTS idx_conversations_harness ON conversations(harness);
       CREATE INDEX IF NOT EXISTS idx_conversations_updated ON conversations(updated_at);
     `);
 
