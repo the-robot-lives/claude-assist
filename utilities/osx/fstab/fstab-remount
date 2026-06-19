@@ -76,22 +76,27 @@ while IFS= read -r line; do
     [[ -z "$line" || "$line" =~ ^[[:space:]]*# ]] && continue
 
     uuid="" label="" disk=""
-    remaining=()
 
-    # Split while \040 is still literal (not yet a space) — fields stay intact
-    for token in $line; do
-        case "$token" in
-            uuid=*)  uuid="${token#uuid=}"   ;;
-            label=*) label="${token#label=}" ;;
-            disk=*)  disk="${token#disk=}"   ;;
-            *)       remaining+=("$token")   ;;
-        esac
-    done
+    # Extract tagged key=value pairs (values are single tokens, except label which may have spaces)
+    [[ "$line" =~ uuid=([^[:space:]]+) ]] && uuid="${BASH_REMATCH[1]}" || uuid="-"
+    [[ "$line" =~ disk=([^[:space:]]+) ]] && disk="${BASH_REMATCH[1]}" || disk="-"
+    if [[ "$line" =~ label=(.*)[[:space:]][[:space:]]+disk= ]]; then
+        label="${BASH_REMATCH[1]}"
+    else
+        label="-"
+    fi
 
-    # Decode fstab-style octal escapes (e.g. \040 → space) in each field
-    mountpoint="$(printf '%b' "${remaining[0]:-}")"
-    fstype="$(printf '%b' "${remaining[1]:-}")"
-    options="$(printf '%b' "${remaining[2]:-}")"
+    # Positional fields: everything after "disk=<device> " — mountpoint may contain spaces
+    # but fstype, options, dump, fsck are always single tokens, so parse from the right
+    positional=$(sed 's/.*disk=[^[:space:]]*[[:space:]]*//' <<< "$line")
+    fstype=$(awk '{print $(NF-3)}' <<< "$positional")
+    options=$(awk '{print $(NF-2)}' <<< "$positional")
+    mountpoint=$(awk '{for(i=1;i<=NF-4;i++) printf "%s%s",$i,(i<NF-4?" ":"")}' <<< "$positional")
+
+    # Decode fstab-style octal escapes (e.g. \040 → space)
+    mountpoint="$(printf '%b' "$mountpoint")"
+    fstype="$(printf '%b' "$fstype")"
+    options="$(printf '%b' "$options")"
 
     [[ -z "$mountpoint" || "$mountpoint" == "none" ]] && continue
     [[ "$options" == *"noauto"* ]] && continue

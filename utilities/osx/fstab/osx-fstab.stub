@@ -5,6 +5,9 @@
 #
 # Mount attempt order: UUID → label → disk (first success wins)
 # Use - for unknown/unavailable identifiers
+# Spaces in labels/mountpoints: literal spaces and \040 escapes both work
+# Separate fields with 2+ spaces; tagged fields (uuid=, label=, disk=) are extracted first,
+# then fstype/options/dump/fsck are parsed from the right — remainder is the mountpoint.
 # options: noauto = skip entirely, rw = read-write, auto = mount at boot, owners = enable ownership
 # dump/fsck: always 0 0
 #
