@@ -1,11 +1,26 @@
 ---
 id: ADR-001
 title: "Three-Layer Storage Architecture (Weaviate + PostgreSQL + Redis)"
-status: accepted
+status: amended
+amended_by: ADR-008
 date: 2026-05-27
 ---
 
 # ADR-001: Three-Layer Storage Architecture (Weaviate + PostgreSQL + Redis)
+
+> **🔄 AMENDED (2026-06-21) for the Elixir/OTP refinement ([ADR-008](./ADR-008-elixir-otp-implementation.md)).**
+> The three-store split stands, but the roles are refined into a **hybrid**:
+> - **Weaviate** — semantic **content** vectors (1536-d) only, behind a `Memory.VectorStore` behaviour.
+> - **PostgreSQL (pgvector)** — system of record: relational metadata, lifecycle, the association
+>   graph (recursive CTE), ACLs, **and the 7-d emotional vector** (`emotional_embedding vector(7)`,
+>   HNSW). Emotional resonance thus becomes a first-class, ACL-co-located ANN query rather than
+>   app-side cosine over JSONB.
+> - **Redis** — **cache only** (tangential hot-index ZSETs + query-embedding cache), demoted from
+>   any system-of-record role.
+>
+> Net effect: the "PostgreSQL with pgvector only" alternative below is *partially adopted* (for the
+> emotional vector and graph), while Weaviate is retained for heavy semantic ANN. The original
+> body is preserved for context.
 
 ## Context
 

@@ -1,53 +1,65 @@
+# Per-project compose — nginx → frontend + backend
+# Connects to shared PG/Redis via external lets-go_default network
+#
+# Images are built by `make build` — this file only runs them.
+# Usage:
+#   make init    — generate .env with secrets + credentials
+#   make build   — build all images
+#   make run     — start containers
+
 services:
-  postgres:
-    image: postgres:16-alpine
+  migrations:
+    build:
+      context: ./backend/db
+      dockerfile: Dockerfile
+    env_file: .env
+    networks:
+      - infra
+    restart: "no"
+
+  nginx:
+    image: ${REGISTRY:-ops.noizu.com}/${PROJECT_DIR:-start-app}/nginx:${TAG:-latest}
+    ports:
+      - "${PORT:-8080}:80"
+    depends_on:
+      - backend
+      - frontend
+    networks:
+      - app
+    restart: unless-stopped
+
+  backend:
+    image: ${REGISTRY:-ops.noizu.com}/${PROJECT_DIR:-start-app}/backend:${TAG:-latest}
+    env_file: .env
     environment:
-      POSTGRES_DB: therobotremembers
-      POSTGRES_USER: trr
-      POSTGRES_PASSWORD: trr_dev_password
-    ports:
-      - "5434:5432"
-    volumes:
-      - pg_data:/var/lib/postgresql/data
-      - ./packages/storage/migrations:/docker-entrypoint-initdb.d
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U trr"]
-      interval: 5s
-      timeout: 3s
-      retries: 5
+      PHX_SERVER: "true"
+      PORT: "4000"
+    expose:
+      - "4000"
+    depends_on:
+      migrations:
+        condition: service_completed_successfully
+    networks:
+      - app
+      - infra
+    restart: unless-stopped
 
-  weaviate:
-    image: cr.weaviate.io/semitechnologies/weaviate:1.28.2
+  frontend:
+    image: ${REGISTRY:-ops.noizu.com}/${PROJECT_DIR:-start-app}/frontend:${TAG:-latest}
     environment:
-      QUERY_DEFAULTS_LIMIT: 50
-      AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: "true"
-      PERSISTENCE_DATA_PATH: /var/lib/weaviate
-      DEFAULT_VECTORIZER_MODULE: none
-      CLUSTER_HOSTNAME: node1
-    ports:
-      - "8081:8080"
-      - "50051:50051"
-    volumes:
-      - weaviate_data:/var/lib/weaviate
-    healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8080/v1/.well-known/ready"]
-      interval: 5s
-      timeout: 3s
-      retries: 5
+      PORT: "3000"
+    expose:
+      - "3000"
+    depends_on:
+      - backend
+    networks:
+      - app
+    restart: unless-stopped
 
-  redis:
-    image: redis:7-alpine
-    ports:
-      - "6380:6379"
-    volumes:
-      - redis_data:/data
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 3s
-      retries: 5
-
-volumes:
-  pg_data:
-  weaviate_data:
-  redis_data:
+networks:
+  app:
+    # Project-internal network — nginx, frontend, backend can see each other
+    # but are isolated from other projects' services
+  infra:
+    external: true
+    name: lets-go_default

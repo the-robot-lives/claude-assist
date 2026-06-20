@@ -1,11 +1,17 @@
 ---
 id: ADR-007
 title: "TypeScript as Primary Implementation Language"
-status: accepted
+status: superseded
+superseded_by: ADR-008
 date: 2026-05-27
 ---
 
 # ADR-007: TypeScript as Primary Implementation Language
+
+> **⚠️ SUPERSEDED (2026-06-21) by [ADR-008](./ADR-008-elixir-otp-implementation.md).** The app
+> has been re-scaffolded onto Elixir/Phoenix/OTP. This ADR itself called the TypeScript choice
+> *"a pragmatic choice, not a technical one"* and acknowledged *"Elixir's concurrency model is
+> superior for agent orchestration."* Retained for historical context only.
 
 ## Context
 

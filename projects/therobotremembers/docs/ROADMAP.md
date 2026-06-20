@@ -1,10 +1,31 @@
 # Implementation Roadmap: The Robot Remembers
 
+> **🔄 Refined plan (2026-06-21).** Two changes from the original linear, agent-per-phase, ~36-week
+> roadmap below:
+> 1. **Stack pivot to Elixir/OTP** ([ADR-008](./adrs/ADR-008-elixir-otp-implementation.md)) — see
+>    the corrected tech stack line.
+> 2. **Phasing → a walking skeleton.** Instead of "no end-to-end value until late," **Phase 0
+>    delivers a vertical slice** (`remember` + emotional-resonance `recall` over MCP, with the eight
+>    agents as inline functions/stubs), then each agent is *graduated* to an autonomous OTP/Oban
+>    process:
+>    - **Phase 0** — skeleton: schema, `Memory.Store` (sync emotional vector + async content
+>      embed→Weaviate), `Recall.active` (semantic + emotional + winnow + XML), MCP server
+>      (`remember`/`recall`/`recall_by_emotion` + Discovery). Agents inline; Monitor/Weaver/
+>      Curator/Dreamer stubbed.
+>    - **Phase 1** — Weaver online (associations) + reinforcement (`reinforce`/`denforce`, Hebbian).
+>    - **Phase 2** — Monitor GenServer pool + 36-bucket Redis hot index (tangential <100 ms).
+>    - **Phase 3** — Curator cron (decay/prune/merge) + first async LLM seams (mood inference,
+>      deep contradiction).
+>    - **Phase 4** — Dreamer (consolidation/synthesis) + operator dashboard + `tune_config`.
+>
+> The phase *content* below (components, stories, risks) remains the reference for what each agent
+> must do; the sequencing and runtime are superseded by the five phases above.
+
 ## Overview
 
 **The Robot Remembers** is an associative memory service for AI agents. Unlike conventional RAG, memories are living nodes in a weighted association graph, each carrying emotional and contextual metadata from the moment of formation. Retrieval operates across multiple dimensions — semantic similarity, emotional resonance, temporal proximity, and relational weight — producing recall that feels intelligent rather than mechanical.
 
-**Tech stack:** TypeScript (API + agent runtime), Next.js 15 (operator dashboard), PostgreSQL (metadata + graph), Weaviate (vector store), Redis/Valkey (hot index + event bus)
+**Tech stack:** Elixir/Phoenix (API + agent runtime, OTP), Next.js 15 (operator dashboard), PostgreSQL + pgvector (metadata + graph + 7-d emotional vector), Weaviate (semantic content vectors), Redis/Valkey (hot-index cache + query-embedding cache), Oban (durable jobs/cron), Phoenix.PubSub (ephemeral notifications), `noizu_mcp` (MCP tool surface) — see [ADR-008](./adrs/ADR-008-elixir-otp-implementation.md)
 
 **Deployment target:** Self-hosted Kubernetes cluster (`*.noizu.com`), deployed via Helm wrapper chart pattern per parent repo conventions
 
@@ -712,7 +733,7 @@ gantt
 ### Phase 4
 - **Dreamer scheduling**: Fixed interval (every 4 hours) vs demand-driven (triggered when consolidation candidates exceed a threshold)? *Recommendation: both. Fixed interval as a floor, with on-demand triggers for bursts of decaying memories.*
 - **Tangential insertion UX**: How should tangentially inserted memories appear to the consuming LLM? Inline text? System message? Separate XML block? *Recommendation: brief XML block with `type="tangential"` attribute, placed after the most recent conversation turn. The consuming LLM's system prompt should instruct it to treat tangential memories as background context, not direct answers.*
-- **Hot index bucket granularity**: How should emotional states map to Redis keys? Continuous (too many keys) vs bucketed (loses precision). *Recommendation: bucket each dimension into 5 levels (very-low, low, mid, high, very-high), creating a composite key. 5^7 = 78,125 possible buckets, but most will be empty. Use a sparse representation.*
+- **Hot index bucket granularity**: How should emotional states map to Redis keys? Continuous (too many keys) vs bucketed (loses precision). *Resolved (aligns with [ADR-004](./adrs/ADR-004-dual-retrieval-modes.md)): bucket on **VAD only** — `quantize(valence,4):quantize(arousal,3):quantize(dominance,3)` = **36 buckets**. The earlier "5^7 = 78,125 buckets" idea is rejected: it is ~all-empty, un-warmable, and ~0% cache-hit, which breaks the <100 ms tangential path. Hormones are dropped from bucketing (used only for fine resonance re-rank). The Refresher warms the current bucket + its immediate neighbors to avoid boundary cutoffs.*
 
 ### Phase 5
 - **Compartment hierarchy**: Flat compartments only, or nested (compartment-within-compartment)? *Recommendation: flat for Phase 5. Nesting adds complexity without clear immediate value. Revisit if usage patterns demand it.*

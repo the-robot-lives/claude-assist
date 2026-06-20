@@ -1,5 +1,25 @@
 # Architecture: The Robot Remembers
 
+> **🔄 Architecture refinement (2026-06-21) — Elixir/OTP.** The implementation has pivoted from
+> the TypeScript design captured below to **Elixir/Phoenix/OTP**. The *memory model, emotional
+> model, lifecycle, weight dynamics, retrieval modes, and the eight-agent concept are unchanged* —
+> what changed is how they are realized. Read the new ADRs alongside this document:
+> - **[ADR-008](./adrs/ADR-008-elixir-otp-implementation.md)** — Elixir/OTP runtime; agents map to
+>   GenServer / Oban / PubSub / `noizu_labs_services`; MCP via `noizu_mcp`. *(supersedes ADR-007)*
+> - **[ADR-009](./adrs/ADR-009-deterministic-ensemble-surgical-llm.md)** — agents are deterministic
+>   mechanics + LLM at four async seams only; dispositions become real tuning parameters.
+> - **[ADR-010](./adrs/ADR-010-hot-async-ingest-split.md)** — fast synchronous capture + durable
+>   async enrichment (resolves the <200 ms-capture vs LLM-contradiction tension).
+> - **[ADR-011](./adrs/ADR-011-event-durability-oban-vs-pubsub.md)** — durable work on Oban,
+>   ephemeral notifications on PubSub.
+> - **[ADR-001 (amended)](./adrs/ADR-001-three-layer-storage-architecture.md)** — hybrid storage:
+>   Weaviate (semantic vectors) + Postgres/pgvector (metadata, graph, ACLs, **7-d emotional
+>   vector**) + Redis (cache only). §6 below describes the pre-Elixir three-store split; defer to
+>   the amended ADR-001 where they differ.
+>
+> Sections §4 (Agent Architecture), §6 (Storage), §8.2 (Hot Index), and §9 (Weight Dynamics)
+> describe the *intent*; the ADRs above describe the *Elixir realization*.
+
 ## 1. Design Philosophy
 
 The Robot Remembers is **not a RAG system**. It is an associative memory fabric modeled after biological memory: memories are not flat documents to be vector-searched but living nodes in a weighted graph, each carrying the emotional and contextual texture of the moment they were formed.

@@ -1,8 +1,16 @@
-node_modules/
-dist/
-.turbo/
-*.tsbuildinfo
+start-app*tar.gz
+# Generated secrets
+start-app*tgz
 .env
-.env.local
-.env.*.local
-!.env.development
+.envrc
+backend/.env
+frontend/.env
+.npmrc
+# OS
+.DS_Store
+
+# Dependencies (if running locally)
+backend/_build/
+backend/deps/
+frontend/node_modules/
+frontend/.next/
