@@ -349,7 +349,7 @@ liquibase_targets:
     username: tobor_locker
     secret_key: DB_PASSWORD
     safety: destructive
-    changelog_dir: projects/NoizuPromptLingo/db
+    changelog_dir: projects/NoizuPromptLingo/backend/db
     changelog_file: changelog/db.changelog-master.yaml
 
   # App-level targets with concrete Liquibase changelogs.

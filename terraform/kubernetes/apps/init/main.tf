@@ -17,6 +17,12 @@ module "app_valkey" {
   storage_class       = local.storage_class
   managed_secret_name = "app-valkey-secrets"
 
+  # Named ACL user/pass pairs (in addition to the default requirepass user).
+  # NoizuPromptLingo connects as the "npl" user.
+  acl_users = {
+    npl = { password_key = "NPL_VALKEY_PASSWORD", rules = "~* &* +@all" }
+  }
+
   infisical = merge(local.infisical_base, { secrets_path = "/apps/valkey" })
 }
 

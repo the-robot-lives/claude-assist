@@ -8,6 +8,17 @@ locals {
     "app.kubernetes.io/managed-by" = "terraform"
   })
   selector = { "app.kubernetes.io/name" = var.name }
+
+  # Default user (requirepass) + any named ACL users. The "$(VAR)" tokens are
+  # substituted by Kubernetes from the container env at runtime, so passwords
+  # never appear literally in the spec.
+  valkey_command = concat(
+    ["valkey-server", "--requirepass", "$(VALKEY_PASSWORD)", "--appendonly", "yes", "--dir", "/data"],
+    flatten([
+      for username, cfg in var.acl_users :
+      concat(["--user", username, "on", ">$(${cfg.password_key})"], split(" ", cfg.rules))
+    ])
+  )
 }
 
 # InfisicalSecret: operator syncs Infisical -> the managed Secret.
@@ -95,7 +106,7 @@ resource "kubernetes_deployment_v1" "valkey" {
         container {
           name    = "valkey"
           image   = var.image
-          command = ["valkey-server", "--requirepass", "$(VALKEY_PASSWORD)", "--appendonly", "yes", "--dir", "/data"]
+          command = local.valkey_command
 
           port {
             name           = "valkey"
@@ -108,6 +119,20 @@ resource "kubernetes_deployment_v1" "valkey" {
               secret_key_ref {
                 name = var.managed_secret_name
                 key  = var.password_key
+              }
+            }
+          }
+
+          # One env var per named ACL user, sourced from the managed Secret.
+          dynamic "env" {
+            for_each = var.acl_users
+            content {
+              name = env.value.password_key
+              value_from {
+                secret_key_ref {
+                  name = var.managed_secret_name
+                  key  = env.value.password_key
+                }
               }
             }
           }

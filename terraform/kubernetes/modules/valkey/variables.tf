@@ -58,9 +58,22 @@ variable "managed_secret_name" {
 }
 
 variable "password_key" {
-  description = "Key in the managed Secret holding the Valkey password."
+  description = "Key in the managed Secret holding the Valkey password (the default user / requirepass)."
   type        = string
   default     = "VALKEY_PASSWORD"
+}
+
+# Named ACL users (user/pass pairs) created in addition to the default user.
+# Map of username => { password_key, rules }, where password_key is the key in
+# the managed Secret holding that user's password and rules are space-separated
+# Valkey ACL rules (e.g. "~* &* +@all" for full access to all keys/channels).
+variable "acl_users" {
+  description = "Named Valkey ACL users in addition to the default user."
+  type = map(object({
+    password_key = string
+    rules        = string
+  }))
+  default = {}
 }
 
 variable "infisical" {
