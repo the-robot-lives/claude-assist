@@ -31,6 +31,12 @@ defmodule Mix.Tasks.Trr.Sim.Load do
 
     if opts[:reset] do
       {n, _} = Repo.delete_all(from(m in MemSchema, where: m.owner_agent == ^agent))
+
+      if TheRobotRemembers.Memory.VectorStore.enabled?() do
+        TheRobotRemembers.Memory.VectorStore.delete_class()
+        TheRobotRemembers.Memory.VectorStore.ensure_class()
+      end
+
       Mix.shell().info("reset: deleted #{n} existing memories for #{agent}")
     end
 

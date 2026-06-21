@@ -101,12 +101,15 @@ SUBTREES=(
   "projects/therobotlives.com|therobotlives-dot-com|mono-repo-dev"
   "projects/therobotmakes.com|therobotmakes-dot-com|mono-repo-dev"
   "projects/therobotpaints|therobotpaints|mono-repo-dev"
-  "projects/therobotplans.com|therobotplans-dot-com|mono-repo-dev"
+  # therobotplans.com RETIRED 2026-06-21: renamed to projects/tobornalp.com (below).
+  # "projects/therobotplans.com|therobotplans-dot-com|mono-repo-dev"
   "projects/therobotremembers|therobotremembers|mono-repo-dev"
   "projects/therobotsrise.com|therobotsrise-dot-com|mono-repo-dev"
   "projects/theWaitcher|the-waitcher|mono-repo-dev"
   "projects/vibeucation.com|vibeucation-dot-com|mono-repo-dev"
-  "projects/tobornalp.com|tobornalp|mono-repo-dev"
+  # snapshot method: this path's history contains an old symlink commit, so `git subtree
+  # push` can't split it. Pushes HEAD's folder tree as a single commit instead.
+  "projects/tobornalp.com|tobornalp|mono-repo-dev|snapshot"
 
   # utilities/agent
   "utilities/agent/claude-assist|claude-assist|mono-repo-dev"
@@ -294,8 +297,57 @@ if [[ $LIST_ONLY -eq 1 ]]; then
 fi
 
 # --- Push -------------------------------------------------------------------
+FAILED=()
+
+# Snapshot push: send HEAD's tree for $prefix to the remote branch as a single commit.
+# Used for prefixes whose history can't be split by git subtree (e.g. an old symlink
+# commit lives in the path's history).
+push_snapshot() {
+  local prefix="$1" remote="$2" branch="$3" tree commit tip tiptree
+  if ! tree=$(git rev-parse -q --verify "HEAD:${prefix}" 2>/dev/null) \
+     || [[ "$(git cat-file -t "$tree" 2>/dev/null)" != "tree" ]]; then
+    echo "SKIP  $prefix (snapshot: HEAD:$prefix is not a committed tree — commit the folder first)"
+    return
+  fi
+  if [[ $DRY_RUN -eq 1 ]]; then
+    echo "DRY   $prefix → $remote/$branch (snapshot, tree $tree)"
+    return
+  fi
+  # Parent the snapshot on the current remote tip so the push fast-forwards;
+  # if the tip already has this exact tree, there's nothing to do.
+  tip=$(git ls-remote "$remote" "refs/heads/${branch}" 2>/dev/null | awk '{print $1}')
+  if [[ -n "$tip" ]]; then
+    git fetch -q "$remote" "refs/heads/${branch}" 2>/dev/null || true
+    tiptree=$(git cat-file -p "$tip" 2>/dev/null | awk '/^tree /{print $2; exit}')
+    if [[ "$tiptree" == "$tree" ]]; then
+      echo "OK    $prefix → $remote/$branch (snapshot already up to date)"
+      return
+    fi
+  fi
+  echo "PUSH  $prefix → $remote/$branch (snapshot)"
+  if [[ -n "$tip" ]]; then
+    commit=$(git commit-tree "$tree" -p "$tip" -m "snapshot: $prefix → $remote/$branch")
+  else
+    commit=$(git commit-tree "$tree" -m "snapshot: $prefix → $remote/$branch")
+  fi
+  if ! git push "$remote" "${commit}:refs/heads/${branch}"; then
+    echo "FAIL  $prefix → $remote/$branch (snapshot)"
+    FAILED+=("$prefix")
+  fi
+}
+
 push_subtree() {
-  local prefix="$1" remote="$2" branch="$3"
+  local prefix="$1" remote="$2" branch="$3" method="${4:-subtree}"
+  if [[ "$method" == "snapshot" ]]; then
+    push_snapshot "$prefix" "$remote" "$branch"
+    return
+  fi
+  # A symlinked prefix is a blob, not a tree — git subtree split cannot handle it
+  # (fatal: "tree entry is of type blob"). Skip rather than abort the whole run.
+  if [[ -L "$prefix" ]]; then
+    echo "SKIP  $prefix (symlink → $(readlink "$prefix"); not a real subtree)"
+    return
+  fi
   if [[ ! -d "$prefix" ]]; then
     echo "SKIP  $prefix (directory not found)"
     return
@@ -305,13 +357,17 @@ push_subtree() {
     return
   fi
   echo "PUSH  $prefix → $remote/$branch"
-  git subtree push --prefix="$prefix" "$remote" "$branch"
+  # Don't let one failing subtree abort the batch (set -e is on).
+  if ! git subtree push --prefix="$prefix" "$remote" "$branch"; then
+    echo "FAIL  $prefix → $remote/$branch"
+    FAILED+=("$prefix")
+  fi
 }
 
 for e in "${CANDIDATES[@]}"; do
-  IFS='|' read -r prefix remote branch <<<"$e"
+  IFS='|' read -r prefix remote branch method <<<"$e"
   [[ -n "$BRANCH_OVERRIDE" ]] && branch="$BRANCH_OVERRIDE"
-  push_subtree "$prefix" "$remote" "$branch"
+  push_subtree "$prefix" "$remote" "$branch" "$method"
 done
 
 echo ""
@@ -321,4 +377,11 @@ if [[ $DRY_RUN -eq 1 ]]; then
   echo "=== Dry run complete (${#CANDIDATES[@]} subtree(s)$_target) ==="
 else
   echo "=== Subtree push complete (${#CANDIDATES[@]} subtree(s)$_target) ==="
+fi
+
+if [[ ${#FAILED[@]} -gt 0 ]]; then
+  echo ""
+  echo "!!! ${#FAILED[@]} subtree(s) FAILED to push:"
+  printf '  - %s\n' "${FAILED[@]}"
+  exit 1
 fi

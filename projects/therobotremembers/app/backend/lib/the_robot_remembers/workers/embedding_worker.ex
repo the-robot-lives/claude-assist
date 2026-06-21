@@ -37,7 +37,7 @@ defmodule TheRobotRemembers.Workers.EmbeddingWorker do
   end
 
   defp enqueue_link(memory_id) do
-    %{memory_id: memory_id} |> LinkJob.new() |> Oban.insert()
+    TheRobotRemembers.Jobs.enqueue(LinkJob, %{memory_id: memory_id})
     :ok
   rescue
     e -> require Logger; Logger.warning("[EmbeddingWorker] could not enqueue link: #{inspect(e)}"); :ok

@@ -24,9 +24,10 @@ defmodule TheRobotRemembers.Memory.Reinforcement do
     if ids == [] do
       :ok
     else
-      %{"memory_ids" => ids, "owner" => context[:owner_agent]}
-      |> ReinforcementWorker.new()
-      |> Oban.insert()
+      TheRobotRemembers.Jobs.enqueue(ReinforcementWorker, %{
+        "memory_ids" => ids,
+        "owner" => context[:owner_agent]
+      })
 
       :ok
     end

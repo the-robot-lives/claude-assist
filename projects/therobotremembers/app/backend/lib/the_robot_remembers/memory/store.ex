@@ -123,7 +123,7 @@ defmodule TheRobotRemembers.Memory.Store do
   end
 
   defp enqueue_embedding(memory_id) do
-    %{memory_id: memory_id} |> EmbeddingWorker.new() |> Oban.insert()
+    TheRobotRemembers.Jobs.enqueue(EmbeddingWorker, %{memory_id: memory_id})
     :ok
   rescue
     e -> Logger.warning("[Store] could not enqueue embedding: #{inspect(e)}"); :ok

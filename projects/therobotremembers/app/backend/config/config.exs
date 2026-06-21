@@ -90,7 +90,7 @@ config :the_robot_remembers, :embeddings,
 # Weaviate via noizu_weaviate (our Weaviate client). Holds the four named text vectors per
 # memory (BYO/vectorizer:none). NOTE: noizu_weaviate reads `endpoint` at COMPILE time, so set
 # it per-environment in config (dev here / prod.exs); the api key is runtime (runtime.exs).
-config :noizu_weaviate, endpoint: "http://localhost:8080/"
+config :noizu_weaviate, endpoint: System.get_env("WEAVIATE_ENDPOINT", "https://weaviate.noizu.com/")
 
 # `enabled` gates the VectorStore — off until a Weaviate instance is actually available, so
 # emotional-resonance + lexical recall work without it.

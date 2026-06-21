@@ -349,6 +349,42 @@ resource "cloudflare_dns_record" "txt_spf_o365" {
   ttl     = 1
 }
 
+# ── Remote-access reverse-tunnel subsystem ───────────────────────────────
+
+# HTTP vhost wildcard for the remote-access reverse-tunnel subsystem.
+# <name>.remote-access.noizu.com → noizu-server, proxied (orange cloud).
+# More-specific than the "*" CNAME below, so this wins for that namespace.
+resource "cloudflare_dns_record" "remote_access_wildcard" {
+  zone_id = local.zone_id
+  name    = "*.remote-access"
+  type    = "A"
+  content = local.ip
+  proxied = true
+  ttl     = 1
+}
+
+# Apex for a status/landing page on the subsystem itself.
+resource "cloudflare_dns_record" "remote_access_apex" {
+  zone_id = local.zone_id
+  name    = "remote-access"
+  type    = "A"
+  content = local.ip
+  proxied = true
+  ttl     = 1
+}
+
+# frps control port (:7000). DNS-only — the frpc→frps control channel is a
+# long-lived custom TCP stream and cannot go through Cloudflare's HTTP/orange
+# proxy, so the laptop must dial the origin directly.
+resource "cloudflare_dns_record" "tunnel_control" {
+  zone_id = local.zone_id
+  name    = "tunnel"
+  type    = "A"
+  content = local.ip
+  proxied = false
+  ttl     = 1
+}
+
 # ── Wildcard CNAME ───────────────────────────────────────────────────────
 
 resource "cloudflare_dns_record" "wildcard" {

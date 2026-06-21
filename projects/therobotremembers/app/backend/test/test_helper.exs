@@ -1,4 +1,5 @@
-ExUnit.start()
+# Live-Weaviate tests are opt-in (they hit weaviate.noizu.com): run with `--include weaviate`.
+ExUnit.start(exclude: [:weaviate])
 # Apply the memory engine schema (Liquibase 025–030) to the test DB. Canonical schema is
 # Liquibase; this keeps the memory suite self-contained (the tables only FK to `memories`).
 TheRobotRemembers.TestSchema.ensure_memory_schema!()

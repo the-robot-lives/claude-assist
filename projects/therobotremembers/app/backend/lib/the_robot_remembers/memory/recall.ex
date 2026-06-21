@@ -18,6 +18,11 @@ defmodule TheRobotRemembers.Memory.Recall do
   @active_states [:active, :consolidating]
   @graph_max_hops 3
   @graph_min_weight 0.2
+  # Per-node fan-out cap: the walk follows only the N strongest edges per node. Without this a
+  # dense association graph (e.g. an agent with thousands of edges) makes the recursive walk
+  # combinatorial — hundreds of thousands of paths that spill to disk and stall. Capping fan-out
+  # bounds the walk to ~N^hops paths and focuses traversal on the strongest associations.
+  @graph_fanout 8
 
   def config, do: Application.get_env(:the_robot_remembers, :memory_recall, [])
   defp vector_weights, do: config()[:vector_weights] || %{content: 1.0, context: 0.8, tangent: 0.8, reflection: 0.7}
@@ -94,20 +99,25 @@ defmodule TheRobotRemembers.Memory.Recall do
     WITH RECURSIVE walk(memory_id, depth, path_weight, path) AS (
       SELECT unnest(string_to_array($1, ',')::uuid[]), 0, 1.0::real, ARRAY[]::uuid[]
       UNION ALL
-      SELECT CASE WHEN e.source_memory_id = w.memory_id THEN e.target_memory_id ELSE e.source_memory_id END,
-             w.depth + 1, w.path_weight * e.weight, w.path || w.memory_id
+      SELECT nxt.memory_id, w.depth + 1, w.path_weight * nxt.weight, w.path || w.memory_id
       FROM walk w
-      JOIN association_edges e
-        ON (e.source_memory_id = w.memory_id OR e.target_memory_id = w.memory_id) AND e.weight >= $2
+      JOIN LATERAL (
+        SELECT CASE WHEN e.source_memory_id = w.memory_id THEN e.target_memory_id ELSE e.source_memory_id END AS memory_id,
+               e.weight
+        FROM association_edges e
+        WHERE (e.source_memory_id = w.memory_id OR e.target_memory_id = w.memory_id) AND e.weight >= $2
+        ORDER BY e.weight DESC, e.id
+        LIMIT $5
+      ) nxt ON true
       WHERE w.depth < $3
-        AND NOT ((CASE WHEN e.source_memory_id = w.memory_id THEN e.target_memory_id ELSE e.source_memory_id END) = ANY(w.path))
+        AND NOT (nxt.memory_id = ANY(w.path))
     )
     SELECT memory_id::text, MAX(path_weight) AS pw
     FROM walk WHERE depth > 0
     GROUP BY memory_id ORDER BY pw DESC, memory_id LIMIT $4
     """
 
-    case Ecto.Adapters.SQL.query(Repo, sql, [Enum.join(seed_ids, ","), @graph_min_weight, @graph_max_hops, cpp()]) do
+    case Ecto.Adapters.SQL.query(Repo, sql, [Enum.join(seed_ids, ","), @graph_min_weight, @graph_max_hops, cpp(), @graph_fanout]) do
       {:ok, %{rows: rows}} ->
         case Enum.map(rows, fn [id, _pw] -> id end) do
           [] -> []

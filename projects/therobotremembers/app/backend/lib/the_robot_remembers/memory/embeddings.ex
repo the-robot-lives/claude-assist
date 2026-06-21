@@ -12,16 +12,26 @@ defmodule TheRobotRemembers.Memory.Embeddings do
   @callback embed([String.t()]) :: {:ok, [[float()]]} | {:error, term()}
 
   def config, do: Application.get_env(:the_robot_remembers, :embeddings, [])
+  def provider, do: config()[:provider] || :openai
   def dimensions, do: config()[:dimensions] || 1536
   def model, do: config()[:model] || "text-embedding-3-small"
-  def configured?, do: is_binary(config()[:api_key]) and config()[:api_key] != ""
+
+  def configured? do
+    case provider() do
+      :deterministic -> true
+      _ -> is_binary(config()[:api_key]) and config()[:api_key] != ""
+    end
+  end
 
   @doc "Embed a list of (non-blank) texts. Vectors returned in the same order."
   @spec embed([String.t()]) :: {:ok, [[float()]]} | {:error, term()}
   def embed([]), do: {:ok, []}
 
   def embed(texts) when is_list(texts) do
-    if configured?(), do: do_embed(texts), else: {:error, :not_configured}
+    case provider() do
+      :deterministic -> {:ok, Enum.map(texts, &hash_embed/1)}
+      _ -> if configured?(), do: do_embed(texts), else: {:error, :not_configured}
+    end
   end
 
   @spec embed_one(String.t()) :: {:ok, [float()]} | {:error, term()}
@@ -53,4 +63,23 @@ defmodule TheRobotRemembers.Memory.Embeddings do
         {:error, reason}
     end
   end
+
+  # Deterministic, offline "embedding" (tests/CI): feature-hash word tokens into `dimensions()`
+  # dims and L2-normalize, so texts sharing words get similar vectors. Not real semantics, but
+  # stable and good enough to exercise the Weaviate named-vector search path without an LLM.
+  defp hash_embed(text) when is_binary(text) do
+    dims = dimensions()
+
+    counts =
+      text
+      |> String.downcase()
+      |> String.split(~r/[^a-z0-9]+/u, trim: true)
+      |> Enum.reduce(%{}, fn tok, acc -> Map.update(acc, :erlang.phash2(tok, dims), 1.0, &(&1 + 1.0)) end)
+
+    vec = for i <- 0..(dims - 1), do: Map.get(counts, i, 0.0)
+    norm = :math.sqrt(Enum.reduce(vec, 0.0, fn x, a -> a + x * x end))
+    if norm > 0.0, do: Enum.map(vec, &(&1 / norm)), else: vec
+  end
+
+  defp hash_embed(_), do: List.duplicate(0.0, dimensions())
 end

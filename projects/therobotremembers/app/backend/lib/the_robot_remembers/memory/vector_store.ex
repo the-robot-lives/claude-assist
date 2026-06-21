@@ -31,8 +31,9 @@ defmodule TheRobotRemembers.Memory.VectorStore do
   @doc "Create the class with four named BYO vectors if absent. Idempotent."
   def ensure_class do
     if enabled?() do
+      # noizu_weaviate decodes responses with ATOM keys
       case call(:get, "v1/schema/#{class()}", nil) do
-        {:ok, %{"class" => _}} -> :ok
+        {:ok, %{class: _}} -> :ok
         _ -> create_class()
       end
     else
@@ -91,14 +92,15 @@ defmodule TheRobotRemembers.Memory.VectorStore do
           "nearVector: {vector: #{Jason.encode!(query_vec)}, targetVectors: [\"#{named_vector}\"]}" <>
           where <> ") { memory_id _additional { distance } } } }"
 
+      # noizu_weaviate decodes responses with ATOM keys (incl. the class name as an atom).
       case call(:post, "v1/graphql", %{query: gql}) do
-        {:ok, %{"data" => %{"Get" => get}}} when is_map(get) ->
-          rows = Map.get(get, class(), []) || []
+        {:ok, %{data: %{Get: get}}} when is_map(get) ->
+          rows = Map.get(get, String.to_atom(class()), []) || []
 
           {:ok,
            Enum.map(rows, fn r ->
-             dist = get_in(r, ["_additional", "distance"]) || 1.0
-             %{memory_id: r["memory_id"], score: 1.0 - dist}
+             dist = get_in(r, [:_additional, :distance]) || 1.0
+             %{memory_id: r[:memory_id], score: 1.0 - dist}
            end)}
 
         other ->
@@ -112,6 +114,30 @@ defmodule TheRobotRemembers.Memory.VectorStore do
   def delete(memory_id) do
     if enabled?(), do: call(:delete, "v1/objects/#{class()}/#{memory_id}", nil), else: :ok
     :ok
+  end
+
+  @doc "Delete the whole class (all objects) — clean re-population / test teardown."
+  def delete_class do
+    if enabled?(), do: call(:delete, "v1/schema/#{class()}", nil)
+    :ok
+  end
+
+  @doc "Count objects in the class via GraphQL Aggregate (verification)."
+  def count do
+    if enabled?() do
+      case call(:post, "v1/graphql", %{query: "{ Aggregate { #{class()} { meta { count } } } }"}) do
+        {:ok, %{data: %{Aggregate: agg}}} when is_map(agg) ->
+          case Map.get(agg, String.to_atom(class()), []) do
+            [%{meta: %{count: c}} | _] -> {:ok, c}
+            _ -> {:ok, 0}
+          end
+
+        other ->
+          other
+      end
+    else
+      {:error, :disabled}
+    end
   end
 
   defp build_where(filters) when map_size(filters) == 0, do: ""
