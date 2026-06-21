@@ -66,6 +66,7 @@ the specs.
 | [`docs/specs/file-formats.md`](docs/specs/file-formats.md) | Import/export formats, interchange standards, and round-trip fidelity. |
 | [`docs/specs/reverse-engineering.md`](docs/specs/reverse-engineering.md) | How source and binaries become models; the unified code-graph. |
 | [`docs/specs/rendering-and-vr.md`](docs/specs/rendering-and-vr.md) | The 3D bubble layout and the performance/VR rendering pipeline. |
+| [`docs/specs/unity-6.3-baseline.md`](docs/specs/unity-6.3-baseline.md) | Verified Unity 6.3 LTS engine baseline (graphics, DOTS, XR, scripting) with primary sources. |
 | [`docs/specs/design-conventions.md`](docs/specs/design-conventions.md) | Visual, layout, color, and interaction conventions across diagram types. |
 | [`docs/adrs/`](docs/adrs/) | Architecture Decision Records. |
 

@@ -12,6 +12,14 @@ layout/render sit in it), [`../CONCEPTS.md`](../CONCEPTS.md) (what a *bubble*, *
 treatment, color, and label rules). This spec owns the *how* of positioning and drawing; those
 documents own the *what* and *why*.
 
+> **Engine baseline:** Unity **6.3 LTS** (`6000.3`), **URP + Render Graph**, Entities **1.4.x**.
+> The verified engine facts behind the API choices below — GPU Resident Drawer, GPU occlusion
+> culling, `RenderMeshIndirect`, foveation, AppSW, scripting runtime — are recorded with primary
+> sources in [`unity-6.3-baseline.md`](unity-6.3-baseline.md). Two facts from that doc constrain
+> this design directly: **(1)** Unity's built-in GPU occlusion culling only culls meshes managed by
+> its GPU Resident Drawer, so our custom indirect path must run **its own** Hi-Z occlusion (below);
+> **(2)** `Graphics.DrawMeshInstancedIndirect` is **obsolete** — use `Graphics.RenderMeshIndirect`.
+
 ---
 
 ## 1. Overview
@@ -211,7 +219,7 @@ path to millions is **indirect drawing**.
 | GPU Instancing | ~1023 / draw | `MaterialPropertyBlock` | Limited |
 | SRP Batcher | — | Lowers per-draw CPU, **not draw count** | Helps, insufficient alone |
 | `DrawMeshInstanced` | 1023 / call | CPU-supplied array | Limited |
-| **`RenderMeshIndirect` / `DrawMeshInstancedIndirect`** | **Millions** | GPU reads instance count from a `ComputeBuffer` | **The scalable path** |
+| **`RenderMeshIndirect`** | **Millions** | GPU reads instance count from a `GraphicsBuffer` (`IndirectDrawIndexedArgs`); one buffer can hold many draw commands | **The scalable path** (`DrawMeshInstancedIndirect` is obsolete in 6.x) |
 | `BatchRendererGroup` | Millions | Underpins Entities Graphics | Viable (via DOTS, §3.5) |
 
 The indirect-draw loop, which the CPU never iterates per instance:
@@ -241,9 +249,13 @@ accept) its entire subtree without touching the children. The octree (§3.5) mak
 rather than O(total).
 
 For occlusion, **do not use Unity's baked occlusion culling** — it bakes static geometry and our
-graph is dynamic. Use **GPU Hi-Z**: build a hierarchical depth pyramid, test bounds against it in
-compute, in the standard two-pass form (draw last-frame-visible set, build Hi-Z, re-test the rest).
-This is the same approach Nanite and Unity 6's GPU occlusion use.
+graph is dynamic. We also cannot lean on Unity 6's **built-in** GPU occlusion culling: it is a
+sub-feature of the GPU Resident Drawer and **only culls meshes the Resident Drawer manages** — meshes
+we draw through our own `RenderMeshIndirect` path act as occluders but are **not themselves culled**
+(verified, [`unity-6.3-baseline.md`](unity-6.3-baseline.md) §3). So we run **our own GPU Hi-Z**:
+build a hierarchical depth pyramid, test bounds against it in compute, in the standard two-pass form
+(draw last-frame-visible set, build Hi-Z, re-test the rest). This is the same approach Nanite and
+Unity 6's built-in GPU occlusion use — we just own the implementation.
 
 ### 3.5 Spatial structures and DOTS
 
@@ -388,3 +400,13 @@ as non-negotiable.
 - [`../CONCEPTS.md`](../CONCEPTS.md) — bubbles, containment, HLOD proxies, model vs. projection.
 - [`design-conventions.md`](design-conventions.md) — visual treatment, color, metric-to-radius
   mapping, and label rules referenced throughout §2 and §3.
+- [`unity-6.3-baseline.md`](unity-6.3-baseline.md) — the verified Unity 6.3 LTS engine facts (GPU
+  Resident Drawer, occlusion culling, `RenderMeshIndirect`, Render Graph, foveation/AppSW, DOTS
+  versions, scripting runtime) behind the API choices in this spec, with primary sources.
+
+> **VR foveation note (verified):** drive Quest foveation through the **OpenXR SRP Foveation API**
+> (`XRDisplaySubsystem.foveatedRenderingLevel` / `…Flags = GazeAllowed`), **not** the 6.1 VRS
+> Shading Rate API — Quest/Android XR foveation uses a different Vulkan extension (Fragment Density)
+> and is incompatible with that API. If we adopt Application SpaceWarp, our custom indirect shaders
+> **must emit motion vectors** (a `LightMode="MotionVectors"` pass), Vulkan-only. See
+> [`unity-6.3-baseline.md`](unity-6.3-baseline.md) §5.

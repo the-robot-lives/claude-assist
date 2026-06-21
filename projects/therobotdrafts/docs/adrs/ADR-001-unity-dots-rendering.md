@@ -7,6 +7,12 @@ date: 2026-06-21
 
 # ADR-001: Unity DOTS + GPU-driven indirect rendering
 
+> **Engine baseline:** Unity **6.3 LTS** (`6000.3`), **URP + Render Graph**, Entities **1.4.x**,
+> **IL2CPP** on **.NET Standard 2.1**. Verified engine facts and their primary sources are in
+> [`unity-6.3-baseline.md`](../specs/unity-6.3-baseline.md). This ADR's decision is confirmed
+> sound against that baseline, with two refinements folded in below (own-Hi-Z occlusion;
+> `RenderMeshIndirect` over the now-obsolete `DrawMeshInstancedIndirect`).
+
 ## Context
 
 The Robot Draft must hold **90fps in VR** while displaying graphs with up to a **million elements**
@@ -40,11 +46,15 @@ Concretely:
   on the hot path.
 - **`RenderMeshIndirect` / indirect instanced draws.** Visible instances are written to GPU buffers
   and drawn with indirect arguments, so the CPU issues a handful of draw calls regardless of element
-  count.
+  count. (Unity 6.x marks the older `DrawMeshInstancedIndirect` obsolete; `RenderMeshIndirect` with
+  `GraphicsBuffer.IndirectDrawIndexedArgs` is the current API.) Built as Render Graph passes via
+  `AddRenderPasses` — URP Compatibility Mode is removed in 6.3.
 - **Compute-shader culling and HLOD selection.** A GPU compute pass performs **octree culling**,
   **Hi-Z (hierarchical-Z) occlusion culling**, frustum culling, and per-cluster **HLOD** selection,
   emitting the instance and argument buffers the indirect draw consumes. The CPU never iterates a
-  million elements per frame.
+  million elements per frame. We implement Hi-Z **ourselves** because Unity 6's built-in GPU
+  occlusion culling only culls meshes managed by its GPU Resident Drawer — not our custom indirect
+  meshes ([`unity-6.3-baseline.md`](../specs/unity-6.3-baseline.md) §3).
 - **Foveated rendering** in VR, driving detail toward the gaze point (see
   [`rendering-and-vr.md`](../specs/rendering-and-vr.md)).
 - **Zero per-frame allocation** on the render path is a hard, enforced constraint, not a goal.

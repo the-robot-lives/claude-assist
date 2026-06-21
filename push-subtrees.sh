@@ -27,8 +27,9 @@ push_subtree() {
 }
 
 # --- 3rd-party ---
+push_subtree 3rd-party/bottlecrm                   bottlecrm                        master
 push_subtree 3rd-party/chartdb                    noizu-forks-chartdb             main
-push_subtree 3rd-party/clickhouse                  noizu-forks-clickhouse           master
+# push_subtree 3rd-party/clickhouse                noizu-forks-clickhouse           master  # TODO: no such remote + dir absent
 push_subtree 3rd-party/directus                    noizu-forks-directus             main
 push_subtree 3rd-party/drawio                      noizu-forks-drawio               dev
 push_subtree 3rd-party/excalidraw                  noizu-forks-excalidraw           master
@@ -91,6 +92,7 @@ push_subtree projects/therobotmakes.com            therobotmakes-dot-com        
 push_subtree projects/therobotpaints               therobotpaints                   main
 push_subtree projects/therobotplans.com            therobotplans-dot-com            main
 push_subtree projects/therobotremembers             therobotremembers                main
+push_subtree projects/therobotsrise.com            therobotsrise-dot-com            main
 push_subtree projects/theWaitcher                  the-waitcher                     main
 push_subtree projects/vibeucation.com              vibeucation-dot-com              main
 push_subtree projects/tobornalp.com                tobornalp                        main

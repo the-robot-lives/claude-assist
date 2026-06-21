@@ -1,0 +1,175 @@
+agent: aria
+date: "2025-05-08"
+day_index: 123
+weekday: Thursday
+phase: "Q2 — core build & first incidents"
+project: p5
+day_summary: >
+  The event schema registry shipped — versioned event schemas, the source of truth that unblocks the
+  rewrite. Aria's PR merged after a clean review; momentum, finally. Sam reviewed the PR and Aria
+  watched Sam learn from it in the comments, which flipped a switch — Aria isn't only the one being
+  taught anymore. Marcus's sign-off was terse and, by Marcus's standards, glowing.
+
+memories:
+  - seq: 1
+    occurred_at: "2025-05-08T09:50:00-04:00"
+    domain: engineering
+    topic: "schema registry merges"
+    project: p5
+    collaborators: [marcus]
+    content: >
+      The schema registry shipped this morning. Versioned event schemas, a single source of truth
+      for what a valid event looks like — and with it, the rewrite stops being blocked on a moving
+      target. Aria has been waiting weeks for this green check.
+    context: >
+      The registry came in close to the small, honest shape Marcus argued for back in April: it
+      versions exactly the event types Cartograph actually emits, no speculative formats, with a
+      clean path to add a new version without breaking old producers. The worker can now ask the
+      registry "is this a known shape, and which version" instead of trusting whatever bytes arrive
+      off the wire. Marcus reviewed it and left the kind of comment Aria has learned to read as high
+      praise — "fine, this is the right amount of registry" — which from Marcus is roughly a standing
+      ovation. Aria merged it and felt the rewrite's foundation go solid underfoot for the first time.
+    reflection: >
+      Aria built the elegant general version in Aria's head back in April and then deliberately did
+      not ship it. The thing that merged is smaller and truer, and Aria is prouder of the restraint
+      than Aria would have been of the cleverness.
+    tangent: >
+      "The right amount of registry" is going in the same mental folder as "version the shapes you
+      actually have." Marcus is slowly teaching Aria an entire aesthetic in five-word fragments.
+    learned: "A scoped, honest design earns Marcus's rare praise; the registry now lets the worker validate-and-version instead of trusting raw input."
+    mood: { valence: 0.45, arousal: 0.52, dominance: 0.52 }
+    neurotransmitters: { cortisol: 0.42, dopamine: 0.66, oxytocin: 0.55, serotonin: 0.54 }
+    salience: 0.85
+    content_type: episodic
+
+  - seq: 2
+    occurred_at: "2025-05-08T11:30:00-04:00"
+    domain: code_review
+    topic: "Sam learns from Aria's PR"
+    project: p5
+    collaborators: [sam]
+    content: >
+      Sam reviewed the registry PR and left a string of genuine questions — why the version lives in
+      the envelope, why rejection is loud instead of silent. Answering Sam, Aria realized Aria was
+      teaching, and that it felt entirely different from being taught.
+    context: >
+      Sam approached the review the way Sam approaches everything right now, apologizing twice before
+      asking anything actually worth asking. But the questions were good — Sam wanted to know why the
+      schema version belonged on the event envelope rather than inferred per field, and why a
+      malformed event gets counted and rejected instead of dropped. Aria wrote out the reasoning,
+      including the whole backstory of Theo's silent-drop fear, and watched Sam's follow-ups get
+      sharper as the model landed. Somewhere in the thread Aria recognized the rhythm from the other
+      side — this was Marcus's move, answering the real question under the asked one, except now Aria
+      was the one doing it. Sam ended with "ok that actually makes sense, thank you," no apology
+      attached, and Aria noticed that small graduation too.
+    reflection: >
+      Three months ago Aria was the green one over-apologizing in Marcus's review threads. Now Aria
+      is the one a junior is learning from. The role didn't announce itself — it just quietly arrived
+      while Aria was busy with the work.
+    tangent: >
+      Aria thought of being mentored on the borrow checker three weeks ago and being the mentor
+      today, and how short the distance between the two chairs turned out to be. A few weeks, one
+      shipped subsystem, and a junior with good questions.
+    learned: "Teaching crystallizes a design — explaining the registry to Sam exposed which decisions Aria could actually justify."
+    mood: { valence: 0.50, arousal: 0.50, dominance: 0.55 }
+    neurotransmitters: { cortisol: 0.40, dopamine: 0.64, oxytocin: 0.62, serotonin: 0.55 }
+    salience: 0.87
+    content_type: episodic
+
+  - seq: 3
+    occurred_at: "2025-05-08T13:40:00-04:00"
+    domain: engineering
+    topic: "wiring the worker to the registry"
+    project: p4
+    collaborators: []
+    content: >
+      With the registry merged, Aria spent the afternoon wiring the Rust worker to validate against
+      it — every incoming event checked, versioned, and either accepted or loudly rejected. The
+      silent drop now has a metric and a name.
+    context: >
+      This was the join Aria had been designing toward since April: the worker no longer trusts the
+      wire. Each event is matched against a known schema version; anything that fails is counted on a
+      rejection metric and routed to a dead-letter path instead of vanishing. Aria built it with the
+      ownership discipline Marcus drilled in three weeks ago, moving each validated event forward
+      cleanly with no borrowed references trailing behind, and the code stayed small and legible the
+      whole way. Watching the rejection counter tick up under a deliberately malformed test payload
+      was, in its small way, the most satisfying moment of the day — the exact failure that scared
+      Theo, finally visible, finally loud.
+    reflection: >
+      The registry and the worker were always one idea split across two projects. Today they became
+      one system, and the seam disappeared. Aria likes when a design stops being a diagram and starts
+      being a thing.
+    tangent: >
+      Aria can already imagine showing Theo the rejection counter and saying "the one that scares you
+      — it can't hide anymore." Aria is saving that for the next time Theo looks tired.
+    learned: "The worker now dead-letters and counts malformed events against the registry — Theo's silent-drop failure mode is observable for the first time."
+    mood: { valence: 0.48, arousal: 0.55, dominance: 0.54 }
+    neurotransmitters: { cortisol: 0.44, dopamine: 0.65, oxytocin: 0.52, serotonin: 0.53 }
+    salience: 0.81
+    content_type: episodic
+
+  - seq: 4
+    occurred_at: "2025-05-08T15:15:00-04:00"
+    domain: meeting
+    topic: "weekly PR review, on the giving side"
+    project: p5
+    collaborators: [marcus, sam]
+    content: >
+      In Thursday PR review Marcus walked the team through the registry as an example of scoping done
+      right, and pointed at Aria's rejection-metric choice as the kind of thing he wished more code
+      did. Sam took notes. Aria felt the praise land sideways and stick.
+    context: >
+      Marcus does not do effusive, so when Marcus held up Aria's work in front of the team as a
+      pattern to copy — specifically the decision to make failure loud and countable rather than
+      convenient and silent — it carried more weight than a paragraph of compliments from anyone
+      else. Marcus framed it as engineering hygiene, not flattery, which is exactly why it counted.
+      Sam, sitting in the same review where Aria once sat as the nervous newcomer, wrote it down.
+      Aria caught the symmetry and held it: the review room hadn't changed, but Aria's place in it
+      had. Lena wasn't on the call, but Priya was, and Priya dropped a quick "nice, this unblocks a
+      lot" that Aria did not need but enjoyed anyway.
+    reflection: >
+      Marcus withholds praise so completely that when it comes, it recalibrates how Aria sees
+      Aria's own work. Aria has stopped fishing for it and started trying to deserve it, which is a
+      healthier hunger and, weirdly, a more reliable way to get it.
+    tangent: >
+      Aria remembered re-reading Priya's "welcome aboard 🎉" from day one more times than Aria would
+      admit. Aria did not re-read Marcus's praise today, but Aria suspects Aria will remember it
+      longer.
+    learned: "Marcus signals trust by holding work up as an example to the team, not by complimenting it directly."
+    mood: { valence: 0.52, arousal: 0.50, dominance: 0.56 }
+    neurotransmitters: { cortisol: 0.40, dopamine: 0.65, oxytocin: 0.58, serotonin: 0.56 }
+    salience: 0.84
+    content_type: episodic
+
+  - seq: 5
+    occurred_at: "2025-05-08T18:00:00-04:00"
+    domain: reflection
+    topic: "momentum, and a small unease"
+    project: p4
+    collaborators: []
+    content: >
+      A good day, end to end: the registry shipped, the worker validates against it, Sam learned
+      from Aria, Marcus approved out loud. Under the momentum, though, a thin thread of unease — the
+      old worker is still running production while the new one matures, and the two are not yet equal.
+    context: >
+      Aria sat with the satisfaction and then, because Aria cannot help it, went looking for what
+      could still go wrong. The new worker is correct and observable in the test rig; the old worker
+      is what is actually catching customer events tonight, with all its known sins — the burst
+      backups, the connection starvation, the silent drop Aria has now fixed only in the version that
+      isn't live yet. There is a window, until cutover, where Cartograph runs the thing Aria knows is
+      flawed instead of the thing Aria has made better. Aria noted the unease without quite knowing
+      what to do with it, filed it next to Theo's pager folklore, and decided to push the cutover
+      timeline a little harder. The gap between built and deployed felt, tonight, like a held breath.
+    reflection: >
+      Aria is happiest the moment a thing works in the rig and most nervous the moment after, when
+      Aria remembers it isn't the thing in production yet. That gap is where incidents live. Aria
+      should respect it more than Aria's good mood wants to.
+    tangent: >
+      Back in January Aria thought the danger was in not understanding the system. Tonight the danger
+      feels like the opposite — understanding exactly what's wrong and not having shipped the fix in
+      time. Aria isn't sure which is worse. Aria has a feeling Aria's about to find out.
+    learned: "The riskiest window is between built-and-correct and deployed-to-production; a known-flawed system runs until cutover."
+    mood: { valence: 0.35, arousal: 0.48, dominance: 0.50 }
+    neurotransmitters: { cortisol: 0.48, dopamine: 0.58, oxytocin: 0.50, serotonin: 0.50 }
+    salience: 0.79
+    content_type: episodic
