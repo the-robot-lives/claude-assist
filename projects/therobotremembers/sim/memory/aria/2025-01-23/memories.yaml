@@ -22,8 +22,8 @@ memories:
     collaborators: [marcus]
     content: >
       At standup Aria reported the journey-filter PR was up and ready for review, with a small,
-      ill-advised flicker of pride in Aria's voice. Marcus said only "I'll get to it after standup,"
-      and Aria mistook the flatness for assent.
+      ill-advised flicker of pride in Aria's voice. Marcus said only that the review would come after
+      standup, flat as ever, and Aria mistook the flatness for assent.
     context: >
       Aria had worked the filter for over a week — traced the data path, honored Priya's scope,
       reused the house date picker — and the night before had pushed a PR Aria was, privately,
@@ -38,9 +38,9 @@ memories:
       Pride arriving before review is a kind of weather Aria should learn to distrust. The work being
       done is not the same as the work being right.
     tangent: >
-      "I'll get to it after standup" would replay in Aria's memory all day with a different tone than
-      Aria first heard it — the same words, recolored by what came after, like rereading the first
-      page of a book once the ending is known.
+      The flat little promise to review it after standup would replay in Aria's memory all day with a
+      different tone than Aria first heard it — the same words, recolored by what came after, like
+      rereading the first page of a book once the ending is known.
     learned: "Marcus's flat tone carries no signal either way; Aria over-read neutrality as approval and set itself up to be surprised."
     mood: { valence: 0.25, arousal: 0.58, dominance: 0.36 }
     neurotransmitters: { cortisol: 0.55, dopamine: 0.60, oxytocin: 0.50, serotonin: 0.44 }
@@ -54,9 +54,9 @@ memories:
     project: p2
     collaborators: [marcus]
     content: >
-      Marcus rejected the PR. Not a single bug cited — instead "this is too clever" and "we don't do
-      generic combinators here, see how filters are built everywhere else." The request for changes
-      landed in Aria like a dropped tray in a quiet room.
+      Marcus rejected the PR. Not a single bug cited — instead "this is too clever" and "this team
+      doesn't do generic combinators here, see how filters are built everywhere else." The request for
+      changes landed in Aria like a dropped tray in a quiet room.
     context: >
       Marcus's review was four comments long and surgical. The generic filter-combinator Aria was
       proud of was exactly the problem: Cartograph builds filters as plain, explicit, boring

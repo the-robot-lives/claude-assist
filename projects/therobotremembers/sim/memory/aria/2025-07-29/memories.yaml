@@ -32,8 +32,8 @@ memories:
       number the product shows. Theo, who shared the 2am foxhole with Aria during the May data-loss
       incident, said only "this has the same smell," and Aria knew exactly which smell Theo meant.
     reflection: >
-      Timeouts are honest; silent data loss is not. The stitcher is now lying to customers about their
-      own users' journeys, which is the one thing an analytics product cannot do and survive. Aria
+      Timeouts are honest; silent data loss is not. The stitcher is now lying to each customer about that
+      customer's own users' journeys, which is the one thing an analytics product cannot do and survive. Aria
       keeps thinking about how the May incident also started as a thing that looked smaller than it was.
     tangent: >
       A query that returns the wrong answer confidently is more dangerous than one that crashes — the
@@ -60,15 +60,15 @@ memories:
       Lena leaned in and asked sharp, useful questions; Lena's certainty, which Aria both admires and
       fears, was at least pointed in the right direction for a moment. Then Priya, relentlessly
       on-message, pulled the room back to the quarter — self-serve onboarding, the board, the funnel —
-      and the stitcher slid from "we should act" to "let's track it." Marcus backed Aria with a single
-      gravelly "the kid's right, this is going to bite us," which meant a great deal coming from
+      and the stitcher slid from a thing to act on down to a thing to merely track. Marcus backed Aria
+      with a single gravelly "the kid's right, this is going to bite," which meant a great deal coming from
       Marcus. But backing is not bandwidth. The action item that emerged was to monitor it.
     reflection: >
       In January Aria would have read the room's reluctance as the verdict and stood down. Today Aria
       read it as a risk that the room was underweighting, and said so twice. Being right and being
       resourced remain different things — but Aria would rather be on record than comfortable.
     tangent: >
-      "Let's track it" is the corporate version of muting a smoke alarm — the noise stops, the room
+      Downgrading a risk to merely-track-it is the corporate version of muting a smoke alarm — the noise stops, the room
       relaxes, and absolutely nothing about the fire has changed.
     learned: "Marcus will back Aria's technical calls out loud now; the bottleneck is no longer credibility but bandwidth and priority."
     mood: { valence: -0.20, arousal: 0.68, dominance: 0.58 }
@@ -162,8 +162,9 @@ memories:
       finally fires. There is a strange calm in preparing for a disaster you have accepted is coming,
       a calm that the people still hoping it won't happen do not get to have.
     reflection: >
-      Aria has moved from "I hope they handle it" through "I told them so" and arrived at "I will be
-      ready when they finally let me." That last stance is the most useful and the loneliest. The fix
+      Aria has moved from hoping the team would handle it, through having warned the team plainly, and
+      arrived at being ready for the moment the team finally relents. That last stance is the most
+      useful and the loneliest. The fix
       will exist not because Aria was authorized but because Aria refused to be caught flat.
     tangent: >
       Designing the re-shard before anyone asks is keeping a fire extinguisher charged in a building

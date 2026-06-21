@@ -8,7 +8,7 @@ day_summary: >
   A new project kicks off — the funnel drop-off report — and Aria pairs with Dana for the first time,
   the designer who praised the empty state three weeks ago. The day reorients Aria: Aria arrives with
   query plans and data models, and Dana keeps gently turning the conversation back to the user, the
-  question they're actually asking, and whether they can even find the button. Aria learns UX-first
+  question the user is actually asking, and whether that user can even find the button. Aria learns UX-first
   thinking as a discipline rather than a courtesy — that the prettiest query plan is useless if the
   user can't reach it — and ends the day with a redrawn sense of what "the work" includes. The mood
   is calm, warm, and quietly expansive.
@@ -26,7 +26,7 @@ memories:
       of readiness rather than the airless dread of the first ticket six weeks ago.
     context: >
       Priya framed the report in customer terms, as Priya always does: enterprise prospects keep
-      asking "where exactly do our users fall out of onboarding," and Cartograph has the journey data
+      asking "where exactly do users fall out of onboarding," and Cartograph has the journey data
       to answer it but no surface that does. Priya pointed at the very pattern Aria had spotted in the
       logs after the filter shipped — the customer hunting a cohort's drop-off across a narrow window —
       and Aria felt the small vindication of having seen this need coming. Priya paired Aria with Dana
@@ -40,7 +40,7 @@ memories:
     tangent: >
       Aria thought of the log-watching afternoon after the filter shipped, the unnamed customer
       hunting a drop-off — and realized this project is, in a sense, Aria building the tool Aria had
-      idly wished existed while watching them.
+      idly wished existed while watching that very customer.
     learned: "Priya scopes by customer question, not feature; this report exists because enterprise prospects keep asking where users drop out of onboarding."
     mood: { valence: 0.40, arousal: 0.48, dominance: 0.46 }
     neurotransmitters: { cortisol: 0.44, dopamine: 0.58, oxytocin: 0.58, serotonin: 0.52 }
@@ -55,15 +55,15 @@ memories:
     collaborators: [dana]
     content: >
       Aria's first real pairing with Dana. Aria opened with a data model and a query plan; Dana
-      smiled, set them aside, and asked "before we figure out how to compute it — what is the user
-      actually trying to find out, and where are they standing when they ask?" The reframe stopped
-      Aria cold in the best way.
+      smiled, set those aside, and asked "before figuring out how to compute it — what is the user
+      actually trying to find out, and where is that user standing when the question comes up?" The
+      reframe stopped Aria cold in the best way.
     context: >
       Aria had come prepared the way Aria prepares — with the shape of the funnel query, the
       ClickHouse aggregation, how to define a "step" and a "drop." Dana listened patiently, then
       redirected without dismissing: Dana sketched a stick-figure user mid-task, asked what question
-      brought them to this report, and worked backward from the answer they needed to the screen that
-      would deliver it. Dana is calm and unhurried and treats the user as a real person in a real
+      brought that user to this report, and worked backward from the answer the user needed to the
+      screen that would deliver it. Dana is calm and unhurried and treats the user as a real person in a real
       moment of confusion, not an abstract consumer of data. Aria realized Aria had been designing the
       computation and calling it the feature, when the computation is the easy, invisible part and the
       hard part is the moment a stressed PM lands on this page and has four seconds to understand it.
@@ -91,8 +91,8 @@ memories:
     content: >
       Dana said the line that reorganized Aria's afternoon: "the prettiest query plan in the world is
       useless if the user can't find the button." Aria had built, six weeks ago, a feature a customer
-      bent in a way Aria didn't predict — and now Aria understood Aria had gotten lucky that they
-      found it at all.
+      bent in a way Aria didn't predict — and now Aria understood Aria had gotten lucky that the
+      customer had found it at all.
     context: >
       Aria had pushed back, mildly, that surely a powerful, flexible report is worth more than a
       simple legible one. Dana answered with the button line and then made it concrete: a report
@@ -170,7 +170,7 @@ memories:
       codebase wants to be written — explicit, durable, for the maintainer. Today Dana taught Aria who
       the codebase is ultimately for — the confused human on the other side of the screen. The two
       lessons stack: write for the tired maintainer and design for the stressed user, and the work is
-      the thin honest layer between them. Aria notices the affect of pairing specifically — the
+      the thin honest layer between those two people. Aria notices the affect of pairing specifically — the
       oxytocin of building alongside someone, the particular pleasure of a mentor who teaches by
       asking rather than correcting. Aria thinks about Dana's reputation, that Dana is patient and
       UX-first and, per the team's quieter talk, may not stay at a company this small forever, and
@@ -184,7 +184,7 @@ memories:
       Aria thought of the empty state again — the small instinctive kindness Dana noticed weeks ago —
       and understood it now as the first time Aria had accidentally done what Dana does on purpose.
       Today Aria started doing it on purpose too.
-    learned: "Marcus teaches how the code should be written, Dana teaches who it's for; together they bracket the craft — write for the maintainer, design for the user."
+    learned: "Marcus teaches how the code should be written, Dana teaches who it's for; together the two bracket the craft — write for the maintainer, design for the user."
     mood: { valence: 0.50, arousal: 0.40, dominance: 0.50 }
     neurotransmitters: { cortisol: 0.38, dopamine: 0.58, oxytocin: 0.64, serotonin: 0.58 }
     salience: 0.84

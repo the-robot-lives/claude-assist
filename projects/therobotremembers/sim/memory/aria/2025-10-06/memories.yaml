@@ -60,8 +60,8 @@ memories:
     context: >
       Sam came in over-prepared and over-apologetic, with a doc that had already decided the schema,
       and Aria recognized the posture immediately — it was Aria in January, bracing for the silence,
-      mistaking volume for readiness. So Aria worked backward: not "here's the data path" but "walk
-      me through how a saved view gets read back." Sam stumbled on tenant scoping, the exact place the
+      mistaking volume for readiness. So Aria worked backward: not "here's the data path" but a
+      question handed to Sam — how does a saved view get read back? Sam stumbled on tenant scoping, the exact place the
       repo had tripped Aria on the journey-filter, and Aria let the silence sit until Sam found the
       query layer alone. It cost Aria something to not just say it. But the version Sam arrived at,
       slower, was Sam's to defend, and that is the whole point of a first solo. Aria gave Sam two

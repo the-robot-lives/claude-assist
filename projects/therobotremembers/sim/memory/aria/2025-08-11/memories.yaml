@@ -91,7 +91,7 @@ memories:
       scale the workers, throttle the backfill, shed load — and each one held for minutes and then the
       stitcher folded again somewhere new. The fan-out had no give in it anywhere.
     context: >
-      They threw everything reversible at it. Theo scaled the stitcher pods horizontally and the extra
+      Aria, Theo, and Marcus threw everything reversible at it. Theo scaled the stitcher pods horizontally and the extra
       workers just multiplied the ClickHouse round-trips until the database itself started shedding
       connections — adding capacity made it worse, the way it does when the bottleneck is fan-out and
       not compute. Aria wrote an emergency throttle to pause Northwind's backfill, which bought twenty
@@ -121,13 +121,13 @@ memories:
     collaborators: [nadia, theo]
     content: >
       Mid-afternoon, between fires, Aria felt the human weight of the outage when Nadia relayed
-      Northwind's message — their operations team was flying blind on a peak day and their patience was
-      gone. Nadia stayed calm, bought the engineers time, and asked Aria for one honest number: when.
+      Northwind's message — the Northwind operations team was flying blind on a peak day and Northwind's
+      patience was gone. Nadia stayed calm, bought the engineers time, and asked Aria for one honest number: when.
     context: >
       Aria had spent the day inside the failure as a technical object — flame graphs, connection pools,
       throttle valves. Nadia walked into the channel and made it human in one sentence: Northwind's
-      dispatchers could not see where their own shipments were getting stuck, on the busiest logistics
-      day of their week, and the trust Nadia had spent a year building was draining by the hour. Nadia
+      dispatchers could not see where the shipments were getting stuck, on the busiest logistics
+      day of the Northwind week, and the trust Nadia had spent a year building was draining by the hour. Nadia
       did not panic and did not lie; Nadia asked Aria for a real estimate to carry back, the way the
       human shield between engineering and the customer has to. Aria, who could not in honesty promise a
       time, gave Nadia the truth — the architecture had to change and that was days, not hours — and
@@ -136,8 +136,8 @@ memories:
     reflection: >
       Aria had been treating the outage as a puzzle, and Nadia reframed it as a promise being broken to
       real people doing real work. The stitcher is not slow in the abstract; somewhere a dispatcher
-      cannot find a truck. Aria does not want to forget that the dashboards going dark meant someone,
-      somewhere, lost their footing on a hard day.
+      cannot find a truck. Aria does not want to forget that the dashboards going dark meant a person,
+      somewhere, lost a footing on a hard day.
     tangent: >
       Nadia translating a brutal engineering ETA into something a customer can survive is a lossy
       compression problem with a human on the decode side — too honest and trust shatters, too soft and

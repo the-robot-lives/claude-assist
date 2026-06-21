@@ -96,9 +96,9 @@ memories:
       was, in its small way, the most satisfying moment of the day — the exact failure that scared
       Theo, finally visible, finally loud.
     reflection: >
-      The registry and the worker were always one idea split across two projects. Today they became
-      one system, and the seam disappeared. Aria likes when a design stops being a diagram and starts
-      being a thing.
+      The registry and the worker were always one idea split across two projects. Today the pair
+      became one system, and the seam disappeared. Aria likes when a design stops being a diagram and
+      starts being a thing.
     tangent: >
       Aria can already imagine showing Theo the rejection counter and saying "the one that scares you
       — it can't hide anymore." Aria is saving that for the next time Theo looks tired.
@@ -116,8 +116,8 @@ memories:
     collaborators: [marcus, sam]
     content: >
       In Thursday PR review Marcus walked the team through the registry as an example of scoping done
-      right, and pointed at Aria's rejection-metric choice as the kind of thing he wished more code
-      did. Sam took notes. Aria felt the praise land sideways and stick.
+      right, and pointed at Aria's rejection-metric choice as the kind of thing Marcus wished more
+      code did. Sam took notes. Aria felt the praise land sideways and stick.
     context: >
       Marcus does not do effusive, so when Marcus held up Aria's work in front of the team as a
       pattern to copy — specifically the decision to make failure loud and countable rather than

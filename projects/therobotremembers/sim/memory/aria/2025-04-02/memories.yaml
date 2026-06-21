@@ -57,10 +57,10 @@ memories:
       Theo pulled up six months of pager history and walked Aria through the worker's real behavior:
       it backs up under burst load, retries blindly until Postgres connections starve, and has a
       silent path where a malformed payload gets logged and then quietly discarded with no metric to
-      catch it. Theo has a whole folklore of 3am graphs memorized and narrated them with the gallows
-      humor of someone who has lost sleep to each one. The thing that stuck with Aria was the silent
+      catch it. Theo has a whole folklore of 3am graphs memorized and narrated each one with the
+      gallows humor of someone who has lost sleep to every single graph. The thing that stuck with Aria was the silent
       drop — not a crash, not an alert, just an event that arrives and then ceases to exist. Theo
-      called it "the one that scares me," and Aria filed that exactly where Aria could find it again.
+      named it the one that scared Theo most, and Aria filed that exactly where Aria could find it again.
     reflection: >
       Marcus taught Aria the codebase's design; Theo is teaching Aria its scar tissue. Aria is
       starting to believe the real spec for the rewrite isn't in any ticket — it's in Theo's pager
@@ -98,8 +98,8 @@ memories:
       mind in the room, and Rust does not care how fast Aria is — only whether Aria is correct, and
       it will not be flattered into agreeing.
     tangent: >
-      It echoed the January feeling of reading four hundred thousand lines and understanding none of
-      them: comprehension is a different operation than reading. Apparently writing is a third.
+      It echoed the January feeling of reading four hundred thousand lines and understanding not one
+      line of it: comprehension is a different operation than reading. Apparently writing is a third.
     learned: "Aria's Elixir instincts (free shared mutable state) fight Rust's ownership model; fluency in reading does not transfer to writing."
     mood: { valence: 0.10, arousal: 0.65, dominance: 0.38 }
     neurotransmitters: { cortisol: 0.58, dopamine: 0.60, oxytocin: 0.45, serotonin: 0.42 }

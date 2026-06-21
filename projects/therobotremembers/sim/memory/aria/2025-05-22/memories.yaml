@@ -73,7 +73,8 @@ memories:
     tangent: >
       A harmless winter cleanup PR set the ceiling on a May recovery. Aria thought of all the
       "temporary" hacks Aria catalogued on day one and felt the same vertigo: nobody decides to
-      cause an incident. They decide a hundred small reasonable things, and one of them is waiting.
+      cause an incident. Nobody does — just a hundred small reasonable choices, and one choice
+      waiting in the dark.
     learned: "A months-old config cleanup (shortened buffer retention) capped the recovery — operational history Theo held is essential postmortem context."
     mood: { valence: 0.15, arousal: 0.45, dominance: 0.52 }
     neurotransmitters: { cortisol: 0.50, dopamine: 0.50, oxytocin: 0.66, serotonin: 0.48 }
@@ -87,8 +88,8 @@ memories:
     project: p4
     collaborators: [marcus, lena]
     content: >
-      Lena and Marcus read the postmortem in the Thursday review. Lena called it "exactly the
-      document I want after a bad night." Marcus said the action items were the right ones and added
+      Lena and Marcus read the postmortem in the Thursday review. Lena called it exactly the kind of
+      document Lena wants after a bad night. Marcus said the action items were the right ones and added
       only one. Aria had braced for a reckoning and got a standard instead.
     context: >
       Aria expected the room to relitigate the eleven-day gap and instead watched Lena use the
@@ -103,10 +104,11 @@ memories:
     reflection: >
       Aria thought the postmortem was a confession. Lena and Marcus treated it as infrastructure —
       the thing that converts one bad night into many prevented ones. Aria is updating what these
-      documents are for. They are not for absolution. They are for the next on-call shift.
+      documents are for. The point is not absolution. The point is the next on-call shift.
     tangent: >
-      Lena saying "exactly the document I want" landed differently than Priya's day-one welcome.
-      Priya welcomed the newcomer; Lena trusted the engineer. Aria has crossed some line between
+      Lena naming it the document Lena wants after a bad night landed differently than Priya's
+      day-one welcome. Priya welcomed the newcomer; Lena trusted the engineer. Aria has crossed some
+      line between
       those two sentences without noticing the exact day it happened.
     learned: "A good postmortem is organizational infrastructure: it converts a single failure into shared, owned guardrails for the future."
     mood: { valence: 0.30, arousal: 0.46, dominance: 0.56 }
@@ -130,9 +132,9 @@ memories:
       and it didn't — it named the system, spread the responsibility honestly, and protected the
       people. Theo had clearly been braced for a version that made Theo the cause and was thanking
       Aria for the version that didn't. Aria felt the foxhole from Monday night extend forward into
-      something durable: the two of them had survived the incident together and now the account of it
-      together, and the account was where it could have gone wrong between them and didn't. Aria wrote
-      back something equally plain. The banter would return tomorrow. Today they just acknowledged it.
+      something durable: Aria and Theo had survived the incident together and now the account of it
+      together, and the account was where the trust could have fractured and didn't. Aria wrote back
+      something equally plain. The banter would return tomorrow. Today the two just acknowledged it.
     reflection: >
       Trust gets built twice in an incident — once in the foxhole, once in how you tell the story
       afterward. Aria nearly only knew about the first. The second is where Theo decided Aria was
@@ -155,7 +157,7 @@ memories:
     content: >
       End of the week that started with a 2am foxhole and ended with a postmortem the CTO held up as
       a model. Aria is drained in a way three days haven't fully cleared, and proud in a way that
-      surprises Aria. Both are true and they don't cancel.
+      surprises Aria. Both are true and neither one cancels the other.
     context: >
       Aria has been turning over the strange arithmetic of the week: a real loss, events gone, a
       customer hurt — and yet Aria has rarely felt more like an engineer who belongs here. The

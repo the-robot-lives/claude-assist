@@ -116,8 +116,8 @@ memories:
     collaborators: [marcus]
     content: >
       With ownership as the frame, Aria rewrote the batching path to move chunks into the flush
-      instead of lending them out. The clone came out. It compiled, and this time Aria knew exactly
-      why.
+      instead of lending each one out. The clone came out. It compiled, and this time Aria knew
+      exactly why.
     context: >
       The rewrite was smaller than any of Aria's failed attempts — that was the humbling part.
       Hours of clever workarounds collapsed into a handful of lines once the mental model was right:

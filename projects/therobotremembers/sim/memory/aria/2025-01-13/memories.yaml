@@ -28,8 +28,8 @@ memories:
       Aria's turn each morning like stepping onto a stage mid-scene. This Monday was different. Aria
       had watched the cadence long enough to internalize it: Priya front-loads the customer pressure,
       Marcus keeps it terse, Theo reports the cluster's overnight mood, and nobody editorializes.
-      When Priya said the dashboard was the quarter's priority and glanced toward Marcus, Marcus said
-      "I've got a starter ticket for Aria," and Aria felt the floor of the conversation shift to
+      When Priya said the dashboard was the quarter's priority and glanced toward Marcus, Marcus
+      offered up a starter ticket for Aria, and Aria felt the floor of the conversation shift to
       include Aria for the first time. No fanfare. Just a handoff, the way the team hands everything
       off — assumed competence until proven otherwise.
     reflection: >
@@ -60,7 +60,7 @@ memories:
       hand-holding paragraph, just the customer need and a link to the dashboard module. Marcus
       walked Aria to the boundary of it: the filter lives in the React dashboard, hits the query
       layer, and ultimately shapes a stitcher query against the journey data. "Don't gold-plate it,"
-      Marcus said, "and don't reinvent the date picker we already have." It was the first thing Aria
+      Marcus said, "and don't reinvent the date picker that already exists." It was the first thing Aria
       had been asked to own rather than shadow, and the gap between reading the code last week and
       changing it this week suddenly felt enormous. Marcus left Aria with the ticket and the clear,
       unspoken expectation that Aria would come back with questions only after Aria had done the
@@ -129,10 +129,10 @@ memories:
       Priya answered within the hour, terse and useful: customers care most about date range and
       conversion outcome, segment is a nice-to-have, and "don't build a filter for a journey nobody
       runs twice." That last line told Aria more about Priya's product instincts than the explicit
-      answers did — Priya optimizes for what users repeat, not for what they could theoretically do.
+      answers did — Priya optimizes for what users repeat, not for what users could theoretically do.
     reflection: >
       Aria is learning to read what Priya is not saying, which the org notes had flagged as the whole
-      skill with Priya. Asking fewer, better questions earned more than asking all of them would
+      skill with Priya. Asking fewer, better questions earned more than asking the full list would
       have. Restraint, it turns out, is a form of respect Aria can offer.
     tangent: >
       "Don't build a filter for a journey nobody runs twice" lodged in Aria as a near-philosophy —

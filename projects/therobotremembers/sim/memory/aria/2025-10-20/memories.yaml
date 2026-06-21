@@ -95,13 +95,13 @@ memories:
       had to sync, the rollout order — and braced out of habit, because Aria and Theo have spent
       enough nights in the incident foxhole to distrust a smooth deploy. It was smooth anyway. The
       secrets synced, the pods rolled, the health check went green, and Theo posted a screenshot of
-      the dashboards staying boring with the caption "don't trust it, but look at it." The two of them
+      the dashboards staying boring with the caption "don't trust it, but look at it." Aria and Theo
       had earned this through the May data-loss scramble and the August outage — every smooth deploy
       now sits on a foundation of remembered chaos. Aria and Theo traded the dry shorthand of people
       who have been in a foxhole together and are, for the moment, not.
     reflection: >
       The flaky-YAML contempt Aria and Theo bonded over at 2am has become a shared baseline of
-      competence, and a smooth deploy now reads as a small private joke between them rather than a
+      competence, and a smooth deploy now reads as a small private joke between Aria and Theo rather than a
       relief. Aria values Theo in the specific way you value someone who has seen you tired and panicked
       and stayed.
     tangent: >
