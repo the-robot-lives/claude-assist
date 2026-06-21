@@ -1,8 +1,7 @@
 Postgrex.Types.define(
   TheRobotRemembers.PostgrexTypes,
   [
-    Pgvector.Extensions.Vector,
-    Geo.PostGIS.Extension
+    Pgvector.Extensions.Vector
   ] ++ Ecto.Adapters.Postgres.extensions(),
   json: Jason
 )

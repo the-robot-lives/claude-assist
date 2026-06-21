@@ -38,6 +38,8 @@ The core insight: **two memories are related not only when their content is simi
 
 ## 2. Memory Model
 
+> **🔄 Amended by [ADR-012](./adrs/ADR-012-multi-vector-memory-and-hormone-harness.md):** a memory now carries **four agent-authored texts**, each OpenAI-embedded as a Weaviate **named vector** — `content` (the event), `context` (what the agent was doing when it registered the memory), `reflection` (its thoughts/feelings/mood in words), and `tangent` (what else it evokes). The single `content`/`embedding` fields below expand into these four (texts in Postgres, vectors in Weaviate). The `tangent` also seeds a Weaver association. Emotional metadata is split: **VAD is agent-supplied; the four hormones are harness state stamped by the Monitor at formation** (see §10 note).
+
 ### 2.1 Memory Entry Structure
 
 A Memory Entry is the atomic unit of the system. Every memory is a node in the association graph.
@@ -715,6 +717,8 @@ Memories with `decay_weight < 0.05` for more than `grace_period` (configurable, 
 ---
 
 ## 10. Emotional Model
+
+> **🔄 Amended by [ADR-012](./adrs/ADR-012-multi-vector-memory-and-hormone-harness.md):** the 7-d vector and resonance math below are unchanged, but **VAD (valence/arousal/dominance) is supplied by the agent per memory** while **the four hormones are a per-agent running state owned by the Monitor** — they rise on interaction events (cortisol↑ contradiction/quarantine; dopamine↑ reinforcement/recall; oxytocin↑ collaboration; serotonin↑ calm stability) and relax toward a disposition baseline, and each memory is **stamped with the Monitor's current hormone snapshot at formation**. The agent also writes a free-text `reflection` (the natural-language companion to VAD), embedded for search.
 
 The emotional metadata system uses a simplified model inspired by dimensional emotion theory (Russell's circumplex model) augmented with simulated hormonal signals.
 

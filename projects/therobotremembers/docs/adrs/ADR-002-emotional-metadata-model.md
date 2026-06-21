@@ -1,11 +1,29 @@
 ---
 id: ADR-002
 title: "Emotional Metadata Model (VAD + Simulated Hormones)"
-status: accepted
+status: amended
+amended_by: ADR-012
 date: 2026-05-27
 ---
 
 # ADR-002: Emotional Metadata Model (VAD + Simulated Hormones)
+
+> **🔄 AMENDED (2026-06-21) by [ADR-012](./ADR-012-multi-vector-memory-and-hormone-harness.md).**
+> The 7-dimensional vector and resonance computation below stand, but **who provides each part**
+> changed:
+> - **VAD (valence/arousal/dominance) is agent-supplied** per memory (may be inferred from the new
+>   `reflection` text as a fallback). The Archivist no longer has to output all 7 floats.
+> - **The four hormones are harness state owned by the Monitor**, not a per-memory agent reading.
+>   The Monitor maintains a per-agent running hormone level that rises on interaction events
+>   (cortisol↑ on contradiction/quarantine; dopamine↑ on reinforcement/successful recall;
+>   oxytocin↑ on collaboration; serotonin↑ on calm stability) and **relaxes toward a disposition
+>   baseline** over time. Each memory is **stamped with the current hormone snapshot at formation**.
+> - The stored resonance vector is therefore `agent VAD ++ Monitor hormones`; resonance scoring,
+>   hot-index bucketing, and Dreamer clustering are unchanged.
+> - Separately, a memory now carries **four embedded texts** (`content`, `context`, `reflection`,
+>   `tangent`) — the `reflection` is the natural-language companion to the numeric VAD. See ADR-012.
+> - The §"Confidence"/`confidence: low` fallback now applies when VAD is inferred from `reflection`
+>   rather than supplied.
 
 ## Context
 

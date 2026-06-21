@@ -1,0 +1,24 @@
+databaseChangeLog:
+  - changeSet:
+      id: 029-create-table-memory-quarantine
+      author: trr-memory
+      changes:
+        - sql:
+            splitStatements: false
+            sql: |
+              CREATE TABLE memory_quarantine (
+                id          uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+                memory_id   uuid REFERENCES memories(id) ON DELETE SET NULL,
+                owner_agent text NOT NULL,
+                reason      text NOT NULL,
+                payload     jsonb NOT NULL DEFAULT '{}',
+                resolved    boolean NOT NULL DEFAULT false,
+                inserted_at timestamptz NOT NULL DEFAULT now(),
+                updated_at  timestamptz NOT NULL DEFAULT now()
+              );
+
+              CREATE INDEX idx_quarantine_unresolved ON memory_quarantine (owner_agent)
+                WHERE resolved = false;
+      rollback:
+        - dropTable:
+            tableName: memory_quarantine

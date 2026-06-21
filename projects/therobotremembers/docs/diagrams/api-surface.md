@@ -275,26 +275,36 @@ interface MemoryWriteRequest {
   /** The memory content — natural language text */
   content: string;
 
+  /** What the agent was doing when the memory was registered (situational/activity).
+   *  Embedded as its own named vector for situational recall. (ADR-012) */
+  context?: string;
+
+  /** The agent's brief thoughts/feelings/mood in words — the natural-language
+   *  companion to the VAD mood below. Embedded as a named vector. (ADR-012) */
+  reflection?: string;
+
+  /** What else this memory makes the agent think of. Embedded as a named vector AND
+   *  used to seed an explicit `tangent` association edge. (ADR-012) */
+  tangent?: string;
+
   /** Memory classification */
   content_type?: 'episodic' | 'semantic' | 'procedural';
 
   /** Compressed version (auto-generated if omitted) */
   summary?: string;
 
-  /** Emotional state at time of memory formation */
+  /** Emotional state at time of memory formation.
+   *  NOTE (ADR-012): the caller supplies only `mood` (VAD). The four hormones are NOT
+   *  caller-supplied — they are harness state maintained by the Monitor and stamped onto
+   *  the memory at formation. `mood` may be omitted and inferred from `reflection`
+   *  (confidence: low) as a fallback. */
   emotional_metadata?: {
     mood?: {
       valence?: number;
       arousal?: number;
       dominance?: number;
     };
-    hormones?: {
-      cortisol?: number;
-      dopamine?: number;
-      oxytocin?: number;
-      serotonin?: number;
-    };
-    frustration_index?: number;
+    // hormones: harness-supplied (Monitor) — NOT accepted from the caller
     confidence?: 'high' | 'medium' | 'low';
   };
 

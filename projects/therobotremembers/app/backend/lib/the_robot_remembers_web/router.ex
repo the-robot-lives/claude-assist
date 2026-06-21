@@ -52,6 +52,15 @@ defmodule TheRobotRemembersWeb.Router do
     get "/health", HealthController, :index
   end
 
+  # MCP (Streamable HTTP). Phase 0: dev-open (no auth verifier); JWT-from-API-key
+  # (the NoizuPromptLingo pattern) is a follow-up. The plug handles its own protocol,
+  # so it is not run through the :api pipeline.
+  scope "/mcp" do
+    forward "/", Noizu.MCP.Transport.StreamableHTTP.Plug,
+      server: TheRobotRemembers.MCP,
+      origins: :any
+  end
+
   scope "/api/v1", TheRobotRemembersWeb do
     pipe_through [:api, :rate_limited_auth]
     post "/auth/register", AuthController, :register

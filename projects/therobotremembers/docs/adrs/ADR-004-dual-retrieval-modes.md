@@ -1,11 +1,24 @@
 ---
 id: ADR-004
 title: "Dual Retrieval Modes (Active Recall + Tangential Insertion)"
-status: accepted
+status: amended
+amended_by: ADR-012
 date: 2026-05-27
 ---
 
 # ADR-004: Dual Retrieval Modes (Active Recall + Tangential Insertion)
+
+> **🔄 AMENDED (2026-06-21) by [ADR-012](./ADR-012-multi-vector-memory-and-hormone-harness.md).**
+> Both retrieval modes stand. Two refinements:
+> - **Active recall's "vector search" is now four named-vector searches** over Weaviate
+>   (`content`/`context`/`reflection`/`tangent`), fused as four RRF rank-lists with per-facet
+>   weights (default `content 1.0 / context 0.8 / tangent 0.8 / reflection 0.7`) alongside the
+>   emotional/temporal/graph paths. A query can thus surface a memory via *what the agent was
+>   doing*, *how it felt*, or *what it evoked* — not only its content.
+> - **The 36-bucket scheme below is canonical** (`quantize(valence,4):quantize(arousal,3):quantize(dominance,3)`);
+>   the "5⁷ = 78,125 buckets" idea floated elsewhere is rejected (un-warmable, ~0% cache-hit). The
+>   bucketing emotional state = agent VAD ++ the Monitor's current hormone snapshot (ADR-002 as
+>   amended; ADR-012). Tangential insertion remains VAD-bucketed and never calls an LLM.
 
 ## Context
 

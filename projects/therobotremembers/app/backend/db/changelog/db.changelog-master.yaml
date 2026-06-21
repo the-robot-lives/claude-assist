@@ -74,3 +74,21 @@ databaseChangeLog:
   - include:
       file: 024-media-variants-cache.yaml
       relativeToChangelogFile: true
+  - include:
+      file: 025-memory-enums.yaml
+      relativeToChangelogFile: true
+  - include:
+      file: 026-memories.yaml
+      relativeToChangelogFile: true
+  - include:
+      file: 027-association-edges.yaml
+      relativeToChangelogFile: true
+  - include:
+      file: 028-compartments-agent-state.yaml
+      relativeToChangelogFile: true
+  - include:
+      file: 029-memory-quarantine.yaml
+      relativeToChangelogFile: true
+  - include:
+      file: 030-recall-log.yaml
+      relativeToChangelogFile: true

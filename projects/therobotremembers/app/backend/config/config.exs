@@ -67,7 +67,7 @@ config :samly, Samly.Provider,
 # Background jobs
 config :the_robot_remembers, Oban,
   repo: TheRobotRemembers.Repo,
-  queues: [mailer: 10, default: 10, cleanup: 5],
+  queues: [mailer: 10, default: 10, cleanup: 5, memory: 8, memory_maint: 2],
   plugins: [
     {Oban.Plugins.Pruner, max_age: 60 * 60 * 24 * 7},
     {Oban.Plugins.Cron,
@@ -75,6 +75,61 @@ config :the_robot_remembers, Oban,
        {"0 */6 * * *", TheRobotRemembers.Workers.CleanupWorker}
      ]}
   ]
+
+# ── Memory engine (The Robot Remembers) ─────────────────────────
+# Text embeddings (content/context/reflection/tangent) — OpenAI by default,
+# behind a swappable behaviour. api_key is supplied at runtime (runtime.exs).
+config :the_robot_remembers, :embeddings,
+  provider: :openai,
+  model: "text-embedding-3-small",
+  dimensions: 1536,
+  api_base: "https://api.openai.com/v1",
+  api_key: nil,
+  timeout_ms: 8_000
+
+# Weaviate via noizu_weaviate (our Weaviate client). Holds the four named text vectors per
+# memory (BYO/vectorizer:none). NOTE: noizu_weaviate reads `endpoint` at COMPILE time, so set
+# it per-environment in config (dev here / prod.exs); the api key is runtime (runtime.exs).
+config :noizu_weaviate, endpoint: "http://localhost:8080/"
+
+# `enabled` gates the VectorStore — off until a Weaviate instance is actually available, so
+# emotional-resonance + lexical recall work without it.
+config :the_robot_remembers, :weaviate,
+  enabled: false,
+  class: "TrrMemory"
+
+# Recall fusion / scoring knobs.
+config :the_robot_remembers, :memory_recall,
+  vector_weights: %{content: 1.0, context: 0.8, tangent: 0.8, reflection: 0.7},
+  blend: %{semantic: 0.40, emotional: 0.30, recency: 0.15, salience: 0.15},
+  rrf_k: 60,
+  candidates_per_path: 50,
+  default_limit: 12
+
+# Hormone-harness baselines (Phase 0 Monitor stub returns these directly).
+config :the_robot_remembers, :emotion,
+  hormone_baseline: %{cortisol: 0.3, dopamine: 0.4, oxytocin: 0.4, serotonin: 0.5},
+  # VAD weight vs hormone weight when building the pre-weighted 7-d vector
+  vad_weight: 0.6,
+  hormone_weight: 0.4
+
+# Weaver association-linking thresholds/weights (tunable).
+config :the_robot_remembers, :weaver,
+  emotional_resonance_min: 0.85,
+  emotional_k: 8,
+  temporal_window_s: 3600,
+  max_edges_per_dim: 8,
+  weights: %{emotional: 0.5, temporal: 0.4, contextual: 0.4, tangent: 0.6, semantic: 0.6}
+
+# Reinforcement deltas (Hebbian + on-recall), clamped to [0.05, 1.0].
+config :the_robot_remembers, :reinforcement,
+  recall_memory_boost: 0.02,
+  recall_edge_boost: 0.05,
+  explicit_boost: 0.1,
+  denforce_penalty: 0.05,
+  hebbian_initial: 0.3,
+  graph_max_hops: 3,
+  graph_min_edge_weight: 0.2
 
 # Feature flags
 config :the_robot_remembers, :feature_flags, %{

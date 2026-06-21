@@ -10,7 +10,12 @@ date: 2026-05-27
 
 > **🔄 AMENDED (2026-06-21) for the Elixir/OTP refinement ([ADR-008](./ADR-008-elixir-otp-implementation.md)).**
 > The three-store split stands, but the roles are refined into a **hybrid**:
-> - **Weaviate** — semantic **content** vectors (1536-d) only, behind a `Memory.VectorStore` behaviour.
+> - **Weaviate** — the **four OpenAI text vectors per memory** (`content`, `context`, `reflection`,
+>   `tangent`; 1536-d each) as **named vectors** on one object (`vectorizer: none` / BYO), behind a
+>   `Memory.VectorStore` behaviour. The four texts themselves are stored in Postgres (SoR). See
+>   [ADR-012](./ADR-012-multi-vector-memory-and-hormone-harness.md). *(The `noizu_weaviate` DSL
+>   doesn't expose named vectors → thin `req`-based BYO client; fallback = four objects sharing
+>   `memory_id`.)*
 > - **PostgreSQL (pgvector)** — system of record: relational metadata, lifecycle, the association
 >   graph (recursive CTE), ACLs, **and the 7-d emotional vector** (`emotional_embedding vector(7)`,
 >   HNSW). Emotional resonance thus becomes a first-class, ACL-co-located ANN query rather than

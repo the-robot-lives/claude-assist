@@ -27,6 +27,8 @@ defmodule TheRobotRemembers.Application do
       {Oban, Application.fetch_env!(:the_robot_remembers, Oban)}
     ] ++ samly_children ++ [
       TheRobotRemembers.Events.WebhookHandler,
+      # MCP server (component registry for the Streamable-HTTP transport mounted in the router)
+      TheRobotRemembers.MCP,
       TheRobotRemembersWeb.Endpoint
     ]
 

@@ -1,0 +1,43 @@
+databaseChangeLog:
+  - changeSet:
+      id: 028-create-table-compartments
+      author: trr-memory
+      changes:
+        - sql:
+            splitStatements: false
+            sql: |
+              CREATE TABLE memory_compartments (
+                id             uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+                slug           text NOT NULL,
+                owner_agent    text NOT NULL,
+                classification memory_classification NOT NULL DEFAULT 'open',
+                settings       jsonb NOT NULL DEFAULT '{}',
+                inserted_at    timestamptz NOT NULL DEFAULT now(),
+                updated_at     timestamptz NOT NULL DEFAULT now(),
+                CONSTRAINT uq_compartment UNIQUE (owner_agent, slug)
+              );
+      rollback:
+        - dropTable:
+            tableName: memory_compartments
+
+  - changeSet:
+      id: 028-create-table-agent-state
+      author: trr-memory
+      changes:
+        - sql:
+            splitStatements: false
+            sql: |
+              CREATE TABLE memory_agent_state (
+                agent_id            text PRIMARY KEY,
+                status              text NOT NULL DEFAULT 'active',
+                current_emotional   vector(7),
+                baseline_emotional  vector(7),
+                current_bucket      text,
+                last_bucket_refresh timestamptz,
+                metrics             jsonb NOT NULL DEFAULT '{}',
+                inserted_at         timestamptz NOT NULL DEFAULT now(),
+                updated_at          timestamptz NOT NULL DEFAULT now()
+              );
+      rollback:
+        - dropTable:
+            tableName: memory_agent_state

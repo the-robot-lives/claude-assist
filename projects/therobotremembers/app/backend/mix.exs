@@ -54,6 +54,8 @@ defmodule TheRobotRemembers.MixProject do
 
       # Noizu
       {:noizu_labs_entities, "~> 0.3.0"},
+      {:noizu_mcp, "~> 0.1.3"},
+      {:noizu_weaviate, "~> 0.2.0"},
       {:semaphore, "~> 1.0"},
       {:seed_helper, "~> 0.1.1"},
       {:smart_token, "~> 0.1.3"},
@@ -67,8 +69,6 @@ defmodule TheRobotRemembers.MixProject do
 
       # Ecto / Schema
       {:redix, "~> 1.1"},
-      {:geo_postgis, "~> 3.7"},
-      {:geo, "~> 3.6"},
       {:ecto_psql_extras, "~> 0.8.1"},
       {:pgvector, "~> 0.3.0"},
 
