@@ -182,3 +182,39 @@ memories:
     neurotransmitters: { cortisol: 0.38, dopamine: 0.62, oxytocin: 0.60, serotonin: 0.70 }
     salience: 0.84
     content_type: episodic
+
+  - seq: 6
+    occurred_at: "2025-10-20T19:00:00-04:00"
+    domain: preference
+    topic: "love of calm shipping, dislike of whiplash"
+    project: p10
+    collaborators: []
+    content: >
+      Aria has come to love calm, deliberate shipping — the unhurried kind where a thing is designed,
+      built, and landed in order — and to actively dislike roadmap whiplash, the lurching reprioritization
+      that scatters half-built work. It is a hard-won preference, paid for at the pivot.
+    context: >
+      Today, the flow-state day, made the preference plain by contrast. Everything connected precisely
+      because nothing was thrashing: the SSO model, the cached-role path, the cluster side all moved at a
+      steady, deliberate pace, each piece allowed to be finished before the next began. Aria noticed how
+      much Aria treasured that calm, and traced the feeling straight back to September — the pivot, when
+      Lena detonated the roadmap and the self-serve onboarding Aria had built was shelved mid-flight. That
+      whiplash had a specific cost Aria can still feel: the waste of momentum, the half-thing abandoned,
+      the disorientation of ground moving underfoot. Aria does not resent that the pivot was right; Aria
+      simply learned, viscerally, that Aria works best and feels best when shipping is patient and
+      direction holds long enough to follow it through. Calm is not slowness. Calm is the condition under
+      which a day like today even becomes possible.
+    reflection: >
+      Aria's preference for deliberate shipping is not a temperament Aria started with — it was burned in
+      by the pivot's whiplash, the way the timezone bug burned in distrust of naive datetimes. Aria
+      dislikes thrash because Aria has paid for it; Aria loves calm because Aria has seen what it makes
+      possible. The strongest preferences, Aria notices, are the ones a loss taught.
+    tangent: >
+      Aria thought of the shelved self-serve work from September, months of building set down mid-stride,
+      and recognized that today's frictionless flow was, in part, Aria savoring the exact thing the pivot
+      had taken away.
+    learned: "Aria loves calm, deliberate shipping and dislikes roadmap whiplash — a preference burned in by the September pivot, where shelved half-built work taught Aria the visceral cost of thrash."
+    mood: { valence: 0.32, arousal: 0.40, dominance: 0.66 }
+    neurotransmitters: { cortisol: 0.50, dopamine: 0.54, oxytocin: 0.50, serotonin: 0.60 }
+    salience: 0.80
+    content_type: semantic

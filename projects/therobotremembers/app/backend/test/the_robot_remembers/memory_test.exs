@@ -57,6 +57,24 @@ defmodule TheRobotRemembers.MemoryTest do
       assert_in_delta m.arousal, 0.5, 0.001
     end
 
+    test "explicit :hormones override the harness baseline on the stored row" do
+      {:ok, %{id: id}} =
+        Memory.remember(
+          %{
+            content: "A memory carrying explicit neurotransmitters.",
+            valence: 0.0, arousal: 0.5, dominance: 0.5,
+            hormones: %{cortisol: 0.91, dopamine: 0.12, oxytocin: 0.77, serotonin: 0.33}
+          },
+          @ctx
+        )
+
+      m = get(id)
+      assert_in_delta m.cortisol, 0.91, 0.001
+      assert_in_delta m.dopamine, 0.12, 0.001
+      assert_in_delta m.oxytocin, 0.77, 0.001
+      assert_in_delta m.serotonin, 0.33, 0.001
+    end
+
     test "quarantines a prompt-injection attempt and stores no memory" do
       before = length(ids())
 

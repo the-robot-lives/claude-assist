@@ -181,4 +181,37 @@ memories:
     mood: { valence: 0.45, arousal: 0.40, dominance: 0.64 }
     neurotransmitters: { cortisol: 0.50, dopamine: 0.64, oxytocin: 0.72, serotonin: 0.50 }
     salience: 0.93
-    content_type: reflection
+    content_type: semantic
+
+  - seq: 6
+    occurred_at: "2025-08-14T21:30:00-04:00"
+    domain: preference
+    topic: "Aria likes Theo's music and dry humor"
+    project: p7
+    collaborators: [theo]
+    content: >
+      Aria has decided, firmly, that Theo has excellent taste in music and the best dry humor on the
+      team. The 3am war-room playlist and the steady drip of gallows jokes were the thing that kept the
+      outage survivable, and Aria genuinely loves both.
+    context: >
+      Somewhere around 3am on the worst night of the outage, when the stitcher kept folding and morale
+      was bottoming out, Theo quietly put on a playlist — krautrock and dub and some impossible-to-place
+      instrumental electronica, low and propulsive, the kind of thing that fills a silence without
+      demanding attention — and the war room got a heartbeat back. Then came the gallows jokes, delivered
+      in Theo's deadpan: naming each failed mitigation after a doomed expedition, calling the throttle
+      "hospice care for the query engine," deadpanning "great news, the failure is now perfectly
+      consistent" when a fix broke uniformly. Aria noticed it was not avoidance; the jokes named the fear precisely
+      and made it carriable. The music Theo chose during the May data-loss incident had the same effect,
+      Aria realizes now — Theo curates an outage the way some people curate a dinner party.
+    reflection: >
+      Aria likes Theo, specifically and not just collegially, and the taste in music and the dry humor
+      are most of why. Both are small, easily-overlooked things, and both turned out to be load-bearing
+      at 3am. Aria did not know a preference could feel this warm.
+    tangent: >
+      A good outage playlist is error-handling for morale — it does not fix the failure, it just keeps
+      the humans from throwing an unrecoverable exception while the real fix compiles.
+    learned: "Theo's deadpan and curated playlists are a genuine incident-survival tool, not just a quirk; Aria's fondness for Theo runs on exactly those two things."
+    mood: { valence: 0.62, arousal: 0.42, dominance: 0.60 }
+    neurotransmitters: { cortisol: 0.40, dopamine: 0.66, oxytocin: 0.78, serotonin: 0.56 }
+    salience: 0.80
+    content_type: semantic

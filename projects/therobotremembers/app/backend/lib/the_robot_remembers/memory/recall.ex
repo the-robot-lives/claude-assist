@@ -35,7 +35,7 @@ defmodule TheRobotRemembers.Memory.Recall do
 
     rows =
       base_scope(owner)
-      |> order_by([m], l2_distance(m.emotional_embedding, ^qvec))
+      |> order_by([m], asc: l2_distance(m.emotional_embedding, ^qvec), asc: m.id)
       |> limit(^limit)
       |> Repo.all()
       |> Sentinel.authorize(context)
@@ -104,7 +104,7 @@ defmodule TheRobotRemembers.Memory.Recall do
     )
     SELECT memory_id::text, MAX(path_weight) AS pw
     FROM walk WHERE depth > 0
-    GROUP BY memory_id ORDER BY pw DESC LIMIT $4
+    GROUP BY memory_id ORDER BY pw DESC, memory_id LIMIT $4
     """
 
     case Ecto.Adapters.SQL.query(Repo, sql, [Enum.join(seed_ids, ","), @graph_min_weight, @graph_max_hops, cpp()]) do
@@ -150,14 +150,18 @@ defmodule TheRobotRemembers.Memory.Recall do
   end
 
   defp lexical_list(query, owner) do
+    # Only genuine trigram matches enter the lexical list (so non-matching memories don't earn
+    # RRF credit just by being in the top-N), and an explicit text query outweighs ambient
+    # emotional resonance (weight 2.0) — the caller typed these words, honor them.
     ids =
       base_scope(owner)
-      |> order_by([m], desc: fragment("similarity(?, ?)", m.content, ^query))
+      |> where([m], fragment("similarity(?, ?) > 0.03", m.content, ^query))
+      |> order_by([m], desc: fragment("similarity(?, ?)", m.content, ^query), asc: m.id)
       |> limit(^cpp())
       |> select([m], m.id)
       |> Repo.all()
 
-    {1.0, {:lexical, :content}, ids}
+    {2.0, {:lexical, :content}, ids}
   end
 
   defp emotional_rank_list(owner) do
@@ -166,12 +170,14 @@ defmodule TheRobotRemembers.Memory.Recall do
 
     ids =
       base_scope(owner)
-      |> order_by([m], l2_distance(m.emotional_embedding, ^qvec))
+      |> order_by([m], asc: l2_distance(m.emotional_embedding, ^qvec), asc: m.id)
       |> limit(^cpp())
       |> select([m], m.id)
       |> Repo.all()
 
-    [{0.9, {:emotional, :vad}, ids}]
+    # Ambient current mood is a secondary signal for an explicit text query (the lexical/semantic
+    # match leads); for `recall_by_emotion` the emotional vector is queried directly, not here.
+    [{0.45, {:emotional, :vad}, ids}]
   end
 
   # ── Reciprocal Rank Fusion ─────────────────────────────────────

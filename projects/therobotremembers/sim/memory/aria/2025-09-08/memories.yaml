@@ -186,4 +186,4 @@ memories:
     mood: { valence: -0.10, arousal: 0.45, dominance: 0.58 }
     neurotransmitters: { cortisol: 0.58, dopamine: 0.44, oxytocin: 0.54, serotonin: 0.50 }
     salience: 0.84
-    content_type: reflection
+    content_type: semantic

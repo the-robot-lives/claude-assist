@@ -58,7 +58,9 @@ defmodule TheRobotRemembers.Memory.Store do
   defp do_store(owner_agent, attrs, context) do
     mood = resolve_mood(attrs)
     confidence = if mood, do: "medium", else: "low"
-    hormones = Monitor.current_hormones(owner_agent)
+    # Explicit per-memory hormones (e.g. simulation fixtures) override the Monitor's harness
+    # snapshot; Emotion.build_vector/components merge whatever is given over the baseline.
+    hormones = attrs[:hormones] || Monitor.current_hormones(owner_agent)
     comps = Emotion.components(mood, hormones)
     vector = Emotion.build_vector(mood, hormones)
 

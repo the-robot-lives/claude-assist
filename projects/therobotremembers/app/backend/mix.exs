@@ -56,6 +56,7 @@ defmodule TheRobotRemembers.MixProject do
       {:noizu_labs_entities, "~> 0.3.0"},
       {:noizu_mcp, "~> 0.1.3"},
       {:noizu_weaviate, "~> 0.2.0"},
+      {:yaml_elixir, "~> 2.9"},
       {:semaphore, "~> 1.0"},
       {:seed_helper, "~> 0.1.1"},
       {:smart_token, "~> 0.1.3"},
