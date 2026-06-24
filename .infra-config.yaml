@@ -260,6 +260,18 @@ chart_path_overrides:
   therobotplans: projects/therobotplans.com/helm/therobotplans
   tobornalp: projects/tobornalp.com/helm/therobotplans
 
+# --- Helm Preserve Values -----------------------------------------------------
+# helm-upgrade passes --reset-values by default so a chart's values.yaml is the
+# source of truth (prevents stale reused values silently ignoring new image tags
+# / config). Charts listed here keep --reuse-values instead — use for stateful
+# charts whose effective values include runtime --set or generated data NOT
+# captured in values.yaml (e.g. timescaledb/postgres instances, vector DBs with
+# generated auth). Add a chart here only if a reset would drop required runtime
+# state.
+helm_preserve_values:
+  - weaviate
+  - qdrant
+
 # --- Timeout Overrides --------------------------------------------------------
 timeout_overrides:
   infisical: 10m
