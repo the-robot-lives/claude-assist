@@ -255,6 +255,7 @@ chart_path_overrides:
   iotgo: projects/iotgo.io/helm/iotgo
   jailbreakingsite: projects/jailbreakingsite.com/helm/jailbreakingsite
   noizu-site: projects/noizu.com/helm/noizu-site
+  npl-mcp: projects/NoizuPromptLingo/helm/npl-mcp
   therobotlives: projects/therobotlives.com/helm/therobotlives
   therobotplans: projects/therobotplans.com/helm/therobotplans
   tobornalp: projects/tobornalp.com/helm/therobotplans
@@ -873,7 +874,7 @@ project:
       services:
         - name: server
           dockerfile: Dockerfile
-          context: .
+          context: backend
           registry_path: npl-mcp/server
           auto_detect: false
           helm:
@@ -881,8 +882,8 @@ project:
             values_path: .backend.image
             format: image
         - name: frontend
-          dockerfile: Dockerfile.nextjs
-          context: web
+          dockerfile: Dockerfile
+          context: frontend
           registry_path: npl-mcp/frontend
           auto_detect: false
           helm:

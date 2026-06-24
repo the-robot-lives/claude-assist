@@ -31,6 +31,8 @@ spec:
           env:
             - name: MIX_ENV
               value: prod
+            - name: PHX_SERVER
+              value: "true"
             - name: PORT
               value: {{ .Values.backend.port | quote }}
             - name: DATABASE_URL
@@ -43,6 +45,31 @@ spec:
                 secretKeyRef:
                   name: {{ .Values.backend.env.secretName }}
                   key: SECRET_KEY_BASE
+            - name: GUARDIAN_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.backend.env.secretName }}
+                  key: GUARDIAN_SECRET_KEY
+            # Host/redirect targets — without PHX_HOST the backend defaults to
+            # example.com and the OIDC redirect_uri + SPA redirect break.
+            - name: PHX_HOST
+              value: {{ .Values.domain | quote }}
+            - name: FRONTEND_URL
+              value: "https://{{ .Values.domain }}"
+            # Authentik OIDC (SSOController :oidc_init / :oidc_callback). Reuses the
+            # AUTHENTIK_* secret values under the OIDC_* names runtime.exs expects.
+            - name: OIDC_ISSUER
+              value: {{ .Values.backend.oidc.issuer | quote }}
+            - name: OIDC_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.backend.env.secretName }}
+                  key: AUTHENTIK_CLIENT_ID
+            - name: OIDC_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.backend.env.secretName }}
+                  key: AUTHENTIK_CLIENT_SECRET
           livenessProbe:
             httpGet:
               path: {{ .Values.backend.probes.liveness.path }}
