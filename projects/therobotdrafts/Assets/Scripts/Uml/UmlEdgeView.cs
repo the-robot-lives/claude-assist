@@ -250,32 +250,56 @@ namespace TheRobotDraft.Uml
         }
     }
 
+    /// <summary>What an edge handle controls: a pinned endpoint, a movable bend, or an "insert bend here" spot.</summary>
+    public enum UmlHandleKind { EndpointStart, EndpointEnd, Vertex, Add }
+
     /// <summary>
-    /// A draggable handle sitting at the midpoint of one orthogonal segment of a selected relationship. Dragging
-    /// it moves that segment perpendicular to its run (keeping right angles), which is how Rose / Sparx / Visual
-    /// Paradigm let you reshape an orthogonal connector. The canvas owns the geometry; this just relays the drag.
+    /// A handle on the selected relationship. Endpoint handles re-pin where the line meets a box (drag anywhere on
+    /// its border); Vertex handles move a bend (drag) or delete it (right-click); Add handles insert a new bend at
+    /// a segment midpoint (click). The canvas owns the geometry; this relays the gesture.
     /// </summary>
-    public sealed class UmlBendHandle : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
+    public sealed class UmlEdgeHandle : MonoBehaviour,
+        IBeginDragHandler, IDragHandler, IEndDragHandler, IPointerClickHandler
     {
         private UmlCanvas _canvas;
         private EdgeId _edge;
-        private int _segment;
+        public UmlHandleKind Kind { get; private set; }
+        public int Index { get; private set; }
 
-        public void Init(UmlCanvas canvas, EdgeId edge, int segment, bool vertical)
+        public void Init(UmlCanvas canvas, EdgeId edge, UmlHandleKind kind, int index, float size, Color color)
         {
-            _canvas = canvas; _edge = edge; _segment = segment;
+            _canvas = canvas; _edge = edge; Kind = kind; Index = index;
             var rt = (RectTransform)transform;
             rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0.5f);
             rt.pivot = new Vector2(0.5f, 0.5f);
-            rt.sizeDelta = new Vector2(12f, 12f);
-            var img = gameObject.AddComponent<Image>();
-            img.color = new Color(0.12f, 0.55f, 0.85f, 1f);
+            rt.sizeDelta = new Vector2(size, size);
+            gameObject.AddComponent<Image>().color = color;
         }
 
         public void SetPosition(Vector2 p) => ((RectTransform)transform).anchoredPosition = p;
 
-        public void OnBeginDrag(PointerEventData e) => _canvas.BeginBendDrag(_edge, _segment);
-        public void OnDrag(PointerEventData e) => _canvas.UpdateBendDrag(e.position);
-        public void OnEndDrag(PointerEventData e) => _canvas.EndBendDrag();
+        private bool Draggable => Kind != UmlHandleKind.Add;
+
+        public void OnBeginDrag(PointerEventData e)
+        {
+            if (Draggable) _canvas.BeginEdgeHandleDrag(_edge, Kind, Index);
+        }
+
+        public void OnDrag(PointerEventData e)
+        {
+            if (Draggable) _canvas.DragEdgeHandle(e.position);
+        }
+
+        public void OnEndDrag(PointerEventData e)
+        {
+            if (Draggable) _canvas.EndEdgeHandleDrag();
+        }
+
+        public void OnPointerClick(PointerEventData e)
+        {
+            if (Kind == UmlHandleKind.Add) _canvas.AddVertex(_edge, Index);
+            else if (Kind == UmlHandleKind.Vertex && e.button == PointerEventData.InputButton.Right)
+                _canvas.DeleteVertex(_edge, Index);
+        }
     }
 }
