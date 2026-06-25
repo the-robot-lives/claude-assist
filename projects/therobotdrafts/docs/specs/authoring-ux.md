@@ -34,7 +34,7 @@ engine and breaks the product's core guarantees.
    parent's sphere packing. So **placement is not "pick a coordinate" — it is "pick the parent."** The
    user drops an element *into a container*; the packer positions it and gently re-packs the subtree
    (ADR-003: siblings preserved, no pop). Letting users free-position would destroy the stable-spatial-memory
-   guarantee. This is the single most important invariant for feasibility validation ([§7](#7-open-feasibility-questions--vr-reality-check)).
+   guarantee. This is the single most important invariant for feasibility validation ([§7](#7-feasibility-findings--vr-reality-check)).
 
 2. **Authoring is the write half of the round-trip** ([`../ARCHITECTURE.md`](../ARCHITECTURE.md)). Every
    authoring verb mutates the **unified model**, and all projections (bubble view + any 2D diagram) are
@@ -134,13 +134,15 @@ deeper rings induce nausea and lose the thumb.
   ring 2 (context): Add → kind ring (Lena §C) · Connect → edge-type ring (Lena §D) · Project → notation ring
 ```
 
-- **Selection mechanic:** thumbstick *direction* highlights a sector + trigger confirms (coarse,
-  comfortable), **or** ray-flick at the sector (precise). Center = Select/cancel. Releasing the menu on a
-  highlighted sector activates it (radial-pie idiom).
+- **Selection mechanic:** **ring-1** uses thumbstick *direction* + trigger to confirm (coarse, comfortable),
+  **or** ray-flick at the sector (precise). **Ring-2** (kind / edge-type / notation rings, which carry 7–9
+  items) uses **ray-pick into the ring**, not thumbstick — its arcs fall below the mis-tolerant floor (F1),
+  with a vertical-list fallback past 8 items. Center = Select/cancel. Releasing the menu on a highlighted
+  sector activates it (radial-pie idiom).
 - **Handedness:** Undo/Redo bias to the **non-dominant** hand's radial, so one hand authors while the
   other history-corrects (mirrors Ctrl+Z-while-mousing).
-- **Reachability:** ring-1 sectors sit at 8-way thumbstick positions; **never more than 6** in ring 1 so
-  each gets a wide, mis-tolerant arc. (Cap-at-4 is a live feasibility question — [F1](#7-open-feasibility-questions--vr-reality-check).)
+- **Reachability:** ring-1 sits at **6** thumbstick-aligned sectors (~60° arcs — validated mis-tolerant on
+  Quest Touch, [F1](#7-feasibility-findings--vr-reality-check)); depth-2 is the ceiling.
 
 ---
 
@@ -215,9 +217,11 @@ the HUD shows the qualified-name preview `parent.NewClass`):
   rhythm).
 - An empty name renders a ghost placeholder `Class…` in the kind's hue, so an unnamed node still reads as
   its kind.
-- **VR:** a near-field keyboard panel (§5.2 HUD surface) opens with the label field focused; **voice-to-text**
-  is offered as the comfortable VR default. Same commit/skip/Tab rules. (In-world SDF-field editing vs.
-  always-panel is a feasibility question — [A2](#7-open-feasibility-questions--vr-reality-check).)
+- **VR:** the §5.2 near-field keyboard panel is the **required input surface** (A2) — it opens with the label
+  field focused and **live-mirrors** the typed text onto the in-world SDF label so the result reads in place
+  (in-world SDF is display-only; no in-world caret editing). **Voice-to-text is a P2 convenience** (poor on
+  code identifiers); the keyboard panel + symbol type-ahead is the **P0** path (A3). Same commit/skip/Tab
+  rules. See [§7](#7-feasibility-findings--vr-reality-check).
 
 ### 3.6 Re-parent (the only "move")
 
@@ -267,6 +271,10 @@ UML relationship, so kind-choice does not gate starting the gesture.
 - **Sticky type override:** pre-picking a type (or having just drawn one) makes it the pending default, so a
   run of same-type edges needs no per-edge picker — shown as a badge on the Connect tool. The picker is
   always one keystroke away.
+- **VR defaults to sticky-type** (C3): a near-field picker on every edge release breaks the drawing rhythm
+  and forces a per-edge look-away, so in VR the pending type persists (badge on the controller/HUD, picker
+  one button away) while **desktop keeps draw-then-type**. A comfort-first §6 substitution, not a parity
+  break — both modalities can do both. See [§7](#7-feasibility-findings--vr-reality-check).
 - **Direction & semantics:** drag direction sets from→to. For generalization the arrow points
   **subtype→supertype**, so the natural gesture is *drag from child to parent* ("this is-a that"). A
   **flip-direction** control in the picker handles a backwards draw — cheaper than redrawing.
@@ -283,6 +291,13 @@ UML relationship, so kind-choice does not gate starting the gesture.
 | Cancel | `Esc` / release on empty space | B-button / release on empty |
 
 Releasing on empty space cancels cleanly — no orphan edge, no dialog (the "never stranded" rule).
+
+> **VR ray-drag precision (C1) — the riskiest interaction in the set.** Picking a small, deep child bubble in
+> a dense packing needs assists, not raw ray + nearest-hit: an **angular magnetic assist** (snap to the
+> nearest *valid* endpoint, with §4.4 kind-validity pruning the candidate set), **dwell-to-confirm with a
+> candidate highlight** before commit, **ray stabilization** (one-euro/low-pass to kill tremor), and
+> **mandatory peek-expand** for dense/collapsed clusters. These are requirements, not polish, and warrant a
+> gated tuning spike before the connect gesture locks. See [§7](#7-feasibility-findings--vr-reality-check).
 
 ### 4.4 Validity — kind-aware, felt during the drag
 
@@ -383,14 +398,16 @@ One SVG per icon → **SDF for VR, raster for desktop** (one file, two outputs �
 and the radial mark are literally the same source):
 
 - **VR:** render from the same SDF atlas as §5 labels (crisp at any depth/angle, billboarded). Ray/touch
-  target ≈ **1.0°** at arm's length; min stroke ≈ **3 arc-min** to survive foveation periphery; a 1px dark
-  contrast halo so each icon reads against a busy multi-hue bubble field.
+  target ≈ **1.0°** at arm's length (≈20–25 px at Quest-3 ~25 ppd); min stroke ≈ **6–8 arc-min (0.10–0.13°)**
+  — the original 3 arc-min (~1 px) aliases and is the first thing Fixed Foveated Rendering eats (F3); bump
+  primary actionable wedges to **~1.2–1.5°**. Keep the 1px dark contrast halo so each icon reads against a
+  busy multi-hue bubble field.
 - **Desktop:** pictograms on a **24px grid** (@2x 48px), integer **2px** stroke, pixel-snapped; hit target
   **≥ 32px** even when the glyph is 24px.
 - **Accessibility:** every command carries icon **+ text label** (toolbar tooltip / radial wedge label) —
   icon-only fails low-vision and learnability. Hotkey hints belong on the desktop tooltip.
 
-(The §5.6 VR angular/stroke minimums are pending hardware validation — [F3](#7-open-feasibility-questions--vr-reality-check).)
+(The VR angular/stroke minimums above reflect Kenji's F3 finding — [§7](#7-feasibility-findings--vr-reality-check); validate on Quest 3 with Fixed Foveated Rendering on.)
 
 ---
 
@@ -410,36 +427,111 @@ Parity is a hard requirement, not an aspiration. Consolidated invariants:
 
 ---
 
-## 7. Open feasibility questions → VR reality-check
+## 7. Feasibility findings → VR reality-check
 
-These are the explicit hand-offs to Kenji's Unity/VR feasibility investigation (ticket `31036022`). **This
-section is pending Kenji's findings** — the questions below are carried verbatim from the three flows; the
-answers, once posted, fold back into the relevant sections. Until then, the VR specifics above are the
-*design intent*, not validated-on-hardware commitments.
+These are Kenji's Unity/VR feasibility findings for ticket `31036022`, validated against the three concrete
+flows and the engine baseline in [`rendering-and-vr.md`](rendering-and-vr.md) (Unity 6.3 LTS, URP + Render
+Graph, Entities 1.4.x, OpenXR/XRI, BVH picking, octree HLOD) and [`unity-6.3-baseline.md`](unity-6.3-baseline.md).
+Budgets referenced below: **11.1 ms** at 90 Hz, **13.9 ms** at 72 Hz (Quest), fill computed at ~2× display
+resolution. Each finding carries a **🟢 green / 🟡 caution / 🔴 red** verdict; where a finding changes design
+intent, the implied spec delta is called out and folds back into the cited section.
+
+> **Headline:** nothing in the authoring design fundamentally fights Unity 6.3 / DOTS / OpenXR-XRI. Eight of
+> nine are green or caution-with-known-mitigation; the one real risk is **C1** (VR ray-drag endpoint
+> precision in a dense packing), which is feasible only with an assist-radius + dwell-confirm + ray
+> smoothing and should get a dedicated spike before the connect gesture locks.
 
 **Command surface (toolbar/radial — flow `1085589f`):**
-- **F1** — Is a 6-sector ring-1 + ray-flick selection reliable on Quest controllers, or should ring-1 cap at
-  4 with the rest on the non-dominant hand? ([§2.3](#23-vr-radial-menu))
-- **F2** — Wrist-anchored vs. world-anchored radial: which holds steady without smooth-motion discomfort?
-- **F3** — Confirm or retune Lena's §5.6 angular minimums (1.0° target, 3-arc-min stroke) for radial glyphs
-  against foveated periphery. ([§5.6](#56-dual-target-legibility))
+
+- **F1 — 🟡 caution (keep 6, split the mechanic by ring).** Ring-1 at six thumbstick-aligned sectors gives
+  ~60° arcs — comfortably above the ~30–40° floor where stick-direction selection stays mis-tolerant on
+  Quest Touch — so **do not cap ring-1 at 4**; six is fine and depth-2 is already the right ceiling. The real
+  precision cliff is **ring-2**: the Add → kind ring carries 7–9 kinds, whose arcs fall below ~40° and make
+  thumbstick-direction unreliable. **Delta ([§2.3](#23-vr-radial-menu)):** ring-1 = thumbstick-direction
+  primary + ray-flick precise alternate (as specced); ring-2 (kind/edge/notation rings) = **ray-pick into the
+  ring**, not thumbstick, with a vertical list fallback when a ring exceeds 8 items. Undo/Redo stay on the
+  non-dominant hand.
+- **F2 — 🟢 green (hand-anchored, not world-anchored).** Anchor the radial to the **non-pointing controller**,
+  billboarded to face the user, at a fixed ~0.3–0.4 m focal distance; summon on the menu button, drive with
+  the dominant hand. A hand/head-relative panel does **not** induce vection — cybersickness comes from
+  *world-relative* optic flow, not from HUD-locked elements that travel with the user — whereas a
+  world-anchored menu forces physical reaching/turning and can clip behind geometry. This is the established
+  idiom (Tilt Brush / shell). Hold the ~0.35 m focal distance to avoid vergence-accommodation fatigue.
+- **F3 — 🟡 caution (targets OK, ~2× the stroke).** At Quest-3 ~25 ppd (use it as the floor; Quest-2 ~20 ppd
+  is EOL-ing), Lena's **1.0° ray/touch target ≈ 20–25 px is fine**. The **3-arc-min stroke (0.05°) ≈ 1 px is
+  too thin** — it aliases/shimmers and is the first thing Fixed Foveated Rendering eats if the radial sits in
+  the periphery. **Delta ([§5.6](#56-dual-target-legibility)):** raise min stroke to **~6–8 arc-min
+  (0.10–0.13°)**, keep the 1 px dark contrast halo, render glyphs from the SDF atlas (already specced), and
+  bump primary actionable wedges to **~1.2–1.5°**. Mitigating factor: the hand-anchored radial (F2) is where
+  the user *looks*, so it lands foveal/para-foveal, not in the FFR-degraded periphery — but validate on Quest
+  3 with FFR on.
 
 **Add-node (flow `abf97287`):**
-- **A1** — Validate the **ray→parent, packer-places** model vs. any expectation of free 6DoF placement: is
-  "you don't position, you parent" the right call for Quest, and does the re-pack cross-fade stay comfortable
-  when a deep subtree ripples? ([§0](#0-the-authoring-registers-read-first), [§3.3](#33-vr-flow-parity))
-- **A2** — Inline in-world label edit vs. forcing the HUD panel: is SDF-field editing legible enough at
-  bubble scale, or is the near-field panel always required? ([§3.5](#35-name-on-create))
-- **A3** — Voice-to-text availability for naming on target hardware.
+
+- **A1 — 🟢 green (strongly endorse ray→parent, packer-places).** This is both the correct call for ADR-003's
+  stable-address guarantee *and* the more comfortable one: free 6DoF placement in a headset is imprecise (no
+  haptic surface, arm fatigue, depth misjudgment). Reducing placement to a single BVH ray-pick (O(log n)) is
+  accurate and cheap. Re-pack cost is **off the frame loop** ([`rendering-and-vr.md`](rendering-and-vr.md) §1)
+  — only the *animation* of interpolating positions touches the frame, and that is an instance-buffer update,
+  trivial. **Comfort caveat → mitigations (fold into [§3.3](#33-vr-flow-parity)):** a large ripple = many
+  bubbles moving = peripheral optic flow = mild vection. ADR-003 already localizes the re-pack (stable
+  addresses → siblings barely move); additionally (1) animate only the affected subtree, (2) ease-out ≤300 ms,
+  (3) keep the parent framed so motion stays parafoveal, (4) for nodes displacing >~10° use alpha
+  fade-through instead of slide. One thing to instrument: worst-case displacement when an insert grows a
+  parent radius significantly — clamp animation distance there.
+- **A2 — 🟡 caution (near-field panel is required for *entry*; in-world SDF for *display*).** SDF labels are
+  resolution-independent, so a name reads fine **in place**; but **editing** in-world is the problem — no
+  caret precision, the field may be small/angled/self-occluded in a dense packing. **Delta
+  ([§3.5](#35-name-on-create)):** commit to the §5.2 near-field keyboard panel as the **input** surface
+  (not optional), with a **live mirror** of the typed text onto the in-world SDF label so the user sees the
+  result land in place. Voice (A3) is the fast path on top.
+- **A3 — 🟡 caution (offer voice, never depend on it).** Quest voice (Meta Voice SDK / Wit.ai dictation) and
+  Android XR on-device speech exist, but (1) dictation historically needs connectivity and (2) accuracy on
+  **code identifiers** (CamelCase, acronyms, `_`) is poor — "getUserById" dictates badly. **Delta:** voice =
+  **P2 convenience** for prose-y names; the keyboard panel + type-ahead from existing symbols is **P0** and
+  the reliable path for identifiers. Do not make voice load-bearing.
 
 **Connect (flow `d6c5a42e`):**
-- **C1** *(riskiest VR interaction in the set)* — VR ray-drag precision for picking a *specific small child
-  bubble* as an endpoint in a dense packing: is ray + snap accurate enough, or do we need a magnetic "assist"
-  radius / dwell-to-confirm? ([§4.3](#43-the-drag-desktop--vr))
-- **C2** — Peek-expand-on-ray-rest of a collapsed proxy mid-drag: performance + comfort of the cross-fade
-  while an edge is live. ([§4.5](#45-cross-boundary--collapsed-endpoints-the-adr-003-hard-case))
-- **C3** — Is "draw-then-type" (release opens a near-field picker) comfortable in VR, or should sticky-type
-  be the VR default to avoid a per-edge panel? ([§4.2](#42-edge-typing--choose-after-drawing))
+
+- **C1 — 🔴→🟡 the real risk; feasible only with assists.** Raw ray-pick of a *small, deep* child bubble in a
+  dense packing is the hardest interaction in the set: ~0.5–1° hand tremor maps to large lateral error at
+  distance, small children subtend a tiny solid angle, and spheres self-occlude (ADR-003 known limit). Naive
+  ray + nearest-hit will mis-target constantly. BVH cost is not the issue (O(log n)); **accuracy** is.
+  **Required (not optional) — fold into [§4.3](#43-the-drag-desktop--vr):** (1) **angular** magnetic assist —
+  snap to the nearest *valid* endpoint within an angular radius (scales with distance), with §4.4 kind-validity
+  pruning the candidate set so assist only competes among legal targets; (2) **dwell-to-confirm + candidate
+  highlight** — show the resolved target on ray-rest before commit; (3) **ray stabilization** — one-euro /
+  low-pass filter to kill tremor; (4) **peek-expand/drill mandatory** for dense or collapsed clusters (see C2)
+  plus a "get closer / table-top" nudge so the target subtends a larger angle. **Recommend a focused spike to
+  tune assist-radius + dwell time on Quest 3 before the connect gesture is locked.**
+- **C2 — 🟡 caution (feasible with hysteresis + one-at-a-time).** Peek-expand promotes one HLOD proxy to its
+  children — a localized residency/draw change routed through the existing HLOD swap ([rendering §3.2](rendering-and-vr.md))
+  and streaming amortization (§3.7): a handful of extra instances, trivial against budget **provided** (a) only
+  one proxy peeks at a time, (b) child upload is amortized over a few frames, (c) buffers are pooled (zero
+  per-frame alloc). The live edge is just a rubber-band quad — no added cost. **Comfort:** ease the cross-fade
+  ≤200 ms, fade-in alpha (no scale-pop), and **re-collapse on ray-leave with hysteresis** so a wobbling ray at
+  the boundary doesn't strobe expand/collapse. Hysteresis + one-at-a-time are hard requirements, not polish.
+- **C3 — 🟡 caution (make sticky-type the VR default).** A near-field picker on *every* edge release breaks
+  the drawing rhythm and forces a look-away-from-canvas context switch per edge — fatiguing across a run.
+  **Delta ([§4.2](#42-edge-typing--choose-after-drawing)):** in **VR default to sticky-type** (pending type
+  persists; draw a run with no panel), surface the current type as a controller/HUD badge, picker one button
+  away. **Desktop keeps draw-then-type** (mouse + nearby picker is cheap). Both modalities can do both — this
+  is a comfort-first §6 substitution, not a parity break.
+
+**Cross-cutting parity flags (the dispatch's "desktop-cheap / VR-awkward" ask):**
+
+- **Hover affordances** (valid-target highlight, quick-connect handle) are free on desktop, impossible in VR
+  (no hover). The spec already moves them to **select**-triggered in VR ([§4.1](#41-initiation--two-paths-same-result),
+  [§6](#6-desktop--vr-parity-summary)) ✅. Implementation note: VR "valid-target highlight" during add/connect
+  must come from **ray-rest (dwell pseudo-hover)**, which is the *same* ray-stability machinery as C1 — build
+  ray-rest highlighting **once** and reuse it for add-target, connect-target, and peek-expand.
+- **Multi-select marquee** (desktop drag) → VR grip+trigger: a 3D volume/lasso select is genuinely awkward and
+  is **flagged for its own design pass** (out of v1 authoring scope; the parity matrix row holds, but the VR
+  mechanic needs work beyond "grip-hold + trigger").
+- Right-click context menu (desktop) ↔ controller menu button (VR): parity holds, no concern.
+
+**Net for the build:** proceed. Implement F2/A1 as specced; apply the F1/F3/A2/A3/C3 deltas above; treat C1
+as the gated spike. Section §2–§6 VR behavior stands as written except where a delta above amends it.
 
 ---
 
@@ -453,7 +545,7 @@ answers, once posted, fold back into the relevant sections. Until then, the VR s
 | §3 add-node + creation palette | `abf97287` | yuki-ux (flow) |
 | §4 connect-nodes / edge drawing | `d6c5a42e` | yuki-ux (flow) |
 | §5 iconography & affordance system | `e94fe1b8` | lena-graphic (visual) |
-| §7 feasibility | `31036022` | kenji-gamedev *(pending)* |
+| §7 feasibility | `31036022` | kenji-gamedev |
 | Epic | `6b6a5365` | — |
 
 Visual marks and states are **Lena's** (`e94fe1b8`); placement, choreography, and command structure are
@@ -470,4 +562,5 @@ When this spec and another conflict, resolve in this order (mirrors design-conve
 4. **Accessibility rules** (redundancy contract §5.2, reserved UI channel §5.1) are not negotiable down —
    they may only be strengthened.
 
-Anything in §2–§6 describing VR behavior is **subordinate to §7's feasibility findings** once those land.
+Anything in §2–§6 describing VR behavior is **subordinate to §7's feasibility findings**, which have landed
+(ticket `31036022`) and are folded into the relevant sections above.

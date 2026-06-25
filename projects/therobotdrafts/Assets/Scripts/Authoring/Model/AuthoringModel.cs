@@ -1,0 +1,146 @@
+using System;
+using System.Collections.Generic;
+
+namespace TheRobotDraft.Authoring.Model
+{
+    /// <summary>One element (node) in the unified model: a kind, a name, a containment parent, and modifiers.</summary>
+    public sealed class ModelElement
+    {
+        public ElementId Id { get; }
+        public ElementKind Kind { get; internal set; }
+        public string Name { get; internal set; }
+        public ElementId Parent { get; internal set; }
+
+        /// <summary>UML <c>abstract</c> is a modifier, not a kind (§3.1) — outline/wireframe glyph.</summary>
+        public bool IsAbstract { get; internal set; }
+
+        internal readonly List<ElementId> Children = new();
+
+        internal ModelElement(ElementId id, ElementKind kind, string name, ElementId parent)
+        {
+            Id = id;
+            Kind = kind;
+            Name = name;
+            Parent = parent;
+        }
+
+        public IReadOnlyList<ElementId> ChildIds => Children;
+    }
+
+    /// <summary>One relationship (edge) in the unified model. Direction is from→to (§4.2).</summary>
+    public sealed class ModelEdge
+    {
+        public EdgeId Id { get; }
+        public EdgeKind Kind { get; internal set; }
+        public ElementId From { get; internal set; }
+        public ElementId To { get; internal set; }
+
+        internal ModelEdge(EdgeId id, EdgeKind kind, ElementId from, ElementId to)
+        {
+            Id = id;
+            Kind = kind;
+            From = from;
+            To = to;
+        }
+    }
+
+    /// <summary>
+    /// The in-memory unified model that authoring verbs mutate (authoring-ux.md §0.2: every verb is a model
+    /// edit; all views are re-derived from this). This type owns the containment <em>tree</em> and the edge
+    /// list and enforces structural integrity (a node has exactly one parent; ids are unique). It does
+    /// <em>not</em> own geometry — positions/radii are the packer's job (ADR-003) and live behind
+    /// <see cref="Seams.IPacker"/>. Mutators are deliberately low-level and reversible so the command layer
+    /// (§0.2 "each is a single undo step") can compose and unwind them precisely.
+    /// </summary>
+    public sealed class AuthoringModel
+    {
+        private readonly Dictionary<ElementId, ModelElement> _elements = new();
+        private readonly Dictionary<EdgeId, ModelEdge> _edges = new();
+
+        public IReadOnlyCollection<ModelElement> Elements => _elements.Values;
+        public IReadOnlyCollection<ModelEdge> Edges => _edges.Values;
+
+        public bool TryGet(ElementId id, out ModelElement element) => _elements.TryGetValue(id, out element);
+        public bool TryGet(EdgeId id, out ModelEdge edge) => _edges.TryGetValue(id, out edge);
+        public bool Contains(ElementId id) => _elements.ContainsKey(id);
+
+        public ModelElement Get(ElementId id) =>
+            _elements.TryGetValue(id, out var e) ? e : throw new KeyNotFoundException($"element {id}");
+
+        public ModelEdge Get(EdgeId id) =>
+            _edges.TryGetValue(id, out var e) ? e : throw new KeyNotFoundException($"edge {id}");
+
+        // --- element mutators (called only by commands) ---
+
+        internal ModelElement AddElement(ElementId id, ElementKind kind, string name, ElementId parent,
+            bool isAbstract)
+        {
+            if (_elements.ContainsKey(id))
+                throw new InvalidOperationException($"element {id} already exists");
+            if (parent.IsValid && !_elements.ContainsKey(parent))
+                throw new InvalidOperationException($"parent {parent} does not exist");
+
+            var element = new ModelElement(id, kind, name, parent) { IsAbstract = isAbstract };
+            _elements.Add(id, element);
+            if (parent.IsValid)
+                _elements[parent].Children.Add(id);
+            return element;
+        }
+
+        internal void RemoveElement(ElementId id)
+        {
+            if (!_elements.TryGetValue(id, out var element)) return;
+            if (element.Parent.IsValid && _elements.TryGetValue(element.Parent, out var parent))
+                parent.Children.Remove(id);
+            _elements.Remove(id);
+        }
+
+        internal void Reparent(ElementId id, ElementId newParent)
+        {
+            var element = _elements[id];
+            if (element.Parent.IsValid && _elements.TryGetValue(element.Parent, out var old))
+                old.Children.Remove(id);
+            element.Parent = newParent;
+            if (newParent.IsValid)
+                _elements[newParent].Children.Add(id);
+        }
+
+        internal void Rename(ElementId id, string name) => _elements[id].Name = name;
+        internal void SetKind(ElementId id, ElementKind kind) => _elements[id].Kind = kind;
+        internal void SetAbstract(ElementId id, bool isAbstract) => _elements[id].IsAbstract = isAbstract;
+
+        // --- edge mutators ---
+
+        internal ModelEdge AddEdge(EdgeId id, EdgeKind kind, ElementId from, ElementId to)
+        {
+            if (_edges.ContainsKey(id))
+                throw new InvalidOperationException($"edge {id} already exists");
+            var edge = new ModelEdge(id, kind, from, to);
+            _edges.Add(id, edge);
+            return edge;
+        }
+
+        internal void RemoveEdge(EdgeId id) => _edges.Remove(id);
+        internal void SetEdgeType(EdgeId id, EdgeKind kind) => _edges[id].Kind = kind;
+        internal void SetEdgeEndpoints(EdgeId id, ElementId from, ElementId to)
+        {
+            var edge = _edges[id];
+            edge.From = from;
+            edge.To = to;
+        }
+
+        /// <summary>True if <paramref name="ancestor"/> contains <paramref name="node"/> transitively (cycle/containment checks).</summary>
+        public bool IsAncestorOf(ElementId ancestor, ElementId node)
+        {
+            var cur = node;
+            var guard = 0;
+            while (cur.IsValid && _elements.TryGetValue(cur, out var e))
+            {
+                if (e.Parent == ancestor) return true;
+                cur = e.Parent;
+                if (++guard > 100_000) break; // defensive: malformed tree
+            }
+            return false;
+        }
+    }
+}

@@ -1,4 +1,5 @@
-.PHONY: install-utilities install
+.PHONY: install-utilities install \
+        trd-build trd-run trd-test trd-open trd-clean trd-doctor
 
 install-utilities:
 	@HOME_DIR="$(HOME)"; \
@@ -14,3 +15,7 @@ install-utilities:
 	CI=true HOME="$$HOME_DIR" $(MAKE) -C utilities install
 
 install: install-utilities
+
+# --- The Robot Draft (Unity/VR) — delegate to projects/therobotdrafts/Makefile ---
+trd-build trd-run trd-test trd-open trd-clean trd-doctor:
+	@$(MAKE) -C projects/therobotdrafts $(patsubst trd-%,%,$@)

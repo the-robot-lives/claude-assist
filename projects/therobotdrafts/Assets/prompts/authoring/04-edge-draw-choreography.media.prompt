@@ -1,0 +1,92 @@
+schema: "0.4"
+id: trd-authoring-04-edge-draw-choreography
+type: image
+quality: high
+
+# therobotdrafts authoring UX — connect-nodes / edge-draw choreography mockup.
+# Consumes: design-conventions §3.1 line styles + §1.1/§2.1, Lena's §D edge glyph
+# set + §B reserved UI channel (e94fe1b8), Yuki's connect flow (d6c5a42e):
+# draw-then-type, kind-aware validity felt DURING the drag.
+
+prompt:
+  system: |
+    You are a senior interaction designer rendering a high-fidelity mockup that
+    CHOREOGRAPHS edge-drawing in a 3D bubble UML IDE — showing the three feedback
+    states of dragging a relationship between two bubbles, plus the edge-type
+    picker that appears on release. Premium, calm, technical. The point is to make
+    the feedback channel unmistakable: in-progress, valid target, invalid target —
+    all using a RESERVED non-kind color channel so they never read as element kinds.
+  text: |
+    A 16:9 mockup choreographing the "connect two nodes" interaction in a dark 3D
+    bubble-view, drawn as a single annotated scene with three moments.
+
+    BACKGROUND:
+    - Dark graphite 3D space (#15181C) with depth. Several packed-sphere bubbles in
+      the Okabe-Ito kind palette with distinct silhouettes: a solid blue Class
+      (#0072B2) as the SOURCE, another blue Class as a VALID target, a small
+      yellow-green Field bubble (#BCBD22) as an INVALID target, plus a frosted
+      slate Package (#6E7B8B) and an orange faceted Enum (#E69F00) for context.
+
+    THE DRAG (centerpiece — a rubber-band edge from the source bubble):
+    - IN-PROGRESS state: a NEUTRAL WHITE DASHED "rubber-band" line stretches from
+      the source class toward the cursor/ray — dashed because the relationship type
+      isn't chosen yet (reserved in-progress channel, NOT a kind color).
+    - VALID TARGET: the second Class bubble glows with a WHITE rim + a ✓ ghost +
+      a snap-pulse ring — "drop here works." Around it, a faint concentric
+      MAGNETIC ASSIST-RADIUS halo shows the ray snapping to the nearest valid
+      target without pixel-perfect aim (Kenji C1 mitigation: assist-radius +
+      dwell-confirm + ray-smoothing for VR endpoint precision), with a small
+      circular dwell-confirm progress tick on the target.
+    - INVALID TARGET: the small Field bubble shows the rejection affordance —
+      a VERMILLION #D55E00 dashed rim + a ✕, with a NO-SNAP feel and a tiny reason
+      chip "can't inherit into a field." (Vermillion is Okabe-Ito, colorblind-safe,
+      and deliberately not a kind hue.)
+
+    THE EDGE-TYPE PICKER (appears on release at the valid drop point — a small
+    dark translucent radial/flyout):
+    - Six options, each icon IS the line+arrowhead it will draw (so the picker
+      previews the result), per UML §3.1:
+        Association  (solid line, open arrow)
+        Dependency   (dashed line, open arrow)
+        Generalization (solid line, hollow triangle)   ← highlighted/default-ish
+        Realization  (dashed line, hollow triangle)
+        Aggregation  (solid line, hollow diamond)
+        Composition  (solid line, filled diamond)
+    - A small "flip direction ⇄" control sits in the picker (subtype→supertype
+      hint). The picker chrome is achromatic graphite/white.
+
+    ANNOTATION STYLE (subtle, designer-spec, not childish):
+    - Tiny muted labels point to each state: "in-progress (dashed, untyped)",
+      "valid target", "invalid target", "type picker (icon = drawn edge)".
+    - Labels in clean small humanist sans-serif, muted grey-white.
+
+    OVERALL:
+    - Only the BUBBLES carry kind color; every feedback cue uses the reserved
+      channel (white / white→cyan / vermillion). Premium calm 3D dev-tool mood.
+      No game UI, no neon, no clutter.
+  provider_options:
+    aspect_ratio: "16:9"
+    style: "natural"
+
+output:
+  formats:
+    - format: png
+  dimensions:
+    width: 1920
+    height: 1080
+    aspect_ratio: "16:9"
+
+eval:
+  pass_threshold: 0.72
+  criteria:
+    feedback_states: {weight: 3, description: "Three distinct drag states legible: neutral-white dashed in-progress rubber-band, white-rim + ✓ valid target, vermillion #D55E00 dashed + ✕ invalid target"}
+    edge_type_picker: {weight: 3, description: "Picker shows the six UML §3.1 relationships where each icon IS the line style + arrowhead it draws (solid/dashed, open arrow, hollow/filled triangle, hollow/filled diamond) + a flip-direction control"}
+    reserved_channel: {weight: 2, description: "All feedback uses the reserved non-kind channel (white / white→cyan / vermillion); only bubbles carry kind hues; picker chrome achromatic"}
+    premium_clarity: {weight: 2, description: "Clean annotated designer-spec look in a dark 3D space; not a game; states unambiguous"}
+  reject_if:
+    - "valid/invalid feedback drawn in kind colors (green=valid etc.) instead of the reserved white/vermillion channel"
+    - "edge-type icons that don't match UML line styles/arrowheads"
+    - "game or neon aesthetic; childish callouts"
+    - "rubber-band shown as a solid typed edge (should be dashed/untyped in-progress)"
+
+tags: [trd, authoring-ux, connect-nodes, edge-drawing, uml, affordance, mockup]
