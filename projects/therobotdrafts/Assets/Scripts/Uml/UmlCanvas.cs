@@ -410,7 +410,7 @@ namespace TheRobotDraft.Uml
                 () =>
                 {
                     _ctl.DeleteEdge(delEdge);
-                    _waypoints.Remove(delEdge);
+                    DropEdgeViewState(delEdge);
                     if (_selectedEdge == delEdge) _selectedEdge = EdgeId.None;
                     CloseMenu();
                     RebuildFromModel();
@@ -427,7 +427,7 @@ namespace TheRobotDraft.Uml
             if (_selectedEdge.IsValid)
             {
                 _ctl.DeleteEdge(_selectedEdge);
-                _waypoints.Remove(_selectedEdge);
+                DropEdgeViewState(_selectedEdge);
                 _selectedEdge = EdgeId.None;
                 RebuildFromModel();
                 return;
@@ -711,6 +711,14 @@ namespace TheRobotDraft.Uml
             from = ElementId.None; to = ElementId.None; return false;
         }
 
+        /// <summary>Forget all view-state (bends + endpoint pins) for a deleted edge.</summary>
+        private void DropEdgeViewState(EdgeId edge)
+        {
+            _waypoints.Remove(edge);
+            _srcAnchor.Remove(edge);
+            _tgtAnchor.Remove(edge);
+        }
+
         private void RefreshBendHandles()
         {
             foreach (var h in _bendHandles) if (h != null) Destroy(h.gameObject);
@@ -718,18 +726,33 @@ namespace TheRobotDraft.Uml
             if (!_selectedEdge.IsValid || !TryGetEdgeEndpoints(_selectedEdge, out var from, out var to)) return;
             if (!_nodes.ContainsKey(from) || !_nodes.ContainsKey(to)) return;
 
-            var route = RouteEdge(from, to, _selectedEdge);
-            for (int i = 0; i < route.Count - 1; i++)
-            {
-                Vector2 p = route[i], q = route[i + 1];
-                bool vertical = Mathf.Abs(p.x - q.x) < Mathf.Abs(p.y - q.y);
-                var go = new GameObject("Bend", typeof(RectTransform));
-                go.transform.SetParent(_handleLayer, false);
-                var handle = go.AddComponent<UmlBendHandle>();
-                handle.Init(this, _selectedEdge, i, vertical);
-                handle.SetPosition((p + q) * 0.5f);
-                _bendHandles.Add(handle);
-            }
+            var ctrl = ControlPolyline(from, to, _selectedEdge, out _, out _);
+            var wps = _waypoints.TryGetValue(_selectedEdge, out var w) ? w : null;
+
+            // Endpoint handles (orange) — drag to re-pin the attachment anywhere on the box border.
+            var orange = new Color(0.95f, 0.62f, 0.18f, 1f);
+            MakeEdgeHandle(UmlHandleKind.EndpointStart, 0, ctrl[0], 14f, orange);
+            MakeEdgeHandle(UmlHandleKind.EndpointEnd, 0, ctrl[ctrl.Count - 1], 14f, orange);
+
+            // Vertex handles (blue) — drag to move a bend; right-click to delete it.
+            if (wps != null)
+                for (int i = 0; i < wps.Count; i++)
+                    MakeEdgeHandle(UmlHandleKind.Vertex, i, wps[i], 13f, new Color(0.12f, 0.55f, 0.85f, 1f));
+
+            // Add handles (small teal) at each control-segment midpoint — click to insert a new bend there.
+            var teal = new Color(0.20f, 0.70f, 0.66f, 1f);
+            for (int k = 0; k < ctrl.Count - 1; k++)
+                MakeEdgeHandle(UmlHandleKind.Add, k, (ctrl[k] + ctrl[k + 1]) * 0.5f, 9f, teal);
+        }
+
+        private void MakeEdgeHandle(UmlHandleKind kind, int index, Vector2 pos, float size, Color color)
+        {
+            var go = new GameObject("EdgeHandle:" + kind, typeof(RectTransform));
+            go.transform.SetParent(_handleLayer, false);
+            var handle = go.AddComponent<UmlEdgeHandle>();
+            handle.Init(this, _selectedEdge, kind, index, size, color);
+            handle.SetPosition(pos);
+            _bendHandles.Add(handle);
         }
 
         private void PositionBendHandles()
@@ -737,79 +760,114 @@ namespace TheRobotDraft.Uml
             if (!_selectedEdge.IsValid || _bendHandles.Count == 0) return;
             if (!TryGetEdgeEndpoints(_selectedEdge, out var from, out var to)) return;
             if (!_nodes.ContainsKey(from) || !_nodes.ContainsKey(to)) return;
-            var route = RouteEdge(from, to, _selectedEdge);
-            for (int i = 0; i < _bendHandles.Count && i < route.Count - 1; i++)
-                if (_bendHandles[i] != null)
-                    _bendHandles[i].SetPosition((route[i] + route[i + 1]) * 0.5f);
+            var ctrl = ControlPolyline(from, to, _selectedEdge, out _, out _);
+            var wps = _waypoints.TryGetValue(_selectedEdge, out var w) ? w : null;
+            foreach (var h in _bendHandles)
+            {
+                if (h == null) continue;
+                switch (h.Kind)
+                {
+                    case UmlHandleKind.EndpointStart: h.SetPosition(ctrl[0]); break;
+                    case UmlHandleKind.EndpointEnd: h.SetPosition(ctrl[ctrl.Count - 1]); break;
+                    case UmlHandleKind.Vertex:
+                        if (wps != null && h.Index < wps.Count) h.SetPosition(wps[h.Index]);
+                        break;
+                    case UmlHandleKind.Add:
+                        if (h.Index < ctrl.Count - 1) h.SetPosition((ctrl[h.Index] + ctrl[h.Index + 1]) * 0.5f);
+                        break;
+                }
+            }
         }
 
-        public void BeginBendDrag(EdgeId edge, int segment)
+        /// <summary>Click an Add handle: insert a new bend at that control-segment midpoint (ask #2 "add points").</summary>
+        public void AddVertex(EdgeId edge, int controlIndex)
         {
-            if (!TryGetEdgeEndpoints(edge, out var from, out var to)) return;
-            _dragEdge = edge;
-            _dragSeg = segment;
-            _dragRoute = RouteEdge(from, to, edge);
+            if (_selectedEdge != edge || !TryGetEdgeEndpoints(edge, out var from, out var to)) return;
+            var ctrl = ControlPolyline(from, to, edge, out _, out _);
+            if (controlIndex < 0 || controlIndex + 1 >= ctrl.Count) return;
+            Vector2 mid = (ctrl[controlIndex] + ctrl[controlIndex + 1]) * 0.5f;
+
+            if (!_waypoints.TryGetValue(edge, out var wps)) { wps = new List<Vector2>(); _waypoints[edge] = wps; }
+            int insertAt = Mathf.Clamp(controlIndex, 0, wps.Count);
+            wps.Insert(insertAt, mid);
+            RefreshBendHandles();
+            Flash("added bend");
         }
 
-        public void UpdateBendDrag(Vector2 screenPos)
+        public void DeleteVertex(EdgeId edge, int index)
         {
-            if (!_dragEdge.IsValid || _dragRoute == null) return;
-            if (_dragSeg < 0 || _dragSeg + 1 >= _dragRoute.Count) return;
+            if (!_waypoints.TryGetValue(edge, out var wps) || index < 0 || index >= wps.Count) return;
+            wps.RemoveAt(index);
+            if (wps.Count == 0) _waypoints.Remove(edge);
+            RefreshBendHandles();
+            Flash("removed bend");
+        }
+
+        public void BeginEdgeHandleDrag(EdgeId edge, UmlHandleKind kind, int index)
+        {
+            _hEdge = edge; _hKind = kind; _hIndex = index;
+        }
+
+        public void DragEdgeHandle(Vector2 screenPos)
+        {
+            if (!_hEdge.IsValid || !TryGetEdgeEndpoints(_hEdge, out var from, out var to)) return;
+            if (!_nodes.ContainsKey(from) || !_nodes.ContainsKey(to)) return;
+            var f = _nodes[from]; var t = _nodes[to];
             Vector2 pos = ScreenToLayer(screenPos);
 
-            // A straight (one-segment) edge has no interior point to move — pull a fresh bend out to the cursor.
-            if (_dragRoute.Count == 2)
+            switch (_hKind)
             {
-                _waypoints[_dragEdge] = new List<Vector2> { pos };
-                return;
+                case UmlHandleKind.EndpointStart:
+                    _srcAnchor[_hEdge] = ProjectToBorder(f.Rt.anchoredPosition, f.Rt.sizeDelta, pos);
+                    break;
+                case UmlHandleKind.EndpointEnd:
+                    _tgtAnchor[_hEdge] = ProjectToBorder(t.Rt.anchoredPosition, t.Rt.sizeDelta, pos);
+                    break;
+                case UmlHandleKind.Vertex:
+                    if (_waypoints.TryGetValue(_hEdge, out var wps) && _hIndex >= 0 && _hIndex < wps.Count)
+                        wps[_hIndex] = SnapVertex(pos, wps, _hIndex, f, t);
+                    break;
             }
-
-            var r = new List<Vector2>(_dragRoute);
-            Vector2 p = r[_dragSeg], q = r[_dragSeg + 1];
-            bool vertical = Mathf.Abs(p.x - q.x) < Mathf.Abs(p.y - q.y);
-
-            float Snap(float v, bool xAxis)
-            {
-                const float t = 9f;
-                float best = v, bestD = t;
-                for (int i = 0; i < r.Count; i++)
-                {
-                    if (i == _dragSeg || i == _dragSeg + 1) continue;
-                    float c = xAxis ? r[i].x : r[i].y;
-                    float dd = Mathf.Abs(v - c);
-                    if (dd < bestD) { bestD = dd; best = c; }
-                }
-                return best;
-            }
-
-            if (vertical)
-            {
-                float nx = Snap(pos.x, true);
-                SetX(r, _dragSeg, nx); SetX(r, _dragSeg + 1, nx);
-            }
-            else
-            {
-                float ny = Snap(pos.y, false);
-                SetY(r, _dragSeg, ny); SetY(r, _dragSeg + 1, ny);
-            }
-
-            // Interior points (drop the box-clipped ends) become the stored waypoints.
-            var cleaned = CleanColinear(r);
-            var interior = new List<Vector2>();
-            for (int i = 1; i < cleaned.Count - 1; i++) interior.Add(cleaned[i]);
-            if (interior.Count == 0) _waypoints.Remove(_dragEdge);
-            else _waypoints[_dragEdge] = interior;
         }
 
-        public void EndBendDrag()
+        public void EndEdgeHandleDrag()
         {
-            _dragEdge = EdgeId.None;
-            _dragRoute = null;
+            if (_hKind == UmlHandleKind.Vertex) CleanWaypoints(_hEdge);
+            _hEdge = EdgeId.None;
             RefreshBendHandles();
         }
 
-        private static void SetX(List<Vector2> r, int i, float x) { var v = r[i]; v.x = x; r[i] = v; }
-        private static void SetY(List<Vector2> r, int i, float y) { var v = r[i]; v.y = y; r[i] = v; }
+        /// <summary>Snap a dragged bend to align (x or y) with a neighbor control point — keeps routes tidy.</summary>
+        private Vector2 SnapVertex(Vector2 pos, List<Vector2> wps, int i, UmlNodeView f, UmlNodeView t)
+        {
+            const float th = 9f;
+            Vector2 prev = i > 0 ? wps[i - 1] : f.Rt.anchoredPosition;
+            Vector2 next = i < wps.Count - 1 ? wps[i + 1] : t.Rt.anchoredPosition;
+            if (Mathf.Abs(pos.x - prev.x) < th) pos.x = prev.x;
+            else if (Mathf.Abs(pos.x - next.x) < th) pos.x = next.x;
+            if (Mathf.Abs(pos.y - prev.y) < th) pos.y = prev.y;
+            else if (Mathf.Abs(pos.y - next.y) < th) pos.y = next.y;
+            return pos;
+        }
+
+        /// <summary>Drop bends that are colinear with their neighbors (incl. the endpoints) after a move.</summary>
+        private void CleanWaypoints(EdgeId edge)
+        {
+            if (!_waypoints.TryGetValue(edge, out var wps) || wps.Count == 0) return;
+            if (!TryGetEdgeEndpoints(edge, out var from, out var to)) return;
+            var ctrl = ControlPolyline(from, to, edge, out _, out _);
+            var cleaned = CleanColinear(ctrl);
+            // Keep only the interior points that survive as the new bend set (approximate by re-deriving from wps).
+            var kept = new List<Vector2>();
+            foreach (var wp in wps)
+            {
+                bool stillThere = false;
+                foreach (var c in cleaned) if ((c - wp).sqrMagnitude < 0.5f) { stillThere = true; break; }
+                if (stillThere) kept.Add(wp);
+            }
+            if (kept.Count == 0) _waypoints.Remove(edge);
+            else _waypoints[edge] = kept;
+        }
 
         private static string Stereotype(ModelElement el)
         {
