@@ -15,13 +15,20 @@ defmodule GenAI.MediaTest do
     def generate_media(%Request{}, _opts), do: {:ok, %{data: "PNGBYTES", mime: "image/png", meta: %{}}}
   end
 
+  # Transcription-style provider: speech INPUT -> text output (audio rides in settings).
+  defmodule SpeechToTextStub do
+    def config_key, do: :stt_stub
+    def supported_modalities, do: [%{input: [:speech], output: :text, mode: :sync}]
+    def generate_media(%Request{}, _opts), do: {:ok, %{data: "transcript", mime: "text/plain", meta: %{}}}
+  end
+
   # A vanilla provider using the behaviour — should inherit the media defaults.
   defmodule DefaultProv do
     use GenAI.InferenceProviderBehaviour
   end
 
   setup do
-    Application.put_env(:genai, :media_providers, [ImageStub])
+    Application.put_env(:genai, :media_providers, [ImageStub, SpeechToTextStub])
     on_exit(fn -> Application.delete_env(:genai, :media_providers) end)
     :ok
   end
@@ -44,6 +51,16 @@ defmodule GenAI.MediaTest do
     test "explicit provider that doesn't support the output -> :provider_unsupported" do
       assert {:error, :provider_unsupported} =
                GenAI.Media.Router.route(%Request{output: :video, provider: ImageStub, prompt: "x"})
+    end
+
+    test "explicit input hint ([:speech]) routes transcription, not the image provider" do
+      assert {:ok, SpeechToTextStub} =
+               GenAI.Media.Router.route(%Request{output: :text, input: [:speech], settings: %{audio: "..."}})
+    end
+
+    test "without the input hint, a text prompt does NOT route to the speech->text provider" do
+      assert {:error, :no_provider_for_modality} =
+               GenAI.Media.Router.route(%Request{output: :text, prompt: "just text"})
     end
   end
 

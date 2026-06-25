@@ -129,12 +129,14 @@ defmodule GenAI do
   end
 
   @doc """
-  Generate non-text media (ADR-016): route a `GenAI.Media.Request` to a provider that
-  declares support for its (input, output) modality, and run its `generate_media/2`.
+  Generate media (ADR-016): route a `GenAI.Media.Request` to a provider that declares
+  support for its (input, output) modality, and run its `generate_media/2`. Covers
+  text -> image/speech/music/sfx/video as well as speech -> text (transcription).
 
   Returns `{:ok, %{data: binary, mime: String.t(), meta: map}}` (sync) |
-  `{:ok, %GenAI.Media.Job{}}` (async) | `{:error, term}`. Vision (image INPUT -> text)
-  is NOT this path — it rides the normal chat/Thread run via the encoder protocol.
+  `{:ok, %GenAI.Media.Job{}}` (async) | `{:error, term}`. Free-form chat/vision
+  (image INPUT -> text generation) is NOT this path — it rides the normal chat/Thread
+  run via the encoder protocol.
   """
   def generate_media(request, options \\ [])
 

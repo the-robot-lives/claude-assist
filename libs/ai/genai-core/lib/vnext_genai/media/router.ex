@@ -62,17 +62,30 @@ defmodule GenAI.Media.Router do
       end)
   end
 
-  # Input-modality detection. Text by default; an image part (for image+text -> image
-  # edits) adds :image. Refined to inspect content parts when the shared image-part
-  # encoder lands (dmitri N1).
+  # Input-modality detection. An explicit `input` list wins (e.g. transcription's
+  # [:speech], whose audio rides in settings, not the prompt). Otherwise infer from the
+  # prompt: text by default; an image part (for image+text -> image edits) adds :image.
+  defp input_modalities(%Request{input: input}) when is_list(input) and input != [], do: input
+
   defp input_modalities(%Request{prompt: prompt}) when is_binary(prompt), do: [:text]
 
   defp input_modalities(%Request{prompt: parts}) when is_list(parts) do
-    has_image? = Enum.any?(parts, &match?(%GenAI.Message.Content.ImageContent{}, &1))
-    if has_image?, do: [:text, :image], else: [:text]
+    image? = Enum.any?(parts, &match?(%GenAI.Message.Content.ImageContent{}, &1))
+    audio? = Enum.any?(parts, &audio_part?/1)
+
+    [:text]
+    |> then(&if(image?, do: &1 ++ [:image], else: &1))
+    |> then(&if(audio?, do: &1 ++ [:speech], else: &1))
   end
 
   defp input_modalities(_), do: [:text]
+
+  # Audio content part detection without a hard dep on an AudioContent struct existing.
+  defp audio_part?(%{__struct__: mod}) do
+    mod in [GenAI.Message.Content.AudioContent, GenAI.Message.Content.SpeechContent]
+  end
+
+  defp audio_part?(_), do: false
 
   defp inputs_covered?(inputs, cap_inputs), do: Enum.all?(inputs, &(&1 in cap_inputs))
 end

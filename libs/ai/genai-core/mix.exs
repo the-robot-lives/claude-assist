@@ -7,7 +7,7 @@ defmodule GenAICore.MixProject do
       name: "GenAI Core",
       description: description(),
       package: package(),
-      version: "0.3.0",
+      version: "0.3.2",
       elixir: "~> 1.16",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
