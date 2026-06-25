@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -240,6 +241,118 @@ namespace TheRobotDraft.Uml
                 new Color(0.22f, 0.24f, 0.29f, 1f), CloseMenu);
 
             FocusInput(nameInput);
+        }
+
+        // --- style editor (color / font / size) ---
+
+        private static readonly Color[] StylePalette =
+        {
+            new Color(1f, 1f, 1f, 1f), new Color(0.90f, 0.91f, 0.93f, 1f),
+            new Color(0.99f, 0.96f, 0.74f, 1f), new Color(0.80f, 0.89f, 0.98f, 1f),
+            new Color(0.80f, 0.93f, 0.82f, 1f), new Color(0.98f, 0.83f, 0.80f, 1f),
+            new Color(0.90f, 0.84f, 0.96f, 1f), new Color(0.99f, 0.88f, 0.74f, 1f),
+            new Color(0.45f, 0.48f, 0.54f, 1f), new Color(0.14f, 0.15f, 0.18f, 1f),
+        };
+
+        private static readonly string[] StyleFonts =
+            { "(default)", "Arial", "Helvetica", "Courier New", "Verdana", "Georgia", "Times New Roman" };
+
+        private void ShowStyleEditor(ElementId id, Vector2 screenPos)
+        {
+            if (!_model.TryGet(id, out var el)) return;
+            CloseMenu();
+            bool has = _styles.TryGetValue(id, out var cur);
+
+            Color fill = has ? cur.Fill : new Color(1f, 1f, 1f, 1f);
+            Color border = has ? cur.Border : new Color(0.42f, 0.45f, 0.51f, 1f);
+            Color text = has ? cur.Text : new Color(0.13f, 0.15f, 0.19f, 1f);
+            string fontName = has ? (cur.FontName ?? "") : "";
+            int size = has && cur.FontSize > 0 ? cur.FontSize : 15;
+
+            float w = 520f, h = 424f;
+            var panel = BeginModal(w, h, "Style   —   " + (el.Kind == ElementKind.Note ? "Note" : el.Name));
+            float y = -50f;
+
+            y = SwatchRow(panel, "Fill", y, w, fill, c => fill = c);
+            y = SwatchRow(panel, "Border / line", y, w, border, c => border = c);
+            y = SwatchRow(panel, "Text", y, w, text, c => text = c);
+
+            FormLabel(panel, "Font  (OS fonts; falls back to default)", ref y, w);
+            var fontLabel = MakeText(panel, "current: " + (string.IsNullOrEmpty(fontName) ? "(default)" : fontName),
+                new Vector2(w - 220f, y + 22f), new Vector2(204f, 18f), 12, LabelColor, TextAnchor.MiddleRight);
+            float fx = 16f;
+            foreach (var fn in StyleFonts)
+            {
+                var cap = fn;
+                MakeButton(panel, fn, new Vector2(fx, y), new Vector2(66f, 26f),
+                    new Color(0.18f, 0.22f, 0.28f, 1f),
+                    () => { fontName = cap == "(default)" ? "" : cap; fontLabel.text = "current: " + cap; });
+                fx += 70f;
+            }
+            y -= 34f;
+
+            FormLabel(panel, "Font size", ref y, w);
+            var sizeLabel = MakeText(panel, size.ToString(), new Vector2(70f, y), new Vector2(50f, 24f), 16,
+                new Color(0.92f, 0.95f, 1f, 1f), TextAnchor.MiddleCenter);
+            MakeButton(panel, "−", new Vector2(16f, y), new Vector2(42f, 24f), new Color(0.18f, 0.22f, 0.28f, 1f),
+                () => { size = Mathf.Max(8, size - 1); sizeLabel.text = size.ToString(); });
+            MakeButton(panel, "+", new Vector2(126f, y), new Vector2(42f, 24f), new Color(0.18f, 0.22f, 0.28f, 1f),
+                () => { size = Mathf.Min(40, size + 1); sizeLabel.text = size.ToString(); });
+            y -= 34f;
+
+            void Submit()
+            {
+                CloseMenu();
+                _styles[id] = new NodeStyle
+                {
+                    Has = true, Fill = fill, Border = border, Text = text,
+                    FontName = string.IsNullOrEmpty(fontName) ? null : fontName, FontSize = size,
+                };
+                RebuildFromModel();
+                SetSelected(id);
+                Flash("styled");
+            }
+
+            float yBtn = -(h - 46f);
+            MakeButton(panel, "Reset", new Vector2(16f, yBtn), new Vector2(92f, 34f),
+                new Color(0.40f, 0.30f, 0.16f, 1f),
+                () => { CloseMenu(); _styles.Remove(id); RebuildFromModel(); SetSelected(id); Flash("style reset"); });
+            MakeButton(panel, "OK", new Vector2(w - 198f, yBtn), new Vector2(84f, 34f),
+                new Color(0.20f, 0.42f, 0.52f, 1f), Submit);
+            MakeButton(panel, "Cancel", new Vector2(w - 104f, yBtn), new Vector2(88f, 34f),
+                new Color(0.22f, 0.24f, 0.29f, 1f), CloseMenu);
+        }
+
+        private float SwatchRow(RectTransform panel, string label, float y, float w, Color initial,
+            Action<Color> onPick)
+        {
+            FormLabel(panel, label, ref y, w);
+            var preview = MakeSwatch(panel, new Vector2(w - 46f, y + 22f), 26f, initial);
+            float x = 16f;
+            const float sw = 32f, gap = 6f;
+            foreach (var c in StylePalette)
+            {
+                var cap = c;
+                MakeButton(panel, "", new Vector2(x, y), new Vector2(sw, 26f), c,
+                    () => { onPick(cap); preview.color = cap; });
+                x += sw + gap;
+            }
+            return y - 34f;
+        }
+
+        private Image MakeSwatch(RectTransform parent, Vector2 topLeft, float size, Color c)
+        {
+            var go = new GameObject("Swatch", typeof(RectTransform));
+            var rt = (RectTransform)go.transform;
+            rt.SetParent(parent, false);
+            rt.anchorMin = rt.anchorMax = new Vector2(0f, 1f);
+            rt.pivot = new Vector2(0f, 1f);
+            rt.sizeDelta = new Vector2(size, size);
+            rt.anchoredPosition = topLeft;
+            var img = go.AddComponent<Image>();
+            img.color = c;
+            img.raycastTarget = false;
+            return img;
         }
 
         // --- note (comment) editor ---

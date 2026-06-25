@@ -7,7 +7,7 @@ using TheRobotDraft.Authoring.Model;
 namespace TheRobotDraft.Uml
 {
     /// <summary>End decoration for a relationship line, in standard UML notation.</summary>
-    public enum EndMarker { None, OpenArrow, HollowTriangle, HollowDiamond, FilledDiamond }
+    public enum EndMarker { None, OpenArrow, HollowTriangle, HollowDiamond, FilledDiamond, StickArrow }
 
     /// <summary>
     /// A standard-UML relationship drawn as an orthogonal (right-angle) polyline between two class boxes:
@@ -144,6 +144,8 @@ namespace TheRobotDraft.Uml
             {
                 case EndMarker.OpenArrow:
                     img.sprite = TriangleSprite(); img.color = color; break;
+                case EndMarker.StickArrow:
+                    img.sprite = StickArrowSprite(); img.color = color; break;
                 case EndMarker.HollowTriangle:
                     img.sprite = TriangleSprite(); img.color = new Color(0.95f, 0.96f, 0.97f, 1f);
                     AddOutline(rt.gameObject, color); break;
@@ -165,7 +167,37 @@ namespace TheRobotDraft.Uml
 
         // --- procedural sprites (reliable across fonts; no glyph dependency) ---
 
-        private static Sprite _dash, _triangle, _diamond;
+        private static Sprite _dash, _triangle, _diamond, _stick;
+
+        /// <summary>An open "stick" (line) arrowhead — the two strokes of an async / reply message head.</summary>
+        private static Sprite StickArrowSprite()
+        {
+            if (_stick != null) return _stick;
+            const int n = 18;
+            var tex = new Texture2D(n, n, TextureFormat.RGBA32, false) { filterMode = FilterMode.Bilinear };
+            // Chevron ">" pointing +x: apex at right-center, two strokes back to the left corners.
+            Vector2 apex = new Vector2(n - 1.5f, n / 2f);
+            Vector2 top = new Vector2(1.5f, n - 1.5f);
+            Vector2 bot = new Vector2(1.5f, 1.5f);
+            for (int y = 0; y < n; y++)
+                for (int x = 0; x < n; x++)
+                {
+                    var p = new Vector2(x + 0.5f, y + 0.5f);
+                    float d = Mathf.Min(DistSeg(p, apex, top), DistSeg(p, apex, bot));
+                    tex.SetPixel(x, y, d <= 1.6f ? Color.white : new Color(1, 1, 1, 0));
+                }
+            tex.Apply();
+            _stick = Sprite.Create(tex, new Rect(0, 0, n, n), new Vector2(0.5f, 0.5f), n);
+            return _stick;
+        }
+
+        private static float DistSeg(Vector2 p, Vector2 a, Vector2 b)
+        {
+            Vector2 ab = b - a;
+            float len2 = ab.sqrMagnitude;
+            float t = len2 < 1e-4f ? 0f : Mathf.Clamp01(Vector2.Dot(p - a, ab) / len2);
+            return (p - (a + ab * t)).magnitude;
+        }
 
         private static Sprite DashSprite()
         {

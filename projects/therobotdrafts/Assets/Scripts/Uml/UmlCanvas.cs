@@ -25,7 +25,14 @@ namespace TheRobotDraft.Uml
         {
             EdgeKind.Association, EdgeKind.Dependency, EdgeKind.Generalization,
             EdgeKind.Realization, EdgeKind.Aggregation, EdgeKind.Composition,
+            EdgeKind.Transition, EdgeKind.Include, EdgeKind.Extend,
+            EdgeKind.NoteLink, EdgeKind.DirectedAssociation,
+            EdgeKind.MessageSync, EdgeKind.MessageAsync, EdgeKind.MessageReply,
         };
+
+        /// <summary>Sequence / communication participants a message may run between (lifelines, activations, objects).</summary>
+        private static bool IsInteractionNode(ElementKind k) =>
+            k == ElementKind.Lifeline || k == ElementKind.Activation || k == ElementKind.ObjectInstance;
         // Classifier kinds offered when adding into a package.
         private static readonly ElementKind[] ClassifierKinds =
         {
@@ -75,6 +82,9 @@ namespace TheRobotDraft.Uml
         // Edges drawn as smooth curves instead of right-angle polylines (view-state).
         private readonly HashSet<EdgeId> _curved = new();
 
+        // Per-element visual style overrides (fill / border / text color, font, size).
+        private readonly Dictionary<ElementId, NodeStyle> _styles = new();
+
         // Copy/paste clipboard: a deep snapshot of one element + its members.
         private ClipElement _clipboard;
 
@@ -93,6 +103,7 @@ namespace TheRobotDraft.Uml
             public string Name, Language, Stereotype;
             public bool IsAbstract, HasPos;
             public Vector2 Pos;
+            public NodeStyle Style;
             public readonly List<ClipMember> Members = new();
         }
 
@@ -185,7 +196,7 @@ namespace TheRobotDraft.Uml
             _activePackage = _selectedId = ElementId.None;
             _selectedEdge = EdgeId.None;
             _pos.Clear(); _size.Clear();
-            _waypoints.Clear(); _srcAnchor.Clear(); _tgtAnchor.Clear(); _curved.Clear();
+            _waypoints.Clear(); _srcAnchor.Clear(); _tgtAnchor.Clear(); _curved.Clear(); _styles.Clear();
             _pan = Vector2.zero; ApplyPan();
         }
 
@@ -221,6 +232,7 @@ namespace TheRobotDraft.Uml
                 Stereotype = el.Stereotype, IsAbstract = el.IsAbstract,
             };
             if (_pos.TryGetValue(id, out var p)) { clip.Pos = p; clip.HasPos = true; }
+            if (_styles.TryGetValue(id, out var style)) clip.Style = style;
             foreach (var cid in el.ChildIds)
                 if (_model.TryGet(cid, out var c) && KindInfo.IsMember(c.Kind))
                     clip.Members.Add(new ClipMember { Kind = c.Kind, Name = c.Name });
@@ -248,6 +260,7 @@ namespace TheRobotDraft.Uml
             }
             _ctl.EnterSelect();
             _pos[nid] = c.HasPos ? c.Pos + new Vector2(34f, -34f) : Vector2.zero;
+            if (c.Style.Has) _styles[nid] = c.Style;
             RebuildFromModel();
             SetSelected(nid);
             Flash("pasted (renamed)");
@@ -268,6 +281,100 @@ namespace TheRobotDraft.Uml
             foreach (var el in _model.Elements)
                 if (el.Parent == _activePackage && el.Name == name) return true;
             return false;
+        }
+
+        // --- toolbar palette: create a node by clicking or dragging a palette item onto the canvas ---
+
+        private GameObject _paletteGhost;
+        private ElementKind _paletteDragKind;
+
+        public void CreateNodeFromPalette(ElementKind kind, Vector2 screenPos)
+        {
+            CloseMenu();
+            bool isPackage = kind == ElementKind.Package;
+            if (!isPackage && !_activePackage.IsValid) { Flash("add a package first (palette → Package)"); return; }
+
+            _ctl.EnterAddNode(kind);
+            var id = _ctl.CommitAddNode(isPackage ? ElementId.None : _activePackage, DefaultName(kind));
+            if (!id.IsValid) { Flash("can't place " + kind + " here"); _ctl.EnterSelect(); return; }
+            if (isPackage) _activePackage = id;
+            else _pos[id] = ScreenToLayer(screenPos);
+            _ctl.EnterSelect();
+            RebuildFromModel();
+            SetSelected(id);
+            Flash("added " + kind);
+        }
+
+        private string DefaultName(ElementKind kind) => kind switch
+        {
+            ElementKind.Note => "note",
+            ElementKind.Actor => "Actor",
+            ElementKind.UseCase => "Use Case",
+            ElementKind.State => "State",
+            ElementKind.StateStart => "start",
+            ElementKind.StateEnd => "end",
+            ElementKind.Interface => "I" + CountOf(kind),
+            ElementKind.Enum => "Enum" + CountOf(kind),
+            ElementKind.Package => "Package" + CountOf(kind),
+            ElementKind.Boundary => "System",
+            ElementKind.Decision => "decision" + CountOf(kind),
+            ElementKind.ForkJoin => "fork" + CountOf(kind),
+            ElementKind.Junction => "junction" + CountOf(kind),
+            ElementKind.History => "history",
+            ElementKind.Terminate => "terminate",
+            ElementKind.FlowFinal => "flow-final" + CountOf(kind),
+            ElementKind.Activity => "Action",
+            ElementKind.Component => "Component" + CountOf(kind),
+            ElementKind.Artifact => "artifact.bin",
+            ElementKind.DeploymentNode => "Node" + CountOf(kind),
+            ElementKind.ObjectInstance => "obj : Class",
+            ElementKind.DataType => "DataType" + CountOf(kind),
+            ElementKind.PrimitiveType => "Integer",
+            ElementKind.PackageNode => "Package" + CountOf(kind),
+            ElementKind.Part => "part : Type",
+            ElementKind.Port => "p",
+            ElementKind.Collaboration => "Collaboration",
+            ElementKind.Lifeline => "obj : Class",
+            ElementKind.Activation => "exec",
+            ElementKind.Frame => "sd interaction",
+            _ => kind.ToString() + CountOf(kind),
+        };
+
+        public void BeginPaletteDrag(ElementKind kind, string label)
+        {
+            CloseMenu();
+            _paletteDragKind = kind;
+            if (_paletteGhost != null) Destroy(_paletteGhost);
+            _paletteGhost = new GameObject("PaletteGhost", typeof(RectTransform));
+            var rt = (RectTransform)_paletteGhost.transform;
+            rt.SetParent(_root, false);
+            rt.anchorMin = rt.anchorMax = new Vector2(0f, 0f);
+            rt.pivot = new Vector2(0.5f, 0.5f);
+            rt.sizeDelta = new Vector2(120f, 28f);
+            var img = _paletteGhost.AddComponent<Image>();
+            img.color = new Color(0.20f, 0.45f, 0.65f, 0.85f);
+            img.raycastTarget = false;
+            var tgo = new GameObject("L", typeof(RectTransform));
+            var trt = (RectTransform)tgo.transform;
+            trt.SetParent(rt, false);
+            trt.anchorMin = Vector2.zero; trt.anchorMax = Vector2.one;
+            trt.offsetMin = Vector2.zero; trt.offsetMax = Vector2.zero;
+            var tx = tgo.AddComponent<Text>();
+            tx.font = _font; tx.text = label; tx.fontSize = 14; tx.alignment = TextAnchor.MiddleCenter;
+            tx.color = new Color(0.96f, 0.98f, 1f, 1f); tx.raycastTarget = false;
+        }
+
+        public void UpdatePaletteDrag(Vector2 screenPos)
+        {
+            if (_paletteGhost != null)
+                ((RectTransform)_paletteGhost.transform).anchoredPosition = screenPos / Mathf.Max(ScaleFactor, 0.0001f);
+        }
+
+        public void EndPaletteDrag(Vector2 screenPos)
+        {
+            if (_paletteGhost != null) { Destroy(_paletteGhost); _paletteGhost = null; }
+            if (screenPos.x < (PaletteWidth + 8f) * ScaleFactor) { Flash("drop onto the canvas to create"); return; }
+            CreateNodeFromPalette(_paletteDragKind, screenPos);
         }
 
         private void Update()
@@ -357,6 +464,35 @@ namespace TheRobotDraft.Uml
         public void OnNodeMoved(ElementId id, Vector2 pos) => _pos[id] = pos;
         public void OnNodeResized(ElementId id, Vector2 size) => _size[id] = size;
 
+        /// <summary>The nodes whose center currently lies within <paramref name="boundary"/>'s rect (its nested children).</summary>
+        public List<ElementId> NodesInside(UmlNodeView boundary)
+        {
+            var result = new List<ElementId>();
+            if (boundary == null) return result;
+            Vector2 c = boundary.Rt.anchoredPosition;
+            float hw = boundary.Rt.sizeDelta.x * 0.5f, hh = boundary.Rt.sizeDelta.y * 0.5f;
+            foreach (var kv in _nodes)
+            {
+                if (kv.Key == boundary.Id || kv.Value == null) continue;
+                Vector2 p = kv.Value.Rt.anchoredPosition;
+                if (p.x >= c.x - hw && p.x <= c.x + hw && p.y >= c.y - hh && p.y <= c.y + hh)
+                    result.Add(kv.Key);
+            }
+            return result;
+        }
+
+        /// <summary>Shift a captured set of nodes by a delta (used to carry a boundary's nested nodes with it).</summary>
+        public void MoveNodesBy(List<ElementId> ids, Vector2 delta)
+        {
+            if (ids == null) return;
+            foreach (var id in ids)
+                if (_nodes.TryGetValue(id, out var nv) && nv != null)
+                {
+                    nv.Rt.anchoredPosition += delta;
+                    _pos[id] = nv.Rt.anchoredPosition;
+                }
+        }
+
         // --- context menus ---
 
         public void ShowNodeMenu(UmlNodeView node, Vector2 screenPos)
@@ -371,6 +507,7 @@ namespace TheRobotDraft.Uml
                 var noteItems = new List<MenuItem>
                 {
                     new MenuItem("Edit text…", true, () => ShowNoteEditor(noteParent, noteId, screenPos)),
+                    new MenuItem("Style…  (color · font)", true, () => ShowStyleEditor(noteId, screenPos)),
                     new MenuItem("Copy", true, () => CopyElement(noteId)),
                     MenuItem.Separator(),
                     new MenuItem("Delete", true,
@@ -405,6 +542,7 @@ namespace TheRobotDraft.Uml
             var pid = node.Id;
             items.Add(new MenuItem("Edit element…  (fields · operations · properties)", true,
                 () => ShowClassifierEditor(pid, screenPos)));
+            items.Add(new MenuItem("Style…  (color · font)", true, () => ShowStyleEditor(pid, screenPos)));
             items.Add(new MenuItem("Copy  (Ctrl/Cmd+C)", true, () => CopyElement(pid)));
             items.Add(new MenuItem("Delete", true,
                 () => { _ctl.Delete(pid); SetSelected(ElementId.None); RebuildFromModel(); }));
@@ -528,12 +666,11 @@ namespace TheRobotDraft.Uml
         {
             CloseMenu();
             var items = new List<MenuItem>();
-            foreach (var k in AllEdgeKinds)
-                if (EdgeRules.CanConnect(_model, k, from, to).IsValid)
-                {
-                    var kind = k;
-                    items.Add(new MenuItem(k.ToString(), true, () => Connect(from, to, kind)));
-                }
+            foreach (var k in OrderedEdgeKindsFor(from, to))
+            {
+                var kind = k;
+                items.Add(new MenuItem(EdgeDisplay(k), true, () => Connect(from, to, kind)));
+            }
             if (items.Count == 0) items.Add(new MenuItem("(no valid relationship here)", false, null));
             CreateMenu(screenPos, "Link type", items);
         }
@@ -558,13 +695,12 @@ namespace TheRobotDraft.Uml
             if (!_model.TryGet(edge.Edge, out var e)) return;
             CloseMenu();
             var items = new List<MenuItem>();
-            foreach (var k in AllEdgeKinds)
-                if (EdgeRules.CanConnect(_model, k, e.From, e.To).IsValid)
-                {
-                    var kind = k; var edgeId = edge.Edge;
-                    items.Add(new MenuItem(k.ToString() + (k == e.Kind ? "  ✓" : ""), true,
-                        () => { _ctl.ReTypeEdge(edgeId, kind); CloseMenu(); RebuildFromModel(); }));
-                }
+            foreach (var k in OrderedEdgeKindsFor(e.From, e.To))
+            {
+                var kind = k; var edgeId = edge.Edge;
+                items.Add(new MenuItem(EdgeDisplay(k) + (k == e.Kind ? "  ✓" : ""), true,
+                    () => { _ctl.ReTypeEdge(edgeId, kind); CloseMenu(); RebuildFromModel(); }));
+            }
             items.Add(MenuItem.Separator());
             var metaEdge = edge.Edge;
             items.Add(new MenuItem("Multiplicity / label…", true, () => ShowEdgeMetaEditor(metaEdge, screenPos)));
@@ -634,7 +770,7 @@ namespace TheRobotDraft.Uml
             foreach (var el in _model.Elements)
             {
                 if (el.Parent != _activePackage) continue;
-                if (!KindInfo.IsClassifier(el.Kind) && el.Kind != ElementKind.Note) continue;
+                if (!KindInfo.IsDiagramNode(el.Kind)) continue;
                 if (!_pos.TryGetValue(el.Id, out var p))
                 {
                     p = new Vector2(-360f + (spread % 4) * 240f, 120f - (spread / 4) * 200f);
@@ -675,36 +811,100 @@ namespace TheRobotDraft.Uml
             var nv = go.AddComponent<UmlNodeView>();
             ColorUtility.TryParseHtmlString(KindInfo.Hue(el.Kind), out var hue);
             _size.TryGetValue(el.Id, out var size);
+            var style = _styles.TryGetValue(el.Id, out var st) ? st : default;
             nv.Init(this, el.Id, el.Name, Stereotype(el), el.Kind, hue, _font, attributes, operations,
-                el.Language, size);
+                el.Language, style, size);
             nv.Rt.anchoredPosition = pos;
             _nodes[el.Id] = nv;
         }
 
         private void CreateEdgeView(ModelEdge edge)
         {
-            var (dashed, src, tgt) = EdgeVisual(edge.Kind);
+            var (dashed, src, tgt, stereo) = EdgeVisual(edge.Kind);
             var go = new GameObject("Edge:" + edge.Kind, typeof(RectTransform));
             go.transform.SetParent(_edgeLayer, false);
             var ev = go.AddComponent<UmlEdgeView>();
             ev.Edge = edge.Id;
-            // Midpoint label is the association name (not the kind — kind is conveyed by line/marker style).
-            ev.Init(this, _font, EdgeColor, edge.Label, edge.SourceMultiplicity, edge.TargetMultiplicity,
+            // Midpoint label is the association name when set, else the kind's stereotype («include», «extend»).
+            string mid = !string.IsNullOrEmpty(edge.Label) ? edge.Label : stereo;
+            ev.Init(this, _font, EdgeColor, mid, edge.SourceMultiplicity, edge.TargetMultiplicity,
                 dashed, src, tgt);
             _edges.Add(new EdgeBinding { View = ev, From = edge.From, To = edge.To });
         }
 
-        private static (bool dashed, EndMarker src, EndMarker tgt) EdgeVisual(EdgeKind k) => k switch
+        private static (bool dashed, EndMarker src, EndMarker tgt, string stereo) EdgeVisual(EdgeKind k) => k switch
         {
             // Plain association = a line with multiplicities, no arrowhead (conventional class-diagram default).
-            EdgeKind.Association => (false, EndMarker.None, EndMarker.None),
-            EdgeKind.Dependency => (true, EndMarker.None, EndMarker.OpenArrow),
-            EdgeKind.Generalization => (false, EndMarker.None, EndMarker.HollowTriangle),
-            EdgeKind.Realization => (true, EndMarker.None, EndMarker.HollowTriangle),
-            EdgeKind.Aggregation => (false, EndMarker.HollowDiamond, EndMarker.None),
-            EdgeKind.Composition => (false, EndMarker.FilledDiamond, EndMarker.None),
-            _ => (false, EndMarker.None, EndMarker.OpenArrow),
+            EdgeKind.Association => (false, EndMarker.None, EndMarker.None, null),
+            EdgeKind.Dependency => (true, EndMarker.None, EndMarker.OpenArrow, null),
+            EdgeKind.Generalization => (false, EndMarker.None, EndMarker.HollowTriangle, null),
+            EdgeKind.Realization => (true, EndMarker.None, EndMarker.HollowTriangle, null),
+            EdgeKind.Aggregation => (false, EndMarker.HollowDiamond, EndMarker.None, null),
+            EdgeKind.Composition => (false, EndMarker.FilledDiamond, EndMarker.None, null),
+            // Behavioral / cross-diagram connectors — the directional "flow" arrows.
+            EdgeKind.Transition => (false, EndMarker.None, EndMarker.OpenArrow, null),
+            EdgeKind.DirectedAssociation => (false, EndMarker.None, EndMarker.OpenArrow, null),
+            EdgeKind.Include => (true, EndMarker.None, EndMarker.OpenArrow, "«include»"),
+            EdgeKind.Extend => (true, EndMarker.None, EndMarker.OpenArrow, "«extend»"),
+            EdgeKind.NoteLink => (true, EndMarker.None, EndMarker.None, null),
+            // Sequence / communication messages: sync = filled head, async = open stick, reply = dashed stick.
+            EdgeKind.MessageSync => (false, EndMarker.None, EndMarker.OpenArrow, null),
+            EdgeKind.MessageAsync => (false, EndMarker.None, EndMarker.StickArrow, null),
+            EdgeKind.MessageReply => (true, EndMarker.None, EndMarker.StickArrow, null),
+            _ => (false, EndMarker.None, EndMarker.OpenArrow, null),
         };
+
+        /// <summary>A friendly name for the link-type / re-type pickers (the bare enum reads poorly).</summary>
+        private static string EdgeDisplay(EdgeKind k) => k switch
+        {
+            EdgeKind.Transition => "Transition  (flow →)",
+            EdgeKind.DirectedAssociation => "Directed association  (→)",
+            EdgeKind.Include => "«include»",
+            EdgeKind.Extend => "«extend»",
+            EdgeKind.NoteLink => "Note anchor  (comment)",
+            EdgeKind.MessageSync => "Message — sync  (▶)",
+            EdgeKind.MessageAsync => "Message — async  (>)",
+            EdgeKind.MessageReply => "Reply / return  (⇠)",
+            _ => k.ToString(),
+        };
+
+        /// <summary>
+        /// The valid relationship kinds for a pair of endpoints, ordered so the most appropriate one is first
+        /// (so a state pair defaults to a Transition arrow, two use cases to «include», a note to a comment
+        /// anchor, etc.) — this is what stops new links from defaulting to a directionless line.
+        /// </summary>
+        private List<EdgeKind> OrderedEdgeKindsFor(ElementId from, ElementId to)
+        {
+            _model.TryGet(from, out var f);
+            _model.TryGet(to, out var t);
+            var order = new List<EdgeKind>();
+            void Add(EdgeKind k)
+            {
+                if (!order.Contains(k) && EdgeRules.CanConnect(_model, k, from, to).IsValid) order.Add(k);
+            }
+
+            bool note = (f != null && f.Kind == ElementKind.Note) || (t != null && t.Kind == ElementKind.Note);
+            bool bothUseCase = f != null && t != null
+                && f.Kind == ElementKind.UseCase && t.Kind == ElementKind.UseCase;
+            bool behavioral = f != null && t != null
+                && KindInfo.IsBehavioral(f.Kind) && KindInfo.IsBehavioral(t.Kind);
+            bool messaging = f != null && t != null && IsInteractionNode(f.Kind) && IsInteractionNode(t.Kind);
+
+            if (note) { Add(EdgeKind.NoteLink); Add(EdgeKind.Dependency); }
+            if (bothUseCase) { Add(EdgeKind.Include); Add(EdgeKind.Extend); Add(EdgeKind.Generalization); }
+            if (behavioral) Add(EdgeKind.Transition);
+            if (messaging) { Add(EdgeKind.MessageSync); Add(EdgeKind.MessageAsync); Add(EdgeKind.MessageReply); }
+
+            // Conventional fallback order for everything else.
+            foreach (var k in new[]
+            {
+                EdgeKind.Association, EdgeKind.DirectedAssociation, EdgeKind.Transition, EdgeKind.Dependency,
+                EdgeKind.Generalization, EdgeKind.Realization, EdgeKind.Aggregation, EdgeKind.Composition,
+                EdgeKind.Include, EdgeKind.Extend, EdgeKind.NoteLink,
+                EdgeKind.MessageSync, EdgeKind.MessageAsync, EdgeKind.MessageReply,
+            }) Add(k);
+            return order;
+        }
 
         // --- orthogonal routing ---
 
@@ -1135,6 +1335,10 @@ namespace TheRobotDraft.Uml
                 ElementKind.Enum => "«enumeration»",
                 ElementKind.Struct => "«struct»",
                 ElementKind.Class when el.IsAbstract => "«abstract»",
+                ElementKind.DataType => "«dataType»",
+                ElementKind.PrimitiveType => "«primitive»",
+                ElementKind.Component => "«component»",
+                ElementKind.Artifact => "«artifact»",
                 _ => null,
             };
         }
@@ -1310,6 +1514,134 @@ namespace TheRobotDraft.Uml
             _hint.text = "Right-click canvas → add / paste · right-click box → edit element · drag empty space → pan · " +
                          "hover a box → drag a side hotspot to link · Ctrl-click a line → add bend (Ctrl+Alt → remove) · " +
                          "drag a box border to resize · Ctrl/Cmd C/V copy · wheel zoom · Ctrl/Cmd S save · Ctrl/Cmd Z undo";
+
+            BuildPalette();
+        }
+
+        // --- toolbar palette UI ---
+
+        private const float PaletteWidth = 168f;
+
+        private void BuildPalette()
+        {
+            var sections = new (string title, (ElementKind kind, string label)[] items)[]
+            {
+                ("Class", new[]
+                {
+                    (ElementKind.Class, "Class"), (ElementKind.Interface, "Interface"),
+                    (ElementKind.Enum, "Enum"), (ElementKind.Struct, "Struct"),
+                    (ElementKind.DataType, "Data Type"), (ElementKind.PrimitiveType, "Primitive"),
+                    (ElementKind.Package, "Package"), (ElementKind.Note, "Note"),
+                }),
+                ("Object", new[] { (ElementKind.ObjectInstance, "Object") }),
+                ("Use Case", new[]
+                {
+                    (ElementKind.Actor, "Actor"), (ElementKind.UseCase, "Use Case"),
+                    (ElementKind.Boundary, "System Boundary"),
+                }),
+                ("State Machine", new[]
+                {
+                    (ElementKind.StateStart, "● Initial"), (ElementKind.State, "State"),
+                    (ElementKind.Decision, "◇ Decision"), (ElementKind.ForkJoin, "▬ Fork / Join"),
+                    (ElementKind.Junction, "• Junction"), (ElementKind.History, "Ⓗ History"),
+                    (ElementKind.Terminate, "✕ Terminate"), (ElementKind.StateEnd, "◉ Final"),
+                }),
+                ("Activity", new[]
+                {
+                    (ElementKind.StateStart, "● Initial"), (ElementKind.Activity, "Action"),
+                    (ElementKind.Decision, "◇ Decision / Merge"), (ElementKind.ForkJoin, "▬ Fork / Join"),
+                    (ElementKind.FlowFinal, "⊗ Flow Final"), (ElementKind.StateEnd, "◉ Activity Final"),
+                }),
+                ("Component", new[]
+                {
+                    (ElementKind.Component, "Component"), (ElementKind.Interface, "Interface"),
+                }),
+                ("Deployment", new[]
+                {
+                    (ElementKind.DeploymentNode, "Node / Device"), (ElementKind.Artifact, "Artifact"),
+                    (ElementKind.Component, "Component"),
+                }),
+                ("Package", new[]
+                {
+                    (ElementKind.PackageNode, "Package"), (ElementKind.Note, "Note"),
+                }),
+                ("Composite Structure", new[]
+                {
+                    (ElementKind.Part, "Part"), (ElementKind.Port, "Port"),
+                    (ElementKind.Collaboration, "Collaboration"), (ElementKind.Interface, "Interface"),
+                }),
+                ("Sequence", new[]
+                {
+                    (ElementKind.Lifeline, "Lifeline"), (ElementKind.Activation, "Activation"),
+                    (ElementKind.Actor, "Actor"), (ElementKind.Frame, "Fragment (alt/opt/loop)"),
+                }),
+                ("Communication", new[]
+                {
+                    (ElementKind.ObjectInstance, "Object"), (ElementKind.Actor, "Actor"),
+                    (ElementKind.Frame, "Frame"),
+                }),
+                ("Interaction Overview", new[]
+                {
+                    (ElementKind.StateStart, "● Initial"), (ElementKind.Frame, "Interaction Frame"),
+                    (ElementKind.Decision, "◇ Decision"), (ElementKind.ForkJoin, "▬ Fork / Join"),
+                    (ElementKind.StateEnd, "◉ Final"),
+                }),
+            };
+
+            const float width = PaletteWidth;
+
+            // Scrollable container pinned to the left edge, from just under the hint line down to the bottom —
+            // the palette now lists every UML diagram family, so it needs to scroll.
+            var container = new GameObject("Palette", typeof(RectTransform));
+            var crt = (RectTransform)container.transform;
+            crt.SetParent(_root, false);
+            crt.anchorMin = new Vector2(0f, 0f); crt.anchorMax = new Vector2(0f, 1f);
+            crt.pivot = new Vector2(0f, 1f);
+            crt.offsetMin = new Vector2(0f, 8f);      // left = 0, bottom = 8
+            crt.offsetMax = new Vector2(width, -70f); // right = width, top = -70 (clears the tabs + hint line)
+            container.AddComponent<Image>().color = new Color(0.12f, 0.13f, 0.16f, 0.97f);
+            container.AddComponent<RectMask2D>();
+            var scroll = container.AddComponent<ScrollRect>();
+            scroll.horizontal = false; scroll.vertical = true;
+            scroll.movementType = ScrollRect.MovementType.Clamped;
+            scroll.scrollSensitivity = 26f;
+
+            var content = new GameObject("Content", typeof(RectTransform));
+            var rt = (RectTransform)content.transform;
+            rt.SetParent(crt, false);
+            rt.anchorMin = new Vector2(0f, 1f); rt.anchorMax = new Vector2(1f, 1f);
+            rt.pivot = new Vector2(0.5f, 1f);
+            rt.anchoredPosition = Vector2.zero;
+            scroll.viewport = crt;
+            scroll.content = rt;
+
+            float y = -8f;
+            foreach (var sec in sections)
+            {
+                var hdr = MakeText(rt, sec.title.ToUpper(), new Vector2(8f, y), new Vector2(width - 12f, 18f), 12,
+                    new Color(0.55f, 0.62f, 0.72f, 1f), TextAnchor.MiddleLeft);
+                hdr.fontStyle = FontStyle.Bold;
+                y -= 20f;
+                foreach (var it in sec.items) { MakePaletteItem(rt, it.kind, it.label, y, width - 16f); y -= 26f; }
+                y -= 8f;
+            }
+            rt.sizeDelta = new Vector2(0f, -y + 4f);
+        }
+
+        private void MakePaletteItem(RectTransform parent, ElementKind kind, string label, float y, float width)
+        {
+            var go = new GameObject("Item:" + label, typeof(RectTransform));
+            var rt = (RectTransform)go.transform;
+            rt.SetParent(parent, false);
+            rt.anchorMin = rt.anchorMax = new Vector2(0f, 1f);
+            rt.pivot = new Vector2(0f, 1f);
+            rt.sizeDelta = new Vector2(width, 23f);
+            rt.anchoredPosition = new Vector2(6f, y);
+            go.AddComponent<Image>().color = new Color(0.20f, 0.23f, 0.28f, 1f);
+            var item = go.AddComponent<UmlPaletteItem>();
+            item.Canvas = this; item.Kind = kind; item.Label = label;
+            MakeText(rt, label, new Vector2(8f, 0f), new Vector2(width - 12f, 23f), 14,
+                new Color(0.90f, 0.93f, 0.98f, 1f), TextAnchor.MiddleLeft);
         }
 
         private RectTransform NewLayer(string name)
@@ -1519,5 +1851,20 @@ namespace TheRobotDraft.Uml
     {
         public UmlCanvas Canvas;
         public void OnPointerClick(PointerEventData eventData) => Canvas.CancelModal();
+    }
+
+    /// <summary>A toolbar palette entry: click to add at center, or drag onto the canvas to drop a new node.</summary>
+    public sealed class UmlPaletteItem : MonoBehaviour,
+        IBeginDragHandler, IDragHandler, IEndDragHandler, IPointerClickHandler
+    {
+        public UmlCanvas Canvas;
+        public ElementKind Kind;
+        public string Label;
+
+        public void OnBeginDrag(PointerEventData e) => Canvas.BeginPaletteDrag(Kind, Label);
+        public void OnDrag(PointerEventData e) => Canvas.UpdatePaletteDrag(e.position);
+        public void OnEndDrag(PointerEventData e) => Canvas.EndPaletteDrag(e.position);
+        public void OnPointerClick(PointerEventData e) =>
+            Canvas.CreateNodeFromPalette(Kind, new Vector2(Screen.width * 0.5f, Screen.height * 0.5f));
     }
 }

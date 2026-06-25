@@ -48,6 +48,12 @@ namespace TheRobotDraft.Uml
     {
         public string id;
         public float px, py, sx, sy;
+        public bool hasStyle;
+        public float fillR, fillG, fillB, fillA;
+        public float borderR, borderG, borderB, borderA;
+        public float textR, textG, textB, textA;
+        public int fontSize;
+        public string fontName;
     }
 
     [Serializable]
@@ -136,6 +142,14 @@ namespace TheRobotDraft.Uml
             {
                 var nd = new NodeGeomDto { id = kv.Key.Value, px = kv.Value.x, py = kv.Value.y };
                 if (_size.TryGetValue(kv.Key, out var s)) { nd.sx = s.x; nd.sy = s.y; }
+                if (_styles.TryGetValue(kv.Key, out var st) && st.Has)
+                {
+                    nd.hasStyle = true;
+                    nd.fillR = st.Fill.r; nd.fillG = st.Fill.g; nd.fillB = st.Fill.b; nd.fillA = st.Fill.a;
+                    nd.borderR = st.Border.r; nd.borderG = st.Border.g; nd.borderB = st.Border.b; nd.borderA = st.Border.a;
+                    nd.textR = st.Text.r; nd.textG = st.Text.g; nd.textB = st.Text.b; nd.textA = st.Text.a;
+                    nd.fontSize = st.FontSize; nd.fontName = st.FontName;
+                }
                 dto.nodeGeom.Add(nd);
             }
 
@@ -163,7 +177,7 @@ namespace TheRobotDraft.Uml
         {
             NewWorld();
             _pos.Clear(); _size.Clear();
-            _waypoints.Clear(); _srcAnchor.Clear(); _tgtAnchor.Clear(); _curved.Clear();
+            _waypoints.Clear(); _srcAnchor.Clear(); _tgtAnchor.Clear(); _curved.Clear(); _styles.Clear();
 
             var byId = new Dictionary<string, ElementDto>();
             foreach (var e in dto.elements) byId[e.id] = e;
@@ -206,6 +220,15 @@ namespace TheRobotDraft.Uml
                     {
                         _pos[nid] = new Vector2(nd.px, nd.py);
                         if (nd.sx > 1f && nd.sy > 1f) _size[nid] = new Vector2(nd.sx, nd.sy);
+                        if (nd.hasStyle)
+                            _styles[nid] = new NodeStyle
+                            {
+                                Has = true,
+                                Fill = new Color(nd.fillR, nd.fillG, nd.fillB, nd.fillA),
+                                Border = new Color(nd.borderR, nd.borderG, nd.borderB, nd.borderA),
+                                Text = new Color(nd.textR, nd.textG, nd.textB, nd.textA),
+                                FontSize = nd.fontSize, FontName = nd.fontName,
+                            };
                     }
 
             if (dto.edgeGeom != null)

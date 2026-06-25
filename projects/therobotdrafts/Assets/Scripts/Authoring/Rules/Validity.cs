@@ -41,11 +41,9 @@ namespace TheRobotDraft.Authoring.Rules
 
             bool ok = parentKind switch
             {
-                // A package groups types and sub-packages — never raw members (the spec's worked example:
-                // a Field directly under a Package is illegal).
-                ElementKind.Package => childKind is ElementKind.Package or ElementKind.Class
-                    or ElementKind.Interface or ElementKind.Enum or ElementKind.Struct or ElementKind.External
-                    or ElementKind.Note,
+                // A package groups any diagram node and sub-packages — never raw members (the spec's worked
+                // example: a Field directly under a Package is illegal).
+                ElementKind.Package => childKind == ElementKind.Package || KindInfo.IsDiagramNode(childKind),
 
                 // Classifiers hold members and (language-permitting) nested types.
                 ElementKind.Class or ElementKind.Struct => childKind is ElementKind.Field or ElementKind.Function
@@ -55,6 +53,10 @@ namespace TheRobotDraft.Authoring.Rules
                     or ElementKind.Interface or ElementKind.Enum,
 
                 ElementKind.Enum => childKind is ElementKind.Field or ElementKind.Function,
+
+                // A «dataType» carries attributes/operations; an object instance carries slot values (fields).
+                ElementKind.DataType => childKind is ElementKind.Field or ElementKind.Function,
+                ElementKind.ObjectInstance => childKind == ElementKind.Field,
 
                 _ => false,
             };
@@ -118,19 +120,49 @@ namespace TheRobotDraft.Authoring.Rules
                         : Validity.Invalid($"{kind} connects types, not packages");
 
                 case EdgeKind.Association:
-                    // reflexive association is allowed (§4.4); endpoints are classifiers.
-                    return (KindInfo.IsClassifier(from.Kind) && KindInfo.IsClassifier(to.Kind))
+                    // Associations/transitions connect any diagram nodes (types, actors, use cases, states).
+                    return (KindInfo.IsConnectable(from.Kind) && KindInfo.IsConnectable(to.Kind))
                         ? Validity.Valid
-                        : Validity.Invalid("association connects types");
+                        : Validity.Invalid("association connects diagram nodes");
 
                 case EdgeKind.Dependency:
                     // loosest: any classifier or package → any classifier or package, and notes attach this way
                     // too (a note→element comment link is a dashed line). (§4.5: package-level dependency is legal.)
-                    bool depEndOk(ElementKind k) =>
-                        KindInfo.IsClassifier(k) || k == ElementKind.Package || k == ElementKind.Note;
-                    return depEndOk(from.Kind) && depEndOk(to.Kind)
+                    return KindInfo.IsConnectable(from.Kind) && KindInfo.IsConnectable(to.Kind)
                         ? Validity.Valid
-                        : Validity.Invalid("dependency connects types, packages, or notes");
+                        : Validity.Invalid("dependency connects diagram nodes or packages");
+
+                case EdgeKind.Transition:
+                    // State-machine / activity flow. Self-transitions are legal (a state may loop on itself).
+                    return KindInfo.IsConnectable(from.Kind) && KindInfo.IsConnectable(to.Kind)
+                        ? Validity.Valid
+                        : Validity.Invalid("a transition connects diagram nodes");
+
+                case EdgeKind.DirectedAssociation:
+                    return KindInfo.IsConnectable(from.Kind) && KindInfo.IsConnectable(to.Kind)
+                        ? Validity.Valid
+                        : Validity.Invalid("a directed association connects diagram nodes");
+
+                case EdgeKind.Include:
+                case EdgeKind.Extend:
+                    if (selfEdge) return Validity.Invalid("«include»/«extend» connect two use cases");
+                    return (from.Kind == ElementKind.UseCase && to.Kind == ElementKind.UseCase)
+                        ? Validity.Valid
+                        : Validity.Invalid("«include»/«extend» connect use cases");
+
+                case EdgeKind.NoteLink:
+                    // A comment anchor: one end is a note, the other is whatever it annotates.
+                    return (from.Kind == ElementKind.Note || to.Kind == ElementKind.Note)
+                        ? Validity.Valid
+                        : Validity.Invalid("a note anchor must touch a note");
+
+                case EdgeKind.MessageSync:
+                case EdgeKind.MessageAsync:
+                case EdgeKind.MessageReply:
+                    // Sequence / communication messages between lifelines, activations and objects (self-calls ok).
+                    return KindInfo.IsConnectable(from.Kind) && KindInfo.IsConnectable(to.Kind)
+                        ? Validity.Valid
+                        : Validity.Invalid("a message connects lifelines / objects");
 
                 default:
                     return Validity.Invalid("unknown relationship");
