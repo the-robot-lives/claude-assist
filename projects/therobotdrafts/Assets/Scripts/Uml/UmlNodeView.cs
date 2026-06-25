@@ -13,12 +13,14 @@ namespace TheRobotDraft.Uml
     /// the add-member / delete menu (§3.1).
     /// </summary>
     public sealed class UmlNodeView : MonoBehaviour,
-        IPointerClickHandler, IBeginDragHandler, IDragHandler
+        IPointerClickHandler, IBeginDragHandler, IDragHandler,
+        IPointerEnterHandler, IPointerExitHandler
     {
         public ElementId Id;
         public RectTransform Rt { get; private set; }
 
         private UmlCanvas _canvas;
+        private CanvasGroup _hotspots; // the four connect handles, revealed on hover
         private Image _bg;
         private Outline _outline;   // selection highlight (toggled)
         private Outline _border;    // permanent thin box border (conventional UML look)
@@ -94,13 +96,32 @@ namespace TheRobotDraft.Uml
             // Operations compartment (methods).
             AddRows(operations, ref y, opH);
 
-            // Four connect hotspots (§4.1 quick-handle), one per side — the link leaves from the side you grab.
+            // Four connect hotspots (§4.1 quick-handle), one per side — revealed on hover (CanvasGroup), and the
+            // link leaves from the side you grab.
+            var hotGo = new GameObject("Hotspots", typeof(RectTransform));
+            var hotRt = (RectTransform)hotGo.transform;
+            hotRt.SetParent(transform, false);
+            hotRt.anchorMin = Vector2.zero; hotRt.anchorMax = Vector2.one;
+            hotRt.offsetMin = Vector2.zero; hotRt.offsetMax = Vector2.zero;
+            _hotspots = hotGo.AddComponent<CanvasGroup>();
+            _hotspots.alpha = 0f;
+            _hotspots.blocksRaycasts = false;
             foreach (BoxSide side in new[] { BoxSide.Left, BoxSide.Right, BoxSide.Top, BoxSide.Bottom })
             {
                 var handleGo = new GameObject("ConnectHandle:" + side, typeof(RectTransform));
-                handleGo.AddComponent<UmlConnectHandle>().Init(_canvas, this, side);
+                handleGo.AddComponent<UmlConnectHandle>().Init(_canvas, this, side, hotRt);
             }
             // Resize is done by grabbing the box border (see OnBeginDrag) — no separate grip.
+        }
+
+        public void OnPointerEnter(PointerEventData e)
+        {
+            if (_hotspots != null) { _hotspots.alpha = 1f; _hotspots.blocksRaycasts = true; }
+        }
+
+        public void OnPointerExit(PointerEventData e)
+        {
+            if (_hotspots != null) { _hotspots.alpha = 0f; _hotspots.blocksRaycasts = false; }
         }
 
         public const float BorderGrab = 9f; // px from the edge that begins a resize instead of a move
@@ -252,11 +273,11 @@ namespace TheRobotDraft.Uml
         private UmlNodeView _node;
         private BoxSide _side;
 
-        public void Init(UmlCanvas canvas, UmlNodeView node, BoxSide side)
+        public void Init(UmlCanvas canvas, UmlNodeView node, BoxSide side, Transform parent)
         {
             _canvas = canvas; _node = node; _side = side;
             var rt = (RectTransform)transform;
-            rt.SetParent(node.transform, false);
+            rt.SetParent(parent, false);
             rt.pivot = new Vector2(0.5f, 0.5f);
             rt.sizeDelta = new Vector2(15f, 15f);
             switch (side)

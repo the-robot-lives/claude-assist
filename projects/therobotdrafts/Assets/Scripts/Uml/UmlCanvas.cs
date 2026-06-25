@@ -103,10 +103,16 @@ namespace TheRobotDraft.Uml
         {
             _font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             BuildCanvas();
-            NewWorld();
-            SeedSample();
-            RebuildFromModel();
+            // Restore the saved diagram if present, else open the sample.
+            if (!LoadDiagram())
+            {
+                NewWorld();
+                SeedSample();
+                RebuildFromModel();
+            }
         }
+
+        private void OnApplicationQuit() => SaveDiagram();
 
         /// <summary>Initial sample so the editor opens showing standard UML. Fully removable (undo / delete).</summary>
         private void SeedSample()
@@ -172,6 +178,7 @@ namespace TheRobotDraft.Uml
 
             bool ctrl = CtrlOrCmd();
             bool shift = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
+            if (ctrl && Input.GetKeyDown(KeyCode.S)) { SaveDiagram(); return; }
             if (ctrl && Input.GetKeyDown(KeyCode.Z)) { if (shift) Redo(); else Undo(); }
             else if (ctrl && Input.GetKeyDown(KeyCode.Y)) Redo();
             else if (Input.GetKeyDown(KeyCode.Delete) || Input.GetKeyDown(KeyCode.Backspace)) DeleteSelected();
@@ -1055,8 +1062,8 @@ namespace TheRobotDraft.Uml
             _hint.supportRichText = false;
             _hint.raycastTarget = false;
             _hint.text = "Right-click canvas → add classifier · right-click a box → add field/method · " +
-                         "drag the cyan handle → link · click an edge → drag its bend handles (orthogonal) · " +
-                         "corner grip resizes · wheel / Ctrl+0 zoom · Ctrl/Cmd+Z undo, +Shift+Z redo";
+                         "hover a box → drag a side hotspot to link · click an edge → drag bend/endpoint handles · " +
+                         "drag a box border to resize · wheel / Ctrl+0 zoom · Ctrl/Cmd+Z undo · Ctrl/Cmd+S save";
         }
 
         private RectTransform NewLayer(string name)
