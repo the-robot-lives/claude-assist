@@ -1,0 +1,82 @@
+schema: "0.4"
+id: trd-authoring-02-vr-radial-menu
+type: image
+quality: high
+
+# therobotdrafts authoring UX — VR radial command menu mockup.
+# Consumes: design-conventions §1.1/§2.1 + §6.2 parity + §6.3 comfort, Lena's
+# verb glyph set + §B reserved UI channel (e94fe1b8), Yuki's radial flow (1085589f).
+
+prompt:
+  system: |
+    You are a senior XR interaction designer rendering a high-fidelity mockup of
+    a VR radial command menu inside a 3D "bubble" UML IDE viewed through a headset.
+    Premium, calm, technical — not a game. First-person VR perspective: we see the
+    user's controllers and a wrist-anchored radial menu floating over a field of
+    packed-sphere code bubbles in a dark volumetric space.
+
+    INVIOLABLE RULE: semantic color belongs ONLY to the bubbles (element kind).
+    The radial menu and all UI chrome are ACHROMATIC (translucent graphite + white
+    glyphs), so chrome never reads as a kind hue. Highlight/selection uses a
+    reserved white→cyan channel only.
+  text: |
+    A 1:1 (square) first-person VR mockup: a radial command menu summoned over a
+    3D bubble-view code space.
+
+    SCENE / BACKGROUND:
+    - Dark graphite volumetric VR space (#15181C) with soft depth haze; a field of
+      packed-sphere "bubbles" floats ahead, colored STRICTLY by the Okabe-Ito kind
+      palette with distinct silhouettes: translucent frosted slate Package
+      (#6E7B8B) containing children, solid blue Class (#0072B2), sky banded
+      Interface (#56B4E9), orange faceted Enum (#E69F00), teal polar-cap Struct
+      (#009E73), small green Function (#2CA02C). A few crisp SDF labels on the
+      nearest bubbles. One bubble ray-targeted with a white→cyan rim.
+    - Two VR controllers visible in the lower frame (clean modern matte controllers),
+      a thin aiming RAY projecting from the dominant hand toward the bubbles.
+
+    THE RADIAL MENU (centerpiece, wrist-anchored to the dominant controller,
+    facing the user, translucent graphite, NO kind colors):
+    - A circular pie menu with SIX primary sectors in ring 1, each a single white
+      monochrome glyph + tiny label, evenly spaced at thumbstick positions:
+        Add (＋ over a bubble) · Connect (two dots + line) · Delete (trash) ·
+        Undo (↶) · Redo (↷) · Project→2D (bubble→rectangle).
+    - The CENTER hub reads "Select / cancel" (the home state).
+    - ONE sector is highlighted (Add) with a white→cyan glow to show the
+      thumbstick is pointing at it — about to confirm with the trigger.
+    - A SECOND, CONTEXT ring fans out from the highlighted Add sector: a small
+      arc of kind options as their §2.1-colored kind glyphs (○ Package, ● Class,
+      ◐ Interface, ⬢ Enum, ◑ Struct) — the only place color appears in the menu,
+      because those swatches preview the bubble kind. Max depth = 2 rings.
+    - The menu has a soft floating drop shadow and gentle translucency so the
+      bubble field is still visible behind it. Comfortable near-field scale.
+
+    OVERALL:
+    - Mood: immersive but calm, premium XR productivity tool. Crisp SDF glyphs
+      that stay sharp at angle/depth. Achromatic menu, colorful bubbles.
+    - No game UI, no neon, no busy particle effects.
+  provider_options:
+    aspect_ratio: "1:1"
+    style: "natural"
+
+output:
+  formats:
+    - format: png
+  dimensions:
+    width: 1440
+    height: 1440
+    aspect_ratio: "1:1"
+
+eval:
+  pass_threshold: 0.72
+  criteria:
+    radial_structure: {weight: 3, description: "Six-sector ring-1 (Add/Connect/Delete/Undo/Redo/Project) with a Select center hub; one sector highlighted; a depth-2 context ring of kind glyphs fanning from Add"}
+    reserved_channel: {weight: 3, description: "Radial menu + chrome are achromatic graphite/white; highlight is white→cyan; the ONLY color in the menu is the kind-swatch context ring; no sector tinted as a random kind hue"}
+    vr_context: {weight: 2, description: "Believable first-person VR: controllers + aiming ray + wrist-anchored near-field menu over a dark volumetric bubble field"}
+    bubble_fidelity: {weight: 2, description: "Background bubbles use correct Okabe-Ito hues + distinct silhouettes; one ray-targeted with white→cyan rim"}
+  reject_if:
+    - "menu sectors colored with kind/rainbow hues (only the kind-swatch ring may be colored)"
+    - "game-style or neon HUD aesthetic"
+    - "flat 2D screenshot with no VR depth or controllers"
+    - "more than two radial rings (over-deep menu)"
+
+tags: [trd, authoring-ux, vr, xr, radial-menu, bubble-view, uml, mockup]
