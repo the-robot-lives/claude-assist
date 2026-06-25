@@ -783,12 +783,14 @@ namespace TheRobotDraft.Uml
         public void AddVertex(EdgeId edge, int controlIndex)
         {
             if (_selectedEdge != edge || !TryGetEdgeEndpoints(edge, out var from, out var to)) return;
-            var ctrl = ControlPolyline(from, to, edge, out _, out _);
+            var ctrl = ControlPolyline(from, to, edge, out bool fixedSrc, out _);
             if (controlIndex < 0 || controlIndex + 1 >= ctrl.Count) return;
             Vector2 mid = (ctrl[controlIndex] + ctrl[controlIndex + 1]) * 0.5f;
 
             if (!_waypoints.TryGetValue(edge, out var wps)) { wps = new List<Vector2>(); _waypoints[edge] = wps; }
-            int insertAt = Mathf.Clamp(controlIndex, 0, wps.Count);
+            // Map control-segment index → waypoint index (the leading A + optional source stub aren't waypoints).
+            int startWp = 1 + (fixedSrc ? 1 : 0);
+            int insertAt = Mathf.Clamp(controlIndex - startWp + 1, 0, wps.Count);
             wps.Insert(insertAt, mid);
             RefreshBendHandles();
             Flash("added bend");
