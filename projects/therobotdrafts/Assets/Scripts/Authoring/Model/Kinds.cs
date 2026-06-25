@@ -89,6 +89,21 @@ namespace TheRobotDraft.Authoring.Model
         Activation,
         /// <summary>An interaction frame / combined fragment (sd, alt, opt, loop, par) — a labeled region.</summary>
         Frame,
+
+        // profile diagram
+        /// <summary>A «metaclass» — an element of the reference metamodel that a stereotype extends.</summary>
+        Metaclass,
+        /// <summary>A «stereotype» definition (a profile-diagram classifier).</summary>
+        Stereotype,
+        /// <summary>A «profile» — the package/region that groups stereotype definitions.</summary>
+        Profile,
+
+        // timing diagram
+        /// <summary>A timing-diagram lifeline: a participant's state plotted as a waveform over a time axis.</summary>
+        TimingLifeline,
+
+        /// <summary>A call-behavior activity node (rounded rect with the rake icon) — distinct from an atomic action.</summary>
+        CallActivity,
     }
 
     /// <summary>
@@ -123,6 +138,9 @@ namespace TheRobotDraft.Authoring.Model
         MessageAsync,
         /// <summary>A reply / return message (dashed line, open stick arrowhead).</summary>
         MessageReply,
+
+        /// <summary>A profile «extension» — a stereotype extends a metaclass (solid line, filled triangle head).</summary>
+        Extension,
     }
 
     /// <summary>
@@ -171,6 +189,11 @@ namespace TheRobotDraft.Authoring.Model
             ElementKind.Lifeline => "#5B8AC4",
             ElementKind.Activation => "#DDE3EA",
             ElementKind.Frame => "#8893A0",
+            ElementKind.Metaclass => "#8FA8B8",
+            ElementKind.Stereotype => "#C8A2C8",
+            ElementKind.Profile => "#8893A0",
+            ElementKind.TimingLifeline => "#5B8AC4",
+            ElementKind.CallActivity => "#4FA3A0",
             _ => "#FFFFFF",
         };
 
@@ -193,8 +216,8 @@ namespace TheRobotDraft.Authoring.Model
         /// </summary>
         public static bool IsBehavioral(ElementKind kind) => kind switch
         {
-            ElementKind.State or ElementKind.Activity or ElementKind.StateStart or ElementKind.StateEnd
-                or ElementKind.Decision or ElementKind.ForkJoin or ElementKind.Junction
+            ElementKind.State or ElementKind.Activity or ElementKind.CallActivity or ElementKind.StateStart
+                or ElementKind.StateEnd or ElementKind.Decision or ElementKind.ForkJoin or ElementKind.Junction
                 or ElementKind.History or ElementKind.Terminate or ElementKind.FlowFinal => true,
             _ => false,
         };

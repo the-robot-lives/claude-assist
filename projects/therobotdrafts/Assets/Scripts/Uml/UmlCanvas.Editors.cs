@@ -42,7 +42,7 @@ namespace TheRobotDraft.Uml
                 ? UmlMemberSignature.Parse(kind, ex.Name)
                 : MemberParts.ForNew(kind);
 
-            float w = 470f, h = isField ? 322f : 420f;
+            float w = 470f, h = (isField ? 322f : 420f) + 110f; // +room for the comment / doc field
             string title = (editing ? "Edit " : "Add ") + (isField ? "Attribute" : "Operation")
                            + "   —   Rose / Sparx convention";
             var panel = BeginModal(w, h, title);
@@ -80,6 +80,13 @@ namespace TheRobotDraft.Uml
             var getStatic = MakeCheckbox(panel, new Vector2(16f, y), "static", parts.IsStatic);
             Func<bool> getAbstract = () => false;
             if (!isField) getAbstract = MakeCheckbox(panel, new Vector2(170f, y), "abstract", parts.IsAbstract);
+            y -= 38f;
+
+            // Comment / doc — the member's Description, surfaced for code generation + import round-trip.
+            string currentComment = editing && _model.TryGet(existing, out var exc) ? exc.Description : "";
+            FormLabel(panel, "Comment / doc   (rendered above the member in generated code)", ref y, w);
+            var commentInput = MakeMultilineInput(panel, new Vector2(16f, y), w - 32f, 64f, currentComment,
+                "What this member is for…");
 
             void Submit()
             {
@@ -94,10 +101,12 @@ namespace TheRobotDraft.Uml
                     IsAbstract = !isField && getAbstract(),
                 };
                 string sig = UmlMemberSignature.Compose(kind, np);
+                string comment = commentInput.text;
                 CloseMenu();
                 if (editing)
                 {
                     _ctl.Rename(existing, sig);
+                    _ctl.SetDescription(existing, comment);
                     RebuildFromModel();
                     SetSelected(parent);
                     Flash("updated " + (isField ? "attribute" : "operation"));
@@ -107,6 +116,7 @@ namespace TheRobotDraft.Uml
                     _ctl.EnterAddNode(kind);
                     var id = _ctl.CommitAddNode(parent, sig);
                     if (!id.IsValid) { Flash("invalid placement"); _ctl.EnterSelect(); onClose?.Invoke(); return; }
+                    if (!string.IsNullOrWhiteSpace(comment)) _ctl.SetDescription(id, comment);
                     RebuildFromModel();
                     SetSelected(parent);
                     Flash("added " + (isField ? "attribute" : "operation"));
@@ -147,8 +157,10 @@ namespace TheRobotDraft.Uml
             const int perRow = 4;
             const float chipW = 100f, chipH = 26f, chipGap = 6f, rowH = 28f;
             int langRows = (CommonLanguages.Length + perRow - 1) / perRow;
+            const float descH = 72f; // multiline description input height
             float w = 480f;
             float h = 250f + langRows * (chipH + chipGap) + (el.Kind == ElementKind.Class ? 36f : 0f)
+                      + 24f + descH + 12f
                       + 48f + attrs.Count * rowH + 48f + ops.Count * rowH + 60f;
             var panel = BeginModal(w, h, "Edit " + el.Kind + "   —   " + el.Name);
 
@@ -176,6 +188,11 @@ namespace TheRobotDraft.Uml
                 "entity, service, controller, value…");
             y -= 44f;
 
+            FormLabel(panel, "Description   (free text — fed to code generation)", ref y, w);
+            var descInput = MakeMultilineInput(panel, new Vector2(16f, y), w - 32f, descH, el.Description,
+                "What this element is / does…");
+            y -= descH + 12f;
+
             Func<bool> getAbstract = () => el.IsAbstract;
             if (el.Kind == ElementKind.Class)
             {
@@ -190,6 +207,7 @@ namespace TheRobotDraft.Uml
                 if (nn != el.Name) _ctl.Rename(id, nn);
                 if (el.Kind == ElementKind.Class && getAbstract() != el.IsAbstract) _ctl.SetAbstract(id, getAbstract());
                 _ctl.SetMeta(id, langInput.text, stereoInput.text);
+                _ctl.SetDescription(id, descInput.text);
             }
             void Reopen() => ShowClassifierEditor(id, screenPos);
 
@@ -337,6 +355,11 @@ namespace TheRobotDraft.Uml
                     () => { onPick(cap); preview.color = cap; });
                 x += sw + gap;
             }
+            // "Pick…" opens the HSV wheel for any colour beyond the presets. The preview swatch holds the live
+            // value, so it doubles as the picker's starting colour and reflects whatever the picker commits.
+            MakeButton(panel, "Pick…", new Vector2(x + 4f, y), new Vector2(70f, 26f),
+                new Color(0.24f, 0.30f, 0.40f, 1f),
+                () => ShowColorPicker(label, preview.color, c => { onPick(c); preview.color = c; }));
             return y - 34f;
         }
 
@@ -355,6 +378,133 @@ namespace TheRobotDraft.Uml
             return img;
         }
 
+        /// <summary>
+        /// HSV colour picker popup, layered above the Style modal: an interactive hue/saturation wheel plus vertical
+        /// Value (brightness) and Alpha sliders, with a live hex readout + preview swatch. It is its own dim backdrop
+        /// parented to <c>_root</c> (a sibling of the Style modal, NOT the shared <c>_menu</c>), so closing it leaves
+        /// the Style modal intact. <paramref name="commit"/> receives the picked colour on OK.
+        /// </summary>
+        private void ShowColorPicker(string channel, Color initial, Action<Color> commit)
+        {
+            // Decompose the starting colour into the H/S/V/A state the picker edits. Sliders compose with the wheel.
+            Color.RGBToHSV(initial, out float hue, out float sat, out float val);
+            float alpha = initial.a;
+
+            // Dim backdrop — a sibling of the Style modal, tracked locally. The Image blocks pointer events from
+            // reaching the Style modal / canvas underneath, but clicking the dim area does NOT close the picker:
+            // it closes only via its own OK / Cancel buttons (a stray click must not discard the pick).
+            var backdrop = new GameObject("ColorPickerBackdrop", typeof(RectTransform));
+            var bdRt = (RectTransform)backdrop.transform;
+            bdRt.SetParent(_root, false);
+            Stretch(bdRt);
+            var bdImg = backdrop.AddComponent<Image>();
+            bdImg.color = new Color(0f, 0f, 0f, 0.45f);
+            bdImg.raycastTarget = true; // swallow clicks on the dim area without dismissing
+
+            void Close() { if (backdrop != null) Destroy(backdrop); }
+
+            const float w = 320f, h = 380f;
+            var panelGo = new GameObject("ColorPicker", typeof(RectTransform));
+            var rt = (RectTransform)panelGo.transform;
+            rt.SetParent(bdRt, false);
+            rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0.5f);
+            rt.pivot = new Vector2(0.5f, 0.5f);
+            rt.sizeDelta = new Vector2(w, h);
+            rt.anchoredPosition = Vector2.zero;
+            panelGo.AddComponent<Image>().color = new Color(0.14f, 0.16f, 0.20f, 1f);
+
+            MakeText(rt, "Pick colour   —   " + channel, new Vector2(16f, -12f), new Vector2(w - 32f, 24f), 16,
+                new Color(0.86f, 0.90f, 0.96f, 1f), TextAnchor.MiddleLeft).fontStyle = FontStyle.Bold;
+
+            // Hue/saturation wheel.
+            var wheelGo = new GameObject("Wheel", typeof(RectTransform));
+            var wheelRt = (RectTransform)wheelGo.transform;
+            wheelRt.SetParent(rt, false);
+            wheelRt.anchorMin = wheelRt.anchorMax = new Vector2(0f, 1f);
+            wheelRt.pivot = new Vector2(0f, 1f);
+            wheelRt.sizeDelta = new Vector2(180f, 180f);
+            wheelRt.anchoredPosition = new Vector2(16f, -48f);
+            var wheel = wheelGo.AddComponent<UmlColorWheelGraphic>();
+
+            // Live preview swatch + hex readout (declared before the slider/wheel callbacks that update them).
+            var preview = MakeSwatch(rt, new Vector2(16f, -240f), 40f, initial);
+            preview.raycastTarget = false;
+            var hexLabel = MakeText(rt, "", new Vector2(64f, -244f), new Vector2(w - 80f, 24f), 16,
+                new Color(0.92f, 0.95f, 1f, 1f), TextAnchor.MiddleLeft);
+
+            void Refresh()
+            {
+                var c = Color.HSVToRGB(hue, sat, val);
+                c.a = alpha;
+                preview.color = c;
+                hexLabel.text = "#" + ColorUtility.ToHtmlStringRGBA(c);
+            }
+
+            wheel.OnHueSat = (newHue, newSat) => { hue = newHue; sat = newSat; Refresh(); };
+
+            // Vertical Value (brightness) and Alpha sliders to the right of the wheel.
+            MakeText(rt, "Value", new Vector2(214f, -48f), new Vector2(48f, 18f), 12,
+                LabelColor, TextAnchor.MiddleCenter);
+            MakeVerticalSlider(rt, new Vector2(224f, -70f), 22f, 150f, val, v => { val = v; Refresh(); });
+
+            MakeText(rt, "Alpha", new Vector2(262f, -48f), new Vector2(48f, 18f), 12,
+                LabelColor, TextAnchor.MiddleCenter);
+            MakeVerticalSlider(rt, new Vector2(272f, -70f), 22f, 150f, alpha, a => { alpha = a; Refresh(); });
+
+            Refresh();
+
+            float yBtn = -(h - 46f);
+            MakeButton(rt, "OK", new Vector2(w - 198f, yBtn), new Vector2(84f, 34f),
+                new Color(0.20f, 0.42f, 0.52f, 1f),
+                () => { var c = Color.HSVToRGB(hue, sat, val); c.a = alpha; commit(c); Close(); });
+            MakeButton(rt, "Cancel", new Vector2(w - 104f, yBtn), new Vector2(88f, 34f),
+                new Color(0.22f, 0.24f, 0.29f, 1f), Close);
+        }
+
+        /// <summary>A bottom-to-top <see cref="Slider"/> (0..1) styled to match the dialog chrome; reports live drags.</summary>
+        private Slider MakeVerticalSlider(RectTransform parent, Vector2 topLeft, float width, float height,
+            float value, Action<float> onChange)
+        {
+            var go = new GameObject("Slider", typeof(RectTransform));
+            var rt = (RectTransform)go.transform;
+            rt.SetParent(parent, false);
+            rt.anchorMin = rt.anchorMax = new Vector2(0f, 1f);
+            rt.pivot = new Vector2(0f, 1f);
+            rt.sizeDelta = new Vector2(width, height);
+            rt.anchoredPosition = topLeft;
+
+            // Track background.
+            var bg = go.AddComponent<Image>();
+            bg.color = new Color(0.20f, 0.22f, 0.27f, 1f);
+
+            // Fill (grows from the bottom as the value increases).
+            var fillArea = new GameObject("Fill", typeof(RectTransform));
+            var fillRt = (RectTransform)fillArea.transform;
+            fillRt.SetParent(rt, false);
+            Stretch(fillRt);
+            var fillImg = fillArea.AddComponent<Image>();
+            fillImg.color = new Color(0.30f, 0.55f, 0.66f, 1f);
+
+            // Handle.
+            var handle = new GameObject("Handle", typeof(RectTransform));
+            var handleRt = (RectTransform)handle.transform;
+            handleRt.SetParent(rt, false);
+            handleRt.sizeDelta = new Vector2(width, 10f);
+            var handleImg = handle.AddComponent<Image>();
+            handleImg.color = new Color(0.86f, 0.90f, 0.96f, 1f);
+
+            var slider = go.AddComponent<Slider>();
+            slider.direction = Slider.Direction.BottomToTop;
+            slider.fillRect = fillRt;
+            slider.handleRect = handleRt;
+            slider.targetGraphic = handleImg;
+            slider.minValue = 0f;
+            slider.maxValue = 1f;
+            slider.value = Mathf.Clamp01(value);
+            slider.onValueChanged.AddListener(v => onChange(v));
+            return slider;
+        }
+
         // --- note (comment) editor ---
 
         private void ShowNoteEditor(ElementId parent, ElementId existing, Vector2 screenPos)
@@ -362,13 +512,19 @@ namespace TheRobotDraft.Uml
             CloseMenu();
             bool editing = existing.IsValid && _model.TryGet(existing, out _);
             string current = editing && _model.TryGet(existing, out var ex) ? ex.Name : "note";
+            string currentDesc = editing && _model.TryGet(existing, out var exd) ? exd.Description : "";
 
-            float w = 460f, h = 240f;
+            float w = 460f, h = 360f;
             var panel = BeginModal(w, h, editing ? "Edit Note" : "Add Note");
 
             float y = -50f;
             FormLabel(panel, "Note text", ref y, w);
             var input = MakeMultilineInput(panel, new Vector2(16f, y), w - 32f, 110f, current, "Free comment text…");
+            y -= 122f;
+
+            FormLabel(panel, "Description   (free text — fed to code generation)", ref y, w);
+            var descInput = MakeMultilineInput(panel, new Vector2(16f, y), w - 32f, 72f, currentDesc,
+                "What this note is about…");
 
             void Submit()
             {
@@ -377,6 +533,7 @@ namespace TheRobotDraft.Uml
                 if (editing)
                 {
                     _ctl.Rename(existing, txt);
+                    _ctl.SetDescription(existing, descInput.text);
                     RebuildFromModel();
                     SetSelected(existing);
                     Flash("updated note");
@@ -386,6 +543,7 @@ namespace TheRobotDraft.Uml
                     _ctl.EnterAddNode(ElementKind.Note);
                     var id = _ctl.CommitAddNode(parent, txt);
                     if (!id.IsValid) { Flash("invalid placement"); _ctl.EnterSelect(); return; }
+                    _ctl.SetDescription(id, descInput.text);
                     _pos[id] = ScreenToLayer(screenPos);
                     RebuildFromModel();
                     SetSelected(id);

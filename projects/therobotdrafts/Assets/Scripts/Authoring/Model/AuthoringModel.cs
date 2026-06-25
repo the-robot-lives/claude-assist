@@ -27,6 +27,27 @@ namespace TheRobotDraft.Authoring.Model
         /// </summary>
         public string Stereotype { get; internal set; }
 
+        /// <summary>Free-text description / documentation of this element. Null/empty = none. Used by code generation.</summary>
+        public string Description { get; internal set; }
+
+        /// <summary>
+        /// The element's saved source code — the approved output of "Generate code", and the round-trip
+        /// counterpart to code→elements (the module/class body lives on the node). Null/empty = none.
+        /// </summary>
+        public string Code { get; internal set; }
+
+        /// <summary>
+        /// The source file this element was imported from (relative or absolute path) — set by folder import and
+        /// used to drive surgical overlay regeneration back into the same file. Null/empty = none.
+        /// </summary>
+        public string SourceFile { get; internal set; }
+
+        /// <summary>
+        /// The diagram Z-layer this element lives on (0 = base). The canvas shows one active layer; elements on
+        /// other layers are hidden, with cross-layer relationships shown as up/down connector stubs.
+        /// </summary>
+        public int ZLayer { get; internal set; }
+
         internal readonly List<ElementId> Children = new();
 
         internal ModelElement(ElementId id, ElementKind kind, string name, ElementId parent)
@@ -132,6 +153,10 @@ namespace TheRobotDraft.Authoring.Model
         internal void SetAbstract(ElementId id, bool isAbstract) => _elements[id].IsAbstract = isAbstract;
         internal void SetLanguage(ElementId id, string language) => _elements[id].Language = language;
         internal void SetStereotype(ElementId id, string stereotype) => _elements[id].Stereotype = stereotype;
+        internal void SetDescription(ElementId id, string description) => _elements[id].Description = description;
+        internal void SetCode(ElementId id, string code) => _elements[id].Code = code;
+        internal void SetSourceFile(ElementId id, string sourceFile) => _elements[id].SourceFile = sourceFile;
+        internal void SetZLayer(ElementId id, int z) => _elements[id].ZLayer = z;
 
         // --- edge mutators ---
 

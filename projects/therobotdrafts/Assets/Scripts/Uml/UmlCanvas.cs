@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -7,6 +8,7 @@ using TheRobotDraft.Authoring.Model;
 using TheRobotDraft.Authoring.Rules;
 using TheRobotDraft.Authoring.Seams;
 using TheRobotDraft.Authoring.State;
+using TheRobotDraft.Uml3D;
 
 namespace TheRobotDraft.Uml
 {
@@ -27,12 +29,16 @@ namespace TheRobotDraft.Uml
             EdgeKind.Realization, EdgeKind.Aggregation, EdgeKind.Composition,
             EdgeKind.Transition, EdgeKind.Include, EdgeKind.Extend,
             EdgeKind.NoteLink, EdgeKind.DirectedAssociation,
-            EdgeKind.MessageSync, EdgeKind.MessageAsync, EdgeKind.MessageReply,
+            EdgeKind.MessageSync, EdgeKind.MessageAsync, EdgeKind.MessageReply, EdgeKind.Extension,
         };
 
         /// <summary>Sequence / communication participants a message may run between (lifelines, activations, objects).</summary>
         private static bool IsInteractionNode(ElementKind k) =>
-            k == ElementKind.Lifeline || k == ElementKind.Activation || k == ElementKind.ObjectInstance;
+            k == ElementKind.Lifeline || k == ElementKind.Activation || k == ElementKind.ObjectInstance
+            || k == ElementKind.Actor;
+
+        private static bool IsMessage(EdgeKind k) =>
+            k == EdgeKind.MessageSync || k == EdgeKind.MessageAsync || k == EdgeKind.MessageReply;
         // Classifier kinds offered when adding into a package.
         private static readonly ElementKind[] ClassifierKinds =
         {
@@ -40,11 +46,47 @@ namespace TheRobotDraft.Uml
         };
 
         private static readonly Color EdgeColor = new Color(0.28f, 0.30f, 0.36f, 1f);
+        private static readonly Color EdgeSelectedColor = new Color(0.12f, 0.55f, 0.85f, 1f);
+        private const float EdgePickPx = 14f; // screen-space pick radius for selecting a link
 
         private Canvas _canvas;
         private RectTransform _root, _nodeLayer, _edgeLayer, _tabBar;
         private Font _font;
         private Text _hint;
+
+        // The 3-D diagram scene the editor now renders into (Stage 2). The overlay Canvas above keeps every HUD
+        // element (palette / tabs / hint / menus / dialogs); the diagram itself — nodes, edges, picking, camera —
+        // lives here. _scene3dNodeBindings tracks which model edge maps to which live UmlEdge3D so LateUpdate can
+        // re-route each frame as nodes move / the camera orbits.
+        private Uml3DScene _scene;
+        private readonly List<Edge3DBinding> _scene3dEdges = new();
+
+        private struct Edge3DBinding { public UmlEdge3D View; public EdgeId Id; public ElementId From, To; public bool Directed; public EdgeKind Kind; }
+
+        // --- 3-D link route editing (selected edge only): interior waypoints, endpoint face attachments, handles ---
+        //
+        // Geometry is view-state (not the authoring model's job, mirroring ADR-003 for the flat renderer). Waypoints
+        // are world-space interior points in route order; the per-end face dictionaries hold a NORMALIZED offset in
+        // the node's local face plane (each axis ~[-0.5,0.5]; (0,0) = face center). All three are in-session only for
+        // now (not persisted — see report). Handles are live 3-D spheres rebuilt when the selected edge changes and
+        // repositioned every LateUpdate so they track the route as nodes move / the camera orbits.
+        private readonly Dictionary<EdgeId, List<Vector3>> _waypoints3d = new();
+        private readonly Dictionary<EdgeId, Vector2> _srcFace = new();
+        private readonly Dictionary<EdgeId, Vector2> _tgtFace = new();
+        private readonly List<UmlEdgeHandle3D> _edgeHandles3d = new();
+        private EdgeId _handlesForEdge = EdgeId.None;   // which edge _edgeHandles3d currently belongs to
+
+        // Active 3-D handle drag (set on mouse-down over a handle; consumed each move/up).
+        private bool _draggingHandle;
+        private EdgeId _handleEdge = EdgeId.None;
+        private UmlEdgeHandle3D.HandleRole _handleRole;
+        private int _handleIndex;
+        private Vector3 _handlePlanePoint;              // a point on the drag plane (the handle's start world pos)
+        private Vector3 _handlePlaneNormal;             // the drag plane's normal (camera forward at grab time)
+
+        private static readonly Color HandleWaypointColor = new Color(0.95f, 0.85f, 0.20f, 1f);   // yellow
+        private static readonly Color HandleMidpointColor = new Color(0.35f, 0.85f, 0.45f, 0.7f); // translucent green
+        private static readonly Color HandleAnchorColor = new Color(0.95f, 0.55f, 0.15f, 1f);     // orange
 
         private AuthoringModel _model;
         private AuthoringController _ctl;
@@ -52,10 +94,23 @@ namespace TheRobotDraft.Uml
 
         private readonly Dictionary<ElementId, UmlNodeView> _nodes = new();
         private readonly Dictionary<ElementId, Vector2> _pos = new();
+        // Continuous per-node world-Z offset (default 0) applied on top of the layer depth, so a node can be
+        // pushed forward/back along world Z independently of its z-layer (Ctrl/Cmd+Shift+drag). Persisted.
+        private readonly Dictionary<ElementId, float> _posZ = new();
         private readonly Dictionary<ElementId, Vector2> _size = new();
         private readonly List<EdgeBinding> _edges = new();
         private ElementId _activePackage = ElementId.None;
+        // Active z-layer (0 = base). The canvas shows ONLY elements on this layer (in addition to the usual
+        // active-package + kind filtering); off-layer elements are not instantiated. Alt+scroll changes it.
+        private int _activeLayer = 0;
+        // Cross-layer connector views: short stubs + chevrons drawn for edges with one endpoint on _activeLayer
+        // and the other on a different (hidden) layer. Rebuilt/destroyed alongside the node + edge views.
+        private readonly List<UmlEdgeView> _layerStubs = new();
+        private readonly List<UmlLayerMarker> _layerMarkers = new();
+        // Selection is a set; _selectedId is the PRIMARY (last-clicked) member used by single-target code paths
+        // (Ctrl+C copy, context menus, edge link affordances). Empty set ⇒ _selectedId is None.
         private ElementId _selectedId = ElementId.None;
+        private readonly HashSet<ElementId> _selection = new();
 
         // Orthogonal-route view-state (geometry is not the model's job, ADR-003): per-edge interior bend points
         // in layer-local coords. Empty/absent → auto-routed. Plus the selected edge and its live bend handles.
@@ -81,6 +136,12 @@ namespace TheRobotDraft.Uml
 
         // Edges drawn as smooth curves instead of right-angle polylines (view-state).
         private readonly HashSet<EdgeId> _curved = new();
+
+        // Sequence/communication layout view-state: each message's vertical level (layer-local y) and its
+        // sequence number, plus a cache of every edge's kind (so routing can pick the horizontal message path).
+        private readonly Dictionary<EdgeId, float> _msgLevel = new();
+        private readonly Dictionary<EdgeId, int> _msgNumber = new();
+        private readonly Dictionary<EdgeId, EdgeKind> _edgeKinds = new();
 
         // Per-element visual style overrides (fill / border / text color, font, size).
         private readonly Dictionary<ElementId, NodeStyle> _styles = new();
@@ -137,6 +198,8 @@ namespace TheRobotDraft.Uml
                 SeedSample();
                 RebuildFromModel();
             }
+            // Frame the diagram in the 3-D camera so it's in view on launch (Ctrl/Cmd+F re-frames at any time).
+            _scene.FrameAll();
         }
 
         private void OnApplicationQuit() => SaveDiagram();
@@ -195,8 +258,13 @@ namespace TheRobotDraft.Uml
             _ctl = new AuthoringController(_model, _history);
             _activePackage = _selectedId = ElementId.None;
             _selectedEdge = EdgeId.None;
-            _pos.Clear(); _size.Clear();
+            _activeLayer = 0;
+            _pos.Clear(); _posZ.Clear(); _size.Clear();
             _waypoints.Clear(); _srcAnchor.Clear(); _tgtAnchor.Clear(); _curved.Clear(); _styles.Clear();
+            _msgLevel.Clear(); _msgNumber.Clear(); _edgeKinds.Clear();
+            _waypoints3d.Clear(); _srcFace.Clear(); _tgtFace.Clear();
+            _sourceFiles.Clear();
+            ClearEdgeHandles3D();
             _pan = Vector2.zero; ApplyPan();
         }
 
@@ -219,6 +287,62 @@ namespace TheRobotDraft.Uml
             RebuildFromModel();
             Flash("reset to sample");
         }
+
+        // --- sequence / communication auto-layout ---
+
+        /// <summary>
+        /// Lay out the active package as a sequence diagram: participants (lifelines / objects / actors) spread
+        /// left-to-right, their life lines stretched to fit, and every message stacked top-to-bottom in model
+        /// order with an auto-assigned sequence number.
+        /// </summary>
+        public void AutoArrangeSequence()
+        {
+            CloseMenu();
+            if (!_activePackage.IsValid) { Flash("no package to arrange"); return; }
+
+            var parts = new List<ElementId>();
+            foreach (var el in _model.Elements)
+                if (el.Parent == _activePackage && IsInteractionNode(el.Kind)) parts.Add(el.Id);
+            if (parts.Count == 0) { Flash("add lifelines first (Sequence palette), then auto-arrange"); return; }
+            parts.Sort((a, b) => PosOf(a).x.CompareTo(PosOf(b).x));
+            var partSet = new HashSet<ElementId>(parts);
+
+            var msgs = new List<EdgeId>();
+            foreach (var e in _model.Edges)
+                if (IsMessage(e.Kind) && partSet.Contains(e.From) && partSet.Contains(e.To)) msgs.Add(e.Id);
+
+            const float spacing = 200f, ytop = 320f, gap = 44f;
+            int m = msgs.Count;
+            float H = Mathf.Max(240f, 140f + Mathf.Max(0, m - 1) * gap);
+            float startX = -((parts.Count - 1) * spacing) * 0.5f;
+
+            for (int i = 0; i < parts.Count; i++)
+            {
+                var id = parts[i];
+                float cx = startX + i * spacing;
+                if (_model.TryGet(id, out var el) && el.Kind == ElementKind.Lifeline)
+                {
+                    float wKeep = _size.TryGetValue(id, out var s) && s.x > 1f ? s.x : 132f;
+                    _size[id] = new Vector2(wKeep, H);
+                    _pos[id] = new Vector2(cx, ytop - H * 0.5f); // align all heads at the same top
+                }
+                else
+                {
+                    _pos[id] = new Vector2(cx, ytop - 30f);
+                }
+            }
+
+            _msgLevel.Clear(); _msgNumber.Clear();
+            float firstLevel = ytop - 70f;
+            for (int k = 0; k < m; k++) { _msgLevel[msgs[k]] = firstLevel - k * gap; _msgNumber[msgs[k]] = k + 1; }
+
+            SetSelected(ElementId.None);
+            _selectedEdge = EdgeId.None;
+            RebuildFromModel();
+            Flash($"sequence arranged — {parts.Count} participants, {m} messages");
+        }
+
+        private Vector2 PosOf(ElementId id) => _pos.TryGetValue(id, out var p) ? p : Vector2.zero;
 
         // --- copy / paste (with rename) ---
 
@@ -260,10 +384,70 @@ namespace TheRobotDraft.Uml
             }
             _ctl.EnterSelect();
             _pos[nid] = c.HasPos ? c.Pos + new Vector2(34f, -34f) : Vector2.zero;
+            _ctl.SetZLayer(nid, _activeLayer); // paste onto the active layer
             if (c.Style.Has) _styles[nid] = c.Style;
             RebuildFromModel();
             SetSelected(nid);
             Flash("pasted (renamed)");
+        }
+
+        // --- copy multiple selected nodes as an image (PNG → OS clipboard) ---
+
+        /// <summary>True only if every selected element is a plain diagram node (no boundaries / regions / packages).</summary>
+        private bool AllSelectedAreCopyableNodes()
+        {
+            foreach (var id in _selection)
+            {
+                if (!_model.TryGet(id, out var el)) return false;
+                if (el.Kind == ElementKind.Package || !KindInfo.IsDiagramNode(el.Kind)) return false;
+                // Regions (boundary / frame / profile) wrap other nodes — exclude them from an image snapshot.
+                if (_nodes.TryGetValue(id, out var nv) && nv != null && nv.IsBoundary) return false;
+            }
+            return true;
+        }
+
+        /// <summary>Snapshot the bounding box of the selected nodes to a PNG and hand it to the OS clipboard.</summary>
+        public void CopySelectionAsPng()
+        {
+            CloseMenu();
+            if (_selection.Count < 2) { Flash("select 2+ boxes to copy as PNG"); return; }
+            StartCoroutine(CaptureSelectionPng());
+        }
+
+        private IEnumerator CaptureSelectionPng()
+        {
+            // Capture after the frame is fully drawn (the menu is already closed above).
+            yield return new WaitForEndOfFrame();
+
+            // Stage 2: render the whole 3-D scene camera into a texture (selection-bounds framing is DEFERRED —
+            // the camera already shows the orbited diagram, and 3-D nodes have no flat screen rect to crop to).
+            // The overlay HUD draws on the ScreenSpaceOverlay canvas, NOT through this camera, so the captured
+            // image is the clean diagram without menus.
+            var cam = _scene != null ? _scene.Camera : null;
+            if (cam == null) { Flash("no scene camera to capture"); yield break; }
+
+            int w = Mathf.Max(1, Screen.width), h = Mathf.Max(1, Screen.height);
+            var rt = new RenderTexture(w, h, 24, RenderTextureFormat.ARGB32);
+            var prevTarget = cam.targetTexture;
+            var prevActive = RenderTexture.active;
+            cam.targetTexture = rt;
+            cam.Render();
+
+            RenderTexture.active = rt;
+            var tex = new Texture2D(w, h, TextureFormat.RGB24, false);
+            tex.ReadPixels(new Rect(0f, 0f, w, h), 0, 0);
+            tex.Apply();
+
+            cam.targetTexture = prevTarget;
+            RenderTexture.active = prevActive;
+
+            byte[] png = tex.EncodeToPNG();
+            Destroy(tex);
+            rt.Release();
+            Destroy(rt);
+
+            string status = UmlImageClipboard.SaveAndCopyToClipboard(png);
+            Flash(status);
         }
 
         private string UniqueName(string baseName)
@@ -298,7 +482,7 @@ namespace TheRobotDraft.Uml
             var id = _ctl.CommitAddNode(isPackage ? ElementId.None : _activePackage, DefaultName(kind));
             if (!id.IsValid) { Flash("can't place " + kind + " here"); _ctl.EnterSelect(); return; }
             if (isPackage) _activePackage = id;
-            else _pos[id] = ScreenToLayer(screenPos);
+            else { _pos[id] = ScreenToModelPx(screenPos); _ctl.SetZLayer(id, _activeLayer); } // insert on the active layer
             _ctl.EnterSelect();
             RebuildFromModel();
             SetSelected(id);
@@ -337,6 +521,11 @@ namespace TheRobotDraft.Uml
             ElementKind.Lifeline => "obj : Class",
             ElementKind.Activation => "exec",
             ElementKind.Frame => "sd interaction",
+            ElementKind.Metaclass => "Class",
+            ElementKind.Stereotype => "Entity",
+            ElementKind.Profile => "«profile» P",
+            ElementKind.TimingLifeline => "obj : Class",
+            ElementKind.CallActivity => "Activity",
             _ => kind.ToString() + CountOf(kind),
         };
 
@@ -379,6 +568,12 @@ namespace TheRobotDraft.Uml
 
         private void Update()
         {
+            // Track the one-frame screen-space mouse delta up front (before any early return) so camera orbit / pan
+            // drags get a consistent per-frame movement regardless of which branch handles this frame.
+            Vector2 mp = Input.mousePosition;
+            _mouseDelta = mp - _lastMousePos;
+            _lastMousePos = mp;
+
             if (Input.GetKeyDown(KeyCode.Escape)) { CloseMenu(); return; }
 
             // Don't steal typing from the name prompt.
@@ -395,17 +590,455 @@ namespace TheRobotDraft.Uml
             else if (ctrl && Input.GetKeyDown(KeyCode.Y)) Redo();
             else if (Input.GetKeyDown(KeyCode.Delete) || Input.GetKeyDown(KeyCode.Backspace)) DeleteSelected();
 
-            // Zoom: mouse wheel anywhere on the canvas, or Ctrl/Cmd +/- ; Ctrl/Cmd+0 resets to 100%.
+            if (ctrl && (Input.GetKeyDown(KeyCode.F))) { _scene.FrameAll(); Flash("framed diagram"); }
+
+            // Mouse wheel dollies the 3-D camera; Alt+wheel walks the active z-layer (and never dollies). The
+            // overlay UI does not zoom.
             float scroll = Input.mouseScrollDelta.y;
-            if (Mathf.Abs(scroll) > 0.01f) SetZoom(_zoom * (1f + scroll * 0.1f));
-            else if (ctrl && (Input.GetKeyDown(KeyCode.Equals) || Input.GetKeyDown(KeyCode.KeypadPlus))) SetZoom(_zoom * 1.1f);
-            else if (ctrl && (Input.GetKeyDown(KeyCode.Minus) || Input.GetKeyDown(KeyCode.KeypadMinus))) SetZoom(_zoom / 1.1f);
-            else if (ctrl && (Input.GetKeyDown(KeyCode.Alpha0) || Input.GetKeyDown(KeyCode.Keypad0))) SetZoom(1f);
+            if (Mathf.Abs(scroll) > 0.01f && !PointerOverUI())
+            {
+                if (AltDown()) ShiftActiveLayer(scroll > 0f ? 1 : -1);
+                else _scene.Dolly(scroll);
+                return;
+            }
+
+            // 6-DOF camera keys (gated by the InputField guard above so they never fire while typing): Q/E roll,
+            // W/S fly forward/back, A/D strafe, R/F rise/descend. Held-key driven, scaled by Time.deltaTime.
+            HandleCameraKeys(ctrl);
+
+            HandleSceneMouse(ctrl, shift, AltDown());
         }
+
+        // --- 3-D diagram pointer interaction (pick / select / orbit / dolly / pan / drag-move) ---
+        //
+        // Nodes are 3-D objects, not uGUI elements, so their pointer handling lives here (the EventSystem only drives
+        // the 2-D overlay HUD). On mouse-down a scene raycast decides the gesture: a node hit under Ctrl/Cmd begins a
+        // drag-move (Stage 3 adds per-node rotation / connect-by-drag); any other drag orbits the camera (Ctrl/Cmd on
+        // empty space pans the pivot). A click (no drag) selects the picked node (Shift toggles), or clears / opens
+        // the empty-space menu on a miss.
+
+        private bool _scenePointerDown;     // a left-press began over the diagram (not the HUD)
+        private bool _sceneDragging;        // the press has moved far enough to count as a drag
+        private bool _draggingNode;         // the active drag is moving a node (Ctrl+press on a node)
+        private bool _zMovingNode;          // the active drag slides a node along world Z (Ctrl+Shift+press on a node)
+        private bool _rotatingNode;         // the active drag spins a node in place (Alt+press on a node)
+        private bool _resizingNode;         // the active drag resizes a node (Ctrl+Alt+press on a node)
+        private bool _connecting;           // the active drag is a connect-by-drag from a source node
+        private bool _marqueeDrag;          // the active drag is a Shift+empty-space rubber-band selection
+        private bool _panGesture;           // the active camera drag pans the pivot (Ctrl) vs. orbits
+        private ElementId _dragNode = ElementId.None;
+        private float _dragPlaneZ;          // world-Z of the node-drag plane (the dragged node's plane)
+        private Vector3 _dragLastWorld;     // last projected world point, for per-frame deltas
+        private Vector2 _pressScreenPos;
+        private const float DragThresholdPx = 4f;
+
+        // Connect-by-drag (no modifier on a node): a temporary 3-D rubber-band edge from the source node's
+        // center to the cursor's point on the source node's world-Z plane, plus the node currently hovered.
+        private ElementId _connectSource = ElementId.None;
+        private float _connectPlaneZ;
+        private UmlEdge3D _connectRubber;
+        private ElementId _connectHover = ElementId.None;
+        private const float RotateDegPerPx = 0.3f;
+        private static readonly Color ConnectColor = new Color(0.20f, 0.55f, 0.85f, 1f);
+
+        // Per-second rates for the 6-DOF camera keys (roll in deg/s, fly/strafe/rise in MoveLocal units/s).
+        private const float RollDegPerSec = 90f;
+        private const float FlyUnitsPerSec = 1.2f;
+
+        /// <summary>
+        /// Drive the camera rig's roll + free-fly translation from held keys. Movement keys (WASD/RF) are
+        /// suppressed while Ctrl/Cmd is held so they don't fight the editor shortcuts (Ctrl+S/C/V/Z/Y); roll
+        /// (Q/E) has no shortcut conflict and is always live. Reached through <c>_scene.Rig</c> — no edit to
+        /// Uml3DScene is needed since it already exposes the rig.
+        /// </summary>
+        private void HandleCameraKeys(bool ctrl)
+        {
+            var rig = _scene != null ? _scene.Rig : null;
+            if (rig == null) return;
+            float dt = Time.deltaTime;
+
+            // Roll about the view axis: Q rolls one way, E the other.
+            float roll = 0f;
+            if (Input.GetKey(KeyCode.Q)) roll -= 1f;
+            if (Input.GetKey(KeyCode.E)) roll += 1f;
+            if (roll != 0f) rig.RollBy(roll * RollDegPerSec * dt);
+
+            if (ctrl) return; // leave WASD/RF to the editor shortcuts while a modifier is down
+
+            // Free-fly translation along the camera's own axes: x = strafe, y = rise, z = forward.
+            Vector3 move = Vector3.zero;
+            if (Input.GetKey(KeyCode.W)) move.z += 1f;
+            if (Input.GetKey(KeyCode.S)) move.z -= 1f;
+            if (Input.GetKey(KeyCode.D)) move.x += 1f;
+            if (Input.GetKey(KeyCode.A)) move.x -= 1f;
+            if (Input.GetKey(KeyCode.R)) move.y += 1f;
+            if (Input.GetKey(KeyCode.F)) move.y -= 1f;
+            if (move != Vector3.zero) rig.MoveLocal(move * (FlyUnitsPerSec * dt));
+        }
+
+        private void HandleSceneMouse(bool ctrl, bool shift, bool alt)
+        {
+            // Right-click: pick → node menu, else empty-space menu. (Handled on button-up via the press tracking
+            // below would conflict with drag; right-click is a discrete action so resolve it immediately.)
+            if (Input.GetMouseButtonDown(1) && !PointerOverUI())
+            {
+                Vector2 sp = Input.mousePosition;
+                var hit = _scene.Raycast(sp);
+                if (hit != null) ShowNodeMenu(hit.Id, sp);
+                else
+                {
+                    var eid = PickEdge3D(sp);
+                    if (eid.IsValid) { Select3DEdge(eid); ShowEdgeMenu(eid, sp); }
+                    else { ClearSelectedEdge(); ShowEmptyMenu(sp); }
+                }
+                return;
+            }
+
+            if (Input.GetMouseButtonDown(0))
+            {
+                if (PointerOverUI()) { _scenePointerDown = false; return; }
+
+                // Route-edit handles on the selected link take priority over the node / edge / camera gestures: test
+                // for a handle hit FIRST. A hit begins a handle drag (or, for Alt+click on a waypoint, deletes it).
+                if (TryBeginEdgeHandleDrag3D(Input.mousePosition, alt))
+                {
+                    _scenePointerDown = false; // the handle owns this press; don't also start a scene gesture
+                    return;
+                }
+
+                _scenePointerDown = true;
+                _sceneDragging = false;
+                _draggingNode = _zMovingNode = _rotatingNode = _resizingNode = _connecting = _marqueeDrag = false;
+                _dragNode = _connectSource = _connectHover = ElementId.None;
+                _pressScreenPos = Input.mousePosition;
+                var hit = _scene.Raycast(_pressScreenPos);
+                if (hit != null)
+                {
+                    // On a node: Ctrl/Cmd+Shift → slide along world Z, Ctrl/Cmd+Alt → resize, Ctrl/Cmd → move in XY,
+                    // Alt → rotate-in-place, no modifier → connect-by-drag. The two-modifier combos are tested
+                    // first so they win over plain Ctrl / plain Alt.
+                    if (ctrl && shift)
+                    {
+                        _zMovingNode = true;
+                        _dragNode = hit.Id;
+                    }
+                    else if (ctrl && alt)
+                    {
+                        _resizingNode = true;
+                        _dragNode = hit.Id;
+                    }
+                    else if (ctrl)
+                    {
+                        _draggingNode = true;
+                        _dragNode = hit.Id;
+                        _dragPlaneZ = hit.transform.position.z;
+                        _dragLastWorld = ProjectToPlane(_pressScreenPos, _dragPlaneZ);
+                    }
+                    else if (alt)
+                    {
+                        _rotatingNode = true;
+                        _dragNode = hit.Id;
+                    }
+                    else
+                    {
+                        _connecting = true;
+                        _connectSource = hit.Id;
+                        _connectPlaneZ = hit.transform.position.z;
+                    }
+                    _panGesture = false;
+                }
+                else
+                {
+                    // Empty space: Shift → marquee select, Ctrl/Cmd → pan pivot, plain → orbit.
+                    _marqueeDrag = shift;
+                    _panGesture = ctrl && !shift;
+                }
+                return;
+            }
+
+            // Active route-edit handle drag (owns the press; runs independently of the scene-gesture tracking).
+            if (_draggingHandle)
+            {
+                if (Input.GetMouseButton(0)) { UpdateEdgeHandleDrag3D(Input.mousePosition); return; }
+                if (Input.GetMouseButtonUp(0)) { EndEdgeHandleDrag3D(); return; }
+                return;
+            }
+
+            if (_scenePointerDown && Input.GetMouseButton(0))
+            {
+                Vector2 cur = Input.mousePosition;
+                if (!_sceneDragging && ((Vector2)cur - _pressScreenPos).sqrMagnitude > DragThresholdPx * DragThresholdPx)
+                {
+                    _sceneDragging = true;
+                    if (!_draggingNode && !_zMovingNode && !_rotatingNode && !_resizingNode) CloseMenu();
+                    if (_connecting) BeginConnectRubber();
+                    else if (_marqueeDrag) BeginMarquee(_pressScreenPos);
+                }
+                if (_sceneDragging)
+                {
+                    if (_draggingNode) DragNode(cur);
+                    else if (_zMovingNode) DragNodeZ(GetMouseDelta());
+                    else if (_resizingNode) ResizeNode(GetMouseDelta());
+                    else if (_rotatingNode) RotateNode(GetMouseDelta());
+                    else if (_connecting) UpdateConnectRubber(cur);
+                    else if (_marqueeDrag) UpdateMarquee(cur);
+                    else if (_panGesture) _scene.PanPivot(GetMouseDelta());
+                    else { Vector2 d = GetMouseDelta(); _scene.Orbit(d.x * OrbitYawPerPx, -d.y * OrbitPitchPerPx); }
+                }
+                return;
+            }
+
+            if (_scenePointerDown && Input.GetMouseButtonUp(0))
+            {
+                bool wasDrag = _sceneDragging;
+                bool wasNodeDrag = _draggingNode;
+                bool wasZMove = _zMovingNode;
+                bool wasRotate = _rotatingNode;
+                bool wasResize = _resizingNode;
+                bool wasConnect = _connecting;
+                bool wasMarquee = _marqueeDrag;
+                _scenePointerDown = false;
+                _sceneDragging = false;
+                _draggingNode = _zMovingNode = _rotatingNode = _resizingNode = _connecting = _marqueeDrag = false;
+                _dragNode = ElementId.None;
+
+                if (wasConnect) { EndConnectRubber(Input.mousePosition); return; }
+                if (wasMarquee) { EndMarquee3D(Input.mousePosition); return; }
+                if (wasDrag)
+                {
+                    if (wasNodeDrag) Flash("moved");
+                    else if (wasZMove) Flash("moved along Z");
+                    else if (wasResize) Flash("resized");
+                    else if (wasRotate) Flash("rotated");
+                    return;
+                }
+
+                // A click (no drag): node → select; else nearest link → select; else clear everything.
+                var hit = _scene.Raycast(Input.mousePosition);
+                CloseMenu();
+                if (hit != null)
+                {
+                    ClearSelectedEdge();
+                    if (shift) ToggleSelection(hit.Id);
+                    else SetSelected(hit.Id);
+                }
+                else
+                {
+                    var eid = PickEdge3D(Input.mousePosition);
+                    if (eid.IsValid) Select3DEdge(eid);
+                    else { ClearSelectedEdge(); Select((UmlNodeView)null); }
+                }
+            }
+        }
+
+        // --- per-node rotation (Alt-drag) ---
+
+        /// <summary>Spin the grabbed node (and any co-selected nodes) in place by a mouse delta. Δx → yaw, Δy →
+        /// pitch; sign inverted so dragging feels like grabbing the box and turning it.</summary>
+        private void RotateNode(Vector2 mouseDelta)
+        {
+            if (!_dragNode.IsValid) return;
+            float dPitch = -mouseDelta.y * RotateDegPerPx;
+            float dYaw = mouseDelta.x * RotateDegPerPx;
+            if (_scene.TryGetNode(_dragNode, out var node) && node != null) node.AddLocalRotation(dPitch, dYaw);
+            // Rotate the whole multi-selection together when the grabbed node is part of it.
+            if (_selection.Count >= 2 && _selection.Contains(_dragNode))
+                foreach (var id in _selection)
+                    if (id != _dragNode && _scene.TryGetNode(id, out var n) && n != null) n.AddLocalRotation(dPitch, dYaw);
+        }
+
+        // --- per-node world-Z move (Ctrl/Cmd+Shift-drag) ---
+
+        /// <summary>World units the node slides along Z per pixel of vertical mouse travel.</summary>
+        private const float ZMovePerPx = 0.01f;
+
+        /// <summary>Slide the grabbed node (and any co-selected nodes) along world Z by the drag's vertical delta —
+        /// dragging up pushes the node toward +Z (its front/content face), down toward −Z. Updates the per-node
+        /// continuous Z offset and re-poses live.</summary>
+        private void DragNodeZ(Vector2 mouseDelta)
+        {
+            if (!_dragNode.IsValid) return;
+            float dz = mouseDelta.y * ZMovePerPx;
+            if (Mathf.Abs(dz) < 1e-6f) return;
+            ShiftNodeZ(_dragNode, dz);
+            // Carry the rest of a multi-selection by the same Z delta.
+            if (_selection.Count >= 2 && _selection.Contains(_dragNode))
+                foreach (var id in _selection)
+                    if (id != _dragNode) ShiftNodeZ(id, dz);
+        }
+
+        /// <summary>Add a Z delta to one node's stored offset and re-pose it (keeping its X/Y and rotation).</summary>
+        private void ShiftNodeZ(ElementId id, float dz)
+        {
+            if (!_scene.TryGetNode(id, out var n) || n == null) return;
+            _posZ[id] = (_posZ.TryGetValue(id, out var z) ? z : 0f) + dz;
+            Vector3 p = n.transform.position;
+            n.SetWorldPose(new Vector3(p.x, p.y, p.z + dz), n.transform.rotation);
+        }
+
+        /// <summary>Resize the grabbed node by the drag delta (right widens, down grows height); rebuilds the slab
+        /// + face live and stores the size override so it survives rebuilds and persists.</summary>
+        private void ResizeNode(Vector2 mouseDelta)
+        {
+            if (!_dragNode.IsValid || !_scene.TryGetNode(_dragNode, out var node) || node == null) return;
+            Vector2 sz = CurrentNodeSizePx(_dragNode);
+            float k = 1f / Mathf.Max(ScaleFactor, 0.0001f);
+            sz.x = Mathf.Max(60f, sz.x + mouseDelta.x * k);
+            sz.y = Mathf.Max(40f, sz.y - mouseDelta.y * k);
+            _size[_dragNode] = sz;
+            node.Resize(sz);
+        }
+
+        /// <summary>The node's current pixel size: the stored override if set, else the content-derived default.</summary>
+        private Vector2 CurrentNodeSizePx(ElementId id)
+        {
+            if (_size.TryGetValue(id, out var s) && s.x > 1f && s.y > 1f) return s;
+            if (_model.TryGet(id, out var el))
+            {
+                MemberSignatures(el, out var attrs, out var ops);
+                return NodeSizePx(el, attrs.Count, ops.Count);
+            }
+            return new Vector2(UmlNodeView.DefaultWidth, 120f);
+        }
+
+        // --- connect-by-drag (drag from a node onto another to draw a relationship) ---
+
+        /// <summary>Spawn the temporary rubber-band edge for a connect drag.</summary>
+        private void BeginConnectRubber()
+        {
+            if (_connectRubber == null) _connectRubber = _scene.AddEdge();
+            _connectRubber.SetArrow(true);
+            UpdateConnectRubber(_pressScreenPos);
+        }
+
+        /// <summary>Track the rubber band from the source center to the cursor (on the source's world-Z plane),
+        /// tinting whichever node is hovered as a candidate target.</summary>
+        private void UpdateConnectRubber(Vector2 screenPos)
+        {
+            if (_connectRubber == null || !_scene.TryGetNode(_connectSource, out var src) || src == null) return;
+            var hit = _scene.Raycast(screenPos);
+            ElementId hoverId = (hit != null && hit.Id != _connectSource) ? hit.Id : ElementId.None;
+            if (hoverId != _connectHover)
+            {
+                // Restore the previous hover's depth tint, then highlight the new one.
+                ClearConnectHover();
+                _connectHover = hoverId;
+                if (_connectHover.IsValid && _scene.TryGetNode(_connectHover, out var hn) && hn != null)
+                    hn.SetSelected(true);
+            }
+
+            Vector3 end = hit != null && hit.Id != _connectSource
+                ? hit.transform.position
+                : ProjectToPlane(screenPos, _connectPlaneZ);
+            _connectRubber.SetRoute(new[] { src.transform.position, end }, ConnectColor);
+        }
+
+        /// <summary>Finish a connect drag: over a different node → open the edge-kind picker; else cancel.</summary>
+        private void EndConnectRubber(Vector2 screenPos)
+        {
+            var hit = _scene.Raycast(screenPos);
+            ElementId source = _connectSource;
+            ClearConnectHover();
+            if (_connectRubber != null) { Destroy(_connectRubber.gameObject); _connectRubber = null; }
+            _connectSource = ElementId.None;
+
+            if (hit == null || hit.Id == source || !source.IsValid)
+            {
+                RefreshSelectionHighlights(); // clear any stray hover highlight
+                return;
+            }
+            // Reuse the existing edge-kind picker → Connect path. The 2-D anchor pins it stores are ignored by the
+            // 3-D edge router (which connects live world centers), so seed them with harmless defaults.
+            _pendingSrcSide = BoxSide.Right;
+            _pendingTgtAnchor = new EndAnchor(BoxSide.Left, 0.5f);
+            ShowTypePicker(source, hit.Id, screenPos);
+        }
+
+        /// <summary>Reset the hovered candidate's highlight back to its selection state.</summary>
+        private void ClearConnectHover()
+        {
+            if (_connectHover.IsValid && _scene.TryGetNode(_connectHover, out var hn) && hn != null)
+                hn.SetSelected(_selection.Contains(_connectHover));
+            _connectHover = ElementId.None;
+        }
+
+        // --- 3-D marquee selection (Shift-drag empty space) ---
+
+        /// <summary>Finish a marquee: select every node whose projected screen point falls inside the swept box.</summary>
+        private void EndMarquee3D(Vector2 screenPos)
+        {
+            if (_marquee != null) { Destroy(_marquee); _marquee = null; }
+            Rect band = ScreenRect(_marqueeStart, screenPos);
+            if (band.width < 3f && band.height < 3f) { Select(null); return; }
+
+            var hits = new List<ElementId>();
+            foreach (var kv in _scene.Nodes)
+            {
+                if (kv.Value == null) continue;
+                Vector3 sp = _scene.WorldToScreen(kv.Value.transform.position);
+                if (sp.z <= 0f) continue; // behind the camera
+                if (band.Contains(new Vector2(sp.x, sp.y))) hits.Add(kv.Key);
+            }
+            SetSelection(hits);
+            Flash(hits.Count == 0 ? "marquee — nothing selected" : $"marquee selected {hits.Count}");
+        }
+
+        private const float OrbitYawPerPx = 0.4f;
+        private const float OrbitPitchPerPx = 0.4f;
+
+        /// <summary>The per-frame screen-space mouse delta (Input has no UI delta outside the EventSystem). Computed
+        /// once at the top of every Update; orbit / pan drags read it via GetMouseDelta.</summary>
+        private Vector2 _lastMousePos;
+        private Vector2 _mouseDelta;
+        private Vector2 GetMouseDelta() => _mouseDelta;
+
+        /// <summary>Intersect the camera ray through <paramref name="screenPos"/> with the world plane z = planeZ.</summary>
+        private Vector3 ProjectToPlane(Vector2 screenPos, float planeZ)
+        {
+            Ray ray = _scene.ScreenPointToRay(screenPos);
+            // Plane with normal +Z at the given z. Guard a near-parallel ray.
+            float denom = ray.direction.z;
+            if (Mathf.Abs(denom) < 1e-5f) return ray.origin;
+            float t = (planeZ - ray.origin.z) / denom;
+            return ray.origin + ray.direction * t;
+        }
+
+        /// <summary>Drag the picked node (and any co-selected nodes) across its world-Z plane, updating _pos (px).</summary>
+        private void DragNode(Vector2 screenPos)
+        {
+            if (!_dragNode.IsValid || !_scene.TryGetNode(_dragNode, out var node) || node == null) return;
+            Vector3 world = ProjectToPlane(screenPos, _dragPlaneZ);
+            Vector3 worldDelta = world - _dragLastWorld;
+            _dragLastWorld = world;
+            if (worldDelta.sqrMagnitude < 1e-10f) return;
+
+            MoveNode3D(_dragNode, worldDelta);
+            // Carry the rest of a multi-selection by the same world delta.
+            if (_selection.Count >= 2 && _selection.Contains(_dragNode))
+                foreach (var id in _selection)
+                    if (id != _dragNode) MoveNode3D(id, worldDelta);
+        }
+
+        /// <summary>Shift one node by a world-space delta and write the new position back to _pos (in px).</summary>
+        private void MoveNode3D(ElementId id, Vector3 worldDelta)
+        {
+            if (!_scene.TryGetNode(id, out var n) || n == null) return;
+            Vector3 p = n.transform.position + worldDelta;
+            n.SetWorldPose(p, n.transform.rotation);
+            _pos[id] = new Vector2(p.x / Uml3DConfig.WorldScale, p.y / Uml3DConfig.WorldScale);
+        }
+
+        /// <summary>True if the pointer is over a real overlay UI element (so the diagram should ignore the gesture).</summary>
+        private static bool PointerOverUI() =>
+            EventSystem.current != null && EventSystem.current.IsPointerOverGameObject();
 
         // --- pan (drag empty canvas to scroll the diagram) ---
 
         private Vector2 _pan;
+
+        // Marquee (rubber-band) selection: a translucent screen-space rectangle drawn while dragging empty canvas.
+        private GameObject _marquee;
+        private Vector2 _marqueeStart; // screen-space anchor (the drag origin)
 
         public void BeginPan() => CloseMenu();
 
@@ -427,6 +1060,83 @@ namespace TheRobotDraft.Uml
             if (rt != null) { rt.offsetMin = _pan; rt.offsetMax = _pan; }
         }
 
+        // --- marquee (rubber-band) selection ---
+
+        /// <summary>Begin a marquee at the drag origin: spawn a translucent rect on the root (screen space).</summary>
+        public void BeginMarquee(Vector2 screenPos)
+        {
+            CloseMenu();
+            ClearSelectedEdge();
+            _marqueeStart = screenPos;
+            if (_marquee != null) Destroy(_marquee);
+            _marquee = new GameObject("Marquee", typeof(RectTransform));
+            var rt = (RectTransform)_marquee.transform;
+            rt.SetParent(_root, false);
+            rt.anchorMin = rt.anchorMax = new Vector2(0f, 0f);
+            rt.pivot = new Vector2(0f, 0f);
+            var img = _marquee.AddComponent<Image>();
+            img.color = new Color(0.12f, 0.55f, 0.85f, 0.18f);
+            img.raycastTarget = false;
+            var outline = _marquee.AddComponent<Outline>();
+            outline.effectColor = new Color(0.12f, 0.55f, 0.85f, 0.8f);
+            outline.effectDistance = new Vector2(1f, 1f);
+            UpdateMarquee(screenPos);
+        }
+
+        /// <summary>Resize the marquee rect to span from its anchor to the current pointer.</summary>
+        public void UpdateMarquee(Vector2 screenPos)
+        {
+            if (_marquee == null) return;
+            float scale = Mathf.Max(ScaleFactor, 0.0001f);
+            Vector2 a = _marqueeStart / scale, b = screenPos / scale;
+            Vector2 min = Vector2.Min(a, b), max = Vector2.Max(a, b);
+            var rt = (RectTransform)_marquee.transform;
+            rt.anchoredPosition = min;
+            rt.sizeDelta = max - min;
+        }
+
+        /// <summary>Finish the marquee: select every node whose screen rect intersects the swept box.</summary>
+        public void EndMarquee(Vector2 screenPos)
+        {
+            if (_marquee == null) return;
+            Destroy(_marquee); _marquee = null;
+
+            Rect band = ScreenRect(_marqueeStart, screenPos);
+            // A trivially-small marquee (a click that registered as a tiny drag) just clears the selection.
+            if (band.width < 3f && band.height < 3f) { Select(null); return; }
+
+            var hits = new List<ElementId>();
+            foreach (var kv in _nodes)
+            {
+                if (kv.Value == null) continue;
+                if (band.Overlaps(NodeScreenRect(kv.Value.Rt), true)) hits.Add(kv.Key);
+            }
+            SetSelection(hits);
+            Flash(hits.Count == 0 ? "marquee — nothing selected" : $"marquee selected {hits.Count}");
+        }
+
+        /// <summary>Axis-aligned screen-space rect between two pointer positions (origin bottom-left).</summary>
+        private static Rect ScreenRect(Vector2 a, Vector2 b)
+        {
+            Vector2 min = Vector2.Min(a, b), max = Vector2.Max(a, b);
+            return new Rect(min.x, min.y, max.x - min.x, max.y - min.y);
+        }
+
+        /// <summary>A node's bounding box in screen space (overlay canvas → camera null), origin bottom-left.</summary>
+        private static Rect NodeScreenRect(RectTransform rt)
+        {
+            var corners = new Vector3[4];
+            rt.GetWorldCorners(corners);
+            float minX = float.MaxValue, minY = float.MaxValue, maxX = float.MinValue, maxY = float.MinValue;
+            for (int i = 0; i < 4; i++)
+            {
+                Vector2 sp = RectTransformUtility.WorldToScreenPoint(null, corners[i]);
+                minX = Mathf.Min(minX, sp.x); minY = Mathf.Min(minY, sp.y);
+                maxX = Mathf.Max(maxX, sp.x); maxY = Mathf.Max(maxY, sp.y);
+            }
+            return new Rect(minX, minY, maxX - minX, maxY - minY);
+        }
+
         /// <summary>Apply a clamped zoom to both layers. Scales around the canvas center (v1; cursor-anchored later).</summary>
         private void SetZoom(float z)
         {
@@ -440,22 +1150,136 @@ namespace TheRobotDraft.Uml
             Flash($"zoom {_zoom * 100f:0}%  ·  Ctrl/Cmd +/− , 0 to reset");
         }
 
+        // --- z-layers (stacked planes; Alt+scroll to change, node menu to move elements between) ---
+
+        /// <summary>Step the active z-layer by ±1 and rebuild so only that layer's nodes show. Clamps to the used
+        /// range, but allows stepping one past each extreme so a node can be moved onto a fresh empty layer.</summary>
+        private void ShiftActiveLayer(int delta)
+        {
+            LayerUsedRange(out int min, out int max);
+            int next = delta > 0
+                ? Mathf.Min(_activeLayer + delta, Mathf.Max(max, _activeLayer) + 1)
+                : Mathf.Max(_activeLayer + delta, Mathf.Min(min, _activeLayer) - 1);
+            if (next == _activeLayer) return;
+            _activeLayer = next;
+            RebuildFromModel();
+            Flash($"layer {_activeLayer}");
+        }
+
+        /// <summary>Jump directly to a layer (used by the cross-layer chevron markers).</summary>
+        public void GoToLayer(int layer)
+        {
+            if (layer == _activeLayer) return;
+            _activeLayer = layer;
+            RebuildFromModel();
+            Flash($"layer {_activeLayer}");
+        }
+
+        /// <summary>The min/max ZLayer in use across the active package's diagram nodes (defaults to 0..0).</summary>
+        private void LayerUsedRange(out int min, out int max)
+        {
+            min = 0; max = 0; bool any = false;
+            foreach (var el in _model.Elements)
+            {
+                if (el.Parent != _activePackage || !KindInfo.IsDiagramNode(el.Kind)) continue;
+                if (!any) { min = max = el.ZLayer; any = true; }
+                else { if (el.ZLayer < min) min = el.ZLayer; if (el.ZLayer > max) max = el.ZLayer; }
+            }
+        }
+
+        // A cross-layer stub binding: the visible endpoint's element, the side it exits, and the chevron marker,
+        // so LateUpdate can re-seat the stub + glyph as that node is dragged.
+        private struct LayerStubBinding { public UmlEdgeView Stub; public UmlLayerMarker Marker; public ElementId Visible; public Vector2 HiddenPos; }
+        private readonly List<LayerStubBinding> _layerStubBindings = new();
+
+        /// <summary>Destroy all cross-layer stub + chevron views and forget their bindings (called on each rebuild).</summary>
+        private void LayerClearCrossLayerViews()
+        {
+            foreach (var s in _layerStubs) if (s != null) Destroy(s.gameObject);
+            foreach (var m in _layerMarkers) if (m != null) Destroy(m.gameObject);
+            _layerStubs.Clear();
+            _layerMarkers.Clear();
+            _layerStubBindings.Clear();
+        }
+
+        /// <summary>
+        /// Build the cross-layer affordance for an edge with one endpoint visible on the active layer and the other
+        /// culled on a different layer: a short stub from the visible node's border toward the hidden endpoint's
+        /// stored position, capped with an up chevron (hidden layer is above) or down chevron (below). Clicking the
+        /// chevron follows the relationship to that layer.
+        /// </summary>
+        private void LayerBuildCrossLayerStub(ModelEdge edge, bool fromVisible)
+        {
+            ElementId visibleId = fromVisible ? edge.From : edge.To;
+            ElementId hiddenId = fromVisible ? edge.To : edge.From;
+            if (!_nodes.TryGetValue(visibleId, out var nv) || nv == null) return;
+            // The hidden endpoint must be a diagram node on a real layer with a known position to aim the stub.
+            if (!_model.TryGet(hiddenId, out var hidden) || !KindInfo.IsDiagramNode(hidden.Kind)) return;
+            if (!_pos.TryGetValue(hiddenId, out var hiddenPos)) return;
+
+            bool up = hidden.ZLayer > _activeLayer;
+            var color = up ? new Color(0.20f, 0.55f, 0.30f, 1f) : new Color(0.62f, 0.34f, 0.74f, 1f);
+
+            var go = new GameObject("LayerStub:" + edge.Kind, typeof(RectTransform));
+            go.transform.SetParent(_edgeLayer, false);
+            var stub = go.AddComponent<UmlEdgeView>();
+            stub.Edge = edge.Id;
+            stub.Interactive = false; // off-layer: not selectable / re-typeable here
+            var (dashed, _, _, _) = EdgeVisual(edge.Kind);
+            stub.Init(this, _font, color, null, null, null, dashed, EndMarker.None, EndMarker.None);
+            _layerStubs.Add(stub);
+
+            var mgo = new GameObject("LayerMarker", typeof(RectTransform));
+            mgo.transform.SetParent(_edgeLayer, false);
+            var marker = mgo.AddComponent<UmlLayerMarker>();
+            _layerMarkers.Add(marker);
+
+            var bind = new LayerStubBinding { Stub = stub, Marker = marker, Visible = visibleId, HiddenPos = hiddenPos };
+            _layerStubBindings.Add(bind);
+            LayerSeatStub(bind, up, hidden.ZLayer, color, true);
+        }
+
+        /// <summary>Re-seat every cross-layer stub + chevron as its visible node moves (called each LateUpdate).</summary>
+        private void LayerRerouteStubs()
+        {
+            foreach (var bind in _layerStubBindings)
+            {
+                if (bind.Stub == null || bind.Marker == null) continue;
+                if (!_nodes.ContainsKey(bind.Visible)) continue;
+                LayerSeatStub(bind, false, 0, default, false);
+            }
+        }
+
+        /// <summary>
+        /// Position one stub: clip to the visible node's border facing the hidden position, run a short fixed-length
+        /// segment outward, and (on first build) place the chevron at the far end. <paramref name="initMarker"/>
+        /// builds the chevron; subsequent calls only move it.
+        /// </summary>
+        private void LayerSeatStub(LayerStubBinding bind, bool up, int hiddenLayer, Color color, bool initMarker)
+        {
+            if (!_nodes.TryGetValue(bind.Visible, out var nv) || nv == null) return;
+            Vector2 center = nv.Rt.anchoredPosition, size = nv.Rt.sizeDelta;
+            Vector2 border = ClipToBox(center, size, bind.HiddenPos);
+            Vector2 dir = (bind.HiddenPos - center);
+            dir = dir.sqrMagnitude > 0.001f ? dir.normalized : Vector2.up;
+            Vector2 far = border + dir * StubLen;
+            bind.Stub.SetRoute(new List<Vector2> { border, far });
+
+            if (initMarker)
+                bind.Marker.Init(this, far + dir * 4f, up, color, hiddenLayer);
+            else
+                ((RectTransform)bind.Marker.transform).anchoredPosition = far + dir * 4f;
+        }
+
         private void LateUpdate()
         {
-            foreach (var b in _edges)
-            {
-                if (b.View == null) continue;
-                if (_nodes.ContainsKey(b.From) && _nodes.ContainsKey(b.To))
-                    b.View.SetRoute(RouteEdge(b.From, b.To, b.View.Edge));
-            }
-            if (_tempLink != null && _linkSource != null)
-            {
-                Vector2 start = AnchorPoint(_linkSource.Rt.anchoredPosition, _linkSource.Rt.sizeDelta,
-                    new EndAnchor(_linkSide, 0.5f));
-                _tempLink.SetRoute(new List<Vector2> { start, ScreenToLayer(Input.mousePosition) });
-            }
-
-            PositionBendHandles();
+            // Re-route every 3-D edge from its endpoints' live world positions so links track as nodes move /
+            // the camera orbits.
+            for (int i = 0; i < _scene3dEdges.Count; i++) RouteEdge3D(_scene3dEdges[i]);
+            for (int i = 0; i < _scene3dStubBindings.Count; i++) RouteCrossLayerStub3D(_scene3dStubBindings[i]);
+            // Build / track the selected link's route-edit handles AFTER routing so they sit on the freshly-routed
+            // polyline (and rebuild when the selection changes / clears).
+            SyncEdgeHandles3D();
         }
 
         // --- selection / movement / resize ---
@@ -493,17 +1317,38 @@ namespace TheRobotDraft.Uml
                 }
         }
 
+        /// <summary>
+        /// Drag a multi-selected node: shift every OTHER selected node by the same layer delta so the whole
+        /// selection travels together (the <paramref name="mover"/> itself is moved by its own drag handler).
+        /// </summary>
+        public void MoveSelectionBy(Vector2 layerDelta, ElementId mover)
+        {
+            if (_selection.Count < 2) return;
+            foreach (var id in _selection)
+            {
+                if (id == mover) continue;
+                if (_nodes.TryGetValue(id, out var nv) && nv != null)
+                {
+                    nv.Rt.anchoredPosition += layerDelta;
+                    _pos[id] = nv.Rt.anchoredPosition;
+                }
+            }
+        }
+
         // --- context menus ---
 
-        public void ShowNodeMenu(UmlNodeView node, Vector2 screenPos)
+        public void ShowNodeMenu(ElementId id, Vector2 screenPos)
         {
             CloseMenu();
-            SetSelected(node.Id);
-            if (!_model.TryGet(node.Id, out var el)) return;
+            // Right-clicking a node already in the multi-selection keeps the set (so "Copy selection as PNG" stays
+            // available); right-clicking elsewhere selects just that node.
+            if (_selection.Contains(id)) { _selectedId = id; RefreshSelectionHighlights(); }
+            else SetSelected(id);
+            if (!_model.TryGet(id, out var el)) return;
 
             if (el.Kind == ElementKind.Note)
             {
-                var noteId = node.Id; var noteParent = el.Parent;
+                var noteId = id; var noteParent = el.Parent;
                 var noteItems = new List<MenuItem>
                 {
                     new MenuItem("Edit text…", true, () => ShowNoteEditor(noteParent, noteId, screenPos)),
@@ -522,7 +1367,7 @@ namespace TheRobotDraft.Uml
             foreach (var k in new[] { ElementKind.Field, ElementKind.Function })
                 if (ContainmentRules.CanContain(el.Kind, k).IsValid)
                 {
-                    var kind = k; var parent = node.Id;
+                    var kind = k; var parent = id;
                     string verb = k == ElementKind.Field ? "＋ Attribute (field)…" : "＋ Operation (method)…";
                     items.Add(new MenuItem(verb, true, () => ShowMemberEditor(parent, kind, ElementId.None, screenPos)));
                 }
@@ -533,17 +1378,48 @@ namespace TheRobotDraft.Uml
             {
                 if (!_model.TryGet(childId, out var c) || !KindInfo.IsMember(c.Kind)) continue;
                 if (!anyMember) { items.Add(MenuItem.Separator()); anyMember = true; }
-                var cid = childId; var ckind = c.Kind; var parent = node.Id;
+                var cid = childId; var ckind = c.Kind; var parent = id;
                 items.Add(new MenuItem("✎  " + Ellipsize(c.Name, 30), true,
                     () => ShowMemberEditor(parent, ckind, cid, screenPos)));
             }
 
             items.Add(MenuItem.Separator());
-            var pid = node.Id;
+            var pid = id;
             items.Add(new MenuItem("Edit element…  (fields · operations · properties)", true,
                 () => ShowClassifierEditor(pid, screenPos)));
             items.Add(new MenuItem("Style…  (color · font)", true, () => ShowStyleEditor(pid, screenPos)));
+            // Code — diagram nodes only (notes return above; packages/members aren't node-menu targets). A node that
+            // already has code (saved generation, or imported source) gets "View code…"; a bare node gets "Generate…".
+            if (KindInfo.IsDiagramNode(el.Kind) && el.Kind != ElementKind.Note)
+            {
+                bool hasCode = !string.IsNullOrEmpty(el.Code)
+                    || (!string.IsNullOrEmpty(el.SourceFile) && _sourceFiles.ContainsKey(el.SourceFile));
+                items.Add(new MenuItem(hasCode ? "⌁ View code…" : "⌁ Generate code (LLM)…", true,
+                    () => GenerateCodeForElement(pid)));
+                if (_selection.Count >= 2)
+                    items.Add(new MenuItem("⌁ Generate code for selection…", true, () => GenerateCodeForSelection()));
+            }
+            // Z-layer: shift this element to a higher / lower stacked plane. It leaves the current view once moved
+            // (it's no longer on _activeLayer) — Alt+scroll to follow it, or click its cross-layer chevron.
+            items.Add(MenuItem.Separator());
+            var zEl = el;
+            items.Add(new MenuItem("Send up a layer ▲", true, () =>
+            {
+                _ctl.SetZLayer(pid, zEl.ZLayer + 1);
+                CloseMenu(); RebuildFromModel();
+                Flash($"moved to layer {zEl.ZLayer + 1} — Alt+scroll to follow");
+            }));
+            items.Add(new MenuItem("Send down a layer ▼", true, () =>
+            {
+                _ctl.SetZLayer(pid, zEl.ZLayer - 1);
+                CloseMenu(); RebuildFromModel();
+                Flash($"moved to layer {zEl.ZLayer - 1} — Alt+scroll to follow");
+            }));
+            items.Add(MenuItem.Separator());
             items.Add(new MenuItem("Copy  (Ctrl/Cmd+C)", true, () => CopyElement(pid)));
+            // Multi-selection of plain diagram nodes (no boundaries / packages) → snapshot them to a PNG.
+            if (_selection.Count >= 2 && AllSelectedAreCopyableNodes())
+                items.Add(new MenuItem($"Copy selection as PNG  ({_selection.Count})", true, () => CopySelectionAsPng()));
             items.Add(new MenuItem("Delete", true,
                 () => { _ctl.Delete(pid); SetSelected(ElementId.None); RebuildFromModel(); }));
 
@@ -574,10 +1450,18 @@ namespace TheRobotDraft.Uml
             items.Add(MenuItem.Separator());
             if (_clipboard != null && _activePackage.IsValid)
                 items.Add(new MenuItem("Paste  (Ctrl/Cmd+V)", true, () => PasteElement()));
+            items.Add(new MenuItem("Sequence: auto-arrange", true, () => AutoArrangeSequence()));
+            items.Add(new MenuItem("Auto-layout: Tidy grid", true, () => AutoLayout("grid")));
+            items.Add(new MenuItem("Auto-layout: Force-directed", true, () => AutoLayout("force")));
+            items.Add(new MenuItem("Auto-layout: By source / package", true, () => AutoLayout("source")));
+            items.Add(new MenuItem("Auto-layout: Hierarchy", true, () => AutoLayout("hierarchy")));
+            items.Add(new MenuItem("Auto-layout: AI-assisted…", true, () => AutoLayoutAI()));
             items.Add(new MenuItem("New (empty diagram)", true, () => NewDiagram()));
             items.Add(new MenuItem("Reset to sample", true, () => ResetToSample()));
             items.Add(new MenuItem("Save  (Ctrl/Cmd+S)", true, () => { CloseMenu(); SaveDiagram(); }));
             items.Add(new MenuItem("Delete saved file", true, () => { CloseMenu(); DeleteSavedDiagram(); }));
+            items.Add(new MenuItem("⌁ Import code → elements…", true, () => ShowImportCodeDialog(screenPos)));
+            items.Add(new MenuItem("LLM settings…", true, () => ShowLlmSettings(screenPos)));
 
             CreateMenu(screenPos, _activePackage.IsValid ? PackageName(_activePackage) : "Canvas (no package yet)", items);
         }
@@ -611,7 +1495,7 @@ namespace TheRobotDraft.Uml
                 var id = _ctl.CommitAddNode(parent, string.IsNullOrWhiteSpace(value) ? template : value.Trim());
                 if (!id.IsValid) { Flash("invalid placement"); _ctl.EnterSelect(); return; }
                 if (kind == ElementKind.Package) _activePackage = id;
-                else _pos[id] = ScreenToLayer(screenPos);
+                else { _pos[id] = ScreenToModelPx(screenPos); _ctl.SetZLayer(id, _activeLayer); } // insert on the active layer
                 RebuildFromModel();
                 SetSelected(id);
                 Flash($"added {kind}");
@@ -690,19 +1574,19 @@ namespace TheRobotDraft.Uml
             RebuildFromModel();
         }
 
-        public void ShowEdgeMenu(UmlEdgeView edge, Vector2 screenPos)
+        public void ShowEdgeMenu(EdgeId edgeId, Vector2 screenPos)
         {
-            if (!_model.TryGet(edge.Edge, out var e)) return;
+            if (!_model.TryGet(edgeId, out var e)) return;
             CloseMenu();
             var items = new List<MenuItem>();
             foreach (var k in OrderedEdgeKindsFor(e.From, e.To))
             {
-                var kind = k; var edgeId = edge.Edge;
+                var kind = k; var eid = edgeId;
                 items.Add(new MenuItem(EdgeDisplay(k) + (k == e.Kind ? "  ✓" : ""), true,
-                    () => { _ctl.ReTypeEdge(edgeId, kind); CloseMenu(); RebuildFromModel(); }));
+                    () => { _ctl.ReTypeEdge(eid, kind); CloseMenu(); RebuildFromModel(); }));
             }
             items.Add(MenuItem.Separator());
-            var metaEdge = edge.Edge;
+            var metaEdge = edgeId;
             items.Add(new MenuItem("Multiplicity / label…", true, () => ShowEdgeMetaEditor(metaEdge, screenPos)));
             bool isCurved = _curved.Contains(metaEdge);
             items.Add(new MenuItem(isCurved ? "Make orthogonal (straight)" : "Make curved (bezier)", true,
@@ -712,7 +1596,7 @@ namespace TheRobotDraft.Uml
                     CloseMenu();
                     RebuildFromModel();
                 }));
-            var delEdge = edge.Edge;
+            var delEdge = edgeId;
             items.Add(new MenuItem("Delete link", true,
                 () =>
                 {
@@ -739,8 +1623,10 @@ namespace TheRobotDraft.Uml
                 RebuildFromModel();
                 return;
             }
-            if (!_selectedId.IsValid) return;
-            _ctl.Delete(_selectedId);
+            if (_selection.Count == 0) return;
+            // Delete every selected node (iterate a copy — the delete path mutates the model, not _selection).
+            var doomed = new List<ElementId>(_selection);
+            foreach (var id in doomed) _ctl.Delete(id);
             SetSelected(ElementId.None);
             FixActiveAfterChange();
             RebuildFromModel();
@@ -750,10 +1636,16 @@ namespace TheRobotDraft.Uml
 
         private void RebuildFromModel()
         {
-            foreach (var nv in _nodes.Values) if (nv != null) Destroy(nv.gameObject);
-            _nodes.Clear();
-            foreach (var b in _edges) if (b.View != null) Destroy(b.View.gameObject);
-            _edges.Clear();
+            // The diagram now lives in the 3-D scene; the 2-D node/edge view dictionaries (_nodes / _edges) are no
+            // longer populated for it (the UmlNodeView/UmlEdgeView classes remain defined but are not instantiated).
+            _scene.RemoveAllNodes();
+            _scene.ClearEdges();          // destroys edge + stub GameObjects (both created via _scene.AddEdge)
+            ClearEdgeHandles3D();         // route-edit handles reference edge bindings we're about to clear
+            EndEdgeHandleDrag3D();        // abandon any in-flight handle drag across the rebuild
+            _scene3dEdges.Clear();
+            _scene3dStubs.Clear();
+            _scene3dStubBindings.Clear();
+            _edgeKinds.Clear();
 
             EnsureActivePackage();
             BuildTabBar();
@@ -765,71 +1657,555 @@ namespace TheRobotDraft.Uml
                 return;
             }
 
-            // Classifier boxes = direct classifier children of the active package.
+            // Classifier boxes = direct classifier children of the active package. Z-layering (Stage 4): nodes
+            // ABOVE the active layer are hidden; the active layer renders at full color on the front plane; nodes
+            // BELOW recede into depth and gray out with distance so the active layer reads as the focus.
             int spread = 0;
             foreach (var el in _model.Elements)
             {
                 if (el.Parent != _activePackage) continue;
                 if (!KindInfo.IsDiagramNode(el.Kind)) continue;
+                if (el.ZLayer > _activeLayer) continue; // above the active layer → hidden
                 if (!_pos.TryGetValue(el.Id, out var p))
                 {
                     p = new Vector2(-360f + (spread % 4) * 240f, 120f - (spread / 4) * 200f);
                     _pos[el.Id] = p;
                 }
                 spread++;
-                CreateNodeView(el, p);
+                CreateNode3D(el, p);
             }
 
-            // Relationship edges between currently-visible boxes.
+            // Relationship edges. Both endpoints shown → a normal edge between their (possibly depth-separated)
+            // world centers. Exactly one endpoint hidden (its peer sits above the active layer) → a short up-stub
+            // off the visible node signaling "continues on a layer above". Both hidden → nothing.
             foreach (var edge in _model.Edges)
-                if (_nodes.ContainsKey(edge.From) && _nodes.ContainsKey(edge.To))
-                    CreateEdgeView(edge);
+            {
+                bool fromShown = _scene.TryGetNode(edge.From, out _);
+                bool toShown = _scene.TryGetNode(edge.To, out _);
+                if (fromShown && toShown) CreateEdge3D(edge);
+                else if (fromShown ^ toShown) CreateCrossLayerStub3D(edge, fromVisible: fromShown);
+            }
 
-            if (_selectedId.IsValid && _nodes.TryGetValue(_selectedId, out var sel)) sel.SetSelected(true);
+            // Re-apply the selection highlight to the whole set. Drop ids whose nodes no longer exist (deleted /
+            // package switch / a load that reset _selectedId directly without touching the set).
+            if (!_selectedId.IsValid) _selection.Clear();
+            _selection.RemoveWhere(id => !_scene.TryGetNode(id, out _));
+            if (_selectedId.IsValid && !_selection.Contains(_selectedId)) _selectedId = ElementId.None;
+            RefreshSelectionHighlights();
 
-            // Re-apply edge selection highlight + bend handles to the freshly-created edge views.
-            if (_selectedEdge.IsValid && !TryGetEdgeEndpoints(_selectedEdge, out _, out _)) _selectedEdge = EdgeId.None;
-            SetEdgeHighlight(_selectedEdge, true);
+            // Edge bend handles are 2-D affordances; with the diagram in 3-D they are DEFERRED (no handles drawn).
+            _selectedEdge = EdgeId.None;
             RefreshBendHandles();
         }
 
-        private void CreateNodeView(ModelElement el, Vector2 pos)
+        /// <summary>The full UML signatures of an element's field / operation members (Rose/Sparx convention).</summary>
+        private void MemberSignatures(ModelElement el, out List<string> attributes, out List<string> operations)
         {
-            // Members store their full UML signature as the name (e.g. "- balance : decimal",
-            // "+ deposit(amount : decimal) : void"), rendered verbatim — Rose/Sparx convention.
-            var attributes = new List<string>();
-            var operations = new List<string>();
+            attributes = new List<string>();
+            operations = new List<string>();
             foreach (var childId in el.ChildIds)
             {
                 if (!_model.TryGet(childId, out var c)) continue;
                 if (c.Kind == ElementKind.Field) attributes.Add(c.Name);
                 else if (c.Kind == ElementKind.Function) operations.Add(c.Name);
             }
-
-            var go = new GameObject("Box:" + el.Name, typeof(RectTransform));
-            go.transform.SetParent(_nodeLayer, false);
-            var nv = go.AddComponent<UmlNodeView>();
-            ColorUtility.TryParseHtmlString(KindInfo.Hue(el.Kind), out var hue);
-            _size.TryGetValue(el.Id, out var size);
-            var style = _styles.TryGetValue(el.Id, out var st) ? st : default;
-            nv.Init(this, el.Id, el.Name, Stereotype(el), el.Kind, hue, _font, attributes, operations,
-                el.Language, style, size);
-            nv.Rt.anchoredPosition = pos;
-            _nodes[el.Id] = nv;
         }
 
-        private void CreateEdgeView(ModelEdge edge)
+        /// <summary>The slab fill / text colors for an element — kind-hue default, overridden by a per-element style
+        /// (ported from <c>UmlNodeView.Init</c> so the 3-D slabs read like the flat boxes did).</summary>
+        private void NodeColors(ModelElement el, out Color fill, out Color text)
+        {
+            ColorUtility.TryParseHtmlString(KindInfo.Hue(el.Kind), out var hue);
+            bool note = el.Kind == ElementKind.Note;
+            bool darkFill = el.Kind == ElementKind.Actor || el.Kind == ElementKind.StateStart
+                || el.Kind == ElementKind.StateEnd || el.Kind == ElementKind.ForkJoin
+                || el.Kind == ElementKind.Junction || el.Kind == ElementKind.Terminate
+                || el.Kind == ElementKind.FlowFinal;
+            Color defaultFill =
+                note ? new Color(0.99f, 0.96f, 0.74f, 1f)
+                : darkFill ? new Color(0.20f, 0.21f, 0.25f, 1f)
+                : Color.Lerp(hue, Color.white, 0.88f);
+            Color defaultText = note ? new Color(0.16f, 0.15f, 0.06f, 1f) : new Color(0.13f, 0.15f, 0.19f, 1f);
+
+            var style = _styles.TryGetValue(el.Id, out var st) ? st : default;
+            fill = style.Has ? style.Fill : defaultFill;
+            text = style.Has ? style.Text : defaultText;
+        }
+
+        /// <summary>A reasonable pixel size for a node's slab when the user hasn't sized it: the default box width and
+        /// a height that grows with the member count (mirrors the flat renderer's content-driven sizing).</summary>
+        private Vector2 NodeSizePx(ModelElement el, int attrCount, int opCount)
+        {
+            if (_size.TryGetValue(el.Id, out var s) && s.x > 1f && s.y > 1f) return s;
+            float headerH = 30f + (string.IsNullOrEmpty(Stereotype(el)) ? 0f : 16f);
+            float attrH = Mathf.Max(1, attrCount) * 18f + 6f;
+            float opH = Mathf.Max(1, opCount) * 18f + 6f;
+            return new Vector2(UmlNodeView.DefaultWidth, headerH + 2f + attrH + 2f + opH);
+        }
+
+        private void CreateNode3D(ModelElement el, Vector2 pos)
+        {
+            MemberSignatures(el, out var attributes, out var operations);
+            NodeColors(el, out var fill, out var text);
+            Vector2 sizePx = NodeSizePx(el, attributes.Count, operations.Count);
+            var node = _scene.AddNode(el.Id, el.Name, Stereotype(el), el.Kind, fill, text,
+                attributes, operations, sizePx);
+            // layerDepth = activeLayer - nodeLayer: 0 on the active/front plane, positive for nodes below (which
+            // recede into depth). Below nodes gray out with distance (≈4 layers down reads as fully gray).
+            int layerDepth = _activeLayer - el.ZLayer;
+            float zOffset = _posZ.TryGetValue(el.Id, out var z) ? z : 0f;
+            node.SetWorldPose(Uml3DConfig.ModelToWorld(pos, layerDepth) + new Vector3(0f, 0f, zOffset),
+                Quaternion.identity);
+            node.SetDepthTint(layerDepth <= 0 ? 0f : Mathf.Clamp01(layerDepth / 4f));
+        }
+
+        // --- cross-layer up-stubs (an edge whose peer is hidden above the active layer) ---
+
+        private readonly List<UmlEdge3D> _scene3dStubs = new();
+        // The world-Y rise of a cross-layer stub off the visible node's top.
+        private const float CrossLayerStubRise = 0.8f;
+        private static readonly Color CrossLayerStubColor = new Color(0.42f, 0.72f, 0.45f, 1f);
+
+        /// <summary>
+        /// Draw a short stub rising off the visible endpoint of an edge whose other endpoint is hidden above the
+        /// active layer — a "continues on a layer above" affordance. The stub re-seats each LateUpdate as the
+        /// visible node moves (see <see cref="LateUpdate"/>).
+        /// </summary>
+        private void CreateCrossLayerStub3D(ModelEdge edge, bool fromVisible)
+        {
+            ElementId visibleId = fromVisible ? edge.From : edge.To;
+            if (!_scene.TryGetNode(visibleId, out var vis) || vis == null) return;
+            var stub = _scene.AddEdge();
+            stub.SetArrow(true);
+            _scene3dStubs.Add(stub);
+            _scene3dStubBindings.Add(new Stub3DBinding { View = stub, Visible = visibleId });
+            RouteCrossLayerStub3D(_scene3dStubBindings[_scene3dStubBindings.Count - 1]);
+        }
+
+        private struct Stub3DBinding { public UmlEdge3D View; public ElementId Visible; }
+        private readonly List<Stub3DBinding> _scene3dStubBindings = new();
+
+        /// <summary>Re-seat one cross-layer stub from the visible node's top straight up.</summary>
+        private void RouteCrossLayerStub3D(Stub3DBinding b)
+        {
+            if (b.View == null) return;
+            if (!_scene.TryGetNode(b.Visible, out var vis) || vis == null) return;
+            Vector3 top = vis.transform.position;
+            b.View.SetRoute(new[] { top, top + Vector3.up * CrossLayerStubRise }, CrossLayerStubColor);
+            b.View.SetArrow(true);
+        }
+
+        private void CreateEdge3D(ModelEdge edge)
         {
             var (dashed, src, tgt, stereo) = EdgeVisual(edge.Kind);
-            var go = new GameObject("Edge:" + edge.Kind, typeof(RectTransform));
-            go.transform.SetParent(_edgeLayer, false);
-            var ev = go.AddComponent<UmlEdgeView>();
-            ev.Edge = edge.Id;
-            // Midpoint label is the association name when set, else the kind's stereotype («include», «extend»).
-            string mid = !string.IsNullOrEmpty(edge.Label) ? edge.Label : stereo;
-            ev.Init(this, _font, EdgeColor, mid, edge.SourceMultiplicity, edge.TargetMultiplicity,
-                dashed, src, tgt);
-            _edges.Add(new EdgeBinding { View = ev, From = edge.From, To = edge.To });
+            _edgeKinds[edge.Id] = edge.Kind;
+            var e = _scene.AddEdge();
+            // Directed when either end carries an arrowhead (most relationship kinds point at the target).
+            bool directed = src != EndMarker.None || tgt != EndMarker.None;
+            _scene3dEdges.Add(new Edge3DBinding { View = e, Id = edge.Id, From = edge.From, To = edge.To, Directed = directed, Kind = edge.Kind });
+            RouteEdge3D(_scene3dEdges[_scene3dEdges.Count - 1]);
+        }
+
+        /// <summary>
+        /// Route one 3-D edge: source endpoint → its interior waypoints (if any) → target endpoint. Each endpoint is
+        /// the node center by default, or a movable point on the node face when a face attachment is stored (part 3).
+        /// Dashed relationship kinds render with true dashes; the selected link draws in the highlight color and the
+        /// two compose. Re-run every LateUpdate so the link tracks as nodes move / the camera orbits.
+        /// </summary>
+        private void RouteEdge3D(Edge3DBinding b)
+        {
+            if (b.View == null) return;
+            if (!_scene.TryGetNode(b.From, out var from) || from == null) return;
+            if (!_scene.TryGetNode(b.To, out var to) || to == null) return;
+
+            var wps = _waypoints3d.TryGetValue(b.Id, out var w) ? w : null;
+            // What each endpoint aims at (for border-clipping): the first/last waypoint if any, else the far node.
+            Vector3 fromToward = (wps != null && wps.Count > 0) ? wps[0] : to.transform.position;
+            Vector3 toToward = (wps != null && wps.Count > 0) ? wps[wps.Count - 1] : from.transform.position;
+
+            // A dragged attachment point wins; otherwise clip to the node's border facing the link (its SIDE, not
+            // the center) so relationships meet the box edges like conventional UML.
+            Vector3 srcPt = _srcFace.TryGetValue(b.Id, out var sf) ? from.FacePointLocal(sf) : NodeBorderPoint(from, fromToward);
+            Vector3 tgtPt = _tgtFace.TryGetValue(b.Id, out var tf) ? to.FacePointLocal(tf) : NodeBorderPoint(to, toToward);
+
+            var pts = new List<Vector3>(2 + 4) { srcPt };
+            if (wps != null) pts.AddRange(wps);
+            pts.Add(tgtPt);
+
+            // Curved links (the "Make curved (bezier)" toggle, _curved set): sample a smooth spline through the
+            // route so the LineRenderer draws a bezier-like curve instead of straight segments.
+            if (_curved.Contains(b.Id)) pts = SmoothCurve(pts);
+
+            Color col = (_selectedEdge.IsValid && b.Id == _selectedEdge) ? EdgeSelectedColor : EdgeColor;
+            bool dashed = EdgeVisual(b.Kind).dashed;
+            b.View.SetRoute(pts, col, dashed);
+            b.View.SetArrow(b.Directed);
+        }
+
+        /// <summary>
+        /// Sample a smooth Catmull-Rom spline through the route's control points (so a curved link renders as a
+        /// bezier-like arc). A plain two-point link gets a perpendicular mid control so it visibly bows.
+        /// </summary>
+        private static List<Vector3> SmoothCurve(List<Vector3> ctrl)
+        {
+            if (ctrl == null || ctrl.Count < 2) return ctrl;
+
+            List<Vector3> c = ctrl;
+            if (ctrl.Count == 2)
+            {
+                Vector3 a = ctrl[0], z = ctrl[1];
+                Vector3 d = z - a;
+                float len = d.magnitude;
+                if (len < 1e-4f) return ctrl;
+                Vector3 n = Vector3.Cross(d / len, Vector3.up);
+                if (n.sqrMagnitude < 1e-4f) n = Vector3.Cross(d / len, Vector3.right);
+                Vector3 mid = (a + z) * 0.5f + n.normalized * (len * 0.18f); // gentle sideways bow
+                c = new List<Vector3> { a, mid, z };
+            }
+
+            const int seg = 18;
+            var outp = new List<Vector3>((c.Count - 1) * seg + 1);
+            for (int i = 0; i < c.Count - 1; i++)
+            {
+                Vector3 p0 = c[Mathf.Max(0, i - 1)];
+                Vector3 p1 = c[i];
+                Vector3 p2 = c[i + 1];
+                Vector3 p3 = c[Mathf.Min(c.Count - 1, i + 2)];
+                for (int s = 0; s < seg; s++) outp.Add(CatmullRom(p0, p1, p2, p3, s / (float)seg));
+            }
+            outp.Add(c[c.Count - 1]);
+            return outp;
+        }
+
+        private static Vector3 CatmullRom(Vector3 p0, Vector3 p1, Vector3 p2, Vector3 p3, float t)
+        {
+            float t2 = t * t, t3 = t2 * t;
+            return 0.5f * ((2f * p1) + (-p0 + p2) * t
+                + (2f * p0 - 5f * p1 + 4f * p2 - p3) * t2
+                + (-p0 + 3f * p1 - 3f * p2 + p3) * t3);
+        }
+
+        /// <summary>
+        /// The point on a node's face border in the direction of <paramref name="toward"/> — so links attach to the
+        /// SIDE of a box rather than its center. Works in the node's own face basis, so it honors per-node rotation.
+        /// </summary>
+        private static Vector3 NodeBorderPoint(UmlNode3D node, Vector3 toward)
+        {
+            Vector3 c = node.transform.position;
+            Vector3 dir = toward - c;
+            Vector2 he = node.FaceHalfExtents; // world half-width / half-height of the face
+            float ax = Vector3.Dot(dir, node.FaceRight);
+            float ay = Vector3.Dot(dir, node.FaceUp);
+            if (Mathf.Abs(ax) < 1e-4f && Mathf.Abs(ay) < 1e-4f) return node.FacePointLocal(Vector2.zero);
+            // Scale the projected direction out to whichever border (left/right or top/bottom) it reaches first.
+            float t = Mathf.Min(
+                he.x > 1e-4f ? he.x / Mathf.Max(Mathf.Abs(ax), 1e-4f) : float.MaxValue,
+                he.y > 1e-4f ? he.y / Mathf.Max(Mathf.Abs(ay), 1e-4f) : float.MaxValue);
+            float bx = ax * t, by = ay * t;
+            float fx = he.x > 1e-4f ? bx / (2f * he.x) : 0f; // normalize to FacePointLocal's [-0.5,0.5]
+            float fy = he.y > 1e-4f ? by / (2f * he.y) : 0f;
+            return node.FacePointLocal(new Vector2(fx, fy));
+        }
+
+        /// <summary>The link nearest <paramref name="screenPos"/> within <see cref="EdgePickPx"/>, by projecting each
+        /// link's endpoint slabs to screen and measuring distance to the segment. EdgeId.None if none is close.</summary>
+        private EdgeId PickEdge3D(Vector2 screenPos)
+        {
+            EdgeId best = EdgeId.None;
+            float bestDist = EdgePickPx;
+            foreach (var b in _scene3dEdges)
+            {
+                if (!_scene.TryGetNode(b.From, out var f) || f == null) continue;
+                if (!_scene.TryGetNode(b.To, out var t) || t == null) continue;
+
+                // Test against the full route polyline (endpoints + any interior waypoints), so a waypoint-bent link
+                // is still pickable along every segment, not just the straight center-to-center chord.
+                Vector3 srcPt = _srcFace.TryGetValue(b.Id, out var sf) ? f.FacePointLocal(sf) : f.transform.position;
+                Vector3 tgtPt = _tgtFace.TryGetValue(b.Id, out var tf) ? t.FacePointLocal(tf) : t.transform.position;
+                var route = new List<Vector3>(2 + 4) { srcPt };
+                if (_waypoints3d.TryGetValue(b.Id, out var wps)) route.AddRange(wps);
+                route.Add(tgtPt);
+
+                for (int i = 0; i + 1 < route.Count; i++)
+                {
+                    Vector3 a = _scene.WorldToScreen(route[i]);
+                    Vector3 c = _scene.WorldToScreen(route[i + 1]);
+                    if (a.z <= 0f || c.z <= 0f) continue; // segment endpoint behind the camera
+                    float d = DistPointToSegment(screenPos, a, c);
+                    if (d < bestDist) { bestDist = d; best = b.Id; }
+                }
+            }
+            return best;
+        }
+
+        /// <summary>Select a link (clears any node selection); the 3-D edge recolors on the next route pass and its
+        /// route-edit handles are (re)built on the next LateUpdate via <see cref="SyncEdgeHandles3D"/>.</summary>
+        private void Select3DEdge(EdgeId edge)
+        {
+            SetSelected(ElementId.None);
+            _selectedEdge = edge;
+        }
+
+        // --- 3-D edge route-edit handles (waypoints / midpoints / endpoint anchors on the selected link) ---
+
+        /// <summary>Find the live binding for an edge id (default struct if absent — caller checks View != null).</summary>
+        private Edge3DBinding FindEdgeBinding(EdgeId id)
+        {
+            foreach (var b in _scene3dEdges) if (b.Id == id) return b;
+            return default;
+        }
+
+        /// <summary>Destroy every live route-edit handle and forget which edge they belonged to.</summary>
+        private void ClearEdgeHandles3D()
+        {
+            foreach (var h in _edgeHandles3d) if (h != null) Destroy(h.gameObject);
+            _edgeHandles3d.Clear();
+            _handlesForEdge = EdgeId.None;
+        }
+
+        /// <summary>
+        /// Reconcile the live handle set with the current selection (called each LateUpdate). When the selected edge
+        /// changes (or clears) the handles are rebuilt; otherwise they're just repositioned to track the live route.
+        /// Suppressed mid-drag so a rebuild can't yank the handle out from under an active drag.
+        /// </summary>
+        private void SyncEdgeHandles3D()
+        {
+            if (_draggingHandle) { RepositionEdgeHandles3D(); return; }
+
+            if (_selectedEdge != _handlesForEdge)
+            {
+                ClearEdgeHandles3D();
+                if (_selectedEdge.IsValid) BuildEdgeHandles3D(_selectedEdge);
+            }
+            RepositionEdgeHandles3D();
+        }
+
+        /// <summary>
+        /// Spawn the route-edit handles for one selected link: a yellow MOVE sphere at each interior waypoint, a
+        /// translucent-green ADD sphere at each segment midpoint, and an orange endpoint anchor at each end. Their
+        /// world positions are seated by the immediately-following <see cref="RepositionEdgeHandles3D"/>.
+        /// </summary>
+        private void BuildEdgeHandles3D(EdgeId edge)
+        {
+            var b = FindEdgeBinding(edge);
+            if (b.View == null) return;
+            var root = _scene != null && _scene.DiagramRoot != null ? _scene.DiagramRoot : transform;
+
+            int wpCount = _waypoints3d.TryGetValue(edge, out var wps) ? wps.Count : 0;
+
+            // Endpoint anchors (orange) — index unused for anchors.
+            _edgeHandles3d.Add(UmlEdgeHandle3D.Create(root, edge, 0, UmlEdgeHandle3D.HandleRole.SrcAnchor, HandleAnchorColor));
+            _edgeHandles3d.Add(UmlEdgeHandle3D.Create(root, edge, 0, UmlEdgeHandle3D.HandleRole.TgtAnchor, HandleAnchorColor));
+
+            // Move handle per existing waypoint (yellow).
+            for (int i = 0; i < wpCount; i++)
+                _edgeHandles3d.Add(UmlEdgeHandle3D.Create(root, edge, i, UmlEdgeHandle3D.HandleRole.Waypoint, HandleWaypointColor));
+
+            // Add handle per route segment midpoint (green). Segments = waypoints + 1.
+            for (int seg = 0; seg <= wpCount; seg++)
+                _edgeHandles3d.Add(UmlEdgeHandle3D.Create(root, edge, seg, UmlEdgeHandle3D.HandleRole.AddMidpoint, HandleMidpointColor));
+
+            _handlesForEdge = edge;
+        }
+
+        /// <summary>Re-seat every live handle onto its current route point (endpoints, waypoints, segment midpoints).</summary>
+        private void RepositionEdgeHandles3D()
+        {
+            if (_edgeHandles3d.Count == 0) return;
+            var route = CurrentRoutePoints(_handlesForEdge, out var ok);
+            if (!ok) { ClearEdgeHandles3D(); return; }
+
+            foreach (var h in _edgeHandles3d)
+            {
+                if (h == null) continue;
+                switch (h.Role)
+                {
+                    case UmlEdgeHandle3D.HandleRole.SrcAnchor:
+                        h.SetWorldPosition(route[0]);
+                        break;
+                    case UmlEdgeHandle3D.HandleRole.TgtAnchor:
+                        h.SetWorldPosition(route[route.Count - 1]);
+                        break;
+                    case UmlEdgeHandle3D.HandleRole.Waypoint:
+                        // Waypoint i sits at route index i+1 (interior point, after the source endpoint).
+                        if (h.Index + 1 <= route.Count - 2)
+                            h.SetWorldPosition(route[h.Index + 1]);
+                        break;
+                    case UmlEdgeHandle3D.HandleRole.AddMidpoint:
+                        if (h.Index + 1 < route.Count)
+                            h.SetWorldPosition((route[h.Index] + route[h.Index + 1]) * 0.5f);
+                        break;
+                }
+            }
+        }
+
+        /// <summary>
+        /// The current world-space route polyline for an edge (source endpoint, interior waypoints, target endpoint),
+        /// mirroring what <see cref="RouteEdge3D"/> draws. <paramref name="ok"/> is false if the edge or a node is gone.
+        /// </summary>
+        private List<Vector3> CurrentRoutePoints(EdgeId edge, out bool ok)
+        {
+            ok = false;
+            var pts = new List<Vector3>();
+            if (!edge.IsValid) return pts;
+            var b = FindEdgeBinding(edge);
+            if (b.View == null) return pts;
+            if (!_scene.TryGetNode(b.From, out var from) || from == null) return pts;
+            if (!_scene.TryGetNode(b.To, out var to) || to == null) return pts;
+
+            Vector3 srcPt = _srcFace.TryGetValue(edge, out var sf) ? from.FacePointLocal(sf) : from.transform.position;
+            Vector3 tgtPt = _tgtFace.TryGetValue(edge, out var tf) ? to.FacePointLocal(tf) : to.transform.position;
+            pts.Add(srcPt);
+            if (_waypoints3d.TryGetValue(edge, out var wps)) pts.AddRange(wps);
+            pts.Add(tgtPt);
+            ok = true;
+            return pts;
+        }
+
+        // --- 3-D edge handle dragging ---
+
+        /// <summary>
+        /// On a left mouse-down, test whether a route-edit handle was hit (a Physics raycast for an
+        /// <see cref="UmlEdgeHandle3D"/>). If so, begin a handle drag and return true so the caller skips the node /
+        /// edge / camera gestures. An Alt-click on a MOVE (waypoint) handle deletes that waypoint instead of dragging.
+        /// </summary>
+        private bool TryBeginEdgeHandleDrag3D(Vector2 screenPos, bool alt)
+        {
+            if (!_selectedEdge.IsValid || _edgeHandles3d.Count == 0) return false;
+            Ray ray = _scene.ScreenPointToRay(screenPos);
+            // RaycastAll + pick the NEAREST handle among all hits: a node slab may sit in front of a handle, so a
+            // single Raycast could return the slab and miss the handle behind it. Handles always win the press.
+            var hits = Physics.RaycastAll(ray, 10000f);
+            UmlEdgeHandle3D handle = null;
+            float bestDist = float.MaxValue;
+            foreach (var h in hits)
+            {
+                if (h.collider == null) continue;
+                var cand = h.collider.GetComponentInParent<UmlEdgeHandle3D>();
+                if (cand != null && h.distance < bestDist) { bestDist = h.distance; handle = cand; }
+            }
+            if (handle == null) return false;
+
+            // Alt-click on an existing waypoint deletes it (no drag).
+            if (alt && handle.Role == UmlEdgeHandle3D.HandleRole.Waypoint)
+            {
+                DeleteWaypoint3D(handle.Edge, handle.Index);
+                return true;
+            }
+
+            _draggingHandle = true;
+            _handleEdge = handle.Edge;
+            _handleRole = handle.Role;
+            _handleIndex = handle.Index;
+
+            // A MIDPOINT add-handle materializes a new waypoint at its segment, then drags as that waypoint.
+            if (_handleRole == UmlEdgeHandle3D.HandleRole.AddMidpoint)
+            {
+                int newIndex = InsertWaypoint3D(_handleEdge, _handleIndex, handle.transform.position);
+                _handleRole = UmlEdgeHandle3D.HandleRole.Waypoint;
+                _handleIndex = newIndex;
+                // Rebuild handles for the new waypoint count so the live set matches the edited route.
+                ClearEdgeHandles3D();
+                BuildEdgeHandles3D(_handleEdge);
+            }
+
+            // Drag on a plane through the grabbed point whose normal faces the camera, so the point tracks the cursor.
+            _handlePlanePoint = handle.transform.position;
+            var cam = _scene != null ? _scene.Camera : null;
+            _handlePlaneNormal = cam != null ? cam.transform.forward : Vector3.forward;
+            return true;
+        }
+
+        /// <summary>Drive the active handle drag from the cursor: move a waypoint along the screen-parallel plane, or
+        /// slide an endpoint anchor across the node face. Re-routes live (handles reposition on the next LateUpdate).</summary>
+        private void UpdateEdgeHandleDrag3D(Vector2 screenPos)
+        {
+            if (!_draggingHandle) return;
+            switch (_handleRole)
+            {
+                case UmlEdgeHandle3D.HandleRole.Waypoint:
+                {
+                    Vector3 world = ProjectToCameraPlane(screenPos, _handlePlanePoint, _handlePlaneNormal);
+                    if (_waypoints3d.TryGetValue(_handleEdge, out var wps) && _handleIndex >= 0 && _handleIndex < wps.Count)
+                        wps[_handleIndex] = world;
+                    break;
+                }
+                case UmlEdgeHandle3D.HandleRole.SrcAnchor:
+                case UmlEdgeHandle3D.HandleRole.TgtAnchor:
+                {
+                    var b = FindEdgeBinding(_handleEdge);
+                    if (b.View == null) break;
+                    bool isSrc = _handleRole == UmlEdgeHandle3D.HandleRole.SrcAnchor;
+                    ElementId nodeId = isSrc ? b.From : b.To;
+                    if (!_scene.TryGetNode(nodeId, out var node) || node == null) break;
+                    Vector2 norm = CursorToFaceOffset(node, screenPos);
+                    if (isSrc) _srcFace[_handleEdge] = norm; else _tgtFace[_handleEdge] = norm;
+                    break;
+                }
+            }
+        }
+
+        /// <summary>End an active handle drag.</summary>
+        private void EndEdgeHandleDrag3D()
+        {
+            if (!_draggingHandle) return;
+            _draggingHandle = false;
+            _handleEdge = EdgeId.None;
+        }
+
+        /// <summary>Insert a new waypoint for an edge at the given segment index, returning its waypoint slot.</summary>
+        private int InsertWaypoint3D(EdgeId edge, int segIndex, Vector3 world)
+        {
+            if (!_waypoints3d.TryGetValue(edge, out var list)) { list = new List<Vector3>(); _waypoints3d[edge] = list; }
+            int idx = Mathf.Clamp(segIndex, 0, list.Count);
+            list.Insert(idx, world);
+            return idx;
+        }
+
+        /// <summary>Delete an edge's waypoint at a slot and rebuild its handles for the new count.</summary>
+        private void DeleteWaypoint3D(EdgeId edge, int index)
+        {
+            if (_waypoints3d.TryGetValue(edge, out var list) && index >= 0 && index < list.Count)
+            {
+                list.RemoveAt(index);
+                if (list.Count == 0) _waypoints3d.Remove(edge);
+            }
+            if (_handlesForEdge == edge) { ClearEdgeHandles3D(); if (_selectedEdge.IsValid) BuildEdgeHandles3D(_selectedEdge); }
+            Flash("removed bend point");
+        }
+
+        /// <summary>Intersect the camera ray through <paramref name="screenPos"/> with the plane through
+        /// <paramref name="planePoint"/> with the given <paramref name="normal"/> (the screen-parallel drag plane).</summary>
+        private Vector3 ProjectToCameraPlane(Vector2 screenPos, Vector3 planePoint, Vector3 normal)
+        {
+            Ray ray = _scene.ScreenPointToRay(screenPos);
+            float denom = Vector3.Dot(ray.direction, normal);
+            if (Mathf.Abs(denom) < 1e-6f) return planePoint;
+            float t = Vector3.Dot(planePoint - ray.origin, normal) / denom;
+            return ray.origin + ray.direction * t;
+        }
+
+        /// <summary>
+        /// Project the cursor onto a node's +Z face plane and convert the hit to the node-local NORMALIZED face offset
+        /// (each axis clamped to [-0.5,0.5]; (0,0) = face center) used by the face-attachment dictionaries.
+        /// </summary>
+        private Vector2 CursorToFaceOffset(UmlNode3D node, Vector2 screenPos)
+        {
+            Vector3 center = node.transform.position;
+            Vector3 hit = ProjectToCameraPlane(screenPos, center, node.FaceForward);
+            Vector3 rel = hit - center;
+            Vector2 ext = node.FaceHalfExtents;
+            float fx = ext.x > 1e-5f ? Vector3.Dot(rel, node.FaceRight) / (ext.x * 2f) : 0f;
+            float fy = ext.y > 1e-5f ? Vector3.Dot(rel, node.FaceUp) / (ext.y * 2f) : 0f;
+            return new Vector2(Mathf.Clamp(fx, -0.5f, 0.5f), Mathf.Clamp(fy, -0.5f, 0.5f));
+        }
+
+        private static float DistPointToSegment(Vector2 p, Vector2 a, Vector2 b)
+        {
+            Vector2 ab = b - a;
+            float len2 = ab.sqrMagnitude;
+            float t = len2 < 1e-6f ? 0f : Mathf.Clamp01(Vector2.Dot(p - a, ab) / len2);
+            return Vector2.Distance(p, a + ab * t);
         }
 
         private static (bool dashed, EndMarker src, EndMarker tgt, string stereo) EdgeVisual(EdgeKind k) => k switch
@@ -851,6 +2227,8 @@ namespace TheRobotDraft.Uml
             EdgeKind.MessageSync => (false, EndMarker.None, EndMarker.OpenArrow, null),
             EdgeKind.MessageAsync => (false, EndMarker.None, EndMarker.StickArrow, null),
             EdgeKind.MessageReply => (true, EndMarker.None, EndMarker.StickArrow, null),
+            // Profile extension: solid line, filled triangle pointing at the metaclass.
+            EdgeKind.Extension => (false, EndMarker.None, EndMarker.OpenArrow, "«extension»"),
             _ => (false, EndMarker.None, EndMarker.OpenArrow, null),
         };
 
@@ -865,6 +2243,7 @@ namespace TheRobotDraft.Uml
             EdgeKind.MessageSync => "Message — sync  (▶)",
             EdgeKind.MessageAsync => "Message — async  (>)",
             EdgeKind.MessageReply => "Reply / return  (⇠)",
+            EdgeKind.Extension => "«extension»",
             _ => k.ToString(),
         };
 
@@ -889,11 +2268,14 @@ namespace TheRobotDraft.Uml
             bool behavioral = f != null && t != null
                 && KindInfo.IsBehavioral(f.Kind) && KindInfo.IsBehavioral(t.Kind);
             bool messaging = f != null && t != null && IsInteractionNode(f.Kind) && IsInteractionNode(t.Kind);
+            bool extension = f != null && t != null
+                && f.Kind == ElementKind.Stereotype && t.Kind == ElementKind.Metaclass;
 
             if (note) { Add(EdgeKind.NoteLink); Add(EdgeKind.Dependency); }
             if (bothUseCase) { Add(EdgeKind.Include); Add(EdgeKind.Extend); Add(EdgeKind.Generalization); }
             if (behavioral) Add(EdgeKind.Transition);
             if (messaging) { Add(EdgeKind.MessageSync); Add(EdgeKind.MessageAsync); Add(EdgeKind.MessageReply); }
+            if (extension) Add(EdgeKind.Extension);
 
             // Conventional fallback order for everything else.
             foreach (var k in new[]
@@ -901,7 +2283,7 @@ namespace TheRobotDraft.Uml
                 EdgeKind.Association, EdgeKind.DirectedAssociation, EdgeKind.Transition, EdgeKind.Dependency,
                 EdgeKind.Generalization, EdgeKind.Realization, EdgeKind.Aggregation, EdgeKind.Composition,
                 EdgeKind.Include, EdgeKind.Extend, EdgeKind.NoteLink,
-                EdgeKind.MessageSync, EdgeKind.MessageAsync, EdgeKind.MessageReply,
+                EdgeKind.MessageSync, EdgeKind.MessageAsync, EdgeKind.MessageReply, EdgeKind.Extension,
             }) Add(k);
             return order;
         }
@@ -911,6 +2293,11 @@ namespace TheRobotDraft.Uml
         /// <summary>The orthogonal polyline for an edge: pinned endpoints + user bends if any, else an auto Z-route.</summary>
         private List<Vector2> RouteEdge(ElementId from, ElementId to, EdgeId edge)
         {
+            // Sequence / communication messages are horizontal arrows between the participants' centre lines,
+            // stacked at their assigned vertical level (set by auto-arrange, else the lower of the two nodes).
+            if (_edgeKinds.TryGetValue(edge, out var ek) && IsMessage(ek))
+                return SequenceRoute(from, to, edge);
+
             var ctrl = ControlPolyline(from, to, edge, out bool fixedSrc, out bool fixedTgt);
             // Curved edges are a smooth spline through the same control points (bend handles still apply).
             if (_curved.Contains(edge)) return CurveThrough(ctrl);
@@ -921,6 +2308,28 @@ namespace TheRobotDraft.Uml
                 return AutoOrthogonal(f.Rt.anchoredPosition, f.Rt.sizeDelta, t.Rt.anchoredPosition, t.Rt.sizeDelta);
             }
             return CleanColinear(Orthogonalize(ctrl));
+        }
+
+        /// <summary>A horizontal message arrow between two participants at the message's vertical level (self = loop).</summary>
+        private List<Vector2> SequenceRoute(ElementId from, ElementId to, EdgeId edge)
+        {
+            var f = _nodes[from]; var t = _nodes[to];
+            float xf = f.Rt.anchoredPosition.x, xt = t.Rt.anchoredPosition.x;
+            float y = _msgLevel.TryGetValue(edge, out var lv)
+                ? lv
+                : Mathf.Min(f.Rt.anchoredPosition.y, t.Rt.anchoredPosition.y) - 10f;
+
+            if (Mathf.Abs(xf - xt) < 3f)
+            {
+                // Self-message: a small rectangular loop hanging off the right of the life line.
+                float x = xf;
+                return new List<Vector2>
+                {
+                    new Vector2(x, y), new Vector2(x + 56f, y),
+                    new Vector2(x + 56f, y - 24f), new Vector2(x, y - 24f),
+                };
+            }
+            return new List<Vector2> { new Vector2(xf, y), new Vector2(xt, y) };
         }
 
         /// <summary>A Catmull-Rom spline tessellated through the control points (smooth curve passing through each).</summary>
@@ -1070,7 +2479,7 @@ namespace TheRobotDraft.Uml
 
         public void OnEdgePointerClick(UmlEdgeView view, PointerEventData e)
         {
-            if (e.button == PointerEventData.InputButton.Right) { ShowEdgeMenu(view, e.position); return; }
+            if (e.button == PointerEventData.InputButton.Right) { ShowEdgeMenu(view.Edge, e.position); return; }
             if (e.button != PointerEventData.InputButton.Left) return;
 
             if (CtrlOrCmd())
@@ -1174,6 +2583,12 @@ namespace TheRobotDraft.Uml
             _srcAnchor.Remove(edge);
             _tgtAnchor.Remove(edge);
             _curved.Remove(edge);
+            _msgLevel.Remove(edge);
+            _msgNumber.Remove(edge);
+            // 3-D route-edit state for this link (waypoints + endpoint face attachments).
+            _waypoints3d.Remove(edge);
+            _srcFace.Remove(edge);
+            _tgtFace.Remove(edge);
         }
 
         private void RefreshBendHandles()
@@ -1182,6 +2597,8 @@ namespace TheRobotDraft.Uml
             _bendHandles.Clear();
             if (!_selectedEdge.IsValid || !TryGetEdgeEndpoints(_selectedEdge, out var from, out var to)) return;
             if (!_nodes.ContainsKey(from) || !_nodes.ContainsKey(to)) return;
+            // Messages are auto-laid-out horizontally — no endpoint/bend handles to drag.
+            if (_edgeKinds.TryGetValue(_selectedEdge, out var sk) && IsMessage(sk)) return;
 
             var ctrl = ControlPolyline(from, to, _selectedEdge, out _, out _);
             var wps = _waypoints.TryGetValue(_selectedEdge, out var w) ? w : null;
@@ -1339,6 +2756,8 @@ namespace TheRobotDraft.Uml
                 ElementKind.PrimitiveType => "«primitive»",
                 ElementKind.Component => "«component»",
                 ElementKind.Artifact => "«artifact»",
+                ElementKind.Metaclass => "«metaclass»",
+                ElementKind.Stereotype => "«stereotype»",
                 _ => null,
             };
         }
@@ -1396,11 +2815,57 @@ namespace TheRobotDraft.Uml
 
         // --- helpers ---
 
+        /// <summary>Single-select: replace the whole selection set with just <paramref name="id"/> (None ⇒ clear).</summary>
         private void SetSelected(ElementId id)
         {
-            if (_selectedId.IsValid && _nodes.TryGetValue(_selectedId, out var prev) && prev != null) prev.SetSelected(false);
+            _selection.Clear();
+            if (id.IsValid) _selection.Add(id);
             _selectedId = id;
-            if (id.IsValid && _nodes.TryGetValue(id, out var nv) && nv != null) nv.SetSelected(true);
+            RefreshSelectionHighlights();
+        }
+
+        /// <summary>Shift-click: add/remove a node from the multi-selection. The toggled node becomes primary.</summary>
+        public void ToggleSelection(ElementId id)
+        {
+            CloseMenu();
+            ClearSelectedEdge();
+            if (!id.IsValid) return;
+            if (!_selection.Remove(id))
+            {
+                _selection.Add(id);
+                _selectedId = id;
+            }
+            else if (_selectedId == id)
+            {
+                // Removed the primary — promote any remaining member, else clear.
+                _selectedId = ElementId.None;
+                foreach (var sid in _selection) { _selectedId = sid; break; }
+            }
+            RefreshSelectionHighlights();
+        }
+
+        /// <summary>Replace the selection set wholesale (used by the marquee). Primary = the first valid id.</summary>
+        public void SetSelection(IEnumerable<ElementId> ids)
+        {
+            _selection.Clear();
+            _selectedId = ElementId.None;
+            if (ids != null)
+                foreach (var id in ids)
+                    if (id.IsValid && _selection.Add(id) && !_selectedId.IsValid) _selectedId = id;
+            RefreshSelectionHighlights();
+        }
+
+        public bool IsSelected(ElementId id) => _selection.Contains(id);
+
+        /// <summary>A snapshot of the currently-selected element ids (read-only view).</summary>
+        public IReadOnlyCollection<ElementId> SelectedIds => _selection;
+
+        /// <summary>Re-apply the selection outline to every live 3-D node from the current selection set.</summary>
+        private void RefreshSelectionHighlights()
+        {
+            if (_scene == null) return;
+            foreach (var kv in _scene.Nodes)
+                if (kv.Value != null) kv.Value.SetSelected(_selection.Contains(kv.Key));
         }
 
         private bool AnyValidEdge(ElementId from, ElementId to)
@@ -1454,6 +2919,14 @@ namespace TheRobotDraft.Uml
             return local;
         }
 
+        /// <summary>Project a screen point onto the active diagram plane (world z = 0) and convert to model pixels —
+        /// used to place a new node where the pointer dropped it.</summary>
+        private Vector2 ScreenToModelPx(Vector2 screenPos)
+        {
+            Vector3 world = ProjectToPlane(screenPos, 0f);
+            return new Vector2(world.x / Uml3DConfig.WorldScale, world.y / Uml3DConfig.WorldScale);
+        }
+
         public static bool CtrlOrCmd() =>
             Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl) ||
             Input.GetKey(KeyCode.LeftCommand) || Input.GetKey(KeyCode.RightCommand);
@@ -1474,12 +2947,23 @@ namespace TheRobotDraft.Uml
             gameObject.AddComponent<GraphicRaycaster>();
             _root = (RectTransform)transform;
 
+            // The 3-D diagram scene lives on its own GameObject (not this overlay canvas). The overlay renders on
+            // top of the scene camera, so every menu / dialog / palette draws above the slabs.
+            var sceneGo = new GameObject("Uml3DScene");
+            _scene = sceneGo.AddComponent<Uml3DScene>();
+            _scene.Init();
+
+            // The diagram backdrop is the 3-D scene camera's clear color now; the overlay's own background image is
+            // kept only as a transparent, non-raycasting filler so the HUD has a root child. All diagram-area pointer
+            // gestures (pick / select / orbit / dolly / pan / drag-move / empty-space menu) are arbitrated in Update
+            // against the 3-D scene; clicks that land on real overlay UI are filtered via IsPointerOverGameObject.
             var bgGo = new GameObject("Background", typeof(RectTransform));
             var bgRt = (RectTransform)bgGo.transform;
             bgRt.SetParent(_root, false);
             Stretch(bgRt);
-            bgGo.AddComponent<Image>().color = new Color(0.95f, 0.96f, 0.97f, 1f);
-            bgGo.AddComponent<UmlBackground>().Canvas = this;
+            var bgImg = bgGo.AddComponent<Image>();
+            bgImg.color = new Color(0f, 0f, 0f, 0f);
+            bgImg.raycastTarget = false;
 
             _edgeLayer = NewLayer("EdgeLayer");
             _nodeLayer = NewLayer("NodeLayer");
@@ -1511,87 +2995,243 @@ namespace TheRobotDraft.Uml
             _hint.alignment = TextAnchor.MiddleLeft;
             _hint.supportRichText = false;
             _hint.raycastTarget = false;
-            _hint.text = "Right-click canvas → add / paste · right-click box → edit element · drag empty space → pan · " +
-                         "hover a box → drag a side hotspot to link · Ctrl-click a line → add bend (Ctrl+Alt → remove) · " +
-                         "drag a box border to resize · Ctrl/Cmd C/V copy · wheel zoom · Ctrl/Cmd S save · Ctrl/Cmd Z undo";
+            _hint.text = "Drag empty space → orbit · Ctrl/Cmd-drag empty space → pan · wheel → zoom (dolly) · Ctrl/Cmd+F → frame · " +
+                         "click box → select · Shift-click → multi-select · Ctrl/Cmd-drag box → move · " +
+                         "right-click box → edit element · right-click canvas → add / paste · " +
+                         "Ctrl/Cmd C/V copy · Ctrl/Cmd S save · Ctrl/Cmd Z undo";
+
+            // Help button (top-right): opens the controls / shortcuts reference.
+            var helpGo = new GameObject("HelpButton", typeof(RectTransform));
+            var helpRt = (RectTransform)helpGo.transform;
+            helpRt.SetParent(_root, false);
+            helpRt.anchorMin = helpRt.anchorMax = new Vector2(1f, 1f);
+            helpRt.pivot = new Vector2(1f, 1f);
+            helpRt.sizeDelta = new Vector2(64f, 28f);
+            helpRt.anchoredPosition = new Vector2(-8f, -6f);
+            var helpImg = helpGo.AddComponent<Image>();
+            helpImg.color = new Color(0.20f, 0.42f, 0.52f, 1f);
+            var helpBtn = helpGo.AddComponent<Button>();
+            helpBtn.targetGraphic = helpImg;
+            helpBtn.onClick.AddListener(() => ShowHelp());
+            MakeText(helpRt, "? Help", new Vector2(0f, 0f), new Vector2(64f, 28f), 14,
+                new Color(0.95f, 0.98f, 1f, 1f), TextAnchor.MiddleCenter).raycastTarget = false;
+
+            // Camera controls (to the left of Help): manual location/direction form + a quick view reset.
+            MakeHudButton("CameraButton", "Camera…", -78f, 84f, () => ShowCameraForm(Input.mousePosition));
+            MakeHudButton("ResetViewButton", "⟲ Reset", -168f, 78f, () => CameraReset());
 
             BuildPalette();
+        }
+
+        /// <summary>A small top-right HUD button anchored from the right edge.</summary>
+        private void MakeHudButton(string name, string label, float xFromRight, float width, System.Action onClick)
+        {
+            var go = new GameObject(name, typeof(RectTransform));
+            var rt = (RectTransform)go.transform;
+            rt.SetParent(_root, false);
+            rt.anchorMin = rt.anchorMax = new Vector2(1f, 1f);
+            rt.pivot = new Vector2(1f, 1f);
+            rt.sizeDelta = new Vector2(width, 28f);
+            rt.anchoredPosition = new Vector2(xFromRight, -6f);
+            var img = go.AddComponent<Image>();
+            img.color = new Color(0.18f, 0.22f, 0.28f, 1f);
+            var btn = go.AddComponent<Button>();
+            btn.targetGraphic = img;
+            btn.onClick.AddListener(() => onClick());
+            MakeText(rt, label, new Vector2(0f, 0f), new Vector2(width, 28f), 13,
+                new Color(0.92f, 0.95f, 1f, 1f), TextAnchor.MiddleCenter).raycastTarget = false;
+        }
+
+        /// <summary>Reset the camera to the default angles and frame the whole diagram.</summary>
+        private void CameraReset()
+        {
+            var rig = _scene != null ? _scene.Rig : null;
+            if (rig != null) { rig.Yaw = 0f; rig.Pitch = 18f; rig.Roll = 0f; }
+            _scene?.FrameAll();
+            Flash("camera reset");
+        }
+
+        private static float ParseFloat(InputField f, float fallback) =>
+            f != null && float.TryParse(f.text, out var v) ? v : fallback;
+
+        /// <summary>Manual camera location / direction form: edit the orbit pivot, yaw/pitch/roll and distance.</summary>
+        private void ShowCameraForm(Vector2 screenPos)
+        {
+            CloseMenu();
+            var rig = _scene != null ? _scene.Rig : null;
+            if (rig == null) { Flash("camera not ready"); return; }
+
+            const float w = 384f, h = 318f;
+            var panel = BeginModal(w, h, "Camera   —   location / direction");
+            float y = -50f;
+
+            FormLabel(panel, "Look-at point (pivot)   X / Y / Z", ref y, w);
+            var px = MakeInput(panel, new Vector2(16f, y), 110f, rig.Pivot.x.ToString("0.###"), "x");
+            var py = MakeInput(panel, new Vector2(134f, y), 110f, rig.Pivot.y.ToString("0.###"), "y");
+            var pz = MakeInput(panel, new Vector2(252f, y), 110f, rig.Pivot.z.ToString("0.###"), "z");
+            y -= 52f;
+
+            FormLabel(panel, "View angles   Yaw / Pitch / Roll   (degrees)", ref y, w);
+            var yaw = MakeInput(panel, new Vector2(16f, y), 110f, rig.Yaw.ToString("0.##"), "yaw");
+            var pitch = MakeInput(panel, new Vector2(134f, y), 110f, rig.Pitch.ToString("0.##"), "pitch");
+            var roll = MakeInput(panel, new Vector2(252f, y), 110f, rig.Roll.ToString("0.##"), "roll");
+            y -= 52f;
+
+            FormLabel(panel, "Distance from pivot", ref y, w);
+            var dist = MakeInput(panel, new Vector2(16f, y), 160f, rig.Distance.ToString("0.###"), "distance");
+            y -= 52f;
+
+            void Apply()
+            {
+                rig.Pivot = new Vector3(ParseFloat(px, rig.Pivot.x), ParseFloat(py, rig.Pivot.y), ParseFloat(pz, rig.Pivot.z));
+                rig.Yaw = ParseFloat(yaw, rig.Yaw);
+                rig.Pitch = Mathf.Clamp(ParseFloat(pitch, rig.Pitch), UmlCameraRig.MinPitch, UmlCameraRig.MaxPitch);
+                rig.Roll = ParseFloat(roll, rig.Roll);
+                rig.Distance = Mathf.Clamp(ParseFloat(dist, rig.Distance), UmlCameraRig.MinDistance, UmlCameraRig.MaxDistance);
+                Flash("camera updated");
+            }
+
+            float yBtn = -(h - 46f);
+            MakeButton(panel, "Reset view", new Vector2(16f, yBtn), new Vector2(110f, 34f),
+                new Color(0.40f, 0.30f, 0.16f, 1f), () => { CameraReset(); CloseMenu(); });
+            MakeButton(panel, "Apply", new Vector2(w - 198f, yBtn), new Vector2(84f, 34f),
+                new Color(0.20f, 0.42f, 0.52f, 1f), Apply); // applies live; leaves the form open to keep tweaking
+            MakeButton(panel, "Close", new Vector2(w - 104f, yBtn), new Vector2(88f, 34f),
+                new Color(0.22f, 0.24f, 0.29f, 1f), CloseMenu);
+        }
+
+        /// <summary>The controls / shortcuts reference, opened from the Help button.</summary>
+        private void ShowHelp()
+        {
+            CloseMenu();
+            const float w = 680f, h = 612f;
+            var panel = BeginModal(w, h, "Controls & Shortcuts");
+            string body = string.Join("\n", new[]
+            {
+                "CAMERA  (full 6 degrees of freedom)",
+                "   Drag empty space ............ orbit  (pitch / yaw)",
+                "   Ctrl/Cmd + drag empty ....... pan",
+                "   Mouse wheel ................. zoom  (dolly in / out)",
+                "   Q / E ....................... roll left / right",
+                "   W / A / S / D ............... fly  forward / left / back / right",
+                "   R / F ....................... fly  up / down",
+                "   Ctrl/Cmd + F ................ frame the whole diagram",
+                "   Alt + mouse wheel ........... change the active Z-layer",
+                "",
+                "NODES",
+                "   Click ....................... select        Shift + click = add / remove",
+                "   Shift + drag empty space .... marquee multi-select",
+                "   Drag a node ................. draw a relationship (connect-by-drag)",
+                "   Ctrl/Cmd + drag ............. move  (in the layer plane)",
+                "   Ctrl/Cmd + Shift + drag ..... move along Z  (depth)",
+                "   Ctrl/Cmd + Alt + drag ....... resize",
+                "   Alt + drag .................. rotate  (pitch / yaw) in place",
+                "   Right-click ................. menu: edit, style, generate code, layer, delete",
+                "   (new nodes are inserted on the current active layer)",
+                "",
+                "LINKS / ARROWS",
+                "   Click a link ................ select        Right-click = link menu",
+                "   Link menu ................... re-type, multiplicity / label, curved / straight, delete",
+                "   Drag green mid-handle ....... add a break point",
+                "   Drag yellow handle .......... move a break point      Alt + click = delete it",
+                "   Drag orange end-handle ...... move the attachment point on a node",
+                "",
+                "EDIT  /  FILE",
+                "   Ctrl/Cmd + C / V ............ copy / paste      Ctrl/Cmd + Z / Y = undo / redo",
+                "   Ctrl/Cmd + S ................ save              Delete = delete selection",
+                "   Right-click canvas .......... add · paste · import code · LLM settings · arrange",
+            });
+            MakeText(panel, body, new Vector2(22f, -44f), new Vector2(w - 44f, h - 104f), 14,
+                new Color(0.84f, 0.89f, 0.96f, 1f), TextAnchor.UpperLeft);
+            float yBtn = -(h - 46f);
+            MakeButton(panel, "Close", new Vector2(w - 104f, yBtn), new Vector2(88f, 34f),
+                new Color(0.22f, 0.24f, 0.29f, 1f), CloseMenu);
         }
 
         // --- toolbar palette UI ---
 
         private const float PaletteWidth = 168f;
 
+        private RectTransform _paletteContent;
+        private readonly HashSet<string> _paletteCollapsed = new();
+
+        private static (string title, (ElementKind kind, string label)[] items)[] PaletteSections() => new[]
+        {
+            ("Class", new[]
+            {
+                (ElementKind.Class, "Class"), (ElementKind.Interface, "Interface"),
+                (ElementKind.Enum, "Enum"), (ElementKind.Struct, "Struct"),
+                (ElementKind.DataType, "Data Type"), (ElementKind.PrimitiveType, "Primitive"),
+                (ElementKind.Package, "Package"), (ElementKind.Note, "Note"),
+            }),
+            ("Object", new[] { (ElementKind.ObjectInstance, "Object") }),
+            ("Use Case", new[]
+            {
+                (ElementKind.Actor, "Actor"), (ElementKind.UseCase, "Use Case"),
+                (ElementKind.Boundary, "System Boundary"),
+            }),
+            ("State Machine", new[]
+            {
+                (ElementKind.StateStart, "● Initial"), (ElementKind.State, "State"),
+                (ElementKind.Decision, "◇ Decision"), (ElementKind.ForkJoin, "▬ Fork / Join"),
+                (ElementKind.Junction, "• Junction"), (ElementKind.History, "Ⓗ History"),
+                (ElementKind.Terminate, "✕ Terminate"), (ElementKind.StateEnd, "◉ Final"),
+            }),
+            ("Activity", new[]
+            {
+                (ElementKind.StateStart, "● Initial"), (ElementKind.Activity, "Action"),
+                (ElementKind.CallActivity, "Activity"), (ElementKind.Decision, "◇ Decision / Merge"),
+                (ElementKind.ForkJoin, "▬ Fork / Join"), (ElementKind.FlowFinal, "⊗ Flow Final"),
+                (ElementKind.StateEnd, "◉ Activity Final"),
+            }),
+            ("Component", new[]
+            {
+                (ElementKind.Component, "Component"), (ElementKind.Interface, "Interface"),
+            }),
+            ("Deployment", new[]
+            {
+                (ElementKind.DeploymentNode, "Node / Device"), (ElementKind.Artifact, "Artifact"),
+                (ElementKind.Component, "Component"),
+            }),
+            ("Package", new[]
+            {
+                (ElementKind.PackageNode, "Package"), (ElementKind.Note, "Note"),
+            }),
+            ("Composite Structure", new[]
+            {
+                (ElementKind.Part, "Part"), (ElementKind.Port, "Port"),
+                (ElementKind.Collaboration, "Collaboration"), (ElementKind.Interface, "Interface"),
+            }),
+            ("Sequence", new[]
+            {
+                (ElementKind.Lifeline, "Lifeline"), (ElementKind.Activation, "Activation"),
+                (ElementKind.Actor, "Actor"), (ElementKind.Frame, "Fragment (alt/opt/loop)"),
+            }),
+            ("Communication", new[]
+            {
+                (ElementKind.ObjectInstance, "Object"), (ElementKind.Actor, "Actor"),
+                (ElementKind.Frame, "Frame"),
+            }),
+            ("Interaction Overview", new[]
+            {
+                (ElementKind.StateStart, "● Initial"), (ElementKind.Frame, "Interaction Frame"),
+                (ElementKind.Decision, "◇ Decision"), (ElementKind.ForkJoin, "▬ Fork / Join"),
+                (ElementKind.StateEnd, "◉ Final"),
+            }),
+            ("Profile", new[]
+            {
+                (ElementKind.Metaclass, "Metaclass"), (ElementKind.Stereotype, "Stereotype"),
+                (ElementKind.Profile, "Profile"),
+            }),
+            ("Timing", new[] { (ElementKind.TimingLifeline, "Timing Lifeline") }),
+        };
+
         private void BuildPalette()
         {
-            var sections = new (string title, (ElementKind kind, string label)[] items)[]
-            {
-                ("Class", new[]
-                {
-                    (ElementKind.Class, "Class"), (ElementKind.Interface, "Interface"),
-                    (ElementKind.Enum, "Enum"), (ElementKind.Struct, "Struct"),
-                    (ElementKind.DataType, "Data Type"), (ElementKind.PrimitiveType, "Primitive"),
-                    (ElementKind.Package, "Package"), (ElementKind.Note, "Note"),
-                }),
-                ("Object", new[] { (ElementKind.ObjectInstance, "Object") }),
-                ("Use Case", new[]
-                {
-                    (ElementKind.Actor, "Actor"), (ElementKind.UseCase, "Use Case"),
-                    (ElementKind.Boundary, "System Boundary"),
-                }),
-                ("State Machine", new[]
-                {
-                    (ElementKind.StateStart, "● Initial"), (ElementKind.State, "State"),
-                    (ElementKind.Decision, "◇ Decision"), (ElementKind.ForkJoin, "▬ Fork / Join"),
-                    (ElementKind.Junction, "• Junction"), (ElementKind.History, "Ⓗ History"),
-                    (ElementKind.Terminate, "✕ Terminate"), (ElementKind.StateEnd, "◉ Final"),
-                }),
-                ("Activity", new[]
-                {
-                    (ElementKind.StateStart, "● Initial"), (ElementKind.Activity, "Action"),
-                    (ElementKind.Decision, "◇ Decision / Merge"), (ElementKind.ForkJoin, "▬ Fork / Join"),
-                    (ElementKind.FlowFinal, "⊗ Flow Final"), (ElementKind.StateEnd, "◉ Activity Final"),
-                }),
-                ("Component", new[]
-                {
-                    (ElementKind.Component, "Component"), (ElementKind.Interface, "Interface"),
-                }),
-                ("Deployment", new[]
-                {
-                    (ElementKind.DeploymentNode, "Node / Device"), (ElementKind.Artifact, "Artifact"),
-                    (ElementKind.Component, "Component"),
-                }),
-                ("Package", new[]
-                {
-                    (ElementKind.PackageNode, "Package"), (ElementKind.Note, "Note"),
-                }),
-                ("Composite Structure", new[]
-                {
-                    (ElementKind.Part, "Part"), (ElementKind.Port, "Port"),
-                    (ElementKind.Collaboration, "Collaboration"), (ElementKind.Interface, "Interface"),
-                }),
-                ("Sequence", new[]
-                {
-                    (ElementKind.Lifeline, "Lifeline"), (ElementKind.Activation, "Activation"),
-                    (ElementKind.Actor, "Actor"), (ElementKind.Frame, "Fragment (alt/opt/loop)"),
-                }),
-                ("Communication", new[]
-                {
-                    (ElementKind.ObjectInstance, "Object"), (ElementKind.Actor, "Actor"),
-                    (ElementKind.Frame, "Frame"),
-                }),
-                ("Interaction Overview", new[]
-                {
-                    (ElementKind.StateStart, "● Initial"), (ElementKind.Frame, "Interaction Frame"),
-                    (ElementKind.Decision, "◇ Decision"), (ElementKind.ForkJoin, "▬ Fork / Join"),
-                    (ElementKind.StateEnd, "◉ Final"),
-                }),
-            };
-
             const float width = PaletteWidth;
 
             // Scrollable container pinned to the left edge, from just under the hint line down to the bottom —
-            // the palette now lists every UML diagram family, so it needs to scroll.
+            // the palette lists every UML diagram family, so it scrolls; each section header collapses.
             var container = new GameObject("Palette", typeof(RectTransform));
             var crt = (RectTransform)container.transform;
             crt.SetParent(_root, false);
@@ -1607,25 +3247,58 @@ namespace TheRobotDraft.Uml
             scroll.scrollSensitivity = 26f;
 
             var content = new GameObject("Content", typeof(RectTransform));
-            var rt = (RectTransform)content.transform;
-            rt.SetParent(crt, false);
-            rt.anchorMin = new Vector2(0f, 1f); rt.anchorMax = new Vector2(1f, 1f);
-            rt.pivot = new Vector2(0.5f, 1f);
-            rt.anchoredPosition = Vector2.zero;
+            _paletteContent = (RectTransform)content.transform;
+            _paletteContent.SetParent(crt, false);
+            _paletteContent.anchorMin = new Vector2(0f, 1f); _paletteContent.anchorMax = new Vector2(1f, 1f);
+            _paletteContent.pivot = new Vector2(0.5f, 1f);
+            _paletteContent.anchoredPosition = Vector2.zero;
             scroll.viewport = crt;
-            scroll.content = rt;
+            scroll.content = _paletteContent;
 
+            RebuildPaletteContent();
+        }
+
+        /// <summary>(Re)populate the palette body, honoring each section's collapsed state.</summary>
+        private void RebuildPaletteContent()
+        {
+            if (_paletteContent == null) return;
+            for (int i = _paletteContent.childCount - 1; i >= 0; i--) Destroy(_paletteContent.GetChild(i).gameObject);
+
+            const float width = PaletteWidth;
             float y = -8f;
-            foreach (var sec in sections)
+            foreach (var sec in PaletteSections())
             {
-                var hdr = MakeText(rt, sec.title.ToUpper(), new Vector2(8f, y), new Vector2(width - 12f, 18f), 12,
-                    new Color(0.55f, 0.62f, 0.72f, 1f), TextAnchor.MiddleLeft);
-                hdr.fontStyle = FontStyle.Bold;
-                y -= 20f;
-                foreach (var it in sec.items) { MakePaletteItem(rt, it.kind, it.label, y, width - 16f); y -= 26f; }
-                y -= 8f;
+                bool collapsed = _paletteCollapsed.Contains(sec.title);
+                MakePaletteHeader(_paletteContent, sec.title, collapsed, y, width - 12f);
+                y -= 22f;
+                if (!collapsed)
+                    foreach (var it in sec.items) { MakePaletteItem(_paletteContent, it.kind, it.label, y, width - 16f); y -= 26f; }
+                y -= 6f;
             }
-            rt.sizeDelta = new Vector2(0f, -y + 4f);
+            _paletteContent.sizeDelta = new Vector2(0f, -y + 4f);
+        }
+
+        private void MakePaletteHeader(RectTransform parent, string title, bool collapsed, float y, float width)
+        {
+            var go = new GameObject("Header:" + title, typeof(RectTransform));
+            var rt = (RectTransform)go.transform;
+            rt.SetParent(parent, false);
+            rt.anchorMin = rt.anchorMax = new Vector2(0f, 1f);
+            rt.pivot = new Vector2(0f, 1f);
+            rt.sizeDelta = new Vector2(width, 20f);
+            rt.anchoredPosition = new Vector2(6f, y);
+            var img = go.AddComponent<Image>();
+            img.color = new Color(0.17f, 0.19f, 0.24f, 1f);
+            var btn = go.AddComponent<Button>();
+            btn.targetGraphic = img;
+            btn.onClick.AddListener(() =>
+            {
+                if (!_paletteCollapsed.Remove(title)) _paletteCollapsed.Add(title);
+                RebuildPaletteContent();
+            });
+            var t = MakeText(rt, (collapsed ? "▸  " : "▾  ") + title.ToUpper(), new Vector2(6f, 0f),
+                new Vector2(width - 10f, 20f), 12, new Color(0.62f, 0.69f, 0.79f, 1f), TextAnchor.MiddleLeft);
+            t.fontStyle = FontStyle.Bold; t.raycastTarget = false;
         }
 
         private void MakePaletteItem(RectTransform parent, ElementKind kind, string label, float y, float width)
@@ -1837,20 +3510,49 @@ namespace TheRobotDraft.Uml
         }
     }
 
-    /// <summary>Full-canvas backdrop: empty-space clicks (add menu / deselect) and click-drag to pan the diagram.</summary>
-    public sealed class UmlBackground : MonoBehaviour, IPointerClickHandler, IBeginDragHandler, IDragHandler
+    /// <summary>
+    /// Full-canvas backdrop: empty-space clicks (add menu / deselect). A plain drag rubber-band-selects nodes;
+    /// a Ctrl/Cmd-drag pans the diagram instead. The mode is latched at drag-start so a modifier released
+    /// mid-drag doesn't switch gestures.
+    /// </summary>
+    public sealed class UmlBackground : MonoBehaviour,
+        IPointerClickHandler, IBeginDragHandler, IDragHandler, IEndDragHandler
     {
         public UmlCanvas Canvas;
+        private bool _panning; // latched at OnBeginDrag: true ⇒ pan, false ⇒ marquee
+
         public void OnPointerClick(PointerEventData eventData) => Canvas.OnBackgroundClick(eventData);
-        public void OnBeginDrag(PointerEventData e) => Canvas.BeginPan();
-        public void OnDrag(PointerEventData e) => Canvas.PanBy(e.delta);
+
+        public void OnBeginDrag(PointerEventData e)
+        {
+            _panning = UmlCanvas.CtrlOrCmd();
+            if (_panning) Canvas.BeginPan();
+            else Canvas.BeginMarquee(e.position);
+        }
+
+        public void OnDrag(PointerEventData e)
+        {
+            if (_panning) Canvas.PanBy(e.delta);
+            else Canvas.UpdateMarquee(e.position);
+        }
+
+        public void OnEndDrag(PointerEventData e)
+        {
+            if (!_panning) Canvas.EndMarquee(e.position);
+        }
     }
 
     /// <summary>Dim modal backdrop behind a property/member dialog: a click on the dim area cancels the dialog.</summary>
+    /// <summary>
+    /// The dim backdrop behind a modal property dialog. It exists only to BLOCK pointer events from reaching the
+    /// canvas/nodes underneath — it intentionally does NOT dismiss the dialog on click. Property dialogs close
+    /// only via their explicit OK / Cancel buttons (a stray click outside must not discard in-progress edits).
+    /// </summary>
     public sealed class UmlModalBackdrop : MonoBehaviour, IPointerClickHandler
     {
         public UmlCanvas Canvas;
-        public void OnPointerClick(PointerEventData eventData) => Canvas.CancelModal();
+        // Swallow the click (so it doesn't fall through to the diagram) without closing the dialog.
+        public void OnPointerClick(PointerEventData eventData) { }
     }
 
     /// <summary>A toolbar palette entry: click to add at center, or drag onto the canvas to drop a new node.</summary>

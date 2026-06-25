@@ -8,9 +8,10 @@ namespace TheRobotDraft.Uml
     /// <summary>
     /// A standard-UML classifier box (class / interface / enum / struct) with three compartments —
     /// stereotype+name, attributes (fields), operations (methods) — so members render <em>inside</em> the box,
-    /// not as separate nodes. The body drags to move, the right-edge handle drags to draw a relationship
-    /// (§4.1), and the bottom-right grip drags to resize. Left-click selects; right-click / ctrl-click opens
-    /// the add-member / delete menu (§3.1).
+    /// not as separate nodes. Ctrl/Cmd-drag the body to move it (a plain drag is reserved for the background
+    /// marquee), the right-edge handle drags to draw a relationship (§4.1), and the bottom-right grip drags to
+    /// resize. Left-click selects; Shift+left-click toggles the multi-selection; right-click opens the
+    /// add-member / delete menu (§3.1).
     /// </summary>
     public sealed class UmlNodeView : MonoBehaviour,
         IPointerClickHandler, IBeginDragHandler, IDragHandler,
@@ -52,9 +53,11 @@ namespace TheRobotDraft.Uml
             bool titled = IsTitledBox(kind);
             bool boundary = kind == ElementKind.Boundary;
             bool frame = kind == ElementKind.Frame;
+            bool profile = kind == ElementKind.Profile;
             bool lifeline = kind == ElementKind.Lifeline;
-            // Both system boundaries and interaction frames are "regions" that carry their nested nodes when moved.
-            IsBoundary = boundary || frame;
+            bool timing = kind == ElementKind.TimingLifeline;
+            // Boundaries, interaction frames and profiles are "regions" that carry nested nodes when moved.
+            IsBoundary = boundary || frame || profile;
             bool darkFill = kind == ElementKind.Actor || kind == ElementKind.StateStart || kind == ElementKind.StateEnd
                 || kind == ElementKind.ForkJoin || kind == ElementKind.Junction
                 || kind == ElementKind.Terminate || kind == ElementKind.FlowFinal;
@@ -107,9 +110,17 @@ namespace TheRobotDraft.Uml
             {
                 BuildBoundary(name, sizeOverride, 280f, 180f);
             }
+            else if (profile)
+            {
+                BuildBoundary(name, sizeOverride, 320f, 220f);
+            }
             else if (lifeline)
             {
                 BuildLifeline(name, sizeOverride);
+            }
+            else if (timing)
+            {
+                BuildTiming(name, sizeOverride);
             }
             else if (titled)
             {
@@ -185,8 +196,22 @@ namespace TheRobotDraft.Uml
                 var handleGo = new GameObject("ConnectHandle:" + side, typeof(RectTransform));
                 handleGo.AddComponent<UmlConnectHandle>().Init(_canvas, this, side, hotRt);
             }
-            // Resize is done by grabbing the box border (see OnBeginDrag) — no separate grip.
+            // Dedicated resize grip in the bottom-right corner — shown on hover with the connect handles, so the
+            // resize gesture is visually distinct from the body-move gesture. Fixed-size glyphs get no grip.
+            if (ResizableKind(kind))
+            {
+                var gripGo = new GameObject("ResizeGrip", typeof(RectTransform));
+                gripGo.AddComponent<UmlResizeHandle>().Init(this, hotRt);
+            }
         }
+
+        /// <summary>Glyph nodes whose size is fixed (markers / ports) — no resize grip.</summary>
+        private static bool ResizableKind(ElementKind k) => k switch
+        {
+            ElementKind.StateStart or ElementKind.StateEnd or ElementKind.Junction or ElementKind.FlowFinal
+                or ElementKind.Terminate or ElementKind.Port or ElementKind.History => false,
+            _ => true,
+        };
 
         public void OnPointerEnter(PointerEventData e)
         {
@@ -215,53 +240,49 @@ namespace TheRobotDraft.Uml
 
         // --- interaction ---
 
-        private bool _resizeL, _resizeR, _resizeT, _resizeB;
-
         public void OnPointerClick(PointerEventData e)
         {
-            bool context = e.button == PointerEventData.InputButton.Right
-                           || (e.button == PointerEventData.InputButton.Left && UmlCanvas.CtrlOrCmd());
-            if (context) _canvas.ShowNodeMenu(this, e.position);
-            else if (e.button == PointerEventData.InputButton.Left) _canvas.Select(this);
+            // Right-click → context menu. (Ctrl is now the drag-to-move modifier, no longer a menu trigger.)
+            if (e.button == PointerEventData.InputButton.Right) { _canvas.ShowNodeMenu(Id, e.position); return; }
+            if (e.button != PointerEventData.InputButton.Left) return;
+            // Shift+left toggles this node in/out of the multi-selection; plain left selects just this node.
+            if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift)) _canvas.ToggleSelection(Id);
+            else _canvas.Select(this);
         }
+
+        private bool _dragMoving;   // true only when the body drag began with Ctrl/Cmd held (move gesture)
 
         public void OnBeginDrag(PointerEventData e)
         {
-            // Grabbing within BorderGrab px of an edge starts a resize on those edges; otherwise it's a move.
-            _resizeL = _resizeR = _resizeT = _resizeB = false;
-            if (RectTransformUtility.ScreenPointToLocalPointInRectangle(Rt, e.position, e.pressEventCamera, out var lp))
-            {
-                float hw = Rt.sizeDelta.x * 0.5f, hh = Rt.sizeDelta.y * 0.5f;
-                _resizeR = lp.x > hw - BorderGrab;
-                _resizeL = lp.x < -hw + BorderGrab;
-                _resizeT = lp.y > hh - BorderGrab;
-                _resizeB = lp.y < -hh + BorderGrab;
-            }
-            // A boundary that's about to be moved (not resized) captures the nodes nested inside it, so they
-            // travel with it as a group.
-            bool resizing = _resizeL || _resizeR || _resizeT || _resizeB;
-            _carrying = (IsBoundary && !resizing) ? _canvas.NodesInside(this) : null;
+            // A node only MOVES when Ctrl/Cmd is held at drag start; otherwise the body drag does nothing (so the
+            // background marquee / plain selection gestures stay the default). A region captures the nodes nested
+            // inside it so they travel along.
+            _dragMoving = UmlCanvas.CtrlOrCmd();
+            _carrying = (_dragMoving && IsBoundary) ? _canvas.NodesInside(this) : null;
         }
 
         public void OnDrag(PointerEventData e)
         {
+            if (!_dragMoving) return; // click-to-select mode: the body doesn't move without Ctrl/Cmd
             // Divide by canvas scale AND diagram zoom so geometry tracks the cursor at any zoom level.
             Vector2 d = e.delta / (_canvas.ScaleFactor * _canvas.Zoom);
-            if (_resizeL || _resizeR || _resizeT || _resizeB) { ResizeBy(d); return; }
             Rt.anchoredPosition += d;
             _canvas.OnNodeMoved(Id, Rt.anchoredPosition);
             if (IsBoundary && _carrying != null) _canvas.MoveNodesBy(_carrying, d);
+            // If this node is part of a multi-selection, carry the rest of the selection with it.
+            if (_canvas.IsSelected(Id)) _canvas.MoveSelectionBy(d, Id);
         }
 
-        private void ResizeBy(Vector2 d)
+        /// <summary>Drag from the bottom-right grip: grow/shrink while keeping the top-left corner fixed.</summary>
+        public void ResizeFromGrip(Vector2 screenDelta)
         {
+            Vector2 d = screenDelta / (_canvas.ScaleFactor * _canvas.Zoom);
             Vector2 size = Rt.sizeDelta, pos = Rt.anchoredPosition;
-            if (_resizeR) { size.x += d.x; pos.x += d.x * 0.5f; }
-            if (_resizeL) { size.x -= d.x; pos.x += d.x * 0.5f; }
-            if (_resizeT) { size.y += d.y; pos.y += d.y * 0.5f; }
-            if (_resizeB) { size.y -= d.y; pos.y += d.y * 0.5f; }
-            size.x = Mathf.Max(140f, size.x);
-            size.y = Mathf.Max(70f, size.y);
+            size.x += d.x; pos.x += d.x * 0.5f;   // right edge follows the cursor
+            size.y -= d.y; pos.y += d.y * 0.5f;   // bottom edge follows the cursor
+            // Low floor so anything can shrink back toward its glyph size.
+            size.x = Mathf.Max(18f, size.x);
+            size.y = Mathf.Max(14f, size.y);
             Rt.sizeDelta = size;
             Rt.anchoredPosition = pos;
             _canvas.OnNodeResized(Id, size);
@@ -337,19 +358,19 @@ namespace TheRobotDraft.Uml
                 or ElementKind.ForkJoin or ElementKind.Junction or ElementKind.History
                 or ElementKind.Terminate or ElementKind.FlowFinal or ElementKind.DeploymentNode
                 or ElementKind.Collaboration or ElementKind.PackageNode or ElementKind.Activation
-                or ElementKind.Port => true,
+                or ElementKind.Port or ElementKind.CallActivity => true,
             _ => false,
         };
 
         /// <summary>A box rendered as a single titled rectangle (stereotype + name), with no member compartments.</summary>
         private static bool IsTitledBox(ElementKind k) =>
             k == ElementKind.PrimitiveType || k == ElementKind.Component || k == ElementKind.Artifact
-            || k == ElementKind.Part;
+            || k == ElementKind.Part || k == ElementKind.Metaclass || k == ElementKind.Stereotype;
 
         private static UmlShape ShapeFor(ElementKind k) => k switch
         {
             ElementKind.UseCase or ElementKind.Collaboration => UmlShape.Ellipse,
-            ElementKind.State or ElementKind.Activity => UmlShape.RoundedRect,
+            ElementKind.State or ElementKind.Activity or ElementKind.CallActivity => UmlShape.RoundedRect,
             ElementKind.StateStart or ElementKind.Junction => UmlShape.Disc,
             ElementKind.StateEnd => UmlShape.RingDisc,
             ElementKind.Decision => UmlShape.Diamond,
@@ -383,6 +404,7 @@ namespace TheRobotDraft.Uml
                 ElementKind.PackageNode => new Vector2(150f, 96f),
                 ElementKind.Activation => new Vector2(14f, 90f),
                 ElementKind.Port => new Vector2(16f, 16f),
+                ElementKind.CallActivity => new Vector2(160f, 60f),
                 _ => new Vector2(120f, 60f),
             };
             float w = sizeOverride.x > 1f ? sizeOverride.x : def.x;
@@ -445,6 +467,26 @@ namespace TheRobotDraft.Uml
                 rt.anchorMin = Vector2.zero; rt.anchorMax = Vector2.one;
                 rt.offsetMin = new Vector2(12f, 6f); rt.offsetMax = new Vector2(-12f, -6f);
             }
+
+            // A call-behavior activity carries the rake icon in its lower-right corner.
+            if (kind == ElementKind.CallActivity) AddRakeIcon();
+        }
+
+        /// <summary>The "rake" / trident glyph (⊐) marking a call-behavior activity, lower-right.</summary>
+        private void AddRakeIcon()
+        {
+            var col = _textColor;
+            void Bar(float x, float yTop, float w, float h)
+            {
+                var rt = NewChild("Rake", transform);
+                rt.anchorMin = rt.anchorMax = new Vector2(1f, 0f); rt.pivot = new Vector2(1f, 0f);
+                rt.sizeDelta = new Vector2(w, h); rt.anchoredPosition = new Vector2(x, yTop);
+                var img = rt.gameObject.AddComponent<Image>(); img.color = col; img.raycastTarget = false;
+            }
+            Bar(-10f, 8f, 2f, 14f);   // spine
+            Bar(-10f, 8f, 9f, 2f);    // bottom tine
+            Bar(-10f, 14f, 9f, 2f);   // middle tine
+            Bar(-10f, 20f, 9f, 2f);   // top tine
         }
 
         internal const float CubeDepth = 14f;
@@ -599,6 +641,77 @@ namespace TheRobotDraft.Uml
             limg.color = new Color(0.45f, 0.49f, 0.56f, 1f); limg.raycastTarget = false;
         }
 
+        // --- timing diagram ---
+
+        /// <summary>
+        /// A timing lifeline: a named participant whose state is drawn as a stepped waveform across a time axis,
+        /// with state lanes on the left. The waveform is illustrative scaffolding (the editor doesn't yet model
+        /// the time series) — rename the node and resize it to taste.
+        /// </summary>
+        private void BuildTiming(string name, Vector2 sizeOverride)
+        {
+            float w = sizeOverride.x > 1f ? sizeOverride.x : 300f;
+            float h = sizeOverride.y > 1f ? sizeOverride.y : 120f;
+            Rt.sizeDelta = new Vector2(w, h);
+
+            var axisCol = new Color(0.55f, 0.59f, 0.66f, 1f);
+            var waveCol = _border != null ? _border.effectColor : new Color(0.25f, 0.45f, 0.70f, 1f);
+
+            // Participant name, vertical along the left gutter would be ideal; keep it simple at top-left.
+            var nameRow = Row(transform, name, -4f, 18f, _memberSize, _textColor, TextAnchor.UpperLeft);
+            nameRow.fontStyle = FontStyle.Bold;
+
+            const float gutter = 46f, padTop = 22f, padBot = 12f;
+            int lanes = 3;
+            string[] laneNames = { "S2", "S1", "S0" };
+            float plotH = h - padTop - padBot;
+            float laneH = plotH / lanes;
+
+            // State lane labels + dashed gridlines.
+            for (int i = 0; i < lanes; i++)
+            {
+                float yTop = -padTop - i * laneH;           // from the top edge, going down
+                Row(transform, laneNames[i], yTop - laneH * 0.5f + 9f, 14f, _memberSize - 2,
+                    new Color(0.45f, 0.49f, 0.56f, 1f), TextAnchor.MiddleLeft).rectTransform.sizeDelta =
+                    new Vector2(gutter - 8f, 14f);
+                HBar(new Vector2(gutter, yTop), w - gutter - 8f, 1f, new Color(axisCol.r, axisCol.g, axisCol.b, 0.5f));
+            }
+            // Baseline + axis.
+            HBar(new Vector2(gutter, -h + padBot), w - gutter - 8f, 2f, axisCol);
+
+            // Illustrative stepped waveform across the lanes.
+            float x0 = gutter, x1 = w - 8f, span = x1 - x0;
+            float[] steps = { 0f, 1f, 1f, 2f, 0f, 2f, 1f }; // lane index per segment
+            int n = steps.Length;
+            float prevY = -padTop - (lanes - 1 - (int)steps[0]) * laneH - laneH * 0.5f;
+            for (int i = 0; i < n; i++)
+            {
+                float sx = x0 + span * (i / (float)n);
+                float ex = x0 + span * ((i + 1) / (float)n);
+                float y = -padTop - (lanes - 1 - (int)steps[i]) * laneH - laneH * 0.5f;
+                if (i > 0 && Mathf.Abs(y - prevY) > 0.5f) VBar(new Vector2(sx, Mathf.Max(y, prevY)),
+                    2f, Mathf.Abs(y - prevY), waveCol); // riser
+                HBar(new Vector2(sx, y), ex - sx, 2f, waveCol);                                       // tread
+                prevY = y;
+            }
+        }
+
+        private void HBar(Vector2 topLeft, float width, float thickness, Color color)
+        {
+            var rt = NewChild("TBar", transform);
+            rt.anchorMin = new Vector2(0f, 1f); rt.anchorMax = new Vector2(0f, 1f); rt.pivot = new Vector2(0f, 1f);
+            rt.sizeDelta = new Vector2(width, thickness); rt.anchoredPosition = topLeft;
+            var img = rt.gameObject.AddComponent<Image>(); img.color = color; img.raycastTarget = false;
+        }
+
+        private void VBar(Vector2 topLeft, float thickness, float height, Color color)
+        {
+            var rt = NewChild("TBar", transform);
+            rt.anchorMin = new Vector2(0f, 1f); rt.anchorMax = new Vector2(0f, 1f); rt.pivot = new Vector2(0f, 1f);
+            rt.sizeDelta = new Vector2(thickness, height); rt.anchoredPosition = topLeft;
+            var img = rt.gameObject.AddComponent<Image>(); img.color = color; img.raycastTarget = false;
+        }
+
         private static Sprite _dashSprite;
 
         private static Sprite DashSprite()
@@ -704,6 +817,29 @@ namespace TheRobotDraft.Uml
         public void OnBeginDrag(PointerEventData e) => _canvas.BeginLink(_node, _side, e.position);
         public void OnDrag(PointerEventData e) => _canvas.UpdateLink(e.position);
         public void OnEndDrag(PointerEventData e) => _canvas.EndLink(e.position);
+    }
+
+    /// <summary>The bottom-right resize grip: dragging it resizes the node (vs. the body, which moves).</summary>
+    public sealed class UmlResizeHandle : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
+    {
+        private UmlNodeView _node;
+
+        public void Init(UmlNodeView node, Transform parent)
+        {
+            _node = node;
+            var rt = (RectTransform)transform;
+            rt.SetParent(parent, false);
+            rt.anchorMin = rt.anchorMax = new Vector2(1f, 0f);
+            rt.pivot = new Vector2(1f, 0f);
+            rt.sizeDelta = new Vector2(14f, 14f);
+            rt.anchoredPosition = new Vector2(-1f, 1f);
+            var img = gameObject.AddComponent<Image>();
+            img.color = new Color(0.95f, 0.62f, 0.18f, 1f); // orange grip, matches the edge endpoint handles
+        }
+
+        public void OnBeginDrag(PointerEventData e) { }
+        public void OnDrag(PointerEventData e) => _node.ResizeFromGrip(e.delta);
+        public void OnEndDrag(PointerEventData e) { }
     }
 
     /// <summary>

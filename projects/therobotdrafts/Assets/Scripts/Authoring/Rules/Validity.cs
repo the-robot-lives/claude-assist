@@ -164,6 +164,12 @@ namespace TheRobotDraft.Authoring.Rules
                         ? Validity.Valid
                         : Validity.Invalid("a message connects lifelines / objects");
 
+                case EdgeKind.Extension:
+                    if (selfEdge) return Validity.Invalid("an extension links a stereotype to a metaclass");
+                    return (from.Kind == ElementKind.Stereotype && to.Kind == ElementKind.Metaclass)
+                        ? Validity.Valid
+                        : Validity.Invalid("«extension» links a stereotype → metaclass");
+
                 default:
                     return Validity.Invalid("unknown relationship");
             }

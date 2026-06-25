@@ -340,6 +340,114 @@ namespace TheRobotDraft.Authoring.Commands
     }
 
     /// <summary>
+    /// Set an element's free-text <c>description</c> / documentation (fed to code generation). One reversible
+    /// undo step; captures the prior value.
+    /// </summary>
+    public sealed class SetDescriptionCommand : IAuthoringCommand
+    {
+        private readonly ElementId _element;
+        private readonly string _description;
+        private string _oldDescription;
+
+        public SetDescriptionCommand(ElementId element, string description)
+        {
+            _element = element;
+            _description = string.IsNullOrWhiteSpace(description) ? null : description.Trim();
+        }
+
+        public string Label => "Edit description";
+
+        public void Do(CommandContext ctx)
+        {
+            var e = ctx.Model.Get(_element);
+            _oldDescription = e.Description;
+            ctx.Model.SetDescription(_element, _description);
+        }
+
+        public void Undo(CommandContext ctx) => ctx.Model.SetDescription(_element, _oldDescription);
+    }
+
+    /// <summary>Set an element's saved source code (the approved "Generate code" output). Undoable.</summary>
+    public sealed class SetCodeCommand : IAuthoringCommand
+    {
+        private readonly ElementId _element;
+        private readonly string _code;
+        private string _oldCode;
+
+        public SetCodeCommand(ElementId element, string code)
+        {
+            _element = element;
+            _code = string.IsNullOrEmpty(code) ? null : code; // preserve code formatting; empty → null
+        }
+
+        public string Label => "Save code";
+
+        public void Do(CommandContext ctx)
+        {
+            var e = ctx.Model.Get(_element);
+            _oldCode = e.Code;
+            ctx.Model.SetCode(_element, _code);
+        }
+
+        public void Undo(CommandContext ctx) => ctx.Model.SetCode(_element, _oldCode);
+    }
+
+    /// <summary>
+    /// Set an element's originating <c>source file</c> path (folder import / overlay round-trip). One reversible
+    /// undo step; captures the prior value.
+    /// </summary>
+    public sealed class SetSourceFileCommand : IAuthoringCommand
+    {
+        private readonly ElementId _element;
+        private readonly string _sourceFile;
+        private string _oldSourceFile;
+
+        public SetSourceFileCommand(ElementId element, string sourceFile)
+        {
+            _element = element;
+            _sourceFile = string.IsNullOrWhiteSpace(sourceFile) ? null : sourceFile.Trim();
+        }
+
+        public string Label => "Set source file";
+
+        public void Do(CommandContext ctx)
+        {
+            var e = ctx.Model.Get(_element);
+            _oldSourceFile = e.SourceFile;
+            ctx.Model.SetSourceFile(_element, _sourceFile);
+        }
+
+        public void Undo(CommandContext ctx) => ctx.Model.SetSourceFile(_element, _oldSourceFile);
+    }
+
+    /// <summary>
+    /// Set an element's diagram <c>z-layer</c> (0 = base). One reversible undo step; captures the prior value.
+    /// </summary>
+    public sealed class SetZLayerCommand : IAuthoringCommand
+    {
+        private readonly ElementId _element;
+        private readonly int _z;
+        private int _oldZ;
+
+        public SetZLayerCommand(ElementId element, int z)
+        {
+            _element = element;
+            _z = z;
+        }
+
+        public string Label => "Edit layer";
+
+        public void Do(CommandContext ctx)
+        {
+            var e = ctx.Model.Get(_element);
+            _oldZ = e.ZLayer;
+            ctx.Model.SetZLayer(_element, _z);
+        }
+
+        public void Undo(CommandContext ctx) => ctx.Model.SetZLayer(_element, _oldZ);
+    }
+
+    /// <summary>
     /// Delete an element and its whole subtree plus every incident edge, as a single undo step (§4.6/§3.6).
     /// Snapshots everything removed so <see cref="Undo"/> restores the subtree and edges exactly.
     /// </summary>
@@ -352,12 +460,14 @@ namespace TheRobotDraft.Authoring.Commands
         {
             public readonly ElementId Id, Parent;
             public readonly ElementKind Kind;
-            public readonly string Name, Language, Stereotype;
+            public readonly string Name, Language, Stereotype, Description, Code, SourceFile;
             public readonly bool IsAbstract;
+            public readonly int ZLayer;
             public ElementSnap(ModelElement e)
             {
                 Id = e.Id; Parent = e.Parent; Kind = e.Kind; Name = e.Name; IsAbstract = e.IsAbstract;
-                Language = e.Language; Stereotype = e.Stereotype;
+                Language = e.Language; Stereotype = e.Stereotype; Description = e.Description;
+                ZLayer = e.ZLayer; Code = e.Code; SourceFile = e.SourceFile;
             }
         }
 
@@ -425,6 +535,10 @@ namespace TheRobotDraft.Authoring.Commands
                 var restored = model.AddElement(s.Id, s.Kind, s.Name, s.Parent, s.IsAbstract);
                 restored.Language = s.Language;
                 restored.Stereotype = s.Stereotype;
+                restored.Description = s.Description;
+                restored.ZLayer = s.ZLayer;
+                restored.Code = s.Code;
+                restored.SourceFile = s.SourceFile;
             }
             foreach (var e in _removedEdges)
             {

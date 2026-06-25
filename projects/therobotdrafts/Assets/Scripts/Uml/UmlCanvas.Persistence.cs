@@ -16,7 +16,16 @@ namespace TheRobotDraft.Uml
         public List<EdgeDto> edges = new();
         public List<NodeGeomDto> nodeGeom = new();
         public List<EdgeGeomDto> edgeGeom = new();
+        public List<SourceFileDto> sourceFiles = new();
         public string activePackage;
+    }
+
+    /// <summary>One imported source file's original text, keyed by its path — backs the overlay round-trip.</summary>
+    [Serializable]
+    public class SourceFileDto
+    {
+        public string path;
+        public string content;
     }
 
     [Serializable]
@@ -29,6 +38,10 @@ namespace TheRobotDraft.Uml
         public bool isAbstract;
         public string language;
         public string stereotype;
+        public string description;
+        public int zLayer;
+        public string code;
+        public string sourceFile;
     }
 
     [Serializable]
@@ -48,6 +61,7 @@ namespace TheRobotDraft.Uml
     {
         public string id;
         public float px, py, sx, sy;
+        public float pz; // continuous world-Z offset (default 0; backward-compatible — absent in old saves reads 0)
         public bool hasStyle;
         public float fillR, fillG, fillB, fillA;
         public float borderR, borderG, borderB, borderA;
@@ -68,6 +82,9 @@ namespace TheRobotDraft.Uml
         public int tgtSide;
         public float tgtT;
         public bool curved;
+        public bool hasLevel;
+        public float level;
+        public int number;
     }
 
     [Serializable]
@@ -124,6 +141,10 @@ namespace TheRobotDraft.Uml
                     isAbstract = el.IsAbstract,
                     language = el.Language,
                     stereotype = el.Stereotype,
+                    description = el.Description,
+                    zLayer = el.ZLayer,
+                    code = el.Code,
+                    sourceFile = el.SourceFile,
                 });
 
             foreach (var e in _model.Edges)
@@ -141,6 +162,7 @@ namespace TheRobotDraft.Uml
             foreach (var kv in _pos)
             {
                 var nd = new NodeGeomDto { id = kv.Key.Value, px = kv.Value.x, py = kv.Value.y };
+                if (_posZ.TryGetValue(kv.Key, out var pz)) nd.pz = pz;
                 if (_size.TryGetValue(kv.Key, out var s)) { nd.sx = s.x; nd.sy = s.y; }
                 if (_styles.TryGetValue(kv.Key, out var st) && st.Has)
                 {
@@ -158,6 +180,8 @@ namespace TheRobotDraft.Uml
             foreach (var k in _srcAnchor.Keys) edgeIds.Add(k);
             foreach (var k in _tgtAnchor.Keys) edgeIds.Add(k);
             foreach (var k in _curved) edgeIds.Add(k);
+            foreach (var k in _msgLevel.Keys) edgeIds.Add(k);
+            foreach (var k in _msgNumber.Keys) edgeIds.Add(k);
             foreach (var id in edgeIds)
             {
                 var g = new EdgeGeomDto { id = id.Value };
@@ -166,8 +190,13 @@ namespace TheRobotDraft.Uml
                 if (_srcAnchor.TryGetValue(id, out var sa)) { g.hasSrc = true; g.srcSide = (int)sa.Side; g.srcT = sa.T; }
                 if (_tgtAnchor.TryGetValue(id, out var ta)) { g.hasTgt = true; g.tgtSide = (int)ta.Side; g.tgtT = ta.T; }
                 g.curved = _curved.Contains(id);
+                if (_msgLevel.TryGetValue(id, out var lv)) { g.hasLevel = true; g.level = lv; }
+                if (_msgNumber.TryGetValue(id, out var num)) g.number = num;
                 dto.edgeGeom.Add(g);
             }
+
+            foreach (var kv in _sourceFiles)
+                dto.sourceFiles.Add(new SourceFileDto { path = kv.Key, content = kv.Value });
 
             dto.activePackage = _activePackage.IsValid ? _activePackage.Value : "";
             return dto;
@@ -176,8 +205,9 @@ namespace TheRobotDraft.Uml
         private void ApplyDto(DiagramDto dto)
         {
             NewWorld();
-            _pos.Clear(); _size.Clear();
+            _pos.Clear(); _posZ.Clear(); _size.Clear();
             _waypoints.Clear(); _srcAnchor.Clear(); _tgtAnchor.Clear(); _curved.Clear(); _styles.Clear();
+            _msgLevel.Clear(); _msgNumber.Clear();
 
             var byId = new Dictionary<string, ElementDto>();
             foreach (var e in dto.elements) byId[e.id] = e;
@@ -196,6 +226,13 @@ namespace TheRobotDraft.Uml
                 if (elDto.isAbstract) _ctl.SetAbstract(nid, true);
                 if (!string.IsNullOrEmpty(elDto.language) || !string.IsNullOrEmpty(elDto.stereotype))
                     _ctl.SetMeta(nid, elDto.language, elDto.stereotype);
+                if (!string.IsNullOrEmpty(elDto.description))
+                    _ctl.SetDescription(nid, elDto.description);
+                if (!string.IsNullOrEmpty(elDto.code))
+                    _ctl.SetCode(nid, elDto.code);
+                if (!string.IsNullOrEmpty(elDto.sourceFile))
+                    _ctl.SetSourceFile(nid, elDto.sourceFile);
+                _ctl.SetZLayer(nid, elDto.zLayer);
             }
 
             var edgeMap = new Dictionary<string, EdgeId>();
@@ -219,6 +256,7 @@ namespace TheRobotDraft.Uml
                     if (idMap.TryGetValue(nd.id, out var nid))
                     {
                         _pos[nid] = new Vector2(nd.px, nd.py);
+                        if (nd.pz != 0f) _posZ[nid] = nd.pz;
                         if (nd.sx > 1f && nd.sy > 1f) _size[nid] = new Vector2(nd.sx, nd.sy);
                         if (nd.hasStyle)
                             _styles[nid] = new NodeStyle
@@ -244,7 +282,14 @@ namespace TheRobotDraft.Uml
                         if (g.hasSrc) _srcAnchor[eid] = new EndAnchor((BoxSide)g.srcSide, g.srcT);
                         if (g.hasTgt) _tgtAnchor[eid] = new EndAnchor((BoxSide)g.tgtSide, g.tgtT);
                         if (g.curved) _curved.Add(eid);
+                        if (g.hasLevel) _msgLevel[eid] = g.level;
+                        if (g.number > 0) _msgNumber[eid] = g.number;
                     }
+
+            if (dto.sourceFiles != null)
+                foreach (var sf in dto.sourceFiles)
+                    if (sf != null && !string.IsNullOrEmpty(sf.path))
+                        _sourceFiles[sf.path] = sf.content ?? "";
 
             _activePackage = (!string.IsNullOrEmpty(dto.activePackage) && idMap.TryGetValue(dto.activePackage, out var ap))
                 ? ap : ElementId.None;

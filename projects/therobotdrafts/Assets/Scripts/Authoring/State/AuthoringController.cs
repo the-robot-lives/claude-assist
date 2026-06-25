@@ -243,6 +243,38 @@ namespace TheRobotDraft.Authoring.State
             return true;
         }
 
+        /// <summary>Set an element's free-text description / documentation (fed to code generation), one undo step.</summary>
+        public bool SetDescription(ElementId element, string description)
+        {
+            if (!_model.Contains(element)) return false;
+            _history.Execute(new SetDescriptionCommand(element, description));
+            return true;
+        }
+
+        /// <summary>Save an element's source code (the approved "Generate code" output), one undo step.</summary>
+        public bool SetCode(ElementId element, string code)
+        {
+            if (!_model.Contains(element)) return false;
+            _history.Execute(new SetCodeCommand(element, code));
+            return true;
+        }
+
+        /// <summary>Set an element's originating source-file path (folder import / overlay round-trip), one undo step.</summary>
+        public bool SetSourceFile(ElementId element, string sourceFile)
+        {
+            if (!_model.Contains(element)) return false;
+            _history.Execute(new SetSourceFileCommand(element, sourceFile));
+            return true;
+        }
+
+        /// <summary>Set an element's diagram z-layer (0 = base), one undo step.</summary>
+        public bool SetZLayer(ElementId element, int z)
+        {
+            if (!_model.Contains(element)) return false;
+            _history.Execute(new SetZLayerCommand(element, z));
+            return true;
+        }
+
         /// <summary>Change a relationship's type in place (§4.6), validity-checked against its current endpoints.</summary>
         public bool ReTypeEdge(EdgeId edge, EdgeKind kind)
         {
