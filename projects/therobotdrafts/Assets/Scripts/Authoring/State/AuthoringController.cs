@@ -227,6 +227,23 @@ namespace TheRobotDraft.Authoring.State
             return true;
         }
 
+        /// <summary>Change a relationship's type in place (§4.6), validity-checked against its current endpoints.</summary>
+        public bool ReTypeEdge(EdgeId edge, EdgeKind kind)
+        {
+            if (!_model.TryGet(edge, out var e)) return false;
+            if (!EdgeRules.CanConnect(_model, kind, e.From, e.To).IsValid) return false;
+            _history.Execute(new ReTypeEdgeCommand(edge, kind));
+            return true;
+        }
+
+        /// <summary>Delete a relationship edge (§4.6), one undo step.</summary>
+        public bool DeleteEdge(EdgeId edge)
+        {
+            if (!_model.TryGet(edge, out _)) return false;
+            _history.Execute(new DeleteEdgeCommand(edge));
+            return true;
+        }
+
         public bool Undo() => _history.Undo();
         public bool Redo() => _history.Redo();
 

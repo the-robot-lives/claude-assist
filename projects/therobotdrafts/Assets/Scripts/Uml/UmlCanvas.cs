@@ -248,13 +248,13 @@ namespace TheRobotDraft.Uml
                 {
                     var kind = k; var edgeId = edge.Edge;
                     items.Add(new MenuItem(k.ToString() + (k == e.Kind ? "  ✓" : ""), true,
-                        () => { _history.Execute(new ReTypeEdgeCommand(edgeId, kind)); CloseMenu(); RebuildFromModel(); }));
+                        () => { _ctl.ReTypeEdge(edgeId, kind); CloseMenu(); RebuildFromModel(); }));
                 }
             }
             items.Add(MenuItem.Separator());
             var delEdge = edge.Edge;
             items.Add(new MenuItem("Delete link", true,
-                () => { _history.Execute(new DeleteEdgeShim(delEdge)); CloseMenu(); RebuildFromModel(); }));
+                () => { _ctl.DeleteEdge(delEdge); CloseMenu(); RebuildFromModel(); }));
             CreateMenu(screenPos, "Re-type / delete link", items);
         }
 
@@ -424,6 +424,7 @@ namespace TheRobotDraft.Uml
             _hint.color = new Color(0.62f, 0.68f, 0.78f, 1f);
             _hint.alignment = TextAnchor.MiddleLeft;
             _hint.supportRichText = false;
+            _hint.raycastTarget = false;
             _hint.text = "Right-click empty → Add Package · right-click a node → add child / delete · " +
                          "drag the cyan handle → link · Ctrl/Cmd+Z undo, +Shift+Z redo · Del removes selection";
         }
@@ -542,22 +543,5 @@ namespace TheRobotDraft.Uml
     {
         public UmlCanvas Canvas;
         public void OnPointerClick(PointerEventData eventData) => Canvas.OnBackgroundClick(eventData);
-    }
-
-    /// <summary>Deletes an edge by id as a single undo step (small command the controller doesn't expose directly).</summary>
-    public sealed class DeleteEdgeShim : IAuthoringCommand
-    {
-        private readonly EdgeId _id;
-        private EdgeKind _kind;
-        private ElementId _from, _to;
-        public DeleteEdgeShim(EdgeId id) => _id = id;
-        public string Label => "Delete link";
-        public void Do(CommandContext ctx)
-        {
-            var e = ctx.Model.Get(_id);
-            _kind = e.Kind; _from = e.From; _to = e.To;
-            ctx.Model.RemoveEdge(_id);
-        }
-        public void Undo(CommandContext ctx) => ctx.Model.AddEdge(_id, _kind, _from, _to);
     }
 }

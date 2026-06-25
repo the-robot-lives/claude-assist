@@ -40,10 +40,12 @@ help:
 build:
 	@"$(PROJECT_DIR)/build-mac.sh"
 
-# Build only if the app is missing, then open. (Shell-based, not a file prerequisite: the .app path
-# contains spaces, which Make would mis-split into multiple targets and rebuild every time.)
+# Build only if the app is missing, then (re)launch. Kills a running instance first so a freshly built
+# binary actually starts — `open` alone just re-focuses an already-running app. (Shell-based, not a file
+# prerequisite: the .app path has spaces, which Make would mis-split into targets and rebuild every time.)
 run:
 	@test -d "$(APP_PATH)" || "$(PROJECT_DIR)/build-mac.sh"
+	@pkill -f "The Robot Draft.app/Contents/MacOS" 2>/dev/null || true
 	@open "$(APP_PATH)"
 
 open:

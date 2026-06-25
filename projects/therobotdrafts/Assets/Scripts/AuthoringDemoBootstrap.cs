@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
+using TheRobotDraft.Uml;
 
 namespace TheRobotDraft
 {
@@ -28,7 +29,7 @@ namespace TheRobotDraft
             EnsureEventSystem();
             RemoveComingSoon();
 
-            var go = new GameObject("UmlAuthoringCanvas");
+            var go = new GameObject("UmlAuthoringCanvas", typeof(RectTransform));
             Object.DontDestroyOnLoad(go);
             go.AddComponent<UmlCanvas>(); // builds its own Canvas + UI in Awake
         }

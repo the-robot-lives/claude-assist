@@ -190,6 +190,27 @@ namespace TheRobotDraft.Authoring.Commands
         public void Undo(CommandContext ctx) => ctx.Model.SetEdgeEndpoints(_edge, _oldFrom, _oldTo);
     }
 
+    /// <summary>Delete a relationship edge as a single undo step (§4.6).</summary>
+    public sealed class DeleteEdgeCommand : IAuthoringCommand
+    {
+        private readonly EdgeId _id;
+        private EdgeKind _kind;
+        private ElementId _from, _to;
+
+        public DeleteEdgeCommand(EdgeId id) => _id = id;
+
+        public string Label => "Delete link";
+
+        public void Do(CommandContext ctx)
+        {
+            var e = ctx.Model.Get(_id);
+            _kind = e.Kind; _from = e.From; _to = e.To;
+            ctx.Model.RemoveEdge(_id);
+        }
+
+        public void Undo(CommandContext ctx) => ctx.Model.AddEdge(_id, _kind, _from, _to);
+    }
+
     /// <summary>Rename an element (§3.5). Empty name is a caller concern (deduped default); this just sets it.</summary>
     public sealed class RenameCommand : IAuthoringCommand
     {
