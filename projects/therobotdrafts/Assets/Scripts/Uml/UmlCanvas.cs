@@ -50,6 +50,16 @@ namespace TheRobotDraft.Uml
         private ElementId _activePackage = ElementId.None;
         private ElementId _selectedId = ElementId.None;
 
+        // Orthogonal-route view-state (geometry is not the model's job, ADR-003): per-edge interior bend points
+        // in layer-local coords. Empty/absent → auto-routed. Plus the selected edge and its live bend handles.
+        private readonly Dictionary<EdgeId, List<Vector2>> _waypoints = new();
+        private readonly List<UmlBendHandle> _bendHandles = new();
+        private RectTransform _handleLayer;
+        private EdgeId _selectedEdge = EdgeId.None;
+        private EdgeId _dragEdge = EdgeId.None;
+        private int _dragSeg;
+        private List<Vector2> _dragRoute;
+
         private UmlNodeView _linkSource;
         private UmlEdgeView _tempLink;
         private UmlNodeView _hoverTarget;
@@ -163,6 +173,7 @@ namespace TheRobotDraft.Uml
             var s = new Vector3(_zoom, _zoom, 1f);
             if (_nodeLayer != null) _nodeLayer.localScale = s;
             if (_edgeLayer != null) _edgeLayer.localScale = s;
+            if (_handleLayer != null) _handleLayer.localScale = s;
             Flash($"zoom {_zoom * 100f:0}%  ·  Ctrl/Cmd +/− , 0 to reset");
         }
 
@@ -171,14 +182,14 @@ namespace TheRobotDraft.Uml
             foreach (var b in _edges)
             {
                 if (b.View == null) continue;
-                if (_nodes.TryGetValue(b.From, out var f) && _nodes.TryGetValue(b.To, out var t))
-                {
-                    Vector2 cf = f.Rt.anchoredPosition, ct = t.Rt.anchoredPosition;
-                    b.View.SetEndpoints(ClipToBox(cf, f.Rt.sizeDelta, ct), ClipToBox(ct, t.Rt.sizeDelta, cf));
-                }
+                if (_nodes.ContainsKey(b.From) && _nodes.ContainsKey(b.To))
+                    b.View.SetRoute(RouteEdge(b.From, b.To, b.View.Edge));
             }
             if (_tempLink != null && _linkSource != null)
-                _tempLink.SetEndpoints(_linkSource.Rt.anchoredPosition, ScreenToLayer(Input.mousePosition));
+                _tempLink.SetRoute(new List<Vector2>
+                    { _linkSource.Rt.anchoredPosition, ScreenToLayer(Input.mousePosition) });
+
+            PositionBendHandles();
         }
 
         // --- selection / movement / resize ---
@@ -293,8 +304,8 @@ namespace TheRobotDraft.Uml
             go.transform.SetParent(_edgeLayer, false);
             _tempLink = go.AddComponent<UmlEdgeView>();
             _tempLink.Interactive = false;
-            _tempLink.Init(_font, new Color(0.20f, 0.45f, 0.65f, 1f), null, null, null, false,
-                EndMarker.None, EndMarker.OpenArrow, null);
+            _tempLink.Init(null, _font, new Color(0.20f, 0.45f, 0.65f, 1f), null, null, null, false,
+                EndMarker.None, EndMarker.OpenArrow);
         }
 
         public void UpdateLink(Vector2 screenPos)
@@ -451,8 +462,8 @@ namespace TheRobotDraft.Uml
             var ev = go.AddComponent<UmlEdgeView>();
             ev.Edge = edge.Id;
             // Midpoint label is the association name (not the kind — kind is conveyed by line/marker style).
-            ev.Init(_font, EdgeColor, edge.Label, edge.SourceMultiplicity, edge.TargetMultiplicity,
-                dashed, src, tgt, ShowEdgeMenu);
+            ev.Init(this, _font, EdgeColor, edge.Label, edge.SourceMultiplicity, edge.TargetMultiplicity,
+                dashed, src, tgt);
             _edges.Add(new EdgeBinding { View = ev, From = edge.From, To = edge.To });
         }
 
@@ -623,6 +634,7 @@ namespace TheRobotDraft.Uml
 
             _edgeLayer = NewLayer("EdgeLayer");
             _nodeLayer = NewLayer("NodeLayer");
+            _handleLayer = NewLayer("HandleLayer"); // bend handles, above boxes
 
             // Tab bar (top strip).
             var tabGo = new GameObject("TabBar", typeof(RectTransform));

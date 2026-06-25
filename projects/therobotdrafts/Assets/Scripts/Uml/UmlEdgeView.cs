@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -9,41 +10,36 @@ namespace TheRobotDraft.Uml
     public enum EndMarker { None, OpenArrow, HollowTriangle, HollowDiamond, FilledDiamond }
 
     /// <summary>
-    /// A standard-UML relationship line between two class boxes: solid or dashed, with the correct end
-    /// markers (open arrow, hollow inheritance triangle, hollow/filled aggregation-composition diamond) and a
-    /// type label. Endpoints are clipped to the box borders by the canvas so the arrow touches the edge.
-    /// Clicking re-types or deletes the link (§4.6).
+    /// A standard-UML relationship drawn as an orthogonal (right-angle) polyline between two class boxes:
+    /// solid or dashed, with the correct end markers (open arrow, hollow inheritance triangle, hollow/filled
+    /// aggregation-composition diamond), a midpoint association label, and per-end multiplicities. The route is
+    /// a list of points the canvas computes (auto-routed or via user bend handles); this view just draws one
+    /// segment rect per leg and seats the markers/labels along the first and last legs. Left-click selects
+    /// (the canvas shows bend handles); right-click / ctrl-click re-types, adorns, or deletes (§4.6).
     /// </summary>
     public sealed class UmlEdgeView : MonoBehaviour, IPointerClickHandler
     {
         public EdgeId Edge;
         public bool Interactive = true;
 
-        private RectTransform _line;
-        private Image _lineImg;
+        private UmlCanvas _canvas;
+        private readonly List<RectTransform> _segments = new();
+        private readonly List<Image> _segImgs = new();
         private RectTransform _srcM, _tgtM;
         private RectTransform _midRt, _srcMultRt, _tgtMultRt;
-        private System.Action<UmlEdgeView, Vector2> _onClick;
+        private Color _color;
+        private bool _dashed;
 
         private const float Thickness = 3f;
         private const float MarkerSize = 16f;
 
-        public void Init(Font font, Color color, string midLabel, string sourceMult, string targetMult,
-            bool dashed, EndMarker source, EndMarker target, System.Action<UmlEdgeView, Vector2> onClick)
+        public void Init(UmlCanvas canvas, Font font, Color color, string midLabel, string sourceMult,
+            string targetMult, bool dashed, EndMarker source, EndMarker target)
         {
-            var self = (RectTransform)transform;
-            Stretch(self);
-            _onClick = onClick;
-
-            _line = NewChild("Line");
-            _lineImg = _line.gameObject.AddComponent<Image>();
-            _lineImg.color = color;
-            _lineImg.raycastTarget = Interactive;
-            if (dashed)
-            {
-                _lineImg.sprite = DashSprite();
-                _lineImg.type = Image.Type.Tiled;
-            }
+            _canvas = canvas;
+            _color = color;
+            _dashed = dashed;
+            Stretch((RectTransform)transform);
 
             _srcM = BuildMarker("SrcMarker", source, color);
             _tgtM = BuildMarker("TgtMarker", target, color);
@@ -54,59 +50,85 @@ namespace TheRobotDraft.Uml
             _tgtMultRt = BuildText("TgtMult", targetMult, font, new Color(0.22f, 0.24f, 0.30f, 1f), 14, 56f);
         }
 
-        private RectTransform BuildText(string name, string text, Font font, Color color, int size, float width)
+        /// <summary>Draw the relationship along an orthogonal polyline of at least two points.</summary>
+        public void SetRoute(IReadOnlyList<Vector2> pts)
         {
-            if (string.IsNullOrEmpty(text)) return null;
-            var rt = NewChild(name);
-            rt.sizeDelta = new Vector2(width, 22f);
-            var t = rt.gameObject.AddComponent<Text>();
-            t.font = font;
-            t.text = text;
-            t.fontSize = size;
-            t.alignment = TextAnchor.MiddleCenter;
-            t.color = color;
-            t.supportRichText = false;
-            t.horizontalOverflow = HorizontalWrapMode.Overflow;
-            t.verticalOverflow = VerticalWrapMode.Overflow;
-            t.raycastTarget = false;
-            return rt;
-        }
+            if (pts == null || pts.Count < 2) return;
+            int segCount = pts.Count - 1;
+            EnsureSegments(segCount);
+            for (int i = 0; i < _segments.Count; i++)
+            {
+                bool used = i < segCount;
+                if (_segments[i].gameObject.activeSelf != used) _segments[i].gameObject.SetActive(used);
+                if (used) PlaceSeg(_segments[i], pts[i], pts[i + 1]);
+            }
 
-        public void SetEndpoints(Vector2 a, Vector2 b)
-        {
-            Vector2 d = b - a;
-            float len = d.magnitude;
-            float ang = Mathf.Atan2(d.y, d.x) * Mathf.Rad2Deg;
-            Vector2 dir = len > 0.001f ? d / len : Vector2.right;
-            Vector2 perp = new Vector2(-dir.y, dir.x);
-
-            _line.anchoredPosition = (a + b) * 0.5f;
-            _line.sizeDelta = new Vector2(Mathf.Max(len, 1f), Thickness);
-            _line.localEulerAngles = new Vector3(0f, 0f, ang);
-
+            Vector2 a = pts[0], a1 = pts[1];
+            Vector2 b = pts[pts.Count - 1], b0 = pts[pts.Count - 2];
+            Vector2 dirA = Norm(a1 - a), dirB = Norm(b - b0);
             const float half = MarkerSize * 0.5f;
             if (_srcM != null)
             {
-                // Seat the diamond just outside the source border; point its axis back toward the source.
-                _srcM.anchoredPosition = a + dir * half;
-                _srcM.localEulerAngles = new Vector3(0f, 0f, ang + 180f);
+                _srcM.anchoredPosition = a + dirA * half;
+                _srcM.localEulerAngles = new Vector3(0f, 0f, Ang(dirA) + 180f);
             }
             if (_tgtM != null)
             {
-                // Seat the arrow/triangle so its apex touches the target border.
-                _tgtM.anchoredPosition = b - dir * half;
-                _tgtM.localEulerAngles = new Vector3(0f, 0f, ang);
+                _tgtM.anchoredPosition = b - dirB * half;
+                _tgtM.localEulerAngles = new Vector3(0f, 0f, Ang(dirB));
             }
 
-            if (_midRt != null) _midRt.anchoredPosition = (a + b) * 0.5f + perp * 14f;
-            if (_srcMultRt != null) _srcMultRt.anchoredPosition = a + dir * 26f + perp * 12f;
-            if (_tgtMultRt != null) _tgtMultRt.anchoredPosition = b - dir * 26f + perp * 12f;
+            Vector2 perpA = new Vector2(-dirA.y, dirA.x), perpB = new Vector2(-dirB.y, dirB.x);
+            if (_srcMultRt != null) _srcMultRt.anchoredPosition = a + dirA * 26f + perpA * 12f;
+            if (_tgtMultRt != null) _tgtMultRt.anchoredPosition = b - dirB * 26f + perpB * 12f;
+            if (_midRt != null)
+            {
+                int k = segCount / 2;
+                Vector2 p = pts[k], q = pts[k + 1];
+                Vector2 dir = Norm(q - p), perp = new Vector2(-dir.y, dir.x);
+                _midRt.anchoredPosition = (p + q) * 0.5f + perp * 14f;
+            }
+        }
+
+        /// <summary>Tint the line when the edge is the selection (its bend handles are live).</summary>
+        public void SetHighlighted(bool on)
+        {
+            var c = on ? new Color(0.12f, 0.55f, 0.85f, 1f) : _color;
+            foreach (var img in _segImgs) if (img != null) img.color = c;
         }
 
         public void OnPointerClick(PointerEventData eventData)
         {
-            if (Interactive) _onClick?.Invoke(this, eventData.position);
+            if (Interactive && _canvas != null) _canvas.OnEdgePointerClick(this, eventData);
         }
+
+        // --- segments ---
+
+        private void EnsureSegments(int count)
+        {
+            while (_segments.Count < count)
+            {
+                var rt = NewChild("Seg");
+                var img = rt.gameObject.AddComponent<Image>();
+                img.color = _color;
+                img.raycastTarget = Interactive;
+                if (_dashed) { img.sprite = DashSprite(); img.type = Image.Type.Tiled; }
+                _segments.Add(rt);
+                _segImgs.Add(img);
+            }
+        }
+
+        private void PlaceSeg(RectTransform seg, Vector2 p, Vector2 q)
+        {
+            Vector2 d = q - p;
+            float len = d.magnitude;
+            seg.anchoredPosition = (p + q) * 0.5f;
+            seg.sizeDelta = new Vector2(Mathf.Max(len, 1f), Thickness);
+            seg.localEulerAngles = new Vector3(0f, 0f, Mathf.Atan2(d.y, d.x) * Mathf.Rad2Deg);
+        }
+
+        private static Vector2 Norm(Vector2 v) { float m = v.magnitude; return m > 0.001f ? v / m : Vector2.right; }
+        private static float Ang(Vector2 d) => Mathf.Atan2(d.y, d.x) * Mathf.Rad2Deg;
 
         // --- markers ---
 
@@ -189,7 +211,25 @@ namespace TheRobotDraft.Uml
             return _diamond;
         }
 
-        // --- helpers ---
+        // --- text + helpers ---
+
+        private RectTransform BuildText(string name, string text, Font font, Color color, int size, float width)
+        {
+            if (string.IsNullOrEmpty(text)) return null;
+            var rt = NewChild(name);
+            rt.sizeDelta = new Vector2(width, 22f);
+            var t = rt.gameObject.AddComponent<Text>();
+            t.font = font;
+            t.text = text;
+            t.fontSize = size;
+            t.alignment = TextAnchor.MiddleCenter;
+            t.color = color;
+            t.supportRichText = false;
+            t.horizontalOverflow = HorizontalWrapMode.Overflow;
+            t.verticalOverflow = VerticalWrapMode.Overflow;
+            t.raycastTarget = false;
+            return rt;
+        }
 
         private RectTransform NewChild(string name)
         {
@@ -206,5 +246,34 @@ namespace TheRobotDraft.Uml
             rt.anchorMin = Vector2.zero; rt.anchorMax = Vector2.one;
             rt.offsetMin = Vector2.zero; rt.offsetMax = Vector2.zero;
         }
+    }
+
+    /// <summary>
+    /// A draggable handle sitting at the midpoint of one orthogonal segment of a selected relationship. Dragging
+    /// it moves that segment perpendicular to its run (keeping right angles), which is how Rose / Sparx / Visual
+    /// Paradigm let you reshape an orthogonal connector. The canvas owns the geometry; this just relays the drag.
+    /// </summary>
+    public sealed class UmlBendHandle : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
+    {
+        private UmlCanvas _canvas;
+        private EdgeId _edge;
+        private int _segment;
+
+        public void Init(UmlCanvas canvas, EdgeId edge, int segment, bool vertical)
+        {
+            _canvas = canvas; _edge = edge; _segment = segment;
+            var rt = (RectTransform)transform;
+            rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0.5f);
+            rt.pivot = new Vector2(0.5f, 0.5f);
+            rt.sizeDelta = new Vector2(12f, 12f);
+            var img = gameObject.AddComponent<Image>();
+            img.color = new Color(0.12f, 0.55f, 0.85f, 1f);
+        }
+
+        public void SetPosition(Vector2 p) => ((RectTransform)transform).anchoredPosition = p;
+
+        public void OnBeginDrag(PointerEventData e) => _canvas.BeginBendDrag(_edge, _segment);
+        public void OnDrag(PointerEventData e) => _canvas.UpdateBendDrag(e.position);
+        public void OnEndDrag(PointerEventData e) => _canvas.EndBendDrag();
     }
 }
