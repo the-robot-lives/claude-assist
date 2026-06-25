@@ -29,6 +29,13 @@ namespace TheRobotDraft
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void Boot()
         {
+            // The authoring-core demo harness owns the screen when present; don't draw the splash over it.
+            if (AuthoringDemoBootstrap.Active)
+            {
+                EnsureWindowed();
+                return;
+            }
+
             EnsureWindowed();
             EnsureCamera();
             BuildOverlay();

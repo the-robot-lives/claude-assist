@@ -40,12 +40,11 @@ help:
 build:
 	@"$(PROJECT_DIR)/build-mac.sh"
 
-run: $(APP_PATH)
+# Build only if the app is missing, then open. (Shell-based, not a file prerequisite: the .app path
+# contains spaces, which Make would mis-split into multiple targets and rebuild every time.)
+run:
+	@test -d "$(APP_PATH)" || "$(PROJECT_DIR)/build-mac.sh"
 	@open "$(APP_PATH)"
-
-# Build only if the app is missing; `make build` forces a rebuild.
-$(APP_PATH):
-	@"$(PROJECT_DIR)/build-mac.sh"
 
 open:
 	@test -d "$(APP_PATH)" || { echo "No build yet — run 'make build' first." >&2; exit 1; }
