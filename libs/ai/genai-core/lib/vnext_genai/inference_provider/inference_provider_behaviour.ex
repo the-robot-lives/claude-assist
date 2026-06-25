@@ -57,6 +57,27 @@ defmodule GenAI.InferenceProviderBehaviour do
 
   @callback standardize_model(model) :: model
 
+  # ---------------------
+  # Media generation (ADR-016)
+  # ---------------------
+  @type modality :: :text | :image | :speech | :music | :sfx | :video | :document
+
+  @doc """
+  The (input, output, mode) modality triples this provider supports, e.g.
+  `[%{input: [:text], output: :image, mode: :sync}]`. genai-core owns the modality
+  vocab; each provider declares its own list. Default (text-only chat) is provided.
+  """
+  @callback supported_modalities() :: [%{input: [modality], output: modality, mode: :sync | :async}]
+
+  @doc """
+  Generate non-text media (text/parts -> image/audio/video). Sync providers return the
+  bytes; long-running (audio/video) providers return a Job to poll. Default: unsupported.
+  """
+  @callback generate_media(request :: GenAI.Media.Request.t(), options :: keyword) ::
+              {:ok, %{data: binary, mime: String.t(), meta: map}}
+              | {:ok, GenAI.Media.Job.t()}
+              | {:error, term}
+
   defmacro __using__(options \\ []) do
     quote do
       @provider unquote(options[:provider]) || GenAI.InferenceProvider.DefaultProvider
@@ -165,10 +186,19 @@ defmodule GenAI.InferenceProviderBehaviour do
       def standardize_model(model),
         do: @provider.standardize_model(__MODULE__, @default_encoder, model)
 
+      # ---------------------
+      # Media generation (ADR-016) — defaults so existing text providers compile unchanged.
+      # ---------------------
+      def supported_modalities(), do: [%{input: [:text], output: :text, mode: :sync}]
+
+      def generate_media(_request, _options), do: {:error, :unsupported_modality}
+
       defoverridable config_key: 0,
                      default_encoder: 0,
                      headers: 1,
-                     standardize_model: 1
+                     standardize_model: 1,
+                     supported_modalities: 0,
+                     generate_media: 2
 
       # base_url: 4,
       # base_url: 5,

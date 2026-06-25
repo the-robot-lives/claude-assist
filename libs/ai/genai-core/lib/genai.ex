@@ -127,4 +127,20 @@ defmodule GenAI do
   def run(thread_context, context, options \\ nil) do
     GenAI.ThreadProtocol.execute(thread_context, :run, context, options)
   end
+
+  @doc """
+  Generate non-text media (ADR-016): route a `GenAI.Media.Request` to a provider that
+  declares support for its (input, output) modality, and run its `generate_media/2`.
+
+  Returns `{:ok, %{data: binary, mime: String.t(), meta: map}}` (sync) |
+  `{:ok, %GenAI.Media.Job{}}` (async) | `{:error, term}`. Vision (image INPUT -> text)
+  is NOT this path — it rides the normal chat/Thread run via the encoder protocol.
+  """
+  def generate_media(request, options \\ [])
+
+  def generate_media(%GenAI.Media.Request{} = request, options) do
+    with {:ok, provider} <- GenAI.Media.Router.route(request) do
+      provider.generate_media(request, options)
+    end
+  end
 end
