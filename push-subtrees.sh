@@ -65,6 +65,12 @@ SUBTREES=(
   "libs/scaffolding/core|scaffolding-core|mono-repo-dev"
   "libs/scaffolding/entities|scaffolding-entities|mono-repo-dev"
 
+  # libs/ai (genai / LLM Elixir libs)
+  "libs/ai/genai|genai|mono-repo-dev"
+  "libs/ai/genai_local|genai-local|mono-repo-dev"
+  "libs/ai/ex_llama|ex_llama|mono-repo-dev"
+  "libs/ai/elixir-weaviate|elixir-weaviate|mono-repo-dev"
+
   # share
   "share/k8-lib|k8-lib|mono-repo-dev"
 

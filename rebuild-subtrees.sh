@@ -41,6 +41,12 @@ git remote add elixir-mcp                       git@github.com:noizu-labs-ml/eli
 git remote add scaffolding-core                 git@github.com:noizu-labs/ElixirCore.git
 git remote add scaffolding-entities             git@github.com:noizu-labs/ElixirScaffolding.git
 
+echo "# --- libs/ai (genai / LLM Elixir libs) ---"
+git remote add genai                            git@github.com:noizu-labs-ml/genai.git
+git remote add genai-local                      git@github.com:noizu-labs-ml/genai-local.git
+git remote add ex_llama                         git@github.com:noizu-labs-ml/ex_llama.git
+git remote add elixir-weaviate                  git@github.com:noizu-labs-ml/elixir-weaviate.git
+
 echo "# --- share ---"
 git remote add k8-lib                           git@github.com:the-robot-lives/k8-lib.git
 
@@ -154,6 +160,13 @@ git subtree add --prefix=components/styleguide           styleguide             
 git subtree add --prefix=libs/elixir-mcp                 elixir-mcp                       main    --squash
 git subtree add --prefix=libs/scaffolding/core           scaffolding-core                 master  --squash
 git subtree add --prefix=libs/scaffolding/entities       scaffolding-entities             master  --squash
+
+# --- libs/ai (genai / LLM Elixir libs) ---
+# NOTE: ex_llama tracks the 'llama.cpp' branch (active dev), not its remote-default 'main'.
+git subtree add --prefix=libs/ai/genai                   genai                            main      --squash
+git subtree add --prefix=libs/ai/genai_local             genai-local                      main      --squash
+git subtree add --prefix=libs/ai/ex_llama                ex_llama                         llama.cpp --squash
+git subtree add --prefix=libs/ai/elixir-weaviate         elixir-weaviate                  main      --squash
 
 # --- share ---
 git subtree add --prefix=share/k8-lib                    k8-lib                           main    --squash

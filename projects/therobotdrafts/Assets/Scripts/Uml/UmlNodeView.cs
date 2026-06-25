@@ -94,14 +94,16 @@ namespace TheRobotDraft.Uml
             // Operations compartment (methods).
             AddRows(operations, ref y, opH);
 
-            // Right-edge connect handle (§4.1 quick-handle).
-            var handleGo = new GameObject("ConnectHandle", typeof(RectTransform));
-            handleGo.AddComponent<UmlConnectHandle>().Init(_canvas, this);
-
-            // Bottom-right resize grip.
-            var gripGo = new GameObject("ResizeGrip", typeof(RectTransform));
-            gripGo.AddComponent<UmlResizeHandle>().Init(_canvas, this);
+            // Four connect hotspots (§4.1 quick-handle), one per side — the link leaves from the side you grab.
+            foreach (BoxSide side in new[] { BoxSide.Left, BoxSide.Right, BoxSide.Top, BoxSide.Bottom })
+            {
+                var handleGo = new GameObject("ConnectHandle:" + side, typeof(RectTransform));
+                handleGo.AddComponent<UmlConnectHandle>().Init(_canvas, this, side);
+            }
+            // Resize is done by grabbing the box border (see OnBeginDrag) — no separate grip.
         }
+
+        public const float BorderGrab = 9f; // px from the edge that begins a resize instead of a move
 
         public void SetSelected(bool on) { if (_outline != null) _outline.enabled = on; }
 
@@ -116,16 +118,9 @@ namespace TheRobotDraft.Uml
             };
         }
 
-        public void ApplyResize(Vector2 delta)
-        {
-            var s = Rt.sizeDelta + new Vector2(delta.x, -delta.y);
-            s.x = Mathf.Max(140f, s.x);
-            s.y = Mathf.Max(70f, s.y);
-            Rt.sizeDelta = s;
-            _canvas.OnNodeResized(Id, s);
-        }
-
         // --- interaction ---
+
+        private bool _resizeL, _resizeR, _resizeT, _resizeB;
 
         public void OnPointerClick(PointerEventData e)
         {
@@ -135,13 +130,42 @@ namespace TheRobotDraft.Uml
             else if (e.button == PointerEventData.InputButton.Left) _canvas.Select(this);
         }
 
-        public void OnBeginDrag(PointerEventData e) { }
+        public void OnBeginDrag(PointerEventData e)
+        {
+            // Grabbing within BorderGrab px of an edge starts a resize on those edges; otherwise it's a move.
+            _resizeL = _resizeR = _resizeT = _resizeB = false;
+            if (RectTransformUtility.ScreenPointToLocalPointInRectangle(Rt, e.position, e.pressEventCamera, out var lp))
+            {
+                float hw = Rt.sizeDelta.x * 0.5f, hh = Rt.sizeDelta.y * 0.5f;
+                _resizeR = lp.x > hw - BorderGrab;
+                _resizeL = lp.x < -hw + BorderGrab;
+                _resizeT = lp.y > hh - BorderGrab;
+                _resizeB = lp.y < -hh + BorderGrab;
+            }
+        }
 
         public void OnDrag(PointerEventData e)
         {
-            // Divide by canvas scale AND diagram zoom so the box tracks the cursor at any zoom level.
-            Rt.anchoredPosition += e.delta / (_canvas.ScaleFactor * _canvas.Zoom);
+            // Divide by canvas scale AND diagram zoom so geometry tracks the cursor at any zoom level.
+            Vector2 d = e.delta / (_canvas.ScaleFactor * _canvas.Zoom);
+            if (_resizeL || _resizeR || _resizeT || _resizeB) { ResizeBy(d); return; }
+            Rt.anchoredPosition += d;
             _canvas.OnNodeMoved(Id, Rt.anchoredPosition);
+        }
+
+        private void ResizeBy(Vector2 d)
+        {
+            Vector2 size = Rt.sizeDelta, pos = Rt.anchoredPosition;
+            if (_resizeR) { size.x += d.x; pos.x += d.x * 0.5f; }
+            if (_resizeL) { size.x -= d.x; pos.x += d.x * 0.5f; }
+            if (_resizeT) { size.y += d.y; pos.y += d.y * 0.5f; }
+            if (_resizeB) { size.y -= d.y; pos.y += d.y * 0.5f; }
+            size.x = Mathf.Max(140f, size.x);
+            size.y = Mathf.Max(70f, size.y);
+            Rt.sizeDelta = size;
+            Rt.anchoredPosition = pos;
+            _canvas.OnNodeResized(Id, size);
+            _canvas.OnNodeMoved(Id, pos);
         }
 
         // --- layout helpers ---
@@ -217,48 +241,36 @@ namespace TheRobotDraft.Uml
 
     public enum AffordanceTint { None, Valid, Invalid }
 
-    /// <summary>Right-edge grip: drag to start a relationship (its drag takes priority over body-move).</summary>
+    /// <summary>The four box sides a relationship can attach to / leave from.</summary>
+    public enum BoxSide { Left, Right, Top, Bottom }
+
+    /// <summary>A per-side connect hotspot: drag from it to start a relationship that leaves from that side.</summary>
     public sealed class UmlConnectHandle : MonoBehaviour,
         IBeginDragHandler, IDragHandler, IEndDragHandler
     {
         private UmlCanvas _canvas;
         private UmlNodeView _node;
+        private BoxSide _side;
 
-        public void Init(UmlCanvas canvas, UmlNodeView node)
+        public void Init(UmlCanvas canvas, UmlNodeView node, BoxSide side)
         {
-            _canvas = canvas; _node = node;
+            _canvas = canvas; _node = node; _side = side;
             var rt = (RectTransform)transform;
             rt.SetParent(node.transform, false);
-            rt.anchorMin = rt.anchorMax = new Vector2(1f, 0.5f);
             rt.pivot = new Vector2(0.5f, 0.5f);
-            rt.sizeDelta = new Vector2(20f, 20f);
-            rt.anchoredPosition = new Vector2(-2f, 0f);
+            rt.sizeDelta = new Vector2(15f, 15f);
+            switch (side)
+            {
+                case BoxSide.Left:   rt.anchorMin = rt.anchorMax = new Vector2(0f, 0.5f); rt.anchoredPosition = new Vector2(2f, 0f); break;
+                case BoxSide.Right:  rt.anchorMin = rt.anchorMax = new Vector2(1f, 0.5f); rt.anchoredPosition = new Vector2(-2f, 0f); break;
+                case BoxSide.Top:    rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 1f); rt.anchoredPosition = new Vector2(0f, -2f); break;
+                default:             rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0f); rt.anchoredPosition = new Vector2(0f, 2f); break;
+            }
             gameObject.AddComponent<Image>().color = new Color(0.30f, 0.85f, 0.95f, 1f);
         }
 
-        public void OnBeginDrag(PointerEventData e) => _canvas.BeginLink(_node, e.position);
+        public void OnBeginDrag(PointerEventData e) => _canvas.BeginLink(_node, _side, e.position);
         public void OnDrag(PointerEventData e) => _canvas.UpdateLink(e.position);
         public void OnEndDrag(PointerEventData e) => _canvas.EndLink(e.position);
-    }
-
-    /// <summary>Bottom-right grip: drag to resize the box.</summary>
-    public sealed class UmlResizeHandle : MonoBehaviour, IDragHandler
-    {
-        private UmlCanvas _canvas;
-        private UmlNodeView _node;
-
-        public void Init(UmlCanvas canvas, UmlNodeView node)
-        {
-            _canvas = canvas; _node = node;
-            var rt = (RectTransform)transform;
-            rt.SetParent(node.transform, false);
-            rt.anchorMin = rt.anchorMax = new Vector2(1f, 0f);
-            rt.pivot = new Vector2(1f, 0f);
-            rt.sizeDelta = new Vector2(16f, 16f);
-            rt.anchoredPosition = Vector2.zero;
-            gameObject.AddComponent<Image>().color = new Color(0.45f, 0.50f, 0.58f, 1f);
-        }
-
-        public void OnDrag(PointerEventData e) => _node.ApplyResize(e.delta / (_canvas.ScaleFactor * _canvas.Zoom));
     }
 }

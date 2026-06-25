@@ -53,12 +53,32 @@ namespace TheRobotDraft.Uml
         // Orthogonal-route view-state (geometry is not the model's job, ADR-003): per-edge interior bend points
         // in layer-local coords. Empty/absent → auto-routed. Plus the selected edge and its live bend handles.
         private readonly Dictionary<EdgeId, List<Vector2>> _waypoints = new();
-        private readonly List<UmlBendHandle> _bendHandles = new();
+        // Fixed endpoint attachments (which side of the box + position along it). Absent → auto facing-side.
+        private readonly Dictionary<EdgeId, EndAnchor> _srcAnchor = new();
+        private readonly Dictionary<EdgeId, EndAnchor> _tgtAnchor = new();
+        private readonly List<UmlEdgeHandle> _bendHandles = new();
         private RectTransform _handleLayer;
         private EdgeId _selectedEdge = EdgeId.None;
-        private EdgeId _dragEdge = EdgeId.None;
-        private int _dragSeg;
-        private List<Vector2> _dragRoute;
+
+        // Active edge-handle drag (endpoint reposition or vertex move).
+        private EdgeId _hEdge = EdgeId.None;
+        private UmlHandleKind _hKind;
+        private int _hIndex;
+
+        // Pending anchors captured during a link drag, applied to the edge once it is created.
+        private BoxSide _linkSide;
+        private BoxSide _pendingSrcSide;
+        private EndAnchor _pendingTgtAnchor;
+
+        private const float StubLen = 22f;
+
+        /// <summary>A fixed endpoint attachment: a side of the box and a 0..1 position along that side.</summary>
+        private struct EndAnchor
+        {
+            public BoxSide Side;
+            public float T;
+            public EndAnchor(BoxSide side, float t) { Side = side; T = t; }
+        }
 
         private UmlNodeView _linkSource;
         private UmlEdgeView _tempLink;
@@ -186,15 +206,18 @@ namespace TheRobotDraft.Uml
                     b.View.SetRoute(RouteEdge(b.From, b.To, b.View.Edge));
             }
             if (_tempLink != null && _linkSource != null)
-                _tempLink.SetRoute(new List<Vector2>
-                    { _linkSource.Rt.anchoredPosition, ScreenToLayer(Input.mousePosition) });
+            {
+                Vector2 start = AnchorPoint(_linkSource.Rt.anchoredPosition, _linkSource.Rt.sizeDelta,
+                    new EndAnchor(_linkSide, 0.5f));
+                _tempLink.SetRoute(new List<Vector2> { start, ScreenToLayer(Input.mousePosition) });
+            }
 
             PositionBendHandles();
         }
 
         // --- selection / movement / resize ---
 
-        public void Select(UmlNodeView node) { CloseMenu(); SetSelected(node != null ? node.Id : ElementId.None); }
+        public void Select(UmlNodeView node) { CloseMenu(); ClearSelectedEdge(); SetSelected(node != null ? node.Id : ElementId.None); }
         public void OnNodeMoved(ElementId id, Vector2 pos) => _pos[id] = pos;
         public void OnNodeResized(ElementId id, Vector2 size) => _size[id] = size;
 
@@ -262,7 +285,7 @@ namespace TheRobotDraft.Uml
         {
             if (e.button == PointerEventData.InputButton.Right
                 || (e.button == PointerEventData.InputButton.Left && CtrlOrCmd()))
-                ShowEmptyMenu(e.position);
+            { ClearSelectedEdge(); ShowEmptyMenu(e.position); }
             else { CloseMenu(); Select(null); }
         }
 
@@ -296,10 +319,11 @@ namespace TheRobotDraft.Uml
 
         // --- link drag (§4) ---
 
-        public void BeginLink(UmlNodeView source, Vector2 screenPos)
+        public void BeginLink(UmlNodeView source, BoxSide side, Vector2 screenPos)
         {
             CloseMenu();
             _linkSource = source;
+            _linkSide = side;
             var go = new GameObject("TempLink", typeof(RectTransform));
             go.transform.SetParent(_edgeLayer, false);
             _tempLink = go.AddComponent<UmlEdgeView>();
@@ -329,6 +353,11 @@ namespace TheRobotDraft.Uml
 
             var source = _linkSource; _linkSource = null;
             if (source == null || target == null || target.Id == source.Id) return;
+
+            // Capture the source side (the hotspot grabbed) and the exact drop point on the target border,
+            // to pin both ends when the edge is created (asks #1 + #3).
+            _pendingSrcSide = _linkSide;
+            _pendingTgtAnchor = ProjectToBorder(target.Rt.anchoredPosition, target.Rt.sizeDelta, ScreenToLayer(screenPos));
             ShowTypePicker(source.Id, target.Id, screenPos);
         }
 
@@ -352,7 +381,12 @@ namespace TheRobotDraft.Uml
             _ctl.EnterConnect(CommitStyle.OneShot, kind);
             _ctl.BeginConnect(from);
             var edge = _ctl.CommitConnect(to);
-            if (edge.IsValid) Flash($"linked: {kind}");
+            if (edge.IsValid)
+            {
+                _srcAnchor[edge] = new EndAnchor(_pendingSrcSide, 0.5f);
+                _tgtAnchor[edge] = _pendingTgtAnchor;
+                Flash($"linked: {kind}");
+            }
             RebuildFromModel();
         }
 
@@ -373,7 +407,14 @@ namespace TheRobotDraft.Uml
             items.Add(new MenuItem("Multiplicity / label…", true, () => ShowEdgeMetaEditor(metaEdge, screenPos)));
             var delEdge = edge.Edge;
             items.Add(new MenuItem("Delete link", true,
-                () => { _ctl.DeleteEdge(delEdge); CloseMenu(); RebuildFromModel(); }));
+                () =>
+                {
+                    _ctl.DeleteEdge(delEdge);
+                    _waypoints.Remove(delEdge);
+                    if (_selectedEdge == delEdge) _selectedEdge = EdgeId.None;
+                    CloseMenu();
+                    RebuildFromModel();
+                }));
             CreateMenu(screenPos, "Re-type / adorn / delete link", items);
         }
 
@@ -383,6 +424,14 @@ namespace TheRobotDraft.Uml
         private void Redo() { if (_ctl.Redo()) { Flash("↷ redo"); FixActiveAfterChange(); RebuildFromModel(); } }
         private void DeleteSelected()
         {
+            if (_selectedEdge.IsValid)
+            {
+                _ctl.DeleteEdge(_selectedEdge);
+                _waypoints.Remove(_selectedEdge);
+                _selectedEdge = EdgeId.None;
+                RebuildFromModel();
+                return;
+            }
             if (!_selectedId.IsValid) return;
             _ctl.Delete(_selectedId);
             SetSelected(ElementId.None);
@@ -405,6 +454,7 @@ namespace TheRobotDraft.Uml
             if (!_activePackage.IsValid)
             {
                 Flash("No package yet — right-click the canvas (or +) to add one.");
+                RefreshBendHandles();
                 return;
             }
 
@@ -428,6 +478,11 @@ namespace TheRobotDraft.Uml
                     CreateEdgeView(edge);
 
             if (_selectedId.IsValid && _nodes.TryGetValue(_selectedId, out var sel)) sel.SetSelected(true);
+
+            // Re-apply edge selection highlight + bend handles to the freshly-created edge views.
+            if (_selectedEdge.IsValid && !TryGetEdgeEndpoints(_selectedEdge, out _, out _)) _selectedEdge = EdgeId.None;
+            SetEdgeHighlight(_selectedEdge, true);
+            RefreshBendHandles();
         }
 
         private void CreateNodeView(ModelElement el, Vector2 pos)
@@ -478,6 +533,283 @@ namespace TheRobotDraft.Uml
             EdgeKind.Composition => (false, EndMarker.FilledDiamond, EndMarker.None),
             _ => (false, EndMarker.None, EndMarker.OpenArrow),
         };
+
+        // --- orthogonal routing ---
+
+        /// <summary>The orthogonal polyline for an edge: pinned endpoints + user bends if any, else an auto Z-route.</summary>
+        private List<Vector2> RouteEdge(ElementId from, ElementId to, EdgeId edge)
+        {
+            var ctrl = ControlPolyline(from, to, edge, out bool fixedSrc, out bool fixedTgt);
+            // Fully-auto edges (no pins, no bends) get the balanced two-bend Z; everything else is squared off.
+            if (!fixedSrc && !fixedTgt && ctrl.Count == 2 && !_waypoints.ContainsKey(edge))
+            {
+                var f = _nodes[from]; var t = _nodes[to];
+                return AutoOrthogonal(f.Rt.anchoredPosition, f.Rt.sizeDelta, t.Rt.anchoredPosition, t.Rt.sizeDelta);
+            }
+            return CleanColinear(Orthogonalize(ctrl));
+        }
+
+        /// <summary>
+        /// The control points an edge routes through: [A] (+ perpendicular stub if A is pinned) + bend points +
+        /// (stub if B is pinned) + [B]. A/B are the pinned anchor points, or auto facing-side clips.
+        /// </summary>
+        private List<Vector2> ControlPolyline(ElementId from, ElementId to, EdgeId edge,
+            out bool fixedSrc, out bool fixedTgt)
+        {
+            var f = _nodes[from]; var t = _nodes[to];
+            Vector2 cf = f.Rt.anchoredPosition, ct = t.Rt.anchoredPosition;
+            Vector2 sf = f.Rt.sizeDelta, st = t.Rt.sizeDelta;
+            bool hasWps = _waypoints.TryGetValue(edge, out var wps) && wps.Count > 0;
+
+            fixedSrc = _srcAnchor.TryGetValue(edge, out var sa);
+            fixedTgt = _tgtAnchor.TryGetValue(edge, out var ta);
+
+            Vector2 A = fixedSrc ? AnchorPoint(cf, sf, sa) : ClipToBox(cf, sf, hasWps ? wps[0] : ct);
+            Vector2 B = fixedTgt ? AnchorPoint(ct, st, ta) : ClipToBox(ct, st, hasWps ? wps[wps.Count - 1] : cf);
+
+            var ctrl = new List<Vector2> { A };
+            if (fixedSrc) ctrl.Add(A + AnchorNormal(sa.Side) * StubLen);
+            if (hasWps) ctrl.AddRange(wps);
+            if (fixedTgt) ctrl.Add(B + AnchorNormal(ta.Side) * StubLen);
+            ctrl.Add(B);
+            return ctrl;
+        }
+
+        private static Vector2 AnchorPoint(Vector2 center, Vector2 size, EndAnchor a)
+        {
+            float hw = size.x * 0.5f, hh = size.y * 0.5f;
+            return a.Side switch
+            {
+                BoxSide.Left => new Vector2(center.x - hw, center.y + (a.T - 0.5f) * size.y),
+                BoxSide.Right => new Vector2(center.x + hw, center.y + (a.T - 0.5f) * size.y),
+                BoxSide.Top => new Vector2(center.x + (a.T - 0.5f) * size.x, center.y + hh),
+                _ => new Vector2(center.x + (a.T - 0.5f) * size.x, center.y - hh),
+            };
+        }
+
+        private static Vector2 AnchorNormal(BoxSide side) => side switch
+        {
+            BoxSide.Left => new Vector2(-1f, 0f),
+            BoxSide.Right => new Vector2(1f, 0f),
+            BoxSide.Top => new Vector2(0f, 1f),
+            _ => new Vector2(0f, -1f),
+        };
+
+        private static EndAnchor ProjectToBorder(Vector2 center, Vector2 size, Vector2 point)
+        {
+            float hw = size.x * 0.5f, hh = size.y * 0.5f;
+            float lx = Mathf.Clamp(point.x - center.x, -hw, hw);
+            float ly = Mathf.Clamp(point.y - center.y, -hh, hh);
+            float dR = hw - lx, dL = lx + hw, dT = hh - ly, dB = ly + hh;
+            float m = Mathf.Min(Mathf.Min(dL, dR), Mathf.Min(dT, dB));
+            float tx = hw > 0f ? (lx + hw) / (2f * hw) : 0.5f;
+            float ty = hh > 0f ? (ly + hh) / (2f * hh) : 0.5f;
+            if (m == dL) return new EndAnchor(BoxSide.Left, ty);
+            if (m == dR) return new EndAnchor(BoxSide.Right, ty);
+            if (m == dT) return new EndAnchor(BoxSide.Top, tx);
+            return new EndAnchor(BoxSide.Bottom, tx);
+        }
+
+        /// <summary>A two-bend orthogonal "Z" between two boxes, exiting the facing sides. Degenerate bends collapse.</summary>
+        private static List<Vector2> AutoOrthogonal(Vector2 cf, Vector2 sf, Vector2 ct, Vector2 st)
+        {
+            float dx = ct.x - cf.x, dy = ct.y - cf.y;
+            var pts = new List<Vector2>(4);
+            if (Mathf.Abs(dx) >= Mathf.Abs(dy))
+            {
+                Vector2 a = ClipToBox(cf, sf, new Vector2(ct.x, cf.y));
+                Vector2 b = ClipToBox(ct, st, new Vector2(cf.x, ct.y));
+                float midX = (a.x + b.x) * 0.5f;
+                pts.Add(a); pts.Add(new Vector2(midX, a.y)); pts.Add(new Vector2(midX, b.y)); pts.Add(b);
+            }
+            else
+            {
+                Vector2 a = ClipToBox(cf, sf, new Vector2(cf.x, ct.y));
+                Vector2 b = ClipToBox(ct, st, new Vector2(ct.x, cf.y));
+                float midY = (a.y + b.y) * 0.5f;
+                pts.Add(a); pts.Add(new Vector2(a.x, midY)); pts.Add(new Vector2(b.x, midY)); pts.Add(b);
+            }
+            return CleanColinear(pts);
+        }
+
+        /// <summary>Insert right-angle elbows so every consecutive pair is axis-aligned (horizontal-first).</summary>
+        private static List<Vector2> Orthogonalize(List<Vector2> pts)
+        {
+            var outp = new List<Vector2> { pts[0] };
+            for (int i = 1; i < pts.Count; i++)
+            {
+                var p = outp[outp.Count - 1]; var q = pts[i];
+                if (Mathf.Abs(p.x - q.x) > 0.5f && Mathf.Abs(p.y - q.y) > 0.5f)
+                    outp.Add(new Vector2(q.x, p.y));
+                outp.Add(q);
+            }
+            return outp;
+        }
+
+        /// <summary>Drop duplicate and colinear interior points so the polyline is minimal.</summary>
+        private static List<Vector2> CleanColinear(List<Vector2> pts)
+        {
+            if (pts.Count <= 2) return pts;
+            var outp = new List<Vector2> { pts[0] };
+            for (int i = 1; i < pts.Count - 1; i++)
+            {
+                var a = outp[outp.Count - 1]; var b = pts[i]; var c = pts[i + 1];
+                bool dup = (a - b).sqrMagnitude < 0.5f;
+                bool colX = Mathf.Abs(a.x - b.x) < 0.5f && Mathf.Abs(b.x - c.x) < 0.5f;
+                bool colY = Mathf.Abs(a.y - b.y) < 0.5f && Mathf.Abs(b.y - c.y) < 0.5f;
+                if (dup || colX || colY) continue;
+                outp.Add(b);
+            }
+            outp.Add(pts[pts.Count - 1]);
+            return outp;
+        }
+
+        // --- edge selection + bend handles ---
+
+        public void OnEdgePointerClick(UmlEdgeView view, PointerEventData e)
+        {
+            if (e.button == PointerEventData.InputButton.Right
+                || (e.button == PointerEventData.InputButton.Left && CtrlOrCmd()))
+                ShowEdgeMenu(view, e.position);
+            else if (e.button == PointerEventData.InputButton.Left)
+            {
+                CloseMenu();
+                SetSelected(ElementId.None);
+                SetSelectedEdge(view.Edge);
+            }
+        }
+
+        private void SetSelectedEdge(EdgeId edge)
+        {
+            if (_selectedEdge != edge)
+            {
+                SetEdgeHighlight(_selectedEdge, false);
+                _selectedEdge = edge;
+                SetEdgeHighlight(_selectedEdge, true);
+            }
+            RefreshBendHandles();
+        }
+
+        private void ClearSelectedEdge()
+        {
+            if (!_selectedEdge.IsValid) { RefreshBendHandles(); return; }
+            SetEdgeHighlight(_selectedEdge, false);
+            _selectedEdge = EdgeId.None;
+            RefreshBendHandles();
+        }
+
+        private void SetEdgeHighlight(EdgeId edge, bool on)
+        {
+            if (!edge.IsValid) return;
+            foreach (var b in _edges) if (b.View != null && b.View.Edge == edge) b.View.SetHighlighted(on);
+        }
+
+        private bool TryGetEdgeEndpoints(EdgeId edge, out ElementId from, out ElementId to)
+        {
+            foreach (var b in _edges)
+                if (b.View != null && b.View.Edge == edge) { from = b.From; to = b.To; return true; }
+            from = ElementId.None; to = ElementId.None; return false;
+        }
+
+        private void RefreshBendHandles()
+        {
+            foreach (var h in _bendHandles) if (h != null) Destroy(h.gameObject);
+            _bendHandles.Clear();
+            if (!_selectedEdge.IsValid || !TryGetEdgeEndpoints(_selectedEdge, out var from, out var to)) return;
+            if (!_nodes.ContainsKey(from) || !_nodes.ContainsKey(to)) return;
+
+            var route = RouteEdge(from, to, _selectedEdge);
+            for (int i = 0; i < route.Count - 1; i++)
+            {
+                Vector2 p = route[i], q = route[i + 1];
+                bool vertical = Mathf.Abs(p.x - q.x) < Mathf.Abs(p.y - q.y);
+                var go = new GameObject("Bend", typeof(RectTransform));
+                go.transform.SetParent(_handleLayer, false);
+                var handle = go.AddComponent<UmlBendHandle>();
+                handle.Init(this, _selectedEdge, i, vertical);
+                handle.SetPosition((p + q) * 0.5f);
+                _bendHandles.Add(handle);
+            }
+        }
+
+        private void PositionBendHandles()
+        {
+            if (!_selectedEdge.IsValid || _bendHandles.Count == 0) return;
+            if (!TryGetEdgeEndpoints(_selectedEdge, out var from, out var to)) return;
+            if (!_nodes.ContainsKey(from) || !_nodes.ContainsKey(to)) return;
+            var route = RouteEdge(from, to, _selectedEdge);
+            for (int i = 0; i < _bendHandles.Count && i < route.Count - 1; i++)
+                if (_bendHandles[i] != null)
+                    _bendHandles[i].SetPosition((route[i] + route[i + 1]) * 0.5f);
+        }
+
+        public void BeginBendDrag(EdgeId edge, int segment)
+        {
+            if (!TryGetEdgeEndpoints(edge, out var from, out var to)) return;
+            _dragEdge = edge;
+            _dragSeg = segment;
+            _dragRoute = RouteEdge(from, to, edge);
+        }
+
+        public void UpdateBendDrag(Vector2 screenPos)
+        {
+            if (!_dragEdge.IsValid || _dragRoute == null) return;
+            if (_dragSeg < 0 || _dragSeg + 1 >= _dragRoute.Count) return;
+            Vector2 pos = ScreenToLayer(screenPos);
+
+            // A straight (one-segment) edge has no interior point to move — pull a fresh bend out to the cursor.
+            if (_dragRoute.Count == 2)
+            {
+                _waypoints[_dragEdge] = new List<Vector2> { pos };
+                return;
+            }
+
+            var r = new List<Vector2>(_dragRoute);
+            Vector2 p = r[_dragSeg], q = r[_dragSeg + 1];
+            bool vertical = Mathf.Abs(p.x - q.x) < Mathf.Abs(p.y - q.y);
+
+            float Snap(float v, bool xAxis)
+            {
+                const float t = 9f;
+                float best = v, bestD = t;
+                for (int i = 0; i < r.Count; i++)
+                {
+                    if (i == _dragSeg || i == _dragSeg + 1) continue;
+                    float c = xAxis ? r[i].x : r[i].y;
+                    float dd = Mathf.Abs(v - c);
+                    if (dd < bestD) { bestD = dd; best = c; }
+                }
+                return best;
+            }
+
+            if (vertical)
+            {
+                float nx = Snap(pos.x, true);
+                SetX(r, _dragSeg, nx); SetX(r, _dragSeg + 1, nx);
+            }
+            else
+            {
+                float ny = Snap(pos.y, false);
+                SetY(r, _dragSeg, ny); SetY(r, _dragSeg + 1, ny);
+            }
+
+            // Interior points (drop the box-clipped ends) become the stored waypoints.
+            var cleaned = CleanColinear(r);
+            var interior = new List<Vector2>();
+            for (int i = 1; i < cleaned.Count - 1; i++) interior.Add(cleaned[i]);
+            if (interior.Count == 0) _waypoints.Remove(_dragEdge);
+            else _waypoints[_dragEdge] = interior;
+        }
+
+        public void EndBendDrag()
+        {
+            _dragEdge = EdgeId.None;
+            _dragRoute = null;
+            RefreshBendHandles();
+        }
+
+        private static void SetX(List<Vector2> r, int i, float x) { var v = r[i]; v.x = x; r[i] = v; }
+        private static void SetY(List<Vector2> r, int i, float y) { var v = r[i]; v.y = y; r[i] = v; }
 
         private static string Stereotype(ModelElement el)
         {
@@ -663,7 +995,8 @@ namespace TheRobotDraft.Uml
             _hint.supportRichText = false;
             _hint.raycastTarget = false;
             _hint.text = "Right-click canvas → add classifier · right-click a box → add field/method · " +
-                         "drag the cyan handle → link · corner grip resizes · Ctrl/Cmd+Z undo, +Shift+Z redo";
+                         "drag the cyan handle → link · click an edge → drag its bend handles (orthogonal) · " +
+                         "corner grip resizes · wheel / Ctrl+0 zoom · Ctrl/Cmd+Z undo, +Shift+Z redo";
         }
 
         private RectTransform NewLayer(string name)

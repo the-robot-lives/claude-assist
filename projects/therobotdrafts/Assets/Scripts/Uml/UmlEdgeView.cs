@@ -170,11 +170,13 @@ namespace TheRobotDraft.Uml
         private static Sprite DashSprite()
         {
             if (_dash != null) return _dash;
-            var tex = new Texture2D(8, 1, TextureFormat.RGBA32, false) { wrapMode = TextureWrapMode.Repeat };
-            for (int x = 0; x < 8; x++)
-                tex.SetPixel(x, 0, x < 4 ? Color.white : new Color(1, 1, 1, 0));
+            // 6px period (3 on / 3 off) at 100 ppu → fine dashes (the old 8ppu sprite tiled ~100px: far too coarse).
+            var tex = new Texture2D(6, 1, TextureFormat.RGBA32, false)
+                { wrapMode = TextureWrapMode.Repeat, filterMode = FilterMode.Point };
+            for (int x = 0; x < 6; x++)
+                tex.SetPixel(x, 0, x < 3 ? Color.white : new Color(1, 1, 1, 0));
             tex.Apply();
-            _dash = Sprite.Create(tex, new Rect(0, 0, 8, 1), new Vector2(0.5f, 0.5f), 8f);
+            _dash = Sprite.Create(tex, new Rect(0, 0, 6, 1), new Vector2(0.5f, 0.5f), 100f);
             return _dash;
         }
 
