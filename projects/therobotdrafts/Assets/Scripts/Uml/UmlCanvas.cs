@@ -164,7 +164,29 @@ namespace TheRobotDraft.Uml
             _history = new UndoStack(ctx);
             _ctl = new AuthoringController(_model, _history);
             _activePackage = _selectedId = ElementId.None;
+            _selectedEdge = EdgeId.None;
             _pos.Clear(); _size.Clear();
+            _waypoints.Clear(); _srcAnchor.Clear(); _tgtAnchor.Clear();
+        }
+
+        /// <summary>Start an empty diagram (no undo of the previous one).</summary>
+        public void NewDiagram()
+        {
+            CloseMenu();
+            NewWorld();           // fresh model + empty history
+            RebuildFromModel();
+            Flash("new empty diagram");
+        }
+
+        /// <summary>Discard the current diagram and reopen the built-in sample (not undoable).</summary>
+        public void ResetToSample()
+        {
+            CloseMenu();
+            NewWorld();
+            SeedSample();
+            _ctl.ClearHistory();  // reset is not an undoable edit
+            RebuildFromModel();
+            Flash("reset to sample");
         }
 
         private void Update()
@@ -236,6 +258,21 @@ namespace TheRobotDraft.Uml
             SetSelected(node.Id);
             if (!_model.TryGet(node.Id, out var el)) return;
 
+            if (el.Kind == ElementKind.Note)
+            {
+                var noteId = node.Id; var noteParent = el.Parent;
+                var noteItems = new List<MenuItem>
+                {
+                    new MenuItem("Edit text…", true, () => ShowNoteEditor(noteParent, noteId, screenPos)),
+                    new MenuItem("Copy", true, () => CopyElement(noteId)),
+                    MenuItem.Separator(),
+                    new MenuItem("Delete", true,
+                        () => { _ctl.Delete(noteId); SetSelected(ElementId.None); RebuildFromModel(); }),
+                };
+                CreateMenu(screenPos, "Note", noteItems);
+                return;
+            }
+
             var items = new List<MenuItem>();
             // Members live inside the box: offer the legal member kinds via the structured editor (Rose/Sparx).
             foreach (var k in new[] { ElementKind.Field, ElementKind.Function })
@@ -279,12 +316,21 @@ namespace TheRobotDraft.Uml
                     var kind = k;
                     items.Add(new MenuItem($"Add {k}", true, () => PromptAndAdd(_activePackage, kind, screenPos)));
                 }
+                items.Add(new MenuItem("Add Note", true, () => ShowNoteEditor(_activePackage, ElementId.None, screenPos)));
             }
             else
             {
                 items.Add(new MenuItem("Add Package", true,
                     () => PromptAndAdd(ElementId.None, ElementKind.Package, screenPos)));
             }
+
+            // Document actions.
+            items.Add(MenuItem.Separator());
+            items.Add(new MenuItem("New (empty diagram)", true, () => NewDiagram()));
+            items.Add(new MenuItem("Reset to sample", true, () => ResetToSample()));
+            items.Add(new MenuItem("Save  (Ctrl/Cmd+S)", true, () => { CloseMenu(); SaveDiagram(); }));
+            items.Add(new MenuItem("Delete saved file", true, () => { CloseMenu(); DeleteSavedDiagram(); }));
+
             CreateMenu(screenPos, _activePackage.IsValid ? PackageName(_activePackage) : "Canvas (no package yet)", items);
         }
 
@@ -469,7 +515,8 @@ namespace TheRobotDraft.Uml
             int spread = 0;
             foreach (var el in _model.Elements)
             {
-                if (el.Parent != _activePackage || !KindInfo.IsClassifier(el.Kind)) continue;
+                if (el.Parent != _activePackage) continue;
+                if (!KindInfo.IsClassifier(el.Kind) && el.Kind != ElementKind.Note) continue;
                 if (!_pos.TryGetValue(el.Id, out var p))
                 {
                     p = new Vector2(-360f + (spread % 4) * 240f, 120f - (spread / 4) * 200f);

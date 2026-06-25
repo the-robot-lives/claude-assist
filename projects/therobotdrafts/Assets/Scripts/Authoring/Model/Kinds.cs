@@ -15,6 +15,9 @@ namespace TheRobotDraft.Authoring.Model
         Function,
         Field,
 
+        /// <summary>A free-text UML note / comment (dog-eared box). Holds no members; attaches via a dashed link.</summary>
+        Note,
+
         /// <summary>External / library element — read-only (§5.3). Not a creation-palette slot.</summary>
         External,
     }
@@ -50,6 +53,7 @@ namespace TheRobotDraft.Authoring.Model
             ElementKind.Struct => "#009E73",
             ElementKind.Function => "#2CA02C",
             ElementKind.Field => "#BCBD22",
+            ElementKind.Note => "#F2E2A0",
             ElementKind.External => "#999999",
             _ => "#FFFFFF",
         };

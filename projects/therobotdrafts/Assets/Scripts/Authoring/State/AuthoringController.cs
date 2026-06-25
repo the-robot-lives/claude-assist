@@ -271,6 +271,9 @@ namespace TheRobotDraft.Authoring.State
         public bool Undo() => _history.Undo();
         public bool Redo() => _history.Redo();
 
+        /// <summary>Drop all undo/redo history (e.g. after loading a document) without disturbing the id factory.</summary>
+        public void ClearHistory() => _history.Clear();
+
         // --- internals ---
 
         private void AfterCommit()

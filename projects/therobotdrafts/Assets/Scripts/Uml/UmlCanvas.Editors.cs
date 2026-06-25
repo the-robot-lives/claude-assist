@@ -16,7 +16,8 @@ namespace TheRobotDraft.Uml
     /// </summary>
     public sealed partial class UmlCanvas
     {
-        private static readonly string[] CommonLanguages = { "C#", "Java", "C++", "TypeScript", "Python" };
+        private static readonly string[] CommonLanguages =
+            { "C#", "C/C++", "Rust", "Go", "Java", "Python", "Node.js", "Elixir", "TypeScript" };
         private static readonly string[] CommonMultiplicities = { "1", "0..1", "0..*", "1..*", "*" };
 
         private static readonly Color LabelColor = new Color(0.62f, 0.68f, 0.78f, 1f);
@@ -129,7 +130,7 @@ namespace TheRobotDraft.Uml
             if (!_model.TryGet(id, out var el)) return;
             CloseMenu();
 
-            float w = 470f, h = 362f;
+            float w = 470f, h = 430f;
             var panel = BeginModal(w, h, "Properties   —   " + el.Kind);
 
             float y = -50f;
@@ -139,18 +140,21 @@ namespace TheRobotDraft.Uml
 
             FormLabel(panel, "Implementation language", ref y, w);
             var langInput = MakeInput(panel, new Vector2(16f, y), w - 32f, el.Language,
-                "C# / Java / C++ / TypeScript / Python…");
+                "C# / Rust / Go / Java / Python / Node.js / Elixir…");
             y -= 40f;
-            // Quick-pick chips that fill the language field.
-            float lx = 16f;
-            foreach (var lang in CommonLanguages)
+            // Quick-pick chips that fill the language field (wrapped into rows).
+            const int perRow = 4;
+            const float chipW = 100f, chipH = 26f, chipGap = 6f;
+            for (int i = 0; i < CommonLanguages.Length; i++)
             {
-                var captured = lang;
-                MakeButton(panel, lang, new Vector2(lx, y), new Vector2(84f, 28f),
+                var captured = CommonLanguages[i];
+                float cx = 16f + (i % perRow) * (chipW + chipGap);
+                float cy = y - (i / perRow) * (chipH + chipGap);
+                MakeButton(panel, captured, new Vector2(cx, cy), new Vector2(chipW, chipH),
                     new Color(0.18f, 0.22f, 0.28f, 1f), () => langInput.text = captured);
-                lx += 88f;
             }
-            y -= 36f;
+            int rows = (CommonLanguages.Length + perRow - 1) / perRow;
+            y -= rows * (chipH + chipGap) + 4f;
 
             FormLabel(panel, "Stereotype   («…» — overrides the derived one)", ref y, w);
             var stereoInput = MakeInput(panel, new Vector2(16f, y), w - 32f, el.Stereotype,
@@ -181,6 +185,82 @@ namespace TheRobotDraft.Uml
                 new Color(0.22f, 0.24f, 0.29f, 1f), CloseMenu);
 
             FocusInput(nameInput);
+        }
+
+        // --- note (comment) editor ---
+
+        private void ShowNoteEditor(ElementId parent, ElementId existing, Vector2 screenPos)
+        {
+            CloseMenu();
+            bool editing = existing.IsValid && _model.TryGet(existing, out _);
+            string current = editing && _model.TryGet(existing, out var ex) ? ex.Name : "note";
+
+            float w = 460f, h = 240f;
+            var panel = BeginModal(w, h, editing ? "Edit Note" : "Add Note");
+
+            float y = -50f;
+            FormLabel(panel, "Note text", ref y, w);
+            var input = MakeMultilineInput(panel, new Vector2(16f, y), w - 32f, 110f, current, "Free comment text…");
+
+            void Submit()
+            {
+                string txt = string.IsNullOrWhiteSpace(input.text) ? "note" : input.text;
+                CloseMenu();
+                if (editing)
+                {
+                    _ctl.Rename(existing, txt);
+                    RebuildFromModel();
+                    SetSelected(existing);
+                    Flash("updated note");
+                }
+                else
+                {
+                    _ctl.EnterAddNode(ElementKind.Note);
+                    var id = _ctl.CommitAddNode(parent, txt);
+                    if (!id.IsValid) { Flash("invalid placement"); _ctl.EnterSelect(); return; }
+                    _pos[id] = ScreenToLayer(screenPos);
+                    RebuildFromModel();
+                    SetSelected(id);
+                    Flash("added note");
+                }
+            }
+
+            float yBtn = -(h - 46f);
+            MakeButton(panel, "OK", new Vector2(w - 198f, yBtn), new Vector2(84f, 34f),
+                new Color(0.20f, 0.42f, 0.52f, 1f), Submit);
+            MakeButton(panel, "Cancel", new Vector2(w - 104f, yBtn), new Vector2(88f, 34f),
+                new Color(0.22f, 0.24f, 0.29f, 1f), CloseMenu);
+
+            FocusInput(input);
+        }
+
+        private InputField MakeMultilineInput(RectTransform parent, Vector2 topLeft, float width, float height,
+            string value, string placeholder)
+        {
+            var inputGo = new GameObject("Input", typeof(RectTransform));
+            var inRt = (RectTransform)inputGo.transform;
+            inRt.SetParent(parent, false);
+            inRt.anchorMin = inRt.anchorMax = new Vector2(0f, 1f);
+            inRt.pivot = new Vector2(0f, 1f);
+            inRt.sizeDelta = new Vector2(width, height);
+            inRt.anchoredPosition = topLeft;
+            inputGo.AddComponent<Image>().color = new Color(0.20f, 0.22f, 0.27f, 1f);
+            var input = inputGo.AddComponent<InputField>();
+
+            var textComp = MakeText(inRt, "", new Vector2(8f, -4f), new Vector2(width - 16f, height - 8f), 15,
+                new Color(0.96f, 0.97f, 1f, 1f), TextAnchor.UpperLeft);
+            textComp.raycastTarget = true;
+            textComp.horizontalOverflow = HorizontalWrapMode.Wrap;
+            var ph = MakeText(inRt, placeholder ?? "", new Vector2(8f, -4f), new Vector2(width - 16f, height - 8f), 15,
+                new Color(0.5f, 0.55f, 0.62f, 1f), TextAnchor.UpperLeft);
+            ph.fontStyle = FontStyle.Italic;
+            ph.horizontalOverflow = HorizontalWrapMode.Wrap;
+
+            input.textComponent = textComp;
+            input.placeholder = ph;
+            input.lineType = InputField.LineType.MultiLineNewline;
+            input.text = value ?? "";
+            return input;
         }
 
         // --- relationship (multiplicity / label) editor ---

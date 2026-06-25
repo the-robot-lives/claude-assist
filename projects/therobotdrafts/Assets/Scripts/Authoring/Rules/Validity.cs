@@ -44,7 +44,8 @@ namespace TheRobotDraft.Authoring.Rules
                 // A package groups types and sub-packages — never raw members (the spec's worked example:
                 // a Field directly under a Package is illegal).
                 ElementKind.Package => childKind is ElementKind.Package or ElementKind.Class
-                    or ElementKind.Interface or ElementKind.Enum or ElementKind.Struct or ElementKind.External,
+                    or ElementKind.Interface or ElementKind.Enum or ElementKind.Struct or ElementKind.External
+                    or ElementKind.Note,
 
                 // Classifiers hold members and (language-permitting) nested types.
                 ElementKind.Class or ElementKind.Struct => childKind is ElementKind.Field or ElementKind.Function
@@ -123,13 +124,13 @@ namespace TheRobotDraft.Authoring.Rules
                         : Validity.Invalid("association connects types");
 
                 case EdgeKind.Dependency:
-                    // loosest: any classifier or package → any classifier or package
-                    // (§4.5: a package-level dependency is legal UML).
-                    bool depOk = (KindInfo.IsClassifier(from.Kind) || from.Kind == ElementKind.Package)
-                                 && (KindInfo.IsClassifier(to.Kind) || to.Kind == ElementKind.Package);
-                    return depOk
+                    // loosest: any classifier or package → any classifier or package, and notes attach this way
+                    // too (a note→element comment link is a dashed line). (§4.5: package-level dependency is legal.)
+                    bool depEndOk(ElementKind k) =>
+                        KindInfo.IsClassifier(k) || k == ElementKind.Package || k == ElementKind.Note;
+                    return depEndOk(from.Kind) && depEndOk(to.Kind)
                         ? Validity.Valid
-                        : Validity.Invalid("dependency connects types or packages");
+                        : Validity.Invalid("dependency connects types, packages, or notes");
 
                 default:
                     return Validity.Invalid("unknown relationship");

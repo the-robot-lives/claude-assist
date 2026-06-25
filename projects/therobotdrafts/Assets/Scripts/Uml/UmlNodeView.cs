@@ -57,44 +57,51 @@ namespace TheRobotDraft.Uml
             _outline.effectDistance = new Vector2(2.5f, 2.5f);
             _outline.enabled = false;
 
-            float stereoH = string.IsNullOrEmpty(stereotype) ? 0f : 16f;
-            float langH = string.IsNullOrEmpty(language) ? 0f : 14f;
-            float headerH = 30f + stereoH + langH;
-            float attrH = Mathf.Max(1, attributes.Count) * RowH + 6f;
-            float opH = Mathf.Max(1, operations.Count) * RowH + 6f;
-            float contentH = headerH + 2f + attrH + 2f + opH;
-
-            float w = sizeOverride.x > 1f ? sizeOverride.x : DefaultWidth;
-            float h = Mathf.Max(contentH, sizeOverride.y);
-            Rt.sizeDelta = new Vector2(w, h);
-
-            // Header: stronger pastel of the kind hue, with stereotype + bold black name (conventional UML).
-            var header = Panel("Header", 0f, headerH, Color.Lerp(hue, Color.white, 0.52f));
-            var nameColor = new Color(0.11f, 0.12f, 0.15f, 1f);
-            var subColor = new Color(0.30f, 0.32f, 0.38f, 1f);
-            float ty = -4f;
-            if (stereoH > 0f)
+            if (kind == ElementKind.Note)
             {
-                Row(header, stereotype, ty, stereoH, 14, subColor, TextAnchor.MiddleCenter);
-                ty -= stereoH;
+                BuildNote(name, sizeOverride);
             }
-            var nameRow = Row(header, name, ty, 28f, 18, nameColor, TextAnchor.MiddleCenter);
-            nameRow.fontStyle = FontStyle.Bold;
-            ty -= 28f;
-            if (langH > 0f)
-                Row(header, "{" + language + "}", ty, langH, 12, subColor, TextAnchor.MiddleCenter);
+            else
+            {
+                float stereoH = string.IsNullOrEmpty(stereotype) ? 0f : 16f;
+                float langH = string.IsNullOrEmpty(language) ? 0f : 14f;
+                float headerH = 30f + stereoH + langH;
+                float attrH = Mathf.Max(1, attributes.Count) * RowH + 6f;
+                float opH = Mathf.Max(1, operations.Count) * RowH + 6f;
+                float contentH = headerH + 2f + attrH + 2f + opH;
 
-            float y = -headerH;
-            Divider(y); y -= 2f;
+                float w = sizeOverride.x > 1f ? sizeOverride.x : DefaultWidth;
+                float h = Mathf.Max(contentH, sizeOverride.y);
+                Rt.sizeDelta = new Vector2(w, h);
 
-            // Attributes compartment (fields).
-            float ay = y;
-            AddRows(attributes, ref ay, attrH);
-            y -= attrH;
-            Divider(y); y -= 2f;
+                // Header: stronger pastel of the kind hue, with stereotype + bold black name (conventional UML).
+                var header = Panel("Header", 0f, headerH, Color.Lerp(hue, Color.white, 0.52f));
+                var nameColor = new Color(0.11f, 0.12f, 0.15f, 1f);
+                var subColor = new Color(0.30f, 0.32f, 0.38f, 1f);
+                float ty = -4f;
+                if (stereoH > 0f)
+                {
+                    Row(header, stereotype, ty, stereoH, 14, subColor, TextAnchor.MiddleCenter);
+                    ty -= stereoH;
+                }
+                var nameRow = Row(header, name, ty, 28f, 18, nameColor, TextAnchor.MiddleCenter);
+                nameRow.fontStyle = FontStyle.Bold;
+                ty -= 28f;
+                if (langH > 0f)
+                    Row(header, "{" + language + "}", ty, langH, 12, subColor, TextAnchor.MiddleCenter);
 
-            // Operations compartment (methods).
-            AddRows(operations, ref y, opH);
+                float y = -headerH;
+                Divider(y); y -= 2f;
+
+                // Attributes compartment (fields).
+                float ay = y;
+                AddRows(attributes, ref ay, attrH);
+                y -= attrH;
+                Divider(y); y -= 2f;
+
+                // Operations compartment (methods).
+                AddRows(operations, ref y, opH);
+            }
 
             // Four connect hotspots (§4.1 quick-handle), one per side — revealed on hover (CanvasGroup), and the
             // link leaves from the side you grab.
@@ -247,6 +254,61 @@ namespace TheRobotDraft.Uml
             t.horizontalOverflow = HorizontalWrapMode.Overflow;
             t.verticalOverflow = VerticalWrapMode.Overflow;
             return t;
+        }
+
+        // --- note (comment) rendering ---
+
+        private void BuildNote(string text, Vector2 sizeOverride)
+        {
+            var noteBody = new Color(0.99f, 0.96f, 0.74f, 1f);
+            _baseColor = noteBody;
+            if (_bg != null) _bg.color = noteBody;
+            if (_border != null) _border.effectColor = new Color(0.78f, 0.70f, 0.40f, 1f);
+
+            float w = sizeOverride.x > 1f ? sizeOverride.x : 220f;
+            float h = sizeOverride.y > 1f ? sizeOverride.y : 96f;
+            Rt.sizeDelta = new Vector2(w, h);
+
+            // Dog-eared (folded) top-right corner.
+            const float fold = 16f;
+            var foldRt = NewChild("Fold", transform);
+            foldRt.anchorMin = foldRt.anchorMax = new Vector2(1f, 1f);
+            foldRt.pivot = new Vector2(1f, 1f);
+            foldRt.sizeDelta = new Vector2(fold, fold);
+            foldRt.anchoredPosition = Vector2.zero;
+            var foldImg = foldRt.gameObject.AddComponent<Image>();
+            foldImg.sprite = CornerFoldSprite();
+            foldImg.color = new Color(0.90f, 0.84f, 0.55f, 1f);
+            foldImg.raycastTarget = false;
+
+            // Free wrapped text filling the box (with padding).
+            var bodyRt = NewChild("NoteText", transform);
+            bodyRt.anchorMin = Vector2.zero; bodyRt.anchorMax = Vector2.one;
+            bodyRt.offsetMin = new Vector2(8f, 6f); bodyRt.offsetMax = new Vector2(-8f, -6f);
+            var t = bodyRt.gameObject.AddComponent<Text>();
+            t.font = font_ ?? (font_ = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf"));
+            t.text = text;
+            t.fontSize = 15;
+            t.color = new Color(0.16f, 0.15f, 0.06f, 1f);
+            t.alignment = TextAnchor.UpperLeft;
+            t.supportRichText = false;
+            t.raycastTarget = false;
+            t.horizontalOverflow = HorizontalWrapMode.Wrap;
+            t.verticalOverflow = VerticalWrapMode.Overflow;
+        }
+
+        private static Sprite _foldSprite;
+        private static Sprite CornerFoldSprite()
+        {
+            if (_foldSprite != null) return _foldSprite;
+            const int n = 16;
+            var tex = new Texture2D(n, n, TextureFormat.RGBA32, false) { filterMode = FilterMode.Point };
+            for (int y = 0; y < n; y++)
+                for (int x = 0; x < n; x++)
+                    tex.SetPixel(x, y, (x + y) <= n ? Color.white : new Color(1, 1, 1, 0));
+            tex.Apply();
+            _foldSprite = Sprite.Create(tex, new Rect(0, 0, n, n), new Vector2(0.5f, 0.5f), n);
+            return _foldSprite;
         }
 
         private Font font_;

@@ -223,7 +223,15 @@ namespace TheRobotDraft.Uml
                 ? ap : ElementId.None;
             _selectedId = ElementId.None;
             _selectedEdge = EdgeId.None;
+            _ctl.ClearHistory(); // a load is not an undoable edit
             RebuildFromModel();
+        }
+
+        /// <summary>Delete the persisted diagram file (so the next launch opens fresh).</summary>
+        public void DeleteSavedDiagram()
+        {
+            try { if (File.Exists(DiagramPath)) File.Delete(DiagramPath); Flash("deleted saved file"); }
+            catch (Exception ex) { Flash("delete failed: " + ex.Message); }
         }
 
         private static List<ElementDto> OrderByDepth(List<ElementDto> els, Dictionary<string, ElementDto> byId)
