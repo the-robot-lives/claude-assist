@@ -14,6 +14,19 @@ namespace TheRobotDraft.Authoring.Model
         /// <summary>UML <c>abstract</c> is a modifier, not a kind (§3.1) — outline/wireframe glyph.</summary>
         public bool IsAbstract { get; internal set; }
 
+        /// <summary>
+        /// Implementation language for a classifier (e.g. "C#", "Java", "C++", "TypeScript") — Rational Rose /
+        /// Sparx EA track this per type so generated code and type semantics follow the right grammar.
+        /// Null/empty = unspecified. Members ignore it.
+        /// </summary>
+        public string Language { get; internal set; }
+
+        /// <summary>
+        /// Custom UML stereotype override (e.g. "entity", "service", "controller"). When set it replaces the
+        /// kind-derived «interface»/«enumeration» guillemet label. Null/empty = use the derived stereotype.
+        /// </summary>
+        public string Stereotype { get; internal set; }
+
         internal readonly List<ElementId> Children = new();
 
         internal ModelElement(ElementId id, ElementKind kind, string name, ElementId parent)
@@ -34,6 +47,15 @@ namespace TheRobotDraft.Authoring.Model
         public EdgeKind Kind { get; internal set; }
         public ElementId From { get; internal set; }
         public ElementId To { get; internal set; }
+
+        /// <summary>Association name / role label drawn at the relationship's midpoint (e.g. "line item"). Null = none.</summary>
+        public string Label { get; internal set; }
+
+        /// <summary>UML multiplicity at the <see cref="From"/> end (e.g. "1", "0..*", "1..*"). Null = unspecified.</summary>
+        public string SourceMultiplicity { get; internal set; }
+
+        /// <summary>UML multiplicity at the <see cref="To"/> end (e.g. "1", "0..*", "1..*"). Null = unspecified.</summary>
+        public string TargetMultiplicity { get; internal set; }
 
         internal ModelEdge(EdgeId id, EdgeKind kind, ElementId from, ElementId to)
         {
@@ -108,6 +130,8 @@ namespace TheRobotDraft.Authoring.Model
         internal void Rename(ElementId id, string name) => _elements[id].Name = name;
         internal void SetKind(ElementId id, ElementKind kind) => _elements[id].Kind = kind;
         internal void SetAbstract(ElementId id, bool isAbstract) => _elements[id].IsAbstract = isAbstract;
+        internal void SetLanguage(ElementId id, string language) => _elements[id].Language = language;
+        internal void SetStereotype(ElementId id, string stereotype) => _elements[id].Stereotype = stereotype;
 
         // --- edge mutators ---
 
@@ -122,6 +146,13 @@ namespace TheRobotDraft.Authoring.Model
 
         internal void RemoveEdge(EdgeId id) => _edges.Remove(id);
         internal void SetEdgeType(EdgeId id, EdgeKind kind) => _edges[id].Kind = kind;
+        internal void SetEdgeLabel(EdgeId id, string label) => _edges[id].Label = label;
+        internal void SetEdgeMultiplicity(EdgeId id, string source, string target)
+        {
+            var edge = _edges[id];
+            edge.SourceMultiplicity = source;
+            edge.TargetMultiplicity = target;
+        }
         internal void SetEdgeEndpoints(EdgeId id, ElementId from, ElementId to)
         {
             var edge = _edges[id];

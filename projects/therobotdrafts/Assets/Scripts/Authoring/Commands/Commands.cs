@@ -163,6 +163,45 @@ namespace TheRobotDraft.Authoring.Commands
         public void Undo(CommandContext ctx) => ctx.Model.SetEdgeType(_edge, _oldKind);
     }
 
+    /// <summary>
+    /// Set a relationship's adornments — midpoint <c>label</c> (association name / role) and the
+    /// per-end <c>source</c>/<c>target</c> multiplicities (e.g. "1", "0..*"). One reversible undo step.
+    /// </summary>
+    public sealed class SetEdgeMetaCommand : IAuthoringCommand
+    {
+        private readonly EdgeId _edge;
+        private readonly string _label, _source, _target;
+        private string _oldLabel, _oldSource, _oldTarget;
+
+        public SetEdgeMetaCommand(EdgeId edge, string label, string source, string target)
+        {
+            _edge = edge;
+            _label = Norm(label);
+            _source = Norm(source);
+            _target = Norm(target);
+        }
+
+        private static string Norm(string s) => string.IsNullOrWhiteSpace(s) ? null : s.Trim();
+
+        public string Label => "Edit relationship";
+
+        public void Do(CommandContext ctx)
+        {
+            var e = ctx.Model.Get(_edge);
+            _oldLabel = e.Label;
+            _oldSource = e.SourceMultiplicity;
+            _oldTarget = e.TargetMultiplicity;
+            ctx.Model.SetEdgeLabel(_edge, _label);
+            ctx.Model.SetEdgeMultiplicity(_edge, _source, _target);
+        }
+
+        public void Undo(CommandContext ctx)
+        {
+            ctx.Model.SetEdgeLabel(_edge, _oldLabel);
+            ctx.Model.SetEdgeMultiplicity(_edge, _oldSource, _oldTarget);
+        }
+    }
+
     /// <summary>Re-home one endpoint of an edge (§4.6 re-target). Keeps the edge's type.</summary>
     public sealed class RetargetEdgeCommand : IAuthoringCommand
     {
@@ -196,6 +235,7 @@ namespace TheRobotDraft.Authoring.Commands
         private readonly EdgeId _id;
         private EdgeKind _kind;
         private ElementId _from, _to;
+        private string _label, _source, _target;
 
         public DeleteEdgeCommand(EdgeId id) => _id = id;
 
@@ -205,10 +245,15 @@ namespace TheRobotDraft.Authoring.Commands
         {
             var e = ctx.Model.Get(_id);
             _kind = e.Kind; _from = e.From; _to = e.To;
+            _label = e.Label; _source = e.SourceMultiplicity; _target = e.TargetMultiplicity;
             ctx.Model.RemoveEdge(_id);
         }
 
-        public void Undo(CommandContext ctx) => ctx.Model.AddEdge(_id, _kind, _from, _to);
+        public void Undo(CommandContext ctx)
+        {
+            var e = ctx.Model.AddEdge(_id, _kind, _from, _to);
+            e.Label = _label; e.SourceMultiplicity = _source; e.TargetMultiplicity = _target;
+        }
     }
 
     /// <summary>Rename an element (§3.5). Empty name is a caller concern (deduped default); this just sets it.</summary>
@@ -260,6 +305,41 @@ namespace TheRobotDraft.Authoring.Commands
     }
 
     /// <summary>
+    /// Set classifier metadata — implementation <c>language</c> and a custom <c>stereotype</c> override
+    /// (Rational Rose / Sparx EA classifier properties). One reversible undo step; captures the prior values.
+    /// </summary>
+    public sealed class SetMetaCommand : IAuthoringCommand
+    {
+        private readonly ElementId _element;
+        private readonly string _language, _stereotype;
+        private string _oldLanguage, _oldStereotype;
+
+        public SetMetaCommand(ElementId element, string language, string stereotype)
+        {
+            _element = element;
+            _language = string.IsNullOrWhiteSpace(language) ? null : language.Trim();
+            _stereotype = string.IsNullOrWhiteSpace(stereotype) ? null : stereotype.Trim();
+        }
+
+        public string Label => "Edit properties";
+
+        public void Do(CommandContext ctx)
+        {
+            var e = ctx.Model.Get(_element);
+            _oldLanguage = e.Language;
+            _oldStereotype = e.Stereotype;
+            ctx.Model.SetLanguage(_element, _language);
+            ctx.Model.SetStereotype(_element, _stereotype);
+        }
+
+        public void Undo(CommandContext ctx)
+        {
+            ctx.Model.SetLanguage(_element, _oldLanguage);
+            ctx.Model.SetStereotype(_element, _oldStereotype);
+        }
+    }
+
+    /// <summary>
     /// Delete an element and its whole subtree plus every incident edge, as a single undo step (§4.6/§3.6).
     /// Snapshots everything removed so <see cref="Undo"/> restores the subtree and edges exactly.
     /// </summary>
@@ -272,18 +352,24 @@ namespace TheRobotDraft.Authoring.Commands
         {
             public readonly ElementId Id, Parent;
             public readonly ElementKind Kind;
-            public readonly string Name;
+            public readonly string Name, Language, Stereotype;
             public readonly bool IsAbstract;
             public ElementSnap(ModelElement e)
             {
                 Id = e.Id; Parent = e.Parent; Kind = e.Kind; Name = e.Name; IsAbstract = e.IsAbstract;
+                Language = e.Language; Stereotype = e.Stereotype;
             }
         }
 
         private readonly struct EdgeSnap
         {
             public readonly EdgeId Id; public readonly EdgeKind Kind; public readonly ElementId From, To;
-            public EdgeSnap(ModelEdge e) { Id = e.Id; Kind = e.Kind; From = e.From; To = e.To; }
+            public readonly string Label, Source, Target;
+            public EdgeSnap(ModelEdge e)
+            {
+                Id = e.Id; Kind = e.Kind; From = e.From; To = e.To;
+                Label = e.Label; Source = e.SourceMultiplicity; Target = e.TargetMultiplicity;
+            }
         }
 
         private List<ElementSnap> _removedElements;
@@ -335,9 +421,18 @@ namespace TheRobotDraft.Authoring.Commands
             var model = ctx.Model;
             // Parents first (snapshot is in BFS order), so each child's parent already exists.
             foreach (var s in _removedElements)
-                model.AddElement(s.Id, s.Kind, s.Name, s.Parent, s.IsAbstract);
+            {
+                var restored = model.AddElement(s.Id, s.Kind, s.Name, s.Parent, s.IsAbstract);
+                restored.Language = s.Language;
+                restored.Stereotype = s.Stereotype;
+            }
             foreach (var e in _removedEdges)
-                model.AddEdge(e.Id, e.Kind, e.From, e.To);
+            {
+                var edge = model.AddEdge(e.Id, e.Kind, e.From, e.To);
+                edge.Label = e.Label;
+                edge.SourceMultiplicity = e.Source;
+                edge.TargetMultiplicity = e.Target;
+            }
             ctx.Packer.OnInserted(_root, _rootParent);
         }
     }

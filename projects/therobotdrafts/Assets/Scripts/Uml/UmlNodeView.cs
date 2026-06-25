@@ -20,14 +20,16 @@ namespace TheRobotDraft.Uml
 
         private UmlCanvas _canvas;
         private Image _bg;
-        private Outline _outline;
+        private Outline _outline;   // selection highlight (toggled)
+        private Outline _border;    // permanent thin box border (conventional UML look)
+        private Color _baseColor;   // resting body fill, restored after affordance tinting
 
         public const float DefaultWidth = 220f;
         private const float RowH = 18f;
 
         public void Init(UmlCanvas canvas, ElementId id, string name, string stereotype, ElementKind kind,
             Color hue, Font font, System.Collections.Generic.List<string> attributes,
-            System.Collections.Generic.List<string> operations, Vector2 sizeOverride)
+            System.Collections.Generic.List<string> operations, string language, Vector2 sizeOverride)
         {
             _canvas = canvas;
             Id = id;
@@ -36,16 +38,26 @@ namespace TheRobotDraft.Uml
             Rt.anchorMin = Rt.anchorMax = new Vector2(0.5f, 0.5f);
             Rt.pivot = new Vector2(0.5f, 0.5f);
 
+            // Conventional UML look (Rose / Sparx / Visual Paradigm): white-ish body faintly tinted by the
+            // kind hue, a thin solid border, and a stronger pastel header band.
+            _baseColor = Color.Lerp(hue, Color.white, 0.88f);
             _bg = gameObject.AddComponent<Image>();
-            _bg.color = new Color(0.15f, 0.17f, 0.21f, 1f);
+            _bg.color = _baseColor;
 
+            // Permanent thin border.
+            _border = gameObject.AddComponent<Outline>();
+            _border.effectColor = Color.Lerp(hue, new Color(0.25f, 0.27f, 0.32f, 1f), 0.55f);
+            _border.effectDistance = new Vector2(1f, 1f);
+
+            // Selection highlight (toggled on top of the border).
             _outline = gameObject.AddComponent<Outline>();
-            _outline.effectColor = new Color(0.30f, 0.85f, 0.95f, 1f);
+            _outline.effectColor = new Color(0.12f, 0.55f, 0.85f, 1f);
             _outline.effectDistance = new Vector2(2.5f, 2.5f);
             _outline.enabled = false;
 
             float stereoH = string.IsNullOrEmpty(stereotype) ? 0f : 16f;
-            float headerH = 30f + stereoH;
+            float langH = string.IsNullOrEmpty(language) ? 0f : 14f;
+            float headerH = 30f + stereoH + langH;
             float attrH = Mathf.Max(1, attributes.Count) * RowH + 6f;
             float opH = Mathf.Max(1, operations.Count) * RowH + 6f;
             float contentH = headerH + 2f + attrH + 2f + opH;
@@ -54,16 +66,21 @@ namespace TheRobotDraft.Uml
             float h = Mathf.Max(contentH, sizeOverride.y);
             Rt.sizeDelta = new Vector2(w, h);
 
-            // Header: kind-hue tinted strip with stereotype + name.
-            var header = Panel("Header", 0f, headerH, new Color(hue.r * 0.5f, hue.g * 0.5f, hue.b * 0.5f, 1f));
+            // Header: stronger pastel of the kind hue, with stereotype + bold black name (conventional UML).
+            var header = Panel("Header", 0f, headerH, Color.Lerp(hue, Color.white, 0.52f));
+            var nameColor = new Color(0.11f, 0.12f, 0.15f, 1f);
+            var subColor = new Color(0.30f, 0.32f, 0.38f, 1f);
             float ty = -4f;
             if (stereoH > 0f)
             {
-                Row(header, stereotype, ty, stereoH, 14, new Color(0.78f, 0.83f, 0.90f, 1f), TextAnchor.MiddleCenter);
+                Row(header, stereotype, ty, stereoH, 14, subColor, TextAnchor.MiddleCenter);
                 ty -= stereoH;
             }
-            var nameRow = Row(header, name, ty, 28f, 18, new Color(0.96f, 0.97f, 1f, 1f), TextAnchor.MiddleCenter);
+            var nameRow = Row(header, name, ty, 28f, 18, nameColor, TextAnchor.MiddleCenter);
             nameRow.fontStyle = FontStyle.Bold;
+            ty -= 28f;
+            if (langH > 0f)
+                Row(header, "{" + language + "}", ty, langH, 12, subColor, TextAnchor.MiddleCenter);
 
             float y = -headerH;
             Divider(y); y -= 2f;
@@ -93,9 +110,9 @@ namespace TheRobotDraft.Uml
             if (_bg == null) return;
             _bg.color = tint switch
             {
-                AffordanceTint.Valid => new Color(0.14f, 0.30f, 0.22f, 1f),
-                AffordanceTint.Invalid => new Color(0.40f, 0.16f, 0.06f, 1f), // §5.1 vermillion-family
-                _ => new Color(0.15f, 0.17f, 0.21f, 1f),
+                AffordanceTint.Valid => new Color(0.80f, 0.93f, 0.82f, 1f),
+                AffordanceTint.Invalid => new Color(0.97f, 0.82f, 0.78f, 1f), // §5.1 vermillion-family (light)
+                _ => _baseColor,
             };
         }
 
@@ -122,7 +139,8 @@ namespace TheRobotDraft.Uml
 
         public void OnDrag(PointerEventData e)
         {
-            Rt.anchoredPosition += e.delta / _canvas.ScaleFactor;
+            // Divide by canvas scale AND diagram zoom so the box tracks the cursor at any zoom level.
+            Rt.anchoredPosition += e.delta / (_canvas.ScaleFactor * _canvas.Zoom);
             _canvas.OnNodeMoved(Id, Rt.anchoredPosition);
         }
 
@@ -134,7 +152,7 @@ namespace TheRobotDraft.Uml
             float top = y - 3f;
             foreach (var s in items)
             {
-                Row(transform, s, top, RowH, 15, new Color(0.86f, 0.89f, 0.94f, 1f), TextAnchor.MiddleLeft);
+                Row(transform, s, top, RowH, 15, new Color(0.13f, 0.15f, 0.19f, 1f), TextAnchor.MiddleLeft);
                 top -= RowH;
             }
             y -= compartmentH;
@@ -161,7 +179,7 @@ namespace TheRobotDraft.Uml
             rt.sizeDelta = new Vector2(0f, 2f);
             rt.anchoredPosition = new Vector2(0f, y);
             var img = rt.gameObject.AddComponent<Image>();
-            img.color = new Color(0.30f, 0.34f, 0.40f, 1f);
+            img.color = new Color(0.66f, 0.68f, 0.73f, 1f);
             img.raycastTarget = false;
         }
 
@@ -241,6 +259,6 @@ namespace TheRobotDraft.Uml
             gameObject.AddComponent<Image>().color = new Color(0.45f, 0.50f, 0.58f, 1f);
         }
 
-        public void OnDrag(PointerEventData e) => _node.ApplyResize(e.delta / _canvas.ScaleFactor);
+        public void OnDrag(PointerEventData e) => _node.ApplyResize(e.delta / (_canvas.ScaleFactor * _canvas.Zoom));
     }
 }

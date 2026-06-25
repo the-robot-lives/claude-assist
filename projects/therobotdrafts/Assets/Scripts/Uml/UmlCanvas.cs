@@ -19,7 +19,7 @@ namespace TheRobotDraft.Uml
     /// Desktop stand-in for the DOTS bubble renderer — the harness owns 2D layout, the real packer owns 3D
     /// (ADR-003). The authoring core (model/rules/commands/controller) is reused unchanged.
     /// </summary>
-    public sealed class UmlCanvas : MonoBehaviour
+    public sealed partial class UmlCanvas : MonoBehaviour
     {
         private static readonly EdgeKind[] AllEdgeKinds =
         {
@@ -32,7 +32,7 @@ namespace TheRobotDraft.Uml
             ElementKind.Class, ElementKind.Interface, ElementKind.Enum, ElementKind.Struct,
         };
 
-        private static readonly Color EdgeColor = new Color(0.72f, 0.77f, 0.86f, 1f);
+        private static readonly Color EdgeColor = new Color(0.28f, 0.30f, 0.36f, 1f);
 
         private Canvas _canvas;
         private RectTransform _root, _nodeLayer, _edgeLayer, _tabBar;
@@ -56,7 +56,14 @@ namespace TheRobotDraft.Uml
 
         private GameObject _menu;
 
+        // Diagram zoom (mouse wheel / Ctrl +/-/0). Scales the node+edge layers around the canvas center.
+        private float _zoom = 1f;
+        private const float MinZoom = 0.3f, MaxZoom = 3f;
+
         public float ScaleFactor => _canvas != null ? _canvas.scaleFactor : 1f;
+
+        /// <summary>Diagram zoom factor (1 = 100%). Pointer-delta math multiplies by this so drags track the cursor.</summary>
+        public float Zoom => _zoom;
 
         private struct EdgeBinding { public UmlEdgeView View; public ElementId From, To; }
 
@@ -85,14 +92,28 @@ namespace TheRobotDraft.Uml
             }
 
             var order = Add(ElementKind.Class, pkg, "Order");
-            _pos[order] = new Vector2(-230f, 30f);
-            Add(ElementKind.Field, order, "id");
-            Add(ElementKind.Field, order, "total");
-            Add(ElementKind.Function, order, "submit");
+            _pos[order] = new Vector2(-250f, 30f);
+            _ctl.SetMeta(order, "C#", null);
+            Add(ElementKind.Field, order, "- id : Guid");
+            Add(ElementKind.Field, order, "- total : decimal");
+            Add(ElementKind.Function, order, "+ submit() : void");
 
             var payable = Add(ElementKind.Interface, pkg, "Payable");
-            _pos[payable] = new Vector2(210f, 60f);
-            Add(ElementKind.Function, payable, "amountDue");
+            _pos[payable] = new Vector2(230f, 60f);
+            _ctl.SetMeta(payable, "C#", null);
+            Add(ElementKind.Function, payable, "+ amountDue() : decimal");
+
+            var customer = Add(ElementKind.Class, pkg, "Customer");
+            _pos[customer] = new Vector2(-250f, -200f);
+            _ctl.SetMeta(customer, "C#", null);
+            Add(ElementKind.Field, customer, "- name : string");
+            Add(ElementKind.Field, customer, "- active : bool");
+
+            // Association Customer 1 ── places ──> 0..* Order (multiplicities + role label).
+            _ctl.EnterConnect(CommitStyle.OneShot, EdgeKind.Association);
+            _ctl.BeginConnect(customer);
+            var places = _ctl.CommitConnect(order);
+            _ctl.SetEdgeMeta(places, "places", "1", "0..*");
 
             _ctl.EnterConnect(CommitStyle.OneShot, EdgeKind.Realization);
             _ctl.BeginConnect(order);
@@ -124,6 +145,25 @@ namespace TheRobotDraft.Uml
             if (ctrl && Input.GetKeyDown(KeyCode.Z)) { if (shift) Redo(); else Undo(); }
             else if (ctrl && Input.GetKeyDown(KeyCode.Y)) Redo();
             else if (Input.GetKeyDown(KeyCode.Delete) || Input.GetKeyDown(KeyCode.Backspace)) DeleteSelected();
+
+            // Zoom: mouse wheel anywhere on the canvas, or Ctrl/Cmd +/- ; Ctrl/Cmd+0 resets to 100%.
+            float scroll = Input.mouseScrollDelta.y;
+            if (Mathf.Abs(scroll) > 0.01f) SetZoom(_zoom * (1f + scroll * 0.1f));
+            else if (ctrl && (Input.GetKeyDown(KeyCode.Equals) || Input.GetKeyDown(KeyCode.KeypadPlus))) SetZoom(_zoom * 1.1f);
+            else if (ctrl && (Input.GetKeyDown(KeyCode.Minus) || Input.GetKeyDown(KeyCode.KeypadMinus))) SetZoom(_zoom / 1.1f);
+            else if (ctrl && (Input.GetKeyDown(KeyCode.Alpha0) || Input.GetKeyDown(KeyCode.Keypad0))) SetZoom(1f);
+        }
+
+        /// <summary>Apply a clamped zoom to both layers. Scales around the canvas center (v1; cursor-anchored later).</summary>
+        private void SetZoom(float z)
+        {
+            float clamped = Mathf.Clamp(z, MinZoom, MaxZoom);
+            if (Mathf.Approximately(clamped, _zoom)) return;
+            _zoom = clamped;
+            var s = new Vector3(_zoom, _zoom, 1f);
+            if (_nodeLayer != null) _nodeLayer.localScale = s;
+            if (_edgeLayer != null) _edgeLayer.localScale = s;
+            Flash($"zoom {_zoom * 100f:0}%  ·  Ctrl/Cmd +/− , 0 to reset");
         }
 
         private void LateUpdate()
@@ -156,19 +196,32 @@ namespace TheRobotDraft.Uml
             if (!_model.TryGet(node.Id, out var el)) return;
 
             var items = new List<MenuItem>();
-            // Members live inside the box: offer the legal member kinds.
+            // Members live inside the box: offer the legal member kinds via the structured editor (Rose/Sparx).
             foreach (var k in new[] { ElementKind.Field, ElementKind.Function })
                 if (ContainmentRules.CanContain(el.Kind, k).IsValid)
                 {
                     var kind = k; var parent = node.Id;
-                    string verb = k == ElementKind.Field ? "Add Field (attribute)" : "Add Function (operation)";
-                    items.Add(new MenuItem(verb, true, () => PromptAndAdd(parent, kind, screenPos)));
+                    string verb = k == ElementKind.Field ? "＋ Attribute (field)…" : "＋ Operation (method)…";
+                    items.Add(new MenuItem(verb, true, () => ShowMemberEditor(parent, kind, ElementId.None, screenPos)));
                 }
-            if (items.Count == 0) items.Add(new MenuItem("(no members for this kind)", false, null));
+
+            // Existing members — edit signature in place (visibility / type / params / return).
+            bool anyMember = false;
+            foreach (var childId in el.ChildIds)
+            {
+                if (!_model.TryGet(childId, out var c) || !KindInfo.IsMember(c.Kind)) continue;
+                if (!anyMember) { items.Add(MenuItem.Separator()); anyMember = true; }
+                var cid = childId; var ckind = c.Kind; var parent = node.Id;
+                items.Add(new MenuItem("✎  " + Ellipsize(c.Name, 30), true,
+                    () => ShowMemberEditor(parent, ckind, cid, screenPos)));
+            }
+
             items.Add(MenuItem.Separator());
-            var delId = node.Id;
+            var pid = node.Id;
+            items.Add(new MenuItem("Properties…  (name · language · stereotype)", true,
+                () => ShowClassifierEditor(pid, screenPos)));
             items.Add(new MenuItem("Delete", true,
-                () => { _ctl.Delete(delId); SetSelected(ElementId.None); RebuildFromModel(); }));
+                () => { _ctl.Delete(pid); SetSelected(ElementId.None); RebuildFromModel(); }));
 
             CreateMenu(screenPos, $"{el.Name} ({el.Kind})", items);
         }
@@ -240,7 +293,7 @@ namespace TheRobotDraft.Uml
             go.transform.SetParent(_edgeLayer, false);
             _tempLink = go.AddComponent<UmlEdgeView>();
             _tempLink.Interactive = false;
-            _tempLink.Init(_font, new Color(0.85f, 0.90f, 0.96f, 1f), null, false,
+            _tempLink.Init(_font, new Color(0.20f, 0.45f, 0.65f, 1f), null, null, null, false,
                 EndMarker.None, EndMarker.OpenArrow, null);
         }
 
@@ -305,10 +358,12 @@ namespace TheRobotDraft.Uml
                         () => { _ctl.ReTypeEdge(edgeId, kind); CloseMenu(); RebuildFromModel(); }));
                 }
             items.Add(MenuItem.Separator());
+            var metaEdge = edge.Edge;
+            items.Add(new MenuItem("Multiplicity / label…", true, () => ShowEdgeMetaEditor(metaEdge, screenPos)));
             var delEdge = edge.Edge;
             items.Add(new MenuItem("Delete link", true,
                 () => { _ctl.DeleteEdge(delEdge); CloseMenu(); RebuildFromModel(); }));
-            CreateMenu(screenPos, "Re-type / delete link", items);
+            CreateMenu(screenPos, "Re-type / adorn / delete link", items);
         }
 
         // --- history ---
@@ -359,7 +414,7 @@ namespace TheRobotDraft.Uml
             // Relationship edges between currently-visible boxes.
             foreach (var edge in _model.Edges)
                 if (_nodes.ContainsKey(edge.From) && _nodes.ContainsKey(edge.To))
-                    CreateEdgeView(edge.Id, edge.From, edge.To, edge.Kind);
+                    CreateEdgeView(edge);
 
             if (_selectedId.IsValid && _nodes.TryGetValue(_selectedId, out var sel)) sel.SetSelected(true);
         }
@@ -382,25 +437,29 @@ namespace TheRobotDraft.Uml
             var nv = go.AddComponent<UmlNodeView>();
             ColorUtility.TryParseHtmlString(KindInfo.Hue(el.Kind), out var hue);
             _size.TryGetValue(el.Id, out var size);
-            nv.Init(this, el.Id, el.Name, Stereotype(el), el.Kind, hue, _font, attributes, operations, size);
+            nv.Init(this, el.Id, el.Name, Stereotype(el), el.Kind, hue, _font, attributes, operations,
+                el.Language, size);
             nv.Rt.anchoredPosition = pos;
             _nodes[el.Id] = nv;
         }
 
-        private void CreateEdgeView(EdgeId id, ElementId from, ElementId to, EdgeKind kind)
+        private void CreateEdgeView(ModelEdge edge)
         {
-            var (dashed, src, tgt) = EdgeVisual(kind);
-            var go = new GameObject("Edge:" + kind, typeof(RectTransform));
+            var (dashed, src, tgt) = EdgeVisual(edge.Kind);
+            var go = new GameObject("Edge:" + edge.Kind, typeof(RectTransform));
             go.transform.SetParent(_edgeLayer, false);
             var ev = go.AddComponent<UmlEdgeView>();
-            ev.Edge = id;
-            ev.Init(_font, EdgeColor, kind.ToString(), dashed, src, tgt, ShowEdgeMenu);
-            _edges.Add(new EdgeBinding { View = ev, From = from, To = to });
+            ev.Edge = edge.Id;
+            // Midpoint label is the association name (not the kind — kind is conveyed by line/marker style).
+            ev.Init(_font, EdgeColor, edge.Label, edge.SourceMultiplicity, edge.TargetMultiplicity,
+                dashed, src, tgt, ShowEdgeMenu);
+            _edges.Add(new EdgeBinding { View = ev, From = edge.From, To = edge.To });
         }
 
         private static (bool dashed, EndMarker src, EndMarker tgt) EdgeVisual(EdgeKind k) => k switch
         {
-            EdgeKind.Association => (false, EndMarker.None, EndMarker.OpenArrow),
+            // Plain association = a line with multiplicities, no arrowhead (conventional class-diagram default).
+            EdgeKind.Association => (false, EndMarker.None, EndMarker.None),
             EdgeKind.Dependency => (true, EndMarker.None, EndMarker.OpenArrow),
             EdgeKind.Generalization => (false, EndMarker.None, EndMarker.HollowTriangle),
             EdgeKind.Realization => (true, EndMarker.None, EndMarker.HollowTriangle),
@@ -409,14 +468,20 @@ namespace TheRobotDraft.Uml
             _ => (false, EndMarker.None, EndMarker.OpenArrow),
         };
 
-        private static string Stereotype(ModelElement el) => el.Kind switch
+        private static string Stereotype(ModelElement el)
         {
-            ElementKind.Interface => "«interface»",
-            ElementKind.Enum => "«enumeration»",
-            ElementKind.Struct => "«struct»",
-            ElementKind.Class when el.IsAbstract => "«abstract»",
-            _ => null,
-        };
+            // A custom stereotype (Properties dialog) overrides the kind-derived one — Rose/Sparx behavior.
+            if (!string.IsNullOrWhiteSpace(el.Stereotype))
+                return "«" + el.Stereotype.Trim() + "»";
+            return el.Kind switch
+            {
+                ElementKind.Interface => "«interface»",
+                ElementKind.Enum => "«enumeration»",
+                ElementKind.Struct => "«struct»",
+                ElementKind.Class when el.IsAbstract => "«abstract»",
+                _ => null,
+            };
+        }
 
         // --- tabs ---
 
@@ -493,6 +558,15 @@ namespace TheRobotDraft.Uml
 
         private string PackageName(ElementId id) => _model.TryGet(id, out var e) ? e.Name : "package";
 
+        /// <summary>Backdrop click on a modal property/member dialog cancels it (click-outside = dismiss).</summary>
+        public void CancelModal() => CloseMenu();
+
+        private static string Ellipsize(string s, int max)
+        {
+            if (string.IsNullOrEmpty(s) || s.Length <= max) return s;
+            return s.Substring(0, max - 1) + "…";
+        }
+
         private UmlNodeView NodeAt(Vector2 screenPos, UmlNodeView exclude)
         {
             UmlNodeView found = null;
@@ -544,7 +618,7 @@ namespace TheRobotDraft.Uml
             var bgRt = (RectTransform)bgGo.transform;
             bgRt.SetParent(_root, false);
             Stretch(bgRt);
-            bgGo.AddComponent<Image>().color = new Color(0.09f, 0.10f, 0.12f, 1f);
+            bgGo.AddComponent<Image>().color = new Color(0.95f, 0.96f, 0.97f, 1f);
             bgGo.AddComponent<UmlBackground>().Canvas = this;
 
             _edgeLayer = NewLayer("EdgeLayer");
@@ -572,7 +646,7 @@ namespace TheRobotDraft.Uml
             hintRt.anchoredPosition = new Vector2(12f, -42f);
             _hint = hintGo.AddComponent<Text>();
             _hint.font = _font; _hint.fontSize = 17;
-            _hint.color = new Color(0.58f, 0.64f, 0.74f, 1f);
+            _hint.color = new Color(0.34f, 0.38f, 0.45f, 1f);
             _hint.alignment = TextAnchor.MiddleLeft;
             _hint.supportRichText = false;
             _hint.raycastTarget = false;
@@ -778,5 +852,12 @@ namespace TheRobotDraft.Uml
     {
         public UmlCanvas Canvas;
         public void OnPointerClick(PointerEventData eventData) => Canvas.OnBackgroundClick(eventData);
+    }
+
+    /// <summary>Dim modal backdrop behind a property/member dialog: a click on the dim area cancels the dialog.</summary>
+    public sealed class UmlModalBackdrop : MonoBehaviour, IPointerClickHandler
+    {
+        public UmlCanvas Canvas;
+        public void OnPointerClick(PointerEventData eventData) => Canvas.CancelModal();
     }
 }

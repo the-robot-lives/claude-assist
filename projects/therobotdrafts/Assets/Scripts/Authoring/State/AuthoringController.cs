@@ -227,12 +227,36 @@ namespace TheRobotDraft.Authoring.State
             return true;
         }
 
+        /// <summary>Toggle a classifier's <c>abstract</c> modifier (§3.1) as one undo step.</summary>
+        public bool SetAbstract(ElementId element, bool value)
+        {
+            if (!_model.Contains(element)) return false;
+            _history.Execute(new SetAbstractCommand(element, value));
+            return true;
+        }
+
+        /// <summary>Set classifier metadata — implementation language and a custom stereotype override (Rose/Sparx).</summary>
+        public bool SetMeta(ElementId element, string language, string stereotype)
+        {
+            if (!_model.Contains(element)) return false;
+            _history.Execute(new SetMetaCommand(element, language, stereotype));
+            return true;
+        }
+
         /// <summary>Change a relationship's type in place (§4.6), validity-checked against its current endpoints.</summary>
         public bool ReTypeEdge(EdgeId edge, EdgeKind kind)
         {
             if (!_model.TryGet(edge, out var e)) return false;
             if (!EdgeRules.CanConnect(_model, kind, e.From, e.To).IsValid) return false;
             _history.Execute(new ReTypeEdgeCommand(edge, kind));
+            return true;
+        }
+
+        /// <summary>Set a relationship's midpoint label and per-end multiplicities (§4.6), one undo step.</summary>
+        public bool SetEdgeMeta(EdgeId edge, string label, string source, string target)
+        {
+            if (!_model.TryGet(edge, out _)) return false;
+            _history.Execute(new SetEdgeMetaCommand(edge, label, source, target));
             return true;
         }
 

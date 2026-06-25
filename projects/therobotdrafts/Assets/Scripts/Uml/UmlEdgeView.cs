@@ -22,15 +22,14 @@ namespace TheRobotDraft.Uml
         private RectTransform _line;
         private Image _lineImg;
         private RectTransform _srcM, _tgtM;
-        private RectTransform _label;
-        private Text _labelText;
+        private RectTransform _midRt, _srcMultRt, _tgtMultRt;
         private System.Action<UmlEdgeView, Vector2> _onClick;
 
         private const float Thickness = 3f;
         private const float MarkerSize = 16f;
 
-        public void Init(Font font, Color color, string label, bool dashed,
-            EndMarker source, EndMarker target, System.Action<UmlEdgeView, Vector2> onClick)
+        public void Init(Font font, Color color, string midLabel, string sourceMult, string targetMult,
+            bool dashed, EndMarker source, EndMarker target, System.Action<UmlEdgeView, Vector2> onClick)
         {
             var self = (RectTransform)transform;
             Stretch(self);
@@ -49,21 +48,28 @@ namespace TheRobotDraft.Uml
             _srcM = BuildMarker("SrcMarker", source, color);
             _tgtM = BuildMarker("TgtMarker", target, color);
 
-            if (!string.IsNullOrEmpty(label))
-            {
-                _label = NewChild("Label");
-                _label.sizeDelta = new Vector2(170f, 24f);
-                _labelText = _label.gameObject.AddComponent<Text>();
-                _labelText.font = font;
-                _labelText.text = label;
-                _labelText.fontSize = 15;
-                _labelText.alignment = TextAnchor.MiddleCenter;
-                _labelText.color = new Color(color.r, color.g, color.b, 0.9f);
-                _labelText.supportRichText = false;
-                _labelText.horizontalOverflow = HorizontalWrapMode.Overflow;
-                _labelText.verticalOverflow = VerticalWrapMode.Overflow;
-                _labelText.raycastTarget = false;
-            }
+            // Midpoint association name / role label, and per-end multiplicities (e.g. "1", "0..*").
+            _midRt = BuildText("Label", midLabel, font, new Color(0.18f, 0.20f, 0.26f, 1f), 15, 170f);
+            _srcMultRt = BuildText("SrcMult", sourceMult, font, new Color(0.22f, 0.24f, 0.30f, 1f), 14, 56f);
+            _tgtMultRt = BuildText("TgtMult", targetMult, font, new Color(0.22f, 0.24f, 0.30f, 1f), 14, 56f);
+        }
+
+        private RectTransform BuildText(string name, string text, Font font, Color color, int size, float width)
+        {
+            if (string.IsNullOrEmpty(text)) return null;
+            var rt = NewChild(name);
+            rt.sizeDelta = new Vector2(width, 22f);
+            var t = rt.gameObject.AddComponent<Text>();
+            t.font = font;
+            t.text = text;
+            t.fontSize = size;
+            t.alignment = TextAnchor.MiddleCenter;
+            t.color = color;
+            t.supportRichText = false;
+            t.horizontalOverflow = HorizontalWrapMode.Overflow;
+            t.verticalOverflow = VerticalWrapMode.Overflow;
+            t.raycastTarget = false;
+            return rt;
         }
 
         public void SetEndpoints(Vector2 a, Vector2 b)
@@ -71,23 +77,30 @@ namespace TheRobotDraft.Uml
             Vector2 d = b - a;
             float len = d.magnitude;
             float ang = Mathf.Atan2(d.y, d.x) * Mathf.Rad2Deg;
+            Vector2 dir = len > 0.001f ? d / len : Vector2.right;
+            Vector2 perp = new Vector2(-dir.y, dir.x);
 
             _line.anchoredPosition = (a + b) * 0.5f;
             _line.sizeDelta = new Vector2(Mathf.Max(len, 1f), Thickness);
             _line.localEulerAngles = new Vector3(0f, 0f, ang);
 
+            const float half = MarkerSize * 0.5f;
             if (_srcM != null)
             {
-                _srcM.anchoredPosition = a;
-                _srcM.localEulerAngles = new Vector3(0f, 0f, ang + 180f); // point back toward the source box
+                // Seat the diamond just outside the source border; point its axis back toward the source.
+                _srcM.anchoredPosition = a + dir * half;
+                _srcM.localEulerAngles = new Vector3(0f, 0f, ang + 180f);
             }
             if (_tgtM != null)
             {
-                _tgtM.anchoredPosition = b;
+                // Seat the arrow/triangle so its apex touches the target border.
+                _tgtM.anchoredPosition = b - dir * half;
                 _tgtM.localEulerAngles = new Vector3(0f, 0f, ang);
             }
-            if (_label != null)
-                _label.anchoredPosition = (a + b) * 0.5f + new Vector2(0f, 12f);
+
+            if (_midRt != null) _midRt.anchoredPosition = (a + b) * 0.5f + perp * 14f;
+            if (_srcMultRt != null) _srcMultRt.anchoredPosition = a + dir * 26f + perp * 12f;
+            if (_tgtMultRt != null) _tgtMultRt.anchoredPosition = b - dir * 26f + perp * 12f;
         }
 
         public void OnPointerClick(PointerEventData eventData)
@@ -110,12 +123,12 @@ namespace TheRobotDraft.Uml
                 case EndMarker.OpenArrow:
                     img.sprite = TriangleSprite(); img.color = color; break;
                 case EndMarker.HollowTriangle:
-                    img.sprite = TriangleSprite(); img.color = new Color(0.10f, 0.12f, 0.15f, 1f);
+                    img.sprite = TriangleSprite(); img.color = new Color(0.95f, 0.96f, 0.97f, 1f);
                     AddOutline(rt.gameObject, color); break;
                 case EndMarker.FilledDiamond:
                     img.sprite = DiamondSprite(); img.color = color; break;
                 case EndMarker.HollowDiamond:
-                    img.sprite = DiamondSprite(); img.color = new Color(0.10f, 0.12f, 0.15f, 1f);
+                    img.sprite = DiamondSprite(); img.color = new Color(0.95f, 0.96f, 0.97f, 1f);
                     AddOutline(rt.gameObject, color); break;
             }
             return rt;
