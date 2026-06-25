@@ -3,6 +3,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using TheRobotDraft.Authoring.Model;
+using TheRobotDraft.Authoring.Rules;
 
 namespace TheRobotDraft.Uml
 {
@@ -29,7 +30,8 @@ namespace TheRobotDraft.Uml
         /// edits that member (its signature is parsed back into the controls); otherwise it adds a new member
         /// under <paramref name="parent"/>.
         /// </summary>
-        private void ShowMemberEditor(ElementId parent, ElementKind kind, ElementId existing, Vector2 screenPos)
+        private void ShowMemberEditor(ElementId parent, ElementKind kind, ElementId existing, Vector2 screenPos,
+            System.Action onClose = null)
         {
             CloseMenu();
             bool isField = kind == ElementKind.Field;
@@ -103,35 +105,51 @@ namespace TheRobotDraft.Uml
                 {
                     _ctl.EnterAddNode(kind);
                     var id = _ctl.CommitAddNode(parent, sig);
-                    if (!id.IsValid) { Flash("invalid placement"); _ctl.EnterSelect(); return; }
+                    if (!id.IsValid) { Flash("invalid placement"); _ctl.EnterSelect(); onClose?.Invoke(); return; }
                     RebuildFromModel();
                     SetSelected(parent);
                     Flash("added " + (isField ? "attribute" : "operation"));
                 }
+                onClose?.Invoke();
             }
 
             float yBtn = -(h - 46f);
             MakeButton(panel, "OK", new Vector2(w - 198f, yBtn), new Vector2(84f, 34f),
                 new Color(0.20f, 0.42f, 0.52f, 1f), Submit);
             MakeButton(panel, "Cancel", new Vector2(w - 104f, yBtn), new Vector2(88f, 34f),
-                new Color(0.22f, 0.24f, 0.29f, 1f), CloseMenu);
+                new Color(0.22f, 0.24f, 0.29f, 1f), () => { CloseMenu(); onClose?.Invoke(); });
             if (editing)
                 MakeButton(panel, "Delete", new Vector2(16f, yBtn), new Vector2(92f, 34f),
                     new Color(0.45f, 0.18f, 0.12f, 1f),
-                    () => { CloseMenu(); _ctl.Delete(existing); RebuildFromModel(); SetSelected(parent); Flash("deleted member"); });
+                    () => { CloseMenu(); _ctl.Delete(existing); RebuildFromModel(); SetSelected(parent); Flash("deleted member"); onClose?.Invoke(); });
 
             FocusInput(nameInput);
         }
 
-        // --- classifier (class / interface / enum / struct) properties editor ---
+        // --- element editor (single screen: properties + fields + operations) ---
 
         private void ShowClassifierEditor(ElementId id, Vector2 screenPos)
         {
             if (!_model.TryGet(id, out var el)) return;
             CloseMenu();
 
-            float w = 470f, h = 430f;
-            var panel = BeginModal(w, h, "Properties   —   " + el.Kind);
+            // Gather members.
+            var attrs = new List<(ElementId id, string name)>();
+            var ops = new List<(ElementId id, string name)>();
+            foreach (var cid in el.ChildIds)
+                if (_model.TryGet(cid, out var c))
+                {
+                    if (c.Kind == ElementKind.Field) attrs.Add((cid, c.Name));
+                    else if (c.Kind == ElementKind.Function) ops.Add((cid, c.Name));
+                }
+
+            const int perRow = 4;
+            const float chipW = 100f, chipH = 26f, chipGap = 6f, rowH = 28f;
+            int langRows = (CommonLanguages.Length + perRow - 1) / perRow;
+            float w = 480f;
+            float h = 250f + langRows * (chipH + chipGap) + (el.Kind == ElementKind.Class ? 36f : 0f)
+                      + 48f + attrs.Count * rowH + 48f + ops.Count * rowH + 60f;
+            var panel = BeginModal(w, h, "Edit " + el.Kind + "   —   " + el.Name);
 
             float y = -50f;
             FormLabel(panel, "Name", ref y, w);
@@ -142,9 +160,6 @@ namespace TheRobotDraft.Uml
             var langInput = MakeInput(panel, new Vector2(16f, y), w - 32f, el.Language,
                 "C# / Rust / Go / Java / Python / Node.js / Elixir…");
             y -= 40f;
-            // Quick-pick chips that fill the language field (wrapped into rows).
-            const int perRow = 4;
-            const float chipW = 100f, chipH = 26f, chipGap = 6f;
             for (int i = 0; i < CommonLanguages.Length; i++)
             {
                 var captured = CommonLanguages[i];
@@ -153,8 +168,7 @@ namespace TheRobotDraft.Uml
                 MakeButton(panel, captured, new Vector2(cx, cy), new Vector2(chipW, chipH),
                     new Color(0.18f, 0.22f, 0.28f, 1f), () => langInput.text = captured);
             }
-            int rows = (CommonLanguages.Length + perRow - 1) / perRow;
-            y -= rows * (chipH + chipGap) + 4f;
+            y -= langRows * (chipH + chipGap) + 4f;
 
             FormLabel(panel, "Stereotype   («…» — overrides the derived one)", ref y, w);
             var stereoInput = MakeInput(panel, new Vector2(16f, y), w - 32f, el.Stereotype,
@@ -163,19 +177,60 @@ namespace TheRobotDraft.Uml
 
             Func<bool> getAbstract = () => el.IsAbstract;
             if (el.Kind == ElementKind.Class)
+            {
                 getAbstract = MakeCheckbox(panel, new Vector2(16f, y), "abstract", el.IsAbstract);
+                y -= 36f;
+            }
+
+            // Commit the property fields (so edits aren't lost when jumping to a member sub-dialog).
+            void ApplyProps()
+            {
+                string nn = string.IsNullOrWhiteSpace(nameInput.text) ? el.Name : nameInput.text.Trim();
+                if (nn != el.Name) _ctl.Rename(id, nn);
+                if (el.Kind == ElementKind.Class && getAbstract() != el.IsAbstract) _ctl.SetAbstract(id, getAbstract());
+                _ctl.SetMeta(id, langInput.text, stereoInput.text);
+            }
+            void Reopen() => ShowClassifierEditor(id, screenPos);
+
+            var rowText = new Color(0.86f, 0.89f, 0.94f, 1f);
+            var editCol = new Color(0.20f, 0.34f, 0.42f, 1f);
+            var delCol = new Color(0.42f, 0.20f, 0.16f, 1f);
+            var addCol = new Color(0.18f, 0.30f, 0.24f, 1f);
+
+            void MemberSection(string title, List<(ElementId id, string name)> list, ElementKind kind)
+            {
+                bool canHave = ContainmentRules.CanContain(el.Kind, kind).IsValid;
+                FormLabel(panel, title + (canHave ? "" : "  (not allowed for this kind)"), ref y, w);
+                foreach (var m in list)
+                {
+                    var mid = m.id; var mkind = kind;
+                    MakeText(panel, "• " + Ellipsize(m.name, 42), new Vector2(20f, y), new Vector2(w - 190f, 22f),
+                        14, rowText, TextAnchor.MiddleLeft);
+                    MakeButton(panel, "Edit", new Vector2(w - 164f, y), new Vector2(66f, 22f), editCol,
+                        () => { ApplyProps(); ShowMemberEditor(id, mkind, mid, screenPos, Reopen); });
+                    MakeButton(panel, "Del", new Vector2(w - 92f, y), new Vector2(60f, 22f), delCol,
+                        () => { ApplyProps(); _ctl.Delete(mid); RebuildFromModel(); Reopen(); });
+                    y -= rowH;
+                }
+                if (canHave)
+                {
+                    string verb = kind == ElementKind.Field ? "＋ Add attribute" : "＋ Add operation";
+                    MakeButton(panel, verb, new Vector2(20f, y), new Vector2(160f, 26f), addCol,
+                        () => { ApplyProps(); ShowMemberEditor(id, kind, ElementId.None, screenPos, Reopen); });
+                    y -= 32f;
+                }
+            }
+
+            MemberSection("Attributes (fields)", attrs, ElementKind.Field);
+            MemberSection("Operations (methods)", ops, ElementKind.Function);
 
             void Submit()
             {
-                string newName = string.IsNullOrWhiteSpace(nameInput.text) ? el.Name : nameInput.text.Trim();
-                bool wantAbstract = getAbstract();
                 CloseMenu();
-                if (newName != el.Name) _ctl.Rename(id, newName);
-                if (el.Kind == ElementKind.Class && wantAbstract != el.IsAbstract) _ctl.SetAbstract(id, wantAbstract);
-                _ctl.SetMeta(id, langInput.text, stereoInput.text);
+                ApplyProps();
                 RebuildFromModel();
                 SetSelected(id);
-                Flash("updated properties");
+                Flash("updated element");
             }
 
             float yBtn = -(h - 46f);

@@ -61,6 +61,7 @@ namespace TheRobotDraft.Uml
         public bool hasTgt;
         public int tgtSide;
         public float tgtT;
+        public bool curved;
     }
 
     [Serializable]
@@ -142,6 +143,7 @@ namespace TheRobotDraft.Uml
             foreach (var k in _waypoints.Keys) edgeIds.Add(k);
             foreach (var k in _srcAnchor.Keys) edgeIds.Add(k);
             foreach (var k in _tgtAnchor.Keys) edgeIds.Add(k);
+            foreach (var k in _curved) edgeIds.Add(k);
             foreach (var id in edgeIds)
             {
                 var g = new EdgeGeomDto { id = id.Value };
@@ -149,6 +151,7 @@ namespace TheRobotDraft.Uml
                     foreach (var w in wps) g.waypoints.Add(new WpDto { x = w.x, y = w.y });
                 if (_srcAnchor.TryGetValue(id, out var sa)) { g.hasSrc = true; g.srcSide = (int)sa.Side; g.srcT = sa.T; }
                 if (_tgtAnchor.TryGetValue(id, out var ta)) { g.hasTgt = true; g.tgtSide = (int)ta.Side; g.tgtT = ta.T; }
+                g.curved = _curved.Contains(id);
                 dto.edgeGeom.Add(g);
             }
 
@@ -160,7 +163,7 @@ namespace TheRobotDraft.Uml
         {
             NewWorld();
             _pos.Clear(); _size.Clear();
-            _waypoints.Clear(); _srcAnchor.Clear(); _tgtAnchor.Clear();
+            _waypoints.Clear(); _srcAnchor.Clear(); _tgtAnchor.Clear(); _curved.Clear();
 
             var byId = new Dictionary<string, ElementDto>();
             foreach (var e in dto.elements) byId[e.id] = e;
@@ -217,6 +220,7 @@ namespace TheRobotDraft.Uml
                         }
                         if (g.hasSrc) _srcAnchor[eid] = new EndAnchor((BoxSide)g.srcSide, g.srcT);
                         if (g.hasTgt) _tgtAnchor[eid] = new EndAnchor((BoxSide)g.tgtSide, g.tgtT);
+                        if (g.curved) _curved.Add(eid);
                     }
 
             _activePackage = (!string.IsNullOrEmpty(dto.activePackage) && idMap.TryGetValue(dto.activePackage, out var ap))

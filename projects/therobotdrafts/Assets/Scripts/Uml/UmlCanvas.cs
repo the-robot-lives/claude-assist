@@ -72,12 +72,28 @@ namespace TheRobotDraft.Uml
 
         private const float StubLen = 22f;
 
+        // Edges drawn as smooth curves instead of right-angle polylines (view-state).
+        private readonly HashSet<EdgeId> _curved = new();
+
+        // Copy/paste clipboard: a deep snapshot of one element + its members.
+        private ClipElement _clipboard;
+
         /// <summary>A fixed endpoint attachment: a side of the box and a 0..1 position along that side.</summary>
         private struct EndAnchor
         {
             public BoxSide Side;
             public float T;
             public EndAnchor(BoxSide side, float t) { Side = side; T = t; }
+        }
+
+        private sealed class ClipMember { public ElementKind Kind; public string Name; }
+        private sealed class ClipElement
+        {
+            public ElementKind Kind;
+            public string Name, Language, Stereotype;
+            public bool IsAbstract, HasPos;
+            public Vector2 Pos;
+            public readonly List<ClipMember> Members = new();
         }
 
         private UmlNodeView _linkSource;
@@ -139,6 +155,9 @@ namespace TheRobotDraft.Uml
             _ctl.SetMeta(payable, "C#", null);
             Add(ElementKind.Function, payable, "+ amountDue() : decimal");
 
+            var note = Add(ElementKind.Note, pkg, "Order is immutable once submitted;\npayment must clear first.");
+            _pos[note] = new Vector2(250f, -150f);
+
             var customer = Add(ElementKind.Class, pkg, "Customer");
             _pos[customer] = new Vector2(-250f, -200f);
             _ctl.SetMeta(customer, "C#", null);
@@ -166,7 +185,8 @@ namespace TheRobotDraft.Uml
             _activePackage = _selectedId = ElementId.None;
             _selectedEdge = EdgeId.None;
             _pos.Clear(); _size.Clear();
-            _waypoints.Clear(); _srcAnchor.Clear(); _tgtAnchor.Clear();
+            _waypoints.Clear(); _srcAnchor.Clear(); _tgtAnchor.Clear(); _curved.Clear();
+            _pan = Vector2.zero; ApplyPan();
         }
 
         /// <summary>Start an empty diagram (no undo of the previous one).</summary>
@@ -189,6 +209,67 @@ namespace TheRobotDraft.Uml
             Flash("reset to sample");
         }
 
+        // --- copy / paste (with rename) ---
+
+        public void CopyElement(ElementId id)
+        {
+            CloseMenu();
+            if (!_model.TryGet(id, out var el)) return;
+            var clip = new ClipElement
+            {
+                Kind = el.Kind, Name = el.Name, Language = el.Language,
+                Stereotype = el.Stereotype, IsAbstract = el.IsAbstract,
+            };
+            if (_pos.TryGetValue(id, out var p)) { clip.Pos = p; clip.HasPos = true; }
+            foreach (var cid in el.ChildIds)
+                if (_model.TryGet(cid, out var c) && KindInfo.IsMember(c.Kind))
+                    clip.Members.Add(new ClipMember { Kind = c.Kind, Name = c.Name });
+            _clipboard = clip;
+            Flash("copied " + el.Kind + " — Ctrl/Cmd+V to paste");
+        }
+
+        public void PasteElement()
+        {
+            CloseMenu();
+            if (_clipboard == null) { Flash("clipboard empty"); return; }
+            if (!_activePackage.IsValid) { Flash("no package to paste into"); return; }
+            var c = _clipboard;
+
+            _ctl.EnterAddNode(c.Kind);
+            var nid = _ctl.CommitAddNode(_activePackage, UniqueName(c.Name));
+            if (!nid.IsValid) { Flash("paste not allowed here"); _ctl.EnterSelect(); return; }
+            if (c.IsAbstract) _ctl.SetAbstract(nid, true);
+            if (!string.IsNullOrEmpty(c.Language) || !string.IsNullOrEmpty(c.Stereotype))
+                _ctl.SetMeta(nid, c.Language, c.Stereotype);
+            foreach (var m in c.Members)
+            {
+                _ctl.EnterAddNode(m.Kind);
+                _ctl.CommitAddNode(nid, m.Name);
+            }
+            _ctl.EnterSelect();
+            _pos[nid] = c.HasPos ? c.Pos + new Vector2(34f, -34f) : Vector2.zero;
+            RebuildFromModel();
+            SetSelected(nid);
+            Flash("pasted (renamed)");
+        }
+
+        private string UniqueName(string baseName)
+        {
+            // Notes hold freeform text → tag "(copy)"; classifiers get a deduped "Copy" suffix.
+            bool freeform = string.IsNullOrEmpty(baseName) || baseName.Contains("\n") || baseName.Length > 24;
+            string candidate = baseName + (freeform ? " (copy)" : "Copy");
+            int n = 2;
+            while (NameExistsInActive(candidate)) candidate = baseName + "Copy" + n++;
+            return candidate;
+        }
+
+        private bool NameExistsInActive(string name)
+        {
+            foreach (var el in _model.Elements)
+                if (el.Parent == _activePackage && el.Name == name) return true;
+            return false;
+        }
+
         private void Update()
         {
             if (Input.GetKeyDown(KeyCode.Escape)) { CloseMenu(); return; }
@@ -201,6 +282,8 @@ namespace TheRobotDraft.Uml
             bool ctrl = CtrlOrCmd();
             bool shift = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
             if (ctrl && Input.GetKeyDown(KeyCode.S)) { SaveDiagram(); return; }
+            if (ctrl && Input.GetKeyDown(KeyCode.C)) { if (_selectedId.IsValid) CopyElement(_selectedId); return; }
+            if (ctrl && Input.GetKeyDown(KeyCode.V)) { PasteElement(); return; }
             if (ctrl && Input.GetKeyDown(KeyCode.Z)) { if (shift) Redo(); else Undo(); }
             else if (ctrl && Input.GetKeyDown(KeyCode.Y)) Redo();
             else if (Input.GetKeyDown(KeyCode.Delete) || Input.GetKeyDown(KeyCode.Backspace)) DeleteSelected();
@@ -211,6 +294,30 @@ namespace TheRobotDraft.Uml
             else if (ctrl && (Input.GetKeyDown(KeyCode.Equals) || Input.GetKeyDown(KeyCode.KeypadPlus))) SetZoom(_zoom * 1.1f);
             else if (ctrl && (Input.GetKeyDown(KeyCode.Minus) || Input.GetKeyDown(KeyCode.KeypadMinus))) SetZoom(_zoom / 1.1f);
             else if (ctrl && (Input.GetKeyDown(KeyCode.Alpha0) || Input.GetKeyDown(KeyCode.Keypad0))) SetZoom(1f);
+        }
+
+        // --- pan (drag empty canvas to scroll the diagram) ---
+
+        private Vector2 _pan;
+
+        public void BeginPan() => CloseMenu();
+
+        public void PanBy(Vector2 screenDelta)
+        {
+            _pan += screenDelta / Mathf.Max(ScaleFactor, 0.0001f);
+            ApplyPan();
+        }
+
+        private void ApplyPan()
+        {
+            SetLayerOffset(_nodeLayer);
+            SetLayerOffset(_edgeLayer);
+            SetLayerOffset(_handleLayer);
+        }
+
+        private void SetLayerOffset(RectTransform rt)
+        {
+            if (rt != null) { rt.offsetMin = _pan; rt.offsetMax = _pan; }
         }
 
         /// <summary>Apply a clamped zoom to both layers. Scales around the canvas center (v1; cursor-anchored later).</summary>
@@ -296,8 +403,9 @@ namespace TheRobotDraft.Uml
 
             items.Add(MenuItem.Separator());
             var pid = node.Id;
-            items.Add(new MenuItem("Properties…  (name · language · stereotype)", true,
+            items.Add(new MenuItem("Edit element…  (fields · operations · properties)", true,
                 () => ShowClassifierEditor(pid, screenPos)));
+            items.Add(new MenuItem("Copy  (Ctrl/Cmd+C)", true, () => CopyElement(pid)));
             items.Add(new MenuItem("Delete", true,
                 () => { _ctl.Delete(pid); SetSelected(ElementId.None); RebuildFromModel(); }));
 
@@ -326,6 +434,8 @@ namespace TheRobotDraft.Uml
 
             // Document actions.
             items.Add(MenuItem.Separator());
+            if (_clipboard != null && _activePackage.IsValid)
+                items.Add(new MenuItem("Paste  (Ctrl/Cmd+V)", true, () => PasteElement()));
             items.Add(new MenuItem("New (empty diagram)", true, () => NewDiagram()));
             items.Add(new MenuItem("Reset to sample", true, () => ResetToSample()));
             items.Add(new MenuItem("Save  (Ctrl/Cmd+S)", true, () => { CloseMenu(); SaveDiagram(); }));
@@ -458,6 +568,14 @@ namespace TheRobotDraft.Uml
             items.Add(MenuItem.Separator());
             var metaEdge = edge.Edge;
             items.Add(new MenuItem("Multiplicity / label…", true, () => ShowEdgeMetaEditor(metaEdge, screenPos)));
+            bool isCurved = _curved.Contains(metaEdge);
+            items.Add(new MenuItem(isCurved ? "Make orthogonal (straight)" : "Make curved (bezier)", true,
+                () =>
+                {
+                    if (isCurved) _curved.Remove(metaEdge); else _curved.Add(metaEdge);
+                    CloseMenu();
+                    RebuildFromModel();
+                }));
             var delEdge = edge.Edge;
             items.Add(new MenuItem("Delete link", true,
                 () =>
@@ -594,6 +712,8 @@ namespace TheRobotDraft.Uml
         private List<Vector2> RouteEdge(ElementId from, ElementId to, EdgeId edge)
         {
             var ctrl = ControlPolyline(from, to, edge, out bool fixedSrc, out bool fixedTgt);
+            // Curved edges are a smooth spline through the same control points (bend handles still apply).
+            if (_curved.Contains(edge)) return CurveThrough(ctrl);
             // Fully-auto edges (no pins, no bends) get the balanced two-bend Z; everything else is squared off.
             if (!fixedSrc && !fixedTgt && ctrl.Count == 2 && !_waypoints.ContainsKey(edge))
             {
@@ -601,6 +721,32 @@ namespace TheRobotDraft.Uml
                 return AutoOrthogonal(f.Rt.anchoredPosition, f.Rt.sizeDelta, t.Rt.anchoredPosition, t.Rt.sizeDelta);
             }
             return CleanColinear(Orthogonalize(ctrl));
+        }
+
+        /// <summary>A Catmull-Rom spline tessellated through the control points (smooth curve passing through each).</summary>
+        private static List<Vector2> CurveThrough(List<Vector2> pts)
+        {
+            if (pts == null || pts.Count <= 2) return pts;
+            const int seg = 14;
+            var outp = new List<Vector2> { pts[0] };
+            for (int i = 0; i < pts.Count - 1; i++)
+            {
+                Vector2 p0 = i > 0 ? pts[i - 1] : pts[i];
+                Vector2 p1 = pts[i];
+                Vector2 p2 = pts[i + 1];
+                Vector2 p3 = i + 2 < pts.Count ? pts[i + 2] : pts[i + 1];
+                for (int j = 1; j <= seg; j++)
+                    outp.Add(CatmullRom(p0, p1, p2, p3, j / (float)seg));
+            }
+            return outp;
+        }
+
+        private static Vector2 CatmullRom(Vector2 p0, Vector2 p1, Vector2 p2, Vector2 p3, float t)
+        {
+            float t2 = t * t, t3 = t2 * t;
+            return 0.5f * ((2f * p1) + (-p0 + p2) * t
+                + (2f * p0 - 5f * p1 + 4f * p2 - p3) * t2
+                + (-p0 + 3f * p1 - 3f * p2 + p3) * t3);
         }
 
         /// <summary>
@@ -720,17 +866,73 @@ namespace TheRobotDraft.Uml
 
         // --- edge selection + bend handles ---
 
+        private static bool AltDown() => Input.GetKey(KeyCode.LeftAlt) || Input.GetKey(KeyCode.RightAlt);
+
         public void OnEdgePointerClick(UmlEdgeView view, PointerEventData e)
         {
-            if (e.button == PointerEventData.InputButton.Right
-                || (e.button == PointerEventData.InputButton.Left && CtrlOrCmd()))
-                ShowEdgeMenu(view, e.position);
-            else if (e.button == PointerEventData.InputButton.Left)
+            if (e.button == PointerEventData.InputButton.Right) { ShowEdgeMenu(view, e.position); return; }
+            if (e.button != PointerEventData.InputButton.Left) return;
+
+            if (CtrlOrCmd())
             {
+                // Ctrl-click a line to add a bend point there; Ctrl+Alt-click to remove the nearest one.
                 CloseMenu();
                 SetSelected(ElementId.None);
                 SetSelectedEdge(view.Edge);
+                Vector2 p = ScreenToLayer(e.position);
+                if (AltDown()) RemoveNearestVertex(view.Edge, p);
+                else AddVertexAt(view.Edge, p);
+                return;
             }
+
+            CloseMenu();
+            SetSelected(ElementId.None);
+            SetSelectedEdge(view.Edge);
+        }
+
+        /// <summary>Ctrl-click on the line: insert a bend at the click, on whichever control segment is nearest.</summary>
+        private void AddVertexAt(EdgeId edge, Vector2 layerPos)
+        {
+            if (!TryGetEdgeEndpoints(edge, out var from, out var to)) return;
+            var ctrl = ControlPolyline(from, to, edge, out bool fixedSrc, out _);
+            int best = 0; float bestD = float.MaxValue;
+            for (int k = 0; k < ctrl.Count - 1; k++)
+            {
+                float d = DistToSegment(layerPos, ctrl[k], ctrl[k + 1]);
+                if (d < bestD) { bestD = d; best = k; }
+            }
+            if (!_waypoints.TryGetValue(edge, out var wps)) { wps = new List<Vector2>(); _waypoints[edge] = wps; }
+            int startWp = 1 + (fixedSrc ? 1 : 0);
+            int insertAt = Mathf.Clamp(best - startWp + 1, 0, wps.Count);
+            wps.Insert(insertAt, layerPos);
+            RefreshBendHandles();
+            Flash("added bend (Ctrl-click line) · Ctrl+Alt-click to remove");
+        }
+
+        /// <summary>Ctrl+Alt-click: remove the bend nearest the click (within reach).</summary>
+        private void RemoveNearestVertex(EdgeId edge, Vector2 layerPos)
+        {
+            if (!_waypoints.TryGetValue(edge, out var wps) || wps.Count == 0) { Flash("no bend to remove"); return; }
+            int best = -1; float bestD = 36f;
+            for (int i = 0; i < wps.Count; i++)
+            {
+                float d = (wps[i] - layerPos).magnitude;
+                if (d < bestD) { bestD = d; best = i; }
+            }
+            if (best < 0) { Flash("click closer to a bend to remove it"); return; }
+            wps.RemoveAt(best);
+            if (wps.Count == 0) _waypoints.Remove(edge);
+            RefreshBendHandles();
+            Flash("removed bend");
+        }
+
+        private static float DistToSegment(Vector2 p, Vector2 a, Vector2 b)
+        {
+            Vector2 ab = b - a;
+            float len2 = ab.sqrMagnitude;
+            if (len2 < 0.0001f) return (p - a).magnitude;
+            float t = Mathf.Clamp01(Vector2.Dot(p - a, ab) / len2);
+            return (p - (a + ab * t)).magnitude;
         }
 
         private void SetSelectedEdge(EdgeId edge)
@@ -771,6 +973,7 @@ namespace TheRobotDraft.Uml
             _waypoints.Remove(edge);
             _srcAnchor.Remove(edge);
             _tgtAnchor.Remove(edge);
+            _curved.Remove(edge);
         }
 
         private void RefreshBendHandles()
@@ -788,15 +991,11 @@ namespace TheRobotDraft.Uml
             MakeEdgeHandle(UmlHandleKind.EndpointStart, 0, ctrl[0], 14f, orange);
             MakeEdgeHandle(UmlHandleKind.EndpointEnd, 0, ctrl[ctrl.Count - 1], 14f, orange);
 
-            // Vertex handles (blue) — drag to move a bend; right-click to delete it.
+            // Vertex handles (blue) — drag to move a bend; right-click (or Ctrl+Alt-click the line) to delete.
+            // Adding bends is done by Ctrl-clicking the line itself (no per-segment add handles).
             if (wps != null)
                 for (int i = 0; i < wps.Count; i++)
                     MakeEdgeHandle(UmlHandleKind.Vertex, i, wps[i], 13f, new Color(0.12f, 0.55f, 0.85f, 1f));
-
-            // Add handles (small teal) at each control-segment midpoint — click to insert a new bend there.
-            var teal = new Color(0.20f, 0.70f, 0.66f, 1f);
-            for (int k = 0; k < ctrl.Count - 1; k++)
-                MakeEdgeHandle(UmlHandleKind.Add, k, (ctrl[k] + ctrl[k + 1]) * 0.5f, 9f, teal);
         }
 
         private void MakeEdgeHandle(UmlHandleKind kind, int index, Vector2 pos, float size, Color color)
@@ -1108,9 +1307,9 @@ namespace TheRobotDraft.Uml
             _hint.alignment = TextAnchor.MiddleLeft;
             _hint.supportRichText = false;
             _hint.raycastTarget = false;
-            _hint.text = "Right-click canvas → add classifier · right-click a box → add field/method · " +
-                         "hover a box → drag a side hotspot to link · click an edge → drag bend/endpoint handles · " +
-                         "drag a box border to resize · wheel / Ctrl+0 zoom · Ctrl/Cmd+Z undo · Ctrl/Cmd+S save";
+            _hint.text = "Right-click canvas → add / paste · right-click box → edit element · drag empty space → pan · " +
+                         "hover a box → drag a side hotspot to link · Ctrl-click a line → add bend (Ctrl+Alt → remove) · " +
+                         "drag a box border to resize · Ctrl/Cmd C/V copy · wheel zoom · Ctrl/Cmd S save · Ctrl/Cmd Z undo";
         }
 
         private RectTransform NewLayer(string name)
@@ -1306,11 +1505,13 @@ namespace TheRobotDraft.Uml
         }
     }
 
-    /// <summary>Full-canvas backdrop that routes empty-space clicks (add menu / deselect) to the canvas.</summary>
-    public sealed class UmlBackground : MonoBehaviour, IPointerClickHandler
+    /// <summary>Full-canvas backdrop: empty-space clicks (add menu / deselect) and click-drag to pan the diagram.</summary>
+    public sealed class UmlBackground : MonoBehaviour, IPointerClickHandler, IBeginDragHandler, IDragHandler
     {
         public UmlCanvas Canvas;
         public void OnPointerClick(PointerEventData eventData) => Canvas.OnBackgroundClick(eventData);
+        public void OnBeginDrag(PointerEventData e) => Canvas.BeginPan();
+        public void OnDrag(PointerEventData e) => Canvas.PanBy(e.delta);
     }
 
     /// <summary>Dim modal backdrop behind a property/member dialog: a click on the dim area cancels the dialog.</summary>

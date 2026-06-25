@@ -21,7 +21,7 @@ namespace TheRobotDraft.Uml
 
         private UmlCanvas _canvas;
         private CanvasGroup _hotspots; // the four connect handles, revealed on hover
-        private Image _bg;
+        private Graphic _bg;           // Image for boxes, UmlNoteGraphic (clipped corner) for notes
         private Outline _outline;   // selection highlight (toggled)
         private Outline _border;    // permanent thin box border (conventional UML look)
         private Color _baseColor;   // resting body fill, restored after affordance tinting
@@ -41,9 +41,10 @@ namespace TheRobotDraft.Uml
             Rt.pivot = new Vector2(0.5f, 0.5f);
 
             // Conventional UML look (Rose / Sparx / Visual Paradigm): white-ish body faintly tinted by the
-            // kind hue, a thin solid border, and a stronger pastel header band.
+            // kind hue, a thin solid border, and a stronger pastel header band. Notes use a clipped-corner mesh.
             _baseColor = Color.Lerp(hue, Color.white, 0.88f);
-            _bg = gameObject.AddComponent<Image>();
+            if (kind == ElementKind.Note) _bg = gameObject.AddComponent<UmlNoteGraphic>();
+            else _bg = gameObject.AddComponent<Image>();
             _bg.color = _baseColor;
 
             // Permanent thin border.
@@ -268,18 +269,7 @@ namespace TheRobotDraft.Uml
             float w = sizeOverride.x > 1f ? sizeOverride.x : 220f;
             float h = sizeOverride.y > 1f ? sizeOverride.y : 96f;
             Rt.sizeDelta = new Vector2(w, h);
-
-            // Dog-eared (folded) top-right corner.
-            const float fold = 16f;
-            var foldRt = NewChild("Fold", transform);
-            foldRt.anchorMin = foldRt.anchorMax = new Vector2(1f, 1f);
-            foldRt.pivot = new Vector2(1f, 1f);
-            foldRt.sizeDelta = new Vector2(fold, fold);
-            foldRt.anchoredPosition = Vector2.zero;
-            var foldImg = foldRt.gameObject.AddComponent<Image>();
-            foldImg.sprite = CornerFoldSprite();
-            foldImg.color = new Color(0.90f, 0.84f, 0.55f, 1f);
-            foldImg.raycastTarget = false;
+            // The dog-eared corner + clipped top-right are drawn by UmlNoteGraphic (the box mesh itself).
 
             // Free wrapped text filling the box (with padding).
             var bodyRt = NewChild("NoteText", transform);
@@ -295,20 +285,6 @@ namespace TheRobotDraft.Uml
             t.raycastTarget = false;
             t.horizontalOverflow = HorizontalWrapMode.Wrap;
             t.verticalOverflow = VerticalWrapMode.Overflow;
-        }
-
-        private static Sprite _foldSprite;
-        private static Sprite CornerFoldSprite()
-        {
-            if (_foldSprite != null) return _foldSprite;
-            const int n = 16;
-            var tex = new Texture2D(n, n, TextureFormat.RGBA32, false) { filterMode = FilterMode.Point };
-            for (int y = 0; y < n; y++)
-                for (int x = 0; x < n; x++)
-                    tex.SetPixel(x, y, (x + y) <= n ? Color.white : new Color(1, 1, 1, 0));
-            tex.Apply();
-            _foldSprite = Sprite.Create(tex, new Rect(0, 0, n, n), new Vector2(0.5f, 0.5f), n);
-            return _foldSprite;
         }
 
         private Font font_;
@@ -355,5 +331,47 @@ namespace TheRobotDraft.Uml
         public void OnBeginDrag(PointerEventData e) => _canvas.BeginLink(_node, _side, e.position);
         public void OnDrag(PointerEventData e) => _canvas.UpdateLink(e.position);
         public void OnEndDrag(PointerEventData e) => _canvas.EndLink(e.position);
+    }
+
+    /// <summary>
+    /// A UML note background: a rectangle whose top-right corner is actually clipped off (a pentagon), with the
+    /// folded-over flap drawn in a darker shade. Outline effects then trace the clipped silhouette.
+    /// </summary>
+    public sealed class UmlNoteGraphic : Graphic
+    {
+        public float Fold = 16f;
+
+        protected override void OnPopulateMesh(VertexHelper vh)
+        {
+            vh.Clear();
+            Rect r = GetPixelAdjustedRect();
+            float f = Mathf.Min(Fold, Mathf.Min(r.width, r.height) * 0.5f);
+            float xMin = r.xMin, xMax = r.xMax, yMin = r.yMin, yMax = r.yMax;
+
+            Color32 body = color;
+            Color32 flap = new Color(color.r * 0.86f, color.g * 0.86f, color.b * 0.82f, color.a);
+
+            // Body pentagon (top-right corner removed), as a fan from the bottom-left.
+            var p0 = new Vector2(xMin, yMin);
+            var p1 = new Vector2(xMax, yMin);
+            var p2 = new Vector2(xMax, yMax - f);
+            var p3 = new Vector2(xMax - f, yMax);
+            var p4 = new Vector2(xMin, yMax);
+            Tri(vh, p0, p1, p2, body);
+            Tri(vh, p0, p2, p3, body);
+            Tri(vh, p0, p3, p4, body);
+
+            // Folded flap inside the cut corner (darker).
+            Tri(vh, p3, p2, new Vector2(xMax - f, yMax - f), flap);
+        }
+
+        private static void Tri(VertexHelper vh, Vector2 a, Vector2 b, Vector2 c, Color32 col)
+        {
+            int i = vh.currentVertCount;
+            vh.AddVert(a, col, Vector2.zero);
+            vh.AddVert(b, col, Vector2.zero);
+            vh.AddVert(c, col, Vector2.zero);
+            vh.AddTriangle(i, i + 1, i + 2);
+        }
     }
 }
