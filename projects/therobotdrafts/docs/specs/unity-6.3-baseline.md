@@ -13,6 +13,10 @@
 
 See also: [rendering-and-vr.md](rendering-and-vr.md) · [reverse-engineering.md](reverse-engineering.md) · [ADR-001](../adrs/ADR-001-unity-dots-rendering.md) · [ARCHITECTURE.md](../ARCHITECTURE.md)
 
+> **Update (Jun 2026):** the team's editor is now **`6000.5.1f1`**. 6.3 remains the **LTS / release
+> target**, but the 6.4 → 6.5 deltas (incl. breaking ECS removals and the DOTS core-package
+> renumber) are tracked in **[unity-6.5-delta.md](unity-6.5-delta.md)** — read it alongside this doc.
+
 ---
 
 ## 1. Version timeline & support

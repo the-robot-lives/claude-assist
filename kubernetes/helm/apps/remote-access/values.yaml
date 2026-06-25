@@ -70,9 +70,13 @@ ingress:
 
 tls:
   enabled: true
-  # Dedicated *.remote-access.noizu.com origin cert synced from Infisical.
+  # Dedicated *.remote-access.noizu.com Cloudflare Origin CA cert.
   # Override to cloudflare-tls-synced if using Cloudflare-terminated TLS only.
   secretName: remote-access-tls-synced
+  # Ship the cert as a bundled SealedSecret (templates/tls-sealedsecret.yaml),
+  # so `helm-upgrade` creates remote-access-tls-synced in apps-ns. Set false if
+  # the secret is provisioned out-of-band. Re-seal if ns/name changes.
+  manageSealedSecret: true
 
 networkPolicy:
   enabled: true

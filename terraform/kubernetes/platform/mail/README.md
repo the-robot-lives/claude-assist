@@ -7,6 +7,12 @@ module):
 - **PostgreSQL** (shared — `mailu` + `roundcube` databases) + **Redis** cache
 - **front** (nginx mail-protocol proxy), **admin** (Podop/DKIM), **postfix**
   (SMTP, relays via SendGrid), **dovecot** (IMAP/POP3), **rspamd** (antispam)
+  - All outbound mail is relayed through SendGrid (`RELAYHOST =
+    [smtp.sendgrid.net]:587`, user `apikey`, password = `SENDGRID_API_KEY` from
+    `mail-app-secrets`). `files/postfix-overrides.cf` (mounted at `/overrides`,
+    applied by Mailu via `postconf -e`) forces **mandatory** TLS on the relay
+    (`smtp_tls_security_level = encrypt`, TLS ≥ 1.2, SASL `noanonymous`) so the
+    API key and message bodies are never sent over a plaintext fallback.
 - **roundcube** webmail + **mta-sts** policy server
 
 The chart's only dependency (`cloudflare-lib`) is a local Helm helper library

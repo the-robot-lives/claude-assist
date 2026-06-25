@@ -1,0 +1,20 @@
+# Postfix overrides — applied by Mailu's start.py via `postconf -e` (one per line).
+#
+# All outbound mail leaves this server through the SendGrid relay
+# ([smtp.sendgrid.net]:587, see RELAYHOST in postfix.tf). Mailu's default
+# outbound policy is opportunistic TLS (smtp_tls_security_level = may), which
+# silently falls back to plaintext if STARTTLS is stripped — that would expose
+# the SendGrid API key sent via SASL AUTH and the message body in cleartext.
+#
+# Force mandatory, modern TLS on the relay so credentials and mail are never
+# sent over an unencrypted connection.
+smtp_tls_security_level = encrypt
+smtp_tls_mandatory_protocols = >=TLSv1.2
+smtp_tls_protocols = >=TLSv1.2
+smtp_tls_mandatory_ciphers = high
+smtp_tls_loglevel = 1
+
+# Only authenticate over an encrypted channel; never offer SASL credentials
+# anonymously or on a plaintext link.
+smtp_sasl_security_options = noanonymous
+smtp_sasl_tls_security_options = noanonymous

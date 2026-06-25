@@ -4,6 +4,82 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ---
 
+## FIRST ACTION — Register your session (do this before anything else)
+
+Before reading files, planning, or any other action, register your work session
+with the NoizuPromptLingo project via the `tobor-sessions` MCP.
+
+The MCP tool layer does NOT expand environment variables — passing the literal
+string `"$NPL_ORG"` fails with `Organization '$NPL_ORG' not found`. You MUST read
+the values first and substitute the resolved slugs into the arguments.
+
+Use the `$NPL_PROJECT` project unless the user specifies an alternative project.
+
+Keep the session `title` short — a few words that fit a narrow input (e.g.
+"Scope personas to project"). Put the longer explanation of what you're working
+on in the `description` field, not the title.
+
+1. Resolve the slugs from the environment:
+
+   ```bash
+   echo $NPL_ORG        # organization slug (e.g. noizu-labs)
+   echo $NPL_PROJECT    # project slug (e.g. npl)
+   ```
+
+2. Check whether the project exists:
+
+   ```
+   ToolCall(tool: "Project.Get", arguments: { "project": "<value of $NPL_PROJECT>" })
+   ```
+
+3a. **If the project exists** — create the session associated with it:
+
+   ```
+   ToolCall(tool: "Session.Create", arguments: {
+     "organization": "<value of $NPL_ORG>",
+     "project":      "<value of $NPL_PROJECT>",
+     "title":        "<short title — a few words>",
+     "description":  "<longer detail on what you're working on>",
+     "status":       "active"
+   })
+   ```
+
+3b. **If the project does NOT exist** — create the session WITHOUT a project,
+    create the project, then associate it:
+
+   ```
+   # 1) session first (no project association yet)
+   ToolCall(tool: "Session.Create", arguments: {
+     "organization": "<value of $NPL_ORG>",
+     "title":        "<short title — a few words>",
+     "description":  "<longer detail on what you're working on>",
+     "status":       "active"
+   })   # capture <session-uuid>
+
+   # 2) create the project (owner_id defaults to the authenticated caller —
+   #    only pass it to assign ownership to a different user)
+   ToolCall(tool: "Project.Create", arguments: {
+     "organization": "<value of $NPL_ORG>",
+     "slug":         "<value of $NPL_PROJECT>",
+     "name":         "<project name>"
+   })
+
+   # 3) point the session at the new project
+   ToolCall(tool: "Session.Update", arguments: {
+     "session": "<session-uuid>",
+     "project": "<value of $NPL_PROJECT>"
+   })
+   ```
+
+4. Capture the session UUID and use it as the context for everything that
+   follows — artifacts, tickets, and chat rooms hang off this session.
+
+Do not proceed to the task until the session exists (and, where applicable, is
+associated with the project) and you have its ID. If a call fails, stop and
+report the error rather than continuing unregistered.
+
+---
+
 ## Repository Overview
 
 Monorepo ("Noizu Infra") containing all infrastructure, Terraform, portfolio projects, shared libraries, and DevOps utilities for self-hosted Kubernetes services on `*.noizu.com` and portfolio product domains (codefre.sh, derobot.is, aifighter.com, gotta.cc, iotgo.io, etc.). Projects are managed as git subtrees — not submodules.

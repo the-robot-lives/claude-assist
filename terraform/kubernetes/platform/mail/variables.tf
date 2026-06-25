@@ -114,9 +114,13 @@ variable "mta_sts_domain" {
 }
 
 # --- SMTP relay (SendGrid) ---------------------------------------------------
+# Port 2525 (not 587): this cluster's datacenter egress firewall blocks outbound
+# SMTP submission on 587 (and 465). SendGrid offers 2525 as a drop-in alternative
+# with identical STARTTLS support; verified OPEN from the mail node, 587 timed out.
+# Mandatory TLS is still enforced via files/postfix-overrides.cf regardless of port.
 variable "postfix_relay_host" {
   type    = string
-  default = "[smtp.sendgrid.net]:587"
+  default = "[smtp.sendgrid.net]:2525"
 }
 
 variable "postfix_relay_username" {

@@ -23,6 +23,19 @@ resource "kubernetes_config_map_v1" "roundcube_nginx_conf" {
   }
 }
 
+# Postfix overrides — enforce mandatory TLS on the SendGrid outbound relay.
+# Mailu's start.py applies each line of /overrides/postfix.cf via `postconf -e`.
+resource "kubernetes_config_map_v1" "postfix_overrides" {
+  metadata {
+    name      = "postfix-overrides"
+    namespace = local.ns
+    labels    = local.labels["postfix"]
+  }
+  data = {
+    "postfix.cf" = file("${path.module}/files/postfix-overrides.cf")
+  }
+}
+
 # MTA-STS policy + nginx config.
 resource "kubernetes_config_map_v1" "mta_sts" {
   metadata {

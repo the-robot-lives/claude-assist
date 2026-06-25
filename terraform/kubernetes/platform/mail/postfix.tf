@@ -16,6 +16,10 @@ resource "kubernetes_deployment_v1" "postfix" {
     template {
       metadata {
         labels = { app = "postfix" }
+        annotations = {
+          # Roll the deployment when the relay TLS policy changes.
+          "checksum/overrides" = sha256(file("${path.module}/files/postfix-overrides.cf"))
+        }
       }
       spec {
         container {
@@ -102,12 +106,28 @@ resource "kubernetes_deployment_v1" "postfix" {
             initial_delay_seconds = 30
             period_seconds        = 30
           }
+
+          volume_mount {
+            name       = "overrides"
+            mount_path = "/overrides"
+            read_only  = true
+          }
+        }
+
+        volume {
+          name = "overrides"
+          config_map {
+            name = kubernetes_config_map_v1.postfix_overrides.metadata[0].name
+          }
         }
       }
     }
   }
 
-  depends_on = [kubectl_manifest.infisical_app_secrets]
+  depends_on = [
+    kubectl_manifest.infisical_app_secrets,
+    kubernetes_config_map_v1.postfix_overrides,
+  ]
 }
 
 resource "kubernetes_service_v1" "postfix" {
