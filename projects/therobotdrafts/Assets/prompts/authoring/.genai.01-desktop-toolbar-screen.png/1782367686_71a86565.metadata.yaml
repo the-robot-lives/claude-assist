@@ -1,0 +1,58 @@
+service: gemini
+model: imagen-4.0-ultra-generate-001
+timestamp: 1782367711
+provider_options:
+  style: String("natural")
+  aspect_ratio: String("16:9")
+prompt: |
+  A 16:9 mockup of the desktop authoring screen for a 3D "bubble" UML IDE.
+  
+  BACKGROUND CANVAS (fills the frame):
+  - A dark graphite 3D space (#15181C → #1E2329 subtle vignette) with soft
+    volumetric depth and a faint ground-plane grid receding into distance.
+  - Floating packed spheres ("bubbles") representing code elements, colored
+    STRICTLY by the Okabe-Ito kind palette, each with its distinct silhouette:
+      • Package: large translucent FROSTED sphere, slate (#6E7B8B), child
+        bubbles faintly visible inside it.
+      • Class: opaque solid matte sphere, blue (#0072B2).
+      • Interface: sphere with a hollow dashed equatorial band, sky (#56B4E9).
+      • Enum: faceted low-poly gem-like sphere, orange (#E69F00).
+      • Struct: sphere with a flat polar cap, teal (#009E73).
+      • Function/method: small slightly-emissive sphere, green (#2CA02C).
+      • Field: smallest flattened sphere, yellow-green (#BCBD22).
+  - One class bubble is SELECTED: a bright white→cyan contrasting outline rim
+    (the reserved selection channel — NOT a kind color). Its sibling bubbles
+    are slightly dimmed/desaturated to show focus context.
+  - A few thin relationship tubes connect bubbles (solid line, small arrowhead).
+  - Short crisp SDF labels float on the nearest/largest bubbles only
+    (e.g. "auth", "Session", "login") — most bubbles are unlabeled (label budget).
+  
+  LEFT VERTICAL TOOLBAR RAIL (the command surface — achromatic, ~56px wide):
+  A slim translucent graphite rail pinned to the left edge, monochrome icon
+  buttons on a 24px glyph / 32px hit grid, grouped with faint dividers:
+    • Select (arrow cursor) — LIT/active with a soft white-cyan ring (home state).
+    • [divider]  Create group: Add-node (a ＋ over a small bubble),
+      Connect (two dots joined by a line).
+    • [divider]  Edit group: Delete (trash), Undo (↶), Redo (↷)
+      — Undo/Redo shown faintly DIMMED (empty history).
+    • [divider]  Output group: Project-to-2D (a bubble morphing into a
+      rectangle) — dimmed/disabled (nothing selected to project).
+  Icons are clean 2px-stroke monochrome pictograms, pixel-crisp, NO color fill.
+  
+  TOP STRIP (thin, achromatic):
+  - A breadcrumb HUD showing the qualified path: "auth ›  Session ›  login",
+    small humanist sans-serif, muted grey-white text.
+  
+  CREATION-PALETTE FLYOUT (open, anchored just right of the Add-node button):
+  A small dark translucent panel listing the UML-core kinds as rows, each row =
+  its §2.1-colored kind glyph + label: ○ Package, ● Class (row highlighted as
+  default), ◐ Interface, ⬢ Enum, ◑ Struct, · Function, · Field. One row
+  ("Field") is dimmed/struck to show it is illegal in the current parent. The
+  swatch on each row is the exact kind hue+silhouette so the palette previews
+  what the bubble will look like.
+  
+  OVERALL:
+  - Mood: focused, spacious, premium dev-tool (think a 3D Linear/Figma, not a
+    game HUD). Generous negative space. No skeuomorphism, no neon clutter.
+  - Only the bubbles carry saturated color; every control is graphite + white.
+  - Typography: clean humanist sans-serif, excellent small-size legibility.

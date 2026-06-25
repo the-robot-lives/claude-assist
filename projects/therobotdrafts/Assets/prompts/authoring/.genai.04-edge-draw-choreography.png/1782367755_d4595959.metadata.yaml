@@ -1,0 +1,54 @@
+service: gemini
+model: imagen-4.0-ultra-generate-001
+timestamp: 1782367776
+provider_options:
+  aspect_ratio: String("16:9")
+  style: String("natural")
+prompt: |
+  A 16:9 mockup choreographing the "connect two nodes" interaction in a dark 3D
+  bubble-view, drawn as a single annotated scene with three moments.
+  
+  BACKGROUND:
+  - Dark graphite 3D space (#15181C) with depth. Several packed-sphere bubbles in
+    the Okabe-Ito kind palette with distinct silhouettes: a solid blue Class
+    (#0072B2) as the SOURCE, another blue Class as a VALID target, a small
+    yellow-green Field bubble (#BCBD22) as an INVALID target, plus a frosted
+    slate Package (#6E7B8B) and an orange faceted Enum (#E69F00) for context.
+  
+  THE DRAG (centerpiece — a rubber-band edge from the source bubble):
+  - IN-PROGRESS state: a NEUTRAL WHITE DASHED "rubber-band" line stretches from
+    the source class toward the cursor/ray — dashed because the relationship type
+    isn't chosen yet (reserved in-progress channel, NOT a kind color).
+  - VALID TARGET: the second Class bubble glows with a WHITE rim + a ✓ ghost +
+    a snap-pulse ring — "drop here works." Around it, a faint concentric
+    MAGNETIC ASSIST-RADIUS halo shows the ray snapping to the nearest valid
+    target without pixel-perfect aim (Kenji C1 mitigation: assist-radius +
+    dwell-confirm + ray-smoothing for VR endpoint precision), with a small
+    circular dwell-confirm progress tick on the target.
+  - INVALID TARGET: the small Field bubble shows the rejection affordance —
+    a VERMILLION #D55E00 dashed rim + a ✕, with a NO-SNAP feel and a tiny reason
+    chip "can't inherit into a field." (Vermillion is Okabe-Ito, colorblind-safe,
+    and deliberately not a kind hue.)
+  
+  THE EDGE-TYPE PICKER (appears on release at the valid drop point — a small
+  dark translucent radial/flyout):
+  - Six options, each icon IS the line+arrowhead it will draw (so the picker
+    previews the result), per UML §3.1:
+      Association  (solid line, open arrow)
+      Dependency   (dashed line, open arrow)
+      Generalization (solid line, hollow triangle)   ← highlighted/default-ish
+      Realization  (dashed line, hollow triangle)
+      Aggregation  (solid line, hollow diamond)
+      Composition  (solid line, filled diamond)
+  - A small "flip direction ⇄" control sits in the picker (subtype→supertype
+    hint). The picker chrome is achromatic graphite/white.
+  
+  ANNOTATION STYLE (subtle, designer-spec, not childish):
+  - Tiny muted labels point to each state: "in-progress (dashed, untyped)",
+    "valid target", "invalid target", "type picker (icon = drawn edge)".
+  - Labels in clean small humanist sans-serif, muted grey-white.
+  
+  OVERALL:
+  - Only the BUBBLES carry kind color; every feedback cue uses the reserved
+    channel (white / white→cyan / vermillion). Premium calm 3D dev-tool mood.
+    No game UI, no neon, no clutter.

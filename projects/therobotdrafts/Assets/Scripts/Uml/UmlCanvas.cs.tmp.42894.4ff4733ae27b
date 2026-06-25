@@ -85,14 +85,14 @@ namespace TheRobotDraft.Uml
             }
 
             var order = Add(ElementKind.Class, pkg, "Order");
-            _pos[order] = new Vector2(-230f, 30f);
-            Add(ElementKind.Field, order, "id");
-            Add(ElementKind.Field, order, "total");
-            Add(ElementKind.Function, order, "submit");
+            _pos[order] = new Vector2(-250f, 30f);
+            Add(ElementKind.Field, order, "- id : int");
+            Add(ElementKind.Field, order, "- total : decimal");
+            Add(ElementKind.Function, order, "+ submit() : bool");
 
             var payable = Add(ElementKind.Interface, pkg, "Payable");
-            _pos[payable] = new Vector2(210f, 60f);
-            Add(ElementKind.Function, payable, "amountDue");
+            _pos[payable] = new Vector2(230f, 60f);
+            Add(ElementKind.Function, payable, "+ amountDue() : decimal");
 
             _ctl.EnterConnect(CommitStyle.OneShot, EdgeKind.Realization);
             _ctl.BeginConnect(order);

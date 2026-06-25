@@ -29,6 +29,15 @@ namespace TheRobotDraft
             EnsureEventSystem();
             RemoveComingSoon();
 
+            // Fill the screen — a large windowed surface (avoid a runtime fullscreen-mode switch, which can
+            // recreate the Metal surface mid-bootstrap). Cap to a sane max for very wide displays.
+            if (!Application.isEditor)
+            {
+                int w = Mathf.Min(Display.main.systemWidth, 2560);
+                int h = Mathf.Min(Display.main.systemHeight, 1440);
+                Screen.SetResolution(w, h, FullScreenMode.Windowed);
+            }
+
             var go = new GameObject("UmlAuthoringCanvas", typeof(RectTransform));
             Object.DontDestroyOnLoad(go);
             go.AddComponent<UmlCanvas>(); // builds its own Canvas + UI in Awake

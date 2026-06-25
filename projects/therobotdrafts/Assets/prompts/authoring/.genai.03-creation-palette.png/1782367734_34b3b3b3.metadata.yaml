@@ -1,0 +1,46 @@
+service: gemini
+model: imagen-4.0-ultra-generate-001
+timestamp: 1782367755
+provider_options:
+  style: String("natural")
+  aspect_ratio: String("4:3")
+prompt: |
+  A 4:3 close-up mockup: a creation palette flyout open over a softly-blurred
+  dark 3D bubble-view background, mid add-node interaction.
+  
+  BACKGROUND (blurred, secondary):
+  - Dark graphite 3D space; a translucent frosted slate Package bubble (#6E7B8B)
+    is the TARGET PARENT, shown with the valid-target affordance: a white rim +
+    a faint ✓ ghost + a subtle snap-pulse ring (reserved UI channel — NOT a kind
+    color). A faint dashed ghost of a new bubble previews where it will pack
+    inside the parent.
+  
+  THE CREATION PALETTE (sharp foreground, dark translucent graphite panel,
+  rounded, soft drop shadow):
+  - Title row: small muted label "Add element" + a tiny notation tag "UML".
+  - A vertical list of kind rows, each = [colored kind glyph] [name] [hint],
+    using the exact §2.1 hue AND a distinct monochrome-readable silhouette:
+      ○ Package    slate #6E7B8B   (dashed circle, nested dots — "container")
+      ● Class      blue  #0072B2   (solid filled circle)         ← ROW HIGHLIGHTED (default), white→cyan selection rim
+      ◐ Interface  sky   #56B4E9   (circle with open equatorial band)
+      ⬢ Enum       orange #E69F00  (hexagon / faceted)
+      ◑ Struct     teal  #009E73   (circle with flat top chord)
+      ·  Function  green #2CA02C   (small solid dot)
+      ·  Field     yellow-green #BCBD22 (small flattened ellipse)  ← ROW DIMMED + struck, with a small "illegal in Package" reason chip
+  - A small footer toggle "[ abstract ]" (a wireframe-outline modifier) shown
+    unchecked.
+  - The highlighted Class row shows a tiny inline NAME field with a blinking
+    caret and a ghost preview "Class1" — name-on-create: the element is placed
+    and immediately namable.
+  
+  DESIGN NOTES TO HONOR:
+  - Each swatch is literally a small render of that kind's bubble (hue+silhouette),
+    so the palette previews the result.
+  - The illegal kind (Field, not allowed directly in a Package) is DIMMED with a
+    reason, never hidden — it teaches the containment rule.
+  - Panel chrome is achromatic graphite/white; the ONLY colors are the kind
+    swatches and the white→cyan selection rim.
+  - Clean humanist sans-serif, crisp at small size; generous row spacing; ≥32px
+    row targets.
+  
+  MOOD: precise, calm, premium developer tool. Not a game menu, not playful.
