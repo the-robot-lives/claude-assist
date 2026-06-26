@@ -35,7 +35,7 @@ config :logger, :default_formatter,
 
 config :phoenix, :json_library, Jason
 
-config :aifighter, :redis, uri: "redis://localhost:6379/0", key_prefix: "aifighter:"
+config :aifighter, :redis, uri: "redis://localhost:6379/0", key_prefix: "starter:"
 
 config :aifighter, Aifighter.Guardian,
   issuer: "aifighter",

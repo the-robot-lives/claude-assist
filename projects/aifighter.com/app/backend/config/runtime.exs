@@ -6,7 +6,7 @@ end
 
 config :aifighter, :redis,
   uri: System.get_env("REDIS_URL") || "redis://localhost:6379/0",
-  key_prefix: System.get_env("REDIS_KEY_PREFIX", "aifighter:")
+  key_prefix: System.get_env("REDIS_KEY_PREFIX", "starter:")
 
 # ── OpenTelemetry ────────────────────────────────────────────────
 if otel_endpoint = System.get_env("OTEL_EXPORTER_OTLP_ENDPOINT") do
@@ -17,7 +17,7 @@ if otel_endpoint = System.get_env("OTEL_EXPORTER_OTLP_ENDPOINT") do
   config :opentelemetry,
     span_processor: :batch,
     resource: %{
-      "service.name" => System.get_env("OTEL_SERVICE_NAME") || "aifighter-backend",
+      "service.name" => System.get_env("OTEL_SERVICE_NAME") || "starter-backend",
       "service.version" => "0.1.0"
     }
 end
@@ -65,7 +65,7 @@ if config_env() == :prod do
 
   config :aifighter, :mail_from,
     {System.get_env("MAIL_FROM_NAME", "Aifighter"),
-     System.get_env("MAIL_FROM_ADDRESS", "noreply@aifighter.local")}
+     System.get_env("MAIL_FROM_ADDRESS", "noreply@starter.local")}
 
   # ── Storage (S3/MinIO) ──────────────────────────────────────────
   if s3_bucket = System.get_env("S3_BUCKET") do

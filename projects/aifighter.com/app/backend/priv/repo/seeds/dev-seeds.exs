@@ -41,7 +41,7 @@ seed "dev:admin-user" do
       handle: "admin",
       name_id: UUID.uuid5(:oid, "Aifighter.Dev.Admin.Name"),
       description_id: UUID.uuid5(:oid, "Aifighter.Dev.Admin.Description"),
-      email: "admin@aifighter.local",
+      email: "admin@starter.local",
       hashed_password: Bcrypt.hash_pwd_salt("password123"),
       status: :active,
       verified: true,
@@ -60,7 +60,7 @@ seed "dev:admin-credential" do
       auth_provider_id: login_provider_id,
       status: :active,
       settings: %{
-        "email" => "admin@aifighter.local",
+        "email" => "admin@starter.local",
         "password" => Bcrypt.hash_pwd_salt("password123")
       },
       state: %{},
@@ -125,7 +125,7 @@ seed "dev:bootstrap-invite" do
   ╚══════════════════════════════════════════════════════════════╝
 
   Dev admin credentials:
-    Email:    admin@aifighter.local
+    Email:    admin@starter.local
     Password: password123
   """)
 end

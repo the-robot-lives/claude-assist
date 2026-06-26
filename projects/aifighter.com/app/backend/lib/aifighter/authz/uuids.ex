@@ -3,7 +3,7 @@ defmodule Aifighter.Authz.UUIDs do
 
   @app_namespace (
     hash = :crypto.hash(:sha, <<0x6B, 0xA7, 0xB8, 0x10, 0x9D, 0xAD, 0x11, 0xD1,
-                                  0x80, 0xB4, 0x00, 0xC0, 0x4F, 0xD4, 0x30, 0xC8>> <> "aifighter-app.local")
+                                  0x80, 0xB4, 0x00, 0xC0, 0x4F, 0xD4, 0x30, 0xC8>> <> "starter-app.local")
     <<a::32, b::16, _::4, c::12, _::2, d::62, _rest::binary>> = hash
     <<a::32, b::16, 5::4, c::12, 2::2, d::62>>
   )
