@@ -9,6 +9,8 @@ export type EditOperation =
 interface SourceMessage {
   role: string;
   content: string;
+  originalIndex?: number;
+  rawRecord?: unknown;
 }
 
 export function applyOperations(
@@ -16,9 +18,10 @@ export function applyOperations(
   operations: EditOperation[],
 ): EditedMessage[] {
   let result: EditedMessage[] = messages.map((m, i) => ({
-    originalIndex: i,
+    originalIndex: m.originalIndex ?? i,
     role: m.role as EditedMessage["role"],
     content: m.content,
+    rawRecord: m.rawRecord,
   }));
 
   for (const op of operations) {

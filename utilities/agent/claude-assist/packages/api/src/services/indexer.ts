@@ -440,6 +440,7 @@ function claudeRecordToUniversalMessage(record: UserMessage | AssistantMessage, 
       sessionId: record.sessionId,
       isSidechain: record.isSidechain,
     },
+    providerRaw: record,
   };
 }
 
@@ -451,13 +452,14 @@ function claudeUserContentToUniversal(content: string | Array<Record<string, unk
 function claudeBlockToUniversal(block: Record<string, unknown>): UniversalContentBlock {
   switch (block.type) {
     case "text":
-      return { type: "text", text: stringOrEmpty(block.text), providerType: "text" };
+      return { type: "text", text: stringOrEmpty(block.text), providerType: "text", providerRaw: block };
     case "thinking":
       return {
         type: "thinking",
         thinking: stringOrEmpty(block.thinking),
         signature: stringOrUndefined(block.signature),
         providerType: "thinking",
+        providerRaw: block,
       };
     case "tool_use":
       return {
@@ -466,6 +468,7 @@ function claudeBlockToUniversal(block: Record<string, unknown>): UniversalConten
         name: stringOrEmpty(block.name),
         input: objectOrEmpty(block.input),
         providerType: "tool_use",
+        providerRaw: block,
       };
     case "tool_result":
       return {
@@ -474,9 +477,10 @@ function claudeBlockToUniversal(block: Record<string, unknown>): UniversalConten
         content: typeof block.content === "string" ? block.content : JSON.stringify(block.content ?? ""),
         isError: typeof block.is_error === "boolean" ? block.is_error : undefined,
         providerType: "tool_result",
+        providerRaw: block,
       };
     default:
-      return { type: "unknown", raw: block, providerType: typeof block.type === "string" ? block.type : undefined };
+      return { type: "unknown", raw: block, providerType: typeof block.type === "string" ? block.type : undefined, providerRaw: block };
   }
 }
 
@@ -495,6 +499,7 @@ function codexRecordToUniversalMessage(record: CodexRecord, sourcePath: string, 
     providerHints: {
       payloadType: record.payload?.type,
     },
+    providerRaw: record,
   };
 }
 
@@ -510,9 +515,9 @@ function codexContentToUniversal(content: unknown): UniversalContentBlock[] {
       case "input_text":
       case "output_text":
       case "text":
-        return { type: "text", text: stringOrEmpty(typed.text), providerType: String(typed.type) };
+        return { type: "text", text: stringOrEmpty(typed.text), providerType: String(typed.type), providerRaw: typed };
       default:
-        return { type: "unknown", raw: typed, providerType: typeof typed.type === "string" ? typed.type : undefined };
+        return { type: "unknown", raw: typed, providerType: typeof typed.type === "string" ? typed.type : undefined, providerRaw: typed };
     }
   });
 }

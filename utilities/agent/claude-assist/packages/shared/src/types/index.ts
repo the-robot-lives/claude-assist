@@ -37,6 +37,8 @@ export interface UniversalBlockBase {
   id?: string;
   providerType?: string;
   providerHints?: Record<string, unknown>;
+  providerRaw?: unknown;
+  [key: string]: unknown;
 }
 
 export interface UniversalTextBlock extends UniversalBlockBase {
@@ -114,6 +116,9 @@ export interface UniversalMessage {
     parentId?: string | null;
   };
   providerHints?: Record<string, unknown>;
+  providerMetadata?: Record<string, unknown>;
+  providerRaw?: unknown;
+  [key: string]: unknown;
 }
 
 export interface RawTranscriptEvent {
@@ -291,6 +296,9 @@ export interface EditedMessage {
   content: string;
   injected?: boolean;
   collapsed?: boolean;
+  template?: string;
+  rawRecord?: unknown;
+  rawEdited?: boolean;
 }
 
 // Conversion artifacts

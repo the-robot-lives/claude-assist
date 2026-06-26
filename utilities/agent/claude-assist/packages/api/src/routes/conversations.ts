@@ -231,11 +231,16 @@ export function createConversationRoutes(storage: StorageService, searchService?
       return c.json({ data: existing });
     }
 
-    const body = await c.req.json() as { messages: Array<{ role: string; content: string }> };
+    const body = await c.req.json() as { messages: Array<{ originalIndex?: number; role: string; content: string; injected?: boolean; collapsed?: boolean; template?: string; rawRecord?: unknown; rawEdited?: boolean }> };
     const editedMessages = (body.messages ?? []).map((m, i) => ({
-      originalIndex: i,
+      originalIndex: m.originalIndex ?? i,
       role: m.role as "user" | "assistant" | "system",
       content: m.content,
+      injected: m.injected,
+      collapsed: m.collapsed,
+      template: m.template,
+      rawRecord: m.rawRecord,
+      rawEdited: m.rawEdited,
     }));
     const draft = await storage.createEdit(id, "Draft edit", editedMessages, "draft");
     return c.json({ data: draft }, 201);
@@ -247,13 +252,16 @@ export function createConversationRoutes(storage: StorageService, searchService?
     if (!draft) {
       return c.json({ data: null, error: "no draft found" }, 404);
     }
-    const body = await c.req.json() as { messages: Array<{ originalIndex?: number; role: string; content: string; injected?: boolean; collapsed?: boolean }>; description?: string };
+    const body = await c.req.json() as { messages: Array<{ originalIndex?: number; role: string; content: string; injected?: boolean; collapsed?: boolean; template?: string; rawRecord?: unknown; rawEdited?: boolean }>; description?: string };
     const messages = body.messages.map((m) => ({
       originalIndex: m.originalIndex,
       role: m.role as "user" | "assistant" | "system",
       content: m.content,
       injected: m.injected,
       collapsed: m.collapsed,
+      template: m.template,
+      rawRecord: m.rawRecord,
+      rawEdited: m.rawEdited,
     }));
     await storage.updateEdit(draft.id, messages, body.description);
     return c.json({ success: true });
@@ -308,7 +316,7 @@ export function createConversationRoutes(storage: StorageService, searchService?
   routes.post("/:id/save-edit", async (c) => {
     const id = c.req.param("id");
     const body = await c.req.json() as {
-      messages: Array<{ role: string; content: string }>;
+      messages: Array<{ originalIndex?: number; role: string; content: string; injected?: boolean; collapsed?: boolean; template?: string; rawRecord?: unknown; rawEdited?: boolean }>;
       mode: "new" | "overwrite";
       description?: string;
     };
@@ -317,8 +325,14 @@ export function createConversationRoutes(storage: StorageService, searchService?
     }
     try {
       const editMessages = body.messages.map((m) => ({
+        originalIndex: m.originalIndex,
         role: m.role as "user" | "assistant" | "system",
         content: m.content,
+        injected: m.injected,
+        collapsed: m.collapsed,
+        template: m.template,
+        rawRecord: m.rawRecord,
+        rawEdited: m.rawEdited,
       }));
       const result = await ops.saveEdit(id, editMessages, body.mode, body.description);
       return c.json({ data: result });

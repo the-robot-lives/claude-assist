@@ -69,8 +69,10 @@ describe("IndexerService", () => {
       type: "text",
       text: "Build the memory harness",
       providerType: "input_text",
+      providerRaw: { type: "input_text", text: "Build the memory harness" },
     });
     expect(universalMessages[0].provenance?.harness).toBe("codex");
+    expect(universalMessages[0].providerRaw).toEqual(lines[1]);
 
     const rawEvents = await storage.getRawTranscriptEvents("codex:codex-session-1");
     expect(rawEvents).toHaveLength(3);

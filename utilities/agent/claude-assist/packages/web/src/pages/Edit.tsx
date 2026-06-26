@@ -29,6 +29,7 @@ interface ThreadRecord {
       output_tokens: number;
     };
   };
+  [key: string]: unknown;
 }
 
 interface DraftMessage {
@@ -38,6 +39,8 @@ interface DraftMessage {
   injected?: boolean;
   collapsed?: boolean;
   template?: string;
+  rawRecord?: unknown;
+  rawEdited?: boolean;
 }
 
 interface DraftEdit {
@@ -215,6 +218,83 @@ function extractText(content: string | ContentBlock[]): string {
     }
   }
   return parts.join("\n\n");
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
+function extractTextFromUnknownContent(content: unknown): string {
+  if (typeof content === "string") return content;
+  if (Array.isArray(content)) return extractText(content as ContentBlock[]);
+  return content == null ? "" : JSON.stringify(content, null, 2);
+}
+
+function deriveDraftFieldsFromRaw(record: unknown): Pick<DraftMessage, "role" | "content"> {
+  if (!isRecord(record)) return { role: "user", content: "" };
+  const type = record.type === "assistant" ? "assistant" : "user";
+  const message = isRecord(record.message) ? record.message : {};
+  const role = message.role === "assistant" || message.role === "system" || message.role === "user"
+    ? message.role
+    : type;
+  return {
+    role,
+    content: extractTextFromUnknownContent(message.content),
+  };
+}
+
+function rawRecordForMessage(msg: DraftMessage, originalRecords: ThreadRecord[]): unknown {
+  if (msg.rawEdited && msg.rawRecord !== undefined) return msg.rawRecord;
+  if (msg.originalIndex != null) return originalRecords[msg.originalIndex];
+  return {
+    type: msg.role === "assistant" ? "assistant" : "user",
+    message: {
+      role: msg.role === "system" ? "user" : msg.role,
+      content: msg.role === "assistant" ? [{ type: "text", text: msg.content }] : msg.content,
+    },
+  };
+}
+
+function toYaml(value: unknown, indent = 0): string {
+  const pad = " ".repeat(indent);
+  if (value === null) return "null";
+  if (value === undefined) return "null";
+  if (typeof value === "number" || typeof value === "boolean") return String(value);
+  if (typeof value === "string") return yamlString(value, indent);
+  if (Array.isArray(value)) {
+    if (value.length === 0) return "[]";
+    return value.map((item) => {
+      if (isRecord(item) || Array.isArray(item)) {
+        const nested = toYaml(item, indent + 2);
+        return `${pad}- ${nested.includes("\n") ? `\n${nested}` : nested}`;
+      }
+      return `${pad}- ${toYaml(item, indent + 2)}`;
+    }).join("\n");
+  }
+  if (isRecord(value)) {
+    const entries = Object.entries(value);
+    if (entries.length === 0) return "{}";
+    return entries.map(([key, item]) => {
+      const safeKey = /^[A-Za-z_][A-Za-z0-9_-]*$/.test(key) ? key : JSON.stringify(key);
+      if (isRecord(item) || Array.isArray(item)) {
+        const nested = toYaml(item, indent + 2);
+        return `${pad}${safeKey}: ${nested.includes("\n") ? `\n${nested}` : nested}`;
+      }
+      return `${pad}${safeKey}: ${toYaml(item, indent + 2)}`;
+    }).join("\n");
+  }
+  return JSON.stringify(value);
+}
+
+function yamlString(value: string, indent: number): string {
+  if (value.includes("\n")) {
+    const pad = " ".repeat(indent + 2);
+    return `|\n${value.split("\n").map((line) => `${pad}${line}`).join("\n")}`;
+  }
+  if (value === "" || /[:#\-[\]{},&*!|>'"%@`\s]/.test(value) || /^(true|false|null|~|-?\d+(\.\d+)?)$/i.test(value)) {
+    return JSON.stringify(value);
+  }
+  return value;
 }
 
 function safeToolResultText(content: ContentBlock["content"]): string {
@@ -588,7 +668,7 @@ export function Edit() {
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [editingIdx, setEditingIdx] = useState<number | null>(null);
-  const [editDraft, setEditDraft] = useState({ role: "user" as string, content: "" });
+  const [editDraft, setEditDraft] = useState({ role: "user" as string, content: "", mode: "rendered" as "rendered" | "json", rawJson: "", rawError: "" });
   const [insertingAt, setInsertingAt] = useState<number | null>(null);
   const [insertTemplate, setInsertTemplate] = useState<MessageTemplate | null>(null);
   const [selected, setSelected] = useState<Set<number>>(new Set());
@@ -859,16 +939,57 @@ Example: [{"role":"assistant","content":"..."}] or [{"role":"user","content":"..
 
   const startEdit = (idx: number) => {
     setEditingIdx(idx);
-    setEditDraft({ role: messages[idx].role, content: messages[idx].content });
+    setEditDraft({
+      role: messages[idx].role,
+      content: messages[idx].content,
+      mode: "rendered",
+      rawJson: JSON.stringify(rawRecordForMessage(messages[idx], originalRecords), null, 2),
+      rawError: "",
+    });
+    setInsertingAt(null);
+    setInsertTemplate(null);
+  };
+
+  const startRawEdit = (idx: number) => {
+    setEditingIdx(idx);
+    setEditDraft({
+      role: messages[idx].role,
+      content: messages[idx].content,
+      mode: "json",
+      rawJson: JSON.stringify(rawRecordForMessage(messages[idx], originalRecords), null, 2),
+      rawError: "",
+    });
     setInsertingAt(null);
     setInsertTemplate(null);
   };
 
   const saveEdit = () => {
     if (editingIdx === null) return;
-    const next = messages.map((m, i) =>
-      i === editingIdx ? { ...m, role: editDraft.role as DraftMessage["role"], content: editDraft.content } : m,
-    );
+    let nextMessage: DraftMessage;
+    if (editDraft.mode === "json") {
+      try {
+        const rawRecord = JSON.parse(editDraft.rawJson);
+        const derived = deriveDraftFieldsFromRaw(rawRecord);
+        nextMessage = {
+          ...messages[editingIdx],
+          ...derived,
+          rawRecord,
+          rawEdited: true,
+        };
+      } catch (err) {
+        setEditDraft((d) => ({ ...d, rawError: err instanceof Error ? err.message : "Invalid JSON" }));
+        return;
+      }
+    } else {
+      nextMessage = {
+        ...messages[editingIdx],
+        role: editDraft.role as DraftMessage["role"],
+        content: editDraft.content,
+        rawEdited: messages[editingIdx].rawEdited,
+        rawRecord: messages[editingIdx].rawRecord,
+      };
+    }
+    const next = messages.map((m, i) => i === editingIdx ? nextMessage : m);
     updateMessages(next);
     setEditingIdx(null);
   };
@@ -911,7 +1032,7 @@ Example: [{"role":"assistant","content":"..."}] or [{"role":"user","content":"..
       const res = await apiFetch<{ data: { id: string; sourcePath: string } }>(`/conversations/${id}/save-edit`, {
         method: "POST",
         body: JSON.stringify({
-          messages: messages.map((m) => ({ role: m.role, content: m.content })),
+          messages,
           mode,
           description: desc || defaultTitle,
         }),
@@ -1055,6 +1176,8 @@ Example: [{"role":"assistant","content":"..."}] or [{"role":"user","content":"..
         const isUser = msg.role === "user";
         const isEditing = editingIdx === i;
         const originalRecord = msg.originalIndex != null ? originalRecords[msg.originalIndex] : null;
+        const displayRawRecord = rawRecordForMessage(msg, originalRecords);
+        const hasDisplayRawRecord = displayRawRecord !== undefined && displayRawRecord !== null;
         const msgType = detectMessageType(msg.content);
         const insertPos = i + 1;
         const isInsertingHere = insertingAt === insertPos;
@@ -1136,11 +1259,11 @@ Example: [{"role":"assistant","content":"..."}] or [{"role":"user","content":"..
                 )}
 
                 <div className="ml-auto flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  {originalRecord && (
+                  {hasDisplayRawRecord && (
                     <button
                       onClick={() => setRawVisible((prev) => { const next = new Set(prev); if (next.has(i)) next.delete(i); else next.add(i); return next; })}
                       className={`rounded px-2 py-1 text-xs transition-colors ${isShowingRaw ? "bg-surface-active text-text-primary" : "text-text-dim hover:text-text-bright hover:bg-surface-active"}`}
-                      title="Toggle raw JSONL record"
+                      title="Toggle raw YAML record"
                     >
                       {isShowingRaw ? "Rendered" : "Raw"}
                     </button>
@@ -1152,6 +1275,15 @@ Example: [{"role":"assistant","content":"..."}] or [{"role":"user","content":"..
                   >
                     ✎
                   </button>
+                  {hasDisplayRawRecord && (
+                    <button
+                      onClick={() => startRawEdit(i)}
+                      className="rounded px-2 py-1 text-xs text-text-dim hover:text-text-bright hover:bg-surface-active transition-colors"
+                      title="Edit the full raw JSON record"
+                    >
+                      Raw Edit
+                    </button>
+                  )}
                   <button
                     onClick={() => handleDelete(i)}
                     className="rounded px-2 py-1 text-xs text-text-dim hover:text-red-400 hover:bg-red-900/20 transition-colors"
@@ -1163,12 +1295,28 @@ Example: [{"role":"assistant","content":"..."}] or [{"role":"user","content":"..
               </div>
 
               {/* Content */}
-              {isShowingRaw && originalRecord ? (
+              {isShowingRaw && hasDisplayRawRecord ? (
                 <pre className="overflow-x-auto whitespace-pre-wrap rounded bg-void p-3 text-xs text-text-muted font-mono leading-relaxed max-h-[600px] overflow-y-auto">
-                  {JSON.stringify(originalRecord, null, 2)}
+                  {toYaml(displayRawRecord)}
                 </pre>
               ) : isEditing ? (
                 <div className="space-y-3">
+                  <div className="inline-flex rounded border border-border-subtle bg-void p-0.5">
+                    <button
+                      onClick={() => setEditDraft((d) => ({ ...d, mode: "rendered" }))}
+                      className={`rounded px-3 py-1 text-xs ${editDraft.mode === "rendered" ? "bg-surface-active text-text-primary" : "text-text-dim hover:text-text-muted"}`}
+                    >
+                      Rendered
+                    </button>
+                    <button
+                      onClick={() => setEditDraft((d) => ({ ...d, mode: "json", rawJson: d.rawJson || JSON.stringify(displayRawRecord, null, 2), rawError: "" }))}
+                      className={`rounded px-3 py-1 text-xs ${editDraft.mode === "json" ? "bg-surface-active text-text-primary" : "text-text-dim hover:text-text-muted"}`}
+                    >
+                      Raw JSON
+                    </button>
+                  </div>
+                  {editDraft.mode === "rendered" ? (
+                    <>
                   <div className="flex items-center gap-2">
                     <label className="text-xs text-text-dim">Role:</label>
                     <select
@@ -1188,6 +1336,21 @@ Example: [{"role":"assistant","content":"..."}] or [{"role":"user","content":"..
                     className="w-full rounded bg-void border border-border-subtle px-4 py-3 text-sm text-text-primary placeholder:text-text-dim outline-none focus:border-glow resize-y font-mono leading-relaxed"
                     autoFocus
                   />
+                    </>
+                  ) : (
+                    <div className="space-y-2">
+                      <textarea
+                        value={editDraft.rawJson}
+                        onChange={(e) => setEditDraft((d) => ({ ...d, rawJson: e.target.value, rawError: "" }))}
+                        rows={Math.min(28, editDraft.rawJson.split("\n").length + 2)}
+                        className="w-full rounded bg-void border border-border-subtle px-4 py-3 text-xs text-text-primary placeholder:text-text-dim outline-none focus:border-glow resize-y font-mono leading-relaxed"
+                        autoFocus
+                      />
+                      {editDraft.rawError && (
+                        <p className="text-xs text-red-400">{editDraft.rawError}</p>
+                      )}
+                    </div>
+                  )}
                   <div className="flex gap-2">
                     <button onClick={saveEdit} className="rounded bg-glow px-4 py-1.5 text-xs font-medium text-void hover:bg-glow/90">Apply</button>
                     <button onClick={() => setEditingIdx(null)} className="btn-action text-xs">Cancel</button>
