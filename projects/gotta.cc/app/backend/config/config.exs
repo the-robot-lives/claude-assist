@@ -27,7 +27,7 @@ config :noizu_sendgrid,
   api_key: System.get_env("SENDGRID_API_KEY") || "SG.dev-placeholder"
 
 config :gotta_cc, :mail_from,
-  {"GottaCC", "noreply@gotta.cc"}
+  {"GottaCc", "noreply@gotta.cc"}
 
 config :logger, :default_formatter,
   format: "$time $metadata[$level] $message\n",

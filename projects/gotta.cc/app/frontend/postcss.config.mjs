@@ -1,7 +1,7 @@
-const config = {
+export default {
   plugins: {
-    "@tailwindcss/postcss": {},
+    "@tailwindcss/postcss": {
+      optimize: process.env.NODE_ENV !== "development" ? undefined : false,
+    },
   },
 };
-
-export default config;

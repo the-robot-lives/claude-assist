@@ -6,13 +6,29 @@
 # First run: deps install (~1-2 min). Subsequent starts are fast (named volumes).
 
 services:
+  migrations:
+    build:
+      context: ./backend/db
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+      - backend/.env
+    environment:
+      DB_HOST: db
+    networks:
+      - infra
+    restart: "no"
+
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile.dev
     image: ${PROJECT_DIR:-start-app}/backend:dev
+    depends_on:
+      migrations:
+        condition: service_completed_successfully
     command: >
-      bash -c "mix deps.get && mix ecto.create 2>/dev/null; mix ecto.migrate && mix phx.server"
+      bash -c "mix deps.get && mix ecto.migrate && mix phx.server"
     working_dir: /app
     volumes:
       - ./backend:/app
@@ -29,6 +45,9 @@ services:
       DB_HOST: db
     expose:
       - "4000"
+    networks:
+      - app
+      - infra
     restart: "no"
 
   frontend:
@@ -56,6 +75,8 @@ services:
       GITHUB_TOKEN: "${GITHUB_TOKEN}"
     expose:
       - "3000"
+    networks:
+      - app
     restart: "no"
 
   # nginx: no overrides — inherits production config as-is.
