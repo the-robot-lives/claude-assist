@@ -1,0 +1,110 @@
+vars:
+  groups:
+    - name: Surfaces
+      vars:
+        white: "#fffaf3"
+        off-white: "#fff1df"
+        gray-50: "#fffaf3"
+        gray-100: "#fff1df"
+        gray-200: "#f6dcc0"
+        gray-300: "#e9bea1"
+        gray-400: "#c89173"
+        gray-500: "#9f684f"
+        gray-600: "#744637"
+        gray-700: "#4f2d25"
+        gray-800: "#33201a"
+        gray-900: "#211613"
+        black: "#1a100d"
+
+    - name: Brand
+      vars:
+        brand-red: "#ff6b6b"
+        brand-blue: "#00a7a5"
+        brand-yellow: "#ffd166"
+        brand-red-light: "rgba(255, 107, 107, 0.18)"
+        brand-blue-light: "rgba(0, 167, 165, 0.16)"
+        brand-blue-mid: "rgba(0, 167, 165, 0.34)"
+        brand-yellow-light: "rgba(255, 209, 102, 0.28)"
+        brand-primary: "#ff6b6b"
+        brand-secondary: "#00a7a5"
+        brand-accent: "#ffd166"
+
+    - name: Semantic
+      vars:
+        success: "#2fb344"
+        success-tint: "rgba(47, 179, 68, 0.16)"
+        warning: "#f08c00"
+        warning-tint: "rgba(240, 140, 0, 0.18)"
+        error: "#e03131"
+        error-tint: "rgba(224, 49, 49, 0.15)"
+        info: "#0ca6a6"
+        info-tint: "rgba(12, 166, 166, 0.16)"
+        running: "#0ca6a6"
+        blocked: "#e03131"
+        review: "#f08c00"
+        approved: "#2fb344"
+
+    - name: Typography
+      vars:
+        font-sans: "'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+        font-mono: "'Space Mono', 'IBM Plex Mono', Menlo, monospace"
+        font-display: "'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+        font-body: "'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+        font-size-base: "16px"
+        font-size-xs: "12px"
+        font-size-sm: "14px"
+        font-size-md: "16px"
+        font-size-lg: "20px"
+        font-size-xl: "26px"
+        font-size-2xl: "34px"
+        font-size-3xl: "44px"
+        font-size-display: "64px"
+        line-height-base: "1.65"
+        line-height-heading: "1.08"
+        letter-spacing-tight: "0"
+
+    - name: Layout
+      vars:
+        unit: "10px"
+        radius: "18px"
+        radius-sm: "12px"
+        radius-md: "18px"
+        radius-lg: "24px"
+        col-gap: "20px"
+        page-max-width: "1180px"
+        panel-padding: "28px"
+
+    - name: Cards
+      vars:
+        card-background: "#fffaf3"
+        card-border-color: "#f2c7a7"
+        card-hover-background: "#fff1df"
+        card-header-background: "#fff1df"
+        card-footer-background: "#ffe8c9"
+        card-accent-color: "#ff6b6b"
+        card-tag-color: "#744637"
+        card-separator-style: "dashed"
+        card-separator-color: "#e9bea1"
+        card-rounded-radius: "18px"
+
+    - name: Buttons
+      vars:
+        btn-font-family: "var(--font-sans)"
+        btn-font-weight: "800"
+        btn-font-size: "15px"
+        btn-background: "#ff6b6b"
+        btn-color: "#1a100d"
+        btn-border-color: "#ff6b6b"
+        btn-hover-background: "#ff8787"
+        btn-outline-background: "#fffaf3"
+        btn-outline-color: "#00a7a5"
+        btn-outline-hover-background: "rgba(0, 167, 165, 0.10)"
+
+    - name: Forms
+      vars:
+        input-background: "#ffffff"
+        input-border-color: "#e9bea1"
+        input-focus-border-color: "#00a7a5"
+        input-color: "#2f1e16"
+        input-placeholder-color: "#9f684f"
+

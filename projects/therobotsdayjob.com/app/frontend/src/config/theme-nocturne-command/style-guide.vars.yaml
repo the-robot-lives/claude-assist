@@ -1,0 +1,110 @@
+vars:
+  groups:
+    - name: Surfaces
+      vars:
+        white: "#d8f3ff"
+        off-white: "#8fb7c8"
+        gray-50: "#1b2a36"
+        gray-100: "#172531"
+        gray-200: "#13202b"
+        gray-300: "#263746"
+        gray-400: "#466173"
+        gray-500: "#6f8b9f"
+        gray-600: "#8fb7c8"
+        gray-700: "#0e1821"
+        gray-800: "#09121a"
+        gray-900: "#050a10"
+        black: "#03070c"
+
+    - name: Brand
+      vars:
+        brand-red: "#ff3b6b"
+        brand-blue: "#18e0ff"
+        brand-yellow: "#f9e65c"
+        brand-red-light: "rgba(255, 59, 107, 0.16)"
+        brand-blue-light: "rgba(24, 224, 255, 0.14)"
+        brand-blue-mid: "rgba(24, 224, 255, 0.36)"
+        brand-yellow-light: "rgba(249, 230, 92, 0.16)"
+        brand-primary: "#18e0ff"
+        brand-secondary: "#8b5cf6"
+        brand-accent: "#f9e65c"
+
+    - name: Semantic
+      vars:
+        success: "#35ff9f"
+        success-tint: "rgba(53, 255, 159, 0.14)"
+        warning: "#f9e65c"
+        warning-tint: "rgba(249, 230, 92, 0.16)"
+        error: "#ff3b6b"
+        error-tint: "rgba(255, 59, 107, 0.15)"
+        info: "#18e0ff"
+        info-tint: "rgba(24, 224, 255, 0.14)"
+        running: "#18e0ff"
+        blocked: "#ff3b6b"
+        review: "#f9e65c"
+        approved: "#35ff9f"
+
+    - name: Typography
+      vars:
+        font-sans: "'IBM Plex Sans Condensed', 'Inter', system-ui, sans-serif"
+        font-mono: "'JetBrains Mono', 'IBM Plex Mono', Menlo, monospace"
+        font-display: "'IBM Plex Sans Condensed', 'Inter', system-ui, sans-serif"
+        font-body: "'IBM Plex Sans Condensed', 'Inter', system-ui, sans-serif"
+        font-size-base: "14px"
+        font-size-xs: "11px"
+        font-size-sm: "12px"
+        font-size-md: "14px"
+        font-size-lg: "17px"
+        font-size-xl: "22px"
+        font-size-2xl: "30px"
+        font-size-3xl: "40px"
+        font-size-display: "58px"
+        line-height-base: "1.5"
+        line-height-heading: "1.0"
+        letter-spacing-tight: "0"
+
+    - name: Layout
+      vars:
+        unit: "6px"
+        radius: "3px"
+        radius-sm: "2px"
+        radius-md: "3px"
+        radius-lg: "4px"
+        col-gap: "12px"
+        page-max-width: "1440px"
+        panel-padding: "16px"
+
+    - name: Cards
+      vars:
+        card-background: "#09121a"
+        card-border-color: "#263746"
+        card-hover-background: "#0e1821"
+        card-header-background: "#0e1821"
+        card-footer-background: "#050a10"
+        card-accent-color: "#18e0ff"
+        card-tag-color: "#8fb7c8"
+        card-separator-style: "solid"
+        card-separator-color: "#263746"
+        card-rounded-radius: "3px"
+
+    - name: Buttons
+      vars:
+        btn-font-family: "var(--font-mono)"
+        btn-font-weight: "700"
+        btn-font-size: "12px"
+        btn-background: "#18e0ff"
+        btn-color: "#03070c"
+        btn-border-color: "#18e0ff"
+        btn-hover-background: "#7df0ff"
+        btn-outline-background: "transparent"
+        btn-outline-color: "#18e0ff"
+        btn-outline-hover-background: "rgba(24, 224, 255, 0.10)"
+
+    - name: Forms
+      vars:
+        input-background: "#050a10"
+        input-border-color: "#263746"
+        input-focus-border-color: "#18e0ff"
+        input-color: "#d8f3ff"
+        input-placeholder-color: "#6f8b9f"
+

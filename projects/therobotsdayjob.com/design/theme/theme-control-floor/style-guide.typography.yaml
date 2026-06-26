@@ -1,0 +1,54 @@
+typography:
+  - var: font-sans
+    name: Inter
+    description: Neutral operational UI sans with high legibility in dense workflow screens.
+    usage: Navigation, dashboards, tables, forms, and product copy.
+    weights: [400, 500, 600, 700]
+  - var: font-mono
+    name: IBM Plex Mono
+    description: Technical monospace for IDs, event names, traces, and compact metadata.
+    usage: Audit rows, tool-call identifiers, message hashes, and log excerpts.
+    weights: [400, 500, 600]
+
+typography-classes:
+  - name: Display
+    class: typography-display
+    font-family: "var(--font-display)"
+    font-size: "var(--font-size-display)"
+    font-weight: "700"
+    line-height: "1.04"
+    letter-spacing: "0"
+  - name: H1
+    class: typography-h1
+    font-family: "var(--font-sans)"
+    font-size: "var(--font-size-3xl)"
+    font-weight: "700"
+    line-height: "1.12"
+    letter-spacing: "0"
+  - name: H2
+    class: typography-h2
+    font-family: "var(--font-sans)"
+    font-size: "var(--font-size-2xl)"
+    font-weight: "650"
+    line-height: "1.18"
+  - name: Body
+    class: typography-body
+    font-family: "var(--font-sans)"
+    font-size: "var(--font-size-md)"
+    font-weight: "400"
+    line-height: "1.55"
+  - name: Code
+    class: typography-code
+    font-family: "var(--font-mono)"
+    font-size: "var(--font-size-sm)"
+    font-weight: "400"
+    line-height: "1.55"
+  - name: Label
+    class: typography-label
+    font-family: "var(--font-sans)"
+    font-size: "var(--font-size-xs)"
+    font-weight: "700"
+    line-height: "1.3"
+    letter-spacing: "0.04em"
+    text-transform: "uppercase"
+

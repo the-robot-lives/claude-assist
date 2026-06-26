@@ -1,0 +1,24 @@
+color-palette:
+  - group: Brand
+    description: Crisp operations palette for trustworthy workflow control.
+    colors:
+      - name: Command Blue
+        value: "var(--brand-blue)"
+      - name: Safety Red
+        value: "var(--brand-red)"
+      - name: Review Amber
+        value: "var(--brand-yellow)"
+      - name: Operations Teal
+        value: "var(--brand-secondary)"
+  - group: Semantic
+    description: Distinct state colors for fast operational scanning.
+    colors:
+      - name: Approved
+        value: "var(--success)"
+      - name: Needs Review
+        value: "var(--warning)"
+      - name: Blocked
+        value: "var(--error)"
+      - name: Running
+        value: "var(--info)"
+

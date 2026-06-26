@@ -1,0 +1,24 @@
+color-modes:
+  light:
+    surface: "#f1f5f9"
+    surface-alt: "#e2e8f0"
+    surface-inverse: "#0f172a"
+    text: "#0f172a"
+    text-secondary: "#334155"
+    text-muted: "#64748b"
+    text-inverse: "#f8fafc"
+    border: "#cbd5e1"
+    border-strong: "#94a3b8"
+    shadow-color: "rgba(2, 6, 23, 0.20)"
+  dark:
+    surface: "#05070d"
+    surface-alt: "#0b1020"
+    surface-inverse: "#e5e7eb"
+    text: "#e5e7eb"
+    text-secondary: "#94a3b8"
+    text-muted: "#64748b"
+    text-inverse: "#0f172a"
+    border: "#1f2937"
+    border-strong: "#334155"
+    shadow-color: "rgba(2, 6, 23, 0.65)"
+

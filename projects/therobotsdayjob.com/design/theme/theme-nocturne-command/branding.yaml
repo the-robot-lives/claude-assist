@@ -1,0 +1,13 @@
+name: "The Robot's Day Job"
+logo-text: "DAYJOB"
+font-url: "https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap"
+intent: Command-grade operational AI for teams that prefer dense, focused work surfaces.
+perception: Serious, fast, and trustworthy with minimal decorative noise.
+audience: Technical operators, security-aware teams, and teams running many concurrent workflows.
+tone: Calm, direct, and no-nonsense.
+keywords:
+  - nocturne
+  - command
+  - dense
+  - audit-first
+  - technical
