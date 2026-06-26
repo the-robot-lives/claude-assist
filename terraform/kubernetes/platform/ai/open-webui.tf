@@ -128,7 +128,7 @@ resource "kubernetes_deployment_v1" "open_webui" {
               OPENAI_API_BASE_URLS = "http://litellm:4000/v1;http://lmstudio-proxy:3713/v1"
               WEBUI_AUTH           = "true"
               WEBUI_NAME           = "Noizu AI"
-              DEFAULT_MODELS       = "zai/glm-5.1 (sub)"
+              DEFAULT_MODELS       = "zai/glm-5.2 (sub)"
               WEBUI_URL            = "https://webui.noizu.com"
               ENABLE_OAUTH_SIGNUP  = "true"
               DEFAULT_USER_ROLE    = "pending"
