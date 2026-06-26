@@ -1,0 +1,13 @@
+name: "The Robot's Day Job"
+logo-text: "RoboCrew"
+font-url: "https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Space+Mono:wght@400;700&display=swap"
+intent: Human-friendly AI copilots that feel approachable without reducing rigor.
+perception: Warm, collaborative, efficient, and slightly upbeat.
+audience: Small teams and agencies needing practical automation with clear trust signals.
+tone: Friendly, encouraging, and practical.
+keywords:
+  - approachable
+  - collaborative
+  - friendly
+  - dependable
+  - visible-control

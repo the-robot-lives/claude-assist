@@ -361,6 +361,9 @@ export interface ConfigWarning {
   level: "warn" | "error";
   section: string;
   message: string;
+  sourceFile?: string;
+  sourcePath?: string;
+  fix?: string;
 }
 
 export interface StyleGuideConfig {

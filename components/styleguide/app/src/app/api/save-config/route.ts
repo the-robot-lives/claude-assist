@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
-import yaml from "js-yaml";
+import * as yaml from "js-yaml";
 
 const CONFIG_ROOT = path.join(process.cwd(), "src", "config");
 const THEME_DIR = path.join(CONFIG_ROOT, "theme-style-guide");

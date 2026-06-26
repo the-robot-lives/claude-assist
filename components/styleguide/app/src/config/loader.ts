@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import yaml from "js-yaml";
+import * as yaml from "js-yaml";
 import type { SimpleStyleGuideConfig, PageSectionGroup } from "@styleguide-engine/lib/types";
 import { normalizeConfig } from "@styleguide-engine/lib/normalizer";
 import { validateConfig } from "@styleguide-engine/lib/validate-config";
@@ -268,6 +268,41 @@ function loadConfigFromDir(dir: string): StyleGuideConfig {
     ? ((yaml.load(fs.readFileSync(metaFile, "utf-8")) as { slug?: string })?.slug || path.basename(dir))
     : path.basename(dir);
   const warnings = validateConfig(merged, themeSlug);
+
+  const brandingFile = path.join(dir, "branding.yaml");
+  if (!fs.existsSync(brandingFile)) {
+    warnings.push({
+      level: "warn",
+      section: "branding",
+      message: "Missing branding.yaml - brand fonts and identity metadata are unavailable",
+      sourceFile: "branding.yaml",
+      sourcePath: "font-url",
+      fix: "Create branding.yaml and populate font-url plus brand identity fields.",
+    });
+  } else {
+    try {
+      const branding = yaml.load(fs.readFileSync(brandingFile, "utf-8")) as { "font-url"?: string } | undefined;
+      if (!branding?.["font-url"]) {
+        warnings.push({
+          level: "warn",
+          section: "branding",
+          message: "branding.yaml is missing 'font-url' - configured font families may render with browser fallbacks",
+          sourceFile: "branding.yaml",
+          sourcePath: "font-url",
+          fix: "Populate branding.yaml -> font-url with the CSS font import URL, or load fonts through the app shell.",
+        });
+      }
+    } catch {
+      warnings.push({
+        level: "warn",
+        section: "branding",
+        message: "branding.yaml could not be parsed - branding font guidance is unavailable",
+        sourceFile: "branding.yaml",
+        sourcePath: "font-url",
+        fix: "Fix YAML syntax in branding.yaml.",
+      });
+    }
+  }
 
   const config = normalizeConfig(merged as unknown as SimpleStyleGuideConfig, dir);
   if (warnings.length > 0) config.warnings = warnings;

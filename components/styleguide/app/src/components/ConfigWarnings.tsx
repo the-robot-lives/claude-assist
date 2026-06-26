@@ -92,7 +92,25 @@ export function ConfigWarnings() {
                   }}>
                     {w.level === "error" ? "✗" : "⚠"}
                   </span>
-                  <span>{w.message}</span>
+                  <span>
+                    <span>{w.message}</span>
+                    {(w.sourceFile || w.sourcePath || w.fix) && (
+                      <span style={{
+                        display: "block",
+                        marginTop: "2px",
+                        color: "var(--text-muted, #666)",
+                      }}>
+                        {w.sourceFile && (
+                          <>
+                            Populate: <code>{w.sourceFile}</code>
+                            {w.sourcePath ? " -> " : ""}
+                          </>
+                        )}
+                        {w.sourcePath && <code>{w.sourcePath}</code>}
+                        {w.fix ? <span> | {w.fix}</span> : null}
+                      </span>
+                    )}
+                  </span>
                 </div>
               ))}
             </div>
