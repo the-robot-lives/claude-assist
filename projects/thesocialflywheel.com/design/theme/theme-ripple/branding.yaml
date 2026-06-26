@@ -1,0 +1,29 @@
+name: "Flywheel"
+logo-text: "FLYWHEEL"
+font-url: "https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap"
+logo-style:
+  font: "var(--font-sans)"
+  color: "var(--text)"
+  # Concentric ripples from a central drop; the outermost ring is coral (opposing view returning).
+  html: '<div style="display:inline-flex;align-items:center;gap:11px"><svg width="34" height="34" viewBox="0 0 34 34" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="17" cy="17" r="15" stroke="var(--error)" stroke-width="1.2" opacity="0.4"/><circle cx="17" cy="17" r="11" stroke="var(--blue)" stroke-width="1.5" opacity="0.6"/><circle cx="17" cy="17" r="7" stroke="var(--red)" stroke-width="1.8" opacity="0.85"/><circle cx="17" cy="17" r="3.2" fill="var(--red)"/></svg><span style="font-family:var(--font-sans);font-size:21px;font-weight:700;letter-spacing:-0.025em;line-height:1;color:currentColor">Flywheel</span></div>'
+intent: "Minimal-tech clarity warmed by consumer-playful softness. Every interaction is a ripple: concentric rings express how content travels outward through degrees, while a coral counter-current visualises opposing views returning. Light, airy, buoyant."
+perception: "Friendly, calm, and trustworthy — a social space that feels like clean water rather than a churning feed."
+audience: "Mainstream, mixed-tech-comfort users (including the cautious and the casual) who want a kinder, more legible social network."
+tone: "Warm, plain-spoken, reassuring. 'Drop an idea. Watch it travel. See what comes back.'"
+keywords:
+  - Ripple
+  - Calm
+  - Outward
+  - Buoyant
+  - Counter-current
+  - Approachable
+intro:
+  title: "Flywheel — Ripple"
+  subtitle: "DROP AN IDEA. WATCH IT TRAVEL."
+  version: "v0.1.0"
+  date: "2026-06-26"
+  colors:
+    - "#10b3b8"
+    - "#1d9bf0"
+    - "#ffc94d"
+    - "#ff6b5e"

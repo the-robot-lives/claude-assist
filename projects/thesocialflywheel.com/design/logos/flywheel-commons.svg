@@ -1,0 +1,14 @@
+<svg width="468" height="132" viewBox="0 0 468 132" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Flywheel — Commons logo">
+  <!-- Logomark: three overlapping Venn circles; 'multiply' darkens the shared lens -->
+  <g transform="translate(66 64)" style="mix-blend-mode:normal">
+    <g style="mix-blend-mode:multiply">
+      <circle cx="-13" cy="-8" r="27" fill="#e5337a" opacity="0.82"/>
+      <circle cx="13" cy="-8" r="27" fill="#4733e5" opacity="0.72"/>
+      <circle cx="0" cy="15" r="27" fill="#f2a900" opacity="0.78"/>
+    </g>
+  </g>
+
+  <!-- Wordmark -->
+  <text x="132" y="62" font-family="'Sora','Inter',sans-serif" font-size="40" font-weight="700" letter-spacing="-0.03em" fill="#161310">Flywheel</text>
+  <text x="133" y="92" font-family="'Sora','Inter',sans-serif" font-size="14" font-weight="600" letter-spacing="0.1em" fill="#857a6c">WHERE YOUR CIRCLES OVERLAP</text>
+</svg>

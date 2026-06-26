@@ -1,0 +1,24 @@
+color-modes:
+  # Orbit is dark-native (Nocturne), but a real light "day sky" mode is provided.
+  light:
+    surface: "#f3f6ff"
+    surface-alt: "#e7ecfb"
+    surface-inverse: "#0b0f1e"
+    text: "#10142a"
+    text-secondary: "#3a4368"
+    text-muted: "#6b749b"
+    text-inverse: "#eaf1ff"
+    border: "#d4dbf2"
+    border-strong: "#b6c0e6"
+    shadow-color: "rgba(40, 32, 120, 0.14)"
+  dark:
+    surface: "#0b0f1e"
+    surface-alt: "#121833"
+    surface-inverse: "#eaf1ff"
+    text: "#eaf1ff"
+    text-secondary: "#b9c2e6"
+    text-muted: "#7f89b5"
+    text-inverse: "#080b16"
+    border: "#1f2748"
+    border-strong: "#323d6b"
+    shadow-color: "rgba(0, 0, 0, 0.55)"

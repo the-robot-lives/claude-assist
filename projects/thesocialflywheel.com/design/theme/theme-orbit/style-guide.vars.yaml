@@ -1,0 +1,25 @@
+vars:
+  groups:
+    - name: "Seed Colors"
+      vars:
+        white: "#eaf1ff"      # starlight — lightest neutral
+        black: "#080b16"      # deep-space indigo — darkest neutral
+        red: "#3ce0ff"        # PRIMARY accent — orbital cyan (core/you)
+        blue: "#8b7bff"        # SECONDARY accent — violet (orbit paths)
+        yellow: "#ffd166"      # TERTIARY accent — star gold (orbiting mutual)
+
+    - name: "Semantic Colors"
+      vars:
+        success: "#34d399"
+        warning: "#fbbf24"
+        error: "#fb7185"
+        info: "#3ce0ff"
+
+    - name: "Typography"
+      vars:
+        font-sans: "'Space Grotesk', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif"
+        font-mono: "'JetBrains Mono', 'Menlo', monospace"
+
+    - name: "Shape"
+      vars:
+        radius: "14px"        # generous rounding to echo the circular motif
