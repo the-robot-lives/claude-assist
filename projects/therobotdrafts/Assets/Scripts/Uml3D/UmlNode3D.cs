@@ -483,6 +483,12 @@ namespace TheRobotDraft.Uml3D
                 return;
             }
 
+            if (style == Uml3DNodeShape.FaceStyle.EaNotation)
+            {
+                BuildEaNotationFace(faceRt, kind, name, stereotype, attributes, pxW, pxH);
+                return;
+            }
+
             // Non-rectangular silhouettes (use case, state, activity, actor, package, cloud, cylinder, note, …)
             // get a single centered label rather than a compartment card: a full-face opaque panel would poke
             // outside the shape's outline. The history pseudostate gets its circled-H glyph the same way.
@@ -548,6 +554,172 @@ namespace TheRobotDraft.Uml3D
             // Operations compartment — only drawn when it actually has rows.
             if (hasOps)
                 foreach (var o in operations) { Row(faceRt, o, ty, RowH, MemberSize, _text, TextAnchor.MiddleLeft, false); ty -= RowH; }
+        }
+
+        private void BuildEaNotationFace(RectTransform parent, ElementKind kind, string name, string stereotype,
+            List<string> rows, float pxW, float pxH)
+        {
+            // BPMN/DMN non-rectangular glyphs keep their silhouette clean and use marker text instead of a card.
+            if (kind == ElementKind.BpmnEvent)
+            {
+                string evt = Prop(rows, "event", "start");
+                string trigger = Prop(rows, "trigger", "message");
+                string marker = trigger.ToLowerInvariant() switch
+                {
+                    "timer" => "T",
+                    "signal" => "△",
+                    "error" => "!",
+                    "terminate" => "X",
+                    _ => "✉",
+                };
+                Label(parent, marker, Vector2.zero, Mathf.Min(pxW, pxH) * 0.72f, 28f, 21,
+                    new Color(0.10f, 0.12f, 0.16f, 1f), new Color(1f, 1f, 1f, 0.7f), true);
+                Label(parent, evt, new Vector2(0f, -pxH * 0.32f), pxW - 8f, 18f, 10,
+                    new Color(0.10f, 0.12f, 0.16f, 1f), new Color(1f, 1f, 1f, 0.7f), false);
+                return;
+            }
+            if (kind == ElementKind.BpmnGateway)
+            {
+                string gateway = Prop(rows, "gateway", "exclusive").ToLowerInvariant();
+                string marker = gateway.Contains("parallel") ? "+" : gateway.Contains("inclusive") ? "O" : "X";
+                Label(parent, marker, Vector2.zero, pxW - 10f, pxH - 10f, 24,
+                    new Color(0.10f, 0.12f, 0.16f, 1f), new Color(1f, 1f, 1f, 0.7f), true);
+                return;
+            }
+            if (kind == ElementKind.DmnDecision || kind == ElementKind.DecisionTreeNode)
+            {
+                Label(parent, name, new Vector2(0f, 8f), pxW - 14f, 30f, NameSize,
+                    new Color(0.10f, 0.12f, 0.16f, 1f), new Color(1f, 1f, 1f, 0.7f), true);
+                string sub = kind == ElementKind.DmnDecision ? Prop(rows, "logic", "decision") : Prop(rows, "condition", "condition");
+                Label(parent, sub, new Vector2(0f, -16f), pxW - 18f, 18f, 11,
+                    new Color(0.22f, 0.24f, 0.28f, 1f), new Color(1f, 1f, 1f, 0.7f), false);
+                return;
+            }
+            if (kind == ElementKind.BpmnConversation)
+            {
+                Label(parent, "conversation", new Vector2(0f, 15f), pxW - 10f, 18f, 11,
+                    new Color(0.22f, 0.24f, 0.28f, 1f), new Color(1f, 1f, 1f, 0.7f), false);
+                Label(parent, name, new Vector2(0f, -4f), pxW - 12f, 30f, 15,
+                    new Color(0.10f, 0.12f, 0.16f, 1f), new Color(1f, 1f, 1f, 0.7f), true);
+                return;
+            }
+            if (kind == ElementKind.SysmlProxyPort || kind == ElementKind.SysmlFullPort || kind == ElementKind.SysmlParameter)
+            {
+                string dir = Prop(rows, "direction", kind == ElementKind.SysmlParameter ? "param" : "inout");
+                Label(parent, dir, Vector2.zero, pxW - 4f, pxH - 4f, 9,
+                    new Color(0.10f, 0.12f, 0.16f, 1f), new Color(1f, 1f, 1f, 0.7f), true);
+                return;
+            }
+
+            BuildFacePanel(parent, pxW, pxH);
+            Color band = BandColor(kind);
+            Rect(parent, "NotationBand", new Vector2(0f, pxH * 0.5f - 12f), new Vector2(pxW - 4f, 22f), band);
+            Rect(parent, "KindChip", new Vector2(-pxW * 0.5f + 18f, pxH * 0.5f - 12f), new Vector2(24f, 14f), Color.Lerp(band, Color.white, 0.35f));
+
+            Color bandText = Luminance(band) < 0.45f ? Color.white : new Color(0.10f, 0.12f, 0.16f, 1f);
+            Row(parent, NotationTitle(kind, stereotype), pxH * 0.5f - 3f, 17f, 11, bandText, TextAnchor.MiddleCenter, false);
+            float y = pxH * 0.5f - 28f;
+            Row(parent, name, y, 25f, NameSize, _text, TextAnchor.MiddleCenter, true);
+            y -= 28f;
+            Divider(parent, y, pxW);
+            y -= 5f;
+
+            var visible = rows ?? new List<string>();
+            int maxRows = Mathf.Max(1, Mathf.FloorToInt((pxH - 70f) / RowH));
+            for (int i = 0; i < visible.Count && i < maxRows; i++)
+            {
+                Row(parent, FormatPropertyRow(visible[i]), y, RowH, 12, _text, TextAnchor.MiddleLeft, false);
+                y -= RowH;
+            }
+        }
+
+        private static string Prop(List<string> rows, string key, string fallback)
+        {
+            if (rows == null) return fallback;
+            string prefix = key + "=";
+            foreach (var raw in rows)
+            {
+                if (string.IsNullOrWhiteSpace(raw)) continue;
+                var row = raw.Trim();
+                if (row.StartsWith(prefix, System.StringComparison.OrdinalIgnoreCase))
+                {
+                    var v = row.Substring(prefix.Length).Trim();
+                    return string.IsNullOrEmpty(v) ? fallback : v;
+                }
+            }
+            return fallback;
+        }
+
+        private static string FormatPropertyRow(string row)
+        {
+            if (string.IsNullOrWhiteSpace(row)) return "";
+            int idx = row.IndexOf('=');
+            if (idx <= 0) return row.Trim();
+            string key = row.Substring(0, idx).Trim();
+            string value = row.Substring(idx + 1).Trim();
+            return string.IsNullOrEmpty(value) ? key + ":" : key + ": " + value;
+        }
+
+        private static string NotationTitle(ElementKind kind, string customStereo)
+        {
+            if (!string.IsNullOrWhiteSpace(customStereo)) return "«" + customStereo.Trim() + "»";
+            return kind switch
+            {
+                ElementKind.SysmlBlock => "«block»",
+                ElementKind.SysmlValueType => "«valueType»",
+                ElementKind.SysmlConstraintBlock => "«constraintBlock»",
+                ElementKind.SysmlRequirement => "«requirement»",
+                ElementKind.BpmnActivity => "BPMN task",
+                ElementKind.BpmnDataObject => "BPMN data object",
+                ElementKind.BpmnDataStore => "BPMN data store",
+                ElementKind.BpmnPool => "BPMN pool",
+                ElementKind.BpmnLane => "BPMN lane",
+                ElementKind.BpmnChoreographyTask => "BPMN choreography",
+                ElementKind.DmnInputData => "DMN input data",
+                ElementKind.DmnBusinessKnowledge => "DMN knowledge",
+                ElementKind.DmnKnowledgeSource => "DMN source",
+                ElementKind.DmnDecisionService => "DMN service",
+                ElementKind.DmnTextAnnotation => "DMN annotation",
+                ElementKind.TogafArchitectureBuildingBlock => "TOGAF ABB",
+                ElementKind.TogafArchitecturePhase => "TOGAF ADM",
+                ElementKind.ZachmanCell => "Zachman cell",
+                ElementKind.UafOperationalNode or ElementKind.UafService or ElementKind.UafResource or ElementKind.UafCapability => "UAF",
+                _ when kind.ToString().StartsWith("Archi") => "ArchiMate",
+                _ => kind.ToString(),
+            };
+        }
+
+        private static Color BandColor(ElementKind kind) => kind switch
+        {
+            ElementKind.SysmlBlock or ElementKind.SysmlValueType or ElementKind.SysmlConstraintBlock
+                or ElementKind.SysmlRequirement or ElementKind.SysmlParameter => new Color(0.22f, 0.45f, 0.65f, 1f),
+            ElementKind.BpmnActivity or ElementKind.BpmnDataObject or ElementKind.BpmnDataStore
+                or ElementKind.BpmnPool or ElementKind.BpmnLane or ElementKind.BpmnChoreographyTask => new Color(0.20f, 0.55f, 0.74f, 1f),
+            ElementKind.DmnInputData or ElementKind.DmnBusinessKnowledge or ElementKind.DmnKnowledgeSource
+                or ElementKind.DmnDecisionService or ElementKind.DmnTextAnnotation => new Color(0.84f, 0.52f, 0.16f, 1f),
+            ElementKind.ArchiBusinessActor or ElementKind.ArchiBusinessProcess => new Color(0.88f, 0.68f, 0.20f, 1f),
+            ElementKind.ArchiApplicationComponent or ElementKind.ArchiApplicationService or ElementKind.ArchiDataObject => new Color(0.23f, 0.55f, 0.78f, 1f),
+            ElementKind.ArchiNode or ElementKind.ArchiDevice or ElementKind.ArchiSystemSoftware or ElementKind.ArchiTechnologyService => new Color(0.26f, 0.62f, 0.42f, 1f),
+            ElementKind.ArchiCapability or ElementKind.ArchiOutcome or ElementKind.ArchiRequirement or ElementKind.ArchiPrinciple => new Color(0.50f, 0.40f, 0.70f, 1f),
+            ElementKind.ArchiWorkPackage or ElementKind.ArchiDeliverable or ElementKind.ArchiPlateau or ElementKind.ArchiGap => new Color(0.80f, 0.42f, 0.16f, 1f),
+            ElementKind.HeatMapItem => new Color(0.78f, 0.20f, 0.18f, 1f),
+            _ => new Color(0.38f, 0.43f, 0.50f, 1f),
+        };
+
+        private static float Luminance(Color c) => 0.2126f * c.r + 0.7152f * c.g + 0.0722f * c.b;
+
+        private static void Rect(RectTransform parent, string name, Vector2 center, Vector2 size, Color color)
+        {
+            var go = new GameObject(name, typeof(RectTransform));
+            var rt = (RectTransform)go.transform;
+            rt.SetParent(parent, false);
+            rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0.5f);
+            rt.pivot = new Vector2(0.5f, 0.5f);
+            rt.sizeDelta = size;
+            rt.anchoredPosition = center;
+            var img = go.AddComponent<Image>();
+            img.color = color;
+            img.raycastTarget = false;
         }
 
         /// <summary>

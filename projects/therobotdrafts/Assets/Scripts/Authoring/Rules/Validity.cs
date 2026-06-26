@@ -61,6 +61,30 @@ namespace TheRobotDraft.Authoring.Rules
                 // An ERD entity / table carries its columns as Field members (and the odd derived operation).
                 ElementKind.EntityTable => childKind is ElementKind.Field or ElementKind.Function,
 
+                // SysML blocks carry structural/parametric child nodes in the same pragmatic way classes carry
+                // members. Constraint blocks and requirements can carry fields as value/prose placeholders.
+                ElementKind.SysmlBlock => childKind is ElementKind.Field or ElementKind.Function
+                    or ElementKind.SysmlProxyPort or ElementKind.SysmlFullPort or ElementKind.SysmlParameter
+                    or ElementKind.SysmlRequirement or ElementKind.SysmlConstraintBlock,
+                ElementKind.SysmlConstraintBlock => childKind is ElementKind.Field or ElementKind.SysmlParameter,
+                ElementKind.SysmlRequirement => childKind == ElementKind.Field,
+
+                // BPMN pools/lanes are region containers. Activities/events/gateways/data nodes live in lanes;
+                // pools may also hold lanes directly.
+                ElementKind.BpmnPool => childKind == ElementKind.BpmnLane || childKind is ElementKind.BpmnEvent
+                    or ElementKind.BpmnActivity or ElementKind.BpmnGateway or ElementKind.BpmnDataObject
+                    or ElementKind.BpmnDataStore or ElementKind.BpmnChoreographyTask or ElementKind.BpmnConversation,
+                ElementKind.BpmnLane => childKind is ElementKind.BpmnEvent or ElementKind.BpmnActivity
+                    or ElementKind.BpmnGateway or ElementKind.BpmnDataObject or ElementKind.BpmnDataStore
+                    or ElementKind.BpmnChoreographyTask or ElementKind.BpmnConversation,
+
+                // Business/enterprise framework frames from the EA gallery.
+                ElementKind.BalancedScorecardPerspective => childKind is ElementKind.StrategyObjective
+                    or ElementKind.BusinessCapability or ElementKind.HeatMapItem or ElementKind.ValueStream,
+                ElementKind.ZachmanCell => childKind is ElementKind.BusinessCapability
+                    or ElementKind.ValueStream or ElementKind.OrgUnit or ElementKind.ArchiDataObject
+                    or ElementKind.TogafArchitectureBuildingBlock or ElementKind.UafCapability,
+
                 // Wireframe / UI mockup: a Screen holds widgets + nested Panels; a Panel holds widgets (and may
                 // itself nest). Item-bearing widgets (table columns, list/tree/dropdown/menu/tabs entries) carry
                 // their items as Field members, mirroring how an ERD table carries columns.
@@ -172,6 +196,20 @@ namespace TheRobotDraft.Authoring.Rules
                     return KindInfo.IsConnectable(from.Kind) && KindInfo.IsConnectable(to.Kind)
                         ? Validity.Valid
                         : Validity.Invalid("a sketch connector links diagram nodes");
+
+                case EdgeKind.SysmlSatisfy:
+                case EdgeKind.SysmlVerify:
+                case EdgeKind.SysmlDeriveReqt:
+                case EdgeKind.SysmlRefine:
+                case EdgeKind.SysmlBinding:
+                case EdgeKind.SysmlItemFlow:
+                case EdgeKind.BpmnSequenceFlow:
+                case EdgeKind.BpmnMessageFlow:
+                case EdgeKind.DmnRequirement:
+                case EdgeKind.ArchiRelationship:
+                    return KindInfo.IsConnectable(from.Kind) && KindInfo.IsConnectable(to.Kind)
+                        ? Validity.Valid
+                        : Validity.Invalid($"{kind} connects diagram nodes");
 
                 case EdgeKind.Include:
                 case EdgeKind.Extend:

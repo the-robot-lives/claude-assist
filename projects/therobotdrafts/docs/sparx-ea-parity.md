@@ -53,18 +53,18 @@ tier is strongest (team repository, security, governance).
 | Capability | EA (edition) | TRD | Notes |
 |---|---|---|---|
 | UML 2.5.1 — all 14 diagram types | Pro | 🟡 | All 14 element/edge **kinds** in the palette; projection engine + full notation fidelity 📋 ([diagram-catalog §1](specs/diagram-catalog.md)) |
-| SysML (BDD, IBD, Parametric, Requirement) | Uni | 📋 | Specced via the profile mechanism; not built |
-| BPMN 2.0 (Process/Collaboration/Choreography) | Pro/Uni | 📋 | Specced; node kinds partly present |
-| DMN (DRD + decision tables + FEEL) | Uni | 📋 | Specced |
-| ArchiMate 3.x (layers + viewpoints) | Uni | 📋 | Specced as layer-colored bubble planes |
-| UAF / UPDM (DoDAF/MODAF/NAF) | Uni/Ult | 📋 | Specced (grid-addressed bubbles) |
-| TOGAF (ADM) | Uni | 📋 | Specced |
-| Zachman framework | Uni | 📋 | Specced |
+| SysML (BDD, IBD, Parametric, Requirement) | Uni | 🟡 | Palette/rendering support for blocks, value types, constraint blocks, requirements, ports, parameters and typed SysML connectors; full profile validation/import-export 📋 |
+| BPMN 2.0 (Process/Collaboration/Choreography) | Pro/Uni | 🟡 | Palette/rendering support for events, activities, gateways, pools/lanes, data nodes, choreography/conversation and sequence/message flow |
+| DMN (DRD + decision tables + FEEL) | Uni | 🟡 | DRD palette/rendering support for decisions, input data, knowledge nodes, decision services and requirement links; decision tables/FEEL 📋 |
+| ArchiMate 3.x (layers + viewpoints) | Uni | 🟡 | Palette/rendering support for business/application/technology/motivation/implementation elements and generic ArchiMate links; viewpoint projection 📋 |
+| UAF / UPDM (DoDAF/MODAF/NAF) | Uni/Ult | 🟡 | First-pass UAF operational node/service/resource/capability palette; full viewpoint grid projection 📋 |
+| TOGAF (ADM) | Uni | 🟡 | ADM phase and architecture building-block palette/rendering support; full TOGAF artifact workflows 📋 |
+| Zachman framework | Uni | 🟡 | Zachman cell region palette/rendering support; full 6x6 generated matrix 📋 |
 | ERD / physical data model | Pro/Corp | 📋 | Specced; no live schema reverse-engineering yet |
 | Profile / MDG / stereotype extension | Pro→Ult | 🟡 | Profile node kinds + «extension» edge in build; MDG-tech authoring 📋 |
 | Rational Rose legacy (Statechart/Collaboration names) | n/a | 📋 | Specced for import fidelity ([diagram-catalog §8](specs/diagram-catalog.md)) |
 | Rose RealTime (Capsules/Ports/Protocols) | n/a | 📋 | Specced |
-| Mind map / DFD / network / wireframe / whiteboard / Gantt-Kanban | Pro/Uni | 🟡 | Whiteboard nodes/connectors now in build; remaining auxiliary layouts are specced as bubble layouts |
+| Mind map / DFD / network / wireframe / whiteboard / Gantt-Kanban | Pro/Uni | 🟡 | Whiteboard, DFD, wireframe, project and business-strategy palettes are in build; generated standard layouts remain 📋 |
 
 **Read:** TRD has the *vocabulary* (element/edge kinds) for nearly EA's whole notation range, but the
 **diagram-projection engine** that turns the model into a faithful, standard 2D diagram is the missing

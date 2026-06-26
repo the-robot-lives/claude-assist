@@ -26,6 +26,8 @@ namespace TheRobotDraft.Uml3D
             /// <summary>A wireframe widget glyph — the concrete UI control (button, field, table, …) composed on
             /// the face canvas by <see cref="WireframeGlyph"/>. Distinct from the classifier compartment card.</summary>
             WireframeWidget,
+            /// <summary>EA/Sparx-style notation face with kind-specific adornments and property rows.</summary>
+            EaNotation,
             /// <summary>No text — the glyph itself is the meaning (markers, control nodes).</summary>
             None,
         }
@@ -35,12 +37,15 @@ namespace TheRobotDraft.Uml3D
         {
             ElementKind.Actor or ElementKind.Person => Uml3DShape_Actor.Build(w, h, d),
 
-            ElementKind.UseCase or ElementKind.Collaboration or ElementKind.WhiteboardCircle => Uml3DShape_UseCase.Build(w, h, d),
+            ElementKind.UseCase or ElementKind.Collaboration or ElementKind.BpmnEvent
+                or ElementKind.BpmnConversation or ElementKind.WhiteboardCircle => Uml3DShape_UseCase.Build(w, h, d),
 
-            ElementKind.State or ElementKind.Activity or ElementKind.CallActivity
+            ElementKind.State or ElementKind.Activity or ElementKind.CallActivity or ElementKind.BpmnActivity
+                or ElementKind.AsyncSend or ElementKind.AsyncReceive
                 => Uml3DShape_RoundedRect.Build(w, h, d),
 
-            ElementKind.Decision or ElementKind.WhiteboardDiamond => Uml3DShape_Diamond.Build(w, h, d),
+            ElementKind.Decision or ElementKind.BpmnGateway or ElementKind.DmnDecision
+                or ElementKind.DecisionTreeNode or ElementKind.WhiteboardDiamond => Uml3DShape_Diamond.Build(w, h, d),
 
             ElementKind.StateStart or ElementKind.Junction or ElementKind.History
                 => Uml3DShape_DiscMarker.Build(w, h, d),
@@ -81,10 +86,17 @@ namespace TheRobotDraft.Uml3D
             // (Screen / Panel are regions — handled as region cubes, not widget glyphs — so they fall through.)
             _ when KindInfo.IsWireframeWidget(kind) => FaceStyle.WireframeWidget,
 
+            _ when KindInfo.IsEaNotationNode(kind) => FaceStyle.EaNotation,
+
+            _ when KindInfo.IsSingleLabelNode(kind) => FaceStyle.NameOnly,
+
             // Non-rectangular silhouettes: a centered name only (a compartment card would spill the outline).
             ElementKind.Actor or ElementKind.Person or ElementKind.UseCase or ElementKind.Collaboration
                 or ElementKind.State or ElementKind.Activity or ElementKind.CallActivity
+                or ElementKind.AsyncSend or ElementKind.AsyncReceive
                 or ElementKind.PackageNode or ElementKind.Database or ElementKind.Cloud
+                or ElementKind.BpmnEvent or ElementKind.BpmnGateway or ElementKind.BpmnConversation
+                or ElementKind.DmnDecision or ElementKind.DecisionTreeNode
                 or ElementKind.MindNode or ElementKind.Note or ElementKind.Artifact or ElementKind.DeploymentNode
                 or ElementKind.FlowTerminator or ElementKind.FlowIO or ElementKind.FlowDocument
                 or ElementKind.WhiteboardSticky or ElementKind.WhiteboardCard or ElementKind.WhiteboardText

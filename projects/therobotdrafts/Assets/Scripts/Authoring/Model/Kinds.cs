@@ -226,6 +226,81 @@ namespace TheRobotDraft.Authoring.Model
         WhiteboardCircle,
         /// <summary>A whiteboard rough diamond used for quick decisions / branching sketches.</summary>
         WhiteboardDiamond,
+
+        // --- reusable behavioral async nodes ---
+        /// <summary>A UML send-signal / asynchronous send action node.</summary>
+        AsyncSend,
+        /// <summary>A UML accept-event / asynchronous receive action node.</summary>
+        AsyncReceive,
+
+        // --- SysML / systems engineering ---
+        /// <summary>A SysML block, equivalent to EA's block definition diagram rectangle.</summary>
+        SysmlBlock,
+        /// <summary>A SysML value type used for physical quantities and typed properties.</summary>
+        SysmlValueType,
+        /// <summary>A SysML constraint block used on parametric diagrams.</summary>
+        SysmlConstraintBlock,
+        /// <summary>A SysML requirement node.</summary>
+        SysmlRequirement,
+        /// <summary>A SysML proxy port.</summary>
+        SysmlProxyPort,
+        /// <summary>A SysML full port.</summary>
+        SysmlFullPort,
+        /// <summary>A SysML parametric parameter / value property.</summary>
+        SysmlParameter,
+
+        // --- BPMN / DMN business modelling ---
+        BpmnEvent,
+        BpmnActivity,
+        BpmnGateway,
+        BpmnDataObject,
+        BpmnDataStore,
+        BpmnPool,
+        BpmnLane,
+        BpmnChoreographyTask,
+        BpmnConversation,
+        DmnDecision,
+        DmnInputData,
+        DmnBusinessKnowledge,
+        DmnKnowledgeSource,
+        DmnDecisionService,
+        DmnTextAnnotation,
+
+        // --- ArchiMate ---
+        ArchiBusinessActor,
+        ArchiBusinessProcess,
+        ArchiApplicationComponent,
+        ArchiApplicationService,
+        ArchiDataObject,
+        ArchiNode,
+        ArchiDevice,
+        ArchiSystemSoftware,
+        ArchiTechnologyService,
+        ArchiCapability,
+        ArchiOutcome,
+        ArchiRequirement,
+        ArchiPrinciple,
+        ArchiWorkPackage,
+        ArchiDeliverable,
+        ArchiPlateau,
+        ArchiGap,
+
+        // --- enterprise / strategy frameworks from the EA gallery ---
+        BusinessCapability,
+        ValueStream,
+        ValueChainActivity,
+        StrategyObjective,
+        BalancedScorecardPerspective,
+        OrgUnit,
+        HeatMapItem,
+        DecisionTreeNode,
+        UafOperationalNode,
+        UafService,
+        UafResource,
+        UafCapability,
+        TogafArchitectureBuildingBlock,
+        TogafArchitecturePhase,
+        ZachmanCell,
     }
 
     /// <summary>
@@ -270,6 +345,27 @@ namespace TheRobotDraft.Authoring.Model
 
         /// <summary>A whiteboard sketch connector: a light, freeform arrow for early ideation before formal UML typing.</summary>
         SketchConnector,
+
+        /// <summary>A SysML «satisfy» requirement relationship.</summary>
+        SysmlSatisfy,
+        /// <summary>A SysML «verify» requirement relationship.</summary>
+        SysmlVerify,
+        /// <summary>A SysML «deriveReqt» relationship.</summary>
+        SysmlDeriveReqt,
+        /// <summary>A SysML «refine» relationship.</summary>
+        SysmlRefine,
+        /// <summary>A SysML parametric binding connector.</summary>
+        SysmlBinding,
+        /// <summary>A SysML item-flow connector.</summary>
+        SysmlItemFlow,
+        /// <summary>A BPMN sequence flow.</summary>
+        BpmnSequenceFlow,
+        /// <summary>A BPMN message flow.</summary>
+        BpmnMessageFlow,
+        /// <summary>A DMN information/knowledge/authority requirement.</summary>
+        DmnRequirement,
+        /// <summary>A typed ArchiMate relationship; label/specialization can be refined per edge.</summary>
+        ArchiRelationship,
     }
 
     /// <summary>
@@ -374,6 +470,69 @@ namespace TheRobotDraft.Authoring.Model
             ElementKind.WhiteboardText => "#F8FAFC",
             ElementKind.WhiteboardCircle => "#56B4E9",
             ElementKind.WhiteboardDiamond => "#E69F00",
+            ElementKind.AsyncSend => "#4FA3A0",
+            ElementKind.AsyncReceive => "#4FA3A0",
+
+            // SysML uses EA's neutral UML box language with a systems-blue accent.
+            ElementKind.SysmlBlock => "#3F83B5",
+            ElementKind.SysmlValueType => "#6BA6B8",
+            ElementKind.SysmlConstraintBlock => "#8AA6C1",
+            ElementKind.SysmlRequirement => "#E7C65B",
+            ElementKind.SysmlProxyPort => "#C7CDD6",
+            ElementKind.SysmlFullPort => "#9AA7B0",
+            ElementKind.SysmlParameter => "#7FA6B0",
+
+            // BPMN / DMN.
+            ElementKind.BpmnEvent => "#5AB28A",
+            ElementKind.BpmnActivity => "#56B4E9",
+            ElementKind.BpmnGateway => "#E69F00",
+            ElementKind.BpmnDataObject => "#B0A878",
+            ElementKind.BpmnDataStore => "#7FA6B0",
+            ElementKind.BpmnPool => "#8893A0",
+            ElementKind.BpmnLane => "#A8B0BC",
+            ElementKind.BpmnChoreographyTask => "#8FA8B8",
+            ElementKind.BpmnConversation => "#B9A6C8",
+            ElementKind.DmnDecision => "#E69F00",
+            ElementKind.DmnInputData => "#56B4E9",
+            ElementKind.DmnBusinessKnowledge => "#7B6FB0",
+            ElementKind.DmnKnowledgeSource => "#B0A878",
+            ElementKind.DmnDecisionService => "#4FA3A0",
+            ElementKind.DmnTextAnnotation => "#F2E2A0",
+
+            // ArchiMate: business/application/technology/motivation/implementation families.
+            ElementKind.ArchiBusinessActor => "#E7C65B",
+            ElementKind.ArchiBusinessProcess => "#E69F00",
+            ElementKind.ArchiApplicationComponent => "#56B4E9",
+            ElementKind.ArchiApplicationService => "#4F86C6",
+            ElementKind.ArchiDataObject => "#7FA6B0",
+            ElementKind.ArchiNode => "#5AB28A",
+            ElementKind.ArchiDevice => "#6E7B8B",
+            ElementKind.ArchiSystemSoftware => "#009E73",
+            ElementKind.ArchiTechnologyService => "#4FA3A0",
+            ElementKind.ArchiCapability => "#7B6FB0",
+            ElementKind.ArchiOutcome => "#B9A6C8",
+            ElementKind.ArchiRequirement => "#C8A2C8",
+            ElementKind.ArchiPrinciple => "#9B8AC4",
+            ElementKind.ArchiWorkPackage => "#D08A3C",
+            ElementKind.ArchiDeliverable => "#B0A878",
+            ElementKind.ArchiPlateau => "#7E8AA2",
+            ElementKind.ArchiGap => "#C44E52",
+
+            ElementKind.BusinessCapability => "#7B6FB0",
+            ElementKind.ValueStream => "#4FA3A0",
+            ElementKind.ValueChainActivity => "#E69F00",
+            ElementKind.StrategyObjective => "#C8A2C8",
+            ElementKind.BalancedScorecardPerspective => "#8893A0",
+            ElementKind.OrgUnit => "#7E8AA2",
+            ElementKind.HeatMapItem => "#C44E52",
+            ElementKind.DecisionTreeNode => "#E69F00",
+            ElementKind.UafOperationalNode => "#3F83B5",
+            ElementKind.UafService => "#4FA3A0",
+            ElementKind.UafResource => "#6E7B8B",
+            ElementKind.UafCapability => "#7B6FB0",
+            ElementKind.TogafArchitectureBuildingBlock => "#5B8AC4",
+            ElementKind.TogafArchitecturePhase => "#B0A878",
+            ElementKind.ZachmanCell => "#8893A0",
 
             _ => "#FFFFFF",
         };
@@ -383,7 +542,9 @@ namespace TheRobotDraft.Authoring.Model
         {
             ElementKind.Class or ElementKind.Interface or ElementKind.Enum or ElementKind.Struct
                 or ElementKind.External or ElementKind.DataType or ElementKind.ObjectInstance
-                or ElementKind.Component or ElementKind.EntityTable => true,
+                or ElementKind.Component or ElementKind.EntityTable
+                or ElementKind.SysmlBlock or ElementKind.SysmlValueType or ElementKind.SysmlConstraintBlock
+                or ElementKind.ArchiApplicationComponent or ElementKind.ArchiDataObject => true,
             _ => false,
         };
 
@@ -399,7 +560,9 @@ namespace TheRobotDraft.Authoring.Model
         {
             ElementKind.State or ElementKind.Activity or ElementKind.CallActivity or ElementKind.StateStart
                 or ElementKind.StateEnd or ElementKind.Decision or ElementKind.ForkJoin or ElementKind.Junction
-                or ElementKind.History or ElementKind.Terminate or ElementKind.FlowFinal => true,
+                or ElementKind.History or ElementKind.Terminate or ElementKind.FlowFinal
+                or ElementKind.AsyncSend or ElementKind.AsyncReceive
+                or ElementKind.BpmnEvent or ElementKind.BpmnActivity or ElementKind.BpmnGateway => true,
             _ => false,
         };
 
@@ -420,6 +583,14 @@ namespace TheRobotDraft.Authoring.Model
         /// </summary>
         public static bool IsWireframeRegion(ElementKind kind) =>
             kind == ElementKind.Screen || kind == ElementKind.Panel;
+
+        /// <summary>Enterprise / business modelling containers drawn as grouping regions rather than slabs.</summary>
+        public static bool IsEaRegion(ElementKind kind) => kind switch
+        {
+            ElementKind.BpmnPool or ElementKind.BpmnLane
+                or ElementKind.BalancedScorecardPerspective or ElementKind.ZachmanCell => true,
+            _ => false,
+        };
 
         /// <summary>
         /// A concrete wireframe widget (button, input, table, …) or the generic <see cref="ElementKind.UiWidget"/>
@@ -444,8 +615,113 @@ namespace TheRobotDraft.Authoring.Model
         public static bool IsWhiteboardNode(ElementKind kind) => kind switch
         {
             ElementKind.WhiteboardSticky or ElementKind.WhiteboardCard or ElementKind.WhiteboardText
-                or ElementKind.WhiteboardCircle or ElementKind.WhiteboardDiamond => true,
+                or ElementKind.WhiteboardCircle or ElementKind.WhiteboardDiamond
+                or ElementKind.Cloud or ElementKind.AsyncSend or ElementKind.AsyncReceive => true,
             _ => false,
         };
+
+        /// <summary>
+        /// Kinds that should default to Enterprise Architect style notation: white/near-white body, dark border,
+        /// and restrained text. Non-standard sketch families can still use their semantic color defaults.
+        /// </summary>
+        public static bool UsesEaNeutralNotation(ElementKind kind) => kind switch
+        {
+            ElementKind.Package or ElementKind.Class or ElementKind.Interface or ElementKind.Enum
+                or ElementKind.Struct or ElementKind.DataType or ElementKind.PrimitiveType
+                or ElementKind.ObjectInstance or ElementKind.Actor or ElementKind.UseCase
+                or ElementKind.Boundary or ElementKind.State or ElementKind.StateStart
+                or ElementKind.StateEnd or ElementKind.Decision or ElementKind.ForkJoin
+                or ElementKind.Junction or ElementKind.History or ElementKind.Terminate
+                or ElementKind.Activity or ElementKind.FlowFinal or ElementKind.Component
+                or ElementKind.Artifact or ElementKind.DeploymentNode or ElementKind.PackageNode
+                or ElementKind.Part or ElementKind.Port or ElementKind.Collaboration
+                or ElementKind.Lifeline or ElementKind.Activation or ElementKind.Frame
+                or ElementKind.Metaclass or ElementKind.Stereotype or ElementKind.Profile
+                or ElementKind.TimingLifeline or ElementKind.CallActivity
+                or ElementKind.AsyncSend or ElementKind.AsyncReceive
+                or ElementKind.SysmlBlock or ElementKind.SysmlValueType or ElementKind.SysmlConstraintBlock
+                or ElementKind.SysmlRequirement or ElementKind.SysmlParameter
+                or ElementKind.BpmnEvent or ElementKind.BpmnActivity or ElementKind.BpmnGateway
+                or ElementKind.BpmnDataObject or ElementKind.BpmnDataStore or ElementKind.BpmnPool
+                or ElementKind.BpmnLane or ElementKind.BpmnChoreographyTask or ElementKind.BpmnConversation
+                or ElementKind.DmnDecision or ElementKind.DmnInputData or ElementKind.DmnBusinessKnowledge
+                or ElementKind.DmnKnowledgeSource or ElementKind.DmnDecisionService or ElementKind.DmnTextAnnotation
+                or ElementKind.ArchiBusinessActor or ElementKind.ArchiBusinessProcess
+                or ElementKind.ArchiApplicationComponent or ElementKind.ArchiApplicationService
+                or ElementKind.ArchiDataObject or ElementKind.ArchiNode or ElementKind.ArchiDevice
+                or ElementKind.ArchiSystemSoftware or ElementKind.ArchiTechnologyService
+                or ElementKind.ArchiCapability or ElementKind.ArchiOutcome or ElementKind.ArchiRequirement
+                or ElementKind.ArchiPrinciple or ElementKind.ArchiWorkPackage or ElementKind.ArchiDeliverable
+                or ElementKind.ArchiPlateau or ElementKind.ArchiGap
+                or ElementKind.BusinessCapability or ElementKind.ValueStream or ElementKind.ValueChainActivity
+                or ElementKind.StrategyObjective or ElementKind.BalancedScorecardPerspective
+                or ElementKind.OrgUnit or ElementKind.HeatMapItem or ElementKind.DecisionTreeNode
+                or ElementKind.UafOperationalNode or ElementKind.UafService or ElementKind.UafResource
+                or ElementKind.UafCapability or ElementKind.TogafArchitectureBuildingBlock
+                or ElementKind.TogafArchitecturePhase or ElementKind.ZachmanCell
+                or ElementKind.EntityTable or ElementKind.FlowProcess or ElementKind.FlowTerminator
+                or ElementKind.FlowIO or ElementKind.FlowDocument or ElementKind.DataStore
+                or ElementKind.ExternalEntity or ElementKind.Server or ElementKind.Database
+                or ElementKind.Cloud or ElementKind.Client or ElementKind.Firewall => true,
+            _ => false,
+        };
+
+        /// <summary>EA-gallery diagram nodes that should render as one-label notation boxes, not class compartments.</summary>
+        public static bool IsSingleLabelNode(ElementKind kind) => kind switch
+        {
+            ElementKind.PrimitiveType or ElementKind.Component or ElementKind.Artifact or ElementKind.Part
+                or ElementKind.Metaclass or ElementKind.Stereotype
+                or ElementKind.WhiteboardCard or ElementKind.WhiteboardText
+                or ElementKind.SysmlBlock or ElementKind.SysmlValueType or ElementKind.SysmlConstraintBlock
+                or ElementKind.SysmlRequirement or ElementKind.SysmlParameter
+                or ElementKind.BpmnActivity or ElementKind.BpmnDataObject or ElementKind.BpmnDataStore
+                or ElementKind.BpmnChoreographyTask
+                or ElementKind.DmnDecision or ElementKind.DmnInputData or ElementKind.DmnBusinessKnowledge
+                or ElementKind.DmnKnowledgeSource or ElementKind.DmnDecisionService or ElementKind.DmnTextAnnotation
+                or ElementKind.ArchiBusinessActor or ElementKind.ArchiBusinessProcess
+                or ElementKind.ArchiApplicationComponent or ElementKind.ArchiApplicationService
+                or ElementKind.ArchiDataObject or ElementKind.ArchiNode or ElementKind.ArchiDevice
+                or ElementKind.ArchiSystemSoftware or ElementKind.ArchiTechnologyService
+                or ElementKind.ArchiCapability or ElementKind.ArchiOutcome or ElementKind.ArchiRequirement
+                or ElementKind.ArchiPrinciple or ElementKind.ArchiWorkPackage or ElementKind.ArchiDeliverable
+                or ElementKind.ArchiPlateau or ElementKind.ArchiGap
+                or ElementKind.BusinessCapability or ElementKind.ValueStream or ElementKind.ValueChainActivity
+                or ElementKind.StrategyObjective or ElementKind.OrgUnit or ElementKind.HeatMapItem
+                or ElementKind.DecisionTreeNode or ElementKind.UafOperationalNode or ElementKind.UafService
+                or ElementKind.UafResource or ElementKind.UafCapability
+                or ElementKind.TogafArchitectureBuildingBlock or ElementKind.TogafArchitecturePhase => true,
+            _ => false,
+        };
+
+        /// <summary>EA-gallery notation families whose face should be rendered by a notation-specific glyph layer.</summary>
+        public static bool IsEaNotationNode(ElementKind kind) => kind switch
+        {
+            ElementKind.SysmlBlock or ElementKind.SysmlValueType or ElementKind.SysmlConstraintBlock
+                or ElementKind.SysmlRequirement or ElementKind.SysmlProxyPort or ElementKind.SysmlFullPort
+                or ElementKind.SysmlParameter
+                or ElementKind.BpmnEvent or ElementKind.BpmnActivity or ElementKind.BpmnGateway
+                or ElementKind.BpmnDataObject or ElementKind.BpmnDataStore or ElementKind.BpmnPool
+                or ElementKind.BpmnLane or ElementKind.BpmnChoreographyTask or ElementKind.BpmnConversation
+                or ElementKind.DmnDecision or ElementKind.DmnInputData or ElementKind.DmnBusinessKnowledge
+                or ElementKind.DmnKnowledgeSource or ElementKind.DmnDecisionService or ElementKind.DmnTextAnnotation
+                or ElementKind.ArchiBusinessActor or ElementKind.ArchiBusinessProcess
+                or ElementKind.ArchiApplicationComponent or ElementKind.ArchiApplicationService
+                or ElementKind.ArchiDataObject or ElementKind.ArchiNode or ElementKind.ArchiDevice
+                or ElementKind.ArchiSystemSoftware or ElementKind.ArchiTechnologyService
+                or ElementKind.ArchiCapability or ElementKind.ArchiOutcome or ElementKind.ArchiRequirement
+                or ElementKind.ArchiPrinciple or ElementKind.ArchiWorkPackage or ElementKind.ArchiDeliverable
+                or ElementKind.ArchiPlateau or ElementKind.ArchiGap
+                or ElementKind.BusinessCapability or ElementKind.ValueStream or ElementKind.ValueChainActivity
+                or ElementKind.StrategyObjective or ElementKind.BalancedScorecardPerspective
+                or ElementKind.OrgUnit or ElementKind.HeatMapItem or ElementKind.DecisionTreeNode
+                or ElementKind.UafOperationalNode or ElementKind.UafService or ElementKind.UafResource
+                or ElementKind.UafCapability or ElementKind.TogafArchitectureBuildingBlock
+                or ElementKind.TogafArchitecturePhase or ElementKind.ZachmanCell => true,
+            _ => false,
+        };
+
+        /// <summary>Nodes that expose editable kind-specific property rows in the inspector.</summary>
+        public static bool HasPropertyRows(ElementKind kind) =>
+            IsWireframeWidget(kind) || IsEaNotationNode(kind);
     }
 }

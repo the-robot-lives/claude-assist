@@ -64,11 +64,14 @@ namespace TheRobotDraft.Uml
             bool darkFill = kind == ElementKind.Actor || kind == ElementKind.StateStart || kind == ElementKind.StateEnd
                 || kind == ElementKind.ForkJoin || kind == ElementKind.Junction
                 || kind == ElementKind.Terminate || kind == ElementKind.FlowFinal;
+            bool eaNeutral = KindInfo.UsesEaNeutralNotation(kind);
             Color defaultFill =
                 note ? new Color(0.99f, 0.96f, 0.74f, 1f)
                 : darkFill ? new Color(0.20f, 0.21f, 0.25f, 1f)
+                : eaNeutral ? new Color(0.98f, 0.985f, 0.99f, 1f)
                 : Color.Lerp(hue, Color.white, 0.88f);
             Color defaultBorder = note ? new Color(0.78f, 0.70f, 0.40f, 1f)
+                                       : eaNeutral ? new Color(0.22f, 0.23f, 0.26f, 1f)
                                        : Color.Lerp(hue, new Color(0.25f, 0.27f, 0.32f, 1f), 0.55f);
             Color defaultText = note ? new Color(0.16f, 0.15f, 0.06f, 1f) : new Color(0.13f, 0.15f, 0.19f, 1f);
 
@@ -158,7 +161,8 @@ namespace TheRobotDraft.Uml
                 Rt.sizeDelta = new Vector2(w, h);
 
                 Color headerColor = style.Has ? Color.Lerp(style.Fill, Color.black, 0.10f)
-                                              : Color.Lerp(hue, Color.white, 0.52f);
+                                              : eaNeutral ? new Color(0.94f, 0.95f, 0.97f, 1f)
+                                                          : Color.Lerp(hue, Color.white, 0.52f);
                 var header = Panel("Header", 0f, headerH, headerColor);
                 var nameColor = style.Has ? style.Text : new Color(0.11f, 0.12f, 0.15f, 1f);
                 var subColor = style.Has ? Color.Lerp(style.Text, _baseColor, 0.35f)
@@ -377,29 +381,35 @@ namespace TheRobotDraft.Uml
                 or ElementKind.Terminate or ElementKind.FlowFinal or ElementKind.DeploymentNode
                 or ElementKind.Collaboration or ElementKind.PackageNode or ElementKind.Activation
                 or ElementKind.Port or ElementKind.CallActivity
+                or ElementKind.SysmlProxyPort or ElementKind.SysmlFullPort
+                or ElementKind.BpmnEvent or ElementKind.BpmnGateway or ElementKind.BpmnConversation
+                or ElementKind.DmnDecision or ElementKind.DecisionTreeNode
+                or ElementKind.Cloud or ElementKind.AsyncSend or ElementKind.AsyncReceive
                 or ElementKind.WhiteboardCircle or ElementKind.WhiteboardDiamond => true,
             _ => false,
         };
 
         /// <summary>A box rendered as a single titled rectangle (stereotype + name), with no member compartments.</summary>
-        private static bool IsTitledBox(ElementKind k) =>
-            k == ElementKind.PrimitiveType || k == ElementKind.Component || k == ElementKind.Artifact
-            || k == ElementKind.Part || k == ElementKind.Metaclass || k == ElementKind.Stereotype
-            || k == ElementKind.WhiteboardCard || k == ElementKind.WhiteboardText;
+        private static bool IsTitledBox(ElementKind k) => KindInfo.IsSingleLabelNode(k);
 
         private static UmlShape ShapeFor(ElementKind k) => k switch
         {
-            ElementKind.UseCase or ElementKind.Collaboration => UmlShape.Ellipse,
-            ElementKind.State or ElementKind.Activity or ElementKind.CallActivity => UmlShape.RoundedRect,
+            ElementKind.UseCase or ElementKind.Collaboration or ElementKind.BpmnEvent
+                or ElementKind.BpmnConversation => UmlShape.Ellipse,
+            ElementKind.State or ElementKind.Activity or ElementKind.CallActivity or ElementKind.BpmnActivity => UmlShape.RoundedRect,
+            ElementKind.AsyncSend => UmlShape.SendSignal,
+            ElementKind.AsyncReceive => UmlShape.AcceptEvent,
             ElementKind.StateStart or ElementKind.Junction => UmlShape.Disc,
             ElementKind.StateEnd => UmlShape.RingDisc,
-            ElementKind.Decision => UmlShape.Diamond,
-            ElementKind.ForkJoin or ElementKind.Activation or ElementKind.Port => UmlShape.Bar,
+            ElementKind.Decision or ElementKind.BpmnGateway or ElementKind.DmnDecision or ElementKind.DecisionTreeNode => UmlShape.Diamond,
+            ElementKind.ForkJoin or ElementKind.Activation or ElementKind.Port
+                or ElementKind.SysmlProxyPort or ElementKind.SysmlFullPort => UmlShape.Bar,
             ElementKind.History => UmlShape.Disc,
             ElementKind.Terminate => UmlShape.Cross,
             ElementKind.FlowFinal => UmlShape.FlowFinal,
             ElementKind.DeploymentNode => UmlShape.Cube,
             ElementKind.PackageNode => UmlShape.Folder,
+            ElementKind.Cloud => UmlShape.Cloud,
             ElementKind.WhiteboardCircle => UmlShape.Ellipse,
             ElementKind.WhiteboardDiamond => UmlShape.Diamond,
             _ => UmlShape.Actor,
@@ -427,6 +437,17 @@ namespace TheRobotDraft.Uml
                 ElementKind.Activation => new Vector2(14f, 90f),
                 ElementKind.Port => new Vector2(16f, 16f),
                 ElementKind.CallActivity => new Vector2(160f, 60f),
+                ElementKind.AsyncSend => new Vector2(160f, 60f),
+                ElementKind.AsyncReceive => new Vector2(160f, 60f),
+                ElementKind.SysmlProxyPort => new Vector2(24f, 24f),
+                ElementKind.SysmlFullPort => new Vector2(24f, 24f),
+                ElementKind.BpmnEvent => new Vector2(52f, 52f),
+                ElementKind.BpmnActivity => new Vector2(170f, 72f),
+                ElementKind.BpmnGateway => new Vector2(88f, 70f),
+                ElementKind.BpmnConversation => new Vector2(116f, 76f),
+                ElementKind.DmnDecision => new Vector2(150f, 86f),
+                ElementKind.DecisionTreeNode => new Vector2(116f, 76f),
+                ElementKind.Cloud => new Vector2(176f, 104f),
                 ElementKind.WhiteboardCircle => new Vector2(132f, 90f),
                 ElementKind.WhiteboardDiamond => new Vector2(116f, 82f),
                 _ => new Vector2(120f, 60f),
@@ -536,14 +557,21 @@ namespace TheRobotDraft.Uml
                 ElementKind.PrimitiveType => new Vector2(150f, 64f),
                 ElementKind.WhiteboardCard => new Vector2(180f, 96f),
                 ElementKind.WhiteboardText => new Vector2(160f, 44f),
+                ElementKind.SysmlRequirement => new Vector2(170f, 92f),
+                ElementKind.SysmlConstraintBlock => new Vector2(180f, 86f),
+                ElementKind.DmnInputData or ElementKind.DmnBusinessKnowledge or ElementKind.DmnKnowledgeSource => new Vector2(170f, 72f),
+                ElementKind.DmnDecisionService => new Vector2(180f, 100f),
+                _ when KindInfo.IsEaNotationNode(kind) => new Vector2(190f, 82f),
                 _ => new Vector2(180f, 64f),
             };
             float w = sizeOverride.x > 1f ? sizeOverride.x : def.x;
             float h = sizeOverride.y > 1f ? sizeOverride.y : def.y;
             Rt.sizeDelta = new Vector2(w, h);
 
-            float ty = -8f;
-            if (!string.IsNullOrEmpty(stereotype))
+            if (KindInfo.IsEaNotationNode(kind)) AddNotationBand(kind, stereotype);
+
+            float ty = KindInfo.IsEaNotationNode(kind) ? -28f : -8f;
+            if (!string.IsNullOrEmpty(stereotype) && !KindInfo.IsEaNotationNode(kind))
             {
                 Row(transform, stereotype, ty, 16f, 13,
                     new Color(0.30f, 0.32f, 0.38f, 1f), TextAnchor.MiddleCenter);
@@ -554,6 +582,57 @@ namespace TheRobotDraft.Uml
 
             if (kind == ElementKind.Component) AddComponentIcon();
             else if (kind == ElementKind.Artifact) AddArtifactIcon();
+        }
+
+        private void AddNotationBand(ElementKind kind, string stereotype)
+        {
+            var band = NewChild("NotationBand", transform);
+            band.anchorMin = new Vector2(0f, 1f); band.anchorMax = new Vector2(1f, 1f);
+            band.pivot = new Vector2(0.5f, 1f);
+            band.offsetMin = new Vector2(2f, -24f); band.offsetMax = new Vector2(-2f, -2f);
+            var img = band.gameObject.AddComponent<Image>(); img.color = NotationBandColor(kind); img.raycastTarget = false;
+            var label = NewChild("NotationBandText", band);
+            label.anchorMin = Vector2.zero; label.anchorMax = Vector2.one;
+            label.offsetMin = Vector2.zero; label.offsetMax = Vector2.zero;
+            var txt = label.gameObject.AddComponent<Text>();
+            txt.font = font_ ?? (font_ = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf"));
+            txt.text = NotationBandText(kind, stereotype);
+            txt.fontSize = 11;
+            txt.alignment = TextAnchor.MiddleCenter;
+            txt.color = new Color(0.10f, 0.12f, 0.16f, 1f);
+            txt.raycastTarget = false;
+        }
+
+        private static Color NotationBandColor(ElementKind kind) => kind switch
+        {
+            ElementKind.ArchiBusinessActor or ElementKind.ArchiBusinessProcess => new Color(0.88f, 0.68f, 0.20f, 1f),
+            ElementKind.ArchiApplicationComponent or ElementKind.ArchiApplicationService or ElementKind.ArchiDataObject => new Color(0.23f, 0.55f, 0.78f, 1f),
+            ElementKind.ArchiNode or ElementKind.ArchiDevice or ElementKind.ArchiSystemSoftware or ElementKind.ArchiTechnologyService => new Color(0.26f, 0.62f, 0.42f, 1f),
+            ElementKind.ArchiCapability or ElementKind.ArchiOutcome or ElementKind.ArchiRequirement or ElementKind.ArchiPrinciple => new Color(0.50f, 0.40f, 0.70f, 1f),
+            ElementKind.HeatMapItem => new Color(0.78f, 0.20f, 0.18f, 1f),
+            ElementKind.DmnDecision or ElementKind.DmnInputData or ElementKind.DmnBusinessKnowledge or ElementKind.DmnKnowledgeSource or ElementKind.DmnDecisionService => new Color(0.84f, 0.52f, 0.16f, 1f),
+            ElementKind.BpmnActivity or ElementKind.BpmnDataObject or ElementKind.BpmnDataStore or ElementKind.BpmnChoreographyTask => new Color(0.20f, 0.55f, 0.74f, 1f),
+            ElementKind.SysmlBlock or ElementKind.SysmlValueType or ElementKind.SysmlConstraintBlock or ElementKind.SysmlRequirement => new Color(0.22f, 0.45f, 0.65f, 1f),
+            _ => new Color(0.72f, 0.76f, 0.82f, 1f),
+        };
+
+        private static string NotationBandText(ElementKind kind, string stereotype)
+        {
+            if (!string.IsNullOrWhiteSpace(stereotype)) return "«" + stereotype.Trim() + "»";
+            return kind switch
+            {
+                ElementKind.SysmlBlock => "«block»",
+                ElementKind.SysmlValueType => "«valueType»",
+                ElementKind.SysmlConstraintBlock => "«constraintBlock»",
+                ElementKind.SysmlRequirement => "«requirement»",
+                ElementKind.BpmnActivity => "BPMN task",
+                ElementKind.DmnInputData => "DMN input",
+                ElementKind.DmnBusinessKnowledge => "DMN knowledge",
+                ElementKind.DmnKnowledgeSource => "DMN source",
+                ElementKind.DmnDecisionService => "DMN service",
+                _ when kind.ToString().StartsWith("Archi") => "ArchiMate",
+                _ => kind.ToString(),
+            };
         }
 
         /// <summary>The two-tab component icon, tucked into the top-right corner.</summary>
@@ -917,7 +996,11 @@ namespace TheRobotDraft.Uml
     }
 
     /// <summary>The procedural shapes used by non-class UML nodes.</summary>
-    public enum UmlShape { Ellipse, RoundedRect, Disc, RingDisc, Actor, Diamond, Bar, FlowFinal, Cube, Cross, Folder }
+    public enum UmlShape
+    {
+        Ellipse, RoundedRect, Disc, RingDisc, Actor, Diamond, Bar, FlowFinal, Cube, Cross, Folder, Cloud,
+        SendSignal, AcceptEvent
+    }
 
     /// <summary>Draws use-case (ellipse), state (rounded rect), start/final markers (disc / ring), and actors (stick figure).</summary>
     public sealed class UmlShapeGraphic : Graphic
@@ -983,7 +1066,69 @@ namespace TheRobotDraft.Uml
                 case UmlShape.Folder:
                     AddFolder(vh, r, col);
                     break;
+                case UmlShape.Cloud:
+                    AddCloud(vh, r, col);
+                    break;
+                case UmlShape.SendSignal:
+                    AddSendSignal(vh, r, col);
+                    break;
+                case UmlShape.AcceptEvent:
+                    AddAcceptEvent(vh, r, col);
+                    break;
             }
+        }
+
+        /// <summary>UML send-signal action: a pentagon with the arrow point on the right.</summary>
+        private static void AddSendSignal(VertexHelper vh, Rect r, Color32 col)
+        {
+            float notch = Mathf.Min(r.width * 0.20f, r.height * 0.45f);
+            var p0 = new Vector2(r.xMin, r.yMin);
+            var p1 = new Vector2(r.xMax - notch, r.yMin);
+            var p2 = new Vector2(r.xMax, r.center.y);
+            var p3 = new Vector2(r.xMax - notch, r.yMax);
+            var p4 = new Vector2(r.xMin, r.yMax);
+            AddPolyFan(vh, new[] { p0, p1, p2, p3, p4 }, col);
+        }
+
+        /// <summary>UML accept-event action: a rectangle with a concave event notch on the left.</summary>
+        private static void AddAcceptEvent(VertexHelper vh, Rect r, Color32 col)
+        {
+            float notch = Mathf.Min(r.width * 0.20f, r.height * 0.45f);
+            var pts = new[]
+            {
+                new Vector2(r.xMin, r.yMin),
+                new Vector2(r.xMax, r.yMin),
+                new Vector2(r.xMax, r.yMax),
+                new Vector2(r.xMin, r.yMax),
+                new Vector2(r.xMin + notch, r.center.y),
+            };
+            AddPolyFan(vh, pts, col);
+        }
+
+        private static void AddPolyFan(VertexHelper vh, Vector2[] pts, Color32 col)
+        {
+            Vector2 c = Vector2.zero;
+            for (int i = 0; i < pts.Length; i++) c += pts[i];
+            c /= Mathf.Max(1, pts.Length);
+            int center = vh.currentVertCount;
+            vh.AddVert(c, col, Vector2.zero);
+            for (int i = 0; i < pts.Length; i++) vh.AddVert(pts[i], col, Vector2.zero);
+            for (int i = 0; i < pts.Length; i++)
+            {
+                int n = (i + 1) % pts.Length;
+                vh.AddTriangle(center, center + 1 + i, center + 1 + n);
+            }
+        }
+
+        /// <summary>EA-style cloud: overlapping lobes plus a lower body, used for cloud / external service nodes.</summary>
+        private static void AddCloud(VertexHelper vh, Rect r, Color32 col)
+        {
+            float w = r.width, h = r.height;
+            var body = new Rect(r.xMin + w * 0.10f, r.yMin + h * 0.18f, w * 0.80f, h * 0.42f);
+            AddRoundedRect(vh, body, Mathf.Min(body.height * 0.45f, body.width * 0.18f), col);
+            AddEllipse(vh, new Vector2(r.xMin + w * 0.30f, r.yMin + h * 0.55f), w * 0.22f, h * 0.24f, 24, col);
+            AddEllipse(vh, new Vector2(r.xMin + w * 0.50f, r.yMin + h * 0.66f), w * 0.28f, h * 0.30f, 28, col);
+            AddEllipse(vh, new Vector2(r.xMin + w * 0.70f, r.yMin + h * 0.52f), w * 0.23f, h * 0.24f, 24, col);
         }
 
         /// <summary>A package "folder": a small tab on the upper-left, then the body rectangle below it.</summary>

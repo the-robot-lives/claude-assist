@@ -31,6 +31,10 @@ namespace TheRobotDraft.Uml
             EdgeKind.NoteLink, EdgeKind.DirectedAssociation,
             EdgeKind.MessageSync, EdgeKind.MessageAsync, EdgeKind.MessageReply, EdgeKind.Extension,
             EdgeKind.SketchConnector,
+            EdgeKind.SysmlSatisfy, EdgeKind.SysmlVerify, EdgeKind.SysmlDeriveReqt,
+            EdgeKind.SysmlRefine, EdgeKind.SysmlBinding, EdgeKind.SysmlItemFlow,
+            EdgeKind.BpmnSequenceFlow, EdgeKind.BpmnMessageFlow,
+            EdgeKind.DmnRequirement, EdgeKind.ArchiRelationship,
         };
 
         /// <summary>Sequence / communication participants a message may run between (lifelines, activations, objects).</summary>
@@ -546,7 +550,12 @@ namespace TheRobotDraft.Uml
             var id = _ctl.CommitAddNode(isPackage ? ElementId.None : _activePackage, DefaultName(kind));
             if (!id.IsValid) { Flash("can't place " + kind + " here"); _ctl.EnterSelect(); return; }
             if (isPackage) _activePackage = id;
-            else { _pos[id] = ScreenToModelPx(screenPos); _ctl.SetZLayer(id, _activeLayer); } // insert on the active layer
+            else
+            {
+                var defaults = DefaultPropertyItems(kind);
+                if (defaults.Length > 0) _ctl.SetPropertyItems(id, defaults);
+                _pos[id] = ScreenToModelPx(screenPos); _ctl.SetZLayer(id, _activeLayer);
+            } // insert on the active layer
             _ctl.EnterSelect();
             RebuildFromModel();
             SetSelected(id);
@@ -572,6 +581,8 @@ namespace TheRobotDraft.Uml
             ElementKind.Terminate => "terminate",
             ElementKind.FlowFinal => "flow-final" + CountOf(kind),
             ElementKind.Activity => "Action",
+            ElementKind.AsyncSend => "send signal",
+            ElementKind.AsyncReceive => "receive event",
             ElementKind.Component => "Component" + CountOf(kind),
             ElementKind.Artifact => "artifact.bin",
             ElementKind.DeploymentNode => "Node" + CountOf(kind),
@@ -621,7 +632,120 @@ namespace TheRobotDraft.Uml
             ElementKind.WhiteboardText => "Text",
             ElementKind.WhiteboardCircle => "Circle",
             ElementKind.WhiteboardDiamond => "Decision",
+            ElementKind.SysmlBlock => "Block" + CountOf(kind),
+            ElementKind.SysmlValueType => "ValueType" + CountOf(kind),
+            ElementKind.SysmlConstraintBlock => "Constraint" + CountOf(kind),
+            ElementKind.SysmlRequirement => "REQ-" + CountOf(kind),
+            ElementKind.SysmlProxyPort => "proxy",
+            ElementKind.SysmlFullPort => "port",
+            ElementKind.SysmlParameter => "parameter",
+            ElementKind.BpmnEvent => "Event",
+            ElementKind.BpmnActivity => "Activity",
+            ElementKind.BpmnGateway => "Gateway",
+            ElementKind.BpmnDataObject => "Data Object",
+            ElementKind.BpmnDataStore => "Data Store",
+            ElementKind.BpmnPool => "Pool",
+            ElementKind.BpmnLane => "Lane",
+            ElementKind.BpmnChoreographyTask => "Choreography",
+            ElementKind.BpmnConversation => "Conversation",
+            ElementKind.DmnDecision => "Decision",
+            ElementKind.DmnInputData => "Input Data",
+            ElementKind.DmnBusinessKnowledge => "Business Knowledge",
+            ElementKind.DmnKnowledgeSource => "Knowledge Source",
+            ElementKind.DmnDecisionService => "Decision Service",
+            ElementKind.DmnTextAnnotation => "Annotation",
+            ElementKind.ArchiBusinessActor => "Business Actor",
+            ElementKind.ArchiBusinessProcess => "Business Process",
+            ElementKind.ArchiApplicationComponent => "Application Component",
+            ElementKind.ArchiApplicationService => "Application Service",
+            ElementKind.ArchiDataObject => "Data Object",
+            ElementKind.ArchiNode => "Node",
+            ElementKind.ArchiDevice => "Device",
+            ElementKind.ArchiSystemSoftware => "System Software",
+            ElementKind.ArchiTechnologyService => "Technology Service",
+            ElementKind.ArchiCapability => "Capability",
+            ElementKind.ArchiOutcome => "Outcome",
+            ElementKind.ArchiRequirement => "Requirement",
+            ElementKind.ArchiPrinciple => "Principle",
+            ElementKind.ArchiWorkPackage => "Work Package",
+            ElementKind.ArchiDeliverable => "Deliverable",
+            ElementKind.ArchiPlateau => "Plateau",
+            ElementKind.ArchiGap => "Gap",
+            ElementKind.BusinessCapability => "Capability",
+            ElementKind.ValueStream => "Value Stream",
+            ElementKind.ValueChainActivity => "Value Chain Activity",
+            ElementKind.StrategyObjective => "Objective",
+            ElementKind.BalancedScorecardPerspective => "Perspective",
+            ElementKind.OrgUnit => "Org Unit",
+            ElementKind.HeatMapItem => "Heat Item",
+            ElementKind.DecisionTreeNode => "Decision",
+            ElementKind.UafOperationalNode => "Operational Node",
+            ElementKind.UafService => "Service",
+            ElementKind.UafResource => "Resource",
+            ElementKind.UafCapability => "Capability",
+            ElementKind.TogafArchitectureBuildingBlock => "Architecture Building Block",
+            ElementKind.TogafArchitecturePhase => "ADM Phase",
+            ElementKind.ZachmanCell => "Zachman Cell",
             _ => kind.ToString() + CountOf(kind),
+        };
+
+        private static string[] DefaultPropertyItems(ElementKind kind) => kind switch
+        {
+            ElementKind.SysmlBlock => new[] { "parts=", "values=", "ports=" },
+            ElementKind.SysmlValueType => new[] { "unit=", "quantityKind=" },
+            ElementKind.SysmlConstraintBlock => new[] { "constraint=", "parameters=" },
+            ElementKind.SysmlRequirement => new[] { "id=", "text=", "risk=medium", "status=proposed" },
+            ElementKind.SysmlProxyPort => new[] { "direction=inout", "type=InterfaceBlock" },
+            ElementKind.SysmlFullPort => new[] { "direction=inout", "type=Block" },
+            ElementKind.SysmlParameter => new[] { "type=Real", "unit=" },
+            ElementKind.BpmnEvent => new[] { "event=start", "trigger=message" },
+            ElementKind.BpmnActivity => new[] { "task=user", "loop=false" },
+            ElementKind.BpmnGateway => new[] { "gateway=exclusive" },
+            ElementKind.BpmnDataObject => new[] { "state=", "collection=false" },
+            ElementKind.BpmnDataStore => new[] { "store=persistent" },
+            ElementKind.BpmnPool => new[] { "participant=", "process=" },
+            ElementKind.BpmnLane => new[] { "role=" },
+            ElementKind.BpmnChoreographyTask => new[] { "initiatingParticipant=", "respondingParticipant=" },
+            ElementKind.BpmnConversation => new[] { "conversation=" },
+            ElementKind.DmnDecision => new[] { "question=", "logic=decision table" },
+            ElementKind.DmnInputData => new[] { "type=", "source=" },
+            ElementKind.DmnBusinessKnowledge => new[] { "knowledgeModel=", "authority=" },
+            ElementKind.DmnKnowledgeSource => new[] { "authority=", "reference=" },
+            ElementKind.DmnDecisionService => new[] { "inputs=", "outputs=" },
+            ElementKind.DmnTextAnnotation => new[] { "text=" },
+            ElementKind.ArchiBusinessActor => new[] { "layer=business", "aspect=active structure" },
+            ElementKind.ArchiBusinessProcess => new[] { "layer=business", "aspect=behavior" },
+            ElementKind.ArchiApplicationComponent => new[] { "layer=application", "aspect=active structure" },
+            ElementKind.ArchiApplicationService => new[] { "layer=application", "aspect=service" },
+            ElementKind.ArchiDataObject => new[] { "layer=application", "aspect=passive structure" },
+            ElementKind.ArchiNode => new[] { "layer=technology", "aspect=active structure" },
+            ElementKind.ArchiDevice => new[] { "layer=technology", "aspect=device" },
+            ElementKind.ArchiSystemSoftware => new[] { "layer=technology", "aspect=system software" },
+            ElementKind.ArchiTechnologyService => new[] { "layer=technology", "aspect=service" },
+            ElementKind.ArchiCapability => new[] { "layer=strategy", "maturity=" },
+            ElementKind.ArchiOutcome => new[] { "layer=strategy", "measure=" },
+            ElementKind.ArchiRequirement => new[] { "layer=motivation", "requirement=" },
+            ElementKind.ArchiPrinciple => new[] { "layer=motivation", "principle=" },
+            ElementKind.ArchiWorkPackage => new[] { "layer=implementation", "status=planned" },
+            ElementKind.ArchiDeliverable => new[] { "layer=implementation", "version=" },
+            ElementKind.ArchiPlateau => new[] { "layer=implementation", "date=" },
+            ElementKind.ArchiGap => new[] { "layer=implementation", "from=", "to=" },
+            ElementKind.BusinessCapability => new[] { "maturity=", "owner=", "criticality=" },
+            ElementKind.ValueStream => new[] { "stage=", "outcome=" },
+            ElementKind.ValueChainActivity => new[] { "primary=true", "owner=" },
+            ElementKind.StrategyObjective => new[] { "measure=", "target=" },
+            ElementKind.BalancedScorecardPerspective => new[] { "perspective=financial", "theme=" },
+            ElementKind.OrgUnit => new[] { "role=", "headcount=" },
+            ElementKind.HeatMapItem => new[] { "score=medium", "metric=" },
+            ElementKind.DecisionTreeNode => new[] { "condition=", "outcome=" },
+            ElementKind.UafOperationalNode => new[] { "view=operational", "role=" },
+            ElementKind.UafService => new[] { "view=services", "interface=" },
+            ElementKind.UafResource => new[] { "view=resources", "type=" },
+            ElementKind.UafCapability => new[] { "view=capability", "phase=" },
+            ElementKind.TogafArchitectureBuildingBlock => new[] { "domain=", "artifact=" },
+            ElementKind.TogafArchitecturePhase => new[] { "phase=", "objective=" },
+            ElementKind.ZachmanCell => new[] { "row=", "column=" },
+            _ => System.Array.Empty<string>(),
         };
 
         public void BeginPaletteDrag(ElementKind kind, string label)
@@ -2303,6 +2427,20 @@ namespace TheRobotDraft.Uml
             return items;
         }
 
+        /// <summary>Editable property rows for EA-gallery notation nodes, falling back to sensible kind defaults.</summary>
+        private List<string> EaPropertyRows(ModelElement el)
+        {
+            var rows = new List<string>();
+            if (el == null) return rows;
+            foreach (var item in el.Items)
+                if (!string.IsNullOrWhiteSpace(item)) rows.Add(item);
+            foreach (var childId in el.ChildIds)
+                if (_model.TryGet(childId, out var c) && c.Kind == ElementKind.Field)
+                    rows.Add(c.Name);
+            if (rows.Count == 0) rows.AddRange(DefaultPropertyItems(el.Kind));
+            return rows;
+        }
+
         /// <summary>The slab fill / text colors for an element — kind-hue default, overridden by a per-element style
         /// (ported from <c>UmlNodeView.Init</c> so the 3-D slabs read like the flat boxes did).</summary>
         private void NodeColors(ModelElement el, out Color fill, out Color text)
@@ -2313,9 +2451,11 @@ namespace TheRobotDraft.Uml
                 || el.Kind == ElementKind.StateEnd || el.Kind == ElementKind.ForkJoin
                 || el.Kind == ElementKind.Junction || el.Kind == ElementKind.Terminate
                 || el.Kind == ElementKind.FlowFinal;
+            bool eaNeutral = KindInfo.UsesEaNeutralNotation(el.Kind);
             Color defaultFill =
                 note ? new Color(0.99f, 0.96f, 0.74f, 1f)
                 : darkFill ? new Color(0.20f, 0.21f, 0.25f, 1f)
+                : eaNeutral ? new Color(0.98f, 0.985f, 0.99f, 1f)
                 : Color.Lerp(hue, Color.white, 0.88f);
             Color defaultText = note ? new Color(0.16f, 0.15f, 0.06f, 1f) : new Color(0.13f, 0.15f, 0.19f, 1f);
 
@@ -2349,6 +2489,26 @@ namespace TheRobotDraft.Uml
             ElementKind.WhiteboardText => new Vector2(160f, 44f),
             ElementKind.WhiteboardCircle => new Vector2(132f, 90f),
             ElementKind.WhiteboardDiamond => new Vector2(116f, 82f),
+            ElementKind.AsyncSend => new Vector2(160f, 60f),
+            ElementKind.AsyncReceive => new Vector2(160f, 60f),
+            ElementKind.SysmlProxyPort => new Vector2(24f, 24f),
+            ElementKind.SysmlFullPort => new Vector2(24f, 24f),
+            ElementKind.SysmlParameter => new Vector2(120f, 40f),
+            ElementKind.SysmlRequirement => new Vector2(170f, 92f),
+            ElementKind.SysmlConstraintBlock => new Vector2(180f, 86f),
+            ElementKind.BpmnEvent => new Vector2(52f, 52f),
+            ElementKind.BpmnActivity => new Vector2(170f, 72f),
+            ElementKind.BpmnGateway => new Vector2(88f, 70f),
+            ElementKind.BpmnDataObject => new Vector2(130f, 72f),
+            ElementKind.BpmnDataStore => new Vector2(130f, 80f),
+            ElementKind.BpmnPool => new Vector2(460f, 280f),
+            ElementKind.BpmnLane => new Vector2(430f, 110f),
+            ElementKind.BpmnConversation => new Vector2(116f, 76f),
+            ElementKind.DmnDecision => new Vector2(150f, 86f),
+            ElementKind.DmnInputData => new Vector2(150f, 70f),
+            ElementKind.DmnDecisionService => new Vector2(180f, 100f),
+            ElementKind.BalancedScorecardPerspective => new Vector2(360f, 180f),
+            ElementKind.ZachmanCell => new Vector2(220f, 150f),
             _ => null,
         };
 
@@ -2391,6 +2551,11 @@ namespace TheRobotDraft.Uml
             MemberSignatures(el, out var attributes, out var operations);
             if (KindInfo.IsWireframeWidget(el.Kind))
                 attributes = WidgetItems(el);
+            else if (KindInfo.IsEaNotationNode(el.Kind))
+            {
+                attributes = EaPropertyRows(el);
+                operations = new List<string>();
+            }
             NodeColors(el, out var fill, out var text);
             Vector2 sizePx = CurrentNodeSizePx(el.Id); // honor a stored resize / pasted size, else the default
             var node = _scene.AddNode(el.Id, el.Name, Stereotype(el), el.Kind, fill, text,
@@ -2434,6 +2599,7 @@ namespace TheRobotDraft.Uml
         private static bool IsRegionKind(ElementKind k) =>
             k == ElementKind.Boundary || k == ElementKind.Frame || k == ElementKind.Profile
             || k == ElementKind.WhiteboardFrame
+            || KindInfo.IsEaRegion(k)
             || KindInfo.IsWireframeRegion(k); // Screen / Panel group their widgets and carry them when moved
 
         /// <summary>Destroy every live region cube.</summary>
@@ -3397,6 +3563,16 @@ namespace TheRobotDraft.Uml
             EdgeKind.Consumes => (true, EndMarker.None, EndMarker.OpenArrow, "«consumes»"),
             // Whiteboard sketch connector: lightweight freeform arrow without UML stereotype baggage.
             EdgeKind.SketchConnector => (false, EndMarker.None, EndMarker.StickArrow, null),
+            EdgeKind.SysmlSatisfy => (true, EndMarker.None, EndMarker.OpenArrow, "«satisfy»"),
+            EdgeKind.SysmlVerify => (true, EndMarker.None, EndMarker.OpenArrow, "«verify»"),
+            EdgeKind.SysmlDeriveReqt => (true, EndMarker.None, EndMarker.OpenArrow, "«deriveReqt»"),
+            EdgeKind.SysmlRefine => (true, EndMarker.None, EndMarker.OpenArrow, "«refine»"),
+            EdgeKind.SysmlBinding => (false, EndMarker.None, EndMarker.None, null),
+            EdgeKind.SysmlItemFlow => (false, EndMarker.None, EndMarker.OpenArrow, "«itemFlow»"),
+            EdgeKind.BpmnSequenceFlow => (false, EndMarker.None, EndMarker.OpenArrow, null),
+            EdgeKind.BpmnMessageFlow => (true, EndMarker.None, EndMarker.OpenArrow, null),
+            EdgeKind.DmnRequirement => (false, EndMarker.None, EndMarker.OpenArrow, null),
+            EdgeKind.ArchiRelationship => (false, EndMarker.None, EndMarker.OpenArrow, null),
             _ => (false, EndMarker.None, EndMarker.OpenArrow, null),
         };
 
@@ -3414,6 +3590,16 @@ namespace TheRobotDraft.Uml
             EdgeKind.Extension => "«extension»",
             EdgeKind.Consumes => "«consumes»  (uses →)",
             EdgeKind.SketchConnector => "Sketch connector  (whiteboard →)",
+            EdgeKind.SysmlSatisfy => "SysML «satisfy»",
+            EdgeKind.SysmlVerify => "SysML «verify»",
+            EdgeKind.SysmlDeriveReqt => "SysML «deriveReqt»",
+            EdgeKind.SysmlRefine => "SysML «refine»",
+            EdgeKind.SysmlBinding => "SysML binding",
+            EdgeKind.SysmlItemFlow => "SysML item flow",
+            EdgeKind.BpmnSequenceFlow => "BPMN sequence flow",
+            EdgeKind.BpmnMessageFlow => "BPMN message flow",
+            EdgeKind.DmnRequirement => "DMN requirement",
+            EdgeKind.ArchiRelationship => "ArchiMate relationship",
             _ => k.ToString(),
         };
 
@@ -3443,9 +3629,21 @@ namespace TheRobotDraft.Uml
             bool whiteboard = f != null && t != null
                 && (KindInfo.IsWhiteboardNode(f.Kind) || f.Kind == ElementKind.WhiteboardFrame)
                 && (KindInfo.IsWhiteboardNode(t.Kind) || t.Kind == ElementKind.WhiteboardFrame);
+            bool sysml = f != null && t != null && IsSysmlNode(f.Kind) && IsSysmlNode(t.Kind);
+            bool bpmn = f != null && t != null && IsBpmnNode(f.Kind) && IsBpmnNode(t.Kind);
+            bool dmn = f != null && t != null && IsDmnNode(f.Kind) && IsDmnNode(t.Kind);
+            bool archi = f != null && t != null && IsArchiNode(f.Kind) && IsArchiNode(t.Kind);
 
             if (note) { Add(EdgeKind.NoteLink); Add(EdgeKind.Dependency); }
             if (whiteboard) Add(EdgeKind.SketchConnector);
+            if (sysml)
+            {
+                Add(EdgeKind.SysmlSatisfy); Add(EdgeKind.SysmlVerify); Add(EdgeKind.SysmlDeriveReqt);
+                Add(EdgeKind.SysmlRefine); Add(EdgeKind.SysmlBinding); Add(EdgeKind.SysmlItemFlow);
+            }
+            if (bpmn) { Add(EdgeKind.BpmnSequenceFlow); Add(EdgeKind.BpmnMessageFlow); }
+            if (dmn) Add(EdgeKind.DmnRequirement);
+            if (archi) Add(EdgeKind.ArchiRelationship);
             if (bothUseCase) { Add(EdgeKind.Include); Add(EdgeKind.Extend); Add(EdgeKind.Generalization); }
             if (behavioral) Add(EdgeKind.Transition);
             if (messaging) { Add(EdgeKind.MessageSync); Add(EdgeKind.MessageAsync); Add(EdgeKind.MessageReply); }
@@ -3456,12 +3654,51 @@ namespace TheRobotDraft.Uml
             {
                 EdgeKind.Association, EdgeKind.DirectedAssociation, EdgeKind.Transition, EdgeKind.Dependency,
                 EdgeKind.Consumes, EdgeKind.SketchConnector,
+                EdgeKind.SysmlSatisfy, EdgeKind.SysmlVerify, EdgeKind.SysmlDeriveReqt, EdgeKind.SysmlRefine,
+                EdgeKind.SysmlBinding, EdgeKind.SysmlItemFlow,
+                EdgeKind.BpmnSequenceFlow, EdgeKind.BpmnMessageFlow, EdgeKind.DmnRequirement,
+                EdgeKind.ArchiRelationship,
                 EdgeKind.Generalization, EdgeKind.Realization, EdgeKind.Aggregation, EdgeKind.Composition,
                 EdgeKind.Include, EdgeKind.Extend, EdgeKind.NoteLink,
                 EdgeKind.MessageSync, EdgeKind.MessageAsync, EdgeKind.MessageReply, EdgeKind.Extension,
             }) Add(k);
             return order;
         }
+
+        private static bool IsSysmlNode(ElementKind k) => k switch
+        {
+            ElementKind.SysmlBlock or ElementKind.SysmlValueType or ElementKind.SysmlConstraintBlock
+                or ElementKind.SysmlRequirement or ElementKind.SysmlProxyPort or ElementKind.SysmlFullPort
+                or ElementKind.SysmlParameter => true,
+            _ => false,
+        };
+
+        private static bool IsBpmnNode(ElementKind k) => k switch
+        {
+            ElementKind.BpmnEvent or ElementKind.BpmnActivity or ElementKind.BpmnGateway
+                or ElementKind.BpmnDataObject or ElementKind.BpmnDataStore or ElementKind.BpmnPool
+                or ElementKind.BpmnLane or ElementKind.BpmnChoreographyTask or ElementKind.BpmnConversation => true,
+            _ => false,
+        };
+
+        private static bool IsDmnNode(ElementKind k) => k switch
+        {
+            ElementKind.DmnDecision or ElementKind.DmnInputData or ElementKind.DmnBusinessKnowledge
+                or ElementKind.DmnKnowledgeSource or ElementKind.DmnDecisionService or ElementKind.DmnTextAnnotation => true,
+            _ => false,
+        };
+
+        private static bool IsArchiNode(ElementKind k) => k switch
+        {
+            ElementKind.ArchiBusinessActor or ElementKind.ArchiBusinessProcess
+                or ElementKind.ArchiApplicationComponent or ElementKind.ArchiApplicationService
+                or ElementKind.ArchiDataObject or ElementKind.ArchiNode or ElementKind.ArchiDevice
+                or ElementKind.ArchiSystemSoftware or ElementKind.ArchiTechnologyService
+                or ElementKind.ArchiCapability or ElementKind.ArchiOutcome or ElementKind.ArchiRequirement
+                or ElementKind.ArchiPrinciple or ElementKind.ArchiWorkPackage or ElementKind.ArchiDeliverable
+                or ElementKind.ArchiPlateau or ElementKind.ArchiGap => true,
+            _ => false,
+        };
 
         // --- orthogonal routing ---
 
@@ -4603,6 +4840,9 @@ namespace TheRobotDraft.Uml
                 (ElementKind.WhiteboardText, "Text"),
                 (ElementKind.WhiteboardCircle, "Circle / Bubble"),
                 (ElementKind.WhiteboardDiamond, "Diamond"),
+                (ElementKind.Cloud, "Cloud"),
+                (ElementKind.AsyncSend, "Async Send"),
+                (ElementKind.AsyncReceive, "Async Receive"),
                 (ElementKind.Note, "UML Note"),
             }),
             ("Wireframe / UI", new[]
@@ -4624,6 +4864,67 @@ namespace TheRobotDraft.Uml
                 (ElementKind.Task, "Task"), (ElementKind.KanbanColumn, "Column"),
             }),
 
+            ("SysML", new[]
+            {
+                (ElementKind.SysmlBlock, "Block"), (ElementKind.SysmlValueType, "Value Type"),
+                (ElementKind.SysmlConstraintBlock, "Constraint Block"), (ElementKind.SysmlRequirement, "Requirement"),
+                (ElementKind.SysmlProxyPort, "Proxy Port"), (ElementKind.SysmlFullPort, "Full Port"),
+                (ElementKind.SysmlParameter, "Parameter"), (ElementKind.Activity, "Activity"),
+                (ElementKind.State, "State"), (ElementKind.UseCase, "Use Case"),
+            }),
+            ("BPMN", new[]
+            {
+                (ElementKind.BpmnPool, "Pool"), (ElementKind.BpmnLane, "Lane"),
+                (ElementKind.BpmnEvent, "Event"), (ElementKind.BpmnActivity, "Activity"),
+                (ElementKind.BpmnGateway, "Gateway"), (ElementKind.BpmnDataObject, "Data Object"),
+                (ElementKind.BpmnDataStore, "Data Store"),
+                (ElementKind.BpmnChoreographyTask, "Choreography"),
+                (ElementKind.BpmnConversation, "Conversation"),
+            }),
+            ("DMN", new[]
+            {
+                (ElementKind.DmnDecision, "Decision"), (ElementKind.DmnInputData, "Input Data"),
+                (ElementKind.DmnBusinessKnowledge, "Business Knowledge"),
+                (ElementKind.DmnKnowledgeSource, "Knowledge Source"),
+                (ElementKind.DmnDecisionService, "Decision Service"),
+                (ElementKind.DmnTextAnnotation, "Annotation"),
+            }),
+            ("ArchiMate", new[]
+            {
+                (ElementKind.ArchiBusinessActor, "Business Actor"),
+                (ElementKind.ArchiBusinessProcess, "Business Process"),
+                (ElementKind.ArchiApplicationComponent, "App Component"),
+                (ElementKind.ArchiApplicationService, "App Service"),
+                (ElementKind.ArchiDataObject, "Data Object"),
+                (ElementKind.ArchiNode, "Node"), (ElementKind.ArchiDevice, "Device"),
+                (ElementKind.ArchiSystemSoftware, "System Software"),
+                (ElementKind.ArchiTechnologyService, "Tech Service"),
+                (ElementKind.ArchiCapability, "Capability"), (ElementKind.ArchiOutcome, "Outcome"),
+                (ElementKind.ArchiRequirement, "Requirement"), (ElementKind.ArchiPrinciple, "Principle"),
+                (ElementKind.ArchiWorkPackage, "Work Package"),
+                (ElementKind.ArchiDeliverable, "Deliverable"),
+                (ElementKind.ArchiPlateau, "Plateau"), (ElementKind.ArchiGap, "Gap"),
+            }),
+            ("Business Strategy", new[]
+            {
+                (ElementKind.BusinessCapability, "Capability"),
+                (ElementKind.ValueStream, "Value Stream"),
+                (ElementKind.ValueChainActivity, "Value Chain"),
+                (ElementKind.StrategyObjective, "Objective"),
+                (ElementKind.BalancedScorecardPerspective, "Scorecard Perspective"),
+                (ElementKind.OrgUnit, "Org Unit"), (ElementKind.HeatMapItem, "Heat Map Item"),
+                (ElementKind.DecisionTreeNode, "Decision Tree Node"),
+            }),
+            ("Enterprise Frameworks", new[]
+            {
+                (ElementKind.UafOperationalNode, "UAF Operational Node"),
+                (ElementKind.UafService, "UAF Service"), (ElementKind.UafResource, "UAF Resource"),
+                (ElementKind.UafCapability, "UAF Capability"),
+                (ElementKind.TogafArchitectureBuildingBlock, "TOGAF ABB"),
+                (ElementKind.TogafArchitecturePhase, "TOGAF ADM Phase"),
+                (ElementKind.ZachmanCell, "Zachman Cell"),
+            }),
+
             ("Use Case", new[]
             {
                 (ElementKind.Actor, "Actor"), (ElementKind.UseCase, "Use Case"),
@@ -4633,6 +4934,7 @@ namespace TheRobotDraft.Uml
             {
                 (ElementKind.StateStart, "● Initial"), (ElementKind.State, "State"),
                 (ElementKind.Decision, "◇ Decision"), (ElementKind.ForkJoin, "▬ Fork / Join"),
+                (ElementKind.AsyncSend, "Send Signal"), (ElementKind.AsyncReceive, "Receive Event"),
                 (ElementKind.Junction, "• Junction"), (ElementKind.History, "Ⓗ History"),
                 (ElementKind.Terminate, "✕ Terminate"), (ElementKind.StateEnd, "◉ Final"),
             }),
@@ -4640,6 +4942,7 @@ namespace TheRobotDraft.Uml
             {
                 (ElementKind.StateStart, "● Initial"), (ElementKind.Activity, "Action"),
                 (ElementKind.CallActivity, "Activity"), (ElementKind.Decision, "◇ Decision / Merge"),
+                (ElementKind.AsyncSend, "Send Signal"), (ElementKind.AsyncReceive, "Receive Event"),
                 (ElementKind.ForkJoin, "▬ Fork / Join"), (ElementKind.FlowFinal, "⊗ Flow Final"),
                 (ElementKind.StateEnd, "◉ Activity Final"),
             }),
@@ -4675,6 +4978,7 @@ namespace TheRobotDraft.Uml
             {
                 (ElementKind.StateStart, "● Initial"), (ElementKind.Frame, "Interaction Frame"),
                 (ElementKind.Decision, "◇ Decision"), (ElementKind.ForkJoin, "▬ Fork / Join"),
+                (ElementKind.AsyncSend, "Send Signal"), (ElementKind.AsyncReceive, "Receive Event"),
                 (ElementKind.StateEnd, "◉ Final"),
             }),
             ("Profile", new[]

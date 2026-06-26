@@ -236,7 +236,7 @@ namespace TheRobotDraft.Uml
             y -= 20f;
         }
 
-        private bool SupportsItemList(ElementKind kind) => KindInfo.IsWireframeWidget(kind);
+        private bool SupportsItemList(ElementKind kind) => KindInfo.HasPropertyRows(kind);
 
         private static string ItemLabel(ElementKind kind) => kind switch
         {
@@ -249,7 +249,25 @@ namespace TheRobotDraft.Uml
             ElementKind.Toolbar => "Toolbar actions",
             ElementKind.Breadcrumb => "Breadcrumb items",
             ElementKind.Card => "Card lines",
-            _ => "Items",
+            ElementKind.SysmlRequirement => "Requirement properties",
+            ElementKind.SysmlBlock or ElementKind.SysmlValueType or ElementKind.SysmlConstraintBlock
+                or ElementKind.SysmlProxyPort or ElementKind.SysmlFullPort or ElementKind.SysmlParameter => "SysML properties",
+            ElementKind.BpmnEvent or ElementKind.BpmnActivity or ElementKind.BpmnGateway
+                or ElementKind.BpmnDataObject or ElementKind.BpmnDataStore or ElementKind.BpmnPool
+                or ElementKind.BpmnLane or ElementKind.BpmnChoreographyTask or ElementKind.BpmnConversation => "BPMN properties",
+            ElementKind.DmnDecision or ElementKind.DmnInputData or ElementKind.DmnBusinessKnowledge
+                or ElementKind.DmnKnowledgeSource or ElementKind.DmnDecisionService or ElementKind.DmnTextAnnotation => "DMN properties",
+            ElementKind.ArchiBusinessActor or ElementKind.ArchiBusinessProcess
+                or ElementKind.ArchiApplicationComponent or ElementKind.ArchiApplicationService
+                or ElementKind.ArchiDataObject or ElementKind.ArchiNode or ElementKind.ArchiDevice
+                or ElementKind.ArchiSystemSoftware or ElementKind.ArchiTechnologyService
+                or ElementKind.ArchiCapability or ElementKind.ArchiOutcome or ElementKind.ArchiRequirement
+                or ElementKind.ArchiPrinciple or ElementKind.ArchiWorkPackage or ElementKind.ArchiDeliverable
+                or ElementKind.ArchiPlateau or ElementKind.ArchiGap => "ArchiMate properties",
+            ElementKind.UafOperationalNode or ElementKind.UafService or ElementKind.UafResource or ElementKind.UafCapability => "UAF properties",
+            ElementKind.TogafArchitectureBuildingBlock or ElementKind.TogafArchitecturePhase => "TOGAF properties",
+            ElementKind.ZachmanCell => "Zachman coordinates",
+            _ => KindInfo.IsEaNotationNode(kind) ? "Notation properties" : "Items",
         };
 
         private string MemberSummary(ModelElement el)

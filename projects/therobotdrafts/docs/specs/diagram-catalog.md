@@ -64,7 +64,7 @@ The bubble model is the source of truth. A diagram is a *view* — a filtered, l
 | 32 | Mind Map | EA-general | Auxiliary | 3 | Central topic bubble with radial child bubbles |
 | 33 | Gantt / Kanban | EA-general | Project | 3 | Task bubbles on a time axis / column volumes |
 | 34 | Wireframe / UI Mockup | EA-general | Design | 3 | Screen container bubbles with widget sub-bubbles |
-| 35 | Whiteboard / Sketch | EA-general | Auxiliary | 3 | Freeform frames, sticky notes, cards, text, bubbles, sketch connectors |
+| 35 | Whiteboard / Sketch | EA-general | Auxiliary | 3 | Freeform frames, sticky notes, cards, text, clouds, bubbles, sketch connectors |
 | 36 | Network Diagram | EA-general | Infrastructure | 3 | Device bubbles, link edges |
 | 37 | XSD / WSDL Schema | W3C | Data/Service | 3 | Type/element bubbles, containment + reference edges |
 | 38 | Rose Use Case (legacy) | UML 1.x (Rose) | Legacy | 3 | UML Use Case projection, legacy element names preserved |
@@ -80,6 +80,8 @@ The bubble model is the source of truth. A diagram is a *view* — a filtered, l
 
 > Tiers are recommended implementation priority. See [Coverage Tiers](#coverage-tiers).
 > Auxiliary EA families noted but not individually rendered (BPEL, BPSim, ORM, GML, ICONIX, Eriksson-Penker) appear under [Additional EA Families](#additional-enterprise-architecture-families).
+>
+> **EA gallery parity note.** The authoring palette now includes first-pass EA-gallery vocabulary for SysML (blocks, value types, constraint blocks, requirements, ports, parameters), BPMN (events, activities, gateways, pools/lanes, data nodes, choreography and conversation), DMN (decision, input data, knowledge source/business knowledge, decision service, annotation), ArchiMate (business, application, technology, motivation and implementation elements), and enterprise framework views (business capabilities, value streams/chains, strategy objectives, scorecard perspectives, org units, heat-map and decision-tree nodes, UAF, TOGAF and Zachman cells). These nodes now use notation-specific face styling and editable kind-specific property rows instead of generic placeholder boxes. Standards-level interchange and validation are tracked separately from basic diagram authoring.
 
 ---
 
@@ -142,7 +144,7 @@ The OMG UML 2.5.1 standard defines 14 diagram types: 7 structural, 7 behavioral.
 #### 1.9 Activity Diagram
 
 - **Purpose:** Model control and data flow through a procedure, including concurrency and decisions.
-- **Key notation:** Action (rounded rectangle); initial/final nodes; decision/merge (diamond); fork/join (bar); object nodes; control and object flows; swimlanes (partitions); send/receive signals.
+- **Key notation:** Action (rounded rectangle); call behavior action (rake marker); send-signal action (pentagon pointing right); accept-event/receive action (concave event notch); initial/final nodes; decision/merge (diamond); fork/join (bar); object nodes; control and object flows; swimlanes (partitions).
 - **Bubble-view mapping:** **Action bubbles** are sequenced along flow edges. Fork/join and decision/merge are **gate bubbles** that split or rejoin edges. Swimlane partitions are translucent **lane volumes** grouping action bubbles by responsible classifier.
 
 #### 1.10 State Machine Diagram
@@ -359,7 +361,7 @@ These families round out parity with Sparx EA and broaden the tool's reach. Seve
 #### 7.8 Whiteboard / Sketch Diagrams
 
 - **Purpose:** Capture early design thinking without forcing the user into formal UML semantics too soon.
-- **Key notation:** Freeform frame, sticky note, card, text label, circle/bubble, diamond, and lightweight sketch connector.
+- **Key notation:** Freeform frame, sticky note, card, text label, cloud, circle/bubble, diamond, async send/receive marker, and lightweight sketch connector.
 - **Bubble-view mapping:** A **whiteboard frame volume** groups sketch bubbles; sticky notes and cards are normal connectable bubbles; sketch connectors can later be retyped as UML, architecture, or traceability relationships.
 
 #### 7.9 Network Diagrams
