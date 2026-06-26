@@ -57,6 +57,13 @@ GUARDIAN_SECRET_KEY=${GUARDIAN_KEY}
 PHX_HOST=${PROJECT_DIR}
 NEXT_PUBLIC_API_URL=
 
+# ── SSO (OIDC) ──────────────────────────────────────────────────
+# Set these to enable Authentik/OIDC SSO in production.
+# OIDC_ISSUER=https://auth.derobot.is/application/o/<app-slug>
+OIDC_ISSUER=
+OIDC_CLIENT_ID=
+OIDC_CLIENT_SECRET=
+
 # ── Port (nginx, host-side) ─────────────────────────────────────
 PORT=${HOST_PORT}
 ENVEOF
@@ -77,6 +84,10 @@ REDIS_KEY_PREFIX=${SLUG}:
 
 SECRET_KEY_BASE=${SECRET_KEY}
 GUARDIAN_SECRET_KEY=${GUARDIAN_KEY}
+
+OIDC_ISSUER=
+OIDC_CLIENT_ID=
+OIDC_CLIENT_SECRET=
 
 PORT=4000
 ENVEOF
