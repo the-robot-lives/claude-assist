@@ -48,18 +48,19 @@ namespace TheRobotDraft.Uml
             Rt.pivot = new Vector2(0.5f, 0.5f);
 
             // Kind-derived defaults (conventional UML look), overridden by an explicit per-element style.
-            bool note = kind == ElementKind.Note;
+            bool note = kind == ElementKind.Note || kind == ElementKind.WhiteboardSticky;
             bool shape = IsShapeKind(kind);
             bool titled = IsTitledBox(kind);
             bool boundary = kind == ElementKind.Boundary;
             bool frame = kind == ElementKind.Frame;
             bool profile = kind == ElementKind.Profile;
+            bool whiteboardFrame = kind == ElementKind.WhiteboardFrame;
             bool lifeline = kind == ElementKind.Lifeline;
             bool timing = kind == ElementKind.TimingLifeline;
             // Boundaries, interaction frames and profiles — plus wireframe Screen/Panel — are "regions" that carry
             // nested nodes when moved.
             bool wireframeRegion = KindInfo.IsWireframeRegion(kind);
-            IsBoundary = boundary || frame || profile || wireframeRegion;
+            IsBoundary = boundary || frame || profile || whiteboardFrame || wireframeRegion;
             bool darkFill = kind == ElementKind.Actor || kind == ElementKind.StateStart || kind == ElementKind.StateEnd
                 || kind == ElementKind.ForkJoin || kind == ElementKind.Junction
                 || kind == ElementKind.Terminate || kind == ElementKind.FlowFinal;
@@ -115,6 +116,10 @@ namespace TheRobotDraft.Uml
             else if (profile)
             {
                 BuildBoundary(name, sizeOverride, 320f, 220f);
+            }
+            else if (whiteboardFrame)
+            {
+                BuildBoundary(name, sizeOverride, 420f, 280f);
             }
             else if (lifeline)
             {
@@ -371,14 +376,16 @@ namespace TheRobotDraft.Uml
                 or ElementKind.ForkJoin or ElementKind.Junction or ElementKind.History
                 or ElementKind.Terminate or ElementKind.FlowFinal or ElementKind.DeploymentNode
                 or ElementKind.Collaboration or ElementKind.PackageNode or ElementKind.Activation
-                or ElementKind.Port or ElementKind.CallActivity => true,
+                or ElementKind.Port or ElementKind.CallActivity
+                or ElementKind.WhiteboardCircle or ElementKind.WhiteboardDiamond => true,
             _ => false,
         };
 
         /// <summary>A box rendered as a single titled rectangle (stereotype + name), with no member compartments.</summary>
         private static bool IsTitledBox(ElementKind k) =>
             k == ElementKind.PrimitiveType || k == ElementKind.Component || k == ElementKind.Artifact
-            || k == ElementKind.Part || k == ElementKind.Metaclass || k == ElementKind.Stereotype;
+            || k == ElementKind.Part || k == ElementKind.Metaclass || k == ElementKind.Stereotype
+            || k == ElementKind.WhiteboardCard || k == ElementKind.WhiteboardText;
 
         private static UmlShape ShapeFor(ElementKind k) => k switch
         {
@@ -393,6 +400,8 @@ namespace TheRobotDraft.Uml
             ElementKind.FlowFinal => UmlShape.FlowFinal,
             ElementKind.DeploymentNode => UmlShape.Cube,
             ElementKind.PackageNode => UmlShape.Folder,
+            ElementKind.WhiteboardCircle => UmlShape.Ellipse,
+            ElementKind.WhiteboardDiamond => UmlShape.Diamond,
             _ => UmlShape.Actor,
         };
 
@@ -418,6 +427,8 @@ namespace TheRobotDraft.Uml
                 ElementKind.Activation => new Vector2(14f, 90f),
                 ElementKind.Port => new Vector2(16f, 16f),
                 ElementKind.CallActivity => new Vector2(160f, 60f),
+                ElementKind.WhiteboardCircle => new Vector2(132f, 90f),
+                ElementKind.WhiteboardDiamond => new Vector2(116f, 82f),
                 _ => new Vector2(120f, 60f),
             };
             float w = sizeOverride.x > 1f ? sizeOverride.x : def.x;
@@ -520,8 +531,15 @@ namespace TheRobotDraft.Uml
 
         private void BuildTitledBox(ElementKind kind, string name, string stereotype, Vector2 sizeOverride)
         {
-            float w = sizeOverride.x > 1f ? sizeOverride.x : (kind == ElementKind.PrimitiveType ? 150f : 180f);
-            float h = sizeOverride.y > 1f ? sizeOverride.y : 64f;
+            Vector2 def = kind switch
+            {
+                ElementKind.PrimitiveType => new Vector2(150f, 64f),
+                ElementKind.WhiteboardCard => new Vector2(180f, 96f),
+                ElementKind.WhiteboardText => new Vector2(160f, 44f),
+                _ => new Vector2(180f, 64f),
+            };
+            float w = sizeOverride.x > 1f ? sizeOverride.x : def.x;
+            float h = sizeOverride.y > 1f ? sizeOverride.y : def.y;
             Rt.sizeDelta = new Vector2(w, h);
 
             float ty = -8f;

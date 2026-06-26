@@ -64,18 +64,19 @@ The bubble model is the source of truth. A diagram is a *view* — a filtered, l
 | 32 | Mind Map | EA-general | Auxiliary | 3 | Central topic bubble with radial child bubbles |
 | 33 | Gantt / Kanban | EA-general | Project | 3 | Task bubbles on a time axis / column volumes |
 | 34 | Wireframe / UI Mockup | EA-general | Design | 3 | Screen container bubbles with widget sub-bubbles |
-| 35 | Network Diagram | EA-general | Infrastructure | 3 | Device bubbles, link edges |
-| 36 | XSD / WSDL Schema | W3C | Data/Service | 3 | Type/element bubbles, containment + reference edges |
-| 37 | Rose Use Case (legacy) | UML 1.x (Rose) | Legacy | 3 | UML Use Case projection, legacy element names preserved |
-| 38 | Rose Class (legacy) | UML 1.x (Rose) | Legacy | 3 | UML Class projection |
-| 39 | Rose Object (legacy) | UML 1.x (Rose) | Legacy | 3 | UML Object projection |
-| 40 | Rose Sequence (legacy) | UML 1.x (Rose) | Legacy | 3 | UML Sequence projection |
-| 41 | Rose Collaboration (legacy) | UML 1.x (Rose) | Legacy | 3 | UML Communication projection, name kept as "Collaboration" |
-| 42 | Rose Statechart (legacy) | UML 1.x (Rose) | Legacy | 3 | UML State Machine projection, name kept as "Statechart" |
-| 43 | Rose Activity (legacy) | UML 1.x (Rose) | Legacy | 3 | UML Activity projection |
-| 44 | Rose Component (legacy) | UML 1.x (Rose) | Legacy | 3 | UML Component projection |
-| 45 | Rose Deployment (legacy) | UML 1.x (Rose) | Legacy | 3 | UML Deployment projection |
-| 46 | Capsule Structure | Rose RealTime (UML-RT/ROOM) | Real-time | 3 | Capsule bubbles with typed ports, protocol-typed connectors |
+| 35 | Whiteboard / Sketch | EA-general | Auxiliary | 3 | Freeform frames, sticky notes, cards, text, bubbles, sketch connectors |
+| 36 | Network Diagram | EA-general | Infrastructure | 3 | Device bubbles, link edges |
+| 37 | XSD / WSDL Schema | W3C | Data/Service | 3 | Type/element bubbles, containment + reference edges |
+| 38 | Rose Use Case (legacy) | UML 1.x (Rose) | Legacy | 3 | UML Use Case projection, legacy element names preserved |
+| 39 | Rose Class (legacy) | UML 1.x (Rose) | Legacy | 3 | UML Class projection |
+| 40 | Rose Object (legacy) | UML 1.x (Rose) | Legacy | 3 | UML Object projection |
+| 41 | Rose Sequence (legacy) | UML 1.x (Rose) | Legacy | 3 | UML Sequence projection |
+| 42 | Rose Collaboration (legacy) | UML 1.x (Rose) | Legacy | 3 | UML Communication projection, name kept as "Collaboration" |
+| 43 | Rose Statechart (legacy) | UML 1.x (Rose) | Legacy | 3 | UML State Machine projection, name kept as "Statechart" |
+| 44 | Rose Activity (legacy) | UML 1.x (Rose) | Legacy | 3 | UML Activity projection |
+| 45 | Rose Component (legacy) | UML 1.x (Rose) | Legacy | 3 | UML Component projection |
+| 46 | Rose Deployment (legacy) | UML 1.x (Rose) | Legacy | 3 | UML Deployment projection |
+| 47 | Capsule Structure | Rose RealTime (UML-RT/ROOM) | Real-time | 3 | Capsule bubbles with typed ports, protocol-typed connectors |
 
 > Tiers are recommended implementation priority. See [Coverage Tiers](#coverage-tiers).
 > Auxiliary EA families noted but not individually rendered (BPEL, BPSim, ORM, GML, ICONIX, Eriksson-Penker) appear under [Additional EA Families](#additional-enterprise-architecture-families).
@@ -355,7 +356,13 @@ These families round out parity with Sparx EA and broaden the tool's reach. Seve
 - **Purpose:** Sketch screen layouts and UI flows.
 - **Bubble-view mapping:** **Screen container bubbles** holding **widget sub-bubbles**; navigation edges link screens.
 
-#### 7.8 Network Diagrams
+#### 7.8 Whiteboard / Sketch Diagrams
+
+- **Purpose:** Capture early design thinking without forcing the user into formal UML semantics too soon.
+- **Key notation:** Freeform frame, sticky note, card, text label, circle/bubble, diamond, and lightweight sketch connector.
+- **Bubble-view mapping:** A **whiteboard frame volume** groups sketch bubbles; sticky notes and cards are normal connectable bubbles; sketch connectors can later be retyped as UML, architecture, or traceability relationships.
+
+#### 7.9 Network Diagrams
 
 - **Purpose:** Show physical/logical network topology.
 - **Bubble-view mapping:** **Device bubbles** (routers, switches, hosts) joined by **link edges** annotated with addressing.

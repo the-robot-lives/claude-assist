@@ -212,6 +212,20 @@ namespace TheRobotDraft.Authoring.Model
         Task,
         /// <summary>A Kanban column / lane (To Do, Doing, Done).</summary>
         KanbanColumn,
+
+        // --- whiteboard / sketch diagramming ---
+        /// <summary>A freeform whiteboard grouping frame; carries cards, sticky notes, text and sketch shapes.</summary>
+        WhiteboardFrame,
+        /// <summary>A whiteboard sticky note; visually looser than a UML comment but still connectable.</summary>
+        WhiteboardSticky,
+        /// <summary>A whiteboard index card / idea block.</summary>
+        WhiteboardCard,
+        /// <summary>A whiteboard text label with minimal chrome.</summary>
+        WhiteboardText,
+        /// <summary>A whiteboard ellipse/circle used for quick grouping or emphasis.</summary>
+        WhiteboardCircle,
+        /// <summary>A whiteboard rough diamond used for quick decisions / branching sketches.</summary>
+        WhiteboardDiamond,
     }
 
     /// <summary>
@@ -253,6 +267,9 @@ namespace TheRobotDraft.Authoring.Model
         /// <summary>A «consumes» usage link (dashed, open arrow): the source class/module uses/depends on the
         /// target — what code import emits when one type references another. Directed source→target.</summary>
         Consumes,
+
+        /// <summary>A whiteboard sketch connector: a light, freeform arrow for early ideation before formal UML typing.</summary>
+        SketchConnector,
     }
 
     /// <summary>
@@ -351,6 +368,12 @@ namespace TheRobotDraft.Authoring.Model
             ElementKind.Toolbar => "#9AA7B0",
             ElementKind.Task => "#2CA02C",
             ElementKind.KanbanColumn => "#7E8AA2",
+            ElementKind.WhiteboardFrame => "#7E8AA2",
+            ElementKind.WhiteboardSticky => "#F2E2A0",
+            ElementKind.WhiteboardCard => "#DDE3EA",
+            ElementKind.WhiteboardText => "#F8FAFC",
+            ElementKind.WhiteboardCircle => "#56B4E9",
+            ElementKind.WhiteboardDiamond => "#E69F00",
 
             _ => "#FFFFFF",
         };
@@ -411,6 +434,17 @@ namespace TheRobotDraft.Authoring.Model
                 or ElementKind.Table or ElementKind.Tree or ElementKind.Image or ElementKind.Tabs
                 or ElementKind.Menu or ElementKind.Card or ElementKind.Separator or ElementKind.Progress
                 or ElementKind.Slider or ElementKind.Breadcrumb or ElementKind.Toolbar => true,
+            _ => false,
+        };
+
+        /// <summary>
+        /// Freeform whiteboard nodes. These intentionally avoid UML-specific semantics while preserving the same
+        /// selection, resize, styling and connector affordances as formal diagram nodes.
+        /// </summary>
+        public static bool IsWhiteboardNode(ElementKind kind) => kind switch
+        {
+            ElementKind.WhiteboardSticky or ElementKind.WhiteboardCard or ElementKind.WhiteboardText
+                or ElementKind.WhiteboardCircle or ElementKind.WhiteboardDiamond => true,
             _ => false,
         };
     }

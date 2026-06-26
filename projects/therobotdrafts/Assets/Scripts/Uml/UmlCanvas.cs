@@ -30,6 +30,7 @@ namespace TheRobotDraft.Uml
             EdgeKind.Transition, EdgeKind.Include, EdgeKind.Extend,
             EdgeKind.NoteLink, EdgeKind.DirectedAssociation,
             EdgeKind.MessageSync, EdgeKind.MessageAsync, EdgeKind.MessageReply, EdgeKind.Extension,
+            EdgeKind.SketchConnector,
         };
 
         /// <summary>Sequence / communication participants a message may run between (lifelines, activations, objects).</summary>
@@ -614,6 +615,12 @@ namespace TheRobotDraft.Uml
             ElementKind.Separator => "—",
             ElementKind.Progress => "progress",
             ElementKind.Slider => "slider",
+            ElementKind.WhiteboardFrame => "Whiteboard",
+            ElementKind.WhiteboardSticky => "sticky note",
+            ElementKind.WhiteboardCard => "Idea card",
+            ElementKind.WhiteboardText => "Text",
+            ElementKind.WhiteboardCircle => "Circle",
+            ElementKind.WhiteboardDiamond => "Decision",
             _ => kind.ToString() + CountOf(kind),
         };
 
@@ -2301,7 +2308,7 @@ namespace TheRobotDraft.Uml
         private void NodeColors(ModelElement el, out Color fill, out Color text)
         {
             ColorUtility.TryParseHtmlString(KindInfo.Hue(el.Kind), out var hue);
-            bool note = el.Kind == ElementKind.Note;
+            bool note = el.Kind == ElementKind.Note || el.Kind == ElementKind.WhiteboardSticky;
             bool darkFill = el.Kind == ElementKind.Actor || el.Kind == ElementKind.StateStart
                 || el.Kind == ElementKind.StateEnd || el.Kind == ElementKind.ForkJoin
                 || el.Kind == ElementKind.Junction || el.Kind == ElementKind.Terminate
@@ -2324,6 +2331,8 @@ namespace TheRobotDraft.Uml
             if (_size.TryGetValue(el.Id, out var s) && s.x > 1f && s.y > 1f) return s;
             // The actor / person robot wants a PORTRAIT footprint (a standing figure), not the wide class-box default.
             if (el.Kind == ElementKind.Actor || el.Kind == ElementKind.Person) return new Vector2(108f, 168f);
+            var wb = WhiteboardDefaultSize(el.Kind);
+            if (wb.HasValue) return wb.Value;
             // Wireframe widgets get compact, per-kind default footprints (a button is small, a table is wide).
             var wf = WidgetDefaultSize(el.Kind, KindInfo.IsWireframeWidget(el.Kind) ? WidgetItems(el).Count : attrCount);
             if (wf.HasValue) return wf.Value;
@@ -2332,6 +2341,16 @@ namespace TheRobotDraft.Uml
             float opH = Mathf.Max(1, opCount) * 18f + 6f;
             return new Vector2(UmlNodeView.DefaultWidth, headerH + 2f + attrH + 2f + opH);
         }
+
+        private static Vector2? WhiteboardDefaultSize(ElementKind kind) => kind switch
+        {
+            ElementKind.WhiteboardSticky => new Vector2(180f, 120f),
+            ElementKind.WhiteboardCard => new Vector2(180f, 96f),
+            ElementKind.WhiteboardText => new Vector2(160f, 44f),
+            ElementKind.WhiteboardCircle => new Vector2(132f, 90f),
+            ElementKind.WhiteboardDiamond => new Vector2(116f, 82f),
+            _ => null,
+        };
 
         /// <summary>A wireframe widget's default pixel footprint (null for non-widgets). Compact, control-shaped — a
         /// button isn't a full-width classifier box. Item-bearing widgets grow with their item count.</summary>
@@ -2411,9 +2430,10 @@ namespace TheRobotDraft.Uml
         private Vector3 _regionLastWorld;
         private readonly List<ElementId> _regionMembers = new();
 
-        /// <summary>Boundary, interaction frame and profile are "regions" — drawn as a grouping cube, not a slab.</summary>
+        /// <summary>Boundary, interaction frame, profile and whiteboard frames are "regions" — grouping cubes, not slabs.</summary>
         private static bool IsRegionKind(ElementKind k) =>
             k == ElementKind.Boundary || k == ElementKind.Frame || k == ElementKind.Profile
+            || k == ElementKind.WhiteboardFrame
             || KindInfo.IsWireframeRegion(k); // Screen / Panel group their widgets and carry them when moved
 
         /// <summary>Destroy every live region cube.</summary>
@@ -3375,6 +3395,8 @@ namespace TheRobotDraft.Uml
             EdgeKind.Extension => (false, EndMarker.None, EndMarker.OpenArrow, "«extension»"),
             // Usage: dashed line, open arrow at the consumed target, «consumes» stereotype.
             EdgeKind.Consumes => (true, EndMarker.None, EndMarker.OpenArrow, "«consumes»"),
+            // Whiteboard sketch connector: lightweight freeform arrow without UML stereotype baggage.
+            EdgeKind.SketchConnector => (false, EndMarker.None, EndMarker.StickArrow, null),
             _ => (false, EndMarker.None, EndMarker.OpenArrow, null),
         };
 
@@ -3391,6 +3413,7 @@ namespace TheRobotDraft.Uml
             EdgeKind.MessageReply => "Reply / return  (⇠)",
             EdgeKind.Extension => "«extension»",
             EdgeKind.Consumes => "«consumes»  (uses →)",
+            EdgeKind.SketchConnector => "Sketch connector  (whiteboard →)",
             _ => k.ToString(),
         };
 
@@ -3417,8 +3440,12 @@ namespace TheRobotDraft.Uml
             bool messaging = f != null && t != null && IsInteractionNode(f.Kind) && IsInteractionNode(t.Kind);
             bool extension = f != null && t != null
                 && f.Kind == ElementKind.Stereotype && t.Kind == ElementKind.Metaclass;
+            bool whiteboard = f != null && t != null
+                && (KindInfo.IsWhiteboardNode(f.Kind) || f.Kind == ElementKind.WhiteboardFrame)
+                && (KindInfo.IsWhiteboardNode(t.Kind) || t.Kind == ElementKind.WhiteboardFrame);
 
             if (note) { Add(EdgeKind.NoteLink); Add(EdgeKind.Dependency); }
+            if (whiteboard) Add(EdgeKind.SketchConnector);
             if (bothUseCase) { Add(EdgeKind.Include); Add(EdgeKind.Extend); Add(EdgeKind.Generalization); }
             if (behavioral) Add(EdgeKind.Transition);
             if (messaging) { Add(EdgeKind.MessageSync); Add(EdgeKind.MessageAsync); Add(EdgeKind.MessageReply); }
@@ -3428,7 +3455,7 @@ namespace TheRobotDraft.Uml
             foreach (var k in new[]
             {
                 EdgeKind.Association, EdgeKind.DirectedAssociation, EdgeKind.Transition, EdgeKind.Dependency,
-                EdgeKind.Consumes,
+                EdgeKind.Consumes, EdgeKind.SketchConnector,
                 EdgeKind.Generalization, EdgeKind.Realization, EdgeKind.Aggregation, EdgeKind.Composition,
                 EdgeKind.Include, EdgeKind.Extend, EdgeKind.NoteLink,
                 EdgeKind.MessageSync, EdgeKind.MessageAsync, EdgeKind.MessageReply, EdgeKind.Extension,
@@ -4568,6 +4595,16 @@ namespace TheRobotDraft.Uml
                 (ElementKind.Firewall, "Firewall"),
             }),
             ("Mind Map", new[] { (ElementKind.MindNode, "Topic") }),
+            ("Whiteboard", new[]
+            {
+                (ElementKind.WhiteboardFrame, "Frame"),
+                (ElementKind.WhiteboardSticky, "Sticky Note"),
+                (ElementKind.WhiteboardCard, "Card"),
+                (ElementKind.WhiteboardText, "Text"),
+                (ElementKind.WhiteboardCircle, "Circle / Bubble"),
+                (ElementKind.WhiteboardDiamond, "Diamond"),
+                (ElementKind.Note, "UML Note"),
+            }),
             ("Wireframe / UI", new[]
             {
                 (ElementKind.Screen, "Screen"), (ElementKind.Panel, "Panel"),

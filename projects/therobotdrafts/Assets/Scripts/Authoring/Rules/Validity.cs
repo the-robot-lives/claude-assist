@@ -70,6 +70,12 @@ namespace TheRobotDraft.Authoring.Rules
                     or ElementKind.Menu or ElementKind.Tabs or ElementKind.Toolbar or ElementKind.Breadcrumb
                     => childKind == ElementKind.Field,
 
+                // Whiteboard frames are intentionally loose: they are used for ideation, EA-style notes, and
+                // sketch grouping before the user commits to a formal UML/architecture notation.
+                ElementKind.WhiteboardFrame => KindInfo.IsWhiteboardNode(childKind)
+                    || childKind == ElementKind.Note
+                    || childKind == ElementKind.WhiteboardFrame,
+
                 _ => false,
             };
 
@@ -160,6 +166,12 @@ namespace TheRobotDraft.Authoring.Rules
                     return KindInfo.IsConnectable(from.Kind) && KindInfo.IsConnectable(to.Kind)
                         ? Validity.Valid
                         : Validity.Invalid("a «consumes» link connects diagram nodes");
+
+                case EdgeKind.SketchConnector:
+                    // Whiteboard connector: deliberately permissive for early ideation, but still not member-level.
+                    return KindInfo.IsConnectable(from.Kind) && KindInfo.IsConnectable(to.Kind)
+                        ? Validity.Valid
+                        : Validity.Invalid("a sketch connector links diagram nodes");
 
                 case EdgeKind.Include:
                 case EdgeKind.Extend:

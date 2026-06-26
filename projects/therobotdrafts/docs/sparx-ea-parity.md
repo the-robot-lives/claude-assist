@@ -64,7 +64,7 @@ tier is strongest (team repository, security, governance).
 | Profile / MDG / stereotype extension | Pro→Ult | 🟡 | Profile node kinds + «extension» edge in build; MDG-tech authoring 📋 |
 | Rational Rose legacy (Statechart/Collaboration names) | n/a | 📋 | Specced for import fidelity ([diagram-catalog §8](specs/diagram-catalog.md)) |
 | Rose RealTime (Capsules/Ports/Protocols) | n/a | 📋 | Specced |
-| Mind map / DFD / network / wireframe / Gantt-Kanban | Pro/Uni | 📋 | Specced as auxiliary bubble layouts |
+| Mind map / DFD / network / wireframe / whiteboard / Gantt-Kanban | Pro/Uni | 🟡 | Whiteboard nodes/connectors now in build; remaining auxiliary layouts are specced as bubble layouts |
 
 **Read:** TRD has the *vocabulary* (element/edge kinds) for nearly EA's whole notation range, but the
 **diagram-projection engine** that turns the model into a faithful, standard 2D diagram is the missing

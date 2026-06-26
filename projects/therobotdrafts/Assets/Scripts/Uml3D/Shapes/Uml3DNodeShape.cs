@@ -35,12 +35,12 @@ namespace TheRobotDraft.Uml3D
         {
             ElementKind.Actor or ElementKind.Person => Uml3DShape_Actor.Build(w, h, d),
 
-            ElementKind.UseCase or ElementKind.Collaboration => Uml3DShape_UseCase.Build(w, h, d),
+            ElementKind.UseCase or ElementKind.Collaboration or ElementKind.WhiteboardCircle => Uml3DShape_UseCase.Build(w, h, d),
 
             ElementKind.State or ElementKind.Activity or ElementKind.CallActivity
                 => Uml3DShape_RoundedRect.Build(w, h, d),
 
-            ElementKind.Decision => Uml3DShape_Diamond.Build(w, h, d),
+            ElementKind.Decision or ElementKind.WhiteboardDiamond => Uml3DShape_Diamond.Build(w, h, d),
 
             ElementKind.StateStart or ElementKind.Junction or ElementKind.History
                 => Uml3DShape_DiscMarker.Build(w, h, d),
@@ -57,7 +57,7 @@ namespace TheRobotDraft.Uml3D
 
             ElementKind.Cloud => Uml3DShape_Cloud.Build(w, h, d),
 
-            ElementKind.Note or ElementKind.Artifact => Uml3DShape_DogEar.Build(w, h, d),
+            ElementKind.Note or ElementKind.Artifact or ElementKind.WhiteboardSticky => Uml3DShape_DogEar.Build(w, h, d),
 
             ElementKind.Component => Uml3DShape_Component.Build(w, h, d),
 
@@ -87,6 +87,8 @@ namespace TheRobotDraft.Uml3D
                 or ElementKind.PackageNode or ElementKind.Database or ElementKind.Cloud
                 or ElementKind.MindNode or ElementKind.Note or ElementKind.Artifact or ElementKind.DeploymentNode
                 or ElementKind.FlowTerminator or ElementKind.FlowIO or ElementKind.FlowDocument
+                or ElementKind.WhiteboardSticky or ElementKind.WhiteboardCard or ElementKind.WhiteboardText
+                or ElementKind.WhiteboardCircle or ElementKind.WhiteboardDiamond
                 => FaceStyle.NameOnly,
 
             // Rectangular classifiers and everything else: the full compartment card.
