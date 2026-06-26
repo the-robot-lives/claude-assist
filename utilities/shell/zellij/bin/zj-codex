@@ -1,0 +1,283 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage() {
+    cat <<'USAGE'
+zj-codex — launch a zellij session with codex in split panes per directory
+
+Each selected directory gets a tab with:
+  - Large top pane: runs `codex` (with optional extra args)
+  - Thin bottom pane: shell navigated to that directory
+
+Usage:
+    zj-codex [OPTIONS] [DIRECTORY]
+
+Arguments:
+    DIRECTORY            Base directory to list subdirs from (default: current dir)
+
+Options:
+    -w, --workspace FILE       YAML file listing directories to open (skips picker)
+    -s, --session NAME         Zellij session name (default: derived from directory)
+    -d, --depth N              Depth of subdirectory listing (default: 1)
+    -a, --all                  Include hidden directories
+    -g, --glob PATTERN         Pre-select dirs matching glob in fzf
+    --codex-args ARGS         Extra arguments passed to codex (quoted string)
+    --codex-command CMD       Override the codex invocation entirely
+    --codex-message, --prompt MSG  Starting message/prompt to send to codex on launch
+    --start-app, --run CMD     Override the dev app command in the floating preview pane
+    -c, --command CMD          Command to run in the bottom terminal pane on launch
+    --bottom-size N            Bottom pane size in rows (default: 10)
+    --dry-run                  Print generated layout and exit
+    -h, --help                 Show this help
+
+Workspace YAML format:
+    directories:
+      - ~/Github/project-a
+      - ~/Github/project-b
+      - /absolute/path/to/project
+
+    # Optional session name (overridden by --session)
+    session: my-workspace
+
+    # Optional codex args (overridden by --codex-args)
+    codex_args: "--resume"
+
+    # Optional overrides (all overridden by CLI flags)
+    codex_command: "codex"
+    codex_message: "/init"
+    start_app: "npm run dev"
+    command: "make watch"
+
+Examples:
+    zj-codex                                  # Pick from subdirs of cwd
+    zj-codex ~/Github                         # Pick from ~/Github subdirs
+    zj-codex -w projects.yaml                 # Open dirs listed in YAML
+    zj-codex --codex-args "--resume" ~/work  # Pass --resume to codex
+    zj-codex --codex-command "codex --profile work" .
+    zj-codex --codex-message "/init" --start-app "npm run dev" .
+USAGE
+    exit 0
+}
+
+workspace=""
+session=""
+explicit_session=""
+glob=""
+depth=1
+show_hidden=false
+codex_args=""
+codex_command=""
+codex_message=""
+start_app=""
+bottom_command=""
+bottom_size=10
+dry_run=false
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        -w|--workspace)   workspace="$2"; shift 2 ;;
+        -s|--session)     session="$2"; explicit_session=1; shift 2 ;;
+        -g|--glob)        glob="$2"; shift 2 ;;
+        -d|--depth)       depth="$2"; shift 2 ;;
+        -a|--all)         show_hidden=true; shift ;;
+        --codex-args)    codex_args="$2"; shift 2 ;;
+        --codex-command) codex_command="$2"; shift 2 ;;
+        --codex-message|--prompt) codex_message="$2"; shift 2 ;;
+        --start-app|--run) start_app="$2"; shift 2 ;;
+        -c|--command)     bottom_command="$2"; shift 2 ;;
+        --bottom-size)    bottom_size="$2"; shift 2 ;;
+        --dry-run)        dry_run=true; shift ;;
+        -h|--help)        usage ;;
+        -*)               echo "Unknown option: $1" >&2; exit 1 ;;
+        *)                break ;;
+    esac
+done
+
+base_dir="${1:-.}"
+base_dir="$(cd "$base_dir" && pwd)"
+
+for tool in zellij codex; do
+    if ! command -v "$tool" &>/dev/null; then
+        echo "Error: $tool not found in PATH" >&2
+        exit 1
+    fi
+done
+
+resolve_dir() {
+    local d="$1"
+    d="${d/#\~/$HOME}"
+    if [[ ! -d "$d" ]]; then
+        echo "Warning: directory does not exist, skipping: $d" >&2
+        return 1
+    fi
+    cd "$d" && pwd
+}
+
+selected=()
+
+if [[ -n "$workspace" ]]; then
+    if [[ ! -f "$workspace" ]]; then
+        echo "Error: workspace file not found: $workspace" >&2
+        exit 1
+    fi
+    if ! command -v yq &>/dev/null; then
+        echo "Error: yq not found in PATH (required for --workspace)" >&2
+        exit 1
+    fi
+
+    ws_session="$(yq -r '.session // ""' "$workspace")"
+    ws_codex_args="$(yq -r '.codex_args // ""' "$workspace")"
+    ws_codex_command="$(yq -r '.codex_command // ""' "$workspace")"
+    ws_codex_message="$(yq -r '.codex_message // ""' "$workspace")"
+    ws_start_app="$(yq -r '.start_app // ""' "$workspace")"
+    ws_command="$(yq -r '.command // ""' "$workspace")"
+
+    if [[ -z "$session" && -n "$ws_session" ]]; then
+        session="$ws_session"
+    fi
+    if [[ -z "$codex_args" && -n "$ws_codex_args" ]]; then
+        codex_args="$ws_codex_args"
+    fi
+    if [[ -z "$codex_command" && -n "$ws_codex_command" ]]; then
+        codex_command="$ws_codex_command"
+    fi
+    if [[ -z "$codex_message" && -n "$ws_codex_message" ]]; then
+        codex_message="$ws_codex_message"
+    fi
+    if [[ -z "$start_app" && -n "$ws_start_app" ]]; then
+        start_app="$ws_start_app"
+    fi
+    if [[ -z "$bottom_command" && -n "$ws_command" ]]; then
+        bottom_command="$ws_command"
+    fi
+
+    while IFS= read -r dir; do
+        resolved="$(resolve_dir "$dir" 2>/dev/null)" && selected+=("$resolved")
+    done < <(yq -r '.directories[]' "$workspace")
+else
+    if ! command -v fzf &>/dev/null; then
+        echo "Error: fzf not found in PATH" >&2
+        exit 1
+    fi
+
+    find_args=("$base_dir" -mindepth 1 -maxdepth "$depth" -type d)
+    if [[ "$show_hidden" == false ]]; then
+        find_args+=(-not -path '*/.*')
+    fi
+    find_args+=(-print)
+
+    fzf_opts=(--multi --prompt="Select directories for codex> "
+              --preview="ls -1 --color=always {}"
+              --bind="ctrl-a:select-all,ctrl-d:deselect-all")
+
+    if [[ -n "$glob" ]]; then
+        fzf_opts+=(--header="Tab=toggle, Enter=confirm (glob: $glob)"
+                   --query="$glob" --bind="start:select-all")
+    else
+        fzf_opts+=(--header="Tab=toggle, Enter=confirm (all pre-selected)"
+                   --bind="start:select-all")
+    fi
+
+    mapfile -t selected < <(find "${find_args[@]}" | sort | fzf "${fzf_opts[@]}")
+fi
+
+if [[ ${#selected[@]} -eq 0 ]]; then
+    echo "No directories selected." >&2
+    exit 0
+fi
+
+if [[ -z "$session" ]]; then
+    session="zcd-$(basename "$base_dir")"
+fi
+
+# Zellij uses Unix domain sockets whose path includes the session name.
+# macOS limits socket paths to 104 bytes; the socket dir on this system is ~83 chars,
+# leaving ~20 chars for the session name. Truncate to stay within the limit.
+max_session_len=20
+if (( ${#session} > max_session_len )); then
+    session="${session:0:$max_session_len}"
+fi
+
+user_shell="$(basename "${SHELL:-/bin/bash}")"
+
+unset ZELLIJ ZELLIJ_SESSION_NAME
+if zellij list-sessions --short --no-formatting 2>/dev/null | grep -qxF "$session"; then
+    if [[ -z "$explicit_session" ]]; then
+        suffix="$(date +%s | tail -c 7)"
+        session="${session:0:$((max_session_len - 7))}-${suffix}"
+    fi
+fi
+
+layout_file="/tmp/zj-codex-$$-$(date +%s).kdl"
+if [[ "$dry_run" == false ]]; then
+    trap 'rm -f "$layout_file"' EXIT
+fi
+
+if [[ -n "$codex_command" ]]; then
+    codex_cmd="$codex_command"
+elif [[ -n "$codex_args" ]]; then
+    codex_cmd="codex $codex_args"
+else
+    codex_cmd="codex"
+fi
+
+if [[ -n "$codex_message" ]]; then
+    codex_cmd="$codex_cmd $(printf '%q' "$codex_message")"
+fi
+
+{
+    echo 'layout {'
+    echo '  default_tab_template {'
+    echo '    pane size=1 borderless=true {'
+    echo '      plugin location="tab-bar"'
+    echo '    }'
+    echo '    children'
+    echo '    pane size=2 borderless=true {'
+    echo '      plugin location="status-bar"'
+    echo '    }'
+    echo '  }'
+
+    for dir in "${selected[@]}"; do
+        tab_name="$(basename "$dir")"
+        cat <<TABEOF
+  tab name="$tab_name" {
+    pane split_direction="vertical" {
+      pane size="50%" name="codex: $tab_name" {
+        command "$user_shell"
+        args "-c" "cd '$dir' && $codex_cmd; exec $user_shell"
+        focus true
+      }
+      pane size="50%" name="nvim: $tab_name" {
+        command "$user_shell"
+        args "-c" "cd '$dir' && nvim .; exec $user_shell"
+      }
+    }
+    pane name="shell: $tab_name" size=$bottom_size {
+      command "$user_shell"
+      args "-c" "cd '$dir' && ${bottom_command:-exec $user_shell}"
+    }
+    floating_panes {
+      pane name="preview: $tab_name" {
+        command "$user_shell"
+        args "-c" "cd '$dir' && ${start_app:-echo 'No --start-app specified. Use --start-app to set a dev command.'}; exec $user_shell"
+      }
+    }
+  }
+TABEOF
+    done
+
+    echo '}'
+} > "$layout_file"
+
+if [[ "$dry_run" == true ]]; then
+    echo "--- Generated layout ($layout_file) ---"
+    cat "$layout_file"
+    echo ""
+    echo "Session: $session"
+    echo "Directories: ${#selected[@]}"
+    for d in "${selected[@]}"; do echo "  - $d"; done
+    exit 0
+fi
+
+echo "Launching zellij session '$session' with ${#selected[@]} codex tab(s)..."
+zellij -s "$session" -n "$layout_file"
