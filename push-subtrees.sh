@@ -40,6 +40,7 @@ SUBTREES=(
   # 3rd-party
   "3rd-party/bottlecrm|bottlecrm|mono-repo-dev"
   "3rd-party/chartdb|noizu-forks-chartdb|mono-repo-dev"
+  "3rd-party/codex|noizu-forks-codex|mono-repo-dev"
   # "3rd-party/clickhouse|noizu-forks-clickhouse|mono-repo-dev"   # TODO: no such remote + dir absent
   "3rd-party/directus|noizu-forks-directus|mono-repo-dev"
   "3rd-party/drawio|noizu-forks-drawio|mono-repo-dev"

@@ -16,6 +16,7 @@ set -euo pipefail
 
 # --- 3rd-party (noizu-forks) ---
 git remote add noizu-forks-chartdb              git@github.com:noizu-forks/chartdb.git
+git remote add noizu-forks-codex                git@github.com:noizu-forks/codex.git
 git remote add noizu-forks-clickhouse           git@github.com:noizu-forks/ClickHouse.git
 git remote add noizu-forks-directus             git@github.com:noizu-forks/directus.git
 git remote add noizu-forks-drawio               git@github.com:noizu-forks/drawio.git
@@ -136,6 +137,7 @@ git fetch --all
 
 # --- 3rd-party ---
 git subtree add --prefix=3rd-party/chartdb              noizu-forks-chartdb             main    --squash
+git subtree add --prefix=3rd-party/codex                noizu-forks-codex               main    --squash
 git subtree add --prefix=3rd-party/clickhouse            noizu-forks-clickhouse           master  --squash
 git subtree add --prefix=3rd-party/directus              noizu-forks-directus             main    --squash
 git subtree add --prefix=3rd-party/drawio                noizu-forks-drawio               dev     --squash
