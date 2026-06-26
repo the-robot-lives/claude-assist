@@ -15,7 +15,7 @@ graph TB
     subgraph "Build Pipeline"
         Y[YAML Theme Config] -->|generate-css| G[design-system.generated.css]
         G --> CSS[globals.css + Tailwind v4]
-        PKG[@the-robot-lives/styleguide] -->|components| A
+        PKG[@noizu/styleguide] -->|components| A
         PKG -->|generate.ts| G
     end
 
@@ -36,7 +36,8 @@ graph TB
 | `generate-css.ts` | Build script — invokes styleguide package to compile YAML themes → CSS |
 | `globals.css` | Imports generated CSS + Tailwind v4; bridges CSS vars to Tailwind `@theme` |
 | `Navbar` | Sticky nav with auth-aware login/logout UI |
-| Styleguide package | `@the-robot-lives/styleguide` — shared components (buttons, cards, viewer) |
+| `CookieConsentProvider` | Category-level cookie consent UI and saved preferences |
+| Styleguide package | `@noizu/styleguide` — shared components (buttons, cards, viewer) |
 
 ## Authentication
 
@@ -50,9 +51,19 @@ YAML config files define the entire visual language (colors, typography, spacing
 
 → *See [arch/design-system.md](arch/design-system.md) for details*
 
+## Cookie Consent & Analytics
+
+The frontend includes a category-based consent layer for reusable project compliance:
+
+- `src/lib/consent/` stores a versioned consent record in `localStorage` with `necessary`, `analytics`, `marketing`, and `preferences` categories.
+- `necessary` is always enabled; optional categories default to disabled until the user chooses.
+- `CookieConsentProvider` mounts a global banner and exposes `CookieSettingsButton` so users can reopen choices.
+- `src/lib/analytics/` checks `hasConsent("analytics")` before initializing GA/PostHog, tracking page views, identifying users, or sending custom events.
+- Runtime analytics keys can be configured by env/Helm, but provider scripts do not load until analytics consent is granted.
+
 ## Deployment
 
-Multi-stage Docker build (deps → build → runtime) producing a standalone Next.js server. GitHub Packages token injected as a build secret for the `@the-robot-lives/styleguide` dependency.
+Multi-stage Docker build (deps → build → runtime) producing a standalone Next.js server. Verdaccio token (`NPM_TOKEN`) injected as a build secret for the `@noizu/styleguide` dependency.
 
 → *See [arch/deployment.md](arch/deployment.md) for details*
 
@@ -64,7 +75,7 @@ Multi-stage Docker build (deps → build → runtime) producing a standalone Nex
 | Styling | Tailwind CSS v4 + YAML-generated CSS custom properties |
 | Auth | JWT (access + refresh tokens), localStorage |
 | API Client | Native `fetch` with Bearer token injection |
-| Components | `@the-robot-lives/styleguide` (GitHub Packages) |
+| Components | `@noizu/styleguide` (Verdaccio — npm.noizu.com) |
 | Build | TypeScript, `tsx` for scripts |
 | Container | Docker multi-stage, Node 22 Alpine, standalone output |
 | Backend | Elixir (separate service at `NEXT_PUBLIC_API_URL`) |

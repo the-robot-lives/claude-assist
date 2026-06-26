@@ -26,7 +26,7 @@ defmodule Codefresh.Runs.FreeballExpectation do
     field :confidence, :decimal
 
     belongs_to :freeball_node, Codefresh.Runs.FreeballNode
-    belongs_to :organization, Codefresh.Organizations.Organization
+    belongs_to :organization, Codefresh.Schema.Organizations.Organization
     belongs_to :rubric_version, Codefresh.Rubrics.RubricVersion
 
     timestamps(type: :utc_datetime, updated_at: false)

@@ -19,10 +19,10 @@ graph LR
 
 ### Build Secrets
 
-The `@the-robot-lives/styleguide` package is hosted on GitHub Packages (private). The Dockerfile:
+The `@noizu/styleguide` package is hosted on Verdaccio (`npm.noizu.com`, private). The Dockerfile:
 
-1. Copies `.npmrc.template` (contains `${GITHUB_TOKEN}` placeholder)
-2. Uses `--mount=type=secret,id=github_token` to inject the token
+1. Copies `.npmrc` (contains `${NPM_TOKEN}` placeholder)
+2. Uses `--mount=type=secret,id=npm_token` to inject the token
 3. Runs `envsubst` to produce `.npmrc` at build time
 4. Deletes `.npmrc` after install
 

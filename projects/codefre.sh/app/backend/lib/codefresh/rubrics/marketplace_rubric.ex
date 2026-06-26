@@ -23,7 +23,7 @@ defmodule Codefresh.Rubrics.MarketplaceRubric do
     field :curation_status, :string, default: "pending"
 
     belongs_to :rubric_version, Codefresh.Rubrics.RubricVersion
-    belongs_to :author_organization, Codefresh.Organizations.Organization
+    belongs_to :author_organization, Codefresh.Schema.Organizations.Organization
 
     timestamps(type: :utc_datetime, updated_at: false)
   end

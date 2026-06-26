@@ -10,3 +10,4 @@ Dockerfile
 .env*
 .DS_Store
 npm-debug.log*
+src/app/styleguide/

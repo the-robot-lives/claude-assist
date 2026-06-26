@@ -22,7 +22,7 @@ defmodule Codefresh.Agents.Agent do
     field :daily_cost_cap_usd, :decimal
     field :rate_limit_per_min, :integer
 
-    belongs_to :organization, Codefresh.Organizations.Organization
+    belongs_to :organization, Codefresh.Schema.Organizations.Organization
     belongs_to :current_version, Codefresh.Agents.AgentVersion, foreign_key: :current_version_id
     belongs_to :created_by, Codefresh.Accounts.User, foreign_key: :created_by_user_id
 

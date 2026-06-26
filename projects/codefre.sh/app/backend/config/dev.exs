@@ -26,9 +26,12 @@ config :codefresh, CodefreshWeb.Endpoint,
 
 config :codefresh, dev_routes: true
 
+config :codefresh, :frontend_url, "http://localhost:3000"
+
 config :logger, :default_formatter, format: "[$level] $message\n"
 
 config :phoenix, :stacktrace_depth, 20
 config :phoenix, :plug_init_mode, :runtime
 
-config :swoosh, :api_client, false
+config :noizu_sendgrid,
+  sandbox_enable: true

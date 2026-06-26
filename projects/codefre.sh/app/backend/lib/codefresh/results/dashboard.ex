@@ -30,7 +30,7 @@ defmodule Codefresh.Results.Dashboard do
     # mirrored in `dashboard_versions` on save.
     field :layout, :map, virtual: true, default: %{}
 
-    belongs_to :organization, Codefresh.Organizations.Organization
+    belongs_to :organization, Codefresh.Schema.Organizations.Organization
 
     belongs_to :current_version, Codefresh.Results.DashboardVersion,
       foreign_key: :current_version_id

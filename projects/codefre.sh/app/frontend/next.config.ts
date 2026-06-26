@@ -1,15 +1,22 @@
 import type { NextConfig } from "next";
 import path from "path";
 
-const pkgRoot = path.dirname(require.resolve("@the-robot-lives/styleguide/components"));
+const pkgRoot = path.dirname(require.resolve("@noizu/styleguide/components"));
 const engineSrc = path.resolve(pkgRoot, "dist", "engine-src");
 
 const nextConfig: NextConfig = {
   output: "standalone",
-  transpilePackages: ["@the-robot-lives/styleguide"],
+  transpilePackages: ["@noizu/styleguide"],
+  turbopack: {
+    resolveAlias: {
+      "@styleguide-engine": engineSrc,
+      "@/": "./src/",
+    },
+  },
   webpack: (config) => {
     config.resolve.alias["@styleguide-engine"] = engineSrc;
-    config.resolve.alias["@"] = path.resolve(__dirname, "src");
+    // Ensure @/ alias resolves from styleguide package's transpiled source too
+    config.resolve.alias["@/"] = path.resolve(__dirname, "src") + "/";
     return config;
   },
 };

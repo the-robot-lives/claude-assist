@@ -1,6 +1,7 @@
 "use client";
 
 import { useAuth } from "@/context/auth";
+import { OrgProvider } from "@/context/org";
 import { useRouter, usePathname } from "next/navigation";
 import { useEffect, useState, use, useMemo } from "react";
 import { cyAttrs } from "@/utils/cypress";
@@ -12,7 +13,10 @@ import {
   UserMenu,
   KeyboardCheatsheet,
 } from "@/components/ui";
-import { useCommandPalette } from "@/components/ui/CommandPaletteProvider";
+import {
+  CommandPaletteProvider,
+  useCommandPalette,
+} from "@/components/ui/CommandPaletteProvider";
 import { MobileTopBar } from "@/components/ui/MobileTopBar";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import type { BreadcrumbItem, TopBarNavItem } from "@/components/ui";
@@ -66,6 +70,22 @@ function titleize(segment: string): string {
 }
 
 export default function OrgLayout({
+  children,
+  params,
+}: {
+  children: React.ReactNode;
+  params: Promise<{ orgId: string }>;
+}) {
+  return (
+    <OrgProvider>
+      <CommandPaletteProvider>
+        <OrgShell params={params}>{children}</OrgShell>
+      </CommandPaletteProvider>
+    </OrgProvider>
+  );
+}
+
+function OrgShell({
   children,
   params,
 }: {

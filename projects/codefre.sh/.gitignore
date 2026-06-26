@@ -14,6 +14,7 @@ next-env.d.ts
 src/app/design-system.generated.css
 public/themes/*.css
 package-lock.json
+!app/frontend/package-lock.json
 
 # SDK workspaces — build artifacts + package manager noise
 sdks/**/node_modules/

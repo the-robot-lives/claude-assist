@@ -1,153 +1,159 @@
-# Dev environment seeds.
-# Invoked from priv/repo/seeds.exs via Code.eval_file when Mix.env() == :dev.
-#
-# Bootstraps:
-#   - one admin user (admin@codefre.sh.local / devpassword123)
-#   - one admin org (slug: codefresh-dev)
-#   - owner membership
-#   - five invite tokens, one per persona in docs/personas/
-#   - one open dev invite (multi-use, 1-year, role=editor)
-#
-# Raw invite tokens are printed to stdout for local signup testing.
-# Re-running is safe: `seed` blocks are idempotent (tracked by seed_helper).
+dir = Path.dirname(__ENV__.file)
+Code.eval_file("#{dir}/prod-seeds.exs")
 
-require SeedHelper
-import SeedHelper
+alias Codefresh.Schema.Users.User
+alias Codefresh.Schema.Organizations.Organization
+alias Codefresh.Schema.Organizations.Membership
+alias Codefresh.Schema.Organizations.InviteToken
+alias Codefresh.Schema.Users.Credentials.UserCredential
+alias Codefresh.Schema.Versioned.Names.Name
+alias Codefresh.Schema.Versioned.Descriptions.Description
 
-alias Codefresh.Accounts
-alias Codefresh.Organizations
+admin_id = UUID.uuid5(:oid, "Codefresh.Dev.Admin")
+dev_org_id = UUID.uuid5(:oid, "Codefresh.Dev.Organization")
+login_provider_id = UUID.uuid5(:oid, "Codefresh.Schema.Auth.Providers.Provider@Login")
 
-seed {"bootstrap_admin_user", "1"} do
-  {:ok, user} =
-    Accounts.register_user(%{
-      "email" => "admin@codefre.sh.local",
-      "password" => "devpassword123"
+seed "dev:admin-name" do
+  Codefresh.Repo.insert!(
+    %Name{id: UUID.uuid5(:oid, "Codefresh.Dev.Admin.Name"), first: "Admin", last: "User"},
+    on_conflict: :nothing,
+    conflict_target: :id
+  )
+end
+
+seed "dev:admin-description" do
+  Codefresh.Repo.insert!(
+    %Description{
+      id: UUID.uuid5(:oid, "Codefresh.Dev.Admin.Description"),
+      title: "Admin",
+      body: "Default development admin user"
+    },
+    on_conflict: :nothing,
+    conflict_target: :id
+  )
+end
+
+seed "dev:admin-user" do
+  Codefresh.Repo.insert!(
+    %User{
+      id: admin_id,
+      user_name: "admin",
+      handle: "admin",
+      name_id: UUID.uuid5(:oid, "Codefresh.Dev.Admin.Name"),
+      description_id: UUID.uuid5(:oid, "Codefresh.Dev.Admin.Description"),
+      email: "admin@starter.local",
+      hashed_password: Bcrypt.hash_pwd_salt("password123"),
+      status: :active,
+      verified: true,
+      flagged: false
+    },
+    on_conflict: :nothing,
+    conflict_target: :id
+  )
+end
+
+seed "dev:admin-credential" do
+  Codefresh.Repo.insert!(
+    %UserCredential{
+      id: UUID.uuid5(:oid, "Codefresh.Dev.Admin.Credential"),
+      user_id: admin_id,
+      auth_provider_id: login_provider_id,
+      status: :active,
+      settings: %{
+        "email" => "admin@starter.local",
+        "password" => Bcrypt.hash_pwd_salt("password123")
+      },
+      state: %{},
+      fingerprint: "dev-admin-login"
+    },
+    on_conflict: :nothing,
+    conflict_target: :id
+  )
+end
+
+seed "dev:organization" do
+  Codefresh.Repo.insert!(
+    %Organization{
+      id: dev_org_id,
+      slug: "dev",
+      name: "Dev Org"
+    },
+    on_conflict: :nothing,
+    conflict_target: :id
+  )
+end
+
+seed "dev:admin-membership" do
+  Codefresh.Repo.insert!(
+    %Membership{
+      id: UUID.uuid5(:oid, "Codefresh.Dev.Admin.Membership"),
+      organization_id: dev_org_id,
+      user_id: admin_id,
+      role: "owner"
+    },
+    on_conflict: :nothing,
+    conflict_target: :id
+  )
+end
+
+seed "dev:bootstrap-invite" do
+  raw_token = "dev-bootstrap-invite-token-do-not-use-in-prod"
+  token_hash = Bcrypt.hash_pwd_salt(raw_token)
+  key_prefix = String.slice(raw_token, 0, 8)
+
+  Codefresh.Repo.insert!(
+    %InviteToken{
+      id: UUID.uuid5(:oid, "Codefresh.Dev.BootstrapInvite"),
+      organization_id: dev_org_id,
+      created_by_user_id: admin_id,
+      token_hash: token_hash,
+      key_prefix: key_prefix,
+      max_uses: nil,
+      uses: 0,
+      revoked: false
+    },
+    on_conflict: :nothing,
+    conflict_target: :id
+  )
+
+  IO.puts("""
+
+  ╔══════════════════════════════════════════════════════════════╗
+  ║  Dev Bootstrap Invite Token                                  ║
+  ║  #{raw_token}  ║
+  ║  Use this token to register additional users in dev mode.   ║
+  ╚══════════════════════════════════════════════════════════════╝
+
+  Dev admin credentials:
+    Email:    admin@starter.local
+    Password: password123
+  """)
+end
+
+seed "dev:admin-magic-link-token" do
+  admin_ref = Codefresh.Users.User.ref(admin_id)
+  context = Noizu.Context.system()
+
+  token =
+    SmartToken.new(%{
+      type: :magic_link,
+      resource: {:bind, :recipient},
+      context: {:bind, :recipient},
+      scope: {:auth, :magic_link},
+      validity_period: {:unbound, {:relative, [{:day, 365}]}},
+      extended_info: %{multi_use: true, limit: 1000}
     })
+    |> SmartToken.bind!(%{recipient: admin_ref}, context)
 
-  set_handle("admin_user_id", user.id)
+  encoded_key = SmartToken.encoded_key(token)
 
-  IO.puts("")
-  IO.puts("[dev-seed] admin user created")
-  IO.puts("  email:    admin@codefre.sh.local")
-  IO.puts("  password: devpassword123")
-end
+  IO.puts("""
 
-requires_seed [{"bootstrap_admin_user", "1"}] do
-  seed {"bootstrap_admin_org", "1"} do
-    {:ok, org} =
-      Organizations.create_organization(%{
-        "slug" => "codefresh-dev",
-        "name" => "CodeFresh Dev"
-      })
+  ╔══════════════════════════════════════════════════════════════╗
+  ║  Dev Magic Link Token (admin)                                ║
+  ╚══════════════════════════════════════════════════════════════╝
 
-    set_handle("admin_org_id", org.id)
-
-    user_id = handle("admin_user_id")
-    user = Accounts.get_user!(user_id)
-
-    {:ok, _membership} =
-      Accounts.create_membership(%{
-        organization_id: org.id,
-        user_id: user.id,
-        role: "owner"
-      })
-
-    IO.puts("[dev-seed] admin org created")
-    IO.puts("  slug: codefresh-dev")
-    IO.puts("  admin is owner")
-  end
-end
-
-requires_seed [{"bootstrap_admin_org", "1"}] do
-  seed {"bootstrap_keith_owner", "1"} do
-    # Project owner — direct login (no invite-token round-trip needed in dev)
-    {:ok, user} =
-      Accounts.register_user(%{
-        "email" => "keith.brings@noizu.com",
-        "password" => "changeme123$!"
-      })
-
-    org_id = handle("admin_org_id")
-
-    {:ok, _membership} =
-      Accounts.create_membership(%{
-        organization_id: org_id,
-        user_id: user.id,
-        role: "owner"
-      })
-
-    set_handle("keith_user_id", user.id)
-
-    IO.puts("")
-    IO.puts("[dev-seed] project owner seeded")
-    IO.puts("  email:    keith.brings@noizu.com")
-    IO.puts("  password: changeme123$!")
-    IO.puts("  org:      codefresh-dev (owner)")
-  end
-end
-
-requires_seed [{"bootstrap_admin_org", "1"}] do
-  seed {"persona_invite_tokens", "1"} do
-    org_id = handle("admin_org_id")
-    admin_id = handle("admin_user_id")
-
-    invites = [
-      {"priya@codefre.sh.local", "editor", "priya-ml-engineer (Senior ML Engineer)"},
-      {"marcus@codefre.sh.local", "admin", "marcus-qa-lead (QA Lead)"},
-      {"yuki@codefre.sh.local", "editor", "yuki-red-teamer (Red Teamer)"},
-      {"alex@codefre.sh.local", "viewer", "alex-oss-maintainer (OSS)"},
-      {"sofia@codefre.sh.local", "viewer", "sofia-product-manager (PM)"}
-    ]
-
-    IO.puts("")
-    IO.puts("[dev-seed] persona invite tokens (expire in 30 days):")
-    IO.puts("  POST /api/v1/auth/register with {user: {email, password}, invite_token: <token>}")
-
-    for {email, role, label} <- invites do
-      {:ok, _invite, raw_token} =
-        Accounts.create_invite_token(%{
-          organization_id: org_id,
-          email: email,
-          role: role,
-          invited_by_user_id: admin_id,
-          expires_at:
-            DateTime.utc_now()
-            |> DateTime.add(30 * 24 * 3600, :second)
-            |> DateTime.truncate(:second),
-          metadata: %{"persona" => label}
-        })
-
-      IO.puts("")
-      IO.puts("  #{label}")
-      IO.puts("    email: #{email}   role: #{role}")
-      IO.puts("    token: #{raw_token}")
-    end
-
-    IO.puts("")
-  end
-end
-
-requires_seed [{"bootstrap_admin_org", "1"}] do
-  seed {"open_dev_invite", "1"} do
-    # Multi-use, email-unbound, one-year expiry — for ad-hoc local experimentation
-    org_id = handle("admin_org_id")
-    admin_id = handle("admin_user_id")
-
-    {:ok, _invite, raw_token} =
-      Accounts.create_invite_token(%{
-        organization_id: org_id,
-        role: "editor",
-        invited_by_user_id: admin_id,
-        max_uses: 100,
-        expires_at:
-          DateTime.utc_now()
-          |> DateTime.add(365 * 24 * 3600, :second)
-          |> DateTime.truncate(:second),
-        metadata: %{"kind" => "dev-open"}
-      })
-
-    IO.puts("[dev-seed] open dev invite (role=editor, max_uses=100, 1 year):")
-    IO.puts("    #{raw_token}")
-    IO.puts("")
-  end
+  Token: #{encoded_key}
+  URL:   http://localhost:3000/auth/verify?token=#{encoded_key}
+  """)
 end

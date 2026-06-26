@@ -33,7 +33,7 @@ defmodule Codefresh.Runs.Run do
     field :cost_estimate_usd, :decimal
     field :cost_cap_usd, :decimal
 
-    belongs_to :organization, Codefresh.Organizations.Organization
+    belongs_to :organization, Codefresh.Schema.Organizations.Organization
     belongs_to :script_version, Codefresh.Scripts.ScriptVersion
     belongs_to :agent_version, Codefresh.Agents.AgentVersion
 

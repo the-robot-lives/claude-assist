@@ -25,7 +25,7 @@ defmodule Codefresh.Review.BranchPromotion do
     field :target_kind, :string, default: "script_version"
     field :inserted_at, :utc_datetime, virtual: false
 
-    belongs_to :organization, Codefresh.Organizations.Organization
+    belongs_to :organization, Codefresh.Schema.Organizations.Organization
     belongs_to :source_freeball_node, Codefresh.Runs.FreeballNode
     belongs_to :source_script_version, Codefresh.Scripts.ScriptVersion
     belongs_to :target_script_version, Codefresh.Scripts.ScriptVersion

@@ -30,7 +30,11 @@ PORT_MAP := \
   robots-unite.com=8088 \
   therobotknows.com=8089 \
   therobotlives.com=8090 \
-  therobotmakes.com=8091
+  therobotmakes.com=8091 \
+  therobotplans.com=8092 \
+  noizu.com=8093 \
+  tobornalp.com=8094 \
+  foryou.therobotlives.com=8095
 
 # ── Redis DB assignment ──────────────────────────────────────────
 REDIS_DB_MAP := \
@@ -45,7 +49,11 @@ REDIS_DB_MAP := \
   robots-unite.com=8 \
   therobotknows.com=9 \
   therobotlives.com=10 \
-  therobotmakes.com=11
+  therobotmakes.com=11 \
+  therobotplans.com=12 \
+  noizu.com=13 \
+  tobornalp.com=14 \
+  foryou.therobotlives.com=15
 
 # ── Slug derivation ─────────────────────────────────────────────
 SLUG_MAP := \
@@ -60,7 +68,11 @@ SLUG_MAP := \
   robots-unite.com=robots_unite \
   therobotknows.com=therobotknows \
   therobotlives.com=therobotlives \
-  therobotmakes.com=therobotmakes
+  therobotmakes.com=therobotmakes \
+  therobotplans.com=therobotplans \
+  noizu.com=noizu_site \
+  tobornalp.com=tobornalp \
+  foryou.therobotlives.com=foryou
 
 PROJECT_SLUG = $(or $(patsubst $(PROJECT_DIR)=%,%,$(filter $(PROJECT_DIR)=%,$(SLUG_MAP))),starter)
 REDIS_DB     = $(or $(patsubst $(PROJECT_DIR)=%,%,$(filter $(PROJECT_DIR)=%,$(REDIS_DB_MAP))),0)
@@ -77,6 +89,11 @@ FRONTEND_BUILD_ARGS = \
 # ── Dev compose shorthand ──────────────────────────────────────
 DEV_COMPOSE = docker compose -p $(COMPOSE_NAME) -f docker-compose.yaml -f docker-compose.dev.yaml
 
+IMAGE_MIGRATIONS = $(PROJECT_DIR)/migrations:$(TAG)
+
+HELM_CHART_DIR    = helm/start-app
+HELM_OCI_REGISTRY = oci://ghcr.io/the-robot-lives/charts
+
 .PHONY: help init regen \
 	build build-no-cache build-push \
 	backend backend-no-cache \
@@ -84,8 +101,13 @@ DEV_COMPOSE = docker compose -p $(COMPOSE_NAME) -f docker-compose.yaml -f docker
 	nginx nginx-no-cache \
 	run stop restart logs clean push \
 	run-dev run-dev-d stop-dev logs-dev \
-	dev-setup dev-migrate dev-regen \
-	dev-shell-backend dev-shell-frontend dev-clean
+	dev-setup dev-migrate dev-regen dev-seed \
+	dev-shell-backend dev-shell-frontend dev-clean \
+	sandbox sandbox-no-cache run-sandbox run-sandbox-d \
+	stop-sandbox logs-sandbox sandbox-shell sandbox-clean sandbox-mount \
+	migrate migrate-status migrate-rollback migrate-validate \
+	helm-package helm-publish helm-lint \
+	helm-bump-patch helm-bump-minor helm-bump-major
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z/_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
@@ -184,25 +206,12 @@ stop-dev: ## Stop dev containers
 logs-dev: ## Tail dev container logs
 	$(DEV_COMPOSE) logs -f
 
-dev-setup: ## Run ecto.setup (create + migrate + seed) in dev backend (mix; requires make run-dev)
-	$(DEV_COMPOSE) exec -e PHX_SERVER=false backend mix ecto.setup
+dev-setup: migrate dev-seed ## Run migrations + seeds in dev
 
-dev-seed: ## Run only seeds in dev backend
-	$(DEV_COMPOSE) exec -e PHX_SERVER=false backend mix run priv/repo/seeds.exs
+dev-migrate: migrate ## Run pending Liquibase migrations in dev
 
-dev-migrate: ## Run pending migrations in dev backend
-	$(DEV_COMPOSE) exec -e PHX_SERVER=false backend mix ecto.migrate
-
-dev-reset: ## Drop + recreate + migrate + seed dev DB (destructive)
-	$(DEV_COMPOSE) exec -e PHX_SERVER=false backend mix ecto.reset
-
-prod-migrate: ## Migrate the running prod container (release eval — no mix needed)
-	docker compose -p $(COMPOSE_NAME) exec backend bin/codefresh eval 'Codefresh.Release.migrate()'
-
-prod-seed: ## Seed the running prod container (release eval — no mix needed)
-	docker compose -p $(COMPOSE_NAME) exec backend bin/codefresh eval 'Codefresh.Release.seed()'
-
-prod-setup: prod-migrate prod-seed ## Migrate + seed prod backend (equivalent of ecto.setup for releases)
+dev-seed: ## Run seeds in dev backend
+	$(DEV_COMPOSE) exec backend mix run priv/repo/seeds.exs
 
 dev-regen: ## Regenerate CSS inside dev frontend container
 	$(DEV_COMPOSE) exec frontend npm run regen
@@ -216,6 +225,130 @@ dev-shell-frontend: ## Open shell in frontend container
 dev-clean: ## Remove dev containers and dependency volumes
 	$(DEV_COMPOSE) down -v
 	@echo "Cleaned dev containers and dependency volumes."
+
+# ── Live sandbox ───────────────────────────────────────────────
+
+IMAGE_SANDBOX  = $(REGISTRY)/$(PROJECT_DIR)/sandbox:$(TAG)
+SANDBOX_COMPOSE = docker compose -p $(COMPOSE_NAME) -f docker-compose.yaml -f docker-compose.sandbox.yaml
+
+sandbox: .env ## Build sandbox image (combined frontend+backend+samba)
+	docker buildx build --load -t $(IMAGE_SANDBOX) -f Dockerfile.sandbox .
+
+sandbox-no-cache: .env ## Build sandbox image (no cache)
+	docker buildx build --no-cache --load -t $(IMAGE_SANDBOX) -f Dockerfile.sandbox .
+
+run-sandbox: .env ## Start sandbox (foreground) — Samba :445, frontend :3000, backend :4000
+	$(SANDBOX_COMPOSE) up --build
+
+run-sandbox-d: .env ## Start sandbox (detached)
+	$(SANDBOX_COMPOSE) up --build -d
+	@echo ""
+	@echo "Sandbox running."
+	@echo "  SMB share: smb://localhost:$${SANDBOX_SMB_PORT:-445}/workspace"
+	@echo "  Frontend:  http://localhost:$${SANDBOX_FRONTEND_PORT:-3000}"
+	@echo "  Backend:   http://localhost:$${SANDBOX_BACKEND_PORT:-4000}"
+	@echo ""
+	@echo "Mount (macOS):  make sandbox-mount"
+	@echo "Logs:           make logs-sandbox"
+
+stop-sandbox: ## Stop sandbox containers
+	$(SANDBOX_COMPOSE) down
+
+logs-sandbox: ## Tail sandbox logs
+	$(SANDBOX_COMPOSE) logs -f sandbox
+
+sandbox-shell: ## Open shell in sandbox container
+	$(SANDBOX_COMPOSE) exec sandbox bash
+
+sandbox-clean: ## Remove sandbox containers and volumes
+	$(SANDBOX_COMPOSE) down -v
+	@echo "Cleaned sandbox containers and volumes."
+
+sandbox-mount: ## Mount sandbox workspace via SMB (macOS)
+	@MOUNT_POINT="$${HOME}/sandbox-$(PROJECT_DIR)" && \
+	  mkdir -p "$$MOUNT_POINT" && \
+	  mount_smbfs "//dev:dev@localhost:$${SANDBOX_SMB_PORT:-445}/workspace" "$$MOUNT_POINT" && \
+	  echo "Mounted at $$MOUNT_POINT"
+
+# ── Liquibase migrations ───────────────────────────────────────
+
+migrate: .env ## Run Liquibase migrations (docker sidecar or host CLI)
+	@if command -v liquibase >/dev/null 2>&1; then \
+		echo "Running Liquibase via host CLI..."; \
+		cd backend/db && liquibase update; \
+	else \
+		echo "Running Liquibase via Docker..."; \
+		docker buildx build --load -t $(IMAGE_MIGRATIONS) ./backend/db && \
+		docker run --rm --env-file .env --network lets-go_default $(IMAGE_MIGRATIONS); \
+	fi
+
+migrate-status: .env ## Show pending Liquibase changesets
+	@if command -v liquibase >/dev/null 2>&1; then \
+		cd backend/db && liquibase status; \
+	else \
+		docker buildx build --load -t $(IMAGE_MIGRATIONS) ./backend/db && \
+		docker run --rm --env-file .env --network lets-go_default $(IMAGE_MIGRATIONS) liquibase status; \
+	fi
+
+migrate-rollback: .env ## Roll back last Liquibase changeset
+	@if command -v liquibase >/dev/null 2>&1; then \
+		cd backend/db && liquibase rollback-count 1; \
+	else \
+		docker buildx build --load -t $(IMAGE_MIGRATIONS) ./backend/db && \
+		docker run --rm --env-file .env --network lets-go_default $(IMAGE_MIGRATIONS) liquibase rollback-count 1; \
+	fi
+
+migrate-validate: ## Validate Liquibase changelog YAML
+	@if command -v liquibase >/dev/null 2>&1; then \
+		cd backend/db && liquibase validate; \
+	else \
+		docker buildx build --load -t $(IMAGE_MIGRATIONS) ./backend/db && \
+		docker run --rm $(IMAGE_MIGRATIONS) liquibase validate; \
+	fi
+
+# ── Helm ────────────────────────────────────────────────────────
+
+helm-lint: ## Lint the Helm chart
+	helm lint $(HELM_CHART_DIR)
+
+helm-package: ## Package the Helm chart into a .tgz
+	helm package $(HELM_CHART_DIR)
+	@echo ""
+	@echo "Packaged: $$(ls -t start-app-*.tgz | head -1)"
+
+helm-publish: helm-package ## Package and push chart to OCI registry (ghcr.io)
+	@TGZ=$$(ls -t start-app-*.tgz | head -1) && \
+	  echo "Pushing $$TGZ to $(HELM_OCI_REGISTRY) ..." && \
+	  helm push "$$TGZ" $(HELM_OCI_REGISTRY) && \
+	  echo "" && \
+	  echo "Published: $$TGZ → $(HELM_OCI_REGISTRY)"
+
+helm-bump-patch: ## Bump chart patch version (0.1.0 → 0.1.1)
+	@cd $(HELM_CHART_DIR) && \
+	  VER=$$(grep '^version:' Chart.yaml | awk '{print $$2}') && \
+	  MAJOR=$$(echo $$VER | cut -d. -f1) && \
+	  MINOR=$$(echo $$VER | cut -d. -f2) && \
+	  PATCH=$$(echo $$VER | cut -d. -f3) && \
+	  NEW="$$MAJOR.$$MINOR.$$((PATCH + 1))" && \
+	  sed -i '' "s/^version: .*/version: $$NEW/" Chart.yaml && \
+	  echo "Bumped chart version: $$VER → $$NEW"
+
+helm-bump-minor: ## Bump chart minor version (0.1.0 → 0.2.0)
+	@cd $(HELM_CHART_DIR) && \
+	  VER=$$(grep '^version:' Chart.yaml | awk '{print $$2}') && \
+	  MAJOR=$$(echo $$VER | cut -d. -f1) && \
+	  MINOR=$$(echo $$VER | cut -d. -f2) && \
+	  NEW="$$MAJOR.$$((MINOR + 1)).0" && \
+	  sed -i '' "s/^version: .*/version: $$NEW/" Chart.yaml && \
+	  echo "Bumped chart version: $$VER → $$NEW"
+
+helm-bump-major: ## Bump chart major version (0.1.0 → 1.0.0)
+	@cd $(HELM_CHART_DIR) && \
+	  VER=$$(grep '^version:' Chart.yaml | awk '{print $$2}') && \
+	  MAJOR=$$(echo $$VER | cut -d. -f1) && \
+	  NEW="$$((MAJOR + 1)).0.0" && \
+	  sed -i '' "s/^version: .*/version: $$NEW/" Chart.yaml && \
+	  echo "Bumped chart version: $$VER → $$NEW"
 
 # ── Prerequisite ───────────────────────────────────────────────
 

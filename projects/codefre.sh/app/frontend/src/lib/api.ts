@@ -1,11 +1,12 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "";
 
-// ─── Response shapes ──────────────────────────────────────────────────────
-interface AuthResponse {
-  user: { id: string; email: string };
-  organization?: { id: string; slug: string; name: string };
-  access_token: string;
-  refresh_token: string;
+export interface User {
+  id: string;
+  email: string;
+  user_name?: string;
+  handle?: string;
+  status?: string;
+  verified?: boolean;
 }
 
 export interface Organization {
@@ -16,6 +17,29 @@ export interface Organization {
   created_at?: string;
 }
 
+interface AuthResponse {
+  user: User;
+  access_token: string;
+  refresh_token: string;
+  organizations?: Organization[];
+}
+
+interface MagicLinkResponse {
+  message: string;
+  dev_link?: string;
+}
+
+interface OtpResponse {
+  message: string;
+  dev_code?: string;
+}
+
+interface PasswordResetResponse {
+  message: string;
+  dev_code?: string;
+}
+
+// ─── Product-domain types (codefresh) ──────────────────────────────────
 export interface Prompt {
   id: string;
   slug: string;
@@ -212,7 +236,6 @@ export interface ScriptValidationResult {
   errors?: string[];
 }
 
-// ─── Agents ───────────────────────────────────────────────────────────────────
 export type AgentAdapter = "openai" | "anthropic" | "langchain" | "http" | "bedrock" | "vertex";
 
 export interface Agent {
@@ -257,7 +280,6 @@ export interface AgentHealthResult {
   checked_at: string;
 }
 
-// ─── Runs ─────────────────────────────────────────────────────────────────────
 export type RunStatus = "pending" | "running" | "pass" | "warn" | "fail" | "cancelled" | "error";
 
 /** Per-node / per-step verdict reported during a run. */
@@ -318,6 +340,135 @@ export interface RunScore {
   rationale?: string | null;
 }
 
+export type ReviewStatus = "pending" | "claimed" | "resolved";
+
+export interface ReviewItem {
+  id: string;
+  run_id: string;
+  status: ReviewStatus;
+  assignee_id: string | null;
+  assignee_email: string | null;
+  notes: string | null;
+  inserted_at: string;
+  updated_at: string;
+}
+
+export interface Dataset {
+  id: string;
+  name: string;
+  description: string | null;
+  current_version_id: string | null;
+  inserted_at: string;
+}
+
+export type CaptureStatus = "pending" | "reviewed" | "promoted";
+
+export interface Capture {
+  id: string;
+  run_id: string;
+  status: CaptureStatus;
+  dataset_id: string | null;
+  inserted_at: string;
+}
+
+export interface OtelSpan {
+  span_id: string;
+  trace_id: string;
+  parent_span_id: string | null;
+  run_id: string | null;
+  name: string;
+  start_time_unix_nano: string;
+  end_time_unix_nano: string;
+  duration_ns: number;
+  status_code: string;
+  attributes: Record<string, unknown>;
+}
+
+export interface OtelLog {
+  id: string;
+  trace_id: string | null;
+  span_id: string | null;
+  run_id: string | null;
+  severity_text: string;
+  body: string | null;
+  attributes: Record<string, unknown>;
+  timestamp: string;
+}
+
+export interface OtelSamplingPolicy {
+  id: string;
+  name: string;
+  sample_rate: number;
+  enabled: boolean;
+}
+
+export const WEBHOOK_EVENTS = [
+  "run.completed",
+  "run.failed",
+  "review.approved",
+  "review.rejected",
+  "dataset.published",
+] as const;
+export type WebhookEvent = (typeof WEBHOOK_EVENTS)[number];
+
+export interface WebhookPayload {
+  url: string;
+  events: WebhookEvent[];
+  enabled: boolean;
+}
+
+export interface Webhook extends WebhookPayload {
+  id: string;
+  inserted_at: string;
+}
+
+export interface WebhookDelivery {
+  id: string;
+  webhook_id: string;
+  event: string;
+  status: "delivered" | "failed" | "dead";
+  response_status: number | null;
+  attempted_at: string;
+  next_retry_at: string | null;
+}
+
+export interface SsoConfig {
+  idp_metadata_url: string;
+  entity_id: string;
+  certificate: string;
+}
+
+let refreshPromise: Promise<string | null> | null = null;
+
+async function attemptRefresh(): Promise<string | null> {
+  const refreshToken = typeof window !== "undefined" ? localStorage.getItem("refresh_token") : null;
+  if (!refreshToken) return null;
+
+  try {
+    const res = await fetch(`${API_URL}/api/v1/auth/refresh`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ refresh_token: refreshToken }),
+    });
+
+    if (!res.ok) return null;
+
+    const data = await res.json();
+    if (data.access_token) {
+      localStorage.setItem("access_token", data.access_token);
+      if (data.refresh_token) {
+        localStorage.setItem("refresh_token", data.refresh_token);
+      }
+      // Sync cookie for middleware
+      document.cookie = `access_token=${data.access_token}; path=/; max-age=${60 * 60}; SameSite=Lax`;
+      return data.access_token;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const token = typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
 
@@ -329,6 +480,41 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
       ...options.headers,
     },
   });
+
+  if (res.status === 401 && token && !path.includes("/auth/refresh")) {
+    // Deduplicate concurrent refresh attempts
+    if (!refreshPromise) {
+      refreshPromise = attemptRefresh().finally(() => { refreshPromise = null; });
+    }
+
+    const newToken = await refreshPromise;
+    if (newToken) {
+      // Retry the original request with the new token
+      const retryRes = await fetch(`${API_URL}${path}`, {
+        ...options,
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${newToken}`,
+          ...options.headers,
+        },
+      });
+
+      if (!retryRes.ok) {
+        const body = await retryRes.json().catch(() => ({}));
+        throw new Error(body.error || body.errors?.email?.[0] || `Request failed: ${retryRes.status}`);
+      }
+
+      return retryRes.json();
+    }
+
+    // Refresh failed — clear tokens and redirect to login
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("refresh_token");
+    document.cookie = "access_token=; path=/; max-age=0; SameSite=Lax";
+    if (typeof window !== "undefined") {
+      window.location.href = "/login";
+    }
+  }
 
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
@@ -353,26 +539,89 @@ export const api = {
     });
   },
 
+  requestMagicLink(email: string) {
+    return request<MagicLinkResponse>("/api/v1/auth/magic-link", {
+      method: "POST",
+      body: JSON.stringify({ email }),
+    });
+  },
+
+  verifyMagicLink(token: string) {
+    return request<AuthResponse>("/api/v1/auth/magic-link/verify", {
+      method: "POST",
+      body: JSON.stringify({ token }),
+    });
+  },
+
+  requestOtpLogin(email: string) {
+    return request<OtpResponse>("/api/v1/auth/otp-login", {
+      method: "POST",
+      body: JSON.stringify({ email }),
+    });
+  },
+
+  verifyOtpLogin(email: string, code: string) {
+    return request<AuthResponse>("/api/v1/auth/otp-login/verify", {
+      method: "POST",
+      body: JSON.stringify({ email, code }),
+    });
+  },
+
+  requestPasswordReset(email: string) {
+    return request<PasswordResetResponse>("/api/v1/auth/password-reset", {
+      method: "POST",
+      body: JSON.stringify({ email }),
+    });
+  },
+
+  verifyPasswordReset(email: string, code: string, newPassword: string) {
+    return request<{ message: string }>("/api/v1/auth/password-reset/verify", {
+      method: "POST",
+      body: JSON.stringify({ email, code, new_password: newPassword }),
+    });
+  },
+
   refresh(refreshToken: string) {
-    return request<{ access_token: string }>("/api/v1/auth/refresh", {
+    return request<{ access_token: string; refresh_token?: string }>("/api/v1/auth/refresh", {
       method: "POST",
       body: JSON.stringify({ refresh_token: refreshToken }),
     });
   },
 
-  me() {
-    return request<{ user: { id: string; email: string } }>("/api/v1/auth/me");
+  ssoProviders() {
+    return request<{ providers: string[] }>("/api/v1/auth/sso/providers");
   },
 
-  // ─── Organizations ─────────────────────────────────────────────────────
+  ssoExchange(code: string) {
+    return request<AuthResponse>("/api/v1/auth/sso/exchange", {
+      method: "POST",
+      body: JSON.stringify({ code }),
+    });
+  },
+
+  me() {
+    return request<{ user: User }>("/api/v1/auth/me");
+  },
+
+  getProfile() {
+    return request<{ user: User }>("/api/v1/users/me");
+  },
+
+  updateProfile(data: { user_name?: string; email?: string; current_password?: string; new_password?: string }) {
+    return request<{ user: User }>("/api/v1/users/me", {
+      method: "PATCH",
+      body: JSON.stringify({ user: data }),
+    });
+  },
+
   listOrganizations() {
     return request<{ organizations: Organization[] }>("/api/v1/organizations");
   },
 
-  createOrganization(name: string, slug?: string) {
+  createOrganization(slug: string, name: string) {
     return request<{ organization: Organization }>("/api/v1/organizations", {
       method: "POST",
-      body: JSON.stringify({ organization: { name, ...(slug && { slug }) } }),
+      body: JSON.stringify({ organization: { slug, name } }),
     });
   },
 
@@ -380,7 +629,78 @@ export const api = {
     return request<{ organization: Organization }>(`/api/v1/organizations/${id}`);
   },
 
-  // ─── Prompts (US-009/010/011/048/050/114/115) ─────────────────────────
+  sendVerificationEmail() {
+    return request<{ message: string; dev_link?: string }>("/api/v1/auth/verify-email", {
+      method: "POST",
+    });
+  },
+
+  verifyEmail(token: string) {
+    return request<{ message: string }>("/api/v1/auth/verify-email/confirm", {
+      method: "POST",
+      body: JSON.stringify({ token }),
+    });
+  },
+
+  listMembers(orgId: string) {
+    return request<{ members: Array<{ id: string; user_id: string; email: string; user_name: string; role: string; joined_at: string }> }>(`/api/v1/organizations/${orgId}/members`);
+  },
+
+  addMember(orgId: string, email: string, role: string) {
+    return request<{ members: Array<{ id: string; user_id: string; email: string; user_name: string; role: string; joined_at: string }> }>(`/api/v1/organizations/${orgId}/members`, {
+      method: "POST",
+      body: JSON.stringify({ email, role }),
+    });
+  },
+
+  updateMemberRole(orgId: string, memberId: string, role: string) {
+    return request<{ members: Array<{ id: string; user_id: string; email: string; user_name: string; role: string; joined_at: string }> }>(`/api/v1/organizations/${orgId}/members/${memberId}`, {
+      method: "PATCH",
+      body: JSON.stringify({ role }),
+    });
+  },
+
+  removeMember(orgId: string, memberId: string) {
+    return request<{ message: string }>(`/api/v1/organizations/${orgId}/members/${memberId}`, {
+      method: "DELETE",
+    });
+  },
+
+  presignUpload(filename: string, contentType: string) {
+    return request<{ upload_url: string; key: string }>("/api/v1/media/presign", {
+      method: "POST",
+      body: JSON.stringify({ filename, content_type: contentType }),
+    });
+  },
+
+  getDownloadUrl(key: string) {
+    return request<{ download_url: string }>("/api/v1/media/download", {
+      method: "POST",
+      body: JSON.stringify({ key }),
+    });
+  },
+
+  adminListUsers(page = 1, perPage = 50) {
+    return request<{ users: Array<{ id: string; email: string; user_name: string; status: string; verified: boolean; admin: boolean; created_at: string }>; total: number; page: number; per_page: number }>(`/api/v1/admin/users?page=${page}&per_page=${perPage}`);
+  },
+
+  adminShowUser(id: string) {
+    return request<{ user: User & { admin: boolean; created_at: string } }>(`/api/v1/admin/users/${id}`);
+  },
+
+  adminListOrganizations(page = 1, perPage = 50) {
+    return request<{ organizations: Array<{ id: string; slug: string; name: string; created_at: string }>; total: number; page: number; per_page: number }>(`/api/v1/admin/organizations?page=${page}&per_page=${perPage}`);
+  },
+
+  adminShowOrganization(id: string) {
+    return request<{ organization: { id: string; slug: string; name: string; created_at: string }; members: Array<{ id: string; email: string; role: string }> }>(`/api/v1/admin/organizations/${id}`);
+  },
+
+  getFeatureFlags() {
+    return request<{ features: string[] }>("/api/v1/config/features");
+  },
+
+  // ─── Prompts ──────────────────────────────────────────────────────────
   listPrompts(orgId: string, q?: string) {
     const qs = q ? `?q=${encodeURIComponent(q)}` : "";
     return request<{ prompts: Prompt[] }>(
@@ -433,7 +753,7 @@ export const api = {
     );
   },
 
-  // ─── Rubrics (US-033/034/056/057/058/119/120) ─────────────────────────
+  // ─── Rubrics ──────────────────────────────────────────────────────────
   listRubrics(orgId: string) {
     return request<{ rubrics: Rubric[] }>(`/api/v1/organizations/${orgId}/rubrics`);
   },
@@ -508,7 +828,7 @@ export const api = {
     );
   },
 
-  // ─── Personas (US-035/036/051/053/055) ─────────────────────────────────
+  // ─── Personas ─────────────────────────────────────────────────────────
   listPersonas(orgId: string, tone?: string) {
     const qs = tone ? `?tone=${encodeURIComponent(tone)}` : "";
     return request<{ personas: Persona[] }>(
@@ -589,7 +909,7 @@ export const api = {
     );
   },
 
-  // ─── Scripts (US-001-008) ─────────────────────────────────────────────
+  // ─── Scripts ──────────────────────────────────────────────────────────
   listScripts(orgId: string) {
     return request<{ scripts: Script[] }>(`/api/v1/organizations/${orgId}/scripts`);
   },
@@ -772,7 +1092,7 @@ export const api = {
     return res.text();
   },
 
-  // ─── Agents (US-012-014, US-061-065) ──────────────────────────────────────
+  // ─── Agents ───────────────────────────────────────────────────────────
   listAgents(orgId: string) {
     return request<{ agents: Agent[] }>(`/api/v1/organizations/${orgId}/agents`);
   },
@@ -820,7 +1140,7 @@ export const api = {
     );
   },
 
-  // ─── Runs (US-025-028) ────────────────────────────────────────────────────
+  // ─── Runs ─────────────────────────────────────────────────────────────
   listRuns(
     orgId: string,
     filters?: { script_id?: string; persona_id?: string; status?: RunStatus; date_from?: string; date_to?: string; page?: number },
@@ -856,11 +1176,6 @@ export const api = {
     );
   },
 
-  /**
-   * Run detail. Returns the run record plus the script graph snapshot at the
-   * version the run executed against (nodes + edges), so the forge view can
-   * recolor the live graph without another round trip.
-   */
   getRun(orgId: string, runId: string) {
     return request<{
       run: Run;
@@ -895,7 +1210,7 @@ export const api = {
     );
   },
 
-  // ─── Review queue (Stage 8) ───────────────────────────────────────────────
+  // ─── Review queue ─────────────────────────────────────────────────────
   listReviewQueue(
     orgId: string,
     filters?: { status?: ReviewStatus; assignee?: string; page?: number },
@@ -936,7 +1251,7 @@ export const api = {
     );
   },
 
-  // ─── Datasets (Stage 9) ───────────────────────────────────────────────────
+  // ─── Datasets ─────────────────────────────────────────────────────────
   listDatasets(orgId: string) {
     return request<{ datasets: Dataset[] }>(`/api/v1/organizations/${orgId}/datasets`);
   },
@@ -973,7 +1288,7 @@ export const api = {
     );
   },
 
-  // ─── OTel (Stage 10) ──────────────────────────────────────────────────────
+  // ─── OTel ─────────────────────────────────────────────────────────────
   searchOtelSpans(
     orgId: string,
     query: { run_id?: string; attributes?: Record<string, unknown>; page?: number },
@@ -1000,7 +1315,7 @@ export const api = {
     );
   },
 
-  // ─── Webhooks (Stage 11) ──────────────────────────────────────────────────
+  // ─── Webhooks ─────────────────────────────────────────────────────────
   listWebhooks(orgId: string) {
     return request<{ webhooks: Webhook[] }>(`/api/v1/organizations/${orgId}/webhooks`);
   },
@@ -1039,7 +1354,7 @@ export const api = {
     );
   },
 
-  // ─── SSO / Enterprise settings (Stage 12) ─────────────────────────────────
+  // ─── SSO / Enterprise settings ────────────────────────────────────────
   getSsoConfig(orgId: string) {
     return request<{ sso_config: SsoConfig | null }>(
       `/api/v1/organizations/${orgId}/sso-config`,
@@ -1057,110 +1372,3 @@ export const api = {
     return `${API_URL}/api/v1/organizations/${orgId}/audit-log.csv`;
   },
 };
-
-// Demo mode override — synchronously replaces api methods with mock data.
-// NEXT_PUBLIC_* vars are inlined at build time; dead code is tree-shaken in prod.
-if (process.env.NEXT_PUBLIC_DEMO_MODE === 'true') {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const { demoApi } = require('./demo-api');
-  Object.assign(api, demoApi);
-}
-
-// ─── Stage 8–12 shapes ────────────────────────────────────────────────────────
-export type ReviewStatus = "pending" | "claimed" | "resolved";
-
-export interface ReviewItem {
-  id: string;
-  run_id: string;
-  status: ReviewStatus;
-  assignee_id: string | null;
-  assignee_email: string | null;
-  notes: string | null;
-  inserted_at: string;
-  updated_at: string;
-}
-
-export interface Dataset {
-  id: string;
-  name: string;
-  description: string | null;
-  current_version_id: string | null;
-  inserted_at: string;
-}
-
-export type CaptureStatus = "pending" | "reviewed" | "promoted";
-
-export interface Capture {
-  id: string;
-  run_id: string;
-  status: CaptureStatus;
-  dataset_id: string | null;
-  inserted_at: string;
-}
-
-export interface OtelSpan {
-  span_id: string;
-  trace_id: string;
-  parent_span_id: string | null;
-  run_id: string | null;
-  name: string;
-  start_time_unix_nano: string;
-  end_time_unix_nano: string;
-  duration_ns: number;
-  status_code: string;
-  attributes: Record<string, unknown>;
-}
-
-export interface OtelLog {
-  id: string;
-  trace_id: string | null;
-  span_id: string | null;
-  run_id: string | null;
-  severity_text: string;
-  body: string | null;
-  attributes: Record<string, unknown>;
-  timestamp: string;
-}
-
-export interface OtelSamplingPolicy {
-  id: string;
-  name: string;
-  sample_rate: number;
-  enabled: boolean;
-}
-
-export const WEBHOOK_EVENTS = [
-  "run.completed",
-  "run.failed",
-  "review.approved",
-  "review.rejected",
-  "dataset.published",
-] as const;
-export type WebhookEvent = (typeof WEBHOOK_EVENTS)[number];
-
-export interface WebhookPayload {
-  url: string;
-  events: WebhookEvent[];
-  enabled: boolean;
-}
-
-export interface Webhook extends WebhookPayload {
-  id: string;
-  inserted_at: string;
-}
-
-export interface WebhookDelivery {
-  id: string;
-  webhook_id: string;
-  event: string;
-  status: "delivered" | "failed" | "dead";
-  response_status: number | null;
-  attempted_at: string;
-  next_retry_at: string | null;
-}
-
-export interface SsoConfig {
-  idp_metadata_url: string;
-  entity_id: string;
-  certificate: string;
-}

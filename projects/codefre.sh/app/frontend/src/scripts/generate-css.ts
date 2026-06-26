@@ -2,7 +2,7 @@ import { execSync } from "child_process";
 import path from "path";
 
 const STARTER_ROOT = path.resolve(__dirname, "../..");
-const PKG_DIR = path.join(STARTER_ROOT, "node_modules", "@the-robot-lives", "styleguide");
+const PKG_DIR = path.join(STARTER_ROOT, "node_modules", "@noizu", "styleguide");
 
 execSync("npx tsx src/generate.ts", {
   cwd: PKG_DIR,

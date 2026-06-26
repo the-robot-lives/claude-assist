@@ -20,7 +20,7 @@ defmodule Codefresh.Enterprise.SsoConfig do
     field :metadata, :map, default: %{}
     field :role_mapping, :map, default: %{}
 
-    belongs_to :organization, Codefresh.Organizations.Organization
+    belongs_to :organization, Codefresh.Schema.Organizations.Organization
 
     timestamps(type: :utc_datetime)
   end

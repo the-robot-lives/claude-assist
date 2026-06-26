@@ -38,7 +38,7 @@ defmodule Codefresh.Webhooks.Webhook do
     field :event_filters, {:array, :string}, default: []
     field :active, :boolean, default: true
 
-    belongs_to :organization, Codefresh.Organizations.Organization
+    belongs_to :organization, Codefresh.Schema.Organizations.Organization
     belongs_to :created_by, Codefresh.Accounts.User, foreign_key: :created_by_user_id
 
     has_many :deliveries, Codefresh.Webhooks.WebhookDelivery

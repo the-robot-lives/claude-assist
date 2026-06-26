@@ -1,4 +1,8 @@
 defmodule Codefresh.Release do
+  @moduledoc """
+  Schema migrations are handled by Liquibase (see backend/db/).
+  This module provides seed running for releases.
+  """
   @app :codefresh
 
   def migrate do
@@ -14,28 +18,14 @@ defmodule Codefresh.Release do
     {:ok, _, _} = Ecto.Migrator.with_repo(repo, &Ecto.Migrator.run(&1, :down, to: version))
   end
 
-  @doc """
-  Run the environment-appropriate seed file inside a running release.
-  Invoke via: `bin/codefresh eval 'Codefresh.Release.seed()'`
-  """
-  def seed(env \\ "dev") do
+  def seed do
     load_app()
 
     for repo <- repos() do
-      {:ok, _, _} = Ecto.Migrator.with_repo(repo, fn _repo ->
-        seed_file(env)
-      end)
-    end
-  end
-
-  defp seed_file(env) do
-    path = Path.join([:code.priv_dir(@app), "repo", "seeds", "#{env}-seeds.exs"])
-
-    if File.exists?(path) do
-      Code.eval_file(path)
-      :ok
-    else
-      raise "seed file not found: #{path}"
+      {:ok, _, _} =
+        Ecto.Migrator.with_repo(repo, fn _repo ->
+          Code.eval_file(Path.join([:code.priv_dir(@app), "repo", "seeds.exs"]))
+        end)
     end
   end
 

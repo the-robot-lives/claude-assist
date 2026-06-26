@@ -26,7 +26,7 @@ defmodule Codefresh.Runs.Score do
     field :scored_at, :utc_datetime
 
     belongs_to :run_step, Codefresh.Runs.RunStep
-    belongs_to :organization, Codefresh.Organizations.Organization
+    belongs_to :organization, Codefresh.Schema.Organizations.Organization
     belongs_to :expectation, Codefresh.Scripts.Expectation
     belongs_to :freeball_expectation, Codefresh.Runs.FreeballExpectation
     belongs_to :rubric_version, Codefresh.Rubrics.RubricVersion

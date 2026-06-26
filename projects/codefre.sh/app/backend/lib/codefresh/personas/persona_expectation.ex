@@ -31,7 +31,7 @@ defmodule Codefresh.Personas.PersonaExpectation do
     # NOTE: Codefresh.Scripts.ScriptNode schema ships in Stage 3; we belong_to it by
     # raw column for now so this module doesn't force a Stage 3 dependency.
     field :script_node_id, Ecto.UUID
-    belongs_to :organization, Codefresh.Organizations.Organization
+    belongs_to :organization, Codefresh.Schema.Organizations.Organization
     belongs_to :rubric_version, Codefresh.Rubrics.RubricVersion
 
     timestamps(type: :utc_datetime, updated_at: false)

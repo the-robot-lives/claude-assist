@@ -10,6 +10,3 @@ npm-debug.log*
 *.tsbuildinfo
 next-env.d.ts
 src/app/design-system.generated.css
-cypress/screenshots/
-cypress/videos/
-cypress/downloads/

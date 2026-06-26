@@ -21,7 +21,7 @@ defmodule Codefresh.Scripts.ScriptVersion do
     field :checksum, :binary
 
     belongs_to :script, Codefresh.Scripts.Script
-    belongs_to :organization, Codefresh.Organizations.Organization
+    belongs_to :organization, Codefresh.Schema.Organizations.Organization
     belongs_to :root_node, Codefresh.Scripts.ScriptNode, foreign_key: :root_node_id
     belongs_to :published_by, Codefresh.Accounts.User, foreign_key: :published_by_user_id
 

@@ -17,7 +17,7 @@ defmodule Codefresh.Scripts.NodeComment do
     field :resolved_at, :utc_datetime
 
     belongs_to :script_node, Codefresh.Scripts.ScriptNode
-    belongs_to :organization, Codefresh.Organizations.Organization
+    belongs_to :organization, Codefresh.Schema.Organizations.Organization
     belongs_to :author, Codefresh.Accounts.User, foreign_key: :author_user_id
     belongs_to :parent_comment, Codefresh.Scripts.NodeComment, foreign_key: :parent_comment_id
     belongs_to :resolved_by, Codefresh.Accounts.User, foreign_key: :resolved_by_user_id

@@ -22,7 +22,7 @@ defmodule Codefresh.Datasets.DatasetEntry do
     field :notes, :string
 
     belongs_to :dataset_version, Codefresh.Datasets.DatasetVersion
-    belongs_to :organization, Codefresh.Organizations.Organization
+    belongs_to :organization, Codefresh.Schema.Organizations.Organization
 
     timestamps(type: :utc_datetime, updated_at: false)
   end

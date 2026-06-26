@@ -1,11 +1,11 @@
-import { loadConfig, loadConfigRaw, loadPageSections, loadAllPageSections, listThemes, loadAllConfigs } from "@the-robot-lives/styleguide/css-gen";
-import { loadBranding, loadAllBrandings } from "@the-robot-lives/styleguide/css-gen";
-import { generateCSSSections } from "@the-robot-lives/styleguide/css-gen";
-import { ThemeConfigProvider } from "@the-robot-lives/styleguide/viewer";
-import { ThemeAwareSections } from "@the-robot-lives/styleguide/viewer";
-import { PageContent } from "@the-robot-lives/styleguide/viewer";
-import { ShellChrome } from "@the-robot-lives/styleguide/viewer";
-import { LayoutBar } from "@the-robot-lives/styleguide/viewer";
+import { loadConfig, loadConfigRaw, loadPageSections, loadAllPageSections, listThemes, loadAllConfigs } from "@noizu/styleguide/css-gen";
+import { loadBranding, loadAllBrandings } from "@noizu/styleguide/css-gen";
+import { generateCSSSections } from "@noizu/styleguide/css-gen";
+import { ThemeConfigProvider } from "@noizu/styleguide/viewer";
+import { ThemeAwareSections } from "@noizu/styleguide/viewer";
+import { PageContent } from "@noizu/styleguide/viewer";
+import { ShellChrome } from "@noizu/styleguide/viewer";
+import { LayoutBar } from "@noizu/styleguide/viewer";
 import fs from "fs";
 import path from "path";
 

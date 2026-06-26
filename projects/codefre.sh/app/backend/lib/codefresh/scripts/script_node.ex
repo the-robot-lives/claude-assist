@@ -24,7 +24,7 @@ defmodule Codefresh.Scripts.ScriptNode do
     field :metadata, :map, default: %{}
 
     belongs_to :script_version, Codefresh.Scripts.ScriptVersion
-    belongs_to :organization, Codefresh.Organizations.Organization
+    belongs_to :organization, Codefresh.Schema.Organizations.Organization
 
     belongs_to :prompt_version, Codefresh.Prompts.PromptVersion, foreign_key: :prompt_version_id
 

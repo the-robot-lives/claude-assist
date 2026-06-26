@@ -1,27 +1,27 @@
-# syntax=docker/dockerfile:1.7
 ARG NODE_VERSION=22-alpine
 
-FROM node:${NODE_VERSION} AS build
+FROM node:${NODE_VERSION} AS deps
 RUN apk add --no-cache gettext
 WORKDIR /app
-COPY package.json ./
-COPY package-lock.jso[n] ./
-COPY .npmrc.template ./
-RUN --mount=type=cache,target=/root/.npm \
-    --mount=type=secret,id=github_token \
-    GITHUB_TOKEN=$(cat /run/secrets/github_token) \
+COPY package.json package-lock.json* .npmrc.template ./
+RUN --mount=type=secret,id=npm_token \
+    --mount=type=cache,target=/root/.npm \
+    NPM_TOKEN=$(cat /run/secrets/npm_token) \
     envsubst < .npmrc.template > .npmrc && \
-    ([ -f package-lock.json ] && npm ci || npm install) && \
+    npm ci && \
     rm -f .npmrc
+
+FROM node:${NODE_VERSION} AS build
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
 ARG NEXT_PUBLIC_API_URL
 ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
 
-RUN --mount=type=cache,target=/app/.next/cache \
-    npm run build
+RUN npm run build
 
-FROM node:${NODE_VERSION} AS runtime
+FROM node:${NODE_VERSION} AS production
 WORKDIR /app
 
 ENV NODE_ENV=production
@@ -34,6 +34,7 @@ RUN addgroup --system --gid 1001 nodejs && \
 COPY --from=build --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=build --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=build --chown=nextjs:nodejs /app/public ./public
+COPY --chown=nextjs:nodejs docker-entrypoint.sh ./
 
 USER nextjs
 
@@ -42,4 +43,4 @@ EXPOSE 3000
 HEALTHCHECK --interval=15s --timeout=3s --start-period=10s --retries=3 \
   CMD wget -qO- http://localhost:3000/ || exit 1
 
-CMD ["node", "server.js"]
+CMD ["sh", "docker-entrypoint.sh"]

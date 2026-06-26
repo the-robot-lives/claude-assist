@@ -1,133 +1,349 @@
 defmodule CodefreshWeb.AuthController do
   use CodefreshWeb, :controller
 
-  alias Codefresh.Accounts
   alias Codefresh.Guardian
+  alias Codefresh.Organizations
 
-  # ──────────────────────────────────────────────────────────────────────────
-  # Register (invite-gated)
-  # ──────────────────────────────────────────────────────────────────────────
+  def register(conn, %{"invite_token" => raw_token, "user" => user_params}) do
+    with {:ok, invite} <- Organizations.find_active_invite_by_raw_token(raw_token),
+         {:ok, {user, _credential}} <-
+           Codefresh.Users.register(
+             %{
+               user_name: user_params["user_name"] || user_params["email"],
+               name: %{
+                 first: user_params["first_name"] || "",
+                 last: user_params["last_name"] || ""
+               },
+               email: user_params["email"],
+               password: user_params["password"]
+             },
+             Noizu.Context.system(),
+             []
+           ),
+         {:ok, session} <- create_session_for_user(user),
+         {:ok, access_token, _} <-
+           Guardian.encode_and_sign(session, %{}, token_type: "access", ttl: {1, :hour}),
+         {:ok, refresh_token, %{"jti" => refresh_jti}} <-
+           Guardian.encode_and_sign(session, %{}, token_type: "refresh", ttl: {7, :day}) do
+      if invite.organization_id do
+        Codefresh.Authz.ScopedMemberships.add_member(
+          "organization", invite.organization_id, user.id, "viewer"
+        )
+      end
 
-  def register(conn, %{"user" => user_params, "invite_token" => raw_token})
-      when is_binary(raw_token) and raw_token != "" do
-    case Accounts.register_user_with_invite(user_params, raw_token) do
-      {:ok, %{user: user, organization: org}} ->
-        {:ok, access_token, _claims} =
-          Guardian.encode_and_sign(user, %{}, token_type: "access", ttl: {1, :hour})
+      Organizations.increment_invite_uses(invite)
+      Codefresh.Auth.TokenStore.store_refresh_jti(refresh_jti)
+      Codefresh.Events.dispatch(:user_registered, %{user_id: user.id, email: user.email})
 
-        {:ok, refresh_token, _claims} =
-          Guardian.encode_and_sign(user, %{}, token_type: "refresh", ttl: {7, :day})
+      orgs = Organizations.list_user_organizations(user.id)
 
-        conn
-        |> put_status(:created)
-        |> json(%{
-          user: %{id: user.id, email: user.email},
-          organization: %{id: org.id, slug: org.slug, name: org.name},
-          access_token: access_token,
-          refresh_token: refresh_token
-        })
+      conn
+      |> put_status(:created)
+      |> json(%{
+        user: serialize_user(user),
+        organizations: orgs,
+        access_token: access_token,
+        refresh_token: refresh_token
+      })
+    else
+      {:error, :invalid_token} ->
+        conn |> put_status(:unauthorized) |> json(%{error: "Invalid or expired invite token"})
 
-      {:error, :invalid_invite_token} ->
-        unauthorized(conn, "Invalid invite token")
+      {:error, changeset} when is_struct(changeset, Ecto.Changeset) ->
+        conn |> put_status(:unprocessable_entity) |> json(%{errors: format_changeset_errors(changeset)})
 
-      {:error, :invite_inactive} ->
-        unauthorized(conn, "Invite token is expired, revoked, or fully redeemed")
-
-      {:error, :invite_email_mismatch} ->
-        unauthorized(conn, "Invite is bound to a different email address")
-
-      {:error, :email_required} ->
-        conn
-        |> put_status(:unprocessable_entity)
-        |> json(%{error: "Email required — this invite is bound to a specific address"})
-
-      {:error, :org_not_found} ->
-        conn
-        |> put_status(:unprocessable_entity)
-        |> json(%{error: "The organization referenced by this invite no longer exists"})
-
-      {:error, %Ecto.Changeset{} = changeset} ->
-        conn
-        |> put_status(:unprocessable_entity)
-        |> json(%{errors: format_changeset_errors(changeset)})
+      {:error, reason} ->
+        conn |> put_status(:unprocessable_entity) |> json(%{error: to_string(reason)})
     end
   end
 
-  def register(conn, %{"user" => _user_params}) do
-    conn
-    |> put_status(:bad_request)
-    |> json(%{error: "invite_token required for signup"})
-  end
-
   def register(conn, _params) do
-    conn
-    |> put_status(:bad_request)
-    |> json(%{error: "Malformed request: expected {user, invite_token}"})
+    conn |> put_status(:bad_request) |> json(%{error: "invite_token is required"})
   end
-
-  # ──────────────────────────────────────────────────────────────────────────
-  # Login / refresh / me (unchanged behavior)
-  # ──────────────────────────────────────────────────────────────────────────
 
   def login(conn, %{"email" => email, "password" => password}) do
-    case Accounts.authenticate_user(email, password) do
-      {:ok, user} ->
-        {:ok, access_token, _claims} =
-          Guardian.encode_and_sign(user, %{}, token_type: "access", ttl: {1, :hour})
+    case Codefresh.Users.Credentials.authenticate({:login, {email, password}}, Noizu.Context.system(), []) do
+      {:ok, session} ->
+        {:ok, access_token, _} =
+          Guardian.encode_and_sign(session, %{}, token_type: "access", ttl: {1, :hour})
 
-        {:ok, refresh_token, _claims} =
-          Guardian.encode_and_sign(user, %{}, token_type: "refresh", ttl: {7, :day})
+        {:ok, refresh_token, %{"jti" => refresh_jti}} =
+          Guardian.encode_and_sign(session, %{}, token_type: "refresh", ttl: {7, :day})
+
+        Codefresh.Auth.TokenStore.store_refresh_jti(refresh_jti)
+        user = resolve_user_from_session(session)
+        orgs = Organizations.list_user_organizations(user.id)
 
         conn
         |> put_status(:ok)
         |> json(%{
-          user: %{id: user.id, email: user.email},
+          user: serialize_user(user),
+          organizations: orgs,
           access_token: access_token,
           refresh_token: refresh_token
         })
 
       {:error, :invalid_credentials} ->
-        unauthorized(conn, "Invalid email or password")
+        conn |> put_status(:unauthorized) |> json(%{error: "Invalid email or password"})
+
+      {:error, {:login, :invalid_credentials}} ->
+        conn |> put_status(:unauthorized) |> json(%{error: "Invalid email or password"})
+
+      {:error, :invalid_email} ->
+        conn |> put_status(:unprocessable_entity) |> json(%{error: "Invalid email format"})
+
+      {:error, :invalid_password} ->
+        conn |> put_status(:unprocessable_entity) |> json(%{error: "Password too short"})
+    end
+  end
+
+  def request_magic_link(conn, %{"email" => email}) do
+    frontend_url = Application.get_env(:codefresh, :frontend_url, "http://localhost:3000")
+
+    case Codefresh.Auth.SmartTokenAuth.request_magic_link(email) do
+      {:ok, %{encoded_key: encoded_key, user: _user}} ->
+        magic_link = "#{frontend_url}/auth/verify?token=#{encoded_key}"
+        Codefresh.Auth.SmartTokenEmail.send_magic_link(email, magic_link)
+
+        response = %{message: "If an account exists with that email, a magic link has been sent."}
+
+        response =
+          if Application.get_env(:codefresh, :dev_routes) do
+            Map.put(response, :dev_link, magic_link)
+          else
+            response
+          end
+
+        conn |> put_status(:ok) |> json(response)
+
+      {:error, :not_found} ->
+        conn
+        |> put_status(:ok)
+        |> json(%{message: "If an account exists with that email, a magic link has been sent."})
+    end
+  end
+
+  def verify_magic_link(conn, %{"token" => token_key}) do
+    case Codefresh.Auth.SmartTokenAuth.verify_magic_link(token_key, conn) do
+      {:ok, session} ->
+        {:ok, access_token, _} =
+          Guardian.encode_and_sign(session, %{}, token_type: "access", ttl: {1, :hour})
+
+        {:ok, refresh_token, %{"jti" => refresh_jti}} =
+          Guardian.encode_and_sign(session, %{}, token_type: "refresh", ttl: {7, :day})
+
+        Codefresh.Auth.TokenStore.store_refresh_jti(refresh_jti)
+        user = resolve_user_from_session(session)
+        orgs = Organizations.list_user_organizations(user.id)
+
+        conn
+        |> put_status(:ok)
+        |> json(%{
+          user: serialize_user(user),
+          organizations: orgs,
+          access_token: access_token,
+          refresh_token: refresh_token
+        })
+
+      {:error, _reason} ->
+        conn |> put_status(:unauthorized) |> json(%{error: "Invalid or expired magic link"})
+    end
+  end
+
+  def request_otp_login(conn, %{"email" => email}) do
+    case Codefresh.Auth.SmartTokenAuth.request_otp_login(email) do
+      {:ok, %{otp_code: otp_code, user: _user}} ->
+        Codefresh.Auth.SmartTokenEmail.send_otp_login(email, otp_code)
+
+        response = %{message: "If an account exists with that email, a login code has been sent."}
+
+        response =
+          if Application.get_env(:codefresh, :dev_routes) do
+            Map.put(response, :dev_code, otp_code)
+          else
+            response
+          end
+
+        conn |> put_status(:ok) |> json(response)
+
+      {:error, :not_found} ->
+        conn
+        |> put_status(:ok)
+        |> json(%{message: "If an account exists with that email, a login code has been sent."})
+    end
+  end
+
+  def verify_otp_login(conn, %{"email" => email, "code" => code}) do
+    case Codefresh.Auth.SmartTokenAuth.verify_otp_login(email, code, conn) do
+      {:ok, session} ->
+        {:ok, access_token, _} =
+          Guardian.encode_and_sign(session, %{}, token_type: "access", ttl: {1, :hour})
+
+        {:ok, refresh_token, %{"jti" => refresh_jti}} =
+          Guardian.encode_and_sign(session, %{}, token_type: "refresh", ttl: {7, :day})
+
+        Codefresh.Auth.TokenStore.store_refresh_jti(refresh_jti)
+        user = resolve_user_from_session(session)
+        orgs = Organizations.list_user_organizations(user.id)
+
+        conn
+        |> put_status(:ok)
+        |> json(%{
+          user: serialize_user(user),
+          organizations: orgs,
+          access_token: access_token,
+          refresh_token: refresh_token
+        })
+
+      {:error, _reason} ->
+        conn |> put_status(:unauthorized) |> json(%{error: "Invalid or expired code"})
+    end
+  end
+
+  def request_password_reset(conn, %{"email" => email}) do
+    case Codefresh.Auth.SmartTokenAuth.request_password_reset(email) do
+      {:ok, %{otp_code: otp_code, user: _user}} ->
+        Codefresh.Auth.SmartTokenEmail.send_password_reset(email, otp_code)
+
+        response = %{message: "If an account exists with that email, a reset code has been sent."}
+
+        response =
+          if Application.get_env(:codefresh, :dev_routes) do
+            Map.put(response, :dev_code, otp_code)
+          else
+            response
+          end
+
+        conn |> put_status(:ok) |> json(response)
+
+      {:error, :not_found} ->
+        conn
+        |> put_status(:ok)
+        |> json(%{message: "If an account exists with that email, a reset code has been sent."})
+    end
+  end
+
+  def verify_password_reset(conn, %{"email" => email, "code" => code, "new_password" => new_password}) do
+    case Codefresh.Auth.SmartTokenAuth.verify_password_reset(email, code, new_password, conn) do
+      {:ok, _credential} ->
+        conn |> put_status(:ok) |> json(%{message: "Password has been reset. You can now log in."})
+
+      {:error, _reason} ->
+        conn |> put_status(:unauthorized) |> json(%{error: "Invalid or expired code"})
     end
   end
 
   def refresh(conn, %{"refresh_token" => refresh_token}) do
+    alias Codefresh.Auth.TokenStore
+
     case Guardian.decode_and_verify(refresh_token, %{"typ" => "refresh"}) do
       {:ok, claims} ->
-        case Guardian.resource_from_claims(claims) do
-          {:ok, user} ->
-            {:ok, access_token, _claims} =
-              Guardian.encode_and_sign(user, %{}, token_type: "access", ttl: {1, :hour})
+        jti = claims["jti"]
 
-            conn
-            |> put_status(:ok)
-            |> json(%{access_token: access_token})
+        if jti && TokenStore.valid_refresh_jti?(jti) do
+          case Guardian.resource_from_claims(claims) do
+            {:ok, session} ->
+              TokenStore.revoke_refresh_jti(jti)
 
-          {:error, _reason} ->
-            unauthorized(conn, "Invalid refresh token")
+              {:ok, access_token, _} =
+                Guardian.encode_and_sign(session, %{}, token_type: "access", ttl: {1, :hour})
+
+              {:ok, new_refresh_token, %{"jti" => new_jti}} =
+                Guardian.encode_and_sign(session, %{}, token_type: "refresh", ttl: {7, :day})
+
+              TokenStore.store_refresh_jti(new_jti)
+
+              conn
+              |> put_status(:ok)
+              |> json(%{access_token: access_token, refresh_token: new_refresh_token})
+
+            {:error, _} ->
+              conn |> put_status(:unauthorized) |> json(%{error: "Invalid refresh token"})
+          end
+        else
+          conn |> put_status(:unauthorized) |> json(%{error: "Invalid refresh token"})
         end
 
-      {:error, _reason} ->
-        unauthorized(conn, "Invalid refresh token")
+      {:error, _} ->
+        conn |> put_status(:unauthorized) |> json(%{error: "Invalid refresh token"})
     end
   end
 
   def me(conn, _params) do
-    user = Guardian.Plug.current_resource(conn)
+    session = Guardian.Plug.current_resource(conn)
+    user = resolve_user_from_session(session)
+    orgs = Organizations.list_user_organizations(user.id)
 
     conn
     |> put_status(:ok)
-    |> json(%{user: %{id: user.id, email: user.email}})
+    |> json(%{user: serialize_user(user), organizations: orgs})
   end
 
-  # ──────────────────────────────────────────────────────────────────────────
-  # Helpers
-  # ──────────────────────────────────────────────────────────────────────────
+  def send_verification(conn, _params) do
+    session = Guardian.Plug.current_resource(conn)
+    user = resolve_user_from_session(session)
+    frontend_url = Application.get_env(:codefresh, :frontend_url, "http://localhost:3000")
 
-  defp unauthorized(conn, message) do
-    conn
-    |> put_status(:unauthorized)
-    |> json(%{error: message})
+    case Codefresh.Auth.SmartTokenAuth.request_email_verification(user.email) do
+      {:ok, %{encoded_key: encoded_key}} ->
+        verification_link = "#{frontend_url}/auth/verify-email?token=#{encoded_key}"
+        Codefresh.Auth.SmartTokenEmail.send_verification_email(user.email, verification_link)
+
+        response = %{message: "Verification email sent."}
+
+        response =
+          if Application.get_env(:codefresh, :dev_routes) do
+            Map.put(response, :dev_link, verification_link)
+          else
+            response
+          end
+
+        conn |> put_status(:ok) |> json(response)
+
+      {:error, _} ->
+        conn |> put_status(:ok) |> json(%{message: "Verification email sent."})
+    end
+  end
+
+  def verify_email(conn, %{"token" => token_key}) do
+    case Codefresh.Auth.SmartTokenAuth.verify_email_token(token_key) do
+      {:ok, user} ->
+        Codefresh.Events.dispatch(:user_verified, %{user_id: user.id})
+        conn |> put_status(:ok) |> json(%{message: "Email verified successfully."})
+
+      {:error, _} ->
+        conn |> put_status(:unauthorized) |> json(%{error: "Invalid or expired verification link"})
+    end
+  end
+
+  defp create_session_for_user(user) do
+    user_ref = Codefresh.Users.User.ref(user.id)
+    session_entity = %Codefresh.Users.Sessions.UserSession{
+      user: user_ref,
+      status: :active,
+      details: %{}
+    }
+    Codefresh.Users.Sessions.create(session_entity, Noizu.Context.system())
+  end
+
+  defp resolve_user_from_session(%Codefresh.Users.Sessions.UserSession{} = session) do
+    case session.user do
+      {:ref, _, id} ->
+        {:ok, user} = Codefresh.Users.get_user(id, Noizu.Context.system())
+        user
+      %Codefresh.Users.User{} = user -> user
+    end
+  end
+
+  defp serialize_user(user) do
+    %{
+      id: user.id,
+      email: user.email,
+      user_name: user.user_name,
+      handle: user.handle,
+      status: user.status,
+      verified: user.verified
+    }
   end
 
   defp format_changeset_errors(changeset) do

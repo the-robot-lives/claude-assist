@@ -45,7 +45,7 @@ defmodule Codefresh.AutoFlag.Rule do
     field :soft_deleted_at, :utc_datetime
     field :match_count, :integer, default: 0
 
-    belongs_to :organization, Codefresh.Organizations.Organization
+    belongs_to :organization, Codefresh.Schema.Organizations.Organization
 
     timestamps(type: :utc_datetime)
   end

@@ -27,7 +27,7 @@ defmodule Codefresh.Review.ReviewItem do
     field :assigned_at, :utc_datetime
     field :sla_warning_sent_at, :utc_datetime
 
-    belongs_to :organization, Codefresh.Organizations.Organization
+    belongs_to :organization, Codefresh.Schema.Organizations.Organization
     belongs_to :freeball_node, Codefresh.Runs.FreeballNode
     belongs_to :assigned_to_user, Codefresh.Accounts.User, foreign_key: :assigned_to_user_id
 

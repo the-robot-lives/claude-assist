@@ -1,9 +1,11 @@
+start-app*tar.gz
 # Generated secrets
+start-app*tgz
 .env
 .envrc
 backend/.env
 frontend/.env
-
+.npmrc
 # OS
 .DS_Store
 

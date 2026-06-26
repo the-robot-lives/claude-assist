@@ -17,7 +17,7 @@ defmodule Codefresh.Personas.Persona do
     field :description, :string
     field :archived_at, :utc_datetime
 
-    belongs_to :organization, Codefresh.Organizations.Organization
+    belongs_to :organization, Codefresh.Schema.Organizations.Organization
 
     belongs_to :current_version, Codefresh.Personas.PersonaVersion,
       foreign_key: :current_version_id

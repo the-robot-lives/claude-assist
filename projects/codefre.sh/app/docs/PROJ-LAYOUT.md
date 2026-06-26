@@ -9,25 +9,41 @@ start-app/
 ├── frontend/                       # Next.js 15 app → [frontend/docs/PROJ-LAYOUT.md](../frontend/docs/PROJ-LAYOUT.md)
 │   ├── src/                        #   App Router pages, components, theme YAML, auth context
 │   ├── docs/                       #   Frontend architecture + layout docs
-│   └── Dockerfile                  #   Frontend container build
+│   ├── docker-entrypoint.sh        #   Container entrypoint (runtime config injection)
+│   ├── Dockerfile                  #   Production container build
+│   └── Dockerfile.dev              #   Development container build (hot reload)
 ├── backend/                        # Phoenix 1.8 API → [backend/docs/PROJ-LAYOUT.md](../backend/docs/PROJ-LAYOUT.md)
 │   ├── lib/                        #   Elixir source (Starter app + StarterWeb)
 │   ├── config/                     #   Mix config per environment
-│   ├── priv/repo/                  #   Migrations and seeds
+│   ├── priv/repo/                  #   Ecto migrations and seeds
+│   ├── db/                         #   Liquibase schema management
+│   │   ├── changelog/              #     Versioned YAML changesets (000–010)
+│   │   ├── liquibase.properties    #     Liquibase connection config
+│   │   └── Dockerfile              #     Liquibase migration runner image
 │   ├── docs/                       #   Backend architecture + layout docs
-│   └── Dockerfile                  #   Backend container build
+│   ├── Dockerfile                  #   Production container build
+│   └── Dockerfile.dev              #   Development container build (hot reload)
 ├── nginx/                          # Reverse proxy
 │   ├── nginx.conf                  #   Route: /api/* → backend, /* → frontend
 │   └── Dockerfile                  #   Nginx container build
+├── helm/                           # Kubernetes deployment
+│   └── start-app/                  #   Helm chart (publishable to OCI registry)
+│       ├── Chart.yaml              #     Chart metadata
+│       ├── values.yaml             #     Default values
+│       └── templates/              #     K8s manifests (deployment, service, ingress, migrate-job)
 ├── scripts/                        # Build utilities
 │   └── gen-env.sh                  #   Generates .env files with secrets for all services
 ├── docs/                           # Root documentation
 │   ├── PROJ-LAYOUT.md              #   This file
-│   └── PROJ-LAYOUT.summary.md     #   Tree-only quick reference
+│   ├── PROJ-LAYOUT.summary.md     #   Tree-only quick reference
+│   ├── PROJ-ARCH.md                #   Architecture documentation
+│   └── PROJ-ARCH.summary.md       #   Architecture quick reference
 ├── .env.example                    # Environment template — copy and configure
 ├── .envrc                          # direnv — run `direnv allow`
+├── .tool-versions                  # asdf/mise versions (Elixir, Erlang, Node.js, Java, CMake)
 ├── .gitignore                      # Git ignore rules
-├── docker-compose.yaml             # Service definitions (nginx, backend, frontend)
+├── docker-compose.yaml             # Production service definitions (nginx, backend, frontend)
+├── docker-compose.dev.yaml         # Development overrides (hot reload, volume mounts)
 └── Makefile                        # Build + lifecycle commands
 ```
 
@@ -37,8 +53,8 @@ start-app/
 |------|--------|
 | `.env` | Run `make init` to generate from `.env.example` with real secrets |
 | `.envrc` | Run `direnv allow` |
+| `.tool-versions` | Run `mise install` or `asdf install` (Elixir 1.19, Erlang 28, Node 22) |
 | `frontend/.npmrc` | Copy from `frontend/.npmrc.template`, add GitHub Packages token |
-| `backend/.tool-versions` | Run `asdf install` to match Elixir/Erlang versions |
 
 ## Make Targets
 

@@ -40,7 +40,7 @@ All live in `src/config/theme-style-guide/`:
 
 ## generate-css.ts
 
-The script (`src/scripts/generate-css.ts`) delegates to the `@the-robot-lives/styleguide` package's `generate.ts`, passing three env vars:
+The script (`src/scripts/generate-css.ts`) delegates to the `@noizu/styleguide` package's `generate.ts`, passing three env vars:
 
 - `STYLEGUIDE_CONFIG_ROOT` → `src/config/`
 - `STYLEGUIDE_OUTPUT` → `src/app/design-system.generated.css`

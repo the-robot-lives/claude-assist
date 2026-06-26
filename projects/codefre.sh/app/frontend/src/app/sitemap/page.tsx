@@ -1,5 +1,5 @@
-import { loadConfig, loadPageSections, listThemes } from "@the-robot-lives/styleguide/css-gen";
-import { loadBranding } from "@the-robot-lives/styleguide/css-gen";
+import { loadConfig, loadPageSections, listThemes } from "@noizu/styleguide/css-gen";
+import { loadBranding } from "@noizu/styleguide/css-gen";
 import Script from "next/script";
 
 export default function SitemapPage() {

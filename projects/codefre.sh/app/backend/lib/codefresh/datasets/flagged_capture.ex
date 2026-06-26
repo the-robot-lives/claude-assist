@@ -33,7 +33,7 @@ defmodule Codefresh.Datasets.FlaggedCapture do
     field :agent_response, :map, default: %{}
     field :captured_attributes, :map, default: %{}
 
-    belongs_to :organization, Codefresh.Organizations.Organization
+    belongs_to :organization, Codefresh.Schema.Organizations.Organization
     belongs_to :flagged_by, Codefresh.Accounts.User, foreign_key: :flagged_by_user_id
 
     # Promotion pins — populated on promote actions (US-108 / US-109).

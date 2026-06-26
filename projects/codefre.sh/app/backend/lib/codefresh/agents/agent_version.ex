@@ -41,7 +41,7 @@ defmodule Codefresh.Agents.AgentVersion do
     field :model_tier, :string
 
     belongs_to :agent, Codefresh.Agents.Agent
-    belongs_to :organization, Codefresh.Organizations.Organization
+    belongs_to :organization, Codefresh.Schema.Organizations.Organization
     belongs_to :published_by, Codefresh.Accounts.User, foreign_key: :published_by_user_id
 
     timestamps(type: :utc_datetime, updated_at: false)

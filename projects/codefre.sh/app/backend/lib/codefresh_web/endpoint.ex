@@ -1,6 +1,10 @@
 defmodule CodefreshWeb.Endpoint do
   use Phoenix.Endpoint, otp_app: :codefresh
 
+  socket "/socket", CodefreshWeb.UserSocket,
+    websocket: [timeout: 45_000],
+    longpoll: false
+
   if code_reloading? do
     plug Phoenix.CodeReloader
     plug Phoenix.Ecto.CheckRepoStatus, otp_app: :codefresh
@@ -8,6 +12,7 @@ defmodule CodefreshWeb.Endpoint do
 
   plug CodefreshWeb.Plugs.CORS
   plug Plug.RequestId
+  plug CodefreshWeb.Plugs.OtelLoggerMetadata
   plug Plug.Telemetry, event_prefix: [:phoenix, :endpoint]
 
   plug Plug.Parsers,

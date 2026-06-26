@@ -21,7 +21,7 @@ defmodule Codefresh.Scripts.ScriptEdge do
     field :label, :string
 
     belongs_to :script_version, Codefresh.Scripts.ScriptVersion
-    belongs_to :organization, Codefresh.Organizations.Organization
+    belongs_to :organization, Codefresh.Schema.Organizations.Organization
     belongs_to :from_node, Codefresh.Scripts.ScriptNode, foreign_key: :from_node_id
     belongs_to :to_node, Codefresh.Scripts.ScriptNode, foreign_key: :to_node_id
 

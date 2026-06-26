@@ -32,7 +32,7 @@ defmodule Codefresh.Webhooks.WebhookDelivery do
     field :inserted_at, :utc_datetime
 
     belongs_to :webhook, Codefresh.Webhooks.Webhook
-    belongs_to :organization, Codefresh.Organizations.Organization
+    belongs_to :organization, Codefresh.Schema.Organizations.Organization
   end
 
   def max_retries, do: @max_retries

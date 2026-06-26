@@ -31,7 +31,7 @@ defmodule Codefresh.Runs.FreeballNode do
     field :learning_examples, :map
 
     belongs_to :run, Codefresh.Runs.Run
-    belongs_to :organization, Codefresh.Organizations.Organization
+    belongs_to :organization, Codefresh.Schema.Organizations.Organization
     belongs_to :parent_script_node, Codefresh.Scripts.ScriptNode
     belongs_to :parent_freeball_node, __MODULE__, foreign_key: :parent_freeball_node_id
 

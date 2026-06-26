@@ -18,7 +18,7 @@ defmodule Codefresh.Results.DashboardVersion do
     field :layout, :map, default: %{}
 
     belongs_to :dashboard, Codefresh.Results.Dashboard
-    belongs_to :organization, Codefresh.Organizations.Organization
+    belongs_to :organization, Codefresh.Schema.Organizations.Organization
 
     belongs_to :published_by, Codefresh.Accounts.User,
       foreign_key: :published_by_user_id

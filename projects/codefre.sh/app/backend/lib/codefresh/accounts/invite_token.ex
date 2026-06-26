@@ -24,7 +24,7 @@ defmodule Codefresh.Accounts.InviteToken do
     # never persisted.
     field :raw_token, :string, virtual: true, redact: true
 
-    belongs_to :organization, Codefresh.Organizations.Organization
+    belongs_to :organization, Codefresh.Schema.Organizations.Organization
     belongs_to :invited_by, Codefresh.Accounts.User, foreign_key: :invited_by_user_id
 
     timestamps(type: :utc_datetime)

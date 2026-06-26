@@ -22,7 +22,7 @@ defmodule Codefresh.Personas.PersonaVersion do
     field :checksum, :binary
 
     belongs_to :persona, Codefresh.Personas.Persona
-    belongs_to :organization, Codefresh.Organizations.Organization
+    belongs_to :organization, Codefresh.Schema.Organizations.Organization
 
     belongs_to :system_prompt_version, Codefresh.Prompts.PromptVersion,
       foreign_key: :system_prompt_version_id

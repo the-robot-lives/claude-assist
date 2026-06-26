@@ -1,70 +1,78 @@
 defmodule CodefreshWeb.OrganizationController do
   use CodefreshWeb, :controller
 
-  alias Codefresh.Organizations
   alias Codefresh.Guardian
-
-  action_fallback CodefreshWeb.FallbackController
+  alias Codefresh.Organizations
 
   def index(conn, _params) do
-    user = Guardian.Plug.current_resource(conn)
-    orgs = Organizations.list_user_organizations(user)
+    session = Guardian.Plug.current_resource(conn)
+    user = resolve_user(session)
+    orgs = Organizations.list_user_organizations(user.id)
 
-    json(conn, %{
-      organizations:
-        Enum.map(orgs, fn %{organization: o, role: role} ->
-          %{id: o.id, slug: o.slug, name: o.name, role: role}
-        end)
-    })
+    conn |> put_status(:ok) |> json(%{organizations: orgs})
   end
 
   def create(conn, %{"organization" => org_params}) do
-    user = Guardian.Plug.current_resource(conn)
-    attrs = derive_slug_if_missing(org_params)
+    session = Guardian.Plug.current_resource(conn)
+    user = resolve_user(session)
 
-    case Organizations.create_organization_with_owner(attrs, user) do
-      {:ok, %{organization: org}} ->
+    case Organizations.create_organization_with_owner(
+           %{slug: org_params["slug"], name: org_params["name"]},
+           user.id
+         ) do
+      {:ok, org} ->
         conn
         |> put_status(:created)
-        |> json(%{organization: %{id: org.id, slug: org.slug, name: org.name, role: "owner"}})
+        |> json(%{organization: %{id: org.id, slug: org.slug, name: org.name}})
 
-      {:error, %Ecto.Changeset{} = cs} ->
+      {:error, changeset} when is_struct(changeset, Ecto.Changeset) ->
         conn
         |> put_status(:unprocessable_entity)
-        |> json(%{errors: CodefreshWeb.ChangesetJSON.errors(cs)})
-    end
-  end
+        |> json(%{errors: format_errors(changeset)})
 
-  def create(conn, _params) do
-    conn
-    |> put_status(:bad_request)
-    |> json(%{error: "Expected {organization: {name, slug?}}"})
+      {:error, reason} ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> json(%{error: to_string(reason)})
+    end
   end
 
   def show(conn, %{"id" => id}) do
-    user = Guardian.Plug.current_resource(conn)
+    session = Guardian.Plug.current_resource(conn)
+    user = resolve_user(session)
 
-    with {:ok, role} <- Organizations.authorize(user, id, "viewer"),
-         org when not is_nil(org) <- Organizations.get_organization(id) do
-      json(conn, %{organization: %{id: org.id, slug: org.slug, name: org.name, role: role}})
-    else
-      nil -> send_resp(conn, 404, "")
-      {:error, :not_a_member} -> send_resp(conn, 404, "")
-      {:error, :forbidden} -> send_resp(conn, 403, "")
+    case Codefresh.Authz.authorize(user.id, "organization", id, "viewer") do
+      {:ok, _membership} ->
+        case Organizations.get_organization(id, Noizu.Context.system()) do
+          {:ok, org} ->
+            conn |> put_status(:ok) |> json(%{organization: %{id: org.id, slug: org.slug, name: org.name}})
+
+          _ ->
+            conn |> put_status(:not_found) |> json(%{error: "Organization not found"})
+        end
+
+      {:error, :not_a_member} ->
+        conn |> put_status(:forbidden) |> json(%{error: "Not a member of this organization"})
+
+      {:error, :insufficient_role} ->
+        conn |> put_status(:forbidden) |> json(%{error: "Insufficient permissions"})
     end
   end
 
-  defp derive_slug_if_missing(%{"slug" => s} = attrs) when is_binary(s) and s != "", do: attrs
+  defp resolve_user(%Codefresh.Users.Sessions.UserSession{} = session) do
+    case session.user do
+      {:ref, _, id} ->
+        {:ok, user} = Codefresh.Users.get_user(id, Noizu.Context.system())
+        user
+      %Codefresh.Users.User{} = user -> user
+    end
+  end
 
-  defp derive_slug_if_missing(attrs) do
-    name = attrs["name"] || ""
-
-    slug =
-      name
-      |> String.downcase()
-      |> String.replace(~r/[^a-z0-9]+/, "-")
-      |> String.trim("-")
-
-    Map.put(attrs, "slug", slug)
+  defp format_errors(changeset) do
+    Ecto.Changeset.traverse_errors(changeset, fn {msg, opts} ->
+      Regex.replace(~r"%{(\w+)}", msg, fn _, key ->
+        opts |> Keyword.get(String.to_existing_atom(key), key) |> to_string()
+      end)
+    end)
   end
 end

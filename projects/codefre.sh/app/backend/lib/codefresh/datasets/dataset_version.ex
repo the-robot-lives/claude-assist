@@ -20,7 +20,7 @@ defmodule Codefresh.Datasets.DatasetVersion do
     field :checksum, :binary
 
     belongs_to :dataset, Codefresh.Datasets.Dataset
-    belongs_to :organization, Codefresh.Organizations.Organization
+    belongs_to :organization, Codefresh.Schema.Organizations.Organization
 
     belongs_to :parent_version, Codefresh.Datasets.DatasetVersion,
       foreign_key: :parent_version_id

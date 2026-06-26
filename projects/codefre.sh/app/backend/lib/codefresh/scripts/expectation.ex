@@ -27,7 +27,7 @@ defmodule Codefresh.Scripts.Expectation do
     field :metadata, :map, default: %{}
 
     belongs_to :script_node, Codefresh.Scripts.ScriptNode
-    belongs_to :organization, Codefresh.Organizations.Organization
+    belongs_to :organization, Codefresh.Schema.Organizations.Organization
     belongs_to :rubric_version, Codefresh.Rubrics.RubricVersion
 
     timestamps(type: :utc_datetime, updated_at: false)

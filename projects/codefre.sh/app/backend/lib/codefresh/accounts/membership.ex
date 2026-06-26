@@ -10,7 +10,7 @@ defmodule Codefresh.Accounts.Membership do
   schema "memberships" do
     field :role, :string
 
-    belongs_to :organization, Codefresh.Organizations.Organization
+    belongs_to :organization, Codefresh.Schema.Organizations.Organization
     belongs_to :user, Codefresh.Accounts.User
 
     timestamps(type: :utc_datetime)

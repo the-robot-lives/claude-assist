@@ -15,7 +15,7 @@ defmodule Codefresh.Runs.RunPersona do
   schema "run_personas" do
     belongs_to :run, Codefresh.Runs.Run
     belongs_to :persona_version, Codefresh.Personas.PersonaVersion
-    belongs_to :organization, Codefresh.Organizations.Organization
+    belongs_to :organization, Codefresh.Schema.Organizations.Organization
 
     timestamps(type: :utc_datetime, updated_at: false)
   end

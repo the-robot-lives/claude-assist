@@ -31,7 +31,7 @@ defmodule Codefresh.MixProject do
       {:ecto_sql, "~> 3.13"},
       {:postgrex, ">= 0.0.0"},
       {:phoenix_live_dashboard, "~> 0.8.3"},
-      {:swoosh, "~> 1.16"},
+      {:noizu_sendgrid, "~> 2.1.0"},
       {:req, "~> 0.5"},
       {:telemetry_metrics, "~> 1.0"},
       {:telemetry_poller, "~> 1.0"},
@@ -42,14 +42,25 @@ defmodule Codefresh.MixProject do
       {:guardian, "~> 2.3"},
       {:bcrypt_elixir, "~> 3.0"},
 
+      # SSO / OAuth
+      {:openid_connect, "~> 1.0"},
+      {:samly, "~> 1.4"},
+      {:ueberauth, "~> 0.10"},
+      {:ueberauth_google, "~> 0.12"},
+      {:ueberauth_facebook, "~> 0.10"},
+      {:ueberauth_github, "~> 0.8"},
+      # {:ueberauth_linkedin, "~> 0.3"}, # incompatible oauth2 dep — needs replacement
+
+
       # Noizu
       {:noizu_labs_entities, "~> 0.3.0"},
       {:semaphore, "~> 1.0"},
       {:seed_helper, "~> 0.1.1"},
+      {:smart_token, "~> 0.1.3"},
 
       # GenAI
       {:genai, "~> 0.3.0"},
-      # {:ex_llama, "~> 0.2.0"},
+      #{:ex_llama, "~> 0.2.0"},
 
       # Routing
       {:syn, "~> 3.3"},
@@ -61,28 +72,32 @@ defmodule Codefresh.MixProject do
       {:ecto_psql_extras, "~> 0.8.1"},
       {:pgvector, "~> 0.3.0"},
 
-      # Background jobs (Stage 0 / Stage 5 runner)
-      {:oban, "~> 2.17"},
+      # Rate Limiting
+      {:hammer, "~> 6.2"},
 
-      # OpenTelemetry instrumentation (Stage 0 / Stage 10)
-      {:opentelemetry, "~> 1.5"},
-      {:opentelemetry_api, "~> 1.4"},
-      {:opentelemetry_exporter, "~> 1.8"},
+      # Storage
+      {:ex_aws, "~> 2.5"},
+      {:ex_aws_s3, "~> 2.5"},
+
+      # Image Processing
+      {:vix, "~> 0.31"},
+
+      # Background Jobs
+      {:oban, "~> 2.18"},
+
+      # Observability
+      {:opentelemetry, "~> 1.4"},
+      {:opentelemetry_api, "~> 1.3"},
+      {:opentelemetry_exporter, "~> 1.7"},
       {:opentelemetry_phoenix, "~> 2.0"},
-      {:opentelemetry_bandit, "~> 0.2"},
       {:opentelemetry_ecto, "~> 1.2"},
-
-      # OpenAPI spec (Stage 0.5 contract freeze)
-      {:open_api_spex, "~> 3.19"},
+      {:opentelemetry_bandit, "~> 0.2"},
+      {:logger_json, "~> 6.0"},
 
       # Test
-      {:junit_formatter, "~> 3.4", only: [:test]},
-      {:stream_data, "~> 1.0", only: [:test]},
-      {:excoveralls, "~> 0.18", only: [:test]},
+      {:junit_formatter, "~> 3.4", only: [:test]}
 
-      # Dev/test lint — no :only because a transitive dep (noizu_labs_entities)
-      # requires credo at :prod scope.
-      {:credo, "~> 1.7", runtime: false}
+
     ]
   end
 

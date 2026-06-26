@@ -27,7 +27,7 @@ defmodule Codefresh.Otel.Log do
     field :attributes, :map, default: %{}
     field :resource_attributes, :map, default: %{}
 
-    belongs_to :organization, Codefresh.Organizations.Organization
+    belongs_to :organization, Codefresh.Schema.Organizations.Organization
     belongs_to :run, Codefresh.Runs.Run
     belongs_to :run_step, Codefresh.Runs.RunStep
 

@@ -44,7 +44,7 @@ defmodule Codefresh.Otel.Span do
     field :sample_decision_reason, :string
     field :sample_rate, :decimal
 
-    belongs_to :organization, Codefresh.Organizations.Organization
+    belongs_to :organization, Codefresh.Schema.Organizations.Organization
     belongs_to :run, Codefresh.Runs.Run
     belongs_to :run_step, Codefresh.Runs.RunStep
 

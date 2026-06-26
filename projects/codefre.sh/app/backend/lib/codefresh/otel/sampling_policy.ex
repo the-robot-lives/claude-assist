@@ -29,7 +29,7 @@ defmodule Codefresh.Otel.SamplingPolicy do
     field :metadata, :map, default: %{}
     field :enabled, :boolean, default: true
 
-    belongs_to :organization, Codefresh.Organizations.Organization
+    belongs_to :organization, Codefresh.Schema.Organizations.Organization
 
     timestamps(type: :utc_datetime)
   end
