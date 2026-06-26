@@ -1,0 +1,28 @@
+# ═══════════════════════════════════════════════════════════════
+# THEME IDENTITY — style-guide.meta.yaml
+# ═══════════════════════════════════════════════════════════════
+#
+# Identifies this theme to the styleguide engine.
+#
+# FIELDS:
+#   name        — human-readable theme name (shown in theme switcher)
+#   slug        — URL-safe ID, also the data-design-theme attribute value
+#   title       — full display title for the style guide page
+#   description — one-line philosophy or tagline
+#
+# HOW TO MODIFY:
+#   - Change `slug` only if you also update every selector in
+#     css-snippets.yaml and scoped-vars.yaml that references it
+#   - `name` and `title` are display-only — safe to change freely
+#
+# RELATED: branding.yaml (logo, tone, audience, intro section)
+# ═══════════════════════════════════════════════════════════════
+
+# Active in-app direction: "Signal" (Bold Expressive) — neon on near-black.
+# To switch later: copy another design/theme/theme-foryou-*/ values over this
+# dir and update slug + the data-design-theme selectors in css-snippets /
+# scoped-vars / globals to match.
+name: "foryou — Signal"
+slug: "foryou-signal"
+title: "foryou — Signal"
+description: "Neon-on-near-black, hard edges, oversized type. The cross-site signup, turned up."

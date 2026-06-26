@@ -1,0 +1,8 @@
+# Builder — dark-native, precise, developer-facing.
+# Demographic: indie hackers, engineers, technical early adopters
+# Style: Nocturne (dark) × Minimal Tech
+name: "foryou — Builder"
+slug: "foryou-builder"
+title: "foryou — Builder (Dark Tech)"
+description: "Dark-native, precise, low-chrome. For developers embedding the signup widget on technical sites."
+base-theme: "theme-style-guide"

@@ -1,0 +1,80 @@
+# Signal seeds — primary neon magenta, secondary electric cyan, tertiary acid.
+# Zero radius + uppercase + heavy weight for maximum signal.
+vars:
+  groups:
+    - name: "Accent Primaries"
+      vars:
+        red: "#ff1f8e"            # PRIMARY — neon magenta
+        red-light: "rgba(255,31,142,0.12)"
+        red-mid: "rgba(255,31,142,0.24)"
+        blue: "#00e5ff"           # SECONDARY — electric cyan
+        blue-light: "rgba(0,229,255,0.12)"
+        blue-mid: "rgba(0,229,255,0.24)"
+        yellow: "#c6ff00"         # TERTIARY — acid lime
+        yellow-light: "rgba(198,255,0,0.12)"
+        yellow-mid: "rgba(198,255,0,0.28)"
+        brand-red: "#ff1f8e"
+        brand-blue: "#00e5ff"
+        brand-yellow: "#c6ff00"
+
+    - name: Semantic
+      vars:
+        success: "#39ff8b"
+        success-tint: "rgba(57,255,139,0.12)"
+        warning: "#ffd000"
+        warning-tint: "rgba(255,208,0,0.12)"
+        error: "#ff3b5c"
+        error-tint: "rgba(255,59,92,0.12)"
+        info: "#00e5ff"
+        info-tint: "rgba(0,229,255,0.12)"
+
+    - name: Typography
+      vars:
+        font-sans: "'Space Grotesk', -apple-system, sans-serif"
+        font-mono: "'Space Mono', 'Menlo', monospace"
+        font-display: "'Space Grotesk', sans-serif"
+        font-body: "'Space Grotesk', sans-serif"
+        font-decorative: "'Space Mono', monospace"
+
+    - name: Radius
+      vars:
+        radius: "0px"
+        radius-sm: "0px"
+        radius-md: "0px"
+        radius-lg: "0px"
+
+    - name: Buttons
+      vars:
+        btn-font-family: "var(--font-sans)"
+        btn-font-weight: "700"
+        btn-font-size: "13px"
+        btn-letter-spacing: "0.08em"
+        btn-text-transform: "uppercase"
+        btn-background: "var(--red)"
+        btn-color: "#0a0a0f"
+        btn-border-color: "transparent"
+        btn-hover-background: "#ff4da6"
+        btn-outline-background: "transparent"
+        btn-outline-color: "var(--red)"
+
+    - name: Branding
+      vars:
+        branding-logo-font-size: "28px"
+        branding-logo-font-weight: "700"
+        branding-logo-letter-spacing: "-0.04em"
+        branding-logo-text-transform: "uppercase"
+        branding-border: "2px solid var(--red)"
+
+    - name: Cards
+      vars:
+        card-accent-side: "left"
+        card-border-color: "var(--border)"
+
+    - name: "HUI: Focus & Interaction"
+      vars:
+        hui-focus-ring-color: "rgba(255,31,142,0.5)"
+        hui-focus-ring-width: "2px"
+
+    - name: "HUI: Showcase Grid"
+      vars:
+        hui-showcase-accent: "var(--red)"

@@ -1,0 +1,24 @@
+name: "foryou — Signal"
+logo-text: "FORYOU"
+font-url: "https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap"
+
+intent: "Make the signup an event. Neon on black, hard edges, type that shouts. Built to convert the already-excited."
+perception: "Electric, confident, a little dangerous. The drop-page energy of a product launch."
+audience: "Sci-fi early adopters and the TheRobotLives core fanbase — people who hit 'notify me' the second it appears."
+tone: "Loud, declarative, hype-forward. All signal, no apology."
+keywords:
+  - neon
+  - high-contrast
+  - bold
+  - kinetic
+  - launch
+
+intro:
+  title: "foryou — Signal"
+  subtitle: "BOLD EXPRESSIVE • NEON ON BLACK"
+  version: "v0.1.0"
+  date: "2026-06-26"
+  colors:
+    - "var(--red)"
+    - "var(--blue)"
+    - "var(--yellow)"

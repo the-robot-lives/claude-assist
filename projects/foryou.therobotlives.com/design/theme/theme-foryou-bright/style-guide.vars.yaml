@@ -1,0 +1,79 @@
+# Bright seeds — primary coral-pink, secondary violet, tertiary amber.
+# Large radii + soft type for an approachable, friendly feel.
+vars:
+  groups:
+    - name: "Accent Primaries"
+      vars:
+        red: "#ff5c8a"            # PRIMARY — coral pink
+        red-light: "rgba(255,92,138,0.10)"
+        red-mid: "rgba(255,92,138,0.20)"
+        blue: "#7c5cff"           # SECONDARY — friendly violet
+        blue-light: "rgba(124,92,255,0.10)"
+        blue-mid: "rgba(124,92,255,0.20)"
+        yellow: "#ffb020"         # TERTIARY — sunny amber
+        yellow-light: "rgba(255,176,32,0.12)"
+        yellow-mid: "rgba(255,176,32,0.25)"
+        brand-red: "#ff5c8a"
+        brand-blue: "#7c5cff"
+        brand-yellow: "#ffb020"
+
+    - name: Semantic
+      vars:
+        success: "#10b981"
+        success-tint: "rgba(16,185,129,0.12)"
+        warning: "#f59e0b"
+        warning-tint: "rgba(245,158,11,0.12)"
+        error: "#ef4444"
+        error-tint: "rgba(239,68,68,0.12)"
+        info: "#7c5cff"
+        info-tint: "rgba(124,92,255,0.12)"
+
+    - name: Typography
+      vars:
+        font-sans: "'Poppins', -apple-system, sans-serif"
+        font-mono: "'DM Mono', 'Menlo', monospace"
+        font-display: "'Poppins', sans-serif"
+        font-body: "'Poppins', sans-serif"
+        font-decorative: "'Poppins', sans-serif"
+
+    - name: Radius
+      vars:
+        radius: "16px"
+        radius-sm: "10px"
+        radius-md: "16px"
+        radius-lg: "24px"
+
+    - name: Buttons
+      vars:
+        btn-font-family: "var(--font-sans)"
+        btn-font-weight: "600"
+        btn-font-size: "14px"
+        btn-letter-spacing: "0"
+        btn-background: "var(--red)"
+        btn-color: "var(--white)"
+        btn-border-color: "transparent"
+        btn-hover-background: "#ff7aa0"
+        btn-outline-background: "transparent"
+        btn-outline-color: "var(--red)"
+
+    - name: Branding
+      vars:
+        branding-logo-font-size: "26px"
+        branding-logo-font-weight: "700"
+        branding-logo-letter-spacing: "-0.02em"
+        branding-logo-text-transform: "none"
+        branding-border: "none"
+
+    - name: Cards
+      vars:
+        card-accent-side: "top"
+        card-border-color: "var(--gray-200)"
+
+    - name: "HUI: Focus & Interaction"
+      vars:
+        hui-focus-ring-color: "rgba(255,92,138,0.4)"
+        hui-focus-ring-width: "3px"
+
+    - name: "HUI: Showcase Grid"
+      vars:
+        hui-showcase-accent: "var(--red)"

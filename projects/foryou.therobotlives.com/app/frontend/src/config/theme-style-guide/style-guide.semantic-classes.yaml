@@ -1,0 +1,103 @@
+# ═══════════════════════════════════════════════════════════════
+# SEMANTIC CLASSES — style-guide.semantic-classes.yaml
+# ═══════════════════════════════════════════════════════════════
+#
+# Defines named semantic state classes (danger, warning, success,
+# info, primary, brand) with their accent, background, and text
+# color values.
+#
+# HOW IT WORKS:
+#   - Each entry generates a .{class} CSS rule with scoped
+#     --{class}-accent, --{class}-background, --{class}-color vars
+#   - The engine also generates card, badge, and alert variants
+#     using these accent values automatically
+#   - `accent-style` controls border rendering (solid, dashed, etc.)
+#
+# HOW TO MODIFY:
+#   - Change colors: edit the `vars` values under each class
+#   - Add a class: append a `- name:` entry with class, title,
+#     description, accent-style, and vars (accent, background, color)
+#   - Run `npm run regen` after changes
+#
+# RELATED: style-guide.semantic-groups.yaml (viewer grouping labels)
+#          style-guide.vars.yaml (base color tokens referenced here)
+# ═══════════════════════════════════════════════════════════════
+
+semantic-classes:
+  - name: danger
+    class: danger
+    title: "Danger"
+    description: "Destructive actions, error states, irreversible operations"
+    accent-style: solid
+    vars:
+      - name: accent
+        value: "#ff3b5c"
+      - name: background
+        value: "rgba(255,59,92,0.08)"
+      - name: color
+        value: "#ff3b5c"
+
+  - name: warning
+    class: warning
+    title: "Warning"
+    description: "Caution states, attention required, recoverable issues"
+    accent-style: solid
+    vars:
+      - name: accent
+        value: "#ffd000"
+      - name: background
+        value: "rgba(255,208,0,0.08)"
+      - name: color
+        value: "#ffd000"
+
+  - name: success
+    class: success
+    title: "Success"
+    description: "Positive outcomes, confirmed states, completed operations"
+    accent-style: solid
+    vars:
+      - name: accent
+        value: "#39ff8b"
+      - name: background
+        value: "rgba(57,255,139,0.08)"
+      - name: color
+        value: "#39ff8b"
+
+  - name: info
+    class: info
+    title: "Info"
+    description: "Informational states, guidance, system messages"
+    accent-style: solid
+    vars:
+      - name: accent
+        value: "#00e5ff"
+      - name: background
+        value: "rgba(0,229,255,0.08)"
+      - name: color
+        value: "#00e5ff"
+
+  - name: primary
+    class: primary
+    title: "Primary / Black"
+    description: "Primary actions, maximum-weight emphasis, structural elements"
+    accent-style: solid
+    vars:
+      - name: accent
+        value: "#000000"
+      - name: background
+        value: "rgba(0,0,0,0.04)"
+      - name: color
+        value: "#000000"
+
+  - name: brand
+    class: brand
+    title: "Brand / Red"
+    description: "Primary accent — the brand color for CTAs, key actions, and brand moments"
+    accent-style: solid
+    vars:
+      - name: accent
+        value: "#ff1f8e"
+      - name: background
+        value: "rgba(255,31,142,0.08)"
+      - name: color
+        value: "#ff1f8e"

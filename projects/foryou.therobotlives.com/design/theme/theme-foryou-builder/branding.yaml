@@ -1,0 +1,24 @@
+name: "foryou — Builder"
+logo-text: "foryou"
+font-url: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap"
+
+intent: "Get out of the way. A signup and preference surface that feels native inside a developer tool."
+perception: "Competent, fast, no-nonsense. The widget a builder would ship without hesitation."
+audience: "Indie hackers, engineers, and technical early adopters signing up for betas, changelogs, and API access."
+tone: "Direct, terse, technical. Speaks in verbs, not adjectives."
+keywords:
+  - precise
+  - dark
+  - low-chrome
+  - keyboard-first
+  - trustworthy
+
+intro:
+  title: "foryou — Builder"
+  subtitle: "NOCTURNE × MINIMAL TECH • DARK-NATIVE"
+  version: "v0.1.0"
+  date: "2026-06-26"
+  colors:
+    - "var(--red)"
+    - "var(--blue)"
+    - "var(--yellow)"
