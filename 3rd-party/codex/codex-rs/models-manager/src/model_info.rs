@@ -69,6 +69,7 @@ pub fn model_info_from_slug(slug: &str) -> ModelInfo {
         slug: slug.to_string(),
         display_name: slug.to_string(),
         description: None,
+        model_provider: None,
         default_reasoning_level: None,
         supported_reasoning_levels: Vec::new(),
         shell_type: ConfigShellToolType::Default,

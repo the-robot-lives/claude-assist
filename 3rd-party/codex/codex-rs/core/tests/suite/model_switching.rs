@@ -102,6 +102,7 @@ fn test_model_info(
         slug: slug.to_string(),
         display_name: display_name.to_string(),
         description: Some(description.to_string()),
+        model_provider: None,
         default_reasoning_level: Some(ReasoningEffort::Medium),
         supported_reasoning_levels: vec![ReasoningEffortPreset {
             effort: ReasoningEffort::Medium,
@@ -926,6 +927,7 @@ async fn model_switch_to_smaller_model_updates_token_context_window() -> Result<
         slug: large_model_slug.to_string(),
         display_name: "Larger Model".to_string(),
         description: Some("larger context window model".to_string()),
+        model_provider: None,
         default_reasoning_level: Some(ReasoningEffort::Medium),
         supported_reasoning_levels: vec![ReasoningEffortPreset {
             effort: ReasoningEffort::Medium,

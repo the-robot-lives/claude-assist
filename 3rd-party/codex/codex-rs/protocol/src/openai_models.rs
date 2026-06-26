@@ -358,6 +358,9 @@ pub struct ModelInfo {
     pub shell_type: ConfigShellToolType,
     pub visibility: ModelVisibility,
     pub supported_in_api: bool,
+    /// Optional model-provider id to route this model through.
+    #[serde(default, alias = "provider", skip_serializing_if = "Option::is_none")]
+    pub model_provider: Option<String>,
     pub priority: i32,
     #[serde(default)]
     pub additional_speed_tiers: Vec<String>,
@@ -652,6 +655,7 @@ mod tests {
             slug: "test-model".to_string(),
             display_name: "Test Model".to_string(),
             description: None,
+            model_provider: None,
             default_reasoning_level: None,
             supported_reasoning_levels: vec![],
             shell_type: ConfigShellToolType::ShellCommand,
@@ -1008,6 +1012,40 @@ mod tests {
         let model = serde_json::from_value::<ModelInfo>(value).expect("deserialize model info");
 
         assert_eq!(model.multi_agent_version, None);
+    }
+
+    #[test]
+    fn model_info_deserializes_model_provider() {
+        let mut value =
+            serde_json::to_value(test_model(/*spec*/ None)).expect("serialize test model");
+        let object = value
+            .as_object_mut()
+            .expect("model info should be an object");
+        object.insert(
+            "model_provider".to_string(),
+            serde_json::Value::String("noizu".to_string()),
+        );
+
+        let model = serde_json::from_value::<ModelInfo>(value).expect("deserialize model info");
+
+        assert_eq!(model.model_provider.as_deref(), Some("noizu"));
+    }
+
+    #[test]
+    fn model_info_accepts_provider_alias() {
+        let mut value =
+            serde_json::to_value(test_model(/*spec*/ None)).expect("serialize test model");
+        let object = value
+            .as_object_mut()
+            .expect("model info should be an object");
+        object.insert(
+            "provider".to_string(),
+            serde_json::Value::String("noizu".to_string()),
+        );
+
+        let model = serde_json::from_value::<ModelInfo>(value).expect("deserialize model info");
+
+        assert_eq!(model.model_provider.as_deref(), Some("noizu"));
     }
 
     #[test]

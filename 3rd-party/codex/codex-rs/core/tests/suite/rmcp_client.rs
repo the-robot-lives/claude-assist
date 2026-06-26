@@ -1636,6 +1636,7 @@ async fn stdio_image_responses_are_sanitized_for_text_only_model() -> anyhow::Re
                 slug: text_only_model_slug.to_string(),
                 display_name: "RMCP Text Only".to_string(),
                 description: Some("Test model without image input support".to_string()),
+                model_provider: None,
                 default_reasoning_level: None,
                 supported_reasoning_levels: vec![ReasoningEffortPreset {
                     effort: codex_protocol::openai_models::ReasoningEffort::Medium,

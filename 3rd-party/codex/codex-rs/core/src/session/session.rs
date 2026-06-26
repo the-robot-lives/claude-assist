@@ -50,6 +50,8 @@ pub(crate) struct Session {
 #[derive(Clone)]
 pub(crate) struct SessionConfiguration {
     /// Provider identifier ("openai", "openrouter", ...).
+    pub(super) provider_id: String,
+    /// Info needed to make API requests to the current provider.
     pub(super) provider: ModelProviderInfo,
 
     pub(super) collaboration_mode: CollaborationMode,
@@ -177,7 +179,7 @@ impl SessionConfiguration {
     pub(super) fn thread_config_snapshot(&self) -> ThreadConfigSnapshot {
         ThreadConfigSnapshot {
             model: self.collaboration_mode.model().to_string(),
-            model_provider_id: self.original_config_do_not_use.model_provider_id.clone(),
+            model_provider_id: self.provider_id.clone(),
             service_tier: self.service_tier.clone(),
             approval_policy: self.approval_policy.value(),
             approvals_reviewer: self.approvals_reviewer,
@@ -225,6 +227,10 @@ impl SessionConfiguration {
                             }
                         )
                 });
+        if let Some((provider_id, provider)) = updates.model_provider.clone() {
+            next_configuration.provider_id = provider_id;
+            next_configuration.provider = provider;
+        }
         if let Some(collaboration_mode) = updates.collaboration_mode.clone() {
             next_configuration.collaboration_mode = collaboration_mode;
         }
@@ -412,6 +418,7 @@ impl SessionConfiguration {
 
 #[derive(Default, Clone)]
 pub(crate) struct SessionSettingsUpdate {
+    pub(crate) model_provider: Option<(String, ModelProviderInfo)>,
     pub(crate) environments: Option<TurnEnvironmentSelections>,
     pub(crate) workspace_roots: Option<Vec<AbsolutePathBuf>>,
     pub(crate) profile_workspace_roots: Option<Vec<AbsolutePathBuf>>,

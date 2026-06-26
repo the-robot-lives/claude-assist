@@ -108,6 +108,28 @@ fn test_model_client_with_thread_id(
 }
 
 #[tokio::test]
+async fn set_provider_info_changes_resolved_api_provider() -> anyhow::Result<()> {
+    let client = test_model_client(SessionSource::Cli);
+    let initial_setup = client.current_client_setup().await?;
+    assert_eq!(
+        initial_setup.api_provider.base_url,
+        "https://example.com/v1"
+    );
+
+    client.set_provider_info(
+        create_oss_provider_with_base_url("https://inference.noizu.com/v1", WireApi::Responses),
+        /*auth_manager*/ None,
+    );
+
+    let updated_setup = client.current_client_setup().await?;
+    assert_eq!(
+        updated_setup.api_provider.base_url,
+        "https://inference.noizu.com/v1"
+    );
+    Ok(())
+}
+
+#[tokio::test]
 async fn compact_uses_bearer_after_agent_identity_session_fallback() -> anyhow::Result<()> {
     let server = MockServer::start().await;
     let registration_count = Arc::new(AtomicUsize::new(0));
@@ -217,7 +239,7 @@ async fn compact_uses_bearer_after_agent_identity_session_fallback() -> anyhow::
 }
 
 fn test_model_provider() -> SharedModelProvider {
-    test_model_client(SessionSource::Cli).state.provider.clone()
+    test_model_client(SessionSource::Cli).state.provider()
 }
 
 fn test_responses_metadata_for_client(

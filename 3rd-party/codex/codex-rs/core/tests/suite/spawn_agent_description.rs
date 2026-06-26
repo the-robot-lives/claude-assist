@@ -52,6 +52,7 @@ fn test_model_info(
         slug: slug.to_string(),
         display_name: display_name.to_string(),
         description: Some(description.to_string()),
+        model_provider: None,
         default_reasoning_level: Some(default_reasoning_level),
         supported_reasoning_levels,
         shell_type: ConfigShellToolType::ShellCommand,

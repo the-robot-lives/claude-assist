@@ -94,7 +94,20 @@ pub async fn update_thread_settings(
     sub_id: String,
     thread_settings: ThreadSettingsOverrides,
 ) {
-    let updates = thread_settings_update(sess, thread_settings).await;
+    let updates = match thread_settings_update(sess, thread_settings).await {
+        Ok(updates) => updates,
+        Err(message) => {
+            sess.send_event_raw(Event {
+                id: sub_id,
+                msg: EventMsg::Error(ErrorEvent {
+                    message,
+                    codex_error_info: Some(CodexErrorInfo::BadRequest),
+                }),
+            })
+            .await;
+            return;
+        }
+    };
     let msg = match sess.update_settings(updates).await {
         Ok(()) => thread_settings_applied_event(sess).await,
         Err(err) => EventMsg::Error(ErrorEvent {
@@ -108,7 +121,7 @@ pub async fn update_thread_settings(
 async fn thread_settings_update(
     sess: &Session,
     thread_settings: ThreadSettingsOverrides,
-) -> SessionSettingsUpdate {
+) -> Result<SessionSettingsUpdate, String> {
     let ThreadSettingsOverrides {
         environments,
         workspace_roots,
@@ -138,7 +151,25 @@ async fn thread_settings_update(
                 .with_updates(model, effort, /*developer_instructions*/ None)
         }
     };
-    SessionSettingsUpdate {
+    let config = sess.get_config().await;
+    let current_model_provider_id = {
+        let state = sess.state.lock().await;
+        state.session_configuration.provider_id.clone()
+    };
+    let model_info = sess
+        .services
+        .models_manager
+        .get_model_info(
+            collaboration_mode.model(),
+            &config.to_models_manager_config(),
+        )
+        .await;
+    let (model_provider_id, provider) = super::model_provider_from_model_info(&config, &model_info)
+        .map_err(|err| err.to_string())?;
+    let model_provider =
+        (model_provider_id != current_model_provider_id).then_some((model_provider_id, provider));
+    Ok(SessionSettingsUpdate {
+        model_provider,
         environments,
         workspace_roots,
         profile_workspace_roots,
@@ -153,7 +184,7 @@ async fn thread_settings_update(
         service_tier,
         personality,
         ..Default::default()
-    }
+    })
 }
 
 async fn thread_settings_applied_event(sess: &Session) -> EventMsg {
@@ -198,7 +229,20 @@ pub(super) async fn user_input_or_turn_inner(
     };
     let emit_thread_settings_applied = thread_settings != ThreadSettingsOverrides::default();
     let mut updates = if emit_thread_settings_applied {
-        thread_settings_update(sess, thread_settings).await
+        match thread_settings_update(sess, thread_settings).await {
+            Ok(updates) => updates,
+            Err(message) => {
+                sess.send_event_raw(Event {
+                    id: sub_id,
+                    msg: EventMsg::Error(ErrorEvent {
+                        message,
+                        codex_error_info: Some(CodexErrorInfo::BadRequest),
+                    }),
+                })
+                .await;
+                return;
+            }
+        }
     } else {
         SessionSettingsUpdate::default()
     };

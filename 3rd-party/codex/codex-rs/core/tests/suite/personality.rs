@@ -552,6 +552,7 @@ async fn remote_model_friendly_personality_instructions_with_feature() -> anyhow
         slug: remote_slug.to_string(),
         display_name: "Remote default personality test".to_string(),
         description: Some("Remote model with default personality template".to_string()),
+        model_provider: None,
         default_reasoning_level: Some(ReasoningEffort::Medium),
         supported_reasoning_levels: vec![ReasoningEffortPreset {
             effort: ReasoningEffort::Medium,
@@ -667,6 +668,7 @@ async fn user_turn_personality_remote_model_template_includes_update_message() -
         slug: remote_slug.to_string(),
         display_name: "Remote personality test".to_string(),
         description: Some("Remote model with personality template".to_string()),
+        model_provider: None,
         default_reasoning_level: Some(ReasoningEffort::Medium),
         supported_reasoning_levels: vec![ReasoningEffortPreset {
             effort: ReasoningEffort::Medium,

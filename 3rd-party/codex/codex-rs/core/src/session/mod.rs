@@ -44,6 +44,7 @@ use crate::session::turn_context::TurnEnvironment;
 use crate::session_prefix::format_inter_agent_completion_message;
 use crate::skills::SkillRenderSideEffects;
 use crate::skills_load_input_from_config;
+use crate::thread_manager::build_models_manager;
 use crate::turn_metadata::TurnMetadataState;
 use crate::turn_timing::now_unix_timestamp_ms;
 use async_channel::Receiver;
@@ -469,6 +470,35 @@ pub(crate) const SUBMISSION_CHANNEL_CAPACITY: usize = 512;
 const CYBER_VERIFY_URL: &str = "https://chatgpt.com/cyber";
 const CYBER_SAFETY_URL: &str = "https://developers.openai.com/codex/concepts/cyber-safety";
 
+fn model_provider_from_model_info(
+    config: &Config,
+    model_info: &ModelInfo,
+) -> CodexResult<(String, ModelProviderInfo)> {
+    let model_provider_id = model_info
+        .model_provider
+        .as_deref()
+        .unwrap_or(config.model_provider_id.as_str());
+
+    if model_provider_id == config.model_provider_id {
+        return Ok((
+            config.model_provider_id.clone(),
+            config.model_provider.clone(),
+        ));
+    }
+
+    let provider = config
+        .model_providers
+        .get(model_provider_id)
+        .cloned()
+        .ok_or_else(|| {
+            CodexErr::InvalidRequest(format!(
+                "model `{}` references unknown model provider `{model_provider_id}`",
+                model_info.slug
+            ))
+        })?;
+    Ok((model_provider_id.to_string(), provider))
+}
+
 impl Codex {
     /// Spawn a new [`Codex`] and initialize the session.
     pub(crate) async fn spawn(args: CodexSpawnArgs) -> CodexResult<CodexSpawnOk> {
@@ -502,7 +532,7 @@ impl Codex {
             user_instructions,
             installation_id,
             auth_manager,
-            models_manager,
+            mut models_manager,
             environment_manager,
             skills_service,
             plugins_manager,
@@ -558,7 +588,7 @@ impl Codex {
             )
         };
 
-        let config = Arc::new(config);
+        let mut config = Arc::new(config);
         let refresh_strategy = if session_source.is_non_root_agent() {
             codex_models_manager::manager::RefreshStrategy::Offline
         } else {
@@ -595,9 +625,29 @@ impl Codex {
         // 1. config.base_instructions override
         // 2. conversation history => session_meta.base_instructions
         // 3. base_instructions for current model
-        let model_info = models_manager
+        let mut model_info = models_manager
             .get_model_info(model.as_str(), &config.to_models_manager_config())
             .await;
+        let (model_provider_id, model_provider) =
+            model_provider_from_model_info(&config, &model_info)?;
+        if model_provider_id != config.model_provider_id {
+            info!(
+                model = %model,
+                model_provider = %model_provider_id,
+                previous_model_provider = %config.model_provider_id,
+                "selected model requested a different model provider"
+            );
+            let mut rerouted_config = config.as_ref().clone();
+            rerouted_config.model_provider_id = model_provider_id;
+            rerouted_config.model_provider = model_provider;
+            let rerouted_config = Arc::new(rerouted_config);
+            models_manager = build_models_manager(&rerouted_config, Arc::clone(&auth_manager));
+            let _ = models_manager.list_models(refresh_strategy).await;
+            model_info = models_manager
+                .get_model_info(model.as_str(), &rerouted_config.to_models_manager_config())
+                .await;
+            config = rerouted_config;
+        }
         let multi_agent_version =
             resolve_multi_agent_version(&conversation_history, inherited_multi_agent_version);
         config
@@ -631,6 +681,7 @@ impl Codex {
             &model_info,
         );
         let session_configuration = SessionConfiguration {
+            provider_id: config.model_provider_id.clone(),
             provider: config.model_provider.clone(),
             collaboration_mode,
             model_reasoning_summary: config.model_reasoning_summary,
@@ -1487,6 +1538,7 @@ impl Session {
         updates: SessionSettingsUpdate,
     ) -> ConstraintResult<()> {
         let notify_config_contributors = !self.services.extensions.config_contributors().is_empty();
+        let model_provider_update = updates.model_provider.clone();
         let (previous_config, new_config, permission_profile_changed) = {
             let mut state = self.state.lock().await;
             let updated = match state.session_configuration.apply(&updates) {
@@ -1513,6 +1565,12 @@ impl Session {
             state.session_configuration = updated;
             (previous_config, new_config, permission_profile_changed)
         };
+        if let Some((_model_provider_id, model_provider)) = model_provider_update {
+            self.services.model_client.set_provider_info(
+                model_provider,
+                Some(Arc::clone(&self.services.auth_manager)),
+            );
+        }
         self.emit_config_changed_contributors(previous_config.as_ref(), new_config.as_ref());
         if permission_profile_changed {
             self.refresh_managed_network_proxy_for_current_permission_profile()
