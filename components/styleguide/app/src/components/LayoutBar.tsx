@@ -36,11 +36,13 @@ function modifierOf(pl: PageLayout): string {
 }
 
 export function LayoutBar({ pageLayouts, themes }: Props) {
-  const [selected, setSelected] = useState(() => readLayout() || "standard");
-  const [activeTheme, setActiveTheme] = useState(() => readTheme() || "");
+  const [selected, setSelected] = useState("standard");
+  const [activeTheme, setActiveTheme] = useState("");
   const [mode, setMode] = useState<"light" | "dark">("light");
 
   useEffect(() => {
+    const storedLayout = readLayout();
+    if (storedLayout) setSelected(storedLayout);
     const stored = readColorMode();
     if (stored === "dark" || (!stored && document.documentElement.classList.contains("dark"))) {
       setMode("dark");

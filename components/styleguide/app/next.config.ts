@@ -1,14 +1,13 @@
 import type { NextConfig } from "next";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const appDir = path.dirname(fileURLToPath(import.meta.url));
 
 const nextConfig: NextConfig = {
   output: "export",
-  turbopack: {},
-  webpack: (config) => {
-    config.module.rules.push({
-      test: /\.yaml$/,
-      use: "raw-loader",
-    });
-    return config;
+  turbopack: {
+    root: appDir,
   },
 };
 

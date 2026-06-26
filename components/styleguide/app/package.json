@@ -7,7 +7,7 @@
     "generate-css": "tsx src/scripts/generate-css.ts",
     "build": "tsx src/scripts/generate-css.ts && next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "tsc --noEmit",
     "build-pkg": "cd pkg && bash build.sh",
     "publish-pkg": "cd pkg && bash publish.sh"
   },

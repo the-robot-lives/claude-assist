@@ -3,7 +3,7 @@ import fs from "fs";
 import path from "path";
 import * as yaml from "js-yaml";
 
-const CONFIG_ROOT = path.join(process.cwd(), "src", "config");
+const CONFIG_ROOT = path.join(/* turbopackIgnore: true */ process.cwd(), "src", "config");
 const THEME_DIR = path.join(CONFIG_ROOT, "theme-style-guide");
 const OVERRIDES_FILE = path.join(THEME_DIR, "style-guide.overrides.yaml");
 

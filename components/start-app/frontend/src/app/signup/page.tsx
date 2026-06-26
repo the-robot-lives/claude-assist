@@ -21,7 +21,7 @@ export default function SignupPage() {
 
     try {
       await register(email, password, inviteToken);
-      router.push("/");
+      router.push("/app");
     } catch (err: unknown) {
       if (err instanceof Error) {
         setError(err.message);

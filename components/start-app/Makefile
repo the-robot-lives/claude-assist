@@ -33,7 +33,8 @@ PORT_MAP := \
   therobotmakes.com=8091 \
   therobotplans.com=8092 \
   noizu.com=8093 \
-  tobornalp.com=8094
+  tobornalp.com=8094 \
+  foryou.therobotlives.com=8096
 
 # ── Redis DB assignment ──────────────────────────────────────────
 REDIS_DB_MAP := \
@@ -51,7 +52,8 @@ REDIS_DB_MAP := \
   therobotmakes.com=11 \
   therobotplans.com=12 \
   noizu.com=13 \
-  tobornalp.com=14
+  tobornalp.com=14 \
+  foryou.therobotlives.com=15
 
 # ── Slug derivation ─────────────────────────────────────────────
 SLUG_MAP := \
@@ -69,7 +71,8 @@ SLUG_MAP := \
   therobotmakes.com=therobotmakes \
   therobotplans.com=therobotplans \
   noizu.com=noizu_site \
-  tobornalp.com=tobornalp
+  tobornalp.com=tobornalp \
+  foryou.therobotlives.com=foryou
 
 PROJECT_SLUG = $(or $(patsubst $(PROJECT_DIR)=%,%,$(filter $(PROJECT_DIR)=%,$(SLUG_MAP))),starter)
 REDIS_DB     = $(or $(patsubst $(PROJECT_DIR)=%,%,$(filter $(PROJECT_DIR)=%,$(REDIS_DB_MAP))),0)

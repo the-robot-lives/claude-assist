@@ -39,7 +39,7 @@ function SSOCallback() {
     }
 
     ssoExchange(code)
-      .then(() => router.push("/"))
+      .then(() => router.push("/app"))
       .catch(() => {
         setError("Failed to complete sign-in. The code may have expired.");
         setVerifying(false);

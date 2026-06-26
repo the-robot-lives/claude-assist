@@ -29,7 +29,8 @@ ls -lh dist/sg.js dist/sg.css dist/sg-viewer.js dist/sg-viewer.css 2>/dev/null |
 
 # Copy to dist target
 if [ -d "$DIST_TARGET" ]; then
-  cp dist/sg.js dist/sg.css "$DIST_TARGET/"
+  cp dist/sg.js "$DIST_TARGET/"
+  cp dist/sg.css "$DIST_TARGET/" 2>/dev/null || true
   cp dist/sg-viewer.js "$DIST_TARGET/" 2>/dev/null || true
   cp dist/sg-viewer.css "$DIST_TARGET/" 2>/dev/null || true
   echo ""

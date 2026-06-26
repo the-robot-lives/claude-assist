@@ -51,7 +51,7 @@ export default function LoginPage() {
     setLoading(true);
     try {
       await login(email, password);
-      router.push("/");
+      router.push("/app");
     } catch {
       setError("Invalid email or password");
     } finally {
@@ -95,7 +95,7 @@ export default function LoginPage() {
     setLoading(true);
     try {
       await verifyOtpLogin(email, otpCode);
-      router.push("/");
+      router.push("/app");
     } catch {
       setError("Invalid or expired code");
     } finally {
