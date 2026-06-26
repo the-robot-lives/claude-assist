@@ -10,7 +10,12 @@ namespace TheRobotDraft.Uml
     {
         private const float InspectorWidth = 320f;
         private RectTransform _inspector;
+        private RectTransform _inspectorBody;
         private RectTransform _inspectorContent;
+        private Text _inspectorToggleText;
+        private bool _inspectorCollapsed;
+
+        private float InspectorActiveWidth => _inspectorCollapsed ? CollapsedSidebarWidth : InspectorWidth;
 
         private void BuildInspector()
         {
@@ -24,9 +29,17 @@ namespace TheRobotDraft.Uml
             _inspector.offsetMax = new Vector2(0f, -70f);
             go.AddComponent<Image>().color = new Color(0.12f, 0.13f, 0.16f, 0.97f);
 
+            var bodyGo = new GameObject("Body", typeof(RectTransform));
+            _inspectorBody = (RectTransform)bodyGo.transform;
+            _inspectorBody.SetParent(_inspector, false);
+            _inspectorBody.anchorMin = Vector2.zero;
+            _inspectorBody.anchorMax = Vector2.one;
+            _inspectorBody.offsetMin = Vector2.zero;
+            _inspectorBody.offsetMax = Vector2.zero;
+
             var viewportGo = new GameObject("Viewport", typeof(RectTransform));
             var viewport = (RectTransform)viewportGo.transform;
-            viewport.SetParent(_inspector, false);
+            viewport.SetParent(_inspectorBody, false);
             viewport.anchorMin = Vector2.zero;
             viewport.anchorMax = Vector2.one;
             viewport.offsetMin = Vector2.zero;
@@ -49,7 +62,41 @@ namespace TheRobotDraft.Uml
             _inspectorContent.anchoredPosition = Vector2.zero;
             scroll.content = _inspectorContent;
 
+            BuildInspectorToggle();
+            ApplyInspectorCollapse();
             RefreshInspector();
+        }
+
+        private void BuildInspectorToggle()
+        {
+            var go = new GameObject("InspectorCollapse", typeof(RectTransform));
+            var rt = (RectTransform)go.transform;
+            rt.SetParent(_inspector, false);
+            rt.anchorMin = rt.anchorMax = new Vector2(0f, 1f);
+            rt.pivot = new Vector2(0f, 1f);
+            rt.sizeDelta = new Vector2(CollapsedSidebarWidth, 44f);
+            rt.anchoredPosition = Vector2.zero;
+            var img = go.AddComponent<Image>();
+            img.color = new Color(0.18f, 0.22f, 0.28f, 1f);
+            var btn = go.AddComponent<Button>();
+            btn.targetGraphic = img;
+            btn.onClick.AddListener(() =>
+            {
+                _inspectorCollapsed = !_inspectorCollapsed;
+                ApplyInspectorCollapse();
+                Flash(_inspectorCollapsed ? "right sidebar collapsed" : "right sidebar expanded");
+            });
+            _inspectorToggleText = MakeText(rt, "", Vector2.zero, rt.sizeDelta, 18,
+                new Color(0.92f, 0.95f, 1f, 1f), TextAnchor.MiddleCenter);
+            _inspectorToggleText.raycastTarget = false;
+        }
+
+        private void ApplyInspectorCollapse()
+        {
+            if (_inspector == null) return;
+            _inspector.offsetMin = new Vector2(-InspectorActiveWidth, 8f);
+            if (_inspectorBody != null) _inspectorBody.gameObject.SetActive(!_inspectorCollapsed);
+            if (_inspectorToggleText != null) _inspectorToggleText.text = _inspectorCollapsed ? "<" : ">";
         }
 
         private void RefreshInspector()
@@ -110,6 +157,17 @@ namespace TheRobotDraft.Uml
                 el.CodeDoc, "Source-code comment emitted above this element");
             y -= 98f;
 
+            InspectorLabel("Deep link", ref y);
+            MakeText(_inspectorContent, DeepLinkIdentity.Marker(el.DeepLinkCode), new Vector2(12f, y),
+                new Vector2(w - 24f, 18f), 12, new Color(0.86f, 0.89f, 0.94f, 1f), TextAnchor.MiddleLeft);
+            y -= 18f;
+            MakeText(_inspectorContent, el.DeepLinkUuid ?? "", new Vector2(12f, y),
+                new Vector2(w - 24f, 18f), 10, new Color(0.62f, 0.68f, 0.78f, 1f), TextAnchor.MiddleLeft);
+            y -= 24f;
+            var embedInput = MakeCheckbox(_inspectorContent, new Vector2(12f, y), "embed in generated docs",
+                el.EmbedDeepLinkCode);
+            y -= 34f;
+
             InputField itemsInput = null;
             if (SupportsItemList(el.Kind))
             {
@@ -141,6 +199,8 @@ namespace TheRobotDraft.Uml
                 }
                 _ctl.SetDescription(id, descInput.text);
                 _ctl.SetCodeDoc(id, docInput.text);
+                if (embedInput() != cur.EmbedDeepLinkCode)
+                    _ctl.SetEmbedDeepLinkCode(id, embedInput());
                 if (itemsInput != null) _ctl.SetPropertyItems(id, SplitLines(itemsInput.text));
                 RebuildFromModel();
                 SetSelected(id);
@@ -161,6 +221,8 @@ namespace TheRobotDraft.Uml
                     new Color(0.20f, 0.42f, 0.52f, 1f), () => GenerateCodeForElement(id));
                 MakeButton(_inspectorContent, "VS Code", new Vector2(114f, y), new Vector2(84f, 30f),
                     new Color(0.24f, 0.28f, 0.34f, 1f), () => EditCodeInVsCode(id));
+                MakeButton(_inspectorContent, "Trace", new Vector2(206f, y), new Vector2(70f, 30f),
+                    new Color(0.30f, 0.24f, 0.42f, 1f), () => ShowTraceView(id));
                 y -= 40f;
             }
 

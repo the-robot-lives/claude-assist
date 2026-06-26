@@ -245,18 +245,16 @@ namespace TheRobotDraft.Uml
 
             if (!ImportEnsurePackage()) { Flash("couldn't create a package to import into"); return; }
 
-            // No LLM gate here anymore: the deterministic parser runs offline. Files it can't handle fall back to the
-            // LLM per-file when one is configured (RunImportFolder), so an unconfigured endpoint is no longer fatal.
-
             List<string> files;
             bool truncated; int skippedBig;
             try { files = EnumerateSourceFiles(folder, out truncated, out skippedBig); }
             catch (System.Exception ex) { Flash("couldn't read folder: " + ex.Message); return; }
 
             if (files.Count == 0) { Flash("no source files found under " + folder); return; }
-            if (truncated) Flash($"importing first {ImportFileCap} of many files…");
 
-            StartCoroutine(RunImportFolder(files, langHint));
+            // Hand off to the pre-flight modal: pick files, set extension filters, add custom LLM guidance, then run
+            // through the live progress modal (incremental population + pause/cancel + issue log).
+            ShowImportPlanModal(folder, files, langHint, truncated);
         }
 
         /// <summary>Directories never descended into — dependency, build, and tooling trees that aren't your source.</summary>
@@ -345,109 +343,87 @@ namespace TheRobotDraft.Uml
         }
 
         /// <summary>
-        /// Sequentially parse each file via the LLM and materialize its types, sharing one name→id map across the
-        /// whole batch so cross-file relationships resolve. A second pass adds edges once every type exists.
+        /// Sequentially parse each file (deterministic first, LLM fallback) and materialize its types incrementally —
+        /// nodes appear on the canvas as each file is processed — sharing one name→id map across the batch so
+        /// cross-file relationships resolve. Driven by the live progress modal (<paramref name="ui"/>): reports
+        /// per-file progress + issues, honors pause (<see cref="_importPaused"/>) and cancel (<see cref="_importCancel"/>),
+        /// and threads the user's <paramref name="customPrompt"/> into the LLM parse. A final pass adds edges.
         /// </summary>
-        private IEnumerator RunImportFolder(List<string> files, string langHint)
+        private IEnumerator RunImportFolder(List<string> files, string langHint, string customPrompt, ImportProgressHandle ui)
         {
             var created = new Dictionary<string, ElementId>();
             var models = new List<CodeParser.ParsedModel>(files.Count);
-            int typeCount = 0, parsedFiles = 0, gridIndex = 0;
+            int typeCount = 0, parsedFiles = 0, gridIndex = 0, edgeCount = 0, issues = 0;
             bool llmConfigured = !string.IsNullOrEmpty(LlmSettings.BaseUrl);
-            string firstFailure = null; // surfaced when nothing parsed at all
+            bool cancelled = false;
+
+            void Issue(string m) { issues++; ui?.Issue(m); }
 
             for (int i = 0; i < files.Count; i++)
             {
+                // Pause: spin (yielding) until resumed or cancelled.
+                while (_importPaused && !_importCancel) { ui?.Status("paused"); yield return null; }
+                if (_importCancel) { cancelled = true; break; }
+
                 string path = files[i];
-                Flash($"importing {i + 1}/{files.Count}: {Path.GetFileName(path)}…");
+                ui?.Progress(i + 1, files.Count, Path.GetFileName(path));
 
                 string text;
                 try { text = File.ReadAllText(path); }
-                catch (System.Exception ex)
-                {
-                    firstFailure ??= Path.GetFileName(path) + ": unreadable — " + ex.Message;
-                    continue; // unreadable file — skip, keep going
-                }
+                catch (System.Exception ex) { Issue(Path.GetFileName(path) + ": unreadable — " + ex.Message); continue; }
 
-                // Skip minified/generated blobs (extremely long lines) so neither the regex parser nor the LLM
-                // can stall the whole import on one file (e.g. a bundled frontend index.js).
-                if (LooksMinified(text))
-                {
-                    firstFailure ??= Path.GetFileName(path) + ": looks minified/generated — skipped";
-                    if ((i % 10) == 9) yield return null;
-                    continue;
-                }
+                if (LooksMinified(text)) { Issue(Path.GetFileName(path) + ": looks minified/generated — skipped"); if ((i % 10) == 9) yield return null; continue; }
 
-                // Deterministic first: structural parse runs offline and is fast, so we batch many files per frame.
+                // Deterministic first: structural parse runs offline and is fast.
                 string langForFile = string.IsNullOrWhiteSpace(langHint) ? Path.GetExtension(path) : langHint;
                 if (CodeStructParser.TryParse(text, langForFile, out var detModel))
                 {
-                    _sourceFiles[path] = text; // keep the original for surgical overlay regeneration
-                    typeCount += MaterializeTypes(detModel, created, ref gridIndex, path);
-                    models.Add(detModel);
-                    parsedFiles++;
-                    if ((i % 10) == 9) yield return null; // let the progress hint repaint periodically
+                    _sourceFiles[path] = text;
+                    int n = MaterializeTypes(detModel, created, ref gridIndex, path);
+                    typeCount += n; models.Add(detModel); parsedFiles++;
+                    ui?.Tallies(typeCount, edgeCount, issues);
+                    yield return null; // let the canvas repaint so nodes appear as we go
                     continue;
                 }
 
-                // Deterministic parse found nothing — fall back to the LLM per-file, but only if one is configured.
-                if (!llmConfigured)
-                {
-                    firstFailure ??= Path.GetFileName(path) + ": no types parsed and no LLM configured";
-                    continue;
-                }
+                // Deterministic parse found nothing — fall back to the LLM per-file, when one is configured.
+                if (!llmConfigured) { Issue(Path.GetFileName(path) + ": no types parsed and no LLM configured"); continue; }
 
                 string userPrompt = CodeParser.BuildUserPrompt(text, langHint);
+                if (!string.IsNullOrWhiteSpace(customPrompt))
+                    userPrompt += "\n\nAdditional modeling guidance from the user:\n" + customPrompt.Trim();
                 using (var req = LlmClient.BuildChatRequest(CodeParser.SystemPrompt, userPrompt))
                 {
-                    req.timeout = 60; // don't stall the whole folder import on one slow/unreachable request
+                    req.timeout = 60;
                     yield return req.SendWebRequest();
-                    if (req.result != UnityWebRequest.Result.Success)
-                    {
-                        firstFailure ??= "LLM unreachable: " + req.error;
-                        continue;
-                    }
-                    if (!LlmClient.TryParseContent(req.downloadHandler.text, out var content, out var apiErr))
-                    {
-                        firstFailure ??= "LLM error: " + apiErr;
-                        continue;
-                    }
-                    if (!CodeParser.TryParse(content, out var model, out var parseErr))
-                    {
-                        firstFailure ??= Path.GetFileName(path) + ": " + parseErr;
-                        continue;
-                    }
+                    if (req.result != UnityWebRequest.Result.Success) { Issue(Path.GetFileName(path) + ": LLM unreachable — " + req.error); continue; }
+                    if (!LlmClient.TryParseContent(req.downloadHandler.text, out var content, out var apiErr)) { Issue(Path.GetFileName(path) + ": LLM error — " + apiErr); continue; }
+                    if (!CodeParser.TryParse(content, out var model, out var parseErr)) { Issue(Path.GetFileName(path) + ": " + parseErr); continue; }
 
-                    _sourceFiles[path] = text; // keep the original for surgical overlay regeneration
+                    _sourceFiles[path] = text;
                     typeCount += MaterializeTypes(model, created, ref gridIndex, path);
-                    models.Add(model);
-                    parsedFiles++;
+                    models.Add(model); parsedFiles++;
+                    ui?.Tallies(typeCount, edgeCount, issues);
+                    yield return null;
                 }
             }
 
-            // Pass 2: resolve relationships by type name across the whole batch.
-            int edgeCount = 0, skipped = 0;
+            // Pass 2: resolve relationships by type name across everything imported so far.
+            int skipped = 0;
             foreach (var model in models)
                 edgeCount += LinkTypes(model, created, ref skipped);
 
             _ctl.EnterSelect();
             SetSelected(ElementId.None);
-            // Organize the freshly imported set by source file instead of leaving it on the per-file seed grid (a
-            // cramped tall strip); AutoLayout rebuilds + frames the scene. Its flash is overwritten by the note below.
             AutoLayout("source");
+            if (parsedFiles > 0)
+                WriteShadowsForImport(); // editable on-disk copies for the "Edit code in VS Code" round-trip
 
-            if (parsedFiles == 0)
-            {
-                string reason = firstFailure ?? (llmConfigured
-                    ? "deterministic parse found none and the LLM returned nothing"
-                    : "deterministic parse found none and no LLM is configured");
-                Flash($"imported 0 types from 0/{files.Count} files — {reason}");
-                yield break;
-            }
-
-            WriteShadowsForImport(); // editable on-disk copies for the "Edit code in VS Code" round-trip
-            string note = $"imported {typeCount} types from {parsedFiles}/{files.Count} files, {edgeCount} relationships";
-            if (skipped > 0) note += $" ({skipped} external ref{(skipped == 1 ? "" : "s")} skipped)";
+            string verb = cancelled ? "cancelled — imported" : "imported";
+            string note = $"{verb} {typeCount} types from {parsedFiles}/{files.Count} files, {edgeCount} relationships";
+            if (issues > 0) note += $", {issues} issue{(issues == 1 ? "" : "s")}";
+            ui?.Done(note);
+            ui?.Tallies(typeCount, edgeCount, issues);
             Flash(note);
         }
 
@@ -510,11 +486,18 @@ namespace TheRobotDraft.Uml
                     _ctl.SetMeta(id, pt.language.Trim(), null);
                 if (!string.IsNullOrWhiteSpace(pt.comment))
                     _ctl.SetCodeDoc(id, pt.comment.Trim()); // class doc-comment -> element CodeDoc
+                if (!string.IsNullOrWhiteSpace(pt.deepLinkUuid) || !string.IsNullOrWhiteSpace(pt.deepLinkCode))
+                {
+                    _ctl.SetDeepLink(id, pt.deepLinkUuid, pt.deepLinkCode);
+                    _ctl.SetEmbedDeepLinkCode(id, true);
+                }
                 if (!string.IsNullOrEmpty(sourceFile))
                     _ctl.SetSourceFile(id, sourceFile);
 
-                ImportAddMembers(id, ElementKind.Field, pt.fields, pt.fieldComments);
-                ImportAddMembers(id, ElementKind.Function, pt.methods, pt.methodComments);
+                ImportAddMembers(id, ElementKind.Field, pt.fields, pt.fieldComments,
+                    pt.fieldDeepLinkUuids, pt.fieldDeepLinkCodes);
+                ImportAddMembers(id, ElementKind.Function, pt.methods, pt.methodComments,
+                    pt.methodDeepLinkUuids, pt.methodDeepLinkCodes);
 
                 _ctl.EnterSelect();
 
@@ -556,7 +539,8 @@ namespace TheRobotDraft.Uml
         /// Add each signature string as a member child of <paramref name="owner"/> (UML signature verbatim), setting
         /// the member's CodeDoc from the index-aligned <paramref name="comments"/> doc-comment when present.
         /// </summary>
-        private void ImportAddMembers(ElementId owner, ElementKind memberKind, string[] signatures, string[] comments)
+        private void ImportAddMembers(ElementId owner, ElementKind memberKind, string[] signatures, string[] comments,
+            string[] deepLinkUuids = null, string[] deepLinkCodes = null)
         {
             if (signatures == null) return;
             for (int i = 0; i < signatures.Length; i++)
@@ -569,6 +553,13 @@ namespace TheRobotDraft.Uml
                 string comment = comments != null && i < comments.Length ? comments[i] : null;
                 if (!string.IsNullOrWhiteSpace(comment))
                     _ctl.SetCodeDoc(mid, comment.Trim());
+                string uuid = deepLinkUuids != null && i < deepLinkUuids.Length ? deepLinkUuids[i] : null;
+                string code = deepLinkCodes != null && i < deepLinkCodes.Length ? deepLinkCodes[i] : null;
+                if (!string.IsNullOrWhiteSpace(uuid) || !string.IsNullOrWhiteSpace(code))
+                {
+                    _ctl.SetDeepLink(mid, uuid, code);
+                    _ctl.SetEmbedDeepLinkCode(mid, true);
+                }
             }
         }
 

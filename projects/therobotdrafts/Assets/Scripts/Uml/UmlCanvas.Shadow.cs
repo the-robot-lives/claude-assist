@@ -152,6 +152,11 @@ namespace TheRobotDraft.Uml
                 var pt = System.Array.Find(model.types, t => t.name == el.Name) ?? model.types[0];
                 ReplaceMembersFromParse(id, pt);
                 if (!string.IsNullOrEmpty(pt.comment)) _ctl.SetCodeDoc(id, pt.comment);
+                if (!string.IsNullOrWhiteSpace(pt.deepLinkUuid) || !string.IsNullOrWhiteSpace(pt.deepLinkCode))
+                {
+                    _ctl.SetDeepLink(id, pt.deepLinkUuid, pt.deepLinkCode);
+                    _ctl.SetEmbedDeepLinkCode(id, true);
+                }
                 RebuildFromModel();
                 SetSelected(id);
                 Flash("re-synced " + el.Name + " from code edits");
@@ -172,8 +177,10 @@ namespace TheRobotDraft.Uml
                 if (_model.TryGet(childId, out var c) && KindInfo.IsMember(c.Kind)) doomed.Add(childId);
             foreach (var d in doomed) _ctl.Delete(d);
 
-            ImportAddMembers(id, ElementKind.Field, pt.fields, pt.fieldComments);
-            ImportAddMembers(id, ElementKind.Function, pt.methods, pt.methodComments);
+            ImportAddMembers(id, ElementKind.Field, pt.fields, pt.fieldComments,
+                pt.fieldDeepLinkUuids, pt.fieldDeepLinkCodes);
+            ImportAddMembers(id, ElementKind.Function, pt.methods, pt.methodComments,
+                pt.methodDeepLinkUuids, pt.methodDeepLinkCodes);
             _ctl.EnterSelect();
         }
     }

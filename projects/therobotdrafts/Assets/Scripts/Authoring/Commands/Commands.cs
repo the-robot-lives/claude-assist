@@ -406,6 +406,58 @@ namespace TheRobotDraft.Authoring.Commands
         public void Undo(CommandContext ctx) => ctx.Model.SetCodeDoc(_element, _oldCodeDoc);
     }
 
+    /// <summary>Set an element's UUIDv5-backed documentation pointer identity. Undoable.</summary>
+    public sealed class SetDeepLinkCommand : IAuthoringCommand
+    {
+        private readonly ElementId _element;
+        private readonly string _uuid, _code;
+        private string _oldUuid, _oldCode;
+
+        public SetDeepLinkCommand(ElementId element, string uuid, string code)
+        {
+            _element = element;
+            _uuid = string.IsNullOrWhiteSpace(uuid) ? null : uuid.Trim();
+            _code = string.IsNullOrWhiteSpace(code) ? null : code.Trim();
+        }
+
+        public string Label => "Set deep link";
+
+        public void Do(CommandContext ctx)
+        {
+            var e = ctx.Model.Get(_element);
+            _oldUuid = e.DeepLinkUuid;
+            _oldCode = e.DeepLinkCode;
+            ctx.Model.SetDeepLink(_element, _uuid, _code);
+        }
+
+        public void Undo(CommandContext ctx) => ctx.Model.SetDeepLink(_element, _oldUuid, _oldCode);
+    }
+
+    /// <summary>Toggle whether generated source embeds this element's deep-link declaration. Undoable.</summary>
+    public sealed class SetEmbedDeepLinkCommand : IAuthoringCommand
+    {
+        private readonly ElementId _element;
+        private readonly bool _embed;
+        private bool _oldEmbed;
+
+        public SetEmbedDeepLinkCommand(ElementId element, bool embed)
+        {
+            _element = element;
+            _embed = embed;
+        }
+
+        public string Label => _embed ? "Embed deep link" : "Hide deep link";
+
+        public void Do(CommandContext ctx)
+        {
+            var e = ctx.Model.Get(_element);
+            _oldEmbed = e.EmbedDeepLinkCode;
+            ctx.Model.SetEmbedDeepLinkCode(_element, _embed);
+        }
+
+        public void Undo(CommandContext ctx) => ctx.Model.SetEmbedDeepLinkCode(_element, _oldEmbed);
+    }
+
     /// <summary>Set kind-specific item/options values for an element. Undoable.</summary>
     public sealed class SetPropertyItemsCommand : IAuthoringCommand
     {
@@ -535,8 +587,9 @@ namespace TheRobotDraft.Authoring.Commands
             public readonly ElementId Id, Parent;
             public readonly ElementKind Kind;
             public readonly string Name, Language, Stereotype, Description, CodeDoc, Code, SourceFile;
+            public readonly string DeepLinkUuid, DeepLinkCode;
             public readonly List<string> Items;
-            public readonly bool IsAbstract;
+            public readonly bool IsAbstract, EmbedDeepLinkCode;
             public readonly int ZLayer;
             public ElementSnap(ModelElement e)
             {
@@ -544,6 +597,7 @@ namespace TheRobotDraft.Authoring.Commands
                 Language = e.Language; Stereotype = e.Stereotype; Description = e.Description;
                 CodeDoc = e.CodeDoc; Items = new List<string>(e.Items);
                 ZLayer = e.ZLayer; Code = e.Code; SourceFile = e.SourceFile;
+                DeepLinkUuid = e.DeepLinkUuid; DeepLinkCode = e.DeepLinkCode; EmbedDeepLinkCode = e.EmbedDeepLinkCode;
             }
         }
 
@@ -617,6 +671,9 @@ namespace TheRobotDraft.Authoring.Commands
                 restored.ZLayer = s.ZLayer;
                 restored.Code = s.Code;
                 restored.SourceFile = s.SourceFile;
+                restored.DeepLinkUuid = s.DeepLinkUuid;
+                restored.DeepLinkCode = s.DeepLinkCode;
+                restored.EmbedDeepLinkCode = s.EmbedDeepLinkCode;
             }
             foreach (var e in _removedEdges)
             {

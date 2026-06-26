@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Text.RegularExpressions;
+using TheRobotDraft.Authoring.Model;
 
 namespace TheRobotDraft.CodeGen
 {
@@ -170,16 +171,25 @@ namespace TheRobotDraft.CodeGen
             bool isStruct = keyword == "struct";
             // `record` is a reference type → treat as Class; `record struct` already matched the struct keyword above.
 
+            string comment = DocCommentBefore(original, decl.Index);
+            DeepLinkIdentity.TryExtract(ref comment, out var deepUuid, out var deepCode);
+
             var pt = new CodeParser.ParsedType
             {
                 name = name,
                 kind = isInterface ? "Interface" : isEnum ? "Enum" : isStruct ? "Struct" : "Class",
                 language = "C#",
-                comment = DocCommentBefore(original, decl.Index),
+                comment = comment,
+                deepLinkUuid = deepUuid ?? "",
+                deepLinkCode = deepCode ?? "",
                 fields = Array.Empty<string>(),
                 fieldComments = Array.Empty<string>(),
+                fieldDeepLinkUuids = Array.Empty<string>(),
+                fieldDeepLinkCodes = Array.Empty<string>(),
                 methods = Array.Empty<string>(),
                 methodComments = Array.Empty<string>(),
+                methodDeepLinkUuids = Array.Empty<string>(),
+                methodDeepLinkCodes = Array.Empty<string>(),
                 extends = Array.Empty<string>(),
                 implements = Array.Empty<string>(),
                 uses = Array.Empty<string>(),
@@ -261,6 +271,8 @@ namespace TheRobotDraft.CodeGen
         {
             var fields = new List<string>();
             var comments = new List<string>();
+            var uuids = new List<string>();
+            var codes = new List<string>();
 
             int i = bodyStart;
             while (i < bodyEnd)
@@ -284,13 +296,19 @@ namespace TheRobotDraft.CodeGen
                 var nameMatch = Regex.Match(token, @"[A-Za-z_]\w*");
                 if (nameMatch.Success)
                 {
+                    string comment = DocCommentBefore(original, memberStart);
+                    DeepLinkIdentity.TryExtract(ref comment, out var uuid, out var code);
                     fields.Add("+ " + nameMatch.Value);
-                    comments.Add(DocCommentBefore(original, memberStart));
+                    comments.Add(comment);
+                    uuids.Add(uuid ?? "");
+                    codes.Add(code ?? "");
                 }
             }
 
             pt.fields = fields.ToArray();
             pt.fieldComments = comments.ToArray();
+            pt.fieldDeepLinkUuids = uuids.ToArray();
+            pt.fieldDeepLinkCodes = codes.ToArray();
         }
 
         /// <summary>
@@ -303,8 +321,12 @@ namespace TheRobotDraft.CodeGen
         {
             var fields = new List<string>();
             var fieldComments = new List<string>();
+            var fieldUuids = new List<string>();
+            var fieldCodes = new List<string>();
             var methods = new List<string>();
             var methodComments = new List<string>();
+            var methodUuids = new List<string>();
+            var methodCodes = new List<string>();
 
             int i = bodyStart;
             int memberStart = SkipLeading(scan, bodyStart, bodyEnd);
@@ -318,7 +340,7 @@ namespace TheRobotDraft.CodeGen
                     if (close < 0 || close >= bodyEnd) close = bodyEnd - 1;
                     string decl = original.Substring(memberStart, i - memberStart);
                     ClassifyMember(original, scan, decl, memberStart, true,
-                        fields, fieldComments, methods, methodComments);
+                        fields, fieldComments, fieldUuids, fieldCodes, methods, methodComments, methodUuids, methodCodes);
                     i = close + 1;
                     // skip a trailing ; after a property/auto block
                     while (i < bodyEnd && (char.IsWhiteSpace(scan[i]) || scan[i] == ';')) i++;
@@ -329,7 +351,7 @@ namespace TheRobotDraft.CodeGen
                 {
                     string decl = original.Substring(memberStart, i - memberStart);
                     ClassifyMember(original, scan, decl, memberStart, false,
-                        fields, fieldComments, methods, methodComments);
+                        fields, fieldComments, fieldUuids, fieldCodes, methods, methodComments, methodUuids, methodCodes);
                     i++;
                     memberStart = SkipLeading(scan, i, bodyEnd);
                     i = memberStart;
@@ -363,7 +385,7 @@ namespace TheRobotDraft.CodeGen
                     string decl = original.Substring(memberStart, memberEnd - memberStart + (hadBlock ? 0 : 0));
                     // For methods we want the signature only (up to and including the param list).
                     string sigSource = original.Substring(memberStart, closeParen - memberStart);
-                    ClassifyMethod(original, sigSource, memberStart, methods, methodComments);
+                    ClassifyMethod(original, sigSource, memberStart, methods, methodComments, methodUuids, methodCodes);
                     i = memberEnd + 1;
                     while (i < bodyEnd && (char.IsWhiteSpace(scan[i]) || scan[i] == ';')) i++;
                     memberStart = i;
@@ -374,8 +396,12 @@ namespace TheRobotDraft.CodeGen
 
             pt.fields = fields.ToArray();
             pt.fieldComments = fieldComments.ToArray();
+            pt.fieldDeepLinkUuids = fieldUuids.ToArray();
+            pt.fieldDeepLinkCodes = fieldCodes.ToArray();
             pt.methods = methods.ToArray();
             pt.methodComments = methodComments.ToArray();
+            pt.methodDeepLinkUuids = methodUuids.ToArray();
+            pt.methodDeepLinkCodes = methodCodes.ToArray();
         }
 
         /// <summary>
@@ -384,7 +410,9 @@ namespace TheRobotDraft.CodeGen
         /// </summary>
         private static void ClassifyMember(string original, string scan, string decl, int memberStart, bool hadBlock,
             List<string> fields, List<string> fieldComments,
-            List<string> methods, List<string> methodComments)
+            List<string> fieldUuids, List<string> fieldCodes,
+            List<string> methods, List<string> methodComments,
+            List<string> methodUuids, List<string> methodCodes)
         {
             string trimmed = StripAttributes(decl).Trim();
             if (trimmed.Length == 0) return;
@@ -406,8 +434,12 @@ namespace TheRobotDraft.CodeGen
             // Expect "Type name" (optionally "Type name1, name2" for multi-field declarations).
             string sig = FieldSignature(vis, body);
             if (sig == null) return;
+            string comment = DocCommentBefore(original, memberStart);
+            DeepLinkIdentity.TryExtract(ref comment, out var uuid, out var code);
             fields.Add(sig);
-            fieldComments.Add(DocCommentBefore(original, memberStart));
+            fieldComments.Add(comment);
+            fieldUuids.Add(uuid ?? "");
+            fieldCodes.Add(code ?? "");
         }
 
         /// <summary>Turn a "Type name" (or "name : Type") fragment into a UML "± name : Type" attribute signature.</summary>
@@ -435,7 +467,8 @@ namespace TheRobotDraft.CodeGen
 
         /// <summary>Classify a member with a parameter list into a UML "± name(params) : ReturnType" operation signature.</summary>
         private static void ClassifyMethod(string original, string sigSource, int memberStart,
-            List<string> methods, List<string> methodComments)
+            List<string> methods, List<string> methodComments,
+            List<string> methodUuids, List<string> methodCodes)
         {
             string s = StripAttributes(sigSource).Trim();
             if (s.Length == 0) return;
@@ -461,8 +494,12 @@ namespace TheRobotDraft.CodeGen
             string sig = vis + " " + name + "(" + umlParams + ")";
             if (!string.IsNullOrEmpty(ret)) sig += " : " + ret;
 
+            string comment = DocCommentBefore(original, memberStart);
+            DeepLinkIdentity.TryExtract(ref comment, out var uuid, out var code);
             methods.Add(sig);
-            methodComments.Add(DocCommentBefore(original, memberStart));
+            methodComments.Add(comment);
+            methodUuids.Add(uuid ?? "");
+            methodCodes.Add(code ?? "");
         }
 
         /// <summary>Render a C# parameter list as UML "name : Type, …", dropping default values, modifiers, and attributes.</summary>
@@ -572,16 +609,25 @@ namespace TheRobotDraft.CodeGen
                 if (bodyEnd < 0) continue;
 
                 string keyword = m.Groups["keyword"].Value;
+                string comment = DocCommentBefore(original, m.Index);
+                DeepLinkIdentity.TryExtract(ref comment, out var deepUuid, out var deepCode);
+
                 var pt = new CodeParser.ParsedType
                 {
                     name = m.Groups["name"].Value,
                     kind = keyword == "interface" ? "Interface" : keyword == "enum" ? "Enum" : "Class",
                     language = language,
-                    comment = DocCommentBefore(original, m.Index),
+                    comment = comment,
+                    deepLinkUuid = deepUuid ?? "",
+                    deepLinkCode = deepCode ?? "",
                     fields = Array.Empty<string>(),
                     fieldComments = Array.Empty<string>(),
+                    fieldDeepLinkUuids = Array.Empty<string>(),
+                    fieldDeepLinkCodes = Array.Empty<string>(),
                     methods = Array.Empty<string>(),
                     methodComments = Array.Empty<string>(),
+                    methodDeepLinkUuids = Array.Empty<string>(),
+                    methodDeepLinkCodes = Array.Empty<string>(),
                     extends = Array.Empty<string>(),
                     implements = Array.Empty<string>(),
                     uses = Array.Empty<string>(),
@@ -614,8 +660,12 @@ namespace TheRobotDraft.CodeGen
         {
             var fields = new List<string>();
             var fieldComments = new List<string>();
+            var fieldUuids = new List<string>();
+            var fieldCodes = new List<string>();
             var methods = new List<string>();
             var methodComments = new List<string>();
+            var methodUuids = new List<string>();
+            var methodCodes = new List<string>();
 
             int i = bodyStart, memberStart = SkipLeading(scan, bodyStart, bodyEnd);
             while (i < bodyEnd)
@@ -626,7 +676,7 @@ namespace TheRobotDraft.CodeGen
                     int close = MatchBrace(scan, i);
                     if (close < 0 || close >= bodyEnd) close = bodyEnd - 1;
                     EmitCurlyMember(original, original.Substring(memberStart, i - memberStart), memberStart,
-                        fields, fieldComments, methods, methodComments);
+                        fields, fieldComments, fieldUuids, fieldCodes, methods, methodComments, methodUuids, methodCodes);
                     i = close + 1;
                     while (i < bodyEnd && (char.IsWhiteSpace(scan[i]) || scan[i] == ';')) i++;
                     memberStart = i;
@@ -635,7 +685,7 @@ namespace TheRobotDraft.CodeGen
                 if (c == ';')
                 {
                     EmitCurlyMember(original, original.Substring(memberStart, i - memberStart), memberStart,
-                        fields, fieldComments, methods, methodComments);
+                        fields, fieldComments, fieldUuids, fieldCodes, methods, methodComments, methodUuids, methodCodes);
                     i++;
                     memberStart = SkipLeading(scan, i, bodyEnd);
                     i = memberStart;
@@ -646,14 +696,20 @@ namespace TheRobotDraft.CodeGen
 
             pt.fields = fields.ToArray();
             pt.fieldComments = fieldComments.ToArray();
+            pt.fieldDeepLinkUuids = fieldUuids.ToArray();
+            pt.fieldDeepLinkCodes = fieldCodes.ToArray();
             pt.methods = methods.ToArray();
             pt.methodComments = methodComments.ToArray();
+            pt.methodDeepLinkUuids = methodUuids.ToArray();
+            pt.methodDeepLinkCodes = methodCodes.ToArray();
         }
 
         /// <summary>Emit one TS/Java member: methods get "+ name(params) : Ret"; fields get "+ name : Type" (default + visibility).</summary>
         private static void EmitCurlyMember(string original, string decl, int memberStart,
             List<string> fields, List<string> fieldComments,
-            List<string> methods, List<string> methodComments)
+            List<string> fieldUuids, List<string> fieldCodes,
+            List<string> methods, List<string> methodComments,
+            List<string> methodUuids, List<string> methodCodes)
         {
             string s = StripAttributes(decl).Trim();
             if (s.Length == 0) return;
@@ -681,8 +737,12 @@ namespace TheRobotDraft.CodeGen
                 if (retMatch.Success) ret = CleanTypeName(retMatch.Groups[1].Value);
                 string sig = vis + " " + name + "(" + SummarizeParams(NormalizeTsParams(paramList)) + ")";
                 if (!string.IsNullOrEmpty(ret)) sig += " : " + ret;
+                string comment = DocCommentBefore(original, memberStart);
+                DeepLinkIdentity.TryExtract(ref comment, out var uuid, out var code);
                 methods.Add(sig);
-                methodComments.Add(DocCommentBefore(original, memberStart));
+                methodComments.Add(comment);
+                methodUuids.Add(uuid ?? "");
+                methodCodes.Add(code ?? "");
                 return;
             }
 
@@ -690,15 +750,23 @@ namespace TheRobotDraft.CodeGen
             var ts = Regex.Match(bodyDecl, @"^([A-Za-z_]\w*)\??\s*:\s*([^=;]+)");
             if (ts.Success)
             {
+                string comment = DocCommentBefore(original, memberStart);
+                DeepLinkIdentity.TryExtract(ref comment, out var uuid, out var code);
                 fields.Add(vis + " " + ts.Groups[1].Value + " : " + CleanTypeName(ts.Groups[2].Value));
-                fieldComments.Add(DocCommentBefore(original, memberStart));
+                fieldComments.Add(comment);
+                fieldUuids.Add(uuid ?? "");
+                fieldCodes.Add(code ?? "");
                 return;
             }
             var java = Regex.Match(bodyDecl, @"^(?<type>[A-Za-z_][\w.<>\[\]]*)\s+(?<name>[A-Za-z_]\w*)");
             if (java.Success && !IsKeyword(java.Groups["name"].Value))
             {
+                string comment = DocCommentBefore(original, memberStart);
+                DeepLinkIdentity.TryExtract(ref comment, out var uuid, out var code);
                 fields.Add(vis + " " + java.Groups["name"].Value + " : " + CleanTypeName(java.Groups["type"].Value));
-                fieldComments.Add(DocCommentBefore(original, memberStart));
+                fieldComments.Add(comment);
+                fieldUuids.Add(uuid ?? "");
+                fieldCodes.Add(code ?? "");
             }
         }
 
@@ -882,7 +950,7 @@ namespace TheRobotDraft.CodeGen
         {
             if (lines == null || lines.Count == 0) return "";
             var nonEmpty = lines.FindAll(l => !string.IsNullOrWhiteSpace(l));
-            return string.Join(" ", nonEmpty).Trim();
+            return string.Join("\n", nonEmpty).Trim();
         }
 
         /// <summary>Index of the matching '}' for the '{' at <paramref name="open"/> in the blanked text, or -1.</summary>

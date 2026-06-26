@@ -21,6 +21,9 @@ namespace TheRobotDraft.CodeGen
         public bool IsAbstract;
         public string Description;  // UML/product description; null/empty ⇒ none
         public string CodeDoc;      // source-code doc-comment text; null/empty ⇒ fallback to Description
+        public string DeepLinkUuid; // UUIDv5 identity for doc-pointer comments
+        public string DeepLinkCode; // compact Unicode token inside ⟦...⟧
+        public bool EmbedDeepLinkCode;
 
         /// <summary>
         /// The original source file's full text when this element was imported from a file (overlay round-trip).
@@ -36,7 +39,18 @@ namespace TheRobotDraft.CodeGen
         // Per-member doc-comments, index-aligned with Attributes / Operations (empty string ⇒ no comment).
         public readonly List<string> AttributeComments = new();
         public readonly List<string> OperationComments = new();
+        public readonly List<MemberDeepLink> AttributeDeepLinks = new();
+        public readonly List<MemberDeepLink> OperationDeepLinks = new();
         public readonly List<string> AttachedNotes = new(); // verbatim note texts linked via NoteLink
+
+        public struct MemberDeepLink
+        {
+            public string Uuid;
+            public string Code;
+            public bool Embed;
+            public string Name;
+            public ElementKind Kind;
+        }
 
         /// <summary>The doc-comment for the i-th attribute, or "" if none / out of range (ragged-list safe).</summary>
         public string AttributeComment(int i) =>
@@ -45,6 +59,12 @@ namespace TheRobotDraft.CodeGen
         /// <summary>The doc-comment for the i-th operation, or "" if none / out of range.</summary>
         public string OperationComment(int i) =>
             i >= 0 && i < OperationComments.Count ? OperationComments[i] ?? "" : "";
+
+        public MemberDeepLink AttributeDeepLink(int i) =>
+            i >= 0 && i < AttributeDeepLinks.Count ? AttributeDeepLinks[i] : default(MemberDeepLink);
+
+        public MemberDeepLink OperationDeepLink(int i) =>
+            i >= 0 && i < OperationDeepLinks.Count ? OperationDeepLinks[i] : default(MemberDeepLink);
 
         public readonly List<Relationship> Relationships = new();
 
@@ -86,6 +106,10 @@ namespace TheRobotDraft.CodeGen
 
             if (!string.IsNullOrWhiteSpace(CodeDoc))
                 sb.Append("\nCode documentation comment:\n").Append(CodeDoc.Trim()).Append('\n');
+            if (!string.IsNullOrWhiteSpace(DeepLinkUuid))
+                sb.Append("\nDoc pointer:\n  uuid5: ").Append(DeepLinkUuid.Trim())
+                    .Append("\n  code: ").Append(DeepLinkIdentity.Marker(DeepLinkCode))
+                    .Append("\n  embed: ").Append(EmbedDeepLinkCode ? "true" : "false").Append('\n');
 
             if (Attributes.Count > 0)
             {
@@ -95,6 +119,11 @@ namespace TheRobotDraft.CodeGen
                     sb.Append("  ").Append(Attributes[i]).Append('\n');
                     string c = AttributeComment(i);
                     if (!string.IsNullOrWhiteSpace(c)) sb.Append("      // ").Append(c.Replace("\n", " ").Trim()).Append('\n');
+                    var d = AttributeDeepLink(i);
+                    if (!string.IsNullOrWhiteSpace(d.Uuid))
+                        sb.Append("      // doc-pointer ").Append(DeepLinkIdentity.Marker(d.Code))
+                            .Append(" uuid5:").Append(d.Uuid).Append(" embed:")
+                            .Append(d.Embed ? "true" : "false").Append('\n');
                 }
             }
 
@@ -106,6 +135,11 @@ namespace TheRobotDraft.CodeGen
                     sb.Append("  ").Append(Operations[i]).Append('\n');
                     string c = OperationComment(i);
                     if (!string.IsNullOrWhiteSpace(c)) sb.Append("      // ").Append(c.Replace("\n", " ").Trim()).Append('\n');
+                    var d = OperationDeepLink(i);
+                    if (!string.IsNullOrWhiteSpace(d.Uuid))
+                        sb.Append("      // doc-pointer ").Append(DeepLinkIdentity.Marker(d.Code))
+                            .Append(" uuid5:").Append(d.Uuid).Append(" embed:")
+                            .Append(d.Embed ? "true" : "false").Append('\n');
                 }
             }
 

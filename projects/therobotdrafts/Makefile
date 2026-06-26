@@ -9,6 +9,8 @@
 #   make open    # open the existing build without rebuilding
 #   make clean   # remove Builds/ and test results
 #   make doctor  # report the editor that will be used and whether Mac Build Support is present
+#   make purge-license  # kill a stuck/zombie Unity licensing client (fixes hangs on "Licensing is not yet initialized")
+#   make doc-pointers   # regenerate docs/doc-pointer-db.json and expand markdown deeplinks
 #
 # Requires a local Unity editor matching ProjectSettings/ProjectVersion.txt (Mac Build Support is
 # needed for `build`/`run`, not for `test`). Install via Unity Hub.
@@ -17,6 +19,7 @@ PROJECT_DIR := $(patsubst %/,%,$(dir $(abspath $(lastword $(MAKEFILE_LIST)))))
 HUB         := /Applications/Unity/Hub/Editor
 APP_NAME    := The Robot Draft.app
 APP_PATH    := $(PROJECT_DIR)/Builds/macOS/$(APP_NAME)
+DOC_POINTERS := $(PROJECT_DIR)/../../utilities/shell/misc-git-utils/bin/doc-pointers
 PIN         := $(shell awk -F': *' '/^m_EditorVersion:/{print $$2}' "$(PROJECT_DIR)/ProjectSettings/ProjectVersion.txt")
 
 # Editor for tests: prefer the pinned version, else the newest installed (Mac module not required).
@@ -24,7 +27,7 @@ TEST_EDITOR := $(firstword \
   $(wildcard $(HUB)/$(PIN)/Unity.app/Contents/MacOS/Unity) \
   $(shell ls -dt $(HUB)/*/Unity.app/Contents/MacOS/Unity 2>/dev/null | head -n1))
 
-.PHONY: build run open test clean doctor help
+.PHONY: build run open test clean doctor help purge-license doc-pointers doc-pointers-check install-doc-pointer-hook
 
 help:
 	@echo "The Robot Draft — make targets:"
@@ -34,6 +37,10 @@ help:
 	@echo "  test    run the EditMode test suite headless"
 	@echo "  clean   remove Builds/ and test results"
 	@echo "  doctor  show the editor that will be used"
+	@echo "  purge-license  kill a stuck Unity licensing client (fixes build hangs)"
+	@echo "  doc-pointers  regenerate doc pointer db and expand deeplink: links"
+	@echo "  doc-pointers-check  verify doc pointer db/links are current"
+	@echo "  install-doc-pointer-hook  install local pre-commit pointer check"
 	@echo ""
 	@echo "  pinned editor: $(PIN)"
 
@@ -80,3 +87,24 @@ doctor:
 	  echo "mac build supp: NO on pinned editor — 'build' falls back via build-mac.sh; add 'Mac Build Support' in Unity Hub"; \
 	fi
 	@echo "installed:      $$(ls "$(HUB)" 2>/dev/null | tr '\n' ' ')"
+
+# A zombie editor-bundled licensing client (left by a crashed/killed batch build) keeps the global
+# mutex on the LicenseClient-<user> channel, so every new headless build fails to acquire it and hangs
+# 60s on "Licensing is not yet initialized" before erroring out. This kills only the editor's bundled
+# client (NOT Unity Hub's own UnityLicensingClient_V1, which lives elsewhere and serves a separate
+# channel); the next build spawns a fresh one and connects in <1s.
+purge-license:
+	@if pkill -f "Hub/Editor/.*/UnityLicensingClient.app/Contents/MacOS/Unity.Licensing.Client" 2>/dev/null; then \
+	  echo "Killed stuck Unity licensing client — rerun 'make build'."; \
+	else \
+	  echo "No stuck licensing client found."; \
+	fi
+
+doc-pointers:
+	@"$(DOC_POINTERS)" --root "$(PROJECT_DIR)" --write
+
+doc-pointers-check:
+	@"$(DOC_POINTERS)" --root "$(PROJECT_DIR)" --check
+
+install-doc-pointer-hook:
+	@"$(DOC_POINTERS)" --root "$(PROJECT_DIR)" --install-hook

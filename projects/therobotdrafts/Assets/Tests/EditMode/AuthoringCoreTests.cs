@@ -149,6 +149,34 @@ namespace TheRobotDraft.Authoring.Tests
         }
 
         [Test]
+        public void NewElements_Get_Uuid5_DeepLinks_With_Kind_Defaults()
+        {
+            var pkg = Seed(ElementKind.Package, "root", ElementId.None);
+
+            _ctl.EnterAddNode(ElementKind.Class, CommitStyle.OneShot);
+            var cls = _ctl.CommitAddNode(pkg, "Customer");
+            _ctl.EnterAddNode(ElementKind.Field, CommitStyle.OneShot);
+            var field = _ctl.CommitAddNode(cls, "- id : Guid");
+            _ctl.EnterAddNode(ElementKind.Function, CommitStyle.OneShot);
+            var op = _ctl.CommitAddNode(cls, "+ save() : void");
+
+            Assert.IsNotEmpty(_model.Get(cls).DeepLinkUuid);
+            Assert.IsNotEmpty(_model.Get(cls).DeepLinkCode);
+            Assert.IsTrue(_model.Get(cls).EmbedDeepLinkCode, "class doc pointers embed by default");
+            Assert.IsFalse(_model.Get(field).EmbedDeepLinkCode, "fields/properties are opt-in");
+            Assert.IsTrue(_model.Get(op).EmbedDeepLinkCode, "operations embed by default");
+        }
+
+        [Test]
+        public void DeepLink_Encoder_Matches_DocPointers_Utility()
+        {
+            var uuid = DeepLinkIdentity.Uuid5(DeepLinkIdentity.NamespaceUuid, "doc-pointers:TestPointer");
+
+            Assert.AreEqual("5c692577-ad0c-51f1-992c-759b5e5fffb5", uuid);
+            Assert.AreEqual("𓆴𓎲𓋝𓁅", DeepLinkIdentity.EncodeToken(uuid));
+        }
+
+        [Test]
         public void AddNode_Refuses_Invalid_Parent()
         {
             var pkg = Seed(ElementKind.Package, "root", ElementId.None);

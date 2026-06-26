@@ -48,6 +48,15 @@ namespace TheRobotDraft.Authoring.Model
         /// </summary>
         public string SourceFile { get; internal set; }
 
+        /// <summary>Stable UUIDv5 identity for documentation deep links. Null only for legacy/corrupt data.</summary>
+        public string DeepLinkUuid { get; internal set; }
+
+        /// <summary>Four-codepoint Unicode token derived from <see cref="DeepLinkUuid"/> for compact doc pointers.</summary>
+        public string DeepLinkCode { get; internal set; }
+
+        /// <summary>Whether generated source should embed this element's deep-link declaration in its doc comment.</summary>
+        public bool EmbedDeepLinkCode { get; internal set; }
+
         /// <summary>
         /// The diagram Z-layer this element lives on (0 = base). The canvas shows one active layer; elements on
         /// other layers are hidden, with cross-layer relationships shown as up/down connector stubs.
@@ -68,6 +77,9 @@ namespace TheRobotDraft.Authoring.Model
             Kind = kind;
             Name = name;
             Parent = parent;
+            DeepLinkUuid = DeepLinkIdentity.Uuid5ForElement(id, kind, name, parent);
+            DeepLinkCode = DeepLinkIdentity.EncodeToken(DeepLinkUuid);
+            EmbedDeepLinkCode = DeepLinkIdentity.DefaultEmbed(kind);
         }
 
         public IReadOnlyList<ElementId> ChildIds => Children;
@@ -171,6 +183,25 @@ namespace TheRobotDraft.Authoring.Model
         internal void SetStereotype(ElementId id, string stereotype) => _elements[id].Stereotype = stereotype;
         internal void SetDescription(ElementId id, string description) => _elements[id].Description = description;
         internal void SetCodeDoc(ElementId id, string codeDoc) => _elements[id].CodeDoc = codeDoc;
+        internal void SetDeepLink(ElementId id, string uuid, string code)
+        {
+            var element = _elements[id];
+            if (!string.IsNullOrWhiteSpace(uuid))
+            {
+                element.DeepLinkUuid = uuid.Trim().ToLowerInvariant();
+                if (!string.IsNullOrWhiteSpace(code)) element.DeepLinkCode = code.Trim();
+                else
+                {
+                    try { element.DeepLinkCode = DeepLinkIdentity.EncodeToken(element.DeepLinkUuid); }
+                    catch { element.DeepLinkCode = null; }
+                }
+            }
+            else if (!string.IsNullOrWhiteSpace(code))
+            {
+                element.DeepLinkCode = code.Trim();
+            }
+        }
+        internal void SetEmbedDeepLinkCode(ElementId id, bool embed) => _elements[id].EmbedDeepLinkCode = embed;
         internal void SetPropertyItems(ElementId id, IEnumerable<string> items)
         {
             var list = _elements[id].PropertyItems;

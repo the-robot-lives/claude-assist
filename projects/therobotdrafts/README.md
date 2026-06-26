@@ -71,6 +71,7 @@ the specs.
 | [`docs/specs/unity-6.3-baseline.md`](docs/specs/unity-6.3-baseline.md) | Verified Unity 6.3 LTS engine baseline (graphics, DOTS, XR, scripting) with primary sources. |
 | [`docs/specs/unity-6.5-delta.md`](docs/specs/unity-6.5-delta.md) | What changed in Unity 6.4 → 6.5 vs the 6.3 baseline (breaking ECS removals, DOTS core-package renumber, Quest perf, LTS-vs-Tech-Stream guidance). The editor is now `6000.5.1f1`. |
 | [`docs/specs/design-conventions.md`](docs/specs/design-conventions.md) | Visual, layout, color, and interaction conventions across diagram types. |
+| [`docs/specs/doc-pointers.md`](docs/specs/doc-pointers.md) | Unicode hard-pointer convention for durable cross-document references and generated deep-link expansion. |
 | [`docs/adrs/`](docs/adrs/) | Architecture Decision Records. |
 
 ## Project layout

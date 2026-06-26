@@ -41,6 +41,9 @@ namespace TheRobotDraft.Uml
             ctx.IsAbstract = el.IsAbstract;
             ctx.Description = el.Description;
             ctx.CodeDoc = el.CodeDoc;
+            ctx.DeepLinkUuid = el.DeepLinkUuid;
+            ctx.DeepLinkCode = el.DeepLinkCode;
+            ctx.EmbedDeepLinkCode = el.EmbedDeepLinkCode;
 
             // The original imported source (overlay round-trip), keyed by the element's source-file path.
             if (!string.IsNullOrEmpty(el.SourceFile) && _sourceFiles.TryGetValue(el.SourceFile, out var orig))
@@ -55,8 +58,32 @@ namespace TheRobotDraft.Uml
             {
                 if (!_model.TryGet(childId, out var c)) continue;
                 string doc = !string.IsNullOrWhiteSpace(c.CodeDoc) ? c.CodeDoc : c.Description;
-                if (c.Kind == ElementKind.Field) { ctx.Attributes.Add(c.Name); ctx.AttributeComments.Add(doc ?? ""); }
-                else if (c.Kind == ElementKind.Function) { ctx.Operations.Add(c.Name); ctx.OperationComments.Add(doc ?? ""); }
+                if (c.Kind == ElementKind.Field)
+                {
+                    ctx.Attributes.Add(c.Name);
+                    ctx.AttributeComments.Add(doc ?? "");
+                    ctx.AttributeDeepLinks.Add(new CodeGenContext.MemberDeepLink
+                    {
+                        Uuid = c.DeepLinkUuid,
+                        Code = c.DeepLinkCode,
+                        Embed = c.EmbedDeepLinkCode,
+                        Name = c.Name,
+                        Kind = c.Kind,
+                    });
+                }
+                else if (c.Kind == ElementKind.Function)
+                {
+                    ctx.Operations.Add(c.Name);
+                    ctx.OperationComments.Add(doc ?? "");
+                    ctx.OperationDeepLinks.Add(new CodeGenContext.MemberDeepLink
+                    {
+                        Uuid = c.DeepLinkUuid,
+                        Code = c.DeepLinkCode,
+                        Embed = c.EmbedDeepLinkCode,
+                        Name = c.Name,
+                        Kind = c.Kind,
+                    });
+                }
             }
 
             // Walk every edge touching this element to fold in notes + relationships.
@@ -242,7 +269,8 @@ namespace TheRobotDraft.Uml
                     ? (string.IsNullOrEmpty(el.Code) ? "imported from " + el.SourceFile + " — read-only; Approve to save, or Regenerate"
                                                      : "saved code — read-only; Approve to save, or Regenerate")
                     : "generating with LLM…",
-                id, Generate, el.Language, 0, gutterStart);
+                id, Generate, el.Language, 0, gutterStart,
+                onAudit: code => RunAudit(code, el.Language));
 
             if (!hasExisting) Generate();
         }
@@ -271,7 +299,7 @@ namespace TheRobotDraft.Uml
 
             // Batch output spans multiple elements, so there's no single node to save onto and no regenerate hook.
             var setText = ShowCodeViewer($"Generate code — {ids.Count} elements", sb.ToString(), "generating with LLM…",
-                ElementId.None, null);
+                ElementId.None, null, onAudit: code => RunAudit(code, ""));
 
             if (string.IsNullOrEmpty(LlmSettings.BaseUrl))
             {
@@ -300,7 +328,9 @@ namespace TheRobotDraft.Uml
             "no markdown fences, no commentary, and absolutely NO other programming language. " +
             $"Model the described UML element the natural {language} way (for example, in Elixir use " +
             "defmodule/defstruct/def and @behaviour, NOT a class; in Go use structs + interfaces). " +
-            "Use the attached notes and relationships to inform the implementation.";
+            "Use the attached notes and relationships to inform the implementation. " +
+            "When the UML model includes a doc-pointer with embed:true, include that exact ⟦code⟧ declaration " +
+            "and uuid5 value in the generated documentation comment for the described type/member.";
 
         /// <summary>True when the element carries an original imported source file we can edit surgically (overlay mode).</summary>
         private static bool HasOverlaySource(CodeGenContext ctx) => !string.IsNullOrEmpty(ctx.OriginalSource);
@@ -312,7 +342,9 @@ namespace TheRobotDraft.Uml
             "Return the COMPLETE updated file with ONLY the modeled changes applied — add, rename, or adjust the " +
             "modeled type and its members (and their doc-comments) to match the model, and otherwise PRESERVE " +
             "everything else verbatim: formatting, imports, comments, other declarations, and any code not described " +
-            "by the model. Output ONLY the full file source — no markdown fences and no commentary.";
+            "by the model. Preserve existing ⟦code⟧ doc-pointer declarations; when the model includes a doc-pointer " +
+            "with embed:true, include that exact declaration and uuid5 value in the relevant doc-comment. " +
+            "Output ONLY the full file source — no markdown fences and no commentary.";
 
         /// <summary>User role for an overlay edit: the original file followed by the element's current model.</summary>
         private static string BuildOverlayUserPrompt(CodeGenContext ctx) =>
@@ -413,7 +445,8 @@ namespace TheRobotDraft.Uml
 
         private System.Action<string, string> ShowCodeViewer(string title, string code, string status,
             ElementId saveTarget, System.Action onRegenerate, string language = null, int initialLine = 0,
-            int gutterStartLine = 1)
+            int gutterStartLine = 1, System.Action<string> onSaveToFile = null, System.Action<string> onAudit = null,
+            string saveToFileLabel = null)
         {
             float w = 760f, h = 560f;
             var panel = BeginModal(w, h, title);
@@ -547,9 +580,18 @@ namespace TheRobotDraft.Uml
             if (onRegenerate != null)
                 MakeButton(panel, "Regenerate", new Vector2(pad + 126f, yBtn), new Vector2(120f, 34f),
                     new Color(0.30f, 0.30f, 0.16f, 1f), () => onRegenerate());
-            if (saveTarget.IsValid)
+            // Save-to-file affordance (used by the Liquibase changelog viewer, which has no node save target).
+            if (onSaveToFile != null)
+                MakeButton(panel, string.IsNullOrEmpty(saveToFileLabel) ? "Save to file…" : saveToFileLabel,
+                    new Vector2(w - 308f, yBtn), new Vector2(196f, 34f),
+                    new Color(0.18f, 0.46f, 0.30f, 1f), () => onSaveToFile(rawCode));
+            if (saveTarget.IsValid && onAudit == null)
                 MakeButton(panel, "Open in VS Code", new Vector2(pad + 254f, yBtn), new Vector2(136f, 34f),
                     new Color(0.24f, 0.28f, 0.34f, 1f), () => EditCodeInVsCode(saveTarget));
+            // On-request LLM audit/review of the shown code (the wizard / review step).
+            if (onAudit != null)
+                MakeButton(panel, "Audit (LLM)…", new Vector2(pad + 254f, yBtn), new Vector2(132f, 34f),
+                    new Color(0.34f, 0.26f, 0.42f, 1f), () => onAudit(rawCode));
             // Approve & save the code onto the node — the round-trip counterpart to import.
             if (saveTarget.IsValid)
                 MakeButton(panel, "Approve & save to node", new Vector2(w - 308f, yBtn), new Vector2(196f, 34f),
@@ -756,7 +798,7 @@ namespace TheRobotDraft.Uml
             public LlmProvider(string name, string baseUrl, string envVar) { Name = name; BaseUrl = baseUrl; EnvVar = envVar; }
         }
 
-        private static readonly LlmProvider[] LlmProviders =
+        private static readonly LlmProvider[] DefaultLlmProviders =
         {
             new LlmProvider("LM Studio (local)", "http://localhost:1234/v1", null),
             new LlmProvider("Ollama (local)",    "http://localhost:11434/v1", null),
@@ -766,16 +808,53 @@ namespace TheRobotDraft.Uml
             new LlmProvider("Together",          "https://api.together.xyz/v1", "TOGETHER_API_KEY"),
             new LlmProvider("Mistral",           "https://api.mistral.ai/v1", "MISTRAL_API_KEY"),
             new LlmProvider("DeepSeek",          "https://api.deepseek.com/v1", "DEEPSEEK_API_KEY"),
+            new LlmProvider("Cerebras",          "https://api.cerebras.ai/v1", "CEREBRAS_API_KEY"),
+            new LlmProvider("z.ai",              "https://api.z.ai/api/paas/v4", "ZAI_API_KEY"),
         };
+
+        private static List<LlmProvider> CurrentLlmProviders()
+        {
+            var providers = new List<LlmProvider>();
+            foreach (var p in GlobalCatalog.LlmProviders)
+                if (!string.IsNullOrWhiteSpace(p.name) && !string.IsNullOrWhiteSpace(p.baseUrl))
+                    providers.Add(new LlmProvider(p.name.Trim(), p.baseUrl.Trim(), string.IsNullOrWhiteSpace(p.envVar) ? null : p.envVar.Trim()));
+            if (providers.Count == 0) providers.AddRange(DefaultLlmProviders);
+            providers.Sort((a, b) => string.Compare(a.Name, b.Name, StringComparison.OrdinalIgnoreCase));
+            return providers;
+        }
 
         /// <summary>The env var holding a key for a base URL (so the dialog can prefill it), or null.</summary>
         private static string EnvVarForUrl(string baseUrl)
         {
             string u = (baseUrl ?? "").TrimEnd('/');
-            foreach (var p in LlmProviders)
+            foreach (var p in CurrentLlmProviders())
                 if (!string.IsNullOrEmpty(p.EnvVar) && string.Equals(p.BaseUrl.TrimEnd('/'), u, StringComparison.OrdinalIgnoreCase))
                     return p.EnvVar;
             return null;
+        }
+
+        private static string ProviderNameForUrl(string baseUrl)
+        {
+            if (string.IsNullOrWhiteSpace(baseUrl)) return "Custom provider";
+            try
+            {
+                var uri = new Uri(baseUrl.Trim());
+                return "Custom " + uri.Host;
+            }
+            catch
+            {
+                return "Custom " + baseUrl.Trim().TrimEnd('/');
+            }
+        }
+
+        private static string ProviderNameForSelection(string selectedName, string baseUrl, List<LlmProvider> knownProviders)
+        {
+            if (selectedName != "Custom…")
+                foreach (var provider in knownProviders)
+                    if (provider.Name == selectedName
+                        && string.Equals(provider.BaseUrl.TrimEnd('/'), (baseUrl ?? "").TrimEnd('/'), StringComparison.OrdinalIgnoreCase))
+                        return selectedName;
+            return ProviderNameForUrl(baseUrl);
         }
 
         /// <summary>
@@ -799,17 +878,18 @@ namespace TheRobotDraft.Uml
 
             InputField urlInput = null, keyInput = null;
             DropdownHandle modelDd = null;
+            var knownProviders = CurrentLlmProviders();
 
             var providerNames = new List<string> { "Custom…" };
-            foreach (var p in LlmProviders) providerNames.Add(p.Name);
+            foreach (var p in knownProviders) providerNames.Add(p.Name);
             string currentProvider = "Custom…";
-            foreach (var p in LlmProviders)
+            foreach (var p in knownProviders)
                 if (string.Equals(p.BaseUrl.TrimEnd('/'), (baseUrl ?? "").TrimEnd('/'), StringComparison.OrdinalIgnoreCase))
                     currentProvider = p.Name;
 
             var providerDd = MakeDropdown(panel, new Vector2(16f, y), w - 32f, providerNames, currentProvider, sel =>
             {
-                foreach (var p in LlmProviders)
+                foreach (var p in knownProviders)
                     if (p.Name == sel)
                     {
                         if (urlInput != null) urlInput.text = p.BaseUrl;
@@ -826,7 +906,14 @@ namespace TheRobotDraft.Uml
             y -= 42f;
 
             FormLabel(panel, "Base URL   (e.g. http://localhost:1234/v1)", ref y, w);
-            urlInput = MakeInput(panel, new Vector2(16f, y), w - 32f, baseUrl, LlmSettings.DefaultBaseUrl);
+            urlInput = MakeInput(panel, new Vector2(16f, y), w - 146f, baseUrl, LlmSettings.DefaultBaseUrl);
+            MakeButton(panel, "Save provider", new Vector2(w - 124f, y), new Vector2(108f, 32f),
+                new Color(0.20f, 0.40f, 0.34f, 1f), () =>
+                {
+                    string name = ProviderNameForSelection(providerDd.Get(), urlInput.text, knownProviders);
+                    GlobalCatalog.RememberLlmProvider(name, urlInput.text, EnvVarForUrl(urlInput.text));
+                    status.text = "provider saved globally";
+                });
             y -= 42f;
 
             FormLabel(panel, "API key   (auto-filled from the provider's env var when set)", ref y, w);
@@ -844,8 +931,9 @@ namespace TheRobotDraft.Uml
             y -= 42f;
 
             FormLabel(panel, "Model   (Fetch to list the provider's models)", ref y, w);
-            var models = new List<string>();
-            if (!string.IsNullOrEmpty(model)) models.Add(model);
+            var models = GlobalCatalog.LlmModels;
+            if (!string.IsNullOrEmpty(model) && !ContainsIgnoreCase(models, model)) models.Add(model);
+            models.Sort(StringComparer.OrdinalIgnoreCase);
             modelDd = MakeDropdown(panel, new Vector2(16f, y), w - 200f, models, string.IsNullOrEmpty(model) ? "(fetch models)" : model, _ => { });
             MakeButton(panel, "↻ Fetch models", new Vector2(w - 176f, y), new Vector2(160f, 32f),
                 new Color(0.22f, 0.34f, 0.46f, 1f),
@@ -854,7 +942,13 @@ namespace TheRobotDraft.Uml
 
             void Submit()
             {
-                LlmSettings.Save(urlInput.text, keyInput.text, modelDd.Get());
+                string selectedModel = modelDd.Get();
+                if (string.IsNullOrWhiteSpace(selectedModel) || selectedModel == "(fetch models)")
+                    selectedModel = LlmSettings.DefaultModel;
+                GlobalCatalog.RememberLlmProvider(ProviderNameForSelection(providerDd.Get(), urlInput.text, knownProviders),
+                    urlInput.text, EnvVarForUrl(urlInput.text));
+                GlobalCatalog.RememberLlmModel(selectedModel);
+                LlmSettings.Save(urlInput.text, keyInput.text, selectedModel);
                 CloseMenu();
                 Flash("LLM settings saved");
             }
@@ -898,6 +992,7 @@ namespace TheRobotDraft.Uml
                 { if (status != null) status.text = "✗ " + req.error; yield break; }
                 if (LlmClient.TryParseModels(req.downloadHandler.text, out var models, out var err))
                 {
+                    foreach (var model in models) GlobalCatalog.RememberLlmModel(model);
                     modelDd?.SetOptions(models);
                     if (status != null) status.text = $"loaded {models.Count} models — pick one above";
                 }
@@ -980,6 +1075,9 @@ namespace TheRobotDraft.Uml
             {
                 CloseList();
                 if (opts.Count == 0) return;
+                // uGUI paints in sibling order: raise the whole dropdown above the form fields created after it so the
+                // open list isn't drawn behind them.
+                rt.SetAsLastSibling();
                 const float ih = 28f; float lh = Mathf.Min(opts.Count, 8) * ih + 4f;
                 list = new GameObject("DDList", typeof(RectTransform));
                 var lrt = (RectTransform)list.transform;

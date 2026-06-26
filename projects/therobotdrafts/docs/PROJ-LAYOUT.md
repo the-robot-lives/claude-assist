@@ -45,6 +45,7 @@ therobotdrafts/
 | Unity editor | Install version in `ProjectSettings/ProjectVersion.txt` via Unity Hub (Mac Build Support for `build`/`run`) |
 | `Assets/Scripts/Llm/LlmSettings.cs` | Point at an OpenAI-compatible `/chat/completions` endpoint for LLM code↔model features |
 | `make doctor` | Run to confirm the resolved editor and Mac Build Support before building |
+| `make doc-pointers` | Regenerate `docs/doc-pointer-db.json` and expand Markdown `deeplink:` references via `../../utilities/shell/misc-git-utils/bin/doc-pointers` |
 
 ## Notes
 

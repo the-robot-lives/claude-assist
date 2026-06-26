@@ -278,6 +278,8 @@ namespace TheRobotDraft.Uml
             _packageLink.Clear();
             _nodeImage.Clear(); _imageCache.Clear();
             _sourceFiles.Clear();
+            _dbBaseline.Clear(); _dbActiveBaseline = null;
+            _breakpoints.Clear();
             _selectedRegion = ElementId.None;
             _geoUndo.Clear(); _geoRedo.Clear();
             ExitResizeMode();
@@ -292,6 +294,43 @@ namespace TheRobotDraft.Uml
             NewWorld();           // fresh model + empty history
             RebuildFromModel();
             Flash("new empty diagram");
+        }
+
+        /// <summary>Delete the active diagram/page package and its view-state. Not undoable.</summary>
+        public void DeleteCurrentDiagram()
+        {
+            CloseMenu();
+            if (!_activePackage.IsValid || !_model.TryGet(_activePackage, out var active) || active.Kind != ElementKind.Package)
+            {
+                Flash("no diagram to delete");
+                return;
+            }
+
+            var roots = new List<ElementId> { _activePackage };
+            foreach (var kv in _packageLink)
+                if (kv.Value == _activePackage && _model.Contains(kv.Key))
+                    roots.Add(kv.Key);
+
+            var removedElements = new HashSet<ElementId>();
+            foreach (var root in roots)
+                CollectElementSubtree(root, removedElements);
+
+            var removedEdges = new HashSet<EdgeId>();
+            foreach (var edge in _model.Edges)
+                if (removedElements.Contains(edge.From) || removedElements.Contains(edge.To))
+                    removedEdges.Add(edge.Id);
+
+            string name = active.Name;
+            foreach (var root in roots)
+                if (_model.Contains(root))
+                    _ctl.Delete(root);
+
+            PruneDeletedViewState(removedElements, removedEdges);
+            _activePackage = ElementId.None;
+            EnsureActivePackage();
+            _ctl.ClearHistory();  // deleting a whole diagram is a document-level action
+            RebuildFromModel();
+            Flash("deleted diagram " + name);
         }
 
         /// <summary>Discard the current diagram and reopen the built-in sample (not undoable).</summary>
@@ -611,7 +650,7 @@ namespace TheRobotDraft.Uml
         public void EndPaletteDrag(Vector2 screenPos)
         {
             if (_paletteGhost != null) { Destroy(_paletteGhost); _paletteGhost = null; }
-            if (screenPos.x < (PaletteWidth + 8f) * ScaleFactor) { Flash("drop onto the canvas to create"); return; }
+            if (screenPos.x < (PaletteActiveWidth + 8f) * ScaleFactor) { Flash("drop onto the canvas to create"); return; }
             CreateNodeFromPalette(_paletteDragKind, screenPos);
         }
 
@@ -1726,7 +1765,10 @@ namespace TheRobotDraft.Uml
                 items.Add(new MenuItem("🗙 Remove image", true, () => { CloseMenu(); ClearNodeImage(pid); }));
 
             if (KindInfo.IsDiagramNode(el.Kind) && el.Kind != ElementKind.Note)
+            {
                 items.Add(new MenuItem("⌁ Code ▸   (generate · view · VS Code · refactor)", true, () => ShowCodeMenu(pid, screenPos)));
+                items.Add(new MenuItem("🔬 Trace / debug…   (bubble IDE · breakpoints)", true, () => ShowTraceView(pid)));
+            }
 
             // Z-layer: shift this element forward (+Z, toward the camera) or back (−Z) by one depth plane.
             items.Add(MenuItem.Separator());
@@ -1816,6 +1858,26 @@ namespace TheRobotDraft.Uml
         {
             CloseMenu();
             SetSelected(ElementId.None);
+
+            var items = new List<MenuItem>
+            {
+                new MenuItem("Add ▸", true, () => ShowCanvasAddMenu(screenPos)),
+                MenuItem.Separator(),
+                new MenuItem("Layout ▸", _activePackage.IsValid, () => ShowCanvasLayoutMenu(screenPos)),
+                MenuItem.Separator(),
+                new MenuItem("Diagram ▸", true, () => ShowCanvasDiagramMenu(screenPos)),
+                MenuItem.Separator(),
+                new MenuItem("Generate ▸", true, () => ShowCanvasGenerateMenu(screenPos)),
+                MenuItem.Separator(),
+                new MenuItem("LLM settings…", true, () => ShowLlmSettings(screenPos)),
+            };
+
+            CreateMenu(screenPos, _activePackage.IsValid ? PackageName(_activePackage) : "Canvas (no package yet)", items);
+        }
+
+        private void ShowCanvasAddMenu(Vector2 screenPos)
+        {
+            CloseMenu();
             var items = new List<MenuItem>();
             if (_activePackage.IsValid)
             {
@@ -1832,26 +1894,56 @@ namespace TheRobotDraft.Uml
                     () => PromptAndAdd(ElementId.None, ElementKind.Package, screenPos)));
             }
 
-            // Document actions.
-            items.Add(MenuItem.Separator());
             if (_clipboard != null && _activePackage.IsValid)
                 items.Add(new MenuItem("Paste  (Ctrl/Cmd+V)", true, () => PasteElement()));
+
+            CreateMenu(screenPos, "Add", items);
+        }
+
+        private void ShowCanvasLayoutMenu(Vector2 screenPos)
+        {
+            CloseMenu();
+            var items = new List<MenuItem>();
             items.Add(new MenuItem("Sequence: auto-arrange", true, () => AutoArrangeSequence()));
+            items.Add(MenuItem.Separator());
             items.Add(new MenuItem("Auto-layout: Tidy grid", true, () => AutoLayout("grid")));
             items.Add(new MenuItem("Auto-layout: Force-directed", true, () => AutoLayout("force")));
             items.Add(new MenuItem("Auto-layout: By source / package", true, () => AutoLayout("source")));
             items.Add(new MenuItem("Auto-layout: Hierarchy", true, () => AutoLayout("hierarchy")));
             items.Add(new MenuItem("Auto-layout: AI-assisted…", true, () => AutoLayoutAI()));
+
+            CreateMenu(screenPos, "Layout", items);
+        }
+
+        private void ShowCanvasDiagramMenu(Vector2 screenPos)
+        {
+            CloseMenu();
+            var items = new List<MenuItem>();
             items.Add(new MenuItem("New (empty diagram)", true, () => NewDiagram()));
             items.Add(new MenuItem("Reset to sample", true, () => ResetToSample()));
+            items.Add(MenuItem.Separator());
             items.Add(new MenuItem("Save  (Ctrl/Cmd+S)", true, () => { CloseMenu(); SaveDiagram(); }));
             items.Add(new MenuItem("Save As…  (Ctrl/Cmd+Shift+S)", true, () => SaveDiagramAs()));
             items.Add(new MenuItem("Open file…  (Ctrl/Cmd+O)", true, () => OpenDiagramFile()));
+            items.Add(MenuItem.Separator());
+            items.Add(new MenuItem("Delete diagram", _activePackage.IsValid, () => DeleteCurrentDiagram()));
+            items.Add(new MenuItem("Delete project", true, () => DeleteProject()));
             items.Add(new MenuItem("Delete saved file", true, () => { CloseMenu(); DeleteSavedDiagram(); }));
-            items.Add(new MenuItem("⌁ Import code → elements…", true, () => ShowImportCodeDialog(screenPos)));
-            items.Add(new MenuItem("LLM settings…", true, () => ShowLlmSettings(screenPos)));
 
-            CreateMenu(screenPos, _activePackage.IsValid ? PackageName(_activePackage) : "Canvas (no package yet)", items);
+            CreateMenu(screenPos, "Diagram", items);
+        }
+
+        private void ShowCanvasGenerateMenu(Vector2 screenPos)
+        {
+            CloseMenu();
+            var items = new List<MenuItem>();
+            items.Add(new MenuItem("⌁ Import code → elements…", true, () => ShowImportCodeDialog(screenPos)));
+            items.Add(new MenuItem("⌁ Generate code…  (wizard)", true, () => ShowCodeGenWizard(screenPos)));
+            items.Add(MenuItem.Separator());
+            items.Add(new MenuItem("⛁ Load DB schema → ERD…", true, () => ShowDbConnectDialog(screenPos)));
+            items.Add(new MenuItem("⛁ Generate Liquibase changelog…", true, () => GenerateLiquibaseChangelog()));
+
+            CreateMenu(screenPos, "Generate", items);
         }
 
         public void OnBackgroundClick(PointerEventData e)
@@ -2043,10 +2135,52 @@ namespace TheRobotDraft.Uml
             if (_selection.Count == 0) return;
             // Delete every selected node (iterate a copy — the delete path mutates the model, not _selection).
             var doomed = new List<ElementId>(_selection);
-            foreach (var id in doomed) _ctl.Delete(id);
+            foreach (var id in doomed) { _ctl.Delete(id); _breakpoints.RemoveAllFor(id); }
             SetSelected(ElementId.None);
             FixActiveAfterChange();
             RebuildFromModel();
+        }
+
+        private void CollectElementSubtree(ElementId root, HashSet<ElementId> into)
+        {
+            if (!root.IsValid || !_model.TryGet(root, out var el) || !into.Add(root)) return;
+            foreach (var child in el.ChildIds)
+                CollectElementSubtree(child, into);
+        }
+
+        private void PruneDeletedViewState(HashSet<ElementId> removedElements, HashSet<EdgeId> removedEdges)
+        {
+            if (removedElements == null) removedElements = new HashSet<ElementId>();
+            if (removedEdges == null) removedEdges = new HashSet<EdgeId>();
+
+            foreach (var id in removedElements)
+            {
+                _pos.Remove(id);
+                _posZ.Remove(id);
+                _size.Remove(id);
+                _nodeDepth.Remove(id);
+                _nodeRot.Remove(id);
+                _styles.Remove(id);
+                _nodeImage.Remove(id);
+                _imageCache.Remove(id);
+                _breakpoints.RemoveAllFor(id);
+                _selection.Remove(id);
+                if (_selectedId == id) _selectedId = ElementId.None;
+                if (_selectedRegion == id) _selectedRegion = ElementId.None;
+            }
+
+            foreach (var edge in removedEdges)
+                DropEdgeViewState(edge);
+
+            var deadLinks = new List<ElementId>();
+            foreach (var kv in _packageLink)
+                if (removedElements.Contains(kv.Key) || removedElements.Contains(kv.Value))
+                    deadLinks.Add(kv.Key);
+            foreach (var id in deadLinks) _packageLink.Remove(id);
+
+            ClearEdgeHandles3D();
+            ExitResizeMode();
+            RefreshInspector();
         }
 
         // --- view rebuild ---
@@ -3599,6 +3733,8 @@ namespace TheRobotDraft.Uml
             _curved.Remove(edge);
             _msgLevel.Remove(edge);
             _msgNumber.Remove(edge);
+            _edgeKinds.Remove(edge);
+            if (_selectedEdge == edge) _selectedEdge = EdgeId.None;
             // 3-D route-edit state for this link (waypoints + endpoint face attachments).
             _waypoints3d.Remove(edge);
             _srcFace.Remove(edge);
@@ -3782,6 +3918,10 @@ namespace TheRobotDraft.Uml
         {
             if (_activePackage.IsValid && _model.Contains(_activePackage)) return;
             _activePackage = ElementId.None;
+            // Prefer a top-level package (a tab/diagram) so the bar always has a selected tab on bootstrap.
+            foreach (var el in _model.Elements)
+                if (el.Kind == ElementKind.Package && !el.Parent.IsValid) { _activePackage = el.Id; break; }
+            if (_activePackage.IsValid) return;
             foreach (var el in _model.Elements)
                 if (el.Kind == ElementKind.Package) { _activePackage = el.Id; break; }
         }
@@ -3791,24 +3931,87 @@ namespace TheRobotDraft.Uml
             if (!_activePackage.IsValid || !_model.Contains(_activePackage)) _activePackage = ElementId.None;
         }
 
+        /// <summary>
+        /// One tab per <b>top-level</b> package (a diagram). A package nested inside another package is a
+        /// <b>page</b> of its diagram, reached through that tab's ▾ dropdown rather than a tab of its own. The
+        /// active tab is the top-level ancestor of whatever page/diagram is currently open.
+        /// </summary>
         private void BuildTabBar()
         {
             for (int i = _tabBar.childCount - 1; i >= 0; i--) Destroy(_tabBar.GetChild(i).gameObject);
 
+            var activeRoot = TopLevelOf(_activePackage);
             float x = 8f;
             foreach (var el in _model.Elements)
             {
-                if (el.Kind != ElementKind.Package) continue;
+                if (el.Kind != ElementKind.Package || el.Parent.IsValid) continue; // top-level only
                 var pkgId = el.Id;
-                bool active = pkgId == _activePackage;
-                MakeTab(el.Name, x, 150f, active, () => { _activePackage = pkgId; SetSelected(ElementId.None); RebuildFromModel(); });
+                bool active = pkgId == activeRoot;
+                bool hasPages = HasPages(pkgId);
+                MakeTab(el.Name, x, 150f, active, hasPages,
+                    () => GoToPackage(pkgId),
+                    () => ShowPagesMenu(pkgId));
                 x += 154f;
             }
-            MakeTab("+", x, 40f, false, () =>
-                PromptAndAdd(ElementId.None, ElementKind.Package, new Vector2(Screen.width * 0.5f, Screen.height * 0.5f)));
+            MakeTab("+", x, 40f, false, false,
+                () => PromptAndAdd(ElementId.None, ElementKind.Package, new Vector2(Screen.width * 0.5f, Screen.height * 0.5f)),
+                null);
         }
 
-        private void MakeTab(string label, float x, float w, bool active, System.Action onClick)
+        /// <summary>The top-level package (tab) that owns <paramref name="id"/> — i.e. walk parents to the root.</summary>
+        private ElementId TopLevelOf(ElementId id)
+        {
+            var cur = id;
+            int guard = 0;
+            while (cur.IsValid && _model.TryGet(cur, out var e) && e.Parent.IsValid)
+            {
+                cur = e.Parent;
+                if (++guard > 100_000) break;
+            }
+            return cur;
+        }
+
+        /// <summary>True if <paramref name="pkgId"/> has at least one nested package (a page).</summary>
+        private bool HasPages(ElementId pkgId)
+        {
+            foreach (var el in _model.Elements)
+                if (el.Kind == ElementKind.Package && el.Parent == pkgId) return true;
+            return false;
+        }
+
+        /// <summary>The diagram (top-level tab) itself, then each of its nested packages, depth-first — for the dropdown.</summary>
+        private void CollectPages(ElementId pkgId, int depth, List<(ElementId id, int depth)> into)
+        {
+            into.Add((pkgId, depth));
+            foreach (var el in _model.Elements)
+                if (el.Kind == ElementKind.Package && el.Parent == pkgId)
+                    CollectPages(el.Id, depth + 1, into);
+        }
+
+        /// <summary>Dropdown listing a diagram and its pages; selecting one opens it.</summary>
+        private void ShowPagesMenu(ElementId pkgId)
+        {
+            var pages = new List<(ElementId id, int depth)>();
+            CollectPages(pkgId, 0, pages);
+
+            var items = new List<MenuItem>();
+            foreach (var (id, depth) in pages)
+            {
+                var target = id;
+                string indent = new string(' ', depth * 3);
+                string mark = id == _activePackage ? "• " : (depth == 0 ? "▸ " : "· ");
+                items.Add(new MenuItem(indent + mark + PackageName(id), true, () => GoToPackage(target)));
+            }
+            items.Add(MenuItem.Separator());
+            items.Add(new MenuItem("＋ Add page here…", true,
+                () => { _activePackage = pkgId; AddPackageWithNode(new Vector2(Screen.width * 0.5f, Screen.height * 0.5f)); }));
+
+            // Anchor the menu just under this tab's row.
+            CreateMenu(new Vector2(8f, Screen.height - 40f), PackageName(pkgId) + "  ▾ pages", items);
+        }
+
+        private void MakeTab(string label, float x, float w, bool active, bool hasPages,
+            System.Action onClick, System.Action onCaret)
         {
             var go = new GameObject("Tab:" + label, typeof(RectTransform));
             var rt = (RectTransform)go.transform;
@@ -3822,9 +4025,31 @@ namespace TheRobotDraft.Uml
             var btn = go.AddComponent<Button>();
             btn.targetGraphic = img;
             btn.onClick.AddListener(() => onClick());
-            var t = MakeText(rt, label, new Vector2(10f, 0f), new Vector2(w - 14f, 30f), 16,
+
+            // The caret occupies the right end of the tab when the diagram has pages; clicking it opens the dropdown.
+            float caretW = onCaret != null ? 22f : 0f;
+            var t = MakeText(rt, label, new Vector2(10f, 0f), new Vector2(w - 14f - caretW, 30f), 16,
                 active ? new Color(0.95f, 0.98f, 1f) : new Color(0.72f, 0.77f, 0.84f, 1f), TextAnchor.MiddleLeft);
             t.raycastTarget = false;
+
+            if (onCaret != null)
+            {
+                var cgo = new GameObject("Caret", typeof(RectTransform));
+                var crt = (RectTransform)cgo.transform;
+                crt.SetParent(rt, false);
+                crt.anchorMin = crt.anchorMax = new Vector2(0f, 0.5f);
+                crt.pivot = new Vector2(0f, 0.5f);
+                crt.sizeDelta = new Vector2(caretW, 30f);
+                crt.anchoredPosition = new Vector2(w - caretW, 0f);
+                var cImg = cgo.AddComponent<Image>();
+                cImg.color = hasPages ? new Color(1f, 1f, 1f, 0.06f) : new Color(1f, 1f, 1f, 0f);
+                var cBtn = cgo.AddComponent<Button>();
+                cBtn.targetGraphic = cImg;
+                cBtn.onClick.AddListener(() => onCaret());
+                var ct = MakeText(crt, "▾", new Vector2(2f, 0f), new Vector2(caretW - 2f, 30f), 14,
+                    hasPages ? new Color(0.9f, 0.94f, 1f, 1f) : new Color(0.55f, 0.6f, 0.68f, 0.7f), TextAnchor.MiddleCenter);
+                ct.raycastTarget = false;
+            }
         }
 
         // --- helpers ---
@@ -4291,11 +4516,18 @@ namespace TheRobotDraft.Uml
         // --- toolbar palette UI ---
 
         private const float PaletteWidth = 168f;
+        private const float CollapsedSidebarWidth = 28f;
 
+        private RectTransform _palette;
+        private RectTransform _paletteBody;
         private RectTransform _paletteContent;
+        private Text _paletteToggleText;
         private readonly HashSet<string> _paletteCollapsed = new();
         private string _paletteSearch = "";
         private bool _paletteDefaultsCollapsed;
+        private bool _paletteSidebarCollapsed;
+
+        private float PaletteActiveWidth => _paletteSidebarCollapsed ? CollapsedSidebarWidth : PaletteWidth;
 
         private static (string title, (ElementKind kind, string label)[] items)[] PaletteSections() => new[]
         {
@@ -4425,23 +4657,29 @@ namespace TheRobotDraft.Uml
             // scroll below it. Sections are collapsed by default (the long family list stays compact) — type in
             // the search box, or click a ▸ header, to reveal kinds.
             var container = new GameObject("Palette", typeof(RectTransform));
-            var crt = (RectTransform)container.transform;
-            crt.SetParent(_root, false);
-            crt.anchorMin = new Vector2(0f, 0f); crt.anchorMax = new Vector2(0f, 1f);
-            crt.pivot = new Vector2(0f, 1f);
-            crt.offsetMin = new Vector2(0f, 8f);      // left = 0, bottom = 8
-            crt.offsetMax = new Vector2(width, -70f); // right = width, top = -70 (clears the tabs + hint line)
+            _palette = (RectTransform)container.transform;
+            _palette.SetParent(_root, false);
+            _palette.anchorMin = new Vector2(0f, 0f); _palette.anchorMax = new Vector2(0f, 1f);
+            _palette.pivot = new Vector2(0f, 1f);
+            _palette.offsetMin = new Vector2(0f, 8f);      // left = 0, bottom = 8
+            _palette.offsetMax = new Vector2(width, -70f); // right = width, top = -70 (clears the tabs + hint line)
             container.AddComponent<Image>().color = new Color(0.12f, 0.13f, 0.16f, 0.97f);
 
+            var bodyGo = new GameObject("Body", typeof(RectTransform));
+            _paletteBody = (RectTransform)bodyGo.transform;
+            _paletteBody.SetParent(_palette, false);
+            _paletteBody.anchorMin = Vector2.zero; _paletteBody.anchorMax = Vector2.one;
+            _paletteBody.offsetMin = Vector2.zero; _paletteBody.offsetMax = Vector2.zero;
+
             // Fixed search/filter box at the very top (not part of the scrolled content).
-            var search = MakeInput(crt, new Vector2(6f, -6f), width - 12f, _paletteSearch, "search nodes…");
+            var search = MakeInput(_paletteBody, new Vector2(6f, -6f), width - 12f, _paletteSearch, "search nodes…");
             ((RectTransform)search.transform).sizeDelta = new Vector2(width - 12f, searchH);
             search.onValueChanged.AddListener(v => { _paletteSearch = v ?? ""; RebuildPaletteContent(); });
 
             // Scrolling viewport below the search box; it masks the content.
             var viewport = new GameObject("Viewport", typeof(RectTransform));
             var vrt = (RectTransform)viewport.transform;
-            vrt.SetParent(crt, false);
+            vrt.SetParent(_paletteBody, false);
             vrt.anchorMin = new Vector2(0f, 0f); vrt.anchorMax = new Vector2(1f, 1f);
             vrt.pivot = new Vector2(0f, 1f);
             vrt.offsetMin = Vector2.zero;
@@ -4470,7 +4708,41 @@ namespace TheRobotDraft.Uml
                 _paletteDefaultsCollapsed = true;
             }
 
+            BuildPaletteToggle();
+            ApplyPaletteCollapse();
             RebuildPaletteContent();
+        }
+
+        private void BuildPaletteToggle()
+        {
+            var go = new GameObject("PaletteCollapse", typeof(RectTransform));
+            var rt = (RectTransform)go.transform;
+            rt.SetParent(_palette, false);
+            rt.anchorMin = rt.anchorMax = new Vector2(1f, 1f);
+            rt.pivot = new Vector2(1f, 1f);
+            rt.sizeDelta = new Vector2(CollapsedSidebarWidth, 44f);
+            rt.anchoredPosition = Vector2.zero;
+            var img = go.AddComponent<Image>();
+            img.color = new Color(0.18f, 0.22f, 0.28f, 1f);
+            var btn = go.AddComponent<Button>();
+            btn.targetGraphic = img;
+            btn.onClick.AddListener(() =>
+            {
+                _paletteSidebarCollapsed = !_paletteSidebarCollapsed;
+                ApplyPaletteCollapse();
+                Flash(_paletteSidebarCollapsed ? "left toolbar collapsed" : "left toolbar expanded");
+            });
+            _paletteToggleText = MakeText(rt, "", Vector2.zero, rt.sizeDelta, 18,
+                new Color(0.92f, 0.95f, 1f, 1f), TextAnchor.MiddleCenter);
+            _paletteToggleText.raycastTarget = false;
+        }
+
+        private void ApplyPaletteCollapse()
+        {
+            if (_palette == null) return;
+            _palette.offsetMax = new Vector2(PaletteActiveWidth, -70f);
+            if (_paletteBody != null) _paletteBody.gameObject.SetActive(!_paletteSidebarCollapsed);
+            if (_paletteToggleText != null) _paletteToggleText.text = _paletteSidebarCollapsed ? ">" : "<";
         }
 
         /// <summary>(Re)populate the palette body, honoring each section's collapsed state.</summary>
@@ -4581,8 +4853,10 @@ namespace TheRobotDraft.Uml
         private void CreateMenu(Vector2 screenPos, string header, List<MenuItem> items)
         {
             CloseMenu();
-            const float w = 250f, ih = 32f, hh = 26f, pad = 6f;
-            float h = hh + pad + items.Count * ih + pad;
+            const float w = 280f, ih = 32f, sh = 10f, hh = 26f, pad = 6f;
+            float bodyH = 0f;
+            foreach (var item in items) bodyH += item.IsSeparator ? sh : ih;
+            float h = hh + pad + bodyH + pad;
             var go = NewPanel("Menu", screenPos, new Vector2(w, h), new Color(0.12f, 0.14f, 0.17f, 0.98f));
             var rt = (RectTransform)go.transform;
             _menu = go;
@@ -4594,7 +4868,12 @@ namespace TheRobotDraft.Uml
             float y = -(hh + pad);
             foreach (var item in items)
             {
-                if (item.IsSeparator) { y -= 6f; continue; }
+                if (item.IsSeparator)
+                {
+                    MakeMenuSeparator(rt, new Vector2(10f, y - sh * 0.5f), w - 20f);
+                    y -= sh;
+                    continue;
+                }
                 MakeMenuButton(rt, item, new Vector2(4f, y), new Vector2(w - 8f, ih));
                 y -= ih;
             }
@@ -4697,9 +4976,41 @@ namespace TheRobotDraft.Uml
             rt.anchorMin = rt.anchorMax = new Vector2(0f, 0f);
             rt.pivot = new Vector2(0f, 1f);
             rt.sizeDelta = size;
-            rt.anchoredPosition = new Vector2(screenPos.x, screenPos.y) / ScaleFactor;
+            rt.anchoredPosition = ClampPanelTopLeft(new Vector2(screenPos.x, screenPos.y) / ScaleFactor, size);
             go.AddComponent<Image>().color = color;
             return go;
+        }
+
+        private Vector2 ClampPanelTopLeft(Vector2 topLeft, Vector2 size)
+        {
+            const float margin = 8f;
+            float canvasW = Screen.width / ScaleFactor;
+            float canvasH = Screen.height / ScaleFactor;
+            if (_root != null && _root.rect.width > 1f && _root.rect.height > 1f)
+            {
+                canvasW = _root.rect.width;
+                canvasH = _root.rect.height;
+            }
+
+            float minX = margin;
+            float maxX = Mathf.Max(margin, canvasW - size.x - margin);
+            float minY = size.y + margin;
+            float maxY = canvasH - margin;
+            if (minY > maxY) minY = maxY = Mathf.Max(margin, canvasH - margin);
+
+            return new Vector2(Mathf.Clamp(topLeft.x, minX, maxX), Mathf.Clamp(topLeft.y, minY, maxY));
+        }
+
+        private void MakeMenuSeparator(RectTransform parent, Vector2 topLeft, float width)
+        {
+            var go = new GameObject("Separator", typeof(RectTransform));
+            var rt = (RectTransform)go.transform;
+            rt.SetParent(parent, false);
+            rt.anchorMin = rt.anchorMax = new Vector2(0f, 1f);
+            rt.pivot = new Vector2(0f, 0.5f);
+            rt.sizeDelta = new Vector2(width, 1f);
+            rt.anchoredPosition = topLeft;
+            go.AddComponent<Image>().color = new Color(0.28f, 0.31f, 0.38f, 1f);
         }
 
         private void MakeMenuButton(RectTransform parent, MenuItem item, Vector2 topLeft, Vector2 size)

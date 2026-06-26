@@ -5,6 +5,7 @@ using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using TheRobotDraft.Authoring.Model;
 using TheRobotDraft.Authoring.Rules;
+using TheRobotDraft.Llm;
 
 namespace TheRobotDraft.Uml
 {
@@ -18,8 +19,6 @@ namespace TheRobotDraft.Uml
     /// </summary>
     public sealed partial class UmlCanvas
     {
-        private static readonly string[] CommonLanguages =
-            { "C#", "C/C++", "Rust", "Go", "Java", "Python", "Node.js", "Elixir", "TypeScript" };
         private static readonly string[] CommonMultiplicities = { "1", "0..1", "0..*", "1..*", "*" };
 
         private static readonly Color LabelColor = new Color(0.62f, 0.68f, 0.78f, 1f);
@@ -37,6 +36,7 @@ namespace TheRobotDraft.Uml
             CloseMenu();
             bool isField = kind == ElementKind.Field;
             bool editing = existing.IsValid && _model.TryGet(existing, out _);
+            string memberLanguage = LanguageForElement(parent);
 
             MemberParts parts = editing && _model.TryGet(existing, out var ex)
                 ? UmlMemberSignature.Parse(kind, ex.Name)
@@ -62,8 +62,9 @@ namespace TheRobotDraft.Uml
             if (isField)
             {
                 FormLabel(panel, "Type", ref y, w);
-                typeInput = MakeInput(panel, new Vector2(16f, y), w - 32f, parts.Type,
-                    "Type  (e.g. decimal, Guid, List<Order>)");
+                typeInput = MakeCatalogCombobox(panel, new Vector2(16f, y), w - 32f, parts.Type,
+                    "Type  (e.g. decimal, Guid, List<Order>)", GlobalCatalog.FieldTypesForLanguage(memberLanguage),
+                    value => GlobalCatalog.RememberFieldType(memberLanguage, value));
                 y -= 44f;
             }
             else
@@ -73,7 +74,9 @@ namespace TheRobotDraft.Uml
                     "amount : decimal, note : string");
                 y -= 44f;
                 FormLabel(panel, "Return type", ref y, w);
-                typeInput = MakeInput(panel, new Vector2(16f, y), w - 32f, parts.Type, "void");
+                typeInput = MakeCatalogCombobox(panel, new Vector2(16f, y), w - 32f, parts.Type, "void",
+                    GlobalCatalog.FieldTypesForLanguage(memberLanguage),
+                    value => GlobalCatalog.RememberFieldType(memberLanguage, value));
                 y -= 44f;
             }
 
@@ -87,6 +90,19 @@ namespace TheRobotDraft.Uml
             FormLabel(panel, "Comment / doc   (rendered above the member in generated code)", ref y, w);
             var commentInput = MakeMultilineInput(panel, new Vector2(16f, y), w - 32f, 64f, currentComment,
                 "What this member is for…");
+            y -= 78f;
+
+            ModelElement linkElement = null;
+            if (editing) _model.TryGet(existing, out linkElement);
+            string currentCode = linkElement != null ? linkElement.DeepLinkCode : "";
+            string currentUuid = linkElement != null ? linkElement.DeepLinkUuid : "";
+            bool currentEmbed = linkElement != null ? linkElement.EmbedDeepLinkCode : DeepLinkIdentity.DefaultEmbed(kind);
+            FormLabel(panel, "Deep link   " + DeepLinkIdentity.Marker(currentCode), ref y, w);
+            MakeText(panel, currentUuid, new Vector2(16f, y), new Vector2(w - 32f, 18f), 11,
+                new Color(0.62f, 0.68f, 0.78f, 1f), TextAnchor.MiddleLeft);
+            y -= 24f;
+            var getEmbedDeepLink = MakeCheckbox(panel, new Vector2(16f, y), "embed in generated docs", currentEmbed);
+            y -= 36f;
 
             void Submit()
             {
@@ -102,11 +118,14 @@ namespace TheRobotDraft.Uml
                 };
                 string sig = UmlMemberSignature.Compose(kind, np);
                 string comment = commentInput.text;
+                GlobalCatalog.RememberFieldType(memberLanguage, typeInput.text);
                 CloseMenu();
                 if (editing)
                 {
                     _ctl.Rename(existing, sig);
                     _ctl.SetCodeDoc(existing, comment);
+                    if (getEmbedDeepLink() != currentEmbed)
+                        _ctl.SetEmbedDeepLinkCode(existing, getEmbedDeepLink());
                     RebuildFromModel();
                     SetSelected(parent);
                     Flash("updated " + (isField ? "attribute" : "operation"));
@@ -117,6 +136,8 @@ namespace TheRobotDraft.Uml
                     var id = _ctl.CommitAddNode(parent, sig);
                     if (!id.IsValid) { Flash("invalid placement"); _ctl.EnterSelect(); onClose?.Invoke(); return; }
                     if (!string.IsNullOrWhiteSpace(comment)) _ctl.SetCodeDoc(id, comment);
+                    if (getEmbedDeepLink() != DeepLinkIdentity.DefaultEmbed(kind))
+                        _ctl.SetEmbedDeepLinkCode(id, getEmbedDeepLink());
                     RebuildFromModel();
                     SetSelected(parent);
                     Flash("added " + (isField ? "attribute" : "operation"));
@@ -154,12 +175,10 @@ namespace TheRobotDraft.Uml
                     else if (c.Kind == ElementKind.Function) ops.Add((cid, c.Name));
                 }
 
-            const int perRow = 4;
-            const float chipW = 100f, chipH = 26f, chipGap = 6f, rowH = 28f;
-            int langRows = (CommonLanguages.Length + perRow - 1) / perRow;
+            const float rowH = 28f;
             const float descH = 72f; // multiline description/doc input height
             float w = 480f;
-            float h = 250f + langRows * (chipH + chipGap) + (el.Kind == ElementKind.Class ? 36f : 0f)
+            float h = 286f + (el.Kind == ElementKind.Class ? 36f : 0f)
                       + 24f + descH + 12f + 24f + descH + 12f
                       + 48f + attrs.Count * rowH + 48f + ops.Count * rowH + 60f;
             var panel = BeginModal(w, h, "Edit " + el.Kind + "   —   " + el.Name);
@@ -170,22 +189,15 @@ namespace TheRobotDraft.Uml
             y -= 44f;
 
             FormLabel(panel, "Implementation language", ref y, w);
-            var langInput = MakeInput(panel, new Vector2(16f, y), w - 32f, el.Language,
-                "C# / Rust / Go / Java / Python / Node.js / Elixir…");
-            y -= 40f;
-            for (int i = 0; i < CommonLanguages.Length; i++)
-            {
-                var captured = CommonLanguages[i];
-                float cx = 16f + (i % perRow) * (chipW + chipGap);
-                float cy = y - (i / perRow) * (chipH + chipGap);
-                MakeButton(panel, captured, new Vector2(cx, cy), new Vector2(chipW, chipH),
-                    new Color(0.18f, 0.22f, 0.28f, 1f), () => langInput.text = captured);
-            }
-            y -= langRows * (chipH + chipGap) + 4f;
+            var langInput = MakeCatalogCombobox(panel, new Vector2(16f, y), w - 32f, el.Language,
+                "C# / Rust / Go / Java / Python / Node.js / Elixir…",
+                GlobalCatalog.Languages, GlobalCatalog.RememberLanguage);
+            y -= 44f;
 
             FormLabel(panel, "Stereotype   («…» — overrides the derived one)", ref y, w);
-            var stereoInput = MakeInput(panel, new Vector2(16f, y), w - 32f, el.Stereotype,
-                "entity, service, controller, value…");
+            var stereoInput = MakeCatalogCombobox(panel, new Vector2(16f, y), w - 32f, el.Stereotype,
+                "entity, service, controller, value…", GlobalCatalog.StereotypesForLanguage(el.Language),
+                value => GlobalCatalog.RememberStereotype(langInput.text, value));
             y -= 44f;
 
             FormLabel(panel, "Description   (UML/product note)", ref y, w);
@@ -197,6 +209,14 @@ namespace TheRobotDraft.Uml
             var docInput = MakeMultilineInput(panel, new Vector2(16f, y), w - 32f, descH, el.CodeDoc,
                 "Comment emitted above this type in generated code…");
             y -= descH + 12f;
+
+            FormLabel(panel, "Deep link   " + DeepLinkIdentity.Marker(el.DeepLinkCode), ref y, w);
+            MakeText(panel, el.DeepLinkUuid ?? "", new Vector2(16f, y), new Vector2(w - 32f, 18f), 11,
+                new Color(0.62f, 0.68f, 0.78f, 1f), TextAnchor.MiddleLeft);
+            y -= 24f;
+            var getEmbedDeepLink = MakeCheckbox(panel, new Vector2(16f, y), "embed in generated docs",
+                el.EmbedDeepLinkCode);
+            y -= 36f;
 
             Func<bool> getAbstract = () => el.IsAbstract;
             if (el.Kind == ElementKind.Class)
@@ -211,9 +231,13 @@ namespace TheRobotDraft.Uml
                 string nn = string.IsNullOrWhiteSpace(nameInput.text) ? el.Name : nameInput.text.Trim();
                 if (nn != el.Name) _ctl.Rename(id, nn);
                 if (el.Kind == ElementKind.Class && getAbstract() != el.IsAbstract) _ctl.SetAbstract(id, getAbstract());
+                GlobalCatalog.RememberLanguage(langInput.text);
+                GlobalCatalog.RememberStereotype(langInput.text, stereoInput.text);
                 _ctl.SetMeta(id, langInput.text, stereoInput.text);
                 _ctl.SetDescription(id, descInput.text);
                 _ctl.SetCodeDoc(id, docInput.text);
+                if (getEmbedDeepLink() != el.EmbedDeepLinkCode)
+                    _ctl.SetEmbedDeepLinkCode(id, getEmbedDeepLink());
             }
             void Reopen() => ShowClassifierEditor(id, screenPos);
 
@@ -765,6 +789,7 @@ namespace TheRobotDraft.Uml
         {
             if (!_model.TryGet(edge, out var e)) return;
             CloseMenu();
+            string edgeLanguage = LanguageForEdge(e);
 
             float w = 470f, h = 420f;
             var panel = BeginModal(w, h, "Relationship   —   multiplicity · label · constraint");
@@ -785,12 +810,15 @@ namespace TheRobotDraft.Uml
             MultiplicityChips(panel, ref y, tgtInput);
 
             FormLabel(panel, "Constraint   (drawn in braces — e.g. {ordered}, {xor}, a guard)", ref y, w);
-            var constraintInput = MakeInput(panel, new Vector2(16f, y), w - 32f, e.Constraint, "{ordered}, {unique}, {subset}…");
+            var constraintInput = MakeCatalogCombobox(panel, new Vector2(16f, y), w - 32f, e.Constraint,
+                "{ordered}, {unique}, {subset}…", GlobalCatalog.ConstraintsForLanguage(edgeLanguage),
+                value => GlobalCatalog.RememberConstraint(edgeLanguage, value));
             y -= 38f;
 
             void Submit()
             {
                 CloseMenu();
+                GlobalCatalog.RememberConstraint(edgeLanguage, constraintInput.text);
                 _ctl.SetEdgeMeta(edge, labelInput.text, srcInput.text, tgtInput.text, constraintInput.text);
                 RebuildFromModel();
                 Flash("updated relationship");
@@ -819,6 +847,16 @@ namespace TheRobotDraft.Uml
         }
 
         private string EndName(ElementId id) => _model.TryGet(id, out var el) ? el.Name : "?";
+
+        private string LanguageForElement(ElementId id) =>
+            _model.TryGet(id, out var el) ? el.Language : null;
+
+        private string LanguageForEdge(ModelEdge edge)
+        {
+            string from = LanguageForElement(edge.From);
+            if (!string.IsNullOrWhiteSpace(from)) return from;
+            return LanguageForElement(edge.To);
+        }
 
         // --- form building blocks ---
 
@@ -879,6 +917,110 @@ namespace TheRobotDraft.Uml
             input.lineType = InputField.LineType.SingleLine;
             input.text = value ?? "";
             return input;
+        }
+
+        private InputField MakeCatalogCombobox(RectTransform parent, Vector2 topLeft, float width, string value,
+            string placeholder, List<string> options, Action<string> remember)
+        {
+            const float dropW = 36f;
+            const float addW = 56f;
+            const float gap = 6f;
+            float inputW = Mathf.Max(120f, width - dropW - addW - gap * 2f);
+            var input = MakeInput(parent, topLeft, inputW, value, placeholder);
+            var opts = new List<string>(options ?? new List<string>());
+            opts.Sort(StringComparer.OrdinalIgnoreCase);
+
+            GameObject list = null;
+            void CloseList()
+            {
+                if (list != null)
+                {
+                    Destroy(list);
+                    list = null;
+                }
+            }
+
+            void AddCurrent()
+            {
+                if (string.IsNullOrWhiteSpace(input.text)) return;
+                remember?.Invoke(input.text);
+                if (!ContainsIgnoreCase(opts, input.text)) opts.Add(input.text.Trim());
+                opts.Sort(StringComparer.OrdinalIgnoreCase);
+                Flash("saved option");
+            }
+
+            void OpenList()
+            {
+                CloseList();
+                opts.Sort(StringComparer.OrdinalIgnoreCase);
+                if (opts.Count == 0) return;
+                parent.SetAsLastSibling();
+
+                const float ih = 28f;
+                float lh = Mathf.Min(opts.Count, 8) * ih + 4f;
+                list = new GameObject("ComboList", typeof(RectTransform));
+                var lrt = (RectTransform)list.transform;
+                lrt.SetParent(parent, false);
+                lrt.anchorMin = lrt.anchorMax = new Vector2(0f, 1f);
+                lrt.pivot = new Vector2(0f, 1f);
+                lrt.sizeDelta = new Vector2(inputW, lh);
+                lrt.anchoredPosition = topLeft + new Vector2(0f, -34f);
+                list.AddComponent<Image>().color = new Color(0.13f, 0.15f, 0.19f, 0.99f);
+                list.AddComponent<RectMask2D>();
+
+                var content = new GameObject("C", typeof(RectTransform));
+                var crt = (RectTransform)content.transform;
+                crt.SetParent(lrt, false);
+                crt.anchorMin = new Vector2(0f, 1f);
+                crt.anchorMax = new Vector2(1f, 1f);
+                crt.pivot = new Vector2(0.5f, 1f);
+                crt.sizeDelta = new Vector2(0f, opts.Count * ih);
+                crt.anchoredPosition = Vector2.zero;
+
+                var scroll = list.AddComponent<ScrollRect>();
+                scroll.content = crt;
+                scroll.viewport = lrt;
+                scroll.horizontal = false;
+                scroll.movementType = ScrollRect.MovementType.Clamped;
+
+                float iy = 0f;
+                foreach (var option in opts)
+                {
+                    var ov = option;
+                    var igo = new GameObject("I", typeof(RectTransform));
+                    var irt = (RectTransform)igo.transform;
+                    irt.SetParent(crt, false);
+                    irt.anchorMin = irt.anchorMax = new Vector2(0f, 1f);
+                    irt.pivot = new Vector2(0f, 1f);
+                    irt.sizeDelta = new Vector2(inputW, ih);
+                    irt.anchoredPosition = new Vector2(0f, iy);
+                    var iimg = igo.AddComponent<Image>();
+                    iimg.color = new Color(0.18f, 0.20f, 0.25f, 1f);
+                    var ibtn = igo.AddComponent<Button>();
+                    ibtn.targetGraphic = iimg;
+                    ibtn.onClick.AddListener(() => { input.text = ov; CloseList(); });
+                    MakeText(irt, ov, new Vector2(8f, 0f), new Vector2(inputW - 12f, ih), 14,
+                        new Color(0.9f, 0.93f, 0.98f, 1f), TextAnchor.MiddleLeft);
+                    iy -= ih;
+                }
+            }
+
+            float x = topLeft.x + inputW + gap;
+            MakeButton(parent, "v", new Vector2(x, topLeft.y), new Vector2(dropW, 32f),
+                new Color(0.18f, 0.22f, 0.28f, 1f), () => { if (list != null) CloseList(); else OpenList(); });
+            MakeButton(parent, "Add", new Vector2(x + dropW + gap, topLeft.y), new Vector2(addW, 32f),
+                new Color(0.20f, 0.40f, 0.34f, 1f), AddCurrent);
+            return input;
+        }
+
+        private static bool ContainsIgnoreCase(List<string> options, string value)
+        {
+            if (string.IsNullOrWhiteSpace(value)) return true;
+            string trimmed = value.Trim();
+            foreach (var option in options)
+                if (string.Equals(option, trimmed, StringComparison.OrdinalIgnoreCase))
+                    return true;
+            return false;
         }
 
         /// <summary>Four-way segmented scope control (+ public / - private / # protected / ~ package).</summary>

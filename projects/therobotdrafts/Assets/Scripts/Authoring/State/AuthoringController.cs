@@ -259,6 +259,22 @@ namespace TheRobotDraft.Authoring.State
             return true;
         }
 
+        /// <summary>Set the element's UUIDv5 + compact Unicode documentation pointer identity, one undo step.</summary>
+        public bool SetDeepLink(ElementId element, string uuid, string code)
+        {
+            if (!_model.Contains(element)) return false;
+            _history.Execute(new SetDeepLinkCommand(element, uuid, code));
+            return true;
+        }
+
+        /// <summary>Toggle whether generated source embeds this element's deep-link declaration, one undo step.</summary>
+        public bool SetEmbedDeepLinkCode(ElementId element, bool embed)
+        {
+            if (!_model.Contains(element)) return false;
+            _history.Execute(new SetEmbedDeepLinkCommand(element, embed));
+            return true;
+        }
+
         /// <summary>Set kind-specific element items/options, one undo step.</summary>
         public bool SetPropertyItems(ElementId element, System.Collections.Generic.IEnumerable<string> items)
         {

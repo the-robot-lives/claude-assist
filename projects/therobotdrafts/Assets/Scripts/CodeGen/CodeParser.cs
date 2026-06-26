@@ -24,10 +24,16 @@ namespace TheRobotDraft.CodeGen
             public string kind;        // Class | Interface | Enum | Struct (free text; mapped + defaulted to Class)
             public string language;    // implementation language, e.g. "C#", "TypeScript"
             public string comment;     // the type's doc-comment text, stripped of comment markers; "" when absent
+            public string deepLinkUuid; // UUIDv5 from a doc-pointer declaration in the type doc-comment, "" when absent
+            public string deepLinkCode; // four-codepoint Unicode doc-pointer code from ⟦....⟧, "" when absent
             public string[] fields;    // UML attribute signatures, e.g. "- id : Guid"
             public string[] fieldComments;  // doc-comment per field, index-aligned with fields; "" when absent
+            public string[] fieldDeepLinkUuids; // per-field UUIDv5 values, same order as fields
+            public string[] fieldDeepLinkCodes; // per-field Unicode doc-pointer codes, same order as fields
             public string[] methods;   // UML operation signatures, e.g. "+ submit() : void"
             public string[] methodComments; // doc-comment per method, index-aligned with methods; "" when absent
+            public string[] methodDeepLinkUuids; // per-method UUIDv5 values, same order as methods
+            public string[] methodDeepLinkCodes; // per-method Unicode doc-pointer codes, same order as methods
             public string[] extends;   // base-type names (Generalization)
             public string[] implements; // interface names (Realization)
             public string[] uses;      // collaborator type names (Dependency)
@@ -54,10 +60,16 @@ namespace TheRobotDraft.CodeGen
             "      \"kind\": \"Class\",                // one of: Class, Interface, Enum, Struct\n" +
             "      \"language\": \"C#\",                // the source language\n" +
             "      \"comment\": \"What this type is for.\",   // the type's doc-comment, plain text, markers stripped\n" +
+            "      \"deepLinkUuid\": \"64e9408c-37a7-5f92-8893-f149cbde01c0\", // UUID from a ⟦....⟧ doc-pointer line, or \"\"\n" +
+            "      \"deepLinkCode\": \"𓀀𓀁𓀂𓀃\",       // the four Unicode chars inside ⟦....⟧, or \"\"\n" +
             "      \"fields\":  [\"- id : Guid\", \"- total : decimal\"],   // UML attribute signatures\n" +
             "      \"fieldComments\": [\"The identity.\", \"\"],            // doc-comment per field, same order\n" +
+            "      \"fieldDeepLinkUuids\": [\"\", \"\"],                    // UUID per field, same order\n" +
+            "      \"fieldDeepLinkCodes\": [\"\", \"\"],                    // Unicode code per field, same order\n" +
             "      \"methods\": [\"+ submit() : void\", \"+ amountDue() : decimal\"], // UML operation signatures\n" +
             "      \"methodComments\": [\"Submit the order.\", \"\"],       // doc-comment per method, same order\n" +
+            "      \"methodDeepLinkUuids\": [\"\", \"\"],                  // UUID per method, same order\n" +
+            "      \"methodDeepLinkCodes\": [\"\", \"\"],                  // Unicode code per method, same order\n" +
             "      \"extends\": [\"BaseType\"],         // base class / parent type names\n" +
             "      \"implements\": [\"IPayable\"],      // interface names this type realizes\n" +
             "      \"uses\": [\"Customer\"]             // other type names this type depends on\n" +
@@ -71,7 +83,10 @@ namespace TheRobotDraft.CodeGen
             "Extract doc-comments: put the type's documentation (XML doc, Javadoc, docstring, # comment, @doc/@moduledoc) " +
             "into \"comment\" as plain text with the comment markers removed; put each member's doc-comment into " +
             "\"fieldComments\"/\"methodComments\" in the SAME order and SAME length as \"fields\"/\"methods\" (use \"\" for " +
-            "members with no comment). Do not invent types or comments that are not present in the source.";
+            "members with no comment). If a doc-comment contains a doc-pointer declaration like " +
+            "\"⟦𓅕𓀦𓈽𓆡⟧ Name :: uuid5:01234567-89ab-cdef-0123-456789abcdef\", remove that line from the plain " +
+            "comment and put the UUID and four-character code into the matching deepLinkUuid/deepLinkCode fields. " +
+            "Do not invent types, comments, UUIDs, or doc-pointer codes that are not present in the source.";
 
         /// <summary>User role: the pasted source plus an optional language hint, framing it for analysis.</summary>
         public static string BuildUserPrompt(string code, string languageHint)

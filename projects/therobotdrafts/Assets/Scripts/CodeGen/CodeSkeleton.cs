@@ -167,7 +167,7 @@ namespace TheRobotDraft.CodeGen
                 {
                     var m = attrs[i];
                     string type = string.IsNullOrEmpty(m.Type) ? "object" : m.Type;
-                    MemberDoc(sb, ctx.AttributeComment(i), "    /// ");
+                    MemberDoc(sb, ctx.AttributeComment(i), "    /// ", ctx.AttributeDeepLink(i));
                     sb.Append("    ").Append(CSharpVis(m.Visibility)).Append(' ')
                       .Append(type).Append(' ').Append(m.Name).Append(" { get; set; }\n");
                 }
@@ -177,7 +177,7 @@ namespace TheRobotDraft.CodeGen
                 {
                     var m = ops[i];
                     string ret = string.IsNullOrEmpty(m.Type) ? "void" : m.Type;
-                    MemberDoc(sb, ctx.OperationComment(i), "    /// ");
+                    MemberDoc(sb, ctx.OperationComment(i), "    /// ", ctx.OperationDeepLink(i));
                     sb.Append("    ").Append(CSharpVis(m.Visibility)).Append(' ');
                     if (ctx.Kind == ElementKind.Interface)
                     {
@@ -243,7 +243,7 @@ namespace TheRobotDraft.CodeGen
                     var m = attrs[i];
                     string vis = JavaVis(m.Visibility);
                     string type = string.IsNullOrEmpty(m.Type) ? "Object" : m.Type;
-                    MemberDoc(sb, ctx.AttributeComment(i), "    // ");
+                    MemberDoc(sb, ctx.AttributeComment(i), "    // ", ctx.AttributeDeepLink(i));
                     sb.Append("    ");
                     if (!string.IsNullOrEmpty(vis)) sb.Append(vis).Append(' ');
                     sb.Append(type).Append(' ').Append(m.Name).Append(";\n");
@@ -255,7 +255,7 @@ namespace TheRobotDraft.CodeGen
                     var m = ops[i];
                     string ret = string.IsNullOrEmpty(m.Type) ? "void" : m.Type;
                     string vis = JavaVis(m.Visibility);
-                    MemberDoc(sb, ctx.OperationComment(i), "    // ");
+                    MemberDoc(sb, ctx.OperationComment(i), "    // ", ctx.OperationDeepLink(i));
                     sb.Append("    ");
                     if (!string.IsNullOrEmpty(vis)) sb.Append(vis).Append(' ');
                     if (ctx.Kind == ElementKind.Interface)
@@ -311,7 +311,7 @@ namespace TheRobotDraft.CodeGen
             {
                 var m = tsAttrs[i];
                 string type = string.IsNullOrEmpty(m.Type) ? "unknown" : m.Type;
-                MemberDoc(sb, ctx.AttributeComment(i), "    // ");
+                MemberDoc(sb, ctx.AttributeComment(i), "    // ", ctx.AttributeDeepLink(i));
                 sb.Append("    ");
                 if (!isInterface && m.Visibility == "-") sb.Append("private ");
                 else if (!isInterface && m.Visibility == "#") sb.Append("protected ");
@@ -323,7 +323,7 @@ namespace TheRobotDraft.CodeGen
             {
                 var m = tsOps[i];
                 string ret = string.IsNullOrEmpty(m.Type) ? "void" : m.Type;
-                MemberDoc(sb, ctx.OperationComment(i), "    // ");
+                MemberDoc(sb, ctx.OperationComment(i), "    // ", ctx.OperationDeepLink(i));
                 sb.Append("    ");
                 if (!isInterface && m.Visibility == "-") sb.Append("private ");
                 else if (!isInterface && m.Visibility == "#") sb.Append("protected ");
@@ -373,7 +373,7 @@ namespace TheRobotDraft.CodeGen
             {
                 var m = pyAttrs[i];
                 string type = string.IsNullOrEmpty(m.Type) ? "object" : m.Type;
-                MemberDoc(sb, ctx.AttributeComment(i), "    # ");
+                MemberDoc(sb, ctx.AttributeComment(i), "    # ", ctx.AttributeDeepLink(i));
                 sb.Append("    ").Append(m.Name).Append(": ").Append(type).Append('\n');
                 wroteBody = true;
             }
@@ -383,7 +383,7 @@ namespace TheRobotDraft.CodeGen
                 var m = pyOps[i];
                 string args = string.IsNullOrEmpty(m.Parameters) ? "self" : "self, " + m.Parameters;
                 sb.Append('\n');
-                MemberDoc(sb, ctx.OperationComment(i), "    # ");
+                MemberDoc(sb, ctx.OperationComment(i), "    # ", ctx.OperationDeepLink(i));
                 sb.Append("    def ").Append(m.Name).Append('(').Append(args).Append(')');
                 if (!string.IsNullOrEmpty(m.Type)) sb.Append(" -> ").Append(m.Type);
                 sb.Append(":\n        # TODO: implement\n        pass\n");
@@ -445,9 +445,14 @@ namespace TheRobotDraft.CodeGen
                 string def = (m.Visibility == "-" || m.Visibility == "#") ? "defp" : "def";
                 // Public functions document with @doc; private ones use a plain # comment (Elixir warns on @doc for defp).
                 string comment = ctx.OperationComment(i);
-                if (!string.IsNullOrWhiteSpace(comment))
+                string pointer = MemberPointerLine(ctx.OperationDeepLink(i));
+                if (!string.IsNullOrWhiteSpace(pointer) || !string.IsNullOrWhiteSpace(comment))
                 {
-                    string oneLine = comment.Replace("\r\n", "\n").Replace('\n', ' ').Trim();
+                    var docParts = new List<string>();
+                    if (!string.IsNullOrWhiteSpace(pointer)) docParts.Add(pointer);
+                    if (!string.IsNullOrWhiteSpace(comment))
+                        docParts.Add(comment.Replace("\r\n", "\n").Replace('\n', ' ').Trim());
+                    string oneLine = string.Join(" ", docParts);
                     if (def == "def") sb.Append("  @doc \"").Append(oneLine.Replace("\"", "\\\"")).Append("\"\n");
                     else sb.Append("  # ").Append(oneLine).Append('\n');
                 }
@@ -527,15 +532,32 @@ namespace TheRobotDraft.CodeGen
         /// </summary>
         private static void MemberDoc(StringBuilder sb, string comment, string linePrefix)
         {
+            MemberDoc(sb, comment, linePrefix, default(CodeGenContext.MemberDeepLink));
+        }
+
+        private static void MemberDoc(StringBuilder sb, string comment, string linePrefix,
+            CodeGenContext.MemberDeepLink deepLink)
+        {
+            string pointer = MemberPointerLine(deepLink);
+            if (string.IsNullOrWhiteSpace(comment) && string.IsNullOrWhiteSpace(pointer)) return;
+            if (!string.IsNullOrWhiteSpace(pointer)) sb.Append(linePrefix).Append(pointer).Append('\n');
             if (string.IsNullOrWhiteSpace(comment)) return;
             string oneLine = comment.Replace("\r\n", "\n").Replace('\n', ' ').Trim();
             sb.Append(linePrefix).Append(oneLine).Append('\n');
+        }
+
+        private static string MemberPointerLine(CodeGenContext.MemberDeepLink deepLink)
+        {
+            if (!deepLink.Embed || string.IsNullOrWhiteSpace(deepLink.Uuid)) return "";
+            return DeepLinkIdentity.DeclarationLine(deepLink.Uuid, deepLink.Code, deepLink.Name, deepLink.Kind);
         }
 
         /// <summary>The plain text body (code doc + notes) for any doc comment, newline-joined; may be empty.</summary>
         private static string DocstringBody(CodeGenContext ctx)
         {
             var lines = new List<string>();
+            if (ctx.EmbedDeepLinkCode && !string.IsNullOrWhiteSpace(ctx.DeepLinkUuid))
+                lines.Add(DeepLinkIdentity.DeclarationLine(ctx.DeepLinkUuid, ctx.DeepLinkCode, ctx.Name, ctx.Kind));
             string doc = !string.IsNullOrWhiteSpace(ctx.CodeDoc) ? ctx.CodeDoc : ctx.Description;
             if (!string.IsNullOrWhiteSpace(doc))
                 foreach (var l in doc.Replace("\r\n", "\n").Split('\n')) lines.Add(l);

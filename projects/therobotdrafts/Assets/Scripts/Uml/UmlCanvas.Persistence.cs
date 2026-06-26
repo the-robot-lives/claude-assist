@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
+using TheRobotDraft.Authoring.Debug;
 using TheRobotDraft.Authoring.Model;
 using TheRobotDraft.Authoring.State;
 
@@ -17,9 +18,22 @@ namespace TheRobotDraft.Uml
         public List<NodeGeomDto> nodeGeom = new();
         public List<EdgeGeomDto> edgeGeom = new();
         public List<SourceFileDto> sourceFiles = new();
+        public List<DbBaselineDto> dbBaselines = new();    // loaded-schema snapshots the changelog diffs against
+        public string dbActiveBaseline;
         public string activePackage;
         public List<PackageLinkDto> packageLinks = new(); // PackageNode id → target Package id
         public List<NodeImageDto> nodeImages = new();      // element id → PNG filename under trd-images/
+        public List<BreakpointDto> breakpoints = new();    // trace/debug breakpoints (element + line)
+    }
+
+    /// <summary>A persisted trace/debug breakpoint: an element id, a 1-based line, an optional condition, enabled flag.</summary>
+    [Serializable]
+    public class BreakpointDto
+    {
+        public string elementId;
+        public int line;
+        public string condition;
+        public bool enabled = true;
     }
 
     /// <summary>Links a node to the PNG filename (under persistentDataPath/trd-images/) shown as its face card.</summary>
@@ -46,6 +60,14 @@ namespace TheRobotDraft.Uml
         public string content;
     }
 
+    /// <summary>A loaded DB schema snapshot (JSON), keyed by engine/namespace — backs the Liquibase changelog diff.</summary>
+    [Serializable]
+    public class DbBaselineDto
+    {
+        public string key;
+        public string json;
+    }
+
     [Serializable]
     public class ElementDto
     {
@@ -58,6 +80,10 @@ namespace TheRobotDraft.Uml
         public string stereotype;
         public string description;
         public string codeDoc;
+        public string deepLinkUuid;
+        public string deepLinkCode;
+        public bool hasEmbedDeepLinkCode;
+        public bool embedDeepLinkCode;
         public List<string> items = new();
         public int zLayer;
         public string code;
@@ -262,6 +288,10 @@ namespace TheRobotDraft.Uml
                     stereotype = el.Stereotype,
                     description = el.Description,
                     codeDoc = el.CodeDoc,
+                    deepLinkUuid = el.DeepLinkUuid,
+                    deepLinkCode = el.DeepLinkCode,
+                    hasEmbedDeepLinkCode = true,
+                    embedDeepLinkCode = el.EmbedDeepLinkCode,
                     items = new List<string>(el.Items),
                     zLayer = el.ZLayer,
                     code = el.Code,
@@ -283,6 +313,7 @@ namespace TheRobotDraft.Uml
 
             foreach (var kv in _pos)
             {
+                if (!_model.Contains(kv.Key)) continue;
                 var nd = new NodeGeomDto { id = kv.Key.Value, px = kv.Value.x, py = kv.Value.y };
                 if (_posZ.TryGetValue(kv.Key, out var pz)) nd.pz = pz;
                 if (_nodeDepth.TryGetValue(kv.Key, out var th)) nd.th = th;
@@ -308,6 +339,7 @@ namespace TheRobotDraft.Uml
             foreach (var k in _msgNumber.Keys) edgeIds.Add(k);
             foreach (var id in edgeIds)
             {
+                if (!_model.TryGet(id, out _)) continue;
                 var g = new EdgeGeomDto { id = id.Value };
                 if (_waypoints.TryGetValue(id, out var wps))
                     foreach (var w in wps) g.waypoints.Add(new WpDto { x = w.x, y = w.y });
@@ -322,12 +354,23 @@ namespace TheRobotDraft.Uml
             foreach (var kv in _sourceFiles)
                 dto.sourceFiles.Add(new SourceFileDto { path = kv.Key, content = kv.Value });
 
+            foreach (var kv in _dbBaseline)
+                dto.dbBaselines.Add(new DbBaselineDto { key = kv.Key, json = kv.Value });
+            dto.dbActiveBaseline = _dbActiveBaseline;
+
             foreach (var kv in _packageLink)
-                dto.packageLinks.Add(new PackageLinkDto { nodeId = kv.Key.Value, pkgId = kv.Value.Value });
+                if (_model.Contains(kv.Key) && _model.Contains(kv.Value))
+                    dto.packageLinks.Add(new PackageLinkDto { nodeId = kv.Key.Value, pkgId = kv.Value.Value });
 
             foreach (var kv in _nodeImage)
-                if (!string.IsNullOrEmpty(kv.Value))
+                if (_model.Contains(kv.Key) && !string.IsNullOrEmpty(kv.Value))
                     dto.nodeImages.Add(new NodeImageDto { nodeId = kv.Key.Value, file = kv.Value });
+
+            foreach (var bp in _breakpoints.All)
+                dto.breakpoints.Add(new BreakpointDto
+                {
+                    elementId = bp.Element.Value, line = bp.Line, condition = bp.Condition, enabled = bp.Enabled,
+                });
 
             dto.activePackage = _activePackage.IsValid ? _activePackage.Value : "";
             return dto;
@@ -362,6 +405,10 @@ namespace TheRobotDraft.Uml
                     _ctl.SetDescription(nid, elDto.description);
                 if (!string.IsNullOrEmpty(elDto.codeDoc))
                     _ctl.SetCodeDoc(nid, elDto.codeDoc);
+                if (!string.IsNullOrEmpty(elDto.deepLinkUuid) || !string.IsNullOrEmpty(elDto.deepLinkCode))
+                    _ctl.SetDeepLink(nid, elDto.deepLinkUuid, elDto.deepLinkCode);
+                if (elDto.hasEmbedDeepLinkCode)
+                    _ctl.SetEmbedDeepLinkCode(nid, elDto.embedDeepLinkCode);
                 if (elDto.items != null && elDto.items.Count > 0)
                     _ctl.SetPropertyItems(nid, elDto.items);
                 if (!string.IsNullOrEmpty(elDto.code))
@@ -429,6 +476,12 @@ namespace TheRobotDraft.Uml
                     if (sf != null && !string.IsNullOrEmpty(sf.path))
                         _sourceFiles[sf.path] = sf.content ?? "";
 
+            if (dto.dbBaselines != null)
+                foreach (var bl in dto.dbBaselines)
+                    if (bl != null && !string.IsNullOrEmpty(bl.key))
+                        _dbBaseline[bl.key] = bl.json ?? "";
+            _dbActiveBaseline = string.IsNullOrEmpty(dto.dbActiveBaseline) ? null : dto.dbActiveBaseline;
+
             if (dto.packageLinks != null)
                 foreach (var pl in dto.packageLinks)
                     if (pl != null && idMap.TryGetValue(pl.nodeId, out var lnode) && idMap.TryGetValue(pl.pkgId, out var lpkg))
@@ -438,6 +491,12 @@ namespace TheRobotDraft.Uml
                 foreach (var ni in dto.nodeImages)
                     if (ni != null && !string.IsNullOrEmpty(ni.file) && idMap.TryGetValue(ni.nodeId, out var inode))
                         _nodeImage[inode] = ni.file;
+
+            _breakpoints.Clear();
+            if (dto.breakpoints != null)
+                foreach (var bp in dto.breakpoints)
+                    if (bp != null && idMap.TryGetValue(bp.elementId, out var bnode))
+                        _breakpoints.Set(new Breakpoint(bnode, bp.line, bp.condition, bp.enabled));
 
             _activePackage = (!string.IsNullOrEmpty(dto.activePackage) && idMap.TryGetValue(dto.activePackage, out var ap))
                 ? ap : ElementId.None;
@@ -452,6 +511,33 @@ namespace TheRobotDraft.Uml
         {
             try { if (File.Exists(DiagramPath)) File.Delete(DiagramPath); Flash("deleted saved file"); }
             catch (Exception ex) { Flash("delete failed: " + ex.Message); }
+        }
+
+        /// <summary>Delete the current project file/default autosave and clear the loaded project. Not undoable.</summary>
+        public void DeleteProject()
+        {
+            CloseMenu();
+            var path = CurrentPath;
+            bool deletedAny = false;
+            try
+            {
+                if (!string.IsNullOrEmpty(path) && File.Exists(path)) { File.Delete(path); deletedAny = true; }
+                if (!string.Equals(path, DiagramPath, StringComparison.OrdinalIgnoreCase) && File.Exists(DiagramPath))
+                {
+                    File.Delete(DiagramPath);
+                    deletedAny = true;
+                }
+            }
+            catch (Exception ex)
+            {
+                Flash("delete project file failed: " + ex.Message);
+                return;
+            }
+
+            _currentDiagramPath = null;
+            NewWorld();
+            RebuildFromModel();
+            Flash(deletedAny ? "deleted project" : "cleared project");
         }
 
         private static List<ElementDto> OrderByDepth(List<ElementDto> els, Dictionary<string, ElementDto> byId)
