@@ -18,23 +18,27 @@ authoring core, with deterministic + LLM code↔model round-trip).
 - **Unified Model** — one KDM-shaped code-graph; single source of truth. *Partial (authoring model in code).*
 - **Layout engine** — sphere-packing bubbles + Sugiyama/force-directed relational. *Partial (2D/3D harness layout).*
 - **Render pipeline** — DOTS/ECS, GPU indirect, octree culling, HLOD, VR stereo/foveation, 90 fps target. *Designed; uGUI/mesh stub today.*
-- **Diagram projection** — model region → UML/SysML/BPMN/ERD. *Partial (UML class diagrams built).*
-- **Interchange** — XMI/Rose/EA/BPMN + PlantUML/Mermaid/DOT/SVG/PNG. *Partial (PNG/clipboard export).*
+- **Diagram projection** — model region → UML/SysML/BPMN/ERD + UI wireframes. *Partial (UML class diagrams + wireframes built).*
+- **Interchange** — XMI/Rose/EA/BPMN + PlantUML/Mermaid/DOT/SVG/PNG. *Partial (PNG/clipboard, HTML + PlantUML salt).*
 - **Authoring core** — UI-agnostic model/rules/commands/controller shared by 2D + 3D. *Built.*
-- **CodeGen** — deterministic + LLM code ↔ model bridge. *Built.*
+- **CodeGen** — deterministic + LLM code ↔ model + wireframe bridge; shadow-file editor round-trip. *Built.*
+- **Styleguide** — Noizu css-gen port: YAML seeds → resolved design tokens; themes HTML wireframe export. *Built.*
 
 ## Data Flow
 
 Pipeline reads left-to-right; editing flows back. Every view points at the one model, so an edit
 becomes a model mutation and re-derives all other views (layout, HLOD, projections, generated code)
-incrementally from the diff. Source-backed and diagram-backed elements behave identically.
+incrementally from the diff. Source-backed and diagram-backed elements behave identically. The
+working instance is the shadow-file round-trip: a node's source opens in VS Code, and saving there
+re-parses edits back onto the model.
 
 ## Technology Stack
 
 Unity 6 (6000.3.18f1), C# (no `System.Text.Json` → `JsonUtility` DTOs), Unity XR/OpenXR; uGUI
-today with DOTS/ECS + GPU-driven rendering targeted; OpenAI-compatible LLM endpoint; targeted
-ingestion via Roslyn/Clang/JDT/TS/go + tree-sitter/SCIP and ILSpy/CFR/JADX/Ghidra; `make` +
-`build-mac.sh` + NUnit EditMode.
+today with DOTS/ECS + GPU-driven rendering targeted; OpenAI-compatible LLM endpoint; in-engine port
+of the Noizu styleguide css-gen pipeline (HTML wireframe theming); targeted ingestion via
+Roslyn/Clang/JDT/TS/go + tree-sitter/SCIP and ILSpy/CFR/JADX/Ghidra; `make` + `build-mac.sh` +
+NUnit EditMode.
 
 ## Key Decisions
 
@@ -47,6 +51,8 @@ ingestion via Roslyn/Clang/JDT/TS/go + tree-sitter/SCIP and ILSpy/CFR/JADX/Ghidr
 ## Implementation Status
 
 Built end-to-end: code→model→diagram, interactive UML editing (add/connect/move/undo), model→code
-(skeleton + LLM), 3D slab view with 6-DOF camera, PNG/clipboard export. Not yet started: DOTS/HLOD/VR
-rendering, compiler-grade + decompiler ingestion, identity-preserving interchange, notations beyond
-UML class diagrams. See [arch/implementation-status.md](arch/implementation-status.md).
+(skeleton + LLM), notation-aware 3D slab view (per-kind silhouettes, regions, resize, images) with
+6-DOF camera, shadow-file VS Code round-trip + LLM refactor, UI-wireframe projection (HTML + PlantUML
+salt) with styleguide theming, PNG/clipboard export. Not yet started: DOTS/HLOD/VR rendering,
+compiler-grade + decompiler ingestion, identity-preserving interchange, notations beyond UML class
+diagrams. See [arch/implementation-status.md](arch/implementation-status.md).

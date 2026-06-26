@@ -40,6 +40,7 @@ namespace TheRobotDraft.Uml
             ctx.Stereotype = el.Stereotype;
             ctx.IsAbstract = el.IsAbstract;
             ctx.Description = el.Description;
+            ctx.CodeDoc = el.CodeDoc;
 
             // The original imported source (overlay round-trip), keyed by the element's source-file path.
             if (!string.IsNullOrEmpty(el.SourceFile) && _sourceFiles.TryGetValue(el.SourceFile, out var orig))
@@ -53,8 +54,9 @@ namespace TheRobotDraft.Uml
             foreach (var childId in el.ChildIds)
             {
                 if (!_model.TryGet(childId, out var c)) continue;
-                if (c.Kind == ElementKind.Field) { ctx.Attributes.Add(c.Name); ctx.AttributeComments.Add(c.Description ?? ""); }
-                else if (c.Kind == ElementKind.Function) { ctx.Operations.Add(c.Name); ctx.OperationComments.Add(c.Description ?? ""); }
+                string doc = !string.IsNullOrWhiteSpace(c.CodeDoc) ? c.CodeDoc : c.Description;
+                if (c.Kind == ElementKind.Field) { ctx.Attributes.Add(c.Name); ctx.AttributeComments.Add(doc ?? ""); }
+                else if (c.Kind == ElementKind.Function) { ctx.Operations.Add(c.Name); ctx.OperationComments.Add(doc ?? ""); }
             }
 
             // Walk every edge touching this element to fold in notes + relationships.
@@ -143,7 +145,10 @@ namespace TheRobotDraft.Uml
             {
                 if (!_model.TryGet(childId, out var c) || !KindInfo.IsWireframeWidget(c.Kind)) continue;
                 var w = new WireframeContext.Widget { Kind = c.Kind, Label = c.Name };
-                // Field members become the widget's items (table columns, list/tree entries, dropdown options, …).
+                // Element-owned items are the widget's options/rows/columns; Field children are legacy fallback.
+                foreach (var item in c.Items)
+                    if (!string.IsNullOrWhiteSpace(item))
+                        w.Items.Add(item);
                 foreach (var itemId in c.ChildIds)
                     if (_model.TryGet(itemId, out var item) && item.Kind == ElementKind.Field)
                         w.Items.Add(item.Name);
@@ -542,6 +547,9 @@ namespace TheRobotDraft.Uml
             if (onRegenerate != null)
                 MakeButton(panel, "Regenerate", new Vector2(pad + 126f, yBtn), new Vector2(120f, 34f),
                     new Color(0.30f, 0.30f, 0.16f, 1f), () => onRegenerate());
+            if (saveTarget.IsValid)
+                MakeButton(panel, "Open in VS Code", new Vector2(pad + 254f, yBtn), new Vector2(136f, 34f),
+                    new Color(0.24f, 0.28f, 0.34f, 1f), () => EditCodeInVsCode(saveTarget));
             // Approve & save the code onto the node — the round-trip counterpart to import.
             if (saveTarget.IsValid)
                 MakeButton(panel, "Approve & save to node", new Vector2(w - 308f, yBtn), new Vector2(196f, 34f),

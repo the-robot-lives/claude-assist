@@ -57,6 +57,8 @@ namespace TheRobotDraft.Uml
         public string language;
         public string stereotype;
         public string description;
+        public string codeDoc;
+        public List<string> items = new();
         public int zLayer;
         public string code;
         public string sourceFile;
@@ -259,6 +261,8 @@ namespace TheRobotDraft.Uml
                     language = el.Language,
                     stereotype = el.Stereotype,
                     description = el.Description,
+                    codeDoc = el.CodeDoc,
+                    items = new List<string>(el.Items),
                     zLayer = el.ZLayer,
                     code = el.Code,
                     sourceFile = el.SourceFile,
@@ -356,6 +360,10 @@ namespace TheRobotDraft.Uml
                     _ctl.SetMeta(nid, elDto.language, elDto.stereotype);
                 if (!string.IsNullOrEmpty(elDto.description))
                     _ctl.SetDescription(nid, elDto.description);
+                if (!string.IsNullOrEmpty(elDto.codeDoc))
+                    _ctl.SetCodeDoc(nid, elDto.codeDoc);
+                if (elDto.items != null && elDto.items.Count > 0)
+                    _ctl.SetPropertyItems(nid, elDto.items);
                 if (!string.IsNullOrEmpty(elDto.code))
                     _ctl.SetCode(nid, elDto.code);
                 if (!string.IsNullOrEmpty(elDto.sourceFile))

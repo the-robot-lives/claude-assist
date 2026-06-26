@@ -1,0 +1,227 @@
+using System.Collections.Generic;
+using System.Text;
+using UnityEngine;
+using UnityEngine.UI;
+using TheRobotDraft.Authoring.Model;
+
+namespace TheRobotDraft.Uml
+{
+    public sealed partial class UmlCanvas
+    {
+        private const float InspectorWidth = 320f;
+        private RectTransform _inspector;
+        private RectTransform _inspectorContent;
+
+        private void BuildInspector()
+        {
+            var go = new GameObject("Inspector", typeof(RectTransform));
+            _inspector = (RectTransform)go.transform;
+            _inspector.SetParent(_root, false);
+            _inspector.anchorMin = new Vector2(1f, 0f);
+            _inspector.anchorMax = new Vector2(1f, 1f);
+            _inspector.pivot = new Vector2(1f, 1f);
+            _inspector.offsetMin = new Vector2(-InspectorWidth, 8f);
+            _inspector.offsetMax = new Vector2(0f, -70f);
+            go.AddComponent<Image>().color = new Color(0.12f, 0.13f, 0.16f, 0.97f);
+
+            var viewportGo = new GameObject("Viewport", typeof(RectTransform));
+            var viewport = (RectTransform)viewportGo.transform;
+            viewport.SetParent(_inspector, false);
+            viewport.anchorMin = Vector2.zero;
+            viewport.anchorMax = Vector2.one;
+            viewport.offsetMin = Vector2.zero;
+            viewport.offsetMax = Vector2.zero;
+            viewportGo.AddComponent<RectMask2D>();
+
+            var scroll = go.AddComponent<ScrollRect>();
+            scroll.horizontal = false;
+            scroll.vertical = true;
+            scroll.movementType = ScrollRect.MovementType.Clamped;
+            scroll.scrollSensitivity = 24f;
+            scroll.viewport = viewport;
+
+            var contentGo = new GameObject("Content", typeof(RectTransform));
+            _inspectorContent = (RectTransform)contentGo.transform;
+            _inspectorContent.SetParent(viewport, false);
+            _inspectorContent.anchorMin = new Vector2(0f, 1f);
+            _inspectorContent.anchorMax = new Vector2(1f, 1f);
+            _inspectorContent.pivot = new Vector2(0.5f, 1f);
+            _inspectorContent.anchoredPosition = Vector2.zero;
+            scroll.content = _inspectorContent;
+
+            RefreshInspector();
+        }
+
+        private void RefreshInspector()
+        {
+            if (_inspectorContent == null) return;
+            for (int i = _inspectorContent.childCount - 1; i >= 0; i--)
+                Destroy(_inspectorContent.GetChild(i).gameObject);
+
+            const float w = InspectorWidth;
+            float y = -12f;
+            MakeText(_inspectorContent, "Properties", new Vector2(12f, y), new Vector2(w - 24f, 24f), 16,
+                new Color(0.88f, 0.92f, 0.98f, 1f), TextAnchor.MiddleLeft).fontStyle = FontStyle.Bold;
+            y -= 34f;
+
+            if (!_selectedId.IsValid || !_model.TryGet(_selectedId, out var el))
+            {
+                MakeText(_inspectorContent, "Select an element to edit its properties.", new Vector2(12f, y),
+                    new Vector2(w - 24f, 44f), 13, new Color(0.62f, 0.68f, 0.78f, 1f), TextAnchor.UpperLeft);
+                _inspectorContent.sizeDelta = new Vector2(0f, 160f);
+                return;
+            }
+
+            MakeText(_inspectorContent, el.Kind.ToString(), new Vector2(12f, y), new Vector2(w - 24f, 20f), 13,
+                new Color(0.62f, 0.68f, 0.78f, 1f), TextAnchor.MiddleLeft);
+            y -= 28f;
+
+            InspectorLabel("Name", ref y);
+            var nameInput = MakeInput(_inspectorContent, new Vector2(12f, y), w - 24f, el.Name, "name");
+            y -= 44f;
+
+            InputField langInput = null;
+            InputField stereoInput = null;
+            System.Func<bool> abstractInput = () => el.IsAbstract;
+            if (KindInfo.IsClassifier(el.Kind))
+            {
+                InspectorLabel("Implementation language", ref y);
+                langInput = MakeInput(_inspectorContent, new Vector2(12f, y), w - 24f, el.Language, "C# / TypeScript / Python");
+                y -= 44f;
+
+                InspectorLabel("Stereotype", ref y);
+                stereoInput = MakeInput(_inspectorContent, new Vector2(12f, y), w - 24f, el.Stereotype, "entity, service, controller");
+                y -= 44f;
+
+                if (el.Kind == ElementKind.Class)
+                {
+                    abstractInput = MakeCheckbox(_inspectorContent, new Vector2(12f, y), "abstract", el.IsAbstract);
+                    y -= 34f;
+                }
+            }
+
+            InspectorLabel("Description", ref y);
+            var descInput = MakeMultilineInput(_inspectorContent, new Vector2(12f, y), w - 24f, 70f,
+                el.Description, "UML/product description");
+            y -= 84f;
+
+            InspectorLabel("Code docs", ref y);
+            var docInput = MakeMultilineInput(_inspectorContent, new Vector2(12f, y), w - 24f, 84f,
+                el.CodeDoc, "Source-code comment emitted above this element");
+            y -= 98f;
+
+            InputField itemsInput = null;
+            if (SupportsItemList(el.Kind))
+            {
+                InspectorLabel(ItemLabel(el.Kind), ref y);
+                itemsInput = MakeMultilineInput(_inspectorContent, new Vector2(12f, y), w - 24f, 104f,
+                    JoinLines(el.Items), "One item per line");
+                y -= 118f;
+            }
+
+            if (KindInfo.IsClassifier(el.Kind))
+            {
+                MakeText(_inspectorContent, MemberSummary(el), new Vector2(12f, y), new Vector2(w - 24f, 20f), 12,
+                    new Color(0.62f, 0.68f, 0.78f, 1f), TextAnchor.MiddleLeft);
+                y -= 30f;
+            }
+
+            var id = _selectedId;
+            void Save()
+            {
+                if (!_model.TryGet(id, out var cur)) return;
+                string nextName = string.IsNullOrWhiteSpace(nameInput.text) ? cur.Name : nameInput.text.Trim();
+                if (nextName != cur.Name) _ctl.Rename(id, nextName);
+                if (KindInfo.IsClassifier(cur.Kind))
+                {
+                    _ctl.SetMeta(id, langInput != null ? langInput.text : cur.Language,
+                        stereoInput != null ? stereoInput.text : cur.Stereotype);
+                    if (cur.Kind == ElementKind.Class && abstractInput() != cur.IsAbstract)
+                        _ctl.SetAbstract(id, abstractInput());
+                }
+                _ctl.SetDescription(id, descInput.text);
+                _ctl.SetCodeDoc(id, docInput.text);
+                if (itemsInput != null) _ctl.SetPropertyItems(id, SplitLines(itemsInput.text));
+                RebuildFromModel();
+                SetSelected(id);
+                Flash("properties saved");
+            }
+
+            MakeButton(_inspectorContent, "Save", new Vector2(12f, y), new Vector2(72f, 30f),
+                new Color(0.18f, 0.46f, 0.30f, 1f), Save);
+            MakeButton(_inspectorContent, "Full editor", new Vector2(92f, y), new Vector2(100f, 30f),
+                new Color(0.20f, 0.34f, 0.42f, 1f), () => OpenNodeEditModal(id, Input.mousePosition));
+            MakeButton(_inspectorContent, "Style", new Vector2(200f, y), new Vector2(68f, 30f),
+                new Color(0.24f, 0.28f, 0.34f, 1f), () => ShowStyleEditor(id, Input.mousePosition));
+            y -= 40f;
+
+            if (KindInfo.IsDiagramNode(el.Kind) && el.Kind != ElementKind.Note)
+            {
+                MakeButton(_inspectorContent, "View code", new Vector2(12f, y), new Vector2(94f, 30f),
+                    new Color(0.20f, 0.42f, 0.52f, 1f), () => GenerateCodeForElement(id));
+                MakeButton(_inspectorContent, "VS Code", new Vector2(114f, y), new Vector2(84f, 30f),
+                    new Color(0.24f, 0.28f, 0.34f, 1f), () => EditCodeInVsCode(id));
+                y -= 40f;
+            }
+
+            _inspectorContent.sizeDelta = new Vector2(0f, Mathf.Max(240f, -y + 20f));
+        }
+
+        private void InspectorLabel(string text, ref float y)
+        {
+            MakeText(_inspectorContent, text, new Vector2(12f, y), new Vector2(InspectorWidth - 24f, 18f), 12,
+                new Color(0.62f, 0.68f, 0.78f, 1f), TextAnchor.MiddleLeft);
+            y -= 20f;
+        }
+
+        private bool SupportsItemList(ElementKind kind) => KindInfo.IsWireframeWidget(kind);
+
+        private static string ItemLabel(ElementKind kind) => kind switch
+        {
+            ElementKind.Dropdown => "Options",
+            ElementKind.List => "List items",
+            ElementKind.Table => "Columns",
+            ElementKind.Tree => "Tree rows",
+            ElementKind.Tabs => "Tabs",
+            ElementKind.Menu => "Menu items",
+            ElementKind.Toolbar => "Toolbar actions",
+            ElementKind.Breadcrumb => "Breadcrumb items",
+            ElementKind.Card => "Card lines",
+            _ => "Items",
+        };
+
+        private string MemberSummary(ModelElement el)
+        {
+            int attrs = 0, ops = 0;
+            foreach (var childId in el.ChildIds)
+                if (_model.TryGet(childId, out var c))
+                {
+                    if (c.Kind == ElementKind.Field) attrs++;
+                    else if (c.Kind == ElementKind.Function) ops++;
+                }
+            return $"{attrs} attributes, {ops} operations";
+        }
+
+        private static string JoinLines(IReadOnlyList<string> items)
+        {
+            if (items == null || items.Count == 0) return "";
+            var sb = new StringBuilder();
+            for (int i = 0; i < items.Count; i++)
+            {
+                if (i > 0) sb.Append('\n');
+                sb.Append(items[i]);
+            }
+            return sb.ToString();
+        }
+
+        private static List<string> SplitLines(string text)
+        {
+            var list = new List<string>();
+            if (string.IsNullOrWhiteSpace(text)) return list;
+            foreach (var raw in text.Replace("\r\n", "\n").Split('\n'))
+                if (!string.IsNullOrWhiteSpace(raw))
+                    list.Add(raw.Trim());
+            return list;
+        }
+    }
+}

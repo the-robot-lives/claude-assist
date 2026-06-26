@@ -9,7 +9,7 @@ namespace TheRobotDraft.Uml
     /// <summary>
     /// Shadow-copy round-trip. Imported / generated source is written to an on-disk shadow folder so a node's code
     /// can be opened in an external editor (VS Code). Each opened file is polled for save-time changes; when the
-    /// user saves in VS Code the node's members / description are re-parsed from the edited code (deterministic
+    /// user saves in VS Code the node's members / code docs are re-parsed from the edited code (deterministic
     /// structural parser) and the bubble model updates — code edits flow back to the diagram.
     /// </summary>
     public partial class UmlCanvas
@@ -136,7 +136,7 @@ namespace TheRobotDraft.Uml
             }
         }
 
-        /// <summary>Re-parse a shadow file and update the node's members + description + stored code from it.</summary>
+        /// <summary>Re-parse a shadow file and update the node's members + code docs + stored code from it.</summary>
         public void ResyncNodeFromShadow(ElementId id, string path)
         {
             if (!_model.TryGet(id, out var el)) return;
@@ -151,7 +151,7 @@ namespace TheRobotDraft.Uml
             {
                 var pt = System.Array.Find(model.types, t => t.name == el.Name) ?? model.types[0];
                 ReplaceMembersFromParse(id, pt);
-                if (!string.IsNullOrEmpty(pt.comment)) _ctl.SetDescription(id, pt.comment);
+                if (!string.IsNullOrEmpty(pt.comment)) _ctl.SetCodeDoc(id, pt.comment);
                 RebuildFromModel();
                 SetSelected(id);
                 Flash("re-synced " + el.Name + " from code edits");

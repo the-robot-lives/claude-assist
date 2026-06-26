@@ -27,4 +27,11 @@ via `Authoring/Commands/UndoStack.cs`), and **model → code** (`UmlCanvas.CodeG
 into a `CodeGenContext`, emits a deterministic skeleton, optionally elaborates via the LLM). The
 incremental-diff re-derivation across many open projections is designed but not yet built.
 
+One round-trip path **is** built end-to-end via on-disk **shadow files** (`UmlCanvas.Shadow.cs`):
+imported/generated source is written to a shadow folder so a node's code opens in an external editor
+(VS Code); each opened file is polled for save-time changes, and on save the structural parser
+re-reads the edited source and updates the node's members/description — so an edit made *outside*
+Unity flows back into the model. LLM-driven refactors (`UmlCanvas.Refactor.cs`) write through the
+same path. This is the working instance of "edit anywhere → model mutation → re-derive."
+
 → Further reading: [implementation-status.md](implementation-status.md), [../ARCHITECTURE.md §The round-trip / edit path](../ARCHITECTURE.md#the-round-trip--edit-path), [../CONCEPTS.md (model vs. projection)](../CONCEPTS.md#model-vs-projection).

@@ -62,10 +62,11 @@ flowchart TB
 | Unified Model | One in-memory code-graph (KDM-shaped); single source of truth | Partial — authoring model |
 | Layout engine | Bubble (sphere packing) + relational (Sugiyama / force-directed) geometry | Partial — 2D/3D harness |
 | Render pipeline | DOTS/ECS, GPU indirect draws, octree culling, HLOD, VR stereo | Designed — uGUI/mesh stub |
-| Diagram projection | Model region → UML/SysML/BPMN/ERD notation | Partial — UML class diagrams |
-| Interchange | Import/export XMI, Rose, EA, BPMN, PlantUML, Mermaid, DOT, SVG/PNG | Partial — PNG/clipboard |
+| Diagram projection | Model region → UML/SysML/BPMN/ERD notation (+ UI wireframes) | Partial — UML class diagrams + wireframes |
+| Interchange | Import/export XMI, Rose, EA, BPMN, PlantUML, Mermaid, DOT, SVG/PNG | Partial — PNG/clipboard, HTML + PlantUML salt |
 | Authoring core | UI-agnostic model/rules/commands/controller shared by 2D + 3D | **Built** |
-| CodeGen | Deterministic + LLM code ↔ model bridge | **Built** |
+| CodeGen | Deterministic + LLM code ↔ model + wireframe bridge; shadow-file editor round-trip | **Built** |
+| Styleguide | Noizu css-gen port: YAML seeds → resolved design tokens; themes HTML wireframe export | **Built** |
 
 ## Unified Model
 
@@ -102,8 +103,10 @@ million-element graphs. The current code is a non-DOTS uGUI/mesh stand-in with a
 ## Diagram Projection & Interchange
 
 Any model region projects non-destructively into standard notation (UML 2.5.1, SysML, BPMN, DMN,
-ArchiMate, ERD, Rose), and the same region can target different notations. Interchange imports/exports
-identity-preserving formats (XMI, exchange XML) for round-trip plus export-oriented text/raster forms.
+ArchiMate, ERD, Rose) — plus a UI-wireframe family — and the same region can target different
+notations. Interchange imports/exports identity-preserving formats (XMI, exchange XML) for round-trip
+plus export-oriented text/raster forms. *Built today: UML class diagrams, and Screen/Panel regions
+to HTML mockups + PlantUML `salt`, themed by the styleguide engine.*
 
 → *See [arch/projection-and-interchange.md](arch/projection-and-interchange.md) for details.*
 
@@ -111,14 +114,17 @@ identity-preserving formats (XMI, exchange XML) for round-trip plus export-orien
 
 The pipeline reads left-to-right but editing flows back: every view points at the one model, so an
 edit becomes a model mutation and re-derives every other view (layout, HLOD, projections, generated
-code) incrementally from the diff. Source-backed and diagram-backed elements behave identically.
+code) incrementally from the diff. Source-backed and diagram-backed elements behave identically. The
+working instance of this loop is the **shadow-file round-trip**: a node's source opens in VS Code,
+and a save there re-parses the edits back onto the model.
 
 → *See [arch/data-flow.md](arch/data-flow.md) for details.*
 
 ## Technology Stack
 
 Unity 6 (6000.3.18f1), C# (no `System.Text.Json` → `JsonUtility` DTOs), Unity XR/OpenXR; uGUI today
-with DOTS/ECS + GPU-driven rendering targeted; an OpenAI-compatible LLM endpoint; targeted ingestion
+with DOTS/ECS + GPU-driven rendering targeted; an OpenAI-compatible LLM endpoint; an in-engine port
+of the Noizu styleguide css-gen pipeline (theme tokens for HTML wireframe export); targeted ingestion
 via Roslyn/Clang/JDT/TS/go + tree-sitter/SCIP and ILSpy/CFR/JADX/Ghidra; `make` + `build-mac.sh` +
 NUnit EditMode.
 
@@ -134,8 +140,10 @@ bubbles over "code city" (ADR-003) are the load-bearing structural choices.
 
 ## Implementation Status
 
-Built end-to-end today: code→model→diagram, interactive UML editing, model→code, a 3D slab view, and
-PNG/clipboard export. Not yet started: DOTS/HLOD/VR rendering, compiler-grade + decompiler ingestion,
+Built end-to-end today: code→model→diagram, interactive UML editing, model→code, a notation-aware 3D
+slab view (per-kind silhouettes, regions, resize, images), shadow-file VS Code round-trip + LLM
+refactor, UI-wireframe projection (HTML + PlantUML salt) with styleguide theming, and PNG/clipboard
+export. Not yet started: DOTS/HLOD/VR rendering, compiler-grade + decompiler ingestion,
 identity-preserving interchange, and notations beyond UML class diagrams.
 
 → *See [arch/implementation-status.md](arch/implementation-status.md) for the designed-vs-built map.*

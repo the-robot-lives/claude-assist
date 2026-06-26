@@ -7,7 +7,7 @@ project regions into standard diagrams, and round-trip back to code. Pre-alpha �
 ```
 therobotdrafts/
 ├── Assets/                     # Unity assets — all committed source → [layout/assets.md](layout/assets.md)
-│   ├── Scripts/                #   C# source (authoring core, codegen, LLM, 2D + 3D UML) → [layout/scripts.md](layout/scripts.md)
+│   ├── Scripts/                #   C# source (authoring core, codegen, LLM, styleguide, 2D + 3D UML) → [layout/scripts.md](layout/scripts.md)
 │   ├── Editor/                 #   Editor-only scripts (BuildMac batch entry point)
 │   ├── Scenes/                 #   Boot.unity — entry scene
 │   ├── prompts/                #   .media.prompt files + generated PNG mockups (authoring UX)
@@ -15,11 +15,18 @@ therobotdrafts/
 ├── docs/                       # Design corpus → [layout/docs.md](layout/docs.md)
 │   ├── ARCHITECTURE.md         #   System architecture overview
 │   ├── CONCEPTS.md             #   Domain concepts / glossary
+│   ├── PROJ-ARCH.md            #   Architecture map (+ .summary.md, arch/* detail)
+│   ├── arch/                   #   Architecture detail files (unified-model, ingestion, layout…)
 │   ├── adrs/                   #   Architecture Decision Records (DOTS, unified model, packing)
 │   ├── specs/                  #   Feature & format specs (authoring UX, rendering/VR, file formats…)
+│   ├── sparx-ea-parity.md      #   Feature parity vs. Sparx Enterprise Architect
+│   ├── ux-review-current-build.md  # UX review of the current build
 │   ├── diagrams/               #   (empty) diagram exports
 │   ├── PROJ-LAYOUT.md          #   This file
 │   └── PROJ-LAYOUT.summary.md  #   Tree-only companion (keep in sync)
+├── project-management/         # Generated planning corpus (9 personas + 100 user stories)
+│   ├── personas/               #   P-001…P-009 + index.yaml
+│   └── user-stories/           #   US-001…US-100 + index.yaml
 ├── Packages/                   # Unity package manifest
 │   ├── manifest.json           #   Declared UPM dependencies (Rider, test-framework, uGUI, XR…)
 │   └── packages-lock.json      #   Resolved dependency lock

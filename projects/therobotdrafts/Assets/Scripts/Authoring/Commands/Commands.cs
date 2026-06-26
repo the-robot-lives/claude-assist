@@ -354,7 +354,7 @@ namespace TheRobotDraft.Authoring.Commands
     }
 
     /// <summary>
-    /// Set an element's free-text <c>description</c> / documentation (fed to code generation). One reversible
+    /// Set an element's free-text UML/product <c>description</c>. One reversible
     /// undo step; captures the prior value.
     /// </summary>
     public sealed class SetDescriptionCommand : IAuthoringCommand
@@ -379,6 +379,66 @@ namespace TheRobotDraft.Authoring.Commands
         }
 
         public void Undo(CommandContext ctx) => ctx.Model.SetDescription(_element, _oldDescription);
+    }
+
+    /// <summary>Set the source-code documentation comment for an element. Undoable.</summary>
+    public sealed class SetCodeDocCommand : IAuthoringCommand
+    {
+        private readonly ElementId _element;
+        private readonly string _codeDoc;
+        private string _oldCodeDoc;
+
+        public SetCodeDocCommand(ElementId element, string codeDoc)
+        {
+            _element = element;
+            _codeDoc = string.IsNullOrWhiteSpace(codeDoc) ? null : codeDoc.Trim();
+        }
+
+        public string Label => "Edit code documentation";
+
+        public void Do(CommandContext ctx)
+        {
+            var e = ctx.Model.Get(_element);
+            _oldCodeDoc = e.CodeDoc;
+            ctx.Model.SetCodeDoc(_element, _codeDoc);
+        }
+
+        public void Undo(CommandContext ctx) => ctx.Model.SetCodeDoc(_element, _oldCodeDoc);
+    }
+
+    /// <summary>Set kind-specific item/options values for an element. Undoable.</summary>
+    public sealed class SetPropertyItemsCommand : IAuthoringCommand
+    {
+        private readonly ElementId _element;
+        private readonly List<string> _items;
+        private List<string> _oldItems;
+
+        public SetPropertyItemsCommand(ElementId element, IEnumerable<string> items)
+        {
+            _element = element;
+            _items = Clean(items);
+        }
+
+        public string Label => "Edit element items";
+
+        public void Do(CommandContext ctx)
+        {
+            var e = ctx.Model.Get(_element);
+            _oldItems = new List<string>(e.Items);
+            ctx.Model.SetPropertyItems(_element, _items);
+        }
+
+        public void Undo(CommandContext ctx) => ctx.Model.SetPropertyItems(_element, _oldItems);
+
+        private static List<string> Clean(IEnumerable<string> items)
+        {
+            var list = new List<string>();
+            if (items == null) return list;
+            foreach (var item in items)
+                if (!string.IsNullOrWhiteSpace(item))
+                    list.Add(item.Trim());
+            return list;
+        }
     }
 
     /// <summary>Set an element's saved source code (the approved "Generate code" output). Undoable.</summary>
@@ -474,13 +534,15 @@ namespace TheRobotDraft.Authoring.Commands
         {
             public readonly ElementId Id, Parent;
             public readonly ElementKind Kind;
-            public readonly string Name, Language, Stereotype, Description, Code, SourceFile;
+            public readonly string Name, Language, Stereotype, Description, CodeDoc, Code, SourceFile;
+            public readonly List<string> Items;
             public readonly bool IsAbstract;
             public readonly int ZLayer;
             public ElementSnap(ModelElement e)
             {
                 Id = e.Id; Parent = e.Parent; Kind = e.Kind; Name = e.Name; IsAbstract = e.IsAbstract;
                 Language = e.Language; Stereotype = e.Stereotype; Description = e.Description;
+                CodeDoc = e.CodeDoc; Items = new List<string>(e.Items);
                 ZLayer = e.ZLayer; Code = e.Code; SourceFile = e.SourceFile;
             }
         }
@@ -550,6 +612,8 @@ namespace TheRobotDraft.Authoring.Commands
                 restored.Language = s.Language;
                 restored.Stereotype = s.Stereotype;
                 restored.Description = s.Description;
+                restored.CodeDoc = s.CodeDoc;
+                restored.PropertyItems.AddRange(s.Items);
                 restored.ZLayer = s.ZLayer;
                 restored.Code = s.Code;
                 restored.SourceFile = s.SourceFile;

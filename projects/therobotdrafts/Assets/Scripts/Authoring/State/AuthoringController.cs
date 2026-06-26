@@ -243,11 +243,27 @@ namespace TheRobotDraft.Authoring.State
             return true;
         }
 
-        /// <summary>Set an element's free-text description / documentation (fed to code generation), one undo step.</summary>
+        /// <summary>Set an element's free-text UML/product description, one undo step.</summary>
         public bool SetDescription(ElementId element, string description)
         {
             if (!_model.Contains(element)) return false;
             _history.Execute(new SetDescriptionCommand(element, description));
+            return true;
+        }
+
+        /// <summary>Set source-code documentation for an element, one undo step.</summary>
+        public bool SetCodeDoc(ElementId element, string codeDoc)
+        {
+            if (!_model.Contains(element)) return false;
+            _history.Execute(new SetCodeDocCommand(element, codeDoc));
+            return true;
+        }
+
+        /// <summary>Set kind-specific element items/options, one undo step.</summary>
+        public bool SetPropertyItems(ElementId element, System.Collections.Generic.IEnumerable<string> items)
+        {
+            if (!_model.Contains(element)) return false;
+            _history.Execute(new SetPropertyItemsCommand(element, items));
             return true;
         }
 

@@ -67,6 +67,9 @@ namespace TheRobotDraft.Uml3D
             ApplyTransform();
         }
 
+        /// <summary>Immediately apply pending rig state changes instead of waiting for LateUpdate.</summary>
+        public void RefreshNow() => ApplyTransform();
+
         private void EnsureCamera()
         {
             if (Cam != null) return;

@@ -15,10 +15,12 @@ the designed architecture so engineers know what exists today and what is still 
 | Ingestion (source) | Deterministic structural parser (C# strong; TS/Java light) + LLM JSON parser as fallback — paste code → model | `Assets/Scripts/CodeGen/CodeStructParser.cs`, `CodeParser.cs` |
 | Ingestion (binary) | Not implemented (no decompilers) | — |
 | Layout engine | 2D harness layout (packages as tabs, classifier boxes, edge routing); 3D Z-layer placement. Real sphere packer is a seam only | `Uml/UmlCanvas.Layout.cs`, `Uml3D/`, `Authoring/Seams/IPacker.cs` |
-| Render pipeline | uGUI 2D canvas + procedural 3D mesh slabs with world-space compartment canvases, 6-DOF camera rig. **No DOTS, no HLOD, no VR yet** | `Uml/UmlCanvas.cs`, `Uml3D/Uml3DScene.cs`, `UmlCameraRig.cs`, `UmlNode3D.cs` |
-| Diagram projection | Standard-UML class diagrams: classifier boxes w/ compartments, UML arrowheads, member visibility glyphs. Other notations not built | `Uml/UmlNodeView.cs`, `UmlEdgeView.cs`, `UmlMemberSignature.cs` |
-| — code generation | model → source: deterministic skeleton (C#/Java/TS/Python) + LLM elaboration | `CodeGen/CodeSkeleton.cs`, `CodeGenContext.cs`, `Uml/UmlCanvas.CodeGen.cs` |
-| Interchange | Diagram → PNG snapshot + OS clipboard (macOS `osascript`); persistence save/load. No XMI/Rose/EA/BPMN | `Uml/UmlImageClipboard.cs`, `Uml/UmlCanvas.Persistence.cs` |
+| Render pipeline | uGUI 2D canvas + procedural 3D mesh slabs with world-space compartment canvases, 6-DOF camera rig. 3D is now notation-aware: per-kind silhouette meshes, dotted-cube regions, per-axis resize handles, vector→volumetric avatars. **No DOTS, no HLOD, no VR yet** | `Uml/UmlCanvas.cs`, `Uml3D/Uml3DScene.cs`, `UmlCameraRig.cs`, `UmlNode3D.cs`, `Uml3D/Shapes/`, `UmlRegion3D.cs`, `UmlResizeHandle3D.cs` |
+| Diagram projection | Standard-UML class diagrams: classifier boxes w/ compartments, UML arrowheads, member visibility glyphs. Plus a UI-wireframe projection (Screen/Panel → HTML mockup + PlantUML `salt`). Other notations not built | `Uml/UmlNodeView.cs`, `UmlEdgeView.cs`, `UmlMemberSignature.cs`, `CodeGen/WireframeSkeleton.cs`, `Uml3D/Uml3DGlyphs.cs` |
+| — code generation | model → source: deterministic skeleton (C#/Java/TS/Python) + LLM elaboration; LLM-driven node refactor (rename/move-to-file/free-form) | `CodeGen/CodeSkeleton.cs`, `CodeGenContext.cs`, `Uml/UmlCanvas.CodeGen.cs`, `Uml/UmlCanvas.Refactor.cs` |
+| — styleguide/theming | Port of the Noizu styleguide css-gen pipeline (~15 YAML seeds → ~300 resolved tokens, light/dark); themes the HTML wireframe export | `Assets/Scripts/Styleguide/` |
+| Interchange | Diagram → PNG snapshot + OS clipboard (macOS `osascript`); wireframe → HTML + PlantUML `salt`; persistence save/load. No XMI/Rose/EA/BPMN | `Uml/UmlImageClipboard.cs`, `Uml/UmlCanvas.Persistence.cs`, `CodeGen/WireframeSkeleton.cs` |
+| — editor round-trip | On-disk shadow files opened in VS Code; save-time re-parse flows edits back to the model | `Uml/UmlCanvas.Shadow.cs` |
 | LLM access | Dependency-free OpenAI-compatible `/chat/completions` client + settings | `Assets/Scripts/Llm/` |
 
 ## What works end-to-end today
@@ -30,8 +32,14 @@ the designed architecture so engineers know what exists today and what is still 
 3. **Model → code.** Walk the model into a `CodeGenContext`, emit a deterministic skeleton, and
    optionally elaborate via the LLM; display highlighted in a read-only viewer with Copy/Approve.
 4. **3D view.** The same model renders as lit 3D slabs on Z-layers with a 6-DOF orbit/dolly/fly
-   camera and dashed/arrowed 3D edges.
-5. **Export.** Snapshot the diagram to PNG and the OS clipboard.
+   camera and dashed/arrowed 3D edges; nodes carry per-kind silhouette meshes, sit inside dotted-cube
+   regions, resize via per-axis handles, and can hold pasted images and vector→volumetric avatars.
+5. **Editor round-trip.** A node's source opens in VS Code via an on-disk shadow file; saving there
+   re-parses the edits back onto the node. LLM refactors (rename / move-to-file / free-form) write
+   through the same path.
+6. **Wireframes.** A Screen/Panel region projects to a standalone HTML mockup and a PlantUML `salt`
+   block, optionally themed by the resolved styleguide tokens.
+7. **Export.** Snapshot the diagram to PNG and the OS clipboard.
 
 ## Key architectural seam
 

@@ -509,7 +509,7 @@ namespace TheRobotDraft.Uml
                 if (!string.IsNullOrWhiteSpace(pt.language))
                     _ctl.SetMeta(id, pt.language.Trim(), null);
                 if (!string.IsNullOrWhiteSpace(pt.comment))
-                    _ctl.SetDescription(id, pt.comment.Trim()); // class doc-comment → element Description
+                    _ctl.SetCodeDoc(id, pt.comment.Trim()); // class doc-comment -> element CodeDoc
                 if (!string.IsNullOrEmpty(sourceFile))
                     _ctl.SetSourceFile(id, sourceFile);
 
@@ -554,7 +554,7 @@ namespace TheRobotDraft.Uml
 
         /// <summary>
         /// Add each signature string as a member child of <paramref name="owner"/> (UML signature verbatim), setting
-        /// the member's Description from the index-aligned <paramref name="comments"/> doc-comment when present.
+        /// the member's CodeDoc from the index-aligned <paramref name="comments"/> doc-comment when present.
         /// </summary>
         private void ImportAddMembers(ElementId owner, ElementKind memberKind, string[] signatures, string[] comments)
         {
@@ -568,7 +568,7 @@ namespace TheRobotDraft.Uml
                 if (!mid.IsValid) continue;
                 string comment = comments != null && i < comments.Length ? comments[i] : null;
                 if (!string.IsNullOrWhiteSpace(comment))
-                    _ctl.SetDescription(mid, comment.Trim());
+                    _ctl.SetCodeDoc(mid, comment.Trim());
             }
         }
 

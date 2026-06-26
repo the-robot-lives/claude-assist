@@ -19,7 +19,8 @@ namespace TheRobotDraft.CodeGen
         public string Language;     // null/empty ⇒ unspecified (skeleton defaults to C#)
         public string Stereotype;   // raw custom stereotype, no guillemets; null/empty ⇒ none
         public bool IsAbstract;
-        public string Description;  // free-text documentation; null/empty ⇒ none
+        public string Description;  // UML/product description; null/empty ⇒ none
+        public string CodeDoc;      // source-code doc-comment text; null/empty ⇒ fallback to Description
 
         /// <summary>
         /// The original source file's full text when this element was imported from a file (overlay round-trip).
@@ -81,7 +82,10 @@ namespace TheRobotDraft.CodeGen
             if (!string.IsNullOrWhiteSpace(Stereotype)) sb.Append("Stereotype: «").Append(Stereotype.Trim()).Append("»\n");
 
             if (!string.IsNullOrWhiteSpace(Description))
-                sb.Append("\nDescription:\n").Append(Description.Trim()).Append('\n');
+                sb.Append("\nUML description:\n").Append(Description.Trim()).Append('\n');
+
+            if (!string.IsNullOrWhiteSpace(CodeDoc))
+                sb.Append("\nCode documentation comment:\n").Append(CodeDoc.Trim()).Append('\n');
 
             if (Attributes.Count > 0)
             {

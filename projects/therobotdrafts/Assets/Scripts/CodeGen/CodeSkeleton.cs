@@ -8,7 +8,7 @@ namespace TheRobotDraft.CodeGen
     /// A deterministic, offline source skeleton for a <see cref="CodeGenContext"/>. It parses the model's UML
     /// member signatures (Rose/Sparx form, e.g. "- id : Guid", "+ submit(amount : decimal) : void") into the
     /// target language's declaration grammar, emits the type declaration with its extends/implements list (from
-    /// Generalization / Realization relationships), and renders the description + attached notes as a doc-comment
+    /// Generalization / Realization relationships), and renders CodeDoc + attached notes as a doc-comment
     /// header. This is both the no-LLM fallback and the seed shown in the viewer while the LLM runs. Supported
     /// languages: C#, Java, TypeScript, Python; anything else falls back to C#.
     /// </summary>
@@ -358,7 +358,7 @@ namespace TheRobotDraft.CodeGen
             if (bases.Count > 0) sb.Append('(').Append(string.Join(", ", bases)).Append(')');
             sb.Append(":\n");
 
-            // Docstring (description + notes).
+            // Docstring (code docs + notes).
             string doc = DocstringBody(ctx);
             if (!string.IsNullOrEmpty(doc))
             {
@@ -397,7 +397,7 @@ namespace TheRobotDraft.CodeGen
         // --- Elixir ---
 
         /// <summary>
-        /// Elixir is not class-based: emit a <c>defmodule</c> with a <c>@moduledoc</c> (description + notes), a
+        /// Elixir is not class-based: emit a <c>defmodule</c> with a <c>@moduledoc</c> (code docs + notes), a
         /// <c>defstruct</c> from the attributes, and <c>def</c>/<c>defp</c> functions from the operations.
         /// Realized interfaces become <c>@behaviour</c>s; an enum kind becomes a <c>@type</c> union of atoms.
         /// </summary>
@@ -532,12 +532,13 @@ namespace TheRobotDraft.CodeGen
             sb.Append(linePrefix).Append(oneLine).Append('\n');
         }
 
-        /// <summary>The plain text body (description + notes) for any doc comment, newline-joined; may be empty.</summary>
+        /// <summary>The plain text body (code doc + notes) for any doc comment, newline-joined; may be empty.</summary>
         private static string DocstringBody(CodeGenContext ctx)
         {
             var lines = new List<string>();
-            if (!string.IsNullOrWhiteSpace(ctx.Description))
-                foreach (var l in ctx.Description.Replace("\r\n", "\n").Split('\n')) lines.Add(l);
+            string doc = !string.IsNullOrWhiteSpace(ctx.CodeDoc) ? ctx.CodeDoc : ctx.Description;
+            if (!string.IsNullOrWhiteSpace(doc))
+                foreach (var l in doc.Replace("\r\n", "\n").Split('\n')) lines.Add(l);
             foreach (var note in ctx.AttachedNotes)
             {
                 lines.Add("Note:");
@@ -550,7 +551,7 @@ namespace TheRobotDraft.CodeGen
         /// Emit a doc-comment header. <paramref name="open"/> is the opening line (e.g. "/**\n" or ""), each body
         /// line is prefixed with <paramref name="linePrefix"/> ("/// " or " * "), and <paramref name="close"/> is the
         /// closing line (" */" or, for C# line comments, the same "/// " — passed but unused there). Emits nothing
-        /// when there is no description and no attached notes.
+        /// when there is no code documentation and no attached notes.
         /// </summary>
         private static void DocComment(StringBuilder sb, CodeGenContext ctx, string open, string linePrefix, string close)
         {

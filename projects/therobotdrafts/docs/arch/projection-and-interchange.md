@@ -12,7 +12,9 @@ model and produces a view — and the *same* region can be projected into *diffe
 method's CFG becomes a UML sequence diagram or a BPMN process, depending on the lens).
 
 Supported families: **UML 2.5.1** (all 14 diagram types), **SysML / BPMN 2.0 / DMN / ArchiMate**,
-**ERD / DDL**, and legacy **Rational Rose** models.
+**ERD / DDL**, and legacy **Rational Rose** models. A **UI-wireframe** family also projects a
+Screen/Panel region — its ordered widget tree — into a low-fidelity mockup, targeting PlantUML
+`salt` as the interchange vocabulary.
 
 ## Interchange
 
@@ -34,9 +36,16 @@ are what the round-trip path relies on.
 
 Projection is implemented for **standard-UML class diagrams** only: classifier boxes with
 stereotype/attributes/operations compartments (`Uml/UmlNodeView.cs`), UML arrowheads and end
-decorations (`UmlEdgeView.cs`), and member-visibility glyphs (`UmlMemberSignature.cs`). Interchange
-is limited to **export**: PNG snapshot pushed to the OS clipboard (`Uml/UmlImageClipboard.cs`, macOS
-`osascript`) and diagram save/load (`Uml/UmlCanvas.Persistence.cs`). No XMI/Rose/EA/BPMN import or
-export yet, and no notations beyond UML class diagrams.
+decorations (`UmlEdgeView.cs`), and member-visibility glyphs (`UmlMemberSignature.cs`). A second
+projection target is built: **UI wireframes** — a Screen/Panel region's widget tree projects to a
+standalone **HTML mockup** and a **PlantUML `salt`** block (`CodeGen/WireframeSkeleton.cs`,
+`WireframeContext.cs`), both offline/deterministic. The HTML export can be themed by the resolved
+**styleguide** engine (`Assets/Scripts/Styleguide/`, a port of the Noizu styleguide css-gen
+pipeline) so the mockup carries real design tokens as a `:root{}` variable block.
+
+Interchange is otherwise limited to **export**: PNG snapshot pushed to the OS clipboard
+(`Uml/UmlImageClipboard.cs`, macOS `osascript`) and diagram save/load (`Uml/UmlCanvas.Persistence.cs`).
+No XMI/Rose/EA/BPMN import or export yet, and no diagram notations beyond UML class diagrams + the
+wireframe path.
 
 → Further reading: [../specs/diagram-catalog.md](../specs/diagram-catalog.md), [../specs/file-formats.md](../specs/file-formats.md), [../ARCHITECTURE.md §5–§6](../ARCHITECTURE.md).

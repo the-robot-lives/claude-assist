@@ -27,8 +27,14 @@ namespace TheRobotDraft.Authoring.Model
         /// </summary>
         public string Stereotype { get; internal set; }
 
-        /// <summary>Free-text description / documentation of this element. Null/empty = none. Used by code generation.</summary>
+        /// <summary>Free-text UML/product description of this element. Null/empty = none.</summary>
         public string Description { get; internal set; }
+
+        /// <summary>
+        /// Source-code documentation for this element. Distinct from <see cref="Description"/>: this is imported from
+        /// doc-comments and emitted back above generated types, fields, operations, and properties. Null/empty = none.
+        /// </summary>
+        public string CodeDoc { get; internal set; }
 
         /// <summary>
         /// The element's saved source code — the approved output of "Generate code", and the round-trip
@@ -48,6 +54,12 @@ namespace TheRobotDraft.Authoring.Model
         /// </summary>
         public int ZLayer { get; internal set; }
 
+        /// <summary>
+        /// Kind-specific value list: dropdown options, list rows, table columns, tabs, menu entries, etc. These are
+        /// owned by the element itself, not modeled as Field/Function members.
+        /// </summary>
+        internal readonly List<string> PropertyItems = new();
+
         internal readonly List<ElementId> Children = new();
 
         internal ModelElement(ElementId id, ElementKind kind, string name, ElementId parent)
@@ -59,6 +71,7 @@ namespace TheRobotDraft.Authoring.Model
         }
 
         public IReadOnlyList<ElementId> ChildIds => Children;
+        public IReadOnlyList<string> Items => PropertyItems;
     }
 
     /// <summary>One relationship (edge) in the unified model. Direction is from→to (§4.2).</summary>
@@ -157,6 +170,18 @@ namespace TheRobotDraft.Authoring.Model
         internal void SetLanguage(ElementId id, string language) => _elements[id].Language = language;
         internal void SetStereotype(ElementId id, string stereotype) => _elements[id].Stereotype = stereotype;
         internal void SetDescription(ElementId id, string description) => _elements[id].Description = description;
+        internal void SetCodeDoc(ElementId id, string codeDoc) => _elements[id].CodeDoc = codeDoc;
+        internal void SetPropertyItems(ElementId id, IEnumerable<string> items)
+        {
+            var list = _elements[id].PropertyItems;
+            list.Clear();
+            if (items == null) return;
+            foreach (var item in items)
+            {
+                if (string.IsNullOrWhiteSpace(item)) continue;
+                list.Add(item.Trim());
+            }
+        }
         internal void SetCode(ElementId id, string code) => _elements[id].Code = code;
         internal void SetSourceFile(ElementId id, string sourceFile) => _elements[id].SourceFile = sourceFile;
         internal void SetZLayer(ElementId id, int z) => _elements[id].ZLayer = z;

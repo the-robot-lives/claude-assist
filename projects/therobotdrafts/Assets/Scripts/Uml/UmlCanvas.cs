@@ -180,6 +180,14 @@ namespace TheRobotDraft.Uml
         private float _zoom = 1f;
         private const float MinZoom = 0.3f, MaxZoom = 3f;
 
+        // 2-D mode keeps the same 3-D object renderer, but presents it as a flat canvas: every node/region/edge
+        // is posed on z=0, saved rotations are ignored, and camera pitch/yaw/roll/free-fly controls are clamped off.
+        private bool _mode2D;
+        private Image _mode2DButtonBg;
+        private Text _mode2DButtonText;
+        private const float FlatNodeThickness = 0.02f;
+        private const float FlatRouteZ = 0.03f;
+
         public float ScaleFactor => _canvas != null ? _canvas.scaleFactor : 1f;
 
         /// <summary>Diagram zoom factor (1 = 100%). Pointer-delta math multiplies by this so drags track the cursor.</summary>
@@ -643,7 +651,12 @@ namespace TheRobotDraft.Uml
             else if (ctrl && Input.GetKeyDown(KeyCode.Y)) { if (!GeoRedo()) Redo(); }
             else if (Input.GetKeyDown(KeyCode.Delete) || Input.GetKeyDown(KeyCode.Backspace)) DeleteSelected();
 
-            if (ctrl && (Input.GetKeyDown(KeyCode.F))) { _scene.FrameAll(); Flash("framed diagram"); }
+            if (ctrl && (Input.GetKeyDown(KeyCode.F)))
+            {
+                if (_mode2D) Apply2DModeCamera(true);
+                else _scene.FrameAll();
+                Flash("framed diagram");
+            }
 
             // N cycles the empty-space drag mode (orbit → pan → X → Y → Z); Shift+N reverses.
             if (!ctrl && Input.GetKeyDown(KeyCode.N)) CycleNavMode(shift);
@@ -654,14 +667,15 @@ namespace TheRobotDraft.Uml
             float scroll = Input.mouseScrollDelta.y;
             if (Mathf.Abs(scroll) > 0.01f && !PointerOverUI())
             {
-                if (AltDown()) JumpCameraZ(scroll > 0f ? 1 : -1);
+                if (!_mode2D && AltDown()) JumpCameraZ(scroll > 0f ? 1 : -1);
                 else _scene.Dolly(scroll);
+                if (_mode2D) Apply2DModeCamera(false);
                 return;
             }
 
             // 6-DOF camera keys (gated by the InputField guard above so they never fire while typing): Q/E roll,
             // W/S fly forward/back, A/D strafe, R/F rise/descend. Held-key driven, scaled by Time.deltaTime.
-            HandleCameraKeys(ctrl);
+            if (!_mode2D) HandleCameraKeys(ctrl);
 
             HandleSceneMouse(ctrl, shift, AltDown());
         }
@@ -795,7 +809,7 @@ namespace TheRobotDraft.Uml
                     // On a node: Ctrl/Cmd+Shift+drag → slide along world Z, Ctrl/Cmd+drag → move in XY, Ctrl/Cmd+CLICK
                     // → toggle resize handles, Alt+drag → rotate-in-place, no modifier → connect-by-drag / double-click
                     // → edit modal. (BeginGeoEdit is deferred to drag-start so a click pushes no undo step.)
-                    if (ctrl && shift)
+                    if (!_mode2D && ctrl && shift)
                     {
                         _zMovingNode = true;
                         _dragNode = hit.Id;
@@ -807,7 +821,7 @@ namespace TheRobotDraft.Uml
                         _dragPlaneZ = hit.transform.position.z;
                         _dragLastWorld = ProjectToPlane(_pressScreenPos, _dragPlaneZ);
                     }
-                    else if (alt)
+                    else if (!_mode2D && alt)
                     {
                         _rotatingNode = true;
                         _dragNode = hit.Id;
@@ -1186,6 +1200,12 @@ namespace TheRobotDraft.Uml
         private void NavigateEmptyDrag(Vector2 d)
         {
             var rig = _scene != null ? _scene.Rig : null;
+            if (_mode2D)
+            {
+                _scene.PanPivot(d);
+                Apply2DModeCamera(false);
+                return;
+            }
             float k = AxisMovePerPx * (rig != null ? rig.Distance : 1f);
             switch (_navMode)
             {
@@ -2056,10 +2076,10 @@ namespace TheRobotDraft.Uml
                 return;
             }
 
-            // Classifier boxes = direct classifier children of the active package. The whole diagram is shown at
-            // once now (no active-layer "pane"): each node's z-layer simply places it at a different world-Z depth
-            // plane. Region kinds (boundary / frame / profile) are NOT drawn as slabs — they become dotted cubes
-            // (built below, after their member nodes exist so the cube can be fit around them).
+            // Classifier boxes = direct classifier children of the active package. In 3-D, each node's z-layer
+            // places it at a different world-Z depth plane. In 2-D mode, z-layers and per-node z offsets are ignored
+            // and every node is posed on the same front-facing plane. Region kinds (boundary / frame / profile) are
+            // NOT drawn as slabs — they become dotted regions built below.
             int spread = 0;
             foreach (var el in _model.Elements)
             {
@@ -2095,6 +2115,7 @@ namespace TheRobotDraft.Uml
             _selection.RemoveWhere(id => !_scene.TryGetNode(id, out _));
             if (_selectedId.IsValid && !_selection.Contains(_selectedId)) _selectedId = ElementId.None;
             RefreshSelectionHighlights();
+            RefreshInspector();
 
             // Edge bend handles are 2-D affordances; with the diagram in 3-D they are DEFERRED (no handles drawn).
             _selectedEdge = EdgeId.None;
@@ -2107,6 +2128,8 @@ namespace TheRobotDraft.Uml
                 if (ok) BuildResizeHandles(_resizeModeNode);
                 else ExitResizeMode();
             }
+
+            if (_mode2D) Apply2DModeCamera(false);
         }
 
         /// <summary>The full UML signatures of an element's field / operation members (Rose/Sparx convention).</summary>
@@ -2120,6 +2143,23 @@ namespace TheRobotDraft.Uml
                 if (c.Kind == ElementKind.Field) attributes.Add(c.Name);
                 else if (c.Kind == ElementKind.Function) operations.Add(c.Name);
             }
+        }
+
+        /// <summary>
+        /// Item rows for wireframe widgets. New diagrams store these on the element; older diagrams may still use
+        /// Field children for list rows/table columns, so append those for compatibility.
+        /// </summary>
+        private List<string> WidgetItems(ModelElement el)
+        {
+            var items = new List<string>();
+            if (el == null) return items;
+            foreach (var item in el.Items)
+                if (!string.IsNullOrWhiteSpace(item))
+                    items.Add(item);
+            foreach (var childId in el.ChildIds)
+                if (_model.TryGet(childId, out var c) && c.Kind == ElementKind.Field)
+                    items.Add(c.Name);
+            return items;
         }
 
         /// <summary>The slab fill / text colors for an element — kind-hue default, overridden by a per-element style
@@ -2151,7 +2191,7 @@ namespace TheRobotDraft.Uml
             // The actor / person robot wants a PORTRAIT footprint (a standing figure), not the wide class-box default.
             if (el.Kind == ElementKind.Actor || el.Kind == ElementKind.Person) return new Vector2(108f, 168f);
             // Wireframe widgets get compact, per-kind default footprints (a button is small, a table is wide).
-            var wf = WidgetDefaultSize(el.Kind, attrCount);
+            var wf = WidgetDefaultSize(el.Kind, KindInfo.IsWireframeWidget(el.Kind) ? WidgetItems(el).Count : attrCount);
             if (wf.HasValue) return wf.Value;
             float headerH = 30f + (string.IsNullOrEmpty(Stereotype(el)) ? 0f : 16f);
             float attrH = Mathf.Max(1, attrCount) * 18f + 6f;
@@ -2196,18 +2236,22 @@ namespace TheRobotDraft.Uml
         private void CreateNode3D(ModelElement el, Vector2 pos)
         {
             MemberSignatures(el, out var attributes, out var operations);
+            if (KindInfo.IsWireframeWidget(el.Kind))
+                attributes = WidgetItems(el);
             NodeColors(el, out var fill, out var text);
             Vector2 sizePx = CurrentNodeSizePx(el.Id); // honor a stored resize / pasted size, else the default
             var node = _scene.AddNode(el.Id, el.Name, Stereotype(el), el.Kind, fill, text,
                 attributes, operations, sizePx);
             // Apply a per-node Z thickness override (set via the depth resize handle) before posing.
-            if (_nodeDepth.TryGetValue(el.Id, out var th)) node.SetThickness(th);
+            if (_mode2D) node.SetThickness(FlatNodeThickness);
+            else if (_nodeDepth.TryGetValue(el.Id, out var th)) node.SetThickness(th);
             // World-Z = ZLayer × LayerGap: a higher layer sits further toward +Z (the front / camera side), a lower
             // layer recedes toward −Z. Every layer is drawn at full color (no active-layer graying anymore).
-            float zOffset = _posZ.TryGetValue(el.Id, out var z) ? z : 0f;
-            node.SetWorldPose(Uml3DConfig.ModelToWorld(pos, el.ZLayer) + new Vector3(0f, 0f, zOffset),
+            float zOffset = (!_mode2D && _posZ.TryGetValue(el.Id, out var z)) ? z : 0f;
+            int zLayer = _mode2D ? 0 : el.ZLayer;
+            node.SetWorldPose(Uml3DConfig.ModelToWorld(pos, zLayer) + new Vector3(0f, 0f, zOffset),
                 Quaternion.identity);
-            if (_nodeRot.TryGetValue(el.Id, out var localRot)) node.SetLocalRotation(localRot); // restore orientation
+            if (!_mode2D && _nodeRot.TryGetValue(el.Id, out var localRot)) node.SetLocalRotation(localRot); // restore orientation
             node.SetDepthTint(0f);
             var img = LoadNodeImage(el.Id); // optional per-node picture rendered as a card on the face
             if (img != null) node.SetImage(img);
@@ -2271,9 +2315,11 @@ namespace TheRobotDraft.Uml
         {
             if (!_pos.TryGetValue(el.Id, out var rp)) { rp = Vector2.zero; _pos[el.Id] = rp; }
             if (!(_size.TryGetValue(el.Id, out var s) && s.x > 1f && s.y > 1f)) { s = RegionDefaultSizePx; _size[el.Id] = s; }
-            Vector3 center = Uml3DConfig.ModelToWorld(rp, el.ZLayer);
-            Bounds b = new Bounds(center, new Vector3(s.x * Uml3DConfig.WorldScale, s.y * Uml3DConfig.WorldScale, RegionDepthWorld));
-            b.Expand(RegionPadding * 2f);
+            Vector3 center = Uml3DConfig.ModelToWorld(rp, _mode2D ? 0 : el.ZLayer);
+            float depth = _mode2D ? FlatNodeThickness : RegionDepthWorld;
+            Bounds b = new Bounds(center, new Vector3(s.x * Uml3DConfig.WorldScale, s.y * Uml3DConfig.WorldScale, depth));
+            if (_mode2D) b.Expand(new Vector3(RegionPadding * 2f, RegionPadding * 2f, 0f));
+            else b.Expand(RegionPadding * 2f);
             return b;
         }
 
@@ -2498,8 +2544,8 @@ namespace TheRobotDraft.Uml
             var root = _scene != null && _scene.DiagramRoot != null ? _scene.DiagramRoot : transform;
             foreach (var (role, dir) in ResizeLayout)
                 _resizeHandles.Add(UmlResizeHandle3D.Create(root, id, role, dir, ResizeColor(role)));
-            // The depth (Z thickness) handle exists for nodes only — a region cube's depth isn't a stored dimension.
-            if (!isRegion)
+            // The depth (Z thickness) handle exists for 3-D nodes only — 2-D mode keeps every node flat.
+            if (!isRegion && !_mode2D)
                 _resizeHandles.Add(UmlResizeHandle3D.Create(root, id, UmlResizeHandle3D.Role.Depth, Vector2.zero, ResizeColD));
             RepositionResizeHandles();
         }
@@ -2615,7 +2661,7 @@ namespace TheRobotDraft.Uml
             else
             {
                 node.Resize(sz);
-                if (_resizeRole == UmlResizeHandle3D.Role.Uniform)
+                if (_resizeRole == UmlResizeHandle3D.Role.Uniform && !_mode2D)
                 {
                     float cur = _nodeDepth.TryGetValue(_resizeNode, out var t) ? t : node.CurrentDepth;
                     float th = Mathf.Max(0.04f, cur + delta * Uml3DConfig.WorldScale);
@@ -2793,6 +2839,7 @@ namespace TheRobotDraft.Uml
             var pts = new List<Vector3>(2 + 4) { srcPt };
             if (wps != null) pts.AddRange(wps);
             pts.Add(tgtPt);
+            if (_mode2D) FlattenRoute(pts);
 
             // Curved links (the "Make curved (bezier)" toggle, _curved set): sample a smooth spline through the
             // route so the LineRenderer draws a bezier-like curve instead of straight segments.
@@ -2802,6 +2849,12 @@ namespace TheRobotDraft.Uml
             bool dashed = EdgeVisual(b.Kind).dashed;
             b.View.SetRoute(pts, col, dashed);
             b.View.SetArrow(b.Directed);
+        }
+
+        private static void FlattenRoute(List<Vector3> pts)
+        {
+            if (pts == null) return;
+            for (int i = 0; i < pts.Count; i++) pts[i] = new Vector3(pts[i].x, pts[i].y, FlatRouteZ);
         }
 
         /// <summary>
@@ -2877,16 +2930,8 @@ namespace TheRobotDraft.Uml
             float bestDist = EdgePickPx;
             foreach (var b in _scene3dEdges)
             {
-                if (!_scene.TryGetNode(b.From, out var f) || f == null) continue;
-                if (!_scene.TryGetNode(b.To, out var t) || t == null) continue;
-
-                // Test against the full route polyline (endpoints + any interior waypoints), so a waypoint-bent link
-                // is still pickable along every segment, not just the straight center-to-center chord.
-                Vector3 srcPt = _srcFace.TryGetValue(b.Id, out var sf) ? f.FacePointLocal(sf) : f.transform.position;
-                Vector3 tgtPt = _tgtFace.TryGetValue(b.Id, out var tf) ? t.FacePointLocal(tf) : t.transform.position;
-                var route = new List<Vector3>(2 + 4) { srcPt };
-                if (_waypoints3d.TryGetValue(b.Id, out var wps)) route.AddRange(wps);
-                route.Add(tgtPt);
+                var route = CurrentRoutePoints(b.Id, out var ok);
+                if (!ok) continue;
 
                 for (int i = 0; i + 1 < route.Count; i++)
                 {
@@ -3020,6 +3065,7 @@ namespace TheRobotDraft.Uml
             pts.Add(srcPt);
             if (_waypoints3d.TryGetValue(edge, out var wps)) pts.AddRange(wps);
             pts.Add(tgtPt);
+            if (_mode2D) FlattenRoute(pts);
             ok = true;
             return pts;
         }
@@ -3088,6 +3134,7 @@ namespace TheRobotDraft.Uml
                 case UmlEdgeHandle3D.HandleRole.Waypoint:
                 {
                     Vector3 world = ProjectToCameraPlane(screenPos, _handlePlanePoint, _handlePlaneNormal);
+                    if (_mode2D) world = new Vector3(world.x, world.y, FlatRouteZ);
                     if (_waypoints3d.TryGetValue(_handleEdge, out var wps) && _handleIndex >= 0 && _handleIndex < wps.Count)
                         wps[_handleIndex] = world;
                     break;
@@ -3120,6 +3167,7 @@ namespace TheRobotDraft.Uml
         {
             if (!_waypoints3d.TryGetValue(edge, out var list)) { list = new List<Vector3>(); _waypoints3d[edge] = list; }
             int idx = Mathf.Clamp(segIndex, 0, list.Count);
+            if (_mode2D) world = new Vector3(world.x, world.y, FlatRouteZ);
             list.Insert(idx, world);
             return idx;
         }
@@ -3789,6 +3837,7 @@ namespace TheRobotDraft.Uml
             _selectedId = id;
             ClearRegionSelection();
             RefreshSelectionHighlights();
+            RefreshInspector();
         }
 
         /// <summary>Shift-click: add/remove a node from the multi-selection. The toggled node becomes primary.</summary>
@@ -3809,6 +3858,7 @@ namespace TheRobotDraft.Uml
                 foreach (var sid in _selection) { _selectedId = sid; break; }
             }
             RefreshSelectionHighlights();
+            RefreshInspector();
         }
 
         /// <summary>Replace the selection set wholesale (used by the marquee). Primary = the first valid id.</summary>
@@ -3820,6 +3870,7 @@ namespace TheRobotDraft.Uml
                 foreach (var id in ids)
                     if (id.IsValid && _selection.Add(id) && !_selectedId.IsValid) _selectedId = id;
             RefreshSelectionHighlights();
+            RefreshInspector();
         }
 
         public bool IsSelected(ElementId id) => _selection.Contains(id);
@@ -3963,7 +4014,7 @@ namespace TheRobotDraft.Uml
             _hint.supportRichText = false;
             _hint.raycastTarget = false;
             _hint.text = "Drag empty space → navigate (set mode top-right) · wheel → zoom · Alt+wheel → jump Z · Ctrl/Cmd+F → frame · " +
-                         "G+click box → center on it · click box → select · Shift-click → multi-select · Ctrl/Cmd-drag box → move · " +
+                         "2D switch → flat canvas / depth ignored · G+click box → center on it · click box → select · Shift-click → multi-select · Ctrl/Cmd-drag box → move · " +
                          "right-click box → edit element · right-click canvas → add / paste · " +
                          "Ctrl/Cmd C/V copy · Ctrl/Cmd S save · Ctrl/Cmd Z undo";
 
@@ -3986,10 +4037,12 @@ namespace TheRobotDraft.Uml
             // Camera controls (to the left of Help): manual location/direction form + a quick view reset.
             MakeHudButton("CameraButton", "Camera…", -78f, 84f, () => ShowCameraForm(Input.mousePosition));
             MakeHudButton("ResetViewButton", "⟲ Reset", -168f, 78f, () => CameraReset());
+            Make2DModeSwitch(-254f);
             // Floating glyph toolbar: choose what an empty-space drag controls (orbit / pan / move along an axis).
             BuildNavBar();
 
             BuildPalette();
+            BuildInspector();
         }
 
         /// <summary>A small top-right HUD button anchored from the right edge. Returns its caption Text.</summary>
@@ -4013,12 +4066,75 @@ namespace TheRobotDraft.Uml
             return t;
         }
 
+        private void Make2DModeSwitch(float xFromRight)
+        {
+            var go = new GameObject("Mode2DSwitch", typeof(RectTransform));
+            var rt = (RectTransform)go.transform;
+            rt.SetParent(_root, false);
+            rt.anchorMin = rt.anchorMax = new Vector2(1f, 1f);
+            rt.pivot = new Vector2(1f, 1f);
+            rt.sizeDelta = new Vector2(78f, 28f);
+            rt.anchoredPosition = new Vector2(xFromRight, -6f);
+            _mode2DButtonBg = go.AddComponent<Image>();
+            var btn = go.AddComponent<Button>();
+            btn.targetGraphic = _mode2DButtonBg;
+            btn.onClick.AddListener(Toggle2DMode);
+            _mode2DButtonText = MakeText(rt, "", new Vector2(0f, 0f), new Vector2(78f, 28f), 13,
+                new Color(0.92f, 0.95f, 1f, 1f), TextAnchor.MiddleCenter);
+            _mode2DButtonText.raycastTarget = false;
+            Refresh2DModeSwitch();
+        }
+
+        private void Toggle2DMode()
+        {
+            CloseMenu();
+            _mode2D = !_mode2D;
+            Refresh2DModeSwitch();
+            if (_mode2D)
+            {
+                _navMode = NavMode.Pan;
+                RefreshNavButtons();
+            }
+            RebuildFromModel();
+            if (_mode2D) Apply2DModeCamera(true);
+            Flash(_mode2D ? "2D mode: flat nodes, centered camera, depth ignored" : "3D mode: depth, orbit and node rotation enabled");
+        }
+
+        private void Refresh2DModeSwitch()
+        {
+            if (_mode2DButtonBg != null)
+                _mode2DButtonBg.color = _mode2D
+                    ? new Color(0.20f, 0.55f, 0.85f, 1f)
+                    : new Color(0.18f, 0.22f, 0.28f, 1f);
+            if (_mode2DButtonText != null) _mode2DButtonText.text = _mode2D ? "2D On" : "2D Off";
+        }
+
+        private void Apply2DModeCamera(bool frame)
+        {
+            var rig = _scene != null ? _scene.Rig : null;
+            if (rig == null) return;
+            rig.Yaw = 0f;
+            rig.Pitch = 0f;
+            rig.Roll = 0f;
+            if (frame) _scene.FrameAll();
+            rig.Pivot = new Vector3(rig.Pivot.x, rig.Pivot.y, 0f);
+            rig.Yaw = 0f;
+            rig.Pitch = 0f;
+            rig.Roll = 0f;
+            rig.RefreshNow();
+        }
+
         /// <summary>Reset the camera to the default angles and frame the whole diagram.</summary>
         private void CameraReset()
         {
             var rig = _scene != null ? _scene.Rig : null;
-            if (rig != null) { rig.Yaw = 0f; rig.Pitch = 18f; rig.Roll = 0f; }
-            _scene?.FrameAll();
+            if (_mode2D) Apply2DModeCamera(true);
+            else
+            {
+                if (rig != null) { rig.Yaw = 0f; rig.Pitch = 18f; rig.Roll = 0f; }
+                _scene?.FrameAll();
+                rig?.RefreshNow();
+            }
             Flash("camera reset");
         }
 
@@ -4035,6 +4151,16 @@ namespace TheRobotDraft.Uml
         {
             var rig = _scene != null ? _scene.Rig : null;
             if (rig == null || !_scene.TryGetNode(id, out var node) || node == null) return;
+
+            if (_mode2D)
+            {
+                rig.Pivot = node.transform.position;
+                rig.Distance = Mathf.Clamp(FocusDistance, UmlCameraRig.MinDistance, UmlCameraRig.MaxDistance);
+                Apply2DModeCamera(false);
+                SetSelected(id);
+                Flash("centered on node (2D)");
+                return;
+            }
 
             // The rig sits at Pivot + Orientation()*(0,0,Distance) looking back at the pivot, so to view the node's
             // front face the rig's local +Z must equal the face's outward normal. Solve yaw/pitch for that normal.
@@ -4089,6 +4215,8 @@ namespace TheRobotDraft.Uml
                 rig.Pitch = Mathf.Clamp(ParseFloat(pitch, rig.Pitch), UmlCameraRig.MinPitch, UmlCameraRig.MaxPitch);
                 rig.Roll = ParseFloat(roll, rig.Roll);
                 rig.Distance = Mathf.Clamp(ParseFloat(dist, rig.Distance), UmlCameraRig.MinDistance, UmlCameraRig.MaxDistance);
+                if (_mode2D) Apply2DModeCamera(false);
+                else rig.RefreshNow();
                 Flash("camera updated");
             }
 
@@ -4110,6 +4238,7 @@ namespace TheRobotDraft.Uml
             string body = string.Join("\n", new[]
             {
                 "CAMERA  (full 6 degrees of freedom)",
+                "   2D switch (top-right) ....... flat front view; depth, orbit, roll and node rotation are ignored",
                 "   Drag empty space ............ orbit  (pitch / yaw)",
                 "   Ctrl/Cmd + drag empty ....... pan",
                 "   Mouse wheel ................. zoom  (dolly in / out)",
@@ -4127,10 +4256,10 @@ namespace TheRobotDraft.Uml
                 "   Shift + drag empty space .... marquee multi-select",
                 "   Drag a node ................. draw a relationship (connect-by-drag)",
                 "   Ctrl/Cmd + drag ............. move  (in the layer plane)",
-                "   Ctrl/Cmd + Shift + drag ..... move along Z  (depth)",
+                "   Ctrl/Cmd + Shift + drag ..... move along Z  (depth; disabled in 2D mode)",
                 "   Double-click ................ open the edit modal (fields · operations · properties)",
                 "   Ctrl/Cmd + click ............ toggle resize handles → drag one (corner=all · side=width X · top=height Y · center=depth Z)",
-                "   Alt + drag .................. rotate  (pitch / yaw) in place",
+                "   Alt + drag .................. rotate  (pitch / yaw) in place; disabled in 2D mode",
                 "   Ctrl/Cmd + Z / Y ............ undo / redo a move or resize too",
                 "   Right-click ................. menu: edit, style, generate code, depth (Z), delete",
                 "",

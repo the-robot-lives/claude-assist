@@ -82,8 +82,8 @@ namespace TheRobotDraft.Uml
             if (!isField) getAbstract = MakeCheckbox(panel, new Vector2(170f, y), "abstract", parts.IsAbstract);
             y -= 38f;
 
-            // Comment / doc — the member's Description, surfaced for code generation + import round-trip.
-            string currentComment = editing && _model.TryGet(existing, out var exc) ? exc.Description : "";
+            // Comment / doc — the member's CodeDoc, surfaced for code generation + import round-trip.
+            string currentComment = editing && _model.TryGet(existing, out var exc) ? exc.CodeDoc : "";
             FormLabel(panel, "Comment / doc   (rendered above the member in generated code)", ref y, w);
             var commentInput = MakeMultilineInput(panel, new Vector2(16f, y), w - 32f, 64f, currentComment,
                 "What this member is for…");
@@ -106,7 +106,7 @@ namespace TheRobotDraft.Uml
                 if (editing)
                 {
                     _ctl.Rename(existing, sig);
-                    _ctl.SetDescription(existing, comment);
+                    _ctl.SetCodeDoc(existing, comment);
                     RebuildFromModel();
                     SetSelected(parent);
                     Flash("updated " + (isField ? "attribute" : "operation"));
@@ -116,7 +116,7 @@ namespace TheRobotDraft.Uml
                     _ctl.EnterAddNode(kind);
                     var id = _ctl.CommitAddNode(parent, sig);
                     if (!id.IsValid) { Flash("invalid placement"); _ctl.EnterSelect(); onClose?.Invoke(); return; }
-                    if (!string.IsNullOrWhiteSpace(comment)) _ctl.SetDescription(id, comment);
+                    if (!string.IsNullOrWhiteSpace(comment)) _ctl.SetCodeDoc(id, comment);
                     RebuildFromModel();
                     SetSelected(parent);
                     Flash("added " + (isField ? "attribute" : "operation"));
@@ -157,10 +157,10 @@ namespace TheRobotDraft.Uml
             const int perRow = 4;
             const float chipW = 100f, chipH = 26f, chipGap = 6f, rowH = 28f;
             int langRows = (CommonLanguages.Length + perRow - 1) / perRow;
-            const float descH = 72f; // multiline description input height
+            const float descH = 72f; // multiline description/doc input height
             float w = 480f;
             float h = 250f + langRows * (chipH + chipGap) + (el.Kind == ElementKind.Class ? 36f : 0f)
-                      + 24f + descH + 12f
+                      + 24f + descH + 12f + 24f + descH + 12f
                       + 48f + attrs.Count * rowH + 48f + ops.Count * rowH + 60f;
             var panel = BeginModal(w, h, "Edit " + el.Kind + "   —   " + el.Name);
 
@@ -188,9 +188,14 @@ namespace TheRobotDraft.Uml
                 "entity, service, controller, value…");
             y -= 44f;
 
-            FormLabel(panel, "Description   (free text — fed to code generation)", ref y, w);
+            FormLabel(panel, "Description   (UML/product note)", ref y, w);
             var descInput = MakeMultilineInput(panel, new Vector2(16f, y), w - 32f, descH, el.Description,
                 "What this element is / does…");
+            y -= descH + 12f;
+
+            FormLabel(panel, "Code docs   (generated source comment)", ref y, w);
+            var docInput = MakeMultilineInput(panel, new Vector2(16f, y), w - 32f, descH, el.CodeDoc,
+                "Comment emitted above this type in generated code…");
             y -= descH + 12f;
 
             Func<bool> getAbstract = () => el.IsAbstract;
@@ -208,6 +213,7 @@ namespace TheRobotDraft.Uml
                 if (el.Kind == ElementKind.Class && getAbstract() != el.IsAbstract) _ctl.SetAbstract(id, getAbstract());
                 _ctl.SetMeta(id, langInput.text, stereoInput.text);
                 _ctl.SetDescription(id, descInput.text);
+                _ctl.SetCodeDoc(id, docInput.text);
             }
             void Reopen() => ShowClassifierEditor(id, screenPos);
 
@@ -623,10 +629,8 @@ namespace TheRobotDraft.Uml
         // --- quick comment / inline-doc editor (right-click a node or a member) ---
 
         /// <summary>
-        /// Quick single-field editor for an element's comment — the SAME <c>Description</c> shown in the full edit
-        /// form, surfaced as a right-click note on a node or one of its attributes / functions. This text is what
-        /// code generation renders as the inline doc-comment above the type / field / method, so editing it drives
-        /// the generated inline comment (regenerate the node's code to apply it to already-generated source).
+        /// Quick single-field editor for an element's source-code documentation comment. This is distinct from the
+        /// UML/product Description and is what generation renders above the type / field / method.
         /// </summary>
         private void ShowCommentEditor(ElementId id, Vector2 screenPos)
         {
@@ -641,13 +645,13 @@ namespace TheRobotDraft.Uml
 
             float y = -50f;
             FormLabel(panel, "Inline doc-comment   (rendered above this " + what + " in generated code)", ref y, w);
-            var input = MakeMultilineInput(panel, new Vector2(16f, y), w - 32f, 108f, el.Description ?? "",
+            var input = MakeMultilineInput(panel, new Vector2(16f, y), w - 32f, 108f, el.CodeDoc ?? "",
                 "Comment text — becomes the doc-comment above this " + what + " in generated code…");
 
             void Submit()
             {
                 CloseMenu();
-                _ctl.SetDescription(id, input.text);
+                _ctl.SetCodeDoc(id, input.text);
                 // A member's comment is shown via its owning node; rebuild and reselect the node either way.
                 ElementId owner = isMember && el.Parent.IsValid ? el.Parent : id;
                 RebuildFromModel();
@@ -688,7 +692,7 @@ namespace TheRobotDraft.Uml
             var input = MakeMultilineInput(panel, new Vector2(16f, y), w - 32f, 110f, current, "Free comment text…");
             y -= 122f;
 
-            FormLabel(panel, "Description   (free text — fed to code generation)", ref y, w);
+            FormLabel(panel, "Description   (UML/product note)", ref y, w);
             var descInput = MakeMultilineInput(panel, new Vector2(16f, y), w - 32f, 72f, currentDesc,
                 "What this note is about…");
 
