@@ -19,6 +19,7 @@ const navGroups: NavGroup[] = [
     label: null,
     items: [
       { page: "explore", label: "Explore", icon: "⊘" },
+      { page: "safety-watch", label: "Safety Watch", icon: "◇" },
     ],
   },
   {
@@ -28,6 +29,7 @@ const navGroups: NavGroup[] = [
       { page: "prompts", label: "Prompts", icon: "✦" },
       { page: "tags", label: "Tags", icon: "⊟" },
       { page: "projects", label: "Projects", icon: "◉" },
+      { page: "style-guide", label: "Style Guide", icon: "□" },
     ],
   },
 ];

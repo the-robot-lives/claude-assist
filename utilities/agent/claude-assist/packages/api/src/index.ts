@@ -33,9 +33,9 @@ const indexSources = process.env.CLAUDE_ASSIST_WATCH_PATHS
 
 const embeddings = new EmbeddingService();
 const storage = new StorageService(dbPath);
-const indexer = new IndexerService(storage, indexSources, embeddings);
-const searchService = new SearchService(storage, embeddings);
 const llmService = new LlmService();
+const indexer = new IndexerService(storage, indexSources, embeddings, llmService);
+const searchService = new SearchService(storage, embeddings);
 
 const app = new Hono();
 
@@ -65,15 +65,15 @@ async function start() {
 
   // Load config from DB and initialize LLM service
   const config = loadConfig(storage);
-  if (config.llm) {
-    llmService.initialize(config.llm).then(() => {
+  const llmReady = config.llm
+    ? llmService.initialize(config.llm).then(() => {
       if (llmService.available) {
         console.log(`LLM inference ready — provider: ${llmService.providerName}`);
       }
-    });
-  }
+    })
+    : Promise.resolve();
 
-  embeddings.initialize().then(() => {
+  const embeddingsReady = embeddings.initialize().then(() => {
     if (embeddings.ready) {
       console.log("Embedding model ready — semantic search enabled");
     }
@@ -86,6 +86,7 @@ async function start() {
     const stats = await storage.getStats();
     if (stats.conversationCount === 0) {
       console.log("No conversations indexed — running initial index...");
+      await Promise.allSettled([llmReady, embeddingsReady]);
       indexer.indexAll().then((result) => {
         console.log(`Initial index: ${result.indexed} indexed, ${result.errors} errors, ${result.skipped} skipped`);
       });

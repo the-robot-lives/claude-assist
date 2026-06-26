@@ -19,8 +19,13 @@ import type {
   UniversalMessage,
   UniversalRole,
 } from "@claude-assist/shared";
-import { StorageService, type StoredMessage } from "./storage.ts";
+import { StorageService, type ConversationWorkItem, type StoredMessage } from "./storage.ts";
 import type { EmbeddingService } from "./embeddings.ts";
+import type { LlmService } from "./llm.ts";
+
+const WORK_EXTRACTION_MESSAGE_BATCH_SIZE = 6;
+const WORK_EXTRACTION_MAX_MESSAGE_CHARS = 1800;
+const WORK_EXTRACTION_MAX_BATCH_CHARS = 12_000;
 
 export interface IndexProgress {
   phase: "idle" | "scanning" | "indexing" | "embedding";
@@ -59,18 +64,37 @@ interface CodexRecord {
   };
 }
 
+interface WorkExtractionMessage {
+  index: number;
+  role: string;
+  timestamp: string;
+  content: string;
+}
+
+interface ParsedWorkItem {
+  kind: string;
+  title: string;
+  description: string;
+  evidence: string | null;
+  startIndex: number;
+  endIndex: number;
+  confidence: number;
+}
+
 export class IndexerService {
   private storage: StorageService;
   private embeddings: EmbeddingService | null;
+  private llm: LlmService | null;
   private indexSources: IndexSource[];
   private watcher: unknown = null;
   private debounceTimer: ReturnType<typeof setTimeout> | null = null;
   private fileModTimes = new Map<string, number>();
   private _progress: IndexProgress = { phase: "idle", current: 0, total: 0 };
 
-  constructor(storage: StorageService, indexSources: Array<string | IndexSource> = [], embeddings?: EmbeddingService) {
+  constructor(storage: StorageService, indexSources: Array<string | IndexSource> = [], embeddings?: EmbeddingService, llm?: LlmService) {
     this.storage = storage;
     this.embeddings = embeddings ?? null;
+    this.llm = llm ?? null;
     this.indexSources = normalizeIndexSources(indexSources);
   }
 
@@ -238,6 +262,7 @@ export class IndexerService {
     await this.storage.insertMessages(conversationId, messages);
     await this.storage.insertUniversalMessages(conversationId, parsed.universalMessages);
     await this.storage.insertRawTranscriptEvents(conversationId, parsed.rawEvents);
+    await this.indexWorkItems(conversationId, harness, filePath, messages);
 
     if (this.embeddings?.ready && this.storage.vecAvailable) {
       try {
@@ -252,6 +277,71 @@ export class IndexerService {
         // Non-fatal: skip embedding for this conversation.
       }
     }
+  }
+
+  private async indexWorkItems(conversationId: string, harness: AgentHarness, sourcePath: string, messages: StoredMessage[]): Promise<void> {
+    if (!this.llm?.available) return;
+
+    try {
+      const workItems = await this.extractWorkItems(conversationId, harness, sourcePath, messages);
+      await this.storage.replaceConversationWorkItems(conversationId, workItems);
+
+      if (!this.embeddings?.ready || !this.storage.vecAvailable) return;
+      for (const item of workItems) {
+        const embedding = await this.embeddings.embed(workItemEmbeddingText(item));
+        await this.storage.upsertWorkItemVector(item.id, embedding);
+      }
+    } catch (err) {
+      console.warn(`Work-item extraction skipped for ${basename(sourcePath)}: ${err instanceof Error ? err.message : err}`);
+    }
+  }
+
+  private async extractWorkItems(conversationId: string, harness: AgentHarness, sourcePath: string, messages: StoredMessage[]): Promise<ConversationWorkItem[]> {
+    const batches = chunkMessagesForWorkExtraction(messages);
+    const extracted: ParsedWorkItem[] = [];
+
+    for (const batch of batches) {
+      try {
+        const response = await this.llm!.complete({
+          temperature: 0,
+          maxTokens: 900,
+          messages: [
+            {
+              role: "system",
+              content: [
+                "Extract concise semantic search entries from agent conversation slices.",
+                "Identify concrete work performed, debugging processes, implementation tasks, decisions, artifacts, and outcomes.",
+                "The slice is independent; do not rely on prior context.",
+                "Return only strict JSON shaped as {\"items\":[{\"kind\":\"task|process|decision|artifact|issue\",\"title\":\"...\",\"description\":\"...\",\"evidence\":\"...\",\"startIndex\":0,\"endIndex\":1,\"confidence\":0.0}]}",
+                "Use the provided message indexes. Prefer 1-4 high-signal items. Return an empty items array if the slice has no useful work signal.",
+              ].join(" "),
+            },
+            {
+              role: "user",
+              content: formatWorkExtractionBatch(sourcePath, batch),
+            },
+          ],
+        });
+
+        extracted.push(...parseWorkItemsResponse(response.content, batch[0].index, batch[batch.length - 1].index));
+      } catch (err) {
+        console.warn(`Work-item batch skipped for ${basename(sourcePath)}: ${err instanceof Error ? err.message : err}`);
+      }
+    }
+
+    const now = new Date().toISOString();
+    return dedupeWorkItems(extracted).map((item, index) => ({
+      id: workItemId(harness, sourcePath, index, item),
+      conversationId,
+      kind: item.kind,
+      title: item.title,
+      description: item.description,
+      evidence: item.evidence,
+      startIndex: item.startIndex,
+      endIndex: item.endIndex,
+      confidence: item.confidence,
+      createdAt: now,
+    }));
   }
 
   private debouncedIndex(filePath: string): void {
@@ -289,6 +379,161 @@ export interface ScanPreview {
   embeddingProvider: string;
   estimatedTokens: number;
   estimatedCost: number;
+}
+
+function chunkMessagesForWorkExtraction(messages: StoredMessage[]): WorkExtractionMessage[][] {
+  const batches: WorkExtractionMessage[][] = [];
+  let current: WorkExtractionMessage[] = [];
+  let currentChars = 0;
+
+  for (let index = 0; index < messages.length; index++) {
+    const message = messages[index];
+    const content = truncate(message.content, WORK_EXTRACTION_MAX_MESSAGE_CHARS);
+    const entry: WorkExtractionMessage = {
+      index,
+      role: message.role,
+      timestamp: message.timestamp,
+      content,
+    };
+    const entryChars = content.length;
+    const shouldFlush = current.length > 0
+      && (current.length >= WORK_EXTRACTION_MESSAGE_BATCH_SIZE || currentChars + entryChars > WORK_EXTRACTION_MAX_BATCH_CHARS);
+
+    if (shouldFlush) {
+      batches.push(current);
+      current = [];
+      currentChars = 0;
+    }
+
+    current.push(entry);
+    currentChars += entryChars;
+  }
+
+  if (current.length > 0) batches.push(current);
+  return batches;
+}
+
+function formatWorkExtractionBatch(sourcePath: string, batch: WorkExtractionMessage[]): string {
+  const messages = batch.map((message) => [
+    `[${message.index}] ${message.role} ${message.timestamp}`,
+    message.content,
+  ].join("\n")).join("\n\n---\n\n");
+  return `Source: ${sourcePath}\n\nMessages:\n${messages}`;
+}
+
+function parseWorkItemsResponse(content: string, minIndex: number, maxIndex: number): ParsedWorkItem[] {
+  const parsed = parseJsonPayload(content);
+  const rawItems = Array.isArray(parsed)
+    ? parsed
+    : parsed && typeof parsed === "object" && Array.isArray((parsed as { items?: unknown }).items)
+      ? (parsed as { items: unknown[] }).items
+      : [];
+
+  const items: ParsedWorkItem[] = [];
+  for (const rawItem of rawItems) {
+    if (!rawItem || typeof rawItem !== "object") continue;
+    const item = rawItem as Record<string, unknown>;
+    const title = cleanText(item.title, 120);
+    const description = cleanText(item.description, 700);
+    if (!title || description.length < 12) continue;
+
+    const startIndex = clampInteger(item.startIndex, minIndex, minIndex, maxIndex);
+    const endIndex = clampInteger(item.endIndex, startIndex, startIndex, maxIndex);
+    items.push({
+      kind: cleanKind(item.kind),
+      title,
+      description,
+      evidence: cleanText(item.evidence, 280) || null,
+      startIndex,
+      endIndex,
+      confidence: clampNumber(item.confidence, 0.6, 0, 1),
+    });
+  }
+  return items;
+}
+
+function parseJsonPayload(content: string): unknown {
+  const trimmed = content.trim();
+  const fenced = trimmed.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/);
+  const candidate = fenced ? fenced[1].trim() : trimmed;
+  try {
+    return JSON.parse(candidate);
+  } catch {
+    const arrayStart = candidate.indexOf("[");
+    const arrayEnd = candidate.lastIndexOf("]");
+    const objectStart = candidate.indexOf("{");
+    const objectEnd = candidate.lastIndexOf("}");
+    if (arrayStart !== -1 && arrayEnd > arrayStart && (objectStart === -1 || arrayStart < objectStart)) {
+      try {
+        return JSON.parse(candidate.slice(arrayStart, arrayEnd + 1));
+      } catch {
+        // Fall through and try object extraction.
+      }
+    }
+    if (objectStart !== -1 && objectEnd > objectStart) {
+      try {
+        return JSON.parse(candidate.slice(objectStart, objectEnd + 1));
+      } catch {
+        // Fall through and report the parse failure below.
+      }
+    }
+    throw new Error("LLM did not return parseable JSON");
+  }
+}
+
+function dedupeWorkItems(items: ParsedWorkItem[]): ParsedWorkItem[] {
+  const seen = new Set<string>();
+  const deduped: ParsedWorkItem[] = [];
+  for (const item of items) {
+    const key = `${item.kind}:${normalizeKey(item.title)}:${normalizeKey(item.description).slice(0, 120)}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    deduped.push(item);
+  }
+  return deduped;
+}
+
+function workItemId(harness: AgentHarness, sourcePath: string, sequence: number, item: ParsedWorkItem): string {
+  const seed = `work:${sequence}:${item.startIndex}:${item.endIndex}:${item.kind}:${item.title}:${item.description}`;
+  return `work:${harness}:${StorageService.generateId(sourcePath, seed, harness)}`;
+}
+
+function workItemEmbeddingText(item: ConversationWorkItem): string {
+  const evidence = item.evidence ? `\nEvidence: ${item.evidence}` : "";
+  return `${item.kind}: ${item.title}\n${item.description}${evidence}`;
+}
+
+function cleanKind(value: unknown): string {
+  if (typeof value !== "string") return "task";
+  const normalized = value.trim().toLowerCase();
+  if (["task", "process", "decision", "artifact", "issue"].includes(normalized)) return normalized;
+  return "task";
+}
+
+function cleanText(value: unknown, maxLength: number): string {
+  if (typeof value !== "string") return "";
+  return truncate(value.replace(/\s+/g, " ").trim(), maxLength);
+}
+
+function truncate(value: string, maxLength: number): string {
+  if (value.length <= maxLength) return value;
+  return `${value.slice(0, Math.max(0, maxLength - 3)).trimEnd()}...`;
+}
+
+function clampInteger(value: unknown, fallback: number, min: number, max: number): number {
+  const parsed = typeof value === "number" ? value : Number.parseInt(String(value ?? ""), 10);
+  if (!Number.isFinite(parsed)) return fallback;
+  return Math.min(max, Math.max(min, Math.trunc(parsed)));
+}
+
+function clampNumber(value: unknown, fallback: number, min: number, max: number): number {
+  const parsed = typeof value === "number" ? value : Number.parseFloat(String(value ?? ""));
+  if (!Number.isFinite(parsed)) return fallback;
+  return Math.min(max, Math.max(min, parsed));
+}
+
+function normalizeKey(value: string): string {
+  return value.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
 }
 
 function parseHarnessFile(harness: AgentHarness, filePath: string): ParsedConversation | null {
@@ -422,7 +667,7 @@ function claudeRecordToUniversalMessage(record: UserMessage | AssistantMessage, 
     : claudeUserContentToUniversal(record.message.content);
 
   return {
-    id: record.uuid,
+    id: scopedUniversalMessageId("claude", sourcePath, rawIndex, record.uuid),
     role,
     timestamp: record.timestamp ?? "",
     content,
@@ -565,6 +810,10 @@ function rawEventFromRecord(harness: AgentHarness, raw: unknown, sourcePath: str
     eventType,
     raw,
   };
+}
+
+function scopedUniversalMessageId(harness: AgentHarness, sourcePath: string, rawIndex: number, providerMessageId: string): string {
+  return `${harness}:${StorageService.generateId(sourcePath, `message:${rawIndex}:${providerMessageId}`, harness)}`;
 }
 
 function normalizeRole(role: unknown): UniversalRole {

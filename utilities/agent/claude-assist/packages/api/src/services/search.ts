@@ -114,6 +114,29 @@ export class SearchService {
 
     const queryVec = await this.embeddings.embed(options.query);
     const limit = options.limit ?? 20;
+    const itemResults = await this.storage.knnSearchWorkItems(queryVec, limit * 3);
+    const workItemMatches: SearchResult[] = [];
+    for (const item of itemResults) {
+      const conv = await this.storage.getConversation(item.conversationId);
+      if (!conv) continue;
+
+      if (options.harness && conv.harness !== options.harness) continue;
+      if (options.project && conv.projectPath !== options.project) continue;
+      if (options.dateFrom && conv.startedAt < options.dateFrom) continue;
+      if (options.dateTo && conv.startedAt > options.dateTo) continue;
+
+      workItemMatches.push({
+        conversation: conv,
+        snippet: `${item.title} - ${item.description}`,
+        highlights: [],
+        relevance: 1 - item.distance,
+      });
+
+      if (workItemMatches.length >= limit) return workItemMatches;
+    }
+
+    if (workItemMatches.length > 0) return workItemMatches;
+
     const knnResults = await this.storage.knnSearch(queryVec, limit);
 
     const results: SearchResult[] = [];

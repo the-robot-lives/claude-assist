@@ -1,8 +1,11 @@
 import React from "react";
 import { RouterProvider, useRouter } from "./context/RouterContext.js";
+import { HarnessProvider } from "./context/HarnessContext.js";
 import { Layout } from "./components/Layout.js";
 import { ExplorePage } from "./pages/ExplorePage.js";
+import { SafetyWatchPage } from "./pages/SafetyWatchPage.js";
 import { ThreadPage } from "./pages/ThreadPage.js";
+import { ContinueSessionPage } from "./pages/ContinueSessionPage.js";
 import { EditPage } from "./pages/EditPage.js";
 import { ConvertPage } from "./pages/ConvertPage.js";
 import { DatasetsPage } from "./pages/DatasetsPage.js";
@@ -12,6 +15,7 @@ import { TagsPage } from "./pages/TagsPage.js";
 import { ProjectsPage } from "./pages/ProjectsPage.js";
 import { ProjectDetailPage } from "./pages/ProjectDetailPage.js";
 import { SettingsPage } from "./pages/SettingsPage.js";
+import { StyleGuidePage } from "./pages/StyleGuidePage.js";
 
 function PageRouter() {
   const { current } = useRouter();
@@ -19,8 +23,12 @@ function PageRouter() {
   switch (current.page) {
     case "explore":
       return <ExplorePage />;
+    case "safety-watch":
+      return <SafetyWatchPage />;
     case "thread":
       return <ThreadPage />;
+    case "continue":
+      return <ContinueSessionPage />;
     case "edit":
       return <EditPage />;
     case "convert":
@@ -39,6 +47,8 @@ function PageRouter() {
       return <ProjectDetailPage />;
     case "settings":
       return <SettingsPage />;
+    case "style-guide":
+      return <StyleGuidePage />;
     default:
       return <ExplorePage />;
   }
@@ -46,10 +56,12 @@ function PageRouter() {
 
 export function InteractiveApp() {
   return (
-    <RouterProvider>
-      <Layout>
-        <PageRouter />
-      </Layout>
-    </RouterProvider>
+    <HarnessProvider>
+      <RouterProvider>
+        <Layout>
+          <PageRouter />
+        </Layout>
+      </RouterProvider>
+    </HarnessProvider>
   );
 }

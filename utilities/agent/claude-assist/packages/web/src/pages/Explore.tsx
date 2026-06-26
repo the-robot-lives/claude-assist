@@ -28,7 +28,7 @@ export function Explore() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
   const [previewMode, setPreviewMode] = useState<PreviewMode>("both");
-  const [groupMode, setGroupMode] = useState<GroupMode>("grouped");
+  const [groupMode, setGroupMode] = useState<GroupMode>("flat");
 
   const isSearching = query.trim().length > 0;
   const offset = (page - 1) * pageSize;

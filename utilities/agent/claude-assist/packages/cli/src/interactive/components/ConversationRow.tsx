@@ -5,6 +5,7 @@ type PreviewMode = "both" | "first" | "last" | "none";
 
 interface ConversationRowProps {
   id: string;
+  harness?: string;
   title: string;
   projectPath: string;
   messageCount?: number;
@@ -24,6 +25,7 @@ function stripToolUse(text: string): string {
 
 export function ConversationRow({
   id,
+  harness,
   title,
   projectPath,
   messageCount,
@@ -45,6 +47,12 @@ export function ConversationRow({
           {isCursor ? "▸ " : "  "}
         </Text>
         <Text dimColor>{id.slice(0, 8)}</Text>
+        {harness && (
+          <>
+            {" "}
+            <Text dimColor>[{harness}]</Text>
+          </>
+        )}
         {" "}
         <Text color="cyan" dimColor>[{shortProject}]</Text>
         {" "}

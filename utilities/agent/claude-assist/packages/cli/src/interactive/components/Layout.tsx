@@ -5,7 +5,7 @@ import { Sidebar, getSidebarItemCount } from "./Sidebar.js";
 import { StatusLine } from "./StatusLine.js";
 import { useTerminalSize } from "../hooks/useTerminalSize.js";
 
-type FocusZone = "sidebar" | "content";
+type FocusZone = "header" | "sidebar" | "content";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -16,12 +16,13 @@ interface LayoutProps {
 export function Layout({ children, statusHints, statusInfo }: LayoutProps) {
   const [focusZone, setFocusZone] = useState<FocusZone>("content");
   const [sidebarIndex, setSidebarIndex] = useState(0);
+  const [harnessIndex, setHarnessIndex] = useState(0);
   const { rows } = useTerminalSize();
   const { exit } = useApp();
 
   useInput((input, key) => {
     if (key.tab) {
-      setFocusZone((z) => z === "sidebar" ? "content" : "sidebar");
+      setFocusZone((z) => z === "content" ? "header" : z === "header" ? "sidebar" : "content");
     }
     if (input === "q" && focusZone !== "content") {
       exit();
@@ -32,7 +33,11 @@ export function Layout({ children, statusHints, statusInfo }: LayoutProps) {
 
   return (
     <Box flexDirection="column" height={rows}>
-      <Header />
+      <Header
+        isActive={focusZone === "header"}
+        selectedHarnessIndex={harnessIndex}
+        onSelectedHarnessIndexChange={setHarnessIndex}
+      />
       <Box height={contentHeight}>
         <Sidebar
           isActive={focusZone === "sidebar"}

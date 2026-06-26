@@ -13,6 +13,7 @@ import { InputModal } from "../components/InputModal.js";
 
 interface ConversationMeta {
   id: string;
+  harness: string;
   title: string;
   slug: string | null;
   description: string | null;
@@ -35,7 +36,8 @@ type Overlay =
   | "edit-title"
   | "edit-slug"
   | "edit-desc"
-  | "remove-tag";
+  | "remove-tag"
+  | "find";
 
 export function ThreadPage() {
   const { current, navigate, goBack } = useRouter();
@@ -52,6 +54,8 @@ export function ThreadPage() {
   const [expandThinking, setExpandThinking] = useState(false);
   const [showRaw, setShowRaw] = useState(false);
   const [actionMsg, setActionMsg] = useState("");
+  const [findQuery, setFindQuery] = useState("");
+  const [findResults, setFindResults] = useState<Array<{ messageId: number; snippet: string }>>([]);
 
   const contentHeight = Math.max(5, rows - 14);
   const scroll = useScroll({
@@ -71,6 +75,8 @@ export function ThreadPage() {
     if (key.escape || input === "b") goBack();
     else if (input === "e") navigate("edit", { id });
     else if (input === "c") navigate("convert", { id });
+    else if (input === "u") navigate("continue", { id });
+    else if (input === "f") setOverlay("find");
     else if (input === "C") setOverlay("clone");
     else if (input === "a") setOverlay("archive");
     else if (input === "r") setOverlay("rehome");
@@ -101,6 +107,26 @@ export function ThreadPage() {
     }
     setOverlay(null);
     refetchMeta();
+  };
+
+  const handleFind = async (query: string) => {
+    setFindQuery(query);
+    if (!query.trim()) {
+      setFindResults([]);
+      setOverlay(null);
+      return;
+    }
+    try {
+      const res = await apiFetch<{ data: Array<{ messageId: number; snippet: string }> }>(
+        `/conversations/${id}/search?q=${encodeURIComponent(query)}`,
+      );
+      setFindResults(res.data);
+      showAction(`${res.data.length} matches`);
+    } catch {
+      setFindResults([]);
+      showAction("Find failed");
+    }
+    setOverlay(null);
   };
 
   const handleClone = async () => {
@@ -203,8 +229,8 @@ export function ThreadPage() {
     return <Text color="red">Conversation not found: {id}</Text>;
   }
 
-  const sessionId = meta.sourcePath.split("/").pop()?.replace(/\.jsonl$/, "") ?? "";
-  const resumeCmd = sessionId ? `claude --resume ${sessionId}` : null;
+  const sessionId = meta.sourcePath?.split("/").pop()?.replace(/\.jsonl$/, "") ?? "";
+  const resumeCmd = meta.harness === "claude" && sessionId ? `pushd ${meta.projectPath} && claude --resume ${sessionId}` : null;
 
   return (
     <Box flexDirection="column">
@@ -213,6 +239,8 @@ export function ThreadPage() {
         <Text bold color="cyan">{meta.title}</Text>
         <Text dimColor>
           <Text color="cyan">{meta.slug ? `@${meta.slug}` : meta.id.slice(0, 8)}</Text>
+          {" | "}
+          <Text color="cyan">{meta.harness}</Text>
           {" | "}
           <Text color="cyan">{shortProject(meta.projectPath)}</Text>
           {" | "}{meta.messageCount} msgs
@@ -226,12 +254,13 @@ export function ThreadPage() {
       {/* Source metadata */}
       <Box flexDirection="column" marginBottom={1}>
         <Text dimColor>Dir: {meta.projectPath}</Text>
+        <Text dimColor>Source: {meta.sourcePath}</Text>
         {resumeCmd && <Text dimColor>Resume: {resumeCmd}</Text>}
       </Box>
 
       {/* Actions */}
       <Text dimColor>
-        b:back e:edit c:convert C:clone r:rehome a:archive t:tag T:untag
+        b:back e:edit c:convert u:continue f:find C:clone r:rehome a:archive t:tag T:untag
       </Text>
       <Text dimColor>
         n:rename S:slug D:desc x:thinking R:raw p:prompt
@@ -256,6 +285,14 @@ export function ThreadPage() {
         <InputModal
           label={`Remove tag (current: ${meta.tags.join(", ")}):`}
           onSubmit={handleRemoveTag}
+          onCancel={() => setOverlay(null)}
+        />
+      )}
+      {overlay === "find" && (
+        <InputModal
+          label="Find in thread:"
+          defaultValue={findQuery}
+          onSubmit={handleFind}
           onCancel={() => setOverlay(null)}
         />
       )}
@@ -290,6 +327,17 @@ export function ThreadPage() {
       {/* Messages */}
       {!overlay && (
         <Box flexDirection="column" marginTop={1}>
+          {findResults.length > 0 && (
+            <Box flexDirection="column" borderStyle="single" borderColor="gray" paddingX={1} marginBottom={1}>
+              <Text bold color="cyan">Find: {findQuery}</Text>
+              {findResults.slice(0, 5).map((result) => (
+                <Text key={result.messageId} dimColor wrap="truncate-end">
+                  #{result.messageId} {result.snippet.replace(/<<</g, "").replace(/>>>/g, "")}
+                </Text>
+              ))}
+              {findResults.length > 5 && <Text dimColor>...and {findResults.length - 5} more matches</Text>}
+            </Box>
+          )}
           <SelectableList
             items={records}
             cursor={scroll.cursor}

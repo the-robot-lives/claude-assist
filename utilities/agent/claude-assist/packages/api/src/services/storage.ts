@@ -52,6 +52,19 @@ export interface StoredUniversalMessage extends UniversalMessage {
   conversationId: string;
 }
 
+export interface ConversationWorkItem {
+  id: string;
+  conversationId: string;
+  kind: string;
+  title: string;
+  description: string;
+  evidence: string | null;
+  startIndex: number;
+  endIndex: number;
+  confidence: number;
+  createdAt: string;
+}
+
 export interface IndexStatus {
   status: "idle" | "indexing";
   lastIndexed: string | null;
@@ -138,6 +151,24 @@ export class StorageService {
       );
 
       CREATE INDEX IF NOT EXISTS idx_raw_events_conversation ON raw_transcript_events(conversation_id);
+    `);
+
+    this.db.exec(`
+      CREATE TABLE IF NOT EXISTS conversation_work_items (
+        id              TEXT PRIMARY KEY,
+        conversation_id TEXT NOT NULL,
+        kind            TEXT NOT NULL,
+        title           TEXT NOT NULL,
+        description     TEXT NOT NULL,
+        evidence        TEXT,
+        start_index     INTEGER NOT NULL DEFAULT 0,
+        end_index       INTEGER NOT NULL DEFAULT 0,
+        confidence      REAL NOT NULL DEFAULT 0,
+        created_at      TEXT NOT NULL,
+        FOREIGN KEY (conversation_id) REFERENCES conversations(id)
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_work_items_conversation ON conversation_work_items(conversation_id);
     `);
 
     this.db.exec(`
@@ -297,6 +328,11 @@ export class StorageService {
           id TEXT PRIMARY KEY,
           embedding float[384]
         );
+
+        CREATE VIRTUAL TABLE IF NOT EXISTS work_item_vectors USING vec0(
+          id TEXT PRIMARY KEY,
+          embedding float[384]
+        );
       `);
       this._vecAvailable = true;
     } catch (err) {
@@ -319,6 +355,14 @@ export class StorageService {
     ).run(conversationId, Buffer.from(embedding.buffer));
   }
 
+  async upsertWorkItemVector(workItemId: string, embedding: Float32Array): Promise<void> {
+    if (!this._vecAvailable) return;
+    const db = this.getDb();
+    db.prepare(
+      "INSERT OR REPLACE INTO work_item_vectors (id, embedding) VALUES (?, ?)",
+    ).run(workItemId, Buffer.from(embedding.buffer));
+  }
+
   async knnSearch(queryEmbedding: Float32Array, limit: number = 20): Promise<Array<{ id: string; distance: number }>> {
     if (!this._vecAvailable) return [];
     const db = this.getDb();
@@ -329,6 +373,35 @@ export class StorageService {
       ORDER BY distance
       LIMIT ?
     `).all(Buffer.from(queryEmbedding.buffer), limit) as Array<{ id: string; distance: number }>;
+    return rows;
+  }
+
+  async knnSearchWorkItems(queryEmbedding: Float32Array, limit: number = 20): Promise<Array<ConversationWorkItem & { distance: number }>> {
+    if (!this._vecAvailable) return [];
+    const db = this.getDb();
+    const rows = db.prepare(`
+      SELECT
+        wi.id,
+        wi.conversation_id as conversationId,
+        wi.kind,
+        wi.title,
+        wi.description,
+        wi.evidence,
+        wi.start_index as startIndex,
+        wi.end_index as endIndex,
+        wi.confidence,
+        wi.created_at as createdAt,
+        vectors.distance
+      FROM (
+        SELECT id, distance
+        FROM work_item_vectors
+        WHERE embedding MATCH ?
+        ORDER BY distance
+        LIMIT ?
+      ) vectors
+      JOIN conversation_work_items wi ON wi.id = vectors.id
+      ORDER BY vectors.distance
+    `).all(Buffer.from(queryEmbedding.buffer), limit) as Array<ConversationWorkItem & { distance: number }>;
     return rows;
   }
 
@@ -539,6 +612,63 @@ export class StorageService {
       eventType: row.eventType,
       raw: JSON.parse(row.payload),
     }));
+  }
+
+  async replaceConversationWorkItems(conversationId: string, items: ConversationWorkItem[]): Promise<void> {
+    const db = this.getDb();
+    const existing = db
+      .prepare("SELECT id FROM conversation_work_items WHERE conversation_id = ?")
+      .all(conversationId) as Array<{ id: string }>;
+
+    if (this._vecAvailable) {
+      const deleteVector = db.prepare("DELETE FROM work_item_vectors WHERE id = ?");
+      for (const row of existing) deleteVector.run(row.id);
+    }
+
+    db.prepare("DELETE FROM conversation_work_items WHERE conversation_id = ?").run(conversationId);
+
+    const insert = db.prepare(`
+      INSERT INTO conversation_work_items
+        (id, conversation_id, kind, title, description, evidence, start_index, end_index, confidence, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+    const batch = db.transaction((workItems: ConversationWorkItem[]) => {
+      for (const item of workItems) {
+        insert.run(
+          item.id,
+          conversationId,
+          item.kind,
+          item.title,
+          item.description,
+          item.evidence,
+          item.startIndex,
+          item.endIndex,
+          item.confidence,
+          item.createdAt,
+        );
+      }
+    });
+    batch(items);
+  }
+
+  async getConversationWorkItems(conversationId: string): Promise<ConversationWorkItem[]> {
+    const db = this.getDb();
+    return db.prepare(`
+      SELECT
+        id,
+        conversation_id as conversationId,
+        kind,
+        title,
+        description,
+        evidence,
+        start_index as startIndex,
+        end_index as endIndex,
+        confidence,
+        created_at as createdAt
+      FROM conversation_work_items
+      WHERE conversation_id = ?
+      ORDER BY start_index, id
+    `).all(conversationId) as ConversationWorkItem[];
   }
 
   async getMessages(conversationId: string): Promise<StoredMessage[]> {

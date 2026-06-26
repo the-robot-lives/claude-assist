@@ -2,7 +2,9 @@ import React, { createContext, useContext, useReducer, useCallback, useMemo } fr
 
 export type PageName =
   | "explore"
+  | "safety-watch"
   | "thread"
+  | "continue"
   | "edit"
   | "convert"
   | "datasets"
@@ -11,7 +13,8 @@ export type PageName =
   | "tags"
   | "projects"
   | "project-detail"
-  | "settings";
+  | "settings"
+  | "style-guide";
 
 export interface Route {
   page: PageName;
