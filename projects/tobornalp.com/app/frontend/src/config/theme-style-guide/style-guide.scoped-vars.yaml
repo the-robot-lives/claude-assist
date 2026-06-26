@@ -1,3 +1,33 @@
+# ═══════════════════════════════════════════════════════════════
+# SCOPED VARIABLES — style-guide.scoped-vars.yaml
+# ═══════════════════════════════════════════════════════════════
+#
+# Defines CSS custom properties scoped to specific selectors, with
+# per-mode (light/dark) values and layout container presets.
+#
+# HOW IT WORKS:
+#   - `sections` declares named scopes (standard, dark, layout), each
+#     with a CSS selector and variable prefix
+#   - `vars[]` entries produce --{prefix}-{name} properties under
+#     their respective selectors
+#   - Vars with `selector` + `selector-body` also emit a CSS rule
+#     applying the property to that selector (e.g. .content max-width)
+#   - Multi-section vars generate overrides per mode (light → standard,
+#     dark → dark selector)
+#
+# HOW TO MODIFY:
+#   - Add a scoped var: append a `- name:` entry to the `vars` list
+#   - Add a layout preset: add a `- name:` entry with section: layout,
+#     a `selector`, and a `selector-body` string
+#   - The `values:` map under a section expands to multiple prefixed vars
+#     (e.g. `max-width: "1200px"` → --layout-{name}-max-width: 1200px)
+#   - Run `npm run regen` after changes
+#
+# RELATED: style-guide.color-modes.yaml (simpler light/dark definitions)
+#          style-guide.vars.yaml (global tokens these reference)
+#          style-guide.page-layouts.yaml (layout presets for the viewer)
+# ═══════════════════════════════════════════════════════════════
+
 scoped-vars:
   prefix: "theme"
 
@@ -13,48 +43,57 @@ scoped-vars:
       prefix: "layout"
 
   vars:
-    # ═══════════════════════════════════════
-    # Color modes: surfaces, text, borders
-    # ═══════════════════════════════════════
+    - name: content-container-type
+      value: "inline-size"
+      selector: ".content"
+      selector-body: "container-type: var(--theme-content-container-type)"
+
+    - name: content-position
+      value:
+        - section: standard
+          value: "relative"
+      selector: ".content"
+      selector-body: "position: var(--theme-content-position)"
+
     - name: surface
       value:
         - section: standard
           value: "var(--white)"
         - section: dark
-          value: "#0F172A"
+          value: "#1a1a1a"
 
     - name: surface-alt
       value:
         - section: standard
           value: "var(--gray-50)"
         - section: dark
-          value: "#1E293B"
+          value: "#252525"
 
     - name: surface-inverse
       value:
         - section: standard
-          value: "var(--gray-900)"
+          value: "var(--black)"
         - section: dark
           value: "var(--gray-200)"
 
     - name: text
       value:
         - section: standard
-          value: "var(--gray-900)"
+          value: "var(--black)"
         - section: dark
-          value: "var(--gray-200)"
+          value: "#e8e8e8"
 
     - name: text-secondary
       value:
         - section: standard
-          value: "var(--gray-600)"
+          value: "var(--gray-700)"
         - section: dark
           value: "var(--gray-400)"
 
     - name: text-muted
       value:
         - section: standard
-          value: "var(--gray-400)"
+          value: "var(--gray-500)"
         - section: dark
           value: "var(--gray-500)"
 
@@ -65,19 +104,12 @@ scoped-vars:
         - section: dark
           value: "var(--gray-900)"
 
-    - name: text-link
-      value:
-        - section: standard
-          value: "#2563EB"
-        - section: dark
-          value: "#60A5FA"
-
     - name: border
       value:
         - section: standard
           value: "var(--gray-200)"
         - section: dark
-          value: "#334155"
+          value: "#333333"
 
     - name: border-strong
       value:
@@ -89,252 +121,134 @@ scoped-vars:
     - name: shadow-color
       value:
         - section: standard
-          value: "rgba(15,23,42,0.06)"
+          value: "rgba(0,0,0,0.08)"
         - section: dark
           value: "rgba(0,0,0,0.3)"
 
-    # ═══════════════════════════════════════
-    # Dark mode: accent brightening
-    # ═══════════════════════════════════════
-    - name: blue
+    - name: surface-accent
       value:
+        - section: standard
+          value: "var(--blue-light)"
         - section: dark
-          value: "#60A5FA"
-    - name: blue-light
-      value:
-        - section: dark
-          value: "color-mix(in srgb, #3B82F6 18%, var(--surface))"
-    - name: blue-mid
-      value:
-        - section: dark
-          value: "color-mix(in srgb, #3B82F6 30%, var(--surface))"
+          value: "rgba(0,71,171,0.18)"
 
-    - name: violet
+    - name: surface-warning
       value:
+        - section: standard
+          value: "var(--yellow-light)"
         - section: dark
-          value: "color-mix(in srgb, #8B5CF6 75%, white)"
-    - name: violet-light
-      value:
-        - section: dark
-          value: "color-mix(in srgb, #8B5CF6 18%, var(--surface))"
-    - name: violet-mid
-      value:
-        - section: dark
-          value: "color-mix(in srgb, #8B5CF6 30%, var(--surface))"
+          value: "rgba(245,197,24,0.15)"
 
-    # ═══════════════════════════════════════
-    # Dark mode: palette color brightening
-    # ═══════════════════════════════════════
-    - name: rose
+    - name: surface-danger
       value:
+        - section: standard
+          value: "var(--red-light)"
         - section: dark
-          value: "color-mix(in srgb, #F43F5E 75%, white)"
-    - name: rose-light
-      value:
-        - section: dark
-          value: "color-mix(in srgb, #F43F5E 18%, var(--surface))"
+          value: "rgba(226,6,19,0.15)"
 
-    - name: emerald
+    - name: text-link
       value:
+        - section: standard
+          value: "var(--blue)"
         - section: dark
-          value: "color-mix(in srgb, #10B981 75%, white)"
-    - name: emerald-light
-      value:
-        - section: dark
-          value: "color-mix(in srgb, #10B981 18%, var(--surface))"
+          value: "#7eb8ff"
 
-    - name: amber
+    - name: border-accent
       value:
+        - section: standard
+          value: "var(--black)"
         - section: dark
-          value: "color-mix(in srgb, #F59E0B 75%, white)"
-    - name: amber-light
-      value:
-        - section: dark
-          value: "color-mix(in srgb, #F59E0B 18%, var(--surface))"
+          value: "#cccccc"
 
-    - name: cyan
+    - name: focus-ring
       value:
+        - section: standard
+          value: "rgba(0,71,171,0.3)"
         - section: dark
-          value: "color-mix(in srgb, #06B6D4 75%, white)"
-    - name: cyan-light
-      value:
-        - section: dark
-          value: "color-mix(in srgb, #06B6D4 18%, var(--surface))"
+          value: "rgba(126,184,255,0.35)"
 
-    - name: indigo
+    - name: bg
       value:
+        - section: standard
+          value: "var(--white)"
         - section: dark
-          value: "color-mix(in srgb, #6366F1 75%, white)"
-    - name: indigo-light
-      value:
-        - section: dark
-          value: "color-mix(in srgb, #6366F1 18%, var(--surface))"
+          value: "#1a1a1a"
 
-    - name: teal
-      value:
-        - section: dark
-          value: "color-mix(in srgb, #14B8A6 75%, white)"
-    - name: teal-light
-      value:
-        - section: dark
-          value: "color-mix(in srgb, #14B8A6 18%, var(--surface))"
-
-    - name: orange
-      value:
-        - section: dark
-          value: "color-mix(in srgb, #F97316 75%, white)"
-    - name: orange-light
-      value:
-        - section: dark
-          value: "color-mix(in srgb, #F97316 18%, var(--surface))"
-
-    - name: sky
-      value:
-        - section: dark
-          value: "color-mix(in srgb, #0EA5E9 75%, white)"
-    - name: sky-light
-      value:
-        - section: dark
-          value: "color-mix(in srgb, #0EA5E9 18%, var(--surface))"
-
-    - name: lime
-      value:
-        - section: dark
-          value: "color-mix(in srgb, #84CC16 75%, white)"
-    - name: lime-light
-      value:
-        - section: dark
-          value: "color-mix(in srgb, #84CC16 18%, var(--surface))"
-
-    - name: pink
-      value:
-        - section: dark
-          value: "color-mix(in srgb, #EC4899 75%, white)"
-    - name: pink-light
-      value:
-        - section: dark
-          value: "color-mix(in srgb, #EC4899 18%, var(--surface))"
-
-    - name: purple
-      value:
-        - section: dark
-          value: "color-mix(in srgb, #A855F7 75%, white)"
-    - name: purple-light
-      value:
-        - section: dark
-          value: "color-mix(in srgb, #A855F7 18%, var(--surface))"
-
-    - name: fuchsia
-      value:
-        - section: dark
-          value: "color-mix(in srgb, #D946EF 75%, white)"
-    - name: fuchsia-light
-      value:
-        - section: dark
-          value: "color-mix(in srgb, #D946EF 18%, var(--surface))"
-
-    # ═══════════════════════════════════════
-    # Dark mode: semantic state brightening
-    # ═══════════════════════════════════════
-    - name: success
-      value:
-        - section: dark
-          value: "color-mix(in srgb, #10B981 75%, white)"
-    - name: success-tint
-      value:
-        - section: dark
-          value: "color-mix(in srgb, #10B981 18%, var(--surface))"
-
-    - name: warning
-      value:
-        - section: dark
-          value: "color-mix(in srgb, #F59E0B 75%, white)"
-    - name: warning-tint
-      value:
-        - section: dark
-          value: "color-mix(in srgb, #F59E0B 18%, var(--surface))"
-
-    - name: error
-      value:
-        - section: dark
-          value: "color-mix(in srgb, #EF4444 75%, white)"
-    - name: error-tint
-      value:
-        - section: dark
-          value: "color-mix(in srgb, #EF4444 18%, var(--surface))"
-
-    - name: info
-      value:
-        - section: dark
-          value: "color-mix(in srgb, #3B82F6 75%, white)"
-    - name: info-tint
-      value:
-        - section: dark
-          value: "color-mix(in srgb, #3B82F6 18%, var(--surface))"
-
-    # ═══════════════════════════════════════
-    # Dark mode: component overrides
-    # ═══════════════════════════════════════
-    - name: card-background
-      value:
-        - section: dark
-          value: "var(--gray-800)"
     - name: card-border-color
       value:
+        - section: standard
+          value: "var(--black)"
         - section: dark
-          value: "var(--gray-700)"
-    - name: btn-background
-      value:
-        - section: dark
-          value: "#2563EB"
-    - name: btn-hover-background
-      value:
-        - section: dark
-          value: "#3B82F6"
+          value: "#444444"
 
-    # ═══════════════════════════════════════
-    # Layout presets
-    # ═══════════════════════════════════════
-    - name: dashboard
+    - name: card-bg
       value:
-        - section: layout
-          values:
-            max-width: "1440px"
-            padding: "var(--space-3)"
-            margin: "0 auto"
-            content-bg: "var(--surface)"
-      selector: ".content"
-      selector-body: "max-width: var(--layout-dashboard-max-width); padding: var(--layout-dashboard-padding); margin: var(--layout-dashboard-margin); background: var(--layout-dashboard-content-bg)"
+        - section: standard
+          value: "var(--white)"
+        - section: dark
+          value: "#1e1e1e"
+
+    - name: radius-none
+      value:
+        - section: standard
+          value: "0"
+
+    - name: radius-sm
+      value:
+        - section: standard
+          value: "2px"
 
     - name: standard
       value:
         - section: layout
           values:
             max-width: "1200px"
-            padding: "var(--space-4)"
+            padding: "var(--space-6)"
             margin: "0 auto"
-            content-bg: "var(--surface-alt)"
-      selector: ".content.standard"
+            content-bg: "transparent"
+      selector: ".content"
       selector-body: "max-width: var(--layout-standard-max-width); padding: var(--layout-standard-padding); margin: var(--layout-standard-margin); background: var(--layout-standard-content-bg)"
+
+    - name: wide
+      value:
+        - section: layout
+          values:
+            max-width: "1200px"
+            padding: "var(--space-6)"
+            margin: "0 auto"
+            content-bg: "transparent"
+      selector: ".content.wide"
+      selector-body: "max-width: var(--layout-wide-max-width); padding: var(--layout-wide-padding); margin: var(--layout-wide-margin); background: var(--layout-wide-content-bg)"
+
+    - name: full
+      value:
+        - section: layout
+          values:
+            max-width: "100%"
+            padding: "var(--space-4)"
+            margin: "0"
+            content-bg: "transparent"
+      selector: ".content.full"
+      selector-body: "max-width: var(--layout-full-max-width); padding: var(--layout-full-padding); margin: var(--layout-full-margin); background: var(--layout-full-content-bg)"
+
+    - name: narrow
+      value:
+        - section: layout
+          values:
+            max-width: "600px"
+            padding: "var(--space-6)"
+            margin: "0 auto"
+            content-bg: "transparent"
+      selector: ".content.narrow"
+      selector-body: "max-width: var(--layout-narrow-max-width); padding: var(--layout-narrow-padding); margin: var(--layout-narrow-margin); background: var(--layout-narrow-content-bg)"
 
     - name: article
       value:
         - section: layout
           values:
-            max-width: "72ch"
+            max-width: "720px"
             padding: "var(--space-6)"
             margin: "0 auto"
-            content-bg: "var(--surface-alt)"
+            content-bg: "transparent"
       selector: ".content.article"
       selector-body: "max-width: var(--layout-article-max-width); padding: var(--layout-article-padding); margin: var(--layout-article-margin); background: var(--layout-article-content-bg)"
-
-    - name: focus
-      value:
-        - section: layout
-          values:
-            max-width: "960px"
-            padding: "var(--space-6)"
-            margin: "0 auto"
-            content-bg: "var(--surface)"
-      selector: ".content.focus"
-      selector-body: "max-width: var(--layout-focus-max-width); padding: var(--layout-focus-padding); margin: var(--layout-focus-margin); background: var(--layout-focus-content-bg)"

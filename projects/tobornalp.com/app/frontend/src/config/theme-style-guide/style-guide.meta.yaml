@@ -1,4 +1,24 @@
-name: "tobornalp"
+# ═══════════════════════════════════════════════════════════════
+# THEME IDENTITY — style-guide.meta.yaml
+# ═══════════════════════════════════════════════════════════════
+#
+# Identifies this theme to the styleguide engine.
+#
+# FIELDS:
+#   name        — human-readable theme name (shown in theme switcher)
+#   slug        — URL-safe ID, also the data-design-theme attribute value
+#   title       — full display title for the style guide page
+#   description — one-line philosophy or tagline
+#
+# HOW TO MODIFY:
+#   - Change `slug` only if you also update every selector in
+#     css-snippets.yaml and scoped-vars.yaml that references it
+#   - `name` and `title` are display-only — safe to change freely
+#
+# RELATED: branding.yaml (logo, tone, audience, intro section)
+# ═══════════════════════════════════════════════════════════════
+
+name: "Base Theme"
 slug: "style-guide"
-title: "tobornalp — Design System"
-description: "AI-native operational life platform — project management, life planning, and AI agents as team members."
+title: "Style Guide — Base Theme"
+description: "The default design system. Override this in your project's theme-{slug}/ directory."

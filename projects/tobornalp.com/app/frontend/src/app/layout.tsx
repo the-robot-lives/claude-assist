@@ -1,13 +1,19 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { AuthProvider } from "@/context/auth";
+import { OrgProvider } from "@/context/org";
+import { Navbar } from "@/components/navbar";
+import { AnalyticsProvider } from "@/components/analytics-provider";
+import { CookieConsentProvider } from "@/components/cookie-consent";
+import { OtelProvider } from "@/components/otel-provider";
 import { loadConfig, loadAllBrandings } from "@noizu/styleguide/css-gen";
 import { Toaster } from "sonner";
 
 export function generateMetadata(): Metadata {
   const config = loadConfig();
   return {
-    title: config.title ?? "tobornalp",
-    description: config.description ?? "Warm, natural, human project planning",
+    title: config.title ?? "Project Name",
+    description: config.description ?? "Built with start-app",
   };
 }
 
@@ -24,21 +30,33 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   const t = config.toast;
 
   return (
-    <html data-design-theme="organic" suppressHydrationWarning>
+    <html lang="en" data-design-theme="organic" suppressHydrationWarning>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
         {fontUrls.map((url) => (
           <link key={url} href={url} rel="stylesheet" />
         ))}
+        <script src="/__env.js" />
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){var s=localStorage.getItem('color-mode');var p=matchMedia('(prefers-color-scheme:dark)').matches;var d=s?s==='dark':p;if(d)document.documentElement.classList.add('dark');else document.documentElement.classList.remove('dark')})()`,
+            __html: `(function(){var s=localStorage.getItem('color-mode');var p=matchMedia('(prefers-color-scheme:dark)').matches;if(s==='dark'||(!s&&p))document.documentElement.classList.add('dark')})()`,
           }}
         />
       </head>
       <body>
-        {children}
+        <OtelProvider>
+          <AuthProvider>
+            <OrgProvider>
+              <CookieConsentProvider>
+                <AnalyticsProvider>
+                  <Navbar />
+                  {children}
+                </AnalyticsProvider>
+              </CookieConsentProvider>
+            </OrgProvider>
+          </AuthProvider>
+        </OtelProvider>
         <Toaster
           position={t?.position ?? "top-right"}
           expand={t?.expand ?? true}

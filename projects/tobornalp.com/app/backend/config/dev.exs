@@ -2,9 +2,9 @@ import Config
 
 config :therobotplans, Therobotplans.Repo,
   username: System.get_env("DB_USER", "therobotplans"),
-  password: System.get_env("DB_PASS", "therobotplans_dev"),
+  password: System.get_env("DB_PASS", "tobornalp_dev"),
   hostname: System.get_env("DB_HOST", "localhost"),
-  database: System.get_env("DB_NAME", "therobotplans_dev"),
+  database: System.get_env("DB_NAME", "tobornalp_dev"),
   port: String.to_integer(System.get_env("DB_PORT") || "5432"),
   stacktrace: true,
   show_sensitive_data_on_connection_error: true,

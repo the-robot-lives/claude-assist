@@ -6,7 +6,7 @@ end
 
 config :therobotplans, :redis,
   uri: System.get_env("REDIS_URL") || "redis://localhost:6379/0",
-  key_prefix: System.get_env("REDIS_KEY_PREFIX", "therobotplans:")
+  key_prefix: System.get_env("REDIS_KEY_PREFIX", "starter:")
 
 # ── OpenTelemetry ────────────────────────────────────────────────
 if otel_endpoint = System.get_env("OTEL_EXPORTER_OTLP_ENDPOINT") do
@@ -17,7 +17,7 @@ if otel_endpoint = System.get_env("OTEL_EXPORTER_OTLP_ENDPOINT") do
   config :opentelemetry,
     span_processor: :batch,
     resource: %{
-      "service.name" => System.get_env("OTEL_SERVICE_NAME") || "therobotplans-backend",
+      "service.name" => System.get_env("OTEL_SERVICE_NAME") || "starter-backend",
       "service.version" => "0.1.0"
     }
 end
@@ -54,7 +54,7 @@ if config_env() == :prod do
       """
 
   config :therobotplans, Therobotplans.Guardian,
-    issuer: "starter",
+    issuer: "therobotplans",
     secret_key: guardian_secret
 
   config :therobotplans, :frontend_url, System.get_env("FRONTEND_URL")

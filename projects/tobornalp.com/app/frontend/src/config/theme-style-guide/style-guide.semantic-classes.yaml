@@ -1,184 +1,103 @@
 # ═══════════════════════════════════════════════════════════════
-# SEMANTIC CLASSES — tobornalp
+# SEMANTIC CLASSES — style-guide.semantic-classes.yaml
 # ═══════════════════════════════════════════════════════════════
 #
-# Contextual modifier classes for status, priority, and feedback.
-# Applied as CSS classes to cards, badges, borders, and indicators.
+# Defines named semantic state classes (danger, warning, success,
+# info, primary, brand) with their accent, background, and text
+# color values.
+#
+# HOW IT WORKS:
+#   - Each entry generates a .{class} CSS rule with scoped
+#     --{class}-accent, --{class}-background, --{class}-color vars
+#   - The engine also generates card, badge, and alert variants
+#     using these accent values automatically
+#   - `accent-style` controls border rendering (solid, dashed, etc.)
+#
+# HOW TO MODIFY:
+#   - Change colors: edit the `vars` values under each class
+#   - Add a class: append a `- name:` entry with class, title,
+#     description, accent-style, and vars (accent, background, color)
+#   - Run `npm run regen` after changes
+#
+# RELATED: style-guide.semantic-groups.yaml (viewer grouping labels)
+#          style-guide.vars.yaml (base color tokens referenced here)
 # ═══════════════════════════════════════════════════════════════
 
 semantic-classes:
-  # ── Feedback ──
   - name: danger
     class: danger
-    group: Feedback
-    title: Danger
-    description: Critical error states requiring immediate attention
-    note: "Failures, destructive actions, error states"
-    accent-style: bottom-bar
+    title: "Danger"
+    description: "Destructive actions, error states, irreversible operations"
+    accent-style: solid
     vars:
-      accent: "var(--error)"
-      background: "var(--error-tint)"
-      color: "var(--error)"
-
-  - name: success
-    class: success
-    group: Feedback
-    title: Success
-    description: Positive confirmation of completed actions
-    note: "Task complete, deploy succeeded, check passed"
-    accent-style: bottom-bar
-    vars:
-      accent: "var(--success)"
-      background: "var(--success-tint)"
-      color: "var(--success)"
+      - name: accent
+        value: "#e20613"
+      - name: background
+        value: "rgba(226,6,19,0.06)"
+      - name: color
+        value: "#c41a1a"
 
   - name: warning
     class: warning
-    group: Feedback
-    title: Warning
-    description: Cautionary messages about potential issues
-    note: "Degraded state, approaching limits, needs attention"
-    accent-style: bottom-bar
+    title: "Warning"
+    description: "Caution states, attention required, recoverable issues"
+    accent-style: solid
     vars:
-      accent: "var(--warning)"
-      background: "var(--warning-tint)"
-      color: "var(--warning)"
+      - name: accent
+        value: "#c27a00"
+      - name: background
+        value: "rgba(194,122,0,0.06)"
+      - name: color
+        value: "#c27a00"
+
+  - name: success
+    class: success
+    title: "Success"
+    description: "Positive outcomes, confirmed states, completed operations"
+    accent-style: solid
+    vars:
+      - name: accent
+        value: "#1a8a3f"
+      - name: background
+        value: "rgba(26,138,63,0.06)"
+      - name: color
+        value: "#1a8a3f"
 
   - name: info
     class: info
-    group: Feedback
-    title: Info
-    description: Neutral informational context
-    note: "Status updates, tips, contextual help"
-    accent-style: bottom-bar
+    title: "Info"
+    description: "Informational states, guidance, system messages"
+    accent-style: solid
     vars:
-      accent: "var(--info)"
-      background: "var(--info-tint)"
-      color: "var(--info)"
+      - name: accent
+        value: "#0047ab"
+      - name: background
+        value: "rgba(0,71,171,0.06)"
+      - name: color
+        value: "#0047ab"
 
-  # ── Priority ──
-  - name: priority-critical
-    class: priority-critical
-    group: Priority
-    title: Critical (P0)
-    description: Highest priority — immediate action required
-    note: "Production down, data loss risk, security incident"
-    accent-style: left-bar
+  - name: primary
+    class: primary
+    title: "Primary / Black"
+    description: "Primary actions, maximum-weight emphasis, structural elements"
+    accent-style: solid
     vars:
-      accent: "var(--error)"
-      background: "var(--error-tint)"
-      color: "var(--error)"
-      font-weight: "var(--font-weight-bold)"
+      - name: accent
+        value: "#000000"
+      - name: background
+        value: "rgba(0,0,0,0.04)"
+      - name: color
+        value: "#000000"
 
-  - name: priority-high
-    class: priority-high
-    group: Priority
-    title: High (P1)
-    description: High priority — address within current sprint
-    note: "Blocking issues, SLA breaches, key deliverables"
-    accent-style: left-bar
+  - name: brand
+    class: brand
+    title: "Brand / Red"
+    description: "Primary accent — the brand color for CTAs, key actions, and brand moments"
+    accent-style: solid
     vars:
-      accent: "var(--warning)"
-      background: "var(--warning-tint)"
-      color: "var(--warning)"
-      font-weight: "var(--font-weight-semibold)"
-
-  - name: priority-medium
-    class: priority-medium
-    group: Priority
-    title: Medium (P2)
-    description: Standard priority — normal queue order
-    note: "Feature work, improvements, planned tasks"
-    accent-style: left-bar
-    vars:
-      accent: "var(--blue)"
-      background: "var(--blue-light)"
-      color: "var(--blue)"
-
-  - name: priority-low
-    class: priority-low
-    group: Priority
-    title: Low (P3)
-    description: Low priority — address when bandwidth allows
-    note: "Nice-to-haves, minor polish, backlog grooming"
-    accent-style: left-bar
-    vars:
-      accent: "var(--gray-400)"
-      background: "rgba(148,163,184,0.1)"
-      color: "var(--gray-400)"
-
-  # ── Agent Status ──
-  - name: agent-active
-    class: agent-active
-    group: Agent Status
-    title: Agent Active
-    description: Agent is online and responding to events
-    note: "Monitoring, listening, ready to act"
-    accent-style: left-bar
-    vars:
-      accent: "var(--emerald)"
-      background: "var(--emerald-light)"
-      color: "var(--emerald)"
-
-  - name: agent-working
-    class: agent-working
-    group: Agent Status
-    title: Agent Working
-    description: Agent is actively executing a task
-    note: "Processing, building, deploying, reviewing"
-    accent-style: left-bar
-    vars:
-      accent: "var(--violet)"
-      background: "var(--violet-light)"
-      color: "var(--violet)"
-
-  - name: agent-idle
-    class: agent-idle
-    group: Agent Status
-    title: Agent Idle
-    description: Agent is available but not actively working
-    note: "Waiting for assignment, between tasks"
-    accent-style: none
-    vars:
-      accent: "var(--gray-400)"
-      background: "rgba(148,163,184,0.1)"
-      color: "var(--gray-400)"
-
-  # ── System State ──
-  - name: state-healthy
-    class: state-healthy
-    group: System State
-    title: Healthy
-    description: System operating normally
-    note: "All checks passing, within SLA"
-    accent-style: bottom-bar
-    vars:
-      accent: "var(--success)"
-      background: "var(--success-tint)"
-      color: "var(--success)"
-
-  - name: state-degraded
-    class: state-degraded
-    group: System State
-    title: Degraded
-    description: System operational but with reduced performance
-    note: "Elevated latency, partial outage, approaching limits"
-    accent-style: bottom-bar
-    vars:
-      accent: "var(--warning)"
-      background: "var(--warning-tint)"
-      color: "var(--warning)"
-
-  - name: state-down
-    class: state-down
-    group: System State
-    title: Down
-    description: System is unavailable
-    note: "Full outage, unreachable, failed health checks"
-    accent-style: bottom-bar
-    vars:
-      accent: "var(--error)"
-      background: "var(--error-tint)"
-      color: "var(--error)"
-      font-weight: "var(--font-weight-bold)"
-      text-transform: "uppercase"
+      - name: accent
+        value: "#e20613"
+      - name: background
+        value: "rgba(226,6,19,0.06)"
+      - name: color
+        value: "#e20613"

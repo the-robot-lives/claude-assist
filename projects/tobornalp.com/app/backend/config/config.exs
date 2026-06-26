@@ -27,7 +27,7 @@ config :noizu_sendgrid,
   api_key: System.get_env("SENDGRID_API_KEY") || "SG.dev-placeholder"
 
 config :therobotplans, :mail_from,
-  {"TheRobotPlans", "noreply@starter.local"}
+  {"Therobotplans", "noreply@starter.local"}
 
 config :logger, :default_formatter,
   format: "$time $metadata[$level] $message\n",
@@ -38,7 +38,7 @@ config :phoenix, :json_library, Jason
 config :therobotplans, :redis, uri: "redis://localhost:6379/0", key_prefix: "starter:"
 
 config :therobotplans, Therobotplans.Guardian,
-  issuer: "starter",
+  issuer: "therobotplans",
   secret_key: "dev-secret-key-change-in-production"
 
 # SSO feature flags (all disabled by default, enabled via runtime env vars)

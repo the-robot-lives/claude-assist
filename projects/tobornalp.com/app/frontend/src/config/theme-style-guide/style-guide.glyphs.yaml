@@ -1,89 +1,94 @@
+# ═══════════════════════════════════════════════════════════════
+# GLYPH LANGUAGE — style-guide.glyphs.yaml
+# ═══════════════════════════════════════════════════════════════
+#
+# Defines the Unicode glyph system used for icons and symbols
+# throughout the theme. No icon fonts, no SVG sprites.
+#
+# HOW IT WORKS:
+#   - `principles[]` document the glyph selection philosophy
+#   - Glyph entries (further in the file) map semantic names to
+#     Unicode code points with usage notes
+#   - The viewer renders these in a glyph reference grid
+#
+# HOW TO MODIFY:
+#   - Add a glyph: append an entry with name, glyph character,
+#     code point, and usage description
+#   - All glyphs must be standard Unicode — no PUA or emoji-only chars
+#   - Pair every glyph with an aria-label for accessibility
+#
+# RELATED: style-guide.page-sections.yaml (glyphs section in viewer)
+# ═══════════════════════════════════════════════════════════════
+
 glyph-language:
   description: >
-    Unicode glyphs for tobornalp UI — status indicators, navigation cues, agent markers,
-    and typographic punctuation. No icon fonts, no SVG sprites. Every glyph renders natively,
-    scales infinitely, and degrades gracefully in plain-text contexts.
+    Unicode glyphs are the primary symbol language — no icon fonts, no SVG sprites.
+    Every glyph chosen for this system is a Unicode code point that renders natively in
+    any font, scales infinitely, requires zero HTTP requests, and degrades gracefully
+    in plain-text contexts. The rule is: if a standard Unicode character communicates
+    the intent, use it.
 
   principles:
     - rule: "Unicode over icon fonts."
-      detail: "Icon fonts fail on load errors and produce invisible squares in fallback. Unicode is always available."
+      detail: "Icon fonts are font-file dependencies that fail on load errors and produce invisible squares in plain-text fallback. Unicode glyphs are always available."
     - rule: "Semantic intent, not decoration."
-      detail: "Every glyph carries meaning interpretable via aria-label. Decorative symbols are aria-hidden."
+      detail: "Every glyph must carry meaning that a screen reader can interpret via aria-label. Purely decorative symbols should be aria-hidden."
     - rule: "Consistency within context."
-      detail: "Same glyph for the same action everywhere. ✕ always means close. → always means forward."
-    - rule: "Size from the type scale."
-      detail: "Glyphs inherit font-size from their parent. No hardcoded px sizes."
+      detail: "Use the same glyph for the same action everywhere. ✕ always means close. → always means forward. Inconsistency breaks user expectations."
+    - rule: "Size from the type scale, not px."
+      detail: "Glyphs inherit font-size from their parent element. Do not hardcode sizes — let the component's type token control the glyph scale."
     - rule: "Test across platforms."
-      detail: "Unicode rendering varies by OS and font. Test on macOS, Windows, and Android."
+      detail: "Unicode rendering varies by OS and font stack. Test on macOS, Windows, and Android before finalising a glyph for production use."
 
   sections:
-    - name: status
-      title: "Status & State"
+    - name: ui
+      title: "UI & Navigation"
       description: >
-        System health, agent status, priority indicators, and operational state signals.
-        These are the most frequently scanned glyphs — they must be instantly recognizable at 11-14px.
+        Controls, affordances, and navigational cues — the symbols users interact with.
+        Geometric, high-contrast forms preferred.
+        Pure arrows, squares, and crosses — nothing ornamental or calligraphic.
+        Every glyph must be legible at 12px in a sans-serif typeface.
       glyphs:
-        - glyph: "●"
-          name: "Filled Circle"
-          code: "U+25CF"
-          use: "Active status dot — online, healthy, running"
-          example: "● Online"
-        - glyph: "○"
-          name: "Empty Circle"
-          code: "U+25CB"
-          use: "Inactive status dot — offline, idle, stopped"
-          example: "○ Offline"
-        - glyph: "✓"
-          name: "Check"
-          code: "U+2713"
-          use: "Complete, passed, shipped, approved"
-          example: "✓ Deployed"
-        - glyph: "✗"
-          name: "Cross"
-          code: "U+2717"
-          use: "Failed, rejected, error"
-          example: "✗ Build failed"
-        - glyph: "⚠"
-          name: "Warning"
-          code: "U+26A0"
-          use: "Degraded, attention needed, P1"
-          example: "⚠ Latency elevated"
-        - glyph: "⏱"
-          name: "Stopwatch"
-          code: "U+23F1"
-          use: "In progress, timing, SLA countdown"
-          example: "⏱ 2h remaining"
-        - glyph: "◉"
-          name: "Bullseye"
-          code: "U+25C9"
-          use: "Selected, focused, current item"
-          example: "◉ Active sprint"
-
-    - name: navigation
-      title: "Navigation & Actions"
-      description: >
-        Controls, affordances, and navigational cues. Prefer high-contrast geometric forms
-        that read clearly at 12px in dense UI.
-      glyphs:
-        - glyph: "→"
-          name: "Right Arrow"
-          code: "U+2192"
-          use: "Forward, CTA, next step, flow direction"
-          example: "Continue →"
+        # Navigation
+        - glyph: "≡"
+          name: "Trigram / Hamburger"
+          code: "U+2261"
+          use: "Mobile nav drawer toggle"
+          example: "≡ Menu"
+        - glyph: "⋮"
+          name: "Vertical Ellipsis"
+          code: "U+22EE"
+          use: "More options / kebab menu"
+          example: "⋮"
+        - glyph: "⋯"
+          name: "Horizontal Ellipsis"
+          code: "U+22EF"
+          use: "Overflow indicator, truncation"
+          example: "Files ⋯"
+        - glyph: "✕"
+          name: "Cross / Close"
+          code: "U+2715"
+          use: "Dismiss, close modal, clear field"
+          example: "✕ Close"
         - glyph: "←"
           name: "Left Arrow"
           code: "U+2190"
-          use: "Back navigation, previous"
+          use: "Back navigation"
           example: "← Back"
+        - glyph: "→"
+          name: "Right Arrow"
+          code: "U+2192"
+          use: "Forward, CTA, next step"
+          example: "Continue →"
         - glyph: "↑"
           name: "Up Arrow"
           code: "U+2191"
-          use: "Expand, scroll to top, sort ascending"
+          use: "Scroll to top, expand up"
           example: "↑ Top"
         - glyph: "↓"
           name: "Down Arrow"
           code: "U+2193"
-          use: "Collapse, expand, sort descending"
+          use: "Expand, collapse toggle"
           example: "Show more ↓"
         - glyph: "↗"
           name: "NE Arrow"
@@ -94,77 +99,148 @@ glyph-language:
           name: "Chevron Right"
           code: "U+203A"
           use: "Breadcrumb separator, nested nav"
-          example: "Home › Projects › Backend"
+          example: "Home › Settings › Profile"
         - glyph: "⌘"
           name: "Command"
           code: "U+2318"
-          use: "Keyboard shortcut label"
+          use: "Keyboard shortcut label (macOS)"
           example: "⌘K to search"
-        - glyph: "✕"
-          name: "Cross / Close"
-          code: "U+2715"
-          use: "Dismiss, close modal, clear field"
-          example: "✕ Close"
-        - glyph: "⊕"
-          name: "Circled Plus"
-          code: "U+2295"
-          use: "Add, create new item"
-          example: "⊕ New task"
-        - glyph: "⚙"
-          name: "Gear"
-          code: "U+2699"
+        # Actions
+        - glyph: "▣"
+          name: "Square with Grid"
+          code: "U+25A3"
           use: "Settings, configuration"
-          example: "⚙ Settings"
-
-    - name: agents
-      title: "Agent Identity"
-      description: >
-        Glyphs that mark AI agent presence, output, and status in the interface.
-        Used alongside violet accent color to create consistent agent visual language.
-      glyphs:
-        - glyph: "⬢"
-          name: "Hexagon"
-          code: "U+2B22"
-          use: "Agent avatar shape, agent identity marker"
-          example: "⬢ PM Agent"
-        - glyph: "⚡"
-          name: "Lightning"
-          code: "U+26A1"
-          use: "Automated action, agent-triggered event"
-          example: "⚡ Auto-triaged"
+          example: "▣ Settings"
+        - glyph: "+"
+          name: "Plus"
+          code: "U+002B"
+          use: "Add, create new item"
+          example: "+ New project"
+        - glyph: "✓"
+          name: "Check"
+          code: "U+2713"
+          use: "Confirm, done, success state"
+          example: "✓ Saved"
+        - glyph: "▷"
+          name: "Triangle Right (outline)"
+          code: "U+25B7"
+          use: "Edit, rename, inline action"
+          example: "▷ Edit"
         - glyph: "⟳"
           name: "Clockwise Arrow"
           code: "U+27F3"
-          use: "Agent retry, refresh, re-evaluation"
-          example: "⟳ Re-running"
+          use: "Refresh, retry, reload"
+          example: "⟳ Refresh"
         - glyph: "⇄"
           name: "Left-Right Arrow"
           code: "U+21C4"
-          use: "Agent handoff, human-agent transition"
-          example: "⇄ Escalated to human"
+          use: "Swap, toggle between two states"
+          example: "⇄ Switch view"
+        # Status
+        - glyph: "■"
+          name: "Filled Square"
+          code: "U+25A0"
+          use: "Active status, online presence"
+          example: "■ Active"
+        - glyph: "□"
+          name: "Empty Square"
+          code: "U+25A1"
+          use: "Inactive, offline, unselected"
+          example: "□ Inactive"
+        - glyph: "◉"
+          name: "Bullseye"
+          code: "U+25C9"
+          use: "Radio button selected state"
+          example: "◉ Selected"
+        - glyph: "◆"
+          name: "Filled Diamond"
+          code: "U+25C6"
+          use: "Favorite, bookmarked, pinned"
+          example: "◆ Pinned"
+        - glyph: "◇"
+          name: "Empty Diamond"
+          code: "U+25C7"
+          use: "Unfavorited, add to favorites"
+          example: "◇ Pin"
+        - glyph: "▲"
+          name: "Triangle Up"
+          code: "U+25B2"
+          use: "Warning indicator, sort asc"
+          example: "▲ Warning"
+        # Layout
+        - glyph: "⊞"
+          name: "Squared Plus"
+          code: "U+229E"
+          use: "Grid / tile view"
+          example: "⊞ Grid view"
+        - glyph: "⊟"
+          name: "Squared Minus"
+          code: "U+229F"
+          use: "Collapse, minimize panel"
+          example: "⊟ Collapse"
+        - glyph: "⊠"
+          name: "Squared X"
+          code: "U+22A0"
+          use: "Close panel, remove widget"
+          example: "⊠ Remove"
 
     - name: typography
       title: "Typography & Text"
       description: >
-        Typographic punctuation for editorial content, wiki pages, and documentation.
+        Typographic punctuation and inline markers used in editorial and body content.
+        These glyphs follow print conventions — curly quotes instead of inch marks,
+        em dashes instead of double hyphens, proper ellipsis instead of three periods.
+        Apply consistently via content style guide and input sanitisation.
       glyphs:
+        - glyph: "→"
+          name: "Right Arrow"
+          use: "Inline CTA, action prompt, list items"
+          example: "→ Read the full guide"
         - glyph: "•"
           name: "Bullet"
           use: "Unordered list items"
-          example: "• First item"
+          example: "• First item\n• Second item"
+        - glyph: "›"
+          name: "Chevron"
+          use: "Breadcrumb separator"
+          example: "Home › Docs › API"
         - glyph: "—"
           name: "Em Dash"
-          use: "Parenthetical aside, attribution"
+          use: "Parenthetical aside, range, attribution"
           example: "Designed — not just built."
         - glyph: "–"
           name: "En Dash"
           use: "Numeric range"
-          example: "Sprint 12–14"
+          example: "Pages 12–24"
         - glyph: "…"
           name: "Horizontal Ellipsis"
-          use: "Truncation, continuation"
+          use: "Text truncation, continuation"
           example: "Loading…"
+        - glyph: "\u201C\u201D"
+          name: "Curly Quotes"
+          use: "Blockquotes, pull quotes, emphasis"
+          example: "\u201CForm follows function.\u201D"
+        - glyph: "×"
+          name: "Multiplication Sign"
+          use: "Dimensions, resolution (not letter x)"
+          example: "1920×1080"
+        - glyph: "°"
+          name: "Degree"
+          use: "Angle, temperature measurements"
+          example: "Rotate 45°"
+        - glyph: "↗"
+          name: "NE Arrow"
+          use: "External link in body text"
+          example: "See RFC 2119 ↗"
+        - glyph: "◆"
+          name: "Diamond"
+          use: "Rating, highlight, featured callout"
+          example: "◆◆◆◆◇ 4/5"
         - glyph: "§"
           name: "Section Sign"
-          use: "Section reference in docs"
+          use: "Section reference in legal/doc text"
           example: "See §4.2"
+        - glyph: "†"
+          name: "Dagger"
+          use: "Footnote marker"
+          example: "Note†"

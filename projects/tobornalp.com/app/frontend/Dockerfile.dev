@@ -1,6 +1,6 @@
-FROM node:22-alpine
+FROM node:22-slim
 
-RUN apk add --no-cache gettext
+RUN apt-get update && apt-get install -y --no-install-recommends gettext-base && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 

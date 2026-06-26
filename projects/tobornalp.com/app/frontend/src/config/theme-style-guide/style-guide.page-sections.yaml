@@ -1,81 +1,105 @@
 # ═══════════════════════════════════════════════════════════════
-# PAGE SECTIONS — tobornalp
+# PAGE SECTIONS — style-guide.page-sections.yaml
+# ═══════════════════════════════════════════════════════════════
+#
+# Defines the navigation structure of the styleguide viewer —
+# which sections appear, in what order, grouped under what headings.
+#
+# HOW IT WORKS:
+#   - Each `- group:` is a collapsible category in the viewer sidebar
+#   - `sections[]` within each group define individual panels
+#   - `id` must match a target-section value in css-snippets.yaml
+#     or a built-in viewer section (typography, color, design-tokens, etc.)
+#   - `title` and `desc` are displayed in the viewer navigation
+#
+# HOW TO MODIFY:
+#   - Reorder sections: move entries within their group
+#   - Add a section: append a `- id:` entry (must match a css-snippet
+#     target-section or built-in section ID)
+#   - Add a group: append a new `- group:` entry
+#   - Removing a section here hides it from the viewer but does not
+#     delete its CSS — clean up css-snippets.yaml separately
+#
+# RELATED: style-guide.css-snippets.yaml (target-section must match id)
+#          style-guide.design-sections.yaml (detailed component docs)
 # ═══════════════════════════════════════════════════════════════
 
 page-sections:
   - group: Visual Foundation
-    desc: "The raw materials — type, color, space, and glyphs that every component is built from."
+    desc: "The grid's raw materials — type, color, space, and the geometric primitives everything is built from."
     sections:
-      - id: design-tokens
-        title: Design Tokens
-        desc: "Full CSS custom property reference — all variables in the system."
-      - id: color
-        title: Color
-        desc: "Brand colors, surfaces, semantic states, and the functional palette."
       - id: typography
         title: Typography
-        desc: "Typefaces, sizes, weights, and line heights."
+        desc: "Two typefaces. One sans, one mono. No serif. No exceptions."
+      - id: color
+        title: Color Palette
+        desc: "Five colors. Three primaries, black, white. That's the system."
       - id: spacing
-        title: "Spacing & Grid"
-        desc: "Scale, rhythm, gutters, and whitespace principles."
+        title: "Spacing, Gutters & Whitespace"
+        desc: "8px base unit. Every gap is a deliberate choice."
+      - id: dividers
+        title: "Dividers & Rules"
+        desc: "1–2px hairlines, hard edges, and offset separators. No gradients."
+      - id: glyphs
+        title: Glyph Language
+        desc: "Geometric symbols and UI marks. Functional notation for controls and states."
+      - id: code-blocks
+        title: Code Blocks
+        desc: "IBM Plex Mono at 13px. Syntax on a neutral field. Code as technical artifact."
+      - id: terminal
+        title: Terminal
+        desc: "The machine interface — monospaced, high-contrast, no frills."
 
   - group: Structure
-    desc: "How pages and shells are assembled — layouts, archetypes, and navigation patterns."
+    desc: "How the layout grid disciplines page assembly — shells, archetypes, and systematic navigation."
     sections:
       - id: shell-layouts
         title: Shell Layouts
-        desc: "Full-page application shells — navbar, sidebar, content area."
+        desc: "Full-page application shells. Fixed chrome, defined zones."
       - id: content-layouts
         title: Content Layouts
-        desc: "Content width and spacing presets — standard, wide, narrow, article."
+        desc: "Max-width presets — standard, wide, narrow, article, full."
       - id: site-archetypes
         title: Site Archetypes
-        desc: "Page-level layout archetypes — dashboard, document, focus mode."
-      - id: dividers
-        title: "Dividers & Rules"
-        desc: "Horizontal and vertical separators — gradient fades, glows, brand accents."
+        desc: "Page-level layout patterns — search-first, dashboard, document, hierarchy, multi-view."
       - id: navigation
         title: Navigation
-        desc: "Wayfinding patterns — navbars, sidebars, breadcrumbs, and contextual menus."
+        desc: "Active state fills black. Completed shows check. No gradients, no glow."
 
   - group: Interaction
-    desc: "Semantic states, status signals, and interactive controls."
+    desc: "Semantic states and precise controls — every affordance is explicit, every state is labeled."
     sections:
       - id: semantic-classes
         title: Semantic Classes
-        desc: "Contextual modifiers — priority, agent status, feedback, and system state."
-      - id: ui-elements
-        title: UI Elements
-        desc: "Cards, buttons, forms, and interactive controls."
+        desc: "State modifiers — danger, warning, success, info, primary, brand. Each class has one job."
       - id: status-indicators
         title: Status Indicators
-        desc: "Badges, alerts, toasts, progress, and status signals."
-      - id: custom-components
-        title: Custom Components
-        desc: "Project-specific composite components — agent badges, priority dots, status pills."
-
-  - group: Component Library
-    desc: "Browse all exported components grouped by package subpath — primitives, showcases, demos, layout, and more."
-    sections:
-      - id: component-browser
-        title: Component Browser
-        desc: "Interactive catalog of all @noizu/styleguide components with live previews and import paths."
+        desc: "Square indicators. No circles — circles are decorative. Squares are data."
+      - id: ui-elements
+        title: UI Elements
+        desc: "Cards, buttons, forms, and controls. 2px black border. Color on top edge signals type."
+      - id: ink-effects
+        title: Project Components
+        desc: "Composite widgets — code blocks, dashboards, and project-specific components."
+      - id: screens
+        title: Screens
+        desc: "Full-page compositions. How users actually experience the product."
 
   - group: Reference
-    desc: "Tokens, generated CSS, YAML config, and live snippets."
+    desc: "The system's source of truth — tokens, generated CSS, YAML config, and live snippets."
     sections:
+      - id: design-tokens
+        title: Design Tokens
+        desc: "CSS custom properties. 8px grid unit. No magic numbers."
       - id: generated-css
         title: Generated CSS
-        desc: "Output CSS by section — vars, cards, buttons, semantic, utilities."
+        desc: "Output CSS by section — vars, cards, buttons, semantic, utilities, and more."
       - id: theme-config
         title: Theme Config
-        desc: "YAML source for this theme."
+        desc: "YAML source for this theme. The specification is the documentation."
       - id: snippets
         title: Snippets & Demos
-        desc: "CSS and JSX snippets defined in YAML — live previews."
-      - id: glyphs
-        title: Glyph Language
-        desc: "Canonical glyphs for UI controls, navigation, and typography."
-      - id: design-sections
-        title: Design Principles
-        desc: "Core design decisions and rationale."
+        desc: "CSS and JSX snippets defined in YAML — live previews of generated components and styles."
+      - id: overrides
+        title: Overrides
+        desc: "Select which variant to use per section. Set to base to disable an override."
