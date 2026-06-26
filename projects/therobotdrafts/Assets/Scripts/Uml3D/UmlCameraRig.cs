@@ -136,7 +136,8 @@ namespace TheRobotDraft.Uml3D
             Vector3 right = rot * Vector3.right;
             Vector3 up = rot * Vector3.up;
             float k = PanSpeed * Distance;
-            Pivot -= right * (screenDelta.x * k);
+            // Drag left ⇒ the view pans left (camera follows the drag direction on the X axis).
+            Pivot += right * (screenDelta.x * k);
             Pivot -= up * (screenDelta.y * k);
         }
 

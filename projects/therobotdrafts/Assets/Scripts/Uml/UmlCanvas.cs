@@ -98,6 +98,7 @@ namespace TheRobotDraft.Uml
         // pushed forward/back along world Z independently of its z-layer (Ctrl/Cmd+Shift+drag). Persisted.
         private readonly Dictionary<ElementId, float> _posZ = new();
         private readonly Dictionary<ElementId, Vector2> _size = new();
+        private readonly Dictionary<ElementId, Quaternion> _nodeRot = new(); // per-node orientation (survives rebuild / copy)
         private readonly List<EdgeBinding> _edges = new();
         private ElementId _activePackage = ElementId.None;
         // Active z-layer (0 = base). The canvas shows ONLY elements on this layer (in addition to the usual
@@ -162,8 +163,9 @@ namespace TheRobotDraft.Uml
         {
             public ElementKind Kind;
             public string Name, Language, Stereotype;
-            public bool IsAbstract, HasPos;
-            public Vector2 Pos;
+            public bool IsAbstract, HasPos, HasSize, HasRot;
+            public Vector2 Pos, Size;
+            public Quaternion Rotation;
             public NodeStyle Style;
             public readonly List<ClipMember> Members = new();
         }
@@ -202,7 +204,9 @@ namespace TheRobotDraft.Uml
             _scene.FrameAll();
         }
 
-        private void OnApplicationQuit() => SaveDiagram();
+        // Always autosave to the default slot on quit so the next launch restores the last state, even if the user
+        // has a named file open (their explicit Ctrl/Cmd+S already wrote that file).
+        private void OnApplicationQuit() => WriteDiagram(DiagramPath);
 
         /// <summary>Initial sample so the editor opens showing standard UML. Fully removable (undo / delete).</summary>
         private void SeedSample()
@@ -259,11 +263,16 @@ namespace TheRobotDraft.Uml
             _activePackage = _selectedId = ElementId.None;
             _selectedEdge = EdgeId.None;
             _activeLayer = 0;
-            _pos.Clear(); _posZ.Clear(); _size.Clear();
+            _pos.Clear(); _posZ.Clear(); _size.Clear(); _nodeDepth.Clear(); _nodeRot.Clear();
             _waypoints.Clear(); _srcAnchor.Clear(); _tgtAnchor.Clear(); _curved.Clear(); _styles.Clear();
             _msgLevel.Clear(); _msgNumber.Clear(); _edgeKinds.Clear();
             _waypoints3d.Clear(); _srcFace.Clear(); _tgtFace.Clear();
+            _packageLink.Clear();
+            _nodeImage.Clear(); _imageCache.Clear();
             _sourceFiles.Clear();
+            _selectedRegion = ElementId.None;
+            _geoUndo.Clear(); _geoRedo.Clear();
+            ExitResizeMode();
             ClearEdgeHandles3D();
             _pan = Vector2.zero; ApplyPan();
         }
@@ -356,7 +365,12 @@ namespace TheRobotDraft.Uml
                 Stereotype = el.Stereotype, IsAbstract = el.IsAbstract,
             };
             if (_pos.TryGetValue(id, out var p)) { clip.Pos = p; clip.HasPos = true; }
+            if (_size.TryGetValue(id, out var sz) && sz.x > 1f && sz.y > 1f) { clip.Size = sz; clip.HasSize = true; }
             if (_styles.TryGetValue(id, out var style)) clip.Style = style;
+            // Orientation: the stored per-node rotation, else the live node's current spin.
+            if (_nodeRot.TryGetValue(id, out var rot)) { clip.Rotation = rot; clip.HasRot = true; }
+            else if (_scene.TryGetNode(id, out var srcNode) && srcNode != null && srcNode.LocalRotation != Quaternion.identity)
+                { clip.Rotation = srcNode.LocalRotation; clip.HasRot = true; }
             foreach (var cid in el.ChildIds)
                 if (_model.TryGet(cid, out var c) && KindInfo.IsMember(c.Kind))
                     clip.Members.Add(new ClipMember { Kind = c.Kind, Name = c.Name });
@@ -386,6 +400,8 @@ namespace TheRobotDraft.Uml
             _pos[nid] = c.HasPos ? c.Pos + new Vector2(34f, -34f) : Vector2.zero;
             _ctl.SetZLayer(nid, _activeLayer); // paste onto the active layer
             if (c.Style.Has) _styles[nid] = c.Style;
+            if (c.HasSize) _size[nid] = c.Size;       // carry size
+            if (c.HasRot) _nodeRot[nid] = c.Rotation; // carry orientation (applied on rebuild)
             RebuildFromModel();
             SetSelected(nid);
             Flash("pasted (renamed)");
@@ -467,7 +483,7 @@ namespace TheRobotDraft.Uml
             return false;
         }
 
-        // --- toolbar palette: create a node by clicking or dragging a palette item onto the canvas ---
+        // --- toolbar palette: create a node by dragging a palette item onto the canvas (click does not insert) ---
 
         private GameObject _paletteGhost;
         private ElementKind _paletteDragKind;
@@ -526,6 +542,31 @@ namespace TheRobotDraft.Uml
             ElementKind.Profile => "«profile» P",
             ElementKind.TimingLifeline => "obj : Class",
             ElementKind.CallActivity => "Activity",
+            // Wireframe / UI — friendly defaults per widget instead of the "Kind1" fallback.
+            ElementKind.Screen => "Screen" + CountOf(kind),
+            ElementKind.Panel => "Panel" + CountOf(kind),
+            ElementKind.UiWidget => "Widget" + CountOf(kind),
+            ElementKind.Button => "Button",
+            ElementKind.Label => "Label",
+            ElementKind.Link => "link",
+            ElementKind.TextField => "text input",
+            ElementKind.TextArea => "textarea",
+            ElementKind.Password => "password",
+            ElementKind.Checkbox => "option",
+            ElementKind.Radio => "option",
+            ElementKind.Dropdown => "select",
+            ElementKind.List => "List",
+            ElementKind.Table => "Table",
+            ElementKind.Tree => "Tree",
+            ElementKind.Image => "image",
+            ElementKind.Tabs => "Tabs",
+            ElementKind.Menu => "Menu",
+            ElementKind.Toolbar => "Toolbar",
+            ElementKind.Breadcrumb => "breadcrumbs",
+            ElementKind.Card => "Card" + CountOf(kind),
+            ElementKind.Separator => "—",
+            ElementKind.Progress => "progress",
+            ElementKind.Slider => "slider",
             _ => kind.ToString() + CountOf(kind),
         };
 
@@ -574,6 +615,9 @@ namespace TheRobotDraft.Uml
             _mouseDelta = mp - _lastMousePos;
             _lastMousePos = mp;
 
+            // Watch any shadow source files opened in VS Code; a save there re-syncs the node from its code.
+            PollShadowFiles();
+
             if (Input.GetKeyDown(KeyCode.Escape)) { CloseMenu(); return; }
 
             // Don't steal typing from the name prompt.
@@ -583,21 +627,34 @@ namespace TheRobotDraft.Uml
 
             bool ctrl = CtrlOrCmd();
             bool shift = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
-            if (ctrl && Input.GetKeyDown(KeyCode.S)) { SaveDiagram(); return; }
+            if (ctrl && Input.GetKeyDown(KeyCode.S)) { if (shift) SaveDiagramAs(); else SaveDiagram(); return; }
+            if (ctrl && Input.GetKeyDown(KeyCode.O)) { OpenDiagramFile(); return; }
             if (ctrl && Input.GetKeyDown(KeyCode.C)) { if (_selectedId.IsValid) CopyElement(_selectedId); return; }
-            if (ctrl && Input.GetKeyDown(KeyCode.V)) { PasteElement(); return; }
-            if (ctrl && Input.GetKeyDown(KeyCode.Z)) { if (shift) Redo(); else Undo(); }
-            else if (ctrl && Input.GetKeyDown(KeyCode.Y)) Redo();
+            if (ctrl && Input.GetKeyDown(KeyCode.V))
+            {
+                // An image on the OS clipboard pastes as an Object node; otherwise fall through to element paste.
+                var clipPng = UmlImageClipboard.TryReadClipboardPng();
+                if (clipPng != null) PasteImageAsObjectNode(new Vector2(Screen.width * 0.5f, Screen.height * 0.5f));
+                else PasteElement();
+                return;
+            }
+            // Undo/redo: a move/resize (geometry) is undone first if any is pending, else the model edit history.
+            if (ctrl && Input.GetKeyDown(KeyCode.Z)) { if (shift) { if (!GeoRedo()) Redo(); } else { if (!GeoUndo()) Undo(); } }
+            else if (ctrl && Input.GetKeyDown(KeyCode.Y)) { if (!GeoRedo()) Redo(); }
             else if (Input.GetKeyDown(KeyCode.Delete) || Input.GetKeyDown(KeyCode.Backspace)) DeleteSelected();
 
             if (ctrl && (Input.GetKeyDown(KeyCode.F))) { _scene.FrameAll(); Flash("framed diagram"); }
 
-            // Mouse wheel dollies the 3-D camera; Alt+wheel walks the active z-layer (and never dollies). The
-            // overlay UI does not zoom.
+            // N cycles the empty-space drag mode (orbit → pan → X → Y → Z); Shift+N reverses.
+            if (!ctrl && Input.GetKeyDown(KeyCode.N)) CycleNavMode(shift);
+
+            // Mouse wheel dollies the 3-D camera; Alt+wheel jumps the camera a fixed step along world Z (the
+            // replacement for the old up/down-a-layer navigation — there is no active-layer "pane" anymore, the
+            // whole diagram is shown in depth at once). The overlay UI does not zoom.
             float scroll = Input.mouseScrollDelta.y;
             if (Mathf.Abs(scroll) > 0.01f && !PointerOverUI())
             {
-                if (AltDown()) ShiftActiveLayer(scroll > 0f ? 1 : -1);
+                if (AltDown()) JumpCameraZ(scroll > 0f ? 1 : -1);
                 else _scene.Dolly(scroll);
                 return;
             }
@@ -687,9 +744,14 @@ namespace TheRobotDraft.Uml
                 if (hit != null) ShowNodeMenu(hit.Id, sp);
                 else
                 {
-                    var eid = PickEdge3D(sp);
-                    if (eid.IsValid) { Select3DEdge(eid); ShowEdgeMenu(eid, sp); }
-                    else { ClearSelectedEdge(); ShowEmptyMenu(sp); }
+                    var reg = PickRegion3D(sp);
+                    if (reg != null) ShowRegionMenu(reg.Id, sp);
+                    else
+                    {
+                        var eid = PickEdge3D(sp);
+                        if (eid.IsValid) { Select3DEdge(eid); ShowEdgeMenu(eid, sp); }
+                        else { ClearSelectedEdge(); ShowEmptyMenu(sp); }
+                    }
                 }
                 return;
             }
@@ -697,6 +759,13 @@ namespace TheRobotDraft.Uml
             if (Input.GetMouseButtonDown(0))
             {
                 if (PointerOverUI()) { _scenePointerDown = false; return; }
+
+                // G + click on a node: center the camera on it, facing its front face at a fixed legible distance.
+                if (Input.GetKey(KeyCode.G))
+                {
+                    var focusHit = _scene.Raycast(Input.mousePosition);
+                    if (focusHit != null) { FocusOnNode(focusHit.Id); _scenePointerDown = false; return; }
+                }
 
                 // Route-edit handles on the selected link take priority over the node / edge / camera gestures: test
                 // for a handle hit FIRST. A hit begins a handle drag (or, for Alt+click on a waypoint, deletes it).
@@ -706,25 +775,29 @@ namespace TheRobotDraft.Uml
                     return;
                 }
 
+                // Resize handles on a double-clicked node take priority too.
+                if (_resizeModeNode.IsValid && TryBeginResizeDrag(Input.mousePosition))
+                {
+                    _scenePointerDown = false;
+                    return;
+                }
+
                 _scenePointerDown = true;
                 _sceneDragging = false;
                 _draggingNode = _zMovingNode = _rotatingNode = _resizingNode = _connecting = _marqueeDrag = false;
+                _draggingRegion = _resizingRegion = _regionPressed = false;
+                _regionDrag = ElementId.None;
                 _dragNode = _connectSource = _connectHover = ElementId.None;
                 _pressScreenPos = Input.mousePosition;
                 var hit = _scene.Raycast(_pressScreenPos);
                 if (hit != null)
                 {
-                    // On a node: Ctrl/Cmd+Shift → slide along world Z, Ctrl/Cmd+Alt → resize, Ctrl/Cmd → move in XY,
-                    // Alt → rotate-in-place, no modifier → connect-by-drag. The two-modifier combos are tested
-                    // first so they win over plain Ctrl / plain Alt.
+                    // On a node: Ctrl/Cmd+Shift+drag → slide along world Z, Ctrl/Cmd+drag → move in XY, Ctrl/Cmd+CLICK
+                    // → toggle resize handles, Alt+drag → rotate-in-place, no modifier → connect-by-drag / double-click
+                    // → edit modal. (BeginGeoEdit is deferred to drag-start so a click pushes no undo step.)
                     if (ctrl && shift)
                     {
                         _zMovingNode = true;
-                        _dragNode = hit.Id;
-                    }
-                    else if (ctrl && alt)
-                    {
-                        _resizingNode = true;
                         _dragNode = hit.Id;
                     }
                     else if (ctrl)
@@ -749,9 +822,28 @@ namespace TheRobotDraft.Uml
                 }
                 else
                 {
-                    // Empty space: Shift → marquee select, Ctrl/Cmd → pan pivot, plain → orbit.
-                    _marqueeDrag = shift;
-                    _panGesture = ctrl && !shift;
+                    // No node hit: a region cube edge may be under the cursor — grab it for select / move / resize.
+                    var reg = PickRegion3D(_pressScreenPos);
+                    if (reg != null)
+                    {
+                        _regionPressed = true;
+                        _regionDrag = reg.Id;
+                        _marqueeDrag = false; _panGesture = false;
+                        if (ctrl && alt) { _resizingRegion = true; }
+                        else if (ctrl)
+                        {
+                            _draggingRegion = true;
+                            _regionPlaneZ = reg.CurrentBounds.center.z;
+                            _regionLastWorld = ProjectToPlane(_pressScreenPos, _regionPlaneZ);
+                            CaptureRegionMembers(reg.Id);
+                        }
+                    }
+                    else
+                    {
+                        // Empty space: Shift → marquee select, Ctrl/Cmd → pan pivot, plain → navigate.
+                        _marqueeDrag = shift;
+                        _panGesture = ctrl && !shift;
+                    }
                 }
                 return;
             }
@@ -764,12 +856,23 @@ namespace TheRobotDraft.Uml
                 return;
             }
 
+            // Active node-resize drag (owns the press).
+            if (_resizing3d)
+            {
+                if (Input.GetMouseButton(0)) { DragResize3D(GetMouseDelta()); return; }
+                if (Input.GetMouseButtonUp(0)) { _resizing3d = false; _resizeNode = ElementId.None; Flash("resized"); return; }
+                return;
+            }
+
             if (_scenePointerDown && Input.GetMouseButton(0))
             {
                 Vector2 cur = Input.mousePosition;
                 if (!_sceneDragging && ((Vector2)cur - _pressScreenPos).sqrMagnitude > DragThresholdPx * DragThresholdPx)
                 {
                     _sceneDragging = true;
+                    // Snapshot geometry once, when a move/resize drag actually starts (so a Ctrl+click that never
+                    // drags doesn't push a no-op undo step).
+                    if (_draggingNode || _zMovingNode || _draggingRegion || _resizingRegion) BeginGeoEdit();
                     if (!_draggingNode && !_zMovingNode && !_rotatingNode && !_resizingNode) CloseMenu();
                     if (_connecting) BeginConnectRubber();
                     else if (_marqueeDrag) BeginMarquee(_pressScreenPos);
@@ -780,10 +883,12 @@ namespace TheRobotDraft.Uml
                     else if (_zMovingNode) DragNodeZ(GetMouseDelta());
                     else if (_resizingNode) ResizeNode(GetMouseDelta());
                     else if (_rotatingNode) RotateNode(GetMouseDelta());
+                    else if (_draggingRegion) DragRegion(cur);
+                    else if (_resizingRegion) ResizeRegion(GetMouseDelta());
                     else if (_connecting) UpdateConnectRubber(cur);
                     else if (_marqueeDrag) UpdateMarquee(cur);
-                    else if (_panGesture) _scene.PanPivot(GetMouseDelta());
-                    else { Vector2 d = GetMouseDelta(); _scene.Orbit(d.x * OrbitYawPerPx, -d.y * OrbitPitchPerPx); }
+                    else if (_panGesture) _scene.PanPivot(GetMouseDelta()); // Ctrl/Cmd-drag always pans
+                    else NavigateEmptyDrag(GetMouseDelta());                 // otherwise follow the Navigate mode
                 }
                 return;
             }
@@ -797,12 +902,55 @@ namespace TheRobotDraft.Uml
                 bool wasResize = _resizingNode;
                 bool wasConnect = _connecting;
                 bool wasMarquee = _marqueeDrag;
+                bool wasRegionDrag = _draggingRegion;
+                bool wasRegionResize = _resizingRegion;
+                bool wasRegionPress = _regionPressed;
+                ElementId regId = _regionDrag;
                 _scenePointerDown = false;
                 _sceneDragging = false;
                 _draggingNode = _zMovingNode = _rotatingNode = _resizingNode = _connecting = _marqueeDrag = false;
+                _draggingRegion = _resizingRegion = _regionPressed = false;
+                _regionDrag = ElementId.None;
                 _dragNode = ElementId.None;
 
-                if (wasConnect) { EndConnectRubber(Input.mousePosition); return; }
+                // Region cube gestures resolve first (they own the press when an edge was grabbed).
+                if (wasRegionDrag || wasRegionResize)
+                {
+                    if (wasDrag)
+                    {
+                        if (wasRegionResize) { RebuildFromModel(); Flash("region resized"); }
+                        else Flash("region moved"); // move: cube + members already translated; no re-fit
+                        return;
+                    }
+                    // Ctrl/Cmd(+Alt)+click on a region edge with no drag → toggle the cube resize handles.
+                    CloseMenu();
+                    SelectRegion(regId);
+                    if (_resizeModeNode == regId && _resizeModeIsRegion) ExitResizeMode();
+                    else EnterResizeMode(regId);
+                    return;
+                }
+                if (wasRegionPress && !wasDrag)
+                {
+                    CloseMenu();
+                    // Double-click a region edge opens its colour / opacity editor; a single click selects.
+                    float rnow = Time.unscaledTime;
+                    if (_lastNodeClick == regId && rnow - _lastNodeClickTime < DoubleClickSecs)
+                    {
+                        SelectRegion(regId);
+                        ShowRegionColorEditor(regId, Input.mousePosition);
+                        _lastNodeClick = ElementId.None;
+                    }
+                    else
+                    {
+                        if (_resizeModeNode.IsValid && _resizeModeNode != regId) ExitResizeMode();
+                        SelectRegion(regId);
+                        _lastNodeClick = regId;
+                        _lastNodeClickTime = rnow;
+                    }
+                    return;
+                }
+
+                if (wasConnect && wasDrag) { EndConnectRubber(Input.mousePosition); return; }
                 if (wasMarquee) { EndMarquee3D(Input.mousePosition); return; }
                 if (wasDrag)
                 {
@@ -819,11 +967,47 @@ namespace TheRobotDraft.Uml
                 if (hit != null)
                 {
                     ClearSelectedEdge();
-                    if (shift) ToggleSelection(hit.Id);
-                    else SetSelected(hit.Id);
+                    if (shift) { ToggleSelection(hit.Id); _lastNodeClick = ElementId.None; }
+                    else if (ctrl)
+                    {
+                        // Ctrl/Cmd+click on a linked folder node navigates to its package tab (a Ctrl/Cmd+drag still moves
+                        // it — this branch is the no-drag case). Otherwise Ctrl/Cmd+click toggles the resize handles.
+                        if (_packageLink.ContainsKey(hit.Id))
+                        {
+                            _lastNodeClick = ElementId.None;
+                            GoToPackage(_packageLink[hit.Id]);
+                        }
+                        else
+                        {
+                            SetSelected(hit.Id);
+                            if (_resizeModeNode == hit.Id && !_resizeModeIsRegion) ExitResizeMode();
+                            else EnterResizeMode(hit.Id);
+                            _lastNodeClick = ElementId.None;
+                        }
+                    }
+                    else
+                    {
+                        // Double-click opens the node's edit modal; a single click just selects.
+                        float now = Time.unscaledTime;
+                        if (_lastNodeClick == hit.Id && now - _lastNodeClickTime < DoubleClickSecs)
+                        {
+                            SetSelected(hit.Id);
+                            OpenNodeEditModal(hit.Id, Input.mousePosition);
+                            _lastNodeClick = ElementId.None;
+                        }
+                        else
+                        {
+                            SetSelected(hit.Id);
+                            if (_resizeModeNode.IsValid && _resizeModeNode != hit.Id) ExitResizeMode();
+                            _lastNodeClick = hit.Id;
+                            _lastNodeClickTime = now;
+                        }
+                    }
                 }
                 else
                 {
+                    if (_resizeModeNode.IsValid) ExitResizeMode();
+                    _lastNodeClick = ElementId.None;
                     var eid = PickEdge3D(Input.mousePosition);
                     if (eid.IsValid) Select3DEdge(eid);
                     else { ClearSelectedEdge(); Select((UmlNodeView)null); }
@@ -840,11 +1024,13 @@ namespace TheRobotDraft.Uml
             if (!_dragNode.IsValid) return;
             float dPitch = -mouseDelta.y * RotateDegPerPx;
             float dYaw = mouseDelta.x * RotateDegPerPx;
-            if (_scene.TryGetNode(_dragNode, out var node) && node != null) node.AddLocalRotation(dPitch, dYaw);
+            if (_scene.TryGetNode(_dragNode, out var node) && node != null)
+            { node.AddLocalRotation(dPitch, dYaw); _nodeRot[_dragNode] = node.LocalRotation; }
             // Rotate the whole multi-selection together when the grabbed node is part of it.
             if (_selection.Count >= 2 && _selection.Contains(_dragNode))
                 foreach (var id in _selection)
-                    if (id != _dragNode && _scene.TryGetNode(id, out var n) && n != null) n.AddLocalRotation(dPitch, dYaw);
+                    if (id != _dragNode && _scene.TryGetNode(id, out var n) && n != null)
+                    { n.AddLocalRotation(dPitch, dYaw); _nodeRot[id] = n.LocalRotation; }
         }
 
         // --- per-node world-Z move (Ctrl/Cmd+Shift-drag) ---
@@ -985,6 +1171,124 @@ namespace TheRobotDraft.Uml
 
         private const float OrbitYawPerPx = 0.4f;
         private const float OrbitPitchPerPx = 0.4f;
+
+        // --- empty-space drag navigation mode (chosen from the "Navigate" HUD menu) ---
+
+        /// <summary>What a plain left-drag over empty space does. Orbit is the default; the other modes constrain the
+        /// drag to sliding the camera pivot along one world axis (or panning in the view plane) for easier framing.</summary>
+        private enum NavMode { Orbit, Pan, MoveX, MoveY, MoveZ }
+        private NavMode _navMode = NavMode.Orbit;
+        private readonly Dictionary<NavMode, Image> _navButtons = new(); // glyph chips in the floating nav bar
+        /// <summary>World units the pivot slides per drag-pixel in an axis nav mode (scaled by camera distance).</summary>
+        private const float AxisMovePerPx = 0.004f;
+
+        /// <summary>Run the current empty-space drag according to <see cref="_navMode"/>.</summary>
+        private void NavigateEmptyDrag(Vector2 d)
+        {
+            var rig = _scene != null ? _scene.Rig : null;
+            float k = AxisMovePerPx * (rig != null ? rig.Distance : 1f);
+            switch (_navMode)
+            {
+                case NavMode.Pan: _scene.PanPivot(d); break;
+                case NavMode.MoveX: if (rig != null) rig.Pivot += Vector3.right * (d.x * k); break;
+                case NavMode.MoveY: if (rig != null) rig.Pivot += Vector3.up * (d.y * k); break;
+                case NavMode.MoveZ: if (rig != null) rig.Pivot += Vector3.forward * (d.y * k); break;
+                default: _scene.Orbit(d.x * OrbitYawPerPx, -d.y * OrbitPitchPerPx); break;
+            }
+        }
+
+        private static string NavModeLabel(NavMode m) => m switch
+        {
+            NavMode.Pan => "Pan", NavMode.MoveX => "Move X", NavMode.MoveY => "Move Y", NavMode.MoveZ => "Move Z",
+            _ => "Orbit",
+        };
+
+        /// <summary>
+        /// A small hovering toolbar (top-right, floating over the diagram) of icon chips — one per drag mode
+        /// (orbit / pan / X / Y / Z axis moves), each a procedurally-drawn sprite (<see cref="UmlNavIcons"/>).
+        /// Clicking a chip sets <see cref="_navMode"/>; the active chip's background is highlighted.
+        /// </summary>
+        private void BuildNavBar()
+        {
+            var bar = new GameObject("NavBar", typeof(RectTransform));
+            var brt = (RectTransform)bar.transform;
+            brt.SetParent(_root, false);
+            brt.anchorMin = brt.anchorMax = new Vector2(1f, 1f);
+            brt.pivot = new Vector2(1f, 1f);
+            brt.anchoredPosition = new Vector2(-8f, -40f);
+            var bg = bar.AddComponent<Image>();
+            bg.color = new Color(0.12f, 0.13f, 0.16f, 0.92f);
+
+            var modes = new (NavMode m, Sprite icon)[]
+            {
+                (NavMode.Orbit, UmlNavIcons.Orbit), (NavMode.Pan, UmlNavIcons.Pan), (NavMode.MoveX, UmlNavIcons.AxisX),
+                (NavMode.MoveY, UmlNavIcons.AxisY), (NavMode.MoveZ, UmlNavIcons.AxisZ),
+            };
+            const float sz = 34f, gap = 2f, pad = 4f;
+            float x = pad;
+            foreach (var it in modes) { MakeNavChip(brt, it.m, it.icon, x, sz); x += sz + gap; }
+            brt.sizeDelta = new Vector2(x - gap + pad, sz + pad * 2f);
+            RefreshNavButtons();
+        }
+
+        private void MakeNavChip(RectTransform parent, NavMode mode, Sprite icon, float x, float sz)
+        {
+            var go = new GameObject("Nav:" + NavModeLabel(mode), typeof(RectTransform));
+            var rt = (RectTransform)go.transform;
+            rt.SetParent(parent, false);
+            rt.anchorMin = rt.anchorMax = new Vector2(0f, 1f);
+            rt.pivot = new Vector2(0f, 1f);
+            rt.sizeDelta = new Vector2(sz, sz);
+            rt.anchoredPosition = new Vector2(x, -4f);
+            var img = go.AddComponent<Image>();          // chip background (tinted for active/inactive)
+            var btn = go.AddComponent<Button>();
+            btn.targetGraphic = img;
+            btn.onClick.AddListener(() => SetNavMode(mode));
+            _navButtons[mode] = img;
+
+            // The icon image sits on top of the chip, inset, and is not itself a raycast target.
+            var ico = new GameObject("Icon", typeof(RectTransform));
+            var irt = (RectTransform)ico.transform;
+            irt.SetParent(rt, false);
+            irt.anchorMin = irt.anchorMax = new Vector2(0.5f, 0.5f);
+            irt.pivot = new Vector2(0.5f, 0.5f);
+            const float inset = 6f;
+            irt.sizeDelta = new Vector2(sz - inset * 2f, sz - inset * 2f);
+            irt.anchoredPosition = Vector2.zero;
+            var im = ico.AddComponent<Image>();
+            im.sprite = icon;
+            im.color = new Color(0.95f, 0.97f, 1f, 1f);
+            im.raycastTarget = false;
+        }
+
+        private void SetNavMode(NavMode m)
+        {
+            _navMode = m;
+            RefreshNavButtons();
+            Flash($"drag empty space → {NavModeLabel(m)}");
+        }
+
+        private static readonly NavMode[] NavCycle =
+            { NavMode.Orbit, NavMode.Pan, NavMode.MoveX, NavMode.MoveY, NavMode.MoveZ };
+
+        /// <summary>Cycle the empty-space drag mode (orbit → pan → X → Y → Z); <paramref name="back"/> reverses.</summary>
+        private void CycleNavMode(bool back)
+        {
+            int i = System.Array.IndexOf(NavCycle, _navMode);
+            if (i < 0) i = 0;
+            int n = NavCycle.Length;
+            SetNavMode(NavCycle[((i + (back ? -1 : 1)) % n + n) % n]);
+        }
+
+        /// <summary>Tint the active nav chip (blue) and the rest neutral.</summary>
+        private void RefreshNavButtons()
+        {
+            foreach (var kv in _navButtons)
+                if (kv.Value != null)
+                    kv.Value.color = kv.Key == _navMode
+                        ? new Color(0.20f, 0.55f, 0.85f, 1f)
+                        : new Color(0.20f, 0.23f, 0.28f, 1f);
+        }
 
         /// <summary>The per-frame screen-space mouse delta (Input has no UI delta outside the EventSystem). Computed
         /// once at the top of every Update; orbit / pan drags read it via GetMouseDelta.</summary>
@@ -1150,7 +1454,22 @@ namespace TheRobotDraft.Uml
             Flash($"zoom {_zoom * 100f:0}%  ·  Ctrl/Cmd +/− , 0 to reset");
         }
 
-        // --- z-layers (stacked planes; Alt+scroll to change, node menu to move elements between) ---
+        // --- camera Z navigation (Alt+scroll jumps the view a fixed amount along world Z) ---
+
+        /// <summary>World-Z distance one Alt+scroll "jump" moves the camera. 250 model-px × WorldScale ≈ 2.5 units —
+        /// roughly the depth between two stacked z-layers, so a jump steps cleanly between depth planes.</summary>
+        private const float ZJumpStep = 250f * Uml3DConfig.WorldScale;
+
+        /// <summary>Slide the camera pivot (and the camera with it) a fixed step along world +Z (dir &gt; 0) or −Z.</summary>
+        private void JumpCameraZ(int dir)
+        {
+            var rig = _scene != null ? _scene.Rig : null;
+            if (rig == null) return;
+            rig.Pivot += new Vector3(0f, 0f, Mathf.Sign(dir) * ZJumpStep);
+            Flash($"jumped {(dir > 0 ? "+" : "−")}{ZJumpStep:0.##}u along Z");
+        }
+
+        // --- z-layers (stacked planes; node menu to move elements between depth planes) ---
 
         /// <summary>Step the active z-layer by ±1 and rebuild so only that layer's nodes show. Clamps to the used
         /// range, but allows stepping one past each extreme so a node can be moved onto a fresh empty layer.</summary>
@@ -1280,6 +1599,9 @@ namespace TheRobotDraft.Uml
             // Build / track the selected link's route-edit handles AFTER routing so they sit on the freshly-routed
             // polyline (and rebuild when the selection changes / clears).
             SyncEdgeHandles3D();
+            // Track the resize handles on a double-clicked node and update the cursor as the pointer hovers them.
+            RepositionResizeHandles();
+            UpdateResizeCursor();
         }
 
         // --- selection / movement / resize ---
@@ -1362,8 +1684,70 @@ namespace TheRobotDraft.Uml
                 return;
             }
 
+            // Streamlined top level: the common single actions; bulky groups (members, code) open submenus.
             var items = new List<MenuItem>();
-            // Members live inside the box: offer the legal member kinds via the structured editor (Rose/Sparx).
+            var pid = id;
+
+            items.Add(new MenuItem("Edit element…  (fields · operations · properties)", true,
+                () => ShowClassifierEditor(pid, screenPos)));
+
+            bool canMembers = ContainmentRules.CanContain(el.Kind, ElementKind.Field).IsValid
+                || ContainmentRules.CanContain(el.Kind, ElementKind.Function).IsValid;
+            bool hasMembers = false;
+            foreach (var c0 in el.ChildIds)
+                if (_model.TryGet(c0, out var cm) && KindInfo.IsMember(cm.Kind)) { hasMembers = true; break; }
+            if (canMembers || hasMembers)
+                items.Add(new MenuItem("Members ▸   (attributes · operations)", true, () => ShowMembersMenu(pid, screenPos)));
+
+            items.Add(new MenuItem("Style…  (color · font)", true, () => ShowStyleEditor(pid, screenPos)));
+            items.Add(new MenuItem("💬  Comment / inline doc…", true, () => ShowCommentEditor(pid, screenPos)));
+            items.Add(new MenuItem("🖼 Paste image into node", true, () => { CloseMenu(); AttachImageToNode(pid); }));
+            if (_nodeImage.ContainsKey(pid))
+                items.Add(new MenuItem("🗙 Remove image", true, () => { CloseMenu(); ClearNodeImage(pid); }));
+
+            if (KindInfo.IsDiagramNode(el.Kind) && el.Kind != ElementKind.Note)
+                items.Add(new MenuItem("⌁ Code ▸   (generate · view · VS Code · refactor)", true, () => ShowCodeMenu(pid, screenPos)));
+
+            // Z-layer: shift this element forward (+Z, toward the camera) or back (−Z) by one depth plane.
+            items.Add(MenuItem.Separator());
+            var zEl = el;
+            items.Add(new MenuItem("Move forward (+Z) ▲", true, () =>
+            {
+                _ctl.SetZLayer(pid, zEl.ZLayer + 1);
+                CloseMenu(); RebuildFromModel();
+                Flash($"moved to depth layer {zEl.ZLayer + 1}");
+            }));
+            items.Add(new MenuItem("Move back (−Z) ▼", true, () =>
+            {
+                _ctl.SetZLayer(pid, zEl.ZLayer - 1);
+                CloseMenu(); RebuildFromModel();
+                Flash($"moved to depth layer {zEl.ZLayer - 1}");
+            }));
+
+            items.Add(MenuItem.Separator());
+            items.Add(new MenuItem("Copy  (Ctrl/Cmd+C)", true, () => CopyElement(pid)));
+            if (_selection.Count >= 2 && AllSelectedAreCopyableNodes())
+                items.Add(new MenuItem($"Copy selection as PNG  ({_selection.Count})", true, () => CopySelectionAsPng()));
+            items.Add(new MenuItem("Delete", true,
+                () => { _ctl.Delete(pid); SetSelected(ElementId.None); RebuildFromModel(); }));
+
+            CreateMenu(screenPos, $"{el.Name} ({el.Kind})", items);
+        }
+
+        /// <summary>Open a node's edit modal (the note text editor for a Note, else the classifier editor).</summary>
+        private void OpenNodeEditModal(ElementId id, Vector2 screenPos)
+        {
+            if (!_model.TryGet(id, out var el)) return;
+            if (el.Kind == ElementKind.Note) ShowNoteEditor(el.Parent, id, screenPos);
+            else ShowClassifierEditor(id, screenPos);
+        }
+
+        /// <summary>Submenu: add / edit a node's attributes and operations (keeps the main node menu short).</summary>
+        private void ShowMembersMenu(ElementId id, Vector2 screenPos)
+        {
+            CloseMenu();
+            if (!_model.TryGet(id, out var el)) return;
+            var items = new List<MenuItem>();
             foreach (var k in new[] { ElementKind.Field, ElementKind.Function })
                 if (ContainmentRules.CanContain(el.Kind, k).IsValid)
                 {
@@ -1371,59 +1755,41 @@ namespace TheRobotDraft.Uml
                     string verb = k == ElementKind.Field ? "＋ Attribute (field)…" : "＋ Operation (method)…";
                     items.Add(new MenuItem(verb, true, () => ShowMemberEditor(parent, kind, ElementId.None, screenPos)));
                 }
-
-            // Existing members — edit signature in place (visibility / type / params / return).
-            bool anyMember = false;
+            bool any = false;
             foreach (var childId in el.ChildIds)
             {
                 if (!_model.TryGet(childId, out var c) || !KindInfo.IsMember(c.Kind)) continue;
-                if (!anyMember) { items.Add(MenuItem.Separator()); anyMember = true; }
+                if (!any) { items.Add(MenuItem.Separator()); any = true; }
                 var cid = childId; var ckind = c.Kind; var parent = id;
                 items.Add(new MenuItem("✎  " + Ellipsize(c.Name, 30), true,
                     () => ShowMemberEditor(parent, ckind, cid, screenPos)));
+                items.Add(new MenuItem("💬  comment…   " + Ellipsize(c.Name, 22), true,
+                    () => ShowCommentEditor(cid, screenPos)));
             }
+            if (items.Count == 0) items.Add(new MenuItem("(no members here)", false, null));
+            CreateMenu(screenPos, "Members — " + Ellipsize(el.Name, 24), items);
+        }
 
-            items.Add(MenuItem.Separator());
+        /// <summary>Submenu: code generation / viewing / VS Code round-trip / refactor for a diagram node.</summary>
+        private void ShowCodeMenu(ElementId id, Vector2 screenPos)
+        {
+            CloseMenu();
+            if (!_model.TryGet(id, out var el)) return;
             var pid = id;
-            items.Add(new MenuItem("Edit element…  (fields · operations · properties)", true,
-                () => ShowClassifierEditor(pid, screenPos)));
-            items.Add(new MenuItem("Style…  (color · font)", true, () => ShowStyleEditor(pid, screenPos)));
-            // Code — diagram nodes only (notes return above; packages/members aren't node-menu targets). A node that
-            // already has code (saved generation, or imported source) gets "View code…"; a bare node gets "Generate…".
-            if (KindInfo.IsDiagramNode(el.Kind) && el.Kind != ElementKind.Note)
+            bool hasCode = !string.IsNullOrEmpty(el.Code)
+                || (!string.IsNullOrEmpty(el.SourceFile) && _sourceFiles.ContainsKey(el.SourceFile));
+            var items = new List<MenuItem>
             {
-                bool hasCode = !string.IsNullOrEmpty(el.Code)
-                    || (!string.IsNullOrEmpty(el.SourceFile) && _sourceFiles.ContainsKey(el.SourceFile));
-                items.Add(new MenuItem(hasCode ? "⌁ View code…" : "⌁ Generate code (LLM)…", true,
-                    () => GenerateCodeForElement(pid)));
-                if (_selection.Count >= 2)
-                    items.Add(new MenuItem("⌁ Generate code for selection…", true, () => GenerateCodeForSelection()));
-            }
-            // Z-layer: shift this element to a higher / lower stacked plane. It leaves the current view once moved
-            // (it's no longer on _activeLayer) — Alt+scroll to follow it, or click its cross-layer chevron.
-            items.Add(MenuItem.Separator());
-            var zEl = el;
-            items.Add(new MenuItem("Send up a layer ▲", true, () =>
-            {
-                _ctl.SetZLayer(pid, zEl.ZLayer + 1);
-                CloseMenu(); RebuildFromModel();
-                Flash($"moved to layer {zEl.ZLayer + 1} — Alt+scroll to follow");
-            }));
-            items.Add(new MenuItem("Send down a layer ▼", true, () =>
-            {
-                _ctl.SetZLayer(pid, zEl.ZLayer - 1);
-                CloseMenu(); RebuildFromModel();
-                Flash($"moved to layer {zEl.ZLayer - 1} — Alt+scroll to follow");
-            }));
-            items.Add(MenuItem.Separator());
-            items.Add(new MenuItem("Copy  (Ctrl/Cmd+C)", true, () => CopyElement(pid)));
-            // Multi-selection of plain diagram nodes (no boundaries / packages) → snapshot them to a PNG.
-            if (_selection.Count >= 2 && AllSelectedAreCopyableNodes())
-                items.Add(new MenuItem($"Copy selection as PNG  ({_selection.Count})", true, () => CopySelectionAsPng()));
-            items.Add(new MenuItem("Delete", true,
-                () => { _ctl.Delete(pid); SetSelected(ElementId.None); RebuildFromModel(); }));
-
-            CreateMenu(screenPos, $"{el.Name} ({el.Kind})", items);
+                new MenuItem(hasCode ? "⌁ View code…" : "⌁ Generate code (LLM)…", true, () => GenerateCodeForElement(pid)),
+            };
+            if (_selection.Count >= 2)
+                items.Add(new MenuItem("⌁ Generate code for selection…", true, () => GenerateCodeForSelection()));
+            items.Add(new MenuItem("🖉 Edit code in VS Code", true, () => { CloseMenu(); EditCodeInVsCode(pid); }));
+            if (System.IO.File.Exists(ShadowPathFor(pid)))
+                items.Add(new MenuItem("⟳ Re-sync from code", true,
+                    () => { CloseMenu(); ResyncNodeFromShadow(pid, ShadowPathFor(pid)); }));
+            items.Add(new MenuItem("⚒ Refactor…  (rename · move · LLM)", true, () => ShowRefactorMenu(pid, screenPos)));
+            CreateMenu(screenPos, "Code — " + Ellipsize(el.Name, 24), items);
         }
 
         public void ShowEmptyMenu(Vector2 screenPos)
@@ -1459,6 +1825,8 @@ namespace TheRobotDraft.Uml
             items.Add(new MenuItem("New (empty diagram)", true, () => NewDiagram()));
             items.Add(new MenuItem("Reset to sample", true, () => ResetToSample()));
             items.Add(new MenuItem("Save  (Ctrl/Cmd+S)", true, () => { CloseMenu(); SaveDiagram(); }));
+            items.Add(new MenuItem("Save As…  (Ctrl/Cmd+Shift+S)", true, () => SaveDiagramAs()));
+            items.Add(new MenuItem("Open file…  (Ctrl/Cmd+O)", true, () => OpenDiagramFile()));
             items.Add(new MenuItem("Delete saved file", true, () => { CloseMenu(); DeleteSavedDiagram(); }));
             items.Add(new MenuItem("⌁ Import code → elements…", true, () => ShowImportCodeDialog(screenPos)));
             items.Add(new MenuItem("LLM settings…", true, () => ShowLlmSettings(screenPos)));
@@ -1479,6 +1847,8 @@ namespace TheRobotDraft.Uml
         private void PromptAndAdd(ElementId parent, ElementKind kind, Vector2 screenPos)
         {
             CloseMenu();
+            // A new Package also drops a linked folder node onto the current diagram (and navigates appropriately).
+            if (kind == ElementKind.Package) { AddPackageWithNode(screenPos); return; }
             // Convention-following templates (Rational Rose / Sparx EA): visibility +/-/#/~, types after ':'.
             (string title, string template) = kind switch
             {
@@ -1574,6 +1944,18 @@ namespace TheRobotDraft.Uml
             RebuildFromModel();
         }
 
+        /// <summary>After flipping an edge's direction, swap its stored face anchors and reverse its waypoints so the
+        /// 3-D routing still matches the new source→target order.</summary>
+        private void ReverseEdgeViewState(EdgeId edge)
+        {
+            bool hasSrc = _srcFace.TryGetValue(edge, out var sf);
+            bool hasTgt = _tgtFace.TryGetValue(edge, out var tf);
+            if (hasTgt) _srcFace[edge] = tf; else _srcFace.Remove(edge);
+            if (hasSrc) _tgtFace[edge] = sf; else _tgtFace.Remove(edge);
+            if (_waypoints3d.TryGetValue(edge, out var w3)) w3.Reverse();
+            if (_waypoints.TryGetValue(edge, out var w2)) w2.Reverse();
+        }
+
         public void ShowEdgeMenu(EdgeId edgeId, Vector2 screenPos)
         {
             if (!_model.TryGet(edgeId, out var e)) return;
@@ -1587,7 +1969,14 @@ namespace TheRobotDraft.Uml
             }
             items.Add(MenuItem.Separator());
             var metaEdge = edgeId;
-            items.Add(new MenuItem("Multiplicity / label…", true, () => ShowEdgeMetaEditor(metaEdge, screenPos)));
+            items.Add(new MenuItem("Multiplicity / label / constraint…", true, () => ShowEdgeMetaEditor(metaEdge, screenPos)));
+            items.Add(new MenuItem("Flip direction  (↺ swap arrow)", true, () =>
+            {
+                _ctl.ReverseEdge(metaEdge);
+                ReverseEdgeViewState(metaEdge);
+                CloseMenu();
+                RebuildFromModel();
+            }));
             bool isCurved = _curved.Contains(metaEdge);
             items.Add(new MenuItem(isCurved ? "Make orthogonal (straight)" : "Make curved (bezier)", true,
                 () =>
@@ -1615,6 +2004,14 @@ namespace TheRobotDraft.Uml
         private void Redo() { if (_ctl.Redo()) { Flash("↷ redo"); FixActiveAfterChange(); RebuildFromModel(); } }
         private void DeleteSelected()
         {
+            if (_selectedRegion.IsValid)
+            {
+                _ctl.Delete(_selectedRegion);
+                _selectedRegion = ElementId.None;
+                FixActiveAfterChange();
+                RebuildFromModel();
+                return;
+            }
             if (_selectedEdge.IsValid)
             {
                 _ctl.DeleteEdge(_selectedEdge);
@@ -1646,6 +2043,8 @@ namespace TheRobotDraft.Uml
             _scene3dStubs.Clear();
             _scene3dStubBindings.Clear();
             _edgeKinds.Clear();
+            ClearRegions3D();
+            ClearResizeHandles(); // handles reference nodes about to be destroyed; rebuilt below if still in resize mode
 
             EnsureActivePackage();
             BuildTabBar();
@@ -1657,15 +2056,16 @@ namespace TheRobotDraft.Uml
                 return;
             }
 
-            // Classifier boxes = direct classifier children of the active package. Z-layering (Stage 4): nodes
-            // ABOVE the active layer are hidden; the active layer renders at full color on the front plane; nodes
-            // BELOW recede into depth and gray out with distance so the active layer reads as the focus.
+            // Classifier boxes = direct classifier children of the active package. The whole diagram is shown at
+            // once now (no active-layer "pane"): each node's z-layer simply places it at a different world-Z depth
+            // plane. Region kinds (boundary / frame / profile) are NOT drawn as slabs — they become dotted cubes
+            // (built below, after their member nodes exist so the cube can be fit around them).
             int spread = 0;
             foreach (var el in _model.Elements)
             {
                 if (el.Parent != _activePackage) continue;
                 if (!KindInfo.IsDiagramNode(el.Kind)) continue;
-                if (el.ZLayer > _activeLayer) continue; // above the active layer → hidden
+                if (IsRegionKind(el.Kind)) continue; // drawn as a region cube, not a slab
                 if (!_pos.TryGetValue(el.Id, out var p))
                 {
                     p = new Vector2(-360f + (spread % 4) * 240f, 120f - (spread / 4) * 200f);
@@ -1674,6 +2074,9 @@ namespace TheRobotDraft.Uml
                 spread++;
                 CreateNode3D(el, p);
             }
+
+            // Region cubes: a dotted wireframe cube grouping the nodes that fall inside each region's footprint.
+            RebuildRegions3D();
 
             // Relationship edges. Both endpoints shown → a normal edge between their (possibly depth-separated)
             // world centers. Exactly one endpoint hidden (its peer sits above the active layer) → a short up-stub
@@ -1696,6 +2099,14 @@ namespace TheRobotDraft.Uml
             // Edge bend handles are 2-D affordances; with the diagram in 3-D they are DEFERRED (no handles drawn).
             _selectedEdge = EdgeId.None;
             RefreshBendHandles();
+
+            // Restore the resize-handle overlay if a node is still in resize mode (it survived the rebuild).
+            if (_resizeModeNode.IsValid)
+            {
+                bool ok = _resizeModeIsRegion ? _regionById.ContainsKey(_resizeModeNode) : _scene.TryGetNode(_resizeModeNode, out _);
+                if (ok) BuildResizeHandles(_resizeModeNode);
+                else ExitResizeMode();
+            }
         }
 
         /// <summary>The full UML signatures of an element's field / operation members (Rose/Sparx convention).</summary>
@@ -1737,26 +2148,577 @@ namespace TheRobotDraft.Uml
         private Vector2 NodeSizePx(ModelElement el, int attrCount, int opCount)
         {
             if (_size.TryGetValue(el.Id, out var s) && s.x > 1f && s.y > 1f) return s;
+            // The actor / person robot wants a PORTRAIT footprint (a standing figure), not the wide class-box default.
+            if (el.Kind == ElementKind.Actor || el.Kind == ElementKind.Person) return new Vector2(108f, 168f);
+            // Wireframe widgets get compact, per-kind default footprints (a button is small, a table is wide).
+            var wf = WidgetDefaultSize(el.Kind, attrCount);
+            if (wf.HasValue) return wf.Value;
             float headerH = 30f + (string.IsNullOrEmpty(Stereotype(el)) ? 0f : 16f);
             float attrH = Mathf.Max(1, attrCount) * 18f + 6f;
             float opH = Mathf.Max(1, opCount) * 18f + 6f;
             return new Vector2(UmlNodeView.DefaultWidth, headerH + 2f + attrH + 2f + opH);
         }
 
+        /// <summary>A wireframe widget's default pixel footprint (null for non-widgets). Compact, control-shaped — a
+        /// button isn't a full-width classifier box. Item-bearing widgets grow with their item count.</summary>
+        private static Vector2? WidgetDefaultSize(ElementKind kind, int itemCount)
+        {
+            // Height for a vertical row-stack: rows × 18px + padding, with a 1–3 row floor.
+            float rows(int n) => Mathf.Max(1, n) * 18f + 16f;
+            switch (kind)
+            {
+                case ElementKind.UiWidget: return new Vector2(160f, 44f);
+                case ElementKind.Button:   return new Vector2(120f, 44f);
+                case ElementKind.Label:    return new Vector2(160f, 24f);
+                case ElementKind.Link:     return new Vector2(160f, 24f);
+                case ElementKind.TextField: return new Vector2(200f, 40f);
+                case ElementKind.TextArea:  return new Vector2(200f, 80f);
+                case ElementKind.Password:  return new Vector2(200f, 40f);
+                case ElementKind.Checkbox:  return new Vector2(160f, 28f);
+                case ElementKind.Radio:     return new Vector2(160f, 28f);
+                case ElementKind.Dropdown:  return new Vector2(180f, 40f);
+                case ElementKind.List:      return new Vector2(160f, rows(Mathf.Min(itemCount, 5)));
+                case ElementKind.Table:     return new Vector2(280f, 80f + Mathf.Max(0, itemCount - 2) * 8f);
+                case ElementKind.Tree:      return new Vector2(180f, rows(Mathf.Min(itemCount, 4)));
+                case ElementKind.Image:     return new Vector2(180f, 120f);
+                case ElementKind.Tabs:      return new Vector2(220f, 90f);
+                case ElementKind.Menu:      return new Vector2(220f, 34f);
+                case ElementKind.Toolbar:   return new Vector2(260f, 34f);
+                case ElementKind.Breadcrumb:return new Vector2(240f, 26f);
+                case ElementKind.Card:      return new Vector2(200f, 110f + Mathf.Max(0, itemCount) * 8f);
+                case ElementKind.Separator: return new Vector2(220f, 12f);
+                case ElementKind.Progress:  return new Vector2(200f, 40f);
+                case ElementKind.Slider:    return new Vector2(200f, 40f);
+                default: return null;
+            }
+        }
+
         private void CreateNode3D(ModelElement el, Vector2 pos)
         {
             MemberSignatures(el, out var attributes, out var operations);
             NodeColors(el, out var fill, out var text);
-            Vector2 sizePx = NodeSizePx(el, attributes.Count, operations.Count);
+            Vector2 sizePx = CurrentNodeSizePx(el.Id); // honor a stored resize / pasted size, else the default
             var node = _scene.AddNode(el.Id, el.Name, Stereotype(el), el.Kind, fill, text,
                 attributes, operations, sizePx);
-            // layerDepth = activeLayer - nodeLayer: 0 on the active/front plane, positive for nodes below (which
-            // recede into depth). Below nodes gray out with distance (≈4 layers down reads as fully gray).
-            int layerDepth = _activeLayer - el.ZLayer;
+            // Apply a per-node Z thickness override (set via the depth resize handle) before posing.
+            if (_nodeDepth.TryGetValue(el.Id, out var th)) node.SetThickness(th);
+            // World-Z = ZLayer × LayerGap: a higher layer sits further toward +Z (the front / camera side), a lower
+            // layer recedes toward −Z. Every layer is drawn at full color (no active-layer graying anymore).
             float zOffset = _posZ.TryGetValue(el.Id, out var z) ? z : 0f;
-            node.SetWorldPose(Uml3DConfig.ModelToWorld(pos, layerDepth) + new Vector3(0f, 0f, zOffset),
+            node.SetWorldPose(Uml3DConfig.ModelToWorld(pos, el.ZLayer) + new Vector3(0f, 0f, zOffset),
                 Quaternion.identity);
-            node.SetDepthTint(layerDepth <= 0 ? 0f : Mathf.Clamp01(layerDepth / 4f));
+            if (_nodeRot.TryGetValue(el.Id, out var localRot)) node.SetLocalRotation(localRot); // restore orientation
+            node.SetDepthTint(0f);
+            var img = LoadNodeImage(el.Id); // optional per-node picture rendered as a card on the face
+            if (img != null) node.SetImage(img);
+        }
+
+        // --- region cubes (boundary / frame / profile drawn as a dotted cube grouping its member nodes) ---
+
+        private readonly List<UmlRegion3D> _regions = new();
+        private readonly Dictionary<ElementId, UmlRegion3D> _regionById = new();
+        private ElementId _selectedRegion = ElementId.None;
+        // World-space padding added around the member-node bounds so the cube doesn't clip its contents.
+        private const float RegionPadding = 0.6f;
+        // Default cube fill opacity for an un-styled region (the user can change it via the region colour editor).
+        private const float DefaultRegionOpacity = 0.12f;
+        // Default footprint (px) for a region that has no explicit size yet, and the cube's fixed world-Z depth.
+        private static readonly Vector2 RegionDefaultSizePx = new Vector2(420f, 300f);
+        private const float RegionDepthWorld = 2.5f;
+
+        // Active region gesture (a cube grabbed by an edge): move (Ctrl/Cmd-drag) or resize (Ctrl/Cmd+Alt-drag).
+        private bool _draggingRegion, _resizingRegion, _regionPressed;
+        private ElementId _regionDrag = ElementId.None;
+        private float _regionPlaneZ;
+        private Vector3 _regionLastWorld;
+        private readonly List<ElementId> _regionMembers = new();
+
+        /// <summary>Boundary, interaction frame and profile are "regions" — drawn as a grouping cube, not a slab.</summary>
+        private static bool IsRegionKind(ElementKind k) =>
+            k == ElementKind.Boundary || k == ElementKind.Frame || k == ElementKind.Profile
+            || KindInfo.IsWireframeRegion(k); // Screen / Panel group their widgets and carry them when moved
+
+        /// <summary>Destroy every live region cube.</summary>
+        private void ClearRegions3D()
+        {
+            foreach (var r in _regions) if (r != null) Destroy(r.gameObject);
+            _regions.Clear();
+            _regionById.Clear();
+        }
+
+        /// <summary>The member node ids whose model-space position falls inside a region's px footprint.</summary>
+        private List<ElementId> RegionMembers(ElementId regionId, Vector2 rp, Vector2 rSize)
+        {
+            var list = new List<ElementId>();
+            float hw = rSize.x * 0.5f, hh = rSize.y * 0.5f;
+            foreach (var kv in _scene.Nodes)
+            {
+                if (kv.Key == regionId || kv.Value == null) continue;
+                if (!_pos.TryGetValue(kv.Key, out var mp)) continue;
+                if (mp.x < rp.x - hw || mp.x > rp.x + hw || mp.y < rp.y - hh || mp.y > rp.y + hh) continue;
+                list.Add(kv.Key);
+            }
+            return list;
+        }
+
+        /// <summary>
+        /// The world box for a region — its EXPLICIT footprint (<c>_pos</c> centre + <c>_size</c> dims at a fixed
+        /// depth), padded. The size is NEVER derived from member encapsulation: that made the cube re-size on every
+        /// rebuild (style edits, undo) and absorb whatever nodes it overlapped after a move. An un-sized region is
+        /// given a sensible default footprint once, baked into <c>_size</c> so it persists and stays put.
+        /// </summary>
+        private Bounds ComputeRegionBounds(ModelElement el)
+        {
+            if (!_pos.TryGetValue(el.Id, out var rp)) { rp = Vector2.zero; _pos[el.Id] = rp; }
+            if (!(_size.TryGetValue(el.Id, out var s) && s.x > 1f && s.y > 1f)) { s = RegionDefaultSizePx; _size[el.Id] = s; }
+            Vector3 center = Uml3DConfig.ModelToWorld(rp, el.ZLayer);
+            Bounds b = new Bounds(center, new Vector3(s.x * Uml3DConfig.WorldScale, s.y * Uml3DConfig.WorldScale, RegionDepthWorld));
+            b.Expand(RegionPadding * 2f);
+            return b;
+        }
+
+        /// <summary>
+        /// Build a dotted cube for each region element in the active package, fit around its member nodes. The cube
+        /// edges are pickable (select / Ctrl-drag move / Ctrl+Alt-drag resize); the interior stays empty so clicks
+        /// fall through to the member slabs.
+        /// </summary>
+        private void RebuildRegions3D()
+        {
+            var root = _scene != null && _scene.DiagramRoot != null ? _scene.DiagramRoot : transform;
+            foreach (var el in _model.Elements)
+            {
+                if (el.Parent != _activePackage || !IsRegionKind(el.Kind)) continue;
+                NodeColors(el, out var fill, out _);
+                // The dotted edges use the region colour (opaque); the cube is filled with the same colour at the
+                // chosen opacity (the fill colour's alpha, stored in the element style — default lightly translucent).
+                float opacity = (_styles.TryGetValue(el.Id, out var st) && st.Has) ? st.Fill.a : DefaultRegionOpacity;
+                var region = UmlRegion3D.Create(root, el.Id, el.Name, fill);
+                region.SetBounds(ComputeRegionBounds(el));
+                region.SetFill(new Color(fill.r, fill.g, fill.b, opacity));
+                if (el.Id == _selectedRegion) region.SetHighlighted(true);
+                _regions.Add(region);
+                _regionById[el.Id] = region;
+            }
+            if (_selectedRegion.IsValid && !_regionById.ContainsKey(_selectedRegion)) _selectedRegion = ElementId.None;
+        }
+
+        /// <summary>Re-fit one region cube to its members' current bounds (called live during a region drag/resize).</summary>
+        private void RefitRegion(ElementId id)
+        {
+            if (_regionById.TryGetValue(id, out var r) && r != null && _model.TryGet(id, out var el))
+                r.SetBounds(ComputeRegionBounds(el));
+        }
+
+        /// <summary>Nearest region cube whose edge collider lies under the cursor, or null.</summary>
+        private UmlRegion3D PickRegion3D(Vector2 screenPos)
+        {
+            if (_scene == null) return null;
+            Ray ray = _scene.ScreenPointToRay(screenPos);
+            var hits = Physics.RaycastAll(ray, 10000f);
+            UmlRegion3D best = null; float bestD = float.MaxValue;
+            foreach (var h in hits)
+            {
+                if (h.collider == null) continue;
+                var r = h.collider.GetComponentInParent<UmlRegion3D>();
+                if (r != null && h.distance < bestD) { bestD = h.distance; best = r; }
+            }
+            return best;
+        }
+
+        /// <summary>Drop the region selection highlight (called when a node / empty space is selected instead).</summary>
+        private void ClearRegionSelection()
+        {
+            if (_selectedRegion.IsValid && _regionById.TryGetValue(_selectedRegion, out var r) && r != null)
+                r.SetHighlighted(false);
+            _selectedRegion = ElementId.None;
+        }
+
+        /// <summary>Select a region cube (clears any node / edge selection and highlights the cube).</summary>
+        private void SelectRegion(ElementId id)
+        {
+            SetSelected(ElementId.None);   // clears node selection (and, via SetSelected, any prior region highlight)
+            ClearSelectedEdge();
+            _selectedRegion = id;
+            if (id.IsValid && _regionById.TryGetValue(id, out var r) && r != null) r.SetHighlighted(true);
+            if (id.IsValid && _model.TryGet(id, out var el)) Flash($"region “{el.Name}” — Ctrl-drag edge to move · Ctrl-click edge for resize handles · double-click for colour");
+        }
+
+        /// <summary>Right-click menu for a region cube: edit its colour / fill opacity, or delete it.</summary>
+        public void ShowRegionMenu(ElementId id, Vector2 screenPos)
+        {
+            CloseMenu();
+            SelectRegion(id);
+            if (!_model.TryGet(id, out var el)) return;
+            var rid = id;
+            var items = new List<MenuItem>
+            {
+                new MenuItem("Color & fill opacity…", true, () => ShowRegionColorEditor(rid, screenPos)),
+                new MenuItem("Resize handles  (Ctrl/Cmd+click an edge)", true, () => { CloseMenu(); SelectRegion(rid); EnterResizeMode(rid); }),
+                MenuItem.Separator(),
+                new MenuItem("Delete region", true, () =>
+                {
+                    _ctl.Delete(rid); _selectedRegion = ElementId.None;
+                    FixActiveAfterChange(); CloseMenu(); RebuildFromModel();
+                }),
+            };
+            CreateMenu(screenPos, $"Region — {Ellipsize(el.Name, 26)}", items);
+        }
+
+        /// <summary>Edit a region's colour and fill opacity with the HSV picker (its alpha slider = the fill opacity).</summary>
+        private void ShowRegionColorEditor(ElementId id, Vector2 screenPos)
+        {
+            if (!_model.TryGet(id, out var el)) return;
+            Color cur;
+            if (_styles.TryGetValue(id, out var st) && st.Has) cur = st.Fill;
+            else { NodeColors(el, out var fill, out _); cur = new Color(fill.r, fill.g, fill.b, DefaultRegionOpacity); }
+
+            ShowColorPicker("Region fill & opacity", cur, c =>
+            {
+                BeginGeoEdit(); // make the colour / opacity change undoable (Ctrl/Cmd+Z)
+                _styles.TryGetValue(id, out var prev);
+                _styles[id] = new NodeStyle
+                {
+                    Has = true,
+                    Fill = c, // rgb = cube + edge colour; alpha = fill opacity
+                    Border = prev.Has ? prev.Border : new Color(0.42f, 0.45f, 0.51f, 1f),
+                    Text = prev.Has ? prev.Text : new Color(0.13f, 0.15f, 0.19f, 1f),
+                    FontName = prev.FontName,
+                    FontSize = prev.FontSize,
+                };
+                RebuildFromModel();
+                Flash("region colour & opacity set");
+            });
+        }
+
+        /// <summary>Capture the member node set at the start of a region move so the group travels together.</summary>
+        private void CaptureRegionMembers(ElementId id)
+        {
+            _regionMembers.Clear();
+            if (!_model.TryGet(id, out var el)) return;
+            if (!_pos.TryGetValue(id, out var rp)) rp = Vector2.zero;
+            _regionMembers.AddRange(RegionMembers(id, rp, CurrentNodeSizePx(id)));
+        }
+
+        /// <summary>Move a grabbed region (and its captured members) across the region's world-Z plane.</summary>
+        private void DragRegion(Vector2 screenPos)
+        {
+            if (!_regionDrag.IsValid) return;
+            Vector3 world = ProjectToPlane(screenPos, _regionPlaneZ);
+            Vector3 delta = world - _regionLastWorld;
+            _regionLastWorld = world;
+            if (delta.sqrMagnitude < 1e-10f) return;
+            foreach (var id in _regionMembers) MoveNode3D(id, delta);
+            if (_pos.TryGetValue(_regionDrag, out var rp))
+                _pos[_regionDrag] = rp + new Vector2(delta.x / Uml3DConfig.WorldScale, delta.y / Uml3DConfig.WorldScale);
+            // Translate the cube rigidly — keep its size constant. (Re-fitting here would re-run the spatial
+            // member query and Encapsulate any node the footprint sweeps over, ballooning the cube unexpectedly.)
+            if (_regionById.TryGetValue(_regionDrag, out var r) && r != null)
+            {
+                var b = r.CurrentBounds;
+                b.center += new Vector3(delta.x, delta.y, 0f);
+                r.SetBounds(b);
+            }
+        }
+
+        /// <summary>Grow / shrink a grabbed region's footprint (right widens, down grows); members re-evaluate live.</summary>
+        private void ResizeRegion(Vector2 mouseDelta)
+        {
+            if (!_regionDrag.IsValid) return;
+            Vector2 sz = CurrentNodeSizePx(_regionDrag);
+            float k = 1f / Mathf.Max(ScaleFactor, 0.0001f);
+            sz.x = Mathf.Max(80f, sz.x + mouseDelta.x * k);
+            sz.y = Mathf.Max(60f, sz.y - mouseDelta.y * k);
+            _size[_regionDrag] = sz;
+            RefitRegion(_regionDrag);
+        }
+
+        // --- node resize mode (double-click a node → constrained resize handles) ---
+
+        // Per-node Z thickness (world units). Absent ⇒ the default Uml3DConfig.NodeThickness. Persisted.
+        private readonly Dictionary<ElementId, float> _nodeDepth = new();
+
+        private ElementId _resizeModeNode = ElementId.None;       // the node/region currently showing resize handles
+        private bool _resizeModeIsRegion;                          // true ⇒ the resize target is a region cube
+        private readonly List<UmlResizeHandle3D> _resizeHandles = new();
+        private bool _resizing3d;                                  // a resize handle is being dragged
+        private UmlResizeHandle3D.Role _resizeRole;
+        private Vector2 _resizeDir;                                // the grabbed handle's face-local placement
+        private ElementId _resizeNode = ElementId.None;
+        private float _lastNodeClickTime;                          // double-click detection
+        private ElementId _lastNodeClick = ElementId.None;
+        private const float DoubleClickSecs = 0.35f;
+        private const float ZThickPerPx = 0.004f;                  // world thickness change per pixel of vertical drag
+        private const float ResizePxPerScreenPx = 2f;              // model-px size change per screen-px of outward drag
+
+        private static readonly Color ResizeColW = new Color(0.90f, 0.30f, 0.30f, 1f); // X = red
+        private static readonly Color ResizeColH = new Color(0.35f, 0.80f, 0.40f, 1f); // Y = green
+        private static readonly Color ResizeColD = new Color(0.30f, 0.55f, 0.90f, 1f); // Z = blue
+        private static readonly Color ResizeColA = new Color(0.95f, 0.62f, 0.18f, 1f); // all = orange
+
+        /// <summary>Show the constrained resize handles on a node OR region (entered by double-clicking it).</summary>
+        private void EnterResizeMode(ElementId id)
+        {
+            BuildResizeHandles(id);
+            if (_resizeModeNode.IsValid)
+                Flash("resize: drag a handle — corner ◣ all · side ▶ width(X) · top/bottom ▲ height(Y)"
+                    + (_resizeModeIsRegion ? "" : " · center ◼ depth(Z)"));
+        }
+
+        // Handle layout in face-local {-1,0,1} units: 4 corners (Uniform), 4 edge-midpoints (Width on left/right,
+        // Height on top/bottom), and (nodes only) a center Depth handle.
+        private static readonly (UmlResizeHandle3D.Role role, Vector2 dir)[] ResizeLayout =
+        {
+            (UmlResizeHandle3D.Role.Uniform, new Vector2(-1f, -1f)),
+            (UmlResizeHandle3D.Role.Uniform, new Vector2( 1f, -1f)),
+            (UmlResizeHandle3D.Role.Uniform, new Vector2(-1f,  1f)),
+            (UmlResizeHandle3D.Role.Uniform, new Vector2( 1f,  1f)),
+            (UmlResizeHandle3D.Role.Width,   new Vector2(-1f,  0f)),
+            (UmlResizeHandle3D.Role.Width,   new Vector2( 1f,  0f)),
+            (UmlResizeHandle3D.Role.Height,  new Vector2( 0f, -1f)),
+            (UmlResizeHandle3D.Role.Height,  new Vector2( 0f,  1f)),
+        };
+
+        private static Color ResizeColor(UmlResizeHandle3D.Role r) => r switch
+        {
+            UmlResizeHandle3D.Role.Width => ResizeColW,
+            UmlResizeHandle3D.Role.Height => ResizeColH,
+            UmlResizeHandle3D.Role.Depth => ResizeColD,
+            _ => ResizeColA,
+        };
+
+        private void BuildResizeHandles(ElementId id)
+        {
+            ClearResizeHandles();
+            _resizeModeNode = ElementId.None;
+            if (!id.IsValid) return;
+            bool isRegion = _regionById.ContainsKey(id);
+            if (!isRegion && (_scene == null || !_scene.TryGetNode(id, out var n) || n == null)) return;
+            _resizeModeNode = id;
+            _resizeModeIsRegion = isRegion;
+            var root = _scene != null && _scene.DiagramRoot != null ? _scene.DiagramRoot : transform;
+            foreach (var (role, dir) in ResizeLayout)
+                _resizeHandles.Add(UmlResizeHandle3D.Create(root, id, role, dir, ResizeColor(role)));
+            // The depth (Z thickness) handle exists for nodes only — a region cube's depth isn't a stored dimension.
+            if (!isRegion)
+                _resizeHandles.Add(UmlResizeHandle3D.Create(root, id, UmlResizeHandle3D.Role.Depth, Vector2.zero, ResizeColD));
+            RepositionResizeHandles();
+        }
+
+        /// <summary>Destroy the resize handles and reset the OS cursor.</summary>
+        private void ClearResizeHandles()
+        {
+            foreach (var h in _resizeHandles) if (h != null) Destroy(h.gameObject);
+            _resizeHandles.Clear();
+            SetResizeCursor(null);
+        }
+
+        private void ExitResizeMode()
+        {
+            _resizeModeNode = ElementId.None;
+            _resizeModeIsRegion = false;
+            ClearResizeHandles();
+        }
+
+        /// <summary>The world frame of the current resize target (node face or region cube). False if it's gone.</summary>
+        private bool ResizeFrame(out Vector3 c, out Vector3 right, out Vector3 up, out Vector3 fwd, out Vector2 he, out float front)
+        {
+            c = Vector3.zero; right = Vector3.right; up = Vector3.up; fwd = Vector3.forward; he = Vector2.zero; front = 0f;
+            if (!_resizeModeNode.IsValid) return false;
+            if (_resizeModeIsRegion)
+            {
+                if (!_regionById.TryGetValue(_resizeModeNode, out var r) || r == null) return false;
+                var b = r.CurrentBounds;
+                c = b.center; he = new Vector2(b.extents.x, b.extents.y); front = b.extents.z;
+                return true;
+            }
+            if (_scene == null || !_scene.TryGetNode(_resizeModeNode, out var n) || n == null) return false;
+            c = n.transform.position; right = n.FaceRight; up = n.FaceUp; fwd = n.FaceForward;
+            he = n.FaceHalfExtents; front = n.CurrentDepth * 0.5f;
+            return true;
+        }
+
+        /// <summary>Re-seat the resize handles on the target's face corners/edges (called each LateUpdate so they track).</summary>
+        private void RepositionResizeHandles()
+        {
+            if (!_resizeModeNode.IsValid) return;
+            if (!ResizeFrame(out var c, out var right, out var up, out var fwd, out var he, out var front)) { ExitResizeMode(); return; }
+            foreach (var h in _resizeHandles)
+            {
+                if (h == null) continue;
+                if (h.HandleRole == UmlResizeHandle3D.Role.Depth)
+                    h.SetWorldPosition(c + fwd * (front + 0.14f));
+                else
+                    h.SetWorldPosition(c + right * (h.Dir.x * he.x) + up * (h.Dir.y * he.y) + fwd * front);
+            }
+        }
+
+        /// <summary>On a left mouse-down in resize mode, begin a resize drag if a handle was hit (returns true to
+        /// consume the press). Snapshots geometry first so the resize is undoable.</summary>
+        private bool TryBeginResizeDrag(Vector2 screenPos)
+        {
+            if (!_resizeModeNode.IsValid || _resizeHandles.Count == 0) return false;
+            Ray ray = _scene.ScreenPointToRay(screenPos);
+            var hits = Physics.RaycastAll(ray, 10000f);
+            UmlResizeHandle3D handle = null; float bestD = float.MaxValue;
+            foreach (var h in hits)
+            {
+                if (h.collider == null) continue;
+                var cand = h.collider.GetComponentInParent<UmlResizeHandle3D>();
+                if (cand != null && h.distance < bestD) { bestD = h.distance; handle = cand; }
+            }
+            if (handle == null) return false;
+            BeginGeoEdit();
+            _resizing3d = true;
+            _resizeRole = handle.HandleRole;
+            _resizeDir = handle.Dir;
+            _resizeNode = handle.Node;
+            return true;
+        }
+
+        /// <summary>
+        /// Drive an active resize from the mouse delta. Grow amount = the drag projected onto the handle's ON-SCREEN
+        /// outward direction (so dragging a handle away from the center always enlarges, regardless of camera
+        /// orientation or the +Z-face mirroring); depth uses vertical drag (up = thicker).
+        /// </summary>
+        private void DragResize3D(Vector2 mouseDelta)
+        {
+            if (!_resizeModeNode.IsValid) return;
+            bool isRegion = _resizeModeIsRegion;
+            UmlNode3D node = null;
+            if (!isRegion && (!_scene.TryGetNode(_resizeNode, out node) || node == null)) return;
+            if (!ResizeFrame(out var c, out var right, out var up, out var fwd, out var he, out _)) return;
+
+            if (_resizeRole == UmlResizeHandle3D.Role.Depth && !isRegion)
+            {
+                float cur = _nodeDepth.TryGetValue(_resizeNode, out var t) ? t : node.CurrentDepth;
+                float th = Mathf.Max(0.04f, cur + mouseDelta.y * ZThickPerPx); // drag up ⇒ thicker
+                _nodeDepth[_resizeNode] = th; node.SetThickness(th);
+                RepositionResizeHandles();
+                return;
+            }
+
+            // Screen-space outward direction of the grabbed handle (center → handle), projected.
+            Vector3 outWorld = right * (_resizeDir.x * Mathf.Max(0.001f, he.x)) + up * (_resizeDir.y * Mathf.Max(0.001f, he.y));
+            Vector2 a = _scene.WorldToScreen(c);
+            Vector2 b = _scene.WorldToScreen(c + outWorld);
+            Vector2 outScreen = b - a;
+            float grow = outScreen.sqrMagnitude > 1e-4f ? Vector2.Dot(mouseDelta, outScreen.normalized) : 0f;
+            float delta = grow * ResizePxPerScreenPx / Mathf.Max(ScaleFactor, 0.0001f);
+
+            Vector2 sz = CurrentNodeSizePx(_resizeNode);
+            if (_resizeRole == UmlResizeHandle3D.Role.Width) sz.x = Mathf.Max(60f, sz.x + delta);
+            else if (_resizeRole == UmlResizeHandle3D.Role.Height) sz.y = Mathf.Max(40f, sz.y + delta);
+            else { sz.x = Mathf.Max(60f, sz.x + delta); sz.y = Mathf.Max(40f, sz.y + delta); } // Uniform corner
+            _size[_resizeNode] = sz;
+
+            if (isRegion) RefitRegion(_resizeNode);
+            else
+            {
+                node.Resize(sz);
+                if (_resizeRole == UmlResizeHandle3D.Role.Uniform)
+                {
+                    float cur = _nodeDepth.TryGetValue(_resizeNode, out var t) ? t : node.CurrentDepth;
+                    float th = Mathf.Max(0.04f, cur + delta * Uml3DConfig.WorldScale);
+                    _nodeDepth[_resizeNode] = th; node.SetThickness(th);
+                }
+            }
+            RepositionResizeHandles();
+        }
+
+        /// <summary>Update the OS cursor to indicate which resize a hovered handle performs (called each frame).</summary>
+        private UmlResizeHandle3D.Role? _cursorRole;
+        private void UpdateResizeCursor()
+        {
+            if (!_resizeModeNode.IsValid || _resizing3d || PointerOverUI()) { if (!_resizing3d) SetResizeCursor(null); return; }
+            Ray ray = _scene.ScreenPointToRay(Input.mousePosition);
+            var hits = Physics.RaycastAll(ray, 10000f);
+            UmlResizeHandle3D handle = null; float bestD = float.MaxValue;
+            foreach (var h in hits)
+            {
+                if (h.collider == null) continue;
+                var cand = h.collider.GetComponentInParent<UmlResizeHandle3D>();
+                if (cand != null && h.distance < bestD) { bestD = h.distance; handle = cand; }
+            }
+            SetResizeCursor(handle != null ? handle.HandleRole : (UmlResizeHandle3D.Role?)null);
+        }
+
+        private void SetResizeCursor(UmlResizeHandle3D.Role? role)
+        {
+            if (_cursorRole == role) return;
+            _cursorRole = role;
+            Texture2D tex = role switch
+            {
+                UmlResizeHandle3D.Role.Width => UmlNavIcons.TexX,
+                UmlResizeHandle3D.Role.Height => UmlNavIcons.TexY,
+                UmlResizeHandle3D.Role.Depth => UmlNavIcons.TexZ,
+                UmlResizeHandle3D.Role.Uniform => UmlNavIcons.TexZ,
+                _ => null,
+            };
+            if (tex != null) Cursor.SetCursor(tex, new Vector2(tex.width * 0.5f, tex.height * 0.5f), CursorMode.Auto);
+            else Cursor.SetCursor(null, Vector2.zero, CursorMode.Auto);
+        }
+
+        // --- geometry undo / redo (positions, sizes, Z offsets, thicknesses — view-state, separate from model undo) ---
+
+        private sealed class GeoSnapshot
+        {
+            public Dictionary<ElementId, Vector2> Pos, Size;
+            public Dictionary<ElementId, float> PosZ, Depth;
+            public Dictionary<ElementId, NodeStyle> Styles;
+        }
+
+        private readonly List<GeoSnapshot> _geoUndo = new();
+        private readonly List<GeoSnapshot> _geoRedo = new();
+        private const int GeoUndoMax = 80;
+
+        private GeoSnapshot SnapshotGeo() => new GeoSnapshot
+        {
+            Pos = new Dictionary<ElementId, Vector2>(_pos),
+            Size = new Dictionary<ElementId, Vector2>(_size),
+            PosZ = new Dictionary<ElementId, float>(_posZ),
+            Depth = new Dictionary<ElementId, float>(_nodeDepth),
+            Styles = new Dictionary<ElementId, NodeStyle>(_styles),
+        };
+
+        private void RestoreGeo(GeoSnapshot s)
+        {
+            _pos.Clear(); foreach (var kv in s.Pos) _pos[kv.Key] = kv.Value;
+            _size.Clear(); foreach (var kv in s.Size) _size[kv.Key] = kv.Value;
+            _posZ.Clear(); foreach (var kv in s.PosZ) _posZ[kv.Key] = kv.Value;
+            _nodeDepth.Clear(); foreach (var kv in s.Depth) _nodeDepth[kv.Key] = kv.Value;
+            _styles.Clear(); foreach (var kv in s.Styles) _styles[kv.Key] = kv.Value;
+        }
+
+        /// <summary>Snapshot the current geometry before a move/resize so it can be undone. Clears the redo stack.</summary>
+        private void BeginGeoEdit()
+        {
+            _geoUndo.Add(SnapshotGeo());
+            if (_geoUndo.Count > GeoUndoMax) _geoUndo.RemoveAt(0);
+            _geoRedo.Clear();
+        }
+
+        private bool GeoUndo()
+        {
+            if (_geoUndo.Count == 0) return false;
+            _geoRedo.Add(SnapshotGeo());
+            var s = _geoUndo[_geoUndo.Count - 1];
+            _geoUndo.RemoveAt(_geoUndo.Count - 1);
+            RestoreGeo(s);
+            RebuildFromModel();
+            Flash("↶ undo move/resize");
+            return true;
+        }
+
+        private bool GeoRedo()
+        {
+            if (_geoRedo.Count == 0) return false;
+            _geoUndo.Add(SnapshotGeo());
+            var s = _geoRedo[_geoRedo.Count - 1];
+            _geoRedo.RemoveAt(_geoRedo.Count - 1);
+            RestoreGeo(s);
+            RebuildFromModel();
+            Flash("↷ redo move/resize");
+            return true;
         }
 
         // --- cross-layer up-stubs (an edge whose peer is hidden above the active layer) ---
@@ -2229,6 +3191,8 @@ namespace TheRobotDraft.Uml
             EdgeKind.MessageReply => (true, EndMarker.None, EndMarker.StickArrow, null),
             // Profile extension: solid line, filled triangle pointing at the metaclass.
             EdgeKind.Extension => (false, EndMarker.None, EndMarker.OpenArrow, "«extension»"),
+            // Usage: dashed line, open arrow at the consumed target, «consumes» stereotype.
+            EdgeKind.Consumes => (true, EndMarker.None, EndMarker.OpenArrow, "«consumes»"),
             _ => (false, EndMarker.None, EndMarker.OpenArrow, null),
         };
 
@@ -2244,6 +3208,7 @@ namespace TheRobotDraft.Uml
             EdgeKind.MessageAsync => "Message — async  (>)",
             EdgeKind.MessageReply => "Reply / return  (⇠)",
             EdgeKind.Extension => "«extension»",
+            EdgeKind.Consumes => "«consumes»  (uses →)",
             _ => k.ToString(),
         };
 
@@ -2281,6 +3246,7 @@ namespace TheRobotDraft.Uml
             foreach (var k in new[]
             {
                 EdgeKind.Association, EdgeKind.DirectedAssociation, EdgeKind.Transition, EdgeKind.Dependency,
+                EdgeKind.Consumes,
                 EdgeKind.Generalization, EdgeKind.Realization, EdgeKind.Aggregation, EdgeKind.Composition,
                 EdgeKind.Include, EdgeKind.Extend, EdgeKind.NoteLink,
                 EdgeKind.MessageSync, EdgeKind.MessageAsync, EdgeKind.MessageReply, EdgeKind.Extension,
@@ -2821,6 +3787,7 @@ namespace TheRobotDraft.Uml
             _selection.Clear();
             if (id.IsValid) _selection.Add(id);
             _selectedId = id;
+            ClearRegionSelection();
             RefreshSelectionHighlights();
         }
 
@@ -2995,8 +3962,8 @@ namespace TheRobotDraft.Uml
             _hint.alignment = TextAnchor.MiddleLeft;
             _hint.supportRichText = false;
             _hint.raycastTarget = false;
-            _hint.text = "Drag empty space → orbit · Ctrl/Cmd-drag empty space → pan · wheel → zoom (dolly) · Ctrl/Cmd+F → frame · " +
-                         "click box → select · Shift-click → multi-select · Ctrl/Cmd-drag box → move · " +
+            _hint.text = "Drag empty space → navigate (set mode top-right) · wheel → zoom · Alt+wheel → jump Z · Ctrl/Cmd+F → frame · " +
+                         "G+click box → center on it · click box → select · Shift-click → multi-select · Ctrl/Cmd-drag box → move · " +
                          "right-click box → edit element · right-click canvas → add / paste · " +
                          "Ctrl/Cmd C/V copy · Ctrl/Cmd S save · Ctrl/Cmd Z undo";
 
@@ -3019,12 +3986,14 @@ namespace TheRobotDraft.Uml
             // Camera controls (to the left of Help): manual location/direction form + a quick view reset.
             MakeHudButton("CameraButton", "Camera…", -78f, 84f, () => ShowCameraForm(Input.mousePosition));
             MakeHudButton("ResetViewButton", "⟲ Reset", -168f, 78f, () => CameraReset());
+            // Floating glyph toolbar: choose what an empty-space drag controls (orbit / pan / move along an axis).
+            BuildNavBar();
 
             BuildPalette();
         }
 
-        /// <summary>A small top-right HUD button anchored from the right edge.</summary>
-        private void MakeHudButton(string name, string label, float xFromRight, float width, System.Action onClick)
+        /// <summary>A small top-right HUD button anchored from the right edge. Returns its caption Text.</summary>
+        private Text MakeHudButton(string name, string label, float xFromRight, float width, System.Action onClick)
         {
             var go = new GameObject(name, typeof(RectTransform));
             var rt = (RectTransform)go.transform;
@@ -3038,8 +4007,10 @@ namespace TheRobotDraft.Uml
             var btn = go.AddComponent<Button>();
             btn.targetGraphic = img;
             btn.onClick.AddListener(() => onClick());
-            MakeText(rt, label, new Vector2(0f, 0f), new Vector2(width, 28f), 13,
-                new Color(0.92f, 0.95f, 1f, 1f), TextAnchor.MiddleCenter).raycastTarget = false;
+            var t = MakeText(rt, label, new Vector2(0f, 0f), new Vector2(width, 28f), 13,
+                new Color(0.92f, 0.95f, 1f, 1f), TextAnchor.MiddleCenter);
+            t.raycastTarget = false;
+            return t;
         }
 
         /// <summary>Reset the camera to the default angles and frame the whole diagram.</summary>
@@ -3049,6 +4020,36 @@ namespace TheRobotDraft.Uml
             if (rig != null) { rig.Yaw = 0f; rig.Pitch = 18f; rig.Roll = 0f; }
             _scene?.FrameAll();
             Flash("camera reset");
+        }
+
+        /// <summary>Fixed world-space distance the camera sits from a node when centered (G+click) — independent of
+        /// the node's size, so every focus settles at the same comfortable, predictable zoom.</summary>
+        private const float FocusDistance = 8f;
+
+        /// <summary>
+        /// Center the camera on a node: pivot on its center, orient the rig so it looks straight at the node's front
+        /// (+Z content) face — honoring any per-node rotation — and back off a fixed, legibility-fitted distance so
+        /// the whole face is framed. Bound to G + click.
+        /// </summary>
+        private void FocusOnNode(ElementId id)
+        {
+            var rig = _scene != null ? _scene.Rig : null;
+            if (rig == null || !_scene.TryGetNode(id, out var node) || node == null) return;
+
+            // The rig sits at Pivot + Orientation()*(0,0,Distance) looking back at the pivot, so to view the node's
+            // front face the rig's local +Z must equal the face's outward normal. Solve yaw/pitch for that normal.
+            Vector3 d = node.FaceForward.normalized;
+            rig.Pivot = node.transform.position;
+            rig.Yaw = Mathf.Atan2(d.x, d.z) * Mathf.Rad2Deg;
+            rig.Pitch = Mathf.Clamp(-Mathf.Asin(Mathf.Clamp(d.y, -1f, 1f)) * Mathf.Rad2Deg,
+                UmlCameraRig.MinPitch, UmlCameraRig.MaxPitch);
+            rig.Roll = 0f;
+
+            // A fixed distance (not fitted to the node size) so every focus lands at the same predictable zoom.
+            rig.Distance = Mathf.Clamp(FocusDistance, UmlCameraRig.MinDistance, UmlCameraRig.MaxDistance);
+
+            SetSelected(id);
+            Flash("centered on node (G+click)");
         }
 
         private static float ParseFloat(InputField f, float fallback) =>
@@ -3116,7 +4117,10 @@ namespace TheRobotDraft.Uml
                 "   W / A / S / D ............... fly  forward / left / back / right",
                 "   R / F ....................... fly  up / down",
                 "   Ctrl/Cmd + F ................ frame the whole diagram",
-                "   Alt + mouse wheel ........... change the active Z-layer",
+                "   Alt + mouse wheel ........... jump the view a fixed step along Z",
+                "   Navigate bar (top-right) .... icon chips set what an empty-space drag does (orbit · pan · X · Y · Z)",
+                "   N  /  Shift+N ............... cycle that drag mode forward / back",
+                "   G + click a node ............ center the camera on it, facing its front",
                 "",
                 "NODES",
                 "   Click ....................... select        Shift + click = add / remove",
@@ -3124,10 +4128,16 @@ namespace TheRobotDraft.Uml
                 "   Drag a node ................. draw a relationship (connect-by-drag)",
                 "   Ctrl/Cmd + drag ............. move  (in the layer plane)",
                 "   Ctrl/Cmd + Shift + drag ..... move along Z  (depth)",
-                "   Ctrl/Cmd + Alt + drag ....... resize",
+                "   Double-click ................ open the edit modal (fields · operations · properties)",
+                "   Ctrl/Cmd + click ............ toggle resize handles → drag one (corner=all · side=width X · top=height Y · center=depth Z)",
                 "   Alt + drag .................. rotate  (pitch / yaw) in place",
-                "   Right-click ................. menu: edit, style, generate code, layer, delete",
-                "   (new nodes are inserted on the current active layer)",
+                "   Ctrl/Cmd + Z / Y ............ undo / redo a move or resize too",
+                "   Right-click ................. menu: edit, style, generate code, depth (Z), delete",
+                "",
+                "REGION CUBES  (boundary / frame / profile — a dotted cube grouping the nodes inside)",
+                "   Click a cube edge ........... select        Double-click = colour / opacity        Right-click = menu",
+                "   Ctrl/Cmd + click an edge .... toggle resize handles (corners = all · sides = width/height)",
+                "   Ctrl/Cmd + drag an edge ..... move the region + its members",
                 "",
                 "LINKS / ARROWS",
                 "   Click a link ................ select        Right-click = link menu",
@@ -3138,7 +4148,8 @@ namespace TheRobotDraft.Uml
                 "",
                 "EDIT  /  FILE",
                 "   Ctrl/Cmd + C / V ............ copy / paste      Ctrl/Cmd + Z / Y = undo / redo",
-                "   Ctrl/Cmd + S ................ save              Delete = delete selection",
+                "   Ctrl/Cmd + S ................ save     Ctrl/Cmd+Shift+S = save as…     Ctrl/Cmd+O = open file…",
+                "   Delete ...................... delete selection",
                 "   Right-click canvas .......... add · paste · import code · LLM settings · arrange",
             });
             MakeText(panel, body, new Vector2(22f, -44f), new Vector2(w - 44f, h - 104f), 14,
@@ -3154,6 +4165,8 @@ namespace TheRobotDraft.Uml
 
         private RectTransform _paletteContent;
         private readonly HashSet<string> _paletteCollapsed = new();
+        private string _paletteSearch = "";
+        private bool _paletteDefaultsCollapsed;
 
         private static (string title, (ElementKind kind, string label)[] items)[] PaletteSections() => new[]
         {
@@ -3165,6 +4178,54 @@ namespace TheRobotDraft.Uml
                 (ElementKind.Package, "Package"), (ElementKind.Note, "Note"),
             }),
             ("Object", new[] { (ElementKind.ObjectInstance, "Object") }),
+
+            // --- additional software-development graph types, ordered most-useful → least ---
+            ("Data Model (ERD)", new[]
+            {
+                (ElementKind.EntityTable, "Table / Entity"), (ElementKind.Note, "Note"),
+            }),
+            ("C4 Model", new[]
+            {
+                (ElementKind.Person, "Person"), (ElementKind.SoftwareSystem, "Software System"),
+                (ElementKind.Container, "Container"), (ElementKind.Component, "Component"),
+            }),
+            ("Flowchart", new[]
+            {
+                (ElementKind.FlowTerminator, "Start / End"), (ElementKind.FlowProcess, "Process"),
+                (ElementKind.Decision, "◇ Decision"), (ElementKind.FlowIO, "Input / Output"),
+                (ElementKind.FlowDocument, "Document"),
+            }),
+            ("Data Flow (DFD)", new[]
+            {
+                (ElementKind.FlowProcess, "Process"), (ElementKind.DataStore, "Data Store"),
+                (ElementKind.ExternalEntity, "External Entity"),
+            }),
+            ("Infrastructure", new[]
+            {
+                (ElementKind.Server, "Server / Host"), (ElementKind.Database, "Database"),
+                (ElementKind.Cloud, "Cloud / Service"), (ElementKind.Client, "Client / Device"),
+                (ElementKind.Firewall, "Firewall"),
+            }),
+            ("Mind Map", new[] { (ElementKind.MindNode, "Topic") }),
+            ("Wireframe / UI", new[]
+            {
+                (ElementKind.Screen, "Screen"), (ElementKind.Panel, "Panel"),
+                (ElementKind.Button, "Button"), (ElementKind.Label, "Label"), (ElementKind.Link, "Link"),
+                (ElementKind.TextField, "Text Field"), (ElementKind.TextArea, "Text Area"),
+                (ElementKind.Password, "Password"), (ElementKind.Checkbox, "Checkbox"),
+                (ElementKind.Radio, "Radio"), (ElementKind.Dropdown, "Dropdown"),
+                (ElementKind.List, "List"), (ElementKind.Table, "Table"), (ElementKind.Tree, "Tree"),
+                (ElementKind.Image, "Image"), (ElementKind.Tabs, "Tabs"), (ElementKind.Menu, "Menu"),
+                (ElementKind.Toolbar, "Toolbar"), (ElementKind.Breadcrumb, "Breadcrumb"),
+                (ElementKind.Card, "Card"), (ElementKind.Separator, "Separator"),
+                (ElementKind.Progress, "Progress"), (ElementKind.Slider, "Slider"),
+                (ElementKind.UiWidget, "Widget (generic)"),
+            }),
+            ("Project (Gantt / Kanban)", new[]
+            {
+                (ElementKind.Task, "Task"), (ElementKind.KanbanColumn, "Column"),
+            }),
+
             ("Use Case", new[]
             {
                 (ElementKind.Actor, "Actor"), (ElementKind.UseCase, "Use Case"),
@@ -3229,9 +4290,11 @@ namespace TheRobotDraft.Uml
         private void BuildPalette()
         {
             const float width = PaletteWidth;
+            const float searchH = 30f;
 
-            // Scrollable container pinned to the left edge, from just under the hint line down to the bottom —
-            // the palette lists every UML diagram family, so it scrolls; each section header collapses.
+            // Container pinned to the left edge. A fixed search box sits at the top; the diagram-family sections
+            // scroll below it. Sections are collapsed by default (the long family list stays compact) — type in
+            // the search box, or click a ▸ header, to reveal kinds.
             var container = new GameObject("Palette", typeof(RectTransform));
             var crt = (RectTransform)container.transform;
             crt.SetParent(_root, false);
@@ -3240,7 +4303,22 @@ namespace TheRobotDraft.Uml
             crt.offsetMin = new Vector2(0f, 8f);      // left = 0, bottom = 8
             crt.offsetMax = new Vector2(width, -70f); // right = width, top = -70 (clears the tabs + hint line)
             container.AddComponent<Image>().color = new Color(0.12f, 0.13f, 0.16f, 0.97f);
-            container.AddComponent<RectMask2D>();
+
+            // Fixed search/filter box at the very top (not part of the scrolled content).
+            var search = MakeInput(crt, new Vector2(6f, -6f), width - 12f, _paletteSearch, "search nodes…");
+            ((RectTransform)search.transform).sizeDelta = new Vector2(width - 12f, searchH);
+            search.onValueChanged.AddListener(v => { _paletteSearch = v ?? ""; RebuildPaletteContent(); });
+
+            // Scrolling viewport below the search box; it masks the content.
+            var viewport = new GameObject("Viewport", typeof(RectTransform));
+            var vrt = (RectTransform)viewport.transform;
+            vrt.SetParent(crt, false);
+            vrt.anchorMin = new Vector2(0f, 0f); vrt.anchorMax = new Vector2(1f, 1f);
+            vrt.pivot = new Vector2(0f, 1f);
+            vrt.offsetMin = Vector2.zero;
+            vrt.offsetMax = new Vector2(0f, -(searchH + 10f)); // clear the search box
+            viewport.AddComponent<RectMask2D>();
+
             var scroll = container.AddComponent<ScrollRect>();
             scroll.horizontal = false; scroll.vertical = true;
             scroll.movementType = ScrollRect.MovementType.Clamped;
@@ -3248,12 +4326,20 @@ namespace TheRobotDraft.Uml
 
             var content = new GameObject("Content", typeof(RectTransform));
             _paletteContent = (RectTransform)content.transform;
-            _paletteContent.SetParent(crt, false);
+            _paletteContent.SetParent(vrt, false);
             _paletteContent.anchorMin = new Vector2(0f, 1f); _paletteContent.anchorMax = new Vector2(1f, 1f);
             _paletteContent.pivot = new Vector2(0.5f, 1f);
             _paletteContent.anchoredPosition = Vector2.zero;
-            scroll.viewport = crt;
+            scroll.viewport = vrt;
             scroll.content = _paletteContent;
+
+            // Collapse every section by default except the most-used "Class" group (done once).
+            if (!_paletteDefaultsCollapsed)
+            {
+                foreach (var sec in PaletteSections())
+                    if (sec.title != "Class") _paletteCollapsed.Add(sec.title);
+                _paletteDefaultsCollapsed = true;
+            }
 
             RebuildPaletteContent();
         }
@@ -3266,6 +4352,35 @@ namespace TheRobotDraft.Uml
 
             const float width = PaletteWidth;
             float y = -8f;
+
+            string q = (_paletteSearch ?? "").Trim();
+            if (q.Length > 0)
+            {
+                // Active filter: flat list of every matching kind across all sections (ignores collapse), so a
+                // search always finds a node. Matches on the item label, the kind name, or the section title.
+                var seen = new HashSet<string>();
+                int matches = 0;
+                foreach (var sec in PaletteSections())
+                    foreach (var it in sec.items)
+                    {
+                        bool hit = it.label.IndexOf(q, System.StringComparison.OrdinalIgnoreCase) >= 0
+                                   || it.kind.ToString().IndexOf(q, System.StringComparison.OrdinalIgnoreCase) >= 0
+                                   || sec.title.IndexOf(q, System.StringComparison.OrdinalIgnoreCase) >= 0;
+                        if (!hit) continue;
+                        if (!seen.Add(it.kind + "|" + it.label)) continue; // dedupe kinds listed in several sections
+                        MakePaletteItem(_paletteContent, it.kind, it.label, y, width - 16f); y -= 26f;
+                        matches++;
+                    }
+                if (matches == 0)
+                {
+                    MakeText(_paletteContent, "no nodes match", new Vector2(8f, y), new Vector2(width - 16f, 22f),
+                        13, new Color(0.55f, 0.60f, 0.68f, 1f), TextAnchor.MiddleLeft).raycastTarget = false;
+                    y -= 26f;
+                }
+                _paletteContent.sizeDelta = new Vector2(0f, -y + 4f);
+                return;
+            }
+
             foreach (var sec in PaletteSections())
             {
                 bool collapsed = _paletteCollapsed.Contains(sec.title);
@@ -3555,9 +4670,11 @@ namespace TheRobotDraft.Uml
         public void OnPointerClick(PointerEventData eventData) { }
     }
 
-    /// <summary>A toolbar palette entry: click to add at center, or drag onto the canvas to drop a new node.</summary>
+    /// <summary>A toolbar palette entry: drag it onto the canvas to drop a new node of its kind.</summary>
+    // Palette items insert ONLY via drag-and-drop onto the canvas — a plain click does nothing (no
+    // IPointerClickHandler), so clicking a kind in the rail never spawns a node at screen center.
     public sealed class UmlPaletteItem : MonoBehaviour,
-        IBeginDragHandler, IDragHandler, IEndDragHandler, IPointerClickHandler
+        IBeginDragHandler, IDragHandler, IEndDragHandler
     {
         public UmlCanvas Canvas;
         public ElementKind Kind;
@@ -3566,7 +4683,5 @@ namespace TheRobotDraft.Uml
         public void OnBeginDrag(PointerEventData e) => Canvas.BeginPaletteDrag(Kind, Label);
         public void OnDrag(PointerEventData e) => Canvas.UpdatePaletteDrag(e.position);
         public void OnEndDrag(PointerEventData e) => Canvas.EndPaletteDrag(e.position);
-        public void OnPointerClick(PointerEventData e) =>
-            Canvas.CreateNodeFromPalette(Kind, new Vector2(Screen.width * 0.5f, Screen.height * 0.5f));
     }
 }

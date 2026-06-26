@@ -58,6 +58,18 @@ namespace TheRobotDraft.Authoring.Rules
                 ElementKind.DataType => childKind is ElementKind.Field or ElementKind.Function,
                 ElementKind.ObjectInstance => childKind == ElementKind.Field,
 
+                // An ERD entity / table carries its columns as Field members (and the odd derived operation).
+                ElementKind.EntityTable => childKind is ElementKind.Field or ElementKind.Function,
+
+                // Wireframe / UI mockup: a Screen holds widgets + nested Panels; a Panel holds widgets (and may
+                // itself nest). Item-bearing widgets (table columns, list/tree/dropdown/menu/tabs entries) carry
+                // their items as Field members, mirroring how an ERD table carries columns.
+                ElementKind.Screen => KindInfo.IsWireframeWidget(childKind) || childKind == ElementKind.Panel,
+                ElementKind.Panel => KindInfo.IsWireframeWidget(childKind) || childKind == ElementKind.Panel,
+                ElementKind.Table or ElementKind.List or ElementKind.Tree or ElementKind.Dropdown
+                    or ElementKind.Menu or ElementKind.Tabs or ElementKind.Toolbar or ElementKind.Breadcrumb
+                    => childKind == ElementKind.Field,
+
                 _ => false,
             };
 
@@ -142,6 +154,12 @@ namespace TheRobotDraft.Authoring.Rules
                     return KindInfo.IsConnectable(from.Kind) && KindInfo.IsConnectable(to.Kind)
                         ? Validity.Valid
                         : Validity.Invalid("a directed association connects diagram nodes");
+
+                case EdgeKind.Consumes:
+                    // A «consumes» usage link: any diagram node / package uses another (source → target).
+                    return KindInfo.IsConnectable(from.Kind) && KindInfo.IsConnectable(to.Kind)
+                        ? Validity.Valid
+                        : Validity.Invalid("a «consumes» link connects diagram nodes");
 
                 case EdgeKind.Include:
                 case EdgeKind.Extend:

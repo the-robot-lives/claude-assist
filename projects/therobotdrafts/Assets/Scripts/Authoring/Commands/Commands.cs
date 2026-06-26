@@ -170,15 +170,16 @@ namespace TheRobotDraft.Authoring.Commands
     public sealed class SetEdgeMetaCommand : IAuthoringCommand
     {
         private readonly EdgeId _edge;
-        private readonly string _label, _source, _target;
-        private string _oldLabel, _oldSource, _oldTarget;
+        private readonly string _label, _source, _target, _constraint;
+        private string _oldLabel, _oldSource, _oldTarget, _oldConstraint;
 
-        public SetEdgeMetaCommand(EdgeId edge, string label, string source, string target)
+        public SetEdgeMetaCommand(EdgeId edge, string label, string source, string target, string constraint = null)
         {
             _edge = edge;
             _label = Norm(label);
             _source = Norm(source);
             _target = Norm(target);
+            _constraint = Norm(constraint);
         }
 
         private static string Norm(string s) => string.IsNullOrWhiteSpace(s) ? null : s.Trim();
@@ -191,15 +192,28 @@ namespace TheRobotDraft.Authoring.Commands
             _oldLabel = e.Label;
             _oldSource = e.SourceMultiplicity;
             _oldTarget = e.TargetMultiplicity;
+            _oldConstraint = e.Constraint;
             ctx.Model.SetEdgeLabel(_edge, _label);
             ctx.Model.SetEdgeMultiplicity(_edge, _source, _target);
+            ctx.Model.SetEdgeConstraint(_edge, _constraint);
         }
 
         public void Undo(CommandContext ctx)
         {
             ctx.Model.SetEdgeLabel(_edge, _oldLabel);
             ctx.Model.SetEdgeMultiplicity(_edge, _oldSource, _oldTarget);
+            ctx.Model.SetEdgeConstraint(_edge, _oldConstraint);
         }
+    }
+
+    /// <summary>Flip a relationship's direction (swap its from/to ends), as one undo step. Self-inverse.</summary>
+    public sealed class ReverseEdgeCommand : IAuthoringCommand
+    {
+        private readonly EdgeId _edge;
+        public ReverseEdgeCommand(EdgeId edge) => _edge = edge;
+        public string Label => "Flip link direction";
+        public void Do(CommandContext ctx) => ctx.Model.ReverseEdge(_edge);
+        public void Undo(CommandContext ctx) => ctx.Model.ReverseEdge(_edge);
     }
 
     /// <summary>Re-home one endpoint of an edge (§4.6 re-target). Keeps the edge's type.</summary>
@@ -235,7 +249,7 @@ namespace TheRobotDraft.Authoring.Commands
         private readonly EdgeId _id;
         private EdgeKind _kind;
         private ElementId _from, _to;
-        private string _label, _source, _target;
+        private string _label, _source, _target, _constraint;
 
         public DeleteEdgeCommand(EdgeId id) => _id = id;
 
@@ -245,14 +259,14 @@ namespace TheRobotDraft.Authoring.Commands
         {
             var e = ctx.Model.Get(_id);
             _kind = e.Kind; _from = e.From; _to = e.To;
-            _label = e.Label; _source = e.SourceMultiplicity; _target = e.TargetMultiplicity;
+            _label = e.Label; _source = e.SourceMultiplicity; _target = e.TargetMultiplicity; _constraint = e.Constraint;
             ctx.Model.RemoveEdge(_id);
         }
 
         public void Undo(CommandContext ctx)
         {
             var e = ctx.Model.AddEdge(_id, _kind, _from, _to);
-            e.Label = _label; e.SourceMultiplicity = _source; e.TargetMultiplicity = _target;
+            e.Label = _label; e.SourceMultiplicity = _source; e.TargetMultiplicity = _target; e.Constraint = _constraint;
         }
     }
 
@@ -474,11 +488,11 @@ namespace TheRobotDraft.Authoring.Commands
         private readonly struct EdgeSnap
         {
             public readonly EdgeId Id; public readonly EdgeKind Kind; public readonly ElementId From, To;
-            public readonly string Label, Source, Target;
+            public readonly string Label, Source, Target, Constraint;
             public EdgeSnap(ModelEdge e)
             {
                 Id = e.Id; Kind = e.Kind; From = e.From; To = e.To;
-                Label = e.Label; Source = e.SourceMultiplicity; Target = e.TargetMultiplicity;
+                Label = e.Label; Source = e.SourceMultiplicity; Target = e.TargetMultiplicity; Constraint = e.Constraint;
             }
         }
 
@@ -546,6 +560,7 @@ namespace TheRobotDraft.Authoring.Commands
                 edge.Label = e.Label;
                 edge.SourceMultiplicity = e.Source;
                 edge.TargetMultiplicity = e.Target;
+                edge.Constraint = e.Constraint;
             }
             ctx.Packer.OnInserted(_root, _rootParent);
         }

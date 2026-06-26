@@ -263,37 +263,123 @@ namespace TheRobotDraft.Uml
 
         // --- style editor (color / font / size) ---
 
+        /// <summary>Parse a hex literal into a colour. Seeds the broad default swatch palette.</summary>
+        private static Color Hex(string h) { ColorUtility.TryParseHtmlString(h, out var c); return c; }
+
+        /// <summary>
+        /// A broad default swatch palette for fill / border / text — light tints, saturated hues, and a dark/neutral
+        /// ramp — so the presets are visibly distinct rather than a wall of similar pastels. Anything beyond these
+        /// comes from the HSV picker and can be saved into the user's custom swatches (below).
+        /// </summary>
         private static readonly Color[] StylePalette =
         {
-            new Color(1f, 1f, 1f, 1f), new Color(0.90f, 0.91f, 0.93f, 1f),
-            new Color(0.99f, 0.96f, 0.74f, 1f), new Color(0.80f, 0.89f, 0.98f, 1f),
-            new Color(0.80f, 0.93f, 0.82f, 1f), new Color(0.98f, 0.83f, 0.80f, 1f),
-            new Color(0.90f, 0.84f, 0.96f, 1f), new Color(0.99f, 0.88f, 0.74f, 1f),
-            new Color(0.45f, 0.48f, 0.54f, 1f), new Color(0.14f, 0.15f, 0.18f, 1f),
+            // light tints (good fills)
+            Hex("#FFFFFF"), Hex("#F4F2EC"), Hex("#DCEBFB"), Hex("#DAF1DE"), Hex("#FCF3C9"),
+            Hex("#FCE3C4"), Hex("#FBDAD6"), Hex("#ECE1F6"), Hex("#D6F0EE"), Hex("#E3E6EA"),
+            // saturated hues (good fills / accents)
+            Hex("#E03B3B"), Hex("#F08A24"), Hex("#F4C20D"), Hex("#EAE034"), Hex("#8BC34A"),
+            Hex("#2FA84F"), Hex("#14A3A0"), Hex("#29B6D8"), Hex("#2D7FF0"), Hex("#4250C8"),
+            Hex("#7E57C2"), Hex("#C840A8"), Hex("#EC5C8D"), Hex("#8D6E63"),
+            // dark / neutral ramp (good text + borders)
+            Hex("#1A1C20"), Hex("#2E3338"), Hex("#44515E"), Hex("#18345E"), Hex("#14512E"),
+            Hex("#5E1A1A"), Hex("#3A1E5E"), Hex("#6B7280"), Hex("#9AA1AA"),
         };
+
+        // --- custom (user-saved) swatches — persisted in PlayerPrefs so they survive sessions ---
+
+        private const string CustomSwatchPrefKey = "trd.style.customSwatches";
+        private const int MaxCustomSwatches = 24;
+
+        // Swatch-grid geometry, shared by the height calc and the row builder.
+        private const float SwatchSize = 22f;
+        private const float SwatchGap = 5f;
+        private const int SwatchPerRow = 18;
+
+        private static int SwatchRows(int count) => count <= 0 ? 0 : (count + SwatchPerRow - 1) / SwatchPerRow;
+
+        private static List<Color> LoadCustomSwatches()
+        {
+            var list = new List<Color>();
+            var raw = PlayerPrefs.GetString(CustomSwatchPrefKey, "");
+            if (string.IsNullOrEmpty(raw)) return list;
+            foreach (var tok in raw.Split(','))
+                if (!string.IsNullOrWhiteSpace(tok) && ColorUtility.TryParseHtmlString(tok.Trim(), out var c))
+                    list.Add(c);
+            return list;
+        }
+
+        private static void SaveCustomSwatches(List<Color> list)
+        {
+            var sb = new System.Text.StringBuilder();
+            for (int i = 0; i < list.Count; i++)
+            {
+                if (i > 0) sb.Append(',');
+                sb.Append('#').Append(ColorUtility.ToHtmlStringRGBA(list[i]));
+            }
+            PlayerPrefs.SetString(CustomSwatchPrefKey, sb.ToString());
+            PlayerPrefs.Save();
+        }
+
+        /// <summary>Add a colour to the front of the saved swatches (de-duped, newest first, capped).</summary>
+        private static void AddCustomSwatch(Color c)
+        {
+            var list = LoadCustomSwatches();
+            string key = ColorUtility.ToHtmlStringRGBA(c);
+            list.RemoveAll(x => ColorUtility.ToHtmlStringRGBA(x) == key);
+            list.Insert(0, c);
+            if (list.Count > MaxCustomSwatches) list.RemoveRange(MaxCustomSwatches, list.Count - MaxCustomSwatches);
+            SaveCustomSwatches(list);
+        }
+
+        private static void RemoveCustomSwatch(Color c)
+        {
+            var list = LoadCustomSwatches();
+            string key = ColorUtility.ToHtmlStringRGBA(c);
+            list.RemoveAll(x => ColorUtility.ToHtmlStringRGBA(x) == key);
+            SaveCustomSwatches(list);
+        }
 
         private static readonly string[] StyleFonts =
             { "(default)", "Arial", "Helvetica", "Courier New", "Verdana", "Georgia", "Times New Roman" };
 
         private void ShowStyleEditor(ElementId id, Vector2 screenPos)
         {
-            if (!_model.TryGet(id, out var el)) return;
-            CloseMenu();
+            if (!_model.TryGet(id, out _)) return;
             bool has = _styles.TryGetValue(id, out var cur);
-
             Color fill = has ? cur.Fill : new Color(1f, 1f, 1f, 1f);
             Color border = has ? cur.Border : new Color(0.42f, 0.45f, 0.51f, 1f);
             Color text = has ? cur.Text : new Color(0.13f, 0.15f, 0.19f, 1f);
             string fontName = has ? (cur.FontName ?? "") : "";
             int size = has && cur.FontSize > 0 ? cur.FontSize : 15;
+            ShowStyleEditorState(id, screenPos, fill, border, text, fontName, size);
+        }
 
-            float w = 520f, h = 424f;
+        /// <summary>
+        /// The style editor, built from explicit current values so it can re-open in place (preserving in-progress
+        /// edits) after the saved-swatch list changes. Each colour channel shows the broad default palette plus the
+        /// user's saved swatches; "Pick…" opens the HSV wheel, "＋ Save" stores the current colour as a swatch, and
+        /// Alt-clicking a saved swatch removes it.
+        /// </summary>
+        private void ShowStyleEditorState(ElementId id, Vector2 screenPos,
+            Color fill, Color border, Color text, string fontName, int size)
+        {
+            if (!_model.TryGet(id, out var el)) return;
+            CloseMenu();
+
+            int customCount = LoadCustomSwatches().Count;
+            int rowsPerChannel = SwatchRows(StylePalette.Length) + SwatchRows(customCount);
+            float channelH = 22f + rowsPerChannel * (SwatchSize + SwatchGap) + (customCount > 0 ? 8f : 0f) + 10f;
+
+            float w = 520f;
+            float h = 50f + 3f * channelH + 34f /*font*/ + 34f /*size*/ + 22f /*hint*/ + 56f /*buttons*/;
             var panel = BeginModal(w, h, "Style   —   " + (el.Kind == ElementKind.Note ? "Note" : el.Name));
             float y = -50f;
 
-            y = SwatchRow(panel, "Fill", y, w, fill, c => fill = c);
-            y = SwatchRow(panel, "Border / line", y, w, border, c => border = c);
-            y = SwatchRow(panel, "Text", y, w, text, c => text = c);
+            void Reopen() => ShowStyleEditorState(id, screenPos, fill, border, text, fontName, size);
+
+            y = SwatchRow(panel, "Fill", y, w, fill, c => fill = c, Reopen);
+            y = SwatchRow(panel, "Border / line", y, w, border, c => border = c, Reopen);
+            y = SwatchRow(panel, "Text", y, w, text, c => text = c, Reopen);
 
             FormLabel(panel, "Font  (OS fonts; falls back to default)", ref y, w);
             var fontLabel = MakeText(panel, "current: " + (string.IsNullOrEmpty(fontName) ? "(default)" : fontName),
@@ -318,9 +404,13 @@ namespace TheRobotDraft.Uml
                 () => { size = Mathf.Min(40, size + 1); sizeLabel.text = size.ToString(); });
             y -= 34f;
 
+            MakeText(panel, "Pick… then ＋ Save to add a swatch · Alt-click a saved swatch to remove",
+                new Vector2(16f, y), new Vector2(w - 32f, 18f), 11, LabelColor, TextAnchor.MiddleLeft);
+
             void Submit()
             {
                 CloseMenu();
+                BeginGeoEdit(); // style is undoable via the geometry history (Ctrl/Cmd+Z)
                 _styles[id] = new NodeStyle
                 {
                     Has = true, Fill = fill, Border = border, Text = text,
@@ -334,7 +424,7 @@ namespace TheRobotDraft.Uml
             float yBtn = -(h - 46f);
             MakeButton(panel, "Reset", new Vector2(16f, yBtn), new Vector2(92f, 34f),
                 new Color(0.40f, 0.30f, 0.16f, 1f),
-                () => { CloseMenu(); _styles.Remove(id); RebuildFromModel(); SetSelected(id); Flash("style reset"); });
+                () => { CloseMenu(); BeginGeoEdit(); _styles.Remove(id); RebuildFromModel(); SetSelected(id); Flash("style reset"); });
             MakeButton(panel, "OK", new Vector2(w - 198f, yBtn), new Vector2(84f, 34f),
                 new Color(0.20f, 0.42f, 0.52f, 1f), Submit);
             MakeButton(panel, "Cancel", new Vector2(w - 104f, yBtn), new Vector2(88f, 34f),
@@ -342,25 +432,50 @@ namespace TheRobotDraft.Uml
         }
 
         private float SwatchRow(RectTransform panel, string label, float y, float w, Color initial,
-            Action<Color> onPick)
+            Action<Color> onPick, Action requestRefresh)
         {
-            FormLabel(panel, label, ref y, w);
-            var preview = MakeSwatch(panel, new Vector2(w - 46f, y + 22f), 26f, initial);
-            float x = 16f;
-            const float sw = 32f, gap = 6f;
-            foreach (var c in StylePalette)
-            {
-                var cap = c;
-                MakeButton(panel, "", new Vector2(x, y), new Vector2(sw, 26f), c,
-                    () => { onPick(cap); preview.color = cap; });
-                x += sw + gap;
-            }
-            // "Pick…" opens the HSV wheel for any colour beyond the presets. The preview swatch holds the live
-            // value, so it doubles as the picker's starting colour and reflects whatever the picker commits.
-            MakeButton(panel, "Pick…", new Vector2(x + 4f, y), new Vector2(70f, 26f),
+            // Header line: label (left), live preview + Pick… + ＋ Save (right). The preview holds the live value,
+            // so it doubles as the picker's starting colour and as what "＋ Save" stores.
+            MakeText(panel, label, new Vector2(16f, y), new Vector2(180f, 18f), 13, LabelColor, TextAnchor.MiddleLeft);
+            var preview = MakeSwatch(panel, new Vector2(w - 190f, y + 1f), SwatchSize, initial);
+            MakeButton(panel, "Pick…", new Vector2(w - 160f, y), new Vector2(64f, 22f),
                 new Color(0.24f, 0.30f, 0.40f, 1f),
                 () => ShowColorPicker(label, preview.color, c => { onPick(c); preview.color = c; }));
-            return y - 34f;
+            MakeButton(panel, "＋ Save", new Vector2(w - 92f, y), new Vector2(76f, 22f),
+                new Color(0.20f, 0.40f, 0.34f, 1f),
+                () => { AddCustomSwatch(preview.color); Flash("swatch saved"); requestRefresh(); });
+            y -= 22f;
+
+            // Default palette grid, then the user's saved swatches (newest first; Alt-click to remove).
+            y = SwatchGrid(panel, StylePalette, y, false, onPick, preview, requestRefresh);
+            var customs = LoadCustomSwatches();
+            if (customs.Count > 0)
+            {
+                y -= 8f;
+                y = SwatchGrid(panel, customs.ToArray(), y, true, onPick, preview, requestRefresh);
+            }
+            return y - 10f;
+        }
+
+        /// <summary>Lay out a colour array as a wrapped grid of clickable swatches; returns y past the last row.</summary>
+        private float SwatchGrid(RectTransform panel, Color[] colors, float y, bool isCustom,
+            Action<Color> onPick, Image preview, Action requestRefresh)
+        {
+            float x = 16f;
+            int col = 0;
+            foreach (var c in colors)
+            {
+                var cap = c;
+                MakeButton(panel, "", new Vector2(x, y), new Vector2(SwatchSize, SwatchSize), cap, () =>
+                {
+                    if (isCustom && AltDown()) { RemoveCustomSwatch(cap); Flash("swatch removed"); requestRefresh(); }
+                    else { onPick(cap); preview.color = cap; }
+                });
+                if (++col >= SwatchPerRow) { col = 0; x = 16f; y -= SwatchSize + SwatchGap; }
+                else x += SwatchSize + SwatchGap;
+            }
+            if (col != 0) y -= SwatchSize + SwatchGap; // close a partial last row
+            return y;
         }
 
         private Image MakeSwatch(RectTransform parent, Vector2 topLeft, float size, Color c)
@@ -505,6 +620,57 @@ namespace TheRobotDraft.Uml
             return slider;
         }
 
+        // --- quick comment / inline-doc editor (right-click a node or a member) ---
+
+        /// <summary>
+        /// Quick single-field editor for an element's comment — the SAME <c>Description</c> shown in the full edit
+        /// form, surfaced as a right-click note on a node or one of its attributes / functions. This text is what
+        /// code generation renders as the inline doc-comment above the type / field / method, so editing it drives
+        /// the generated inline comment (regenerate the node's code to apply it to already-generated source).
+        /// </summary>
+        private void ShowCommentEditor(ElementId id, Vector2 screenPos)
+        {
+            if (!_model.TryGet(id, out var el)) return;
+            CloseMenu();
+
+            bool isMember = KindInfo.IsMember(el.Kind);
+            string what = isMember ? (el.Kind == ElementKind.Field ? "field" : "method") : "element";
+
+            float w = 460f, h = 244f;
+            var panel = BeginModal(w, h, "Comment   —   " + Ellipsize(string.IsNullOrEmpty(el.Name) ? what : el.Name, 36));
+
+            float y = -50f;
+            FormLabel(panel, "Inline doc-comment   (rendered above this " + what + " in generated code)", ref y, w);
+            var input = MakeMultilineInput(panel, new Vector2(16f, y), w - 32f, 108f, el.Description ?? "",
+                "Comment text — becomes the doc-comment above this " + what + " in generated code…");
+
+            void Submit()
+            {
+                CloseMenu();
+                _ctl.SetDescription(id, input.text);
+                // A member's comment is shown via its owning node; rebuild and reselect the node either way.
+                ElementId owner = isMember && el.Parent.IsValid ? el.Parent : id;
+                RebuildFromModel();
+                SetSelected(owner);
+                Flash(OwnerHasCode(owner)
+                    ? "comment saved — regenerate code to refresh the inline comments"
+                    : "comment saved");
+            }
+
+            float yBtn = -(h - 46f);
+            MakeButton(panel, "OK", new Vector2(w - 198f, yBtn), new Vector2(84f, 34f),
+                new Color(0.20f, 0.42f, 0.52f, 1f), Submit);
+            MakeButton(panel, "Cancel", new Vector2(w - 104f, yBtn), new Vector2(88f, 34f),
+                new Color(0.22f, 0.24f, 0.29f, 1f), CloseMenu);
+            FocusInput(input);
+        }
+
+        /// <summary>True if the node already has generated or imported code (so an edited comment needs a regen to land in source).</summary>
+        private bool OwnerHasCode(ElementId nodeId) =>
+            _model.TryGet(nodeId, out var n)
+            && (!string.IsNullOrEmpty(n.Code)
+                || (!string.IsNullOrEmpty(n.SourceFile) && _sourceFiles.ContainsKey(n.SourceFile)));
+
         // --- note (comment) editor ---
 
         private void ShowNoteEditor(ElementId parent, ElementId existing, Vector2 screenPos)
@@ -596,8 +762,8 @@ namespace TheRobotDraft.Uml
             if (!_model.TryGet(edge, out var e)) return;
             CloseMenu();
 
-            float w = 470f, h = 352f;
-            var panel = BeginModal(w, h, "Relationship   —   multiplicity & label");
+            float w = 470f, h = 420f;
+            var panel = BeginModal(w, h, "Relationship   —   multiplicity · label · constraint");
 
             float y = -50f;
             FormLabel(panel, "Source-end multiplicity   (at " + EndName(e.From) + ")", ref y, w);
@@ -614,10 +780,14 @@ namespace TheRobotDraft.Uml
             y -= 38f;
             MultiplicityChips(panel, ref y, tgtInput);
 
+            FormLabel(panel, "Constraint   (drawn in braces — e.g. {ordered}, {xor}, a guard)", ref y, w);
+            var constraintInput = MakeInput(panel, new Vector2(16f, y), w - 32f, e.Constraint, "{ordered}, {unique}, {subset}…");
+            y -= 38f;
+
             void Submit()
             {
                 CloseMenu();
-                _ctl.SetEdgeMeta(edge, labelInput.text, srcInput.text, tgtInput.text);
+                _ctl.SetEdgeMeta(edge, labelInput.text, srcInput.text, tgtInput.text, constraintInput.text);
                 RebuildFromModel();
                 Flash("updated relationship");
             }

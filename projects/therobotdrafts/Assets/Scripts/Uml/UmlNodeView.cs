@@ -56,8 +56,10 @@ namespace TheRobotDraft.Uml
             bool profile = kind == ElementKind.Profile;
             bool lifeline = kind == ElementKind.Lifeline;
             bool timing = kind == ElementKind.TimingLifeline;
-            // Boundaries, interaction frames and profiles are "regions" that carry nested nodes when moved.
-            IsBoundary = boundary || frame || profile;
+            // Boundaries, interaction frames and profiles — plus wireframe Screen/Panel — are "regions" that carry
+            // nested nodes when moved.
+            bool wireframeRegion = KindInfo.IsWireframeRegion(kind);
+            IsBoundary = boundary || frame || profile || wireframeRegion;
             bool darkFill = kind == ElementKind.Actor || kind == ElementKind.StateStart || kind == ElementKind.StateEnd
                 || kind == ElementKind.ForkJoin || kind == ElementKind.Junction
                 || kind == ElementKind.Terminate || kind == ElementKind.FlowFinal;
@@ -121,6 +123,17 @@ namespace TheRobotDraft.Uml
             else if (timing)
             {
                 BuildTiming(name, sizeOverride);
+            }
+            else if (wireframeRegion)
+            {
+                // A Screen / Panel region in the (dormant) 2-D path: a titled frame like a boundary.
+                BuildBoundary(name, sizeOverride, 360f, 260f);
+            }
+            else if (KindInfo.IsWireframeWidget(kind))
+            {
+                // 2-D parity for the concrete widget glyphs (the live render path is 3-D; this keeps the flat class
+                // consistent for copy-PNG preview / a future 2-D mode). A simple titled box stands in for the glyph.
+                BuildTitledBox(kind, name, stereotype, sizeOverride);
             }
             else if (titled)
             {
@@ -787,6 +800,7 @@ namespace TheRobotDraft.Uml
         public Color Fill, Border, Text;
         public int FontSize;     // 0 = default
         public string FontName;  // null/empty = default legacy font
+        public float Radius;     // corner radius (px) from a styleguide theme; 0 = square corners
     }
 
     /// <summary>A per-side connect hotspot: drag from it to start a relationship that leaves from that side.</summary>

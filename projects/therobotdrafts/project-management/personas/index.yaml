@@ -1,0 +1,46 @@
+personas:
+  - id: P-001
+    name: "Dana Okonkwo"
+    archetype: "Systems Architect"
+    segment: "primary"
+    file: P-001-systems-architect.md
+  - id: P-002
+    name: "Marcus Lee"
+    archetype: "Newly-Onboarding Engineer"
+    segment: "primary"
+    file: P-002-onboarding-engineer.md
+  - id: P-003
+    name: "Priya Raman"
+    archetype: "Tech Lead / Engineering Manager"
+    segment: "secondary"
+    file: P-003-tech-lead.md
+  - id: P-004
+    name: "Sven Halvorsen"
+    archetype: "Reverse Engineer / Security Researcher"
+    segment: "secondary"
+    file: P-004-reverse-engineer.md
+  - id: P-005
+    name: "Robert Fields"
+    archetype: "Enterprise UML Modeler (EA/Rose migrant)"
+    segment: "secondary"
+    file: P-005-legacy-modeler.md
+  - id: P-006
+    name: "Aiko Tanaka"
+    archetype: "VR/XR Power User"
+    segment: "secondary"
+    file: P-006-vr-explorer.md
+  - id: P-007
+    name: "Elena Vasquez"
+    archetype: "CS Educator / Trainer"
+    segment: "tertiary"
+    file: P-007-cs-educator.md
+  - id: P-008
+    name: "ARIA (Automation Agent)"
+    archetype: "LLM / CI Automation Actor"
+    segment: "edge-case"
+    file: P-008-automation-agent.md
+  - id: P-009
+    name: "Theo Brandt"
+    archetype: "Accessibility-Constrained Developer"
+    segment: "edge-case"
+    file: P-009-accessibility-first-dev.md

@@ -284,11 +284,19 @@ namespace TheRobotDraft.Authoring.State
             return true;
         }
 
-        /// <summary>Set a relationship's midpoint label and per-end multiplicities (§4.6), one undo step.</summary>
-        public bool SetEdgeMeta(EdgeId edge, string label, string source, string target)
+        /// <summary>Set a relationship's midpoint label, per-end multiplicities, and constraint (§4.6), one undo step.</summary>
+        public bool SetEdgeMeta(EdgeId edge, string label, string source, string target, string constraint = null)
         {
             if (!_model.TryGet(edge, out _)) return false;
-            _history.Execute(new SetEdgeMetaCommand(edge, label, source, target));
+            _history.Execute(new SetEdgeMetaCommand(edge, label, source, target, constraint));
+            return true;
+        }
+
+        /// <summary>Flip a relationship's direction (swap from/to ends), one undo step.</summary>
+        public bool ReverseEdge(EdgeId edge)
+        {
+            if (!_model.TryGet(edge, out _)) return false;
+            _history.Execute(new ReverseEdgeCommand(edge));
             return true;
         }
 

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
 using UnityEngine.Networking;
@@ -57,6 +58,49 @@ namespace TheRobotDraft.Llm
         {
             public string message;
         }
+
+        // --- /models listing ---
+
+        [Serializable]
+        private sealed class ModelList { public ModelEntry[] data; }
+
+        [Serializable]
+        private sealed class ModelEntry { public string id; }
+
+        /// <summary>Build (but do not send) a GET to <c>{baseUrl}/models</c> using the supplied (unsaved) credentials —
+        /// used by the settings dialog's "Test connection" and "Fetch models" before the values are persisted.</summary>
+        public static UnityWebRequest BuildModelsRequest(string baseUrl, string apiKey)
+        {
+            string url = TrimUrl(baseUrl) + "/models";
+            var req = UnityWebRequest.Get(url);
+            if (!string.IsNullOrEmpty(apiKey)) req.SetRequestHeader("Authorization", "Bearer " + apiKey);
+            return req;
+        }
+
+        /// <summary>Parse the model ids out of an OpenAI-style <c>{"data":[{"id":"…"}]}</c> listing.</summary>
+        public static bool TryParseModels(string json, out List<string> models, out string error)
+        {
+            models = new List<string>();
+            error = null;
+            if (string.IsNullOrWhiteSpace(json)) { error = "empty response"; return false; }
+            try
+            {
+                var parsed = JsonUtility.FromJson<ModelList>(json);
+                if (parsed != null && parsed.data != null)
+                    foreach (var m in parsed.data)
+                        if (m != null && !string.IsNullOrEmpty(m.id)) models.Add(m.id);
+                if (models.Count > 0) { models.Sort(StringComparer.OrdinalIgnoreCase); return true; }
+
+                var envelope = JsonUtility.FromJson<ErrorEnvelope>(json);
+                if (envelope != null && envelope.error != null && !string.IsNullOrEmpty(envelope.error.message))
+                { error = envelope.error.message; return false; }
+                error = "no models in response";
+                return false;
+            }
+            catch (Exception e) { error = "parse error: " + e.Message; return false; }
+        }
+
+        private static string TrimUrl(string url) => string.IsNullOrEmpty(url) ? url : url.TrimEnd('/');
 
         /// <summary>
         /// Build (but do not send) a POST to <c>{BaseUrl}/chat/completions</c> carrying the system + user prompt.

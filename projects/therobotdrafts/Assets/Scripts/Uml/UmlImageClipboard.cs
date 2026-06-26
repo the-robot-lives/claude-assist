@@ -49,5 +49,45 @@ namespace TheRobotDraft.Uml
             GUIUtility.systemCopyBuffer = path;
             return "saved PNG → " + path + " (path copied)";
         }
+
+        /// <summary>
+        /// Read an image off the OS clipboard as PNG bytes (macOS only). Dumps the pasteboard's «class PNGf»
+        /// payload to a temp file via <c>osascript</c>, then returns the file's bytes. Returns null when the
+        /// clipboard holds no image (osascript exits non-zero) or on any error — never throws to the caller.
+        /// </summary>
+        public static byte[] TryReadClipboardPng()
+        {
+            if (Application.platform != RuntimePlatform.OSXEditor
+                && Application.platform != RuntimePlatform.OSXPlayer)
+                return null;
+
+            string path = Path.Combine(Application.temporaryCachePath, "trd-clip-in.png");
+            try
+            {
+                var psi = new ProcessStartInfo("osascript")
+                {
+                    UseShellExecute = false,
+                    CreateNoWindow = true,
+                    RedirectStandardError = true,
+                };
+                // Each statement is its own -e line. The whole thing fails (non-zero exit) if the clipboard
+                // doesn't hold a PNG-coercible image, in which case we return null.
+                psi.ArgumentList.Add("-e"); psi.ArgumentList.Add("set thePng to (the clipboard as «class PNGf»)");
+                psi.ArgumentList.Add("-e"); psi.ArgumentList.Add("set fp to (POSIX file \"" + path + "\")");
+                psi.ArgumentList.Add("-e"); psi.ArgumentList.Add("set fh to open for access fp with write permission");
+                psi.ArgumentList.Add("-e"); psi.ArgumentList.Add("set eof fh to 0");
+                psi.ArgumentList.Add("-e"); psi.ArgumentList.Add("write thePng to fh");
+                psi.ArgumentList.Add("-e"); psi.ArgumentList.Add("close access fh");
+                using (var proc = Process.Start(psi))
+                {
+                    proc.WaitForExit();
+                    if (proc.ExitCode != 0) return null; // no image on the clipboard
+                }
+                if (!File.Exists(path)) return null;
+                var bytes = File.ReadAllBytes(path);
+                return (bytes != null && bytes.Length > 0) ? bytes : null;
+            }
+            catch { return null; }
+        }
     }
 }

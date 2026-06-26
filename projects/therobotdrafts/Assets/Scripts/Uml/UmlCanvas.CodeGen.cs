@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
@@ -129,6 +130,51 @@ namespace TheRobotDraft.Uml
             return rel;
         }
 
+        // --- wireframe (Screen / Panel) generation ---
+
+        /// <summary>Build the widget inventory for a Screen/Panel region, in authored child order.</summary>
+        private WireframeContext BuildWireframeContext(ElementId id)
+        {
+            var wf = new WireframeContext();
+            if (!_model.TryGet(id, out var el)) return wf;
+            wf.Name = el.Name;
+            wf.RegionKind = el.Kind;
+            foreach (var childId in el.ChildIds)
+            {
+                if (!_model.TryGet(childId, out var c) || !KindInfo.IsWireframeWidget(c.Kind)) continue;
+                var w = new WireframeContext.Widget { Kind = c.Kind, Label = c.Name };
+                // Field members become the widget's items (table columns, list/tree entries, dropdown options, …).
+                foreach (var itemId in c.ChildIds)
+                    if (_model.TryGet(itemId, out var item) && item.Kind == ElementKind.Field)
+                        w.Items.Add(item.Name);
+                wf.Widgets.Add(w);
+            }
+            return wf;
+        }
+
+        /// <summary>Open the viewer seeded with an HTML mockup, with a PlantUML salt block as the LLM seed.</summary>
+        private void GenerateWireframeForElement(ElementId id)
+        {
+            var wf = BuildWireframeContext(id);
+            WireframeSkeleton.ThemeRootVars = ThemeCssRootVars(); // inline the resolved styleguide tokens, if any
+            string html = WireframeSkeleton.GenerateHtml(wf);
+            string salt = WireframeSkeleton.GenerateSalt(wf);
+
+            // Seed the viewer with the HTML (the primary handoff artifact); carry the salt as the LLM refinement seed
+            // so a configured endpoint can polish the mockup into a fuller page.
+            string title = $"Wireframe — {(string.IsNullOrWhiteSpace(wf.Name) ? "screen" : wf.Name)}";
+            ShowCodeViewer(title, html, "HTML mockup (PlantUML salt in Console log)", id, null, "html");
+            Flash(wf.Widgets.Count > 0
+                ? $"wireframe: {wf.Widgets.Count} widgets  (HTML + PlantUML salt)"
+                : "empty screen — add widgets first");
+            // The salt is emitted to the log so it can be copy-pasted into a PlantUML renderer; the viewer shows HTML.
+            if (!string.IsNullOrEmpty(LlmSettings.BaseUrl))
+                Debug.Log("[WireframeSkeleton] salt:\n" + salt);
+        }
+
+        /// <summary>Resolved styleguide CSS-var block for the loaded theme (or null when no theme is active).</summary>
+        private static string ThemeCssRootVars() => null; // wired by the theme feature once loaded (Feature B)
+
         // --- public entry points ---
 
         /// <summary>
@@ -139,6 +185,14 @@ namespace TheRobotDraft.Uml
         {
             CloseMenu();
             if (!_model.TryGet(id, out var el)) { Flash("nothing to generate"); return; }
+
+            // A wireframe region (Screen / Panel) generates an HTML mockup + PlantUML salt block instead of a class
+            // skeleton — the artifacts that make a wireframe usable for handoff.
+            if (KindInfo.IsWireframeRegion(el.Kind))
+            {
+                GenerateWireframeForElement(id);
+                return;
+            }
 
             var ctx = BuildCodeContext(id);
             string skeleton = CodeSkeleton.Generate(ctx);
@@ -687,31 +741,112 @@ namespace TheRobotDraft.Uml
 
         // --- LLM settings dialog ---
 
-        /// <summary>Edit the OpenAI-compatible endpoint settings (base URL, API key, model) persisted in PlayerPrefs.</summary>
+        /// <summary>A known OpenAI-compatible provider: a display name, its endpoint, and the env var its key lives in.</summary>
+        private readonly struct LlmProvider
+        {
+            public readonly string Name, BaseUrl, EnvVar;
+            public LlmProvider(string name, string baseUrl, string envVar) { Name = name; BaseUrl = baseUrl; EnvVar = envVar; }
+        }
+
+        private static readonly LlmProvider[] LlmProviders =
+        {
+            new LlmProvider("LM Studio (local)", "http://localhost:1234/v1", null),
+            new LlmProvider("Ollama (local)",    "http://localhost:11434/v1", null),
+            new LlmProvider("OpenAI",            "https://api.openai.com/v1", "OPENAI_API_KEY"),
+            new LlmProvider("OpenRouter",        "https://openrouter.ai/api/v1", "OPENROUTER_API_KEY"),
+            new LlmProvider("Groq",              "https://api.groq.com/openai/v1", "GROQ_API_KEY"),
+            new LlmProvider("Together",          "https://api.together.xyz/v1", "TOGETHER_API_KEY"),
+            new LlmProvider("Mistral",           "https://api.mistral.ai/v1", "MISTRAL_API_KEY"),
+            new LlmProvider("DeepSeek",          "https://api.deepseek.com/v1", "DEEPSEEK_API_KEY"),
+        };
+
+        /// <summary>The env var holding a key for a base URL (so the dialog can prefill it), or null.</summary>
+        private static string EnvVarForUrl(string baseUrl)
+        {
+            string u = (baseUrl ?? "").TrimEnd('/');
+            foreach (var p in LlmProviders)
+                if (!string.IsNullOrEmpty(p.EnvVar) && string.Equals(p.BaseUrl.TrimEnd('/'), u, StringComparison.OrdinalIgnoreCase))
+                    return p.EnvVar;
+            return null;
+        }
+
+        /// <summary>
+        /// Edit the OpenAI-compatible endpoint settings. Provides a provider preset dropdown (which fills the base URL
+        /// and, when its key is exported in the environment, the API key), a "Test connection" button, and a model
+        /// dropdown populated by fetching <c>/models</c> from the provider.
+        /// </summary>
         public void ShowLlmSettings(Vector2 screenPos)
         {
             CloseMenu();
             LlmSettings.Load(out var baseUrl, out var apiKey, out var model);
 
-            float w = 480f, h = 300f;
+            const float w = 520f, h = 392f;
             var panel = BeginModal(w, h, "LLM settings   —   OpenAI-compatible endpoint");
 
             float y = -50f;
+            FormLabel(panel, "Provider preset", ref y, w);
+            // The status line (test-connection / fetch results) — declared early so the closures below can write it.
+            var status = MakeText(panel, "", new Vector2(16f, -(h - 78f)), new Vector2(w - 32f, 18f), 13,
+                LabelColor, TextAnchor.MiddleLeft);
+
+            InputField urlInput = null, keyInput = null;
+            DropdownHandle modelDd = null;
+
+            var providerNames = new List<string> { "Custom…" };
+            foreach (var p in LlmProviders) providerNames.Add(p.Name);
+            string currentProvider = "Custom…";
+            foreach (var p in LlmProviders)
+                if (string.Equals(p.BaseUrl.TrimEnd('/'), (baseUrl ?? "").TrimEnd('/'), StringComparison.OrdinalIgnoreCase))
+                    currentProvider = p.Name;
+
+            var providerDd = MakeDropdown(panel, new Vector2(16f, y), w - 32f, providerNames, currentProvider, sel =>
+            {
+                foreach (var p in LlmProviders)
+                    if (p.Name == sel)
+                    {
+                        if (urlInput != null) urlInput.text = p.BaseUrl;
+                        if (keyInput != null && !string.IsNullOrEmpty(p.EnvVar))
+                        {
+                            string envKey = Environment.GetEnvironmentVariable(p.EnvVar);
+                            if (!string.IsNullOrEmpty(envKey)) { keyInput.text = envKey; status.text = $"API key loaded from ${p.EnvVar}"; }
+                            else status.text = $"{p.EnvVar} not set in the environment — paste a key below";
+                        }
+                        else if (keyInput != null && string.IsNullOrEmpty(p.EnvVar)) status.text = "local provider — no API key needed";
+                        break;
+                    }
+            });
+            y -= 42f;
+
             FormLabel(panel, "Base URL   (e.g. http://localhost:1234/v1)", ref y, w);
-            var urlInput = MakeInput(panel, new Vector2(16f, y), w - 32f, baseUrl, LlmSettings.DefaultBaseUrl);
-            y -= 44f;
+            urlInput = MakeInput(panel, new Vector2(16f, y), w - 32f, baseUrl, LlmSettings.DefaultBaseUrl);
+            y -= 42f;
 
-            FormLabel(panel, "API key   (leave blank for a local server)", ref y, w);
-            var keyInput = MakeInput(panel, new Vector2(16f, y), w - 32f, apiKey, "sk-…  (optional)");
+            FormLabel(panel, "API key   (auto-filled from the provider's env var when set)", ref y, w);
+            keyInput = MakeInput(panel, new Vector2(16f, y), w - 200f, apiKey, "sk-…  (optional for local)");
             keyInput.contentType = InputField.ContentType.Password;
-            y -= 44f;
+            // Offer to pull the key from the environment for the current URL on open.
+            string envForCurrent = EnvVarForUrl(baseUrl);
+            if (string.IsNullOrEmpty(apiKey) && envForCurrent != null)
+            {
+                string envKey = Environment.GetEnvironmentVariable(envForCurrent);
+                if (!string.IsNullOrEmpty(envKey)) { keyInput.text = envKey; status.text = $"API key loaded from ${envForCurrent}"; }
+            }
+            MakeButton(panel, "Test connection", new Vector2(w - 176f, y), new Vector2(160f, 32f),
+                new Color(0.22f, 0.40f, 0.34f, 1f), () => StartCoroutine(TestLlmConnection(urlInput.text, keyInput.text, status)));
+            y -= 42f;
 
-            FormLabel(panel, "Model", ref y, w);
-            var modelInput = MakeInput(panel, new Vector2(16f, y), w - 32f, model, LlmSettings.DefaultModel);
+            FormLabel(panel, "Model   (Fetch to list the provider's models)", ref y, w);
+            var models = new List<string>();
+            if (!string.IsNullOrEmpty(model)) models.Add(model);
+            modelDd = MakeDropdown(panel, new Vector2(16f, y), w - 200f, models, string.IsNullOrEmpty(model) ? "(fetch models)" : model, _ => { });
+            MakeButton(panel, "↻ Fetch models", new Vector2(w - 176f, y), new Vector2(160f, 32f),
+                new Color(0.22f, 0.34f, 0.46f, 1f),
+                () => StartCoroutine(FetchLlmModels(urlInput.text, keyInput.text, modelDd, status)));
+            y -= 46f;
 
             void Submit()
             {
-                LlmSettings.Save(urlInput.text, keyInput.text, modelInput.text);
+                LlmSettings.Save(urlInput.text, keyInput.text, modelDd.Get());
                 CloseMenu();
                 Flash("LLM settings saved");
             }
@@ -723,6 +858,173 @@ namespace TheRobotDraft.Uml
                 new Color(0.22f, 0.24f, 0.29f, 1f), CloseMenu);
 
             FocusInput(urlInput);
+        }
+
+        /// <summary>GET {baseUrl}/models to verify reachability + auth, reporting into the dialog's status line.</summary>
+        private IEnumerator TestLlmConnection(string baseUrl, string apiKey, Text status)
+        {
+            if (status != null) status.text = "testing…";
+            if (string.IsNullOrWhiteSpace(baseUrl)) { if (status != null) status.text = "set a base URL first"; yield break; }
+            using (var req = LlmClient.BuildModelsRequest(baseUrl, apiKey))
+            {
+                req.timeout = 15;
+                yield return req.SendWebRequest();
+                if (req.result != UnityWebRequest.Result.Success)
+                { if (status != null) status.text = "✗ " + req.error; yield break; }
+                if (LlmClient.TryParseModels(req.downloadHandler.text, out var models, out var err))
+                { if (status != null) status.text = $"✓ connected — {models.Count} models available"; }
+                else { if (status != null) status.text = "✓ reachable, but: " + err; }
+            }
+        }
+
+        /// <summary>GET {baseUrl}/models and load the ids into the model dropdown.</summary>
+        private IEnumerator FetchLlmModels(string baseUrl, string apiKey, DropdownHandle modelDd, Text status)
+        {
+            if (status != null) status.text = "fetching models…";
+            if (string.IsNullOrWhiteSpace(baseUrl)) { if (status != null) status.text = "set a base URL first"; yield break; }
+            using (var req = LlmClient.BuildModelsRequest(baseUrl, apiKey))
+            {
+                req.timeout = 20;
+                yield return req.SendWebRequest();
+                if (req.result != UnityWebRequest.Result.Success)
+                { if (status != null) status.text = "✗ " + req.error; yield break; }
+                if (LlmClient.TryParseModels(req.downloadHandler.text, out var models, out var err))
+                {
+                    modelDd?.SetOptions(models);
+                    if (status != null) status.text = $"loaded {models.Count} models — pick one above";
+                }
+                else if (status != null) status.text = "✗ " + err;
+            }
+        }
+
+        // --- LLM error toast (shown when an AI feature can't reach the endpoint) ---
+
+        /// <summary>
+        /// A small action toast for LLM connection failures: explains the problem and offers a button to open the
+        /// LLM settings dialog (plus any extra actions the caller supplies, e.g. "use basic layout").
+        /// </summary>
+        public void ShowLlmErrorToast(string detail, params (string label, Action act)[] extraActions)
+        {
+            CloseMenu();
+            const float w = 460f;
+            var actions = new List<(string, Action)> { ("Open LLM settings…", () => ShowLlmSettings(Input.mousePosition)) };
+            if (extraActions != null) actions.AddRange(extraActions);
+            actions.Add(("Dismiss", CloseMenu));
+
+            float h = 96f + actions.Count * 40f;
+            var panel = NewPanel("LlmToast",
+                new Vector2((Screen.width - w) * 0.5f, Screen.height * 0.72f), new Vector2(w, h),
+                new Color(0.16f, 0.12f, 0.13f, 0.98f));
+            var rt = (RectTransform)panel.transform;
+            _menu = panel;
+
+            MakeText(rt, "⚠  LLM endpoint unreachable", new Vector2(14f, -10f), new Vector2(w - 28f, 22f), 16,
+                new Color(0.97f, 0.82f, 0.55f, 1f), TextAnchor.MiddleLeft).fontStyle = FontStyle.Bold;
+            MakeText(rt, detail + "\nConfigure or fix the endpoint, or use a basic layout.",
+                new Vector2(14f, -38f), new Vector2(w - 28f, 50f), 13,
+                new Color(0.86f, 0.88f, 0.92f, 1f), TextAnchor.UpperLeft);
+
+            float by = -96f;
+            foreach (var a in actions)
+            {
+                var act = a.Item2;
+                MakeButton(rt, a.Item1, new Vector2(14f, by), new Vector2(w - 28f, 32f),
+                    new Color(0.22f, 0.30f, 0.42f, 1f), () => act());
+                by -= 40f;
+            }
+        }
+
+        // --- a lightweight custom dropdown (button + toggled option list; no UnityEngine.UI.Dropdown template) ---
+
+        /// <summary>Live handle to a dropdown: read the value, set it, or replace the option list (e.g. after a fetch).</summary>
+        private sealed class DropdownHandle
+        {
+            public Func<string> Get;
+            public Action<List<string>> SetOptions;
+        }
+
+        private DropdownHandle MakeDropdown(RectTransform parent, Vector2 topLeft, float width,
+            List<string> options, string current, Action<string> onSelect)
+        {
+            string value = current ?? "";
+            var opts = new List<string>(options ?? new List<string>());
+
+            var go = new GameObject("Dropdown", typeof(RectTransform));
+            var rt = (RectTransform)go.transform;
+            rt.SetParent(parent, false);
+            rt.anchorMin = rt.anchorMax = new Vector2(0f, 1f);
+            rt.pivot = new Vector2(0f, 1f);
+            rt.sizeDelta = new Vector2(width, 32f);
+            rt.anchoredPosition = topLeft;
+            var img = go.AddComponent<Image>();
+            img.color = new Color(0.20f, 0.22f, 0.27f, 1f);
+            var btn = go.AddComponent<Button>();
+            btn.targetGraphic = img;
+            var label = MakeText(rt, value, new Vector2(8f, 0f), new Vector2(width - 26f, 32f), 15,
+                new Color(0.94f, 0.96f, 1f, 1f), TextAnchor.MiddleLeft);
+            MakeText(rt, "▾", new Vector2(width - 20f, 0f), new Vector2(16f, 32f), 14,
+                new Color(0.7f, 0.74f, 0.8f, 1f), TextAnchor.MiddleCenter);
+
+            GameObject list = null;
+            void CloseList() { if (list != null) { Destroy(list); list = null; } }
+
+            void OpenList()
+            {
+                CloseList();
+                if (opts.Count == 0) return;
+                const float ih = 28f; float lh = Mathf.Min(opts.Count, 8) * ih + 4f;
+                list = new GameObject("DDList", typeof(RectTransform));
+                var lrt = (RectTransform)list.transform;
+                lrt.SetParent(rt, false);
+                lrt.anchorMin = lrt.anchorMax = new Vector2(0f, 1f);
+                lrt.pivot = new Vector2(0f, 1f);
+                lrt.sizeDelta = new Vector2(width, lh);
+                lrt.anchoredPosition = new Vector2(0f, -34f);
+                list.AddComponent<Image>().color = new Color(0.13f, 0.15f, 0.19f, 0.99f);
+                list.AddComponent<RectMask2D>();
+                var content = new GameObject("C", typeof(RectTransform));
+                var crt = (RectTransform)content.transform;
+                crt.SetParent(lrt, false);
+                crt.anchorMin = new Vector2(0f, 1f); crt.anchorMax = new Vector2(1f, 1f);
+                crt.pivot = new Vector2(0.5f, 1f);
+                crt.sizeDelta = new Vector2(0f, opts.Count * ih);
+                crt.anchoredPosition = Vector2.zero;
+                var scroll = list.AddComponent<ScrollRect>();
+                scroll.content = crt; scroll.viewport = lrt; scroll.horizontal = false; scroll.movementType = ScrollRect.MovementType.Clamped;
+                float iy = 0f;
+                foreach (var o in opts)
+                {
+                    var ov = o;
+                    var igo = new GameObject("I", typeof(RectTransform));
+                    var irt = (RectTransform)igo.transform;
+                    irt.SetParent(crt, false);
+                    irt.anchorMin = irt.anchorMax = new Vector2(0f, 1f);
+                    irt.pivot = new Vector2(0f, 1f);
+                    irt.sizeDelta = new Vector2(width, ih);
+                    irt.anchoredPosition = new Vector2(0f, iy);
+                    var iimg = igo.AddComponent<Image>();
+                    iimg.color = new Color(0.18f, 0.20f, 0.25f, 1f);
+                    var ibtn = igo.AddComponent<Button>();
+                    ibtn.targetGraphic = iimg;
+                    ibtn.onClick.AddListener(() => { value = ov; label.text = ov; CloseList(); onSelect?.Invoke(ov); });
+                    MakeText(irt, ov, new Vector2(8f, 0f), new Vector2(width - 12f, ih), 14,
+                        new Color(0.9f, 0.93f, 0.98f, 1f), TextAnchor.MiddleLeft);
+                    iy -= ih;
+                }
+            }
+
+            btn.onClick.AddListener(() => { if (list != null) CloseList(); else OpenList(); });
+
+            return new DropdownHandle
+            {
+                Get = () => value,
+                SetOptions = newOpts =>
+                {
+                    opts = new List<string>(newOpts ?? new List<string>());
+                    if (!opts.Contains(value) && opts.Count > 0) { value = opts[0]; label.text = value; onSelect?.Invoke(value); }
+                    CloseList();
+                },
+            };
         }
     }
 }

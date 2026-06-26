@@ -506,8 +506,8 @@ namespace TheRobotDraft.Uml
 
             if (string.IsNullOrEmpty(LlmSettings.BaseUrl))
             {
-                AutoLayout("force");
-                Flash("LLM not configured — used force-directed");
+                ShowLlmErrorToast("No LLM endpoint is configured for AI-assisted layout.",
+                    ("Use basic layout", () => AutoLayout("force")));
                 return;
             }
 
@@ -560,7 +560,19 @@ namespace TheRobotDraft.Uml
                 req.timeout = 60;
                 yield return req.SendWebRequest();
 
-                if (req.result != UnityWebRequest.Result.Success) { FallbackForce("AI layout failed: " + req.error); yield break; }
+                if (req.result != UnityWebRequest.Result.Success)
+                {
+                    // A connection-level failure (host unreachable / settings wrong) → alert with a link to fix it.
+                    ShowLlmErrorToast("Auto-layout couldn't reach the LLM:  " + req.error,
+                        ("Use basic layout", () =>
+                        {
+                            string note = LayoutForceDirected(ids);
+                            SetSelected(ElementId.None); _selectedEdge = EdgeId.None;
+                            RebuildFromModel(); _scene.FrameAll();
+                            Flash(note);
+                        }));
+                    yield break;
+                }
                 if (!LlmClient.TryParseContent(req.downloadHandler.text, out var content, out var apiError))
                 { FallbackForce("AI layout failed: " + apiError); yield break; }
 

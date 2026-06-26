@@ -78,6 +78,9 @@ namespace TheRobotDraft.Authoring.Model
         /// <summary>UML multiplicity at the <see cref="To"/> end (e.g. "1", "0..*", "1..*"). Null = unspecified.</summary>
         public string TargetMultiplicity { get; internal set; }
 
+        /// <summary>A constraint on the relationship, drawn in braces (e.g. "{ordered}", "{xor}", a guard). Null = none.</summary>
+        public string Constraint { get; internal set; }
+
         internal ModelEdge(EdgeId id, EdgeKind kind, ElementId from, ElementId to)
         {
             Id = id;
@@ -178,11 +181,19 @@ namespace TheRobotDraft.Authoring.Model
             edge.SourceMultiplicity = source;
             edge.TargetMultiplicity = target;
         }
+        internal void SetEdgeConstraint(EdgeId id, string constraint) => _edges[id].Constraint = constraint;
         internal void SetEdgeEndpoints(EdgeId id, ElementId from, ElementId to)
         {
             var edge = _edges[id];
             edge.From = from;
             edge.To = to;
+        }
+        /// <summary>Swap an edge's endpoints (and the end-anchored multiplicities) — flips the arrow direction.</summary>
+        internal void ReverseEdge(EdgeId id)
+        {
+            var edge = _edges[id];
+            (edge.From, edge.To) = (edge.To, edge.From);
+            (edge.SourceMultiplicity, edge.TargetMultiplicity) = (edge.TargetMultiplicity, edge.SourceMultiplicity);
         }
 
         /// <summary>True if <paramref name="ancestor"/> contains <paramref name="node"/> transitively (cycle/containment checks).</summary>

@@ -209,7 +209,7 @@ namespace TheRobotDraft.Uml
 
                 if (req.result != UnityWebRequest.Result.Success)
                 {
-                    Flash("import failed: LLM request error — " + req.error);
+                    ShowLlmErrorToast("Code import couldn't reach the LLM:  " + req.error);
                     yield break;
                 }
 
@@ -445,6 +445,7 @@ namespace TheRobotDraft.Uml
                 yield break;
             }
 
+            WriteShadowsForImport(); // editable on-disk copies for the "Edit code in VS Code" round-trip
             string note = $"imported {typeCount} types from {parsedFiles}/{files.Count} files, {edgeCount} relationships";
             if (skipped > 0) note += $" ({skipped} external ref{(skipped == 1 ? "" : "s")} skipped)";
             Flash(note);
@@ -475,6 +476,7 @@ namespace TheRobotDraft.Uml
             // AutoLayout rebuilds + frames the scene. Its flash is overwritten by the import note below.
             AutoLayout("source");
 
+            WriteShadowsForImport(); // editable on-disk copies for the "Edit code in VS Code" round-trip
             string note = $"imported {typeCount} types, {edgeCount} relationships";
             if (skipped > 0) note += $" ({skipped} external ref{(skipped == 1 ? "" : "s")} skipped)";
             Flash(note);
@@ -544,7 +546,8 @@ namespace TheRobotDraft.Uml
 
                 edgeCount += ImportConnect(fromId, pt.extends, EdgeKind.Generalization, created, ref skipped);
                 edgeCount += ImportConnect(fromId, pt.implements, EdgeKind.Realization, created, ref skipped);
-                edgeCount += ImportConnect(fromId, pt.uses, EdgeKind.Dependency, created, ref skipped);
+                // A class/module that references another "consumes" it — directed consumer → consumed.
+                edgeCount += ImportConnect(fromId, pt.uses, EdgeKind.Consumes, created, ref skipped);
             }
             return edgeCount;
         }

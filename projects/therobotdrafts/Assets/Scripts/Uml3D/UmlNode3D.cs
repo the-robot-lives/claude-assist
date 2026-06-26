@@ -29,8 +29,16 @@ namespace TheRobotDraft.Uml3D
         private MeshRenderer _slabRenderer;
         private Material _slabMaterial;     // runtime instance; tinted for fill / depth / selection
         private BoxCollider _collider;
+        private GameObject _outline;        // inverted-hull silhouette border (always-on, in a darker fill tone)
+        private Material _outlineMaterial;
+        private GameObject _robot;          // for Actor/Person: the multi-part colored robot (replaces the slab mesh)
+        private IReadOnlyList<Renderer> _robotRenderers; // the robot's per-part fill renderers (for depth/selection tint)
+        private IReadOnlyList<Color> _robotBaseColors;   // the colors those parts were built with (re-tinted from base)
+        private Color[] _robotBaseEmission;              // each part's as-built emission (so the selection lift adds on top)
         private Canvas _faceCanvas;         // world-space content on the +Z face
+        private RectTransform _faceRt;      // the face canvas's RectTransform (image card attaches here)
         private CanvasGroup _faceGroup;     // alpha fades with depth tint
+        private Texture2D _faceImage;       // optional per-node picture rendered as a card on the face
         private GameObject _selectionBox;   // wireframe-ish highlight border, toggled on selection
 
         private Vector3 _basePos = Vector3.zero;   // world pose set by the layer (before LocalRotation)
@@ -50,6 +58,7 @@ namespace TheRobotDraft.Uml3D
         private ElementKind _kind;
         private List<string> _attrs, _ops;
         private float _depth;
+        private Vector2 _sizePx;   // last pixel size, retained so SetThickness can rebuild at the current footprint
 
         private const float RowH = 18f;             // matches UmlNodeView's compartment row height (px)
         private const float HeaderH = 30f;
@@ -73,6 +82,7 @@ namespace TheRobotDraft.Uml3D
             float h = Mathf.Max(14f, sizePx.y) * Uml3DConfig.WorldScale;
             float d = Uml3DConfig.NodeThickness;
             _depth = d;
+            _sizePx = sizePx;
             _faceHalfW = w * 0.5f; _faceHalfH = h * 0.5f;
 
             // The slab is a child so per-node LocalRotation can spin it (plus its face + collider) while the
@@ -82,7 +92,6 @@ namespace TheRobotDraft.Uml3D
             _slab.SetParent(transform, false);
 
             var mf = slabGo.AddComponent<MeshFilter>();
-            mf.sharedMesh = BuildBoxMesh(w, h, d);
             _slabRenderer = slabGo.AddComponent<MeshRenderer>();
             _slabMaterial = CreateMaterial(fill);
             _slabRenderer.sharedMaterial = _slabMaterial;
@@ -91,8 +100,48 @@ namespace TheRobotDraft.Uml3D
             _collider.size = new Vector3(w, h, d);
             _collider.center = Vector3.zero;
 
+            BuildBody(mf, w, h, d);
             BuildFace(name, stereotype, kind, sizePx, w, h, d, attributes, operations);
             BuildSelectionBox(w, h, d);
+        }
+
+        /// <summary>
+        /// Populate the slab's visual: most kinds get the single tinted shape mesh (+ a silhouette border); the
+        /// actor / person get a multi-part colored ROBOT built by <see cref="Uml3DRobot"/> instead (so the plain
+        /// slab renderer is hidden and the shape mesh left empty — the collider/cage/face still use w×h×d).
+        /// </summary>
+        private void BuildBody(MeshFilter mf, float w, float h, float d)
+        {
+            if (_robot != null) { Destroy(_robot); _robot = null; }
+            _robotRenderers = null;
+            _robotBaseColors = null;
+            _robotBaseEmission = null;
+            bool robot = _kind == ElementKind.Actor || _kind == ElementKind.Person;
+            if (robot)
+            {
+                mf.sharedMesh = new Mesh { name = "RobotPlaceholder" };
+                _slabRenderer.enabled = false;
+                if (_outline != null) { Destroy(_outline); _outline = null; }
+                var handle = Uml3DRobot.Build(_slab, w, h, d, _fill);
+                _robot = handle.Root;
+                _robotRenderers = handle.Parts;
+                _robotBaseColors = handle.BaseColors;
+                // Capture each part's as-built emission so the selection lift adds onto (not replaces) glowing parts.
+                _robotBaseEmission = new Color[_robotRenderers.Count];
+                for (int i = 0; i < _robotRenderers.Count; i++)
+                {
+                    var pm = _robotRenderers[i] != null ? _robotRenderers[i].sharedMaterial : null;
+                    _robotBaseEmission[i] = (pm != null && pm.HasProperty(EmissionColorId))
+                        ? pm.GetColor(EmissionColorId) : Color.black;
+                }
+                ApplyTint(); // seed the robot parts with the current depth gray / selection state
+            }
+            else
+            {
+                _slabRenderer.enabled = true;
+                mf.sharedMesh = Uml3DNodeShape.Build(_kind, w, h, d);
+                BuildOutline(mf.sharedMesh, w, h);
+            }
         }
 
         // --- public API for the integration layer ---
@@ -112,6 +161,16 @@ namespace TheRobotDraft.Uml3D
 
         /// <summary>World half-extents of the slab's +Z face (x = half-width, y = half-height).</summary>
         public Vector2 FaceHalfExtents => new Vector2(_faceHalfW, _faceHalfH);
+
+        /// <summary>The slab's current Z thickness (world units).</summary>
+        public float CurrentDepth => _depth;
+
+        /// <summary>Set the slab's Z thickness (world units) and rebuild the mesh / collider / face at the current size.</summary>
+        public void SetThickness(float worldDepth)
+        {
+            _depth = Mathf.Max(0.02f, worldDepth);
+            Resize(_sizePx); // rebuilds the box mesh + collider + face + selection cage using the new _depth
+        }
 
         /// <summary>
         /// Map a normalized face offset (each axis in roughly [-0.5,0.5]; (0,0) = face center) to a world point sitting
@@ -145,6 +204,7 @@ namespace TheRobotDraft.Uml3D
         /// </summary>
         public void Resize(Vector2 sizePx)
         {
+            _sizePx = sizePx;
             float w = Mathf.Max(20f, sizePx.x) * Uml3DConfig.WorldScale;
             float h = Mathf.Max(14f, sizePx.y) * Uml3DConfig.WorldScale;
             float d = _depth;
@@ -153,7 +213,7 @@ namespace TheRobotDraft.Uml3D
             if (_slab != null)
             {
                 var mf = _slab.GetComponent<MeshFilter>();
-                if (mf != null) mf.sharedMesh = BuildBoxMesh(w, h, d);
+                if (mf != null) BuildBody(mf, w, h, d);
             }
             if (_collider != null) _collider.size = new Vector3(w, h, d);
 
@@ -164,6 +224,8 @@ namespace TheRobotDraft.Uml3D
 
             if (_selectionBox != null) _selectionBox.SetActive(_selected);
             if (_faceGroup != null) _faceGroup.alpha = Mathf.Lerp(1f, 0.35f, _depthT);
+            _faceImageCard = null; // the old card was destroyed with the rebuilt face canvas
+            ApplyFaceImage();      // re-attach the picture (if any) to the freshly rebuilt face
         }
 
         /// <summary>Accumulate a per-node spin (degrees) about the node's local right (pitch) and up (yaw) axes.</summary>
@@ -173,6 +235,62 @@ namespace TheRobotDraft.Uml3D
             _localYaw += dYaw;
             LocalRotation = Quaternion.Euler(_localPitch, _localYaw, 0f);
             if (_slab != null) _slab.localRotation = LocalRotation;
+        }
+
+        /// <summary>Set the per-node spin directly (used to restore orientation on rebuild / paste).</summary>
+        public void SetLocalRotation(Quaternion q)
+        {
+            var e = q.eulerAngles;
+            _localPitch = e.x;
+            _localYaw = e.y;
+            LocalRotation = q;
+            if (_slab != null) _slab.localRotation = q;
+        }
+
+        /// <summary>
+        /// Attach (or replace) a picture rendered as a card on the +Z face. The image fills the face with a small
+        /// inset and occupies the top portion, leaving the bold name visible as a caption beneath it. No-op for
+        /// marker kinds that carry no face canvas. Robust to being called any time after <see cref="BuildFace"/>;
+        /// the card is re-applied automatically across <see cref="Resize"/> rebuilds.
+        /// </summary>
+        public void SetImage(Texture2D tex)
+        {
+            _faceImage = tex;
+            ApplyFaceImage();
+        }
+
+        // The card host (a child of the face canvas), kept so it can be replaced/cleared without a full rebuild.
+        private GameObject _faceImageCard;
+
+        private void ApplyFaceImage()
+        {
+            if (_faceImageCard != null) { Destroy(_faceImageCard); _faceImageCard = null; }
+            if (_faceImage == null || _faceRt == null) return; // no picture, or a marker kind with no face canvas
+
+            float pxW = _faceRt.sizeDelta.x, pxH = _faceRt.sizeDelta.y;
+            // Reserve a caption band at the bottom for the node name; the picture occupies the top ~82% of the face.
+            const float inset = 4f;
+            float captionH = Mathf.Clamp(pxH * 0.18f, 16f, 40f);
+            float imgW = Mathf.Max(1f, pxW - inset * 2f);
+            float imgH = Mathf.Max(1f, pxH - captionH - inset * 2f);
+
+            var go = new GameObject("FaceImage", typeof(RectTransform));
+            _faceImageCard = go;
+            var rt = (RectTransform)go.transform;
+            rt.SetParent(_faceRt, false);
+            rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0.5f);
+            rt.pivot = new Vector2(0.5f, 0.5f);
+            rt.sizeDelta = new Vector2(imgW, imgH);
+            // Center vertically within the area above the caption band (top of face minus half the caption).
+            rt.anchoredPosition = new Vector2(0f, captionH * 0.5f);
+            var raw = go.AddComponent<RawImage>();
+            raw.texture = _faceImage;
+            raw.raycastTarget = false;
+            // Draw above the fill/border panel but below the text rows (the bold name caption stays readable).
+            // The name Row was added after the panel, so place the card just behind it by ordering it right after
+            // the panel siblings; using SetAsFirstSibling()+offset keeps it over the panel yet under the labels.
+            int idx = Mathf.Min(2, _faceRt.childCount - 1);
+            rt.SetSiblingIndex(Mathf.Max(0, idx));
         }
 
         /// <summary>Toggle the selection highlight (a tinted border box around the slab plus an emissive lift).</summary>
@@ -198,16 +316,42 @@ namespace TheRobotDraft.Uml3D
 
         private void ApplyTint()
         {
-            if (_slabMaterial == null) return;
             var gray = new Color(0.5f, 0.52f, 0.55f, 1f);
-            Color c = Color.Lerp(_fill, gray, _depthT);
-            _slabMaterial.color = c;
-            if (_slabMaterial.HasProperty(BaseColorId)) _slabMaterial.SetColor(BaseColorId, c);
-            // A subtle emissive lift when selected (works on Lit; harmless on Standard / ignored on unlit).
-            if (_slabMaterial.HasProperty(EmissionColorId))
+            Color lift = _selected ? new Color(0.10f, 0.32f, 0.50f, 1f) : Color.black;
+
+            if (_slabMaterial != null)
             {
-                Color emis = _selected ? new Color(0.10f, 0.32f, 0.50f, 1f) : Color.black;
-                _slabMaterial.SetColor(EmissionColorId, emis);
+                Color c = Color.Lerp(_fill, gray, _depthT);
+                _slabMaterial.color = c;
+                if (_slabMaterial.HasProperty(BaseColorId)) _slabMaterial.SetColor(BaseColorId, c);
+                // A subtle emissive lift when selected (works on Lit; harmless on Standard / ignored on unlit).
+                if (_slabMaterial.HasProperty(EmissionColorId))
+                    _slabMaterial.SetColor(EmissionColorId, lift);
+            }
+
+            // Actor / Person: also gray + highlight every robot part, recomputing from each part's stored base color
+            // (and base emission) so repeated calls never compound. Parts with identical looks share one material
+            // (per this node's Uml3DVector cache) so writing through the shared material here stays node-isolated.
+            if (_robot != null && _robotRenderers != null && _robotBaseColors != null)
+            {
+                int n = Mathf.Min(_robotRenderers.Count, _robotBaseColors.Count);
+                for (int i = 0; i < n; i++)
+                {
+                    var r = _robotRenderers[i];
+                    var m = r != null ? r.sharedMaterial : null;
+                    if (m == null) continue;
+                    Color baseCol = _robotBaseColors[i];
+                    Color c = Color.Lerp(baseCol, gray, _depthT);
+                    c.a = baseCol.a; // preserve transparency
+                    m.color = c;
+                    if (m.HasProperty(BaseColorId)) m.SetColor(BaseColorId, c);
+                    if (m.HasProperty(EmissionColorId))
+                    {
+                        Color baseEmis = (_robotBaseEmission != null && i < _robotBaseEmission.Length)
+                            ? _robotBaseEmission[i] : Color.black;
+                        m.SetColor(EmissionColorId, baseEmis + lift);
+                    }
+                }
             }
         }
 
@@ -215,49 +359,53 @@ namespace TheRobotDraft.Uml3D
 
         private static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
         private static readonly int EmissionColorId = Shader.PropertyToID("_EmissionColor");
+        private static readonly int CullId = Shader.PropertyToID("_Cull");
 
-        /// <summary>A 24-vertex (per-face normals), 12-triangle box centered on the origin. Front face at +Z.</summary>
-        private static Mesh BuildBoxMesh(float w, float h, float d)
+        /// <summary>
+        /// Build (or rebuild) the always-on silhouette border: a child carrying the same shape mesh, slightly
+        /// inflated and rendered with FRONT-face culling in a darker tone of the fill, so only the back-faces peek
+        /// out around the rim as a colored edge. Works for every kind (box, ovoid, cylinder, actor, …) without a
+        /// per-shape outline path. Drawn just before opaque geometry so the node body covers the interior.
+        /// </summary>
+        private void BuildOutline(Mesh mesh, float w, float h)
         {
-            float x = w * 0.5f, y = h * 0.5f, z = d * 0.5f;
-            var v = new[]
-            {
-                // +Z (front)
-                new Vector3(-x, -y, z), new Vector3(x, -y, z), new Vector3(x, y, z), new Vector3(-x, y, z),
-                // -Z (back)
-                new Vector3(x, -y, -z), new Vector3(-x, -y, -z), new Vector3(-x, y, -z), new Vector3(x, y, -z),
-                // +X (right)
-                new Vector3(x, -y, z), new Vector3(x, -y, -z), new Vector3(x, y, -z), new Vector3(x, y, z),
-                // -X (left)
-                new Vector3(-x, -y, -z), new Vector3(-x, -y, z), new Vector3(-x, y, z), new Vector3(-x, y, -z),
-                // +Y (top)
-                new Vector3(-x, y, z), new Vector3(x, y, z), new Vector3(x, y, -z), new Vector3(-x, y, -z),
-                // -Y (bottom)
-                new Vector3(-x, -y, -z), new Vector3(x, -y, -z), new Vector3(x, -y, z), new Vector3(-x, -y, z),
-            };
-            var n = new[]
-            {
-                Vector3.forward, Vector3.back, Vector3.right, Vector3.left, Vector3.up, Vector3.down,
-            };
-            var normals = new Vector3[24];
-            for (int f = 0; f < 6; f++)
-                for (int i = 0; i < 4; i++)
-                    normals[f * 4 + i] = n[f];
+            if (_outline != null) Destroy(_outline);
+            if (mesh == null) return;
 
-            var tris = new int[36];
-            for (int f = 0; f < 6; f++)
-            {
-                int b = f * 4, t = f * 6;
-                tris[t] = b; tris[t + 1] = b + 1; tris[t + 2] = b + 2;
-                tris[t + 3] = b; tris[t + 4] = b + 2; tris[t + 5] = b + 3;
-            }
+            _outline = new GameObject("Outline");
+            _outline.transform.SetParent(_slab, false);
+            _outline.AddComponent<MeshFilter>().sharedMesh = mesh;
+            var r = _outline.AddComponent<MeshRenderer>();
+            r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            r.receiveShadows = false;
+            _outlineMaterial = CreateOutlineMaterial(BorderColor(_fill));
+            r.sharedMaterial = _outlineMaterial;
 
-            var mesh = new Mesh { name = "UmlNodeSlab" };
-            mesh.vertices = v;
-            mesh.normals = normals;
-            mesh.triangles = tris;
-            mesh.RecalculateBounds();
-            return mesh;
+            // A constant-ish world border (~0.025u) regardless of node size: scale by the larger span so wide
+            // nodes don't get a runaway rim.
+            float span = Mathf.Max(0.1f, Mathf.Max(w, h));
+            _outline.transform.localScale = Vector3.one * (1f + 0.05f / span);
+        }
+
+        /// <summary>A darker tone of the node fill, used for the silhouette border so each kind keeps its hue.</summary>
+        private static Color BorderColor(Color fill)
+        {
+            Color c = Color.Lerp(fill, Color.black, 0.55f);
+            c.a = 1f;
+            return c;
+        }
+
+        /// <summary>An unlit, front-culled material for the inverted-hull border (URP Unlit, plain Unlit fallback).</summary>
+        private static Material CreateOutlineMaterial(Color color)
+        {
+            Shader sh = Shader.Find("Universal Render Pipeline/Unlit");
+            if (sh == null) sh = Shader.Find("Unlit/Color");
+            if (sh == null) sh = Shader.Find("Sprites/Default");
+            var m = new Material(sh) { color = color };
+            if (m.HasProperty(BaseColorId)) m.SetColor(BaseColorId, color);
+            if (m.HasProperty(CullId)) m.SetFloat(CullId, 1f); // 1 = Front → render back faces only
+            m.renderQueue = 1999;                              // just before opaque geometry (2000)
+            return m;
         }
 
         /// <summary>Build a lit material, falling back through Standard then an unlit color shader if URP is absent.</summary>
@@ -282,8 +430,21 @@ namespace TheRobotDraft.Uml3D
         {
             if (_font == null) _font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
 
+            var style = Uml3DNodeShape.Face(kind);
+            // Markers / control nodes (start, final, junction, fork, decision, flow-final, terminate, …) carry no
+            // text — the silhouette is the meaning. Leave the face canvas unbuilt; everything that reads it is
+            // null-guarded.
+            if (style == Uml3DNodeShape.FaceStyle.None)
+            {
+                _faceCanvas = null;
+                _faceGroup = null;
+                _faceRt = null;
+                return;
+            }
+
             var faceGo = new GameObject("Face", typeof(RectTransform));
             var faceRt = (RectTransform)faceGo.transform;
+            _faceRt = faceRt;
             faceRt.SetParent(_slab, false);
             _faceCanvas = faceGo.AddComponent<Canvas>();
             _faceCanvas.renderMode = RenderMode.WorldSpace;
@@ -301,8 +462,40 @@ namespace TheRobotDraft.Uml3D
             // Just in front of the +Z face (nudged a hair further out so the opaque panel can't z-fight the slab).
             // Flipped 180° about Y so the canvas's READABLE side faces +Z (the camera): a uGUI world-space canvas
             // is legible from its −Z side, so an identity-rotated face shows its mirrored back to a +Z camera.
-            faceRt.localPosition = new Vector3(0f, 0f, d * 0.5f + 0.004f);
+            // Shapes that bulge toward the camera (mind-node ovoid, database drum) seat the label on their dome.
+            float faceFrontZ = kind switch
+            {
+                ElementKind.MindNode => Uml3DShape_MindNode.FrontPoleZ(w, h, d),
+                ElementKind.Database => Uml3DShape_Cylinder.FrontPoleZ(w, h, d),
+                _ => d * 0.5f,
+            };
+            faceRt.localPosition = new Vector3(0f, 0f, faceFrontZ + 0.004f);
             faceRt.localRotation = Quaternion.Euler(0f, 180f, 0f);
+
+            // Wireframe widgets: draw the concrete UI control glyph (button, field, table, …) on an opaque card.
+            // The glyph composes from lo-fi uGUI primitives; Field members become the widget's items (table columns,
+            // list entries, …). The slab fill is the kind hue (or a styleguide theme color via ThemeApplier).
+            if (style == Uml3DNodeShape.FaceStyle.WireframeWidget)
+            {
+                BuildFacePanel(faceRt, pxW, pxH);
+                WireframeGlyph.Build(kind, name, attributes, faceRt,
+                    WireframeGlyph.FromHue(_fill), _font);
+                return;
+            }
+
+            // Non-rectangular silhouettes (use case, state, activity, actor, package, cloud, cylinder, note, …)
+            // get a single centered label rather than a compartment card: a full-face opaque panel would poke
+            // outside the shape's outline. The history pseudostate gets its circled-H glyph the same way.
+            if (style != Uml3DNodeShape.FaceStyle.Compartments)
+            {
+                string label = style == Uml3DNodeShape.FaceStyle.GlyphH ? "H" : name;
+                // The actor / person silhouette fills the face and reserves a band at the bottom for its name
+                // (UML writes the actor's name beneath the figure), so anchor the label low for those kinds.
+                bool nameAtBottom = kind == ElementKind.Actor || kind == ElementKind.Person;
+                BuildLabelFace(faceRt, label,
+                    style == Uml3DNodeShape.FaceStyle.GlyphH ? null : stereotype, pxW, pxH, nameAtBottom);
+                return;
+            }
 
             // Opaque, full-face background panel drawn behind every row. uGUI renders unlit, so this panel plus the
             // text rows are always full-bright regardless of scene lighting, guaranteeing the (dark) member text has
@@ -400,6 +593,56 @@ namespace TheRobotDraft.Uml3D
             panelImg.raycastTarget = false;
             // Sit immediately above the border but below the text rows added afterward.
             panelRt.SetSiblingIndex(1);
+        }
+
+        /// <summary>
+        /// A centered name (and optional stereotype above it) for non-rectangular silhouettes — no opaque card, so
+        /// the text floats on the shape's front face. The color is chosen to contrast the lit, fill-tinted mesh and
+        /// an <see cref="Outline"/> is added so the label stays legible over a mid-tone surface.
+        /// </summary>
+        private void BuildLabelFace(RectTransform parent, string name, string stereotype, float pxW, float pxH,
+            bool atBottom = false)
+        {
+            float lum = 0.2126f * _fill.r + 0.7152f * _fill.g + 0.0722f * _fill.b;
+            Color textCol = lum < 0.5f ? new Color(0.97f, 0.98f, 1f, 1f) : new Color(0.10f, 0.12f, 0.16f, 1f);
+            Color outline = lum < 0.5f ? new Color(0f, 0f, 0f, 0.65f) : new Color(1f, 1f, 1f, 0.7f);
+
+            bool hasStereo = !string.IsNullOrEmpty(name) && !string.IsNullOrEmpty(stereotype);
+            // Bottom-anchored (actor/person): the name sits in the reserved band beneath the figure. Otherwise the
+            // label block is centered on the face, nudged down a touch when a stereotype rides above it.
+            float nameY = atBottom ? (-pxH * 0.5f + 15f) : (hasStereo ? 9f : 0f);
+            float nameH = atBottom ? 28f : Mathf.Max(20f, pxH - 12f);
+            if (hasStereo)
+                Label(parent, stereotype, new Vector2(0f, nameY + (atBottom ? 18f : 16f)), pxW - 8f, 22f, 13,
+                    textCol, outline, false);
+            Label(parent, name, new Vector2(0f, nameY), pxW - 8f, nameH, NameSize, textCol, outline, true);
+        }
+
+        /// <summary>One centered, outlined label inside the face canvas (used by <see cref="BuildLabelFace"/>).</summary>
+        private void Label(RectTransform parent, string text, Vector2 center, float width, float height, int size,
+            Color color, Color outline, bool bold)
+        {
+            var go = new GameObject("Label", typeof(RectTransform));
+            var rt = (RectTransform)go.transform;
+            rt.SetParent(parent, false);
+            rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0.5f);
+            rt.pivot = new Vector2(0.5f, 0.5f);
+            rt.sizeDelta = new Vector2(width, height);
+            rt.anchoredPosition = center;
+            var t = go.AddComponent<Text>();
+            t.font = _font;
+            t.text = text;
+            t.fontSize = size;
+            t.color = color;
+            t.fontStyle = bold ? FontStyle.Bold : FontStyle.Normal;
+            t.alignment = TextAnchor.MiddleCenter;
+            t.supportRichText = false;
+            t.raycastTarget = false;
+            t.horizontalOverflow = HorizontalWrapMode.Wrap;
+            t.verticalOverflow = VerticalWrapMode.Truncate;
+            var o = go.AddComponent<Outline>();
+            o.effectColor = outline;
+            o.effectDistance = new Vector2(1.2f, 1.2f);
         }
 
         /// <summary>One text row laid out from the canvas center, top-anchored at <paramref name="topY"/> (px).</summary>

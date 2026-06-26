@@ -104,6 +104,114 @@ namespace TheRobotDraft.Authoring.Model
 
         /// <summary>A call-behavior activity node (rounded rect with the rake icon) — distinct from an atomic action.</summary>
         CallActivity,
+
+        // ============================================================================================
+        // Additional software-development graph types (appended; saved-diagram kind ordinals stay stable).
+        // Ordered most-useful → least-useful for software work. These render as labelled bubbles via the
+        // shared slab renderer; they need only a hue + (for table-like kinds) containment.
+        // ============================================================================================
+
+        // --- data model / ERD ---
+        /// <summary>An entity / database table — a classifier whose columns are Field members.</summary>
+        EntityTable,
+
+        // --- C4 model (software architecture) ---
+        /// <summary>A C4 person / user actor.</summary>
+        Person,
+        /// <summary>A C4 software system (the highest-level box).</summary>
+        SoftwareSystem,
+        /// <summary>A C4 container — a deployable/runnable unit (app, service, database) inside a system.</summary>
+        Container,
+
+        // --- flowchart ---
+        /// <summary>A flowchart process step (rectangle).</summary>
+        FlowProcess,
+        /// <summary>A flowchart terminator — start / end (stadium).</summary>
+        FlowTerminator,
+        /// <summary>A flowchart input / output node (parallelogram).</summary>
+        FlowIO,
+        /// <summary>A flowchart document node (wavy-bottom rectangle).</summary>
+        FlowDocument,
+
+        // --- data flow diagram (DFD) ---
+        /// <summary>A DFD data store (open-ended rectangle).</summary>
+        DataStore,
+        /// <summary>A DFD external entity / source-sink (square).</summary>
+        ExternalEntity,
+
+        // --- infrastructure / network / cloud ---
+        /// <summary>A server / host node.</summary>
+        Server,
+        /// <summary>A database server (cylinder) — the infra store, distinct from an ERD table.</summary>
+        Database,
+        /// <summary>A cloud / managed-service boundary.</summary>
+        Cloud,
+        /// <summary>A client device / workstation.</summary>
+        Client,
+        /// <summary>A firewall / security appliance.</summary>
+        Firewall,
+
+        // --- mind map ---
+        /// <summary>A mind-map topic / idea node.</summary>
+        MindNode,
+
+        // --- wireframe / UI mockup ---
+        /// <summary>A screen / page container in a UI wireframe; a region that groups its widgets.</summary>
+        Screen,
+        /// <summary>A generic UI widget (button, input, label, …) inside a screen — the un-typed fallback.</summary>
+        UiWidget,
+        /// <summary>A layout / grouping region inside a screen (or nested); carries its child widgets when moved.</summary>
+        Panel,
+
+        // Concrete wireframe widgets (PlantUML-`salt` parity). All are leaves — they contain nothing.
+        /// <summary>A wireframe push button.</summary>
+        Button,
+        /// <summary>A non-interactive text label.</summary>
+        Label,
+        /// <summary>A hyperlink (underlined text).</summary>
+        Link,
+        /// <summary>A single-line text input.</summary>
+        TextField,
+        /// <summary>A multi-line text input.</summary>
+        TextArea,
+        /// <summary>A masked password input.</summary>
+        Password,
+        /// <summary>A toggle checkbox.</summary>
+        Checkbox,
+        /// <summary>A radio button.</summary>
+        Radio,
+        /// <summary>A select / dropdown.</summary>
+        Dropdown,
+        /// <summary>A list box of items.</summary>
+        List,
+        /// <summary>A data table (columns from its Field children).</summary>
+        Table,
+        /// <summary>A tree / outline view.</summary>
+        Tree,
+        /// <summary>An image / picture placeholder.</summary>
+        Image,
+        /// <summary>A tab strip with a body region.</summary>
+        Tabs,
+        /// <summary>A menu / menubar.</summary>
+        Menu,
+        /// <summary>A card container.</summary>
+        Card,
+        /// <summary>A horizontal / vertical rule.</summary>
+        Separator,
+        /// <summary>A progress bar.</summary>
+        Progress,
+        /// <summary>A slider / range control.</summary>
+        Slider,
+        /// <summary>A breadcrumb trail.</summary>
+        Breadcrumb,
+        /// <summary>A toolbar / action bar.</summary>
+        Toolbar,
+
+        // --- project (Gantt / Kanban) ---
+        /// <summary>A project task / work item (Gantt bar or Kanban card).</summary>
+        Task,
+        /// <summary>A Kanban column / lane (To Do, Doing, Done).</summary>
+        KanbanColumn,
     }
 
     /// <summary>
@@ -141,6 +249,10 @@ namespace TheRobotDraft.Authoring.Model
 
         /// <summary>A profile «extension» — a stereotype extends a metaclass (solid line, filled triangle head).</summary>
         Extension,
+
+        /// <summary>A «consumes» usage link (dashed, open arrow): the source class/module uses/depends on the
+        /// target — what code import emits when one type references another. Directed source→target.</summary>
+        Consumes,
     }
 
     /// <summary>
@@ -194,6 +306,52 @@ namespace TheRobotDraft.Authoring.Model
             ElementKind.Profile => "#8893A0",
             ElementKind.TimingLifeline => "#5B8AC4",
             ElementKind.CallActivity => "#4FA3A0",
+
+            // --- additional software-development graph types ---
+            ElementKind.EntityTable => "#2C7FB8",
+            ElementKind.Person => "#7B6FB0",
+            ElementKind.SoftwareSystem => "#1F6FB2",
+            ElementKind.Container => "#438DD5",
+            ElementKind.FlowProcess => "#5B8AC4",
+            ElementKind.FlowTerminator => "#5AB28A",
+            ElementKind.FlowIO => "#E69F00",
+            ElementKind.FlowDocument => "#B0A878",
+            ElementKind.DataStore => "#7FA6B0",
+            ElementKind.ExternalEntity => "#8893A0",
+            ElementKind.Server => "#6E7B8B",
+            ElementKind.Database => "#4F86C6",
+            ElementKind.Cloud => "#56B4E9",
+            ElementKind.Client => "#9AA7B0",
+            ElementKind.Firewall => "#C44E52",
+            ElementKind.MindNode => "#4FA3A0",
+            ElementKind.Screen => "#8893A0",
+            ElementKind.UiWidget => "#C7CDD6",
+            ElementKind.Panel => "#7E8AA2",
+            // Wireframe widgets: a neutral lo-fi family with a few semantic accents (overridable by a theme).
+            ElementKind.Button => "#4FA3A0",
+            ElementKind.Label => "#9AA7B0",
+            ElementKind.Link => "#0284C7",
+            ElementKind.TextField => "#7FA6B0",
+            ElementKind.TextArea => "#7FA6B0",
+            ElementKind.Password => "#7FA6B0",
+            ElementKind.Checkbox => "#9AA7B0",
+            ElementKind.Radio => "#9AA7B0",
+            ElementKind.Dropdown => "#7FA6B0",
+            ElementKind.List => "#9AA7B0",
+            ElementKind.Table => "#7FA6B0",
+            ElementKind.Tree => "#9AA7B0",
+            ElementKind.Image => "#B0A878",
+            ElementKind.Tabs => "#9AA7B0",
+            ElementKind.Menu => "#9AA7B0",
+            ElementKind.Card => "#C7CDD6",
+            ElementKind.Separator => "#C7CDD6",
+            ElementKind.Progress => "#5AB28A",
+            ElementKind.Slider => "#9AA7B0",
+            ElementKind.Breadcrumb => "#9AA7B0",
+            ElementKind.Toolbar => "#9AA7B0",
+            ElementKind.Task => "#2CA02C",
+            ElementKind.KanbanColumn => "#7E8AA2",
+
             _ => "#FFFFFF",
         };
 
@@ -202,7 +360,7 @@ namespace TheRobotDraft.Authoring.Model
         {
             ElementKind.Class or ElementKind.Interface or ElementKind.Enum or ElementKind.Struct
                 or ElementKind.External or ElementKind.DataType or ElementKind.ObjectInstance
-                or ElementKind.Component => true,
+                or ElementKind.Component or ElementKind.EntityTable => true,
             _ => false,
         };
 
@@ -232,5 +390,28 @@ namespace TheRobotDraft.Authoring.Model
         /// <summary>Any node that a relationship line may attach to (diagram nodes + packages).</summary>
         public static bool IsConnectable(ElementKind kind) =>
             IsDiagramNode(kind) || kind == ElementKind.Package;
+
+        /// <summary>
+        /// A wireframe container that groups widgets and carries them when moved (a "region"). Screen is the
+        /// top-level page; Panel is a nested layout group. Rendered as a region cube, not a slab.
+        /// </summary>
+        public static bool IsWireframeRegion(ElementKind kind) =>
+            kind == ElementKind.Screen || kind == ElementKind.Panel;
+
+        /// <summary>
+        /// A concrete wireframe widget (button, input, table, …) or the generic <see cref="ElementKind.UiWidget"/>
+        /// fallback. These are leaves — they contain nothing — and render as distinct lo-fi glyphs inside a
+        /// Screen/Panel. PlantUML-`salt` vocabulary.
+        /// </summary>
+        public static bool IsWireframeWidget(ElementKind kind) => kind switch
+        {
+            ElementKind.UiWidget or ElementKind.Button or ElementKind.Label or ElementKind.Link
+                or ElementKind.TextField or ElementKind.TextArea or ElementKind.Password
+                or ElementKind.Checkbox or ElementKind.Radio or ElementKind.Dropdown or ElementKind.List
+                or ElementKind.Table or ElementKind.Tree or ElementKind.Image or ElementKind.Tabs
+                or ElementKind.Menu or ElementKind.Card or ElementKind.Separator or ElementKind.Progress
+                or ElementKind.Slider or ElementKind.Breadcrumb or ElementKind.Toolbar => true,
+            _ => false,
+        };
     }
 }
