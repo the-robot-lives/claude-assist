@@ -8,6 +8,15 @@
 #   make run     — start containers
 
 services:
+  migrations:
+    build:
+      context: ./backend/db
+      dockerfile: Dockerfile
+    env_file: .env
+    networks:
+      - infra
+    restart: "no"
+
   nginx:
     image: ${REGISTRY:-ops.noizu.com}/${PROJECT_DIR:-start-app}/nginx:${TAG:-latest}
     ports:
@@ -27,6 +36,9 @@ services:
       PORT: "4000"
     expose:
       - "4000"
+    depends_on:
+      migrations:
+        condition: service_completed_successfully
     networks:
       - app
       - infra

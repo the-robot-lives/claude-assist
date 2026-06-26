@@ -27,7 +27,7 @@ config :noizu_sendgrid,
   api_key: System.get_env("SENDGRID_API_KEY") || "SG.dev-placeholder"
 
 config :therobotlives, :mail_from,
-  {"TheRobotLives", "noreply@therobotlives.com"}
+  {"Therobotlives", "noreply@starter.local"}
 
 config :logger, :default_formatter,
   format: "$time $metadata[$level] $message\n",
@@ -35,7 +35,7 @@ config :logger, :default_formatter,
 
 config :phoenix, :json_library, Jason
 
-config :therobotlives, :redis, uri: "redis://localhost:6379/0", key_prefix: "therobotlives:"
+config :therobotlives, :redis, uri: "redis://localhost:6379/0", key_prefix: "starter:"
 
 config :therobotlives, Therobotlives.Guardian,
   issuer: "therobotlives",
