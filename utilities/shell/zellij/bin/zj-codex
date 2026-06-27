@@ -3,10 +3,10 @@ set -euo pipefail
 
 usage() {
     cat <<'USAGE'
-zj-codex — launch a zellij session with codex in split panes per directory
+zj-codex — launch a zellij session with codex queued in split panes per directory
 
 Each selected directory gets a tab with:
-  - Large top pane: runs `codex` (with optional extra args)
+  - Large top pane: prefills `codex` (with optional extra args); press Enter to run
   - Thin bottom pane: shell navigated to that directory
 
 Usage:
@@ -200,6 +200,36 @@ fi
 
 user_shell="$(basename "${SHELL:-/bin/bash}")"
 
+kdl_escape() {
+    local s="$1"
+    s="${s//\\/\\\\}"
+    s="${s//\"/\\\"}"
+    s="${s//$'\n'/\\n}"
+    printf '%s' "$s"
+}
+
+prefill_launch_script() {
+    local dir="$1"
+    local agent_cmd="$2"
+    local dir_q agent_q shell_q
+
+    dir_q="$(printf '%q' "$dir")"
+    agent_q="$(printf '%q' "$agent_cmd")"
+    shell_q="$(printf '%q' "$user_shell")"
+
+    case "$user_shell" in
+        zsh)
+            printf 'cd %s || exit; __zj_cmd=%s; vared -p "$ " __zj_cmd; __zj_status=$?; if [[ $__zj_status -eq 0 && -n "$__zj_cmd" ]]; then eval "$__zj_cmd"; fi; exec %s' "$dir_q" "$agent_q" "$shell_q"
+            ;;
+        bash)
+            printf 'cd %s || exit; __zj_cmd=""; if read -e -i %s -p "$ " __zj_cmd; then if [[ -n "$__zj_cmd" ]]; then eval "$__zj_cmd"; fi; fi; exec %s' "$dir_q" "$agent_q" "$shell_q"
+            ;;
+        *)
+            printf 'cd %s || exit; printf "Command ready: %%s\n" %s; exec %s' "$dir_q" "$agent_q" "$shell_q"
+            ;;
+    esac
+}
+
 unset ZELLIJ ZELLIJ_SESSION_NAME
 if zellij list-sessions --short --no-formatting 2>/dev/null | grep -qxF "$session"; then
     if [[ -z "$explicit_session" ]]; then
@@ -239,27 +269,38 @@ fi
 
     for dir in "${selected[@]}"; do
         tab_name="$(basename "$dir")"
+        tab_name_kdl="$(kdl_escape "$tab_name")"
+        user_shell_kdl="$(kdl_escape "$user_shell")"
+        dir_q="$(printf '%q' "$dir")"
+        codex_script="$(prefill_launch_script "$dir" "$codex_cmd")"
+        nvim_script="cd $dir_q && nvim .; exec $user_shell"
+        shell_script="cd $dir_q && ${bottom_command:-exec $user_shell}"
+        preview_script="cd $dir_q && ${start_app:-echo 'No --start-app specified. Use --start-app to set a dev command.'}; exec $user_shell"
+        codex_script_kdl="$(kdl_escape "$codex_script")"
+        nvim_script_kdl="$(kdl_escape "$nvim_script")"
+        shell_script_kdl="$(kdl_escape "$shell_script")"
+        preview_script_kdl="$(kdl_escape "$preview_script")"
         cat <<TABEOF
-  tab name="$tab_name" {
+  tab name="$tab_name_kdl" {
     pane split_direction="vertical" {
-      pane size="50%" name="codex: $tab_name" {
-        command "$user_shell"
-        args "-c" "cd '$dir' && $codex_cmd; exec $user_shell"
+      pane size="50%" name="codex: $tab_name_kdl" {
+        command "$user_shell_kdl"
+        args "-ic" "$codex_script_kdl"
         focus true
       }
-      pane size="50%" name="nvim: $tab_name" {
-        command "$user_shell"
-        args "-c" "cd '$dir' && nvim .; exec $user_shell"
+      pane size="50%" name="nvim: $tab_name_kdl" {
+        command "$user_shell_kdl"
+        args "-c" "$nvim_script_kdl"
       }
     }
-    pane name="shell: $tab_name" size=$bottom_size {
-      command "$user_shell"
-      args "-c" "cd '$dir' && ${bottom_command:-exec $user_shell}"
+    pane name="shell: $tab_name_kdl" size=$bottom_size {
+      command "$user_shell_kdl"
+      args "-c" "$shell_script_kdl"
     }
     floating_panes {
-      pane name="preview: $tab_name" {
-        command "$user_shell"
-        args "-c" "cd '$dir' && ${start_app:-echo 'No --start-app specified. Use --start-app to set a dev command.'}; exec $user_shell"
+      pane name="preview: $tab_name_kdl" {
+        command "$user_shell_kdl"
+        args "-c" "$preview_script_kdl"
       }
     }
   }
