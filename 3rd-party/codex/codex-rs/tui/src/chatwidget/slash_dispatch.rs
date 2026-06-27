@@ -260,6 +260,10 @@ impl ChatWidget {
                 }
                 self.app_event_tx.compact();
             }
+            SlashCommand::EditConvo => {
+                self.bottom_pane.show_edit_convo_view(self.rollout_path());
+                self.request_redraw();
+            }
             SlashCommand::Review => {
                 self.open_review_popup();
             }
@@ -1068,6 +1072,7 @@ impl ChatWidget {
             | SlashCommand::Fork
             | SlashCommand::Init
             | SlashCommand::Compact
+            | SlashCommand::EditConvo
             | SlashCommand::Review
             | SlashCommand::Model
             | SlashCommand::Personality

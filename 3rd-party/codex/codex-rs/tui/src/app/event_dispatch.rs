@@ -43,6 +43,21 @@ impl App {
                 )
                 .await;
             }
+            AppEvent::EditConvoApplied {
+                output_path,
+                summary,
+            } => {
+                self.chat_widget.add_info_message(
+                    format!("Conversation edit copy written: {}", output_path.display()),
+                    Some(summary),
+                );
+                tui.frame_requester().schedule_frame();
+            }
+            AppEvent::EditConvoFailed { message } => {
+                self.chat_widget
+                    .add_error_message(format!("Conversation edit failed: {message}"));
+                tui.frame_requester().schedule_frame();
+            }
             AppEvent::RawOutputModeChanged { enabled } => {
                 self.apply_raw_output_mode(tui, enabled, /*notify*/ false);
             }

@@ -352,6 +352,7 @@ export function ExplorePage() {
               title={item.conversation.title}
               projectPath={item.conversation.projectPath}
               messageCount={item.conversation.messageCount}
+              startedAt={(item.conversation as Partial<ConversationItem>).startedAt}
               updatedAt={item.conversation.updatedAt}
               snippet={item.snippet}
               isCursor={isCursor}
@@ -367,9 +368,11 @@ export function ExplorePage() {
           visibleRange={scroll.visibleRange}
           renderItem={(item, _index, isCursor) => (
             item.type === "group" ? (
-              <Text inverse={isCursor} color="cyan" bold>
-                {isCursor ? "▸ " : "  "}Project {shortProject(item.projectPath)} <Text dimColor>({item.count})</Text>
-              </Text>
+              <Box flexDirection="column" borderStyle={isCursor ? "single" : undefined} borderColor={isCursor ? "cyan" : undefined} paddingX={isCursor ? 1 : 0}>
+                <Text color={isCursor ? "white" : "cyan"} bold>
+                  {isCursor ? "✓ " : "  "}Project {shortProject(item.projectPath)} <Text dimColor={!isCursor}>({item.count})</Text>
+                </Text>
+              </Box>
             ) : (
               <ConversationRow
                 id={item.conversation.id}
@@ -377,6 +380,7 @@ export function ExplorePage() {
                 title={item.conversation.title}
                 projectPath={item.conversation.projectPath}
                 messageCount={item.conversation.messageCount}
+                startedAt={item.conversation.startedAt}
                 updatedAt={item.conversation.updatedAt}
                 status={item.conversation.status}
                 firstMessage={item.conversation.firstMessage}

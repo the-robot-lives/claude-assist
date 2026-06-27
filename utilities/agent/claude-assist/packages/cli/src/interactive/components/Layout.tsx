@@ -44,7 +44,14 @@ export function Layout({ children, statusHints, statusInfo }: LayoutProps) {
           selectedIndex={sidebarIndex}
           onSelectedIndexChange={setSidebarIndex}
         />
-        <Box flexDirection="column" flexGrow={1} paddingX={1} overflow="hidden">
+        <Box
+          flexDirection="column"
+          flexGrow={1}
+          borderStyle="single"
+          borderColor={focusZone === "content" ? "white" : "gray"}
+          paddingX={1}
+          overflow="hidden"
+        >
           {children}
         </Box>
       </Box>

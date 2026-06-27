@@ -27,6 +27,7 @@ fn preset_to_info(preset: &ModelPreset, priority: i32) -> ModelInfo {
             ModelVisibility::Hide
         },
         supported_in_api: preset.supported_in_api,
+        model_provider: None,
         priority,
         additional_speed_tiers: preset.additional_speed_tiers.clone(),
         service_tiers: preset.service_tiers.clone(),

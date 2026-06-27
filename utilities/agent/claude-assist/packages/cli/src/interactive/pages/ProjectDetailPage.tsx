@@ -129,6 +129,7 @@ export function ProjectDetailPage() {
               title={conv.title}
               projectPath={conv.projectPath}
               messageCount={conv.messageCount}
+              startedAt={conv.startedAt}
               updatedAt={conv.updatedAt}
               status={conv.status}
               isCursor={isCursor}

@@ -206,6 +206,17 @@ pub(crate) enum AppEvent {
     /// previous chat resumable.
     ClearUi,
 
+    /// The local conversation editor wrote an edited rollout copy.
+    EditConvoApplied {
+        output_path: PathBuf,
+        summary: String,
+    },
+
+    /// The local conversation editor failed to validate or write an edited rollout copy.
+    EditConvoFailed {
+        message: String,
+    },
+
     /// Re-render the transcript using the selected scrollback rendering mode.
     RawOutputModeChanged {
         enabled: bool,

@@ -1,10 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Box, Text, useInput } from "ink";
-import { Spinner, TextInput, Select } from "@inkjs/ui";
+import { Spinner } from "@inkjs/ui";
 import { useApiQuery, apiFetch, useIndexStatus } from "../hooks/useApi.js";
 import { useScroll } from "../hooks/useScroll.js";
 import { useTerminalSize } from "../hooks/useTerminalSize.js";
-import { ConfirmDialog } from "../components/ConfirmDialog.js";
 import { InputModal } from "../components/InputModal.js";
 
 interface LlmConfig {
@@ -58,19 +57,38 @@ type UIMode =
   | "llm-key"
   | "llm-baseurl"
   | "llm-apitype"
-  | "test-prompt"
-  | "confirm-rebuild";
+  | "test-prompt";
 
 type Section = "index" | "embedding" | "llm";
 
-const EMBEDDING_OPTIONS = [
+interface MenuOption {
+  label: string;
+  value: string;
+}
+
+interface ActionButton {
+  id: string;
+  label: string;
+  run: () => void | Promise<void>;
+  disabled?: boolean;
+}
+
+const SECTIONS: Section[] = ["index", "embedding", "llm"];
+
+const SECTION_LABELS: Record<Section, string> = {
+  index: "Index Paths",
+  embedding: "Embedding",
+  llm: "LLM Inference",
+};
+
+const EMBEDDING_OPTIONS: MenuOption[] = [
   { label: "Local (MiniLM)", value: "local" },
   { label: "OpenAI", value: "openai" },
   { label: "Voyage", value: "voyage" },
   { label: "Anthropic", value: "anthropic" },
 ];
 
-const LLM_OPTIONS = [
+const LLM_OPTIONS: MenuOption[] = [
   { label: "None", value: "" },
   { label: "Anthropic (Claude)", value: "anthropic" },
   { label: "OpenAI", value: "openai" },
@@ -83,7 +101,7 @@ const LLM_OPTIONS = [
   { label: "Custom Endpoint", value: "custom" },
 ];
 
-const API_TYPE_OPTIONS = [
+const API_TYPE_OPTIONS: MenuOption[] = [
   { label: "OpenAI-compatible", value: "openai" },
   { label: "Anthropic-compatible", value: "anthropic" },
 ];
@@ -97,10 +115,19 @@ const MODEL_PLACEHOLDERS: Record<string, string> = {
   deepseek: "deepseek-chat",
 };
 
+function selectedOptionIndex(options: MenuOption[], value: string | undefined): number {
+  return Math.max(0, options.findIndex((option) => option.value === (value ?? "")));
+}
+
+function shortPath(path: string): string {
+  const parts = path.split("/").filter(Boolean);
+  return parts.length > 3 ? parts.slice(-3).join("/") : path;
+}
+
 export function SettingsPage() {
   const { rows } = useTerminalSize();
 
-  const { data: configData, loading, refetch } = useApiQuery<{ data: AppConfig }>("/config");
+  const { data: configData, loading } = useApiQuery<{ data: AppConfig }>("/config");
   const { data: idxData, refetch: refetchIdx } = useIndexStatus();
 
   const [config, setConfig] = useState<AppConfig | null>(null);
@@ -108,10 +135,13 @@ export function SettingsPage() {
   const [scanPreview, setScanPreview] = useState<ScanPreview | null>(null);
   const [uiMode, setUiMode] = useState<UIMode>("browse");
   const [section, setSection] = useState<Section>("index");
+  const [actionIndex, setActionIndex] = useState(0);
+  const [optionIndex, setOptionIndex] = useState(0);
   const [dirty, setDirty] = useState(false);
   const [saving, setSaving] = useState(false);
   const [scanning, setScanning] = useState(false);
   const [reindexing, setReindexing] = useState(false);
+  const [testPrompt, setTestPrompt] = useState<string | null>(null);
   const [testResponse, setTestResponse] = useState<string | null>(null);
   const [testError, setTestError] = useState<string | null>(null);
   const [testing, setTesting] = useState(false);
@@ -125,54 +155,28 @@ export function SettingsPage() {
     apiFetch<{ data: LlmStatus }>("/llm/status")
       .then((res) => setLlmStatus(res.data))
       .catch(() => {});
-  }, [saving]);
+  }, [saving, dirty]);
+
+  useEffect(() => {
+    setActionIndex(0);
+  }, [section]);
 
   const pathScroll = useScroll({
     totalItems: config?.indexPaths.length ?? 0,
     viewportHeight: Math.min(8, Math.max(3, rows - 20)),
-    isActive: uiMode === "browse" && section === "index",
+    isActive: false,
   });
 
   const showAction = (msg: string) => {
     setActionMsg(msg);
-    setTimeout(() => setActionMsg(""), 2000);
+    setTimeout(() => setActionMsg(""), 2500);
   };
 
-  useInput((input, key) => {
-    if (uiMode !== "browse") {
-      if (key.escape) setUiMode("browse");
+  const handleSave = async () => {
+    if (!config || !dirty) {
+      showAction("No settings changes to save");
       return;
     }
-
-    if (input === "1") setSection("index");
-    else if (input === "2") setSection("embedding");
-    else if (input === "3") setSection("llm");
-    else if (input === "s") handleSave();
-    else if (section === "index") {
-      if (input === "a") setUiMode("add-path");
-      else if (input === "d" && config) {
-        const updated = { ...config, indexPaths: config.indexPaths.filter((_, i) => i !== pathScroll.cursor) };
-        setConfig(updated);
-        setDirty(true);
-      }
-      else if (input === "p") handleScan();
-      else if (input === "r") handleRebuild();
-    }
-    else if (section === "embedding") {
-      if (input === "e") setUiMode("select-embedding");
-    }
-    else if (section === "llm") {
-      if (input === "e") setUiMode("select-llm");
-      else if (input === "m") setUiMode("llm-model");
-      else if (input === "k") setUiMode("llm-key");
-      else if (input === "b") setUiMode("llm-baseurl");
-      else if (input === "y") setUiMode("llm-apitype");
-      else if (input === "t") setUiMode("test-prompt");
-    }
-  }, { isActive: true });
-
-  const handleSave = async () => {
-    if (!config || !dirty) return;
     setSaving(true);
     try {
       const res = await apiFetch<{ data: AppConfig }>("/config", {
@@ -193,6 +197,7 @@ export function SettingsPage() {
     try {
       const res = await apiFetch<{ data: ScanPreview }>("/index/preview");
       setScanPreview(res.data);
+      showAction("Scan preview ready");
     } catch {
       showAction("Scan failed");
     }
@@ -201,6 +206,7 @@ export function SettingsPage() {
 
   const handleRebuild = async () => {
     setReindexing(true);
+    showAction("Rebuild started");
     await apiFetch("/index/rebuild", { method: "POST" });
     const poll = setInterval(async () => {
       try {
@@ -223,151 +229,240 @@ export function SettingsPage() {
     setTestError(null);
     setTestResponse(null);
     const msg = prompt.trim() || "Say hello in one sentence";
+    setTestPrompt(msg);
     try {
       const res = await apiFetch<{ data: { content: string } }>("/llm/complete", {
         method: "POST",
         body: JSON.stringify({ messages: [{ role: "user", content: msg }], maxTokens: 256 }),
       });
       setTestResponse(res.data.content);
+      showAction("Inference test complete");
     } catch (err: any) {
       setTestError(err.message ?? "Request failed");
+      showAction("Inference test failed");
     }
     setTesting(false);
     setUiMode("browse");
   };
 
-  if (loading || !config) return <Spinner label="Loading settings..." />;
+  const openOptionMenu = (mode: Extract<UIMode, "select-embedding" | "select-llm" | "llm-apitype">, options: MenuOption[], value?: string) => {
+    setOptionIndex(selectedOptionIndex(options, value));
+    setUiMode(mode);
+  };
 
+  const moveSection = (delta: number) => {
+    setSection((current) => {
+      const currentIndex = SECTIONS.indexOf(current);
+      return SECTIONS[(currentIndex + delta + SECTIONS.length) % SECTIONS.length];
+    });
+  };
+
+  const selectOption = (value: string) => {
+    if (!config) return;
+    if (uiMode === "select-embedding") {
+      setConfig({ ...config, embedding: { ...config.embedding, provider: value } });
+      setDirty(true);
+      setUiMode("browse");
+      showAction(`Embedding provider set to ${value}`);
+    } else if (uiMode === "select-llm") {
+      setConfig(value ? { ...config, llm: { ...config.llm, provider: value } } : { ...config, llm: undefined });
+      setDirty(true);
+      setUiMode("browse");
+      showAction(value ? `LLM provider set to ${value}` : "LLM provider cleared");
+    } else if (uiMode === "llm-apitype") {
+      setConfig({
+        ...config,
+        llm: { provider: config.llm?.provider ?? "custom", ...config.llm, apiType: value as "openai" | "anthropic" },
+      });
+      setDirty(true);
+      setUiMode("browse");
+      showAction(`API type set to ${value}`);
+    }
+  };
+
+  const activeConfig: AppConfig = config ?? {
+    indexPaths: [],
+    embedding: { provider: "local" },
+    server: { port: 0, host: "localhost" },
+  };
   const indexStatus = idxData?.data;
-  const lastIndexed = indexStatus?.lastIndexed
-    ? new Date(indexStatus.lastIndexed).toLocaleString()
-    : "Never";
-  const llmProvider = config.llm?.provider ?? "";
+  const lastIndexed = indexStatus?.lastIndexed ? new Date(indexStatus.lastIndexed).toLocaleString() : "Never";
+  const llmProvider = activeConfig.llm?.provider ?? "";
   const llmNeedsBaseUrl = llmProvider === "ollama" || llmProvider === "litellm" || llmProvider === "custom";
+
+  const sectionActions: Record<Section, ActionButton[]> = {
+    index: [
+      { id: "add", label: "Add Path", run: () => setUiMode("add-path") },
+      {
+        id: "delete",
+        label: "Delete Selected",
+        disabled: activeConfig.indexPaths.length === 0,
+        run: () => {
+          if (!config) return;
+          const updated = { ...config, indexPaths: config.indexPaths.filter((_, i) => i !== pathScroll.cursor) };
+          setConfig(updated);
+          setDirty(true);
+          showAction("Path removed");
+        },
+      },
+      { id: "scan", label: "Preview Scan", run: handleScan },
+      { id: "rebuild", label: "Rebuild Index", run: handleRebuild },
+      { id: "save", label: dirty ? "Save Changes" : "Save", disabled: !dirty, run: handleSave },
+    ],
+    embedding: [
+      {
+        id: "provider",
+        label: "Change Provider",
+        run: () => openOptionMenu("select-embedding", EMBEDDING_OPTIONS, activeConfig.embedding.provider),
+      },
+      { id: "save", label: dirty ? "Save Changes" : "Save", disabled: !dirty, run: handleSave },
+    ],
+    llm: [
+      { id: "provider", label: "Provider", run: () => openOptionMenu("select-llm", LLM_OPTIONS, llmProvider) },
+      { id: "model", label: "Model", disabled: !llmProvider, run: () => setUiMode("llm-model") },
+      { id: "key", label: "API Key", disabled: !llmProvider, run: () => setUiMode("llm-key") },
+      { id: "base", label: "Base URL", disabled: !llmNeedsBaseUrl, run: () => setUiMode("llm-baseurl") },
+      {
+        id: "type",
+        label: "API Type",
+        disabled: llmProvider !== "custom",
+        run: () => openOptionMenu("llm-apitype", API_TYPE_OPTIONS, activeConfig.llm?.apiType ?? "openai"),
+      },
+      { id: "test", label: "Test Inference", disabled: !llmProvider, run: () => setUiMode("test-prompt") },
+      { id: "save", label: dirty ? "Save Changes" : "Save", disabled: !dirty, run: handleSave },
+    ],
+  };
+
+  const currentActions = sectionActions[section];
+  const currentAction = currentActions[Math.min(actionIndex, currentActions.length - 1)];
+
+  useInput((input, key) => {
+    if (!config) return;
+
+    if (uiMode === "select-embedding" || uiMode === "select-llm" || uiMode === "llm-apitype") {
+      const options = uiMode === "select-embedding"
+        ? EMBEDDING_OPTIONS
+        : uiMode === "select-llm"
+          ? LLM_OPTIONS
+          : API_TYPE_OPTIONS;
+      if (key.escape) setUiMode("browse");
+      else if (key.upArrow) setOptionIndex((idx) => (idx - 1 + options.length) % options.length);
+      else if (key.downArrow) setOptionIndex((idx) => (idx + 1) % options.length);
+      else if (key.return) selectOption(options[optionIndex]?.value ?? "");
+      return;
+    }
+
+    if (uiMode !== "browse") {
+      if (key.escape) setUiMode("browse");
+      return;
+    }
+
+    if (key.upArrow) moveSection(-1);
+    else if (key.downArrow) moveSection(1);
+    else if (key.leftArrow) setActionIndex((idx) => (idx - 1 + currentActions.length) % currentActions.length);
+    else if (key.rightArrow) setActionIndex((idx) => (idx + 1) % currentActions.length);
+    else if (key.return && currentAction && !currentAction.disabled) currentAction.run();
+    else if (section === "index" && input === "j") pathScroll.moveCursorDown();
+    else if (section === "index" && input === "k") pathScroll.moveCursorUp();
+  }, { isActive: true });
+
+  const visiblePaths = activeConfig.indexPaths.slice(pathScroll.visibleRange[0], pathScroll.visibleRange[1]);
+
+  if (loading || !config) return <Spinner label="Loading settings..." />;
 
   return (
     <Box flexDirection="column">
-      <Text bold color="cyan">Settings</Text>
-      <Text dimColor>
-        1:Index 2:Embedding 3:LLM s:save
-        {dirty && <Text color="yellow"> [unsaved]</Text>}
-      </Text>
-      {actionMsg && <Text color="green">{actionMsg}</Text>}
-
-      {/* Section tabs */}
-      <Box gap={2} marginY={1}>
-        {(["index", "embedding", "llm"] as Section[]).map((s) => (
-          <Text key={s} bold={section === s} color={section === s ? "cyan" : undefined} dimColor={section !== s}>
-            [{s === "index" ? "1" : s === "embedding" ? "2" : "3"}] {s.toUpperCase()}
-          </Text>
-        ))}
+      <Box justifyContent="space-between">
+        <Text bold color="cyan">Settings</Text>
+        <Text dimColor>
+          <Text color="yellow">Keys:</Text> arrows move, Enter activates, Esc cancels
+          {section === "index" && <Text color="magenta">  j/k select path</Text>}
+        </Text>
       </Box>
+      {actionMsg && <Text color="cyan">{actionMsg}</Text>}
+      {dirty && <Text color="yellow">Unsaved changes</Text>}
 
-      {/* ── Index Section ── */}
-      {section === "index" && (
-        <Box flexDirection="column" borderStyle="single" borderColor="gray" paddingX={1}>
-          <Text bold>Index & Watch Paths</Text>
-          <Text dimColor>a:add d:remove p:preview-scan r:rebuild</Text>
-
-          {/* Status */}
-          <Box marginTop={1}>
+      <SettingsSection title={SECTION_LABELS.index} active={section === "index"} actions={sectionActions.index} actionIndex={actionIndex}>
+        <Text>
+          <Text color={reindexing ? "yellow" : "green"}>●</Text>
+          {" "}{reindexing ? "Indexing..." : "Idle"}
+          {" | "}{indexStatus?.conversationCount ?? 0} indexed
+          {" | "}Last: {lastIndexed}
+        </Text>
+        {config.indexPaths.length === 0 && <Text dimColor italic>No paths configured.</Text>}
+        {visiblePaths.map((path, i) => {
+          const pathIndex = pathScroll.visibleRange[0] + i;
+          const selected = pathIndex === pathScroll.cursor;
+          return (
+            <Text key={pathIndex} wrap="truncate-end">
+              <Text color={selected ? "white" : "gray"} bold={selected}>{selected ? "✓ " : "  "}</Text>
+              <Text color={selected ? "white" : undefined}>{shortPath(path)}</Text>
+              <Text dimColor>  {path}</Text>
+            </Text>
+          );
+        })}
+        {reindexing && <Spinner label="Rebuilding index..." />}
+        {scanning && <Spinner label="Scanning..." />}
+        {scanPreview && (
+          <Box flexDirection="column" marginTop={1} borderStyle="single" borderColor="gray" paddingX={1}>
+            <Text bold>Scan Preview</Text>
             <Text>
-              <Text color={reindexing ? "yellow" : "green"}>●</Text>
-              {" "}{reindexing ? "Indexing..." : "Idle"}
-              {" | "}{indexStatus?.conversationCount ?? 0} indexed
-              {" | "}Last: {lastIndexed}
+              <Text bold>{scanPreview.totalFiles}</Text> files total
+              {" | "}<Text bold color="cyan">{scanPreview.totalNewFiles}</Text> new/changed
+              {" | "}Cost: {scanPreview.embeddingProvider === "local" ? "Free" : `~$${scanPreview.estimatedCost.toFixed(4)}`}
             </Text>
-          </Box>
-
-          {/* Paths */}
-          {config.indexPaths.length === 0 && <Text dimColor italic>No paths configured. Press a to add ~/.claude/projects</Text>}
-          {config.indexPaths.map((p, i) => (
-            <Text key={i}>
-              <Text color={pathScroll.cursor === i ? "cyan" : undefined} inverse={pathScroll.cursor === i}>
-                {pathScroll.cursor === i ? "▸ " : "  "}{p}
+            <Text dimColor>~{scanPreview.estimatedTokens.toLocaleString()} tokens to embed</Text>
+            {scanPreview.projects.slice(0, 5).map((proj, i) => (
+              <Text key={i} dimColor>
+                {"  "}{shortPath(proj.projectPath)} - {proj.fileCount} files
+                {proj.newOrChanged > 0 && <Text color="cyan"> ({proj.newOrChanged} new)</Text>}
               </Text>
+            ))}
+          </Box>
+        )}
+      </SettingsSection>
+
+      <SettingsSection title={SECTION_LABELS.embedding} active={section === "embedding"} actions={sectionActions.embedding} actionIndex={actionIndex}>
+        <Text>Current: <Text color="cyan">{config.embedding.provider}</Text></Text>
+        <Text dimColor>Local embeddings use all-MiniLM-L6-v2. Cloud providers require API configuration outside local embedding mode.</Text>
+      </SettingsSection>
+
+      <SettingsSection title={SECTION_LABELS.llm} active={section === "llm"} actions={sectionActions.llm} actionIndex={actionIndex}>
+        <Text>
+          Provider: <Text color="cyan">{llmProvider || "None"}</Text>
+          {llmStatus && (
+            <Text>
+              {" | "}
+              <Text color={llmStatus.available ? "green" : "yellow"}>{llmStatus.available ? "connected" : "not configured"}</Text>
             </Text>
-          ))}
-
-          {reindexing && <Spinner label="Rebuilding index..." />}
-          {scanning && <Spinner label="Scanning..." />}
-
-          {/* Scan preview */}
-          {scanPreview && (
-            <Box flexDirection="column" marginTop={1} borderStyle="single" borderColor="gray" paddingX={1}>
-              <Text bold>Scan Preview</Text>
-              <Text>
-                <Text bold>{scanPreview.totalFiles}</Text> files total
-                {" | "}<Text bold color="cyan">{scanPreview.totalNewFiles}</Text> new/changed
-                {" | "}Cost: {scanPreview.embeddingProvider === "local" ? "Free" : `~$${scanPreview.estimatedCost.toFixed(4)}`}
-              </Text>
-              <Text dimColor>~{scanPreview.estimatedTokens.toLocaleString()} tokens to embed</Text>
-              {scanPreview.projects.slice(0, 8).map((proj, i) => (
-                <Text key={i} dimColor>
-                  {"  "}{proj.projectPath.split("/").slice(-3).join("/")} — {proj.fileCount} files
-                  {proj.newOrChanged > 0 && <Text color="cyan"> ({proj.newOrChanged} new)</Text>}
-                </Text>
-              ))}
-              {scanPreview.projects.length > 8 && (
-                <Text dimColor>  ...and {scanPreview.projects.length - 8} more projects</Text>
-              )}
-            </Box>
           )}
-        </Box>
-      )}
-
-      {/* ── Embedding Section ── */}
-      {section === "embedding" && (
-        <Box flexDirection="column" borderStyle="single" borderColor="gray" paddingX={1}>
-          <Text bold>Embedding Provider</Text>
-          <Text dimColor>e:change provider</Text>
-          <Text>Current: <Text color="cyan">{config.embedding.provider}</Text></Text>
-          <Text dimColor>Local embeddings use all-MiniLM-L6-v2 (~25MB, CPU). No API key needed.</Text>
-        </Box>
-      )}
-
-      {/* ── LLM Section ── */}
-      {section === "llm" && (
-        <Box flexDirection="column" borderStyle="single" borderColor="gray" paddingX={1}>
-          <Box>
-            <Text bold>LLM Inference</Text>
-            {llmStatus && (
-              <Text>
-                {"  "}
-                <Text color={llmStatus.available ? "green" : "yellow"}>●</Text>
-                {" "}{llmStatus.available ? `${llmStatus.provider} connected` : "Not configured"}
-              </Text>
-            )}
+        </Text>
+        {config.llm?.model && <Text>Model: <Text color="cyan">{config.llm.model}</Text></Text>}
+        {config.llm?.apiKey && <Text>API Key: <Text dimColor>***configured***</Text></Text>}
+        {config.llm?.baseUrl && <Text>Base URL: <Text dimColor>{config.llm.baseUrl}</Text></Text>}
+        {config.llm?.apiType && <Text>API Type: <Text dimColor>{config.llm.apiType}</Text></Text>}
+        {testing && <Spinner label="Testing inference..." />}
+        {(testResponse || testError || testPrompt) && (
+          <Box flexDirection="column" marginTop={1} borderStyle="single" borderColor={testError ? "red" : testResponse ? "green" : "gray"} paddingX={1}>
+            <Text bold color={testError ? "red" : testResponse ? "green" : "cyan"}>
+              Inference Test {testError ? "Failed" : testResponse ? "Succeeded" : "Pending"}
+            </Text>
+            {testPrompt && <Text dimColor>Prompt: {testPrompt}</Text>}
+            {testError && <Text color="red">Error: {testError}</Text>}
+            {testResponse && <Text wrap="wrap">{testResponse}</Text>}
           </Box>
-          <Text dimColor>e:provider m:model k:api-key {llmNeedsBaseUrl ? "b:base-url " : ""}{llmProvider === "custom" ? "y:api-type " : ""}t:test</Text>
+        )}
+      </SettingsSection>
 
-          <Text>Provider: <Text color="cyan">{llmProvider || "None"}</Text></Text>
-          {config.llm?.model && <Text>Model: <Text color="cyan">{config.llm.model}</Text></Text>}
-          {config.llm?.apiKey && <Text>API Key: <Text dimColor>***configured***</Text></Text>}
-          {config.llm?.baseUrl && <Text>Base URL: <Text dimColor>{config.llm.baseUrl}</Text></Text>}
-          {config.llm?.apiType && <Text>API Type: <Text dimColor>{config.llm.apiType}</Text></Text>}
-
-          {/* Test results */}
-          {testing && <Spinner label="Testing..." />}
-          {testError && <Text color="red">Error: {testError}</Text>}
-          {testResponse && (
-            <Box flexDirection="column" marginTop={1} borderStyle="single" borderColor="green" paddingX={1}>
-              <Text bold color="green">Response:</Text>
-              <Text wrap="wrap">{testResponse}</Text>
-            </Box>
-          )}
-        </Box>
-      )}
-
-      {/* ── Overlays ── */}
       {uiMode === "add-path" && (
         <InputModal
           label="New index path:"
           placeholder="~/.claude/projects"
           onSubmit={(path) => {
-            if (path && config) {
+            if (path) {
               setConfig({ ...config, indexPaths: [...config.indexPaths, path] });
               setDirty(true);
+              showAction("Path added");
             }
             setUiMode("browse");
           }}
@@ -375,47 +470,16 @@ export function SettingsPage() {
         />
       )}
 
-      {uiMode === "select-embedding" && (
-        <Box marginY={1}>
-          <Select
-            options={EMBEDDING_OPTIONS}
-            defaultValue={config.embedding.provider}
-            onChange={(v) => {
-              setConfig({ ...config, embedding: { ...config.embedding, provider: v } });
-              setDirty(true);
-              setUiMode("browse");
-            }}
-          />
-        </Box>
-      )}
-
-      {uiMode === "select-llm" && (
-        <Box marginY={1}>
-          <Select
-            options={LLM_OPTIONS}
-            defaultValue={llmProvider}
-            onChange={(v) => {
-              if (!v) {
-                setConfig({ ...config, llm: undefined });
-              } else {
-                setConfig({ ...config, llm: { ...config.llm, provider: v } });
-              }
-              setDirty(true);
-              setUiMode("browse");
-            }}
-          />
-        </Box>
-      )}
-
       {uiMode === "llm-model" && (
         <InputModal
           label="Model name:"
           defaultValue={config.llm?.model ?? ""}
           placeholder={MODEL_PLACEHOLDERS[llmProvider] ?? "model-name"}
-          onSubmit={(v) => {
-            setConfig({ ...config, llm: { ...config.llm!, model: v || undefined } });
+          onSubmit={(value) => {
+            setConfig({ ...config, llm: { provider: llmProvider || "custom", ...config.llm, model: value || undefined } });
             setDirty(true);
             setUiMode("browse");
+            showAction("Model updated");
           }}
           onCancel={() => setUiMode("browse")}
         />
@@ -424,11 +488,12 @@ export function SettingsPage() {
       {uiMode === "llm-key" && (
         <InputModal
           label="API Key:"
-          placeholder="Enter API key (or set via env var)"
-          onSubmit={(v) => {
-            setConfig({ ...config, llm: { ...config.llm!, apiKey: v || undefined } });
+          placeholder="Enter API key"
+          onSubmit={(value) => {
+            setConfig({ ...config, llm: { provider: llmProvider || "custom", ...config.llm, apiKey: value || undefined } });
             setDirty(true);
             setUiMode("browse");
+            showAction(value ? "API key updated" : "API key cleared");
           }}
           onCancel={() => setUiMode("browse")}
         />
@@ -439,43 +504,116 @@ export function SettingsPage() {
           label="Base URL:"
           defaultValue={config.llm?.baseUrl ?? ""}
           placeholder="http://localhost:11434"
-          onSubmit={(v) => {
-            setConfig({ ...config, llm: { ...config.llm!, baseUrl: v || undefined } });
+          onSubmit={(value) => {
+            setConfig({ ...config, llm: { provider: llmProvider || "custom", ...config.llm, baseUrl: value || undefined } });
             setDirty(true);
             setUiMode("browse");
+            showAction(value ? "Base URL updated" : "Base URL cleared");
           }}
           onCancel={() => setUiMode("browse")}
         />
       )}
 
-      {uiMode === "llm-apitype" && (
-        <Box marginY={1}>
-          <Select
-            options={API_TYPE_OPTIONS}
-            defaultValue={config.llm?.apiType ?? "openai"}
-            onChange={(v) => {
-              setConfig({ ...config, llm: { ...config.llm!, apiType: v as "openai" | "anthropic" } });
-              setDirty(true);
-              setUiMode("browse");
-            }}
-          />
-        </Box>
-      )}
-
       {uiMode === "test-prompt" && (
         <InputModal
-          label="Test prompt (leave blank for default):"
+          label="Test prompt:"
           placeholder="Say hello in one sentence"
           onSubmit={handleTestLlm}
           onCancel={() => setUiMode("browse")}
         />
       )}
 
-      {/* Save reminder */}
-      <Box marginTop={1}>
-        <Text dimColor>s:save settings</Text>
-        {saving && <Spinner label=" Saving..." />}
+      {(uiMode === "select-embedding" || uiMode === "select-llm" || uiMode === "llm-apitype") && (
+        <OptionMenu
+          title={uiMode === "select-embedding" ? "Embedding Provider" : uiMode === "select-llm" ? "LLM Provider" : "API Type"}
+          options={uiMode === "select-embedding" ? EMBEDDING_OPTIONS : uiMode === "select-llm" ? LLM_OPTIONS : API_TYPE_OPTIONS}
+          selectedIndex={optionIndex}
+          currentValue={uiMode === "select-embedding" ? config.embedding.provider : uiMode === "select-llm" ? llmProvider : config.llm?.apiType}
+        />
+      )}
+
+      {saving && <Spinner label="Saving..." />}
+    </Box>
+  );
+}
+
+function SettingsSection({
+  title,
+  active,
+  actions,
+  actionIndex,
+  children,
+}: {
+  title: string;
+  active: boolean;
+  actions: ActionButton[];
+  actionIndex: number;
+  children: React.ReactNode;
+}) {
+  return (
+    <Box flexDirection="column" borderStyle="single" borderColor={active ? "white" : "gray"} paddingX={1} marginTop={1}>
+      <Box justifyContent="space-between">
+        <Text bold color={active ? "white" : "cyan"}>{active ? "✓ " : "  "}{title}</Text>
+        {active && <Text dimColor><Text color="yellow">Keys:</Text> ←/→ buttons</Text>}
       </Box>
+      <ActionButtons actions={actions} activeIndex={active ? actionIndex : -1} />
+      <Box flexDirection="column" marginTop={1}>
+        {children}
+      </Box>
+    </Box>
+  );
+}
+
+function ActionButtons({ actions, activeIndex }: { actions: ActionButton[]; activeIndex: number }) {
+  return (
+    <Box gap={1} marginTop={1}>
+      {actions.map((action, index) => {
+        const selected = index === activeIndex;
+        const disabled = Boolean(action.disabled);
+        return (
+          <Text
+            key={action.id}
+            color={selected ? "black" : disabled ? "gray" : "cyan"}
+            backgroundColor={selected ? disabled ? "gray" : "cyan" : undefined}
+            bold={selected || !disabled}
+          >
+            {" "}{action.label}{" "}
+          </Text>
+        );
+      })}
+    </Box>
+  );
+}
+
+function OptionMenu({
+  title,
+  options,
+  selectedIndex,
+  currentValue,
+}: {
+  title: string;
+  options: MenuOption[];
+  selectedIndex: number;
+  currentValue?: string;
+}) {
+  return (
+    <Box flexDirection="column" borderStyle="round" borderColor="cyan" paddingX={2} paddingY={1} marginTop={1}>
+      <Text bold>{title}</Text>
+      <Text dimColor><Text color="yellow">Keys:</Text> ↑/↓ choose, Enter apply, Esc cancel</Text>
+      {options.map((option, index) => {
+        const selected = index === selectedIndex;
+        const current = option.value === (currentValue ?? "");
+        return (
+          <Text
+            key={option.value || "none"}
+            color={selected ? "black" : current ? "cyan" : undefined}
+            backgroundColor={selected ? "cyan" : undefined}
+            bold={selected || current}
+          >
+            {selected ? "› " : "  "}{option.label}{current ? "  current" : ""}
+          </Text>
+        );
+      })}
     </Box>
   );
 }
