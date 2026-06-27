@@ -1145,14 +1145,20 @@ mod tests {
     }
 
     #[test]
-    fn validation_rejects_user_user_sequence() {
+    fn validation_rejects_edit_that_creates_user_user_sequence() {
         let doc = document(vec![
             message("user", "a"),
             message("assistant", "b"),
             message("user", "c"),
         ]);
-        let err = apply_staged_ops(&doc, &[PendingOp::Delete { start: 1, end: 1 }])
-            .expect_err("delete should fail");
+        let err = apply_staged_ops(
+            &doc,
+            &[PendingOp::EditJson {
+                index: 1,
+                item: message("user", "invalid"),
+            }],
+        )
+        .expect_err("edit should fail");
         assert!(err.contains("user item"));
     }
 }
