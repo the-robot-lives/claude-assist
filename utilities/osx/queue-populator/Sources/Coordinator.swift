@@ -257,7 +257,7 @@ final class Coordinator: SpeechEngineDelegate {
         }
 
         do {
-            if let outputURL = try memoAudioRecorder.stopAndExportMP3() {
+            if let outputURL = try memoAudioRecorder.stopAndExport() {
                 transcriptWindow.appendEvent("Memo audio exported: \(outputURL.path)")
                 log("  [memo-audio] exported \(outputURL.path)")
             } else {

@@ -54,9 +54,11 @@ final class MemoAudioRecorder: @unchecked Sendable {
         }
     }
 
-    func stopAndExportMP3() throws -> URL? {
-        let state = lock.withLock {
-            let result = (file, tempURL, outputURL, wroteAudio)
+    func stopAndExport() throws -> URL? {
+        // The AVAudioFile must deinit inside this block so its tail buffers are
+        // flushed to disk before the encoders below read the temp file.
+        let state: (hadFile: Bool, temp: URL?, output: URL?, wrote: Bool) = lock.withLock {
+            let result = (file != nil, tempURL, outputURL, wroteAudio)
             file = nil
             tempURL = nil
             outputURL = nil
@@ -64,18 +66,44 @@ final class MemoAudioRecorder: @unchecked Sendable {
             return result
         }
 
-        guard state.0 != nil, let temp = state.1, let output = state.2 else {
+        guard state.hadFile, let temp = state.temp, let output = state.output else {
             return nil
         }
 
-        guard state.3 else {
+        guard state.wrote else {
             try? FileManager.default.removeItem(at: temp)
             return nil
         }
 
-        try Self.convertToMP3(input: temp, output: output)
-        try? FileManager.default.removeItem(at: temp)
-        return output
+        defer { try? FileManager.default.removeItem(at: temp) }
+
+        // CoreAudio cannot encode MP3, so real .mp3 output needs lame.
+        if let lame = Self.lamePath() {
+            do {
+                try Self.encodeMP3(input: temp, output: output, lame: lame)
+                return output
+            } catch {
+                try? FileManager.default.removeItem(at: output)
+                fputs("memo-audio: lame encode failed (\(error.localizedDescription)); falling back to AAC\n", stderr)
+            }
+        } else {
+            fputs("memo-audio: lame not found; saving AAC .m4a instead of .mp3\n", stderr)
+        }
+
+        let m4a = output.deletingPathExtension().appendingPathExtension("m4a")
+        do {
+            try? FileManager.default.removeItem(at: m4a)
+            try Self.run("/usr/bin/afconvert", ["-f", "m4af", "-d", "aac", temp.path, m4a.path])
+            return m4a
+        } catch {
+            fputs("memo-audio: AAC fallback failed (\(error.localizedDescription)); salvaging raw audio\n", stderr)
+        }
+
+        // Last resort: keep the raw capture so the recording is never lost.
+        let caf = output.deletingPathExtension().appendingPathExtension("caf")
+        try? FileManager.default.removeItem(at: caf)
+        try FileManager.default.copyItem(at: temp, to: caf)
+        return caf
     }
 
     func cancel() {
@@ -92,15 +120,24 @@ final class MemoAudioRecorder: @unchecked Sendable {
         }
     }
 
-    private static func convertToMP3(input: URL, output: URL) throws {
+    private static func lamePath() -> String? {
+        let candidates = ["/opt/homebrew/bin/lame", "/usr/local/bin/lame", "/usr/bin/lame"]
+        return candidates.first { FileManager.default.isExecutableFile(atPath: $0) }
+    }
+
+    // lame cannot read CAF, so hop through a 16-bit WAV.
+    private static func encodeMP3(input: URL, output: URL, lame: String) throws {
+        let wav = input.deletingPathExtension().appendingPathExtension("wav")
+        defer { try? FileManager.default.removeItem(at: wav) }
+        try run("/usr/bin/afconvert", ["-f", "WAVE", "-d", "LEI16", input.path, wav.path])
+        try? FileManager.default.removeItem(at: output)
+        try run(lame, ["--quiet", "-b", "128", wav.path, output.path])
+    }
+
+    private static func run(_ tool: String, _ arguments: [String]) throws {
         let process = Process()
-        process.executableURL = URL(fileURLWithPath: "/usr/bin/afconvert")
-        process.arguments = [
-            "-f", "MPG3",
-            "-d", ".mp3",
-            input.path,
-            output.path
-        ]
+        process.executableURL = URL(fileURLWithPath: tool)
+        process.arguments = arguments
         try process.run()
         process.waitUntilExit()
         guard process.terminationStatus == 0 else {
