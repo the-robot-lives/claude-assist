@@ -124,7 +124,8 @@ pub fn schema_json() -> String {
         ));
         s.push_str(&format!("      \"effectful\": {},\n", t.effectful));
         s.push_str("      \"inputSchema\": { \"type\": \"object\", \"properties\": {");
-        for (j, (p, ty, _req, desc)) in t.params.iter().enumerate() {
+        for (j, param) in t.params.iter().enumerate() {
+            let (p, ty, _req, desc) = *param;
             s.push_str(&format!(
                 " {}: {{ \"type\": {}, \"description\": {} }}",
                 json_str(p),
@@ -139,8 +140,8 @@ pub fn schema_json() -> String {
         let req: Vec<String> = t
             .params
             .iter()
-            .filter(|(_, _, r, _)| *r)
-            .map(|(p, _, _, _)| json_str(p))
+            .filter(|param| param.2)
+            .map(|param| json_str(param.0))
             .collect();
         s.push_str(&req.join(", "));
         s.push_str("] }\n    }");
