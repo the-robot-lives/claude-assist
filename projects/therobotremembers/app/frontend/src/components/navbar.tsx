@@ -18,6 +18,9 @@ export function Navbar() {
           <CookieSettingsButton />
           {loading ? null : user ? (
             <>
+              <Link href="/app/agents" className="sg-navbar__link">
+                Memory
+              </Link>
               <OrgSwitcher />
               <span className="sg-navbar__user">{user.email}</span>
               <button onClick={logout} className="sg-btn sg-btn--outline sg-btn--sm">

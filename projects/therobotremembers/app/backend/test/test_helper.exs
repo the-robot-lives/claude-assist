@@ -1,5 +1,6 @@
 # Live-Weaviate tests are opt-in (they hit weaviate.noizu.com): run with `--include weaviate`.
-ExUnit.start(exclude: [:weaviate])
+# Live-AGE tests are opt-in (they need a DB with Apache AGE + AGE_GRAPH_ENABLED=true): `--include age`.
+ExUnit.start(exclude: [:weaviate, :age])
 # Apply the memory engine schema (Liquibase 025–030) to the test DB. Canonical schema is
 # Liquibase; this keeps the memory suite self-contained (the tables only FK to `memories`).
 TheRobotRemembers.TestSchema.ensure_memory_schema!()

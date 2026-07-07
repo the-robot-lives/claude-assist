@@ -9,6 +9,7 @@ defmodule TheRobotRemembers.MCP.Tools.Recall do
     category: "Memory"
 
   alias TheRobotRemembers.Memory
+  alias TheRobotRemembers.MCP.Auth
 
   input do
     field :query, :string, required: true, description: "What to recall (natural language)"
@@ -17,17 +18,18 @@ defmodule TheRobotRemembers.MCP.Tools.Recall do
   end
 
   @impl true
-  def call(args, _ctx) do
-    owner = args[:agent] || "local"
-    context = %{owner_agent: owner, requester_id: owner}
-    opts = if l = args[:limit], do: [limit: l], else: []
+  def call(args, ctx) do
+    with {:ok, owner} <- Auth.resolve_agent(ctx, args[:agent]) do
+      context = %{owner_agent: owner, requester_id: owner}
+      opts = if l = args[:limit], do: [limit: l], else: []
 
-    case Memory.recall(args[:query], opts, context) do
-      {:ok, %{results: results, xml: xml}} ->
-        {:ok, %{mode: "active", count: length(results), memories: xml}}
+      case Memory.recall(args[:query], opts, context) do
+        {:ok, %{results: results, xml: xml}} ->
+          {:ok, %{mode: "active", count: length(results), memories: xml}}
 
-      {:error, reason} ->
-        {:error, "recall failed: #{inspect(reason)}"}
+        {:error, reason} ->
+          {:error, "recall failed: #{inspect(reason)}"}
+      end
     end
   end
 end

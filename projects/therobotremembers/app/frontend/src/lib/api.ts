@@ -38,6 +38,126 @@ interface PasswordResetResponse {
   dev_code?: string;
 }
 
+// ─── Memory UI types (Phase D contract) ────────────────────────────
+
+/** One agent row from GET /api/v1/memory/agents. */
+export interface MemoryAgent {
+  agent_id: string;
+  current_bucket: string;
+  memory_count: number;
+  edge_count: number;
+}
+
+/** A memory node, shape shared by /graph, PATCH /memories, reinforce/denforce. */
+export interface MemoryNode {
+  id: string;
+  summary: string;
+  content_type: string;
+  state: string;
+  compartment: string;
+  salience: number;
+  decay_weight: number;
+  pinned: boolean;
+  valence: number;
+  arousal: number;
+  recall_count: number;
+  occurred_at: string | null;
+}
+
+/** A graph edge, shape shared by /graph and PATCH /edges. */
+export interface MemoryEdge {
+  id: string;
+  source: string;
+  target: string;
+  type: string;
+  weight: number;
+  reinforcement_count: number;
+  last_reinforced_at: string | null;
+}
+
+export interface MemoryGraph {
+  nodes: MemoryNode[];
+  edges: MemoryEdge[];
+  truncated: boolean;
+}
+
+/** Query params for GET /graph. */
+export interface MemoryGraphParams {
+  compartment?: string;
+  min_weight?: number;
+  hops?: number;
+  seed?: string;
+  limit?: number;
+}
+
+/** Emotional context for recall preview. VAD in [-1,1], hormones in [0,1]. */
+export interface RecallMood {
+  valence?: number;
+  arousal?: number;
+  dominance?: number;
+  cortisol?: number;
+  dopamine?: number;
+  oxytocin?: number;
+  serotonin?: number;
+}
+
+export interface RecallOverrides {
+  rrf_k?: number;
+  vector_weights?: Record<string, number>;
+}
+
+export interface RecallPreviewRequest {
+  query?: string;
+  mood?: RecallMood;
+  limit?: number;
+  overrides?: RecallOverrides;
+}
+
+/** One RRF source contribution for a recalled memory. */
+export interface RecallContribution {
+  source: string;
+  rank: number;
+  score: number;
+}
+
+export interface RecallResult {
+  memory: Pick<MemoryNode, "id" | "summary" | "content_type" | "salience">;
+  score: number;
+  contributions: RecallContribution[];
+}
+
+export interface RecallPreviewResponse {
+  results: RecallResult[];
+  duration_ms: number;
+}
+
+export interface MemoryEdgeUpdate {
+  weight?: number;
+  reason?: string;
+}
+
+export interface MemoryNodeUpdate {
+  decay_weight?: number;
+  pinned?: boolean;
+}
+
+// The single-entity endpoints (PATCH edge/memory, reinforce, denforce) return
+// "updated JSON (shape as in /graph)". The contract does not pin down whether
+// that JSON is wrapped ({ edge }, { memory }/{ node }) like the rest of this
+// API or returned bare, so we tolerate both here.
+type EdgeResponse = MemoryEdge | { edge: MemoryEdge };
+type NodeResponse = MemoryNode | { memory: MemoryNode } | { node: MemoryNode };
+
+function coerceEdge(res: EdgeResponse): MemoryEdge {
+  return "edge" in res ? res.edge : res;
+}
+
+function coerceNode(res: NodeResponse): MemoryNode {
+  if ("memory" in res) return res.memory;
+  if ("node" in res) return res.node;
+  return res;
+}
+
 let refreshPromise: Promise<string | null> | null = null;
 
 async function attemptRefresh(): Promise<string | null> {
@@ -298,5 +418,63 @@ export const api = {
 
   getFeatureFlags() {
     return request<{ features: string[] }>("/api/v1/config/features");
+  },
+
+  // ─── Memory UI (Phase D) ──────────────────────────────────────────
+
+  listMemoryAgents() {
+    return request<{ agents: MemoryAgent[] }>("/api/v1/memory/agents");
+  },
+
+  getMemoryGraph(agentId: string, params: MemoryGraphParams = {}) {
+    const qs = new URLSearchParams();
+    if (params.compartment) qs.set("compartment", params.compartment);
+    if (params.min_weight != null) qs.set("min_weight", String(params.min_weight));
+    if (params.hops != null) qs.set("hops", String(params.hops));
+    if (params.seed) qs.set("seed", params.seed);
+    if (params.limit != null) qs.set("limit", String(params.limit));
+    const query = qs.toString();
+    return request<MemoryGraph>(
+      `/api/v1/memory/agents/${encodeURIComponent(agentId)}/graph${query ? `?${query}` : ""}`
+    );
+  },
+
+  recallPreview(agentId: string, body: RecallPreviewRequest) {
+    return request<RecallPreviewResponse>(
+      `/api/v1/memory/agents/${encodeURIComponent(agentId)}/recall/preview`,
+      { method: "POST", body: JSON.stringify(body) }
+    );
+  },
+
+  async updateMemoryEdge(agentId: string, edgeId: string, body: MemoryEdgeUpdate) {
+    const res = await request<EdgeResponse>(
+      `/api/v1/memory/agents/${encodeURIComponent(agentId)}/edges/${encodeURIComponent(edgeId)}`,
+      { method: "PATCH", body: JSON.stringify(body) }
+    );
+    return coerceEdge(res);
+  },
+
+  async updateMemoryNode(agentId: string, memoryId: string, body: MemoryNodeUpdate) {
+    const res = await request<NodeResponse>(
+      `/api/v1/memory/agents/${encodeURIComponent(agentId)}/memories/${encodeURIComponent(memoryId)}`,
+      { method: "PATCH", body: JSON.stringify(body) }
+    );
+    return coerceNode(res);
+  },
+
+  async reinforceMemory(agentId: string, memoryId: string) {
+    const res = await request<NodeResponse>(
+      `/api/v1/memory/agents/${encodeURIComponent(agentId)}/memories/${encodeURIComponent(memoryId)}/reinforce`,
+      { method: "POST" }
+    );
+    return coerceNode(res);
+  },
+
+  async denforceMemory(agentId: string, memoryId: string) {
+    const res = await request<NodeResponse>(
+      `/api/v1/memory/agents/${encodeURIComponent(agentId)}/memories/${encodeURIComponent(memoryId)}/denforce`,
+      { method: "POST" }
+    );
+    return coerceNode(res);
   },
 };

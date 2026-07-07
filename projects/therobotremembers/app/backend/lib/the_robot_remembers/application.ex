@@ -4,6 +4,9 @@ defmodule TheRobotRemembers.Application do
 
   @impl true
   def start(_type, _args) do
+    # Fail fast on a graph_store misconfiguration (:age selected without the AGE layer enabled).
+    TheRobotRemembers.Memory.GraphStore.validate!()
+
     OpentelemetryPhoenix.setup(adapter: :bandit)
     OpentelemetryEcto.setup([:the_robot_remembers, :repo])
     OpentelemetryBandit.setup()

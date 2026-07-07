@@ -12,7 +12,7 @@ defmodule TheRobotRemembers.Memory.Recall do
   alias TheRobotRemembers.Repo
   alias TheRobotRemembers.Schema.Memory.Memory
   alias TheRobotRemembers.Schema.Memory.RecallLog
-  alias TheRobotRemembers.Memory.{Emotion, Embeddings, VectorStore, Reinforcement}
+  alias TheRobotRemembers.Memory.{Emotion, Embeddings, VectorStore, Reinforcement, GraphStore}
   alias TheRobotRemembers.Agents.{Monitor, Sentinel}
 
   @active_states [:active, :consolidating]
@@ -90,39 +90,74 @@ defmodule TheRobotRemembers.Memory.Recall do
     {:ok, %{mode: :active, results: rows, xml: to_xml(rows, mode: "active", query: query)}}
   end
 
+  # ── Recall preview (side-effect-free; per-result RRF contribution breakdown) ──
+  # Additive path for the memory console (API contract Phase D). Same rank assembly as active/3
+  # but: (1) NO Reinforcement.on_recall (no Hebbian writes), (2) recall_log written with mode
+  # "preview", (3) each result carries its per-source RRF contributions. `query` and `mood` are
+  # each optional (the caller must supply at least one); `overrides` remaps Recall.config knobs
+  # (rrf_k, vector_weights) for this call only. The CTE traversal (graph_rank_list) is unchanged.
+  def preview(query, opts \\ [], context \\ %{}) do
+    started = System.monotonic_time(:millisecond)
+    owner = Sentinel.owner_scope(context)
+    limit = opts[:limit] || default_limit()
+    overrides = normalize_overrides(opts[:overrides])
+    mood = opts[:mood]
+    k = overrides[:rrf_k] || rrf_k()
+
+    semantic_lists =
+      if is_binary(query) and String.trim(query) != "" do
+        semantic_rank_lists(query, owner) |> apply_vector_weights(overrides)
+      else
+        []
+      end
+
+    emotional_list = emotional_rank_list_for(owner, mood)
+
+    seed_ids =
+      (semantic_lists ++ emotional_list)
+      |> Enum.flat_map(fn {_w, _s, ids} -> ids end)
+      |> Enum.uniq()
+      |> Enum.take(60)
+
+    graph_list = graph_rank_list(owner, seed_ids)
+    rank_lists = semantic_lists ++ emotional_list ++ graph_list
+
+    {fused, contribs} = rrf_detailed(rank_lists, k)
+    score_by_id = Map.new(fused)
+    ids = fused |> Enum.map(&elem(&1, 0)) |> Enum.take(limit * 3)
+
+    rows =
+      ids
+      |> hydrate(owner)
+      |> Sentinel.authorize(context)
+      |> reorder_by(ids)
+      |> Enum.take(limit)
+
+    results =
+      Enum.map(rows, fn mem ->
+        %{memory: mem, score: Map.get(score_by_id, mem.id, 0.0), contributions: Map.get(contribs, mem.id, [])}
+      end)
+
+    log(:preview, owner, context, query, rows, started, %{path: "preview"})
+    {:ok, %{mode: :preview, results: results, duration_ms: System.monotonic_time(:millisecond) - started}}
+  end
+
   # Recursive graph traversal (≤3 hops, weight≥0.2, cycle-guarded, bidirectional), seeded by
   # the semantic+emotional frontier. Returns a single weighted RRF rank-list (by path weight).
   defp graph_rank_list(_owner, []), do: []
 
   defp graph_rank_list(_owner, seed_ids) do
-    sql = """
-    WITH RECURSIVE walk(memory_id, depth, path_weight, path) AS (
-      SELECT unnest(string_to_array($1, ',')::uuid[]), 0, 1.0::real, ARRAY[]::uuid[]
-      UNION ALL
-      SELECT nxt.memory_id, w.depth + 1, w.path_weight * nxt.weight, w.path || w.memory_id
-      FROM walk w
-      JOIN LATERAL (
-        SELECT CASE WHEN e.source_memory_id = w.memory_id THEN e.target_memory_id ELSE e.source_memory_id END AS memory_id,
-               e.weight
-        FROM association_edges e
-        WHERE (e.source_memory_id = w.memory_id OR e.target_memory_id = w.memory_id) AND e.weight >= $2
-        ORDER BY e.weight DESC, e.id
-        LIMIT $5
-      ) nxt ON true
-      WHERE w.depth < $3
-        AND NOT (nxt.memory_id = ANY(w.path))
-    )
-    SELECT memory_id::text, MAX(path_weight) AS pw
-    FROM walk WHERE depth > 0
-    GROUP BY memory_id ORDER BY pw DESC, memory_id LIMIT $4
-    """
-
-    case Ecto.Adapters.SQL.query(Repo, sql, [Enum.join(seed_ids, ","), @graph_min_weight, @graph_max_hops, cpp(), @graph_fanout]) do
-      {:ok, %{rows: rows}} ->
-        case Enum.map(rows, fn [id, _pw] -> id end) do
-          [] -> []
-          ids -> [{0.8, {:graph, :cte}, ids}]
-        end
+    # ADR-006 seam: the traversal runs through the configured GraphStore adapter (:cte default —
+    # the same SQL as before; :age when the graph layer is on). One weighted RRF rank-list, ordered
+    # by path score. The source tag records which adapter served it (graph:cte / graph:age).
+    case GraphStore.rank_list(seed_ids,
+           min_weight: @graph_min_weight,
+           max_hops: @graph_max_hops,
+           fanout: @graph_fanout,
+           limit: cpp()
+         ) do
+      {:ok, results} when results != [] ->
+        [{0.8, {:graph, GraphStore.adapter_name()}, Enum.map(results, & &1.memory_id)}]
 
       _ ->
         []
@@ -202,6 +237,82 @@ defmodule TheRobotRemembers.Memory.Recall do
     end)
     |> Enum.sort_by(fn {_id, s} -> -s end)
   end
+
+  # RRF variant that also returns, per memory id, the ranked source contributions (source tag,
+  # rank within that source's list, and this source's share of the fused score). Used only by
+  # preview/3; the normal rrf/2 return shape is unchanged.
+  defp rrf_detailed(rank_lists, k) do
+    {scores, contribs} =
+      Enum.reduce(rank_lists, {%{}, %{}}, fn {weight, src, ids}, acc ->
+        tag = source_tag(src)
+
+        ids
+        |> Enum.with_index()
+        |> Enum.reduce(acc, fn {id, idx}, {sc, co} ->
+          share = weight / (k + idx + 1)
+          entry = %{source: tag, rank: idx + 1, score: share}
+          {Map.update(sc, id, share, &(&1 + share)), Map.update(co, id, [entry], &[entry | &1])}
+        end)
+      end)
+
+    fused = Enum.sort_by(scores, fn {_id, s} -> -s end)
+    contribs = Map.new(contribs, fn {id, list} -> {id, Enum.sort_by(list, &(-&1.score))} end)
+    {fused, contribs}
+  end
+
+  defp source_tag({a, b}), do: "#{a}:#{b}"
+  defp source_tag(a), do: "#{a}"
+
+  # mood-anchored emotional rank list (preview): rank by L2 to the supplied mood vector. With no
+  # mood, falls back to the ambient (Monitor) emotional list used by active/3.
+  defp emotional_rank_list_for(owner, nil), do: emotional_rank_list(owner)
+
+  defp emotional_rank_list_for(owner, mood) when is_map(mood) do
+    # Pass the full contract mood map as both mood + hormones: build_vector reads VAD from the
+    # former and the four hormones from the latter (extra keys are ignored).
+    qvec = Pgvector.new(Emotion.build_vector(mood, mood))
+
+    ids =
+      base_scope(owner)
+      |> order_by([m], asc: l2_distance(m.emotional_embedding, ^qvec), asc: m.id)
+      |> limit(^cpp())
+      |> select([m], m.id)
+      |> Repo.all()
+
+    [{0.45, {:emotional, :vad}, ids}]
+  end
+
+  defp apply_vector_weights(lists, %{vector_weights: vw}) when is_map(vw) do
+    Enum.map(lists, fn
+      {_w, {:weaviate, nv}, ids} -> {Map.get(vw, to_string(nv), 0.7), {:weaviate, nv}, ids}
+      other -> other
+    end)
+  end
+
+  defp apply_vector_weights(lists, _overrides), do: lists
+
+  # Preview override map → keyed by the two knobs we honor (rrf_k, vector_weights). Accepts
+  # string- or atom-keyed input (HTTP JSON vs MCP), coercing numeric values.
+  defp normalize_overrides(nil), do: %{}
+
+  defp normalize_overrides(o) when is_map(o) do
+    Enum.reduce(o, %{}, fn {key, v}, acc ->
+      case to_string(key) do
+        "rrf_k" ->
+          Map.put(acc, :rrf_k, to_num(v))
+
+        "vector_weights" when is_map(v) ->
+          Map.put(acc, :vector_weights, Map.new(v, fn {kk, vv} -> {to_string(kk), to_num(vv)} end))
+
+        _ ->
+          acc
+      end
+    end)
+  end
+
+  defp to_num(v) when is_number(v), do: v
+  defp to_num(v) when is_binary(v), do: (case Float.parse(v) do {f, _} -> f; :error -> 0.0 end)
+  defp to_num(_), do: 0.0
 
   # ── query/hydration helpers ────────────────────────────────────
   defp base_scope(owner) do

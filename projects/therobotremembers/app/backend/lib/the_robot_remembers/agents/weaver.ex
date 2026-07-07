@@ -19,7 +19,7 @@ defmodule TheRobotRemembers.Agents.Weaver do
 
   alias TheRobotRemembers.Repo
   alias TheRobotRemembers.Schema.Memory.{Memory, AssociationEdge}
-  alias TheRobotRemembers.Memory.{Emotion, Embeddings, VectorStore}
+  alias TheRobotRemembers.Memory.{Emotion, Embeddings, VectorStore, GraphMirror}
 
   @active [:active, :consolidating]
 
@@ -33,8 +33,16 @@ defmodule TheRobotRemembers.Agents.Weaver do
   @doc "Create association edges for a memory id. Returns the count created/attempted."
   def link(memory_id) when is_binary(memory_id) do
     case Repo.get(Memory, memory_id) do
-      nil -> {:ok, 0}
-      mem -> {:ok, link_memory(mem)}
+      nil ->
+        {:ok, 0}
+
+      mem ->
+        count = link_memory(mem)
+        # Project the (idempotent) edges just woven for this memory into AGE. No-op unless the
+        # graph layer is enabled; sync_memories re-reads the edges, so on_conflict-skipped rows
+        # and below-threshold edges are handled correctly.
+        GraphMirror.enqueue_sync([mem.id])
+        {:ok, count}
     end
   end
 

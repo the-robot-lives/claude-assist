@@ -6,6 +6,7 @@ defmodule TheRobotRemembers.MCP.Tools.Reinforce do
     category: "Memory"
 
   alias TheRobotRemembers.Memory
+  alias TheRobotRemembers.MCP.Auth
 
   input do
     field :memory_id, :string, required: true, description: "The memory id to reinforce"
@@ -13,13 +14,13 @@ defmodule TheRobotRemembers.MCP.Tools.Reinforce do
   end
 
   @impl true
-  def call(args, _ctx) do
-    owner = args[:agent] || "local"
-
-    case Memory.reinforce(args[:memory_id], %{owner_agent: owner}) do
-      {:ok, weight} -> {:ok, %{memory_id: args[:memory_id], decay_weight: weight, status: "reinforced"}}
-      {:error, :not_found} -> {:error, "memory not found"}
-      {:error, reason} -> {:error, "reinforce failed: #{inspect(reason)}"}
+  def call(args, ctx) do
+    with {:ok, owner} <- Auth.resolve_agent(ctx, args[:agent]) do
+      case Memory.reinforce(args[:memory_id], %{owner_agent: owner}) do
+        {:ok, weight} -> {:ok, %{memory_id: args[:memory_id], decay_weight: weight, status: "reinforced"}}
+        {:error, :not_found} -> {:error, "memory not found"}
+        {:error, reason} -> {:error, "reinforce failed: #{inspect(reason)}"}
+      end
     end
   end
 end

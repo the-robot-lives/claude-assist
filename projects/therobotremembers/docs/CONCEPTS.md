@@ -261,6 +261,8 @@ An access-controlled partition within the memory store, managed by the Sentinel 
 
 Compartments create boundaries in the association graph. The Weaver can create edges across compartment boundaries, but the Sentinel will redact or block traversal across those edges during recall unless the requester has appropriate access.
 
+**Cross-owner edges are intentional.** The association graph is a *shared substrate*: the Weaver and Hebbian reinforcement may link memories of different owners — for example `co_occurrence` edges between `open` memories that were co-recalled in an owner-less (agent-less) recall. These edges are deliberate; they let shared knowledge form a cross-agent associative web. Isolation is enforced on **read**, not in the graph — the Sentinel re-scopes every recall result by owner/classification (so a cross-owner edge can shape ranking but never returns another owner's memory), and the per-agent graph API shows only edges whose *both* endpoints the requester owns.
+
 **See also:** Sentinel, Recall Agent, Association Path
 
 ---

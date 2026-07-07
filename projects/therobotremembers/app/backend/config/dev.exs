@@ -8,6 +8,9 @@ config :the_robot_remembers, TheRobotRemembers.Repo,
   port: String.to_integer(System.get_env("DB_PORT") || "5432"),
   stacktrace: true,
   show_sensitive_data_on_connection_error: true,
+  # Tunable for slow/remote connections (e.g. running the graph benchmark over a port-forward,
+  # where one long-held checkout can exceed the 15s default). Defaults to the previous behavior.
+  timeout: String.to_integer(System.get_env("DB_TIMEOUT") || "15000"),
   pool_size: 10
 
 config :the_robot_remembers, TheRobotRemembersWeb.Endpoint,

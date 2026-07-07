@@ -25,6 +25,22 @@ config :the_robot_remembers, :weaviate,
   enabled: System.get_env("WEAVIATE_ENABLED") == "true",
   class: System.get_env("WEAVIATE_CLASS", "TrrMemory")
 
+# Apache AGE graph projection. Off unless AGE_GRAPH_ENABLED=true (and AGE is installed on the DB —
+# see Liquibase 031). When enabled, Repo.AGE.after_connect/1 runs `LOAD 'age'` + search_path on
+# every connection, so the target database MUST have the extension or connections will fail.
+config :the_robot_remembers, :age_graph,
+  enabled: System.get_env("AGE_GRAPH_ENABLED") == "true",
+  graph: System.get_env("AGE_GRAPH_NAME", "trr_memory")
+
+# Graph-store backend (ADR-006): GRAPH_STORE=age routes recall + console graph ops through AGE.
+# Validated at boot — :age without AGE_GRAPH_ENABLED raises (see GraphStore.validate!/0).
+config :the_robot_remembers, :graph_store,
+  adapter: if(System.get_env("GRAPH_STORE") == "age", do: :age, else: :cte)
+
+# Gate the /mcp mount behind Guardian when MCP_AUTH_REQUIRED=true (default false → dev-open).
+config :the_robot_remembers, :mcp_auth,
+  required: System.get_env("MCP_AUTH_REQUIRED") == "true"
+
 # ── OpenTelemetry ────────────────────────────────────────────────
 if otel_endpoint = System.get_env("OTEL_EXPORTER_OTLP_ENDPOINT") do
   config :opentelemetry_exporter,

@@ -110,3 +110,4 @@ All parameters are exposed as ConfigMap values (see Implementation Guide):
 - ADR-003: Multi-Agent Ensemble — the Weaver implements weight dynamics, the Curator implements pruning, and they operate in designed tension
 - ADR-006: Graph Storage in PostgreSQL — edge weights stored in `association_edges.weight` column
 - ADR-002: Emotional Metadata Model — emotional similarity is one factor in initial edge weight assignment
+- ADR-014: Cross-Owner Association Edges — Hebbian `co_occurrence` edges may link memories of different owners; this is intentional (the shared graph substrate), with recall guards enforcing isolation on read (summarized in ADR-013's Tenancy section)

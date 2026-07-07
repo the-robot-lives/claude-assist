@@ -6,6 +6,7 @@ defmodule TheRobotRemembers.MCP.Tools.MemoryAssociations do
     category: "Memory"
 
   alias TheRobotRemembers.Memory
+  alias TheRobotRemembers.MCP.Auth
 
   input do
     field :memory_id, :string, required: true, description: "The memory id to inspect"
@@ -13,8 +14,13 @@ defmodule TheRobotRemembers.MCP.Tools.MemoryAssociations do
   end
 
   @impl true
-  def call(args, _ctx) do
-    owner = args[:agent] || "local"
+  def call(args, ctx) do
+    with {:ok, owner} <- Auth.resolve_agent(ctx, args[:agent]) do
+      do_call(args, owner)
+    end
+  end
+
+  defp do_call(args, owner) do
     edges = Memory.associations(args[:memory_id], %{owner_agent: owner})
 
     formatted =
