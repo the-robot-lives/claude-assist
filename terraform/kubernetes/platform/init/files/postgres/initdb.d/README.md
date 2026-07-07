@@ -1,4 +1,4 @@
-# `platform-postgres` initdb.d — per-app DB provisioning
+# `platform-timescaledb` initdb.d — per-app DB provisioning
 
 Same mechanism as `infra/files/postgres/initdb.d` (see `modules/timescaledb`).
 Each per-app database + login role is provisioned by a tiny idempotent script,
@@ -22,9 +22,9 @@ image's baked first-boot scripts are preserved.
 
 2. Add `<APP>_DB_USER` and `<APP>_DB_PASSWORD` to the Infisical `/platform/postgres`
    path (env `prod`, project `k8-infra`). The operator syncs them into the
-   `platform-postgres-secrets` managed Secret, which the module mounts as env.
+   `platform-timescaledb-secrets` managed Secret, which the module mounts as env.
 
-3. `terragrunt apply` (creates fresh) or `./refresh-db.sh postgres` (idempotent
+3. `terragrunt apply` (creates fresh) or `./refresh-db.sh timescaledb` (idempotent
    re-run against the live pod — initdb.d only runs on an empty PGDATA).
 
 `_lib.sh` holds the shared `create_db` / `create_extensions` helpers; it is keyed

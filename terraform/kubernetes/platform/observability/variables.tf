@@ -53,7 +53,7 @@ variable "oneuptime_storage" {
 # --- Shared data tier ---------------------------------------------------------
 variable "postgres_host" {
   type    = string
-  default = "infra-postgres.infra.svc.cluster.local"
+  default = "infra-timescaledb.infra.svc.cluster.local"
 }
 
 variable "clickhouse_host" {

@@ -1,7 +1,7 @@
 # `infra-services` — platform applications (MinIO-backed remote state)
 
 Application tier, deployed into the `infra` namespace. Sits on top of `init`
-(cluster bootstrap + MinIO) and `infra` (shared data tier: postgres, valkey,
+(cluster bootstrap + MinIO) and `infra` (shared data tier: TimescaleDB, valkey,
 clickhouse, zookeeper, registry, minio).
 
 ```
@@ -14,13 +14,13 @@ infra-services/ state in MinIO  the apps below
 
 | App | File | Host | Notes |
 |---|---|---|---|
-| Infisical | `infisical.tf` | infisical.noizu.com | shared infra-postgres + infra-valkey |
+| Infisical | `infisical.tf` | infisical.noizu.com | shared infra-timescaledb + infra-valkey |
 | Infisical operator | `infisical-operator.tf` | — | secrets.infisical.com CRDs, ns `infisical-operator-system` |
 | Verdaccio | `verdaccio.tf` | npm.noizu.com | private npm registry |
 | Headlamp | `headlamp.tf` | headlamp.noizu.com | k8s dashboard (cluster-admin SA) |
 | Authentik | `authentik.tf` | auth.noizu.com | server + worker; config via `envFrom` |
-| Phoenix | `phoenix.tf` | eval.noizu.com | uses shared Postgres |
-| PostHog | `posthog.tf` | posthog.noizu.com | web/worker/plugins → **shared** clickhouse/postgres/valkey; dedicated Redpanda (kafka) |
+| Phoenix | `phoenix.tf` | eval.noizu.com | uses shared TimescaleDB |
+| PostHog | `posthog.tf` | posthog.noizu.com | web/worker/plugins → **shared** clickhouse/TimescaleDB/valkey; dedicated Redpanda (kafka) |
 | SigNoz | `signoz.tf` | apm.noizu.com | moved from the infra module; uses infra-clickhouse |
 | Cockpit | `cockpit.tf` | cockpit.noizu.com | proxy (Service + manual Endpoints) to the host Cockpit at `10.1.0.1:9090` |
 

@@ -32,7 +32,7 @@ variable "init_state_path" {
 # --- Shared data tier (platform/init) --------------------------------------
 variable "postgres_host" {
   type    = string
-  default = "platform-postgres.platform.svc.cluster.local"
+  default = "platform-timescaledb.platform.svc.cluster.local"
 }
 
 variable "valkey_host" {

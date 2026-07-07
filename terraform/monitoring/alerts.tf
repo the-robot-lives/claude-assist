@@ -151,7 +151,7 @@ locals {
     }
 
     postgres_errors = {
-      name       = "noizu – Shared Postgres Errors"
+      name       = "noizu – Shared TimescaleDB Errors"
       alert_type = "LOGS_BASED_ALERT"
       severity   = "critical"
       condition = {
@@ -173,12 +173,12 @@ locals {
                   {
                     key   = { key = "k8s.namespace.name", dataType = "string", type = "resource" }
                     op    = "="
-                    value = "data-ns"
+                    value = "infra"
                   },
                   {
                     key   = { key = "k8s.deployment.name", dataType = "string", type = "resource" }
                     op    = "regex"
-                    value = "shared-postgres.*"
+                    value = "infra-timescaledb.*"
                   }
                 ]
                 op = "AND"
@@ -195,11 +195,11 @@ locals {
       preferred_channels = var.critical_preferred_channels
       labels = {
         environment = "production"
-        service     = "shared-postgres"
+        service     = "infra-timescaledb"
         tier        = "data"
-        namespace   = "data-ns"
+        namespace   = "infra"
       }
-      description = "Shared Postgres (TimescaleDB) produced 10+ errors in 5 minutes — 17 databases depend on this."
+      description = "Shared TimescaleDB produced 10+ errors in 5 minutes — shared application databases depend on this."
     }
 
     mysql_errors = {
@@ -500,7 +500,7 @@ resource "signoz_alert" "v2" {
 # ---------------------------------------------------------------------------
 
 resource "signoz_alert" "postgres_memory_high" {
-  alert      = "noizu – Shared Postgres Memory High"
+  alert      = "noizu – Shared TimescaleDB Memory High"
   alert_type = "METRIC_BASED_ALERT"
   severity   = "warning"
 
@@ -523,12 +523,12 @@ resource "signoz_alert" "postgres_memory_high" {
               {
                 key   = { key = "k8s.namespace.name", dataType = "string", type = "resource" }
                 op    = "="
-                value = "data-ns"
+                value = "infra"
               },
               {
                 key   = { key = "k8s.pod.name", dataType = "string", type = "resource" }
                 op    = "regex"
-                value = "shared-postgres.*"
+                value = "infra-timescaledb.*"
               }
             ]
             op = "AND"
@@ -544,16 +544,16 @@ resource "signoz_alert" "postgres_memory_high" {
 
   labels = {
     environment = "production"
-    service     = "shared-postgres"
+    service     = "infra-timescaledb"
     tier        = "data"
-    namespace   = "data-ns"
+    namespace   = "infra"
   }
 
   eval_window = "5m0s"
   frequency   = "1m0s"
 
   preferred_channels = var.warning_preferred_channels
-  description        = "Shared Postgres (TimescaleDB) memory exceeds 3 GiB (limit: 4 GiB) — 17 app databases at risk."
+  description        = "Shared TimescaleDB memory exceeds 3 GiB (limit: 4 GiB) — shared application databases at risk."
 
   rule_type      = "threshold_rule"
   disabled       = !var.alerts_enabled

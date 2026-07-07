@@ -109,7 +109,7 @@ resource "helm_release" "argocd" {
       }
       cm = {
         url = "https://${var.argocd_domain}"
-        oidc.config = yamlencode({
+        "oidc.config" = yamlencode({
           name     = "Authentik"
           issuer   = "http://argocd-dex:5556/dex"
           clientID = var.argocd_oidc_client_id
@@ -122,7 +122,7 @@ resource "helm_release" "argocd" {
         })
       }
       rbac = {
-        policy.csv = "p, role:admin, applications, *, */*, allow\np, role:admin, repositories, *, *, allow\np, role:admin, clusters, *, *, allow\np, role:admin, accounts, *, *, allow\np, role:viewers, applications, *, */*, get\ng, authentik:admin, role:admin\ng, authentik:viewers, role:viewers"
+        "policy.csv" = "p, role:admin, applications, *, */*, allow\np, role:admin, repositories, *, *, allow\np, role:admin, clusters, *, *, allow\np, role:admin, accounts, *, *, allow\np, role:viewers, applications, *, */*, get\ng, authentik:admin, role:admin\ng, authentik:viewers, role:viewers"
       }
     }
   })]

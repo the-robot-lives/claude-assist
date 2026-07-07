@@ -1,6 +1,6 @@
 # Penpot — design / prototyping platform, served at penpot.noizu.com. Frontend
 # (nginx, proxies to backend+exporter in-cluster) + backend + exporter + a
-# private embedded MinIO for asset storage. Postgres + Valkey come from
+# private embedded MinIO for asset storage. TimescaleDB + Valkey come from
 # platform/init via full DSNs in penpot-secrets (/creative/penpot).
 locals {
   penpot_public_uri        = "https://${var.penpot_domain}"

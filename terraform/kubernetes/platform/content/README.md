@@ -2,14 +2,14 @@
 
 | Service   | Image                | Data                                  | Host                |
 |-----------|----------------------|---------------------------------------|---------------------|
-| docmost   | `docmost/docmost`    | shared Postgres + Valkey + PVC (50Gi) | docmost.noizu.com   |
+| docmost   | `docmost/docmost`    | shared TimescaleDB + Valkey + PVC (50Gi) | docmost.noizu.com   |
 | ghost     | `ghost:5.109-alpine` | shared MariaDB + PVC (10Gi)           | ghost.noizu.com     |
-| nextcloud | `nextcloud:29-apache`| shared Postgres + Valkey + PVC (100Gi)| nextcloud.noizu.com |
+| nextcloud | `nextcloud:29-apache`| shared TimescaleDB + Valkey + PVC (100Gi)| nextcloud.noizu.com |
 
 ## Data tier (platform/init)
-- docmost → **platform-postgres** (`files/postgres/initdb.d/docmost`) + **platform-valkey**
+- docmost -> **platform-timescaledb** (`files/postgres/initdb.d/docmost`) + **platform-valkey**
 - ghost → **platform-mariadb** (`files/mariadb/initdb.d/ghost`)
-- nextcloud → **platform-postgres** (`files/postgres/initdb.d/nextcloud`) + **platform-valkey**
+- nextcloud -> **platform-timescaledb** (`files/postgres/initdb.d/nextcloud`) + **platform-valkey**
 
 ## Secrets (`/content` → `content-app-secrets`)
 - docmost: `DOCMOST_DATABASE_URL`, `DOCMOST_REDIS_URL`, `DOCMOST_JWT_SECRET`, `SMTP_HOST/PORT/USER/PASSWORD/FROM`

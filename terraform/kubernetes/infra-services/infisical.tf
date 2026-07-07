@@ -1,16 +1,16 @@
 # ---------------------------------------------------------------------------
 # Infisical — secrets manager, served at infisical.noizu.com.
 # ---------------------------------------------------------------------------
-# Uses the SHARED data tier (infra module): Postgres on infra-postgres and
-# Redis on infra-valkey — no dedicated DBs. The infisical Postgres role/DB is
+# Uses the SHARED data tier (infra module): TimescaleDB on infra-timescaledb and
+# Redis on infra-valkey — no dedicated DBs. The infisical TimescaleDB role/DB is
 # provisioned by infra (postgres.tf local.pg_app_dbs + files/postgres/initdb.d/)
-# and its password lives in the sealed postgres-secrets. The infisical Valkey ACL
+# and its password lives in the sealed TimescaleDB secret. The infisical Valkey ACL
 # user is owned by init (valkey-creds.tf); its password reaches us via init's
 # remote state, from which we build REDIS_URL here.
 #
 # Secrets consumed by the app:
 #   infisical-core-secrets (sealed; seal-secrets.sh) — ENCRYPTION_KEY,
-#     AUTH_SECRET, DB_CONNECTION_URI (postgres URL w/ the shared-DB password),
+#     AUTH_SECRET, DB_CONNECTION_URI (PostgreSQL-compatible URL w/ the shared TimescaleDB password),
 #     SMTP_* (SendGrid/SMTP configuration).
 #   infisical-redis        (this file)               — REDIS_URL (shared valkey).
 locals {
@@ -66,7 +66,7 @@ resource "kubernetes_deployment_v1" "infisical" {
             container_port = local.infisical_port
           }
 
-          # App keys + shared-Postgres connection (sealed).
+          # App keys + shared-TimescaleDB connection (sealed).
           dynamic "env" {
             for_each = {
               ENCRYPTION_KEY    = "ENCRYPTION_KEY"

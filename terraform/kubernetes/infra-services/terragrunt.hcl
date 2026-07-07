@@ -13,7 +13,7 @@
 # Run ordering: this stack runs LAST. It reads init's outputs directly via
 # terraform_remote_state (remote-state.tf: namespace, storage class, node
 # selector, shared valkey users) AND its apps connect to the shared data tier
-# that `infra` stands up (postgres, valkey, clickhouse). Terragrunt does NOT
+# that `infra` stands up (TimescaleDB, valkey, clickhouse). Terragrunt does NOT
 # infer ordering from the data source, so we declare both edges explicitly.
 
 include "root" {

@@ -1,6 +1,6 @@
 # ---------------------------------------------------------------------------
 # OneUptime — uptime monitoring + incident management, served at uptime.noizu.com.
-# Uses the shared infra-clickhouse (25.x) and infra-postgres (PostgreSQL).
+# Uses the shared infra-clickhouse (25.x) and infra-timescaledb.
 # A local Redis sidecar handles caching.
 # ---------------------------------------------------------------------------
 
@@ -94,9 +94,9 @@ resource "kubernetes_deployment_v1" "oneuptime" {
         node_selector = local.node_selector
 
         init_container {
-          name    = "wait-for-postgres"
+          name    = "wait-for-timescaledb"
           image   = "busybox:1.36"
-          command = ["sh", "-c", "until nc -z ${var.postgres_host} 5432; do echo 'Waiting for PostgreSQL...'; sleep 5; done"]
+          command = ["sh", "-c", "until nc -z ${var.postgres_host} 5432; do echo 'Waiting for TimescaleDB...'; sleep 5; done"]
         }
         init_container {
           name    = "wait-for-clickhouse"

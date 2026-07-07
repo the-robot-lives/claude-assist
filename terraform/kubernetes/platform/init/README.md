@@ -1,7 +1,7 @@
 # `platform/init` — platform-tier shared data services
 
 Deploys the platform tier's shared **Valkey** (`platform-valkey`) and
-**TimescaleDB** (`platform-postgres`) into the `platform` namespace, using the
+**TimescaleDB** (`platform-timescaledb`) into the `platform` namespace, using the
 reusable `../../modules/{valkey,timescaledb}` modules.
 
 ## Secret management — Infisical
@@ -10,7 +10,7 @@ Unlike the `infra`/`infra-services` modules (sealed secrets), these workloads ge
 their credentials from **Infisical** via the operator: each module creates an
 `InfisicalSecret` CR that syncs `/platform/valkey` and `/platform/postgres` from
 the `k8-infra` project (env `prod`) into the managed Secrets
-(`platform-valkey-secrets`, `platform-postgres-secrets`).
+(`platform-valkey-secrets`, `platform-timescaledb-secrets`).
 
 Prerequisites (from `infra-services`): the Infisical operator + the
 `universal-auth-credentials` machine-identity secret in `infra`.

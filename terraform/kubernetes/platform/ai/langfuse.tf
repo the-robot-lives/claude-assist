@@ -1,6 +1,6 @@
 # ---------------------------------------------------------------------------
 # Langfuse — LLM observability, served at langfuse.noizu.com.
-# Hand-translated from local chart templates. DB lives in the shared Postgres
+# Hand-translated from local chart templates. DB lives in the shared TimescaleDB
 # (connection string comes from langfuse-app-secrets/LANGFUSE_DATABASE_URL).
 # ---------------------------------------------------------------------------
 resource "kubectl_manifest" "langfuse_infisical" {

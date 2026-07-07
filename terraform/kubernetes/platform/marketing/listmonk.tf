@@ -1,6 +1,6 @@
 # ---------------------------------------------------------------------------
 # Listmonk — newsletter / mailing-list manager, served at listmonk.noizu.com.
-# Uses the shared Postgres (platform/init). An init container runs the idempotent
+# Uses the shared TimescaleDB (platform/init). An init container runs the idempotent
 # --install / --upgrade before the server starts.
 # ---------------------------------------------------------------------------
 locals {
@@ -52,7 +52,7 @@ resource "kubernetes_deployment_v1" "listmonk" {
         init_container {
           name    = "db-wait"
           image   = "postgres:16-alpine"
-          command = ["sh", "-c", "until pg_isready -h ${var.postgres_host} -p 5432 -U ${var.listmonk_db_user}; do echo 'waiting for postgres...'; sleep 3; done"]
+          command = ["sh", "-c", "until pg_isready -h ${var.postgres_host} -p 5432 -U ${var.listmonk_db_user}; do echo 'waiting for timescaledb...'; sleep 3; done"]
         }
         init_container {
           name    = "listmonk-install"

@@ -1,6 +1,6 @@
 # ---------------------------------------------------------------------------
 # Nextcloud — file sync / collaboration, served at nextcloud.noizu.com. Shared
-# Postgres + Valkey (platform/init); data on a dedicated 100Gi PVC. Runs as the
+# TimescaleDB + Valkey (platform/init); data on a dedicated 100Gi PVC. Runs as the
 # www-data uid/gid (33).
 # ---------------------------------------------------------------------------
 resource "kubernetes_persistent_volume_claim_v1" "nextcloud_data" {

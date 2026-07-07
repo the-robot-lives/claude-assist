@@ -38,6 +38,14 @@ terragrunt plan
 terragrunt apply
 ```
 
+This unit is excluded from repo-wide Terragrunt queues by default because the
+Namecheap API refresh is slow and infrequently needed. Run it directly from this
+directory, or opt into it for a repo-wide run:
+
+```bash
+TG_INCLUDE_NAMECHEAP=true terragrunt run --all plan
+```
+
 ## Verify which domains are actually registered (once IP is whitelisted)
 
 ```bash

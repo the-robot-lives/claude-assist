@@ -28,7 +28,7 @@ VALUES="$STORE/values.env"
 HTPASSWD_FILE="$STORE/registry.htpasswd"
 REG_USER="${REGISTRY_USERNAME:-ops}"
 
-# Per-app Postgres roles — keep in sync with infra/postgres.tf local.pg_app_dbs.
+# Per-app TimescaleDB roles — keep in sync with infra/postgres.tf local.pg_app_dbs.
 APPS=(AIFIGHTER AUTHENTIK BOTTLECRM DOCMOST GHOST GOTTA_CC INFISICAL IOTGO
       JAILBREAKING LANGFUSE LISTMONK N8N NEXTCLOUD NOIZU_SITE PENPOT PHOENIX
       PLANE POSTHOG POSTIZ TAIGA THEROBOTKNOWS THEROBOTLIVES THEROBOTPLANS

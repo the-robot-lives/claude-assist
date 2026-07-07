@@ -1,18 +1,18 @@
 # ---------------------------------------------------------------------------
-# PostgreSQL — shared multi-tenant DB on TimescaleDB-HA + Apache AGE.
+# TimescaleDB — shared multi-tenant DB on TimescaleDB-HA + Apache AGE.
 # ---------------------------------------------------------------------------
 # Image: noizu/timescaledb-ha-with-age. Unlike the stock timescaledb image this
 # runs as uid/gid 1000 with PGDATA=/home/postgres/pgdata/data, so the volume is
 # mounted at /home/postgres/pgdata. Per-app databases/roles are created by the
-# initdb.d scripts (below) from the postgres-secrets values passed as env.
+# initdb.d scripts (below) from the sealed DB secret values passed as env.
 locals {
   pg_image = "docker.io/noizu/timescaledb-ha-with-age:pg17.9-ts2.25.2-all-age1.7.0-r2"
 
   # Per-app DB provisioning lives one-file-per-app under files/postgres/initdb.d/
   # <app>/init-db.sh, with shared helpers in _lib.sh. The folder name is the
   # single source of truth: it drives both the initdb script set AND the
-  # <APP>_DB_USER / <APP>_DB_PASSWORD env keys read from the postgres-secrets
-  # sealed secret. Adding an app = drop an initdb.d/<app>/init-db.sh folder and
+  # <APP>_DB_USER / <APP>_DB_PASSWORD env keys read from the sealed DB secret.
+  # Adding an app = drop an initdb.d/<app>/init-db.sh folder and
   # add its two keys to the sealed secret.
   pg_initdb_dir   = "${path.module}/files/postgres/initdb.d"
   pg_app_scripts  = sort(tolist(fileset(local.pg_initdb_dir, "*/init-db.sh")))
@@ -35,7 +35,7 @@ locals {
 
 resource "kubernetes_persistent_volume_claim_v1" "postgres" {
   metadata {
-    name      = "infra-postgres-data"
+    name      = "infra-timescaledb-data"
     namespace = local.ns
     labels    = merge(local.common_labels, { "app.kubernetes.io/name" = "postgres" })
   }
@@ -55,7 +55,7 @@ resource "kubernetes_persistent_volume_claim_v1" "postgres" {
 
 resource "kubernetes_config_map_v1" "postgres_init" {
   metadata {
-    name      = "infra-postgres-init"
+    name      = "infra-timescaledb-init"
     namespace = local.ns
     labels    = merge(local.common_labels, { "app.kubernetes.io/name" = "postgres" })
   }
@@ -64,7 +64,7 @@ resource "kubernetes_config_map_v1" "postgres_init" {
 
 resource "kubernetes_deployment_v1" "postgres" {
   metadata {
-    name      = "infra-postgres"
+    name      = "infra-timescaledb"
     namespace = local.ns
     labels    = merge(local.common_labels, { "app.kubernetes.io/name" = "postgres" })
   }
@@ -206,7 +206,7 @@ resource "kubernetes_deployment_v1" "postgres" {
 
 resource "kubernetes_service_v1" "postgres" {
   metadata {
-    name      = "infra-postgres"
+    name      = "infra-timescaledb"
     namespace = local.ns
     labels    = merge(local.common_labels, { "app.kubernetes.io/name" = "postgres" })
   }

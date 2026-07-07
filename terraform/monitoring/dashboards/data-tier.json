@@ -16,7 +16,7 @@
   "widgets": [
     {
       "id": "pg-connections",
-      "title": "Postgres Active Connections",
+      "title": "TimescaleDB Active Connections",
       "panelTypes": "graph",
       "query": {
         "queryType": "builder",
@@ -39,7 +39,7 @@
     },
     {
       "id": "pg-latency",
-      "title": "Postgres Query Duration p99",
+      "title": "TimescaleDB Query Duration p99",
       "panelTypes": "graph",
       "query": {
         "queryType": "builder",
@@ -61,8 +61,8 @@
       "softMin": 0
     },
     {
-      "id": "pg-memory",
-      "title": "Postgres Pod Memory",
+      "id": "timescaledb-memory",
+      "title": "TimescaleDB Pod Memory",
       "panelTypes": "graph",
       "query": {
         "queryType": "builder",
@@ -74,8 +74,8 @@
             "aggregateAttribute": { "key": "k8s.pod.memory.usage", "dataType": "float64", "type": "Gauge" },
             "filters": {
               "items": [
-                { "key": { "key": "k8s.namespace.name", "dataType": "string", "type": "resource" }, "op": "=", "value": "data-ns" },
-                { "key": { "key": "k8s.pod.name", "dataType": "string", "type": "resource" }, "op": "regex", "value": "shared-postgres.*" }
+                { "key": { "key": "k8s.namespace.name", "dataType": "string", "type": "resource" }, "op": "=", "value": "infra" },
+                { "key": { "key": "k8s.pod.name", "dataType": "string", "type": "resource" }, "op": "regex", "value": "infra-timescaledb.*" }
               ],
               "op": "AND"
             }

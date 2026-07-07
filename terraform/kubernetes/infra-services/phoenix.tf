@@ -1,7 +1,7 @@
 # ---------------------------------------------------------------------------
 # Arize Phoenix — LLM eval/observability, served at eval.noizu.com.
 # ---------------------------------------------------------------------------
-# Uses the shared Postgres (DB URL in phoenix-secrets). OTLP gRPC on 4317.
+# Uses the shared TimescaleDB (DB URL in phoenix-secrets). OTLP gRPC on 4317.
 locals {
   phoenix_host = "eval.noizu.com"
 }
@@ -53,9 +53,9 @@ resource "kubernetes_deployment_v1" "phoenix" {
           }
         }
         init_container {
-          name    = "wait-for-postgres"
+          name    = "wait-for-timescaledb"
           image   = "busybox:1.36"
-          command = ["sh", "-c", "until nc -z infra-postgres.${local.ns}.svc.cluster.local 5432; do echo 'Waiting for PostgreSQL...'; sleep 5; done"]
+          command = ["sh", "-c", "until nc -z infra-timescaledb.${local.ns}.svc.cluster.local 5432; do echo 'Waiting for TimescaleDB...'; sleep 5; done"]
         }
         container {
           name  = "phoenix"

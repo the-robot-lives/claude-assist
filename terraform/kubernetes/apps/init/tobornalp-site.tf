@@ -79,7 +79,7 @@ resource "helm_release" "tobornalp_site" {
       }
 
       database = {
-        host = "app-postgres"
+        host = "app-timescaledb"
         port = 5432
         name = "tobornalp"
       }

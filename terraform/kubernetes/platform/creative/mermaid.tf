@@ -1,5 +1,5 @@
 # Mermaid Live Editor — text-to-diagram editor, served at mermaid.noizu.com.
-# SvelteKit Node server with Authentik OIDC, shared Postgres (DSN in the secret),
+# SvelteKit Node server with Authentik OIDC, shared TimescaleDB (DSN in the secret),
 # SendGrid email and OTEL log export. All secrets come from mermaid-secrets
 # (/creative/mermaid) via envFrom; explicit env below sets non-secret config.
 resource "kubernetes_deployment_v1" "mermaid" {

@@ -1,5 +1,5 @@
 # Webstudio — visual web builder, served at webstudio.noizu.com. Builder + a
-# PostgREST sidecar over the shared Postgres (platform/init). An init container
+# PostgREST sidecar over the shared TimescaleDB (platform/init). An init container
 # mints a long-lived PostgREST JWT from the shared HMAC secret.
 locals {
   webstudio_pg = "${var.postgres_host}:5432/${var.webstudio_db_name}"

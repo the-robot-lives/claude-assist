@@ -1,7 +1,7 @@
 # ---------------------------------------------------------------------------
 # BottleCRM — Django REST backend + celery-worker + celery-beat + SvelteKit
 # frontend, all in one pod (mirrors the legacy chart). Served at
-# bottlecrm.noizu.com. Postgres + Valkey from platform/init; SMTP via SendGrid.
+# bottlecrm.noizu.com. TimescaleDB + Valkey from platform/init; SMTP via SendGrid.
 # ---------------------------------------------------------------------------
 locals {
   # Shared env across the Django backend, celery worker/beat, and the migrate
@@ -61,7 +61,7 @@ resource "kubernetes_deployment_v1" "bottlecrm" {
         init_container {
           name    = "db-wait"
           image   = "postgres:16-alpine"
-          command = ["sh", "-c", "until pg_isready -h ${var.postgres_host} -p 5432 -U ${var.bottlecrm_db_user}; do echo 'waiting for postgres...'; sleep 3; done"]
+          command = ["sh", "-c", "until pg_isready -h ${var.postgres_host} -p 5432 -U ${var.bottlecrm_db_user}; do echo 'waiting for timescaledb...'; sleep 3; done"]
         }
         init_container {
           name              = "migrate"

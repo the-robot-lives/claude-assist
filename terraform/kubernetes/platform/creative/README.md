@@ -10,12 +10,12 @@ Diagram + design tools in the `platform-creative` namespace.
 | kroki      | `yuzutech/kroki` + 4 companions         | stateless                    | kroki.noizu.com     |
 | mydraft    | `ops.noizu.com/noizu/mydraft-server`    | PVC (5Gi)                    | mydraft.noizu.com   |
 | excalidraw | `excalidraw/excalidraw` + room          | shared Valkey (db 1)         | excalidraw.noizu.com|
-| mermaid    | `ops.noizu.com/mermaid-live-editor`     | shared Postgres + Authentik OIDC + OTEL | mermaid.noizu.com |
-| penpot     | `penpotapp/{frontend,backend,exporter}` | shared Postgres + Valkey + embedded MinIO (PVC) | penpot.noizu.com |
-| webstudio  | `ops.noizu.com/webstudio/builder` + PostgREST | shared Postgres        | webstudio.noizu.com |
+| mermaid    | `ops.noizu.com/mermaid-live-editor`     | shared TimescaleDB + Authentik OIDC + OTEL | mermaid.noizu.com |
+| penpot     | `penpotapp/{frontend,backend,exporter}` | shared TimescaleDB + Valkey + embedded MinIO (PVC) | penpot.noizu.com |
+| webstudio  | `ops.noizu.com/webstudio/builder` + PostgREST | shared TimescaleDB        | webstudio.noizu.com |
 
 ## Data tier (platform/init)
-- Postgres (`platform-postgres`): mermaid, penpot, webstudio — DBs provisioned by
+- TimescaleDB (`platform-timescaledb`): mermaid, penpot, webstudio — DBs provisioned by
   `files/postgres/initdb.d/{mermaid,penpot,webstudio}`.
 - Valkey (`platform-valkey`): excalidraw (db 1), penpot (db 0).
 - penpot also runs its own embedded MinIO (`penpot-minio`) for asset storage.

@@ -1,5 +1,5 @@
 variable "name" {
-  description = "Workload/service name (e.g. platform-postgres)."
+  description = "Workload/service name (e.g. platform-timescaledb)."
   type        = string
 }
 
@@ -20,7 +20,7 @@ variable "storage_size" {
 }
 
 variable "image" {
-  description = "Postgres/TimescaleDB image (HA + Apache AGE build)."
+  description = "TimescaleDB image (HA + Apache AGE build)."
   type        = string
   default     = "docker.io/noizu/timescaledb-ha-with-age:pg17.9-ts2.25.2-all-age1.7.0-r2"
 }

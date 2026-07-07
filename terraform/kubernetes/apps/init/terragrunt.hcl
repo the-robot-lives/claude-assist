@@ -40,12 +40,12 @@ dependencies {
 # Terraform runs from a .terragrunt-cache copy, so hand it absolute paths for
 # the local init state and for the Helm chart that lives outside terraform/.
 inputs = {
-  init_state_path           = "${get_terragrunt_dir()}/../../init/terraform.tfstate"
-  noizu_site_chart_path     = "${get_terragrunt_dir()}/../../../../projects/noizu.com/helm/noizu-site"
-  aifighter_site_chart_path = "${get_terragrunt_dir()}/../../../../projects/aifighter.com/helm/aifighter"
-  codefresh_chart_path      = "${get_terragrunt_dir()}/../../../../projects/codefre.sh/helm/codefresh"
-  gottacc_site_chart_path   = "${get_terragrunt_dir()}/../../../../projects/gotta.cc/helm/gotta-cc"
-  iotgo_site_chart_path     = "${get_terragrunt_dir()}/../../../../projects/iotgo.io/helm/iotgo"
+  init_state_path             = "${get_terragrunt_dir()}/../../init/terraform.tfstate"
+  noizu_site_chart_path       = "${get_terragrunt_dir()}/../../../../projects/noizu.com/helm/noizu-site"
+  aifighter_site_chart_path   = "${get_terragrunt_dir()}/../../../../projects/aifighter.com/helm/aifighter"
+  codefresh_chart_path        = "${get_terragrunt_dir()}/../../../../projects/codefre.sh/helm/codefresh"
+  gottacc_site_chart_path     = "${get_terragrunt_dir()}/../../../../projects/gotta.cc/helm/gotta-cc"
+  iotgo_site_chart_path       = "${get_terragrunt_dir()}/../../../../projects/iotgo.io/helm/iotgo"
   jailbreakingsite_chart_path = "${get_terragrunt_dir()}/../../../../projects/jailbreakingsite.com/helm/jailbreakingsite"
   noizurpg_chart_path         = "${get_terragrunt_dir()}/../../../../projects/noizurpg.com/helm/noizurpg"
   robotsunite_chart_path      = "${get_terragrunt_dir()}/../../../../projects/robots-unite.com/helm/robots-unite"

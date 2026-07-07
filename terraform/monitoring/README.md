@@ -48,7 +48,7 @@ provider_installation {
 | Production Error Logs | Application | all | Critical | >25 errors / 5m | All services |
 | SigNoz/OTEL Export Failures | Observability | observability-ns | Warning | >3 failures / 5m | Telemetry pipeline |
 | ClickHouse Errors | Data | data-ns | Critical | >5 errors / 5m | SigNoz, PostHog |
-| Shared Postgres Errors | Data | data-ns | Critical | >10 errors / 5m | 17 app databases |
+| Shared TimescaleDB Errors | Data | infra | Critical | >10 errors / 5m | Shared application databases |
 | Shared MySQL Errors | Data | data-ns | Critical | >10 errors / 5m | ghost, matomo, mautic, espocrm, seonaut |
 | Mailu Postfix Errors | Mail | mail-ns | Warning | >5 errors / 5m | therobotlives.com email |
 | vLLM Errors | AI | ai-ns | Warning | >5 errors / 5m | Weaviate vectorizer |
@@ -59,7 +59,7 @@ provider_installation {
 
 | Alert | Target | Severity | Threshold | Context |
 |-------|--------|----------|-----------|---------|
-| Shared Postgres Memory | data-ns/shared-postgres | Warning | >3 GiB (limit 4 GiB) | TimescaleDB, 17 databases |
+| Shared TimescaleDB Memory | infra/infra-timescaledb | Warning | >3 GiB (limit 4 GiB) | Shared TimescaleDB databases |
 | ClickHouse Memory | data-ns/shared-clickhouse | Critical | >12 GiB (max_memory 12GB, limit 15 GiB) | SigNoz + PostHog backend |
 | Shared MySQL Memory | data-ns/shared-mysql | Warning | >6 GiB (limit 8 GiB) | 5 app databases |
 | Redis/Valkey Memory | data-ns/shared-redis,valkey | Warning | >768 MiB (limit 1 GiB) | Cache evictions |

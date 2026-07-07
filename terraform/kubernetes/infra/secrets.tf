@@ -7,13 +7,13 @@
 # applies them, so an apply can never regenerate the values.
 #
 # Expected files in secrets/ (one SealedSecret each):
-#   postgres-secrets     (POSTGRES_PASSWORD, <APP>_DB_USER/PASSWORD)  — postgres
+#   postgres-secrets     (POSTGRES_PASSWORD, <APP>_DB_USER/PASSWORD)  — TimescaleDB credentials
 #   clickhouse-secrets   (SIGNOZ_TOKENIZER_JWT_SECRET)               — clickhouse
 #   registry-basic-auth  (auth = htpasswd)                           — registry ingress
 #   ops-noizu-com-tls    (tls.crt, tls.key)                          — registry ingress
 #
 # Generate/refresh from the live cluster (needs kubeseal):
-#   ./seal-managed-secrets.sh   # postgres / clickhouse / registry-basic-auth
+#   ./seal-managed-secrets.sh   # timescaledb / clickhouse / registry-basic-auth
 #   ./seal-secrets.sh           # ops-noizu-com-tls (recovered cert)
 locals {
   sealed_secret_files = fileset("${path.module}/secrets", "*.sealedsecret.yaml")

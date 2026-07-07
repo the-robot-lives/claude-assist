@@ -1,7 +1,7 @@
 # ---------------------------------------------------------------------------
 # PostHog — product analytics, served at posthog.noizu.com.
 # ---------------------------------------------------------------------------
-# Pointed at the SHARED data tier: infra-clickhouse, infra-postgres (DB URL in
+# Pointed at the SHARED data tier: infra-clickhouse, infra-timescaledb (DB URL in
 # the secret), infra-valkey (Redis). Kafka is a dedicated Redpanda node
 # (posthog-kafka) — there is no shared Kafka.
 locals {
@@ -45,7 +45,7 @@ locals {
   # Wait-for-dependency init containers (point at the shared services).
   posthog_wait_inits = {
     wait-clickhouse = "until wget -q --spider http://posthog-clickhouse:8123/ping; do echo 'Waiting for ClickHouse...'; sleep 5; done"
-    wait-postgres   = "until nc -z infra-postgres.${local.ns}.svc.cluster.local 5432; do echo 'Waiting for PostgreSQL...'; sleep 5; done"
+    wait-timescaledb = "until nc -z infra-timescaledb.${local.ns}.svc.cluster.local 5432; do echo 'Waiting for TimescaleDB...'; sleep 5; done"
     wait-redis      = "until nc -z infra-valkey 6379; do echo 'Waiting for Redis...'; sleep 5; done"
     wait-kafka      = "until nc -z posthog-kafka 9092; do echo 'Waiting for Kafka...'; sleep 5; done"
   }

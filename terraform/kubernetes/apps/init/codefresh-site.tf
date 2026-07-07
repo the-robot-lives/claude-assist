@@ -87,7 +87,7 @@ resource "helm_release" "codefresh_site" {
       }
 
       database = {
-        host = "app-postgres"
+        host = "app-timescaledb"
         port = 5432
         name = "codefresh"
       }

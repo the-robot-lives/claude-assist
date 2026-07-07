@@ -1,5 +1,5 @@
 # ---------------------------------------------------------------------------
-# Docmost — wiki / docs, served at docmost.noizu.com. Shared Postgres + Valkey
+# Docmost — wiki / docs, served at docmost.noizu.com. Shared TimescaleDB + Valkey
 # (full DSNs in Infisical); local file storage on a PVC. SMTP via SendGrid.
 # ---------------------------------------------------------------------------
 resource "kubernetes_persistent_volume_claim_v1" "docmost_data" {

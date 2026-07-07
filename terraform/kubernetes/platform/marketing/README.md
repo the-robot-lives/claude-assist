@@ -2,11 +2,11 @@
 
 | Service  | Image                  | Data                          | Host               |
 |----------|------------------------|-------------------------------|--------------------|
-| listmonk | `listmonk/listmonk`    | shared Postgres + PVC uploads | listmonk.noizu.com |
+| listmonk | `listmonk/listmonk`    | shared TimescaleDB + PVC uploads | listmonk.noizu.com |
 | mautic   | `mautic/mautic:5-apache` | shared MariaDB + PVC        | mautic.noizu.com   |
 
 ## Data tier (platform/init)
-- listmonk → **platform-postgres** (db `listmonk`, `files/postgres/initdb.d/listmonk`)
+- listmonk -> **platform-timescaledb** (db `listmonk`, `files/postgres/initdb.d/listmonk`)
 - mautic → **platform-mariadb** (db `mautic`, `files/mariadb/initdb.d/mautic`)
 
 ## Secrets (`/marketing` → `marketing-app-secrets`)

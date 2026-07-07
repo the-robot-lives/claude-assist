@@ -3,7 +3,7 @@
 # (by default) destroying data.
 #
 # Background:
-#   * Postgres/TimescaleDB only runs /docker-entrypoint-initdb.d scripts when
+#   * TimescaleDB only runs /docker-entrypoint-initdb.d scripts when
 #     PGDATA is EMPTY. Restarting the pod does NOT re-run init-db.sh, so we exec
 #     the (idempotent) script against the live pod instead.
 #   * Valkey re-applies its ACL users on every pod start (the `prepare` init
@@ -12,10 +12,10 @@
 #
 # Usage:
 #   ./refresh-db.sh                 # refresh both, keep data (default)
-#   ./refresh-db.sh postgres        # only Postgres/Timescale
+#   ./refresh-db.sh timescaledb     # only TimescaleDB
 #   ./refresh-db.sh valkey          # only Valkey
 #   ./refresh-db.sh --wipe          # DESTRUCTIVE: delete PVCs + recreate (both)
-#   ./refresh-db.sh --wipe postgres # DESTRUCTIVE: wipe only Postgres data
+#   ./refresh-db.sh --wipe timescaledb # DESTRUCTIVE: wipe only TimescaleDB data
 #
 # --wipe deletes the data PVC so the next pod comes up fresh; you must run
 # `terraform -chdir=infra apply` afterwards to recreate the PVC + roll the pod.
@@ -41,13 +41,13 @@ echo "Namespace: $NS  |  target: $TARGET  |  wipe: $WIPE"
 
 refresh_postgres() {
   if [[ "$WIPE" == 1 ]]; then
-    echo "==> WIPING Postgres/Timescale data (infra-postgres-data)"
-    kubectl -n "$NS" scale deploy/infra-postgres --replicas=0
-    kubectl -n "$NS" delete pvc infra-postgres-data --ignore-not-found
+    echo "==> WIPING TimescaleDB data (infra-timescaledb-data)"
+    kubectl -n "$NS" scale deploy/infra-timescaledb --replicas=0
+    kubectl -n "$NS" delete pvc infra-timescaledb-data --ignore-not-found
     echo "    PVC deleted. Run: terraform -chdir=$HERE apply"
   else
-    echo "==> Re-running init-db.sh on infra-postgres (idempotent, keeps data)"
-    kubectl -n "$NS" exec deploy/infra-postgres -c timescaledb -- \
+    echo "==> Re-running init-db.sh on infra-timescaledb (idempotent, keeps data)"
+    kubectl -n "$NS" exec deploy/infra-timescaledb -c timescaledb -- \
       bash /docker-entrypoint-initdb.d/init-db.sh
   fi
 }

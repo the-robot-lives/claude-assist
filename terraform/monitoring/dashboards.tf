@@ -13,7 +13,7 @@ locals {
     data_tier = {
       title = "noizu – Data Tier"
       name  = "data-tier"
-      desc  = "Postgres, MySQL, Redis, Valkey, and ClickHouse health metrics"
+      desc  = "TimescaleDB, MySQL, Redis, Valkey, and ClickHouse health metrics"
       tags  = ["data", "databases"]
     }
     app_services = {

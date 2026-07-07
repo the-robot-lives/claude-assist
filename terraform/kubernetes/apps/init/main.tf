@@ -1,5 +1,5 @@
 # ---------------------------------------------------------------------------
-# Apps-tier shared data services: app-valkey + app-postgres.
+# Apps-tier shared data services: app-valkey + app-timescaledb.
 # ---------------------------------------------------------------------------
 # Credentials are managed by Infisical (operator syncs /apps/* into the managed
 # Secrets). Requires the infisical operator + universal-auth-credentials.
@@ -21,6 +21,7 @@ module "app_valkey" {
   # NoizuPromptLingo connects as the "npl" user.
   acl_users = {
     npl = { password_key = "NPL_VALKEY_PASSWORD", rules = "~* &* +@all" }
+    ddi = { password_key = "DDI_VALKEY_PASSWORD", rules = "~* &* +@all" }
   }
 
   infisical = merge(local.infisical_base, { secrets_path = "/apps/valkey" })
@@ -29,10 +30,10 @@ module "app_valkey" {
 module "app_timescaledb" {
   source = "../../modules/timescaledb"
 
-  name                = "app-postgres"
+  name                = "app-timescaledb"
   namespace           = kubernetes_namespace_v1.apps.metadata[0].name
   storage_class       = local.storage_class
-  managed_secret_name = "app-postgres-secrets"
+  managed_secret_name = "app-timescaledb-secrets"
 
   initdb_scripts_dir = "${path.module}/files/postgres/initdb.d"
 
