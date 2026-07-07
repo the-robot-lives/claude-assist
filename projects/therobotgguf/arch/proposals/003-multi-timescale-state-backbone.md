@@ -10,7 +10,7 @@
 
 Attention gives the transformer a perfect verbatim buffer and charges for it twice: O(L²) compute during training, and a KV cache that grows O(L) during decoding — making generation memory-bandwidth-bound and context length a cache-size problem.
 
-The brain holds no verbatim buffer. It runs cascades of decaying traces at multiple time constants (milliseconds → seconds → minutes) plus content-addressed episodic recall when verbatim detail is actually needed. That is *exactly* §B + §F — the plan already contains the replacement; this proposal commits to it.
+Biological memory holds no verbatim buffer; it runs cascades of decaying traces at multiple time constants (milliseconds → seconds → minutes) plus content-addressed episodic recall when verbatim detail is actually needed. That is *exactly* §B + §F — the plan already contains the replacement; this proposal commits to it.
 
 ## 2. The overhaul
 
