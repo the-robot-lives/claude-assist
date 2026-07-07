@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Package">
+  <title>Package</title>
+  <rect x="12.00" y="14.00" width="17.00" height="8.00" rx="1.50" fill="#6E7B8B" stroke="#485261" stroke-width="2.0" stroke-linejoin="round"/>
+  <rect x="12.00" y="22.00" width="40.00" height="28.00" rx="1.50" fill="#6E7B8B" stroke="#485261" stroke-width="2.0" stroke-linejoin="round"/>
+</svg>

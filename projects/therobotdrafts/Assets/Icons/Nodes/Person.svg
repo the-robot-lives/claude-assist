@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Person">
+  <title>Person</title>
+  <circle cx="32.00" cy="20.00" r="7.00" fill="#7B6FB0" stroke="#4F4C75" stroke-width="2.0"/>
+  <path d="M20,50 v-4 a12,10 0 0 1 24,0 v4 Z" fill="#7B6FB0" stroke="#4F4C75" stroke-width="2.0" stroke-linejoin="round" stroke-linecap="round"/>
+</svg>

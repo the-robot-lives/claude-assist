@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Panel">
+  <title>Panel</title>
+  <rect x="11.00" y="15.00" width="42.00" height="34.00" rx="2.00" fill="none" stroke="#505A6E" stroke-width="2.0" stroke-dasharray="5 3" stroke-linejoin="round"/>
+  <rect x="11.00" y="15.00" width="42.00" height="34.00" fill="#7E8AA2" fill-opacity="0.18" stroke-linejoin="round"/>
+</svg>

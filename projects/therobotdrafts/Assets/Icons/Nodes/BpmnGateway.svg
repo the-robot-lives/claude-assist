@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Gateway">
+  <title>Gateway</title>
+  <polygon points="32.00,14.00 50.00,32.00 32.00,50.00 14.00,32.00" fill="#E69F00" stroke="#6C541D" stroke-width="2.0" stroke-linejoin="round" stroke-linecap="round"/>
+  <line x1="26.00" y1="26.00" x2="38.00" y2="38.00" stroke="#382D12" stroke-width="2.2" stroke-linecap="round"/>
+  <line x1="38.00" y1="26.00" x2="26.00" y2="38.00" stroke="#382D12" stroke-width="2.2" stroke-linecap="round"/>
+</svg>

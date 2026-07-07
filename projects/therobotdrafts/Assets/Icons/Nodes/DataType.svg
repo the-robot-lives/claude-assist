@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Data Type">
+  <title>Data Type</title>
+  <rect x="12.00" y="11.00" width="40.00" height="42.00" fill="#7FA6B0" stroke="#435763" stroke-width="2.0" stroke-linejoin="round"/>
+  <line x1="12.00" y1="25.00" x2="52.00" y2="25.00" stroke="#435763" stroke-width="2.0" stroke-linecap="round"/>
+  <text x="32.00" y="17.50" font-family="Helvetica,Arial,sans-serif" font-size="8" font-weight="600" fill="#242F35" text-anchor="middle" dominant-baseline="central">«dataType»</text>
+  <line x1="22.00" y1="21.50" x2="42.00" y2="21.50" stroke="#242F35" stroke-width="2.4" stroke-linecap="round"/>
+  <line x1="12.00" y1="39.00" x2="52.00" y2="39.00" stroke="#435763" stroke-width="2.0" stroke-linecap="round"/>
+  <line x1="18.00" y1="33.00" x2="38.16" y2="33.00" stroke="#242F35" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="18.00" y1="39.00" x2="38.16" y2="39.00" stroke="#242F35" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="18.00" y1="47.00" x2="38.16" y2="47.00" stroke="#242F35" stroke-width="1.5" stroke-linecap="round"/>
+</svg>

@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Heat Map Item">
+  <title>Heat Map Item</title>
+  <rect x="14.00" y="16.00" width="36.00" height="10.67" fill="#DB8C4F" stroke-linejoin="round"/>
+  <rect x="14.00" y="26.67" width="36.00" height="10.67" fill="#DB744E" stroke-linejoin="round"/>
+  <rect x="14.00" y="37.33" width="36.00" height="10.67" fill="#D85254" stroke-linejoin="round"/>
+  <rect x="14.00" y="16.00" width="36.00" height="32.00" rx="2.00" fill="none" stroke="#763A42" stroke-width="2.0" stroke-linejoin="round"/>
+</svg>

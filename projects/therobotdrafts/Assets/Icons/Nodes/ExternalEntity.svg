@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="External Entity">
+  <title>External Entity</title>
+  <rect x="16.00" y="16.00" width="32.00" height="32.00" rx="1.00" fill="#8893A0" stroke="#565F6C" stroke-width="2.0" stroke-linejoin="round"/>
+  <line x1="20.00" y1="16.00" x2="20.00" y2="48.00" stroke="#FFFFFF" stroke-width="1.4" stroke-linecap="round"/>
+  <line x1="16.00" y1="20.00" x2="48.00" y2="20.00" stroke="#FFFFFF" stroke-width="1.4" stroke-linecap="round"/>
+  <line x1="26.00" y1="34.00" x2="42.00" y2="34.00" stroke="#FFFFFF" stroke-width="2.6" stroke-linecap="round"/>
+</svg>

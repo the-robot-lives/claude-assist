@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Artifact">
+  <title>Artifact</title>
+  <path d="M14,12 H40 L50,22 V52 H14 Z" fill="#B0A878" stroke="#57584D" stroke-width="2.0" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M40,12 V22 H50" fill="#908A62" stroke="#57584D" stroke-width="2.0" stroke-linejoin="round" stroke-linecap="round"/>
+  <text x="30.00" y="28.00" font-family="Helvetica,Arial,sans-serif" font-size="7" font-weight="600" fill="#2E2F2A" text-anchor="middle" dominant-baseline="central">«artifact»</text>
+  <line x1="19.00" y1="36.00" x2="44.00" y2="36.00" stroke="#2E2F2A" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="19.00" y1="42.00" x2="44.00" y2="42.00" stroke="#2E2F2A" stroke-width="1.5" stroke-linecap="round"/>
+</svg>

@@ -38,14 +38,35 @@ namespace TheRobotDraft.Uml3D
             ElementKind.Actor or ElementKind.Person => Uml3DShape_Actor.Build(w, h, d),
 
             ElementKind.UseCase or ElementKind.Collaboration or ElementKind.BpmnEvent
-                or ElementKind.BpmnConversation or ElementKind.WhiteboardCircle => Uml3DShape_UseCase.Build(w, h, d),
+                or ElementKind.WhiteboardCircle => Uml3DShape_UseCase.Build(w, h, d),
 
             ElementKind.State or ElementKind.Activity or ElementKind.CallActivity or ElementKind.BpmnActivity
-                or ElementKind.AsyncSend or ElementKind.AsyncReceive
                 => Uml3DShape_RoundedRect.Build(w, h, d),
 
-            ElementKind.Decision or ElementKind.BpmnGateway or ElementKind.DmnDecision
+            // Async send / receive: the send-signal pentagon and the concave accept-event notch.
+            ElementKind.AsyncSend => Uml3DShape_Ext.Pentagon(w, h, d),
+            ElementKind.AsyncReceive => Uml3DShape_Ext.AcceptEvent(w, h, d),
+
+            ElementKind.Decision or ElementKind.BpmnGateway
                 or ElementKind.DecisionTreeNode or ElementKind.WhiteboardDiamond => Uml3DShape_Diamond.Build(w, h, d),
+
+            // Pointy hexagon: BPMN conversation, UAF operational node.
+            ElementKind.BpmnConversation or ElementKind.UafOperationalNode => Uml3DShape_Ext.Hexagon(w, h, d),
+
+            // Process / value arrows drawn as a chevron.
+            ElementKind.ValueStream or ElementKind.ValueChainActivity or ElementKind.ArchiBusinessProcess
+                => Uml3DShape_Ext.Chevron(w, h, d),
+
+            // Stadium / pill: DMN input data and the ArchiMate / UAF service elements.
+            ElementKind.DmnInputData or ElementKind.ArchiApplicationService
+                or ElementKind.ArchiTechnologyService or ElementKind.UafService => Uml3DShape_Ext.Stadium(w, h, d),
+
+            // Face-on disc: a TOGAF ADM phase.
+            ElementKind.TogafArchitecturePhase => Uml3DShape_Ext.Disc(w, h, d),
+
+            // Chunky 3-D box for the deployment / device / server / resource nodes.
+            ElementKind.DeploymentNode or ElementKind.ArchiNode or ElementKind.ArchiDevice
+                or ElementKind.Server or ElementKind.UafResource => Uml3DShape_Ext.DeepBox(w, h, d),
 
             ElementKind.StateStart or ElementKind.Junction or ElementKind.History
                 => Uml3DShape_DiscMarker.Build(w, h, d),
@@ -54,22 +75,42 @@ namespace TheRobotDraft.Uml3D
 
             ElementKind.FlowFinal or ElementKind.Terminate => Uml3DShape_FlowFinal.Build(kind, w, h, d),
 
-            ElementKind.PackageNode => Uml3DShape_Folder.Build(w, h, d),
+            ElementKind.PackageNode or ElementKind.Profile => Uml3DShape_Folder.Build(w, h, d),
 
-            ElementKind.Database => Uml3DShape_Cylinder.Build(w, h, d),
+            ElementKind.Database or ElementKind.BpmnDataStore => Uml3DShape_Cylinder.Build(w, h, d),
 
             ElementKind.MindNode => Uml3DShape_MindNode.Build(w, h, d),
 
             ElementKind.Cloud => Uml3DShape_Cloud.Build(w, h, d),
 
-            ElementKind.Note or ElementKind.Artifact or ElementKind.WhiteboardSticky => Uml3DShape_DogEar.Build(w, h, d),
+            ElementKind.Note or ElementKind.Artifact or ElementKind.WhiteboardSticky
+                or ElementKind.BpmnDataObject => Uml3DShape_DogEar.Build(w, h, d),
 
-            ElementKind.Component => Uml3DShape_Component.Build(w, h, d),
+            ElementKind.Component or ElementKind.ArchiApplicationComponent => Uml3DShape_Component.Build(w, h, d),
 
             ElementKind.FlowTerminator or ElementKind.FlowIO or ElementKind.FlowDocument
                 => Uml3DShape_Flowchart.Build(kind, w, h, d),
 
-            _ => Box(w, h, d),  // class, interface, enum, struct, table, deployment box, bars, frames, …
+            // Thin synchronization / activation bars and ports (were full slabs).
+            ElementKind.ForkJoin or ElementKind.Activation or ElementKind.Port
+                or ElementKind.SysmlProxyPort or ElementKind.SysmlFullPort => Uml3DShape_Ext.Bar(w, h, d),
+
+            // Members as balls (design-conventions §1.1): functions = sphere, fields = flattened sphere.
+            ElementKind.Function => Uml3DShape_Ext.Sphere(w, h, d),
+            ElementKind.Field => Uml3DShape_Ext.FlatSphere(w, h, d),
+
+            // Rounded "capability / service" tiles.
+            ElementKind.SoftwareSystem or ElementKind.Container
+                or ElementKind.ArchiCapability or ElementKind.BusinessCapability or ElementKind.UafCapability
+                or ElementKind.ArchiSystemSoftware or ElementKind.SysmlConstraintBlock
+                or ElementKind.DmnDecisionService => Uml3DShape_RoundedRect.Build(w, h, d),
+
+            ElementKind.DmnBusinessKnowledge => Uml3DShape_Ext.ClippedTop(w, h, d),   // BKM: clipped top corners
+            ElementKind.DmnKnowledgeSource => Uml3DShape_Flowchart.Build(ElementKind.FlowDocument, w, h, d), // wavy
+            ElementKind.ArchiDeliverable => Uml3DShape_Ext.RoundedBottom(w, h, d),     // rounded bottom edge
+            ElementKind.ArchiPlateau => Uml3DShape_Ext.Layered(w, h, d),               // stacked slabs
+
+            _ => Box(w, h, d),  // class, interface, enum, struct, table, frames, remaining EA rectangles, …
         };
 
         /// <summary>How the +Z face should be populated for <paramref name="kind"/>.</summary>
@@ -78,9 +119,15 @@ namespace TheRobotDraft.Uml3D
             // Markers / control nodes: the glyph is the meaning.
             ElementKind.StateStart or ElementKind.StateEnd or ElementKind.Junction or ElementKind.ForkJoin
                 or ElementKind.FlowFinal or ElementKind.Terminate or ElementKind.Activation or ElementKind.Port
+                or ElementKind.SysmlProxyPort or ElementKind.SysmlFullPort
                 or ElementKind.Decision => FaceStyle.None,
 
             ElementKind.History => FaceStyle.GlyphH,
+
+            // Kinds we now render with a non-rectangular silhouette (hexagon, chevron, stadium, pentagon,
+            // accept-event, disc) get a centered label only — a full-face opaque EA/compartment card would
+            // poke outside the outline. Their EA property rows move to the inspector, not the face.
+            _ when HasNonRectSilhouette(kind) => FaceStyle.NameOnly,
 
             // Wireframe widgets: the concrete UI control glyph, composed on the face canvas by WireframeGlyph.
             // (Screen / Panel are regions — handled as region cubes, not widget glyphs — so they fall through.)
@@ -114,5 +161,24 @@ namespace TheRobotDraft.Uml3D
             b.AddBox(Vector3.zero, new Vector3(w, h, d));
             return b.ToMesh("UmlNodeBox");
         }
+
+        /// <summary>
+        /// Kinds whose <see cref="Build"/> mesh is a non-rectangular silhouette (pentagon, accept-event, hexagon,
+        /// chevron, stadium, disc). These take a centered-label face so a rectangular card can't spill past the
+        /// outline; the (deep-box, folder, cylinder, dog-ear, component) kinds stay rectangular-enough to keep
+        /// their normal face and are deliberately not listed here.
+        /// </summary>
+        private static bool HasNonRectSilhouette(ElementKind kind) => kind switch
+        {
+            ElementKind.AsyncSend or ElementKind.AsyncReceive
+                or ElementKind.BpmnConversation or ElementKind.UafOperationalNode
+                or ElementKind.ValueStream or ElementKind.ValueChainActivity or ElementKind.ArchiBusinessProcess
+                or ElementKind.DmnInputData or ElementKind.ArchiApplicationService
+                or ElementKind.ArchiTechnologyService or ElementKind.UafService
+                or ElementKind.TogafArchitecturePhase
+                or ElementKind.Function or ElementKind.Field
+                or ElementKind.DmnKnowledgeSource or ElementKind.ArchiDeliverable or ElementKind.ArchiPlateau => true,
+            _ => false,
+        };
     }
 }

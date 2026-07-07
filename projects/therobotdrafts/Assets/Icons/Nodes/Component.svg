@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Component">
+  <title>Component</title>
+  <rect x="16.00" y="15.00" width="34.00" height="34.00" rx="2.00" fill="#5B8AC4" stroke="#3E5A80" stroke-width="2.0" stroke-linejoin="round"/>
+  <rect x="10.00" y="22.00" width="12.00" height="8.00" fill="#5B8AC4" stroke="#3E5A80" stroke-width="1.6" stroke-linejoin="round"/>
+  <rect x="10.00" y="35.00" width="12.00" height="8.00" fill="#5B8AC4" stroke="#3E5A80" stroke-width="1.6" stroke-linejoin="round"/>
+</svg>

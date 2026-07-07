@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="TOGAF ADM Phase">
+  <title>TOGAF ADM Phase</title>
+  <circle cx="32.00" cy="32.00" r="15.00" fill="#B0A878" stroke="#57584D" stroke-width="2.0"/>
+  <circle cx="32.00" cy="32.00" r="5.00" fill="#BDB68E" stroke="#57584D" stroke-width="1.4"/>
+  <path d="M32,32 L32,17 A15,15 0 0 1 44.99,24.50 Z" fill="#CCC6A7" stroke="#57584D" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <line x1="32.00" y1="32.00" x2="32.00" y2="17.00" stroke="#57584D" stroke-width="1.1" stroke-linecap="round"/>
+  <line x1="32.00" y1="32.00" x2="44.99" y2="24.50" stroke="#57584D" stroke-width="1.1" stroke-linecap="round"/>
+  <line x1="32.00" y1="32.00" x2="44.99" y2="39.50" stroke="#57584D" stroke-width="1.1" stroke-linecap="round"/>
+  <line x1="32.00" y1="32.00" x2="32.00" y2="47.00" stroke="#57584D" stroke-width="1.1" stroke-linecap="round"/>
+  <line x1="32.00" y1="32.00" x2="19.01" y2="39.50" stroke="#57584D" stroke-width="1.1" stroke-linecap="round"/>
+  <line x1="32.00" y1="32.00" x2="19.01" y2="24.50" stroke="#57584D" stroke-width="1.1" stroke-linecap="round"/>
+</svg>

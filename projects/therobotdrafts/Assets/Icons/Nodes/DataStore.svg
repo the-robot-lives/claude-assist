@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Data Store">
+  <title>Data Store</title>
+  <rect x="12.00" y="20.00" width="42.00" height="24.00" fill="#7FA6B0" stroke-linejoin="round"/>
+  <line x1="12.00" y1="20.00" x2="54.00" y2="20.00" stroke="#435763" stroke-width="2.0" stroke-linecap="round"/>
+  <line x1="12.00" y1="44.00" x2="54.00" y2="44.00" stroke="#435763" stroke-width="2.0" stroke-linecap="round"/>
+  <line x1="12.00" y1="20.00" x2="12.00" y2="44.00" stroke="#435763" stroke-width="2.0" stroke-linecap="round"/>
+  <rect x="12.00" y="20.00" width="8.00" height="24.00" fill="#6C8D96" stroke-linejoin="round"/>
+  <rect x="12.00" y="20.00" width="42.00" height="24.00" fill="#7FA6B0" fill-opacity="0.0" stroke-linejoin="round"/>
+  <line x1="20.00" y1="20.00" x2="20.00" y2="44.00" stroke="#435763" stroke-width="1.4" stroke-linecap="round"/>
+  <line x1="27.00" y1="32.00" x2="47.00" y2="32.00" stroke="#242F35" stroke-width="2.6" stroke-linecap="round"/>
+</svg>

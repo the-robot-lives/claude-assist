@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Menu">
+  <title>Menu</title>
+  <rect x="12.00" y="24.00" width="40.00" height="12.00" rx="1.50" fill="#9AA7B0" stroke="#4E5763" stroke-width="2.0" stroke-linejoin="round"/>
+  <line x1="17.00" y1="30.00" x2="24.00" y2="30.00" stroke="#292F35" stroke-width="1.6" stroke-linecap="round"/>
+  <line x1="29.00" y1="30.00" x2="36.00" y2="30.00" stroke="#292F35" stroke-width="1.6" stroke-linecap="round"/>
+  <line x1="41.00" y1="30.00" x2="48.00" y2="30.00" stroke="#292F35" stroke-width="1.6" stroke-linecap="round"/>
+</svg>

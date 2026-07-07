@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Screen">
+  <title>Screen</title>
+  <rect x="11.00" y="13.00" width="42.00" height="38.00" rx="2.00" fill="#8893A0" stroke="#565F6C" stroke-width="2.0" stroke-linejoin="round"/>
+  <rect x="11.00" y="13.00" width="42.00" height="8.00" fill="#727B86" stroke="#565F6C" stroke-width="1.4" stroke-linejoin="round"/>
+  <circle cx="16.00" cy="17.00" r="1.30" fill="#FFFFFF"/>
+  <circle cx="20.00" cy="17.00" r="1.30" fill="#FFFFFF"/>
+  <circle cx="24.00" cy="17.00" r="1.30" fill="#FFFFFF"/>
+</svg>

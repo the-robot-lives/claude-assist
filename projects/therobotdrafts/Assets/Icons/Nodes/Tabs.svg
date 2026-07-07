@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Tabs">
+  <title>Tabs</title>
+  <rect x="12.00" y="25.00" width="40.00" height="26.00" rx="2.00" fill="#9AA7B0" stroke="#4E5763" stroke-width="2.0" stroke-linejoin="round"/>
+  <rect x="12.00" y="17.00" width="13.00" height="10.00" rx="2.00" fill="#9AA7B0" stroke="#4E5763" stroke-width="1.4" stroke-linejoin="round"/>
+  <rect x="25.00" y="17.00" width="13.00" height="10.00" rx="2.00" fill="#7E8990" stroke="#4E5763" stroke-width="1.4" stroke-linejoin="round"/>
+  <rect x="38.00" y="17.00" width="13.00" height="10.00" rx="2.00" fill="#7E8990" stroke="#4E5763" stroke-width="1.4" stroke-linejoin="round"/>
+</svg>

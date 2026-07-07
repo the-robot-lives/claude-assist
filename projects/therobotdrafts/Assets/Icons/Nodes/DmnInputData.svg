@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Input Data">
+  <title>Input Data</title>
+  <rect x="11.00" y="20.00" width="42.00" height="24.00" rx="12.00" fill="#56B4E9" stroke="#335C7A" stroke-width="2.0" stroke-linejoin="round"/>
+  <line x1="22.00" y1="32.00" x2="42.00" y2="32.00" stroke="#1C3240" stroke-width="3.0" stroke-linecap="round"/>
+</svg>

@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Terminate">
+  <title>Terminate</title>
+  <line x1="23.00" y1="23.00" x2="41.00" y2="41.00" stroke="#2A2D34" stroke-width="4.2" stroke-linecap="round"/>
+  <line x1="41.00" y1="23.00" x2="23.00" y2="41.00" stroke="#2A2D34" stroke-width="4.2" stroke-linecap="round"/>
+</svg>

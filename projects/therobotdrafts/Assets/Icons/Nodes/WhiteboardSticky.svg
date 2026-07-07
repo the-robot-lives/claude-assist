@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Sticky Note">
+  <title>Sticky Note</title>
+  <path d="M14,12 H39 L50,23 V52 H14 Z" fill="#F2E2A0" stroke="#716F5D" stroke-width="2.0" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M39,12 V23 H50" fill="#C6B983" stroke="#716F5D" stroke-width="2.0" stroke-linejoin="round" stroke-linecap="round"/>
+  <line x1="19.00" y1="29.00" x2="44.00" y2="29.00" stroke="#3B3B32" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="19.00" y1="35.00" x2="44.00" y2="35.00" stroke="#3B3B32" stroke-width="1.5" stroke-linecap="round"/>
+</svg>

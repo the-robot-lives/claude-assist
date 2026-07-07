@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Lane">
+  <title>Lane</title>
+  <rect x="11.00" y="14.00" width="42.00" height="36.00" rx="2.00" fill="#A8B0BC" stroke="#535B68" stroke-width="2.0" stroke-linejoin="round"/>
+  <rect x="11.00" y="14.00" width="10.00" height="36.00" fill="#8D949E" stroke="#535B68" stroke-width="2.0" stroke-linejoin="round"/>
+  <line x1="21.00" y1="14.00" x2="21.00" y2="50.00" stroke="#535B68" stroke-width="1.4" stroke-linecap="round"/>
+</svg>

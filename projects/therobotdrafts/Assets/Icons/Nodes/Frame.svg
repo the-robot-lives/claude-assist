@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Fragment">
+  <title>Fragment</title>
+  <rect x="12.00" y="14.00" width="40.00" height="36.00" rx="1.00" fill="#8893A0" stroke="#565F6C" stroke-width="2.0" stroke-linejoin="round"/>
+  <path d="M12,14 h16 l0,7 l-4,4 h-12 Z" fill="#727B86" stroke="#565F6C" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <text x="19.00" y="19.50" font-family="Helvetica,Arial,sans-serif" font-size="7.5" font-weight="700" fill="#FFFFFF" text-anchor="middle" dominant-baseline="central">sd</text>
+</svg>

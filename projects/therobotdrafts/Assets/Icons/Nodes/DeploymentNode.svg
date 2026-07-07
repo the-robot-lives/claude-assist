@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Node / Device">
+  <title>Node / Device</title>
+  <polygon points="14.00,27.00 23.00,18.00 48.00,18.00 39.00,27.00" fill="#7B8A9C" stroke="#485261" stroke-width="2.0" stroke-linejoin="round" stroke-linecap="round"/>
+  <polygon points="39.00,27.00 48.00,18.00 48.00,39.00 39.00,48.00" fill="#5A6572" stroke="#485261" stroke-width="2.0" stroke-linejoin="round" stroke-linecap="round"/>
+  <rect x="14.00" y="27.00" width="25.00" height="21.00" fill="#6E7B8B" stroke="#485261" stroke-width="2.0" stroke-linejoin="round"/>
+</svg>

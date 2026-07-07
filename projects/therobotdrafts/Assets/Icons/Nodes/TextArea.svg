@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Text Area">
+  <title>Text Area</title>
+  <rect x="13.00" y="18.00" width="38.00" height="28.00" rx="2.00" fill="#7FA6B0" stroke="#435763" stroke-width="2.0" stroke-linejoin="round"/>
+  <line x1="17.00" y1="24.00" x2="46.00" y2="24.00" stroke="#242F35" stroke-width="1.4" stroke-linecap="round"/>
+  <line x1="17.00" y1="30.00" x2="46.00" y2="30.00" stroke="#242F35" stroke-width="1.4" stroke-linecap="round"/>
+  <line x1="17.00" y1="36.00" x2="46.00" y2="36.00" stroke="#242F35" stroke-width="1.4" stroke-linecap="round"/>
+</svg>

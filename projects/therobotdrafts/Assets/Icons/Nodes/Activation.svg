@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Activation">
+  <title>Activation</title>
+  <line x1="32.00" y1="12.00" x2="32.00" y2="54.00" stroke="#696F7A" stroke-width="1.4" stroke-dasharray="4 4" stroke-linecap="round"/>
+  <rect x="28.00" y="20.00" width="8.00" height="26.00" rx="1.00" fill="#DDE3EA" stroke="#696F7A" stroke-width="2.0" stroke-linejoin="round"/>
+</svg>
