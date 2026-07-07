@@ -8,7 +8,7 @@
 
 ## 1. The bottleneck we're attacking
 
-The industry's answer to every capability gap is to retrain the monolith end-to-end: O(model × data) each time, catastrophic forgetting managed by re-mixing all previous data, zero reuse across runs. Brains never do this. A cortex does not re-derive vision to learn a fact; learning is local synaptic growth plus offline consolidation, on top of circuitry that stays put for decades.
+The industry's answer to every capability gap is to retrain the monolith end-to-end: O(model × data) each time, catastrophic forgetting managed by re-mixing all previous data, zero reuse across runs. Biological systems never do this: a brain does not re-derive vision to learn a fact; learning is local, incremental growth plus offline consolidation, on top of circuitry that stays put for decades.
 
 ## 2. The overhaul
 
