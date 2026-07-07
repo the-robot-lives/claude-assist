@@ -18,6 +18,10 @@
 
 #include "models/models.h"
 
+// ROBOT-EXT-BEGIN(model-include)
+#include "llama-robot-model.h"
+// ROBOT-EXT-END
+
 #include "ggml.h"
 #include "ggml-cpp.h"
 
@@ -327,6 +331,12 @@ llama_model * llama_model_create(llama_model_loader & ml, const llama_model_para
     if (arch == LLM_ARCH_UNKNOWN) {
         throw std::runtime_error("unknown model architecture: '" + ml.get_arch_name() + "'");
     }
+
+    // ROBOT-EXT-BEGIN(model-create) — therobot files wrap a donor base arch
+    if (arch == LLM_ARCH_THEROBOT) {
+        return llama_robot_model_create(ml, params);
+    }
+    // ROBOT-EXT-END
 
     return llama_model_create(arch, params);
 }

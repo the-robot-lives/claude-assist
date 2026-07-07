@@ -5,3 +5,6 @@
 ggml-common.h
 **/*.swp
 !peg-parser
+# ROBOT-EXT-BEGIN(tests-gitignore)
+!robot/
+# ROBOT-EXT-END

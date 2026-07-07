@@ -140,6 +140,9 @@ static const std::map<llm_arch, const char *> LLM_ARCH_NAMES = {
     { LLM_ARCH_KIMI_LINEAR,      "kimi-linear"      },
     { LLM_ARCH_TALKIE,           "talkie"           },
     { LLM_ARCH_MELLUM,           "mellum"           },
+    // ROBOT-EXT-BEGIN(arch-name)
+    { LLM_ARCH_THEROBOT,         "therobot"         },
+    // ROBOT-EXT-END
     { LLM_ARCH_UNKNOWN,          "(unknown)"        },
 };
 

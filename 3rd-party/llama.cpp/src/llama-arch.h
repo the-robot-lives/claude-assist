@@ -145,6 +145,9 @@ enum llm_arch {
     LLM_ARCH_MELLUM,
     LLM_ARCH_EAGLE3,
     LLM_ARCH_DFLASH,
+    // ROBOT-EXT-BEGIN(arch-enum) — therobot architecture family (wraps a donor base arch)
+    LLM_ARCH_THEROBOT,
+    // ROBOT-EXT-END
     LLM_ARCH_UNKNOWN,
 };
 

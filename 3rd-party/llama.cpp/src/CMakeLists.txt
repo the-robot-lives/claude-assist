@@ -35,6 +35,10 @@ add_library(llama
             llama-model-saver.cpp
             llama-model.cpp
             llama-quant.cpp
+            # ROBOT-EXT-BEGIN(build-src)
+            llama-robot-hparams.cpp
+            llama-robot-model.cpp
+            # ROBOT-EXT-END
             llama-sampler.cpp
             llama-vocab.cpp
             unicode-data.cpp

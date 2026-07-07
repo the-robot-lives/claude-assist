@@ -40,4 +40,7 @@ else()
     endif()
     add_subdirectory(fit-params)
     add_subdirectory(results)
+    # ROBOT-EXT-BEGIN(build-tools)
+    add_subdirectory(robot-inspect)
+    # ROBOT-EXT-END
 endif()
