@@ -2,9 +2,9 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "start-app.fullname" . }}-sandbox
+  name: {{ include "ddi.fullname" . }}-sandbox
   labels:
-    {{- include "start-app.labels" . | nindent 4 }}
+    {{- include "ddi.labels" . | nindent 4 }}
     app.kubernetes.io/component: sandbox
 spec:
   replicas: 1
@@ -12,12 +12,12 @@ spec:
     type: Recreate
   selector:
     matchLabels:
-      {{- include "start-app.selectorLabels" . | nindent 6 }}
+      {{- include "ddi.selectorLabels" . | nindent 6 }}
       app.kubernetes.io/component: sandbox
   template:
     metadata:
       labels:
-        {{- include "start-app.selectorLabels" . | nindent 8 }}
+        {{- include "ddi.selectorLabels" . | nindent 8 }}
         app.kubernetes.io/component: sandbox
     spec:
       {{- with .Values.imagePullSecrets }}
@@ -39,7 +39,7 @@ spec:
           containerPort: 4000
           protocol: TCP
         env:
-        {{- include "start-app.backendEnv" . | nindent 8 }}
+        {{- include "ddi.backendEnv" . | nindent 8 }}
         - name: MIX_ENV
           value: "dev"
         - name: NODE_ENV
@@ -60,7 +60,7 @@ spec:
       - name: workspace
         {{- if .Values.sandbox.persistence.enabled }}
         persistentVolumeClaim:
-          claimName: {{ include "start-app.fullname" . }}-sandbox-workspace
+          claimName: {{ include "ddi.fullname" . }}-sandbox-workspace
         {{- else }}
         emptyDir:
           sizeLimit: {{ .Values.sandbox.persistence.size | default "5Gi" }}

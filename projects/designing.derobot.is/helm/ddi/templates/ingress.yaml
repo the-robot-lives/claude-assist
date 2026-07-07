@@ -1,15 +1,15 @@
 {{- if .Values.ingress.enabled }}
-{{- $svcName := ternary (printf "%s-sandbox" (include "start-app.fullname" .)) (include "start-app.fullname" .) (.Values.sandbox.enabled | default false) }}
+{{- $svcName := ternary (printf "%s-sandbox" (include "ddi.fullname" .)) (include "ddi.fullname" .) (.Values.sandbox.enabled | default false) }}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: {{ include "start-app.fullname" . }}
+  name: {{ include "ddi.fullname" . }}
   labels:
-    {{- include "start-app.labels" . | nindent 4 }}
+    {{- include "ddi.labels" . | nindent 4 }}
   annotations:
     {{- toYaml .Values.ingress.annotations | nindent 4 }}
     {{- if .Values.ingress.cloudflareOnly }}
-    nginx.ingress.kubernetes.io/whitelist-source-range: {{ include "start-app.cloudflareWhitelist" . | quote }}
+    nginx.ingress.kubernetes.io/whitelist-source-range: {{ include "ddi.cloudflareWhitelist" . | quote }}
     {{- end }}
 spec:
   ingressClassName: {{ .Values.ingress.className }}

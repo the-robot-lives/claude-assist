@@ -35,7 +35,7 @@ migrate:
       memory: 256Mi
 
 database:
-  host: app-postgres.apps.svc.cluster.local
+  host: app-timescaledb.apps.svc.cluster.local
   port: 5432
   name: designing_derobot_is_dev
 

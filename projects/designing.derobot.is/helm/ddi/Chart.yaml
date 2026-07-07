@@ -1,11 +1,11 @@
 apiVersion: v2
-name: start-app
-description: "Start-App — Phoenix API + Next.js frontend scaffold chart"
+name: ddi
+description: "Designing.deRobot.is — Phoenix API + Next.js chart"
 version: 0.1.2
 appVersion: "0.1.0"
 type: application
 keywords:
-  - start-app
+  - ddi
   - phoenix
   - nextjs
   - elixir

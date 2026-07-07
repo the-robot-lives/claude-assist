@@ -2,9 +2,9 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: {{ include "start-app.fullname" . }}-migrate
+  name: {{ include "ddi.fullname" . }}-migrate
   labels:
-    {{- include "start-app.labels" . | nindent 4 }}
+    {{- include "ddi.labels" . | nindent 4 }}
     app.kubernetes.io/component: migrate
   annotations:
     "helm.sh/hook": pre-install,pre-upgrade
@@ -16,7 +16,7 @@ spec:
   template:
     metadata:
       labels:
-        {{- include "start-app.selectorLabels" . | nindent 8 }}
+        {{- include "ddi.selectorLabels" . | nindent 8 }}
         app.kubernetes.io/component: migrate
     spec:
       restartPolicy: Never
@@ -30,14 +30,14 @@ spec:
         imagePullPolicy: Always
         command: {{ .Values.migrate.command | toJson }}
         env:
-          {{- include "start-app.backendEnv" . | nindent 8 }}
+          {{- include "ddi.backendEnv" . | nindent 8 }}
           {{- with .Values.extraEnv }}
           {{- toYaml . | nindent 8 }}
           {{- end }}
         {{- if .Values.configMap.enabled }}
         envFrom:
         - configMapRef:
-            name: {{ include "start-app.fullname" . }}-config
+            name: {{ include "ddi.fullname" . }}-config
         {{- end }}
         resources:
           {{- toYaml .Values.migrate.resources | nindent 10 }}

@@ -1,8 +1,8 @@
-{{- define "start-app.name" -}}
+{{- define "ddi.name" -}}
 {{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
-{{- define "start-app.fullname" -}}
+{{- define "ddi.fullname" -}}
 {{- if .Values.fullnameOverride }}
 {{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" }}
 {{- else }}
@@ -15,23 +15,23 @@
 {{- end }}
 {{- end }}
 
-{{- define "start-app.labels" -}}
+{{- define "ddi.labels" -}}
 helm.sh/chart: {{ printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
-{{ include "start-app.selectorLabels" . }}
+{{ include "ddi.selectorLabels" . }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- end }}
 
-{{- define "start-app.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "start-app.name" . }}
+{{- define "ddi.selectorLabels" -}}
+app.kubernetes.io/name: {{ include "ddi.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
-{{- define "start-app.cloudflareWhitelist" -}}
+{{- define "ddi.cloudflareWhitelist" -}}
 173.245.48.0/20,103.21.244.0/22,103.22.200.0/22,103.31.4.0/22,141.101.64.0/18,108.162.192.0/18,190.93.240.0/20,188.114.96.0/20,197.234.240.0/22,198.41.128.0/17,162.158.0.0/15,104.16.0.0/13,104.24.0.0/14,172.64.0.0/13,131.0.72.0/22,2400:cb00::/32,2606:4700::/32,2803:f800::/32,2405:b500::/32,2405:8100::/32,2a06:98c0::/29,2c0f:f248::/32
 {{- end }}
 
-{{- define "start-app.backendEnv" -}}
+{{- define "ddi.backendEnv" -}}
 - name: DB_HOST
   value: {{ .Values.database.host | quote }}
 - name: DB_PORT
@@ -177,7 +177,7 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 {{- end }}
 
-{{- define "start-app.otelEnv" -}}
+{{- define "ddi.otelEnv" -}}
 {{- if .Values.otel.enabled }}
 - name: OTEL_EXPORTER_OTLP_ENDPOINT
   value: {{ .Values.otel.collectorEndpoint | quote }}
@@ -188,7 +188,7 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 {{- end }}
 
-{{- define "start-app.storageEnv" -}}
+{{- define "ddi.storageEnv" -}}
 {{- if .Values.storage.enabled }}
 - name: S3_BUCKET
   value: {{ .Values.storage.bucket | quote }}

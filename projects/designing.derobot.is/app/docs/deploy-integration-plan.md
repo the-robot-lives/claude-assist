@@ -44,12 +44,16 @@ These pieces are in place and do not need to be redone:
 
 > **RESOLVED during bring-up** (2026-07-08): 3a (path bug — promoted chart to
 > `projects/designing.derobot.is/helm/ddi`, fixed all 4 `.infra-config.yaml`
-> refs), 3c (namespace is `apps`, not `apps-ns`; the broken `liquibase_targets`
-> entry was removed — start-app uses Ecto, not Liquibase), 3e (the `derobot.is`
-> zone has a wildcard `*` CNAME so DNS already resolves — no record needed).
-> Still open: 3b (TF InfisicalSecret CRD for `apps-ddi-secrets`), 3f (confirm
-> wildcard cert covers `*.derobot.is`). 3d (project.yaml) is moot — operator
-> uses the manual workflow (see `docs/new-start-app-setup.md`).
+> refs), 3b (InfisicalSecret CRD `infisical-ddi-secrets` already exists live in
+> `apps` syncing `/apps/ddi` → `ddi-secrets`; backed with TF at
+> `terraform/kubernetes/apps/init/ddi-site.tf`; helm values `secrets.name`
+> corrected to `ddi-secrets`), 3c (namespace is `apps`, not `apps-ns`; the
+> broken `liquibase_targets` entry was removed — start-app uses Ecto, not
+> Liquibase), 3e (the `derobot.is` zone has a wildcard `*` CNAME so DNS already
+> resolves — no record needed). Still open: 3f (confirm wildcard cert covers
+> `*.derobot.is`); TF import of `kubectl_manifest.infisical_ddi_secrets` into
+> state so apply is a no-op. 3d (project.yaml) is moot — operator uses the
+> manual workflow (see `docs/new-start-app-setup.md`).
 
 ### 3a. CRITICAL: chart path mismatch (blocks all deploys)
 

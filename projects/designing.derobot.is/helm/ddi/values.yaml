@@ -2,7 +2,7 @@ replicas: 1
 domain: designing.derobot.is
 
 backend:
-  image: ops.noizu.com/designing.derobot.is/backend:latest
+  image: ops.noizu.com/designing.derobot.is/backend:v1.0.0
   port: 4000
   resources:
     requests:
@@ -13,7 +13,7 @@ backend:
       memory: 512Mi
 
 frontend:
-  image: ops.noizu.com/designing.derobot.is/frontend:latest
+  image: ops.noizu.com/designing.derobot.is/frontend:v1.0.0
   port: 3000
   resources:
     requests:
@@ -35,9 +35,9 @@ migrate:
       memory: 256Mi
 
 database:
-  host: app-postgres.apps.svc.cluster.local
+  host: app-timescaledb.apps.svc.cluster.local
   port: 5432
-  name: designing_derobot_is_dev
+  name: designing_derobot_is
 
 redis:
   host: app-valkey.apps.svc.cluster.local
@@ -49,6 +49,7 @@ secrets:
   keys:
     dbUser: DDI_DB_USER
     dbPassword: DDI_DB_PASSWORD
+    databaseUrl: DDI_DATABASE_URL
     secretKeyBase: DDI_SECRET_KEY_BASE
     guardianSecretKey: DDI_GUARDIAN_SECRET_KEY
     redisUrl: DDI_REDIS_URL
@@ -123,7 +124,7 @@ otel:
   enabled: false
   collectorEndpoint: "otel-collector.observability-ns.svc.cluster.local:4317"
   collectorHttpEndpoint: "http://otel-collector.observability-ns.svc.cluster.local:4318"
-  serviceName: "start-app"
+  serviceName: "ddi"
 
 storage:
   enabled: false
@@ -145,7 +146,7 @@ podDisruptionBudget:
 
 sandbox:
   enabled: false
-  image: ops.noizu.com/start-app/sandbox:latest
+  image: ops.noizu.com/designing.derobot.is/sandbox:latest
   resources:
     requests:
       cpu: 200m
