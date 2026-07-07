@@ -52,6 +52,34 @@ variable "argocd_domain" {
   default = "argocd.noizu.com"
 }
 
+variable "argocd_oidc_client_id" {
+  description = "ArgoCD Dex client ID (set in dex config)."
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+variable "argocd_oidc_client_secret" {
+  description = "ArgoCD Dex client secret (set in dex config)."
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+variable "argocd_authentik_client_id" {
+  description = "Authentik OIDC client ID for Dex to authenticate against Authentik."
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+variable "argocd_authentik_client_secret" {
+  description = "Authentik OIDC client secret for Dex to authenticate against Authentik."
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
 # --- Keygen (proxy mode) ---------------------------------------------------
 variable "keygen_proxy_image" {
   type    = string

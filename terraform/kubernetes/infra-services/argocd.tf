@@ -67,7 +67,41 @@ resource "helm_release" "argocd" {
 
     applicationSet = { enabled = false }
     notifications  = { enabled = false }
-    dex            = { enabled = false }
+    dex = {
+      enabled = true
+      config = yamlencode({
+        issuer   = "https://auth.derobot.is/application/o/argocd/"
+        storage  = { type = "kubernetes", config = { inCluster = true } }
+        web      = { http = "0.0.0.0:5556" }
+        telemetry = { http = "0.0.0.0:5557" }
+        staticClients = [
+          {
+            id     = var.argocd_oidc_client_id
+            name   = "ArgoCD"
+            secret = var.argocd_oidc_client_secret
+            redirectURIs = [
+              "https://${var.argocd_domain}/api/dex/callback"
+            ]
+          }
+        ]
+        connectors = [
+          {
+            type = "oidc"
+            name = "Authentik"
+            id   = "authentik"
+            config = {
+              issuer           = "https://auth.derobot.is"
+              clientID         = var.argocd_authentik_client_id
+              clientSecret     = var.argocd_authentik_client_secret
+              redirectURI      = "http://localhost:5556/callback"
+              requestedIDTokenClaims = {
+                groups = { essential = true }
+              }
+            }
+          }
+        ]
+      })
+    }
 
     configs = {
       params = {
@@ -75,6 +109,20 @@ resource "helm_release" "argocd" {
       }
       cm = {
         url = "https://${var.argocd_domain}"
+        oidc.config = yamlencode({
+          name     = "Authentik"
+          issuer   = "http://argocd-dex:5556/dex"
+          clientID = var.argocd_oidc_client_id
+          clientSecret = var.argocd_oidc_client_secret
+          requestedScopes = ["openid", "profile", "email", "groups"]
+          requestedIDTokenClaims = {
+            groups = { essential = true }
+          }
+          logoutURL = "https://auth.derobot.is/application/o/argocd/end-session/"
+        })
+      }
+      rbac = {
+        policy.csv = "p, role:admin, applications, *, */*, allow\np, role:admin, repositories, *, *, allow\np, role:admin, clusters, *, *, allow\np, role:admin, accounts, *, *, allow\np, role:viewers, applications, *, */*, get\ng, authentik:admin, role:admin\ng, authentik:viewers, role:viewers"
       }
     }
   })]

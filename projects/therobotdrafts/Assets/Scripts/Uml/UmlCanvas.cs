@@ -215,11 +215,38 @@ namespace TheRobotDraft.Uml
             }
             // Frame the diagram in the 3-D camera so it's in view on launch (Ctrl/Cmd+F re-frames at any time).
             _scene.FrameAll();
+
+            // On macOS, expose File / Edit / View in the real application menu bar (routes back to RunMenuCommand).
+            NativeMacMenu.Install(RunMenuCommand);
         }
 
         // Always autosave to the default slot on quit so the next launch restores the last state, even if the user
         // has a named file open (their explicit Ctrl/Cmd+S already wrote that file).
         private void OnApplicationQuit() => WriteDiagram(DiagramPath);
+
+        /// <summary>Route a native menu-bar command (see <see cref="NativeMacMenu"/>) to the matching action.</summary>
+        public void RunMenuCommand(int cmd)
+        {
+            switch (cmd)
+            {
+                case NativeMacMenu.New: NewDiagram(); break;
+                case NativeMacMenu.Open: OpenDiagramFile(); break;
+                case NativeMacMenu.Save: SaveDiagram(); break;
+                case NativeMacMenu.SaveAs: SaveDiagramAs(); break;
+                case NativeMacMenu.ExportCode:
+                    ShowCodeGenWizard(new Vector2(Screen.width * 0.5f, Screen.height * 0.5f)); break;
+                case NativeMacMenu.Undo: if (!GeoUndo()) Undo(); break;
+                case NativeMacMenu.Redo: if (!GeoRedo()) Redo(); break;
+                case NativeMacMenu.Copy: if (_selectedId.IsValid) CopyElement(_selectedId); break;
+                case NativeMacMenu.Paste: PasteElement(); break;
+                case NativeMacMenu.Delete: DeleteSelected(); break;
+                case NativeMacMenu.FrameAll:
+                    if (_mode2D) Apply2DModeCamera(true); else _scene.FrameAll();
+                    Flash("framed diagram"); break;
+                case NativeMacMenu.CycleNav: CycleNavMode(false); break;
+                case NativeMacMenu.Toggle2D: Toggle2DMode(); break;
+            }
+        }
 
         /// <summary>Initial sample so the editor opens showing standard UML. Fully removable (undo / delete).</summary>
         private void SeedSample()
@@ -795,6 +822,9 @@ namespace TheRobotDraft.Uml
 
             // Watch any shadow source files opened in VS Code; a save there re-syncs the node from its code.
             PollShadowFiles();
+
+            // Run any commands clicked in the native macOS menu bar (queued on the AppKit thread).
+            NativeMacMenu.Drain();
 
             if (Input.GetKeyDown(KeyCode.Escape)) { CloseMenu(); return; }
 

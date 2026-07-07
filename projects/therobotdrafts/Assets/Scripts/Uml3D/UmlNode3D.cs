@@ -417,6 +417,11 @@ namespace TheRobotDraft.Uml3D
             Material m = sh != null ? new Material(sh) : new Material(Shader.Find("Unlit/Color"));
             m.color = color;
             if (m.HasProperty(BaseColorId)) m.SetColor(BaseColorId, color);
+            // Matte-satin dielectric: a low, soft specular so the three-point rig gives gentle form-shading
+            // and a faint highlight without a plasticky sheen. Works on both URP/Lit and built-in Standard.
+            if (m.HasProperty("_Metallic")) m.SetFloat("_Metallic", 0f);
+            if (m.HasProperty("_Glossiness")) m.SetFloat("_Glossiness", 0.22f); // Standard
+            if (m.HasProperty("_Smoothness")) m.SetFloat("_Smoothness", 0.22f); // URP/Lit
             return m;
         }
 

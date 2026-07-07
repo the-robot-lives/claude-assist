@@ -31,23 +31,47 @@ namespace TheRobotDraft.EditorTools
             cam.clearFlags = CameraClearFlags.SolidColor;
             cam.backgroundColor = bg;
             cam.orthographic = true;
-            cam.orthographicSize = 1.0f;
+            cam.orthographicSize = 1.12f;
             cam.nearClipPlane = 0.01f;
-            cam.farClipPlane = 50f;
-            camGo.transform.position = new Vector3(0f, 0f, 4f);
-            camGo.transform.LookAt(Vector3.zero); // forward = -Z, so the +Z front face points at the camera
+            cam.farClipPlane = 60f;
+            // Elevated 3/4 so each node sits on the ground plane and casts a soft contact shadow.
+            camGo.transform.position = new Vector3(1.05f, 1.35f, 3.6f);
+            camGo.transform.LookAt(new Vector3(0f, -0.14f, 0f));
 
-            var lightGo = new GameObject("BakeLight");
-            var light = lightGo.AddComponent<Light>();
-            light.type = LightType.Directional;
-            light.intensity = 1.05f;
-            light.color = new Color(1f, 0.98f, 0.95f);
-            lightGo.transform.rotation = Quaternion.Euler(38f, 205f, 0f); // rakes across the +Z face and side walls
+            var prevShadows = QualitySettings.shadows;
+            var prevShadowDist = QualitySettings.shadowDistance;
+            QualitySettings.shadows = ShadowQuality.All;
+            QualitySettings.shadowDistance = 40f;
+
+            // Three-point rig matching Uml3DScene: warm key (soft shadows), cool fill, back/rim.
+            var keyGo = new GameObject("BakeKey");
+            var key = keyGo.AddComponent<Light>();
+            key.type = LightType.Directional; key.intensity = 1.1f;
+            key.color = new Color(1f, 0.97f, 0.92f);
+            key.shadows = LightShadows.Soft; key.shadowStrength = 0.55f;
+            key.shadowBias = 0.04f; key.shadowNormalBias = 0.4f;
+            keyGo.transform.rotation = Quaternion.Euler(52f, 42f, 0f);
+
+            var fillGo = new GameObject("BakeFill");
+            var fill = fillGo.AddComponent<Light>();
+            fill.type = LightType.Directional; fill.intensity = 0.45f;
+            fill.color = new Color(0.80f, 0.86f, 1f); fill.shadows = LightShadows.None;
+            fillGo.transform.rotation = Quaternion.Euler(16f, -60f, 0f);
+
+            var rimGo = new GameObject("BakeRim");
+            var rim = rimGo.AddComponent<Light>();
+            rim.type = LightType.Directional; rim.intensity = 0.55f;
+            rim.color = new Color(0.85f, 0.90f, 1f); rim.shadows = LightShadows.None;
+            rimGo.transform.rotation = Quaternion.Euler(-42f, 205f, 0f);
 
             var prevMode = RenderSettings.ambientMode;
-            var prevAmbient = RenderSettings.ambientLight;
-            RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
-            RenderSettings.ambientLight = new Color(0.42f, 0.44f, 0.48f);
+            var prevSky = RenderSettings.ambientSkyColor;
+            var prevEq = RenderSettings.ambientEquatorColor;
+            var prevGnd = RenderSettings.ambientGroundColor;
+            RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Trilight;
+            RenderSettings.ambientSkyColor = new Color(0.34f, 0.36f, 0.40f);
+            RenderSettings.ambientEquatorColor = new Color(0.24f, 0.25f, 0.28f);
+            RenderSettings.ambientGroundColor = new Color(0.12f, 0.13f, 0.15f);
 
             var rt = new RenderTexture(Size, Size, 24, RenderTextureFormat.ARGB32, RenderTextureReadWrite.sRGB)
             { antiAliasing = 8 };
@@ -56,6 +80,17 @@ namespace TheRobotDraft.EditorTools
             Shader lit = Shader.Find("Standard");
             if (lit == null) lit = Shader.Find("Universal Render Pipeline/Lit");
             if (lit == null) lit = Shader.Find("Diffuse");
+
+            // Ground plane (thin box) just under the nodes' base to catch the key light's contact shadow.
+            var groundMat = new Material(lit) { color = new Color(0.16f, 0.17f, 0.20f) };
+            if (groundMat.HasProperty("_Glossiness")) groundMat.SetFloat("_Glossiness", 0.04f);
+            if (groundMat.HasProperty("_Smoothness")) groundMat.SetFloat("_Smoothness", 0.04f);
+            if (groundMat.HasProperty("_Metallic")) groundMat.SetFloat("_Metallic", 0f);
+            var groundGo = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            groundGo.transform.position = new Vector3(0f, -0.445f, 0f);
+            groundGo.transform.localScale = new Vector3(9f, 0.04f, 9f);
+            groundGo.GetComponent<MeshRenderer>().sharedMaterial = groundMat;
+            Object.DestroyImmediate(groundGo.GetComponent<Collider>());
 
             int n = 0;
             foreach (ElementKind kind in System.Enum.GetValues(typeof(ElementKind)))
@@ -68,13 +103,14 @@ namespace TheRobotDraft.EditorTools
                 Color hue = HexToColor(KindInfo.Hue(kind));
                 var mat = new Material(lit) { color = hue };
                 if (mat.HasProperty("_BaseColor")) mat.SetColor("_BaseColor", hue);
-                if (mat.HasProperty("_Glossiness")) mat.SetFloat("_Glossiness", 0.12f);
-                if (mat.HasProperty("_Smoothness")) mat.SetFloat("_Smoothness", 0.12f);
+                if (mat.HasProperty("_Metallic")) mat.SetFloat("_Metallic", 0f);
+                if (mat.HasProperty("_Glossiness")) mat.SetFloat("_Glossiness", 0.22f);
+                if (mat.HasProperty("_Smoothness")) mat.SetFloat("_Smoothness", 0.22f);
 
                 var go = new GameObject(kind.ToString());
                 go.AddComponent<MeshFilter>().sharedMesh = mesh;
                 go.AddComponent<MeshRenderer>().sharedMaterial = mat;
-                go.transform.rotation = Quaternion.Euler(16f, -26f, 0f); // 3/4 view so depth reads
+                go.transform.rotation = Quaternion.identity; // the elevated camera provides the 3/4 angle
 
                 RenderTexture.active = rt;
                 GL.Clear(true, true, bg);

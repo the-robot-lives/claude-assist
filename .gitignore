@@ -1,3 +1,5 @@
+.fseventsd
+.Spotlight-V100
 liquibase.properties
 .infisical-secrets.yaml
 infisical-secrets.yaml

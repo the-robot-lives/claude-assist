@@ -73,21 +73,53 @@ namespace TheRobotDraft.Uml3D
         {
             if (_light == null)
             {
-                var go = new GameObject("UmlSceneLight");
-                go.transform.SetParent(transform, false);
-                _light = go.AddComponent<Light>();
+                // Three-point rig: a warm key that casts soft shadows (so nodes read as lit solids that
+                // shade and shadow one another), a cool fill that lifts the shadow side, and a back/rim light
+                // that grazes the top edges to separate silhouettes from the background.
+                var keyGo = new GameObject("UmlKeyLight");
+                keyGo.transform.SetParent(transform, false);
+                _light = keyGo.AddComponent<Light>();
                 _light.type = LightType.Directional;
-                _light.color = Color.white;
-                _light.intensity = 1.1f;
-                go.transform.rotation = Quaternion.Euler(50f, -30f, 0f);
+                _light.color = new Color(1f, 0.97f, 0.92f);
+                _light.intensity = 1.15f;
+                keyGo.transform.rotation = Quaternion.Euler(48f, -34f, 0f);
+                try
+                {
+                    _light.shadows = LightShadows.Soft;
+                    _light.shadowStrength = 0.5f;
+                    _light.shadowBias = 0.04f;
+                    _light.shadowNormalBias = 0.4f;
+                }
+                catch (System.Exception) { }
+
+                var fillGo = new GameObject("UmlFillLight");
+                fillGo.transform.SetParent(transform, false);
+                var fill = fillGo.AddComponent<Light>();
+                fill.type = LightType.Directional;
+                fill.color = new Color(0.80f, 0.86f, 1f);
+                fill.intensity = 0.45f;
+                fill.shadows = LightShadows.None;
+                fillGo.transform.rotation = Quaternion.Euler(18f, 150f, 0f);
+
+                var rimGo = new GameObject("UmlRimLight");
+                rimGo.transform.SetParent(transform, false);
+                var rim = rimGo.AddComponent<Light>();
+                rim.type = LightType.Directional;
+                rim.color = new Color(0.85f, 0.90f, 1f);
+                rim.intensity = 0.55f;
+                rim.shadows = LightShadows.None;
+                rimGo.transform.rotation = Quaternion.Euler(-42f, 18f, 0f);
             }
 
-            // Soft ambient fill so unlit faces read as dark-gray rather than black. Guarded so it never throws
-            // in batchmode / headless builds where the lighting subsystem may be unavailable.
+            // Gradient (trilight) ambient so faces out of the key light read as soft sky/ground bounce rather
+            // than flat gray. Guarded so it never throws in batchmode / headless builds.
             try
             {
-                RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
-                RenderSettings.ambientLight = new Color(0.35f, 0.37f, 0.40f, 1f);
+                RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Trilight;
+                RenderSettings.ambientSkyColor = new Color(0.62f, 0.66f, 0.72f);
+                RenderSettings.ambientEquatorColor = new Color(0.42f, 0.44f, 0.48f);
+                RenderSettings.ambientGroundColor = new Color(0.20f, 0.21f, 0.24f);
+                QualitySettings.shadowDistance = Mathf.Max(QualitySettings.shadowDistance, 60f);
             }
             catch (System.Exception)
             {
