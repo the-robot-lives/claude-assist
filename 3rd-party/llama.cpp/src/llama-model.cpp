@@ -2571,6 +2571,12 @@ llama_rope_type llama_model_rope_type(const llama_model * model) {
         case LLM_ARCH_HUNYUAN_VL:
             return model->hparams.use_mrope() ? LLAMA_ROPE_TYPE_MROPE : LLAMA_ROPE_TYPE_NEOX;
 
+        // ROBOT-EXT-BEGIN(rope-type) — never reached: therobot models run with
+        // model->arch set to the donor architecture (llama-robot-model.cpp)
+        case LLM_ARCH_THEROBOT:
+            GGML_ABORT("therobot models must carry their donor architecture");
+        // ROBOT-EXT-END
+
         // all model arches should be listed explicitly here
         case LLM_ARCH_UNKNOWN:
             GGML_ABORT("unknown architecture");

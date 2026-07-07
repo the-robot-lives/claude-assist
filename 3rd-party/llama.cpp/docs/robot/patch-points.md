@@ -9,7 +9,8 @@ gates, and update this file whenever a fence is added, moved, or removed.
 New-file extension code (no fences needed, never conflicts):
 
 - `src/llama-robot-hparams.{h,cpp}` — spec v1 parser + feature negotiation
-- `src/llama-robot-model.{h,cpp}` — donor-wrapper template + factory
+- `src/llama-robot-model.{h,cpp}` — donor-wrapper template + factory + tap graph outputs
+- `src/llama-robot-context.cpp` + `include/llama-robot.h` — E2 public API: tap read-back, probe evaluation
 - `tools/robot-inspect/` — manifest inspection tool (`llama-robot-inspect`)
 - `tests/robot/` — fixture generators + L0 parity test (manual; see its README)
 - `docs/robot/` — this documentation
@@ -25,6 +26,8 @@ New-file extension code (no fences needed, never conflicts):
 | 5 | `src/CMakeLists.txt` | `build-src` | Adds `llama-robot-hparams.cpp`, `llama-robot-model.cpp` to the `llama` target |
 | 6 | `tools/CMakeLists.txt` | `build-tools` | `add_subdirectory(robot-inspect)` |
 | 7 | `tests/.gitignore` | `tests-gitignore` | Un-ignores `tests/robot/` (manual E1 smoke tests) |
+| 8 | `src/llama-context.h` | `context-last-res` | Public read-only accessor `robot_last_res()` to `gf_res_prev` so tap outputs of the most recent decode can be located by name |
+| 9 | `src/llama-model.cpp` | `rope-type` | Unreachable `LLM_ARCH_THEROBOT` case in `llama_model_rope_type`'s exhaustive switch (silences `-Wswitch`; robot models always carry the donor arch) |
 
 ## Upstream internals relied on without modification
 
@@ -37,6 +40,8 @@ a sync touches the listed files:
 | `llama_model_loader` public members `arch_name`, `llm_kv`, `weights_map`, `metadata`, `n_created`, `size_data` | factory + tensor claim | KV formatter rebind and the skip-unused-tensor bookkeeping pattern (`size_data -= nbytes; n_created++;`) keep working |
 | `LLM_TENSOR_NAMES` being arch-independent | wrapper | donor tensor names resolve without per-arch tables |
 | Donor model classes `llama_model_llama`, `llama_model_qwen2`, `llama_model_qwen2moe`, `llama_model_qwen3`, `llama_model_mamba` (`src/models/models.h`) | `llama_robot_model_mapping()` | constructor signature `(const llama_model_params &)` |
+| Graph tensor naming `"attn_out-<il>"` / `"ffn_out-<il>"` / `"l_out-<il>"` (per-model `cb()` calls + `llama_context::graph_get_cb`) | `llama_robot_graph_add_taps()` | cleave-point tensors are locatable by name after the donor graph builds; `ffn_out` resolves to the first (pre-residual) occurrence |
+| `llm_graph_context` public `ctx0` / `gf`, `llm_graph_result::get_gf()`, graph-reuse keyed on topology | tap insertion + read-back | added tap nodes are part of `build_graph`, so reuse and scheduling see a stable topology |
 
 ## Superset invariant
 

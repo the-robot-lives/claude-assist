@@ -1,12 +1,13 @@
 #pragma once
 
-// therobot runtime extension — architecture-family model wrapper (E1)
+// therobot runtime extension — architecture-family model wrapper (E1/E2)
 //
 // One architecture (`therobot`) wraps an open-ended set of donor base
 // families (llamacpp-extensions.md §1). The wrapper is a template over the
 // donor's model class: hparams/tensors/graph all dispatch to the donor
-// implementation, with therobot additions layered at explicit points. At E1
-// the graph is a pure passthrough (L0); insertion points arrive with E2+.
+// implementation, with therobot additions layered at explicit points:
+//   - E1: spec parsing, feature negotiation, extension tensor claim
+//   - E2: bottleneck taps marked as graph outputs + materialized probe heads
 //
 // therobot-fork-only code; not included by stock translation units.
 
@@ -14,10 +15,15 @@
 
 #include "llama-model.h"
 
+#include "ggml-cpp.h"
+
 #include <array>
 #include <cstddef>
 #include <string>
+#include <unordered_map>
 #include <vector>
+
+struct llm_graph_context;
 
 // extension tensor claimed from a therobot file (`robot.*` / `blk.{L}.robot_*`)
 struct llama_robot_ext_tensor {
@@ -30,28 +36,71 @@ struct llama_robot_ext_tensor {
 // true for tensor names in the therobot extension namespace (spec §1.2–§1.7)
 bool llama_robot_is_ext_tensor(const std::string & name);
 
-// Claim every extension tensor in the file so the loader's tensor accounting
-// stays consistent (mirrors the loader's skip-unused-tensor bookkeeping).
-// E1 records their metadata; materialization into compute buffers lands with
-// the work packages that consume them (E2 taps, E4 state/modulator, ...).
-void llama_robot_claim_ext_tensors(llama_model_loader & ml, std::vector<llama_robot_ext_tensor> & out);
-
-template <typename TBase>
-struct llama_model_robot : public TBase {
+// Non-template face of a wrapped model, reachable from a `const llama_model *`
+// via dynamic_cast (the public API and the context-side code use this).
+struct llama_robot_model_iface {
     llama_robot_hparams robot;
+
+    // extension tensors claimed at load (E1) ...
     std::vector<llama_robot_ext_tensor> robot_ext_tensors;
 
+    // ... and materialized into CPU-side copies after the base load (E2).
+    // Extension tensors are small and exempt from quantization (spec §2), so
+    // host memory is the right home until a work package moves specific ones
+    // into the compute graph (E4+).
+    ggml_context_ptr robot_ext_ctx;
+    std::unordered_map<std::string, ggml_tensor *> robot_ext_data;
+
+    virtual ~llama_robot_model_iface() = default;
+
+    // materialized extension tensor by exact name, or nullptr
+    ggml_tensor * robot_ext_tensor(const std::string & name) const;
+};
+
+// E1 — claim extension tensors so loader accounting stays consistent
+void llama_robot_claim_ext_tensors(llama_model_loader & ml, std::vector<llama_robot_ext_tensor> & out);
+
+// E2 — copy claimed extension tensor data into robot_ext_ctx (reads straight
+// from the still-open model files; mmap-independent)
+void llama_robot_materialize_ext_tensors(llama_model_loader & ml, llama_robot_model_iface & iface);
+
+// E2 — validate declared bottlenecks against the donor's hparams
+void llama_robot_validate_taps(const llama_robot_model_iface & iface, const llama_hparams & hparams);
+
+// E2 — after the donor graph is built: mark each declared cleave-point slice
+// as a named graph output `robot_tap-<i>` (ggml_view → ggml_cont → output)
+void llama_robot_graph_add_taps(const llama_robot_model_iface & iface, llm_graph_context * g);
+
+template <typename TBase>
+struct llama_model_robot : public TBase, public llama_robot_model_iface {
     llama_model_robot(const llama_model_params & params, llama_robot_hparams robot_hparams)
-        : TBase(params), robot(std::move(robot_hparams)) {}
+        : TBase(params) {
+        this->robot = std::move(robot_hparams);
+    }
+
+    void load_arch_hparams(llama_model_loader & ml) override {
+        TBase::load_arch_hparams(ml);
+        llama_robot_validate_taps(*this, this->hparams);
+    }
 
     void load_arch_tensors(llama_model_loader & ml) override {
         TBase::load_arch_tensors(ml);
         llama_robot_claim_ext_tensors(ml, robot_ext_tensors);
     }
 
-    // load_arch_hparams and build_arch_graph are inherited from the donor:
-    // base keys/tensors use the donor family's stock names (spec §1.1) and the
-    // E1 graph is the donor graph, untouched.
+    bool load_tensors(llama_model_loader & ml) override {
+        if (!TBase::load_tensors(ml)) {
+            return false;
+        }
+        llama_robot_materialize_ext_tensors(ml, *this);
+        return true;
+    }
+
+    std::unique_ptr<llm_graph_context> build_arch_graph(const llm_graph_params & params) const override {
+        auto res = TBase::build_arch_graph(params);
+        llama_robot_graph_add_taps(*this, res.get());
+        return res;
+    }
 };
 
 // Factory: called by llama_model_create() when general.architecture is

@@ -160,7 +160,7 @@ static const std::map<std::string, llama_robot_feature> LLAMA_ROBOT_FEATURE_NAME
 // is refused — running it degraded would violate the required-feature
 // semantics of spec §1.1.
 static const std::set<llama_robot_feature> LLAMA_ROBOT_FEATURES_IMPLEMENTED = {
-    // (none yet — E1 supports L0 passthrough files only)
+    LLAMA_ROBOT_FEATURE_TAPS, // E2 — bottleneck taps + probe heads
 };
 
 const char * llama_robot_feature_name(llama_robot_feature f) {

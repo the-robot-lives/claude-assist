@@ -25,9 +25,9 @@ def t(*shape):
     return (rng.standard_normal(shape) * 0.02).astype(np.float32)
 
 
-def write_model(path, arch, robot):
+def write_model(path, arch, robot, taps=False):
     global rng
-    rng = np.random.default_rng(42)  # identical weights in both twins
+    rng = np.random.default_rng(42)  # identical weights in all twins
     w = gguf.GGUFWriter(path, arch)
     # llama-family hparams (stock keys — with arch "llama" the writer emits
     # llama.*; for the therobot twin we must emit llama.* keys explicitly)
@@ -57,9 +57,30 @@ def write_model(path, arch, robot):
     if robot:
         w.add_uint32("therobot.spec_version", 1)
         w.add_string("therobot.base_architecture", "llama")
-        w.add_uint32("therobot.level", 0)
-        w.add_array("therobot.features", [])
         w.add_string("therobot.donor.id", "local/tiny-llama-fixture@0")
+        if taps:
+            w.add_uint32("therobot.level", 1)
+            w.add_array("therobot.features", ["taps"])
+            w.add_uint32("therobot.bottleneck.count", 2)
+            # tap 0: mid-layer residual slice with an identity probe head
+            w.add_string("therobot.bottleneck.0.name", "subject")
+            w.add_uint32("therobot.bottleneck.0.layer", 0)
+            w.add_string("therobot.bottleneck.0.point", "resid_post")
+            w.add_uint32("therobot.bottleneck.0.offset", 4)
+            w.add_uint32("therobot.bottleneck.0.width", 8)
+            w.add_array("therobot.bottleneck.0.attributes", ["subject"])
+            w.add_float32("therobot.bottleneck.0.decodability", 1.0)
+            w.add_float32("therobot.bottleneck.0.selectivity", 1.0)
+            # tap 1: last-layer ffn branch output (exercises output-row filtering)
+            w.add_string("therobot.bottleneck.1.name", "style")
+            w.add_uint32("therobot.bottleneck.1.layer", 1)
+            w.add_string("therobot.bottleneck.1.point", "ffn_out")
+            w.add_uint32("therobot.bottleneck.1.offset", 0)
+            w.add_uint32("therobot.bottleneck.1.width", 8)
+            w.add_array("therobot.bottleneck.1.attributes", ["style"])
+        else:
+            w.add_uint32("therobot.level", 0)
+            w.add_array("therobot.features", [])
 
     # weights
     w.add_tensor("token_embd.weight", t(N_VOCAB, N_EMBD))
@@ -79,6 +100,10 @@ def write_model(path, arch, robot):
     if robot:
         # an extension tensor the wrapper must claim for accounting to balance
         w.add_tensor("robot.mod.alpha", np.zeros((8,), dtype=np.float32))
+    if taps:
+        # identity probe head with constant bias: probe(x) == x + 0.5
+        w.add_tensor("robot.probe.0.subject.weight", np.eye(8, dtype=np.float32))
+        w.add_tensor("robot.probe.0.subject.bias", np.full((8,), 0.5, dtype=np.float32))
 
     w.write_header_to_file()
     w.write_kv_data_to_file()
@@ -89,3 +114,4 @@ def write_model(path, arch, robot):
 
 write_model(f"{out_dir}/tiny-llama-stock.gguf", "llama", robot=False)
 write_model(f"{out_dir}/tiny-llama-therobot.gguf", "therobot", robot=True)
+write_model(f"{out_dir}/tiny-llama-taps.gguf", "therobot", robot=True, taps=True)
