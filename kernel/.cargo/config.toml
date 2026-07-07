@@ -1,0 +1,7 @@
+# NOTE: build from the kernel/ directory (or via ../run.sh) so the
+# relative -Tlink.ld path resolves.
+[build]
+target = "aarch64-unknown-none"
+
+[target.aarch64-unknown-none]
+rustflags = ["-C", "link-arg=-Tlink.ld", "-C", "link-arg=--gc-sections"]
