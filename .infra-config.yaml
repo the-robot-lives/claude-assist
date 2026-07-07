@@ -383,6 +383,9 @@ liquibase_targets:
     username: ddi
     secret_key: DDI_DB_PASSWORD
     safety: destructive
+    # provision-db: role creds from dc, superuser from the live instance secret
+    role_password_dc: "services apps.ddi_db_password"
+    admin_secret: app-timescaledb-secrets
     changelog_dir: projects/designing.derobot.is/app/backend/db
     changelog_file: changelog/db.changelog-master.yaml
 
