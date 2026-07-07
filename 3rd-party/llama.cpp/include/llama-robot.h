@@ -76,6 +76,30 @@ LLAMA_API bool llama_robot_shim_detach(struct llama_context * ctx, const char * 
 // number of currently attached shims
 LLAMA_API int32_t llama_robot_shim_count(const struct llama_context * ctx);
 
+//
+// E4 — modulator bus m + session state (spec §1.3/§1.4, planning §A/§B)
+//
+// m and the leaky state banks update automatically on every decode. m can
+// also be read and written directly — that is the priming lever (planning M3:
+// induce a bias, watch it decay back toward baseline).
+//
+
+// modulator dimension (0 if the model has no modulator) and channel names
+LLAMA_API int32_t      llama_robot_mod_dim    (const struct llama_model * model);
+LLAMA_API const char * llama_robot_mod_channel(const struct llama_model * model, int32_t i);
+
+// read / write the context's current m (llama_robot_mod_dim() floats).
+// Writes take effect on the next decode.
+LLAMA_API bool llama_robot_mod_get(struct llama_context * ctx, float * dst);
+LLAMA_API bool llama_robot_mod_set(struct llama_context * ctx, const float * src);
+
+// Session state checkpoint (the "mind": m + state banks; 003 §4). Save
+// returns bytes written (0 on error); size returns the buffer size needed;
+// load restores a previously saved blob into a context of the same model.
+LLAMA_API size_t llama_robot_session_size(struct llama_context * ctx);
+LLAMA_API size_t llama_robot_session_save(struct llama_context * ctx, uint8_t * dst, size_t size);
+LLAMA_API size_t llama_robot_session_load(struct llama_context * ctx, const uint8_t * src, size_t size);
+
 #ifdef __cplusplus
 }
 #endif

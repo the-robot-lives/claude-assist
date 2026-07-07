@@ -55,3 +55,6 @@ shim(f"{out_dir}/shim-gated-off.gguf", "gated-off", gate="probe:energy>1.5",
 # registry metadata fixtures
 shim(f"{out_dir}/shim-dependent.gguf", "dependent", depends=["steer-up"], steer=0.5)
 shim(f"{out_dir}/shim-conflicting.gguf", "conflicting", conflicts=["steer-up"], steer=-1.0)
+
+# E4: additive edit gated on the modulator bus (fires while m[arousal] > 2)
+shim(f"{out_dir}/shim-mod-gated.gguf", "mod-gated", gate="modulator:arousal>2", steer=1.0)

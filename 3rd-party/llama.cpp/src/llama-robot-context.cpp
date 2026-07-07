@@ -14,6 +14,7 @@
 #include "llama-model.h"
 #include "llama-robot-model.h"
 #include "llama-robot-shim.h"
+#include "llama-robot-state.h"
 
 #include "ggml.h"
 
@@ -305,4 +306,142 @@ int32_t llama_robot_shim_count(const llama_context * ctx) {
         return 0;
     }
     return (int32_t) ctx->robot_state->shims.size();
+}
+
+//
+// E4 — modulator access + session checkpoint
+//
+
+int32_t llama_robot_mod_dim(const llama_model * model) {
+    const auto * iface = robot_iface(model);
+    if (iface == nullptr || !iface->robot.has_feature(LLAMA_ROBOT_FEATURE_MODULATOR)) {
+        return 0;
+    }
+    return (int32_t) iface->robot.modulator.dim;
+}
+
+const char * llama_robot_mod_channel(const llama_model * model, int32_t i) {
+    const auto * iface = robot_iface(model);
+    if (iface == nullptr || i < 0 || (size_t) i >= iface->robot.modulator.channels.size()) {
+        return nullptr;
+    }
+    return iface->robot.modulator.channels[i].c_str();
+}
+
+static llama_robot_context_state * robot_session_state(llama_context * ctx) {
+    if (ctx == nullptr) {
+        return nullptr;
+    }
+    llama_robot_state_prepare(ctx); // idempotent; sizes m/banks on first use
+    auto & st = ctx->robot_state;
+    return st && st->state_ready ? st.get() : nullptr;
+}
+
+bool llama_robot_mod_get(llama_context * ctx, float * dst) {
+    auto * st = robot_session_state(ctx);
+    if (st == nullptr || st->m.empty() || dst == nullptr) {
+        return false;
+    }
+    memcpy(dst, st->m.data(), st->m.size() * sizeof(float));
+    return true;
+}
+
+bool llama_robot_mod_set(llama_context * ctx, const float * src) {
+    auto * st = robot_session_state(ctx);
+    if (st == nullptr || st->m.empty() || src == nullptr) {
+        return false;
+    }
+    memcpy(st->m.data(), src, st->m.size() * sizeof(float));
+    return true;
+}
+
+// blob: magic, version, M, m[], n_banks, { layer, S, s[] }*
+static constexpr uint32_t ROBOT_SESSION_MAGIC   = 0x52534553; // "RSES"
+static constexpr uint32_t ROBOT_SESSION_VERSION = 1;
+
+size_t llama_robot_session_size(llama_context * ctx) {
+    const auto * st = robot_session_state(ctx);
+    if (st == nullptr) {
+        return 0;
+    }
+    size_t n = 4 * sizeof(uint32_t) + st->m.size() * sizeof(float);
+    for (const auto & [L, bank] : st->banks) {
+        n += 2 * sizeof(uint32_t) + bank.size() * sizeof(float);
+    }
+    return n;
+}
+
+size_t llama_robot_session_save(llama_context * ctx, uint8_t * dst, size_t size) {
+    const auto * st = robot_session_state(ctx);
+    const size_t need = llama_robot_session_size(ctx);
+    if (st == nullptr || dst == nullptr || size < need) {
+        return 0;
+    }
+    uint8_t * p = dst;
+    auto put_u32 = [&](uint32_t v) { memcpy(p, &v, 4); p += 4; };
+    auto put_f32 = [&](const std::vector<float> & v) { memcpy(p, v.data(), v.size() * 4); p += v.size() * 4; };
+
+    put_u32(ROBOT_SESSION_MAGIC);
+    put_u32(ROBOT_SESSION_VERSION);
+    put_u32((uint32_t) st->m.size());
+    put_f32(st->m);
+    put_u32((uint32_t) st->banks.size());
+    for (const auto & [L, bank] : st->banks) {
+        put_u32(L);
+        put_u32((uint32_t) bank.size());
+        put_f32(bank);
+    }
+    return (size_t) (p - dst);
+}
+
+size_t llama_robot_session_load(llama_context * ctx, const uint8_t * src, size_t size) {
+    auto * st = robot_session_state(ctx);
+    if (st == nullptr || src == nullptr) {
+        return 0;
+    }
+    const uint8_t * p = src;
+    const uint8_t * end = src + size;
+    auto get_u32 = [&](uint32_t & v) -> bool {
+        if (p + 4 > end) { return false; }
+        memcpy(&v, p, 4); p += 4; return true;
+    };
+    auto get_f32 = [&](std::vector<float> & v, uint32_t n) -> bool {
+        if (p + (size_t) n * 4 > end) { return false; }
+        v.resize(n);
+        memcpy(v.data(), p, (size_t) n * 4); p += (size_t) n * 4; return true;
+    };
+
+    uint32_t magic = 0, version = 0, mdim = 0, n_banks = 0;
+    if (!get_u32(magic) || magic != ROBOT_SESSION_MAGIC ||
+        !get_u32(version) || version != ROBOT_SESSION_VERSION ||
+        !get_u32(mdim) || mdim != st->m.size()) {
+        LLAMA_LOG_ERROR("therobot: session blob is malformed or from a different model\n");
+        return 0;
+    }
+    std::vector<float> m;
+    if (!get_f32(m, mdim) || !get_u32(n_banks) || n_banks != st->banks.size()) {
+        LLAMA_LOG_ERROR("therobot: session blob truncated or bank count mismatch\n");
+        return 0;
+    }
+    std::vector<std::pair<uint32_t, std::vector<float>>> banks;
+    for (uint32_t i = 0; i < n_banks; ++i) {
+        uint32_t L = 0, S = 0;
+        std::vector<float> bank;
+        if (!get_u32(L) || !get_u32(S) || !get_f32(bank, S)) {
+            LLAMA_LOG_ERROR("therobot: session blob truncated\n");
+            return 0;
+        }
+        const auto * cur = st->bank(L);
+        if (cur == nullptr || cur->size() != S) {
+            LLAMA_LOG_ERROR("therobot: session blob bank layout mismatch (layer %u)\n", L);
+            return 0;
+        }
+        banks.emplace_back(L, std::move(bank));
+    }
+
+    st->m = std::move(m);
+    for (auto & [L, bank] : banks) {
+        *st->bank(L) = std::move(bank);
+    }
+    return (size_t) (p - src);
 }

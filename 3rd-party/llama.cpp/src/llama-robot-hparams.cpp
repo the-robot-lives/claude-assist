@@ -160,8 +160,10 @@ static const std::map<std::string, llama_robot_feature> LLAMA_ROBOT_FEATURE_NAME
 // is refused — running it degraded would violate the required-feature
 // semantics of spec §1.1.
 static const std::set<llama_robot_feature> LLAMA_ROBOT_FEATURES_IMPLEMENTED = {
-    LLAMA_ROBOT_FEATURE_TAPS,  // E2 — bottleneck taps + probe heads
-    LLAMA_ROBOT_FEATURE_SHIMS, // E3 — slice-scoped shim engine (module files, hot attach/detach)
+    LLAMA_ROBOT_FEATURE_TAPS,      // E2 — bottleneck taps + probe heads
+    LLAMA_ROBOT_FEATURE_SHIMS,     // E3 — slice-scoped shim engine (module files, hot attach/detach)
+    LLAMA_ROBOT_FEATURE_STATE,     // E4 — grafted leaky state banks
+    LLAMA_ROBOT_FEATURE_MODULATOR, // E4 — modulator bus m + FiLM gating
 };
 
 const char * llama_robot_feature_name(llama_robot_feature f) {

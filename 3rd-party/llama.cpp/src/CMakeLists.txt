@@ -41,6 +41,7 @@ add_library(llama
             llama-robot-hparams.cpp
             llama-robot-model.cpp
             llama-robot-shim.cpp
+            llama-robot-state.cpp
             # ROBOT-EXT-END
             llama-sampler.cpp
             llama-vocab.cpp

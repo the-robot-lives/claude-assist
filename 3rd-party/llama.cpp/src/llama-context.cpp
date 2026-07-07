@@ -14,6 +14,7 @@
 
 // ROBOT-EXT-BEGIN(context-include)
 #include "llama-robot-shim.h"
+#include "llama-robot-state.h"
 // ROBOT-EXT-END
 
 #include <cinttypes>
@@ -1312,6 +1313,12 @@ llm_graph_result * llama_context::process_ubatch(const llama_ubatch & ubatch, ll
         return nullptr;
     }
 
+    // ROBOT-EXT-BEGIN(context-state-prepare) — lazily size the recurrent
+    // session state (m + state banks) for therobot models before graph_params
+    // captures the state pointer
+    llama_robot_state_prepare(this);
+    // ROBOT-EXT-END
+
     auto * res = gf_res_prev.get();
     auto * gf  = res->get_gf();
 
@@ -1371,6 +1378,12 @@ llm_graph_result * llama_context::process_ubatch(const llama_ubatch & ubatch, ll
         ret = status;
         return nullptr;
     }
+
+    // ROBOT-EXT-BEGIN(context-state-capture) — pull the updated recurrent
+    // state (robot_mod_out, robot_state_out-<L>) back to the host so the next
+    // ubatch/decode reads it; no-op for stock models
+    llama_robot_state_capture(this, res);
+    // ROBOT-EXT-END
 
     ret = GGML_STATUS_SUCCESS;
 

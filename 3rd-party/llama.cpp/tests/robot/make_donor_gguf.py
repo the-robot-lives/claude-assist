@@ -25,7 +25,10 @@ def t(*shape):
     return (rng.standard_normal(shape) * 0.02).astype(np.float32)
 
 
-def write_model(path, arch, robot, taps=False):
+def write_model(path, arch, robot, taps=False, l2=None):
+    """l2: None, or dict(film=bool, state=bool) — L2 file with zero grafts by
+    default; film=True primes beta on channel 0, state=True makes the leaky
+    state branch live (nonzero in/out projections)."""
     global rng
     rng = np.random.default_rng(42)  # identical weights in all twins
     w = gguf.GGUFWriter(path, arch)
@@ -58,9 +61,27 @@ def write_model(path, arch, robot, taps=False):
         w.add_uint32("therobot.spec_version", 1)
         w.add_string("therobot.base_architecture", "llama")
         w.add_string("therobot.donor.id", "local/tiny-llama-fixture@0")
-        if taps:
+        if l2 is not None:
+            w.add_uint32("therobot.level", 2)
+            w.add_array("therobot.features", ["taps", "state", "modulator"])
+            # state: fast + glacial banks on layer 0 (layer 1 is output-filtered)
+            w.add_uint32("therobot.state.bank_count", 2)
+            w.add_string("therobot.state.bank.0.name", "fast")
+            w.add_uint32("therobot.state.bank.0.width", 4)
+            w.add_string("therobot.state.bank.1.name", "glacial")
+            w.add_uint32("therobot.state.bank.1.width", 4)
+            w.add_array("therobot.state.layers", [0])
+            # modulator: 4 named channels, pooled source
+            w.add_uint32("therobot.modulator.dim", 4)
+            w.add_array("therobot.modulator.channels", ["arousal", "valence", "attention", "energy"])
+            w.add_string("therobot.modulator.source", "pooled")
+        elif taps:
             w.add_uint32("therobot.level", 1)
             w.add_array("therobot.features", ["taps"])
+        else:
+            w.add_uint32("therobot.level", 0)
+            w.add_array("therobot.features", [])
+        if taps or l2 is not None:
             w.add_uint32("therobot.bottleneck.count", 2)
             # tap 0: mid-layer residual slice with an identity probe head
             w.add_string("therobot.bottleneck.0.name", "subject")
@@ -78,9 +99,6 @@ def write_model(path, arch, robot, taps=False):
             w.add_uint32("therobot.bottleneck.1.offset", 0)
             w.add_uint32("therobot.bottleneck.1.width", 8)
             w.add_array("therobot.bottleneck.1.attributes", ["style"])
-        else:
-            w.add_uint32("therobot.level", 0)
-            w.add_array("therobot.features", [])
 
     # weights
     w.add_tensor("token_embd.weight", t(N_VOCAB, N_EMBD))
@@ -97,13 +115,38 @@ def write_model(path, arch, robot, taps=False):
         w.add_tensor(f"blk.{i}.ffn_down.weight", t(N_EMBD, N_FF))
         w.add_tensor(f"blk.{i}.ffn_up.weight", t(N_FF, N_EMBD))
 
-    if robot:
+    if robot and l2 is None:
         # an extension tensor the wrapper must claim for accounting to balance
         w.add_tensor("robot.mod.alpha", np.zeros((8,), dtype=np.float32))
-    if taps:
+    if taps or l2 is not None:
         # identity probe head with constant bias: probe(x) == x + 0.5
         w.add_tensor("robot.probe.0.subject.weight", np.eye(8, dtype=np.float32))
         w.add_tensor("robot.probe.0.subject.bias", np.full((8,), 0.5, dtype=np.float32))
+    if l2 is not None:
+        S, M = 8, 4
+        # state grafts on layer 0: alpha logits 0 → decay 0.5 per position
+        w.add_tensor("blk.0.robot_state.alpha", np.zeros((S,), dtype=np.float32))
+        if l2.get("state"):
+            in_proj = (np.random.default_rng(7).standard_normal((S, N_EMBD)) * 0.1).astype(np.float32)
+            out_proj = (np.random.default_rng(8).standard_normal((N_EMBD, S)) * 0.1).astype(np.float32)
+        else:
+            in_proj = np.zeros((S, N_EMBD), dtype=np.float32)
+            out_proj = np.zeros((N_EMBD, S), dtype=np.float32)  # zero at graft ⇒ parity
+        w.add_tensor("blk.0.robot_state.in_proj.weight", in_proj)
+        w.add_tensor("blk.0.robot_state.out_proj.weight", out_proj)
+        # modulator grafts: alpha logits 0 → m halves per decode; pool/cell zero
+        # so m moves only via decay (and llama_robot_mod_set)
+        w.add_tensor("robot.mod.alpha", np.zeros((M,), dtype=np.float32))
+        w.add_tensor("robot.mod.pool.weight", np.zeros((M, N_EMBD), dtype=np.float32))
+        w.add_tensor("robot.mod.cell.weight", np.zeros((M, M), dtype=np.float32))
+        # FiLM heads on layer 0: identity at graft (gamma bias 1, all else 0);
+        # the primed variant sets beta.weight so β = m[0] uniformly
+        w.add_tensor("blk.0.robot_film.gamma.weight", np.zeros((N_EMBD, M), dtype=np.float32))
+        w.add_tensor("blk.0.robot_film.gamma.bias", np.ones((N_EMBD,), dtype=np.float32))
+        beta_w = np.zeros((N_EMBD, M), dtype=np.float32)
+        if l2.get("film"):
+            beta_w[:, 0] = 1.0  # β_j = m[0] for every channel j
+        w.add_tensor("blk.0.robot_film.beta.weight", beta_w)
 
     w.write_header_to_file()
     w.write_kv_data_to_file()
@@ -115,3 +158,6 @@ def write_model(path, arch, robot, taps=False):
 write_model(f"{out_dir}/tiny-llama-stock.gguf", "llama", robot=False)
 write_model(f"{out_dir}/tiny-llama-therobot.gguf", "therobot", robot=True)
 write_model(f"{out_dir}/tiny-llama-taps.gguf", "therobot", robot=True, taps=True)
+write_model(f"{out_dir}/tiny-llama-l2.gguf", "therobot", robot=True, l2={})                    # zero grafts ⇒ parity
+write_model(f"{out_dir}/tiny-llama-l2-film.gguf", "therobot", robot=True, l2={"film": True})   # β = m[0]
+write_model(f"{out_dir}/tiny-llama-l2-state.gguf", "therobot", robot=True, l2={"state": True}) # live leaky state

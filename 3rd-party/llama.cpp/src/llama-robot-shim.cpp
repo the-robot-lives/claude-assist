@@ -124,7 +124,21 @@ llama_robot_shim * llama_robot_shim_load(const llama_model * model, const char *
     llama_robot_kv_get_str(ctx, "therobot.shim.gate", gate_text, false);
     shim->gate = robot_shim_parse_gate(gate_text);
     if (shim->gate.kind == llama_robot_shim_gate::GATE_MODULATOR) {
-        throw std::runtime_error("therobot: 'modulator:' shim gates need the modulator bus (E4) — not implemented yet");
+        if (!iface->robot.has_feature(LLAMA_ROBOT_FEATURE_MODULATOR)) {
+            throw std::runtime_error(format("therobot: shim '%s' has a modulator gate but the model has no modulator bus",
+                    gate_text.c_str()));
+        }
+        const auto & channels = iface->robot.modulator.channels;
+        for (size_t c = 0; c < channels.size(); ++c) {
+            if (channels[c] == shim->gate.subject) {
+                shim->gate_channel = (int32_t) c;
+                break;
+            }
+        }
+        if (shim->gate_channel < 0) {
+            throw std::runtime_error(format("therobot: shim gate references unknown modulator channel '%s'",
+                    shim->gate.subject.c_str()));
+        }
     }
 
     // resolve target bottleneck
@@ -211,7 +225,8 @@ llama_robot_shim * llama_robot_shim_load(const llama_model * model, const char *
         shim->t_steer  = dup(m_steer);
         shim->t_gain   = dup(m_gain);
         shim->t_gate_w = dup(m_gate_w);
-        if (shim->gate.kind == llama_robot_shim_gate::GATE_PROBE) {
+        if (shim->gate.kind == llama_robot_shim_gate::GATE_PROBE ||
+            shim->gate.kind == llama_robot_shim_gate::GATE_MODULATOR) {
             // effective bias synthesized below (op/value folded in)
             shim->t_gate_b = ggml_new_tensor_1d(shim->ctx.get(), GGML_TYPE_F32, 1);
             ggml_set_name(shim->t_gate_b, "robot.shim.gate.bias_eff");
@@ -272,6 +287,14 @@ llama_robot_shim * llama_robot_shim_load(const llama_model * model, const char *
             const float beff = less ? (shim->gate.value - bg) : (bg - shim->gate.value);
 
             ggml_backend_tensor_set(shim->t_gate_w, wv.data(), 0, wsize);
+            ggml_backend_tensor_set(shim->t_gate_b, &beff, 0, sizeof(beff));
+        }
+
+        // modulator gate: score is m[channel] directly — fold the comparison
+        // into an effective bias (m_c > v → step(m_c − v); m_c < v → step(−m_c + v))
+        if (shim->gate.kind == llama_robot_shim_gate::GATE_MODULATOR) {
+            const bool less = (shim->gate.op == "<" || shim->gate.op == "<=");
+            const float beff = less ? shim->gate.value : -shim->gate.value;
             ggml_backend_tensor_set(shim->t_gate_b, &beff, 0, sizeof(beff));
         }
     }

@@ -59,6 +59,7 @@ struct llama_robot_shim {
     const llama_model * model = nullptr;
     int32_t  bottleneck_id = -1;
     uint32_t width = 0;
+    int32_t  gate_channel = -1; // modulator channel index for `modulator:` gates
 
     // tensors, allocated in a CPU backend buffer (v0 targets CPU streaming;
     // the scheduler inserts copies when the model runs elsewhere)
@@ -73,10 +74,31 @@ struct llama_robot_shim {
     ggml_tensor * t_gate_b = nullptr; // [1]            effective bias (op/value folded in)
 };
 
-// per-context therobot state: the attached shim set, in attach order
+// per-context therobot state: the attached shim set (E3) and the recurrent
+// session state (E4) — the leaky state banks and the modulator vector m.
+// Together these are the checkpointable "mind" of a session (003 §4).
 struct llama_robot_context_state {
     uint64_t epoch = 1; // bumps on attach/detach; keyed into llm_graph_params
     std::vector<const llama_robot_shim *> shims;
+
+    // E4 — host-side recurrent state, fed into each decode's graph as inputs
+    // and refreshed from its outputs after compute. v1 scope: one state per
+    // context (batch-1 / single-sequence streaming, the project's v0 target).
+    bool state_ready = false;
+    std::vector<float> m;                                    // [modulator dim]
+    std::vector<std::pair<uint32_t, std::vector<float>>> banks; // (layer, [S_layer])
+
+    std::vector<float> * bank(uint32_t layer) {
+        for (auto & b : banks) {
+            if (b.first == layer) {
+                return &b.second;
+            }
+        }
+        return nullptr;
+    }
+    const std::vector<float> * bank(uint32_t layer) const {
+        return const_cast<llama_robot_context_state *>(this)->bank(layer);
+    }
 };
 
 // epoch accessor used by llama_context::graph_params() (fenced call site);

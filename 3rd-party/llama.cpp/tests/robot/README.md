@@ -1,9 +1,9 @@
-# therobot runtime tests (E1 + E2 + E3)
+# therobot runtime tests (E1 + E2 + E3 + E4)
 
 Manual smoke tests for the therobot spec loader (E1), bottleneck taps (E2),
-and the shim engine (E3). Not yet wired into CMake/CI — that lands with the
-E0 CI gates (llamacpp-extensions.md §2). All commands run from the repo root;
-`$BUILD` is a configured build directory.
+the shim engine (E3), and state banks + modulator (E4). Not yet wired into
+CMake/CI — that lands with the E0 CI gates (llamacpp-extensions.md §2). All
+commands run from the repo root; `$BUILD` is a configured build directory.
 
 ## Fixtures
 
@@ -62,8 +62,10 @@ g++ -std=c++17 -Iinclude -Iggml/include tests/robot/robot_tap_test.cpp \
 /tmp/robot_tap_test /tmp/robot-fixtures/tiny-llama-stock.gguf /tmp/robot-fixtures/tiny-llama-taps.gguf
 # expect: E2 TAP TEST: OK
 
-# negotiation: files requiring not-yet-implemented features must still refuse
-$BUILD/bin/llama-robot-inspect /tmp/robot-fixtures/l2-manifest.gguf --load   # expect: load check FAILED ('state' unimplemented)
+# negotiation: taps/shims/state/modulator are implemented; l2-manifest.gguf now
+# passes negotiation and fails later for the honest reason (it is a
+# manifest-only fixture with no donor tensors)
+$BUILD/bin/llama-robot-inspect /tmp/robot-fixtures/l2-manifest.gguf --load   # expect: load check FAILED (missing donor hparams)
 ```
 
 Deferred from E2: the `llama-server` `/robot/taps` endpoint — server-side slot
@@ -89,8 +91,37 @@ g++ -std=c++17 -Iinclude -Iggml/include tests/robot/robot_shim_test.cpp \
 # expect: E3 SHIM TEST: OK
 ```
 
-E3 notes: shim tensors must be f32 (v1); `modulator:` gates parse but refuse
-to load until the E4 modulator bus exists; probe-gate scores come from the
+E3 notes: shim tensors must be f32 (v1); probe-gate scores come from the
 shim's own `robot.shim.gate.weight` projection with the comparison folded into
 an effective bias at load (`step()` in-graph, so `>` is strict and `>=`
 behaves like `>`); a shim must outlive the contexts it is attached to.
+
+## E4 state banks + modulator
+
+`make_donor_gguf.py` emits three L2 variants: `tiny-llama-l2.gguf` (all grafts
+at function-preserving init — out_proj zero, γ-bias 1, everything else 0),
+`tiny-llama-l2-film.gguf` (β = m[arousal] at layer 0), and
+`tiny-llama-l2-state.gguf` (live leaky-state branch on layer 0). The test
+covers: bit-exact zero-graft parity across multiple decodes; the M3 priming
+demo — `llama_robot_mod_set` induces a logit bias that relaxes monotonically
+back to baseline through per-channel decay (σ(0) = 0.5 per decode); state
+carry across identical KV-cleared decodes; exact session checkpoint/rollback
+via `llama_robot_session_save/load` (the 003 §4 mind-checkpoint); and a
+`modulator:arousal>2` gated shim firing/shutting off exactly with m.
+
+```bash
+g++ -std=c++17 -Iinclude -Iggml/include tests/robot/robot_state_test.cpp \
+    -L$BUILD/bin -lllama -lggml -Wl,-rpath,$BUILD/bin -o /tmp/robot_state_test
+/tmp/robot_state_test /tmp/robot-fixtures/tiny-llama-stock.gguf /tmp/robot-fixtures
+# expect: E4 STATE TEST: OK
+```
+
+E4 notes and v1 limits: one recurrent state per context (batch-1 /
+single-sequence streaming — the project's v0 target); m updates once per
+ubatch (pooled over its positions), not per token; the leaky-state scan is
+unrolled over the ubatch (~5·T nodes per covered layer — size `n_ubatch`
+accordingly); state on the final layer is refused at load (its rows are
+output-filtered); grafted tensors must be f32. Session state rides the
+dedicated `llama_robot_session_*` API — integration with
+`llama_state_get_data/set_data` is deferred until cross-version session-file
+compatibility is worked out.

@@ -12,6 +12,7 @@
 // therobot-fork-only code; not included by stock translation units.
 
 #include "llama-robot-hparams.h"
+#include "llama-robot-state.h" // llama_robot_validate_grafts in the wrapper's load_tensors
 
 #include "llama-graph.h" // llm_graph_params::robot in the wrapper's build_arch_graph
 #include "llama-model.h"
@@ -45,11 +46,12 @@ struct llama_robot_model_iface {
     // extension tensors claimed at load (E1) ...
     std::vector<llama_robot_ext_tensor> robot_ext_tensors;
 
-    // ... and materialized into CPU-side copies after the base load (E2).
-    // Extension tensors are small and exempt from quantization (spec §2), so
-    // host memory is the right home until a work package moves specific ones
-    // into the compute graph (E4+).
-    ggml_context_ptr robot_ext_ctx;
+    // ... and materialized after the base load (E2). They live in a CPU
+    // backend buffer: host-readable for probe heads, and usable as graph
+    // leaves for FiLM / state / modulator subgraphs (E4). Extension tensors
+    // are small and exempt from quantization (spec §2).
+    ggml_context_ptr        robot_ext_ctx;
+    ggml_backend_buffer_ptr robot_ext_buf;
     std::unordered_map<std::string, ggml_tensor *> robot_ext_data;
 
     virtual ~llama_robot_model_iface() = default;
@@ -68,13 +70,21 @@ void llama_robot_materialize_ext_tensors(llama_model_loader & ml, llama_robot_mo
 // E2 — validate declared bottlenecks against the donor's hparams
 void llama_robot_validate_taps(const llama_robot_model_iface & iface, const llama_hparams & hparams);
 
-// E2/E3 — after the donor graph is built: apply the context's attached shims
-// at their target bottlenecks (slice-scoped gated edits, spliced into the
-// donor graph so downstream consumers read the edited stream), then mark each
-// cleave-point slice — post-shim — as a named graph output `robot_tap-<i>`.
+// E2/E3/E4 — after the donor graph is built, per layer: apply FiLM modulation
+// (E4), the leaky-state branch (E4), then the context's attached shims at
+// their target bottlenecks (E3) — each spliced into the donor graph so
+// downstream consumers read the edited stream — and finally mark each
+// cleave-point slice (post-edit) as a named graph output `robot_tap-<i>`.
+// The modulator update subgraph and the state/m graph inputs are added when
+// the model carries those features.
 struct llama_robot_context_state;
 void llama_robot_graph_apply(const llama_robot_model_iface & iface, llm_graph_context * g,
         const llama_robot_context_state * st);
+
+// Splice an edit into the built graph: `out` must compute a replacement for
+// node `src` (and depend on it). Re-points downstream consumers and restores
+// topological order. Shared by the shim, FiLM, and state passes.
+void llama_robot_graph_splice_edit(struct ggml_cgraph * gf, ggml_tensor * src, ggml_tensor * out);
 
 template <typename TBase>
 struct llama_model_robot : public TBase, public llama_robot_model_iface {
@@ -98,6 +108,7 @@ struct llama_model_robot : public TBase, public llama_robot_model_iface {
             return false;
         }
         llama_robot_materialize_ext_tensors(ml, *this);
+        llama_robot_validate_grafts(*this, this->hparams); // E4 shapes/coverage
         return true;
     }
 

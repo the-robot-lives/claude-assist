@@ -9,9 +9,10 @@ gates, and update this file whenever a fence is added, moved, or removed.
 New-file extension code (no fences needed, never conflicts):
 
 - `src/llama-robot-hparams.{h,cpp}` — spec v1 parser + feature negotiation
-- `src/llama-robot-model.{h,cpp}` — donor-wrapper template + factory + tap/shim graph application (incl. cgraph splicing)
-- `src/llama-robot-shim.{h,cpp}` — E3 shim module loader (`therobot-shim` files) + per-context shim state
-- `src/llama-robot-context.cpp` + `include/llama-robot.h` — public API: tap read-back, probe evaluation, shim init/attach/detach
+- `src/llama-robot-model.{h,cpp}` — donor-wrapper template + factory + graph application: taps, shims, FiLM, leaky-state scan, modulator update (incl. cgraph splicing)
+- `src/llama-robot-shim.{h,cpp}` — E3 shim module loader (`therobot-shim` files) + per-context state struct
+- `src/llama-robot-state.{h,cpp}` — E4 recurrent session state: graph input class, prepare/capture hooks, graft validation
+- `src/llama-robot-context.cpp` + `include/llama-robot.h` — public API: taps/probes, shim lifecycle, modulator get/set, session checkpoint
 - `tools/robot-inspect/` — manifest inspection tool (`llama-robot-inspect`)
 - `tests/robot/` — fixture generators + L0 parity test (manual; see its README)
 - `docs/robot/` — this documentation
@@ -31,8 +32,10 @@ New-file extension code (no fences needed, never conflicts):
 | 9 | `src/llama-model.cpp` | `rope-type` | Unreachable `LLM_ARCH_THEROBOT` case in `llama_model_rope_type`'s exhaustive switch (silences `-Wswitch`; robot models always carry the donor arch) |
 | 10 | `src/llama-graph.h` | `graph-params-robot` | `robot` (shim set) + `robot_epoch` fields on `llm_graph_params` |
 | 11 | `src/llama-graph.h` | `graph-params-robot-reuse` | `allow_reuse()` returns false when the shim set or epoch differs — attach/detach forces a graph rebuild on the next decode |
-| 12 | `src/llama-context.cpp` | `context-include` | `#include "llama-robot-shim.h"` |
+| 12 | `src/llama-context.cpp` | `context-include` | `#include "llama-robot-shim.h"` + `"llama-robot-state.h"` |
 | 13 | `src/llama-context.cpp` | `graph-params-robot-set` / `graph-params-robot-set-tail` | `graph_params()` assembles the struct locally and attaches `robot_state` + epoch before returning |
+| 14 | `src/llama-context.cpp` | `context-state-prepare` | Top of `process_ubatch()`: lazily size the recurrent session state (m + banks) before `graph_params` captures the state pointer |
+| 15 | `src/llama-context.cpp` | `context-state-capture` | After successful graph compute in `process_ubatch()`: pull `robot_mod_out` / `robot_state_out-<L>` back to host state |
 
 ## Upstream internals relied on without modification
 

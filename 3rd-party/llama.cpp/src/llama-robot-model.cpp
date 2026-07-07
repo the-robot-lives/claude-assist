@@ -8,6 +8,9 @@
 #include "llama-mmap.h"
 #include "llama-model-loader.h"
 #include "llama-robot-shim.h"
+#include "llama-robot-state.h"
+
+#include "ggml-backend.h"
 
 #include "models/models.h"
 
@@ -81,21 +84,19 @@ void llama_robot_materialize_ext_tensors(llama_model_loader & ml, llama_robot_mo
         return;
     }
 
-    size_t mem_size = 0;
-    for (const auto & rec : iface.robot_ext_tensors) {
-        mem_size += ggml_tensor_overhead() + GGML_PAD(rec.nbytes, GGML_MEM_ALIGN);
-    }
-
+    // create the tensors (no_alloc), back them with a CPU backend buffer —
+    // host-readable for probe heads, graph-leaf-capable for E4 subgraphs
     ggml_init_params ip = {
-        /*.mem_size   =*/ mem_size + ggml_tensor_overhead(), // slack
+        /*.mem_size   =*/ (iface.robot_ext_tensors.size() + 1) * ggml_tensor_overhead(),
         /*.mem_buffer =*/ nullptr,
-        /*.no_alloc   =*/ false,
+        /*.no_alloc   =*/ true,
     };
     iface.robot_ext_ctx.reset(ggml_init(ip));
     if (!iface.robot_ext_ctx) {
         throw std::runtime_error("therobot: failed to allocate extension tensor context");
     }
 
+    std::vector<ggml_tensor *> tensors;
     for (const auto & rec : iface.robot_ext_tensors) {
         int n_dims = 1;
         for (int d = GGML_MAX_DIMS - 1; d > 0; --d) {
@@ -106,18 +107,34 @@ void llama_robot_materialize_ext_tensors(llama_model_loader & ml, llama_robot_mo
             throw std::runtime_error(format("therobot: failed to create extension tensor '%s'", rec.name.c_str()));
         }
         ggml_set_name(t, rec.name.c_str());
-
-        // read straight from the (still open) model file — independent of the
-        // mmap fragments that load_all_data may already have released
-        const auto & w = ml.require_weight(rec.name.c_str());
-        const auto & file = ml.files.at(w.idx);
-        file->seek(w.offs, SEEK_SET);
-        file->read_raw(t->data, rec.nbytes);
-
-        iface.robot_ext_data.emplace(rec.name, t);
+        tensors.push_back(t);
     }
 
-    LLAMA_LOG_INFO("therobot: materialized %zu extension tensor(s) host-side\n", iface.robot_ext_data.size());
+    ggml_backend_dev_t cpu_dev = ggml_backend_dev_by_type(GGML_BACKEND_DEVICE_TYPE_CPU);
+    if (cpu_dev == nullptr) {
+        throw std::runtime_error("therobot: no CPU backend device found");
+    }
+    iface.robot_ext_buf.reset(ggml_backend_alloc_ctx_tensors_from_buft(iface.robot_ext_ctx.get(), ggml_backend_dev_buffer_type(cpu_dev)));
+    if (!iface.robot_ext_buf) {
+        throw std::runtime_error("therobot: failed to allocate extension tensor buffer");
+    }
+
+    // read straight from the (still open) model files — independent of the
+    // mmap fragments that load_all_data may already have released
+    std::vector<uint8_t> read_buf;
+    for (size_t i = 0; i < iface.robot_ext_tensors.size(); ++i) {
+        const auto & rec = iface.robot_ext_tensors[i];
+        const auto & w = ml.require_weight(rec.name.c_str());
+        const auto & file = ml.files.at(w.idx);
+        read_buf.resize(rec.nbytes);
+        file->seek(w.offs, SEEK_SET);
+        file->read_raw(read_buf.data(), rec.nbytes);
+        ggml_backend_tensor_set(tensors[i], read_buf.data(), 0, rec.nbytes);
+
+        iface.robot_ext_data.emplace(rec.name, tensors[i]);
+    }
+
+    LLAMA_LOG_INFO("therobot: materialized %zu extension tensor(s) (CPU buffer)\n", iface.robot_ext_data.size());
 }
 
 void llama_robot_validate_taps(const llama_robot_model_iface & iface, const llama_hparams & hparams) {
@@ -162,7 +179,7 @@ static void robot_graph_use_count_adjust(ggml_cgraph * gf, ggml_tensor * t, int3
 // node `src` (and depend on it). Expands `out` into the graph, re-points every
 // downstream consumer of `src` at `out`, then moves the new nodes to sit
 // directly after `src` so execution order stays topological.
-static void robot_graph_splice_edit(ggml_cgraph * gf, ggml_tensor * src, ggml_tensor * out) {
+void llama_robot_graph_splice_edit(ggml_cgraph * gf, ggml_tensor * src, ggml_tensor * out) {
     const int n0 = gf->n_nodes;
     ggml_build_forward_expand(gf, out);
     const int n1 = gf->n_nodes;
@@ -201,11 +218,18 @@ static void robot_graph_splice_edit(ggml_cgraph * gf, ggml_tensor * src, ggml_te
 //   delta = g · (y − x),  g = step(w·x + b_eff)  (or 1 for `always`)
 //   out   = t_in + pad(delta)
 // Returns `out`, spliced in as the new interface tensor.
+// Build one shim edit over the (full-width) interface tensor `t_in`:
+//   y     = gain ⊙ x + steer + B(A·x)   on the slice x
+//   delta = g · (y − x),  g from the gate (1 for `always`; in-graph step() for
+//           `probe:` on the pre-edit slice and `modulator:` on a channel of m)
+//   out   = t_in + pad(delta)
+// Returns `out`, spliced in as the new interface tensor.
 static ggml_tensor * robot_graph_apply_shim(
         llm_graph_context * g,
         const llama_robot_bottleneck & bn,
         const llama_robot_shim * shim,
-        ggml_tensor * t_in) {
+        ggml_tensor * t_in,
+        ggml_tensor * m_in) {
     ggml_context * ctx0 = g->ctx0;
 
     const int64_t W = bn.width;
@@ -233,6 +257,15 @@ static ggml_tensor * robot_graph_apply_shim(
         p = ggml_add(ctx0, p, shim->t_gate_b);
         ggml_tensor * gate = ggml_step(ctx0, p); // 0/1 per position
         delta = ggml_mul(ctx0, delta, gate);     // broadcast [1,T] → [W,T]
+    } else if (shim->gate.kind == llama_robot_shim_gate::GATE_MODULATOR) {
+        GGML_ASSERT(m_in != nullptr); // enforced at load: modulator feature required
+        ggml_tensor * mc = ggml_view_1d(ctx0, m_in, 1, (size_t) shim->gate_channel * m_in->nb[0]);
+        if (shim->gate.op == "<" || shim->gate.op == "<=") {
+            mc = ggml_neg(ctx0, mc);
+        }
+        ggml_tensor * p = ggml_add(ctx0, mc, shim->t_gate_b); // ±m[c] + b_eff
+        ggml_tensor * gate = ggml_step(ctx0, p);              // one scalar for the whole ubatch
+        delta = ggml_mul(ctx0, delta, gate);                  // broadcast [1] → [W,T]
     }
 
     ggml_tensor * delta_full = ggml_pad_ext(ctx0, delta,
@@ -241,52 +274,301 @@ static ggml_tensor * robot_graph_apply_shim(
     ggml_tensor * out = ggml_add(ctx0, t_in, delta_full);
     ggml_format_name(out, "robot_shim_out-%s", shim->name.c_str());
 
-    robot_graph_splice_edit(g->gf, t_in, out);
+    llama_robot_graph_splice_edit(g->gf, t_in, out);
 
+    return out;
+}
+
+// E3 shims + E2 tap for one bottleneck, on the current interface tensor
+static ggml_tensor * robot_graph_apply_bottleneck(
+        llm_graph_context * g,
+        const llama_robot_model_iface & iface,
+        size_t bn_id,
+        const llama_robot_context_state * st,
+        ggml_tensor * m_in,
+        ggml_tensor * cur) {
+    const auto & bn = iface.robot.bottlenecks[bn_id];
+
+    GGML_ASSERT(cur->type == GGML_TYPE_F32);
+    GGML_ASSERT((int64_t) bn.offset + bn.width <= cur->ne[0]);
+
+    // attached shims stack on this bottleneck in attach order; each edit
+    // becomes the interface tensor the next one (and the tap) reads
+    if (st != nullptr) {
+        for (const llama_robot_shim * shim : st->shims) {
+            if (shim->bottleneck_id == (int32_t) bn_id) {
+                cur = robot_graph_apply_shim(g, bn, shim, cur, m_in);
+            }
+        }
+    }
+
+    // slice channels [offset, offset+width) across all positions, make
+    // contiguous, and mark as a named graph output (post-shim view)
+    ggml_tensor * view = ggml_view_2d(g->ctx0, cur,
+            bn.width, cur->ne[1],
+            cur->nb[1],
+            (size_t) bn.offset * cur->nb[0]);
+    ggml_tensor * tap = ggml_cont(g->ctx0, view);
+    ggml_set_name(tap, format("robot_tap-%zu", bn_id).c_str());
+    ggml_set_output(tap);
+    ggml_build_forward_expand(g->gf, tap);
+
+    return cur;
+}
+
+// E4 FiLM: out = (γ_w·m + γ_b) ⊙ h + (β_w·m + β_b), spliced at the layer stream
+static ggml_tensor * robot_graph_apply_film(
+        llm_graph_context * g,
+        const llama_robot_model_iface & iface,
+        int L,
+        ggml_tensor * m_in,
+        ggml_tensor * cur) {
+    ggml_context * ctx0 = g->ctx0;
+
+    ggml_tensor * gw = iface.robot_ext_tensor(format("blk.%d.robot_film.gamma.weight", L));
+    ggml_tensor * gb = iface.robot_ext_tensor(format("blk.%d.robot_film.gamma.bias",   L));
+    ggml_tensor * bw = iface.robot_ext_tensor(format("blk.%d.robot_film.beta.weight",  L));
+    ggml_tensor * bb = iface.robot_ext_tensor(format("blk.%d.robot_film.beta.bias",    L));
+
+    ggml_tensor * gamma = ggml_mul_mat(ctx0, gw, m_in); // [n_embd, 1]
+    if (gb != nullptr) {
+        gamma = ggml_add(ctx0, gamma, gb);
+    }
+    ggml_tensor * out = ggml_mul(ctx0, cur, gamma); // broadcast over positions
+
+    if (bw != nullptr) {
+        ggml_tensor * beta = ggml_mul_mat(ctx0, bw, m_in); // [n_embd, 1]
+        if (bb != nullptr) {
+            beta = ggml_add(ctx0, beta, bb);
+        }
+        out = ggml_add(ctx0, out, beta);
+    } else if (bb != nullptr) {
+        out = ggml_add(ctx0, out, bb);
+    }
+
+    ggml_format_name(out, "robot_film_out-%d", L);
+    llama_robot_graph_splice_edit(g->gf, cur, out);
+    return out;
+}
+
+// E4 leaky state branch at layer L: exact per-position EMA scan (unrolled over
+// the ubatch; adds ~5·T nodes — v1 targets small-batch streaming), stream
+// contribution through out_proj (zero at graft ⇒ exact donor parity), final
+// state exposed as output `robot_state_out-<L>`.
+static ggml_tensor * robot_graph_apply_state(
+        llm_graph_context * g,
+        const llama_robot_model_iface & iface,
+        int L,
+        ggml_tensor * s_in,
+        ggml_tensor * cur,
+        ggml_tensor ** s_final_out) {
+    ggml_context * ctx0 = g->ctx0;
+
+    ggml_tensor * aw = iface.robot_ext_tensor(format("blk.%d.robot_state.alpha", L));
+    ggml_tensor * iw = iface.robot_ext_tensor(format("blk.%d.robot_state.in_proj.weight", L));
+    ggml_tensor * ib = iface.robot_ext_tensor(format("blk.%d.robot_state.in_proj.bias", L));
+    ggml_tensor * ow = iface.robot_ext_tensor(format("blk.%d.robot_state.out_proj.weight", L));
+    ggml_tensor * ob = iface.robot_ext_tensor(format("blk.%d.robot_state.out_proj.bias", L));
+
+    const int64_t S = aw->ne[0];
+    const int64_t T = cur->ne[1];
+
+    ggml_tensor * F = ggml_mul_mat(ctx0, iw, cur); // [S, T]
+    if (ib != nullptr) {
+        F = ggml_add(ctx0, F, ib);
+    }
+
+    ggml_tensor * a   = ggml_sigmoid(ctx0, aw);                  // σ(α)   [S]
+    ggml_tensor * oma = ggml_sigmoid(ctx0, ggml_neg(ctx0, aw));  // σ(−α) = 1−σ(α)
+
+    ggml_tensor * s = ggml_reshape_2d(ctx0, s_in, S, 1);
+    ggml_tensor * states = nullptr; // [S, T]
+    for (int64_t t = 0; t < T; ++t) {
+        ggml_tensor * f_t = ggml_view_2d(ctx0, F, S, 1, F->nb[1], (size_t) t * F->nb[1]);
+        s = ggml_add(ctx0, ggml_mul(ctx0, s, a), ggml_mul(ctx0, f_t, oma));
+        states = states == nullptr ? s : ggml_concat(ctx0, states, s, 1);
+    }
+
+    ggml_tensor * O = ggml_mul_mat(ctx0, ow, states); // [n_embd, T]
+    if (ob != nullptr) {
+        O = ggml_add(ctx0, O, ob);
+    }
+
+    ggml_tensor * out = ggml_add(ctx0, cur, O);
+    ggml_format_name(out, "robot_state_stream-%d", L);
+    llama_robot_graph_splice_edit(g->gf, cur, out);
+
+    // the final state is a node inside the spliced chain — name it and mark it
+    // as an output so it survives scheduling and can be captured post-decode
+    ggml_set_name(s, format("robot_state_out-%d", L).c_str());
+    ggml_set_output(s);
+
+    *s_final_out = s;
     return out;
 }
 
 void llama_robot_graph_apply(const llama_robot_model_iface & iface, llm_graph_context * g,
         const llama_robot_context_state * st) {
-    if (!iface.robot.has_feature(LLAMA_ROBOT_FEATURE_TAPS)) {
+    const auto & robot = iface.robot;
+
+    const bool has_taps  = robot.has_feature(LLAMA_ROBOT_FEATURE_TAPS);
+    const bool has_state = robot.has_feature(LLAMA_ROBOT_FEATURE_STATE);
+    const bool has_mod   = robot.has_feature(LLAMA_ROBOT_FEATURE_MODULATOR);
+    if (!has_taps && !has_state && !has_mod) {
         return;
     }
-    for (size_t i = 0; i < iface.robot.bottlenecks.size(); ++i) {
-        const auto & bn = iface.robot.bottlenecks[i];
 
-        const char * base = robot_tap_point_base(bn.point);
-        GGML_ASSERT(base != nullptr); // validated at spec parse
+    ggml_context * ctx0 = g->ctx0;
+    const int n_layer = (int) g->n_layer;
 
-        const std::string src_name = format("%s-%d", base, (int) bn.layer);
-        ggml_tensor * cur = ggml_graph_get_tensor(g->gf, src_name.c_str());
-        if (cur == nullptr) {
-            LLAMA_LOG_WARN("therobot: tap %zu ('%s'): tensor '%s' not found in donor graph — tap and shims disabled\n",
-                    i, bn.name.c_str(), src_name.c_str());
+    // recurrent inputs: m and the per-covered-layer state vectors enter the
+    // graph as input tensors, pushed from host state at set_input time
+    llm_graph_input_robot * inp = nullptr;
+    ggml_tensor * m_in = nullptr;
+    if (has_state || has_mod) {
+        auto input = std::make_unique<llm_graph_input_robot>(st);
+        if (has_mod) {
+            m_in = ggml_new_tensor_1d(ctx0, GGML_TYPE_F32, robot.modulator.dim);
+            ggml_set_name(m_in, "robot_mod_in");
+            ggml_set_input(m_in);
+            input->m_in = m_in;
+        }
+        if (has_state) {
+            const int64_t S = llama_robot_state_width(iface);
+            for (const uint32_t L : robot.state.layers) {
+                ggml_tensor * s = ggml_new_tensor_1d(ctx0, GGML_TYPE_F32, S);
+                ggml_set_name(s, format("robot_state_in-%u", L).c_str());
+                ggml_set_input(s);
+                input->s_in.emplace_back(L, s);
+            }
+        }
+        inp = static_cast<llm_graph_input_robot *>(g->res->add_input(std::move(input)));
+    }
+
+    // per-layer pipeline over the residual stream: FiLM → state → shims/taps
+    ggml_tensor * final_stream = nullptr; // pooled modulator source
+    ggml_tensor * last_s_final = nullptr; // glacial modulator source
+
+    const bool need_final = has_mod && robot.modulator.source == "pooled";
+
+    for (int L = 0; L < n_layer; ++L) {
+        const bool film_here  = has_mod &&
+                iface.robot_ext_tensor(format("blk.%d.robot_film.gamma.weight", L)) != nullptr;
+        bool state_here = false;
+        ggml_tensor * s_in = nullptr;
+        if (has_state && inp != nullptr) {
+            for (const auto & [sl, t] : inp->s_in) {
+                if ((int) sl == L) { state_here = true; s_in = t; break; }
+            }
+        }
+        bool bn_here = false;
+        if (has_taps) {
+            for (const auto & bn : robot.bottlenecks) {
+                if ((int) bn.layer == L && bn.point == "resid_post") { bn_here = true; break; }
+            }
+        }
+        if (!film_here && !state_here && !bn_here && !(need_final && L == n_layer - 1)) {
             continue;
         }
-        GGML_ASSERT(cur->type == GGML_TYPE_F32);
-        GGML_ASSERT((int64_t) bn.offset + bn.width <= cur->ne[0]);
 
-        // E3: attached shims stack on this bottleneck in attach order; each
-        // edit becomes the interface tensor the next one (and the tap) reads
-        if (st != nullptr) {
-            for (const llama_robot_shim * shim : st->shims) {
-                if (shim->bottleneck_id == (int32_t) i) {
-                    cur = robot_graph_apply_shim(g, bn, shim, cur);
+        ggml_tensor * cur = ggml_graph_get_tensor(g->gf, format("l_out-%d", L).c_str());
+        if (cur == nullptr) {
+            LLAMA_LOG_WARN("therobot: layer %d: tensor 'l_out-%d' not found in donor graph — extensions at this layer disabled\n", L, L);
+            continue;
+        }
+
+        if (film_here && m_in != nullptr) {
+            cur = robot_graph_apply_film(g, iface, L, m_in, cur);
+        }
+        if (state_here) {
+            ggml_tensor * s_final = nullptr;
+            cur = robot_graph_apply_state(g, iface, L, s_in, cur, &s_final);
+            last_s_final = s_final;
+        }
+        if (bn_here) {
+            for (size_t i = 0; i < robot.bottlenecks.size(); ++i) {
+                if ((int) robot.bottlenecks[i].layer == L && robot.bottlenecks[i].point == "resid_post") {
+                    cur = robot_graph_apply_bottleneck(g, iface, i, st, m_in, cur);
                 }
             }
         }
+        if (L == n_layer - 1) {
+            final_stream = cur;
+        }
+    }
 
-        // E2: slice channels [offset, offset+width) across all positions,
-        // make contiguous, and mark as a named graph output (post-shim view)
-        ggml_tensor * view = ggml_view_2d(g->ctx0, cur,
-                bn.width, cur->ne[1],
-                cur->nb[1],
-                (size_t) bn.offset * cur->nb[0]);
-        ggml_tensor * tap = ggml_cont(g->ctx0, view);
-        ggml_set_name(tap, format("robot_tap-%zu", i).c_str());
-        ggml_set_output(tap);
-        ggml_build_forward_expand(g->gf, tap);
+    // bottlenecks at non-residual points (attn_out / ffn_out) — direct path
+    if (has_taps) {
+        for (size_t i = 0; i < robot.bottlenecks.size(); ++i) {
+            const auto & bn = robot.bottlenecks[i];
+            if (bn.point == "resid_post") {
+                continue;
+            }
+            const char * base = robot_tap_point_base(bn.point);
+            GGML_ASSERT(base != nullptr); // validated at spec parse
+            ggml_tensor * cur = ggml_graph_get_tensor(g->gf, format("%s-%d", base, (int) bn.layer).c_str());
+            if (cur == nullptr) {
+                LLAMA_LOG_WARN("therobot: tap %zu ('%s'): tensor '%s-%d' not found in donor graph — tap and shims disabled\n",
+                        i, bn.name.c_str(), base, (int) bn.layer);
+                continue;
+            }
+            robot_graph_apply_bottleneck(g, iface, i, st, m_in, cur);
+        }
+    }
+
+    // modulator update subgraph: p → z → c → m_out (per-channel decay)
+    if (has_mod && inp != nullptr && m_in != nullptr) {
+        ggml_tensor * p = nullptr;
+        if (robot.modulator.source == "glacial") {
+            GGML_ASSERT(last_s_final != nullptr && "glacial modulator source requires state layers");
+            // glacial bank slice of the last covered layer's final state
+            int64_t off = 0, wg = 0;
+            for (const auto & bank : robot.state.banks) {
+                if (bank.name == "glacial") { wg = bank.width; break; }
+                off += bank.width;
+            }
+            GGML_ASSERT(wg > 0);
+            p = ggml_view_1d(ctx0, last_s_final, wg, (size_t) off * last_s_final->nb[0]);
+        } else {
+            if (final_stream == nullptr) {
+                LLAMA_LOG_WARN("therobot: pooled modulator source unavailable — modulator update disabled\n");
+                return;
+            }
+            // mean over positions, weights pushed from set_input (1/n each)
+            ggml_tensor * mean_w = ggml_new_tensor_1d(ctx0, GGML_TYPE_F32, final_stream->ne[1]);
+            ggml_set_name(mean_w, "robot_mod_meanw");
+            ggml_set_input(mean_w);
+            inp->mean_w = mean_w;
+            ggml_tensor * tr = ggml_cont(ctx0, ggml_transpose(ctx0, final_stream)); // [T*, n_embd]
+            p = ggml_mul_mat(ctx0, tr, mean_w); // [n_embd, 1]
+        }
+
+        ggml_tensor * pw = iface.robot_ext_tensor("robot.mod.pool.weight");
+        ggml_tensor * pb = iface.robot_ext_tensor("robot.mod.pool.bias");
+        ggml_tensor * cw = iface.robot_ext_tensor("robot.mod.cell.weight");
+        ggml_tensor * cb = iface.robot_ext_tensor("robot.mod.cell.bias");
+        ggml_tensor * ma = iface.robot_ext_tensor("robot.mod.alpha");
+
+        ggml_tensor * z = ggml_mul_mat(ctx0, pw, p); // [M, 1]
+        if (pb != nullptr) {
+            z = ggml_add(ctx0, z, pb);
+        }
+        z = ggml_add(ctx0, z, ggml_mul_mat(ctx0, cw, m_in)); // + cell·m
+        if (cb != nullptr) {
+            z = ggml_add(ctx0, z, cb);
+        }
+        ggml_tensor * c = ggml_tanh(ctx0, z); // candidate [M, 1]
+
+        ggml_tensor * am  = ggml_sigmoid(ctx0, ma);                  // σ(α_m)
+        ggml_tensor * omm = ggml_sigmoid(ctx0, ggml_neg(ctx0, ma));  // 1 − σ(α_m)
+
+        // m_out = σ(α_m)⊙m + (1−σ(α_m))⊙c
+        ggml_tensor * m_out = ggml_add(ctx0,
+                ggml_mul(ctx0, c, omm),
+                ggml_mul(ctx0, ggml_reshape_2d(ctx0, m_in, m_in->ne[0], 1), am));
+        ggml_set_name(m_out, "robot_mod_out");
+        ggml_set_output(m_out);
+        ggml_build_forward_expand(g->gf, m_out);
     }
 }
 
