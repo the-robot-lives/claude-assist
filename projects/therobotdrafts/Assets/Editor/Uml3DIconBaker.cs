@@ -131,9 +131,17 @@ namespace TheRobotDraft.EditorTools
             RenderTexture.active = null;
             Object.DestroyImmediate(rt);
             Object.DestroyImmediate(camGo);
-            Object.DestroyImmediate(lightGo);
+            Object.DestroyImmediate(keyGo);
+            Object.DestroyImmediate(fillGo);
+            Object.DestroyImmediate(rimGo);
+            Object.DestroyImmediate(groundGo);
+            Object.DestroyImmediate(groundMat);
             RenderSettings.ambientMode = prevMode;
-            RenderSettings.ambientLight = prevAmbient;
+            RenderSettings.ambientSkyColor = prevSky;
+            RenderSettings.ambientEquatorColor = prevEq;
+            RenderSettings.ambientGroundColor = prevGnd;
+            QualitySettings.shadows = prevShadows;
+            QualitySettings.shadowDistance = prevShadowDist;
 
             AssetDatabase.Refresh();
             Debug.Log($"[Uml3DIconBaker] baked {n} node meshes to {OutDir}");
