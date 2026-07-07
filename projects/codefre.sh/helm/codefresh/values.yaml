@@ -34,7 +34,7 @@ migrate:
       memory: 256Mi
 
 database:
-  host: app-postgres
+  host: app-timescaledb.apps.svc.cluster.local
   port: 5432
   name: codefresh
 

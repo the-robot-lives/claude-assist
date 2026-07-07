@@ -51,7 +51,7 @@ Namespace is taken from the release namespace (`helm-upgrade` sets it from
 | `frps.subdomainHost` | `remote-access.noizu.com` | `<subdomain>.<subdomainHost>`. |
 | `frps.tlsForce` | `true` | `transport.tls.force` on the control channel. |
 | `frps.auth.pluginName` | `npl-auth` | httpPlugin name. |
-| `frps.auth.addr` | `http://npl-mcp.apps-ns.svc.cluster.local:4000` | NPL callback base. |
+| `frps.auth.addr` | `http://npl-mcp.apps.svc.cluster.local:4000` | NPL callback base. |
 | `frps.auth.path` | `/api/v1/remote-access/frp-auth` | NPL callback path. |
 | `frps.auth.ops` | `[Login, NewProxy, CloseProxy]` | Hooked operations. |
 | `frps.extraConfig` | `""` | Raw TOML appended verbatim (log level, limits). |
@@ -68,7 +68,7 @@ Namespace is taken from the release namespace (`helm-upgrade` sets it from
 | `tls.secretName` | `remote-access-tls-synced` | Override to `cloudflare-tls-synced` for Cloudflare-terminated TLS only (§4.2a). |
 | `networkPolicy.enabled` | `true` | |
 | `networkPolicy.dataNsCidr` | `""` | Documented only; deny is by allow-list absence (see below). |
-| `networkPolicy.nplMcp.namespace` | `apps-ns` | Egress allowed to this namespace. |
+| `networkPolicy.nplMcp.namespace` | `apps` | Egress allowed to this namespace. |
 | `networkPolicy.nplMcp.port` | `4000` | |
 
 ### NetworkPolicy note (deny egress to data-ns)
@@ -84,7 +84,7 @@ deny is required.
 
 ```bash
 # Prereqs (Phase 1, separate): *.remote-access + tunnel DNS records;
-# remote-access-tls-synced secret synced from Infisical into apps-ns.
+# remote-access-tls-synced secret synced from Infisical into apps.
 helm-upgrade --list                          # confirm tier/namespace
 helm-upgrade --include remote-access         # deploy/upgrade this chart
 helm-upgrade --include remote-access --preview   # diff live vs proposed
@@ -108,7 +108,7 @@ reference. Add the following:
 2. Under `namespace_overrides:` (Apps section):
 
 ```yaml
-  remote-access: apps-ns
+  remote-access: apps
 ```
 
 3. As a standalone chart reference (alongside the other `projects[]` entries —
@@ -124,7 +124,7 @@ reference. Add the following:
             path: projects/NoizuPromptLingo/helm/remote-access
 ```
 
-> Tier 5 co-locates it with `npl-mcp`'s namespace (`apps-ns`); the design notes
+> Tier 5 co-locates it with `npl-mcp`'s namespace (`apps`); the design notes
 > tier 3 or 5 are both acceptable (§3). If `frps` is later mirrored to the
 > private registry, add a `services:` entry with a `helm.values_path` (e.g.
 > `.image`) so `docker-push --update-helm` can bump the tag.

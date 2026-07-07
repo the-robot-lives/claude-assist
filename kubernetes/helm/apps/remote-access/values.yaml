@@ -33,7 +33,7 @@ frps:
   # NPL server-plugin callback — validates the tunnel token + name ownership.
   auth:
     pluginName: npl-auth
-    addr: http://npl-mcp.apps-ns.svc.cluster.local:4000
+    addr: http://npl-mcp.apps.svc.cluster.local:4000
     path: /api/v1/remote-access/frp-auth
     ops:
       - Login
@@ -74,7 +74,7 @@ tls:
   # Override to cloudflare-tls-synced if using Cloudflare-terminated TLS only.
   secretName: remote-access-tls-synced
   # Ship the cert as a bundled SealedSecret (templates/tls-sealedsecret.yaml),
-  # so `helm-upgrade` creates remote-access-tls-synced in apps-ns. Set false if
+  # so `helm-upgrade` creates remote-access-tls-synced in apps. Set false if
   # the secret is provisioned out-of-band. Re-seal if ns/name changes.
   manageSealedSecret: true
 
@@ -85,5 +85,5 @@ networkPolicy:
   dataNsCidr: ""
   # npl-mcp callback target (egress allowed).
   nplMcp:
-    namespace: apps-ns
+    namespace: apps
     port: 4000

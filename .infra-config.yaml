@@ -170,49 +170,51 @@ namespace_overrides:
   infra-portal: apps
   health-tests: platform-ns
   # Tier 3-4 — Apps
-  codefresh: apps-ns
-  docmost: apps-ns
-  taiga: apps-ns
-  plane: apps-ns
-  nextcloud: apps-ns
-  ghost: apps-ns
-  espocrm: apps-ns
-  mautic: apps-ns
-  listmonk: apps-ns
-  postiz: apps-ns
-  bottlecrm: apps-ns
-  growthbook: apps-ns
-  label-studio: apps-ns
-  matomo: apps-ns
-  serpbear: apps-ns
-  seonaut: apps-ns
-  hakatime: apps-ns
-  code-server: apps-ns
-  livecodes: apps-ns
-  n8n: apps-ns
-  portal: apps-ns
-  coming-soon: apps-ns
-  chatterbox-tts: apps-ns
-  kitten-tts: apps-ns
-  aifighter: apps-ns
-  bladeofeternity: apps-ns
-  derobotis: apps-ns
-  gotta-cc: apps-ns
-  iotgo: apps-ns
-  jailbreakingsite: apps-ns
-  mcphost: apps-ns
-  npl-mcp: apps-ns
-  noizu: apps-ns
-  noizurpg: apps-ns
-  robotsunite: apps-ns
-  therobotknows: apps-ns
-  therobotlearns: apps-ns
-  therobotlives: apps-ns
-  therobotmakes: apps-ns
-  start-app: apps-ns
-  therobotplans: apps-ns
-  tobornalp: apps-ns
-  ddi: apps-ns
+  codefresh: apps
+  docmost: apps
+  taiga: apps
+  plane: apps
+  nextcloud: apps
+  ghost: apps
+  espocrm: apps
+  mautic: apps
+  listmonk: apps
+  postiz: apps
+  bottlecrm: apps
+  growthbook: apps
+  label-studio: apps
+  matomo: apps
+  serpbear: apps
+  seonaut: apps
+  hakatime: apps
+  code-server: apps
+  livecodes: apps
+  n8n: apps
+  portal: apps
+  coming-soon: apps
+  chatterbox-tts: apps
+  kitten-tts: apps
+  aifighter: apps
+  bladeofeternity: apps
+  derobotis: apps
+  gotta-cc: apps
+  iotgo: apps
+  jailbreakingsite: apps
+  mcphost: apps
+  npl-mcp: apps
+  noizu: apps
+  noizurpg: apps
+  robotsunite: apps
+  therobotknows: apps
+  therobotlearns: apps
+  therobotlives: apps
+  therobotmakes: apps
+  start-app: apps
+  therobotplans: apps
+  tobornalp: apps
+  ddi: apps
+  noizu-site: apps
+  remote-access: apps
   # Tier 4 — Creative
   penpot: creative-ns
   webstudio: creative-ns
@@ -310,8 +312,8 @@ liquibase_targets:
     safety: destructive
 
   hakatime:
-    description: "Hakatime TimescaleDB instance in apps-ns"
-    namespace: apps-ns
+    description: "Hakatime TimescaleDB instance in apps"
+    namespace: apps
     service: svc/haka-db
     remote_port: 5432
     local_port: 54323
@@ -361,10 +363,20 @@ liquibase_targets:
     db_name: tobor_locker
     schema: public
     secret_name: npl-mcp-secrets
-    secret_namespace: apps-ns
+    secret_namespace: apps
     username: tobor_locker
     secret_key: DB_PASSWORD
     safety: destructive
+    # provision-db: role creds from dc, superuser from the live instance secret
+    role_password_dc: "services apps.npl_mcp_db_password"
+    admin_secret: app-timescaledb-secrets
+    # Valkey/Redis ACL user on app-valkey (NoizuPromptLingo connects as "npl")
+    redis_password_dc: "auto npl_valkey_password"
+    redis_service: svc/app-valkey
+    redis_user: npl
+    redis_admin_secret: app-valkey-secrets
+    # superuser-only extensions the changelog needs pre-created (pgvector et al.)
+    extensions: [citext, uuid-ossp, vector, cube, pg_trgm, earthdistance]
     changelog_dir: projects/NoizuPromptLingo/backend/db
     changelog_file: changelog/db.changelog-master.yaml
 
@@ -386,6 +398,13 @@ liquibase_targets:
     # provision-db: role creds from dc, superuser from the live instance secret
     role_password_dc: "services apps.ddi_db_password"
     admin_secret: app-timescaledb-secrets
+    # Valkey/Redis ACL user on app-valkey (provision: `provision-db ddi --redis-only`)
+    redis_password_dc: "services apps.ddi_valkey_password"
+    redis_service: svc/app-valkey
+    redis_user: ddi
+    redis_admin_secret: app-valkey-secrets
+    # superuser-only extensions the changelog needs pre-created (pgvector et al.)
+    extensions: [citext, uuid-ossp, vector, cube, pg_trgm, earthdistance]
     changelog_dir: projects/designing.derobot.is/app/backend/db
     changelog_file: changelog/db.changelog-master.yaml
 
@@ -436,7 +455,7 @@ liquibase_targets:
     db_name: aifighter
     schema: public
     secret_name: aifighter-secrets
-    secret_namespace: apps-ns
+    secret_namespace: apps
     username_key: AIFIGHTER_DB_USER
     secret_key: AIFIGHTER_DB_PASSWORD
     changelog_dir: projects/aifighter.com/app/backend/priv/repo/migrations
@@ -451,7 +470,7 @@ liquibase_targets:
     db_name: gotta_cc
     schema: public
     secret_name: gotta-cc-secrets
-    secret_namespace: apps-ns
+    secret_namespace: apps
     username_key: GOTTA_CC_DB_USER
     secret_key: GOTTA_CC_DB_PASSWORD
     changelog_dir: projects/gotta.cc/app/backend/priv/repo/migrations
@@ -466,7 +485,7 @@ liquibase_targets:
     db_name: iotgo
     schema: public
     secret_name: iotgo-secrets
-    secret_namespace: apps-ns
+    secret_namespace: apps
     username_key: IOTGO_DB_USER
     secret_key: IOTGO_DB_PASSWORD
     changelog_dir: projects/iotgo.io/app/backend/priv/repo/migrations
@@ -481,7 +500,7 @@ liquibase_targets:
     db_name: jailbreaking
     schema: public
     secret_name: jailbreakingsite-secrets
-    secret_namespace: apps-ns
+    secret_namespace: apps
     username_key: JAILBREAKING_DB_USER
     secret_key: JAILBREAKING_DB_PASSWORD
     changelog_dir: projects/jailbreakingsite.com/app/backend/priv/repo/migrations
@@ -496,7 +515,7 @@ liquibase_targets:
     db_name: therobotknows
     schema: public
     secret_name: therobotknows-secrets
-    secret_namespace: apps-ns
+    secret_namespace: apps
     username_key: THEROBOTKNOWS_DB_USER
     secret_key: THEROBOTKNOWS_DB_PASSWORD
     changelog_dir: projects/therobotknows.com/app/backend/priv/repo/migrations
@@ -511,7 +530,7 @@ liquibase_targets:
     db_name: therobotlives
     schema: public
     secret_name: therobotlives-secrets
-    secret_namespace: apps-ns
+    secret_namespace: apps
     username_key: THEROBOTLIVES_DB_USER
     secret_key: THEROBOTLIVES_DB_PASSWORD
     changelog_dir: projects/therobotlives.com/app/backend/priv/repo/migrations
@@ -526,7 +545,7 @@ liquibase_targets:
     db_name: noizu_site
     schema: public
     secret_name: noizu-site-secrets
-    secret_namespace: apps-ns
+    secret_namespace: apps
     username_key: NOIZU_SITE_DB_USER
     secret_key: NOIZU_SITE_DB_PASSWORD
     changelog_dir: projects/noizu.com/app/backend/priv/repo/migrations
@@ -541,7 +560,7 @@ liquibase_targets:
     db_name: therobotplans
     schema: public
     secret_name: therobotplans-secrets
-    secret_namespace: apps-ns
+    secret_namespace: apps
     username_key: THEROBOTPLANS_DB_USER
     secret_key: THEROBOTPLANS_DB_PASSWORD
     changelog_dir: projects/therobotplans.com/app/backend/priv/repo/migrations

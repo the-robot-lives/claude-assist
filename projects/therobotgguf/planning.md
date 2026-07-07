@@ -143,7 +143,7 @@ Reusability is the payoff: once a core is cleaved and frozen, new capabilities a
 - **Credit assignment through memory.** Back-propagating through a discrete write-gate needs a relaxation (straight-through / Gumbel) or a policy-gradient treatment.
 - **Novelty vs. reinvention.** Several components resemble Mamba (§B), predictive coding / DEQ (§C), and PEFT/steering (§E). We should reuse those directly and keep our contribution to the *composition + cleave-train recipe*, not rebuild each wheel.
 - **Elixir ecosystem maturity.** Some custom kernels (associative scans, implicit-diff fixed points) may need EXLA/XLA custom-call work. Validate feasibility in Milestone 2 before committing.
-- **GGUF export of nonstandard layers.** Modulation, leaky state, and shims aren't standard GGUF ops; plan for either fusing them into supported ops at export or a custom runtime shim. Confirm early (Milestone 1).
+- **GGUF export of nonstandard layers.** Modulation, leaky state, and shims aren't standard GGUF ops; plan for either fusing them into supported ops at export or a custom runtime shim. Confirm early (Milestone 1). *Now planned in full: see [`arch/runtime/`](arch/runtime/README.md) — donor conversion pipeline, llama.cpp deep fork, and the `therobot` GGUF extension spec.*
 
 ---
 
