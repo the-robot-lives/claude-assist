@@ -108,7 +108,7 @@ Then hydrate `helm/<SLUG>/values.yaml`:
 - `migrate.command: ["bin/<OTP>", "eval", "<MODULE>.Release.migrate()"]`
 - `database.host: app-postgres.apps.svc.cluster.local`, `database.name: <DBNAME>`
 - `redis.host: app-valkey.apps.svc.cluster.local`, `redis.db: <your-free-index>`
-- `secrets.name: apps-<SLUG>-secrets`, `secrets.keys.*: <UPPERSLUG>_*`
+- `secrets.name: <slug>-secrets`, `secrets.keys.*: <UPPERSLUG>_*`
 - `tls` → reuse wildcard cert or set a new path (step 4)
 
 > **Migrations are Ecto (`.exs`), not Liquibase.** start-app runs schema via the
@@ -330,10 +330,18 @@ plain `psql` as the new role.
 
 ## 6. Terraform: InfisicalSecret CRD (so the app Secret exists in-cluster)
 
-The chart reads runtime secrets from a K8s `Secret` named `apps-<slug>-secrets`
+The chart reads runtime secrets from a K8s `Secret` named `<slug>-secrets`
 (values.yaml `secrets.name`). That Secret is materialized by an
-`InfisicalSecret` CRD syncing Infisical `/apps/<slug>` into it. Create
-`terraform/kubernetes/apps/init/<slug>-site.tf` modeled on `tobornalp-site.tf`:
+`InfisicalSecret` CRD syncing Infisical `/apps/<slug>` into it. **Check first**
+— it may already exist (the operator or an earlier step may have applied it):
+```bash
+kubectl get infisicalsecret -n apps | grep <slug>
+kubectl get secret <slug>-secrets -n apps
+```
+If present and `Ready`, skip creation (just back it with TF + import — below).
+
+To create/back it, add `terraform/kubernetes/apps/init/<slug>-site.tf` modeled
+on `tobornalp-site.tf`:
 
 ```hcl
 resource "kubectl_manifest" "infisical_<slug>_secrets" {
@@ -359,9 +367,10 @@ resource "kubectl_manifest" "infisical_<slug>_secrets" {
             envSlug     = local.infisical_base.env_slug
             secretsPath = "/apps/<slug>" } } }
       managedSecretReference = {
-        secretName      = "apps-<slug>-secrets"          # must match values.yaml secrets.name
+        secretName      = "<slug>-secrets"               # must match values.yaml secrets.name
         secretNamespace = kubernetes_namespace_v1.apps.metadata[0].name
         creationPolicy  = "Owner"
+        secretType      = "Opaque"
         template        = { includeAllSecrets = true } }
     }
   })
@@ -376,6 +385,16 @@ Apply (needs MinIO port-forward `127.0.0.1:9000` + AWS creds per CLAUDE.md):
 ```bash
 cd terraform/kubernetes/apps/init && terragrunt apply
 ```
+
+**If the CRD already exists live** (created out-of-band), import it into TF state
+so the apply is a no-op instead of a conflict:
+```bash
+cd terraform/kubernetes/apps/init
+terragrunt import kubectl_manifest.infisical_<slug>_secrets \
+  apis/apps/v1/infisicalsecret/infisical-<slug>-secrets
+```
+(`kubectl_manifest` import id format: `<group>/<version>/<kind>/<name>`; namespaced
+kinds include the namespace as shown.)
 
 ---
 
@@ -459,6 +478,6 @@ helm-upgrade --include <SLUG>
 - **Namespace is `apps`**, not `apps-ns` (that's the npl-mcp/tobor stack). Secrets CRD + app pods + DB all in `apps`.
 - **Ecto, not Liquibase** — do not add a `liquibase_targets` entry; no changelog exists and `liquibase-shell` errors. Migrations run via the chart's migrate hook.
 - **Redis index** — pick a free 0–15 on `app-valkey`; check what's taken before choosing.
-- **`apps-<slug>-secrets` vs `<slug>-secrets`** — the chart reads runtime secrets from `apps-<slug>-secrets` (values.yaml `secrets.name`); make the TF InfisicalSecret CRD sync `/apps/<slug>` into that exact name.
+- **Secret name is `<slug>-secrets`** — the chart reads runtime secrets from `<slug>-secrets` (values.yaml `secrets.name`); make the TF InfisicalSecret CRD `managedSecretReference.secretName` match exactly. (An earlier draft used `apps-<slug>-secrets` — wrong; the live convention is `<slug>-secrets` in namespace `apps`, e.g. `ddi-secrets`, `tobornalp-secrets`, `aifighter-secrets`.)
 - **Wildcard TLS** — if the zone has a wildcard cert, reuse it; don't mint a per-subdomain cert.
 - **`--reset-values`** — `helm-upgrade` defaults to it, so `values.yaml` wins; pin tags there.

@@ -9,7 +9,7 @@
 # --controller-name sealed-secrets-controller).
 resource "helm_release" "sealed_secrets" {
   name       = "sealed-secrets"
-  repository = "https://bitnami-labs.github.io/sealed-secrets"
+  repository = "https://bitnami.github.io/sealed-secrets"
   chart      = "sealed-secrets"
   version    = "2.18.6"
   namespace  = "kube-system"
