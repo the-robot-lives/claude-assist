@@ -58,8 +58,11 @@ struct llama_context {
     void synchronize();
 
     // ROBOT-EXT-BEGIN(context-last-res) — read-only access to the most recent
-    // decode's graph result so tap outputs can be read (llama-robot-context.cpp)
+    // decode's graph result so tap outputs can be read, plus the per-context
+    // therobot state (attached shims; managed by llama-robot-context.cpp)
     llm_graph_result * robot_last_res() const { return gf_res_prev.get(); }
+
+    std::shared_ptr<struct llama_robot_context_state> robot_state;
     // ROBOT-EXT-END
 
     const llama_model   & get_model()   const;

@@ -12,6 +12,10 @@
 #include "llama-ext.h"
 #include "llama.h"
 
+// ROBOT-EXT-BEGIN(context-include)
+#include "llama-robot-shim.h"
+// ROBOT-EXT-END
+
 #include <cinttypes>
 #include <cmath>
 #include <cstring>
@@ -2403,7 +2407,12 @@ llm_graph_params llama_context::graph_params(
                       const llama_ubatch & ubatch,
             const llama_memory_context_i * mctx,
                           llm_graph_type   gtype) const {
-    return {
+    // ROBOT-EXT-BEGIN(graph-params-robot-set) — assembled locally so the
+    // therobot fields (attached shim set + epoch) ride along; the epoch makes
+    // allow_reuse() rebuild the graph whenever shims are attached/detached
+    llm_graph_params params =
+    // ROBOT-EXT-END
+    {
         /*.arch        =*/ model.arch,
         /*.hparams     =*/ model.hparams,
         /*.cparams     =*/ cparams,
@@ -2420,6 +2429,11 @@ llm_graph_params llama_context::graph_params(
         /*.cb          =*/ graph_get_cb(),
         /*.res         =*/ res,
     };
+    // ROBOT-EXT-BEGIN(graph-params-robot-set-tail)
+    params.robot       = robot_state.get();
+    params.robot_epoch = llama_robot_context_state_epoch(robot_state.get());
+    return params;
+    // ROBOT-EXT-END
 }
 
 ggml_status llama_context::graph_compute(

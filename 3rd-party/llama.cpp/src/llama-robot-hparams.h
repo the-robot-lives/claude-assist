@@ -130,3 +130,11 @@ void llama_robot_hparams_load(llama_robot_hparams & robot, llama_model_loader & 
 // feature negotiation failures are logged instead of thrown so the manifest of
 // a file this runtime cannot yet run can still be dumped.
 void llama_robot_hparams_load_gguf(llama_robot_hparams & robot, const gguf_context * ctx, bool negotiate = true);
+
+// low-level `therobot.*` KV readers, shared with the shim loader (E3):
+// lenient on integer widths, strict on semantics; throw on type mismatch or
+// on a missing required key
+bool llama_robot_kv_get_str    (const gguf_context * ctx, const std::string & key, std::string & out, bool required);
+bool llama_robot_kv_get_u32    (const gguf_context * ctx, const std::string & key, uint32_t & out, bool required);
+bool llama_robot_kv_get_f32    (const gguf_context * ctx, const std::string & key, float & out, bool required);
+bool llama_robot_kv_get_str_arr(const gguf_context * ctx, const std::string & key, std::vector<std::string> & out, bool required);

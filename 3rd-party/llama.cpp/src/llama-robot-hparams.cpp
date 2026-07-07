@@ -22,7 +22,7 @@ static int robot_kv_find(const gguf_context * ctx, const std::string & key) {
     return gguf_find_key(ctx, key.c_str());
 }
 
-static bool robot_kv_get_str(const gguf_context * ctx, const std::string & key, std::string & out, bool required) {
+bool llama_robot_kv_get_str(const gguf_context * ctx, const std::string & key, std::string & out, bool required) {
     const int id = robot_kv_find(ctx, key);
     if (id < 0) {
         if (required) {
@@ -37,7 +37,7 @@ static bool robot_kv_get_str(const gguf_context * ctx, const std::string & key, 
     return true;
 }
 
-static bool robot_kv_get_u32(const gguf_context * ctx, const std::string & key, uint32_t & out, bool required) {
+bool llama_robot_kv_get_u32(const gguf_context * ctx, const std::string & key, uint32_t & out, bool required) {
     const int id = robot_kv_find(ctx, key);
     if (id < 0) {
         if (required) {
@@ -58,7 +58,7 @@ static bool robot_kv_get_u32(const gguf_context * ctx, const std::string & key, 
     return true;
 }
 
-static bool robot_kv_get_f32(const gguf_context * ctx, const std::string & key, float & out, bool required) {
+bool llama_robot_kv_get_f32(const gguf_context * ctx, const std::string & key, float & out, bool required) {
     const int id = robot_kv_find(ctx, key);
     if (id < 0) {
         if (required) {
@@ -75,7 +75,7 @@ static bool robot_kv_get_f32(const gguf_context * ctx, const std::string & key, 
     return true;
 }
 
-static bool robot_kv_get_str_arr(const gguf_context * ctx, const std::string & key, std::vector<std::string> & out, bool required) {
+bool llama_robot_kv_get_str_arr(const gguf_context * ctx, const std::string & key, std::vector<std::string> & out, bool required) {
     const int id = robot_kv_find(ctx, key);
     if (id < 0) {
         if (required) {
@@ -160,7 +160,8 @@ static const std::map<std::string, llama_robot_feature> LLAMA_ROBOT_FEATURE_NAME
 // is refused — running it degraded would violate the required-feature
 // semantics of spec §1.1.
 static const std::set<llama_robot_feature> LLAMA_ROBOT_FEATURES_IMPLEMENTED = {
-    LLAMA_ROBOT_FEATURE_TAPS, // E2 — bottleneck taps + probe heads
+    LLAMA_ROBOT_FEATURE_TAPS,  // E2 — bottleneck taps + probe heads
+    LLAMA_ROBOT_FEATURE_SHIMS, // E3 — slice-scoped shim engine (module files, hot attach/detach)
 };
 
 const char * llama_robot_feature_name(llama_robot_feature f) {
@@ -178,19 +179,19 @@ const char * llama_robot_feature_name(llama_robot_feature f) {
 
 static void robot_load_bottlenecks(llama_robot_hparams & robot, const gguf_context * ctx) {
     uint32_t count = 0;
-    robot_kv_get_u32(ctx, "therobot.bottleneck.count", count, true);
+    llama_robot_kv_get_u32(ctx, "therobot.bottleneck.count", count, true);
     robot.bottlenecks.resize(count);
     for (uint32_t i = 0; i < count; ++i) {
         auto & bn = robot.bottlenecks[i];
         const std::string p = format("therobot.bottleneck.%u.", i);
-        robot_kv_get_str    (ctx, p + "name",         bn.name,         true);
-        robot_kv_get_u32    (ctx, p + "layer",        bn.layer,        true);
-        robot_kv_get_str    (ctx, p + "point",        bn.point,        true);
-        robot_kv_get_u32    (ctx, p + "offset",       bn.offset,       true);
-        robot_kv_get_u32    (ctx, p + "width",        bn.width,        true);
-        robot_kv_get_str_arr(ctx, p + "attributes",   bn.attributes,   true);
-        robot_kv_get_f32    (ctx, p + "decodability", bn.decodability, false);
-        robot_kv_get_f32    (ctx, p + "selectivity",  bn.selectivity,  false);
+        llama_robot_kv_get_str    (ctx, p + "name",         bn.name,         true);
+        llama_robot_kv_get_u32    (ctx, p + "layer",        bn.layer,        true);
+        llama_robot_kv_get_str    (ctx, p + "point",        bn.point,        true);
+        llama_robot_kv_get_u32    (ctx, p + "offset",       bn.offset,       true);
+        llama_robot_kv_get_u32    (ctx, p + "width",        bn.width,        true);
+        llama_robot_kv_get_str_arr(ctx, p + "attributes",   bn.attributes,   true);
+        llama_robot_kv_get_f32    (ctx, p + "decodability", bn.decodability, false);
+        llama_robot_kv_get_f32    (ctx, p + "selectivity",  bn.selectivity,  false);
         if (bn.point != "resid_post" && bn.point != "attn_out" && bn.point != "ffn_out") {
             throw std::runtime_error(format("therobot: bottleneck %u has invalid point '%s' (expected resid_post|attn_out|ffn_out)", i, bn.point.c_str()));
         }
@@ -202,13 +203,13 @@ static void robot_load_bottlenecks(llama_robot_hparams & robot, const gguf_conte
 
 static void robot_load_state(llama_robot_hparams & robot, const gguf_context * ctx) {
     uint32_t bank_count = 0;
-    robot_kv_get_u32(ctx, "therobot.state.bank_count", bank_count, true);
+    llama_robot_kv_get_u32(ctx, "therobot.state.bank_count", bank_count, true);
     robot.state.banks.resize(bank_count);
     for (uint32_t b = 0; b < bank_count; ++b) {
         auto & bank = robot.state.banks[b];
         const std::string p = format("therobot.state.bank.%u.", b);
-        robot_kv_get_str(ctx, p + "name",  bank.name,  true);
-        robot_kv_get_u32(ctx, p + "width", bank.width, true);
+        llama_robot_kv_get_str(ctx, p + "name",  bank.name,  true);
+        llama_robot_kv_get_u32(ctx, p + "width", bank.width, true);
         if (bank.name != "fast" && bank.name != "mid" && bank.name != "slow" && bank.name != "glacial") {
             throw std::runtime_error(format("therobot: state bank %u has invalid name '%s' (expected fast|mid|slow|glacial)", b, bank.name.c_str()));
         }
@@ -217,9 +218,9 @@ static void robot_load_state(llama_robot_hparams & robot, const gguf_context * c
 }
 
 static void robot_load_modulator(llama_robot_hparams & robot, const gguf_context * ctx) {
-    robot_kv_get_u32    (ctx, "therobot.modulator.dim",      robot.modulator.dim,      true);
-    robot_kv_get_str_arr(ctx, "therobot.modulator.channels", robot.modulator.channels, true);
-    robot_kv_get_str    (ctx, "therobot.modulator.source",   robot.modulator.source,   true);
+    llama_robot_kv_get_u32    (ctx, "therobot.modulator.dim",      robot.modulator.dim,      true);
+    llama_robot_kv_get_str_arr(ctx, "therobot.modulator.channels", robot.modulator.channels, true);
+    llama_robot_kv_get_str    (ctx, "therobot.modulator.source",   robot.modulator.source,   true);
     if (robot.modulator.source != "pooled" && robot.modulator.source != "glacial") {
         throw std::runtime_error(format("therobot: invalid modulator source '%s' (expected pooled|glacial)", robot.modulator.source.c_str()));
     }
@@ -229,17 +230,17 @@ static void robot_load_modulator(llama_robot_hparams & robot, const gguf_context
 }
 
 static void robot_load_memory(llama_robot_hparams & robot, const gguf_context * ctx) {
-    robot_kv_get_u32(ctx, "therobot.memory.key_dim",   robot.memory.key_dim,   true);
-    robot_kv_get_u32(ctx, "therobot.memory.value_dim", robot.memory.value_dim, true);
-    robot_kv_get_u32(ctx, "therobot.memory.capacity",  robot.memory.capacity,  true);
-    robot_kv_get_f32(ctx, "therobot.memory.decay_halflife", robot.memory.decay_halflife, true);
-    robot_kv_get_f32(ctx, "therobot.memory.salience.threshold_quantile", robot.memory.salience_threshold_quantile, true);
+    llama_robot_kv_get_u32(ctx, "therobot.memory.key_dim",   robot.memory.key_dim,   true);
+    llama_robot_kv_get_u32(ctx, "therobot.memory.value_dim", robot.memory.value_dim, true);
+    llama_robot_kv_get_u32(ctx, "therobot.memory.capacity",  robot.memory.capacity,  true);
+    llama_robot_kv_get_f32(ctx, "therobot.memory.decay_halflife", robot.memory.decay_halflife, true);
+    llama_robot_kv_get_f32(ctx, "therobot.memory.salience.threshold_quantile", robot.memory.salience_threshold_quantile, true);
 }
 
 static void robot_load_delta(llama_robot_hparams & robot, const gguf_context * ctx) {
-    robot_kv_get_str(ctx, "therobot.delta.granularity", robot.delta.granularity, true);
-    robot_kv_get_u32(ctx, "therobot.delta.heartbeat",   robot.delta.heartbeat,   true);
-    robot_kv_get_f32(ctx, "therobot.delta.target_keep_rate", robot.delta.target_keep_rate, false);
+    llama_robot_kv_get_str(ctx, "therobot.delta.granularity", robot.delta.granularity, true);
+    llama_robot_kv_get_u32(ctx, "therobot.delta.heartbeat",   robot.delta.heartbeat,   true);
+    llama_robot_kv_get_f32(ctx, "therobot.delta.target_keep_rate", robot.delta.target_keep_rate, false);
     if (robot.delta.granularity != "block") {
         // channel_group is reserved by spec v1 but not accepted by any runtime yet
         throw std::runtime_error(format("therobot: unsupported delta granularity '%s' (v1 accepts 'block')", robot.delta.granularity.c_str()));
@@ -247,10 +248,10 @@ static void robot_load_delta(llama_robot_hparams & robot, const gguf_context * c
 }
 
 static void robot_load_settle(llama_robot_hparams & robot, const gguf_context * ctx) {
-    robot_kv_get_str    (ctx, "therobot.settle.objective",     robot.settle.objective,     true);
-    robot_kv_get_u32    (ctx, "therobot.settle.mask_token_id", robot.settle.mask_token_id, true);
-    robot_kv_get_u32    (ctx, "therobot.settle.max_steps",     robot.settle.max_steps,     true);
-    robot_kv_get_f32    (ctx, "therobot.settle.epsilon",       robot.settle.epsilon,       true);
+    llama_robot_kv_get_str    (ctx, "therobot.settle.objective",     robot.settle.objective,     true);
+    llama_robot_kv_get_u32    (ctx, "therobot.settle.mask_token_id", robot.settle.mask_token_id, true);
+    llama_robot_kv_get_u32    (ctx, "therobot.settle.max_steps",     robot.settle.max_steps,     true);
+    llama_robot_kv_get_f32    (ctx, "therobot.settle.epsilon",       robot.settle.epsilon,       true);
     robot_kv_get_f32_arr(ctx, "therobot.settle.m_schedule",    robot.settle.m_schedule,    false);
 }
 
@@ -274,7 +275,7 @@ static const char * robot_feature_probe_key(llama_robot_feature f) {
 
 void llama_robot_hparams_load_gguf(llama_robot_hparams & robot, const gguf_context * ctx, bool negotiate) {
     // §1.1 identity & negotiation
-    robot_kv_get_u32(ctx, "therobot.spec_version", robot.spec_version, true);
+    llama_robot_kv_get_u32(ctx, "therobot.spec_version", robot.spec_version, true);
     if (robot.spec_version != LLAMA_ROBOT_SPEC_VERSION) {
         throw std::runtime_error(format(
             "therobot: file requires spec version %u, this runtime implements version %u "
@@ -282,18 +283,18 @@ void llama_robot_hparams_load_gguf(llama_robot_hparams & robot, const gguf_conte
             robot.spec_version, LLAMA_ROBOT_SPEC_VERSION));
     }
 
-    robot_kv_get_str(ctx, "therobot.base_architecture", robot.base_architecture, true);
+    llama_robot_kv_get_str(ctx, "therobot.base_architecture", robot.base_architecture, true);
     robot.base_arch = llm_arch_from_string(robot.base_architecture);
     if (robot.base_arch == LLM_ARCH_UNKNOWN || robot.base_arch == LLM_ARCH_THEROBOT || robot.base_arch == LLM_ARCH_CLIP) {
         throw std::runtime_error(format("therobot: unknown or invalid base architecture '%s'", robot.base_architecture.c_str()));
     }
 
-    robot_kv_get_u32(ctx, "therobot.level", robot.level, false); // informational only
-    robot_kv_get_str(ctx, "therobot.donor.id", robot.donor_id, false);
-    robot_kv_get_str(ctx, "therobot.convert.lockfile_hash", robot.convert_lockfile_hash, false);
+    llama_robot_kv_get_u32(ctx, "therobot.level", robot.level, false); // informational only
+    llama_robot_kv_get_str(ctx, "therobot.donor.id", robot.donor_id, false);
+    llama_robot_kv_get_str(ctx, "therobot.convert.lockfile_hash", robot.convert_lockfile_hash, false);
 
     // required features: refuse unknown; refuse known-but-unimplemented
-    robot_kv_get_str_arr(ctx, "therobot.features", robot.features_required_raw, false); // missing == empty == L0
+    llama_robot_kv_get_str_arr(ctx, "therobot.features", robot.features_required_raw, false); // missing == empty == L0
     for (const auto & name : robot.features_required_raw) {
         const auto it = LLAMA_ROBOT_FEATURE_NAMES.find(name);
         if (it == LLAMA_ROBOT_FEATURE_NAMES.end()) {
@@ -313,7 +314,7 @@ void llama_robot_hparams_load_gguf(llama_robot_hparams & robot, const gguf_conte
 
     // optional features: known ones are honored, unknown ones logged and ignored
     std::vector<std::string> optional_names;
-    robot_kv_get_str_arr(ctx, "therobot.features_optional", optional_names, false);
+    llama_robot_kv_get_str_arr(ctx, "therobot.features_optional", optional_names, false);
     for (const auto & name : optional_names) {
         const auto it = LLAMA_ROBOT_FEATURE_NAMES.find(name);
         if (it == LLAMA_ROBOT_FEATURE_NAMES.end()) {

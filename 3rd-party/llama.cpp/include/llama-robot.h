@@ -42,6 +42,40 @@ LLAMA_API int32_t llama_robot_probe_dim(const struct llama_model * model, int32_
 // dst receives llama_robot_probe_dim() floats
 LLAMA_API bool llama_robot_probe_eval(struct llama_context * ctx, int32_t tap_id, const char * attr, float * dst);
 
+//
+// E3 — shims (slice-scoped behavior-override adapters, spec §4)
+//
+// Shims load from standalone `therobot-shim` GGUF module files, validate
+// against the model's declared bottlenecks, and hot-attach/detach per context.
+// Attach and detach take effect on the next decode (the graph is rebuilt).
+// A shim must outlive every context it is attached to.
+//
+
+struct llama_robot_shim; // opaque
+
+// load + validate a shim module against a therobot model; NULL on failure
+LLAMA_API struct llama_robot_shim * llama_robot_shim_init(const struct llama_model * model, const char * path);
+
+// free a shim (detach it from all contexts first)
+LLAMA_API void llama_robot_shim_free(struct llama_robot_shim * shim);
+
+// registry metadata (spec §4)
+LLAMA_API const char * llama_robot_shim_name       (const struct llama_robot_shim * shim);
+LLAMA_API const char * llama_robot_shim_version    (const struct llama_robot_shim * shim);
+LLAMA_API const char * llama_robot_shim_effect     (const struct llama_robot_shim * shim);
+LLAMA_API const char * llama_robot_shim_target     (const struct llama_robot_shim * shim); // target bottleneck name
+LLAMA_API float        llama_robot_shim_selectivity(const struct llama_robot_shim * shim);
+
+// attach: enforces registry metadata — every name in `depends` must already
+// be attached, and `conflicts` are checked in both directions
+LLAMA_API bool llama_robot_shim_attach(struct llama_context * ctx, const struct llama_robot_shim * shim);
+
+// detach by name: refused while another attached shim depends on it
+LLAMA_API bool llama_robot_shim_detach(struct llama_context * ctx, const char * name);
+
+// number of currently attached shims
+LLAMA_API int32_t llama_robot_shim_count(const struct llama_context * ctx);
+
 #ifdef __cplusplus
 }
 #endif

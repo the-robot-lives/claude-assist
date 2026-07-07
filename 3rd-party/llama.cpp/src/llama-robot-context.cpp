@@ -13,9 +13,11 @@
 #include "llama-impl.h"
 #include "llama-model.h"
 #include "llama-robot-model.h"
+#include "llama-robot-shim.h"
 
 #include "ggml.h"
 
+#include <algorithm>
 #include <cstring>
 #include <vector>
 
@@ -168,4 +170,139 @@ bool llama_robot_probe_eval(llama_context * ctx, int32_t tap_id, const char * at
     }
 
     return true;
+}
+
+//
+// E3 — shim lifecycle + per-context attach/detach
+//
+
+llama_robot_shim * llama_robot_shim_init(const llama_model * model, const char * path) {
+    try {
+        return llama_robot_shim_load(model, path);
+    } catch (const std::exception & e) {
+        LLAMA_LOG_ERROR("%s\n", e.what());
+        return nullptr;
+    }
+}
+
+void llama_robot_shim_free(llama_robot_shim * shim) {
+    delete shim;
+}
+
+const char * llama_robot_shim_name(const llama_robot_shim * shim) {
+    return shim == nullptr ? nullptr : shim->name.c_str();
+}
+
+const char * llama_robot_shim_version(const llama_robot_shim * shim) {
+    return shim == nullptr ? nullptr : shim->version.c_str();
+}
+
+const char * llama_robot_shim_effect(const llama_robot_shim * shim) {
+    return shim == nullptr ? nullptr : shim->effect.c_str();
+}
+
+const char * llama_robot_shim_target(const llama_robot_shim * shim) {
+    return shim == nullptr ? nullptr : shim->target_bottleneck.c_str();
+}
+
+float llama_robot_shim_selectivity(const llama_robot_shim * shim) {
+    return shim == nullptr ? 0.0f : shim->selectivity;
+}
+
+static bool robot_state_has(const llama_robot_context_state * st, const std::string & name) {
+    if (st == nullptr) {
+        return false;
+    }
+    for (const auto * s : st->shims) {
+        if (s->name == name) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool llama_robot_shim_attach(llama_context * ctx, const llama_robot_shim * shim) {
+    if (ctx == nullptr || shim == nullptr) {
+        return false;
+    }
+    if (shim->model != &ctx->get_model()) {
+        LLAMA_LOG_ERROR("therobot: shim '%s' was loaded against a different model\n", shim->name.c_str());
+        return false;
+    }
+
+    auto & st = ctx->robot_state;
+    if (!st) {
+        st = std::make_shared<llama_robot_context_state>();
+    }
+
+    if (robot_state_has(st.get(), shim->name)) {
+        LLAMA_LOG_ERROR("therobot: shim '%s' is already attached\n", shim->name.c_str());
+        return false;
+    }
+
+    // registry metadata (spec §4): dependencies must already be attached ...
+    for (const auto & dep : shim->depends) {
+        if (!robot_state_has(st.get(), dep)) {
+            LLAMA_LOG_ERROR("therobot: shim '%s' depends on '%s', which is not attached\n",
+                    shim->name.c_str(), dep.c_str());
+            return false;
+        }
+    }
+    // ... and conflicts are checked in both directions
+    for (const auto & con : shim->conflicts) {
+        if (robot_state_has(st.get(), con)) {
+            LLAMA_LOG_ERROR("therobot: shim '%s' conflicts with attached shim '%s'\n",
+                    shim->name.c_str(), con.c_str());
+            return false;
+        }
+    }
+    for (const auto * s : st->shims) {
+        if (std::find(s->conflicts.begin(), s->conflicts.end(), shim->name) != s->conflicts.end()) {
+            LLAMA_LOG_ERROR("therobot: attached shim '%s' declares a conflict with '%s'\n",
+                    s->name.c_str(), shim->name.c_str());
+            return false;
+        }
+    }
+
+    st->shims.push_back(shim);
+    st->epoch++; // invalidates graph reuse → next decode rebuilds with the shim
+
+    LLAMA_LOG_INFO("therobot: attached shim '%s' → '%s' (%d attached)\n",
+            shim->name.c_str(), shim->target_bottleneck.c_str(), (int) st->shims.size());
+    return true;
+}
+
+bool llama_robot_shim_detach(llama_context * ctx, const char * name) {
+    if (ctx == nullptr || name == nullptr || !ctx->robot_state) {
+        return false;
+    }
+    auto & st = *ctx->robot_state;
+
+    // refuse while another attached shim depends on it
+    for (const auto * s : st.shims) {
+        if (s->name != name &&
+            std::find(s->depends.begin(), s->depends.end(), name) != s->depends.end()) {
+            LLAMA_LOG_ERROR("therobot: cannot detach '%s': attached shim '%s' depends on it\n",
+                    name, s->name.c_str());
+            return false;
+        }
+    }
+
+    for (auto it = st.shims.begin(); it != st.shims.end(); ++it) {
+        if ((*it)->name == name) {
+            st.shims.erase(it);
+            st.epoch++;
+            LLAMA_LOG_INFO("therobot: detached shim '%s' (%d attached)\n", name, (int) st.shims.size());
+            return true;
+        }
+    }
+    LLAMA_LOG_ERROR("therobot: no attached shim named '%s'\n", name);
+    return false;
+}
+
+int32_t llama_robot_shim_count(const llama_context * ctx) {
+    if (ctx == nullptr || !ctx->robot_state) {
+        return 0;
+    }
+    return (int32_t) ctx->robot_state->shims.size();
 }

@@ -13,6 +13,7 @@
 
 #include "llama-robot-hparams.h"
 
+#include "llama-graph.h" // llm_graph_params::robot in the wrapper's build_arch_graph
 #include "llama-model.h"
 
 #include "ggml-cpp.h"
@@ -67,9 +68,13 @@ void llama_robot_materialize_ext_tensors(llama_model_loader & ml, llama_robot_mo
 // E2 — validate declared bottlenecks against the donor's hparams
 void llama_robot_validate_taps(const llama_robot_model_iface & iface, const llama_hparams & hparams);
 
-// E2 — after the donor graph is built: mark each declared cleave-point slice
-// as a named graph output `robot_tap-<i>` (ggml_view → ggml_cont → output)
-void llama_robot_graph_add_taps(const llama_robot_model_iface & iface, llm_graph_context * g);
+// E2/E3 — after the donor graph is built: apply the context's attached shims
+// at their target bottlenecks (slice-scoped gated edits, spliced into the
+// donor graph so downstream consumers read the edited stream), then mark each
+// cleave-point slice — post-shim — as a named graph output `robot_tap-<i>`.
+struct llama_robot_context_state;
+void llama_robot_graph_apply(const llama_robot_model_iface & iface, llm_graph_context * g,
+        const llama_robot_context_state * st);
 
 template <typename TBase>
 struct llama_model_robot : public TBase, public llama_robot_model_iface {
@@ -98,7 +103,7 @@ struct llama_model_robot : public TBase, public llama_robot_model_iface {
 
     std::unique_ptr<llm_graph_context> build_arch_graph(const llm_graph_params & params) const override {
         auto res = TBase::build_arch_graph(params);
-        llama_robot_graph_add_taps(*this, res.get());
+        llama_robot_graph_apply(*this, res.get(), params.robot);
         return res;
     }
 };

@@ -701,6 +701,13 @@ struct llm_graph_params {
 
     llm_graph_result * res;
 
+    // ROBOT-EXT-BEGIN(graph-params-robot) — per-context therobot state (attached
+    // shims). The epoch increments on every attach/detach so allow_reuse()
+    // correctly invalidates reused graphs when the shim set changes.
+    const struct llama_robot_context_state * robot = nullptr;
+    uint64_t robot_epoch = 0;
+    // ROBOT-EXT-END
+
     // return true if the "other" params would result in a graph with the same topology as with the current params
     //   having the same topology allows us to reuse the graph in some cases
     bool allow_reuse(const llm_graph_params & other) const {
@@ -761,6 +768,12 @@ struct llm_graph_params {
         if (cparams.nextn_layer_offset != other.cparams.nextn_layer_offset) {
             return false;
         }
+
+        // ROBOT-EXT-BEGIN(graph-params-robot-reuse)
+        if (robot != other.robot || robot_epoch != other.robot_epoch) {
+            return false;
+        }
+        // ROBOT-EXT-END
 
         return
             cparams.embeddings              == other.cparams.embeddings              &&

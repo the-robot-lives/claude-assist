@@ -1,9 +1,9 @@
-# therobot runtime tests (E1 + E2)
+# therobot runtime tests (E1 + E2 + E3)
 
-Manual smoke tests for the therobot spec loader (E1) and bottleneck taps (E2).
-Not yet wired into CMake/CI — that lands with the E0 CI gates
-(llamacpp-extensions.md §2). All commands run from the repo root; `$BUILD` is a
-configured build directory.
+Manual smoke tests for the therobot spec loader (E1), bottleneck taps (E2),
+and the shim engine (E3). Not yet wired into CMake/CI — that lands with the
+E0 CI gates (llamacpp-extensions.md §2). All commands run from the repo root;
+`$BUILD` is a configured build directory.
 
 ## Fixtures
 
@@ -70,3 +70,27 @@ Deferred from E2: the `llama-server` `/robot/taps` endpoint — server-side slot
 semantics (which sequence's taps a request refers to) are better settled
 together with E8's per-request routing; the C API above is the contract it
 will mirror.
+
+## E3 shims
+
+Shim modules (`make_shim_ggufs.py`) target the `subject` bottleneck of
+`tiny-llama-taps.gguf`: an always-on `steer` (+1), a gain ×2 behind a probe
+gate that deterministically fires / never fires, and depends/conflicts
+fixtures. The test covers: exact slice edits read back through the (post-shim)
+tap, downstream logit movement, bit-exact detach parity, in-graph gate on/off,
+composition in attach order, hot attach/detach mid-session on one context
+(graph-reuse epoch invalidation), and registry metadata enforcement.
+
+```bash
+python3 tests/robot/make_shim_ggufs.py gguf-py /tmp/robot-fixtures
+g++ -std=c++17 -Iinclude -Iggml/include tests/robot/robot_shim_test.cpp \
+    -L$BUILD/bin -lllama -lggml -Wl,-rpath,$BUILD/bin -o /tmp/robot_shim_test
+/tmp/robot_shim_test /tmp/robot-fixtures/tiny-llama-taps.gguf /tmp/robot-fixtures
+# expect: E3 SHIM TEST: OK
+```
+
+E3 notes: shim tensors must be f32 (v1); `modulator:` gates parse but refuse
+to load until the E4 modulator bus exists; probe-gate scores come from the
+shim's own `robot.shim.gate.weight` projection with the comparison folded into
+an effective bias at load (`step()` in-graph, so `>` is strict and `>=`
+behaves like `>`); a shim must outlive the contexts it is attached to.
