@@ -1,66 +1,96 @@
-//! fast-os phase-0 kernel: boot on QEMU aarch64 `virt`, print a banner,
-//! and serve a tiny polling shell (`fsh0`) over the PL011 UART.
+//! fast-os phase-0 kernel: boots via the Linux Image protocol on QEMU
+//! aarch64 `virt` *and* Apple Virtualization (UTM), autodetects its console
+//! from the device tree (PL011 on QEMU, virtio-console on Apple VZ), prints
+//! a banner, and serves the tiny polling shell `fsh0`.
 //!
 //! Deliberately minimal — no interrupts, no MMU config, no allocator.
-//! This exists to prove the toolchain, boot path, and dev loop
-//! (roadmap.md Phase 0).
+//! This is the roadmap.md Phase 0 exit artifact.
 
 #![no_std]
 #![no_main]
 
+mod fdt;
+mod pl011;
+mod virtio_console;
+
 use core::fmt::{self, Write};
 use core::panic::PanicInfo;
+use fdt::Fdt;
+use pl011::Pl011;
+use virtio_console::VirtioConsole;
 
 core::arch::global_asm!(include_str!("boot.s"));
 
-// ─── PL011 UART (QEMU virt board, fixed at 0x0900_0000) ────────────────────
+// ─── console abstraction ────────────────────────────────────────────────────
 
-const UART_BASE: usize = 0x0900_0000;
-const UART_DR: *mut u32 = UART_BASE as *mut u32;
-const UART_FR: *mut u32 = (UART_BASE + 0x18) as *mut u32;
-const FR_TXFF: u32 = 1 << 5; // transmit FIFO full
-const FR_RXFE: u32 = 1 << 4; // receive FIFO empty
-
-fn putb(b: u8) {
-    unsafe {
-        while UART_FR.read_volatile() & FR_TXFF != 0 {}
-        UART_DR.write_volatile(b as u32);
-    }
+enum Console {
+    Pl011(Pl011),
+    Virtio(VirtioConsole),
+    None,
 }
 
-fn getb() -> Option<u8> {
-    unsafe {
-        if UART_FR.read_volatile() & FR_RXFE != 0 {
-            None
-        } else {
-            Some((UART_DR.read_volatile() & 0xff) as u8)
-        }
-    }
-}
-
-struct Uart;
-
-impl Write for Uart {
-    fn write_str(&mut self, s: &str) -> fmt::Result {
-        for b in s.bytes() {
-            if b == b'\n' {
-                putb(b'\r');
+impl Console {
+    fn write_bytes(&mut self, s: &[u8]) {
+        match self {
+            Console::Pl011(u) => {
+                for &b in s {
+                    u.putb(b);
+                }
             }
-            putb(b);
+            Console::Virtio(v) => v.write_bytes(s),
+            Console::None => {}
         }
+    }
+
+    fn getb(&mut self) -> Option<u8> {
+        match self {
+            Console::Pl011(u) => u.getb(),
+            Console::Virtio(v) => v.getb(),
+            Console::None => None,
+        }
+    }
+
+    fn name(&self) -> &'static str {
+        match self {
+            Console::Pl011(_) => "PL011 uart (QEMU virt)",
+            Console::Virtio(_) => "virtio-console (Apple Virtualization / virtio-mmio)",
+            Console::None => "none",
+        }
+    }
+}
+
+static mut CONSOLE: Console = Console::None;
+
+fn console() -> &'static mut Console {
+    // Single core, no interrupts: exclusive access by construction.
+    unsafe { &mut *core::ptr::addr_of_mut!(CONSOLE) }
+}
+
+struct Out;
+
+impl Write for Out {
+    fn write_str(&mut self, s: &str) -> fmt::Result {
+        // convert \n → \r\n without allocating
+        let mut rest = s.as_bytes();
+        while let Some(pos) = rest.iter().position(|&b| b == b'\n') {
+            console().write_bytes(&rest[..pos]);
+            console().write_bytes(b"\r\n");
+            rest = &rest[pos + 1..];
+        }
+        console().write_bytes(rest);
         Ok(())
     }
 }
 
 macro_rules! kprint {
-    ($($arg:tt)*) => {{ let _ = write!(Uart, $($arg)*); }};
+    ($($arg:tt)*) => {{ let _ = write!(Out, $($arg)*); }};
 }
 macro_rules! kprintln {
-    () => {{ let _ = writeln!(Uart); }};
-    ($($arg:tt)*) => {{ let _ = writeln!(Uart, $($arg)*); }};
+    () => {{ let _ = writeln!(Out); }};
+    ($($arg:tt)*) => {{ let _ = writeln!(Out, $($arg)*); }};
 }
 
-// ─── Generic timer ──────────────────────────────────────────────────────────
+// ─── generic timer ──────────────────────────────────────────────────────────
 
 fn counter_ticks() -> u64 {
     let v: u64;
@@ -88,12 +118,37 @@ fn current_el() -> u64 {
     (v >> 2) & 0b11
 }
 
+// ─── console detection ──────────────────────────────────────────────────────
+
+fn detect_console(dtb: *const u8) -> Console {
+    if let Some(tree) = unsafe { Fdt::new(dtb) } {
+        let mut regs = [(0u64, 0u64); 8];
+
+        // QEMU virt: PL011 serial
+        if tree.find_all(b"arm,pl011", &mut regs) > 0 {
+            return Console::Pl011(Pl011::new(regs[0].0 as usize));
+        }
+
+        // Apple VZ (and others): probe virtio-mmio nodes for a console
+        let n = tree.find_all(b"virtio,mmio", &mut regs);
+        for i in 0..n {
+            if let Some(vc) = VirtioConsole::init(regs[i].0 as usize) {
+                return Console::Virtio(vc);
+            }
+        }
+        Console::None
+    } else {
+        // No DTB (unexpected) — assume QEMU virt's fixed PL011.
+        Console::Pl011(Pl011::new(0x0900_0000))
+    }
+}
+
 // ─── fsh0: the polling proto-shell ──────────────────────────────────────────
 
 fn read_line(buf: &mut [u8]) -> usize {
     let mut len = 0;
     loop {
-        let Some(b) = getb() else {
+        let Some(b) = console().getb() else {
             core::hint::spin_loop();
             continue;
         };
@@ -103,7 +158,6 @@ fn read_line(buf: &mut [u8]) -> usize {
                 return len;
             }
             0x08 | 0x7f => {
-                // backspace / delete
                 if len > 0 {
                     len -= 1;
                     kprint!("\x08 \x08");
@@ -113,7 +167,7 @@ fn read_line(buf: &mut [u8]) -> usize {
                 if len < buf.len() {
                     buf[len] = b;
                     len += 1;
-                    putb(b);
+                    console().write_bytes(&[b]);
                 }
             }
             _ => {}
@@ -137,13 +191,12 @@ fn run_command(line: &str) {
             kprintln!("  echo <text>   print <text>");
             kprintln!("  clear         clear screen");
             kprintln!("  panic         test the panic handler");
-            kprintln!("  (exit qemu:   Ctrl-a x)");
         }
         "info" => {
-            kprintln!("fast-os {} · aarch64 · QEMU virt", env!("CARGO_PKG_VERSION"));
+            kprintln!("fast-os {} · aarch64 · Linux Image protocol", env!("CARGO_PKG_VERSION"));
+            kprintln!("console:         {}", console().name());
             kprintln!("exception level: EL{}", current_el());
             kprintln!("timer freq:      {} Hz", counter_freq());
-            kprintln!("uart:            PL011 @ {:#x} (polled)", UART_BASE);
         }
         "uptime" => kprintln!("{} ms", uptime_ms()),
         "echo" => kprintln!("{}", rest),
@@ -156,13 +209,18 @@ fn run_command(line: &str) {
 // ─── entry ──────────────────────────────────────────────────────────────────
 
 #[no_mangle]
-pub extern "C" fn kmain() -> ! {
+pub extern "C" fn kmain(dtb: *const u8) -> ! {
+    unsafe {
+        *core::ptr::addr_of_mut!(CONSOLE) = detect_console(dtb);
+    }
+
     let boot_ms = uptime_ms();
     kprintln!();
     kprintln!("+------------------------------------+");
     kprintln!("|  fast-os  --  phase-0 proto-kernel |");
     kprintln!("+------------------------------------+");
     kprintln!("fast-os {}", env!("CARGO_PKG_VERSION"));
+    kprintln!("console: {}", console().name());
     kprintln!("boot-to-banner: {} ms · EL{} · type 'help'", boot_ms, current_el());
     kprintln!();
 
@@ -181,7 +239,7 @@ fn panic(info: &PanicInfo) -> ! {
     kprintln!();
     kprintln!("*** KERNEL PANIC ***");
     kprintln!("{}", info);
-    kprintln!("(system halted — Ctrl-a x to exit qemu)");
+    kprintln!("(system halted)");
     loop {
         unsafe { core::arch::asm!("wfe") };
     }

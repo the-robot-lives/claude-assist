@@ -1,16 +1,28 @@
-/* fast-os phase-0 linker script — QEMU aarch64 `virt` machine.
-   RAM starts at 0x4000_0000; we load at the conventional +0x8_0000. */
+/* fast-os phase-0 linker script.
+   Linked at base 0, position-independent; boot.s self-relocates using
+   .rela.dyn, so the raw Image boots at any load address (QEMU virt,
+   Apple Virtualization). .text.boot must stay first: it carries the
+   ARM64 Linux boot header at offset 0. */
 ENTRY(_start)
 
 SECTIONS
 {
-    . = 0x40080000;
+    . = 0;
     __kernel_start = .;
 
     .text.boot : { KEEP(*(.text.boot)) }
     .text      : { *(.text*) }
     .rodata    : { *(.rodata*) }
-    .data      : { *(.data*) }
+
+    .rela.dyn : {
+        __rela_start = .;
+        *(.rela) *(.rela.*)
+        __rela_end = .;
+    }
+
+    .got     : { *(.got) *(.got.plt) }
+    .data    : { *(.data*) *(.data.rel.ro*) }
+    .dynamic : { *(.dynamic) }
 
     .bss (NOLOAD) : ALIGN(16) {
         __bss_start = .;
@@ -26,6 +38,7 @@ SECTIONS
     __stack_top = .;
 
     __kernel_end = .;
+    __image_size = __kernel_end - __kernel_start;
 
-    /DISCARD/ : { *(.comment*) *(.note*) *(.eh_frame*) }
+    /DISCARD/ : { *(.comment*) *(.note*) *(.eh_frame*) *(.interp) }
 }

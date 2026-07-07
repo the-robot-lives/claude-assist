@@ -31,6 +31,10 @@ Targets: x86_64 desktop/server and ARM64 NPU-equipped SoCs; QEMU/KVM for the dev
 | [docs/app-compatibility.md](docs/app-compatibility.md) | Running Linux, Windows, and macOS applications (tiered plan) |
 | [docs/roadmap-distribution.md](docs/roadmap-distribution.md) | Path to installable VM live disk + self-hosting |
 | [docs/graphics-display.md](docs/graphics-display.md) | GPU kernel layer, viewd compositor, input/audio, trusted overlay |
+| [docs/security.md](docs/security.md) | Authorization (capabilities + NT-superset policy), memory protection |
+| [docs/package-management.md](docs/package-management.md) | `fpkg`: verified content-addressed store + Windows/macOS/Linux bridge |
+| [docs/design/shell.md](docs/design/shell.md) | Desktop shell UX: Scenes, tiling, keyboard-first, the Bar |
+| [docs/design/installer.md](docs/design/installer.md) | Installer UX: staged-effects plan-review flow |
 | [docs/networking.md](docs/networking.md) | Three-lane net stack, QUIC-first, capability-scoped network authority |
 | [docs/adr/](docs/adr/) | Architecture decision records |
 
@@ -50,14 +54,17 @@ fast-os/
 └── docs/
 ```
 
-## Quickstart (macOS)
+## Quickstart (macOS + UTM)
 
 ```bash
-brew install qemu          # plus Rust via https://rustup.rs if needed
-./run.sh                   # build + boot in QEMU (HVF on Apple Silicon); exit: Ctrl-a x
+make                       # needs Rust (https://rustup.rs) + python3; builds fast-os.img
 ```
 
-Boots the phase-0 proto-kernel to a banner and the `fsh0` proto-shell (`help`, `info`, `uptime`, `echo`, `panic`).
+Then in UTM: Virtualize → Linux → **Use Apple Virtualization** → *Boot from kernel image* → select `fast-os.img` → Serial (Built-in Terminal) device → boot. The QEMU backend works too. Full steps: [docs/utm-setup.md](docs/utm-setup.md).
+
+CLI alternative: `brew install qemu && make run` (exit: `Ctrl-a x`).
+
+Either way you get the phase-0 proto-kernel: banner with detected console + boot-to-banner ms, and the `fsh0` proto-shell (`help`, `info`, `uptime`, `echo`, `panic`).
 
 ## Status
 
