@@ -1,49 +1,60 @@
 #!/usr/bin/env bash
 set -euo pipefail
 # =============================================================================
-# deploy-service - Headless build -> push -> chart bump -> helm upgrade.
+# deploy-service — Headless build → push → values-bump → helm upgrade.
 #
-# Reads each image's deploy target from project.yaml files under
-# paths.projects_dir from infra-config.yaml. An image declares where it ships via:
+# One command to ship a portfolio image: build + multi-arch push (with version
+# promotion), rewrite the target chart's values.yaml to the newly-pushed tag,
+# then run helm-upgrade for the owning release.
 #
-#   # docker.images[].helm                 (flat / standalone images)
-#   # projects[].services[].helm           (composite projects)
+# Config source (same as docker-build / docker-push): .infra-config.yaml,
+# resolved via k8-lib's config-resolver (--config / K8_CONFIG / INFRA_ROOT /
+# git-root walk). Each image declares its deploy target with a `helm:` stanza:
+#
+#   # composite:  .project.projects[].services[].helm
+#   # flat:       .project.docker.images[].helm
 #   helm:
-#     chart_path:  helm/<domain>/<chart>      # dir containing values.yaml
-#     values_path: .some.yq.path              # yq target inside values.yaml
-#     format:      tag | image                # default: tag
+#     chart_path:  kubernetes/helm/apps/codefresh   # dir holding values.yaml
+#     values_path: .codefresh.backend.image         # yq path inside values.yaml
+#     format:      image | tag                       # default: tag
 #
-# format=tag   -> values_path points to a bare version string (".image.tag")
-# format=image -> values_path points to a full image string (".backend.image");
-#                the registry prefix of the existing value is preserved.
+#   format=tag    values_path is a bare version string  (".image.tag")
+#   format=image  values_path is a full image ref       (".backend.image");
+#                 only the tag is swapped, the registry prefix is preserved.
+#
+# The chart (helm release) is basename(chart_path) — the same key helm-upgrade
+# discovers from paths.helm_dir / helm_scan_dirs / chart_path_overrides.
 #
 # Usage:
 #   deploy-service <image-key> [<image-key>...] [flags]
 #
 # Batched behaviour:
-#   Multiple image-keys are built sequentially (fail-fast), then each chart's
-#   values.yaml is updated, then each unique helm release is upgraded exactly
-#   once at the end, so a coupled backend+frontend ship as one deploy.
+#   Multiple image-keys build+push sequentially (fail-fast). Each image's
+#   values.yaml is bumped, then each unique helm release is upgraded exactly
+#   once at the end — so a coupled backend+frontend ship as a single deploy.
 #
 # Arguments:
-#   <image-key>    docker-build target.  Flat name (e.g., webstudio-builder)
-#                  or composite (e.g., codefre.sh/backend).  Repeatable.
+#   <image-key>    docker-build target. Flat name (e.g. bottlecrm) or composite
+#                  (e.g. codefre.sh/backend). Directory names and single-service
+#                  domain shorthand resolve the same way docker-build resolves
+#                  them. Repeatable.
 #
 # Flags:
-#   --tag TAG      Override the tag (rejected if >1 image-key given).
+#   --tag TAG      Force the edge build tag (e.g. v2.1.edge); rejected with >1 key.
 #   --stage        Set BUILD_ENV=stage.
 #   --prod         Set BUILD_ENV=prod.
-#   --dev          Set BUILD_ENV=dev.
+#   --dev          Set BUILD_ENV=dev  (default).
 #   --env ENV      Set BUILD_ENV to a custom value.
-#   --no-cache     Pass through to docker-build for every image.
-#   --skip-build   Skip build/push (images must already exist at their tags).
-#   --skip-deploy  Build (+ bump values) only; no helm-upgrade.
-#   --dry-run      Print planned actions; touch nothing.
-#   --config PATH  Path to infra-config.yaml.
-#   -v, --verbose  Show sub-commands before executing.
+#   --no-cache     Pass --no-cache through to docker-build.
+#   --skip-build   Skip build/push and the values bump; deploy current values.yaml.
+#   --skip-deploy  Build + push + bump values only; no helm-upgrade.
+#   --yes, -y      Auto-confirm all prompts (docker push + helm-upgrade headless).
+#   --dry-run      Print the plan; touch nothing.
+#   --config PATH  Path to .infra-config.yaml.
+#   -v, --verbose  Echo sub-commands before running them.
 #   -h, --help     Show this help.
 #
-# Requires: docker-build, helm-upgrade, yq, git on PATH.
+# Requires: docker-build, docker-push, helm-upgrade, yq, git on PATH.
 # =============================================================================
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -63,10 +74,18 @@ for _k8_arg in "$@"; do
 done
 unset _k8_arg _k8_prev
 
+# common.sh → colours + step/ok/warn/die + config-resolver (sets INFRA_ROOT,
+#             HELM_DIR, REGISTRY-related K8_* vars from .infra-config.yaml)
+# docker-config.sh → docker image registry (normalize_repo_name, DOCKER_REPOS,
+#             _registry_path_for_image) + build/push state (.docker-state)
+# helm-common.sh → chart discovery (_CHART_DIRS), release/namespace resolution
 source "$K8_LIB_DIR/bin/common.sh"
-source "$K8_LIB_DIR/bin/project-registry.sh"
+source "$K8_LIB_DIR/bin/docker-config.sh"
+source "$K8_LIB_DIR/bin/helm-common.sh"
 source "$K8_LIB_DIR/bin/assist.sh"
 _k8_check_assist "$0" "$@"
+
+BOLD=$'\033[1m'
 
 # --- Parse args --------------------------------------------------------------
 IMAGE_KEYS=()
@@ -76,6 +95,7 @@ FLAG_SKIP_BUILD=false
 FLAG_SKIP_DEPLOY=false
 FLAG_DRY_RUN=false
 FLAG_VERBOSE=false
+FLAG_YES=false
 
 usage() {
   sed -n '3,/^# ===/p' "$0" | sed -e '$d' -e 's/^# \{0,1\}//' >&2
@@ -85,6 +105,7 @@ usage() {
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --tag)          TAG_OVERRIDE="$2"; shift 2 ;;
+    --tag=*)        TAG_OVERRIDE="${1#--tag=}"; shift ;;
     --no-cache)     FLAG_NO_CACHE=true; shift ;;
     --skip-build)   FLAG_SKIP_BUILD=true; shift ;;
     --skip-deploy)  FLAG_SKIP_DEPLOY=true; shift ;;
@@ -93,6 +114,7 @@ while [[ $# -gt 0 ]]; do
     --dev)          export BUILD_ENV=dev; shift ;;
     --env=*)        export BUILD_ENV="${1#--env=}"; shift ;;
     --env)          export BUILD_ENV="$2"; shift 2 ;;
+    --yes|-y)       FLAG_YES=true; shift ;;
     --dry-run)      FLAG_DRY_RUN=true; shift ;;
     --config=*)     shift ;;
     --config)       shift 2 ;;
@@ -110,158 +132,174 @@ if [[ -n "$TAG_OVERRIDE" && ${#IMAGE_KEYS[@]} -gt 1 ]]; then
 fi
 
 command -v yq >/dev/null            || die "yq not on PATH"
-command -v docker-build >/dev/null  || die "docker-build not on PATH"
+command -v git >/dev/null           || die "git not on PATH"
+$FLAG_SKIP_BUILD || command -v docker-build >/dev/null \
+  || die "docker-build not on PATH"
 $FLAG_SKIP_DEPLOY || command -v helm-upgrade >/dev/null \
   || die "helm-upgrade not on PATH"
 
-_k8_require_yq
-load_project_registry "${PROJECTS_DIR:-}"
+if $FLAG_YES; then
+  export DOCKER_YES=true AUTO_YES=true
+fi
 
-# --- Resolve image → helm target from project.yaml --------------------------
+# --- Resolve an image key → its helm: stanza from the merged .infra-config.yaml
+# Sets RES_CHART_PATH / RES_VALUES_PATH / RES_FORMAT. Returns 1 if no stanza.
 resolve_image_helm() {
-  local key="$1"
-  local yaml helm_json
-  local projects_dir="${PROJECTS_DIR:-$INFRA_ROOT/projects}"
-  local -a project_yamls
-  mapfile -t project_yamls < <(find "$projects_dir" -maxdepth 5 -name project.yaml 2>/dev/null)
+  local key="$1" cfg="$_K8_MERGED_CONFIG" q hj
+  RES_CHART_PATH="" RES_VALUES_PATH="" RES_FORMAT=""
 
   if [[ "$key" == */* ]]; then
     local domain="${key%%/*}" svc="${key#*/}"
-    for yaml in "${project_yamls[@]}"; do
-      [[ "$(yq -r '.type // ""' "$yaml" 2>/dev/null)" == "composite" ]] || continue
-      helm_json="$(yq -o=json \
-        ".projects[]? | select(.domain == \"$domain\") | .services[]? | select(.name == \"$svc\") | .helm // \"\"" \
-        "$yaml" 2>/dev/null || true)"
-      if [[ -n "$helm_json" && "$helm_json" != '""' && "$helm_json" != "null" ]]; then
-        printf '%s\n%s\n' "$yaml" "$helm_json"
-        return 0
-      fi
-    done
+    q=".project.projects[]? | select(.domain == \"$domain\") | .services[]? | select(.name == \"$svc\") | .helm"
   else
-    for yaml in "${project_yamls[@]}"; do
-      helm_json="$(yq -o=json \
-        ".docker.images[]? | select(.name == \"$key\") | .helm // \"\"" \
-        "$yaml" 2>/dev/null || true)"
-      if [[ -n "$helm_json" && "$helm_json" != '""' && "$helm_json" != "null" ]]; then
-        printf '%s\n%s\n' "$yaml" "$helm_json"
-        return 0
-      fi
-    done
+    q=".project.docker.images[]? | select(.name == \"$key\") | .helm"
   fi
-  return 1
+
+  hj="$(yq -o=json -I=0 "$q // \"\"" "$cfg" 2>/dev/null | head -n1 || true)"
+  [[ -z "$hj" || "$hj" == '""' || "$hj" == "null" ]] && return 1
+
+  RES_CHART_PATH="$(printf '%s' "$hj"  | yq -r '.chart_path // ""')"
+  RES_VALUES_PATH="$(printf '%s' "$hj" | yq -r '.values_path // ""')"
+  RES_FORMAT="$(printf '%s' "$hj"      | yq -r '.format // "tag"')"
+  return 0
 }
 
-resolve_release_for_chart_path() {
-  local target="$1" i=0
-  while [[ $i -lt ${#PROJECT_RELEASES[@]} ]]; do
-    local proj_full="${PROJECT_DIRS[$i]}/${PROJECT_CHART_PATHS[$i]%/}"
-    proj_full="${proj_full%/}"
-    if [[ "$proj_full" == "$INFRA_ROOT/${target%/}" ]] || \
-       [[ "$proj_full" == "${target%/}" ]]; then
-      echo "${PROJECT_RELEASES[$i]}"
-      return 0
+# --- Most recent promoted tag docker-push recorded for a key -----------------
+# .docker-state/pushes lines are: epoch|image-key|sha|version-tag
+last_pushed_vsn() {
+  local f="${DOCKER_STATE_DIR}/pushes"
+  [[ -f "$f" ]] || return 1
+  awk -F'|' -v k="$1" '$2==k{v=$4} END{ if (v != "") print v }' "$f"
+}
+
+# --- Rewrite values.yaml at values_path to the newly-pushed tag --------------
+bump_values() {
+  local vf="$1" vp="$2" fmt="$3" tag="$4"
+  if [[ "$fmt" == "image" ]]; then
+    local cur prefix
+    cur="$(yq -r "$vp // \"\"" "$vf")"
+    if [[ "$cur" == *:* ]]; then
+      prefix="${cur%:*}"
+    else
+      prefix="$cur"   # no existing tag — write bare (unusual)
     fi
-    i=$((i + 1))
-  done
-  echo ""
+    yq -i "$vp = \"${prefix}:${tag}\"" "$vf"
+  else
+    yq -i "$vp = \"${tag}\"" "$vf"
+  fi
 }
 
-# --- Build parallel arrays describing each image's plan ---------------------
-declare -a PLAN_KEYS PLAN_OWNING_YAML PLAN_CHART_PATH PLAN_RELEASE
-declare -a PLAN_VALUES_FILE PLAN_YQ_PATH PLAN_FORMAT
-declare -a PLAN_CURRENT PLAN_TARGET PLAN_NEW_TAG
+# --- Build per-image plan ----------------------------------------------------
+declare -a PLAN_KEYS PLAN_CHART_PATH PLAN_CHART_NAME PLAN_VALUES_FILE
+declare -a PLAN_YQ_PATH PLAN_FORMAT PLAN_CURRENT PLAN_EDGE
 
-for key in "${IMAGE_KEYS[@]}"; do
-  resolved="$(resolve_image_helm "$key")" || \
-    die "No project.yaml declares helm: for image '$key'."
-  owning_yaml="$(echo "$resolved" | head -n1)"
-  helm_json="$(echo "$resolved" | tail -n +2)"
+for raw in "${IMAGE_KEYS[@]}"; do
+  # Canonicalise the key exactly like docker-build (dir names, single-service
+  # domain shorthand, …).
+  if key="$(normalize_repo_name "$raw" 2>/dev/null)"; then :; else
+    die "Unknown image '$raw'. Known: $(get_all_docker_repos 2>/dev/null | tr '\n' ' ')"
+  fi
 
-  chart_path="$(echo "$helm_json" | yq -r '.chart_path // ""')"
-  yq_path="$(echo "$helm_json" | yq -r '.values_path // ""')"
-  fmt="$(echo "$helm_json" | yq -r '.format // "tag"')"
+  resolve_image_helm "$key" \
+    || die "$key: no helm: stanza in .infra-config.yaml (need chart_path + values_path)"
 
-  [[ -z "$chart_path" ]] && die "$owning_yaml: helm.chart_path is required"
-  [[ -z "$yq_path" ]]    && die "$owning_yaml: helm.values_path is required"
+  chart_path="$RES_CHART_PATH"
+  yq_path="$RES_VALUES_PATH"
+  fmt="$RES_FORMAT"
+
+  [[ -z "$chart_path" ]] && die "$key: helm.chart_path is required"
+  [[ -z "$yq_path" ]]    && die "$key: helm.values_path is required"
   [[ "$fmt" == "tag" || "$fmt" == "image" ]] \
-    || die "$owning_yaml: helm.format must be 'tag' or 'image' (got '$fmt')"
+    || die "$key: helm.format must be 'tag' or 'image' (got '$fmt')"
   [[ "$yq_path" != .* ]] && yq_path=".$yq_path"
 
-  values_file="$INFRA_ROOT/$chart_path/values.yaml"
-  [[ -f "$values_file" ]] || die "values.yaml not found: $values_file"
+  # Resolve values.yaml (chart_path is repo-root-relative unless absolute).
+  if [[ "$chart_path" == /* ]]; then
+    values_file="$chart_path/values.yaml"
+  else
+    values_file="$INFRA_ROOT/$chart_path/values.yaml"
+  fi
+  if [[ ! -f "$values_file" ]]; then
+    die "chart values.yaml not found: $values_file
+   Portfolio charts live under projects/*/helm/; shared platform charts live in
+   the upstream noizu-infra repo (kubernetes/helm/*). Run deploy-service where
+   the chart is checked out, or fix helm.chart_path for '$key'."
+  fi
 
-  release="$(resolve_release_for_chart_path "$chart_path")"
-  if ! $FLAG_SKIP_DEPLOY && [[ -z "$release" ]]; then
-    die "Could not reverse-map chart_path '$chart_path' to a helm release"
+  chart_name="$(basename "$chart_path")"
+  if [[ -z "${_CHART_DIRS[$chart_name]+x}" ]] && ! $FLAG_SKIP_DEPLOY; then
+    warn "chart '$chart_name' not discoverable by helm-upgrade (not under paths.helm_dir / helm_scan_dirs / chart_path_overrides) — deploy step may be a no-op"
   fi
 
   current_val="$(yq -r "${yq_path} // \"\"" "$values_file")"
   [[ -z "$current_val" || "$current_val" == "null" ]] && \
-    die "values.yaml has no value at $yq_path in $values_file"
+    die "$values_file has no value at $yq_path"
 
   if [[ "$fmt" == "image" ]]; then
-    [[ "$current_val" == *:* ]] || die "Image string lacks tag: $current_val ($values_file)"
+    [[ "$current_val" == *:* ]] || die "image string lacks a tag: $current_val ($values_file)"
     cur_tag="${current_val##*:}"
   else
     cur_tag="$current_val"
   fi
 
+  # Derive the edge build tag (v<major>.<minor>.edge[-env]) so version
+  # promotion continues the series the chart currently references.
   clean_cur="${cur_tag#v}"
   if [[ -n "$TAG_OVERRIDE" ]]; then
-    build_vsn="$TAG_OVERRIDE"
-  elif [[ "$clean_cur" =~ ^([0-9]+)\.([0-9]+)\.edge([-.].*)?$ ]] || \
-       [[ "$clean_cur" =~ ^([0-9]+)\.([0-9]+)\.edge$ ]]; then
-    build_vsn="v$clean_cur"
+    edge="${TAG_OVERRIDE#v}"; edge="v$edge"
+  elif [[ "$clean_cur" =~ ^([0-9]+)\.([0-9]+)\.edge([-.].*)?$ ]]; then
+    edge="v$clean_cur"
   elif [[ "$clean_cur" =~ ^([0-9]+)\.([0-9]+)\. ]]; then
-    env_sfx=""
     env_val="${BUILD_ENV:-dev}"
+    env_sfx=""
     [[ "$env_val" != "prod" && "$env_val" != "production" ]] && env_sfx="-${env_val}"
-    build_vsn="v${BASH_REMATCH[1]}.${BASH_REMATCH[2]}.edge${env_sfx}"
+    edge="v${BASH_REMATCH[1]}.${BASH_REMATCH[2]}.edge${env_sfx}"
   else
-    die "Cannot derive edge tag from current value '$cur_tag' in $values_file (need M.m.patch form)"
+    die "cannot derive an edge tag from current value '$cur_tag' in $values_file (need M.m.patch form, or pass --tag)"
   fi
 
   PLAN_KEYS+=("$key")
-  PLAN_OWNING_YAML+=("$owning_yaml")
   PLAN_CHART_PATH+=("$chart_path")
-  PLAN_RELEASE+=("$release")
+  PLAN_CHART_NAME+=("$chart_name")
   PLAN_VALUES_FILE+=("$values_file")
   PLAN_YQ_PATH+=("$yq_path")
   PLAN_FORMAT+=("$fmt")
   PLAN_CURRENT+=("$current_val")
-  PLAN_TARGET+=("auto (docker-push promotes edge → next patch)")
-  PLAN_NEW_TAG+=("$build_vsn")
+  PLAN_EDGE+=("$edge")
+done
+
+# Unique helm releases (chart names), preserving first-seen order.
+UNIQUE_CHARTS=()
+for name in "${PLAN_CHART_NAME[@]}"; do
+  seen=false
+  for existing in "${UNIQUE_CHARTS[@]:-}"; do
+    [[ "$existing" == "$name" ]] && { seen=true; break; }
+  done
+  $seen || UNIQUE_CHARTS+=("$name")
 done
 
 # --- Plan summary ------------------------------------------------------------
-step "deploy-service plan (${#PLAN_KEYS[@]} image$([ ${#PLAN_KEYS[@]} -gt 1 ] && echo s))"
+step "deploy-service plan (${#PLAN_KEYS[@]} image$([ ${#PLAN_KEYS[@]} -gt 1 ] && echo s), env=${BUILD_ENV:-dev})"
 for i in "${!PLAN_KEYS[@]}"; do
-  printf "  ${BOLD:-}[%d] %s${NC}\n" "$((i + 1))" "${PLAN_KEYS[$i]}"
-  printf "      %-16s %s\n" "project.yaml"  "${PLAN_OWNING_YAML[$i]#$INFRA_ROOT/}"
-  printf "      %-16s %s\n" "chart_path"    "${PLAN_CHART_PATH[$i]}"
-  printf "      %-16s %s\n" "release"       "${PLAN_RELEASE[$i]:-<skip-deploy>}"
-  printf "      %-16s %s\n" "values_path"   "${PLAN_YQ_PATH[$i]}"
-  printf "      %-16s %s\n" "format"        "${PLAN_FORMAT[$i]}"
-  printf "      %-16s %s\n" "current"       "${PLAN_CURRENT[$i]}"
-  printf "      %-16s %s\n" "edge build"    "${PLAN_NEW_TAG[$i]}"
-  printf "      %-16s %s\n" "target"        "${PLAN_TARGET[$i]}"
+  printf "  ${BOLD}[%d] %s${NC}\n" "$((i + 1))" "${PLAN_KEYS[$i]}"
+  printf "      %-14s %s\n" "chart"       "${PLAN_CHART_NAME[$i]}  (${PLAN_CHART_PATH[$i]})"
+  printf "      %-14s %s\n" "values.yaml" "${PLAN_VALUES_FILE[$i]#$INFRA_ROOT/}"
+  printf "      %-14s %s  [%s]\n" "values_path" "${PLAN_YQ_PATH[$i]}" "${PLAN_FORMAT[$i]}"
+  printf "      %-14s %s\n" "current"     "${PLAN_CURRENT[$i]}"
+  printf "      %-14s %s → v<M>.<m>.<next patch> (resolved on push)\n" "edge build" "${PLAN_EDGE[$i]}"
 done
 echo
-
-UNIQUE_RELEASES=()
-for rel in "${PLAN_RELEASE[@]}"; do
-  [[ -z "$rel" ]] && continue
-  seen=false
-  for existing in "${UNIQUE_RELEASES[@]:-}"; do
-    [[ "$existing" == "$rel" ]] && { seen=true; break; }
-  done
-  $seen || UNIQUE_RELEASES+=("$rel")
-done
-echo "  build step:  $($FLAG_SKIP_BUILD && echo 'skip (--skip-build)' || { s="docker-build --push --vsn <tag>"; $FLAG_NO_CACHE && s+=" --no-cache"; echo "$s × ${#PLAN_KEYS[@]}"; })"
+if $FLAG_SKIP_BUILD; then
+  echo "  build step:  skip (--skip-build); deploying current values.yaml as-is"
+else
+  s="docker-build --push --multiarch --vsn <edge>"; $FLAG_NO_CACHE && s+=" --no-cache"
+  echo "  build step:  $s  × ${#PLAN_KEYS[@]}"
+  echo "  bump step:   values.yaml ← promoted tag (from .docker-state)"
+fi
 if $FLAG_SKIP_DEPLOY; then
   echo "  deploy step: skip (--skip-deploy)"
 else
-  echo "  deploy step: helm-upgrade --include ${UNIQUE_RELEASES[*]:-<none>}"
+  echo "  deploy step: helm-upgrade --include ${UNIQUE_CHARTS[*]:-<none>}"
 fi
 echo
 
@@ -274,29 +312,48 @@ run() {
   "$@"
 }
 
-# --- Stage 1: build + push ---------------------------------------------------
-export DOCKER_PUSH_HELM_UPDATE_MODE=yes
+if $FLAG_DRY_RUN; then
+  warn "Dry run — nothing built, bumped, or deployed."
+  exit 0
+fi
 
+# --- Stage 1: build + push + bump values -------------------------------------
 if ! $FLAG_SKIP_BUILD; then
   for i in "${!PLAN_KEYS[@]}"; do
-    step "[$((i + 1))/${#PLAN_KEYS[@]}] Build & push ${PLAN_KEYS[$i]} (edge: ${PLAN_NEW_TAG[$i]})"
-    build_args=(docker-build --push --multiarch --vsn "${PLAN_NEW_TAG[$i]}")
+    key="${PLAN_KEYS[$i]}"
+    step "[$((i + 1))/${#PLAN_KEYS[@]}] Build & push ${key} (edge: ${PLAN_EDGE[$i]})"
+
+    build_args=(docker-build --push --multiarch --vsn "${PLAN_EDGE[$i]}")
     $FLAG_NO_CACHE && build_args+=(--no-cache)
-    build_args+=("${PLAN_KEYS[$i]}")
+    $FLAG_VERBOSE  && build_args+=(--verbose)
+    $FLAG_YES      && build_args+=(--yes)
+    build_args+=("$key")
     run "${build_args[@]}" < /dev/null
-    ok "${PLAN_KEYS[$i]} built + pushed (values.yaml rewritten by docker-push)"
+
+    # docker-push recorded the promoted tag to .docker-state/pushes.
+    if promoted="$(last_pushed_vsn "$key")" && [[ -n "$promoted" ]]; then
+      :
+    else
+      die "could not determine promoted tag for '$key' from ${DOCKER_STATE_DIR}/pushes (push may have failed)"
+    fi
+
+    step "Bump ${PLAN_VALUES_FILE[$i]#$INFRA_ROOT/}: ${PLAN_YQ_PATH[$i]} → ${promoted}"
+    bump_values "${PLAN_VALUES_FILE[$i]}" "${PLAN_YQ_PATH[$i]}" "${PLAN_FORMAT[$i]}" "$promoted"
+    ok "${key} pushed ${promoted}; values.yaml updated"
   done
 else
-  warn "Skipping build (--skip-build)"
+  warn "Skipping build/push/bump (--skip-build) — deploying values.yaml as checked out"
 fi
 
 # --- Stage 2: helm upgrade ---------------------------------------------------
 if ! $FLAG_SKIP_DEPLOY; then
-  for rel in "${UNIQUE_RELEASES[@]:-}"; do
-    [[ -z "$rel" ]] && continue
-    step "helm-upgrade --include $rel"
-    run helm-upgrade --include "$rel"
-    ok "$rel upgrade dispatched"
+  helm_flags=()
+  $FLAG_YES && helm_flags+=(--headless)
+  for name in "${UNIQUE_CHARTS[@]:-}"; do
+    [[ -z "$name" ]] && continue
+    step "helm-upgrade --include $name"
+    run helm-upgrade --include "$name" "${helm_flags[@]+"${helm_flags[@]}"}"
+    ok "$name upgrade dispatched"
   done
 else
   warn "Skipping deploy (--skip-deploy)"
