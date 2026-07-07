@@ -368,23 +368,24 @@ liquibase_targets:
     changelog_dir: projects/NoizuPromptLingo/backend/db
     changelog_file: changelog/db.changelog-master.yaml
 
+  # App-level targets with concrete Liquibase changelogs.
   ddi:
-    description: "Designing.deRobot.is app database"
+    description: "Designing.deRobot.is app database on app-timescaledb"
     namespace: apps
     service: svc/app-timescaledb
     remote_port: 5432
     local_port: 54338
     db_type: postgresql
-    db_name: designing_derobot_is_dev
+    db_name: designing_derobot_is
     schema: public
     secret_name: ddi-secrets
-    secret_namespace: apps-ns
+    secret_namespace: apps
     username: ddi
     secret_key: DDI_DB_PASSWORD
     safety: destructive
-    changelog_dir: projects/designing.derobot.is/app/backend/priv/repo/migrations
+    changelog_dir: projects/designing.derobot.is/app/backend/db
+    changelog_file: changelog/db.changelog-master.yaml
 
-  # App-level targets with concrete Liquibase changelogs.
   start-app:
     description: "Start App PostgreSQL on shared-postgres"
     namespace: data-ns

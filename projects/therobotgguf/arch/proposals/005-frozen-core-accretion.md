@@ -1,7 +1,7 @@
 # 005 — Frozen-Core Accretion: Training as Growth, Never Retraining
 
 **Status:** proposal
-**Primary targets:** collapse the *marginal* cost of training, continual learning without forgetting, brain-like consolidation
+**Primary targets:** collapse the *marginal* cost of training, continual learning without forgetting, offline consolidation
 **One-line thesis:** Train a modest core once, cleave it (§D), freeze it permanently. Every subsequent capability arrives as an accreted module — shim (§E), memory (§F), modulator policy (§A) — trained against *recorded* interfaces, in parallel, at adapter cost. This scales the §7 "cleave and reinforce" recipe from a technique into the entire training economy.
 
 ---

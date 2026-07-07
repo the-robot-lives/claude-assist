@@ -1,9 +1,13 @@
 # Deploy Integration Plan — designing.derobot.is (ddi)
 
-**Status:** Planning (not executed) — 2026-07-08
+**Status:** Wiring complete — 2026-07-08 (build/push/deploy handled by operator)
 **Slug:** `ddi`
 **Registry paths:** `designing.derobot.is/backend`, `designing.derobot.is/frontend`
-**Chart:** `start-app` (shared scaffold chart, release name `ddi`, namespace `apps-ns`, tier 3)
+**Chart:** `projects/designing.derobot.is/helm/ddi` (release name `ddi`, namespace `apps`, tier 3)
+
+> The reusable version of this knowledge now lives at
+> **`docs/new-start-app-setup.md`** (repo root). This file is the ddi-specific
+> record. Both were reconciled after the bring-up fixes below.
 
 ---
 
@@ -37,6 +41,15 @@ These pieces are in place and do not need to be redone:
 ---
 
 ## 3. The GAP — what's missing or broken
+
+> **RESOLVED during bring-up** (2026-07-08): 3a (path bug — promoted chart to
+> `projects/designing.derobot.is/helm/ddi`, fixed all 4 `.infra-config.yaml`
+> refs), 3c (namespace is `apps`, not `apps-ns`; the broken `liquibase_targets`
+> entry was removed — start-app uses Ecto, not Liquibase), 3e (the `derobot.is`
+> zone has a wildcard `*` CNAME so DNS already resolves — no record needed).
+> Still open: 3b (TF InfisicalSecret CRD for `apps-ddi-secrets`), 3f (confirm
+> wildcard cert covers `*.derobot.is`). 3d (project.yaml) is moot — operator
+> uses the manual workflow (see `docs/new-start-app-setup.md`).
 
 ### 3a. CRITICAL: chart path mismatch (blocks all deploys)
 

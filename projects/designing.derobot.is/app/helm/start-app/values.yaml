@@ -45,7 +45,7 @@ redis:
   db: 8
 
 secrets:
-  name: apps-designing-derobot-secrets
+  name: ddi-secrets
   keys:
     dbUser: DDI_DB_USER
     dbPassword: DDI_DB_PASSWORD

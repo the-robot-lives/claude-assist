@@ -50,7 +50,7 @@ Unchanged — this proposal is training-side. But one durable payoff: because no
 | §C top-down feedback | Becomes the predictive-coding teaching signal |
 | §D typed bottlenecks | Module boundaries = training contracts = message schema |
 | §E shims | Trained with exactly this machinery (local loss vs frozen neighbor) |
-| §F salience gate | Surprise signal that drives the plasticity gate |
+| §F salience gate | Surprise signal that drives the learning-rate gate |
 
 ## 6. What it buys (honest arithmetic)
 
