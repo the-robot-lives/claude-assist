@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+# fastfs — portable wrapper around the fastfs userspace tool (macOS + Linux).
+#
+# Builds the release binary on first use, then forwards all arguments to it.
+# Lets you create and manage fastfs images from the host without a kernel
+# driver. Examples:
+#   fastfs mkfs ~/data.fastfs
+#   fastfs import ~/data.fastfs ~/Documents /docs
+#   fastfs mcp list
+set -euo pipefail
+
+# locate the crate relative to this script (utilities/ is a sibling of fastfs/)
+here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+crate="$here/../fastfs"
+bin="$crate/target/release/fastfs-tool"
+
+if ! command -v cargo >/dev/null 2>&1; then
+    echo "fastfs: Rust/cargo not found — install from https://rustup.rs" >&2
+    exit 1
+fi
+
+# (re)build if the binary is missing or older than any source file
+if [[ ! -x "$bin" ]] || [[ -n "$(find "$crate/src" -newer "$bin" 2>/dev/null || true)" ]]; then
+    echo "fastfs: building…" >&2
+    ( cd "$crate" && cargo build --release --quiet )
+fi
+
+exec "$bin" "$@"

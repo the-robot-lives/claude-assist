@@ -14,14 +14,16 @@ else
   ACCEL := -cpu cortex-a72
 endif
 
-.PHONY: all build image run clean help
+.PHONY: all build image run clean help fastfs fastfs-test
 
 all: image
 
 help:
-	@echo "make image   build the bootable kernel image (default; use with UTM)"
-	@echo "make run     build + boot in QEMU CLI (exit: Ctrl-a x)"
-	@echo "make clean   remove build artifacts"
+	@echo "make image        build the bootable kernel image (default; use with UTM)"
+	@echo "make run          build + boot in QEMU CLI (exit: Ctrl-a x)"
+	@echo "make fastfs       build the fastfs userspace tool (macOS/Linux)"
+	@echo "make fastfs-test  run the fastfs test suite"
+	@echo "make clean        remove build artifacts"
 
 build:
 	cd kernel && cargo build --release
@@ -33,5 +35,13 @@ image: build
 run: image
 	$(QEMU) -M virt $(ACCEL) -m 512M -nographic -kernel $(IMAGE)
 
+fastfs:
+	cd fastfs && cargo build --release
+	@echo "[fast-os] fastfs tool: $(abspath fastfs/target/release/fastfs-tool)"
+
+fastfs-test:
+	cd fastfs && cargo test
+
 clean:
 	cd kernel && cargo clean
+	cd fastfs && cargo clean

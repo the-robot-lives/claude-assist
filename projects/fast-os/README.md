@@ -46,9 +46,11 @@ fast-os/
 ├── kernel/
 │   ├── frame/       # privileged unsafe core (paging, IRQ, ctx switch, DMA)
 │   └── services/    # safe-Rust kernel services (sched, fastfs, net, ipc, caps)
+├── fastfs/          # userspace reference impl of the native filesystem (tested)
 ├── drivers/         # virtio first; NVMe/NIC for bare metal
 ├── services/        # tier-0 userspace: inferd, agentd, toolbusd, memoryd
 ├── userland/        # fsh shell, SDK, std port, POSIX shim
+├── utilities/       # host tools for macOS/Linux (fastfs image manager)
 ├── tools/           # xtask build/run/test orchestration
 ├── tests/           # QEMU snapshot + property tests
 └── docs/

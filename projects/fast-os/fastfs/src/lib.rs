@@ -25,6 +25,7 @@ pub mod codec;
 pub mod device;
 pub mod fs;
 pub mod keyspace;
+pub mod mcp;
 pub mod policy;
 
 pub use fs::Fastfs;

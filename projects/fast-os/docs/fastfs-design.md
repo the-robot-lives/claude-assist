@@ -78,6 +78,17 @@ Flight-recorder journals live in an auto-snapshotted subvolume (`mirror:2` force
 
 ZFS-style RAID-Z fixed vdev geometry (violates per-directory constraint); filesystem-wide profiles only (btrfs's limitation — the thing we're fixing); in-place-update FS with separate volume manager (LVM/mdadm layering can't see files, so per-directory policy is impossible below the FS).
 
+## 5b. Reference implementation (`fastfs/`)
+
+A working userspace implementation lives in [`../fastfs/`](../fastfs/README.md) — zero-dependency `std` Rust, the way filesystems are normally prototyped before kernel porting. It realizes the model above and adds four capabilities beyond the original spec:
+
+- **Tags**: arbitrary searchable labels on any file/dir (`find-tag`), stored on the inode record.
+- **Per-folder quotas**: a byte budget on a directory subtree, enforced at write time by summing subtree usage against the nearest quota'd ancestor.
+- **Per-folder snapshot history**: `snapshot <folder> <label>` freezes state (O(1) version tag) and records it in that folder's history; `history <folder>` lists entries and any past version is readable. (The version machinery is subvolume-wide; history is *listed* per folder — a genuine per-folder conformer/independent-version model is future work.)
+- **MCP/LLM tooling**: every operation is exposed as a typed, self-describing tool (`mcp.rs`) with read-only vs `effectful` marked, realizing [agent-integration.md](agent-integration.md) §5 at the FS layer — an agent enumerates and calls filesystem tools with capability-appropriate gating.
+
+Faithful to design: content-addressed CoW, subvolumes, version-tag snapshots, per-directory `mirror:N` with **real replicas** that `scrub` verifies and self-heals, and FNV checksums verified on every read. Simplifications (documented in the crate README): in-memory `BTreeMap` keyspace checkpointed to disk instead of an on-disk CoW B-tree (same semantics), append-only allocator (no block GC yet), no stripe parity, and host access via `import`/`export` pending a FUSE mount. Host tooling for macOS/Linux is [`../utilities/fastfs`](../utilities/README.md).
+
 ## 6. Open questions (future ADRs)
 
 Erasure-coding geometry defaults per pool size; snapshot GC scheduling vs. latency class; whether the conformer uses idle-class rings or a dedicated device budget; dedup (probably per-policy-domain, offline, later).

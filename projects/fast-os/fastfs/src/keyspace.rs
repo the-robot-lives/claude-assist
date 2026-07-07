@@ -56,6 +56,31 @@ pub struct InodeRec {
     pub itype: u8,
     pub size: u64,
     pub policy: Policy,
+    /// Arbitrary user/agent tags (searchable).
+    pub tags: Vec<String>,
+    /// Directory subtree byte quota; 0 = unlimited.
+    pub quota: u64,
+}
+
+impl InodeRec {
+    pub fn new_dir(policy: Policy) -> InodeRec {
+        InodeRec {
+            itype: ITYPE_DIR,
+            size: 0,
+            policy,
+            tags: Vec::new(),
+            quota: 0,
+        }
+    }
+    pub fn new_file(size: u64, policy: Policy) -> InodeRec {
+        InodeRec {
+            itype: ITYPE_FILE,
+            size,
+            policy,
+            tags: Vec::new(),
+            quota: 0,
+        }
+    }
 }
 
 #[derive(Clone, Debug)]
@@ -98,6 +123,11 @@ impl Value {
                 w.u8(i.itype);
                 w.u64(i.size);
                 i.policy.encode(w);
+                w.u32(i.tags.len() as u32);
+                for t in &i.tags {
+                    w.string(t);
+                }
+                w.u64(i.quota);
             }
             Value::Dirent(d) => {
                 w.u64(d.child);
@@ -114,11 +144,24 @@ impl Value {
     fn decode(r: &mut Reader) -> Result<Value> {
         let tag = r.u8()?;
         match tag {
-            1 => Ok(Value::Inode(InodeRec {
-                itype: r.u8()?,
-                size: r.u64()?,
-                policy: Policy::decode(r)?,
-            })),
+            1 => {
+                let itype = r.u8()?;
+                let size = r.u64()?;
+                let policy = Policy::decode(r)?;
+                let ntags = r.u32()?;
+                let mut tags = Vec::with_capacity(ntags as usize);
+                for _ in 0..ntags {
+                    tags.push(r.string()?);
+                }
+                let quota = r.u64()?;
+                Ok(Value::Inode(InodeRec {
+                    itype,
+                    size,
+                    policy,
+                    tags,
+                    quota,
+                }))
+            }
             2 => Ok(Value::Dirent(DirentRec {
                 child: r.u64()?,
                 name: r.string()?,
@@ -186,6 +229,25 @@ impl KeySpace {
 
     pub fn put(&mut self, key: Key, val: Value) {
         self.map.insert(key, val);
+    }
+
+    pub fn len(&self) -> usize {
+        self.map.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.map.is_empty()
+    }
+
+    /// Every extent record in the store (all inodes, all snapshots) — used by scrub.
+    pub fn extents(&self) -> Vec<(Key, ExtentRec)> {
+        let mut out = Vec::new();
+        for (k, v) in &self.map {
+            if let Value::Extent(e) = v {
+                out.push((*k, e.clone()));
+            }
+        }
+        out
     }
 
     /// Resolve (subvol, inode, kind, offset) as seen at snapshot version `v`.
