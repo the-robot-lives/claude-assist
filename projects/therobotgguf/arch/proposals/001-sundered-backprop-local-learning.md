@@ -1,7 +1,7 @@
 # 001 — Sundered Backprop: Module-Parallel Local Learning
 
 **Status:** proposal
-**Primary targets:** faster training (wall-clock), brain-like parallelization of *learning*
+**Primary targets:** faster training (wall-clock), biologically-motivated parallel *learning*
 **One-line thesis:** Kill the global backward pass. Train the network as a mesh of modules that learn simultaneously from locally available signals, with typed bottlenecks (planning §D) serving as the contracts between them.
 
 ---
@@ -16,7 +16,7 @@ End-to-end backpropagation serializes training three ways (the DNI paper's "lock
 
 Consequences: depth-sequential wall-clock, O(depth) activation storage held hostage for the backward pass, and global synchronization barriers that pipeline parallelism only papers over with bubbles.
 
-Brains do none of this. There is no global loss and no error signal broadcast from a distal output back through every synapse. Each region adjusts from *local* information — pre/post-synaptic activity plus diffuse neuromodulatory signals. That third factor is exactly the modulator bus **m** we already planned (§A).
+Biological learning does none of this: there is no global loss broadcast from a distal output back through every connection. Each region adjusts from *local* information — local pre/post activity plus diffuse modulatory signals. That third factor is exactly the modulator bus **m** we already planned (§A).
 
 ## 2. The overhaul
 
@@ -27,7 +27,7 @@ Brains do none of this. There is no global loss and no error signal broadcast fr
    - **Synthetic-gradient critic (optional)** — a small learned model of the downstream gradient (DNI-style) to keep modules aligned with the end task without waiting for it.
    - **Local self-supervision** — contrastive or forward-forward term where no downstream signal exists yet.
 3. **Asynchronous training loop.** Modules exchange bottleneck activations (upward) and predictions (downward) as messages. Each module steps on whatever it has, tolerating bounded staleness. No global barrier anywhere.
-4. **Neuromodulated plasticity.** **m** gates each module's learning rate: high-surprise state → plastic, calm → consolidating. This is the classic three-factor learning rule, and it reuses §A unchanged.
+4. **Modulated learning.** **m** gates each module's learning rate: high-surprise state → high learning rate, calm → consolidating. This is the classic three-factor learning rule, and it reuses §A unchanged.
 
 Note the inversion worth savoring: planning.md treats top-down feedback (§C) as an *inference* mechanism with training-stability risk. Here feedback **is the training signal**. The thing that was the risk becomes the teacher.
 
@@ -45,7 +45,7 @@ Unchanged — this proposal is training-side. But one durable payoff: because no
 
 | Component | Role in this proposal |
 |---|---|
-| §A modulator **m** | Third factor gating per-module plasticity |
+| §A modulator **m** | Third factor gating per-module learning rate |
 | §B leaky state | Stays module-local; no cross-module BPTT needed |
 | §C top-down feedback | Becomes the predictive-coding teaching signal |
 | §D typed bottlenecks | Module boundaries = training contracts = message schema |
@@ -73,7 +73,7 @@ Unchanged — this proposal is training-side. But one durable payoff: because no
 
 ## 9. Prior art to build on
 
-Forward-Forward (Hinton 2022); predictive coding as BP approximation (Whittington & Bogacz 2017; Millidge et al. 2020); Decoupled Neural Interfaces / synthetic gradients (Jaderberg et al. 2017); greedy layerwise scaling (Belilovsky et al. 2019); local losses / decoupled parallel training (LoCo and successors); three-factor neuromodulated plasticity rules.
+Forward-Forward (Hinton 2022); predictive coding as BP approximation (Whittington & Bogacz 2017; Millidge et al. 2020); Decoupled Neural Interfaces / synthetic gradients (Jaderberg et al. 2017); greedy layerwise scaling (Belilovsky et al. 2019); local losses / decoupled parallel training (LoCo and successors); three-factor modulated learning rules.
 
 ## 10. Fit with the milestone plan
 

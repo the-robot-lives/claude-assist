@@ -1,14 +1,14 @@
 # 002 — Event-Driven Delta Inference: Only Compute Change
 
 **Status:** proposal
-**Primary targets:** faster output (FLOPs & latency), brain-like asynchronous parallelism at inference, arrow of time
-**One-line thesis:** Stop recomputing the whole network every token. Units hold leaky state and recompute only when their input *changes* past an adaptive threshold; computation propagates through the network like activity through cortex — sparse, asynchronous, and history-dependent.
+**Primary targets:** faster output (FLOPs & latency), biologically-motivated asynchronous parallelism at inference, arrow of time
+**One-line thesis:** Stop recomputing the whole network every token. Units hold leaky state and recompute only when their input *changes* past an adaptive threshold; computation propagates through the network sparsely, asynchronously, and history-dependently — flowing only where something changed.
 
 ---
 
 ## 1. The bottleneck we're attacking
 
-A dense forward pass touches every weight for every token, regardless of whether anything changed. But consecutive tokens in a stream are highly correlated — most activations barely move between steps, and dense compute re-derives them anyway. Meanwhile the brain runs at ~1–4% unit activity, has no global clock, and spends energy only where something happened.
+A dense forward pass touches every weight for every token, regardless of whether anything changed. But consecutive tokens in a stream are highly correlated — most activations barely move between steps, and dense compute re-derives them anyway. By contrast, biological networks run at ~1–4% unit activity, have no global clock, and spend energy only where something happened.
 
 This proposal takes the notes' *non-static firing thresholds* (§1, §1a) literally, as the execution model rather than a feature on top of one.
 
@@ -32,9 +32,9 @@ This proposal takes the notes' *non-static firing thresholds* (§1, §1a) litera
 - **Latency honesty:** the worst case (input where everything changes) costs the dense forward *plus* bookkeeping overhead. Report percentile latencies, not means. The win is the common case, and the **m** dial bounds the tail (clamp excitability → cap activity).
 - CPU-friendliness: irregular sparsity hurts GPUs but helps CPUs; for a self-hosted cluster doing inference on mixed hardware, this is the proposal that moves the needle most.
 
-## 5. Brain-like parallelization
+## 5. Distributed, event-driven parallelism
 
-Regions of the network run concurrently on separate devices, exchanging only events. In BEAM terms: region = supervised process, events = messages, and OTP *is* the scheduler — no global clock is not a slogan here, it's the runtime we already chose. This is the strongest alignment in the whole proposal set between the biology story and the systems story.
+Regions of the network run concurrently on separate devices, exchanging only events. In BEAM terms: region = supervised process, events = messages, and OTP *is* the scheduler — no global clock is not a slogan here, it's the runtime we already chose. This is the strongest alignment in the whole proposal set between the biological motivation and the systems story.
 
 ## 6. The arrow of time, constitutive
 

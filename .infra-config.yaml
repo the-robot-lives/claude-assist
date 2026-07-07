@@ -100,6 +100,7 @@ tiers:
       - start-app
       - therobotplans
       - tobornalp
+      - ddi
 
   - name: "User-Facing & Creative"
     tier: 4
@@ -211,6 +212,7 @@ namespace_overrides:
   start-app: apps-ns
   therobotplans: apps-ns
   tobornalp: apps-ns
+  ddi: apps-ns
   # Tier 4 — Creative
   penpot: creative-ns
   webstudio: creative-ns
@@ -259,6 +261,7 @@ chart_path_overrides:
   therobotlives: projects/therobotlives.com/helm/therobotlives
   therobotplans: projects/therobotplans.com/helm/therobotplans
   tobornalp: projects/tobornalp.com/helm/therobotplans
+  ddi: projects/designing.derobot.is/helm/ddi
 
 # --- Helm Preserve Values -----------------------------------------------------
 # helm-upgrade passes --reset-values by default so a chart's values.yaml is the
@@ -364,6 +367,22 @@ liquibase_targets:
     safety: destructive
     changelog_dir: projects/NoizuPromptLingo/backend/db
     changelog_file: changelog/db.changelog-master.yaml
+
+  ddi:
+    description: "Designing.deRobot.is app database"
+    namespace: apps
+    service: svc/app-timescaledb
+    remote_port: 5432
+    local_port: 54338
+    db_type: postgresql
+    db_name: designing_derobot_is_dev
+    schema: public
+    secret_name: ddi-secrets
+    secret_namespace: apps-ns
+    username: ddi
+    secret_key: DDI_DB_PASSWORD
+    safety: destructive
+    changelog_dir: projects/designing.derobot.is/app/backend/priv/repo/migrations
 
   # App-level targets with concrete Liquibase changelogs.
   start-app:
@@ -880,6 +899,33 @@ project:
             chart_path: projects/tobornalp.com/helm/therobotplans
             values_path: .frontend.image
             format: image
+
+    - domain: designing.derobot.is
+      services:
+        - name: backend
+          dockerfile: app/backend/Dockerfile
+          context: app/backend
+          registry_path: designing.derobot.is/backend
+          auto_detect: false
+          helm:
+            chart_path: projects/designing.derobot.is/helm/ddi
+            values_path: .backend.image
+            format: image
+        - name: frontend
+          dockerfile: app/frontend/Dockerfile
+          context: app/frontend
+          registry_path: designing.derobot.is/frontend
+          build_args:
+            NEXT_PUBLIC_API_URL: "https://api.designing.derobot.is"
+          auto_detect: false
+          helm:
+            chart_path: projects/designing.derobot.is/helm/ddi
+            values_path: .frontend.image
+            format: image
+      helm:
+        charts:
+          - name: ddi
+            path: projects/designing.derobot.is/helm/ddi
     - domain: npl-mcp
       name: mcp.derobot.is
       base_path: projects/NoizuPromptLingo

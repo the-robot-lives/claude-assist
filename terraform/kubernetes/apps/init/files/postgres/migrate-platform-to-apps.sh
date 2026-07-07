@@ -48,6 +48,11 @@ CREATE ROLE therobotplans WITH LOGIN PASSWORD '$(dc get services apps.therobotpl
 ALTER DATABASE therobotplans OWNER TO therobotplans;
 GRANT ALL PRIVILEGES ON DATABASE therobotplans TO therobotplans;
 
+-- ddi (designing.derobot.is)
+CREATE ROLE ddi WITH LOGIN PASSWORD '$(dc get services apps.ddi_db_password --reveal --raw 2>/dev/null)';
+CREATE DATABASE designing_derobot_is_dev OWNER ddi;
+GRANT ALL PRIVILEGES ON DATABASE designing_derobot_is_dev TO ddi;
+
 -- startapp (role exists, update password + own start_app db)
 ALTER ROLE startapp WITH PASSWORD '$(dc get services apps.startapp_db_password --reveal --raw 2>/dev/null)';
 ALTER DATABASE start_app OWNER TO startapp;

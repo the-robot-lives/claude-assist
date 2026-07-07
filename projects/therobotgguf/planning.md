@@ -2,7 +2,7 @@
 
 **Status:** design / pre-implementation
 **Source:** distilled and formalized from `notes.md` (word-stream musings, April 2018)
-**Goal:** A ground-up transformer variant that incorporates four biologically-motivated ideas the original notes argue are missing from mainstream deep learning — dynamic firing thresholds, top-down feedback, modular reusable sub-networks with behavior-override "shims," and a crude episodic memory — implemented in Elixir (Nx/Axon) with an eye toward GGUF export for inference.
+**Goal:** A ground-up transformer variant that incorporates four ideas (several with biological analogues) the original notes argue are missing from mainstream deep learning — dynamic firing thresholds, top-down feedback, modular reusable sub-networks with behavior-override "shims," and a crude episodic memory — implemented in Elixir (Nx/Axon) with an eye toward GGUF export for inference.
 
 This document turns the notes into named components, maps each to concrete modern mechanisms (so we build on known-good techniques rather than reinventing them), and lays out a staged build plan. The intent is that nothing here requires a scientific miracle: every component has a working analogue in the literature. The novelty is the *combination* and the *training methodology*, not any single piece.
 
@@ -10,7 +10,7 @@ This document turns the notes into named components, maps each to concrete moder
 
 ## 1. Thesis in one paragraph
 
-Standard transformers are stateless within a forward pass, feedforward across layers, monolithic, and memoryless beyond the context window. The notes conjecture that four missing brain-like properties limit what compact models can do: (a) firing thresholds that vary with recent activity and a global "neurochemical" state, giving the network an arrow of time and mood/priming; (b) long-range top-down feedback that lets high layers reshape how low layers interpret their input, locking the system into coherent interpretations; (c) modularity, where sub-networks are trained to expose specific information at specific layers so other modules can read and override them without retraining the core; and (d) a salience-gated memory that writes noteworthy states and replays them to bias future processing. This project builds a transformer that has all four, and — critically — a training recipe that produces reusable, composable modules.
+Standard transformers are stateless within a forward pass, feedforward across layers, monolithic, and memoryless beyond the context window. The notes conjecture that four missing properties limit what compact models can do: (a) firing thresholds that vary with recent activity and a global modulation state, giving the network an arrow of time and mood/priming; (b) long-range top-down feedback that lets high layers reshape how low layers interpret their input, locking the system into coherent interpretations; (c) modularity, where sub-networks are trained to expose specific information at specific layers so other modules can read and override them without retraining the core; and (d) a salience-gated memory that writes noteworthy states and replays them to bias future processing. This project builds a transformer that has all four, and — critically — a training recipe that produces reusable, composable modules.
 
 ---
 
@@ -34,10 +34,10 @@ The table maps each notes idea to the nearest established technique(s), so imple
 
 | Notes idea (source line) | Formal component | Closest prior art to build on |
 |---|---|---|
-| Non-static axon thresholds; neurochemical priming; anxiety/inattention → false positives (§1, §1a) | Neuromodulatory gating: global state vector conditions per-unit gain/bias | FiLM conditioning; gain modulation; mixture-of-experts routing; spiking-net adaptive thresholds |
+| Non-static firing thresholds; modulator priming; anxiety/inattention → false positives (§1, §1a) | Modulatory gating: global state vector conditions per-unit gain/bias | FiLM conditioning; gain modulation; mixture-of-experts routing; spiking-net adaptive thresholds |
 | Decaying threshold as function of last firing + time; "motion blur"; arrow of time (§1b) | Leaky temporal state per unit / channel | State-space models (S4/Mamba); leaky integrate-and-fire; recency-biased attention; EMA of activations |
 | Different decay rates → executive vs. background processing; slow-burn reassessment (§1b, Apr 9) | Multi-timescale state (fast + slow channels) | Clockwork/multi-timescale RNNs; hierarchical SSM timescales |
-| Long axons feeding signals back up-chain; face illusion "locks in" one reading (§2) | Top-down feedback + iterative settling to a fixed point | Predictive coding; Universal Transformer (depth recurrence); Feedback Memory Transformer; deep equilibrium models |
+| Long-range connections feeding signals back up-chain; face illusion "locks in" one reading (§2) | Top-down feedback + iterative settling to a fixed point | Predictive coding; Universal Transformer (depth recurrence); Feedback Memory Transformer; deep equilibrium models |
 | Bistable percept (young/old woman) processed one-at-a-time, not in parallel (§2 close) | Competition / attractor dynamics over interpretations | Winner-take-all; modern Hopfield networks (= attention); attractor nets |
 | Cleave output layer into regions that *must* encode subject/color/size (§3 Stage 1) | Structured/disentangled bottlenecks with auxiliary decode heads | Deep supervision; auxiliary probing heads; information bottleneck; concept whitening |
 | Shim layer that distorts color without touching other values; third-party override (§3) | Adapter / steering "shim" over a disentangled subspace | Adapters (Houlsby); LoRA; prefix tuning; activation steering / representation engineering |
@@ -48,8 +48,8 @@ The table maps each notes idea to the nearest established technique(s), so imple
 
 ## 4. Component specifications
 
-### A. Neuromodulator (global state) and adaptive gating
-A small recurrent module maintains a low-dimensional state vector **m** (the "neurochemical" bus): a handful of scalar-ish channels such as arousal/threat, attention, valence. **m** is produced from pooled activations plus recall from memory (§F), and is broadcast to every block. Each block applies FiLM-style modulation: `h' = γ(m) ⊙ h + β(m)`, where `γ, β` are learned per-channel functions of **m**. This is the mechanism behind "inattentive → lower threshold → see the snake in the hose": raising gain on threat-relevant features increases false-positive likelihood, exactly as the notes describe, and it's reversible because **m** itself decays (§B).
+### A. Modulator (global state) and adaptive gating
+A small recurrent module maintains a low-dimensional state vector **m** (the modulation bus): a handful of scalar-ish channels such as arousal/threat, attention, valence. **m** is produced from pooled activations plus recall from memory (§F), and is broadcast to every block. Each block applies FiLM-style modulation: `h' = γ(m) ⊙ h + β(m)`, where `γ, β` are learned per-channel functions of **m**. This is the mechanism behind "inattentive → lower threshold → see the snake in the hose": raising gain on threat-relevant features increases false-positive likelihood, exactly as the notes describe, and it's reversible because **m** itself decays (§B).
 
 Different units responding differently to the same signal (notes §1a) falls out naturally: `γ, β` are per-channel, so one modulator channel excites some units and suppresses others.
 
@@ -95,7 +95,7 @@ One inference step: run bottom-up with current **m** and leaky states; compute b
 
 ## 6. Elixir implementation plan
 
-**Stack.** Nx for tensors, Axon for model definition and training, EXLA (XLA) for the compiled backend, Bumblebee where we want to warm-start from a pretrained transformer, GGUF export for inference/distribution (project name). Note a design tension worth resolving early: OTP processes are a tempting literal model for "neurons/modules as message-passing actors," but training needs dense differentiable tensor ops. Resolution: **actors for orchestration and module composition, Nx/Axon for anything in the gradient path.** Don't put per-neuron logic in processes.
+**Stack.** Nx for tensors, Axon for model definition and training, EXLA (XLA) for the compiled backend, Bumblebee where we want to warm-start from a pretrained transformer, GGUF export for inference/distribution (project name). Note a design tension worth resolving early: OTP processes are a tempting literal model for "units/modules as message-passing actors," but training needs dense differentiable tensor ops. Resolution: **actors for orchestration and module composition, Nx/Axon for anything in the gradient path.** Don't put per-unit logic in processes.
 
 **Custom layers to write in Axon:**
 - `FiLMModulation` — applies `γ(m)⊙h + β(m)` given the modulator bus.
@@ -109,7 +109,7 @@ One inference step: run bottom-up with current **m** and leaky states; compute b
 
 1. **Baseline.** Plain Axon transformer + training/eval harness on a small dataset. Establishes the fixed parameter budget for later comparisons. Get GGUF export working end-to-end here so it's not a surprise later.
 2. **Temporal state (§B).** Add `LeakyState`; validate on a task needing temporal integration; confirm the multi-timescale variant helps on slow-burn tasks. *Hypothesis 1.*
-3. **Neuromodulator (§A).** Add the **m** bus + `FiLMModulation`; show state-dependent priming (deliberately induce and then relax a false-positive bias).
+3. **Modulator (§A).** Add the **m** bus + `FiLMModulation`; show state-dependent priming (deliberately induce and then relax a false-positive bias).
 4. **Feedback (§C).** Add `FeedbackController` + top-down projections; measure gains on ambiguous inputs and look for bistability. *Hypothesis 2.*
 5. **Structured bottlenecks (§D).** Add `TypedBottleneck`/`AuxHead`; measure attribute decodability and selectivity at cleave points.
 6. **Shims (§E).** Freeze the core; train shims; measure edit selectivity (change target attribute, hold others). Stand up the shim registry. *Hypothesis 3.*
@@ -149,7 +149,7 @@ Reusability is the payoff: once a core is cleaved and frozen, new capabilities a
 
 ## 9. Glossary
 
-**Modulator / bus (m):** low-dimensional global state ("neurochemicals") conditioning the whole network.
+**Modulator / bus (m):** low-dimensional global state (the modulation signals) conditioning the whole network.
 **Leaky state:** per-channel decaying memory of recent activation; source of the arrow of time.
 **Cleave point / typed bottleneck:** a representation slice required (via aux heads) to encode specified attributes.
 **Shim:** an adapter that reads a typed bottleneck and overrides downstream behavior without retraining the core.
