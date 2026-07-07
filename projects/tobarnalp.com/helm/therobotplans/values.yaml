@@ -117,8 +117,9 @@ tls:
   infisical:
     enabled: true
     resyncInterval: 300
+    hostAPI: https://infisical.noizu.com/api
     credentialsSecret: universal-auth-credentials
-    credentialsNamespace: infisical-operator-system
+    credentialsNamespace: infra
     projectSlug: k8-infra
     envSlug: prod
     secretsPath: "/apps/tls/therobotplans"

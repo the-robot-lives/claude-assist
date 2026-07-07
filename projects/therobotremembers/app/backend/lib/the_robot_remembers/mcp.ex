@@ -22,4 +22,18 @@ defmodule TheRobotRemembers.MCP do
   tool TheRobotRemembers.MCP.Tools.Reinforce, category: "Memory"
   tool TheRobotRemembers.MCP.Tools.Denforce, category: "Memory"
   tool TheRobotRemembers.MCP.Tools.MemoryAssociations, category: "Memory"
+
+  # Console/ops surface (API contract Phase D) — same internal API as the HTTP endpoints.
+  tool TheRobotRemembers.MCP.Tools.MemoryArchive, category: "Memory"
+  tool TheRobotRemembers.MCP.Tools.MemoryRestore, category: "Memory"
+  tool TheRobotRemembers.MCP.Tools.GraphSubgraph, category: "Graph"
+  tool TheRobotRemembers.MCP.Tools.EdgeSetWeight, category: "Graph"
+  tool TheRobotRemembers.MCP.Tools.MemorySet, category: "Memory"
+  tool TheRobotRemembers.MCP.Tools.RecallPreview, category: "Memory"
+  tool TheRobotRemembers.MCP.Tools.AgentMoodGet, category: "Agent"
+  tool TheRobotRemembers.MCP.Tools.AgentMoodSet, category: "Agent"
+  tool TheRobotRemembers.MCP.Tools.CompartmentsList, category: "Memory"
+
+  # Phase B — graph traversal seam (ADR-006): path-explanation surface.
+  tool TheRobotRemembers.MCP.Tools.GraphExplainPath, category: "Graph"
 end

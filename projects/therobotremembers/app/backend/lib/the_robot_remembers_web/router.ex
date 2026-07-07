@@ -47,15 +47,24 @@ defmodule TheRobotRemembersWeb.Router do
     plug TheRobotRemembersWeb.Plugs.RequireAdmin
   end
 
+  # Optional Guardian gate for the MCP mount. No-op unless MCP_AUTH_REQUIRED=true (default false —
+  # preserves Phase-0 dev-open behavior). When on, it verifies the Bearer JWT and stashes the
+  # authenticated claims so tools can validate the self-asserted `agent` param.
+  pipeline :mcp_auth do
+    plug TheRobotRemembersWeb.Plugs.MCPAuth
+  end
+
   scope "/", TheRobotRemembersWeb do
     pipe_through :api
     get "/health", HealthController, :index
   end
 
-  # MCP (Streamable HTTP). Phase 0: dev-open (no auth verifier); JWT-from-API-key
-  # (the NoizuPromptLingo pattern) is a follow-up. The plug handles its own protocol,
-  # so it is not run through the :api pipeline.
+  # MCP (Streamable HTTP). Dev-open by default; set MCP_AUTH_REQUIRED=true to gate the mount behind
+  # Guardian (the :mcp_auth pipeline). The transport handles its own protocol, so only the auth
+  # plug runs ahead of it — not the :api (JSON) pipeline, which would consume the request body.
   scope "/mcp" do
+    pipe_through :mcp_auth
+
     forward "/", Noizu.MCP.Transport.StreamableHTTP.Plug,
       server: TheRobotRemembers.MCP,
       origins: :any
@@ -97,6 +106,26 @@ defmodule TheRobotRemembersWeb.Router do
   scope "/api/v1/organizations/:org_id", TheRobotRemembersWeb do
     pipe_through [:api, :authenticated, :org_admin]
     resources "/members", MembershipController, only: [:index, :create, :update, :delete]
+  end
+
+  # Memory console (API contract Phase D). Reads + preview: viewer = any authenticated user.
+  # NOTE: "editor+" mutations are gated by :admin, not RequireRole — RequireRole is org-scoped
+  # (needs org_id + membership) and these routes are per-agent, org-less. See the contract doc.
+  scope "/api/v1/memory", TheRobotRemembersWeb do
+    pipe_through [:api, :authenticated]
+
+    get "/agents", MemoryController, :agents
+    get "/agents/:agent_id/graph", MemoryController, :graph
+    post "/agents/:agent_id/recall/preview", MemoryController, :recall_preview
+  end
+
+  scope "/api/v1/memory", TheRobotRemembersWeb do
+    pipe_through [:api, :authenticated, :admin]
+
+    patch "/agents/:agent_id/edges/:edge_id", MemoryController, :update_edge
+    patch "/agents/:agent_id/memories/:memory_id", MemoryController, :update_memory
+    post "/agents/:agent_id/memories/:memory_id/reinforce", MemoryController, :reinforce
+    post "/agents/:agent_id/memories/:memory_id/denforce", MemoryController, :denforce
   end
 
   scope "/api/v1/admin", TheRobotRemembersWeb do

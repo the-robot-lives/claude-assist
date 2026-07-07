@@ -8,6 +8,7 @@ defmodule TheRobotRemembers.Workers.ReinforcementWorker do
 
   alias TheRobotRemembers.Repo
   alias TheRobotRemembers.Schema.Memory.AssociationEdge
+  alias TheRobotRemembers.Memory.GraphMirror
 
   def config, do: Application.get_env(:the_robot_remembers, :reinforcement, [])
   defp mem_boost, do: config()[:recall_memory_boost] || 0.02
@@ -19,6 +20,11 @@ defmodule TheRobotRemembers.Workers.ReinforcementWorker do
     bump_memories(ids)
     strengthen_edges(ids)
     hebbian(ids)
+    # Edge weights physically change here (strengthen_edges bumps them; hebbian inserts new
+    # co_occurrence edges), so this is the reinforcement weight-change locus the AGE mirror hooks.
+    # No-op unless the graph layer is enabled. A previously below-threshold edge that a bump lifts
+    # over min_edge_weight now appears in AGE; sync_memories reconciles the neighborhood.
+    GraphMirror.enqueue_sync(ids)
     :ok
   end
 

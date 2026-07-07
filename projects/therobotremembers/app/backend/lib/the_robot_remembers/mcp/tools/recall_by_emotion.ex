@@ -9,6 +9,7 @@ defmodule TheRobotRemembers.MCP.Tools.RecallByEmotion do
     category: "Memory"
 
   alias TheRobotRemembers.Memory
+  alias TheRobotRemembers.MCP.Auth
 
   input do
     field :valence, :number, description: "Target valence -1.0 .. 1.0"
@@ -19,20 +20,21 @@ defmodule TheRobotRemembers.MCP.Tools.RecallByEmotion do
   end
 
   @impl true
-  def call(args, _ctx) do
-    owner = args[:agent] || "local"
-    context = %{owner_agent: owner, requester_id: owner}
-    opts = if l = args[:limit], do: [limit: l], else: []
+  def call(args, ctx) do
+    with {:ok, owner} <- Auth.resolve_agent(ctx, args[:agent]) do
+      context = %{owner_agent: owner, requester_id: owner}
+      opts = if l = args[:limit], do: [limit: l], else: []
 
-    mood = Map.take(args, [:valence, :arousal, :dominance])
-    emotional_state = %{mood: mood}
+      mood = Map.take(args, [:valence, :arousal, :dominance])
+      emotional_state = %{mood: mood}
 
-    case Memory.recall_by_emotion(emotional_state, opts, context) do
-      {:ok, %{results: results, xml: xml}} ->
-        {:ok, %{mode: "by_emotion", count: length(results), memories: xml}}
+      case Memory.recall_by_emotion(emotional_state, opts, context) do
+        {:ok, %{results: results, xml: xml}} ->
+          {:ok, %{mode: "by_emotion", count: length(results), memories: xml}}
 
-      {:error, reason} ->
-        {:error, "recall_by_emotion failed: #{inspect(reason)}"}
+        {:error, reason} ->
+          {:error, "recall_by_emotion failed: #{inspect(reason)}"}
+      end
     end
   end
 end

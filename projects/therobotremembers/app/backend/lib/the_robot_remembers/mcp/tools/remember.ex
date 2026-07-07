@@ -11,6 +11,7 @@ defmodule TheRobotRemembers.MCP.Tools.Remember do
     category: "Memory"
 
   alias TheRobotRemembers.Memory
+  alias TheRobotRemembers.MCP.Auth
 
   input do
     field :content, :string, required: true, description: "The memory / event itself (required)"
@@ -31,8 +32,13 @@ defmodule TheRobotRemembers.MCP.Tools.Remember do
   end
 
   @impl true
-  def call(args, _ctx) do
-    owner = args[:agent] || "local"
+  def call(args, ctx) do
+    with {:ok, owner} <- Auth.resolve_agent(ctx, args[:agent]) do
+      do_call(args, owner)
+    end
+  end
+
+  defp do_call(args, owner) do
     context = %{owner_agent: owner, requester_id: owner, source_agent: "mcp"}
 
     attrs = %{

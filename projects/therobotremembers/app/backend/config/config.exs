@@ -8,7 +8,10 @@ config :smart_token,
 
 config :the_robot_remembers, TheRobotRemembers.Repo,
   types: TheRobotRemembers.PostgrexTypes,
-  migration_primary_key: [name: :id, type: :uuid]
+  migration_primary_key: [name: :id, type: :uuid],
+  # Per-connection Apache AGE session setup. The hook no-ops unless the AGE graph layer is
+  # enabled (config :the_robot_remembers, :age_graph), so it is safe on DBs without AGE.
+  after_connect: {TheRobotRemembers.Repo.AGE, :after_connect, []}
 
 config :the_robot_remembers,
   ecto_repos: [TheRobotRemembers.Repo],
@@ -98,6 +101,22 @@ config :the_robot_remembers, :weaviate,
   enabled: false,
   class: "TrrMemory"
 
+# Apache AGE graph projection of the association graph (see TheRobotRemembers.Memory.GraphMirror).
+# `enabled` gates both the per-connection AGE session hook (Repo.AGE.after_connect/1) and every
+# mirror enqueue — off until AGE is provisioned (Liquibase 031) on the target DB. AGE is a pure
+# projection of `association_edges`; Postgres stays the system of record. Mirrors the Weaviate flag.
+config :the_robot_remembers, :age_graph,
+  enabled: false,
+  graph: "trr_memory",
+  min_edge_weight: 0.2
+
+# Graph-store backend for recall + console graph ops (ADR-006/ADR-013 seam,
+# TheRobotRemembers.Memory.GraphStore):
+#   :cte (default) — the recursive-CTE implementations, extracted verbatim.
+#   :age            — the same ops against the Apache AGE projection. Selecting :age without the AGE
+#                     layer enabled raises at boot (GraphStore.validate!/0). Runtime: GRAPH_STORE=age.
+config :the_robot_remembers, :graph_store, adapter: :cte
+
 # Recall fusion / scoring knobs.
 config :the_robot_remembers, :memory_recall,
   vector_weights: %{content: 1.0, context: 0.8, tangent: 0.8, reflection: 0.7},
@@ -130,6 +149,10 @@ config :the_robot_remembers, :reinforcement,
   hebbian_initial: 0.3,
   graph_max_hops: 3,
   graph_min_edge_weight: 0.2
+
+# MCP mount auth. Off by default (dev-open, Phase-0 behavior). When required, the /mcp mount is
+# gated by a Guardian JWT (see TheRobotRemembersWeb.Plugs.MCPAuth). Runtime override in runtime.exs.
+config :the_robot_remembers, :mcp_auth, required: false
 
 # Feature flags
 config :the_robot_remembers, :feature_flags, %{

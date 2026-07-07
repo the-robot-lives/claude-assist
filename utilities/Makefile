@@ -1,4 +1,4 @@
-SUBDIRS := agent shell k8 terraform database colo start-app-scaffold osx
+SUBDIRS := agent shell k8 terraform database colo start-app-scaffold linux osx
 SUBDIRS_NO_OSX := $(filter-out osx,$(SUBDIRS))
 SUBDIR_TARGETS := build compile test clean
 SUBDIR_DESCRIPTION := Utility groups
