@@ -1,9 +1,10 @@
-# therobot runtime tests (E1 + E2 + E3 + E4)
+# therobot runtime tests (E1–E5)
 
 Manual smoke tests for the therobot spec loader (E1), bottleneck taps (E2),
-the shim engine (E3), and state banks + modulator (E4). Not yet wired into
-CMake/CI — that lands with the E0 CI gates (llamacpp-extensions.md §2). All
-commands run from the repo root; `$BUILD` is a configured build directory.
+the shim engine (E3), state banks + modulator (E4), and episodic memory (E5).
+Not yet wired into CMake/CI — that lands with the E0 CI gates
+(llamacpp-extensions.md §2). All commands run from the repo root; `$BUILD` is
+a configured build directory.
 
 ## Fixtures
 
@@ -125,3 +126,32 @@ output-filtered); grafted tensors must be f32. Session state rides the
 dedicated `llama_robot_session_*` API — integration with
 `llama_state_get_data/set_data` is deferred until cross-version session-file
 compatibility is worked out.
+
+## E5 episodic memory
+
+`tiny-llama-l2-mem.gguf` has silent salience weights (only explicit
+`llama_robot_memory_write` stores) and β = m[arousal] so recall is visible in
+logits; `tiny-llama-l2-mem-auto.gguf` has live salience weights for the
+quantile-gated auto-write path. The test covers Hypothesis 4 end-to-end: a
+single write changes behavior with no weight update (rises to a peak while
+recall is fresh, then decays monotonically to <5% of peak through the
+4-token recency halflife + m decay), the memory itself persisting while its
+influence fades; `memory_forget`; non-positive-salience refusal; capacity-4
+decay-based eviction; the v2 session blob carrying the full mind (store +
+recall + clock); warmup suppressing auto-writes and the salience gate opening
+after it, capacity-bounded.
+
+```bash
+g++ -std=c++17 -Iinclude -Iggml/include tests/robot/robot_memory_test.cpp \
+    -L$BUILD/bin -lllama -lggml -Wl,-rpath,$BUILD/bin -o /tmp/robot_memory_test
+/tmp/robot_memory_test /tmp/robot-fixtures
+# expect: E5 MEMORY TEST: OK
+```
+
+E5 notes and v1 limits: memory requires taps + modulator, and `value_dim`
+must equal the modulator dim (recall lives in modulator space); recall is
+injected into the *next* decode's modulator update, so behavior onset lags
+one decode; surprise is the −log p of the incoming token under the previous
+decode's last-position distribution (not checkpointed — the first
+post-restore decode reads surprise 0); auto-writes need salience > 0, an
+8-decode warmup, and salience ≥ the running-window quantile.

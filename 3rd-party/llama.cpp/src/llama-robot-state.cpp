@@ -6,6 +6,7 @@
 #include "llama-hparams.h"
 #include "llama-impl.h"
 #include "llama-model.h"
+#include "llama-robot-memory.h"
 #include "llama-robot-model.h"
 #include "llama-robot-shim.h"
 
@@ -51,6 +52,16 @@ void llm_graph_input_robot::set_input(const llama_ubatch * ubatch) {
         }
     }
 
+    if (recall_in != nullptr) {
+        const size_t n = (size_t) recall_in->ne[0];
+        if (st != nullptr && st->recall.size() == n) {
+            ggml_backend_tensor_set(recall_in, st->recall.data(), 0, n * sizeof(float));
+        } else {
+            std::vector<float> zeros(n, 0.0f);
+            ggml_backend_tensor_set(recall_in, zeros.data(), 0, n * sizeof(float));
+        }
+    }
+
     for (const auto & [L, t] : s_in) {
         const size_t n = (size_t) t->ne[0];
         const std::vector<float> * bank = st != nullptr ? st->bank(L) : nullptr;
@@ -84,6 +95,9 @@ void llama_robot_state_prepare(llama_context * ctx) {
     if (iface->robot.has_feature(LLAMA_ROBOT_FEATURE_MODULATOR)) {
         st->m.assign(iface->robot.modulator.dim, 0.0f);
     }
+    if (llama_robot_memory_enabled(*iface)) {
+        st->recall.assign(iface->robot.modulator.dim, 0.0f);
+    }
     if (iface->robot.has_feature(LLAMA_ROBOT_FEATURE_STATE)) {
         const uint32_t S = llama_robot_state_width(*iface);
         for (const uint32_t L : iface->robot.state.layers) {
@@ -98,7 +112,7 @@ void llama_robot_state_prepare(llama_context * ctx) {
             st->m.size(), st->banks.size());
 }
 
-void llama_robot_state_capture(llama_context * ctx, llm_graph_result * res) {
+void llama_robot_state_capture(llama_context * ctx, llm_graph_result * res, const llama_ubatch * ubatch) {
     auto & st = ctx->robot_state;
     if (!st || !st->state_ready || res == nullptr) {
         return;
@@ -120,6 +134,12 @@ void llama_robot_state_capture(llama_context * ctx, llm_graph_result * res) {
         if (t != nullptr && t->buffer != nullptr) {
             ggml_backend_tensor_get(t, bank.data(), 0, bank.size() * sizeof(float));
         }
+    }
+
+    // E5: per-decode episodic memory update (summary → salience gate → recall)
+    const auto * iface = dynamic_cast<const llama_robot_model_iface *>(&ctx->get_model());
+    if (iface != nullptr) {
+        llama_robot_memory_update(*iface, *st, res, ubatch);
     }
 }
 
@@ -200,4 +220,7 @@ void llama_robot_validate_grafts(const llama_robot_model_iface & iface, const ll
             }
         }
     }
+
+    // E5 memory-head tensors (requires taps + modulator; value_dim == M)
+    llama_robot_memory_validate(iface);
 }

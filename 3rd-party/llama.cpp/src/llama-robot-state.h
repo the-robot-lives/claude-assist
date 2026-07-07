@@ -56,8 +56,9 @@ public:
 
     const llama_robot_context_state * st;
 
-    ggml_tensor * m_in   = nullptr; // [M]
-    ggml_tensor * mean_w = nullptr; // [T*] pooled-mean weights (1/n each)
+    ggml_tensor * m_in      = nullptr; // [M]
+    ggml_tensor * mean_w    = nullptr; // [T*] pooled-mean weights (1/n each)
+    ggml_tensor * recall_in = nullptr; // [M] episodic recall (E5), lags one decode
     std::vector<std::pair<uint32_t, ggml_tensor *>> s_in; // (layer, [S])
 };
 
@@ -69,8 +70,11 @@ bool llama_robot_state_enabled(const llama_robot_model_iface & iface);
 void llama_robot_state_prepare(llama_context * ctx);
 
 // Called after a successful graph compute (fenced): pulls `robot_mod_out` and
-// `robot_state_out-<L>` from the computed graph into the host-side state.
-void llama_robot_state_capture(llama_context * ctx, llm_graph_result * res);
+// `robot_state_out-<L>` from the computed graph into the host-side state, then
+// runs the per-decode episodic memory update (E5 — summary, salience gate,
+// recall refresh). The ubatch supplies the incoming tokens for the surprise
+// signal.
+void llama_robot_state_capture(llama_context * ctx, llm_graph_result * res, const llama_ubatch * ubatch);
 
 // load-time validation of grafted tensors against donor hparams (shapes,
 // coverage, final-layer restriction); throws on contract violations

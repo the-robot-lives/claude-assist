@@ -164,6 +164,7 @@ static const std::set<llama_robot_feature> LLAMA_ROBOT_FEATURES_IMPLEMENTED = {
     LLAMA_ROBOT_FEATURE_SHIMS,     // E3 — slice-scoped shim engine (module files, hot attach/detach)
     LLAMA_ROBOT_FEATURE_STATE,     // E4 — grafted leaky state banks
     LLAMA_ROBOT_FEATURE_MODULATOR, // E4 — modulator bus m + FiLM gating
+    LLAMA_ROBOT_FEATURE_MEMORY,    // E5 — salience-gated episodic store feeding m
 };
 
 const char * llama_robot_feature_name(llama_robot_feature f) {

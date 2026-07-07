@@ -433,6 +433,12 @@ void llama_robot_graph_apply(const llama_robot_model_iface & iface, llm_graph_co
             ggml_set_input(m_in);
             input->m_in = m_in;
         }
+        if (robot.has_feature(LLAMA_ROBOT_FEATURE_MEMORY)) {
+            ggml_tensor * r = ggml_new_tensor_1d(ctx0, GGML_TYPE_F32, robot.modulator.dim);
+            ggml_set_name(r, "robot_mem_recall_in");
+            ggml_set_input(r);
+            input->recall_in = r;
+        }
         if (has_state) {
             const int64_t S = llama_robot_state_width(iface);
             for (const uint32_t L : robot.state.layers) {
@@ -556,6 +562,9 @@ void llama_robot_graph_apply(const llama_robot_model_iface & iface, llm_graph_co
         z = ggml_add(ctx0, z, ggml_mul_mat(ctx0, cw, m_in)); // + cell·m
         if (cb != nullptr) {
             z = ggml_add(ctx0, z, cb);
+        }
+        if (inp->recall_in != nullptr) {
+            z = ggml_add(ctx0, z, inp->recall_in); // + E5 episodic recall
         }
         ggml_tensor * c = ggml_tanh(ctx0, z); // candidate [M, 1]
 

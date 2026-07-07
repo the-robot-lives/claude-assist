@@ -1380,9 +1380,9 @@ llm_graph_result * llama_context::process_ubatch(const llama_ubatch & ubatch, ll
     }
 
     // ROBOT-EXT-BEGIN(context-state-capture) — pull the updated recurrent
-    // state (robot_mod_out, robot_state_out-<L>) back to the host so the next
-    // ubatch/decode reads it; no-op for stock models
-    llama_robot_state_capture(this, res);
+    // state (robot_mod_out, robot_state_out-<L>) back to the host and run the
+    // per-decode episodic memory update; no-op for stock models
+    llama_robot_state_capture(this, res, &ubatch);
     // ROBOT-EXT-END
 
     ret = GGML_STATUS_SUCCESS;

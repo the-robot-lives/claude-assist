@@ -93,12 +93,36 @@ LLAMA_API const char * llama_robot_mod_channel(const struct llama_model * model,
 LLAMA_API bool llama_robot_mod_get(struct llama_context * ctx, float * dst);
 LLAMA_API bool llama_robot_mod_set(struct llama_context * ctx, const float * src);
 
-// Session state checkpoint (the "mind": m + state banks; 003 §4). Save
-// returns bytes written (0 on error); size returns the buffer size needed;
-// load restores a previously saved blob into a context of the same model.
+// Session state checkpoint (the "mind": m + state banks + episodic store;
+// 003 §4). Save returns bytes written (0 on error); size returns the buffer
+// size needed; load restores a previously saved blob into a context of the
+// same model.
 LLAMA_API size_t llama_robot_session_size(struct llama_context * ctx);
 LLAMA_API size_t llama_robot_session_save(struct llama_context * ctx, uint8_t * dst, size_t size);
 LLAMA_API size_t llama_robot_session_load(struct llama_context * ctx, const uint8_t * src, size_t size);
+
+//
+// E5 — episodic memory (spec §1.5, planning §F)
+//
+// The store updates automatically each decode: bottleneck summaries are
+// written when the salience gate fires (surprise + ‖m‖ against a
+// quantile-normalized threshold), and a recency-weighted content-addressed
+// recall vector is injected into the next decode's modulator update.
+//
+
+// number of stored episodic memories (0 for models without the feature)
+LLAMA_API int32_t llama_robot_memory_count(const struct llama_context * ctx);
+
+// explicitly write the latest decode's summary with the given salience
+// (bypasses the gate — "this moment is noteworthy"); requires ≥1 prior decode
+LLAMA_API bool llama_robot_memory_write(struct llama_context * ctx, float salience);
+
+// drop every stored memory (recall fades to zero on the next decode)
+LLAMA_API void llama_robot_memory_forget(struct llama_context * ctx);
+
+// current recall vector (llama_robot_mod_dim() floats): what the past is
+// whispering into the next decode's modulator update
+LLAMA_API bool llama_robot_memory_recall(const struct llama_context * ctx, float * dst);
 
 #ifdef __cplusplus
 }

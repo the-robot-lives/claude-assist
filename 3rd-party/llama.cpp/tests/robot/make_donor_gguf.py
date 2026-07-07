@@ -62,8 +62,18 @@ def write_model(path, arch, robot, taps=False, l2=None):
         w.add_string("therobot.base_architecture", "llama")
         w.add_string("therobot.donor.id", "local/tiny-llama-fixture@0")
         if l2 is not None:
-            w.add_uint32("therobot.level", 2)
-            w.add_array("therobot.features", ["taps", "state", "modulator"])
+            mem = l2.get("mem")  # None | "manual" | "auto"
+            if mem:
+                w.add_uint32("therobot.level", 2)
+                w.add_array("therobot.features", ["taps", "state", "modulator", "memory"])
+                w.add_uint32("therobot.memory.key_dim", 8)
+                w.add_uint32("therobot.memory.value_dim", 4)  # == modulator dim
+                w.add_uint32("therobot.memory.capacity", 4)
+                w.add_float32("therobot.memory.decay_halflife", 4.0)
+                w.add_float32("therobot.memory.salience.threshold_quantile", 0.5)
+            else:
+                w.add_uint32("therobot.level", 2)
+                w.add_array("therobot.features", ["taps", "state", "modulator"])
             # state: fast + glacial banks on layer 0 (layer 1 is output-filtered)
             w.add_uint32("therobot.state.bank_count", 2)
             w.add_string("therobot.state.bank.0.name", "fast")
@@ -147,6 +157,19 @@ def write_model(path, arch, robot, taps=False, l2=None):
         if l2.get("film"):
             beta_w[:, 0] = 1.0  # β_j = m[0] for every channel j
         w.add_tensor("blk.0.robot_film.beta.weight", beta_w)
+        mem = l2.get("mem")
+        if mem:
+            D = 16  # Σ bottleneck widths (8 + 8)
+            key_w = (np.random.default_rng(9).standard_normal((8, D)) * 0.5).astype(np.float32)
+            w.add_tensor("robot.mem.summary.key.weight", key_w)
+            val_w = np.zeros((4, D), dtype=np.float32)
+            val_w[0, :] = 0.05  # recall arousal = 0.05 · Σ summary
+            w.add_tensor("robot.mem.summary.value.weight", val_w)
+            if mem == "manual":
+                # silent salience channel: only explicit writes store memories
+                w.add_tensor("robot.mem.salience.weight", np.zeros((2,), dtype=np.float32))
+            else:
+                w.add_tensor("robot.mem.salience.weight", np.ones((2,), dtype=np.float32))
 
     w.write_header_to_file()
     w.write_kv_data_to_file()
@@ -161,3 +184,7 @@ write_model(f"{out_dir}/tiny-llama-taps.gguf", "therobot", robot=True, taps=True
 write_model(f"{out_dir}/tiny-llama-l2.gguf", "therobot", robot=True, l2={})                    # zero grafts ⇒ parity
 write_model(f"{out_dir}/tiny-llama-l2-film.gguf", "therobot", robot=True, l2={"film": True})   # β = m[0]
 write_model(f"{out_dir}/tiny-llama-l2-state.gguf", "therobot", robot=True, l2={"state": True}) # live leaky state
+write_model(f"{out_dir}/tiny-llama-l2-mem.gguf", "therobot", robot=True,
+            l2={"film": True, "mem": "manual"})  # memory via explicit writes; β = m[0] makes recall visible
+write_model(f"{out_dir}/tiny-llama-l2-mem-auto.gguf", "therobot", robot=True,
+            l2={"film": True, "mem": "auto"})    # salience-gated auto-writes

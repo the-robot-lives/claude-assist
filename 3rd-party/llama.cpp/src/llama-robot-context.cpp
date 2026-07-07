@@ -12,6 +12,7 @@
 #include "llama-graph.h"
 #include "llama-impl.h"
 #include "llama-model.h"
+#include "llama-robot-memory.h"
 #include "llama-robot-model.h"
 #include "llama-robot-shim.h"
 #include "llama-robot-state.h"
@@ -355,9 +356,11 @@ bool llama_robot_mod_set(llama_context * ctx, const float * src) {
     return true;
 }
 
-// blob: magic, version, M, m[], n_banks, { layer, S, s[] }*
+// blob v2: magic, version, M, m[], n_banks, { layer, S, s[] }*,
+//          mem_clock u64, recall_len, recall[], summary_len, summary[],
+//          n_entries, { salience, timestamp u64, key_len, key[], val_len, val[] }*
 static constexpr uint32_t ROBOT_SESSION_MAGIC   = 0x52534553; // "RSES"
-static constexpr uint32_t ROBOT_SESSION_VERSION = 1;
+static constexpr uint32_t ROBOT_SESSION_VERSION = 2;
 
 size_t llama_robot_session_size(llama_context * ctx) {
     const auto * st = robot_session_state(ctx);
@@ -367,6 +370,16 @@ size_t llama_robot_session_size(llama_context * ctx) {
     size_t n = 4 * sizeof(uint32_t) + st->m.size() * sizeof(float);
     for (const auto & [L, bank] : st->banks) {
         n += 2 * sizeof(uint32_t) + bank.size() * sizeof(float);
+    }
+    // E5 memory section
+    n += sizeof(uint64_t);                                        // clock
+    n += sizeof(uint32_t) + st->recall.size() * sizeof(float);    // recall
+    n += sizeof(uint32_t) + st->last_summary.size() * sizeof(float); // summary
+    n += sizeof(uint32_t);                                        // n_entries
+    for (const auto & e : st->mem) {
+        n += sizeof(float) + sizeof(uint64_t);
+        n += sizeof(uint32_t) + e.key.size() * sizeof(float);
+        n += sizeof(uint32_t) + e.value.size() * sizeof(float);
     }
     return n;
 }
@@ -390,6 +403,23 @@ size_t llama_robot_session_save(llama_context * ctx, uint8_t * dst, size_t size)
         put_u32(L);
         put_u32((uint32_t) bank.size());
         put_f32(bank);
+    }
+
+    // E5 memory section
+    auto put_u64 = [&](uint64_t v) { memcpy(p, &v, 8); p += 8; };
+    put_u64(st->mem_clock);
+    put_u32((uint32_t) st->recall.size());
+    put_f32(st->recall);
+    put_u32((uint32_t) st->last_summary.size());
+    put_f32(st->last_summary);
+    put_u32((uint32_t) st->mem.size());
+    for (const auto & e : st->mem) {
+        memcpy(p, &e.salience, 4); p += 4;
+        put_u64(e.timestamp);
+        put_u32((uint32_t) e.key.size());
+        put_f32(e.key);
+        put_u32((uint32_t) e.value.size());
+        put_f32(e.value);
     }
     return (size_t) (p - dst);
 }
@@ -439,9 +469,90 @@ size_t llama_robot_session_load(llama_context * ctx, const uint8_t * src, size_t
         banks.emplace_back(L, std::move(bank));
     }
 
+    // E5 memory section
+    auto get_u64 = [&](uint64_t & v) -> bool {
+        if (p + 8 > end) { return false; }
+        memcpy(&v, p, 8); p += 8; return true;
+    };
+    uint64_t clock = 0;
+    uint32_t recall_len = 0, summary_len = 0, n_entries = 0;
+    std::vector<float> recall, summary;
+    std::vector<llama_robot_memory_entry> mem;
+    if (!get_u64(clock) ||
+        !get_u32(recall_len) || !get_f32(recall, recall_len) ||
+        !get_u32(summary_len) || !get_f32(summary, summary_len) ||
+        !get_u32(n_entries)) {
+        LLAMA_LOG_ERROR("therobot: session blob truncated (memory section)\n");
+        return 0;
+    }
+    for (uint32_t i = 0; i < n_entries; ++i) {
+        llama_robot_memory_entry e;
+        uint32_t klen = 0, vlen = 0;
+        if (p + 4 > end) { LLAMA_LOG_ERROR("therobot: session blob truncated\n"); return 0; }
+        memcpy(&e.salience, p, 4); p += 4;
+        if (!get_u64(e.timestamp) ||
+            !get_u32(klen) || !get_f32(e.key, klen) ||
+            !get_u32(vlen) || !get_f32(e.value, vlen)) {
+            LLAMA_LOG_ERROR("therobot: session blob truncated\n");
+            return 0;
+        }
+        mem.push_back(std::move(e));
+    }
+
     st->m = std::move(m);
     for (auto & [L, bank] : banks) {
         *st->bank(L) = std::move(bank);
     }
+    st->mem_clock    = clock;
+    st->recall       = std::move(recall);
+    st->last_summary = std::move(summary);
+    st->mem          = std::move(mem);
+    // surprise history is not checkpointed: the first post-restore decode has
+    // no previous distribution (documented v1 behavior)
+    st->prev_logits.clear();
     return (size_t) (p - src);
+}
+
+//
+// E5 — episodic memory API
+//
+
+int32_t llama_robot_memory_count(const llama_context * ctx) {
+    if (ctx == nullptr || !ctx->robot_state) {
+        return 0;
+    }
+    return (int32_t) ctx->robot_state->mem.size();
+}
+
+bool llama_robot_memory_write(llama_context * ctx, float salience) {
+    if (ctx == nullptr) {
+        return false;
+    }
+    const auto * iface = dynamic_cast<const llama_robot_model_iface *>(&ctx->get_model());
+    auto * st = robot_session_state(ctx);
+    if (iface == nullptr || st == nullptr) {
+        return false;
+    }
+    return llama_robot_memory_write_now(*iface, *st, salience);
+}
+
+void llama_robot_memory_forget(llama_context * ctx) {
+    if (ctx == nullptr || !ctx->robot_state) {
+        return;
+    }
+    auto & st = *ctx->robot_state;
+    st.mem.clear();
+    st.recall.assign(st.recall.size(), 0.0f);
+}
+
+bool llama_robot_memory_recall(const llama_context * ctx, float * dst) {
+    if (ctx == nullptr || !ctx->robot_state || dst == nullptr) {
+        return false;
+    }
+    const auto & st = *ctx->robot_state;
+    if (st.recall.empty()) {
+        return false;
+    }
+    memcpy(dst, st.recall.data(), st.recall.size() * sizeof(float));
+    return true;
 }

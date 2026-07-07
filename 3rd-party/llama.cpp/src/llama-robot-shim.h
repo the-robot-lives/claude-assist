@@ -74,9 +74,19 @@ struct llama_robot_shim {
     ggml_tensor * t_gate_b = nullptr; // [1]            effective bias (op/value folded in)
 };
 
+// E5 — one episodic memory: a memory-head projection of a bottleneck summary,
+// written when the salience gate fired (or on explicit request)
+struct llama_robot_memory_entry {
+    std::vector<float> key;   // [key_dim]
+    std::vector<float> value; // [value_dim == modulator dim]
+    float    salience  = 0.0f;
+    uint64_t timestamp = 0;   // token clock at write
+};
+
 // per-context therobot state: the attached shim set (E3) and the recurrent
-// session state (E4) — the leaky state banks and the modulator vector m.
-// Together these are the checkpointable "mind" of a session (003 §4).
+// session state (E4/E5) — leaky state banks, the modulator vector m, and the
+// episodic store. Together these are the checkpointable "mind" of a session
+// (003 §4).
 struct llama_robot_context_state {
     uint64_t epoch = 1; // bumps on attach/detach; keyed into llm_graph_params
     std::vector<const llama_robot_shim *> shims;
@@ -87,6 +97,14 @@ struct llama_robot_context_state {
     bool state_ready = false;
     std::vector<float> m;                                    // [modulator dim]
     std::vector<std::pair<uint32_t, std::vector<float>>> banks; // (layer, [S_layer])
+
+    // E5 — episodic memory (session state, never file content — spec §1.5)
+    uint64_t mem_clock = 0;               // tokens processed (recency reference)
+    std::vector<llama_robot_memory_entry> mem;
+    std::vector<float> recall;            // [modulator dim] — injected next decode
+    std::vector<float> last_summary;      // [Σ bottleneck widths] — latest decode
+    std::vector<float> prev_logits;       // last position logits (surprise basis)
+    std::vector<float> salience_window;   // running scores for the quantile gate
 
     std::vector<float> * bank(uint32_t layer) {
         for (auto & b : banks) {

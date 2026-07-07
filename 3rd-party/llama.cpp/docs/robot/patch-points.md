@@ -12,6 +12,7 @@ New-file extension code (no fences needed, never conflicts):
 - `src/llama-robot-model.{h,cpp}` — donor-wrapper template + factory + graph application: taps, shims, FiLM, leaky-state scan, modulator update (incl. cgraph splicing)
 - `src/llama-robot-shim.{h,cpp}` — E3 shim module loader (`therobot-shim` files) + per-context state struct
 - `src/llama-robot-state.{h,cpp}` — E4 recurrent session state: graph input class, prepare/capture hooks, graft validation
+- `src/llama-robot-memory.{h,cpp}` — E5 episodic memory: salience-gated store, cosine+recency recall, decay eviction (pure runtime, CPU-side)
 - `src/llama-robot-context.cpp` + `include/llama-robot.h` — public API: taps/probes, shim lifecycle, modulator get/set, session checkpoint
 - `tools/robot-inspect/` — manifest inspection tool (`llama-robot-inspect`)
 - `tests/robot/` — fixture generators + L0 parity test (manual; see its README)
@@ -35,7 +36,7 @@ New-file extension code (no fences needed, never conflicts):
 | 12 | `src/llama-context.cpp` | `context-include` | `#include "llama-robot-shim.h"` + `"llama-robot-state.h"` |
 | 13 | `src/llama-context.cpp` | `graph-params-robot-set` / `graph-params-robot-set-tail` | `graph_params()` assembles the struct locally and attaches `robot_state` + epoch before returning |
 | 14 | `src/llama-context.cpp` | `context-state-prepare` | Top of `process_ubatch()`: lazily size the recurrent session state (m + banks) before `graph_params` captures the state pointer |
-| 15 | `src/llama-context.cpp` | `context-state-capture` | After successful graph compute in `process_ubatch()`: pull `robot_mod_out` / `robot_state_out-<L>` back to host state |
+| 15 | `src/llama-context.cpp` | `context-state-capture` | After successful graph compute in `process_ubatch()`: pull `robot_mod_out` / `robot_state_out-<L>` back to host state and run the per-decode episodic memory update (passes the ubatch for the surprise signal) |
 
 ## Upstream internals relied on without modification
 

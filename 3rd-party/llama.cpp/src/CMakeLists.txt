@@ -39,6 +39,7 @@ add_library(llama
             ../include/llama-robot.h
             llama-robot-context.cpp
             llama-robot-hparams.cpp
+            llama-robot-memory.cpp
             llama-robot-model.cpp
             llama-robot-shim.cpp
             llama-robot-state.cpp
