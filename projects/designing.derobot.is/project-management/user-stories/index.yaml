@@ -1,0 +1,126 @@
+user_stories:
+  - id: US-01
+    title: Author a screen in the text DSL
+    persona: solo-founder-validating
+    priority: P0
+    size: S
+  - id: US-02
+    title: Element types with themeable default classes
+    persona: figma-product-designer
+    priority: P0
+    size: S
+  - id: US-03
+    title: First-class data-* and aria-* attributes
+    persona: figma-product-designer
+    priority: P1
+    size: S
+  - id: US-04
+    title: Live low-fi render in the editor
+    persona: solo-founder-validating
+    priority: P0
+    size: S
+  - id: US-05
+    title: Edit theme.yaml seed tokens and watch generated CSS
+    persona: figma-product-designer
+    priority: P0
+    size: M
+  - id: US-06
+    title: Low-fi / high-fi toggle for a whole screen
+    persona: solo-founder-validating
+    priority: P0
+    size: S
+  - id: US-07
+    title: Scoped, nested toggle with nearest-wins resolution
+    persona: ux-researcher-pm
+    priority: P1
+    size: M
+  - id: US-08
+    title: Nearest-theme resolution in the tree
+    persona: figma-product-designer
+    priority: P2
+    size: M
+  - id: US-09
+    title: Upvert a text element to the structured form
+    persona: design-system-frontend-engineer
+    priority: P1
+    size: M
+  - id: US-10
+    title: Hybrid partial upvert of a subset
+    persona: figma-product-designer
+    priority: P1
+    size: M
+  - id: US-11
+    title: Retain the text source after upverting
+    persona: design-system-frontend-engineer
+    priority: P1
+    size: S
+  - id: US-12
+    title: Export Lit web components
+    persona: design-system-frontend-engineer
+    priority: P0
+    size: M
+  - id: US-13
+    title: Export static, self-contained HTML
+    persona: solo-founder-validating
+    priority: P1
+    size: S
+  - id: US-14
+    title: Cross-framework reuse of exported components
+    persona: design-system-frontend-engineer
+    priority: P1
+    size: M
+  - id: US-15
+    title: Define a finite state machine for a prototype
+    persona: agent-mcp-operator
+    priority: P0
+    size: M
+  - id: US-16
+    title: Bind a transition to an API / webhook call
+    persona: ux-researcher-pm
+    priority: P1
+    size: M
+  - id: US-17
+    title: LLM-populated / responsive content
+    persona: agency-consultant-demos
+    priority: P1
+    size: M
+  - id: US-18
+    title: Key-value store for state persistence
+    persona: ux-researcher-pm
+    priority: P1
+    size: M
+  - id: US-19
+    title: MCP agent-driven authoring
+    persona: agent-mcp-operator
+    priority: P0
+    size: M
+  - id: US-20
+    title: Run a prototype over MCP with structured results
+    persona: agent-mcp-operator
+    priority: P1
+    size: M
+  - id: US-21
+    title: Full-screen Prototype Player
+    persona: ux-researcher-pm
+    priority: P1
+    size: M
+  - id: US-22
+    title: Screens / project dashboard
+    persona: agency-consultant-demos
+    priority: P1
+    size: S
+  - id: US-23
+    title: Accessibility check on a screen
+    persona: figma-product-designer
+    priority: P2
+    size: M
+  - id: US-24
+    title: Collaboration and prototype sharing
+    persona: agency-consultant-demos
+    priority: P2
+    size: M
+  - id: US-25
+    title: Swap themes to instantly rebrand
+    persona: agency-consultant-demos
+    priority: P2
+    size: S
