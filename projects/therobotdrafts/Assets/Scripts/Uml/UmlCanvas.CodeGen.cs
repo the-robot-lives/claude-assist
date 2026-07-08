@@ -6,6 +6,7 @@ using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.UI;
 using TheRobotDraft.Authoring.Model;
+using TheRobotDraft.Authoring.State;
 using TheRobotDraft.CodeGen;
 using TheRobotDraft.Llm;
 
@@ -126,6 +127,23 @@ namespace TheRobotDraft.Uml
                     ctx.Relationships.Add(MakeRelationship(kind, dir, edge, other));
                 }
             }
+
+            // Resolved (effective) aspects for this element: merge the scope ladder (global / element-type /
+            // element-type+graph / stereotype-bundle) with any authored-on instances. GraphType.Unspecified because the
+            // canvas carries no diagram-type axis today — the ElementType+Graph layer simply won't match until one exists.
+            foreach (var ea in AspectAttachment.ResolveElement(el, GraphType.Unspecified))
+            {
+                var view = new CodeGenContext.AspectView
+                {
+                    Name = ea.Def?.Name ?? "",
+                    DefVersion = ea.Def?.Version ?? ea.Instance?.DefVersion ?? 1,
+                    Emit = ea.Emit,
+                    FromScope = ea.FromScope,
+                };
+                foreach (var kv in ea.Values) view.Values[kv.Key] = kv.Value;
+                ctx.Aspects.Add(view);
+            }
+            foreach (var ff in AspectAttachment.FreeformElement(el)) ctx.Freeform.Add(ff);
 
             return ctx;
         }

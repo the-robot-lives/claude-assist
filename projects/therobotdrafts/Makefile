@@ -117,10 +117,10 @@ purge-license:
 	fi
 
 doc-pointers:
-	@"$(DOC_POINTERS)" --root "$(PROJECT_DIR)" --write
+	@"$(DOC_POINTERS)" build --root "$(PROJECT_DIR)" --write
 
 doc-pointers-check:
-	@"$(DOC_POINTERS)" --root "$(PROJECT_DIR)" --check
+	@"$(DOC_POINTERS)" build --root "$(PROJECT_DIR)" --check
 
 install-doc-pointer-hook:
-	@"$(DOC_POINTERS)" --root "$(PROJECT_DIR)" --install-hook
+	@"$(DOC_POINTERS)" hook --root "$(PROJECT_DIR)"

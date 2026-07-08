@@ -2522,6 +2522,7 @@ namespace TheRobotDraft.Uml
 
             EnsureActivePackage();
             BuildTabBar();
+            _browseNav?.RebuildTree(); // C1: model-derived browse tree (all diagrams), independent of active package
 
             if (!_activePackage.IsValid)
             {
@@ -4534,6 +4535,7 @@ namespace TheRobotDraft.Uml
             ClearRegionSelection();
             RefreshSelectionHighlights();
             RefreshInspector();
+            _browseNav?.RefreshSelection(_selectedId);
         }
 
         /// <summary>Shift-click: add/remove a node from the multi-selection. The toggled node becomes primary.</summary>
@@ -4741,6 +4743,7 @@ namespace TheRobotDraft.Uml
             BuildNavBar();
 
             BuildPalette();
+            BuildBrowseNav();
             BuildInspector();
         }
 

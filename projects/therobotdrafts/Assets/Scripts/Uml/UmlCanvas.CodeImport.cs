@@ -492,7 +492,14 @@ namespace TheRobotDraft.Uml
                     _ctl.SetEmbedDeepLinkCode(id, true);
                 }
                 if (!string.IsNullOrEmpty(sourceFile))
+                {
                     _ctl.SetSourceFile(id, sourceFile);
+                    // Recover any aspect/freeform metadata carried in the source text (Track E — extraction half of
+                    // the round-trip). Carriers (<aspect> doc-tags, comment carriers, native attributes) sit directly
+                    // above the type they decorate, so ingest attributes each carrier to its owning type by position —
+                    // no single-type restriction.
+                    ImportAspectsForType(id, pt.name.Trim(), sourceFile);
+                }
 
                 ImportAddMembers(id, ElementKind.Field, pt.fields, pt.fieldComments,
                     pt.fieldDeepLinkUuids, pt.fieldDeepLinkCodes);
@@ -512,6 +519,38 @@ namespace TheRobotDraft.Uml
                 made++;
             }
             return made;
+        }
+
+        /// <summary>
+        /// Recover the aspect + freeform metadata authored in <paramref name="sourceFile"/> for the type named
+        /// <paramref name="typeName"/> and attach it to <paramref name="id"/>. Ingest attributes each carrier to its
+        /// owning type by position (the carrier sits above the type it decorates), so this is correct for multi-type
+        /// files too — there is no single-type restriction. Mutates the element's
+        /// <see cref="ModelElement.AspectSet"/> directly via the model; no-op when the file text isn't cached, the
+        /// element can't be resolved, or no carriers belong to this type.
+        /// </summary>
+        private void ImportAspectsForType(ElementId id, string typeName, string sourceFile)
+        {
+            if (!id.IsValid || string.IsNullOrEmpty(typeName) || string.IsNullOrEmpty(sourceFile)) return;
+            if (!_sourceFiles.TryGetValue(sourceFile, out var text) || string.IsNullOrEmpty(text)) return;
+
+            var byType = AspectIngest.IngestCodeByType(text);
+            if (byType == null || byType.Count == 0) return;
+            if (!byType.TryGetValue(typeName, out var recovered)) return;
+            if ((recovered.Aspects == null || recovered.Aspects.Count == 0) &&
+                (recovered.Freeform == null || recovered.Freeform.Count == 0)) return;
+            if (!_model.TryGet(id, out var el) || el.AspectSet == null) return;
+
+            // Coalesce onto the registry (Normalize drops invalid/locked-field overrides) so imported instances are clean.
+            foreach (var inst in recovered.Aspects)
+            {
+                var def = AspectRegistry.Get(inst.DefName);
+                if (def != null) AspectResolution.Normalize(def, inst);
+                el.AspectSet.Aspects.Add(inst);
+            }
+            foreach (var f in recovered.Freeform)
+                if (f != null && AspectResolution.IsValidKey(f.Key))
+                    el.AspectSet.Freeform.Add(new FreeformEntry { Key = f.Key, Value = f.Value });
         }
 
         /// <summary>

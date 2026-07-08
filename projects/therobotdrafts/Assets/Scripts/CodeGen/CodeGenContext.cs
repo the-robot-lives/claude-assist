@@ -43,6 +43,30 @@ namespace TheRobotDraft.CodeGen
         public readonly List<MemberDeepLink> OperationDeepLinks = new();
         public readonly List<string> AttachedNotes = new(); // verbatim note texts linked via NoteLink
 
+        /// <summary>
+        /// The resolved (effective) aspects for this element: one entry per aspect in scope (global / element-type /
+        /// element-type+graph / stereotype-bundle) plus any authored-on instances, each carrying its def version, the
+        /// effective per-field values (def default + instance override), the effective <see cref="EmitFlags"/>, and
+        /// whether it came purely from a scope layer. Populated by the UmlCanvas partial from
+        /// <c>AspectAttachment.ResolveElement</c>; consumed by <see cref="CodeSkeleton"/> (emit dispatch) and
+        /// <see cref="ToPromptString"/>. Kept decoupled from <c>Authoring.State</c> so the codegen layer needn't
+        /// reference the SQLite-backed registry.
+        /// </summary>
+        public readonly List<AspectView> Aspects = new();
+
+        /// <summary>Authored freeform key-values on the element (sparse — exactly what was typed).</summary>
+        public readonly List<FreeformEntry> Freeform = new();
+
+        /// <summary>One resolved aspect view (def identity + effective values + effective emit).</summary>
+        public sealed class AspectView
+        {
+            public string Name;                 // aspect def name
+            public int DefVersion;              // def version the values were resolved against
+            public readonly Dictionary<string, string> Values = new(); // effective per-field values
+            public EmitFlags Emit;              // effective emit flags (A/D/C/M dispatch targets)
+            public bool FromScope;              // true when this aspect is scope-attached only, never authored
+        }
+
         public struct MemberDeepLink
         {
             public string Uuid;
@@ -166,8 +190,34 @@ namespace TheRobotDraft.CodeGen
                 }
             }
 
+            if (Aspects.Count > 0)
+            {
+                sb.Append("\nAspects (typed metadata attached to this element):\n");
+                foreach (var a in Aspects)
+                {
+                    // emit-target flags tell the generator where to place this aspect's values: A=native attribute,
+                    // D=doc tag, C=comment, M=meta sidecar. Surface them so the LLM routes each aspect correctly.
+                    sb.Append("  - ").Append(a.Name).Append(" (v").Append(a.DefVersion).Append(')');
+                    sb.Append(" emit:[").Append(EmitLetters(a.Emit)).Append("]");
+                    if (a.FromScope) sb.Append(" (scope-attached)");
+                    sb.Append('\n');
+                    foreach (var kv in a.Values)
+                        sb.Append("      ").Append(kv.Key).Append(" = ").Append(kv.Value).Append('\n');
+                }
+            }
+
+            if (Freeform.Count > 0)
+            {
+                sb.Append("\nFreeform metadata (author key-values, no schema):\n");
+                foreach (var f in Freeform)
+                    sb.Append("  ").Append(f.Key).Append(" = ").Append(f.Value).Append('\n');
+            }
+
             return sb.ToString();
         }
+
+        private static string EmitLetters(EmitFlags f) =>
+            (f.Annotate ? "A" : "") + (f.DocTag ? "D" : "") + (f.Comment ? "C" : "") + (f.Meta ? "M" : "");
 
         private static void AppendMemberLines(StringBuilder sb, string prefix, List<string> members)
         {
