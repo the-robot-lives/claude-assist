@@ -70,6 +70,20 @@ namespace TheRobotDraft.Uml
                 case IxElementType.Artifact: return ElementKind.Artifact;
                 case IxElementType.Boundary: return ElementKind.Boundary;
                 case IxElementType.Actor: return ElementKind.Actor;
+                case IxElementType.UseCase: return ElementKind.UseCase;
+                case IxElementType.State: return ElementKind.State;
+                case IxElementType.StateStart: return ElementKind.StateStart;
+                case IxElementType.StateEnd: return ElementKind.StateEnd;
+                case IxElementType.Activity: return ElementKind.Activity;
+                case IxElementType.Decision: return ElementKind.Decision;
+                case IxElementType.ForkJoin: return ElementKind.ForkJoin;
+                case IxElementType.FlowFinal: return ElementKind.FlowFinal;
+                case IxElementType.Component: return ElementKind.Component;
+                case IxElementType.DeploymentNode: return ElementKind.DeploymentNode;
+                case IxElementType.Database: return ElementKind.Database;
+                case IxElementType.Cloud: return ElementKind.Cloud;
+                case IxElementType.Lifeline: return ElementKind.Lifeline;
+                case IxElementType.MindNode: return ElementKind.MindNode;
                 default: return ElementKind.Class; // Unknown / unmapped → Class (stereotype preserves the original)
             }
         }
@@ -88,6 +102,12 @@ namespace TheRobotDraft.Uml
                 case IxEdgeType.Dependency: return EdgeKind.Dependency;
                 case IxEdgeType.NoteLink: return EdgeKind.NoteLink;
                 case IxEdgeType.Extension: return EdgeKind.Extension;
+                case IxEdgeType.Include: return EdgeKind.Include;
+                case IxEdgeType.Extend: return EdgeKind.Extend;
+                case IxEdgeType.Transition: return EdgeKind.Transition;
+                case IxEdgeType.MessageSync: return EdgeKind.MessageSync;
+                case IxEdgeType.MessageAsync: return EdgeKind.MessageAsync;
+                case IxEdgeType.MessageReply: return EdgeKind.MessageReply;
                 default: return EdgeKind.Association;
             }
         }
@@ -801,6 +821,20 @@ namespace TheRobotDraft.Uml
                 case ElementKind.Artifact: return IxElementType.Artifact;
                 case ElementKind.Boundary: return IxElementType.Boundary;
                 case ElementKind.Actor: return IxElementType.Actor;
+                case ElementKind.UseCase: return IxElementType.UseCase;
+                case ElementKind.State: return IxElementType.State;
+                case ElementKind.StateStart: return IxElementType.StateStart;
+                case ElementKind.StateEnd: return IxElementType.StateEnd;
+                case ElementKind.Activity: return IxElementType.Activity;
+                case ElementKind.Decision: return IxElementType.Decision;
+                case ElementKind.ForkJoin: return IxElementType.ForkJoin;
+                case ElementKind.FlowFinal: return IxElementType.FlowFinal;
+                case ElementKind.Component: return IxElementType.Component;
+                case ElementKind.DeploymentNode: return IxElementType.DeploymentNode;
+                case ElementKind.Database: return IxElementType.Database;
+                case ElementKind.Cloud: return IxElementType.Cloud;
+                case ElementKind.Lifeline: return IxElementType.Lifeline;
+                case ElementKind.MindNode: return IxElementType.MindNode;
                 default: mapped = false; return IxElementType.Unknown;
             }
         }
@@ -817,15 +851,15 @@ namespace TheRobotDraft.Uml
             EdgeKind.Dependency => IxEdgeType.Dependency,
             EdgeKind.NoteLink => IxEdgeType.NoteLink,
             EdgeKind.Extension => IxEdgeType.Extension,
-            EdgeKind.Consumes => IxEdgeType.Dependency,
-            EdgeKind.Include => IxEdgeType.Dependency,
-            EdgeKind.Extend => IxEdgeType.Dependency,
-            EdgeKind.MessageReply => IxEdgeType.Dependency,
-            EdgeKind.Transition => IxEdgeType.DirectedAssociation,
-            EdgeKind.MessageSync => IxEdgeType.DirectedAssociation,
-            EdgeKind.MessageAsync => IxEdgeType.DirectedAssociation,
+            EdgeKind.Include => IxEdgeType.Include,
+            EdgeKind.Extend => IxEdgeType.Extend,
+            EdgeKind.Transition => IxEdgeType.Transition,
+            EdgeKind.MessageSync => IxEdgeType.MessageSync,
+            EdgeKind.MessageAsync => IxEdgeType.MessageAsync,
+            EdgeKind.MessageReply => IxEdgeType.MessageReply,
+            EdgeKind.Consumes => IxEdgeType.Dependency,       // «consumes» usage has no distinct IR relation
             EdgeKind.SketchConnector => IxEdgeType.Association,
-            _ => IxEdgeType.Unknown,
+            _ => IxEdgeType.Unknown,                           // SysML / BPMN / DMN / Archi — no v1 IR equivalent
         };
 
         private static UmlVisibility MapVisibility(IxVisibility v) => v switch

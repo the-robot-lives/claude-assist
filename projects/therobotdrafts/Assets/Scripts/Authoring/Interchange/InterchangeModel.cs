@@ -33,6 +33,10 @@ namespace TheRobotDraft.Authoring.Interchange
         Package, Class, Interface, Enum, Struct, DataType,
         Table,      // ERD entity (EA Class stereotyped «table»)
         Note, Artifact, Boundary, Actor,
+        // Behavioral / deployment vocabulary (use-case, state, activity,
+        // component, deployment, sequence, mind-map sources)
+        UseCase, State, StateStart, StateEnd, Activity, Decision, ForkJoin, FlowFinal,
+        Component, DeploymentNode, Database, Cloud, Lifeline, MindNode,
         Unknown
     }
 
@@ -40,6 +44,8 @@ namespace TheRobotDraft.Authoring.Interchange
     {
         Association, DirectedAssociation, Aggregation, Composition,
         Generalization, Realization, Dependency, NoteLink, Extension,
+        // Behavioral vocabulary
+        Include, Extend, Transition, MessageSync, MessageAsync, MessageReply,
         Unknown
     }
 

@@ -190,10 +190,10 @@ namespace TheRobotDraft.Authoring.Tests
         [Test]
         public void RoundTrip_Doc9_Shaped_Text_Is_Stable_And_Complete()
         {
-            // A §9-shaped diagram exercising packages, a generic interface, an abstract class + abstract member,
-            // an enum, typed fields/methods (both styles), and every class-diagram relationship kind with
-            // multiplicities. The abstract base is named "Base" (not the doc's "Entity") to avoid a reader
-            // keyword-collision — see final report — while covering the identical feature set.
+            // The docs/formats/plantuml-format.md §9 worked example verbatim: packages, a generic interface,
+            // an abstract class, an enum, typed fields/methods, and every class-diagram relationship kind with
+            // multiplicities and a reading-direction label. The class literally named "Entity" (which previously
+            // collided with the `entity` keyword) is exercised here to guard that regression.
             const string src =
                 "@startuml\n" +
                 "hide empty members\n" +
@@ -202,7 +202,7 @@ namespace TheRobotDraft.Authoring.Tests
                 "    + findById(id: Guid): T\n" +
                 "    + save(entity: T): void\n" +
                 "  }\n" +
-                "  abstract class Base {\n" +
+                "  abstract class Entity {\n" +
                 "    + {abstract} id: Guid\n" +
                 "    # createdAt: DateTime\n" +
                 "  }\n" +
@@ -222,11 +222,11 @@ namespace TheRobotDraft.Authoring.Tests
                 "    + save(entity: Customer): void\n" +
                 "  }\n" +
                 "}\n" +
-                "Base <|-- Customer\n" +
+                "Entity <|-- Customer\n" +
                 "Repository <|.. CustomerRepository\n" +
                 "CustomerRepository ..> Customer : manages\n" +
                 "Customer \"1\" o-- \"0..*\" Status : has\n" +
-                "Customer --> \"1\" Status : current\n" +
+                "Customer --> \"1\" Status : current >\n" +
                 "@enduml\n";
 
             IxModel m1 = PlantUmlReader.Parse(src);
@@ -236,10 +236,10 @@ namespace TheRobotDraft.Authoring.Tests
             IxElement repo = Find(m1, "Repository");
             Assert.AreEqual(IxElementType.Interface, repo.Type);
             Assert.AreEqual("T", repo.GenericParams, "generic interface");
-            Assert.IsTrue(Find(m1, "Base").IsAbstract, "abstract class");
+            Assert.IsTrue(Find(m1, "Entity").IsAbstract, "abstract class");
             Assert.AreEqual(3, Find(m1, "Status").EnumLiterals.Count, "enum literals");
-            Assert.IsTrue(m1.Edges.Any(e => e.Type == IxEdgeType.Generalization && e.FromId == "Customer" && e.ToId == "Base"),
-                "generalization normalized child->parent");
+            Assert.IsTrue(m1.Edges.Any(e => e.Type == IxEdgeType.Generalization && e.FromId == "Customer" && e.ToId == "Entity"),
+                "generalization normalized child->parent (class named Entity, not misparsed as entity keyword)");
             Assert.IsTrue(m1.Edges.Any(e => e.Type == IxEdgeType.Realization && e.FromId == "CustomerRepository" && e.ToId == "Repository"),
                 "realization impl->interface");
             Assert.IsTrue(m1.Edges.Any(e => e.Type == IxEdgeType.Dependency && e.FromId == "CustomerRepository" && e.ToId == "Customer"),
@@ -284,10 +284,10 @@ namespace TheRobotDraft.Authoring.Tests
             repo.Members.Add(Op("save", "void", new IxParam { Name = "entity", Type = "T" }));
             m.Elements.Add(repo);
 
-            var baseEl = new IxElement { Id = "Base", Name = "Base", Type = IxElementType.Class, ParentId = "domain", IsAbstract = true };
-            baseEl.Members.Add(new IxMember { Name = "id", Type = "Guid", IsAbstract = true, Visibility = IxVisibility.Public });
-            baseEl.Members.Add(new IxMember { Name = "createdAt", Type = "DateTime", Visibility = IxVisibility.Protected });
-            m.Elements.Add(baseEl);
+            var entity = new IxElement { Id = "Entity", Name = "Entity", Type = IxElementType.Class, ParentId = "domain", IsAbstract = true };
+            entity.Members.Add(new IxMember { Name = "id", Type = "Guid", IsAbstract = true, Visibility = IxVisibility.Public });
+            entity.Members.Add(new IxMember { Name = "createdAt", Type = "DateTime", Visibility = IxVisibility.Protected });
+            m.Elements.Add(entity);
 
             var status = new IxElement { Id = "Status", Name = "Status", Type = IxElementType.Enum, ParentId = "domain" };
             status.EnumLiterals.Add("ACTIVE");
@@ -310,7 +310,7 @@ namespace TheRobotDraft.Authoring.Tests
 
             m.Elements.Add(new IxElement { Id = "N1", Name = "a customer note", Type = IxElementType.Note, Documentation = "a customer note" });
 
-            m.Edges.Add(new IxEdge { Type = IxEdgeType.Generalization, FromId = "Customer", ToId = "Base" });
+            m.Edges.Add(new IxEdge { Type = IxEdgeType.Generalization, FromId = "Customer", ToId = "Entity" });
             m.Edges.Add(new IxEdge { Type = IxEdgeType.Realization, FromId = "CustomerRepository", ToId = "Repository" });
             m.Edges.Add(new IxEdge { Type = IxEdgeType.Dependency, FromId = "CustomerRepository", ToId = "Customer", Label = "manages" });
             m.Edges.Add(new IxEdge { Type = IxEdgeType.Aggregation, FromId = "Customer", ToId = "Status", FromMultiplicity = "1", ToMultiplicity = "0..*", Label = "has" });

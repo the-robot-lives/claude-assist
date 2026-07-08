@@ -36,7 +36,7 @@ namespace TheRobotDraft.Authoring.Interchange
             if (family == "salt")
                 throw new InterchangeException("salt wireframe markup isn't supported yet — import it as a UI mockup instead");
 
-            var model = new IxModel { Name = FindTitle(lines) };
+            var model = new IxModel { Name = FindTitle(lines) ?? FindStartName(lines) };
             model.Diagrams.Add(new IxDiagram { Id = "d1", Name = model.Name, Kind = family });
 
             switch (family)
@@ -97,6 +97,22 @@ namespace TheRobotDraft.Authoring.Interchange
             return null;
         }
 
+        /// <summary>Recover the diagram name from <c>@startuml Name</c> (the form PlantUmlWriter emits) when no
+        /// explicit <c>title</c> is present.</summary>
+        private static string FindStartName(List<string> lines)
+        {
+            foreach (var l in lines)
+            {
+                var m = Regex.Match(l, @"^@startuml\s+(.+)$", RegexOptions.IgnoreCase);
+                if (m.Success)
+                {
+                    string n = Unquote(m.Groups[1].Value.Trim());
+                    if (n.Length > 0) return n;
+                }
+            }
+            return null;
+        }
+
         private static string DetectFamily(string text, List<string> lines)
         {
             if (text.IndexOf("@startmindmap", StringComparison.OrdinalIgnoreCase) >= 0) return "mindmap";
@@ -144,7 +160,10 @@ namespace TheRobotDraft.Authoring.Interchange
 
         private static bool StartsWithWord(string line, string word)
         {
-            if (!line.StartsWith(word, StringComparison.OrdinalIgnoreCase)) return false;
+            // Case-sensitive: PlantUML element/directive keywords are lowercase, so a capitalized identifier
+            // (e.g. a class literally named "Entity" in `Entity <|-- Customer`) must NOT match the `entity`
+            // keyword and be misparsed as a declaration.
+            if (!line.StartsWith(word, StringComparison.Ordinal)) return false;
             if (line.Length == word.Length) return true;
             char c = line[word.Length];
             return c == ' ' || c == '\t' || c == '(' || c == '"';
@@ -431,6 +450,14 @@ namespace TheRobotDraft.Authoring.Interchange
                 else if (s == "end") type = IxElementType.StateEnd;
             }
 
+            // «table» stereotype on a class marks an ERD table (round-trips PlantUmlWriter's Table output);
+            // the type carries the semantics, so the stereotype text itself is dropped.
+            if (stereo != null && (type == IxElementType.Class || type == IxElementType.Table) && Eq(stereo, "table"))
+            {
+                type = IxElementType.Table;
+                stereo = null;
+            }
+
             element = ctx.Declare(key, display, type);
             element.IsAbstract = isAbstract || element.IsAbstract;
             if (stereo != null && element.Stereotype == null
@@ -669,6 +696,7 @@ namespace TheRobotDraft.Authoring.Interchange
             }
             else if (stereoInLabel != null && Eq(stereoInLabel, "include")) { type = IxEdgeType.Include; }
             else if (stereoInLabel != null && Eq(stereoInLabel, "extend")) { type = IxEdgeType.Extend; }
+            else if (stereoInLabel != null && Eq(stereoInLabel, "extension")) { type = IxEdgeType.Extension; }
             else if (lh == "<|" || rh == "|>")
             {
                 // arrowhead marks the parent; normalize From=child, To=parent
@@ -707,7 +735,7 @@ namespace TheRobotDraft.Authoring.Interchange
             }
 
             ctx.AddEdge(type, eFrom.Id, eTo.Id,
-                string.IsNullOrEmpty(cleanLabel) ? (stereoInLabel != null && type != IxEdgeType.Include && type != IxEdgeType.Extend ? stereoInLabel : cleanLabel) : cleanLabel,
+                string.IsNullOrEmpty(cleanLabel) ? (stereoInLabel != null && type != IxEdgeType.Include && type != IxEdgeType.Extend && type != IxEdgeType.Extension ? stereoInLabel : cleanLabel) : cleanLabel,
                 eFrom == from ? leftMult : rightMult,
                 eFrom == from ? rightMult : leftMult);
             return true;
