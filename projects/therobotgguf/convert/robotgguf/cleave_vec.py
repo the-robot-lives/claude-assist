@@ -135,7 +135,7 @@ def run(cfg: Config) -> None:
     dom_ids, dom_names = store.domains()
 
     # sample cap keeps the solve + scoring memory-bounded on focused passes
-    n_all = man.n_samples
+    n_all = min(man.n_samples, len(vec))   # vector may be truncated vs acts
     cap = int(cfg.vec_sample_cap)
     take = np.sort(rng.choice(n_all, size=min(cap, n_all), replace=False))
     y_all = np.asarray(vec, dtype=np.float32)[take]

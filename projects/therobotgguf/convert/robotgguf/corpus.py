@@ -174,6 +174,8 @@ def stratified_windows(strata: list, tok, max_tokens: int, window: int,
         domain_ids.append(pick)
         emitted[pick] += 1
 
+    for r in readers:
+        r.close()
     if not windows:
         raise SystemExit("corpus: no stratum produced a full window of tokens")
     return windows, np.asarray(domain_ids, dtype=np.int64), domains

@@ -67,6 +67,24 @@ layout; confirm the Qwen3.5 module tree matches (adjust `record.py`'s layer
 accessor if HF renamed it for the hybrid blocks). Run the weak-labeler pass
 to replace placeholder labels before cleave.
 
+**3b. Labels (extraction-v1).** The config now names `semvec:
+configs/semvec-v1.yaml`, so labels are the 512-dim vector + categorical
+views. With recordings already on disk, everything below re-runs WITHOUT
+touching the model:
+
+```bash
+robotgguf --config configs/qwen3.5-0.8b.yaml relabel        # t0 vector + views
+robotgguf --config configs/qwen3.5-0.8b.yaml labelvec --fit-basis work/semvec-v1-basis.npz
+#   → pin latent.basis / basis_sha256 / embedder_revision in semvec-v1.yaml (freezes the standard)
+robotgguf --config configs/qwen3.5-0.8b.yaml labelvec --tiers t1        # classifiers + latent block
+robotgguf --config configs/qwen3.5-0.8b.yaml labelvec --tiers t2        # teacher (ROBOT_TEACHER_* env)
+robotgguf --config configs/qwen3.5-0.8b.yaml labels-qa                  # C2 gates → lockfile
+```
+
+Re-baseline note: pre-v1 recordings were drawn head-of-file (extraction-v1
+§1.5) — re-record (step 3) with the fixed stratified loader before trusting
+any v0-vs-v1 admission comparison.
+
 **4. Cleave:**
 
 ```bash
@@ -76,6 +94,12 @@ robotgguf --config configs/qwen3.5-0.8b.yaml cleave
 Vet per validation.md 2.3. Donor-specific expectation: sites at L ≡ 2 (mod 4)
 sit directly before attention blocks and typically probe best — if `resid14`
 / `resid18` dominate, that's consistent with the layout, keep 4–6 winners.
+With semvec labels present, cleave also runs the vector path
+(lockfile `[cleave_vec]`, tensors in `work/semvec-probes/`) — the per-axis
+depth map plus proj/calib/overlay per site; `shim-compile` then builds
+semvec-defined modules from `semvec_shims:` definitions, and export packages
+the readout layer automatically (optional feature; `verify` gate 5 checks it
+structurally).
 
 **5. Graft (zero-init first), calibrate, shims:**
 
