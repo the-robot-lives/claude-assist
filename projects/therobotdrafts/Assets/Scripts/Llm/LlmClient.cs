@@ -135,6 +135,70 @@ namespace TheRobotDraft.Llm
         }
 
         /// <summary>
+        /// Build (but do not send) a multimodal POST to <c>{baseUrl}/chat/completions</c>: a system prompt plus a
+        /// user turn carrying text and an inline base64 PNG (<c>image_url</c> content part, data-URL form — the
+        /// OpenAI-compatible vision convention LM Studio / Ollama / OpenRouter all accept). The body is composed by
+        /// hand because <see cref="JsonUtility"/> cannot serialize the polymorphic <c>content</c> array. Explicit
+        /// endpoint arguments (rather than <see cref="LlmSettings"/>) so the vision endpoint can differ from the
+        /// text one. The caller owns the request lifecycle, as with <see cref="BuildChatRequest"/>.
+        /// </summary>
+        public static UnityWebRequest BuildVisionChatRequest(string baseUrl, string apiKey, string model,
+            string systemPrompt, string userText, byte[] imagePng)
+        {
+            var sb = new StringBuilder(4096 + (imagePng != null ? (imagePng.Length / 3 + 1) * 4 : 0));
+            sb.Append("{\"model\":").Append(JsonString(model))
+              .Append(",\"temperature\":0.1,\"messages\":[");
+            sb.Append("{\"role\":\"system\",\"content\":").Append(JsonString(systemPrompt ?? "")).Append("},");
+            sb.Append("{\"role\":\"user\",\"content\":[");
+            sb.Append("{\"type\":\"text\",\"text\":").Append(JsonString(userText ?? "")).Append('}');
+            if (imagePng != null && imagePng.Length > 0)
+            {
+                sb.Append(",{\"type\":\"image_url\",\"image_url\":{\"url\":\"data:image/png;base64,")
+                  .Append(Convert.ToBase64String(imagePng))
+                  .Append("\"}}");
+            }
+            sb.Append("]}]}");
+
+            byte[] payload = Encoding.UTF8.GetBytes(sb.ToString());
+            string url = TrimUrl(baseUrl) + "/chat/completions";
+            var req = new UnityWebRequest(url, UnityWebRequest.kHttpVerbPOST)
+            {
+                uploadHandler = new UploadHandlerRaw(payload),
+                downloadHandler = new DownloadHandlerBuffer(),
+            };
+            req.SetRequestHeader("Content-Type", "application/json");
+            if (!string.IsNullOrEmpty(apiKey))
+                req.SetRequestHeader("Authorization", "Bearer " + apiKey);
+            return req;
+        }
+
+        /// <summary>Encode a string as a JSON literal (quotes included), escaping per RFC 8259.</summary>
+        private static string JsonString(string s)
+        {
+            var sb = new StringBuilder((s == null ? 0 : s.Length) + 8);
+            sb.Append('"');
+            foreach (char c in s ?? "")
+            {
+                switch (c)
+                {
+                    case '"': sb.Append("\\\""); break;
+                    case '\\': sb.Append("\\\\"); break;
+                    case '\n': sb.Append("\\n"); break;
+                    case '\r': sb.Append("\\r"); break;
+                    case '\t': sb.Append("\\t"); break;
+                    case '\b': sb.Append("\\b"); break;
+                    case '\f': sb.Append("\\f"); break;
+                    default:
+                        if (c < 0x20) sb.Append("\\u").Append(((int)c).ToString("x4"));
+                        else sb.Append(c);
+                        break;
+                }
+            }
+            sb.Append('"');
+            return sb.ToString();
+        }
+
+        /// <summary>
         /// Pull <c>choices[0].message.content</c> out of a chat-completions response body. On failure (empty body,
         /// missing choices, or an error envelope) returns false and sets <paramref name="error"/>.
         /// </summary>

@@ -2103,6 +2103,24 @@ namespace TheRobotDraft.Uml
             items.Add(MenuItem.Separator());
             items.Add(new MenuItem("⛁ Load DB schema → ERD…", true, () => ShowDbConnectDialog(screenPos)));
             items.Add(new MenuItem("⛁ Generate Liquibase changelog…", true, () => GenerateLiquibaseChangelog()));
+            items.Add(MenuItem.Separator());
+            items.Add(new MenuItem("⇄ Import PlantUML…", true, () => ImportPlantUml()));
+            items.Add(new MenuItem("⇄ Import XMI…", true, () => ImportXmi()));
+            items.Add(new MenuItem("⇄ Import Mermaid…", true, () => ImportMermaid()));
+            items.Add(new MenuItem("⇄ Import EA project (.qea)…", true, () => ImportQea()));
+            items.Add(MenuItem.Separator());
+            items.Add(new MenuItem("⇄ Export PlantUML…", true, () => ExportPlantUml()));
+            items.Add(new MenuItem("⇄ Export XMI…", true, () => ExportXmi()));
+            items.Add(new MenuItem("⇄ Export Mermaid…", true, () => ExportMermaid()));
+            items.Add(new MenuItem("⇄ Export EA project (.qea)…", true, () => ExportQea()));
+            if (_selection.Count > 0)
+            {
+                items.Add(MenuItem.Separator());
+                items.Add(new MenuItem("⇄ Export selection → PlantUML…", true, () => ExportSelectionPlantUml()));
+                items.Add(new MenuItem("⇄ Export selection → XMI…", true, () => ExportSelectionXmi()));
+                items.Add(new MenuItem("⇄ Export selection → Mermaid…", true, () => ExportSelectionMermaid()));
+                items.Add(new MenuItem("⇄ Export selection → PNG…", true, () => ExportSelectionPng()));
+            }
 
             CreateMenu(screenPos, "Generate", items);
         }
