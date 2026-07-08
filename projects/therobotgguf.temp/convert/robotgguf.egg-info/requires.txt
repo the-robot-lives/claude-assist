@@ -1,7 +1,0 @@
-numpy
-pyyaml
-
-[hf]
-torch
-transformers
-datasets
