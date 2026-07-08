@@ -240,6 +240,8 @@ static void robot_load_memory(llama_robot_hparams & robot, const gguf_context * 
     llama_robot_kv_get_u32(ctx, "therobot.memory.capacity",  robot.memory.capacity,  true);
     llama_robot_kv_get_f32(ctx, "therobot.memory.decay_halflife", robot.memory.decay_halflife, true);
     llama_robot_kv_get_f32(ctx, "therobot.memory.salience.threshold_quantile", robot.memory.salience_threshold_quantile, true);
+    // absolute salience floor (optional, default 0 = relative gate only)
+    llama_robot_kv_get_f32(ctx, "therobot.memory.salience.floor", robot.memory.salience_floor, false);
 }
 
 static void robot_load_delta(llama_robot_hparams & robot, const gguf_context * ctx) {

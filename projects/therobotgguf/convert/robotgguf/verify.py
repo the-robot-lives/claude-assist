@@ -44,12 +44,18 @@ def run(cfg: Config, parity_bin: str | None = None) -> None:
     print(f"verify: runtime load OK ({os.path.basename(out)})")
 
     # gate 2: L0 parity — zero-graft export ≡ stock base, bit-exact logits
-    if parity_bin and cfg.base_gguf:
+    if parity_bin and not os.path.exists(parity_bin):
+        print(f"verify: SKIP parity gate — binary not found at {parity_bin} "
+              f"(compile tests/robot/robot_parity_test.cpp; see qwen3.5-0.8b.md)")
+        results["parity"] = "skipped (binary missing)"
+    elif parity_bin and cfg.base_gguf:
         stdout = _run([parity_bin, cfg.resolve(cfg.base_gguf), out], "parity")
         if "PARITY OK" not in stdout:
             raise SystemExit("verify: parity gate failed:\n" + stdout)
         results["parity"] = stdout.strip().splitlines()[0]
         print(f"verify: parity gate OK ({results['parity']})")
+    else:
+        print("verify: parity gate not requested (pass --parity-bin to run it)")
 
     # gate 3: strip interop — the downgraded file loads as a stock model
     stripped = os.path.splitext(out)[0] + ".stripped.gguf"

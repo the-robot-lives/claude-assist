@@ -31,10 +31,25 @@ def _softmax(z: np.ndarray) -> np.ndarray:
     return e / e.sum(axis=1, keepdims=True)
 
 
+def _balanced_accuracy(pred: np.ndarray, y: np.ndarray, classes: int) -> float:
+    """Mean per-class recall — chance level is 1/C regardless of imbalance, so
+    majority-class guessing scores ~1/C instead of the majority fraction. This
+    is the metric that makes decodability meaningful on real (imbalanced) web
+    corpora, where raw accuracy just rewards predicting the dominant class."""
+    recalls = []
+    for c in range(classes):
+        m = (y == c)
+        if m.any():
+            recalls.append(float((pred[m] == c).mean()))
+    return float(np.mean(recalls)) if recalls else 0.0
+
+
 def train_probe(x: np.ndarray, y: np.ndarray, l2: float = 1e-3,
                 epochs: int = 200, lr: float = 0.5, seed: int = 0):
-    """Multinomial logistic regression by full-batch gradient descent.
-    Returns (W [D, C], b [C], heldout accuracy)."""
+    """Class-weighted multinomial logistic regression by full-batch gradient
+    descent. Returns (W [D, C], b [C], held-out balanced accuracy). Inverse-
+    frequency class weights keep the probe from ignoring minority classes; the
+    score is balanced accuracy so imbalance can't inflate it."""
     rng = np.random.default_rng(seed)
     x = np.asarray(x, dtype=np.float32)
     n, d = x.shape
@@ -47,30 +62,43 @@ def train_probe(x: np.ndarray, y: np.ndarray, l2: float = 1e-3,
     idx = rng.permutation(n)
     split = max(1, int(0.8 * n))
     tr, te = idx[:split], idx[split:]
+    ytr = y[tr]
+
+    # inverse-frequency per-sample weights (normalized to mean 1)
+    counts = np.bincount(ytr, minlength=classes).astype(np.float32)
+    cls_w = len(ytr) / (classes * np.maximum(counts, 1.0))
+    sw = cls_w[ytr]
+    sw = (sw / sw.mean()).astype(np.float32)
 
     w = np.zeros((d, classes), dtype=np.float32)
     b = np.zeros(classes, dtype=np.float32)
-    onehot = np.eye(classes, dtype=np.float32)[y[tr]]
+    onehot = np.eye(classes, dtype=np.float32)[ytr]
     for _ in range(epochs):
         p = _softmax(xs[tr] @ w + b)
-        g = xs[tr].T @ (p - onehot) / len(tr) + l2 * w
+        err = (p - onehot) * sw[:, None]              # weight the residual
+        g = xs[tr].T @ err / len(tr) + l2 * w
         w -= lr * g
-        b -= lr * (p - onehot).mean(0)
+        b -= lr * err.mean(0)
 
-    acc = float((np.argmax(xs[te] @ w + b, axis=1) == y[te]).mean()) if len(te) else 0.0
+    if len(te):
+        pred = np.argmax(xs[te] @ w + b, axis=1)
+        bacc = _balanced_accuracy(pred, y[te], classes)
+    else:
+        bacc = 0.0
 
     # unfold standardization: probe(raw) = ((raw − mu)/sd)·W + b
     w_raw = (w / sd[:, None]).astype(np.float32)
     b_raw = (b - mu / sd @ w).astype(np.float32)
-    return w_raw, b_raw, acc
+    return w_raw, b_raw, bacc
 
 
 def _shard_accuracy(x, y, w, b, shards) -> list:
     accs = []
+    classes = int(np.asarray(y).max()) + 1
     for lo, hi in zip(shards[:-1], shards[1:]):
         if hi > lo:
             pred = np.argmax(np.asarray(x[lo:hi], dtype=np.float32) @ w + b, axis=1)
-            accs.append(float((pred == y[lo:hi]).mean()))
+            accs.append(_balanced_accuracy(pred, np.asarray(y[lo:hi]), classes))
     return accs
 
 
@@ -85,8 +113,15 @@ def run(cfg: Config) -> None:
     probe_dir = os.path.join(cfg.workdir, "probes")
     os.makedirs(probe_dir, exist_ok=True)
 
+    import sys, time  # noqa: PLC0415
     bottlenecks, findings = [], []
-    for name, site in man.sites.items():
+    n_sites = len(man.sites)
+    n_pairs = n_sites * len(man.attributes)
+    print(f"cleave: training {n_pairs} probe(s) + {n_pairs} selectivity controls "
+          f"over {man.n_samples:,} samples", file=sys.stderr, flush=True)
+    t0 = time.time()
+    done = 0
+    for si, (name, site) in enumerate(man.sites.items()):
         x = store.activations(name)
         admitted_attrs, scores = [], {}
         for attr in man.attributes:
@@ -100,6 +135,14 @@ def run(cfg: Config) -> None:
             sel = acc - acc_ctl
 
             stab = 1.0 - float(np.std(_shard_accuracy(x, y, w, b, man.shards)))
+
+            done += 1
+            el = time.time() - t0
+            eta = el / done * (n_pairs - done)
+            verdict = "keep" if (acc >= cfg.min_decodability and sel >= cfg.min_selectivity) else "drop"
+            print(f"\rcleave: [{done}/{n_pairs}] {name}.{attr:16} "
+                  f"decod={acc:.3f} sel={sel:+.3f} → {verdict}   ETA {eta:.0f}s   ",
+                  end="", file=sys.stderr, flush=True)
 
             if acc >= cfg.min_decodability and sel >= cfg.min_selectivity:
                 admitted_attrs.append(attr)
@@ -130,7 +173,7 @@ def run(cfg: Config) -> None:
         "recordings": {"model": man.model, "corpus": man.corpus},
         "bottlenecks": bottlenecks,
         "findings": findings,
-        "probe_dir": os.path.relpath(probe_dir, cfg.root),
+        "probe_dir": probe_dir,  # absolute; round-trips through cfg.resolve
     })
     print(f"cleave: admitted {len(bottlenecks)} bottleneck(s), "
           f"{len(findings)} attribute/site pair(s) dropped as findings")

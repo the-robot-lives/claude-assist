@@ -40,7 +40,7 @@ downgrades an extended file for stock-llama.cpp interop.
 | R0 ingest, R1 record, R3 graft training | implemented, **untested** — need a GPU/checkpoint host (`pip install '.[hf]'`); the graft's zero-init path runs anywhere and is tested |
 | R2 cleave, R4 calibrate, R5 shims, R7 export/strip, R8 verify | implemented and covered by `tests/e2e_test.py` |
 | R6 settle | config passthrough (v0 policy: diffusion-class donor through R0–R5; the runtime's `jacobi-ar` objective works on any causal donor) |
-| Weak labelers (R2 label source) | not included — `record` emits placeholder labels and warns; label once, reuse forever |
+| Weak labelers (R2 label source) | heuristic v0 in `robotgguf/labelers.py` — sentence-granular, seven attributes, wired into `record`; `robotgguf relabel` regenerates labels from stored tokens without re-running the model; a teacher-LLM pass can overwrite `labels/<attr>.npy` later (same contract). Tested by `tests/labelers_test.py` |
 
 ## End-to-end test (no GPU needed)
 

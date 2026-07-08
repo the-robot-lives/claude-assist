@@ -75,6 +75,10 @@ struct llama_robot_memory_params {
     uint32_t capacity  = 0;             // runtime may override
     float    decay_halflife = 0.0f;     // tokens
     float    salience_threshold_quantile = 0.0f;
+    // absolute salience floor: a write must clear BOTH the running quantile and
+    // this fixed minimum — makes retention rare and meaningful rather than the
+    // constant ~(1−quantile) rate a relative gate produces on its own. 0 = off.
+    float    salience_floor = 0.0f;
 };
 
 // spec §1.6 — delta inference

@@ -65,6 +65,19 @@ int32_t llama_robot_tap_layer(const llama_model * model, int32_t tap_id) {
     return bn == nullptr ? -1 : (int32_t) bn->layer;
 }
 
+int32_t llama_robot_tap_attr_count(const llama_model * model, int32_t tap_id) {
+    const auto * bn = robot_tap(model, tap_id);
+    return bn == nullptr ? 0 : (int32_t) bn->attributes.size();
+}
+
+const char * llama_robot_tap_attr(const llama_model * model, int32_t tap_id, int32_t attr_id) {
+    const auto * bn = robot_tap(model, tap_id);
+    if (bn == nullptr || attr_id < 0 || (size_t) attr_id >= bn->attributes.size()) {
+        return nullptr;
+    }
+    return bn->attributes[attr_id].c_str();
+}
+
 bool llama_robot_tap_read(llama_context * ctx, int32_t tap_id, float * dst) {
     const auto * bn = robot_tap(&ctx->get_model(), tap_id);
     if (bn == nullptr || dst == nullptr) {
@@ -357,6 +370,44 @@ bool llama_robot_mod_set(llama_context * ctx, const float * src) {
     return true;
 }
 
+void llama_robot_session_reset(llama_context * ctx, bool forget_memory) {
+    if (ctx == nullptr || !ctx->robot_state) {
+        return;
+    }
+    auto & st = *ctx->robot_state;
+
+    // modulator m and the leaky state banks back to baseline (the arrow of
+    // time is wiped — next decode starts as if the session just began)
+    std::fill(st.m.begin(), st.m.end(), 0.0f);
+    for (auto & [layer, bank] : st.banks) {
+        std::fill(bank.begin(), bank.end(), 0.0f);
+    }
+
+    // E5 transient state: recall, the running surprise/salience history, and
+    // the last summary. The episodic store itself is kept unless asked to
+    // forget (long-term memory survives a session reset by default).
+    std::fill(st.recall.begin(), st.recall.end(), 0.0f);
+    st.last_summary.clear();
+    st.prev_logits.clear();
+    st.salience_window.clear();
+    st.mem_clock = 0;
+    if (forget_memory) {
+        st.mem.clear();
+    }
+
+    // E6 delta holds: clear them and force a dense sweep on the next streaming
+    // token so the held outputs re-initialize cleanly
+    for (auto & b : st.delta) {
+        std::fill(b.held_in.begin(),  b.held_in.end(),  0.0f);
+        std::fill(b.held_out.begin(), b.held_out.end(), 0.0f);
+        b.fatigue = 0.0f;
+    }
+    st.delta_since_dense = UINT64_MAX;
+
+    LLAMA_LOG_INFO("therobot: session reset (arrow of time cleared%s)\n",
+            forget_memory ? ", episodic memory forgotten" : ", memory kept");
+}
+
 // blob v2: magic, version, M, m[], n_banks, { layer, S, s[] }*,
 //          mem_clock u64, recall_len, recall[], summary_len, summary[],
 //          n_entries, { salience, timestamp u64, key_len, key[], val_len, val[] }*
@@ -523,6 +574,22 @@ int32_t llama_robot_memory_count(const llama_context * ctx) {
         return 0;
     }
     return (int32_t) ctx->robot_state->mem.size();
+}
+
+bool llama_robot_memory_get(const llama_context * ctx, int32_t i,
+                            float * salience, uint64_t * timestamp, uint64_t * age_tokens) {
+    if (ctx == nullptr || !ctx->robot_state) {
+        return false;
+    }
+    const auto & st = *ctx->robot_state;
+    if (i < 0 || (size_t) i >= st.mem.size()) {
+        return false;
+    }
+    const auto & e = st.mem[i];
+    if (salience)   *salience   = e.salience;
+    if (timestamp)  *timestamp  = e.timestamp;
+    if (age_tokens) *age_tokens = st.mem_clock >= e.timestamp ? st.mem_clock - e.timestamp : 0;
+    return true;
 }
 
 bool llama_robot_memory_write(llama_context * ctx, float salience) {

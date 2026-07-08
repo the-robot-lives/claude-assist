@@ -69,8 +69,14 @@ void llama_robot_memory_validate(const llama_robot_model_iface & iface) {
         throw std::runtime_error(format("therobot: robot.mem.summary.value.weight must be f32 [%lld, %u]", (long long) D, mem.value_dim));
     }
     const ggml_tensor * sw = iface.robot_ext_tensor("robot.mem.salience.weight");
-    if (sw != nullptr && (sw->type != GGML_TYPE_F32 || sw->ne[0] != 2)) {
-        throw std::runtime_error("therobot: robot.mem.salience.weight must be f32 [2] (surprise, ‖m‖ weights)");
+    if (sw != nullptr) {
+        const int64_t M = (int64_t) iface.robot.modulator.dim;
+        if (sw->type != GGML_TYPE_F32 || (sw->ne[0] != 2 && sw->ne[0] != 2 + M)) {
+            throw std::runtime_error(format(
+                "therobot: robot.mem.salience.weight must be f32 [2] (surprise, ‖m‖) or "
+                "[2+modulator_dim=%lld] (surprise, ‖m‖, per-channel importance); got [%lld]",
+                (long long) (2 + M), (long long) sw->ne[0]));
+        }
     }
 }
 
@@ -259,18 +265,38 @@ void llama_robot_memory_update(
         return;
     }
 
-    // salience of this decode: surprise under the previous distribution + ‖m‖
-    float w_surprise = 1.0f, w_mnorm = 1.0f;
-    if (const ggml_tensor * sw = iface.robot_ext_tensor("robot.mem.salience.weight")) {
-        w_surprise = ((const float *) sw->data)[0];
-        w_mnorm    = ((const float *) sw->data)[1];
-    }
+    // Salience of this decode. Surprise (−log p of the token under the previous
+    // distribution) is the free, always-available bootstrap signal — but it
+    // measures "startling", not "important". A rare glyph is surprising and
+    // worthless; "allergic to penicillin" is unsurprising and must be kept. So
+    // salience is a learned linear gate over [surprise, ‖m‖, m_0 … m_{M-1}]:
+    // the modulator's emotional/importance channels (threat, valence, novelty,
+    // goal-relevance …) drive retention too, so a calm-but-consequential input
+    // can be written and a startling-but-trivial one skipped. salience.weight
+    // length 2 = surprise+‖m‖ only (v1 default); length 2+M also weights each
+    // named modulator channel, so importance is decoded from internal state,
+    // not just prediction error. (A fully learned head over the bottleneck
+    // summary content is the R5 training-side upgrade.)
+    const int64_t M = (int64_t) st.m.size();
+    const float surprise = robot_mem_surprise(st, ubatch);
     float mnorm = 0.0f;
     for (const float v : st.m) {
         mnorm += v * v;
     }
     mnorm = std::sqrt(mnorm);
-    const float salience = w_surprise * robot_mem_surprise(st, ubatch) + w_mnorm * mnorm;
+
+    float salience;
+    if (const ggml_tensor * sw = iface.robot_ext_tensor("robot.mem.salience.weight")) {
+        const float * w = (const float *) sw->data;
+        salience = w[0] * surprise + w[1] * mnorm;
+        if (sw->ne[0] == 2 + M) {
+            for (int64_t c = 0; c < M; ++c) {
+                salience += w[2 + c] * st.m[c];   // per-channel importance
+            }
+        }
+    } else {
+        salience = surprise + mnorm;              // default weights = 1
+    }
 
     // summarize this decode's bottleneck slices
     std::vector<float> summary;
@@ -279,10 +305,15 @@ void llama_robot_memory_update(
         st.last_summary = summary;
     }
 
-    // salience gate: quantile-normalized over a running window, after warmup.
-    // salience must be strictly positive — a silent channel never writes.
+    // Salience gate. Two bars, both must clear:
+    //   1. relative — quantile over a running window (writes the top (1−q) of
+    //      recent decodes: self-calibrating, but always writes *something*);
+    //   2. absolute — a fixed salience_floor (0 = off) so a whole quiet stretch
+    //      writes nothing. Together: "rare AND meaningful" instead of a constant
+    //      (1−q) trickle. salience must also be strictly positive.
     if (have_summary && salience > 0.0f && st.salience_window.size() >= ROBOT_MEM_WARMUP) {
-        const float thr = robot_mem_quantile(st.salience_window, iface.robot.memory.salience_threshold_quantile);
+        const float qthr = robot_mem_quantile(st.salience_window, iface.robot.memory.salience_threshold_quantile);
+        const float thr  = std::max(qthr, iface.robot.memory.salience_floor);
         if (salience >= thr) {
             robot_mem_write(iface, st, summary, salience);
         }

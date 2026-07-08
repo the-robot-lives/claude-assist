@@ -92,7 +92,10 @@ class Config:
         return os.path.dirname(self.path)
 
     def resolve(self, p: str) -> str:
-        return p if os.path.isabs(p) else os.path.join(self.root, p)
+        # relative paths in the config (corpus/, work/, ../../../3rd-party/...)
+        # are authored relative to the working directory the pipeline is run
+        # from (the `convert/` package root), not the config file's directory
+        return p if os.path.isabs(p) else os.path.abspath(p)
 
     @property
     def workdir(self) -> str:

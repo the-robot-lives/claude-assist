@@ -121,8 +121,7 @@ def run(cfg: Config) -> None:
         "salience_threshold_quantile", 0.9))}
 
     lock.update("shims", {"admitted": admitted, "rejected": rejected,
-                          "registry": os.path.relpath(
-                              os.path.join(out_dir, "registry.json"), cfg.root),
+                          "registry": os.path.join(out_dir, "registry.json"),
                           "salience": salience})
     print(f"shims: {len(admitted)} admitted, {len(rejected)} rejected "
           f"→ {out_dir}/registry.json")

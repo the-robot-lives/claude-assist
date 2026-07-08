@@ -15,6 +15,7 @@ def main(argv=None) -> None:
     sub.add_parser("ingest", help="R0 — survey the donor checkpoint [HF stack]")
     r1 = sub.add_parser("record", help="R1 — record candidate cleave sites [HF stack]")
     r1.add_argument("--max-tokens", type=int, default=200_000)
+    sub.add_parser("relabel", help="R1.5 — regenerate weak labels from stored tokens [HF tokenizer]")
     sub.add_parser("cleave", help="R2 — probe training + bottleneck selection")
     r3 = sub.add_parser("graft", help="R3 — leaky state + modulator graft")
     r3.add_argument("--steps", type=int, default=0,
@@ -38,6 +39,8 @@ def main(argv=None) -> None:
         from . import ingest; ingest.run(cfg)
     elif args.stage == "record":
         from . import record; record.run(cfg, max_tokens=args.max_tokens)
+    elif args.stage == "relabel":
+        from . import record; record.relabel(cfg)
     elif args.stage == "cleave":
         from . import cleave; cleave.run(cfg)
     elif args.stage == "graft":

@@ -18,13 +18,27 @@ import numpy as np
 from .config import Config, Lockfile
 
 
+def _n_embd_from_base(cfg: Config) -> int:
+    """Read the donor's embedding length from the base GGUF, so the zero-graft
+    path works without an HF `ingest` pass."""
+    if not cfg.base_gguf:
+        return 0
+    try:
+        gguf = cfg.gguf_module()
+        reader = gguf.GGUFReader(cfg.resolve(cfg.base_gguf))
+        field = reader.fields.get(f"{cfg.base_architecture}.embedding_length")
+        return int(field.contents()) if field is not None else 0
+    except Exception:
+        return 0
+
+
 def run(cfg: Config, steps: int = 0, lr: float = 1e-4) -> None:
     lock = Lockfile(cfg.lockfile_path)
     tensor_dir = os.path.join(cfg.workdir, "grafts")
     os.makedirs(tensor_dir, exist_ok=True)
 
     survey = lock.section("survey")
-    n_embd = int(survey.get("n_embd", 0))
+    n_embd = int(survey.get("n_embd", 0)) or _n_embd_from_base(cfg)
     s_width = sum(int(b["width"]) for b in cfg.state_banks)
     m_dim = int(cfg.modulator["dim"])
     film_layers = list(cfg.raw.get("film_layers", cfg.state_layers))
@@ -34,7 +48,8 @@ def run(cfg: Config, steps: int = 0, lr: float = 1e-4) -> None:
         # This path needs no torch and keeps the export honest — the runtime's
         # parity gate will prove the graft contributed nothing.
         if n_embd == 0:
-            raise SystemExit("graft: run `robotgguf ingest` first (n_embd unknown)")
+            raise SystemExit("graft: could not determine n_embd — run `robotgguf ingest` "
+                             "or set base_gguf in the config")
         rng = np.random.default_rng(0)
         for layer in cfg.state_layers:
             np.save(os.path.join(tensor_dir, f"blk.{layer}.robot_state.alpha.npy"),
@@ -58,7 +73,7 @@ def run(cfg: Config, steps: int = 0, lr: float = 1e-4) -> None:
             np.save(os.path.join(tensor_dir, f"blk.{layer}.robot_film.beta.weight.npy"),
                     np.zeros((n_embd, m_dim), dtype=np.float32))
         lock.update("graft", {"trained": False, "steps": 0,
-                              "tensor_dir": os.path.relpath(tensor_dir, cfg.root),
+                              "tensor_dir": tensor_dir,
                               "film_layers": film_layers})
         print(f"graft: function-preserving init emitted ({tensor_dir}); "
               f"train with --steps N on a GPU host")
@@ -179,6 +194,6 @@ def run(cfg: Config, steps: int = 0, lr: float = 1e-4) -> None:
                 graft.film_b[k].weight.detach().cpu().numpy())
 
     lock.update("graft", {"trained": True, "steps": steps,
-                          "tensor_dir": os.path.relpath(tensor_dir, cfg.root),
+                          "tensor_dir": tensor_dir,
                           "film_layers": film_layers})
     print(f"graft: trained {steps} step(s); tensors in {tensor_dir}")

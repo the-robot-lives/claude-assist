@@ -160,8 +160,30 @@ def run(cfg: Config, out_path: str) -> None:
         writer.add_float32("therobot.memory.decay_halflife", float(memc.get("decay_halflife", 256.0)))
         writer.add_float32("therobot.memory.salience.threshold_quantile",
                            float(lock.section("shims").get("salience", {}).get("threshold_quantile", 0.9)))
+        # absolute salience floor: writes must clear BOTH the running quantile and
+        # this fixed bar, so a quiet stretch writes nothing (rare + meaningful).
+        sal = memc.get("salience", {}) if isinstance(memc.get("salience"), dict) else {}
+        writer.add_float32("therobot.memory.salience.floor", float(sal.get("floor", 0.0)))
         ext.append(("robot.mem.summary.key.weight", graft_tensor("robot.mem.summary.key.weight", (kd, d_in))))
         ext.append(("robot.mem.summary.value.weight", graft_tensor("robot.mem.summary.value.weight", (vd, d_in))))
+        # Salience weight vector. Surprise is only the bootstrap signal; importance
+        # also comes from the modulator's emotional channels. Emit [w_surprise,
+        # w_mnorm] and, when the config names per-channel importance weights, the
+        # extended [2+M] form so a calm-but-consequential moment (high threat /
+        # valence, low surprise) is retained. Omitted → runtime defaults to 1,1.
+        w_surprise = float(sal.get("surprise", 1.0))
+        w_mnorm    = float(sal.get("mnorm", 1.0))
+        chan_w = sal.get("channels", {}) or {}
+        if chan_w:
+            names = list(cfg.modulator.get("channels", []))
+            vec = [w_surprise, w_mnorm] + [float(chan_w.get(n, 0.0)) for n in names]
+            if len(vec) != 2 + vd:
+                raise ValueError(
+                    f"salience.channels needs one weight per modulator channel "
+                    f"({vd} channels: {names}); got vector length {len(vec)}")
+        else:
+            vec = [w_surprise, w_mnorm]
+        ext.append(("robot.mem.salience.weight", np.array(vec, dtype=np.float32)))
 
     # §1.6 delta thresholds (R4 — measured)
     if "delta" in features:

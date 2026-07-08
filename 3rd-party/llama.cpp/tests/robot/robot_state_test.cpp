@@ -199,6 +199,38 @@ int main(int argc, char ** argv) {
         llama_model_free(model);
     }
 
+    // ---- session reset clears the arrow of time (live leaky state) ----
+    {
+        llama_model * model = llama_model_load_from_file((dir + "/tiny-llama-l2-state.gguf").c_str(), mp);
+        CHECK(model != nullptr, "l2-state load for reset");
+        if (!model) { return 1; }
+
+        llama_context * ctx = make_ctx(model);
+        const auto fresh = step(model, ctx);   // first decode from a clean session
+
+        // evolve the leaky state and prime m so both diverge from baseline
+        for (int i = 0; i < 5; ++i) { step(model, ctx); }
+        float prime[4] = { 4.0f, 1.0f, 0, 0 };
+        llama_robot_mod_set(ctx, prime);
+        const auto evolved = step(model, ctx);
+        CHECK(vec_diff(evolved, fresh) > 0.0f, "state/m must have drifted from the fresh baseline");
+
+        // reset the arrow of time; m and banks must read back as baseline
+        llama_robot_session_reset(ctx, /*forget_memory =*/ false);
+        float m_after[4];
+        CHECK(llama_robot_mod_get(ctx, m_after), "mod_get after reset");
+        CHECK(m_after[0] == 0.0f && m_after[1] == 0.0f, "reset zeroes the modulator");
+
+        // and a decode after reset must reproduce the fresh-session decode exactly
+        const auto after = step(model, ctx);
+        printf("reset: |evolved - fresh| = %g; |after-reset - fresh| = %g\n",
+                vec_diff(evolved, fresh), vec_diff(after, fresh));
+        CHECK(vec_diff(after, fresh) == 0.0f, "post-reset decode must equal a fresh session");
+
+        llama_free(ctx);
+        llama_model_free(model);
+    }
+
     if (failures) { printf("E4 STATE TEST: %d FAILURE(S)\n", failures); return 1; }
     printf("E4 STATE TEST: OK\n");
     return 0;

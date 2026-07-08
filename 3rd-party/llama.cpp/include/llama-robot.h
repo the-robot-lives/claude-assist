@@ -29,6 +29,11 @@ LLAMA_API const char * llama_robot_tap_point(const struct llama_model * model, i
 LLAMA_API int32_t      llama_robot_tap_width(const struct llama_model * model, int32_t tap_id);
 LLAMA_API int32_t      llama_robot_tap_layer(const struct llama_model * model, int32_t tap_id);
 
+// declared attributes a tap carries probes for (spec §1.2). Enumerate these to
+// drive probe evaluation without hard-coding attribute names.
+LLAMA_API int32_t      llama_robot_tap_attr_count(const struct llama_model * model, int32_t tap_id);
+LLAMA_API const char * llama_robot_tap_attr      (const struct llama_model * model, int32_t tap_id, int32_t attr_id);
+
 // read the tap slice for the most recent decoded position into dst
 // (llama_robot_tap_width() floats). false if the tap is unknown, disabled,
 // or no graph has been computed yet.
@@ -101,6 +106,16 @@ LLAMA_API size_t llama_robot_session_size(struct llama_context * ctx);
 LLAMA_API size_t llama_robot_session_save(struct llama_context * ctx, uint8_t * dst, size_t size);
 LLAMA_API size_t llama_robot_session_load(struct llama_context * ctx, const uint8_t * src, size_t size);
 
+// Reset the context's recurrent "arrow of time" back to a fresh-session
+// baseline without reloading the model: zeroes the leaky state banks, the
+// modulator m, the episodic recall vector, the surprise history, and the
+// delta-executor holds (forcing a dense sweep on the next streaming token).
+// If forget_memory is true it also clears the episodic store; otherwise
+// long-term memories survive the reset. This is the therobot state reset and
+// is independent of the KV cache — for a complete session reset, also call
+// llama_memory_clear(llama_get_memory(ctx), true).
+LLAMA_API void llama_robot_session_reset(struct llama_context * ctx, bool forget_memory);
+
 //
 // E5 — episodic memory (spec §1.5, planning §F)
 //
@@ -112,6 +127,13 @@ LLAMA_API size_t llama_robot_session_load(struct llama_context * ctx, const uint
 
 // number of stored episodic memories (0 for models without the feature)
 LLAMA_API int32_t llama_robot_memory_count(const struct llama_context * ctx);
+
+// inspect one stored memory by index [0, memory_count). Any out-pointer may be
+// null. `age_tokens` is how many tokens ago it was written (mem_clock − ts).
+// Returns false if the index is out of range. For UIs that list the store.
+LLAMA_API bool llama_robot_memory_get(
+        const struct llama_context * ctx, int32_t i,
+        float * salience, uint64_t * timestamp, uint64_t * age_tokens);
 
 // explicitly write the latest decode's summary with the given salience
 // (bypasses the gate — "this moment is noteworthy"); requires ≥1 prior decode
