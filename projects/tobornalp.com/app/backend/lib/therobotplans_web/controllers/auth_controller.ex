@@ -336,13 +336,18 @@ defmodule TherobotplansWeb.AuthController do
   end
 
   defp serialize_user(user) do
+    # Consent lives on the DB schema row, not the versioned entity — read it back
+    # so /auth/me and login responses carry it (needed to hydrate app.* on load).
+    row = Therobotplans.Repo.get(Therobotplans.Schema.Users.User, user.id)
+
     %{
       id: user.id,
       email: user.email,
       user_name: user.user_name,
       handle: user.handle,
       status: user.status,
-      verified: user.verified
+      verified: user.verified,
+      consent_preferences: row && row.consent_preferences
     }
   end
 

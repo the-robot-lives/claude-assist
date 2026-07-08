@@ -15,6 +15,8 @@ defmodule Therobotplans.Schema.Users.User do
       default: :active
     field :verified, :boolean, default: false
     field :flagged, :boolean, default: false
+    field :consent_preferences, :map
+    field :consent_updated_at, :utc_datetime_usec
     field :deleted_at, :utc_datetime_usec
     timestamps(type: :utc_datetime_usec)
   end

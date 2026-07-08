@@ -39,6 +39,28 @@ defmodule TherobotplansWeb.UserController do
     conn |> put_status(:bad_request) |> json(%{error: "user params required"})
   end
 
+  # Persist cookie-consent preferences on the account (explicit user choice from
+  # the consent banner always wins). Stored as jsonb so it survives the apex →
+  # app.tobornalp.com hop, where localStorage does not carry over.
+  def consent(conn, %{"preferences" => prefs}) when is_map(prefs) do
+    user = get_current_user(conn)
+    now = DateTime.utc_now()
+
+    {_, _} =
+      from(u in UserSchema, where: u.id == ^user.id)
+      |> Therobotplans.Repo.update_all(
+        set: [consent_preferences: prefs, consent_updated_at: now]
+      )
+
+    conn
+    |> put_status(:ok)
+    |> json(%{consent_preferences: prefs, consent_updated_at: now})
+  end
+
+  def consent(conn, _params) do
+    conn |> put_status(:bad_request) |> json(%{error: "preferences map required"})
+  end
+
   defp get_current_user(conn) do
     session = Guardian.Plug.current_resource(conn)
 
@@ -102,13 +124,17 @@ defmodule TherobotplansWeb.UserController do
   end
 
   defp serialize_user(user) do
+    # Consent lives on the DB schema row, not the versioned entity — read it back.
+    row = Therobotplans.Repo.get(UserSchema, user.id)
+
     %{
       id: user.id,
       email: user.email,
       user_name: user.user_name,
       handle: user.handle,
       status: user.status,
-      verified: user.verified
+      verified: user.verified,
+      consent_preferences: row && row.consent_preferences
     }
   end
 

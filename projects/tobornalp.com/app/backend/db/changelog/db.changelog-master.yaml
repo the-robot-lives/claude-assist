@@ -95,3 +95,6 @@ databaseChangeLog:
   - include:
       file: 031-session-claim-code.yaml
       relativeToChangelogFile: true
+  - include:
+      file: 032-user-consent.yaml
+      relativeToChangelogFile: true
