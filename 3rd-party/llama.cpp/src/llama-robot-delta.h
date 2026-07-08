@@ -41,7 +41,7 @@
 
 struct llama_context;
 struct llama_hparams;
-struct llm_graph_result;
+class  llm_graph_result;
 struct llama_robot_model_iface;
 struct llama_robot_context_state;
 

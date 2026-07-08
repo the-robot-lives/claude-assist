@@ -33,7 +33,7 @@
 #include <vector>
 
 struct llama_ubatch;
-struct llm_graph_result;
+class  llm_graph_result;
 struct llama_robot_context_state;
 struct llama_robot_model_iface;
 
