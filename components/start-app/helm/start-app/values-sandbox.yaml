@@ -1,6 +1,7 @@
 replicas: 0
 
-domain: start-app.noizu.com
+domain: starter.therobotlives.com
+appDomain: app.starter.therobotlives.com
 
 sandbox:
   enabled: true
@@ -30,12 +31,12 @@ migrate:
   enabled: false
 
 database:
-  host: shared-postgres.data-ns.svc.cluster.local
+  host: app-timescaledb.apps.svc.cluster.local
   port: 5432
   name: start_app
 
 secrets:
-  name: start-app-secrets
+  name: startapp-secrets
   keys:
     dbUser: START_APP_DB_USER
     dbPassword: START_APP_DB_PASSWORD
@@ -67,6 +68,6 @@ ingress:
 
 tls:
   enabled: true
-  secretName: start-app-tls
+  secretName: therobotlives-tls
   infisical:
     enabled: false
