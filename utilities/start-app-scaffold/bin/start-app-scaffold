@@ -169,14 +169,29 @@ export FROM="Start-App: Tagline" TO="${APP_NAME}: ${TAGLINE}"
 replace_in_file "$TARGET/frontend/src/app/layout.tsx" "$FROM" "$TO"
 replace_in_file "$TARGET/frontend/src/app/page.tsx" "$FROM" "$TO"
 replace_in_file "$TARGET/frontend/src/components/navbar.tsx" "$FROM" "$TO"
+replace_in_file "$TARGET/frontend/cypress.config.ts" "$FROM" "$TO"
 
 export FROM="Start-App" TO="$APP_NAME"
 replace_in_file "$TARGET/frontend/src/app/page.tsx" "$FROM" "$TO"
 replace_in_file "$TARGET/frontend/src/components/navbar.tsx" "$FROM" "$TO"
+replace_in_file "$TARGET/frontend/cypress.config.ts" "$FROM" "$TO"
 
 export FROM="Tagline" TO="$TAGLINE"
 replace_in_file "$TARGET/frontend/src/app/layout.tsx" "$FROM" "$TO"
 replace_in_file "$TARGET/frontend/src/app/page.tsx" "$FROM" "$TO"
+replace_in_file "$TARGET/frontend/cypress.config.ts" "$FROM" "$TO"
+
+export FROM='process.env.CYPRESS_APP_DOMAIN || "app.example.com"' TO="process.env.CYPRESS_APP_DOMAIN || \"$APP_DOMAIN\""
+replace_in_file "$TARGET/frontend/cypress.config.ts" "$FROM" "$TO"
+
+export FROM='process.env.CYPRESS_SSO_DOMAIN || "sso.example.com"' TO="process.env.CYPRESS_SSO_DOMAIN || \"$SITE\""
+replace_in_file "$TARGET/frontend/cypress.config.ts" "$FROM" "$TO"
+
+export FROM='process.env.CYPRESS_SITE_DOMAIN || "example.com"' TO="process.env.CYPRESS_SITE_DOMAIN || \"$SITE\""
+replace_in_file "$TARGET/frontend/cypress.config.ts" "$FROM" "$TO"
+
+export FROM='process.env.CYPRESS_PASSWORD_DOMAIN || "example.com"' TO="process.env.CYPRESS_PASSWORD_DOMAIN || \"$SITE\""
+replace_in_file "$TARGET/frontend/cypress.config.ts" "$FROM" "$TO"
 
 if [[ -f "$TARGET/frontend/src/config/theme-style-guide/branding.yaml" ]]; then
   export FROM='name: "Your Project"' TO="name: \"$APP_NAME\""

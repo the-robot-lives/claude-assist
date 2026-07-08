@@ -3,7 +3,11 @@ defmodule Starter.Users do
   Context for Starter.Users
   """
   alias Starter.Users.User, as: Entity
+  alias Starter.Schema.Auth.Providers.Provider, as: ProviderSchema
   alias Starter.Schema.Users.User, as: Schema
+  alias Starter.Schema.Users.Credentials.UserCredential, as: CredentialSchema
+  alias Starter.Schema.Versioned.Descriptions.Description, as: DescriptionSchema
+  alias Starter.Schema.Versioned.Names.Name, as: NameSchema
   use Noizu.Repo
   def_repo(entity: Starter.Users.User)
 
@@ -22,7 +26,7 @@ defmodule Starter.Users do
 
   def register(details, auth, context, options \\ [])
 
-  def register(details, {:login, {email, password}} = auth, context, options) do
+  def register(details, {:login, {email, password}}, context, options) do
     middle = details.name[:middle] && Enum.map(details.name.middle, &String.trim/1)
 
     name = %{
@@ -57,45 +61,67 @@ defmodule Starter.Users do
          :valid <- valid_login?(email, password),
          :valid <- user_name_available?(user_name, context, options),
          :valid <- login_available?(email, context, options) do
-      with {:ok, name_entity} <-
-             %Starter.Versioned.Names.Name{
-               first: name.first,
-               middle: name.middle,
-               last: name.last,
-               time_stamp: Noizu.Entity.TimeStamp.now()
-             }
-             |> Starter.EntityRepo.create(context),
-           {:ok, name_ref} <- Noizu.EntityReference.Protocol.ref(name_entity),
-           {:ok, description} <-
-             %Starter.Versioned.Descriptions.Description{
-               title: "Description",
-               body: details[:description] || "",
-               time_stamp: Noizu.Entity.TimeStamp.now()
-             }
-             |> Starter.EntityRepo.create(context),
-           {:ok, description_ref} <- Noizu.EntityReference.Protocol.ref(description),
-           {:ok, user} <-
-             %Starter.Users.User{
-               user_name: user_name,
-               handle: handle,
-               name: name_ref,
-               description: description_ref,
-               status: status,
-               mobile_phone: mobile_phone,
-               invite_token:
-                 invite_token_id && Starter.Organizations.InviteToken.ref(invite_token_id),
-               profile_completed_at: profile_completed_at,
-               approved_at: if(status == :active, do: DateTime.utc_now(), else: nil),
-               verified: false,
-               flagged: false,
-               time_stamp: Noizu.Entity.TimeStamp.now()
-             }
-             |> Starter.EntityRepo.create(context),
-           {:ok, user_ref} <- Noizu.EntityReference.Protocol.ref(user),
-           {:ok, credential} <-
-             Starter.Users.Credentials.register(user_ref, auth, context, options) do
-        {:ok, {user, credential}}
-      end
+      Starter.Repo.transaction(fn ->
+        with {:ok, name_record} <-
+               %NameSchema{}
+               |> NameSchema.changeset(%{
+                 first: name.first,
+                 middle: name.middle || [],
+                 last: name.last
+               })
+               |> Starter.Repo.insert(),
+             {:ok, description_record} <-
+               %DescriptionSchema{}
+               |> DescriptionSchema.changeset(%{
+                 title: "Description",
+                 body: details[:description] || "Registered user"
+               })
+               |> Starter.Repo.insert(),
+             {:ok, user} <-
+               %Schema{}
+               |> Schema.changeset(%{
+                 user_name: user_name,
+                 handle: handle,
+                 name_id: name_record.id,
+                 description_id: description_record.id,
+                 invite_token_id: invite_token_id,
+                 email: email,
+                 status: status,
+                 mobile_phone: mobile_phone,
+                 profile_completed_at: profile_completed_at,
+                 approved_at: if(status == :active, do: DateTime.utc_now(), else: nil),
+                 verified: false,
+                 flagged: false
+               })
+               |> Starter.Repo.insert(),
+             hashed_password = Bcrypt.hash_pwd_salt(password),
+             auth_provider_id = UUID.uuid5(:oid, "Starter.Schema.Auth.Providers.Provider@Login"),
+             {:ok, _auth_provider} <-
+               Starter.Repo.insert(
+                 %ProviderSchema{
+                   id: auth_provider_id,
+                   title: "Login",
+                   description: "Email and password authentication"
+                 },
+                 on_conflict: :nothing,
+                 conflict_target: :id
+               ),
+             {:ok, credential} <-
+               %CredentialSchema{}
+               |> CredentialSchema.changeset(%{
+                 user_id: user.id,
+                 auth_provider_id: auth_provider_id,
+                 status: :active,
+                 settings: %{"email" => email, "password" => hashed_password},
+                 state: %{},
+                 fingerprint: "#{email}:#{hashed_password}"
+               })
+               |> Starter.Repo.insert() do
+          {user, credential}
+        else
+          {:error, reason} -> Starter.Repo.rollback(reason)
+        end
+      end)
     end
   end
 

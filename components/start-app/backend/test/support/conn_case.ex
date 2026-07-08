@@ -13,7 +13,9 @@ defmodule StarterWeb.ConnCase do
 
   setup tags do
     Starter.DataCase.setup_sandbox(tags)
-    {:ok, conn: Phoenix.ConnTest.build_conn()}
+    n = System.unique_integer([:positive])
+    remote_ip = {127, rem(div(n, 65_536), 256), rem(div(n, 256), 256), rem(n, 256)}
+    {:ok, conn: %{Phoenix.ConnTest.build_conn() | remote_ip: remote_ip}}
   end
 
   @doc """

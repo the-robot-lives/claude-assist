@@ -77,7 +77,8 @@ backend/
 |---------|---------|
 | `mix setup` | `deps.get` → `ecto.create` → `ecto.migrate` → seeds |
 | `mix ecto.reset` | Drop → create → migrate → seeds |
-| `mix test` | Create DB (quiet) → migrate (quiet) → run tests |
+| `mix test` | Create DB (quiet) → apply Liquibase schema (quiet) → run tests |
+| `mix liquibase.update` | Apply the canonical Liquibase changelog to the configured Repo database |
 
 ## Notable Dependencies
 

@@ -5,7 +5,7 @@ export const BROWSER_SESSION_STORAGE_KEY = "start-app.browser-session-id";
 const CONSENT_EVENT_NAME = "start-app:cookie-consent-change";
 
 export interface ConsentPreferences {
-  necessary: boolean;
+  necessary: true;
   analytics: boolean;
   marketing: boolean;
   preferences: boolean;
@@ -79,7 +79,7 @@ function normalizePreferences(
   preferences?: Partial<Record<ConsentCategory, boolean>>
 ): ConsentPreferences {
   return {
-    necessary: preferences?.necessary === false ? false : true,
+    necessary: true,
     analytics: Boolean(preferences?.analytics),
     marketing: Boolean(preferences?.marketing),
     preferences: Boolean(preferences?.preferences),
@@ -197,6 +197,7 @@ export function clearConsentPreferences() {
 }
 
 export function hasConsent(category: ConsentCategory): boolean {
+  if (category === "necessary") return true;
   return Boolean(getConsentState()?.categories[category]);
 }
 

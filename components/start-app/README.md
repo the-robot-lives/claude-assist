@@ -127,6 +127,22 @@ make migrate-status     # Show pending changesets
 make migrate-rollback   # Roll back last changeset
 ```
 
+Backend tests apply the Liquibase changelog through `mix liquibase.update` before
+ExUnit runs, so a fresh `starter_test` database receives the canonical schema.
+
+## Tests
+
+```bash
+cd backend && mix test
+cd frontend && npm run test
+cd frontend && npm run test:e2e
+```
+
+The frontend E2E suite uses Cypress with Cucumber feature files under
+`frontend/cypress/e2e`. Generated app instances inherit this suite, and
+`start-app-scaffold` rewrites the default app/domain values in
+`frontend/cypress.config.ts`.
+
 ## Helm Chart
 
 ```bash

@@ -103,18 +103,23 @@ tsx
 // src/utils/cypress.ts
 type Cy = {
   cy?: string;
-  cyId?: string;
-  cyFor?: string;
+  cyId?: string | number;
+  cyFor?: string | number;
   cyValue?: string | number;
   cyScope?: string;
+  cyFlags?: Record<string, string>;
 };
 
-export const cyAttrs = ({ cy, cyId, cyFor, cyValue, cyScope }: Cy = {}) => ({
+export const cyAttrs = ({ cy, cyId, cyFor, cyValue, cyScope, cyFlags }: Cy = {}) => ({
   ...(cy && { 'data-cy': cy }),
   ...(cyId && { 'data-cy-id': String(cyId) }),
   ...(cyFor && { 'data-cy-for': String(cyFor) }),
   ...(cyValue !== undefined && { 'data-cy-value': String(cyValue) }),
   ...(cyScope && { 'data-cy-scope': cyScope }),
+  ...(cyFlags &&
+    Object.fromEntries(
+      Object.entries(cyFlags).map(([k, v]) => [`data-cy-flag-${k}`, v]),
+    )),
 });
 
 

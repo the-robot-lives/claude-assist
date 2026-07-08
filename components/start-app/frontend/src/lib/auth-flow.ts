@@ -1,5 +1,5 @@
-import type { User } from "@/lib/api";
-import { getRuntimeConfig } from "@/lib/runtime-config";
+import type { User } from "./api";
+import { getRuntimeConfig } from "./runtime-config";
 
 export function userNeedsProfile(user: User | null | undefined) {
   return Boolean(user && (user.requires_profile_completion || !user.profile_complete));

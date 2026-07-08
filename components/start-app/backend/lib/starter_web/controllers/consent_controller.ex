@@ -39,7 +39,7 @@ defmodule StarterWeb.ConsentController do
         browser_session_id: if(user_id, do: nil, else: browser_session_id),
         version: Map.get(params, "version", @consent_version),
         categories: categories,
-        required_session_allowed: categories["necessary"] == true,
+        required_session_allowed: true,
         accepted_at: (existing && existing.accepted_at) || now,
         updated_choice_at: now
       }
@@ -52,7 +52,7 @@ defmodule StarterWeb.ConsentController do
         {:ok, consent} ->
           json(conn, %{
             consent: serialize(consent),
-            requires_session_tracking: !consent.required_session_allowed
+            requires_session_tracking: false
           })
 
         {:error, changeset} ->
@@ -113,7 +113,7 @@ defmodule StarterWeb.ConsentController do
 
   defp normalize_categories(categories) when is_map(categories) do
     Map.merge(@default_categories, %{
-      "necessary" => Map.get(categories, "necessary", true) == true,
+      "necessary" => true,
       "analytics" => Map.get(categories, "analytics", false) == true,
       "marketing" => Map.get(categories, "marketing", false) == true,
       "preferences" => Map.get(categories, "preferences", false) == true
@@ -128,7 +128,7 @@ defmodule StarterWeb.ConsentController do
       categories: normalize_categories(consent.categories),
       accepted_at: consent.accepted_at,
       updated_at: consent.updated_choice_at,
-      requires_session_tracking: !consent.required_session_allowed
+      requires_session_tracking: false
     }
   end
 

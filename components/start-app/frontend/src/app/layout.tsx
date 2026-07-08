@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import "./globals.css";
 import { AuthProvider } from "@/context/auth";
 import { OrgProvider } from "@/context/org";
@@ -6,7 +7,7 @@ import { Navbar } from "@/components/navbar";
 import { AnalyticsProvider } from "@/components/analytics-provider";
 import { CookieConsentProvider } from "@/components/cookie-consent";
 import { OtelProvider } from "@/components/otel-provider";
-import { loadConfig, loadAllBrandings } from "@noizu/styleguide/css-gen";
+import { loadConfig } from "@noizu/styleguide/css-gen";
 import { Toaster } from "sonner";
 
 export function generateMetadata(): Metadata {
@@ -18,31 +19,14 @@ export function generateMetadata(): Metadata {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const config = loadConfig();
-  const allBrandings = loadAllBrandings();
-  const fontUrls = [
-    ...new Set(
-      Object.values(allBrandings)
-        .map((b) => b["font-url"])
-        .filter(Boolean)
-    ),
-  ] as string[];
   const t = config.toast;
 
   return (
     <html lang="en" data-design-theme={config.slug} suppressHydrationWarning>
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
-        {fontUrls.map((url) => (
-          <link key={url} href={url} rel="stylesheet" />
-        ))}
-        <script src="/__env.js" />
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `(function(){var s=localStorage.getItem('color-mode');var p=matchMedia('(prefers-color-scheme:dark)').matches;if(s==='dark'||(!s&&p))document.documentElement.classList.add('dark')})()`,
-          }}
-        />
-      </head>
+      <Script src="/__env.js" strategy="beforeInteractive" />
+      <Script id="color-mode-script" strategy="beforeInteractive">
+        {`(function(){var s=localStorage.getItem('color-mode');var p=matchMedia('(prefers-color-scheme:dark)').matches;if(s==='dark'||(!s&&p))document.documentElement.classList.add('dark')})()`}
+      </Script>
       <body>
         <OtelProvider>
           <AuthProvider>

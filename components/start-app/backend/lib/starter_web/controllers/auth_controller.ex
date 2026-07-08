@@ -348,7 +348,7 @@ defmodule StarterWeb.AuthController do
   end
 
   defp create_session_for_user(user) do
-    user_ref = Starter.Users.User.ref(user.id)
+    user_ref = {:ref, Starter.Users.User, user.id}
 
     session_entity = %Starter.Users.Sessions.UserSession{
       user: user_ref,

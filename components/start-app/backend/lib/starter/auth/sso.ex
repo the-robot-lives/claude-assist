@@ -1,7 +1,6 @@
 defmodule Starter.Auth.SSO do
   alias Starter.Schema.Users.User, as: UserSchema
   alias Starter.Schema.Users.Credentials.UserCredential, as: CredentialSchema
-  alias Starter.Schema.Versioned.Names.Name
   import Ecto.Query, only: [from: 2]
 
   @provider_map %{
@@ -16,7 +15,7 @@ defmodule Starter.Auth.SSO do
   def authenticate_sso(provider_type, %{email: email} = attrs) do
     context = Noizu.Context.system()
     email = email |> String.trim() |> String.downcase()
-    provider_ref = @provider_map[provider_type].()
+    provider_ref = provider_ref(provider_type)
     {:ok, provider_id} = Starter.Auth.Providers.Provider.id(provider_ref)
 
     case find_user_by_email(email) do
@@ -42,7 +41,15 @@ defmodule Starter.Auth.SSO do
     end
   end
 
+  defp provider_ref(provider_type) do
+    case @provider_map[provider_type].() do
+      {:ok, provider_ref} -> provider_ref
+      provider_ref -> provider_ref
+    end
+  end
+
   defp ensure_sso_credential(user, provider_ref, provider_id, provider_type, attrs, context) do
+    user_ref = {:ref, Starter.Users.User, user.id}
     fingerprint = sso_fingerprint(provider_type, attrs)
 
     q =
@@ -55,7 +62,7 @@ defmodule Starter.Auth.SSO do
     case Starter.Repo.one(q) do
       nil ->
         %Starter.Users.Credentials.UserCredential{
-          user: Starter.Users.User.ref(user.id),
+          user: user_ref,
           auth_provider: provider_ref,
           status: :active,
           settings: sso_settings(provider_type, attrs),
@@ -71,7 +78,7 @@ defmodule Starter.Auth.SSO do
   end
 
   defp create_sso_session(user, provider_type, context) do
-    user_ref = Starter.Users.User.ref(user.id)
+    user_ref = {:ref, Starter.Users.User, user.id}
 
     %Starter.Users.Sessions.UserSession{
       user: user_ref,
@@ -82,22 +89,17 @@ defmodule Starter.Auth.SSO do
     |> Starter.EntityRepo.create(context)
   end
 
-  defp auto_provision_user(email, attrs, provider_ref, provider_id, provider_type, context) do
-    first = attrs[:name][:first] || ""
-    last = attrs[:name][:last] || ""
+  defp auto_provision_user(email, attrs, provider_ref, _provider_id, provider_type, context) do
     handle = email |> String.split("@") |> hd() |> String.replace(~r/[^a-z0-9_]/, "_")
+    first = get_in(attrs, [:name, :first]) || attrs[:given_name] || handle
+    last = get_in(attrs, [:name, :last]) || attrs[:family_name] || "User"
 
     {:ok, name} =
-      Starter.EntityRepo.create(
-        %Starter.Versioned.Names.Name{
-          first: first,
-          last: last,
-          time_stamp: Noizu.Entity.TimeStamp.now()
-        },
-        context
-      )
-
-    {:ok, name_ref} = Noizu.EntityReference.Protocol.ref(name)
+      %Starter.Schema.Versioned.Names.Name{
+        first: first,
+        last: last
+      }
+      |> Starter.Repo.insert()
 
     user_schema = %UserSchema{
       id: UUID.uuid4(),
@@ -113,7 +115,7 @@ defmodule Starter.Auth.SSO do
     {:ok, user} = Starter.Repo.insert(user_schema, on_conflict: :nothing, conflict_target: :email)
 
     %Starter.Users.Credentials.UserCredential{
-      user: Starter.Users.User.ref(user.id),
+      user: {:ref, Starter.Users.User, user.id},
       auth_provider: provider_ref,
       status: :active,
       settings: sso_settings(provider_type, attrs),
@@ -128,7 +130,7 @@ defmodule Starter.Auth.SSO do
 
   defp sso_settings(:saml, attrs), do: %{email: attrs[:email], name_id: attrs[:name_id]}
 
-  defp sso_settings(provider_type, attrs),
+  defp sso_settings(_provider_type, attrs),
     do: %{email: attrs[:email], sub: attrs[:sub] || attrs[:uid]}
 
   defp sso_fingerprint(:saml, attrs), do: "saml:#{attrs[:name_id]}"

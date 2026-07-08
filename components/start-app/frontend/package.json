@@ -7,7 +7,11 @@
     "generate-css": "tsx src/scripts/generate-css.ts",
     "build": "npm run generate-css && next build",
     "start": "next start",
-    "regen": "rm -rf .cache && npm run generate-css"
+    "regen": "rm -rf .cache && npm run generate-css",
+    "test": "tsx src/lib/auth-flow.test.ts",
+    "test:e2e:types": "tsc --noEmit -p cypress/tsconfig.json",
+    "test:e2e": "cypress run --e2e",
+    "test:e2e:open": "cypress open --e2e"
   },
   "dependencies": {
     "@headlessui/react": "^2.2.10",
@@ -35,15 +39,25 @@
     "tailwindcss": "^4.3.1"
   },
   "devDependencies": {
+    "@badeball/cypress-cucumber-preprocessor": "^26.0.0",
+    "@bahmutov/cypress-esbuild-preprocessor": "^2.2.8",
     "@types/js-yaml": "^4.0.9",
     "@types/node": "^26.0.1",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
+    "cypress": "^15.18.1",
     "tsx": "^4.22.4",
     "typescript": "^6.0.3"
   },
   "overrides": {
     "dompurify": "^3.4.11",
+    "diff": "^8.0.2",
+    "serialize-javascript": "^7.0.7",
     "postcss": "^8.5.15"
+  },
+  "cypress-cucumber-preprocessor": {
+    "stepDefinitions": [
+      "cypress/e2e/**/*.ts"
+    ]
   }
 }
