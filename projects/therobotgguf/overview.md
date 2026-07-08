@@ -2,6 +2,7 @@
 
 **Status:** runtime + conversion pipeline implemented and validated on a real
 donor (Qwen3.5‑0.8B); training-side stages and quality studies pending.
+**Last updated:** 2026‑07‑08.
 **Scope of this document:** what was built, why, how, and what we expect it to
 buy us — an executive summary followed by an engineering deep‑dive with
 diagrams.
@@ -16,8 +17,9 @@ therobot adds four runtime mechanisms to an **existing, frozen** language model
 without retraining it: persistent state (an "arrow of time"), a top‑down
 modulation bus (mood/priming), hot‑swappable behavior modules, and episodic
 memory. The model's weights are never touched; the mechanisms are grafted on
-top and start as no‑ops, so a converted model is byte‑for‑byte identical to the
-original until you deliberately engage them.
+top and start as no‑ops, so a converted model's *outputs* are bit‑exact to the
+original's until you deliberately engage them. (The converted file itself is a
+strict superset — donor tensors unchanged, plus dormant `robot.*` additions.)
 
 ### Why
 
@@ -43,7 +45,10 @@ retrains.
   degrades.
 - **Faster inference on self‑host hardware** — spend compute only where the
   input actually changes; trade sequential depth for parallel refinement.
-- **All of it as a strict, reversible superset** — a byte‑exact parity
+  (v1 proves the semantics and measures the ceiling via the compute trace; the
+  physical compute‑skip that converts it into wall‑clock speedup is a deferred
+  optimization — see E6/E7.)
+- **All of it as a strict, reversible superset** — a logit‑exact parity
   guarantee means the downside is bounded: worst case you gain runtime
   interpretability and deterministic steering for free.
 
@@ -62,16 +67,18 @@ Two interlocking deliverables, meeting at one contract:
 2. **A Python conversion pipeline** (`projects/therobotgguf/convert`,
    `robotgguf`) that retrofits an existing HF checkpoint onto the runtime by
    *discovering* structure in the frozen model and *grafting* zero‑effect
-   additions — stages **R0–R8**.
+   additions — stages **R0–R8**. <!-- TODO: R6 never appears in this doc's
+   diagrams (they jump R5 → R7) — document what R6 is, or renumber. -->
 
 They meet at the **GGUF extension spec** (`therobot.*` metadata + `robot.*`
 tensors), the single contract both sides implement.
 
 ### The extensions, and why each should improve the model
 
-Eight runtime extensions (E1–E8). E1 is plumbing; the other seven each attack a
-specific limitation of a stock feedforward transformer, and each carries a
-concrete performance hypothesis:
+Eight runtime extensions (E1–E8). E1 is plumbing; each tier after it attacks a
+specific limitation of a stock feedforward transformer and carries a concrete
+performance hypothesis. (E4 is one package contributing *two* grafted
+mechanisms — state banks and the modulator bus — listed separately below.)
 
 - **E2 — Taps & probes (introspection).** *What:* named read‑outs of the
   model's own hidden activations at chosen depths, plus tiny linear heads that
@@ -146,8 +153,9 @@ the base model is provably untouched until engaged.
 ### The non‑negotiable invariant
 
 Every extension is **function‑preserving at insertion**. With all additions at
-their initial state, a converted model is **bit‑for‑bit the donor** — proven,
-not asserted: the runtime's parity gate reports `max |logit diff| = 0` on
+their initial state, a converted model is **behaviorally bit‑exact to the
+donor** — proven, not asserted: the runtime's parity gate (validation runbook,
+`3rd-party/llama.cpp/docs/robot/`) reports `max |logit diff| = 0` on
 Qwen3.5‑0.8B across all 248,320 vocabulary logits. This is what makes it a
 *retrofit* rather than a fine‑tune: you never change what the model knows, you
 add a nervous system that observes and gently steers.
@@ -156,12 +164,12 @@ add a nervous system that observes and gently steers.
 
 | # | Hypothesis | Mechanism | How it's tested |
 |---|---|---|---|
-| H1 | State banks let a compact model encode time/causality more compactly than a same‑size feedforward baseline | E4 leaky state (§B) | R3 temporal suite: slow‑burn tasks where late evidence must flip an interpretation |
-| H2 | A modulator bus gives controllable, decaying behavioral priming | E4 modulator + FiLM (§A) | Induce‑and‑relax: set `m[arousal]`, watch bias appear and decay (proven in‑fixture) |
-| H3 | Typed bottlenecks expose isolated attribute subspaces that can be edited surgically | E2 taps + E3 shims (§D/§E) | Cleave selectivity + shim admission (move target, hold others) |
-| H4 | Salience‑gated memory gives one‑shot in‑session behavior change that decays | E5 episodic memory (§F) | One write changes next decode, fades to <5% of peak — **proven in‑fixture** |
-| H5 | Change‑triggered execution cuts streaming compute at bounded quality loss | E6 delta executor (002) | Keep‑rate vs quality; heartbeat‑bounded divergence — **exact schedule proven** |
-| H6 | Capability accretes as governed modules without core regression | E8 registry + routing (005) | Zero‑forgetting gate: route→∅ is bit‑identical to never‑routed — **proven** |
+| H1 | State banks let a compact model encode time/causality more compactly than a same‑size feedforward baseline | E4 leaky state (§3.3) | R3 temporal suite: slow‑burn tasks where late evidence must flip an interpretation |
+| H2 | A modulator bus gives controllable, decaying behavioral priming | E4 modulator + FiLM (§3.3) | Induce‑and‑relax: set `m[arousal]`, watch bias appear and decay (proven in‑fixture) |
+| H3 | Typed bottlenecks expose isolated attribute subspaces that can be edited surgically | E2 taps + E3 shims (§3.3) | Cleave selectivity + shim admission (move target, hold others) |
+| H4 | Salience‑gated memory gives one‑shot in‑session behavior change that decays | E5 episodic memory (§3.3, §3.6) | One write changes next decode, fades to <5% of peak — **proven in‑fixture** |
+| H5 | Change‑triggered execution cuts streaming compute at bounded quality loss | E6 delta executor (§3.3) | Keep‑rate vs quality; heartbeat‑bounded divergence — **exact schedule proven** |
+| H6 | Capability accretes as governed modules without core regression | E8 registry + routing (§3.3) | Zero‑forgetting gate: route→∅ is bit‑identical to never‑routed — **proven** |
 
 The mechanisms are all implemented and unit‑proven on fixtures; whether the
 *quality* gains (H1, H3, H5 at scale) materialize on real donors is exactly
@@ -330,8 +338,9 @@ cannot perturb the logits — proven by the tap test's bit‑exact parity with
 taps active. After a decode, `tap_read` copies the most recent position's slice
 back to the host. Probe heads are the small linear decoders trained by the
 conversion pipeline (§4.4) and shipped as `robot.probe.*` tensors; they are
-evaluated only when the caller asks, as a host‑side matvec, so introspection
-costs nothing unless used.
+evaluated only when the caller asks, as a host‑side matvec. Precisely: a
+*declared* tap carries a small always‑on cost (its slice view + contiguous
+copy runs every decode); *probe evaluation* costs nothing unless used.
 
 ---
 
@@ -410,7 +419,8 @@ and is captured back after compute. The whole thing serializes via
 `session_save/load` (fork, roll back, or migrate a "mind" as a byte blob) and
 can be wiped mid‑session with `session_reset` — independent of the KV cache.
 v1 scope: one recurrent state per context (batch‑1 streaming), state on the
-final layer refused (its rows are output‑filtered).
+final layer refused (its rows are output‑filtered). §3.5 inventories all of
+this per‑context state in plain terms.
 
 ---
 
@@ -431,37 +441,21 @@ adaptation the frozen model has no analogue for.
 **How.** Pure runtime, CPU‑side, no graph changes. The store holds entries
 `{key, value, salience, timestamp}` where keys/values are learned memory‑head
 projections of the *bottleneck summary* (the concatenated tap slices at the
-last position). Each decode: (1) **summarize** the tap slices; (2) score
-**salience** — importance, *not just surprise*. Surprise (the negative
-log‑probability the model assigned to the token that actually arrived — a spike
-means it was caught off guard) is the free, always‑available bootstrap signal,
-but it measures "startling", not "important": a rare glyph is surprising and
-worthless, while "allergic to penicillin" is unsurprising and must be kept. So
-salience is a learned linear gate over `[surprise, ‖m‖, m₀ … m_{M−1}]` — the
-weight vector `robot.mem.salience.weight`. The first two terms are prediction
-error and overall arousal; the optional per‑channel terms let the modulator's
-*importance* channels (threat, valence, novelty, goal‑relevance) drive
-retention, so a calm‑but‑consequential input is written and a startling‑but‑
-trivial one is skipped. `salience = w₀·surprise + w₁·‖m‖ + Σ_c w_{2+c}·m_c`
-(length‑2 weight = surprise+‖m‖ only; length‑`2+M` also weights each channel;
-absent = defaults 1,1). A fully learned head over the summary *content* is the
-R5 training‑side upgrade; (3) **gate** the write on two bars that must *both*
-clear: a running *quantile* over recent salience (noteworthy relative to the
-session's own baseline) **and** an absolute `salience_floor` (0 = off), so a
-quiet stretch writes nothing rather than the constant `(1−q)` trickle a relative
-gate produces alone — "rare AND meaningful". Positivity is still required, and
-an explicit `llama_robot_memory_write` bypasses the gate; (4) **write**,
-evicting the lowest `salience · 2^(−age/halflife)` entry if full; (5) **recall** by projecting the
-current summary to query space and scoring every entry by
-`cos(query, key) · 2^(−Δtokens/halflife)`, taking the recency‑weighted top‑k
-mean of values; (6) **inject** that recall (which lives in modulator space —
+last position). Each decode runs a six‑step loop: **summarize** the tap
+slices; score **salience** (a learned linear gate over
+`[surprise, ‖m‖, m₀ … m_{M−1}]` — importance, not just surprise); **gate** the
+write on a session‑relative quantile *and* an absolute floor; **write**
+(evicting the lowest‑retention entry if full); **recall** by content match ×
+recency; and **inject** the recall (which lives in modulator space —
 `value_dim == modulator dim`, enforced at load) into the *next* decode's
 modulator update. So a past event reaches the present one step behind, through
 the same mood dial the rest of the system uses, and decays as both the memory
-ages and `m` relaxes. Proven behavioral signature (Hypothesis 4): one write
-moves the next decode, rises to a peak, then decays monotonically to <5% of
-peak while the memory itself persists. The store rides the session checkpoint
-and exports as JSON (`memory_export`) for offline consolidation.
+ages and `m` relaxes. The full loop — every formula, and the reasoning behind
+the salience gate and the dual write bars — is traced step by step in §3.6.
+Proven behavioral signature (Hypothesis 4): one write moves the next decode,
+rises to a peak, then decays monotonically to <5% of peak while the memory
+itself persists. The store rides the session checkpoint and exports as JSON
+(`memory_export`) for offline consolidation.
 
 **Memory bandwidth = modulator width.** Because recall injects into `m`, a
 memory's *value* is a modulator‑space vector (`value_dim == modulator dim`), so
@@ -517,8 +511,8 @@ input/output; a quiet block contributes its held output, blended as
 held state and bounding how far the held approximation can drift; the interval
 is chosen from the calibrated divergence curve. Fire decisions are read back
 per token as the compute trace the tests require (per‑block fire counts, keep
-rate = effective executions / (tokens · blocks)). Off by default (002's risk
-posture). v1 scope note: blocks still *execute* — the fire flag gates whether
+rate = effective executions / (tokens · blocks)). Off by default (a deliberate
+risk posture). v1 scope note: blocks still *execute* — the fire flag gates whether
 their output enters the stream — which yields exact delta semantics, the full
 trace, and bounded‑divergence behavior; the *physical* skip of quiet blocks is
 the shared‑executor optimization deferred alongside E7, with the compute trace
@@ -592,7 +586,10 @@ outputs *bit‑identical* to a never‑routed context (proven). `memory_export`
 writes the episodic store with provenance as JSON; the offline consolidation
 pipeline distills those traces into new shim modules that re‑enter through the
 registry — closing the loop from runtime experience back to installable
-capability.
+capability. Module *integrity* — signing, provenance beyond model‑hash keying,
+tamper‑resistance of `registry.json` — is deliberately out of scope in v1 (the
+registry is a local, trusted artifact) and is the obvious hardening item
+before third‑party modules are ever admitted.
 
 ### 3.4 Session lifecycle & control surface
 
@@ -816,6 +813,17 @@ correctly *drops* it — not for lack of signal but for lack of label variation.
 The **selectivity** control (probe vs a shuffled‑feature baseline) is what
 distinguishes real signal from class‑imbalance artifacts.
 
+**v0 is a bootstrap corpus, not the destination.** 300MB of FineWeb plus
+synthetic suites is enough to validate the apparatus, not to map a model. The
+planned corpus is significantly larger and deliberately domain‑stratified —
+code, mathematics, science, literature, and a wide multilingual spread — so
+that cleave can (a) test attributes that only vary across domains
+(code‑vs‑prose, formal‑proof register, symbolic density), (b) admit bottlenecks
+that are stable *across* domains rather than artifacts of web text, and
+(c) give the selectivity control a harder, better‑balanced null. Domain balance
+matters more than raw size — every attribute needs genuine variation, per this
+section's own argument. See §4.6 for the full extraction roadmap.
+
 ### 4.4 Feature extraction — how cleave finds and scores typed bottlenecks
 
 Cleave is the introspection engine. It answers, for each recorded depth and
@@ -825,13 +833,14 @@ by accident?* Where the answer is yes, that (depth, channel‑slice) becomes a
 **typed bottleneck** — a named, machine‑readable interface — and the trained
 readout is exported as a `robot.probe.*` tensor the runtime can evaluate live.
 
-**The probe.** For a site's recorded slice `X ∈ ℝ^{N×128}` (N token positions,
-128 channels) and an attribute's integer labels `y ∈ {0..C−1}^N`, a probe is a
-multinomial logistic regression trained by full‑batch gradient descent:
+**The probe.** For a site's recorded slice `X ∈ ℝ^{N×d}` (N token positions,
+d = the site's configured slice width — 128 in the Qwen3.5 config) and an
+attribute's integer labels `y ∈ {0..C−1}^N`, a probe is a multinomial logistic
+regression trained by full‑batch gradient descent:
 
 ```
 standardize:   x̃ = (X − μ) / σ            (μ, σ per channel)
-model:         p = softmax(x̃·W + b)         W ∈ ℝ^{128×C}, b ∈ ℝ^C
+model:         p = softmax(x̃·W + b)         W ∈ ℝ^{d×C}, b ∈ ℝ^C
 loss:          cross-entropy + λ‖W‖²        (L2, λ = 1e-3)
 ```
 
@@ -846,7 +855,8 @@ probe(raw)  ≡  softmax(raw·W_raw + b_raw)
 That folded `(W_raw, b_raw)` is exactly what ships as
 `robot.probe.{i}.{attr}.weight/.bias` and what `llama_robot_probe_eval` runs as
 a small host‑side matvec during generation. Linear first; a 1‑hidden‑layer
-probe is the fallback only if linear fails (kept out of v0 for simplicity).
+probe is the fallback only if linear fails (kept out of v0 for simplicity —
+scheduled as part of the extraction roadmap, §4.6).
 
 **The three scores.** Each (site, attribute) pair is judged on:
 
@@ -913,6 +923,30 @@ that makes LoRA/adapters/steering vectors work on frozen models — and H1 is th
 falsifiable claim that a *trained* state bank actually helps on
 memory‑across‑tokens tasks.
 
+### 4.6 Roadmap — more robust feature extraction
+
+v0's extraction stack is deliberately minimal: linear probes, seven heuristic
+weak labelers, one small recording corpus. Three upgrades are planned, in
+order of leverage:
+
+1. **A much larger, domain‑stratified corpus** — code, mathematics, science,
+   literature, and a wide multilingual spread alongside general web text
+   (§4.3). Attributes can only be admitted where they genuinely vary, and
+   cross‑domain stability should become an admission criterion alongside
+   decodability, selectivity, and shard stability.
+2. **Stronger labels** — replace the heuristic weak labelers with a
+   teacher‑LLM labeler through the same recording contract (anticipated in
+   §5), and grow the attribute set beyond the initial seven (e.g.
+   code‑context, mathematical register, factual‑vs‑speculative, domain).
+3. **Stronger probes** — the 1‑hidden‑layer nonlinear fallback where linear
+   decodability fails, a richer slice search (widths and offsets beyond the
+   fixed windows), and per‑domain probe validation so a bottleneck admitted on
+   web text cannot silently fail on code or math.
+
+The admission discipline is unchanged — decodability, selectivity against a
+shuffled control, stability — only the instrument gets sharper and the map
+larger.
+
 ---
 
 ## 5. What has been proven vs what remains
@@ -936,6 +970,10 @@ memory‑across‑tokens tasks.
   shared executor.
 - Weak labelers are heuristic v0; a teacher‑LLM labeler can overwrite them
   through the same recording contract.
+- A significantly larger, domain‑stratified recording corpus (code, math,
+  science, literature, multilingual) and the more robust feature‑extraction
+  stack built on it — nonlinear probe fallback, richer slice search,
+  cross‑domain admission (§4.6).
 
 ---
 
@@ -949,12 +987,24 @@ memory‑across‑tokens tasks.
 - **Behavior as a controlled variable:** the modulator is a named, decaying,
   inspectable dial — steering by mechanism, not prompt hope — and taps make the
   model's internal state auditable at runtime.
-- **Faster on self‑host hardware:** E6 spends compute where the signal changes;
-  E7 trades sequential depth for parallel rounds.
+- **Faster on self‑host hardware (ceiling proven, speedup pending):** E6's
+  delta semantics and per‑token compute trace are exact today, but v1 still
+  executes every block — the trace reports the achievable saving as effective
+  FLOPs, and the physical skip behind the E6/E7 shared executor is what
+  converts that ceiling into wall‑clock speedup. E7 trades sequential depth
+  for parallel rounds.
 - **Near‑free option value:** a strict superset of llama.cpp with a permanent
   bit‑exact parity gate — worst case you've bought runtime interpretability and
   deterministic steering; best case you've found the recipe by which small,
   self‑hosted models act meaningfully smarter than their parameter count.
+
+A note on cost when *engaged*: the grafts are small but not free — per covered
+layer, FiLM is two matvecs from the low‑dimensional `m`, a state bank is an
+in/out projection pair plus a diagonal EMA over ~64 channels, a declared tap
+is one slice copy, and the memory loop is a handful of host‑side matvecs per
+decode. All of it is marginal next to a 0.8B forward pass, but none of it has
+been *measured* yet — engaged‑mode overhead numbers belong in the validation
+runbook alongside the quality studies.
 
 The honest caveat: all mechanisms are proven on toy fixtures and one real
 parity run. Whether the *quality* gains materialize is what the remaining
