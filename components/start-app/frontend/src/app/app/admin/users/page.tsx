@@ -8,6 +8,8 @@ interface AdminUser {
   email: string;
   user_name: string;
   status: string;
+  mobile_phone?: string;
+  profile_completed_at?: string | null;
   verified: boolean;
   admin: boolean;
   created_at: string;
@@ -18,6 +20,11 @@ export default function AdminUsersPage() {
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
+
+  async function approveUser(id: string) {
+    const res = await api.adminApproveUser(id);
+    setUsers((current) => current.map((u) => (u.id === id ? { ...u, ...res.user } : u)));
+  }
 
   useEffect(() => {
     api.adminListUsers(page).then((res) => {
@@ -40,6 +47,7 @@ export default function AdminUsersPage() {
             <th style={{ padding: 8 }}>Status</th>
             <th style={{ padding: 8 }}>Verified</th>
             <th style={{ padding: 8 }}>Admin</th>
+            <th style={{ padding: 8 }}>Action</th>
           </tr>
         </thead>
         <tbody>
@@ -50,6 +58,13 @@ export default function AdminUsersPage() {
               <td style={{ padding: 8 }}>{u.status}</td>
               <td style={{ padding: 8 }}>{u.verified ? "Yes" : "No"}</td>
               <td style={{ padding: 8 }}>{u.admin ? "Yes" : "No"}</td>
+              <td style={{ padding: 8 }}>
+                {u.status === "pending" ? (
+                  <button type="button" className="sg-btn sg-btn--outline sg-btn--sm" onClick={() => approveUser(u.id)}>
+                    Approve
+                  </button>
+                ) : null}
+              </td>
             </tr>
           ))}
         </tbody>

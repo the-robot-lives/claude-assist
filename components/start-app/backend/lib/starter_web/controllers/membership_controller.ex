@@ -79,5 +79,4 @@ defmodule StarterWeb.MembershipController do
       id -> id
     end
   end
-
 end

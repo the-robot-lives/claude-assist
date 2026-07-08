@@ -9,6 +9,7 @@ defmodule Starter.Auth.SSOCode do
 
   def exchange(code) do
     key = Starter.Redis.prefix("sso_code:#{code}")
+
     case Starter.Redis.command(["GETDEL", key]) do
       {:ok, nil} -> {:error, :invalid_code}
       {:ok, session_id} -> {:ok, session_id}

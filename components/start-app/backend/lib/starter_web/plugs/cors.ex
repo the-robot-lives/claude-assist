@@ -7,7 +7,10 @@ defmodule StarterWeb.Plugs.CORS do
     conn
     |> put_resp_header("access-control-allow-origin", get_origin(conn))
     |> put_resp_header("access-control-allow-methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS")
-    |> put_resp_header("access-control-allow-headers", "authorization, content-type")
+    |> put_resp_header(
+      "access-control-allow-headers",
+      "authorization, content-type, x-browser-session-id"
+    )
     |> put_resp_header("access-control-max-age", "3600")
     |> handle_preflight()
   end

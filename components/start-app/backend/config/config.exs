@@ -26,8 +26,7 @@ config :starter, StarterWeb.Endpoint,
 config :noizu_sendgrid,
   api_key: System.get_env("SENDGRID_API_KEY") || "SG.dev-placeholder"
 
-config :starter, :mail_from,
-  {"Starter", "noreply@starter.local"}
+config :starter, :mail_from, {"Starter", "noreply@starter.local"}
 
 config :logger, :default_formatter,
   format: "$time $metadata[$level] $message\n",
@@ -51,18 +50,17 @@ config :starter, :facebook_enabled, false
 config :starter, :github_enabled, false
 config :starter, :linkedin_enabled, false
 config :starter, :sso_require_invite, false
+config :starter, :sso_domains, %{}
 
 config :junit_formatter,
   report_file: "results.xml"
 
 # Rate limiting
 config :hammer,
-  backend: {Hammer.Backend.ETS,
-    [expiry_ms: 60_000 * 60, cleanup_interval_ms: 60_000 * 10]}
+  backend: {Hammer.Backend.ETS, [expiry_ms: 60_000 * 60, cleanup_interval_ms: 60_000 * 10]}
 
 # SAML handler
-config :samly, Samly.Provider,
-  pipeline_handler: StarterWeb.SAMLHandler
+config :samly, Samly.Provider, pipeline_handler: StarterWeb.SAMLHandler
 
 # Background jobs
 config :starter, Oban,

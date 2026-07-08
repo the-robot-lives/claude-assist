@@ -17,7 +17,15 @@ defmodule Starter.Schema.Users.Credentials.UserCredential do
 
   def changeset(credential, attrs) do
     credential
-    |> cast(attrs, [:user_id, :auth_provider_id, :description_id, :status, :settings, :state, :fingerprint])
+    |> cast(attrs, [
+      :user_id,
+      :auth_provider_id,
+      :description_id,
+      :status,
+      :settings,
+      :state,
+      :fingerprint
+    ])
     |> validate_required([:user_id, :auth_provider_id, :status])
   end
 end

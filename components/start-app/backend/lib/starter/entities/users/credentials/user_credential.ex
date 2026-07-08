@@ -16,8 +16,11 @@ defmodule Starter.Users.Credentials.UserCredential do
     @config auto: true
     @store name: :description_id
     field :description, nil, Starter.Versioned.Descriptions.DescriptionReference
-    field :status, nil,
+
+    field :status,
+          nil,
           {:ecto, Starter.Schema.Users.Credentials.UserCredential.__schema__(:type, :status)}
+
     field :settings, %{}, :map
     field :state, %{}, :map
     field :fingerprint, nil, :string

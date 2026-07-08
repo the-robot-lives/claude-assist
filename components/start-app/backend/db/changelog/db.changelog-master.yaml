@@ -74,3 +74,6 @@ databaseChangeLog:
   - include:
       file: 024-media-variants-cache.yaml
       relativeToChangelogFile: true
+  - include:
+      file: 025-auth-registration-consent.yaml
+      relativeToChangelogFile: true

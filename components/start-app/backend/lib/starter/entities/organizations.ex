@@ -5,6 +5,7 @@ defmodule Starter.Organizations do
   alias Starter.Organizations.Organization, as: Entity
   alias Starter.Schema.Organizations.Organization, as: Schema
   alias Starter.Schema.Organizations.InviteToken, as: InviteTokenSchema
+  alias Starter.Schema.Organizations.InviteTokenRedemption, as: InviteTokenRedemptionSchema
   alias Starter.Schema.Authz.ScopedMembership, as: ScopedMembershipSchema
   use Noizu.Repo
   def_repo(entity: Entity)
@@ -26,7 +27,8 @@ defmodule Starter.Organizations do
   def create_organization_with_owner(attrs, user_id) do
     Starter.Repo.transaction(fn ->
       with {:ok, org} <- %Schema{} |> Schema.changeset(attrs) |> Starter.Repo.insert(),
-           {:ok, _membership} <- Starter.Authz.ScopedMemberships.add_member("organization", org.id, user_id, "owner") do
+           {:ok, _membership} <-
+             Starter.Authz.ScopedMemberships.add_member("organization", org.id, user_id, "owner") do
         org
       else
         {:error, reason} -> Starter.Repo.rollback(reason)
@@ -36,9 +38,13 @@ defmodule Starter.Organizations do
 
   def list_user_organizations(user_id) do
     from(sm in ScopedMembershipSchema,
-      join: o in Schema, on: o.id == sm.resource_id,
-      join: g in Starter.Schema.Authz.Group, on: g.id == sm.group_id,
-      where: sm.member_type == "user" and sm.member_id == ^user_id and sm.resource_type == "organization",
+      join: o in Schema,
+      on: o.id == sm.resource_id,
+      join: g in Starter.Schema.Authz.Group,
+      on: g.id == sm.group_id,
+      where:
+        sm.member_type == "user" and sm.member_id == ^user_id and
+          sm.resource_type == "organization",
       where: is_nil(sm.expires_at) or sm.expires_at > ^DateTime.utc_now(),
       select: %{id: o.id, slug: o.slug, name: o.name, role: g.name}
     )
@@ -60,10 +66,12 @@ defmodule Starter.Organizations do
 
     result =
       %InviteTokenSchema{}
-      |> InviteTokenSchema.changeset(Map.merge(attrs, %{
-        token_hash: token_hash,
-        key_prefix: key_prefix
-      }))
+      |> InviteTokenSchema.changeset(
+        Map.merge(attrs, %{
+          token_hash: token_hash,
+          key_prefix: key_prefix
+        })
+      )
       |> Starter.Repo.insert()
 
     case result do
@@ -72,18 +80,25 @@ defmodule Starter.Organizations do
     end
   end
 
-  def find_active_invite_by_raw_token(raw_token) when is_binary(raw_token) do
+  def find_active_invite_by_raw_token(raw_token, email \\ nil) when is_binary(raw_token) do
     key_prefix = String.slice(raw_token, 0, 8)
     now = DateTime.utc_now()
+    email = email && Starter.Users.Credentials.standardize_email(email)
 
     from(t in InviteTokenSchema,
       where: t.key_prefix == ^key_prefix and t.revoked == false,
+      where: is_nil(t.starts_at) or t.starts_at <= ^now,
       where: is_nil(t.expires_at) or t.expires_at > ^now,
       where: is_nil(t.max_uses) or t.uses < t.max_uses
     )
     |> Starter.Repo.all()
     |> Enum.find(fn token ->
-      Bcrypt.verify_pass(raw_token, token.token_hash)
+      email_matches? =
+        is_nil(token.email) ||
+          is_nil(email) ||
+          Starter.Users.Credentials.standardize_email(token.email) == email
+
+      email_matches? && Bcrypt.verify_pass(raw_token, token.token_hash)
     end)
     |> case do
       nil -> {:error, :invalid_token}
@@ -93,6 +108,49 @@ defmodule Starter.Organizations do
 
   def increment_invite_uses(invite_token) do
     from(t in InviteTokenSchema, where: t.id == ^invite_token.id)
-    |> Starter.Repo.update_all(inc: [uses: 1])
+    |> Starter.Repo.update_all(inc: [uses: 1, redemption_count: 1])
   end
+
+  def redeem_invite_for_user(invite_token, user, conn \\ nil) do
+    user_id = Map.get(user, :id)
+    now = DateTime.utc_now()
+
+    Starter.Repo.transaction(fn ->
+      attrs = %{
+        invite_token_id: invite_token.id,
+        user_id: user_id,
+        redeemed_at: now,
+        remote_ip: remote_ip(conn),
+        user_agent: user_agent(conn)
+      }
+
+      with {:ok, _redemption} <-
+             %InviteTokenRedemptionSchema{}
+             |> InviteTokenRedemptionSchema.changeset(attrs)
+             |> Starter.Repo.insert() do
+        {_, _} =
+          from(t in InviteTokenSchema, where: t.id == ^invite_token.id)
+          |> Starter.Repo.update_all(
+            inc: [uses: 1, redemption_count: 1],
+            set: [
+              accepted_by: user_id,
+              accepted_at: invite_token.accepted_at || now,
+              status: "accepted",
+              updated_at: now
+            ]
+          )
+
+        :ok
+      else
+        {:error, reason} -> Starter.Repo.rollback(reason)
+      end
+    end)
+  end
+
+  defp remote_ip(nil), do: nil
+  defp remote_ip(%{remote_ip: nil}), do: nil
+  defp remote_ip(%{remote_ip: remote_ip}), do: remote_ip |> :inet.ntoa() |> to_string()
+
+  defp user_agent(nil), do: nil
+  defp user_agent(conn), do: Plug.Conn.get_req_header(conn, "user-agent") |> List.first()
 end

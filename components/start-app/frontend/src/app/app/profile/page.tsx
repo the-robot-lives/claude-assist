@@ -9,6 +9,7 @@ export default function ProfilePage() {
   const { user } = useAuth();
   const [userName, setUserName] = useState("");
   const [email, setEmail] = useState("");
+  const [mobilePhone, setMobilePhone] = useState("");
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [saving, setSaving] = useState(false);
@@ -17,6 +18,7 @@ export default function ProfilePage() {
     if (user) {
       setUserName(user.user_name || "");
       setEmail(user.email || "");
+      setMobilePhone(user.mobile_phone || "");
     }
   }, [user]);
 
@@ -24,7 +26,7 @@ export default function ProfilePage() {
     e.preventDefault();
     setSaving(true);
     try {
-      await api.updateProfile({ user_name: userName, email });
+      await api.updateProfile({ user_name: userName, email, mobile_phone: mobilePhone });
       toast.success("Profile updated");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Update failed");
@@ -64,6 +66,10 @@ export default function ProfilePage() {
         <label style={{ display: "block", marginBottom: 12 }}>
           <span style={{ display: "block", fontSize: 14, marginBottom: 4 }}>Email</span>
           <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} style={{ width: "100%", padding: 8, border: "1px solid #ccc", borderRadius: 4 }} />
+        </label>
+        <label style={{ display: "block", marginBottom: 12 }}>
+          <span style={{ display: "block", fontSize: 14, marginBottom: 4 }}>Mobile</span>
+          <input type="tel" value={mobilePhone} onChange={(e) => setMobilePhone(e.target.value)} style={{ width: "100%", padding: 8, border: "1px solid #ccc", borderRadius: 4 }} />
         </label>
         <button type="submit" disabled={saving} style={{ padding: "8px 16px", background: "#000", color: "#fff", border: "none", borderRadius: 4, cursor: "pointer" }}>
           {saving ? "Saving..." : "Save Profile"}

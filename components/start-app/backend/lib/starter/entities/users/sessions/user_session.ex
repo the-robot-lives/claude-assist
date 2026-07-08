@@ -14,8 +14,11 @@ defmodule Starter.Users.Sessions.UserSession do
     @config auto: true
     @store name: :credential_id
     field :credential, nil, Starter.Users.Credentials.UserCredentialReference
-    field :status, nil,
+
+    field :status,
+          nil,
           {:ecto, Starter.Schema.Users.Sessions.UserSession.__schema__(:type, :status)}
+
     field :details, %{}, :map
     field :time_stamp, nil, Noizu.Entity.TimeStamp
   end

@@ -4,6 +4,7 @@ import { useAuth } from '@/context/auth';
 import { useOrg } from '@/context/org';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
+import { userNeedsProfile, userPendingApproval } from '@/lib/auth-flow';
 
 export default function AppPage() {
   const { user, loading: authLoading } = useAuth();
@@ -13,6 +14,10 @@ export default function AppPage() {
   useEffect(() => {
     if (!authLoading && !user) {
       router.push('/login');
+    } else if (!authLoading && userNeedsProfile(user)) {
+      router.push('/complete-registration');
+    } else if (!authLoading && userPendingApproval(user)) {
+      router.push('/pending-approval');
     }
   }, [user, authLoading, router]);
 

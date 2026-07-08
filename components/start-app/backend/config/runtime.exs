@@ -8,6 +8,33 @@ config :starter, :redis,
   uri: System.get_env("REDIS_URL") || "redis://localhost:6379/0",
   key_prefix: System.get_env("REDIS_KEY_PREFIX", "starter:")
 
+parse_sso_domains = fn
+  nil ->
+    %{}
+
+  "" ->
+    %{}
+
+  value ->
+    value
+    |> String.split(~r/[;\s]+/, trim: true)
+    |> Enum.reduce(%{}, fn entry, acc ->
+      case String.split(entry, ["=", ":"], parts: 2) do
+        [domain, providers] ->
+          provider_list =
+            providers
+            |> String.split(",", trim: true)
+            |> Enum.map(&String.trim/1)
+            |> Enum.reject(&(&1 == ""))
+
+          Map.put(acc, domain |> String.trim() |> String.downcase(), provider_list)
+
+        _ ->
+          acc
+      end
+    end)
+end
+
 # ── OpenTelemetry ────────────────────────────────────────────────
 if otel_endpoint = System.get_env("OTEL_EXPORTER_OTLP_ENDPOINT") do
   config :opentelemetry_exporter,
@@ -63,9 +90,10 @@ if config_env() == :prod do
     config :noizu_sendgrid, api_key: sendgrid_key
   end
 
-  config :starter, :mail_from,
-    {System.get_env("MAIL_FROM_NAME", "Starter"),
-     System.get_env("MAIL_FROM_ADDRESS", "noreply@starter.local")}
+  config :starter,
+         :mail_from,
+         {System.get_env("MAIL_FROM_NAME", "Starter"),
+          System.get_env("MAIL_FROM_ADDRESS", "noreply@starter.local")}
 
   # ── Storage (S3/MinIO) ──────────────────────────────────────────
   if s3_bucket = System.get_env("S3_BUCKET") do
@@ -92,13 +120,15 @@ if config_env() == :prod do
   if oidc_client_id = System.get_env("OIDC_CLIENT_ID") do
     config :openid_connect, :providers,
       default: [
-        discovery_document_uri: System.get_env("OIDC_ISSUER") <> "/.well-known/openid-configuration",
+        discovery_document_uri:
+          System.get_env("OIDC_ISSUER") <> "/.well-known/openid-configuration",
         client_id: oidc_client_id,
         client_secret: System.get_env("OIDC_CLIENT_SECRET"),
         redirect_uri: System.get_env("OIDC_REDIRECT_URI") || "https://#{host}/auth/oidc/callback",
         response_type: "code",
         scope: "openid email profile"
       ]
+
     config :starter, :oidc_enabled, true
   end
 
@@ -108,13 +138,29 @@ if config_env() == :prod do
     sp_key = System.get_env("SAML_SP_KEY", "") |> String.replace("\\n", "\n")
 
     config :samly, Samly.Provider,
-      idp: [%{id: "default", sp_id: "default", base_url: "https://#{host}/sso/saml", metadata_url: saml_metadata}],
-      sp: [%{id: "default", entity_id: System.get_env("SAML_SP_ENTITY_ID") || "https://#{host}", certfile_data: sp_cert, keyfile_data: sp_key}]
+      idp: [
+        %{
+          id: "default",
+          sp_id: "default",
+          base_url: "https://#{host}/sso/saml",
+          metadata_url: saml_metadata
+        }
+      ],
+      sp: [
+        %{
+          id: "default",
+          entity_id: System.get_env("SAML_SP_ENTITY_ID") || "https://#{host}",
+          certfile_data: sp_cert,
+          keyfile_data: sp_key
+        }
+      ]
+
     config :starter, :saml_enabled, true
   end
 
   # ── SSO: Social OAuth (each enabled when *_CLIENT_ID is set) ──
   config :starter, :sso_require_invite, System.get_env("SSO_REQUIRE_INVITE") == "true"
+  config :starter, :sso_domains, parse_sso_domains.(System.get_env("SSO_DOMAINS"))
 
   oauth_providers = []
 
@@ -123,6 +169,7 @@ if config_env() == :prod do
       config :ueberauth, Ueberauth.Strategy.Google.OAuth,
         client_id: google_id,
         client_secret: System.get_env("GOOGLE_CLIENT_SECRET")
+
       config :starter, :google_enabled, true
       [{:google, {Ueberauth.Strategy.Google, [default_scope: "email profile"]}} | oauth_providers]
     else
@@ -134,8 +181,13 @@ if config_env() == :prod do
       config :ueberauth, Ueberauth.Strategy.Facebook.OAuth,
         client_id: fb_id,
         client_secret: System.get_env("FACEBOOK_CLIENT_SECRET")
+
       config :starter, :facebook_enabled, true
-      [{:facebook, {Ueberauth.Strategy.Facebook, [default_scope: "email,public_profile"]}} | oauth_providers]
+
+      [
+        {:facebook, {Ueberauth.Strategy.Facebook, [default_scope: "email,public_profile"]}}
+        | oauth_providers
+      ]
     else
       oauth_providers
     end
@@ -145,6 +197,7 @@ if config_env() == :prod do
       config :ueberauth, Ueberauth.Strategy.Github.OAuth,
         client_id: gh_id,
         client_secret: System.get_env("GITHUB_CLIENT_SECRET")
+
       config :starter, :github_enabled, true
       [{:github, {Ueberauth.Strategy.Github, [default_scope: "user:email"]}} | oauth_providers]
     else

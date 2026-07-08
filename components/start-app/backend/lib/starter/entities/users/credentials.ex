@@ -83,7 +83,8 @@ defmodule Starter.Users.Credentials do
           if Bcrypt.verify_pass(password, credential.settings["password"]) do
             with {:ok, credential_entity} <-
                    Starter.Users.Credentials.UserCredential.entity(credential.id, context),
-                 {:ok, user} <- Noizu.EntityReference.Protocol.entity(credential_entity.user, context) do
+                 {:ok, user} <-
+                   Noizu.EntityReference.Protocol.entity(credential_entity.user, context) do
               %Starter.Users.Sessions.UserSession{
                 user: user,
                 credential: credential_entity,

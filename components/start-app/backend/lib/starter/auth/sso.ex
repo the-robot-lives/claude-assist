@@ -34,7 +34,7 @@ defmodule Starter.Auth.SSO do
   end
 
   defp find_user_by_email(email) do
-    q = from u in UserSchema, where: u.email == ^email, where: u.status == :active, limit: 1
+    q = from u in UserSchema, where: u.email == ^email, where: u.status != :deleted, limit: 1
 
     case Starter.Repo.one(q) do
       nil -> :not_found
@@ -89,7 +89,11 @@ defmodule Starter.Auth.SSO do
 
     {:ok, name} =
       Starter.EntityRepo.create(
-        %Starter.Versioned.Names.Name{first: first, last: last, time_stamp: Noizu.Entity.TimeStamp.now()},
+        %Starter.Versioned.Names.Name{
+          first: first,
+          last: last,
+          time_stamp: Noizu.Entity.TimeStamp.now()
+        },
         context
       )
 
@@ -101,7 +105,7 @@ defmodule Starter.Auth.SSO do
       handle: handle,
       name_id: name.id,
       email: email,
-      status: :active,
+      status: :pending,
       verified: true,
       flagged: false
     }
@@ -123,7 +127,9 @@ defmodule Starter.Auth.SSO do
   end
 
   defp sso_settings(:saml, attrs), do: %{email: attrs[:email], name_id: attrs[:name_id]}
-  defp sso_settings(provider_type, attrs), do: %{email: attrs[:email], sub: attrs[:sub] || attrs[:uid]}
+
+  defp sso_settings(provider_type, attrs),
+    do: %{email: attrs[:email], sub: attrs[:sub] || attrs[:uid]}
 
   defp sso_fingerprint(:saml, attrs), do: "saml:#{attrs[:name_id]}"
   defp sso_fingerprint(provider_type, attrs), do: "#{provider_type}:#{attrs[:sub] || attrs[:uid]}"

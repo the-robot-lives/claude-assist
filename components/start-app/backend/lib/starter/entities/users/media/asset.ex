@@ -17,8 +17,11 @@ defmodule Starter.Users.Media.Asset do
     @config auto: true
     @store name: :description_id
     field :description, nil, Starter.Versioned.Descriptions.DescriptionReference
-    field :media_type, nil,
+
+    field :media_type,
+          nil,
           {:ecto, Starter.Schema.Users.Media.Asset.__schema__(:type, :media_type)}
+
     field :settings, %{}, :map
     field :time_stamp, nil, Noizu.Entity.TimeStamp
   end

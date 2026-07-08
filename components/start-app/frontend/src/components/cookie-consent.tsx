@@ -12,7 +12,9 @@ import {
   acceptAllConsent,
   consentCategoryDetails,
   defaultConsentPreferences,
+  getBrowserSessionId,
   getConsentState,
+  hydrateConsentState,
   hasConsent,
   onConsentChange,
   rejectOptionalConsent,
@@ -22,6 +24,9 @@ import {
   type ConsentState,
   type OptionalConsentCategory,
 } from "@/lib/consent";
+import { api } from "@/lib/api";
+import { usePathname, useRouter } from "next/navigation";
+import { useAuth } from "@/context/auth";
 
 interface CookieConsentContextValue {
   state: ConsentState | null;
@@ -46,29 +51,69 @@ export function CookieConsentProvider({ children }: { children: React.ReactNode 
   const [state, setState] = useState<ConsentState | null>(null);
   const [mounted, setMounted] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const router = useRouter();
+  const pathname = usePathname();
+  const { user } = useAuth();
 
   useEffect(() => {
-    setState(getConsentState());
+    const localState = getConsentState();
+    const browserSessionId = getBrowserSessionId();
+    setState(localState);
     setMounted(true);
+    api
+      .getCookieConsent(browserSessionId)
+      .then((res) => {
+        if (res.consent) {
+          hydrateConsentState({
+            version: res.consent.version,
+            categories: {
+              necessary: true,
+              analytics: Boolean(res.consent.categories.analytics),
+              marketing: Boolean(res.consent.categories.marketing),
+              preferences: Boolean(res.consent.categories.preferences),
+            },
+            acceptedAt: res.consent.accepted_at,
+            updatedAt: res.consent.updated_at,
+          });
+        }
+      })
+      .catch(() => {});
+
     return onConsentChange(setState);
   }, []);
+
+  useEffect(() => {
+    if (state && !state.categories.necessary && pathname !== "/session-cookie-required") {
+      router.push("/session-cookie-required");
+    }
+  }, [pathname, router, state]);
+
+  useEffect(() => {
+    if (user && state) persistConsent(state);
+  }, [state, user]);
 
   const openSettings = useCallback(() => setIsSettingsOpen(true), []);
   const closeSettings = useCallback(() => setIsSettingsOpen(false), []);
 
   const acceptAll = useCallback(() => {
-    setState(acceptAllConsent());
+    const next = acceptAllConsent();
+    setState(next);
+    persistConsent(next);
     setIsSettingsOpen(false);
   }, []);
 
   const rejectOptional = useCallback(() => {
-    setState(rejectOptionalConsent());
+    const next = rejectOptionalConsent();
+    setState(next);
+    persistConsent(next);
     setIsSettingsOpen(false);
   }, []);
 
   const savePreferences = useCallback(
     (preferences: Partial<Record<ConsentCategory, boolean>>) => {
-      setState(setConsentPreferences(preferences));
+      const next = setConsentPreferences(preferences);
+      setState(next);
+      persistConsent(next);
       setIsSettingsOpen(false);
     },
     []
@@ -104,6 +149,16 @@ export function CookieConsentProvider({ children }: { children: React.ReactNode 
       {mounted ? <CookieConsentBanner /> : null}
     </CookieConsentContext.Provider>
   );
+}
+
+function persistConsent(state: ConsentState) {
+  const browserSessionId = getBrowserSessionId();
+  api
+    .saveCookieConsent(browserSessionId, {
+      version: state.version,
+      categories: { ...state.categories },
+    })
+    .catch(() => {});
 }
 
 export function useCookieConsent() {

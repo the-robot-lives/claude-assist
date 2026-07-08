@@ -6,6 +6,7 @@ defmodule Starter.Versioned.Descriptions do
 
   def list(context, options \\ []) do
     settings = Noizu.Entity.Meta.persistence(Entity) |> hd
+
     Starter.Repo.all(Schema)
     |> Enum.map(fn record ->
       {:ok, entity} = Entity.from_record(record, settings, context, options)

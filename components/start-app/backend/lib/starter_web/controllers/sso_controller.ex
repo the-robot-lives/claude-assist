@@ -15,19 +15,23 @@ defmodule StarterWeb.SSOController do
       |> maybe_add(:linkedin_enabled, "linkedin")
       |> maybe_add(:saml_enabled, "saml")
 
-    json(conn, %{providers: providers})
+    json(conn, %{providers: providers, domains: Application.get_env(:starter, :sso_domains, %{})})
   end
 
   # ── OIDC ──────────────────────────────────────────────────────
 
   def oidc_init(conn, _params) do
-    {:ok, uri} = OpenIDConnect.authorization_uri(:default)
+    config = oidc_config()
+    {:ok, uri} = OpenIDConnect.authorization_uri(config, config.redirect_uri)
     redirect(conn, external: uri)
   end
 
   def oidc_callback(conn, %{"code" => code}) do
-    with {:ok, tokens} <- OpenIDConnect.fetch_tokens(:default, code),
-         {:ok, claims} <- OpenIDConnect.verify(:default, tokens["id_token"]) do
+    config = oidc_config()
+
+    with {:ok, tokens} <-
+           OpenIDConnect.fetch_tokens(config, %{code: code, redirect_uri: config.redirect_uri}),
+         {:ok, claims} <- OpenIDConnect.verify(config, tokens["id_token"]) do
       handle_sso_callback(conn, :oidc, %{
         email: claims["email"],
         name: %{first: claims["given_name"] || "", last: claims["family_name"] || ""},
@@ -67,9 +71,12 @@ defmodule StarterWeb.SSOController do
 
   def exchange(conn, %{"code" => code}) do
     with {:ok, session_id} <- Starter.Auth.SSOCode.exchange(code),
-         {:ok, session} <- Starter.Users.Sessions.get(session_id, Noizu.Context.system()),
-         {:ok, access_token, _} <- Guardian.encode_and_sign(session, %{}, token_type: "access", ttl: {1, :hour}),
-         {:ok, refresh_token, _} <- Guardian.encode_and_sign(session, %{}, token_type: "refresh", ttl: {7, :day}) do
+         {:ok, session} <- Starter.Users.Sessions.get(session_id, Noizu.Context.system(), []),
+         {:ok, access_token, _} <-
+           Guardian.encode_and_sign(session, %{}, token_type: "access", ttl: {1, :hour}),
+         {:ok, refresh_token, %{"jti" => refresh_jti}} <-
+           Guardian.encode_and_sign(session, %{}, token_type: "refresh", ttl: {7, :day}) do
+      Starter.Auth.TokenStore.store_refresh_jti(refresh_jti)
       user = resolve_user_from_session(session)
       orgs = Organizations.list_user_organizations(user.id)
 
@@ -94,7 +101,10 @@ defmodule StarterWeb.SSOController do
     case Starter.Auth.SSO.authenticate_sso(provider_type, attrs) do
       {:ok, session} ->
         {:ok, code} = Starter.Auth.SSOCode.create(session.id)
-        redirect(conn, external: "#{frontend_url}/auth/sso-callback?code=#{code}&provider=#{provider_type}")
+
+        redirect(conn,
+          external: "#{frontend_url}/auth/sso-callback?code=#{code}&provider=#{provider_type}"
+        )
 
       {:error, :user_not_provisioned} ->
         redirect(conn, external: "#{frontend_url}/auth/sso-callback?error=not_provisioned")
@@ -109,12 +119,21 @@ defmodule StarterWeb.SSOController do
     redirect(conn, external: "#{frontend_url}/auth/sso-callback?error=#{error}")
   end
 
+  defp oidc_config do
+    :openid_connect
+    |> Application.fetch_env!(:providers)
+    |> Keyword.fetch!(:default)
+    |> Map.new()
+  end
+
   defp resolve_user_from_session(%Starter.Users.Sessions.UserSession{} = session) do
     case session.user do
       {:ref, _, id} ->
         {:ok, user} = Starter.Users.get_user(id, Noizu.Context.system())
         user
-      %Starter.Users.User{} = user -> user
+
+      %Starter.Users.User{} = user ->
+        user
     end
   end
 
@@ -124,8 +143,12 @@ defmodule StarterWeb.SSOController do
       email: user.email,
       user_name: user.user_name,
       handle: user.handle,
+      mobile_phone: Map.get(user, :mobile_phone),
       status: user.status,
-      verified: user.verified
+      verified: user.verified,
+      profile_completed_at: Map.get(user, :profile_completed_at),
+      profile_complete: !!Map.get(user, :profile_completed_at),
+      requires_profile_completion: !Map.get(user, :profile_completed_at)
     }
   end
 

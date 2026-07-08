@@ -16,6 +16,7 @@ defmodule StarterWeb.Router do
       signing_salt: "sso_session_salt",
       same_site: "Lax",
       max_age: 300
+
     plug :fetch_session
   end
 
@@ -57,6 +58,8 @@ defmodule StarterWeb.Router do
     post "/auth/register", AuthController, :register
     post "/auth/login", AuthController, :login
     post "/auth/refresh", AuthController, :refresh
+    get "/consent/cookies", ConsentController, :show
+    put "/consent/cookies", ConsentController, :update
     get "/auth/sso/providers", SSOController, :providers
     post "/auth/sso/exchange", SSOController, :exchange
     get "/config/features", ConfigController, :features
@@ -79,6 +82,7 @@ defmodule StarterWeb.Router do
     post "/auth/verify-email", AuthController, :send_verification
     get "/users/me", UserController, :show
     patch "/users/me", UserController, :update
+    post "/users/me/complete-registration", UserController, :complete_registration
     resources "/organizations", OrganizationController, only: [:index, :create, :show]
     post "/media/presign", MediaController, :presign
     post "/media/download", MediaController, :download
@@ -94,6 +98,7 @@ defmodule StarterWeb.Router do
     pipe_through [:api, :authenticated, :admin]
     get "/users", AdminController, :list_users
     get "/users/:id", AdminController, :show_user
+    post "/users/:id/approve", AdminController, :approve_user
     get "/organizations", AdminController, :list_organizations
     get "/organizations/:id", AdminController, :show_organization
   end

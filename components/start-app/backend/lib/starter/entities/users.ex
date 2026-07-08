@@ -45,6 +45,12 @@ defmodule Starter.Users do
 
     email = Starter.Users.Credentials.standardize_email(email)
     password = String.trim(password)
+    status = Keyword.get(options, :status, details[:status] || :active)
+    invite_token_id = Keyword.get(options, :invite_token_id, details[:invite_token_id])
+    mobile_phone = Keyword.get(options, :mobile_phone, details[:mobile_phone])
+
+    profile_completed_at =
+      Keyword.get(options, :profile_completed_at, details[:profile_completed_at])
 
     with :valid <- valid_user_name?(details.user_name),
          :valid <- valid_name?(name.first, name.middle, name.last),
@@ -74,7 +80,12 @@ defmodule Starter.Users do
                handle: handle,
                name: name_ref,
                description: description_ref,
-               status: :active,
+               status: status,
+               mobile_phone: mobile_phone,
+               invite_token:
+                 invite_token_id && Starter.Organizations.InviteToken.ref(invite_token_id),
+               profile_completed_at: profile_completed_at,
+               approved_at: if(status == :active, do: DateTime.utc_now(), else: nil),
                verified: false,
                flagged: false,
                time_stamp: Noizu.Entity.TimeStamp.now()

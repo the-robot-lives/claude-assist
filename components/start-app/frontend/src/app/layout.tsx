@@ -10,10 +10,9 @@ import { loadConfig, loadAllBrandings } from "@noizu/styleguide/css-gen";
 import { Toaster } from "sonner";
 
 export function generateMetadata(): Metadata {
-  const config = loadConfig();
   return {
-    title: config.title ?? "Project Name",
-    description: config.description ?? "Built with start-app",
+    title: "Start-App: Tagline",
+    description: "Tagline",
   };
 }
 

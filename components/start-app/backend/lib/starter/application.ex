@@ -15,20 +15,23 @@ defmodule Starter.Application do
         []
       end
 
-    children = [
-      StarterWeb.Telemetry,
-      Starter.Repo,
-      {Ecto.Migrator,
-       repos: Application.fetch_env!(:starter, :ecto_repos), skip: skip_migrations?()},
-      {DNSCluster, query: Application.get_env(:starter, :dns_cluster_query) || :ignore},
-      {Phoenix.PubSub, name: Starter.PubSub},
-      Starter.Redis,
-      Noizu.LiveViewEventServer,
-      {Oban, Application.fetch_env!(:starter, Oban)}
-    ] ++ samly_children ++ [
-      Starter.Events.WebhookHandler,
-      StarterWeb.Endpoint
-    ]
+    children =
+      [
+        StarterWeb.Telemetry,
+        Starter.Repo,
+        {Ecto.Migrator,
+         repos: Application.fetch_env!(:starter, :ecto_repos), skip: skip_migrations?()},
+        {DNSCluster, query: Application.get_env(:starter, :dns_cluster_query) || :ignore},
+        {Phoenix.PubSub, name: Starter.PubSub},
+        Starter.Redis,
+        Noizu.LiveViewEventServer,
+        {Oban, Application.fetch_env!(:starter, Oban)}
+      ] ++
+        samly_children ++
+        [
+          Starter.Events.WebhookHandler,
+          StarterWeb.Endpoint
+        ]
 
     opts = [strategy: :one_for_one, name: Starter.Supervisor]
     Supervisor.start_link(children, opts)

@@ -20,7 +20,13 @@ defmodule Starter.Users.Sessions do
 
   def get_session(id, context, options \\ []), do: get(id, context, options)
 
-  def create(session, context, options \\ []) do
+  def create(session, context, options \\ [])
+
+  def create(%Entity{} = session, context, options) do
+    super(session, context, options)
+  end
+
+  def create(session, context, options) do
     %Entity{}
     |> change(session)
     |> super(context, options)

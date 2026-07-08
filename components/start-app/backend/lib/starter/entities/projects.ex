@@ -9,8 +9,12 @@ defmodule Starter.Projects do
 
   def create_with_owner(attrs, user_id, context \\ Noizu.Context.system()) do
     Starter.Repo.transaction(fn ->
-      with {:ok, project} <- %Schema{} |> Schema.changeset(Map.put(attrs, :created_by, user_id)) |> Starter.Repo.insert(),
-           {:ok, _membership} <- Starter.Authz.ScopedMemberships.add_member("project", project.id, user_id, "owner") do
+      with {:ok, project} <-
+             %Schema{}
+             |> Schema.changeset(Map.put(attrs, :created_by, user_id))
+             |> Starter.Repo.insert(),
+           {:ok, _membership} <-
+             Starter.Authz.ScopedMemberships.add_member("project", project.id, user_id, "owner") do
         project
       else
         {:error, reason} -> Starter.Repo.rollback(reason)
@@ -25,7 +29,9 @@ defmodule Starter.Projects do
     case Ecto.Adapters.SQL.query(Starter.Repo, sql, params) do
       {:ok, %{rows: rows, columns: cols}} ->
         Enum.map(rows, fn row -> Enum.zip(cols, row) |> Map.new() end)
-      _ -> []
+
+      _ ->
+        []
     end
   end
 
@@ -42,7 +48,9 @@ defmodule Starter.Projects do
 
   def archive(id) do
     case Starter.Repo.get(Schema, id) do
-      nil -> {:error, :not_found}
+      nil ->
+        {:error, :not_found}
+
       project ->
         project
         |> Schema.changeset(%{status: "archived", archived_at: DateTime.utc_now()})
@@ -52,7 +60,9 @@ defmodule Starter.Projects do
 
   def unarchive(id) do
     case Starter.Repo.get(Schema, id) do
-      nil -> {:error, :not_found}
+      nil ->
+        {:error, :not_found}
+
       project ->
         project
         |> Schema.changeset(%{status: "active", archived_at: nil})
@@ -62,7 +72,9 @@ defmodule Starter.Projects do
 
   def delete_project(id) do
     case Starter.Repo.get(Schema, id) do
-      nil -> {:error, :not_found}
+      nil ->
+        {:error, :not_found}
+
       project ->
         project
         |> Schema.changeset(%{status: "deleted"})

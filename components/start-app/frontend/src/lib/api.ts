@@ -1,12 +1,20 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "";
+import { getRuntimeConfig } from "@/lib/runtime-config";
+
+function apiUrl() {
+  return getRuntimeConfig().API_URL || process.env.NEXT_PUBLIC_API_URL || "";
+}
 
 export interface User {
   id: string;
   email: string;
   user_name?: string;
   handle?: string;
+  mobile_phone?: string;
   status?: string;
   verified?: boolean;
+  profile_completed_at?: string | null;
+  profile_complete?: boolean;
+  requires_profile_completion?: boolean;
 }
 
 export interface Organization {
@@ -21,6 +29,24 @@ interface AuthResponse {
   access_token: string;
   refresh_token: string;
   organizations?: Organization[];
+}
+
+export interface RegisterPayload {
+  email: string;
+  password: string;
+  userName: string;
+  firstName: string;
+  lastName: string;
+  mobilePhone: string;
+  inviteToken?: string;
+}
+
+export interface CompleteRegistrationPayload {
+  userName: string;
+  firstName: string;
+  lastName: string;
+  mobilePhone: string;
+  inviteToken?: string;
 }
 
 interface MagicLinkResponse {
@@ -40,12 +66,22 @@ interface PasswordResetResponse {
 
 let refreshPromise: Promise<string | null> | null = null;
 
+function authCookie(value: string | null) {
+  const cookieDomain = getRuntimeConfig().COOKIE_DOMAIN;
+  const domain = cookieDomain ? `; Domain=${cookieDomain}` : "";
+  if (value) {
+    document.cookie = `access_token=${value}; path=/; max-age=${60 * 60}; SameSite=Lax${domain}`;
+  } else {
+    document.cookie = `access_token=; path=/; max-age=0; SameSite=Lax${domain}`;
+  }
+}
+
 async function attemptRefresh(): Promise<string | null> {
   const refreshToken = typeof window !== "undefined" ? localStorage.getItem("refresh_token") : null;
   if (!refreshToken) return null;
 
   try {
-    const res = await fetch(`${API_URL}/api/v1/auth/refresh`, {
+    const res = await fetch(`${apiUrl()}/api/v1/auth/refresh`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ refresh_token: refreshToken }),
@@ -60,7 +96,7 @@ async function attemptRefresh(): Promise<string | null> {
         localStorage.setItem("refresh_token", data.refresh_token);
       }
       // Sync cookie for middleware
-      document.cookie = `access_token=${data.access_token}; path=/; max-age=${60 * 60}; SameSite=Lax`;
+      authCookie(data.access_token);
       return data.access_token;
     }
     return null;
@@ -72,7 +108,7 @@ async function attemptRefresh(): Promise<string | null> {
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const token = typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
 
-  const res = await fetch(`${API_URL}${path}`, {
+  const res = await fetch(`${apiUrl()}${path}`, {
     ...options,
     headers: {
       "Content-Type": "application/json",
@@ -90,7 +126,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     const newToken = await refreshPromise;
     if (newToken) {
       // Retry the original request with the new token
-      const retryRes = await fetch(`${API_URL}${path}`, {
+      const retryRes = await fetch(`${apiUrl()}${path}`, {
         ...options,
         headers: {
           "Content-Type": "application/json",
@@ -110,7 +146,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     // Refresh failed — clear tokens and redirect to login
     localStorage.removeItem("access_token");
     localStorage.removeItem("refresh_token");
-    document.cookie = "access_token=; path=/; max-age=0; SameSite=Lax";
+    authCookie(null);
     if (typeof window !== "undefined") {
       window.location.href = "/login";
     }
@@ -125,10 +161,20 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 }
 
 export const api = {
-  register(email: string, password: string, inviteToken: string) {
+  register(payload: RegisterPayload) {
     return request<AuthResponse>("/api/v1/auth/register", {
       method: "POST",
-      body: JSON.stringify({ user: { email, password }, invite_token: inviteToken }),
+      body: JSON.stringify({
+        user: {
+          email: payload.email,
+          password: payload.password,
+          user_name: payload.userName,
+          first_name: payload.firstName,
+          last_name: payload.lastName,
+          mobile_phone: payload.mobilePhone,
+        },
+        invite_token: payload.inviteToken || undefined,
+      }),
     });
   },
 
@@ -189,7 +235,7 @@ export const api = {
   },
 
   ssoProviders() {
-    return request<{ providers: string[] }>("/api/v1/auth/sso/providers");
+    return request<{ providers: string[]; domains?: Record<string, string[]> }>("/api/v1/auth/sso/providers");
   },
 
   ssoExchange(code: string) {
@@ -200,17 +246,32 @@ export const api = {
   },
 
   me() {
-    return request<{ user: User }>("/api/v1/auth/me");
+    return request<{ user: User; organizations?: Organization[] }>("/api/v1/auth/me");
   },
 
   getProfile() {
     return request<{ user: User }>("/api/v1/users/me");
   },
 
-  updateProfile(data: { user_name?: string; email?: string; current_password?: string; new_password?: string }) {
+  updateProfile(data: { user_name?: string; email?: string; mobile_phone?: string; first_name?: string; last_name?: string; current_password?: string; new_password?: string }) {
     return request<{ user: User }>("/api/v1/users/me", {
       method: "PATCH",
       body: JSON.stringify({ user: data }),
+    });
+  },
+
+  completeRegistration(data: CompleteRegistrationPayload) {
+    return request<{ user: User }>("/api/v1/users/me/complete-registration", {
+      method: "POST",
+      body: JSON.stringify({
+        user: {
+          user_name: data.userName,
+          first_name: data.firstName,
+          last_name: data.lastName,
+          mobile_phone: data.mobilePhone,
+          invite_token: data.inviteToken || undefined,
+        },
+      }),
     });
   },
 
@@ -288,6 +349,12 @@ export const api = {
     return request<{ user: User & { admin: boolean; created_at: string } }>(`/api/v1/admin/users/${id}`);
   },
 
+  adminApproveUser(id: string) {
+    return request<{ user: User & { admin: boolean; created_at: string } }>(`/api/v1/admin/users/${id}/approve`, {
+      method: "POST",
+    });
+  },
+
   adminListOrganizations(page = 1, perPage = 50) {
     return request<{ organizations: Array<{ id: string; slug: string; name: string; created_at: string }>; total: number; page: number; per_page: number }>(`/api/v1/admin/organizations?page=${page}&per_page=${perPage}`);
   },
@@ -298,5 +365,31 @@ export const api = {
 
   getFeatureFlags() {
     return request<{ features: string[] }>("/api/v1/config/features");
+  },
+
+  getCookieConsent(browserSessionId: string) {
+    return request<{ consent: null | {
+      version: number;
+      categories: Record<string, boolean>;
+      accepted_at?: string;
+      updated_at?: string;
+      requires_session_tracking?: boolean;
+    } }>("/api/v1/consent/cookies", {
+      headers: { "X-Browser-Session-Id": browserSessionId },
+    });
+  },
+
+  saveCookieConsent(browserSessionId: string, consent: { version: number; categories: Record<string, boolean> }) {
+    return request<{ consent: {
+      version: number;
+      categories: Record<string, boolean>;
+      accepted_at?: string;
+      updated_at?: string;
+      requires_session_tracking?: boolean;
+    }; requires_session_tracking?: boolean }>("/api/v1/consent/cookies", {
+      method: "PUT",
+      headers: { "X-Browser-Session-Id": browserSessionId },
+      body: JSON.stringify({ consent }),
+    });
   },
 };
