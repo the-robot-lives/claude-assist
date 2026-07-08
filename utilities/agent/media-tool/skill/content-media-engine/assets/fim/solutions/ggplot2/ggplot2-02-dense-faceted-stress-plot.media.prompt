@@ -1,0 +1,60 @@
+schema: "0.4"
+id: ggplot2-02-dense-faceted-stress-plot
+type: visualization
+quality: high
+solution: ggplot2
+category: julia-r
+variant: dense-faceted-stress-plot
+
+prompt:
+  system: "Generate only runnable R code for a ggplot2 visualization. Do not include markdown fences or explanatory prose."
+  text: |
+    Create a dense and faceted ggplot2 stress-test visualization that avoids raw overplotting.
+    Generate a deterministic synthetic data frame with at least 50000 rows, two numeric dimensions, two facet variables, and a response intensity.
+    Use set.seed and base R or tidyverse-compatible data preparation.
+    Build a faceted heatmap or binned density plot using geom_bin2d, geom_hex, geom_tile after aggregation, or stat_density_2d.
+    Use facet_grid or facet_wrap with free or fixed scales as appropriate, a continuous fill scale such as scale_fill_viridis_c or scale_fill_gradient, and labels that explain the density or count encoding.
+    Save the result as a PNG and include a code comment explaining why binning or aggregation is used for large data in ggplot2.
+
+output:
+  format: r
+  file: ggplot2-02-dense-faceted-stress-plot.R
+  renders:
+    - format: png
+      file: ggplot2-02-dense-faceted-stress-plot.png
+  requirements:
+    - ggplot2
+
+evaluation:
+  checklist:
+    - Generates at least 50000 rows with deterministic set.seed.
+    - Uses binned, aggregated, or density-based geoms instead of raw point overplotting.
+    - Uses ggplot2 facets and a continuous fill scale.
+    - Saves a raster output suitable for stress-test review.
+  rubric:
+    Format validity:
+      weight: 30
+      criteria: "The response is valid R code with correct ggplot2 syntax for dense data, facets, scales, labels, and export."
+    Semantic completeness:
+      weight: 30
+      criteria: "The visualization covers dense data, stress behavior, faceting, aggregation or binning, and deterministic generation."
+    Visual/structural quality:
+      weight: 25
+      criteria: "The facets remain readable, the fill scale communicates counts or density, and labels make the encoding clear."
+    Robustness:
+      weight: 15
+      criteria: "The code controls randomness, avoids memory-heavy unnecessary transformations, and uses ggsave with explicit size and dpi."
+  pass_conditions:
+    - The generated data has at least 50000 rows.
+    - The plot uses facet_grid or facet_wrap.
+    - The primary layer is geom_bin2d, geom_hex, geom_tile, stat_density_2d, or a comparable aggregation.
+    - The code writes a PNG file.
+
+tags:
+  - fim
+  - julia-r
+  - ggplot2
+  - dense-data
+  - faceting
+  - stress-test
+  - aggregation

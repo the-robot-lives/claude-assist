@@ -1,0 +1,52 @@
+schema: "0.4"
+id: cytoscape_js-04-integration-analysis-output
+type: data
+quality: high
+solution: cytoscape_js
+category: network-and-graph-visualization
+variant: edge-integration-analysis-output
+
+prompt:
+  context:
+    - "references/fim/overview/network-3d-graphics/cytoscape_js.md"
+    - "references/fim/solution/cytoscape_js.md"
+  text: |
+    Emit a Cytoscape.js integration bundle for a graph-analysis workflow. Return
+    elements JSON with node and edge data, class labels, compound parent fields, a
+    stylesheet array, a layout config, and an analysis section containing degree,
+    component id, PageRank, and shortest-path results for a chosen source. Include
+    import/export notes for JSON, GraphML extension handoff, PNG/SVG export, and
+    validation rules for duplicate IDs, missing endpoints, and unsupported layout
+    extensions.
+
+output:
+  formats:
+    - format: json
+    - format: md
+  expected_artifact: "Cytoscape-ready elements/style/layout package with analysis report."
+
+evaluation:
+  checklist:
+    - "Elements JSON is shaped for Cytoscape node and edge data."
+    - "Stylesheet and layout are included separately from graph data."
+    - "Analysis output includes metrics and shortest-path results."
+    - "Validation covers IDs, endpoints, and extension availability."
+  rubric:
+    - name: Format validity
+      weight: 30
+      description: "YAML parses and requests valid JSON plus markdown integration notes."
+    - name: Semantic completeness
+      weight: 30
+      description: "Covers Cytoscape data, styling, layout, exports, and graph analysis."
+    - name: Visual/structural quality
+      weight: 25
+      description: "Data supports styled, grouped, and navigable network output."
+    - name: Robustness
+      weight: 15
+      description: "Validation prevents common integration failures before render time."
+  pass_conditions:
+    - "The output can initialize Cytoscape without inventing missing fields."
+    - "The analysis section is machine-readable."
+    - "The prompt includes concrete edge-case validation."
+
+tags: [fim, cytoscape-js, integration, elements-json, graph-analysis, export]

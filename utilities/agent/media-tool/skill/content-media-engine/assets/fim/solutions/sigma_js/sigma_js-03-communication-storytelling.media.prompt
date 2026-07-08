@@ -1,0 +1,53 @@
+schema: "0.4"
+id: sigma_js-03-communication-storytelling
+type: visualization
+quality: high
+solution: sigma_js
+category: network-and-graph-visualization
+variant: communication-storytelling-graph
+
+prompt:
+  context:
+    - "references/fim/overview/network-3d-graphics/sigma_js.md"
+    - "references/fim/solution/sigma_js.md"
+  text: |
+    Create a Sigma.js storytelling graph for an interactive report on ecosystem
+    influence. Use a graphology graph with precomputed positions, community colors,
+    node size by influence score, and curved or arrow edge types where registered.
+    Add narrative chapters that move the camera, update reducers to highlight a
+    selected community, dim non-neighbors, reveal bridge nodes, and end on a curated
+    path between two named actors. Keep labels thresholded and use overlay text for
+    chapter explanations.
+
+output:
+  formats:
+    - format: html
+    - format: png
+  renderer: sigma-js-webgl
+  expected_artifact: "Camera-driven Sigma story graph with reducer-based highlights."
+
+evaluation:
+  checklist:
+    - "Uses camera transitions and reducers for story chapters."
+    - "Keeps graphology attributes and Sigma rendering separate."
+    - "Highlights communities, bridge nodes, and a final path."
+    - "Manages labels and overlays for readable communication."
+  rubric:
+    - name: Format validity
+      weight: 30
+      description: "YAML parses and declares Sigma narrative output."
+    - name: Semantic completeness
+      weight: 30
+      description: "Covers storytelling chapters, camera, reducers, attributes, and path emphasis."
+    - name: Visual/structural quality
+      weight: 25
+      description: "Audience can follow the story without losing graph context."
+    - name: Robustness
+      weight: 15
+      description: "Chapter changes do not mutate data unnecessarily or overload labels."
+  pass_conditions:
+    - "The prompt uses Sigma-specific camera and reducer patterns."
+    - "The narrative remains connected to graph structure."
+    - "Labels and overlays are scale-aware."
+
+tags: [fim, sigma-js, storytelling, communication-graph, camera, reducers]

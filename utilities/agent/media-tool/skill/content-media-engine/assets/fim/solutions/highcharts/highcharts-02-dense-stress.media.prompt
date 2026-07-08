@@ -1,0 +1,79 @@
+schema: "0.4"
+id: highcharts-02-dense-stress
+type: visualization
+quality: high
+solution: highcharts
+category: js-charting
+variant: dense-stress
+references:
+  - "references/fim/overview/data-visualization/highcharts.md"
+  - "references/fim/solution/highcharts.md"
+  - "assets/example-prompts/landing-page.media.prompt"
+  - "assets/example-prompts/architecture-diagram.media.prompt"
+
+prompt:
+  system: |-
+    You generate Highcharts browser visualization artifacts. Output only a complete self-contained HTML document with inline CSS and JavaScript, using Highcharts CDN modules as needed. Do not use markdown fences or explanations.
+  text: |-
+    Create the dense stress visualization for Highcharts.
+    
+    Scenario:
+    Create a dense visualization that intentionally stresses the solution with high-volume time series, many categories, or a large graph. Include built-in performance controls, filtering, and a clear explanation in the UI of the active sampling or rendering strategy.
+    
+    Implementation requirements:
+    - Use this library source or equivalent npm import pattern: https://code.highcharts.com/highcharts.js.
+    - Parser/API contract: Use Highcharts.chart or Highcharts.stockChart with a valid option object containing chart, title, axes, tooltip, plotOptions, series, and modules as needed.
+    - Data encoding contract: Encode series as supported arrays or objects, use datetime timestamps in milliseconds, yAxis mapping, point metadata, and module-specific series types correctly.
+    - Responsive contract: Use responsive.rules, reflow, a sized container, and layouts that preserve legends and axes on narrow screens.
+    - Accessibility contract: Load the accessibility module, add chart descriptions, keyboard navigation cues, high-contrast colors, and a data table or export view.
+    - Edge data contract: Handle nulls, timezone choices, missing modules, empty series, extreme outliers, export privacy, and license or credits constraints.
+    - Performance contract: Use boost for large datasets, disable markers and animation when needed, and import only required modules.
+    - Integration contract: Expose updateSeries(rows), addPoint(point), exportLocal(), reflowChart(), and destroyChart() hooks.
+    - Include deterministic inline sample data with realistic field names, units, and at least one edge case row.
+    - Include concise visible titles, legends, units, source note, and no placeholder lorem ipsum text.
+    - Output only the final artifact, with no commentary outside the artifact.
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.2
+
+output:
+  text_format: html
+  artifact_kind: highcharts-html-stress-visualization
+  formats:
+    - format: html
+
+evaluation:
+  checklist:
+    - "Format validity: parseable schema 0.4 media prompt and generated artifact is exactly one html output with no markdown fences."
+    - "Parser/API: Use Highcharts.chart or Highcharts.stockChart with a valid option object containing chart, title, axes, tooltip, plotOptions, series, and modules as needed."
+    - "Data encoding: Encode series as supported arrays or objects, use datetime timestamps in milliseconds, yAxis mapping, point metadata, and module-specific series types correctly."
+    - "Responsive behavior: Use responsive.rules, reflow, a sized container, and layouts that preserve legends and axes on narrow screens."
+    - "Accessibility: Load the accessibility module, add chart descriptions, keyboard navigation cues, high-contrast colors, and a data table or export view."
+    - "Edge data: Handle nulls, timezone choices, missing modules, empty series, extreme outliers, export privacy, and license or credits constraints."
+    - "Performance/integration: Use boost for large datasets, disable markers and animation when needed, and import only required modules. Expose updateSeries(rows), addPoint(point), exportLocal(), reflowChart(), and destroyChart() hooks."
+  rubric:
+    - name: "Format validity"
+      weight: 30
+      criteria: "The artifact is valid for the requested text format, contains no markdown fences, and uses the required solution parser or API without syntax errors."
+    - name: "Semantic completeness"
+      weight: 30
+      criteria: "The visualization covers the requested scenario, data story, interactions, labels, and solution-specific capabilities."
+    - name: "Visual/structural quality"
+      weight: 25
+      criteria: "The layout, hierarchy, color, typography, chart choice, and dashboard or diagram structure are clear and professional."
+    - name: "Robustness"
+      weight: 15
+      criteria: "The artifact handles responsive layout, accessibility, edge data, update or teardown behavior, and performance constraints without runtime failures."
+  pass_conditions:
+    - "YAML parses successfully and all text is ASCII-only."
+    - "Generated artifact runs without console errors when CDN dependencies are available."
+    - "Parser/API, data encoding, responsive, accessibility, and edge data checklist items are all satisfied."
+    - "Rubric score is at least 80 out of 100 and no rubric dimension scores zero."
+
+tags:
+  - "fim"
+  - "js-charting"
+  - "highcharts"
+  - "dense-stress"
+  - "visualization"
+  - "stress-test"

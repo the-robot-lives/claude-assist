@@ -1,0 +1,53 @@
+schema: "0.4"
+id: sigma_js-01-topology-exploration
+type: visualization
+quality: high
+solution: sigma_js
+category: network-and-graph-visualization
+variant: topology-exploration
+
+prompt:
+  context:
+    - "references/fim/overview/network-3d-graphics/sigma_js.md"
+    - "references/fim/solution/sigma_js.md"
+  text: |
+    Create a Sigma.js topology explorer for a large knowledge graph. Build a
+    graphology Graph with node attributes x, y, size, label, color, category, and
+    risk, then render it with new Sigma(graph, container, settings). Use ForceAtlas2
+    or precomputed coordinates before rendering, search and hover reducers, selected
+    neighborhood dimming, camera controls, label thresholds, and edge hiding below
+    a zoom level. Include a visible reminder that Sigma renders graphology data and
+    does not compute layout by itself.
+
+output:
+  formats:
+    - format: html
+    - format: png
+  renderer: sigma-js-webgl
+  expected_artifact: "Interactive WebGL topology explorer backed by graphology."
+
+evaluation:
+  checklist:
+    - "Uses graphology for graph data and Sigma for rendering."
+    - "Assigns x/y coordinates before rendering."
+    - "Uses reducers for hover, search, and neighborhood focus."
+    - "Includes camera and label-threshold controls for exploration."
+  rubric:
+    - name: Format validity
+      weight: 30
+      description: "YAML parses and declares Sigma/WebGL output."
+    - name: Semantic completeness
+      weight: 30
+      description: "Covers graphology data, Sigma renderer, layout assignment, reducers, and exploration controls."
+    - name: Visual/structural quality
+      weight: 25
+      description: "Topology remains readable at scale with labels and edge LOD."
+    - name: Robustness
+      weight: 15
+      description: "Handles missing coordinates, empty containers, and reducer refresh behavior."
+  pass_conditions:
+    - "The prompt does not ask Sigma to own layout or graph data."
+    - "The graph has coordinates before render."
+    - "Reducers and camera controls are part of the topology exploration."
+
+tags: [fim, sigma-js, graphology, topology-exploration, webgl, reducers]

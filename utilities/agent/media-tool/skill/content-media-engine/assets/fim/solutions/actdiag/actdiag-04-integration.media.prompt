@@ -1,0 +1,77 @@
+schema: "0.4"
+id: fim-diagrams-dsl-xml-actdiag-04-integration
+type: diagram
+quality: production
+solution: actdiag
+category: diagrams-dsl-xml
+variant: integration
+prompt:
+  system: You generate actdiag source for the blockdiag activity-diagram renderer. Output only a valid
+    actdiag { ... } document. Do not use code fences or explanatory prose.
+  text: Create an actdiag source diagram for a CI/CD release gate that integrates GitHub, Jira, security
+    scanning, staging deploy, manual approval, Argo CD production sync, and audit logging. Include failure
+    loops for failed tests or security findings and a final release evidence archive.
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.2
+    top_p: 0.9
+output:
+  text_format: actdiag
+  artifact_kind: activity_diagram_source
+  formats:
+  - format: diag
+  - format: svg
+  - format: png
+  - format: pdf
+evaluation:
+  checklist:
+  - 'Output uses native actdiag syntax: actdiag root block, A -> B transitions, lane blocks, activity
+    attributes, beginpoint, endpoint, and diamond decision shapes.'
+  - 'Output captures the requested semantics: activity workflows where lane ownership, branch logic, and
+    process completion are explicit.'
+  - 'Output has solution-appropriate structure: clear swimlanes, cross-lane transitions, readable labels,
+    and styled decision/error paths.'
+  - 'Output is robust for the renderer/importer: every activity is assigned to one lane, branches rejoin
+    or terminate, and node ids remain stable and parser-safe.'
+  - Models boundaries, external systems, failure paths, references, ids, or import/export assumptions
+    needed for integration work.
+  - Output contains only the requested artifact source, with no Markdown fences, no explanatory prose,
+    and no non-ASCII characters.
+  rubric:
+    Format validity:
+      weight: 30
+      criteria: 'Must parse as actdiag and follow actdiag-specific grammar: actdiag root block, A -> B
+        transitions, lane blocks, activity attributes, beginpoint, endpoint, and diamond decision shapes.
+        Deduct heavily for malformed roots, unmatched blocks/tags, invalid ids, unresolved references,
+        or mixing syntax from another diagram DSL.'
+    Semantic completeness:
+      weight: 30
+      criteria: Must satisfy the full scenario for edge/integration use and include the domain entities,
+        relationships, responsibilities, and edge/failure paths requested in the prompt. The diagram must
+        use actdiag for activity workflows where lane ownership, branch logic, and process completion
+        are explicit.
+    Visual/structural quality:
+      weight: 25
+      criteria: Must produce a readable rendered or importable artifact with clear swimlanes, cross-lane
+        transitions, readable labels, and styled decision/error paths. Labels should be concise, grouping
+        should reduce clutter, and styling/layout choices must match the strengths and limits of actdiag.
+    Robustness:
+      weight: 15
+      criteria: Must remain stable under normal rendering, import, export, or documentation use. Check
+        every activity is assigned to one lane, branches rejoin or terminate, and node ids remain stable
+        and parser-safe, avoid placeholders that block execution, and keep output ASCII-only and deterministic.
+  pass_conditions:
+  - Total rubric score is at least 85 out of 100.
+  - Format validity score is at least 24 out of 30.
+  - The generated artifact source has no code fences, no prose wrapper, and no non-ASCII characters.
+  - The generated source can be parsed or imported by the normal actdiag toolchain without unresolved
+    references or missing required root elements.
+tags:
+- fim
+- diagrams-dsl-xml
+- actdiag
+- integration
+- activity-diagram
+- swimlanes
+- process-flow
+

@@ -1,0 +1,51 @@
+schema: "0.4"
+id: d3-force-04-integration-analysis-output
+type: data
+quality: high
+solution: d3-force
+category: network-and-graph-visualization
+variant: edge-integration-analysis-output
+
+prompt:
+  context:
+    - "references/fim/overview/network-3d-graphics/d3-force.md"
+    - "references/fim/solution/d3-force.md"
+  text: |
+    Emit a D3 force integration output for a node-link dataset. Return node and
+    link JSON, simulation settings, a manual precompute routine that calls tick(n),
+    final x/y coordinates, and a validation report. The report must flag missing
+    node IDs, unresolved link source or target references, duplicate node IDs,
+    extreme degree hubs, and force settings likely to explode or collapse the
+    layout. Include renderer notes for both SVG and Canvas consumers.
+
+output:
+  formats:
+    - format: json
+    - format: md
+  expected_artifact: "D3-force-ready graph data, settled coordinates, and validation report."
+
+evaluation:
+  checklist:
+    - "Includes node-link JSON and force settings."
+    - "Precomputes or describes final coordinates from simulation ticks."
+    - "Validation checks ID resolution, duplicates, hubs, and unsafe force values."
+    - "Documents SVG versus Canvas renderer choices."
+  rubric:
+    - name: Format validity
+      weight: 30
+      description: "YAML parses and requires valid JSON plus markdown notes."
+    - name: Semantic completeness
+      weight: 30
+      description: "Covers D3-force data, settings, precompute, coordinates, and validation."
+    - name: Visual/structural quality
+      weight: 25
+      description: "Output coordinates and settings can produce a coherent graph view."
+    - name: Robustness
+      weight: 15
+      description: "Analysis catches broken links and unstable simulation parameters."
+  pass_conditions:
+    - "The output can initialize d3.forceSimulation without schema guessing."
+    - "Coordinates and validation are included."
+    - "Renderer guidance is explicit and scale-aware."
+
+tags: [fim, d3-force, integration, node-link-json, analysis-output, validation]

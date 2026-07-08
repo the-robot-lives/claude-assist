@@ -1,0 +1,53 @@
+schema: "0.4"
+id: networkx-01-topology-exploration
+type: visualization
+quality: high
+solution: networkx
+category: network-and-graph-visualization
+variant: topology-exploration
+
+prompt:
+  context:
+    - "references/fim/overview/network-3d-graphics/networkx.md"
+    - "references/fim/solution/networkx.md"
+  text: |
+    Create a NetworkX topology exploration notebook script for a software module
+    dependency graph. Build a DiGraph with node attributes for package, owner, and
+    risk, plus weighted directed edges. Compute density, weakly connected
+    components, degree centrality, PageRank, shortest paths from a selected module,
+    and cycle detection. Render a static matplotlib figure using spring_layout with
+    a fixed seed, node color by package, node size by PageRank, edge width by
+    weight, curved arrows for directed cycles, and labels for the top hubs.
+
+output:
+  formats:
+    - format: py
+    - format: png
+    - format: csv
+  expected_artifact: "NetworkX analysis script with topology figure and metrics table."
+
+evaluation:
+  checklist:
+    - "Uses NetworkX graph classes, algorithms, layouts, and matplotlib drawing."
+    - "Computes topology metrics and selected shortest paths."
+    - "Uses stable layout seed and per-node/per-edge style lists."
+    - "Exports both a figure and metrics."
+  rubric:
+    - name: Format validity
+      weight: 30
+      description: "YAML parses and requested script, PNG, and CSV outputs are explicit."
+    - name: Semantic completeness
+      weight: 30
+      description: "Covers graph construction, topology algorithms, drawing, and export."
+    - name: Visual/structural quality
+      weight: 25
+      description: "Figure clearly communicates packages, hubs, cycles, and weighted edges."
+    - name: Robustness
+      weight: 15
+      description: "Handles directed assumptions, stable layouts, and ordering of style lists."
+  pass_conditions:
+    - "The prompt uses NetworkX rather than igraph or D3 APIs."
+    - "Topology exploration includes numeric metrics and visual output."
+    - "The matplotlib figure is reproducible."
+
+tags: [fim, networkx, topology-exploration, python, matplotlib, graph-analysis]

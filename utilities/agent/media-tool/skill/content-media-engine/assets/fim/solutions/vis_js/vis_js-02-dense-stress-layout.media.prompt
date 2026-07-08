@@ -1,0 +1,54 @@
+schema: "0.4"
+id: vis_js-02-dense-stress-layout
+type: visualization
+quality: high
+solution: vis_js
+category: network-and-graph-visualization
+variant: dense-graph-stress-layout
+
+prompt:
+  context:
+    - "references/fim/overview/network-3d-graphics/vis_js.md"
+    - "references/fim/solution/vis_js.md"
+  text: |
+    Build a vis-network dense-graph stress demo for a 2500-node service graph.
+    Use clustering, hidden low-priority edges, stabilization iterations, a physics
+    solver such as forceAtlas2Based or barnesHut, and a handler that disables
+    physics after stabilizationIterationsDone. Include controls to cluster by hub
+    size, open clusters on double click, hide labels while zoomed out, and switch
+    to precomputed x/y positions with physics false when counts exceed the live
+    simulation threshold. Report node count, edge count, cluster count, layout
+    duration, and stabilization progress.
+
+output:
+  formats:
+    - format: html
+    - format: json
+  renderer: vis-network-canvas
+  expected_artifact: "Dense vis-network stress page with clustering and metrics."
+
+evaluation:
+  checklist:
+    - "Uses vis-network clustering and stabilization controls."
+    - "Disables physics after stabilization for performance."
+    - "Includes precomputed-position fallback for excessive graph size."
+    - "Reports layout and clustering metrics."
+  rubric:
+    - name: Format validity
+      weight: 30
+      description: "YAML parses and declares visualization plus metrics outputs."
+    - name: Semantic completeness
+      weight: 30
+      description: "Covers dense graph physics, clustering, stabilization, fallback, and telemetry."
+    - name: Visual/structural quality
+      weight: 25
+      description: "Dense graph remains navigable through clustering and label controls."
+    - name: Robustness
+      weight: 15
+      description: "Avoids continuous physics cost and warns beyond vis-network limits."
+  pass_conditions:
+    - "The prompt respects vis-network's mid-size graph ceiling."
+    - "Dense stress metrics and stabilization progress are included."
+    - "Cluster open and fallback behavior are specified."
+
+tags: [fim, vis-js, vis-network, dense-graph, stress-layout, clustering, stabilization]

@@ -1,0 +1,53 @@
+schema: "0.4"
+id: sigma_js-04-integration-analysis-output
+type: data
+quality: high
+solution: sigma_js
+category: network-and-graph-visualization
+variant: edge-integration-analysis-output
+
+prompt:
+  context:
+    - "references/fim/overview/network-3d-graphics/sigma_js.md"
+    - "references/fim/solution/sigma_js.md"
+  text: |
+    Emit a Sigma.js integration package for rendering a Gephi export in the browser.
+    Provide code and data notes for parsing GEXF with graphology-gexf, verifying
+    every node has x, y, size, color, and label attributes, instantiating Sigma, and
+    applying reducers for search and selected-neighborhood focus. Include an
+    analysis report for missing coordinates, zero-height container risk, graphology
+    and Sigma version compatibility, edge count pressure, and label threshold
+    recommendations.
+
+output:
+  formats:
+    - format: js
+    - format: json
+    - format: md
+  expected_artifact: "Sigma/graphology integration scaffold with validation and analysis notes."
+
+evaluation:
+  checklist:
+    - "Uses graphology-gexf or graphology data as the Sigma input."
+    - "Validates required Sigma render attributes and container dimensions."
+    - "Includes reducers and refresh behavior for interaction."
+    - "Reports version, coordinate, edge count, and label-threshold risks."
+  rubric:
+    - name: Format validity
+      weight: 30
+      description: "YAML parses and declares JS, JSON, and markdown outputs."
+    - name: Semantic completeness
+      weight: 30
+      description: "Covers GEXF parsing, graphology, Sigma instantiation, reducers, and validation."
+    - name: Visual/structural quality
+      weight: 25
+      description: "Integration data can produce a styled, navigable WebGL graph."
+    - name: Robustness
+      weight: 15
+      description: "Validation prevents common blank-canvas and missing-coordinate failures."
+  pass_conditions:
+    - "The integration package separates graph data from renderer settings."
+    - "The prompt includes concrete checks for Sigma-specific failure modes."
+    - "The output is ready for a browser rendering pipeline."
+
+tags: [fim, sigma-js, integration, graphology, gexf, validation, analysis-output]

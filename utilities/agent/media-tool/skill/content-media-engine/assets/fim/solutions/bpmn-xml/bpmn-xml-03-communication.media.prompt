@@ -1,0 +1,76 @@
+schema: "0.4"
+id: fim-diagrams-dsl-xml-bpmn-xml-03-communication
+type: diagram
+quality: production
+solution: bpmn-xml
+category: diagrams-dsl-xml
+variant: communication
+prompt:
+  system: You generate BPMN 2.0 XML. Output only well-formed XML rooted at bpmn:definitions, including
+    BPMN DI when a visible diagram is requested. Do not use code fences or explanatory prose.
+  text: Create BPMN 2.0 XML for an executive-readable employee onboarding workflow. Use lanes for HR,
+    IT, Security, Manager, and New Hire. Use clear task names, inclusive gateway branches for remote versus
+    office employees, and BPMN DI layout suitable for a modeler screenshot.
+  provider_options:
+    max_tokens: 4096
+    temperature: 0.2
+    top_p: 0.9
+output:
+  text_format: bpmn-xml
+  artifact_kind: executable_process_xml
+  formats:
+  - format: bpmn
+  - format: xml
+  - format: svg
+evaluation:
+  checklist:
+  - 'Output uses native bpmn-xml syntax: bpmn:definitions namespaces, process, events, tasks, gateways,
+    sequenceFlow ids, collaboration, lanes, and bpmndi shapes/edges with dc:Bounds and di:waypoint geometry.'
+  - 'Output captures the requested semantics: BPMN process semantics with executable flow, gateway conditions,
+    events, lanes, and message boundaries where applicable.'
+  - 'Output has solution-appropriate structure: complete process plus diagram interchange geometry that
+    renders in bpmn-js or Camunda Modeler.'
+  - 'Output is robust for the renderer/importer: all sourceRef, targetRef, processRef, messageRef, and
+    BPMNShape/BPMNEdge references resolve to declared ids.'
+  - Optimizes labels, grouping, and visual hierarchy for human review while remaining faithful to the
+    native renderer constraints.
+  - Output contains only the requested artifact source, with no Markdown fences, no explanatory prose,
+    and no non-ASCII characters.
+  rubric:
+    Format validity:
+      weight: 30
+      criteria: 'Must parse as bpmn-xml and follow bpmn-xml-specific grammar: bpmn:definitions namespaces,
+        process, events, tasks, gateways, sequenceFlow ids, collaboration, lanes, and bpmndi shapes/edges
+        with dc:Bounds and di:waypoint geometry. Deduct heavily for malformed roots, unmatched blocks/tags,
+        invalid ids, unresolved references, or mixing syntax from another diagram DSL.'
+    Semantic completeness:
+      weight: 30
+      criteria: Must satisfy the full scenario for design/communication use and include the domain entities,
+        relationships, responsibilities, and edge/failure paths requested in the prompt. The diagram must
+        use bpmn-xml for BPMN process semantics with executable flow, gateway conditions, events, lanes,
+        and message boundaries where applicable.
+    Visual/structural quality:
+      weight: 25
+      criteria: Must produce a readable rendered or importable artifact with complete process plus diagram
+        interchange geometry that renders in bpmn-js or Camunda Modeler. Labels should be concise, grouping
+        should reduce clutter, and styling/layout choices must match the strengths and limits of bpmn-xml.
+    Robustness:
+      weight: 15
+      criteria: Must remain stable under normal rendering, import, export, or documentation use. Check
+        all sourceRef, targetRef, processRef, messageRef, and BPMNShape/BPMNEdge references resolve to
+        declared ids, avoid placeholders that block execution, and keep output ASCII-only and deterministic.
+  pass_conditions:
+  - Total rubric score is at least 85 out of 100.
+  - Format validity score is at least 24 out of 30.
+  - The generated artifact source has no code fences, no prose wrapper, and no non-ASCII characters.
+  - The generated source can be parsed or imported by the normal bpmn-xml toolchain without unresolved
+    references or missing required root elements.
+tags:
+- fim
+- diagrams-dsl-xml
+- bpmn-xml
+- communication
+- bpmn
+- xml
+- workflow
+

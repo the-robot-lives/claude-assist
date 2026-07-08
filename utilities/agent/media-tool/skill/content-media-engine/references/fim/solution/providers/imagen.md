@@ -16,6 +16,15 @@ Imagen is a **natural-language** model. Write full descriptive sentences or a ti
 - **Ordering guidance**: `subject → composition/shot → environment → lighting → style/medium → in-image text (if any)`.
 - **Emphasis without weights**: repeat or elaborate the important element in natural language ("a *single, prominent* red maple, its canopy filling the upper third"), rather than reaching for a weighting operator it doesn't support.
 
+**Tag → prose conversion** (the single most common prep fix). If upstream guidance hands you an SD-style tag list, rewrite it as a sentence:
+```text
+# SD-style (wrong for Imagen):
+red fox, forest, autumn, (bokeh:1.3), masterpiece, best quality, 8k
+# Imagen-native (right):
+A red fox standing in an autumn forest, warm afternoon light filtering through
+the trees, soft background bokeh, crisp focus, high detail.
+```
+
 ## Prompt Grammar / Syntax
 
 There is no special operator grammar. Control happens through **descriptive vocabulary** plus a few **API parameters** (not in-prompt flags). The knobs media-tool exposes:
@@ -80,6 +89,24 @@ morning light, cobblestone street, potted geraniums, warm and inviting.
 ```
 Note: one environment, one light source — layering three lighting states confuses the scene.
 
+### How to condition on a reference image (edit / subject transfer)
+Attach one or more images; media-tool auto-routes to the `generateContent` edit path on `gemini-2.5-flash-image`. Write the instruction as plain language describing the desired change or how to use the reference.
+```text
+# with an attached product photo:
+Place this exact sneaker on a concrete pedestal in a bright studio,
+soft top light, seamless white background, keep the shoe's colors and logo unchanged.
+```
+Note: attachments switch endpoints automatically — the same descriptive style applies; name what to preserve.
+
+### How to build a reusable prompt template for a batch
+Keep a fixed style/lighting suffix and vary only the subject clause, so a series stays visually consistent.
+```text
+{SUBJECT}, centered, isometric 3D render, soft studio lighting,
+pastel background, clean minimal, high detail
+# swap {SUBJECT}: "a wooden alarm clock" / "a potted succulent" / "a coffee grinder"
+```
+Note: since there's no seed control, a shared style suffix is the main lever for set cohesion.
+
 ## Do's and Don'ts
 
 ### ✅ Do
@@ -109,6 +136,16 @@ Practical exclusion strategy: **state what you want in the positive prompt** ("a
 - **Quality tiers via model choice**: `fast` (speed/cost) → `standard` → `ultra` (max fidelity + best text). media-tool selects these by `Quality::Low/Medium/High`.
 - **Reference images**: attachments switch to the `generateContent` endpoint on `gemini-2.5-flash-image` (a.k.a. "Nano Banana"–class editing), enabling instruction-style edits and subject conditioning from supplied images.
 - **Style control** is purely lexical: name the medium ("watercolor", "35mm film photo", "isometric 3D render", "flat vector illustration").
+- **`personGeneration`** gates how/whether people are rendered — accepted values are the Imagen enum (e.g. `dont_allow`, `allow_adult`, `allow_all`); availability varies by region/policy. Set it via `provider_options.person_generation` when a prompt legitimately needs people and is being filtered.
+- **`safetyFilterLevel`** tunes content filtering strictness (`block_low_and_above` … `block_only_high`-style enum). Pass via `provider_options.safety_filter_level`; leave default unless you have a specific policy reason.
+
+### Vocabulary cheatsheet (the real style levers)
+Because there are no numeric knobs, your descriptive words *are* the control surface:
+- **Medium**: `photograph`, `oil painting`, `watercolor`, `3D render`, `flat vector illustration`, `pencil sketch`, `pixel art`.
+- **Shot / lens**: `close-up`, `wide shot`, `macro`, `aerial/overhead`, `low-angle`, `35mm`, `85mm portrait`, `shallow depth of field`.
+- **Lighting**: `golden hour`, `soft window light`, `studio softbox`, `rim light`, `neon`, `overcast`, `chiaroscuro`.
+- **Mood / palette**: `warm earth tones`, `muted pastel`, `high-contrast`, `moody`, `vibrant`, `monochrome`.
+- **Detail / finish**: `high detail`, `sharp focus`, `matte`, `glossy`, `film grain`, `minimalist`.
 
 ## Aspect / Resolution / Duration Constraints
 

@@ -1,0 +1,75 @@
+---
+schema: "0.4"
+id: fim-math-and-scientific-rendering-desmos-api-01-canonical-equation-plot
+type: interactive
+quality: high
+solution: desmos-api
+category: math-and-scientific-rendering
+variant: canonical-equation-plot
+references:
+- references/fim/overview/geospatial-math-scientific/desmos-api.md
+- references/fim/solution/desmos-api.md
+prompt:
+  system: |-
+    You are a senior interactive math engineer. Output only one complete ASCII HTML file using the Desmos API. No Markdown fences or prose outside the source.
+  text: |-
+    Create a canonical Desmos API graphing calculator that plots y=a*x^2+b*x+c with sliders for a, b, and c, roots when the discriminant is nonnegative, and a labeled vertex point. Use Desmos.GraphingCalculator, stable setExpression ids, setMathBounds, updateSettings axis labels, and HelperExpression observers for the discriminant and vertex coordinates.
+
+    Requirements: include script loading notes with apiKey placeholder handling, a fixed-size responsive container, escaped LaTeX strings, colorblind-safe colors, labels for x and y in math units, screenshot export to PNG or SVG, and cleanup comments for destroy() integration.
+  provider_options:
+    temperature: 0.2
+    max_tokens: 8192
+output:
+  text_format: html
+  artifact_kind: desmos-api-html
+  formats:
+  - format: html
+  - format: png
+  - format: svg
+evaluation:
+  checklist:
+  - "YAML parses and required schema 0.4 fields are present."
+  - "HTML is complete, ASCII-only, and uses Desmos.GraphingCalculator with stable expression ids."
+  - "Math correctness covers quadratic formula, discriminant state, vertex coordinates, and plotted parabola."
+  - "Notation validity covers escaped LaTeX strings, slider definitions, point labels, and axis labels."
+  - "Renderability covers nonzero container size, apiKey loading notes, setMathBounds, and screenshot export."
+  - "Labels and units identify x, y, coefficients, roots, discriminant, and vertex."
+  - "Domain edge cases cover a=0 linear fallback, negative discriminant, repeated roots, and invalid API key behavior."
+  rubric:
+  - name: Format validity
+    weight: 30
+    criteria:
+    - "Output is one complete ASCII HTML file with no Markdown wrapper."
+    - "The file loads Desmos, creates the calculator after the container exists, and documents apiKey setup."
+    - "The source uses valid JavaScript and Desmos API calls for expressions, helpers, bounds, and export."
+  - name: Semantic completeness
+    weight: 30
+    criteria:
+    - "Quadratic curve, sliders, roots, vertex, discriminant display, and export control are all implemented."
+    - "Desmos API is the primary interactive rendering surface."
+    - "HelperExpression is used for numeric values rather than parsing calculator state."
+  - name: Visual/structural quality
+    weight: 25
+    criteria:
+    - "The first render is nonblank and framed around the important parabola features."
+    - "Labels, colors, and line styles are readable and do not crowd the expression list."
+    - "The UI remains understandable on narrow screens."
+  - name: Robustness
+    weight: 15
+    criteria:
+    - "Handles degenerate linear cases, negative discriminants, and repeated roots without stale labels."
+    - "Uses stable ids and state update patterns that can be embedded in a framework."
+    - "Includes cleanup, apiKey, and screenshot failure notes."
+  pass_conditions:
+  - "Rubric weights are exactly Format validity 30, Semantic completeness 30, Visual/structural quality 25, Robustness 15."
+  - "Score is 80 or higher out of 100 with no critical failure in math correctness, notation validity, or renderability."
+  - "The artifact presents a working Desmos quadratic explorer with labels, units, and export path."
+  - "Domain edge cases and integration constraints are explicitly represented."
+tags:
+- fim
+- math-and-scientific-rendering
+- desmos-api
+- canonical-equation-plot
+- interactive-graphing
+- sliders
+

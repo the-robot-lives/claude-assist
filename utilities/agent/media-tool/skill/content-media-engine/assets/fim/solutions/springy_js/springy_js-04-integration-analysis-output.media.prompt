@@ -1,0 +1,53 @@
+schema: "0.4"
+id: springy_js-04-integration-analysis-output
+type: data
+quality: high
+solution: springy_js
+category: network-and-graph-visualization
+variant: edge-integration-analysis-output
+
+prompt:
+  context:
+    - "references/fim/overview/network-3d-graphics/springy_js.md"
+    - "references/fim/solution/springy_js.md"
+  text: |
+    Emit a Springy.js integration package for embedding a small graph widget. Return
+    a loadJSON-compatible graph object, optional newNode/newEdge construction code,
+    ForceDirected layout settings, renderer callback signatures, coordinate
+    mapping helpers, and a validation report. Validate duplicate labels, missing
+    edge endpoints, graphs above the recommended small-node threshold, missing
+    canvas dimensions, absent jQuery when using springyui, and lack of a
+    minEnergyThreshold for settling.
+
+output:
+  formats:
+    - format: json
+    - format: js
+    - format: md
+  expected_artifact: "Springy embed data and renderer contract with validation notes."
+
+evaluation:
+  checklist:
+    - "Includes Springy loadJSON data or equivalent construction code."
+    - "Documents layout settings and renderer callbacks."
+    - "Validates node count, endpoints, canvas sizing, and optional springyui dependencies."
+    - "Includes coordinate mapping and settling guidance."
+  rubric:
+    - name: Format validity
+      weight: 30
+      description: "YAML parses and requests JSON, JS, and markdown outputs."
+    - name: Semantic completeness
+      weight: 30
+      description: "Covers Springy data, layout, renderer integration, and validation."
+    - name: Visual/structural quality
+      weight: 25
+      description: "Data and callbacks can render a clear small graph widget."
+    - name: Robustness
+      weight: 15
+      description: "Validation catches scale, endpoint, canvas, and dependency failures."
+  pass_conditions:
+    - "The integration package can initialize a small Springy widget."
+    - "The prompt includes Springy-specific validation risks."
+    - "The output is data-first and embed-ready."
+
+tags: [fim, springy-js, integration, loadjson, canvas, validation, analysis-output]

@@ -80,6 +80,23 @@ Sane defaults: **DPM++ 2M Karras**, **25–35 steps**, **CFG 6–8** (SDXL). `Eu
 ```
 Note: SD3.5-Large-Turbo and SDXL-Lightning run at ~4–8 steps, CFG ~1–2 — normal CFG will overcook them.
 
+### How to constrain composition with ControlNet
+Feed a control image (pose skeleton, depth map, canny edges, lineart) alongside the prompt; set control weight and the step window it's active.
+```text
+# ControlNet: openpose | weight 0.8 | start 0.0 end 0.7
+prompt: knight in plate armor, dynamic action pose, castle courtyard, cinematic
+```
+Note: lower control weight (~0.5) or end the guidance early (~0.6) so the model still has freedom to render detail; weight 1.0 for the full window can look stiff/traced.
+
+### How to isolate subject from style with BREAK
+Split the prompt into a subject chunk and a style chunk so the 75-token encoder doesn't bleed style words into the subject.
+```text
+a majestic snow leopard on a rocky ledge, alert, detailed fur
+BREAK
+watercolor painting, soft washes, cool blue palette, paper texture
+```
+Note: `BREAK` (uppercase) starts a fresh CLIP chunk — useful when a long style block was contaminating the subject.
+
 ## Do's and Don'ts
 
 ### ✅ Do
@@ -109,6 +126,16 @@ Negative prompts are **first-class and powerful** in SD (this is the ecosystem w
 - **ControlNet**: pose/depth/canny/lineart conditioning from a reference image (weight + start/end percent).
 - **Reference / IP-Adapter**: image-prompt conditioning for style or identity transfer.
 - **Refiner (SDXL)**: optional second pass (base → refiner) for final detail; SD3.5 does not use the SDXL refiner scheme.
+
+## SD 1.5 vs SDXL vs SD 3.5 (pick the right base)
+
+| Base | Native res | Prompt style | Notes |
+|------|-----------|--------------|-------|
+| **SD 1.5** | 512² | Heavy weighted tags; needs quality boosters | Largest LoRA/embedding library; weakest text & anatomy |
+| **SDXL 1.0** | 1024² | Weighted tags; two text encoders | Best community LoRA support at 1024²; optional refiner pass |
+| **SD 3.5 Large** | 1024²+ | Tags OR natural language (more prose-tolerant) | Best prompt adherence + typography of the three; heavier VRAM |
+
+A LoRA/embedding is base-specific: an SD 1.5 LoRA will not load on SDXL/SD3.5 and vice-versa. When the prep agent picks a base, it must emit prompts in that base's idiom (more boosters + tags for 1.5; leaner tags or light prose for SD3.5).
 
 ## Aspect / Resolution / Duration Constraints
 

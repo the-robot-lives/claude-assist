@@ -1,0 +1,52 @@
+schema: "0.4"
+id: cytoscape_js-01-topology-exploration
+type: visualization
+quality: high
+solution: cytoscape_js
+category: network-and-graph-visualization
+variant: topology-exploration
+
+prompt:
+  context:
+    - "references/fim/overview/network-3d-graphics/cytoscape_js.md"
+    - "references/fim/solution/cytoscape_js.md"
+  text: |
+    Create a Cytoscape.js topology explorer for an application dependency network.
+    Build elements for services, databases, queues, jobs, and external APIs, with
+    typed directed edges and compound parent nodes for domains. Use a production
+    stylesheet, cose-bilkent or fcose layout, neighborhood highlighting, search,
+    tap-to-focus, and a side panel that shows degree, PageRank, and shortest-path
+    hints for the selected node. Include export controls for PNG and JSON.
+
+output:
+  formats:
+    - format: html
+    - format: png
+  renderer: cytoscape-js
+  expected_artifact: "Interactive browser graph with Cytoscape elements, style, layout, and analysis panel."
+
+evaluation:
+  checklist:
+    - "Uses Cytoscape elements, stylesheet selectors, and a real layout configuration."
+    - "Includes compound nodes or grouping where useful for topology exploration."
+    - "Adds interaction for search, selection, neighbor focus, and export."
+    - "Computes or displays graph metrics relevant to selected topology nodes."
+  rubric:
+    - name: Format validity
+      weight: 30
+      description: "YAML parses and requested output formats are explicit."
+    - name: Semantic completeness
+      weight: 30
+      description: "Covers Cytoscape data, styling, layout, interaction, and algorithms."
+    - name: Visual/structural quality
+      weight: 25
+      description: "Topology view is legible with typed nodes, edges, grouping, and focus states."
+    - name: Robustness
+      weight: 15
+      description: "Handles missing metrics, large neighborhoods, and export without breaking the view."
+  pass_conditions:
+    - "The prompt relies on Cytoscape.js features instead of generic canvas drawing."
+    - "The result supports topology exploration, not only static display."
+    - "Elements, style, and layout are all represented."
+
+tags: [fim, cytoscape-js, topology-exploration, graph-algorithms, compound-nodes, browser]

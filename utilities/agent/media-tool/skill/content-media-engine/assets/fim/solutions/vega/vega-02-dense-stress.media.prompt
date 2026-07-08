@@ -1,0 +1,79 @@
+schema: "0.4"
+id: vega-02-dense-stress
+type: visualization
+quality: high
+solution: vega
+category: js-charting
+variant: dense-stress
+references:
+  - "references/fim/overview/data-visualization/vega.md"
+  - "references/fim/solution/vega.md"
+  - "assets/example-prompts/landing-page.media.prompt"
+  - "assets/example-prompts/architecture-diagram.media.prompt"
+
+prompt:
+  system: |-
+    You generate Vega browser visualization artifacts. Output only a complete self-contained HTML document with inline CSS and JavaScript, using the Vega CDN. Do not use markdown fences or explanations.
+  text: |-
+    Create the dense stress visualization for Vega.
+    
+    Scenario:
+    Create a dense visualization that intentionally stresses the solution with high-volume time series, many categories, or a large graph. Include built-in performance controls, filtering, and a clear explanation in the UI of the active sampling or rendering strategy.
+    
+    Implementation requirements:
+    - Use this library source or equivalent npm import pattern: https://cdn.jsdelivr.net/npm/vega@5.
+    - Parser/API contract: Define a valid Vega v5 JSON spec with $schema, data, scales, axes, legends, marks, and signals, then parse with vega.parse and render through vega.View.
+    - Data encoding contract: Encode named datasets and transforms, reference scales and data names consistently, and keep transforms in the data block rather than hard-coding marks.
+    - Responsive contract: Use autosize or recompute width and height from the container, then call view.resize and view.runAsync after size changes.
+    - Accessibility contract: Add top-level description, meaningful titles, text summaries, high-contrast encodings, and non-color cues for important states.
+    - Edge data contract: Handle misnamed datasets, missing scales, empty data, large inline data, label overlap, zero domains, and renderer selection between Canvas and SVG.
+    - Performance contract: Use sample, aggregate, Canvas renderer, named changesets, and avoid reparsing large inline data repeatedly.
+    - Integration contract: Expose renderSpec(spec), updateData(rows), exportSvg(), exportPng(), resizeView(), and finalizeView() hooks.
+    - Include deterministic inline sample data with realistic field names, units, and at least one edge case row.
+    - Include concise visible titles, legends, units, source note, and no placeholder lorem ipsum text.
+    - Output only the final artifact, with no commentary outside the artifact.
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.2
+
+output:
+  text_format: html
+  artifact_kind: vega-html-stress-visualization
+  formats:
+    - format: html
+
+evaluation:
+  checklist:
+    - "Format validity: parseable schema 0.4 media prompt and generated artifact is exactly one html output with no markdown fences."
+    - "Parser/API: Define a valid Vega v5 JSON spec with $schema, data, scales, axes, legends, marks, and signals, then parse with vega.parse and render through vega.View."
+    - "Data encoding: Encode named datasets and transforms, reference scales and data names consistently, and keep transforms in the data block rather than hard-coding marks."
+    - "Responsive behavior: Use autosize or recompute width and height from the container, then call view.resize and view.runAsync after size changes."
+    - "Accessibility: Add top-level description, meaningful titles, text summaries, high-contrast encodings, and non-color cues for important states."
+    - "Edge data: Handle misnamed datasets, missing scales, empty data, large inline data, label overlap, zero domains, and renderer selection between Canvas and SVG."
+    - "Performance/integration: Use sample, aggregate, Canvas renderer, named changesets, and avoid reparsing large inline data repeatedly. Expose renderSpec(spec), updateData(rows), exportSvg(), exportPng(), resizeView(), and finalizeView() hooks."
+  rubric:
+    - name: "Format validity"
+      weight: 30
+      criteria: "The artifact is valid for the requested text format, contains no markdown fences, and uses the required solution parser or API without syntax errors."
+    - name: "Semantic completeness"
+      weight: 30
+      criteria: "The visualization covers the requested scenario, data story, interactions, labels, and solution-specific capabilities."
+    - name: "Visual/structural quality"
+      weight: 25
+      criteria: "The layout, hierarchy, color, typography, chart choice, and dashboard or diagram structure are clear and professional."
+    - name: "Robustness"
+      weight: 15
+      criteria: "The artifact handles responsive layout, accessibility, edge data, update or teardown behavior, and performance constraints without runtime failures."
+  pass_conditions:
+    - "YAML parses successfully and all text is ASCII-only."
+    - "Generated artifact runs without console errors when CDN dependencies are available."
+    - "Parser/API, data encoding, responsive, accessibility, and edge data checklist items are all satisfied."
+    - "Rubric score is at least 80 out of 100 and no rubric dimension scores zero."
+
+tags:
+  - "fim"
+  - "js-charting"
+  - "vega"
+  - "dense-stress"
+  - "visualization"
+  - "stress-test"

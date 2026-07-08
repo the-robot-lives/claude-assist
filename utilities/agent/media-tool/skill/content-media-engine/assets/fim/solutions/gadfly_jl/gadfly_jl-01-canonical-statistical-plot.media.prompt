@@ -1,0 +1,61 @@
+schema: "0.4"
+id: gadfly_jl-01-canonical-statistical-plot
+type: visualization
+quality: high
+solution: gadfly_jl
+category: julia-r
+variant: canonical-statistical-plot
+
+prompt:
+  system: "Generate only runnable Julia code for a Gadfly.jl visualization. Do not include markdown fences or explanatory prose."
+  text: |
+    Create a canonical statistical visualization in Julia with Gadfly.jl using a DataFrame.
+    Use the iris dataset from RDatasets or an equivalent inline DataFrame if the dataset is unavailable.
+    Build a grammar-of-graphics scatter plot of sepal length versus sepal width, map species to color, add a linear smooth layer, and label the title, axes, and color key.
+    Use Gadfly elements such as plot, Geom.point, Geom.smooth, Guide.xlabel, Guide.ylabel, Guide.title, Guide.colorkey, Scale.color_discrete_manual, and Theme.
+    Export the plot to SVG at a report-ready size with draw(SVG(...)).
+    Keep the code deterministic, compact, and suitable for a notebook or CI render step.
+
+output:
+  format: julia
+  file: gadfly_jl-01-canonical-statistical-plot.jl
+  renders:
+    - format: svg
+      file: gadfly_jl-01-canonical-statistical-plot.svg
+  requirements:
+    - Gadfly
+    - DataFrames
+    - RDatasets
+
+evaluation:
+  checklist:
+    - Uses Gadfly.jl grammar elements rather than another plotting package.
+    - Includes point and smooth layers with species mapped to color.
+    - Includes explicit title, axis labels, legend label, palette, and theme settings.
+    - Produces deterministic Julia code and saves an SVG artifact.
+  rubric:
+    Format validity:
+      weight: 30
+      criteria: "The response is valid Julia code with no markdown fences and uses correct Gadfly, DataFrames, and RDatasets syntax."
+    Semantic completeness:
+      weight: 30
+      criteria: "The visualization clearly implements the requested iris scatter plot, color grouping, trend layer, labels, palette, and SVG export."
+    Visual/structural quality:
+      weight: 25
+      criteria: "The plot has readable labels, appropriate point sizing, a clear legend, balanced color choices, and a clean statistical presentation."
+    Robustness:
+      weight: 15
+      criteria: "The code handles package imports, dataset loading, deterministic output paths, and avoids backend assumptions beyond Gadfly SVG rendering."
+  pass_conditions:
+    - The output can be parsed as Julia source.
+    - The plot call includes Geom.point and Geom.smooth.
+    - The final code writes an SVG file.
+    - All rubric categories are addressed with no blocking syntax errors.
+
+tags:
+  - fim
+  - julia-r
+  - gadfly-jl
+  - grammar-of-graphics
+  - statistical-plot
+  - svg

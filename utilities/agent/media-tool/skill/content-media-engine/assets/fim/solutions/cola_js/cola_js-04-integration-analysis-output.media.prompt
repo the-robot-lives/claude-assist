@@ -1,0 +1,53 @@
+schema: "0.4"
+id: cola_js-04-integration-analysis-output
+type: data
+quality: high
+solution: cola_js
+category: network-and-graph-visualization
+variant: edge-integration-analysis-output
+
+prompt:
+  context:
+    - "references/fim/overview/network-3d-graphics/cola_js.md"
+    - "references/fim/solution/cola_js.md"
+  text: |
+    Emit a WebCola integration package for a constrained architecture graph. Return
+    JSON containing nodes with width and height, links with source and target
+    indices, groups with leaves and padding, constraints for alignment and ordered
+    separation, and recommended layout settings. Include a companion analysis block
+    reporting disconnected components, potential conflicting constraints, expected
+    overlap risks, and renderer responsibilities for D3/SVG. Include a small edge
+    case set covering self-loop rejection, missing node reference rejection, and
+    mixed index/object source-target prevention.
+
+output:
+  formats:
+    - format: json
+    - format: md
+  expected_artifact: "Machine-readable WebCola layout package with validation notes."
+
+evaluation:
+  checklist:
+    - "JSON data matches WebCola node, link, group, and constraint expectations."
+    - "Analysis calls out renderer responsibilities and layout risks."
+    - "Edge cases include invalid references, self-loops, and mixed link reference styles."
+    - "Settings include iteration phases and overlap handling."
+  rubric:
+    - name: Format validity
+      weight: 30
+      description: "YAML parses and requires valid JSON plus markdown notes."
+    - name: Semantic completeness
+      weight: 30
+      description: "Covers WebCola data, constraints, groups, settings, and analysis."
+    - name: Visual/structural quality
+      weight: 25
+      description: "Data can produce a structured constrained graph when rendered."
+    - name: Robustness
+      weight: 15
+      description: "Validation catches malformed edges, conflicting constraints, and renderer gaps."
+  pass_conditions:
+    - "The package can be handed to a WebCola+D3 renderer without schema guessing."
+    - "The prompt asks for concrete validation output."
+    - "The output is data-first and suitable for pipeline integration."
+
+tags: [fim, cola-js, webcola, integration, graph-json, validation, analysis-output]

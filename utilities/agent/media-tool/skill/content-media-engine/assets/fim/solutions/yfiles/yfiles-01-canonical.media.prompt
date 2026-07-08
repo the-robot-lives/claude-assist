@@ -1,0 +1,80 @@
+schema: "0.4"
+id: fim-diagrams-dsl-xml-yfiles-01-canonical
+type: diagram
+quality: production
+solution: yfiles
+category: diagrams-dsl-xml
+variant: canonical
+prompt:
+  system: You generate JavaScript source for yFiles for HTML diagrams. Output only code that uses yFiles
+    APIs to create, style, lay out, and fit a graph. Do not use code fences or explanatory prose.
+  text: Create JavaScript using yFiles for HTML for an interactive service dependency graph. Instantiate
+    GraphComponent, set a viewer input mode, build nodes and edges from arrays with GraphBuilder, style
+    databases/services/queues differently, apply HierarchicalLayout, and fit graph bounds. Use a License.value
+    placeholder.
+  provider_options:
+    max_tokens: 4096
+    temperature: 0.2
+    top_p: 0.9
+output:
+  text_format: javascript-yfiles
+  artifact_kind: interactive_graph_code
+  formats:
+  - format: js
+  - format: html
+  - format: svg
+evaluation:
+  checklist:
+  - 'Output uses native yfiles syntax: GraphComponent, GraphEditorInputMode or GraphViewerInputMode, IGraph
+    creation, GraphBuilder data binding, node and edge styles, labels, tags, layout algorithms, and fitGraphBounds.'
+  - 'Output captures the requested semantics: interactive enterprise graph visualizations with data-bound
+    nodes, edges, styles, labels, layout, and optional editing behavior.'
+  - 'Output has solution-appropriate structure: data-driven graph construction, automatic layout, visual
+    encoding from tags, readable labels, and interaction mode suited to the use case.'
+  - 'Output is robust for the renderer/importer: license handling is represented as a placeholder, graph
+    mutations use yFiles APIs, large graphs use builder/layout patterns, and no public npm install assumption
+    is made without a license.'
+  - Covers the canonical use case with the essential native constructs of this solution, not a generic
+    diagram in another language.
+  - Output contains only the requested artifact source, with no Markdown fences, no explanatory prose,
+    and no non-ASCII characters.
+  rubric:
+    Format validity:
+      weight: 30
+      criteria: 'Must parse as javascript-yfiles and follow yfiles-specific grammar: GraphComponent, GraphEditorInputMode
+        or GraphViewerInputMode, IGraph creation, GraphBuilder data binding, node and edge styles, labels,
+        tags, layout algorithms, and fitGraphBounds. Deduct heavily for malformed roots, unmatched blocks/tags,
+        invalid ids, unresolved references, or mixing syntax from another diagram DSL.'
+    Semantic completeness:
+      weight: 30
+      criteria: Must satisfy the full scenario for canonical use and include the domain entities, relationships,
+        responsibilities, and edge/failure paths requested in the prompt. The diagram must use yfiles
+        for interactive enterprise graph visualizations with data-bound nodes, edges, styles, labels,
+        layout, and optional editing behavior.
+    Visual/structural quality:
+      weight: 25
+      criteria: Must produce a readable rendered or importable artifact with data-driven graph construction,
+        automatic layout, visual encoding from tags, readable labels, and interaction mode suited to the
+        use case. Labels should be concise, grouping should reduce clutter, and styling/layout choices
+        must match the strengths and limits of yfiles.
+    Robustness:
+      weight: 15
+      criteria: Must remain stable under normal rendering, import, export, or documentation use. Check
+        license handling is represented as a placeholder, graph mutations use yFiles APIs, large graphs
+        use builder/layout patterns, and no public npm install assumption is made without a license, avoid
+        placeholders that block execution, and keep output ASCII-only and deterministic.
+  pass_conditions:
+  - Total rubric score is at least 85 out of 100.
+  - Format validity score is at least 24 out of 30.
+  - The generated artifact source has no code fences, no prose wrapper, and no non-ASCII characters.
+  - The generated source can be parsed or imported by the normal yfiles toolchain without unresolved references
+    or missing required root elements.
+tags:
+- fim
+- diagrams-dsl-xml
+- yfiles
+- canonical
+- yfiles
+- interactive-graph
+- automatic-layout
+

@@ -1,0 +1,52 @@
+schema: "0.4"
+id: igraph-01-topology-exploration
+type: visualization
+quality: high
+solution: igraph
+category: network-and-graph-visualization
+variant: topology-exploration
+
+prompt:
+  context:
+    - "references/fim/overview/network-3d-graphics/igraph.md"
+    - "references/fim/solution/igraph.md"
+  text: |
+    Create a Python igraph topology exploration script for a protein interaction
+    graph. Build the graph from named tuples, assign vertex and edge attributes,
+    compute degree, betweenness, PageRank, connected components, and Louvain or
+    Leiden communities. Render a static SVG and PNG using ig.plot with vertex
+    labels, community colors, vertex size by degree, edge width by confidence, and
+    a reused Fruchterman-Reingold layout for stable comparison.
+
+output:
+  formats:
+    - format: py
+    - format: svg
+    - format: png
+  expected_artifact: "Reproducible igraph analysis script with static topology figures."
+
+evaluation:
+  checklist:
+    - "Uses igraph as ig and graph construction APIs correctly."
+    - "Computes topology metrics and community membership."
+    - "Styles vertex and edge visuals from igraph attributes or plot kwargs."
+    - "Saves static outputs through ig.plot."
+  rubric:
+    - name: Format validity
+      weight: 30
+      description: "YAML parses and output files are explicit."
+    - name: Semantic completeness
+      weight: 30
+      description: "Covers igraph construction, analysis, layout, plotting, and topology exploration."
+    - name: Visual/structural quality
+      weight: 25
+      description: "Static figures communicate communities, hubs, and confidence edges."
+    - name: Robustness
+      weight: 15
+      description: "Handles named vertices, missing weights, and stable layout reuse."
+  pass_conditions:
+    - "The prompt uses igraph APIs rather than NetworkX syntax."
+    - "The output includes both numeric analysis and plotted topology."
+    - "The figure can be reproduced from the script."
+
+tags: [fim, igraph, topology-exploration, python, network-analysis, static-plot]

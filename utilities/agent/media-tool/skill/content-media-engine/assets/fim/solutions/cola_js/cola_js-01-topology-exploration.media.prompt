@@ -1,0 +1,54 @@
+schema: "0.4"
+id: cola_js-01-topology-exploration
+type: visualization
+quality: high
+solution: cola_js
+category: network-and-graph-visualization
+variant: topology-exploration
+
+prompt:
+  context:
+    - "references/fim/overview/network-3d-graphics/cola_js.md"
+    - "references/fim/solution/cola_js.md"
+  text: |
+    Create an interactive WebCola topology explorer for a multi-team service map.
+    Use nodes with width and height, typed links, nested groups for product areas,
+    separation constraints for tiers, alignment constraints for shared platform
+    services, avoidOverlaps(true), handleDisconnected(true), and a D3 SVG renderer.
+    Include drag behavior, group container rectangles, labels, critical path edge
+    styling, and a small legend for team, risk, and dependency type. The layout
+    should make the constrained structure obvious without pretending WebCola draws
+    the scene itself.
+
+output:
+  formats:
+    - format: html
+    - format: svg
+  renderer: d3-svg
+  expected_artifact: "Self-contained browser example using webcola plus D3."
+
+evaluation:
+  checklist:
+    - "Uses cola.d3adaptor(d3) with nodes, links, constraints, groups, and a tick handler."
+    - "Renders nodes, links, labels, and group bounds through D3/SVG."
+    - "Shows topology exploration affordances: drag, legend, group containers, and highlighted critical paths."
+    - "Keeps constraints coherent and avoids overlap-heavy output."
+  rubric:
+    - name: Format validity
+      weight: 30
+      description: "YAML parses and the requested artifact shape is explicit."
+    - name: Semantic completeness
+      weight: 30
+      description: "Covers WebCola constraints, groups, D3 rendering, and topology exploration."
+    - name: Visual/structural quality
+      weight: 25
+      description: "Layout communicates tiers, groups, labels, and critical dependencies cleanly."
+    - name: Robustness
+      weight: 15
+      description: "Handles disconnected components, drag updates, and readable fallback styling."
+  pass_conditions:
+    - "A reviewer can identify WebCola-specific constraint and group behavior."
+    - "The prompt does not ask WebCola to provide rendering without D3 or another renderer."
+    - "The output can be rendered as an interactive SVG topology view."
+
+tags: [fim, cola-js, webcola, d3, network-topology, constraints, topology-exploration]

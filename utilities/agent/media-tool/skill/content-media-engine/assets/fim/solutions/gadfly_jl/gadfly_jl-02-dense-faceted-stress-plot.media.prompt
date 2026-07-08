@@ -1,0 +1,62 @@
+schema: "0.4"
+id: gadfly_jl-02-dense-faceted-stress-plot
+type: visualization
+quality: high
+solution: gadfly_jl
+category: julia-r
+variant: dense-faceted-stress-plot
+
+prompt:
+  system: "Generate only runnable Julia code for a Gadfly.jl visualization. Do not include markdown fences or explanatory prose."
+  text: |
+    Create a dense stress-test visualization in Julia with Gadfly.jl that shows how to avoid overplotting.
+    Generate a deterministic synthetic DataFrame with at least 12000 rows, numeric x and y columns, categorical group columns, and a numeric intensity column.
+    Build faceted small multiples with xgroup or ygroup and Geom.subplot_grid.
+    Use an aggregation-friendly geometry such as Geom.hexbin, Geom.histogram2d, or Geom.rectbin, plus a continuous color scale.
+    Include readable facet labels, a color key, axis labels, a title, and a restrained theme.
+    Save an SVG artifact and include an inline comment noting when sampling or binning is preferable to raw points for Gadfly performance.
+
+output:
+  format: julia
+  file: gadfly_jl-02-dense-faceted-stress-plot.jl
+  renders:
+    - format: svg
+      file: gadfly_jl-02-dense-faceted-stress-plot.svg
+  requirements:
+    - Gadfly
+    - DataFrames
+    - Random
+
+evaluation:
+  checklist:
+    - Generates deterministic dense data with a fixed random seed.
+    - Uses Gadfly faceting through Geom.subplot_grid and grouping aesthetics.
+    - Uses a binned or aggregated geometry appropriate for dense data.
+    - Includes title, axes, color scale, legend or color key, and SVG export.
+  rubric:
+    Format validity:
+      weight: 30
+      criteria: "The response is valid Julia code with correct Gadfly syntax for dense data, faceting, scales, guides, and export."
+    Semantic completeness:
+      weight: 30
+      criteria: "The code satisfies the dense-data stress scenario with deterministic generation, small multiples, binning, and performance-aware structure."
+    Visual/structural quality:
+      weight: 25
+      criteria: "The faceted plot remains readable despite dense data, with coherent panels, color mapping, labels, and theme choices."
+    Robustness:
+      weight: 15
+      criteria: "The code avoids raw overplotted scatter as the main encoding, controls randomness, and uses stable file output."
+  pass_conditions:
+    - The DataFrame has at least 12000 rows.
+    - The main plot uses Geom.subplot_grid.
+    - The main visual encoding is binned, aggregated, or otherwise dense-data safe.
+    - The final code writes an SVG file.
+
+tags:
+  - fim
+  - julia-r
+  - gadfly-jl
+  - faceting
+  - dense-data
+  - stress-test
+  - svg

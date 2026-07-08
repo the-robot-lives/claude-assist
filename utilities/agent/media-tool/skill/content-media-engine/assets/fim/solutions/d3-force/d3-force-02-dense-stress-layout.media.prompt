@@ -1,0 +1,52 @@
+schema: "0.4"
+id: d3-force-02-dense-stress-layout
+type: visualization
+quality: high
+solution: d3-force
+category: network-and-graph-visualization
+variant: dense-graph-stress-layout
+
+prompt:
+  context:
+    - "references/fim/overview/network-3d-graphics/d3-force.md"
+    - "references/fim/solution/d3-force.md"
+  text: |
+    Build a D3 force dense-graph stress demo using Canvas rendering for 10000
+    nodes and 30000 links. Use forceManyBody with distanceMax and theta tuning,
+    forceLink with low iterations, forceX/forceY to keep components on screen, and
+    a manual warm-up tick loop before animation. Display live performance counters
+    for alpha, tick count, frame time, visible labels, and edge draw count. Include
+    zoom-level edge hiding and a warning that SVG should be avoided at this scale.
+
+output:
+  formats:
+    - format: html
+    - format: json
+  renderer: canvas
+  expected_artifact: "Canvas-based D3 force stress visualization with performance telemetry."
+
+evaluation:
+  checklist:
+    - "Uses Canvas rather than SVG for the dense graph."
+    - "Tunes forceManyBody, forceLink, alpha, and pre-warm ticks for stress behavior."
+    - "Includes performance counters and level-of-detail edge or label hiding."
+    - "States realistic limits and fallback strategies."
+  rubric:
+    - name: Format validity
+      weight: 30
+      description: "YAML parses and specifies dense visualization plus telemetry output."
+    - name: Semantic completeness
+      weight: 30
+      description: "Covers dense force simulation tuning, Canvas rendering, and stress reporting."
+    - name: Visual/structural quality
+      weight: 25
+      description: "Dense output remains interpretable through LOD controls and counters."
+    - name: Robustness
+      weight: 15
+      description: "Avoids runaway simulation settings and handles large graph rendering safely."
+  pass_conditions:
+    - "The prompt uses D3-force as the layout engine and Canvas as the renderer."
+    - "Stress metrics are first-class output."
+    - "The prompt does not recommend SVG DOM rendering for 10000 nodes."
+
+tags: [fim, d3-force, dense-graph, stress-layout, canvas, performance]

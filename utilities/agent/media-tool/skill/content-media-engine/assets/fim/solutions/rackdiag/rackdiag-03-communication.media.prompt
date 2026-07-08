@@ -1,0 +1,81 @@
+schema: "0.4"
+id: fim-diagrams-dsl-xml-rackdiag-03-communication
+type: diagram
+quality: production
+solution: rackdiag
+category: diagrams-dsl-xml
+variant: communication
+prompt:
+  system: You generate rackdiag source for rack-unit datacenter diagrams. Output only a valid rackdiag
+    { ... } document with rack heights, equipment units, optional rack blocks, and attributes. Do not
+    use code fences or explanatory prose.
+  text: Create rackdiag source for a capacity-planning diagram that a facilities team can read. Show current
+    equipment, reserved expansion slots, power equipment, cooling gaps, and simple color coding in a 24U
+    edge rack.
+  provider_options:
+    max_tokens: 4096
+    temperature: 0.2
+    top_p: 0.9
+output:
+  text_format: rackdiag
+  artifact_kind: rack_diagram_source
+  formats:
+  - format: rackdiag
+  - format: svg
+  - format: png
+  - format: pdf
+evaluation:
+  checklist:
+  - 'Output uses native rackdiag syntax: rackdiag root block, 42U or other rack height, equipment unit
+    positions, [NU] heights, rack blocks, description attributes, classes, colors, and ascending where
+    needed.'
+  - 'Output captures the requested semantics: physical datacenter rack layouts with accurate U positions,
+    equipment heights, capacity gaps, and rack grouping.'
+  - 'Output has solution-appropriate structure: rack-unit accurate placement, color classes by equipment
+    role, clear descriptions, and readable multi-rack grouping.'
+  - 'Output is robust for the renderer/importer: equipment does not overlap or exceed rack height, gaps
+    are intentional, and each rack block has independent valid unit numbering.'
+  - Optimizes labels, grouping, and visual hierarchy for human review while remaining faithful to the
+    native renderer constraints.
+  - Output contains only the requested artifact source, with no Markdown fences, no explanatory prose,
+    and no non-ASCII characters.
+  rubric:
+    Format validity:
+      weight: 30
+      criteria: 'Must parse as rackdiag and follow rackdiag-specific grammar: rackdiag root block, 42U
+        or other rack height, equipment unit positions, [NU] heights, rack blocks, description attributes,
+        classes, colors, and ascending where needed. Deduct heavily for malformed roots, unmatched blocks/tags,
+        invalid ids, unresolved references, or mixing syntax from another diagram DSL.'
+    Semantic completeness:
+      weight: 30
+      criteria: Must satisfy the full scenario for design/communication use and include the domain entities,
+        relationships, responsibilities, and edge/failure paths requested in the prompt. The diagram must
+        use rackdiag for physical datacenter rack layouts with accurate U positions, equipment heights,
+        capacity gaps, and rack grouping.
+    Visual/structural quality:
+      weight: 25
+      criteria: Must produce a readable rendered or importable artifact with rack-unit accurate placement,
+        color classes by equipment role, clear descriptions, and readable multi-rack grouping. Labels
+        should be concise, grouping should reduce clutter, and styling/layout choices must match the strengths
+        and limits of rackdiag.
+    Robustness:
+      weight: 15
+      criteria: Must remain stable under normal rendering, import, export, or documentation use. Check
+        equipment does not overlap or exceed rack height, gaps are intentional, and each rack block has
+        independent valid unit numbering, avoid placeholders that block execution, and keep output ASCII-only
+        and deterministic.
+  pass_conditions:
+  - Total rubric score is at least 85 out of 100.
+  - Format validity score is at least 24 out of 30.
+  - The generated artifact source has no code fences, no prose wrapper, and no non-ASCII characters.
+  - The generated source can be parsed or imported by the normal rackdiag toolchain without unresolved
+    references or missing required root elements.
+tags:
+- fim
+- diagrams-dsl-xml
+- rackdiag
+- communication
+- rackdiag
+- datacenter
+- rack-layout
+

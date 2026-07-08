@@ -1,0 +1,74 @@
+---
+schema: "0.4"
+id: fim-math-and-scientific-rendering-asymptote-04-edge-integration-stability-accessibility
+type: visualization
+quality: high
+solution: asymptote
+category: math-and-scientific-rendering
+variant: edge-integration-stability-accessibility
+references:
+- references/fim/overview/geospatial-math-scientific/asymptote.md
+- references/fim/solution/asymptote.md
+prompt:
+  system: |-
+    You are a senior scientific graphics reliability engineer. Output only one complete ASCII Asymptote source file. No Markdown fences or prose outside the source.
+  text: |-
+    Create an Asymptote edge-case and integration figure for the function f(x)=sin(x)/x with a removable singularity at x=0. Render the curve, a zoomed inset around zero, a marker for the limiting value f(0)=1, and annotations explaining how the source avoids division by zero while preserving the mathematical limit.
+
+    Requirements: include a safe function wrapper, deterministic samples, labels with units where x is dimensionless and f(x) is normalized response, colorblind-safe style plus dashed/solid redundancy, PDF/SVG compile comments, and a short alt-text comment suitable for downstream accessibility metadata.
+  provider_options:
+    temperature: 0.2
+    max_tokens: 8192
+output:
+  text_format: asymptote
+  artifact_kind: asymptote-source
+  formats:
+  - format: asy
+  - format: pdf
+  - format: svg
+evaluation:
+  checklist:
+  - "YAML parses and required schema 0.4 fields are present."
+  - "Asymptote source is complete, ASCII-only, and includes a safe removable-singularity implementation."
+  - "Math correctness covers the sinc limit, sampled curve, inset scale, and highlighted f(0)=1 point."
+  - "Notation validity covers LaTeX limit notation, labels, units, and comments."
+  - "Renderability covers documented asy commands and nonblank main plus inset output."
+  - "Labels and units identify dimensionless x, normalized response, limit marker, and inset bounds."
+  - "Domain edge cases cover x=0, near-zero cancellation, large x ranges, export integration, and accessibility alt text."
+  rubric:
+  - name: Format validity
+    weight: 30
+    criteria:
+    - "Output is one complete ASCII Asymptote file with no Markdown wrapper."
+    - "The file compiles with documented asy commands and includes stable output filenames."
+    - "The source includes explicit integration and accessibility comments."
+  - name: Semantic completeness
+    weight: 30
+    criteria:
+    - "The sinc curve, removable singularity, zoomed inset, limit marker, and explanatory annotations are present."
+    - "The source uses Asymptote primitives and a safe function wrapper."
+    - "Mathematical and numeric-stability handling is clear and correct."
+  - name: Visual/structural quality
+    weight: 25
+    criteria:
+    - "Main plot and inset are legible, consistently styled, and not visually redundant."
+    - "Labels, dashed lines, and markers remain readable in monochrome or colorblind contexts."
+    - "Accessibility alt text accurately summarizes the figure."
+  - name: Robustness
+    weight: 15
+    criteria:
+    - "Handles exact zero, near-zero values, and wide-domain sampling without division failures."
+    - "Documents PDF/SVG export and LaTeX dependency assumptions."
+    - "Uses deterministic sample counts and bounds."
+  pass_conditions:
+  - "Rubric weights are exactly Format validity 30, Semantic completeness 30, Visual/structural quality 25, Robustness 15."
+  - "Score is 80 or higher out of 100 with no critical failure in math correctness, notation validity, renderability, or accessibility handling."
+  - "The artifact represents the removable singularity safely and visibly."
+  - "Domain edge cases, integration notes, and alt-text metadata are present."
+tags:
+- fim
+- math-and-scientific-rendering
+- asymptote
+- edge-integration-stability-accessibility
+- numeric-stability
+- accessibility

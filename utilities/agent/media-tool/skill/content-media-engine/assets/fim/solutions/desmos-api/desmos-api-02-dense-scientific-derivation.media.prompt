@@ -1,0 +1,75 @@
+---
+schema: "0.4"
+id: fim-math-and-scientific-rendering-desmos-api-02-dense-scientific-derivation
+type: interactive
+quality: high
+solution: desmos-api
+category: math-and-scientific-rendering
+variant: dense-scientific-derivation
+references:
+- references/fim/overview/geospatial-math-scientific/desmos-api.md
+- references/fim/solution/desmos-api.md
+prompt:
+  system: |-
+    You are a senior interactive calculus engineer. Output only one complete ASCII HTML file using the Desmos API. No Markdown fences or prose outside the source.
+  text: |-
+    Create a dense Desmos API calculus explorer for f(x)=sin(x)*exp(-k*x/6). Include the function, derivative, tangent line at x=t, shaded definite integral over [u,v], sliders for k, t, u, and v, a helper panel showing f(t), f'(t), and the approximate area, and a compact derivation note outside the calculator.
+
+    Requirements: use stable setExpression ids, HelperExpression observers for numeric readouts, setMathBounds, escaped LaTeX, one slider-driven curve instead of many duplicated expressions, and asyncScreenshot export. Include guard behavior when u>v or the interval is outside the viewport.
+  provider_options:
+    temperature: 0.2
+    max_tokens: 8192
+output:
+  text_format: html
+  artifact_kind: desmos-api-html
+  formats:
+  - format: html
+  - format: png
+  - format: svg
+evaluation:
+  checklist:
+  - "YAML parses and required schema 0.4 fields are present."
+  - "HTML is complete, ASCII-only, and uses Desmos expressions, sliders, helpers, and screenshot export."
+  - "Math correctness covers derivative, tangent point, definite integral interval, and numeric helper values."
+  - "Notation validity covers escaped LaTeX, derivative notation, integral notation, and slider bounds."
+  - "Renderability covers visible calculator sizing, loaded apiKey script, and nonblank first viewport."
+  - "Labels and units identify x, response, damping parameter, tangent point, and integration interval."
+  - "Domain edge cases cover reversed intervals, dense expressions, viewport clipping, and invalid helper values."
+  rubric:
+  - name: Format validity
+    weight: 30
+    criteria:
+    - "Output is one complete ASCII HTML file with no Markdown wrapper."
+    - "The source uses valid Desmos API calls and a deterministic initialization sequence."
+    - "The file documents apiKey, screenshot, and local browser execution expectations."
+  - name: Semantic completeness
+    weight: 30
+    criteria:
+    - "Function, derivative, tangent, integral shading, sliders, helper readouts, and derivation note are all present."
+    - "The implementation follows Desmos expression-state patterns and does not parse UI text for math."
+    - "The dense derivation remains tied to the rendered graph."
+  - name: Visual/structural quality
+    weight: 25
+    criteria:
+    - "Dense content is organized with readable colors, labels, and expression list ordering."
+    - "The graph remains framed and understandable as sliders change."
+    - "The derivation note and helper panel do not obscure the calculator."
+  - name: Robustness
+    weight: 15
+    criteria:
+    - "Handles reversed intervals, extreme damping, and viewport changes without stale expressions."
+    - "Uses stable expression ids and one dynamic slider-driven family for performance."
+    - "Includes integration cleanup and export failure notes."
+  pass_conditions:
+  - "Rubric weights are exactly Format validity 30, Semantic completeness 30, Visual/structural quality 25, Robustness 15."
+  - "Score is 80 or higher out of 100 with no critical failure in math correctness, notation validity, or renderability."
+  - "The artifact exposes the calculus derivation through native Desmos graph state and helper values."
+  - "Domain edge cases and performance constraints are represented."
+tags:
+- fim
+- math-and-scientific-rendering
+- desmos-api
+- dense-scientific-derivation
+- calculus
+- helper-expression
+

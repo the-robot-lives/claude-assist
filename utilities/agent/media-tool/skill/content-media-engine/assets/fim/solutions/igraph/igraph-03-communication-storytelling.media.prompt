@@ -1,0 +1,52 @@
+schema: "0.4"
+id: igraph-03-communication-storytelling
+type: visualization
+quality: high
+solution: igraph
+category: network-and-graph-visualization
+variant: communication-storytelling-graph
+
+prompt:
+  context:
+    - "references/fim/overview/network-3d-graphics/igraph.md"
+    - "references/fim/solution/igraph.md"
+  text: |
+    Produce an igraph communication figure for an executive report on partner
+    influence. Build a directed weighted graph, calculate PageRank, betweenness,
+    in-degree, out-degree, and community membership, then create a two-panel static
+    output: one overview graph colored by community and sized by PageRank, and one
+    bridge-node detail showing the shortest paths between two strategic partners.
+    Include clear captions and a CSV table of the top ranked vertices.
+
+output:
+  formats:
+    - format: py
+    - format: pdf
+    - format: csv
+  expected_artifact: "Static igraph story figure plus ranked analysis table."
+
+evaluation:
+  checklist:
+    - "Uses directed weighted igraph algorithms."
+    - "Includes overview and detail panels with captions."
+    - "Communicates influence and bridge nodes without requiring interactivity."
+    - "Exports ranking data for review."
+  rubric:
+    - name: Format validity
+      weight: 30
+      description: "YAML parses and declares script, PDF, and CSV outputs."
+    - name: Semantic completeness
+      weight: 30
+      description: "Covers communication goal, centrality metrics, communities, paths, and captions."
+    - name: Visual/structural quality
+      weight: 25
+      description: "Static figure is readable and supports the report narrative."
+    - name: Robustness
+      weight: 15
+      description: "Handles disconnected partners, tied rankings, and weighted path assumptions."
+  pass_conditions:
+    - "The result is a storytelling graph suitable for static reporting."
+    - "Metrics are computed with igraph and exported."
+    - "Captions explain, rather than overclaim, the visual encodings."
+
+tags: [fim, igraph, storytelling, communication-graph, centrality, static-report]

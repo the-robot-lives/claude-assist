@@ -1,0 +1,79 @@
+schema: "0.4"
+id: vega-lite-04-edge-integration
+type: visualization
+quality: high
+solution: vega-lite
+category: js-charting
+variant: edge-integration
+references:
+  - "references/fim/overview/data-visualization/vega-lite.md"
+  - "references/fim/solution/vega-lite.md"
+  - "assets/example-prompts/landing-page.media.prompt"
+  - "assets/example-prompts/architecture-diagram.media.prompt"
+
+prompt:
+  system: |-
+    You generate Vega-Lite browser visualization artifacts. Output only a complete self-contained HTML document with inline CSS and JavaScript, using vega, vega-lite, and vega-embed CDNs. Do not use markdown fences or explanations.
+  text: |-
+    Create the edge integration output for Vega-Lite.
+    
+    Scenario:
+    Create an embeddable analytics widget that demonstrates integration behavior. It must support resizing, data refresh, export where the library supports it, cleanup, and visible handling for empty, partial, malformed, and extreme data.
+    
+    Implementation requirements:
+    - Use this library source or equivalent npm import pattern: https://cdn.jsdelivr.net/npm/vega-embed@6.
+    - Parser/API contract: Define a valid Vega-Lite v5 JSON spec with $schema, data, mark, encoding, transforms, params, and composition, then render with vegaEmbed.
+    - Data encoding contract: Encode fields with explicit type values, use aggregate, bin, timeUnit, transform, layer, facet, concat, or repeat where suitable.
+    - Responsive contract: Use autosize, container width, responsive embed behavior, and compact legends or facets on small screens.
+    - Accessibility contract: Add description, title, tooltip encodings, readable palettes, non-color channels, and a table fallback.
+    - Edge data contract: Handle missing field types, dates as strings, constant value versus field encodings, empty filters, independent facet scales, and more than 50k points by aggregating.
+    - Performance contract: Use aggregate, sample, bin, and switch-to-Vega notes for raw Canvas rendering when data volume exceeds Vega-Lite comfort.
+    - Integration contract: Expose embedSpec(spec), updateSpec(rows), exportView(format), resizeEmbed(), and teardownEmbed() hooks.
+    - Include deterministic inline sample data with realistic field names, units, and at least one edge case row.
+    - Include concise visible titles, legends, units, source note, and no placeholder lorem ipsum text.
+    - Output only the final artifact, with no commentary outside the artifact.
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.2
+
+output:
+  text_format: html
+  artifact_kind: vega-lite-html-integration-widget
+  formats:
+    - format: html
+
+evaluation:
+  checklist:
+    - "Format validity: parseable schema 0.4 media prompt and generated artifact is exactly one html output with no markdown fences."
+    - "Parser/API: Define a valid Vega-Lite v5 JSON spec with $schema, data, mark, encoding, transforms, params, and composition, then render with vegaEmbed."
+    - "Data encoding: Encode fields with explicit type values, use aggregate, bin, timeUnit, transform, layer, facet, concat, or repeat where suitable."
+    - "Responsive behavior: Use autosize, container width, responsive embed behavior, and compact legends or facets on small screens."
+    - "Accessibility: Add description, title, tooltip encodings, readable palettes, non-color channels, and a table fallback."
+    - "Edge data: Handle missing field types, dates as strings, constant value versus field encodings, empty filters, independent facet scales, and more than 50k points by aggregating."
+    - "Performance/integration: Use aggregate, sample, bin, and switch-to-Vega notes for raw Canvas rendering when data volume exceeds Vega-Lite comfort. Expose embedSpec(spec), updateSpec(rows), exportView(format), resizeEmbed(), and teardownEmbed() hooks."
+  rubric:
+    - name: "Format validity"
+      weight: 30
+      criteria: "The artifact is valid for the requested text format, contains no markdown fences, and uses the required solution parser or API without syntax errors."
+    - name: "Semantic completeness"
+      weight: 30
+      criteria: "The visualization covers the requested scenario, data story, interactions, labels, and solution-specific capabilities."
+    - name: "Visual/structural quality"
+      weight: 25
+      criteria: "The layout, hierarchy, color, typography, chart choice, and dashboard or diagram structure are clear and professional."
+    - name: "Robustness"
+      weight: 15
+      criteria: "The artifact handles responsive layout, accessibility, edge data, update or teardown behavior, and performance constraints without runtime failures."
+  pass_conditions:
+    - "YAML parses successfully and all text is ASCII-only."
+    - "Generated artifact runs without console errors when CDN dependencies are available."
+    - "Parser/API, data encoding, responsive, accessibility, and edge data checklist items are all satisfied."
+    - "Rubric score is at least 80 out of 100 and no rubric dimension scores zero."
+
+tags:
+  - "fim"
+  - "js-charting"
+  - "vega-lite"
+  - "edge-integration"
+  - "visualization"
+  - "integration"

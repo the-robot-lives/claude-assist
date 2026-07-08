@@ -1,0 +1,75 @@
+---
+schema: "0.4"
+id: fim-math-and-scientific-rendering-asymptote-01-canonical-equation-plot
+type: visualization
+quality: high
+solution: asymptote
+category: math-and-scientific-rendering
+variant: canonical-equation-plot
+references:
+- references/fim/overview/geospatial-math-scientific/asymptote.md
+- references/fim/solution/asymptote.md
+prompt:
+  system: |-
+    You are a senior mathematical graphics engineer. Output only one complete ASCII Asymptote source file. No Markdown fences or prose outside the source.
+  text: |-
+    Create a canonical Asymptote equation/plot figure for the damped oscillator x(t)=exp(-0.18*t)*cos(2*pi*t). Include a 2D plot over t in seconds, a highlighted first local maximum, the envelope curves, and a small equation annotation typeset with LaTeX. Use native Asymptote paths, axes, labels, pens, and output comments for PDF and SVG.
+
+    Requirements: include compile comments for asy -f pdf and asy -f svg, deterministic coordinate ranges, readable labels with units, a legend, colorblind-safe styling, and comments explaining the mathematical checks for the extrema and envelopes. The generated artifact must use Asymptote as the primary rendering surface.
+  provider_options:
+    temperature: 0.2
+    max_tokens: 8192
+output:
+  text_format: asymptote
+  artifact_kind: asymptote-source
+  formats:
+  - format: asy
+  - format: pdf
+  - format: svg
+evaluation:
+  checklist:
+  - "YAML parses and required schema 0.4 fields are present."
+  - "Asymptote source is complete, ASCII-only, and uses native draw, label, path, pen, and axis constructs."
+  - "Math correctness covers the oscillator equation, envelope curves, extrema annotation, and sampled plot coordinates."
+  - "Notation validity covers LaTeX labels, escaped strings, units, and plot legends."
+  - "Renderability covers documented asy commands and nonblank PDF or SVG output."
+  - "Labels and units are present for time, amplitude, equation callouts, and highlighted points."
+  - "Domain edge cases cover damping limits, zero crossings, extrema near plot bounds, and label overlap."
+  rubric:
+  - name: Format validity
+    weight: 30
+    criteria:
+    - "Output is one complete ASCII Asymptote file with no Markdown wrapper."
+    - "The file compiles with documented asy commands and declares stable output expectations."
+    - "Source syntax, comments, and filenames match the asymptote canonical equation/plot variant."
+  - name: Semantic completeness
+    weight: 30
+    criteria:
+    - "The requested oscillator, envelopes, extrema marker, equation annotation, labels, and legend are all implemented."
+    - "Asymptote is the primary graphics language and is not replaced by LaTeX-only or SVG-only code."
+    - "Mathematical checks are described or encoded clearly enough to audit."
+  - name: Visual/structural quality
+    weight: 25
+    criteria:
+    - "Composition is publication-ready with readable axes, consistent hierarchy, and no clipped labels."
+    - "Styling uses distinguishable line patterns or colors and keeps equation text legible."
+    - "The figure remains interpretable in both PDF and SVG exports."
+  - name: Robustness
+    weight: 15
+    criteria:
+    - "Handles plot-bound extremes, small amplitudes, and label placement without hiding data."
+    - "Uses deterministic ranges and sample counts."
+    - "Documents Asymptote and LaTeX dependency expectations."
+  pass_conditions:
+  - "Rubric weights are exactly Format validity 30, Semantic completeness 30, Visual/structural quality 25, Robustness 15."
+  - "Score is 80 or higher out of 100 with no critical failure in math correctness, notation validity, or renderability."
+  - "The artifact renders a labeled oscillator plot with units and a valid equation annotation."
+  - "Domain edge cases and export commands are represented in the source."
+tags:
+- fim
+- math-and-scientific-rendering
+- asymptote
+- canonical-equation-plot
+- vector-graphics
+- latex-labels
+

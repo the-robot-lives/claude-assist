@@ -1,0 +1,78 @@
+schema: "0.4"
+id: fim-diagrams-dsl-xml-uml-xmi-04-integration
+type: diagram
+quality: production
+solution: uml-xmi
+category: diagrams-dsl-xml
+variant: integration
+prompt:
+  system: You generate UML XMI model interchange XML. Output only well-formed XML using consistent XMI
+    and UML namespaces for the requested target. Do not use code fences or explanatory prose.
+  text: Create UML XMI using the Eclipse UML2 5.x UML namespace for an integration model with components,
+    interfaces, provided/required relationships, service classes, DTO datatypes, and associations. Use
+    xmi:XMI root if needed and keep namespace/version tokens consistent for Papyrus import.
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.2
+    top_p: 0.9
+output:
+  text_format: uml-xmi
+  artifact_kind: uml_model_interchange_xml
+  formats:
+  - format: xmi
+  - format: xml
+evaluation:
+  checklist:
+  - 'Output uses native uml-xmi syntax: uml:Model or xmi:XMI root, xmi:version, xmi:id, xmi:type, packagedElement,
+    ownedAttribute, ownedOperation, multiplicity values, associations, generalizations, and primitive
+    type hrefs.'
+  - 'Output captures the requested semantics: tool-neutral UML model data for class, package, component,
+    use-case, or integration models rather than a rendered picture.'
+  - 'Output has solution-appropriate structure: stable ids, complete containment, correct references,
+    multiplicities, operations, interfaces, and associations.'
+  - 'Output is robust for the renderer/importer: all idrefs resolve, namespace lineage is consistent,
+    primitive type hrefs are valid for the target, and no diagram geometry is implied unless requested.'
+  - Models boundaries, external systems, failure paths, references, ids, or import/export assumptions
+    needed for integration work.
+  - Output contains only the requested artifact source, with no Markdown fences, no explanatory prose,
+    and no non-ASCII characters.
+  rubric:
+    Format validity:
+      weight: 30
+      criteria: 'Must parse as uml-xmi and follow uml-xmi-specific grammar: uml:Model or xmi:XMI root,
+        xmi:version, xmi:id, xmi:type, packagedElement, ownedAttribute, ownedOperation, multiplicity values,
+        associations, generalizations, and primitive type hrefs. Deduct heavily for malformed roots, unmatched
+        blocks/tags, invalid ids, unresolved references, or mixing syntax from another diagram DSL.'
+    Semantic completeness:
+      weight: 30
+      criteria: Must satisfy the full scenario for edge/integration use and include the domain entities,
+        relationships, responsibilities, and edge/failure paths requested in the prompt. The diagram must
+        use uml-xmi for tool-neutral UML model data for class, package, component, use-case, or integration
+        models rather than a rendered picture.
+    Visual/structural quality:
+      weight: 25
+      criteria: Must produce a readable rendered or importable artifact with stable ids, complete containment,
+        correct references, multiplicities, operations, interfaces, and associations. Labels should be
+        concise, grouping should reduce clutter, and styling/layout choices must match the strengths and
+        limits of uml-xmi.
+    Robustness:
+      weight: 15
+      criteria: Must remain stable under normal rendering, import, export, or documentation use. Check
+        all idrefs resolve, namespace lineage is consistent, primitive type hrefs are valid for the target,
+        and no diagram geometry is implied unless requested, avoid placeholders that block execution,
+        and keep output ASCII-only and deterministic.
+  pass_conditions:
+  - Total rubric score is at least 85 out of 100.
+  - Format validity score is at least 24 out of 30.
+  - The generated artifact source has no code fences, no prose wrapper, and no non-ASCII characters.
+  - The generated source can be parsed or imported by the normal uml-xmi toolchain without unresolved
+    references or missing required root elements.
+tags:
+- fim
+- diagrams-dsl-xml
+- uml-xmi
+- integration
+- xmi
+- uml
+- model-interchange
+

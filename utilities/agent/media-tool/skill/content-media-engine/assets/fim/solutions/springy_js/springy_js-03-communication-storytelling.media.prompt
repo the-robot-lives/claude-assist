@@ -1,0 +1,52 @@
+schema: "0.4"
+id: springy_js-03-communication-storytelling
+type: visualization
+quality: high
+solution: springy_js
+category: network-and-graph-visualization
+variant: communication-storytelling-graph
+
+prompt:
+  context:
+    - "references/fim/overview/network-3d-graphics/springy_js.md"
+    - "references/fim/solution/springy_js.md"
+  text: |
+    Create a Springy.js storytelling graph for a compact product-roadmap narrative.
+    Use 18 nodes for user needs, features, risks, and milestones. Store labels,
+    colors, radius, and edge type in node.data and edge.data, and draw them in
+    custom Canvas callbacks. Add chapter buttons that highlight one path at a time:
+    discovery, build, launch, and feedback. Keep animation subtle, use a
+    minEnergyThreshold so the graph settles, and include a canvas snapshot export.
+
+output:
+  formats:
+    - format: html
+    - format: png
+  renderer: springy-canvas
+  expected_artifact: "Small animated Springy story graph with chapter highlights."
+
+evaluation:
+  checklist:
+    - "Uses a small graph suitable for Springy."
+    - "Stores visual and story metadata in data objects."
+    - "Uses custom renderer callbacks for labels, colors, and highlighted paths."
+    - "Provides chapter controls and snapshot export."
+  rubric:
+    - name: Format validity
+      weight: 30
+      description: "YAML parses and declares HTML and PNG outputs."
+    - name: Semantic completeness
+      weight: 30
+      description: "Covers storytelling chapters, Springy graph data, canvas rendering, and export."
+    - name: Visual/structural quality
+      weight: 25
+      description: "Story path highlights are readable in a compact graph."
+    - name: Robustness
+      weight: 15
+      description: "Settling, chapter state, and snapshot export behave predictably."
+  pass_conditions:
+    - "The graph is intentionally compact."
+    - "The story is communicated through highlighted paths and labels."
+    - "The output stays within Springy's feature set."
+
+tags: [fim, springy-js, storytelling, communication-graph, roadmap, canvas]

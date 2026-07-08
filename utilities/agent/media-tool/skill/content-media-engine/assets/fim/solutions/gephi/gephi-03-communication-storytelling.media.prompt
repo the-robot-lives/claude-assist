@@ -1,0 +1,53 @@
+schema: "0.4"
+id: gephi-03-communication-storytelling
+type: visualization
+quality: high
+solution: gephi
+category: network-and-graph-visualization
+variant: communication-storytelling-graph
+
+prompt:
+  context:
+    - "references/fim/overview/network-3d-graphics/gephi.md"
+    - "references/fim/solution/gephi.md"
+  text: |
+    Create a Gephi storytelling graph for a research report about misinformation
+    communities. Use a GEXF graph with attributes for community, account type,
+    evidence tier, and time window. Describe the Gephi workflow to run Modularity,
+    PageRank, and Betweenness, color communities, size influential nodes, curve
+    weighted edges in Preview, and export two figures: an overview community map
+    and a zoomed bridge-node detail. Include caption text that explains what the
+    styling means without overstating causality.
+
+output:
+  formats:
+    - format: gexf
+    - format: svg
+    - format: md
+  expected_artifact: "Publication-oriented Gephi story graph with captions."
+
+evaluation:
+  checklist:
+    - "Uses Gephi statistics and Preview styling for a communication artifact."
+    - "Includes overview and detail exports."
+    - "Explains community, influence, and bridge-node encodings."
+    - "Avoids unsupported causal claims."
+  rubric:
+    - name: Format validity
+      weight: 30
+      description: "YAML parses and requests graph, image, and caption outputs."
+    - name: Semantic completeness
+      weight: 30
+      description: "Covers storytelling attributes, statistics, styling, and captions."
+    - name: Visual/structural quality
+      weight: 25
+      description: "Figures are publication-ready and visually explain communities and bridges."
+    - name: Robustness
+      weight: 15
+      description: "Captions and metrics avoid misleading interpretation."
+  pass_conditions:
+    - "The output is a communication graph suitable for a report."
+    - "Gephi's statistics and Preview export path are used."
+    - "Narrative claims are bounded by the data."
+
+tags: [fim, gephi, storytelling, communication-graph, publication-figure, modularity]

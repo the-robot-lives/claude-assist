@@ -1,0 +1,53 @@
+schema: "0.4"
+id: igraph-02-dense-stress-layout
+type: visualization
+quality: high
+solution: igraph
+category: network-and-graph-visualization
+variant: dense-graph-stress-layout
+
+prompt:
+  context:
+    - "references/fim/overview/network-3d-graphics/igraph.md"
+    - "references/fim/solution/igraph.md"
+  text: |
+    Build an igraph dense-network stress analysis for a large edge list. Use bulk
+    construction through Graph.TupleList or Graph.DataFrame, run fast metrics such
+    as degree, component sizes, PageRank, and Leiden community detection, and avoid
+    plotting every node when the visible graph is too dense. Render a sampled or
+    community-aggregated PNG using layout_drl or layout_fruchterman_reingold, and
+    emit a stress report with node count, edge count, memory estimate, algorithm
+    timings, sampled nodes, omitted labels, and output dimensions.
+
+output:
+  formats:
+    - format: py
+    - format: png
+    - format: csv
+  expected_artifact: "High-performance igraph stress script with sampled figure and metrics."
+
+evaluation:
+  checklist:
+    - "Uses bulk graph construction and igraph algorithms suited for large graphs."
+    - "Avoids unreadable full plotting of excessive node counts."
+    - "Reports timing, counts, sampling, and layout choice."
+    - "Uses layout_drl or another scale-aware layout where appropriate."
+  rubric:
+    - name: Format validity
+      weight: 30
+      description: "YAML parses and requested script, image, and CSV outputs are explicit."
+    - name: Semantic completeness
+      weight: 30
+      description: "Covers dense analysis, performance metrics, sampling, layout, and plotting."
+    - name: Visual/structural quality
+      weight: 25
+      description: "Sampled or aggregated figure still shows meaningful dense-graph structure."
+    - name: Robustness
+      weight: 15
+      description: "Protects against memory-heavy plotting and slow per-edge construction."
+  pass_conditions:
+    - "The prompt reflects igraph's C-backed performance and static plotting limits."
+    - "Stress output includes algorithm timings and sampling decisions."
+    - "The final figure is intentionally filtered or aggregated."
+
+tags: [fim, igraph, dense-graph, stress-layout, large-graph, performance, sampling]

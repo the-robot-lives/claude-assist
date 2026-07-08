@@ -1,0 +1,52 @@
+schema: "0.4"
+id: d3-force-01-topology-exploration
+type: visualization
+quality: high
+solution: d3-force
+category: network-and-graph-visualization
+variant: topology-exploration
+
+prompt:
+  context:
+    - "references/fim/overview/network-3d-graphics/d3-force.md"
+    - "references/fim/solution/d3-force.md"
+  text: |
+    Create a D3 force topology explorer for a cloud service network. Build nodes
+    and links, run d3.forceSimulation with forceLink using id accessors, negative
+    forceManyBody charge, forceCenter, forceCollide, and optional forceX/forceY
+    grouping. Render SVG lines, circles, labels, and drag interaction in a tick
+    handler. Add filters for team and risk, hover emphasis for connected nodes, a
+    legend, and a stable seed or pre-warm pass for repeatable exploration.
+
+output:
+  formats:
+    - format: html
+    - format: svg
+  renderer: d3-svg
+  expected_artifact: "Interactive D3 force-directed topology explorer."
+
+evaluation:
+  checklist:
+    - "Uses d3.forceSimulation and a tick handler to update SVG."
+    - "Includes link id resolution, charge, center, collision, and drag behavior."
+    - "Supports topology filters, hover neighborhood focus, labels, and legend."
+    - "Avoids implying d3-force draws without D3 rendering code."
+  rubric:
+    - name: Format validity
+      weight: 30
+      description: "YAML parses and declares D3/SVG output."
+    - name: Semantic completeness
+      weight: 30
+      description: "Covers simulation forces, rendering, interaction, and topology exploration."
+    - name: Visual/structural quality
+      weight: 25
+      description: "Node-link structure, groups, labels, and risk styling remain readable."
+    - name: Robustness
+      weight: 15
+      description: "Handles drag reheating, repeatability, and missing link IDs."
+  pass_conditions:
+    - "The prompt contains D3-force-specific APIs."
+    - "The output is an explorable network, not a static screenshot."
+    - "The graph remains stable enough for repeated inspection."
+
+tags: [fim, d3-force, d3, topology-exploration, force-simulation, svg]

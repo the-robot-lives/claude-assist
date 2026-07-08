@@ -1,0 +1,53 @@
+schema: "0.4"
+id: gephi-01-topology-exploration
+type: visualization
+quality: high
+solution: gephi
+category: network-and-graph-visualization
+variant: topology-exploration
+
+prompt:
+  context:
+    - "references/fim/overview/network-3d-graphics/gephi.md"
+    - "references/fim/solution/gephi.md"
+  text: |
+    Create a Gephi topology-exploration workflow for a supply-chain dependency
+    network. Provide GEXF input with node attributes for tier, region, risk, and
+    owner; edge weights for dependency criticality; and viz color, size, and
+    position hints. Describe the Gephi desktop steps: import, run ForceAtlas2 with
+    approximate repulsion, run Modularity and Degree, color by community, size by
+    degree, filter low-weight edges, run Noverlap, and export a styled SVG and
+    cleaned GEXF for web handoff.
+
+output:
+  formats:
+    - format: gexf
+    - format: svg
+    - format: md
+  expected_artifact: "GEXF graph plus Gephi exploration and export workflow."
+
+evaluation:
+  checklist:
+    - "Uses Gephi desktop workflow and GEXF interchange appropriately."
+    - "Includes statistics, appearance, filtering, layout, and export steps."
+    - "Represents topology attributes and weighted edges."
+    - "Avoids treating Gephi as an embeddable web library."
+  rubric:
+    - name: Format validity
+      weight: 30
+      description: "YAML parses and requested GEXF/SVG/markdown outputs are explicit."
+    - name: Semantic completeness
+      weight: 30
+      description: "Covers import, layout, statistics, styling, filtering, and export."
+    - name: Visual/structural quality
+      weight: 25
+      description: "Topology exploration produces clear communities, hubs, and risk cues."
+    - name: Robustness
+      weight: 15
+      description: "Workflow includes filtering, overlap removal, and web handoff checks."
+  pass_conditions:
+    - "The prompt centers on Gephi's GUI and GEXF strengths."
+    - "The output can be imported into Gephi."
+    - "The exported artifact supports topology exploration."
+
+tags: [fim, gephi, topology-exploration, gexf, forceatlas2, modularity]

@@ -1,0 +1,78 @@
+schema: "0.4"
+id: go_js-03-design-communication
+type: visualization
+quality: high
+solution: go_js
+category: js-charting
+variant: design-communication
+references:
+  - "references/fim/overview/data-visualization/go_js.md"
+  - "references/fim/solution/go_js.md"
+  - "assets/example-prompts/landing-page.media.prompt"
+  - "assets/example-prompts/architecture-diagram.media.prompt"
+
+prompt:
+  system: |-
+    You generate GoJS browser diagram visualization artifacts. Output only a complete self-contained HTML document with inline CSS and JavaScript, using the GoJS CDN. Do not use markdown fences or explanations.
+  text: |-
+    Create the design communication visualization for GoJS.
+    
+    Scenario:
+    Create a board-ready communication visual that explains a product adoption story. Use annotation, hierarchy, callouts, color discipline, and readable labels to make the insight understandable without presenter narration.
+    
+    Implementation requirements:
+    - Use this library source or equivalent npm import pattern: https://cdn.jsdelivr.net/npm/gojs@3/release/go.js.
+    - Parser/API contract: Use go.GraphObject.make or builder syntax to create a go.Diagram, nodeTemplate, linkTemplate, layout, and go.GraphLinksModel or go.TreeModel.
+    - Data encoding contract: Encode nodes in nodeDataArray and links in linkDataArray with stable keys, categories, ports, and labels; use bindings rather than direct visual mutation.
+    - Responsive contract: Give the diagram div explicit responsive dimensions, call diagram.requestUpdate as needed, and preserve readable node spacing across viewport sizes.
+    - Accessibility contract: Include text labels in every node, keyboard-focused controls outside the canvas, visible selection state, and a textual model summary.
+    - Edge data contract: Handle orphan nodes, cycles, duplicate keys, missing from/to links, very long labels, empty models, and large diagrams with lean templates or virtualization notes.
+    - Performance contract: Use lean templates, batched transactions, cached locations, disabled animation for stress mode, and layouts appropriate to graph size.
+    - Integration contract: Expose loadModel(json), exportModel(), exportSvg(), exportPng(), resizeDiagram(), and disposeDiagram() hooks.
+    - Include deterministic inline sample data with realistic field names, units, and at least one edge case row.
+    - Include concise visible titles, legends, units, source note, and no placeholder lorem ipsum text.
+    - Output only the final artifact, with no commentary outside the artifact.
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.2
+
+output:
+  text_format: html
+  artifact_kind: gojs-html-communication-visualization
+  formats:
+    - format: html
+
+evaluation:
+  checklist:
+    - "Format validity: parseable schema 0.4 media prompt and generated artifact is exactly one html output with no markdown fences."
+    - "Parser/API: Use go.GraphObject.make or builder syntax to create a go.Diagram, nodeTemplate, linkTemplate, layout, and go.GraphLinksModel or go.TreeModel."
+    - "Data encoding: Encode nodes in nodeDataArray and links in linkDataArray with stable keys, categories, ports, and labels; use bindings rather than direct visual mutation."
+    - "Responsive behavior: Give the diagram div explicit responsive dimensions, call diagram.requestUpdate as needed, and preserve readable node spacing across viewport sizes."
+    - "Accessibility: Include text labels in every node, keyboard-focused controls outside the canvas, visible selection state, and a textual model summary."
+    - "Edge data: Handle orphan nodes, cycles, duplicate keys, missing from/to links, very long labels, empty models, and large diagrams with lean templates or virtualization notes."
+    - "Performance/integration: Use lean templates, batched transactions, cached locations, disabled animation for stress mode, and layouts appropriate to graph size. Expose loadModel(json), exportModel(), exportSvg(), exportPng(), resizeDiagram(), and disposeDiagram() hooks."
+  rubric:
+    - name: "Format validity"
+      weight: 30
+      criteria: "The artifact is valid for the requested text format, contains no markdown fences, and uses the required solution parser or API without syntax errors."
+    - name: "Semantic completeness"
+      weight: 30
+      criteria: "The visualization covers the requested scenario, data story, interactions, labels, and solution-specific capabilities."
+    - name: "Visual/structural quality"
+      weight: 25
+      criteria: "The layout, hierarchy, color, typography, chart choice, and dashboard or diagram structure are clear and professional."
+    - name: "Robustness"
+      weight: 15
+      criteria: "The artifact handles responsive layout, accessibility, edge data, update or teardown behavior, and performance constraints without runtime failures."
+  pass_conditions:
+    - "YAML parses successfully and all text is ASCII-only."
+    - "Generated artifact runs without console errors when CDN dependencies are available."
+    - "Parser/API, data encoding, responsive, accessibility, and edge data checklist items are all satisfied."
+    - "Rubric score is at least 80 out of 100 and no rubric dimension scores zero."
+
+tags:
+  - "fim"
+  - "js-charting"
+  - "go_js"
+  - "design-communication"
+  - "visualization"

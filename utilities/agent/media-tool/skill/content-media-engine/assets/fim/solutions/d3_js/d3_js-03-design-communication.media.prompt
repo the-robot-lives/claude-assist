@@ -1,0 +1,78 @@
+schema: "0.4"
+id: d3_js-03-design-communication
+type: visualization
+quality: high
+solution: d3_js
+category: js-charting
+variant: design-communication
+references:
+  - "references/fim/overview/data-visualization/d3_js.md"
+  - "references/fim/solution/d3_js.md"
+  - "assets/example-prompts/landing-page.media.prompt"
+  - "assets/example-prompts/architecture-diagram.media.prompt"
+
+prompt:
+  system: |-
+    You generate D3.js browser visualization artifacts. Output only a complete self-contained HTML document with inline CSS and JavaScript, using the D3 v7 CDN. Do not use markdown fences or explanations.
+  text: |-
+    Create the design communication visualization for D3.js.
+    
+    Scenario:
+    Create a board-ready communication visual that explains a product adoption story. Use annotation, hierarchy, callouts, color discipline, and readable labels to make the insight understandable without presenter narration.
+    
+    Implementation requirements:
+    - Use this library source or equivalent npm import pattern: https://cdn.jsdelivr.net/npm/d3@7.
+    - Parser/API contract: Use D3 selections, keyed data joins, scales, axes, and update functions; keep rendering state explicit and avoid one-off static SVG markup.
+    - Data encoding contract: Encode data as tidy typed objects, coerce numbers and dates, define domains with d3.extent or explicit ranges, and use meaningful key functions.
+    - Responsive contract: Use viewBox or measured container dimensions, recompute scales and axes on resize, and preserve margins for labels on mobile.
+    - Accessibility contract: Add SVG role/img, title and desc nodes, keyboard-reachable controls, high-contrast encodings, and a summary table fallback.
+    - Edge data contract: Handle NaN, missing dates, duplicate ids, empty joins, outliers, zero or negative values on log scales, and large datasets with aggregation or Canvas.
+    - Performance contract: Use aggregation, sampling, Canvas for dense marks, throttled brush or zoom handlers, and keyed joins to avoid full redraws.
+    - Integration contract: Expose render(data), update(data), resize(), and destroy() functions that clean listeners and DOM nodes.
+    - Include deterministic inline sample data with realistic field names, units, and at least one edge case row.
+    - Include concise visible titles, legends, units, source note, and no placeholder lorem ipsum text.
+    - Output only the final artifact, with no commentary outside the artifact.
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.2
+
+output:
+  text_format: html
+  artifact_kind: d3-html-communication-visualization
+  formats:
+    - format: html
+
+evaluation:
+  checklist:
+    - "Format validity: parseable schema 0.4 media prompt and generated artifact is exactly one html output with no markdown fences."
+    - "Parser/API: Use D3 selections, keyed data joins, scales, axes, and update functions; keep rendering state explicit and avoid one-off static SVG markup."
+    - "Data encoding: Encode data as tidy typed objects, coerce numbers and dates, define domains with d3.extent or explicit ranges, and use meaningful key functions."
+    - "Responsive behavior: Use viewBox or measured container dimensions, recompute scales and axes on resize, and preserve margins for labels on mobile."
+    - "Accessibility: Add SVG role/img, title and desc nodes, keyboard-reachable controls, high-contrast encodings, and a summary table fallback."
+    - "Edge data: Handle NaN, missing dates, duplicate ids, empty joins, outliers, zero or negative values on log scales, and large datasets with aggregation or Canvas."
+    - "Performance/integration: Use aggregation, sampling, Canvas for dense marks, throttled brush or zoom handlers, and keyed joins to avoid full redraws. Expose render(data), update(data), resize(), and destroy() functions that clean listeners and DOM nodes."
+  rubric:
+    - name: "Format validity"
+      weight: 30
+      criteria: "The artifact is valid for the requested text format, contains no markdown fences, and uses the required solution parser or API without syntax errors."
+    - name: "Semantic completeness"
+      weight: 30
+      criteria: "The visualization covers the requested scenario, data story, interactions, labels, and solution-specific capabilities."
+    - name: "Visual/structural quality"
+      weight: 25
+      criteria: "The layout, hierarchy, color, typography, chart choice, and dashboard or diagram structure are clear and professional."
+    - name: "Robustness"
+      weight: 15
+      criteria: "The artifact handles responsive layout, accessibility, edge data, update or teardown behavior, and performance constraints without runtime failures."
+  pass_conditions:
+    - "YAML parses successfully and all text is ASCII-only."
+    - "Generated artifact runs without console errors when CDN dependencies are available."
+    - "Parser/API, data encoding, responsive, accessibility, and edge data checklist items are all satisfied."
+    - "Rubric score is at least 80 out of 100 and no rubric dimension scores zero."
+
+tags:
+  - "fim"
+  - "js-charting"
+  - "d3_js"
+  - "design-communication"
+  - "visualization"

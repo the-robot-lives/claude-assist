@@ -1,0 +1,77 @@
+schema: "0.4"
+id: fim-diagrams-dsl-xml-blockdiag-03-communication
+type: diagram
+quality: production
+solution: blockdiag
+category: diagrams-dsl-xml
+variant: communication
+prompt:
+  system: You generate blockdiag source. Output only a valid blockdiag { ... } document with parser-safe
+    ids, node attributes, groups, and edges. Do not use code fences or explanatory prose.
+  text: Create a blockdiag source diagram for a product strategy briefing that explains how customer touchpoints,
+    product services, analytics, support, and billing fit together. Keep labels business-readable and
+    use groups and color classes to separate customer-facing, internal, and external systems.
+  provider_options:
+    max_tokens: 4096
+    temperature: 0.2
+    top_p: 0.9
+output:
+  text_format: blockdiag
+  artifact_kind: block_diagram_source
+  formats:
+  - format: diag
+  - format: svg
+  - format: png
+  - format: pdf
+evaluation:
+  checklist:
+  - 'Output uses native blockdiag syntax: blockdiag root block, node statements, group blocks, edge attributes,
+    flowchart shapes, classes, and diagram defaults.'
+  - 'Output captures the requested semantics: box-and-arrow system structure with explicit components,
+    dependencies, and grouped responsibility boundaries.'
+  - 'Output has solution-appropriate structure: automatic layout friendly groups, clear edge labels, shape
+    choices, and concise node labels.'
+  - 'Output is robust for the renderer/importer: no unsupported diagram types, no orphan critical nodes,
+    and no ambiguous unlabeled high-risk edges.'
+  - Optimizes labels, grouping, and visual hierarchy for human review while remaining faithful to the
+    native renderer constraints.
+  - Output contains only the requested artifact source, with no Markdown fences, no explanatory prose,
+    and no non-ASCII characters.
+  rubric:
+    Format validity:
+      weight: 30
+      criteria: 'Must parse as blockdiag and follow blockdiag-specific grammar: blockdiag root block,
+        node statements, group blocks, edge attributes, flowchart shapes, classes, and diagram defaults.
+        Deduct heavily for malformed roots, unmatched blocks/tags, invalid ids, unresolved references,
+        or mixing syntax from another diagram DSL.'
+    Semantic completeness:
+      weight: 30
+      criteria: Must satisfy the full scenario for design/communication use and include the domain entities,
+        relationships, responsibilities, and edge/failure paths requested in the prompt. The diagram must
+        use blockdiag for box-and-arrow system structure with explicit components, dependencies, and grouped
+        responsibility boundaries.
+    Visual/structural quality:
+      weight: 25
+      criteria: Must produce a readable rendered or importable artifact with automatic layout friendly
+        groups, clear edge labels, shape choices, and concise node labels. Labels should be concise, grouping
+        should reduce clutter, and styling/layout choices must match the strengths and limits of blockdiag.
+    Robustness:
+      weight: 15
+      criteria: Must remain stable under normal rendering, import, export, or documentation use. Check
+        no unsupported diagram types, no orphan critical nodes, and no ambiguous unlabeled high-risk edges,
+        avoid placeholders that block execution, and keep output ASCII-only and deterministic.
+  pass_conditions:
+  - Total rubric score is at least 85 out of 100.
+  - Format validity score is at least 24 out of 30.
+  - The generated artifact source has no code fences, no prose wrapper, and no non-ASCII characters.
+  - The generated source can be parsed or imported by the normal blockdiag toolchain without unresolved
+    references or missing required root elements.
+tags:
+- fim
+- diagrams-dsl-xml
+- blockdiag
+- communication
+- block-diagram
+- architecture
+- component-map
+

@@ -1,0 +1,54 @@
+schema: "0.4"
+id: cytoscape_js-02-dense-stress-layout
+type: visualization
+quality: high
+solution: cytoscape_js
+category: network-and-graph-visualization
+variant: dense-graph-stress-layout
+
+prompt:
+  context:
+    - "references/fim/overview/network-3d-graphics/cytoscape_js.md"
+    - "references/fim/solution/cytoscape_js.md"
+  text: |
+    Build a Cytoscape.js dense-graph stress layout for a package dependency corpus
+    with 2500 nodes and 9000 edges. Use fcose or cose-bilkent quality settings,
+    label thresholds, edge opacity reduction, neighborhood-only edge emphasis, and
+    a community filter to keep rendering readable. Include stress metrics for load
+    time, layout duration, visible node count, hidden edge count, memory caution,
+    and frames dropped during pan and zoom. Provide a fallback branch that switches
+    to precomputed positions and disables animation when the graph exceeds the
+    live-layout limit.
+
+output:
+  formats:
+    - format: html
+    - format: json
+  renderer: cytoscape-js
+  expected_artifact: "Dense Cytoscape stress page plus machine-readable performance report."
+
+evaluation:
+  checklist:
+    - "Uses Cytoscape layout extension settings appropriate for dense graphs."
+    - "Includes readability controls: label thresholds, filtering, and edge de-emphasis."
+    - "Reports layout and interaction stress metrics."
+    - "Defines a precomputed-position fallback for excessive graph size."
+  rubric:
+    - name: Format validity
+      weight: 30
+      description: "YAML parses and declares both visualization and stress-report outputs."
+    - name: Semantic completeness
+      weight: 30
+      description: "Covers dense data, layout, rendering limits, filtering, and fallback behavior."
+    - name: Visual/structural quality
+      weight: 25
+      description: "Dense view remains interpretable through community and neighborhood focus."
+    - name: Robustness
+      weight: 15
+      description: "Handles large input without promising unlimited live layout performance."
+  pass_conditions:
+    - "The prompt reflects Cytoscape's strengths and scale limits."
+    - "Stress metrics are visible and exported."
+    - "The dense graph has a clear fallback strategy."
+
+tags: [fim, cytoscape-js, dense-graph, stress-layout, fcose, cose-bilkent, performance]

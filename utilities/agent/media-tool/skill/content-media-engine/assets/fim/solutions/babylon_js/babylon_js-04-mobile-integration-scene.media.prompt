@@ -1,0 +1,71 @@
+---
+schema: '0.4'
+id: fim-3d-engines-and-webgl-babylon_js-04-mobile-integration-scene
+type: interactive
+quality: high
+solution: babylon_js
+category: 3d-engines-and-webgl
+variant: mobile-integration-scene
+references:
+- references/fim/overview/network-3d-graphics/babylon_js.md
+- references/fim/solution/babylon_js.md
+prompt:
+  system: Generate production-quality Babylon.js media assets for FIM evaluation. Prefer idiomatic Babylon.js patterns from the referenced docs. Output only the requested source artifact.
+  text: 'Create a Babylon.js edge integration and mobile scene asset for the 3d-engines-and-webgl category. Scenario: A WebXR-ready mobile configurator with adaptive quality, touch controls, loading progress, resize handling, and graceful WebGL support messaging. Use Babylon.js Engine, Scene, ArcRotateCamera, lights, meshes, PBR materials, loaders, GUI, and render loop. Build an edge-case integration scene that emphasizes responsive layout, mobile or touch controls, fallback behavior, loading errors, and embedding constraints. The generated artifact must include a visible nonblank initial render, a deliberately framed starting camera, solution-appropriate lighting and materials, at least one animation or user interaction, explicit asset loading or placeholder handling, and mobile/performance notes in code comments or UI diagnostics. Return complete source for the requested artifact without markdown fences or explanatory prose outside the source.'
+  requirements:
+  - Start from a nonblank render state; do not rely on a user action before the first visible frame.
+  - Frame the camera or primary viewpoint so the important geometry or data is visible immediately.
+  - Use solution-appropriate lighting, materials, colors, or shader output so depth and structure are readable.
+  - Include animation or interactivity that is frame-rate independent or otherwise bounded.
+  - Show how external assets are loaded, preloaded, streamed, inlined, or replaced by placeholders on failure.
+  - Handle resize, device pixel ratio, touch input, and constrained mobile or low-power performance.
+  - Include the performance strategy expected for this solution, such as instancing, batching, LOD, streaming, server rendering, or shape-count limits.
+  provider_options:
+    temperature: 0.25
+    max_tokens: 8192
+output:
+  formats:
+  - format: html
+  - format: png
+  text_format: html
+  artifact: Babylon.js edge integration and mobile scene source asset
+  dimensions:
+    width: 1440
+    height: 900
+  render_expectation: Interactive browser or streamed visualization suitable for PNG capture after initial load.
+evaluation:
+  checklist:
+  - YAML parses and required schema 0.4 fields are present.
+  - Initial render is nonblank and shows the scenario subject within the first viewport.
+  - Camera or viewpoint is initialized, framed, and adjustable by the expected controls.
+  - Lighting, materials, colors, shaders, or flat shading make the 3D structure readable.
+  - Animation or interactivity is present and does not depend on unbounded per-frame allocation.
+  - Asset loading path is explicit and includes preloading, streaming, placeholders, or error fallback.
+  - Mobile and responsive behavior covers resize, touch, DPR, and constrained GPU or server performance.
+  - Performance strategy matches the solution and scenario instead of relying on many naive objects.
+  rubric:
+  - name: Format validity
+    weight: 30
+    criteria: YAML parses under schema 0.4, required fields are present, generated output uses the requested solution syntax, and file names and ids match the solution and variant.
+  - name: Semantic completeness
+    weight: 30
+    criteria: Scene fulfills the scenario, follows the referenced FIM solution and overview notes, and includes camera, lighting/materials, animation/interactivity, asset loading, and mobile/performance concerns.
+  - name: Visual/structural quality
+    weight: 25
+    criteria: Render is nonblank, composition is legible, 3D structure is clear, labels or controls do not occlude the scene, and materials, colors, depth, and motion are coherent.
+  - name: Robustness
+    weight: 15
+    criteria: Handles resize, missing or slow assets, low-power mobile hardware, WebGL or server capability limits, and provides fallback or diagnostic states without a blank screen.
+  pass_conditions:
+  - Rubric weights sum to 100 with Format validity 30, Semantic completeness 30, Visual/structural quality 25, and Robustness 15.
+  - Score is 80 or higher out of 100.
+  - No critical failure in nonblank render, camera, lighting/materials, animation/interactivity, asset loading, or mobile/performance checks.
+  - Generated content is clearly aligned with Babylon.js and does not substitute a different 3D engine unless used only as a documented dependency of the solution.
+tags:
+- 3d-engines-and-webgl
+- babylon_js
+- mobile-integration-scene
+- babylonjs
+- pbr
+- webxr
+- game-engine
