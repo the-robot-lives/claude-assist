@@ -106,6 +106,20 @@ struct llama_robot_context_state {
     std::vector<float> prev_logits;       // last position logits (surprise basis)
     std::vector<float> salience_window;   // running scores for the quantile gate
 
+    // E6 — delta executor (002). Off by default; toggling bumps the epoch so
+    // the graph rebuilds with/without the delta subgraphs.
+    struct delta_block {
+        uint32_t layer = 0;
+        std::vector<float> held_in;   // [n_embd] input the block last fired on
+        std::vector<float> held_out;  // [n_embd] output it produced then
+        float    fatigue = 0.0f;      // leaky refractory pressure (raises θ_eff)
+        uint64_t fires   = 0;         // compute trace: how often this block ran
+    };
+    bool     delta_enabled     = false;
+    uint64_t delta_tokens      = 0;           // delta-mode (T==1) tokens processed
+    uint64_t delta_since_dense = UINT64_MAX;  // forces a dense sweep on first use
+    std::vector<delta_block> delta;
+
     std::vector<float> * bank(uint32_t layer) {
         for (auto & b : banks) {
             if (b.first == layer) {

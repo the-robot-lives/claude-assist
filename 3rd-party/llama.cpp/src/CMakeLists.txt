@@ -38,6 +38,7 @@ add_library(llama
             # ROBOT-EXT-BEGIN(build-src)
             ../include/llama-robot.h
             llama-robot-context.cpp
+            llama-robot-delta.cpp
             llama-robot-hparams.cpp
             llama-robot-memory.cpp
             llama-robot-model.cpp

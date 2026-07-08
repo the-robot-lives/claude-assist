@@ -7,6 +7,7 @@
 #include "llama-impl.h"
 #include "llama-mmap.h"
 #include "llama-model-loader.h"
+#include "llama-robot-delta.h"
 #include "llama-robot-shim.h"
 #include "llama-robot-state.h"
 
@@ -407,6 +408,58 @@ static ggml_tensor * robot_graph_apply_state(
     return out;
 }
 
+// E6 delta blend at block L: fire = step(mean((x−held_in)²) − θ_eff) (+force),
+// out = held_out + fire·(block_out − held_out); refreshed holds and the fire
+// flag are named outputs for the capture hook / compute trace.
+static ggml_tensor * robot_graph_apply_delta(
+        llm_graph_context * g,
+        const llama_robot_model_iface & iface,
+        const llm_graph_input_robot::delta_inputs & din,
+        ggml_tensor * force,
+        ggml_tensor * m_in,
+        ggml_tensor * x_in,
+        ggml_tensor * cur) {
+    ggml_context * ctx0 = g->ctx0;
+    const uint32_t L = din.layer;
+
+    ggml_tensor * theta = iface.robot_ext_tensor(format("blk.%u.robot_delta.theta_base", L)); // [1]
+
+    // mean squared input change vs the held input
+    ggml_tensor * diff = ggml_sub(ctx0, x_in, din.held_in); // [n_embd, 1]
+    ggml_tensor * msq  = ggml_scale(ctx0, ggml_sum(ctx0, ggml_mul(ctx0, diff, diff)), 1.0f / (float) x_in->ne[0]);
+
+    // θ_eff = θ_base + fatigue − excitability·m
+    ggml_tensor * theta_eff = ggml_add(ctx0, theta, din.fatigue);
+    if (m_in != nullptr) {
+        if (ggml_tensor * ew = iface.robot_ext_tensor("robot.delta.excitability.weight")) {
+            theta_eff = ggml_sub(ctx0, theta_eff, ggml_mul_mat(ctx0, ew, m_in)); // [1]
+        }
+    }
+
+    ggml_tensor * fire = ggml_step(ctx0, ggml_sub(ctx0, msq, theta_eff)); // {0,1}
+    fire = ggml_step(ctx0, ggml_add(ctx0, fire, force));                  // force is ±0.5-biased
+    ggml_set_name(fire, format("robot_delta_fire-%u", L).c_str());
+    ggml_set_output(fire);
+
+    // blend: quiet blocks contribute their held output
+    ggml_tensor * out = ggml_add(ctx0,
+            ggml_mul(ctx0, ggml_sub(ctx0, cur, din.held_out), fire),
+            din.held_out);
+    ggml_set_name(out, format("robot_delta_hout-%u", L).c_str());
+    ggml_set_output(out);
+    llama_robot_graph_splice_edit(g->gf, cur, out);
+
+    // refreshed held input (only moves when the block fired)
+    ggml_tensor * hin = ggml_add(ctx0,
+            ggml_mul(ctx0, ggml_sub(ctx0, x_in, din.held_in), fire),
+            din.held_in);
+    ggml_set_name(hin, format("robot_delta_hin-%u", L).c_str());
+    ggml_set_output(hin);
+    ggml_build_forward_expand(g->gf, hin);
+
+    return out;
+}
+
 void llama_robot_graph_apply(const llama_robot_model_iface & iface, llm_graph_context * g,
         const llama_robot_context_state * st) {
     const auto & robot = iface.robot;
@@ -414,19 +467,23 @@ void llama_robot_graph_apply(const llama_robot_model_iface & iface, llm_graph_co
     const bool has_taps  = robot.has_feature(LLAMA_ROBOT_FEATURE_TAPS);
     const bool has_state = robot.has_feature(LLAMA_ROBOT_FEATURE_STATE);
     const bool has_mod   = robot.has_feature(LLAMA_ROBOT_FEATURE_MODULATOR);
-    if (!has_taps && !has_state && !has_mod) {
+    // delta subgraphs build only when enabled on this context and streaming
+    // (T == 1 — prompt ubatches run dense; 002's v0 constraint)
+    const bool has_delta = robot.has_feature(LLAMA_ROBOT_FEATURE_DELTA) &&
+            st != nullptr && st->delta_enabled && g->n_tokens == 1;
+    if (!has_taps && !has_state && !has_mod && !has_delta) {
         return;
     }
 
     ggml_context * ctx0 = g->ctx0;
     const int n_layer = (int) g->n_layer;
 
-    // recurrent inputs: m and the per-covered-layer state vectors enter the
-    // graph as input tensors, pushed from host state at set_input time
+    // recurrent inputs: m, per-covered-layer state vectors, and delta holds
+    // enter the graph as input tensors, pushed from host state at set_input
     llm_graph_input_robot * inp = nullptr;
     ggml_tensor * m_in = nullptr;
-    if (has_state || has_mod) {
-        auto input = std::make_unique<llm_graph_input_robot>(st);
+    if (has_state || has_mod || has_delta) {
+        auto input = std::make_unique<llm_graph_input_robot>(&iface, st);
         if (has_mod) {
             m_in = ggml_new_tensor_1d(ctx0, GGML_TYPE_F32, robot.modulator.dim);
             ggml_set_name(m_in, "robot_mod_in");
@@ -448,12 +505,32 @@ void llama_robot_graph_apply(const llama_robot_model_iface & iface, llm_graph_co
                 input->s_in.emplace_back(L, s);
             }
         }
+        if (has_delta) {
+            input->delta_force = ggml_new_tensor_1d(ctx0, GGML_TYPE_F32, 1);
+            ggml_set_name(input->delta_force, "robot_delta_force");
+            ggml_set_input(input->delta_force);
+            for (const auto & b : st->delta) {
+                llm_graph_input_robot::delta_inputs din;
+                din.layer    = b.layer;
+                din.held_in  = ggml_new_tensor_1d(ctx0, GGML_TYPE_F32, g->n_embd);
+                din.held_out = ggml_new_tensor_1d(ctx0, GGML_TYPE_F32, g->n_embd);
+                din.fatigue  = ggml_new_tensor_1d(ctx0, GGML_TYPE_F32, 1);
+                ggml_set_name(din.held_in,  format("robot_delta_hin_in-%u", b.layer).c_str());
+                ggml_set_name(din.held_out, format("robot_delta_hout_in-%u", b.layer).c_str());
+                ggml_set_name(din.fatigue,  format("robot_delta_fat_in-%u", b.layer).c_str());
+                ggml_set_input(din.held_in);
+                ggml_set_input(din.held_out);
+                ggml_set_input(din.fatigue);
+                input->delta_in.push_back(din);
+            }
+        }
         inp = static_cast<llm_graph_input_robot *>(g->res->add_input(std::move(input)));
     }
 
-    // per-layer pipeline over the residual stream: FiLM → state → shims/taps
+    // per-layer pipeline over the residual stream: delta → FiLM → state → shims/taps
     ggml_tensor * final_stream = nullptr; // pooled modulator source
     ggml_tensor * last_s_final = nullptr; // glacial modulator source
+    std::vector<ggml_tensor *> layer_cur((size_t) n_layer, nullptr); // post-edit stream per layer
 
     const bool need_final = has_mod && robot.modulator.source == "pooled";
 
@@ -467,13 +544,19 @@ void llama_robot_graph_apply(const llama_robot_model_iface & iface, llm_graph_co
                 if ((int) sl == L) { state_here = true; s_in = t; break; }
             }
         }
+        const llm_graph_input_robot::delta_inputs * din = nullptr;
+        if (has_delta && inp != nullptr) {
+            for (const auto & d : inp->delta_in) {
+                if ((int) d.layer == L) { din = &d; break; }
+            }
+        }
         bool bn_here = false;
         if (has_taps) {
             for (const auto & bn : robot.bottlenecks) {
                 if ((int) bn.layer == L && bn.point == "resid_post") { bn_here = true; break; }
             }
         }
-        if (!film_here && !state_here && !bn_here && !(need_final && L == n_layer - 1)) {
+        if (!film_here && !state_here && !bn_here && din == nullptr && !(need_final && L == n_layer - 1)) {
             continue;
         }
 
@@ -481,6 +564,20 @@ void llama_robot_graph_apply(const llama_robot_model_iface & iface, llm_graph_co
         if (cur == nullptr) {
             LLAMA_LOG_WARN("therobot: layer %d: tensor 'l_out-%d' not found in donor graph — extensions at this layer disabled\n", L, L);
             continue;
+        }
+
+        // E6 first: the delta decision compares the block's *input* (the
+        // previous layer's final stream) and holds the raw block output
+        if (din != nullptr) {
+            ggml_tensor * x_in = L > 0 ? layer_cur[L - 1] : nullptr;
+            if (x_in == nullptr) {
+                x_in = ggml_graph_get_tensor(g->gf, format("l_out-%d", L - 1).c_str());
+            }
+            if (x_in != nullptr) {
+                cur = robot_graph_apply_delta(g, iface, *din, inp->delta_force, m_in, x_in, cur);
+            } else {
+                LLAMA_LOG_WARN("therobot: delta block %d: input stream not found — block runs dense\n", L);
+            }
         }
 
         if (film_here && m_in != nullptr) {
@@ -498,6 +595,7 @@ void llama_robot_graph_apply(const llama_robot_model_iface & iface, llm_graph_co
                 }
             }
         }
+        layer_cur[L] = cur;
         if (L == n_layer - 1) {
             final_stream = cur;
         }

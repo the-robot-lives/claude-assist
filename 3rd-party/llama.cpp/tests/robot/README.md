@@ -1,10 +1,10 @@
-# therobot runtime tests (E1–E5)
+# therobot runtime tests (E1–E6)
 
 Manual smoke tests for the therobot spec loader (E1), bottleneck taps (E2),
-the shim engine (E3), state banks + modulator (E4), and episodic memory (E5).
-Not yet wired into CMake/CI — that lands with the E0 CI gates
-(llamacpp-extensions.md §2). All commands run from the repo root; `$BUILD` is
-a configured build directory.
+the shim engine (E3), state banks + modulator (E4), episodic memory (E5), and
+the delta executor (E6). Not yet wired into CMake/CI — that lands with the
+E0 CI gates (llamacpp-extensions.md §2). All commands run from the repo root;
+`$BUILD` is a configured build directory.
 
 ## Fixtures
 
@@ -155,3 +155,36 @@ one decode; surprise is the −log p of the incoming token under the previous
 decode's last-position distribution (not checkpointed — the first
 post-restore decode reads surprise 0); auto-writes need salience > 0, an
 8-decode warmup, and salience ≥ the running-window quantile.
+
+## E6 delta executor
+
+Three 3-layer fixtures cover blocks 1–2 with modulator-coupled excitability
+(1e6 per unit of m[arousal]): `tiny-llama-delta-lo.gguf` (θ = 0, heartbeat 4),
+`tiny-llama-delta-hi.gguf` (θ = 1e6, heartbeat 4), and
+`tiny-llama-delta-nohb.gguf` (θ = 1e6, heartbeat 1000). The test covers:
+delta OFF by default; always-firing delta matching dense to blend round-off
+(≤1e-4); the exact heartbeat fire schedule (3 fires per block over 12 tokens,
+keep rate 0.25) via the compute-trace API; heartbeat sweeps bounding
+divergence (drift with heartbeat ≤ drift without); excitability priming
+(`mod_set` fires a block outside the schedule — 002's "anxious streams fire
+easier" coupling); prompt ubatches running dense without polluting the trace,
+with streaming resuming on a dense sweep.
+
+```bash
+g++ -std=c++17 -Iinclude -Iggml/include tests/robot/robot_delta_test.cpp \
+    -L$BUILD/bin -lllama -lggml -Wl,-rpath,$BUILD/bin -o /tmp/robot_delta_test
+/tmp/robot_delta_test /tmp/robot-fixtures
+# expect: E6 DELTA TEST: OK
+```
+
+E6 notes and v1 limits: blocks still *execute* — the fire flag gates whether
+their output enters the stream, giving exact delta semantics, the full
+compute trace, and bounded-divergence behavior; physically skipping quiet
+blocks is the shared `llama-robot-executor` optimization E6/E7 converge on
+(same interface, deferred — the DoD's ≥2× FLOP cut reads from the trace as
+*effective* FLOPs until then). Coverage is declared by
+`blk.{L}.robot_delta.theta_base` presence (block 0 excluded); θ compares
+mean-squared input change; fatigue tensors (`.fatigue.rho/.gain`) are
+optional and default to off; prompt ubatches (T > 1) always run dense; delta
+holds are per-context execution cache, deliberately outside the session
+checkpoint (a dense sweep re-initializes them within one heartbeat).

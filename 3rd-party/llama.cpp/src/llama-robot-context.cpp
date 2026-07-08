@@ -12,6 +12,7 @@
 #include "llama-graph.h"
 #include "llama-impl.h"
 #include "llama-model.h"
+#include "llama-robot-delta.h"
 #include "llama-robot-memory.h"
 #include "llama-robot-model.h"
 #include "llama-robot-shim.h"
@@ -555,4 +556,77 @@ bool llama_robot_memory_recall(const llama_context * ctx, float * dst) {
     }
     memcpy(dst, st.recall.data(), st.recall.size() * sizeof(float));
     return true;
+}
+
+//
+// E6 — delta executor toggle + compute trace
+//
+
+bool llama_robot_delta_enable(llama_context * ctx, bool enable) {
+    if (ctx == nullptr) {
+        return false;
+    }
+    const auto * iface = dynamic_cast<const llama_robot_model_iface *>(&ctx->get_model());
+    if (iface == nullptr || !llama_robot_delta_feature(*iface)) {
+        LLAMA_LOG_ERROR("therobot: model has no delta feature\n");
+        return false;
+    }
+    auto * st = robot_session_state(ctx);
+    if (st == nullptr) {
+        return false;
+    }
+    if (st->delta_enabled == enable) {
+        return true;
+    }
+    st->delta_enabled = enable;
+    st->delta_since_dense = UINT64_MAX; // (re-)entering delta mode starts with a dense sweep
+    st->epoch++;                        // topology change → rebuild on next decode
+    LLAMA_LOG_INFO("therobot: delta mode %s (%zu covered block(s), heartbeat %u)\n",
+            enable ? "enabled" : "disabled", st->delta.size(), iface->robot.delta.heartbeat);
+    return true;
+}
+
+bool llama_robot_delta_enabled(const llama_context * ctx) {
+    return ctx != nullptr && ctx->robot_state && ctx->robot_state->delta_enabled;
+}
+
+int32_t llama_robot_delta_block_count(const llama_model * model) {
+    const auto * iface = robot_iface(model);
+    if (iface == nullptr || !llama_robot_delta_feature(*iface)) {
+        return 0;
+    }
+    return llama_robot_delta_blocks(*iface, nullptr, 0);
+}
+
+uint64_t llama_robot_delta_tokens(const llama_context * ctx) {
+    if (ctx == nullptr || !ctx->robot_state) {
+        return 0;
+    }
+    return ctx->robot_state->delta_tokens;
+}
+
+uint64_t llama_robot_delta_fires(const llama_context * ctx, int32_t block_idx) {
+    if (ctx == nullptr || !ctx->robot_state) {
+        return 0;
+    }
+    const auto & d = ctx->robot_state->delta;
+    if (block_idx < 0 || (size_t) block_idx >= d.size()) {
+        return 0;
+    }
+    return d[block_idx].fires;
+}
+
+float llama_robot_delta_keep_rate(const llama_context * ctx) {
+    if (ctx == nullptr || !ctx->robot_state) {
+        return 0.0f;
+    }
+    const auto & st = *ctx->robot_state;
+    if (st.delta_tokens == 0 || st.delta.empty()) {
+        return 0.0f;
+    }
+    uint64_t fires = 0;
+    for (const auto & b : st.delta) {
+        fires += b.fires;
+    }
+    return (float) fires / (float) (st.delta_tokens * st.delta.size());
 }

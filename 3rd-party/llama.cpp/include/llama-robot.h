@@ -124,6 +124,30 @@ LLAMA_API void llama_robot_memory_forget(struct llama_context * ctx);
 // whispering into the next decode's modulator update
 LLAMA_API bool llama_robot_memory_recall(const struct llama_context * ctx, float * dst);
 
+//
+// E6 — delta executor (spec §1.6, proposal 002)
+//
+// Change-triggered execution at block granularity, batch-1 streaming. OFF by
+// default; enabling/disabling takes effect on the next decode. Covered blocks
+// compare their input against the input they last fired on; quiet blocks
+// contribute their held output. A dense heartbeat sweep every
+// `therobot.delta.heartbeat` tokens bounds drift. Fire flags are recorded per
+// token — the compute trace 002's tests require.
+//
+
+// toggle delta mode on a context (false if the model has no delta feature)
+LLAMA_API bool llama_robot_delta_enable(struct llama_context * ctx, bool enable);
+LLAMA_API bool llama_robot_delta_enabled(const struct llama_context * ctx);
+
+// number of delta-covered blocks in the model
+LLAMA_API int32_t llama_robot_delta_block_count(const struct llama_model * model);
+
+// compute trace: delta-mode tokens processed, per-block fire counts, and the
+// keep rate (block executions that actually fired / (tokens · blocks))
+LLAMA_API uint64_t llama_robot_delta_tokens(const struct llama_context * ctx);
+LLAMA_API uint64_t llama_robot_delta_fires (const struct llama_context * ctx, int32_t block_idx);
+LLAMA_API float    llama_robot_delta_keep_rate(const struct llama_context * ctx);
+
 #ifdef __cplusplus
 }
 #endif

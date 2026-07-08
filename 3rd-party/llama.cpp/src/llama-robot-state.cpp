@@ -6,6 +6,7 @@
 #include "llama-hparams.h"
 #include "llama-impl.h"
 #include "llama-model.h"
+#include "llama-robot-delta.h"
 #include "llama-robot-memory.h"
 #include "llama-robot-model.h"
 #include "llama-robot-shim.h"
@@ -72,6 +73,30 @@ void llm_graph_input_robot::set_input(const llama_ubatch * ubatch) {
             ggml_backend_tensor_set(t, zeros.data(), 0, n * sizeof(float));
         }
     }
+
+    // E6 delta: holds, fatigue, and the sign-biased heartbeat force flag
+    if (delta_force != nullptr) {
+        const bool force = st != nullptr && iface != nullptr && llama_robot_delta_force_dense(*iface, *st);
+        const float f = force ? 0.5f : -0.5f;
+        ggml_backend_tensor_set(delta_force, &f, 0, sizeof(float));
+    }
+    for (const auto & d : delta_in) {
+        const llama_robot_context_state::delta_block * b = nullptr;
+        if (st != nullptr) {
+            for (const auto & cand : st->delta) {
+                if (cand.layer == d.layer) { b = &cand; break; }
+            }
+        }
+        const size_t n = (size_t) d.held_in->ne[0];
+        std::vector<float> zeros;
+        if (b == nullptr || b->held_in.size() != n) {
+            zeros.assign(n, 0.0f);
+        }
+        ggml_backend_tensor_set(d.held_in,  b != nullptr ? b->held_in.data()  : zeros.data(), 0, n * sizeof(float));
+        ggml_backend_tensor_set(d.held_out, b != nullptr ? b->held_out.data() : zeros.data(), 0, n * sizeof(float));
+        const float fat = b != nullptr ? b->fatigue : 0.0f;
+        ggml_backend_tensor_set(d.fatigue, &fat, 0, sizeof(float));
+    }
 }
 
 //
@@ -80,7 +105,7 @@ void llm_graph_input_robot::set_input(const llama_ubatch * ubatch) {
 
 void llama_robot_state_prepare(llama_context * ctx) {
     const auto * iface = dynamic_cast<const llama_robot_model_iface *>(&ctx->get_model());
-    if (iface == nullptr || !llama_robot_state_enabled(*iface)) {
+    if (iface == nullptr || (!llama_robot_state_enabled(*iface) && !llama_robot_delta_feature(*iface))) {
         return;
     }
 
@@ -91,6 +116,8 @@ void llama_robot_state_prepare(llama_context * ctx) {
     if (st->state_ready) {
         return;
     }
+
+    llama_robot_delta_prepare(*iface, *st, ctx->get_model().hparams.n_embd);
 
     if (iface->robot.has_feature(LLAMA_ROBOT_FEATURE_MODULATOR)) {
         st->m.assign(iface->robot.modulator.dim, 0.0f);
@@ -140,6 +167,9 @@ void llama_robot_state_capture(llama_context * ctx, llm_graph_result * res, cons
     const auto * iface = dynamic_cast<const llama_robot_model_iface *>(&ctx->get_model());
     if (iface != nullptr) {
         llama_robot_memory_update(*iface, *st, res, ubatch);
+
+        // E6: fire flags → compute trace, refreshed holds, heartbeat counter
+        llama_robot_delta_capture(*iface, *st, res, ubatch != nullptr ? ubatch->n_tokens : 1);
     }
 }
 
@@ -223,4 +253,7 @@ void llama_robot_validate_grafts(const llama_robot_model_iface & iface, const ll
 
     // E5 memory-head tensors (requires taps + modulator; value_dim == M)
     llama_robot_memory_validate(iface);
+
+    // E6 delta thresholds / excitability (coverage from theta_base presence)
+    llama_robot_delta_validate(iface, hparams);
 }

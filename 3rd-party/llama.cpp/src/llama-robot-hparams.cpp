@@ -165,6 +165,7 @@ static const std::set<llama_robot_feature> LLAMA_ROBOT_FEATURES_IMPLEMENTED = {
     LLAMA_ROBOT_FEATURE_STATE,     // E4 — grafted leaky state banks
     LLAMA_ROBOT_FEATURE_MODULATOR, // E4 — modulator bus m + FiLM gating
     LLAMA_ROBOT_FEATURE_MEMORY,    // E5 — salience-gated episodic store feeding m
+    LLAMA_ROBOT_FEATURE_DELTA,     // E6 — change-triggered execution (off by default per context)
 };
 
 const char * llama_robot_feature_name(llama_robot_feature f) {

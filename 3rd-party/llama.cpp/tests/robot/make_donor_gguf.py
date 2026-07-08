@@ -25,10 +25,11 @@ def t(*shape):
     return (rng.standard_normal(shape) * 0.02).astype(np.float32)
 
 
-def write_model(path, arch, robot, taps=False, l2=None):
-    """l2: None, or dict(film=bool, state=bool) — L2 file with zero grafts by
-    default; film=True primes beta on channel 0, state=True makes the leaky
-    state branch live (nonzero in/out projections)."""
+def write_model(path, arch, robot, taps=False, l2=None, delta=None, n_layer=N_LAYER):
+    """l2: None, or dict(film=bool, state=bool, mem=None|'manual'|'auto').
+    delta: None, or dict(theta=float, heartbeat=int) — delta-covered blocks
+    1..n_layer-1 with the given base threshold, plus a modulator bus wired to
+    excitability on channel 0."""
     global rng
     rng = np.random.default_rng(42)  # identical weights in all twins
     w = gguf.GGUFWriter(path, arch)
@@ -37,7 +38,7 @@ def write_model(path, arch, robot, taps=False, l2=None):
     prefix = "llama"
     w.add_uint32(f"{prefix}.context_length", N_CTX)
     w.add_uint32(f"{prefix}.embedding_length", N_EMBD)
-    w.add_uint32(f"{prefix}.block_count", N_LAYER)
+    w.add_uint32(f"{prefix}.block_count", n_layer)
     w.add_uint32(f"{prefix}.feed_forward_length", N_FF)
     w.add_uint32(f"{prefix}.attention.head_count", N_HEAD)
     w.add_uint32(f"{prefix}.attention.head_count_kv", N_HEAD_KV)
@@ -88,6 +89,15 @@ def write_model(path, arch, robot, taps=False, l2=None):
         elif taps:
             w.add_uint32("therobot.level", 1)
             w.add_array("therobot.features", ["taps"])
+        elif delta is not None:
+            w.add_uint32("therobot.level", 3)
+            w.add_array("therobot.features", ["delta", "modulator"])
+            w.add_string("therobot.delta.granularity", "block")
+            w.add_uint32("therobot.delta.heartbeat", delta["heartbeat"])
+            w.add_float32("therobot.delta.target_keep_rate", 0.5)
+            w.add_uint32("therobot.modulator.dim", 4)
+            w.add_array("therobot.modulator.channels", ["arousal", "valence", "attention", "energy"])
+            w.add_string("therobot.modulator.source", "pooled")
         else:
             w.add_uint32("therobot.level", 0)
             w.add_array("therobot.features", [])
@@ -114,7 +124,7 @@ def write_model(path, arch, robot, taps=False, l2=None):
     w.add_tensor("token_embd.weight", t(N_VOCAB, N_EMBD))
     w.add_tensor("output_norm.weight", np.ones((N_EMBD,), dtype=np.float32))
     w.add_tensor("output.weight", t(N_VOCAB, N_EMBD))
-    for i in range(N_LAYER):
+    for i in range(n_layer):
         w.add_tensor(f"blk.{i}.attn_norm.weight", np.ones((N_EMBD,), dtype=np.float32))
         w.add_tensor(f"blk.{i}.attn_q.weight", t(N_EMBD, N_EMBD))
         w.add_tensor(f"blk.{i}.attn_k.weight", t(N_EMBD, N_EMBD))
@@ -125,7 +135,7 @@ def write_model(path, arch, robot, taps=False, l2=None):
         w.add_tensor(f"blk.{i}.ffn_down.weight", t(N_EMBD, N_FF))
         w.add_tensor(f"blk.{i}.ffn_up.weight", t(N_FF, N_EMBD))
 
-    if robot and l2 is None:
+    if robot and l2 is None and delta is None:
         # an extension tensor the wrapper must claim for accounting to balance
         w.add_tensor("robot.mod.alpha", np.zeros((8,), dtype=np.float32))
     if taps or l2 is not None:
@@ -157,6 +167,20 @@ def write_model(path, arch, robot, taps=False, l2=None):
         if l2.get("film"):
             beta_w[:, 0] = 1.0  # β_j = m[0] for every channel j
         w.add_tensor("blk.0.robot_film.beta.weight", beta_w)
+    if delta is not None:
+        M = 4
+        for L in range(1, n_layer):
+            w.add_tensor(f"blk.{L}.robot_delta.theta_base",
+                         np.array([delta["theta"]], dtype=np.float32))
+        # excitability: m[arousal] lowers thresholds by 1e6 per unit
+        exc = np.zeros((1, M), dtype=np.float32)
+        exc[0, 0] = 1.0e6
+        w.add_tensor("robot.delta.excitability.weight", exc)
+        # modulator grafts (pool/cell zero: m moves only via mod_set + decay)
+        w.add_tensor("robot.mod.alpha", np.zeros((M,), dtype=np.float32))
+        w.add_tensor("robot.mod.pool.weight", np.zeros((M, N_EMBD), dtype=np.float32))
+        w.add_tensor("robot.mod.cell.weight", np.zeros((M, M), dtype=np.float32))
+    if l2 is not None:
         mem = l2.get("mem")
         if mem:
             D = 16  # Σ bottleneck widths (8 + 8)
@@ -188,3 +212,10 @@ write_model(f"{out_dir}/tiny-llama-l2-mem.gguf", "therobot", robot=True,
             l2={"film": True, "mem": "manual"})  # memory via explicit writes; β = m[0] makes recall visible
 write_model(f"{out_dir}/tiny-llama-l2-mem-auto.gguf", "therobot", robot=True,
             l2={"film": True, "mem": "auto"})    # salience-gated auto-writes
+# E6 delta fixtures (3 layers → blocks 1 and 2 covered)
+write_model(f"{out_dir}/tiny-llama-delta-lo.gguf", "therobot", robot=True, n_layer=3,
+            delta={"theta": 0.0, "heartbeat": 4})      # θ=0: every block always fires
+write_model(f"{out_dir}/tiny-llama-delta-hi.gguf", "therobot", robot=True, n_layer=3,
+            delta={"theta": 1.0e6, "heartbeat": 4})    # fires only on heartbeat/excitability
+write_model(f"{out_dir}/tiny-llama-delta-nohb.gguf", "therobot", robot=True, n_layer=3,
+            delta={"theta": 1.0e6, "heartbeat": 1000}) # effectively no heartbeat

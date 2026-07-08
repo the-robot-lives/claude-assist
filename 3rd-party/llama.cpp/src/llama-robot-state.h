@@ -44,7 +44,8 @@ struct llama_robot_context_state;
 // on those; zero-filled defensively anyway).
 class llm_graph_input_robot : public llm_graph_input_i {
 public:
-    explicit llm_graph_input_robot(const llama_robot_context_state * st) : st(st) {}
+    llm_graph_input_robot(const llama_robot_model_iface * iface, const llama_robot_context_state * st)
+        : iface(iface), st(st) {}
     virtual ~llm_graph_input_robot() = default;
 
     void set_input(const llama_ubatch * ubatch) override;
@@ -54,12 +55,25 @@ public:
         return params.robot == st;
     }
 
+    const llama_robot_model_iface   * iface;
     const llama_robot_context_state * st;
 
     ggml_tensor * m_in      = nullptr; // [M]
     ggml_tensor * mean_w    = nullptr; // [T*] pooled-mean weights (1/n each)
     ggml_tensor * recall_in = nullptr; // [M] episodic recall (E5), lags one decode
     std::vector<std::pair<uint32_t, ggml_tensor *>> s_in; // (layer, [S])
+
+    // E6 delta: per covered block (layer, held_in [n_embd], held_out [n_embd],
+    // fatigue [1]) plus the shared heartbeat force flag [1], pushed sign-biased
+    // (+0.5 forces a dense sweep, −0.5 leaves the threshold decision alone)
+    struct delta_inputs {
+        uint32_t layer = 0;
+        ggml_tensor * held_in  = nullptr;
+        ggml_tensor * held_out = nullptr;
+        ggml_tensor * fatigue  = nullptr;
+    };
+    ggml_tensor * delta_force = nullptr;
+    std::vector<delta_inputs> delta_in;
 };
 
 // true if the model carries E4 features (state banks and/or modulator)
