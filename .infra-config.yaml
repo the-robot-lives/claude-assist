@@ -261,6 +261,7 @@ chart_path_overrides:
   noizu-site: projects/noizu.com/helm/noizu-site
   npl-mcp: projects/NoizuPromptLingo/helm/npl-mcp
   therobotlives: projects/therobotlives.com/helm/therobotlives
+  start-app: components/start-app/helm/start-app
   therobotplans: projects/therobotplans.com/helm/therobotplans
   tobornalp: projects/tobornalp.com/helm/therobotplans
   ddi: projects/designing.derobot.is/helm/ddi
@@ -409,23 +410,30 @@ liquibase_targets:
     changelog_file: changelog/db.changelog-master.yaml
 
   start-app:
-    description: "Start App PostgreSQL on shared-postgres"
-    namespace: data-ns
-    service: svc/shared-postgres
+    description: "Start-App scaffold database on app-timescaledb"
+    namespace: apps
+    service: svc/app-timescaledb
     remote_port: 5432
     local_port: 54320
     db_type: postgresql
-    db_name: startapp
+    db_name: start_app
     schema: public
-    secret_name: data-postgres-secrets
-    username_key: STARTAPP_DB_USER
-    username_key_fallbacks:
-      - START_APP_DB_USER
-    secret_key: STARTAPP_DB_PASSWORD
-    secret_key_fallbacks:
-      - START_APP_DB_PASSWORD
+    secret_name: startapp-secrets
+    secret_namespace: apps
+    username: startapp
+    secret_key: START_APP_DB_PASSWORD
     safety: destructive
-    changelog_dir: incubator/start-app/backend/db
+    # provision-db: role creds from dc, superuser from the live instance secret
+    role_password_dc: "services apps.startapp_db_password"
+    admin_secret: app-timescaledb-secrets
+    # Valkey/Redis ACL user on app-valkey (provision: `provision-db start-app --redis-only`)
+    redis_password_dc: "services apps.startapp_valkey_password"
+    redis_service: svc/app-valkey
+    redis_user: startapp
+    redis_admin_secret: app-valkey-secrets
+    # superuser-only extensions the changelog needs pre-created (pgvector et al.)
+    extensions: [citext, uuid-ossp, vector, cube, pg_trgm, earthdistance]
+    changelog_dir: components/start-app/backend/db
     changelog_file: changelog/db.changelog-master.yaml
 
   mermaid:
@@ -626,7 +634,7 @@ project:
           platform: linux/amd64
           auto_detect: false
           helm:
-            chart_path: kubernetes/helm/apps/start-app
+            chart_path: components/start-app/helm/start-app
             values_path: .start-app.backend.image
             format: image
         - name: frontend
@@ -635,16 +643,16 @@ project:
           registry_path: start-app/frontend
           platform: linux/amd64
           build_args:
-            NEXT_PUBLIC_API_URL: https://start-app.noizu.com
+            NEXT_PUBLIC_API_URL: https://starter.therobotlives.com
           auto_detect: false
           helm:
-            chart_path: kubernetes/helm/apps/start-app
+            chart_path: components/start-app/helm/start-app
             values_path: .start-app.frontend.image
             format: image
       helm:
         charts:
           - name: start-app
-            path: kubernetes/helm/apps/start-app
+            path: components/start-app/helm/start-app
     - domain: noizu.com
       services:
         - name: backend
