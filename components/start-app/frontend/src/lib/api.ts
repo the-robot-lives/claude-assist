@@ -1,4 +1,4 @@
-import { getRuntimeConfig } from "@/lib/runtime-config";
+import { getRuntimeConfig, runtimeCookieDomainAttribute } from "@/lib/runtime-config";
 
 function apiUrl() {
   return getRuntimeConfig().API_URL || process.env.NEXT_PUBLIC_API_URL || "";
@@ -67,12 +67,16 @@ interface PasswordResetResponse {
 let refreshPromise: Promise<string | null> | null = null;
 
 function authCookie(value: string | null) {
-  const cookieDomain = getRuntimeConfig().COOKIE_DOMAIN;
-  const domain = cookieDomain ? `; Domain=${cookieDomain}` : "";
-  if (value) {
-    document.cookie = `access_token=${value}; path=/; max-age=${60 * 60}; SameSite=Lax${domain}`;
-  } else {
-    document.cookie = `access_token=; path=/; max-age=0; SameSite=Lax${domain}`;
+  if (typeof document === "undefined") return;
+  const domain = runtimeCookieDomainAttribute();
+  try {
+    if (value) {
+      document.cookie = `access_token=${value}; path=/; max-age=${60 * 60}; SameSite=Lax${domain}`;
+    } else {
+      document.cookie = `access_token=; path=/; max-age=0; SameSite=Lax${domain}`;
+    }
+  } catch {
+    // Localhost or strict browser policies can reject Domain cookies; localStorage remains canonical.
   }
 }
 

@@ -1,9 +1,9 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState, useCallback } from "react";
+import { createContext, useContext, useEffect, useMemo, useState, useCallback } from "react";
 import { api, type Organization, type RegisterPayload, type User } from "@/lib/api";
 import { analytics } from "@/lib/analytics";
-import { getRuntimeConfig } from "@/lib/runtime-config";
+import { runtimeCookieDomainAttribute } from "@/lib/runtime-config";
 
 interface AuthContextType {
   user: User | null;
@@ -19,16 +19,26 @@ interface AuthContextType {
   logout: () => void;
 }
 
+type AuthResponsePayload = {
+  user: User;
+  access_token: string;
+  refresh_token: string;
+  organizations?: Organization[];
+};
+
 const AuthContext = createContext<AuthContextType | null>(null);
 
 function setAuthCookie(token: string | null) {
   if (typeof document === "undefined") return;
-  const cookieDomain = getRuntimeConfig().COOKIE_DOMAIN;
-  const domain = cookieDomain ? `; Domain=${cookieDomain}` : "";
-  if (token) {
-    document.cookie = `access_token=${token}; path=/; max-age=${60 * 60}; SameSite=Lax${domain}`;
-  } else {
-    document.cookie = `access_token=; path=/; max-age=0; SameSite=Lax${domain}`;
+  const domain = runtimeCookieDomainAttribute();
+  try {
+    if (token) {
+      document.cookie = `access_token=${token}; path=/; max-age=${60 * 60}; SameSite=Lax${domain}`;
+    } else {
+      document.cookie = `access_token=; path=/; max-age=0; SameSite=Lax${domain}`;
+    }
+  } catch {
+    // Localhost or strict browser policies can reject Domain cookies; localStorage remains canonical.
   }
 }
 
@@ -76,83 +86,96 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     loadUser();
   }, [loadUser]);
 
-  async function login(email: string, password: string) {
+  const applyAuthResponse = useCallback(
+    (
+      res: AuthResponsePayload,
+      options: { identify?: boolean; trackMethod?: string } = {}
+    ) => {
+      const identify = options.identify ?? true;
+      localStorage.setItem("access_token", res.access_token);
+      localStorage.setItem("refresh_token", res.refresh_token);
+      setAuthCookie(res.access_token);
+      setUser(res.user);
+      setOrganizations(res.organizations ?? []);
+      if (identify) analytics.identify({ id: res.user.id, email: res.user.email });
+      if (options.trackMethod) {
+        analytics.trackEvent({ name: "login", properties: { method: options.trackMethod } });
+      }
+      return res.user;
+    },
+    []
+  );
+
+  const login = useCallback(async (email: string, password: string) => {
     const res = await api.login(email, password);
-    localStorage.setItem("access_token", res.access_token);
-    localStorage.setItem("refresh_token", res.refresh_token);
-    setAuthCookie(res.access_token);
-    setUser(res.user);
-    setOrganizations(res.organizations ?? []);
-    analytics.identify({ id: res.user.id, email: res.user.email });
-    analytics.trackEvent({ name: "login", properties: { method: "password" } });
-    return res.user;
-  }
+    return applyAuthResponse(res, { trackMethod: "password" });
+  }, [applyAuthResponse]);
 
-  async function register(payload: RegisterPayload) {
+  const register = useCallback(async (payload: RegisterPayload) => {
     const res = await api.register(payload);
-    localStorage.setItem("access_token", res.access_token);
-    localStorage.setItem("refresh_token", res.refresh_token);
-    setAuthCookie(res.access_token);
-    setUser(res.user);
-    setOrganizations(res.organizations ?? []);
-    return res.user;
-  }
+    return applyAuthResponse(res, { identify: false });
+  }, [applyAuthResponse]);
 
-  async function requestMagicLink(email: string) {
+  const requestMagicLink = useCallback(async (email: string) => {
     return api.requestMagicLink(email);
-  }
+  }, []);
 
-  async function loginWithMagicLink(token: string) {
+  const loginWithMagicLink = useCallback(async (token: string) => {
     const res = await api.verifyMagicLink(token);
-    localStorage.setItem("access_token", res.access_token);
-    localStorage.setItem("refresh_token", res.refresh_token);
-    setAuthCookie(res.access_token);
-    setUser(res.user);
-    setOrganizations(res.organizations ?? []);
-    analytics.identify({ id: res.user.id, email: res.user.email });
-    analytics.trackEvent({ name: "login", properties: { method: "magic_link" } });
-    return res.user;
-  }
+    return applyAuthResponse(res, { trackMethod: "magic_link" });
+  }, [applyAuthResponse]);
 
-  async function requestOtpLogin(email: string) {
+  const requestOtpLogin = useCallback(async (email: string) => {
     return api.requestOtpLogin(email);
-  }
+  }, []);
 
-  async function verifyOtpLogin(email: string, code: string) {
+  const verifyOtpLogin = useCallback(async (email: string, code: string) => {
     const res = await api.verifyOtpLogin(email, code);
-    localStorage.setItem("access_token", res.access_token);
-    localStorage.setItem("refresh_token", res.refresh_token);
-    setAuthCookie(res.access_token);
-    setUser(res.user);
-    setOrganizations(res.organizations ?? []);
-    analytics.identify({ id: res.user.id, email: res.user.email });
-    analytics.trackEvent({ name: "login", properties: { method: "otp" } });
-    return res.user;
-  }
+    return applyAuthResponse(res, { trackMethod: "otp" });
+  }, [applyAuthResponse]);
 
-  async function ssoExchange(code: string) {
+  const ssoExchange = useCallback(async (code: string) => {
     const res = await api.ssoExchange(code);
-    localStorage.setItem("access_token", res.access_token);
-    localStorage.setItem("refresh_token", res.refresh_token);
-    setAuthCookie(res.access_token);
-    setUser(res.user);
-    setOrganizations(res.organizations ?? []);
-    analytics.identify({ id: res.user.id, email: res.user.email });
-    analytics.trackEvent({ name: "login", properties: { method: "sso" } });
-    return res.user;
-  }
+    return applyAuthResponse(res, { trackMethod: "sso" });
+  }, [applyAuthResponse]);
 
-  function logout() {
+  const logout = useCallback(() => {
     localStorage.removeItem("access_token");
     localStorage.removeItem("refresh_token");
     setAuthCookie(null);
     setUser(null);
     setOrganizations([]);
     analytics.reset();
-  }
+  }, []);
+
+  const value = useMemo<AuthContextType>(() => ({
+    user,
+    loading,
+    organizations,
+    login,
+    register,
+    requestMagicLink,
+    loginWithMagicLink,
+    requestOtpLogin,
+    verifyOtpLogin,
+    ssoExchange,
+    logout,
+  }), [
+    user,
+    loading,
+    organizations,
+    login,
+    register,
+    requestMagicLink,
+    loginWithMagicLink,
+    requestOtpLogin,
+    verifyOtpLogin,
+    ssoExchange,
+    logout,
+  ]);
 
   return (
-    <AuthContext.Provider value={{ user, loading, organizations, login, register, requestMagicLink, loginWithMagicLink, requestOtpLogin, verifyOtpLogin, ssoExchange, logout }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );

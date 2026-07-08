@@ -24,6 +24,11 @@ function ssoEmail() {
   return `ada@${Cypress.env("ssoDomain")}`;
 }
 
+function dismissCookieBanner() {
+  cy.contains("button", "Reject optional", { timeout: 10_000 }).click({ force: true });
+  cy.get(".cookie-consent").should("not.exist");
+}
+
 Given("SSO is configured for the generated app", () => {
   cy.intercept("GET", "**/api/v1/auth/sso/providers", {
     statusCode: 200,
@@ -73,10 +78,12 @@ Given("SSO exchange returns an incomplete generated app user", () => {
 
 When("I open the login page", () => {
   cy.visit("/login");
+  dismissCookieBanner();
 });
 
 When("I open the signup page", () => {
   cy.visit("/signup");
+  dismissCookieBanner();
 });
 
 When("I open the generated app home page", () => {
@@ -137,8 +144,8 @@ Then("I should be on the pending approval page", () => {
 });
 
 Then("I should be on the complete registration page", () => {
-  cy.wait("@ssoExchange");
-  cy.location("pathname").should("eq", "/complete-registration");
+  cy.wait("@ssoExchange").its("response.statusCode").should("eq", 200);
+  cy.location("pathname", { timeout: 10_000 }).should("eq", "/complete-registration");
 });
 
 Then("the saved cookie preferences should keep necessary cookies enabled", () => {
