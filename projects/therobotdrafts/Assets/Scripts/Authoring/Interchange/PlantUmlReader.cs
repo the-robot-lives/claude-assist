@@ -580,12 +580,13 @@ namespace TheRobotDraft.Authoring.Interchange
             string line = lines[i];
             string body = Regex.Replace(line, @"^[rh]?note\s+", "", RegexOptions.IgnoreCase);
 
-            // `note "text" as N`
+            // `note "text" as N` — decode the writer's \n escapes back into real newlines.
             var named = Regex.Match(body, @"^""([^""]*)""\s+as\s+(\S+)\s*$", RegexOptions.IgnoreCase);
             if (named.Success)
             {
-                var el = ctx.Declare(named.Groups[2].Value, named.Groups[1].Value, IxElementType.Note);
-                el.Documentation = named.Groups[1].Value;
+                string noteText = named.Groups[1].Value.Replace("\\n", "\n");
+                var el = ctx.Declare(named.Groups[2].Value, noteText, IxElementType.Note);
+                el.Documentation = noteText;
                 return i;
             }
 

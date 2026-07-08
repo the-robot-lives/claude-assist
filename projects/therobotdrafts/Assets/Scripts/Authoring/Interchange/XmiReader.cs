@@ -128,6 +128,20 @@ namespace TheRobotDraft.Authoring.Interchange
                 case "DataType":
                     EmitClassifier(pe, parentId, IxElementType.DataType, ctx);
                     break;
+                // Real UML metaclasses our writer uses for non-class-model kinds; a trdKind marker in
+                // the extension may still refine these (e.g. Component stays Component).
+                case "Artifact":
+                    EmitClassifier(pe, parentId, IxElementType.Artifact, ctx);
+                    break;
+                case "Actor":
+                    EmitClassifier(pe, parentId, IxElementType.Actor, ctx);
+                    break;
+                case "UseCase":
+                    EmitClassifier(pe, parentId, IxElementType.UseCase, ctx);
+                    break;
+                case "Component":
+                    EmitClassifier(pe, parentId, IxElementType.Component, ctx);
+                    break;
                 case "PrimitiveType":
                     // Registered as a type target already; only surfaces as an element if it has members.
                     if (HasMembers(pe)) EmitClassifier(pe, parentId, IxElementType.DataType, ctx);
@@ -418,25 +432,51 @@ namespace TheRobotDraft.Authoring.Interchange
 
         private static void ReadExtension(XElement ext, Ctx ctx)
         {
-            // (a) documentation fallback — apply only when the standard model gave us nothing.
+            // (a) Per-element metadata refines the element the standard model already produced:
+            //     documentation + stereotype fill in when absent; a trdKind marker restores an
+            //     IxElementType that had to serialize as uml:Class (Table/Boundary/Struct/State/…).
             foreach (var block in ext.Elements().Where(e => e.Name.LocalName == "elements"))
                 foreach (var el in block.Elements().Where(e => e.Name.LocalName == "element"))
                 {
                     string idref = XmiIdref(el);
                     if (idref == null) continue;
-                    string documentation = Plain(el, "documentation");
-                    if (string.IsNullOrEmpty(documentation))
-                    {
-                        var props = el.Elements().FirstOrDefault(x => x.Name.LocalName == "properties");
-                        if (props != null) documentation = Plain(props, "documentation");
-                    }
-                    if (string.IsNullOrEmpty(documentation)) continue;
                     var target = ctx.Model.Elements.FirstOrDefault(x => x.Id == idref || x.ExternalUuid == idref);
-                    if (target != null && string.IsNullOrEmpty(target.Documentation))
+                    if (target == null) continue;
+                    var props = el.Elements().FirstOrDefault(x => x.Name.LocalName == "properties");
+
+                    string documentation = Plain(el, "documentation") ?? (props != null ? Plain(props, "documentation") : null);
+                    if (!string.IsNullOrEmpty(documentation) && string.IsNullOrEmpty(target.Documentation))
                         target.Documentation = documentation;
+
+                    string stereotype = Plain(el, "stereotype") ?? (props != null ? Plain(props, "stereotype") : null);
+                    if (!string.IsNullOrEmpty(stereotype) && string.IsNullOrEmpty(target.Stereotype))
+                        target.Stereotype = stereotype;
+
+                    string kind = Plain(el, "trdKind") ?? (props != null ? Plain(props, "trdKind") : null);
+                    if (!string.IsNullOrEmpty(kind) && Enum.TryParse(kind, out IxElementType parsed)
+                        && Enum.IsDefined(typeof(IxElementType), parsed))
+                        target.Type = parsed;
+                    else if (!string.IsNullOrEmpty(stereotype) && target.Type == IxElementType.Class
+                             && stereotype.Equals("table", StringComparison.OrdinalIgnoreCase))
+                        target.Type = IxElementType.Table; // EA «table» class → ERD entity
                 }
 
-            // (b) diagrams — the only place layout coordinates live.
+            // (b) Non-native edge kinds: a marked connector restores the exact IxEdgeType onto the
+            //     Dependency the standard model produced.
+            foreach (var block in ext.Elements().Where(e => e.Name.LocalName == "connectors"))
+                foreach (var conn in block.Elements().Where(e => e.Name.LocalName == "connector"))
+                {
+                    string idref = XmiIdref(conn);
+                    if (idref == null) continue;
+                    var props = conn.Elements().FirstOrDefault(x => x.Name.LocalName == "properties");
+                    string kind = Plain(conn, "trdKind") ?? (props != null ? Plain(props, "trdKind") : null);
+                    if (string.IsNullOrEmpty(kind)) continue;
+                    if (!Enum.TryParse(kind, out IxEdgeType ek) || !Enum.IsDefined(typeof(IxEdgeType), ek)) continue;
+                    var edge = ctx.Model.Edges.FirstOrDefault(x => x.ExternalUuid == idref || x.Id == idref);
+                    if (edge != null) edge.Type = ek;
+                }
+
+            // (c) diagrams — the only place layout coordinates live.
             foreach (var block in ext.Elements().Where(e => e.Name.LocalName == "diagrams"))
                 foreach (var d in block.Elements().Where(e => e.Name.LocalName == "diagram"))
                 {
@@ -602,7 +642,8 @@ namespace TheRobotDraft.Authoring.Interchange
 
         private static bool IsClassifierType(string tl) =>
             tl == "Class" || tl == "Interface" || tl == "Enumeration" ||
-            tl == "DataType" || tl == "PrimitiveType" || tl == "AssociationClass";
+            tl == "DataType" || tl == "PrimitiveType" || tl == "AssociationClass" ||
+            tl == "Artifact" || tl == "Actor" || tl == "UseCase" || tl == "Component";
 
         private static bool HasMembers(XElement pe) =>
             pe.Elements().Any(e => e.Name.LocalName == "ownedAttribute" || e.Name.LocalName == "ownedOperation");

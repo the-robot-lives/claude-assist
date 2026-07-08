@@ -49,7 +49,9 @@ namespace TheRobotDraft.Authoring.Interchange
             if (text == null) throw new InterchangeException("Mermaid input is null.");
 
             var ctx = new Ctx { Model = new IxModel() };
-            foreach (var line in Preprocess(text))
+            var bodyLines = Preprocess(text, out string title);
+            if (title != null) ctx.Model.Name = title;
+            foreach (var line in bodyLines)
             {
                 string s = line.Trim();
                 if (s.Length == 0) continue;
@@ -117,8 +119,9 @@ namespace TheRobotDraft.Authoring.Interchange
 
         // --- envelope --------------------------------------------------------------------------
 
-        private static IEnumerable<string> Preprocess(string text)
+        private static IEnumerable<string> Preprocess(string text, out string title)
         {
+            title = null;
             var raw = text.Replace("\r\n", "\n").Replace("\r", "\n").Split('\n');
             int p = 0;
             while (p < raw.Length && raw[p].Trim().Length == 0) p++;
@@ -126,7 +129,19 @@ namespace TheRobotDraft.Authoring.Interchange
             if (p < raw.Length && raw[p].Trim() == "---")
             {
                 int q = p + 1;
-                while (q < raw.Length && raw[q].Trim() != "---") q++;
+                while (q < raw.Length && raw[q].Trim() != "---")
+                {
+                    // Recover the diagram name from `title:`; every other frontmatter key is skipped.
+                    var t = raw[q].Trim();
+                    if (title == null && t.StartsWith("title:"))
+                    {
+                        string v = t.Substring("title:".Length).Trim();
+                        if (v.Length >= 2 && ((v[0] == '"' && v[v.Length - 1] == '"') || (v[0] == '\'' && v[v.Length - 1] == '\'')))
+                            v = v.Substring(1, v.Length - 2);
+                        title = NullIfEmpty(v);
+                    }
+                    q++;
+                }
                 start = q < raw.Length ? q + 1 : raw.Length; // drop frontmatter (and skip a stray unterminated one)
             }
             var outp = new List<string>();

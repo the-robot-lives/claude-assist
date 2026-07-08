@@ -303,6 +303,76 @@ namespace TheRobotDraft.Authoring.Tests
             Assert.AreEqual("Ordering", back.Name, "@startuml Name recovered into IxModel.Name");
         }
 
+        [Test]
+        public void RoundTrip_GuidIds_And_Illegal_Names_Survive()
+        {
+            // Mirrors the EA (.qea) failure: element Ids are {GUID}s (illegal as PlantUML aliases — braces collide
+            // with the block-open), names carry spaces, and two names collide only by case ("User" vs "user", which
+            // the reader resolves case-insensitively). Every edge kind + a multi-line floating note must survive.
+            const string g1 = "{1FF1E529-6C52-495a-8E82-16DDB661B518}";
+            const string g2 = "{0EE354FE-0590-419a-91A4-969FFE94D9D6}";
+            const string g3 = "{42F2ED36-5004-45e2-9C99-27A3AF34F55E}";
+            const string g4 = "{206C1234-98F3-4bc1-954F-D92E1F036EFB}";
+            const string g5 = "{C704DC3B-9416-459c-AF31-C52BD2454979}";
+            const string g6 = "{8A80B74B-D3BF-434e-9FE6-C18CDDCC41A8}";
+            const string gPkg = "{BB83357A-78B8-4763-B28F-3E98D3AB1B48}";
+            const string gNote = "{AD475F85-81CC-4ca3-9A93-8621DAD62E96}";
+
+            var m = new IxModel();
+            m.Elements.Add(new IxElement { Id = gPkg, Name = "My Package", Type = IxElementType.Package });
+            m.Elements.Add(new IxElement { Id = g1, Name = "User", Type = IxElementType.Class, ParentId = gPkg });
+            m.Elements.Add(new IxElement { Id = g2, Name = "user", Type = IxElementType.Table, ParentId = gPkg }); // case-collides with "User"
+            m.Elements.Add(new IxElement { Id = g3, Name = "Order Item", Type = IxElementType.Class, ParentId = gPkg }); // space
+            m.Elements.Add(new IxElement { Id = g4, Name = "Base", Type = IxElementType.Class, IsAbstract = true, ParentId = gPkg });
+            m.Elements.Add(new IxElement { Id = g5, Name = "Repo", Type = IxElementType.Interface, GenericParams = "T", ParentId = gPkg });
+            var status = new IxElement { Id = g6, Name = "Status", Type = IxElementType.Enum, ParentId = gPkg };
+            status.EnumLiterals.Add("A");
+            status.EnumLiterals.Add("B");
+            m.Elements.Add(status);
+            string noteDoc = "line one\nline two\n\nlast line";
+            m.Elements.Add(new IxElement { Id = gNote, Name = noteDoc, Type = IxElementType.Note, Documentation = noteDoc });
+
+            m.Edges.Add(new IxEdge { Type = IxEdgeType.Generalization, FromId = g1, ToId = g4 });
+            m.Edges.Add(new IxEdge { Type = IxEdgeType.Realization, FromId = g1, ToId = g5 });
+            m.Edges.Add(new IxEdge { Type = IxEdgeType.Composition, FromId = g3, ToId = g6 });
+            m.Edges.Add(new IxEdge { Type = IxEdgeType.Aggregation, FromId = g1, ToId = g6, FromMultiplicity = "1", ToMultiplicity = "0..*" });
+            m.Edges.Add(new IxEdge { Type = IxEdgeType.DirectedAssociation, FromId = g1, ToId = g3, ToMultiplicity = "1", Label = "has" });
+            m.Edges.Add(new IxEdge { Type = IxEdgeType.Association, FromId = g2, ToId = g3 });
+            m.Edges.Add(new IxEdge { Type = IxEdgeType.Dependency, FromId = g3, ToId = g5 });
+            m.Edges.Add(new IxEdge { Type = IxEdgeType.Extension, FromId = g2, ToId = g1 });
+            m.Edges.Add(new IxEdge { Type = IxEdgeType.NoteLink, FromId = gNote, ToId = g1 });
+
+            string puml = PlantUmlWriter.Write(m);
+
+            // No raw {GUID} is ever emitted (as an alias or an endpoint).
+            foreach (string id in new[] { g1, g2, g3, g4, g5, g6, gPkg, gNote })
+            {
+                Assert.IsFalse(puml.Contains(id), "raw Id must not be emitted: " + id);
+            }
+            Assert.IsFalse(Regex.IsMatch(puml, @"\bas \{"), "no alias is a brace GUID");
+
+            IxModel back = PlantUmlReader.Parse(puml);
+
+            // Every element survives (compared by name, since Ids become derived aliases).
+            CollectionAssert.AreEquivalent(
+                m.Elements.Select(e => NameCore(e.Name)).ToList(),
+                back.Elements.Select(e => NameCore(e.Name)).ToList(),
+                "element names survive:\n" + puml);
+
+            // The case-colliding pair stays two distinct elements.
+            Assert.AreEqual(1, back.Elements.Count(e => e.Name == "User"), "Class 'User' distinct");
+            Assert.AreEqual(1, back.Elements.Count(e => e.Name == "user"), "Table 'user' distinct");
+
+            // Every edge kind survives, endpoints intact (matched by endpoint name).
+            List<string> want = m.Edges.Select(e => EdgeKeyByName(m, e)).OrderBy(x => x).ToList();
+            List<string> got = back.Edges.Select(e => EdgeKeyByName(back, e)).OrderBy(x => x).ToList();
+            CollectionAssert.AreEqual(want, got, "edges survive by kind + endpoints:\n" + puml);
+
+            // Floating note survives with its multi-line body intact.
+            IxElement parsedNote = back.Elements.Single(e => e.Type == IxElementType.Note);
+            Assert.AreEqual(noteDoc, parsedNote.Documentation, "multi-line note body round-trips");
+        }
+
         // ------------------------------------------------------------------ fixtures & helpers
 
         private static IxModel Representative()
@@ -433,6 +503,19 @@ namespace TheRobotDraft.Authoring.Tests
         {
             return e.Type + "|" + e.FromId + "->" + e.ToId + "|L=" + e.Label
                    + "|FM=" + e.FromMultiplicity + "|TM=" + e.ToMultiplicity;
+        }
+
+        // Edge key by endpoint *name* (not Id) — for round-trips where format-local Ids change into derived aliases.
+        private static string EdgeKeyByName(IxModel model, IxEdge e)
+        {
+            return e.Type + "|" + NameOf(model, e.FromId) + "->" + NameOf(model, e.ToId)
+                   + "|L=" + e.Label + "|FM=" + e.FromMultiplicity + "|TM=" + e.ToMultiplicity;
+        }
+
+        private static string NameOf(IxModel model, string id)
+        {
+            IxElement el = model.Elements.FirstOrDefault(x => x.Id == id);
+            return NameCore(el != null ? (el.Name ?? el.Id) : id);
         }
     }
 }

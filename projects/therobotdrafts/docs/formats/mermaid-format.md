@@ -34,8 +34,9 @@ classDiagram
     ... body ...
 ```
 
-- **Frontmatter** — an optional leading `---` … `---` YAML block. Skipped whole (an unterminated
-  one is also tolerated).
+- **Frontmatter** — an optional leading `---` … `---` YAML block. The reader recovers `title:` as
+  `IxModel.Name` and skips every other key (an unterminated block is also tolerated). The writer
+  emits `---\ntitle: <Name>\n---` when `IxModel.Name` is set, and nothing otherwise.
 - **Header** — `classDiagram` or `classDiagram-v2`. **Tolerated if missing** (the whole input is
   treated as a body).
 - **Comments** — a line whose first non-whitespace is `%%`. The config directive form
@@ -228,23 +229,39 @@ fields produces no styling:
    `fill,stroke,color` order.
 3. Assign with `class <id> <styleName>` lines, **sorted by id**.
 
-Grouping in emission order (not raw model order) is what makes `parse → write → parse → write` a
-fixed point even with generated `styleN` names.
+Grouping in emission order (not raw model order) is what keeps generated `styleN` names stable
+across re-import.
+
+**Determinism invariant.** `Write` is a pure function, so the same model always yields identical
+bytes. The **first** `Write` may *normalize* the model — packages flatten, empty packages drop, a
+multi-target note splits — so `W1` (from the source model) can differ from `W2` (after one
+read-back). The honest fixed point is therefore **`W2 == W3`**: once a model has been through one
+`write → parse` cycle, `write ∘ parse` is stable. This is asserted directly in the tests.
 
 ---
 
 ## 7. Things a tolerant importer SKIPs
 
-`%%` comments · `%%{init: …}%%` directives · `---` frontmatter · `classDiagram` / `classDiagram-v2`
-header · `direction …` · `click …` / `callback …` / `link …` / `href …` interactions · `style-width`
-and other non-color CSS props · any unrecognized line. None are fatal.
+`%%` comments · `%%{init: …}%%` directives · `---` frontmatter (except `title:`, which becomes the
+model name) · `classDiagram` / `classDiagram-v2` header · `direction …` · `click …` / `callback …` /
+`link …` / `href …` interactions · `style-width` and other non-color CSS props · any unrecognized
+line. None are fatal.
 
 ---
 
 ## 8. Export shape
 
-The writer emits, in order: `classDiagram`, namespaces (with their classes), top-level classes,
-notes, relationships, then the styling block. Example for a small model:
+The writer emits, in order: optional `---title---` frontmatter (when `IxModel.Name` is set),
+`classDiagram`, namespaces (with their classes), top-level classes, notes, relationships, then the
+styling block.
+
+**Notes with several links.** Mermaid's `note for X "…"` binds one note box to exactly one element,
+so a Note that carries multiple `NoteLink` edges is written as **one `note for` line per target**
+(the text repeated). Re-import therefore splits that Note into N separate notes — the note element
+count grows, but **every link is preserved** (no silent drop). A Note with no link becomes a
+standalone `note "…"`.
+
+Example for a small model:
 
 ```mermaid
 classDiagram
@@ -299,6 +316,7 @@ that same id.
 
 | Mermaid | IxModel |
 |---|---|
+| `---\ntitle: N\n---` frontmatter | `IxModel.Name` |
 | `class` / `<<interface>>` / `<<enumeration>>` / `<<abstract>>` | `IxElement.Type` / `IsAbstract` |
 | other `<<stereo>>` | `IxElement.Stereotype` |
 | `Name["label"]` | `Id` + `Name` |
@@ -320,6 +338,9 @@ that same id.
   Association; roles are dropped.
 - **Nested packages** round-trip only one level deep (the writer flattens to one `namespace` per
   package with children; empty packages are dropped).
+- A **note linked to N elements** is written as N `note for` lines and re-imports as N notes: all
+  `NoteLink` edges survive, but the note element count grows by N−1 (see §8). This is a benign
+  normalization, part of why the determinism fixed point is `W2 == W3`, not `W1 == W2`.
 - A single element carrying **both** a custom `Stereotype` and `IsAbstract` emits only the
   stereotype annotation (one `<<…>>` per class on export).
 - `IxMember.RawText` is populated on read but the writer regenerates canonical member text, so

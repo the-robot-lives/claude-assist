@@ -365,5 +365,70 @@ classDiagram
             // and it round-trips back to the same display name
             Assert.AreEqual("Bank Account", El(MermaidReader.Parse(outp), "Bank Account").Name);
         }
+
+        // --- model name (frontmatter title) -----------------------------------------------------
+
+        [Test]
+        public void Model_Name_Round_Trips_Via_Frontmatter_Title()
+        {
+            var g = new IxModel { Name = "My Domain" };
+            g.Elements.Add(new IxElement { Id = "a", Name = "A" });
+            string outp = MermaidWriter.Write(g);
+            StringAssert.StartsWith("---\ntitle: My Domain\n---\n", outp);
+            Assert.AreEqual("My Domain", MermaidReader.Parse(outp).Name);
+        }
+
+        [Test]
+        public void No_Model_Name_Emits_No_Frontmatter()
+        {
+            var g = new IxModel();
+            g.Elements.Add(new IxElement { Id = "a", Name = "A" });
+            StringAssert.StartsWith("classDiagram", MermaidWriter.Write(g));
+        }
+
+        // --- notes with multiple targets --------------------------------------------------------
+
+        [Test]
+        public void Note_With_Multiple_Targets_Preserves_Every_Link()
+        {
+            // One note linked to two elements: Mermaid can't tie one note box to two, so it is written
+            // as two `note for` lines and re-imports as two notes — but all links survive (no silent drop).
+            var g = new IxModel();
+            g.Elements.Add(new IxElement { Id = "a", Name = "A" });
+            g.Elements.Add(new IxElement { Id = "b", Name = "B" });
+            g.Elements.Add(new IxElement { Id = "n", Name = "n", Type = IxElementType.Note, Documentation = "shared note" });
+            g.Edges.Add(new IxEdge { Type = IxEdgeType.NoteLink, FromId = "n", ToId = "a" });
+            g.Edges.Add(new IxEdge { Type = IxEdgeType.NoteLink, FromId = "n", ToId = "b" });
+
+            string outp = MermaidWriter.Write(g);
+            Assert.AreEqual(2, outp.Split('\n').Count(l => l.TrimStart().StartsWith("note for ")), "one note-for per target");
+
+            var m = MermaidReader.Parse(outp);
+            Assert.AreEqual(2, m.Edges.Count(e => e.Type == IxEdgeType.NoteLink), "both links preserved");
+            var targets = m.Edges.Where(e => e.Type == IxEdgeType.NoteLink).Select(e => NameOf(m, e.ToId)).OrderBy(x => x).ToArray();
+            CollectionAssert.AreEqual(new[] { "A", "B" }, targets);
+        }
+
+        // --- determinism after normalization ----------------------------------------------------
+
+        [Test]
+        public void Write_Parse_Is_A_Fixed_Point_After_One_Normalization_Cycle()
+        {
+            // The first Write may normalize (flatten packages, split a multi-target note), so W1 can
+            // differ from W2. The honest invariant is that write∘parse is stable thereafter: W2 == W3.
+            var g = new IxModel { Name = "Sample" };
+            var pkg = new IxElement { Id = "p", Name = "pkg", Type = IxElementType.Package };
+            var a = new IxElement { Id = "a", Name = "A", ParentId = "p", FillColor = "#112233", StyleClass = "s" };
+            var b = new IxElement { Id = "b", Name = "B", ParentId = "p", FillColor = "#112233", StyleClass = "s" };
+            var note = new IxElement { Id = "n", Name = "n", Type = IxElementType.Note, Documentation = "shared" };
+            g.Elements.Add(pkg); g.Elements.Add(a); g.Elements.Add(b); g.Elements.Add(note);
+            g.Edges.Add(new IxEdge { Type = IxEdgeType.Generalization, FromId = "b", ToId = "a" });
+            g.Edges.Add(new IxEdge { Type = IxEdgeType.NoteLink, FromId = "n", ToId = "a" });
+            g.Edges.Add(new IxEdge { Type = IxEdgeType.NoteLink, FromId = "n", ToId = "b" });
+
+            string w2 = MermaidWriter.Write(MermaidReader.Parse(MermaidWriter.Write(g)));
+            string w3 = MermaidWriter.Write(MermaidReader.Parse(w2));
+            Assert.AreEqual(w2, w3, "write∘parse is a fixed point after the first normalization cycle");
+        }
     }
 }

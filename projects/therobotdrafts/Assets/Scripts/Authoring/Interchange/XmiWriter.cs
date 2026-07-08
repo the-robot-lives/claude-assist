@@ -39,6 +39,7 @@ namespace TheRobotDraft.Authoring.Interchange
             private readonly Dictionary<string, XElement> _xelById = new Dictionary<string, XElement>();
             private readonly Dictionary<string, string> _primIdByName = new Dictionary<string, string>(); // synthesized primitive name -> id
             private readonly List<XElement> _primitives = new List<XElement>();
+            private readonly List<(string id, string kind)> _connectorMarkers = new List<(string, string)>(); // non-native edge kinds
             private int _seq;
 
             public W(IxModel model) { _model = model; }
@@ -91,8 +92,11 @@ namespace TheRobotDraft.Authoring.Interchange
                         new XAttribute("exporterVersion", "1.0")),
                     modelEl);
 
-                if (_model.Diagrams != null && _model.Diagrams.Count > 0)
-                    xmi.Add(BuildExtension());
+                // The EA extension now carries three kinds of side-channel metadata: element
+                // stereotype/kind/documentation, non-native edge kinds, and authored diagram geometry.
+                // Emit it only if it ended up with content.
+                var extension = BuildExtension();
+                if (extension.HasElements) xmi.Add(extension);
 
                 var doc = new XDocument(new XDeclaration("1.0", "UTF-8", null), xmi);
                 return Serialize(doc);
@@ -221,14 +225,19 @@ namespace TheRobotDraft.Authoring.Interchange
                             break;
 
                         case IxEdgeType.Dependency:
-                            modelEl.Add(BuildDependency(e));
+                            modelEl.Add(BuildDependency(e, EdgeId(e)));
                             break;
 
                         case IxEdgeType.NoteLink:
-                            // A note's link is carried by <ownedComment annotatedElement>; a NoteLink with
-                            // no actual Note on either side degrades to a plain Dependency (§ writer spec).
+                            // A note's link is carried by <ownedComment annotatedElement>. A NoteLink with
+                            // no actual Note on either side is emitted as a marked Dependency so its kind
+                            // survives the round trip.
                             if (!IsNote(e.FromId) && !IsNote(e.ToId))
-                                modelEl.Add(BuildDependency(e));
+                            {
+                                string nid = EdgeId(e);
+                                modelEl.Add(BuildDependency(e, nid));
+                                _connectorMarkers.Add((nid, IxEdgeType.NoteLink.ToString()));
+                            }
                             break;
 
                         case IxEdgeType.Association:
@@ -237,13 +246,23 @@ namespace TheRobotDraft.Authoring.Interchange
                         case IxEdgeType.Composition:
                             modelEl.Add(BuildAssociation(e));
                             break;
+
+                        default:
+                            // Every other kind (Extension, Include, Extend, Transition, Message*, Unknown)
+                            // has no native UML 2.1 construct — serialize as a Dependency that preserves
+                            // client/supplier/name, and stash the exact kind in the extension so nothing
+                            // vanishes on round trip.
+                            string did = EdgeId(e);
+                            modelEl.Add(BuildDependency(e, did));
+                            _connectorMarkers.Add((did, e.Type.ToString()));
+                            break;
                     }
                 }
             }
 
-            private XElement BuildDependency(IxEdge e)
+            private XElement BuildDependency(IxEdge e, string id)
             {
-                var dep = new XElement("packagedElement", TypeA("uml:Dependency"), IdA(EdgeId(e)));
+                var dep = new XElement("packagedElement", TypeA("uml:Dependency"), IdA(id));
                 if (!string.IsNullOrEmpty(e.Label)) dep.Add(new XAttribute("name", e.Label));
                 if (e.FromId != null) dep.Add(new XAttribute("client", Wid(e.FromId)));
                 if (e.ToId != null) dep.Add(new XAttribute("supplier", Wid(e.ToId)));
@@ -329,36 +348,76 @@ namespace TheRobotDraft.Authoring.Interchange
                 if (classId != null && _xelById.TryGetValue(classId, out var xe)) xe.Add(end);
             }
 
-            // --- EA extension: authored diagram geometry (§6.3) -------------------------------------
+            // --- EA extension: element metadata + non-native edge kinds + diagram geometry (§6) ------
 
             private XElement BuildExtension()
             {
                 var ext = new XElement(XmiNs + "Extension",
                     new XAttribute("extender", "TheRobotDrafts"),
                     new XAttribute("extenderID", "TheRobotDrafts"));
-                var diagrams = new XElement("diagrams");
-                foreach (var dia in _model.Diagrams)
-                {
-                    var d = new XElement("diagram", IdA(!string.IsNullOrEmpty(dia.Id) ? Nc(dia.Id) : "DIA_" + (_seq++)));
-                    var props = new XElement("properties");
-                    if (dia.Name != null) props.Add(new XAttribute("name", dia.Name));
-                    if (dia.Kind != null) props.Add(new XAttribute("type", dia.Kind));
-                    d.Add(props);
 
-                    var elems = new XElement("elements");
-                    foreach (var n in dia.Nodes)
-                    {
-                        float right = n.X + n.Width, bottom = n.Y + n.Height;
-                        string geom = "Left=" + F(n.X) + ";Top=" + F(n.Y) +
-                                      ";Right=" + F(right) + ";Bottom=" + F(bottom) + ";";
-                        elems.Add(new XElement("element",
-                            new XAttribute("geometry", geom),
-                            new XAttribute("subject", Wid(n.ElementId))));
-                    }
-                    d.Add(elems);
-                    diagrams.Add(d);
+                // (a) Per-element metadata: stereotype, documentation, and a kind marker for any
+                //     IxElementType that had to fall back to uml:Class (Table/Boundary/Struct/State/…).
+                var metaEls = new List<XElement>();
+                foreach (var el in _model.Elements)
+                {
+                    if (el.Type == IxElementType.Note) continue;
+                    bool needKind = NeedsKindMarker(el.Type);
+                    bool hasStereo = !string.IsNullOrEmpty(el.Stereotype);
+                    bool hasDoc = !string.IsNullOrEmpty(el.Documentation);
+                    if (!needKind && !hasStereo && !hasDoc) continue;
+
+                    var props = new XElement("properties");
+                    if (hasStereo) props.Add(new XAttribute("stereotype", el.Stereotype));
+                    if (hasDoc) props.Add(new XAttribute("documentation", el.Documentation));
+                    if (needKind) props.Add(new XAttribute("trdKind", el.Type.ToString()));
+                    metaEls.Add(new XElement("element",
+                        IdrefA(_wid[el.Id]), TypeA("uml:" + MetaOf(el.Type)), props));
                 }
-                ext.Add(diagrams);
+                if (metaEls.Count > 0)
+                {
+                    var elements = new XElement("elements");
+                    foreach (var e in metaEls) elements.Add(e);
+                    ext.Add(elements);
+                }
+
+                // (b) Non-native edge kinds recorded as connectors keyed by the Dependency id we emitted.
+                if (_connectorMarkers.Count > 0)
+                {
+                    var connectors = new XElement("connectors");
+                    foreach (var cm in _connectorMarkers)
+                        connectors.Add(new XElement("connector", IdrefA(cm.id),
+                            new XElement("properties", new XAttribute("trdKind", cm.kind))));
+                    ext.Add(connectors);
+                }
+
+                // (c) Authored diagram geometry — the only place layout coordinates live.
+                if (_model.Diagrams != null && _model.Diagrams.Count > 0)
+                {
+                    var diagrams = new XElement("diagrams");
+                    foreach (var dia in _model.Diagrams)
+                    {
+                        var d = new XElement("diagram", IdA(!string.IsNullOrEmpty(dia.Id) ? Nc(dia.Id) : "DIA_" + (_seq++)));
+                        var props = new XElement("properties");
+                        if (dia.Name != null) props.Add(new XAttribute("name", dia.Name));
+                        if (dia.Kind != null) props.Add(new XAttribute("type", dia.Kind));
+                        d.Add(props);
+
+                        var elems = new XElement("elements");
+                        foreach (var n in dia.Nodes)
+                        {
+                            float right = n.X + n.Width, bottom = n.Y + n.Height;
+                            string geom = "Left=" + F(n.X) + ";Top=" + F(n.Y) +
+                                          ";Right=" + F(right) + ";Bottom=" + F(bottom) + ";";
+                            elems.Add(new XElement("element",
+                                new XAttribute("geometry", geom),
+                                new XAttribute("subject", Wid(n.ElementId))));
+                        }
+                        d.Add(elems);
+                        diagrams.Add(d);
+                    }
+                    ext.Add(diagrams);
+                }
                 return ext;
             }
 
@@ -401,6 +460,8 @@ namespace TheRobotDraft.Authoring.Interchange
                 return (mult.Substring(0, dd), mult.Substring(dd + 2));
             }
 
+            // Element kinds that have a real UML 2.1 metaclass are emitted as it (and recovered from
+            // it on read); every other kind falls back to uml:Class and rides a trdKind marker.
             private static string MetaOf(IxElementType t)
             {
                 switch (t)
@@ -409,13 +470,38 @@ namespace TheRobotDraft.Authoring.Interchange
                     case IxElementType.Interface: return "Interface";
                     case IxElementType.Enum: return "Enumeration";
                     case IxElementType.DataType: return "DataType";
-                    default: return "Class"; // Class/Struct/Table/Actor/… all serialize as uml:Class
+                    case IxElementType.Artifact: return "Artifact";
+                    case IxElementType.Actor: return "Actor";
+                    case IxElementType.UseCase: return "UseCase";
+                    case IxElementType.Component: return "Component";
+                    default: return "Class"; // Class/Struct/Table/Boundary/State/… serialize as uml:Class
                 }
             }
 
+            // Inverse of MetaOf for the metaclasses we emit; anything else reads back as Class.
+            internal static IxElementType MetaToType(string meta)
+            {
+                switch (meta)
+                {
+                    case "Package": return IxElementType.Package;
+                    case "Interface": return IxElementType.Interface;
+                    case "Enumeration": return IxElementType.Enum;
+                    case "DataType": return IxElementType.DataType;
+                    case "Artifact": return IxElementType.Artifact;
+                    case "Actor": return IxElementType.Actor;
+                    case "UseCase": return IxElementType.UseCase;
+                    case "Component": return IxElementType.Component;
+                    default: return IxElementType.Class;
+                }
+            }
+
+            // True when the metaclass alone cannot recover the IxElementType (needs a trdKind marker).
+            private static bool NeedsKindMarker(IxElementType t) =>
+                t != IxElementType.Note && MetaToType(MetaOf(t)) != t;
+
+            // Any element that is not a Package/Enum/Note carries members losslessly.
             private static bool IsClassifier(IxElementType t) =>
-                t == IxElementType.Class || t == IxElementType.Interface ||
-                t == IxElementType.DataType || t == IxElementType.Struct || t == IxElementType.Table;
+                t != IxElementType.Package && t != IxElementType.Enum && t != IxElementType.Note;
 
             private static string VisStr(IxVisibility v)
             {

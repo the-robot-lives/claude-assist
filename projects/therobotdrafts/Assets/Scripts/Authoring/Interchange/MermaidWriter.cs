@@ -27,6 +27,9 @@ namespace TheRobotDraft.Authoring.Interchange
 
             var ident = BuildIdents(model);
             var sb = new StringBuilder();
+            // Model name rides in YAML frontmatter (the reader recovers `title:` and skips the rest).
+            if (!string.IsNullOrEmpty(model.Name))
+                sb.Append("---\ntitle: ").Append(model.Name.Replace("\r", " ").Replace("\n", " ")).Append("\n---\n");
             sb.Append("classDiagram\n");
 
             var packageIds = new HashSet<string>();
@@ -63,15 +66,18 @@ namespace TheRobotDraft.Authoring.Interchange
                 if (c.ParentId == null || !packageIds.Contains(c.ParentId))
                 { EmitClass(sb, c, ident, "    "); ordered.Add(c); }
 
-            // Notes.
+            // Notes. Mermaid `note for X` ties one note box to one element, so a note carrying several
+            // NoteLinks is emitted as one `note for` line per target (re-import splits it into N notes,
+            // preserving every link). A note with no link degrades to a standalone `note "…"`.
             foreach (var n in notes)
             {
-                string target = NoteTarget(model, n);
                 string body = EscapeNote(n.Documentation);
-                if (target != null && ident.TryGetValue(target, out var tid))
-                    sb.Append("    note for ").Append(tid).Append(" \"").Append(body).Append("\"\n");
-                else
+                var targets = NoteTargets(model, n, ident);
+                if (targets.Count == 0)
                     sb.Append("    note \"").Append(body).Append("\"\n");
+                else
+                    foreach (var tid in targets)
+                        sb.Append("    note for ").Append(tid).Append(" \"").Append(body).Append("\"\n");
                 ordered.Add(n);
             }
 
@@ -302,13 +308,17 @@ namespace TheRobotDraft.Authoring.Interchange
 
         // --- notes -----------------------------------------------------------------------------
 
-        private static string NoteTarget(IxModel model, IxElement note)
+        // Every element this note links to, as emitted idents, in edge order (a note may target many).
+        private static List<string> NoteTargets(IxModel model, IxElement note, Dictionary<string, string> ident)
         {
+            var outp = new List<string>();
             foreach (var e in model.Edges)
-                if (e != null && e.Type == IxEdgeType.NoteLink && e.FromId == note.Id) return e.ToId;
-            foreach (var e in model.Edges)
-                if (e != null && e.Type == IxEdgeType.NoteLink && e.ToId == note.Id) return e.FromId;
-            return null;
+            {
+                if (e == null || e.Type != IxEdgeType.NoteLink) continue;
+                string other = e.FromId == note.Id ? e.ToId : (e.ToId == note.Id ? e.FromId : null);
+                if (other != null && ident.TryGetValue(other, out var tid)) outp.Add(tid);
+            }
+            return outp;
         }
 
         // --- small helpers ---------------------------------------------------------------------

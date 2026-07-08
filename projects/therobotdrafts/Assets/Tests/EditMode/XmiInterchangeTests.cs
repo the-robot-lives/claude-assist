@@ -387,6 +387,103 @@ namespace TheRobotDraft.Authoring.Tests
             Assert.AreEqual(80f, carNode.Height, 0.001f);
         }
 
+        // --- (7) non-native edge kinds survive -----------------------------------------------------
+
+        [Test]
+        public void Non_Native_Edge_Kinds_Survive_As_Marked_Dependencies()
+        {
+            var m0 = new IxModel { Name = "Edges" };
+            m0.Elements.Add(El("A", IxElementType.Class, null));
+            m0.Elements.Add(El("B", IxElementType.Class, null));
+            m0.Edges.Add(new IxEdge { Id = "x", Type = IxEdgeType.Extension, FromId = "A", ToId = "B", Label = "ext" });
+            m0.Edges.Add(new IxEdge { Id = "u", Type = IxEdgeType.Unknown, FromId = "A", ToId = "B" });
+            m0.Edges.Add(new IxEdge { Id = "i", Type = IxEdgeType.Include, FromId = "A", ToId = "B" });
+            m0.Edges.Add(new IxEdge { Id = "d", Type = IxEdgeType.Dependency, FromId = "A", ToId = "B" });
+
+            string xml = XmiWriter.Write(m0);
+            StringAssert.Contains("<connectors", xml);
+            StringAssert.Contains("trdKind=\"Extension\"", xml);
+
+            var m = XmiReader.Parse(xml);
+            Assert.AreEqual(4, m.Edges.Count, "nothing is dropped — 4 in, 4 out");
+
+            var ext = Edge(m, IxEdgeType.Extension, "A", "B");
+            Assert.IsNotNull(ext, "Extension edge kind restored from the connector marker");
+            Assert.AreEqual("ext", ext.Label, "the dependency name preserves the label");
+            Assert.IsNotNull(Edge(m, IxEdgeType.Unknown, "A", "B"));
+            Assert.IsNotNull(Edge(m, IxEdgeType.Include, "A", "B"));
+            // A genuine Dependency stays a Dependency (it carries no marker).
+            Assert.IsNotNull(Edge(m, IxEdgeType.Dependency, "A", "B"));
+        }
+
+        // --- (8) real UML metaclasses for Artifact/Actor/UseCase/Component --------------------------
+
+        [Test]
+        public void Artifact_Actor_UseCase_Component_Round_Trip_As_Metaclasses()
+        {
+            var m0 = new IxModel { Name = "Behavioral" };
+            m0.Elements.Add(El("doc", IxElementType.Artifact, null));
+            m0.Elements.Add(El("user", IxElementType.Actor, null));
+            m0.Elements.Add(El("login", IxElementType.UseCase, null));
+            m0.Elements.Add(El("svc", IxElementType.Component, null));
+
+            string xml = XmiWriter.Write(m0);
+            StringAssert.Contains("xmi:type=\"uml:Artifact\"", xml);
+            StringAssert.Contains("xmi:type=\"uml:Actor\"", xml);
+
+            var m = XmiReader.Parse(xml);
+            Assert.AreEqual(IxElementType.Artifact, E(m, "doc").Type);
+            Assert.AreEqual(IxElementType.Actor, E(m, "user").Type);
+            Assert.AreEqual(IxElementType.UseCase, E(m, "login").Type);
+            Assert.AreEqual(IxElementType.Component, E(m, "svc").Type);
+        }
+
+        // --- (9) kind + stereotype recovery via the EA extension -----------------------------------
+
+        [Test]
+        public void Table_Boundary_Struct_Kind_And_Stereotype_Recovered_From_Extension()
+        {
+            var m0 = new IxModel { Name = "Erd" };
+
+            var session = El("user_session", IxElementType.Table, null);
+            session.Stereotype = "table";
+            session.Members.Add(Field("id", "uuid", IxVisibility.Public));
+            session.Members.Add(Field("expires", "timestamp", IxVisibility.Public));
+            m0.Elements.Add(session);
+
+            m0.Elements.Add(El("ui", IxElementType.Boundary, null));
+
+            var point = El("point", IxElementType.Struct, null);
+            point.Members.Add(Field("x", "int", IxVisibility.Public));
+            point.Members.Add(Field("y", "int", IxVisibility.Public));
+            m0.Elements.Add(point);
+
+            var entity = El("Account", IxElementType.Class, null);
+            entity.Stereotype = "entity"; // custom stereotype on a plain class
+            m0.Elements.Add(entity);
+
+            string xml = XmiWriter.Write(m0);
+            StringAssert.Contains("trdKind=\"Table\"", xml);
+            StringAssert.Contains("stereotype=\"table\"", xml);
+
+            var m = XmiReader.Parse(xml);
+
+            var s = E(m, "user_session");
+            Assert.AreEqual(IxElementType.Table, s.Type, "Table kind recovered, not collapsed to Class");
+            Assert.AreEqual("table", s.Stereotype);
+            Assert.AreEqual(2, s.Members.Count, "members survive on a stereotyped element");
+
+            Assert.AreEqual(IxElementType.Boundary, E(m, "ui").Type);
+
+            var p = E(m, "point");
+            Assert.AreEqual(IxElementType.Struct, p.Type);
+            Assert.AreEqual(2, p.Members.Count);
+
+            var acct = E(m, "Account");
+            Assert.AreEqual(IxElementType.Class, acct.Type, "custom stereotype does not change the kind");
+            Assert.AreEqual("entity", acct.Stereotype);
+        }
+
         // --- round-trip model builder -------------------------------------------------------------
 
         private static IxModel BuildRoundTripModel()
