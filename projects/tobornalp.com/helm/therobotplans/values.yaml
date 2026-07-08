@@ -1,7 +1,7 @@
 replicas: 1
 domain: tobornalp.com
 backend:
-  image: ops.noizu.com/tobornalp.com/backend:v1.0.9
+  image: ops.noizu.com/tobornalp.com/backend:v1.0.11
   port: 4000
   resources:
     requests:
@@ -11,7 +11,7 @@ backend:
       cpu: 500m
       memory: 512Mi
 frontend:
-  image: ops.noizu.com/tobornalp.com/frontend:v1.0.8
+  image: ops.noizu.com/tobornalp.com/frontend:v1.0.10
   port: 3000
   resources:
     requests:
@@ -42,13 +42,19 @@ redis:
   db: 12
 secrets:
   name: tobornalp-secrets
+  # DATABASE_URL sources from the populated DB's secret (db `therobotplans`,
+  # 50-table schema, user `therobotplans`). The `tobornalp` DB the default
+  # TOBORNALP_DATABASE_URL points at was never migrated (empty → 500s). All
+  # other env (secret_key_base, guardian, oidc client creds) stay on
+  # tobornalp-secrets.
+  databaseUrlSecretName: therobotplans-secrets
   keys:
     dbUser: TOBORNALP_DB_USER
     dbPassword: TOBORNALP_DB_PASSWORD
     secretKeyBase: TOBORNALP_SECRET_KEY_BASE
     guardianSecretKey: TOBORNALP_GUARDIAN_SECRET_KEY
     redisUrl: TOBORNALP_REDIS_URL
-    databaseUrl: TOBORNALP_DATABASE_URL
+    databaseUrl: THEROBOTPLANS_DATABASE_URL
     sendgridApiKey: TOBORNALP_SENDGRID_API_KEY
     oidcClientId: TOBORNALP_OIDC_CLIENT_ID
     oidcClientSecret: TOBORNALP_OIDC_CLIENT_SECRET
@@ -86,7 +92,7 @@ sso:
 # from sso.requireInvite above — only add the domain allowlist here.
 extraEnv:
   - name: SSO_ALLOWED_DOMAINS
-    value: "therobotlives.com,noizu.com,greatnonprofits.org,communityconnectlabs.com"
+    value: "noizu.com,therobotlives.com,derobot.is,greatnonprofits.org,communityconnectlabs.com"
 configMap:
   enabled: false
   data: {}

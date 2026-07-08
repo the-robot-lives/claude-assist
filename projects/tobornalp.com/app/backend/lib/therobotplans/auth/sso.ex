@@ -64,7 +64,9 @@ defmodule Therobotplans.Auth.SSO do
           error -> error
         end
       else
-        if identity[:invite_required] or not domain_allowed?(email) do
+        # `||` not `or`: identity[:invite_required] is nil (not false) for
+        # allowlisted domains, and `or` requires a boolean left operand.
+        if identity[:invite_required] || not domain_allowed?(email) do
           {:error, :invite_required}
         else
           {:ok, nil}

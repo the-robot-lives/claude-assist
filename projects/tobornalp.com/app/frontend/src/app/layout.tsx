@@ -10,12 +10,11 @@ import { loadConfig, loadAllBrandings } from "@noizu/styleguide/css-gen";
 import { Toaster } from "sonner";
 
 export function generateMetadata(): Metadata {
-  const config = loadConfig();
+  // Title is fixed to the product name rather than derived from loadConfig(),
+  // whose no-arg default resolves to the base theme ("Style Guide — Base Theme")
+  // instead of the active organic theme.
   return {
-    title:
-      config.title === "tobornalp"
-        ? "tobornalp — AI-Native Operational Life Platform"
-        : (config.title ?? "tobornalp"),
+    title: "tobornalp — AI-Native Operational Life Platform",
     description:
       "One surface for personal todos, team projects, CI/CD, bug tracking, monitoring, docs, and OKR-driven life planning — with AI agents that are teammates, not tools.",
   };

@@ -921,7 +921,9 @@ project:
           context: app/frontend
           registry_path: tobornalp.com/frontend
           build_args:
-            NEXT_PUBLIC_API_URL: "https://tobornalp.com/api"
+            # Origin only — api.ts paths already include the /api/v1 prefix.
+            # A trailing /api here produces double /api/api/v1 → backend 404s.
+            NEXT_PUBLIC_API_URL: "https://tobornalp.com"
           auto_detect: false
           helm:
             chart_path: projects/tobornalp.com/helm/therobotplans

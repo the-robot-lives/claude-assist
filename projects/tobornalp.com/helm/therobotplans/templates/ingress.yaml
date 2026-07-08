@@ -35,7 +35,12 @@ spec:
             name: {{ $svcName }}
             port:
               number: {{ .Values.backend.port }}
-      - path: /auth
+      # Only the OIDC redirect flow (/auth/oidc, /auth/oidc/callback) is a backend
+      # route. Frontend pages /auth/register and /auth/sso-callback live under
+      # /auth/* too and must fall through to the frontend (/). All other backend
+      # auth APIs are under /api/v1/auth/*. A broad `/auth` prefix here steals the
+      # frontend pages → backend matches them on GET /auth/:provider → 500.
+      - path: /auth/oidc
         pathType: Prefix
         backend:
           service:
