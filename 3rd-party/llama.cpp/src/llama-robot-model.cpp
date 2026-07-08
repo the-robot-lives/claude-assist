@@ -690,11 +690,12 @@ static llama_model * llama_robot_model_mapping(
         case LLM_ARCH_QWEN2:    return new llama_model_robot<llama_model_qwen2>   (params, std::move(robot));
         case LLM_ARCH_QWEN2MOE: return new llama_model_robot<llama_model_qwen2moe>(params, std::move(robot));
         case LLM_ARCH_QWEN3:    return new llama_model_robot<llama_model_qwen3>   (params, std::move(robot));
+        case LLM_ARCH_QWEN35:   return new llama_model_robot<llama_model_qwen35>  (params, std::move(robot));
         case LLM_ARCH_MAMBA:    return new llama_model_robot<llama_model_mamba>   (params, std::move(robot));
         default:
             throw std::runtime_error(format(
                 "therobot: base architecture '%s' is not wrapped by this runtime yet "
-                "(supported: llama, qwen2, qwen2moe, qwen3, mamba)",
+                "(supported: llama, qwen2, qwen2moe, qwen3, qwen35, mamba)",
                 robot.base_architecture.c_str()));
     }
 }

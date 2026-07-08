@@ -10,6 +10,11 @@ asserted).
 
 ## Usage
 
+The current primary target is **Qwen3.5-0.8B** (`configs/qwen3.5-0.8b.yaml`,
+with donor-specific instructions in `configs/qwen3.5-0.8b.md`); the
+`qwen2.5-1.5b.yaml` config remains as the reference for a pure-attention
+donor. Substitute your config below.
+
 ```bash
 cd projects/therobotgguf/convert
 pip install -e .            # numpy + pyyaml; `pip install -e '.[hf]'` for R0/R1/R3 training
