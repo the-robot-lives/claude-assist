@@ -257,3 +257,14 @@ Database migration targets are defined in `.infra-config.yaml` under `liquibase_
 - **Helm charts**: Not stored in this repo — they live in the upstream `noizu-infra` repo under `kubernetes/helm/`. This repo's `.infra-config.yaml` references chart paths that exist in that context.
 - **TLS**: Wildcard `*.noizu.com` cert from Cloudflare is synced via Infisical. Portfolio product domains have per-domain TLS certs in separate Infisical sections.
 - **Namespaces**: Strict namespace separation by function (data-ns, apps-ns, creative-ns, ai-ns, etc.) defined in `namespace_overrides`.
+
+
+---
+
+# Git Trees
+
+Because this is a monorepo you generall will not want to create regular git worktrees with otu extra staps.
+what you may do instead is: 
+1. git init the target project/util etc. you need worktrees for. add the contents commit -m base and then create worktrees.
+when finished cleanup the .git folders and worktrees.
+2. the above but moved to the special Noizu/staging/ folder i.e. copy the dir, init that fodler, and proceed as above. 
