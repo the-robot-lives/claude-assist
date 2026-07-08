@@ -1,10 +1,10 @@
-# therobot runtime tests (E1–E6)
+# therobot runtime tests (E1–E7)
 
 Manual smoke tests for the therobot spec loader (E1), bottleneck taps (E2),
-the shim engine (E3), state banks + modulator (E4), episodic memory (E5), and
-the delta executor (E6). Not yet wired into CMake/CI — that lands with the
-E0 CI gates (llamacpp-extensions.md §2). All commands run from the repo root;
-`$BUILD` is a configured build directory.
+the shim engine (E3), state banks + modulator (E4), episodic memory (E5), the
+delta executor (E6), and the settling decoder (E7). Not yet wired into
+CMake/CI — that lands with the E0 CI gates (llamacpp-extensions.md §2). All
+commands run from the repo root; `$BUILD` is a configured build directory.
 
 ## Fixtures
 
@@ -188,3 +188,35 @@ mean-squared input change; fatigue tensors (`.fatigue.rho/.gain`) are
 optional and default to off; prompt ubatches (T > 1) always run dense; delta
 holds are per-context execution cache, deliberately outside the session
 checkpoint (a dense sweep re-initializes them within one heartbeat).
+
+## E7 settling decoder
+
+`tiny-llama-settle.gguf` declares `settle` (objective `jacobi-ar`, mask token
+0, step cap 64, ε 0, m_schedule [0,1,2,4]) plus a modulator and one tap. The
+`llama_robot_settle` canvas loop — built on `llama-robot-executor`, the
+shared iterate-until-quiet control structure — drafts every position, then
+re-decodes the molten canvas each round (prompt KV stays warm; the canvas
+region is dropped and re-decoded in one batch). The test proves: the settled
+canvas **equals the greedy AR output exactly** (the jacobi-ar fixed point),
+rounds bounded by canvas length + 1; rounds track difficulty (shorter canvas
+⇒ ≤ rounds — 004 test 2 flavor); arousal 3 adds exactly its 4 scheduled
+re-check rounds and those re-checks don't disturb the settled canvas; taps
+stay readable across settling; argument errors are rejected.
+
+```bash
+g++ -std=c++17 -Iinclude -Iggml/include tests/robot/robot_settle_test.cpp \
+    -L$BUILD/bin -lllama -lggml -Wl,-rpath,$BUILD/bin -o /tmp/robot_settle_test
+/tmp/robot_settle_test /tmp/robot-fixtures
+# expect: E7 SETTLE TEST: OK
+```
+
+E7 notes and v1 limits: only the `jacobi-ar` objective is implemented —
+masked-diffusion (`mdlm`) objectives refuse at load until a Dream/LLaDA-class
+donor path exists, and the `llama-robot-settle` CLI tool + `llama-server`
+settle mode are deferred with it (the C API is the contract they will wrap);
+commit is prefix-stability (which is what makes the greedy-AR equality
+exact); the m-schedule indexes on the arousal channel at settle entry (m
+keeps decaying underneath — the leaky state persisting across settling
+rounds is the un-commit escape hatch, not a bug); the optional
+`robot.settle.len.*` length head is not consumed yet (callers provide the
+canvas length).

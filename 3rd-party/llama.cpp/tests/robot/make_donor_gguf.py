@@ -25,7 +25,7 @@ def t(*shape):
     return (rng.standard_normal(shape) * 0.02).astype(np.float32)
 
 
-def write_model(path, arch, robot, taps=False, l2=None, delta=None, n_layer=N_LAYER):
+def write_model(path, arch, robot, taps=False, l2=None, delta=None, settle=False, n_layer=N_LAYER):
     """l2: None, or dict(film=bool, state=bool, mem=None|'manual'|'auto').
     delta: None, or dict(theta=float, heartbeat=int) — delta-covered blocks
     1..n_layer-1 with the given base threshold, plus a modulator bus wired to
@@ -98,6 +98,25 @@ def write_model(path, arch, robot, taps=False, l2=None, delta=None, n_layer=N_LA
             w.add_uint32("therobot.modulator.dim", 4)
             w.add_array("therobot.modulator.channels", ["arousal", "valence", "attention", "energy"])
             w.add_string("therobot.modulator.source", "pooled")
+        elif settle:
+            w.add_uint32("therobot.level", 4)
+            w.add_array("therobot.features", ["settle", "modulator", "taps"])
+            w.add_string("therobot.settle.objective", "jacobi-ar")
+            w.add_uint32("therobot.settle.mask_token_id", 0)
+            w.add_uint32("therobot.settle.max_steps", 64)
+            w.add_float32("therobot.settle.epsilon", 0.0)
+            w.add_array("therobot.settle.m_schedule", [0.0, 1.0, 2.0, 4.0])
+            w.add_uint32("therobot.modulator.dim", 4)
+            w.add_array("therobot.modulator.channels", ["arousal", "valence", "attention", "energy"])
+            w.add_string("therobot.modulator.source", "pooled")
+            # one bottleneck so taps are readable mid-settle
+            w.add_uint32("therobot.bottleneck.count", 1)
+            w.add_string("therobot.bottleneck.0.name", "subject")
+            w.add_uint32("therobot.bottleneck.0.layer", 0)
+            w.add_string("therobot.bottleneck.0.point", "resid_post")
+            w.add_uint32("therobot.bottleneck.0.offset", 4)
+            w.add_uint32("therobot.bottleneck.0.width", 8)
+            w.add_array("therobot.bottleneck.0.attributes", ["subject"])
         else:
             w.add_uint32("therobot.level", 0)
             w.add_array("therobot.features", [])
@@ -135,9 +154,14 @@ def write_model(path, arch, robot, taps=False, l2=None, delta=None, n_layer=N_LA
         w.add_tensor(f"blk.{i}.ffn_down.weight", t(N_EMBD, N_FF))
         w.add_tensor(f"blk.{i}.ffn_up.weight", t(N_FF, N_EMBD))
 
-    if robot and l2 is None and delta is None:
+    if robot and l2 is None and delta is None and not settle:
         # an extension tensor the wrapper must claim for accounting to balance
         w.add_tensor("robot.mod.alpha", np.zeros((8,), dtype=np.float32))
+    if settle:
+        M = 4  # modulator grafts (zero: m moves only via mod_set + decay)
+        w.add_tensor("robot.mod.alpha", np.zeros((M,), dtype=np.float32))
+        w.add_tensor("robot.mod.pool.weight", np.zeros((M, N_EMBD), dtype=np.float32))
+        w.add_tensor("robot.mod.cell.weight", np.zeros((M, M), dtype=np.float32))
     if taps or l2 is not None:
         # identity probe head with constant bias: probe(x) == x + 0.5
         w.add_tensor("robot.probe.0.subject.weight", np.eye(8, dtype=np.float32))
@@ -219,3 +243,5 @@ write_model(f"{out_dir}/tiny-llama-delta-hi.gguf", "therobot", robot=True, n_lay
             delta={"theta": 1.0e6, "heartbeat": 4})    # fires only on heartbeat/excitability
 write_model(f"{out_dir}/tiny-llama-delta-nohb.gguf", "therobot", robot=True, n_layer=3,
             delta={"theta": 1.0e6, "heartbeat": 1000}) # effectively no heartbeat
+# E7 settling decoder (jacobi-ar objective; m-scheduled depth on arousal)
+write_model(f"{out_dir}/tiny-llama-settle.gguf", "therobot", robot=True, settle=True)

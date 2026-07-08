@@ -14,6 +14,8 @@ New-file extension code (no fences needed, never conflicts):
 - `src/llama-robot-state.{h,cpp}` — E4 recurrent session state: graph input class, prepare/capture hooks, graft validation
 - `src/llama-robot-memory.{h,cpp}` — E5 episodic memory: salience-gated store, cosine+recency recall, decay eviction (pure runtime, CPU-side)
 - `src/llama-robot-delta.{h,cpp}` — E6 delta executor: per-block fire decisions, held-output blending, heartbeat sweeps, compute trace
+- `src/llama-robot-executor.{h,cpp}` — the shared iterate-until-quiet control structure (E6 across tokens, E7 across settling rounds)
+- `src/llama-robot-settle.cpp` — E7 settling decoder: canvas loop, jacobi-ar objective, m-scheduled settling depth
 - `src/llama-robot-context.cpp` + `include/llama-robot.h` — public API: taps/probes, shim lifecycle, modulator get/set, session checkpoint
 - `tools/robot-inspect/` — manifest inspection tool (`llama-robot-inspect`)
 - `tests/robot/` — fixture generators + L0 parity test (manual; see its README)

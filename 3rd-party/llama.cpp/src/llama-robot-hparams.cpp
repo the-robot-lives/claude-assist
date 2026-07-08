@@ -166,6 +166,7 @@ static const std::set<llama_robot_feature> LLAMA_ROBOT_FEATURES_IMPLEMENTED = {
     LLAMA_ROBOT_FEATURE_MODULATOR, // E4 — modulator bus m + FiLM gating
     LLAMA_ROBOT_FEATURE_MEMORY,    // E5 — salience-gated episodic store feeding m
     LLAMA_ROBOT_FEATURE_DELTA,     // E6 — change-triggered execution (off by default per context)
+    LLAMA_ROBOT_FEATURE_SETTLE,    // E7 — canvas settling decoder (jacobi-ar objective)
 };
 
 const char * llama_robot_feature_name(llama_robot_feature f) {

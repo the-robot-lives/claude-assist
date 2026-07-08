@@ -256,4 +256,17 @@ void llama_robot_validate_grafts(const llama_robot_model_iface & iface, const ll
 
     // E6 delta thresholds / excitability (coverage from theta_base presence)
     llama_robot_delta_validate(iface, hparams);
+
+    // E7 settle contract: v1 implements the jacobi-ar objective (AR fixed
+    // point); masked-diffusion objectives need a diffusion-class donor path
+    if (robot.has_feature(LLAMA_ROBOT_FEATURE_SETTLE)) {
+        if (robot.settle.objective != "jacobi-ar") {
+            throw std::runtime_error(format(
+                    "therobot: settle objective '%s' is not implemented yet (v1 supports 'jacobi-ar')",
+                    robot.settle.objective.c_str()));
+        }
+        if (robot.settle.max_steps == 0) {
+            throw std::runtime_error("therobot: settle max_steps must be positive");
+        }
+    }
 }

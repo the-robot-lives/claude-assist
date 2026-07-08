@@ -148,6 +148,28 @@ LLAMA_API uint64_t llama_robot_delta_tokens(const struct llama_context * ctx);
 LLAMA_API uint64_t llama_robot_delta_fires (const struct llama_context * ctx, int32_t block_idx);
 LLAMA_API float    llama_robot_delta_keep_rate(const struct llama_context * ctx);
 
+//
+// E7 — settling decoder (spec §1.7, proposal 004)
+//
+// Canvas-based parallel iterative refinement: draft every position, iterate
+// until the canvas stops changing (change ≤ ε under a step cap), with
+// m-scheduled extra re-check rounds (anxious → deeper settling). The v1
+// objective is `jacobi-ar`: on a causal donor the settle loop's fixed point
+// equals the greedy autoregressive output — settling trades sequential depth
+// for parallel rounds. `mdlm` (masked-diffusion) objectives refuse at load
+// until a diffusion-class donor path exists. Taps, shims, state, and memory
+// all remain live across settling rounds (they see the molten canvas).
+//
+
+// Settle n_out tokens after the prompt. Writes the committed tokens to `out`
+// and the number of settling rounds to *steps_used (optional). Returns the
+// number of tokens produced, or -1 on error. Clears the context's KV state.
+LLAMA_API int32_t llama_robot_settle(
+        struct llama_context * ctx,
+        const llama_token * prompt, int32_t n_prompt,
+        llama_token * out, int32_t n_out,
+        int32_t * steps_used);
+
 #ifdef __cplusplus
 }
 #endif
