@@ -109,6 +109,10 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 - name: SSO_DOMAINS
   value: {{ .Values.sso.domains | quote }}
 {{- end }}
+{{- if .Values.sso.autoApproveDomains }}
+- name: SSO_AUTO_APPROVE_DOMAINS
+  value: {{ .Values.sso.autoApproveDomains | quote }}
+{{- end }}
 {{- if .Values.secrets.keys.googleClientId }}
 - name: GOOGLE_CLIENT_ID
   valueFrom:

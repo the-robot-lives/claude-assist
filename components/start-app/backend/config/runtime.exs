@@ -35,6 +35,34 @@ parse_sso_domains = fn
     end)
 end
 
+parse_domain_list = fn
+  nil ->
+    []
+
+  "" ->
+    []
+
+  value ->
+    value
+    |> String.split(~r/[,\s;]+/, trim: true)
+    |> Enum.map(&(&1 |> String.trim() |> String.downcase()))
+    |> Enum.reject(&(&1 == ""))
+    |> Enum.uniq()
+end
+
+build_sso_domain_policies = fn domains, auto_approve_domains ->
+  auto_approve = MapSet.new(auto_approve_domains)
+
+  domains
+  |> Enum.into(%{}, fn {domain, providers} ->
+    {domain,
+     %{
+       providers: providers,
+       auto_approve: MapSet.member?(auto_approve, "*") || MapSet.member?(auto_approve, domain)
+     }}
+  end)
+end
+
 # ── OpenTelemetry ────────────────────────────────────────────────
 if otel_endpoint = System.get_env("OTEL_EXPORTER_OTLP_ENDPOINT") do
   config :opentelemetry_exporter,
@@ -160,7 +188,14 @@ if config_env() == :prod do
 
   # ── SSO: Social OAuth (each enabled when *_CLIENT_ID is set) ──
   config :starter, :sso_require_invite, System.get_env("SSO_REQUIRE_INVITE") == "true"
-  config :starter, :sso_domains, parse_sso_domains.(System.get_env("SSO_DOMAINS"))
+  sso_domains = parse_sso_domains.(System.get_env("SSO_DOMAINS"))
+  sso_auto_approve_domains = parse_domain_list.(System.get_env("SSO_AUTO_APPROVE_DOMAINS"))
+  config :starter, :sso_domains, sso_domains
+  config :starter, :sso_auto_approve_domains, sso_auto_approve_domains
+
+  config :starter,
+         :sso_domain_policies,
+         build_sso_domain_policies.(sso_domains, sso_auto_approve_domains)
 
   oauth_providers = []
 

@@ -143,6 +143,20 @@ The frontend E2E suite uses Cypress with Cucumber feature files under
 `start-app-scaffold` rewrites the default app/domain values in
 `frontend/cypress.config.ts`.
 
+## SSO Domain Policy
+
+SSO is configured per email domain:
+
+```env
+SSO_DOMAINS=example.com=oidc;corp.example=google,oidc
+SSO_AUTO_APPROVE_DOMAINS=corp.example
+```
+
+`SSO_DOMAINS` controls whether SSO is available for a domain and which providers
+may be used. `SSO_AUTO_APPROVE_DOMAINS` controls which SSO registrations become
+active immediately. SSO users from domains not in the auto-approve list are
+created as pending and must be approved manually or activated with an invite.
+
 ## Helm Chart
 
 ```bash

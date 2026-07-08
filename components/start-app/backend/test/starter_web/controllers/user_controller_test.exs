@@ -25,7 +25,9 @@ defmodule StarterWeb.UserControllerTest do
     test "valid invite activates a pending completed-registration user", %{conn: conn} do
       %{access_token: token, user: user} = setup_user_and_token()
       mark_pending!(user)
-      {:ok, invite, raw_token} = Starter.Organizations.create_invite_token(invite_attrs(user.email))
+
+      {:ok, invite, raw_token} =
+        Starter.Organizations.create_invite_token(invite_attrs(user.email))
 
       params = Map.put(profile_params(), :invite_token, raw_token)
 

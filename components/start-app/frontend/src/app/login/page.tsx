@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/context/auth";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
+import type { SsoDomainMap } from "@/lib/api";
 import { matchingSsoProviders, postAuthPath } from "@/lib/auth-flow";
 import Link from "next/link";
 
@@ -32,7 +33,7 @@ export default function LoginPage() {
   const router = useRouter();
   const [step, setStep] = useState<Step>("email");
   const [ssoProviders, setSsoProviders] = useState<string[]>([]);
-  const [ssoDomains, setSsoDomains] = useState<Record<string, string[]>>({});
+  const [ssoDomains, setSsoDomains] = useState<SsoDomainMap>({});
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -43,7 +44,7 @@ export default function LoginPage() {
       .ssoProviders()
       .then((res) => {
         setSsoProviders(res.providers);
-        setSsoDomains(res.domains ?? {});
+        setSsoDomains(res.domain_policies ?? res.domains ?? {});
       })
       .catch(() => {});
   }, []);

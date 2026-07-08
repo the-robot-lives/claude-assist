@@ -15,20 +15,23 @@ defmodule Starter.Auth.SSO do
   def authenticate_sso(provider_type, %{email: email} = attrs) do
     context = Noizu.Context.system()
     email = email |> String.trim() |> String.downcase()
-    provider_ref = provider_ref(provider_type)
-    {:ok, provider_id} = Starter.Auth.Providers.Provider.id(provider_ref)
+    provider_type = provider_type(provider_type)
 
-    case find_user_by_email(email) do
-      {:ok, user} ->
-        ensure_sso_credential(user, provider_ref, provider_id, provider_type, attrs, context)
-        create_sso_session(user, provider_type, context)
+    with provider_type when not is_nil(provider_type) <- provider_type,
+         true <- Starter.Auth.SSODomains.sso_available?(email, provider_type) do
+      provider_ref = provider_ref(provider_type)
+      {:ok, provider_id} = Starter.Auth.Providers.Provider.id(provider_ref)
 
-      :not_found ->
-        if Application.get_env(:starter, :sso_require_invite, false) do
-          {:error, :user_not_provisioned}
-        else
+      case find_user_by_email(email) do
+        {:ok, user} ->
+          ensure_sso_credential(user, provider_ref, provider_id, provider_type, attrs, context)
+          create_sso_session(user, provider_type, context)
+
+        :not_found ->
           auto_provision_user(email, attrs, provider_ref, provider_id, provider_type, context)
-        end
+      end
+    else
+      _ -> {:error, :sso_not_allowed}
     end
   end
 
@@ -47,6 +50,20 @@ defmodule Starter.Auth.SSO do
       provider_ref -> provider_ref
     end
   end
+
+  defp provider_type(value) when is_atom(value), do: if(Map.has_key?(@provider_map, value), do: value)
+
+  defp provider_type(value) when is_binary(value) do
+    value
+    |> String.trim()
+    |> String.downcase()
+    |> String.to_existing_atom()
+    |> provider_type()
+  rescue
+    ArgumentError -> nil
+  end
+
+  defp provider_type(_), do: nil
 
   defp ensure_sso_credential(user, provider_ref, provider_id, provider_type, attrs, context) do
     user_ref = {:ref, Starter.Users.User, user.id}
@@ -107,9 +124,10 @@ defmodule Starter.Auth.SSO do
       handle: handle,
       name_id: name.id,
       email: email,
-      status: :pending,
+      status: Starter.Auth.SSODomains.registration_status(email, provider_type),
       verified: true,
-      flagged: false
+      flagged: false,
+      approved_at: auto_approved_at(email, provider_type)
     }
 
     {:ok, user} = Starter.Repo.insert(user_schema, on_conflict: :nothing, conflict_target: :email)
@@ -126,6 +144,10 @@ defmodule Starter.Auth.SSO do
     |> Starter.EntityRepo.create(context)
 
     create_sso_session(user, provider_type, context)
+  end
+
+  defp auto_approved_at(email, provider_type) do
+    if Starter.Auth.SSODomains.auto_approve?(email, provider_type), do: DateTime.utc_now()
   end
 
   defp sso_settings(:saml, attrs), do: %{email: attrs[:email], name_id: attrs[:name_id]}

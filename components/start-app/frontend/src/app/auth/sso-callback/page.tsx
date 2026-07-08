@@ -8,6 +8,7 @@ import { postAuthPath } from "@/lib/auth-flow";
 
 const ERROR_MESSAGES: Record<string, string> = {
   not_provisioned: "No account exists for this email. Please contact your administrator.",
+  sso_unavailable: "SSO is not available for this email domain.",
   sso_failed: "SSO authentication failed. Please try again.",
   oidc_failed: "OpenID Connect authentication failed.",
   google_failed: "Google sign-in failed.",

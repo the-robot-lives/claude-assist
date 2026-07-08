@@ -25,6 +25,21 @@ By default the target is `projects/<project-dir>/app`. The utility writes:
 Use `--execute --postgres-url <admin-url> --valkey-url <admin-url>` to apply the
 generated database and Valkey ACL provisioning.
 
+## SSO Domain Policy
+
+Generated Helm values include SSO availability and approval policy placeholders:
+
+```yaml
+sso:
+  domains: "example.com=oidc"
+  autoApproveDomains: ""
+```
+
+`domains` controls whether SSO is offered for an email domain and which providers
+are valid. `autoApproveDomains` controls which SSO-enabled domains bypass manual
+approval. Domains not listed in `autoApproveDomains` can still use SSO, but new
+users remain pending unless they redeem a valid invite.
+
 ## Generated Test Coverage
 
 The scaffold keeps the Cypress+Cucumber suite in `frontend/cypress/` and rewrites

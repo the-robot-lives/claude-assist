@@ -1,4 +1,4 @@
-import type { User } from "./api";
+import type { SsoDomainMap, User } from "./api";
 import { getRuntimeConfig } from "./runtime-config";
 
 export function userNeedsProfile(user: User | null | undefined) {
@@ -31,7 +31,19 @@ export function emailDomain(email: string) {
   return domain || "";
 }
 
-export function matchingSsoProviders(email: string, domains: Record<string, string[]> = {}) {
+export function matchingSsoProviders(email: string, domains: SsoDomainMap = {}) {
   const domain = emailDomain(email);
-  return domain ? domains[domain] ?? [] : [];
+  if (!domain) return [];
+
+  const policy = domains[domain];
+  if (!policy) return [];
+  return Array.isArray(policy) ? policy : policy.providers ?? [];
+}
+
+export function ssoDomainAutoApproves(email: string, domains: SsoDomainMap = {}) {
+  const domain = emailDomain(email);
+  if (!domain) return false;
+
+  const policy = domains[domain];
+  return !Array.isArray(policy) && Boolean(policy?.auto_approve);
 }

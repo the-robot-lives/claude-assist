@@ -37,6 +37,9 @@ Given("SSO is configured for the generated app", () => {
       domains: {
         [Cypress.env("ssoDomain")]: ["oidc"],
       },
+      domain_policies: {
+        [Cypress.env("ssoDomain")]: { providers: ["oidc"], auto_approve: false },
+      },
     },
   }).as("ssoProviders");
 });

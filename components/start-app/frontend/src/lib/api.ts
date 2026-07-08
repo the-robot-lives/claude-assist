@@ -64,6 +64,19 @@ interface PasswordResetResponse {
   dev_code?: string;
 }
 
+export interface SsoDomainPolicy {
+  providers: string[];
+  auto_approve?: boolean;
+}
+
+export type SsoDomainMap = Record<string, string[] | SsoDomainPolicy>;
+
+interface SsoProvidersResponse {
+  providers: string[];
+  domains?: Record<string, string[]>;
+  domain_policies?: Record<string, SsoDomainPolicy>;
+}
+
 let refreshPromise: Promise<string | null> | null = null;
 
 function authCookie(value: string | null) {
@@ -239,7 +252,7 @@ export const api = {
   },
 
   ssoProviders() {
-    return request<{ providers: string[]; domains?: Record<string, string[]> }>("/api/v1/auth/sso/providers");
+    return request<SsoProvidersResponse>("/api/v1/auth/sso/providers");
   },
 
   ssoExchange(code: string) {

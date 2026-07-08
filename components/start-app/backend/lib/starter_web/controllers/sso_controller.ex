@@ -15,7 +15,11 @@ defmodule StarterWeb.SSOController do
       |> maybe_add(:linkedin_enabled, "linkedin")
       |> maybe_add(:saml_enabled, "saml")
 
-    json(conn, %{providers: providers, domains: Application.get_env(:starter, :sso_domains, %{})})
+    json(conn, %{
+      providers: providers,
+      domains: Starter.Auth.SSODomains.providers_map(),
+      domain_policies: Starter.Auth.SSODomains.public_policies()
+    })
   end
 
   # ── OIDC ──────────────────────────────────────────────────────
@@ -108,6 +112,9 @@ defmodule StarterWeb.SSOController do
 
       {:error, :user_not_provisioned} ->
         redirect(conn, external: "#{frontend_url}/auth/sso-callback?error=not_provisioned")
+
+      {:error, :sso_not_allowed} ->
+        redirect(conn, external: "#{frontend_url}/auth/sso-callback?error=sso_unavailable")
 
       {:error, _} ->
         redirect(conn, external: "#{frontend_url}/auth/sso-callback?error=sso_failed")

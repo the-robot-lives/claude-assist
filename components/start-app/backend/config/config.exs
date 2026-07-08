@@ -51,6 +51,8 @@ config :starter, :github_enabled, false
 config :starter, :linkedin_enabled, false
 config :starter, :sso_require_invite, false
 config :starter, :sso_domains, %{}
+config :starter, :sso_auto_approve_domains, []
+config :starter, :sso_domain_policies, %{}
 
 config :junit_formatter,
   report_file: "results.xml"

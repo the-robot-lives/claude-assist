@@ -3,6 +3,7 @@ import {
   emailDomain,
   matchingSsoProviders,
   postAuthPath,
+  ssoDomainAutoApproves,
   userNeedsProfile,
   userPendingApproval,
 } from "./auth-flow";
@@ -25,6 +26,24 @@ assert.deepEqual(
     "sso.example.com": ["oidc", "google"],
   }),
   ["oidc", "google"]
+);
+assert.deepEqual(
+  matchingSsoProviders("ada@corp.example.com", {
+    "corp.example.com": { providers: ["oidc"], auto_approve: true },
+  }),
+  ["oidc"]
+);
+assert.equal(
+  ssoDomainAutoApproves("ada@corp.example.com", {
+    "corp.example.com": { providers: ["oidc"], auto_approve: true },
+  }),
+  true
+);
+assert.equal(
+  ssoDomainAutoApproves("ada@sso.example.com", {
+    "sso.example.com": ["oidc"],
+  }),
+  false
 );
 assert.deepEqual(matchingSsoProviders("ada@example.com", {}), []);
 

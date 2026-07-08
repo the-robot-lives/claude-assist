@@ -73,8 +73,13 @@ mail:
 
 sso:
   requireInvite: false
-  # Format: "example.com=oidc;corp.example=google,oidc"
+  # SSO availability by email domain. Format:
+  # "example.com=oidc;corp.example=google,oidc"
   domains: ""
+  # Domains whose SSO registrations are approved immediately. All other SSO
+  # registrations remain pending unless an invite activates them. Format:
+  # "example.com;corp.example" or "*" for every SSO-enabled domain.
+  autoApproveDomains: ""
   oidc:
     # Default OIDC issuer for portfolio services (Authentik at auth.noizu.com)
     # Example: https://auth.noizu.com/application/o/{app-slug}/
