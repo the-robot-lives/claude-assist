@@ -51,7 +51,8 @@ defmodule Starter.Auth.SSO do
     end
   end
 
-  defp provider_type(value) when is_atom(value), do: if(Map.has_key?(@provider_map, value), do: value)
+  defp provider_type(value) when is_atom(value),
+    do: if(Map.has_key?(@provider_map, value), do: value)
 
   defp provider_type(value) when is_binary(value) do
     value

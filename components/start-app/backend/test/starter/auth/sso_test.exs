@@ -48,7 +48,7 @@ defmodule Starter.Auth.SSOTest do
     email = "sso-approved-#{System.unique_integer([:positive])}@example.com"
 
     assert {:ok, session} =
-             Starter.Auth.SSO.authenticate_sso(:google, %{
+             Starter.Auth.SSO.authenticate_sso("google", %{
                email: email,
                name: %{first: "Ada", last: "Lovelace"},
                sub: "google-approved-#{System.unique_integer([:positive])}"

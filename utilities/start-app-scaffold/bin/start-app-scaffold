@@ -138,6 +138,84 @@ generate_secret() {
   openssl rand -base64 36 | tr '/+' '_-' | tr -d '='
 }
 
+yaml_escape() {
+  local value="$1"
+  value="${value//\\/\\\\}"
+  value="${value//\"/\\\"}"
+  printf "%s" "$value"
+}
+
+update_base_hydration_file() {
+  local file="$TARGET/.base-hydration.yaml"
+  [[ -f "$file" ]] || return 0
+
+  local applied_at
+  local themes_yaml
+  applied_at="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+  themes_yaml="$(
+    for theme in "${THEMES[@]}"; do
+      printf '      - "%s"\n' "$(yaml_escape "$theme")"
+    done
+  )"
+
+  export APPLIED_AT_YAML APP_NAME_YAML TAGLINE_YAML SITE_YAML TARGET_YAML REGISTRY_YAML
+  export THEMES_YAML DB_NAME_YAML DB_USER_YAML DB_PASSWORD_SOURCE_YAML
+  export VALKEY_USER_YAML VALKEY_PASSWORD_SOURCE_YAML POSTGRES_URL_PROVIDED_YAML
+  export VALKEY_URL_PROVIDED_YAML EXECUTE_YAML APP_DOMAIN_YAML COOKIE_DOMAIN_YAML
+  export ACTIVE_THEME_YAML
+
+  APPLIED_AT_YAML="$(yaml_escape "$applied_at")"
+  APP_NAME_YAML="$(yaml_escape "$APP_NAME")"
+  TAGLINE_YAML="$(yaml_escape "$TAGLINE")"
+  SITE_YAML="$(yaml_escape "$SITE")"
+  TARGET_YAML="$(yaml_escape "$TARGET")"
+  REGISTRY_YAML="$(yaml_escape "$REGISTRY")"
+  THEMES_YAML="$themes_yaml"
+  DB_NAME_YAML="$(yaml_escape "$DB_NAME")"
+  DB_USER_YAML="$(yaml_escape "$DB_USER")"
+  DB_PASSWORD_SOURCE_YAML="$(yaml_escape "$DB_PASSWORD_SOURCE")"
+  VALKEY_USER_YAML="$(yaml_escape "$VALKEY_USER")"
+  VALKEY_PASSWORD_SOURCE_YAML="$(yaml_escape "$VALKEY_PASSWORD_SOURCE")"
+  [[ -n "$POSTGRES_URL" ]] && POSTGRES_URL_PROVIDED_YAML=true || POSTGRES_URL_PROVIDED_YAML=false
+  [[ -n "$VALKEY_URL" ]] && VALKEY_URL_PROVIDED_YAML=true || VALKEY_URL_PROVIDED_YAML=false
+  [[ "$EXECUTE" == true ]] && EXECUTE_YAML=true || EXECUTE_YAML=false
+  APP_DOMAIN_YAML="$(yaml_escape "$APP_DOMAIN")"
+  COOKIE_DOMAIN_YAML="$(yaml_escape "$COOKIE_DOMAIN")"
+  ACTIVE_THEME_YAML="$(yaml_escape "$ACTIVE_THEME")"
+
+  perl -0pi -e '
+    my $block = "start_app_scaffold:\n"
+      . "  applied: true\n"
+      . "  applied_at: \"$ENV{APPLIED_AT_YAML}\"\n"
+      . "  tool: \"start-app-scaffold\"\n"
+      . "  args:\n"
+      . "    app_name: \"$ENV{APP_NAME_YAML}\"\n"
+      . "    tagline: \"$ENV{TAGLINE_YAML}\"\n"
+      . "    site: \"$ENV{SITE_YAML}\"\n"
+      . "    target: \"$ENV{TARGET_YAML}\"\n"
+      . "    registry: \"$ENV{REGISTRY_YAML}\"\n"
+      . "    themes:\n$ENV{THEMES_YAML}\n"
+      . "    db_name: \"$ENV{DB_NAME_YAML}\"\n"
+      . "    db_user: \"$ENV{DB_USER_YAML}\"\n"
+      . "    db_password_source: \"$ENV{DB_PASSWORD_SOURCE_YAML}\"\n"
+      . "    valkey_user: \"$ENV{VALKEY_USER_YAML}\"\n"
+      . "    valkey_password_source: \"$ENV{VALKEY_PASSWORD_SOURCE_YAML}\"\n"
+      . "    postgres_url_provided: $ENV{POSTGRES_URL_PROVIDED_YAML}\n"
+      . "    valkey_url_provided: $ENV{VALKEY_URL_PROVIDED_YAML}\n"
+      . "    execute: $ENV{EXECUTE_YAML}\n"
+      . "  derived:\n"
+      . "    app_domain: \"$ENV{APP_DOMAIN_YAML}\"\n"
+      . "    cookie_domain: \"$ENV{COOKIE_DOMAIN_YAML}\"\n"
+      . "    active_theme: \"$ENV{ACTIVE_THEME_YAML}\"\n";
+    s/start_app_scaffold:\n  applied: false\n/$block/s;
+  ' "$file"
+}
+
+DB_PASSWORD_SOURCE="provided"
+VALKEY_PASSWORD_SOURCE="provided"
+[[ -z "$DB_PASSWORD" ]] && DB_PASSWORD_SOURCE="generated"
+[[ -z "$VALKEY_PASSWORD" ]] && VALKEY_PASSWORD_SOURCE="generated"
+
 DB_PASSWORD="${DB_PASSWORD:-$(generate_secret)}"
 VALKEY_PASSWORD="${VALKEY_PASSWORD:-$(generate_secret)}"
 
@@ -289,6 +367,8 @@ postgres_sql=${TARGET}/.start-app-provision/provision-postgres.sql
 valkey_acl=${TARGET}/.start-app-provision/provision-valkey.acl
 helm_values=${TARGET}/.start-app-provision/helm-values.generated.yaml
 SUMMARY
+
+update_base_hydration_file
 
 if $EXECUTE; then
   if [[ -n "$POSTGRES_URL" ]]; then

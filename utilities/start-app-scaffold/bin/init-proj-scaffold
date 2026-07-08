@@ -29,6 +29,70 @@ TEMPLATE="$REPO_ROOT/components/start-app"
 TARBALL="$TEMPLATE/start-app.tar.gz"
 PROJECTS="$REPO_ROOT/projects"
 
+file_md5() {
+  local file="$1"
+  if command -v md5 >/dev/null 2>&1; then
+    md5 -q "$file"
+  elif command -v md5sum >/dev/null 2>&1; then
+    md5sum "$file" | awk '{print $1}'
+  else
+    openssl dgst -md5 -r "$file" | awk '{print $1}'
+  fi
+}
+
+yaml_escape() {
+  local value="$1"
+  value="${value//\\/\\\\}"
+  value="${value//\"/\\\"}"
+  printf "%s" "$value"
+}
+
+hydrate_base_hydration_file() {
+  local file="$TARGET/.base-hydration.yaml"
+  [[ -f "$file" ]] || return 0
+
+  export SOURCE_TEMPLATE_YAML TARBALL_PATH_YAML TARBALL_MD5_YAML HYDRATED_AT_YAML
+  export PROJECT_DIR_YAML SLUG_YAML ELIXIR_MODULE_YAML TARGET_YAML HELM_MODE_YAML
+  export WEB_MODULE_YAML OTP_APP_YAML OTP_APP_WEB_YAML DB_NAME_YAML DB_NAME_TEST_YAML
+  export FRONTEND_NAME_YAML HOST_PORT_YAML
+
+  SOURCE_TEMPLATE_YAML="$(yaml_escape "$TEMPLATE")"
+  TARBALL_PATH_YAML="$(yaml_escape "$TARBALL")"
+  TARBALL_MD5_YAML="$(yaml_escape "$TARBALL_MD5")"
+  HYDRATED_AT_YAML="$(yaml_escape "$HYDRATED_AT")"
+  PROJECT_DIR_YAML="$(yaml_escape "$PROJECT_DIR")"
+  SLUG_YAML="$(yaml_escape "$SLUG")"
+  ELIXIR_MODULE_YAML="$(yaml_escape "$ELIXIR_MODULE")"
+  TARGET_YAML="$(yaml_escape "$TARGET")"
+  HELM_MODE_YAML="$(yaml_escape "$HELM_MODE")"
+  WEB_MODULE_YAML="$(yaml_escape "$WEB_MODULE")"
+  OTP_APP_YAML="$(yaml_escape "$OTP_APP")"
+  OTP_APP_WEB_YAML="$(yaml_escape "$OTP_APP_WEB")"
+  DB_NAME_YAML="$(yaml_escape "$DB_NAME")"
+  DB_NAME_TEST_YAML="$(yaml_escape "$DB_NAME_TEST")"
+  FRONTEND_NAME_YAML="$(yaml_escape "$FRONTEND_NAME")"
+  HOST_PORT_YAML="$(yaml_escape "$HOST_PORT")"
+
+  perl -0pi -e '
+    s/__SOURCE_TEMPLATE__/$ENV{SOURCE_TEMPLATE_YAML}/g;
+    s/__TARBALL_PATH__/$ENV{TARBALL_PATH_YAML}/g;
+    s/__TARBALL_MD5__/$ENV{TARBALL_MD5_YAML}/g;
+    s/__HYDRATED_AT__/$ENV{HYDRATED_AT_YAML}/g;
+    s/__PROJECT_DIR__/$ENV{PROJECT_DIR_YAML}/g;
+    s/__SLUG__/$ENV{SLUG_YAML}/g;
+    s/__ELIXIR_MODULE__/$ENV{ELIXIR_MODULE_YAML}/g;
+    s/__TARGET__/$ENV{TARGET_YAML}/g;
+    s/__HELM_MODE__/$ENV{HELM_MODE_YAML}/g;
+    s/__WEB_MODULE__/$ENV{WEB_MODULE_YAML}/g;
+    s/__OTP_APP__/$ENV{OTP_APP_YAML}/g;
+    s/__OTP_APP_WEB__/$ENV{OTP_APP_WEB_YAML}/g;
+    s/__DB_NAME__/$ENV{DB_NAME_YAML}/g;
+    s/__DB_NAME_TEST__/$ENV{DB_NAME_TEST_YAML}/g;
+    s/__FRONTEND_NAME__/$ENV{FRONTEND_NAME_YAML}/g;
+    s/__HOST_PORT__/$ENV{HOST_PORT_YAML}/g;
+  ' "$file"
+}
+
 # ── Parse flags + positionals ─────────────────────────────────────
 TARGET_OVERRIDE=""
 HELM_MODE="ask"   # ask | skip | force
@@ -118,6 +182,9 @@ tar czf "$TARBALL" \
   --exclude='start-app.tar.gz' \
   -C "$TEMPLATE" .
 echo "Built: $TARBALL"
+TARBALL_MD5="$(file_md5 "$TARBALL")"
+HYDRATED_AT="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+echo "Tarball md5: $TARBALL_MD5"
 
 # ── Step 2: Extract ───────────────────────────────────────────────
 echo "Extracting to $TARGET ..."
@@ -183,6 +250,8 @@ services:
       - "${HOST_PORT}:80"
 OVERLAY
 
+hydrate_base_hydration_file
+
 # ── Step 5: Summary ───────────────────────────────────────────────
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
@@ -193,6 +262,7 @@ echo "  OTP app:  $OTP_APP"
 echo "  DB:       $DB_NAME (${SLUG}/${SLUG}_dev)"
 echo "  Port:     $HOST_PORT"
 echo "  Frontend: $FRONTEND_NAME"
+echo "  Hydration: $TARGET/.base-hydration.yaml"
 echo ""
 echo "Next steps:"
 echo "  cd $TARGET"

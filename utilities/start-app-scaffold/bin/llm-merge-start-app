@@ -1,0 +1,624 @@
+#!/usr/bin/env bash
+# Stage a fresh start-app scaffold with inferred project identity and hand the
+# merge to an LLM coding agent.
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+while [[ "$REPO_ROOT" != "/" ]]; do
+  [[ -d "$REPO_ROOT/.git" ]] && break
+  REPO_ROOT="$(dirname "$REPO_ROOT")"
+done
+
+TARGET_INPUT=""
+TARGET_APP=""
+PROJECT_DIR=""
+SLUG=""
+ELIXIR_MODULE=""
+APP_NAME=""
+TAGLINE=""
+SITE=""
+REGISTRY="${REGISTRY:-ops.noizu.com}"
+WORKDIR=""
+AGENT_CMD="${LLM_MERGE_AGENT_CMD:-}"
+APPLY=false
+PRINT_PROMPT=false
+HISTORY=true
+HISTORY_DEPTH=12
+KEEP=true
+POSITIONAL=()
+
+usage() {
+  cat <<'USAGE'
+Stage a fresh start-app scaffold and optionally invoke an LLM-assisted merge.
+
+Usage:
+  llm-merge-start-app <project-dir|project-root|app-dir> [options]
+  llm-merge-start-app projects/example.com/app --apply
+  llm-merge-start-app example.com --slug ex --module Example --app-name "Example"
+
+The command infers project-dir, slug, Elixir module, app name, tagline, and
+site/domain from an existing target when possible. It then creates a fresh
+hydrated start-app scaffold in a merge workspace and writes:
+
+  metadata.env             inferred identity
+  diff-stat.txt            target vs fresh scaffold summary
+  diff.patch               target vs fresh scaffold patch, excluding secrets
+  file-sets/*.txt          added/removed/common file inventories
+  git-history.txt          recent target history
+  agent-prompt.md          prompt for an LLM coding agent
+
+By default this does not modify the target app beyond creating the merge
+workspace. Pass --apply to run the LLM agent.
+
+Options:
+  --target <dir>           Existing app target. Overrides positional target.
+  --project-dir <name>     Project dir/domain, usually under projects/<name>.
+  --slug <slug>            App slug for package/db/user names.
+  --module <PascalCase>    Elixir module name.
+  --app-name <name>        Visible app/product name.
+  --tagline <tagline>      Visible tagline/metadata description.
+  --site <domain>          Public site domain.
+  --registry <host>        Image registry. Defaults to ops.noizu.com.
+  --workdir <dir>          Merge workspace. Defaults under target/.start-app-merge.
+  --agent-cmd <cmd>        Command to run for --apply. It receives the prompt
+                           file path in LLM_MERGE_PROMPT_FILE.
+  --history-depth <n>      Git commits to include. Defaults to 12.
+  --no-history             Skip git history collection.
+  --apply                  Invoke the LLM coding agent after staging.
+  --print-prompt           Print the generated prompt path and content.
+  -h, --help               Show this help.
+
+Agent selection for --apply:
+  1. --agent-cmd / LLM_MERGE_AGENT_CMD, called with LLM_MERGE_PROMPT_FILE set.
+  2. codex exec --cd <repo> <prompt>, when codex is available.
+  3. claude -p <prompt>, when claude is available.
+
+Secrets:
+  Fresh scaffold credentials are placeholders. Existing .env files and
+  .start-app-provision directories are excluded from generated diffs.
+USAGE
+}
+
+die() {
+  echo "Error: $*" >&2
+  exit 1
+}
+
+warn() {
+  echo "Warning: $*" >&2
+}
+
+info() {
+  echo "$*" >&2
+}
+
+abs_path() {
+  local path="$1"
+  if [[ "$path" == /* ]]; then
+    printf "%s\n" "$path"
+  else
+    printf "%s\n" "$PWD/$path"
+  fi
+}
+
+trim() {
+  local value="$1"
+  value="${value#"${value%%[![:space:]]*}"}"
+  value="${value%"${value##*[![:space:]]}"}"
+  printf "%s\n" "$value"
+}
+
+title_from_slug() {
+  local value="$1"
+  value="${value%%/app}"
+  value="${value##*/}"
+  value="$(printf "%s" "$value" | sed -E 's/\.(com|net|org|io|is|us|ai|dev|app)$//')"
+  value="$(printf "%s" "$value" | tr '_-' '  ')"
+  value="$(printf "%s" "$value" | tr '.' ' ')"
+  awk '{
+    for (i = 1; i <= NF; i++) {
+      $i = toupper(substr($i, 1, 1)) substr($i, 2)
+    }
+    print
+  }' <<<"$value"
+}
+
+pascal_from_domain() {
+  local value="$1"
+  value="${value%%/app}"
+  value="${value##*/}"
+  value="$(printf "%s" "$value" | sed -E 's/\.(com|net|org|io|is|us|ai|dev|app)$//')"
+  printf "%s" "$value" |
+    tr '.-_/' '    ' |
+    awk '{
+      out = ""
+      for (i = 1; i <= NF; i++) {
+        out = out toupper(substr($i, 1, 1)) substr($i, 2)
+      }
+      print out
+    }'
+}
+
+slug_from_domain() {
+  local value="$1"
+  value="${value%%/app}"
+  value="${value##*/}"
+  local root="${value%%.*}"
+  root="$(printf "%s" "$root" | tr '[:upper:]' '[:lower:]' | tr -cd 'a-z0-9')"
+  if [[ -n "$root" ]]; then
+    printf "%s\n" "$root"
+  else
+    printf "%s" "$value" | tr '[:upper:]' '[:lower:]' | tr -cd 'a-z0-9' | cut -c1-16
+    printf "\n"
+  fi
+}
+
+read_json_name() {
+  local file="$1"
+  [[ -f "$file" ]] || return 1
+  sed -nE 's/^[[:space:]]*"name"[[:space:]]*:[[:space:]]*"([^"]+)".*/\1/p' "$file" | head -n 1
+}
+
+read_env_key() {
+  local file="$1"
+  local key="$2"
+  [[ -f "$file" ]] || return 1
+  sed -nE "s/^${key}=//p" "$file" | head -n 1
+}
+
+read_yaml_string_key() {
+  local file="$1"
+  local key="$2"
+  local value
+  [[ -f "$file" ]] || return 1
+  value="$(
+    sed -nE \
+      -e "s/^[[:space:]]*${key}:[[:space:]]*\"([^\"]+)\".*/\1/p" \
+      -e "s/^[[:space:]]*${key}:[[:space:]]*([^#[:space:]][^#]*).*/\1/p" \
+      "$file" |
+      head -n 1
+  )"
+  value="${value%%#*}"
+  value="$(trim "$value")"
+  [[ -n "$value" ]] || return 1
+  printf "%s\n" "$value"
+}
+
+infer_from_target() {
+  local frontend_package="$TARGET_APP/frontend/package.json"
+  local backend_mix="$TARGET_APP/backend/mix.exs"
+  local layout="$TARGET_APP/frontend/src/app/layout.tsx"
+  local branding="$TARGET_APP/frontend/src/config/theme-style-guide/branding.yaml"
+  local env_file="$TARGET_APP/.env"
+  local env_example="$TARGET_APP/.env.example"
+  local helm_values="$TARGET_APP/helm/start-app/values.yaml"
+  local package_name=""
+  local metadata_title=""
+  local metadata_description=""
+  local app_url=""
+  local helm_domain=""
+
+  if [[ -z "$SLUG" ]]; then
+    package_name="$(read_json_name "$frontend_package" || true)"
+    if [[ -n "$package_name" ]]; then
+      SLUG="${package_name%-frontend}"
+    fi
+  fi
+
+  if [[ -z "$SLUG" ]]; then
+    SLUG="$(read_env_key "$env_file" PROJECT_SLUG || read_env_key "$env_example" PROJECT_SLUG || true)"
+  fi
+
+  if [[ -z "$ELIXIR_MODULE" && -f "$backend_mix" ]]; then
+    ELIXIR_MODULE="$(sed -nE 's/^defmodule[[:space:]]+([A-Za-z0-9_]+)\.MixProject[[:space:]]+do/\1/p' "$backend_mix" | head -n 1)"
+  fi
+
+  if [[ -z "$APP_NAME" ]]; then
+    APP_NAME="$(read_yaml_string_key "$branding" "name" || true)"
+    [[ "$APP_NAME" == "Your Project" ]] && APP_NAME=""
+  fi
+
+  if [[ -z "$APP_NAME" && -f "$layout" ]]; then
+    metadata_title="$(sed -nE 's/^[[:space:]]*title:[[:space:]]*"([^"]+)".*/\1/p' "$layout" | head -n 1)"
+    if [[ -n "$metadata_title" ]]; then
+      APP_NAME="${metadata_title%%:*}"
+    fi
+    [[ "$APP_NAME" == "Start-App" ]] && APP_NAME=""
+  fi
+
+  if [[ -z "$TAGLINE" && -f "$layout" ]]; then
+    metadata_description="$(sed -nE 's/^[[:space:]]*description:[[:space:]]*"([^"]+)".*/\1/p' "$layout" | head -n 1)"
+    if [[ -n "$metadata_description" && "$metadata_description" != "Tagline" ]]; then
+      TAGLINE="$metadata_description"
+    fi
+  fi
+
+  if [[ -z "$TAGLINE" && -f "$branding" ]]; then
+    TAGLINE="$(sed -nE 's/.*STYLE GUIDE[[:space:]]*[^[:alnum:][:space:]][[:space:]]*([^"]+)".*/\1/p' "$branding" | head -n 1 || true)"
+    [[ "$TAGLINE" == "REPLACE WITH YOUR TAGLINE" ]] && TAGLINE=""
+  fi
+
+  if [[ -z "$SITE" ]]; then
+    app_url="$(read_env_key "$env_file" NEXT_PUBLIC_APP_URL || true)"
+    if [[ "$app_url" =~ ^https?://app\.([^/:]+) ]]; then
+      SITE="${BASH_REMATCH[1]}"
+    elif [[ "$app_url" =~ ^https?://([^/:]+) ]]; then
+      SITE="${BASH_REMATCH[1]}"
+    fi
+  fi
+
+  if [[ "$SITE" == "localhost" || "$SITE" == "app.localhost" ]]; then
+    SITE=""
+  fi
+
+  if [[ -z "$SITE" ]]; then
+    helm_domain="$(read_yaml_string_key "$helm_values" "domain" || true)"
+    [[ -n "$helm_domain" ]] && SITE="$helm_domain"
+  fi
+
+  return 0
+}
+
+resolve_target() {
+  if [[ -n "$TARGET_APP" ]]; then
+    TARGET_APP="$(abs_path "$TARGET_APP")"
+  elif [[ -n "$TARGET_INPUT" ]]; then
+    if [[ "$TARGET_INPUT" == /* || "$TARGET_INPUT" == .* || "$TARGET_INPUT" == */* ]]; then
+      local candidate
+      candidate="$(abs_path "$TARGET_INPUT")"
+      if [[ -d "$candidate/app/backend" || -d "$candidate/app/frontend" ]]; then
+        TARGET_APP="$candidate/app"
+      else
+        TARGET_APP="$candidate"
+      fi
+    else
+      TARGET_APP="$REPO_ROOT/projects/$TARGET_INPUT/app"
+    fi
+  else
+    case "$PWD" in
+      "$REPO_ROOT"/projects/*/app*)
+        TARGET_APP="${PWD%%/app*}/app"
+        ;;
+      "$REPO_ROOT"/projects/*)
+        local rel="${PWD#"$REPO_ROOT"/projects/}"
+        local project="${rel%%/*}"
+        TARGET_APP="$REPO_ROOT/projects/$project/app"
+        ;;
+      *)
+        die "Missing target. Pass a project dir, project root, or app dir."
+        ;;
+    esac
+  fi
+
+  if [[ -z "$PROJECT_DIR" ]]; then
+    case "$TARGET_APP" in
+      "$REPO_ROOT"/projects/*/app)
+        local rel="${TARGET_APP#"$REPO_ROOT"/projects/}"
+        PROJECT_DIR="${rel%%/app}"
+        ;;
+      */app)
+        PROJECT_DIR="$(basename "$(dirname "$TARGET_APP")")"
+        ;;
+      *)
+        PROJECT_DIR="$(basename "$TARGET_APP")"
+        ;;
+    esac
+  fi
+}
+
+write_metadata() {
+  local file="$1"
+  cat > "$file" <<EOF
+TARGET_APP=$(printf "%q" "$TARGET_APP")
+FRESH_APP=$(printf "%q" "$FRESH_APP")
+PROJECT_DIR=$(printf "%q" "$PROJECT_DIR")
+SLUG=$(printf "%q" "$SLUG")
+ELIXIR_MODULE=$(printf "%q" "$ELIXIR_MODULE")
+APP_NAME=$(printf "%q" "$APP_NAME")
+TAGLINE=$(printf "%q" "$TAGLINE")
+SITE=$(printf "%q" "$SITE")
+REGISTRY=$(printf "%q" "$REGISTRY")
+WORKDIR=$(printf "%q" "$WORKDIR")
+EOF
+}
+
+collect_file_sets() {
+  local target="$1"
+  local fresh="$2"
+  local out_dir="$3"
+  mkdir -p "$out_dir"
+
+  (
+    cd "$target"
+    find . -type f \
+      ! -path './.git/*' \
+      ! -path './node_modules/*' \
+      ! -path './frontend/node_modules/*' \
+      ! -path './backend/deps/*' \
+      ! -path './backend/_build/*' \
+      ! -path './.start-app-merge/*' \
+      ! -path './.start-app-provision/*' \
+      ! -name '.env' \
+      ! -name '*.log' |
+      sort
+  ) > "$out_dir/target-files.txt"
+
+  (
+    cd "$fresh"
+    find . -type f \
+      ! -path './.git/*' \
+      ! -path './node_modules/*' \
+      ! -path './frontend/node_modules/*' \
+      ! -path './backend/deps/*' \
+      ! -path './backend/_build/*' \
+      ! -path './.start-app-provision/*' \
+      ! -name '.env' \
+      ! -name '*.log' |
+      sort
+  ) > "$out_dir/fresh-files.txt"
+
+  comm -12 "$out_dir/target-files.txt" "$out_dir/fresh-files.txt" > "$out_dir/common-files.txt"
+  comm -23 "$out_dir/target-files.txt" "$out_dir/fresh-files.txt" > "$out_dir/target-only-files.txt"
+  comm -13 "$out_dir/target-files.txt" "$out_dir/fresh-files.txt" > "$out_dir/fresh-only-files.txt"
+}
+
+collect_diff() {
+  local target="$1"
+  local fresh="$2"
+  local stat_file="$3"
+  local patch_file="$4"
+  local excludes=(
+    --exclude='.env'
+    --exclude='.env.*'
+    --exclude='.start-app-merge'
+    --exclude='.start-app-provision'
+    --exclude='node_modules'
+    --exclude='deps'
+    --exclude='_build'
+    --exclude='*.log'
+  )
+
+  diff -qr "${excludes[@]}" "$target" "$fresh" > "$stat_file" || true
+  diff -ruN "${excludes[@]}" "$target" "$fresh" > "$patch_file" || true
+}
+
+collect_history() {
+  local target="$1"
+  local history_file="$2"
+  local status_file="$3"
+
+  : > "$history_file"
+  : > "$status_file"
+  [[ "$HISTORY" == true ]] || return 0
+  git -C "$REPO_ROOT" rev-parse --is-inside-work-tree >/dev/null 2>&1 || return 0
+
+  local rel_target="$target"
+  case "$target" in
+    "$REPO_ROOT"/*) rel_target="${target#"$REPO_ROOT"/}" ;;
+  esac
+
+  {
+    echo "# Recent commits touching $rel_target"
+    git -C "$REPO_ROOT" log --oneline --decorate --max-count="$HISTORY_DEPTH" -- "$rel_target" || true
+    echo
+    echo "# Recent changed paths"
+    git -C "$REPO_ROOT" log --name-status --max-count="$HISTORY_DEPTH" -- "$rel_target" || true
+  } > "$history_file"
+
+  git -C "$REPO_ROOT" status --short -- "$rel_target" > "$status_file" || true
+}
+
+write_prompt() {
+  local prompt_file="$1"
+  cat > "$prompt_file" <<EOF
+# LLM-assisted start-app merge
+
+You are merging the current \`components/start-app\` scaffold into an existing
+hydrated portfolio app. Treat this as a careful code merge, not a replacement.
+
+## Identity
+
+- Target app: \`$TARGET_APP\`
+- Fresh scaffold: \`$FRESH_APP\`
+- Project dir/domain: \`$PROJECT_DIR\`
+- Site/domain: \`$SITE\`
+- Slug: \`$SLUG\`
+- Elixir module: \`$ELIXIR_MODULE\`
+- Product name: \`$APP_NAME\`
+- Tagline: \`$TAGLINE\`
+- Merge workspace: \`$WORKDIR\`
+
+## Generated context
+
+- Metadata: \`$WORKDIR/metadata.env\`
+- Diff stat: \`$WORKDIR/diff-stat.txt\`
+- Full patch: \`$WORKDIR/diff.patch\`
+- File inventories: \`$WORKDIR/file-sets/\`
+- Target hydration metadata: \`$TARGET_APP/.base-hydration.yaml\` when present
+- Fresh hydration metadata: \`$FRESH_APP/.base-hydration.yaml\`
+- Git history: \`$WORKDIR/git-history.txt\`
+- Dirty target status: \`$WORKDIR/git-status.txt\`
+- Merge report to write: \`$WORKDIR/merge-report.md\`
+
+## Rules
+
+1. Preserve target-specific product work: branding, domain configuration,
+   custom features, routes, migrations, tests, copy, theme changes, secrets,
+   and local deployment choices.
+2. Import scaffold improvements from the fresh scaffold when they are generic
+   reusable logic, dependency updates, bug fixes, auth flow fixes, test harness
+   fixes, Docker/build fixes, Helm template fixes, or shared configuration
+   improvements.
+3. Use git history when a target change may be either a product extension or an
+   older scaffold artifact. History is especially useful for files that still
+   look scaffold-shaped but have target-specific edits.
+4. Do not copy generated placeholder credentials from the fresh scaffold. Do not
+   print or inspect secret values from existing \`.env\` files.
+5. Do not commit. Leave unrelated repo changes alone.
+6. When uncertain, keep the target behavior and record the uncertainty in the
+   merge report.
+
+## Suggested workflow
+
+1. Read \`metadata.env\`, hydration metadata files, \`diff-stat.txt\`,
+   \`git-status.txt\`, and \`file-sets/*.txt\`.
+2. Inspect \`diff.patch\` selectively. It is target-to-fresh, so plus lines are
+   fresh scaffold content and minus lines are current target content.
+3. For high-conflict files, compare the target file, fresh file, and relevant
+   git history before editing.
+4. Apply focused edits to \`$TARGET_APP\`.
+5. Run lightweight validation appropriate to changed files when practical.
+6. Write \`$WORKDIR/merge-report.md\` with:
+   - changes applied
+   - scaffold updates intentionally skipped
+   - conflicts or follow-ups
+   - validation run or skipped
+
+Start now.
+EOF
+}
+
+run_agent() {
+  local prompt_file="$1"
+  local prompt
+  prompt="$(cat "$prompt_file")"
+
+  if [[ -n "$AGENT_CMD" ]]; then
+    info "Running custom agent command..."
+    LLM_MERGE_PROMPT_FILE="$prompt_file" bash -lc "$AGENT_CMD"
+  elif command -v codex >/dev/null 2>&1; then
+    info "Running codex exec..."
+    codex exec --cd "$REPO_ROOT" "$prompt"
+  elif command -v claude >/dev/null 2>&1; then
+    info "Running claude -p..."
+    claude -p "$prompt"
+  else
+    die "No LLM agent found. Install codex/claude or pass --agent-cmd."
+  fi
+}
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --target) TARGET_APP="$2"; shift 2 ;;
+    --target=*) TARGET_APP="${1#*=}"; shift ;;
+    --project-dir) PROJECT_DIR="$2"; shift 2 ;;
+    --project-dir=*) PROJECT_DIR="${1#*=}"; shift ;;
+    --slug) SLUG="$2"; shift 2 ;;
+    --slug=*) SLUG="${1#*=}"; shift ;;
+    --module) ELIXIR_MODULE="$2"; shift 2 ;;
+    --module=*) ELIXIR_MODULE="${1#*=}"; shift ;;
+    --app-name) APP_NAME="$2"; shift 2 ;;
+    --app-name=*) APP_NAME="${1#*=}"; shift ;;
+    --tagline) TAGLINE="$2"; shift 2 ;;
+    --tagline=*) TAGLINE="${1#*=}"; shift ;;
+    --site) SITE="$2"; shift 2 ;;
+    --site=*) SITE="${1#*=}"; shift ;;
+    --registry) REGISTRY="$2"; shift 2 ;;
+    --registry=*) REGISTRY="${1#*=}"; shift ;;
+    --workdir) WORKDIR="$2"; shift 2 ;;
+    --workdir=*) WORKDIR="${1#*=}"; shift ;;
+    --agent-cmd) AGENT_CMD="$2"; shift 2 ;;
+    --agent-cmd=*) AGENT_CMD="${1#*=}"; shift ;;
+    --history-depth) HISTORY_DEPTH="$2"; shift 2 ;;
+    --history-depth=*) HISTORY_DEPTH="${1#*=}"; shift ;;
+    --no-history) HISTORY=false; shift ;;
+    --apply) APPLY=true; shift ;;
+    --print-prompt) PRINT_PROMPT=true; shift ;;
+    --keep) KEEP=true; shift ;;
+    --no-keep) KEEP=false; shift ;;
+    -h|--help) usage; exit 0 ;;
+    -*) die "Unknown option: $1" ;;
+    *) POSITIONAL+=("$1"); shift ;;
+  esac
+done
+
+if [[ ${#POSITIONAL[@]} -gt 1 ]]; then
+  die "Expected at most one positional target."
+elif [[ ${#POSITIONAL[@]} -eq 1 ]]; then
+  TARGET_INPUT="${POSITIONAL[0]}"
+fi
+
+[[ "$HISTORY_DEPTH" =~ ^[0-9]+$ ]] || die "--history-depth must be a number"
+
+resolve_target
+[[ -d "$TARGET_APP" ]] || die "Target app does not exist: $TARGET_APP. Run start-app-scaffold first or pass --target."
+infer_from_target
+
+SITE="${SITE:-$PROJECT_DIR}"
+SLUG="${SLUG:-$(slug_from_domain "$PROJECT_DIR")}"
+ELIXIR_MODULE="${ELIXIR_MODULE:-$(pascal_from_domain "$PROJECT_DIR")}"
+APP_NAME="${APP_NAME:-$(title_from_slug "$PROJECT_DIR")}"
+TAGLINE="${TAGLINE:-Operational dashboard}"
+
+[[ -n "$PROJECT_DIR" ]] || die "Could not infer project dir."
+[[ -n "$SLUG" ]] || die "Could not infer slug. Pass --slug."
+[[ "$ELIXIR_MODULE" =~ ^[A-Z][A-Za-z0-9_]*$ ]] || die "--module must be PascalCase."
+[[ -n "$APP_NAME" ]] || die "Could not infer app name. Pass --app-name."
+[[ -n "$SITE" ]] || die "Could not infer site/domain. Pass --site."
+[[ "$ELIXIR_MODULE" != "Starter" ]] || die "Target still uses the raw Starter module. Use a hydrated project app target or pass a real --module."
+
+if [[ -z "$WORKDIR" ]]; then
+  timestamp="$(date +%Y%m%d-%H%M%S)"
+  WORKDIR="$TARGET_APP/.start-app-merge/$timestamp"
+else
+  WORKDIR="$(abs_path "$WORKDIR")"
+fi
+
+FRESH_APP="$WORKDIR/fresh/app"
+mkdir -p "$WORKDIR/fresh"
+
+info "Inferred start-app identity:"
+info "  target:  $TARGET_APP"
+info "  project: $PROJECT_DIR"
+info "  site:    $SITE"
+info "  slug:    $SLUG"
+info "  module:  $ELIXIR_MODULE"
+info "  app:     $APP_NAME"
+info "  tagline: $TAGLINE"
+info ""
+info "Creating fresh scaffold at $FRESH_APP ..."
+
+"$SCRIPT_DIR/start-app-scaffold" \
+  --project-dir "$PROJECT_DIR" \
+  --slug "$SLUG" \
+  --module "$ELIXIR_MODULE" \
+  --app-name "$APP_NAME" \
+  --tagline "$TAGLINE" \
+  --site "$SITE" \
+  --target "$FRESH_APP" \
+  --registry "$REGISTRY" \
+  --db-password "CHANGE_ME_DB_PASSWORD" \
+  --valkey-password "CHANGE_ME_VALKEY_PASSWORD" \
+  --force
+
+write_metadata "$WORKDIR/metadata.env"
+collect_file_sets "$TARGET_APP" "$FRESH_APP" "$WORKDIR/file-sets"
+collect_diff "$TARGET_APP" "$FRESH_APP" "$WORKDIR/diff-stat.txt" "$WORKDIR/diff.patch"
+collect_history "$TARGET_APP" "$WORKDIR/git-history.txt" "$WORKDIR/git-status.txt"
+write_prompt "$WORKDIR/agent-prompt.md"
+
+if [[ "$PRINT_PROMPT" == true ]]; then
+  echo
+  cat "$WORKDIR/agent-prompt.md"
+fi
+
+echo
+echo "Prepared LLM merge workspace:"
+echo "  $WORKDIR"
+echo
+echo "Review:"
+echo "  less '$WORKDIR/diff-stat.txt'"
+echo "  less '$WORKDIR/agent-prompt.md'"
+echo
+
+if [[ "$APPLY" == true ]]; then
+  run_agent "$WORKDIR/agent-prompt.md"
+else
+  echo "No target files were merged yet. Re-run with --apply to invoke the LLM agent."
+fi
+
+if [[ "$KEEP" != true ]]; then
+  warn "--no-keep was requested, but cleanup is intentionally manual for merge auditability: $WORKDIR"
+fi
