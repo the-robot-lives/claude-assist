@@ -199,4 +199,4 @@ echo "  cd $TARGET"
 echo "  make init"
 echo "  make build"
 echo "  make run"
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" SCRIPT_EOF
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"

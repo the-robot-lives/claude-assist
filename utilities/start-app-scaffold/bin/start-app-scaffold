@@ -1,0 +1,293 @@
+#!/usr/bin/env bash
+# Scaffold and provision a start-app instance.
+#
+# Usage:
+#   start-app-scaffold --project-dir example.com --slug example --module Example \
+#     --app-name "Example" --tagline "Operational dashboard" --site example.com
+#
+# By default this creates the app and writes local provisioning artifacts under
+# <target>/.start-app-provision. Use --execute with --postgres-url and/or
+# --valkey-url to apply the generated database and Valkey ACL steps.
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+while [[ "$REPO_ROOT" != "/" ]]; do
+  [[ -d "$REPO_ROOT/.git" ]] && break
+  REPO_ROOT="$(dirname "$REPO_ROOT")"
+done
+
+PROJECT_DIR=""
+SLUG=""
+ELIXIR_MODULE=""
+APP_NAME="Start-App"
+TAGLINE="Tagline"
+SITE=""
+TARGET=""
+REGISTRY="${REGISTRY:-ops.noizu.com}"
+THEMES=()
+DB_NAME=""
+DB_USER=""
+DB_PASSWORD=""
+VALKEY_USER=""
+VALKEY_PASSWORD=""
+POSTGRES_URL=""
+VALKEY_URL=""
+EXECUTE=false
+FORCE=false
+
+usage() {
+  cat <<'USAGE'
+Scaffold and provision a start-app instance.
+
+Usage:
+  start-app-scaffold --project-dir example.com --slug example --module Example \
+    --app-name "Example" --tagline "Operational dashboard" --site example.com
+
+By default this creates the app and writes local provisioning artifacts under
+<target>/.start-app-provision. Use --execute with --postgres-url and/or
+--valkey-url to apply the generated database and Valkey ACL steps.
+
+Options:
+  --project-dir <name>       Portfolio project dir, usually the site domain.
+  --slug <slug>              App slug for package/db/user names.
+  --module <PascalCase>      Elixir module name.
+  --app-name <name>          Visible app/product name.
+  --tagline <tagline>        Visible tagline and metadata description.
+  --site <domain>            Public site domain; app domain becomes app.<site>.
+  --target <dir>             Target app directory. Defaults to projects/<project-dir>/app.
+  --theme <name>             Theme name. Repeatable. First value is active.
+  --registry <host>          Image registry. Defaults to ops.noizu.com.
+  --db-name <name>           Database name. Defaults from project dir.
+  --db-user <user>           Database role. Defaults to slug.
+  --db-password <password>   Database password. Generated if omitted.
+  --valkey-user <user>       Valkey ACL user. Defaults to slug.
+  --valkey-password <pass>   Valkey ACL password. Generated if omitted.
+  --postgres-url <url>       Admin Postgres URL for --execute.
+  --valkey-url <url>         Admin Redis/Valkey URL for --execute.
+  --execute                  Apply generated DB/Valkey provisioning.
+  --force                    Allow hydrating an existing target.
+USAGE
+}
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --project-dir) PROJECT_DIR="$2"; shift 2 ;;
+    --project-dir=*) PROJECT_DIR="${1#*=}"; shift ;;
+    --slug) SLUG="$2"; shift 2 ;;
+    --slug=*) SLUG="${1#*=}"; shift ;;
+    --module) ELIXIR_MODULE="$2"; shift 2 ;;
+    --module=*) ELIXIR_MODULE="${1#*=}"; shift ;;
+    --app-name) APP_NAME="$2"; shift 2 ;;
+    --app-name=*) APP_NAME="${1#*=}"; shift ;;
+    --tagline) TAGLINE="$2"; shift 2 ;;
+    --tagline=*) TAGLINE="${1#*=}"; shift ;;
+    --site) SITE="$2"; shift 2 ;;
+    --site=*) SITE="${1#*=}"; shift ;;
+    --target) TARGET="$2"; shift 2 ;;
+    --target=*) TARGET="${1#*=}"; shift ;;
+    --theme) THEMES+=("$2"); shift 2 ;;
+    --theme=*) THEMES+=("${1#*=}"); shift ;;
+    --registry) REGISTRY="$2"; shift 2 ;;
+    --registry=*) REGISTRY="${1#*=}"; shift ;;
+    --db-name) DB_NAME="$2"; shift 2 ;;
+    --db-name=*) DB_NAME="${1#*=}"; shift ;;
+    --db-user) DB_USER="$2"; shift 2 ;;
+    --db-user=*) DB_USER="${1#*=}"; shift ;;
+    --db-password) DB_PASSWORD="$2"; shift 2 ;;
+    --db-password=*) DB_PASSWORD="${1#*=}"; shift ;;
+    --valkey-user) VALKEY_USER="$2"; shift 2 ;;
+    --valkey-user=*) VALKEY_USER="${1#*=}"; shift ;;
+    --valkey-password) VALKEY_PASSWORD="$2"; shift 2 ;;
+    --valkey-password=*) VALKEY_PASSWORD="${1#*=}"; shift ;;
+    --postgres-url) POSTGRES_URL="$2"; shift 2 ;;
+    --postgres-url=*) POSTGRES_URL="${1#*=}"; shift ;;
+    --valkey-url) VALKEY_URL="$2"; shift 2 ;;
+    --valkey-url=*) VALKEY_URL="${1#*=}"; shift ;;
+    --execute) EXECUTE=true; shift ;;
+    --force) FORCE=true; shift ;;
+    -h|--help) usage; exit 0 ;;
+    *) echo "Unknown option: $1" >&2; usage; exit 1 ;;
+  esac
+done
+
+[[ -n "$PROJECT_DIR" ]] || { echo "Missing --project-dir" >&2; exit 1; }
+[[ -n "$SLUG" ]] || { echo "Missing --slug" >&2; exit 1; }
+[[ -n "$ELIXIR_MODULE" ]] || { echo "Missing --module" >&2; exit 1; }
+[[ -n "$SITE" ]] || SITE="$PROJECT_DIR"
+[[ "$ELIXIR_MODULE" =~ ^[A-Z] ]] || { echo "--module must be PascalCase" >&2; exit 1; }
+
+if [[ -z "$TARGET" ]]; then
+  TARGET="$REPO_ROOT/projects/$PROJECT_DIR/app"
+elif [[ "$TARGET" != /* ]]; then
+  TARGET="$PWD/$TARGET"
+fi
+
+DB_NAME="${DB_NAME:-$(echo "$PROJECT_DIR" | tr '.-' '__')_dev}"
+DB_USER="${DB_USER:-$SLUG}"
+VALKEY_USER="${VALKEY_USER:-$SLUG}"
+APP_DOMAIN="app.${SITE}"
+COOKIE_DOMAIN=".${SITE}"
+if [[ ${#THEMES[@]} -eq 0 ]]; then
+  THEMES=("starter")
+fi
+ACTIVE_THEME="${THEMES[0]}"
+
+generate_secret() {
+  openssl rand -base64 36 | tr '/+' '_-' | tr -d '='
+}
+
+DB_PASSWORD="${DB_PASSWORD:-$(generate_secret)}"
+VALKEY_PASSWORD="${VALKEY_PASSWORD:-$(generate_secret)}"
+
+if [[ -d "$TARGET" && "$FORCE" != true ]]; then
+  echo "Target exists: $TARGET" >&2
+  echo "Use --force to hydrate an existing scaffold." >&2
+  exit 1
+fi
+
+if [[ ! -d "$TARGET" ]]; then
+  "$SCRIPT_DIR/init-proj-scaffold" "$PROJECT_DIR" "$SLUG" "$ELIXIR_MODULE" --target "$TARGET" --no-helm
+fi
+
+mkdir -p "$TARGET/.start-app-provision"
+
+replace_in_file() {
+  local file="$1" from="$2" to="$3"
+  [[ -f "$file" ]] || return 0
+  perl -0pi -e 's/\Q$ENV{FROM}\E/$ENV{TO}/g' "$file"
+}
+
+set_env_key() {
+  local file="$1" key="$2" value="$3"
+  [[ -f "$file" ]] || return 0
+  KEY="$key" VALUE="$value" perl -0pi -e 'BEGIN { $key = $ENV{"KEY"}; $value = $ENV{"VALUE"} } s/^\Q$key\E=.*/$key=$value/m' "$file"
+}
+
+export FROM="Start-App: Tagline" TO="${APP_NAME}: ${TAGLINE}"
+replace_in_file "$TARGET/frontend/src/app/layout.tsx" "$FROM" "$TO"
+replace_in_file "$TARGET/frontend/src/app/page.tsx" "$FROM" "$TO"
+replace_in_file "$TARGET/frontend/src/components/navbar.tsx" "$FROM" "$TO"
+
+export FROM="Start-App" TO="$APP_NAME"
+replace_in_file "$TARGET/frontend/src/app/page.tsx" "$FROM" "$TO"
+replace_in_file "$TARGET/frontend/src/components/navbar.tsx" "$FROM" "$TO"
+
+export FROM="Tagline" TO="$TAGLINE"
+replace_in_file "$TARGET/frontend/src/app/layout.tsx" "$FROM" "$TO"
+replace_in_file "$TARGET/frontend/src/app/page.tsx" "$FROM" "$TO"
+
+if [[ -f "$TARGET/frontend/src/config/theme-style-guide/branding.yaml" ]]; then
+  export FROM='name: "Your Project"' TO="name: \"$APP_NAME\""
+  replace_in_file "$TARGET/frontend/src/config/theme-style-guide/branding.yaml" "$FROM" "$TO"
+  export FROM='logo-text: "YOUR PROJECT"' TO="logo-text: \"$APP_NAME\""
+  replace_in_file "$TARGET/frontend/src/config/theme-style-guide/branding.yaml" "$FROM" "$TO"
+  export FROM='title: "Style Guide"' TO="title: \"$APP_NAME\""
+  replace_in_file "$TARGET/frontend/src/config/theme-style-guide/branding.yaml" "$FROM" "$TO"
+  export FROM='STYLE GUIDE · REPLACE WITH YOUR TAGLINE' TO="$TAGLINE"
+  replace_in_file "$TARGET/frontend/src/config/theme-style-guide/branding.yaml" "$FROM" "$TO"
+fi
+
+if [[ -f "$TARGET/frontend/package.json" ]]; then
+  package_name="$(echo "$SLUG-frontend" | tr '[:upper:]' '[:lower:]' | tr -c 'a-z0-9._-' '-')"
+  export PACKAGE_NAME="$package_name"
+  perl -0pi -e 's/"name": "[^"]+"/"name": "$ENV{PACKAGE_NAME}"/' "$TARGET/frontend/package.json"
+fi
+
+if [[ -x "$TARGET/scripts/gen-env.sh" ]]; then
+  (cd "$TARGET" && ./scripts/gen-env.sh "$SLUG" "$DB_NAME" "0" "$PROJECT_DIR" "$REGISTRY" "8080" >/dev/null)
+fi
+
+if [[ -f "$TARGET/.env" ]]; then
+  set_env_key "$TARGET/.env" "DB_USER" "$DB_USER"
+  set_env_key "$TARGET/.env" "DB_PASSWORD" "$DB_PASSWORD"
+  set_env_key "$TARGET/.env" "DB_NAME" "$DB_NAME"
+  set_env_key "$TARGET/.env" "DATABASE_URL" "ecto://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}"
+  set_env_key "$TARGET/.env" "REDIS_URL" "redis://${VALKEY_USER}:${VALKEY_PASSWORD}@redis:6379/0"
+  set_env_key "$TARGET/.env" "NEXT_PUBLIC_APP_URL" "https://${APP_DOMAIN}"
+  set_env_key "$TARGET/.env" "NEXT_PUBLIC_COOKIE_DOMAIN" "$COOKIE_DOMAIN"
+  set_env_key "$TARGET/.env" "FRONTEND_URL" "https://${APP_DOMAIN}"
+fi
+
+cat > "$TARGET/.start-app-provision/helm-values.generated.yaml" <<YAML
+domain: ${SITE}
+appDomain: ${APP_DOMAIN}
+
+backend:
+  image: ${REGISTRY}/${PROJECT_DIR}/backend:latest
+frontend:
+  image: ${REGISTRY}/${PROJECT_DIR}/frontend:latest
+
+database:
+  name: ${DB_NAME}
+
+sso:
+  domains: "${SITE}=oidc"
+YAML
+
+sql_escape() {
+  printf "%s" "$1" | sed "s/'/''/g"
+}
+
+ident_escape() {
+  printf "%s" "$1" | sed 's/"/""/g'
+}
+
+DB_NAME_Q="$(ident_escape "$DB_NAME")"
+DB_USER_Q="$(ident_escape "$DB_USER")"
+DB_PASSWORD_Q="$(sql_escape "$DB_PASSWORD")"
+
+cat > "$TARGET/.start-app-provision/provision-postgres.sql" <<SQL
+DO \$\$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = '${DB_USER_Q}') THEN
+    CREATE ROLE "${DB_USER_Q}" LOGIN PASSWORD '${DB_PASSWORD_Q}';
+  ELSE
+    ALTER ROLE "${DB_USER_Q}" LOGIN PASSWORD '${DB_PASSWORD_Q}';
+  END IF;
+END
+\$\$;
+
+SELECT 'CREATE DATABASE "${DB_NAME_Q}" OWNER "${DB_USER_Q}"'
+WHERE NOT EXISTS (SELECT 1 FROM pg_database WHERE datname = '${DB_NAME_Q}')\\gexec
+
+GRANT ALL PRIVILEGES ON DATABASE "${DB_NAME_Q}" TO "${DB_USER_Q}";
+SQL
+
+cat > "$TARGET/.start-app-provision/provision-valkey.acl" <<ACL
+ACL SETUSER ${VALKEY_USER} on >${VALKEY_PASSWORD} ~* &* +@all
+ACL
+
+cat > "$TARGET/.start-app-provision/summary.txt" <<SUMMARY
+app_name=${APP_NAME}
+tagline=${TAGLINE}
+site=${SITE}
+app_domain=${APP_DOMAIN}
+theme=${ACTIVE_THEME}
+target=${TARGET}
+db_name=${DB_NAME}
+db_user=${DB_USER}
+valkey_user=${VALKEY_USER}
+postgres_sql=${TARGET}/.start-app-provision/provision-postgres.sql
+valkey_acl=${TARGET}/.start-app-provision/provision-valkey.acl
+helm_values=${TARGET}/.start-app-provision/helm-values.generated.yaml
+SUMMARY
+
+if $EXECUTE; then
+  if [[ -n "$POSTGRES_URL" ]]; then
+    command -v psql >/dev/null || { echo "psql is required for --execute --postgres-url" >&2; exit 1; }
+    psql "$POSTGRES_URL" -f "$TARGET/.start-app-provision/provision-postgres.sql"
+  fi
+
+  if [[ -n "$VALKEY_URL" ]]; then
+    command -v redis-cli >/dev/null || { echo "redis-cli is required for --execute --valkey-url" >&2; exit 1; }
+    redis-cli -u "$VALKEY_URL" ACL SETUSER "$VALKEY_USER" on ">$VALKEY_PASSWORD" '~*' '&*' '+@all'
+  fi
+fi
+
+echo "Created start-app scaffold at $TARGET"
+echo "App: ${APP_NAME}: ${TAGLINE}"
+echo "Site: https://${SITE}"
+echo "Dashboard: https://${APP_DOMAIN}"
+echo "Provisioning artifacts: $TARGET/.start-app-provision"
