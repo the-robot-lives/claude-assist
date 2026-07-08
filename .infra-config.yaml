@@ -551,9 +551,9 @@ liquibase_targets:
     changelog_dir: projects/noizu.com/app/backend/priv/repo/migrations
 
   therobotplans:
-    description: "TheRobotPlans app database"
-    namespace: data-ns
-    service: svc/shared-postgres
+    description: "tobornalp (therobotplans) app database on app-timescaledb"
+    namespace: apps
+    service: svc/app-timescaledb
     remote_port: 5432
     local_port: 54337
     db_type: postgresql
@@ -563,7 +563,12 @@ liquibase_targets:
     secret_namespace: apps
     username_key: THEROBOTPLANS_DB_USER
     secret_key: THEROBOTPLANS_DB_PASSWORD
-    changelog_dir: projects/therobotplans.com/app/backend/priv/repo/migrations
+    admin_secret: app-timescaledb-secrets
+    safety: destructive
+    # superuser-only extensions the changelog needs pre-created (pgvector et al.)
+    extensions: [citext, uuid-ossp, vector, cube, pg_trgm, earthdistance]
+    changelog_dir: projects/tobornalp.com/app/backend/db
+    changelog_file: changelog/db.changelog-master.yaml
 
 # =============================================================================
 # Project Registry — build/deploy metadata for portfolio projects

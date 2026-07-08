@@ -1,8 +1,8 @@
 replicas: 1
-domain: therobotplans.com
+domain: tobornalp.com
 
 backend:
-  image: ops.noizu.com/therobotplans.com/backend:v1.0.edge
+  image: ops.noizu.com/tobornalp.com/backend:v1.0.4
   port: 4000
   resources:
     requests:
@@ -13,7 +13,7 @@ backend:
       memory: 512Mi
 
 frontend:
-  image: ops.noizu.com/therobotplans.com/frontend:v1.0.edge
+  image: ops.noizu.com/tobornalp.com/frontend:v1.0.3
   port: 3000
   resources:
     requests:
@@ -25,6 +25,8 @@ frontend:
 
 migrate:
   enabled: true
+  # OTP app/module are still :therobotplans / Therobotplans.* (code not renamed;
+  # only the deploy/runtime identity is tobornalp). DB name is `therobotplans`.
   command: ["bin/therobotplans", "eval", "Therobotplans.Release.migrate()"]
   resources:
     requests:
@@ -35,27 +37,27 @@ migrate:
       memory: 256Mi
 
 database:
-  host: shared-postgres.data-ns.svc.cluster.local
+  host: app-postgres.apps.svc.cluster.local   # ExternalName → app-timescaledb
   port: 5432
-  name: therobotplans
+  name: therobotplans                          # live DB name (unchanged)
 
 redis:
-  host: shared-redis.data-ns.svc.cluster.local
+  host: app-valkey.apps.svc.cluster.local
   port: 6379
   db: 12
 
 secrets:
-  name: therobotplans-secrets
+  name: tobornalp-secrets
   keys:
-    dbUser: THEROBOTPLANS_DB_USER
-    dbPassword: THEROBOTPLANS_DB_PASSWORD
-    secretKeyBase: THEROBOTPLANS_SECRET_KEY_BASE
-    guardianSecretKey: THEROBOTPLANS_GUARDIAN_SECRET_KEY
-    redisUrl: THEROBOTPLANS_REDIS_URL
-    databaseUrl: THEROBOTPLANS_DATABASE_URL
-    sendgridApiKey: ""
-    oidcClientId: ""
-    oidcClientSecret: ""
+    dbUser: TOBORNALP_DB_USER
+    dbPassword: TOBORNALP_DB_PASSWORD
+    secretKeyBase: TOBORNALP_SECRET_KEY_BASE
+    guardianSecretKey: TOBORNALP_GUARDIAN_SECRET_KEY
+    redisUrl: TOBORNALP_REDIS_URL
+    databaseUrl: TOBORNALP_DATABASE_URL
+    sendgridApiKey: TOBORNALP_SENDGRID_API_KEY
+    oidcClientId: TOBORNALP_OIDC_CLIENT_ID
+    oidcClientSecret: TOBORNALP_OIDC_CLIENT_SECRET
     googleClientId: ""
     googleClientSecret: ""
     facebookClientId: ""
@@ -75,11 +77,11 @@ secrets:
     credentialsNamespace: infra
     projectSlug: k8-infra
     envSlug: prod
-    secretsPath: "/apps/therobotplans"
+    secretsPath: "/apps/tobornalp"
 
 mail:
   fromName: ""
-  fromAddress: "noreply@therobotplans.com"
+  fromAddress: "noreply@tobornalp.com"
 
 sso:
   requireInvite: false
@@ -113,7 +115,7 @@ ingress:
   cloudflareOnly: true
 
 tls:
-  secretName: therobotplans-com-tls
+  secretName: tobornalp-tls   # cert: *.tobornalp.com + tobornalp.com (Cloudflare Origin)
   infisical:
     enabled: true
     resyncInterval: 300
@@ -122,15 +124,15 @@ tls:
     credentialsNamespace: infra
     projectSlug: k8-infra
     envSlug: prod
-    secretsPath: "/apps/tls/therobotplans"
-    crtKey: THEROBOTPLANS_TLS_CRT
-    keyKey: THEROBOTPLANS_TLS_KEY
+    secretsPath: "/apps/tls/tobornalp"
+    crtKey: TOBORNALP_TLS_CRT
+    keyKey: TOBORNALP_TLS_KEY
 
 otel:
   enabled: false
   collectorEndpoint: "otel-collector.observability-ns.svc.cluster.local:4317"
   collectorHttpEndpoint: "http://otel-collector.observability-ns.svc.cluster.local:4318"
-  serviceName: "therobotplans"
+  serviceName: "tobornalp"
 
 storage:
   enabled: false
