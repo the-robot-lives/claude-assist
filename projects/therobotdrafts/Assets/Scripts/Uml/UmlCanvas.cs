@@ -509,32 +509,68 @@ namespace TheRobotDraft.Uml
             StartCoroutine(CaptureSelectionPng());
         }
 
+        /// <summary>Screen-space padding added around the selected nodes' projected bounds before cropping.</summary>
+        private const float SelectionPngPaddingPx = 24f;
+
         private IEnumerator CaptureSelectionPng()
         {
-            // Capture after the frame is fully drawn (the menu is already closed above).
+            // Capture after the frame is fully drawn (the menu is already closed above). The overlay HUD draws
+            // on the ScreenSpaceOverlay canvas, NOT through this camera, so the captured image is the clean
+            // diagram without menus.
             yield return new WaitForEndOfFrame();
 
-            // Stage 2: render the whole 3-D scene camera into a texture (selection-bounds framing is DEFERRED —
-            // the camera already shows the orbited diagram, and 3-D nodes have no flat screen rect to crop to).
-            // The overlay HUD draws on the ScreenSpaceOverlay canvas, NOT through this camera, so the captured
-            // image is the clean diagram without menus.
             var cam = _scene != null ? _scene.Camera : null;
             if (cam == null) { Flash("no scene camera to capture"); yield break; }
 
             int w = Mathf.Max(1, Screen.width), h = Mathf.Max(1, Screen.height);
+
+            // Frame the crop around the selected nodes' world bounds (current camera pose, before any hiding).
+            Bounds bounds = default;
+            bool anyBounds = false;
+            foreach (var id in _selection)
+            {
+                if (!_scene.TryGetNode(id, out var n) || n == null) continue;
+                var col = n.GetComponentInChildren<Collider>();
+                if (col == null) continue;
+                if (!anyBounds) { bounds = col.bounds; anyBounds = true; } else bounds.Encapsulate(col.bounds);
+            }
+            Rect crop = anyBounds ? ProjectBoundsToScreenRect(bounds, w, h) : new Rect(0f, 0f, w, h);
+
+            // Isolate the selection: hide every other node + all edges so occluding/occluded geometry never
+            // bleeds into the snapshot, render off-screen against a transparent backdrop, then restore
+            // visibility before this coroutine yields again (no frame is ever presented with nodes hidden).
+            var hiddenNodes = new List<GameObject>();
+            foreach (var kv in _scene.Nodes)
+            {
+                var n = kv.Value;
+                if (n == null || _selection.Contains(kv.Key) || !n.gameObject.activeSelf) continue;
+                n.gameObject.SetActive(false);
+                hiddenNodes.Add(n.gameObject);
+            }
+            _scene.SetEdgesVisible(false);
+
             var rt = new RenderTexture(w, h, 24, RenderTextureFormat.ARGB32);
             var prevTarget = cam.targetTexture;
             var prevActive = RenderTexture.active;
+            var prevClearFlags = cam.clearFlags;
+            var prevBgColor = cam.backgroundColor;
+            cam.clearFlags = CameraClearFlags.SolidColor;
+            cam.backgroundColor = new Color(0f, 0f, 0f, 0f); // transparent backdrop around the isolated selection
             cam.targetTexture = rt;
             cam.Render();
 
             RenderTexture.active = rt;
-            var tex = new Texture2D(w, h, TextureFormat.RGB24, false);
-            tex.ReadPixels(new Rect(0f, 0f, w, h), 0, 0);
+            var tex = new Texture2D(Mathf.Max(1, (int)crop.width), Mathf.Max(1, (int)crop.height), TextureFormat.RGBA32, false);
+            tex.ReadPixels(crop, 0, 0);
             tex.Apply();
 
             cam.targetTexture = prevTarget;
+            cam.clearFlags = prevClearFlags;
+            cam.backgroundColor = prevBgColor;
             RenderTexture.active = prevActive;
+
+            foreach (var go in hiddenNodes) if (go != null) go.SetActive(true);
+            _scene.SetEdgesVisible(true);
 
             byte[] png = tex.EncodeToPNG();
             Destroy(tex);
@@ -543,6 +579,31 @@ namespace TheRobotDraft.Uml
 
             string status = UmlImageClipboard.SaveAndCopyToClipboard(png);
             Flash(status);
+        }
+
+        /// <summary>Project a world-space AABB's 8 corners to a padded, camera-clamped screen-space crop rect.
+        /// Falls back to the full frame if every corner projects behind the camera.</summary>
+        private Rect ProjectBoundsToScreenRect(Bounds b, int screenW, int screenH)
+        {
+            Vector3 min = b.min, max = b.max;
+            float minX = float.MaxValue, minY = float.MaxValue, maxX = float.MinValue, maxY = float.MinValue;
+            for (int i = 0; i < 8; i++)
+            {
+                var corner = new Vector3(
+                    (i & 1) == 0 ? min.x : max.x,
+                    (i & 2) == 0 ? min.y : max.y,
+                    (i & 4) == 0 ? min.z : max.z);
+                Vector3 sp = _scene.WorldToScreen(corner);
+                if (sp.z <= 0f) continue; // behind the camera — ignore for framing
+                minX = Mathf.Min(minX, sp.x); minY = Mathf.Min(minY, sp.y);
+                maxX = Mathf.Max(maxX, sp.x); maxY = Mathf.Max(maxY, sp.y);
+            }
+            if (minX > maxX || minY > maxY) return new Rect(0f, 0f, screenW, screenH);
+            minX = Mathf.Clamp(minX - SelectionPngPaddingPx, 0f, screenW);
+            minY = Mathf.Clamp(minY - SelectionPngPaddingPx, 0f, screenH);
+            maxX = Mathf.Clamp(maxX + SelectionPngPaddingPx, 0f, screenW);
+            maxY = Mathf.Clamp(maxY + SelectionPngPaddingPx, 0f, screenH);
+            return new Rect(minX, minY, Mathf.Max(1f, maxX - minX), Mathf.Max(1f, maxY - minY));
         }
 
         private string UniqueName(string baseName)

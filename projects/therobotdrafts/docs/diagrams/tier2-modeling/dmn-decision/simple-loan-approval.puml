@@ -1,0 +1,82 @@
+@startuml
+' ============================================================================
+' METADATA
+'   author:       TheRobotDrafts Examples
+'   description:  Simple DMN Decision Requirements Diagram (DRD) for a single
+'                 loan-approval decision fed by one input data source and one
+'                 knowledge source.
+'   usecase:      Teaching DMN DRD node shapes and the two core edge types:
+'                 information requirement (solid) and knowledge requirement
+'                 (dashed). Minimal — 3 DRG elements + 1 authority edge.
+'   complexity:   simple
+'   domain:       finance / loan origination
+' ============================================================================
+
+title DMN Decision Requirements - Simple Loan Approval
+
+' ---------------------------------------------------------------------------
+' TEACHING NOTES
+' ---------------------------------------------------------------------------
+' A DRD (Decision Requirements Diagram) is the graph view of a decision model.
+' It answers "what do we need to decide, and what feeds it?" — NOT "how do we
+' decide it" (that is the decision table / boxed expression, the payload).
+'
+' Four DMN node shapes (DRG elements):
+'   1. Decision            — rectangle.  The act of determining an output.
+'   2. Input Data          — stadium / rounded-end shape.  Raw facts entering
+'                            the decision from outside the decision model.
+'   3. Business Knowledge  — clipped rectangle (document with a folded corner
+'                            removed).  Reusable decision logic a business owns
+'                            (e.g. a rate card, a lookup, a formula).
+'   4. Knowledge Source    — document shape.  An authority that governs /
+'                            informs the logic — regulation, policy doc, SME.
+'
+' Two DMN edge types:
+'   - Information Requirement  — SOLID arrow, Input Data or upstream Decision
+'                                 ──> into a Decision. "I need this data to decide."
+'   - Knowledge Requirement    — DASHED arrow. Two sub-kinds:
+'       * Decision  ..> Business Knowledge  : <<authority>>   "uses this logic"
+'       * Decision  ..> Knowledge Source    : <<authority>>   "this doc governs me"
+'
+' Shape stand-ins used here (PlantUML has no native DMN shapes):
+'   Decision            = rectangle           (rectangular, as DMN specifies)
+'   Input Data          = usecase             (stadium-ish oval)
+'   Business Knowledge  = rectangle with note  (clipped-rect approximated)
+'   Knowledge Source    = file                (document shape)
+' ---------------------------------------------------------------------------
+
+' === Input Data (stadium) ===
+' Raw applicant facts entering from outside the decision model.
+usecase "Applicant\nData" as ApplicantData
+
+' === Decision (rectangle) ===
+' The determination being made: approve or deny.
+rectangle "Loan\nApproval" as LoanApproval <<decision>>
+
+' === Knowledge Source (document shape) ===
+' External authority governing underwriting rules.
+file "Underwriting\nPolicy" as Policy
+
+' === Information requirement: solid arrow, data flows IN ===
+' "Applicant Data is required information for the Loan Approval decision."
+ApplicantData --> LoanApproval
+
+' === Knowledge requirement: dashed arrow, authority ===
+' "The Underwriting Policy is the knowledge source that governs the decision."
+' In strict DMN this is a Knowledge Requirement; some tools label it <<authority>>.
+LoanApproval ..> Policy : <<authority>>
+
+' Inline legend so the shape vocabulary is self-documenting.
+note bottom of LoanApproval
+  **DRD element legend**
+  rectangle = Decision (output we produce)
+  stadium   = Input Data (facts we consume)
+  file      = Knowledge Source (governing authority)
+  --
+  solid arrow  = Information Requirement
+  dashed arrow = Knowledge Requirement
+end note
+
+' Hint: a Decision may consume MANY inputs and reuse MANY knowledge sources.
+' This minimal example keeps it to one of each to isolate the teaching point.
+@enduml

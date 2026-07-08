@@ -1,0 +1,90 @@
+@startuml
+' ============================================================================
+' METADATA
+'   author:       TheRobotDrafts Examples
+'   description:  Variant contrasting the directed-graph view of requirement
+'                 traceability (req bubbles + satisfy/verify/derive edges) with
+'                 the adjacency-matrix view (req x test table) for the same set
+'                 of requirements, with a note on when each view is clearer.
+'   usecase:      Teaching that the SAME traceability data has two canonical
+'                 presentations — a graph (good for dependency tracing) and a
+'                 matrix (good for coverage auditing) — and when to use each.
+'   complexity:   simple
+'   domain:       systems engineering / requirements (teaching variant)
+' ============================================================================
+
+title Requirements Variant - Trace Matrix vs Graph
+
+' ---------------------------------------------------------------------------
+' TEACHING NOTES
+' ---------------------------------------------------------------------------
+' Traceability data has two common presentations:
+'
+'   1. GRAPH — nodes (requirements, design, tests) + directed dashed edges
+'      (satisfy, verify, derive, trace).
+'      CLEARER FOR: understanding WHY something exists, tracing a single
+'      requirement up to its source and down to its tests, presenting the
+'      model to a stakeholder, change-impact analysis on one requirement.
+'
+'   2. MATRIX — a grid with requirements as rows and tests (or components)
+'      as columns; a cell marked X means the edge exists.
+'      CLEARER FOR: coverage auditing at a glance, finding rows/columns with
+'      no marks (gaps), bulk review with a large team, export to a spreadsheet.
+'
+' They are two VIEWS of the same underlying links. Edit one, the other changes.
+' ---------------------------------------------------------------------------
+
+' === LEFT: the GRAPH view ===
+together {
+  rectangle "REQ-A\nFeature A"  as RA <<requirement>>
+  rectangle "REQ-B\nFeature B"  as RB <<requirement>>
+  rectangle "REQ-C\nFeature C"  as RC <<requirement>>
+
+  rectangle "Comp-A" as CA <<component>>
+  rectangle "Comp-B" as CB <<component>>
+
+  rectangle "T-A" as TA <<testcase>>
+  rectangle "T-B" as TB <<testcase>>
+  rectangle "T-C" as TC <<testcase>>
+
+  RB ..> RA : <<derive>>
+  RC ..> RA : <<derive>>
+
+  CA ..> RA : <<satisfy>>
+  CB ..> RB : <<satisfy>>
+
+  TA ..> RA : <<verify>>
+  TB ..> RB : <<verify>>
+  TC ..> RC : <<verify>>
+}
+
+note left of RA
+  **LEFT = Graph view**
+  Good for: tracing one requirement's
+  lineage and coverage, explaining the
+  model, change-impact analysis.
+end note
+
+' === RIGHT: the MATRIX view (same data, as a note table) ===
+note right of RC
+  **RIGHT = Matrix view (same links)**
+  --
+  | Req  | Comp-A | Comp-B | T-A | T-B | T-C |
+  |------|:------:|:------:|:---:|:---:|:---:|
+  | REQ-A|   X    |        |  X  |     |     |
+  | REQ-B|        |   X    |     |  X  |     |
+  | REQ-C|        |        |     |     |  X  |
+  --
+  Good for: coverage auditing, finding
+  gaps (empty rows = unsatisfied /
+  unverified), bulk review, export to
+  a spreadsheet.
+end note
+
+note bottom of RC
+  **When to use which**
+  - Graph:  "Tell me the story of REQ-B." Stakeholder review.
+  - Matrix: "Show me everything missing coverage." Audit / compliance.
+  Both views are generated from the same underlying trace links.
+end note
+@enduml

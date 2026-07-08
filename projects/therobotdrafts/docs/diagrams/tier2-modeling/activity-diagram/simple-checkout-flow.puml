@@ -1,0 +1,45 @@
+@startuml
+' ============================================================================
+' METADATA
+'   author:       TheRobotDrafts Examples
+' '   description:  A simple e-commerce checkout flow with one decision point.
+'   usecase:      Teach action nodes, initial/final, decision/merge, control flow.
+'   complexity:   simple
+'   domain:       e-commerce
+' ============================================================================
+title Example Activity - Simple Checkout Flow
+
+' The INITIAL NODE (filled circle) is written as |start|.
+' It is the single entry point of an activity diagram.
+start
+
+' ACTION NODES are written as ":Label;" and render as ROUNDED RECTANGLES.
+' The trailing semicolon terminates the action label.
+:Browse product catalog;
+
+:Add item to shopping cart;
+
+:Enter shipping details;
+
+' A DECISION NODE tests a condition and splits the flow into outgoing branches.
+'   Syntax: if (cond) then (label-yes) ... else (label-no) ... endif
+' The parenthesized labels annotate the edges leaving the decision.
+if (Payment valid?) then (yes)
+  :Process payment;
+else (no)
+  :Show payment error;
+  :Offer alternate payment method;
+endif
+
+' Both branches converge here. This rejoin point is the implicit MERGE NODE.
+' A merge simply reunites alternative flows — no synchronization occurs.
+:Confirm outcome to customer;
+
+' The FINAL NODE (bullseye) is written as |stop| and ends the activity.
+stop
+
+' TEACHING NOTES:
+'   - An arrow between two nodes is a CONTROL FLOW edge.
+'   - There is exactly one initial node; there may be many final nodes.
+'   - Decision and merge often come as a pair (split then rejoin).
+@enduml

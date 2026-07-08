@@ -1,0 +1,133 @@
+@startuml
+' ============================================================================
+' METADATA
+'   author:       TheRobotDrafts Examples
+'   description:  Complex SysML requirements tree for a VR UML-IDE: 18
+'                 requirements across three levels (operational, functional,
+'                 component), with satisfy/verify/refine/trace edges to design
+'                 blocks and test cases, plus rationale notes.
+'   usecase:      Teaching a multi-level requirement hierarchy, the difference
+'                 between refine and derive, attaching rationale, and tracing a
+'                 single leaf requirement all the way up to an operational need.
+'   complexity:   complex
+'   domain:       systems engineering / VR authoring tool
+' ============================================================================
+
+title Requirements Traceability - Complex SysML Tree
+
+' ---------------------------------------------------------------------------
+' TEACHING NOTES
+' ---------------------------------------------------------------------------
+' A mature requirement set is layered:
+'   Operational  — what the user must be able to DO in the field (the mission).
+'   Functional   — what functions the system must PROVIDE (derived from ops).
+'   Component    — what each component must GUARANTEE (derived from functional).
+'
+' Edge vocabulary at scale:
+'   derive  : parent -> child requirement refinement across LEVELS.
+'   refine  : a MORE DETAILED requirement refines a vaguer one (same intent).
+'   satisfy : design block implements a (usually component) requirement.
+'   verify  : test case proves a requirement.
+'   trace   : generic link to rationale, source, or related artifact.
+'
+' Rationale notes (attached via <<trace>>) capture WHY a requirement exists or
+' why a derivation was made — invaluable for change impact analysis.
+' ---------------------------------------------------------------------------
+
+package "Operational Requirements" {
+  rectangle "OPS-1\nAuthors shall collaborate\non UML models in real time." as OPS1 <<requirement>>
+  rectangle "OPS-2\nAuthors shall deliver\ndiagrams to reviewers\nwithout VR hardware." as OPS2 <<requirement>>
+  rectangle "OPS-3\nThe tool shall be usable\nfor a 2-hour session without\nfatigue." as OPS3 <<requirement>>
+}
+
+package "Functional Requirements" {
+  rectangle "FUN-10\nReal-time multi-user\nsynchronization of the\nscene graph." as FUN10 <<requirement>>
+  rectangle "FUN-11\nConflict resolution on\nconcurrent edits."                  as FUN11 <<requirement>>
+  rectangle "FUN-20\nExport diagrams to\nPNG/SVG/PDF."                            as FUN20 <<requirement>>
+  rectangle "FUN-21\nGenerate a read-only\nshareable web link."                   as FUN21 <<requirement>>
+  rectangle "FUN-30\nComfort-based locomotion\n(teleport + snap-turn)."           as FUN30 <<requirement>>
+  rectangle "FUN-31\nConfigurable IPD and\nrender-scale for comfort."             as FUN31 <<requirement>>
+}
+
+package "Component Requirements" {
+  rectangle "CMP-100\nCRDT engine shall converge\nin < 100ms p95."        as CMP100 <<requirement>>
+  rectangle "CMP-101\nPresence avatars shall\nupdate at >= 30Hz."         as CMP101 <<requirement>>
+  rectangle "CMP-200\nRenderer shall export at\n>= 300 DPI."              as CMP200 <<requirement>>
+  rectangle "CMP-201\nShare-link service shall\nauth in < 500ms."         as CMP201 <<requirement>>
+  rectangle "CMP-300\nFrame time shall stay\n< 11ms (90 FPS)."           as CMP300 <<requirement>>
+  rectangle "CMP-301\nDynamic foveation shall\nkeep GPU < 80% peak."      as CMP301 <<requirement>>
+}
+
+' === derive: operational -> functional ===
+FUN10 ..> OPS1 : <<derive>>
+FUN11 ..> OPS1 : <<derive>>
+FUN20 ..> OPS2 : <<derive>>
+FUN21 ..> OPS2 : <<derive>>
+FUN30 ..> OPS3 : <<derive>>
+FUN31 ..> OPS3 : <<derive>>
+
+' === derive: functional -> component ===
+CMP100 ..> FUN10 : <<derive>>
+CMP101 ..> FUN10 : <<derive>>
+CMP200 ..> FUN20 : <<refine>>
+CMP201 ..> FUN21 : <<derive>>
+CMP300 ..> FUN30 : <<derive>>
+CMP301 ..> FUN31 : <<refine>>
+
+' === Design blocks satisfying component requirements ===
+rectangle "CRDT\nSync Engine"   as CRDT <<component>>
+rectangle "Presence\nService"   as Presence <<component>>
+rectangle "Export\nPipeline"    as Exporter <<component>>
+rectangle "Share-Link\nAPI"     as ShareLink <<component>>
+rectangle "Render\nPipeline"    as Render <<component>>
+
+CRDT      ..> CMP100 : <<satisfy>>
+Presence  ..> CMP101 : <<satisfy>>
+Exporter  ..> CMP200 : <<satisfy>>
+ShareLink ..> CMP201 : <<satisfy>>
+Render    ..> CMP300 : <<satisfy>>
+Render    ..> CMP301 : <<satisfy>>
+
+' === Test cases verifying component requirements ===
+rectangle "T-CRDT-Converge"  as TC1 <<testcase>>
+rectangle "T-Presence-Rate"  as TC2 <<testcase>>
+rectangle "T-Export-DPI"     as TC3 <<testcase>>
+rectangle "T-Share-Auth"     as TC4 <<testcase>>
+rectangle "T-Frame-Time"     as TC5 <<testcase>>
+rectangle "T-Foveation-Load" as TC6 <<testcase>>
+
+TC1 ..> CMP100 : <<verify>>
+TC2 ..> CMP101 : <<verify>>
+TC3 ..> CMP200 : <<verify>>
+TC4 ..> CMP201 : <<verify>>
+TC5 ..> CMP300 : <<verify>>
+TC6 ..> CMP301 : <<verify>>
+
+' === Rationale notes (trace links to source/justification) ===
+file "User Study\n2026-Q1" as Study
+OPS3 ..> Study : <<trace>>
+
+note right of CMP100
+  **Rationale: why 100ms p95?**
+  Below 100ms users perceive collaboration
+  as "live"; above it, edits feel laggy and
+  users start overwriting each other.
+  Source: User Study 2026-Q1 (<<trace>> link).
+end note
+
+note bottom of CMP300
+  **Rationale: why < 11ms frame time?**
+  90 FPS headset refresh = 11.1ms budget.
+  Exceeding it causes reprojection artifacts
+  and motion discomfort — directly serves OPS-3.
+end note
+
+note bottom of OPS1
+  **Reading a deep tree**
+  Pick any leaf (e.g. CMP-100). Follow derive edges UP
+  to find the operational need it ultimately serves.
+  Follow satisfy/verify DOWN to find the code and tests
+  that implement and prove it. A broken chain anywhere
+  is a coverage gap.
+end note
+@enduml

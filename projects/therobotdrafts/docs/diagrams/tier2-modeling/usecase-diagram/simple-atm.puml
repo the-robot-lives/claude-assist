@@ -1,0 +1,53 @@
+@startuml
+' ============================================================================
+' METADATA
+'   author:       TheRobotDrafts Examples
+'   description:  Simple use case diagram — one Customer actor associated with three use cases inside an ATM system boundary.
+'   usecase:      Teach actor (stick figure), use case (ellipse), system boundary (rectangle), and association.
+'   complexity:   simple
+'   domain:       Banking / ATM
+' ============================================================================
+title Example Use Case Diagram - Simple ATM
+
+' ---------------------------------------------------------------------------
+' A USE CASE DIAGRAM captures functional requirements from an ACTOR's point of
+' view.  Core concepts:
+'   - ACTOR: an external role (human or system) drawn as a stick figure.
+'   - USE CASE: a unit of behaviour worth describing, drawn as an ellipse.
+'   - SYSTEM BOUNDARY: a rectangle that scopes WHICH use cases belong to the
+'     system under design.
+'   - ASSOCIATION: a solid line between an actor and a use case it
+#     participates in (no arrowhead by convention, or an open arrow).
+' ---------------------------------------------------------------------------
+
+left to right direction
+
+' ACTOR — external role interacting with the system.
+actor "Customer" as cust
+
+' SYSTEM BOUNDARY — the rectangle scopes what the ATM is responsible for.
+rectangle "ATM System" {
+
+  ' USE CASES — ellipses, one unit of observable behaviour each.
+  usecase "Withdraw Cash"    as uc1
+  usecase "Check Balance"    as uc2
+  usecase "Deposit Funds"    as uc3
+}
+
+' ASSOCIATIONS — the Customer participates in each use case.
+cust --> uc1
+cust --> uc2
+cust --> uc3
+
+note right of uc2
+  <b>How to read this diagram</b>
+  • Stick figure = ACTOR (Customer).
+  • Ellipse = USE CASE (Check Balance).
+  • Rectangle = SYSTEM BOUNDARY.
+  • Solid line = ASSOCIATION
+    (actor participates in the use case).
+  Use cases answer "WHAT does the system
+  do for this actor?" — not HOW.
+end note
+
+@enduml

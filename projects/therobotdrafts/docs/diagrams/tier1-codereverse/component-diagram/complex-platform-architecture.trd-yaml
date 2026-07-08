@@ -1,0 +1,51 @@
+# .trd-yaml — TheRobotDrafts native model (IxModel serialization)
+name: Example Component Diagram - Complex Platform Architecture
+elements:
+  - { id: edge, type: Package, name: Edge }
+  - { id: web, type: Component, name: Web Client, parentId: edge }
+  - { id: mob, type: Component, name: Mobile Client, parentId: edge }
+  - { id: partner, type: Component, name: 3rd-Party API Consumer, parentId: edge }
+  - { id: gw, type: Package, name: Gateway }
+  - { id: api, type: Component, name: API Gateway, parentId: gw }
+  - { id: lb, type: Component, name: Load Balancer, parentId: gw }
+  - { id: idpkg, type: Package, name: Identity }
+  - { id: auth, type: Component, name: Auth Service, parentId: idpkg }
+  - { id: oidc, type: Component, name: OIDC Provider, parentId: idpkg }
+  - { id: svcs, type: Package, name: Services }
+  - { id: catalog, type: Component, name: Catalog Service, parentId: svcs }
+  - { id: order, type: Component, name: Order Service, parentId: svcs }
+  - { id: pay, type: Component, name: Payment Service, parentId: svcs }
+  - { id: inv, type: Component, name: Inventory Service, parentId: svcs }
+  - { id: notify, type: Component, name: Notification Service, parentId: svcs }
+  - { id: ship, type: Component, name: Shipping Service, parentId: svcs }
+  - { id: plat, type: Package, name: Platform Services }
+  - { id: registry, type: Component, name: Service Registry, parentId: plat }
+  - { id: bus, type: Boundary, name: Message Bus, parentId: plat }
+  - { id: stores, type: Package, name: Data Stores }
+  - { id: catalogDb, type: Database, name: Catalog DB, parentId: stores }
+  - { id: ordersDb, type: Database, name: Orders DB, parentId: stores }
+  - { id: usersDb, type: Database, name: Users DB, parentId: stores }
+  - { id: cache, type: Database, name: Redis Cache, parentId: stores }
+  - { id: iBrowse, type: Component, name: iBrowse }
+  - { id: iRegister, type: Component, name: iRegister }
+edges:
+  - { id: e1, type: DirectedAssociation, from: lb, to: api, label: routes }
+  - { id: e2, type: DirectedAssociation, from: oidc, to: auth, label: issues tokens for }
+  - { id: e3, type: Dependency, from: web, to: iBrowse }
+  - { id: e4, type: Dependency, from: order, to: iBrowse }
+  - { id: e5, type: Dependency, from: catalog, to: iRegister, label: registers }
+  - { id: e6, type: Dependency, from: order, to: iRegister, label: registers }
+  - { id: e7, type: Dependency, from: pay, to: iRegister, label: registers }
+  - { id: e8, type: Dependency, from: inv, to: iRegister, label: registers }
+  - { id: e9, type: Dependency, from: ship, to: iRegister, label: registers }
+  - { id: e10, type: Dependency, from: notify, to: iRegister, label: registers }
+  - { id: e11, type: Dependency, from: order, to: registry, label: resolves Pay/Ship }
+  - { id: e12, type: Dependency, from: api, to: registry, label: resolves services }
+  - { id: e13, type: Dependency, from: order, to: bus, label: publishes OrderPlaced }
+  - { id: e14, type: Dependency, from: pay, to: bus, label: publishes PaymentCaptured }
+  - { id: e15, type: Dependency, from: inv, to: bus, label: publishes StockReserved }
+  - { id: e16, type: Dependency, from: bus, to: notify, label: delivers events }
+  - { id: e17, type: Dependency, from: bus, to: ship, label: delivers OrderPlaced }
+  - { id: e18, type: Dependency, from: bus, to: inv, label: delivers OrderPlaced }
+diagrams:
+  - { id: d1, name: Example Component Diagram - Complex Platform Architecture, kind: component, layoutProvenance: Synthesized }

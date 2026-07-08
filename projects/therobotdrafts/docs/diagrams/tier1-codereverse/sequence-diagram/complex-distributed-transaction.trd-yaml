@@ -1,0 +1,47 @@
+# .trd-yaml — TheRobotDrafts native model (IxModel serialization)
+name: Example Sequence Diagram - Distributed Transaction (Saga)
+elements:
+  - { id: CL, type: Lifeline, name: Client, stereotype: actor }
+  - { id: SO, type: Lifeline, name: Saga\nOrchestrator }
+  - { id: OS, type: Lifeline, name: Order Service }
+  - { id: INV, type: Lifeline, name: Inventory }
+  - { id: PAY, type: Lifeline, name: Payment }
+  - { id: SHP, type: Lifeline, name: Shipping }
+  - { id: NOT, type: Lifeline, name: Notification }
+  - { id: BIL, type: Lifeline, name: Billing }
+  - { id: FRD, type: Lifeline, name: Fraud Check }
+  - { id: AUD, type: Lifeline, name: Audit Log }
+edges:
+  - { id: e1, type: MessageSync, from: CL, to: SO, label: startCheckout(cart) }
+  - { id: e2, type: MessageSync, from: SO, to: OS, label: validate(item) }
+  - { id: e3, type: MessageReply, from: OS, to: SO, label: ok }
+  - { id: e4, type: MessageSync, from: SO, to: FRD, label: checkRisk(customer) }
+  - { id: e5, type: MessageSync, from: SO, to: INV, label: reserveAll(cart) }
+  - { id: e6, type: MessageReply, from: FRD, to: SO, label: riskScore }
+  - { id: e7, type: MessageReply, from: INV, to: SO, label: reservationId }
+  - { id: e8, type: MessageSync, from: SO, to: NOT, label: flagForManualReview() }
+  - { id: e9, type: MessageReply, from: NOT, to: SO, label: acknowledged }
+  - { id: e10, type: MessageSync, from: SO, to: PAY, label: charge(reservationId) }
+  - { id: e11, type: MessageReply, from: PAY, to: SO, label: receipt }
+  - { id: e12, type: MessageSync, from: SO, to: SHP, label: schedulePickup(address) }
+  - { id: e13, type: MessageSync, from: SO, to: NOT, label: sendConfirmation(customer) }
+  - { id: e14, type: MessageSync, from: SO, to: BIL, label: recordInvoice(receipt) }
+  - { id: e15, type: MessageReply, from: SHP, to: SO, label: trackingId }
+  - { id: e16, type: MessageReply, from: NOT, to: SO, label: sent }
+  - { id: e17, type: MessageReply, from: BIL, to: SO, label: invoiceId }
+  - { id: e18, type: MessageSync, from: SO, to: AUD, label: commitSaga() }
+  - { id: e19, type: MessageReply, from: AUD, to: SO, label: logged }
+  - { id: e20, type: MessageReply, from: SO, to: CL, label: checkoutComplete() }
+  - { id: e21, type: MessageSync, from: SO, to: BIL, label: voidInvoice() }
+  - { id: e22, type: MessageReply, from: BIL, to: SO, label: voided }
+  - { id: e23, type: MessageSync, from: SO, to: INV, label: releaseStock(reservationId) }
+  - { id: e24, type: MessageReply, from: INV, to: SO, label: released }
+  - { id: e25, type: MessageSync, from: SO, to: PAY, label: refund(receipt) }
+  - { id: e26, type: MessageReply, from: PAY, to: SO, label: refundId }
+  - { id: e27, type: MessageSync, from: SO, to: NOT, label: sendFailure(customer) }
+  - { id: e28, type: MessageReply, from: NOT, to: SO, label: sent }
+  - { id: e29, type: MessageSync, from: SO, to: AUD, label: rollbackSaga() }
+  - { id: e30, type: MessageReply, from: AUD, to: SO, label: logged }
+  - { id: e31, type: MessageReply, from: SO, to: CL, label: checkoutFailed(reason) }
+diagrams:
+  - { id: d1, name: Example Sequence Diagram - Distributed Transaction (Saga), kind: sequence, layoutProvenance: Synthesized }

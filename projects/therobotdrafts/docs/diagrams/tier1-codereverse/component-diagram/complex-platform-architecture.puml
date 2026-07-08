@@ -1,0 +1,180 @@
+@startuml
+' ============================================================================
+' METADATA
+'   author:       TheRobotDrafts Examples
+'   description:  Enterprise platform architecture spanning API gateway,
+'                 identity, microservices, a message bus, service registry,
+'                 and heterogeneous data stores. Shows provided/required
+'                 interface wiring across many components plus event-driven
+'                 (async) wiring and registry-based discovery.
+'   usecase:      Teach large-scale component wiring: many provided/required
+'                 interfaces, a service registry, and pub/sub event flows.
+'   complexity:   complex
+'   domain:       platform / enterprise architecture
+' ============================================================================
+title Example Component Diagram - Complex Platform Architecture
+
+' ---------------------------------------------------------------------------
+' STYLE
+' ---------------------------------------------------------------------------
+skinparam componentStyle uml2
+skinparam shadowing false
+skinparam packageStyle rectangle
+
+' ===========================================================================
+' EDGE / CLIENT LAYER
+' ===========================================================================
+package "Edge" as edge {
+  component "Web Client" as web
+  component "Mobile Client" as mob
+  component "3rd-Party API Consumer" as partner
+}
+
+' ===========================================================================
+' GATEWAY + IDENTITY
+' ===========================================================================
+package "Gateway" as gw {
+  component "API Gateway" as api
+  component "Load Balancer" as lb
+}
+
+package "Identity" as idpkg {
+  component "Auth Service" as auth
+  component "OIDC Provider" as oidc
+}
+
+' ===========================================================================
+' DOMAIN SERVICES (microservices)
+' ===========================================================================
+package "Services" as svcs {
+  component "Catalog Service" as catalog
+  component "Order Service" as order
+  component "Payment Service" as pay
+  component "Inventory Service" as inv
+  component "Notification Service" as notify
+  component "Shipping Service" as ship
+}
+
+' ===========================================================================
+' SUPPORTING PLATFORM
+' ===========================================================================
+package "Platform Services" as plat {
+  component "Service Registry" as registry
+  queue "Message Bus" as bus
+}
+
+' ===========================================================================
+' DATA STORES
+' ===========================================================================
+package "Data Stores" as stores {
+  database "Catalog DB" as catalogDb
+  database "Orders DB" as ordersDb
+  database "Users DB" as usersDb
+  database "Redis Cache" as cache
+}
+
+' ===========================================================================
+' PROVIDED / REQUIRED INTERFACE WIRING
+' ===========================================================================
+
+' --- Gateway contract (provided) consumed by every edge client (required) ---
+() "Public API" as iPublic
+api -()- iPublic
+web ..() iPublic
+mob ..() iPublic
+partner ..() iPublic
+lb --> api : routes
+
+' --- Auth contract: gateway and services all REQUIRE token verification ---
+() "Verify Token" as iVerify
+auth -()- iVerify
+api ..() iVerify
+order ..() iVerify
+pay ..() iVerify
+oidc --> auth : issues tokens for
+
+' --- Domain service contracts (each service PROVIDES, others REQUIRE) ---
+() "Browse Catalog" as iBrowse
+catalog -()- iBrowse
+web ..> iBrowse
+order ..> iBrowse
+
+() "Place Order" as iPlace
+order -()- iPlace
+web ..() iPlace
+mob ..() iPlace
+
+() "Take Payment" as iPay
+pay -()- iPay
+order ..() iPay
+
+() "Reserve Stock" as iStock
+inv -()- iStock
+order ..() iStock
+
+' ===========================================================================
+' SERVICE REGISTRY — discovery wiring.
+' Each service REGISTERs itself (provides its location); callers LOOK UP
+' dependencies (requires a handle) before invoking. Model register as a
+' provided "Register" interface owned by the registry.
+' ===========================================================================
+() "Register" as iRegister
+registry -()- iRegister
+catalog ..> iRegister : registers
+order ..> iRegister   : registers
+pay ..> iRegister     : registers
+inv ..> iRegister     : registers
+ship ..> iRegister    : registers
+notify ..> iRegister  : registers
+
+' Callers consult the registry to resolve a service (dotted lookup).
+order ..> registry : resolves Pay/Ship
+api ..> registry    : resolves services
+
+' ===========================================================================
+' EVENT-DRIVEN WIRING — publish/subscribe over the message bus.
+' Publisher ..> bus means "publishes to"; bus ..> subscriber means "delivers to".
+' This is asynchronous wiring, distinct from synchronous provided/required.
+' ===========================================================================
+order ..> bus : publishes OrderPlaced
+pay ..> bus   : publishes PaymentCaptured
+inv ..> bus   : publishes StockReserved
+
+bus ..> notify : delivers events
+bus ..> ship   : delivers OrderPlaced
+bus ..> inv    : delivers OrderPlaced
+
+' ===========================================================================
+' DATA-STORE WIRING — services require repository interfaces that the
+' databases provide. Tier rule: stores never point back up.
+' ===========================================================================
+() "Catalog Repo" as iCatalogRepo
+catalogDb -()- iCatalogRepo
+catalog ..() iCatalogRepo
+
+() "Order Repo" as iOrderRepo
+ordersDb -()- iOrderRepo
+order ..() iOrderRepo
+
+() "User Repo" as iUserRepo
+usersDb -()- iUserRepo
+auth ..() iUserRepo
+
+() "Cache KV" as iCache
+cache -()- iCache
+catalog ..() iCache
+api ..() iCache
+
+' ===========================================================================
+' LEGEND
+' ===========================================================================
+legend bottom
+  |= Line |= Meaning |
+  | -(0- (ball) | provided interface (component offers it) |
+  | ..() (cup)  | required interface (component needs it) |
+  | -->         | synchronous call / routing |
+  | ..>         | dependency, lookup, publish, or delivery |
+  | bus ..> svc | event-driven delivery (async) |
+endlegend
+
+@enduml

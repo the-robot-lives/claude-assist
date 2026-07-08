@@ -1,0 +1,86 @@
+@startuml
+' ============================================================================
+' METADATA
+'   author:       TheRobotDrafts Examples
+' '   description:  16+ action distributed workflow with fork/join, call-behavior, signals, and exception flow.
+'   usecase:      Teach call-behavior (rake), send-signal/accept-event, multiple decisions, exception handling.
+'   complexity:   complex
+'   domain:       distributed-systems
+' ============================================================================
+title Example Activity - Complex Distributed Workflow
+
+start
+
+:Receive service request;
+:Authenticate caller;
+
+' First DECISION — guard the whole pipeline on authorization.
+if (Authorized?) then (yes)
+else (no)
+  :Return 401 Unauthorized;
+  ' EXCEPTION FLOW: an abnormal exit path. UML models this as a dedicated
+  ' exception edge from a node to a handler; here it terminates early.
+  stop
+endif
+
+:Parse request payload;
+:Validate schema;
+
+' CALL-BEHAVIOR node (shown with a "rake" glyph in full UML): an action that
+' itself invokes another, nested activity diagram. The rake indicates
+' "this box is elaborated in its own activity elsewhere."
+:Run risk assessment;
+note right
+  <<call-behavior>>
+  Invokes nested activity:
+  "RiskAssessment" (rake glyph).
+  See: risk-assessment.puml
+end note
+
+' FORK into three concurrent enrichment flows.
+fork
+  :Enrich data via Service A;
+fork again
+  :Enrich data via Service B;
+fork again
+  :Fetch user profile;
+end fork
+
+' SEND-SIGNAL node: the activity emits an asynchronous signal to another process.
+' (PlantUML has no native signal glyph; we annotate an action to convey it.)
+:Publish "OrderPending" event;
+note right: <<send-signal>>\nemits to message bus
+
+' ACCEPT-EVENT node: the activity WAITS for an incoming signal before continuing.
+:Wait for inventory confirmation;
+note right: <<accept-event>>\nblocks until signal arrives
+
+' Multiple chained DECISION points.
+if (Inventory confirmed?) then (yes)
+  if (All enrichments ready?) then (yes)
+    :Compose full response;
+    :Persist result;
+    :Publish "OrderConfirmed" event;
+    note right: <<send-signal>>
+  else (timeout)
+    :Compose partial response;
+    :Log timeout warning;
+  endif
+else (no)
+  :Compensate prior steps;
+  :Publish "OrderFailed" event;
+  note right: <<send-signal>>
+endif
+
+' A guaranteed final step that executes on both the success and exception paths.
+:Record audit trail;
+stop
+
+' TEACHING NOTES:
+'   - A call-behavior node is reusable: change the nested activity once,
+'     every caller benefits.
+'   - Send-signal / accept-event pairs model asynchronous hand-offs between
+'     independent activities or processes.
+'   - Exception flow should still run cleanup (compensation) before terminating.
+'   - Forks can have more than two concurrent branches (here: three).
+@enduml

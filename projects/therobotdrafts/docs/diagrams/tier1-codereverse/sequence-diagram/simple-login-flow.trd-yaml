@@ -1,0 +1,13 @@
+# .trd-yaml — TheRobotDrafts native model (IxModel serialization)
+name: Example Sequence Diagram - Simple Login Flow
+elements:
+  - { id: U, type: Lifeline, name: User, stereotype: actor }
+  - { id: W, type: Lifeline, name: Web App }
+  - { id: A, type: Lifeline, name: Auth Service }
+edges:
+  - { id: e1, type: MessageSync, from: U, to: W, label: enterCredentials() }
+  - { id: e2, type: MessageSync, from: W, to: A, label: 'authenticate(email, password)' }
+  - { id: e3, type: MessageReply, from: A, to: W, label: token (or error) }
+  - { id: e4, type: MessageReply, from: W, to: U, label: renderDashboard() }
+diagrams:
+  - { id: d1, name: Example Sequence Diagram - Simple Login Flow, kind: sequence, layoutProvenance: Synthesized }

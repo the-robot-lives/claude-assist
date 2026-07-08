@@ -1,0 +1,40 @@
+# .trd-yaml — TheRobotDrafts native model (IxModel serialization)
+name: Example Package Diagram - Multi-module Layered Architecture
+elements:
+  - { id: Infrastructure, type: Package, name: Infrastructure, stereotype: layer }
+  - { id: Persistence, type: Package, name: Persistence, parentId: Infrastructure }
+  - { id: OrderRepositoryImpl, type: Class, name: OrderRepositoryImpl, parentId: Persistence }
+  - { id: ProductRepositoryImpl, type: Class, name: ProductRepositoryImpl, parentId: Persistence }
+  - { id: Messaging, type: Package, name: Messaging, parentId: Infrastructure }
+  - { id: EventBus, type: Class, name: EventBus, parentId: Messaging }
+  - { id: Web, type: Package, name: Web, parentId: Infrastructure }
+  - { id: RestControllers, type: Class, name: RestControllers, parentId: Web }
+  - { id: Application, type: Package, name: Application, stereotype: layer }
+  - { id: OrderServices, type: Package, name: OrderServices, parentId: Application }
+  - { id: PlaceOrderUseCase, type: Class, name: PlaceOrderUseCase, parentId: OrderServices }
+  - { id: CancelOrderUseCase, type: Class, name: CancelOrderUseCase, parentId: OrderServices }
+  - { id: CatalogServices, type: Package, name: CatalogServices, parentId: Application }
+  - { id: SearchProductsUseCase, type: Class, name: SearchProductsUseCase, parentId: CatalogServices }
+  - { id: Ports, type: Package, name: Ports, parentId: Application }
+  - { id: OrderRepository, type: Interface, name: OrderRepository, parentId: Ports }
+  - { id: ProductRepository, type: Interface, name: ProductRepository, parentId: Ports }
+  - { id: Domain, type: Package, name: Domain, stereotype: layer }
+  - { id: Orders, type: Package, name: Orders, parentId: Domain }
+  - { id: Order, type: Class, name: Order, parentId: Orders }
+  - { id: OrderLine, type: Class, name: OrderLine, parentId: Orders }
+  - { id: Catalog, type: Package, name: Catalog, parentId: Domain }
+  - { id: Product, type: Class, name: Product, parentId: Catalog }
+  - { id: Price, type: Class, name: Price, parentId: Catalog }
+  - { id: ~note1, type: Note, name: '<b>Dependency Rule:</b>', documentation: '<b>Dependency Rule:</b>\nNothing in Domain depends outward.\nArrows only ever point <i>into</i> this layer.' }
+edges:
+  - { id: e1, type: Dependency, from: Web, to: OrderServices, label: access }
+  - { id: e2, type: Dependency, from: Web, to: CatalogServices, label: access }
+  - { id: e3, type: Dependency, from: OrderServices, to: Orders, label: import }
+  - { id: e4, type: Dependency, from: CatalogServices, to: Catalog, label: import }
+  - { id: e5, type: Dependency, from: OrderServices, to: Ports, label: import }
+  - { id: e6, type: Dependency, from: CatalogServices, to: Ports, label: import }
+  - { id: e7, type: Dependency, from: Persistence, to: Ports, label: implements }
+  - { id: e8, type: Dependency, from: Messaging, to: OrderServices, label: access }
+  - { id: e9, type: NoteLink, from: ~note1, to: Domain }
+diagrams:
+  - { id: d1, name: Example Package Diagram - Multi-module Layered Architecture, kind: class, layoutProvenance: Synthesized }

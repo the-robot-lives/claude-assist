@@ -1,0 +1,50 @@
+@startuml
+' ============================================================================
+' METADATA
+'   author:       TheRobotDrafts Examples
+' '   description:  Hotel booking collaboration with nested numbering, a self-message, and conditional messages.
+'   usecase:      Teach nested numbering (1.1, 1.2, 2), self-messages, and conditional messages.
+'   complexity:   medium
+'   domain:       travel
+' ============================================================================
+title Example Communication - Medium Booking Collaboration
+
+actor "Guest" as Guest
+participant "BookingUI" as BookingUI
+participant "ReservationSvc" as ReservationSvc
+participant "InventorySvc" as InventorySvc
+participant "PaymentSvc" as PaymentSvc
+participant "NotificationSvc" as NotificationSvc
+
+' TOP-LEVEL messages (1, 2, 3...) are the major steps in order.
+' NESTED messages (1.1, 1.2) are the sub-calls that make up step 1.
+
+Guest --> BookingUI : 1: searchRooms(checkIn, checkOut)
+BookingUI --> InventorySvc : 1.1: queryAvailability()
+InventorySvc --> BookingUI : 1.2: returnAvailableRooms()
+BookingUI --> Guest : 1.3: showResults()
+
+Guest --> BookingUI : 2: selectRoom(roomId)
+BookingUI --> ReservationSvc : 2.1: createHold(roomId)
+
+' GUARDED / CONDITIONAL message: only fires if the bracketed condition holds.
+' PlantUML has no dedicated conditional syntax on links, so we annotate it.
+ReservationSvc --> PaymentSvc : 2.2: preAuthorizeCard()[card_on_file]
+
+' SELF-MESSAGE: an object sends a message to itself along its own link.
+' Useful for showing internal validation or state mutation.
+ReservationSvc --> ReservationSvc : 2.3: setExpiryTimer()
+
+Guest --> BookingUI : 3: confirmBooking()
+BookingUI --> ReservationSvc : 3.1: confirm()
+ReservationSvc --> PaymentSvc : 3.2: capturePayment()
+ReservationSvc --> NotificationSvc : 3.3: sendConfirmation()
+NotificationSvc --> Guest : 3.4: emailConfirmation()
+
+' TEACHING NOTES:
+'   - Nested numbering reveals CALL HIERARCHY: 1.1 and 1.2 both happen
+'     while message 1 is being serviced.
+'   - A self-message (2.3) does NOT leave the object; it shows internal work.
+'   - Conditional messages (2.2) carry a guard — they may or may not fire.
+'   - The same link can carry many numbered messages over time.
+@enduml

@@ -1,0 +1,24 @@
+# .trd-yaml — TheRobotDrafts native model (IxModel serialization)
+name: Example Sequence Diagram - Async vs Sync and Error Handling
+elements:
+  - { id: CL, type: Lifeline, name: Caller, stereotype: actor }
+  - { id: GW, type: Lifeline, name: API Gateway }
+  - { id: MB, type: Lifeline, name: Message Bus }
+  - { id: WK, type: Lifeline, name: Worker }
+  - { id: ~note1, type: Note, name: 'Async: open arrowhead,', documentation: 'Async: open arrowhead,\ncaller does not block.' }
+edges:
+  - { id: e1, type: MessageSync, from: CL, to: GW, label: submitJob(payload) }
+  - { id: e2, type: MessageSync, from: GW, to: MB, label: publish(jobId) }
+  - { id: e3, type: NoteLink, from: ~note1, to: GW }
+  - { id: e4, type: MessageReply, from: GW, to: CL, label: accepted(jobId) }
+  - { id: e5, type: MessageSync, from: MB, to: WK, label: deliver(jobId) }
+  - { id: e6, type: MessageSync, from: WK, to: GW, label: fetchConfig(jobId) }
+  - { id: e7, type: MessageReply, from: GW, to: WK, label: config }
+  - { id: e8, type: MessageSync, from: WK, to: MB, label: ack(jobId) }
+  - { id: e9, type: MessageReply, from: WK, to: CL, label: done(result) }
+  - { id: e10, type: MessageSync, from: WK, to: MB, label: deadLetter(jobId) }
+  - { id: e11, type: MessageReply, from: WK, to: CL, label: failed(error) }
+  - { id: e12, type: MessageSync, from: MB, to: GW, label: requeue(jobId) }
+  - { id: e13, type: MessageReply, from: GW, to: CL, label: retried(jobId) }
+diagrams:
+  - { id: d1, name: Example Sequence Diagram - Async vs Sync and Error Handling, kind: sequence, layoutProvenance: Synthesized }

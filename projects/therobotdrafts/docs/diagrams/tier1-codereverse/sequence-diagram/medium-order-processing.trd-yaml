@@ -1,0 +1,25 @@
+# .trd-yaml — TheRobotDrafts native model (IxModel serialization)
+name: Example Sequence Diagram - Order Processing
+elements:
+  - { id: C, type: Lifeline, name: Customer, stereotype: actor }
+  - { id: UI, type: Lifeline, name: Web UI }
+  - { id: OS, type: Lifeline, name: Order Service }
+  - { id: IS, type: Lifeline, name: Inventory Service }
+  - { id: PS, type: Lifeline, name: Payment Service }
+  - { id: O, type: Lifeline, name: O }
+edges:
+  - { id: e1, type: MessageSync, from: C, to: UI, label: placeOrder(items) }
+  - { id: e2, type: MessageSync, from: UI, to: OS, label: createOrder(cart) }
+  - { id: e3, type: MessageSync, from: OS, to: O, label: 'new(cart, customerRef)' }
+  - { id: e4, type: MessageSync, from: OS, to: IS, label: reserveStock(items) }
+  - { id: e5, type: MessageReply, from: IS, to: OS, label: reservationId }
+  - { id: e6, type: MessageSync, from: OS, to: PS, label: chargePayment(reservationId) }
+  - { id: e7, type: MessageReply, from: PS, to: OS, label: receipt }
+  - { id: e8, type: MessageSync, from: OS, to: O, label: markConfirmed() }
+  - { id: e9, type: MessageReply, from: UI, to: C, label: showConfirmation() }
+  - { id: e10, type: MessageSync, from: OS, to: IS, label: releaseStock(reservationId) }
+  - { id: e11, type: MessageReply, from: IS, to: OS, label: released }
+  - { id: e12, type: MessageSync, from: OS, to: O, label: markCancelled() }
+  - { id: e13, type: MessageReply, from: UI, to: C, label: showPaymentError() }
+diagrams:
+  - { id: d1, name: Example Sequence Diagram - Order Processing, kind: sequence, layoutProvenance: Synthesized }

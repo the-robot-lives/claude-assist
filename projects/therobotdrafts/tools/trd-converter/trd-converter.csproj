@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>TheRobotDraft.Tools.Converter</RootNamespace>
+    <AssemblyName>trd-converter</AssemblyName>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <!-- Intentionally NOT defined: UNITY_EDITOR, UNITY_*. The Unity-only menu items in
+         ConvertPumlToTrdYaml.cs are guarded by #if UNITY_EDITOR, so this build is pure BCL. -->
+    <NoWarn>CS0414;CS0169</NoWarn>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+  </PropertyGroup>
+
+  <!-- Source files are globs-in-place: the interchange layer + YamlLite + the converter wrapper.
+       We exclude everything else in Assets/ so Unity-runtime code never enters this build. -->
+  <ItemGroup>
+    <Compile Include="..\..\Assets\Scripts\Authoring\Interchange\InterchangeModel.cs" Link="Interchange\InterchangeModel.cs" />
+    <Compile Include="..\..\Assets\Scripts\Authoring\Interchange\PlantUmlReader.cs" Link="Interchange\PlantUmlReader.cs" />
+    <Compile Include="..\..\Assets\Scripts\Authoring\Interchange\PlantUmlWriter.cs" Link="Interchange\PlantUmlWriter.cs" />
+    <Compile Include="..\..\Assets\Scripts\Authoring\Interchange\MermaidReader.cs" Link="Interchange\MermaidReader.cs" />
+    <Compile Include="..\..\Assets\Scripts\Authoring\Interchange\MermaidWriter.cs" Link="Interchange\MermaidWriter.cs" />
+    <Compile Include="..\..\Assets\Scripts\Authoring\Interchange\XmiReader.cs" Link="Interchange\XmiReader.cs" />
+    <Compile Include="..\..\Assets\Scripts\Authoring\Interchange\XmiWriter.cs" Link="Interchange\XmiWriter.cs" />
+    <Compile Include="..\..\Assets\Scripts\Authoring\Interchange\TrdYamlWriter.cs" Link="Interchange\TrdYamlWriter.cs" />
+    <Compile Include="..\..\Assets\Scripts\Authoring\Interchange\TrdYamlReader.cs" Link="Interchange\TrdYamlReader.cs" />
+    <Compile Include="..\..\Assets\Scripts\Styleguide\YamlLite.cs" Link="YamlLite.cs" />
+    <Compile Include="Program.cs" Link="Program.cs" />
+    <Compile Include="DiffCheck.cs" Link="DiffCheck.cs" />
+  </ItemGroup>
+
+</Project>
