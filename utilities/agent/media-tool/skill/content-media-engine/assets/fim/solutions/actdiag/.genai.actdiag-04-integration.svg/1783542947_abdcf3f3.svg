@@ -1,0 +1,124 @@
+actdiag {
+  orientation = landscape
+
+  developer_push -> trigger_ci -> unit_tests -> unit_tests_passed;
+  unit_tests_passed -> integration_tests [label = "pass"];
+  unit_tests_passed -> notify_test_failure [label = "fail"];
+  notify_test_failure -> create_jira_bug -> developer_push [label = "retry"];
+
+  integration_tests -> integration_passed;
+  integration_passed -> security_scan [label = "pass"];
+  integration_passed -> notify_test_failure [label = "fail"];
+
+  security_scan -> security_gate;
+  security_gate -> build_artifact [label = "clean"];
+  security_gate -> security_findings_alert [label = "findings"];
+  security_findings_alert -> create_jira_security_ticket -> block_pipeline;
+  block_pipeline -> security_remediation -> security_scan [label = "re-scan"];
+
+  build_artifact -> push_container_registry -> update_jira_fix_version;
+  update_jira_fix_version -> deploy_staging;
+
+  deploy_staging -> staging_smoke_tests;
+  staging_smoke_tests -> staging_passed;
+  staging_passed -> performance_tests [label = "pass"];
+  staging_passed -> rollback_staging [label = "fail"];
+  rollback_staging -> notify_staging_failure -> create_jira_bug;
+
+  performance_tests -> perf_gate;
+  perf_gate -> generate_release_notes [label = "pass"];
+  perf_gate -> notify_perf_failure [label = "fail"];
+  notify_perf_failure -> create_jira_bug;
+
+  generate_release_notes -> update_jira_release -> request_manual_approval;
+
+  request_manual_approval -> approval_decision;
+  approval_decision -> argocd_sync_production [label = "approved"];
+  approval_decision -> reject_release [label = "rejected"];
+  reject_release -> create_jira_bug;
+
+  argocd_sync_production -> production_health_check;
+  production_health_check -> health_gate;
+  health_gate -> update_jira_released [label = "healthy"];
+  health_gate -> argocd_rollback [label = "unhealthy"];
+  argocd_rollback -> notify_production_failure -> create_jira_incident;
+  create_jira_incident -> post_mortem;
+
+  update_jira_released -> close_jira_tickets -> generate_sbom;
+  generate_sbom -> sign_artifacts -> collect_audit_logs;
+  collect_audit_logs -> compile_release_evidence -> archive_release_evidence;
+  archive_release_evidence -> notify_stakeholders -> pipeline_complete;
+
+  lane github {
+    label = "GitHub / CI Runner";
+    developer_push;
+    trigger_ci;
+    unit_tests;
+    unit_tests_passed;
+    integration_tests;
+    integration_passed;
+    build_artifact;
+    push_container_registry;
+  }
+
+  lane security {
+    label = "Security Gate";
+    security_scan;
+    security_gate;
+    security_findings_alert;
+    create_jira_security_ticket;
+    block_pipeline;
+    security_remediation;
+    generate_sbom;
+    sign_artifacts;
+  }
+
+  lane jira {
+    label = "Jira";
+    create_jira_bug;
+    update_jira_fix_version;
+    update_jira_release;
+    update_jira_released;
+    close_jira_tickets;
+    create_jira_incident;
+    post_mortem;
+  }
+
+  lane staging {
+    label = "Staging Environment";
+    deploy_staging;
+    staging_smoke_tests;
+    staging_passed;
+    performance_tests;
+    perf_gate;
+    rollback_staging;
+    notify_staging_failure;
+    notify_perf_failure;
+  }
+
+  lane approval {
+    label = "Manual Approval Gate";
+    generate_release_notes;
+    request_manual_approval;
+    approval_decision;
+    reject_release;
+  }
+
+  lane argocd {
+    label = "Argo CD / Production";
+    argocd_sync_production;
+    production_health_check;
+    health_gate;
+    argocd_rollback;
+    notify_production_failure;
+  }
+
+  lane audit {
+    label = "Audit and Evidence";
+    collect_audit_logs;
+    compile_release_evidence;
+    archive_release_evidence;
+    notify_stakeholders;
+    pipeline_complete;
+  }
+}

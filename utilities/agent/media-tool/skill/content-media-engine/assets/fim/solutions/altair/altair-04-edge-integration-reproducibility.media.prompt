@@ -21,8 +21,7 @@ output:
   artifact_kind: altair-vegalite-script
   formats:
   - format: py
-  - format: html
-  - format: json
+  render_expectation: Running the Python script writes the requested HTML and Vega-Lite JSON exports.
 evaluation:
   checklist:
   - 'Import check: generated code imports altair as alt, pandas as pd, numpy as np and does not replace Altair with an unrelated primary library.'

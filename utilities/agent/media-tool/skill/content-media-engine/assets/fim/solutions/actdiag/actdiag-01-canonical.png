@@ -1,0 +1,31 @@
+actdiag {
+  orientation = portrait;
+
+  "Submit Expense Report" -> "Review Expense Report" -> "Approve or Reject?" -> "Approve Expense Report" -> "Verify and Process Payment" -> "Issue Reimbursement" -> "Archive for Audit" -> "End";
+  "Approve or Reject?" -> "Request Revisions" -> "Revise Expense Report" -> "Review Expense Report";
+
+  lane Employee {
+    label = "Employee";
+    "Submit Expense Report";
+    "Revise Expense Report";
+  }
+
+  lane Manager {
+    label = "Manager";
+    "Review Expense Report";
+    "Approve or Reject?";
+    "Approve Expense Report";
+    "Request Revisions";
+  }
+
+  lane Finance {
+    label = "Finance";
+    "Verify and Process Payment";
+    "Issue Reimbursement";
+  }
+
+  lane Accounting {
+    label = "Accounting";
+    "Archive for Audit";
+  }
+}

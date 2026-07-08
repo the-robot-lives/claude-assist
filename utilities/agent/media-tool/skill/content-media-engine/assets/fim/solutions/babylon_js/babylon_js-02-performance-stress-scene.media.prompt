@@ -26,7 +26,6 @@ prompt:
 output:
   formats:
   - format: html
-  - format: png
   text_format: html
   artifact: Babylon.js dense performance stress scene source asset
   artifact_kind: Babylon.js dense performance stress scene source asset

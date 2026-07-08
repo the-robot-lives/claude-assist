@@ -1,0 +1,84 @@
+actdiag {
+  orientation = landscape;
+
+  recruiter_post_job [label = "Post Job\nRequisition"];
+  recruiter_screen [label = "Screen\nApplications"];
+  recruiter_schedule [label = "Schedule\nInterviews"];
+  recruiter_extend_offer [label = "Extend\nOffer Letter"];
+  recruiter_collect_docs [label = "Collect Signed\nDocuments"];
+  recruiter_notify_it [label = "Notify IT &\nSecurity"];
+  recruiter_confirm_start [label = "Confirm\nStart Date"];
+
+  hm_review_req [label = "Review &\nApprove Req"];
+  hm_interview [label = "Conduct\nInterviews"];
+  hm_select [label = "Select\nCandidate"];
+  hm_approve_offer [label = "Approve\nOffer Terms"];
+  hm_assign_buddy [label = "Assign\nOnboarding Buddy"];
+  hm_day1_welcome [label = "Day 1\nWelcome Meeting"];
+  hm_set_goals [label = "Set 30-Day\nGoals"];
+  hm_week1_checkin [label = "Week 1\nCheck-In"];
+  hm_sign_off [label = "Sign Off:\nFirst Week Complete"];
+
+  it_receive_request [label = "Receive\nAccess Request"];
+  it_provision_accounts [label = "Provision\nAccounts & Email"];
+  it_prepare_equipment [label = "Prepare\nLaptop & Hardware"];
+  it_deliver_equipment [label = "Deliver Equipment\non Day 1"];
+  it_verify_access [label = "Verify System\nAccess"];
+
+  sec_receive_request [label = "Receive\nSecurity Request"];
+  sec_background_check [label = "Run Background\nCheck"];
+  sec_badge [label = "Issue Building\nBadge"];
+  sec_nda [label = "Confirm NDA\nSigned"];
+  sec_complete [label = "Security\nClearance Complete"];
+
+  nh_accept_offer [label = "Accept\nOffer"];
+  nh_submit_docs [label = "Submit Required\nDocuments"];
+  nh_orientation [label = "Attend Company\nOrientation"];
+  nh_receive_equipment [label = "Receive Laptop\n& Badge"];
+  nh_complete_training [label = "Complete\nMandatory Training"];
+  nh_meet_team [label = "Meet Team\n& Stakeholders"];
+  nh_first_week_done [label = "First Week\nMilestone Achieved"];
+
+  lane Recruiter {
+    recruiter_post_job -> recruiter_screen -> recruiter_schedule -> recruiter_extend_offer -> recruiter_collect_docs -> recruiter_notify_it -> recruiter_confirm_start;
+  }
+
+  lane "Hiring Manager" {
+    hm_review_req -> hm_interview -> hm_select -> hm_approve_offer -> hm_assign_buddy -> hm_day1_welcome -> hm_set_goals -> hm_week1_checkin -> hm_sign_off;
+  }
+
+  lane IT {
+    it_receive_request -> it_provision_accounts -> it_prepare_equipment -> it_deliver_equipment -> it_verify_access;
+  }
+
+  lane Security {
+    sec_receive_request -> sec_background_check -> sec_badge -> sec_nda -> sec_complete;
+  }
+
+  lane "New Hire" {
+    nh_accept_offer -> nh_submit_docs -> nh_orientation -> nh_receive_equipment -> nh_complete_training -> nh_meet_team -> nh_first_week_done;
+  }
+
+  recruiter_post_job -> hm_review_req;
+  hm_review_req -> recruiter_screen;
+  recruiter_schedule -> hm_interview;
+  hm_select -> recruiter_extend_offer;
+  hm_approve_offer -> recruiter_extend_offer;
+  recruiter_extend_offer -> nh_accept_offer;
+  nh_accept_offer -> recruiter_collect_docs;
+  nh_submit_docs -> recruiter_collect_docs;
+  recruiter_notify_it -> it_receive_request;
+  recruiter_notify_it -> sec_receive_request;
+  sec_background_check -> recruiter_confirm_start;
+  sec_nda -> nh_submit_docs;
+  sec_complete -> sec_badge;
+  it_provision_accounts -> nh_orientation;
+  it_deliver_equipment -> nh_receive_equipment;
+  sec_badge -> nh_receive_equipment;
+  hm_assign_buddy -> nh_orientation;
+  hm_day1_welcome -> nh_orientation;
+  nh_complete_training -> it_verify_access;
+  hm_set_goals -> nh_meet_team;
+  nh_meet_team -> hm_week1_checkin;
+  hm_sign_off -> nh_first_week_done;
+}

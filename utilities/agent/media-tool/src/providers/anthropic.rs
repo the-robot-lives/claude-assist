@@ -61,18 +61,21 @@ impl ChatProvider for AnthropicProvider {
             body["system"] = json!(system_prompt);
         }
 
-        if let Some(temp) = options
+        let temperature = options
             .provider_options
             .get("temperature")
-            .and_then(|v| v.as_f64())
-        {
-            body["temperature"] = json!(temp);
-        }
-        if let Some(top_p) = options
+            .and_then(|v| v.as_f64());
+        let top_p = options
             .provider_options
             .get("top_p")
-            .and_then(|v| v.as_f64())
-        {
+            .and_then(|v| v.as_f64());
+
+        if let Some(temp) = temperature {
+            body["temperature"] = json!(temp);
+            if top_p.is_some() && options.verbose {
+                ui::verbose("Anthropic ignores top_p when temperature is set");
+            }
+        } else if let Some(top_p) = top_p {
             body["top_p"] = json!(top_p);
         }
 

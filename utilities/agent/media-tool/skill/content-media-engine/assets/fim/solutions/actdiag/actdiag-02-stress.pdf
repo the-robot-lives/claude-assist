@@ -1,0 +1,123 @@
+actdiag {
+  orientation = portrait
+
+  "Alert Triggered" -> "Evaluate Alert Severity" -> "Severity Decision";
+
+  "Severity Decision" -> "Page On Call Engineer" [label = "SEV3/SEV2"];
+  "Severity Decision" -> "Page On Call Engineer" [label = "SEV1/SEV0"];
+  "Severity Decision" -> "Escalate to Incident Commander" [label = "SEV1/SEV0"];
+  "Severity Decision" -> "Notify Executive Team" [label = "SEV0"];
+
+  "Page On Call Engineer" -> "Acknowledge Alert";
+  "Acknowledge Alert" -> "Initial Triage";
+  "Initial Triage" -> "Confirm Incident";
+
+  "Escalate to Incident Commander" -> "Open Incident Bridge";
+  "Open Incident Bridge" -> "Assign Roles";
+  "Assign Roles" -> "Coordinate Response";
+
+  "Confirm Incident" -> "Coordinate Response";
+  "Coordinate Response" -> "Engage Service Team";
+
+  "Engage Service Team" -> "Diagnose Root Cause";
+  "Diagnose Root Cause" -> "Impact Assessment";
+  "Impact Assessment" -> "Remediation Decision";
+
+  "Remediation Decision" -> "Execute Rollback" [label = "Rollback"];
+  "Remediation Decision" -> "Develop Hotfix" [label = "Hotfix"];
+
+  "Execute Rollback" -> "Verify Rollback Success";
+  "Develop Hotfix" -> "Test Hotfix in Staging";
+  "Test Hotfix in Staging" -> "Deploy Hotfix to Production";
+  "Deploy Hotfix to Production" -> "Verify Hotfix Success";
+
+  "Verify Rollback Success" -> "Service Restored Check";
+  "Verify Hotfix Success" -> "Service Restored Check";
+
+  "Service Restored Check" -> "Re-diagnose Root Cause" [label = "Not Resolved"];
+  "Service Restored Check" -> "Declare Incident Resolved" [label = "Resolved"];
+  "Re-diagnose Root Cause" -> "Remediation Decision";
+
+  "Notify Executive Team" -> "Executive Situation Report";
+  "Executive Situation Report" -> "Approve Major Changes";
+  "Approve Major Changes" -> "Coordinate Response";
+
+  "Declare Incident Resolved" -> "Draft Customer Notification";
+  "Draft Customer Notification" -> "Review Notification";
+  "Review Notification" -> "Publish Customer Notification";
+  "Publish Customer Notification" -> "Close Incident Bridge";
+
+  "Close Incident Bridge" -> "Schedule Postmortem";
+  "Schedule Postmortem" -> "Collect Incident Timeline";
+  "Collect Incident Timeline" -> "Identify Contributing Factors";
+  "Identify Contributing Factors" -> "Draft Postmortem Document";
+  "Draft Postmortem Document" -> "Postmortem Review Meeting";
+  "Postmortem Review Meeting" -> "Approve Action Items";
+  "Approve Action Items" -> "Assign Action Item Owners";
+  "Assign Action Item Owners" -> "Track Remediation Tasks";
+  "Track Remediation Tasks" -> "Incident Closed";
+
+  lane Monitoring {
+    label = "Monitoring";
+    "Alert Triggered";
+    "Evaluate Alert Severity";
+    "Severity Decision";
+  }
+
+  lane OnCallEngineer {
+    label = "On Call Engineer";
+    "Page On Call Engineer";
+    "Acknowledge Alert";
+    "Initial Triage";
+    "Confirm Incident";
+    "Re-diagnose Root Cause";
+  }
+
+  lane IncidentCommander {
+    label = "Incident Commander";
+    "Escalate to Incident Commander";
+    "Open Incident Bridge";
+    "Assign Roles";
+    "Coordinate Response";
+    "Remediation Decision";
+    "Service Restored Check";
+    "Declare Incident Resolved";
+    "Close Incident Bridge";
+    "Schedule Postmortem";
+  }
+
+  lane ServiceTeam {
+    label = "Service Team";
+    "Engage Service Team";
+    "Diagnose Root Cause";
+    "Impact Assessment";
+    "Execute Rollback";
+    "Verify Rollback Success";
+    "Develop Hotfix";
+    "Test Hotfix in Staging";
+    "Deploy Hotfix to Production";
+    "Verify Hotfix Success";
+    "Collect Incident Timeline";
+    "Identify Contributing Factors";
+    "Track Remediation Tasks";
+    "Incident Closed";
+  }
+
+  lane Communications {
+    label = "Communications";
+    "Draft Customer Notification";
+    "Review Notification";
+    "Publish Customer Notification";
+    "Draft Postmortem Document";
+    "Postmortem Review Meeting";
+  }
+
+  lane ExecutiveReview {
+    label = "Executive Review";
+    "Notify Executive Team";
+    "Executive Situation Report";
+    "Approve Major Changes";
+    "Approve Action Items";
+    "Assign Action Item Owners";
+  }
+}

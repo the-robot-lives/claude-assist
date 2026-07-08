@@ -41,9 +41,7 @@ output:
   artifact_kind: alphatab-html-score-tab-player
   formats:
   - format: html
-  - format: svg
-  - format: canvas
-  - format: audio
+  render_expectation: Browser execution renders notation, tablature, and optional playback from the embedded alphaTex source.
 evaluation:
   checklist:
   - 'Format validity: prompt YAML parses as schema 0.4 and the generated artifact is exactly the requested output with no markdown fences.'

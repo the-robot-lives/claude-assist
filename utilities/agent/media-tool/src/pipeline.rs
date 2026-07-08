@@ -26,8 +26,8 @@ pub struct PipelineConfig {
     pub service_override: Option<String>,
     pub no_eval: bool,
     pub no_prep: bool,
-    /// When true, the prep agent loads a FIM solution file for the target channel and
-    /// uses it IN PLACE OF the static guidance. Disabled via --no-fim or MEDIA_FIM_INJECT=0.
+    /// When true, text generation and prep load the matching FIM solution file for
+    /// the target channel. Disabled via --no-fim or MEDIA_FIM_INJECT=0.
     pub fim_enabled: bool,
     pub eval_url: Option<String>,
     pub eval_model: Option<String>,
@@ -595,6 +595,43 @@ fn resolve_display_service(
     (display, first_model)
 }
 
+fn text_inference_system_prompt(
+    svc: &str,
+    prompt: &ParsedPrompt,
+    fim_enabled: bool,
+) -> Option<String> {
+    let is_text_inference =
+        prompt.meta.asset_type.is_chat_type() || get_chat_provider(svc).is_some();
+    if !is_text_inference {
+        return prompt.payload.prompt.system.clone();
+    }
+
+    let mut sections = Vec::new();
+    if let Some(solution) = crate::fim::guidance_for(
+        svc,
+        prompt.meta.asset_type,
+        prompt.payload.output.text_format.as_deref(),
+        fim_enabled,
+    ) {
+        let solution = solution.trim();
+        if !solution.is_empty() {
+            sections.push(format!("FIM solution reference:\n\n{}", solution));
+        }
+    }
+
+    if let Some(system) = prompt.payload.prompt.system.as_deref().map(str::trim) {
+        if !system.is_empty() {
+            sections.push(format!("Prompt-specific output contract:\n\n{}", system));
+        }
+    }
+
+    if sections.is_empty() {
+        None
+    } else {
+        Some(sections.join("\n\n"))
+    }
+}
+
 // ---------------------------------------------------------------------------
 // Eval-gated loop
 // ---------------------------------------------------------------------------
@@ -788,11 +825,13 @@ async fn run_eval_gated(
                 )
             };
 
+            let system_prompt = text_inference_system_prompt(svc, prompt, config.fim_enabled);
+
             let ok = generate_one(
                 svc,
                 &gen_text,
                 gen_negative.as_deref(),
-                prompt.payload.prompt.system.as_deref(),
+                system_prompt.as_deref(),
                 &genai_path,
                 &api_key,
                 &options,
@@ -1060,11 +1099,13 @@ async fn run_legacy_variants(
             (raw_text, prompt.payload.prompt.negative.clone())
         };
 
+        let system_prompt = text_inference_system_prompt(svc, prompt, config.fim_enabled);
+
         let ok = generate_one(
             svc,
             &gen_text,
             gen_neg.as_deref(),
-            prompt.payload.prompt.system.as_deref(),
+            system_prompt.as_deref(),
             &genai_path,
             &api_key,
             &options,
@@ -1186,10 +1227,17 @@ async fn generate_one(
     // Show full prompt sent to the provider
     eprintln!();
     ui::step(&format!(
-        "Prompt sent to {} provider ({} chars):",
+        "{} prompt sent to {} provider ({} chars):",
+        if is_chat { "User" } else { "Prompt" },
         svc,
         prompt_text.len()
     ));
+    if is_chat {
+        let system_chars = system.map(|s| s.len()).unwrap_or(0);
+        if system_chars > 0 {
+            ui::plan_detail("System", &format!("{} chars", system_chars));
+        }
+    }
     for line in prompt_text.lines() {
         eprintln!("  {}", line);
     }

@@ -3,6 +3,7 @@ pub mod elevenlabs;
 pub mod gemini;
 pub mod gemini_chat;
 pub mod grok_video;
+pub mod groq_chat;
 pub mod openai_chat;
 pub mod openai_tts;
 pub mod qwen_tts;
@@ -185,44 +186,10 @@ pub fn candidates_for(
         | AssetType::StyleGuide
         | AssetType::Diagram
         | AssetType::Document => match quality {
-            Quality::Low => vec![
-                Candidate {
-                    service: "gemini-chat",
-                    model: "gemini-2.5-flash",
-                },
-                Candidate {
-                    service: "openai-chat",
-                    model: "gpt-4.1",
-                },
-            ],
-            Quality::Medium => vec![
-                Candidate {
-                    service: "anthropic",
-                    model: "claude-sonnet-4-6",
-                },
-                Candidate {
-                    service: "openai-chat",
-                    model: "gpt-4.1",
-                },
-                Candidate {
-                    service: "gemini-chat",
-                    model: "gemini-2.5-flash",
-                },
-            ],
-            Quality::High => vec![
-                Candidate {
-                    service: "anthropic",
-                    model: "claude-opus-4-6",
-                },
-                Candidate {
-                    service: "anthropic",
-                    model: "claude-sonnet-4-6",
-                },
-                Candidate {
-                    service: "gemini-chat",
-                    model: "gemini-2.5-pro",
-                },
-            ],
+            Quality::Low | Quality::Medium | Quality::High => vec![Candidate {
+                service: "groq-chat",
+                model: "meta-llama/llama-4-scout-17b-16e-instruct",
+            }],
         },
 
         AssetType::Unknown => vec![Candidate {
@@ -259,6 +226,7 @@ pub fn get_chat_provider(service: &str) -> Option<Box<dyn ChatProvider>> {
     match service {
         "anthropic" => Some(Box::new(anthropic::AnthropicProvider)),
         "gemini-chat" => Some(Box::new(gemini_chat::GeminiChatProvider)),
+        "groq" | "groq-chat" => Some(Box::new(groq_chat::GroqChatProvider)),
         "openai-chat" => Some(Box::new(openai_chat::OpenAiChatProvider)),
         "zai" | "z.ai" => Some(Box::new(zai::ZaiProvider)),
         _ => None,
@@ -277,6 +245,8 @@ pub fn is_stub_provider(service: &str) -> bool {
             | "veo"
             | "anthropic"
             | "gemini-chat"
+            | "groq"
+            | "groq-chat"
             | "openai-chat"
             | "zai"
             | "z.ai"
@@ -293,6 +263,7 @@ pub fn api_key_env(service: &str) -> &'static str {
         "grok-video" => "XAI_API_KEY",
         "anthropic" => "ANTHROPIC_API_KEY",
         "gemini-chat" => "GEMINI_API_KEY",
+        "groq" | "groq-chat" => "GROQ_API_KEY",
         "openai-chat" => "OPENAI_API_KEY",
         "zai" | "z.ai" => "XAI_API_KEY",
         _ => "GEMINI_API_KEY",
@@ -401,6 +372,7 @@ pub fn default_model(service: &str) -> &'static str {
         "veo" => "veo-3.0-generate-001",
         "anthropic" => "claude-sonnet-4-6",
         "gemini-chat" => "gemini-2.5-flash",
+        "groq" | "groq-chat" => "meta-llama/llama-4-scout-17b-16e-instruct",
         "openai-chat" => "gpt-4.1",
         "zai" | "z.ai" => "grok-4.3",
         _ => "default",

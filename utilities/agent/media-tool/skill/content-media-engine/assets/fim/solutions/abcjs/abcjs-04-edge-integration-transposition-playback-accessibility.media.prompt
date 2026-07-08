@@ -41,8 +41,7 @@ output:
   artifact_kind: abcjs-html-score
   formats:
   - format: html
-  - format: svg
-  - format: midi
+  render_expectation: Browser execution renders notation SVG and optional playback controls from the embedded ABC source.
 evaluation:
   checklist:
   - 'Format validity: prompt YAML parses as schema 0.4 and the generated artifact is exactly the requested output with no markdown fences.'

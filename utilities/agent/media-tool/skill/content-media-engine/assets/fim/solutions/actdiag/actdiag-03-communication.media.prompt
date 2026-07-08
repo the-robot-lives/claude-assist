@@ -20,9 +20,7 @@ output:
   artifact_kind: activity_diagram_source
   formats:
   - format: diag
-  - format: svg
-  - format: png
-  - format: pdf
+  render_expectation: Actdiag source only. Render to SVG/PNG/PDF in a separate renderer step when an actdiag/blockdiag renderer is available.
 evaluation:
   checklist:
   - 'Output uses native actdiag syntax: actdiag root block, A -> B transitions, lane blocks, activity
@@ -74,4 +72,3 @@ tags:
 - activity-diagram
 - swimlanes
 - process-flow
-

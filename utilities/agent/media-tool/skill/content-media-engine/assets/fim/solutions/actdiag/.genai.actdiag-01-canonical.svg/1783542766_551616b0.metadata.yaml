@@ -1,0 +1,9 @@
+service: anthropic
+model: claude-sonnet-4-6
+timestamp: 1783542773
+provider_options:
+  temperature: Number(0.2)
+  max_tokens: Number(4096)
+  top_p: Number(0.9)
+prompt: |
+  Create an actdiag source diagram for an employee expense approval workflow. Include Employee, Manager, Finance, and Accounting lanes; start and end markers; a decision for approval; a revision loop for rejected reports; and labels for reimbursement and audit archive steps.

@@ -1,0 +1,136 @@
+actdiag {
+  orientation = portrait
+
+  "Alert Triggered" -> "Evaluate Alert Severity" -> "Severity Decision"
+
+  "Severity Decision" -> "Page On Call Engineer" [label = "SEV3/SEV2"]
+  "Severity Decision" -> "Page On Call Engineer" [label = "SEV1/SEV0"]
+  "Severity Decision" -> "Escalate to Incident Commander" [label = "SEV1/SEV0"]
+  "Severity Decision" -> "Notify Executive Team" [label = "SEV0"]
+
+  "Page On Call Engineer" -> "Acknowledge Alert"
+  "Acknowledge Alert" -> "Initial Triage"
+  "Initial Triage" -> "Open Incident Ticket"
+  "Open Incident Ticket" -> "Assess Impact Scope"
+
+  "Escalate to Incident Commander" -> "Declare Incident"
+  "Declare Incident" -> "Assign Incident Commander Role"
+  "Assign Incident Commander Role" -> "Open War Room Bridge"
+
+  "Notify Executive Team" -> "Executive Briefing"
+  "Executive Briefing" -> "Authorize Emergency Resources"
+
+  "Assess Impact Scope" -> "Open War Room Bridge"
+  "Open War Room Bridge" -> "Coordinate Service Teams"
+
+  "Coordinate Service Teams" -> "Investigate Root Cause"
+  "Authorize Emergency Resources" -> "Investigate Root Cause"
+
+  "Investigate Root Cause" -> "Draft Initial Customer Notice"
+  "Investigate Root Cause" -> "Identify Fix Strategy"
+
+  "Draft Initial Customer Notice" -> "Approve Customer Notice"
+  "Approve Customer Notice" -> "Publish Status Page Update"
+
+  "Identify Fix Strategy" -> "Rollback Decision"
+  "Rollback Decision" -> "Execute Rollback" [label = "Rollback"]
+  "Rollback Decision" -> "Develop Hotfix" [label = "Hotfix"]
+
+  "Execute Rollback" -> "Verify Rollback Success"
+  "Verify Rollback Success" -> "Rollback Failed?"
+  "Rollback Failed?" -> "Develop Hotfix" [label = "Failed"]
+  "Rollback Failed?" -> "Monitor Service Recovery" [label = "Success"]
+
+  "Develop Hotfix" -> "Code Review and Testing"
+  "Code Review and Testing" -> "Approve Hotfix Deployment"
+  "Approve Hotfix Deployment" -> "Deploy Hotfix to Production"
+  "Deploy Hotfix to Production" -> "Monitor Service Recovery"
+
+  "Monitor Service Recovery" -> "Confirm Service Restored"
+  "Confirm Service Restored" -> "Publish Resolution Notice"
+  "Confirm Service Restored" -> "Close War Room Bridge"
+  "Confirm Service Restored" -> "Notify Executive Resolution"
+
+  "Publish Resolution Notice" -> "Customer Follow Up"
+  "Close War Room Bridge" -> "Compile Incident Timeline"
+  "Notify Executive Resolution" -> "Executive Resolution Review"
+
+  "Customer Follow Up" -> "Schedule Postmortem"
+  "Compile Incident Timeline" -> "Schedule Postmortem"
+  "Executive Resolution Review" -> "Schedule Postmortem"
+
+  "Schedule Postmortem" -> "Conduct Postmortem Meeting"
+  "Conduct Postmortem Meeting" -> "Identify Action Items"
+  "Identify Action Items" -> "Assign Remediation Owners"
+  "Assign Remediation Owners" -> "Track Remediation Progress"
+  "Track Remediation Progress" -> "Verify Remediations Complete"
+  "Verify Remediations Complete" -> "Close Incident Record"
+
+  lane Monitoring {
+    label = "Monitoring"
+    "Alert Triggered"
+    "Evaluate Alert Severity"
+    "Severity Decision"
+    "Monitor Service Recovery"
+    "Confirm Service Restored"
+  }
+
+  lane OnCallEngineer {
+    label = "On Call Engineer"
+    "Page On Call Engineer"
+    "Acknowledge Alert"
+    "Initial Triage"
+    "Open Incident Ticket"
+    "Assess Impact Scope"
+    "Investigate Root Cause"
+    "Identify Fix Strategy"
+    "Rollback Decision"
+    "Execute Rollback"
+    "Verify Rollback Success"
+    "Rollback Failed?"
+    "Develop Hotfix"
+    "Code Review and Testing"
+    "Deploy Hotfix to Production"
+  }
+
+  lane IncidentCommander {
+    label = "Incident Commander"
+    "Escalate to Incident Commander"
+    "Declare Incident"
+    "Assign Incident Commander Role"
+    "Open War Room Bridge"
+    "Coordinate Service Teams"
+    "Approve Hotfix Deployment"
+    "Close War Room Bridge"
+    "Compile Incident Timeline"
+    "Schedule Postmortem"
+    "Conduct Postmortem Meeting"
+    "Close Incident Record"
+  }
+
+  lane ServiceTeam {
+    label = "Service Team"
+    "Approve Customer Notice"
+    "Assign Remediation Owners"
+    "Track Remediation Progress"
+    "Verify Remediations Complete"
+    "Identify Action Items"
+  }
+
+  lane Communications {
+    label = "Communications"
+    "Draft Initial Customer Notice"
+    "Publish Status Page Update"
+    "Publish Resolution Notice"
+    "Customer Follow Up"
+  }
+
+  lane ExecutiveReview {
+    label = "Executive Review"
+    "Notify Executive Team"
+    "Executive Briefing"
+    "Authorize Emergency Resources"
+    "Notify Executive Resolution"
+    "Executive Resolution Review"
+  }
+}

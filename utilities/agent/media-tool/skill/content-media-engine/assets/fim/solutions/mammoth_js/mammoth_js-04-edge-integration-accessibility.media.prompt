@@ -31,8 +31,7 @@ output:
   artifact_kind: mammoth-secure-docx-ingestion
   formats:
     - format: js
-    - format: html
-    - format: json
+  render_expectation: "Running the emitted JavaScript converter may write converted document artifacts and metadata; the LLM directly emits only JavaScript source."
 evaluation:
   checklist:
     - "Format validity: YAML parses as schema 0.4, generated output is one JavaScript file, and Mammoth.js is the primary converter."
@@ -69,4 +68,3 @@ tags:
   - accessibility
   - metadata
   - secure-ingestion
-

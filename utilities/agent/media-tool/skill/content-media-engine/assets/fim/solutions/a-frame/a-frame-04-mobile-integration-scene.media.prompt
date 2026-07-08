@@ -26,7 +26,6 @@ prompt:
 output:
   formats:
   - format: html
-  - format: png
   text_format: html
   artifact: A-Frame edge integration and mobile scene source asset
   artifact_kind: A-Frame edge integration and mobile scene source asset

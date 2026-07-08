@@ -24,7 +24,7 @@ output:
   artifact_kind: latex-document
   formats:
   - format: tex
-  - format: pdf
+  render_expectation: "Compile the emitted .tex source with LaTeX to produce PDF render outputs; the LLM directly emits only TeX source."
 evaluation:
   checklist:
   - "YAML parses and required schema 0.4 fields are present."

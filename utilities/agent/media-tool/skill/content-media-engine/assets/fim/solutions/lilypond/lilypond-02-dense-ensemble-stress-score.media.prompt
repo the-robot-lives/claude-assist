@@ -41,9 +41,7 @@ output:
   artifact_kind: lilypond-source-score
   formats:
   - format: ly
-  - format: pdf
-  - format: png
-  - format: midi
+  render_expectation: "Compile the emitted .ly source with LilyPond to produce PDF, PNG, and MIDI render outputs; the LLM directly emits only LilyPond source."
 evaluation:
   checklist:
   - 'Format validity: prompt YAML parses as schema 0.4 and the generated artifact is exactly the requested output with no markdown fences.'

@@ -31,9 +31,7 @@ output:
   artifact_kind: mammoth-dense-docx-ingestion
   formats:
     - format: js
-    - format: html
-    - format: txt
-    - format: json
+  render_expectation: "Running the emitted JavaScript converter may write converted document artifacts and metadata; the LLM directly emits only JavaScript source."
 evaluation:
   checklist:
     - "Format validity: YAML parses as schema 0.4, generated output is one JavaScript file, and Mammoth.js conversion/extraction APIs are used."
@@ -70,4 +68,3 @@ tags:
   - dense-docx
   - stress
   - ingestion
-

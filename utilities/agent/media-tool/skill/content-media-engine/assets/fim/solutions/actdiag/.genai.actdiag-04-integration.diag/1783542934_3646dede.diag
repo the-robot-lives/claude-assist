@@ -1,0 +1,91 @@
+actdiag {
+  orientation = landscape
+
+  developer_push -> trigger_ci -> unit_tests -> integration_tests;
+  integration_tests -> test_results_check;
+  test_results_check -> security_scan [label = "tests passed"];
+  test_results_check -> notify_test_failure [label = "tests failed"];
+  notify_test_failure -> create_jira_bug -> developer_push;
+
+  security_scan -> security_results_check;
+  security_results_check -> build_artifact [label = "no findings"];
+  security_results_check -> notify_security_failure [label = "findings found"];
+  notify_security_failure -> create_jira_security_ticket -> security_remediation -> developer_push;
+
+  build_artifact -> push_to_registry -> update_jira_in_progress -> deploy_staging;
+  deploy_staging -> staging_smoke_tests -> staging_check;
+  staging_check -> request_manual_approval [label = "staging healthy"];
+  staging_check -> rollback_staging [label = "staging failed"];
+  rollback_staging -> create_jira_staging_bug -> developer_push;
+
+  request_manual_approval -> approval_gate;
+  approval_gate -> argocd_sync [label = "approved"];
+  approval_gate -> reject_release [label = "rejected"];
+  reject_release -> update_jira_rejected -> notify_team_rejection;
+
+  argocd_sync -> production_health_check;
+  production_health_check -> prod_check;
+  prod_check -> update_jira_done [label = "healthy"];
+  prod_check -> argocd_rollback [label = "unhealthy"];
+  argocd_rollback -> create_jira_prod_incident -> notify_oncall;
+
+  update_jira_done -> generate_release_notes -> collect_audit_logs -> archive_release_evidence -> notify_release_complete;
+
+  lane developer {
+    label = "Developer";
+    developer_push;
+    security_remediation;
+  }
+  lane ci_pipeline {
+    label = "CI Pipeline (GitHub Actions)";
+    trigger_ci;
+    unit_tests;
+    integration_tests;
+    test_results_check;
+    notify_test_failure;
+    security_scan;
+    security_results_check;
+    notify_security_failure;
+    build_artifact;
+    push_to_registry;
+  }
+  lane jira {
+    label = "Jira";
+    create_jira_bug;
+    create_jira_security_ticket;
+    update_jira_in_progress;
+    create_jira_staging_bug;
+    update_jira_rejected;
+    update_jira_done;
+    create_jira_prod_incident;
+  }
+  lane staging {
+    label = "Staging Environment";
+    deploy_staging;
+    staging_smoke_tests;
+    staging_check;
+    rollback_staging;
+  }
+  lane approval {
+    label = "Release Manager";
+    request_manual_approval;
+    approval_gate;
+    reject_release;
+    notify_team_rejection;
+  }
+  lane production {
+    label = "Argo CD / Production";
+    argocd_sync;
+    production_health_check;
+    prod_check;
+    argocd_rollback;
+    notify_oncall;
+  }
+  lane audit {
+    label = "Audit & Evidence";
+    generate_release_notes;
+    collect_audit_logs;
+    archive_release_evidence;
+    notify_release_complete;
+  }
+}

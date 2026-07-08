@@ -1,0 +1,26 @@
+service: gemini
+model: imagen-4.0-ultra-generate-001
+timestamp: 1783542300
+provider_options:
+  max_tokens: Number(8192)
+  temperature: Number(0.2)
+prompt: |
+  Create the brand and editorial communication asset prompt for HTML5 Canvas 2D API.
+  
+  Scenario:
+  Create a launch poster for Signal Bloom 2026, a fictional creative-coding festival. Include a headline, short deck, date line, location line, sponsor strip, abstract hero artwork, and two format-safe crop guides for square and wide editorial reuse.
+  
+  Implementation requirements:
+  - Category: 2d-canvas-svg-and-creative-coding.
+  - Required solution: canvas-api (HTML5 Canvas 2D API).
+  - Output: a complete self-contained HTML document with inline CSS and JavaScript.
+  - Native API contract: Use only the native CanvasRenderingContext2D API: getContext("2d"), Path2D, gradients, transforms, clipping, text metrics, requestAnimationFrame, devicePixelRatio scaling, and toBlob or toDataURL export.
+  - Native technique focus: raw immediate-mode canvas draw calls with explicit state management, save/restore pairs, clear/redraw behavior, and optional pixel access only when justified.
+  - Responsive contract: Resize the canvas buffer and CSS size together, scale by devicePixelRatio, redraw after resize, and keep text and controls legible from 360px to 1440px wide.
+  - Export and integration contract: Expose exportPNG(), exportWebP(), resizeCanvas(), render(seed), and destroy() helpers; make export work without tainting the canvas.
+  - Determinism contract: Use a small seeded PRNG for all random placements, colors, and motion offsets; display the seed in a diagnostics label.
+  - Scenario-specific emphasis: Build a finished brand or editorial communication asset with typography, hierarchy, contrast, and production export behavior.
+  - Additional edge detail: Use meaningful text, accessible contrast, and a layout that still works when captured as PNG or serialized as SVG where the solution supports vector export.
+  - Include realistic inline sample data, labels, dimensions, seed value, and source note where the scenario needs them.
+  - Avoid placeholder lorem ipsum text, external credentials, paid private assets, and hidden dependencies.
+  - Output only the final artifact, with no commentary outside the artifact.

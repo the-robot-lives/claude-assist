@@ -1,0 +1,142 @@
+actdiag {
+  orientation = portrait
+
+  alert_triggered -> severity_assessment;
+
+  alert_triggered [label = "Alert Triggered\n(Monitoring System)"];
+  severity_assessment [label = "Assess Severity\nLevel"];
+  sev_decision [label = "Severity\nDecision\n(SEV1/SEV2/SEV3)", shape = diamond];
+  page_oncall [label = "Page On-Call\nEngineer"];
+  acknowledge [label = "Acknowledge\nAlert"];
+  initial_triage [label = "Initial Triage\n& Diagnosis"];
+  declare_incident [label = "Declare Incident\n& Assign SEV"];
+  engage_ic [label = "Engage Incident\nCommander"];
+  open_war_room [label = "Open War Room\n/ Bridge Call"];
+  notify_service_team [label = "Notify Relevant\nService Team"];
+  deep_investigation [label = "Deep Investigation\n& Root Cause"];
+  impact_assessment [label = "Assess Customer\nImpact"];
+  draft_initial_comms [label = "Draft Initial\nCustomer Comms"];
+  send_initial_notification [label = "Send Initial\nCustomer Notification"];
+  exec_briefing [label = "Executive\nBriefing"];
+  exec_approval [label = "Executive\nApproval for\nPublic Comms", shape = diamond];
+  mitigation_decision [label = "Mitigation\nDecision\n(Rollback vs Hotfix)", shape = diamond];
+  rollback_prepare [label = "Prepare\nRollback Plan"];
+  hotfix_develop [label = "Develop\nHotfix / Patch"];
+  rollback_execute [label = "Execute\nRollback"];
+  hotfix_test [label = "Test Hotfix\nin Staging"];
+  hotfix_deploy [label = "Deploy\nHotfix to\nProduction"];
+  verify_mitigation [label = "Verify\nMitigation\nEffective"];
+  service_restored [label = "Service\nRestored\nConfirmation"];
+  update_status_page [label = "Update Status\nPage / Comms"];
+  send_resolution_notice [label = "Send Resolution\nNotice to Customers"];
+  exec_resolution_brief [label = "Executive\nResolution Briefing"];
+  close_incident [label = "Close Incident\nTicket"];
+  schedule_postmortem [label = "Schedule\nPostmortem Meeting"];
+  postmortem_meeting [label = "Conduct\nPostmortem Meeting"];
+  identify_action_items [label = "Identify Action\nItems & Owners"];
+  implement_fixes [label = "Implement\nLong-Term Fixes"];
+  exec_postmortem_review [label = "Executive\nPostmortem Review"];
+  publish_postmortem [label = "Publish Internal\nPostmortem Report"];
+  track_completion [label = "Track Action\nItem Completion"];
+
+  lane Monitoring {
+    label = "Monitoring";
+    alert_triggered;
+    severity_assessment;
+    sev_decision;
+    verify_mitigation;
+  }
+
+  lane OnCallEngineer {
+    label = "On-Call Engineer";
+    page_oncall;
+    acknowledge;
+    initial_triage;
+    declare_incident;
+    mitigation_decision;
+    rollback_prepare;
+    hotfix_develop;
+    rollback_execute;
+    hotfix_test;
+    hotfix_deploy;
+    service_restored;
+    close_incident;
+    schedule_postmortem;
+  }
+
+  lane IncidentCommander {
+    label = "Incident Commander";
+    engage_ic;
+    open_war_room;
+    impact_assessment;
+    exec_briefing;
+    postmortem_meeting;
+    identify_action_items;
+    implement_fixes;
+  }
+
+  lane ServiceTeam {
+    label = "Service Team";
+    notify_service_team;
+    deep_investigation;
+    hotfix_test;
+    track_completion;
+  }
+
+  lane Communications {
+    label = "Communications";
+    draft_initial_comms;
+    send_initial_notification;
+    update_status_page;
+    send_resolution_notice;
+    publish_postmortem;
+  }
+
+  lane ExecutiveReview {
+    label = "Executive Review";
+    exec_approval;
+    exec_resolution_brief;
+    exec_postmortem_review;
+  }
+
+  severity_assessment -> sev_decision;
+  sev_decision -> page_oncall [label = "SEV1/SEV2"];
+  sev_decision -> acknowledge [label = "SEV3"];
+  page_oncall -> acknowledge;
+  acknowledge -> initial_triage;
+  initial_triage -> declare_incident;
+  declare_incident -> engage_ic;
+  declare_incident -> notify_service_team;
+  engage_ic -> open_war_room;
+  open_war_room -> deep_investigation;
+  open_war_room -> impact_assessment;
+  notify_service_team -> deep_investigation;
+  deep_investigation -> mitigation_decision;
+  impact_assessment -> draft_initial_comms;
+  draft_initial_comms -> exec_approval;
+  exec_approval -> send_initial_notification [label = "Approved"];
+  exec_approval -> draft_initial_comms [label = "Revise"];
+  impact_assessment -> exec_briefing;
+  exec_briefing -> exec_approval;
+  mitigation_decision -> rollback_prepare [label = "Rollback"];
+  mitigation_decision -> hotfix_develop [label = "Hotfix"];
+  rollback_prepare -> rollback_execute;
+  hotfix_develop -> hotfix_test;
+  hotfix_test -> hotfix_deploy;
+  rollback_execute -> verify_mitigation;
+  hotfix_deploy -> verify_mitigation;
+  verify_mitigation -> service_restored;
+  service_restored -> update_status_page;
+  service_restored -> exec_resolution_brief;
+  update_status_page -> send_resolution_notice;
+  exec_resolution_brief -> send_resolution_notice;
+  service_restored -> close_incident;
+  close_incident -> schedule_postmortem;
+  schedule_postmortem -> postmortem_meeting;
+  postmortem_meeting -> identify_action_items;
+  identify_action_items -> implement_fixes;
+  identify_action_items -> exec_postmortem_review;
+  exec_postmortem_review -> publish_postmortem;
+  implement_fixes -> track_completion;
+  publish_postmortem -> track_completion;
+}

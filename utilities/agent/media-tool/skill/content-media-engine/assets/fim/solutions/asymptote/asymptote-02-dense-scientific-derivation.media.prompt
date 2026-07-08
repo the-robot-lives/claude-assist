@@ -24,8 +24,7 @@ output:
   artifact_kind: asymptote-source
   formats:
   - format: asy
-  - format: pdf
-  - format: svg
+  render_expectation: Asymptote can render PDF or SVG derivatives from the emitted .asy source.
 evaluation:
   checklist:
   - "YAML parses and required schema 0.4 fields are present."
@@ -72,4 +71,3 @@ tags:
 - dense-scientific-derivation
 - phase-portrait
 - differential-equations
-

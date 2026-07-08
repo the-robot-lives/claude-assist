@@ -33,9 +33,7 @@ output:
   artifact_kind: "lcapy-analysis-script"
   formats:
     - format: "py"
-    - format: "tex"
-    - format: "svg"
-    - format: "png"
+  render_expectation: "Running the emitted Python script may write TeX, SVG, and PNG analysis outputs; the LLM directly emits only Python source."
 evaluation:
   checklist:
     - "YAML parses successfully, uses schema 0.4, and includes id, type, quality, solution, category, variant, prompt, output, evaluation, and tags."

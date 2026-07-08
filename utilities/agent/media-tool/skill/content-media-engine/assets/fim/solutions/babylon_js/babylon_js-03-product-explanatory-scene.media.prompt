@@ -26,7 +26,6 @@ prompt:
 output:
   formats:
   - format: html
-  - format: png
   text_format: html
   artifact: Babylon.js product and explanatory scene source asset
   artifact_kind: Babylon.js product and explanatory scene source asset

@@ -25,9 +25,7 @@ output:
   artifact_kind: asciidoc-document-source
   formats:
   - format: adoc
-  - format: html
-  - format: pdf
-  - format: docbook
+  render_expectation: Asciidoctor can render HTML, PDF, or DocBook derivatives from the emitted .adoc source.
 evaluation:
   checklist:
   - "Parser/build compatibility: generated artifact follows AsciiDoc article/book source and can be parsed or built with Asciidoctor and asciidoctor-pdf using the documented local command."

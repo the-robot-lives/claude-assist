@@ -2,8 +2,8 @@
 //!
 //! The media-tool bundles a FIM reference library under
 //! `skill/content-media-engine/references/fim/solution/`. These markdown files are
-//! machine-reference knowledge consumed by the prompt-PREP agent (`prep.rs`) to shape
-//! the best possible prompt for a given generation target.
+//! machine-reference knowledge consumed by text generation (`pipeline.rs`) and the
+//! prompt-PREP agent (`prep.rs`) to shape the best possible prompt for a given target.
 //!
 //! This module resolves the right solution file for a (service, asset_type, text_format)
 //! target and returns its content with low-value sections stripped to bound token cost.
