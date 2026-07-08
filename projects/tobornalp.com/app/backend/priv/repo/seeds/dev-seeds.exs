@@ -41,7 +41,7 @@ seed "dev:admin-user" do
       handle: "admin",
       name_id: UUID.uuid5(:oid, "Therobotplans.Dev.Admin.Name"),
       description_id: UUID.uuid5(:oid, "Therobotplans.Dev.Admin.Description"),
-      email: "admin@starter.local",
+      email: "admin@tobornalp.com",
       hashed_password: Bcrypt.hash_pwd_salt("password123"),
       status: :active,
       verified: true,
@@ -60,7 +60,7 @@ seed "dev:admin-credential" do
       auth_provider_id: login_provider_id,
       status: :active,
       settings: %{
-        "email" => "admin@starter.local",
+        "email" => "admin@tobornalp.com",
         "password" => Bcrypt.hash_pwd_salt("password123")
       },
       state: %{},
@@ -125,7 +125,7 @@ seed "dev:bootstrap-invite" do
   ╚══════════════════════════════════════════════════════════════╝
 
   Dev admin credentials:
-    Email:    admin@starter.local
+    Email:    admin@tobornalp.com
     Password: password123
   """)
 end

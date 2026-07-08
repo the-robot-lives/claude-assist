@@ -1,5 +1,7 @@
 replicas: 1
 domain: tobornalp.com
+appDomain: app.tobornalp.com
+
 backend:
   image: ops.noizu.com/tobornalp.com/backend:v1.0.12
   port: 4000
@@ -10,6 +12,7 @@ backend:
     limits:
       cpu: 500m
       memory: 512Mi
+
 frontend:
   image: ops.noizu.com/tobornalp.com/frontend:v1.0.11
   port: 3000
@@ -20,10 +23,10 @@ frontend:
     limits:
       cpu: 200m
       memory: 256Mi
+
 migrate:
   enabled: true
-  # OTP app/module are still :therobotplans / Therobotplans.* (code not renamed;
-  # only the deploy/runtime identity is tobornalp). DB name is `therobotplans`.
+  # OTP app/module are still :therobotplans / Therobotplans.*; deploy identity is tobornalp.
   command: ["bin/therobotplans", "eval", "Therobotplans.Release.migrate()"]
   resources:
     requests:
@@ -32,21 +35,19 @@ migrate:
     limits:
       cpu: 200m
       memory: 256Mi
+
 database:
-  host: app-postgres.apps.svc.cluster.local # ExternalName → app-timescaledb
+  host: app-postgres.apps.svc.cluster.local
   port: 5432
-  name: therobotplans # live DB name (unchanged)
+  name: therobotplans
+
 redis:
   host: app-valkey.apps.svc.cluster.local
   port: 6379
   db: 12
+
 secrets:
   name: tobornalp-secrets
-  # DATABASE_URL sources from the populated DB's secret (db `therobotplans`,
-  # 50-table schema, user `therobotplans`). The `tobornalp` DB the default
-  # TOBORNALP_DATABASE_URL points at was never migrated (empty → 500s). All
-  # other env (secret_key_base, guardian, oidc client creds) stay on
-  # tobornalp-secrets.
   databaseUrlSecretName: therobotplans-secrets
   keys:
     dbUser: TOBORNALP_DB_USER
@@ -77,33 +78,44 @@ secrets:
     projectSlug: k8-infra
     envSlug: prod
     secretsPath: "/apps/tobornalp"
+
 mail:
   fromName: ""
   fromAddress: "noreply@tobornalp.com"
+
 sso:
   requireInvite: true
+  # SSO availability by email domain. Format:
+  # "example.com=oidc;corp.example=google,oidc"
+  domains: "tobornalp.com=oidc;noizu.com=oidc;therobotlives.com=oidc;derobot.is=oidc;greatnonprofits.org=oidc;communityconnectlabs.com=oidc"
+  # Domains whose SSO registrations are approved immediately. All other SSO
+  # registrations remain pending unless an invite activates them. Format:
+  # "example.com;corp.example" or "*" for every SSO-enabled domain.
+  autoApproveDomains: "tobornalp.com;noizu.com;therobotlives.com;derobot.is;greatnonprofits.org;communityconnectlabs.com"
   oidc:
+    # Default OIDC issuer for portfolio services (Authentik at auth.noizu.com)
+    # Example: https://auth.noizu.com/application/o/{app-slug}/
     issuer: "https://auth.derobot.is/application/o/tobornalp"
   saml:
     idpMetadataUrl: ""
     spEntityId: ""
-# SSO is the only auth method. Domain allowlist = auto-register; others need an
-# invite code at /auth/register. SSO_REQUIRE_INVITE is emitted by _helpers.tpl
-# from sso.requireInvite above — only add the domain allowlist here.
-extraEnv:
-  - name: SSO_ALLOWED_DOMAINS
-    value: "noizu.com,therobotlives.com,derobot.is,greatnonprofits.org,communityconnectlabs.com"
+
+extraEnv: []
+
 configMap:
   enabled: false
   data: {}
+
 imagePullSecrets:
   - name: ops-registry-secret
+
 analytics:
   ga:
     measurementId: ""
   posthog:
     key: ""
     host: "https://us.i.posthog.com"
+
 ingress:
   enabled: true
   className: nginx
@@ -111,8 +123,10 @@ ingress:
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
     nginx.ingress.kubernetes.io/proxy-body-size: "10m"
   cloudflareOnly: true
+
 tls:
-  secretName: tobornalp-tls # cert: *.tobornalp.com + tobornalp.com (Cloudflare Origin)
+  enabled: true
+  secretName: tobornalp-tls
   infisical:
     enabled: true
     resyncInterval: 300
@@ -124,21 +138,44 @@ tls:
     secretsPath: "/apps/tls/tobornalp"
     crtKey: TOBORNALP_TLS_CRT
     keyKey: TOBORNALP_TLS_KEY
+
 otel:
   enabled: false
   collectorEndpoint: "otel-collector.observability-ns.svc.cluster.local:4317"
   collectorHttpEndpoint: "http://otel-collector.observability-ns.svc.cluster.local:4318"
   serviceName: "tobornalp"
+
 storage:
   enabled: false
+  bucket: ""
+  region: "us-east-1"
+  endpoint: ""
+  scheme: "https://"
+
 autoscaling:
   enabled: false
   minReplicas: 1
   maxReplicas: 5
   targetCPUUtilizationPercentage: 70
   targetMemoryUtilizationPercentage: 80
+
 podDisruptionBudget:
   enabled: false
   minAvailable: 1
+
 sandbox:
   enabled: false
+  image: ops.noizu.com/tobornalp.com/sandbox:v1.0.0
+  resources:
+    requests:
+      cpu: 200m
+      memory: 512Mi
+    limits:
+      cpu: "1"
+      memory: 1Gi
+  persistence:
+    enabled: false
+    size: 5Gi
+    storageClass: ""
+  service:
+    type: ClusterIP

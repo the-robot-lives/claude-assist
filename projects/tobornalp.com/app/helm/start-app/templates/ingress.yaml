@@ -59,7 +59,9 @@ spec:
             name: {{ $svcName }}
             port:
               number: {{ .Values.backend.port }}
-      - path: /auth
+      # Only the OIDC redirect flow is a backend route. Frontend pages under
+      # /auth/* must fall through to Next.js.
+      - path: /auth/oidc
         pathType: Prefix
         backend:
           service:
@@ -119,7 +121,9 @@ spec:
             name: {{ $svcName }}
             port:
               number: {{ .Values.frontend.port }}
-      - path: /auth
+      # Only the OIDC redirect flow is a backend route. Frontend pages under
+      # /auth/* must fall through to Next.js.
+      - path: /auth/oidc
         pathType: Prefix
         backend:
           service:

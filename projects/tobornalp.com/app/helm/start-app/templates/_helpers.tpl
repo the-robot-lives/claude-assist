@@ -52,7 +52,7 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 - name: DATABASE_URL
   valueFrom:
     secretKeyRef:
-      name: {{ .Values.secrets.name }}
+      name: {{ .Values.secrets.databaseUrlSecretName | default .Values.secrets.name }}
       key: {{ .Values.secrets.keys.databaseUrl }}
 {{- end }}
 - name: SECRET_KEY_BASE

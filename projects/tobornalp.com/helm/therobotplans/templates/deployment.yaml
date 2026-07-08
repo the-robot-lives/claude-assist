@@ -60,6 +60,10 @@ spec:
         env:
         - name: API_URL
           value: "https://{{ .Values.domain }}"
+        - name: APP_URL
+          value: "https://{{ .Values.appDomain | default .Values.domain }}"
+        - name: COOKIE_DOMAIN
+          value: ".{{ .Values.domain }}"
         - name: PORT
           value: {{ .Values.frontend.port | quote }}
         - name: HOSTNAME

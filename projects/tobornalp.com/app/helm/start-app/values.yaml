@@ -3,7 +3,7 @@ domain: tobornalp.com
 appDomain: app.tobornalp.com
 
 backend:
-  image: ops.noizu.com/tobornalp.com/backend:v1.0.0
+  image: ops.noizu.com/tobornalp.com/backend:v1.0.12
   port: 4000
   resources:
     requests:
@@ -14,7 +14,7 @@ backend:
       memory: 512Mi
 
 frontend:
-  image: ops.noizu.com/tobornalp.com/frontend:v1.0.0
+  image: ops.noizu.com/tobornalp.com/frontend:v1.0.11
   port: 3000
   resources:
     requests:
@@ -26,7 +26,8 @@ frontend:
 
 migrate:
   enabled: true
-  command: ["bin/starter", "eval", "Starter.Release.migrate()"]
+  # OTP app/module are still :therobotplans / Therobotplans.*; deploy identity is tobornalp.
+  command: ["bin/therobotplans", "eval", "Therobotplans.Release.migrate()"]
   resources:
     requests:
       cpu: 50m
@@ -36,26 +37,28 @@ migrate:
       memory: 256Mi
 
 database:
-  host: shared-postgres.data-ns.svc.cluster.local
+  host: app-postgres.apps.svc.cluster.local
   port: 5432
-  name: starter
+  name: therobotplans
 
 redis:
-  host: shared-redis.data-ns.svc.cluster.local
+  host: app-valkey.apps.svc.cluster.local
   port: 6379
-  db: 0
+  db: 12
 
 secrets:
-  name: apps-app-secrets
+  name: tobornalp-secrets
+  databaseUrlSecretName: therobotplans-secrets
   keys:
-    dbUser: STARTER_DB_USER
-    dbPassword: STARTER_DB_PASSWORD
-    secretKeyBase: STARTER_SECRET_KEY_BASE
-    guardianSecretKey: STARTER_GUARDIAN_SECRET_KEY
-    redisUrl: STARTER_REDIS_URL
-    sendgridApiKey: ""
-    oidcClientId: ""
-    oidcClientSecret: ""
+    dbUser: TOBORNALP_DB_USER
+    dbPassword: TOBORNALP_DB_PASSWORD
+    secretKeyBase: TOBORNALP_SECRET_KEY_BASE
+    guardianSecretKey: TOBORNALP_GUARDIAN_SECRET_KEY
+    redisUrl: TOBORNALP_REDIS_URL
+    databaseUrl: THEROBOTPLANS_DATABASE_URL
+    sendgridApiKey: TOBORNALP_SENDGRID_API_KEY
+    oidcClientId: TOBORNALP_OIDC_CLIENT_ID
+    oidcClientSecret: TOBORNALP_OIDC_CLIENT_SECRET
     googleClientId: ""
     googleClientSecret: ""
     facebookClientId: ""
@@ -66,24 +69,33 @@ secrets:
     linkedinClientSecret: ""
     samlSpCert: ""
     samlSpKey: ""
+  infisical:
+    enabled: true
+    hostAPI: https://infisical.noizu.com/api
+    resyncInterval: 120
+    credentialsSecret: universal-auth-credentials
+    credentialsNamespace: infra
+    projectSlug: k8-infra
+    envSlug: prod
+    secretsPath: "/apps/tobornalp"
 
 mail:
   fromName: ""
-  fromAddress: ""
+  fromAddress: "noreply@tobornalp.com"
 
 sso:
-  requireInvite: false
+  requireInvite: true
   # SSO availability by email domain. Format:
   # "example.com=oidc;corp.example=google,oidc"
-  domains: "tobornalp.com=oidc"
+  domains: "tobornalp.com=oidc;noizu.com=oidc;therobotlives.com=oidc;derobot.is=oidc;greatnonprofits.org=oidc;communityconnectlabs.com=oidc"
   # Domains whose SSO registrations are approved immediately. All other SSO
   # registrations remain pending unless an invite activates them. Format:
   # "example.com;corp.example" or "*" for every SSO-enabled domain.
-  autoApproveDomains: ""
+  autoApproveDomains: "tobornalp.com;noizu.com;therobotlives.com;derobot.is;greatnonprofits.org;communityconnectlabs.com"
   oidc:
     # Default OIDC issuer for portfolio services (Authentik at auth.noizu.com)
     # Example: https://auth.noizu.com/application/o/{app-slug}/
-    issuer: ""
+    issuer: "https://auth.derobot.is/application/o/tobornalp"
   saml:
     idpMetadataUrl: ""
     spEntityId: ""
@@ -114,24 +126,24 @@ ingress:
 
 tls:
   enabled: true
-  secretName: start-app-tls
+  secretName: tobornalp-tls
   infisical:
     enabled: true
     resyncInterval: 300
-    hostAPI: ""
+    hostAPI: https://infisical.noizu.com/api
     credentialsSecret: universal-auth-credentials
     credentialsNamespace: infra
     projectSlug: k8-infra
     envSlug: prod
-    secretsPath: "/apps/tls/start-app"
-    crtKey: STARTER_TLS_CRT
-    keyKey: STARTER_TLS_KEY
+    secretsPath: "/apps/tls/tobornalp"
+    crtKey: TOBORNALP_TLS_CRT
+    keyKey: TOBORNALP_TLS_KEY
 
 otel:
   enabled: false
   collectorEndpoint: "otel-collector.observability-ns.svc.cluster.local:4317"
   collectorHttpEndpoint: "http://otel-collector.observability-ns.svc.cluster.local:4318"
-  serviceName: "start-app"
+  serviceName: "tobornalp"
 
 storage:
   enabled: false

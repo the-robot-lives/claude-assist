@@ -21,7 +21,7 @@ export function initOtel() {
 
   const provider = new WebTracerProvider({
     resource: resourceFromAttributes({
-      [ATTR_SERVICE_NAME]: "starter-frontend",
+      [ATTR_SERVICE_NAME]: "tobornalp-frontend",
       [ATTR_SERVICE_VERSION]: "0.1.0",
     }),
     spanProcessors: [

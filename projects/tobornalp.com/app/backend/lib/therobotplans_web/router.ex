@@ -12,7 +12,7 @@ defmodule TherobotplansWeb.Router do
   pipeline :sso_session do
     plug Plug.Session,
       store: :cookie,
-      key: "_starter_sso",
+      key: "_tobornalp_sso",
       signing_salt: "sso_session_salt",
       same_site: "Lax",
       max_age: 300
