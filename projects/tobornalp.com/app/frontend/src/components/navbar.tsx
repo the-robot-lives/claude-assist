@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useAuth } from "@/context/auth";
 import { OrgSwitcher } from "@/components/org-switcher";
-import { CookieSettingsButton } from "@/components/cookie-consent";
 
 /*
  * Global navbar — mounted in layout.tsx, shown on every route.
@@ -28,7 +27,6 @@ export function Navbar() {
           </Link>
 
           <div className="tn-nav__links">
-            <CookieSettingsButton />
             {loading ? null : user ? (
               <>
                 <OrgSwitcher />

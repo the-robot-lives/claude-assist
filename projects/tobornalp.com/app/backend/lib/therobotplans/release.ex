@@ -18,8 +18,19 @@ defmodule Therobotplans.Release do
     {:ok, _, _} = Ecto.Migrator.with_repo(repo, &Ecto.Migrator.run(&1, :down, to: version))
   end
 
-  def seed do
+  @doc """
+  Run seeds for `env` (defaults to $SEED_ENV, else "prod").
+
+  The env is exported as SEED_ENV so seeds.exs can resolve it inside a release,
+  where `Mix.env/0` is unavailable. Dev/test are unchanged: running
+  `mix run priv/repo/seeds.exs` leaves SEED_ENV unset and falls back to Mix.env().
+
+      bin/therobotplans eval 'Therobotplans.Release.seed()'         # prod
+      bin/therobotplans eval 'Therobotplans.Release.seed("staging")'
+  """
+  def seed(env \\ System.get_env("SEED_ENV") || "prod") do
     load_app()
+    System.put_env("SEED_ENV", to_string(env))
 
     for repo <- repos() do
       {:ok, _, _} =

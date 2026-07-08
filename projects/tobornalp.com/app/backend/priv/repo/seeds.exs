@@ -15,7 +15,11 @@ import SeedHelper
 SeedHelper.begin_session()
 
 dir = Path.dirname(__ENV__.file)
-Code.eval_file("#{dir}/seeds/#{Mix.env()}-seeds.exs")
+# In a release SEED_ENV is set by Therobotplans.Release.seed/1 (Mix is absent).
+# Under `mix run` SEED_ENV is unset, so we fall back to Mix.env() (dev/test
+# convenience). `||` is lazy: Mix.env() is never evaluated when SEED_ENV is set.
+env = System.get_env("SEED_ENV") || to_string(Mix.env())
+Code.eval_file("#{dir}/seeds/#{env}-seeds.exs")
 
 # Will throw if any requires_seeds blocks were not resolved during execution.
 :ok = end_session()

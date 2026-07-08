@@ -95,38 +95,37 @@ defmodule Therobotplans.Auth.SSO do
   end
 
   # Create the user row for an SSO registration (verified on creation).
-  defp create_sso_user(email, attrs, _provider_type, sub) do
-    context = Noizu.Context.system()
+  defp create_sso_user(email, attrs, _provider_type, _sub) do
     first = attrs[:first] || attrs[:name][:first] || ""
     last = attrs[:last] || attrs[:name][:last] || ""
     handle = email |> String.split("@") |> hd() |> String.replace(~r/[^a-z0-9_]/, "_")
 
-    with {:ok, name} <-
-           Therobotplans.EntityRepo.create(
-             %Therobotplans.Versioned.Names.Name{first: first, last: last, time_stamp: Noizu.Entity.TimeStamp.now()},
-             context
-           ),
-         {:ok, _name_ref} <- Noizu.EntityReference.Protocol.ref(name) do
-      user_schema = %UserSchema{
-        id: UUID.uuid4(),
-        user_name: handle,
-        handle: handle,
-        name_id: name.id,
-        email: email,
-        status: :active,
-        verified: true,
-        flagged: false
-      }
+    # Raw insert of the versioned-name schema (mirrors NPL). The entity
+    # Names.create/change expects an attrs *map*, not a %Name{} struct —
+    # passing a struct makes change/2 call Enum.map on it → Protocol.UndefinedError.
+    name = Therobotplans.Repo.insert!(%Name{first: first, last: last, middle: []})
 
-      # Idempotent on email (race-safe): re-fetch if it already existed.
-      case Therobotplans.Repo.insert(user_schema, on_conflict: :nothing, conflict_target: :email) do
-        {:ok, user} -> {:ok, user}
-        {:error, _} ->
-          case find_user_by_email(email) do
-            {:ok, user} -> {:ok, user}
-            :not_found -> {:error, :registration_failed}
-          end
-      end
+    user_schema = %UserSchema{
+      id: UUID.uuid4(),
+      user_name: handle,
+      handle: handle,
+      name_id: name.id,
+      email: email,
+      status: :active,
+      verified: true,
+      flagged: false
+    }
+
+    # Idempotent on email (race-safe): re-fetch if it already existed.
+    case Therobotplans.Repo.insert(user_schema, on_conflict: :nothing, conflict_target: :email) do
+      {:ok, user} ->
+        {:ok, user}
+
+      {:error, _} ->
+        case find_user_by_email(email) do
+          {:ok, user} -> {:ok, user}
+          :not_found -> {:error, :registration_failed}
+        end
     end
   end
 
@@ -169,32 +168,33 @@ defmodule Therobotplans.Auth.SSO do
     end
   end
 
-  defp ensure_sso_credential(user, provider_ref, provider_id, provider_type, attrs, context) do
+  # Raw insert of the credential schema (mirrors NPL). Same reason as
+  # create_sso_user: the entity create/change expects an attrs map, and feeding
+  # it a %UserCredential{} struct crashes change/2 with Protocol.UndefinedError.
+  defp ensure_sso_credential(user, _provider_ref, provider_id, provider_type, attrs, _context) do
     fingerprint = sso_fingerprint(provider_type, attrs)
 
-    q =
-      from c in CredentialSchema,
+    exists =
+      from(c in CredentialSchema,
         where: c.user_id == ^user.id,
         where: c.auth_provider_id == ^provider_id,
         where: c.status == :active,
         limit: 1
+      )
+      |> Therobotplans.Repo.one()
 
-    case Therobotplans.Repo.one(q) do
-      nil ->
-        %Therobotplans.Users.Credentials.UserCredential{
-          user: Therobotplans.Users.User.ref(user.id),
-          auth_provider: provider_ref,
-          status: :active,
-          settings: sso_settings(provider_type, attrs),
-          state: %{},
-          fingerprint: fingerprint,
-          time_stamp: Noizu.Entity.TimeStamp.now()
-        }
-        |> Therobotplans.EntityRepo.create(context)
-
-      _existing ->
-        :ok
+    if is_nil(exists) do
+      Therobotplans.Repo.insert!(%CredentialSchema{
+        user_id: user.id,
+        auth_provider_id: provider_id,
+        status: :active,
+        settings: sso_settings(provider_type, attrs),
+        state: %{},
+        fingerprint: fingerprint
+      })
     end
+
+    :ok
   end
 
   # Returns {:ok, session_schema}. The session carries a one-time claim_code that
