@@ -92,8 +92,7 @@ function Hero() {
         </div>
 
         <p className="tl-micro">
-          Free tier forever &middot; No credit card required &middot;
-          Personal todos, 1 project, 1 planner agent
+          Sign in with your team account to get started
         </p>
       </div>
     </section>
@@ -438,7 +437,7 @@ function FinalCTA() {
           </Link>
         </div>
         <p className="tl-micro">
-          Free tier forever &middot; No credit card required
+          Sign in with SSO to create your account
         </p>
       </div>
     </section>
