@@ -83,7 +83,7 @@ resource "helm_release" "tobornalp_site" {
       sso = {
         requireInvite = true
         oidc = {
-          issuer = "https://auth.noizu.com/application/o/tobornalp"
+          issuer = "https://auth.derobot.is/application/o/tobornalp"
         }
       }
 

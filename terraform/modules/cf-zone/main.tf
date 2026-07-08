@@ -32,6 +32,19 @@ resource "cloudflare_dns_record" "stage" {
   ttl     = 1
 }
 
+# app.<domain> — explicit A record to the same origin as root (e.g. the dashboard
+# subdomain). Preferred over relying on the wildcard CNAME so the host resolves
+# directly to the cluster ingress.
+resource "cloudflare_dns_record" "app" {
+  count   = var.add_app ? 1 : 0
+  zone_id = cloudflare_zone.this.id
+  name    = "app"
+  type    = "A"
+  content = var.server_ip
+  proxied = var.proxied
+  ttl     = 1
+}
+
 resource "cloudflare_dns_record" "wildcard" {
   count   = var.add_wildcard ? 1 : 0
   zone_id = cloudflare_zone.this.id

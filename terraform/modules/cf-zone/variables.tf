@@ -31,6 +31,12 @@ variable "add_stage" {
   default     = true
 }
 
+variable "add_app" {
+  description = "Whether to add an app.* A record pointing to the server (dashboard subdomain)"
+  type        = bool
+  default     = false
+}
+
 variable "add_wildcard" {
   description = "Whether to add a wildcard CNAME record pointing to the wildcard target"
   type        = bool
