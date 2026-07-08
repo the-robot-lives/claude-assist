@@ -87,6 +87,13 @@ defmodule TherobotplansWeb.Router do
             TherobotplansWeb.MCPConfig.plug_opts(Therobotplans.Domains.Notifications.MCP)
   end
 
+  scope "/", host: "goals." do
+    pipe_through [:api]
+    forward "/mcp",
+            Noizu.MCP.Transport.StreamableHTTP.Plug,
+            TherobotplansWeb.MCPConfig.plug_opts(Therobotplans.Domains.Goals.MCP)
+  end
+
   scope "/api/v1", TherobotplansWeb do
     pipe_through [:api, :rate_limited_auth]
     post "/auth/register", AuthController, :register
@@ -114,6 +121,9 @@ defmodule TherobotplansWeb.Router do
     post "/auth/verify-email", AuthController, :send_verification
     get "/users/me", UserController, :show
     patch "/users/me", UserController, :update
+
+    # Today view — unified "what do I do now" plan for the authenticated user.
+    get "/today", TodayController, :show
     resources "/organizations", OrganizationController, only: [:index, :create, :show]
     post "/media/presign", MediaController, :presign
     post "/media/download", MediaController, :download
@@ -211,6 +221,11 @@ defmodule TherobotplansWeb.Router do
     get "/notifications", NotificationController, :index
     get "/notifications/count", NotificationController, :count
     post "/notifications/mark_read", NotificationController, :mark_read
+
+    # OKRs (objectives + key results + check-ins).
+    resources "/objectives", OkrController, only: [:index, :create, :show, :update]
+    post "/objectives/:id/key_results", OkrController, :create_key_result
+    post "/objectives/:id/checkins", OkrController, :create_checkin
   end
 
   # PBAC v2: Custom Roles (authenticated, permission-checked per action)

@@ -299,4 +299,254 @@ export const api = {
   getFeatureFlags() {
     return request<{ features: string[] }>("/api/v1/config/features");
   },
+
+  // ── Items (work tracking) ──────────────────────────────────────────────────
+  listItems(orgId: string, params?: { project_id?: string; status?: string; item_type?: string; priority?: string; assignee?: string; queue_id?: string; stage_id?: string }) {
+    const qs = new URLSearchParams(Object.entries(params || {}).filter(([, v]) => v != null && v !== "") as [string, string][]).toString();
+    return request<{ items: Item[] }>(`/api/v1/organizations/${orgId}/items${qs ? `?${qs}` : ""}`);
+  },
+  getItem(orgId: string, id: string) {
+    return request<{ item: Item; links: { outgoing: ItemLink[]; incoming: ItemLink[] } }>(`/api/v1/organizations/${orgId}/items/${id}`);
+  },
+  createItem(orgId: string, data: Partial<Item>) {
+    return request<{ item: Item }>(`/api/v1/organizations/${orgId}/items`, {
+      method: "POST",
+      body: JSON.stringify({ item: data }),
+    });
+  },
+  updateItem(orgId: string, id: string, data: Partial<Item>) {
+    return request<{ item: Item }>(`/api/v1/organizations/${orgId}/items/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify({ item: data }),
+    });
+  },
+
+  // ── Boards (queues + stages + iterations) ─────────────────────────────────
+  listQueues(orgId: string, projectId?: string) {
+    const qs = projectId ? `?project_id=${projectId}` : "";
+    return request<{ queues: ItemQueue[]; methodologies: string[] }>(`/api/v1/organizations/${orgId}/queues${qs}`);
+  },
+  getQueue(orgId: string, id: string) {
+    return request<{ queue: ItemQueue }>(`/api/v1/organizations/${orgId}/queues/${id}`);
+  },
+  createQueue(orgId: string, data: { name: string; slug: string; methodology?: string; project_id?: string; description?: string }) {
+    return request<{ queue: ItemQueue }>(`/api/v1/organizations/${orgId}/queues`, {
+      method: "POST",
+      body: JSON.stringify({ queue: data }),
+    });
+  },
+
+  // ── Item type/field definitions (tri-scoped) ───────────────────────────────
+  listFieldDefinitions(orgId: string, projectId?: string) {
+    const qs = projectId ? `?project_id=${projectId}` : "";
+    return request<{ fields: ItemFieldDefinition[] }>(`/api/v1/organizations/${orgId}/definitions/fields${qs}`);
+  },
+  listTypeDefinitions(orgId: string, projectId?: string) {
+    const qs = projectId ? `?project_id=${projectId}` : "";
+    return request<{ types: ItemTypeDefinition[] }>(`/api/v1/organizations/${orgId}/definitions/types${qs}`);
+  },
+
+  // ── Notifications inbox (recipient = authenticated user) ───────────────────
+  listNotifications(orgId: string, cursor = 0) {
+    return request<{ notifications: Notification[]; next_cursor?: number; throttled?: boolean; retry_after_ms?: number }>(`/api/v1/organizations/${orgId}/notifications?cursor=${cursor}`);
+  },
+  unreadCount(orgId: string) {
+    return request<{ unread: number }>(`/api/v1/organizations/${orgId}/notifications/count`);
+  },
+  markNotificationsRead(orgId: string, ids?: string[]) {
+    return request<{ marked_read: number }>(`/api/v1/organizations/${orgId}/notifications/mark_read`, {
+      method: "POST",
+      body: JSON.stringify(ids ? { ids } : {}),
+    });
+  },
+
+  // ── OKRs (objectives + key results + check-ins) ────────────────────────────
+  listObjectives(orgId: string, params?: { owner_id?: string; level?: string; status?: string; project_id?: string }) {
+    const qs = new URLSearchParams(Object.entries(params || {}).filter(([, v]) => v != null && v !== "") as [string, string][]).toString();
+    return request<{ objectives: Objective[] }>(`/api/v1/organizations/${orgId}/objectives${qs ? `?${qs}` : ""}`);
+  },
+  getObjective(orgId: string, id: string) {
+    return request<{ objective: ObjectiveDetail }>(`/api/v1/organizations/${orgId}/objectives/${id}`);
+  },
+  createObjective(orgId: string, data: Partial<Objective>) {
+    return request<{ objective: Objective }>(`/api/v1/organizations/${orgId}/objectives`, {
+      method: "POST",
+      body: JSON.stringify({ objective: data }),
+    });
+  },
+  updateObjective(orgId: string, id: string, data: Partial<Objective>) {
+    return request<{ objective: Objective }>(`/api/v1/organizations/${orgId}/objectives/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify({ objective: data }),
+    });
+  },
+  createKeyResult(orgId: string, objectiveId: string, data: Partial<KeyResult>) {
+    return request<{ key_result: KeyResult }>(`/api/v1/organizations/${orgId}/objectives/${objectiveId}/key_results`, {
+      method: "POST",
+      body: JSON.stringify({ key_result: data }),
+    });
+  },
+  createCheckin(orgId: string, objectiveId: string, data: { body: string; period?: string }) {
+    return request<{ checkin: OkrCheckin }>(`/api/v1/organizations/${orgId}/objectives/${objectiveId}/checkins`, {
+      method: "POST",
+      body: JSON.stringify({ checkin: data }),
+    });
+  },
+
+  // ── Today (unified daily plan for the authenticated user) ──────────────────
+  today(orgId?: string, dueWindowDays?: number) {
+    const qs = new URLSearchParams(
+      Object.entries({ org_id: orgId, due_window_days: dueWindowDays?.toString() })
+        .filter(([, v]) => v != null && v !== "")
+        .map(([k, v]) => [k, String(v)]),
+    ).toString();
+    return request<{ plan: TodayPlan }>(`/api/v1/today${qs ? `?${qs}` : ""}`);
+  },
 };
+
+// ── Domain types (mirror the backend schemas) ─────────────────────────────────
+export interface Item {
+  id: string;
+  key?: string;
+  number?: number;
+  organization_id: string;
+  project_id?: string;
+  title: string;
+  description?: string;
+  item_type: string;
+  status: string;
+  priority?: string;
+  assignee?: string;
+  reporter?: string;
+  queue_id?: string;
+  parent_id?: string;
+  stage_id?: string;
+  iteration_id?: string;
+  custom_fields?: Record<string, unknown>;
+  inserted_at?: string;
+  updated_at?: string;
+}
+
+export interface ItemLink {
+  id: string;
+  link_type: string;
+  target_item_id?: string;
+  source_item_id?: string;
+}
+
+export interface ItemQueue {
+  id: string;
+  name: string;
+  slug: string;
+  methodology?: string;
+  description?: string;
+  organization_id?: string;
+  project_id?: string;
+  config?: Record<string, unknown>;
+  stages?: BoardStage[];
+  iterations?: BoardIteration[];
+}
+
+export interface BoardStage {
+  id: string;
+  slug: string;
+  name: string;
+  kind?: string;
+  position: number;
+  wip_limit?: number;
+}
+
+export interface BoardIteration {
+  id: string;
+  name: string;
+  sequence: number;
+  status: string;
+  starts_on?: string;
+  ends_on?: string;
+}
+
+export interface ItemFieldDefinition {
+  id: string;
+  slug: string;
+  label: string;
+  field_type: string;
+  organization_id?: string;
+  project_id?: string;
+  options?: Record<string, unknown>;
+  default_value?: string;
+  description?: string;
+  disabled?: boolean;
+}
+
+export interface ItemTypeDefinition {
+  id: string;
+  slug: string;
+  name: string;
+  description?: string;
+  organization_id?: string;
+  project_id?: string;
+  icon?: string;
+  status_workflow?: Record<string, unknown>;
+  disabled?: boolean;
+  fields?: Array<{ id: string; slug: string; label: string; field_type: string; required: boolean; position: number }>;
+}
+
+export interface Notification {
+  id: string;
+  seq?: number;
+  kind: string;
+  sender?: string;
+  subject_type?: string;
+  subject_id?: string;
+  body?: string;
+  payload?: Record<string, unknown>;
+  seen?: boolean;
+  read?: boolean;
+  inserted_at?: string;
+}
+
+export interface Objective {
+  id: string;
+  title: string;
+  level: string;
+  status: string;
+  period?: string;
+  owner_id?: string;
+  organization_id?: string;
+  project_id?: string;
+  description?: string;
+  progress?: string;
+}
+
+export interface ObjectiveDetail extends Objective {
+  key_results?: KeyResult[];
+  checkins?: OkrCheckin[];
+}
+
+export interface KeyResult {
+  id: string;
+  objective_id?: string;
+  title: string;
+  target_value?: string | number;
+  current_value?: string | number;
+  auto_progress?: boolean;
+  status?: string;
+  due_on?: string;
+  unit?: string;
+}
+
+export interface OkrCheckin {
+  id: string;
+  body: string;
+  period?: string;
+  inserted_at?: string;
+}
+
+export interface TodayPlan {
+  user_id: string;
+  assigned?: Item[];
+  due_soon?: Item[];
+  objectives?: Objective[];
+  key_results?: Array<{ kr_id: string; objective_id: string; title: string; target: string | number; current: string | number }>;
+  unread_notifications?: number | null;
+}

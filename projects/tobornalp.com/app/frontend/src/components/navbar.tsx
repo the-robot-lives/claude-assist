@@ -12,7 +12,7 @@ export function Navbar() {
     <nav className="sg-navbar">
       <div className="sg-navbar__inner">
         <Link href="/" className="sg-navbar__brand">
-          Project Name
+          tobornalp
         </Link>
         <div className="sg-navbar__links">
           <CookieSettingsButton />

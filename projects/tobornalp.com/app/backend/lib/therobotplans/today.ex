@@ -55,7 +55,11 @@ defmodule Therobotplans.Today do
     |> where([i], i.assignee == ^to_string(user_id) and i.status not in ~w(done closed))
     |> scope_org(org_id)
     |> order_by([i],
-      asc: priority_rank_fragment(i.priority),
+      asc:
+        fragment(
+          "CASE ? WHEN 'critical' THEN 0 WHEN 'high' THEN 1 WHEN 'medium' THEN 2 WHEN 'low' THEN 3 ELSE 4 END",
+          i.priority
+        ),
       desc: i.inserted_at
     )
     |> limit(50)
@@ -113,13 +117,4 @@ defmodule Therobotplans.Today do
 
   defp scope_org_obj(query, nil), do: query
   defp scope_org_obj(query, org_id), do: where(query, [o], o.organization_id == ^org_id)
-
-  # Lower rank = higher priority, so ascending puts critical first. Expressed as
-  # a SQL fragment because order_by needs a DB-side expression, not a runtime fn.
-  defp priority_rank_fragment(priority) do
-    fragment(
-      "CASE ? WHEN 'critical' THEN 0 WHEN 'high' THEN 1 WHEN 'medium' THEN 2 WHEN 'low' THEN 3 ELSE 4 END",
-      priority
-    )
-  end
 end
