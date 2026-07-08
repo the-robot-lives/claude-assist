@@ -73,7 +73,11 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 - name: PHX_HOST
   value: {{ .Values.domain | quote }}
 - name: FRONTEND_URL
-  value: "https://{{ .Values.domain }}"
+  # Post-auth redirects (sso-callback, register) go to the dashboard subdomain so
+  # the one-time claim code is exchanged on app.* — minting the session in app.*'s
+  # own storage (localStorage is origin-scoped). OIDC init/callback stay on the
+  # apex (PHX_HOST / OIDC_REDIRECT_URI) so Authentik's registered redirect matches.
+  value: "https://{{ .Values.appDomain | default (printf "app.%s" .Values.domain) }}"
 - name: PHX_SERVER
   value: "true"
 - name: PORT

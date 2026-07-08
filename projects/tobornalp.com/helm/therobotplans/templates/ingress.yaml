@@ -1,5 +1,7 @@
 {{- if .Values.ingress.enabled }}
 {{- $svcName := ternary (printf "%s-sandbox" (include "start-app.fullname" .)) (include "start-app.fullname" .) (.Values.sandbox.enabled | default false) }}
+{{- $appDomain := .Values.appDomain | default (printf "app.%s" .Values.domain) }}
+{{- $hosts := list .Values.domain $appDomain }}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -15,10 +17,13 @@ spec:
   ingressClassName: {{ .Values.ingress.className }}
   tls:
   - hosts:
-    - {{ .Values.domain }}
+    {{- range $hosts }}
+    - {{ . }}
+    {{- end }}
     secretName: {{ .Values.tls.secretName }}
   rules:
-  - host: {{ .Values.domain }}
+  {{- range $host := $hosts }}
+  - host: {{ $host }}
     http:
       paths:
       - path: /api
@@ -27,14 +32,14 @@ spec:
           service:
             name: {{ $svcName }}
             port:
-              number: {{ .Values.backend.port }}
+              number: {{ $.Values.backend.port }}
       - path: /health
         pathType: Exact
         backend:
           service:
             name: {{ $svcName }}
             port:
-              number: {{ .Values.backend.port }}
+              number: {{ $.Values.backend.port }}
       # Only the OIDC redirect flow (/auth/oidc, /auth/oidc/callback) is a backend
       # route. Frontend pages /auth/register and /auth/sso-callback live under
       # /auth/* too and must fall through to the frontend (/). All other backend
@@ -46,19 +51,20 @@ spec:
           service:
             name: {{ $svcName }}
             port:
-              number: {{ .Values.backend.port }}
+              number: {{ $.Values.backend.port }}
       - path: /sso
         pathType: Prefix
         backend:
           service:
             name: {{ $svcName }}
             port:
-              number: {{ .Values.backend.port }}
+              number: {{ $.Values.backend.port }}
       - path: /
         pathType: Prefix
         backend:
           service:
             name: {{ $svcName }}
             port:
-              number: {{ .Values.frontend.port }}
+              number: {{ $.Values.frontend.port }}
+  {{- end }}
 {{- end }}

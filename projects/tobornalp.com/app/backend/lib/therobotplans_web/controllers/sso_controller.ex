@@ -79,7 +79,10 @@ defmodule TherobotplansWeb.SSOController do
     with {:ok, claimed} <- Therobotplans.Auth.SSO.claim_session(code),
          {:ok, session} <- Therobotplans.Users.Sessions.get(claimed.id, Noizu.Context.system(), []),
          {:ok, access_token, _} <- Guardian.encode_and_sign(session, %{}, token_type: "access", ttl: {1, :hour}),
-         {:ok, refresh_token, _} <- Guardian.encode_and_sign(session, %{}, token_type: "refresh", ttl: {7, :day}) do
+         {:ok, refresh_token, %{"jti" => refresh_jti}} <- Guardian.encode_and_sign(session, %{}, token_type: "refresh", ttl: {7, :day}) do
+      # Register the refresh JTI so later /auth/refresh calls validate (mirrors register/2).
+      Therobotplans.Auth.TokenStore.store_refresh_jti(refresh_jti)
+
       user = resolve_user_from_session(session)
       orgs = Organizations.list_user_organizations(user.id)
 
@@ -205,13 +208,18 @@ defmodule TherobotplansWeb.SSOController do
   end
 
   defp serialize_user(user) do
+    # Consent lives on the DB schema row, not the versioned entity — read it back
+    # so SSO exchange/register responses carry it (the SPA hydrates from this).
+    row = Therobotplans.Repo.get(Therobotplans.Schema.Users.User, user.id)
+
     %{
       id: user.id,
       email: user.email,
       user_name: user.user_name,
       handle: user.handle,
       status: user.status,
-      verified: user.verified
+      verified: user.verified,
+      consent_preferences: row && row.consent_preferences
     }
   end
 
