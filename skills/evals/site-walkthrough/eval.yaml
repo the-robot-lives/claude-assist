@@ -22,8 +22,8 @@ thresholds:
   completion_validation: 0.80
 
 models_to_test:
-  - claude-opus-4-20250514
-  - claude-sonnet-4-20250514
+  - claude-opus-4-8
+  - claude-sonnet-5
   - gpt-4.1
   - gemini-2.5-pro
 
