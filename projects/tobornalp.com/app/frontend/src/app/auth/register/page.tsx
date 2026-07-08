@@ -5,6 +5,7 @@ import { useAuth } from "@/context/auth";
 import { useRouter, useSearchParams } from "next/navigation";
 import { api } from "@/lib/api";
 import { getConsentPreferences } from "@/lib/consent";
+import { postAuthPath } from "@/lib/auth-flow";
 
 function Register() {
   const { ssoRegister } = useAuth();
@@ -45,7 +46,7 @@ function Register() {
     setError("");
     setSubmitting(true);
     try {
-      await ssoRegister({
+      const user = await ssoRegister({
         token,
         first,
         last,
@@ -53,7 +54,7 @@ function Register() {
         // Carry the visitor's cookie-consent choice onto the new account.
         consent: getConsentPreferences() as unknown as Record<string, boolean>,
       });
-      router.push("/");
+      router.push(postAuthPath(user));
     } catch (err) {
       setError(
         err instanceof Error && err.message

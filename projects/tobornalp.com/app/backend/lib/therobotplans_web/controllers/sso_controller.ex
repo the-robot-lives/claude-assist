@@ -15,7 +15,11 @@ defmodule TherobotplansWeb.SSOController do
       |> maybe_add(:linkedin_enabled, "linkedin")
       |> maybe_add(:saml_enabled, "saml")
 
-    json(conn, %{providers: providers})
+    json(conn, %{
+      providers: providers,
+      domains: Therobotplans.Auth.SSODomains.providers_map(),
+      domain_policies: Therobotplans.Auth.SSODomains.public_policies()
+    })
   end
 
   # ── OIDC ──────────────────────────────────────────────────────
@@ -116,6 +120,9 @@ defmodule TherobotplansWeb.SSOController do
         invite_flag = if identity[:invite_required], do: "&invite=1", else: ""
         redirect(conn, external: "#{frontend_url}/auth/register?token=#{token}#{invite_flag}")
 
+      {:error, :sso_not_allowed} ->
+        redirect(conn, external: "#{frontend_url}/auth/sso-callback?error=sso_unavailable")
+
       {:error, _} ->
         redirect(conn, external: "#{frontend_url}/auth/sso-callback?error=sso_failed")
     end
@@ -131,7 +138,8 @@ defmodule TherobotplansWeb.SSOController do
         json(conn, %{
           email: identity[:email],
           provider: identity[:provider],
-          invite_required: identity[:invite_required] == true
+          invite_required: identity[:invite_required] == true,
+          auto_approve: identity[:auto_approve] == true
         })
 
       _ ->
@@ -184,6 +192,9 @@ defmodule TherobotplansWeb.SSOController do
       {:error, :invalid_token} ->
         conn |> put_status(:forbidden) |> json(%{error: "Invalid or expired invite code"})
 
+      {:error, :sso_not_allowed} ->
+        conn |> put_status(:forbidden) |> json(%{error: "SSO is not available for this email domain"})
+
       {:error, _} ->
         conn |> put_status(:unprocessable_entity) |> json(%{error: "Registration failed"})
     end
@@ -217,8 +228,12 @@ defmodule TherobotplansWeb.SSOController do
       email: user.email,
       user_name: user.user_name,
       handle: user.handle,
+      mobile_phone: Map.get(user, :mobile_phone),
       status: user.status,
       verified: user.verified,
+      profile_completed_at: Map.get(user, :profile_completed_at),
+      profile_complete: !!Map.get(user, :profile_completed_at),
+      requires_profile_completion: !Map.get(user, :profile_completed_at),
       consent_preferences: row && row.consent_preferences
     }
   end

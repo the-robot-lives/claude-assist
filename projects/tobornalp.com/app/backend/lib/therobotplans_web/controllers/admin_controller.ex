@@ -20,6 +20,8 @@ defmodule TherobotplansWeb.AdminController do
           email: u.email,
           user_name: u.user_name,
           status: u.status,
+          mobile_phone: u.mobile_phone,
+          profile_completed_at: u.profile_completed_at,
           verified: u.verified,
           admin: u.admin,
           created_at: u.inserted_at
@@ -38,16 +40,46 @@ defmodule TherobotplansWeb.AdminController do
         conn |> put_status(:not_found) |> json(%{error: "User not found"})
 
       user ->
-        conn |> put_status(:ok) |> json(%{user: %{
-          id: user.id,
-          email: user.email,
-          user_name: user.user_name,
-          handle: user.handle,
-          status: user.status,
-          verified: user.verified,
-          admin: user.admin,
-          created_at: user.inserted_at
-        }})
+        conn
+        |> put_status(:ok)
+        |> json(%{
+          user: %{
+            id: user.id,
+            email: user.email,
+            user_name: user.user_name,
+            handle: user.handle,
+            status: user.status,
+            mobile_phone: user.mobile_phone,
+            profile_completed_at: user.profile_completed_at,
+            verified: user.verified,
+            admin: user.admin,
+            created_at: user.inserted_at
+          }
+        })
+    end
+  end
+
+  def approve_user(conn, %{"id" => id}) do
+    admin_user = conn.assigns[:admin_user]
+
+    case Therobotplans.Repo.get(UserSchema, id) do
+      nil ->
+        conn |> put_status(:not_found) |> json(%{error: "User not found"})
+
+      user ->
+        attrs = %{
+          status: :active,
+          approved_at: DateTime.utc_now(),
+          approved_by_user_id: admin_user.id
+        }
+
+        case user |> UserSchema.changeset(attrs) |> Therobotplans.Repo.update() do
+          {:ok, updated_user} ->
+            conn |> put_status(:ok) |> json(%{user: serialize_user(updated_user)})
+
+          {:error, changeset} ->
+            conn |> put_status(:unprocessable_entity) |> json(%{errors: format_errors(changeset)})
+        end
     end
   end
 
@@ -72,7 +104,9 @@ defmodule TherobotplansWeb.AdminController do
 
     total = Therobotplans.Repo.aggregate(OrgSchema, :count, :id)
 
-    conn |> put_status(:ok) |> json(%{organizations: orgs, total: total, page: page, per_page: per_page})
+    conn
+    |> put_status(:ok)
+    |> json(%{organizations: orgs, total: total, page: page, per_page: per_page})
   end
 
   def show_organization(conn, %{"id" => id}) do
@@ -82,12 +116,41 @@ defmodule TherobotplansWeb.AdminController do
 
       org ->
         members = Therobotplans.Organizations.list_members(org.id)
-        conn |> put_status(:ok) |> json(%{organization: %{
-          id: org.id,
-          slug: org.slug,
-          name: org.name,
-          created_at: org.inserted_at
-        }, members: members})
+
+        conn
+        |> put_status(:ok)
+        |> json(%{
+          organization: %{
+            id: org.id,
+            slug: org.slug,
+            name: org.name,
+            created_at: org.inserted_at
+          },
+          members: members
+        })
     end
+  end
+
+  defp serialize_user(user) do
+    %{
+      id: user.id,
+      email: user.email,
+      user_name: user.user_name,
+      handle: user.handle,
+      status: user.status,
+      mobile_phone: user.mobile_phone,
+      profile_completed_at: user.profile_completed_at,
+      verified: user.verified,
+      admin: user.admin,
+      created_at: user.inserted_at
+    }
+  end
+
+  defp format_errors(changeset) do
+    Ecto.Changeset.traverse_errors(changeset, fn {msg, opts} ->
+      Regex.replace(~r"%{(\w+)}", msg, fn _, key ->
+        opts |> Keyword.get(String.to_existing_atom(key), key) |> to_string()
+      end)
+    end)
   end
 end

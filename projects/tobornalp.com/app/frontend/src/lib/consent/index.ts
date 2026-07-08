@@ -1,5 +1,6 @@
 export const CONSENT_VERSION = 1;
 export const CONSENT_STORAGE_KEY = `start-app.cookie-consent.v${CONSENT_VERSION}`;
+export const BROWSER_SESSION_STORAGE_KEY = "start-app.browser-session-id";
 
 const CONSENT_EVENT_NAME = "start-app:cookie-consent-change";
 
@@ -137,6 +138,23 @@ export function getConsentPreferences(): ConsentPreferences {
   return getConsentState()?.categories ?? defaultConsentPreferences;
 }
 
+export function hydrateConsentState(state: ConsentState | null) {
+  inMemoryConsentState = state;
+  if (isBrowser()) {
+    try {
+      if (state) {
+        window.localStorage.setItem(CONSENT_STORAGE_KEY, JSON.stringify(state));
+      } else {
+        window.localStorage.removeItem(CONSENT_STORAGE_KEY);
+      }
+      useInMemoryConsentState = false;
+    } catch {
+      useInMemoryConsentState = true;
+    }
+  }
+  emitConsentChange(state);
+}
+
 export function setConsentPreferences(
   preferences: Partial<Record<ConsentCategory, boolean>>
 ): ConsentState {
@@ -181,6 +199,42 @@ export function clearConsentPreferences() {
 export function hasConsent(category: ConsentCategory): boolean {
   if (category === "necessary") return true;
   return Boolean(getConsentState()?.categories[category]);
+}
+
+export function getBrowserSessionId() {
+  if (!isBrowser()) return "";
+
+  try {
+    const existing = window.sessionStorage.getItem(BROWSER_SESSION_STORAGE_KEY);
+    if (existing) return existing;
+
+    const id = window.crypto?.randomUUID?.() ?? fallbackUuid();
+    window.sessionStorage.setItem(BROWSER_SESSION_STORAGE_KEY, id);
+    return id;
+  } catch {
+    return inMemoryBrowserSessionId();
+  }
+}
+
+let fallbackBrowserSessionId: string | null = null;
+
+function inMemoryBrowserSessionId() {
+  fallbackBrowserSessionId ||= fallbackUuid();
+  return fallbackBrowserSessionId;
+}
+
+function fallbackUuid() {
+  const randomByte = () => {
+    const browserCrypto = isBrowser() ? window.crypto : undefined;
+    if (browserCrypto?.getRandomValues) {
+      return browserCrypto.getRandomValues(new Uint8Array(1))[0];
+    }
+    return Math.floor(Math.random() * 256);
+  };
+
+  return "10000000-1000-4000-8000-100000000000".replace(/[018]/g, (c) =>
+    (Number(c) ^ (randomByte() & (15 >> (Number(c) / 4)))).toString(16)
+  );
 }
 
 export function onConsentChange(handler: ConsentChangeHandler) {

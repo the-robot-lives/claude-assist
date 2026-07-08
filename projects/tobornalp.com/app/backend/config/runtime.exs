@@ -8,6 +8,61 @@ config :therobotplans, :redis,
   uri: System.get_env("REDIS_URL") || "redis://localhost:6379/0",
   key_prefix: System.get_env("REDIS_KEY_PREFIX", "starter:")
 
+parse_sso_domains = fn
+  nil ->
+    %{}
+
+  "" ->
+    %{}
+
+  value ->
+    value
+    |> String.split(~r/[;\s]+/, trim: true)
+    |> Enum.reduce(%{}, fn entry, acc ->
+      case String.split(entry, ["=", ":"], parts: 2) do
+        [domain, providers] ->
+          provider_list =
+            providers
+            |> String.split(",", trim: true)
+            |> Enum.map(&String.trim/1)
+            |> Enum.reject(&(&1 == ""))
+
+          Map.put(acc, domain |> String.trim() |> String.downcase(), provider_list)
+
+        _ ->
+          acc
+      end
+    end)
+end
+
+parse_domain_list = fn
+  nil ->
+    []
+
+  "" ->
+    []
+
+  value ->
+    value
+    |> String.split(~r/[,\s;]+/, trim: true)
+    |> Enum.map(&(&1 |> String.trim() |> String.downcase()))
+    |> Enum.reject(&(&1 == ""))
+    |> Enum.uniq()
+end
+
+build_sso_domain_policies = fn domains, auto_approve_domains ->
+  auto_approve = MapSet.new(auto_approve_domains)
+
+  domains
+  |> Enum.into(%{}, fn {domain, providers} ->
+    {domain,
+     %{
+       providers: providers,
+       auto_approve: MapSet.member?(auto_approve, "*") || MapSet.member?(auto_approve, domain)
+     }}
+  end)
+end
+
 # ── OpenTelemetry ────────────────────────────────────────────────
 if otel_endpoint = System.get_env("OTEL_EXPORTER_OTLP_ENDPOINT") do
   config :opentelemetry_exporter,
@@ -116,12 +171,14 @@ if config_env() == :prod do
 
   # ── SSO: Social OAuth (each enabled when *_CLIENT_ID is set) ──
   config :therobotplans, :sso_require_invite, System.get_env("SSO_REQUIRE_INVITE") == "true"
+  sso_domains = parse_sso_domains.(System.get_env("SSO_DOMAINS"))
+  sso_auto_approve_domains = parse_domain_list.(System.get_env("SSO_AUTO_APPROVE_DOMAINS"))
+  config :therobotplans, :sso_domains, sso_domains
+  config :therobotplans, :sso_auto_approve_domains, sso_auto_approve_domains
 
-  # Email domains allowed to self-register via SSO without an invite code.
-  if domains = System.get_env("SSO_ALLOWED_DOMAINS") do
-    config :therobotplans, :sso_allowed_domains,
-      domains |> String.split(",", trim: true) |> Enum.map(&String.trim/1)
-  end
+  config :therobotplans,
+         :sso_domain_policies,
+         build_sso_domain_policies.(sso_domains, sso_auto_approve_domains)
 
   oauth_providers = []
 

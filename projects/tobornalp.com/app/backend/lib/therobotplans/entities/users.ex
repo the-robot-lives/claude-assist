@@ -3,7 +3,11 @@ defmodule Therobotplans.Users do
   Context for Therobotplans.Users
   """
   alias Therobotplans.Users.User, as: Entity
+  alias Therobotplans.Schema.Auth.Providers.Provider, as: ProviderSchema
   alias Therobotplans.Schema.Users.User, as: Schema
+  alias Therobotplans.Schema.Users.Credentials.UserCredential, as: CredentialSchema
+  alias Therobotplans.Schema.Versioned.Descriptions.Description, as: DescriptionSchema
+  alias Therobotplans.Schema.Versioned.Names.Name, as: NameSchema
   use Noizu.Repo
   def_repo(entity: Therobotplans.Users.User)
 
@@ -22,7 +26,7 @@ defmodule Therobotplans.Users do
 
   def register(details, auth, context, options \\ [])
 
-  def register(details, {:login, {email, password}} = auth, context, options) do
+  def register(details, {:login, {email, password}}, context, options) do
     middle = details.name[:middle] && Enum.map(details.name.middle, &String.trim/1)
 
     name = %{
@@ -45,46 +49,79 @@ defmodule Therobotplans.Users do
 
     email = Therobotplans.Users.Credentials.standardize_email(email)
     password = String.trim(password)
+    status = Keyword.get(options, :status, details[:status] || :active)
+    invite_token_id = Keyword.get(options, :invite_token_id, details[:invite_token_id])
+    mobile_phone = Keyword.get(options, :mobile_phone, details[:mobile_phone])
+
+    profile_completed_at =
+      Keyword.get(options, :profile_completed_at, details[:profile_completed_at])
 
     with :valid <- valid_user_name?(details.user_name),
          :valid <- valid_name?(name.first, name.middle, name.last),
          :valid <- valid_login?(email, password),
          :valid <- user_name_available?(user_name, context, options),
          :valid <- login_available?(email, context, options) do
-      with {:ok, name_entity} <-
-             %Therobotplans.Versioned.Names.Name{
-               first: name.first,
-               middle: name.middle,
-               last: name.last,
-               time_stamp: Noizu.Entity.TimeStamp.now()
-             }
-             |> Therobotplans.EntityRepo.create(context),
-           {:ok, name_ref} <- Noizu.EntityReference.Protocol.ref(name_entity),
-           {:ok, description} <-
-             %Therobotplans.Versioned.Descriptions.Description{
-               title: "Description",
-               body: details[:description] || "",
-               time_stamp: Noizu.Entity.TimeStamp.now()
-             }
-             |> Therobotplans.EntityRepo.create(context),
-           {:ok, description_ref} <- Noizu.EntityReference.Protocol.ref(description),
-           {:ok, user} <-
-             %Therobotplans.Users.User{
-               user_name: user_name,
-               handle: handle,
-               name: name_ref,
-               description: description_ref,
-               status: :active,
-               verified: false,
-               flagged: false,
-               time_stamp: Noizu.Entity.TimeStamp.now()
-             }
-             |> Therobotplans.EntityRepo.create(context),
-           {:ok, user_ref} <- Noizu.EntityReference.Protocol.ref(user),
-           {:ok, credential} <-
-             Therobotplans.Users.Credentials.register(user_ref, auth, context, options) do
-        {:ok, {user, credential}}
-      end
+      Therobotplans.Repo.transaction(fn ->
+        with {:ok, name_record} <-
+               %NameSchema{}
+               |> NameSchema.changeset(%{
+                 first: name.first,
+                 middle: name.middle || [],
+                 last: name.last
+               })
+               |> Therobotplans.Repo.insert(),
+             {:ok, description_record} <-
+               %DescriptionSchema{}
+               |> DescriptionSchema.changeset(%{
+                 title: "Description",
+                 body: details[:description] || "Registered user"
+               })
+               |> Therobotplans.Repo.insert(),
+             {:ok, user} <-
+               %Schema{}
+               |> Schema.changeset(%{
+                 user_name: user_name,
+                 handle: handle,
+                 name_id: name_record.id,
+                 description_id: description_record.id,
+                 invite_token_id: invite_token_id,
+                 email: email,
+                 status: status,
+                 mobile_phone: mobile_phone,
+                 profile_completed_at: profile_completed_at,
+                 approved_at: if(status == :active, do: DateTime.utc_now(), else: nil),
+                 verified: false,
+                 flagged: false
+               })
+               |> Therobotplans.Repo.insert(),
+             hashed_password = Bcrypt.hash_pwd_salt(password),
+             auth_provider_id = UUID.uuid5(:oid, "Therobotplans.Schema.Auth.Providers.Provider@Login"),
+             {:ok, _auth_provider} <-
+               Therobotplans.Repo.insert(
+                 %ProviderSchema{
+                   id: auth_provider_id,
+                   title: "Login",
+                   description: "Email and password authentication"
+                 },
+                 on_conflict: :nothing,
+                 conflict_target: :id
+               ),
+             {:ok, credential} <-
+               %CredentialSchema{}
+               |> CredentialSchema.changeset(%{
+                 user_id: user.id,
+                 auth_provider_id: auth_provider_id,
+                 status: :active,
+                 settings: %{"email" => email, "password" => hashed_password},
+                 state: %{},
+                 fingerprint: "#{email}:#{hashed_password}"
+               })
+               |> Therobotplans.Repo.insert() do
+          {user, credential}
+        else
+          {:error, reason} -> Therobotplans.Repo.rollback(reason)
+        end
+      end)
     end
   end
 

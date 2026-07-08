@@ -1,9 +1,10 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState, useCallback } from "react";
-import { api, type Organization } from "@/lib/api";
+import { createContext, useContext, useEffect, useMemo, useState, useCallback } from "react";
+import { api, type Organization, type RegisterPayload, type User } from "@/lib/api";
 import { analytics } from "@/lib/analytics";
 import { setConsentPreferences } from "@/lib/consent";
+import { runtimeCookieDomainAttribute } from "@/lib/runtime-config";
 
 // The account's consent choice is authoritative and crosses the apex → app.*
 // subdomain boundary (localStorage does not). Mirror it into the local consent
@@ -14,39 +15,52 @@ function hydrateConsentFromAccount(consent?: Record<string, boolean> | null) {
   }
 }
 
-interface User {
-  id: string;
-  email: string;
-  user_name?: string;
-  handle?: string;
-  status?: string;
-  verified?: boolean;
-}
-
 interface AuthContextType {
   user: User | null;
   loading: boolean;
   organizations: Organization[];
-  login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string, inviteToken: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<User>;
+  register: (payload: RegisterPayload) => Promise<User>;
   requestMagicLink: (email: string) => Promise<{ message: string; dev_link?: string }>;
-  loginWithMagicLink: (token: string) => Promise<void>;
+  loginWithMagicLink: (token: string) => Promise<User>;
   requestOtpLogin: (email: string) => Promise<{ message: string; dev_code?: string }>;
-  verifyOtpLogin: (email: string, code: string) => Promise<void>;
-  ssoExchange: (code: string) => Promise<void>;
-  ssoRegister: (payload: { token: string; first: string; last: string; invite_token?: string; consent?: Record<string, boolean> }) => Promise<void>;
+  verifyOtpLogin: (email: string, code: string) => Promise<User>;
+  ssoExchange: (code: string) => Promise<User>;
+  ssoRegister: (payload: { token: string; first: string; last: string; invite_token?: string; consent?: Record<string, boolean> }) => Promise<User>;
   logout: () => void;
 }
+
+type AuthResponsePayload = {
+  user: User;
+  access_token: string;
+  refresh_token: string;
+  organizations?: Organization[];
+};
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
 function setAuthCookie(token: string | null) {
   if (typeof document === "undefined") return;
-  if (token) {
-    document.cookie = `access_token=${token}; path=/; max-age=${60 * 60}; SameSite=Lax`;
-  } else {
-    document.cookie = "access_token=; path=/; max-age=0; SameSite=Lax";
+  const domain = runtimeCookieDomainAttribute();
+  try {
+    if (token) {
+      document.cookie = `access_token=${token}; path=/; max-age=${60 * 60}; SameSite=Lax${domain}`;
+    } else {
+      document.cookie = `access_token=; path=/; max-age=0; SameSite=Lax${domain}`;
+    }
+  } catch {
+    // Localhost or strict browser policies can reject Domain cookies; localStorage remains canonical.
   }
+}
+
+function getCookie(name: string) {
+  if (typeof document === "undefined") return null;
+  const prefix = `${name}=`;
+  return document.cookie
+    .split(";")
+    .map((part) => part.trim())
+    .find((part) => part.startsWith(prefix))
+    ?.slice(prefix.length) ?? null;
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -55,15 +69,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [organizations, setOrganizations] = useState<Organization[]>([]);
 
   const loadUser = useCallback(async () => {
-    const token = localStorage.getItem("access_token");
+    let token = localStorage.getItem("access_token");
+    if (!token) {
+      token = getCookie("access_token");
+      if (token) localStorage.setItem("access_token", token);
+    }
     if (!token) {
       setLoading(false);
       return;
     }
 
     try {
-      const { user } = await api.me();
+      const { user, organizations } = await api.me();
       setUser(user);
+      setOrganizations(organizations ?? []);
       hydrateConsentFromAccount(user.consent_preferences);
       analytics.identify({ id: user.id, email: user.email });
     } catch {
@@ -79,91 +98,107 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     loadUser();
   }, [loadUser]);
 
-  async function login(email: string, password: string) {
+  const applyAuthResponse = useCallback(
+    (
+      res: AuthResponsePayload,
+      options: { identify?: boolean; trackMethod?: string; trackName?: string } = {}
+    ) => {
+      const identify = options.identify ?? true;
+      localStorage.setItem("access_token", res.access_token);
+      localStorage.setItem("refresh_token", res.refresh_token);
+      setAuthCookie(res.access_token);
+      setUser(res.user);
+      setOrganizations(res.organizations ?? []);
+      hydrateConsentFromAccount(res.user.consent_preferences);
+      if (identify) analytics.identify({ id: res.user.id, email: res.user.email });
+      if (options.trackMethod) {
+        analytics.trackEvent({
+          name: options.trackName ?? "login",
+          properties: { method: options.trackMethod },
+        });
+      }
+      return res.user;
+    },
+    []
+  );
+
+  const login = useCallback(async (email: string, password: string) => {
     const res = await api.login(email, password);
-    localStorage.setItem("access_token", res.access_token);
-    localStorage.setItem("refresh_token", res.refresh_token);
-    setAuthCookie(res.access_token);
-    setUser(res.user);
-    setOrganizations(res.organizations ?? []);
-    analytics.identify({ id: res.user.id, email: res.user.email });
-    analytics.trackEvent({ name: "login", properties: { method: "password" } });
-  }
+    return applyAuthResponse(res, { trackMethod: "password" });
+  }, [applyAuthResponse]);
 
-  async function register(email: string, password: string, inviteToken: string) {
-    const res = await api.register(email, password, inviteToken);
-    localStorage.setItem("access_token", res.access_token);
-    localStorage.setItem("refresh_token", res.refresh_token);
-    setAuthCookie(res.access_token);
-    setUser(res.user);
-    setOrganizations(res.organizations ?? []);
-  }
+  const register = useCallback(async (payload: RegisterPayload) => {
+    const res = await api.register(payload);
+    return applyAuthResponse(res, { identify: false });
+  }, [applyAuthResponse]);
 
-  async function requestMagicLink(email: string) {
+  const requestMagicLink = useCallback(async (email: string) => {
     return api.requestMagicLink(email);
-  }
+  }, []);
 
-  async function loginWithMagicLink(token: string) {
+  const loginWithMagicLink = useCallback(async (token: string) => {
     const res = await api.verifyMagicLink(token);
-    localStorage.setItem("access_token", res.access_token);
-    localStorage.setItem("refresh_token", res.refresh_token);
-    setAuthCookie(res.access_token);
-    setUser(res.user);
-    setOrganizations(res.organizations ?? []);
-    analytics.identify({ id: res.user.id, email: res.user.email });
-    analytics.trackEvent({ name: "login", properties: { method: "magic_link" } });
-  }
+    return applyAuthResponse(res, { trackMethod: "magic_link" });
+  }, [applyAuthResponse]);
 
-  async function requestOtpLogin(email: string) {
+  const requestOtpLogin = useCallback(async (email: string) => {
     return api.requestOtpLogin(email);
-  }
+  }, []);
 
-  async function verifyOtpLogin(email: string, code: string) {
+  const verifyOtpLogin = useCallback(async (email: string, code: string) => {
     const res = await api.verifyOtpLogin(email, code);
-    localStorage.setItem("access_token", res.access_token);
-    localStorage.setItem("refresh_token", res.refresh_token);
-    setAuthCookie(res.access_token);
-    setUser(res.user);
-    setOrganizations(res.organizations ?? []);
-    analytics.identify({ id: res.user.id, email: res.user.email });
-    analytics.trackEvent({ name: "login", properties: { method: "otp" } });
-  }
+    return applyAuthResponse(res, { trackMethod: "otp" });
+  }, [applyAuthResponse]);
 
-  async function ssoExchange(code: string) {
+  const ssoExchange = useCallback(async (code: string) => {
     const res = await api.ssoExchange(code);
-    localStorage.setItem("access_token", res.access_token);
-    localStorage.setItem("refresh_token", res.refresh_token);
-    setAuthCookie(res.access_token);
-    setUser(res.user);
-    hydrateConsentFromAccount(res.user.consent_preferences);
-    setOrganizations(res.organizations ?? []);
-    analytics.identify({ id: res.user.id, email: res.user.email });
-    analytics.trackEvent({ name: "login", properties: { method: "sso" } });
-  }
+    return applyAuthResponse(res, { trackMethod: "sso" });
+  }, [applyAuthResponse]);
 
-  async function ssoRegister(payload: { token: string; first: string; last: string; invite_token?: string; consent?: Record<string, boolean> }) {
+  const ssoRegister = useCallback(async (payload: { token: string; first: string; last: string; invite_token?: string; consent?: Record<string, boolean> }) => {
     const res = await api.ssoRegister(payload);
-    localStorage.setItem("access_token", res.access_token);
-    localStorage.setItem("refresh_token", res.refresh_token);
-    setAuthCookie(res.access_token);
-    setUser(res.user);
-    hydrateConsentFromAccount(res.user.consent_preferences);
-    setOrganizations(res.organizations ?? []);
-    analytics.identify({ id: res.user.id, email: res.user.email });
-    analytics.trackEvent({ name: "signup", properties: { method: "sso" } });
-  }
+    return applyAuthResponse(res, { trackMethod: "sso", trackName: "signup" });
+  }, [applyAuthResponse]);
 
-  function logout() {
+  const logout = useCallback(() => {
     localStorage.removeItem("access_token");
     localStorage.removeItem("refresh_token");
     setAuthCookie(null);
     setUser(null);
     setOrganizations([]);
     analytics.reset();
-  }
+  }, []);
+
+  const value = useMemo<AuthContextType>(() => ({
+    user,
+    loading,
+    organizations,
+    login,
+    register,
+    requestMagicLink,
+    loginWithMagicLink,
+    requestOtpLogin,
+    verifyOtpLogin,
+    ssoExchange,
+    ssoRegister,
+    logout,
+  }), [
+    user,
+    loading,
+    organizations,
+    login,
+    register,
+    requestMagicLink,
+    loginWithMagicLink,
+    requestOtpLogin,
+    verifyOtpLogin,
+    ssoExchange,
+    ssoRegister,
+    logout,
+  ]);
 
   return (
-    <AuthContext.Provider value={{ user, loading, organizations, login, register, requestMagicLink, loginWithMagicLink, requestOtpLogin, verifyOtpLogin, ssoExchange, ssoRegister, logout }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );

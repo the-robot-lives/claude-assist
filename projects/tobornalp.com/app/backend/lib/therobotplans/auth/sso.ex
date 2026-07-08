@@ -17,28 +17,30 @@ defmodule Therobotplans.Auth.SSO do
   def authenticate_sso(provider_type, %{email: email} = attrs) do
     context = Noizu.Context.system()
     email = email |> String.trim() |> String.downcase()
-    provider_ref = unwrap_ref(@provider_map[provider_type].())
-    provider_id = provider_ref_id(provider_ref)
+    provider_type = provider_type(provider_type)
 
-    case find_user_by_email(email) do
-      {:ok, user} ->
-        # Returning user — link credential if missing, issue a session (login).
-        ensure_sso_credential(user, provider_ref, provider_id, provider_type, attrs, context)
-        create_sso_session(user, provider_type)
+    with provider_type when not is_nil(provider_type) <- provider_type,
+         true <- Therobotplans.Auth.SSODomains.sso_available?(email, provider_type) do
+      provider_ref = unwrap_ref(@provider_map[provider_type].())
+      provider_id = provider_ref_id(provider_ref)
 
-      :not_found ->
-        # Brand-new identity. No users are pre-provisioned (SSO-only), so the
-        # first sign-in *is* account creation. Gate it by domain allowlist:
-        # allowlisted domains may register directly; everyone else must supply
-        # an invite code at the /auth/register step (checked in register_user/2).
-        if domain_allowed?(email) do
-          {:registration_required, %{provider: to_string(provider_type), sub: sso_subject(attrs), email: email}}
-        else
-          # Non-allowlisted domain: still allow registration, but require an
-          # invite code (the frontend will enforce the field; the backend
-          # re-checks in register_user/2). Carry a flag so the form knows.
-          {:registration_required, %{provider: to_string(provider_type), sub: sso_subject(attrs), email: email, invite_required: true}}
-        end
+      case find_user_by_email(email) do
+        {:ok, user} ->
+          # Returning user: link credential if missing, issue a session.
+          ensure_sso_credential(user, provider_ref, provider_id, provider_type, attrs, context)
+          create_sso_session(user, provider_type)
+
+        :not_found ->
+          {:registration_required,
+           %{
+             provider: to_string(provider_type),
+             sub: sso_subject(attrs),
+             email: email,
+             auto_approve: Therobotplans.Auth.SSODomains.auto_approve?(email, provider_type)
+           }}
+      end
+    else
+      _ -> {:error, :sso_not_allowed}
     end
   end
 
@@ -50,55 +52,58 @@ defmodule Therobotplans.Auth.SSO do
   """
   def register_user(%{provider: provider, sub: sub} = identity, attrs) when is_binary(provider) and is_binary(sub) do
     context = Noizu.Context.system()
-    provider_type = String.to_existing_atom(provider)
-    provider_ref = unwrap_ref(@provider_map[provider_type].())
-    provider_id = provider_ref_id(provider_ref)
+    provider_type = provider_type(provider)
     email = identity[:email] |> to_string() |> String.trim() |> String.downcase()
 
-    # Invite gate: required when the domain isn't allowlisted OR explicitly
-    # requested by the caller.
-    invite =
+    invite_result =
       if invite_token = attrs[:invite_token] do
-        case Therobotplans.Organizations.find_active_invite_by_raw_token(invite_token) do
+        case Therobotplans.Organizations.find_active_invite_by_raw_token(invite_token, email) do
           {:ok, found} -> {:ok, found}
           error -> error
         end
       else
-        # `||` not `or`: identity[:invite_required] is nil (not false) for
-        # allowlisted domains, and `or` requires a boolean left operand.
-        if identity[:invite_required] || not domain_allowed?(email) do
-          {:error, :invite_required}
-        else
-          {:ok, nil}
-        end
+        {:ok, nil}
       end
 
-    with {:ok, _invite} <- invite,
-         {:ok, user} <- create_sso_user(email, attrs, provider_type, attrs[:sub] || sub),
+    with provider_type when not is_nil(provider_type) <- provider_type,
+         true <- Therobotplans.Auth.SSODomains.sso_available?(email, provider_type),
+         provider_ref = unwrap_ref(@provider_map[provider_type].()),
+         provider_id = provider_ref_id(provider_ref),
+         {:ok, invite} <- invite_result,
+         {:ok, user} <- create_sso_user(email, attrs, provider_type, attrs[:sub] || sub, invite, identity),
          _ <- ensure_sso_credential(user, provider_ref, provider_id, provider_type, %{email: email, sub: sub}, context),
          {:ok, session} <- create_sso_session(user, provider_type) do
       # If an invite was used, grant org membership + consume it (mirror AuthController.register).
       case invite do
-        {:ok, %{organization_id: org_id} = used} when not is_nil(org_id) ->
+        %{organization_id: org_id} = used when not is_nil(org_id) ->
           Therobotplans.Authz.ScopedMemberships.add_member("organization", org_id, user.id, "viewer")
-          Therobotplans.Organizations.increment_invite_uses(used)
+          Therobotplans.Organizations.redeem_invite_for_user(used, user)
 
-        {:ok, used} when not is_nil(used) ->
-          Therobotplans.Organizations.increment_invite_uses(used)
+        used when not is_nil(used) ->
+          Therobotplans.Organizations.redeem_invite_for_user(used, user)
 
         _ ->
           :ok
       end
 
       {:ok, session}
+    else
+      false -> {:error, :sso_not_allowed}
+      nil -> {:error, :sso_not_allowed}
+      error -> error
     end
   end
 
   # Create the user row for an SSO registration (verified on creation).
-  defp create_sso_user(email, attrs, _provider_type, _sub) do
-    first = attrs[:first] || attrs[:name][:first] || ""
-    last = attrs[:last] || attrs[:name][:last] || ""
+  defp create_sso_user(email, attrs, provider_type, _sub, invite, identity) do
+    first = attrs[:first] || get_in(attrs, [:name, :first]) || ""
+    last = attrs[:last] || get_in(attrs, [:name, :last]) || ""
     handle = email |> String.split("@") |> hd() |> String.replace(~r/[^a-z0-9_]/, "_")
+    auto_approve? =
+      identity[:auto_approve] == true ||
+        Therobotplans.Auth.SSODomains.auto_approve?(email, provider_type)
+    approved? = auto_approve? || not is_nil(invite)
+    status = if approved?, do: :active, else: :pending
 
     # Raw insert of the versioned-name schema (mirrors NPL). The entity
     # Names.create/change expects an attrs *map*, not a %Name{} struct —
@@ -118,8 +123,11 @@ defmodule Therobotplans.Auth.SSO do
       user_name: handle,
       handle: handle,
       name_id: name.id,
+      invite_token_id: invite && invite.id,
       email: email,
-      status: :active,
+      status: status,
+      profile_completed_at: profile_completed_at(attrs),
+      approved_at: if(approved?, do: DateTime.utc_now()),
       verified: true,
       flagged: false,
       consent_preferences: consent_prefs,
@@ -139,18 +147,26 @@ defmodule Therobotplans.Auth.SSO do
     end
   end
 
-  # Domain allowlist: true when the config is empty (open) or the email's
-  # domain matches one of the allowlisted domains.
-  defp domain_allowed?(email) do
-    domains = Application.get_env(:therobotplans, :sso_allowed_domains, [])
+  defp provider_type(value) when is_atom(value),
+    do: if(Map.has_key?(@provider_map, value), do: value)
 
-    if domains == [] do
-      true
-    else
-      case email |> String.split("@") |> List.last() do
-        nil -> false
-        domain -> String.downcase(domain) in Enum.map(domains, &String.downcase/1)
-      end
+  defp provider_type(value) when is_binary(value) do
+    value
+    |> String.trim()
+    |> String.downcase()
+    |> String.to_existing_atom()
+    |> provider_type()
+  rescue
+    ArgumentError -> nil
+  end
+
+  defp provider_type(_), do: nil
+
+  defp profile_completed_at(attrs) do
+    required = [attrs[:first], attrs[:last]]
+
+    if Enum.all?(required, &(is_binary(&1) && String.trim(&1) != "")) do
+      DateTime.utc_now()
     end
   end
 
@@ -170,7 +186,7 @@ defmodule Therobotplans.Auth.SSO do
   defp sso_subject(attrs), do: attrs[:sub] || attrs[:uid]
 
   defp find_user_by_email(email) do
-    q = from u in UserSchema, where: u.email == ^email, where: u.status == :active, limit: 1
+    q = from u in UserSchema, where: u.email == ^email, where: u.status != :deleted, limit: 1
 
     case Therobotplans.Repo.one(q) do
       nil -> :not_found

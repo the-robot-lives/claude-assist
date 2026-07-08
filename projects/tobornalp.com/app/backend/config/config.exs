@@ -51,9 +51,9 @@ config :therobotplans, :facebook_enabled, false
 config :therobotplans, :github_enabled, false
 config :therobotplans, :linkedin_enabled, false
 config :therobotplans, :sso_require_invite, false
-# Email domains whose users may self-register via SSO without an invite code.
-# Others must supply an invite code at the /auth/register step. Empty = open.
-config :therobotplans, :sso_allowed_domains, []
+config :therobotplans, :sso_domains, %{}
+config :therobotplans, :sso_auto_approve_domains, []
+config :therobotplans, :sso_domain_policies, %{}
 
 config :junit_formatter,
   report_file: "results.xml"

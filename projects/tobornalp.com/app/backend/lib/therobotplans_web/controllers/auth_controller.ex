@@ -4,34 +4,48 @@ defmodule TherobotplansWeb.AuthController do
   alias Therobotplans.Guardian
   alias Therobotplans.Organizations
 
-  def register(conn, %{"invite_token" => raw_token, "user" => user_params}) do
-    with {:ok, invite} <- Organizations.find_active_invite_by_raw_token(raw_token),
+  def register(conn, %{"user" => user_params} = params) do
+    raw_token = optional_string(params["invite_token"])
+    email = user_params["email"]
+
+    with {:ok, invite} <- resolve_invite(raw_token, email),
          {:ok, {user, _credential}} <-
            Therobotplans.Users.register(
              %{
-               user_name: user_params["user_name"] || user_params["email"],
+               user_name: user_params["user_name"] || email,
                name: %{
                  first: user_params["first_name"] || "",
                  last: user_params["last_name"] || ""
                },
-               email: user_params["email"],
-               password: user_params["password"]
+               email: email,
+               password: user_params["password"],
+               mobile_phone: user_params["mobile_phone"],
+               invite_token_id: invite && invite.id,
+               status: registration_status(invite),
+               profile_completed_at: profile_completed_at(user_params)
              },
+             {:login, {email, user_params["password"]}},
              Noizu.Context.system(),
-             []
+             status: registration_status(invite),
+             invite_token_id: invite && invite.id,
+             mobile_phone: user_params["mobile_phone"],
+             profile_completed_at: profile_completed_at(user_params)
            ),
          {:ok, session} <- create_session_for_user(user),
          {:ok, access_token, _} <-
            Guardian.encode_and_sign(session, %{}, token_type: "access", ttl: {1, :hour}),
          {:ok, refresh_token, %{"jti" => refresh_jti}} <-
            Guardian.encode_and_sign(session, %{}, token_type: "refresh", ttl: {7, :day}) do
-      if invite.organization_id do
+      if invite && invite.organization_id do
         Therobotplans.Authz.ScopedMemberships.add_member(
-          "organization", invite.organization_id, user.id, "viewer"
+          "organization",
+          invite.organization_id,
+          user.id,
+          "viewer"
         )
       end
 
-      Organizations.increment_invite_uses(invite)
+      if invite, do: Organizations.redeem_invite_for_user(invite, user, conn)
       Therobotplans.Auth.TokenStore.store_refresh_jti(refresh_jti)
       Therobotplans.Events.dispatch(:user_registered, %{user_id: user.id, email: user.email})
 
@@ -58,7 +72,7 @@ defmodule TherobotplansWeb.AuthController do
   end
 
   def register(conn, _params) do
-    conn |> put_status(:bad_request) |> json(%{error: "invite_token is required"})
+    conn |> put_status(:bad_request) |> json(%{error: "user params required"})
   end
 
   def login(conn, %{"email" => email, "password" => password}) do
@@ -94,6 +108,9 @@ defmodule TherobotplansWeb.AuthController do
 
       {:error, :invalid_password} ->
         conn |> put_status(:unprocessable_entity) |> json(%{error: "Password too short"})
+
+      {:error, :pending_approval} ->
+        conn |> put_status(:forbidden) |> json(%{error: "Account is pending approval"})
     end
   end
 
@@ -345,11 +362,44 @@ defmodule TherobotplansWeb.AuthController do
       email: user.email,
       user_name: user.user_name,
       handle: user.handle,
+      mobile_phone: Map.get(user, :mobile_phone),
       status: user.status,
       verified: user.verified,
+      profile_completed_at: Map.get(user, :profile_completed_at),
+      profile_complete: !!Map.get(user, :profile_completed_at),
+      requires_profile_completion: !Map.get(user, :profile_completed_at),
       consent_preferences: row && row.consent_preferences
     }
   end
+
+  defp resolve_invite(nil, _email), do: {:ok, nil}
+  defp resolve_invite("", _email), do: {:ok, nil}
+
+  defp resolve_invite(raw_token, email),
+    do: Organizations.find_active_invite_by_raw_token(raw_token, email)
+
+  defp registration_status(nil), do: :pending
+  defp registration_status(_invite), do: :active
+
+  defp profile_completed_at(params) do
+    required = [
+      params["user_name"],
+      params["first_name"],
+      params["last_name"],
+      params["mobile_phone"]
+    ]
+
+    if Enum.all?(required, &(is_binary(&1) && String.trim(&1) != "")) do
+      DateTime.utc_now()
+    end
+  end
+
+  defp optional_string(value) when is_binary(value) do
+    value = String.trim(value)
+    if value == "", do: nil, else: value
+  end
+
+  defp optional_string(_), do: nil
 
   defp format_changeset_errors(changeset) do
     Ecto.Changeset.traverse_errors(changeset, fn {msg, opts} ->

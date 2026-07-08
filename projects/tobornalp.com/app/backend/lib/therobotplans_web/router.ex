@@ -123,6 +123,7 @@ defmodule TherobotplansWeb.Router do
     post "/auth/verify-email", AuthController, :send_verification
     get "/users/me", UserController, :show
     patch "/users/me", UserController, :update
+    post "/users/me/complete-registration", UserController, :complete_registration
     put "/users/active/consent", UserController, :consent
 
     # Today view — unified "what do I do now" plan for the authenticated user.
@@ -142,6 +143,7 @@ defmodule TherobotplansWeb.Router do
     pipe_through [:api, :authenticated, :admin]
     get "/users", AdminController, :list_users
     get "/users/:id", AdminController, :show_user
+    post "/users/:id/approve", AdminController, :approve_user
     get "/organizations", AdminController, :list_organizations
     get "/organizations/:id", AdminController, :show_organization
   end
