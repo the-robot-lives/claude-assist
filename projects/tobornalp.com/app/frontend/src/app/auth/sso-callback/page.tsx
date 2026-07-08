@@ -1,12 +1,11 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { useAuth } from "@/context/auth";
 import { useRouter, useSearchParams } from "next/navigation";
-import Link from "next/link";
 
 const ERROR_MESSAGES: Record<string, string> = {
-  not_provisioned: "No account exists for this email. Please contact your administrator.",
+  not_provisioned: "No account exists for this email and self-registration is not available. Please contact your administrator.",
   sso_failed: "SSO authentication failed. Please try again.",
   oidc_failed: "OpenID Connect authentication failed.",
   google_failed: "Google sign-in failed.",
@@ -21,8 +20,11 @@ function SSOCallback() {
   const searchParams = useSearchParams();
   const [error, setError] = useState("");
   const [verifying, setVerifying] = useState(true);
+  // Guard against React StrictMode double-invocation consuming the one-time code twice.
+  const ran = useRef(false);
 
   useEffect(() => {
+    if (ran.current) return;
     const code = searchParams.get("code");
     const errorParam = searchParams.get("error");
 
@@ -38,6 +40,7 @@ function SSOCallback() {
       return;
     }
 
+    ran.current = true;
     ssoExchange(code)
       .then(() => router.push("/"))
       .catch(() => {
@@ -47,24 +50,26 @@ function SSOCallback() {
   }, [searchParams, ssoExchange, router]);
 
   return (
-    <div className="content">
-      <main>
-        <h1 className="sg-page-title">Signing In</h1>
-        {verifying && <p>Completing authentication...</p>}
-        {error && (
-          <>
-            <p className="sg-error">{error}</p>
-            <p><Link href="/login">Back to login</Link></p>
-          </>
-        )}
-      </main>
+    <div className="content" style={{ maxWidth: 480, margin: "4rem auto", padding: "0 24px" }}>
+      <h1 style={{ fontFamily: "var(--font-display)", fontSize: 28, fontWeight: 500, color: "var(--text)" }}>
+        Signing In
+      </h1>
+      {verifying && <p style={{ fontFamily: "var(--font-body)", color: "var(--text-secondary)" }}>Completing authentication…</p>}
+      {error && (
+        <>
+          <p style={{ color: "var(--brand-red)", fontFamily: "var(--font-body)" }}>{error}</p>
+          <p>
+            <a href="/auth/oidc" style={{ color: "var(--brand-blue)" }}>Try again</a>
+          </p>
+        </>
+      )}
     </div>
   );
 }
 
 export default function SSOCallbackPage() {
   return (
-    <Suspense fallback={<div className="content"><main><p>Loading...</p></main></div>}>
+    <Suspense fallback={<div className="content"><main><p>Loading…</p></main></div>}>
       <SSOCallback />
     </Suspense>
   );

@@ -24,6 +24,7 @@ interface AuthContextType {
   requestOtpLogin: (email: string) => Promise<{ message: string; dev_code?: string }>;
   verifyOtpLogin: (email: string, code: string) => Promise<void>;
   ssoExchange: (code: string) => Promise<void>;
+  ssoRegister: (payload: { token: string; first: string; last: string; invite_token?: string }) => Promise<void>;
   logout: () => void;
 }
 
@@ -128,6 +129,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     analytics.trackEvent({ name: "login", properties: { method: "sso" } });
   }
 
+  async function ssoRegister(payload: { token: string; first: string; last: string; invite_token?: string }) {
+    const res = await api.ssoRegister(payload);
+    localStorage.setItem("access_token", res.access_token);
+    localStorage.setItem("refresh_token", res.refresh_token);
+    setAuthCookie(res.access_token);
+    setUser(res.user);
+    setOrganizations(res.organizations ?? []);
+    analytics.identify({ id: res.user.id, email: res.user.email });
+    analytics.trackEvent({ name: "signup", properties: { method: "sso" } });
+  }
+
   function logout() {
     localStorage.removeItem("access_token");
     localStorage.removeItem("refresh_token");
@@ -138,7 +150,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, organizations, login, register, requestMagicLink, loginWithMagicLink, requestOtpLogin, verifyOtpLogin, ssoExchange, logout }}>
+    <AuthContext.Provider value={{ user, loading, organizations, login, register, requestMagicLink, loginWithMagicLink, requestOtpLogin, verifyOtpLogin, ssoExchange, ssoRegister, logout }}>
       {children}
     </AuthContext.Provider>
   );

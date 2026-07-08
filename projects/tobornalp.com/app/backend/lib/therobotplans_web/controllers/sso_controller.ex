@@ -96,12 +96,84 @@ defmodule TherobotplansWeb.SSOController do
         {:ok, code} = Therobotplans.Auth.SSOCode.create(session.id)
         redirect(conn, external: "#{frontend_url}/auth/sso-callback?code=#{code}&provider=#{provider_type}")
 
-      {:error, :user_not_provisioned} ->
-        redirect(conn, external: "#{frontend_url}/auth/sso-callback?error=not_provisioned")
+      {:registration_required, identity} ->
+        # Brand-new SSO identity: sign a short-lived token carrying the verified
+        # identity, redirect to the register form to collect name (+ invite).
+        token = Therobotplans.Auth.RegistrationToken.sign(identity)
+        invite_flag = if identity[:invite_required], do: "&invite=1", else: ""
+        redirect(conn, external: "#{frontend_url}/auth/register?token=#{token}#{invite_flag}")
 
       {:error, _} ->
         redirect(conn, external: "#{frontend_url}/auth/sso-callback?error=sso_failed")
     end
+  end
+
+  # ── SSO Registration ──────────────────────────────────────────
+
+  # Prefill: peek at the pending identity so the register form can show the
+  # verified email and whether an invite is required.
+  def registration(conn, %{"token" => token}) do
+    case Therobotplans.Auth.RegistrationToken.verify(token) do
+      {:ok, identity} ->
+        json(conn, %{
+          email: identity[:email],
+          provider: identity[:provider],
+          invite_required: identity[:invite_required] == true
+        })
+
+      _ ->
+        conn |> put_status(:not_found) |> json(%{error: "Invalid or expired registration"})
+    end
+  end
+
+  def registration(conn, _params) do
+    conn |> put_status(:bad_request) |> json(%{error: "token is required"})
+  end
+
+  # Complete registration: verify the token, create the user + session, mint JWTs.
+  def register(conn, %{"token" => token} = params) do
+    attrs = %{
+      first: params["first_name"] || params["first"] || "",
+      last: params["last_name"] || params["last"] || "",
+      invite_token: params["invite_token"]
+    }
+
+    with {:ok, identity} <- Therobotplans.Auth.RegistrationToken.verify(token),
+         {:ok, session} <- Therobotplans.Auth.SSO.register_user(identity, attrs),
+         {:ok, access_token, _} <-
+           Guardian.encode_and_sign(session, %{}, token_type: "access", ttl: {1, :hour}),
+         {:ok, refresh_token, %{"jti" => refresh_jti}} <-
+           Guardian.encode_and_sign(session, %{}, token_type: "refresh", ttl: {7, :day}) do
+      Therobotplans.Auth.TokenStore.store_refresh_jti(refresh_jti)
+
+      user = resolve_user_from_session(session)
+      orgs = Therobotplans.Organizations.list_user_organizations(user.id)
+
+      conn
+      |> put_status(:created)
+      |> json(%{
+        user: serialize_user(user),
+        organizations: orgs,
+        access_token: access_token,
+        refresh_token: refresh_token
+      })
+    else
+      {:error, reason} when reason in [:expired, :invalid] ->
+        conn |> put_status(:unauthorized) |> json(%{error: "Invalid or expired registration"})
+
+      {:error, :invite_required} ->
+        conn |> put_status(:forbidden) |> json(%{error: "A valid invite code is required for this email domain"})
+
+      {:error, :invalid_token} ->
+        conn |> put_status(:forbidden) |> json(%{error: "Invalid or expired invite code"})
+
+      {:error, _} ->
+        conn |> put_status(:unprocessable_entity) |> json(%{error: "Registration failed"})
+    end
+  end
+
+  def register(conn, _params) do
+    conn |> put_status(:bad_request) |> json(%{error: "token is required"})
   end
 
   defp redirect_with_error(conn, error) do

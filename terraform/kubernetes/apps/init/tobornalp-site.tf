@@ -78,6 +78,20 @@ resource "helm_release" "tobornalp_site" {
         enabled = false
       }
 
+      # SSO is the only auth method (Authentik OIDC). Domain allowlist auto-
+      # registers; others need an invite code at /auth/register.
+      sso = {
+        requireInvite = true
+        oidc = {
+          issuer = "https://auth.noizu.com/application/o/tobornalp"
+        }
+      }
+
+      extraEnv = [
+        { name = "SSO_REQUIRE_INVITE", value = "true" },
+        { name = "SSO_ALLOWED_DOMAINS", value = "therobotlives.com,noizu.com,greatnonprofits.org,communityconnectlabs.com" }
+      ]
+
       database = {
         host = "app-timescaledb"
         port = 5432

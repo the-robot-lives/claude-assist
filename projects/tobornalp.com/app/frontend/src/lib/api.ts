@@ -199,6 +199,19 @@ export const api = {
     });
   },
 
+  getRegistration(token: string) {
+    return request<{ email: string; provider: string; invite_required?: boolean }>(
+      `/api/v1/auth/sso/registration?token=${encodeURIComponent(token)}`,
+    );
+  },
+
+  ssoRegister(payload: { token: string; first: string; last: string; invite_token?: string }) {
+    return request<AuthResponse>("/api/v1/auth/sso/register", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  },
+
   me() {
     return request<{ user: User }>("/api/v1/auth/me");
   },

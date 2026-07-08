@@ -116,6 +116,12 @@ if config_env() == :prod do
   # ── SSO: Social OAuth (each enabled when *_CLIENT_ID is set) ──
   config :therobotplans, :sso_require_invite, System.get_env("SSO_REQUIRE_INVITE") == "true"
 
+  # Email domains allowed to self-register via SSO without an invite code.
+  if domains = System.get_env("SSO_ALLOWED_DOMAINS") do
+    config :therobotplans, :sso_allowed_domains,
+      domains |> String.split(",", trim: true) |> Enum.map(&String.trim/1)
+  end
+
   oauth_providers = []
 
   oauth_providers =

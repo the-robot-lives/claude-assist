@@ -101,6 +101,8 @@ defmodule TherobotplansWeb.Router do
     post "/auth/refresh", AuthController, :refresh
     get "/auth/sso/providers", SSOController, :providers
     post "/auth/sso/exchange", SSOController, :exchange
+    get "/auth/sso/registration", SSOController, :registration
+    post "/auth/sso/register", SSOController, :register
     get "/config/features", ConfigController, :features
   end
 

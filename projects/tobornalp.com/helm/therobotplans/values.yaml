@@ -1,6 +1,5 @@
 replicas: 1
 domain: tobornalp.com
-
 backend:
   image: ops.noizu.com/tobornalp.com/backend:v1.0.4
   port: 4000
@@ -11,9 +10,8 @@ backend:
     limits:
       cpu: 500m
       memory: 512Mi
-
 frontend:
-  image: ops.noizu.com/tobornalp.com/frontend:v1.0.3
+  image: ops.noizu.com/tobornalp.com/frontend:v1.0.5
   port: 3000
   resources:
     requests:
@@ -22,7 +20,6 @@ frontend:
     limits:
       cpu: 200m
       memory: 256Mi
-
 migrate:
   enabled: true
   # OTP app/module are still :therobotplans / Therobotplans.* (code not renamed;
@@ -35,17 +32,14 @@ migrate:
     limits:
       cpu: 200m
       memory: 256Mi
-
 database:
-  host: app-postgres.apps.svc.cluster.local   # ExternalName → app-timescaledb
+  host: app-postgres.apps.svc.cluster.local # ExternalName → app-timescaledb
   port: 5432
-  name: therobotplans                          # live DB name (unchanged)
-
+  name: therobotplans # live DB name (unchanged)
 redis:
   host: app-valkey.apps.svc.cluster.local
   port: 6379
   db: 12
-
 secrets:
   name: tobornalp-secrets
   keys:
@@ -68,7 +62,6 @@ secrets:
     linkedinClientSecret: ""
     samlSpCert: ""
     samlSpKey: ""
-
   infisical:
     enabled: true
     hostAPI: https://infisical.noizu.com/api
@@ -78,44 +71,43 @@ secrets:
     projectSlug: k8-infra
     envSlug: prod
     secretsPath: "/apps/tobornalp"
-
 mail:
   fromName: ""
   fromAddress: "noreply@tobornalp.com"
-
 sso:
-  requireInvite: false
+  requireInvite: true
   oidc:
-    issuer: ""
+    issuer: "https://auth.noizu.com/application/o/tobornalp"
   saml:
     idpMetadataUrl: ""
     spEntityId: ""
-
-extraEnv: []
-
+# SSO is the only auth method. Domain allowlist = auto-register; others need an
+# invite code at /auth/register. requireInvite gates the registration step.
+extraEnv:
+  - name: SSO_REQUIRE_INVITE
+    value: "true"
+  - name: SSO_ALLOWED_DOMAINS
+    value: "therobotlives.com,noizu.com,greatnonprofits.org,communityconnectlabs.com"
 configMap:
   enabled: false
   data: {}
-
 imagePullSecrets:
   - name: ops-registry-secret
-
 analytics:
   ga:
     measurementId: ""
   posthog:
     key: ""
     host: "https://us.i.posthog.com"
-
 ingress:
+  enabled: true
   className: nginx
   annotations:
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
     nginx.ingress.kubernetes.io/proxy-body-size: "10m"
   cloudflareOnly: true
-
 tls:
-  secretName: tobornalp-tls   # cert: *.tobornalp.com + tobornalp.com (Cloudflare Origin)
+  secretName: tobornalp-tls # cert: *.tobornalp.com + tobornalp.com (Cloudflare Origin)
   infisical:
     enabled: true
     resyncInterval: 300
@@ -127,26 +119,21 @@ tls:
     secretsPath: "/apps/tls/tobornalp"
     crtKey: TOBORNALP_TLS_CRT
     keyKey: TOBORNALP_TLS_KEY
-
 otel:
   enabled: false
   collectorEndpoint: "otel-collector.observability-ns.svc.cluster.local:4317"
   collectorHttpEndpoint: "http://otel-collector.observability-ns.svc.cluster.local:4318"
   serviceName: "tobornalp"
-
 storage:
   enabled: false
-
 autoscaling:
   enabled: false
   minReplicas: 1
   maxReplicas: 5
   targetCPUUtilizationPercentage: 70
   targetMemoryUtilizationPercentage: 80
-
 podDisruptionBudget:
   enabled: false
   minAvailable: 1
-
 sandbox:
   enabled: false
