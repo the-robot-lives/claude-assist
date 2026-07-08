@@ -16,6 +16,20 @@ defmodule TherobotplansWeb.OrganizationController do
     session = Guardian.Plug.current_resource(conn)
     user = resolve_user(session)
 
+    # Approved-only: creating an org makes the caller its owner, so it must not
+    # double as a way for an unapproved account to self-activate. Users pending
+    # manual approval (or otherwise not active) keep waiting — the invite path is
+    # how they get in early; a not-invited *approved* user makes their own org.
+    if user.status == :active do
+      create_for_user(conn, user, org_params)
+    else
+      conn
+      |> put_status(:forbidden)
+      |> json(%{error: "Your account must be approved before you can create an organization."})
+    end
+  end
+
+  defp create_for_user(conn, user, org_params) do
     case Organizations.create_organization_with_owner(
            %{slug: org_params["slug"], name: org_params["name"]},
            user.id
