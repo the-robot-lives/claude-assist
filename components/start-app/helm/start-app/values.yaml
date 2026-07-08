@@ -3,7 +3,7 @@ domain: example.com
 appDomain: app.example.com
 
 backend:
-  image: ops.noizu.com/start-app/backend:latest
+  image: ops.noizu.com/start-app/backend:v1.0.0
   port: 4000
   resources:
     requests:
@@ -14,7 +14,7 @@ backend:
       memory: 512Mi
 
 frontend:
-  image: ops.noizu.com/start-app/frontend:latest
+  image: ops.noizu.com/start-app/frontend:v1.0.0
   port: 3000
   resources:
     requests:
