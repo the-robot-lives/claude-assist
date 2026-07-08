@@ -123,6 +123,7 @@ defmodule TherobotplansWeb.Router do
     post "/auth/verify-email", AuthController, :send_verification
     get "/users/me", UserController, :show
     patch "/users/me", UserController, :update
+    put "/users/active/consent", UserController, :consent
 
     # Today view — unified "what do I do now" plan for the authenticated user.
     get "/today", TodayController, :show

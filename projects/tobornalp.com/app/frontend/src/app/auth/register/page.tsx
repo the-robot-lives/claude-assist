@@ -4,6 +4,7 @@ import { Suspense, useEffect, useRef, useState } from "react";
 import { useAuth } from "@/context/auth";
 import { useRouter, useSearchParams } from "next/navigation";
 import { api } from "@/lib/api";
+import { getConsentPreferences } from "@/lib/consent";
 
 function Register() {
   const { ssoRegister } = useAuth();
@@ -44,7 +45,14 @@ function Register() {
     setError("");
     setSubmitting(true);
     try {
-      await ssoRegister({ token, first, last, invite_token: inviteToken.trim() || undefined });
+      await ssoRegister({
+        token,
+        first,
+        last,
+        invite_token: inviteToken.trim() || undefined,
+        // Carry the visitor's cookie-consent choice onto the new account.
+        consent: getConsentPreferences() as unknown as Record<string, boolean>,
+      });
       router.push("/");
     } catch (err) {
       setError(

@@ -145,7 +145,10 @@ defmodule TherobotplansWeb.SSOController do
     attrs = %{
       first: params["first_name"] || params["first"] || "",
       last: params["last_name"] || params["last"] || "",
-      invite_token: params["invite_token"]
+      invite_token: params["invite_token"],
+      # Cookie-consent choice captured on the register form — persisted on the
+      # new account so it carries across the apex → app.* subdomain hop.
+      consent: params["consent"]
     }
 
     with {:ok, identity} <- Therobotplans.Auth.RegistrationToken.verify(token),

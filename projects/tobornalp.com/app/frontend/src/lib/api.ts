@@ -7,6 +7,8 @@ export interface User {
   handle?: string;
   status?: string;
   verified?: boolean;
+  // Account-persisted cookie-consent categories (authoritative across subdomains).
+  consent_preferences?: Record<string, boolean> | null;
 }
 
 export interface Organization {
@@ -205,10 +207,19 @@ export const api = {
     );
   },
 
-  ssoRegister(payload: { token: string; first: string; last: string; invite_token?: string }) {
+  ssoRegister(payload: { token: string; first: string; last: string; invite_token?: string; consent?: Record<string, boolean> }) {
     return request<AuthResponse>("/api/v1/auth/sso/register", {
       method: "POST",
       body: JSON.stringify(payload),
+    });
+  },
+
+  // Persist cookie-consent categories on the account (crosses the apex → app.*
+  // boundary; account value is authoritative). No-op safe when unauthenticated.
+  updateConsent(preferences: Record<string, boolean>) {
+    return request<{ consent_preferences: Record<string, boolean> }>("/api/v1/users/active/consent", {
+      method: "PUT",
+      body: JSON.stringify({ preferences }),
     });
   },
 

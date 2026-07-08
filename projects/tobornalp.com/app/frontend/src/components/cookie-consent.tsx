@@ -22,6 +22,16 @@ import {
   type ConsentState,
   type OptionalConsentCategory,
 } from "@/lib/consent";
+import { api } from "@/lib/api";
+
+// When a logged-in user makes a consent choice, persist it to their account so
+// it is authoritative and crosses the apex → app.* subdomain boundary. Anonymous
+// visitors just keep the local choice. Best-effort — never block the UI.
+function persistConsentToAccount(state: ConsentState | null) {
+  if (typeof window === "undefined") return;
+  if (!state || !window.localStorage.getItem("access_token")) return;
+  api.updateConsent(state.categories as unknown as Record<string, boolean>).catch(() => {});
+}
 
 interface CookieConsentContextValue {
   state: ConsentState | null;
@@ -57,18 +67,24 @@ export function CookieConsentProvider({ children }: { children: React.ReactNode 
   const closeSettings = useCallback(() => setIsSettingsOpen(false), []);
 
   const acceptAll = useCallback(() => {
-    setState(acceptAllConsent());
+    const next = acceptAllConsent();
+    setState(next);
+    persistConsentToAccount(next);
     setIsSettingsOpen(false);
   }, []);
 
   const rejectOptional = useCallback(() => {
-    setState(rejectOptionalConsent());
+    const next = rejectOptionalConsent();
+    setState(next);
+    persistConsentToAccount(next);
     setIsSettingsOpen(false);
   }, []);
 
   const savePreferences = useCallback(
     (preferences: Partial<Record<ConsentCategory, boolean>>) => {
-      setState(setConsentPreferences(preferences));
+      const next = setConsentPreferences(preferences);
+      setState(next);
+      persistConsentToAccount(next);
       setIsSettingsOpen(false);
     },
     []

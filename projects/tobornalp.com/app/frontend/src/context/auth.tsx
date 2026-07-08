@@ -3,6 +3,16 @@
 import { createContext, useContext, useEffect, useState, useCallback } from "react";
 import { api, type Organization } from "@/lib/api";
 import { analytics } from "@/lib/analytics";
+import { setConsentPreferences } from "@/lib/consent";
+
+// The account's consent choice is authoritative and crosses the apex → app.*
+// subdomain boundary (localStorage does not). Mirror it into the local consent
+// store on login/load so the banner does not re-prompt a decided user.
+function hydrateConsentFromAccount(consent?: Record<string, boolean> | null) {
+  if (consent && typeof consent === "object") {
+    setConsentPreferences(consent);
+  }
+}
 
 interface User {
   id: string;
@@ -24,7 +34,7 @@ interface AuthContextType {
   requestOtpLogin: (email: string) => Promise<{ message: string; dev_code?: string }>;
   verifyOtpLogin: (email: string, code: string) => Promise<void>;
   ssoExchange: (code: string) => Promise<void>;
-  ssoRegister: (payload: { token: string; first: string; last: string; invite_token?: string }) => Promise<void>;
+  ssoRegister: (payload: { token: string; first: string; last: string; invite_token?: string; consent?: Record<string, boolean> }) => Promise<void>;
   logout: () => void;
 }
 
@@ -54,6 +64,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const { user } = await api.me();
       setUser(user);
+      hydrateConsentFromAccount(user.consent_preferences);
       analytics.identify({ id: user.id, email: user.email });
     } catch {
       localStorage.removeItem("access_token");
@@ -124,17 +135,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem("refresh_token", res.refresh_token);
     setAuthCookie(res.access_token);
     setUser(res.user);
+    hydrateConsentFromAccount(res.user.consent_preferences);
     setOrganizations(res.organizations ?? []);
     analytics.identify({ id: res.user.id, email: res.user.email });
     analytics.trackEvent({ name: "login", properties: { method: "sso" } });
   }
 
-  async function ssoRegister(payload: { token: string; first: string; last: string; invite_token?: string }) {
+  async function ssoRegister(payload: { token: string; first: string; last: string; invite_token?: string; consent?: Record<string, boolean> }) {
     const res = await api.ssoRegister(payload);
     localStorage.setItem("access_token", res.access_token);
     localStorage.setItem("refresh_token", res.refresh_token);
     setAuthCookie(res.access_token);
     setUser(res.user);
+    hydrateConsentFromAccount(res.user.consent_preferences);
     setOrganizations(res.organizations ?? []);
     analytics.identify({ id: res.user.id, email: res.user.email });
     analytics.trackEvent({ name: "signup", properties: { method: "sso" } });

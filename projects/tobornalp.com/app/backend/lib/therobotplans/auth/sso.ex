@@ -105,6 +105,14 @@ defmodule Therobotplans.Auth.SSO do
     # passing a struct makes change/2 call Enum.map on it → Protocol.UndefinedError.
     name = Therobotplans.Repo.insert!(%Name{first: first, last: last, middle: []})
 
+    # Consent captured on the register form (account-authoritative; a brand-new
+    # account has none, so this is the first value). nil when not provided.
+    {consent_prefs, consent_at} =
+      case attrs[:consent] do
+        prefs when is_map(prefs) -> {prefs, DateTime.utc_now()}
+        _ -> {nil, nil}
+      end
+
     user_schema = %UserSchema{
       id: UUID.uuid4(),
       user_name: handle,
@@ -113,7 +121,9 @@ defmodule Therobotplans.Auth.SSO do
       email: email,
       status: :active,
       verified: true,
-      flagged: false
+      flagged: false,
+      consent_preferences: consent_prefs,
+      consent_updated_at: consent_at
     }
 
     # Idempotent on email (race-safe): re-fetch if it already existed.
