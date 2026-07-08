@@ -71,13 +71,16 @@ impl PromptPrepper {
         prompt_section: &PromptSection,
         service: &str,
         asset_type: AssetType,
+        text_format: Option<&str>,
+        fim_enabled: bool,
         verbose: bool,
     ) -> Option<PreparedPrompt> {
         let system_context = prompt_section.system.as_deref().unwrap_or("");
         let raw_text = &prompt_section.text;
         let raw_negative = prompt_section.negative.as_deref().unwrap_or("");
 
-        let provider_guidance = provider_prompt_guidance(service, asset_type);
+        let provider_guidance =
+            resolve_guidance(service, asset_type, text_format, fim_enabled, verbose);
         let limit = crate::providers::constraints(service).max_prompt_chars;
         let length_instruction = if let Some(max) = limit {
             format!(
@@ -249,6 +252,8 @@ Reply with ONLY valid JSON (no markdown fences, no commentary):
         prompt_section: &PromptSection,
         service: &str,
         asset_type: AssetType,
+        text_format: Option<&str>,
+        fim_enabled: bool,
         eval_notes: &str,
         scores_summary: &str,
         failed_output: Option<&std::path::Path>,
@@ -258,7 +263,8 @@ Reply with ONLY valid JSON (no markdown fences, no commentary):
         let raw_text = &prompt_section.text;
         let raw_negative = prompt_section.negative.as_deref().unwrap_or("");
 
-        let provider_guidance = provider_prompt_guidance(service, asset_type);
+        let provider_guidance =
+            resolve_guidance(service, asset_type, text_format, fim_enabled, verbose);
 
         let instruction = format!(
             r#"You are refining a generation prompt that failed quality evaluation. The original specification is rich and detailed — your job is to adjust the prompt to fix the specific issues the evaluator identified, NOT to rewrite from scratch.
@@ -422,6 +428,39 @@ Reply with ONLY valid JSON (no markdown fences, no commentary):
             }
             Err(_) => None,
         }
+    }
+}
+
+/// Resolve the channel guidance for the prep/refine instruction.
+///
+/// When FIM injection is enabled and a solution file resolves for this target, the
+/// loaded solution **replaces** the static guidance (it is more specific and current).
+/// Otherwise we fall back to the compiled-in static `provider_prompt_guidance` so
+/// behavior never regresses when the FIM dir/file is absent.
+fn resolve_guidance(
+    service: &str,
+    asset_type: AssetType,
+    text_format: Option<&str>,
+    fim_enabled: bool,
+    verbose: bool,
+) -> String {
+    if let Some(content) = crate::fim::guidance_for(service, asset_type, text_format, fim_enabled) {
+        if verbose {
+            let label = text_format.unwrap_or(service);
+            ui::verbose(&format!(
+                "FIM solution loaded for {service}/{label} ({} chars; replaces static guidance)",
+                content.len()
+            ));
+        }
+        content
+    } else {
+        if verbose && fim_enabled {
+            let label = text_format.unwrap_or("");
+            ui::verbose(&format!(
+                "No FIM solution for {service}/{asset_type:?}/{label} — using static guidance"
+            ));
+        }
+        provider_prompt_guidance(service, asset_type).to_string()
     }
 }
 

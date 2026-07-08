@@ -1,6 +1,7 @@
 mod attachments;
 mod dag;
 mod eval;
+mod fim;
 mod output;
 mod pipeline;
 mod prep;
@@ -68,6 +69,10 @@ struct Cli {
     /// Skip LLM prompt preparation (send raw prompt text to provider)
     #[arg(long)]
     no_prep: bool,
+
+    /// Disable FIM solution injection into the prompt-prep agent's guidance
+    #[arg(long)]
+    no_fim: bool,
 
     /// Override eval endpoint base URL
     #[arg(long, value_name = "URL")]
@@ -148,6 +153,11 @@ async fn main() -> color_eyre::Result<()> {
     ui::ok(&format!("Loaded {} prompt file(s)", prompts.len()));
 
     // Run pipeline
+    // FIM solution injection into the prep agent is on by default; disable via --no-fim
+    // or MEDIA_FIM_INJECT=0.
+    let fim_enabled = !cli.no_fim
+        && std::env::var("MEDIA_FIM_INJECT").ok().as_deref() != Some("0");
+
     let config = PipelineConfig {
         variant_count: cli.variants,
         dry_run: cli.dry_run,
@@ -159,6 +169,7 @@ async fn main() -> color_eyre::Result<()> {
         service_override: cli.service,
         no_eval: cli.no_eval,
         no_prep: cli.no_prep,
+        fim_enabled,
         eval_url: cli.eval_url,
         eval_model: cli.eval_model,
     };

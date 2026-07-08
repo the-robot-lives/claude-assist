@@ -26,6 +26,9 @@ pub struct PipelineConfig {
     pub service_override: Option<String>,
     pub no_eval: bool,
     pub no_prep: bool,
+    /// When true, the prep agent loads a FIM solution file for the target channel and
+    /// uses it IN PLACE OF the static guidance. Disabled via --no-fim or MEDIA_FIM_INJECT=0.
+    pub fim_enabled: bool,
     pub eval_url: Option<String>,
     pub eval_model: Option<String>,
 }
@@ -669,6 +672,8 @@ async fn run_eval_gated(
                                 &prompt.payload.prompt,
                                 svc,
                                 prompt.meta.asset_type,
+                                prompt.payload.output.text_format.as_deref(),
+                                config.fim_enabled,
                                 config.verbose,
                             ).await {
                                 Some(prepared) => (
@@ -706,6 +711,8 @@ async fn run_eval_gated(
                     &prompt.payload.prompt,
                     svc,
                     prompt.meta.asset_type,
+                    prompt.payload.output.text_format.as_deref(),
+                    config.fim_enabled,
                     feedback,
                     scores,
                     last_failed_output.as_deref(),
@@ -942,6 +949,8 @@ async fn run_legacy_variants(
                         &prompt.payload.prompt,
                         svc,
                         prompt.meta.asset_type,
+                        prompt.payload.output.text_format.as_deref(),
+                        config.fim_enabled,
                         config.verbose,
                     ).await {
                         Some(prepared) => (

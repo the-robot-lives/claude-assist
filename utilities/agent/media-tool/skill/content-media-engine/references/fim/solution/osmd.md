@@ -1,430 +1,235 @@
-# OSMD (OpenSheetMusicDisplay) - MusicXML Display
+# OpenSheetMusicDisplay (OSMD) — MusicXML Rendering in the Browser
 
-## Overview
-TypeScript/JavaScript library for rendering MusicXML scores in browsers using VexFlow. OSMD provides a high-level API for displaying musical notation with automatic layout, formatting, and comprehensive MusicXML support.
+OpenSheetMusicDisplay is a TypeScript/JavaScript library that renders **MusicXML** (and
+compressed `.mxl`) scores to SVG or Canvas in the browser, using VexFlow underneath but
+adding a full automatic layout engine. You give it a MusicXML document; it handles line
+breaking, spacing, beaming, and formatting. It also exposes a cursor for playback
+following. It does *not* generate audio — pair it with a synth for sound.
 
-**Official Resources:**
-- [GitHub Repository](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay)
-- [Official Documentation](https://opensheetmusicdisplay.github.io/demo/)
-- [API Documentation](https://opensheetmusicdisplay.github.io/opensheetmusicdisplay/)
-- [Live Demo](https://opensheetmusicdisplay.github.io/demo/)
-- [Example Gallery](https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/tree/develop/demo)
+**Current Version**: 1.9.x  **License**: BSD-3-Clause
+**Bundle**: ~2–3MB (includes VexFlow + fonts)  **Runtime**: Browser (ES2015+); loads MusicXML strings/URLs
 
-## License & Pricing
-- **License**: BSD 3-Clause License (Open Source)
-- **Commercial Use**: Free for commercial and non-commercial projects
-- **Attribution**: Required (retain copyright notice)
-- **Source Code**: Available on GitHub under permissive license
+## Official Resources & Documentation
+- Site & demo: https://opensheetmusicdisplay.github.io/demo/
+- GitHub: https://github.com/opensheetmusicdisplay/opensheetmusicdisplay
+- API docs: https://opensheetmusicdisplay.github.io/opensheetmusicdisplay/
+- npm: https://www.npmjs.com/package/opensheetmusicdisplay
+- Wiki (options reference): https://github.com/opensheetmusicdisplay/opensheetmusicdisplay/wiki
 
-## Browser Compatibility
-**Supported Browsers:**
-- Chrome 60+ (recommended)
-- Firefox 55+
-- Safari 11+
-- Edge 79+
-- Mobile Safari (iOS 11+)
-- Chrome Android 60+
+## Installation & Setup
 
-**Requirements:**
-- ES6/ES2015 support
-- SVG rendering capabilities
-- Web Audio API (for cursor/playback features)
-- Minimum 2GB RAM for large scores
-- Hardware acceleration recommended
-
-## Installation
-
-### NPM Package
+### Package manager
 ```bash
 npm install opensheetmusicdisplay
-# TypeScript definitions included
 ```
 
 ### CDN
 ```html
 <script src="https://cdn.jsdelivr.net/npm/opensheetmusicdisplay/build/opensheetmusicdisplay.min.js"></script>
+<div id="score"></div>
 ```
 
-### Webpack/Bundle Configuration
-```javascript
-// webpack.config.js
-module.exports = {
-  resolve: {
-    fallback: {
-      "fs": false,
-      "path": false
-    }
-  }
-};
-```
-
-## Configuration Examples
-
-### Basic Setup
+### ES module import
 ```javascript
 import { OpenSheetMusicDisplay } from 'opensheetmusicdisplay';
-
-// Initialize OSMD
-const osmd = new OpenSheetMusicDisplay('score-container', {
-  backend: 'svg',
-  drawTitle: true,
-  drawComposer: true
-});
-
-// Load MusicXML
-async function loadScore() {
-  await osmd.load('path/to/score.musicxml');
-  await osmd.render();
-}
 ```
 
-### Advanced Configuration
-```javascript
-const osmd = new OpenSheetMusicDisplay('score-container', {
-  // Rendering options
-  backend: 'svg',                    // 'svg' or 'canvas'
-  autoResize: true,                  // Auto-resize to container
-  pageBreaks: true,                  // Enable page breaks
-  pageFormat: 'A4_P',               // Page format
+## Core API Reference
 
-  // Display options
+The lifecycle is: **construct(container, options) → await load(source) → render()**.
+`load` accepts a MusicXML string, a URL, a `.mxl` ArrayBuffer, or a parsed Document.
+`render` must be called after every `load`, `zoom` change, or resize.
+
+### Construction & options
+```javascript
+const osmd = new OpenSheetMusicDisplay('score', {
+  backend: 'svg',                  // 'svg' (default) or 'canvas'
+  autoResize: true,                // re-render on window resize
   drawTitle: true,
+  drawSubtitle: true,
   drawComposer: true,
   drawLyricist: false,
-  drawCredits: true,
   drawPartNames: true,
   drawPartAbbreviations: true,
   drawMeasureNumbers: true,
   drawMeasureNumbersOnlyAtSystemStart: false,
-
-  // Layout options
-  compactMode: false,                // Compact spacing
-  defaultColorMusic: '#000000',      // Default music color
-  defaultColorTitle: '#000000',      // Title color
-  defaultFontFamily: 'Times New Roman',
-  defaultFontSize: 12,
-
-  // Performance options
-  drawHiddenNotes: false,           // Skip hidden notes
-  drawingParameters: 'default',     // Drawing quality
-  renderSingleHorizontalStaffline: false
+  drawFingerings: true,
+  drawSlurs: true,
+  pageFormat: 'Endless',           // 'Endless' | 'A4_P' | 'A4_L' | 'Letter_P' | 'Letter_L'
+  pageBackgroundColor: '#FFFFFF',
+  renderSingleHorizontalStaffline: false,  // one long line, no wraps
 });
 ```
 
-### Interactive Features
+### Loading a score
 ```javascript
-// Cursor control for playback visualization
+async function show(source) {
+  await osmd.load(source);   // MusicXML string | URL | .mxl ArrayBuffer
+  osmd.zoom = 0.8;           // set BEFORE render
+  await osmd.render();
+}
+```
+
+### Cursor (playback following / note iteration)
+```javascript
 osmd.cursor.show();
-osmd.cursor.next();                // Move to next note
-osmd.cursor.previous();            // Move to previous note
-osmd.cursor.reset();               // Reset to beginning
+osmd.cursor.next();          // advance to next note group
+osmd.cursor.previous();
+osmd.cursor.reset();         // back to start
+osmd.cursor.hide();
 
-// Zoom and view control
-osmd.zoom = 0.8;                   // Set zoom level
-osmd.setLogLevel('warn');          // Set logging level
-
-// Event handling
-osmd.cursor.CursorPositionChanged = (cursor) => {
-  console.log('Cursor moved to:', cursor.Iterator.CurrentMeasure);
-};
+// Inspect the notes under the cursor:
+const notes = osmd.cursor.NotesUnderCursor();       // VexFlow-level notes
+const iter  = osmd.cursor.Iterator;                 // MusicSheet iterator
+const measureIndex = iter.CurrentMeasureIndex;
+const timestamp    = iter.currentTimeStamp.RealValue;
 ```
 
-### Loading Different Sources
+### Reading sheet structure
 ```javascript
-// Load from URL
-async function loadFromURL(url) {
-  await osmd.load(url);
+const sheet = osmd.Sheet;
+sheet.Title.text;                      // title string
+sheet.Instruments;                     // parts
+sheet.SourceMeasures.length;           // measure count
+osmd.GraphicSheet;                     // rendered graphical model (positions)
+osmd.Version;                          // library version
+```
+
+### Runtime option changes
+```javascript
+osmd.setOptions({ drawMeasureNumbers: false });
+osmd.setLogLevel('warn');              // 'trace'|'debug'|'info'|'warn'|'error'
+osmd.clear();                          // wipe rendered content
+await osmd.render();                   // re-render after option change
+```
+
+## Supported Input & Output
+- **Input**: MusicXML 3.x/4.x (`score-partwise` and `score-timewise`), compressed `.mxl`,
+  MXL fetched as ArrayBuffer.
+- **Output**: SVG (default, DOM-inspectable) or Canvas (raster, faster for very large scores).
+- **Notation coverage**: multi-part scores, dynamics, articulations, slurs, ties, tuplets,
+  lyrics, chord symbols, repeats/endings, grace notes, fingerings, tablature (partial).
+
+## How-To (worked recipes)
+
+### How to color notes and the score
+Two mechanisms: (1) MusicXML `color` attributes on notes (honored per-element), and
+(2) OSMD default-color options for global theming.
+```javascript
+const osmd = new OpenSheetMusicDisplay('score', {
+  defaultColorMusic: '#1a1a1a',    // notes/stems/beams
+  defaultColorNotehead: '#c0392b', // noteheads only
+  defaultColorStem: '#2980b9',
+  defaultColorTitle: '#333333',
+});
+await osmd.load(musicXml);
+await osmd.render();
+
+// Recolor a single note after render, then re-render:
+osmd.GraphicSheet.MeasureList[0][0].staffEntries[0]
+    .graphicalVoiceEntries[0].notes[0].sourceNote.NoteheadColor = '#00A000';
+await osmd.render();
+```
+
+### How to load a compressed `.mxl` file from a file input
+```javascript
+fileInput.addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  const buffer = await file.arrayBuffer();   // .mxl is a zip — pass the ArrayBuffer
+  await osmd.load(buffer);
   await osmd.render();
-}
-
-// Load from XML string
-async function loadFromString(xmlString) {
-  await osmd.load(xmlString);
-  osmd.zoom = 0.8;
-  await osmd.render();
-}
-
-// Load from File input
-async function loadFromFile(file) {
-  const text = await file.text();
-  await osmd.load(text);
-  await osmd.render();
-}
-
-// Load with error handling
-async function safeLoad(source) {
-  try {
-    await osmd.load(source);
-    await osmd.render();
-    console.log('Score loaded successfully');
-  } catch (error) {
-    console.error('Failed to load score:', error);
-  }
-}
-```
-
-### Responsive Design
-```javascript
-// Auto-resize handling
-function setupResponsive() {
-  const container = document.getElementById('score-container');
-  const resizeObserver = new ResizeObserver(() => {
-    osmd.render();
-  });
-  resizeObserver.observe(container);
-}
-
-// Manual resize
-function resizeScore() {
-  const container = document.getElementById('score-container');
-  osmd.setLogLevel('warn');
-  osmd.render();
-}
-```
-
-## Performance Considerations
-
-### Bundle Size Optimization
-```javascript
-// Tree-shaking support - import only needed modules
-import { OpenSheetMusicDisplay } from 'opensheetmusicdisplay/build/dist/src/OpenSheetMusicDisplay';
-
-// Lazy loading for large applications
-const loadOSMD = () => import('opensheetmusicdisplay');
-```
-
-### Memory Management
-```javascript
-// Dispose of instances when no longer needed
-function cleanupOSMD() {
-  if (osmd) {
-    osmd.clear();  // Clear rendered content
-    osmd = null;   // Release reference
-  }
-}
-
-// For large scores, consider pagination
-const osmd = new OpenSheetMusicDisplay('container', {
-  drawingParameters: 'compact',  // Reduce memory usage
-  pageBreaks: true,             // Enable pagination
-  drawHiddenNotes: false        // Skip unnecessary elements
 });
 ```
 
-### Rendering Performance
+### How to drive a playback cursor with audio
 ```javascript
-// Optimize rendering for large scores
-const osmd = new OpenSheetMusicDisplay('container', {
-  backend: 'svg',               // SVG generally faster than canvas
-  autoResize: false,           // Disable if manual control preferred
-  drawingParameters: 'compact' // Faster rendering
-});
-
-// Batch operations
-async function loadAndRenderOptimized(xmlString) {
-  osmd.setLogLevel('error');    // Reduce console output
-  await osmd.load(xmlString);
-  await osmd.render();
-  osmd.setLogLevel('warn');     // Restore normal logging
-}
-```
-
-## Troubleshooting
-
-### Common Issues and Solutions
-
-**1. Bundle Size Too Large**
-```javascript
-// Problem: Large bundle size affecting load times
-// Solution: Use dynamic imports and tree-shaking
-const loadOSMD = async () => {
-  const { OpenSheetMusicDisplay } = await import('opensheetmusicdisplay');
-  return OpenSheetMusicDisplay;
-};
-```
-
-**2. MusicXML Loading Failures**
-```javascript
-// Problem: Scores fail to load or render incorrectly
-// Solution: Validate XML and handle errors gracefully
-async function validateAndLoad(xmlString) {
-  try {
-    // Basic XML validation
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(xmlString, 'application/xml');
-    const errorNode = doc.querySelector('parsererror');
-
-    if (errorNode) {
-      throw new Error('Invalid XML format');
-    }
-
-    await osmd.load(xmlString);
-    await osmd.render();
-  } catch (error) {
-    console.error('Loading failed:', error.message);
-    // Display user-friendly error message
-    displayError('Unable to load music score. Please check the file format.');
-  }
-}
-```
-
-**3. Rendering Performance Issues**
-```javascript
-// Problem: Slow rendering of large scores
-// Solution: Optimize settings and implement virtual scrolling
-const osmd = new OpenSheetMusicDisplay('container', {
-  drawingParameters: 'compact',
-  drawHiddenNotes: false,
-  pageBreaks: true,
-  autoResize: false
-});
-
-// Implement lazy loading for multi-page scores
-function loadPageByPage(xmlString, pageSize = 20) {
-  // Split score into smaller chunks for rendering
-  // Implementation depends on score structure
-}
-```
-
-**4. Mobile Compatibility Issues**
-```javascript
-// Problem: Touch events and mobile rendering
-// Solution: Mobile-specific configuration
-function setupMobileSupport() {
-  const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-
-  if (isMobile) {
-    const osmd = new OpenSheetMusicDisplay('container', {
-      autoResize: true,
-      defaultFontSize: 14,        // Larger font for mobile
-      compactMode: true,          // Better for small screens
-      drawMeasureNumbers: false   // Reduce clutter
-    });
-  }
-}
-```
-
-**5. CORS Issues with Remote Files**
-```javascript
-// Problem: Cannot load MusicXML from external URLs
-// Solution: Proxy through your server or use proper CORS headers
-async function loadWithProxy(url) {
-  try {
-    // Option 1: Server-side proxy
-    const response = await fetch(`/api/proxy?url=${encodeURIComponent(url)}`);
-    const xmlString = await response.text();
-    await osmd.load(xmlString);
-
-    // Option 2: Direct with proper headers (if server supports CORS)
-    const directResponse = await fetch(url, {
-      mode: 'cors',
-      headers: {
-        'Accept': 'application/xml, text/xml'
-      }
-    });
-
-    if (!directResponse.ok) throw new Error('Network error');
-    const xml = await directResponse.text();
-    await osmd.load(xml);
-  } catch (error) {
-    console.error('CORS or network error:', error);
-  }
-}
-```
-
-### Debug Mode Configuration
-```javascript
-// Enable detailed logging for troubleshooting
-const osmd = new OpenSheetMusicDisplay('container', {
-  // ... other options
-});
-
-osmd.setLogLevel('debug');  // Verbose logging
-// Other levels: 'trace', 'debug', 'info', 'warn', 'error'
-
-// Access internal state for debugging
-console.log('OSMD Version:', osmd.Version);
-console.log('Graphic Sheet:', osmd.graphic);
-console.log('Current Sheet:', osmd.sheet);
-```
-
-## Strengths
-- **Comprehensive MusicXML Support**: Handles complex musical notation including dynamics, articulations, and advanced features
-- **Automatic Layout Engine**: Intelligent spacing, alignment, and formatting without manual intervention
-- **High-Level API**: Built on VexFlow but provides simpler, more intuitive interface
-- **TypeScript Support**: Full type definitions included for enhanced development experience
-- **Cross-Platform**: Works consistently across all modern browsers and mobile devices
-- **Active Development**: Regular updates and community support
-- **Extensible**: Plugin architecture allows for custom extensions
-
-## Limitations
-- **Bundle Size**: Larger footprint (2-3MB) compared to lightweight alternatives
-- **Customization Constraints**: Less granular control than direct VexFlow usage
-- **No Audio Playback**: Requires integration with separate audio libraries
-- **Memory Usage**: Can be intensive with very large orchestral scores
-- **Limited Animation**: Basic cursor support, complex animations require custom implementation
-- **Print Support**: Web printing may not always match screen rendering exactly
-
-## Best Use Cases
-- **Digital Sheet Music Platforms**: Library systems, score sharing websites
-- **Music Education Software**: Interactive learning applications with score display
-- **Practice Applications**: Apps requiring visual score following and cursor tracking
-- **Music Analysis Tools**: Academic software for score analysis and annotation
-- **Composition Software**: Displaying exported scores from notation programs
-- **Publishing Workflows**: Converting MusicXML to web-displayable format
-- **Mobile Music Apps**: Score readers and practice companions
-- **Archive Digitization**: Converting legacy scores to modern web format
-
-## Integration Examples
-
-### With Audio Playback Libraries
-```javascript
-// Integrate with Tone.js for audio
 import * as Tone from 'tone';
+const synth = new Tone.PolySynth().toDestination();
 
-class ScorePlayer {
-  constructor(containerId) {
-    this.osmd = new OpenSheetMusicDisplay(containerId);
-    this.synth = new Tone.Synth().toDestination();
-  }
-
-  async playCurrentNote() {
-    const note = this.osmd.cursor.Iterator.CurrentNote;
-    if (note) {
-      this.synth.triggerAttackRelease(note.Pitch.ToString(), '4n');
-      this.osmd.cursor.next();
-    }
-  }
+async function step() {
+  const notes = osmd.cursor.NotesUnderCursor();
+  const pitches = notes
+    .filter(n => n.sourceNote.Pitch)
+    .map(n => n.sourceNote.Pitch.ToStringShortGet ? n.sourceNote.Pitch.ToString() : n.sourceNote.Pitch.toString());
+  if (pitches.length) synth.triggerAttackRelease(pitches, '4n');
+  osmd.cursor.next();
 }
+osmd.cursor.show();
+setInterval(step, 500);   // naive; real timing should follow note durations
 ```
 
-### React Component
-```jsx
-import React, { useEffect, useRef } from 'react';
-import { OpenSheetMusicDisplay } from 'opensheetmusicdisplay';
-
-function ScoreViewer({ musicXML, options = {} }) {
-  const containerRef = useRef(null);
-  const osmdRef = useRef(null);
-
-  useEffect(() => {
-    if (containerRef.current && !osmdRef.current) {
-      osmdRef.current = new OpenSheetMusicDisplay(containerRef.current, {
-        autoResize: true,
-        backend: 'svg',
-        ...options
-      });
-    }
-  }, [options]);
-
-  useEffect(() => {
-    if (osmdRef.current && musicXML) {
-      osmdRef.current.load(musicXML)
-        .then(() => osmdRef.current.render())
-        .catch(console.error);
-    }
-  }, [musicXML]);
-
-  return <div ref={containerRef} style={{ width: '100%', height: '600px' }} />;
-}
+### How to render one long horizontal line (no wrapping)
+```javascript
+const osmd = new OpenSheetMusicDisplay('score', {
+  renderSingleHorizontalStaffline: true,
+  autoResize: false,
+});
+await osmd.load(musicXml);
+await osmd.render();
 ```
+
+### How to responsively re-render on container resize
+```javascript
+const container = document.getElementById('score');
+new ResizeObserver(() => { osmd.render(); }).observe(container);
+```
+
+## Do's and Don'ts
+
+### ✅ Do
+- Always `await osmd.load(...)` before `render()`; both are async.
+- Set `zoom` and options *before* calling `render()`; call `render()` again after any change.
+- Pass `.mxl` files as an ArrayBuffer, not a string — they are zipped.
+- Reuse a single OSMD instance and `clear()` between scores rather than constructing new ones.
+- Validate MusicXML with `DOMParser` first to catch malformed input before `load`.
+
+### ❌ Don't
+- Don't expect audio — OSMD renders only; wire up [tone_js](tone_js.md)/[web-audio-api](web-audio-api.md).
+- Don't feed it ABC or MIDI — OSMD consumes MusicXML/MXL only (convert first).
+- Don't forget CORS — loading a MusicXML URL cross-origin needs proper headers or a proxy.
+- Don't mutate the graphic model without a follow-up `render()` — changes won't appear.
+- Don't render huge orchestral scores with `backend: 'svg'` if performance matters — try `'canvas'`.
+
+## Styling, Theming & Customization
+- **Global colors**: `defaultColorMusic`, `defaultColorNotehead`, `defaultColorStem`,
+  `defaultColorRest`, `defaultColorTitle`, `pageBackgroundColor`.
+- **Fonts**: `defaultFontFamily` (e.g. `'Times New Roman'`); music glyph font selectable
+  (Gonville, Bravura, Petaluma) via `setOptions({ drawingParameters, ... })` and the font build.
+- **Spacing/compactness**: `drawingParameters: 'compact'` or `'compacttight'` reduces margins.
+- **Per-note color** via MusicXML `color="#RRGGBB"` on `<note>`, `<notehead>`, `<stem>`.
+- **CSS**: SVG output is fully styleable/inspectable in the DOM; add classes and target them.
+
+## Advanced Features
+- **Cursor API** for practice/playback following, note highlighting, and karaoke-style scroll.
+- **Transpose** via the `TransposeCalculator` plugin (`osmd.TransposeCalculator = new …`).
+- **Selective drawing**: hide/show measure numbers, part names, fingerings at runtime.
+- **PDF/PNG export** by serializing the SVG or using the canvas backend + `toDataURL`.
+- **Multi-instrument** scores with per-part visibility toggles.
+
+## Common Pitfalls & Troubleshooting
+- **Blank render** → forgot `await render()`, or container has zero width/height.
+- **`.mxl` fails to load** → passed a string instead of ArrayBuffer.
+- **CORS error on URL load** → proxy the file server-side or set `Access-Control-Allow-Origin`.
+- **Slow / heavy** → large scores: use `drawingParameters: 'compact'`, `canvas` backend, disable `autoResize`.
+- **Cursor pitches undefined** → rests and unpitched percussion have no `Pitch`; filter them.
+- **Layout differs from print** → OSMD's engine ≠ Finale/Sibelius; expect reflow, not pixel-identical output.
+
+## Integration Notes
+- **React**: construct in `useEffect` once the ref exists; `load`→`render` in a second effect keyed on the MusicXML prop.
+- **Audio**: OSMD + Tone.js is the common practice-app stack (cursor drives the synth).
+- **Source pipeline**: export MusicXML from MuseScore/Finale/Sibelius or from [music21j](music21j.md)/[lilypond](lilypond.md) (`musicxml`), then feed OSMD.
+
+## Best For / Avoid For
+`musicxml-display`, `digital-sheet-music`, `practice-apps`, `education`, `score-following`,
+`mobile-readers` — choose OSMD when you already have MusicXML and want automatic layout.
+Avoid for: building notation from scratch programmatically (use [vexflow](vexflow.md)),
+guitar-tab + playback (use [alphatab](alphatab.md)), or print-grade engraving (use
+[lilypond](lilypond.md)).
+
+## See Also
+- [musicxml](musicxml.md) — the input format OSMD consumes
+- [vexflow](vexflow.md) — the rendering engine underneath OSMD
+- [alphatab](alphatab.md) — tab-focused alternative with built-in audio
+- [music21j](music21j.md) — produce MusicXML to feed OSMD
+- [tone_js](tone_js.md) — add playback to the cursor
+- Use case: [../use-case/music-notation.md](../use-case/music-notation.md)
