@@ -25,7 +25,7 @@ def t(*shape):
     return (rng.standard_normal(shape) * 0.02).astype(np.float32)
 
 
-def write_model(path, arch, robot, taps=False, l2=None, delta=None, settle=False, n_layer=N_LAYER):
+def write_model(path, arch, robot, taps=False, l2=None, delta=None, settle=False, semvec=False, n_layer=N_LAYER):
     """l2: None, or dict(film=bool, state=bool, mem=None|'manual'|'auto').
     delta: None, or dict(theta=float, heartbeat=int) — delta-covered blocks
     1..n_layer-1 with the given base threshold, plus a modulator bus wired to
@@ -120,6 +120,26 @@ def write_model(path, arch, robot, taps=False, l2=None, delta=None, settle=False
         else:
             w.add_uint32("therobot.level", 0)
             w.add_array("therobot.features", [])
+        if semvec:
+            # the standardized readout layer, exactly calibrated by
+            # construction: axes 0 (named) and 4 (latent) admitted+writable,
+            # E columns = slice unit vectors, G rows = the same vectors →
+            # G·E == I on the admitted diagonal, zero crosstalk. Site reuses
+            # the "subject" bottleneck (layer 0 resid_post [4..12)).
+            w.add_array("therobot.features_optional", ["semvec"])
+            w.add_string("therobot.semvec.version", "1.0-fixture")
+            w.add_string("therobot.semvec.hash", "f1x70000deadbeef")
+            w.add_uint32("therobot.semvec.named_dim", 4)
+            w.add_uint32("therobot.semvec.latent_dim", 4)
+            w.add_array("therobot.semvec.axes", ["formality", "menace", "certainty", "warmth"])
+            w.add_uint32("therobot.semvec.site_count", 1)
+            w.add_string("therobot.semvec.site.0.name", "subject")
+            w.add_uint32("therobot.semvec.site.0.layer", 0)
+            w.add_string("therobot.semvec.site.0.point", "resid_post")
+            w.add_uint32("therobot.semvec.site.0.offset", 4)
+            w.add_uint32("therobot.semvec.site.0.width", 8)
+            w.add_uint32("therobot.semvec.site.0.n_admitted", 2)
+            w.add_uint32("therobot.semvec.site.0.n_writable", 2)
         if taps or l2 is not None:
             w.add_uint32("therobot.bottleneck.count", 2)
             # tap 0: mid-layer residual slice with an identity probe head
@@ -162,6 +182,20 @@ def write_model(path, arch, robot, taps=False, l2=None, delta=None, settle=False
         w.add_tensor("robot.mod.alpha", np.zeros((M,), dtype=np.float32))
         w.add_tensor("robot.mod.pool.weight", np.zeros((M, N_EMBD), dtype=np.float32))
         w.add_tensor("robot.mod.cell.weight", np.zeros((M, M), dtype=np.float32))
+    if semvec:
+        d, D = 8, 8
+        proj = np.zeros((d, D), dtype=np.float32)
+        proj[0, 0] = 1.0   # named axis 0 (formality) ← slice channel 0
+        proj[1, 4] = 1.0   # latent axis 0            ← slice channel 1
+        calib = np.zeros((D, 2), dtype=np.float32)
+        calib[0, 0] = 1.0  # scale 1, bias 0 on the two admitted axes
+        calib[4, 0] = 1.0
+        overlay = np.zeros((D, d), dtype=np.float32)
+        overlay[0, 0] = 1.0   # unit write on axis 0 → +1 on slice ch 0 → +1 readout
+        overlay[4, 1] = 1.0
+        w.add_tensor("robot.semvec.subject.proj", proj)
+        w.add_tensor("robot.semvec.subject.calib", calib)
+        w.add_tensor("robot.semvec.subject.overlay", overlay)
     if taps or l2 is not None:
         # identity probe head with constant bias: probe(x) == x + 0.5
         w.add_tensor("robot.probe.0.subject.weight", np.eye(8, dtype=np.float32))
@@ -229,6 +263,7 @@ def write_model(path, arch, robot, taps=False, l2=None, delta=None, settle=False
 write_model(f"{out_dir}/tiny-llama-stock.gguf", "llama", robot=False)
 write_model(f"{out_dir}/tiny-llama-therobot.gguf", "therobot", robot=True)
 write_model(f"{out_dir}/tiny-llama-taps.gguf", "therobot", robot=True, taps=True)
+write_model(f"{out_dir}/tiny-llama-semvec.gguf", "therobot", robot=True, taps=True, semvec=True)  # readout layer, exactly calibrated
 write_model(f"{out_dir}/tiny-llama-l2.gguf", "therobot", robot=True, l2={})                    # zero grafts ⇒ parity
 write_model(f"{out_dir}/tiny-llama-l2-film.gguf", "therobot", robot=True, l2={"film": True})   # β = m[0]
 write_model(f"{out_dir}/tiny-llama-l2-state.gguf", "therobot", robot=True, l2={"state": True}) # live leaky state
