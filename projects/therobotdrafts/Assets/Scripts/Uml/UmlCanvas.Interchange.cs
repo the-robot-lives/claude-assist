@@ -718,14 +718,13 @@ namespace TheRobotDraft.Uml
                 int di = 1;
                 foreach (var topLevel in TopLevelPackages())
                 {
-                    var pkgEl = _model.Get(topLevel);
                     var d = new IxDiagram
                     {
                         Id = "d" + di++,
-                        Name = string.IsNullOrEmpty(pkgEl.Name) ? diagramName : pkgEl.Name,
+                        Name = string.IsNullOrEmpty(topLevel.Name) ? diagramName : topLevel.Name,
                         LayoutProvenance = IxLayoutProvenance.Authored,
                     };
-                    AddPlacementsTo(d, SubtreeOf(topLevel), byId);
+                    AddPlacementsTo(d, SubtreeOf(topLevel.Id), byId);
                     if (d.Nodes.Count > 0) model.Diagrams.Add(d);
                 }
                 // Elements with no top-level package ancestor (rare — orphan placements) land in a catch-all diagram.

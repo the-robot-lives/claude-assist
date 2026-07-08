@@ -301,6 +301,22 @@ namespace TheRobotDraft.Authoring.Model
         TogafArchitectureBuildingBlock,
         TogafArchitecturePhase,
         ZachmanCell,
+
+        // --- whiteboard primitives (geometric shapes, looser than UML notation) ---
+        /// <summary>A flat triangular slab on a whiteboard.</summary>
+        WhiteboardTriangle,
+        /// <summary>A flat rectangular card on a whiteboard.</summary>
+        WhiteboardRectangle,
+        /// <summary>A full-depth cube on a whiteboard.</summary>
+        WhiteboardCube,
+        /// <summary>A sphere on a whiteboard.</summary>
+        WhiteboardSphere,
+        /// <summary>An upright cylinder/drum on a whiteboard.</summary>
+        WhiteboardCylinder,
+        /// <summary>A faceted decahedron (pentagonal bipyramid) on a whiteboard.</summary>
+        WhiteboardDecahedron,
+        /// <summary>An organic blob/metaball on a whiteboard.</summary>
+        WhiteboardBlob,
     }
 
     /// <summary>
@@ -366,22 +382,6 @@ namespace TheRobotDraft.Authoring.Model
         DmnRequirement,
         /// <summary>A typed ArchiMate relationship; label/specialization can be refined per edge.</summary>
         ArchiRelationship,
-
-        // --- whiteboard primitives (geometric shapes, looser than UML notation) ---
-        /// <summary>A flat triangular slab on a whiteboard.</summary>
-        WhiteboardTriangle,
-        /// <summary>A flat rectangular card on a whiteboard.</summary>
-        WhiteboardRectangle,
-        /// <summary>A full-depth cube on a whiteboard.</summary>
-        WhiteboardCube,
-        /// <summary>A sphere on a whiteboard.</summary>
-        WhiteboardSphere,
-        /// <summary>An upright cylinder/drum on a whiteboard.</summary>
-        WhiteboardCylinder,
-        /// <summary>A faceted decahedron (pentagonal bipyramid) on a whiteboard.</summary>
-        WhiteboardDecahedron,
-        /// <summary>An organic blob/metaball on a whiteboard.</summary>
-        WhiteboardBlob,
     }
 
     /// <summary>
