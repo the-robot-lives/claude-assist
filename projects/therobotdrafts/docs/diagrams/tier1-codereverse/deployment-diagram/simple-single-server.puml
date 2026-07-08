@@ -1,0 +1,63 @@
+@startuml
+' ============================================================================
+' METADATA
+'   author:       TheRobotDrafts Examples
+'   description:  Single app server hosting one artifact, plus a database.
+'   usecase:      Smallest teaching deployment — one app node + one DB node.
+'   complexity:   simple
+'   domain:       deployment
+' ============================================================================
+title Example Deployment Diagram - Simple Single Server
+
+' ---------------------------------------------------------------------------
+' Deployment diagrams show how SOFTWARE ARTIFACTS (binaries, jars, WAR files)
+' are deployed onto HARDWARE NODES (servers, devices, VMs) and how those
+' nodes talk to each other. Key vocabulary:
+'
+'   node          -> a physical or virtual machine, drawn as a 3D box
+'   artifact      -> a deployable software package that lives INSIDE a node
+'   database      -> a specialized node shape for data stores
+'   -->           -> a communication path (association) between two nodes
+'
+' Stereotypes refine what kind of node/artifact you mean:
+'   <<device>>               a piece of physical hardware (a real box)
+'   <<executionEnvironment>> a software runtime that hosts other software
+'                           (an OS, a JVM, a container runtime)
+'   <<deploy>>              an artifact deployed onto a node
+'   <<database>>            a data store (also expressible via the
+'                           `database` keyword for the shape)
+' ---------------------------------------------------------------------------
+
+' A single application server — modeled as a <<device>> (a real/virtual box).
+' `node` renders as a 3D cube. Add a stereotype to say WHAT KIND of node.
+node "App Server" as app <<device>> {
+  ' Artifacts live INSIDE the node body. Use `artifact` + stereotype `<<deploy>>`
+  ' to show "this software package is deployed here."
+  artifact "UML-IDE Backend\n(web-1.0.0.jar)" as backend <<deploy>>
+}
+
+' A database node — the `database` keyword gives the classic cylinder shape.
+database "PostgreSQL DB" as db <<database>> {
+  ' Databases host artifacts too: the schema/seed data is a deployable thing.
+  artifact "UML-IDE Schema\n(schema-1.0.0.sql)" as schema <<deploy>>
+}
+
+' Communication path between the two nodes.
+' `-->` draws a solid arrowhead line; the `: JDBC` suffix labels the protocol.
+' Use a label to show HOW they talk (JDBC, HTTPS, gRPC, TCP, etc.).
+app --> db : JDBC
+
+' A short teaching note pinned to the diagram. Notes are great for
+' calling out WHY a relationship exists or flagging assumptions.
+note right of db
+  The app connects to the DB
+  over the standard JDBC port (5432).
+end note
+
+' Recap (read this in the source — it won't render):
+'   * TWO nodes total: one `node` (3D box) + one `database` (cylinder).
+'   * Each node HOSTS an artifact via the <<deploy>> stereotype.
+'   * One communication path, labeled with its protocol.
+' That is the minimum vocabulary for ANY deployment diagram.
+
+@enduml

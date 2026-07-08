@@ -1,0 +1,184 @@
+@startuml
+' ============================================================================
+' METADATA
+'   author:       TheRobotDrafts Examples
+'   description:  Side-by-side comparison of three ERD cardinality notations - IE crow's-foot, Chen/look-across, and simple UML multiplicity labels - on the same Customer-to-Order entity pair
+'   usecase:      Educational example showing when each notation style is used and how to read them
+'   complexity:   medium
+'   domain:       Notation Reference
+' ============================================================================
+title Example ERD - Crow's-Foot vs IE vs Simple Multiplicity
+
+' ============================================================
+' This variant answers a common question: "Why does this
+' relationship line look different in tool X vs tool Y?"
+' The SAME business rule - "A Customer places zero-or-more
+' Orders; each Order belongs to exactly one Customer" - can be
+' drawn three ways. All three mean the same thing; the difference
+' is notation convention.
+' ============================================================
+'
+' NOTATION 1: IE (INFORMATION ENGINEERING) CROW'S-FOOT
+'   Uses symbols at the line endpoints:
+'     ||  = exactly one (a bar)
+'     o{  = zero-or-many (a circle + crow's foot)
+'     |{  = one-or-many (a bar + crow's foot)
+'     o|  = zero-or-one (a circle + bar)
+'   This is the DEFAULT in most modern ERD tools (dbdiagram.io,
+'   Lucidchart, DBeaver, DataGrip). PlantUML uses this natively.
+'
+' NOTATION 2: CHEN / LOOK-ACROSS
+'   Uses cardinality numbers or letters ON the line itself:
+'     1, N, M  or  (0,n), (1,1), (0,*)
+'   The numbers are placed near the OPPOSITE entity (look-across
+'   rule). PlantUML can emulate this with multiplicity labels.
+'
+' NOTATION 3: SIMPLE UML MULTIPLICITY
+'   Uses 1, 0..1, *, 1..* labels in quotes near each end.
+'   Common in UML class-diagram-style tools adapted for ERD.
+'   PlantUML supports this via "1" -- "*" syntax.
+' ============================================================
+
+' ============================================================
+' SHARED ENTITIES (identical structure for all three comparisons)
+' ============================================================
+
+entity "Customer" as cust_a {
+  * customer_id : BIGINT <<PK>>
+  --
+  email : VARCHAR(255) NN
+  name : VARCHAR(100) NN
+}
+
+entity "Order" as ord_a {
+  * order_id : BIGINT <<PK>>
+  --
+  customer_id : BIGINT <<FK>> NN
+  order_date : TIMESTAMP NN
+}
+
+entity "Customer" as cust_b {
+  * customer_id : BIGINT <<PK>>
+  --
+  email : VARCHAR(255) NN
+  name : VARCHAR(100) NN
+}
+
+entity "Order" as ord_b {
+  * order_id : BIGINT <<PK>>
+  --
+  customer_id : BIGINT <<FK>> NN
+  order_date : TIMESTAMP NN
+}
+
+entity "Customer" as cust_c {
+  * customer_id : BIGINT <<PK>>
+  --
+  email : VARCHAR(255) NN
+  name : VARCHAR(100) NN
+}
+
+entity "Order" as ord_c {
+  * order_id : BIGINT <<PK>>
+  --
+  customer_id : BIGINT <<FK>> NN
+  order_date : TIMESTAMP NN
+}
+
+' ============================================================
+' STYLE 1: IE CROW'S-FOOT (PlantUML native)
+' ||--o{ = exactly-one on the left, zero-or-many on the right.
+' Read: "One Customer has zero-or-many Orders."
+' ============================================================
+note top of cust_a
+  <b>Style 1: IE Crow's-Foot</b>
+  The symbol at each endpoint encodes
+  cardinality directly.
+  || = one      o{ = zero-or-many
+  This is the most common style in
+  modern database tools.
+end note
+
+cust_a ||--o{ ord_a : "places (IE)"
+
+' ============================================================
+' STYLE 2: CHEN / LOOK-ACROSS with multiplicity labels
+' PlantUML renders "1" and "0..N" as labels near each end.
+' In true Chen notation the cardinality is read by looking at
+' the FAR end of the line from each entity. Here we attach
+' explicit labels to approximate that reading.
+' ============================================================
+note top of cust_b
+  <b>Style 2: Chen / Look-Across</b>
+  Cardinality numbers sit ON the line.
+  Read by looking across to the opposite
+  entity's end. Often uses 1 / N / M or
+  (0,n) / (1,1) style labels.
+  Common in academic textbooks.
+end note
+
+cust_b "1" -- "0..N" ord_b : "places (Chen)"
+
+' ============================================================
+' STYLE 3: SIMPLE UML MULTIPLICITY
+' Uses the "1" .. "*" label syntax borrowed from UML class
+' diagrams. * means "many" (0..*), 1 means "exactly one".
+' ============================================================
+note top of cust_c
+  <b>Style 3: Simple UML Multiplicity</b>
+  Minimal labels: 1, 0..1, *, 1..*
+  Borrowed from UML class diagrams.
+  Lightweight; no endpoint symbols.
+  Good for quick whiteboard sketches.
+end note
+
+cust_c "1" -- "*" ord_c : "places (UML)"
+
+' ============================================================
+' SUMMARY COMPARISON TABLE (as a note)
+' ============================================================
+note as ComparisonNote
+  <b>When to use each notation</b>
+  --
+  <b>IE Crow's-Foot</b>
+  Use in production database design and reverse-engineering
+  output. Tools like dbdiagram.io, DBeaver, DataGrip, ER/Studio,
+  and PlantUML default to this. Endpoints are unambiguous once
+  learned, and they scale to dense diagrams without overlapping
+  text.
+  --
+  <b>Chen / Look-Across</b>
+  Use in academic settings, textbooks, and when you need to
+  annotate participation/dependency constraints explicitly
+  (total vs partial, weak entities). The look-across reading can
+  confuse newcomers but maps cleanly to formal set theory.
+  --
+  <b>Simple UML Multiplicity</b>
+  Use for quick communication, whiteboard sessions, and when
+  your audience already knows UML class diagrams. Least formal;
+  pairs well with application-layer modeling where you mix
+  classes and tables in one diagram.
+end note
+
+ord_a .. ComparisonNote
+ComparisonNote .. ord_b
+
+' ============================================================
+' READING CROW'S-FOOT SYMBOLS - QUICK REFERENCE
+'   ||--||    one-to-one       (exactly one / exactly one)
+'   ||--o|    one-to-zero-or-one
+'   ||--o{    one-to-zero-or-many  (most common for FK parents)
+'   ||--|{    one-to-one-or-many   (identifying / mandatory)
+'   }o--o{    many-to-many         (resolve with a join table)
+'
+' LEFT SIDE codes (closest to first entity):
+'   ||  exactly one
+'   o|  zero or one
+'   }o  zero or many
+'   }|  one or many
+'
+' RIGHT SIDE codes (closest to second entity) use the same set
+' mirrored:  ||  o{  |{  o|
+' ============================================================
+
+@enduml

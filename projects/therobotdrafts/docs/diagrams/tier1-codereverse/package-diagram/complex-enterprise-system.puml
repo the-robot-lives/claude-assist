@@ -1,0 +1,151 @@
+@startuml
+' ============================================================================
+' METADATA
+'   author:       TheRobotDrafts Examples
+'   description:  Demonstrates cross-context dependencies, transitive
+'                 dependencies, and package generalization across a large
+'                 enterprise
+'   usecase:      Educational example modeling a CRM + Orders + Billing +
+'                 Identity enterprise
+'   complexity:   complex
+'   domain:       Enterprise SaaS
+' ============================================================================
+title Example Package Diagram - Enterprise System (Multiple Bounded Contexts)
+
+' ============================================================================
+' ENTERPRISE PACKAGE DIAGRAM
+' 10-15 packages spanning multiple BOUNDED CONTEXTS (DDD).
+' Concepts demonstrated:
+'   * Bounded Contexts as top-level packages, each owning sub-packages.
+'   * CROSS-CONTEXT dependencies (one context referencing another's published API).
+'   * TRANSITIVE dependencies: A -> B -> C means A indirectly depends on C.
+'   * PACKAGE GENERALIZATION: a specialized package inherits from a generic one
+'     (drawn as a solid line with a hollow triangle, same as class inheritance).
+' ============================================================================
+
+' ====================== CONTEXT: Identity & Access ==========================
+package "IdentityContext" {
+  package "Auth" {
+    interface Authenticator
+    class OauthProvider
+  }
+  package "Accounts" {
+    class User
+    class Tenant
+  }
+  package "SharedKernel" {
+    class AuditableEntity
+  }
+}
+
+' ============================ CONTEXT: Sales ================================
+package "SalesContext" {
+  package "Crm" {
+    class Lead
+    class Opportunity
+  }
+  package "Quotes" {
+    class Quote
+    class QuoteLine
+  }
+}
+
+' =========================== CONTEXT: Fulfillment ===========================
+package "FulfillmentContext" {
+  package "Orders" {
+    class SalesOrder
+    class OrderItem
+  }
+  package "Shipping" {
+    class Shipment
+    class Carrier
+  }
+}
+
+' ============================ CONTEXT: Billing ==============================
+package "BillingContext" {
+  package "Invoicing" {
+    class Invoice
+  }
+  package "Payments" {
+    class PaymentProcessor
+    class Refund
+  }
+}
+
+' ============================ CONTEXT: Reporting ============================
+package "ReportingContext" {
+  package "Analytics" {
+    class RevenueReport
+  }
+  package "Export" {
+    class CsvExporter
+  }
+}
+
+' ----------------------------------------------------------------------------
+' CROSS-CONTEXT DEPENDENCIES (dashed). Contexts should depend only on a small
+' PUBLISHED INTERFACE of another context - not its internals.
+' ----------------------------------------------------------------------------
+
+' Quotes depend on Leads/Opportunities from Sales CRM
+Quotes .down.> Crm : <<access>>
+
+' Orders depend on Quotes (convert quote -> order)
+Orders .up.> Quotes : <<import>>
+
+' Shipping depends on Orders (ship what was ordered)
+Shipping .up.> Orders : <<access>>
+
+' Invoicing depends on Orders (bill what shipped)
+Invoicing .left.> Orders : <<access>>
+
+' Payments depends on Invoicing (pay an invoice)
+Payments .up.> Invoicing : <<import>>
+
+' ----------------------------------------------------------------------------
+' TRANSITIVE DEPENDENCY EXAMPLE:
+'   Shipping -> Orders -> Quotes -> Crm
+' Shipping indirectly depends on Crm. This is acceptable but should be kept
+' shallow; long transitive chains indicate tight coupling between contexts.
+' ----------------------------------------------------------------------------
+
+' ----------------------------------------------------------------------------
+' CROSS-CUTTING: every context consumes Identity for the current user/tenant.
+' Drawn once from each context's outer package to the Auth/Accounts packages.
+' ----------------------------------------------------------------------------
+
+SalesContext .up.> Auth : <<access>>
+FulfillmentContext .up.> Auth : <<access>>
+BillingContext .up.> Auth : <<access>>
+ReportingContext .up.> Auth : <<access>>
+
+' ----------------------------------------------------------------------------
+' PACKAGE GENERALIZATION (solid hollow-triangle arrowhead).
+' "Analytics" and "Export" both specialize the generic "ReportPackage".
+' Generalization means the sub-package INHERITS the contents/contracts of the
+' generic package and may extend them - just like class inheritance.
+' ----------------------------------------------------------------------------
+
+package "ReportPackage" <<abstract>> {
+  interface IReportSource
+}
+
+Analytics -|> ReportPackage : specializes
+Export -|> ReportPackage : specializes
+
+' ----------------------------------------------------------------------------
+' SHARED KERNEL reuse: domain entities extend a shared auditable base.
+' (class-level detail included to show how the SharedKernel package is reused
+'  across contexts - a lighter-weight alternative to generalizing a package.)
+' ----------------------------------------------------------------------------
+SalesOrder -up-|> SharedKernel.AuditableEntity
+Invoice -up-|> SharedKernel.AuditableEntity
+
+note bottom of ReportingContext
+  <b>Transitive chain:</b>
+  Shipping --> Orders --> Quotes --> Crm
+  Keep these shallow to avoid hidden coupling.
+end note
+
+@enduml

@@ -1,0 +1,128 @@
+@startuml
+' ============================================================================
+' METADATA
+'   author:       TheRobotDrafts Examples
+'   description:  Demonstrates combined fragments (alt, opt, loop, par), guards, async messages, and compensation flows for a distributed saga across services
+'   usecase:      Educational example showing advanced sequence-diagram vocabulary for long-running distributed workflows
+'   complexity:   complex
+'   domain:       Distributed Systems
+' ============================================================================
+title Example Sequence Diagram - Distributed Transaction (Saga)
+
+' ============================================================================
+' CONCEPTS TAUGHT
+'   - combined fragments: alt (alternatives), opt (single optional), loop
+'                        (iteration), par (parallel regions)
+'   - guard [condition] : boolean expression in square brackets; the
+'                        fragment body only executes when the guard is true
+'   - async message  -> : solid line, OPEN arrowhead is drawn when the
+'                        sender does NOT block awaiting a reply (fire-and-forget)
+'   - reply message --> : dashed arrow returning a result or ACK
+'   - compensation   : an action that undoes a previously committed step
+'                        when a later step fails (saga pattern)
+' ============================================================================
+
+' Ten participants: one coordinator plus nine services.
+box "Client" #LightBlue
+  actor "Client" as CL
+end box
+
+box "Coordinator" #White
+  participant "Saga\nOrchestrator" as SO
+end box
+
+box "Services" #LightYellow
+  participant "Order Service" as OS
+  participant "Inventory" as INV
+  participant "Payment" as PAY
+  participant "Shipping" as SHP
+  participant "Notification" as NOT
+  participant "Billing" as BIL
+  participant "Fraud Check" as FRD
+  participant "Audit Log" as AUD
+end box
+
+' 1. Client opens the transaction asynchronously and continues working.
+CL -> SO : startCheckout(cart)
+activate SO
+
+' LOOP FRAGMENT: repeated fan-out to validate every line item.
+loop [for each item in cart]
+  SO -> OS : validate(item)
+  activate OS
+  OS --> SO : ok
+  deactivate OS
+end
+
+' PAR FRAGMENT: concurrent independent calls run in parallel regions.
+par
+  SO -> FRD : checkRisk(customer)
+  activate FRD
+else
+  SO -> INV : reserveAll(cart)
+  activate INV
+end
+FRD --> SO : riskScore
+deactivate FRD
+INV --> SO : reservationId
+deactivate INV
+
+' OPT FRAGMENT: a single conditional body, executes only if the guard holds.
+opt [riskScore > threshold]
+  SO -> NOT : flagForManualReview()
+  activate NOT
+  NOT --> SO : acknowledged
+  deactivate NOT
+end
+
+' Synchronous charge; SO blocks for the receipt.
+SO -> PAY : charge(reservationId)
+activate PAY
+PAY --> SO : receipt
+deactivate PAY
+
+' Async fire-and-forget to parallel leaf services (sender does not block).
+SO -> SHP : schedulePickup(address)
+SO -> NOT : sendConfirmation(customer)
+SO -> BIL : recordInvoice(receipt)
+SHP --> SO : trackingId
+NOT --> SO : sent
+BIL --> SO : invoiceId
+
+' ALT FRAGMENT: the success-vs-failure branch that drives compensation.
+alt [all steps succeeded]
+  SO -> AUD : commitSaga()
+  activate AUD
+  AUD --> SO : logged
+  deactivate AUD
+  SO --> CL : checkoutComplete()
+else [any step failed]
+  ' COMPENSATION FLOW: undo committed work in reverse order.
+  loop [in reverse commit order]
+    SO -> BIL : voidInvoice()
+    activate BIL
+    BIL --> SO : voided
+    deactivate BIL
+    SO -> INV : releaseStock(reservationId)
+    activate INV
+    INV --> SO : released
+    deactivate INV
+    SO -> PAY : refund(receipt)
+    activate PAY
+    PAY --> SO : refundId
+    deactivate PAY
+  end
+  SO -> NOT : sendFailure(customer)
+  activate NOT
+  NOT --> SO : sent
+  deactivate NOT
+  SO -> AUD : rollbackSaga()
+  activate AUD
+  AUD --> SO : logged
+  deactivate AUD
+  SO --> CL : checkoutFailed(reason)
+end
+
+deactivate SO
+
+@enduml

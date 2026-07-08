@@ -1,0 +1,110 @@
+@startuml
+' ============================================================================
+' METADATA
+'   author:       TheRobotDrafts Examples
+'   description:  Side-by-side comparison of the same logical capability
+'                 packaged as one monolithic tree versus several independent
+'                 microservice packages
+'   usecase:      Educational example showing how packaging choices reshape a
+'                 package diagram
+'   complexity:   medium
+'   domain:       E-commerce
+' ============================================================================
+title Example Package Diagram - Variant: Monolith vs Microservices Packaging
+
+' ============================================================================
+' PACKAGING VARIANT: MONOLITH vs MICROSERVICES
+' The SAME logical capabilities (catalog, cart, orders, payments) can be
+' packaged two radically different ways. This diagram uses two labeled frames
+' to place the two styles side by side for comparison.
+'
+' Key visual differences:
+'   MONOLITH     - one root package tree; sub-packages share a deployment.
+'                  Internal edges are <<access>> within a single boundary.
+'   MICROSERVICES- several independent root packages, each its own deployment.
+'                  Edges between them cross process boundaries and represent
+'                  network calls / async events (still modeled as dependencies).
+' ============================================================================
+
+' ============================ LEFT SIDE: MONOLITH ===========================
+together {
+frame "Monolith: single deployable unit" as MonolithFrame {
+
+  package "ShopMonolith" {
+
+    package "Catalog" {
+      class ProductCatalog
+    }
+
+    package "Cart" {
+      class ShoppingCart
+    }
+
+    package "Orders" {
+      class OrderService
+    }
+
+    package "Payments" {
+      class Checkout
+    }
+
+    ' In a monolith these are in-process calls - direct, synchronous.
+    Catalog .down.> Cart : in-process
+    Cart .down.> Orders : in-process
+    Orders .down.> Payments : in-process
+  }
+}
+}
+
+' =========================== RIGHT SIDE: MICROSERVICES ======================
+together {
+frame "Microservices: many deployable units" as ServicesFrame {
+
+  package "CatalogService" <<microservice>> {
+    class ProductCatalog
+    interface CatalogApi
+  }
+
+  package "CartService" <<microservice>> {
+    class ShoppingCart
+    interface CartApi
+  }
+
+  package "OrderService" <<microservice>> {
+    class OrderProcessor
+    interface OrderApi
+  }
+
+  package "PaymentService" <<microservice>> {
+    class PaymentGateway
+    interface PaymentApi
+  }
+
+  ' Cross-service edges now span PROCESS boundaries.
+  ' Model them as dependencies, but annotate the transport.
+  CatalogApi ..> CartApi : HTTPS / REST
+  CartApi ..> OrderApi : async event
+  OrderApi ..> PaymentApi : gRPC
+}
+}
+
+' ----------------------------------------------------------------------------
+' COMPARISON NOTE - explains the trade-off directly on the diagram.
+' ----------------------------------------------------------------------------
+note bottom of MonolithFrame
+  <b>Monolith trade-offs</b>
+  + Single deployment, simple local calls
+  + Easy code reuse and refactoring
+  - Must redeploy everything on any change
+  - Harder to scale pieces independently
+end note
+
+note bottom of ServicesFrame
+  <b>Microservice trade-offs</b>
+  + Independent deploy & scale per service
+  + Clear team/service ownership boundaries
+  - Network latency + partial-failure handling
+  - Operational complexity (discovery, tracing)
+end note
+
+@enduml

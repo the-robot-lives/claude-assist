@@ -1,0 +1,72 @@
+@startuml
+' ============================================================================
+' METADATA
+'   author:       TheRobotDrafts Examples
+'   description:  Demonstrates activation bars, create/destroy, and a simple alt fragment for in-stock vs out-of-stock
+'   usecase:      Educational example showing a typical request/response flow across multiple services with branching
+'   complexity:   medium
+'   domain:       E-Commerce
+' ============================================================================
+title Example Sequence Diagram - Order Processing
+
+' ============================================================================
+' CONCEPTS TAUGHT
+'   - activation bar   : drawn with activate/deactivate, shows a participant
+'                        is busy servicing a call
+'   - create           : brings a new participant into existence mid-flow
+'   - destroy          : removes a participant's lifeline, signalling cleanup
+'   - alt fragment     : mutually-exclusive branches; the condition in [ ]
+'                        is the UML "guard" for each branch
+'   - else             : separator between alternative branches
+' ============================================================================
+
+' Five participants spanning client, gateway, and three microservices.
+actor "Customer" as C
+participant "Web UI" as UI
+participant "Order Service" as OS
+participant "Inventory Service" as IS
+participant "Payment Service" as PS
+
+' Customer kicks off the flow.
+C -> UI : placeOrder(items)
+activate UI
+
+UI -> OS : createOrder(cart)
+activate OS
+
+' CREATE: bring a new Order entity to life mid-sequence.
+create "Order" as O
+OS -> O : new(cart, customerRef)
+
+' Reservation check is synchronous; OS blocks on the reply.
+OS -> IS : reserveStock(items)
+activate IS
+IS --> OS : reservationId
+deactivate IS
+
+' ALT FRAGMENT: branching behaviour based on a guard condition.
+' PlantUML uses "alt / else / end" to delimit alternatives.
+alt [payment succeeds]
+  ' First branch: happy path.
+  OS -> PS : chargePayment(reservationId)
+  activate PS
+  PS --> OS : receipt
+  deactivate PS
+  OS -> O : markConfirmed()
+  UI --> C : showConfirmation()
+else [payment fails]
+  ' Second branch: compensating action to restore consistency.
+  OS -> IS : releaseStock(reservationId)
+  activate IS
+  IS --> OS : released
+  deactivate IS
+  OS -> O : markCancelled()
+  UI --> C : showPaymentError()
+end
+
+' DESTROY: tear down the Order lifeline to show cleanup.
+destroy O
+deactivate OS
+deactivate UI
+
+@enduml

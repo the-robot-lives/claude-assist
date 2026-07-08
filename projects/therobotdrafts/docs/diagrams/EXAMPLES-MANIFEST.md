@@ -100,22 +100,24 @@ docs/diagrams/examples/
 
 ### PlantUML Files
 - Standard `.puml` extension
-- Include metadata header:
+- **CRITICAL**: metadata MUST live in a comment block. Bare-word `author`/`description`/`complexity`/`domain`/`usecase` lines are invalid PlantUML and will not compile (they get parsed as class identifiers). Only `title` renders. Required header:
   ```plantuml
   @startuml
-  !include https://raw.githubusercontent.com/TheRobotDrafts/examples/master/theme/theme.puml
-  
-  title Example Class Diagram - Simple Banking Domain
-  author TheRobotDrafts Examples
-  description Demonstrates basic class relationships, inheritance, and associations
-  usecase Educational example showing fundamental UML class concepts
-  complexity simple
-  domain Banking
-  
+  ' ============================================================================
+  ' METADATA
+  '   author:       TheRobotDrafts Examples
+  '   description:  <one-two line summary of what this teaches>
+  '   usecase:      <when you'd use this pattern>
+  '   complexity:   simple | medium | complex
+  '   domain:       <industry/problem domain>
+  ' ============================================================================
+  title Example <Type> - <Name>
+
   ' Diagram content here...
-  
+
   @enduml
   ```
+- Self-contained: no network `!include` (no external theme fetches). If a theme is needed, inline it.
 
 ### XMI Files (for interchange)
 - `.xmi` extension for UML/SysML models

@@ -1,0 +1,65 @@
+@startuml
+' ============================================================================
+' METADATA
+'   author:       TheRobotDrafts Examples
+'   description:  Demonstrates the package (tabbed folder) notation, nesting,
+'                 and basic dashed dependency arrows
+'   usecase:      Educational example introducing UML package diagram fundamentals
+'   complexity:   simple
+'   domain:       Library Management
+' ============================================================================
+title Example Package Diagram - Simple Single Module
+
+' ============================================================================
+' PACKAGE DIAGRAM BASICS
+' A package groups related model elements (classes, interfaces, etc.).
+' In PlantUML the "package" keyword renders the classic UML "tabbed folder".
+' Packages may be NESTED to show containment (inner belongs to outer).
+' Dependencies are drawn as DASHED arrows (----> or .up./.down.) and mean
+'   "the source uses/references something in the target".
+' ============================================================================
+
+' Top-level application package - everything lives under this root module
+package "LibrarySystem" {
+
+  ' Nested package: catalog of books/media the library owns
+  package "Catalog" {
+    class BookItem
+    class MediaItem
+  }
+
+  ' Nested package: member registration and lending records
+  package "Membership" {
+    class Member
+    class Loan
+  }
+
+  ' Nested package: search/index services
+  package "Search" {
+    class CatalogIndex
+  }
+
+  ' Nested package: notification helpers (email/SMS senders)
+  package "Notification" {
+    class EmailGateway
+  }
+}
+
+' ----------------------------------------------------------------------------
+' DEPENDENCIES - dashed arrows point FROM the dependent TO the supplier.
+' Use .up.> / .down.> or --> to control layout direction.
+' ----------------------------------------------------------------------------
+
+' Membership depends on Catalog (loans reference book items)
+Membership .down.> Catalog : uses
+
+' Search depends on Catalog (it indexes catalog entries)
+Search .down.> Catalog : indexes
+
+' Membership depends on Notification (it sends due-date reminders)
+Membership .right.> Notification : notifies
+
+' Catalog is independent here - it has no outgoing dependencies
+' (this is a leaf package; others build on top of it).
+
+@enduml

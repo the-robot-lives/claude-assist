@@ -1,0 +1,81 @@
+@startuml
+' ============================================================================
+' METADATA
+'   author:       TheRobotDrafts Examples
+'   description:  Demonstrates async (open arrowhead) vs sync (filled arrowhead) messages, reply (dashed), and error-handling patterns using alt and break fragments
+'   usecase:      Educational example showing how message arrow styles encode the sender's blocking behaviour and how fragments model error paths
+'   complexity:   medium
+'   domain:       Integration
+' ============================================================================
+title Example Sequence Diagram - Async vs Sync and Error Handling
+
+' ============================================================================
+' CONCEPTS TAUGHT
+'   - ? (async, open arrowhead)   : Sender -> Receiver : message
+'                        PlantUML draws an OPEN arrowhead when the message
+'                        is marked asynchronous; the caller does NOT block.
+'   - -> (sync, filled arrowhead) : the caller blocks until the receiver
+'                        returns; paired with a dashed reply
+'   - --> (reply / return)        : dashed arrow carrying a return value
+'   - alt / else / end            : alternatives branch on a guard
+'   - break                       : an exception-handling fragment; if its
+'                        guard fires, the body executes and the surrounding
+'                        interaction is ABORTED (breaks out of any loop)
+'   - note                        : free-text annotation anchored to a
+'                        participant or message for teaching readers
+' ============================================================================
+
+' Four participants spanning a client, an API gateway, and two workers.
+actor "Caller" as CL
+participant "API Gateway" as GW
+queue "Message Bus" as MB #LightCoral
+participant "Worker" as WK
+
+' --- ASYNC fire-and-forget section --------------------------------------
+' The Caller hands work to the Gateway and immediately continues; the arrow
+' carries an open (asynchronous) arrowhead because no reply is expected.
+CL -> GW : submitJob(payload)
+activate GW
+GW -> MB : publish(jobId)
+' The publish is itself async - GW does not wait for the worker to ack.
+note right of GW
+  Async: open arrowhead,
+  caller does not block.
+end note
+GW --> CL : accepted(jobId)
+deactivate GW
+
+' --- SYNSYNC request/reply section -------------------------------------
+' MB hands the job to a Worker. The Worker then makes a SYNCHRONOUS call to
+' fetch configuration - it cannot proceed until the reply arrives.
+MB -> WK : deliver(jobId)
+activate WK
+WK -> GW : fetchConfig(jobId)
+activate GW
+GW --> WK : config
+deactivate GW
+
+' --- ERROR-HANDLING alternatives ---------------------------------------
+alt [config valid]
+  ' Happy path: process and acknowledge.
+  WK -> MB : ack(jobId)
+  WK --> CL : done(result)
+else [config invalid]
+  ' Second branch: surface the error and bail out.
+  WK -> MB : deadLetter(jobId)
+  WK --> CL : failed(error)
+end
+
+' BREAK FRAGMENT: model an unrecoverable fault that aborts the surrounding
+' interaction entirely. If the guard is true, the break body runs and no
+' further messages in the enclosing scope are sent.
+break [worker crashed]
+  MB -> GW : requeue(jobId)
+  activate GW
+  GW --> CL : retried(jobId)
+  deactivate GW
+end
+
+deactivate WK
+
+@enduml

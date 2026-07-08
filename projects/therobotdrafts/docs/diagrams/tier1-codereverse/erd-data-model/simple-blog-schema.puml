@@ -1,0 +1,111 @@
+@startuml
+' ============================================================================
+' METADATA
+'   author:       TheRobotDrafts Examples
+'   description:  Demonstrates basic ERD concepts - entity/table boxes, column rows, PK/FK markers, and one-to-many relationships
+'   usecase:      Educational example showing the building blocks of a physical data model using IE (information-engineering) crow's-foot notation
+'   complexity:   simple
+'   domain:       Blog / Content Management
+' ============================================================================
+title Example ERD - Simple Blog Schema
+
+' ============================================================
+' WHAT IS AN ERD?
+' An Entity-Relationship Diagram models the PHYSICAL data
+' structure of a database: tables, columns, keys, and the
+' cardinality of links between them. Unlike a class diagram
+' (which models behavior + types), an ERD is purely about DATA.
+' ============================================================
+'
+' PLANTUML ERD SYNTAX:
+'   entity "Display Name" as alias {
+'     * PK_COLUMN : type      <- asterisk marks a PRIMARY KEY
+'     FK_COLUMN  : type       <- plain row (FK shown by link below)
+'     column     : type       <- regular attribute
+'     --
+'     column     : type       <- double-dash separates key group from others
+'   }
+'
+' RELATIONSHIP LINES (IE crow's-foot):
+'   ||--o{   one-to-zero-or-many
+'   ||--|{   one-to-one-or-many
+'   ||--||   one-to-one
+'   }o--o{   many-to-many (usually resolved by a join table)
+'
+' Read left-to-right:  User ||--o{ Post
+'   "A User has zero-or-many Posts"
+' ============================================================
+
+' ------------------------------------------------------------
+' USER - authors blog posts and comments.
+' The * before user_id marks it as the PRIMARY KEY.
+' ------------------------------------------------------------
+entity "User" as user {
+  * user_id : BIGINT <<PK>>
+  --
+  username : VARCHAR(50)
+  email : VARCHAR(255)
+  created_at : TIMESTAMP
+}
+
+' ------------------------------------------------------------
+' POST - an article written by a User.
+' author_id is a FOREIGN KEY referencing User.user_id.
+' The relationship below tells PlantUML to draw the FK link.
+' ------------------------------------------------------------
+entity "Post" as post {
+  * post_id : BIGINT <<PK>>
+  --
+  author_id : BIGINT <<FK>>
+  title : VARCHAR(200)
+  body : TEXT
+  published_at : TIMESTAMP
+}
+
+' ------------------------------------------------------------
+' COMMENT - a reader's reply on a Post.
+' Both post_id (which Post) and author_id (which User wrote it)
+' are foreign keys, giving Comment two relationships.
+' ------------------------------------------------------------
+entity "Comment" as comment {
+  * comment_id : BIGINT <<PK>>
+  --
+  post_id : BIGINT <<FK>>
+  author_id : BIGINT <<FK>>
+  body : TEXT
+  created_at : TIMESTAMP
+}
+
+' ============================================================
+' RELATIONSHIPS
+' ============================================================
+
+' One User authors many Posts.
+' ||--o{  =  exactly one (||) on the User side,
+'            zero-or-more (o{) on the Post side.
+' This is a NON-IDENTIFYING relationship: a Post has its own
+' surrogate PK (post_id), so its identity does not depend on
+' the User. Compare with the identifying relationship in the
+' e-commerce example (OrderItem under Order).
+user ||--o{ post : "authors"
+
+' One Post has many Comments.
+' ||--o{ again: one Post, zero-or-many Comments.
+post ||--o{ comment : "receives"
+
+' One User writes many Comments.
+' A second FK from the same User entity - a single table can
+' participate in multiple relationships with different meanings.
+user ||--o{ comment : "writes"
+
+' ============================================================
+' KEY TAKEAWAYS
+'   1. Every entity box shows columns as rows: name : type.
+'   2. * marks the PRIMARY KEY row.
+'   3. <<FK>> annotation documents foreign-key columns.
+'   4. Crow's-foot lines encode cardinality:
+'        || = exactly one      o{ = zero-or-many
+'   5. The label on the line ("authors") describes the verb.
+' ============================================================
+
+@enduml

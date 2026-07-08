@@ -1,0 +1,286 @@
+@startuml
+' ============================================================================
+' METADATA
+'   author:       TheRobotDrafts Examples
+'   description:  Demonstrates abstract classes, multi-level inheritance, dependency injection, service/repository pattern, and full visibility markers at production complexity
+'   usecase:      Educational example showing layered enterprise architecture: domain models, repositories, services, and cross-cutting contracts
+'   complexity:   complex
+'   domain:       Enterprise HR / Payroll
+' ============================================================================
+title Example Class Diagram - Complex Enterprise Application
+
+' ============================================================
+' LAYER 1 - DOMAIN INTERFACES (contracts / abstractions)
+' These define what the system DOES without specifying HOW.
+' Multiple interfaces enable the Interface Segregation Principle
+' (ISP): clients depend only on the methods they actually use.
+' ============================================================
+
+' Generic repository contract - note the ~T~ type-parameter hint
+' for generics. PlantUML renders ~T~ as a template parameter box.
+interface IRepository<T> {
+  +findById(id: UUID): T
+  +findAll(filter: QueryFilter): List<T>
+  +save(entity: T): T
+  +delete(id: UUID): Boolean
+}
+
+' Read-only slice of IRepository - segregates query-only clients
+interface IReadOnlyRepository<T> {
+  +findById(id: UUID): T
+  +findAll(filter: QueryFilter): List<T>
+}
+
+' Auditable contract - any entity that tracks who changed it
+interface IAuditable {
+  +getCreatedAt(): DateTime
+  +getCreatedBy(): UUID
+  +getUpdatedAt(): DateTime
+  +getUpdatedBy(): UUID
+}
+
+' Notification sink contract - for sending messages/alerts
+interface INotificationService {
+  +notify(userId: UUID, message: Notification): Boolean
+  +notifyBatch(userIds: List<UUID>, message: Notification): Integer
+}
+
+' ============================================================
+' LAYER 2 - ABSTRACT BASE CLASSES (partial implementation)
+' Abstract classes provide shared behavior; subclasses complete it.
+' Multi-level inheritance: BaseEntity <- Person <- Employee.
+' ============================================================
+
+' Root entity all domain objects extend
+abstract class BaseEntity {
+  #id: UUID
+  #version: Long
+  +getId(): UUID
+  +getVersion(): Long
+  {abstract} +validate(): ValidationResult
+}
+
+' Person adds identity fields common to humans in the system
+abstract class Person extends BaseEntity {
+  #firstName: String
+  #lastName: String
+  #email: String
+  #dateOfBirth: LocalDate
+  +fullName(): String
+  +age(): Integer
+  {abstract} +validate(): ValidationResult
+}
+
+' ============================================================
+' LAYER 3 - CONCRETE DOMAIN ENTITIES
+' These are the business objects the application operates on.
+' ============================================================
+
+' Employee - a person who works for the company
+class Employee extends Person {
+  -employeeNumber: String
+  -department: Department
+  -salary: Decimal
+  -hireDate: LocalDate
+  -status: EmploymentStatus
+  +promote(newRole: String, newSalary: Decimal): void
+  +terminate(effectiveDate: LocalDate): void
+  +calculateAnnualPay(): Decimal
+  +validate(): ValidationResult
+}
+
+' Manager - specialized employee with reports (2nd inheritance level)
+class Manager extends Employee {
+  -reports: List<Employee>
+  -budgetAuthority: Decimal
+  +addReport(employee: Employee): void
+  +removeReport(employeeId: UUID): void
+  +getDirectReports(): List<Employee>
+  +approveTimeOff(request: TimeOffRequest): ApprovalResult
+}
+
+' Contractor - alternative to Employee, shares Person base but
+' diverges on employment semantics (flat-fee, no benefits)
+class Contractor extends Person {
+  -agency: String
+  -hourlyRate: Decimal
+  -contractEnd: LocalDate
+  +submitInvoice(hours: Decimal): Invoice
+  +renewContract(until: LocalDate): void
+  +validate(): ValidationResult
+}
+
+' Department - organizational unit that employs people
+class Department {
+  -departmentId: UUID
+  -name: String
+  -costCenter: String
+  -budget: Decimal
+  +addEmployee(employee: Employee): void
+  +getHeadcount(): Integer
+  +isOverBudget(): Boolean
+}
+
+' TimeOffRequest - a leave application submitted by an employee
+class TimeOffRequest {
+  -requestId: UUID
+  -employee: Employee
+  -startDate: LocalDate
+  -endDate: LocalDate
+  -reason: String
+  -status: RequestStatus
+  +approve(approver: Manager): void
+  +deny(approver: Manager, reason: String): void
+  +duration(): Integer
+}
+
+' PayrollRecord - immutable record of a single pay event
+class PayrollRecord {
+  -recordId: UUID
+  -employee: Employee
+  -payPeriod: DateRange
+  -grossAmount: Decimal
+  -deductions: Decimal
+  -netAmount: Decimal
+  +netPay(): Decimal
+  +issue(): Paycheck
+}
+
+' ============================================================
+' LAYER 4 - REPOSITORIES (data access; implement IRepository)
+' The repository pattern decouples persistence from domain logic.
+' Each repository realizes IRepository<T> for its entity type.
+' ============================================================
+
+class EmployeeRepository {
+  -dbContext: DbContext
+  -cache: ICache
+  +findById(id: UUID): Employee
+  +findAll(filter: QueryFilter): List<Employee>
+  +findByDepartment(dept: Department): List<Employee>
+  +save(entity: Employee): Employee
+  +delete(id: UUID): Boolean
+}
+
+class DepartmentRepository {
+  -dbContext: DbContext
+  +findById(id: UUID): Department
+  +findAll(filter: QueryFilter): List<Department>
+  +findByName(name: String): Department
+  +save(entity: Department): Department
+  +delete(id: UUID): Boolean
+}
+
+class TimeOffRequestRepository {
+  -dbContext: DbContext
+  +findById(id: UUID): TimeOffRequest
+  +findAll(filter: QueryFilter): List<TimeOffRequest>
+  +findPendingForManager(mgr: Manager): List<TimeOffRequest>
+  +save(entity: TimeOffRequest): TimeOffRequest
+  +delete(id: UUID): Boolean
+}
+
+' ============================================================
+' LAYER 5 - SERVICES (business orchestration; DI consumers)
+' Services depend on repositories and other services via
+' constructor injection (shown here as dependency arrows ..>).
+' This enables unit testing with mock implementations.
+' ============================================================
+
+abstract class BaseService {
+  #logger: ILogger
+  #auditLog: IAuditLog
+  +logAction(action: String, target: UUID): void
+}
+
+class PayrollService extends BaseService {
+  -employeeRepo: EmployeeRepository
+  -notificationService: INotificationService
+  +runPayroll(period: DateRange): PayrollSummary
+  +generatePaycheck(employee: Employee): Paycheck
+  +processBonus(employee: Employee, amount: Decimal): void
+}
+
+class TimeOffService extends BaseService {
+  -requestRepo: TimeOffRequestRepository
+  -employeeRepo: EmployeeRepository
+  -notificationService: INotificationService
+  +submitRequest(employee: Employee, req: TimeOffRequest): void
+  +processApproval(request: TimeOffRequest, approver: Manager): void
+  +getPendingForManager(manager: Manager): List<TimeOffRequest>
+}
+
+' EmailNotificationService - concrete implementation injected
+' wherever INotificationService is required (DI / polymorphism)
+class EmailNotificationService {
+  -smtpClient: ISmtpClient
+  -fromAddress: String
+  +notify(userId: UUID, message: Notification): Boolean
+  +notifyBatch(userIds: List<UUID>, message: Notification): Integer
+  -renderTemplate(template: String, data: Map): String
+}
+
+' ============================================================
+' RELATIONSHIPS
+' ============================================================
+
+' --- Inheritance chains (multi-level) ---
+' Person -> BaseEntity is declared via 'extends' above.
+' Employee -> Person, Manager -> Employee, Contractor -> Person.
+
+' --- Interface realization (repositories implement contracts) ---
+EmployeeRepository ..|> IRepository<Employee>
+DepartmentRepository ..|> IRepository<Department>
+TimeOffRequestRepository ..|> IRepository<TimeOffRequest>
+
+' IReadOnlyRepository is a narrower contract some repos also satisfy
+EmployeeRepository ..|> IReadOnlyRepository<Employee>
+
+' EmailNotificationService realizes the notification contract
+EmailNotificationService ..|> INotificationService
+
+' --- Composition (strong lifecycle ownership) ---
+' A Department composes its employees collection; deleting a
+' Department cascades to its employee roster reference.
+Department "1" *-- "*" Employee : employs
+
+' A Manager composes their direct-reports list
+Manager "1" *-- "*" Employee : manages
+
+' --- Aggregation (shared reference, no lifecycle ownership) ---
+' TimeOffRequest references an Employee and a Manager without owning them
+TimeOffRequest "*" o-- "1" Employee : submitted by
+TimeOffRequest "*" o-- "1" Manager : decided by
+
+' PayrollRecord references the Employee it paid
+PayrollRecord "*" o-- "1" Employee : compensates
+
+' --- Association (structural links) ---
+' An Employee belongs to exactly one Department
+Employee "*" --> "1" Department : belongs to
+
+' --- Dependency injection (services depend on abstractions) ---
+' Dashed arrows show runtime collaboration, not ownership.
+PayrollService ..> EmployeeRepository : injects
+PayrollService ..> INotificationService : injects
+PayrollService ..> PayrollRecord : creates
+
+TimeOffService ..> TimeOffRequestRepository : injects
+TimeOffService ..> EmployeeRepository : injects
+TimeOffService ..> INotificationService : injects
+
+' Repositories depend on their DbContext and cache infrastructure
+EmployeeRepository ..> DbContext : uses
+EmployeeRepository ..> ICache : uses
+DepartmentRepository ..> DbContext : uses
+TimeOffRequestRepository ..> DbContext : uses
+
+' EmailNotificationService depends on its SMTP transport
+EmailNotificationService ..> ISmtpClient : uses
+
+' --- Interfaces realized by domain entities ---
+' Entities that track audit metadata implement IAuditable
+Employee ..|> IAuditable : tracks
+Department ..|> IAuditable : tracks
+
+@enduml

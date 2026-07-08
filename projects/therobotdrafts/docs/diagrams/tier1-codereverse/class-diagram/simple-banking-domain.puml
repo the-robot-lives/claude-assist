@@ -1,10 +1,13 @@
 @startuml
+' ============================================================================
+' METADATA
+'   author:       TheRobotDrafts Examples
+'   description:  Demonstrates basic UML class relationships, inheritance, and associations
+'   usecase:      Educational example showing fundamental UML class concepts
+'   complexity:   simple
+'   domain:       Banking
+' ============================================================================
 title Example Class Diagram - Simple Banking Domain
-author TheRobotDrafts Examples
-description Demonstrates basic UML class relationships, inheritance, and associations
-usecase Educational example showing fundamental UML class concepts
-complexity simple
-domain Banking
 
 ' Customer class - represents bank customers
 class Customer {

@@ -1,0 +1,98 @@
+@startuml
+' ============================================================================
+' METADATA
+'   author:       TheRobotDrafts Examples
+'   description:  Demonstrates layered packaging with <<import>> and <<access>>
+'                 stereotypes and inward-pointing dependencies
+'   usecase:      Educational example showing dependency-inversion in a clean
+'                 layered architecture
+'   complexity:   medium
+'   domain:       E-commerce
+' ============================================================================
+title Example Package Diagram - Multi-module Layered Architecture
+
+' ============================================================================
+' LAYERED ARCHITECTURE (Clean / Hexagonal style)
+' Packages are arranged in horizontal LAYERS. The Dependency Rule states:
+'   dependencies must point INWARD toward the domain/core.
+'   - Outer layers may depend on inner layers.
+'   - Inner layers must NOT depend on outer layers.
+' UML stereotype keywords on dependency arrows:
+'   <<import>>  - public contents of the target are merged into source's namespace
+'   <<access>>  - source references names from the target without merging
+'   <<merge>>   - full private merge (rare; not used here)
+' ============================================================================
+
+' ---- INFRASTRUCTURE LAYER (outermost) - technical details & frameworks ----
+package "Infrastructure" <<layer>> {
+  package "Persistence" {
+    class OrderRepositoryImpl
+    class ProductRepositoryImpl
+  }
+  package "Messaging" {
+    class EventBus
+  }
+  package "Web" {
+    class RestControllers
+  }
+}
+
+' ---- APPLICATION LAYER - orchestration, use cases, app services ----
+package "Application" <<layer>> {
+  package "OrderServices" {
+    class PlaceOrderUseCase
+    class CancelOrderUseCase
+  }
+  package "CatalogServices" {
+    class SearchProductsUseCase
+  }
+  package "Ports" {
+    interface OrderRepository
+    interface ProductRepository
+  }
+}
+
+' ---- DOMAIN LAYER (innermost) - pure business rules, no framework deps ----
+package "Domain" <<layer>> {
+  package "Orders" {
+    class Order
+    class OrderLine
+  }
+  package "Catalog" {
+    class Product
+    class Price
+  }
+}
+
+' ----------------------------------------------------------------------------
+' DEPENDENCY DIRECTIONS - every arrow points INWARD (toward Domain).
+' Outer packages <<import>> the ports they implement; inner packages
+' stay ignorant of the outer ones (dependency inversion via interfaces).
+' ----------------------------------------------------------------------------
+
+' Web (outer) depends on Application use cases to handle requests
+Web .down.> OrderServices : <<access>>
+Web .down.> CatalogServices : <<access>>
+
+' Application use cases depend on Domain entities
+OrderServices .down.> Orders : <<import>>
+CatalogServices .down.> Catalog : <<import>>
+
+' Application defines Ports (interfaces); use cases depend on the ports
+OrderServices .down.> Ports : <<import>>
+CatalogServices .down.> Ports : <<import>>
+
+' Infrastructure implements the Ports (dependency inversion)
+' The implementation arrow points inward to the port interfaces.
+Persistence .up.> Ports : <<implements>>
+
+' Messaging is used by Application to publish domain events (inward rule)
+Messaging .up.> OrderServices : <<access>>
+
+note right of Domain
+  <b>Dependency Rule:</b>
+  Nothing in Domain depends outward.
+  Arrows only ever point <i>into</i> this layer.
+end note
+
+@enduml
