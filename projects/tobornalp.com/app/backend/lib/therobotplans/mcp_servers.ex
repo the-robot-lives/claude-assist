@@ -12,11 +12,15 @@ defmodule Therobotplans.MCPServers do
   # %{id: label/required/desc}. `id` doubles as the subdomain label (except root).
   @servers [
     %{id: "root", label: "Root MCP", required: true, desc: "All domains + discovery"},
-    %{id: "projects", label: "Projects", required: false, desc: "Project management"}
+    %{id: "projects", label: "Projects", required: false, desc: "Project management"},
+    %{id: "items", label: "Items", required: false, desc: "Item tracking — tasks, bugs, todos, epics, boards & definitions"},
+    %{id: "notifications", label: "Notifications", required: false, desc: "Per-recipient notification inbox"}
   ]
 
   @server_modules %{
-    "projects" => Therobotplans.MCP.Projects
+    "projects" => Therobotplans.MCP.Projects,
+    "items" => Therobotplans.Domains.Items.MCP,
+    "notifications" => Therobotplans.Domains.Notifications.MCP
   }
 
   @doc "All configured MCP servers."

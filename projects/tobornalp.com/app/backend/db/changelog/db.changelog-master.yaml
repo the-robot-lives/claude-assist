@@ -86,3 +86,9 @@ databaseChangeLog:
   - include:
       file: 028-item-human-keys.yaml
       relativeToChangelogFile: true
+  - include:
+      file: 029-notifications.yaml
+      relativeToChangelogFile: true
+  - include:
+      file: 030-okrs.yaml
+      relativeToChangelogFile: true

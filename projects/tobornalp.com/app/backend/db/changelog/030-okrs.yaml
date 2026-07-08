@@ -1,0 +1,113 @@
+databaseChangeLog:
+  # ── OKRs (objectives + key results + check-ins) ────────────────────────────
+  # Objectives cascade (company → team → individual → personal) via parent_id;
+  # progress rolls up from key results. A KR may be item-backed: kr_item_links
+  # connect a KR to items, and the KR's current_value auto-computes from the
+  # completion fraction of its linked items (KR auto-progress). tobornalp-unique
+  # (no NPL equivalent).
+
+  # ── objectives ─────────────────────────────────────────────────────────────
+  - changeSet:
+      id: 030-create-table-objectives
+      author: therobotplans
+      changes:
+        - sql:
+            sql: |
+              CREATE TABLE objectives (
+                id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+                organization_id uuid NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+                project_id uuid REFERENCES projects(id) ON DELETE SET NULL,
+                parent_id uuid REFERENCES objectives(id) ON DELETE SET NULL,
+                owner_id uuid REFERENCES users(id) ON DELETE SET NULL,
+                level varchar(32) NOT NULL DEFAULT 'personal'
+                  CHECK (level IN ('company', 'team', 'individual', 'personal')),
+                title varchar(500) NOT NULL,
+                description text,
+                status varchar(32) NOT NULL DEFAULT 'active'
+                  CHECK (status IN ('draft', 'active', 'at_risk', 'off_track', 'completed', 'archived')),
+                period varchar(32),
+                inserted_at timestamptz NOT NULL DEFAULT now(),
+                updated_at timestamptz NOT NULL DEFAULT now()
+              );
+              CREATE INDEX idx_objectives_org ON objectives (organization_id);
+              CREATE INDEX idx_objectives_project ON objectives (project_id);
+              CREATE INDEX idx_objectives_owner ON objectives (owner_id);
+              CREATE INDEX idx_objectives_parent ON objectives (parent_id);
+      rollback:
+        - dropTable:
+            tableName: objectives
+
+  # ── key_results ────────────────────────────────────────────────────────────
+  - changeSet:
+      id: 030-create-table-key-results
+      author: therobotplans
+      changes:
+        - sql:
+            sql: |
+              CREATE TABLE key_results (
+                id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+                objective_id uuid NOT NULL REFERENCES objectives(id) ON DELETE CASCADE,
+                owner_id uuid REFERENCES users(id) ON DELETE SET NULL,
+                title varchar(500) NOT NULL,
+                unit varchar(64),
+                target_value numeric NOT NULL DEFAULT 100,
+                current_value numeric NOT NULL DEFAULT 0,
+                direction varchar(16) NOT NULL DEFAULT 'higher_better'
+                  CHECK (direction IN ('higher_better', 'lower_better')),
+                due_on date,
+                status varchar(32) NOT NULL DEFAULT 'on_track'
+                  CHECK (status IN ('on_track', 'at_risk', 'behind', 'completed')),
+                -- When true, current_value is auto-computed from linked item
+                -- completion (see Domains.Goals.recompute_progress/1), not edited.
+                auto_progress boolean NOT NULL DEFAULT false,
+                inserted_at timestamptz NOT NULL DEFAULT now(),
+                updated_at timestamptz NOT NULL DEFAULT now()
+              );
+              CREATE INDEX idx_key_results_objective ON key_results (objective_id);
+              CREATE INDEX idx_key_results_owner ON key_results (owner_id);
+      rollback:
+        - dropTable:
+            tableName: key_results
+
+  # ── kr_item_links (KR ↔ item, drives auto-progress) ────────────────────────
+  - changeSet:
+      id: 030-create-table-kr-item-links
+      author: therobotplans
+      changes:
+        - sql:
+            sql: |
+              CREATE TABLE kr_item_links (
+                id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+                key_result_id uuid NOT NULL REFERENCES key_results(id) ON DELETE CASCADE,
+                item_id uuid NOT NULL REFERENCES items(id) ON DELETE CASCADE,
+                weight numeric NOT NULL DEFAULT 1.0,
+                inserted_at timestamptz NOT NULL DEFAULT now(),
+                updated_at timestamptz NOT NULL DEFAULT now()
+              );
+              CREATE UNIQUE INDEX idx_kr_item_links_unique
+                ON kr_item_links (key_result_id, item_id);
+              CREATE INDEX idx_kr_item_links_item ON kr_item_links (item_id);
+      rollback:
+        - dropTable:
+            tableName: kr_item_links
+
+  # ── okr_checkins ───────────────────────────────────────────────────────────
+  - changeSet:
+      id: 030-create-table-okr-checkins
+      author: therobotplans
+      changes:
+        - sql:
+            sql: |
+              CREATE TABLE okr_checkins (
+                id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+                objective_id uuid NOT NULL REFERENCES objectives(id) ON DELETE CASCADE,
+                author_id uuid REFERENCES users(id) ON DELETE SET NULL,
+                body text NOT NULL,
+                period varchar(32),
+                inserted_at timestamptz NOT NULL DEFAULT now(),
+                updated_at timestamptz NOT NULL DEFAULT now()
+              );
+              CREATE INDEX idx_okr_checkins_objective ON okr_checkins (objective_id);
+      rollback:
+        - dropTable:
+            tableName: okr_checkins

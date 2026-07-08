@@ -34,6 +34,8 @@ defmodule Therobotplans.Application do
       # scopes in TherobotplansWeb.Router and the MCPServers catalog.
       Therobotplans.MCP,
       Therobotplans.MCP.Projects,
+      Therobotplans.Domains.Items.MCP,
+      Therobotplans.Domains.Notifications.MCP,
       TherobotplansWeb.Endpoint
     ]
 

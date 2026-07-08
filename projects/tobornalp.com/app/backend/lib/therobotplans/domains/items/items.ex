@@ -218,8 +218,15 @@ defmodule Therobotplans.Domains.Items do
         |> Item.update_changeset(Map.put(attrs, :custom_fields, merged_custom))
         |> Repo.update()
         |> tap(fn
-          {:ok, updated} -> dispatch_update(updated, prev_assignee)
-          _ -> :ok
+          {:ok, updated} ->
+            dispatch_update(updated, prev_assignee)
+            # Best-effort KR auto-progress recompute (item status change may move
+            # a linked KR's completion). Guarded so a Goals failure never breaks
+            # the item write.
+            maybe_recompute_krs(updated)
+
+          _ ->
+            :ok
         end)
     end
   end
@@ -243,6 +250,23 @@ defmodule Therobotplans.Domains.Items do
       true ->
         try do
           apply(Therobotplans.Domains.Notifications.Dispatch, kind, [item])
+        rescue
+          _ -> :ok
+        catch
+          _, _ -> :ok
+        end
+
+      false ->
+        :ok
+    end
+  end
+
+  # Best-effort KR recompute when Goals exists; never raise into the write path.
+  defp maybe_recompute_krs(%{id: item_id}) do
+    case Code.ensure_loaded?(Therobotplans.Domains.Goals) do
+      true ->
+        try do
+          Therobotplans.Domains.Goals.item_status_changed(item_id)
         rescue
           _ -> :ok
         catch

@@ -73,6 +73,20 @@ defmodule TherobotplansWeb.Router do
             TherobotplansWeb.MCPConfig.plug_opts(Therobotplans.MCP.Projects)
   end
 
+  scope "/", host: "items." do
+    pipe_through [:api]
+    forward "/mcp",
+            Noizu.MCP.Transport.StreamableHTTP.Plug,
+            TherobotplansWeb.MCPConfig.plug_opts(Therobotplans.Domains.Items.MCP)
+  end
+
+  scope "/", host: "notifications." do
+    pipe_through [:api]
+    forward "/mcp",
+            Noizu.MCP.Transport.StreamableHTTP.Plug,
+            TherobotplansWeb.MCPConfig.plug_opts(Therobotplans.Domains.Notifications.MCP)
+  end
+
   scope "/api/v1", TherobotplansWeb do
     pipe_through [:api, :rate_limited_auth]
     post "/auth/register", AuthController, :register
@@ -180,6 +194,23 @@ defmodule TherobotplansWeb.Router do
       patch "/members/:member_user_id", ProjectController, :update_member
       delete "/members/:member_user_id", ProjectController, :remove_member
     end
+
+    # Items (work tracking) — basic CRUD. :id accepts UUID or human key (PREFIX-NNN).
+    resources "/items", ItemController, only: [:index, :create, :show, :update]
+
+    # Boards (queues) — methodology-aware kanban/scrum/waterfall/spiral boards.
+    resources "/queues", QueueController, only: [:index, :create, :show, :update]
+
+    # Tri-scoped item type/field definitions.
+    get "/definitions/fields", DefinitionController, :index_fields
+    post "/definitions/fields", DefinitionController, :create_field
+    get "/definitions/types", DefinitionController, :index_types
+    post "/definitions/types", DefinitionController, :create_type
+
+    # Notifications inbox (recipient = authenticated user).
+    get "/notifications", NotificationController, :index
+    get "/notifications/count", NotificationController, :count
+    post "/notifications/mark_read", NotificationController, :mark_read
   end
 
   # PBAC v2: Custom Roles (authenticated, permission-checked per action)
