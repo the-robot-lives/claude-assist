@@ -348,7 +348,10 @@ Full EA-style example (Car —> Engine, Car navigable to engine, composition):
    - both ends `aggregation="none"` → plain **association**;
    - one end `aggregation="shared"` → **aggregation** (hollow diamond on the shared end);
    - one end `aggregation="composite"` → **composition** (filled diamond on the composite
-     end). The diamond sits on the end that declares the aggregation.
+     end). The diamond sits on the **whole** — the classifier that owns the aggregating
+     property (equivalently, the type of the *opposite* member end); the end carrying
+     `aggregation="composite"` is typed by the **part**. Do not read "declares the
+     aggregation" as "is the diamond side".
 
 **Direct/attribute-only associations:** many EA class diagrams model a simple "has-a" as a
 plain typed `ownedAttribute` with **no** `uml:Association` packagedElement at all (the

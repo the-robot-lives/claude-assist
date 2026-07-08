@@ -1435,7 +1435,7 @@ namespace TheRobotDraft.Uml
             brt.SetParent(_root, false);
             brt.anchorMin = brt.anchorMax = new Vector2(1f, 1f);
             brt.pivot = new Vector2(1f, 1f);
-            brt.anchoredPosition = new Vector2(-8f, -40f);
+            brt.anchoredPosition = new Vector2(-8f, -72f);
             var bg = bar.AddComponent<Image>();
             bg.color = new Color(0.12f, 0.13f, 0.16f, 0.92f);
 
@@ -1923,7 +1923,11 @@ namespace TheRobotDraft.Uml
             items.Add(new MenuItem("💬  Comment / inline doc…", true, () => ShowCommentEditor(pid, screenPos)));
             items.Add(new MenuItem("🖼 Paste image into node", true, () => { CloseMenu(); AttachImageToNode(pid); }));
             if (_nodeImage.ContainsKey(pid))
+            {
+                items.Add(new MenuItem("🖼→◇ Import diagram from this image…", true,
+                    () => ShowImageImportDialogForNode(pid, screenPos)));
                 items.Add(new MenuItem("🗙 Remove image", true, () => { CloseMenu(); ClearNodeImage(pid); }));
+            }
 
             if (KindInfo.IsDiagramNode(el.Kind) && el.Kind != ElementKind.Note)
             {
@@ -2030,7 +2034,8 @@ namespace TheRobotDraft.Uml
                 MenuItem.Separator(),
                 new MenuItem("Generate ▸", true, () => ShowCanvasGenerateMenu(screenPos)),
                 MenuItem.Separator(),
-                new MenuItem("LLM settings…", true, () => ShowLlmSettings(screenPos)),
+                new MenuItem("Export ▸   (code · PNG · 3D model)", true, () => ShowExportMenu(screenPos)),
+                new MenuItem("Settings ▸   (LLM · vision · database)", true, () => ShowSettingsMenu(screenPos)),
             };
 
             CreateMenu(screenPos, _activePackage.IsValid ? PackageName(_activePackage) : "Canvas (no package yet)", items);
@@ -2099,6 +2104,7 @@ namespace TheRobotDraft.Uml
             CloseMenu();
             var items = new List<MenuItem>();
             items.Add(new MenuItem("⌁ Import code → elements…", true, () => ShowImportCodeDialog(screenPos)));
+            items.Add(new MenuItem("🖼 Import diagram from image…  (vision LLM)", true, () => ShowImageImportDialog(screenPos)));
             items.Add(new MenuItem("⌁ Generate code…  (wizard)", true, () => ShowCodeGenWizard(screenPos)));
             items.Add(MenuItem.Separator());
             items.Add(new MenuItem("⛁ Load DB schema → ERD…", true, () => ShowDbConnectDialog(screenPos)));
@@ -4524,14 +4530,17 @@ namespace TheRobotDraft.Uml
             _nodeLayer = NewLayer("NodeLayer");
             _handleLayer = NewLayer("HandleLayer"); // bend handles, above boxes
 
-            // Tab bar (top strip).
+            // In-app menu bar (File / Edit / Add / Generate / Layout / Export / Settings) — the tab bar sits below it.
+            BuildMenuBar();
+
+            // Tab bar (top strip, under the menu bar).
             var tabGo = new GameObject("TabBar", typeof(RectTransform));
             _tabBar = (RectTransform)tabGo.transform;
             _tabBar.SetParent(_root, false);
             _tabBar.anchorMin = new Vector2(0f, 1f); _tabBar.anchorMax = new Vector2(1f, 1f);
             _tabBar.pivot = new Vector2(0f, 1f);
             _tabBar.sizeDelta = new Vector2(0f, 38f);
-            _tabBar.anchoredPosition = new Vector2(0f, -2f);
+            _tabBar.anchoredPosition = new Vector2(0f, -32f);
             var tabBg = tabGo.AddComponent<Image>();
             tabBg.color = new Color(0.11f, 0.12f, 0.15f, 1f);
             tabBg.raycastTarget = false;
@@ -4543,7 +4552,7 @@ namespace TheRobotDraft.Uml
             hintRt.anchorMin = new Vector2(0f, 1f); hintRt.anchorMax = new Vector2(1f, 1f);
             hintRt.pivot = new Vector2(0f, 1f);
             hintRt.sizeDelta = new Vector2(0f, 26f);
-            hintRt.anchoredPosition = new Vector2(12f, -42f);
+            hintRt.anchoredPosition = new Vector2(12f, -74f);
             _hint = hintGo.AddComponent<Text>();
             _hint.font = _font; _hint.fontSize = 17;
             _hint.color = new Color(0.34f, 0.38f, 0.45f, 1f);

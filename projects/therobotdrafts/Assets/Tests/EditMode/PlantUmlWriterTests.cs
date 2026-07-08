@@ -272,6 +272,37 @@ namespace TheRobotDraft.Authoring.Tests
             AssertModelsEqual(m, back);
         }
 
+        [Test]
+        public void RoundTrip_Table_And_Extension()
+        {
+            // Table (emitted as `class <<table>>`) and Extension (emitted as `..> : <<extension>>`) now map back
+            // to their IR types on import, so both survive a round-trip.
+            var m = new IxModel();
+            var orders = new IxElement { Id = "orders", Name = "orders", Type = IxElementType.Table };
+            orders.Members.Add(new IxMember { Name = "id", Type = "bigint", Visibility = IxVisibility.Public });
+            orders.Members.Add(new IxMember { Name = "total", Type = "numeric", Visibility = IxVisibility.Public });
+            m.Elements.Add(orders);
+            m.Elements.Add(Cls("Profile"));
+            m.Elements.Add(Cls("Person"));
+            m.Edges.Add(new IxEdge { Type = IxEdgeType.Extension, FromId = "Profile", ToId = "Person" });
+
+            IxModel back = PlantUmlReader.Parse(PlantUmlWriter.Write(m));
+            Assert.AreEqual(IxElementType.Table, Find(back, "orders").Type, "class <<table>> re-imports as Table");
+            Assert.IsTrue(
+                back.Edges.Any(e => e.Type == IxEdgeType.Extension && e.FromId == "Profile" && e.ToId == "Person"),
+                "..> : <<extension>> re-imports as Extension");
+            AssertModelsEqual(m, back);
+        }
+
+        [Test]
+        public void RoundTrip_Diagram_Name_Via_Startuml_Header()
+        {
+            var m = new IxModel { Name = "Ordering" };
+            m.Elements.Add(Cls("Order"));
+            IxModel back = PlantUmlReader.Parse(PlantUmlWriter.Write(m));
+            Assert.AreEqual("Ordering", back.Name, "@startuml Name recovered into IxModel.Name");
+        }
+
         // ------------------------------------------------------------------ fixtures & helpers
 
         private static IxModel Representative()
@@ -350,6 +381,7 @@ namespace TheRobotDraft.Authoring.Tests
 
         private static void AssertModelsEqual(IxModel expected, IxModel actual)
         {
+            Assert.AreEqual(expected.Name, actual.Name, "diagram name");
             var ex = expected.Elements.ToDictionary(e => e.Id);
             var ac = actual.Elements.ToDictionary(e => e.Id);
             CollectionAssert.AreEquivalent(ex.Keys, ac.Keys, "element ids");
