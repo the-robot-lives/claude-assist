@@ -1,0 +1,5 @@
+convert/work/
+convert/corpus/
+__pycache__/
+node_modules/
+.next/
