@@ -1,7 +1,8 @@
 replicas: 0
 
 domain: starter.therobotlives.com
-appDomain: app.starter.therobotlives.com
+appDomain: appstarter.therobotlives.com
+cookieDomain: ".therobotlives.com"
 
 sandbox:
   enabled: true

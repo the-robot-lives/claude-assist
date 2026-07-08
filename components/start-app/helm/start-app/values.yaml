@@ -1,6 +1,10 @@
 replicas: 1
 domain: starter.therobotlives.com
-appDomain: app.starter.therobotlives.com
+appDomain: appstarter.therobotlives.com
+# appDomain is a sibling subdomain (not a child of domain), so the auth cookie
+# must be scoped to the shared parent zone for the OIDC/session flow to work
+# across both hosts. Defaults to ".{domain}" when unset.
+cookieDomain: ".therobotlives.com"
 
 backend:
   image: ops.noizu.com/start-app/backend:latest
