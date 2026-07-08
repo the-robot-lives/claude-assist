@@ -63,3 +63,11 @@ bool llama_robot_memory_write_now(
         const llama_robot_model_iface & iface,
         llama_robot_context_state & st,
         float salience);
+
+// cosine of entry i's key against the current query (key-projection of the
+// latest summary) — how strongly this memory matches the present context, i.e.
+// whether it is firing into recall right now. 0 if no summary yet / out of range.
+float llama_robot_memory_match_at(
+        const llama_robot_model_iface & iface,
+        const llama_robot_context_state & st,
+        size_t i);

@@ -1,5 +1,6 @@
 .PHONY: install-utilities install \
-        trd-build trd-run trd-test trd-open trd-clean trd-doctor
+        trd-build trd-run trd-test trd-open trd-clean trd-doctor \
+        rtui-build rtui-run rtui-shim rtui-rebuild rtui-clean rtui-log
 
 install-utilities:
 	@HOME_DIR="$(HOME)"; \
@@ -19,3 +20,7 @@ install: install-utilities
 # --- The Robot Draft (Unity/VR) — delegate to projects/therobotdrafts/Makefile ---
 trd-build trd-run trd-test trd-open trd-clean trd-doctor:
 	@$(MAKE) -C projects/therobotdrafts $(patsubst trd-%,%,$@)
+
+# --- robot-tui (therobot terminal UI) — delegate to the crate Makefile ---
+rtui-build rtui-run rtui-shim rtui-rebuild rtui-clean rtui-log:
+	@$(MAKE) -C 3rd-party/llama.cpp/tools/robot-tui $(patsubst rtui-%,%,$@)

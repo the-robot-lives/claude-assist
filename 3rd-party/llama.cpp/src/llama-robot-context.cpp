@@ -592,6 +592,30 @@ bool llama_robot_memory_get(const llama_context * ctx, int32_t i,
     return true;
 }
 
+bool llama_robot_memory_value(const llama_context * ctx, int32_t i, float * dst) {
+    if (ctx == nullptr || !ctx->robot_state || dst == nullptr) {
+        return false;
+    }
+    const auto & st = *ctx->robot_state;
+    if (i < 0 || (size_t) i >= st.mem.size()) {
+        return false;
+    }
+    const auto & v = st.mem[i].value;
+    std::copy(v.begin(), v.end(), dst);
+    return true;
+}
+
+float llama_robot_memory_match(const llama_context * ctx, int32_t i) {
+    if (ctx == nullptr || !ctx->robot_state || i < 0) {
+        return 0.0f;
+    }
+    const auto * iface = dynamic_cast<const llama_robot_model_iface *>(&ctx->get_model());
+    if (iface == nullptr) {
+        return 0.0f;
+    }
+    return llama_robot_memory_match_at(*iface, *ctx->robot_state, (size_t) i);
+}
+
 bool llama_robot_memory_write(llama_context * ctx, float salience) {
     if (ctx == nullptr) {
         return false;

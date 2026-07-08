@@ -66,7 +66,13 @@ state_banks:
 state_layers: [6, 12, 18]
 film_layers: [6, 12, 18]
 modulator:
-  dim: 8
+  # The modulator bus doubles as the episodic-memory value space (memory
+  # value_dim == modulator dim), so its width is memory's content bandwidth.
+  # The first 8 dims are named, interpretable mood channels; the remaining dims
+  # are an UNNAMED latent space that memory can embed richer content vectors
+  # into and FiLM projects back into the residual (n_embd). Widen for more
+  # memory capacity; narrow (=8) for pure mood. Re-export after changing.
+  dim: 32
   channels: [arousal, valence, attention, safety, novelty, focus, warmth, energy]
   source: glacial
 

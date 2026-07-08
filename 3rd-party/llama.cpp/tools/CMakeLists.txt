@@ -25,7 +25,10 @@ else()
         add_subdirectory(ui)
         add_subdirectory(cli)
         # ROBOT-EXT-BEGIN(build-tools-server)
-        add_subdirectory(robot-cli)
+        # robot-cli (C++ TUI fork) is parked — superseded by the Rust robot-tui
+        # crate (tools/robot-tui) driving the robot-ffi C shim. Left in-tree for
+        # reference but out of the build.
+        # add_subdirectory(robot-cli)
         # ROBOT-EXT-END
         add_subdirectory(server)
     endif()
@@ -46,5 +49,8 @@ else()
     # ROBOT-EXT-BEGIN(build-tools)
     add_subdirectory(robot-inspect)
     add_subdirectory(robot-run)
+    if (LLAMA_BUILD_COMMON)
+        add_subdirectory(robot-ffi)   # C shim for the Rust robot-tui
+    endif()
     # ROBOT-EXT-END
 endif()

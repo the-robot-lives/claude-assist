@@ -339,6 +339,22 @@ void llama_robot_memory_update(
     }
 }
 
+float llama_robot_memory_match_at(
+        const llama_robot_model_iface & iface,
+        const llama_robot_context_state & st,
+        size_t i) {
+    if (i >= st.mem.size() || st.last_summary.empty()) {
+        return 0.0f;
+    }
+    const ggml_tensor * kw = iface.robot_ext_tensor("robot.mem.summary.key.weight");
+    if (kw == nullptr) {
+        return 0.0f;
+    }
+    std::vector<float> query;
+    robot_mem_project(kw, st.last_summary, query);
+    return robot_mem_cosine(query, st.mem[i].key);
+}
+
 bool llama_robot_memory_write_now(
         const llama_robot_model_iface & iface,
         llama_robot_context_state & st,

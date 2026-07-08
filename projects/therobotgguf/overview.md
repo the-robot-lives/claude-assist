@@ -463,6 +463,34 @@ moves the next decode, rises to a peak, then decays monotonically to <5% of
 peak while the memory itself persists. The store rides the session checkpoint
 and exports as JSON (`memory_export`) for offline consolidation.
 
+**Memory bandwidth = modulator width.** Because recall injects into `m`, a
+memory's *value* is a modulator‑space vector (`value_dim == modulator dim`), so
+the width of the modulator bus is exactly how much content one memory can carry.
+The first channels are the named, interpretable mood dials (arousal, valence,
+safety …); the remaining dims are an **unnamed latent space** that the value
+head can embed richer content into and FiLM projects back into the residual
+(`n_embd`). Widening the modulator (e.g. 8 → 32) therefore widens memory from a
+pure mood dial toward genuine content recall, at the cost of more parameters in
+the FiLM and value projections; narrowing it back to the named channels gives
+pure affect. Everything downstream (FiLM γ/β, the value head) is sized by this
+one number, so it is a single conversion‑time knob.
+
+**Relation to attention.** Episodic memory *is* content‑addressed retrieval —
+query·key similarity then a weighted combination of values — so structurally it
+is a cousin of an attention head. The differences are what make it a distinct
+mechanism rather than another head: attention keeps *every* token's K/V for the
+life of the context window (dense, ephemeral, in‑band, full softmax, wiped at
+the window boundary), whereas episodic memory keeps *one compressed summary per
+salience‑gated event*, persists across the whole session and to disk, decays on
+a designed forgetting curve with capacity eviction, retrieves by recency‑
+weighted cosine top‑k, and injects its read one step behind through the
+modulator side‑channel. In short: an attention head is working memory — dense,
+high‑bandwidth, ephemeral; this store is long‑term memory — sparse, curated,
+decaying, persistent. Architecturally it is closer to an external retrieval
+memory (kNN‑LM, Memorizing Transformers, RETRO) than to a per‑layer head: the
+trade is fidelity for reach — attention is far sharper inside its window;
+episodic memory is what lets a moment survive past it.
+
 ---
 
 #### E6 — Delta executor (change‑triggered compute)

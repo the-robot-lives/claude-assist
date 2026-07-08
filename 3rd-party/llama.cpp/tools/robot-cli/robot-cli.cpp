@@ -37,6 +37,7 @@
 
 #include <sys/ioctl.h>          // ROBOT-FORK (terminal size)
 #include <unistd.h>             // ROBOT-FORK
+#include <termios.h>            // ROBOT-FORK (raw-mode input for the owned TUI)
 
 #if defined(_WIN32)
 #define WIN32_LEAN_AND_MEAN
@@ -56,35 +57,22 @@ const char * LLAMA_ASCII_LOGO = R"(
                                     ▀▀    ▀▀
 )";
 
-// ─────────────────────────── ROBOT-FORK: live panel ───────────────────────────
+// ───────────────────────── ROBOT-FORK: owned split-pane TUI ─────────────────────────
 //
-// A top status panel drawn with ANSI. We reserve `height` rows at the top of the
-// screen and set the scroll region (DECSTBM) to start below them, so the CLI's
-// streaming text never overwrites the panel and scrolling leaves it in place.
-// Reads are cheap host-side snapshots of the robot context; they run on the main
-// thread while the server's inference thread decodes — fine for a debug view.
+// A full-screen two-column UI drawn on the alternate screen buffer. The left
+// column is the scrolling conversation (word-wrapped tail); the right column is
+// a full-height therobot state pane; the bottom row is the input line. All chat
+// text is routed into `transcript` and the whole screen is repainted, so we own
+// the output space entirely rather than fighting the CLI's raw stdout stream.
+//
+// Metal-safety: probe read-outs run a compute graph on the backend, so they are
+// only evaluated at idle turn boundaries (with_probes=true). Per-token repaints
+// during streaming pass with_probes=false and reuse the cached probe lines; the
+// other read-outs (modulator, memory, recall, delta) are host-side struct reads,
+// safe to sample live.
 
-struct robot_panel_state {
-    bool                enabled = false;
-    int                 height  = 6;
-    int                 rows    = 24;
-    int                 cols    = 100;
-    llama_context *     ctx     = nullptr;
-    const llama_model * model   = nullptr;
-    std::string         probe_row = "probes:";   // cached; probe_eval only runs at idle
-};
-static robot_panel_state g_robot_panel;
-
-static void robot_panel_term_size(int * rows, int * cols) {
-    struct winsize ws;
-    if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws) == 0 && ws.ws_col > 0 && ws.ws_row > 0) {
-        *rows = ws.ws_row; *cols = ws.ws_col;
-    } else { *rows = 24; *cols = 100; }
-}
-
-// top class + confidence for one probe (softmax over the head's logits)
-static bool robot_panel_probe_top(llama_context * ctx, const llama_model * m, int tap,
-                                   const char * attr, int * cls, float * conf) {
+static bool robot_probe_top(llama_context * ctx, const llama_model * m, int tap,
+                            const char * attr, int * cls, float * conf) {
     int dim = llama_robot_probe_dim(m, tap, attr);
     if (dim <= 0) return false;
     std::vector<float> out(dim);
@@ -96,147 +84,206 @@ static bool robot_panel_probe_top(llama_context * ctx, const llama_model * m, in
     return true;
 }
 
-// write one panel row (absolute position, cleared), truncated to terminal width
-static void robot_panel_row(int row, const std::string & s) {
-    std::string t = s;
-    if ((int) t.size() > g_robot_panel.cols) t = t.substr(0, g_robot_panel.cols);
-    printf("\x1b[%d;1H\x1b[2K%s", row, t.c_str());
-}
+struct robot_ui {
+    bool                active = false;
+    llama_context *     ctx    = nullptr;
+    const llama_model * model  = nullptr;
+    std::string         transcript;
+    std::vector<std::string> probe_lines{ "probes: (pending)" }; // cached; refreshed at idle
+    int                 rows = 24, cols = 100, leftw = 60;
+    struct termios      saved_termios{};
+    bool                termios_saved = false;
 
-// with_probes=false skips llama_robot_probe_eval (which runs a compute graph on
-// the backend). NEVER pass true while the server's inference thread may be
-// decoding — concurrent backend use corrupts the Metal command queue. Live
-// per-token repaints pass false and reuse the cached probe row; probes are
-// refreshed only at turn boundaries when the inference thread is idle.
-static void robot_panel_draw(bool with_probes) {
-    if (!g_robot_panel.enabled || !g_robot_panel.ctx) return;
-    llama_context *     ctx = g_robot_panel.ctx;
-    const llama_model * m   = g_robot_panel.model;
-    char buf[512];
-
-    printf("\x1b" "7");   // save cursor + attrs
-
-    // row 1: reverse-video title bar
-    {
-        snprintf(buf, sizeof(buf), " therobot live state | memory: %d | %s",
-                 llama_robot_memory_count(ctx),
-                 llama_robot_delta_enabled(ctx) ? "delta ON" : "delta off");
-        std::string s = "\x1b[7m";
-        s += buf;
-        for (int i = (int) strlen(buf); i < g_robot_panel.cols; ++i) s += ' ';
-        s += "\x1b[0m";
-        printf("\x1b[1;1H\x1b[2K%s", s.c_str());
+    void measure() {
+        struct winsize ws;
+        if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws) == 0 && ws.ws_col > 0 && ws.ws_row > 0) {
+            rows = ws.ws_row; cols = ws.ws_col;
+        } else { rows = 24; cols = 100; }
+        leftw = cols * 3 / 5;
+        if (leftw < 24)        leftw = 24;
+        if (leftw > cols - 20) leftw = cols - 20;
+        if (leftw < 1)         leftw = 1;
     }
 
-    // row 2: modulator channels
-    {
-        std::string s = "m:";
+    static std::string bar(float v, float lo, float hi, int w) {
+        float f = (v - lo) / (hi - lo);
+        if (f < 0) f = 0; if (f > 1) f = 1;
+        int n = (int)(f * w);
+        std::string s;
+        for (int i = 0; i < w; ++i) s += (i < n ? '#' : '.');
+        return s;
+    }
+
+    // hard-wrap transcript (honoring newlines) into <=leftw byte lines
+    void wrap(std::vector<std::string> & out) const {
+        std::string cur;
+        for (char c : transcript) {
+            if (c == '\n') { out.push_back(cur); cur.clear(); continue; }
+            cur += c;
+            if ((int) cur.size() >= leftw) { out.push_back(cur); cur.clear(); }
+        }
+        out.push_back(cur);
+    }
+
+    // build the right-column content (state pane). with_probes re-evaluates the
+    // probe rows (backend compute — idle only) and caches them.
+    std::vector<std::string> right_lines(bool with_probes) {
+        std::vector<std::string> L;
+        char buf[512];
+        llama_context * c = ctx; const llama_model * m = model;
+
+        snprintf(buf, sizeof(buf), "therobot | mem %d | %s",
+                 llama_robot_memory_count(c),
+                 llama_robot_delta_enabled(c) ? "delta ON" : "delta off");
+        L.push_back(buf);
+        L.push_back("");
+
         int md = llama_robot_mod_dim(m);
         if (md > 0) {
             std::vector<float> mv(md);
-            llama_robot_mod_get(ctx, mv.data());
+            llama_robot_mod_get(c, mv.data());
+            L.push_back("modulator m:");
             for (int i = 0; i < md; ++i) {
                 const char * n = llama_robot_mod_channel(m, i);
-                snprintf(buf, sizeof(buf), " %s=%+.2f", n ? n : "?", mv[i]);
-                s += buf;
+                snprintf(buf, sizeof(buf), "  %-9s %+5.2f %s",
+                         n ? n : "?", mv[i], bar(mv[i], -4, 4, 10).c_str());
+                L.push_back(buf);
             }
+            L.push_back("");
         }
-        robot_panel_row(2, s);
-    }
 
-    // row 3: tap probes (top class per attribute). Only re-evaluate (backend
-    // compute) when idle; otherwise reuse the cached row from the last turn.
-    if (with_probes) {
-        std::string s = "probes:";
-        for (int t = 0; t < llama_robot_tap_count(m); ++t) {
-            snprintf(buf, sizeof(buf), " %s[", llama_robot_tap_name(m, t)); s += buf;
-            for (int a = 0; a < llama_robot_tap_attr_count(m, t); ++a) {
-                const char * attr = llama_robot_tap_attr(m, t, a);
-                int c; float cf;
-                if (robot_panel_probe_top(ctx, m, t, attr, &c, &cf)) {
-                    snprintf(buf, sizeof(buf), "%s=%d@%.2f ", attr, c, cf); s += buf;
+        if (with_probes) {
+            probe_lines.clear();
+            probe_lines.push_back("probes (attr=class@conf):");
+            for (int t = 0; t < llama_robot_tap_count(m); ++t) {
+                std::string row = "  ";
+                row += llama_robot_tap_name(m, t);
+                for (int a = 0; a < llama_robot_tap_attr_count(m, t); ++a) {
+                    const char * attr = llama_robot_tap_attr(m, t, a);
+                    int cl; float cf;
+                    if (robot_probe_top(c, m, t, attr, &cl, &cf)) {
+                        snprintf(buf, sizeof(buf), " %s=%d@%.2f", attr, cl, cf);
+                        row += buf;
+                    }
                 }
+                probe_lines.push_back(row);
             }
-            if (!s.empty() && s.back() == ' ') s.pop_back();
-            s += "]";
         }
-        g_robot_panel.probe_row = s;
-    }
-    robot_panel_row(3, g_robot_panel.probe_row);
+        for (auto & s : probe_lines) L.push_back(s);
+        L.push_back("");
 
-    // row 4: episodic memory list (newest first): #idx(salience@age)
-    {
-        int nmem = llama_robot_memory_count(ctx);
-        std::string s = "mem:";
-        int show = nmem < 6 ? nmem : 6;
+        int nmem = llama_robot_memory_count(c);
+        snprintf(buf, sizeof(buf), "episodic memory: %d", nmem);
+        L.push_back(buf);
+        int show = nmem < 10 ? nmem : 10;
         for (int k = 0; k < show; ++k) {
             int idx = nmem - 1 - k;
             float sal; uint64_t age;
-            if (llama_robot_memory_get(ctx, idx, &sal, nullptr, &age)) {
-                snprintf(buf, sizeof(buf), " #%d(%.1f@%llut)", idx, sal, (unsigned long long) age);
-                s += buf;
+            if (llama_robot_memory_get(c, idx, &sal, nullptr, &age)) {
+                snprintf(buf, sizeof(buf), "  #%-3d sal %6.2f  %llu tok ago",
+                         idx, sal, (unsigned long long) age);
+                L.push_back(buf);
             }
         }
-        if (nmem > show) { snprintf(buf, sizeof(buf), " +%d older", nmem - show); s += buf; }
-        if (nmem == 0)   s += " (none)";
-        robot_panel_row(4, s);
-    }
+        if (nmem > show) { snprintf(buf, sizeof(buf), "  … +%d older", nmem - show); L.push_back(buf); }
+        if (nmem == 0)   L.push_back("  (none yet)");
+        L.push_back("");
 
-    // row 5: recall magnitude + delta keep-rate
-    {
-        std::string s = "recall:";
-        int md = llama_robot_mod_dim(m);
         if (md > 0) {
             std::vector<float> r(md);
-            if (llama_robot_memory_recall(ctx, r.data())) {
+            if (llama_robot_memory_recall(c, r.data())) {
                 float nr = 0; for (float v : r) nr += v * v; nr = std::sqrt(nr);
-                snprintf(buf, sizeof(buf), " ||recall||=%.3f", nr); s += buf;
+                snprintf(buf, sizeof(buf), "||recall|| = %.3f", nr);
+                L.push_back(buf);
             }
         }
-        if (llama_robot_delta_enabled(ctx)) {
-            snprintf(buf, sizeof(buf), "   delta keep=%.2f (%llu tok)",
-                     llama_robot_delta_keep_rate(ctx),
-                     (unsigned long long) llama_robot_delta_tokens(ctx));
-            s += buf;
+        if (llama_robot_delta_enabled(c)) {
+            snprintf(buf, sizeof(buf), "delta keep = %.2f (%llu tok)",
+                     llama_robot_delta_keep_rate(c),
+                     (unsigned long long) llama_robot_delta_tokens(c));
+            L.push_back(buf);
         }
-        robot_panel_row(5, s);
+        return L;
     }
 
-    // row 6: separator
-    {
-        std::string s(g_robot_panel.cols, '-');
-        printf("\x1b[6;1H\x1b[2K%s", s.c_str());
+    void repaint(bool with_probes) {
+        if (!active) return;
+        measure();
+        std::vector<std::string> R = right_lines(with_probes);
+        std::vector<std::string> Lw;
+        wrap(Lw);
+        const int rightw = cols - leftw - 3;
+        const int body   = rows - 1;                 // last row = input
+        int lstart = (int) Lw.size() > body ? (int) Lw.size() - body : 0;
+
+        printf("\x1b[H");
+        for (int r = 0; r < body; ++r) {
+            std::string lt = (lstart + r < (int) Lw.size()) ? Lw[lstart + r] : "";
+            if ((int) lt.size() < leftw) lt.append(leftw - lt.size(), ' ');
+            else                          lt = lt.substr(0, leftw);
+            std::string rt = r < (int) R.size() ? R[r] : "";
+            if (rightw > 0 && (int) rt.size() > rightw) rt = rt.substr(0, rightw);
+            printf("\x1b[%d;1H\x1b[2K%s \x1b[90m\xe2\x94\x82\x1b[0m %s", r + 1, lt.c_str(), rt.c_str());
+        }
+        printf("\x1b[%d;1H\x1b[2K", rows);           // clear input row (drawn by read_line)
+        fflush(stdout);
     }
 
-    printf("\x1b" "8");   // restore cursor + attrs
-    fflush(stdout);
-}
+    void append(const std::string & s) { transcript += s; }
+    void note(const std::string & s)   { transcript += s; if (!s.empty() && s.back() != '\n') transcript += '\n'; }
 
-// clear screen, park the panel at the top, and confine scrolling below it
-static void robot_panel_enable(llama_context * ctx) {
-    if (ctx == nullptr) return;
-    const llama_model * m = llama_get_model(ctx);
-    if (!llama_robot_enabled(m)) return;      // stock model → behave as llama-cli
-    g_robot_panel.enabled = true;
-    g_robot_panel.ctx     = ctx;
-    g_robot_panel.model   = m;
-    robot_panel_term_size(&g_robot_panel.rows, &g_robot_panel.cols);
-    printf("\x1b[2J\x1b[H");                                       // clear
-    printf("\x1b[%d;%dr", g_robot_panel.height + 1, g_robot_panel.rows); // scroll region
-    printf("\x1b[%d;1H", g_robot_panel.height + 1);               // cursor into region
-    robot_panel_draw(false);   // no decode has run yet — nothing to probe
-    printf("\x1b[%d;1H", g_robot_panel.height + 1);
-    fflush(stdout);
-}
+    void draw_input(const std::string & line) {
+        printf("\x1b[%d;1H\x1b[2K\x1b[1m> \x1b[0m%s", rows, line.c_str());
+        fflush(stdout);
+    }
 
-static void robot_panel_disable() {
-    if (!g_robot_panel.enabled) return;
-    printf("\x1b[r");                              // reset scroll region
-    printf("\x1b[%d;1H", g_robot_panel.rows);      // cursor to bottom
-    fflush(stdout);
-    g_robot_panel.enabled = false;
-}
-// ─────────────────────────── end ROBOT-FORK panel ─────────────────────────────
+    // raw-mode single-line reader drawn on the input row. Returns the line;
+    // sets *eof on Ctrl-D at an empty line. Ctrl-C sets the global interrupt.
+    std::string read_line(bool * eof) {
+        *eof = false;
+        repaint(true);                 // idle → full state incl. probes
+        std::string line;
+        draw_input(line);
+        while (true) {
+            int ch = getchar();
+            if (ch == EOF || ch == 4) { if (line.empty()) { *eof = true; } return line; } // ^D
+            if (ch == '\r' || ch == '\n') { return line; }
+            if (ch == 3) { extern std::atomic<bool> g_ui_interrupt_flag; return std::string("/exit"); } // ^C → exit
+            if (ch == 127 || ch == 8) { if (!line.empty()) line.pop_back(); draw_input(line); continue; }
+            if (ch == 27) { getchar(); getchar(); continue; }          // swallow escape seqs (arrows)
+            if (ch >= 32 && ch < 127) { line += (char) ch; draw_input(line); continue; }
+            // ignore other control chars
+        }
+    }
+
+    void begin(llama_context * c) {
+        if (c == nullptr) return;
+        const llama_model * m = llama_get_model(c);
+        if (!llama_robot_enabled(m)) return;         // stock model → plain llama-cli
+        ctx = c; model = m; active = true;
+        if (tcgetattr(STDIN_FILENO, &saved_termios) == 0) {
+            termios_saved = true;
+            struct termios raw = saved_termios;
+            raw.c_lflag &= ~(ICANON | ECHO);          // char-at-a-time, no echo (we echo manually)
+            raw.c_cc[VMIN]  = 1;
+            raw.c_cc[VTIME] = 0;
+            tcsetattr(STDIN_FILENO, TCSANOW, &raw);
+        }
+        printf("\x1b[?1049h\x1b[2J\x1b[H");            // alt screen + clear
+        fflush(stdout);
+    }
+
+    void end() {
+        if (!active) return;
+        printf("\x1b[?1049l");                         // leave alt screen (restores shell scrollback)
+        fflush(stdout);
+        if (termios_saved) tcsetattr(STDIN_FILENO, TCSANOW, &saved_termios);
+        active = false;
+    }
+};
+
+static robot_ui g_ui;
+// ─────────────────────────── end ROBOT-FORK TUI ─────────────────────────────
 
 static std::atomic<bool> g_is_interrupted = false;
 static bool should_stop() {

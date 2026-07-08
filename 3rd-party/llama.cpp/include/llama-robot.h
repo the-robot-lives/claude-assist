@@ -135,6 +135,18 @@ LLAMA_API bool llama_robot_memory_get(
         const struct llama_context * ctx, int32_t i,
         float * salience, uint64_t * timestamp, uint64_t * age_tokens);
 
+// copy memory i's value vector (llama_robot_mod_dim() floats) into dst — this is
+// what the memory injects into the modulator when recalled, i.e. the mood/state
+// it re-instates. Returns false on out-of-range or dimension mismatch.
+LLAMA_API bool llama_robot_memory_value(
+        const struct llama_context * ctx, int32_t i, float * dst);
+
+// how strongly memory i matches the current context: cosine of its key against
+// the key-projection of the latest summary, in [-1, 1] (>0 means it is firing
+// into the recall vector right now). Works with untrained value heads — it only
+// needs the key projection. 0 if no decode has produced a summary yet.
+LLAMA_API float llama_robot_memory_match(const struct llama_context * ctx, int32_t i);
+
 // explicitly write the latest decode's summary with the given salience
 // (bypasses the gate — "this moment is noteworthy"); requires ≥1 prior decode
 LLAMA_API bool llama_robot_memory_write(struct llama_context * ctx, float salience);
