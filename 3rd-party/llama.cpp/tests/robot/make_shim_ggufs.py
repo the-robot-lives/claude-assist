@@ -58,3 +58,42 @@ shim(f"{out_dir}/shim-conflicting.gguf", "conflicting", conflicts=["steer-up"], 
 
 # E4: additive edit gated on the modulator bus (fires while m[arousal] > 2)
 shim(f"{out_dir}/shim-mod-gated.gguf", "mod-gated", gate="modulator:arousal>2", steer=1.0)
+
+# E8: a 10-module registry (integer steers so stacked effects are float-exact)
+import json
+import os
+
+reg_dir = f"{out_dir}/registry"
+os.makedirs(reg_dir, exist_ok=True)
+
+reg_entries = []
+
+
+def reg_shim(i, tags, depends=None, conflicts=None):
+    name = f"r{i}"
+    shim(f"{reg_dir}/{name}.gguf", name, depends=depends, conflicts=conflicts,
+         steer=float(i + 1))
+    reg_entries.append({
+        "name": name,
+        "file": f"{name}.gguf",
+        "tags": tags,
+        "selectivity": 0.90 + 0.01 * i,
+        "depends": depends or [],
+        "conflicts": conflicts or [],
+    })
+
+
+reg_shim(0, ["alpha", "core"])
+reg_shim(1, ["alpha"])
+reg_shim(2, ["alpha"])
+reg_shim(3, ["alpha"])
+reg_shim(4, ["beta"])
+reg_shim(5, ["beta"])
+reg_shim(6, ["beta"])
+reg_shim(7, ["beta"])
+reg_shim(8, ["gamma"], depends=["r0"])            # dependency auto-include
+reg_shim(9, ["gamma", "solo"], conflicts=["r8"])  # first-admitted r8 wins on gamma
+
+with open(f"{reg_dir}/registry.json", "w") as f:
+    json.dump({"spec_version": 1, "model": "deadbeef", "shims": reg_entries}, f, indent=2)
+print("wrote", f"{reg_dir}/registry.json")

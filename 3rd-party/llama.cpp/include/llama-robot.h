@@ -170,6 +170,36 @@ LLAMA_API int32_t llama_robot_settle(
         llama_token * out, int32_t n_out,
         int32_t * steps_used);
 
+//
+// E8 — accretion serving (proposal 005, spec §4)
+//
+// A registry.json indexes admitted shim modules with admission scores, task
+// tags, and the dependency graph. Per-request routing hot-swaps the attached
+// set by tags — dependencies auto-included, conflicts skipped (first admitted
+// wins), module files streamed in lazily — without context teardown. Routing
+// to an empty tag set restores core-path outputs bit-identical to a
+// never-routed context (the zero-forgetting invariant, 005 test 2). A
+// registry must outlive every context routed from it.
+//
+
+struct llama_robot_registry; // opaque
+
+LLAMA_API struct llama_robot_registry * llama_robot_registry_load(const struct llama_model * model, const char * path);
+LLAMA_API void llama_robot_registry_free(struct llama_robot_registry * reg);
+
+LLAMA_API int32_t      llama_robot_registry_count(const struct llama_robot_registry * reg);
+LLAMA_API const char * llama_robot_registry_name (const struct llama_robot_registry * reg, int32_t i);
+LLAMA_API float        llama_robot_registry_selectivity(const struct llama_robot_registry * reg, int32_t i);
+
+// route the context to the given task tags; returns the number of registry
+// shims now attached, or -1 on error. Manually attached shims are untouched.
+LLAMA_API int32_t llama_robot_route(struct llama_context * ctx, struct llama_robot_registry * reg,
+        const char ** tags, int32_t n_tags);
+
+// export the session's episodic memory traces as JSON — the raw material the
+// offline consolidation pipeline distills into new shim modules
+LLAMA_API bool llama_robot_memory_export(struct llama_context * ctx, const char * path);
+
 #ifdef __cplusplus
 }
 #endif

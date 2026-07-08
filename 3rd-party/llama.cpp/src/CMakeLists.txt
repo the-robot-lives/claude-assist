@@ -43,6 +43,7 @@ add_library(llama
             llama-robot-hparams.cpp
             llama-robot-memory.cpp
             llama-robot-model.cpp
+            llama-robot-registry.cpp
             llama-robot-settle.cpp
             llama-robot-shim.cpp
             llama-robot-state.cpp
@@ -63,6 +64,9 @@ set_target_properties(llama PROPERTIES
 
 target_include_directories(llama PRIVATE .)
 target_include_directories(llama PUBLIC ../include)
+# ROBOT-EXT-BEGIN(build-vendor) — vendored nlohmann/json for the E8 registry
+target_include_directories(llama PRIVATE ../vendor)
+# ROBOT-EXT-END
 target_compile_features   (llama PRIVATE cxx_std_17) # don't bump
 
 target_link_libraries(llama PUBLIC ggml)

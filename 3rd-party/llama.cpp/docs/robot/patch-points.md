@@ -16,6 +16,7 @@ New-file extension code (no fences needed, never conflicts):
 - `src/llama-robot-delta.{h,cpp}` — E6 delta executor: per-block fire decisions, held-output blending, heartbeat sweeps, compute trace
 - `src/llama-robot-executor.{h,cpp}` — the shared iterate-until-quiet control structure (E6 across tokens, E7 across settling rounds)
 - `src/llama-robot-settle.cpp` — E7 settling decoder: canvas loop, jacobi-ar objective, m-scheduled settling depth
+- `src/llama-robot-registry.{h,cpp}` — E8 accretion serving: registry.json index, per-request tag routing over the E3 hot-swap machinery, memory trace export
 - `src/llama-robot-context.cpp` + `include/llama-robot.h` — public API: taps/probes, shim lifecycle, modulator get/set, session checkpoint
 - `tools/robot-inspect/` — manifest inspection tool (`llama-robot-inspect`)
 - `tests/robot/` — fixture generators + L0 parity test (manual; see its README)
@@ -35,6 +36,7 @@ New-file extension code (no fences needed, never conflicts):
 | 8 | `src/llama-context.h` | `context-last-res` | Public accessor `robot_last_res()` to `gf_res_prev` (tap read-back) + the per-context `robot_state` member (attached shims) |
 | 9 | `src/llama-model.cpp` | `rope-type` | Unreachable `LLM_ARCH_THEROBOT` case in `llama_model_rope_type`'s exhaustive switch (silences `-Wswitch`; robot models always carry the donor arch) |
 | 10 | `src/llama-graph.h` | `graph-params-robot` | `robot` (shim set) + `robot_epoch` fields on `llm_graph_params` |
+| 16 | `src/CMakeLists.txt` | `build-vendor` | Adds `../vendor` to the llama target's private includes (vendored `nlohmann/json` for the E8 registry) |
 | 11 | `src/llama-graph.h` | `graph-params-robot-reuse` | `allow_reuse()` returns false when the shim set or epoch differs — attach/detach forces a graph rebuild on the next decode |
 | 12 | `src/llama-context.cpp` | `context-include` | `#include "llama-robot-shim.h"` + `"llama-robot-state.h"` |
 | 13 | `src/llama-context.cpp` | `graph-params-robot-set` / `graph-params-robot-set-tail` | `graph_params()` assembles the struct locally and attaches `robot_state` + epoch before returning |

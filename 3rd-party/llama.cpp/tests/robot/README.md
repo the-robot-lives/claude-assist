@@ -1,10 +1,11 @@
-# therobot runtime tests (E1–E7)
+# therobot runtime tests (E1–E8)
 
 Manual smoke tests for the therobot spec loader (E1), bottleneck taps (E2),
 the shim engine (E3), state banks + modulator (E4), episodic memory (E5), the
-delta executor (E6), and the settling decoder (E7). Not yet wired into
-CMake/CI — that lands with the E0 CI gates (llamacpp-extensions.md §2). All
-commands run from the repo root; `$BUILD` is a configured build directory.
+delta executor (E6), the settling decoder (E7), and accretion serving (E8).
+Not yet wired into CMake/CI — that lands with the E0 CI gates
+(llamacpp-extensions.md §2). All commands run from the repo root; `$BUILD` is
+a configured build directory.
 
 ## Fixtures
 
@@ -220,3 +221,33 @@ keeps decaying underneath — the leaky state persisting across settling
 rounds is the un-commit escape hatch, not a bug); the optional
 `robot.settle.len.*` length head is not consumed yet (callers provide the
 canvas length).
+
+## E8 accretion serving
+
+`make_shim_ggufs.py` emits `registry/` — ten modules `r0..r9` (integer steers
+so stacked effects are measurable) indexed by `registry.json` with tags,
+admission scores, and the dependency graph: `r8` depends on `r0`, `r9`
+conflicts with `r8`. The test covers the S6 DoD: ten modules hot-loaded and
+routed per-request on one resident context (route alpha → beta swaps sets
+without teardown; the wide route keeps 9 non-conflicting modules with exact
+stacked effect); dependency auto-include (`gamma` pulls `r0` in);
+first-admitted-wins conflict resolution (`r9` skipped beside `r8`, attaches
+alone via its own tag); the zero-forgetting invariant — `route(none)` is
+**bit-identical** to a never-routed context (005 test 2); and
+`llama_robot_memory_export` writing the consolidation pipeline's raw material
+(JSON with provenance, m, and the salience-stamped entries).
+
+```bash
+g++ -std=c++17 -Iinclude -Iggml/include tests/robot/robot_registry_test.cpp \
+    -L$BUILD/bin -lllama -lggml -Wl,-rpath,$BUILD/bin -o /tmp/robot_registry_test
+/tmp/robot_registry_test /tmp/robot-fixtures
+# expect: E8 REGISTRY TEST: OK
+```
+
+E8 notes: routing manages only registry-loaded modules (manually attached
+shims are untouched); module files stream in lazily on first routing and are
+owned by the registry — free the registry only after the contexts routed from
+it; consolidation *training* is the offline Python pipeline's job — the
+runtime exports traces and loads distilled modules, nothing more. The
+`llama-server` routing endpoint follows when the server surface lands
+(deferred with E2's `/robot/taps`).
