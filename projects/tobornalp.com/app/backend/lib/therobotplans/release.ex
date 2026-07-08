@@ -30,7 +30,9 @@ defmodule Therobotplans.Release do
   """
   def seed(env \\ System.get_env("SEED_ENV") || "prod") do
     load_app()
-    System.put_env("SEED_ENV", to_string(env))
+    # Accept atom (:prod) or string ("prod") — normalize to a string once.
+    env = to_string(env)
+    System.put_env("SEED_ENV", env)
 
     for repo <- repos() do
       {:ok, _, _} =

@@ -58,7 +58,7 @@ defmodule Therobotplans.MixProject do
       # Noizu
       {:noizu_labs_entities, "~> 0.3.0"},
       {:semaphore, "~> 1.0"},
-      {:seed_helper, "~> 0.1.1"},
+      {:seed_helper, "~> 0.2.0"},
       {:smart_token, "~> 0.1.3"},
       {:noizu_mcp, "~> 0.1.3"},
 
