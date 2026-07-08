@@ -1,0 +1,32 @@
+@startuml
+' ============================================================================
+' METADATA
+'   author:       TheRobotDrafts Examples
+'   description:  Simple interaction overview - an activity flow whose nodes are interaction (sequence-diagram) uses.
+'   usecase:      Teach interaction-use (ref) as a node, control flow between interactions, one decision.
+'   complexity:   simple
+'   domain:       Checkout flow
+' ============================================================================
+title Example Interaction Overview - Simple Checkout
+
+' An interaction overview diagram is an activity diagram whose action nodes
+' are interactions (sequence diagrams). Each `ref` rectangle references
+' another interaction by name instead of being an opaque action.
+
+start
+
+' Interaction-use node: references the "BrowseCatalog" interaction diagram.
+ref over "BrowseCatalog"
+
+' A decision guards which interaction runs next based on a condition.
+if (Cart empty?) then (yes)
+  ref over "ShowEmpty"
+else (no)
+  ref over "CheckoutCart"
+endif
+
+ref over "ConfirmOrder"
+
+stop
+
+@enduml

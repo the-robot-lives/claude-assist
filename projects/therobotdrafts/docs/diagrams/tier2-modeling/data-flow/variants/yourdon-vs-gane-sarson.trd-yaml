@@ -1,0 +1,26 @@
+# .trd-yaml — TheRobotDrafts native model (IxModel serialization)
+name: Data Flow Variant - Yourdon vs Gane-Sarson
+elements:
+  - { id: Yourdon / DeMarco, type: Package, name: Yourdon / DeMarco }
+  - { id: YC, type: Boundary, name: Customer, stereotype: externalEntity }
+  - { id: YP1, type: UseCase, name: 1\nProcess\nOrder, stereotype: process }
+  - { id: YD1, type: Component, name: Orders\n(D1), stereotype: dataStore }
+  - { id: ~note1, type: Note, name: '**Yourdon shapes**', documentation: '**Yourdon shapes**\ncircle  = Process (number inside)\nstorage = open-ended rectangle\nsquare  = External entity' }
+  - { id: Gane-Sarson, type: Package, name: Gane-Sarson }
+  - { id: GC, type: Boundary, name: Customer, stereotype: externalEntity }
+  - { id: GP1, type: Boundary, name: 1.0\nProcess Order, stereotype: process }
+  - { id: GD1, type: Component, name: D1  Orders, stereotype: dataStore }
+  - { id: ~note2, type: Note, name: '**Gane-Sarson shapes**', documentation: '**Gane-Sarson shapes**\nrounded rect = Process (ID in a corner box)\ntwo-line box = Data store (numbered D1, D2)\nsquare       = External entity (often 4-corner)\n--\nSemantically IDENTICAL to Yourdon — only\nthe visual dialect differs. Pick one and\nuse it consistently within a diagram set.' }
+  - { id: ~note3, type: Note, name: '**How to choose**', documentation: '**How to choose**\n- Yourdon/DeMarco: common in US software-engineering texts and CASE tools.\n- Gane-Sarson:    common in enterprise/legacy analysis and some European tooling.\n- Rule: never mix notations in a single DFD. The converter tag\n(yourdon vs gane-sarson) drives the rendered shape set.' }
+edges:
+  - { id: e1, type: MessageReply, from: YC, to: YP1, label: order }
+  - { id: e2, type: MessageReply, from: YP1, to: YD1, label: order record }
+  - { id: e3, type: MessageReply, from: YP1, to: YC, label: receipt }
+  - { id: e4, type: NoteLink, from: ~note1, to: YP1 }
+  - { id: e5, type: MessageReply, from: GC, to: GP1, label: order }
+  - { id: e6, type: MessageReply, from: GP1, to: GD1, label: order record }
+  - { id: e7, type: MessageReply, from: GP1, to: GC, label: receipt }
+  - { id: e8, type: NoteLink, from: ~note2, to: GP1 }
+  - { id: e9, type: NoteLink, from: ~note3, to: GD1 }
+diagrams:
+  - { id: d1, name: Data Flow Variant - Yourdon vs Gane-Sarson, kind: sequence, layoutProvenance: Synthesized }

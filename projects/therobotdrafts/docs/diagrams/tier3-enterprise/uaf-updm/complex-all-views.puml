@@ -1,0 +1,77 @@
+' ============================================================================
+' METADATA
+'   author:       TheRobotDrafts Examples
+'   description:  Complex UAF/UPDM all-views across Strategic/Operational/Systems/Standards.
+'   usecase:      Teach multi-viewpoint grids, needlines, and measure relationships.
+'   complexity:   complex
+'   domain:       enterprise / defense-architecture
+' ============================================================================
+title Example UAF/UPDM - Complex All Views
+
+note as TopNote
+  Four viewpoint ROWS on the UAF grid:
+  Strategic, Operational, Systems, Standards.
+  Needlines cross rows; Measures annotate capabilities.
+end note
+
+' ---- Strategic viewpoint ----
+package "Strategic x Goals" as ST_G {
+  rectangle "Goal: Maritime Domain Awareness" as G1
+  rectangle "Measure: 99% Track Coverage" as M1
+}
+
+package "Strategic x Capabilities" as ST_C {
+  rectangle "Cap: Wide Area Surveillance" as C1
+  rectangle "Cap: Rapid Threat Response" as C2
+}
+
+' ---- Operational viewpoint ----
+package "Operational x Activities" as OP_A {
+  usecase "Conduct Patrol" as A1
+  usecase "Classify Contact" as A2
+  usecase "Alert Commander" as A3
+}
+
+package "Operational x Resources (Org)" as OP_O {
+  actor "Patrol Crew" as P1
+  actor "Watch Officer" as W1
+}
+
+' ---- Systems viewpoint ----
+package "Systems x Resources" as SY_R {
+  node "AIS Receiver" as S1
+  node "Radar" as S2
+  node "Fusion Engine" as S3
+  database "Track Store" as S4
+  queue "Alert Queue" as Q1
+}
+
+' ---- Standards viewpoint ----
+package "Standards x Profiles" as STD_P {
+  rectangle "STD: STANAG 4609 (FMV)" as ST1
+  rectangle "STD: Link 22" as ST2
+}
+
+G1 --> C1 : requires
+G1 --> C2 : requires
+G1 ..> M1 : measured by
+
+C1 ..> A1 : realized-by (needline)
+C2 ..> A3 : realized-by (needline)
+
+A1 --> A2 : feeds
+A2 --> A3 : triggers
+P1 --> A1 : performs
+W1 --> A3 : receives alert
+
+A2 ..> S3 : supported-by (needline)
+A3 ..> Q1 : emits (needline)
+
+S1 --> S3 : positional data
+S2 --> S3 : radar returns
+S3 --> S4 : persist
+S3 --> Q1 : enqueue alert
+Q1 --> W1 : notify
+
+S2 ..> ST2 : conforms-to
+S3 ..> ST1 : conforms-to

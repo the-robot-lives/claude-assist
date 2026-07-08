@@ -1,0 +1,50 @@
+' ============================================================================
+' METADATA
+'   author:       TheRobotDrafts Examples
+'   description:  Same unit as a UML-RT capsule (typed ports + protocol) vs a UML component
+'                 (provided/required interfaces).
+'   usecase:      Teach protocol-governed (UML-RT) vs interface-based (UML component) design.
+'   complexity:   variant
+'   domain:       rose-realtime / uml-rt
+' ============================================================================
+title Example Rose RealTime - Capsule vs Component
+
+note as TopNote
+  VARIANT: same "Scheduler" unit shown two ways.
+  LEFT: UML-RT CAPSULE - boundary ports typed by PROTOCOLS carrying SIGNALS.
+       Protocol-governed, concurrent, with an executable state machine.
+       Signals are asynchronous by default; timing/reactivity is first-class.
+  RIGHT: UML COMPONENT - provided/required INTERFACES (method signatures).
+       Interface-based, typically synchronous method calls; no built-in timing.
+  Capsules suit real-time/embedded; components suit enterprise/OOP wiring.
+end note
+
+' ============ LEFT: UML-RT CAPSULE ============
+class "Scheduler\n<<capsule>>" as RT_CAP {
+  behavior: state machine
+}
+class "JobProtocol\n<<protocol>>" as RT_P {
+  + in: submit(job), cancel(id)
+  + out: completed(result)
+}
+class "TimerProtocol\n<<protocol>>" as RT_PT {
+  + in: arm(ms)
+  + out: timeout()
+}
+rectangle "p_job: JobProtocol" as RT_PORT1
+rectangle "p_timer: TimerProtocol" as RT_PORT2
+
+RT_CAP --> RT_PORT1 : "port"
+RT_CAP --> RT_PORT2 : "port"
+RT_PORT1 --> RT_P : "typed by"
+RT_PORT2 --> RT_PT : "typed by"
+
+' ============ RIGHT: UML COMPONENT ============
+component "Scheduler\n<<component>>" as UML_COMP
+interface "IJobService\n+ submit(job)\n+ cancel(id)" as IJOB
+interface "ICompletionSink\n+ onCompleted(result)" as ISINK
+interface "ITimer\n+ arm(ms)" as ITIMER
+
+UML_COMP --() IJOB : "provides"
+UML_COMP ..() ISINK : "requires"
+UML_COMP ..() ITIMER : "requires"

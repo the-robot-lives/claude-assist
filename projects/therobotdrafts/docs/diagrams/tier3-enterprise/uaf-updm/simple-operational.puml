@@ -1,0 +1,38 @@
+' ============================================================================
+' METADATA
+'   author:       TheRobotDrafts Examples
+'   description:  Small UAF/UPDM Operational viewpoint on a grid (row x col).
+'   usecase:      Teach grid addressing and viewpoints for defense architecture.
+'   complexity:   simple
+'   domain:       enterprise / defense-architecture
+' ============================================================================
+title Example UAF/UPDM - Simple Operational Viewpoint
+
+' UAF organizes the architecture on a GRID of viewpoints (rows) x aspects (cols).
+' Rows: Strategic, Operational, Systems, Services, Standards, etc.
+' Cols: Personnel, OperationalActivities, Resources, Information, etc.
+' Below, a 3x3 grid is shown by nested packages (a TRD grid addressing aid).
+
+note as TopNote
+  UAF/UPDM grid:
+  Rows = viewpoints (Operational shown here)
+  Cols = aspects (OperationalActivities, Resources, Information)
+  Each cell holds a model element addressed by (row, col).
+end note
+
+package "Operational Row x OperationalActivities Col" as O_OA {
+  usecase "Conduct Surveillance" as UC1
+}
+
+package "Operational Row x Resources Col" as O_R {
+  actor "Sensor Operator" as A1
+}
+
+package "Operational Row x Information Col" as O_I {
+  rectangle "Track Report" as T1
+}
+
+' Needline = operational info flow between nodes, addressed across grid cells.
+A1 --> UC1 : performs (needline)
+UC1 --> T1 : produces (info)
+T1 --> A1 : consumed (info)

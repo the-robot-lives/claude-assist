@@ -1,0 +1,47 @@
+@startuml
+' ============================================================================
+' METADATA
+'   author:       TheRobotDrafts Examples
+'   description:  Same org at strategy layer vs business layer.
+'   usecase:      Contrasting abstraction levels.
+'   complexity:   medium
+'   domain:       enterprise-architecture / strategy
+' ============================================================================
+title Example ArchiMate Strategy - Variant Strategy vs Business
+
+note "TOP = Strategy layer (capabilities/outcomes)\nBOTTOM = Business layer (actors/processes)\nStrategy answers WHY; Business answers WHO does WHAT.\nStrategy = light green; Outcome = blue; Business = yellow." as Legend
+
+' ===== STRATEGY VIEW =====
+package "Strategy Layer (What + Why)" #E8F5E9 {
+  rectangle "<<capability>>\nOrder\nFulfillment" as SC1 #E8F5E9
+  rectangle "<<capability>>\nBilling" as SC2 #E8F5E9
+  rectangle "<<course of action>>\nAutomate\nFulfillment" as SCA #FFF9C4
+  rectangle "<<outcome>>\nSame-Day\nDelivery" as SO #E3F2FD
+
+  SC1 -[#444]-> SO : <<realization>>
+  SC2 -[#444]-> SO : <<realization>>
+  SCA -[#444]-> SC1 : <<realization>>
+}
+
+' ===== BUSINESS VIEW =====
+package "Business Layer (Who + How)" #FFFDE7 {
+  rectangle "<<business actor>>\nWarehouse" as BA1 #FFF9C4
+  rectangle "<<business role>>\nBilling\nClerk" as BR1 #FFF9C4
+  rectangle "<<business process>>\nPick &\nShip" as BP1 #FFF59D
+  rectangle "<<business process>>\nInvoice" as BP2 #FFF59D
+  rectangle "<<business service>>\nDelivery\nService" as BS1 #FFF59D
+  rectangle "<<business object>>\nShipment" as BO1 #FFF59D
+
+  BA1 -[#444]-> BP1 : <<assignment>>
+  BR1 -[#444]-> BP2 : <<assignment>>
+  BP1 -[#444]-> BS1 : <<realization>>
+  BP2 -[#444]-> BS1 : <<realization>>
+  BP1 -[#444]-> BO1 : <<access>>
+}
+
+' --- Cross-layer: business realizes strategy ---
+BP1 .[#888].> SC1 : <<realization>>
+BP2 .[#888].> SC2 : <<realization>>
+BS1 .[#888].> SO : <<realization>>
+
+@enduml

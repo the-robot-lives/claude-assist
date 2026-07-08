@@ -28,6 +28,7 @@
     <Compile Include="..\..\Assets\Scripts\Styleguide\YamlLite.cs" Link="YamlLite.cs" />
     <Compile Include="Program.cs" Link="Program.cs" />
     <Compile Include="DiffCheck.cs" Link="DiffCheck.cs" />
+    <Compile Include="Stats.cs" Link="Stats.cs" />
   </ItemGroup>
 
 </Project>

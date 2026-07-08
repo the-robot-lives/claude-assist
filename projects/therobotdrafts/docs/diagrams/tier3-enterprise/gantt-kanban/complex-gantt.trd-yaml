@@ -1,0 +1,6 @@
+# .trd-yaml — TheRobotDrafts native model (IxModel serialization)
+name: Example Gantt - Complex Release Plan
+elements:
+  - { id: '[Milestone', type: Component, name: '[Milestone', members: [{ name: 'Requirements Signoff] happens at [Requirements Doc]''s end', isOperation: false, visibility: Public, rawText: 'Requirements Signoff] happens at [Requirements Doc]''s end' }, { name: 'Code Freeze] happens at [Feature Pages]''s end', isOperation: false, visibility: Public, rawText: 'Code Freeze] happens at [Feature Pages]''s end' }, { name: 'Go-Live] happens at [Deploy]''s end', isOperation: false, visibility: Public, rawText: 'Go-Live] happens at [Deploy]''s end' }] }
+diagrams:
+  - { id: d1, name: Example Gantt - Complex Release Plan, kind: component, layoutProvenance: Synthesized }

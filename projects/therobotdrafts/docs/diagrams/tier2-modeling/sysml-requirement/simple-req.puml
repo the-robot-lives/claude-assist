@@ -1,0 +1,59 @@
+@startuml
+' ============================================================================
+' METADATA
+'   author:       TheRobotDrafts Examples
+'   description:  Simple SysML requirement graph — 3-4 «requirement» boxes + satisfy edge to a block.
+'   usecase:      Teach requirement box (id/text), satisfy/verify/derive/trace.
+'   complexity:   simple
+'   domain:       systems-engineering
+' ============================================================================
+title Example SysML Requirement - Simple Satisfaction
+
+' «requirement» is a SysML stereotype on Class. Inside: id and text properties.
+' «satisfy»/«verify»/«deriveReqt»/«trace» are dependency stereotypes between
+' requirements and other model elements (blocks, test cases).
+
+' ---- Requirements ---------------------------------------------------------
+class "Max Payload" <<requirement>> {
+  id : REQ-001
+  text : "The robot shall lift at least 5 kg."
+}
+
+class "Reach Distance" <<requirement>> {
+  id : REQ-002
+  text : "The robot shall reach 1.2 m horizontally."
+}
+
+class "Cycle Time" <<requirement>> {
+  id : REQ-003
+  text : "The robot shall complete a cycle in under 10 s."
+}
+
+' ---- Block that satisfies them -------------------------------------------
+class "ArmController" <<block>> {
+  payloadKg : 7
+  reachM : 1.3
+}
+
+' ---- Dependency stereotypes ---------------------------------------------
+' «satisfy» — a block/design realizes a requirement.
+' «verify»  — a test case demonstrates compliance.
+' «deriveReqt» — one requirement derived from another.
+' «trace» — generic historical/auxiliary link.
+class "PayloadBenchTest" <<testCase>> {
+  id : TC-001
+}
+
+"ArmController" ..> "Max Payload" : <<satisfy>>
+"ArmController" ..> "Reach Distance" : <<satisfy>>
+"PayloadBenchTest" ..> "Max Payload" : <<verify>>
+
+note bottom of "Max Payload"
+  <b>Requirement box convention:</b>
+  - id : the requirement identifier
+  - text : the "shall" statement
+  - Optional: source, verifyMethod,
+    risk, status.
+end note
+
+@enduml

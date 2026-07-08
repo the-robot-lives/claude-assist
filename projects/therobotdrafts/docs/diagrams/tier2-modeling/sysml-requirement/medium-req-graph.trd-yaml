@@ -1,0 +1,19 @@
+# .trd-yaml — TheRobotDrafts native model (IxModel serialization)
+name: Example SysML Requirement - Medium Graph
+elements:
+  - { id: 'Op: Continuous Operation', type: Requirement, name: 'Op: Continuous Operation', members: [{ name: id, isOperation: false, visibility: Public, type: REQ-O1, rawText: 'id : REQ-O1' }, { name: text, isOperation: false, visibility: Public, type: '"The system shall operate 24/7 without unscheduled downtime."', rawText: 'text : "The system shall operate 24/7 without unscheduled downtime."' }] }
+  - { id: 'Op: Remote Monitoring', type: Requirement, name: 'Op: Remote Monitoring', members: [{ name: id, isOperation: false, visibility: Public, type: REQ-O2, rawText: 'id : REQ-O2' }, { name: text, isOperation: false, visibility: Public, type: '"Operators shall monitor the system remotely."', rawText: 'text : "Operators shall monitor the system remotely."' }] }
+  - { id: 'Fn: Auto Restart', type: Requirement, name: 'Fn: Auto Restart', members: [{ name: id, isOperation: false, visibility: Public, type: REQ-F1, rawText: 'id : REQ-F1' }, { name: text, isOperation: false, visibility: Public, type: '"Software shall restart critical services within 30 s of failure."', rawText: 'text : "Software shall restart critical services within 30 s of failure."' }] }
+  - { id: 'Fn: Telemetry Stream', type: Requirement, name: 'Fn: Telemetry Stream', members: [{ name: id, isOperation: false, visibility: Public, type: REQ-F2, rawText: 'id : REQ-F2' }, { name: text, isOperation: false, visibility: Public, type: '"Software shall publish metrics at 1 Hz to the dashboard."', rawText: 'text : "Software shall publish metrics at 1 Hz to the dashboard."' }] }
+  - { id: 'Fn: Alert Pipeline', type: Requirement, name: 'Fn: Alert Pipeline', members: [{ name: id, isOperation: false, visibility: Public, type: REQ-F3, rawText: 'id : REQ-F3' }, { name: text, isOperation: false, visibility: Public, type: '"Software shall page on-call within 60 s of an SLO breach."', rawText: 'text : "Software shall page on-call within 60 s of an SLO breach."' }] }
+  - { id: SupervisorProcess, type: Block, name: SupervisorProcess }
+  - { id: MetricsExporter, type: Block, name: MetricsExporter }
+  - { id: AlertRouter, type: Block, name: AlertRouter }
+  - { id: '"RestartBench"  { id : TC-101 }', type: TestCase, name: '"RestartBench"  { id : TC-101 }' }
+  - { id: '"TelemetryCheck"  { id : TC-102 }', type: TestCase, name: '"TelemetryCheck"  { id : TC-102 }' }
+  - { id: '"AlertDrill"  { id : TC-103 }', type: TestCase, name: '"AlertDrill"  { id : TC-103 }' }
+  - { id: ~note1, type: Note, name: '<b>Edge stereotypes recap:</b>', documentation: '<b>Edge stereotypes recap:</b>\n«deriveReqt» — child derived from parent\n«satisfy»    — design/block fulfills req\n«verify»     — test case proves req\n«trace»      — generic link' }
+edges:
+  - { id: e1, type: NoteLink, from: ~note1, to: 'Op: Continuous Operation' }
+diagrams:
+  - { id: d1, name: Example SysML Requirement - Medium Graph, kind: class, layoutProvenance: Synthesized }

@@ -1,0 +1,14 @@
+# .trd-yaml — TheRobotDrafts native model (IxModel serialization)
+name: Example Communication - Simple Login Collaboration
+elements:
+  - { id: User, type: Lifeline, name: User, stereotype: actor }
+  - { id: LoginForm, type: Lifeline, name: LoginForm }
+  - { id: AuthService, type: Lifeline, name: AuthService }
+edges:
+  - { id: e1, type: MessageReply, from: User, to: LoginForm, label: '1: enterCredentials()' }
+  - { id: e2, type: MessageReply, from: LoginForm, to: AuthService, label: '2: authenticate(user, pass)' }
+  - { id: e3, type: MessageReply, from: AuthService, to: AuthService, label: '2.1: hashPassword()' }
+  - { id: e4, type: MessageReply, from: AuthService, to: LoginForm, label: '3: returnToken()' }
+  - { id: e5, type: MessageReply, from: LoginForm, to: User, label: '4: showDashboard()' }
+diagrams:
+  - { id: d1, name: Example Communication - Simple Login Collaboration, kind: sequence, layoutProvenance: Synthesized }

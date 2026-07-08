@@ -1,0 +1,25 @@
+' ============================================================================
+' METADATA
+'   author:       TheRobotDrafts Examples
+'   description:  Small office network: router, switch, 2 hosts, and links with addressing labels.
+'   usecase:      Teach device nodes, links, and addressing labels.
+'   complexity:   simple
+'   domain:       network / topology
+' ============================================================================
+title Example Network - Simple Office Net
+
+' Network shapes: node (router/switch/host), cloud (internet), database, queue.
+' Links use -- with labels showing addressing (IP, VLAN, port).
+
+cloud "Internet" as INET
+
+node "Router\n10.0.0.1" as R1
+node "Switch\n(VLAN 10)" as SW1
+node "Host A\n10.0.0.10" as H1
+node "Host B\n10.0.0.11" as H2
+
+' Edge with addressing labels.
+INET --> R1 : "WAN 203.0.113.2/30"
+R1 --> SW1 : "LAN 10.0.0.0/24 (trunk)"
+SW1 --> H1 : "access port Gi1/0/1"
+SW1 --> H2 : "access port Gi1/0/2"

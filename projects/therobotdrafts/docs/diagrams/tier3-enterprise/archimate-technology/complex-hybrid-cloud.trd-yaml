@@ -1,0 +1,26 @@
+# .trd-yaml — TheRobotDrafts native model (IxModel serialization)
+name: Example ArchiMate Technology - Complex Hybrid Cloud
+elements:
+  - { id: Legend, type: Note, name: 'Technology = GREEN.\nOn-prem (left) | Cloud (right) | Path=VPN/ExpressRoute', documentation: 'Technology = GREEN.\nOn-prem (left) | Cloud (right) | Path=VPN/ExpressRoute' }
+  - { id: On-Premises Datacenter, type: Package, name: On-Premises Datacenter }
+  - { id: N1, type: Boundary, name: \nBare Metal\nDB Host, parentId: On-Premises Datacenter, stereotype: node }
+  - { id: N2, type: Boundary, name: \nVM Host, parentId: On-Premises Datacenter, stereotype: node }
+  - { id: D1, type: Boundary, name: \nFirewall, parentId: On-Premises Datacenter, stereotype: device }
+  - { id: D2, type: Boundary, name: \nOn-Prem LB, parentId: On-Premises Datacenter, stereotype: device }
+  - { id: SW1, type: Boundary, name: \nPostgreSQL, parentId: On-Premises Datacenter, stereotype: system software }
+  - { id: SW2, type: Boundary, name: \nKVM, parentId: On-Premises Datacenter, stereotype: system software }
+  - { id: SW3, type: Boundary, name: \nLegacy App\nServer, parentId: On-Premises Datacenter, stereotype: system software }
+  - { id: NET1, type: Boundary, name: \nCorp LAN, parentId: On-Premises Datacenter, stereotype: network }
+  - { id: ART1, type: Boundary, name: \nLegacy.war, parentId: On-Premises Datacenter, stereotype: artifact }
+  - { id: Public Cloud, type: Package, name: Public Cloud }
+  - { id: C1, type: Boundary, name: \nEKS\nCluster, parentId: Public Cloud, stereotype: node }
+  - { id: C2, type: Boundary, name: \nLambda\nFunctions, parentId: Public Cloud, stereotype: node }
+  - { id: CD1, type: Boundary, name: \nCloud LB, parentId: Public Cloud, stereotype: device }
+  - { id: CSW1, type: Boundary, name: \nContainer\nRuntime, parentId: Public Cloud, stereotype: system software }
+  - { id: CSW2, type: Boundary, name: \nRDS Proxy, parentId: Public Cloud, stereotype: system software }
+  - { id: NET2, type: Boundary, name: \nCloud VPC, parentId: Public Cloud, stereotype: network }
+  - { id: ART2, type: Boundary, name: '\napi:v3.img', parentId: Public Cloud, stereotype: artifact }
+  - { id: VPN, type: Boundary, name: \nSite-to-Site\nVPN, stereotype: communication path }
+  - { id: SYNC, type: Boundary, name: \nCloud Sync\nAgent, stereotype: system software }
+diagrams:
+  - { id: d1, name: Example ArchiMate Technology - Complex Hybrid Cloud, kind: component, layoutProvenance: Synthesized }

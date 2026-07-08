@@ -1,0 +1,53 @@
+' ============================================================================
+' METADATA
+'   author:       TheRobotDrafts Examples
+'   description:  Zachman 6x6 with ~1/3 cells populated with example artifacts.
+'   usecase:      Teach representative artifacts per cell (data/process/network models).
+'   complexity:   medium
+'   domain:       enterprise / classification-taxonomy
+' ============================================================================
+title Example Zachman - Medium 6x6 (one-third populated)
+
+note as TopNote
+  ~12 of 36 cells populated with representative artifacts.
+  Columns: What | How | Where | Who | When | Why
+  Rows:    Planner | Owner | Designer | Builder | Programmer | User
+  Grid via nested packages (row -> column cell).
+end note
+
+package "Planner row" as PR {
+  package "P x What" as P_W { rectangle "List of Things" as P1 }
+  package "P x How"  as P_H { rectangle "List of Processes" as P2 }
+  package "P x Where" as P_Wh { rectangle "Site Locations" as P3 }
+  package "P x Why"  as P_Y { rectangle "Business Purpose" as P4 }
+}
+
+package "Owner row" as OR {
+  package "O x What" as O_W { rectangle "Semantic Model" as O1 }
+  package "O x How"  as O_H { rectangle "Business Process" as O2 }
+  package "O x Where" as O_Wh { rectangle "Logistics Network" as O3 }
+}
+
+package "Designer row" as DR {
+  package "D x What" as D_W { rectangle "Data Model (ERD)" as D1 }
+  package "D x How"  as D_H { rectangle "App Architecture" as D2 }
+  package "D x Where" as D_Wh { rectangle "System Geography" as D3 }
+}
+
+package "Builder row" as BR {
+  package "B x How"  as B_H { rectangle "Program Spec" as B1 }
+}
+
+package "Programmer row" as PRG {
+  package "Pg x How" as Pg_H { rectangle "Source Code" as Pg1 }
+}
+
+' Refinement down the What column.
+P1 --> O1 : refines
+O1 --> D1 : refines
+
+' Refinement down the How column.
+P2 --> O2 : refines
+O2 --> D2 : refines
+D2 --> B1 : refines
+B1 --> Pg1 : refines

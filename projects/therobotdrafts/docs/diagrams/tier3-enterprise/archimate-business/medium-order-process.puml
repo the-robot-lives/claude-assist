@@ -1,0 +1,50 @@
+@startuml
+' ============================================================================
+' METADATA
+'   author:       TheRobotDrafts Examples
+'   description:  Order-to-cash process with roles, events, objects.
+'   usecase:      Teaching process steps, events, serving relationships.
+'   complexity:   medium
+'   domain:       enterprise-architecture / business
+' ============================================================================
+title Example ArchiMate Business - Medium Order Process
+
+note "Business layer = YELLOW.\nEvent=amber border | Object=pale | Service=gold" as Legend
+
+' --- Actors / roles ---
+rectangle "<<business actor>>\nCustomer" as CUST #FFF9C4
+rectangle "<<business role>>\nSales Rep" as REP #FFF9C4
+rectangle "<<business role>>\nWarehouse\nManager" as WM #FFF9C4
+
+' --- Process steps ---
+rectangle "<<business process>>\nReceive\nOrder" as P1 #FFF59D
+rectangle "<<business process>>\nValidate\nOrder" as P2 #FFF59D
+rectangle "<<business process>>\nPick &\nPack" as P3 #FFF59D
+rectangle "<<business process>>\nShip" as P4 #FFF59D
+rectangle "<<business process>>\nInvoice" as P5 #FFF59D
+rectangle "<<business process>>\nClose" as P6 #FFF59D
+
+' --- Events / objects / services ---
+rectangle "<<business event>>\nOrder\nPlaced" as E1 #FFE082
+rectangle "<<business object>>\nSales\nOrder" as OBJ #FFFDE7
+rectangle "<<business service>>\nOrder\nFulfillment" as SVC #FFF176
+rectangle "<<product>>\nExpress\nDelivery" as PROD #FFE0B2
+
+CUST -[#444]-> E1 : <<triggers>>
+E1 -[#444]-> P1 : <<triggering>>
+REP -[#444]-> P2 : <<assignment>>
+WM -[#444]-> P3 : <<assignment>>
+
+P1 -[#444]-> P2 : <<triggering>>
+P2 -[#444]-> P3 : <<triggering>>
+P3 -[#444]-> P4 : <<triggering>>
+P4 -[#444]-> P5 : <<triggering>>
+P5 -[#444]-> P6 : <<triggering>>
+
+P2 -[#444]-> OBJ : <<access>>
+P4 -[#444]-> OBJ : <<access>>
+P6 -[#444]-> SVC : <<realization>>
+SVC -[#444]-> CUST : <<serving>>
+PROD -[#444]-> SVC : <<aggregation>>
+
+@enduml

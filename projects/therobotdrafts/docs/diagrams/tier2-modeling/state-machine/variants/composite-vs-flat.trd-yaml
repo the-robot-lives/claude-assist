@@ -1,0 +1,36 @@
+# .trd-yaml — TheRobotDrafts native model (IxModel serialization)
+name: Example State Machine Variant - Composite vs Flat
+elements:
+  - { id: ~start1, type: StateStart, name: start }
+  - { id: Idle, type: State, name: Idle }
+  - { id: Playing, type: State, name: Playing }
+  - { id: Loading, type: State, name: Loading, parentId: Playing }
+  - { id: Buffering, type: State, name: Buffering, parentId: Playing }
+  - { id: Streaming, type: State, name: Streaming, parentId: Playing }
+  - { id: Paused, type: State, name: Paused, parentId: Playing }
+  - { id: Stopped, type: State, name: Stopped }
+  - { id: ~end2, type: StateEnd, name: end }
+edges:
+  - { id: e1, type: Transition, from: ~start1, to: Idle }
+  - { id: e2, type: Transition, from: ~start1, to: Loading }
+  - { id: e3, type: Transition, from: Loading, to: Buffering, label: data_ready }
+  - { id: e4, type: Transition, from: Buffering, to: Streaming, label: buffer_full }
+  - { id: e5, type: Transition, from: Streaming, to: Paused, label: pause }
+  - { id: e6, type: Transition, from: Paused, to: Streaming, label: resume }
+  - { id: e7, type: Transition, from: Streaming, to: Buffering, label: underrun }
+  - { id: e8, type: Transition, from: Idle, to: Playing, label: play(track) }
+  - { id: e9, type: Transition, from: Playing, to: Idle, label: stop }
+  - { id: e10, type: Transition, from: Playing, to: Stopped, label: end_of_stream }
+  - { id: e11, type: Transition, from: Stopped, to: Idle, label: reset }
+  - { id: e12, type: Transition, from: Stopped, to: ~end2 }
+  - { id: e13, type: Transition, from: ~start1, to: Idle }
+  - { id: e14, type: Transition, from: Idle, to: Loading, label: play(track) }
+  - { id: e15, type: Transition, from: Loading, to: Buffering, label: data_ready }
+  - { id: e16, type: Transition, from: Buffering, to: Streaming, label: buffer_full }
+  - { id: e17, type: Transition, from: Streaming, to: Paused, label: pause }
+  - { id: e18, type: Transition, from: Paused, to: Streaming, label: resume }
+  - { id: e19, type: Transition, from: Streaming, to: Buffering, label: underrun }
+  - { id: e20, type: Transition, from: Streaming, to: Stopped, label: end_of_stream }
+  - { id: e21, type: Transition, from: Stopped, to: Idle, label: reset }
+diagrams:
+  - { id: d1, name: Example State Machine Variant - Composite vs Flat, kind: state, layoutProvenance: Synthesized }

@@ -1,0 +1,11 @@
+# .trd-yaml — TheRobotDrafts native model (IxModel serialization)
+name: Example SysML Block BDD - Complex MBD Hierarchy
+elements:
+  - { id: ValueTypes, type: Package, name: ValueTypes }
+  - { id: MassKg, type: Class, name: MassKg, parentId: ValueTypes, stereotype: '(D,#FF7700) ValueType' }
+  - { id: PowerW, type: Class, name: PowerW, parentId: ValueTypes, stereotype: '(D,#FF7700) ValueType' }
+  - { id: TorqueNm, type: Class, name: TorqueNm, parentId: ValueTypes, stereotype: '(D,#FF7700) ValueType' }
+  - { id: IPower, type: Interface, name: IPower, members: [{ name: flow in  pwrIn, isOperation: false, visibility: Public, type: PowerW, rawText: 'flow in  pwrIn  : PowerW' }, { name: flow out pwrOut, isOperation: false, visibility: Public, type: PowerW, rawText: 'flow out pwrOut : PowerW' }] }
+  - { id: ICommand, type: Interface, name: ICommand, members: [{ name: in  cmd, isOperation: false, visibility: Public, type: Command, rawText: 'in  cmd   : Command' }, { name: out telemetry, isOperation: false, visibility: Public, type: Telemetry, rawText: 'out telemetry : Telemetry' }] }
+diagrams:
+  - { id: d1, name: Example SysML Block BDD - Complex MBD Hierarchy, kind: class, layoutProvenance: Synthesized }

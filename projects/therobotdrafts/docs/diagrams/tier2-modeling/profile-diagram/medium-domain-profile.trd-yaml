@@ -1,0 +1,24 @@
+# .trd-yaml — TheRobotDrafts native model (IxModel serialization)
+name: Example Profile Diagram - Medium Domain Profile
+elements:
+  - { id: EnterpriseProfile, type: Package, name: EnterpriseProfile, stereotype: profile }
+  - { id: 'Component  { }', type: Class, name: 'Component  { }', parentId: EnterpriseProfile, stereotype: '(M,#B4A7E5) metaclass' }
+  - { id: 'Class      { }', type: Class, name: 'Class      { }', parentId: EnterpriseProfile, stereotype: '(M,#B4A7E5) metaclass' }
+  - { id: Service, type: Class, name: Service, parentId: EnterpriseProfile, stereotype: '(S,#F2C9C9) stereotype', members: [{ name: endpoint, isOperation: false, visibility: Public, type: String, rawText: '+ endpoint : String' }, { name: version, isOperation: false, visibility: Public, type: String, rawText: '+ version  : String' }] }
+  - { id: RESTEndpoint, type: Class, name: RESTEndpoint, parentId: EnterpriseProfile, stereotype: '(S,#F2C9C9) stereotype', members: [{ name: method, isOperation: false, visibility: Public, type: HTTPMethod, rawText: '+ method : HTTPMethod' }, { name: path, isOperation: false, visibility: Public, type: String, rawText: '+ path   : String' }] }
+  - { id: Entity, type: Class, name: Entity, parentId: EnterpriseProfile, stereotype: '(S,#F2C9C9) stereotype', members: [{ name: tableName, isOperation: false, visibility: Public, type: String, rawText: '+ tableName : String' }] }
+  - { id: ValueObject, type: Class, name: ValueObject, parentId: EnterpriseProfile, stereotype: '(S,#F2C9C9) stereotype', members: [{ name: immutable, isOperation: false, visibility: Public, type: Boolean, rawText: '+ immutable : Boolean' }] }
+  - { id: Component, type: Class, name: Component, parentId: EnterpriseProfile }
+  - { id: Class, type: Class, name: Class, parentId: EnterpriseProfile }
+  - { id: ~note1, type: Note, name: '<b>Stereotype generalization</b>', documentation: '<b>Stereotype generalization</b>\nValueObject --|> Entity\nmeans «ValueObject» inherits the\ntableName tagged value from\n«Entity» and adds its own\nimmutable flag.  The base element\ntype is still Class.' }
+  - { id: ~note2, type: Note, name: '<b>Different metaclasses</b>', documentation: '<b>Different metaclasses</b>\nService extends Component; the\nothers extend Class.  A stereotype\nmust name exactly which metaclass\nit extends, because the tagged\nvalues only become applicable on\nelements of THAT metaclass.' }
+edges:
+  - { id: e1, type: Extend, from: Service, to: Component }
+  - { id: e2, type: Extend, from: RESTEndpoint, to: Class }
+  - { id: e3, type: Extend, from: Entity, to: Class }
+  - { id: e4, type: Extend, from: ValueObject, to: Class }
+  - { id: e5, type: Generalization, from: ValueObject, to: Entity }
+  - { id: e6, type: NoteLink, from: ~note1, to: Service }
+  - { id: e7, type: NoteLink, from: ~note2, to: RESTEndpoint }
+diagrams:
+  - { id: d1, name: Example Profile Diagram - Medium Domain Profile, kind: class, layoutProvenance: Synthesized }

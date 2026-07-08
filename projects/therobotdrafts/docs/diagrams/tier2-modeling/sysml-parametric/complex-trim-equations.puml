@@ -1,0 +1,108 @@
+@startuml
+' ============================================================================
+' METADATA
+'   author:       TheRobotDrafts Examples
+'   description:  Complex Parametric Diagram with 8+ constraint blocks in a constraint-property network binding many value properties for an aircraft trim/CG calculation.
+'   usecase:      Teach a large constraint-property network with explicit binding connectors across many value properties.
+'   complexity:   complex
+'   domain:       aerospace
+' ============================================================================
+title Example Parametric - Complex Trim/CG Equations
+
+note top of "WeightSum"
+  PARAMETRIC DIAGRAM NOTE:
+  EVERY edge here is a BINDING CONNECTOR (==)
+  meaning equality. The network is a system
+  of simultaneous equations, not a flow graph.
+  Constraint blocks evaluate the model's
+  value properties so they stay consistent.
+end note
+
+class "WeightSum" <<constraint>> {
+  { W_total = W_fus + W_wing + W_tail + W_eng + W_fuel }
+}
+
+class "MomentSum" <<constraint>> {
+  { CG = (W_fus*x_fus + W_wing*x_wing + W_tail*x_tail + W_eng*x_eng + W_fuel*x_fuel) / W_total }
+}
+
+class "LiftEq" <<constraint>> {
+  { L = 0.5 * rho * V^2 * S * CL }
+}
+
+class "WeightEq" <<constraint>> {
+  { L = W_total * g }
+}
+
+class "PitchMoment" <<constraint>> {
+  { M_pitch = L * x_ac - W_total * g * CG + T * z_thrust }
+}
+
+class "TrimCondition" <<constraint>> {
+  { M_pitch = 0 }
+}
+
+class "FuelBurn" <<constraint>> {
+  { W_fuel = W_fuel_init - SFC * T * t }
+}
+
+class "ThrustDrag" <<constraint>> {
+  { T = D }
+}
+
+class "DragEq" <<constraint>> {
+  { D = 0.5 * rho * V^2 * S * CD }
+}
+
+package "Binding context (inside an AircraftTrim block)" {
+  object "vW_total : Mass" as vW_total
+  object "vCG : Length" as vCG
+  object "vL : Force" as vL
+  object "vD : Force" as vD
+  object "vT : Force" as vT
+  object "vV : Velocity" as vV
+  object "vCL : Real" as vCL
+  object "vCD : Real" as vCD
+  object "vM_pitch : Torque" as vM_pitch
+  object "vW_fuel : Mass" as vW_fuel
+
+  class "WeightSumInst" as "cWS : WeightSum" <<constraint>> { }
+  class "MomentSumInst" as "cMS : MomentSum" <<constraint>> { }
+  class "LiftEqInst" as "cLE : LiftEq" <<constraint>> { }
+  class "WeightEqInst" as "cWE : WeightEq" <<constraint>> { }
+  class "PitchMomentInst" as "cPM : PitchMoment" <<constraint>> { }
+  class "TrimConditionInst" as "cTC : TrimCondition" <<constraint>> { }
+  class "FuelBurnInst" as "cFB : FuelBurn" <<constraint>> { }
+  class "ThrustDragInst" as "cTD : ThrustDrag" <<constraint>> { }
+  class "DragEqInst" as "cDE : DragEq" <<constraint>> { }
+}
+
+vW_total == cWS
+vCG == cMS
+vW_total == cMS
+vL == cLE
+vV == cLE
+vCL == cLE
+vL == cWE
+vW_total == cWE
+vM_pitch == cPM
+vL == cPM
+vCG == cPM
+vT == cPM
+vM_pitch == cTC
+vW_fuel == cFB
+vT == cFB
+vT == cTD
+vD == cTD
+vD == cDE
+vV == cDE
+vCD == cDE
+
+note right of cTC
+  TrimCondition (M_pitch = 0) binds the
+  pitch moment to zero, closing the loop.
+  The whole network is one coupled
+  equation set the solver must satisfy.
+end note
+
+@enduml

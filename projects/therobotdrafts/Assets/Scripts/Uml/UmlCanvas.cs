@@ -922,12 +922,24 @@ namespace TheRobotDraft.Uml
             // N cycles the empty-space drag mode (orbit → pan → X → Y → Z); Shift+N reverses.
             if (!ctrl && Input.GetKeyDown(KeyCode.N)) CycleNavMode(shift);
 
-            // Mouse wheel dollies the 3-D camera; Alt+wheel jumps the camera a fixed step along world Z (the
-            // replacement for the old up/down-a-layer navigation — there is no active-layer "pane" anymore, the
-            // whole diagram is shown in depth at once). The overlay UI does not zoom.
+            // Volumetric marquee depth (Shift-held only — see EndMarquee3D): Shift+D / Shift+"+"/"=" grow the
+            // depth reach one step, Shift+"-" shrinks it, Shift+F collapses back to 0 (flat "square" select).
+            if (shift)
+            {
+                if (Input.GetKeyDown(KeyCode.D)) AdjustMarqueeDepthReach(MarqueeDepthStepKey);
+                if (Input.GetKeyDown(KeyCode.Equals) || Input.GetKeyDown(KeyCode.KeypadPlus)) AdjustMarqueeDepthReach(MarqueeDepthStepKey);
+                if (Input.GetKeyDown(KeyCode.Minus) || Input.GetKeyDown(KeyCode.KeypadMinus)) AdjustMarqueeDepthReach(-MarqueeDepthStepKey);
+                if (!ctrl && Input.GetKeyDown(KeyCode.F)) ResetMarqueeDepthReach();
+            }
+
+            // Mouse wheel dollies the 3-D camera; Shift+wheel instead grows/shrinks the volumetric marquee's depth
+            // reach; Alt+wheel jumps the camera a fixed step along world Z (the replacement for the old up/down-a-
+            // layer navigation — there is no active-layer "pane" anymore, the whole diagram is shown in depth at
+            // once). The overlay UI does not zoom.
             float scroll = Input.mouseScrollDelta.y;
             if (Mathf.Abs(scroll) > 0.01f && !PointerOverUI())
             {
+                if (shift) { AdjustMarqueeDepthReach(scroll > 0f ? MarqueeDepthStepScroll : -MarqueeDepthStepScroll); return; }
                 if (!_mode2D && AltDown()) JumpCameraZ(scroll > 0f ? 1 : -1);
                 else _scene.Dolly(scroll);
                 if (_mode2D) Apply2DModeCamera(false);
@@ -936,7 +948,9 @@ namespace TheRobotDraft.Uml
 
             // 6-DOF camera keys (gated by the InputField guard above so they never fire while typing): Q/E roll,
             // W/S fly forward/back, A/D strafe, R/F rise/descend. Held-key driven, scaled by Time.deltaTime.
-            if (!_mode2D) HandleCameraKeys(ctrl);
+            // Suppressed while Shift is held — D/F are reused above for the volumetric-marquee depth controls, and
+            // free-flying the camera mid Shift-gesture (marquee drag or depth tweak) would fight both.
+            if (!_mode2D && !shift) HandleCameraKeys(ctrl);
 
             HandleSceneMouse(ctrl, shift, AltDown());
         }
@@ -963,6 +977,14 @@ namespace TheRobotDraft.Uml
         private Vector3 _dragLastWorld;     // last projected world point, for per-frame deltas
         private Vector2 _pressScreenPos;
         private const float DragThresholdPx = 4f;
+
+        // Volumetric marquee: extra depth (world units, behind the nearest match) swept by a Shift-marquee, on
+        // top of its screen-space rect. Persists across drags — Shift+D / Shift+scroll / Shift+"+"/"-" grow or
+        // shrink it, Shift+F resets it — so 0 always means the flat "square select" every other gesture keeps.
+        private float _marqueeDepthReach;
+        private const float MarqueeDepthEpsilon = 0.05f; // slack so the nearest match's own depth always counts
+        private const float MarqueeDepthStepKey = 0.5f;
+        private const float MarqueeDepthStepScroll = 0.25f;
 
         // Connect-by-drag (no modifier on a node): a temporary 3-D rubber-band edge from the source node's
         // center to the cursor's point on the source node's world-Z plane, plus the node currently hovered.
@@ -1425,23 +1447,51 @@ namespace TheRobotDraft.Uml
 
         // --- 3-D marquee selection (Shift-drag empty space) ---
 
-        /// <summary>Finish a marquee: select every node whose projected screen point falls inside the swept box.</summary>
+        /// <summary>Finish a marquee: select nodes whose projected screen point falls inside the swept box AND
+        /// whose depth is within <see cref="_marqueeDepthReach"/> of the nearest match — 0 reach (the default,
+        /// "square select") keeps only the frontmost layer under the band; growing the reach (Shift+D / Shift+
+        /// scroll / Shift+"+"/"-") extrudes it into a true volumetric select that also picks up nodes behind.</summary>
         private void EndMarquee3D(Vector2 screenPos)
         {
             if (_marquee != null) { Destroy(_marquee); _marquee = null; }
             Rect band = ScreenRect(_marqueeStart, screenPos);
             if (band.width < 3f && band.height < 3f) { Select(null); return; }
 
-            var hits = new List<ElementId>();
+            var candidates = new List<(ElementId id, float depth)>();
             foreach (var kv in _scene.Nodes)
             {
                 if (kv.Value == null) continue;
                 Vector3 sp = _scene.WorldToScreen(kv.Value.transform.position);
                 if (sp.z <= 0f) continue; // behind the camera
-                if (band.Contains(new Vector2(sp.x, sp.y))) hits.Add(kv.Key);
+                if (band.Contains(new Vector2(sp.x, sp.y))) candidates.Add((kv.Key, sp.z));
+            }
+
+            var hits = new List<ElementId>();
+            if (candidates.Count > 0)
+            {
+                float nearest = float.MaxValue;
+                foreach (var c in candidates) nearest = Mathf.Min(nearest, c.depth);
+                float maxDepth = nearest + MarqueeDepthEpsilon + _marqueeDepthReach;
+                foreach (var c in candidates) if (c.depth <= maxDepth) hits.Add(c.id);
             }
             SetSelection(hits);
-            Flash(hits.Count == 0 ? "marquee — nothing selected" : $"marquee selected {hits.Count}");
+            string depthNote = _marqueeDepthReach > 0f ? $" (depth reach {_marqueeDepthReach:0.0})" : "";
+            Flash(hits.Count == 0 ? "marquee — nothing selected" : $"marquee selected {hits.Count}{depthNote}");
+        }
+
+        /// <summary>Grow/shrink the volumetric marquee's depth reach by <paramref name="delta"/>, clamped at 0
+        /// (the flat "square select" state).</summary>
+        private void AdjustMarqueeDepthReach(float delta)
+        {
+            _marqueeDepthReach = Mathf.Max(0f, _marqueeDepthReach + delta);
+            Flash(_marqueeDepthReach <= 0f ? "marquee depth: square (flat)" : $"marquee depth reach: {_marqueeDepthReach:0.0}");
+        }
+
+        /// <summary>Collapse the volumetric marquee back down to a flat "square select" (depth reach 0).</summary>
+        private void ResetMarqueeDepthReach()
+        {
+            _marqueeDepthReach = 0f;
+            Flash("marquee depth reset (square)");
         }
 
         private const float OrbitYawPerPx = 0.4f;
@@ -2604,6 +2654,13 @@ namespace TheRobotDraft.Uml
             ElementKind.WhiteboardText => new Vector2(160f, 44f),
             ElementKind.WhiteboardCircle => new Vector2(132f, 90f),
             ElementKind.WhiteboardDiamond => new Vector2(116f, 82f),
+            ElementKind.WhiteboardTriangle => new Vector2(120f, 104f),
+            ElementKind.WhiteboardRectangle => new Vector2(132f, 84f),
+            ElementKind.WhiteboardCube => new Vector2(110f, 110f),
+            ElementKind.WhiteboardSphere => new Vector2(108f, 108f),
+            ElementKind.WhiteboardCylinder => new Vector2(100f, 120f),
+            ElementKind.WhiteboardDecahedron => new Vector2(108f, 108f),
+            ElementKind.WhiteboardBlob => new Vector2(116f, 104f),
             ElementKind.AsyncSend => new Vector2(160f, 60f),
             ElementKind.AsyncReceive => new Vector2(160f, 60f),
             ElementKind.SysmlProxyPort => new Vector2(24f, 24f),
@@ -4958,6 +5015,13 @@ namespace TheRobotDraft.Uml
                 (ElementKind.WhiteboardText, "Text"),
                 (ElementKind.WhiteboardCircle, "Circle / Bubble"),
                 (ElementKind.WhiteboardDiamond, "Diamond"),
+                (ElementKind.WhiteboardTriangle, "Triangle"),
+                (ElementKind.WhiteboardRectangle, "Rectangle"),
+                (ElementKind.WhiteboardCube, "Cube"),
+                (ElementKind.WhiteboardSphere, "Sphere"),
+                (ElementKind.WhiteboardCylinder, "Cylinder"),
+                (ElementKind.WhiteboardDecahedron, "Decahedron"),
+                (ElementKind.WhiteboardBlob, "Blob"),
                 (ElementKind.Cloud, "Cloud"),
                 (ElementKind.AsyncSend, "Async Send"),
                 (ElementKind.AsyncReceive, "Async Receive"),

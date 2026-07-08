@@ -1,0 +1,55 @@
+' ============================================================================
+' METADATA
+'   author:       TheRobotDrafts Examples
+'   description:  Same dashboard screen as low-fidelity (plain rectangles) vs high-fidelity
+'                 (styled rectangles with colors, closer to a mockup).
+'   usecase:      Teach fidelity levels - lo-fi for structure, hi-fi for look-and-feel.
+'   complexity:   variant
+'   domain:       wireframe / ui-mockup
+' ============================================================================
+title Example Wireframe - Lo-fi vs Hi-fi
+
+note as TopNote
+  VARIANT: same dashboard shown two ways.
+  TOP: LO-FI - plain boxes + labels, structural only, minutes to make.
+  BOTTOM: HI-FI - styled rectangles with color/styling, closer to final mockup.
+  Lo-fi is for agreeing STRUCTURE; hi-fi is for agreeing LOOK and copy.
+end note
+
+' ============ TOP: LO-FI ============
+rectangle "LO-FI: Dashboard" as LF_HDR
+rectangle "Nav: Home | Orders | Settings" as LF_NAV
+rectangle "+ Welcome +" as LF_WELCOME
+rectangle "Card: Revenue | Card: Orders | Card: Users" as LF_CARDS
+rectangle "Table: Order | Customer | Status" as LF_TBL
+
+LF_HDR -[hidden]down- LF_NAV
+LF_NAV -[hidden]down- LF_WELCOME
+LF_WELCOME -[hidden]down- LF_CARDS
+LF_CARDS -[hidden]down- LF_TBL
+
+' ============ BOTTOM: HI-FI ============
+skinparam rectangle {
+  BackgroundColor<<header>> #1E40AF
+  FontColor<<header>> #FFFFFF
+  BackgroundColor<<card>> #EFF6FF
+  BorderColor<<card>> #1E40AF
+  BackgroundColor<<nav>> #111827
+  FontColor<<nav>> #F9FAFB
+  BackgroundColor<<tablehead>> #DBEAFE
+}
+
+rectangle "=== Dashboard ===" <<header>> as H1
+rectangle "Home  |  Orders  |  Settings" <<nav>> as NAV
+rectangle "**Welcome back, Alex**\nHere is your overview today." as WELCOME
+rectangle "Revenue\n$48,250\n+12% MoM" <<card>> as CARD1
+rectangle "Orders\n1,204\n+3% MoM" <<card>> as CARD2
+rectangle "Active Users\n312\n+8% MoM" <<card>> as CARD3
+rectangle "Order | Customer | Status | Total\n1001 | Acme Corp | Shipped | $1,200\n1002 | Beta LLC | Pending | $800" <<tablehead>> as TBL
+
+H1 -[hidden]down- NAV
+NAV -[hidden]down- WELCOME
+WELCOME -[hidden]down- CARD1
+CARD1 -[hidden]right- CARD2
+CARD2 -[hidden]right- CARD3
+CARD1 -[hidden]down- TBL

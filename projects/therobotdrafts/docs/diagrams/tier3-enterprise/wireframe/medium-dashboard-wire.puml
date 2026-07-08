@@ -1,0 +1,42 @@
+@startsalt
+' ============================================================================
+' METADATA
+'   author:       TheRobotDrafts Examples
+'   description:  Medium dashboard screen: header, sidebar nav, content cards, table.
+'   usecase:      Teach a dashboard with multiple widget types (sidebar, cards, table).
+'   complexity:   medium
+'   domain:       wireframe / ui-mockup
+' ============================================================================
+title Example Wireframe - Medium Dashboard (lo-fi)
+
+{
+  {/ ++Dashboard++ | ++Reports++ | ++Settings++}
+  --
+  {
+    {Sidebar
+    ----
+    Home
+    Orders
+    Customers
+    Analytics
+    Admin}
+    |
+    {
+      {+ Welcome back, Alex +}
+      ..
+      {
+        {Card: Revenue}
+        | {Card: Orders}
+        | {Card: Active Users}
+      }
+      ..
+      {t
+        +Order | +Customer | +Status | +Total
+        #1001 | Acme Corp | Shipped | $1,200
+        #1002 | Beta LLC | Pending | $ 800
+        #1003 | Gamma Co | Shipped | $2,400
+      }
+    }
+  }
+}
+@endsalt

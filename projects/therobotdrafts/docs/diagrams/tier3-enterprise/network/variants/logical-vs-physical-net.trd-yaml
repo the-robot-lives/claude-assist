@@ -1,0 +1,31 @@
+# .trd-yaml — TheRobotDrafts native model (IxModel serialization)
+name: Example Network - Logical vs Physical
+elements:
+  - { id: VARIANT, type: Component, name: VARIANT, members: [{ name: same 3-tier app topology shown two ways., isOperation: false, visibility: Public, rawText: same 3-tier app topology shown two ways. }] }
+  - { id: L_INET, type: Cloud, name: Internet (logical) }
+  - { id: 'L_DMZ { node "Web tier" as L_WEB }', type: Package, name: DMZ segment }
+  - { id: 'L_APP { node "App tier" as L_APPN }', type: Package, name: App segment }
+  - { id: 'L_DATA { database "DB tier" as L_DB }', type: Package, name: Data segment }
+  - { id: L_DMZ, type: Component, name: L_DMZ }
+  - { id: L_APP, type: Component, name: L_APP }
+  - { id: L_DATA, type: Component, name: L_DATA }
+  - { id: P_INET, type: Cloud, name: Internet (physical) }
+  - { id: P_FW, type: DeploymentNode, name: FW-01\n203.0.113.1 }
+  - { id: P_SW_D, type: DeploymentNode, name: SW-DMZ-01\n172.16.20.1 }
+  - { id: P_WEB, type: DeploymentNode, name: WEB-01\n172.16.20.10 }
+  - { id: P_SW_A, type: DeploymentNode, name: SW-APP-01\n10.0.0.1 }
+  - { id: P_APP, type: DeploymentNode, name: APP-01\n10.0.0.20 }
+  - { id: P_DB, type: Database, name: DB-01\n10.0.0.30 }
+edges:
+  - { id: e1, type: DirectedAssociation, from: L_INET, to: L_DMZ, label: '"HTTPS flow"' }
+  - { id: e2, type: DirectedAssociation, from: L_DMZ, to: L_APP, label: '"app calls"' }
+  - { id: e3, type: DirectedAssociation, from: L_APP, to: L_DATA, label: '"queries"' }
+  - { id: e4, type: DirectedAssociation, from: P_INET, to: P_FW, label: '"eth0 (WAN)"' }
+  - { id: e5, type: DirectedAssociation, from: P_FW, to: P_SW_D, label: '"eth1 Gi1/0/1 (Cat6)"' }
+  - { id: e6, type: DirectedAssociation, from: P_SW_D, to: P_WEB, label: '"Gi1/0/2 (Cat6)"' }
+  - { id: e7, type: DirectedAssociation, from: P_FW, to: P_SW_A, label: '"eth2 Gi1/0/24 (fiber)"' }
+  - { id: e8, type: DirectedAssociation, from: P_SW_A, to: P_APP, label: '"Gi1/0/10 (Cat6)"' }
+  - { id: e9, type: DirectedAssociation, from: P_SW_A, to: P_DB, label: '"Gi1/0/11 (Cat6)"' }
+  - { id: e10, type: DirectedAssociation, from: P_APP, to: P_DB, label: '"TCP 5432"' }
+diagrams:
+  - { id: d1, name: Example Network - Logical vs Physical, kind: component, layoutProvenance: Synthesized }

@@ -1,0 +1,6 @@
+# .trd-yaml — TheRobotDrafts native model (IxModel serialization)
+name: Example SysML Block BDD - Simple Block Tree
+elements:
+  - { id: DroneSystem, type: Package, name: DroneSystem }
+diagrams:
+  - { id: d1, name: Example SysML Block BDD - Simple Block Tree, kind: class, layoutProvenance: Synthesized }

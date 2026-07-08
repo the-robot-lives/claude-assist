@@ -1,0 +1,65 @@
+@startmindmap
+' ============================================================================
+' METADATA
+'   author:       TheRobotDrafts Examples
+'   description:  Complex strategy mind map - 6+ branches, 3-4 levels, floating nodes and a legend.
+'   usecase:      Teach multi-root/floating nodes via `+`/`-` syntax and adding a legend.
+'   complexity:   complex
+'   domain:       Product strategy
+' ============================================================================
+title Example Mind Map - Complex Strategy
+
+caption
+  Legend:  + = branch outward   |   - = branch inward   |   * = floating note
+endcaption
+
++ TheRobotDrafts Strategy
+
+++ Markets
++++ Indie developers
++++ Enterprise architects
+++++ Fortune-500 modeling teams
++++ Education
+++++ University SE courses
+
+++ Differentiators
++++ VR-first UML-IDE
++++ Open interchange format
+++++ .trd-yaml + XMI round-trip
++++ AI-assisted code-gen
+
+++ Revenue
++++ Subscription
++++ Per-seat enterprise
++++ Marketplace
+++++ Template packs
+
+++ Delivery
++++ Unity desktop
++++ Web viewer
++++ CLI export
+
+++ Ecosystem
++++ Partners
+++++ EA, Lucidchart bridges
++++ Community templates
+
+++ Risks
++++ Unity licensing cost
++++ Competitor lock-in
+
+left side
+
+++ Operations
++++ CI/CD
++++ Telemetry
+++++ OpenTelemetry tracing
+
+-- Foundations
+--- Noizu infra platform
+--- Kubernetes self-host
+
+' A floating node uses `*` to attach a free note not bound to the main tree.
+* Floating: revisit pricing Q3 after GA launch
+
+@endmindmap

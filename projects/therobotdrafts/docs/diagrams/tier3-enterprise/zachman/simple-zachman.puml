@@ -1,0 +1,35 @@
+' ============================================================================
+' METADATA
+'   author:       TheRobotDrafts Examples
+'   description:  Zachman 6x6 matrix (perspectives x interrogatives), a few cells filled.
+'   usecase:      Teach the 6 perspectives x 6 interrogatives classification grid.
+'   complexity:   simple
+'   domain:       enterprise / classification-taxonomy
+' ============================================================================
+title Example Zachman - Simple 6x6 (partially filled)
+
+note as TopNote
+  Zachman is a CLASSIFICATION TAXONOMY (not a method).
+  6 PERSPECTIVES (rows): Planner, Owner, Designer, Builder, Programmer, User.
+  6 INTERROGATIVES (cols): What, How, Where, Who, When, Why.
+  Each cell = a primitive model type. A few filled below (grid via packages).
+end note
+
+' Grid rendered as nested packages: row package -> column cell package.
+package "Planner row" as PR {
+  package "Planner x Why" as P_WHY { rectangle "Scope / Purpose" as P1 }
+  package "Planner x What" as P_WHAT { rectangle "List of Things" as P2 }
+}
+
+package "Designer row" as DR {
+  package "Designer x What" as D_WHAT { rectangle "Data Model (ERD)" as D1 }
+  package "Designer x How" as D_HOW { rectangle "System Function Model" as D2 }
+}
+
+package "Builder row" as BR {
+  package "Builder x How" as B_HOW { rectangle "Program Spec" as B1 }
+}
+
+' Refinement flows DOWN a column (same interrogative, deeper perspective).
+P2 --> D1 : refines (down What column)
+D2 --> B1 : refines (down How column)

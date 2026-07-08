@@ -1,0 +1,70 @@
+@startuml
+' ============================================================================
+' METADATA
+'   author:       TheRobotDrafts Examples
+'   description:  Variant — requirement graph vs traceability matrix (adjacency table).
+'   usecase:      Note when each representation is clearer.
+'   complexity:   simple
+'   domain:       systems-engineering
+' ============================================================================
+title Example SysML Requirement - Graph vs Traceability Matrix (Variant)
+
+' Two representations of the same set: {REQ-A, REQ-B} derived from {ROOT},
+' satisfied by {B1, B2}, verified by {T1, T2}.
+
+' ---- Part 1: Requirement graph ------------------------------------------
+' Best when: exploring unknown links, finding coverage gaps visually,
+' presenting to a stakeholder audience.
+
+class "ROOT" <<requirement>> { id : REQ-R }
+class "REQ-A" <<requirement>> { id : REQ-A1 }
+class "REQ-B" <<requirement>> { id : REQ-B1 }
+class "Block1" <<block>>
+class "Block2" <<block>>
+class "Test1" <<testCase>> { id : T1 }
+class "Test2" <<testCase>> { id : T2 }
+
+"REQ-A" ..> "ROOT" : <<deriveReqt>>
+"REQ-B" ..> "ROOT" : <<deriveReqt>>
+"Block1" ..> "REQ-A" : <<satisfy>>
+"Block2" ..> "REQ-B" : <<satisfy>>
+"Test1" ..> "REQ-A" : <<verify>>
+"Test2" ..> "REQ-B" : <<verify>>
+
+note right of "ROOT"
+  <b>Graph view — best when:</b>
+  - Few requirements, rich topology
+  - Reading paths/traces aloud
+  - Spotting orphan requirements
+  - Stakeholder review
+end note
+
+' ---- Part 2: Traceability matrix (adjacency table) ---------------------
+' Best when: scale is large (hundreds+ reqs), auditing coverage cell-by-cell,
+' generating a compliance report, or feeding a tool that consumes tables.
+
+note bottom of "REQ-B"
+  <b>Matrix view — best when:</b>
+  - Hundreds/thousands of requirements
+  - Auditing coverage cell-by-cell
+  - Compliance reporting (X cell empty = gap)
+  - Tabular tooling (DOORS, Jama, etc.)
+end note
+
+@enduml
+
+' ---------------------------------------------------------------------------
+' The matrix below is intentionally shown as a code block in this comment so
+' the converter can render it as a separate diagram view or a sibling asset.
+' ---------------------------------------------------------------------------
+'
+' Traceability Matrix (adjacency):
+'
+'              | deriveReqt | satisfy | verify
+' -------------|------------|---------|--------
+'  REQ-A       |    ROOT    | Block1  |  T1
+'  REQ-B       |    ROOT    | Block2  |  T2
+'  ROOT        |     -      |    -    |  -
+'
+' Empty cells (ROOT satisfy/verify) signal coverage gaps the graph obscures
+' at scale but the matrix surfaces immediately.

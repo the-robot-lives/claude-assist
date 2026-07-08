@@ -34,7 +34,12 @@ namespace TheRobotDraft.Authoring.Interchange
 
             string family = DetectFamily(text, lines);
             if (family == "salt")
-                throw new InterchangeException("salt wireframe markup isn't supported yet — import it as a UI mockup instead");
+            {
+                // Salt wireframe markup is a distinct UI-mockup grammar this reader does not structurally
+                // parse. Rather than throw (which blocks batch conversion), degrade to a single Note
+                // element carrying the raw source so the file round-trips and nothing is lost.
+                return DegradedModel(text, lines, "salt");
+            }
 
             var model = new IxModel { Name = FindTitle(lines) ?? FindStartName(lines) };
             model.Diagrams.Add(new IxDiagram { Id = "d1", Name = model.Name, Kind = family });
@@ -44,6 +49,7 @@ namespace TheRobotDraft.Authoring.Interchange
                 case "mindmap": ParseMindmap(lines, model); break;
                 case "sequence": ParseSequence(lines, model); break;
                 case "activity": ParseActivity(lines, model); break;
+                case "timing": ParseTiming(lines, model); break;
                 default: ParseDeclarative(lines, model, family); break; // class / usecase / state / component
             }
 
@@ -118,6 +124,10 @@ namespace TheRobotDraft.Authoring.Interchange
             if (text.IndexOf("@startmindmap", StringComparison.OrdinalIgnoreCase) >= 0) return "mindmap";
             if (text.IndexOf("@startsalt", StringComparison.OrdinalIgnoreCase) >= 0) return "salt";
             if (text.IndexOf("@startwbs", StringComparison.OrdinalIgnoreCase) >= 0) return "mindmap"; // WBS ≈ mindmap tree
+            // Timing diagrams: PlantUML `robust`/`concise` lifelines plotted against an @N time axis.
+            if (StartsWithWord(text, "robust") || StartsWithWord(text, "concise")
+                || text.IndexOf("robust ", StringComparison.OrdinalIgnoreCase) >= 0
+                || text.IndexOf("concise ", StringComparison.OrdinalIgnoreCase) >= 0) return "timing";
 
             int classScore = 0, seqScore = 0, stateScore = 0, activityScore = 0, usecaseScore = 0, componentScore = 0;
             foreach (var l in lines)
@@ -294,6 +304,70 @@ namespace TheRobotDraft.Authoring.Interchange
             "agent", "storage", "abstract",
         };
 
+        // ------------------------------------------------------------------ timing diagrams
+
+        /// <summary>Minimal UML timing-diagram projection. Each <c>robust</c>/<c>concise</c> declaration is a
+        /// Lifeline; each <c>@N</c> time point with <c>X is "State"</c> becomes a self-transition on that
+        /// lifeline labelled with the time and the new state. The waveform's exact geometry isn't captured,
+        /// but the lifelines, their states, and the ordering of state changes survive into the model.</summary>
+        private static void ParseTiming(List<string> lines, IxModel model)
+        {
+            var aliasToEl = new Dictionary<string, IxElement>(StringComparer.OrdinalIgnoreCase);
+            string currentTime = null;
+            foreach (var raw in lines)
+            {
+                string l = raw.Trim();
+                if (l.Length == 0) continue;
+                // robust "Name" as Alias   /   concise "Name" as Alias
+                var decl = Regex.Match(l, @"^(?:robust|concise)\s+""?([^""]+)""?\s+as\s+(\w+)", RegexOptions.IgnoreCase);
+                if (decl.Success)
+                {
+                    string name = decl.Groups[1].Value, alias = decl.Groups[2].Value;
+                    var el = new IxElement { Id = alias, Name = name, Type = IxElementType.Lifeline };
+                    model.Elements.Add(el);
+                    aliasToEl[alias] = el;
+                    continue;
+                }
+                // @N  — a time observation; remember it for the next "X is State" line.
+                var t = Regex.Match(l, @"^@(\d+)");
+                if (t.Success) { currentTime = t.Groups[1].Value; continue; }
+                // X is "State"  — state change at the current time point.
+                var ch = Regex.Match(l, @"^(\w+)\s+is\s+""?([^""]+)""?", RegexOptions.IgnoreCase);
+                if (ch.Success && aliasToEl.TryGetValue(ch.Groups[1].Value, out var owner))
+                {
+                    string state = ch.Groups[2].Value;
+                    string label = (currentTime != null ? "@" + currentTime + " " : "") + "is " + state;
+                    model.Edges.Add(new IxEdge
+                    {
+                        Id = "t" + model.Edges.Count,
+                        Type = IxEdgeType.Transition,
+                        FromId = owner.Id,
+                        ToId = owner.Id,
+                        Label = label
+                    });
+                }
+            }
+        }
+
+        /// <summary>Degraded model for document types the reader cannot structurally parse (e.g. salt
+        /// wireframes). Captures the raw source as a single Note element so the file converts and
+        /// round-trips without loss, and tags the diagram kind so callers can detect the degraded path.</summary>
+        private static IxModel DegradedModel(string text, List<string> lines, string family)
+        {
+            string title = FindTitle(lines) ?? FindStartName(lines) ?? family;
+            var model = new IxModel { Name = title };
+            model.Diagrams.Add(new IxDiagram { Id = "d1", Name = title, Kind = family });
+            model.Elements.Add(new IxElement
+            {
+                Id = "src",
+                Name = family + " source",
+                Type = IxElementType.Note,
+                Documentation = "[degraded — " + family + " markup not structurally parsed]\n" + text,
+                Tags = { ["degraded"] = "true" }
+            });
+            return model;
+        }
+
         // ------------------------------------------------------------------ declarative families (class / usecase / state / component)
 
         private static void ParseDeclarative(List<string> lines, IxModel model, string family)
@@ -456,6 +530,32 @@ namespace TheRobotDraft.Authoring.Interchange
             {
                 type = IxElementType.Table;
                 stereo = null;
+            }
+
+            // Notation-fidelity stereotypes: a class/rectangle carrying one of these marks is promoted to a
+            // first-class SysML/BPMN/DMN element type. The stereotype text is dropped (the type carries it),
+            // mirroring the «table» rule above.
+            if (stereo != null && type == IxElementType.Class)
+            {
+                string st = stereo.ToLowerInvariant();
+                // SysML
+                if (st == "block") { type = IxElementType.Block; stereo = null; }
+                else if (st == "valuetype") { type = IxElementType.ValueType; stereo = null; }
+                else if (st == "constraint") { type = IxElementType.Constraint; stereo = null; }
+                else if (st == "requirement") { type = IxElementType.Requirement; stereo = null; }
+                else if (st == "testcase" || st == "test") { type = IxElementType.TestCase; stereo = null; }
+                // DMN
+                else if (st == "decision") { type = IxElementType.DmnDecision; stereo = null; }
+                else if (st == "inputdata" || st == "input") { type = IxElementType.InputData; stereo = null; }
+                else if (st == "knowledgesource") { type = IxElementType.KnowledgeSource; stereo = null; }
+                else if (st == "businessknowledge" || st == "businessknowledgemodel") { type = IxElementType.BusinessKnowledge; stereo = null; }
+                // BPMN (also accepts the EA-style activity stereotype)
+                else if (st == "bpmsubprocess" || st == "bpmnactivity" || st == "subprocess") { type = IxElementType.BpmnActivity; stereo = null; }
+                else if (st == "bpmevent" || st == "event") { type = IxElementType.BpmnEvent; stereo = null; }
+                else if (st == "bpmngateway" || st == "gateway") { type = IxElementType.BpmnGateway; stereo = null; }
+                else if (st == "bpmndataobject" || st == "dataobject") { type = IxElementType.BpmnDataObject; stereo = null; }
+                else if (st == "pool") { type = IxElementType.BpmnPool; stereo = null; }
+                else if (st == "lane") { type = IxElementType.BpmnLane; stereo = null; }
             }
 
             element = ctx.Declare(key, display, type);
@@ -698,6 +798,17 @@ namespace TheRobotDraft.Authoring.Interchange
             else if (stereoInLabel != null && Eq(stereoInLabel, "include")) { type = IxEdgeType.Include; }
             else if (stereoInLabel != null && Eq(stereoInLabel, "extend")) { type = IxEdgeType.Extend; }
             else if (stereoInLabel != null && Eq(stereoInLabel, "extension")) { type = IxEdgeType.Extension; }
+            // SysML / requirements-traceability relationships (from «satisfy», «verify», «deriveReqt», ...)
+            else if (stereoInLabel != null && Eq(stereoInLabel, "satisfy")) { type = IxEdgeType.Satisfy; }
+            else if (stereoInLabel != null && Eq(stereoInLabel, "verify")) { type = IxEdgeType.Verify; }
+            else if (stereoInLabel != null && (Eq(stereoInLabel, "derive") || Eq(stereoInLabel, "derivereqt"))) { type = IxEdgeType.Derive; }
+            else if (stereoInLabel != null && Eq(stereoInLabel, "refine")) { type = IxEdgeType.Refine; }
+            else if (stereoInLabel != null && Eq(stereoInLabel, "trace")) { type = IxEdgeType.Trace; }
+            else if (stereoInLabel != null && Eq(stereoInLabel, "copy")) { type = IxEdgeType.Copy; }
+            // BPMN message flow (dashed arrow with the «messageFlow» stereotype, or the canonical
+            // <<messageFlow>> used to distinguish cross-pool messages from plain sequence flow).
+            else if (stereoInLabel != null && Eq(stereoInLabel, "messageflow")) { type = IxEdgeType.MessageFlow; }
+            else if (stereoInLabel != null && Eq(stereoInLabel, "sequenceflow")) { type = IxEdgeType.SequenceFlow; }
             else if (lh == "<|" || rh == "|>")
             {
                 // arrowhead marks the parent; normalize From=child, To=parent
@@ -720,6 +831,11 @@ namespace TheRobotDraft.Authoring.Interchange
                 if (reversed) { eFrom = to; eTo = from; string tm = leftMult; leftMult = rightMult; rightMult = tm; }
                 if (family == "state" || family == "activity"
                     || IsBehavioral(eFrom.Type) || IsBehavioral(eTo.Type)) type = IxEdgeType.Transition;
+                else if (IsBpmn(eFrom.Type) || IsBpmn(eTo.Type))
+                {
+                    // BPMN: solid = sequence flow, dotted = message flow (cross-pool).
+                    type = dotted ? IxEdgeType.MessageFlow : IxEdgeType.SequenceFlow;
+                }
                 else if (family == "sequence")
                 {
                     // Sequence-diagram convention: `->` solid call, `-->` (two dashes) IS the dotted reply arrow.
@@ -747,6 +863,14 @@ namespace TheRobotDraft.Authoring.Interchange
             return t == IxElementType.State || t == IxElementType.StateStart || t == IxElementType.StateEnd
                 || t == IxElementType.Decision || t == IxElementType.ForkJoin || t == IxElementType.Activity
                 || t == IxElementType.FlowFinal;
+        }
+
+        /// <summary>True for BPMN flow-object element types. A plain arrow between two BPMN elements is a
+        /// BPMN sequence flow, not a generic association.</summary>
+        private static bool IsBpmn(IxElementType t)
+        {
+            return t == IxElementType.BpmnEvent || t == IxElementType.BpmnActivity
+                || t == IxElementType.BpmnGateway || t == IxElementType.BpmnDataObject;
         }
 
         private static void SkipWs(string s, ref int pos)

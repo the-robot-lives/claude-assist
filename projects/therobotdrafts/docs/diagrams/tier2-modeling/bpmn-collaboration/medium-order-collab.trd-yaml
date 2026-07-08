@@ -1,0 +1,49 @@
+# .trd-yaml — TheRobotDrafts native model (IxModel serialization)
+name: Example BPMN Collaboration - Order (Customer/Merchant/Bank)
+elements:
+  - { id: P1, type: Boundary, name: '**Customer**' }
+  - { id: C1s, type: UseCase, name: C1s, parentId: P1 }
+  - { id: C1, type: Boundary, name: Browse Catalog, parentId: P1 }
+  - { id: C2, type: Boundary, name: Submit Order, parentId: P1 }
+  - { id: C3, type: Boundary, name: Receive Confirmation, parentId: P1 }
+  - { id: C1e, type: UseCase, name: C1e, parentId: P1 }
+  - { id: P2, type: Boundary, name: '**Merchant**' }
+  - { id: M1s, type: UseCase, name: M1s, parentId: P2 }
+  - { id: M1, type: Boundary, name: Receive Order, parentId: P2 }
+  - { id: M2, type: Boundary, name: Request Payment Auth, parentId: P2 }
+  - { id: X1, type: UseCase, name: 'Auth OK?', parentId: P2 }
+  - { id: M3, type: Boundary, name: Prepare Shipment, parentId: P2 }
+  - { id: M4, type: Boundary, name: Send Confirmation, parentId: P2 }
+  - { id: M1e, type: UseCase, name: M1e, parentId: P2 }
+  - { id: P3, type: Boundary, name: '**Bank**' }
+  - { id: B1s, type: UseCase, name: B1s, parentId: P3 }
+  - { id: B1, type: Boundary, name: Authorize Card, parentId: P3 }
+  - { id: B2, type: Boundary, name: Reserve Funds, parentId: P3 }
+  - { id: B1e, type: UseCase, name: B1e, parentId: P3 }
+  - { id: ~note1, type: Note, name: '<b>Message-start event</b>', documentation: '<b>Message-start event</b>\nBank''s process begins when the\nauth-request message arrives.' }
+  - { id: ~note2, type: Note, name: '<b>Exclusive gateway</b>', documentation: '<b>Exclusive gateway</b>\nRoutes on the bank''s decision.' }
+  - { id: ~note3, type: Note, name: '<b>Third pool</b>', documentation: '<b>Third pool</b>\nBank is a separate participant;\nmessage flows are the only legal\nedges across pool boundaries.' }
+edges:
+  - { id: e1, type: DirectedAssociation, from: C1s, to: C1 }
+  - { id: e2, type: DirectedAssociation, from: C1, to: C2 }
+  - { id: e3, type: DirectedAssociation, from: C2, to: C3 }
+  - { id: e4, type: DirectedAssociation, from: C3, to: C1e }
+  - { id: e5, type: DirectedAssociation, from: M1s, to: M1 }
+  - { id: e6, type: DirectedAssociation, from: M1, to: M2 }
+  - { id: e7, type: DirectedAssociation, from: M2, to: X1 }
+  - { id: e8, type: DirectedAssociation, from: X1, to: M3, label: (yes) }
+  - { id: e9, type: DirectedAssociation, from: X1, to: M1e, label: (no — cancel) }
+  - { id: e10, type: DirectedAssociation, from: M3, to: M4 }
+  - { id: e11, type: DirectedAssociation, from: M4, to: M1e }
+  - { id: e12, type: DirectedAssociation, from: B1s, to: B1 }
+  - { id: e13, type: DirectedAssociation, from: B1, to: B2 }
+  - { id: e14, type: DirectedAssociation, from: B2, to: B1e }
+  - { id: e15, type: Dependency, from: C2, to: M1, label: '"Order"' }
+  - { id: e16, type: Dependency, from: M2, to: B1, label: '"Auth Request"' }
+  - { id: e17, type: Dependency, from: B2, to: M2, label: '"Auth Decision"' }
+  - { id: e18, type: Dependency, from: M4, to: C3, label: '"Confirmation"' }
+  - { id: e19, type: NoteLink, from: ~note1, to: B1s }
+  - { id: e20, type: NoteLink, from: ~note2, to: X1 }
+  - { id: e21, type: NoteLink, from: ~note3, to: P3 }
+diagrams:
+  - { id: d1, name: Example BPMN Collaboration - Order (Customer/Merchant/Bank), kind: usecase, layoutProvenance: Synthesized }

@@ -1,0 +1,6 @@
+# .trd-yaml — TheRobotDrafts native model (IxModel serialization)
+name: Example Gantt - Simple Project
+elements:
+  - { id: '[Milestone', type: Component, name: '[Milestone', members: [{ name: 'MVP Demo] happens at [Coding]''s end', isOperation: false, visibility: Public, rawText: 'MVP Demo] happens at [Coding]''s end' }] }
+diagrams:
+  - { id: d1, name: Example Gantt - Simple Project, kind: component, layoutProvenance: Synthesized }

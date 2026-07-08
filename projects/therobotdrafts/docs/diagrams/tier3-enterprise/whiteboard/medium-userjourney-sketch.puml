@@ -1,0 +1,42 @@
+' ============================================================================
+' METADATA
+'   author:       TheRobotDrafts Examples
+'   description:  Sticky notes + cards arranged as a user journey with annotations and idea cloud.
+'   usecase:      Teach journey-style whiteboard sketches with mixed elements.
+'   complexity:   medium
+'   domain:       whiteboard / sketch
+' ============================================================================
+title Example Whiteboard - Medium User Journey Sketch
+
+package "Journey Frame: First-time Buyer" as JFRAME {
+  ' Journey steps as stickies (left to right).
+  note "Step 1: Land on home" as S1
+  note "Step 2: Search product" as S2
+  note "Step 3: View detail" as S3
+  note "Step 4: Add to cart" as S4
+  note "Step 5: Checkout" as S5
+}
+
+' Cards = more concrete artifacts pinned on the board.
+card "Card: 40% drop at Step 3" as C1
+card "Card: Fix images first" as C2
+
+cloud "Idea: 3D product preview" as IDEA
+cloud "Idea: one-page checkout" as IDEA2
+
+' Annotations
+note "Pain point!" as P1
+note "Quick win" as Q1
+
+' Flow arrows between journey steps.
+S1 --> S2 --> S3 --> S4 --> S5
+
+' Annotations pointing at steps.
+P1 ..> S3 : points at
+Q1 ..> S5 : points at
+C1 ..> S3 : metric for
+C2 ..> IDEA : drives
+
+' Ideas connect to steps they'd improve.
+IDEA --> S3 : could help
+IDEA2 --> S5 : could help

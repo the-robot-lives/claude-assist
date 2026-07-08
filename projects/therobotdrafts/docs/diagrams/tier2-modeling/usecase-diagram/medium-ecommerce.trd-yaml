@@ -1,0 +1,36 @@
+# .trd-yaml — TheRobotDrafts native model (IxModel serialization)
+name: Example Use Case Diagram - Medium E-Commerce
+elements:
+  - { id: '#', type: Actor, name: '#' }
+  - { id: «include», type: Actor, name: «include» }
+  - { id: «extend», type: Actor, name: «extend» }
+  - { id: cust, type: Actor, name: Customer }
+  - { id: guest, type: Actor, name: Guest }
+  - { id: admin, type: Actor, name: Admin }
+  - { id: Online Store, type: Boundary, name: Online Store }
+  - { id: ucBrowse, type: UseCase, name: Browse Catalog, parentId: Online Store }
+  - { id: ucSearch, type: UseCase, name: Search Products, parentId: Online Store }
+  - { id: ucAdd, type: UseCase, name: Add to Cart, parentId: Online Store }
+  - { id: ucCheckout, type: UseCase, name: Checkout, parentId: Online Store }
+  - { id: ucPay, type: UseCase, name: Pay, parentId: Online Store }
+  - { id: ucDiscount, type: UseCase, name: Apply Discount, parentId: Online Store }
+  - { id: ucShip, type: UseCase, name: Ship Order, parentId: Online Store }
+  - { id: ucManage, type: UseCase, name: Manage Products, parentId: Online Store }
+  - { id: ~note1, type: Note, name: '<b>«extend» — optional</b>', documentation: '<b>«extend» — optional</b>\nApply Discount extends Checkout.\nCondition: { discount code entered }.\nThe base use case is complete WITHOUT\nthe extension; the extension ADDS\nbehaviour only when the condition holds.' }
+  - { id: ~note2, type: Note, name: '<b>«include» — mandatory</b>', documentation: '<b>«include» — mandatory</b>\nCheckout includes Pay.  Pay ALWAYS\nexecutes as part of Checkout — there is\nno condition.  Use «include» to factor\nout common, required behaviour that\nseveral base use cases share.' }
+edges:
+  - { id: e1, type: Association, from: '#', to: «include», label: Checkout MANDATORILY invokes Pay (every checkout pays). }
+  - { id: e2, type: Association, from: '#', to: «extend», label: Apply Discount OPTIONALLY extends Checkout (only if a code }
+  - { id: e3, type: Generalization, from: guest, to: cust }
+  - { id: e4, type: DirectedAssociation, from: cust, to: ucBrowse }
+  - { id: e5, type: DirectedAssociation, from: cust, to: ucSearch }
+  - { id: e6, type: DirectedAssociation, from: cust, to: ucAdd }
+  - { id: e7, type: DirectedAssociation, from: cust, to: ucCheckout }
+  - { id: e8, type: DirectedAssociation, from: admin, to: ucManage }
+  - { id: e9, type: DirectedAssociation, from: admin, to: ucShip }
+  - { id: e10, type: Include, from: ucCheckout, to: ucPay }
+  - { id: e11, type: Extend, from: ucDiscount, to: ucCheckout }
+  - { id: e12, type: NoteLink, from: ~note1, to: ucDiscount }
+  - { id: e13, type: NoteLink, from: ~note2, to: ucPay }
+diagrams:
+  - { id: d1, name: Example Use Case Diagram - Medium E-Commerce, kind: usecase, layoutProvenance: Synthesized }

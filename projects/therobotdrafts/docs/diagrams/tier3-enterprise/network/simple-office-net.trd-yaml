@@ -1,0 +1,15 @@
+# .trd-yaml — TheRobotDrafts native model (IxModel serialization)
+name: Example Network - Simple Office Net
+elements:
+  - { id: INET, type: Cloud, name: Internet }
+  - { id: R1, type: DeploymentNode, name: Router\n10.0.0.1 }
+  - { id: SW1, type: DeploymentNode, name: Switch\n(VLAN 10) }
+  - { id: H1, type: DeploymentNode, name: Host A\n10.0.0.10 }
+  - { id: H2, type: DeploymentNode, name: Host B\n10.0.0.11 }
+edges:
+  - { id: e1, type: DirectedAssociation, from: INET, to: R1, label: '"WAN 203.0.113.2/30"' }
+  - { id: e2, type: DirectedAssociation, from: R1, to: SW1, label: '"LAN 10.0.0.0/24 (trunk)"' }
+  - { id: e3, type: DirectedAssociation, from: SW1, to: H1, label: '"access port Gi1/0/1"' }
+  - { id: e4, type: DirectedAssociation, from: SW1, to: H2, label: '"access port Gi1/0/2"' }
+diagrams:
+  - { id: d1, name: Example Network - Simple Office Net, kind: component, layoutProvenance: Synthesized }

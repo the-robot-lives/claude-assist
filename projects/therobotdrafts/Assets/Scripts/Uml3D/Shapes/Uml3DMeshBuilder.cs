@@ -661,5 +661,68 @@ namespace TheRobotDraft.Uml3D
             u = Vector3.Normalize(Vector3.Cross(reference, axis));
             v = Vector3.Normalize(Vector3.Cross(axis, u));
         }
+
+        /// <summary>
+        /// A regular pentagonal bipyramid (decahedron: 10 triangular faces — five meeting at the top apex, five at
+        /// the bottom), centered at <paramref name="center"/> with circumradius <paramref name="r"/>. The five
+        /// equatorial vertices lie in the XZ plane; the two apexes are on ±Y. A faceted gem/crystal silhouette.
+        /// </summary>
+        public void AddDecahedron(Vector3 center, float r)
+        {
+            r = Mathf.Max(1e-4f, r);
+            const int n = 5;
+            var equator = new Vector3[n];
+            for (int i = 0; i < n; i++)
+            {
+                float ang = i / (float)n * Mathf.PI * 2f;
+                equator[i] = new Vector3(Mathf.Cos(ang) * r, 0f, Mathf.Sin(ang) * r);
+            }
+            Vector3 top = new Vector3(0f, r, 0f);
+            Vector3 bottom = new Vector3(0f, -r, 0f);
+            for (int i = 0; i < n; i++)
+            {
+                int j = (i + 1) % n;
+                // Upper fan (CCW seen from above/outside); face normal ≀ outward from the side's midpoint.
+                Vector3 midU = (equator[i] + equator[j] + top) / 3f;
+                AddTriangleOriented(center + top, center + equator[i], center + equator[j], midU);
+                // Lower fan.
+                Vector3 midL = (equator[i] + equator[j] + bottom) / 3f;
+                AddTriangleOriented(center + bottom, center + equator[j], center + equator[i], midL);
+            }
+        }
+
+        /// <summary>
+        /// An organic blob: a UV sphere whose vertices are deterministically noise-displaced along their outward
+        /// direction, producing a soft metaball-like lump. Displacement is deterministic (sin of spherical coords)
+        /// so the mesh is stable across rebuilds; amplitude is clamped so the silhouette stays roughly round and
+        /// the bounding-box selection cage still fits.
+        /// </summary>
+        public void AddBlob(Vector3 center, float r, int latSegs = 14, int lonSegs = 20)
+        {
+            r = Mathf.Max(1e-4f, r);
+            float amp = r * 0.18f; // lumpiness — small enough to stay inside the cage
+            for (int la = 0; la < latSegs; la++)
+            {
+                float t0 = la / (float)latSegs * Mathf.PI;
+                float t1 = (la + 1) / (float)latSegs * Mathf.PI;
+                for (int lo = 0; lo < lonSegs; lo++)
+                {
+                    float p0 = lo / (float)lonSegs * Mathf.PI * 2f;
+                    float p1 = (lo + 1) / (float)lonSegs * Mathf.PI * 2f;
+                    Vector3 a = BlobPt(t0, p0, r, amp), b = BlobPt(t1, p0, r, amp);
+                    Vector3 c = BlobPt(t1, p1, r, amp), dd = BlobPt(t0, p1, r, amp);
+                    AddQuadOriented(center + a, center + b, center + c, center + dd, (a + b + c + dd));
+                }
+            }
+        }
+
+        private static Vector3 BlobPt(float theta, float phi, float r, float amp)
+        {
+            // Deterministic low-frequency lumping along the outward direction.
+            float d = Mathf.Sin(theta * 2f) * Mathf.Cos(phi * 3f) * amp
+                    + Mathf.Sin(phi * 2f) * Mathf.Cos(theta * 4f) * amp * 0.5f;
+            float rr = r + d;
+            return new Vector3(Mathf.Sin(theta) * Mathf.Cos(phi), Mathf.Cos(theta), Mathf.Sin(theta) * Mathf.Sin(phi)) * rr;
+        }
     }
 }

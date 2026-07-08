@@ -1,0 +1,66 @@
+@startuml
+' ============================================================================
+' METADATA
+'   author:       TheRobotDrafts Examples
+'   description:  Medium SysML Package Diagram with nested packages, import/access stereotypes, and cross-package dependencies across a model.
+'   usecase:      Teach nested packages, «import»/«access» stereotypes, and cross-package dependency.
+'   complexity:   medium
+'   domain:       systems-engineering
+' ============================================================================
+title Example Package - Medium Subsystem Packages
+
+package "RobotSystem" {
+  package "Requirements" {
+    package "Operational" {
+      class "ReqMotion" <<requirement>> { }
+      class "ReqPower" <<requirement>> { }
+    }
+    package "Safety" {
+      class "ReqEStop" <<requirement>> { }
+    }
+  }
+
+  package "Analysis" {
+    class "MotionBudget" <<block>> { }
+    class "PowerBudget" <<block>> { }
+  }
+
+  package "Design" {
+    package "Mechanical" {
+      class "Chassis" <<block>> { }
+      class "DriveTrain" <<block>> { }
+    }
+    package "Electrical" {
+      class "PowerBoard" <<block>> { }
+      class "MotorDriver" <<block>> { }
+    }
+    package "Software" {
+      class "MotionController" <<block>> { }
+      class "SafetyMonitor" <<block>> { }
+    }
+  }
+
+  package "ValueTypes" {
+    class "Torque" <<valueType>> { }
+    class "Current" <<valueType>> { }
+    class "Voltage" <<valueType>> { }
+  }
+}
+
+"Design".Mechanical ..> "ValueTypes" : dependency
+"Design".Electrical ..> "ValueTypes" : dependency
+"Design".Software ..> "Design".Mechanical : dependency
+
+"Design" ..> "Analysis" : <<import>>
+"Analysis" ..> "Requirements".Operational : <<access>>
+"Design".Software ..> "Requirements".Safety : <<import>>
+
+note right of "Analysis"
+  «import» brings public names INTO the
+  importing package's namespace (transitive
+  unless marked otherwise).
+  «access» is the non-transitive variant:
+  names are reachable but not re-exported.
+end note
+
+@enduml

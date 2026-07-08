@@ -1,0 +1,58 @@
+# .trd-yaml — TheRobotDrafts native model (IxModel serialization)
+name: Example Rose RealTime - Complex Real-Time System
+elements:
+  - { id: PS, type: Class, name: SensorProtocol\n, stereotype: protocol, members: [{ name: 'out: sample', isOperation: true, visibility: Public, params: [{ name: d }], rawText: '+ out: sample(d)' }] }
+  - { id: PA, type: Class, name: ActuatorProtocol\n, stereotype: protocol, members: [{ name: 'in: command', isOperation: true, visibility: Public, params: [{ name: v }], rawText: '+ in: command(v)' }] }
+  - { id: PC, type: Class, name: CmdProtocol\n, stereotype: protocol, members: [{ name: 'in: start', isOperation: true, visibility: Public, params: [{ name: '), stop(' }], rawText: '+ in: start(), stop()' }, { name: 'out: ack', isOperation: true, visibility: Public, rawText: '+ out: ack()' }] }
+  - { id: PT, type: Class, name: TimerProtocol\n, stereotype: protocol, members: [{ name: 'in: arm', isOperation: true, visibility: Public, params: [{ name: ms }], rawText: '+ in: arm(ms)' }, { name: 'out: timeout', isOperation: true, visibility: Public, rawText: '+ out: timeout()' }] }
+  - { id: PL, type: Class, name: LogProtocol\n, stereotype: protocol, members: [{ name: 'in: write', isOperation: true, visibility: Public, params: [{ name: msg }], rawText: '+ in: write(msg)' }] }
+  - { id: SYS, type: Class, name: System\n, stereotype: capsule (top) }
+  - { id: C_TEMP, type: Class, name: TempSensor\n, stereotype: capsule }
+  - { id: C_PRES, type: Class, name: PressureSensor\n, stereotype: capsule }
+  - { id: C_FLOW, type: Class, name: FlowSensor\n, stereotype: capsule }
+  - { id: C_FILT, type: Class, name: Filter\n, stereotype: capsule }
+  - { id: C_FUSION, type: Class, name: Fusion\n, stereotype: capsule }
+  - { id: C_CTRL, type: Class, name: 'Controller\n\n(behavior: state machine)', stereotype: capsule }
+  - { id: C_ACT, type: Class, name: ActuatorDriver\n, stereotype: capsule }
+  - { id: C_VALVE, type: Class, name: Valve\n, stereotype: capsule }
+  - { id: C_PUMP, type: Class, name: Pump\n, stereotype: capsule }
+  - { id: C_TMR, type: Class, name: Timer\n, stereotype: capsule }
+  - { id: C_WD, type: Class, name: Watchdog\n, stereotype: capsule }
+  - { id: C_LOG, type: Class, name: Logger\n, stereotype: capsule }
+  - { id: C_COMM, type: Class, name: CommGateway\n, stereotype: capsule }
+  - { id: ~note1, type: Note, name: 'Capsule behavior (executable state machine):', documentation: 'Capsule behavior (executable state machine):\nIdle --start()--> Running\nRunning --timeout()--> Sample\nSample --done()--> Running\nRunning --stop()--> Idle\nRunning --fault()--> SafeMode' }
+  - { id: ~note2, type: Note, name: 'Reused across: Temp->Filter, Pres->Filter,', documentation: 'Reused across: Temp->Filter, Pres->Filter,\nFlow->Filter, Filter->Fusion.\nOne protocol type, many connectors.' }
+edges:
+  - { id: e1, type: Composition, from: SYS, to: C_TEMP }
+  - { id: e2, type: Composition, from: SYS, to: C_PRES }
+  - { id: e3, type: Composition, from: SYS, to: C_FLOW }
+  - { id: e4, type: Composition, from: SYS, to: C_FILT }
+  - { id: e5, type: Composition, from: SYS, to: C_FUSION }
+  - { id: e6, type: Composition, from: SYS, to: C_CTRL }
+  - { id: e7, type: Composition, from: SYS, to: C_ACT }
+  - { id: e8, type: Composition, from: SYS, to: C_VALVE }
+  - { id: e9, type: Composition, from: SYS, to: C_PUMP }
+  - { id: e10, type: Composition, from: SYS, to: C_TMR }
+  - { id: e11, type: Composition, from: SYS, to: C_WD }
+  - { id: e12, type: Composition, from: SYS, to: C_LOG }
+  - { id: e13, type: Composition, from: SYS, to: C_COMM }
+  - { id: e14, type: DirectedAssociation, from: C_TEMP, to: C_FILT, label: '"SensorProtocol"' }
+  - { id: e15, type: DirectedAssociation, from: C_PRES, to: C_FILT, label: '"SensorProtocol"' }
+  - { id: e16, type: DirectedAssociation, from: C_FLOW, to: C_FILT, label: '"SensorProtocol"' }
+  - { id: e17, type: DirectedAssociation, from: C_FILT, to: C_FUSION, label: '"SensorProtocol (filtered)"' }
+  - { id: e18, type: DirectedAssociation, from: C_FUSION, to: C_CTRL, label: '"CmdProtocol (fused)"' }
+  - { id: e19, type: DirectedAssociation, from: C_CTRL, to: C_ACT, label: '"ActuatorProtocol"' }
+  - { id: e20, type: DirectedAssociation, from: C_ACT, to: C_VALVE, label: '"ActuatorProtocol"' }
+  - { id: e21, type: DirectedAssociation, from: C_ACT, to: C_PUMP, label: '"ActuatorProtocol"' }
+  - { id: e22, type: DirectedAssociation, from: C_CTRL, to: C_TMR, label: '"TimerProtocol (arm loop)"' }
+  - { id: e23, type: DirectedAssociation, from: C_TMR, to: C_CTRL, label: '"TimerProtocol (timeout)"' }
+  - { id: e24, type: DirectedAssociation, from: C_CTRL, to: C_WD, label: '"CmdProtocol (heartbeat)"' }
+  - { id: e25, type: DirectedAssociation, from: C_WD, to: C_CTRL, label: '"CmdProtocol (reset)"' }
+  - { id: e26, type: DirectedAssociation, from: C_CTRL, to: C_LOG, label: '"LogProtocol"' }
+  - { id: e27, type: DirectedAssociation, from: C_FUSION, to: C_LOG, label: '"LogProtocol"' }
+  - { id: e28, type: DirectedAssociation, from: C_COMM, to: C_CTRL, label: '"CmdProtocol (remote cmds)"' }
+  - { id: e29, type: DirectedAssociation, from: C_CTRL, to: C_COMM, label: '"CmdProtocol (telemetry ack)"' }
+  - { id: e30, type: NoteLink, from: ~note1, to: C_CTRL }
+  - { id: e31, type: NoteLink, from: ~note2, to: PS }
+diagrams:
+  - { id: d1, name: Example Rose RealTime - Complex Real-Time System, kind: class, layoutProvenance: Synthesized }

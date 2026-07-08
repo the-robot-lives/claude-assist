@@ -1,0 +1,65 @@
+@startuml
+' ============================================================================
+' METADATA
+'   author:       TheRobotDrafts Examples
+'   description:  Medium-complexity BDD of an Electric Power System with generalization, flow properties, and reference properties.
+'   usecase:      Teach block inheritance, flow properties, reference properties, and a value type with units.
+'   complexity:   medium
+'   domain:       energy
+' ============================================================================
+title Example BDD - Medium Power System
+
+class "PowerSource" <<block>> {
+  out current : Current
+  out voltage : Voltage
+}
+
+class "Battery" <<block>> {
+  capacity : Energy
+  stateOfCharge : Real
+}
+
+class "SolarArray" <<block>> {
+  area : Area
+  efficiency : Real
+}
+
+class "ChargeController" <<block>> {
+  in pvCurrent : Current
+  out battCurrent : Current
+}
+
+class "Inverter" <<block>> {
+  in dcVoltage : Voltage
+  out acVoltage : Voltage
+}
+
+class "Load" <<block>> {
+  in acCurrent : Current
+  ratedPower : Power
+}
+
+class "PowerBus" <<block>> {
+  busVoltage : Voltage
+}
+
+class "Voltage" <<valueType>> {
+  value : Real
+  unit : "V"
+}
+
+"PowerSource" <|-- "Battery"
+"PowerSource" <|-- "SolarArray"
+
+"ChargeController" *-- "1" "PowerBus" : internalBus
+"Load" ..> "PowerBus" : reference
+"Inverter" ..> "PowerBus" : reference
+
+note right of "PowerSource"
+  Generalization (<|--)
+  = PowerSource is the abstract
+  supertype; Battery and SolarArray
+  inherit its flow properties.
+end note
+
+@enduml

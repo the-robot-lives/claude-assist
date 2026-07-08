@@ -1,0 +1,61 @@
+@startuml
+' ============================================================================
+' METADATA
+'   author:       TheRobotDrafts Examples
+'   description:  Minimal internal-BDD showing two blocks whose internal
+'                 parts exchange a typed item flow through flow ports.
+'   usecase:      Teach flow ports + item flows across block boundaries.
+'   complexity:   simple
+'   domain:       sysml internal block definition / fluid transfer
+' ============================================================================
+title Example Internal BDD - Simple Internal Flow
+
+' ---------------------------------------------------------------------------
+' Mapping note — how the SysML concepts map onto this PlantUML sketch.
+' PlantUML has no native SysML, so we approximate:
+'   - block               -> class <<block>>
+'   - part (usage)        -> object rectangle inside the owning block
+'   - flow port           -> boundary stud drawn with () on the block edge
+'   - connector           -> --> edge between two ports
+'   - item flow           -> typed label on the connector edge plus a note
+'                            naming the flow properties carried
+'   - flow direction      -> direction arrow on the edge (-> out, <- in)
+' In a real IBD this is the interior of a single block; an INTERNAL-BDD
+' instead shows the internal parts/ports of SEVERAL block definitions and
+' the item flows that cross from one block's interior to another's.
+' ---------------------------------------------------------------------------
+note over "TankBlock", "PumpBlock"
+  Flow port (drawn as "()") carries a typed
+  item flow. Direction is shown by the edge
+  arrow; the label names the flow type and
+  the flow properties it conveys.
+end note
+
+class "TankBlock" <<block>> {
+  +out: FluidPort
+  part supply : FluidStore
+}
+
+class "PumpBlock" <<block>> {
+  +in: FluidPort
+  part intake : IntakeChamber
+}
+
+' Flow ports are shown as studs on each block boundary.
+' Connector between the two flow ports carries the typed item flow.
+' "FluidFlow{rate, pressure}" lists the flow properties carried.
+"TankBlock" -(#darkblue)->[color=#darkblue] "PumpBlock" : FluidFlow { rate, pressure }
+
+note right of "TankBlock"
+  TankBlock.out is a FLOW PORT (atomic,
+  type = FluidFlow). It exports the
+  flow properties rate, pressure.
+end note
+
+note right of "PumpBlock"
+  PumpBlock.in is a FLOW PORT that
+  receives FluidFlow. Direction of the
+  edge encodes out->in flow.
+end note
+
+@enduml

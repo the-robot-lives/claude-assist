@@ -1,0 +1,43 @@
+' ============================================================================
+' METADATA
+'   author:       TheRobotDrafts Examples
+'   description:  Simple UML-RT/ROOM: one capsule with two typed ports and a protocol with in/out signals.
+'   usecase:      Teach capsule, port, protocol (in/out signals), and connector.
+'   complexity:   simple
+'   domain:       rose-realtime / uml-rt
+' ============================================================================
+title Example Rose RealTime - Simple Capsule
+
+' UML-RT (ROOM) core concepts:
+'   Capsule  - active, concurrent executable unit (modeled as a class w/ <<capsule>>)
+'   Port     - typed by a Protocol; a communication endpoint on the capsule boundary
+'   Protocol - defines IN signals (received) and OUT signals (sent)
+'   Connector- wires two ports of compatible protocols together
+
+' ---- Protocol: SensorProtocol ----
+class "SensorProtocol\n<<protocol>>" as P1 {
+  + in: readRequest()
+  + out: sample(data)
+}
+
+' ---- Capsule: SensorReader ----
+class "SensorReader\n<<capsule>>" as CAP1 {
+  behavior: state machine
+}
+
+' Two ports on the capsule boundary, typed by the protocol.
+' (relay ports pass through; external end connects to a peer.)
+rectangle "p1: SensorProtocol" as PT1
+rectangle "p2: SensorProtocol" as PT2
+
+CAP1 --> PT1 : "port"
+CAP1 --> PT2 : "port"
+
+PT1 --> P1 : "typed by"
+PT2 --> P1 : "typed by"
+
+note bottom of CAP1
+  Ports carry SIGNALS governed by the Protocol.
+  The capsule has an executable state machine reacting to in-signals
+  and emitting out-signals.
+end note

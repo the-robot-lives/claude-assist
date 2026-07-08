@@ -1,0 +1,18 @@
+# .trd-yaml — TheRobotDrafts native model (IxModel serialization)
+name: Example Wireframe - Lo-fi vs Hi-fi
+elements:
+  - { id: VARIANT, type: Component, name: VARIANT, members: [{ name: same dashboard shown two ways., isOperation: false, visibility: Public, rawText: same dashboard shown two ways. }] }
+  - { id: LF_HDR, type: Boundary, name: 'LO-FI: Dashboard' }
+  - { id: LF_NAV, type: Boundary, name: 'Nav: Home | Orders | Settings' }
+  - { id: LF_WELCOME, type: Boundary, name: + Welcome + }
+  - { id: LF_CARDS, type: Boundary, name: 'Card: Revenue | Card: Orders | Card: Users' }
+  - { id: LF_TBL, type: Boundary, name: 'Table: Order | Customer | Status' }
+  - { id: H1, type: Boundary, name: === Dashboard ===, stereotype: header }
+  - { id: NAV, type: Boundary, name: 'Home  |  Orders  |  Settings', stereotype: nav }
+  - { id: WELCOME, type: Boundary, name: '**Welcome back, Alex**\nHere is your overview today.' }
+  - { id: CARD1, type: Boundary, name: 'Revenue\n$48,250\n+12% MoM', stereotype: card }
+  - { id: CARD2, type: Boundary, name: 'Orders\n1,204\n+3% MoM', stereotype: card }
+  - { id: CARD3, type: Boundary, name: 'Active Users\n312\n+8% MoM', stereotype: card }
+  - { id: TBL, type: Boundary, name: 'Order | Customer | Status | Total\n1001 | Acme Corp | Shipped | $1,200\n1002 | Beta LLC | Pending | $800', stereotype: tablehead }
+diagrams:
+  - { id: d1, name: Example Wireframe - Lo-fi vs Hi-fi, kind: component, layoutProvenance: Synthesized }

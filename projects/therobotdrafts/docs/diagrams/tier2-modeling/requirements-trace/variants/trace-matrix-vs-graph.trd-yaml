@@ -1,0 +1,27 @@
+# .trd-yaml — TheRobotDrafts native model (IxModel serialization)
+name: Requirements Variant - Trace Matrix vs Graph
+elements:
+  - { id: RA, type: Boundary, name: REQ-A\nFeature A, stereotype: requirement }
+  - { id: RB, type: Boundary, name: REQ-B\nFeature B, stereotype: requirement }
+  - { id: RC, type: Boundary, name: REQ-C\nFeature C, stereotype: requirement }
+  - { id: CA, type: Boundary, name: Comp-A, stereotype: component }
+  - { id: CB, type: Boundary, name: Comp-B, stereotype: component }
+  - { id: TA, type: Boundary, name: T-A, stereotype: testcase }
+  - { id: TB, type: Boundary, name: T-B, stereotype: testcase }
+  - { id: TC, type: Boundary, name: T-C, stereotype: testcase }
+  - { id: ~note1, type: Note, name: '**LEFT = Graph view**', documentation: '**LEFT = Graph view**\nGood for: tracing one requirement''s\nlineage and coverage, explaining the\nmodel, change-impact analysis.' }
+  - { id: ~note2, type: Note, name: '**RIGHT = Matrix view (same links)**', documentation: '**RIGHT = Matrix view (same links)**\n--\n| Req  | Comp-A | Comp-B | T-A | T-B | T-C |\n|------|:------:|:------:|:---:|:---:|:---:|\n| REQ-A|   X    |        |  X  |     |     |\n| REQ-B|        |   X    |     |  X  |     |\n| REQ-C|        |        |     |     |  X  |\n--\nGood for: coverage auditing, finding\ngaps (empty rows = unsatisfied /\nunverified), bulk review, export to\na spreadsheet.' }
+  - { id: ~note3, type: Note, name: '**When to use which**', documentation: '**When to use which**\n- Graph:  "Tell me the story of REQ-B." Stakeholder review.\n- Matrix: "Show me everything missing coverage." Audit / compliance.\nBoth views are generated from the same underlying trace links.' }
+edges:
+  - { id: e1, type: Derive, from: RB, to: RA, label: derive }
+  - { id: e2, type: Derive, from: RC, to: RA, label: derive }
+  - { id: e3, type: Satisfy, from: CA, to: RA, label: satisfy }
+  - { id: e4, type: Satisfy, from: CB, to: RB, label: satisfy }
+  - { id: e5, type: Verify, from: TA, to: RA, label: verify }
+  - { id: e6, type: Verify, from: TB, to: RB, label: verify }
+  - { id: e7, type: Verify, from: TC, to: RC, label: verify }
+  - { id: e8, type: NoteLink, from: ~note1, to: RA }
+  - { id: e9, type: NoteLink, from: ~note2, to: RC }
+  - { id: e10, type: NoteLink, from: ~note3, to: RC }
+diagrams:
+  - { id: d1, name: Requirements Variant - Trace Matrix vs Graph, kind: class, layoutProvenance: Synthesized }

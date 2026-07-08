@@ -1,0 +1,111 @@
+' ============================================================================
+' METADATA
+'   author:       TheRobotDrafts Examples
+'   description:  Complex UML-RT system: 12+ capsules, reused protocols, connector topology,
+'                 and a capsule state machine noted.
+'   usecase:      Teach a full real-time system topology with reused protocols and state machines.
+'   complexity:   complex
+'   domain:       rose-realtime / uml-rt
+' ============================================================================
+title Example Rose RealTime - Complex Real-Time System
+
+note as TopNote
+  A real-time control system: sensors -> controller -> actuators,
+  with a timer, watchdog, and logger. 12+ capsules.
+  Protocols are REUSED across many connectors (a key UML-RT strength).
+  One capsule's executable state machine is noted (behavior).
+end note
+
+' ---- Reused protocols ----
+class "SensorProtocol\n<<protocol>>" as PS {
+  + out: sample(d)
+}
+class "ActuatorProtocol\n<<protocol>>" as PA {
+  + in: command(v)
+}
+class "CmdProtocol\n<<protocol>>" as PC {
+  + in: start(), stop()
+  + out: ack()
+}
+class "TimerProtocol\n<<protocol>>" as PT {
+  + in: arm(ms)
+  + out: timeout()
+}
+class "LogProtocol\n<<protocol>>" as PL {
+  + in: write(msg)
+}
+
+' ---- Capsules ----
+class "System\n<<capsule (top)>>" as SYS
+
+class "TempSensor\n<<capsule>>" as C_TEMP
+class "PressureSensor\n<<capsule>>" as C_PRES
+class "FlowSensor\n<<capsule>>" as C_FLOW
+
+class "Filter\n<<capsule>>" as C_FILT
+class "Fusion\n<<capsule>>" as C_FUSION
+
+class "Controller\n<<capsule>>\n(behavior: state machine)" as C_CTRL
+class "ActuatorDriver\n<<capsule>>" as C_ACT
+class "Valve\n<<capsule>>" as C_VALVE
+class "Pump\n<<capsule>>" as C_PUMP
+
+class "Timer\n<<capsule>>" as C_TMR
+class "Watchdog\n<<capsule>>" as C_WD
+class "Logger\n<<capsule>>" as C_LOG
+class "CommGateway\n<<capsule>>" as C_COMM
+
+' Containment under the top System capsule.
+SYS *-- C_TEMP
+SYS *-- C_PRES
+SYS *-- C_FLOW
+SYS *-- C_FILT
+SYS *-- C_FUSION
+SYS *-- C_CTRL
+SYS *-- C_ACT
+SYS *-- C_VALVE
+SYS *-- C_PUMP
+SYS *-- C_TMR
+SYS *-- C_WD
+SYS *-- C_LOG
+SYS *-- C_COMM
+
+' ---- Connector topology (protocol-typed) ----
+C_TEMP --> C_FILT : "SensorProtocol"
+C_PRES --> C_FILT : "SensorProtocol"
+C_FLOW --> C_FILT : "SensorProtocol"
+C_FILT --> C_FUSION : "SensorProtocol (filtered)"
+C_FUSION --> C_CTRL : "CmdProtocol (fused)"
+
+C_CTRL --> C_ACT : "ActuatorProtocol"
+C_ACT --> C_VALVE : "ActuatorProtocol"
+C_ACT --> C_PUMP : "ActuatorProtocol"
+
+C_CTRL --> C_TMR : "TimerProtocol (arm loop)"
+C_TMR --> C_CTRL : "TimerProtocol (timeout)"
+
+C_CTRL --> C_WD : "CmdProtocol (heartbeat)"
+C_WD --> C_CTRL : "CmdProtocol (reset)"
+
+C_CTRL --> C_LOG : "LogProtocol"
+C_FUSION --> C_LOG : "LogProtocol"
+
+C_COMM --> C_CTRL : "CmdProtocol (remote cmds)"
+C_CTRL --> C_COMM : "CmdProtocol (telemetry ack)"
+
+' State machine note for the Controller capsule.
+note bottom of C_CTRL
+  Capsule behavior (executable state machine):
+    Idle --start()--> Running
+    Running --timeout()--> Sample
+    Sample --done()--> Running
+    Running --stop()--> Idle
+    Running --fault()--> SafeMode
+end note
+
+' Protocol reuse note.
+note right of PS
+  Reused across: Temp->Filter, Pres->Filter,
+  Flow->Filter, Filter->Fusion.
+  One protocol type, many connectors.
+end note

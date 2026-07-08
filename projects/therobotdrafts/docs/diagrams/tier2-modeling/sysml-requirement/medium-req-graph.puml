@@ -1,0 +1,76 @@
+@startuml
+' ============================================================================
+' METADATA
+'   author:       TheRobotDrafts Examples
+'   description:  Medium requirement graph — derive chain, satisfy to blocks, verify to test cases.
+'   usecase:      Operational -> functional derive chain with full coverage.
+'   complexity:   medium
+'   domain:       systems-engineering
+' ============================================================================
+title Example SysML Requirement - Medium Graph
+
+' Layers: operational requirements drive functional requirements, which are
+' satisfied by blocks and verified by test cases. «deriveReqt» edges flow
+' top-down from operational to functional.
+
+' ---- Operational requirements -------------------------------------------
+class "Op: Continuous Operation" <<requirement>> {
+  id : REQ-O1
+  text : "The system shall operate 24/7 without unscheduled downtime."
+}
+
+class "Op: Remote Monitoring" <<requirement>> {
+  id : REQ-O2
+  text : "Operators shall monitor the system remotely."
+}
+
+' ---- Functional requirements (derived) -----------------------------------
+class "Fn: Auto Restart" <<requirement>> {
+  id : REQ-F1
+  text : "Software shall restart critical services within 30 s of failure."
+}
+
+class "Fn: Telemetry Stream" <<requirement>> {
+  id : REQ-F2
+  text : "Software shall publish metrics at 1 Hz to the dashboard."
+}
+
+class "Fn: Alert Pipeline" <<requirement>> {
+  id : REQ-F3
+  text : "Software shall page on-call within 60 s of an SLO breach."
+}
+
+' ---- Blocks --------------------------------------------------------------
+class "SupervisorProcess" <<block>>
+class "MetricsExporter" <<block>>
+class "AlertRouter" <<block>>
+
+' ---- Test cases ----------------------------------------------------------
+class "RestartBench" <<testCase>> { id : TC-101 }
+class "TelemetryCheck" <<testCase>> { id : TC-102 }
+class "AlertDrill" <<testCase>> { id : TC-103 }
+
+' ---- Derive chain: operational -> functional ----------------------------
+"Fn: Auto Restart" ..> "Op: Continuous Operation" : <<deriveReqt>>
+"Fn: Telemetry Stream" ..> "Op: Remote Monitoring" : <<deriveReqt>>
+"Fn: Alert Pipeline" ..> "Op: Remote Monitoring" : <<deriveReqt>>
+
+' ---- Satisfaction: blocks satisfy functional ----------------------------
+"SupervisorProcess" ..> "Fn: Auto Restart" : <<satisfy>>
+"MetricsExporter" ..> "Fn: Telemetry Stream" : <<satisfy>>
+"AlertRouter" ..> "Fn: Alert Pipeline" : <<satisfy>>
+
+' ---- Verification: tests verify functional ------------------------------
+"RestartBench" ..> "Fn: Auto Restart" : <<verify>>
+"TelemetryCheck" ..> "Fn: Telemetry Stream" : <<verify>>
+"AlertDrill" ..> "Fn: Alert Pipeline" : <<verify>>
+
+note bottom of "Op: Continuous Operation"
+  <b>Edge stereotypes recap:</b>
+  «deriveReqt» — child derived from parent
+  «satisfy»    — design/block fulfills req
+  «verify»     — test case proves req
+  «trace»      — generic link
+end note
+
+@enduml

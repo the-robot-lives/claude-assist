@@ -1,0 +1,20 @@
+# .trd-yaml — TheRobotDrafts native model (IxModel serialization)
+name: 'Example Parametric - Simple F = m*a'
+elements:
+  - { id: ~note1, type: Note, name: 'PARAMETRIC DIAGRAM NOTE:', documentation: 'PARAMETRIC DIAGRAM NOTE:\nEdges here are BINDING CONNECTORS (==).\nA binding means the two ends are EQUAL\n(same value), NOT that material flows.' }
+  - { id: NewtonLaw, type: Class, name: NewtonLaw, members: [{ name: '{ F', isOperation: false, visibility: Public, defaultValue: 'm * a }', rawText: '{ F = m * a }' }] }
+  - { id: Binding context (inside a DynamicBody block), type: Package, name: Binding context (inside a DynamicBody block) }
+  - { id: Fp, type: Class, name: 'F : Force', parentId: Binding context (inside a DynamicBody block) }
+  - { id: mp, type: Class, name: 'm : Mass', parentId: Binding context (inside a DynamicBody block) }
+  - { id: ap, type: Class, name: 'a : Acceleration', parentId: Binding context (inside a DynamicBody block) }
+  - { id: 'fma : NewtonLaw', type: Constraint, name: NewtonLawInst, parentId: Binding context (inside a DynamicBody block) }
+  - { id: fma, type: Class, name: fma }
+  - { id: ~note2, type: Note, name: The constraint block exposes PARAMETERS, documentation: 'The constraint block exposes PARAMETERS\n(F, m, a). Each value property of the\nenclosing block is bound (==) to a\nparameter port, making them equal and\nenforcing the equation F = m*a.' }
+edges:
+  - { id: e1, type: NoteLink, from: ~note1, to: NewtonLaw }
+  - { id: e2, type: Association, from: Fp, to: fma }
+  - { id: e3, type: Association, from: mp, to: fma }
+  - { id: e4, type: Association, from: ap, to: fma }
+  - { id: e5, type: NoteLink, from: ~note2, to: fma }
+diagrams:
+  - { id: d1, name: 'Example Parametric - Simple F = m*a', kind: class, layoutProvenance: Synthesized }

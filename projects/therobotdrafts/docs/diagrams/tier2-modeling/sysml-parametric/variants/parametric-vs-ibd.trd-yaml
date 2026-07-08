@@ -1,0 +1,39 @@
+# .trd-yaml — TheRobotDrafts native model (IxModel serialization)
+name: Example Parametric - Parametric vs IBD
+elements:
+  - { id: SysML Parametric Diagram (equations), type: Package, name: SysML Parametric Diagram (equations) }
+  - { id: ~note1, type: Note, name: BINDING CONNECTORS (==) = equality., parentId: SysML Parametric Diagram (equations), documentation: 'BINDING CONNECTORS (==) = equality.\nParametric edges are NOT flow.' }
+  - { id: HeatBalanceC, type: Class, name: HeatBalanceC, parentId: SysML Parametric Diagram (equations), members: [{ name: '{ Q_out', isOperation: false, visibility: Public, defaultValue: 'Q_in - Q_loss }', rawText: '{ Q_out = Q_in - Q_loss }' }] }
+  - { id: ThermalConductanceC, type: Constraint, name: ThermalConductanceC, parentId: SysML Parametric Diagram (equations), members: [{ name: '{ Q_loss', isOperation: false, visibility: Public, defaultValue: 'k * A * dT / L }', rawText: '{ Q_loss = k * A * dT / L }' }] }
+  - { id: pQin, type: Class, name: 'pQin : HeatFlow', parentId: SysML Parametric Diagram (equations) }
+  - { id: pQout, type: Class, name: 'pQout : HeatFlow', parentId: SysML Parametric Diagram (equations) }
+  - { id: pQloss, type: Class, name: 'pQloss : HeatFlow', parentId: SysML Parametric Diagram (equations) }
+  - { id: pK, type: Class, name: 'pK : Conductivity', parentId: SysML Parametric Diagram (equations) }
+  - { id: '"hb : HeatBalanceC"  { }', type: Constraint, name: HeatBalInst, parentId: SysML Parametric Diagram (equations) }
+  - { id: '"tc : ThermalConductanceC"  { }', type: Constraint, name: CondInst, parentId: SysML Parametric Diagram (equations) }
+  - { id: hb, type: Class, name: hb, parentId: SysML Parametric Diagram (equations) }
+  - { id: tc, type: Class, name: tc, parentId: SysML Parametric Diagram (equations) }
+  - { id: SysML Internal Block Diagram (structure), type: Package, name: SysML Internal Block Diagram (structure) }
+  - { id: '"HeatExchanger"  { }', type: Block, name: '"HeatExchanger"  { }', parentId: SysML Internal Block Diagram (structure) }
+  - { id: HeatExchanger interior, type: Package, name: HeatExchanger interior, parentId: SysML Internal Block Diagram (structure) }
+  - { id: hCore, type: Class, name: 'hCore : Core', parentId: HeatExchanger interior }
+  - { id: hFluidIn, type: Class, name: 'hFluidIn : InletPipe', parentId: HeatExchanger interior }
+  - { id: hFluidOut, type: Class, name: 'hFluidOut : OutletPipe', parentId: HeatExchanger interior }
+  - { id: coldIn, type: Class, name: coldIn, parentId: SysML Internal Block Diagram (structure) }
+  - { id: coldOut, type: Class, name: coldOut, parentId: SysML Internal Block Diagram (structure) }
+  - { id: ~note2, type: Note, name: 'PARAMETRIC edges = binding connectors (==): the …', documentation: 'PARAMETRIC edges = binding connectors (==): the two\nends are EQUAL values; the diagram encodes equations\nthe solver enforces (conservation laws).\nIBD edges = connectors carrying item FLOW: the two\nends are WIRED together; the diagram encodes the\nphysical structure (what connects to what).\nSame block, two orthogonal views: math vs wiring.' }
+  - { id: HeatExchanger, type: Class, name: HeatExchanger }
+edges:
+  - { id: e1, type: NoteLink, from: ~note1, to: HeatBalanceC }
+  - { id: e2, type: Association, from: pQin, to: hb }
+  - { id: e3, type: Association, from: pQout, to: hb }
+  - { id: e4, type: Association, from: pQloss, to: hb }
+  - { id: e5, type: Association, from: pQloss, to: tc }
+  - { id: e6, type: Association, from: pK, to: tc }
+  - { id: e7, type: DirectedAssociation, from: coldIn, to: hFluidIn, label: FluidFlow }
+  - { id: e8, type: DirectedAssociation, from: hFluidIn, to: hCore, label: FluidFlow }
+  - { id: e9, type: DirectedAssociation, from: hCore, to: hFluidOut, label: FluidFlow }
+  - { id: e10, type: DirectedAssociation, from: hFluidOut, to: coldOut, label: FluidFlow }
+  - { id: e11, type: NoteLink, from: ~note2, to: HeatExchanger }
+diagrams:
+  - { id: d1, name: Example Parametric - Parametric vs IBD, kind: class, layoutProvenance: Synthesized }

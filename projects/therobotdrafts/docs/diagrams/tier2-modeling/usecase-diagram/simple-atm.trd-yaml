@@ -1,0 +1,16 @@
+# .trd-yaml — TheRobotDrafts native model (IxModel serialization)
+name: Example Use Case Diagram - Simple ATM
+elements:
+  - { id: cust, type: Actor, name: Customer }
+  - { id: ATM System, type: Boundary, name: ATM System }
+  - { id: uc1, type: UseCase, name: Withdraw Cash, parentId: ATM System }
+  - { id: uc2, type: UseCase, name: Check Balance, parentId: ATM System }
+  - { id: uc3, type: UseCase, name: Deposit Funds, parentId: ATM System }
+  - { id: ~note1, type: Note, name: '<b>How to read this diagram</b>', documentation: '<b>How to read this diagram</b>\n• Stick figure = ACTOR (Customer).\n• Ellipse = USE CASE (Check Balance).\n• Rectangle = SYSTEM BOUNDARY.\n• Solid line = ASSOCIATION\n(actor participates in the use case).\nUse cases answer "WHAT does the system\ndo for this actor?" — not HOW.' }
+edges:
+  - { id: e1, type: DirectedAssociation, from: cust, to: uc1 }
+  - { id: e2, type: DirectedAssociation, from: cust, to: uc2 }
+  - { id: e3, type: DirectedAssociation, from: cust, to: uc3 }
+  - { id: e4, type: NoteLink, from: ~note1, to: uc2 }
+diagrams:
+  - { id: d1, name: Example Use Case Diagram - Simple ATM, kind: usecase, layoutProvenance: Synthesized }

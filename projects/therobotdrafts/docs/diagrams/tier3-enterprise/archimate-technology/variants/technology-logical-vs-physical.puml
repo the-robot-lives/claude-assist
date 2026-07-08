@@ -1,0 +1,56 @@
+@startuml
+' ============================================================================
+' METADATA
+'   author:       TheRobotDrafts Examples
+'   description:  Same infra as logical (abstract) vs physical (named/specs).
+'   usecase:      Contrasting abstraction level in technology views.
+'   complexity:   medium
+'   domain:       enterprise-architecture / technology
+' ============================================================================
+title Example ArchiMate Technology - Variant Logical vs Physical
+
+note "TOP = Logical view (abstract node types)\nBOTTOM = Physical view (named devices with specs)\nLogical answers WHAT; Physical answers WHICH EXACT BOX." as Legend
+
+' ===== LOGICAL =====
+package "Logical View (Abstract)" #E8F5E9 {
+  rectangle "<<node>>\nApplication\nTier" as L1 #C8E6C9
+  rectangle "<<node>>\nDatabase\nTier" as L2 #C8E6C9
+  rectangle "<<node>>\nCache\nTier" as L3 #C8E6C9
+  rectangle "<<system software>>\nOS" as LSW #A5D6A7
+  rectangle "<<network>>\nBackend\nNetwork" as LNET #81C784
+
+  L1 -[#444]-> LNET : <<aggregation>>
+  L2 -[#444]-> LNET : <<aggregation>>
+  L3 -[#444]-> LNET : <<aggregation>>
+  L1 -[#444]-> LSW : <<assignment>>
+  L2 -[#444]-> LSW : <<assignment>>
+}
+
+' ===== PHYSICAL =====
+package "Physical View (Named, with specs)" #E3F2FD {
+  rectangle "<<node>>\napp-01\n16 vCPU / 64GB\n10.0.1.10" as P1 #C8E6C9
+  rectangle "<<node>>\napp-02\n16 vCPU / 64GB\n10.0.1.11" as P2 #C8E6C9
+  rectangle "<<node>>\ndb-primary\n32 vCPU / 256GB\n10.0.2.5" as P3 #C8E6C9
+  rectangle "<<node>>\nredis-01\n8 vCPU / 32GB\n10.0.3.5" as P4 #C8E6C9
+  rectangle "<<system software>>\nUbuntu 24.04" as PSW #A5D6A7
+  rectangle "<<system software>>\nRedis 7.4" as PSW2 #A5D6A7
+  rectangle "<<network>>\nVPC subnet\n10.0.0.0/16" as PNET #81C784
+
+  P1 -[#444]-> PNET : <<aggregation>>
+  P2 -[#444]-> PNET : <<aggregation>>
+  P3 -[#444]-> PNET : <<aggregation>>
+  P4 -[#444]-> PNET : <<aggregation>>
+  P1 -[#444]-> PSW : <<assignment>>
+  P2 -[#444]-> PSW : <<assignment>>
+  P3 -[#444]-> PSW : <<assignment>>
+  P4 -[#444]-> PSW2 : <<assignment>>
+}
+
+' --- realization: physical instances realize logical types ---
+P1 .[#888].> L1 : <<realization>>
+P2 .[#888].> L1 : <<realization>>
+P3 .[#888].> L2 : <<realization>>
+P4 .[#888].> L3 : <<realization>>
+PNET .[#888].> LNET : <<realization>>
+
+@enduml

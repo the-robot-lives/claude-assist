@@ -1,0 +1,24 @@
+@startuml
+' ============================================================================
+' METADATA
+'   author:       TheRobotDrafts Examples
+'   description:  Minimal datacenter — nodes, system software, network.
+'   usecase:      Teaching node, device, system software, network.
+'   complexity:   simple
+'   domain:       enterprise-architecture / technology
+' ============================================================================
+title Example ArchiMate Technology - Simple Datacenter
+
+note "ArchiMate Technology layer = GREEN\nNode/Device (active) | System Software (behavior) | Network (passive)" as Legend
+
+rectangle "<<node>>\nApp Server" as N1 #C8E6C9
+rectangle "<<device>>\nLoad Balancer" as D1 #C8E6C9
+rectangle "<<system software>>\nLinux OS" as SW1 #A5D6A7
+rectangle "<<network>>\nLAN" as NET #81C784
+
+D1 -[#444]-> N1 : <<serving>>
+N1 -[#444]-> SW1 : <<assignment>>
+N1 -[#444]-> NET : <<aggregation>>
+D1 -[#444]-> NET : <<aggregation>>
+
+@enduml

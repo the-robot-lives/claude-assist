@@ -1,0 +1,18 @@
+# .trd-yaml — TheRobotDrafts native model (IxModel serialization)
+name: Example Whiteboard - Simple Brainstorm
+elements:
+  - { id: FRAME, type: Package, name: 'Whiteboard Frame: Onboarding Ideas' }
+  - { id: S1, type: Note, name: 'Sticky: make signup 1-click', parentId: FRAME, documentation: 'Sticky: make signup 1-click' }
+  - { id: S2, type: Note, name: 'Sticky: add social login', parentId: FRAME, documentation: 'Sticky: add social login' }
+  - { id: C1, type: Component, name: 'Card: Conversion +15%', parentId: FRAME }
+  - { id: B1, type: UseCase, name: Idea bubble, parentId: FRAME }
+  - { id: CL, type: Cloud, name: Growth Cloud\n(maybe later) }
+  - { id: T1, type: Note, name: 'Text: vote with dots!', documentation: 'Text: vote with dots!' }
+edges:
+  - { id: e1, type: NoteLink, from: S1, to: B1, label: sketch arrow }
+  - { id: e2, type: NoteLink, from: S2, to: B1, label: sketch arrow }
+  - { id: e3, type: DirectedAssociation, from: B1, to: C1, label: '"leads to"' }
+  - { id: e4, type: Dependency, from: C1, to: CL, label: maybe }
+  - { id: e5, type: NoteLink, from: T1, to: S1, label: points at }
+diagrams:
+  - { id: d1, name: Example Whiteboard - Simple Brainstorm, kind: usecase, layoutProvenance: Synthesized }

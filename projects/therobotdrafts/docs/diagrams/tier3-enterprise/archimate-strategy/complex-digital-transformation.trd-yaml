@@ -1,0 +1,24 @@
+# .trd-yaml — TheRobotDrafts native model (IxModel serialization)
+name: Example ArchiMate Strategy - Complex Digital Transformation
+elements:
+  - { id: Legend, type: Note, name: 'Layer map:\nDriver(orange) | Assessment(pink) | Capability(light green)\nResource(grey) | Course of Action(yellow) | Outcome(blue)\nStakeholder(tan) | Value(blue-green)', documentation: 'Layer map:\nDriver(orange) | Assessment(pink) | Capability(light green)\nResource(grey) | Course of Action(yellow) | Outcome(blue)\nStakeholder(tan) | Value(blue-green)' }
+  - { id: D1, type: Boundary, name: \nMarket\nDisruption, stereotype: driver }
+  - { id: D2, type: Boundary, name: \nRegulatory\nPressure, stereotype: driver }
+  - { id: S1, type: Boundary, name: \nBoard of\nDirectors, stereotype: stakeholder }
+  - { id: S2, type: Boundary, name: \nCustomers, stereotype: stakeholder }
+  - { id: A1, type: Boundary, name: \nLegacy Debt\nRisk, stereotype: assessment }
+  - { id: A2, type: Boundary, name: \nCloud\nOpportunity, stereotype: assessment }
+  - { id: CAP1, type: Boundary, name: \nDigital\nChannels, stereotype: capability }
+  - { id: CAP2, type: Boundary, name: \nData\nAnalytics, stereotype: capability }
+  - { id: CAP3, type: Boundary, name: \nCloud\nPlatform, stereotype: capability }
+  - { id: CAP4, type: Boundary, name: \nDevOps, stereotype: capability }
+  - { id: CAP5, type: Boundary, name: \nAPI\nEconomy, stereotype: capability }
+  - { id: R1, type: Boundary, name: \nEngineering\nTalent, stereotype: resource }
+  - { id: R2, type: Boundary, name: \nData Lake, stereotype: resource }
+  - { id: CA1, type: Boundary, name: \nCloud-First\nStrategy, stereotype: course of action }
+  - { id: CA2, type: Boundary, name: \nData-Driven\nCulture, stereotype: course of action }
+  - { id: O1, type: Boundary, name: '\n30% Cost\nReduction', stereotype: outcome }
+  - { id: O2, type: Boundary, name: \n2x Time-to-Market, stereotype: outcome }
+  - { id: V1, type: Boundary, name: \nShareholder\nValue, stereotype: value }
+diagrams:
+  - { id: d1, name: Example ArchiMate Strategy - Complex Digital Transformation, kind: component, layoutProvenance: Synthesized }

@@ -1,0 +1,76 @@
+# .trd-yaml — TheRobotDrafts native model (IxModel serialization)
+name: Example Mind Map - Complex Strategy
+elements:
+  - { id: ~mm1, type: MindNode, name: TheRobotDrafts Strategy }
+  - { id: ~mm2, type: MindNode, name: Markets }
+  - { id: ~mm3, type: MindNode, name: Indie developers }
+  - { id: ~mm4, type: MindNode, name: Enterprise architects }
+  - { id: ~mm5, type: MindNode, name: Fortune-500 modeling teams }
+  - { id: ~mm6, type: MindNode, name: Education }
+  - { id: ~mm7, type: MindNode, name: University SE courses }
+  - { id: ~mm8, type: MindNode, name: Differentiators }
+  - { id: ~mm9, type: MindNode, name: VR-first UML-IDE }
+  - { id: ~mm10, type: MindNode, name: Open interchange format }
+  - { id: ~mm11, type: MindNode, name: .trd-yaml + XMI round-trip }
+  - { id: ~mm12, type: MindNode, name: AI-assisted code-gen }
+  - { id: ~mm13, type: MindNode, name: Revenue }
+  - { id: ~mm14, type: MindNode, name: Subscription }
+  - { id: ~mm15, type: MindNode, name: Per-seat enterprise }
+  - { id: ~mm16, type: MindNode, name: Marketplace }
+  - { id: ~mm17, type: MindNode, name: Template packs }
+  - { id: ~mm18, type: MindNode, name: Delivery }
+  - { id: ~mm19, type: MindNode, name: Unity desktop }
+  - { id: ~mm20, type: MindNode, name: Web viewer }
+  - { id: ~mm21, type: MindNode, name: CLI export }
+  - { id: ~mm22, type: MindNode, name: Ecosystem }
+  - { id: ~mm23, type: MindNode, name: Partners }
+  - { id: ~mm24, type: MindNode, name: 'EA, Lucidchart bridges' }
+  - { id: ~mm25, type: MindNode, name: Community templates }
+  - { id: ~mm26, type: MindNode, name: Risks }
+  - { id: ~mm27, type: MindNode, name: Unity licensing cost }
+  - { id: ~mm28, type: MindNode, name: Competitor lock-in }
+  - { id: ~mm29, type: MindNode, name: Operations }
+  - { id: ~mm30, type: MindNode, name: CI/CD }
+  - { id: ~mm31, type: MindNode, name: Telemetry }
+  - { id: ~mm32, type: MindNode, name: OpenTelemetry tracing }
+  - { id: ~mm33, type: MindNode, name: Foundations }
+  - { id: ~mm34, type: MindNode, name: Noizu infra platform }
+  - { id: ~mm35, type: MindNode, name: Kubernetes self-host }
+  - { id: ~mm36, type: MindNode, name: 'Floating: revisit pricing Q3 after GA launch' }
+edges:
+  - { id: e1, type: DirectedAssociation, from: ~mm1, to: ~mm2 }
+  - { id: e2, type: DirectedAssociation, from: ~mm2, to: ~mm3 }
+  - { id: e3, type: DirectedAssociation, from: ~mm2, to: ~mm4 }
+  - { id: e4, type: DirectedAssociation, from: ~mm4, to: ~mm5 }
+  - { id: e5, type: DirectedAssociation, from: ~mm2, to: ~mm6 }
+  - { id: e6, type: DirectedAssociation, from: ~mm6, to: ~mm7 }
+  - { id: e7, type: DirectedAssociation, from: ~mm1, to: ~mm8 }
+  - { id: e8, type: DirectedAssociation, from: ~mm8, to: ~mm9 }
+  - { id: e9, type: DirectedAssociation, from: ~mm8, to: ~mm10 }
+  - { id: e10, type: DirectedAssociation, from: ~mm10, to: ~mm11 }
+  - { id: e11, type: DirectedAssociation, from: ~mm8, to: ~mm12 }
+  - { id: e12, type: DirectedAssociation, from: ~mm1, to: ~mm13 }
+  - { id: e13, type: DirectedAssociation, from: ~mm13, to: ~mm14 }
+  - { id: e14, type: DirectedAssociation, from: ~mm13, to: ~mm15 }
+  - { id: e15, type: DirectedAssociation, from: ~mm13, to: ~mm16 }
+  - { id: e16, type: DirectedAssociation, from: ~mm16, to: ~mm17 }
+  - { id: e17, type: DirectedAssociation, from: ~mm1, to: ~mm18 }
+  - { id: e18, type: DirectedAssociation, from: ~mm18, to: ~mm19 }
+  - { id: e19, type: DirectedAssociation, from: ~mm18, to: ~mm20 }
+  - { id: e20, type: DirectedAssociation, from: ~mm18, to: ~mm21 }
+  - { id: e21, type: DirectedAssociation, from: ~mm1, to: ~mm22 }
+  - { id: e22, type: DirectedAssociation, from: ~mm22, to: ~mm23 }
+  - { id: e23, type: DirectedAssociation, from: ~mm23, to: ~mm24 }
+  - { id: e24, type: DirectedAssociation, from: ~mm22, to: ~mm25 }
+  - { id: e25, type: DirectedAssociation, from: ~mm1, to: ~mm26 }
+  - { id: e26, type: DirectedAssociation, from: ~mm26, to: ~mm27 }
+  - { id: e27, type: DirectedAssociation, from: ~mm26, to: ~mm28 }
+  - { id: e28, type: DirectedAssociation, from: ~mm1, to: ~mm29 }
+  - { id: e29, type: DirectedAssociation, from: ~mm29, to: ~mm30 }
+  - { id: e30, type: DirectedAssociation, from: ~mm29, to: ~mm31 }
+  - { id: e31, type: DirectedAssociation, from: ~mm31, to: ~mm32 }
+  - { id: e32, type: DirectedAssociation, from: ~mm1, to: ~mm33 }
+  - { id: e33, type: DirectedAssociation, from: ~mm33, to: ~mm34 }
+  - { id: e34, type: DirectedAssociation, from: ~mm33, to: ~mm35 }
+diagrams:
+  - { id: d1, name: Example Mind Map - Complex Strategy, kind: mindmap, layoutProvenance: Synthesized }

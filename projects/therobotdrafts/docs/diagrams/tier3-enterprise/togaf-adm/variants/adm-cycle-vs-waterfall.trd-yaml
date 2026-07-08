@@ -1,0 +1,33 @@
+# .trd-yaml — TheRobotDrafts native model (IxModel serialization)
+name: Example TOGAF ADM - Cycle vs Waterfall
+elements:
+  - { id: Variant, type: Actor, name: Variant, members: [{ name: same 8 phases shown TWO ways., isOperation: false, visibility: Public, rawText: same 8 phases shown TWO ways. }] }
+  - { id: cA, type: UseCase, name: A (cycle) }
+  - { id: cB, type: UseCase, name: B (cycle) }
+  - { id: cC, type: UseCase, name: C (cycle) }
+  - { id: cD, type: UseCase, name: D (cycle) }
+  - { id: cE, type: UseCase, name: E (cycle) }
+  - { id: cF, type: UseCase, name: F (cycle) }
+  - { id: cG, type: UseCase, name: G (cycle) }
+  - { id: cH, type: UseCase, name: H (cycle) }
+  - { id: wA, type: Boundary, name: A (waterfall) }
+  - { id: wB, type: Boundary, name: B (waterfall) }
+  - { id: wC, type: Boundary, name: C (waterfall) }
+  - { id: wD, type: Boundary, name: D (waterfall) }
+  - { id: wE, type: Boundary, name: E (waterfall) }
+  - { id: wF, type: Boundary, name: F (waterfall) }
+  - { id: wG, type: Boundary, name: G (waterfall) }
+  - { id: wH, type: Boundary, name: H (waterfall) }
+  - { id: ~note1, type: Note, name: STOP - no feedback to A, documentation: STOP - no feedback to A }
+edges:
+  - { id: e1, type: DirectedAssociation, from: cH, to: cA, label: iterate }
+  - { id: e2, type: DirectedAssociation, from: wA, to: wB }
+  - { id: e3, type: DirectedAssociation, from: wB, to: wC }
+  - { id: e4, type: DirectedAssociation, from: wC, to: wD }
+  - { id: e5, type: DirectedAssociation, from: wD, to: wE }
+  - { id: e6, type: DirectedAssociation, from: wE, to: wF }
+  - { id: e7, type: DirectedAssociation, from: wF, to: wG }
+  - { id: e8, type: DirectedAssociation, from: wG, to: wH }
+  - { id: e9, type: NoteLink, from: ~note1, to: wH }
+diagrams:
+  - { id: d1, name: Example TOGAF ADM - Cycle vs Waterfall, kind: usecase, layoutProvenance: Synthesized }

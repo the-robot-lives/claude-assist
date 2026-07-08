@@ -1,0 +1,16 @@
+# .trd-yaml — TheRobotDrafts native model (IxModel serialization)
+name: Example Composite Structure - Simple Published/Subscribed
+elements:
+  - { id: channel, type: Boundary, name: EventChannel, stereotype: structuredClassifier }
+  - { id: pub, type: Component, name: 'publisher : Publisher', parentId: channel }
+  - { id: sub, type: Component, name: 'subscriber : Subscriber', parentId: channel }
+  - { id: pIn, type: Component, name: pIn, parentId: channel }
+  - { id: pOut, type: Component, name: pOut, parentId: channel }
+  - { id: ~note1, type: Note, name: '<b>How to read this diagram</b>', documentation: '<b>How to read this diagram</b>\n• The rectangle IS the classifier\n"EventChannel" (a structured type).\n• publisher & subscriber are PARTS:\ntyped slots, not instances.\n• pub --> sub is a CONNECTOR\n(parts talk over it).\n• in/out are PORTS on the boundary.\n• pIn --> pub is a DELEGATION\nconnector: a message sent to the\nport is forwarded to the part.' }
+edges:
+  - { id: e1, type: DirectedAssociation, from: pub, to: sub, label: dispatch }
+  - { id: e2, type: DirectedAssociation, from: pIn, to: pub }
+  - { id: e3, type: DirectedAssociation, from: sub, to: pOut }
+  - { id: e4, type: NoteLink, from: ~note1, to: channel }
+diagrams:
+  - { id: d1, name: Example Composite Structure - Simple Published/Subscribed, kind: component, layoutProvenance: Synthesized }

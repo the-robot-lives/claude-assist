@@ -1,0 +1,11 @@
+# .trd-yaml — TheRobotDrafts native model (IxModel serialization)
+name: Example Timing Diagram - Simple Traffic Light
+elements:
+  - { id: TL, type: Lifeline, name: TrafficLight }
+edges:
+  - { id: t0, type: Transition, from: TL, to: TL, label: '@0 is Red' }
+  - { id: t1, type: Transition, from: TL, to: TL, label: '@5 is Green' }
+  - { id: t2, type: Transition, from: TL, to: TL, label: '@10 is Yellow' }
+  - { id: t3, type: Transition, from: TL, to: TL, label: '@12 is Red' }
+diagrams:
+  - { id: d1, name: Example Timing Diagram - Simple Traffic Light, kind: timing, layoutProvenance: Synthesized }

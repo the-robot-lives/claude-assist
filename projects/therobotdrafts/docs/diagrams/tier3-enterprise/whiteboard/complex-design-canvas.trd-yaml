@@ -1,0 +1,48 @@
+# .trd-yaml — TheRobotDrafts native model (IxModel serialization)
+name: Example Whiteboard - Complex Design Canvas
+elements:
+  - { id: F1, type: Package, name: 'Frame: Discovery' }
+  - { id: N1, type: Note, name: User wants speed, parentId: F1, documentation: User wants speed }
+  - { id: N2, type: Note, name: Legacy is slow, parentId: F1, documentation: Legacy is slow }
+  - { id: N3, type: Note, name: Budget tight, parentId: F1, documentation: Budget tight }
+  - { id: C1, type: Component, name: 'Card: Interview 12 users', parentId: F1 }
+  - { id: F2, type: Package, name: 'Frame: Ideation' }
+  - { id: N4, type: Note, name: 'Sticky: cache layer', parentId: F2, documentation: 'Sticky: cache layer' }
+  - { id: N5, type: Note, name: 'Sticky: async jobs', parentId: F2, documentation: 'Sticky: async jobs' }
+  - { id: N6, type: Note, name: 'Sticky: CDN edges', parentId: F2, documentation: 'Sticky: CDN edges' }
+  - { id: U1, type: UseCase, name: 'Bubble: edge compute', parentId: F2 }
+  - { id: U2, type: UseCase, name: 'Bubble: job runner', parentId: F2 }
+  - { id: F3, type: Package, name: 'Frame: Decisions' }
+  - { id: D1, type: Component, name: 'Decision: adopt CDN', parentId: F3 }
+  - { id: D2, type: Component, name: 'Decision: defer jobs', parentId: F3 }
+  - { id: CL1, type: Cloud, name: 'Big Idea Cloud:\nEdge-first' }
+  - { id: CL2, type: Cloud, name: 'Risk Cloud:\nCost overrun' }
+  - { id: AQ1, type: Boundary, name: 'Async: send to cache team' }
+  - { id: AQ2, type: Boundary, name: 'Async: receive from finance' }
+  - { id: T1, type: Note, name: 'Text: VOTE BY FRIDAY', documentation: 'Text: VOTE BY FRIDAY' }
+  - { id: T2, type: Note, name: 'Text: owner = @maya', documentation: 'Text: owner = @maya' }
+  - { id: DM1, type: Actor, name: DM1 }
+  - { id: GO1, type: Actor, name: GO1 }
+  - { id: NO1, type: Actor, name: NO1 }
+edges:
+  - { id: e1, type: NoteLink, from: N1, to: C1 }
+  - { id: e2, type: NoteLink, from: N2, to: N4 }
+  - { id: e3, type: NoteLink, from: N3, to: D2 }
+  - { id: e4, type: DirectedAssociation, from: C1, to: U1 }
+  - { id: e5, type: NoteLink, from: N4, to: U1 }
+  - { id: e6, type: NoteLink, from: N5, to: U2 }
+  - { id: e7, type: NoteLink, from: N6, to: U1 }
+  - { id: e8, type: DirectedAssociation, from: U1, to: DM1 }
+  - { id: e9, type: DirectedAssociation, from: U2, to: DM1 }
+  - { id: e10, type: DirectedAssociation, from: DM1, to: GO1, label: pick CDN }
+  - { id: e11, type: DirectedAssociation, from: DM1, to: NO1, label: defer jobs }
+  - { id: e12, type: DirectedAssociation, from: GO1, to: D1 }
+  - { id: e13, type: DirectedAssociation, from: NO1, to: D2 }
+  - { id: e14, type: DirectedAssociation, from: D1, to: AQ1, label: send }
+  - { id: e15, type: DirectedAssociation, from: AQ2, to: D2, label: receive }
+  - { id: e16, type: DirectedAssociation, from: CL1, to: U1, label: inspires }
+  - { id: e17, type: Dependency, from: CL2, to: D2, label: threatens }
+  - { id: e18, type: NoteLink, from: T1, to: DM1 }
+  - { id: e19, type: NoteLink, from: T2, to: D1 }
+diagrams:
+  - { id: d1, name: Example Whiteboard - Complex Design Canvas, kind: usecase, layoutProvenance: Synthesized }

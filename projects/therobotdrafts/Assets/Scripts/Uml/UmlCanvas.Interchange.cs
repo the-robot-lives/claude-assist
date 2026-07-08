@@ -439,29 +439,31 @@ namespace TheRobotDraft.Uml
                 }
             _ctl.EnterSelect();
 
-            // Geometry — apply the first authored diagram's placements (IR is top-left, Y-down; the canvas stores a
-            // node's centre with Y-up, so add half-extents and flip Y). No authored geometry ⇒ lay out by source.
-            IxDiagram authored = null;
+            // Geometry — apply placements from ALL authored diagrams (IR is top-left, Y-down; the canvas stores a
+            // node's centre Y-up, so add half-extents and flip Y). The runtime holds one geometry per element, so for
+            // an element placed in several diagrams the FIRST diagram's placement wins. No authored geometry ⇒ source layout.
+            int placed = 0;
+            var seen = new HashSet<ElementId>();
             if (model.Diagrams != null)
                 foreach (var d in model.Diagrams)
-                    if (d != null && d.LayoutProvenance == IxLayoutProvenance.Authored) { authored = d; break; }
-
-            int placed = 0;
-            if (authored != null && authored.Nodes != null)
-                foreach (var pl in authored.Nodes)
                 {
-                    if (pl == null || string.IsNullOrEmpty(pl.ElementId)) continue;
-                    if (!idMap.TryGetValue(pl.ElementId, out var nid)) continue;
-                    if (pl.Width > 0f && pl.Height > 0f)
+                    if (d == null || d.LayoutProvenance != IxLayoutProvenance.Authored || d.Nodes == null) continue;
+                    foreach (var pl in d.Nodes)
                     {
-                        _pos[nid] = new Vector2(pl.X + pl.Width * 0.5f, -(pl.Y + pl.Height * 0.5f));
-                        _size[nid] = new Vector2(pl.Width, pl.Height);
+                        if (pl == null || string.IsNullOrEmpty(pl.ElementId)) continue;
+                        if (!idMap.TryGetValue(pl.ElementId, out var nid)) continue;
+                        if (!seen.Add(nid)) continue; // first-placement-wins for multi-diagram geometry
+                        if (pl.Width > 0f && pl.Height > 0f)
+                        {
+                            _pos[nid] = new Vector2(pl.X + pl.Width * 0.5f, -(pl.Y + pl.Height * 0.5f));
+                            _size[nid] = new Vector2(pl.Width, pl.Height);
+                        }
+                        else
+                        {
+                            _pos[nid] = new Vector2(pl.X, -pl.Y);
+                        }
+                        placed++;
                     }
-                    else
-                    {
-                        _pos[nid] = new Vector2(pl.X, -pl.Y);
-                    }
-                    placed++;
                 }
 
             _selectedId = ElementId.None;
@@ -702,9 +704,47 @@ namespace TheRobotDraft.Uml
                 });
             }
 
-            // Geometry — one authored diagram; centre (Y-up) back to top-left (Y-down) with half-extents.
-            var diagram = new IxDiagram { Id = "d1", Name = diagramName, LayoutProvenance = IxLayoutProvenance.Authored };
-            foreach (var el in _model.Elements)
+            // Geometry — emit one authored IxDiagram per top-level Package (the runtime "tab"). Each diagram carries
+            // the placements of every element whose top-level ancestor is that package. Centre (Y-up) back to top-left
+            // (Y-down) with half-extents. Selection export keeps the single-synthetic-diagram behaviour.
+            if (included != null)
+            {
+                var diagram = new IxDiagram { Id = "d1", Name = diagramName, LayoutProvenance = IxLayoutProvenance.Authored };
+                AddPlacementsTo(diagram, _model.Elements, byId);
+                if (diagram.Nodes.Count > 0) model.Diagrams.Add(diagram);
+            }
+            else
+            {
+                int di = 1;
+                foreach (var topLevel in TopLevelPackages())
+                {
+                    var pkgEl = _model.Get(topLevel);
+                    var d = new IxDiagram
+                    {
+                        Id = "d" + di++,
+                        Name = string.IsNullOrEmpty(pkgEl.Name) ? diagramName : pkgEl.Name,
+                        LayoutProvenance = IxLayoutProvenance.Authored,
+                    };
+                    AddPlacementsTo(d, SubtreeOf(topLevel), byId);
+                    if (d.Nodes.Count > 0) model.Diagrams.Add(d);
+                }
+                // Elements with no top-level package ancestor (rare — orphan placements) land in a catch-all diagram.
+                if (model.Diagrams.Count == 0)
+                {
+                    var fallback = new IxDiagram { Id = "d1", Name = diagramName, LayoutProvenance = IxLayoutProvenance.Authored };
+                    AddPlacementsTo(fallback, _model.Elements, byId);
+                    if (fallback.Nodes.Count > 0) model.Diagrams.Add(fallback);
+                }
+            }
+
+            return model;
+        }
+
+        /// <summary>Append a placement (top-left, Y-down) for every element in <paramref name="elements"/> that has a
+        /// position and an IxElement, into <paramref name="diagram"/>. Centre (Y-up) → top-left (Y-down) + half-extents.</summary>
+        private void AddPlacementsTo(IxDiagram diagram, IEnumerable<ModelElement> elements, Dictionary<string, IxElement> byId)
+        {
+            foreach (var el in elements)
             {
                 if (KindInfo.IsMember(el.Kind) || !byId.ContainsKey(el.Id.Value)) continue;
                 if (!_pos.TryGetValue(el.Id, out var centre)) continue;
@@ -726,9 +766,34 @@ namespace TheRobotDraft.Uml
                 }
                 diagram.Nodes.Add(placement);
             }
-            model.Diagrams.Add(diagram);
+        }
 
-            return model;
+        /// <summary>Every top-level Package element (a Package with no parent) — these are the runtime "tabs" / diagrams.</summary>
+        private List<ModelElement> TopLevelPackages()
+        {
+            var list = new List<ModelElement>();
+            foreach (var el in _model.Elements)
+            {
+                if (!KindInfo.IsMember(el.Kind) && el.Kind == ElementKind.Package && !el.Parent.IsValid)
+                    list.Add(el);
+            }
+            return list;
+        }
+
+        /// <summary>An element and all its transitive descendants (by containment).</summary>
+        private IEnumerable<ModelElement> SubtreeOf(ElementId root)
+        {
+            var stack = new Stack<ElementId>();
+            stack.Push(root);
+            int guard = 0;
+            while (stack.Count > 0)
+            {
+                var id = stack.Pop();
+                if (!_model.TryGet(id, out var el)) continue;
+                yield return el;
+                foreach (var c in el.ChildIds) stack.Push(c);
+                if (++guard > 1000000) yield break;
+            }
         }
 
         /// <summary>Selected elements + their member children + their ancestor package chain (the export closure).</summary>

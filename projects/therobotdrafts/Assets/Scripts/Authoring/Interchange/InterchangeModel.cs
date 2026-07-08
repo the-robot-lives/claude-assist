@@ -37,6 +37,12 @@ namespace TheRobotDraft.Authoring.Interchange
         // component, deployment, sequence, mind-map sources)
         UseCase, State, StateStart, StateEnd, Activity, Decision, ForkJoin, FlowFinal,
         Component, DeploymentNode, Database, Cloud, Lifeline, MindNode,
+        // SysML vocabulary (stereotyped classes / blocks)
+        Block, ValueType, Constraint, Requirement, TestCase,
+        // BPMN 2.0 vocabulary
+        BpmnEvent, BpmnActivity, BpmnGateway, BpmnDataObject, BpmnPool, BpmnLane,
+        // DMN vocabulary (Decision collides with the activity-decision diamond, hence DmnDecision)
+        DmnDecision, InputData, KnowledgeSource, BusinessKnowledge,
         Unknown
     }
 
@@ -46,6 +52,10 @@ namespace TheRobotDraft.Authoring.Interchange
         Generalization, Realization, Dependency, NoteLink, Extension,
         // Behavioral vocabulary
         Include, Extend, Transition, MessageSync, MessageAsync, MessageReply,
+        // SysML / requirements-traceability vocabulary (from «satisfy»/«verify»/«derive»/«refine»/«trace»)
+        Satisfy, Verify, Derive, Refine, Trace, Copy,
+        // BPMN vocabulary
+        SequenceFlow, MessageFlow,
         Unknown
     }
 

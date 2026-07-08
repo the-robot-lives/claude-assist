@@ -1,0 +1,33 @@
+@startmindmap
+' ============================================================================
+' METADATA
+'   author:       TheRobotDrafts Examples
+'   description:  Variant - the same content as a radial mind map vs a top-down hierarchical tree (org-chart style).
+'   usecase:      Note the radial-vs-tree presentation trade-off.
+'   complexity:   medium
+'   domain:       Diagram-family comparison
+' ============================================================================
+title Example Mind Map (Variant) - Mind Map vs Tree
+
+' MIND MAP (this file): branches radiate from a central topic; levels nest by
+'   indentation; favors free-form brainstorming and non-uniform depth.
+' HIERARCHICAL TREE: a top-down org-chart with explicit parent-child edges;
+'   favors reporting structure and ordered ranks.
+
++ TheRobotDrafts Platform
+++ Diagrams
++++ UML
++++ SysML
+++ Editor
+++ Collaboration
+
+left side
+
+++ Infrastructure
+
+' The paired tree view is emitted by the converter as a separate diagram using
+' nested packages / WBS or salt tree syntax. The radial mind map emphasizes
+' the central topic; the tree emphasizes rank and ordering.
+* Floating: tree variant rendered separately by the converter
+
+@endmindmap

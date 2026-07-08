@@ -1,0 +1,27 @@
+@startgantt
+' ============================================================================
+' METADATA
+'   author:       TheRobotDrafts Examples
+'   description:  Simple Gantt — 4 tasks, one dependency, one milestone.
+'   usecase:      Teaching gantt task, milestone, dependency, time axis.
+'   complexity:   simple
+'   domain:       project-tracking / gantt
+' ============================================================================
+title Example Gantt - Simple Project
+
+project starts the 1st of january 2026
+saturday are closed
+sunday are closed
+
+-- Design --
+[Requirements] lasts 5 days
+[Wireframes] lasts 4 days
+[Wireframes] starts at [Requirements]'s end
+
+-- Build --
+[Coding] lasts 10 days
+[Coding] starts at [Wireframes]'s end
+
+[Milestone: MVP Demo] happens at [Coding]'s end
+
+@endgantt

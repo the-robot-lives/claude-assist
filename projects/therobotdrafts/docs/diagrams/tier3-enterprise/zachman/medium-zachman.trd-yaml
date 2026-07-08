@@ -1,0 +1,37 @@
+# .trd-yaml — TheRobotDrafts native model (IxModel serialization)
+name: Example Zachman - Medium 6x6 (one-third populated)
+elements:
+  - { id: PR, type: Package, name: Planner row }
+  - { id: 'P_W { rectangle "List of Things" as P1 }', type: Package, name: P x What }
+  - { id: 'P_H { rectangle "List of Processes" as P2 }', type: Package, name: P x How }
+  - { id: 'P_Wh { rectangle "Site Locations" as P3 }', type: Package, name: P x Where }
+  - { id: 'P_Y { rectangle "Business Purpose" as P4 }', type: Package, name: P x Why }
+  - { id: OR, type: Package, name: Owner row }
+  - { id: 'O_W { rectangle "Semantic Model" as O1 }', type: Package, name: O x What }
+  - { id: 'O_H { rectangle "Business Process" as O2 }', type: Package, name: O x How }
+  - { id: 'O_Wh { rectangle "Logistics Network" as O3 }', type: Package, name: O x Where }
+  - { id: DR, type: Package, name: Designer row }
+  - { id: 'D_W { rectangle "Data Model (ERD)" as D1 }', type: Package, name: D x What }
+  - { id: 'D_H { rectangle "App Architecture" as D2 }', type: Package, name: D x How }
+  - { id: 'D_Wh { rectangle "System Geography" as D3 }', type: Package, name: D x Where }
+  - { id: BR, type: Package, name: Builder row }
+  - { id: 'B_H { rectangle "Program Spec" as B1 }', type: Package, name: B x How }
+  - { id: PRG, type: Package, name: Programmer row }
+  - { id: 'Pg_H { rectangle "Source Code" as Pg1 }', type: Package, name: Pg x How }
+  - { id: P1, type: Lifeline, name: P1 }
+  - { id: O1, type: Lifeline, name: O1 }
+  - { id: D1, type: Lifeline, name: D1 }
+  - { id: P2, type: Lifeline, name: P2 }
+  - { id: O2, type: Lifeline, name: O2 }
+  - { id: D2, type: Lifeline, name: D2 }
+  - { id: B1, type: Lifeline, name: B1 }
+  - { id: Pg1, type: Lifeline, name: Pg1 }
+edges:
+  - { id: e1, type: MessageReply, from: P1, to: O1, label: refines }
+  - { id: e2, type: MessageReply, from: O1, to: D1, label: refines }
+  - { id: e3, type: MessageReply, from: P2, to: O2, label: refines }
+  - { id: e4, type: MessageReply, from: O2, to: D2, label: refines }
+  - { id: e5, type: MessageReply, from: D2, to: B1, label: refines }
+  - { id: e6, type: MessageReply, from: B1, to: Pg1, label: refines }
+diagrams:
+  - { id: d1, name: Example Zachman - Medium 6x6 (one-third populated), kind: sequence, layoutProvenance: Synthesized }

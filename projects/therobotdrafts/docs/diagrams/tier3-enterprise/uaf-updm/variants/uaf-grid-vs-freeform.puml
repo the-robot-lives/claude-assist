@@ -1,0 +1,48 @@
+' ============================================================================
+' METADATA
+'   author:       TheRobotDrafts Examples
+'   description:  UAF strict-grid (cells labeled by viewpoint x aspect) vs freeform layout.
+'   usecase:      Teach when the UAF grid addressability matters vs a freeform sketch.
+'   complexity:   variant
+'   domain:       enterprise / defense-architecture
+' ============================================================================
+title Example UAF/UPDM - Grid vs Freeform
+
+note as TopNote
+  Variant: same 4-node surveillance story shown TWO ways.
+  LEFT: strict UAF grid - each cell is addressed (row, col).
+  RIGHT: freeform - same nodes/edges, no grid cells.
+  Grid MATTERS when you need to prove viewpoint coverage or
+  map each element to a canonical cell for tooling/traceability.
+end note
+
+' ============ LEFT: STRICT GRID ============
+package "GRID: Operational x Activities" as G_OA {
+  usecase "Conduct Patrol" as GA1
+}
+
+package "GRID: Operational x Resources" as G_OR {
+  actor "Patrol Crew" as GP1
+}
+
+package "GRID: Systems x Resources" as G_SR {
+  node "Radar" as GS1
+}
+
+package "GRID: Standards x Profiles" as G_SP {
+  rectangle "STD: Link 22" as GST1
+}
+
+GP1 --> GA1 : performs
+GA1 ..> GS1 : needline
+GS1 ..> GST1 : conforms
+
+' ============ RIGHT: FREEFORM (no grid cells) ============
+actor "Patrol Crew (FF)" as FP1
+usecase "Conduct Patrol (FF)" as FA1
+node "Radar (FF)" as FS1
+rectangle "STD: Link 22 (FF)" as FST1
+
+FP1 --> FA1 : performs
+FA1 --> FS1 : supported-by
+FS1 --> FST1 : conforms

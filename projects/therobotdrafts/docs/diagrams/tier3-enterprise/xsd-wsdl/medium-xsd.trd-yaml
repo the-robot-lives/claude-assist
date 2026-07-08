@@ -1,0 +1,22 @@
+# .trd-yaml — TheRobotDrafts native model (IxModel serialization)
+name: 'Example XSD - Medium Schema (extension/restriction, choice/sequence)'
+elements:
+  - { id: NS_CAT, type: Package, name: 'catalog.xsd (target ns: cat)' }
+  - { id: Product, type: Class, name: Product\n\n(sequence), parentId: NS_CAT, stereotype: complexType, members: [{ name: sku, isOperation: false, visibility: Public, type: string, rawText: '+ sku: string' }, { name: name, isOperation: false, visibility: Public, type: string, rawText: '+ name: string' }, { name: price, isOperation: false, visibility: Public, type: decimal, rawText: '+ price: decimal' }] }
+  - { id: Book, type: Class, name: Book\n\n(extends Product), parentId: NS_CAT, stereotype: complexType, members: [{ name: author, isOperation: false, visibility: Public, type: string, rawText: '+ author: string' }, { name: pages, isOperation: false, visibility: Public, type: int, rawText: '+ pages: int' }] }
+  - { id: Electronic, type: Class, name: Electronic\n\n(extends Product), parentId: NS_CAT, stereotype: complexType, members: [{ name: voltage, isOperation: false, visibility: Public, type: int, rawText: '+ voltage: int' }, { name: warranty, isOperation: false, visibility: Public, type: duration, rawText: '+ warranty: duration' }] }
+  - { id: Shipment, type: Class, name: Shipment\n\n(choice), parentId: NS_CAT, stereotype: complexType, members: [{ name: method, isOperation: false, visibility: Public, type: string, rawText: '+ method: string' }] }
+  - { id: Address, type: Class, name: Address\n, parentId: NS_CAT, stereotype: complexType, members: [{ name: street, isOperation: false, visibility: Public, type: string, rawText: '+ street: string' }, { name: city, isOperation: false, visibility: Public, type: string, rawText: '+ city: string' }, { name: zip, isOperation: false, visibility: Public, type: string, rawText: '+ zip: string' }] }
+  - { id: OrderStatus, type: Class, name: OrderStatus\n\n(restriction enum), parentId: NS_CAT, stereotype: simpleType, members: [{ name: PENDING, isOperation: false, visibility: Public, rawText: + PENDING }, { name: SHIPPED, isOperation: false, visibility: Public, rawText: + SHIPPED }, { name: DELIVERED, isOperation: false, visibility: Public, rawText: + DELIVERED }, { name: CANCELLED, isOperation: false, visibility: Public, rawText: + CANCELLED }] }
+  - { id: ~note1, type: Note, name: 'xs:choice of:', documentation: 'xs:choice of:\nAirFreight | Ground | Pickup' }
+  - { id: ~note2, type: Note, name: 'xs:sequence: sku, name, price (ordered)', documentation: 'xs:sequence: sku, name, price (ordered)' }
+  - { id: ~note3, type: Note, name: 'xs:restriction base="xs:string"', documentation: 'xs:restriction base="xs:string"\n(enumeration facets)' }
+edges:
+  - { id: e1, type: Generalization, from: Book, to: Product, label: '"xs:extension"' }
+  - { id: e2, type: Generalization, from: Electronic, to: Product, label: '"xs:extension"' }
+  - { id: e3, type: NoteLink, from: ~note1, to: Shipment }
+  - { id: e4, type: NoteLink, from: ~note2, to: Product }
+  - { id: e5, type: NoteLink, from: ~note3, to: OrderStatus }
+  - { id: e6, type: DirectedAssociation, from: Shipment, to: Address, label: '"destination (element ref)"' }
+diagrams:
+  - { id: d1, name: 'Example XSD - Medium Schema (extension/restriction, choice/sequence)', kind: class, layoutProvenance: Synthesized }

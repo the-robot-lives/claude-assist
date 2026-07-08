@@ -1,0 +1,6 @@
+# .trd-yaml — TheRobotDrafts native model (IxModel serialization)
+name: Example Wireframe - Simple Login (lo-fi)
+elements:
+  - { id: src, type: Note, name: salt source, documentation: '[degraded — salt markup not structurally parsed]\n@startsalt\n'' ============================================================================\n'' METADATA\n''   author:       TheRobotDrafts Examples\n''   description:  Low-fidelity login screen wireframe using salt widget syntax.\n''   usecase:      Teach screen container, widgets, and a navigation hint.\n''   complexity:   simple\n''   domain:       wireframe / ui-mockup\n'' ============================================================================\ntitle Example Wireframe - Simple Login (lo-fi)\n\n{\n  {+Logo placeholder+}\n  ..\n  {Login | "username"  }\n  {Password | "password"  }\n  ..\n  [Sign In]\n  ..\n  "Forgot password?"\n}\n@endsalt\n', tags: {degraded: true} }
+diagrams:
+  - { id: d1, name: Example Wireframe - Simple Login (lo-fi), kind: salt, layoutProvenance: Synthesized }

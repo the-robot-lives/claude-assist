@@ -1,0 +1,30 @@
+# .trd-yaml — TheRobotDrafts native model (IxModel serialization)
+name: Example BPMN Collaboration - Buyer / Seller
+elements:
+  - { id: PoolBuyer, type: Boundary, name: '**Buyer**' }
+  - { id: BStart, type: UseCase, name: BStart, parentId: PoolBuyer }
+  - { id: B1, type: Boundary, name: Place Order, parentId: PoolBuyer }
+  - { id: B2, type: Boundary, name: Receive Goods, parentId: PoolBuyer }
+  - { id: BEnd, type: UseCase, name: BEnd, parentId: PoolBuyer }
+  - { id: PoolSeller, type: Boundary, name: '**Seller**' }
+  - { id: SStart, type: UseCase, name: SStart, parentId: PoolSeller }
+  - { id: S1, type: Boundary, name: Accept Order, parentId: PoolSeller }
+  - { id: S2, type: Boundary, name: Ship Goods, parentId: PoolSeller }
+  - { id: SEnd, type: UseCase, name: SEnd, parentId: PoolSeller }
+  - { id: ~note1, type: Note, name: '<b>Expanded pool</b>', documentation: '<b>Expanded pool</b>\nInternal process visible.\nTasks + sequence flow shown.' }
+  - { id: ~note2, type: Note, name: '<b>Expanded pool</b>', documentation: '<b>Expanded pool</b>\nContrast: a black-box pool\nwould be empty with only\nmessage flows touching it.' }
+  - { id: ~note3, type: Note, name: '<b>Message flow (dashed ..>)</b>', documentation: '<b>Message flow (dashed ..>)</b>\nCrosses the pool boundary.\nSequence flow never crosses pools.' }
+edges:
+  - { id: e1, type: DirectedAssociation, from: BStart, to: B1 }
+  - { id: e2, type: DirectedAssociation, from: B1, to: B2 }
+  - { id: e3, type: DirectedAssociation, from: B2, to: BEnd }
+  - { id: e4, type: DirectedAssociation, from: SStart, to: S1 }
+  - { id: e5, type: DirectedAssociation, from: S1, to: S2 }
+  - { id: e6, type: DirectedAssociation, from: S2, to: SEnd }
+  - { id: e7, type: Dependency, from: B1, to: S1, label: '"Order"' }
+  - { id: e8, type: Dependency, from: S2, to: B2, label: '"Goods + Invoice"' }
+  - { id: e9, type: NoteLink, from: ~note1, to: PoolBuyer }
+  - { id: e10, type: NoteLink, from: ~note2, to: PoolSeller }
+  - { id: e11, type: NoteLink, from: ~note3, to: PoolSeller }
+diagrams:
+  - { id: d1, name: Example BPMN Collaboration - Buyer / Seller, kind: usecase, layoutProvenance: Synthesized }

@@ -1,0 +1,47 @@
+# .trd-yaml — TheRobotDrafts native model (IxModel serialization)
+name: Example Zachman - Complex Full 6x6 (all cells)
+elements:
+  - { id: PR, type: Package, name: Planner row }
+  - { id: P1, type: Boundary, name: 'P-What: List of Things', parentId: PR }
+  - { id: P2, type: Boundary, name: 'P-How: List of Processes', parentId: PR }
+  - { id: P3, type: Boundary, name: 'P-Where: Locations', parentId: PR }
+  - { id: P4, type: Boundary, name: 'P-Who: Org Units', parentId: PR }
+  - { id: P5, type: Boundary, name: 'P-When: Event List', parentId: PR }
+  - { id: P6, type: Boundary, name: 'P-Why: Vision/Goals', parentId: PR }
+  - { id: OR, type: Package, name: Owner row }
+  - { id: O1, type: Boundary, name: 'O-What: Semantic Model', parentId: OR }
+  - { id: O2, type: Boundary, name: 'O-How: Business Process', parentId: OR }
+  - { id: O3, type: Boundary, name: 'O-Where: Logistics Net', parentId: OR }
+  - { id: O4, type: Boundary, name: 'O-Who: Work Flow', parentId: OR }
+  - { id: O5, type: Boundary, name: 'O-When: Master Schedule', parentId: OR }
+  - { id: O6, type: Boundary, name: 'O-Why: Business Plan', parentId: OR }
+  - { id: DR, type: Package, name: Designer row }
+  - { id: D1, type: Boundary, name: 'D-What: Logical Data Model', parentId: DR }
+  - { id: D2, type: Boundary, name: 'D-How: System Function Model', parentId: DR }
+  - { id: D3, type: Boundary, name: 'D-Where: System Geography', parentId: DR }
+  - { id: D4, type: Boundary, name: 'D-Who: Human Interface Arch', parentId: DR }
+  - { id: D5, type: Boundary, name: 'D-When: Event/Time Model', parentId: DR }
+  - { id: D6, type: Boundary, name: 'D-Why: Business Rule Model', parentId: DR }
+  - { id: BR, type: Package, name: Builder row }
+  - { id: B1, type: Boundary, name: 'B-What: Physical Data Model', parentId: BR }
+  - { id: B2, type: Boundary, name: 'B-How: Program Spec', parentId: BR }
+  - { id: B3, type: Boundary, name: 'B-Where: Network Architecture', parentId: BR }
+  - { id: B4, type: Boundary, name: 'B-Who: Role/Task Model', parentId: BR }
+  - { id: B5, type: Boundary, name: 'B-When: Control Structure', parentId: BR }
+  - { id: B6, type: Boundary, name: 'B-Why: Rule Specification', parentId: BR }
+  - { id: PGR, type: Package, name: Programmer row }
+  - { id: Pg1, type: Boundary, name: 'Pg-What: Data Definition', parentId: PGR }
+  - { id: Pg2, type: Boundary, name: 'Pg-How: Source Code', parentId: PGR }
+  - { id: Pg3, type: Boundary, name: 'Pg-Where: Network Config', parentId: PGR }
+  - { id: Pg4, type: Boundary, name: 'Pg-Who: User Screen', parentId: PGR }
+  - { id: Pg5, type: Boundary, name: 'Pg-When: Job Schedule', parentId: PGR }
+  - { id: Pg6, type: Boundary, name: 'Pg-Why: Rule Implementation', parentId: PGR }
+  - { id: UR, type: Package, name: User row }
+  - { id: U1, type: Boundary, name: 'U-What: Usable Data', parentId: UR }
+  - { id: U2, type: Boundary, name: 'U-How: Executable Function', parentId: UR }
+  - { id: U3, type: Boundary, name: 'U-Where: Usable Network', parentId: UR }
+  - { id: U4, type: Boundary, name: 'U-Who: User Role', parentId: UR }
+  - { id: U5, type: Boundary, name: 'U-When: Trigger Event', parentId: UR }
+  - { id: U6, type: Boundary, name: 'U-Why: Enforced Strategy', parentId: UR }
+diagrams:
+  - { id: d1, name: Example Zachman - Complex Full 6x6 (all cells), kind: class, layoutProvenance: Synthesized }

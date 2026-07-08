@@ -1,0 +1,32 @@
+# .trd-yaml — TheRobotDrafts native model (IxModel serialization)
+name: Example TOGAF ADM - Simple ADM Cycle
+elements:
+  - { id: N1, type: Note, name: Requirements Mgmt is central and continuous, documentation: Requirements Mgmt is central and continuous }
+  - { id: RM, type: UseCase, name: Requirements\nManagement }
+  - { id: A, type: UseCase, name: 'A: Architecture Vision' }
+  - { id: B, type: UseCase, name: 'B: Business Architecture' }
+  - { id: C, type: UseCase, name: 'C: Information Systems\nArchitectures' }
+  - { id: D, type: UseCase, name: 'D: Technology Architecture' }
+  - { id: E, type: UseCase, name: 'E: Opportunities & Solutions' }
+  - { id: F, type: UseCase, name: 'F: Migration Planning' }
+  - { id: G, type: UseCase, name: 'G: Implementation Governance' }
+  - { id: H, type: UseCase, name: 'H: Architecture Change\nManagement' }
+edges:
+  - { id: e1, type: DirectedAssociation, from: A, to: B }
+  - { id: e2, type: DirectedAssociation, from: B, to: C }
+  - { id: e3, type: DirectedAssociation, from: C, to: D }
+  - { id: e4, type: DirectedAssociation, from: D, to: E }
+  - { id: e5, type: DirectedAssociation, from: E, to: F }
+  - { id: e6, type: DirectedAssociation, from: F, to: G }
+  - { id: e7, type: DirectedAssociation, from: G, to: H }
+  - { id: e8, type: DirectedAssociation, from: H, to: A, label: next iteration }
+  - { id: e9, type: DirectedAssociation, from: RM, to: A, label: informs }
+  - { id: e10, type: DirectedAssociation, from: RM, to: B, label: informs }
+  - { id: e11, type: DirectedAssociation, from: RM, to: C, label: informs }
+  - { id: e12, type: DirectedAssociation, from: RM, to: D, label: informs }
+  - { id: e13, type: DirectedAssociation, from: RM, to: E, label: informs }
+  - { id: e14, type: DirectedAssociation, from: RM, to: F, label: informs }
+  - { id: e15, type: DirectedAssociation, from: RM, to: G, label: informs }
+  - { id: e16, type: DirectedAssociation, from: RM, to: H, label: informs }
+diagrams:
+  - { id: d1, name: Example TOGAF ADM - Simple ADM Cycle, kind: usecase, layoutProvenance: Synthesized }

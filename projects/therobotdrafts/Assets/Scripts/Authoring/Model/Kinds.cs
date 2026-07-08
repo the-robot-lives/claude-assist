@@ -366,6 +366,22 @@ namespace TheRobotDraft.Authoring.Model
         DmnRequirement,
         /// <summary>A typed ArchiMate relationship; label/specialization can be refined per edge.</summary>
         ArchiRelationship,
+
+        // --- whiteboard primitives (geometric shapes, looser than UML notation) ---
+        /// <summary>A flat triangular slab on a whiteboard.</summary>
+        WhiteboardTriangle,
+        /// <summary>A flat rectangular card on a whiteboard.</summary>
+        WhiteboardRectangle,
+        /// <summary>A full-depth cube on a whiteboard.</summary>
+        WhiteboardCube,
+        /// <summary>A sphere on a whiteboard.</summary>
+        WhiteboardSphere,
+        /// <summary>An upright cylinder/drum on a whiteboard.</summary>
+        WhiteboardCylinder,
+        /// <summary>A faceted decahedron (pentagonal bipyramid) on a whiteboard.</summary>
+        WhiteboardDecahedron,
+        /// <summary>An organic blob/metaball on a whiteboard.</summary>
+        WhiteboardBlob,
     }
 
     /// <summary>
@@ -534,6 +550,14 @@ namespace TheRobotDraft.Authoring.Model
             ElementKind.TogafArchitecturePhase => "#B0A878",
             ElementKind.ZachmanCell => "#8893A0",
 
+            ElementKind.WhiteboardTriangle => "#9DB4C0",
+            ElementKind.WhiteboardRectangle => "#AEB7C2",
+            ElementKind.WhiteboardCube => "#8B97A4",
+            ElementKind.WhiteboardSphere => "#7FB3D5",
+            ElementKind.WhiteboardCylinder => "#7D9D9C",
+            ElementKind.WhiteboardDecahedron => "#C39BD3",
+            ElementKind.WhiteboardBlob => "#82C09A",
+
             _ => "#FFFFFF",
         };
 
@@ -616,6 +640,9 @@ namespace TheRobotDraft.Authoring.Model
         {
             ElementKind.WhiteboardSticky or ElementKind.WhiteboardCard or ElementKind.WhiteboardText
                 or ElementKind.WhiteboardCircle or ElementKind.WhiteboardDiamond
+                or ElementKind.WhiteboardTriangle or ElementKind.WhiteboardRectangle or ElementKind.WhiteboardCube
+                or ElementKind.WhiteboardSphere or ElementKind.WhiteboardCylinder
+                or ElementKind.WhiteboardDecahedron or ElementKind.WhiteboardBlob
                 or ElementKind.Cloud or ElementKind.AsyncSend or ElementKind.AsyncReceive => true,
             _ => false,
         };

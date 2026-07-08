@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using TheRobotDraft.Authoring.Model;
 
 namespace TheRobotDraft.Uml3D
 {
@@ -12,6 +13,16 @@ namespace TheRobotDraft.Uml3D
     /// </summary>
     public static class Uml3DShape_Primitives
     {
+        /// <summary>Dispatch the primitive mesh by element kind. Used by <see cref="Uml3DNodeShape.Build"/>.</summary>
+        public static Mesh Build(ElementKind kind, float w, float h, float d) => kind switch
+        {
+            ElementKind.WhiteboardTriangle => Triangle(w, h, d),
+            ElementKind.WhiteboardRectangle => Rectangle(w, h, d),
+            ElementKind.WhiteboardCube => Cube(w, h, d),
+            ElementKind.WhiteboardSphere => Sphere(w, h, d),
+            ElementKind.WhiteboardCylinder => Cylinder(w, h, d),
+            _ => Rectangle(w, h, d),
+        };
         /// <summary>
         /// A flat whiteboard triangle: a thin triangular prism. The triangle points up (apex at +Y), base on −Y,
         /// extruded along Z so it reads as a slab from the side. Uses <see cref="Uml3DMeshBuilder.AddConvexPrism"/>.

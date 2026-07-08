@@ -1,0 +1,13 @@
+# .trd-yaml — TheRobotDrafts native model (IxModel serialization)
+name: DMN Decision Requirements - Simple Loan Approval
+elements:
+  - { id: ApplicantData, type: UseCase, name: Applicant\nData }
+  - { id: LoanApproval, type: Boundary, name: Loan\nApproval, stereotype: decision }
+  - { id: Policy, type: Artifact, name: Underwriting\nPolicy }
+  - { id: ~note1, type: Note, name: '**DRD element legend**', documentation: '**DRD element legend**\nrectangle = Decision (output we produce)\nstadium   = Input Data (facts we consume)\nfile      = Knowledge Source (governing authority)\n--\nsolid arrow  = Information Requirement\ndashed arrow = Knowledge Requirement' }
+edges:
+  - { id: e1, type: DirectedAssociation, from: ApplicantData, to: LoanApproval }
+  - { id: e2, type: Dependency, from: LoanApproval, to: Policy, label: authority }
+  - { id: e3, type: NoteLink, from: ~note1, to: LoanApproval }
+diagrams:
+  - { id: d1, name: DMN Decision Requirements - Simple Loan Approval, kind: usecase, layoutProvenance: Synthesized }

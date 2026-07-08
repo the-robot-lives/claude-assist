@@ -1,0 +1,13 @@
+# .trd-yaml — TheRobotDrafts native model (IxModel serialization)
+name: Example Object Diagram - Simple Bank Snapshot
+elements:
+  - { id: john, type: Class, name: 'john:Customer', members: [{ name: name, isOperation: false, visibility: Public, defaultValue: '"John Smith"', rawText: 'name = "John Smith"' }, { name: customerId, isOperation: false, visibility: Public, defaultValue: 42, rawText: customerId = 42 }, { name: email, isOperation: false, visibility: Public, defaultValue: '"john@example.com"', rawText: 'email = "john@example.com"' }] }
+  - { id: acct1, type: Class, name: 'acct1:Account', members: [{ name: accountId, isOperation: false, visibility: Public, defaultValue: 1001, rawText: accountId = 1001 }, { name: balance, isOperation: false, visibility: Public, defaultValue: 1500.00, rawText: balance = 1500.00 }, { name: type, isOperation: false, visibility: Public, defaultValue: '"CHECKING"', rawText: 'type = "CHECKING"' }] }
+  - { id: tx1, type: Class, name: 'tx1:Transaction', members: [{ name: txnId, isOperation: false, visibility: Public, defaultValue: 77001, rawText: txnId = 77001 }, { name: amount, isOperation: false, visibility: Public, defaultValue: 200.00, rawText: amount = 200.00 }, { name: 'timestamp = "2026-07-09T10', isOperation: false, visibility: Public, type: '15:00Z"', rawText: 'timestamp = "2026-07-09T10:15:00Z"' }] }
+  - { id: ~note1, type: Note, name: '<b>Reading guide</b>', documentation: '<b>Reading guide</b>\nEach box = one runtime object.\nUnderlined name = instance (not type).\nField lines = slots (concrete values).\nArrows = links (instance associations).' }
+edges:
+  - { id: e1, type: DirectedAssociation, from: john, to: acct1, fromMultiplicity: 1, toMultiplicity: 'owns *' }
+  - { id: e2, type: DirectedAssociation, from: acct1, to: tx1, label: posted, fromMultiplicity: 1, toMultiplicity: 'records *' }
+  - { id: e3, type: NoteLink, from: ~note1, to: john }
+diagrams:
+  - { id: d1, name: Example Object Diagram - Simple Bank Snapshot, kind: class, layoutProvenance: Synthesized }

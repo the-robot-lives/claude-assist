@@ -1,0 +1,51 @@
+@startuml
+' ============================================================================
+' METADATA
+'   author:       TheRobotDrafts Examples
+'   description:  Medium IBD of a FluidFilter block with 5-6 parts, flow ports carrying FluidFlow, and delegation connectors.
+'   usecase:      Teach item flow on connectors and delegation from a boundary port to an internal part.
+'   complexity:   medium
+'   domain:       fluid-power
+' ============================================================================
+title Example IBD - Medium Filter Internals
+
+class "FluidFilter" <<block>> {
+}
+
+package "FluidFilter interior" {
+  object "fInlet : InletPort" as fInlet
+  object "fPreFilter : PreFilterMesh" as fPreFilter
+  object "fCartridge : CarbonCartridge" as fCartridge
+  object "fSensor : PressureSensor" as fSensor
+  object "fBypass : BypassValve" as fBypass
+  object "fOutlet : OutletPort" as fOutlet
+
+  port "FluidFilter.supply" as supply
+  port "FluidFilter.return" as ret
+  port "FluidFilter.telemetry" as telemetry
+}
+
+supply --> fInlet : FluidFlow
+fInlet --> fPreFilter : FluidFlow
+fPreFilter --> fCartridge : FluidFlow
+fCartridge --> fBypass : FluidFlow
+fBypass --> fOutlet : FluidFlow
+fOutlet --> ret : FluidFlow
+
+fSensor ..> fCartridge : senses
+fSensor --> telemetry : PressureReading
+
+note right of supply
+  Delegation connector: boundary port
+  'supply' forwards its FluidFlow to
+  internal part fInlet. Item flow type
+  is carried on the connector.
+end note
+
+note bottom of fBypass
+  Flow ports carry an item flow (here FluidFlow).
+  Connectors between flow ports transmit that
+  item type end-to-end.
+end note
+
+@enduml

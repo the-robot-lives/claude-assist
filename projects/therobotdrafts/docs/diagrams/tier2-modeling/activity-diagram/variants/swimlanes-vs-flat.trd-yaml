@@ -1,0 +1,24 @@
+# .trd-yaml — TheRobotDrafts native model (IxModel serialization)
+name: Example Activity Variant - Swimlanes vs Flat
+elements:
+  - { id: ~start1, type: StateStart, name: start }
+  - { id: ~act2, type: Activity, name: File bug report }
+  - { id: ~act3, type: Activity, name: Reproduce issue }
+  - { id: ~dec4, type: Decision, name: 'Reproducible?' }
+  - { id: ~act5, type: Activity, name: Implement fix }
+  - { id: ~act6, type: Activity, name: Verify fix }
+  - { id: ~act7, type: Activity, name: Close as cannot-reproduce }
+  - { id: ~act8, type: Activity, name: Confirm resolved }
+  - { id: ~end9, type: StateEnd, name: end }
+edges:
+  - { id: e1, type: Transition, from: ~start1, to: ~act2 }
+  - { id: e2, type: Transition, from: ~act2, to: ~act3 }
+  - { id: e3, type: Transition, from: ~act3, to: ~dec4 }
+  - { id: e4, type: Transition, from: ~dec4, to: ~act5, label: yes }
+  - { id: e5, type: Transition, from: ~act5, to: ~act6 }
+  - { id: e6, type: Transition, from: ~dec4, to: ~act7, label: no }
+  - { id: e7, type: Transition, from: ~act6, to: ~act8 }
+  - { id: e8, type: Transition, from: ~act7, to: ~act8 }
+  - { id: e9, type: Transition, from: ~act8, to: ~end9 }
+diagrams:
+  - { id: d1, name: Example Activity Variant - Swimlanes vs Flat, kind: activity, layoutProvenance: Synthesized }

@@ -1,0 +1,51 @@
+@startuml
+' ============================================================================
+' METADATA
+'   author:       TheRobotDrafts Examples
+'   description:  Variant showing the same ControllerBox block as a SysML IBD vs a UML composite structure diagram.
+'   usecase:      Contrast SysML parts/ports/item-flow against UML composite parts/ports/connectors.
+'   complexity:   medium
+'   domain:       methodology
+' ============================================================================
+title Example IBD - IBD vs UML Composite Structure
+
+package "SysML Internal Block Diagram" {
+  class "ControllerBox" <<block>> {
+  }
+  package "ControllerBox interior" {
+    object "cInput : InputStage" as cInput
+    object "cProc : Processor" as cProc
+    object "cDriver : OutputDriver" as cDriver
+    port "ControllerBox.sensorIn" as sensorIn
+    port "ControllerBox.actuatorOut" as actuatorOut
+  }
+  sensorIn --> cInput : SampleStream
+  cInput --> cProc : DigitalSignal
+  cProc --> cDriver : CommandWord
+  cDriver --> actuatorOut : DriveCurrent
+}
+
+package "UML Composite Structure" {
+  class "ControllerBoxCS" as "ControllerBox" {
+  }
+  object "uInput : InputStage" as uInput
+  object "uProc : Processor" as uProc
+  object "uDriver : OutputDriver" as uDriver
+  "ControllerBox" *-- uInput
+  "ControllerBox" *-- uProc
+  "ControllerBox" *-- uDriver
+  uInput --> uProc : signal
+  uProc --> uDriver : command
+}
+
+note bottom of "ControllerBox"
+  SysML IBD adds over UML composite structure:
+  - FLOW PORTS with direction (in/out) carrying an item flow type
+    (e.g. sensorIn carries SampleStream)
+  - ITEM FLOW labels on connectors naming the substance moving
+    (DigitalSignal, DriveCurrent)
+  UML composite has parts, ports, and connectors but NO typed
+  item flow and NO directional flow ports — only generic links.
+end note
+
+@enduml

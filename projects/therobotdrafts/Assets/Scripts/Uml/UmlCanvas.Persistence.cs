@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 using TheRobotDraft.Authoring.Debug;
+using TheRobotDraft.Authoring.Interchange;
 using TheRobotDraft.Authoring.Model;
+using TheRobotDraft.Authoring.Rules;
 using TheRobotDraft.Authoring.State;
 
 namespace TheRobotDraft.Uml
@@ -147,7 +149,15 @@ namespace TheRobotDraft.Uml
     /// </summary>
     public sealed partial class UmlCanvas
     {
-        private static string DiagramPath => Path.Combine(Application.persistentDataPath, "uml-diagram.json");
+        /// <summary>The native file extension for a multi-diagram TRD model file.</summary>
+        private const string NativeExt = ".trd-yaml";
+
+        /// <summary>The default autosave slot — now the native .trd-yaml format. A legacy uml-diagram.json is still
+        /// read on load (one-diagram back-compat) but not destructively rewritten on disk.</summary>
+        private static string DiagramPath => Path.Combine(Application.persistentDataPath, "diagram" + NativeExt);
+
+        /// <summary>The pre-native autosave slot. Read on load as a one-diagram legacy import; never overwritten.</summary>
+        private static string LegacyDiagramPath => Path.Combine(Application.persistentDataPath, "uml-diagram.json");
 
         // The file Ctrl/Cmd+S writes to. Null ⇒ the default autosave slot (DiagramPath); set by "Save As…" / "Open file…".
         private string _currentDiagramPath;
@@ -165,33 +175,67 @@ namespace TheRobotDraft.Uml
             CloseMenu();
             string path = BrowseForSaveFile(Path.GetFileName(CurrentPath));
             if (string.IsNullOrEmpty(path)) { Flash("save cancelled"); return; }
-            if (!path.EndsWith(".json", StringComparison.OrdinalIgnoreCase)) path += ".json";
-            if (WriteDiagram(path)) { _currentDiagramPath = path; Flash("saved → " + path); }
+            // Do NOT force an extension — the native format is .trd-yaml. If the user typed no extension, append native.
+            bool hasExt = path.EndsWith(NativeExt, StringComparison.OrdinalIgnoreCase)
+                          || path.EndsWith(".json", StringComparison.OrdinalIgnoreCase)
+                          || path.EndsWith(".yaml", StringComparison.OrdinalIgnoreCase)
+                          || path.EndsWith(".yml", StringComparison.OrdinalIgnoreCase);
+            if (!hasExt) path += NativeExt;
+            if (WriteDiagram(path)) { _currentDiagramPath = path; RecentFiles.AddRecent(path); Flash("saved → " + path); }
         }
 
-        /// <summary>Choose a diagram file and load it, replacing the current diagram; Ctrl/Cmd+S then targets it.</summary>
+        /// <summary>Choose a diagram file and load it, replacing the current diagram; Ctrl/Cmd+S then targets it.
+        /// Native <c>.trd-yaml</c> is loaded via the interchange IR; a legacy <c>.json</c> is read as a one-diagram import.</summary>
         public void OpenDiagramFile()
         {
             CloseMenu();
             string path = BrowseForOpenFile();
             if (string.IsNullOrEmpty(path)) { Flash("open cancelled"); return; }
-            try
-            {
-                if (!File.Exists(path)) { Flash("file not found: " + path); return; }
-                var dto = JsonUtility.FromJson<DiagramDto>(File.ReadAllText(path));
-                if (dto?.elements == null || dto.elements.Count == 0) { Flash("not a valid diagram: " + Path.GetFileName(path)); return; }
-                ApplyDto(dto);
-                _currentDiagramPath = path;
-                if (_scene != null) _scene.FrameAll();
-                Flash("opened " + Path.GetFileName(path));
-            }
-            catch (Exception ex) { Flash("open failed: " + ex.Message); }
+            if (!TryOpenPath(path)) return;
+            _currentDiagramPath = path;
+            RecentFiles.AddRecent(path);
+            if (_scene != null) _scene.FrameAll();
+            Flash("opened " + Path.GetFileName(path));
         }
 
-        /// <summary>Write the current diagram DTO to a path. Returns false (and flashes) on an IO error.</summary>
+        /// <summary>Load a file by path, dispatching on extension: .trd-yaml → IR; .json → legacy DiagramDto.</summary>
+        private bool TryOpenPath(string path)
+        {
+            try
+            {
+                if (!File.Exists(path)) { Flash("file not found: " + path); RecentFiles.Remove(path); return false; }
+                string text = File.ReadAllText(path);
+
+                if (path.EndsWith(NativeExt, StringComparison.OrdinalIgnoreCase) || path.EndsWith(".yaml", StringComparison.OrdinalIgnoreCase) || path.EndsWith(".yml", StringComparison.OrdinalIgnoreCase))
+                {
+                    var ix = TrdYamlReader.Parse(text);
+                    var validity = TrdModelValidator.Validate(ix);
+                    if (!validity.IsValid) { Flash("invalid model: " + validity.Reason); return false; }
+                    MaterializeInterchange(ix, path);
+                    return true;
+                }
+
+                var dto = JsonUtility.FromJson<DiagramDto>(text);
+                if (dto?.elements == null || dto.elements.Count == 0) { Flash("not a valid diagram: " + Path.GetFileName(path)); return false; }
+                ApplyDto(dto);
+                return true;
+            }
+            catch (InterchangeException ex) { Flash("open failed: " + ex.Message); return false; }
+            catch (Exception ex) { Flash("open failed: " + ex.Message); return false; }
+        }
+
+        /// <summary>Write the current model to a path. Native <c>.trd-yaml</c> serializes the IxModel (multi-diagram);
+        /// a legacy <c>.json</c> path falls back to the single-diagram DiagramDto. Returns false (and flashes) on IO error.</summary>
         private bool WriteDiagram(string path)
         {
-            try { File.WriteAllText(path, JsonUtility.ToJson(BuildDto(), true)); return true; }
+            try
+            {
+                if (path.EndsWith(".json", StringComparison.OrdinalIgnoreCase))
+                    File.WriteAllText(path, JsonUtility.ToJson(BuildDto(), true));
+                else
+                    File.WriteAllText(path, TrdYamlWriter.Write(BuildInterchangeModel(false)));
+                return true;
+            }
             catch (Exception ex) { Flash("save failed: " + ex.Message); return false; }
         }
 
@@ -200,26 +244,25 @@ namespace TheRobotDraft.Uml
         private static string BrowseForSaveFile(string defaultName)
         {
 #if UNITY_EDITOR
-            string baseName = string.IsNullOrEmpty(defaultName) ? "uml-diagram" : Path.GetFileNameWithoutExtension(defaultName);
-            return UnityEditor.EditorUtility.SaveFilePanel("Save diagram as", "", baseName, "json") ?? "";
+            string baseName = string.IsNullOrEmpty(defaultName) ? "diagram" : Path.GetFileNameWithoutExtension(defaultName);
+            return UnityEditor.EditorUtility.SaveFilePanel("Save model as", "", baseName, "trd-yaml") ?? "";
 #else
             if (Application.platform == RuntimePlatform.OSXPlayer)
             {
-                string nm = (string.IsNullOrEmpty(defaultName) ? "uml-diagram.json" : defaultName).Replace("\"", "");
-                return OsascriptPath("POSIX path of (choose file name with prompt \"Save diagram as\" default name \"" + nm + "\")");
+                string nm = (string.IsNullOrEmpty(defaultName) ? "diagram" + NativeExt : defaultName).Replace("\"", "");
+                return OsascriptPath("POSIX path of (choose file name with prompt \"Save model as\" default name \"" + nm + "\")");
             }
-            // No native dialog on this platform — fall back to the persistent data folder so a save still lands somewhere.
-            return Path.Combine(Application.persistentDataPath, string.IsNullOrEmpty(defaultName) ? "uml-diagram.json" : defaultName);
+            return Path.Combine(Application.persistentDataPath, string.IsNullOrEmpty(defaultName) ? "diagram" + NativeExt : defaultName);
 #endif
         }
 
         private static string BrowseForOpenFile()
         {
 #if UNITY_EDITOR
-            return UnityEditor.EditorUtility.OpenFilePanel("Open diagram", "", "json") ?? "";
+            return UnityEditor.EditorUtility.OpenFilePanel("Open model", "", "trd-yaml") ?? "";
 #else
             if (Application.platform == RuntimePlatform.OSXPlayer)
-                return OsascriptPath("POSIX path of (choose file with prompt \"Open diagram\")");
+                return OsascriptPath("POSIX path of (choose file with prompt \"Open model\")");
             return "";
 #endif
         }
@@ -259,12 +302,33 @@ namespace TheRobotDraft.Uml
         {
             try
             {
-                if (!File.Exists(DiagramPath)) return false;
-                var dto = JsonUtility.FromJson<DiagramDto>(File.ReadAllText(DiagramPath));
-                if (dto?.elements == null || dto.elements.Count == 0) return false;
-                ApplyDto(dto);
-                Flash("loaded diagram");
-                return true;
+                // Native .trd-yaml autosave takes precedence.
+                if (File.Exists(DiagramPath))
+                {
+                    var ix = TrdYamlReader.Parse(File.ReadAllText(DiagramPath));
+                    var validity = TrdModelValidator.Validate(ix);
+                    if (validity.IsValid && ix.Elements != null && ix.Elements.Count > 0)
+                    {
+                        MaterializeInterchange(ix, DiagramPath);
+                        Flash("loaded model");
+                        return true;
+                    }
+                    if (!validity.IsValid)
+                        Debug.LogWarning("Native autosave failed validation: " + validity.Reason);
+                }
+
+                // Legacy one-diagram .json autosave — read but do NOT destructively rewrite on disk.
+                if (File.Exists(LegacyDiagramPath))
+                {
+                    var dto = JsonUtility.FromJson<DiagramDto>(File.ReadAllText(LegacyDiagramPath));
+                    if (dto?.elements != null && dto.elements.Count > 0)
+                    {
+                        ApplyDto(dto);
+                        Flash("loaded diagram (legacy)");
+                        return true;
+                    }
+                }
+                return false;
             }
             catch (Exception ex)
             {
@@ -509,7 +573,7 @@ namespace TheRobotDraft.Uml
         /// <summary>Delete the persisted diagram file (so the next launch opens fresh).</summary>
         public void DeleteSavedDiagram()
         {
-            try { if (File.Exists(DiagramPath)) File.Delete(DiagramPath); Flash("deleted saved file"); }
+            try { if (File.Exists(DiagramPath)) File.Delete(DiagramPath); if (File.Exists(LegacyDiagramPath)) File.Delete(LegacyDiagramPath); Flash("deleted saved file"); }
             catch (Exception ex) { Flash("delete failed: " + ex.Message); }
         }
 

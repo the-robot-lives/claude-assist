@@ -1,0 +1,17 @@
+# .trd-yaml — TheRobotDrafts native model (IxModel serialization)
+name: Example BDD - Medium Power System
+elements:
+  - { id: PowerSource, type: Block, name: PowerSource, members: [{ name: out current, isOperation: false, visibility: Public, type: Current, rawText: 'out current : Current' }, { name: out voltage, isOperation: false, visibility: Public, type: Voltage, rawText: 'out voltage : Voltage' }] }
+  - { id: Battery, type: Block, name: Battery, members: [{ name: capacity, isOperation: false, visibility: Public, type: Energy, rawText: 'capacity : Energy' }, { name: stateOfCharge, isOperation: false, visibility: Public, type: Real, rawText: 'stateOfCharge : Real' }] }
+  - { id: SolarArray, type: Block, name: SolarArray, members: [{ name: area, isOperation: false, visibility: Public, type: Area, rawText: 'area : Area' }, { name: efficiency, isOperation: false, visibility: Public, type: Real, rawText: 'efficiency : Real' }] }
+  - { id: ChargeController, type: Block, name: ChargeController, members: [{ name: in pvCurrent, isOperation: false, visibility: Public, type: Current, rawText: 'in pvCurrent : Current' }, { name: out battCurrent, isOperation: false, visibility: Public, type: Current, rawText: 'out battCurrent : Current' }] }
+  - { id: Inverter, type: Block, name: Inverter, members: [{ name: in dcVoltage, isOperation: false, visibility: Public, type: Voltage, rawText: 'in dcVoltage : Voltage' }, { name: out acVoltage, isOperation: false, visibility: Public, type: Voltage, rawText: 'out acVoltage : Voltage' }] }
+  - { id: Load, type: Block, name: Load, members: [{ name: in acCurrent, isOperation: false, visibility: Public, type: Current, rawText: 'in acCurrent : Current' }, { name: ratedPower, isOperation: false, visibility: Public, type: Power, rawText: 'ratedPower : Power' }] }
+  - { id: PowerBus, type: Block, name: PowerBus, members: [{ name: busVoltage, isOperation: false, visibility: Public, type: Voltage, rawText: 'busVoltage : Voltage' }] }
+  - { id: Voltage, type: ValueType, name: Voltage, members: [{ name: value, isOperation: false, visibility: Public, type: Real, rawText: 'value : Real' }, { name: unit, isOperation: false, visibility: Public, type: '"V"', rawText: 'unit : "V"' }] }
+  - { id: ~note1, type: Note, name: 'Generalization (<|--)', documentation: 'Generalization (<|--)\n= PowerSource is the abstract\nsupertype; Battery and SolarArray\ninherit its flow properties.' }
+edges:
+  - { id: e1, type: Composition, from: ChargeController, to: PowerBus, label: internalBus, toMultiplicity: 1 }
+  - { id: e2, type: NoteLink, from: ~note1, to: PowerSource }
+diagrams:
+  - { id: d1, name: Example BDD - Medium Power System, kind: class, layoutProvenance: Synthesized }

@@ -1,0 +1,6 @@
+# .trd-yaml — TheRobotDrafts native model (IxModel serialization)
+name: Example Gantt - Medium Multi-Track
+elements:
+  - { id: '[Milestone', type: Component, name: '[Milestone', members: [{ name: 'Spec Complete] happens at [Spec]''s end', isOperation: false, visibility: Public, rawText: 'Spec Complete] happens at [Spec]''s end' }, { name: 'Feature Freeze] happens at [Integrate]''s end', isOperation: false, visibility: Public, rawText: 'Feature Freeze] happens at [Integrate]''s end' }] }
+diagrams:
+  - { id: d1, name: Example Gantt - Medium Multi-Track, kind: component, layoutProvenance: Synthesized }
