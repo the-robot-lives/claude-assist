@@ -20,8 +20,12 @@ bool llama_robot_delta_feature(const llama_robot_model_iface & iface) {
 int32_t llama_robot_delta_blocks(const llama_robot_model_iface & iface, uint32_t * layers, int32_t max) {
     int32_t n = 0;
     for (const auto & rec : iface.robot_ext_tensors) {
-        int L = -1;
-        if (sscanf(rec.name.c_str(), "blk.%d.robot_delta.theta_base", &L) == 1 && L >= 0) {
+        // exact-match "blk.<L>.robot_delta.theta_base" — note sscanf alone is
+        // not enough: it reports a match once %d converts, even when the
+        // trailing literal differs (e.g. blk.0.robot_state.alpha)
+        int L = -1, consumed = 0;
+        if (sscanf(rec.name.c_str(), "blk.%d.robot_delta.theta_base%n", &L, &consumed) == 1 &&
+            L >= 0 && consumed == (int) rec.name.size()) {
             if (layers != nullptr && n < max) {
                 layers[n] = (uint32_t) L;
             }

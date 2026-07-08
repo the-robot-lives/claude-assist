@@ -1,5 +1,8 @@
 # therobot fork — patch points
 
+See also [`validation.md`](validation.md) — the step-by-step runbook for
+converting a donor model and vetting it on this fork.
+
 Every touch inside an upstream file is fenced with `// ROBOT-EXT-BEGIN(<id>)` /
 `// ROBOT-EXT-END` markers (llamacpp-extensions.md §2). This document is the
 authoritative checklist for upstream rebases: after a sync, verify each fence
