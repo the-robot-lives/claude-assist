@@ -20,8 +20,9 @@ module "app_valkey" {
   # Named ACL user/pass pairs (in addition to the default requirepass user).
   # NoizuPromptLingo connects as the "npl" user.
   acl_users = {
-    npl = { password_key = "NPL_VALKEY_PASSWORD", rules = "~* &* +@all" }
-    ddi = { password_key = "DDI_VALKEY_PASSWORD", rules = "~* &* +@all" }
+    npl      = { password_key = "NPL_VALKEY_PASSWORD", rules = "~* &* +@all" }
+    ddi      = { password_key = "DDI_VALKEY_PASSWORD", rules = "~* &* +@all" }
+    tobornalp = { password_key = "TOBORNALP_VALKEY_PASSWORD", rules = "~* &* +@all" }
   }
 
   infisical = merge(local.infisical_base, { secrets_path = "/apps/valkey" })

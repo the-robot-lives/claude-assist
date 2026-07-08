@@ -90,15 +90,16 @@ if config_env() == :prod do
 
   # ── SSO: OIDC ──────────────────────────────────────────────────
   if oidc_client_id = System.get_env("OIDC_CLIENT_ID") do
-    config :openid_connect, :providers,
-      default: [
-        discovery_document_uri: System.get_env("OIDC_ISSUER") <> "/.well-known/openid-configuration",
-        client_id: oidc_client_id,
-        client_secret: System.get_env("OIDC_CLIENT_SECRET"),
-        redirect_uri: System.get_env("OIDC_REDIRECT_URI") || "https://#{host}/auth/oidc/callback",
-        response_type: "code",
-        scope: "openid email profile"
-      ]
+    # openid_connect 1.0 takes an explicit config map (atom keys) at each call
+    # site rather than a named provider registered in app env.
+    config :therobotplans, :oidc_provider, %{
+      discovery_document_uri: System.get_env("OIDC_ISSUER") <> "/.well-known/openid-configuration",
+      client_id: oidc_client_id,
+      client_secret: System.get_env("OIDC_CLIENT_SECRET"),
+      redirect_uri: System.get_env("OIDC_REDIRECT_URI") || "https://#{host}/auth/oidc/callback",
+      response_type: "code",
+      scope: "openid email profile"
+    }
     config :therobotplans, :oidc_enabled, true
   end
 
