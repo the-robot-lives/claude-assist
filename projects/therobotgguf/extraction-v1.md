@@ -586,11 +586,19 @@ the first cross-donor depth × axis map, all in one coordinate system.
 KVs, flagged optional via `therobot.features_optional` (`strip` removes them);
 `robotgguf shim-compile` compiles `semvec_shims:` definitions per donor
 through the write-calibrated overlay, with exact-algebra crosstalk admission
-and semvec-keyed registry entries. Remaining: (b) the fork's optional
-feature — tensor loading, `semvec_read/axis/query`, the overlay-apply graph
-op (one matvec + add, gated like E3) — and (c) R8's zero-shot sanity suite +
-the dormant-semvec parity case. Also confirm/land the fork arch string for
-the qwen3_5_moe family (`qwen35moe` assumed by the 35B config).
+and semvec-keyed registry entries. The conversion side of (c) is
+also **[done]**: `robotgguf verify` gate 5 structurally verifies the packaged
+readout layer (calib scales, zeroed unadmitted columns, G·E = I on writable
+axes), `robotgguf labels-qa` writes the C2 quality report to the lockfile,
+and `tools/gen_sites.py` generates survey/focused candidate-site grids.
+The fork side is now
+**implemented too** (pending first build): the `semvec` optional feature
+(`llama-robot-semvec.{h,cpp}` — negotiation, site→tap resolution, validation
+of calibration claims at load, `semvec_read/axis/query/axis_index`, overlay
+compiled to an ephemeral E3 steer shim owned by the context), the `qwen35moe`
+factory registration, and `robot_semvec_test.cpp` covering the spec's four
+runtime gates. See `convert/docs/semvec-runtime-spec.md` (status) and
+`quality-roadmap.md` for the validation program.
 
 **N8 — focused pass + the map + the shim compiler (C5).** Re-record winning
 depths across points/offsets/widths; final cleave; name the decodable

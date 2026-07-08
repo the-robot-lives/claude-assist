@@ -91,6 +91,11 @@ struct llama_robot_context_state {
     uint64_t epoch = 1; // bumps on attach/detach; keyed into llm_graph_params
     std::vector<const llama_robot_shim *> shims;
 
+    // shims owned by THIS context (semvec overlays built at runtime); entries
+    // must also appear in `shims` while attached. External module shims stay
+    // caller-owned as before.
+    std::vector<std::unique_ptr<llama_robot_shim>> owned_shims;
+
     // E4 — host-side recurrent state, fed into each decode's graph as inputs
     // and refreshed from its outputs after compute. v1 scope: one state per
     // context (batch-1 / single-sequence streaming, the project's v0 target).

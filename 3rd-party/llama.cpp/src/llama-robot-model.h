@@ -12,7 +12,8 @@
 // therobot-fork-only code; not included by stock translation units.
 
 #include "llama-robot-hparams.h"
-#include "llama-robot-state.h" // llama_robot_validate_grafts in the wrapper's load_tensors
+#include "llama-robot-semvec.h" // llama_robot_validate_semvec in the wrapper's load_tensors
+#include "llama-robot-state.h"  // llama_robot_validate_grafts in the wrapper's load_tensors
 
 #include "llama-graph.h" // llm_graph_params::robot in the wrapper's build_arch_graph
 #include "llama-model.h"
@@ -109,6 +110,7 @@ struct llama_model_robot : public TBase, public llama_robot_model_iface {
         }
         llama_robot_materialize_ext_tensors(ml, *this);
         llama_robot_validate_grafts(*this, this->hparams); // E4 shapes/coverage
+        llama_robot_validate_semvec(*this, this->hparams); // readout-layer shapes/calibration
         return true;
     }
 

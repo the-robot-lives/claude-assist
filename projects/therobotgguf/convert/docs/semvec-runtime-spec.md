@@ -1,9 +1,13 @@
 # semvec runtime extension — spec for the fork (handoff)
 
-**Status:** conversion side complete and tested (`robotgguf` emits everything
-below; `tests/extraction_test.py` round-trips it via gguf-py). This document
-is the contract for the llama.cpp fork's side — the one remaining
-implementation surface. Companion design: `../../extraction-v1.md` §4.4–4.5.
+**Status:** BOTH sides implemented. Conversion: `robotgguf` emits everything
+below (`tests/extraction_test.py` round-trips it via gguf-py). Fork: the
+`semvec` optional feature is implemented per this spec —
+`src/llama-robot-semvec.{h,cpp}` (validation, read/query, overlay-as-
+ephemeral-E3-shim), hparams negotiation + site→tap resolution, `qwen35moe`
+factory registration, `tests/robot/robot_semvec_test.cpp` (the §6 gates) —
+**pending first build + fixture run on the Mac** (authored off-box; expect
+only mechanical compile fixes if any). Companion: `../../extraction-v1.md`.
 
 ---
 

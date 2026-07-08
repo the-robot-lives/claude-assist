@@ -205,6 +205,48 @@ LLAMA_API int32_t llama_robot_settle(
         int32_t * steps_used);
 
 //
+// semvec — the standardized readout layer (optional feature; extraction-v1
+// §4.4/§4.5, convert/docs/semvec-runtime-spec.md)
+//
+// Per admitted site the file carries an encoder E (residual slice → the
+// versioned, donor-independent semantic vector), per-axis calibration, and a
+// write-calibrated decoder G. Reads cost one host matvec, computed only when
+// called; the overlay is an ephemeral steer-only shim riding the E3
+// machinery, so Δs = 0 (or no overlay) is bit-exact identity.
+//
+
+// number of semvec sites (0 → feature absent) and site names
+LLAMA_API int32_t      llama_robot_semvec_site_count(const struct llama_model * model);
+LLAMA_API const char * llama_robot_semvec_site_name (const struct llama_model * model, int32_t site);
+
+// coordinate-system dimensions and named-axis lookup
+LLAMA_API int32_t      llama_robot_semvec_dim       (const struct llama_model * model); // named + latent
+LLAMA_API int32_t      llama_robot_semvec_named_dim (const struct llama_model * model);
+LLAMA_API const char * llama_robot_semvec_axis_name (const struct llama_model * model, int32_t axis);
+LLAMA_API int32_t      llama_robot_semvec_axis_index(const struct llama_model * model, const char * name);
+
+// read the model's current state at a site, in standard coordinates: dst
+// receives llama_robot_semvec_dim() floats (n must be >= that). Applies
+// proj + calibration; non-admitted axes read as 0. Requires >= 1 decode.
+LLAMA_API bool llama_robot_semvec_read(struct llama_context * ctx, int32_t site, float * dst, size_t n);
+
+// calibrated scalar for one axis of a previously read vector (host math)
+LLAMA_API float llama_robot_semvec_axis(const struct llama_model * model, const float * s, int32_t axis);
+
+// zero-shot: cosine between n entries of a read vector and a caller-supplied
+// query vector. The host embeds + reduces the query text through the SAME
+// frozen semvec basis (labelers side) — the runtime never sees the embedder.
+// Point both pointers at the latent block for open-vocabulary questions.
+LLAMA_API float llama_robot_semvec_query(const struct llama_model * model, const float * s, const float * query, size_t n);
+
+// overlay: register a semvec-space edit at a site for subsequent decodes —
+// h_slice' = h_slice + scale · (delta_s · G), delta_s carrying
+// llama_robot_semvec_dim() floats. delta_s == NULL or scale == 0 unsets.
+// Attach/unset take effect on the next decode (graph epoch bump, like E3).
+LLAMA_API bool llama_robot_semvec_overlay_set(struct llama_context * ctx, int32_t site,
+        const float * delta_s, float scale);
+
+//
 // E8 — accretion serving (proposal 005, spec §4)
 //
 // A registry.json indexes admitted shim modules with admission scores, task

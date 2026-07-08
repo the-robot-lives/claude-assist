@@ -44,6 +44,7 @@ add_library(llama
             llama-robot-memory.cpp
             llama-robot-model.cpp
             llama-robot-registry.cpp
+            llama-robot-semvec.cpp
             llama-robot-settle.cpp
             llama-robot-shim.cpp
             llama-robot-state.cpp

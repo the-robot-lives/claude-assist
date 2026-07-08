@@ -152,6 +152,7 @@ static const std::map<std::string, llama_robot_feature> LLAMA_ROBOT_FEATURE_NAME
     { "memory",    LLAMA_ROBOT_FEATURE_MEMORY    },
     { "delta",     LLAMA_ROBOT_FEATURE_DELTA     },
     { "settle",    LLAMA_ROBOT_FEATURE_SETTLE    },
+    { "semvec",    LLAMA_ROBOT_FEATURE_SEMVEC    },
 };
 
 // features whose runtime behavior is actually implemented. Grows with the
@@ -167,6 +168,7 @@ static const std::set<llama_robot_feature> LLAMA_ROBOT_FEATURES_IMPLEMENTED = {
     LLAMA_ROBOT_FEATURE_MEMORY,    // E5 — salience-gated episodic store feeding m
     LLAMA_ROBOT_FEATURE_DELTA,     // E6 — change-triggered execution (off by default per context)
     LLAMA_ROBOT_FEATURE_SETTLE,    // E7 — canvas settling decoder (jacobi-ar objective)
+    LLAMA_ROBOT_FEATURE_SEMVEC,    // standardized readout layer (read/query/overlay)
 };
 
 const char * llama_robot_feature_name(llama_robot_feature f) {
@@ -271,9 +273,79 @@ static const char * robot_feature_probe_key(llama_robot_feature f) {
         case LLAMA_ROBOT_FEATURE_MEMORY:    return "therobot.memory.key_dim";
         case LLAMA_ROBOT_FEATURE_DELTA:     return "therobot.delta.granularity";
         case LLAMA_ROBOT_FEATURE_SETTLE:    return "therobot.settle.objective";
+        case LLAMA_ROBOT_FEATURE_SEMVEC:    return "therobot.semvec.hash";
         case LLAMA_ROBOT_FEATURE_SHIMS:     return nullptr; // shims ship as separate module files (spec §4)
     }
     return nullptr;
+}
+
+static void robot_load_semvec(llama_robot_hparams & robot, const gguf_context * ctx) {
+    auto & sv = robot.semvec;
+    llama_robot_kv_get_str(ctx, "therobot.semvec.version", sv.version, true);
+    llama_robot_kv_get_str(ctx, "therobot.semvec.hash",    sv.hash,    true);
+    llama_robot_kv_get_u32(ctx, "therobot.semvec.named_dim",  sv.named_dim,  true);
+    llama_robot_kv_get_u32(ctx, "therobot.semvec.latent_dim", sv.latent_dim, true);
+    llama_robot_kv_get_str_arr(ctx, "therobot.semvec.axes", sv.axes, false);
+    if (!sv.axes.empty() && sv.axes.size() != sv.named_dim) {
+        throw std::runtime_error(format("therobot: semvec axes count %zu != named_dim %u",
+                sv.axes.size(), sv.named_dim));
+    }
+    uint32_t count = 0;
+    llama_robot_kv_get_u32(ctx, "therobot.semvec.site_count", count, true);
+    sv.sites.resize(count);
+    for (uint32_t i = 0; i < count; ++i) {
+        auto & s = sv.sites[i];
+        const std::string p = format("therobot.semvec.site.%u.", i);
+        llama_robot_kv_get_str(ctx, p + "name",   s.name,   true);
+        llama_robot_kv_get_u32(ctx, p + "layer",  s.layer,  false);
+        llama_robot_kv_get_str(ctx, p + "point",  s.point,  false);
+        llama_robot_kv_get_u32(ctx, p + "offset", s.offset, false);
+        llama_robot_kv_get_u32(ctx, p + "width",  s.width,  false);
+        llama_robot_kv_get_u32(ctx, p + "n_admitted", s.n_admitted, false);
+        llama_robot_kv_get_u32(ctx, p + "n_writable", s.n_writable, false);
+        if (s.point.empty()) { s.point = "resid_post"; }
+    }
+
+    // Resolve each site onto the tap machinery: reuse a bottleneck with the
+    // same name (the converter uses candidate-site names for both), else
+    // append a synthetic attribute-less bottleneck so E2 marks the slice as a
+    // graph output. Taps are pure additional outputs, so implying the taps
+    // feature is behavior-preserving by construction.
+    for (auto & s : sv.sites) {
+        int32_t found = -1;
+        for (size_t b = 0; b < robot.bottlenecks.size(); ++b) {
+            if (robot.bottlenecks[b].name == s.name) { found = (int32_t) b; break; }
+        }
+        if (found >= 0) {
+            const auto & bn = robot.bottlenecks[found];
+            if (s.width == 0) { s.width = bn.width; }
+            if (bn.width != s.width || (s.point != bn.point) ||
+                (bn.layer != s.layer && s.layer != 0) ||
+                (bn.offset != s.offset)) {
+                throw std::runtime_error(format(
+                        "therobot: semvec site '%s' geometry disagrees with the bottleneck of the same name",
+                        s.name.c_str()));
+            }
+            s.layer = bn.layer;
+            s.tap_id = found;
+        } else {
+            if (s.width == 0) {
+                throw std::runtime_error(format(
+                        "therobot: semvec site '%s' has no width and no matching bottleneck", s.name.c_str()));
+            }
+            llama_robot_bottleneck bn;
+            bn.name   = s.name;
+            bn.layer  = s.layer;
+            bn.point  = s.point;
+            bn.offset = s.offset;
+            bn.width  = s.width;
+            robot.bottlenecks.push_back(std::move(bn));
+            s.tap_id = (int32_t) robot.bottlenecks.size() - 1;
+        }
+    }
+    if (!sv.sites.empty()) {
+        robot.features.insert(LLAMA_ROBOT_FEATURE_TAPS);
+    }
 }
 
 //
@@ -349,6 +421,7 @@ void llama_robot_hparams_load_gguf(llama_robot_hparams & robot, const gguf_conte
     if (robot.has_feature(LLAMA_ROBOT_FEATURE_MEMORY))    { robot_load_memory     (robot, ctx); }
     if (robot.has_feature(LLAMA_ROBOT_FEATURE_DELTA))     { robot_load_delta      (robot, ctx); }
     if (robot.has_feature(LLAMA_ROBOT_FEATURE_SETTLE))    { robot_load_settle     (robot, ctx); }
+    if (robot.has_feature(LLAMA_ROBOT_FEATURE_SEMVEC))    { robot_load_semvec     (robot, ctx); }
 
     if (robot.is_passthrough()) {
         LLAMA_LOG_INFO("therobot: L0 passthrough file (base architecture '%s') — must behave identically to the donor\n",

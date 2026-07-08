@@ -34,6 +34,7 @@ enum llama_robot_feature {
     LLAMA_ROBOT_FEATURE_MEMORY,
     LLAMA_ROBOT_FEATURE_DELTA,
     LLAMA_ROBOT_FEATURE_SETTLE,
+    LLAMA_ROBOT_FEATURE_SEMVEC,   // the standardized readout layer (extraction-v1 §4.4)
 };
 
 const char * llama_robot_feature_name(llama_robot_feature f);
@@ -81,6 +82,32 @@ struct llama_robot_memory_params {
     float    salience_floor = 0.0f;
 };
 
+// semvec — the standardized readout layer (optional feature; extraction-v1
+// §4.4 and convert/docs/semvec-runtime-spec.md). Sites project a declared
+// residual slice into a versioned, donor-independent semantic coordinate
+// system; the overlay is the calibrated write path back.
+struct llama_robot_semvec_site {
+    std::string name;
+    uint32_t layer  = 0;
+    std::string point;                  // resid_post | attn_out | ffn_out
+    uint32_t offset = 0;
+    uint32_t width  = 0;                // slice width d
+    uint32_t n_admitted = 0;
+    uint32_t n_writable = 0;
+    int32_t  tap_id = -1;               // resolved bottleneck/tap index
+};
+
+struct llama_robot_semvec_params {
+    std::string version;                // e.g. "1.0"
+    std::string hash;                   // 16-hex coordinate-system identity
+    uint32_t named_dim  = 0;
+    uint32_t latent_dim = 0;
+    std::vector<std::string> axes;      // named-axis names [named_dim]
+    std::vector<llama_robot_semvec_site> sites;
+
+    uint32_t dim() const { return named_dim + latent_dim; }
+};
+
 // spec §1.6 — delta inference
 struct llama_robot_delta_params {
     std::string granularity;            // block (v1) | channel_group (reserved)
@@ -115,6 +142,7 @@ struct llama_robot_hparams {
     llama_robot_memory_params    memory;
     llama_robot_delta_params     delta;
     llama_robot_settle_params    settle;
+    llama_robot_semvec_params    semvec;
 
     bool has_feature(llama_robot_feature f) const { return features.count(f) > 0; }
 
