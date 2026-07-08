@@ -5,7 +5,8 @@ defmodule Starter.Organizations.Membership do
   @repo Starter.Organizations.Memberships
   @sref "membership"
   @persistence ecto_store(Starter.Schema.Organizations.Membership, Starter.Repo)
-  @derive Noizu.Entity.Store.Ecto.EntityProtocol
+  use Noizu.Entity.Store.Ecto.EntityProtocol.Behaviour
+
   def_entity do
     id(:uuid)
     @config auto: false
@@ -18,5 +19,5 @@ defmodule Starter.Organizations.Membership do
     field :time_stamp, nil, Noizu.Entity.TimeStamp
   end
 
-  jason_encoder()
+  use Starter.Support.NoizuJasonEncoder
 end

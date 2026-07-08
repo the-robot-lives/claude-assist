@@ -5,7 +5,8 @@ defmodule Starter.Users.Sessions.UserSession do
   @repo Starter.Users.Sessions
   @sref "user-session"
   @persistence ecto_store(Starter.Schema.Users.Sessions.UserSession, Starter.Repo)
-  @derive Noizu.Entity.Store.Ecto.EntityProtocol
+  use Noizu.Entity.Store.Ecto.EntityProtocol.Behaviour
+
   def_entity do
     id(:uuid)
     @config auto: true
@@ -23,5 +24,5 @@ defmodule Starter.Users.Sessions.UserSession do
     field :time_stamp, nil, Noizu.Entity.TimeStamp
   end
 
-  jason_encoder()
+  use Starter.Support.NoizuJasonEncoder
 end

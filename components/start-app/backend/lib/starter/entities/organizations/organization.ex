@@ -5,7 +5,8 @@ defmodule Starter.Organizations.Organization do
   @repo Starter.Organizations
   @sref "organization"
   @persistence ecto_store(Starter.Schema.Organizations.Organization, Starter.Repo)
-  @derive Noizu.Entity.Store.Ecto.EntityProtocol
+  use Noizu.Entity.Store.Ecto.EntityProtocol.Behaviour
+
   def_entity do
     id(:uuid)
     field :slug, nil, :string
@@ -14,5 +15,5 @@ defmodule Starter.Organizations.Organization do
     field :time_stamp, nil, Noizu.Entity.TimeStamp
   end
 
-  jason_encoder()
+  use Starter.Support.NoizuJasonEncoder
 end

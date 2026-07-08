@@ -4,7 +4,8 @@ defmodule Starter.Users.Credentials.UserCredential do
   @repo Starter.Users.Credentials
   @sref "user-credential"
   @persistence ecto_store(Starter.Schema.Users.Credentials.UserCredential, Starter.Repo)
-  @derive Noizu.Entity.Store.Ecto.EntityProtocol
+  use Noizu.Entity.Store.Ecto.EntityProtocol.Behaviour
+
   def_entity do
     id(:uuid)
     @config auto: false
@@ -27,5 +28,5 @@ defmodule Starter.Users.Credentials.UserCredential do
     field :time_stamp, nil, Noizu.Entity.TimeStamp
   end
 
-  jason_encoder()
+  use Starter.Support.NoizuJasonEncoder
 end

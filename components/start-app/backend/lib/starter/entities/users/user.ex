@@ -5,7 +5,8 @@ defmodule Starter.Users.User do
   @repo Starter.Users
   @sref "user"
   @persistence ecto_store(Starter.Schema.Users.User, Starter.Repo)
-  @derive Noizu.Entity.Store.Ecto.EntityProtocol
+  use Noizu.Entity.Store.Ecto.EntityProtocol.Behaviour
+
   def_entity do
     id(:uuid)
     field :user_name, nil, :string
@@ -39,5 +40,5 @@ defmodule Starter.Users.User do
     field :time_stamp, nil, Noizu.Entity.TimeStamp
   end
 
-  jason_encoder()
+  use Starter.Support.NoizuJasonEncoder
 end

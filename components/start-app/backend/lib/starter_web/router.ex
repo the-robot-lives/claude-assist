@@ -111,11 +111,9 @@ defmodule StarterWeb.Router do
   end
 
   # SAML 2.0 (Samly handles assertion consumer service, metadata, etc.)
-  if Application.compile_env(:starter, :saml_enabled) do
-    scope "/sso/saml" do
-      pipe_through [:sso_session]
-      forward "/", Samly.Router
-    end
+  scope "/sso/saml" do
+    pipe_through [:sso_session]
+    forward "/", Samly.Router
   end
 
   # OIDC redirect flow

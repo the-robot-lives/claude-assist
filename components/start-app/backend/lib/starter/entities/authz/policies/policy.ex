@@ -5,7 +5,7 @@ defmodule Starter.Authz.Policies.Policy do
   @repo Starter.Authz.Policies
   @sref "authz-policy"
   @persistence ecto_store(Starter.Schema.Authz.Policy, Starter.Repo)
-  @derive Noizu.Entity.Store.Ecto.EntityProtocol
+  use Noizu.Entity.Store.Ecto.EntityProtocol.Behaviour
 
   def_entity do
     id(:uuid)
@@ -17,5 +17,5 @@ defmodule Starter.Authz.Policies.Policy do
     field :time_stamp, nil, Noizu.Entity.TimeStamp
   end
 
-  jason_encoder()
+  use Starter.Support.NoizuJasonEncoder
 end

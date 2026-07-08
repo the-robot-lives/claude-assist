@@ -5,7 +5,7 @@ defmodule Starter.Authz.Groups.Group do
   @repo Starter.Authz.Groups
   @sref "authz-group"
   @persistence ecto_store(Starter.Schema.Authz.Group, Starter.Repo)
-  @derive Noizu.Entity.Store.Ecto.EntityProtocol
+  use Noizu.Entity.Store.Ecto.EntityProtocol.Behaviour
 
   def_entity do
     id(:uuid)
@@ -16,5 +16,5 @@ defmodule Starter.Authz.Groups.Group do
     field :time_stamp, nil, Noizu.Entity.TimeStamp
   end
 
-  jason_encoder()
+  use Starter.Support.NoizuJasonEncoder
 end

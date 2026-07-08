@@ -4,7 +4,7 @@ defmodule Starter.Versioned.Descriptions.Description do
   @vsn 1.0
   @repo Starter.Versioned.Descriptions
   @sref "versioned-description"
-  @derive Noizu.Entity.Store.Ecto.EntityProtocol
+  use Noizu.Entity.Store.Ecto.EntityProtocol.Behaviour
   @persistence ecto_store(Starter.Schema.Versioned.Descriptions.Description, Starter.Repo)
   def_entity do
     id(:uuid)
@@ -13,5 +13,5 @@ defmodule Starter.Versioned.Descriptions.Description do
     field :time_stamp, nil, Noizu.Entity.TimeStamp
   end
 
-  jason_encoder()
+  use Starter.Support.NoizuJasonEncoder
 end

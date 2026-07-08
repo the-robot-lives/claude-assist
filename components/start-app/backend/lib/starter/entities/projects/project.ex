@@ -5,7 +5,7 @@ defmodule Starter.Projects.Project do
   @repo Starter.Projects
   @sref "project"
   @persistence ecto_store(Starter.Schema.Projects.Project, Starter.Repo)
-  @derive Noizu.Entity.Store.Ecto.EntityProtocol
+  use Noizu.Entity.Store.Ecto.EntityProtocol.Behaviour
 
   def_entity do
     id(:uuid)
@@ -23,5 +23,5 @@ defmodule Starter.Projects.Project do
     field :time_stamp, nil, Noizu.Entity.TimeStamp
   end
 
-  jason_encoder()
+  use Starter.Support.NoizuJasonEncoder
 end

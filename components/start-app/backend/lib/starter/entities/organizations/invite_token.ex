@@ -5,7 +5,8 @@ defmodule Starter.Organizations.InviteToken do
   @repo Starter.Organizations.InviteTokens
   @sref "invite-token"
   @persistence ecto_store(Starter.Schema.Organizations.InviteToken, Starter.Repo)
-  @derive Noizu.Entity.Store.Ecto.EntityProtocol
+  use Noizu.Entity.Store.Ecto.EntityProtocol.Behaviour
+
   def_entity do
     id(:uuid)
     @config auto: false
@@ -31,5 +32,5 @@ defmodule Starter.Organizations.InviteToken do
     field :time_stamp, nil, Noizu.Entity.TimeStamp
   end
 
-  jason_encoder()
+  use Starter.Support.NoizuJasonEncoder
 end

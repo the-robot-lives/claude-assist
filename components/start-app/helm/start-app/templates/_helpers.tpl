@@ -161,9 +161,15 @@ app.kubernetes.io/instance: {{ .Release.Name }}
       name: {{ .Values.secrets.name }}
       key: {{ .Values.secrets.keys.linkedinClientSecret }}
 {{- end }}
-{{- if .Values.sso.saml.idpMetadataUrl }}
-- name: SAML_IDP_METADATA_URL
-  value: {{ .Values.sso.saml.idpMetadataUrl | quote }}
+{{- $samlMetadataFile := .Values.sso.saml.idpMetadataFile | default .Values.sso.saml.idpMetadataUrl }}
+{{- if or .Values.sso.saml.idpMetadata $samlMetadataFile }}
+{{- if .Values.sso.saml.idpMetadata }}
+- name: SAML_IDP_METADATA
+  value: {{ .Values.sso.saml.idpMetadata | quote }}
+{{- else }}
+- name: SAML_IDP_METADATA_FILE
+  value: {{ $samlMetadataFile | quote }}
+{{- end }}
 - name: SAML_SP_ENTITY_ID
   value: {{ .Values.sso.saml.spEntityId | default (printf "https://%s" .Values.domain) | quote }}
 - name: SAML_SP_BASE_URL

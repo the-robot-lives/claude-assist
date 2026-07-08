@@ -5,7 +5,8 @@ defmodule Starter.Media.Asset do
   @repo Starter.Media
   @sref "media-asset"
   @persistence ecto_store(Starter.Schema.Media.Asset, Starter.Repo)
-  @derive Noizu.Entity.Store.Ecto.EntityProtocol
+  use Noizu.Entity.Store.Ecto.EntityProtocol.Behaviour
+
   def_entity do
     id(:uuid)
     field :media_type, nil, {:ecto, Starter.Schema.Media.Asset.__schema__(:type, :media_type)}
@@ -20,5 +21,5 @@ defmodule Starter.Media.Asset do
     field :time_stamp, nil, Noizu.Entity.TimeStamp
   end
 
-  jason_encoder()
+  use Starter.Support.NoizuJasonEncoder
 end

@@ -5,7 +5,8 @@ defmodule Starter.Auth.Providers.Provider do
   @repo Starter.Auth.Providers
   @sref "auth-provider"
   @persistence ecto_store(Starter.Schema.Auth.Providers.Provider, Starter.Repo)
-  @derive Noizu.Entity.Store.Ecto.EntityProtocol
+  use Noizu.Entity.Store.Ecto.EntityProtocol.Behaviour
+
   def_entity do
     id(:uuid)
     field :title, nil, :string
@@ -14,5 +15,5 @@ defmodule Starter.Auth.Providers.Provider do
     field :time_stamp, nil, Noizu.Entity.TimeStamp
   end
 
-  jason_encoder()
+  use Starter.Support.NoizuJasonEncoder
 end

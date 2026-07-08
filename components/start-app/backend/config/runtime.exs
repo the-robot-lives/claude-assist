@@ -161,26 +161,34 @@ if config_env() == :prod do
   end
 
   # ── SSO: SAML ──────────────────────────────────────────────────
-  if saml_metadata = System.get_env("SAML_IDP_METADATA_URL") do
+  saml_metadata =
+    cond do
+      value = System.get_env("SAML_IDP_METADATA") -> [metadata: value]
+      value = System.get_env("SAML_IDP_METADATA_FILE") -> [metadata_file: value]
+      true -> []
+    end
+
+  if saml_metadata != [] do
     sp_cert = System.get_env("SAML_SP_CERT", "") |> String.replace("\\n", "\n")
     sp_key = System.get_env("SAML_SP_KEY", "") |> String.replace("\\n", "\n")
 
     config :samly, Samly.Provider,
-      idp: [
-        %{
-          id: "default",
-          sp_id: "default",
-          base_url: "https://#{host}/sso/saml",
-          metadata_url: saml_metadata
-        }
-      ],
-      sp: [
+      service_providers: [
         %{
           id: "default",
           entity_id: System.get_env("SAML_SP_ENTITY_ID") || "https://#{host}",
           certfile_data: sp_cert,
           keyfile_data: sp_key
         }
+      ],
+      identity_providers: [
+        %{
+          id: "default",
+          sp_id: "default",
+          base_url: "https://#{host}/sso/saml",
+          pre_session_create_pipeline: StarterWeb.SAMLHandler
+        }
+        |> Map.merge(Map.new(saml_metadata))
       ]
 
     config :starter, :saml_enabled, true

@@ -85,6 +85,11 @@ sso:
     # Example: https://auth.noizu.com/application/o/{app-slug}/
     issuer: ""
   saml:
+    # Samly 1.4 expects raw metadata XML or a local metadata file path; it does
+    # not fetch metadata URLs at runtime.
+    idpMetadata: ""
+    idpMetadataFile: ""
+    # Deprecated. Kept for existing values files that used this as a file path.
     idpMetadataUrl: ""
     spEntityId: ""
 
