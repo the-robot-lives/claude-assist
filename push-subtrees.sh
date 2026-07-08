@@ -13,8 +13,8 @@
 #                         With no folder, ALL subtrees are candidates.
 #
 # Options:
-#   -i, --interactive     Toggle on/off screen to pick which repos to push
-#                         (fzf: TAB toggles, ENTER confirms; plain fallback otherwise).
+#   -s, --select          Open a selector view to pick which repos to push.
+#   -i, --interactive     Alias for --select.
 #       --include <glob>  Keep only subtrees whose prefix matches the glob (repeatable).
 #       --exclude <glob>  Drop subtrees whose prefix matches the glob (repeatable).
 #   -b, --branch <name>   Push ALL selected subtrees to this branch instead of each
@@ -30,8 +30,8 @@
 #   ./push-subtrees.sh projects/NoizuPromptLingo/frontend/src   # subdir -> same subtree
 #   ./push-subtrees.sh 3rd-party                     # all 3rd-party subtrees
 #   ./push-subtrees.sh --include 'utilities/*' --exclude '*zellij*'
-#   ./push-subtrees.sh -i                            # interactive toggle over all
-#   ./push-subtrees.sh projects -i                   # interactive toggle within projects/
+#   ./push-subtrees.sh --select                      # selector view over all
+#   ./push-subtrees.sh projects --select             # selector view within projects/
 #   ./push-subtrees.sh --branch mono-repo-dev        # push/create mono-repo-dev on every remote
 set -euo pipefail
 
@@ -40,14 +40,14 @@ SUBTREES=(
   # 3rd-party
   "3rd-party/bottlecrm|bottlecrm|mono-repo-dev"
   "3rd-party/chartdb|noizu-forks-chartdb|mono-repo-dev"
-  "3rd-party/codex|noizu-forks-codex|mono-repo-dev"
+  "3rd-party/codex|codex-cli|mono-repo-dev"
   # "3rd-party/clickhouse|noizu-forks-clickhouse|mono-repo-dev"   # TODO: no such remote + dir absent
   "3rd-party/directus|noizu-forks-directus|mono-repo-dev"
   "3rd-party/drawio|noizu-forks-drawio|mono-repo-dev"
   "3rd-party/excalidraw|noizu-forks-excalidraw|mono-repo-dev"
   "3rd-party/excalidraw-room|noizu-forks-excalidraw-room|mono-repo-dev"
   "3rd-party/kroki|noizu-forks-kroki|mono-repo-dev"
-  "3rd-party/llama.cpp|llama-cpp|master"
+  "3rd-party/llama.cpp|llama-cpp|mono-repo-dev"
   "3rd-party/mermaid-live-editor|noizu-forks-mermaid-live-editor|mono-repo-dev"
   "3rd-party/mydraft-server2|noizu-forks-mydraft-server2|mono-repo-dev"
   "3rd-party/n8n|noizu-forks-n8n|mono-repo-dev"
@@ -169,11 +169,11 @@ BRANCH_OVERRIDE=""
 INCLUDES=()
 EXCLUDES=()
 
-usage() { sed -n '2,40p' "$0" | sed 's/^# \{0,1\}//'; }
+usage() { sed -n '2,35p' "$0" | sed 's/^# \{0,1\}//'; }
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    -i|--interactive) INTERACTIVE=1; shift ;;
+    -s|--select|-i|--interactive) INTERACTIVE=1; shift ;;
     -l|--list)        LIST_ONLY=1; shift ;;
     -n|--dry-run)     DRY_RUN=1; shift ;;
     --include)        INCLUDES+=("$2"); shift 2 ;;
@@ -241,10 +241,9 @@ eff_branch() {
   else cut -d'|' -f3 <<<"$1"; fi
 }
 
-# --- Interactive toggle screen ---------------------------------------------
-# Presents the candidate set; user toggles which repos to push.
+# --- Selector view ----------------------------------------------------------
+# Presents the candidate set; user chooses which repos to push.
 interactive_select() {
-  local -n _out="$1"; shift
   local cands=("$@") chosen=()
 
   if command -v fzf >/dev/null 2>&1; then
@@ -258,16 +257,16 @@ interactive_select() {
     picked=$(printf '%s\n' "$lines" | fzf --multi --no-sort \
       --delimiter='\t' --with-nth=1,2 \
       --height=90% --border --cycle \
-      --header=$'TAB toggle  •  CTRL-A all  •  CTRL-D none  •  ENTER push selected  •  ESC cancel' \
+      --header='Select items to push | TAB toggle | CTRL-A all | CTRL-D none | ENTER push selected | ESC cancel' \
       --bind 'ctrl-a:select-all' --bind 'ctrl-d:deselect-all' \
       --prompt='push> ') || true
-    [[ -z "$picked" ]] && { _out=(); return 0; }
+    [[ -z "$picked" ]] && { SELECTED=(); return 0; }
     while IFS=$'\t' read -r prefix _; do
       for e in "${cands[@]}"; do [[ "${e%%|*}" == "$prefix" ]] && chosen+=("$e"); done
     done <<<"$picked"
   else
     # Plain fallback: numbered toggle.
-    echo "Select repos to push (space-separated numbers, 'a'=all, 'q'=cancel):" >&2
+    echo "Select items to push (space-separated numbers, 'a'=all, 'q'=cancel):" >&2
     local i=1
     for e in "${cands[@]}"; do
       printf '  %2d) %-45s → %s/%s\n' "$i" "${e%%|*}" \
@@ -276,21 +275,21 @@ interactive_select() {
     done
     local reply; read -r -p "> " reply
     case "$reply" in
-      q|Q|"") _out=(); return 0 ;;
+      q|Q|"") SELECTED=(); return 0 ;;
       a|A)    chosen=("${cands[@]}") ;;
       *)      for n in $reply; do
                 [[ "$n" =~ ^[0-9]+$ ]] && (( n>=1 && n<=${#cands[@]} )) && chosen+=("${cands[$((n-1))]}")
               done ;;
     esac
   fi
-  _out=("${chosen[@]}")
+  SELECTED=("${chosen[@]}")
 }
 
 if [[ $INTERACTIVE -eq 1 ]]; then
   SELECTED=()
-  interactive_select SELECTED "${CANDIDATES[@]}"
+  interactive_select "${CANDIDATES[@]}"
   if [[ ${#SELECTED[@]} -eq 0 ]]; then
-    echo "Nothing selected — aborting." >&2
+    echo "Nothing selected - aborting." >&2
     exit 0
   fi
   CANDIDATES=("${SELECTED[@]}")
@@ -359,6 +358,11 @@ push_subtree() {
   fi
   if [[ ! -d "$prefix" ]]; then
     echo "SKIP  $prefix (directory not found)"
+    return
+  fi
+  if ! git remote get-url "$remote" >/dev/null 2>&1; then
+    echo "FAIL  $prefix → $remote/$branch (remote not configured)"
+    FAILED+=("$prefix")
     return
   fi
   if [[ $DRY_RUN -eq 1 ]]; then

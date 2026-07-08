@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# pull-subtree.sh
+# pull-subtrees.sh
 # Pull remote subtree updates into the monorepo.
 #
 # Usage:
-#   ./pull-subtree.sh [folder] [options]
+#   ./pull-subtrees.sh [folder] [options]
 #
 #   folder                A path or directory to pull. The subtree is looked up
 #                         from the folder:
@@ -13,8 +13,8 @@
 #                         With no folder, ALL subtrees are candidates.
 #
 # Options:
-#   -i, --interactive     Toggle on/off screen to pick which repos to pull
-#                         (fzf: TAB toggles, ENTER confirms; plain fallback otherwise).
+#   -s, --select          Open a selector view to pick which repos to pull.
+#   -i, --interactive     Alias for --select.
 #       --include <glob>  Keep only subtrees whose prefix matches the glob (repeatable).
 #       --exclude <glob>  Drop subtrees whose prefix matches the glob (repeatable).
 #   -b, --branch <name>   Pull ALL selected subtrees from this branch instead of each
@@ -25,14 +25,14 @@
 #   -h, --help            Show this help.
 #
 # Examples:
-#   ./pull-subtree.sh                              # pull everything
-#   ./pull-subtree.sh projects/NoizuPromptLingo    # pull one subtree (folder lookup)
-#   ./pull-subtree.sh projects/NoizuPromptLingo/frontend/src   # subdir -> same subtree
-#   ./pull-subtree.sh 3rd-party                     # all 3rd-party subtrees
-#   ./pull-subtree.sh --include 'utilities/*' --exclude '*zellij*'
-#   ./pull-subtree.sh -i                            # interactive toggle over all
-#   ./pull-subtree.sh projects -i                   # interactive toggle within projects/
-#   ./pull-subtree.sh --branch main                 # pull every selected subtree from main
+#   ./pull-subtrees.sh                              # pull everything
+#   ./pull-subtrees.sh projects/NoizuPromptLingo    # pull one subtree (folder lookup)
+#   ./pull-subtrees.sh projects/NoizuPromptLingo/frontend/src   # subdir -> same subtree
+#   ./pull-subtrees.sh 3rd-party                     # all 3rd-party subtrees
+#   ./pull-subtrees.sh --include 'utilities/*' --exclude '*zellij*'
+#   ./pull-subtrees.sh --select                      # selector view over all
+#   ./pull-subtrees.sh projects --select             # selector view within projects/
+#   ./pull-subtrees.sh --branch main                 # pull every selected subtree from main
 set -euo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
@@ -47,7 +47,7 @@ BRANCH_OVERRIDE=""
 INCLUDES=()
 EXCLUDES=()
 
-usage() { sed -n '2,43p' "$0" | sed 's/^# \{0,1\}//'; }
+usage() { sed -n '2,35p' "$0" | sed 's/^# \{0,1\}//'; }
 
 die() {
   echo "$*" >&2
@@ -60,7 +60,7 @@ need_value() {
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    -i|--interactive) INTERACTIVE=1; shift ;;
+    -s|--select|-i|--interactive) INTERACTIVE=1; shift ;;
     -l|--list)        LIST_ONLY=1; shift ;;
     -n|--dry-run)     DRY_RUN=1; shift ;;
     --allow-dirty)    ALLOW_DIRTY=1; shift ;;
@@ -88,8 +88,12 @@ resolve_candidates() {
 
   local args=() output line prefix remote branch
   [[ -n "$FOLDER" ]] && args+=("$FOLDER")
-  for line in "${INCLUDES[@]}"; do args+=(--include "$line"); done
-  for line in "${EXCLUDES[@]}"; do args+=(--exclude "$line"); done
+  if [[ ${#INCLUDES[@]} -gt 0 ]]; then
+    for line in "${INCLUDES[@]}"; do args+=(--include "$line"); done
+  fi
+  if [[ ${#EXCLUDES[@]} -gt 0 ]]; then
+    for line in "${EXCLUDES[@]}"; do args+=(--exclude "$line"); done
+  fi
   [[ -n "$BRANCH_OVERRIDE" ]] && args+=(--branch "$BRANCH_OVERRIDE")
   args+=(--list)
 
@@ -108,7 +112,6 @@ resolve_candidates() {
 }
 
 interactive_select() {
-  local -n _out="$1"; shift
   local cands=("$@") chosen=()
 
   if command -v fzf >/dev/null 2>&1; then
@@ -123,15 +126,15 @@ interactive_select() {
     picked=$(printf '%s\n' "$lines" | fzf --multi --no-sort \
       --delimiter='\t' --with-nth=1,2 \
       --height=90% --border --cycle \
-      --header=$'TAB toggle  |  CTRL-A all  |  CTRL-D none  |  ENTER pull selected  |  ESC cancel' \
+      --header='Select items to pull | TAB toggle | CTRL-A all | CTRL-D none | ENTER pull selected | ESC cancel' \
       --bind 'ctrl-a:select-all' --bind 'ctrl-d:deselect-all' \
       --prompt='pull> ') || true
-    [[ -z "$picked" ]] && { _out=(); return 0; }
+    [[ -z "$picked" ]] && { SELECTED=(); return 0; }
     while IFS=$'\t' read -r prefix _; do
       for e in "${cands[@]}"; do [[ "${e%%|*}" == "$prefix" ]] && chosen+=("$e"); done
     done <<<"$picked"
   else
-    echo "Select repos to pull (space-separated numbers, 'a'=all, 'q'=cancel):" >&2
+    echo "Select items to pull (space-separated numbers, 'a'=all, 'q'=cancel):" >&2
     local i=1 prefix remote branch reply n
     for e in "${cands[@]}"; do
       IFS='|' read -r prefix remote branch <<<"$e"
@@ -140,14 +143,14 @@ interactive_select() {
     done
     read -r -p "> " reply
     case "$reply" in
-      q|Q|"") _out=(); return 0 ;;
+      q|Q|"") SELECTED=(); return 0 ;;
       a|A)    chosen=("${cands[@]}") ;;
       *)      for n in $reply; do
                 [[ "$n" =~ ^[0-9]+$ ]] && (( n>=1 && n<=${#cands[@]} )) && chosen+=("${cands[$((n-1))]}")
               done ;;
     esac
   fi
-  _out=("${chosen[@]}")
+  SELECTED=("${chosen[@]}")
 }
 
 require_clean_worktree() {
@@ -164,7 +167,7 @@ resolve_candidates
 
 if [[ $INTERACTIVE -eq 1 ]]; then
   SELECTED=()
-  interactive_select SELECTED "${CANDIDATES[@]}"
+  interactive_select "${CANDIDATES[@]}"
   if [[ ${#SELECTED[@]} -eq 0 ]]; then
     echo "Nothing selected - aborting." >&2
     exit 0
