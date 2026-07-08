@@ -379,13 +379,13 @@ model_list:
     litellm_params:
       model: xai/grok-code-fast-1
       api_key: "os.environ/XAI_API_KEY"
-  - model_name: "anthropic/claude-opus-4-7 ($$$)"
+  - model_name: "anthropic/claude-opus-4-8 ($$$)"
     litellm_params:
-      model: anthropic/claude-opus-4-7
+      model: anthropic/claude-opus-4-8
       api_key: "os.environ/ANTHROPIC_API_KEY"
-  - model_name: "anthropic/claude-sonnet-4-6 ($$)"
+  - model_name: "anthropic/claude-sonnet-5 ($$)"
     litellm_params:
-      model: anthropic/claude-sonnet-4-6
+      model: anthropic/claude-sonnet-5
       api_key: "os.environ/ANTHROPIC_API_KEY"
   - model_name: "anthropic/claude-haiku-4-5-20251001 ($)"
     litellm_params:
