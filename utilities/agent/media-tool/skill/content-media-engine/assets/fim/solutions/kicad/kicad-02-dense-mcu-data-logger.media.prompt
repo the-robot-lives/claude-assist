@@ -1,0 +1,76 @@
+---
+schema: "0.4"
+id: "fim-electronics-circuits-hdl-and-timing-kicad-02-dense-mcu-data-logger"
+type: "engineering"
+quality: "production"
+solution: "kicad"
+category: "electronics-circuits-hdl-and-timing"
+variant: "dense-stress"
+references:
+  - "references/fim/overview/electronics-media-docfile/kicad.md"
+  - "references/fim/solution/kicad.md"
+prompt:
+  system: |-
+    You generate ASCII KiCad v6-plus project artifacts. Output only a multi-file manifest with complete S-expression snippets and automation commands, no Markdown fences or prose wrapper.
+  text: |-
+    Scenario: Create a dense KiCad stress project for a compact MCU data logger with USB-C power, buck regulator, I2C sensors, SPI flash, SWD header, battery monitor, status LEDs, and test points. Use hierarchical sheets, clear net classes, controlled power nets, and a four-layer manufacturing intent.
+    
+    Coverage: Stress the renderer or parser with density while preserving readability, deterministic layout, labels, units, and meaningful grouping.
+    
+    Requirements:
+    - Follow the solution reference for kicad and stay inside its native artifact model.
+    - The artifact must use valid KiCad S-expressions, version tokens, unique uuids, valid net indexes, balanced parentheses, and kicad-cli compatible export commands.
+    - Every symbol pin, footprint pad, segment, via, zone, and label must map to a defined net with no accidental floating or shorted nodes.
+    - Include electrical correctness, timing assumptions, units, labels, net consistency, parser/render compatibility, and safety checks.
+    - Prefer deterministic names and ordering so generated artifacts diff cleanly in git.
+    - Output only the requested artifact source or manifest; do not include commentary outside it.
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.2
+    top_p: 0.9
+output:
+  text_format: "kicad-project-source"
+  artifact_kind: "kicad-schematic-pcb-bundle"
+  formats:
+    - format: "kicad_pro"
+    - format: "kicad_sch"
+    - format: "kicad_pcb"
+    - format: "gerber"
+    - format: "excellon"
+    - format: "step"
+    - format: "svg"
+evaluation:
+  checklist:
+    - "YAML parses successfully, uses schema 0.4, and includes id, type, quality, solution, category, variant, prompt, output, evaluation, and tags."
+    - "Generated artifact is ASCII-only, contains no Markdown fences, no prose wrapper, and matches the requested output.text_format."
+    - "Electrical correctness is explicit: component values or logic levels are plausible, polarities are clear, grounds or references exist, and unsafe shorts or missing current limits are avoided."
+    - "Timing is explicit where relevant: clocks, delays, setup/hold, transient windows, sample points, or time constants use stated units and align with the scenario."
+    - "Units and labels are complete: voltages, currents, resistance, capacitance, frequency, time, bus widths, active-low names, and probe labels are readable and internally consistent."
+    - "Net consistency is maintained: node names, connector ids, signal names, bus labels, references, and measurement names resolve to the same intended nets throughout the artifact."
+    - "Parser/render compatibility is checked against the normal toolchain for the solution and avoids syntax from sibling tools unless the scenario explicitly asks for an integration handoff."
+    - "Safety checks are present for power, current, voltage stress, ESD, inductive kick, fabrication clearances, or simulation assumptions as appropriate for the artifact."
+  rubric:
+    - name: "Format validity"
+      weight: 30
+      criteria: "Must satisfy schema 0.4 and emit syntactically valid kicad-project-source for kicad; parser roots, required wrappers, balanced delimiters, file manifests, and output formats must be correct."
+    - name: "Semantic completeness"
+      weight: 30
+      criteria: "Must fully cover the dense-stress scenario, including requested circuit behavior or HDL/timing behavior, electrical correctness, timing relationships, units, labels, and safety assumptions."
+    - name: "Technical/visual quality"
+      weight: 25
+      criteria: "Must be readable and technically useful after rendering or simulation: labels do not collide, dense content is grouped, waveforms align, plots or schematics carry units, and net consistency is visible."
+    - name: "Robustness"
+      weight: 15
+      criteria: "Must remain stable under normal parsing, rendering, simulation, export, or documentation use; handle edge cases, deterministic ordering, missing-backend notes, and compatibility limits for kicad."
+  pass_conditions:
+    - "Rubric weights are exactly Format validity 30, Semantic completeness 30, Technical/visual quality 25, Robustness 15."
+    - "Total score is at least 85 out of 100, with Format validity at least 24 out of 30 and no zero-score rubric dimension."
+    - "Generated artifact is ASCII-only, parser/render compatible for the requested solution, and contains no Markdown fences or explanatory prose wrapper."
+    - "Electrical correctness, timing, units, labels, net consistency, parser/render compatibility, and safety checks are all addressed in the generated artifact."
+tags:
+  - "fim"
+  - "electronics-circuits-hdl-and-timing"
+  - "kicad"
+  - "dense-stress"
+  - "engineering"
+  - "kicad-project-source"

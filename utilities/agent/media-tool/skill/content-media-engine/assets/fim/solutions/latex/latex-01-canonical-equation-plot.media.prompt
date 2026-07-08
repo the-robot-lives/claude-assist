@@ -1,0 +1,74 @@
+---
+schema: "0.4"
+id: fim-math-and-scientific-rendering-latex-01-canonical-equation-plot
+type: document
+quality: high
+solution: latex
+category: math-and-scientific-rendering
+variant: canonical-equation-plot
+references:
+- references/fim/overview/geospatial-math-scientific/latex.md
+- references/fim/solution/latex.md
+prompt:
+  system: |-
+    You are a senior LaTeX scientific publishing engineer. Output only one complete ASCII LaTeX source file. No Markdown fences or prose outside the source.
+  text: |-
+    Create a canonical LaTeX article that derives the quadratic formula and includes a native pgfplots figure of y=x^2-5*x+6 with roots labeled. Use amsmath for aligned equations, booktabs for a small coefficient table, hyperref for references, and a captioned figure with labels.
+
+    Requirements: include compile comments for latexmk or pdflatex, define all packages in the preamble, use valid equation labels and cross references, axis labels with units, and a short verification paragraph substituting both roots back into the polynomial.
+  provider_options:
+    temperature: 0.2
+    max_tokens: 8192
+output:
+  text_format: latex
+  artifact_kind: latex-document
+  formats:
+  - format: tex
+  - format: pdf
+evaluation:
+  checklist:
+  - "YAML parses and required schema 0.4 fields are present."
+  - "LaTeX source is complete, ASCII-only, and includes documentclass, preamble, body, and compile comments."
+  - "Math correctness covers derivation steps, root values, substitution checks, and plotted polynomial."
+  - "Notation validity covers amsmath environments, labels, references, pgfplots syntax, and table syntax."
+  - "Renderability covers package imports, compiler comments, no missing external images, and PDF output."
+  - "Labels and units identify x, y, roots, coefficients, figure, table, and equations."
+  - "Domain edge cases cover zero leading coefficient notes, repeated roots, negative discriminant discussion, and overfull labels."
+  rubric:
+  - name: Format validity
+    weight: 30
+    criteria:
+    - "Output is one complete ASCII .tex file with no Markdown wrapper."
+    - "The file compiles with the documented LaTeX command and uses valid package syntax."
+    - "All labels, references, figures, and tables are defined."
+  - name: Semantic completeness
+    weight: 30
+    criteria:
+    - "Derivation, plotted figure, coefficient table, root verification, captions, and cross references are all present."
+    - "LaTeX is the primary document and math typesetting surface."
+    - "The derivation is mathematically correct and readable."
+  - name: Visual/structural quality
+    weight: 25
+    criteria:
+    - "Document hierarchy, equations, figure, and table are well spaced and publication-like."
+    - "The pgfplots figure has readable labels, legend, and root markers."
+    - "The PDF avoids clipped content and overfull text where practical."
+  - name: Robustness
+    weight: 15
+    criteria:
+    - "Uses self-contained data and deterministic plot settings."
+    - "Documents compiler and package expectations."
+    - "Discusses key quadratic domain edge cases."
+  pass_conditions:
+  - "Rubric weights are exactly Format validity 30, Semantic completeness 30, Visual/structural quality 25, Robustness 15."
+  - "Score is 80 or higher out of 100 with no critical failure in math correctness, notation validity, or renderability."
+  - "The artifact compiles into a labeled LaTeX PDF with a valid plot and derivation."
+  - "Domain edge cases and compiler constraints are represented."
+tags:
+- fim
+- math-and-scientific-rendering
+- latex
+- canonical-equation-plot
+- scientific-document
+- pgfplots
+

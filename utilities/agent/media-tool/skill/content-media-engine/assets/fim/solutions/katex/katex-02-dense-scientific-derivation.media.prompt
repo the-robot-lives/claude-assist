@@ -1,0 +1,75 @@
+---
+schema: "0.4"
+id: fim-math-and-scientific-rendering-katex-02-dense-scientific-derivation
+type: document
+quality: high
+solution: katex
+category: math-and-scientific-rendering
+variant: dense-scientific-derivation
+references:
+- references/fim/overview/geospatial-math-scientific/katex.md
+- references/fim/solution/katex.md
+prompt:
+  system: |-
+    You are a senior scientific documentation engineer. Output only one complete ASCII HTML file using KaTeX. No Markdown fences or prose outside the source.
+  text: |-
+    Create a dense KaTeX derivation page for solving the heat equation u_t=alpha*u_xx on 0<x<L with zero boundary conditions by separation of variables. Render aligned multi-line equations, the eigenvalue condition, Fourier coefficients, and the final series solution. Include a compact SVG or CSS diagram of the rod with boundary labels.
+
+    Requirements: use KaTeX supported aligned environments, explicit macros for alpha and pi if helpful, htmlAndMathml output, strict warning handling, labels with units for length and temperature, and comments that mark where unsupported package commands were intentionally avoided.
+  provider_options:
+    temperature: 0.2
+    max_tokens: 8192
+output:
+  text_format: html
+  artifact_kind: katex-html-document
+  formats:
+  - format: html
+  - format: mathml
+  - format: png
+evaluation:
+  checklist:
+  - "YAML parses and required schema 0.4 fields are present."
+  - "HTML is complete, ASCII-only, and renders dense KaTeX math with valid supported environments."
+  - "Math correctness covers separation, eigenfunctions, coefficients, boundary conditions, and final series."
+  - "Notation validity covers TeX alignment, macros, subscripts, sums, integrals, and units."
+  - "Renderability covers KaTeX CSS, htmlAndMathml output, strict handling, and unsupported-command avoidance."
+  - "Labels and units identify x, time, length L, temperature u, boundary values, and coefficient terms."
+  - "Domain edge cases cover n=0 exclusion, convergence assumptions, unsupported TeX packages, and macro expansion limits."
+  rubric:
+  - name: Format validity
+    weight: 30
+    criteria:
+    - "Output is one complete ASCII HTML file with no Markdown wrapper."
+    - "The file uses valid KaTeX APIs and supported TeX syntax."
+    - "The document includes deterministic render targets and dependency comments."
+  - name: Semantic completeness
+    weight: 30
+    criteria:
+    - "Boundary setup, separation steps, eigenvalues, Fourier coefficients, final series, and rod diagram are all present."
+    - "KaTeX renders the derivation rather than delegating math to images."
+    - "The derivation is internally consistent and mathematically complete."
+  - name: Visual/structural quality
+    weight: 25
+    criteria:
+    - "Dense equations are aligned, chunked, and readable."
+    - "The diagram and labels clarify the PDE domain."
+    - "Spacing, typography, and contrast support study use."
+  - name: Robustness
+    weight: 15
+    criteria:
+    - "Avoids unsupported TeX constructs and guards macro expansion."
+    - "Handles fallback rendering and error display without breaking the page."
+    - "Documents convergence and boundary-condition assumptions."
+  pass_conditions:
+  - "Rubric weights are exactly Format validity 30, Semantic completeness 30, Visual/structural quality 25, Robustness 15."
+  - "Score is 80 or higher out of 100 with no critical failure in math correctness, notation validity, or renderability."
+  - "The artifact renders the heat-equation derivation with valid KaTeX and accessible structure."
+  - "Domain edge cases and notation limits are explicit."
+tags:
+- fim
+- math-and-scientific-rendering
+- katex
+- dense-scientific-derivation
+- pde
+- aligned-equations
+

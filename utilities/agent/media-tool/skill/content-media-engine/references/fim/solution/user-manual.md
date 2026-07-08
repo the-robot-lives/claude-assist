@@ -105,6 +105,26 @@ self-describing placeholder the illustrator can fulfill and mark what to highlig
 *Note:* describe the *annotation* (highlight/arrow/callout number), not just the frame — that's
 the part a raw screenshot can't convey.
 
+### How to write a concept topic that supports tasks without lecturing
+A concept answers only what the reader needs to *do the tasks* — no more. Keep it to a
+definition, why it matters, and a pointer to the tasks it enables.
+> **About workspaces**
+> A *workspace* is a container for your projects and the people who can see them. Each person
+> you invite joins a workspace, not an individual project — so workspace choice controls who
+> sees what.
+> To create one, see *Create a workspace*. To add people, see *Invite a teammate*.
+
+*Note:* if a concept topic grows past a few short paragraphs, you're writing a textbook — cut it
+to what the adjacent tasks require and link out for depth.
+
+### How to choose numbered vs. bulleted lists
+Numbered = a sequence that must happen in order (a procedure). Bulleted = an unordered set
+(options, prerequisites, features). Mixing them misleads the reader about whether order matters.
+> Numbered: "1. Click **File**. 2. Click **Export**. 3. Choose **PDF**." (order is mandatory)
+> Bulleted: "Supported formats: PDF · CSV · PNG" (order is irrelevant)
+
+*Note:* never number a set of independent options — the reader will assume they're sequential steps.
+
 ### How to write a prerequisites block that actually prevents failure
 List everything the reader must have or have done, as a checklist, in the order they'll need it.
 > **Before you begin**

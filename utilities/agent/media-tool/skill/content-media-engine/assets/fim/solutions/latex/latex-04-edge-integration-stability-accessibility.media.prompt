@@ -1,0 +1,73 @@
+---
+schema: "0.4"
+id: fim-math-and-scientific-rendering-latex-04-edge-integration-stability-accessibility
+type: document
+quality: high
+solution: latex
+category: math-and-scientific-rendering
+variant: edge-integration-stability-accessibility
+references:
+- references/fim/overview/geospatial-math-scientific/latex.md
+- references/fim/solution/latex.md
+prompt:
+  system: |-
+    You are a senior LaTeX reliability engineer. Output only one complete ASCII LaTeX source file. No Markdown fences or prose outside the source.
+  text: |-
+    Create a LaTeX integration and numeric-stability note for evaluating log(1+x) near x=0. Include the direct formula, the stable series approximation, an error table for selected x values, a pgfplots log-scale error plot, and an accessibility comment describing the figure for PDF metadata workflows.
+
+    Requirements: use amsmath, booktabs, siunitx if useful, pgfplots, compile comments, valid labels and cross references, units for relative error, and a warning box or paragraph for cancellation when abs(x) is small.
+  provider_options:
+    temperature: 0.2
+    max_tokens: 8192
+output:
+  text_format: latex
+  artifact_kind: latex-document
+  formats:
+  - format: tex
+  - format: pdf
+evaluation:
+  checklist:
+  - "YAML parses and required schema 0.4 fields are present."
+  - "LaTeX source is complete, ASCII-only, and includes table plus pgfplots figure."
+  - "Math correctness covers log series, truncation error, relative error definition, and stable evaluation discussion."
+  - "Notation validity covers functions, series, absolute values, units, labels, and cross references."
+  - "Renderability covers package imports, table syntax, plot syntax, and PDF compile path."
+  - "Labels and units identify x, direct value, stable value, relative error, and cancellation region."
+  - "Domain edge cases cover x near zero, x<=-1 domain invalidity, tiny magnitudes, table precision, and accessibility metadata."
+  rubric:
+  - name: Format validity
+    weight: 30
+    criteria:
+    - "Output is one complete ASCII .tex file with no Markdown wrapper."
+    - "The file compiles with documented commands and self-contained plot data."
+    - "All labels, references, tables, plots, and warning notes are valid."
+  - name: Semantic completeness
+    weight: 30
+    criteria:
+    - "Direct formula, stable approximation, error table, error plot, warning note, and accessibility comment are all present."
+    - "LaTeX and pgfplots are used for publication output."
+    - "The numeric-stability explanation is correct for log(1+x)."
+  - name: Visual/structural quality
+    weight: 25
+    criteria:
+    - "The plot and table are readable and clearly labeled."
+    - "Warning text is visible but not distracting."
+    - "The document avoids overfull equations and clipped plot labels."
+  - name: Robustness
+    weight: 15
+    criteria:
+    - "Covers invalid domain x<=-1, near-zero cancellation, and precision limits."
+    - "Uses deterministic table data and self-contained plot coordinates."
+    - "Documents compiler and accessibility constraints."
+  pass_conditions:
+  - "Rubric weights are exactly Format validity 30, Semantic completeness 30, Visual/structural quality 25, Robustness 15."
+  - "Score is 80 or higher out of 100 with no critical failure in math correctness, notation validity, renderability, or accessibility."
+  - "The artifact compiles into a stability note with labeled table and plot."
+  - "Domain edge cases and accessibility output are explicit."
+tags:
+- fim
+- math-and-scientific-rendering
+- latex
+- edge-integration-stability-accessibility
+- numeric-stability
+- pgfplots

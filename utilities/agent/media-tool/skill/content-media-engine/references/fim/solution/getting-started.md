@@ -44,6 +44,10 @@ reader's own environment. One path, one outcome, one moment of "it works!"
   without asking anyone.
 - **Ends with next-steps links**, not with the last command. Never leave the reader at a dead end.
 - **No feature tour, no architecture, no "why we built this".** Save it for the docs.
+- **First success must not require production credentials, real payment, or a long build.** Use
+  a sandbox/test key, sample data, or a prebuilt template so the payoff is safe and fast.
+- **Total scannable length ≤ ~2 screens.** If it scrolls forever, the scope is wrong — shrink
+  the goal, don't shrink the type size.
 
 ## How-To (worked recipes)
 
@@ -85,6 +89,19 @@ Everything that isn't on the single shortest path to first success is skipped an
 
 *Note:* the discipline of a quickstart is subtraction. When in doubt, cut it and add a link.
 
+### How to handle the credential step without a security footgun
+The one placeholder the reader must fill is usually a key. Guide it safely: read from an env
+var, never hard-code, and point to where the key comes from.
+> 1. Get a **test** API key from your [dashboard](#) (test keys are safe to experiment with).
+> 2. Export it:
+>    ```bash
+>    export API_KEY="sk_test_…"
+>    ```
+> Now the commands below read `$API_KEY` — you never paste the key into a file.
+
+*Note:* default to a **sandbox/test** credential so a newcomer can't touch production or spend
+real money on step one. Never show a real-looking secret inline as if to copy.
+
 ### How to end so the reader keeps going
 Close with a short, curated set of next moves — momentum, not a menu.
 > **Next steps**
@@ -93,6 +110,15 @@ Close with a short, curated set of next moves — momentum, not a menu.
 > - See working examples → *Examples repo*
 
 *Note:* 2–4 links max. A wall of 20 links is as paralyzing as none.
+
+### How to fix a quickstart that's secretly a manual (before/after)
+If the draft branches, tours features, and has no payoff, cut it to the spine.
+> **Before:** 1,800 words — intro to the product philosophy, a feature matrix, three install
+> methods, config reference, then (finally) a snippet with no expected output.
+> **After:** goal line → 3 prerequisites → 4 commands → `{"status":"sent"}` → 3 next-steps links.
+> ~250 words, first success in 4 minutes.
+
+*Note:* the edit is almost entirely deletion. A quickstart is defined by what you leave out.
 
 ## Do's and Don'ts
 

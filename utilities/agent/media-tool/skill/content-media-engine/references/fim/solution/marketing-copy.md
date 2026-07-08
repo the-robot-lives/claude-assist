@@ -73,6 +73,58 @@ hero; an efficacy objection gets the outcome-stat testimonial beside the benefit
 Pre-empt in the subhead or a mini-FAQ. Objection "too hard to switch" → subhead adds "migrate your
 data in one click." Convert the top 3 sales objections into affirmative benefit lines or FAQ entries.
 
+### How to write a benefit stack that builds instead of listing
+Order benefits by emotional weight, not feature order. Lead with the outcome the reader most wants,
+support with the one that removes their biggest fear, close with the one that makes it feel easy.
+- 1. "Get paid 9 days faster." (the want) → 2. "Never chase an invoice again." (the pain removed) →
+  3. "Set it up in an afternoon." (the friction removed). Each line earns the next.
+
+## Worked Example — a landing page in blocks
+
+A real-form landing page for a fictional invoicing tool, emitted as labeled markdown blocks the
+renderer maps to page components. PAS spine, one CTA, proof beside the claim.
+
+```markdown
+# HERO
+## Get paid 9 days faster — without chasing a single invoice
+AcmeInvoice sends, tracks, and follows up on every invoice automatically, so freelancers and small
+studios stop doing collections and get back to the work they're actually paid for.
+[ Start free — no card required ]
+★ 4.8/5 from 3,000+ freelancers
+
+# PROOF STRIP
+Trusted by studios at Pentagram, Huge, and 3,000 independent designers.
+
+# PROBLEM (P)
+You finished the work weeks ago. The invoice is still unpaid. Now you're writing an awkward
+"just following up" email instead of starting the next project.
+
+# AGITATE (A)
+The average freelancer waits 34 days to get paid and spends 5 hours a month chasing invoices —
+that's 60 hours a year of unpaid admin, and the client relationship gets tense every time.
+
+# SOLVE (S)
+AcmeInvoice sends the invoice, tracks when it's opened, and sends polite, on-brand reminders on a
+schedule you set. You never send another follow-up. Most users are paid 9 days sooner.
+
+# BENEFITS
+- **Get paid faster** — automated reminders cut payment time by an average of 9 days.
+- **Never chase again** — the awkward follow-up email writes and sends itself.
+- **Set it up in an afternoon** — import clients, pick a reminder cadence, done.
+
+# OBJECTIONS (mini-FAQ)
+- *Will my clients feel nagged?* Reminders are polite, on-brand, and stop the moment they pay.
+- *Hard to switch?* Import your client list in one click; keep your existing bank and accounting tool.
+
+# CLOSING CTA
+## Stop chasing. Start getting paid.
+[ Start free — no card required ]  ·  Cancel anytime · 30-day refund
+```
+
+Why it works: hero passes the 5-second test (what/for-whom/next step); PAS builds tension then resolves
+it; every benefit is an outcome; proof sits in the hero and the benefit line; objections pre-empted; one
+CTA repeated; no fabricated stats — the numbers are placeholders the human confirms.
+
 ## Do's and Don'ts
 
 ### ✅ Do

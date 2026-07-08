@@ -89,6 +89,46 @@ The single most important word goes in the first two words of the primary asset.
 only "Cut invoicing time" and nothing else, they'd still know the offer. Test by truncating your
 headline at 15 chars — is the promise still legible?
 
+### How to write descriptions that complement, not duplicate, the headlines
+Descriptions carry what headlines can't: proof, mechanism, and the transactional CTA. Don't restate
+the headline benefit — extend it.
+- Description 1 (proof, 84): "Rated 4.8/5 by 12,000 teams. Automate invoicing and get paid 9 days faster."
+- Description 2 (offer + CTA, 71): "Free 14-day trial, no card. Start automating in under 5 minutes."
+
+## Worked Example — a complete Google RSA
+
+A real, uploadable responsive search ad for a project-management SaaS targeting the query
+*project management software for agencies*. Every asset within limit; themes grouped for coherent
+combination; nothing pinned except the brand at H1.
+
+```
+Final URL:  https://example.com/agency
+Path:       /Agency  /Demo                 (≤15 each)
+
+Headlines (≤30 each):
+ 1 [pin H1] Acme PM for Agencies            (24)  ← brand + audience
+ 2  Ship Client Work On Time               (23)  ← benefit
+ 3  Cut Status Meetings in Half            (26)  ← benefit
+ 4  See Every Project at a Glance          (28)  ← benefit
+ 5  Trusted by 3,000+ Agencies             (25)  ← proof (real figure only)
+ 6  Built for Client Deadlines             (25)  ← audience fit
+ 7  Free 14-Day Trial, No Card             (25)  ← offer
+ 8  Onboard Your Team in a Day             (25)  ← objection (ease)
+ 9  Start Free Today                       (16)  ← CTA
+
+Descriptions (≤90 each):
+ 1  Plan, track, and deliver every client project in one place. Try Acme free for 14 days.   (87)
+ 2  Real-time dashboards, time tracking, and client portals. Rated 4.8/5 by 3,000 agencies.  (88)
+
+Callouts (≤25):  Free Onboarding · Cancel Anytime · 24/7 Support
+Sitelinks (text ≤25 / desc ≤35):
+   "See a Live Demo"   — "Watch a 3-min product tour" / "No signup required"
+   "View Pricing"      — "Plans from $12/user/month" / "Volume discounts for teams"
+```
+
+Why it passes: 9 distinct-theme headlines (ML has room), keyword echoed in H1/H6, only the brand
+pinned, real proof numbers, transactional CTA in a description, no superlatives, no policy tripwires.
+
 ## Do's and Don'ts
 
 ### ✅ Do
@@ -149,6 +189,16 @@ than emit a policy-violating asset.
 - **Duplicate-message flooding**: 15 headlines that all say "Great CRM Software" — the ML has nothing to test.
 - **Buried offer**: the discount or benefit appearing in headline 12 instead of front-loaded.
 - **Limit-cramming**: forcing exactly 30/90 chars with a truncated word — readability beats maxing the count.
+
+## CTA Verb Bank (by funnel stage)
+
+Pick the verb to the reader's intent — don't default to "Learn more" for everything.
+- **Transactional / high intent** (search, bottom-funnel): Buy, Start, Get, Try, Book, Order,
+  Claim, Switch, Compare, Download, Sign up, Start free.
+- **Consideration / mid-funnel**: See how, Explore, Compare plans, Get a quote, See pricing, Watch demo.
+- **Discovery / social, low intent**: Discover, See why, Find out, Meet, Take the quiz — pair with a
+  curiosity payload so it isn't hollow.
+Anti-pattern: "Learn more" / "Click here" as the *only* verb on a transactional ad wastes the click.
 
 ## Prep-Agent Notes (media-tool specific)
 

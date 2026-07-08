@@ -1,0 +1,75 @@
+---
+schema: "0.4"
+id: fim-math-and-scientific-rendering-katex-01-canonical-equation-plot
+type: document
+quality: high
+solution: katex
+category: math-and-scientific-rendering
+variant: canonical-equation-plot
+references:
+- references/fim/overview/geospatial-math-scientific/katex.md
+- references/fim/solution/katex.md
+prompt:
+  system: |-
+    You are a senior web math typesetting engineer. Output only one complete ASCII HTML file using KaTeX. No Markdown fences or prose outside the source.
+  text: |-
+    Create a canonical KaTeX document that renders the quadratic formula, a worked example for x^2-5*x+6=0, and a small accessible HTML/CSS coordinate sketch of the parabola with roots labeled. Use katex.render or katex.renderToString for the math, include KaTeX CSS, and render with output htmlAndMathml.
+
+    Requirements: use display and inline math, macros where useful, throwOnError false for controlled examples, trust false, axis labels with units, a figure caption, and a noscript or fallback text path. The generated artifact must use KaTeX as the primary math rendering surface.
+  provider_options:
+    temperature: 0.2
+    max_tokens: 8192
+output:
+  text_format: html
+  artifact_kind: katex-html-document
+  formats:
+  - format: html
+  - format: mathml
+  - format: png
+evaluation:
+  checklist:
+  - "YAML parses and required schema 0.4 fields are present."
+  - "HTML is complete, ASCII-only, and uses KaTeX render or renderToString with CSS loaded."
+  - "Math correctness covers quadratic formula, worked roots, plotted labels, and substitution checks."
+  - "Notation validity covers TeX syntax, macro definitions, display mode, and htmlAndMathml output."
+  - "Renderability covers KaTeX CSS, synchronous render calls, fallback behavior, and nonblank document output."
+  - "Labels and units identify x, y, roots, coefficients, equation steps, and figure caption."
+  - "Domain edge cases cover unsupported TeX, bad input, missing CSS, trust false, and color-only distinctions."
+  rubric:
+  - name: Format validity
+    weight: 30
+    criteria:
+    - "Output is one complete ASCII HTML file with no Markdown wrapper."
+    - "The file uses valid KaTeX APIs, loads required CSS, and documents local browser execution."
+    - "Generated markup has deterministic ids and stable render targets."
+  - name: Semantic completeness
+    weight: 30
+    criteria:
+    - "Formula, worked example, roots, coordinate sketch, labels, caption, and fallback text are all present."
+    - "KaTeX is the primary math renderer and emits accessible MathML where requested."
+    - "The worked solution is mathematically correct and auditable."
+  - name: Visual/structural quality
+    weight: 25
+    criteria:
+    - "Equation hierarchy, sketch, labels, and caption are readable and balanced."
+    - "The document remains legible without relying only on color."
+    - "Math spacing and alignment look professional."
+  - name: Robustness
+    weight: 15
+    criteria:
+    - "Handles bad TeX, missing render target, missing CSS, and no-script fallback clearly."
+    - "Uses safe KaTeX options for untrusted input."
+    - "Documents limits of the static sketch versus true plotting."
+  pass_conditions:
+  - "Rubric weights are exactly Format validity 30, Semantic completeness 30, Visual/structural quality 25, Robustness 15."
+  - "Score is 80 or higher out of 100 with no critical failure in math correctness, notation validity, renderability, or accessibility."
+  - "The artifact renders a valid KaTeX quadratic document with labels, units, and fallback text."
+  - "Domain edge cases and safe rendering constraints are represented."
+tags:
+- fim
+- math-and-scientific-rendering
+- katex
+- canonical-equation-plot
+- math-typesetting
+- html-mathml
+

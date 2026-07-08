@@ -48,9 +48,35 @@ turns; the **sestet** answers or resolves it. The octave rhyme is fixed
 (abbaabba); the sestet is flexible — common schemes: `cdecde`, `cdcdcd`,
 `cdccdc`. Avoid ending the sestet on a couplet (that reads Shakespearean).
 
+Real Petrarchan example (Wordsworth, "The world is too much with us") — the octave
+`abbaabba`, the volta at line 9 ("Great God!"), then the sestet:
+
+```
+The world is too much with us; late and soon,   (a)
+Getting and spending, we lay waste our powers;— (b)
+Little we see in Nature that is ours;            (b)
+We have given our hearts away, a sordid boon!    (a)
+...
+Great God! I'd rather be                         (volta, line 9)
+A Pagan suckled in a creed outworn;
+```
+
 **The volta (turn)** is the defining craft element of *both* types — a shift in
 direction signalled by "But," "Yet," "And yet," "So," "Then," or a change of
 tense/address/argument. A sonnet without a volta is just 14 rhymed lines.
+
+**Scansion — reading the iambic beat.** Iambic pentameter = five iambs
+(da-DUM) per line. Mark stresses to check a line scans:
+
+```
+Shall I | com-PARE | thee TO | a SUM | mer's DAY?
+  x  /  |  x   /   |  x   /  |  x  / |   x    /
+```
+
+Five stressed beats (`/`), ten syllables, unstressed-stressed throughout. A common
+*legal* variation is a **trochaic first foot** (DUM-da) for emphasis, or a
+**feminine ending** (an extra unstressed 11th syllable). Test by tapping: if you
+can't find five clean beats, the line is off-meter.
 
 ## Hard Constraints
 

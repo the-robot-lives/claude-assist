@@ -54,6 +54,20 @@ In the middle of the night              (B)
 To find that his dream had come true.    (A)
 ```
 
+**Beat-mapping a real line.** Mark stresses (`/`) to hear the anapestic gallop and
+the 3/3/2/2/3 contrast:
+
+```
+there ONCE was a MAN from peRU        / 3 beats
+who DREAMED he was EA-ting his SHOE   / 3 beats
+he WOKE with a FRIGHT                 / 2 beats
+in the MID-dle of NIGHT               / 2 beats
+to FIND that his DREAM had come TRUE  / 3 beats
+```
+
+Say it aloud: the DUMs fall in a rolling triple rhythm, and lines 3–4 are audibly
+shorter. That contrast — long/long/short/short/long — is the limerick's skeleton.
+
 ## Hard Constraints
 
 Checkable, non-negotiable:
@@ -102,6 +116,14 @@ of content.
 Lines 3 and 4 are fast and light — use them for the pivot/action that loads the
 punchline ("He woke with a fright / In the middle of the night"). Don't waste them
 on filler; they control the comic timing.
+
+### How to repair a limping line
+When a line thuds, the stress usually landed on the wrong syllable or a beat is
+missing. Two fixes: (1) **reorder** so a naturally stressed syllable falls on the
+beat ("a man who was living in Kent" → "there once was a fellow from Kent"); (2)
+**swap a word** for one with the right stress shape — replace a two-syllable word
+that fights the meter with a one- or three-syllable word that rides it. Re-chant
+after every change; fix meter by ear, not by counting letters.
 
 ## Do's and Don'ts
 

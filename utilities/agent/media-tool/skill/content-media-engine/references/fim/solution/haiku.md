@@ -55,6 +55,28 @@ the sound of the bell
 as it leaves the bell
 ```
 
+**Kigo (season-word) quick reference** — pick a *specific* image, not the tired
+default. A haiku carries exactly one:
+
+| Season | Common kigo | Fresher / more specific choices |
+|--------|-------------|---------------------------------|
+| Spring | cherry blossom, warbler | melting snow, first frog, plum bud, muddy thaw |
+| Summer | cicada, heat, festival | first mosquito, cut grass, thunderhead, sweat |
+| Autumn | harvest moon, red leaves | first cold rain, last cricket, woodsmoke, empty field |
+| Winter | snow, frost | bare branch, breath fog, cracked ice, the year's end |
+| New Year | (its own season in Japanese) | first sunrise, first writing, temple bell at midnight |
+
+**Senryū contrast.** Haiku's comic cousin, *senryū*, uses the same 5-7-5 shape but
+drops the kigo and turns its eye on human nature/foibles — ironic, wry, no season
+required. If the brief wants humor about people rather than a nature moment, it may
+actually want senryū. Real senryū (trans.):
+
+```
+the robber,
+when I catch him—
+my own son
+```
+
 ## Hard Constraints
 
 These are checkable. The generated haiku MUST satisfy:
