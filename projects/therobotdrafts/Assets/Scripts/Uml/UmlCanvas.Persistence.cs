@@ -136,6 +136,8 @@ namespace TheRobotDraft.Uml
     public class NodeGeomDto
     {
         public string id;
+        public string diagramId; // the diagram (package/page id) this placement belongs to; empty in pre-per-diagram
+                                 // saves → migrated to the element's parent-package scope on load.
         public float px, py, sx, sy;
         public float pz; // continuous world-Z offset (default 0; backward-compatible — absent in old saves reads 0)
         public float th; // per-node Z thickness in world units (default 0 ⇒ use Uml3DConfig.NodeThickness)
@@ -465,24 +467,29 @@ namespace TheRobotDraft.Uml
                 foreach (var f in e.AspectSet.Freeform) dto.edges[^1].freeform.Add(ToFreeformDto(f));
             }
 
-            foreach (var kv in _pos)
-            {
-                if (!_model.Contains(kv.Key)) continue;
-                var nd = new NodeGeomDto { id = kv.Key.Value, px = kv.Value.x, py = kv.Value.y };
-                if (_posZ.TryGetValue(kv.Key, out var pz)) nd.pz = pz;
-                if (_nodeDepth.TryGetValue(kv.Key, out var th)) nd.th = th;
-                if (_size.TryGetValue(kv.Key, out var s)) { nd.sx = s.x; nd.sy = s.y; }
-                if (_styles.TryGetValue(kv.Key, out var st) && st.Has)
+            // One geometry row per (diagram, element): an element linked into several diagrams is emitted once per
+            // diagram, each with its own placement. Style is element-global — attached to every row of the element.
+            foreach (var diagram in _placements.Diagrams)
+                foreach (var kv in _placements.InDiagram(diagram))
                 {
-                    nd.hasStyle = true;
-                    nd.fillR = st.Fill.r; nd.fillG = st.Fill.g; nd.fillB = st.Fill.b; nd.fillA = st.Fill.a;
-                    nd.borderR = st.Border.r; nd.borderG = st.Border.g; nd.borderB = st.Border.b; nd.borderA = st.Border.a;
-                    nd.textR = st.Text.r; nd.textG = st.Text.g; nd.textB = st.Text.b; nd.textA = st.Text.a;
-                    nd.fontSize = st.FontSize; nd.fontName = st.FontName;
-                    nd.radius = st.Radius;
+                    var elId = kv.Key;
+                    if (!_model.Contains(elId)) continue;
+                    var pl = kv.Value;
+                    var nd = new NodeGeomDto { id = elId.Value, diagramId = diagram.Value, px = pl.Pos.x, py = pl.Pos.y };
+                    if (pl.PosZ != 0f) nd.pz = pl.PosZ;
+                    if (pl.Depth > 0f) nd.th = pl.Depth;
+                    if (pl.HasSize) { nd.sx = pl.Size.x; nd.sy = pl.Size.y; }
+                    if (_styles.TryGetValue(elId, out var st) && st.Has)
+                    {
+                        nd.hasStyle = true;
+                        nd.fillR = st.Fill.r; nd.fillG = st.Fill.g; nd.fillB = st.Fill.b; nd.fillA = st.Fill.a;
+                        nd.borderR = st.Border.r; nd.borderG = st.Border.g; nd.borderB = st.Border.b; nd.borderA = st.Border.a;
+                        nd.textR = st.Text.r; nd.textG = st.Text.g; nd.textB = st.Text.b; nd.textA = st.Text.a;
+                        nd.fontSize = st.FontSize; nd.fontName = st.FontName;
+                        nd.radius = st.Radius;
+                    }
+                    dto.nodeGeom.Add(nd);
                 }
-                dto.nodeGeom.Add(nd);
-            }
 
             var edgeIds = new HashSet<EdgeId>();
             foreach (var k in _waypoints.Keys) edgeIds.Add(k);
@@ -533,7 +540,7 @@ namespace TheRobotDraft.Uml
         private void ApplyDto(DiagramDto dto)
         {
             NewWorld();
-            _pos.Clear(); _posZ.Clear(); _size.Clear(); _nodeDepth.Clear();
+            _placements.Clear();
             _waypoints.Clear(); _srcAnchor.Clear(); _tgtAnchor.Clear(); _curved.Clear(); _styles.Clear();
             _msgLevel.Clear(); _msgNumber.Clear(); _packageLink.Clear();
             _nodeImage.Clear(); _imageCache.Clear();
@@ -600,10 +607,21 @@ namespace TheRobotDraft.Uml
                 foreach (var nd in dto.nodeGeom)
                     if (idMap.TryGetValue(nd.id, out var nid))
                     {
-                        _pos[nid] = new Vector2(nd.px, nd.py);
-                        if (nd.pz != 0f) _posZ[nid] = nd.pz;
-                        if (nd.th > 0f) _nodeDepth[nid] = nd.th;
-                        if (nd.sx > 1f && nd.sy > 1f) _size[nid] = new Vector2(nd.sx, nd.sy);
+                        // Diagram scope: new files carry diagramId (remapped through idMap); old files (empty
+                        // diagramId) migrate to the element's parent-package scope — lossless because a legacy
+                        // element had exactly one placement under exactly one parent.
+                        ElementId scope = ElementId.None;
+                        if (!string.IsNullOrEmpty(nd.diagramId) && idMap.TryGetValue(nd.diagramId, out var mapped))
+                            scope = mapped;
+                        else if (_model.TryGet(nid, out var elm))
+                            scope = elm.Parent;
+
+                        var pl = new Placement { Pos = new Vector2(nd.px, nd.py), Rot = Quaternion.identity };
+                        if (nd.pz != 0f) pl.PosZ = nd.pz;
+                        if (nd.th > 0f) pl.Depth = nd.th;
+                        if (nd.sx > 1f && nd.sy > 1f) pl.Size = new Vector2(nd.sx, nd.sy);
+                        _placements.Set(scope, nid, pl);
+
                         if (nd.hasStyle)
                             _styles[nid] = new NodeStyle
                             {
@@ -660,8 +678,8 @@ namespace TheRobotDraft.Uml
                     if (bp != null && idMap.TryGetValue(bp.elementId, out var bnode))
                         _breakpoints.Set(new Breakpoint(bnode, bp.line, bp.condition, bp.enabled));
 
-            _activePackage = (!string.IsNullOrEmpty(dto.activePackage) && idMap.TryGetValue(dto.activePackage, out var ap))
-                ? ap : ElementId.None;
+            SetActivePackage((!string.IsNullOrEmpty(dto.activePackage) && idMap.TryGetValue(dto.activePackage, out var ap))
+                ? ap : ElementId.None);
             _selectedId = ElementId.None;
             _selectedEdge = EdgeId.None;
             _ctl.ClearHistory(); // a load is not an undoable edit

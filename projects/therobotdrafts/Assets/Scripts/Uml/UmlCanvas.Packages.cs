@@ -17,7 +17,7 @@ namespace TheRobotDraft.Uml
         public void GoToPackage(ElementId pkgId)
         {
             if (!pkgId.IsValid || !_model.TryGet(pkgId, out var el) || el.Kind != ElementKind.Package) return;
-            _activePackage = pkgId;
+            SetActivePackage(pkgId);
             SetSelected(ElementId.None);
             RebuildFromModel();
             Flash("opened " + el.Name);
@@ -48,11 +48,11 @@ namespace TheRobotDraft.Uml
                     var nodeId = _ctl.CommitAddNode(prev, name);
                     if (nodeId.IsValid)
                     {
-                        _pos[nodeId] = ScreenToModelPx(screenPos);
+                        _placements.SetPos(nodeId, ScreenToModelPx(screenPos));
                         _ctl.SetZLayer(nodeId, _activeLayer);
                         _packageLink[nodeId] = pkgId;
                     }
-                    _activePackage = prev; // remain on the current diagram so the user sees the new folder
+                    SetActivePackage(prev); // remain on the current diagram so the user sees the new folder
                     _ctl.EnterSelect();
                     RebuildFromModel();
                     SetSelected(nodeId);
@@ -64,7 +64,7 @@ namespace TheRobotDraft.Uml
                     _ctl.EnterAddNode(ElementKind.Package);
                     var pkgId = _ctl.CommitAddNode(ElementId.None, name);
                     if (!pkgId.IsValid) { Flash("invalid placement"); _ctl.EnterSelect(); return; }
-                    _activePackage = pkgId;
+                    SetActivePackage(pkgId);
                     _ctl.EnterSelect();
                     RebuildFromModel();
                     SetSelected(ElementId.None);

@@ -195,7 +195,7 @@ namespace TheRobotDraft.Uml
             var pkg = _ctl.CommitAddNode(ElementId.None, "Imported");
             _ctl.EnterSelect();
             if (!pkg.IsValid) return false;
-            _activePackage = pkg;
+            SetActivePackage(pkg);
             return true;
         }
 
@@ -501,9 +501,9 @@ namespace TheRobotDraft.Uml
 
                 _ctl.EnterSelect();
 
-                _pos[id] = new Vector2(
+                _placements.SetPos(id, new Vector2(
                     originX + (gridIndex % 4) * colW,
-                    originY - (gridIndex / 4) * rowH);
+                    originY - (gridIndex / 4) * rowH));
                 _ctl.SetZLayer(id, _activeLayer); // import onto the active layer
 
                 // First writer wins on a name collision (we deduped the box name, but key on the original).

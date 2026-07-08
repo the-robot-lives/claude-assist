@@ -98,12 +98,11 @@ namespace TheRobotDraft.Uml
         private UndoStack _history;
 
         private readonly Dictionary<ElementId, UmlNodeView> _nodes = new();
-        private readonly Dictionary<ElementId, Vector2> _pos = new();
-        // Continuous per-node world-Z offset (default 0) applied on top of the layer depth, so a node can be
-        // pushed forward/back along world Z independently of its z-layer (Ctrl/Cmd+Shift+drag). Persisted.
-        private readonly Dictionary<ElementId, float> _posZ = new();
-        private readonly Dictionary<ElementId, Vector2> _size = new();
-        private readonly Dictionary<ElementId, Quaternion> _nodeRot = new(); // per-node orientation (survives rebuild / copy)
+        // Per-diagram node geometry — position, size, continuous world-Z offset (Ctrl/Cmd+Shift+drag), slab depth,
+        // and orientation — scoped by the active package/page (see PlacementStore). Replaces the former flat
+        // _pos/_size/_posZ/_nodeDepth/_nodeRot dictionaries so the same element can be placed (linked, not cloned)
+        // in multiple diagrams with independent geometry.
+        private readonly PlacementStore _placements = new();
         private readonly List<EdgeBinding> _edges = new();
         private ElementId _activePackage = ElementId.None;
         // Active z-layer (0 = base). The canvas shows ONLY elements on this layer (in addition to the usual
@@ -253,7 +252,7 @@ namespace TheRobotDraft.Uml
         {
             _ctl.EnterAddNode(ElementKind.Package);
             var pkg = _ctl.CommitAddNode(ElementId.None, "Domain");
-            _activePackage = pkg;
+            SetActivePackage(pkg);
 
             ElementId Add(ElementKind k, ElementId parent, string name)
             {
@@ -262,22 +261,22 @@ namespace TheRobotDraft.Uml
             }
 
             var order = Add(ElementKind.Class, pkg, "Order");
-            _pos[order] = new Vector2(-250f, 30f);
+            _placements.SetPos(order, new Vector2(-250f, 30f));
             _ctl.SetMeta(order, "C#", null);
             Add(ElementKind.Field, order, "- id : Guid");
             Add(ElementKind.Field, order, "- total : decimal");
             Add(ElementKind.Function, order, "+ submit() : void");
 
             var payable = Add(ElementKind.Interface, pkg, "Payable");
-            _pos[payable] = new Vector2(230f, 60f);
+            _placements.SetPos(payable, new Vector2(230f, 60f));
             _ctl.SetMeta(payable, "C#", null);
             Add(ElementKind.Function, payable, "+ amountDue() : decimal");
 
             var note = Add(ElementKind.Note, pkg, "Order is immutable once submitted;\npayment must clear first.");
-            _pos[note] = new Vector2(250f, -150f);
+            _placements.SetPos(note, new Vector2(250f, -150f));
 
             var customer = Add(ElementKind.Class, pkg, "Customer");
-            _pos[customer] = new Vector2(-250f, -200f);
+            _placements.SetPos(customer, new Vector2(-250f, -200f));
             _ctl.SetMeta(customer, "C#", null);
             Add(ElementKind.Field, customer, "- name : string");
             Add(ElementKind.Field, customer, "- active : bool");
@@ -300,10 +299,10 @@ namespace TheRobotDraft.Uml
             var ctx = new CommandContext(_model, new NullPacker(), new CountingIdFactory());
             _history = new UndoStack(ctx);
             _ctl = new AuthoringController(_model, _history);
-            _activePackage = _selectedId = ElementId.None;
+            SetActivePackage(ElementId.None); _selectedId = ElementId.None;
             _selectedEdge = EdgeId.None;
             _activeLayer = 0;
-            _pos.Clear(); _posZ.Clear(); _size.Clear(); _nodeDepth.Clear(); _nodeRot.Clear();
+            _placements.Clear();
             _waypoints.Clear(); _srcAnchor.Clear(); _tgtAnchor.Clear(); _curved.Clear(); _styles.Clear();
             _msgLevel.Clear(); _msgNumber.Clear(); _edgeKinds.Clear();
             _waypoints3d.Clear(); _srcFace.Clear(); _tgtFace.Clear();
@@ -358,7 +357,8 @@ namespace TheRobotDraft.Uml
                     _ctl.Delete(root);
 
             PruneDeletedViewState(removedElements, removedEdges);
-            _activePackage = ElementId.None;
+            foreach (var root in roots) _placements.RemoveDiagram(root); // drop the deleted diagram's per-diagram geometry scope
+            SetActivePackage(ElementId.None);
             EnsureActivePackage();
             _ctl.ClearHistory();  // deleting a whole diagram is a document-level action
             RebuildFromModel();
@@ -410,13 +410,13 @@ namespace TheRobotDraft.Uml
                 float cx = startX + i * spacing;
                 if (_model.TryGet(id, out var el) && el.Kind == ElementKind.Lifeline)
                 {
-                    float wKeep = _size.TryGetValue(id, out var s) && s.x > 1f ? s.x : 132f;
-                    _size[id] = new Vector2(wKeep, H);
-                    _pos[id] = new Vector2(cx, ytop - H * 0.5f); // align all heads at the same top
+                    float wKeep = _placements.TrySize(id, out var s) ? s.x : 132f;
+                    _placements.SetSize(id, new Vector2(wKeep, H));
+                    _placements.SetPos(id, new Vector2(cx, ytop - H * 0.5f)); // align all heads at the same top
                 }
                 else
                 {
-                    _pos[id] = new Vector2(cx, ytop - 30f);
+                    _placements.SetPos(id, new Vector2(cx, ytop - 30f));
                 }
             }
 
@@ -430,7 +430,7 @@ namespace TheRobotDraft.Uml
             Flash($"sequence arranged — {parts.Count} participants, {m} messages");
         }
 
-        private Vector2 PosOf(ElementId id) => _pos.TryGetValue(id, out var p) ? p : Vector2.zero;
+        private Vector2 PosOf(ElementId id) => _placements.Pos(id);
 
         // --- copy / paste (with rename) ---
 
@@ -443,11 +443,11 @@ namespace TheRobotDraft.Uml
                 Kind = el.Kind, Name = el.Name, Language = el.Language,
                 Stereotype = el.Stereotype, IsAbstract = el.IsAbstract,
             };
-            if (_pos.TryGetValue(id, out var p)) { clip.Pos = p; clip.HasPos = true; }
-            if (_size.TryGetValue(id, out var sz) && sz.x > 1f && sz.y > 1f) { clip.Size = sz; clip.HasSize = true; }
+            if (_placements.TryPos(id, out var p)) { clip.Pos = p; clip.HasPos = true; }
+            if (_placements.TrySize(id, out var sz)) { clip.Size = sz; clip.HasSize = true; }
             if (_styles.TryGetValue(id, out var style)) clip.Style = style;
             // Orientation: the stored per-node rotation, else the live node's current spin.
-            if (_nodeRot.TryGetValue(id, out var rot)) { clip.Rotation = rot; clip.HasRot = true; }
+            if (_placements.TryRot(id, out var rot)) { clip.Rotation = rot; clip.HasRot = true; }
             else if (_scene.TryGetNode(id, out var srcNode) && srcNode != null && srcNode.LocalRotation != Quaternion.identity)
                 { clip.Rotation = srcNode.LocalRotation; clip.HasRot = true; }
             foreach (var cid in el.ChildIds)
@@ -476,11 +476,11 @@ namespace TheRobotDraft.Uml
                 _ctl.CommitAddNode(nid, m.Name);
             }
             _ctl.EnterSelect();
-            _pos[nid] = c.HasPos ? c.Pos + new Vector2(34f, -34f) : Vector2.zero;
+            _placements.SetPos(nid, c.HasPos ? c.Pos + new Vector2(34f, -34f) : Vector2.zero);
             _ctl.SetZLayer(nid, _activeLayer); // paste onto the active layer
             if (c.Style.Has) _styles[nid] = c.Style;
-            if (c.HasSize) _size[nid] = c.Size;       // carry size
-            if (c.HasRot) _nodeRot[nid] = c.Rotation; // carry orientation (applied on rebuild)
+            if (c.HasSize) _placements.SetSize(nid, c.Size);       // carry size
+            if (c.HasRot) _placements.SetRot(nid, c.Rotation); // carry orientation (applied on rebuild)
             RebuildFromModel();
             SetSelected(nid);
             Flash("pasted (renamed)");
@@ -637,12 +637,12 @@ namespace TheRobotDraft.Uml
             _ctl.EnterAddNode(kind);
             var id = _ctl.CommitAddNode(isPackage ? ElementId.None : _activePackage, DefaultName(kind));
             if (!id.IsValid) { Flash("can't place " + kind + " here"); _ctl.EnterSelect(); return; }
-            if (isPackage) _activePackage = id;
+            if (isPackage) SetActivePackage(id);
             else
             {
                 var defaults = DefaultPropertyItems(kind);
                 if (defaults.Length > 0) _ctl.SetPropertyItems(id, defaults);
-                _pos[id] = ScreenToModelPx(screenPos); _ctl.SetZLayer(id, _activeLayer);
+                _placements.SetPos(id, ScreenToModelPx(screenPos)); _ctl.SetZLayer(id, _activeLayer);
             } // insert on the active layer
             _ctl.EnterSelect();
             RebuildFromModel();
@@ -1322,12 +1322,12 @@ namespace TheRobotDraft.Uml
             float dPitch = -mouseDelta.y * RotateDegPerPx;
             float dYaw = mouseDelta.x * RotateDegPerPx;
             if (_scene.TryGetNode(_dragNode, out var node) && node != null)
-            { node.AddLocalRotation(dPitch, dYaw); _nodeRot[_dragNode] = node.LocalRotation; }
+            { node.AddLocalRotation(dPitch, dYaw); _placements.SetRot(_dragNode, node.LocalRotation); }
             // Rotate the whole multi-selection together when the grabbed node is part of it.
             if (_selection.Count >= 2 && _selection.Contains(_dragNode))
                 foreach (var id in _selection)
                     if (id != _dragNode && _scene.TryGetNode(id, out var n) && n != null)
-                    { n.AddLocalRotation(dPitch, dYaw); _nodeRot[id] = n.LocalRotation; }
+                    { n.AddLocalRotation(dPitch, dYaw); _placements.SetRot(id, n.LocalRotation); }
         }
 
         // --- per-node world-Z move (Ctrl/Cmd+Shift-drag) ---
@@ -1354,7 +1354,7 @@ namespace TheRobotDraft.Uml
         private void ShiftNodeZ(ElementId id, float dz)
         {
             if (!_scene.TryGetNode(id, out var n) || n == null) return;
-            _posZ[id] = (_posZ.TryGetValue(id, out var z) ? z : 0f) + dz;
+            _placements.SetPosZ(id, _placements.PosZ(id) + dz);
             Vector3 p = n.transform.position;
             n.SetWorldPose(new Vector3(p.x, p.y, p.z + dz), n.transform.rotation);
         }
@@ -1368,14 +1368,14 @@ namespace TheRobotDraft.Uml
             float k = 1f / Mathf.Max(ScaleFactor, 0.0001f);
             sz.x = Mathf.Max(60f, sz.x + mouseDelta.x * k);
             sz.y = Mathf.Max(40f, sz.y - mouseDelta.y * k);
-            _size[_dragNode] = sz;
+            _placements.SetSize(_dragNode, sz);
             node.Resize(sz);
         }
 
         /// <summary>The node's current pixel size: the stored override if set, else the content-derived default.</summary>
         private Vector2 CurrentNodeSizePx(ElementId id)
         {
-            if (_size.TryGetValue(id, out var s) && s.x > 1f && s.y > 1f) return s;
+            if (_placements.TrySize(id, out var s)) return s;
             if (_model.TryGet(id, out var el))
             {
                 MemberSignatures(el, out var attrs, out var ops);
@@ -1660,7 +1660,7 @@ namespace TheRobotDraft.Uml
             if (!_scene.TryGetNode(id, out var n) || n == null) return;
             Vector3 p = n.transform.position + worldDelta;
             n.SetWorldPose(p, n.transform.rotation);
-            _pos[id] = new Vector2(p.x / Uml3DConfig.WorldScale, p.y / Uml3DConfig.WorldScale);
+            _placements.SetPos(id, new Vector2(p.x / Uml3DConfig.WorldScale, p.y / Uml3DConfig.WorldScale));
         }
 
         /// <summary>True if the pointer is over a real overlay UI element (so the diagram should ignore the gesture).</summary>
@@ -1865,7 +1865,7 @@ namespace TheRobotDraft.Uml
             if (!_nodes.TryGetValue(visibleId, out var nv) || nv == null) return;
             // The hidden endpoint must be a diagram node on a real layer with a known position to aim the stub.
             if (!_model.TryGet(hiddenId, out var hidden) || !KindInfo.IsDiagramNode(hidden.Kind)) return;
-            if (!_pos.TryGetValue(hiddenId, out var hiddenPos)) return;
+            if (!_placements.TryPos(hiddenId, out var hiddenPos)) return;
 
             bool up = hidden.ZLayer > _activeLayer;
             var color = up ? new Color(0.20f, 0.55f, 0.30f, 1f) : new Color(0.62f, 0.34f, 0.74f, 1f);
@@ -1938,8 +1938,8 @@ namespace TheRobotDraft.Uml
         // --- selection / movement / resize ---
 
         public void Select(UmlNodeView node) { CloseMenu(); ClearSelectedEdge(); SetSelected(node != null ? node.Id : ElementId.None); }
-        public void OnNodeMoved(ElementId id, Vector2 pos) => _pos[id] = pos;
-        public void OnNodeResized(ElementId id, Vector2 size) => _size[id] = size;
+        public void OnNodeMoved(ElementId id, Vector2 pos) => _placements.SetPos(id, pos);
+        public void OnNodeResized(ElementId id, Vector2 size) => _placements.SetSize(id, size);
 
         /// <summary>The nodes whose center currently lies within <paramref name="boundary"/>'s rect (its nested children).</summary>
         public List<ElementId> NodesInside(UmlNodeView boundary)
@@ -1966,7 +1966,7 @@ namespace TheRobotDraft.Uml
                 if (_nodes.TryGetValue(id, out var nv) && nv != null)
                 {
                     nv.Rt.anchoredPosition += delta;
-                    _pos[id] = nv.Rt.anchoredPosition;
+                    _placements.SetPos(id, nv.Rt.anchoredPosition);
                 }
         }
 
@@ -1983,7 +1983,7 @@ namespace TheRobotDraft.Uml
                 if (_nodes.TryGetValue(id, out var nv) && nv != null)
                 {
                     nv.Rt.anchoredPosition += layerDelta;
-                    _pos[id] = nv.Rt.anchoredPosition;
+                    _placements.SetPos(id, nv.Rt.anchoredPosition);
                 }
             }
         }
@@ -2300,8 +2300,8 @@ namespace TheRobotDraft.Uml
                 _ctl.EnterAddNode(kind);
                 var id = _ctl.CommitAddNode(parent, string.IsNullOrWhiteSpace(value) ? template : value.Trim());
                 if (!id.IsValid) { Flash("invalid placement"); _ctl.EnterSelect(); return; }
-                if (kind == ElementKind.Package) _activePackage = id;
-                else { _pos[id] = ScreenToModelPx(screenPos); _ctl.SetZLayer(id, _activeLayer); } // insert on the active layer
+                if (kind == ElementKind.Package) SetActivePackage(id);
+                else { _placements.SetPos(id, ScreenToModelPx(screenPos)); _ctl.SetZLayer(id, _activeLayer); } // insert on the active layer
                 RebuildFromModel();
                 SetSelected(id);
                 Flash($"added {kind}");
@@ -2479,11 +2479,7 @@ namespace TheRobotDraft.Uml
 
             foreach (var id in removedElements)
             {
-                _pos.Remove(id);
-                _posZ.Remove(id);
-                _size.Remove(id);
-                _nodeDepth.Remove(id);
-                _nodeRot.Remove(id);
+                _placements.RemoveEverywhere(id); // clear geometry in every diagram the element appeared in
                 _styles.Remove(id);
                 _nodeImage.Remove(id);
                 _imageCache.Remove(id);
@@ -2544,13 +2540,22 @@ namespace TheRobotDraft.Uml
                 if (el.Parent != _activePackage) continue;
                 if (!KindInfo.IsDiagramNode(el.Kind)) continue;
                 if (IsRegionKind(el.Kind)) continue; // drawn as a region cube, not a slab
-                if (!_pos.TryGetValue(el.Id, out var p))
-                {
-                    p = new Vector2(-360f + (spread % 4) * 240f, 120f - (spread / 4) * 200f);
-                    _pos[el.Id] = p;
-                }
+                // Native membership = parented under the active diagram. Seed a placement in this diagram's scope
+                // (spread-laid) the first time it's shown; keep it thereafter.
+                var seed = new Vector2(-360f + (spread % 4) * 240f, 120f - (spread / 4) * 200f);
+                var p = _placements.EnsureNative(el.Id, seed).Pos;
                 spread++;
                 CreateNode3D(el, p);
+            }
+
+            // Linked appearances: elements placed in THIS diagram whose parent lives elsewhere (drag-drop link — Track C
+            // populates these). Natives (parent == active) were drawn above; regions become cubes; members are never nodes.
+            foreach (var kv in _placements.InDiagram(_activePackage))
+            {
+                if (!_model.TryGet(kv.Key, out var lel)) continue;      // stale placement — element gone
+                if (lel.Parent == _activePackage) continue;             // native — already drawn above
+                if (!KindInfo.IsDiagramNode(lel.Kind) || IsRegionKind(lel.Kind)) continue;
+                CreateNode3D(lel, kv.Value.Pos);
             }
 
             // Region cubes: a dotted wireframe cube grouping the nodes that fall inside each region's footprint.
@@ -2661,7 +2666,7 @@ namespace TheRobotDraft.Uml
         /// a height that grows with the member count (mirrors the flat renderer's content-driven sizing).</summary>
         private Vector2 NodeSizePx(ModelElement el, int attrCount, int opCount)
         {
-            if (_size.TryGetValue(el.Id, out var s) && s.x > 1f && s.y > 1f) return s;
+            if (_placements.TrySize(el.Id, out var s)) return s;
             // The actor / person robot wants a PORTRAIT footprint (a standing figure), not the wide class-box default.
             if (el.Kind == ElementKind.Actor || el.Kind == ElementKind.Person) return new Vector2(108f, 168f);
             var wb = WhiteboardDefaultSize(el.Kind);
@@ -2762,14 +2767,14 @@ namespace TheRobotDraft.Uml
                 attributes, operations, sizePx);
             // Apply a per-node Z thickness override (set via the depth resize handle) before posing.
             if (_mode2D) node.SetThickness(FlatNodeThickness);
-            else if (_nodeDepth.TryGetValue(el.Id, out var th)) node.SetThickness(th);
+            else if (_placements.TryDepth(el.Id, out var th)) node.SetThickness(th);
             // World-Z = ZLayer × LayerGap: a higher layer sits further toward +Z (the front / camera side), a lower
             // layer recedes toward −Z. Every layer is drawn at full color (no active-layer graying anymore).
-            float zOffset = (!_mode2D && _posZ.TryGetValue(el.Id, out var z)) ? z : 0f;
+            float zOffset = _mode2D ? 0f : _placements.PosZ(el.Id);
             int zLayer = _mode2D ? 0 : el.ZLayer;
             node.SetWorldPose(Uml3DConfig.ModelToWorld(pos, zLayer) + new Vector3(0f, 0f, zOffset),
                 Quaternion.identity);
-            if (!_mode2D && _nodeRot.TryGetValue(el.Id, out var localRot)) node.SetLocalRotation(localRot); // restore orientation
+            if (!_mode2D && _placements.TryRot(el.Id, out var localRot)) node.SetLocalRotation(localRot); // restore orientation
             node.SetDepthTint(0f);
             var img = LoadNodeImage(el.Id); // optional per-node picture rendered as a card on the face
             if (img != null) node.SetImage(img);
@@ -2818,7 +2823,7 @@ namespace TheRobotDraft.Uml
             foreach (var kv in _scene.Nodes)
             {
                 if (kv.Key == regionId || kv.Value == null) continue;
-                if (!_pos.TryGetValue(kv.Key, out var mp)) continue;
+                if (!_placements.TryPos(kv.Key, out var mp)) continue;
                 if (mp.x < rp.x - hw || mp.x > rp.x + hw || mp.y < rp.y - hh || mp.y > rp.y + hh) continue;
                 list.Add(kv.Key);
             }
@@ -2833,8 +2838,8 @@ namespace TheRobotDraft.Uml
         /// </summary>
         private Bounds ComputeRegionBounds(ModelElement el)
         {
-            if (!_pos.TryGetValue(el.Id, out var rp)) { rp = Vector2.zero; _pos[el.Id] = rp; }
-            if (!(_size.TryGetValue(el.Id, out var s) && s.x > 1f && s.y > 1f)) { s = RegionDefaultSizePx; _size[el.Id] = s; }
+            if (!_placements.TryPos(el.Id, out var rp)) { rp = Vector2.zero; _placements.SetPos(el.Id, rp); }
+            if (!_placements.TrySize(el.Id, out var s)) { s = RegionDefaultSizePx; _placements.SetSize(el.Id, s); }
             Vector3 center = Uml3DConfig.ModelToWorld(rp, _mode2D ? 0 : el.ZLayer);
             float depth = _mode2D ? FlatNodeThickness : RegionDepthWorld;
             Bounds b = new Bounds(center, new Vector3(s.x * Uml3DConfig.WorldScale, s.y * Uml3DConfig.WorldScale, depth));
@@ -2961,7 +2966,7 @@ namespace TheRobotDraft.Uml
         {
             _regionMembers.Clear();
             if (!_model.TryGet(id, out var el)) return;
-            if (!_pos.TryGetValue(id, out var rp)) rp = Vector2.zero;
+            if (!_placements.TryPos(id, out var rp)) rp = Vector2.zero;
             _regionMembers.AddRange(RegionMembers(id, rp, CurrentNodeSizePx(id)));
         }
 
@@ -2974,8 +2979,8 @@ namespace TheRobotDraft.Uml
             _regionLastWorld = world;
             if (delta.sqrMagnitude < 1e-10f) return;
             foreach (var id in _regionMembers) MoveNode3D(id, delta);
-            if (_pos.TryGetValue(_regionDrag, out var rp))
-                _pos[_regionDrag] = rp + new Vector2(delta.x / Uml3DConfig.WorldScale, delta.y / Uml3DConfig.WorldScale);
+            if (_placements.TryPos(_regionDrag, out var rp))
+                _placements.SetPos(_regionDrag, rp + new Vector2(delta.x / Uml3DConfig.WorldScale, delta.y / Uml3DConfig.WorldScale));
             // Translate the cube rigidly — keep its size constant. (Re-fitting here would re-run the spatial
             // member query and Encapsulate any node the footprint sweeps over, ballooning the cube unexpectedly.)
             if (_regionById.TryGetValue(_regionDrag, out var r) && r != null)
@@ -2994,14 +2999,13 @@ namespace TheRobotDraft.Uml
             float k = 1f / Mathf.Max(ScaleFactor, 0.0001f);
             sz.x = Mathf.Max(80f, sz.x + mouseDelta.x * k);
             sz.y = Mathf.Max(60f, sz.y - mouseDelta.y * k);
-            _size[_regionDrag] = sz;
+            _placements.SetSize(_regionDrag, sz);
             RefitRegion(_regionDrag);
         }
 
         // --- node resize mode (double-click a node → constrained resize handles) ---
 
         // Per-node Z thickness (world units). Absent ⇒ the default Uml3DConfig.NodeThickness. Persisted.
-        private readonly Dictionary<ElementId, float> _nodeDepth = new();
 
         private ElementId _resizeModeNode = ElementId.None;       // the node/region currently showing resize handles
         private bool _resizeModeIsRegion;                          // true ⇒ the resize target is a region cube
@@ -3156,9 +3160,9 @@ namespace TheRobotDraft.Uml
 
             if (_resizeRole == UmlResizeHandle3D.Role.Depth && !isRegion)
             {
-                float cur = _nodeDepth.TryGetValue(_resizeNode, out var t) ? t : node.CurrentDepth;
+                float cur = _placements.TryDepth(_resizeNode, out var t) ? t : node.CurrentDepth;
                 float th = Mathf.Max(0.04f, cur + mouseDelta.y * ZThickPerPx); // drag up ⇒ thicker
-                _nodeDepth[_resizeNode] = th; node.SetThickness(th);
+                _placements.SetDepth(_resizeNode, th); node.SetThickness(th);
                 RepositionResizeHandles();
                 return;
             }
@@ -3175,7 +3179,7 @@ namespace TheRobotDraft.Uml
             if (_resizeRole == UmlResizeHandle3D.Role.Width) sz.x = Mathf.Max(60f, sz.x + delta);
             else if (_resizeRole == UmlResizeHandle3D.Role.Height) sz.y = Mathf.Max(40f, sz.y + delta);
             else { sz.x = Mathf.Max(60f, sz.x + delta); sz.y = Mathf.Max(40f, sz.y + delta); } // Uniform corner
-            _size[_resizeNode] = sz;
+            _placements.SetSize(_resizeNode, sz);
 
             if (isRegion) RefitRegion(_resizeNode);
             else
@@ -3183,9 +3187,9 @@ namespace TheRobotDraft.Uml
                 node.Resize(sz);
                 if (_resizeRole == UmlResizeHandle3D.Role.Uniform && !_mode2D)
                 {
-                    float cur = _nodeDepth.TryGetValue(_resizeNode, out var t) ? t : node.CurrentDepth;
+                    float cur = _placements.TryDepth(_resizeNode, out var t) ? t : node.CurrentDepth;
                     float th = Mathf.Max(0.04f, cur + delta * Uml3DConfig.WorldScale);
-                    _nodeDepth[_resizeNode] = th; node.SetThickness(th);
+                    _placements.SetDepth(_resizeNode, th); node.SetThickness(th);
                 }
             }
             RepositionResizeHandles();
@@ -3228,8 +3232,7 @@ namespace TheRobotDraft.Uml
 
         private sealed class GeoSnapshot
         {
-            public Dictionary<ElementId, Vector2> Pos, Size;
-            public Dictionary<ElementId, float> PosZ, Depth;
+            public PlacementStore Placements;                       // whole per-diagram geometry store (pos/size/Z/depth/rotation)
             public Dictionary<ElementId, NodeStyle> Styles;
         }
 
@@ -3237,21 +3240,17 @@ namespace TheRobotDraft.Uml
         private readonly List<GeoSnapshot> _geoRedo = new();
         private const int GeoUndoMax = 80;
 
+        // Snapshot the whole placement store (all diagrams). Folding rotation into the store means undo now also covers
+        // per-node orientation, which the former flat snapshot did not capture.
         private GeoSnapshot SnapshotGeo() => new GeoSnapshot
         {
-            Pos = new Dictionary<ElementId, Vector2>(_pos),
-            Size = new Dictionary<ElementId, Vector2>(_size),
-            PosZ = new Dictionary<ElementId, float>(_posZ),
-            Depth = new Dictionary<ElementId, float>(_nodeDepth),
+            Placements = _placements.Clone(),
             Styles = new Dictionary<ElementId, NodeStyle>(_styles),
         };
 
         private void RestoreGeo(GeoSnapshot s)
         {
-            _pos.Clear(); foreach (var kv in s.Pos) _pos[kv.Key] = kv.Value;
-            _size.Clear(); foreach (var kv in s.Size) _size[kv.Key] = kv.Value;
-            _posZ.Clear(); foreach (var kv in s.PosZ) _posZ[kv.Key] = kv.Value;
-            _nodeDepth.Clear(); foreach (var kv in s.Depth) _nodeDepth[kv.Key] = kv.Value;
+            _placements.RestoreFrom(s.Placements);
             _styles.Clear(); foreach (var kv in s.Styles) _styles[kv.Key] = kv.Value;
         }
 
@@ -4378,21 +4377,29 @@ namespace TheRobotDraft.Uml
 
         // --- tabs ---
 
+        /// <summary>The single chokepoint for changing the active diagram/page: sets <c>_activePackage</c> and keeps the
+        /// placement store's active scope in sync, so per-diagram geometry always reads/writes the right diagram.</summary>
+        private void SetActivePackage(ElementId id)
+        {
+            _activePackage = id;
+            _placements.Active = id;
+        }
+
         private void EnsureActivePackage()
         {
-            if (_activePackage.IsValid && _model.Contains(_activePackage)) return;
-            _activePackage = ElementId.None;
+            if (_activePackage.IsValid && _model.Contains(_activePackage)) { _placements.Active = _activePackage; return; }
+            SetActivePackage(ElementId.None);
             // Prefer a top-level package (a tab/diagram) so the bar always has a selected tab on bootstrap.
             foreach (var el in _model.Elements)
-                if (el.Kind == ElementKind.Package && !el.Parent.IsValid) { _activePackage = el.Id; break; }
+                if (el.Kind == ElementKind.Package && !el.Parent.IsValid) { SetActivePackage(el.Id); break; }
             if (_activePackage.IsValid) return;
             foreach (var el in _model.Elements)
-                if (el.Kind == ElementKind.Package) { _activePackage = el.Id; break; }
+                if (el.Kind == ElementKind.Package) { SetActivePackage(el.Id); break; }
         }
 
         private void FixActiveAfterChange()
         {
-            if (!_activePackage.IsValid || !_model.Contains(_activePackage)) _activePackage = ElementId.None;
+            if (!_activePackage.IsValid || !_model.Contains(_activePackage)) SetActivePackage(ElementId.None);
         }
 
         /// <summary>
@@ -4468,7 +4475,7 @@ namespace TheRobotDraft.Uml
             }
             items.Add(MenuItem.Separator());
             items.Add(new MenuItem("＋ Add page here…", true,
-                () => { _activePackage = pkgId; AddPackageWithNode(new Vector2(Screen.width * 0.5f, Screen.height * 0.5f)); }));
+                () => { SetActivePackage(pkgId); AddPackageWithNode(new Vector2(Screen.width * 0.5f, Screen.height * 0.5f)); }));
 
             // Anchor the menu just under this tab's row.
             CreateMenu(new Vector2(8f, Screen.height - 40f), PackageName(pkgId) + "  ▾ pages", items);
@@ -5054,6 +5061,7 @@ namespace TheRobotDraft.Uml
                 (ElementKind.AsyncSend, "Async Send"),
                 (ElementKind.AsyncReceive, "Async Receive"),
                 (ElementKind.Note, "UML Note"),
+                (ElementKind.Actor, "Actor"),
             }),
             ("Wireframe / UI", new[]
             {

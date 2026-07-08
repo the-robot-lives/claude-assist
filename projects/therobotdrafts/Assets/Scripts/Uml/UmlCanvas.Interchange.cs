@@ -259,7 +259,7 @@ namespace TheRobotDraft.Uml
                 }
 
                 _ctl.EnterSelect();
-                _pos[id] = new Vector2(originX + (gridIndex % 4) * colW, originY - (gridIndex / 4) * rowH);
+                _placements.SetPos(id, new Vector2(originX + (gridIndex % 4) * colW, originY - (gridIndex / 4) * rowH));
                 _ctl.SetZLayer(id, _activeLayer);
                 if (row.Source != null && !created.ContainsKey(row.Source.Id)) created[row.Source.Id] = id;
                 gridIndex++;
@@ -464,11 +464,12 @@ namespace TheRobotDraft.Uml
                 }
             _ctl.EnterSelect();
 
-            // Geometry — apply placements from ALL authored diagrams (IR is top-left, Y-down; the canvas stores a
-            // node's centre Y-up, so add half-extents and flip Y). The runtime holds one geometry per element, so for
-            // an element placed in several diagrams the FIRST diagram's placement wins. No authored geometry ⇒ source layout.
+            // Geometry — apply placements from every authored diagram (IR is top-left, Y-down; the canvas stores a
+            // node's centre Y-up, so add half-extents and flip Y). Per-diagram store: each placement is written into
+            // the placed element's own diagram scope (its parent package/page), so page nodes land on their page — no
+            // first-placement-wins compromise. True cross-diagram LINKS (an element placed in a diagram that is NOT its
+            // parent) will be routed by a diagram→scope map once Track C introduces them. No authored geometry ⇒ source layout.
             int placed = 0;
-            var seen = new HashSet<ElementId>();
             if (model.Diagrams != null)
                 foreach (var d in model.Diagrams)
                 {
@@ -477,16 +478,16 @@ namespace TheRobotDraft.Uml
                     {
                         if (pl == null || string.IsNullOrEmpty(pl.ElementId)) continue;
                         if (!idMap.TryGetValue(pl.ElementId, out var nid)) continue;
-                        if (!seen.Add(nid)) continue; // first-placement-wins for multi-diagram geometry
-                        if (pl.Width > 0f && pl.Height > 0f)
-                        {
-                            _pos[nid] = new Vector2(pl.X + pl.Width * 0.5f, -(pl.Y + pl.Height * 0.5f));
-                            _size[nid] = new Vector2(pl.Width, pl.Height);
-                        }
-                        else
-                        {
-                            _pos[nid] = new Vector2(pl.X, -pl.Y);
-                        }
+                        var scope = _model.TryGet(nid, out var elm) ? elm.Parent : ElementId.None;
+                        var placement = (pl.Width > 0f && pl.Height > 0f)
+                            ? new Placement
+                              {
+                                  Pos = new Vector2(pl.X + pl.Width * 0.5f, -(pl.Y + pl.Height * 0.5f)),
+                                  Size = new Vector2(pl.Width, pl.Height),
+                                  Rot = Quaternion.identity,
+                              }
+                            : new Placement { Pos = new Vector2(pl.X, -pl.Y), Rot = Quaternion.identity };
+                        _placements.Set(scope, nid, placement);
                         placed++;
                     }
                 }
@@ -774,9 +775,11 @@ namespace TheRobotDraft.Uml
             foreach (var el in elements)
             {
                 if (KindInfo.IsMember(el.Kind) || !byId.ContainsKey(el.Id.Value)) continue;
-                if (!_pos.TryGetValue(el.Id, out var centre)) continue;
+                // Each element's geometry lives in its own diagram scope (its parent package/page).
+                if (!_placements.TryGet(el.Parent, el.Id, out var geo)) continue;
+                var centre = geo.Pos;
                 float w = 0f, h = 0f;
-                if (_size.TryGetValue(el.Id, out var s)) { w = s.x; h = s.y; }
+                if (geo.HasSize) { w = geo.Size.x; h = geo.Size.y; }
 
                 var placement = new IxNodePlacement { ElementId = el.Id.Value };
                 if (w > 0f && h > 0f)

@@ -128,7 +128,7 @@ namespace TheRobotDraft.Uml
             }
             float cx = (minX + maxX) * 0.5f, cy = (minY + maxY) * 0.5f;
             for (int i = 0; i < ids.Count; i++)
-                _pos[ids[i]] = new Vector2(p[i].x - cx, p[i].y - cy);
+                _placements.SetPos(ids[i], new Vector2(p[i].x - cx, p[i].y - cy));
         }
 
         // --- 1) tidy grid ---
@@ -181,7 +181,7 @@ namespace TheRobotDraft.Uml
             if (CurrentPositionsSpread(ids, spacing))
             {
                 for (int i = 0; i < n; i++)
-                    pos[i] = _pos.TryGetValue(ids[i], out var cur) ? cur : Vector2.zero;
+                    pos[i] = _placements.Pos(ids[i]);
             }
             else
             {
@@ -247,7 +247,7 @@ namespace TheRobotDraft.Uml
             int have = 0;
             foreach (var id in ids)
             {
-                if (!_pos.TryGetValue(id, out var p)) continue;
+                if (!_placements.TryPos(id, out var p)) continue;
                 have++;
                 if (p.x < minX) minX = p.x;
                 if (p.x > maxX) maxX = p.x;
@@ -587,7 +587,7 @@ namespace TheRobotDraft.Uml
                 // keep their current position.
                 float side = Mathf.Min(Mathf.Max(600f, n * 180f), 9000f);
                 var p = new Vector2[n];
-                for (int i = 0; i < n; i++) p[i] = _pos.TryGetValue(ids[i], out var cur) ? cur : Vector2.zero;
+                for (int i = 0; i < n; i++) p[i] = _placements.Pos(ids[i]);
                 int placed = 0;
                 foreach (var node in resp.nodes)
                 {

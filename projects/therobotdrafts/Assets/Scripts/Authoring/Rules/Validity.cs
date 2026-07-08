@@ -98,6 +98,7 @@ namespace TheRobotDraft.Authoring.Rules
                 // sketch grouping before the user commits to a formal UML/architecture notation.
                 ElementKind.WhiteboardFrame => KindInfo.IsWhiteboardNode(childKind)
                     || childKind == ElementKind.Note
+                    || childKind == ElementKind.Actor
                     || childKind == ElementKind.WhiteboardFrame,
 
                 _ => false,

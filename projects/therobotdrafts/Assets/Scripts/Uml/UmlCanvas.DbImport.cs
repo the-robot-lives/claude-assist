@@ -175,7 +175,7 @@ namespace TheRobotDraft.Uml
                 }
 
                 _ctl.EnterSelect();
-                _pos[id] = new Vector2(originX + (gridIndex % 4) * colW, originY - (gridIndex / 4) * rowH);
+                _placements.SetPos(id, new Vector2(originX + (gridIndex % 4) * colW, originY - (gridIndex / 4) * rowH));
                 _ctl.SetZLayer(id, _activeLayer);
                 created[t.Qualified] = id;
                 gridIndex++;
