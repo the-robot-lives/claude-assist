@@ -170,18 +170,34 @@ namespace TheRobotDraft.Uml
             wf.RegionKind = el.Kind;
             foreach (var childId in el.ChildIds)
             {
-                if (!_model.TryGet(childId, out var c) || !KindInfo.IsWireframeWidget(c.Kind)) continue;
-                var w = new WireframeContext.Widget { Kind = c.Kind, Label = c.Name };
-                // Element-owned items are the widget's options/rows/columns; Field children are legacy fallback.
-                foreach (var item in c.Items)
-                    if (!string.IsNullOrWhiteSpace(item))
-                        w.Items.Add(item);
-                foreach (var itemId in c.ChildIds)
-                    if (_model.TryGet(itemId, out var item) && item.Kind == ElementKind.Field)
-                        w.Items.Add(item.Name);
-                wf.Widgets.Add(w);
+                if (!_model.TryGet(childId, out var c)) continue;
+                if (!KindInfo.IsWireframeWidget(c.Kind) && c.Kind != ElementKind.Panel) continue;
+                wf.Widgets.Add(BuildWireframeWidget(c));
             }
             return wf;
+        }
+
+        /// <summary>Build one recursive wireframe widget subtree from the authored containment tree.</summary>
+        private WireframeContext.Widget BuildWireframeWidget(ModelElement el)
+        {
+            var w = new WireframeContext.Widget { Kind = el.Kind, Label = el.Name };
+            // Element-owned items are the widget's options/rows/columns; Field children are legacy fallback.
+            foreach (var item in el.Items)
+                if (!string.IsNullOrWhiteSpace(item))
+                    w.Items.Add(item);
+            foreach (var childId in el.ChildIds)
+            {
+                if (!_model.TryGet(childId, out var child)) continue;
+                if (child.Kind == ElementKind.Field)
+                {
+                    if (!string.IsNullOrWhiteSpace(child.Name))
+                        w.Items.Add(child.Name);
+                    continue;
+                }
+                if (KindInfo.IsWireframeWidget(child.Kind) || child.Kind == ElementKind.Panel)
+                    w.Children.Add(BuildWireframeWidget(child));
+            }
+            return w;
         }
 
         /// <summary>Open the viewer seeded with an HTML mockup, with a PlantUML salt block as the LLM seed.</summary>

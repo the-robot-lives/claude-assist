@@ -493,6 +493,62 @@ namespace TheRobotDraft.Authoring.Commands
         }
     }
 
+    /// <summary>Replace an element's full aspect set (typed instances + freeform). Undoable, one step.</summary>
+    public sealed class SetElementAspectsCommand : IAuthoringCommand
+    {
+        private readonly ElementId _element;
+        private readonly AspectSet _next;
+        private AspectSet _old;
+
+        public SetElementAspectsCommand(ElementId element, IEnumerable<AspectInstance> aspects, IEnumerable<FreeformEntry> freeform)
+        {
+            _element = element;
+            _next = new AspectSet();
+            if (aspects != null) foreach (var a in aspects) if (a != null) _next.Aspects.Add(AspectResolution.Clone(a));
+            if (freeform != null) foreach (var f in freeform) if (f != null)
+                _next.Freeform.Add(new FreeformEntry { Key = f.Key, Value = f.Value });
+        }
+
+        public string Label => "Edit element aspects";
+
+        public void Do(CommandContext ctx)
+        {
+            var e = ctx.Model.Get(_element);
+            _old = AspectResolution.Clone(e.AspectSet);
+            ctx.Model.SetElementAspects(_element, _next.Aspects, _next.Freeform);
+        }
+
+        public void Undo(CommandContext ctx) => ctx.Model.SetElementAspects(_element, _old?.Aspects, _old?.Freeform);
+    }
+
+    /// <summary>Replace an edge's full aspect set (typed instances + freeform). Undoable, one step.</summary>
+    public sealed class SetEdgeAspectsCommand : IAuthoringCommand
+    {
+        private readonly EdgeId _edge;
+        private readonly AspectSet _next;
+        private AspectSet _old;
+
+        public SetEdgeAspectsCommand(EdgeId edge, IEnumerable<AspectInstance> aspects, IEnumerable<FreeformEntry> freeform)
+        {
+            _edge = edge;
+            _next = new AspectSet();
+            if (aspects != null) foreach (var a in aspects) if (a != null) _next.Aspects.Add(AspectResolution.Clone(a));
+            if (freeform != null) foreach (var f in freeform) if (f != null)
+                _next.Freeform.Add(new FreeformEntry { Key = f.Key, Value = f.Value });
+        }
+
+        public string Label => "Edit relationship aspects";
+
+        public void Do(CommandContext ctx)
+        {
+            var e = ctx.Model.Get(_edge);
+            _old = AspectResolution.Clone(e.AspectSet);
+            ctx.Model.SetEdgeAspects(_edge, _next.Aspects, _next.Freeform);
+        }
+
+        public void Undo(CommandContext ctx) => ctx.Model.SetEdgeAspects(_edge, _old?.Aspects, _old?.Freeform);
+    }
+
     /// <summary>Set an element's saved source code (the approved "Generate code" output). Undoable.</summary>
     public sealed class SetCodeCommand : IAuthoringCommand
     {

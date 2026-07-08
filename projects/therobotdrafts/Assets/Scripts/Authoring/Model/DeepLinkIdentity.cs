@@ -35,6 +35,16 @@ namespace TheRobotDraft.Authoring.Model
             return Uuid5(NamespaceUuid, seed);
         }
 
+        /// <summary>UUIDv5 identity for an edge — the aspect sidecar key for a link. Stable across re-derivation.</summary>
+        public static string Uuid5ForEdge(EdgeId id, EdgeKind kind, ElementId from, ElementId to, string label)
+        {
+            string seed = "doc-pointers:therobotdrafts:edge:"
+                + id.Value + ":" + kind + ":"
+                + (from.IsValid ? from.Value : "?") + "->" + (to.IsValid ? to.Value : "?") + ":"
+                + (label ?? "");
+            return Uuid5(NamespaceUuid, seed);
+        }
+
         public static string Uuid5(string namespaceUuid, string name)
         {
             byte[] ns = UuidStringToBytes(namespaceUuid);

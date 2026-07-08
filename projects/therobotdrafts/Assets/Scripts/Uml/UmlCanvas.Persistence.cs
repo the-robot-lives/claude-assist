@@ -90,6 +90,8 @@ namespace TheRobotDraft.Uml
         public int zLayer;
         public string code;
         public string sourceFile;
+        public List<AspectDto> aspects = new();     // sparse aspect attachments (typed)
+        public List<FreeformDto> freeform = new();  // freeform {key,value} entries
     }
 
     [Serializable]
@@ -103,6 +105,31 @@ namespace TheRobotDraft.Uml
         public string srcMult;
         public string tgtMult;
         public string constraint;
+        public List<AspectDto> aspects = new();
+        public List<FreeformDto> freeform = new();
+    }
+
+    /// <summary>
+    /// A sparse aspect attachment for legacy JSON. <c>overrideKeys/overrideValues</c> are index-aligned and
+    /// hold ONLY overridden field values (defaults live on the registry AspectDef). <c>emitOverride</c> is the
+    /// compact ADCM string ("" = no override). Mirrors Authoring.Model.AspectInstance.
+    /// </summary>
+    [Serializable]
+    public class AspectDto
+    {
+        public string defName;
+        public int defVersion = 1;
+        public List<string> overrideKeys = new();
+        public List<string> overrideValues = new();
+        public string emitOverride;   // "" or null = use def defaults; else letters A/D/C/M
+    }
+
+    /// <summary>Freeform {key, value} escape hatch for legacy JSON.</summary>
+    [Serializable]
+    public class FreeformDto
+    {
+        public string key;
+        public string value;
     }
 
     [Serializable]
@@ -162,6 +189,61 @@ namespace TheRobotDraft.Uml
         // The file Ctrl/Cmd+S writes to. Null ⇒ the default autosave slot (DiagramPath); set by "Save As…" / "Open file…".
         private string _currentDiagramPath;
         private string CurrentPath => string.IsNullOrEmpty(_currentDiagramPath) ? DiagramPath : _currentDiagramPath;
+
+        // --- aspect <-> DTO mapping (shared by elements and edges) ---
+
+        private static AspectDto ToAspectDto(AspectInstance a)
+        {
+            var d = new AspectDto { defName = a.DefName, defVersion = a.DefVersion <= 0 ? 1 : a.DefVersion };
+            if (a.Overrides != null)
+                foreach (var kv in a.Overrides) { d.overrideKeys.Add(kv.Key); d.overrideValues.Add(kv.Value ?? ""); }
+            d.emitOverride = a.EmitOverride.HasValue ? EmitFlagsToString(a.EmitOverride.Value) : "";
+            return d;
+        }
+
+        private static AspectInstance FromAspectDto(AspectDto d)
+        {
+            var a = new AspectInstance { DefName = d.defName, DefVersion = d.defVersion <= 0 ? 1 : d.defVersion };
+            if (d.overrideKeys != null && d.overrideValues != null)
+            {
+                for (int i = 0; i < d.overrideKeys.Count && i < d.overrideValues.Count; i++)
+                    if (!string.IsNullOrEmpty(d.overrideKeys[i]))
+                        a.Overrides[d.overrideKeys[i]] = d.overrideValues[i] ?? "";
+            }
+            a.EmitOverride = string.IsNullOrEmpty(d.emitOverride) ? (EmitFlags?)null : StringToEmitFlags(d.emitOverride);
+            return a;
+        }
+
+        private static FreeformDto ToFreeformDto(FreeformEntry f) =>
+            new FreeformDto { key = f.Key, value = f.Value };
+
+        private static FreeformEntry FromFreeformDto(FreeformDto d) =>
+            new FreeformEntry { Key = d.key, Value = d.value };
+
+        internal static string EmitFlagsToString(EmitFlags f)
+        {
+            var sb = new System.Text.StringBuilder();
+            if (f.Annotate) sb.Append('A');
+            if (f.DocTag) sb.Append('D');
+            if (f.Comment) sb.Append('C');
+            if (f.Meta) sb.Append('M');
+            return sb.Length == 0 ? "" : sb.ToString();
+        }
+
+        internal static EmitFlags StringToEmitFlags(string s)
+        {
+            var f = new EmitFlags();
+            if (string.IsNullOrEmpty(s)) return f;
+            foreach (char c in s)
+                switch (c)
+                {
+                    case 'A': case 'a': f.Annotate = true; break;
+                    case 'D': case 'd': f.DocTag = true; break;
+                    case 'C': case 'c': f.Comment = true; break;
+                    case 'M': case 'm': f.Meta = true; break;
+                }
+            return f;
+        }
 
         /// <summary>Save to the current file (the named file from Save As / Open, else the default autosave slot).</summary>
         public void SaveDiagram()
@@ -341,6 +423,7 @@ namespace TheRobotDraft.Uml
         {
             var dto = new DiagramDto();
             foreach (var el in _model.Elements)
+            {
                 dto.elements.Add(new ElementDto
                 {
                     id = el.Id.Value,
@@ -361,8 +444,12 @@ namespace TheRobotDraft.Uml
                     code = el.Code,
                     sourceFile = el.SourceFile,
                 });
+                foreach (var a in el.AspectSet.Aspects) dto.elements[^1].aspects.Add(ToAspectDto(a));
+                foreach (var f in el.AspectSet.Freeform) dto.elements[^1].freeform.Add(ToFreeformDto(f));
+            }
 
             foreach (var e in _model.Edges)
+            {
                 dto.edges.Add(new EdgeDto
                 {
                     id = e.Id.Value,
@@ -374,6 +461,9 @@ namespace TheRobotDraft.Uml
                     tgtMult = e.TargetMultiplicity,
                     constraint = e.Constraint,
                 });
+                foreach (var a in e.AspectSet.Aspects) dto.edges[^1].aspects.Add(ToAspectDto(a));
+                foreach (var f in e.AspectSet.Freeform) dto.edges[^1].freeform.Add(ToFreeformDto(f));
+            }
 
             foreach (var kv in _pos)
             {
@@ -480,6 +570,10 @@ namespace TheRobotDraft.Uml
                 if (!string.IsNullOrEmpty(elDto.sourceFile))
                     _ctl.SetSourceFile(nid, elDto.sourceFile);
                 _ctl.SetZLayer(nid, elDto.zLayer);
+                if (elDto.aspects != null && elDto.aspects.Count > 0 || elDto.freeform != null && elDto.freeform.Count > 0)
+                    _ctl.SetElementAspects(nid,
+                        elDto.aspects != null ? System.Linq.Enumerable.Select(elDto.aspects, FromAspectDto) : null,
+                        elDto.freeform != null ? System.Linq.Enumerable.Select(elDto.freeform, FromFreeformDto) : null);
             }
 
             var edgeMap = new Dictionary<string, EdgeId>();
@@ -495,6 +589,10 @@ namespace TheRobotDraft.Uml
                     if (!string.IsNullOrEmpty(eDto.label) || !string.IsNullOrEmpty(eDto.srcMult)
                         || !string.IsNullOrEmpty(eDto.tgtMult) || !string.IsNullOrEmpty(eDto.constraint))
                         _ctl.SetEdgeMeta(ne, eDto.label, eDto.srcMult, eDto.tgtMult, eDto.constraint);
+                    if (eDto.aspects != null && eDto.aspects.Count > 0 || eDto.freeform != null && eDto.freeform.Count > 0)
+                        _ctl.SetEdgeAspects(ne,
+                            eDto.aspects != null ? System.Linq.Enumerable.Select(eDto.aspects, FromAspectDto) : null,
+                            eDto.freeform != null ? System.Linq.Enumerable.Select(eDto.freeform, FromFreeformDto) : null);
                 }
             _ctl.EnterSelect();
 

@@ -7,6 +7,7 @@
 #   make run     # build if needed, then open the .app
 #   make install # build if needed, then copy the .app into /Applications
 #   make test    # run the EditMode test suite headless
+#   make check   # verify doc pointers, then run the EditMode test suite
 #   make open    # open the existing build without rebuilding
 #   make clean   # remove Builds/ and test results
 #   make doctor  # report the editor that will be used and whether Mac Build Support is present
@@ -29,7 +30,7 @@ TEST_EDITOR := $(firstword \
   $(wildcard $(HUB)/$(PIN)/Unity.app/Contents/MacOS/Unity) \
   $(shell ls -dt $(HUB)/*/Unity.app/Contents/MacOS/Unity 2>/dev/null | head -n1))
 
-.PHONY: build run install open test clean doctor help purge-license doc-pointers doc-pointers-check install-doc-pointer-hook
+.PHONY: build run install open test check clean doctor help purge-license doc-pointers doc-pointers-check install-doc-pointer-hook
 
 help:
 	@echo "The Robot Draft — make targets:"
@@ -38,6 +39,7 @@ help:
 	@echo "  install build if needed, then copy the app into /Applications"
 	@echo "  open    open the existing build (no rebuild)"
 	@echo "  test    run the EditMode test suite headless"
+	@echo "  check   verify doc pointers, then run EditMode tests"
 	@echo "  clean   remove Builds/ and test results"
 	@echo "  doctor  show the editor that will be used"
 	@echo "  purge-license  kill a stuck Unity licensing client (fixes build hangs)"
@@ -81,8 +83,10 @@ test:
 	@"$(TEST_EDITOR)" -batchmode -nographics -projectPath "$(PROJECT_DIR)" \
 	  -runTests -testPlatform EditMode \
 	  -testResults "$(PROJECT_DIR)/Logs/test-results.xml" \
-	  -logFile "$(PROJECT_DIR)/Logs/test-run.log"
+		  -logFile "$(PROJECT_DIR)/Logs/test-run.log"
 	@echo "Tests passed."
+
+check: doc-pointers-check test
 
 clean:
 	@rm -rf "$(PROJECT_DIR)/Builds/macOS" "$(PROJECT_DIR)/Builds/build-macos.log" \

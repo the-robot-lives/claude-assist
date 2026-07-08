@@ -95,6 +95,17 @@ namespace TheRobotDraft.Authoring.Interchange
                 sb.Append(']');
             }
 
+            if (el.Items != null && el.Items.Count > 0)
+            {
+                sb.Append(", items: [");
+                for (int i = 0; i < el.Items.Count; i++)
+                {
+                    if (i > 0) sb.Append(", ");
+                    sb.Append(Scalar(el.Items[i]));
+                }
+                sb.Append(']');
+            }
+
             if (el.Tags != null && el.Tags.Count > 0)
             {
                 bool firstTag = true;
@@ -106,6 +117,8 @@ namespace TheRobotDraft.Authoring.Interchange
                 }
                 sb.Append('}');
             }
+
+            AppendAspects(sb, el.Aspects, el.Freeform);
 
             // members as a flow sequence inside the element's flow map (keeps the node valid YAML).
             if (el.Members != null && el.Members.Count > 0)
@@ -179,6 +192,7 @@ namespace TheRobotDraft.Authoring.Interchange
             AppendPair(sb, "fromRole", e.FromRole);
             AppendPair(sb, "toRole", e.ToRole);
             AppendPair(sb, "externalUuid", e.ExternalUuid);
+            AppendAspects(sb, e.Aspects, e.Freeform);
             sb.Append(" }\n");
         }
 
@@ -207,6 +221,80 @@ namespace TheRobotDraft.Authoring.Interchange
                     sb.Append(" }\n");
                 }
             }
+        }
+
+        // Aspect/freeform KEYS are always single-quoted (uniform, survives unicode/weirdness) and must be
+        // whitespace-free (validated upstream — see AspectResolution.IsValidKey). Values stay on Scalar.
+        private static string QuotedKey(string s)
+        {
+            if (s == null) return "''";
+            string cleaned = s.Replace("\r\n", "\n").Replace('\r', '\n').Replace("\n", "\\n").Replace("\t", "\\t");
+            return "'" + cleaned.Replace("'", "''") + "'";
+        }
+
+        // ------------------------------------------------------------------ aspects
+
+        // Emits sparse aspect attachments + freeform entries into the enclosing element/edge flow map as
+        // ", aspects: { defName: { _defv: N, field: value, ... }, ... }, freeform: { k: v }". Only overridden
+        // keys are written per instance (defaults live on the registry AspectDef, not in the model file).
+        private static void AppendAspects(StringBuilder sb, List<IxAspectInstance> aspects, List<IxFreeformEntry> freeform)
+        {
+            if (aspects != null && aspects.Count > 0)
+            {
+                sb.Append(", aspects: {");
+                bool first = true;
+                foreach (var a in aspects)
+                {
+                    if (a == null || string.IsNullOrEmpty(a.DefName)) continue;
+                    if (!first) sb.Append(", ");
+                    first = false;
+                    sb.Append(QuotedKey(a.DefName)).Append(": {");
+                    bool fFirst = true;
+                    if (a.DefVersion > 1) { sb.Append("_defv: ").Append(a.DefVersion.ToString()); fFirst = false; }
+                    if (a.EmitOverride.HasValue)
+                    {
+                        if (!fFirst) sb.Append(", ");
+                        sb.Append("_emit: ").Append(EmitFlagsString(a.EmitOverride.Value));
+                        fFirst = false;
+                    }
+                    if (a.Overrides != null)
+                    {
+                        foreach (var kv in a.Overrides)
+                        {
+                            if (kv.Key == "_defv" || kv.Key == "_emit") continue; // reserved
+                            if (!fFirst) sb.Append(", ");
+                            fFirst = false;
+                            sb.Append(QuotedKey(kv.Key)).Append(": ").Append(Scalar(kv.Value ?? ""));
+                        }
+                    }
+                    sb.Append('}');
+                }
+                sb.Append('}');
+            }
+            if (freeform != null && freeform.Count > 0)
+            {
+                sb.Append(", freeform: {");
+                bool first = true;
+                foreach (var f in freeform)
+                {
+                    if (f == null || string.IsNullOrEmpty(f.Key)) continue;
+                    if (!first) sb.Append(", ");
+                    first = false;
+                    sb.Append(QuotedKey(f.Key)).Append(": ").Append(Scalar(f.Value ?? ""));
+                }
+                sb.Append('}');
+            }
+        }
+
+        // Compact emit-flags string: subset letters in fixed order A/D/C/M, "-" when none.
+        private static string EmitFlagsString(IxEmitFlags f)
+        {
+            var s = new StringBuilder();
+            if (f.Annotate) s.Append('A');
+            if (f.DocTag) s.Append('D');
+            if (f.Comment) s.Append('C');
+            if (f.Meta) s.Append('M');
+            return s.Length == 0 ? "-" : s.ToString();
         }
 
         // ------------------------------------------------------------------ scalars

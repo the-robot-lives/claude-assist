@@ -47,8 +47,8 @@ Flags: `--no-recurse` (top-level only), `--check` (round-trip validation),
   and BPMN flow edges (`SequenceFlow`, `MessageFlow`) are promoted from edge stereotypes /
   BPMn-element context.
 - Timing diagrams (`robust`/`concise`) parse to lifelines + transition edges. Salt wireframes
-  degrade to a Note carrying the source (the grammar is structurally unsupported) rather than
-  throwing, so batch conversion never blocks.
+  parse to `Screen`/`Panel`/widget elements for the supported UI vocabulary; unsupported Salt rows
+  are preserved as raw `UiWidget` nodes so batch conversion never blocks.
 
 ## Extending the IR
 

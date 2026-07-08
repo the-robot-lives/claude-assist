@@ -283,6 +283,26 @@ namespace TheRobotDraft.Authoring.State
             return true;
         }
 
+        /// <summary>Replace an element's full aspect set (typed instances + freeform), one undo step.</summary>
+        public bool SetElementAspects(ElementId element,
+            System.Collections.Generic.IEnumerable<AspectInstance> aspects,
+            System.Collections.Generic.IEnumerable<FreeformEntry> freeform)
+        {
+            if (!_model.Contains(element)) return false;
+            _history.Execute(new SetElementAspectsCommand(element, aspects, freeform));
+            return true;
+        }
+
+        /// <summary>Replace an edge's full aspect set (typed instances + freeform), one undo step.</summary>
+        public bool SetEdgeAspects(EdgeId edge,
+            System.Collections.Generic.IEnumerable<AspectInstance> aspects,
+            System.Collections.Generic.IEnumerable<FreeformEntry> freeform)
+        {
+            if (!_model.TryGet(edge, out _)) return false;
+            _history.Execute(new SetEdgeAspectsCommand(edge, aspects, freeform));
+            return true;
+        }
+
         /// <summary>Save an element's source code (the approved "Generate code" output), one undo step.</summary>
         public bool SetCode(ElementId element, string code)
         {

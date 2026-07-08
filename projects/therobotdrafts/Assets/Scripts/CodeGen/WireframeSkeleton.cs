@@ -57,7 +57,7 @@ namespace TheRobotDraft.CodeGen
             sb.Append("{^\n");
             sb.Append("  {+").Append(EscapeSalt(title)).Append("+}\n");
             foreach (var w in ctx.Widgets)
-                sb.Append("  ").Append(WidgetSalt(w)).Append('\n');
+                AppendSaltWidget(sb, w, "  ");
             sb.Append("}\n");
             sb.Append("@endsalt\n");
             return sb.ToString();
@@ -70,6 +70,8 @@ namespace TheRobotDraft.CodeGen
             string label = Escape(w.Label ?? "");
             switch (w.Kind)
             {
+                case ElementKind.Panel:
+                    return PanelHtml(w);
                 case ElementKind.Button:
                     return "<button class=\"wf-btn\">" + label + "</button>";
                 case ElementKind.Label:
@@ -104,7 +106,7 @@ namespace TheRobotDraft.CodeGen
                 case ElementKind.Breadcrumb:
                     return NavHtml(w.Items.Count > 0 ? w.Items : new List<string> { "Home", "Section", "Page" }, "wf-breadcrumb");
                 case ElementKind.Card:
-                    return CardHtml(label, w.Items);
+                    return CardHtml(w);
                 case ElementKind.Separator:
                     return "<hr class=\"wf-sep\">";
                 case ElementKind.Progress:
@@ -173,13 +175,35 @@ namespace TheRobotDraft.CodeGen
             return sb.ToString();
         }
 
-        private static string CardHtml(string title, List<string> lines)
+        private static string CardHtml(WireframeContext.Widget w)
         {
             var sb = new StringBuilder();
             sb.Append("<article class=\"wf-card\">\n");
-            if (!string.IsNullOrEmpty(title)) sb.Append("  <h3>").Append(Escape(title)).Append("</h3>\n");
-            foreach (var l in lines) sb.Append("  <p>").Append(Escape(l)).Append("</p>\n");
+            if (!string.IsNullOrEmpty(w.Label)) sb.Append("  <h3>").Append(Escape(w.Label)).Append("</h3>\n");
+            foreach (var l in w.Items) sb.Append("  <p>").Append(Escape(l)).Append("</p>\n");
+            foreach (var child in w.Children)
+            {
+                string html = WidgetHtml(child);
+                foreach (var line in html.Replace("\r\n", "\n").Split('\n'))
+                    if (line.Length > 0) sb.Append("  ").Append(line).Append('\n');
+            }
             sb.Append("</article>");
+            return sb.ToString();
+        }
+
+        private static string PanelHtml(WireframeContext.Widget w)
+        {
+            var sb = new StringBuilder();
+            sb.Append("<section class=\"wf-panel\">\n");
+            if (!string.IsNullOrWhiteSpace(w.Label))
+                sb.Append("  <header class=\"wf-panel-title\">").Append(Escape(w.Label)).Append("</header>\n");
+            foreach (var child in w.Children)
+            {
+                string html = WidgetHtml(child);
+                foreach (var line in html.Replace("\r\n", "\n").Split('\n'))
+                    if (line.Length > 0) sb.Append("  ").Append(line).Append('\n');
+            }
+            sb.Append("</section>");
             return sb.ToString();
         }
 
@@ -190,6 +214,7 @@ namespace TheRobotDraft.CodeGen
             string label = EscapeSalt(w.Label ?? "");
             switch (w.Kind)
             {
+                case ElementKind.Panel:        return SaltPanel(w);
                 case ElementKind.Button:       return "{[" + label + "]}";
                 case ElementKind.Label:        return "\"" + label + "\"";
                 case ElementKind.Link:         return "\"" + label + "\"";
@@ -207,13 +232,21 @@ namespace TheRobotDraft.CodeGen
                 case ElementKind.Menu:
                 case ElementKind.Toolbar:      return SaltMenu(w.Items);
                 case ElementKind.Breadcrumb:   return "\"" + SaltBreadcrumb(w.Items) + "\"";
-                case ElementKind.Card:         return SaltCard(w.Label, w.Items);
+                case ElementKind.Card:         return SaltCard(w);
                 case ElementKind.Separator:    return "--";
                 case ElementKind.Progress:     return "[##" + new string(' ', 6) + "]";
                 case ElementKind.Slider:       return "[o" + new string('-', 10) + "]";
                 case ElementKind.UiWidget:
                 default:                       return "\"" + label + "\"";
             }
+        }
+
+        private static void AppendSaltWidget(StringBuilder sb, WireframeContext.Widget w, string indent)
+        {
+            string text = WidgetSalt(w);
+            foreach (var line in text.Replace("\r\n", "\n").Split('\n'))
+                if (line.Length > 0)
+                    sb.Append(indent).Append(line).Append('\n');
         }
 
         private static string SaltList(List<string> items, string fallback)
@@ -276,11 +309,25 @@ namespace TheRobotDraft.CodeGen
             return sb.ToString();
         }
 
-        private static string SaltCard(string title, List<string> lines)
+        private static string SaltCard(WireframeContext.Widget w)
         {
             var sb = new StringBuilder();
-            sb.Append("{^\n  {+").Append(EscapeSalt(title ?? "")).Append("+}\n  --\n");
-            foreach (var l in lines) sb.Append("  \"").Append(EscapeSalt(l)).Append("\"\\n");
+            sb.Append("{^\n  {+").Append(EscapeSalt(w.Label ?? "")).Append("+}\n  --\n");
+            foreach (var l in w.Items) sb.Append("  \"").Append(EscapeSalt(l)).Append("\"\\n");
+            foreach (var child in w.Children)
+                AppendSaltWidget(sb, child, "  ");
+            sb.Append("}^");
+            return sb.ToString();
+        }
+
+        private static string SaltPanel(WireframeContext.Widget w)
+        {
+            var sb = new StringBuilder();
+            sb.Append("{^\n");
+            if (!string.IsNullOrWhiteSpace(w.Label))
+                sb.Append("  {+").Append(EscapeSalt(w.Label)).Append("+}\n");
+            foreach (var child in w.Children)
+                AppendSaltWidget(sb, child, "  ");
             sb.Append("}^");
             return sb.ToString();
         }
@@ -297,6 +344,8 @@ namespace TheRobotDraft.CodeGen
             + " .wf-input,.wf-textarea{padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;font:inherit}"
             + " .wf-textarea{min-height:64px} .wf-check{font-size:14px} .wf-image{min-height:96px;background:#e5e7eb;"
             + "border:1px dashed #9ca3af;border-radius:6px;display:flex;align-items:center;justify-content:center;color:#6b7280}"
+            + " .wf-panel{border:1px solid #e5e7eb;border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:10px}"
+            + " .wf-panel-title{font-size:13px;font-weight:700;color:#374151}"
             + " .wf-table{width:100%;border-collapse:collapse;font-size:14px} .wf-table th,.wf-table td{border:1px solid #e5e7eb;"
             + "padding:6px 10px;text-align:left} .wf-table thead{background:#f9fafb} .wf-menu,.wf-breadcrumb,.wf-tabs{display:flex;gap:14px}"
             + " .wf-menu a,.wf-breadcrumb a,.wf-tab{font-size:14px;color:#374151;text-decoration:none} .wf-tab.is-active"

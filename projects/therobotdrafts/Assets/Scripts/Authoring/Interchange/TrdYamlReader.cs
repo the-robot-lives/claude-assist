@@ -115,9 +115,18 @@ namespace TheRobotDraft.Authoring.Interchange
                     case "enumLiterals":
                         foreach (var lit in FlowSeq(kv.Value)) el.EnumLiterals.Add(Unquote(lit));
                         break;
+                    case "items":
+                        foreach (var item in FlowSeq(kv.Value)) el.Items.Add(Unquote(item));
+                        break;
                     case "tags":
                         foreach (var tp in FlowMap.Parse(kv.Value))
                             el.Tags[Unquote(tp.Key)] = Unquote(tp.Value);
+                        break;
+                    case "aspects":
+                        ParseAspectsInto(kv.Value, el.Aspects);
+                        break;
+                    case "freeform":
+                        ParseFreeformInto(kv.Value, el.Freeform);
                         break;
                     case "members":
                         // Inline flow-sequence of member maps: members: [ { ... }, { ... } ]
@@ -265,6 +274,12 @@ namespace TheRobotDraft.Authoring.Interchange
                         case "fromRole": e.FromRole = UnquoteOrNull(kv.Value); break;
                         case "toRole": e.ToRole = UnquoteOrNull(kv.Value); break;
                         case "externalUuid": e.ExternalUuid = UnquoteOrNull(kv.Value); break;
+                        case "aspects":
+                            ParseAspectsInto(kv.Value, e.Aspects);
+                            break;
+                        case "freeform":
+                            ParseFreeformInto(kv.Value, e.Freeform);
+                            break;
                     }
                 }
                 model.Edges.Add(e);
@@ -397,6 +412,66 @@ namespace TheRobotDraft.Authoring.Interchange
             return r == null ? null : r;
         }
 
+        // Parse "aspects" value: { defName: { _defv: N, _emit: ADCM, field: value, ... }, ... }. Each inner map
+        // is a sparse instance — only overridden keys appear; defaults live on the registry AspectDef.
+        private static void ParseAspectsInto(string value, List<IxAspectInstance> list)
+        {
+            if (string.IsNullOrWhiteSpace(value)) return;
+            foreach (var outer in FlowMap.Parse(value))
+            {
+                string defName = Unquote(outer.Key);
+                if (string.IsNullOrEmpty(defName)) continue;
+                var inst = new IxAspectInstance { DefName = defName };
+                foreach (var inner in FlowMap.Parse(outer.Value))
+                {
+                    string k = Unquote(inner.Key);
+                    if (k == "_defv")
+                    {
+                        int.TryParse(Unquote(inner.Value), out int v);
+                        inst.DefVersion = v <= 0 ? 1 : v;
+                    }
+                    else if (k == "_emit")
+                    {
+                        inst.EmitOverride = ParseEmitFlags(Unquote(inner.Value));
+                    }
+                    else
+                    {
+                        inst.Overrides[k] = UnquoteOrNull(inner.Value) ?? "";
+                    }
+                }
+                list.Add(inst);
+            }
+        }
+
+        private static void ParseFreeformInto(string value, List<IxFreeformEntry> list)
+        {
+            if (string.IsNullOrWhiteSpace(value)) return;
+            foreach (var kv in FlowMap.Parse(value))
+            {
+                string key = Unquote(kv.Key);
+                if (string.IsNullOrEmpty(key)) continue;
+                list.Add(new IxFreeformEntry { Key = key, Value = UnquoteOrNull(kv.Value) ?? "" });
+            }
+        }
+
+        // Inverse of TrdYamlWriter.EmitFlagsString: letters A/D/C/M in any order; "-" or empty = none.
+        private static IxEmitFlags ParseEmitFlags(string s)
+        {
+            var f = new IxEmitFlags();
+            if (string.IsNullOrEmpty(s) || s == "-") return f;
+            foreach (char c in s)
+            {
+                switch (c)
+                {
+                    case 'A': case 'a': f.Annotate = true; break;
+                    case 'D': case 'd': f.DocTag = true; break;
+                    case 'C': case 'c': f.Comment = true; break;
+                    case 'M': case 'm': f.Meta = true; break;
+                }
+            }
+            return f;
+        }
+
         /// <summary>Split a flow-sequence value <c>[a, b, c]</c> into its items (each item may itself be a flow map).</summary>
         private static List<string> FlowSeq(string value)
         {
@@ -466,9 +541,21 @@ namespace TheRobotDraft.Authoring.Interchange
 
             private static string ReadKey(string s, ref int i)
             {
-                int start = i;
+                // A single-quoted key (may contain spaces/colons/commas): read the whole quoted span.
+                if (i < s.Length && s[i] == '\'')
+                {
+                    int start = i; i++;
+                    while (i < s.Length)
+                    {
+                        if (s[i] == '\'') { if (i + 1 < s.Length && s[i + 1] == '\'') { i += 2; continue; } break; }
+                        i++;
+                    }
+                    if (i < s.Length) i++; // closing quote
+                    return s.Substring(start, i - start);
+                }
+                int start2 = i;
                 while (i < s.Length && s[i] != ':' && s[i] != ',' && s[i] != ' ' && s[i] != '\t') i++;
-                return s.Substring(start, i - start);
+                return s.Substring(start2, i - start2);
             }
 
             private static string ReadValue(string s, ref int i)

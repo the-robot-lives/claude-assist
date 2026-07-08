@@ -84,6 +84,30 @@ namespace TheRobotDraft.Uml
                 case IxElementType.Cloud: return ElementKind.Cloud;
                 case IxElementType.Lifeline: return ElementKind.Lifeline;
                 case IxElementType.MindNode: return ElementKind.MindNode;
+                case IxElementType.Screen: return ElementKind.Screen;
+                case IxElementType.Panel: return ElementKind.Panel;
+                case IxElementType.UiWidget: return ElementKind.UiWidget;
+                case IxElementType.Button: return ElementKind.Button;
+                case IxElementType.Label: return ElementKind.Label;
+                case IxElementType.Link: return ElementKind.Link;
+                case IxElementType.TextField: return ElementKind.TextField;
+                case IxElementType.TextArea: return ElementKind.TextArea;
+                case IxElementType.Password: return ElementKind.Password;
+                case IxElementType.Checkbox: return ElementKind.Checkbox;
+                case IxElementType.Radio: return ElementKind.Radio;
+                case IxElementType.Dropdown: return ElementKind.Dropdown;
+                case IxElementType.List: return ElementKind.List;
+                case IxElementType.UiTable: return ElementKind.Table;
+                case IxElementType.Tree: return ElementKind.Tree;
+                case IxElementType.Image: return ElementKind.Image;
+                case IxElementType.Tabs: return ElementKind.Tabs;
+                case IxElementType.Menu: return ElementKind.Menu;
+                case IxElementType.Card: return ElementKind.Card;
+                case IxElementType.Separator: return ElementKind.Separator;
+                case IxElementType.Progress: return ElementKind.Progress;
+                case IxElementType.Slider: return ElementKind.Slider;
+                case IxElementType.Breadcrumb: return ElementKind.Breadcrumb;
+                case IxElementType.Toolbar: return ElementKind.Toolbar;
                 default: return ElementKind.Class; // Unknown / unmapped → Class (stereotype preserves the original)
             }
         }
@@ -412,6 +436,7 @@ namespace TheRobotDraft.Uml
                 if (!string.IsNullOrEmpty(ix.Stereotype)) _ctl.SetMeta(nid, null, ix.Stereotype);
                 if (!string.IsNullOrEmpty(ix.Documentation)) _ctl.SetDescription(nid, ix.Documentation);
                 if (!string.IsNullOrEmpty(ix.ExternalUuid)) _ctl.SetDeepLink(nid, ix.ExternalUuid, null);
+                if (ix.Items != null && ix.Items.Count > 0) _ctl.SetPropertyItems(nid, ix.Items);
                 ApplyColorsToNode(nid, ix.FillColor, ix.LineColor, ix.TextColor);
 
                 AddIxMembers(nid, ix);
@@ -668,6 +693,9 @@ namespace TheRobotDraft.Uml
                     IsAbstract = el.IsAbstract,
                     Documentation = el.Description,
                 };
+                foreach (var item in el.Items)
+                    if (!string.IsNullOrWhiteSpace(item))
+                        ix.Items.Add(item);
                 if (_styles.TryGetValue(el.Id, out var st) && st.Has)
                 {
                     // Only emit colors the node actually carries — never invent them for an unstyled node.
@@ -822,12 +850,20 @@ namespace TheRobotDraft.Uml
         private void BuildIxMembers(ModelElement el, IxElement ix, HashSet<ElementId> included)
         {
             bool isEnum = el.Kind == ElementKind.Enum;
+            bool wireframeItemOwner = el.Kind == ElementKind.Table || el.Kind == ElementKind.List
+                || el.Kind == ElementKind.Tree || el.Kind == ElementKind.Dropdown || el.Kind == ElementKind.Menu
+                || el.Kind == ElementKind.Tabs || el.Kind == ElementKind.Toolbar || el.Kind == ElementKind.Breadcrumb;
             foreach (var childId in el.ChildIds)
             {
                 if (included != null && !included.Contains(childId)) continue;
                 if (!_model.TryGet(childId, out var c)) continue;
                 if (c.Kind == ElementKind.Field)
                 {
+                    if (wireframeItemOwner)
+                    {
+                        if (!string.IsNullOrWhiteSpace(c.Name)) ix.Items.Add(c.Name.Trim());
+                        continue;
+                    }
                     var parts = UmlMemberSignature.Parse(ElementKind.Field, c.Name);
                     if (isEnum)
                     {
@@ -899,6 +935,30 @@ namespace TheRobotDraft.Uml
                 case ElementKind.Cloud: return IxElementType.Cloud;
                 case ElementKind.Lifeline: return IxElementType.Lifeline;
                 case ElementKind.MindNode: return IxElementType.MindNode;
+                case ElementKind.Screen: return IxElementType.Screen;
+                case ElementKind.Panel: return IxElementType.Panel;
+                case ElementKind.UiWidget: return IxElementType.UiWidget;
+                case ElementKind.Button: return IxElementType.Button;
+                case ElementKind.Label: return IxElementType.Label;
+                case ElementKind.Link: return IxElementType.Link;
+                case ElementKind.TextField: return IxElementType.TextField;
+                case ElementKind.TextArea: return IxElementType.TextArea;
+                case ElementKind.Password: return IxElementType.Password;
+                case ElementKind.Checkbox: return IxElementType.Checkbox;
+                case ElementKind.Radio: return IxElementType.Radio;
+                case ElementKind.Dropdown: return IxElementType.Dropdown;
+                case ElementKind.List: return IxElementType.List;
+                case ElementKind.Table: return IxElementType.UiTable;
+                case ElementKind.Tree: return IxElementType.Tree;
+                case ElementKind.Image: return IxElementType.Image;
+                case ElementKind.Tabs: return IxElementType.Tabs;
+                case ElementKind.Menu: return IxElementType.Menu;
+                case ElementKind.Card: return IxElementType.Card;
+                case ElementKind.Separator: return IxElementType.Separator;
+                case ElementKind.Progress: return IxElementType.Progress;
+                case ElementKind.Slider: return IxElementType.Slider;
+                case ElementKind.Breadcrumb: return IxElementType.Breadcrumb;
+                case ElementKind.Toolbar: return IxElementType.Toolbar;
                 default: mapped = false; return IxElementType.Unknown;
             }
         }
