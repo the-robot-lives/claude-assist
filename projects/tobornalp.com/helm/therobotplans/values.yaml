@@ -1,7 +1,7 @@
 replicas: 1
 domain: tobornalp.com
 backend:
-  image: ops.noizu.com/tobornalp.com/backend:v1.0.4
+  image: ops.noizu.com/tobornalp.com/backend:v1.0.6
   port: 4000
   resources:
     requests:
@@ -11,7 +11,7 @@ backend:
       cpu: 500m
       memory: 512Mi
 frontend:
-  image: ops.noizu.com/tobornalp.com/frontend:v1.0.5
+  image: ops.noizu.com/tobornalp.com/frontend:v1.0.6
   port: 3000
   resources:
     requests:
