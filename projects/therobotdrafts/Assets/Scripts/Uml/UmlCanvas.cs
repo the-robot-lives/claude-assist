@@ -2202,12 +2202,40 @@ namespace TheRobotDraft.Uml
             items.Add(new MenuItem("Save  (Ctrl/Cmd+S)", true, () => { CloseMenu(); SaveDiagram(); }));
             items.Add(new MenuItem("Save As…  (Ctrl/Cmd+Shift+S)", true, () => SaveDiagramAs()));
             items.Add(new MenuItem("Open file…  (Ctrl/Cmd+O)", true, () => OpenDiagramFile()));
+            items.Add(new MenuItem("Open Recent ▸", RecentFiles.HasRecent(), () => ShowRecentFilesMenu(screenPos)));
             items.Add(MenuItem.Separator());
             items.Add(new MenuItem("Delete diagram", _activePackage.IsValid, () => DeleteCurrentDiagram()));
             items.Add(new MenuItem("Delete project", true, () => DeleteProject()));
             items.Add(new MenuItem("Delete saved file", true, () => { CloseMenu(); DeleteSavedDiagram(); }));
 
             CreateMenu(screenPos, "Diagram", items);
+        }
+
+        /// <summary>A submenu of recently opened model files (MRU). Selecting one opens it directly.</summary>
+        private void ShowRecentFilesMenu(Vector2 screenPos)
+        {
+            CloseMenu();
+            var items = new List<MenuItem>();
+            foreach (var p in RecentFiles.GetRecent())
+            {
+                var path = p;
+                string label = System.IO.Path.GetFileName(path);
+                string dir = ShortenDir(System.IO.Path.GetDirectoryName(path) ?? "");
+                if (!string.IsNullOrEmpty(dir)) label += "   — " + dir;
+                items.Add(new MenuItem(label, System.IO.File.Exists(path), () => { CloseMenu(); if (TryOpenPath(path)) { _currentDiagramPath = path; RecentFiles.AddRecent(path); if (_scene != null) _scene.FrameAll(); Flash("opened " + System.IO.Path.GetFileName(path)); } }));
+            }
+            items.Add(MenuItem.Separator());
+            items.Add(new MenuItem("Clear Recent", true, () => { RecentFiles.Clear(); CloseMenu(); Flash("cleared recent"); }));
+            CreateMenu(screenPos + new Vector2(220f, 0f), "Open Recent", items);
+        }
+
+        /// <summary>Compact a long directory path for a menu line: first segment, …, last two segments.</summary>
+        private static string ShortenDir(string dir)
+        {
+            if (string.IsNullOrEmpty(dir)) return "";
+            var segs = dir.Split(System.IO.Path.DirectorySeparatorChar, System.IO.Path.AltDirectorySeparatorChar);
+            if (segs.Length <= 3) return dir;
+            return segs[0] + System.IO.Path.DirectorySeparatorChar + "…" + System.IO.Path.DirectorySeparatorChar + string.Join(System.IO.Path.DirectorySeparatorChar.ToString(), segs[^2..]);
         }
 
         private void ShowCanvasGenerateMenu(Vector2 screenPos)
