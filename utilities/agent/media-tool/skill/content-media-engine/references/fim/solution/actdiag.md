@@ -20,7 +20,7 @@ pip install sphinxcontrib-actdiag      # Sphinx directives
 CLI rendering (command is `actdiag`):
 ```bash
 actdiag flow.diag                      # -> flow.png
-actdiag flow.diag -T svg -o flow.svg   # SVG
+actdiag flow.diag -T png -o flow.svg   # SVG
 actdiag flow.diag -T pdf -o flow.pdf   # PDF (needs [pdf] extra)
 actdiag -f /path/Font.ttf flow.diag    # embed a TTF for non-ASCII labels
 ```
