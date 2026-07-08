@@ -353,4 +353,31 @@ defmodule TherobotplansWeb.AuthController do
       end)
     end)
   end
+
+  # ── MCP connection config ────────────────────────────────────────────────
+  # Returns the host + list of MCP servers (with full URLs) so clients can
+  # build `claude mcp add` setup commands.
+  def mcp_config(conn, _params) do
+    host =
+      Application.get_env(:therobotplans, :frontend_url)
+      |> derive_host() || derive_host(conn) || "localhost"
+
+    conn
+    |> put_status(:ok)
+    |> json(%{host: host, servers: Therobotplans.MCPServers.for_host(host)})
+  end
+
+  defp derive_host(nil), do: nil
+  defp derive_host(url) when is_binary(url) do
+    case URI.parse(url) do
+      %URI{host: host} when is_binary(host) and host != "" -> host
+      _ -> nil
+    end
+  end
+  defp derive_host(conn) do
+    case conn.host do
+      host when is_binary(host) and host != "" -> host
+      _ -> nil
+    end
+  end
 end

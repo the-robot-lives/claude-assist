@@ -74,3 +74,15 @@ databaseChangeLog:
   - include:
       file: 024-media-variants-cache.yaml
       relativeToChangelogFile: true
+  - include:
+      file: 025-mcp-api-keys.yaml
+      relativeToChangelogFile: true
+  - include:
+      file: 026-items-queues.yaml
+      relativeToChangelogFile: true
+  - include:
+      file: 027-cross-cutting.yaml
+      relativeToChangelogFile: true
+  - include:
+      file: 028-item-human-keys.yaml
+      relativeToChangelogFile: true

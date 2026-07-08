@@ -52,6 +52,27 @@ defmodule TherobotplansWeb.Router do
     get "/health", HealthController, :index
   end
 
+  # MCP JWT bootstrap — exchange a raw MCP API key for a short-lived MCP JWT.
+  # Unauthenticated (the raw key IS the credential). Identity is taken from the
+  # verified key's owner row, never from request-supplied ids.
+  scope "/api/mcp", TherobotplansWeb do
+    pipe_through [:api, :rate_limited_auth]
+    post "/token", TokenController, :create
+  end
+
+  # ── MCP server endpoints ─────────────────────────────────────────────────
+  # Each domain server is mounted on its own subdomain at `/mcp`; the root
+  # aggregator serves the bare host at `/mcp`. Requests must present a Bearer
+  # MCP JWT (see TherobotplansWeb.MCPConfig). NOTE: keep these host: scopes in
+  # sync with the Therobotplans.MCPServers catalog and the application.ex
+  # children list — a server missing from any of the three is dead.
+  scope "/", host: "projects." do
+    pipe_through [:api]
+    forward "/mcp",
+            Noizu.MCP.Transport.StreamableHTTP.Plug,
+            TherobotplansWeb.MCPConfig.plug_opts(Therobotplans.MCP.Projects)
+  end
+
   scope "/api/v1", TherobotplansWeb do
     pipe_through [:api, :rate_limited_auth]
     post "/auth/register", AuthController, :register
@@ -181,6 +202,21 @@ defmodule TherobotplansWeb.Router do
     resources "/policies", PolicyController, only: [:index, :create, :show, :update, :delete]
     post "/users/:user_id/policies", PolicyController, :attach_to_user
     delete "/users/:user_id/policies/:policy_id", PolicyController, :detach_from_user
+  end
+
+  # MCP connection config (host + server list) for building setup commands.
+  scope "/api/v1", TherobotplansWeb do
+    pipe_through [:api, :authenticated]
+    get "/auth/mcp/config", AuthController, :mcp_config
+  end
+
+  # Root MCP aggregator — bare host `/mcp`. Must come after the subdomain
+  # scopes so the per-domain hosts win for those hosts.
+  scope "/", TherobotplansWeb do
+    pipe_through [:api]
+    forward "/mcp",
+            Noizu.MCP.Transport.StreamableHTTP.Plug,
+            TherobotplansWeb.MCPConfig.plug_opts(Therobotplans.MCP)
   end
 
   if Application.compile_env(:therobotplans, :dev_routes) do

@@ -57,6 +57,7 @@ defmodule Therobotplans.MixProject do
       {:semaphore, "~> 1.0"},
       {:seed_helper, "~> 0.1.1"},
       {:smart_token, "~> 0.1.3"},
+      {:noizu_mcp, "~> 0.1.3"},
 
       # GenAI
       {:genai, "~> 0.3.0"},

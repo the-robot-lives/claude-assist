@@ -27,6 +27,13 @@ defmodule Therobotplans.Application do
       {Oban, Application.fetch_env!(:therobotplans, Oban)}
     ] ++ samly_children ++ [
       Therobotplans.Events.WebhookHandler,
+      # MCP servers (root aggregator + domain servers).
+      # GOTCHA: every server MUST be a child here — the supervised process
+      # starts its SSE Registry; a server omitted from this list compiles and
+      # routes but its /mcp endpoint is dead. Keep in sync with the host:
+      # scopes in TherobotplansWeb.Router and the MCPServers catalog.
+      Therobotplans.MCP,
+      Therobotplans.MCP.Projects,
       TherobotplansWeb.Endpoint
     ]
 

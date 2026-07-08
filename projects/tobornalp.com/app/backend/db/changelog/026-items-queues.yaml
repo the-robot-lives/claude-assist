@@ -1,0 +1,266 @@
+databaseChangeLog:
+  # ── Items domain (ported from NPL tickets, collapsed into final shape) ─────
+  # Items are the universal work primitive (todo/task/bug/epic/etc.). They are
+  # bound to an organization (required) with an optional project. Field/type
+  # definitions and queues (boards) are tri-scoped (global/org/project) so teams
+  # can customize per-project. Queues are methodology-aware boards with ordered
+  # stages (columns) and optional iterations (sprints/cycles).
+
+  # ── item_field_definitions (tri-scoped custom fields) ──────────────────────
+  - changeSet:
+      id: 026-create-table-item-field-definitions
+      author: therobotplans
+      changes:
+        - sql:
+            sql: |
+              CREATE TABLE item_field_definitions (
+                id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+                organization_id uuid REFERENCES organizations(id) ON DELETE CASCADE,
+                project_id uuid REFERENCES projects(id) ON DELETE CASCADE,
+                slug varchar(255) NOT NULL,
+                label varchar(255) NOT NULL,
+                field_type varchar(255) NOT NULL,
+                options jsonb,
+                default_value varchar(255),
+                description varchar(255),
+                disabled boolean NOT NULL DEFAULT false,
+                inserted_at timestamptz NOT NULL DEFAULT now(),
+                updated_at timestamptz NOT NULL DEFAULT now()
+              );
+              -- Tri-scope uniqueness: one active definition per slug per scope.
+              -- Global = both org+project NULL; org = project NULL; project = both set.
+              CREATE UNIQUE INDEX idx_item_field_definitions_global_slug
+                ON item_field_definitions (slug) WHERE organization_id IS NULL AND project_id IS NULL;
+              CREATE UNIQUE INDEX idx_item_field_definitions_org_slug
+                ON item_field_definitions (organization_id, slug) WHERE organization_id IS NOT NULL AND project_id IS NULL;
+              CREATE UNIQUE INDEX idx_item_field_definitions_project_slug
+                ON item_field_definitions (organization_id, project_id, slug) WHERE project_id IS NOT NULL;
+              CREATE INDEX idx_item_field_definitions_scope ON item_field_definitions (organization_id, project_id);
+      rollback:
+        - dropTable:
+            tableName: item_field_definitions
+
+  # ── item_type_definitions (tri-scoped item types) ──────────────────────────
+  - changeSet:
+      id: 026-create-table-item-type-definitions
+      author: therobotplans
+      changes:
+        - sql:
+            sql: |
+              CREATE TABLE item_type_definitions (
+                id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+                organization_id uuid REFERENCES organizations(id) ON DELETE CASCADE,
+                project_id uuid REFERENCES projects(id) ON DELETE CASCADE,
+                slug varchar(255) NOT NULL,
+                name varchar(255) NOT NULL,
+                description varchar(255),
+                icon varchar(255),
+                status_workflow jsonb,
+                disabled boolean NOT NULL DEFAULT false,
+                inserted_at timestamptz NOT NULL DEFAULT now(),
+                updated_at timestamptz NOT NULL DEFAULT now()
+              );
+              CREATE UNIQUE INDEX idx_item_type_definitions_global_slug
+                ON item_type_definitions (slug) WHERE organization_id IS NULL AND project_id IS NULL;
+              CREATE UNIQUE INDEX idx_item_type_definitions_org_slug
+                ON item_type_definitions (organization_id, slug) WHERE organization_id IS NOT NULL AND project_id IS NULL;
+              CREATE UNIQUE INDEX idx_item_type_definitions_project_slug
+                ON item_type_definitions (organization_id, project_id, slug) WHERE project_id IS NOT NULL;
+              CREATE INDEX idx_item_type_definitions_scope ON item_type_definitions (organization_id, project_id);
+      rollback:
+        - dropTable:
+            tableName: item_type_definitions
+
+  # ── item_type_fields (which fields belong to which type) ───────────────────
+  - changeSet:
+      id: 026-create-table-item-type-fields
+      author: therobotplans
+      changes:
+        - sql:
+            sql: |
+              CREATE TABLE item_type_fields (
+                id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+                item_type_definition_id uuid NOT NULL REFERENCES item_type_definitions(id) ON DELETE CASCADE,
+                item_field_definition_id uuid NOT NULL REFERENCES item_field_definitions(id) ON DELETE CASCADE,
+                required boolean NOT NULL DEFAULT false,
+                position integer NOT NULL DEFAULT 0,
+                inserted_at timestamptz NOT NULL DEFAULT now(),
+                updated_at timestamptz NOT NULL DEFAULT now()
+              );
+              CREATE INDEX idx_item_type_fields_type_def_id ON item_type_fields (item_type_definition_id);
+              CREATE UNIQUE INDEX idx_item_type_fields_unique
+                ON item_type_fields (item_type_definition_id, item_field_definition_id);
+      rollback:
+        - dropTable:
+            tableName: item_type_fields
+
+  # ── item_queues (tri-scoped, methodology-aware boards) ─────────────────────
+  - changeSet:
+      id: 026-create-table-item-queues
+      author: therobotplans
+      changes:
+        - sql:
+            sql: |
+              CREATE TABLE item_queues (
+                id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+                organization_id uuid REFERENCES organizations(id) ON DELETE CASCADE,
+                project_id uuid REFERENCES projects(id) ON DELETE CASCADE,
+                name varchar(255) NOT NULL,
+                slug varchar(255) NOT NULL,
+                description varchar(255),
+                methodology varchar(255) NOT NULL DEFAULT 'kanban'
+                  CHECK (methodology IN ('kanban', 'scrum', 'waterfall', 'spiral')),
+                config jsonb NOT NULL DEFAULT '{}',
+                inserted_at timestamptz NOT NULL DEFAULT now(),
+                updated_at timestamptz NOT NULL DEFAULT now()
+              );
+              CREATE UNIQUE INDEX idx_item_queues_global_slug
+                ON item_queues (slug) WHERE organization_id IS NULL AND project_id IS NULL;
+              CREATE UNIQUE INDEX idx_item_queues_org_slug
+                ON item_queues (organization_id, slug) WHERE organization_id IS NOT NULL AND project_id IS NULL;
+              CREATE UNIQUE INDEX idx_item_queues_project_slug
+                ON item_queues (organization_id, project_id, slug) WHERE project_id IS NOT NULL;
+              CREATE INDEX idx_item_queues_scope ON item_queues (organization_id, project_id);
+      rollback:
+        - dropTable:
+            tableName: item_queues
+
+  # ── board_stages (kanban columns / phases / lanes) ─────────────────────────
+  - changeSet:
+      id: 026-create-table-board-stages
+      author: therobotplans
+      changes:
+        - sql:
+            sql: |
+              CREATE TABLE board_stages (
+                id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+                queue_id uuid NOT NULL REFERENCES item_queues(id) ON DELETE CASCADE,
+                slug varchar(255) NOT NULL,
+                name varchar(255) NOT NULL,
+                kind varchar(255) NOT NULL DEFAULT 'stage',
+                position integer NOT NULL DEFAULT 0,
+                wip_limit integer,
+                config jsonb NOT NULL DEFAULT '{}',
+                inserted_at timestamptz NOT NULL DEFAULT now(),
+                updated_at timestamptz NOT NULL DEFAULT now()
+              );
+              CREATE UNIQUE INDEX idx_board_stages_queue_slug ON board_stages (queue_id, slug);
+              CREATE INDEX idx_board_stages_queue_position ON board_stages (queue_id, position);
+      rollback:
+        - dropTable:
+            tableName: board_stages
+
+  # ── board_iterations (sprints / cycles) ────────────────────────────────────
+  - changeSet:
+      id: 026-create-table-board-iterations
+      author: therobotplans
+      changes:
+        - sql:
+            sql: |
+              CREATE TABLE board_iterations (
+                id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+                queue_id uuid NOT NULL REFERENCES item_queues(id) ON DELETE CASCADE,
+                name varchar(255) NOT NULL,
+                sequence integer NOT NULL DEFAULT 0,
+                status varchar(255) NOT NULL DEFAULT 'planned'
+                  CHECK (status IN ('planned', 'active', 'completed')),
+                goal text,
+                starts_on date,
+                ends_on date,
+                config jsonb NOT NULL DEFAULT '{}',
+                inserted_at timestamptz NOT NULL DEFAULT now(),
+                updated_at timestamptz NOT NULL DEFAULT now()
+              );
+              CREATE INDEX idx_board_iterations_queue_seq ON board_iterations (queue_id, sequence);
+              CREATE INDEX idx_board_iterations_status ON board_iterations (queue_id, status);
+      rollback:
+        - dropTable:
+            tableName: board_iterations
+
+  # ── items (the universal work primitive) ───────────────────────────────────
+  - changeSet:
+      id: 026-create-table-items
+      author: therobotplans
+      changes:
+        - sql:
+            sql: |
+              CREATE TABLE items (
+                id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+                organization_id uuid NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+                project_id uuid REFERENCES projects(id) ON DELETE SET NULL,
+                title varchar(255) NOT NULL,
+                description text,
+                item_type varchar(255) NOT NULL,
+                status varchar(255) NOT NULL DEFAULT 'open',
+                priority varchar(255),
+                assignee varchar(255),
+                reporter varchar(255),
+                custom_fields jsonb NOT NULL DEFAULT '{}',
+                queue_id uuid REFERENCES item_queues(id) ON DELETE SET NULL,
+                stage_id uuid REFERENCES board_stages(id) ON DELETE SET NULL,
+                iteration_id uuid REFERENCES board_iterations(id) ON DELETE SET NULL,
+                parent_id uuid REFERENCES items(id) ON DELETE SET NULL,
+                inserted_at timestamptz NOT NULL DEFAULT now(),
+                updated_at timestamptz NOT NULL DEFAULT now()
+              );
+              CREATE INDEX idx_items_organization_id ON items (organization_id);
+              CREATE INDEX idx_items_project_id ON items (project_id);
+              CREATE INDEX idx_items_item_type ON items (item_type);
+              CREATE INDEX idx_items_status ON items (status);
+              CREATE INDEX idx_items_priority ON items (priority);
+              CREATE INDEX idx_items_assignee ON items (assignee);
+              CREATE INDEX idx_items_queue_id ON items (queue_id);
+              CREATE INDEX idx_items_stage_id ON items (stage_id);
+              CREATE INDEX idx_items_iteration_id ON items (iteration_id);
+              CREATE INDEX idx_items_parent_id ON items (parent_id);
+      rollback:
+        - dropTable:
+            tableName: items
+
+  # ── item_links (item ↔ item relationships) ─────────────────────────────────
+  - changeSet:
+      id: 026-create-table-item-links
+      author: therobotplans
+      changes:
+        - sql:
+            sql: |
+              CREATE TABLE item_links (
+                id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+                source_item_id uuid NOT NULL REFERENCES items(id) ON DELETE CASCADE,
+                target_item_id uuid NOT NULL REFERENCES items(id) ON DELETE CASCADE,
+                link_type varchar(255) NOT NULL,
+                inserted_at timestamptz NOT NULL DEFAULT now(),
+                updated_at timestamptz NOT NULL DEFAULT now()
+              );
+              CREATE INDEX idx_item_links_source ON item_links (source_item_id);
+              CREATE INDEX idx_item_links_target ON item_links (target_item_id);
+              CREATE UNIQUE INDEX idx_item_links_unique
+                ON item_links (source_item_id, target_item_id, link_type);
+      rollback:
+        - dropTable:
+            tableName: item_links
+
+  # ── item_entity_links (item ↔ arbitrary entity, polymorphic) ───────────────
+  - changeSet:
+      id: 026-create-table-item-entity-links
+      author: therobotplans
+      changes:
+        - sql:
+            sql: |
+              CREATE TABLE item_entity_links (
+                id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+                item_id uuid NOT NULL REFERENCES items(id) ON DELETE CASCADE,
+                entity_type varchar(64) NOT NULL,
+                entity_id uuid NOT NULL,
+                link_type varchar(64) NOT NULL DEFAULT 'relates_to',
+                metadata jsonb NOT NULL DEFAULT '{}'::jsonb,
+                inserted_at timestamptz NOT NULL DEFAULT now(),
+                updated_at timestamptz NOT NULL DEFAULT now()
+              );
+              CREATE UNIQUE INDEX idx_item_entity_links_uniq
+                ON item_entity_links (item_id, entity_type, entity_id, link_type);
+              CREATE INDEX idx_item_entity_links_entity
+                ON item_entity_links (entity_type, entity_id);
+      rollback:
+        - dropTable:
+            tableName: item_entity_links
