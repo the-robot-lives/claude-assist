@@ -2062,6 +2062,15 @@ namespace TheRobotDraft.Uml
                 Flash($"moved to depth layer {zEl.ZLayer - 1}");
             }));
 
+            // Link an existing element (not already on this diagram) into the active diagram — a per-diagram placement
+            // in C0's PlacementStore, never a clone (see RequestPlacement). Shown for real diagram nodes only; the
+            // picker's own filter hides anything already placed here.
+            if (KindInfo.IsDiagramNode(el.Kind))
+                items.Add(new MenuItem("🔗 Link to another diagram…", true, () =>
+                    PickElement(
+                        m => KindInfo.IsDiagramNode(m.Kind) && !_placements.Contains(_activePackage, m.Id),
+                        picked => RequestPlacement(picked, _activePackage, null))));
+
             items.Add(MenuItem.Separator());
             items.Add(new MenuItem("Copy  (Ctrl/Cmd+C)", true, () => CopyElement(pid)));
             if (_selection.Count >= 2 && AllSelectedAreCopyableNodes())

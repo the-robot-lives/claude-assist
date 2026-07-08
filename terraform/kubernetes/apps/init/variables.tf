@@ -423,6 +423,37 @@ variable "tobornalp_chart_path" {
   default = ""
 }
 
+# --- starter.therobotlives.com (start-app scaffold) -------------------------
+variable "start_app_domain" {
+  type    = string
+  default = "starter.therobotlives.com"
+}
+
+variable "start_app_app_domain" {
+  type    = string
+  default = "appstarter.therobotlives.com"
+}
+
+variable "start_app_backend_image" {
+  type    = string
+  default = "ops.noizu.com/start-app/backend:latest"
+}
+
+variable "start_app_frontend_image" {
+  type    = string
+  default = "ops.noizu.com/start-app/frontend:latest"
+}
+
+variable "start_app_tls_secret_name" {
+  type    = string
+  default = "therobotlives-tls"
+}
+
+variable "start_app_chart_path" {
+  type    = string
+  default = ""
+}
+
 # --- infra.noizu.com ----------------------------------------------------------
 variable "infra_portal_image" {
   type    = string
