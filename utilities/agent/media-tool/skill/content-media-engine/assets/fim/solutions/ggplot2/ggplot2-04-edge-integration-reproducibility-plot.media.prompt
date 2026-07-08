@@ -1,63 +1,74 @@
-schema: "0.4"
+schema: '0.4'
 id: ggplot2-04-edge-integration-reproducibility-plot
 type: visualization
 quality: high
 solution: ggplot2
 category: julia-r
 variant: edge-integration-reproducibility-plot
-
 prompt:
-  system: "Generate only runnable R code for a ggplot2 visualization. Do not include markdown fences or explanatory prose."
-  text: |
-    Create an edge-case and integration-focused ggplot2 visualization for reproducible R Markdown or Quarto use.
+  system: Generate only runnable R code for a ggplot2 visualization. Do not include markdown fences or explanatory prose.
+  text: 'Create an edge-case and integration-focused ggplot2 visualization for reproducible R Markdown or Quarto use.
+
     Build a deterministic inline data frame with missing values, zero values, negative values, an outlier, and an ordered categorical variable.
+
     Explicitly clean or filter the data before plotting, with concise comments explaining each transformation.
+
     Demonstrate a scale or coordinate edge case correctly, such as using coord_cartesian for zoom without dropping data, or filtering to positive values before scale_y_log10.
+
     Include labels, manual category ordering, theme settings, and ggsave output paths.
+
     The script should be self-contained and safe to run in CI without external files.
 
+    '
+  provider_options:
+    max_tokens: 6144
+    temperature: 0.3
 output:
   format: r
   file: ggplot2-04-edge-integration-reproducibility-plot.R
   renders:
-    - format: png
-      file: ggplot2-04-edge-integration-reproducibility-plot.png
-    - format: pdf
-      file: ggplot2-04-edge-integration-reproducibility-plot.pdf
+  - format: png
+    file: ggplot2-04-edge-integration-reproducibility-plot.png
+  - format: pdf
+    file: ggplot2-04-edge-integration-reproducibility-plot.pdf
   requirements:
-    - ggplot2
-
+  - ggplot2
+  text_format: r
+  artifact_kind: ggplot2-04-edge-integration-reproducibility-plot.R
+  formats:
+  - format: r
+  - format: png
+  - format: pdf
 evaluation:
   checklist:
-    - Handles missing, zero, negative, outlier, and ordered category edge cases.
-    - Uses coord_cartesian or scale transformation correctly without misleading dropped data.
-    - Includes concise comments explaining data preparation and reproducibility choices.
-    - Saves outputs suitable for R Markdown, Quarto, or CI artifacts.
+  - Handles missing, zero, negative, outlier, and ordered category edge cases.
+  - Uses coord_cartesian or scale transformation correctly without misleading dropped data.
+  - Includes concise comments explaining data preparation and reproducibility choices.
+  - Saves outputs suitable for R Markdown, Quarto, or CI artifacts.
   rubric:
     Format validity:
       weight: 30
-      criteria: "The response is valid R code with correct ggplot2 syntax, factor ordering, missing-data handling, and export calls."
+      criteria: The response is valid R code with correct ggplot2 syntax, factor ordering, missing-data handling, and export calls.
     Semantic completeness:
       weight: 30
-      criteria: "The plot demonstrates edge-case handling, reproducibility, integration with report pipelines, and safe scale or coordinate usage."
+      criteria: The plot demonstrates edge-case handling, reproducibility, integration with report pipelines, and safe scale or coordinate usage.
     Visual/structural quality:
       weight: 25
-      criteria: "The resulting figure is interpretable, clearly labeled, and visually honest about filtering, zooming, and category order."
+      criteria: The resulting figure is interpretable, clearly labeled, and visually honest about filtering, zooming, and category order.
     Robustness:
       weight: 15
-      criteria: "The code is deterministic, self-contained, avoids log-scale invalid values, and produces stable output files."
+      criteria: The code is deterministic, self-contained, avoids log-scale invalid values, and produces stable output files.
   pass_conditions:
-    - The code explicitly handles missing values.
-    - The code addresses zero or negative values before any log scale is used.
-    - The code preserves or defines categorical order.
-    - The code writes PNG and PDF outputs.
-
+  - The code explicitly handles missing values.
+  - The code addresses zero or negative values before any log scale is used.
+  - The code preserves or defines categorical order.
+  - The code writes PNG and PDF outputs.
 tags:
-  - fim
-  - julia-r
-  - ggplot2
-  - reproducibility
-  - edge-cases
-  - r-markdown
-  - quarto
-  - ci
+- fim
+- julia-r
+- ggplot2
+- reproducibility
+- edge-cases
+- r-markdown
+- quarto
+- ci

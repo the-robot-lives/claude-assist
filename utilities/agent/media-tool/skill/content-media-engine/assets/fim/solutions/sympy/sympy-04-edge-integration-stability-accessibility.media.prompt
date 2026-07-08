@@ -1,0 +1,75 @@
+---
+schema: "0.4"
+id: fim-math-and-scientific-rendering-sympy-04-edge-integration-stability-accessibility
+type: data
+quality: high
+solution: sympy
+category: math-and-scientific-rendering
+variant: edge-integration-stability-accessibility
+references:
+- references/fim/overview/geospatial-math-scientific/sympy.md
+- references/fim/solution/sympy.md
+prompt:
+  system: |-
+    You are a senior SymPy numeric-stability engineer. Output only one complete ASCII Python file using SymPy. No Markdown fences or prose outside the source.
+  text: |-
+    Create a SymPy edge-case script for evaluating (1-cos(x))/x**2 near x=0. Prove the exact limit is 1/2, derive the stable series, compare direct NumPy evaluation with lambdified stable evaluation over selected tiny x values, write a CSV table, and save a log-scale error plot.
+
+    Requirements: use limit, series, removeO, lambdify, Rational, numpy only after symbolic derivation, explicit x=0 handling, labeled units for dimensionless x and relative error, and comments containing alt text for the exported plot.
+  provider_options:
+    temperature: 0.2
+    max_tokens: 8192
+output:
+  text_format: python
+  artifact_kind: sympy-script
+  formats:
+  - format: py
+  - format: csv
+  - format: svg
+  - format: png
+evaluation:
+  checklist:
+  - "YAML parses and required schema 0.4 fields are present."
+  - "Python source is complete, ASCII-only, and separates symbolic proof from numeric comparison."
+  - "Math correctness covers exact limit, stable series, x=0 handling, direct versus stable error, and plot values."
+  - "Notation validity covers SymPy expressions, LaTeX or text labels, CSV headers, units, and alt-text comments."
+  - "Renderability covers Python execution, CSV writing, saved log-scale plot, and no GUI requirement."
+  - "Labels and units identify x, direct value, stable value, relative error, limit, and precision."
+  - "Domain edge cases cover x=0, tiny x cancellation, float contamination, lambdify warnings, and missing dependencies."
+  rubric:
+  - name: Format validity
+    weight: 30
+    criteria:
+    - "Output is one complete ASCII Python file with no Markdown wrapper."
+    - "The script uses valid SymPy, NumPy, CSV, and plotting APIs and writes stable outputs."
+    - "The source documents run commands and dependencies."
+  - name: Semantic completeness
+    weight: 30
+    criteria:
+    - "Exact limit, stable series, direct comparison, CSV, log-scale plot, and alt-text comments are all present."
+    - "SymPy performs the symbolic proof before numeric evaluation."
+    - "Numeric-stability conclusions are correct."
+  - name: Visual/structural quality
+    weight: 25
+    criteria:
+    - "The error plot and CSV headers are clear and correctly labeled."
+    - "Text output explains the edge case concisely."
+    - "Accessibility comments summarize the plot accurately."
+  - name: Robustness
+    weight: 15
+    criteria:
+    - "Handles zero, tiny magnitudes, cancellation, and dependency failures."
+    - "Uses exact rationals before explicit floating conversion."
+    - "Documents limitations of direct floating evaluation."
+  pass_conditions:
+  - "Rubric weights are exactly Format validity 30, Semantic completeness 30, Visual/structural quality 25, Robustness 15."
+  - "Score is 80 or higher out of 100 with no critical failure in math correctness, notation validity, renderability, or accessibility."
+  - "The artifact safely evaluates the near-zero expression and exports labeled data and plots."
+  - "Domain edge cases and accessibility output are explicit."
+tags:
+- fim
+- math-and-scientific-rendering
+- sympy
+- edge-integration-stability-accessibility
+- numeric-stability
+- lambdify

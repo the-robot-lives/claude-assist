@@ -1,0 +1,68 @@
+schema: "0.4"
+id: fim-notebook-livebook-and-widgets-kino-ets-03-teaching-exploration-widget
+type: data
+quality: high
+solution: kino-ets
+category: notebook-livebook-and-widgets
+variant: teaching-exploration-widget
+prompt:
+  system: |-
+    You are a senior Elixir Livebook educator. Output only one complete ASCII Elixir Livebook code cell for Kino.ETS. No Markdown fences, no prose outside code. Make ETS behavior teachable through runnable examples and concise comments.
+  text: |-
+    Create a Kino.ETS teaching cell that explores ETS table types and access modes. Build small deterministic examples for :set, :ordered_set, :bag, and :duplicate_bag where practical, render each with Kino.ETS.new/1, and include a small Kino.DataTable projection that gives named columns for one table. Explain key position, tuple columns, public/protected/private access implications, manual refresh, and when to pair with Kino.Process to find table owners.
+
+    Requirements: include Livebook compatibility comments, avoid trying to inspect an inaccessible private table, demonstrate fallback table recreation, include accessible labels and clear names, document data shapes, and include safe execution checks for refresh loops, production tables, eval, shell calls, credentials, and remote data.
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.2
+    top_p: 0.9
+output:
+  text_format: elixir
+  artifact_kind: livebook-kino-ets-teaching-cell
+  formats:
+  - format: exs
+evaluation:
+  checklist:
+  - "Import check: generated code installs kino, creates multiple ETS table examples, and renders Kino.ETS.new/1."
+  - "Notebook compatibility: comments identify Livebook/Kino runtime and explain how this differs from Jupyter widgets."
+  - "Reactive state: examples explain manual Refresh, rerun behavior, explicit inserts, and safe optional animation."
+  - "Data shape: table type, access mode, tuple position columns, and named DataTable projection are documented."
+  - "Accessibility and fallback: example names and projected columns are readable and fallback recreation is deterministic."
+  - "Safe execution: no private-table inspection assumptions, production polling, credentials, remote data, eval, or shell commands."
+  rubric:
+  - name: Format validity
+    weight: 30
+    criteria:
+    - "Output is one complete ASCII Elixir Livebook code cell with no Markdown fences or explanatory wrapper."
+    - "The code is valid Elixir and creates each table before rendering it."
+    - "Comments are concise and accurately name current Kino.ETS behavior."
+  - name: Semantic completeness
+    weight: 30
+    criteria:
+    - "Teaches ETS table types, access modes, key position, refresh behavior, and DataTable projection."
+    - "Uses Kino.ETS.new/1 for raw ETS viewing and Kino.DataTable only as a labeled companion."
+    - "Includes notebook/livebook compatibility, reactive state, data shape, accessibility, fallback, and safe execution checks."
+  - name: UX/structural quality
+    weight: 25
+    criteria:
+    - "The examples progress from simple to more nuanced ETS behavior."
+    - "Names and comments help users interpret positional columns."
+    - "The companion DataTable clarifies one raw tuple shape without replacing Kino.ETS."
+  - name: Robustness
+    weight: 15
+    criteria:
+    - "Handles stale or already-existing named tables deterministically."
+    - "Avoids inaccessible private table reads and unbounded refresh loops."
+    - "Keeps teaching data small and safe for repeated Livebook execution."
+  pass_conditions:
+  - "All required YAML fields are present and the generated artifact is one valid ASCII Elixir Livebook cell."
+  - "Rubric weights are exactly Format validity 30, Semantic completeness 30, UX/structural quality 25, Robustness 15."
+  - "The prompt requires notebook/livebook compatibility, reactive state, data shape, accessibility, fallback, and safe execution checks."
+  - "The solution remains Kino.ETS-centered and teaches current ETS viewer limits accurately."
+tags:
+- fim
+- notebook-livebook-and-widgets
+- livebook
+- kino-ets
+- teaching-exploration-widget
+

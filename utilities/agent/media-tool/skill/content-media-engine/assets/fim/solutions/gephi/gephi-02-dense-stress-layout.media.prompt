@@ -1,52 +1,71 @@
-schema: "0.4"
+schema: '0.4'
 id: gephi-02-dense-stress-layout
 type: visualization
 quality: high
 solution: gephi
 category: network-and-graph-visualization
 variant: dense-graph-stress-layout
-
 prompt:
   context:
-    - "references/fim/overview/network-3d-graphics/gephi.md"
-    - "references/fim/solution/gephi.md"
-  text: |
-    Define a Gephi dense-graph stress workflow for a 100000-node, 800000-edge
+  - references/fim/overview/network-3d-graphics/gephi.md
+  - references/fim/solution/gephi.md
+  text: 'Define a Gephi dense-graph stress workflow for a 100000-node, 800000-edge
+
     social network sample. Include JVM heap guidance, import validation, component
+
     filtering, OpenOrd or ForceAtlas2 with approximate repulsion, label suppression,
+
     modularity partition coloring, degree-range filters, Noverlap, and Preview
+
     export settings. Report stress metrics: import time, memory pressure, layout
+
     algorithm, edge filter thresholds, visible node count, and final export size.
 
+    '
+  system: You generate artifacts for gephi. Output only the requested artifact content. No markdown fences, no explanations.
+  provider_options:
+    max_tokens: 6144
+    temperature: 0.3
 output:
   formats:
-    - format: md
-    - format: csv
-    - format: png
-  expected_artifact: "Dense Gephi stress runbook with metrics table and exported preview image."
-
+  - format: md
+  - format: csv
+  - format: png
+  expected_artifact: Dense Gephi stress runbook with metrics table and exported preview image.
+  text_format: gephi
+  artifact_kind: Dense Gephi stress runbook with metrics table and exported preview image.
 evaluation:
   checklist:
-    - "Uses Gephi-specific large graph practices and memory cautions."
-    - "Includes filtering and layout choices appropriate for dense networks."
-    - "Captures stress metrics before and after filtering."
-    - "Keeps labels and preview settings scale-aware."
+  - Uses Gephi-specific large graph practices and memory cautions.
+  - Includes filtering and layout choices appropriate for dense networks.
+  - Captures stress metrics before and after filtering.
+  - Keeps labels and preview settings scale-aware.
   rubric:
-    - name: Format validity
-      weight: 30
-      description: "YAML parses and declares runbook, metrics, and image outputs."
-    - name: Semantic completeness
-      weight: 30
-      description: "Covers dense import, memory, layout, filtering, preview, and export."
-    - name: Visual/structural quality
-      weight: 25
-      description: "Final view communicates communities and hubs despite dense input."
-    - name: Robustness
-      weight: 15
-      description: "Workflow avoids out-of-memory and unreadable label-heavy exports."
+  - name: Format validity
+    weight: 30
+    description: YAML parses and declares runbook, metrics, and image outputs.
+    criteria: YAML parses and declares runbook, metrics, and image outputs.
+  - name: Semantic completeness
+    weight: 30
+    description: Covers dense import, memory, layout, filtering, preview, and export.
+    criteria: Covers dense import, memory, layout, filtering, preview, and export.
+  - name: Visual/structural quality
+    weight: 25
+    description: Final view communicates communities and hubs despite dense input.
+    criteria: Final view communicates communities and hubs despite dense input.
+  - name: Robustness
+    weight: 15
+    description: Workflow avoids out-of-memory and unreadable label-heavy exports.
+    criteria: Workflow avoids out-of-memory and unreadable label-heavy exports.
   pass_conditions:
-    - "The prompt acknowledges Gephi's memory-bound dense graph limits."
-    - "Stress metrics are specified."
-    - "The dense graph is filtered before final export."
-
-tags: [fim, gephi, dense-graph, stress-layout, openord, forceatlas2, metrics]
+  - The prompt acknowledges Gephi's memory-bound dense graph limits.
+  - Stress metrics are specified.
+  - The dense graph is filtered before final export.
+tags:
+- fim
+- gephi
+- dense-graph
+- stress-layout
+- openord
+- forceatlas2
+- metrics

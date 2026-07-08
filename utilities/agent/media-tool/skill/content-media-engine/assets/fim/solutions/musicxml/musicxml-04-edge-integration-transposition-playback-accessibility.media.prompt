@@ -1,0 +1,89 @@
+schema: '0.4'
+id: musicxml-04-edge-integration-transposition-playback-accessibility
+type: document
+quality: high
+solution: musicxml
+category: music-notation
+variant: edge-integration-transposition-playback-accessibility
+references:
+- references/fim/overview/music-audio-ml/musicxml.md
+- references/fim/solution/musicxml.md
+prompt:
+  system: |-
+    You generate MusicXML score documents. Output only one complete XML document. Do not use markdown fences or explanations.
+  text: |
+    Create the edge integration transposition playback accessibility case for musicxml.
+
+    Scenario:
+    Create an edge and integration case that combines transposition, playback or export, responsive rendering, accessibility, and failure handling. Include a concert-pitch source and a transposed view, a playback cursor or exported audio/MIDI path when supported, keyboard controls, screen-reader text, and a visible parse or auth error state.
+
+    Implementation requirements:
+    - Use this solution source: MusicXML 4.0 score-partwise XML.
+    - Target common consumers such as OSMD, MuseScore, Finale, Sibelius, Dorico, and music21 by using conservative MusicXML 4.0 score-partwise structures.
+    - Syntax contract: Use valid MusicXML: score-partwise, part-list, score-part IDs, part, measure, attributes, divisions, key, time, clef, notes, duration, type, pitch step/alter/octave, rests, backup, forward, directions, lyrics, ties, slurs, and barlines.
+    - Musical coherence contract: pitches, chords, lyrics, articulations, and form must describe one coherent musical example, not disconnected fragments.
+    - Measure-duration contract: every measure, part, voice, layer, sequence, or track must sum to the declared time signature; pickups, tuplets, ties, repeats, and final bars must be explicitly represented.
+    - Clef/key contract: declare initial clefs, keys, time signatures, part names, and any changes in the solution-native structure; transposed parts must use correct written key signatures and accidentals.
+    - Playback/render compatibility contract: include the exact load, render, playback, export, or fallback path expected for this solution and explain unsupported playback honestly inside code comments or metadata.
+    - Accessibility contract: include title, instrument labels, measure numbers or landmarks, keyboard-operable controls when interactive, and text alternatives for screen readers.
+    - Provide renderer notes in XML metadata, midi-instrument and sound tempo hints, and avoid consumer-specific extensions unless a fallback is included.
+    - Prefer interoperability over clever layout tricks and keep duration/type consistency exact.
+    - Include at least one non-trivial edge case: pickup measure, incomplete final bar, enharmonic spelling, percussion or tab, compressed import, service error, missing font, or draft-schema fallback.
+    - Transposition must preserve measure duration, chord symbols, key signatures, accidentals, and written clefs.
+    - Playback or render compatibility must be explicit, including browser autoplay, missing assets, CORS, service auth, or renderer fallback behavior as relevant.
+    - Include deterministic sample score data directly in the artifact; do not depend on private credentials or remote score files except public library CDNs or clearly marked placeholders.
+    - Output only the final artifact requested by the system message, with no commentary outside the artifact.
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.2
+output:
+  text_format: xml
+  artifact_kind: musicxml-score-partwise
+  formats:
+  - format: musicxml
+  - format: xml
+  - format: mxl
+  - format: svg
+  - format: midi
+evaluation:
+  checklist:
+  - 'Format validity: prompt YAML parses as schema 0.4 and the generated artifact is exactly the requested output with no markdown fences.'
+  - 'Syntax: generated artifact uses valid musicxml syntax or API calls and includes required parser, compiler, renderer, service, or font setup.'
+  - 'Musical coherence: melody, harmony, rhythm, lyrics, annotations, and form describe one coherent score suitable for the scenario.'
+  - 'Measure duration: every measure in every part, voice, layer, sequence, or track sums to the declared meter; pickups, tuplets, ties, repeats, and final bars are handled explicitly.'
+  - 'Clefs and keys: initial clefs, keys, time signatures, part names, transpositions, and any changes are declared in solution-native fields.'
+  - 'Playback/render compatibility: load, render, compile, export, playback, cursor, soundfont, service auth, font, CORS, or fallback behavior is correct for the solution.'
+  - 'Accessibility: artifact includes title, part labels, text fallback or source view, keyboard-operable controls when interactive, and screen-reader friendly summaries.'
+  - 'Robustness: artifact handles missing fonts/assets, malformed notation, large or dense scores, responsive layout, and cleanup or teardown without runtime failure.'
+  rubric:
+  - name: Format validity
+    weight: 30
+    criteria: The prompt YAML and generated artifact use the required schema, file format, solution syntax, parser or API contract, and contain no markdown fences or malformed structures.
+  - name: Semantic completeness
+    weight: 30
+    criteria: The score covers the requested scenario with complete musical content, annotations, metadata, parts, playback or export path, and solution-specific capabilities.
+  - name: Visual/structural quality
+    weight: 25
+    criteria: The notation structure, engraving or layout hierarchy, labels, spacing, page or responsive behavior, and instructional affordances are clear and professional.
+  - name: Robustness
+    weight: 15
+    criteria: The artifact handles dense material, edge notation, transposition, accessibility, missing assets, service/auth errors, render fallback, playback constraints, and teardown safely.
+  pass_conditions:
+  - YAML parses successfully and all prompt file bytes are ASCII-only.
+  - Rubric weights are exactly 30, 30, 25, and 15, summing to 100.
+  - Generated artifact passes solution syntax validation or the closest practical parser/compiler/load check.
+  - Every measure duration is consistent with declared meter across all parts, voices, tracks, layers, or sequences.
+  - Clefs, keys, time signatures, part names, transpositions, and accidentals are explicit and musically coherent.
+  - Playback, render, compile, export, font, service, or fallback compatibility checks are satisfied for the target solution.
+  - Accessibility and robustness checklist items are satisfied; no rubric dimension scores zero.
+tags:
+- fim
+- music-notation
+- musicxml
+- edge-integration-transposition-playback-accessibility
+- document
+- edge-case
+- integration
+- transposition
+- playback
+- accessibility

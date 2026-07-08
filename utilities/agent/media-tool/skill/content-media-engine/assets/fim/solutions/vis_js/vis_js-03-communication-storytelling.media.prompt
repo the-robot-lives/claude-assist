@@ -1,53 +1,72 @@
-schema: "0.4"
+schema: '0.4'
 id: vis_js-03-communication-storytelling
 type: visualization
 quality: high
 solution: vis_js
 category: network-and-graph-visualization
 variant: communication-storytelling-graph
-
 prompt:
   context:
-    - "references/fim/overview/network-3d-graphics/vis_js.md"
-    - "references/fim/solution/vis_js.md"
-  text: |
-    Create a vis-network storytelling graph for a cross-team workflow. Use a
+  - references/fim/overview/network-3d-graphics/vis_js.md
+  - references/fim/solution/vis_js.md
+  text: 'Create a vis-network storytelling graph for a cross-team workflow. Use a
+
     hierarchical left-to-right layout with directed arrows for request, approval,
+
     handoff, blocker, and escalation edges. Add step buttons that select and focus
+
     each workflow phase, hover tooltips with title fields, smooth cubicBezier edges,
+
     group styling for team ownership, and a final fit animation showing the whole
+
     workflow. Keep physics configured for hierarchicalRepulsion or disabled after
+
     stabilization so the story remains stable.
 
+    '
+  system: You generate artifacts for vis_js. Output only the requested artifact content. No markdown fences, no explanations.
+  provider_options:
+    max_tokens: 6144
+    temperature: 0.3
 output:
   formats:
-    - format: html
-    - format: png
+  - format: html
+  - format: png
   renderer: vis-network-canvas
-  expected_artifact: "Interactive workflow story graph with hierarchical layout."
-
+  expected_artifact: Interactive workflow story graph with hierarchical layout.
+  text_format: vis_js
+  artifact_kind: Interactive workflow story graph with hierarchical layout.
 evaluation:
   checklist:
-    - "Uses vis-network hierarchical layout and directed arrows."
-    - "Includes phase step controls, focus, fit, and tooltips."
-    - "Uses group styling for ownership and edge types for workflow semantics."
-    - "Keeps layout stable across story phases."
+  - Uses vis-network hierarchical layout and directed arrows.
+  - Includes phase step controls, focus, fit, and tooltips.
+  - Uses group styling for ownership and edge types for workflow semantics.
+  - Keeps layout stable across story phases.
   rubric:
-    - name: Format validity
-      weight: 30
-      description: "YAML parses and declares vis-network story output."
-    - name: Semantic completeness
-      weight: 30
-      description: "Covers storytelling phases, hierarchy, interactions, and workflow edge semantics."
-    - name: Visual/structural quality
-      weight: 25
-      description: "Workflow story is easy to scan and follow from left to right."
-    - name: Robustness
-      weight: 15
-      description: "Stabilization and focus changes do not shift the narrative unpredictably."
+  - name: Format validity
+    weight: 30
+    description: YAML parses and declares vis-network story output.
+    criteria: YAML parses and declares vis-network story output.
+  - name: Semantic completeness
+    weight: 30
+    description: Covers storytelling phases, hierarchy, interactions, and workflow edge semantics.
+    criteria: Covers storytelling phases, hierarchy, interactions, and workflow edge semantics.
+  - name: Visual/structural quality
+    weight: 25
+    description: Workflow story is easy to scan and follow from left to right.
+    criteria: Workflow story is easy to scan and follow from left to right.
+  - name: Robustness
+    weight: 15
+    description: Stabilization and focus changes do not shift the narrative unpredictably.
+    criteria: Stabilization and focus changes do not shift the narrative unpredictably.
   pass_conditions:
-    - "The graph communicates a workflow story rather than a generic network."
-    - "vis-network layout and interaction options are central."
-    - "The final fit state shows the complete workflow."
-
-tags: [fim, vis-js, vis-network, storytelling, workflow-graph, hierarchical-layout]
+  - The graph communicates a workflow story rather than a generic network.
+  - vis-network layout and interaction options are central.
+  - The final fit state shows the complete workflow.
+tags:
+- fim
+- vis-js
+- vis-network
+- storytelling
+- workflow-graph
+- hierarchical-layout

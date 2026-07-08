@@ -1,0 +1,73 @@
+schema: "0.4"
+id: lottie-02-dense-timeline-stress
+type: interactive
+quality: high
+solution: lottie
+category: animation-and-motion
+variant: dense-timeline-stress
+references:
+  - "references/fim/overview/canvas-svg-creative-animation/lottie.md"
+  - "references/fim/solution/lottie.md"
+prompt:
+  system: |-
+    Generate production-quality Lottie stress playback assets for FIM evaluation. Output only a complete self-contained HTML document with inline CSS, JavaScript, and compact inline animation data.
+  text: |-
+    Create a dense Lottie playback stress harness for multiple instances, segment control, and renderer choice.
+
+    Scenario:
+    Build a dashboard of 12 small Lottie animation instances plus one primary preview. Use shared compact inline animationData, lazy or staged initialization, controls for play all, pause all, stop all, segment sweep, speed, renderer mode, and destroy/reload. Include diagnostics for instance count, total frames, renderer, frame progress, and reduced-motion status.
+
+    Implementation requirements:
+    - Use lottie-web 5.12.2 from a CDN or equivalent import and load each instance with a validated DOM container.
+    - Compare "svg" and "canvas" renderer modes or provide a control to rebuild with either mode.
+    - Include explicit frameRate, total frame count, segment ranges, speed, direction, loop settings, and autoplay settings.
+    - Use lottie.setQuality(), setSubframe(false) where useful, progressiveLoad renderer settings, and destroy() before reload.
+    - Provide a reduced-motion mode that renders poster or final frames, disables autoplay, and avoids simultaneous loops.
+    - Keep all players, controls, and diagnostics in a stable responsive grid with no overlap or clipping.
+    - Handle data_failed and malformed data fallback without leaving blank player boxes.
+    - Output only the final artifact, with no markdown fences or explanatory prose outside the artifact.
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.2
+output:
+  text_format: html
+  artifact_kind: lottie-html-dense-timeline-stress
+  formats:
+    - format: html
+  dimensions:
+    width: 1440
+    height: 900
+  render_expectation: "Dense Lottie player grid that remains responsive through renderer switches, segment sweeps, destroy, and reload."
+evaluation:
+  checklist:
+    - "Format validity: YAML parses under schema 0.4 and generated output is exactly one HTML artifact with no markdown fences."
+    - "Lottie API: Uses multiple loadAnimation() calls, valid containers, renderer switching, events, setQuality, setSubframe, and destroy()."
+    - "Motion timing: Specifies frameRate, total frames, segments, speed, direction, looping, autoplay, and staged playback."
+    - "Visual quality: Player grid, primary preview, controls, and diagnostics stay readable and non-overlapping."
+    - "Reduced motion: Renders static posters or final frames and disables simultaneous autoplay loops."
+    - "Performance: Uses staged initialization, renderer choice, quality settings, and cleanup to limit memory and DOM pressure."
+  rubric:
+    - name: "Format validity"
+      weight: 30
+      criteria: "YAML and generated HTML are syntactically valid, required fields are present, id and file name match, and the artifact uses Lottie rather than a substitute animation library."
+    - name: "Semantic completeness"
+      weight: 30
+      criteria: "The artifact includes dense player instances, shared animation data, renderer comparison, frame and segment controls, diagnostics, target validation, reduced motion, and cleanup."
+    - name: "Motion/visual quality"
+      weight: 25
+      criteria: "Dense playback remains legible, well-framed, consistently timed, and free of player, control, or diagnostic overlap."
+    - name: "Robustness"
+      weight: 15
+      criteria: "Handles missing containers, data failure, renderer rebuild, reduced motion, resize, and performance pressure without blank screens or runtime errors."
+  pass_conditions:
+    - "Rubric weights are exactly 30, 30, 25, and 15 for a total of 100."
+    - "YAML parses successfully and all prompt text is ASCII-only."
+    - "Generated artifact runs with no console errors when lottie-web is available."
+    - "Score is at least 80 out of 100 with no zero score in any rubric dimension."
+tags:
+  - "fim"
+  - "animation-and-motion"
+  - "lottie"
+  - "dense-timeline-stress"
+  - "multi-instance"
+  - "performance"

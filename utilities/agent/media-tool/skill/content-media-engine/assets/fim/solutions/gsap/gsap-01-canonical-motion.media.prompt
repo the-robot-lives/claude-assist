@@ -1,0 +1,73 @@
+schema: "0.4"
+id: gsap-01-canonical-motion
+type: interactive
+quality: high
+solution: gsap
+category: animation-and-motion
+variant: canonical-motion
+references:
+  - "references/fim/overview/canvas-svg-creative-animation/gsap.md"
+  - "references/fim/solution/gsap.md"
+prompt:
+  system: |-
+    Generate production-quality GSAP animation assets for FIM evaluation. Output only a complete self-contained HTML document with inline CSS and JavaScript.
+  text: |-
+    Create a canonical GSAP browser animation that demonstrates professional timeline sequencing on DOM and SVG targets.
+
+    Scenario:
+    Build a motion scene with a hero panel, SVG signal path, four metric chips, and control buttons. On load, use gsap.set() for initial states, then play a looped gsap.timeline() that reveals the hero, draws the SVG path, staggers the chips, and animates a subtle background accent.
+
+    Implementation requirements:
+    - Use GSAP 3 from a CDN or equivalent import and the gsap.to(), gsap.fromTo(), gsap.set(), and gsap.timeline() APIs.
+    - Build and validate all DOM and SVG targets before timeline creation; show a readable fallback if any critical selector is missing.
+    - Specify durations in seconds, named ease values, timeline labels or position parameters, repeat, yoyo or repeatDelay, and control behavior.
+    - Include play, pause, reverse, restart, progress seek, and timeScale controls.
+    - Use transforms and opacity for movement; animate SVG strokeDashoffset or path-related attributes for line drawing.
+    - Honor prefers-reduced-motion by setting the final state and disabling looped motion.
+    - Keep hero, chips, SVG, controls, and labels non-overlapping across desktop and mobile layouts.
+    - Output only the final artifact, with no markdown fences or explanatory prose outside the artifact.
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.22
+output:
+  text_format: html
+  artifact_kind: gsap-html-canonical-motion
+  formats:
+    - format: html
+  dimensions:
+    width: 1440
+    height: 900
+  render_expectation: "Interactive GSAP timeline suitable for capture at initial state, mid-timeline, and looped state."
+evaluation:
+  checklist:
+    - "Format validity: YAML parses under schema 0.4 and generated output is exactly one HTML artifact with no markdown fences."
+    - "GSAP API: Uses gsap.set(), gsap.to(), gsap.fromTo(), and gsap.timeline() with valid DOM/SVG targets."
+    - "Motion timing: Specifies durations in seconds, easing, timeline labels or positions, repeat or yoyo behavior, and controls."
+    - "Visual quality: Initial and animated states are nonblank, readable, and free of overlap."
+    - "Reduced motion: Honors prefers-reduced-motion with final state rendering and no forced infinite motion."
+    - "Performance: Uses transform/opacity and SVG attributes appropriately and avoids layout thrash."
+  rubric:
+    - name: "Format validity"
+      weight: 30
+      criteria: "YAML and generated HTML are syntactically valid, required fields are present, id and file name match, and the artifact uses GSAP rather than a substitute animation library."
+    - name: "Semantic completeness"
+      weight: 30
+      criteria: "The artifact covers GSAP timeline sequencing, target validation, SVG drawing, controls, looping, reduced motion, and referenced GSAP patterns."
+    - name: "Motion/visual quality"
+      weight: 25
+      criteria: "Motion has clear easing, rhythm, hierarchy, and composition; animated content stays legible and non-overlapping."
+    - name: "Robustness"
+      weight: 15
+      criteria: "Handles missing targets, reduced motion, resize, controls, and performance constraints without blank screens or runtime errors."
+  pass_conditions:
+    - "Rubric weights are exactly 30, 30, 25, and 15 for a total of 100."
+    - "YAML parses successfully and all prompt text is ASCII-only."
+    - "Generated artifact runs with no console errors when GSAP is available."
+    - "Score is at least 80 out of 100 with no zero score in any rubric dimension."
+tags:
+  - "fim"
+  - "animation-and-motion"
+  - "gsap"
+  - "canonical-motion"
+  - "timeline"
+  - "svg-animation"

@@ -1,54 +1,75 @@
-schema: "0.4"
+schema: '0.4'
 id: vis_js-04-integration-analysis-output
 type: data
 quality: high
 solution: vis_js
 category: network-and-graph-visualization
 variant: edge-integration-analysis-output
-
 prompt:
   context:
-    - "references/fim/overview/network-3d-graphics/vis_js.md"
-    - "references/fim/solution/vis_js.md"
-  text: |
-    Emit a vis-network integration package for an embeddable dependency graph.
+  - references/fim/overview/network-3d-graphics/vis_js.md
+  - references/fim/solution/vis_js.md
+  text: 'Emit a vis-network integration package for an embeddable dependency graph.
+
     Provide nodes and edges arrays suitable for vis.DataSet, an options object with
+
     groups, layout, physics, interaction, manipulation disabled by default, and
+
     clustering settings. Include event wiring for click, selectNode, hoverNode,
+
     blurNode, stabilizationProgress, and stabilizationIterationsDone. Add validation
+
     for duplicate IDs, missing from/to endpoints, zero-height container, missing
+
     CSS, graph size above physics threshold, and unsafe dynamic smooth edges on
+
     large graphs.
 
+    '
+  system: You generate artifacts for vis_js. Output only the requested artifact content. No markdown fences, no explanations.
+  provider_options:
+    max_tokens: 6144
+    temperature: 0.3
 output:
   formats:
-    - format: json
-    - format: js
-    - format: md
-  expected_artifact: "vis-network DataSet package, options, events, and validation report."
-
+  - format: json
+  - format: js
+  - format: md
+  expected_artifact: vis-network DataSet package, options, events, and validation report.
+  text_format: vis_js
+  artifact_kind: vis-network DataSet package, options, events, and validation report.
 evaluation:
   checklist:
-    - "Data arrays are shaped for vis.DataSet nodes and edges."
-    - "Options include groups, layout, physics, interaction, and clustering."
-    - "Event wiring covers selection, hover, and stabilization."
-    - "Validation covers IDs, endpoints, container, CSS, physics threshold, and smooth-edge cost."
+  - Data arrays are shaped for vis.DataSet nodes and edges.
+  - Options include groups, layout, physics, interaction, and clustering.
+  - Event wiring covers selection, hover, and stabilization.
+  - Validation covers IDs, endpoints, container, CSS, physics threshold, and smooth-edge cost.
   rubric:
-    - name: Format validity
-      weight: 30
-      description: "YAML parses and requests JSON, JS, and markdown outputs."
-    - name: Semantic completeness
-      weight: 30
-      description: "Covers vis-network data, options, events, clustering, and validation."
-    - name: Visual/structural quality
-      weight: 25
-      description: "Package can render a styled, interactive dependency graph."
-    - name: Robustness
-      weight: 15
-      description: "Validation prevents common blank canvas and performance failures."
+  - name: Format validity
+    weight: 30
+    description: YAML parses and requests JSON, JS, and markdown outputs.
+    criteria: YAML parses and requests JSON, JS, and markdown outputs.
+  - name: Semantic completeness
+    weight: 30
+    description: Covers vis-network data, options, events, clustering, and validation.
+    criteria: Covers vis-network data, options, events, clustering, and validation.
+  - name: Visual/structural quality
+    weight: 25
+    description: Package can render a styled, interactive dependency graph.
+    criteria: Package can render a styled, interactive dependency graph.
+  - name: Robustness
+    weight: 15
+    description: Validation prevents common blank canvas and performance failures.
+    criteria: Validation prevents common blank canvas and performance failures.
   pass_conditions:
-    - "The output can initialize a vis-network instance without missing options."
-    - "Event behavior and stabilization handling are explicit."
-    - "Scale and rendering risks are reported before runtime."
-
-tags: [fim, vis-js, vis-network, integration, dataset, events, validation]
+  - The output can initialize a vis-network instance without missing options.
+  - Event behavior and stabilization handling are explicit.
+  - Scale and rendering risks are reported before runtime.
+tags:
+- fim
+- vis-js
+- vis-network
+- integration
+- dataset
+- events
+- validation

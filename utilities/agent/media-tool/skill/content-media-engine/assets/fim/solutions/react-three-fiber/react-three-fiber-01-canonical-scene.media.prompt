@@ -30,6 +30,7 @@ output:
   - format: png
   text_format: tsx
   artifact: React Three Fiber canonical scene source asset
+  artifact_kind: React Three Fiber canonical scene source asset
   dimensions:
     width: 1440
     height: 900

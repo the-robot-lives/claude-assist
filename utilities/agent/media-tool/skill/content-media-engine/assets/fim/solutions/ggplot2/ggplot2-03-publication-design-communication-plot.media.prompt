@@ -1,63 +1,74 @@
-schema: "0.4"
+schema: '0.4'
 id: ggplot2-03-publication-design-communication-plot
 type: visualization
 quality: high
 solution: ggplot2
 category: julia-r
 variant: publication-design-communication-plot
-
 prompt:
-  system: "Generate only runnable R code for a ggplot2 visualization. Do not include markdown fences or explanatory prose."
-  text: |
-    Create a publication-quality communication graphic in R with ggplot2.
+  system: Generate only runnable R code for a ggplot2 visualization. Do not include markdown fences or explanatory prose.
+  text: 'Create a publication-quality communication graphic in R with ggplot2.
+
     Use a deterministic inline data frame representing quarterly product adoption, confidence intervals, and a launch milestone.
+
     Build a layered line chart with geom_line, geom_point, geom_ribbon or geom_errorbar, geom_vline for the milestone, and annotate for a concise callout.
+
     Use labs, theme_minimal or theme_classic, custom theme adjustments, and a colorblind-safe manual palette.
+
     Include a title, subtitle, caption, axis labels with units, and a legend title.
+
     Save as SVG if svglite is available or as PDF and PNG with ggsave, using clear dimensions for a report or manuscript.
 
+    '
+  provider_options:
+    max_tokens: 6144
+    temperature: 0.3
 output:
   format: r
   file: ggplot2-03-publication-design-communication-plot.R
   renders:
-    - format: svg
-      file: ggplot2-03-publication-design-communication-plot.svg
-    - format: png
-      file: ggplot2-03-publication-design-communication-plot.png
+  - format: svg
+    file: ggplot2-03-publication-design-communication-plot.svg
+  - format: png
+    file: ggplot2-03-publication-design-communication-plot.png
   requirements:
-    - ggplot2
-    - svglite
-
+  - ggplot2
+  - svglite
+  text_format: r
+  artifact_kind: ggplot2-03-publication-design-communication-plot.R
+  formats:
+  - format: r
+  - format: svg
+  - format: png
 evaluation:
   checklist:
-    - Uses layered ggplot2 geoms for trend, interval, milestone, and annotation.
-    - Includes publication-ready labels, subtitle or caption, palette, and theme settings.
-    - Uses deterministic inline data and explicit output dimensions.
-    - Saves a vector or print-quality artifact plus a PNG preview.
+  - Uses layered ggplot2 geoms for trend, interval, milestone, and annotation.
+  - Includes publication-ready labels, subtitle or caption, palette, and theme settings.
+  - Uses deterministic inline data and explicit output dimensions.
+  - Saves a vector or print-quality artifact plus a PNG preview.
   rubric:
     Format validity:
       weight: 30
-      criteria: "The response is valid R code using correct ggplot2 and ggsave syntax, with graceful handling of SVG export if svglite is present."
+      criteria: The response is valid R code using correct ggplot2 and ggsave syntax, with graceful handling of SVG export if svglite is present.
     Semantic completeness:
       weight: 30
-      criteria: "The figure communicates trend, uncertainty, milestone context, annotation, labels, and report-ready exports."
+      criteria: The figure communicates trend, uncertainty, milestone context, annotation, labels, and report-ready exports.
     Visual/structural quality:
       weight: 25
-      criteria: "The composition, palette, annotation, type sizing, and legend placement are suitable for publication or executive reporting."
+      criteria: The composition, palette, annotation, type sizing, and legend placement are suitable for publication or executive reporting.
     Robustness:
       weight: 15
-      criteria: "The code is deterministic, self-contained, handles optional SVG export reasonably, and writes explicit file names."
+      criteria: The code is deterministic, self-contained, handles optional SVG export reasonably, and writes explicit file names.
   pass_conditions:
-    - The plot includes a trend layer and an uncertainty layer.
-    - The plot includes a milestone marker and annotation.
-    - The code saves at least one vector-style output or PDF plus a PNG.
-    - The code uses only deterministic inline or built-in data.
-
+  - The plot includes a trend layer and an uncertainty layer.
+  - The plot includes a milestone marker and annotation.
+  - The code saves at least one vector-style output or PDF plus a PNG.
+  - The code uses only deterministic inline or built-in data.
 tags:
-  - fim
-  - julia-r
-  - ggplot2
-  - publication
-  - design-communication
-  - uncertainty
-  - svg
+- fim
+- julia-r
+- ggplot2
+- publication
+- design-communication
+- uncertainty
+- svg

@@ -1,0 +1,83 @@
+schema: "0.4"
+id: ffmpeg-wasm-04-edge-integration-error-metadata
+type: image/visualization/data
+quality: high
+solution: ffmpeg-wasm
+category: image-and-video-processing
+variant: edge-integration-error-metadata
+references:
+  - "references/fim/overview/electronics-media-docfile/ffmpeg-wasm.md"
+  - "references/fim/solution/ffmpeg-wasm.md"
+prompt:
+  system: |-
+    You generate FFmpeg.wasm media-processing artifacts. Output only one complete ASCII JavaScript module. Do not use markdown fences or explanatory prose.
+  text: |-
+    Create an FFmpeg.wasm integration wrapper focused on edge cases, errors, metadata, and deterministic diagnostics.
+
+    Requirements:
+    - Provide an initFFmpegWasm() loader that verifies WebAssembly support, crossOriginIsolated state, SharedArrayBuffer availability, core asset URLs, and single-thread fallback.
+    - Provide probeLikeMetadata(file) that writes the file to MEMFS, runs a safe metadata-oriented ffmpeg command, captures log events, and returns parsed duration, streams, codecs, rotation, dimensions, and warnings without requiring native ffprobe.
+    - Provide convertWithDiagnostics(file, options) that validates requested dimensions, codec, output format, color profile, alpha behavior, memory budget, timeout, and cancellation before exec.
+    - Cover output dimensions 640x360, 1280x720, and 1920x1080 with deterministic validation errors for unsupported sizes.
+    - Specify srgb display assumptions, yuv420p video output, alpha preservation only for PNG frame outputs, and alpha flattening for MP4, WebM, JPEG, and GIF.
+    - Support input formats mp4, mov, webm, mkv, gif, png, jpg, and wav with clear unsupported-codec and unsupported-container errors.
+    - Include memory and performance controls: preflight byte caps, estimated decoded pixel budget, timeout, AbortSignal, progress logs, and MEMFS cleanup in finally blocks.
+    - Emit metadata and diagnostics JSON with stable error codes, source hash, output settings, browser capability flags, command args, log excerpts, timings, and cleanup status.
+    - Include deterministic output checks for validation order, error code strings, metadata key order, and command argument arrays.
+    - Output only the final JavaScript artifact.
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.2
+output:
+  text_format: javascript
+  artifact_kind: ffmpeg-wasm-edge-integration-diagnostics
+  dimensions:
+    width: 1920
+    height: 1080
+  color_profile: srgb-display-yuv420p-output
+  alpha: png-only-preserved-delivery-flattened
+  formats:
+    - format: js
+    - format: mp4
+    - format: webm
+    - format: png
+    - format: jpg
+    - format: gif
+    - format: json
+evaluation:
+  checklist:
+    - "Format validity: YAML parses as schema 0.4, generated output is one JavaScript module, and FFmpeg.wasm APIs are used."
+    - "Semantic completeness: loader checks, probe-like metadata, conversion diagnostics, validation, errors, cleanup, and capability flags are present."
+    - "Dimensions: 640x360, 1280x720, and 1920x1080 presets are validated deterministically."
+    - "Color profile and alpha: srgb assumptions, yuv420p video output, PNG alpha preservation, and flattening for delivery formats are explicit."
+    - "File formats: supported and unsupported input/output containers are represented with stable error codes."
+    - "Memory and performance: byte caps, pixel budget estimates, timeouts, AbortSignal, progress logs, and finally-block cleanup are implemented."
+    - "Metadata: diagnostics JSON records source hash, output settings, browser flags, command args, log excerpts, timings, and cleanup status."
+    - "Deterministic output: validation order, error codes, metadata keys, and command arrays are stable."
+  rubric:
+    - name: "Format validity"
+      weight: 30
+      criteria: "The prompt YAML and generated JavaScript are parseable, ASCII-only, and use FFmpeg.wasm without native ffprobe dependencies."
+    - name: "Semantic completeness"
+      weight: 30
+      criteria: "The artifact covers integration checks, metadata extraction, conversion validation, diagnostic errors, cleanup, and browser capability handling."
+    - name: "Output quality"
+      weight: 25
+      criteria: "The generated diagnostics and converted outputs are clear, correctly bounded, web-compatible, and easy to integrate."
+    - name: "Robustness"
+      weight: 15
+      criteria: "The artifact handles unsupported browsers, missing core assets, malformed media, codec failures, memory limits, cancellations, and deterministic error reporting."
+  pass_conditions:
+    - "YAML parses successfully and all file text is ASCII-only."
+    - "Rubric weights are exactly Format validity 30, Semantic completeness 30, Output quality 25, and Robustness 15."
+    - "Generated JavaScript contains no markdown fences and uses FFmpeg.wasm rather than native ffmpeg or ffprobe."
+    - "All dimensions, color profile/alpha, file format, memory/performance, metadata, and deterministic output checks are represented."
+    - "Rubric score is at least 80 out of 100 and no required checklist item is absent."
+tags:
+  - fim
+  - image-and-video-processing
+  - ffmpeg-wasm
+  - edge-integration-error-metadata
+  - diagnostics
+  - metadata
+  - browser-integration

@@ -38,12 +38,22 @@ impl PromptPrepper {
             .unwrap_or_else(|| DEFAULT_PREP_MODEL.to_string());
 
         // Priority 1: explicit override
-        if let Some(url) = cli_url.map(|s| s.to_string()).or_else(|| std::env::var("MEDIA_PREP_BASE_URL").ok()) {
+        if let Some(url) = cli_url
+            .map(|s| s.to_string())
+            .or_else(|| std::env::var("MEDIA_PREP_BASE_URL").ok())
+        {
             let api_key = std::env::var("MEDIA_PREP_API_KEY").unwrap_or_else(|_| "none".into());
             if verbose {
-                ui::verbose(&format!("Prompt prep via custom endpoint: {} (model: {})", url, model));
+                ui::verbose(&format!(
+                    "Prompt prep via custom endpoint: {} (model: {})",
+                    url, model
+                ));
             }
-            return Some(PromptPrepper { base_url: url, model, api_key });
+            return Some(PromptPrepper {
+                base_url: url,
+                model,
+                api_key,
+            });
         }
 
         // Priority 2: Groq cloud
@@ -53,7 +63,9 @@ impl PromptPrepper {
                     ui::verbose(&format!("Prompt prep via Groq (model: {})", model));
                 }
                 return Some(PromptPrepper {
-                    base_url: GROQ_API_URL.trim_end_matches("/chat/completions").to_string(),
+                    base_url: GROQ_API_URL
+                        .trim_end_matches("/chat/completions")
+                        .to_string(),
                     model,
                     api_key: key,
                 });
@@ -61,7 +73,9 @@ impl PromptPrepper {
         }
 
         if verbose {
-            ui::verbose("No prompt prep endpoint available (set GROQ_API_KEY or MEDIA_PREP_BASE_URL)");
+            ui::verbose(
+                "No prompt prep endpoint available (set GROQ_API_KEY or MEDIA_PREP_BASE_URL)",
+            );
         }
         None
     }
@@ -147,7 +161,10 @@ Reply with ONLY valid JSON (no markdown fences, no commentary):
         let client = reqwest::Client::new();
 
         if verbose {
-            ui::verbose(&format!("Prompt prep POST {} (service={}, model={})", url, service, self.model));
+            ui::verbose(&format!(
+                "Prompt prep POST {} (service={}, model={})",
+                url, service, self.model
+            ));
         }
 
         let resp = match client
@@ -172,7 +189,11 @@ Reply with ONLY valid JSON (no markdown fences, no commentary):
             let status = resp.status();
             let body_text = resp.text().await.unwrap_or_default();
             if verbose {
-                ui::verbose(&format!("Prompt prep HTTP {}: {}", status, &body_text[..body_text.len().min(200)]));
+                ui::verbose(&format!(
+                    "Prompt prep HTTP {}: {}",
+                    status,
+                    &body_text[..body_text.len().min(200)]
+                ));
             }
             return None;
         }
@@ -194,10 +215,7 @@ Reply with ONLY valid JSON (no markdown fences, no commentary):
             .to_string();
 
         if verbose {
-            ui::verbose(&format!(
-                "Prompt prep raw: {}",
-                &raw[..raw.len().min(300)]
-            ));
+            ui::verbose(&format!("Prompt prep raw: {}", &raw[..raw.len().min(300)]));
         }
 
         let cleaned = strip_reasoning_and_fences(&raw);
@@ -237,7 +255,11 @@ Reply with ONLY valid JSON (no markdown fences, no commentary):
             }
             Err(e) => {
                 if verbose {
-                    ui::verbose(&format!("Prompt prep JSON parse failed: {} — cleaned text: {}", e, &cleaned[..cleaned.len().min(200)]));
+                    ui::verbose(&format!(
+                        "Prompt prep JSON parse failed: {} — cleaned text: {}",
+                        e,
+                        &cleaned[..cleaned.len().min(200)]
+                    ));
                 }
                 None
             }
@@ -315,7 +337,10 @@ Reply with ONLY valid JSON (no markdown fences, no commentary):
 
         // Build message content — text instruction + optional failed output image
         let content = if let Some(output_path) = failed_output {
-            let ext = output_path.extension().and_then(|e| e.to_str()).unwrap_or("");
+            let ext = output_path
+                .extension()
+                .and_then(|e| e.to_str())
+                .unwrap_or("");
             match ext {
                 "png" | "jpg" | "jpeg" | "webp" => {
                     if let Ok(data) = std::fs::read(output_path) {
@@ -342,8 +367,15 @@ Reply with ONLY valid JSON (no markdown fences, no commentary):
                 // Text-based outputs (SVG, HTML, etc.) — include inline
                 "svg" | "html" | "mmd" | "tsx" | "md" => {
                     if let Ok(text_content) = std::fs::read_to_string(output_path) {
-                        let truncated = if text_content.len() > 8192 { &text_content[..8192] } else { &text_content };
-                        json!(format!("{}\n\n[Previous output content]\n{}", instruction, truncated))
+                        let truncated = if text_content.len() > 8192 {
+                            &text_content[..8192]
+                        } else {
+                            &text_content
+                        };
+                        json!(format!(
+                            "{}\n\n[Previous output content]\n{}",
+                            instruction, truncated
+                        ))
                     } else {
                         json!(instruction)
                     }
@@ -364,7 +396,10 @@ Reply with ONLY valid JSON (no markdown fences, no commentary):
         let client = reqwest::Client::new();
 
         if verbose {
-            ui::verbose(&format!("Prompt refine POST {} (vision-informed refinement)", url));
+            ui::verbose(&format!(
+                "Prompt refine POST {} (vision-informed refinement)",
+                url
+            ));
         }
 
         let resp = match client
@@ -409,7 +444,10 @@ Reply with ONLY valid JSON (no markdown fences, no commentary):
             .to_string();
 
         if verbose {
-            ui::verbose(&format!("Prompt refine raw: {}", &raw[..raw.len().min(300)]));
+            ui::verbose(&format!(
+                "Prompt refine raw: {}",
+                &raw[..raw.len().min(300)]
+            ));
         }
 
         let cleaned = strip_reasoning_and_fences(&raw);

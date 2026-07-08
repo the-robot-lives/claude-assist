@@ -61,10 +61,18 @@ impl ChatProvider for AnthropicProvider {
             body["system"] = json!(system_prompt);
         }
 
-        if let Some(temp) = options.provider_options.get("temperature").and_then(|v| v.as_f64()) {
+        if let Some(temp) = options
+            .provider_options
+            .get("temperature")
+            .and_then(|v| v.as_f64())
+        {
             body["temperature"] = json!(temp);
         }
-        if let Some(top_p) = options.provider_options.get("top_p").and_then(|v| v.as_f64()) {
+        if let Some(top_p) = options
+            .provider_options
+            .get("top_p")
+            .and_then(|v| v.as_f64())
+        {
             body["top_p"] = json!(top_p);
         }
 
@@ -95,7 +103,12 @@ impl ChatProvider for AnthropicProvider {
                 if !status.is_success() {
                     let error_body = response.text().await.unwrap_or_default();
                     let preview: String = error_body.chars().take(300).collect();
-                    ui::fail_msg(&format!("HTTP {} for {}: {}", status.as_u16(), output_path.display(), preview));
+                    ui::fail_msg(&format!(
+                        "HTTP {} for {}: {}",
+                        status.as_u16(),
+                        output_path.display(),
+                        preview
+                    ));
                     return Ok(false);
                 }
 
@@ -115,13 +128,20 @@ impl ChatProvider for AnthropicProvider {
                         Ok(true)
                     }
                     None => {
-                        ui::fail_msg(&format!("No text content in response for {}", output_path.display()));
+                        ui::fail_msg(&format!(
+                            "No text content in response for {}",
+                            output_path.display()
+                        ));
                         Ok(false)
                     }
                 }
             }
             Err(e) => {
-                ui::fail_msg(&format!("Network error for {}: {}", output_path.display(), e));
+                ui::fail_msg(&format!(
+                    "Network error for {}: {}",
+                    output_path.display(),
+                    e
+                ));
                 Ok(false)
             }
         }

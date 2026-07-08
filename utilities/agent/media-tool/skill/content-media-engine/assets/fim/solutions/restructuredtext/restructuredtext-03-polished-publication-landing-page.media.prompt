@@ -1,0 +1,77 @@
+schema: "0.4"
+id: fim-document-authoring-and-static-site-generators-restructuredtext-03-polished-publication-landing-page
+type: document
+quality: production
+solution: restructuredtext
+category: document-authoring-and-static-site-generators
+variant: polished-publication-landing-page
+prompt:
+  system: |-
+    You are a senior reStructuredText documentation engineer. Output only one complete .rst document. Do not add explanatory prose, Markdown fences around the whole artifact, or non-ASCII characters. Keep paths relative, builds local, and solution-specific syntax primary.
+  text: |-
+    Create a polished publication or landing page for a technical guide launch called Field Manual 2026. Include publication metadata, a concise lead section, navigation or table of contents, feature or chapter summaries, one highlighted callout, one responsive figure or media placeholder, one comparison table, contributor or citation metadata where the solution supports it, and theme hooks or styling that produce a refined accessible page without relying on remote assets. Keep the structure suitable for both desktop and narrow screens.
+
+    Required solution focus: reStructuredText using consistent title adornments, directives, roles, code-block options, contents directive, note and warning admonitions, image and figure directives with alt text, list-table, labels, explicit links, math directives, and indentation-safe nested content.
+
+    Parser and build target: Docutils rst2html5 and Sphinx when Sphinx roles are used; expected local command: rst2html5 document.rst output.html or sphinx-build -b html source _build/html.
+
+    Output expectation: one complete .rst document for the polished publication or landing page scenario. If a project bundle is requested, use deterministic file path markers, list files in build order, and make each file body valid for its own parser.
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.2
+    top_p: 0.9
+output:
+  text_format: rst
+  artifact_kind: restructuredtext-document-source
+  formats:
+  - format: rst
+  - format: html
+  - format: pdf
+  - format: epub
+evaluation:
+  checklist:
+  - "Parser/build compatibility: generated artifact follows reStructuredText document source and can be parsed or built with Docutils rst2html5 and Sphinx when Sphinx roles are used using the documented local command."
+  - "Headings/TOC: includes one clear primary title, a logical heading hierarchy, stable anchors or ids, and table of contents or navigation support where the solution provides it."
+  - "Links: includes valid internal references, external links with meaningful labels, and base path or relative URL handling where relevant."
+  - "Accessibility: includes semantic structure, alternative text or text equivalents for media, readable table headers, language metadata where supported, and no color-only meaning."
+  - "Responsive layout: rendered HTML/site/page output uses responsive images, tables, navigation, or theme hooks; print/PDF-oriented formats document layout assumptions."
+  - "Portable assets: uses relative asset paths, deterministic output names, no network-only resources, and comments or config for copying/static asset handling."
+  - "Solution fidelity: uses reStructuredText constructs from the FIM references rather than substituting a generic Markdown or HTML-only answer."
+  rubric:
+  - name: "Format validity"
+    weight: 30
+    criteria:
+    - "Output uses the requested solution syntax and can be parsed or built by the named parser or toolchain."
+    - "Required roots, metadata, delimiters, ids, file names, and extension-specific constructs are valid."
+    - "Output is ASCII-only and contains no prose wrapper unless the requested artifact format explicitly requires a project-bundle boundary."
+  - name: "Semantic completeness"
+    weight: 30
+    criteria:
+    - "The artifact satisfies every scenario requirement, not just a representative subset."
+    - "Solution-specific features from the FIM references are used as primary constructs rather than replaced by a generic format."
+    - "Build, parser, links, assets, accessibility, responsive layout, and localization requirements are represented where applicable."
+  - name: "Structure/design quality"
+    weight: 25
+    criteria:
+    - "Headings, table of contents, navigation, sections, tables, figures, and callouts form a coherent information architecture."
+    - "Rendered output is readable, polished for the requested use case, and avoids clutter, broken hierarchy, low contrast, and label overflow."
+    - "Layout or theme hooks support responsive display and accessible reading without depending on remote assets."
+  - name: "Robustness"
+    weight: 15
+    criteria:
+    - "Handles long content, special characters, missing assets, empty states, relative paths, base paths, and link targets predictably."
+    - "Documents local build commands, parser assumptions, optional dependencies, and deterministic output filenames."
+    - "Avoids network-only resources, unstable ids, ambiguous parser dialects, and non-portable absolute paths."
+  pass_conditions:
+  - "All required YAML fields are present and this prompt file parses as YAML schema 0.4."
+  - "Rubric weights are exactly Format validity 30, Semantic completeness 30, Structure/design quality 25, Robustness 15."
+  - "The generated artifact can be parsed or built by Docutils rst2html5 and Sphinx when Sphinx roles are used with the documented local command or a clearly stated optional dependency."
+  - "The generated artifact includes parser/build compatibility, headings/TOC, links, accessibility, responsive layout, and portable assets coverage."
+  - "The generated artifact is ASCII-only, deterministic, and avoids unrelated toolchains except where the solution reference explicitly integrates them."
+tags:
+- fim
+- document-authoring-and-static-site-generators
+- restructuredtext
+- polished-publication-landing-page
+- document-authoring
+- static-site-generators

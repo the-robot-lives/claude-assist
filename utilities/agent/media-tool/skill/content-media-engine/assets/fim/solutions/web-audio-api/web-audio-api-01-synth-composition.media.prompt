@@ -41,6 +41,7 @@ prompt:
 output:
   text_format: html
   artifact: "Web Audio API synth composition browser source"
+  artifact_kind: "Web Audio API synth composition browser source"
   formats:
     - format: html
     - format: js

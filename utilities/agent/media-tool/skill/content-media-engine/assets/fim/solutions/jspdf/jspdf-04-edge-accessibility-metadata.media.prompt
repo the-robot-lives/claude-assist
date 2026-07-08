@@ -1,0 +1,72 @@
+schema: "0.4"
+id: jspdf-04-edge-accessibility-metadata
+type: document/data
+quality: high
+solution: jspdf
+category: document-data-file-processing
+variant: edge-accessibility-metadata
+references:
+  - "references/fim/overview/electronics-media-docfile/jspdf.md"
+  - "references/fim/solution/jspdf.md"
+prompt:
+  system: |-
+    You generate browser-first jsPDF document artifacts. Output only one complete self-contained HTML document with inline JavaScript and CSS. Do not use Markdown fences or explanatory prose.
+  text: |-
+    Create a jsPDF edge-case export for an accessible receipt archive.
+
+    Requirements:
+    - Use jsPDF 2.5.x from a CDN and avoid HTML rasterization.
+    - Demonstrate handling of empty optional fields, very long names, zero-amount rows, negative adjustments, special ASCII punctuation, and unsupported non-ASCII replacement policy.
+    - Include a font strategy that uses built-in fonts and documents when a custom font would be required for non-Latin text.
+    - Add deterministic metadata fields: title, subject, author, keywords, creator, archive id, version, source system, and generated timestamp.
+    - Add a text-only accessibility summary page, high-contrast status labels, and descriptive table headings.
+    - Include an integration surface with `makePdfBlob(data)`, `makePdfArrayBuffer(data)`, and `downloadPdf(data)` functions.
+    - Include pagination guards for long notes and a final page count check.
+    - Include parseability, pagination, fonts, accessibility, formulas/data types, metadata, and deterministic output safeguards in the code comments.
+    - Output only the final HTML artifact.
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.2
+output:
+  text_format: html
+  artifact_kind: jspdf-accessible-archive-export
+  formats:
+    - format: html
+    - format: pdf
+evaluation:
+  checklist:
+    - "Format validity: YAML parses as schema 0.4, generated output is one HTML document, and jsPDF is the primary generator."
+    - "Parseability: JavaScript is syntactically valid and exposes Blob, ArrayBuffer, and download integration functions."
+    - "Semantic completeness: edge receipt data, adjustments, archive metadata, and accessibility summary are included."
+    - "Pagination: long notes wrap safely, page count is checked, and every page has footer metadata."
+    - "Fonts: built-in font limits are documented and unsupported character replacement is deterministic."
+    - "Accessibility: high contrast, selectable text, descriptive summaries, labeled controls, and non-color status indicators are present."
+    - "Formulas/data types: zero, negative, currency, date, boolean, and status fields are formatted and calculated predictably."
+    - "Metadata: PDF info fields and archive integration fields are populated."
+    - "Deterministic output: normalization, replacement policy, sort order, filename, timestamp, and totals are fixed."
+  rubric:
+    - name: "Format validity"
+      weight: 30
+      criteria: "The prompt YAML and generated HTML are parseable, ASCII-only, and create valid PDF outputs through jsPDF."
+    - name: "Semantic completeness"
+      weight: 30
+      criteria: "The edge archive export includes all requested data cases, integration functions, accessibility summary, and metadata."
+    - name: "Layout/data quality"
+      weight: 25
+      criteria: "The PDF remains readable with long content, clear data formatting, stable pagination, and accessible visual hierarchy."
+    - name: "Robustness"
+      weight: 15
+      criteria: "The artifact handles odd but valid input, unsupported glyph policy, empty values, metadata, and deterministic reruns."
+  pass_conditions:
+    - "YAML parses successfully and all file text is ASCII-only."
+    - "Rubric weights are exactly 30, 30, 25, and 15."
+    - "Generated artifact creates Blob and ArrayBuffer PDF outputs without relying on private browser APIs."
+    - "All checklist items for parseability, pagination, fonts, accessibility, formulas/data types, metadata, and deterministic output are represented."
+tags:
+  - fim
+  - document-data-file-processing
+  - jspdf
+  - accessibility
+  - metadata
+  - integration
+

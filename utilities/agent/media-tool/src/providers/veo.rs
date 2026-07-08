@@ -33,7 +33,12 @@ impl MediaProvider for VeoProvider {
         let aspect_ratio = options
             .aspect_ratio
             .as_deref()
-            .or_else(|| options.provider_options.get("aspectRatio").and_then(|v| v.as_str()))
+            .or_else(|| {
+                options
+                    .provider_options
+                    .get("aspectRatio")
+                    .and_then(|v| v.as_str())
+            })
             .unwrap_or("16:9");
 
         // duration_seconds from GenerationOptions takes precedence over provider_options
@@ -44,7 +49,10 @@ impl MediaProvider for VeoProvider {
                 options
                     .provider_options
                     .get("durationSeconds")
-                    .and_then(|v| v.as_u64().or_else(|| v.as_str().and_then(|s| s.parse().ok())))
+                    .and_then(|v| {
+                        v.as_u64()
+                            .or_else(|| v.as_str().and_then(|s| s.parse().ok()))
+                    })
             })
             .unwrap_or(8);
 
@@ -144,14 +152,17 @@ impl MediaProvider for VeoProvider {
         }
 
         let result: serde_json::Value = response.json().await?;
-        let operation_name = result["name"]
-            .as_str()
-            .ok_or_else(|| color_eyre::eyre::eyre!("No operation name in Veo response: {}", result))?;
+        let operation_name = result["name"].as_str().ok_or_else(|| {
+            color_eyre::eyre::eyre!("No operation name in Veo response: {}", result)
+        })?;
 
         if options.verbose {
             ui::verbose(&format!("Operation: {}", operation_name));
         }
-        ui::info(&format!("Veo operation {} — polling for completion", operation_name));
+        ui::info(&format!(
+            "Veo operation {} — polling for completion",
+            operation_name
+        ));
 
         let poll_url = format!("{}/{}?key={}", API_BASE, operation_name, api_key);
 
@@ -176,7 +187,11 @@ impl MediaProvider for VeoProvider {
 
             if !poll_response.status().is_success() {
                 if options.verbose {
-                    ui::verbose(&format!("Poll attempt {} returned {}", attempt, poll_response.status()));
+                    ui::verbose(&format!(
+                        "Poll attempt {} returned {}",
+                        attempt,
+                        poll_response.status()
+                    ));
                 }
                 continue;
             }
@@ -192,14 +207,12 @@ impl MediaProvider for VeoProvider {
                     return Ok(false);
                 }
 
-                let samples = poll_result["response"]["generateVideoResponse"]["generatedSamples"]
-                    .as_array();
+                let samples =
+                    poll_result["response"]["generateVideoResponse"]["generatedSamples"].as_array();
 
                 if let Some(samples) = samples {
                     if let Some(first) = samples.first() {
-                        let video_uri = first["video"]["uri"]
-                            .as_str()
-                            .unwrap_or("");
+                        let video_uri = first["video"]["uri"].as_str().unwrap_or("");
 
                         if video_uri.is_empty() {
                             ui::fail_msg("Veo returned done but no video URI");
@@ -211,7 +224,13 @@ impl MediaProvider for VeoProvider {
                         } else {
                             format!("{}?key={}", video_uri, api_key)
                         };
-                        return download_file(&authenticated_uri, output_path, &client, options.verbose).await;
+                        return download_file(
+                            &authenticated_uri,
+                            output_path,
+                            &client,
+                            options.verbose,
+                        )
+                        .await;
                     }
                 }
 

@@ -1,0 +1,73 @@
+schema: "0.4"
+id: gsap-03-product-brand-communication-motion
+type: interactive
+quality: high
+solution: gsap
+category: animation-and-motion
+variant: product-brand-communication-motion
+references:
+  - "references/fim/overview/canvas-svg-creative-animation/gsap.md"
+  - "references/fim/solution/gsap.md"
+prompt:
+  system: |-
+    Generate production-quality GSAP product communication motion assets for FIM evaluation. Output only a complete self-contained HTML document with inline CSS and JavaScript.
+  text: |-
+    Create a polished GSAP product and brand communication sequence.
+
+    Scenario:
+    Build a first-viewport product story for a fictional workflow platform. The sequence should introduce the wordmark, draw an SVG route, flip in three product capability panels, animate a CTA accent, and loop a restrained background pulse that can be paused.
+
+    Implementation requirements:
+    - Use GSAP 3 from a CDN or equivalent import with gsap.set(), gsap.fromTo(), a labeled gsap.timeline(), and staggered panel reveals.
+    - Use SVG strokeDasharray and strokeDashoffset for line drawing without relying on unavailable plugins.
+    - Define motion tokens for durations in seconds, ease values, repeatDelay, stagger, and reduced-motion substitutions.
+    - Validate DOM/SVG targets before timeline creation and expose a concise diagnostic if any brand, panel, route, or CTA target is missing.
+    - Include controls for play, pause, restart, reverse, seek, and reduced-motion mode.
+    - Keep wordmark, route, panels, CTA, controls, and annotations non-overlapping across desktop and mobile widths.
+    - Prefer transform and opacity animations and avoid conflicting CSS transitions on properties GSAP controls.
+    - Output only the final artifact, with no markdown fences or explanatory prose outside the artifact.
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.24
+output:
+  text_format: html
+  artifact_kind: gsap-html-product-brand-motion
+  formats:
+    - format: html
+  dimensions:
+    width: 1440
+    height: 900
+  render_expectation: "Interactive GSAP brand motion composition suitable for product communication review."
+evaluation:
+  checklist:
+    - "Format validity: YAML parses under schema 0.4 and generated output is exactly one HTML artifact with no markdown fences."
+    - "GSAP API: Uses gsap.set(), gsap.fromTo(), labeled timeline sequencing, stagger, and valid DOM/SVG targets."
+    - "Motion timing: Defines durations in seconds, easing, repeatDelay, stagger, controls, and reduced-motion substitutions."
+    - "Visual quality: Brand hierarchy is clear and wordmark, route, panels, CTA, and controls do not overlap."
+    - "Reduced motion: Preserves the final brand message while disabling looped pulse and large movement."
+    - "Performance: Uses transform, opacity, and SVG stroke properties with no CSS transition conflicts."
+  rubric:
+    - name: "Format validity"
+      weight: 30
+      criteria: "YAML and generated HTML are syntactically valid, required fields are present, id and file name match, and the artifact uses GSAP rather than a substitute animation library."
+    - name: "Semantic completeness"
+      weight: 30
+      criteria: "The artifact delivers product communication motion with brand reveal, SVG route drawing, panel sequencing, CTA emphasis, controls, target validation, and reduced motion."
+    - name: "Motion/visual quality"
+      weight: 25
+      criteria: "Motion supports brand hierarchy, uses appropriate easing and rhythm, avoids distraction, and keeps all content readable without overlap."
+    - name: "Robustness"
+      weight: 15
+      criteria: "Handles missing targets, responsive layout, reduced motion, loop control, and performance constraints without runtime errors."
+  pass_conditions:
+    - "Rubric weights are exactly 30, 30, 25, and 15 for a total of 100."
+    - "YAML parses successfully and all prompt text is ASCII-only."
+    - "Generated artifact runs with no console errors when GSAP is available."
+    - "Score is at least 80 out of 100 with no zero score in any rubric dimension."
+tags:
+  - "fim"
+  - "animation-and-motion"
+  - "gsap"
+  - "product-brand-communication-motion"
+  - "brand-motion"
+  - "svg-route"

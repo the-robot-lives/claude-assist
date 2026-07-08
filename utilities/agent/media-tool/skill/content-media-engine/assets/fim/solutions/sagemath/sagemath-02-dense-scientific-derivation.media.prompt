@@ -1,0 +1,75 @@
+---
+schema: "0.4"
+id: fim-math-and-scientific-rendering-sagemath-02-dense-scientific-derivation
+type: data
+quality: high
+solution: sagemath
+category: math-and-scientific-rendering
+variant: dense-scientific-derivation
+references:
+- references/fim/overview/geospatial-math-scientific/sagemath.md
+- references/fim/solution/sagemath.md
+prompt:
+  system: |-
+    You are a senior computational mathematics engineer. Output only one complete ASCII .sage source file. No Markdown fences or prose outside the source.
+  text: |-
+    Create a dense SageMath derivation script for the eigenvalues and eigenvectors of a 3 by 3 rational matrix. Compute the characteristic polynomial over QQ, factor it, obtain exact eigenvalues/eigenvectors, verify A*v=lambda*v, print LaTeX for the results, and save a small matrix_plot or graphics_array summary.
+
+    Requirements: use matrix(QQ,...), characteristic_polynomial, eigenvectors_right or exact eigenspace methods, exact arithmetic, explicit verification assertions, deterministic JSON-like plain-text summary output, and comments for singular or repeated-eigenvalue cases.
+  provider_options:
+    temperature: 0.2
+    max_tokens: 8192
+output:
+  text_format: sage
+  artifact_kind: sagemath-script
+  formats:
+  - format: sage
+  - format: txt
+  - format: svg
+evaluation:
+  checklist:
+  - "YAML parses and required schema 0.4 fields are present."
+  - "Sage source is complete, ASCII-only, and uses exact Sage algebra structures."
+  - "Math correctness covers characteristic polynomial, factorization, eigenpairs, and verification assertions."
+  - "Notation validity covers matrix dimensions, QQ parent, lambda notation, LaTeX output, and summary fields."
+  - "Renderability covers sage execution, printed summary, saved plot or matrix visual, and no interactive viewer dependence."
+  - "Labels and units identify matrix A, eigenvalue lambda, eigenvectors, characteristic polynomial, and verification residuals."
+  - "Domain edge cases cover repeated eigenvalues, defective matrices, singular matrices, irrational roots, and exact versus numeric output."
+  rubric:
+  - name: Format validity
+    weight: 30
+    criteria:
+    - "Output is one complete ASCII .sage file with no Markdown wrapper."
+    - "The script runs with Sage and writes deterministic text and visual outputs."
+    - "The source uses valid Sage exact algebra and plotting syntax."
+  - name: Semantic completeness
+    weight: 30
+    criteria:
+    - "Matrix setup, characteristic polynomial, factorization, eigenpairs, verification, LaTeX, and summary output are all present."
+    - "SageMath is used for exact algebra rather than floating-only computation."
+    - "The derivation is auditable from printed and asserted results."
+  - name: Visual/structural quality
+    weight: 25
+    criteria:
+    - "Output summaries are organized and labels are unambiguous."
+    - "The optional visual summary is readable and not misleading."
+    - "Code sections are structured for inspection."
+  - name: Robustness
+    weight: 15
+    criteria:
+    - "Addresses repeated, singular, defective, and irrational-eigenvalue cases."
+    - "Keeps exact arithmetic until explicitly formatting or plotting."
+    - "Documents Sage parent and preparser constraints."
+  pass_conditions:
+  - "Rubric weights are exactly Format validity 30, Semantic completeness 30, Visual/structural quality 25, Robustness 15."
+  - "Score is 80 or higher out of 100 with no critical failure in math correctness, notation validity, or renderability."
+  - "The artifact produces exact Sage eigenanalysis with verification."
+  - "Domain edge cases and exact/numeric constraints are explicit."
+tags:
+- fim
+- math-and-scientific-rendering
+- sagemath
+- dense-scientific-derivation
+- eigenvalues
+- exact-algebra
+

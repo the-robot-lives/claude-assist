@@ -1,0 +1,68 @@
+schema: "0.4"
+id: fim-notebook-livebook-and-widgets-kino-mermaid-01-canonical-widget
+type: visualization
+quality: high
+solution: kino-mermaid
+category: notebook-livebook-and-widgets
+variant: canonical-widget
+prompt:
+  system: |-
+    You are a senior Elixir Livebook documentation engineer. Output only one complete ASCII Elixir Livebook code cell for Kino.Mermaid. No Markdown fences, no prose outside code. Use current core Kino.Mermaid behavior.
+  text: |-
+    Create a canonical Kino.Mermaid Livebook cell. Install core Kino, build a Mermaid flowchart or sequence diagram in an Elixir heredoc, and render it with Kino.Mermaid.new/1. Include a clear diagram type token on the first nonblank line, quoted labels for special characters, classDef styling, and a small data-driven variant that builds a sequence diagram from a list of safe tuples or maps.
+
+    Requirements: document Livebook/Kino compatibility and that this is static SVG output, not a Jupyter ipywidgets control; describe the diagram source shape and supported diagram type; include accessible title/summary text near the diagram; include fallback comments for old Kino versions; and include safe execution checks for untrusted labels, Mermaid control characters, eval, shell calls, credentials, and remote libraries.
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.2
+    top_p: 0.9
+output:
+  text_format: elixir
+  artifact_kind: livebook-kino-mermaid-cell
+  formats:
+  - format: exs
+evaluation:
+  checklist:
+  - "Import check: generated code installs kino and renders Kino.Mermaid.new/1 as the primary output."
+  - "Notebook compatibility: comments identify Livebook/Kino runtime and static SVG behavior."
+  - "Reactive state: generated diagram source is deterministic; dynamic changes require rerunning the cell or regenerating source."
+  - "Data shape: Mermaid source string, first-line type token, quoted labels, and optional data-driven steps are documented."
+  - "Accessibility and fallback: diagram has a readable title or summary and a fallback note for old Kino versions."
+  - "Safe execution: untrusted labels are escaped or sanitized; no eval, shell commands, credentials, remote libraries, or unsafe control characters."
+  rubric:
+  - name: Format validity
+    weight: 30
+    criteria:
+    - "Output is one complete ASCII Elixir Livebook code cell with no Markdown fences or explanatory wrapper."
+    - "The Mermaid source starts with a valid diagram type token and uses real newlines."
+    - "The code is valid Elixir and calls Kino.Mermaid.new/1."
+  - name: Semantic completeness
+    weight: 30
+    criteria:
+    - "Implements a canonical Mermaid diagram with styling and an optional data-driven source example."
+    - "Uses Kino.Mermaid-specific constraints including heredoc source, static SVG output, and core Kino dependency."
+    - "Includes notebook/livebook compatibility, reactive state, data shape, accessibility, fallback, and safe execution checks."
+  - name: UX/structural quality
+    weight: 25
+    criteria:
+    - "The diagram is readable, not over-dense, and uses consistent labels and styling."
+    - "Text summary makes the visual structure understandable outside the SVG."
+    - "Node and edge labels are clear and do not rely only on color."
+  - name: Robustness
+    weight: 15
+    criteria:
+    - "Handles labels with spaces or special characters through quoting or sanitization."
+    - "Avoids unsupported beta syntax unless a fallback is documented."
+    - "Keeps generated source deterministic and bounded."
+  pass_conditions:
+  - "All required YAML fields are present and the generated artifact is one valid ASCII Elixir Livebook cell."
+  - "Rubric weights are exactly Format validity 30, Semantic completeness 30, UX/structural quality 25, Robustness 15."
+  - "The prompt requires notebook/livebook compatibility, reactive state, data shape, accessibility, fallback, and safe execution checks."
+  - "The solution remains Kino.Mermaid-centered and does not replace the diagram with a generic SVG library."
+tags:
+- fim
+- notebook-livebook-and-widgets
+- livebook
+- kino-mermaid
+- canonical-widget
+

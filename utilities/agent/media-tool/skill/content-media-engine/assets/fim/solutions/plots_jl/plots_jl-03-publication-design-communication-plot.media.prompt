@@ -1,63 +1,74 @@
-schema: "0.4"
+schema: '0.4'
 id: plots_jl-03-publication-design-communication-plot
 type: visualization
 quality: high
 solution: plots_jl
 category: julia-r
 variant: publication-design-communication-plot
-
 prompt:
-  system: "Generate only runnable Julia code for a Plots.jl visualization. Do not include markdown fences or explanatory prose."
-  text: |
-    Create a publication and design communication plot in Julia with Plots.jl.
+  system: Generate only runnable Julia code for a Plots.jl visualization. Do not include markdown fences or explanatory prose.
+  text: 'Create a publication and design communication plot in Julia with Plots.jl.
+
     Use deterministic inline data for three scenarios over twelve months, with a central estimate and upper or lower bands.
+
     Build a layered line chart with ribbon uncertainty, markers, a milestone vline!, and an annotate! callout.
+
     Use a publication-friendly theme such as theme(:wong) or explicit font, grid, foreground, background, legend, and palette attributes.
+
     Include title, subtitle via plot annotation or title text, axis labels with units, legend labels, and controlled dimensions.
+
     Save PDF and PNG outputs, and use pgfplotsx() only if the code chooses to demonstrate LaTeX-quality output.
 
+    '
+  provider_options:
+    max_tokens: 6144
+    temperature: 0.3
 output:
   format: julia
   file: plots_jl-03-publication-design-communication-plot.jl
   renders:
-    - format: png
-      file: plots_jl-03-publication-design-communication-plot.png
-    - format: pdf
-      file: plots_jl-03-publication-design-communication-plot.pdf
+  - format: png
+    file: plots_jl-03-publication-design-communication-plot.png
+  - format: pdf
+    file: plots_jl-03-publication-design-communication-plot.pdf
   requirements:
-    - Plots
-    - Random
-
+  - Plots
+  - Random
+  text_format: julia
+  artifact_kind: plots_jl-03-publication-design-communication-plot.jl
+  formats:
+  - format: julia
+  - format: png
+  - format: pdf
 evaluation:
   checklist:
-    - Uses Plots.jl layered lines, ribbons or intervals, milestone marker, and annotation.
-    - Includes publication-oriented theme, labels, legend, dimensions, and exports.
-    - Uses deterministic inline data for multiple scenarios.
-    - Saves PNG and PDF outputs.
+  - Uses Plots.jl layered lines, ribbons or intervals, milestone marker, and annotation.
+  - Includes publication-oriented theme, labels, legend, dimensions, and exports.
+  - Uses deterministic inline data for multiple scenarios.
+  - Saves PNG and PDF outputs.
   rubric:
     Format validity:
       weight: 30
-      criteria: "The response is valid Julia code using correct Plots.jl layer, ribbon, annotation, and savefig syntax."
+      criteria: The response is valid Julia code using correct Plots.jl layer, ribbon, annotation, and savefig syntax.
     Semantic completeness:
       weight: 30
-      criteria: "The plot communicates scenario trends, uncertainty, milestone context, labels, and publication-ready output."
+      criteria: The plot communicates scenario trends, uncertainty, milestone context, labels, and publication-ready output.
     Visual/structural quality:
       weight: 25
-      criteria: "The visual hierarchy, palette, annotation, legend position, and text sizing support report or manuscript communication."
+      criteria: The visual hierarchy, palette, annotation, legend position, and text sizing support report or manuscript communication.
     Robustness:
       weight: 15
-      criteria: "The code is deterministic, uses backend-compatible attributes, and writes explicit PDF and PNG outputs."
+      criteria: The code is deterministic, uses backend-compatible attributes, and writes explicit PDF and PNG outputs.
   pass_conditions:
-    - The plot includes at least three scenario series.
-    - The plot includes uncertainty ribbons or intervals.
-    - The plot includes a milestone marker and annotation.
-    - The code writes PNG and PDF files.
-
+  - The plot includes at least three scenario series.
+  - The plot includes uncertainty ribbons or intervals.
+  - The plot includes a milestone marker and annotation.
+  - The code writes PNG and PDF files.
 tags:
-  - fim
-  - julia-r
-  - plots-jl
-  - publication
-  - design-communication
-  - uncertainty
-  - pdf
+- fim
+- julia-r
+- plots-jl
+- publication
+- design-communication
+- uncertainty
+- pdf

@@ -1,0 +1,71 @@
+schema: "0.4"
+id: pdf_js-04-edge-accessibility-metadata
+type: document/data
+quality: high
+solution: pdf_js
+category: document-data-file-processing
+variant: edge-accessibility-metadata
+references:
+  - "references/fim/overview/electronics-media-docfile/pdf_js.md"
+  - "references/fim/solution/pdf_js.md"
+prompt:
+  system: |-
+    You generate PDF.js browser document viewer artifacts. Output only one complete self-contained HTML document with inline JavaScript and CSS. Do not use Markdown fences or explanatory prose.
+  text: |-
+    Create a PDF.js edge-case accessibility and metadata inspector.
+
+    Requirements:
+    - Use pdfjs-dist 4.x ESM CDN imports with matching worker configuration.
+    - Support password callback handling, invalid PDF errors, missing metadata, rotated pages, CJK/CMap notes, and pages with no extractable text.
+    - Render canvas plus a selectable text layer for the current page when text content is available.
+    - Extract annotations, outline/bookmarks if available, metadata info fields, XMP metadata text when exposed, and page labels if available.
+    - Provide accessibility diagnostics: text layer present, headings not inferable, link annotations count, form widget count, contrast of viewer controls, and keyboard navigation.
+    - Include cleanup for render cancellation, page cleanup, and document destroy.
+    - Include parseability, pagination, fonts, accessibility, formulas/data types, metadata, and deterministic output safeguards in comments and validation checks.
+    - Output only the final HTML artifact.
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.2
+output:
+  text_format: html
+  artifact_kind: pdfjs-accessibility-metadata-inspector
+  formats:
+    - format: html
+    - format: json
+evaluation:
+  checklist:
+    - "Format validity: YAML parses as schema 0.4, generated output is one HTML document, and PDF.js APIs are used without editing the PDF."
+    - "Parseability: JavaScript is syntactically valid, workerSrc matches version, and password/error callbacks are implemented."
+    - "Semantic completeness: password flow, rotated pages, text layer, annotations, outlines, metadata, diagnostics, and cleanup are included."
+    - "Pagination: page labels, page count, rotation-aware viewport, and bounds-checked navigation are implemented."
+    - "Fonts: CMap and standard font data considerations are reported for missing glyphs or CJK text."
+    - "Accessibility: text layer, keyboard navigation, status messages, link/form counts, and diagnostics are visible."
+    - "Formulas/data types: extracted form values, dates, numbers, and text runs are treated as parsed data, not recalculated."
+    - "Metadata: PDF info, XMP metadata, file metadata, outline data, annotations, and diagnostic metadata are displayed/exported."
+    - "Deterministic output: diagnostic ids, export schema, default scale, timestamp, and cleanup order are stable."
+  rubric:
+    - name: "Format validity"
+      weight: 30
+      criteria: "The prompt YAML and generated HTML are parseable, ASCII-only, and use PDF.js viewer/parser APIs correctly."
+    - name: "Semantic completeness"
+      weight: 30
+      criteria: "The inspector covers edge PDF loading, text layer, annotations, metadata, accessibility diagnostics, and cleanup."
+    - name: "Layout/data quality"
+      weight: 25
+      criteria: "The inspector presents canvas, text, diagnostics, and metadata in a readable, accurate, and navigable layout."
+    - name: "Robustness"
+      weight: 15
+      criteria: "The artifact handles protected PDFs, missing text, rotation, font data issues, metadata gaps, and deterministic exports."
+  pass_conditions:
+    - "YAML parses successfully and all file text is ASCII-only."
+    - "Rubric weights are exactly 30, 30, 25, and 15."
+    - "Generated HTML reports errors and missing capabilities clearly instead of crashing."
+    - "All checklist items for parseability, pagination, fonts, accessibility, formulas/data types, metadata, and deterministic output are represented."
+tags:
+  - fim
+  - document-data-file-processing
+  - pdf_js
+  - accessibility
+  - metadata
+  - edge-cases
+

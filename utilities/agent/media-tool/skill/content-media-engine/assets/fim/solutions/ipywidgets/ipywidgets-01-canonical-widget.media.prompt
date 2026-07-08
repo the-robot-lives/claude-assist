@@ -1,0 +1,68 @@
+schema: "0.4"
+id: fim-notebook-livebook-and-widgets-ipywidgets-01-canonical-widget
+type: interactive
+quality: high
+solution: ipywidgets
+category: notebook-livebook-and-widgets
+variant: canonical-widget
+prompt:
+  system: |-
+    You are a senior Python notebook engineer. Output only one complete ASCII Python notebook cell for Jupyter ipywidgets. No Markdown fences, no prose outside code. Use deterministic local sample data when no input data is supplied.
+  text: |-
+    Create a canonical ipywidgets dashboard cell for Jupyter. Use import statements for ipywidgets, IPython.display, numpy, pandas, and matplotlib. Build a small deterministic dataset, then render a VBox or HBox layout with a Dropdown, FloatSlider, IntRangeSlider, Checkbox, Button, and Output widget. Wire the controls with observe(names="value") and Button.on_click, capture plots and summaries inside Output, and update existing widget state rather than rebuilding widgets inside callbacks.
+
+    Requirements: include notebook compatibility comments for JupyterLab, Notebook 7, VS Code, Colab, and Voila; use layout and style properties for readable labels; describe the data shape in code comments; include accessibility labels, colorblind-safe plotting, non-color encodings, fallback demo data, and safe execution checks that avoid eval, shell execution, network reads, and untrusted HTML injection.
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.2
+    top_p: 0.9
+output:
+  text_format: python
+  artifact_kind: jupyter-ipywidgets-cell
+  formats:
+  - format: py
+evaluation:
+  checklist:
+  - "Import check: generated code imports ipywidgets as widgets, display from IPython.display, numpy, pandas, and matplotlib without substituting another widget framework."
+  - "Notebook compatibility: code is suitable for a Jupyter notebook cell and comments mention JupyterLab, Notebook 7, VS Code, Colab, and Voila constraints."
+  - "Reactive state: controls use observe(names=\"value\") or on_click, mutate existing widgets, and render through an Output widget with clear_output(wait=True)."
+  - "Data shape: deterministic local data is a pandas DataFrame or equivalent records with documented columns, missing-value handling, and fallback rows."
+  - "Accessibility and fallback: labels are readable, description_width is handled, colors are colorblind-safe, and the cell remains useful when optional frontend support is missing."
+  - "Safe execution: no eval, exec, shell commands, remote data fetches, credential reads, or untrusted inner HTML are used."
+  rubric:
+  - name: Format validity
+    weight: 30
+    criteria:
+    - "Output is one complete ASCII Python notebook cell with no Markdown fences or explanatory wrapper."
+    - "Required imports are present, syntax is valid, and all widgets are constructed before display."
+    - "The cell includes concise install or compatibility comments without relying on network data."
+  - name: Semantic completeness
+    weight: 30
+    criteria:
+    - "Implements the canonical ipywidgets scenario with real widgets, callbacks, Output rendering, and deterministic data."
+    - "Uses ipywidgets-specific APIs including observe, on_click, VBox or HBox, layout, and style."
+    - "Includes notebook/livebook category checks even though this solution targets Jupyter rather than Livebook."
+  - name: UX/structural quality
+    weight: 25
+    criteria:
+    - "Controls are grouped logically with stable layout widths, readable descriptions, and clear output regions."
+    - "The visualization uses accessible labels, legends, color choices, and non-color cues where practical."
+    - "Widget state changes do not shift or duplicate the layout during interaction."
+  - name: Robustness
+    weight: 15
+    criteria:
+    - "Handles empty filters, missing values, extreme values, and duplicate categories without crashing."
+    - "Uses deterministic seeds and fallback demo data for reproducible notebook execution."
+    - "Documents frontend limitations and avoids unsafe execution paths."
+  pass_conditions:
+  - "All required YAML fields are present and the generated artifact is one valid ASCII Python cell."
+  - "Rubric weights are exactly Format validity 30, Semantic completeness 30, UX/structural quality 25, Robustness 15."
+  - "The prompt requires notebook compatibility, reactive state, data shape, accessibility, fallback, and safe execution checks."
+  - "The solution remains ipywidgets-centered and does not replace the widget surface with Dash, Streamlit, or plain matplotlib."
+tags:
+- fim
+- notebook-livebook-and-widgets
+- jupyter
+- ipywidgets
+- canonical-widget
+

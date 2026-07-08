@@ -32,7 +32,10 @@ impl FromStr for Quality {
             "low" => Ok(Quality::Low),
             "medium" | "med" => Ok(Quality::Medium),
             "high" => Ok(Quality::High),
-            other => Err(format!("Unknown quality '{}'; expected low|medium|high", other)),
+            other => Err(format!(
+                "Unknown quality '{}'; expected low|medium|high",
+                other
+            )),
         }
     }
 }
@@ -200,7 +203,11 @@ fn default_role() -> String {
 #[serde(untagged)]
 pub enum DependencyRef {
     Simple(String),
-    Detailed { r#ref: String, r#as: Option<String>, collapse: Option<String> },
+    Detailed {
+        r#ref: String,
+        r#as: Option<String>,
+        collapse: Option<String>,
+    },
 }
 
 impl DependencyRef {
@@ -390,7 +397,10 @@ pub fn parse_prompt_file(path: &Path) -> color_eyre::Result<ParsedPrompt> {
     } else {
         let name = path.file_name().unwrap().to_str().unwrap();
         let base = name.strip_suffix(".prompt").unwrap();
-        base.rsplit_once('.').map(|(stem, _)| stem).unwrap_or(base).to_string()
+        base.rsplit_once('.')
+            .map(|(stem, _)| stem)
+            .unwrap_or(base)
+            .to_string()
     };
 
     let output_dir = path.parent().unwrap_or(Path::new(".")).to_path_buf();
@@ -459,19 +469,37 @@ fn normalize_to_v03(payload: &mut PromptPayload) {
     }
 }
 
-fn detect_asset_info(path: &Path, payload: &PromptPayload) -> (AssetType, AudioKind, Vec<FormatEntry>) {
+fn detect_asset_info(
+    path: &Path,
+    payload: &PromptPayload,
+) -> (AssetType, AudioKind, Vec<FormatEntry>) {
     if is_media_prompt(path) {
         let (asset_type, audio_kind) = AssetType::from_type_str(&payload.r#type);
         let formats = if !payload.output.formats.is_empty() {
             payload.output.formats.clone()
         } else if let Some(ref reqs) = payload.requirements {
             if let Some(ref fmt) = reqs.format {
-                vec![FormatEntry { format: fmt.clone(), quality: None, filename: None, description: None }]
+                vec![FormatEntry {
+                    format: fmt.clone(),
+                    quality: None,
+                    filename: None,
+                    description: None,
+                }]
             } else {
-                vec![FormatEntry { format: asset_type.default_extension().into(), quality: None, filename: None, description: None }]
+                vec![FormatEntry {
+                    format: asset_type.default_extension().into(),
+                    quality: None,
+                    filename: None,
+                    description: None,
+                }]
             }
         } else {
-            vec![FormatEntry { format: asset_type.default_extension().into(), quality: None, filename: None, description: None }]
+            vec![FormatEntry {
+                format: asset_type.default_extension().into(),
+                quality: None,
+                filename: None,
+                description: None,
+            }]
         };
         (asset_type, audio_kind, formats)
     } else {
@@ -479,6 +507,15 @@ fn detect_asset_info(path: &Path, payload: &PromptPayload) -> (AssetType, AudioK
         let base = name.strip_suffix(".prompt").unwrap();
         let ext = base.rsplit_once('.').map(|(_, e)| e).unwrap_or("png");
         let asset_type = AssetType::from_extension(ext);
-        (asset_type, AudioKind::Voice, vec![FormatEntry { format: ext.into(), quality: None, filename: None, description: None }])
+        (
+            asset_type,
+            AudioKind::Voice,
+            vec![FormatEntry {
+                format: ext.into(),
+                quality: None,
+                filename: None,
+                description: None,
+            }],
+        )
     }
 }

@@ -1,0 +1,68 @@
+schema: "0.4"
+id: fim-notebook-livebook-and-widgets-kino-plotly-02-dense-reactive-stress-widget
+type: visualization
+quality: high
+solution: kino-plotly
+category: notebook-livebook-and-widgets
+variant: dense-reactive-stress-widget
+prompt:
+  system: |-
+    You are a senior Elixir Livebook scientific visualization engineer. Output only one complete ASCII Elixir Livebook code cell for Kino.Plotly. No Markdown fences, no prose outside code. Prioritize bounded high-density figures and responsive notebook behavior.
+  text: |-
+    Create a dense reactive Kino.Plotly stress visualization. Generate deterministic bounded data for multiple Plotly traces, such as a heatmap plus contour, scatter3d point cloud, surface plus projected contour, or multi-series line chart. Validate trace array lengths or z matrix dimensions, downsample or aggregate before rendering, and include layout controls such as legend orientation, hovermode, scene camera, margins, and colorscales.
+
+    Requirements: document Livebook compatibility, Plotly trace data shape, matrix orientation, and browser-rendering limits; include fallback smaller data and wrapper fallback notes; include accessible labels, hover text, color scale legends, and non-color encodings; include safe execution checks for huge traces, remote data, credentials, eval, shell calls, and unavailable Kino.Plotly wrapper.
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.2
+    top_p: 0.9
+output:
+  text_format: elixir
+  artifact_kind: livebook-kino-plotly-stress-cell
+  formats:
+  - format: exs
+evaluation:
+  checklist:
+  - "Import check: generated code installs kino_plotly and kino, creates multiple bounded traces, and calls Kino.Plotly.new/2."
+  - "Notebook compatibility: comments identify Livebook/Kino, Plotly.js browser limits, and wrapper availability."
+  - "Reactive state: figure rebuild or rerun state is explicit; optional updates are bounded and do not rely on uncontrolled browser loops."
+  - "Data shape: trace arrays, z matrix rows/columns, lengths, colorscale fields, and layout domains are validated or documented."
+  - "Accessibility and fallback: hover text, labels, legends, fallback smaller data, and readable color scales are present."
+  - "Safe execution: no huge unbounded traces, remote data, credentials, eval, shell commands, or unguarded wrapper assumptions."
+  rubric:
+  - name: Format validity
+    weight: 30
+    criteria:
+    - "Output is one complete ASCII Elixir Livebook code cell with no Markdown fences or explanatory wrapper."
+    - "The code is valid and all traces are in a list passed to Kino.Plotly.new/2."
+    - "Layout uses correct Plotly fields for 2D and 3D charts."
+  - name: Semantic completeness
+    weight: 30
+    criteria:
+    - "Implements a dense Plotly stress chart with multiple traces, validation, downsampling, and layout tuning."
+    - "Uses Plotly-specific trace type strings, colorscales, hover, legend, and scene options."
+    - "Includes notebook/livebook compatibility, reactive state, data shape, accessibility, fallback, and safe execution checks."
+  - name: UX/structural quality
+    weight: 25
+    criteria:
+    - "Dense visualization remains legible through sampling, legends, colorscales, and hover text."
+    - "Layout choices avoid clipped labels and ambiguous axes."
+    - "Fallback and performance notes are visible in comments or status output."
+  - name: Robustness
+    weight: 15
+    criteria:
+    - "Handles empty data, matrix transposition, mismatched lengths, outliers, and missing wrapper dependency."
+    - "Keeps generated data deterministic and bounded."
+    - "Documents when to switch to the Kino.JS fallback or downsample further."
+  pass_conditions:
+  - "All required YAML fields are present and the generated artifact is one valid ASCII Elixir Livebook cell."
+  - "Rubric weights are exactly Format validity 30, Semantic completeness 30, UX/structural quality 25, Robustness 15."
+  - "The prompt requires notebook/livebook compatibility, reactive state, data shape, accessibility, fallback, and safe execution checks."
+  - "The solution remains Kino.Plotly-centered and treats browser rendering limits explicitly."
+tags:
+- fim
+- notebook-livebook-and-widgets
+- livebook
+- kino-plotly
+- dense-reactive-stress-widget
+

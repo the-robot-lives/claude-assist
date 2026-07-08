@@ -1,0 +1,74 @@
+schema: "0.4"
+id: velocity_js-04-edge-integration-reduced-motion-performance
+type: interactive
+quality: high
+solution: velocity_js
+category: animation-and-motion
+variant: edge-integration-reduced-motion-performance
+references:
+  - "references/fim/overview/canvas-svg-creative-animation/velocity_js.md"
+  - "references/fim/solution/velocity_js.md"
+prompt:
+  system: |-
+    Generate production-quality Velocity.js integration edge-case assets for FIM evaluation. Output only a complete self-contained HTML document with inline CSS and JavaScript.
+  text: |-
+    Create a Velocity.js integration harness for reduced motion, queue cleanup, missing targets, and performance.
+
+    Scenario:
+    Build a mountable transition widget with a list, badge, SVG progress path, scroll container, and diagnostics. Add controls for init, destroy, rebuild, missing target simulation, reduced motion, low-power mode, queue mode, stop, finish, and reverse.
+
+    Implementation requirements:
+    - Use velocity-animate 2.0.6 from a CDN or equivalent import and expose initVelocityMotion(root), destroyVelocityMotion(), rebuildVelocityMotion(), and setReducedMotion(enabled).
+    - Validate root-scoped DOM and SVG targets before calling Velocity; report missing selector groups without throwing.
+    - Specify millisecond durations, easing names or arrays, stagger, delay, loop or repeat bounds, queue names, queue:false parallel sections, pause/resume, stop, finish, and reverse behavior.
+    - Honor prefers-reduced-motion and manual reduced-motion mode by rendering static final states, disabling scroll animation, and disabling loops.
+    - Keep widget, list, badge, SVG path, scroll area, controls, and diagnostics non-overlapping after resize and rebuild.
+    - Use transform, opacity, color, and SVG stroke properties; avoid layout-thrashing animation and conflicting CSS transitions.
+    - Stop active animations, clear queues where appropriate, and reset inline state before destroy or rebuild.
+    - Include low-power mode that reduces targets, disables loops, or shortens transition duration.
+    - Output only the final artifact, with no markdown fences or explanatory prose outside the artifact.
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.2
+output:
+  text_format: html
+  artifact_kind: velocityjs-html-edge-integration-reduced-motion-performance
+  formats:
+    - format: html
+  dimensions:
+    width: 1440
+    height: 900
+  render_expectation: "Interactive Velocity.js robustness harness that survives missing targets, stop, finish, destroy, rebuild, reduced motion, and low-power modes."
+evaluation:
+  checklist:
+    - "Format validity: YAML parses under schema 0.4 and generated output is exactly one HTML artifact with no markdown fences."
+    - "Velocity.js API: Uses root-scoped standalone Velocity() calls, valid DOM/SVG targets, commands, queues, and lifecycle functions."
+    - "Motion timing: Specifies millisecond durations, easing, stagger, delay, loop bounds, queue names, pause/resume, stop, finish, and reverse."
+    - "Visual quality: Widget, list, badge, SVG path, scroll area, controls, and diagnostics remain readable and non-overlapping."
+    - "Reduced motion: Supports prefers-reduced-motion and manual toggle with static final states and no loops or scroll animation."
+    - "Performance: Uses GPU-friendly properties, clears queues, resets inline state, and reduces work in low-power mode."
+  rubric:
+    - name: "Format validity"
+      weight: 30
+      criteria: "YAML and generated HTML are syntactically valid, required fields are present, id and file name match, and the artifact uses Velocity.js rather than a substitute animation library."
+    - name: "Semantic completeness"
+      weight: 30
+      criteria: "The artifact covers lifecycle integration, root-scoped target validation, timing, easing, queues, looping, reduced motion, diagnostics, cleanup, and low-power performance controls."
+    - name: "Motion/visual quality"
+      weight: 25
+      criteria: "Transitions are clear, bounded, correctly targeted, and non-overlapping across normal, reduced-motion, fault, and rebuild states."
+    - name: "Robustness"
+      weight: 15
+      criteria: "Handles missing targets, destroy/rebuild, stop/finish, reduced motion, resize, and low-power operation without blank screens, stuck queues, or runtime errors."
+  pass_conditions:
+    - "Rubric weights are exactly 30, 30, 25, and 15 for a total of 100."
+    - "YAML parses successfully and all prompt text is ASCII-only."
+    - "Generated artifact runs with no console errors when Velocity.js is available."
+    - "Score is at least 80 out of 100 with no zero score in any rubric dimension."
+tags:
+  - "fim"
+  - "animation-and-motion"
+  - "velocity_js"
+  - "edge-integration-reduced-motion-performance"
+  - "queue-cleanup"
+  - "reduced-motion"

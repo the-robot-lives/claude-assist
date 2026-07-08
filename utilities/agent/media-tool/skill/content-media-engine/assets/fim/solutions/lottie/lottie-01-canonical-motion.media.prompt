@@ -1,0 +1,74 @@
+schema: "0.4"
+id: lottie-01-canonical-motion
+type: interactive
+quality: high
+solution: lottie
+category: animation-and-motion
+variant: canonical-motion
+references:
+  - "references/fim/overview/canvas-svg-creative-animation/lottie.md"
+  - "references/fim/solution/lottie.md"
+prompt:
+  system: |-
+    Generate production-quality Lottie web animation assets for FIM evaluation. Output only a complete self-contained HTML document with inline CSS, JavaScript, and compact inline animation data.
+  text: |-
+    Create a canonical Lottie playback integration that demonstrates designer-authored vector animation in a browser.
+
+    Scenario:
+    Build a product loading and success animation using lottie-web. Include a visible player container, compact inline Lottie JSON animationData, controls for play, pause, stop, speed, direction, and segment playback, plus a small frame diagnostic.
+
+    Implementation requirements:
+    - Use lottie-web 5.12.2 from a CDN or equivalent import and call lottie.loadAnimation() with a valid container.
+    - Use renderer "svg" for the canonical player, loop true for the ambient loader, and autoplay true unless reduced motion is active.
+    - Include explicit frame timing, frameRate, total frames or segment frame ranges, playback speed, direction, loop behavior, and named segment controls.
+    - Validate the player DOM target before loadAnimation() and show a readable fallback if the target is missing.
+    - Include data_ready, DOMLoaded, complete, loopComplete, enterFrame, and data_failed handling where applicable.
+    - Honor prefers-reduced-motion by rendering a poster or final frame with looping and autoplay disabled.
+    - Keep player, controls, status text, and diagnostics inside responsive bounds with no overlap.
+    - Destroy the AnimationItem before reloading or leaving the widget.
+    - Output only the final artifact, with no markdown fences or explanatory prose outside the artifact.
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.22
+output:
+  text_format: html
+  artifact_kind: lottie-html-canonical-motion
+  formats:
+    - format: html
+  dimensions:
+    width: 1440
+    height: 900
+  render_expectation: "Interactive Lottie player suitable for capture at initial load, during looping playback, and after segment playback."
+evaluation:
+  checklist:
+    - "Format validity: YAML parses under schema 0.4 and generated output is exactly one HTML artifact with no markdown fences."
+    - "Lottie API: Uses lottie.loadAnimation() with a valid container, renderer choice, loop, autoplay, controls, events, and destroy()."
+    - "Motion timing: Specifies frameRate, segment frames, speed, direction, loop behavior, autoplay, and playback controls."
+    - "Visual quality: Player, controls, status text, and diagnostics are nonblank, readable, and non-overlapping."
+    - "Reduced motion: Honors prefers-reduced-motion with poster or final frame and no forced autoplay loop."
+    - "Performance: Uses appropriate renderer settings and destroys AnimationItem before reload."
+  rubric:
+    - name: "Format validity"
+      weight: 30
+      criteria: "YAML and generated HTML are syntactically valid, required fields are present, id and file name match, and the artifact uses Lottie rather than a substitute animation library."
+    - name: "Semantic completeness"
+      weight: 30
+      criteria: "The artifact covers Lottie animationData, loadAnimation, renderer settings, frame and segment controls, event handling, target validation, reduced motion, and destroy cleanup."
+    - name: "Motion/visual quality"
+      weight: 25
+      criteria: "Playback is legible, well-framed, visually coherent, and controls or diagnostics do not overlap the player."
+    - name: "Robustness"
+      weight: 15
+      criteria: "Handles missing targets, data failure, reduced motion, resize, reload, and performance settings without blank screens or runtime errors."
+  pass_conditions:
+    - "Rubric weights are exactly 30, 30, 25, and 15 for a total of 100."
+    - "YAML parses successfully and all prompt text is ASCII-only."
+    - "Generated artifact runs with no console errors when lottie-web is available."
+    - "Score is at least 80 out of 100 with no zero score in any rubric dimension."
+tags:
+  - "fim"
+  - "animation-and-motion"
+  - "lottie"
+  - "canonical-motion"
+  - "lottie-web"
+  - "playback"

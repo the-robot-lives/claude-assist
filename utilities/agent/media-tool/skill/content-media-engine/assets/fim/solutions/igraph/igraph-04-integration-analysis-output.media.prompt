@@ -1,53 +1,73 @@
-schema: "0.4"
+schema: '0.4'
 id: igraph-04-integration-analysis-output
 type: data
 quality: high
 solution: igraph
 category: network-and-graph-visualization
 variant: edge-integration-analysis-output
-
 prompt:
   context:
-    - "references/fim/overview/network-3d-graphics/igraph.md"
-    - "references/fim/solution/igraph.md"
-  text: |
-    Emit an igraph analysis-output package for a graph pipeline. Provide Python code
+  - references/fim/overview/network-3d-graphics/igraph.md
+  - references/fim/solution/igraph.md
+  text: 'Emit an igraph analysis-output package for a graph pipeline. Provide Python code
+
     that reads an edge CSV, builds an igraph Graph with named vertices, computes
+
     centrality, communities, connected components, shortest path samples, and graph
+
     summary statistics, then writes GraphML plus node_metrics.csv and
+
     edge_metrics.csv. Include validation for unknown endpoints, duplicate edges,
+
     missing weights, directed versus undirected assumptions, and index-to-name
+
     mapping errors.
 
+    '
+  system: You generate artifacts for igraph. Output only the requested artifact content. No markdown fences, no explanations.
+  provider_options:
+    max_tokens: 6144
+    temperature: 0.3
 output:
   formats:
-    - format: py
-    - format: graphml
-    - format: csv
-  expected_artifact: "igraph pipeline script with GraphML export and analysis tables."
-
+  - format: py
+  - format: graphml
+  - format: csv
+  expected_artifact: igraph pipeline script with GraphML export and analysis tables.
+  text_format: igraph
+  artifact_kind: igraph pipeline script with GraphML export and analysis tables.
 evaluation:
   checklist:
-    - "Builds igraph data from CSV with named vertices."
-    - "Exports GraphML and separate node and edge metric tables."
-    - "Includes centrality, community, component, and path outputs."
-    - "Validates endpoint, weight, duplicate, and index/name issues."
+  - Builds igraph data from CSV with named vertices.
+  - Exports GraphML and separate node and edge metric tables.
+  - Includes centrality, community, component, and path outputs.
+  - Validates endpoint, weight, duplicate, and index/name issues.
   rubric:
-    - name: Format validity
-      weight: 30
-      description: "YAML parses and requests script, GraphML, and CSV outputs."
-    - name: Semantic completeness
-      weight: 30
-      description: "Covers igraph ingestion, algorithms, exports, and validation."
-    - name: Visual/structural quality
-      weight: 25
-      description: "Exported data can drive meaningful downstream visualization."
-    - name: Robustness
-      weight: 15
-      description: "Validation prevents common igraph pipeline mistakes."
+  - name: Format validity
+    weight: 30
+    description: YAML parses and requests script, GraphML, and CSV outputs.
+    criteria: YAML parses and requests script, GraphML, and CSV outputs.
+  - name: Semantic completeness
+    weight: 30
+    description: Covers igraph ingestion, algorithms, exports, and validation.
+    criteria: Covers igraph ingestion, algorithms, exports, and validation.
+  - name: Visual/structural quality
+    weight: 25
+    description: Exported data can drive meaningful downstream visualization.
+    criteria: Exported data can drive meaningful downstream visualization.
+  - name: Robustness
+    weight: 15
+    description: Validation prevents common igraph pipeline mistakes.
+    criteria: Validation prevents common igraph pipeline mistakes.
   pass_conditions:
-    - "The package is analysis-first and uses igraph-specific graph handling."
-    - "Exports are compatible with Gephi, NetworkX, or other GraphML consumers."
-    - "Validation explicitly maps vertex indices back to names."
-
-tags: [fim, igraph, integration, graphml, analysis-output, csv, validation]
+  - The package is analysis-first and uses igraph-specific graph handling.
+  - Exports are compatible with Gephi, NetworkX, or other GraphML consumers.
+  - Validation explicitly maps vertex indices back to names.
+tags:
+- fim
+- igraph
+- integration
+- graphml
+- analysis-output
+- csv
+- validation

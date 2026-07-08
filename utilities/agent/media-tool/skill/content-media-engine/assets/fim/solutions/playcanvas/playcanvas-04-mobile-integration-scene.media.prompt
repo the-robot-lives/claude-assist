@@ -29,6 +29,7 @@ output:
   - format: png
   text_format: html
   artifact: PlayCanvas edge integration and mobile scene source asset
+  artifact_kind: PlayCanvas edge integration and mobile scene source asset
   dimensions:
     width: 1440
     height: 900

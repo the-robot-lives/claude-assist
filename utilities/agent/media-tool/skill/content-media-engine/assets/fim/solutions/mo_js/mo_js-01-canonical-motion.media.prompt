@@ -1,0 +1,73 @@
+schema: "0.4"
+id: mo_js-01-canonical-motion
+type: interactive
+quality: high
+solution: mo_js
+category: animation-and-motion
+variant: canonical-motion
+references:
+  - "references/fim/overview/canvas-svg-creative-animation/mo_js.md"
+  - "references/fim/solution/mo_js.md"
+prompt:
+  system: |-
+    Generate production-quality mo.js animation assets for FIM evaluation. Output only a complete self-contained HTML document with inline CSS and JavaScript.
+  text: |-
+    Create a canonical mo.js motion-graphics interaction that demonstrates shapes, bursts, HTML animation, and timeline playback.
+
+    Scenario:
+    Build a like-button style interaction with a central HTML button, a ring Shape, a Burst of particles, a small CustomShape glyph, and a Timeline that can play, replay, pause, and scrub. The initial state must be nonblank and the click or keyboard action should replay the motion at the target position.
+
+    Implementation requirements:
+    - Use @mojs/core from a CDN or equivalent import with mojs.Shape, mojs.Burst, mojs.Html, mojs.Timeline, and mojs.CustomShape or built-in shapes.
+    - Use mo.js delta syntax for animatable properties, explicit durations in milliseconds, easing names or custom easing, delay, repeat or isYoyo where useful, and playback controls.
+    - Validate parent and element targets before creating mo.js modules and show a fallback if required targets are missing.
+    - Keep the injected SVG shapes, HTML button, status label, and controls inside the component bounds with no overlap.
+    - Honor prefers-reduced-motion by showing the selected final state and disabling burst replay and looping.
+    - Reuse modules with tune().replay() rather than creating unbounded SVG nodes on every click.
+    - Include cleanup that removes injected nodes or pauses modules before rebuild.
+    - Output only the final artifact, with no markdown fences or explanatory prose outside the artifact.
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.22
+output:
+  text_format: html
+  artifact_kind: mojs-html-canonical-motion
+  formats:
+    - format: html
+  dimensions:
+    width: 1440
+    height: 900
+  render_expectation: "Interactive mo.js motion graphic suitable for capture before and after replay."
+evaluation:
+  checklist:
+    - "Format validity: YAML parses under schema 0.4 and generated output is exactly one HTML artifact with no markdown fences."
+    - "mo.js API: Uses Shape, Burst, Html, Timeline, delta syntax, valid parent/element targets, and replay controls."
+    - "Motion timing: Specifies durations in milliseconds, easing, delay, repeat or isYoyo behavior, and scrub or playback controls."
+    - "Visual quality: Button, bursts, shapes, status, and controls are nonblank, legible, and non-overlapping."
+    - "Reduced motion: Honors prefers-reduced-motion with final state rendering and no forced burst or loop."
+    - "Performance: Reuses modules, avoids unbounded injected SVG nodes, and provides cleanup before rebuild."
+  rubric:
+    - name: "Format validity"
+      weight: 30
+      criteria: "YAML and generated HTML are syntactically valid, required fields are present, id and file name match, and the artifact uses mo.js rather than a substitute animation library."
+    - name: "Semantic completeness"
+      weight: 30
+      criteria: "The artifact covers Shape, Burst, Html, Timeline, delta syntax, target validation, timing, easing, controls, reduced motion, and cleanup."
+    - name: "Motion/visual quality"
+      weight: 25
+      criteria: "Motion has expressive easing, clear composition, readable feedback, and no overlap between animated graphics and UI."
+    - name: "Robustness"
+      weight: 15
+      criteria: "Handles missing targets, reduced motion, replay, rebuild cleanup, resize, and performance limits without blank screens or runtime errors."
+  pass_conditions:
+    - "Rubric weights are exactly 30, 30, 25, and 15 for a total of 100."
+    - "YAML parses successfully and all prompt text is ASCII-only."
+    - "Generated artifact runs with no console errors when mo.js is available."
+    - "Score is at least 80 out of 100 with no zero score in any rubric dimension."
+tags:
+  - "fim"
+  - "animation-and-motion"
+  - "mo_js"
+  - "canonical-motion"
+  - "burst"
+  - "motion-graphics"

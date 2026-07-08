@@ -1,53 +1,72 @@
-schema: "0.4"
+schema: '0.4'
 id: vis_js-01-topology-exploration
 type: visualization
 quality: high
 solution: vis_js
 category: network-and-graph-visualization
 variant: topology-exploration
-
 prompt:
   context:
-    - "references/fim/overview/network-3d-graphics/vis_js.md"
-    - "references/fim/solution/vis_js.md"
-  text: |
-    Create a vis-network topology explorer for a data-center dependency map. Use
+  - references/fim/overview/network-3d-graphics/vis_js.md
+  - references/fim/solution/vis_js.md
+  text: 'Create a vis-network topology explorer for a data-center dependency map. Use
+
     vis.DataSet nodes and edges with groups for compute, database, cache, queue,
+
     user, and external service nodes. Configure Network options for physics,
+
     interaction hover, multiselect, tooltipDelay, group styling, arrows, smooth
+
     edges, and stabilization. Include hover neighborhood highlighting, focus,
+
     fit/reset controls, tooltips through title fields, and a side panel showing the
+
     selected node and its connected nodes.
 
+    '
+  system: You generate artifacts for vis_js. Output only the requested artifact content. No markdown fences, no explanations.
+  provider_options:
+    max_tokens: 6144
+    temperature: 0.3
 output:
   formats:
-    - format: html
-    - format: png
+  - format: html
+  - format: png
   renderer: vis-network-canvas
-  expected_artifact: "Interactive vis-network topology explorer with DataSet updates."
-
+  expected_artifact: Interactive vis-network topology explorer with DataSet updates.
+  text_format: vis_js
+  artifact_kind: Interactive vis-network topology explorer with DataSet updates.
 evaluation:
   checklist:
-    - "Uses vis.DataSet and new vis.Network or equivalent imports."
-    - "Configures physics, groups, edges, and interaction options."
-    - "Includes hover, focus, fit/reset, tooltips, and side-panel exploration."
-    - "Uses DataSet updates for live interaction."
+  - Uses vis.DataSet and new vis.Network or equivalent imports.
+  - Configures physics, groups, edges, and interaction options.
+  - Includes hover, focus, fit/reset, tooltips, and side-panel exploration.
+  - Uses DataSet updates for live interaction.
   rubric:
-    - name: Format validity
-      weight: 30
-      description: "YAML parses and declares vis-network output."
-    - name: Semantic completeness
-      weight: 30
-      description: "Covers DataSet graph data, options, interaction, and topology exploration."
-    - name: Visual/structural quality
-      weight: 25
-      description: "Topology is readable with groups, arrows, labels, and focus states."
-    - name: Robustness
-      weight: 15
-      description: "Handles stabilization, duplicate IDs, and container sizing."
+  - name: Format validity
+    weight: 30
+    description: YAML parses and declares vis-network output.
+    criteria: YAML parses and declares vis-network output.
+  - name: Semantic completeness
+    weight: 30
+    description: Covers DataSet graph data, options, interaction, and topology exploration.
+    criteria: Covers DataSet graph data, options, interaction, and topology exploration.
+  - name: Visual/structural quality
+    weight: 25
+    description: Topology is readable with groups, arrows, labels, and focus states.
+    criteria: Topology is readable with groups, arrows, labels, and focus states.
+  - name: Robustness
+    weight: 15
+    description: Handles stabilization, duplicate IDs, and container sizing.
+    criteria: Handles stabilization, duplicate IDs, and container sizing.
   pass_conditions:
-    - "The prompt uses vis-network APIs and option structure."
-    - "The output supports interactive topology exploration."
-    - "The container and DataSet behavior are explicit."
-
-tags: [fim, vis-js, vis-network, topology-exploration, dataset, canvas]
+  - The prompt uses vis-network APIs and option structure.
+  - The output supports interactive topology exploration.
+  - The container and DataSet behavior are explicit.
+tags:
+- fim
+- vis-js
+- vis-network
+- topology-exploration
+- dataset
+- canvas

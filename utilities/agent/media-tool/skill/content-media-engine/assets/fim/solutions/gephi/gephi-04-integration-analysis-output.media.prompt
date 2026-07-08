@@ -1,52 +1,71 @@
-schema: "0.4"
+schema: '0.4'
 id: gephi-04-integration-analysis-output
 type: data
 quality: high
 solution: gephi
 category: network-and-graph-visualization
 variant: edge-integration-analysis-output
-
 prompt:
   context:
-    - "references/fim/overview/network-3d-graphics/gephi.md"
-    - "references/fim/solution/gephi.md"
-  text: |
-    Emit a Gephi integration and analysis package. Produce valid GEXF 1.3 with
+  - references/fim/overview/network-3d-graphics/gephi.md
+  - references/fim/solution/gephi.md
+  text: 'Emit a Gephi integration and analysis package. Produce valid GEXF 1.3 with
+
     declared node and edge attributes, attvalues, directed edge type, weights, and
+
     viz color, size, and position fields. Include a CSV metrics table for degree,
+
     modularity class, PageRank, betweenness, and component id, plus handoff notes
+
     for NetworkX, igraph, and Sigma.js. Validate namespace usage, unique node IDs,
+
     edge endpoints, attribute declarations, and viz fields.
 
+    '
+  system: You generate artifacts for gephi. Output only the requested artifact content. No markdown fences, no explanations.
+  provider_options:
+    max_tokens: 6144
+    temperature: 0.3
 output:
   formats:
-    - format: gexf
-    - format: csv
-    - format: md
-  expected_artifact: "Gephi-ready interchange graph plus analysis metrics and validation notes."
-
+  - format: gexf
+  - format: csv
+  - format: md
+  expected_artifact: Gephi-ready interchange graph plus analysis metrics and validation notes.
+  text_format: gephi
+  artifact_kind: Gephi-ready interchange graph plus analysis metrics and validation notes.
 evaluation:
   checklist:
-    - "GEXF declares attributes before attvalues reference them."
-    - "Includes valid viz color, size, and position hints."
-    - "Metrics table supports downstream analysis and styling."
-    - "Validation covers namespaces, IDs, endpoints, and handoff compatibility."
+  - GEXF declares attributes before attvalues reference them.
+  - Includes valid viz color, size, and position hints.
+  - Metrics table supports downstream analysis and styling.
+  - Validation covers namespaces, IDs, endpoints, and handoff compatibility.
   rubric:
-    - name: Format validity
-      weight: 30
-      description: "YAML parses and requests valid GEXF, CSV, and markdown."
-    - name: Semantic completeness
-      weight: 30
-      description: "Covers Gephi interchange, metrics, visualization hints, and tool handoff."
-    - name: Visual/structural quality
-      weight: 25
-      description: "GEXF can drive a styled Gephi or Sigma view with meaningful structure."
-    - name: Robustness
-      weight: 15
-      description: "Validation catches common GEXF and integration errors."
+  - name: Format validity
+    weight: 30
+    description: YAML parses and requests valid GEXF, CSV, and markdown.
+    criteria: YAML parses and requests valid GEXF, CSV, and markdown.
+  - name: Semantic completeness
+    weight: 30
+    description: Covers Gephi interchange, metrics, visualization hints, and tool handoff.
+    criteria: Covers Gephi interchange, metrics, visualization hints, and tool handoff.
+  - name: Visual/structural quality
+    weight: 25
+    description: GEXF can drive a styled Gephi or Sigma view with meaningful structure.
+    criteria: GEXF can drive a styled Gephi or Sigma view with meaningful structure.
+  - name: Robustness
+    weight: 15
+    description: Validation catches common GEXF and integration errors.
+    criteria: Validation catches common GEXF and integration errors.
   pass_conditions:
-    - "The GEXF can be imported by Gephi without undeclared attributes."
-    - "Metrics and handoff notes are included."
-    - "The output is data-first and integration-ready."
-
-tags: [fim, gephi, integration, gexf, graph-metrics, sigma-js, analysis-output]
+  - The GEXF can be imported by Gephi without undeclared attributes.
+  - Metrics and handoff notes are included.
+  - The output is data-first and integration-ready.
+tags:
+- fim
+- gephi
+- integration
+- gexf
+- graph-metrics
+- sigma-js
+- analysis-output

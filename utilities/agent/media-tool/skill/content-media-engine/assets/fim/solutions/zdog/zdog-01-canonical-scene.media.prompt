@@ -30,6 +30,7 @@ output:
   - format: png
   text_format: html
   artifact: Zdog canonical scene source asset
+  artifact_kind: Zdog canonical scene source asset
   dimensions:
     width: 1440
     height: 900

@@ -1,53 +1,72 @@
-schema: "0.4"
+schema: '0.4'
 id: networkx-02-dense-stress-layout
 type: visualization
 quality: high
 solution: networkx
 category: network-and-graph-visualization
 variant: dense-graph-stress-layout
-
 prompt:
   context:
-    - "references/fim/overview/network-3d-graphics/networkx.md"
-    - "references/fim/solution/networkx.md"
-  text: |
-    Build a NetworkX dense-graph stress analysis for a medium graph where pure
+  - references/fim/overview/network-3d-graphics/networkx.md
+  - references/fim/solution/networkx.md
+  text: 'Build a NetworkX dense-graph stress analysis for a medium graph where pure
+
     Python limits matter. Load or synthesize a graph with 8000 nodes and 25000
+
     edges, compute inexpensive summary metrics first, then create a sampled
+
     subgraph or community aggregate for drawing. Use spring_layout only on the
+
     sampled view with a fixed seed, omit most labels, and export a stress report
+
     explaining which algorithms were skipped or approximated. Include guidance to
+
     hand off very large graphs to igraph, Gephi, or Sigma.js.
 
+    '
+  system: You generate artifacts for networkx. Output only the requested artifact content. No markdown fences, no explanations.
+  provider_options:
+    max_tokens: 6144
+    temperature: 0.3
 output:
   formats:
-    - format: py
-    - format: png
-    - format: md
-  expected_artifact: "NetworkX stress script with sampled visualization and limit-aware report."
-
+  - format: py
+  - format: png
+  - format: md
+  expected_artifact: NetworkX stress script with sampled visualization and limit-aware report.
+  text_format: networkx
+  artifact_kind: NetworkX stress script with sampled visualization and limit-aware report.
 evaluation:
   checklist:
-    - "Acknowledges NetworkX pure-Python performance limits."
-    - "Uses sampling or aggregation before drawing dense data."
-    - "Reports skipped or approximated algorithms."
-    - "Includes handoff guidance for larger interactive or high-performance needs."
+  - Acknowledges NetworkX pure-Python performance limits.
+  - Uses sampling or aggregation before drawing dense data.
+  - Reports skipped or approximated algorithms.
+  - Includes handoff guidance for larger interactive or high-performance needs.
   rubric:
-    - name: Format validity
-      weight: 30
-      description: "YAML parses and declares script, image, and report outputs."
-    - name: Semantic completeness
-      weight: 30
-      description: "Covers dense graph summary, sampling, drawing, skipped algorithms, and handoff."
-    - name: Visual/structural quality
-      weight: 25
-      description: "Sampled figure remains useful rather than unreadably dense."
-    - name: Robustness
-      weight: 15
-      description: "Avoids expensive all-pairs or full-label operations on dense input."
+  - name: Format validity
+    weight: 30
+    description: YAML parses and declares script, image, and report outputs.
+    criteria: YAML parses and declares script, image, and report outputs.
+  - name: Semantic completeness
+    weight: 30
+    description: Covers dense graph summary, sampling, drawing, skipped algorithms, and handoff.
+    criteria: Covers dense graph summary, sampling, drawing, skipped algorithms, and handoff.
+  - name: Visual/structural quality
+    weight: 25
+    description: Sampled figure remains useful rather than unreadably dense.
+    criteria: Sampled figure remains useful rather than unreadably dense.
+  - name: Robustness
+    weight: 15
+    description: Avoids expensive all-pairs or full-label operations on dense input.
+    criteria: Avoids expensive all-pairs or full-label operations on dense input.
   pass_conditions:
-    - "The prompt does not overstate NetworkX scale or rendering performance."
-    - "The dense visualization is sampled or aggregated."
-    - "Stress limitations are visible in the report."
-
-tags: [fim, networkx, dense-graph, stress-layout, sampling, python-limits]
+  - The prompt does not overstate NetworkX scale or rendering performance.
+  - The dense visualization is sampled or aggregated.
+  - Stress limitations are visible in the report.
+tags:
+- fim
+- networkx
+- dense-graph
+- stress-layout
+- sampling
+- python-limits

@@ -1,0 +1,80 @@
+schema: "0.4"
+id: jimp-02-dense-batch-performance-pipeline
+type: image/visualization/data
+quality: high
+solution: jimp
+category: image-and-video-processing
+variant: dense-batch-performance-pipeline
+references:
+  - "references/fim/overview/electronics-media-docfile/jimp.md"
+  - "references/fim/solution/jimp.md"
+prompt:
+  system: |-
+    You generate Jimp image-processing artifacts. Output only one complete ASCII JavaScript module. Do not use markdown fences or explanatory prose.
+  text: |-
+    Create a dense batch Jimp pipeline for dependency-free image preparation in serverless and browser runtimes.
+
+    Requirements:
+    - Build a deterministic batch runner that converts many uploaded images into 320px thumbnails, 800px previews, and compressed JPEG fallbacks.
+    - Use Jimp v1 APIs with async loading, clone() before divergent outputs, contain(), cover(), background(), getBuffer(), and write().
+    - Limit concurrency explicitly, sort inputs by stable name, and avoid high-volume server assumptions that would be better served by Sharp.
+    - Include dimensions for thumbnail 320x320, preview 800x600, and original-derived max dimension 1600.
+    - Specify srgb RGBA bitmap assumptions, PNG alpha preservation, JPEG alpha flattening to #ffffff, and no embedded ICC preservation guarantee.
+    - Support input formats PNG, JPEG, BMP, TIFF, GIF and output formats PNG, JPEG, JSON manifest, and optional base64 data URLs.
+    - Include memory and performance controls: per-image pixel budget, total decoded byte estimate, early downscale, queue backpressure, timeout per item, and scan loop limits.
+    - Emit deterministic metadata JSON per image and a batch manifest with source hash, dimensions, output sizes, MIME types, alpha decisions, elapsed milliseconds, warnings, and stable filenames.
+    - Include deterministic output checks for sort order, quality settings, output naming, warning order, and manifest key order.
+    - Output only the final JavaScript artifact.
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.2
+output:
+  text_format: javascript
+  artifact_kind: jimp-batch-performance-pipeline
+  dimensions:
+    width: 800
+    height: 600
+  color_profile: srgb-rgba-assumed
+  alpha: png-preserved-jpeg-flattened
+  formats:
+    - format: js
+    - format: png
+    - format: jpg
+    - format: json
+evaluation:
+  checklist:
+    - "Format validity: YAML parses as schema 0.4, generated output is one JavaScript module, and Jimp v1 APIs are used."
+    - "Semantic completeness: deterministic batch runner, variants, queueing, clone use, PNG/JPEG outputs, and manifest writing are present."
+    - "Dimensions: thumbnails are 320x320, previews are 800x600, and source-derived max dimension is 1600."
+    - "Color profile and alpha: srgb RGBA assumptions, PNG alpha preservation, JPEG flattening, and ICC limitations are explicit."
+    - "File formats: PNG, JPEG, BMP, TIFF, GIF input and PNG, JPEG, JSON, base64 output are represented."
+    - "Memory and performance: concurrency limits, pixel budgets, decoded byte estimates, early downscale, backpressure, timeouts, and scan limits are covered."
+    - "Metadata: per-image metadata and batch manifest record hashes, dimensions, sizes, MIME types, alpha decisions, timings, warnings, and filenames."
+    - "Deterministic output: input sorting, quality settings, filenames, warning order, and manifest keys are stable."
+  rubric:
+    - name: "Format validity"
+      weight: 30
+      criteria: "The prompt YAML and generated JavaScript are parseable, ASCII-only, and use Jimp as the primary image engine."
+    - name: "Semantic completeness"
+      weight: 30
+      criteria: "The artifact covers batch orchestration, variants, output formats, alpha handling, memory constraints, manifests, and deterministic behavior."
+    - name: "Output quality"
+      weight: 25
+      criteria: "The generated thumbnails and previews are consistently sized, readable, format-correct, and encoded with suitable quality settings."
+    - name: "Robustness"
+      weight: 15
+      criteria: "The artifact handles slow pure-JS processing, memory pressure, malformed images, alpha loss, queue failures, and deterministic reruns."
+  pass_conditions:
+    - "YAML parses successfully and all file text is ASCII-only."
+    - "Rubric weights are exactly Format validity 30, Semantic completeness 30, Output quality 25, and Robustness 15."
+    - "Generated JavaScript contains no markdown fences and uses Jimp rather than native image libraries."
+    - "All dimensions, color profile/alpha, file format, memory/performance, metadata, and deterministic output checks are represented."
+    - "Rubric score is at least 80 out of 100 and no required checklist item is absent."
+tags:
+  - fim
+  - image-and-video-processing
+  - jimp
+  - dense-batch-performance-pipeline
+  - serverless
+  - batch-images
+  - pure-js

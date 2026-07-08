@@ -1,0 +1,74 @@
+schema: "0.4"
+id: mo_js-04-edge-integration-reduced-motion-performance
+type: interactive
+quality: high
+solution: mo_js
+category: animation-and-motion
+variant: edge-integration-reduced-motion-performance
+references:
+  - "references/fim/overview/canvas-svg-creative-animation/mo_js.md"
+  - "references/fim/solution/mo_js.md"
+prompt:
+  system: |-
+    Generate production-quality mo.js integration edge-case assets for FIM evaluation. Output only a complete self-contained HTML document with inline CSS and JavaScript.
+  text: |-
+    Create a mo.js integration harness for target validity, cleanup, reduced motion, and performance edge cases.
+
+    Scenario:
+    Build a mountable effects widget with a focus ring, click burst, hover swirl, and HTML badge animation. Add controls for missing parent simulation, reduced motion, low-power mode, replay, cleanup, and rebuild. Show diagnostics for module count, injected SVG count, target validity, and last replay position.
+
+    Implementation requirements:
+    - Use @mojs/core from a CDN or equivalent import and expose initEffects(root), destroyEffects(), rebuildEffects(), setReducedMotion(enabled), and setLowPowerMode(enabled).
+    - Validate root-scoped parent and element targets before constructing Shape, Burst, ShapeSwirl or Shape, Html, and Timeline modules.
+    - Use delta syntax with explicit millisecond durations, easing, delay, repeat, isYoyo, speed, setProgress, and replay behavior.
+    - Reuse modules with tune().replay() and never allocate new bursts on every pointer event.
+    - Honor prefers-reduced-motion and manual reduced-motion mode by rendering a static selected state and disabling bursts and loops.
+    - Keep controls, diagnostics, target area, injected SVG graphics, and HTML badge non-overlapping after resize and rebuild.
+    - Remove injected SVG nodes, pause modules, and clear listeners during destroy.
+    - Include low-power mode that reduces particle count, disables swirl, or shortens loops.
+    - Output only the final artifact, with no markdown fences or explanatory prose outside the artifact.
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.2
+output:
+  text_format: html
+  artifact_kind: mojs-html-edge-integration-reduced-motion-performance
+  formats:
+    - format: html
+  dimensions:
+    width: 1440
+    height: 900
+  render_expectation: "Interactive mo.js robustness harness that survives missing targets, cleanup, rebuild, reduced motion, and low-power modes."
+evaluation:
+  checklist:
+    - "Format validity: YAML parses under schema 0.4 and generated output is exactly one HTML artifact with no markdown fences."
+    - "mo.js API: Uses root-scoped Shape, Burst, ShapeSwirl or Shape, Html, Timeline modules with valid targets and lifecycle functions."
+    - "Motion timing: Specifies millisecond durations, easing, delay, repeat, isYoyo, speed, progress, and replay behavior."
+    - "Visual quality: Controls, diagnostics, target area, SVG graphics, and HTML badge remain readable and non-overlapping."
+    - "Reduced motion: Supports prefers-reduced-motion and manual toggle with bursts and loops disabled."
+    - "Performance: Reuses modules, limits particles in low-power mode, removes injected SVG nodes, and clears listeners."
+  rubric:
+    - name: "Format validity"
+      weight: 30
+      criteria: "YAML and generated HTML are syntactically valid, required fields are present, id and file name match, and the artifact uses mo.js rather than a substitute animation library."
+    - name: "Semantic completeness"
+      weight: 30
+      criteria: "The artifact covers lifecycle integration, target validation, timing, easing, looping, reduced motion, diagnostics, cleanup, and low-power performance controls."
+    - name: "Motion/visual quality"
+      weight: 25
+      criteria: "Effects are clear, bounded, correctly targeted, and non-overlapping across normal, reduced-motion, fault, and rebuild states."
+    - name: "Robustness"
+      weight: 15
+      criteria: "Handles missing targets, destroy/rebuild, reduced motion, resize, and low-power operation without blank screens, duplicate nodes, or runtime errors."
+  pass_conditions:
+    - "Rubric weights are exactly 30, 30, 25, and 15 for a total of 100."
+    - "YAML parses successfully and all prompt text is ASCII-only."
+    - "Generated artifact runs with no console errors when mo.js is available."
+    - "Score is at least 80 out of 100 with no zero score in any rubric dimension."
+tags:
+  - "fim"
+  - "animation-and-motion"
+  - "mo_js"
+  - "edge-integration-reduced-motion-performance"
+  - "cleanup"
+  - "target-validation"

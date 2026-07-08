@@ -1,0 +1,71 @@
+schema: "0.4"
+id: pdf_js-03-business-review
+type: document/data
+quality: high
+solution: pdf_js
+category: document-data-file-processing
+variant: business-review
+references:
+  - "references/fim/overview/electronics-media-docfile/pdf_js.md"
+  - "references/fim/solution/pdf_js.md"
+prompt:
+  system: |-
+    You generate PDF.js browser document viewer artifacts. Output only one complete self-contained HTML document with inline JavaScript and CSS. Do not use Markdown fences or explanatory prose.
+  text: |-
+    Create a PDF.js business document review workbench for contracts and reports.
+
+    Requirements:
+    - Use pdfjs-dist 4.x ESM CDN imports and configure a matching worker.
+    - Load an uploaded PDF and provide page preview, extracted text, metadata, and document classification fields.
+    - Include reviewer controls for status, risk level, due date, owner, and notes using deterministic local sample defaults.
+    - Extract text for the current page and full document, then compute simple counts for pages, words, dates, currency-like values, and risk terms.
+    - Render annotation/link information when available and list link destinations or missing annotations.
+    - Include export of a JSON review summary without modifying the PDF.
+    - Include parseability, pagination, fonts, accessibility, formulas/data types, metadata, and deterministic output safeguards in comments and validation checks.
+    - Output only the final HTML artifact.
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.2
+output:
+  text_format: html
+  artifact_kind: pdfjs-business-review-workbench
+  formats:
+    - format: html
+    - format: json
+evaluation:
+  checklist:
+    - "Format validity: YAML parses as schema 0.4, generated output is one HTML document, and PDF.js reads/renders but does not edit PDFs."
+    - "Parseability: JavaScript is syntactically valid, workerSrc is configured, and JSON review export works."
+    - "Semantic completeness: page preview, text extraction, reviewer fields, risk counts, annotations, metadata, and summary export are included."
+    - "Pagination: current page, total pages, page navigation, and page-specific review context are handled."
+    - "Fonts: missing embedded fonts and standard font data notes are displayed when relevant."
+    - "Accessibility: reviewer controls are labeled, keyboard usable, high contrast, and extracted text is selectable."
+    - "Formulas/data types: counts for dates, currency-like values, risk terms, booleans, and status fields are deterministic."
+    - "Metadata: PDF info, file metadata, review metadata, and exported JSON metadata are present."
+    - "Deterministic output: default review fields, count logic, export schema, timestamp, and ordering are stable."
+  rubric:
+    - name: "Format validity"
+      weight: 30
+      criteria: "The prompt YAML and generated HTML are parseable, ASCII-only, and use PDF.js for PDF viewing and extraction."
+    - name: "Semantic completeness"
+      weight: 30
+      criteria: "The review workbench includes PDF preview, extracted data, annotation awareness, reviewer workflow, and JSON export."
+    - name: "Layout/data quality"
+      weight: 25
+      criteria: "The UI presents page preview, text, metadata, and review fields clearly with accurate counts and data labels."
+    - name: "Robustness"
+      weight: 15
+      criteria: "The artifact handles missing annotations, missing metadata, failed loads, font issues, and deterministic exports."
+  pass_conditions:
+    - "YAML parses successfully and all file text is ASCII-only."
+    - "Rubric weights are exactly 30, 30, 25, and 15."
+    - "Generated HTML exports a stable JSON review summary and does not claim to modify the PDF."
+    - "All checklist items for parseability, pagination, fonts, accessibility, formulas/data types, metadata, and deterministic output are represented."
+tags:
+  - fim
+  - document-data-file-processing
+  - pdf_js
+  - business-review
+  - metadata
+  - json-export
+

@@ -1,0 +1,72 @@
+schema: "0.4"
+id: jspdf-02-multipage-stress
+type: document/data
+quality: high
+solution: jspdf
+category: document-data-file-processing
+variant: multipage-stress
+references:
+  - "references/fim/overview/electronics-media-docfile/jspdf.md"
+  - "references/fim/solution/jspdf.md"
+prompt:
+  system: |-
+    You generate browser-first jsPDF document artifacts. Output only one complete self-contained HTML document with inline JavaScript and CSS. Do not use Markdown fences or explanatory prose.
+  text: |-
+    Create a jsPDF multi-page stress artifact for a long audit packet.
+
+    Requirements:
+    - Use jsPDF plus jspdf-autotable from CDNs.
+    - Generate at least 120 deterministic rows with mixed numeric, date, status, boolean, and text fields.
+    - Use AutoTable for the dense table and include repeated headers, zebra rows, right-aligned numbers, status styling, and long text wrapping.
+    - Add a summary page, multi-page table body, exception appendix, and final sign-off page.
+    - Add page numbers after all pages are created using `getNumberOfPages()` and `setPage()`.
+    - Demonstrate explicit page-break guards for narrative sections outside AutoTable.
+    - Include custom filename, PDF metadata, deterministic generated timestamp, and a compact audit hash derived from the sample data.
+    - Include parseability, pagination, fonts, accessibility, formulas/data types, metadata, and deterministic output safeguards in the code comments.
+    - Output only the final HTML artifact.
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.2
+output:
+  text_format: html
+  artifact_kind: jspdf-multipage-table-report
+  formats:
+    - format: html
+    - format: pdf
+evaluation:
+  checklist:
+    - "Format validity: YAML parses as schema 0.4, generated output is one HTML document, and jsPDF plus AutoTable APIs are used."
+    - "Parseability: JavaScript is syntactically valid, dependencies load in order, and generation does not require user data."
+    - "Semantic completeness: summary, dense table, exceptions, and sign-off pages are present."
+    - "Pagination: AutoTable repeats headers, page footers show current/total pages, and manual sections do not overflow."
+    - "Fonts: built-in fonts and sizes are selected consistently and long text wrapping is measured before placement."
+    - "Accessibility: HTML controls are labeled, PDF text remains selectable, contrast is high, and summary text describes table contents."
+    - "Formulas/data types: typed rows drive counts, totals, rates, dates, booleans, status labels, and derived exception flags."
+    - "Metadata: PDF info, report id, audit hash, filename, and deterministic timestamp are present."
+    - "Deterministic output: row generation, sorting, calculations, colors, timestamps, and filenames are stable across runs."
+  rubric:
+    - name: "Format validity"
+      weight: 30
+      criteria: "The prompt YAML and generated HTML are parseable, ASCII-only, and use jsPDF with AutoTable correctly."
+    - name: "Semantic completeness"
+      weight: 30
+      criteria: "The long audit packet covers all requested pages, dense data, summary logic, and exception reporting."
+    - name: "Layout/data quality"
+      weight: 25
+      criteria: "The table remains readable across pages with correct alignment, wrapping, repeated headers, and stable totals."
+    - name: "Robustness"
+      weight: 15
+      criteria: "The artifact remains stable for dense rows, long labels, empty exception sets, metadata, and deterministic reruns."
+  pass_conditions:
+    - "YAML parses successfully and all file text is ASCII-only."
+    - "Rubric weights are exactly 30, 30, 25, and 15."
+    - "Generated artifact creates a valid multi-page PDF and does not clip dense table content."
+    - "All checklist items for parseability, pagination, fonts, accessibility, formulas/data types, metadata, and deterministic output are represented."
+tags:
+  - fim
+  - document-data-file-processing
+  - jspdf
+  - multipage
+  - autotable
+  - stress
+

@@ -1,52 +1,70 @@
-schema: "0.4"
+schema: '0.4'
 id: d3-force-02-dense-stress-layout
 type: visualization
 quality: high
 solution: d3-force
 category: network-and-graph-visualization
 variant: dense-graph-stress-layout
-
 prompt:
   context:
-    - "references/fim/overview/network-3d-graphics/d3-force.md"
-    - "references/fim/solution/d3-force.md"
-  text: |
-    Build a D3 force dense-graph stress demo using Canvas rendering for 10000
+  - references/fim/overview/network-3d-graphics/d3-force.md
+  - references/fim/solution/d3-force.md
+  text: 'Build a D3 force dense-graph stress demo using Canvas rendering for 10000
+
     nodes and 30000 links. Use forceManyBody with distanceMax and theta tuning,
+
     forceLink with low iterations, forceX/forceY to keep components on screen, and
+
     a manual warm-up tick loop before animation. Display live performance counters
+
     for alpha, tick count, frame time, visible labels, and edge draw count. Include
+
     zoom-level edge hiding and a warning that SVG should be avoided at this scale.
 
+    '
+  system: You generate artifacts for d3-force. Output only the requested artifact content. No markdown fences, no explanations.
+  provider_options:
+    max_tokens: 6144
+    temperature: 0.3
 output:
   formats:
-    - format: html
-    - format: json
+  - format: html
+  - format: json
   renderer: canvas
-  expected_artifact: "Canvas-based D3 force stress visualization with performance telemetry."
-
+  expected_artifact: Canvas-based D3 force stress visualization with performance telemetry.
+  text_format: d3-force
+  artifact_kind: Canvas-based D3 force stress visualization with performance telemetry.
 evaluation:
   checklist:
-    - "Uses Canvas rather than SVG for the dense graph."
-    - "Tunes forceManyBody, forceLink, alpha, and pre-warm ticks for stress behavior."
-    - "Includes performance counters and level-of-detail edge or label hiding."
-    - "States realistic limits and fallback strategies."
+  - Uses Canvas rather than SVG for the dense graph.
+  - Tunes forceManyBody, forceLink, alpha, and pre-warm ticks for stress behavior.
+  - Includes performance counters and level-of-detail edge or label hiding.
+  - States realistic limits and fallback strategies.
   rubric:
-    - name: Format validity
-      weight: 30
-      description: "YAML parses and specifies dense visualization plus telemetry output."
-    - name: Semantic completeness
-      weight: 30
-      description: "Covers dense force simulation tuning, Canvas rendering, and stress reporting."
-    - name: Visual/structural quality
-      weight: 25
-      description: "Dense output remains interpretable through LOD controls and counters."
-    - name: Robustness
-      weight: 15
-      description: "Avoids runaway simulation settings and handles large graph rendering safely."
+  - name: Format validity
+    weight: 30
+    description: YAML parses and specifies dense visualization plus telemetry output.
+    criteria: YAML parses and specifies dense visualization plus telemetry output.
+  - name: Semantic completeness
+    weight: 30
+    description: Covers dense force simulation tuning, Canvas rendering, and stress reporting.
+    criteria: Covers dense force simulation tuning, Canvas rendering, and stress reporting.
+  - name: Visual/structural quality
+    weight: 25
+    description: Dense output remains interpretable through LOD controls and counters.
+    criteria: Dense output remains interpretable through LOD controls and counters.
+  - name: Robustness
+    weight: 15
+    description: Avoids runaway simulation settings and handles large graph rendering safely.
+    criteria: Avoids runaway simulation settings and handles large graph rendering safely.
   pass_conditions:
-    - "The prompt uses D3-force as the layout engine and Canvas as the renderer."
-    - "Stress metrics are first-class output."
-    - "The prompt does not recommend SVG DOM rendering for 10000 nodes."
-
-tags: [fim, d3-force, dense-graph, stress-layout, canvas, performance]
+  - The prompt uses D3-force as the layout engine and Canvas as the renderer.
+  - Stress metrics are first-class output.
+  - The prompt does not recommend SVG DOM rendering for 10000 nodes.
+tags:
+- fim
+- d3-force
+- dense-graph
+- stress-layout
+- canvas
+- performance

@@ -1,0 +1,72 @@
+schema: "0.4"
+id: jspdf-01-canonical-generation
+type: document/data
+quality: high
+solution: jspdf
+category: document-data-file-processing
+variant: canonical-generation
+references:
+  - "references/fim/overview/electronics-media-docfile/jspdf.md"
+  - "references/fim/solution/jspdf.md"
+prompt:
+  system: |-
+    You generate browser-first jsPDF document artifacts. Output only one complete self-contained HTML document with inline JavaScript and CSS. Do not use Markdown fences or explanatory prose.
+  text: |-
+    Create a canonical jsPDF generation example for a client-side invoice PDF.
+
+    Requirements:
+    - Use jsPDF 2.5.x from a CDN and create the document with the UMD global `window.jspdf.jsPDF`.
+    - Generate a deterministic invoice PDF with buyer, seller, invoice metadata, line items, subtotal, tax, total, payment terms, and a concise notes section.
+    - Use native jsPDF text, line, rect, fill, font, and page APIs rather than rasterizing HTML.
+    - Keep all coordinates explicit in millimeters on A4 portrait pages.
+    - Include a small deterministic data model with numeric quantity, unit price, tax rate, date strings, booleans, and a calculated total.
+    - Add a visible preview area, a download button, and a `generateInvoicePdf()` function that returns a Blob.
+    - Include page footer metadata with invoice id, page number, generation profile, and deterministic timestamp.
+    - Include parseability, pagination, fonts, accessibility, formulas/data types, metadata, and deterministic output safeguards in the code comments.
+    - Output only the final HTML artifact.
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.2
+output:
+  text_format: html
+  artifact_kind: jspdf-client-pdf-generator
+  formats:
+    - format: html
+    - format: pdf
+evaluation:
+  checklist:
+    - "Format validity: YAML parses as schema 0.4, generated output is one HTML document, and jsPDF APIs are used without Markdown fences."
+    - "Parseability: JavaScript is syntactically valid, loads jsPDF 2.5.x, and exposes `generateInvoicePdf()` returning a Blob."
+    - "Semantic completeness: invoice parties, line items, totals, terms, notes, and document metadata are present."
+    - "Pagination: A4 coordinates stay inside margins, footer page numbers are present, and content has explicit page-break guards."
+    - "Fonts: built-in jsPDF fonts are selected intentionally with size, weight, alignment, and fallback behavior noted."
+    - "Accessibility: HTML controls have labels, PDF text is selectable, color contrast is high, and a screen-reader summary is present."
+    - "Formulas/data types: numeric totals are calculated from typed fields and dates/booleans are formatted deterministically."
+    - "Metadata: PDF info fields, invoice id, source note, generation profile, and deterministic timestamp are included."
+    - "Deterministic output: sample data, sort order, totals, filenames, and timestamp are fixed."
+  rubric:
+    - name: "Format validity"
+      weight: 30
+      criteria: "The prompt YAML and generated HTML are parseable, ASCII-only, and use jsPDF as the primary document generator."
+    - name: "Semantic completeness"
+      weight: 30
+      criteria: "The invoice generation workflow includes all requested business fields, calculations, controls, and PDF output behavior."
+    - name: "Layout/data quality"
+      weight: 25
+      criteria: "PDF layout has clear hierarchy, readable spacing, correct numeric formatting, clean pagination, and coherent typography."
+    - name: "Robustness"
+      weight: 15
+      criteria: "The artifact handles missing optional fields, long item names, browser preview/download behavior, metadata, and deterministic reruns."
+  pass_conditions:
+    - "YAML parses successfully and all file text is ASCII-only."
+    - "Rubric weights are exactly 30, 30, 25, and 15."
+    - "Generated HTML can be opened locally and create a valid PDF without network calls beyond the jsPDF CDN."
+    - "All checklist items for parseability, pagination, fonts, accessibility, formulas/data types, metadata, and deterministic output are represented."
+tags:
+  - fim
+  - document-data-file-processing
+  - jspdf
+  - pdf-generation
+  - invoice
+  - canonical-generation
+

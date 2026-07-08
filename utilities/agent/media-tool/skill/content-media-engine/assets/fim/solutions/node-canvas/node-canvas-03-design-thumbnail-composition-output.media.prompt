@@ -1,0 +1,82 @@
+schema: "0.4"
+id: node-canvas-03-design-thumbnail-composition-output
+type: image/visualization/data
+quality: high
+solution: node-canvas
+category: image-and-video-processing
+variant: design-thumbnail-composition-output
+references:
+  - "references/fim/overview/electronics-media-docfile/node-canvas.md"
+  - "references/fim/solution/node-canvas.md"
+prompt:
+  system: |-
+    You generate node-canvas image-generation artifacts. Output only one complete ASCII JavaScript module. Do not use markdown fences or explanatory prose.
+  text: |-
+    Create a node-canvas design and thumbnail composition output for an automated editorial image service.
+
+    Requirements:
+    - Generate a polished 1200x630 Open Graph image, a 1080x1080 square feed image, and a 640x360 video thumbnail mockup from structured input data.
+    - Use Canvas 2D drawing: gradients, rectangles, clipping paths, arcs, text alignment, measureText wrapping, image masks, logos, and simple chart marks.
+    - Use registerFont before createCanvas and include deterministic fallback metrics if a font cannot be registered.
+    - Include dimensions 1200x630, 1080x1080, 640x360, avatar crop 160x160, and logo lockup max width 220.
+    - Specify srgb canvas assumptions, PNG alpha preservation for transparent variants, JPEG flattening against a named background, and PDF/SVG export notes when vector surfaces are selected.
+    - Support input formats PNG, JPEG, SVG, data URI and output formats PNG, JPEG, SVG, PDF, and JSON metadata.
+    - Include memory and performance controls: one canvas per output, asset reuse, max text length, bounded chart points, stream optional large outputs, and avoid unbounded per-record allocations.
+    - Emit deterministic metadata JSON with layout boxes, text line breaks, font choices, color palette, alpha decisions, image hashes, output formats, byte sizes, and stable filenames.
+    - Include deterministic output checks for text wrapping, layer order, color normalization, rounded coordinates, filenames, and metadata key order.
+    - Output only the final JavaScript artifact.
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.2
+output:
+  text_format: javascript
+  artifact_kind: node-canvas-design-thumbnail-composition
+  dimensions:
+    width: 1200
+    height: 630
+  color_profile: srgb-canvas-assumed
+  alpha: png-preserved-jpeg-flattened
+  formats:
+    - format: js
+    - format: png
+    - format: jpg
+    - format: svg
+    - format: pdf
+    - format: json
+evaluation:
+  checklist:
+    - "Format validity: YAML parses as schema 0.4, generated output is one JavaScript module, and node-canvas APIs are used."
+    - "Semantic completeness: OG image, square feed image, video thumbnail, fonts, layout, charts, logos, metadata, and exports are present."
+    - "Dimensions: outputs are 1200x630, 1080x1080, 640x360, avatar crop is 160x160, and logo max width is 220."
+    - "Color profile and alpha: srgb canvas assumptions, PNG alpha preservation, JPEG flattening, and vector export notes are explicit."
+    - "File formats: PNG, JPEG, SVG, data URI input and PNG, JPEG, SVG, PDF, JSON output are represented."
+    - "Memory and performance: one canvas per output, asset reuse, text caps, bounded chart points, optional streaming, and allocation limits are covered."
+    - "Metadata: layout boxes, line breaks, fonts, palette, alpha decisions, hashes, formats, byte sizes, and filenames are recorded."
+    - "Deterministic output: text wrapping, layer order, color normalization, rounded coordinates, filenames, and metadata keys are stable."
+  rubric:
+    - name: "Format validity"
+      weight: 30
+      criteria: "The prompt YAML and generated JavaScript are parseable, ASCII-only, and use node-canvas for the designed outputs."
+    - name: "Semantic completeness"
+      weight: 30
+      criteria: "The artifact covers all requested compositions, Canvas 2D drawing, font handling, export formats, metadata, and deterministic layout."
+    - name: "Output quality"
+      weight: 25
+      criteria: "The generated editorial images are polished, legible, correctly framed, and suitable for thumbnail and social use."
+    - name: "Robustness"
+      weight: 15
+      criteria: "The artifact handles missing fonts/assets, long text, vector support gaps, memory pressure, export failures, and deterministic reruns."
+  pass_conditions:
+    - "YAML parses successfully and all file text is ASCII-only."
+    - "Rubric weights are exactly Format validity 30, Semantic completeness 30, Output quality 25, and Robustness 15."
+    - "Generated JavaScript contains no markdown fences and uses node-canvas rather than DOM screenshot rendering."
+    - "All dimensions, color profile/alpha, file format, memory/performance, metadata, and deterministic output checks are represented."
+    - "Rubric score is at least 80 out of 100 and no required checklist item is absent."
+tags:
+  - fim
+  - image-and-video-processing
+  - node-canvas
+  - design-thumbnail-composition-output
+  - og-image
+  - editorial-image
+  - canvas-2d

@@ -1,0 +1,73 @@
+schema: "0.4"
+id: mammoth_js-03-cms-reporting
+type: document/data
+quality: high
+solution: mammoth_js
+category: document-data-file-processing
+variant: cms-reporting
+references:
+  - "references/fim/overview/electronics-media-docfile/mammoth_js.md"
+  - "references/fim/solution/mammoth_js.md"
+prompt:
+  system: |-
+    You generate Mammoth.js document ingestion artifacts. Output only one complete ASCII JavaScript file. Do not use Markdown fences or explanatory prose.
+  text: |-
+    Create a Mammoth.js business content migration pipeline for CMS reporting.
+
+    Requirements:
+    - Convert a DOCX quarterly narrative report to semantic HTML and Markdown.
+    - Use a style map for executive summary, KPI callout, risk note, table caption, figure caption, appendix heading, and code reference.
+    - Wrap converted output in a minimal CMS import payload with title, slug, summary, tags, sections, warnings, and asset manifest.
+    - Extract images to deterministic filenames and preserve alt text or create an explicit missing-alt warning.
+    - Include a report-quality audit: heading order, empty links, table count, image count, warnings by type, and unmapped styles.
+    - Keep presentation in CSS class names rather than trying to preserve Word fonts and colors.
+    - Include parseability, pagination, fonts, accessibility, formulas/data types, metadata, and deterministic output safeguards in comments and validation checks.
+    - Output only the final JavaScript artifact.
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.2
+output:
+  text_format: javascript
+  artifact_kind: mammoth-cms-import-pipeline
+  formats:
+    - format: js
+    - format: html
+    - format: md
+    - format: json
+evaluation:
+  checklist:
+    - "Format validity: YAML parses as schema 0.4, generated output is one JavaScript file, and Mammoth.js HTML/Markdown APIs are used."
+    - "Parseability: JavaScript validates input/output paths and writes CMS payload, HTML, Markdown, and audit JSON."
+    - "Semantic completeness: CMS fields, style mapping, sections, asset manifest, warnings, and report audit are present."
+    - "Pagination: page fidelity is not claimed; page-break and appendix markers are preserved or reported for downstream rendering."
+    - "Fonts: Word fonts/colors are mapped to semantic CMS classes with clear limits."
+    - "Accessibility: heading order, alt text, link text, captions, table summaries, and missing-alt warnings are checked."
+    - "Formulas/data types: KPI table cells preserve numbers, percentages, dates, booleans, and formula text as source content."
+    - "Metadata: slug, source filename, style-map version, warning summary, asset manifest, and deterministic timestamp are emitted."
+    - "Deterministic output: slugs, filenames, tag order, warning order, section ids, and timestamp are stable."
+  rubric:
+    - name: "Format validity"
+      weight: 30
+      criteria: "The prompt YAML and generated JavaScript are parseable, ASCII-only, and use Mammoth.js for DOCX conversion."
+    - name: "Semantic completeness"
+      weight: 30
+      criteria: "The CMS migration pipeline includes conversion, style map, payload generation, asset handling, audit, and warnings."
+    - name: "Layout/data quality"
+      weight: 25
+      criteria: "The HTML/Markdown and CMS payload preserve document structure, clean data, captions, and useful classes for styling."
+    - name: "Robustness"
+      weight: 15
+      criteria: "The artifact handles missing alt text, malformed style names, sparse tables, metadata, and deterministic reruns."
+  pass_conditions:
+    - "YAML parses successfully and all file text is ASCII-only."
+    - "Rubric weights are exactly 30, 30, 25, and 15."
+    - "Generated JavaScript produces a CMS-ready payload without claiming visual DOCX fidelity."
+    - "All checklist items for parseability, pagination, fonts, accessibility, formulas/data types, metadata, and deterministic output are represented."
+tags:
+  - fim
+  - document-data-file-processing
+  - mammoth_js
+  - cms-import
+  - reporting
+  - docx-to-markdown
+

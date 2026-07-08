@@ -29,6 +29,7 @@ output:
   - format: png
   text_format: html
   artifact: Cesium.js canonical scene source asset
+  artifact_kind: Cesium.js canonical scene source asset
   dimensions:
     width: 1440
     height: 900

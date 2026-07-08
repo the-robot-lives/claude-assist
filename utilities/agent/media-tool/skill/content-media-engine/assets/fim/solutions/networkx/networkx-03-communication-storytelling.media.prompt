@@ -1,52 +1,70 @@
-schema: "0.4"
+schema: '0.4'
 id: networkx-03-communication-storytelling
 type: visualization
 quality: high
 solution: networkx
 category: network-and-graph-visualization
 variant: communication-storytelling-graph
-
 prompt:
   context:
-    - "references/fim/overview/network-3d-graphics/networkx.md"
-    - "references/fim/solution/networkx.md"
-  text: |
-    Produce a NetworkX communication graph for a stakeholder influence brief.
+  - references/fim/overview/network-3d-graphics/networkx.md
+  - references/fim/solution/networkx.md
+  text: 'Produce a NetworkX communication graph for a stakeholder influence brief.
+
     Build a weighted directed graph, compute PageRank, in-degree, out-degree,
+
     betweenness, communities, and shortest paths between two named stakeholders.
+
     Render a static matplotlib figure with color by community, node size by
+
     PageRank, edge arrows and width by influence strength, and callout annotations
+
     for the bridge stakeholders. Export a table backing every visual claim.
 
+    '
+  system: You generate artifacts for networkx. Output only the requested artifact content. No markdown fences, no explanations.
+  provider_options:
+    max_tokens: 6144
+    temperature: 0.3
 output:
   formats:
-    - format: py
-    - format: png
-    - format: csv
-  expected_artifact: "Static NetworkX story graph and supporting metric table."
-
+  - format: py
+  - format: png
+  - format: csv
+  expected_artifact: Static NetworkX story graph and supporting metric table.
+  text_format: networkx
+  artifact_kind: Static NetworkX story graph and supporting metric table.
 evaluation:
   checklist:
-    - "Uses NetworkX directed weighted metrics."
-    - "Creates a communication figure with callouts and captions."
-    - "Exports supporting data for visual claims."
-    - "Handles disconnected shortest-path cases gracefully."
+  - Uses NetworkX directed weighted metrics.
+  - Creates a communication figure with callouts and captions.
+  - Exports supporting data for visual claims.
+  - Handles disconnected shortest-path cases gracefully.
   rubric:
-    - name: Format validity
-      weight: 30
-      description: "YAML parses and declares script, image, and CSV outputs."
-    - name: Semantic completeness
-      weight: 30
-      description: "Covers story objective, metrics, path analysis, drawing, and exports."
-    - name: Visual/structural quality
-      weight: 25
-      description: "Figure communicates influence, communities, and bridges clearly."
-    - name: Robustness
-      weight: 15
-      description: "Handles missing paths, tied metrics, and style ordering correctly."
+  - name: Format validity
+    weight: 30
+    description: YAML parses and declares script, image, and CSV outputs.
+    criteria: YAML parses and declares script, image, and CSV outputs.
+  - name: Semantic completeness
+    weight: 30
+    description: Covers story objective, metrics, path analysis, drawing, and exports.
+    criteria: Covers story objective, metrics, path analysis, drawing, and exports.
+  - name: Visual/structural quality
+    weight: 25
+    description: Figure communicates influence, communities, and bridges clearly.
+    criteria: Figure communicates influence, communities, and bridges clearly.
+  - name: Robustness
+    weight: 15
+    description: Handles missing paths, tied metrics, and style ordering correctly.
+    criteria: Handles missing paths, tied metrics, and style ordering correctly.
   pass_conditions:
-    - "The communication story is backed by NetworkX-computed metrics."
-    - "The graph is readable as a static figure."
-    - "The exported table supports audit of visual claims."
-
-tags: [fim, networkx, storytelling, communication-graph, centrality, stakeholder-map]
+  - The communication story is backed by NetworkX-computed metrics.
+  - The graph is readable as a static figure.
+  - The exported table supports audit of visual claims.
+tags:
+- fim
+- networkx
+- storytelling
+- communication-graph
+- centrality
+- stakeholder-map

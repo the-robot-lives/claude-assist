@@ -41,6 +41,7 @@ prompt:
 output:
   text_format: html
   artifact: "Tone.js synth composition browser audio source"
+  artifact_kind: "Tone.js synth composition browser audio source"
   formats:
     - format: html
     - format: js

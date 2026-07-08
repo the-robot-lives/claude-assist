@@ -1,0 +1,70 @@
+schema: "0.4"
+id: pdf_js-02-multipage-stress
+type: document/data
+quality: high
+solution: pdf_js
+category: document-data-file-processing
+variant: multipage-stress
+references:
+  - "references/fim/overview/electronics-media-docfile/pdf_js.md"
+  - "references/fim/solution/pdf_js.md"
+prompt:
+  system: |-
+    You generate PDF.js browser document viewer artifacts. Output only one complete self-contained HTML document with inline JavaScript and CSS. Do not use Markdown fences or explanatory prose.
+  text: |-
+    Create a PDF.js multi-page stress viewer for long PDF review.
+
+    Requirements:
+    - Use pdfjs-dist 4.x ESM CDN imports with a matching worker URL.
+    - Render a scrollable list of pages from an uploaded PDF with lazy page rendering and cancellation when scale changes.
+    - Include thumbnail generation for the first ten pages, document-wide text search, and per-page text snippets.
+    - Cap render scale and canvas dimensions to avoid memory blowups.
+    - Reuse the PDFDocumentProxy and call cleanup/destroy when a new file is loaded.
+    - Show page count, rendered page count, search hit count, metadata, and memory-safety notes.
+    - Include parseability, pagination, fonts, accessibility, formulas/data types, metadata, and deterministic output safeguards in comments and validation checks.
+    - Output only the final HTML artifact.
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.2
+output:
+  text_format: html
+  artifact_kind: pdfjs-multipage-stress-viewer
+  formats:
+    - format: html
+evaluation:
+  checklist:
+    - "Format validity: YAML parses as schema 0.4, generated output is one HTML document, and PDF.js APIs are used correctly."
+    - "Parseability: JavaScript is syntactically valid, workerSrc matches version, and async render/search flows are awaited."
+    - "Semantic completeness: lazy multi-page rendering, thumbnails, search, snippets, status counters, metadata, and cleanup are included."
+    - "Pagination: total pages, visible pages, current page targets, thumbnails, and page bounds are handled."
+    - "Fonts: CMap and standard font data notes are included for documents with missing or CJK fonts."
+    - "Accessibility: keyboard navigation, labeled controls, text snippets, live status, and high-contrast page boundaries are included."
+    - "Formulas/data types: extracted text preserves table numbers, dates, page labels, and form-like values for search."
+    - "Metadata: file metadata, PDF info, rendered counts, search counts, and cleanup state are visible."
+    - "Deterministic output: thumbnail ordering, default scale, search normalization, cleanup order, and status formatting are stable."
+  rubric:
+    - name: "Format validity"
+      weight: 30
+      criteria: "The prompt YAML and generated HTML are parseable, ASCII-only, and use PDF.js worker-backed rendering."
+    - name: "Semantic completeness"
+      weight: 30
+      criteria: "The stress viewer covers long-document rendering, thumbnails, text search, counters, metadata, and cleanup."
+    - name: "Layout/data quality"
+      weight: 25
+      criteria: "The multi-page UI keeps pages aligned, snippets readable, controls compact, and document data clear."
+    - name: "Robustness"
+      weight: 15
+      criteria: "The artifact handles large page counts, render cancellation, scale limits, missing fonts, metadata, and deterministic behavior."
+  pass_conditions:
+    - "YAML parses successfully and all file text is ASCII-only."
+    - "Rubric weights are exactly 30, 30, 25, and 15."
+    - "Generated HTML can load a multi-page PDF and avoid unbounded canvas rendering."
+    - "All checklist items for parseability, pagination, fonts, accessibility, formulas/data types, metadata, and deterministic output are represented."
+tags:
+  - fim
+  - document-data-file-processing
+  - pdf_js
+  - multipage
+  - stress
+  - search
+

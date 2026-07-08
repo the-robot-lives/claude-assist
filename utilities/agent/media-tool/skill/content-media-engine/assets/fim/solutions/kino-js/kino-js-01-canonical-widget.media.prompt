@@ -1,0 +1,68 @@
+schema: "0.4"
+id: fim-notebook-livebook-and-widgets-kino-js-01-canonical-widget
+type: interactive
+quality: high
+solution: kino-js
+category: notebook-livebook-and-widgets
+variant: canonical-widget
+prompt:
+  system: |-
+    You are a senior Elixir Livebook engineer. Output only one complete ASCII Elixir Livebook code cell for Kino.JS. No Markdown fences, no prose outside code. Use the current module asset API, not obsolete inline keyword options.
+  text: |-
+    Create a canonical custom Kino.JS widget for Livebook. Define an Elixir module that uses Kino.JS, exposes a new/1 constructor, embeds asset "main.js", exports init(ctx, data), renders into ctx.root, and returns Kino.JS.new(__MODULE__, data). Build a compact interactive read-only widget such as a metric card, checklist, or compact chart wrapper with deterministic local JSON-serializable data.
+
+    Requirements: document Livebook/Kino compatibility and that this is not a Jupyter ipywidgets widget; use only JSON-serializable data; scope CSS under a unique wrapper class; use textContent for untrusted text; include accessible roles, labels, keyboard focus, fallback content, reactive browser-side state, and safe execution checks that avoid eval, unsanitized innerHTML, credentials, shell calls, remote data, and global style leaks.
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.2
+    top_p: 0.9
+output:
+  text_format: elixir
+  artifact_kind: livebook-kino-js-cell
+  formats:
+  - format: exs
+evaluation:
+  checklist:
+  - "Import check: generated code installs kino, defines a module with use Kino.JS, asset \"main.js\", init(ctx, data), and Kino.JS.new(__MODULE__, data)."
+  - "Notebook compatibility: comments identify Livebook/Kino runtime and distinguish it from Jupyter ipywidgets."
+  - "Reactive state: browser-side interactions update local DOM state without recreating the widget module."
+  - "Data shape: data passed to new/1 is JSON-serializable and documented with fallback defaults."
+  - "Accessibility and fallback: roles, labels, focus states, readable fallback content, and scoped CSS are present."
+  - "Safe execution: no obsolete Kino.JS.new(html, js:, css:) API, eval, unsanitized innerHTML, credentials, shell calls, or global style leakage."
+  rubric:
+  - name: Format validity
+    weight: 30
+    criteria:
+    - "Output is one complete ASCII Elixir Livebook code cell with no Markdown fences or explanatory wrapper."
+    - "The code is syntactically valid and uses current Kino.JS module and asset patterns."
+    - "The JavaScript exports init(ctx, data) and renders only inside ctx.root."
+  - name: Semantic completeness
+    weight: 30
+    criteria:
+    - "Implements a canonical custom widget with deterministic data, scoped styling, and browser interaction."
+    - "Uses Kino.JS-specific APIs from the references and avoids the obsolete keyword constructor."
+    - "Includes notebook/livebook compatibility, reactive state, data shape, accessibility, fallback, and safe execution checks."
+  - name: UX/structural quality
+    weight: 25
+    criteria:
+    - "The widget layout is stable, readable, and scoped to a unique root class."
+    - "Interactive controls have labels, focus handling, and state indicators that do not rely only on color."
+    - "Fallback content remains useful when JavaScript setup fails."
+  - name: Robustness
+    weight: 15
+    criteria:
+    - "Handles missing or malformed data with defaults."
+    - "Avoids non-serializable PIDs, refs, functions, and tuple keys in widget data."
+    - "Documents security and browser-runtime limitations."
+  pass_conditions:
+  - "All required YAML fields are present and the generated artifact is one valid ASCII Elixir Livebook cell."
+  - "Rubric weights are exactly Format validity 30, Semantic completeness 30, UX/structural quality 25, Robustness 15."
+  - "The prompt requires notebook/livebook compatibility, reactive state, data shape, accessibility, fallback, and safe execution checks."
+  - "The solution remains Kino.JS-centered and uses the current module asset API."
+tags:
+- fim
+- notebook-livebook-and-widgets
+- livebook
+- kino-js
+- canonical-widget
+

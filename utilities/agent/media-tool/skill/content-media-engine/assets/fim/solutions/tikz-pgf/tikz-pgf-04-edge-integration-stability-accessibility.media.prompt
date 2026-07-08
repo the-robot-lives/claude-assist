@@ -1,0 +1,74 @@
+---
+schema: "0.4"
+id: fim-math-and-scientific-rendering-tikz-pgf-04-edge-integration-stability-accessibility
+type: visualization
+quality: high
+solution: tikz-pgf
+category: math-and-scientific-rendering
+variant: edge-integration-stability-accessibility
+references:
+- references/fim/overview/geospatial-math-scientific/tikz-pgf.md
+- references/fim/solution/tikz-pgf.md
+prompt:
+  system: |-
+    You are a senior TikZ/PGF reliability engineer. Output only one complete ASCII LaTeX source file using TikZ/PGF. No Markdown fences or prose outside the source.
+  text: |-
+    Create a TikZ/PGF edge-case figure for f(x)=sin(x)/x with a removable singularity. Plot the curve with pgfplots, mark the limit value at x=0 as an open or annotated point, include a zoomed inset around zero, and add a caption note explaining the stable limit interpretation.
+
+    Requirements: use a safe expression or explicit coordinates to avoid division by zero, label x as dimensionless and f(x) as normalized response, use non-color encodings, include comments for accessibility alt text, and document PDF/SVG compile and conversion commands.
+  provider_options:
+    temperature: 0.2
+    max_tokens: 8192
+output:
+  text_format: latex
+  artifact_kind: tikz-pgf-latex
+  formats:
+  - format: tex
+  - format: pdf
+  - format: svg
+evaluation:
+  checklist:
+  - "YAML parses and required schema 0.4 fields are present."
+  - "LaTeX source is complete, ASCII-only, and uses TikZ/PGF or pgfplots with safe singularity handling."
+  - "Math correctness covers sinc limit, plotted curve, open or annotated removable point, and inset bounds."
+  - "Notation validity covers TeX labels, pgfplots syntax, units, caption note, and alt-text comments."
+  - "Renderability covers compiler path, no division-by-zero failure, and nonblank PDF/SVG output."
+  - "Labels and units identify x, normalized f(x), limit value, removable point, inset region, and stable interpretation."
+  - "Domain edge cases cover x=0, near-zero cancellation, plot sampling, label overlap, color-only styling, and export conversion."
+  rubric:
+  - name: Format validity
+    weight: 30
+    criteria:
+    - "Output is one complete ASCII LaTeX file with no Markdown wrapper."
+    - "The file compiles with valid TikZ/PGF syntax and safe plot data."
+    - "The source includes compile, export, and accessibility comments."
+  - name: Semantic completeness
+    weight: 30
+    criteria:
+    - "Main curve, limit marker, inset, labels, caption note, and alt-text comments are all present."
+    - "TikZ/PGF is the primary vector rendering surface."
+    - "The removable singularity is handled mathematically correctly."
+  - name: Visual/structural quality
+    weight: 25
+    criteria:
+    - "Main plot and inset are readable with clear hierarchy."
+    - "The singularity marker and labels remain visible in grayscale."
+    - "PDF and SVG outputs preserve vector clarity."
+  - name: Robustness
+    weight: 15
+    criteria:
+    - "Avoids division by zero and handles near-zero sampling safely."
+    - "Uses deterministic plot data or guarded expressions."
+    - "Documents compile, export, and accessibility constraints."
+  pass_conditions:
+  - "Rubric weights are exactly Format validity 30, Semantic completeness 30, Visual/structural quality 25, Robustness 15."
+  - "Score is 80 or higher out of 100 with no critical failure in math correctness, notation validity, renderability, or accessibility."
+  - "The artifact compiles into a TikZ/PGF sinc edge-case figure with inset."
+  - "Domain edge cases and accessibility output are explicit."
+tags:
+- fim
+- math-and-scientific-rendering
+- tikz-pgf
+- edge-integration-stability-accessibility
+- removable-singularity
+- accessibility

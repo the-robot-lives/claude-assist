@@ -1,0 +1,72 @@
+schema: "0.4"
+id: mammoth_js-01-canonical-conversion
+type: document/data
+quality: high
+solution: mammoth_js
+category: document-data-file-processing
+variant: canonical-conversion
+references:
+  - "references/fim/overview/electronics-media-docfile/mammoth_js.md"
+  - "references/fim/solution/mammoth_js.md"
+prompt:
+  system: |-
+    You generate Mammoth.js document ingestion artifacts. Output only one complete ASCII JavaScript file. Do not use Markdown fences or explanatory prose.
+  text: |-
+    Create a canonical Node.js Mammoth.js converter for DOCX to clean semantic HTML.
+
+    Requirements:
+    - Use `mammoth.convertToHtml({ path }, options)` and read the DOCX path from a CLI argument.
+    - Include a style map for Title, Subtitle, Heading 1, Heading 2, Body Text, Quote, Caption, Code, Emphasis, and Strong.
+    - Preserve headings, paragraphs, lists, basic tables, links, footnotes, comments, and embedded images through a deterministic image handler.
+    - Write `article.html`, `article.messages.json`, and `article.metadata.json` to an output directory.
+    - Sanitize or clearly mark the sanitation boundary for user-supplied HTML before CMS rendering.
+    - Include message handling for unrecognized styles and unsupported DOCX constructs.
+    - Include parseability, pagination, fonts, accessibility, formulas/data types, metadata, and deterministic output safeguards in comments and validation checks.
+    - Output only the final JavaScript artifact.
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.2
+output:
+  text_format: javascript
+  artifact_kind: mammoth-docx-to-html-converter
+  formats:
+    - format: js
+    - format: html
+    - format: json
+evaluation:
+  checklist:
+    - "Format validity: YAML parses as schema 0.4, generated output is one JavaScript file, and Mammoth.js APIs are used."
+    - "Parseability: JavaScript is syntactically valid, imports mammoth and fs/path modules, and accepts a DOCX path argument."
+    - "Semantic completeness: style map, conversion call, image handling, warnings, HTML output, and metadata JSON are present."
+    - "Pagination: the artifact explains that Mammoth converts document structure rather than page layout and records page-break markers when present."
+    - "Fonts: output maps Word styles to semantic classes and avoids claiming visual font fidelity."
+    - "Accessibility: generated HTML uses headings, alt text, captions, lists, tables, and link text suitable for assistive technology."
+    - "Formulas/data types: tables preserve cell text, dates, numbers, and formula-like strings as content without recalculation."
+    - "Metadata: converter writes source filename, conversion time, message counts, style-map version, and output filenames."
+    - "Deterministic output: image names, warning order, generated timestamp, output filenames, and class names are stable."
+  rubric:
+    - name: "Format validity"
+      weight: 30
+      criteria: "The prompt YAML and generated JavaScript are parseable, ASCII-only, and use Mammoth.js as the primary DOCX converter."
+    - name: "Semantic completeness"
+      weight: 30
+      criteria: "The converter covers style mapping, images, messages, HTML output, metadata, and sanitation boundary requirements."
+    - name: "Layout/data quality"
+      weight: 25
+      criteria: "The generated HTML preserves document semantics, table structure, readable classes, and data text without false visual fidelity claims."
+    - name: "Robustness"
+      weight: 15
+      criteria: "The artifact handles missing files, unsupported DOCX features, unrecognized styles, metadata, and deterministic reruns."
+  pass_conditions:
+    - "YAML parses successfully and all file text is ASCII-only."
+    - "Rubric weights are exactly 30, 30, 25, and 15."
+    - "Generated JavaScript can run with `node converter.js input.docx out` after installing mammoth."
+    - "All checklist items for parseability, pagination, fonts, accessibility, formulas/data types, metadata, and deterministic output are represented."
+tags:
+  - fim
+  - document-data-file-processing
+  - mammoth_js
+  - docx-to-html
+  - canonical-conversion
+  - ingestion
+

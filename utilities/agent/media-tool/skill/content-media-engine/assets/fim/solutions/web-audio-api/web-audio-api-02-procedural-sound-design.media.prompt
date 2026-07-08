@@ -41,6 +41,7 @@ prompt:
 output:
   text_format: html
   artifact: "Web Audio API procedural sound design browser source"
+  artifact_kind: "Web Audio API procedural sound design browser source"
   formats:
     - format: html
     - format: js

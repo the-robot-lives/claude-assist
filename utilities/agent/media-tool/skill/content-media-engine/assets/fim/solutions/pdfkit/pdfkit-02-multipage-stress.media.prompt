@@ -1,0 +1,71 @@
+schema: "0.4"
+id: pdfkit-02-multipage-stress
+type: document/data
+quality: high
+solution: pdfkit
+category: document-data-file-processing
+variant: multipage-stress
+references:
+  - "references/fim/overview/electronics-media-docfile/pdfkit.md"
+  - "references/fim/solution/pdfkit.md"
+prompt:
+  system: |-
+    You generate PDFKit programmatic PDF artifacts. Output only one complete ASCII JavaScript file for Node.js. Do not use Markdown fences or explanatory prose.
+  text: |-
+    Create a PDFKit dense multi-page stress report generator.
+
+    Requirements:
+    - Use `new PDFDocument({ bufferPages: true })`, pipe to a file stream, and call `doc.end()`.
+    - Generate a deterministic compliance report with cover, executive summary, 100-row findings table, appendix, and sign-off section.
+    - Hand-build table rows with measured text, row-height calculation, repeated table headers, and page-break guards.
+    - Use buffered pages to add final page numbers and document footer metadata after content generation.
+    - Include vector severity indicators, long finding descriptions, wrapped remediation text, and empty/zero-value edge rows.
+    - Verify the stream finish event and output file size.
+    - Include parseability, pagination, fonts, accessibility, formulas/data types, metadata, and deterministic output safeguards in comments and validation checks.
+    - Output only the final JavaScript artifact.
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.2
+output:
+  text_format: javascript
+  artifact_kind: pdfkit-multipage-stress-report
+  formats:
+    - format: js
+    - format: pdf
+evaluation:
+  checklist:
+    - "Format validity: YAML parses as schema 0.4, generated output is one JavaScript file, and PDFKit streaming APIs are used."
+    - "Parseability: JavaScript is syntactically valid, pipes correctly, buffers pages, and ends the document."
+    - "Semantic completeness: cover, summary, dense findings table, appendix, sign-off, verification, and metadata are present."
+    - "Pagination: measured row heights, repeated headers, page-break guards, buffered page numbers, and no clipped rows are implemented."
+    - "Fonts: standard fonts, sizes, weights, and long-text measurement are used consistently."
+    - "Accessibility: selectable text, non-color severity labels, high contrast, descriptive section headings, and summary text are included."
+    - "Formulas/data types: numeric risk score, date fields, boolean flags, zero values, and derived counts are calculated from typed rows."
+    - "Metadata: PDF info, report id, page footer metadata, output filename, and deterministic timestamp are included."
+    - "Deterministic output: generated rows, sort order, page footer text, calculations, timestamp, and filename are stable."
+  rubric:
+    - name: "Format validity"
+      weight: 30
+      criteria: "The prompt YAML and generated JavaScript are parseable, ASCII-only, and create a valid PDFKit stream."
+    - name: "Semantic completeness"
+      weight: 30
+      criteria: "The stress report covers dense rows, sections, calculations, appendices, stream verification, and metadata."
+    - name: "Layout/data quality"
+      weight: 25
+      criteria: "Dense table layout remains readable with correct row measurement, pagination, data formatting, and section hierarchy."
+    - name: "Robustness"
+      weight: 15
+      criteria: "The artifact handles long rows, zero values, stream errors, page totals, metadata, and deterministic reruns."
+  pass_conditions:
+    - "YAML parses successfully and all file text is ASCII-only."
+    - "Rubric weights are exactly 30, 30, 25, and 15."
+    - "Generated JavaScript creates a multi-page PDF without row clipping."
+    - "All checklist items for parseability, pagination, fonts, accessibility, formulas/data types, metadata, and deterministic output are represented."
+tags:
+  - fim
+  - document-data-file-processing
+  - pdfkit
+  - multipage
+  - stress
+  - compliance-report
+

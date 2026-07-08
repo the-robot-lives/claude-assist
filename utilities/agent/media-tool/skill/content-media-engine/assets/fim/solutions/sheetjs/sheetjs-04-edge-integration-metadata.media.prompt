@@ -1,0 +1,73 @@
+schema: "0.4"
+id: sheetjs-04-edge-integration-metadata
+type: document/data
+quality: high
+solution: sheetjs
+category: document-data-file-processing
+variant: edge-integration-metadata
+references:
+  - "references/fim/overview/electronics-media-docfile/sheetjs.md"
+  - "references/fim/solution/sheetjs.md"
+prompt:
+  system: |-
+    You generate SheetJS spreadsheet processing artifacts. Output only one complete ASCII JavaScript file for Node.js. Do not use Markdown fences or explanatory prose.
+  text: |-
+    Create a SheetJS edge integration parser and writer for messy spreadsheet intake.
+
+    Requirements:
+    - Read XLSX or CSV input when provided and otherwise use deterministic inline messy rows.
+    - Normalize duplicate headers, blank cells, date serials, formatted numbers, booleans, formula cells, error cells, and mixed-type columns.
+    - Use `sheet_to_json` with `defval`, `raw`, `cellDates`, and `cellFormula` options where applicable.
+    - Emit normalized JSON, rejected rows JSON, a cleaned XLSX workbook, and a metadata/audit sidecar.
+    - Preserve formulas as formula strings and clearly state that SheetJS does not calculate them.
+    - Enforce valid sheet names, deterministic column ordering, and stable output filenames.
+    - Include parseability, pagination, fonts, accessibility, formulas/data types, metadata, and deterministic output safeguards in comments and validation checks.
+    - Output only the final JavaScript artifact.
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.2
+output:
+  text_format: javascript
+  artifact_kind: sheetjs-edge-intake-normalizer
+  formats:
+    - format: js
+    - format: xlsx
+    - format: json
+    - format: csv
+evaluation:
+  checklist:
+    - "Format validity: YAML parses as schema 0.4, generated output is one JavaScript file, and SheetJS read/write APIs are used."
+    - "Parseability: JavaScript validates inputs, handles XLSX/CSV modes, and writes normalized outputs."
+    - "Semantic completeness: messy input normalization, rejected rows, formula preservation, cleaned workbook, and audit metadata are present."
+    - "Pagination: spreadsheet page-layout limits are documented and output focuses on sheets/ranges rather than visual page fidelity."
+    - "Fonts: SheetJS CE font/style limits are documented and headers/widths improve readability."
+    - "Accessibility: stable headers, data dictionary, rejected-row reasons, sheet names, and summary metadata are included."
+    - "Formulas/data types: dates, serials, numbers, booleans, blanks, formulas, errors, and mixed columns are normalized deterministically."
+    - "Metadata: audit sidecar includes source file, row counts, rejects, warnings, formula cells, profile, and deterministic timestamp."
+    - "Deterministic output: column order, reject reasons, filenames, timestamp, and JSON key order are stable."
+  rubric:
+    - name: "Format validity"
+      weight: 30
+      criteria: "The prompt YAML and generated JavaScript are parseable, ASCII-only, and use SheetJS for intake and output."
+    - name: "Semantic completeness"
+      weight: 30
+      criteria: "The integration normalizer covers messy data handling, formula preservation, rejects, cleaned workbook, and metadata."
+    - name: "Layout/data quality"
+      weight: 25
+      criteria: "The cleaned workbook and JSON outputs have coherent column order, accurate types, clear rejects, and usable metadata."
+    - name: "Robustness"
+      weight: 15
+      criteria: "The artifact handles invalid values, duplicate headers, mixed types, formula caveats, metadata, and deterministic reruns."
+  pass_conditions:
+    - "YAML parses successfully and all file text is ASCII-only."
+    - "Rubric weights are exactly 30, 30, 25, and 15."
+    - "Generated JavaScript preserves formulas without claiming to recalculate them."
+    - "All checklist items for parseability, pagination, fonts, accessibility, formulas/data types, metadata, and deterministic output are represented."
+tags:
+  - fim
+  - document-data-file-processing
+  - sheetjs
+  - integration
+  - metadata
+  - data-normalization
+

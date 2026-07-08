@@ -1,0 +1,78 @@
+schema: "0.4"
+id: fim-document-authoring-and-static-site-generators-quarto-04-edge-integration-build-accessibility-localization
+type: document
+quality: production
+solution: quarto
+category: document-authoring-and-static-site-generators
+variant: edge-integration-build-accessibility-localization
+prompt:
+  system: |-
+    You are a senior Quarto documentation engineer. Output only one complete .qmd document or a small Quarto project bundle when requested. Do not add explanatory prose, Markdown fences around the whole artifact, or non-ASCII characters. Keep paths relative, builds local, and solution-specific syntax primary.
+  text: |-
+    Create an edge integration, build, accessibility, and localization case for a documentation set that must build offline and deploy under a subpath. Include build configuration or commands, base URL or path handling where relevant, localization or language metadata for en and es content, link checking expectations, portable asset references, accessibility annotations, keyboard or screen-reader considerations where relevant, responsive table or image handling, deterministic output names, and comments explaining renderer assumptions. Avoid network-only dependencies and avoid non-ASCII content.
+
+    Required solution focus: Quarto using YAML front matter, format-specific options, execute options, hashpipe cell options, Python/R/Julia/OJS code fences as needed, labels for figures and tables, callouts, citations, listings, _quarto.yml projects, and freeze or cache options.
+
+    Parser and build target: quarto render with the required language engines installed; expected local command: quarto render report.qmd or quarto render for a project.
+
+    Output expectation: one complete .qmd document or a small Quarto project bundle when requested for the edge integration, build, accessibility, and localization case scenario. If a project bundle is requested, use deterministic file path markers, list files in build order, and make each file body valid for its own parser.
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.2
+    top_p: 0.9
+output:
+  text_format: qmd
+  artifact_kind: quarto-document-source
+  formats:
+  - format: qmd
+  - format: yml
+  - format: html
+  - format: pdf
+  - format: docx
+evaluation:
+  checklist:
+  - "Parser/build compatibility: generated artifact follows Quarto QMD document or project source and can be parsed or built with quarto render with the required language engines installed using the documented local command."
+  - "Headings/TOC: includes one clear primary title, a logical heading hierarchy, stable anchors or ids, and table of contents or navigation support where the solution provides it."
+  - "Links: includes valid internal references, external links with meaningful labels, and base path or relative URL handling where relevant."
+  - "Accessibility: includes semantic structure, alternative text or text equivalents for media, readable table headers, language metadata where supported, and no color-only meaning."
+  - "Responsive layout: rendered HTML/site/page output uses responsive images, tables, navigation, or theme hooks; print/PDF-oriented formats document layout assumptions."
+  - "Portable assets: uses relative asset paths, deterministic output names, no network-only resources, and comments or config for copying/static asset handling."
+  - "Solution fidelity: uses Quarto constructs from the FIM references rather than substituting a generic Markdown or HTML-only answer."
+  rubric:
+  - name: "Format validity"
+    weight: 30
+    criteria:
+    - "Output uses the requested solution syntax and can be parsed or built by the named parser or toolchain."
+    - "Required roots, metadata, delimiters, ids, file names, and extension-specific constructs are valid."
+    - "Output is ASCII-only and contains no prose wrapper unless the requested artifact format explicitly requires a project-bundle boundary."
+  - name: "Semantic completeness"
+    weight: 30
+    criteria:
+    - "The artifact satisfies every scenario requirement, not just a representative subset."
+    - "Solution-specific features from the FIM references are used as primary constructs rather than replaced by a generic format."
+    - "Build, parser, links, assets, accessibility, responsive layout, and localization requirements are represented where applicable."
+  - name: "Structure/design quality"
+    weight: 25
+    criteria:
+    - "Headings, table of contents, navigation, sections, tables, figures, and callouts form a coherent information architecture."
+    - "Rendered output is readable, polished for the requested use case, and avoids clutter, broken hierarchy, low contrast, and label overflow."
+    - "Layout or theme hooks support responsive display and accessible reading without depending on remote assets."
+  - name: "Robustness"
+    weight: 15
+    criteria:
+    - "Handles long content, special characters, missing assets, empty states, relative paths, base paths, and link targets predictably."
+    - "Documents local build commands, parser assumptions, optional dependencies, and deterministic output filenames."
+    - "Avoids network-only resources, unstable ids, ambiguous parser dialects, and non-portable absolute paths."
+  pass_conditions:
+  - "All required YAML fields are present and this prompt file parses as YAML schema 0.4."
+  - "Rubric weights are exactly Format validity 30, Semantic completeness 30, Structure/design quality 25, Robustness 15."
+  - "The generated artifact can be parsed or built by quarto render with the required language engines installed with the documented local command or a clearly stated optional dependency."
+  - "The generated artifact includes parser/build compatibility, headings/TOC, links, accessibility, responsive layout, and portable assets coverage."
+  - "The generated artifact is ASCII-only, deterministic, and avoids unrelated toolchains except where the solution reference explicitly integrates them."
+tags:
+- fim
+- document-authoring-and-static-site-generators
+- quarto
+- edge-integration-build-accessibility-localization
+- document-authoring
+- static-site-generators

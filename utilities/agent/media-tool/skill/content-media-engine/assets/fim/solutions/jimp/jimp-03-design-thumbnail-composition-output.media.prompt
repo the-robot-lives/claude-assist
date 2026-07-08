@@ -1,0 +1,80 @@
+schema: "0.4"
+id: jimp-03-design-thumbnail-composition-output
+type: image/visualization/data
+quality: high
+solution: jimp
+category: image-and-video-processing
+variant: design-thumbnail-composition-output
+references:
+  - "references/fim/overview/electronics-media-docfile/jimp.md"
+  - "references/fim/solution/jimp.md"
+prompt:
+  system: |-
+    You generate Jimp image-processing artifacts. Output only one complete ASCII JavaScript module. Do not use markdown fences or explanatory prose.
+  text: |-
+    Create a Jimp design and thumbnail composition pipeline for portable social image generation.
+
+    Requirements:
+    - Create a deterministic 1200x630 social card and a 600x315 thumbnail from a title, subtitle, source photo, logo PNG, and optional accent color.
+    - Use new Jimp({ width, height, color }), Jimp.read(), cover(), contain(), composite(), opacity(), color(), print(), loadFont(), and getBuffer().
+    - Use bitmap fonts through loadFont and keep text wrapping deterministic with fixed max widths and line limits.
+    - Include dimensions 1200x630 for the card, 600x315 for the thumbnail, 96x96 for logo display, and deterministic safe margins.
+    - Specify srgb RGBA bitmap assumptions, alpha preserved for PNG card output, JPEG thumbnail flattened to a fixed background, and no ICC profile preservation claims.
+    - Support input formats PNG and JPEG for assets, optional GIF first-frame handling, and output formats PNG, JPEG, base64 data URL, and JSON metadata.
+    - Include memory and performance controls: downscale source photo before compositing, cap text length, avoid large scan loops, clone before outputs, and warn when source pixels exceed budget.
+    - Emit deterministic metadata JSON with text metrics, dimensions, color choices, alpha decisions, source hashes, logo placement, font names, output filenames, and warnings.
+    - Include deterministic output checks for text wrapping, color normalization, layer order, filenames, and metadata key order.
+    - Output only the final JavaScript artifact.
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.2
+output:
+  text_format: javascript
+  artifact_kind: jimp-design-thumbnail-composition
+  dimensions:
+    width: 1200
+    height: 630
+  color_profile: srgb-rgba-assumed
+  alpha: png-preserved-jpeg-flattened
+  formats:
+    - format: js
+    - format: png
+    - format: jpg
+    - format: json
+evaluation:
+  checklist:
+    - "Format validity: YAML parses as schema 0.4, generated output is one JavaScript module, and Jimp APIs are used."
+    - "Semantic completeness: social card, thumbnail, source photo, logo, title, subtitle, font loading, compositing, and metadata are present."
+    - "Dimensions: card is 1200x630, thumbnail is 600x315, logo display is 96x96, and safe margins are deterministic."
+    - "Color profile and alpha: srgb RGBA assumptions, PNG alpha preservation, JPEG flattening, and ICC limitations are explicit."
+    - "File formats: PNG, JPEG, GIF first-frame input and PNG, JPEG, base64, JSON output are represented."
+    - "Memory and performance: source downscale, text caps, bounded operations, clone use, and pixel budget warnings are covered."
+    - "Metadata: text metrics, dimensions, color choices, alpha decisions, hashes, placement, fonts, filenames, and warnings are recorded."
+    - "Deterministic output: text wrapping, color normalization, layer order, filenames, and metadata keys are stable."
+  rubric:
+    - name: "Format validity"
+      weight: 30
+      criteria: "The prompt YAML and generated JavaScript are parseable, ASCII-only, and use Jimp as the composition engine."
+    - name: "Semantic completeness"
+      weight: 30
+      criteria: "The artifact covers card and thumbnail generation, bitmap fonts, compositing, alpha handling, metadata, and deterministic layout."
+    - name: "Output quality"
+      weight: 25
+      criteria: "The generated social card and thumbnail are legible, well composed, correctly sized, and format-appropriate."
+    - name: "Robustness"
+      weight: 15
+      criteria: "The artifact handles missing images, missing fonts, long text, alpha flattening, memory pressure, and deterministic reruns."
+  pass_conditions:
+    - "YAML parses successfully and all file text is ASCII-only."
+    - "Rubric weights are exactly Format validity 30, Semantic completeness 30, Output quality 25, and Robustness 15."
+    - "Generated JavaScript contains no markdown fences and uses Jimp rather than node-canvas for drawing."
+    - "All dimensions, color profile/alpha, file format, memory/performance, metadata, and deterministic output checks are represented."
+    - "Rubric score is at least 80 out of 100 and no required checklist item is absent."
+tags:
+  - fim
+  - image-and-video-processing
+  - jimp
+  - design-thumbnail-composition-output
+  - social-card
+  - thumbnail
+  - bitmap-fonts

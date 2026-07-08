@@ -1,53 +1,72 @@
-schema: "0.4"
+schema: '0.4'
 id: springy_js-01-topology-exploration
 type: visualization
 quality: high
 solution: springy_js
 category: network-and-graph-visualization
 variant: topology-exploration
-
 prompt:
   context:
-    - "references/fim/overview/network-3d-graphics/springy_js.md"
-    - "references/fim/solution/springy_js.md"
-  text: |
-    Create a lightweight Springy.js topology widget for a small classroom network
+  - references/fim/overview/network-3d-graphics/springy_js.md
+  - references/fim/solution/springy_js.md
+  text: 'Create a lightweight Springy.js topology widget for a small classroom network
+
     of 24 devices. Build a Springy.Graph with labeled nodes and colored edges, run
+
     Springy.Layout.ForceDirected with tuned stiffness, repulsion, damping, and
+
     minEnergyThreshold, and render to Canvas through custom Renderer callbacks.
+
     Include scale and translate helpers, hover or click selection through the
+
     renderer or springyui, and a legend for router, switch, workstation, and link
+
     status. Keep the graph intentionally small.
 
+    '
+  system: You generate artifacts for springy_js. Output only the requested artifact content. No markdown fences, no explanations.
+  provider_options:
+    max_tokens: 6144
+    temperature: 0.3
 output:
   formats:
-    - format: html
-    - format: png
+  - format: html
+  - format: png
   renderer: springy-canvas
-  expected_artifact: "Small animated Canvas topology widget using Springy.js."
-
+  expected_artifact: Small animated Canvas topology widget using Springy.js.
+  text_format: springy_js
+  artifact_kind: Small animated Canvas topology widget using Springy.js.
 evaluation:
   checklist:
-    - "Uses Springy.Graph, ForceDirected layout, and Renderer callbacks."
-    - "Keeps the graph to a small node count suited to Springy."
-    - "Includes coordinate scaling into canvas pixel space."
-    - "Stores visual hints in node.data and edge.data."
+  - Uses Springy.Graph, ForceDirected layout, and Renderer callbacks.
+  - Keeps the graph to a small node count suited to Springy.
+  - Includes coordinate scaling into canvas pixel space.
+  - Stores visual hints in node.data and edge.data.
   rubric:
-    - name: Format validity
-      weight: 30
-      description: "YAML parses and declares Springy Canvas output."
-    - name: Semantic completeness
-      weight: 30
-      description: "Covers graph construction, force tuning, renderer callbacks, and topology interaction."
-    - name: Visual/structural quality
-      weight: 25
-      description: "Small topology is clear, labeled, and color coded."
-    - name: Robustness
-      weight: 15
-      description: "Handles canvas scaling, selection, and stable settling."
+  - name: Format validity
+    weight: 30
+    description: YAML parses and declares Springy Canvas output.
+    criteria: YAML parses and declares Springy Canvas output.
+  - name: Semantic completeness
+    weight: 30
+    description: Covers graph construction, force tuning, renderer callbacks, and topology interaction.
+    criteria: Covers graph construction, force tuning, renderer callbacks, and topology interaction.
+  - name: Visual/structural quality
+    weight: 25
+    description: Small topology is clear, labeled, and color coded.
+    criteria: Small topology is clear, labeled, and color coded.
+  - name: Robustness
+    weight: 15
+    description: Handles canvas scaling, selection, and stable settling.
+    criteria: Handles canvas scaling, selection, and stable settling.
   pass_conditions:
-    - "The prompt does not use Springy for large or analytical graphs."
-    - "Custom canvas drawing or springyui is clearly specified."
-    - "The output is a small, usable topology widget."
-
-tags: [fim, springy-js, topology-exploration, lightweight-graph, canvas, small-network]
+  - The prompt does not use Springy for large or analytical graphs.
+  - Custom canvas drawing or springyui is clearly specified.
+  - The output is a small, usable topology widget.
+tags:
+- fim
+- springy-js
+- topology-exploration
+- lightweight-graph
+- canvas
+- small-network

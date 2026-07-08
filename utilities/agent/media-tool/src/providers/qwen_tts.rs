@@ -9,8 +9,10 @@ use crate::ui;
 
 const DEFAULT_MODEL: &str = "qwen3-tts-flash";
 const DEFAULT_VOICE: &str = "Cherry";
-const API_URL_INTL: &str = "https://dashscope-intl.aliyuncs.com/api/v1/services/aigc/multimodal-generation/generation";
-const API_URL_CN: &str = "https://dashscope.aliyuncs.com/api/v1/services/aigc/multimodal-generation/generation";
+const API_URL_INTL: &str =
+    "https://dashscope-intl.aliyuncs.com/api/v1/services/aigc/multimodal-generation/generation";
+const API_URL_CN: &str =
+    "https://dashscope.aliyuncs.com/api/v1/services/aigc/multimodal-generation/generation";
 
 pub struct QwenTtsProvider;
 
@@ -48,7 +50,11 @@ impl MediaProvider for QwenTtsProvider {
             .and_then(|v| v.as_str())
             .unwrap_or("intl");
 
-        let api_url = if region == "cn" { API_URL_CN } else { API_URL_INTL };
+        let api_url = if region == "cn" {
+            API_URL_CN
+        } else {
+            API_URL_INTL
+        };
 
         let mut input = json!({
             "text": prompt_text,
@@ -56,7 +62,11 @@ impl MediaProvider for QwenTtsProvider {
             "language_type": language,
         });
 
-        if let Some(instructions) = options.provider_options.get("instructions").and_then(|v| v.as_str()) {
+        if let Some(instructions) = options
+            .provider_options
+            .get("instructions")
+            .and_then(|v| v.as_str())
+        {
             input["instructions"] = json!(instructions);
         }
 
@@ -73,7 +83,10 @@ impl MediaProvider for QwenTtsProvider {
                 preview,
                 if prompt_text.len() > 120 { "..." } else { "" }
             ));
-            ui::verbose(&format!("Model: {}, voice: {}, lang: {}", model, voice, language));
+            ui::verbose(&format!(
+                "Model: {}, voice: {}, lang: {}",
+                model, voice, language
+            ));
         }
 
         let client = reqwest::Client::new();
@@ -116,9 +129,9 @@ impl MediaProvider for QwenTtsProvider {
         let result: serde_json::Value = response.json().await?;
 
         // Extract audio URL from response
-        let audio_url = result["output"]["audio"]["url"]
-            .as_str()
-            .ok_or_else(|| color_eyre::eyre::eyre!("No audio URL in Qwen TTS response: {}", result))?;
+        let audio_url = result["output"]["audio"]["url"].as_str().ok_or_else(|| {
+            color_eyre::eyre::eyre!("No audio URL in Qwen TTS response: {}", result)
+        })?;
 
         if options.verbose {
             ui::verbose(&format!("Downloading audio from: {}", audio_url));

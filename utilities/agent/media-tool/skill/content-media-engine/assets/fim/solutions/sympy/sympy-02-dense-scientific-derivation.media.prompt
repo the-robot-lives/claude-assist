@@ -1,0 +1,76 @@
+---
+schema: "0.4"
+id: fim-math-and-scientific-rendering-sympy-02-dense-scientific-derivation
+type: data
+quality: high
+solution: sympy
+category: math-and-scientific-rendering
+variant: dense-scientific-derivation
+references:
+- references/fim/overview/geospatial-math-scientific/sympy.md
+- references/fim/solution/sympy.md
+prompt:
+  system: |-
+    You are a senior symbolic derivation engineer. Output only one complete ASCII Python file using SymPy. No Markdown fences or prose outside the source.
+  text: |-
+    Create a dense SymPy script deriving the Euler-Lagrange equation for L=(1/2)*m*Derivative(q(t),t)^2-(1/2)*k*q(t)^2. Use Function, symbols with positive assumptions, diff, Eq, dsolve, simplify, latex, and verification by substituting the solution into the ODE.
+
+    Requirements: print a structured derivation with LaTeX strings, preserve exact symbolic parameters, include a simple plot of q(t) for deterministic numeric parameter choices using lambdify or substitution, and write a plain text summary file.
+  provider_options:
+    temperature: 0.2
+    max_tokens: 8192
+output:
+  text_format: python
+  artifact_kind: sympy-script
+  formats:
+  - format: py
+  - format: txt
+  - format: tex
+  - format: svg
+evaluation:
+  checklist:
+  - "YAML parses and required schema 0.4 fields are present."
+  - "Python source is complete, ASCII-only, and uses SymPy symbolic differentiation and ODE solving."
+  - "Math correctness covers Euler-Lagrange derivative, harmonic oscillator ODE, solution form, and substitution verification."
+  - "Notation validity covers Function notation, Derivative, Eq, assumptions, LaTeX output, and parameter units."
+  - "Renderability covers Python execution, text summary, deterministic plot export, and dependency comments."
+  - "Labels and units identify q, t, mass m, stiffness k, angular frequency, and displacement."
+  - "Domain edge cases cover zero or negative parameters, missing initial conditions, arbitrary constants, and lambdify conversion."
+  rubric:
+  - name: Format validity
+    weight: 30
+    criteria:
+    - "Output is one complete ASCII Python file with no Markdown wrapper."
+    - "The script uses valid SymPy APIs and writes deterministic outputs."
+    - "The source documents dependencies and run commands."
+  - name: Semantic completeness
+    weight: 30
+    criteria:
+    - "Lagrangian, Euler-Lagrange steps, ODE, solution, verification, LaTeX, summary, and plot are all present."
+    - "SymPy carries the symbolic derivation rather than hard-coded final answers only."
+    - "The numeric plot is tied to the symbolic solution."
+  - name: Visual/structural quality
+    weight: 25
+    criteria:
+    - "Printed derivation is structured and readable."
+    - "The plot is labeled with units and deterministic parameter values."
+    - "Code organization separates symbolic derivation, verification, and rendering."
+  - name: Robustness
+    weight: 15
+    criteria:
+    - "Handles parameter assumptions, missing initial conditions, and numeric conversion safely."
+    - "Avoids float contamination until explicit plotting."
+    - "Documents limitations of dsolve and plotting dependencies."
+  pass_conditions:
+  - "Rubric weights are exactly Format validity 30, Semantic completeness 30, Visual/structural quality 25, Robustness 15."
+  - "Score is 80 or higher out of 100 with no critical failure in math correctness, notation validity, or renderability."
+  - "The artifact produces a verified SymPy Euler-Lagrange derivation and plot."
+  - "Domain edge cases and exact/numeric constraints are explicit."
+tags:
+- fim
+- math-and-scientific-rendering
+- sympy
+- dense-scientific-derivation
+- euler-lagrange
+- ode
+

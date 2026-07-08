@@ -1,54 +1,75 @@
-schema: "0.4"
+schema: '0.4'
 id: cola_js-03-communication-storytelling
 type: visualization
 quality: high
 solution: cola_js
 category: network-and-graph-visualization
 variant: communication-storytelling-graph
-
 prompt:
   context:
-    - "references/fim/overview/network-3d-graphics/cola_js.md"
-    - "references/fim/solution/cola_js.md"
-  text: |
-    Produce a WebCola and D3 storytelling graph for an outage narrative. Arrange
+  - references/fim/overview/network-3d-graphics/cola_js.md
+  - references/fim/solution/cola_js.md
+  text: 'Produce a WebCola and D3 storytelling graph for an outage narrative. Arrange
+
     actors into constrained swimlanes for customer, edge, API, data, and operator
+
     layers. Use alignment constraints for the timeline checkpoints, separation
+
     constraints for causal order, grouped containers for subsystems, and styled
+
     edges for symptom, cause, mitigation, and verification. Add step controls that
+
     reveal one narrative phase at a time while preserving a stable constrained
+
     layout. Labels and annotations should explain the story without hiding the
+
     node-link structure.
 
+    '
+  system: You generate artifacts for cola_js. Output only the requested artifact content. No markdown fences, no explanations.
+  provider_options:
+    max_tokens: 6144
+    temperature: 0.3
 output:
   formats:
-    - format: html
-    - format: svg
+  - format: html
+  - format: svg
   renderer: d3-svg
-  expected_artifact: "Annotated interactive incident-story graph."
-
+  expected_artifact: Annotated interactive incident-story graph.
+  text_format: cola_js
+  artifact_kind: Annotated interactive incident-story graph.
 evaluation:
   checklist:
-    - "Uses constraints to express swimlanes and causal order."
-    - "Includes narrative step controls and stable layout behavior."
-    - "Distinguishes symptoms, causes, mitigations, and verification edges."
-    - "Keeps annotations readable and tied to the graph structure."
+  - Uses constraints to express swimlanes and causal order.
+  - Includes narrative step controls and stable layout behavior.
+  - Distinguishes symptoms, causes, mitigations, and verification edges.
+  - Keeps annotations readable and tied to the graph structure.
   rubric:
-    - name: Format validity
-      weight: 30
-      description: "YAML parses and specifies a WebCola/D3 interactive artifact."
-    - name: Semantic completeness
-      weight: 30
-      description: "Covers storytelling phases, constraints, groups, and edge semantics."
-    - name: Visual/structural quality
-      weight: 25
-      description: "Narrative layout is stable, readable, and visually ordered."
-    - name: Robustness
-      weight: 15
-      description: "Step changes do not break constraints, labels, or group bounds."
+  - name: Format validity
+    weight: 30
+    description: YAML parses and specifies a WebCola/D3 interactive artifact.
+    criteria: YAML parses and specifies a WebCola/D3 interactive artifact.
+  - name: Semantic completeness
+    weight: 30
+    description: Covers storytelling phases, constraints, groups, and edge semantics.
+    criteria: Covers storytelling phases, constraints, groups, and edge semantics.
+  - name: Visual/structural quality
+    weight: 25
+    description: Narrative layout is stable, readable, and visually ordered.
+    criteria: Narrative layout is stable, readable, and visually ordered.
+  - name: Robustness
+    weight: 15
+    description: Step changes do not break constraints, labels, or group bounds.
+    criteria: Step changes do not break constraints, labels, or group bounds.
   pass_conditions:
-    - "The output clearly reads as a communication graph, not just a raw topology."
-    - "WebCola constraints are central to the story layout."
-    - "The graph remains coherent across reveal states."
-
-tags: [fim, cola-js, webcola, storytelling, incident-graph, swimlanes, communication]
+  - The output clearly reads as a communication graph, not just a raw topology.
+  - WebCola constraints are central to the story layout.
+  - The graph remains coherent across reveal states.
+tags:
+- fim
+- cola-js
+- webcola
+- storytelling
+- incident-graph
+- swimlanes
+- communication

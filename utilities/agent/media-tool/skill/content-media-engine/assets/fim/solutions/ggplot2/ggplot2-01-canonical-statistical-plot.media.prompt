@@ -1,62 +1,73 @@
-schema: "0.4"
+schema: '0.4'
 id: ggplot2-01-canonical-statistical-plot
 type: visualization
 quality: high
 solution: ggplot2
 category: julia-r
 variant: canonical-statistical-plot
-
 prompt:
-  system: "Generate only runnable R code for a ggplot2 visualization. Do not include markdown fences or explanatory prose."
-  text: |
-    Create a canonical statistical visualization in R with ggplot2.
+  system: Generate only runnable R code for a ggplot2 visualization. Do not include markdown fences or explanatory prose.
+  text: 'Create a canonical statistical visualization in R with ggplot2.
+
     Use the built-in mtcars dataset and convert cyl and gear to factors.
+
     Build a scatter plot of weight versus miles per gallon, map cylinder count to color, add geom_smooth with method = "lm" and se = FALSE, and facet by gear.
+
     Use ggplot(data, aes(...)) plus geom_point, geom_smooth, scale_color_brewer or scale_color_manual, labs, facet_wrap, and theme_minimal.
+
     Save the figure with ggsave as both PNG and PDF at report-ready dimensions and 300 dpi for the raster output.
+
     Keep the code deterministic, self-contained, and suitable for R Markdown or Quarto.
 
+    '
+  provider_options:
+    max_tokens: 6144
+    temperature: 0.3
 output:
   format: r
   file: ggplot2-01-canonical-statistical-plot.R
   renders:
-    - format: png
-      file: ggplot2-01-canonical-statistical-plot.png
-    - format: pdf
-      file: ggplot2-01-canonical-statistical-plot.pdf
+  - format: png
+    file: ggplot2-01-canonical-statistical-plot.png
+  - format: pdf
+    file: ggplot2-01-canonical-statistical-plot.pdf
   requirements:
-    - ggplot2
-
+  - ggplot2
+  text_format: r
+  artifact_kind: ggplot2-01-canonical-statistical-plot.R
+  formats:
+  - format: r
+  - format: png
+  - format: pdf
 evaluation:
   checklist:
-    - Uses ggplot2 grammar with data, aes mappings, geoms, scales, facets, and theme.
-    - Maps cyl to color, facets by gear, and adds a linear smooth layer.
-    - Includes title, axis labels, legend title, and clear units.
-    - Saves PNG and PDF outputs with ggsave.
+  - Uses ggplot2 grammar with data, aes mappings, geoms, scales, facets, and theme.
+  - Maps cyl to color, facets by gear, and adds a linear smooth layer.
+  - Includes title, axis labels, legend title, and clear units.
+  - Saves PNG and PDF outputs with ggsave.
   rubric:
     Format validity:
       weight: 30
-      criteria: "The response is valid R code with correct ggplot2 syntax and no markdown fences."
+      criteria: The response is valid R code with correct ggplot2 syntax and no markdown fences.
     Semantic completeness:
       weight: 30
-      criteria: "The plot implements the mtcars statistical scatter, color grouping, linear trend, faceting, labels, and exports."
+      criteria: The plot implements the mtcars statistical scatter, color grouping, linear trend, faceting, labels, and exports.
     Visual/structural quality:
       weight: 25
-      criteria: "The figure has readable facets, a coherent palette, clear labels, and a publication-friendly theme."
+      criteria: The figure has readable facets, a coherent palette, clear labels, and a publication-friendly theme.
     Robustness:
       weight: 15
-      criteria: "The code is self-contained, deterministic, uses appropriate factor conversion, and writes explicit output files."
+      criteria: The code is self-contained, deterministic, uses appropriate factor conversion, and writes explicit output files.
   pass_conditions:
-    - The code includes ggplot, geom_point, geom_smooth, and facet_wrap.
-    - The smooth layer uses method = "lm".
-    - The output includes ggsave calls for PNG and PDF.
-    - The script can run using built-in data plus ggplot2.
-
+  - The code includes ggplot, geom_point, geom_smooth, and facet_wrap.
+  - The smooth layer uses method = "lm".
+  - The output includes ggsave calls for PNG and PDF.
+  - The script can run using built-in data plus ggplot2.
 tags:
-  - fim
-  - julia-r
-  - ggplot2
-  - grammar-of-graphics
-  - statistical-plot
-  - r-markdown
-  - quarto
+- fim
+- julia-r
+- ggplot2
+- grammar-of-graphics
+- statistical-plot
+- r-markdown
+- quarto

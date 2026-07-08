@@ -1,52 +1,71 @@
-schema: "0.4"
+schema: '0.4'
 id: networkx-04-integration-analysis-output
 type: data
 quality: high
 solution: networkx
 category: network-and-graph-visualization
 variant: edge-integration-analysis-output
-
 prompt:
   context:
-    - "references/fim/overview/network-3d-graphics/networkx.md"
-    - "references/fim/solution/networkx.md"
-  text: |
-    Emit a NetworkX integration package for downstream graph visualization. Provide
+  - references/fim/overview/network-3d-graphics/networkx.md
+  - references/fim/solution/networkx.md
+  text: 'Emit a NetworkX integration package for downstream graph visualization. Provide
+
     Python code that reads a pandas edge list, builds the correct Graph or DiGraph,
+
     computes summary metrics, writes GraphML and GEXF, and exports node_link_data
+
     JSON for D3, Cytoscape.js, or Sigma conversion. Include validation for duplicate
+
     node keys, missing endpoints, invalid weights, graph class mismatch, and style
+
     arrays whose ordering does not match G.nodes() or G.edges().
 
+    '
+  system: You generate artifacts for networkx. Output only the requested artifact content. No markdown fences, no explanations.
+  provider_options:
+    max_tokens: 6144
+    temperature: 0.3
 output:
   formats:
-    - format: py
-    - format: json
-    - format: graphml
-  expected_artifact: "NetworkX conversion and analysis pipeline with validated exports."
-
+  - format: py
+  - format: json
+  - format: graphml
+  expected_artifact: NetworkX conversion and analysis pipeline with validated exports.
+  text_format: networkx
+  artifact_kind: NetworkX conversion and analysis pipeline with validated exports.
 evaluation:
   checklist:
-    - "Reads edge data and builds the correct NetworkX graph class."
-    - "Writes node_link_data JSON plus GraphML or GEXF for other tools."
-    - "Includes summary metrics and validation failures."
-    - "Documents style-list ordering requirements."
+  - Reads edge data and builds the correct NetworkX graph class.
+  - Writes node_link_data JSON plus GraphML or GEXF for other tools.
+  - Includes summary metrics and validation failures.
+  - Documents style-list ordering requirements.
   rubric:
-    - name: Format validity
-      weight: 30
-      description: "YAML parses and requests script, JSON, and GraphML outputs."
-    - name: Semantic completeness
-      weight: 30
-      description: "Covers ingestion, graph class, metrics, exports, and validation."
-    - name: Visual/structural quality
-      weight: 25
-      description: "Exported data can drive correct downstream visualization."
-    - name: Robustness
-      weight: 15
-      description: "Validation catches common NetworkX integration mistakes."
+  - name: Format validity
+    weight: 30
+    description: YAML parses and requests script, JSON, and GraphML outputs.
+    criteria: YAML parses and requests script, JSON, and GraphML outputs.
+  - name: Semantic completeness
+    weight: 30
+    description: Covers ingestion, graph class, metrics, exports, and validation.
+    criteria: Covers ingestion, graph class, metrics, exports, and validation.
+  - name: Visual/structural quality
+    weight: 25
+    description: Exported data can drive correct downstream visualization.
+    criteria: Exported data can drive correct downstream visualization.
+  - name: Robustness
+    weight: 15
+    description: Validation catches common NetworkX integration mistakes.
+    criteria: Validation catches common NetworkX integration mistakes.
   pass_conditions:
-    - "The output is usable as a pipeline bridge to browser or desktop graph tools."
-    - "NetworkX node and edge ordering caveats are explicit."
-    - "Graph class and edge direction assumptions are validated."
-
-tags: [fim, networkx, integration, node-link-json, graphml, gexf, analysis-output]
+  - The output is usable as a pipeline bridge to browser or desktop graph tools.
+  - NetworkX node and edge ordering caveats are explicit.
+  - Graph class and edge direction assumptions are validated.
+tags:
+- fim
+- networkx
+- integration
+- node-link-json
+- graphml
+- gexf
+- analysis-output

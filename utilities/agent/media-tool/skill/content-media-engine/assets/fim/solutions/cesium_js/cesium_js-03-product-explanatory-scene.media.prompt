@@ -29,6 +29,7 @@ output:
   - format: png
   text_format: html
   artifact: Cesium.js product and explanatory scene source asset
+  artifact_kind: Cesium.js product and explanatory scene source asset
   dimensions:
     width: 1440
     height: 900

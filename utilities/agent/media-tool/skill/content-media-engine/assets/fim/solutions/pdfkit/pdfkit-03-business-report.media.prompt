@@ -1,0 +1,72 @@
+schema: "0.4"
+id: pdfkit-03-business-report
+type: document/data
+quality: high
+solution: pdfkit
+category: document-data-file-processing
+variant: business-report
+references:
+  - "references/fim/overview/electronics-media-docfile/pdfkit.md"
+  - "references/fim/solution/pdfkit.md"
+prompt:
+  system: |-
+    You generate PDFKit programmatic PDF artifacts. Output only one complete ASCII JavaScript file for Node.js. Do not use Markdown fences or explanatory prose.
+  text: |-
+    Create a PDFKit business reporting artifact for an investor update.
+
+    Requirements:
+    - Use PDFKit in Node.js with a file stream and deterministic inline sample data.
+    - Generate a polished PDF with cover page, KPI dashboard, revenue table, milestone timeline, risk matrix, and appendix.
+    - Draw vector mini charts using PDFKit paths, rectangles, lines, gradients or simple fills, and text labels.
+    - Use `bufferPages: true` for final page numbers and document footer metadata.
+    - Calculate quarterly totals, percentage deltas, runway, weighted risk scores, and milestone completion counts.
+    - Set PDF info metadata and include visible source period, report version, author, and deterministic timestamp.
+    - Use measured text to keep timeline and risk descriptions from overlapping.
+    - Include parseability, pagination, fonts, accessibility, formulas/data types, metadata, and deterministic output safeguards in comments and validation checks.
+    - Output only the final JavaScript artifact.
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.2
+output:
+  text_format: javascript
+  artifact_kind: pdfkit-investor-report
+  formats:
+    - format: js
+    - format: pdf
+evaluation:
+  checklist:
+    - "Format validity: YAML parses as schema 0.4, generated output is one JavaScript file, and PDFKit APIs are used directly."
+    - "Parseability: JavaScript imports pdfkit/fs, builds data locally, pipes to a stream, and ends the document."
+    - "Semantic completeness: cover, KPI dashboard, revenue table, timeline, risk matrix, appendix, calculations, and metadata are present."
+    - "Pagination: buffered page numbers, section page breaks, measured text, and footers are implemented."
+    - "Fonts: standard fonts, weights, sizes, and optional custom font notes create a consistent report hierarchy."
+    - "Accessibility: selectable text, high contrast, captions for charts, non-color risk encoding, and clear headings are included."
+    - "Formulas/data types: currency, percentages, dates, booleans, counts, and weighted scores are calculated from typed sample data."
+    - "Metadata: PDF info, source period, author, version, filename, and deterministic timestamp are included."
+    - "Deterministic output: sample data, chart scales, calculations, ordering, timestamp, and filename are stable."
+  rubric:
+    - name: "Format validity"
+      weight: 30
+      criteria: "The prompt YAML and generated JavaScript are parseable, ASCII-only, and generate a PDF through PDFKit."
+    - name: "Semantic completeness"
+      weight: 30
+      criteria: "The investor report includes all requested sections, calculations, vector graphics, metadata, and export behavior."
+    - name: "Layout/data quality"
+      weight: 25
+      criteria: "The PDF is report-quality with clear hierarchy, accurate data formatting, readable vector charts, and balanced pages."
+    - name: "Robustness"
+      weight: 15
+      criteria: "The artifact handles long labels, negative deltas, missing optional notes, stream errors, metadata, and deterministic reruns."
+  pass_conditions:
+    - "YAML parses successfully and all file text is ASCII-only."
+    - "Rubric weights are exactly 30, 30, 25, and 15."
+    - "Generated JavaScript creates a board-ready multi-section PDF without HTML rendering."
+    - "All checklist items for parseability, pagination, fonts, accessibility, formulas/data types, metadata, and deterministic output are represented."
+tags:
+  - fim
+  - document-data-file-processing
+  - pdfkit
+  - business-report
+  - investor-update
+  - vector-graphics
+

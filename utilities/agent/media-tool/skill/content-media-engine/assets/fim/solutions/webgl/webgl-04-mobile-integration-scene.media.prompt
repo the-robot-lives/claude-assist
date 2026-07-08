@@ -30,6 +30,7 @@ output:
   - format: png
   text_format: html
   artifact: WebGL edge integration and mobile scene source asset
+  artifact_kind: WebGL edge integration and mobile scene source asset
   dimensions:
     width: 1440
     height: 900

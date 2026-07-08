@@ -1,52 +1,70 @@
-schema: "0.4"
+schema: '0.4'
 id: springy_js-02-dense-stress-layout
 type: visualization
 quality: high
 solution: springy_js
 category: network-and-graph-visualization
 variant: dense-graph-stress-layout
-
 prompt:
   context:
-    - "references/fim/overview/network-3d-graphics/springy_js.md"
-    - "references/fim/solution/springy_js.md"
-  text: |
-    Build a Springy.js stress-layout demo that intentionally shows the practical
+  - references/fim/overview/network-3d-graphics/springy_js.md
+  - references/fim/solution/springy_js.md
+  text: 'Build a Springy.js stress-layout demo that intentionally shows the practical
+
     ceiling for a tiny force-directed library. Use three graph sizes: 24, 60, and
+
     120 nodes, each with increasing edge density. Render on Canvas with simple
+
     circles and lines, report frame time, kinetic energy, node count, edge count,
+
     and settle time, and display a warning when the O(n squared) repulsion becomes
+
     unsuitable. Recommend Sigma.js, Cytoscape.js, or igraph for larger data.
 
+    '
+  system: You generate artifacts for springy_js. Output only the requested artifact content. No markdown fences, no explanations.
+  provider_options:
+    max_tokens: 6144
+    temperature: 0.3
 output:
   formats:
-    - format: html
-    - format: json
+  - format: html
+  - format: json
   renderer: springy-canvas
-  expected_artifact: "Limit-aware Springy stress demo with performance report."
-
+  expected_artifact: Limit-aware Springy stress demo with performance report.
+  text_format: springy_js
+  artifact_kind: Limit-aware Springy stress demo with performance report.
 evaluation:
   checklist:
-    - "Uses Springy only within small-to-medium demonstration sizes."
-    - "Measures frame time, energy, node count, edge count, and settle time."
-    - "Explains the O(n squared) repulsion limitation."
-    - "Provides clear handoff guidance for larger graphs."
+  - Uses Springy only within small-to-medium demonstration sizes.
+  - Measures frame time, energy, node count, edge count, and settle time.
+  - Explains the O(n squared) repulsion limitation.
+  - Provides clear handoff guidance for larger graphs.
   rubric:
-    - name: Format validity
-      weight: 30
-      description: "YAML parses and declares visualization plus JSON report outputs."
-    - name: Semantic completeness
-      weight: 30
-      description: "Covers stress sizes, physics limits, metrics, and fallback recommendations."
-    - name: Visual/structural quality
-      weight: 25
-      description: "Stress views are simple enough to compare at each size."
-    - name: Robustness
-      weight: 15
-      description: "Avoids pretending Springy scales to dense production graphs."
+  - name: Format validity
+    weight: 30
+    description: YAML parses and declares visualization plus JSON report outputs.
+    criteria: YAML parses and declares visualization plus JSON report outputs.
+  - name: Semantic completeness
+    weight: 30
+    description: Covers stress sizes, physics limits, metrics, and fallback recommendations.
+    criteria: Covers stress sizes, physics limits, metrics, and fallback recommendations.
+  - name: Visual/structural quality
+    weight: 25
+    description: Stress views are simple enough to compare at each size.
+    criteria: Stress views are simple enough to compare at each size.
+  - name: Robustness
+    weight: 15
+    description: Avoids pretending Springy scales to dense production graphs.
+    criteria: Avoids pretending Springy scales to dense production graphs.
   pass_conditions:
-    - "The prompt is honest about Springy's scale ceiling."
-    - "Stress metrics are part of the artifact."
-    - "The larger-size warning is explicit."
-
-tags: [fim, springy-js, dense-graph, stress-layout, performance-limit, canvas]
+  - The prompt is honest about Springy's scale ceiling.
+  - Stress metrics are part of the artifact.
+  - The larger-size warning is explicit.
+tags:
+- fim
+- springy-js
+- dense-graph
+- stress-layout
+- performance-limit
+- canvas

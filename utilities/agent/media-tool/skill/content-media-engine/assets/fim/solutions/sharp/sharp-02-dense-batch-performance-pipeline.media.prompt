@@ -1,0 +1,82 @@
+schema: "0.4"
+id: sharp-02-dense-batch-performance-pipeline
+type: image/visualization/data
+quality: high
+solution: sharp
+category: image-and-video-processing
+variant: dense-batch-performance-pipeline
+references:
+  - "references/fim/overview/electronics-media-docfile/sharp.md"
+  - "references/fim/solution/sharp.md"
+prompt:
+  system: |-
+    You generate Sharp image-processing artifacts. Output only one complete ASCII JavaScript module. Do not use markdown fences or explanatory prose.
+  text: |-
+    Create a dense batch Sharp performance pipeline for responsive image generation at scale.
+
+    Requirements:
+    - Build a deterministic batch runner that emits responsive widths 320, 640, 960, 1280, and 1920 for each input image.
+    - Use metadata() once per source, rotate() before resize(), clone() for variants, webp(), avif(), jpeg(), png(), toBuffer(), toFile(), and stream piping where appropriate.
+    - Configure sharp.concurrency(), sharp.cache(), queue backpressure, and per-input pixel limits with safe defaults.
+    - Include dimensions for responsive widths, a 1200x630 social variant, a 512x512 square crop, and an optional 2x density output.
+    - Specify srgb output color profile, withMetadata for retained ICC where requested, alpha preserved for PNG/WebP/AVIF when enabled, and alpha flattened for JPEG.
+    - Support input formats JPEG, PNG, WebP, AVIF, TIFF, GIF, SVG and output formats JPEG, PNG, WebP, AVIF, JSON manifest, and streams.
+    - Include memory and performance controls: sequentialRead for large images, limitInputPixels, cache bounds, concurrency limits, stream backpressure, avoiding repeated disk reads, and no awaiting the same Sharp instance twice.
+    - Emit deterministic metadata JSON per source and a batch manifest with source hash, original dimensions, output dimensions, format decisions, encoder quality, alpha/color decisions, byte sizes, timings, warnings, and stable filenames.
+    - Include deterministic output checks for sorted input order, variant ordering, encoder settings, filename templates, manifest key order, and warning order.
+    - Output only the final JavaScript artifact.
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.2
+output:
+  text_format: javascript
+  artifact_kind: sharp-batch-performance-pipeline
+  dimensions:
+    width: 1920
+    height: 1080
+  color_profile: srgb-with-optional-icc
+  alpha: modern-formats-preserved-jpeg-flattened
+  formats:
+    - format: js
+    - format: jpg
+    - format: png
+    - format: webp
+    - format: avif
+    - format: json
+evaluation:
+  checklist:
+    - "Format validity: YAML parses as schema 0.4, generated output is one JavaScript module, and Sharp APIs are used."
+    - "Semantic completeness: batch runner, responsive variants, social crop, square crop, concurrency/cache controls, streams, and manifests are present."
+    - "Dimensions: responsive widths include 320, 640, 960, 1280, 1920, plus 1200x630 social and 512x512 square variants."
+    - "Color profile and alpha: srgb output, optional ICC retention, modern-format alpha preservation, and JPEG flattening are explicit."
+    - "File formats: JPEG, PNG, WebP, AVIF, TIFF, GIF, SVG input and JPEG, PNG, WebP, AVIF, JSON, stream output are represented."
+    - "Memory and performance: sequentialRead, pixel limits, cache bounds, concurrency, backpressure, clone use, and single-use Sharp instance safety are covered."
+    - "Metadata: per-source and batch manifests record hashes, dimensions, format decisions, quality, alpha/color decisions, sizes, timings, warnings, and filenames."
+    - "Deterministic output: input sorting, variant order, encoder settings, filenames, manifest keys, and warning order are stable."
+  rubric:
+    - name: "Format validity"
+      weight: 30
+      criteria: "The prompt YAML and generated JavaScript are parseable, ASCII-only, and use Sharp batch APIs correctly."
+    - name: "Semantic completeness"
+      weight: 30
+      criteria: "The artifact covers batch orchestration, responsive variants, performance controls, stream handling, metadata, and deterministic behavior."
+    - name: "Output quality"
+      weight: 25
+      criteria: "The generated responsive outputs are consistently sized, sharp, color-safe, alpha-safe, and encoded with appropriate quality settings."
+    - name: "Robustness"
+      weight: 15
+      criteria: "The artifact handles huge images, malformed input, codec gaps, stream errors, cache/concurrency pressure, and deterministic reruns."
+  pass_conditions:
+    - "YAML parses successfully and all file text is ASCII-only."
+    - "Rubric weights are exactly Format validity 30, Semantic completeness 30, Output quality 25, and Robustness 15."
+    - "Generated JavaScript contains no markdown fences and uses Sharp rather than native CLI tools."
+    - "All dimensions, color profile/alpha, file format, memory/performance, metadata, and deterministic output checks are represented."
+    - "Rubric score is at least 80 out of 100 and no required checklist item is absent."
+tags:
+  - fim
+  - image-and-video-processing
+  - sharp
+  - dense-batch-performance-pipeline
+  - responsive-images
+  - batch-optimization
+  - performance

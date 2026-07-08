@@ -1,0 +1,68 @@
+schema: "0.4"
+id: fim-notebook-livebook-and-widgets-kino-datatable-01-canonical-widget
+type: data
+quality: high
+solution: kino-datatable
+category: notebook-livebook-and-widgets
+variant: canonical-widget
+prompt:
+  system: |-
+    You are a senior Elixir Livebook engineer. Output only one complete ASCII Elixir Livebook code cell for Kino.DataTable. No Markdown fences, no prose outside code. Use deterministic local data when no input data is supplied.
+  text: |-
+    Create a canonical Kino.DataTable Livebook cell. Install core Kino, build deterministic local rows as a list of maps with named fields, and render Kino.DataTable.new/2 with explicit keys, name, sorting_enabled, and num_rows options. Include a compact summary row set for orders, users, events, or experiments, with formatted dates, money, booleans, and missing-value placeholders.
+
+    Requirements: document Livebook/Kino compatibility, note that this is not a Jupyter ipywidgets artifact, describe the data shape and accepted row forms, avoid bare tuples unless converted to maps first, include accessibility-minded column names and readable fallback values, and include safe execution checks that avoid database credentials, remote queries, eval, shell calls, and unbounded row materialization.
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.2
+    top_p: 0.9
+output:
+  text_format: elixir
+  artifact_kind: livebook-kino-datatable-cell
+  formats:
+  - format: exs
+evaluation:
+  checklist:
+  - "Import check: generated code uses Mix.install with kino and renders Kino.DataTable.new/2 as the primary widget."
+  - "Notebook compatibility: comments identify Livebook/Kino as the runtime and distinguish it from Jupyter ipywidgets."
+  - "Reactive state: table state is managed by the Kino widget controls for sorting and pagination without rebuilding unrelated widgets."
+  - "Data shape: rows are named maps, keyword lists, structs, Explorer DataFrame, or Table.Reader sources; bare tuples are converted first."
+  - "Accessibility and fallback: column names, title, formatted values, and placeholders are readable and deterministic."
+  - "Safe execution: no credentials, remote database calls, eval, shell commands, or unbounded data loads are used."
+  rubric:
+  - name: Format validity
+    weight: 30
+    criteria:
+    - "Output is one complete ASCII Elixir Livebook code cell with no Markdown fences or explanatory wrapper."
+    - "The code is syntactically valid and uses Kino.DataTable.new/2 with supported options."
+    - "The cell includes concise compatibility comments and deterministic local data."
+  - name: Semantic completeness
+    weight: 30
+    criteria:
+    - "Implements a canonical table viewer with named fields, explicit keys, title, sorting, and pagination."
+    - "Demonstrates Kino.DataTable-specific constraints from the references, especially named records and tuple conversion."
+    - "Includes notebook/livebook category checks, data shape documentation, fallback rows, and safe execution notes."
+  - name: UX/structural quality
+    weight: 25
+    criteria:
+    - "Columns are ordered for scanning and formatted values are human-readable."
+    - "The table title, keys, and page size create a clear inspection workflow."
+    - "Missing values and boolean states are represented accessibly without relying only on color."
+  - name: Robustness
+    weight: 15
+    criteria:
+    - "Handles empty lists, heterogeneous rows, missing keys, duplicate labels, and large-but-bounded row counts."
+    - "Avoids relying on map iteration order by setting keys explicitly."
+    - "Documents when to sample, aggregate, or use Table.Reader instead of materializing huge lists."
+  pass_conditions:
+  - "All required YAML fields are present and the generated artifact is one valid ASCII Elixir Livebook cell."
+  - "Rubric weights are exactly Format validity 30, Semantic completeness 30, UX/structural quality 25, Robustness 15."
+  - "The prompt requires notebook/livebook compatibility, reactive state, data shape, accessibility, fallback, and safe execution checks."
+  - "The solution remains Kino.DataTable-centered and does not replace the table with a custom JavaScript grid."
+tags:
+- fim
+- notebook-livebook-and-widgets
+- livebook
+- kino-datatable
+- canonical-widget
+

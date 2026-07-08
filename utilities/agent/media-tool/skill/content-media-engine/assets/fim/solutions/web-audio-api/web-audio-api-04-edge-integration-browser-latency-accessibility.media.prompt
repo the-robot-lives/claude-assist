@@ -42,6 +42,7 @@ prompt:
 output:
   text_format: html
   artifact: "Web Audio API browser latency and accessibility integration source"
+  artifact_kind: "Web Audio API browser latency and accessibility integration source"
   formats:
     - format: html
     - format: js

@@ -31,6 +31,7 @@ output:
   - format: png
   text_format: html
   artifact: Verge3D edge integration and mobile scene source asset
+  artifact_kind: Verge3D edge integration and mobile scene source asset
   dimensions:
     width: 1440
     height: 900

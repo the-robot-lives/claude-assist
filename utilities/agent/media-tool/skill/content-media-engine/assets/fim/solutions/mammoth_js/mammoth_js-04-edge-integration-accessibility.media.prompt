@@ -1,0 +1,72 @@
+schema: "0.4"
+id: mammoth_js-04-edge-integration-accessibility
+type: document/data
+quality: high
+solution: mammoth_js
+category: document-data-file-processing
+variant: edge-integration-accessibility
+references:
+  - "references/fim/overview/electronics-media-docfile/mammoth_js.md"
+  - "references/fim/solution/mammoth_js.md"
+prompt:
+  system: |-
+    You generate Mammoth.js document ingestion artifacts. Output only one complete ASCII JavaScript file. Do not use Markdown fences or explanatory prose.
+  text: |-
+    Create a Mammoth.js edge and integration converter for untrusted DOCX uploads.
+
+    Requirements:
+    - Accept DOCX input as either a Node Buffer or a browser ArrayBuffer wrapper function.
+    - Reject legacy `.doc`, RTF, PDF, and missing files with clear errors.
+    - Use Mammoth style maps, `idPrefix`, `ignoreEmptyParagraphs: false`, and a deterministic image extraction handler.
+    - Emit sanitized HTML boundary comments, conversion messages, security notes, accessibility notes, and metadata JSON.
+    - Cover edge constructs: unknown styles, empty paragraphs, missing image alt text, nested tables, comments, bookmarks, and unsupported charts or SmartArt.
+    - Provide integration functions `convertDocxBuffer`, `convertDocxPath`, `buildCmsEnvelope`, and `summarizeMessages`.
+    - Include parseability, pagination, fonts, accessibility, formulas/data types, metadata, and deterministic output safeguards in comments and validation checks.
+    - Output only the final JavaScript artifact.
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.2
+output:
+  text_format: javascript
+  artifact_kind: mammoth-secure-docx-ingestion
+  formats:
+    - format: js
+    - format: html
+    - format: json
+evaluation:
+  checklist:
+    - "Format validity: YAML parses as schema 0.4, generated output is one JavaScript file, and Mammoth.js is the primary converter."
+    - "Parseability: JavaScript exposes the requested integration functions and validates file types before conversion."
+    - "Semantic completeness: buffer/path conversion, style map, id prefixing, image extraction, messages, and CMS envelope are present."
+    - "Pagination: DOCX pagination is treated as advisory only; page breaks and empty paragraphs are preserved or reported."
+    - "Fonts: font fidelity limits are documented and CSS class mapping is used instead of copying Word visual styling."
+    - "Accessibility: heading hierarchy, alt text, captions, list structure, table semantics, and warning summaries are included."
+    - "Formulas/data types: table content preserves dates, numbers, blanks, booleans, and formula-like values without recalculation."
+    - "Metadata: upload id, source filename, conversion profile, warnings, unsupported features, and deterministic timestamp are emitted."
+    - "Deterministic output: ids, image filenames, warning order, metadata keys, and timestamp are stable."
+  rubric:
+    - name: "Format validity"
+      weight: 30
+      criteria: "The prompt YAML and generated JavaScript are parseable, ASCII-only, and implement Mammoth.js conversion correctly."
+    - name: "Semantic completeness"
+      weight: 30
+      criteria: "The integration converter covers validation, conversion, accessibility, security boundaries, metadata, and edge constructs."
+    - name: "Layout/data quality"
+      weight: 25
+      criteria: "The output preserves clean semantic HTML, table text, image references, warning data, and reliable CMS envelope fields."
+    - name: "Robustness"
+      weight: 15
+      criteria: "The artifact handles invalid file types, unsupported DOCX features, empty content, metadata, and deterministic reruns."
+  pass_conditions:
+    - "YAML parses successfully and all file text is ASCII-only."
+    - "Rubric weights are exactly 30, 30, 25, and 15."
+    - "Generated JavaScript fails closed for unsupported file types and reports conversion limitations."
+    - "All checklist items for parseability, pagination, fonts, accessibility, formulas/data types, metadata, and deterministic output are represented."
+tags:
+  - fim
+  - document-data-file-processing
+  - mammoth_js
+  - accessibility
+  - metadata
+  - secure-ingestion
+

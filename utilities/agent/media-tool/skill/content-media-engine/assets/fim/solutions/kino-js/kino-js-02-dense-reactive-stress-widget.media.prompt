@@ -1,0 +1,68 @@
+schema: "0.4"
+id: fim-notebook-livebook-and-widgets-kino-js-02-dense-reactive-stress-widget
+type: interactive
+quality: high
+solution: kino-js
+category: notebook-livebook-and-widgets
+variant: dense-reactive-stress-widget
+prompt:
+  system: |-
+    You are a senior Elixir Livebook engineer. Output only one complete ASCII Elixir Livebook code cell for Kino.JS.Live. No Markdown fences, no prose outside code. Prioritize bounded state, event correctness, and responsive DOM updates.
+  text: |-
+    Create a dense reactive Kino.JS.Live stress widget. Define a module that uses Kino.JS and Kino.JS.Live, initializes server-side state, implements handle_connect/1, handle_event/3, and at least one handle_cast/2 or handle_info/2 timer, then renders a browser UI from asset "main.js" using ctx.pushEvent and ctx.handleEvent. Include multiple controls, bounded event payloads, throttled input handling, and deterministic local sample data.
+
+    Requirements: document Livebook/Kino compatibility; keep all payloads JSON-serializable and small; broadcast state updates safely to late-joining clients; avoid heavy compute in JS init; scope CSS; include accessibility roles, keyboard support, reduced-motion handling, fallback state, and safe execution checks for event names, payload validation, eval, untrusted HTML, external assets, credentials, and shell calls.
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.2
+    top_p: 0.9
+output:
+  text_format: elixir
+  artifact_kind: livebook-kino-js-live-stress-cell
+  formats:
+  - format: exs
+evaluation:
+  checklist:
+  - "Import check: generated code installs kino and defines a module using both Kino.JS and Kino.JS.Live."
+  - "Notebook compatibility: comments identify Livebook/Kino runtime and note browser and reconnect behavior."
+  - "Reactive state: handle_connect, handle_event, broadcast_event or send_event, and ctx.handleEvent/ctx.pushEvent are used coherently."
+  - "Data shape: payloads are bounded, JSON-serializable maps/lists/strings/numbers with documented schema and fallback defaults."
+  - "Accessibility and fallback: labels, roles, keyboard support, status text, scoped CSS, and reduced-motion behavior are present."
+  - "Safe execution: no eval, unsanitized innerHTML, non-serializable terms, excessive events, credentials, shell calls, or untrusted external asset assumptions."
+  rubric:
+  - name: Format validity
+    weight: 30
+    criteria:
+    - "Output is one complete ASCII Elixir Livebook code cell with no Markdown fences or explanatory wrapper."
+    - "The code is valid Elixir and JavaScript with current Kino.JS.Live callbacks."
+    - "The module exports init(ctx, data) in main.js and uses supported event APIs."
+  - name: Semantic completeness
+    weight: 30
+    criteria:
+    - "Implements dense two-way state with bounded controls, event validation, reconnect handling, and optional timer or cast updates."
+    - "Uses current Kino.JS and Kino.JS.Live patterns rather than obsolete inline options."
+    - "Includes notebook/livebook compatibility, reactive state, data shape, accessibility, fallback, and safe execution checks."
+  - name: UX/structural quality
+    weight: 25
+    criteria:
+    - "Dense controls are grouped in a stable, readable layout with clear current-state feedback."
+    - "Keyboard and screen-reader affordances are included for custom controls."
+    - "Event-driven updates do not duplicate DOM nodes or cause layout jumps."
+  - name: Robustness
+    weight: 15
+    criteria:
+    - "Handles late clients, invalid payloads, missing data, rapid events, and timer cleanup gracefully."
+    - "Keeps payloads bounded and serializable."
+    - "Documents browser, asset, and security limitations."
+  pass_conditions:
+  - "All required YAML fields are present and the generated artifact is one valid ASCII Elixir Livebook cell."
+  - "Rubric weights are exactly Format validity 30, Semantic completeness 30, UX/structural quality 25, Robustness 15."
+  - "The prompt requires notebook/livebook compatibility, reactive state, data shape, accessibility, fallback, and safe execution checks."
+  - "The solution remains Kino.JS.Live-centered and validates both Elixir and browser-side state transitions."
+tags:
+- fim
+- notebook-livebook-and-widgets
+- livebook
+- kino-js
+- dense-reactive-stress-widget
+

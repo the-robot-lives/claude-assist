@@ -1,0 +1,74 @@
+schema: "0.4"
+id: lottie-04-edge-integration-reduced-motion-performance
+type: interactive
+quality: high
+solution: lottie
+category: animation-and-motion
+variant: edge-integration-reduced-motion-performance
+references:
+  - "references/fim/overview/canvas-svg-creative-animation/lottie.md"
+  - "references/fim/solution/lottie.md"
+prompt:
+  system: |-
+    Generate production-quality Lottie integration edge-case assets for FIM evaluation. Output only a complete self-contained HTML document with inline CSS, JavaScript, and compact inline animation data.
+  text: |-
+    Create a Lottie integration harness for data failure, lifecycle cleanup, reduced motion, and renderer performance.
+
+    Scenario:
+    Build a mountable Lottie widget with controls for valid inline data, malformed data, missing container, SVG renderer, canvas renderer, low quality, high quality, reduced motion, and destroy/reload. Show diagnostics for current renderer, frame, loop state, data status, and active AnimationItem.
+
+    Implementation requirements:
+    - Use lottie-web 5.12.2 from a CDN or equivalent import and expose initLottie(root), destroyLottie(), reloadLottie(options), and setReducedMotion(enabled).
+    - Validate the player container before calling loadAnimation() and report missing targets without throwing.
+    - Include explicit frameRate, frame ranges, speed, direction, loop, autoplay, setSubframe, setQuality, and rendererSettings choices.
+    - Handle data_ready, data_failed, DOMLoaded, complete, loopComplete, and enterFrame events with readable diagnostics.
+    - Honor prefers-reduced-motion and manual reduced-motion mode by rendering poster or final frame and disabling loops and autoplay.
+    - Keep fallback UI, player, controls, diagnostics, and poster area non-overlapping across responsive layouts.
+    - Call destroy() before reload, renderer switch, or unmount, and avoid duplicate event listeners.
+    - Include a performance mode that switches to canvas, lower quality, fewer simultaneous instances, or disabled subframes.
+    - Output only the final artifact, with no markdown fences or explanatory prose outside the artifact.
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.2
+output:
+  text_format: html
+  artifact_kind: lottie-html-edge-integration-reduced-motion-performance
+  formats:
+    - format: html
+  dimensions:
+    width: 1440
+    height: 900
+  render_expectation: "Interactive Lottie robustness harness that survives data errors, missing targets, renderer switches, destroy, reload, and reduced motion."
+evaluation:
+  checklist:
+    - "Format validity: YAML parses under schema 0.4 and generated output is exactly one HTML artifact with no markdown fences."
+    - "Lottie API: Uses loadAnimation(), validated containers, renderer settings, event handling, setSubframe, setQuality, and destroy()."
+    - "Motion timing: Specifies frameRate, frame ranges, speed, direction, loop, autoplay, and reduced-motion frame handling."
+    - "Visual quality: Player, poster, controls, fallback UI, and diagnostics remain readable and non-overlapping."
+    - "Reduced motion: Supports prefers-reduced-motion and manual toggle with loops and autoplay disabled."
+    - "Performance: Provides renderer, quality, subframe, and instance-count strategies with cleanup before reload."
+  rubric:
+    - name: "Format validity"
+      weight: 30
+      criteria: "YAML and generated HTML are syntactically valid, required fields are present, id and file name match, and the artifact uses Lottie rather than a substitute animation library."
+    - name: "Semantic completeness"
+      weight: 30
+      criteria: "The artifact covers lifecycle integration, data failure, renderer choices, timing, looping, reduced motion, diagnostics, cleanup, and performance modes."
+    - name: "Motion/visual quality"
+      weight: 25
+      criteria: "Playback and fallback states are legible, well-framed, correctly targeted, and non-overlapping across normal and reduced-motion states."
+    - name: "Robustness"
+      weight: 15
+      criteria: "Handles missing containers, malformed data, destroy/reload, renderer switch, reduced motion, and low-power operation without blank screens or runtime errors."
+  pass_conditions:
+    - "Rubric weights are exactly 30, 30, 25, and 15 for a total of 100."
+    - "YAML parses successfully and all prompt text is ASCII-only."
+    - "Generated artifact runs with no console errors when lottie-web is available."
+    - "Score is at least 80 out of 100 with no zero score in any rubric dimension."
+tags:
+  - "fim"
+  - "animation-and-motion"
+  - "lottie"
+  - "edge-integration-reduced-motion-performance"
+  - "renderer-switch"
+  - "data-failure"

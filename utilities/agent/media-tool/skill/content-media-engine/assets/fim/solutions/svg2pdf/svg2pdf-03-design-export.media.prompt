@@ -1,0 +1,72 @@
+schema: "0.4"
+id: svg2pdf-03-design-export
+type: document/data
+quality: high
+solution: svg2pdf
+category: document-data-file-processing
+variant: design-export
+references:
+  - "references/fim/overview/electronics-media-docfile/svg2pdf.md"
+  - "references/fim/solution/svg2pdf.md"
+prompt:
+  system: |-
+    You generate svg2pdf.js browser export artifacts. Output only one complete self-contained HTML document with inline SVG, JavaScript, and CSS. Do not use Markdown fences or explanatory prose.
+  text: |-
+    Create an svg2pdf.js business design export for a print-ready product one-pager.
+
+    Requirements:
+    - Use jsPDF and svg2pdf.js from CDNs.
+    - Build an inline SVG one-pager with product title, KPI badges, feature blocks, comparison mini-chart, icon-like vector shapes, and footer metadata.
+    - Keep all visual elements in SVG primitives and text; avoid foreignObject and raster screenshots.
+    - Export to a PDF sized for US letter with margins and visible crop-safe guides.
+    - Include deterministic data for KPIs, comparison values, and feature priorities.
+    - Use `loadExternalStyleSheets: false` and inline critical fill/stroke/text styles so colors resolve.
+    - Include parseability, pagination, fonts, accessibility, formulas/data types, metadata, and deterministic output safeguards in comments and validation checks.
+    - Output only the final HTML artifact.
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.2
+output:
+  text_format: html
+  artifact_kind: svg2pdf-product-onepager-export
+  formats:
+    - format: html
+    - format: svg
+    - format: pdf
+evaluation:
+  checklist:
+    - "Format validity: YAML parses as schema 0.4, generated output is one HTML document, and svg2pdf.js converts inline SVG."
+    - "Parseability: JavaScript is syntactically valid, awaits conversion, and keeps styles resolvable without external stylesheets."
+    - "Semantic completeness: one-pager title, KPI badges, features, comparison chart, vector icons, export control, and metadata are present."
+    - "Pagination: PDF is sized to US letter with margins, crop-safe guides, and no clipped SVG content."
+    - "Fonts: font choices are declared in SVG text and exact embedding caveats are documented."
+    - "Accessibility: SVG title/desc, meaningful labels, high contrast, and non-color KPI labels are included."
+    - "Formulas/data types: KPI and comparison values are typed, formatted, and plotted deterministically."
+    - "Metadata: PDF info, one-pager id, source period, export profile, and deterministic timestamp are included."
+    - "Deterministic output: data, layout constants, styles, filename, timestamp, and PDF dimensions are stable."
+  rubric:
+    - name: "Format validity"
+      weight: 30
+      criteria: "The prompt YAML and generated HTML are parseable, ASCII-only, and convert a supported SVG design to PDF."
+    - name: "Semantic completeness"
+      weight: 30
+      criteria: "The design export includes the requested product one-pager content, vector styling, export behavior, and metadata."
+    - name: "Layout/data quality"
+      weight: 25
+      criteria: "The SVG/PDF is print-ready, visually balanced, crisp, unclipped, and data values are formatted accurately."
+    - name: "Robustness"
+      weight: 15
+      criteria: "The artifact handles style resolution, unsupported SVG caveats, font notes, metadata, and deterministic reruns."
+  pass_conditions:
+    - "YAML parses successfully and all file text is ASCII-only."
+    - "Rubric weights are exactly 30, 30, 25, and 15."
+    - "Generated HTML exports a vector PDF without relying on external CSS or raster screenshots."
+    - "All checklist items for parseability, pagination, fonts, accessibility, formulas/data types, metadata, and deterministic output are represented."
+tags:
+  - fim
+  - document-data-file-processing
+  - svg2pdf
+  - design-export
+  - product-onepager
+  - print-ready
+

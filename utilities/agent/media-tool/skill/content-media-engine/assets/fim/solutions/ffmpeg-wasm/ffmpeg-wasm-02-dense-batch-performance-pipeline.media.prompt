@@ -1,0 +1,83 @@
+schema: "0.4"
+id: ffmpeg-wasm-02-dense-batch-performance-pipeline
+type: image/visualization/data
+quality: high
+solution: ffmpeg-wasm
+category: image-and-video-processing
+variant: dense-batch-performance-pipeline
+references:
+  - "references/fim/overview/electronics-media-docfile/ffmpeg-wasm.md"
+  - "references/fim/solution/ffmpeg-wasm.md"
+prompt:
+  system: |-
+    You generate FFmpeg.wasm media-processing artifacts. Output only one complete ASCII JavaScript module. Do not use markdown fences or explanatory prose.
+  text: |-
+    Create a dense batch FFmpeg.wasm performance pipeline for an offline browser media optimizer.
+
+    Requirements:
+    - Build a queue that processes a deterministic list of short clips into WebM previews, MP4 web delivery files, and PNG contact-sheet thumbnails.
+    - Use one FFmpeg instance per queue worker, load once, reuse safely, and delete every MEMFS input, output, list file, palette, and frame directory between jobs.
+    - Detect crossOriginIsolated and load @ffmpeg/core-mt with workerURL only when SharedArrayBuffer is available; otherwise use the single-thread core.
+    - Apply performance-focused argument arrays: stream-copy trims when no filter is needed, re-encode only when scaling or codec conversion is required, cap fps, and use web-compatible pixel formats.
+    - Include a two-pass palette GIF path using palettegen and paletteuse for small animated previews.
+    - Include dimensions for 1920x1080 maximum video, 480px-wide GIF previews, and 320x180 contact-sheet tiles.
+    - Specify srgb display assumptions, yuv420p video output, PNG alpha preservation for frame tiles, and no alpha for MP4/WebM/GIF delivery outputs.
+    - Include file formats for mp4, webm, gif, png, json, and logs.
+    - Include memory and performance controls: total queued bytes, per-job timeout, input duration cap, progress aggregation, core download caching notes, and backpressure.
+    - Emit deterministic metadata JSON per job and a batch manifest with stable sorting, content hashes, codec decisions, dimensions, byte sizes, warnings, and elapsed milliseconds.
+    - Output only the final JavaScript artifact.
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.2
+output:
+  text_format: javascript
+  artifact_kind: ffmpeg-wasm-batch-performance-pipeline
+  dimensions:
+    width: 1920
+    height: 1080
+  color_profile: srgb-display-yuv420p-video
+  alpha: png-frames-preserved-delivery-flattened
+  formats:
+    - format: js
+    - format: mp4
+    - format: webm
+    - format: gif
+    - format: png
+    - format: json
+evaluation:
+  checklist:
+    - "Format validity: YAML parses as schema 0.4, generated output is one JavaScript module, and FFmpeg.wasm APIs are used."
+    - "Semantic completeness: queueing, multi-thread detection, single-thread fallback, MP4/WebM/GIF/PNG outputs, cleanup, and manifests are present."
+    - "Dimensions: output caps are 1920x1080 video, 480px-wide GIF previews, and 320x180 contact-sheet tiles."
+    - "Color profile and alpha: srgb display assumptions, yuv420p video, PNG alpha preservation, and delivery alpha limitations are explicit."
+    - "File formats: mp4, webm, gif, png, json, and log outputs are handled with stable names."
+    - "Memory and performance: queue byte budgets, duration caps, timeouts, backpressure, progress aggregation, and core caching are covered."
+    - "Metadata: each job and the batch manifest record hashes, codec decisions, dimensions, byte sizes, warnings, and elapsed milliseconds."
+    - "Deterministic output: input sorting, command construction, manifest key order, and artifact filenames are stable."
+  rubric:
+    - name: "Format validity"
+      weight: 30
+      criteria: "The prompt YAML and generated JavaScript are parseable, ASCII-only, and use FFmpeg.wasm batch processing APIs correctly."
+    - name: "Semantic completeness"
+      weight: 30
+      criteria: "The artifact covers queue orchestration, media variants, multi-thread fallback, cleanup, manifests, progress, and timeout behavior."
+    - name: "Output quality"
+      weight: 25
+      criteria: "The generated batch outputs are web-compatible, consistently sized, readable, and encoded with scenario-appropriate quality settings."
+    - name: "Robustness"
+      weight: 15
+      criteria: "The artifact handles memory pressure, unsupported browsers, long inputs, failed jobs, stale MEMFS content, and deterministic batch reruns."
+  pass_conditions:
+    - "YAML parses successfully and all file text is ASCII-only."
+    - "Rubric weights are exactly Format validity 30, Semantic completeness 30, Output quality 25, and Robustness 15."
+    - "Generated JavaScript contains no markdown fences and uses FFmpeg.wasm rather than native ffmpeg."
+    - "All dimensions, color profile/alpha, file format, memory/performance, metadata, and deterministic output checks are represented."
+    - "Rubric score is at least 80 out of 100 and no required checklist item is absent."
+tags:
+  - fim
+  - image-and-video-processing
+  - ffmpeg-wasm
+  - dense-batch-performance-pipeline
+  - batch-video
+  - wasm
+  - performance

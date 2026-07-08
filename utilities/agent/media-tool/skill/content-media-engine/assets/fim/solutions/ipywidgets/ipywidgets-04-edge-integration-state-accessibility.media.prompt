@@ -1,0 +1,67 @@
+schema: "0.4"
+id: fim-notebook-livebook-and-widgets-ipywidgets-04-edge-integration-state-accessibility
+type: interactive
+quality: high
+solution: ipywidgets
+category: notebook-livebook-and-widgets
+variant: edge-integration-state-accessibility
+prompt:
+  system: |-
+    You are a senior Python notebook engineer. Output only one complete ASCII Python notebook cell for Jupyter ipywidgets. No Markdown fences, no prose outside code. Prioritize state safety, validation, accessibility, and graceful fallback behavior.
+  text: |-
+    Create an ipywidgets edge/integration cell that accepts an optional FileUpload CSV, validates columns and file size, falls back to seeded demo data, and exposes controls to inspect, filter, and plot the data. Include clear status messages, a reset button, Output regions for validation errors and results, and a browser-side link or embed note for static exports where appropriate.
+
+    Requirements: parse uploaded bytes safely with pandas from an in-memory buffer; never eval uploaded content; validate required columns, row limits, numeric ranges, and empty files; document JupyterLab/Notebook/VS Code/Colab/Voila behavior; include accessibility labels, keyboard-friendly controls, readable fallback status, and protection against callback loops or stale state.
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.2
+    top_p: 0.9
+output:
+  text_format: python
+  artifact_kind: jupyter-ipywidgets-edge-cell
+  formats:
+  - format: py
+evaluation:
+  checklist:
+  - "Import check: generated code uses ipywidgets FileUpload, Button, Output, display, pandas, numpy, and an in-memory byte parser."
+  - "Notebook compatibility: comments cover Jupyter widget manager requirements and Voila/static export limitations."
+  - "Reactive state: upload, reset, filter, and plot controls share explicit state without recursive callbacks or stale widget recreation."
+  - "Data shape: required CSV columns, row limits, numeric ranges, empty files, malformed rows, and fallback demo rows are handled."
+  - "Accessibility and fallback: status messages are readable, controls have clear descriptions, color is not the only signal, and demo data is always available."
+  - "Safe execution: uploaded content is parsed as data only with no eval, exec, shell commands, remote fetches, credentials, or unsanitized HTML."
+  rubric:
+  - name: Format validity
+    weight: 30
+    criteria:
+    - "Output is one complete ASCII Python notebook cell with no Markdown fences or explanatory wrapper."
+    - "The code is syntactically valid and defines all callbacks, state containers, and fallback data before display."
+    - "The cell includes concise compatibility comments and stable output names or labels."
+  - name: Semantic completeness
+    weight: 30
+    criteria:
+    - "Implements file upload integration, validation, reset behavior, filtering, plotting, and fallback data."
+    - "Uses ipywidgets-specific APIs including FileUpload, Output, Button.on_click, observe, layout, and style."
+    - "Covers notebook/livebook category fit by making the supported Jupyter runtime explicit."
+  - name: UX/structural quality
+    weight: 25
+    criteria:
+    - "Error, warning, and success states are visible, concise, and accessible."
+    - "Controls are arranged with stable widths and clear labels for keyboard and screen-reader users."
+    - "The plot and table output remain legible for empty, fallback, and uploaded data."
+  - name: Robustness
+    weight: 15
+    criteria:
+    - "Rejects malformed, empty, oversized, or schema-mismatched uploads gracefully."
+    - "Maintains deterministic fallback state and bounded computations."
+    - "Documents frontend support, static export caveats, and safe parsing limits."
+  pass_conditions:
+  - "All required YAML fields are present and the generated artifact is one valid ASCII Python cell."
+  - "Rubric weights are exactly Format validity 30, Semantic completeness 30, UX/structural quality 25, Robustness 15."
+  - "The prompt requires notebook compatibility, reactive state, data shape, accessibility, fallback, and safe execution checks."
+  - "The solution remains ipywidgets-centered and treats uploaded content strictly as data."
+tags:
+- fim
+- notebook-livebook-and-widgets
+- jupyter
+- ipywidgets
+- edge-integration-state-accessibility

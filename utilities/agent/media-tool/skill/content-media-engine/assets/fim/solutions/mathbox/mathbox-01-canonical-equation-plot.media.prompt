@@ -1,0 +1,75 @@
+---
+schema: "0.4"
+id: fim-math-and-scientific-rendering-mathbox-01-canonical-equation-plot
+type: interactive
+quality: high
+solution: mathbox
+category: math-and-scientific-rendering
+variant: canonical-equation-plot
+references:
+- references/fim/overview/geospatial-math-scientific/mathbox.md
+- references/fim/solution/mathbox.md
+prompt:
+  system: |-
+    You are a senior WebGL mathematical visualization engineer. Output only one complete ASCII HTML file using MathBox. No Markdown fences or prose outside the source.
+  text: |-
+    Create a canonical MathBox 3D equation plot for z=sin(x)*cos(y). Use MathBox.mathBox, camera, cartesian view, axes, grid, area data, surface display, and label or HTML overlay annotations for x, y, and z. Include orbit controls and a nonblank first render.
+
+    Requirements: match MathBox and Three.js bundle versions, frame the camera so the surface is visible immediately, use shaded surface plus mesh lines, include units for x and y in radians and z as normalized amplitude, and provide screenshot-capture notes for PNG output.
+  provider_options:
+    temperature: 0.2
+    max_tokens: 8192
+output:
+  text_format: html
+  artifact_kind: mathbox-html
+  formats:
+  - format: html
+  - format: png
+  - format: webgl
+evaluation:
+  checklist:
+  - "YAML parses and required schema 0.4 fields are present."
+  - "HTML is complete, ASCII-only, and initializes MathBox with compatible Three.js or bundled assets."
+  - "Math correctness covers surface equation, coordinate ranges, sampling axes, and amplitude labels."
+  - "Notation validity covers equation text, axis labels, units, and MathBox node configuration."
+  - "Renderability covers nonblank first frame, camera framing, WebGL availability, and screenshot notes."
+  - "Labels and units identify x, y, z, radians, amplitude, surface, axes, and grid."
+  - "Domain edge cases cover WebGL failure, resize, device pixel ratio, dense sampling, and label overlay placement."
+  rubric:
+  - name: Format validity
+    weight: 30
+    criteria:
+    - "Output is one complete ASCII HTML file with no Markdown wrapper."
+    - "The file uses valid MathBox scene graph calls and compatible dependency loading."
+    - "The source documents local run, screenshot, and dependency expectations."
+  - name: Semantic completeness
+    weight: 30
+    criteria:
+    - "Camera, cartesian view, axes, grid, surface, labels, controls, and capture notes are all present."
+    - "MathBox is the primary 3D math rendering surface."
+    - "The plotted surface matches z=sin(x)*cos(y)."
+  - name: Visual/structural quality
+    weight: 25
+    criteria:
+    - "The first render is framed, lit or shaded, and structurally readable."
+    - "Labels and overlays do not obscure the surface."
+    - "Mesh, color, and camera choices make depth clear."
+  - name: Robustness
+    weight: 15
+    criteria:
+    - "Handles resize, WebGL unavailability, high device pixel ratio, and dense sampling limits."
+    - "Avoids unbounded per-frame allocations."
+    - "Documents version compatibility and capture constraints."
+  pass_conditions:
+  - "Rubric weights are exactly Format validity 30, Semantic completeness 30, Visual/structural quality 25, Robustness 15."
+  - "Score is 80 or higher out of 100 with no critical failure in math correctness, notation validity, or renderability."
+  - "The artifact renders a visible labeled MathBox surface on first load."
+  - "Domain edge cases and WebGL integration constraints are explicit."
+tags:
+- fim
+- math-and-scientific-rendering
+- mathbox
+- canonical-equation-plot
+- webgl
+- surface-plot
+

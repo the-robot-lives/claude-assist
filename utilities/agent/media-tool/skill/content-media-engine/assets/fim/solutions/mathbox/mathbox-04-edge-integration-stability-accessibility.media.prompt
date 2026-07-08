@@ -1,0 +1,74 @@
+---
+schema: "0.4"
+id: fim-math-and-scientific-rendering-mathbox-04-edge-integration-stability-accessibility
+type: interactive
+quality: high
+solution: mathbox
+category: math-and-scientific-rendering
+variant: edge-integration-stability-accessibility
+references:
+- references/fim/overview/geospatial-math-scientific/mathbox.md
+- references/fim/solution/mathbox.md
+prompt:
+  system: |-
+    You are a senior WebGL math reliability engineer. Output only one complete ASCII HTML file using MathBox. No Markdown fences or prose outside the source.
+  text: |-
+    Create a MathBox edge-case harness for visualizing f(x,y)=sin(r)/r where r=sqrt(x^2+y^2). Render a surface with a safe value of 1 at r=0, a zoom control, a marker at the removable singularity, and an accessible status panel describing the numeric-stability branch.
+
+    Requirements: avoid NaN and Infinity in emitted coordinates, bound surface resolution for low-power GPUs, handle WebGL failure with a readable fallback, use resize and device-pixel-ratio handling, include alt-text metadata comments, and provide screenshot-capture guidance.
+  provider_options:
+    temperature: 0.2
+    max_tokens: 8192
+output:
+  text_format: html
+  artifact_kind: mathbox-html
+  formats:
+  - format: html
+  - format: png
+  - format: webgl
+evaluation:
+  checklist:
+  - "YAML parses and required schema 0.4 fields are present."
+  - "HTML is complete, ASCII-only, and uses MathBox with safe numeric surface generation."
+  - "Math correctness covers radial sinc definition, r=0 limit, marker placement, and zoomed view."
+  - "Notation validity covers function labels, units, status text, and alt-text comments."
+  - "Renderability covers nonblank first frame, WebGL fallback, resize, DPR handling, and screenshot notes."
+  - "Labels and units identify x, y, z, radial distance, normalized amplitude, removable point, and zoom."
+  - "Domain edge cases cover r=0, near-zero cancellation, NaN prevention, dense sampling, low-power GPU limits, and accessibility."
+  rubric:
+  - name: Format validity
+    weight: 30
+    criteria:
+    - "Output is one complete ASCII HTML file with no Markdown wrapper."
+    - "The file uses valid MathBox APIs and safe JavaScript numeric guards."
+    - "The source documents dependency versions, run, fallback, and capture behavior."
+  - name: Semantic completeness
+    weight: 30
+    criteria:
+    - "Surface, removable marker, zoom control, numeric-stability status, fallback, and alt-text comments are all present."
+    - "MathBox remains the primary 3D render surface."
+    - "The radial sinc limit is handled mathematically correctly."
+  - name: Visual/structural quality
+    weight: 25
+    criteria:
+    - "Surface and removable point are readable at first render and zoomed states."
+    - "Labels, status, and controls are legible and non-overlapping."
+    - "Accessibility text accurately summarizes the visual."
+  - name: Robustness
+    weight: 15
+    criteria:
+    - "Handles r=0, near-zero values, WebGL failure, resize, high DPR, and GPU load limits."
+    - "Avoids unbounded per-frame allocations."
+    - "Documents capture and fallback constraints."
+  pass_conditions:
+  - "Rubric weights are exactly Format validity 30, Semantic completeness 30, Visual/structural quality 25, Robustness 15."
+  - "Score is 80 or higher out of 100 with no critical failure in math correctness, notation validity, renderability, or accessibility."
+  - "The artifact safely renders the radial sinc edge case with accessible status output."
+  - "Domain edge cases and WebGL integration constraints are explicit."
+tags:
+- fim
+- math-and-scientific-rendering
+- mathbox
+- edge-integration-stability-accessibility
+- numeric-stability
+- webgl-fallback

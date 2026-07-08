@@ -1,0 +1,72 @@
+schema: "0.4"
+id: jspdf-03-business-report
+type: document/data
+quality: high
+solution: jspdf
+category: document-data-file-processing
+variant: business-report
+references:
+  - "references/fim/overview/electronics-media-docfile/jspdf.md"
+  - "references/fim/solution/jspdf.md"
+prompt:
+  system: |-
+    You generate browser-first jsPDF document artifacts. Output only one complete self-contained HTML document with inline JavaScript and CSS. Do not use Markdown fences or explanatory prose.
+  text: |-
+    Create a jsPDF board-ready quarterly business report.
+
+    Requirements:
+    - Use jsPDF 2.5.x from a CDN.
+    - Generate a polished PDF with cover, KPI strip, revenue bridge, risk register, regional performance table, and recommendations.
+    - Draw simple vector charts directly with jsPDF lines, rectangles, labels, and legends; do not use screenshots.
+    - Use deterministic sample data for revenue, margin, pipeline, churn, and risk severity.
+    - Calculate totals, percentage deltas, weighted risk score, and recommendation priority from typed data.
+    - Include report metadata, author, subject, version, deterministic generated timestamp, and source data period.
+    - Ensure all text remains selectable with clear font choices, readable contrast, and compact page headers/footers.
+    - Include parseability, pagination, fonts, accessibility, formulas/data types, metadata, and deterministic output safeguards in the code comments.
+    - Output only the final HTML artifact.
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.2
+output:
+  text_format: html
+  artifact_kind: jspdf-business-report
+  formats:
+    - format: html
+    - format: pdf
+evaluation:
+  checklist:
+    - "Format validity: YAML parses as schema 0.4, generated output is one HTML document, and jsPDF native drawing/text APIs are used."
+    - "Parseability: JavaScript is syntactically valid and exposes a single report generation function."
+    - "Semantic completeness: cover, KPI strip, charts, tables, risk register, and recommendations are included."
+    - "Pagination: cover and body sections have explicit page placement, page numbers, and no clipped report blocks."
+    - "Fonts: font family, style, size, and alignment choices support a professional report hierarchy."
+    - "Accessibility: high contrast, selectable text, descriptive chart captions, non-color risk labels, and HTML control labels are included."
+    - "Formulas/data types: numbers, percentages, dates, booleans, and risk scores are calculated from typed source rows."
+    - "Metadata: PDF info fields, report version, data period, filename, and deterministic timestamp are present."
+    - "Deterministic output: sample data, calculations, chart scales, ordering, and timestamp are stable."
+  rubric:
+    - name: "Format validity"
+      weight: 30
+      criteria: "The prompt YAML and generated HTML are parseable, ASCII-only, and produce a valid jsPDF PDF."
+    - name: "Semantic completeness"
+      weight: 30
+      criteria: "The business report covers requested reporting sections, calculations, chart captions, and recommendations."
+    - name: "Layout/data quality"
+      weight: 25
+      criteria: "The report looks board-ready with readable hierarchy, balanced pages, accurate data formatting, and clear vector charts."
+    - name: "Robustness"
+      weight: 15
+      criteria: "The artifact handles long labels, zero or negative deltas, missing optional notes, metadata, and deterministic reruns."
+  pass_conditions:
+    - "YAML parses successfully and all file text is ASCII-only."
+    - "Rubric weights are exactly 30, 30, 25, and 15."
+    - "Generated artifact creates a valid PDF with at least three pages and no rasterized report body text."
+    - "All checklist items for parseability, pagination, fonts, accessibility, formulas/data types, metadata, and deterministic output are represented."
+tags:
+  - fim
+  - document-data-file-processing
+  - jspdf
+  - business-report
+  - vector-charts
+  - reporting
+

@@ -1,62 +1,72 @@
-schema: "0.4"
+schema: '0.4'
 id: gadfly_jl-04-edge-integration-reproducibility-plot
 type: visualization
 quality: high
 solution: gadfly_jl
 category: julia-r
 variant: edge-integration-reproducibility-plot
-
 prompt:
-  system: "Generate only runnable Julia code for a Gadfly.jl visualization. Do not include markdown fences or explanatory prose."
-  text: |
-    Create an edge-case and integration-focused Gadfly.jl visualization for a reproducible report pipeline.
+  system: Generate only runnable Julia code for a Gadfly.jl visualization. Do not include markdown fences or explanatory prose.
+  text: 'Create an edge-case and integration-focused Gadfly.jl visualization for a reproducible report pipeline.
+
     Build a deterministic DataFrame with missing values, zero or negative values, an extreme outlier, and categorical ordering that must be preserved.
+
     Clean or filter the data explicitly before plotting, explain each transformation with short code comments, and preserve a reproducible seed where random data is used.
+
     Produce a plot that demonstrates a transformed scale or bounded coordinate range, such as a log-safe metric after filtering positive values or a zoomed Coord.cartesian view that does not mutate the source data.
+
     Include DataFrames-native column references, Guide labels, Theme settings, and SVG export for embedding in Documenter.jl, Weave.jl, Pluto, or IJulia.
+
     Avoid interactivity and backend-specific assumptions beyond Gadfly SVG rendering.
 
+    '
+  provider_options:
+    max_tokens: 6144
+    temperature: 0.3
 output:
   format: julia
   file: gadfly_jl-04-edge-integration-reproducibility-plot.jl
   renders:
-    - format: svg
-      file: gadfly_jl-04-edge-integration-reproducibility-plot.svg
+  - format: svg
+    file: gadfly_jl-04-edge-integration-reproducibility-plot.svg
   requirements:
-    - Gadfly
-    - DataFrames
-    - Random
-
+  - Gadfly
+  - DataFrames
+  - Random
+  text_format: julia
+  artifact_kind: gadfly_jl-04-edge-integration-reproducibility-plot.jl
+  formats:
+  - format: julia
+  - format: svg
 evaluation:
   checklist:
-    - Handles missing, zero or negative, outlier, and categorical ordering edge cases.
-    - Uses explicit data cleaning before scale transformation or coordinate bounding.
-    - Uses Gadfly DataFrame column symbols and exports SVG for report integration.
-    - Includes concise comments that clarify reproducibility and transformation choices.
+  - Handles missing, zero or negative, outlier, and categorical ordering edge cases.
+  - Uses explicit data cleaning before scale transformation or coordinate bounding.
+  - Uses Gadfly DataFrame column symbols and exports SVG for report integration.
+  - Includes concise comments that clarify reproducibility and transformation choices.
   rubric:
     Format validity:
       weight: 30
-      criteria: "The response is valid Julia code with correct missing-data handling, Gadfly syntax, and SVG export."
+      criteria: The response is valid Julia code with correct missing-data handling, Gadfly syntax, and SVG export.
     Semantic completeness:
       weight: 30
-      criteria: "The plot demonstrates edge-case handling, report integration, transformation logic, and reproducible data preparation."
+      criteria: The plot demonstrates edge-case handling, report integration, transformation logic, and reproducible data preparation.
     Visual/structural quality:
       weight: 25
-      criteria: "The figure remains interpretable after filtering or zooming, with clear labels, stable category order, and no misleading scale use."
+      criteria: The figure remains interpretable after filtering or zooming, with clear labels, stable category order, and no misleading scale use.
     Robustness:
       weight: 15
-      criteria: "The code avoids log-scale failures, handles missing values explicitly, keeps deterministic behavior, and is suitable for CI or documentation rendering."
+      criteria: The code avoids log-scale failures, handles missing values explicitly, keeps deterministic behavior, and is suitable for CI or documentation rendering.
   pass_conditions:
-    - The code explicitly handles missing values.
-    - The code avoids plotting invalid values on transformed scales.
-    - The plot uses Gadfly and writes an SVG artifact.
-    - The output is reproducible without relying on external files.
-
+  - The code explicitly handles missing values.
+  - The code avoids plotting invalid values on transformed scales.
+  - The plot uses Gadfly and writes an SVG artifact.
+  - The output is reproducible without relying on external files.
 tags:
-  - fim
-  - julia-r
-  - gadfly-jl
-  - reproducibility
-  - edge-cases
-  - data-cleaning
-  - report-integration
+- fim
+- julia-r
+- gadfly-jl
+- reproducibility
+- edge-cases
+- data-cleaning
+- report-integration

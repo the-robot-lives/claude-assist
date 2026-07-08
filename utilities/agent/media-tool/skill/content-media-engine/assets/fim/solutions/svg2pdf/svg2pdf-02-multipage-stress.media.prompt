@@ -1,0 +1,72 @@
+schema: "0.4"
+id: svg2pdf-02-multipage-stress
+type: document/data
+quality: high
+solution: svg2pdf
+category: document-data-file-processing
+variant: multipage-stress
+references:
+  - "references/fim/overview/electronics-media-docfile/svg2pdf.md"
+  - "references/fim/solution/svg2pdf.md"
+prompt:
+  system: |-
+    You generate svg2pdf.js browser export artifacts. Output only one complete self-contained HTML document with inline SVG, JavaScript, and CSS. Do not use Markdown fences or explanatory prose.
+  text: |-
+    Create an svg2pdf.js multi-page stress export for a packet of SVG diagrams.
+
+    Requirements:
+    - Use jsPDF and svg2pdf.js from CDNs.
+    - Include four deterministic inline SVG panels: architecture map, dense line chart, process diagram, and legend-heavy risk matrix.
+    - Export each SVG to its own PDF page with `await doc.svg(...)` inside an ordered async loop.
+    - Use page dimensions that prevent clipping and preserve aspect ratio.
+    - Include a cover page drawn with jsPDF text and a final metadata page summarizing SVG ids, node counts, and export sizes.
+    - Avoid unsupported SVG features such as foreignObject and heavy filters; include fallback notes for masks/filters.
+    - Include parseability, pagination, fonts, accessibility, formulas/data types, metadata, and deterministic output safeguards in comments and validation checks.
+    - Output only the final HTML artifact.
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.2
+output:
+  text_format: html
+  artifact_kind: svg2pdf-multipage-diagram-packet
+  formats:
+    - format: html
+    - format: svg
+    - format: pdf
+evaluation:
+  checklist:
+    - "Format validity: YAML parses as schema 0.4, generated output is one HTML document, and svg2pdf.js async conversion is used."
+    - "Parseability: JavaScript is syntactically valid, awaits every `doc.svg` call, and exports all inline SVG nodes."
+    - "Semantic completeness: four SVG panels, cover page, metadata page, export controls, and unsupported-feature notes are present."
+    - "Pagination: each SVG lands on a separate PDF page with correct size, margins, aspect ratio, and page numbering."
+    - "Fonts: SVG text uses declared fonts and comments note jsPDF font registration for exact selectable text."
+    - "Accessibility: every SVG has title/desc, labels, high contrast, and non-color encodings where practical."
+    - "Formulas/data types: chart scales, risk matrix values, node counts, and export sizes are calculated from typed data."
+    - "Metadata: PDF info, SVG ids, node counts, page sizes, export profile, and deterministic timestamp are included."
+    - "Deterministic output: SVG order, ids, data, page sizes, filename, timestamp, and metadata page are stable."
+  rubric:
+    - name: "Format validity"
+      weight: 30
+      criteria: "The prompt YAML and generated HTML are parseable, ASCII-only, and use svg2pdf.js correctly for multi-page export."
+    - name: "Semantic completeness"
+      weight: 30
+      criteria: "The packet includes all SVG panels, cover, metadata page, export loop, and feature-limit notes."
+    - name: "Layout/data quality"
+      weight: 25
+      criteria: "Each PDF page is unclipped, readable, vector-preserving, data-driven, and visually organized."
+    - name: "Robustness"
+      weight: 15
+      criteria: "The artifact handles async ordering, complex but supported SVG, size calculation, metadata, and deterministic reruns."
+  pass_conditions:
+    - "YAML parses successfully and all file text is ASCII-only."
+    - "Rubric weights are exactly 30, 30, 25, and 15."
+    - "Generated HTML creates a multi-page PDF with one SVG panel per page plus cover and metadata pages."
+    - "All checklist items for parseability, pagination, fonts, accessibility, formulas/data types, metadata, and deterministic output are represented."
+tags:
+  - fim
+  - document-data-file-processing
+  - svg2pdf
+  - multipage
+  - stress
+  - vector-diagrams
+

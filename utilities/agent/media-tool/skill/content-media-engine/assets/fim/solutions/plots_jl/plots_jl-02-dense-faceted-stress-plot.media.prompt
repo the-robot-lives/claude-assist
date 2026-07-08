@@ -1,62 +1,72 @@
-schema: "0.4"
+schema: '0.4'
 id: plots_jl-02-dense-faceted-stress-plot
 type: visualization
 quality: high
 solution: plots_jl
 category: julia-r
 variant: dense-faceted-stress-plot
-
 prompt:
-  system: "Generate only runnable Julia code for a Plots.jl visualization. Do not include markdown fences or explanatory prose."
-  text: |
-    Create a dense stress-test visualization in Julia with Plots.jl.
+  system: Generate only runnable Julia code for a Plots.jl visualization. Do not include markdown fences or explanatory prose.
+  text: 'Create a dense stress-test visualization in Julia with Plots.jl.
+
     Generate deterministic synthetic data with at least 100000 observations and multiple groups.
+
     Avoid raw overplotting by using histogram2d, heatmap after aggregation, contour, or density-style summaries.
+
     Build a multi-panel layout with at least four subplots using layout=(2,2) or @layout, with shared conceptual axes and clear subplot titles.
+
     Use a continuous color gradient such as :viridis or :thermal, explicit size, dpi, and a note in a code comment about first-plot latency and backend behavior.
+
     Save a PNG artifact with the GR backend.
 
+    '
+  provider_options:
+    max_tokens: 6144
+    temperature: 0.3
 output:
   format: julia
   file: plots_jl-02-dense-faceted-stress-plot.jl
   renders:
-    - format: png
-      file: plots_jl-02-dense-faceted-stress-plot.png
+  - format: png
+    file: plots_jl-02-dense-faceted-stress-plot.png
   requirements:
-    - Plots
-    - Random
-    - Statistics
-
+  - Plots
+  - Random
+  - Statistics
+  text_format: julia
+  artifact_kind: plots_jl-02-dense-faceted-stress-plot.jl
+  formats:
+  - format: julia
+  - format: png
 evaluation:
   checklist:
-    - Generates at least 100000 deterministic observations.
-    - Uses aggregated or density-style Plots.jl series rather than raw dense scatter.
-    - Builds a multi-panel layout with at least four subplots.
-    - Uses an explicit backend, color gradient, size, dpi, and PNG export.
+  - Generates at least 100000 deterministic observations.
+  - Uses aggregated or density-style Plots.jl series rather than raw dense scatter.
+  - Builds a multi-panel layout with at least four subplots.
+  - Uses an explicit backend, color gradient, size, dpi, and PNG export.
   rubric:
     Format validity:
       weight: 30
-      criteria: "The response is valid Julia code with correct Plots.jl dense visualization, layout, backend, and export syntax."
+      criteria: The response is valid Julia code with correct Plots.jl dense visualization, layout, backend, and export syntax.
     Semantic completeness:
       weight: 30
-      criteria: "The code covers dense data, stress behavior, aggregation, multi-panel comparison, deterministic generation, and backend notes."
+      criteria: The code covers dense data, stress behavior, aggregation, multi-panel comparison, deterministic generation, and backend notes.
     Visual/structural quality:
       weight: 25
-      criteria: "The subplots are coherent, labeled, and readable, with color scales that make high-density structure visible."
+      criteria: The subplots are coherent, labeled, and readable, with color scales that make high-density structure visible.
     Robustness:
       weight: 15
-      criteria: "The code controls memory reasonably, seeds randomness, avoids unsupported interactive attributes, and writes a stable PNG output."
+      criteria: The code controls memory reasonably, seeds randomness, avoids unsupported interactive attributes, and writes a stable PNG output.
   pass_conditions:
-    - The generated data has at least 100000 observations.
-    - The plot uses histogram2d, heatmap, contour, density, or equivalent aggregation.
-    - The output combines at least four panels in one figure.
-    - The code writes a PNG file.
-
+  - The generated data has at least 100000 observations.
+  - The plot uses histogram2d, heatmap, contour, density, or equivalent aggregation.
+  - The output combines at least four panels in one figure.
+  - The code writes a PNG file.
 tags:
-  - fim
-  - julia-r
-  - plots-jl
-  - dense-data
-  - stress-test
-  - layout
-  - heatmap
+- fim
+- julia-r
+- plots-jl
+- dense-data
+- stress-test
+- layout
+- heatmap

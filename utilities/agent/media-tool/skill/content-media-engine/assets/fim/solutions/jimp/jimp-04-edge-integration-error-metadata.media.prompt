@@ -1,0 +1,83 @@
+schema: "0.4"
+id: jimp-04-edge-integration-error-metadata
+type: image/visualization/data
+quality: high
+solution: jimp
+category: image-and-video-processing
+variant: edge-integration-error-metadata
+references:
+  - "references/fim/overview/electronics-media-docfile/jimp.md"
+  - "references/fim/solution/jimp.md"
+prompt:
+  system: |-
+    You generate Jimp image-processing artifacts. Output only one complete ASCII JavaScript module. Do not use markdown fences or explanatory prose.
+  text: |-
+    Create a Jimp integration wrapper focused on edge cases, errors, metadata, and deterministic diagnostics.
+
+    Requirements:
+    - Provide loadJimpImage(input) for path, URL, Buffer, ArrayBuffer, browser File, and data URL inputs with stable validation errors.
+    - Validate requested output dimensions, MIME type, JPEG quality, alpha policy, pixel budget, and per-pixel scan settings before mutating the image.
+    - Use Jimp v1 APIs and clone() before any branch that needs the original source.
+    - Cover output dimensions 128x128, 512x512, 1024x768, and 1920x1080 with deterministic validation messages.
+    - Specify srgb RGBA bitmap assumptions, alpha preserved for PNG, alpha flattened for JPEG/BMP, and no embedded EXIF or ICC preservation guarantee.
+    - Support input formats PNG, JPEG, BMP, TIFF, GIF and output formats PNG, JPEG, BMP, TIFF, GIF, base64 data URL, and JSON.
+    - Include memory and performance controls: decoded RGBA byte estimate, max megapixels, bounded scan rectangle, timeouts for expensive filters, and guidance to switch to Sharp for high-throughput servers.
+    - Emit diagnostics JSON with stable error codes, source hash, dimensions, MIME type, alpha policy, memory estimate, warnings, operation list, output filenames, and elapsed milliseconds.
+    - Include deterministic output checks for validation order, error code strings, operation list ordering, metadata key order, and output filenames.
+    - Output only the final JavaScript artifact.
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.2
+output:
+  text_format: javascript
+  artifact_kind: jimp-edge-integration-diagnostics
+  dimensions:
+    width: 1920
+    height: 1080
+  color_profile: srgb-rgba-assumed
+  alpha: png-preserved-lossy-formats-flattened
+  formats:
+    - format: js
+    - format: png
+    - format: jpg
+    - format: bmp
+    - format: tiff
+    - format: gif
+    - format: json
+evaluation:
+  checklist:
+    - "Format validity: YAML parses as schema 0.4, generated output is one JavaScript module, and Jimp v1 APIs are used."
+    - "Semantic completeness: input loading, validation, cloning, transformation, diagnostics, edge errors, and stable outputs are present."
+    - "Dimensions: 128x128, 512x512, 1024x768, and 1920x1080 presets are validated deterministically."
+    - "Color profile and alpha: srgb RGBA assumptions, PNG alpha preservation, lossy-format flattening, and EXIF/ICC limitations are explicit."
+    - "File formats: PNG, JPEG, BMP, TIFF, GIF, base64 data URL, and JSON handling is represented."
+    - "Memory and performance: RGBA byte estimates, megapixel caps, bounded scan rectangles, filter timeouts, and Sharp guidance are covered."
+    - "Metadata: diagnostics JSON records error codes, hash, dimensions, MIME type, alpha policy, memory estimate, warnings, operations, filenames, and timing."
+    - "Deterministic output: validation order, error codes, operation order, metadata keys, and filenames are stable."
+  rubric:
+    - name: "Format validity"
+      weight: 30
+      criteria: "The prompt YAML and generated JavaScript are parseable, ASCII-only, and use Jimp without native dependencies."
+    - name: "Semantic completeness"
+      weight: 30
+      criteria: "The artifact covers edge input loading, validation, mutation safety, diagnostics, alpha behavior, metadata, and deterministic errors."
+    - name: "Output quality"
+      weight: 25
+      criteria: "The generated outputs and diagnostics are correctly bounded, format-correct, and easy to integrate in portable runtimes."
+    - name: "Robustness"
+      weight: 15
+      criteria: "The artifact handles malformed input, unsupported MIME types, memory pressure, long filters, mutation side effects, and deterministic reruns."
+  pass_conditions:
+    - "YAML parses successfully and all file text is ASCII-only."
+    - "Rubric weights are exactly Format validity 30, Semantic completeness 30, Output quality 25, and Robustness 15."
+    - "Generated JavaScript contains no markdown fences and uses Jimp rather than native bindings."
+    - "All dimensions, color profile/alpha, file format, memory/performance, metadata, and deterministic output checks are represented."
+    - "Rubric score is at least 80 out of 100 and no required checklist item is absent."
+tags:
+  - fim
+  - image-and-video-processing
+  - jimp
+  - edge-integration-error-metadata
+  - diagnostics
+  - metadata
+  - portable-runtime

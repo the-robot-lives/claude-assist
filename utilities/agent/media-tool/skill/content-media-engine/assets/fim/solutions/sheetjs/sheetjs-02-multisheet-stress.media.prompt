@@ -1,0 +1,73 @@
+schema: "0.4"
+id: sheetjs-02-multisheet-stress
+type: document/data
+quality: high
+solution: sheetjs
+category: document-data-file-processing
+variant: multisheet-stress
+references:
+  - "references/fim/overview/electronics-media-docfile/sheetjs.md"
+  - "references/fim/solution/sheetjs.md"
+prompt:
+  system: |-
+    You generate SheetJS spreadsheet processing artifacts. Output only one complete ASCII JavaScript file for Node.js. Do not use Markdown fences or explanatory prose.
+  text: |-
+    Create a SheetJS multi-sheet stress workbook generator.
+
+    Requirements:
+    - Use deterministic generated data to build a workbook with Summary, Orders, Refunds, Inventory, Customers, and DataDictionary sheets.
+    - Generate at least 500 total rows across sheets with mixed strings, numbers, dates, booleans, blanks, formulas, and error sentinel values.
+    - Use `book_new`, `aoa_to_sheet`, `json_to_sheet`, `sheet_add_aoa`, `sheet_add_json`, `decode_range`, and `book_append_sheet`.
+    - Add formulas in Summary that reference other sheets, and clearly note that SheetJS stores formulas but does not recalculate them.
+    - Set valid sheet names, column widths, autofilters, merges for title rows, and number/date formats.
+    - Write XLSX and CSV exports for key sheets plus a metadata sidecar.
+    - Include parseability, pagination, fonts, accessibility, formulas/data types, metadata, and deterministic output safeguards in comments and validation checks.
+    - Output only the final JavaScript artifact.
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.2
+output:
+  text_format: javascript
+  artifact_kind: sheetjs-multisheet-stress-workbook
+  formats:
+    - format: js
+    - format: xlsx
+    - format: csv
+    - format: json
+evaluation:
+  checklist:
+    - "Format validity: YAML parses as schema 0.4, generated output is one JavaScript file, and SheetJS workbook APIs are used."
+    - "Parseability: JavaScript is syntactically valid, builds all sheets, and writes XLSX/CSV/metadata outputs."
+    - "Semantic completeness: six sheets, dense rows, formulas, merges, widths, autofilters, CSV exports, and metadata are present."
+    - "Pagination: worksheet print/page setup notes or properties are included where feasible, without claiming visual page layout fidelity."
+    - "Fonts: SheetJS CE style limits are documented and readability relies on headers, widths, ordering, and labels."
+    - "Accessibility: sheet names, headers, data dictionary, summary labels, and consistent column order are included."
+    - "Formulas/data types: formulas, dates, numbers, booleans, blanks, strings, and error sentinels are represented and documented."
+    - "Metadata: workbook/sidecar metadata include row counts, sheet list, formula caveat, source profile, and timestamp."
+    - "Deterministic output: generated rows, sheet ordering, formulas, filenames, timestamp, and exports are stable."
+  rubric:
+    - name: "Format validity"
+      weight: 30
+      criteria: "The prompt YAML and generated JavaScript are parseable, ASCII-only, and use SheetJS APIs correctly."
+    - name: "Semantic completeness"
+      weight: 30
+      criteria: "The stress workbook covers multiple sheets, dense data, formulas, exports, metadata, and edge data values."
+    - name: "Layout/data quality"
+      weight: 25
+      criteria: "Sheets are organized, headers and widths support scanning, data types are accurate, and formulas are clear."
+    - name: "Robustness"
+      weight: 15
+      criteria: "The artifact handles dense rows, invalid sheet names, blanks, formula caveats, metadata, and deterministic reruns."
+  pass_conditions:
+    - "YAML parses successfully and all file text is ASCII-only."
+    - "Rubric weights are exactly 30, 30, 25, and 15."
+    - "Generated JavaScript creates a workbook with exactly the requested sheet set and stable exports."
+    - "All checklist items for parseability, pagination, fonts, accessibility, formulas/data types, metadata, and deterministic output are represented."
+tags:
+  - fim
+  - document-data-file-processing
+  - sheetjs
+  - multisheet
+  - stress
+  - formulas
+

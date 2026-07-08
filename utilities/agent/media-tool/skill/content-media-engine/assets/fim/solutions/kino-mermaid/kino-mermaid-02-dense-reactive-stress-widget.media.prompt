@@ -1,0 +1,68 @@
+schema: "0.4"
+id: fim-notebook-livebook-and-widgets-kino-mermaid-02-dense-reactive-stress-widget
+type: visualization
+quality: high
+solution: kino-mermaid
+category: notebook-livebook-and-widgets
+variant: dense-reactive-stress-widget
+prompt:
+  system: |-
+    You are a senior Elixir Livebook documentation engineer. Output only one complete ASCII Elixir Livebook code cell for Kino.Mermaid. No Markdown fences, no prose outside code. Prioritize readable dense diagrams and bounded generated source.
+  text: |-
+    Create a dense Mermaid stress diagram in Livebook using Kino.Mermaid.new/1. Generate a bounded graph, sequence, ER, or C4-style diagram from local data, with subgraphs or grouped sections, classDef styling, link labels, and a validation step that checks the diagram type token and maximum node or edge count before rendering. Keep the diagram large enough to stress layout but small enough to remain legible.
+
+    Requirements: document Livebook compatibility, static SVG behavior, and rerun-based state updates; describe the source data shape and generated Mermaid string; include accessible summary text and a fallback smaller diagram; include safe execution checks for untrusted labels, oversized diagrams, unsupported beta diagram types, eval, shell calls, credentials, and remote Mermaid libraries.
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.2
+    top_p: 0.9
+output:
+  text_format: elixir
+  artifact_kind: livebook-kino-mermaid-stress-cell
+  formats:
+  - format: exs
+evaluation:
+  checklist:
+  - "Import check: generated code installs kino, builds Mermaid source, validates bounds, and renders Kino.Mermaid.new/1."
+  - "Notebook compatibility: comments identify Livebook/Kino runtime and static rerun-based behavior."
+  - "Reactive state: generated source responds to local data changes only by rerunning or regenerating the cell output."
+  - "Data shape: source records, node and edge counts, diagram token, labels, and generated string are documented."
+  - "Accessibility and fallback: text summary, grouped layout, readable labels, and smaller fallback diagram are present."
+  - "Safe execution: no oversized unbounded diagrams, eval, shell commands, credentials, remote library requirement, or unsanitized labels."
+  rubric:
+  - name: Format validity
+    weight: 30
+    criteria:
+    - "Output is one complete ASCII Elixir Livebook code cell with no Markdown fences or explanatory wrapper."
+    - "The generated Mermaid string is syntactically plausible and starts with a supported diagram type."
+    - "The code validates bounds before rendering."
+  - name: Semantic completeness
+    weight: 30
+    criteria:
+    - "Implements a dense but bounded Mermaid scenario with grouping, styling, labels, and validation."
+    - "Uses Kino.Mermaid.new/1 and Mermaid DSL features rather than drawing manually."
+    - "Includes notebook/livebook compatibility, reactive state, data shape, accessibility, fallback, and safe execution checks."
+  - name: UX/structural quality
+    weight: 25
+    criteria:
+    - "The dense diagram remains organized through subgraphs, direction, labels, and class styling."
+    - "The notebook includes a readable non-visual summary."
+    - "Fallback output is clear when the source would become too large."
+  - name: Robustness
+    weight: 15
+    criteria:
+    - "Handles empty data, duplicate ids, special characters, unsupported diagram types, and size limits."
+    - "Keeps source deterministic and bounded."
+    - "Documents when to use Graphviz or another tool for huge graphs."
+  pass_conditions:
+  - "All required YAML fields are present and the generated artifact is one valid ASCII Elixir Livebook cell."
+  - "Rubric weights are exactly Format validity 30, Semantic completeness 30, UX/structural quality 25, Robustness 15."
+  - "The prompt requires notebook/livebook compatibility, reactive state, data shape, accessibility, fallback, and safe execution checks."
+  - "The solution remains Kino.Mermaid-centered and treats layout stress as bounded diagram generation."
+tags:
+- fim
+- notebook-livebook-and-widgets
+- livebook
+- kino-mermaid
+- dense-reactive-stress-widget
+

@@ -1,65 +1,76 @@
-schema: "0.4"
+schema: '0.4'
 id: gadfly_jl-03-publication-design-communication-plot
 type: visualization
 quality: high
 solution: gadfly_jl
 category: julia-r
 variant: publication-design-communication-plot
-
 prompt:
-  system: "Generate only runnable Julia code for a Gadfly.jl visualization. Do not include markdown fences or explanatory prose."
-  text: |
-    Create a publication-style communication graphic in Julia with Gadfly.jl.
+  system: Generate only runnable Julia code for a Gadfly.jl visualization. Do not include markdown fences or explanatory prose.
+  text: 'Create a publication-style communication graphic in Julia with Gadfly.jl.
+
     Use a small deterministic DataFrame of quarterly cohort metrics with observed values, uncertainty intervals, and a target reference line.
+
     Build a layered plot using points or lines plus Geom.errorbar or Geom.ribbon, add an hline or annotation for the target, and use Guide.annotation for a short callout.
+
     Apply a publication-friendly Theme with white background, readable font sizes, restrained grid, and a manual color palette.
+
     Include title, subtitle or caption text where practical, axis labels, legend labels, and explicit units.
+
     Export both SVG and PDF or PNG, using Cairo and Fontconfig when required for non-SVG export.
 
+    '
+  provider_options:
+    max_tokens: 6144
+    temperature: 0.3
 output:
   format: julia
   file: gadfly_jl-03-publication-design-communication-plot.jl
   renders:
-    - format: svg
-      file: gadfly_jl-03-publication-design-communication-plot.svg
-    - format: pdf
-      file: gadfly_jl-03-publication-design-communication-plot.pdf
+  - format: svg
+    file: gadfly_jl-03-publication-design-communication-plot.svg
+  - format: pdf
+    file: gadfly_jl-03-publication-design-communication-plot.pdf
   requirements:
-    - Gadfly
-    - DataFrames
-    - Cairo
-    - Fontconfig
-
+  - Gadfly
+  - DataFrames
+  - Cairo
+  - Fontconfig
+  text_format: julia
+  artifact_kind: gadfly_jl-03-publication-design-communication-plot.jl
+  formats:
+  - format: julia
+  - format: svg
+  - format: pdf
 evaluation:
   checklist:
-    - Uses layered Gadfly code for values, uncertainty, and a target reference.
-    - Includes publication-oriented labels, callout annotation, palette, and theme.
-    - Uses deterministic inline data with clear units and cohort or quarter labels.
-    - Exports SVG and one print-oriented format.
+  - Uses layered Gadfly code for values, uncertainty, and a target reference.
+  - Includes publication-oriented labels, callout annotation, palette, and theme.
+  - Uses deterministic inline data with clear units and cohort or quarter labels.
+  - Exports SVG and one print-oriented format.
   rubric:
     Format validity:
       weight: 30
-      criteria: "The response is valid Julia code with correct Gadfly, Compose annotation, and export syntax."
+      criteria: The response is valid Julia code with correct Gadfly, Compose annotation, and export syntax.
     Semantic completeness:
       weight: 30
-      criteria: "The figure communicates a metric trend with uncertainty, target context, labels, and publication-ready exports."
+      criteria: The figure communicates a metric trend with uncertainty, target context, labels, and publication-ready exports.
     Visual/structural quality:
       weight: 25
-      criteria: "The visual hierarchy, palette, annotation placement, and text sizing support clear report or manuscript use."
+      criteria: The visual hierarchy, palette, annotation placement, and text sizing support clear report or manuscript use.
     Robustness:
       weight: 15
-      criteria: "The code includes required export dependencies, stable file paths, deterministic data, and avoids fragile interactive assumptions."
+      criteria: The code includes required export dependencies, stable file paths, deterministic data, and avoids fragile interactive assumptions.
   pass_conditions:
-    - The code includes at least two visual layers.
-    - The plot includes uncertainty and a target or reference marker.
-    - The output includes SVG plus PDF or PNG export.
-    - The annotation or callout is implemented through Gadfly or Compose-compatible APIs.
-
+  - The code includes at least two visual layers.
+  - The plot includes uncertainty and a target or reference marker.
+  - The output includes SVG plus PDF or PNG export.
+  - The annotation or callout is implemented through Gadfly or Compose-compatible APIs.
 tags:
-  - fim
-  - julia-r
-  - gadfly-jl
-  - publication
-  - design-communication
-  - uncertainty
-  - vector-output
+- fim
+- julia-r
+- gadfly-jl
+- publication
+- design-communication
+- uncertainty
+- vector-output

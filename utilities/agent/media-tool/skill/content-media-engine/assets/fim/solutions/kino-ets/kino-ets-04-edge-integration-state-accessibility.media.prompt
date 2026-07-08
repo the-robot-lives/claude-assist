@@ -1,0 +1,67 @@
+schema: "0.4"
+id: fim-notebook-livebook-and-widgets-kino-ets-04-edge-integration-state-accessibility
+type: data
+quality: high
+solution: kino-ets
+category: notebook-livebook-and-widgets
+variant: edge-integration-state-accessibility
+prompt:
+  system: |-
+    You are a senior Elixir Livebook runtime engineer. Output only one complete ASCII Elixir Livebook code cell for Kino.ETS. No Markdown fences, no prose outside code. Prioritize state safety, integration boundaries, and accessible diagnostics.
+  text: |-
+    Create a Kino.ETS edge/integration cell for inspecting a table that may be missing, stale, private, or owned by another process. Include safe named-table discovery, guarded table lookup, fallback public table creation, Kino.ETS.new/1 rendering, and a companion diagnostics table with :ets.info/1 results and clear status strings. Pair with a small Kino.Process or Process.info note only when useful, without requiring an external app.
+
+    Requirements: handle invalid tid badarg, deleted owner process, unreadable access mode, empty table, and mixed tuple shapes; do not use a refresh: option; include Livebook compatibility, data shape documentation, accessibility labels, fallback behavior, and safe execution checks for production nodes, tracing, credentials, eval, shell calls, and unbounded tab2list.
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.2
+    top_p: 0.9
+output:
+  text_format: elixir
+  artifact_kind: livebook-kino-ets-edge-cell
+  formats:
+  - format: exs
+evaluation:
+  checklist:
+  - "Import check: generated code installs kino, safely obtains or creates an ETS table, and renders Kino.ETS.new/1."
+  - "Notebook compatibility: comments identify Livebook/Kino runtime and state that external app attachment is optional."
+  - "Reactive state: refresh behavior uses manual Refresh, rerun, or guarded Kino.animate, never a refresh option."
+  - "Data shape: invalid tid, missing table, access mode, empty rows, mixed tuple shapes, and diagnostics rows are documented."
+  - "Accessibility and fallback: status strings, table names, and diagnostics labels are readable and deterministic."
+  - "Safe execution: no aggressive production polling, unsafe tracing, credentials, remote data, eval, shell commands, or unbounded tab2list."
+  rubric:
+  - name: Format validity
+    weight: 30
+    criteria:
+    - "Output is one complete ASCII Elixir Livebook code cell with no Markdown fences or explanatory wrapper."
+    - "The code is valid Elixir and guards ETS access errors without crashing the notebook."
+    - "The cell includes clear fallback and diagnostic paths."
+  - name: Semantic completeness
+    weight: 30
+    criteria:
+    - "Implements edge inspection for missing, stale, private, empty, and mixed-shape ETS tables."
+    - "Uses current Kino.ETS APIs and documents refresh limitations."
+    - "Includes notebook/livebook compatibility, reactive state, data shape, accessibility, fallback, and safe execution checks."
+  - name: UX/structural quality
+    weight: 25
+    criteria:
+    - "Diagnostics explain why a table can or cannot be viewed."
+    - "Fallback table output is clearly separated from real table inspection status."
+    - "Readable labels compensate for raw tuple and metadata formats."
+  - name: Robustness
+    weight: 15
+    criteria:
+    - "Handles badarg, deleted tables, private access, empty rows, and mixed tuples gracefully."
+    - "Keeps sampling and refresh bounded."
+    - "Documents production-node and ownership risks without requiring credentials or external state."
+  pass_conditions:
+  - "All required YAML fields are present and the generated artifact is one valid ASCII Elixir Livebook cell."
+  - "Rubric weights are exactly Format validity 30, Semantic completeness 30, UX/structural quality 25, Robustness 15."
+  - "The prompt requires notebook/livebook compatibility, reactive state, data shape, accessibility, fallback, and safe execution checks."
+  - "The solution remains Kino.ETS-centered and makes unsafe table states explicit."
+tags:
+- fim
+- notebook-livebook-and-widgets
+- livebook
+- kino-ets
+- edge-integration-state-accessibility

@@ -1,0 +1,70 @@
+schema: "0.4"
+id: pdf_js-01-canonical-render
+type: document/data
+quality: high
+solution: pdf_js
+category: document-data-file-processing
+variant: canonical-render
+references:
+  - "references/fim/overview/electronics-media-docfile/pdf_js.md"
+  - "references/fim/solution/pdf_js.md"
+prompt:
+  system: |-
+    You generate PDF.js browser document viewer artifacts. Output only one complete self-contained HTML document with inline JavaScript and CSS. Do not use Markdown fences or explanatory prose.
+  text: |-
+    Create a canonical PDF.js viewer for rendering and reading a PDF in the browser.
+
+    Requirements:
+    - Use pdfjs-dist 4.x ESM CDN imports and set `pdfjsLib.GlobalWorkerOptions.workerSrc` to a matching worker URL.
+    - Load a user-selected PDF File as an ArrayBuffer and render page 1 to canvas.
+    - Include zoom controls, page navigation, text extraction, metadata display, and a search box.
+    - Render at devicePixelRatio for crisp output and keep CSS canvas size aligned with viewport size.
+    - Display extracted text in a selectable panel and show document title, author, producer, page count, and filename.
+    - Include cleanup for render tasks, page cleanup, object URLs, and document destroy.
+    - Include parseability, pagination, fonts, accessibility, formulas/data types, metadata, and deterministic output safeguards in comments and validation checks.
+    - Output only the final HTML artifact.
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.2
+output:
+  text_format: html
+  artifact_kind: pdfjs-browser-viewer
+  formats:
+    - format: html
+evaluation:
+  checklist:
+    - "Format validity: YAML parses as schema 0.4, generated output is one HTML document, and PDF.js 4.x APIs are used."
+    - "Parseability: JavaScript is syntactically valid, workerSrc matches the PDF.js version, and file input loading is implemented."
+    - "Semantic completeness: rendering, navigation, zoom, text extraction, search, cleanup, and metadata display are present."
+    - "Pagination: page count, current page, bounds checks, and page navigation are implemented."
+    - "Fonts: standardFontData/CMap considerations are noted for missing fonts and CJK text."
+    - "Accessibility: file input labels, keyboard controls, selectable extracted text, high contrast, and status messages are included."
+    - "Formulas/data types: extracted text preserves numeric/date strings and form-like values without claiming formula evaluation."
+    - "Metadata: PDF metadata and file metadata are displayed with missing-value fallbacks."
+    - "Deterministic output: UI ids, default scale, search behavior, cleanup order, and display formatting are stable."
+  rubric:
+    - name: "Format validity"
+      weight: 30
+      criteria: "The prompt YAML and generated HTML are parseable, ASCII-only, and use PDF.js as the primary PDF renderer/parser."
+    - name: "Semantic completeness"
+      weight: 30
+      criteria: "The viewer covers loading, rendering, navigation, zoom, text extraction, search, metadata, and cleanup."
+    - name: "Layout/data quality"
+      weight: 25
+      criteria: "The page viewer is readable, canvas sizing is correct, text extraction is usable, and metadata/data panels are clear."
+    - name: "Robustness"
+      weight: 15
+      criteria: "The artifact handles missing metadata, invalid PDFs, render cancellation, font notes, and deterministic UI behavior."
+  pass_conditions:
+    - "YAML parses successfully and all file text is ASCII-only."
+    - "Rubric weights are exactly 30, 30, 25, and 15."
+    - "Generated HTML renders a selected PDF page and extracts text when PDF.js CDN dependencies are available."
+    - "All checklist items for parseability, pagination, fonts, accessibility, formulas/data types, metadata, and deterministic output are represented."
+tags:
+  - fim
+  - document-data-file-processing
+  - pdf_js
+  - pdf-viewer
+  - canonical-render
+  - text-extraction
+

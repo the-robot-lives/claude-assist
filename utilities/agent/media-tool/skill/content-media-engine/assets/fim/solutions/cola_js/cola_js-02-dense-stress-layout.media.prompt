@@ -1,54 +1,75 @@
-schema: "0.4"
+schema: '0.4'
 id: cola_js-02-dense-stress-layout
 type: visualization
 quality: high
 solution: cola_js
 category: network-and-graph-visualization
 variant: dense-graph-stress-layout
-
 prompt:
   context:
-    - "references/fim/overview/network-3d-graphics/cola_js.md"
-    - "references/fim/solution/cola_js.md"
-  text: |
-    Build a WebCola stress-layout demo for a dense incident dependency graph with
+  - references/fim/overview/network-3d-graphics/cola_js.md
+  - references/fim/solution/cola_js.md
+  text: 'Build a WebCola stress-layout demo for a dense incident dependency graph with
+
     about 600 nodes, 1800 links, and 25 grouped subsystems. Precompute or warm the
+
     layout before first paint, use symmetricDiffLinkLengths or jaccardLinkLengths,
+
     avoidOverlaps(true), handleDisconnected(true), and staged start iterations.
+
     Render with D3 SVG for a filtered subset and include a performance panel that
+
     reports node count, edge count, constraints, layout phase, elapsed milliseconds,
+
     and unresolved overlaps. Include an explicit fallback note that very large live
+
     constraint solves should be precomputed or moved to a worker.
 
+    '
+  system: You generate artifacts for cola_js. Output only the requested artifact content. No markdown fences, no explanations.
+  provider_options:
+    max_tokens: 6144
+    temperature: 0.3
 output:
   formats:
-    - format: html
-    - format: json
+  - format: html
+  - format: json
   renderer: d3-svg
-  expected_artifact: "Stress test page plus serialized layout diagnostics."
-
+  expected_artifact: Stress test page plus serialized layout diagnostics.
+  text_format: cola_js
+  artifact_kind: Stress test page plus serialized layout diagnostics.
 evaluation:
   checklist:
-    - "Uses WebCola as a layout engine with realistic iteration controls."
-    - "Includes dense graph stress metrics and a filtered rendering strategy."
-    - "Explains precompute or worker fallback for heavy constraint solving."
-    - "Avoids promising smooth live interaction for unbounded graph sizes."
+  - Uses WebCola as a layout engine with realistic iteration controls.
+  - Includes dense graph stress metrics and a filtered rendering strategy.
+  - Explains precompute or worker fallback for heavy constraint solving.
+  - Avoids promising smooth live interaction for unbounded graph sizes.
   rubric:
-    - name: Format validity
-      weight: 30
-      description: "YAML parses and declares formats, renderer, and diagnostics."
-    - name: Semantic completeness
-      weight: 30
-      description: "Covers dense graph, constraints, overlap avoidance, and performance reporting."
-    - name: Visual/structural quality
-      weight: 25
-      description: "Stress view remains legible through filtering, grouping, and diagnostic overlays."
-    - name: Robustness
-      weight: 15
-      description: "Includes safeguards for convergence limits, overlap checks, and large graph fallback."
+  - name: Format validity
+    weight: 30
+    description: YAML parses and declares formats, renderer, and diagnostics.
+    criteria: YAML parses and declares formats, renderer, and diagnostics.
+  - name: Semantic completeness
+    weight: 30
+    description: Covers dense graph, constraints, overlap avoidance, and performance reporting.
+    criteria: Covers dense graph, constraints, overlap avoidance, and performance reporting.
+  - name: Visual/structural quality
+    weight: 25
+    description: Stress view remains legible through filtering, grouping, and diagnostic overlays.
+    criteria: Stress view remains legible through filtering, grouping, and diagnostic overlays.
+  - name: Robustness
+    weight: 15
+    description: Includes safeguards for convergence limits, overlap checks, and large graph fallback.
+    criteria: Includes safeguards for convergence limits, overlap checks, and large graph fallback.
   pass_conditions:
-    - "The prompt respects WebCola performance limits and layout-only role."
-    - "The dense scenario includes measurable stress indicators."
-    - "The rendered subset and JSON diagnostics can be evaluated independently."
-
-tags: [fim, cola-js, webcola, dense-graph, stress-layout, constraints, diagnostics]
+  - The prompt respects WebCola performance limits and layout-only role.
+  - The dense scenario includes measurable stress indicators.
+  - The rendered subset and JSON diagnostics can be evaluated independently.
+tags:
+- fim
+- cola-js
+- webcola
+- dense-graph
+- stress-layout
+- constraints
+- diagnostics

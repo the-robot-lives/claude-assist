@@ -1,52 +1,70 @@
-schema: "0.4"
+schema: '0.4'
 id: d3-force-03-communication-storytelling
 type: visualization
 quality: high
 solution: d3-force
 category: network-and-graph-visualization
 variant: communication-storytelling-graph
-
 prompt:
   context:
-    - "references/fim/overview/network-3d-graphics/d3-force.md"
-    - "references/fim/solution/d3-force.md"
-  text: |
-    Produce a D3 force storytelling graph for a public-facing data journalism piece
+  - references/fim/overview/network-3d-graphics/d3-force.md
+  - references/fim/solution/d3-force.md
+  text: 'Produce a D3 force storytelling graph for a public-facing data journalism piece
+
     about collaboration among research labs. Use force-directed positions with
+
     category pull forces, link distance by collaboration strength, node radius by
+
     publication count, and staged annotations that reveal clusters, bridge nodes,
+
     and one highlighted collaboration path. Include animated transitions between
+
     overview, cluster, bridge, and conclusion states without resetting positions.
 
+    '
+  system: You generate artifacts for d3-force. Output only the requested artifact content. No markdown fences, no explanations.
+  provider_options:
+    max_tokens: 6144
+    temperature: 0.3
 output:
   formats:
-    - format: html
-    - format: svg
+  - format: html
+  - format: svg
   renderer: d3-svg
-  expected_artifact: "Annotated narrative graph with animated D3 force states."
-
+  expected_artifact: Annotated narrative graph with animated D3 force states.
+  text_format: d3-force
+  artifact_kind: Annotated narrative graph with animated D3 force states.
 evaluation:
   checklist:
-    - "Uses D3 forces to support narrative states and stable positions."
-    - "Encodes link strength, node size, clusters, and bridge nodes."
-    - "Includes annotations and staged reveal controls."
-    - "Maintains visual continuity across story states."
+  - Uses D3 forces to support narrative states and stable positions.
+  - Encodes link strength, node size, clusters, and bridge nodes.
+  - Includes annotations and staged reveal controls.
+  - Maintains visual continuity across story states.
   rubric:
-    - name: Format validity
-      weight: 30
-      description: "YAML parses and requests a D3 SVG narrative artifact."
-    - name: Semantic completeness
-      weight: 30
-      description: "Covers communication story, force tuning, visual encodings, and annotations."
-    - name: Visual/structural quality
-      weight: 25
-      description: "Audience can follow clusters, bridge nodes, and highlighted path."
-    - name: Robustness
-      weight: 15
-      description: "Transitions avoid jitter, label overlap, and position resets."
+  - name: Format validity
+    weight: 30
+    description: YAML parses and requests a D3 SVG narrative artifact.
+    criteria: YAML parses and requests a D3 SVG narrative artifact.
+  - name: Semantic completeness
+    weight: 30
+    description: Covers communication story, force tuning, visual encodings, and annotations.
+    criteria: Covers communication story, force tuning, visual encodings, and annotations.
+  - name: Visual/structural quality
+    weight: 25
+    description: Audience can follow clusters, bridge nodes, and highlighted path.
+    criteria: Audience can follow clusters, bridge nodes, and highlighted path.
+  - name: Robustness
+    weight: 15
+    description: Transitions avoid jitter, label overlap, and position resets.
+    criteria: Transitions avoid jitter, label overlap, and position resets.
   pass_conditions:
-    - "The graph has a clear storytelling sequence."
-    - "D3-force mechanics are used for layout and animation."
-    - "Visual encoding supports the narrative claims."
-
-tags: [fim, d3-force, storytelling, data-journalism, communication-graph, annotations]
+  - The graph has a clear storytelling sequence.
+  - D3-force mechanics are used for layout and animation.
+  - Visual encoding supports the narrative claims.
+tags:
+- fim
+- d3-force
+- storytelling
+- data-journalism
+- communication-graph
+- annotations

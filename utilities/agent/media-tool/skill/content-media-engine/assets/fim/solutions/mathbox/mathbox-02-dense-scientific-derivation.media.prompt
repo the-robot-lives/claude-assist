@@ -1,0 +1,75 @@
+---
+schema: "0.4"
+id: fim-math-and-scientific-rendering-mathbox-02-dense-scientific-derivation
+type: interactive
+quality: high
+solution: mathbox
+category: math-and-scientific-rendering
+variant: dense-scientific-derivation
+references:
+- references/fim/overview/geospatial-math-scientific/mathbox.md
+- references/fim/solution/mathbox.md
+prompt:
+  system: |-
+    You are a senior animated mathematical visualization engineer. Output only one complete ASCII HTML file using MathBox. No Markdown fences or prose outside the source.
+  text: |-
+    Create a dense MathBox visualization of the gradient field for z=x^2-y^2. Show the saddle surface, contour traces on the base plane, vectors representing grad z=(2*x,-2*y), and an animated point moving along a steepest-ascent path. Include an explanatory HTML panel with the derivative derivation.
+
+    Requirements: use area, interval or array data nodes as appropriate, vector display, surface display, clock-driven animation, bounded sample counts, axis labels with units, and a camera path or controls that keep the saddle visible. Include WebGL fallback status text.
+  provider_options:
+    temperature: 0.2
+    max_tokens: 8192
+output:
+  text_format: html
+  artifact_kind: mathbox-html
+  formats:
+  - format: html
+  - format: png
+  - format: webgl
+evaluation:
+  checklist:
+  - "YAML parses and required schema 0.4 fields are present."
+  - "HTML is complete, ASCII-only, and uses MathBox data/display primitives for surface, contours, vectors, and animation."
+  - "Math correctness covers saddle equation, gradient vector components, contour levels, and steepest-ascent direction."
+  - "Notation validity covers equation text, derivative notation, labels, units, and explanatory panel."
+  - "Renderability covers nonblank first frame, bounded sample counts, animation loop, and WebGL fallback."
+  - "Labels and units identify x, y, z, gradient vectors, contour plane, path point, and time."
+  - "Domain edge cases cover dense vector clutter, per-frame allocation, camera clipping, WebGL failure, and resize."
+  rubric:
+  - name: Format validity
+    weight: 30
+    criteria:
+    - "Output is one complete ASCII HTML file with no Markdown wrapper."
+    - "The file uses valid MathBox scene graph, data nodes, display nodes, and animation constructs."
+    - "The source documents dependency versions, run, and capture expectations."
+  - name: Semantic completeness
+    weight: 30
+    criteria:
+    - "Surface, contour traces, gradient vectors, animated point, derivation panel, labels, and fallback are all present."
+    - "MathBox remains the primary rendering surface for 3D mathematical structure."
+    - "The derivative derivation agrees with the rendered field."
+  - name: Visual/structural quality
+    weight: 25
+    criteria:
+    - "Dense layers are readable through hierarchy, opacity, color, and sampling."
+    - "Animation supports understanding without distracting or obscuring labels."
+    - "The first camera view frames the full saddle and vector field."
+  - name: Robustness
+    weight: 15
+    criteria:
+    - "Handles vector density, resize, WebGL failure, and low-power GPUs."
+    - "Uses bounded animation and avoids unbounded allocations."
+    - "Documents version and performance constraints."
+  pass_conditions:
+  - "Rubric weights are exactly Format validity 30, Semantic completeness 30, Visual/structural quality 25, Robustness 15."
+  - "Score is 80 or higher out of 100 with no critical failure in math correctness, notation validity, or renderability."
+  - "The artifact presents a dense but readable MathBox gradient-field derivation."
+  - "Domain edge cases and performance safeguards are represented."
+tags:
+- fim
+- math-and-scientific-rendering
+- mathbox
+- dense-scientific-derivation
+- gradient-field
+- animation
+

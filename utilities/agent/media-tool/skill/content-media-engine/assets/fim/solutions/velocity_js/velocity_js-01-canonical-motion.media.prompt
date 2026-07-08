@@ -1,0 +1,73 @@
+schema: "0.4"
+id: velocity_js-01-canonical-motion
+type: interactive
+quality: high
+solution: velocity_js
+category: animation-and-motion
+variant: canonical-motion
+references:
+  - "references/fim/overview/canvas-svg-creative-animation/velocity_js.md"
+  - "references/fim/solution/velocity_js.md"
+prompt:
+  system: |-
+    Generate production-quality Velocity.js animation assets for FIM evaluation. Output only a complete self-contained HTML document with inline CSS and JavaScript.
+  text: |-
+    Create a canonical Velocity.js browser animation that demonstrates standalone DOM and SVG property animation.
+
+    Scenario:
+    Build a UI transition scene with a panel, five list rows, a badge, and an SVG progress stroke. On load, animate entrance transitions, stagger the rows, draw the SVG stroke, pulse the badge, and expose controls for replay, pause, resume, stop, finish, reverse, and scroll-to.
+
+    Implementation requirements:
+    - Use velocity-animate 2.0.6 from a CDN or equivalent import and the standalone Velocity(element, properties, options) form.
+    - Optionally load velocity.ui for named transitions, but do not rely on transition names unless the UI Pack is included.
+    - Validate DOM and SVG targets before calling Velocity and show a readable fallback if targets are missing.
+    - Specify durations in milliseconds, easing names or bezier arrays, stagger, delay, loop or repeat behavior, queue behavior, and completion callbacks.
+    - Use transform, opacity, color, and SVG strokeDashoffset animations; avoid layout properties during playback unless justified.
+    - Honor prefers-reduced-motion by rendering final states and disabling loops, scroll animation, and attention pulses.
+    - Keep panel, rows, badge, SVG, controls, and diagnostics non-overlapping across responsive layouts.
+    - Output only the final artifact, with no markdown fences or explanatory prose outside the artifact.
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.22
+output:
+  text_format: html
+  artifact_kind: velocityjs-html-canonical-motion
+  formats:
+    - format: html
+  dimensions:
+    width: 1440
+    height: 900
+  render_expectation: "Interactive Velocity.js UI motion asset suitable for capture before, during, and after transitions."
+evaluation:
+  checklist:
+    - "Format validity: YAML parses under schema 0.4 and generated output is exactly one HTML artifact with no markdown fences."
+    - "Velocity.js API: Uses standalone Velocity(element, properties, options), valid DOM/SVG targets, commands, and optional UI Pack correctly."
+    - "Motion timing: Specifies millisecond durations, easing, stagger, delay, loop or repeat behavior, queue behavior, and callbacks."
+    - "Visual quality: Panel, rows, badge, SVG, controls, and diagnostics are nonblank, readable, and non-overlapping."
+    - "Reduced motion: Honors prefers-reduced-motion with final state rendering and no forced loops or scroll motion."
+    - "Performance: Uses transform/opacity/SVG properties, avoids layout thrash, and stops or finishes animations cleanly."
+  rubric:
+    - name: "Format validity"
+      weight: 30
+      criteria: "YAML and generated HTML are syntactically valid, required fields are present, id and file name match, and the artifact uses Velocity.js rather than a substitute animation library."
+    - name: "Semantic completeness"
+      weight: 30
+      criteria: "The artifact covers standalone Velocity calls, transitions, stagger, SVG drawing, controls, target validation, timing, easing, reduced motion, and stop/finish behavior."
+    - name: "Motion/visual quality"
+      weight: 25
+      criteria: "Motion has clear easing and hierarchy, communicates UI state, and keeps all text, controls, and animated content readable without overlap."
+    - name: "Robustness"
+      weight: 15
+      criteria: "Handles missing targets, reduced motion, responsive layout, pause/resume/stop, queue behavior, and performance constraints without runtime errors."
+  pass_conditions:
+    - "Rubric weights are exactly 30, 30, 25, and 15 for a total of 100."
+    - "YAML parses successfully and all prompt text is ASCII-only."
+    - "Generated artifact runs with no console errors when Velocity.js is available."
+    - "Score is at least 80 out of 100 with no zero score in any rubric dimension."
+tags:
+  - "fim"
+  - "animation-and-motion"
+  - "velocity_js"
+  - "canonical-motion"
+  - "ui-transition"
+  - "svg-animation"

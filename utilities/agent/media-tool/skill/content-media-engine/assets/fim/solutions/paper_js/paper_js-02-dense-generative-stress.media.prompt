@@ -1,0 +1,99 @@
+schema: '0.4'
+id: paper_js-02-dense-generative-stress
+type: interactive
+quality: high
+solution: paper_js
+category: 2d-canvas-svg-and-creative-coding
+variant: dense-generative-stress
+references:
+- references/fim/overview/canvas-svg-creative-animation/paper_js.md
+- references/fim/solution/paper_js.md
+prompt:
+  system: Generate production-quality FIM media assets for the named 2D canvas, SVG, or creative-coding solution. Output only
+    the requested source artifact with no markdown fences or explanatory prose.
+  text: "Create the dense generative stress artwork prompt for Paper.js.\n\nScenario:\nCreate a layered generative city-field\
+    \ artwork from a fixed seed. It should contain hundreds of marks or vector objects, repeated motifs, clustering, motion\
+    \ or variation where supported, and visible diagnostics for seed, mark count, frame budget, and renderer mode.\n\nImplementation\
+    \ requirements:\n- Category: 2d-canvas-svg-and-creative-coding.\n- Required solution: paper_js (Paper.js).\n- Output:\
+    \ a complete self-contained HTML document that loads paper-full from a CDN.\n- Native API contract: Use Paper.js paper.setup(canvas),\
+    \ Project, Layer, Group, Path, CompoundPath, Point, SymbolDefinition, PointText, Tool events, onFrame animation, hit testing,\
+    \ and exportSVG.\n- Native technique focus: retained vector objects with layers, groups, bezier paths, symbols, boolean\
+    \ or compound geometry where useful, and explicit project cleanup.\n- Responsive contract: Set the canvas drawing buffer\
+    \ and Paper view size from the container, update view.center and bounds-aware layout on resize, and preserve stroke readability.\n\
+    - Export and integration contract: Expose exportSVG(), exportPNG(), renderScene(seed), resizeView(), and destroyProject();\
+    \ remove tools and clear the project on teardown.\n- Determinism contract: Generate object placement from a seeded PRNG\
+    \ and rebuild the Paper project deterministically for any given seed.\n- Scenario-specific emphasis: Build dense deterministic\
+    \ generative artwork that stresses the native drawing model while remaining legible, performant, and exportable.\n- Additional\
+    \ edge detail: Use batching, symbols, retained objects, renderer choice, or redraw discipline appropriate to the solution;\
+    \ do not allocate unbounded objects per frame.\n- Include realistic inline sample data, labels, dimensions, seed value,\
+    \ and source note where the scenario needs them.\n- Avoid placeholder lorem ipsum text, external credentials, paid private\
+    \ assets, and hidden dependencies.\n- Output only the final artifact, with no commentary outside the artifact."
+  requirements:
+  - Start from a visible nonblank render state; do not require user input before the first meaningful frame.
+  - Use explicit viewBox, canvas sizing, or equivalent figure bounds; handle device pixel ratio or vector scaling where relevant.
+  - Use deliberate layering order so background, main subject, annotations, and controls do not collide.
+  - Use accessible contrast for text, callouts, controls, and essential marks against their backgrounds.
+  - Include responsive behavior and at least one export path appropriate to the solution.
+  - Use deterministic randomness from a documented seed and make repeated reloads reproducible.
+  - Include a concise diagnostics or source note with renderer, seed, dimensions, and export status.
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.2
+output:
+  text_format: html
+  artifact_kind: paper-js-html-vector-scene-dense-generative-stress
+  formats:
+  - format: html
+  - format: svg
+  - format: png
+  dimensions:
+    width: 1440
+    height: 900
+  render_expectation: A nonblank artifact suitable for browser or compiler rendering and capture after initial load or compile.
+evaluation:
+  checklist:
+  - YAML parses and required schema 0.4 fields are present.
+  - Generated artifact uses the requested solution and does not substitute a different renderer or library for the core drawing
+    work.
+  - Initial render is nonblank and shows the main subject within the first viewport or figure bounds.
+  - viewBox/canvas sizing or equivalent figure bounds are explicit, responsive, and not blurry at common DPR values.
+  - Layering order is intentional and keeps background, dense marks, labels, controls, and export UI readable.
+  - Contrast is sufficient for text, controls, callouts, and critical marks in both default and compact layouts.
+  - Responsive/export behavior works for compact, wide, and capture-oriented sizes without clipping key content.
+  - Deterministic randomness is seeded, documented, and reproducible across reloads for the same seed.
+  - 'Solution-specific API contract is satisfied for Paper.js: retained vector objects with layers, groups, bezier paths,
+    symbols, boolean or compound geometry where useful, and explicit project cleanup.'
+  - 'Export/integration hooks are present where applicable: Expose exportSVG(), exportPNG(), renderScene(seed), resizeView(),
+    and destroyProject(); remove tools and clear the project on teardown..'
+  rubric:
+  - name: Format validity
+    weight: 30
+    criteria: YAML uses schema 0.4 with required fields, the generated artifact matches the requested text format, contains
+      no markdown fences, and uses the named solution syntax or API without parse/runtime errors.
+  - name: Semantic completeness
+    weight: 30
+    criteria: The artifact satisfies the scenario, includes solution-specific native capabilities, covers nonblank rendering,
+      sizing, layering, contrast, responsive/export behavior, and deterministic randomness.
+  - name: Visual quality
+    weight: 25
+    criteria: Composition, typography, spacing, color, density, hierarchy, motion, and labels are polished, coherent, legible,
+      and suited to the requested drawing, generative, brand, or integration use case.
+  - name: Robustness
+    weight: 15
+    criteria: The artifact handles resize, missing or empty input, fallback states, lifecycle cleanup, export edge cases,
+      performance limits, and deterministic regeneration without blank screens or broken output.
+  pass_conditions:
+  - Rubric weights sum to 100 with Format validity 30, Semantic completeness 30, Visual quality 25, and Robustness 15.
+  - Score is 80 or higher out of 100 and no rubric dimension scores zero.
+  - Generated result has a nonblank render, explicit viewBox/canvas sizing or equivalent bounds, readable layering, sufficient
+    contrast, responsive/export behavior, and deterministic randomness.
+  - Generated content is aligned with the referenced overview and solution documents for the named solution.
+tags:
+- fim
+- 2d-canvas-svg-and-creative-coding
+- paper_js
+- dense-generative-stress
+- interactive
+- nonblank-render
+- viewbox-canvas-sizing
+- deterministic-randomness

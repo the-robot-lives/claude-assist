@@ -1,0 +1,73 @@
+schema: "0.4"
+id: mammoth_js-02-dense-docx-stress
+type: document/data
+quality: high
+solution: mammoth_js
+category: document-data-file-processing
+variant: dense-docx-stress
+references:
+  - "references/fim/overview/electronics-media-docfile/mammoth_js.md"
+  - "references/fim/solution/mammoth_js.md"
+prompt:
+  system: |-
+    You generate Mammoth.js document ingestion artifacts. Output only one complete ASCII JavaScript file. Do not use Markdown fences or explanatory prose.
+  text: |-
+    Create a Mammoth.js stress converter for dense long-form DOCX ingestion.
+
+    Requirements:
+    - Use `mammoth.convertToHtml` and `mammoth.extractRawText` for the same DOCX input.
+    - Handle a dense document with many headings, nested lists, tables, footnotes, comments, images, bookmarks, and intentional blank paragraphs.
+    - Use a style map with `:fresh` rules to prevent adjacent sections from merging.
+    - Extract images to deterministic filenames and emit an image manifest with content type, alt text, and relative path.
+    - Emit an HTML file, raw text file, warning summary, style coverage report, and ingestion metadata.
+    - Include thresholds for large documents and report unsupported constructs rather than failing silently.
+    - Include parseability, pagination, fonts, accessibility, formulas/data types, metadata, and deterministic output safeguards in comments and validation checks.
+    - Output only the final JavaScript artifact.
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.2
+output:
+  text_format: javascript
+  artifact_kind: mammoth-dense-docx-ingestion
+  formats:
+    - format: js
+    - format: html
+    - format: txt
+    - format: json
+evaluation:
+  checklist:
+    - "Format validity: YAML parses as schema 0.4, generated output is one JavaScript file, and Mammoth.js conversion/extraction APIs are used."
+    - "Parseability: JavaScript imports required modules, validates CLI arguments, and writes all declared outputs."
+    - "Semantic completeness: dense headings, lists, tables, images, footnotes, comments, raw text, warnings, and manifests are handled."
+    - "Pagination: page layout is not promised, but page-break markers and section boundaries are preserved or reported when present."
+    - "Fonts: Word visual fonts are mapped to semantic classes and font fidelity limits are documented."
+    - "Accessibility: extracted images include alt text fallback policy, heading hierarchy is checked, and tables retain header-like rows."
+    - "Formulas/data types: table cells preserve dates, numbers, booleans, formula-like strings, blanks, and merged-cell warnings."
+    - "Metadata: source stats, message counts, image manifest, style coverage, and deterministic conversion timestamp are emitted."
+    - "Deterministic output: image names, file names, section ids, warning sort order, and timestamp are fixed."
+  rubric:
+    - name: "Format validity"
+      weight: 30
+      criteria: "The prompt YAML and generated JavaScript are parseable, ASCII-only, and use Mammoth.js correctly."
+    - name: "Semantic completeness"
+      weight: 30
+      criteria: "The stress converter covers dense document structures, extracted assets, messages, raw text, and metadata."
+    - name: "Layout/data quality"
+      weight: 25
+      criteria: "The output preserves semantic structure, clear sectioning, table content, image references, and useful data manifests."
+    - name: "Robustness"
+      weight: 15
+      criteria: "The artifact handles large documents, unsupported features, empty content, metadata, and deterministic reruns."
+  pass_conditions:
+    - "YAML parses successfully and all file text is ASCII-only."
+    - "Rubric weights are exactly 30, 30, 25, and 15."
+    - "Generated JavaScript reports unsupported DOCX constructs through messages and manifests."
+    - "All checklist items for parseability, pagination, fonts, accessibility, formulas/data types, metadata, and deterministic output are represented."
+tags:
+  - fim
+  - document-data-file-processing
+  - mammoth_js
+  - dense-docx
+  - stress
+  - ingestion
+

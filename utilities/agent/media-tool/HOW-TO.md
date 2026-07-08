@@ -394,6 +394,14 @@ Use `-n` to generate several candidates per provider attempt. When an `eval` blo
 generate-media-prompt -n 3 hero.media.prompt
 ```
 
+### Selecting A Batch
+
+Use `-r` to scan a directory recursively and toggle which nested prompt files should run. Add `-j` inside zellij to distribute the selected files across batch panes:
+
+```bash
+generate-media-prompt -r ./assets/prompts -j 4
+```
+
 ### Dry Run
 
 Preview the plan without making API calls:

@@ -41,6 +41,7 @@ prompt:
 output:
   text_format: html
   artifact: "Tone.js interactive UI audio browser source"
+  artifact_kind: "Tone.js interactive UI audio browser source"
   formats:
     - format: html
     - format: js

@@ -201,10 +201,7 @@ fn strip_low_value_sections(raw: &str) -> String {
         // A line starting with "## " begins a new h2 section.
         let trimmed_start = line.trim_start();
         if trimmed_start.starts_with("## ") {
-            let title = trimmed_start
-                .trim_start_matches('#')
-                .trim()
-                .to_lowercase();
+            let title = trimmed_start.trim_start_matches('#').trim().to_lowercase();
             skip = LOW_VALUE_SECTION_PREFIXES
                 .iter()
                 .any(|p| title.starts_with(p));
@@ -296,13 +293,11 @@ mod tests {
             return;
         }
         // mermaid.md ships in every checkout that has the skill assets.
-        let g = guidance_for(
-            "anthropic",
-            AssetType::Diagram,
-            Some("mermaid"),
-            true,
+        let g = guidance_for("anthropic", AssetType::Diagram, Some("mermaid"), true);
+        assert!(
+            g.is_some(),
+            "mermaid solution should load when tree present"
         );
-        assert!(g.is_some(), "mermaid solution should load when tree present");
         let g = g.unwrap();
         assert!(g.contains("Mermaid") || g.contains("mermaid"));
         // stripped sections must be gone

@@ -1,64 +1,75 @@
-schema: "0.4"
+schema: '0.4'
 id: plots_jl-01-canonical-statistical-plot
 type: visualization
 quality: high
 solution: plots_jl
 category: julia-r
 variant: canonical-statistical-plot
-
 prompt:
-  system: "Generate only runnable Julia code for a Plots.jl visualization. Do not include markdown fences or explanatory prose."
-  text: |
-    Create a canonical statistical visualization in Julia with Plots.jl.
+  system: Generate only runnable Julia code for a Plots.jl visualization. Do not include markdown fences or explanatory prose.
+  text: 'Create a canonical statistical visualization in Julia with Plots.jl.
+
     Use deterministic synthetic data or a small inline DataFrame with two numeric series and a categorical group variable.
+
     Select the GR backend with gr(), then build a scatter plot with grouped colors and overlay fitted trend lines or mean reference lines using plot! and hline!.
+
     Include title, axis labels, legend title or series labels, a readable palette, theme settings, size, and dpi.
+
     Demonstrate Plots.jl layering with plot and plot! rather than rebuilding the plot object.
+
     Save the result as PNG and SVG.
 
+    '
+  provider_options:
+    max_tokens: 6144
+    temperature: 0.3
 output:
   format: julia
   file: plots_jl-01-canonical-statistical-plot.jl
   renders:
-    - format: png
-      file: plots_jl-01-canonical-statistical-plot.png
-    - format: svg
-      file: plots_jl-01-canonical-statistical-plot.svg
+  - format: png
+    file: plots_jl-01-canonical-statistical-plot.png
+  - format: svg
+    file: plots_jl-01-canonical-statistical-plot.svg
   requirements:
-    - Plots
-    - Statistics
-    - Random
-
+  - Plots
+  - Statistics
+  - Random
+  text_format: julia
+  artifact_kind: plots_jl-01-canonical-statistical-plot.jl
+  formats:
+  - format: julia
+  - format: png
+  - format: svg
 evaluation:
   checklist:
-    - Uses Plots.jl with an explicit backend selection.
-    - Demonstrates plot and plot! layering for points and reference or trend lines.
-    - Includes labels, legend, palette or theme, dimensions, and deterministic data.
-    - Saves PNG and SVG outputs.
+  - Uses Plots.jl with an explicit backend selection.
+  - Demonstrates plot and plot! layering for points and reference or trend lines.
+  - Includes labels, legend, palette or theme, dimensions, and deterministic data.
+  - Saves PNG and SVG outputs.
   rubric:
     Format validity:
       weight: 30
-      criteria: "The response is valid Julia code with correct Plots.jl, Random, Statistics, and savefig syntax."
+      criteria: The response is valid Julia code with correct Plots.jl, Random, Statistics, and savefig syntax.
     Semantic completeness:
       weight: 30
-      criteria: "The visualization implements a canonical statistical scatter with grouping, layered reference or trend information, labels, and exports."
+      criteria: The visualization implements a canonical statistical scatter with grouping, layered reference or trend information, labels, and exports.
     Visual/structural quality:
       weight: 25
-      criteria: "The plot has readable markers, clear series labels, sensible colors, and a clean static presentation."
+      criteria: The plot has readable markers, clear series labels, sensible colors, and a clean static presentation.
     Robustness:
       weight: 15
-      criteria: "The code controls randomness, selects a backend, avoids first-run assumptions in comments, and writes stable output paths."
+      criteria: The code controls randomness, selects a backend, avoids first-run assumptions in comments, and writes stable output paths.
   pass_conditions:
-    - The code uses using Plots and gr().
-    - The code includes scatter or plot with seriestype scatter.
-    - The code adds at least one layer with plot!, hline!, vline!, or annotate!.
-    - The code writes PNG and SVG files.
-
+  - The code uses using Plots and gr().
+  - The code includes scatter or plot with seriestype scatter.
+  - The code adds at least one layer with plot!, hline!, vline!, or annotate!.
+  - The code writes PNG and SVG files.
 tags:
-  - fim
-  - julia-r
-  - plots-jl
-  - statistical-plot
-  - gr-backend
-  - layering
-  - svg
+- fim
+- julia-r
+- plots-jl
+- statistical-plot
+- gr-backend
+- layering
+- svg

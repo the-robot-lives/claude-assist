@@ -1,52 +1,71 @@
-schema: "0.4"
+schema: '0.4'
 id: sigma_js-02-dense-stress-layout
 type: visualization
 quality: high
 solution: sigma_js
 category: network-and-graph-visualization
 variant: dense-graph-stress-layout
-
 prompt:
   context:
-    - "references/fim/overview/network-3d-graphics/sigma_js.md"
-    - "references/fim/solution/sigma_js.md"
-  text: |
-    Build a Sigma.js dense-graph stress viewer for 75000 nodes and 250000 edges.
+  - references/fim/overview/network-3d-graphics/sigma_js.md
+  - references/fim/solution/sigma_js.md
+  text: 'Build a Sigma.js dense-graph stress viewer for 75000 nodes and 250000 edges.
+
     Use graphology for storage, precomputed or worker-based ForceAtlas2 positions,
+
     WebGL rendering, cheap node and edge reducers, labelRenderedSizeThreshold, edge
+
     hiding while zoomed out, and renderLabels toggled off during camera movement.
+
     Include telemetry for graph order, graph size, layout mode, WebGL init status,
+
     reducer time, frame time, visible labels, and edge LOD state.
 
+    '
+  system: You generate artifacts for sigma_js. Output only the requested artifact content. No markdown fences, no explanations.
+  provider_options:
+    max_tokens: 6144
+    temperature: 0.3
 output:
   formats:
-    - format: html
-    - format: json
+  - format: html
+  - format: json
   renderer: sigma-js-webgl
-  expected_artifact: "Large-scale Sigma WebGL stress viewer with telemetry export."
-
+  expected_artifact: Large-scale Sigma WebGL stress viewer with telemetry export.
+  text_format: sigma_js
+  artifact_kind: Large-scale Sigma WebGL stress viewer with telemetry export.
 evaluation:
   checklist:
-    - "Uses Sigma for large-scale WebGL rendering and graphology for data."
-    - "Uses precomputed or worker layout rather than blocking the main thread."
-    - "Includes label and edge level-of-detail controls."
-    - "Reports performance telemetry and WebGL readiness."
+  - Uses Sigma for large-scale WebGL rendering and graphology for data.
+  - Uses precomputed or worker layout rather than blocking the main thread.
+  - Includes label and edge level-of-detail controls.
+  - Reports performance telemetry and WebGL readiness.
   rubric:
-    - name: Format validity
-      weight: 30
-      description: "YAML parses and declares visualization and telemetry outputs."
-    - name: Semantic completeness
-      weight: 30
-      description: "Covers dense graph storage, layout, WebGL rendering, reducers, and telemetry."
-    - name: Visual/structural quality
-      weight: 25
-      description: "Dense view remains navigable through LOD and camera behavior."
-    - name: Robustness
-      weight: 15
-      description: "Avoids slow reducer code and blocking layouts on huge graphs."
+  - name: Format validity
+    weight: 30
+    description: YAML parses and declares visualization and telemetry outputs.
+    criteria: YAML parses and declares visualization and telemetry outputs.
+  - name: Semantic completeness
+    weight: 30
+    description: Covers dense graph storage, layout, WebGL rendering, reducers, and telemetry.
+    criteria: Covers dense graph storage, layout, WebGL rendering, reducers, and telemetry.
+  - name: Visual/structural quality
+    weight: 25
+    description: Dense view remains navigable through LOD and camera behavior.
+    criteria: Dense view remains navigable through LOD and camera behavior.
+  - name: Robustness
+    weight: 15
+    description: Avoids slow reducer code and blocking layouts on huge graphs.
+    criteria: Avoids slow reducer code and blocking layouts on huge graphs.
   pass_conditions:
-    - "The prompt reflects Sigma's scale-oriented strengths."
-    - "Stress telemetry is visible and exported."
-    - "Layout and rendering responsibilities are separated."
-
-tags: [fim, sigma-js, dense-graph, stress-layout, webgl, forceatlas2, telemetry]
+  - The prompt reflects Sigma's scale-oriented strengths.
+  - Stress telemetry is visible and exported.
+  - Layout and rendering responsibilities are separated.
+tags:
+- fim
+- sigma-js
+- dense-graph
+- stress-layout
+- webgl
+- forceatlas2
+- telemetry

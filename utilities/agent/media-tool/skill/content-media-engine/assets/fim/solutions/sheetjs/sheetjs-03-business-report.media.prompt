@@ -1,0 +1,73 @@
+schema: "0.4"
+id: sheetjs-03-business-report
+type: document/data
+quality: high
+solution: sheetjs
+category: document-data-file-processing
+variant: business-report
+references:
+  - "references/fim/overview/electronics-media-docfile/sheetjs.md"
+  - "references/fim/solution/sheetjs.md"
+prompt:
+  system: |-
+    You generate SheetJS spreadsheet processing artifacts. Output only one complete ASCII JavaScript file for Node.js. Do not use Markdown fences or explanatory prose.
+  text: |-
+    Create a SheetJS business reporting workbook for monthly operations.
+
+    Requirements:
+    - Generate a workbook with Executive Summary, Sales Detail, Region Rollup, Forecast, and Notes sheets.
+    - Use deterministic sample data for regions, products, channels, order dates, units, revenue, cost, margin, forecast, and risk flags.
+    - Calculate typed aggregates in JavaScript and include workbook formulas for visible spreadsheet recalculation.
+    - Add column widths, autofilters, frozen-pane notes if not directly supported, merges for sheet titles, number formats, date formats, and clear sheet order.
+    - Include a data dictionary and metadata sidecar describing every column type and formula.
+    - Export XLSX and a CSV version of the Sales Detail sheet.
+    - Include parseability, pagination, fonts, accessibility, formulas/data types, metadata, and deterministic output safeguards in comments and validation checks.
+    - Output only the final JavaScript artifact.
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.2
+output:
+  text_format: javascript
+  artifact_kind: sheetjs-business-report-workbook
+  formats:
+    - format: js
+    - format: xlsx
+    - format: csv
+    - format: json
+evaluation:
+  checklist:
+    - "Format validity: YAML parses as schema 0.4, generated output is one JavaScript file, and SheetJS APIs are used."
+    - "Parseability: JavaScript is syntactically valid and writes XLSX, CSV, and metadata sidecar outputs."
+    - "Semantic completeness: summary, detail, rollup, forecast, notes, data dictionary, formulas, and exports are present."
+    - "Pagination: sheet print/page notes or properties are included where feasible, with no false claims about PDF pagination."
+    - "Fonts: SheetJS CE style limitations are documented and layout quality uses sheet structure, widths, and labels."
+    - "Accessibility: meaningful sheet names, headers, data dictionary, summary labels, and consistent field order are included."
+    - "Formulas/data types: currency, dates, percentages, booleans, strings, formulas, and aggregate values are typed correctly."
+    - "Metadata: workbook properties or sidecar include author, source period, formula list, column dictionary, row counts, and timestamp."
+    - "Deterministic output: sample data, calculations, formula cells, sheet order, filenames, and timestamp are stable."
+  rubric:
+    - name: "Format validity"
+      weight: 30
+      criteria: "The prompt YAML and generated JavaScript are parseable, ASCII-only, and use SheetJS as the workbook writer."
+    - name: "Semantic completeness"
+      weight: 30
+      criteria: "The workbook includes all requested business sheets, formulas, typed data, exports, and metadata."
+    - name: "Layout/data quality"
+      weight: 25
+      criteria: "The workbook is clear for operations reporting with accurate aggregates, readable columns, and usable sheet structure."
+    - name: "Robustness"
+      weight: 15
+      criteria: "The artifact handles blanks, negative margins, zero revenue, formula caveats, metadata, and deterministic reruns."
+  pass_conditions:
+    - "YAML parses successfully and all file text is ASCII-only."
+    - "Rubric weights are exactly 30, 30, 25, and 15."
+    - "Generated JavaScript creates a business workbook with formulas and a metadata sidecar."
+    - "All checklist items for parseability, pagination, fonts, accessibility, formulas/data types, metadata, and deterministic output are represented."
+tags:
+  - fim
+  - document-data-file-processing
+  - sheetjs
+  - business-report
+  - operations
+  - workbook
+

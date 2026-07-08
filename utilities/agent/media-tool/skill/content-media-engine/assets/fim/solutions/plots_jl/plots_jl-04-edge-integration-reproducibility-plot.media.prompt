@@ -1,64 +1,75 @@
-schema: "0.4"
+schema: '0.4'
 id: plots_jl-04-edge-integration-reproducibility-plot
 type: visualization
 quality: high
 solution: plots_jl
 category: julia-r
 variant: edge-integration-reproducibility-plot
-
 prompt:
-  system: "Generate only runnable Julia code for a Plots.jl visualization. Do not include markdown fences or explanatory prose."
-  text: |
-    Create an edge-case and integration-focused Plots.jl visualization for reproducible Julia pipelines.
+  system: Generate only runnable Julia code for a Plots.jl visualization. Do not include markdown fences or explanatory prose.
+  text: 'Create an edge-case and integration-focused Plots.jl visualization for reproducible Julia pipelines.
+
     Generate deterministic inline data with missing values, NaN values, zero or negative values, an outlier, and a custom struct or named tuple collection that is converted through a small recipe-like preparation step.
+
     Clean the data explicitly before plotting and include short comments explaining how each edge case is handled.
+
     Demonstrate backend flexibility by selecting gr() for static PNG output and mentioning in a comment how plotlyjs() or pgfplotsx() could be swapped for interactive HTML or LaTeX output.
+
     Use a scale or axis limit safely, add hline!, vline!, or annotate! to show thresholds, and save SVG plus PNG outputs.
+
     Keep the script self-contained and suitable for Pluto, IJulia, or CI artifact generation.
 
+    '
+  provider_options:
+    max_tokens: 6144
+    temperature: 0.3
 output:
   format: julia
   file: plots_jl-04-edge-integration-reproducibility-plot.jl
   renders:
-    - format: png
-      file: plots_jl-04-edge-integration-reproducibility-plot.png
-    - format: svg
-      file: plots_jl-04-edge-integration-reproducibility-plot.svg
+  - format: png
+    file: plots_jl-04-edge-integration-reproducibility-plot.png
+  - format: svg
+    file: plots_jl-04-edge-integration-reproducibility-plot.svg
   requirements:
-    - Plots
-    - Random
-    - Statistics
-
+  - Plots
+  - Random
+  - Statistics
+  text_format: julia
+  artifact_kind: plots_jl-04-edge-integration-reproducibility-plot.jl
+  formats:
+  - format: julia
+  - format: png
+  - format: svg
 evaluation:
   checklist:
-    - Handles missing, NaN, zero or negative, outlier, and custom-data preparation cases.
-    - Uses explicit cleaning before plotting or applying scale constraints.
-    - Demonstrates Plots.jl backend-aware integration with comments and static exports.
-    - Includes threshold markers or annotation and stable output files.
+  - Handles missing, NaN, zero or negative, outlier, and custom-data preparation cases.
+  - Uses explicit cleaning before plotting or applying scale constraints.
+  - Demonstrates Plots.jl backend-aware integration with comments and static exports.
+  - Includes threshold markers or annotation and stable output files.
   rubric:
     Format validity:
       weight: 30
-      criteria: "The response is valid Julia code with correct Plots.jl syntax, missing and NaN handling, backend selection, and export calls."
+      criteria: The response is valid Julia code with correct Plots.jl syntax, missing and NaN handling, backend selection, and export calls.
     Semantic completeness:
       weight: 30
-      criteria: "The plot demonstrates edge-case handling, reproducible preparation, backend integration, safe axes or scales, and report outputs."
+      criteria: The plot demonstrates edge-case handling, reproducible preparation, backend integration, safe axes or scales, and report outputs.
     Visual/structural quality:
       weight: 25
-      criteria: "The figure remains interpretable after cleaning, with clear labels, thresholds, legend, and stable visual structure."
+      criteria: The figure remains interpretable after cleaning, with clear labels, thresholds, legend, and stable visual structure.
     Robustness:
       weight: 15
-      criteria: "The code is deterministic, avoids invalid transformed values, handles non-finite data, and writes SVG and PNG outputs."
+      criteria: The code is deterministic, avoids invalid transformed values, handles non-finite data, and writes SVG and PNG outputs.
   pass_conditions:
-    - The code explicitly handles missing or NaN values.
-    - The code handles zero or negative values before using any restricted scale.
-    - The code selects a Plots.jl backend and saves static artifacts.
-    - The output is self-contained and does not rely on external files.
-
+  - The code explicitly handles missing or NaN values.
+  - The code handles zero or negative values before using any restricted scale.
+  - The code selects a Plots.jl backend and saves static artifacts.
+  - The output is self-contained and does not rely on external files.
 tags:
-  - fim
-  - julia-r
-  - plots-jl
-  - reproducibility
-  - edge-cases
-  - backend-flexibility
-  - ci
+- fim
+- julia-r
+- plots-jl
+- reproducibility
+- edge-cases
+- backend-flexibility
+- ci
