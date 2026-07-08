@@ -1,0 +1,83 @@
+schema: "0.4"
+id: "fim-audio-and-sound-tone_js-04-edge-integration-browser-latency-accessibility"
+type: interactive
+quality: high
+solution: tone_js
+category: audio-and-sound
+variant: edge-integration-browser-latency-accessibility
+references:
+  - "references/fim/overview/music-audio-ml/tone_js.md"
+  - "references/fim/solution/tone_js.md"
+prompt:
+  system: |-
+    Generate production-quality Tone.js browser audio assets for FIM evaluation. Output only the requested source artifact, with no markdown fences or explanatory prose.
+  text: |-
+    Create a self-contained Tone.js edge integration artifact for the audio-and-sound category.
+
+    Scenario:
+    Build an embeddable rhythm trainer or metronome component that exposes lifecycle methods and handles browser latency, autoplay policy, accessibility, low-power devices, tab visibility, and repeated mounting in a larger app. It must demonstrate precise musical timing while remaining safe when audio is blocked, muted, or unsupported.
+
+    Implementation requirements:
+    - Use Tone.js 15 from a CDN or an equivalent import pattern.
+    - Expose createAudioWidget(root), startAudio(), stopAudio(), setTempo(bpm), setMuted(flag), calibrateLatency(ms), and destroyAudioWidget() or equivalent public integration methods.
+    - Unlock audio only through await Tone.start() inside an explicit user gesture and show the current Tone.Context state.
+    - Use Tone.Transport, Tone.Loop, Sequence, Part, or Draw for scheduled ticks and visual beat indicators; do not use JavaScript timers as the audio clock.
+    - Include latency controls or diagnostics for look-ahead, scheduling offset, baseLatency or outputLatency when available, and user calibration.
+    - Include gain staging with accent and subdivision levels routed through a master gain, limiter or compressor, and muted default support.
+    - Include cleanup and dispose behavior that stops Transport, cancels scheduled events, clears Draw events, disposes Tone nodes, removes listeners, and prevents double-start bugs.
+    - Include fallback checks for blocked autoplay, suspended context, failed Tone.js load, unavailable latency APIs, page visibility changes, reduced sound, and unsupported Web Audio.
+    - Include accessible alternatives: visible beat state, ARIA labels, keyboard controls, text status, and operation with audio muted.
+    - Output only a complete HTML document with inline CSS and JavaScript.
+  requirements:
+    - "Autoplay policy: audio unlock is explicit, repeatable, and reflected in visible context state."
+    - "Gain staging: accent, subdivision, and master outputs are bounded and safe under rapid tempo changes."
+    - "Timing: Tone.Transport remains the clock, with latency diagnostics and calibration separated from rhythm generation."
+    - "Cleanup/dispose: integration destroy removes every Tone node, scheduled event, Draw callback, and DOM listener."
+    - "Fallback checks: blocked, suspended, hidden-tab, unsupported, and reduced-sound paths avoid silent failure."
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.2
+output:
+  text_format: html
+  artifact: "Tone.js browser latency and accessibility integration source"
+  formats:
+    - format: html
+    - format: js
+  render_expectation: "Embeddable interactive browser audio component with visible timing diagnostics and audio that starts only after explicit activation."
+evaluation:
+  checklist:
+    - "YAML parses under schema 0.4, all required fields are present, and all file text is ASCII-only."
+    - "Generated artifact is a complete Tone.js HTML or JavaScript browser asset with no markdown fences."
+    - "Integration API exposes lifecycle methods for create, start, stop, tempo change, mute, latency calibration, and destroy."
+    - "Autoplay policy is respected with await Tone.start() inside a user gesture and visible context state."
+    - "Gain staging includes bounded accent, subdivision, and master levels plus limiter or compressor protection."
+    - "Timing uses Tone.Transport and Tone scheduling primitives rather than JavaScript timers as the audio clock."
+    - "Latency handling includes diagnostics or controls for baseLatency, outputLatency, scheduling offset, or user calibration."
+    - "Cleanup/dispose stops Transport, cancels scheduled events, clears Draw callbacks, disposes Tone nodes, and removes listeners."
+    - "Fallback checks cover blocked autoplay, suspended context, failed Tone.js load, hidden tabs, reduced sound, unsupported Web Audio, and accessibility operation while muted."
+  rubric:
+    - name: "Format validity"
+      weight: 30
+      criteria: "YAML parses, schema 0.4 fields are present, generated output is valid HTML or JavaScript, and file name, id, solution, category, type, and variant align."
+    - name: "Semantic completeness"
+      weight: 30
+      criteria: "The artifact fulfills the edge integration scenario and uses Tone.js Transport, lifecycle APIs, latency handling, autoplay unlock, accessibility, and disposal patterns from the references."
+    - name: "Audio/structural quality"
+      weight: 25
+      criteria: "Timing is stable, beat states are legible, levels are safe, cues are musically coherent, and latency controls are understandable."
+    - name: "Robustness"
+      weight: 15
+      criteria: "The artifact handles browser autoplay, hidden tabs, blocked or muted audio, repeated mount/unmount, rapid tempo changes, cleanup, responsive UI, and accessibility states without runtime failure."
+  pass_conditions:
+    - "Rubric weights sum to 100 with Format validity 30, Semantic completeness 30, Audio/structural quality 25, and Robustness 15."
+    - "Score is at least 80 out of 100."
+    - "No critical failure in YAML parsing, Tone.js loading, autoplay unlock, gain staging, timing, latency handling, cleanup/dispose, fallback checks, or accessibility equivalents."
+    - "Generated content is clearly aligned with Tone.js integration and browser-latency behavior."
+tags:
+  - "fim"
+  - "audio-and-sound"
+  - "tone_js"
+  - "edge-integration"
+  - "browser-latency"
+  - "accessibility"
+  - "tone-transport"

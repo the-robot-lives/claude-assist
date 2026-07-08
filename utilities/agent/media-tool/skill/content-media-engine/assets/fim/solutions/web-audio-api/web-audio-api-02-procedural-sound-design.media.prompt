@@ -1,0 +1,84 @@
+schema: "0.4"
+id: "fim-audio-and-sound-web-audio-api-02-procedural-sound-design"
+type: audio
+quality: high
+solution: web-audio-api
+category: audio-and-sound
+variant: procedural-sound-design
+references:
+  - "references/fim/overview/music-audio-ml/web-audio-api.md"
+  - "references/fim/solution/web-audio-api.md"
+prompt:
+  system: |-
+    Generate production-quality Web Audio API browser audio assets for FIM evaluation. Output only the requested source artifact, with no markdown fences or explanatory prose.
+  text: |-
+    Create a self-contained Web Audio API procedural sound design artifact for the audio-and-sound category.
+
+    Scenario:
+    Build a native browser procedural sound workshop for real-time effects, such as UI notifications, game pickups, impacts, engine hums, alarms, footsteps, wind, or transition sweeps. It must synthesize at least six labeled effects with no external audio files and must expose safe controls for pitch, decay, brightness, stereo position, and intensity.
+
+    Implementation requirements:
+    - Use native Web Audio API only; do not import Tone.js or another audio framework.
+    - Create one AudioContext or webkitAudioContext and resume it from a user gesture before any cue plays.
+    - Generate effects from OscillatorNode, custom PeriodicWave, generated AudioBuffer noise, GainNode envelopes, BiquadFilterNode, StereoPannerNode, DelayNode, ConvolverNode with generated impulse response, and DynamicsCompressorNode where useful.
+    - Use AudioParam scheduling against audioContext.currentTime for cue layers, pitch sweeps, filter sweeps, and gain envelopes.
+    - Use linear or exponential ramps safely; never ramp exponentially to zero, and use small positive values for releases.
+    - Recreate one-shot OscillatorNode and AudioBufferSourceNode instances for each cue trigger, while reusing shared buses and effects.
+    - Include gain staging with per-cue gain, shared bus gain, master gain, dry/wet control, and clipping protection.
+    - Include cleanup and dispose behavior that stops active sources, disconnects transient nodes, clears animation frames or timers, and removes listeners.
+    - Include fallback checks for unsupported AudioContext, missing StereoPannerNode or ConvolverNode, suspended context, muted output, and reduced sound operation.
+    - Include accessible labels, keyboard-operable cue buttons, visible cue descriptions, and no reliance on sound alone.
+    - Output only a complete HTML document with inline CSS and JavaScript.
+  requirements:
+    - "Autoplay policy: cue buttons cannot produce sound until AudioContext.resume() succeeds from a user gesture."
+    - "Gain staging: cue, bus, wet, and master gains are bounded and protected by dynamics control."
+    - "Timing: every procedural layer schedules AudioParam changes against audioContext.currentTime."
+    - "Cleanup/dispose: transient sources stop and disconnect, shared nodes are cleaned up, and listeners are removed."
+    - "Fallback checks: missing node features degrade to simpler routing instead of blank or broken UI."
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.2
+output:
+  text_format: html
+  artifact: "Web Audio API procedural sound design browser source"
+  formats:
+    - format: html
+    - format: js
+  render_expectation: "Native browser procedural sound palette with generated cue playback after audio unlock and visible diagnostics."
+evaluation:
+  checklist:
+    - "YAML parses under schema 0.4, all required fields are present, and all file text is ASCII-only."
+    - "Generated artifact is a complete native Web Audio HTML or JavaScript browser asset with no markdown fences."
+    - "At least six named effects are generated from native oscillators, noise buffers, filters, envelopes, panning, delay, convolver, or compressor nodes."
+    - "Autoplay policy is respected with AudioContext.resume() inside a user gesture before any cue plays."
+    - "Gain staging includes per-cue, bus, wet, and master gains with dynamics protection."
+    - "Timing uses audioContext.currentTime and AudioParam scheduling for layers, sweeps, and envelopes."
+    - "One-shot sources are recreated for each trigger, stopped, and disconnected after use."
+    - "Cleanup/dispose frees transient nodes, shared effects, animation frames or timers, and listeners."
+    - "Fallback checks cover unsupported AudioContext, missing optional nodes, suspended context, muted output, reduced sound, and accessibility operation."
+  rubric:
+    - name: "Format validity"
+      weight: 30
+      criteria: "YAML parses, schema 0.4 fields are present, generated output is valid HTML or JavaScript, and file name, id, solution, category, type, and variant align."
+    - name: "Semantic completeness"
+      weight: 30
+      criteria: "The artifact fulfills the procedural sound design scenario and uses native Web Audio node graph, generated sources, AudioParam scheduling, autoplay unlock, and cleanup patterns from the references."
+    - name: "Audio/structural quality"
+      weight: 25
+      criteria: "The generated effects are distinct, well labeled, dynamically controlled, smoothly enveloped, intentionally filtered or spatialized, and free of obvious clicks or clipping."
+    - name: "Robustness"
+      weight: 15
+      criteria: "The artifact handles browser autoplay, missing optional nodes, overlapping cues, unsupported audio, repeated playback, cleanup, responsive UI, and accessibility states without runtime failure."
+  pass_conditions:
+    - "Rubric weights sum to 100 with Format validity 30, Semantic completeness 30, Audio/structural quality 25, and Robustness 15."
+    - "Score is at least 80 out of 100."
+    - "No critical failure in YAML parsing, native Web Audio setup, autoplay unlock, gain staging, timing, cleanup/dispose, or fallback checks."
+    - "Generated content is clearly aligned with Web Audio procedural sound design and does not depend on external media or frameworks."
+tags:
+  - "fim"
+  - "audio-and-sound"
+  - "web-audio-api"
+  - "procedural-sound-design"
+  - "sound-effects"
+  - "audioparam"
+  - "browser-audio"

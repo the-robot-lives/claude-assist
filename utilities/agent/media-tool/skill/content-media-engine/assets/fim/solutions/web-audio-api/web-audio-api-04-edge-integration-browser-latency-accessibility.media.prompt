@@ -1,0 +1,85 @@
+schema: "0.4"
+id: "fim-audio-and-sound-web-audio-api-04-edge-integration-browser-latency-accessibility"
+type: interactive
+quality: high
+solution: web-audio-api
+category: audio-and-sound
+variant: edge-integration-browser-latency-accessibility
+references:
+  - "references/fim/overview/music-audio-ml/web-audio-api.md"
+  - "references/fim/solution/web-audio-api.md"
+prompt:
+  system: |-
+    Generate production-quality Web Audio API browser audio assets for FIM evaluation. Output only the requested source artifact, with no markdown fences or explanatory prose.
+  text: |-
+    Create a self-contained Web Audio API edge integration artifact for the audio-and-sound category.
+
+    Scenario:
+    Build an embeddable native browser audio engine component for latency-sensitive playback, accessibility, and integration testing. The component should behave like a small metronome, cue router, or rhythm calibration tool that can be mounted and destroyed repeatedly in a larger app while exposing diagnostics for browser latency, context state, scheduling drift, and fallback behavior.
+
+    Implementation requirements:
+    - Use native Web Audio API only; do not import Tone.js or another audio framework.
+    - Expose createAudioEngine(root), startEngine(), stopEngine(), setBpm(bpm), setMuted(flag), setLatencyOffset(ms), renderOfflinePreview(), and destroyAudioEngine() or equivalent public methods.
+    - Create one AudioContext or webkitAudioContext lazily and resume it only from an explicit user gesture.
+    - Use audioContext.currentTime and AudioParam scheduling for ticks, accents, cue routing, envelopes, and calibration sounds.
+    - Use a look-ahead scheduler for future event enqueueing, with visible diagnostics for look-ahead window, scheduler interval, drift, baseLatency, outputLatency, sampleRate, and context state when available.
+    - Include optional OfflineAudioContext rendering for a preview or test buffer, with a visible fallback when OfflineAudioContext is unavailable.
+    - Include optional AudioWorklet support for custom processing or timing diagnostics, with fallback to built-in nodes when AudioWorklet is unavailable or module loading fails.
+    - Include gain staging with accent gain, subdivision gain, master gain, short attack and release ramps, and compressor or limiter-like protection.
+    - Include cleanup and dispose behavior that stops sources, disconnects nodes, clears scheduler timers and animation frames, removes listeners, and safely closes or suspends the context according to the lifecycle.
+    - Include fallback checks for autoplay block, suspended or interrupted context, hidden tabs, timer throttling, missing latency APIs, missing AudioWorklet, missing OfflineAudioContext, reduced sound, and unsupported AudioContext.
+    - Include accessible controls, keyboard operation, visible beat state, ARIA labels, text diagnostics, and meaningful operation while muted.
+    - Output only a complete HTML document with inline CSS and JavaScript.
+  requirements:
+    - "Autoplay policy: engine start resumes AudioContext only from explicit user activation and reports context state."
+    - "Gain staging: all tick and cue routes use bounded gains, ramps, and dynamics protection."
+    - "Timing: audioContext.currentTime remains the source of truth, with look-ahead timers only enqueueing future events."
+    - "Cleanup/dispose: destroy clears timers, animation frames, nodes, sources, worklet references, listeners, and context lifecycle state."
+    - "Fallback checks: missing latency, worklet, offline rendering, hidden-tab, suspended, muted, and unsupported paths remain usable."
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.2
+output:
+  text_format: html
+  artifact: "Web Audio API browser latency and accessibility integration source"
+  formats:
+    - format: html
+    - format: js
+  render_expectation: "Embeddable native browser audio component with visible latency diagnostics and audio that starts only after explicit activation."
+evaluation:
+  checklist:
+    - "YAML parses under schema 0.4, all required fields are present, and all file text is ASCII-only."
+    - "Generated artifact is a complete native Web Audio HTML or JavaScript browser asset with no markdown fences."
+    - "Integration API exposes lifecycle methods for create, start, stop, BPM, mute, latency offset, offline preview, and destroy."
+    - "Autoplay policy is respected with AudioContext.resume() inside a user gesture and visible context state."
+    - "Gain staging includes bounded accent, subdivision, and master levels plus ramps and dynamics protection."
+    - "Timing uses audioContext.currentTime and AudioParam scheduling, with look-ahead timers only enqueueing future events."
+    - "Latency diagnostics include look-ahead, interval, drift, baseLatency or outputLatency when available, sampleRate, and context state."
+    - "Cleanup/dispose clears timers, animation frames, active sources, shared nodes, optional worklet state, listeners, and context lifecycle state."
+    - "Fallback checks cover blocked autoplay, suspended or interrupted context, hidden tabs, timer throttling, missing latency APIs, missing AudioWorklet, missing OfflineAudioContext, reduced sound, unsupported AudioContext, and accessibility operation while muted."
+  rubric:
+    - name: "Format validity"
+      weight: 30
+      criteria: "YAML parses, schema 0.4 fields are present, generated output is valid HTML or JavaScript, and file name, id, solution, category, type, and variant align."
+    - name: "Semantic completeness"
+      weight: 30
+      criteria: "The artifact fulfills the edge integration scenario and uses native Web Audio lifecycle APIs, node graph, scheduling, latency diagnostics, optional worklet or offline rendering, autoplay unlock, accessibility, and cleanup patterns from the references."
+    - name: "Audio/structural quality"
+      weight: 25
+      criteria: "Timing diagnostics are legible, beat or cue structure is stable, gain is safe, ramps are clean, and fallback behavior is understandable."
+    - name: "Robustness"
+      weight: 15
+      criteria: "The artifact handles browser autoplay, hidden tabs, timer throttling, blocked or muted audio, missing optional APIs, repeated mount/unmount, cleanup, responsive UI, and accessibility states without runtime failure."
+  pass_conditions:
+    - "Rubric weights sum to 100 with Format validity 30, Semantic completeness 30, Audio/structural quality 25, and Robustness 15."
+    - "Score is at least 80 out of 100."
+    - "No critical failure in YAML parsing, native Web Audio setup, autoplay unlock, gain staging, timing, latency handling, cleanup/dispose, fallback checks, or accessibility equivalents."
+    - "Generated content is clearly aligned with Web Audio API edge integration and browser-latency behavior."
+tags:
+  - "fim"
+  - "audio-and-sound"
+  - "web-audio-api"
+  - "edge-integration"
+  - "browser-latency"
+  - "accessibility"
+  - "audiocontext"

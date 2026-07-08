@@ -1,0 +1,84 @@
+schema: "0.4"
+id: "fim-audio-and-sound-tone_js-02-procedural-sound-design"
+type: audio
+quality: high
+solution: tone_js
+category: audio-and-sound
+variant: procedural-sound-design
+references:
+  - "references/fim/overview/music-audio-ml/tone_js.md"
+  - "references/fim/solution/tone_js.md"
+prompt:
+  system: |-
+    Generate production-quality Tone.js browser audio assets for FIM evaluation. Output only the requested source artifact, with no markdown fences or explanatory prose.
+  text: |-
+    Create a self-contained Tone.js procedural sound design artifact for the audio-and-sound category.
+
+    Scenario:
+    Build a compact browser sound lab for game and product effects. It must synthesize at least six labeled cues, such as confirm, deny, pickup, impact, power-up, alarm, ambience, and transition sweep, without relying on external audio files. Each cue should demonstrate procedural synthesis, envelopes, modulation, filtering, panning, and reusable routing.
+
+    Implementation requirements:
+    - Use Tone.js 15 from a CDN or an equivalent import pattern.
+    - Unlock audio with a user gesture through await Tone.start(); no sound may play on page load.
+    - Use Tone.MembraneSynth, Tone.NoiseSynth, Tone.MetalSynth, Tone.FMSynth, Tone.AMSynth, MonoSynth, Oscillator, or Player only when the source is generated or has a visible fallback.
+    - Use reusable synth and effect objects instead of creating a new permanent node for every trigger.
+    - Use Tone.Envelope, Tone.Filter, Tone.LFO, Tone.Panner, Tone.Gain, Tone.Channel, or Tone.Compressor to shape sound design parameters.
+    - Expose safe controls for intensity, pitch, decay, wet mix, and master volume with bounded ranges and accessible labels.
+    - Schedule any layered cue components with Tone.now(), the trigger time argument, or Tone.Transport; do not use timer jitter for cue timing.
+    - Include gain staging for stacked effects, with peak-safe defaults and a limiter or compressor before Tone.Destination.
+    - Include cleanup and dispose behavior for all instruments, modulators, effects, scheduled events, and UI listeners.
+    - Include fallback checks for unavailable Web Audio, failed Tone.js load, muted output, suspended context, and reduced sound preference.
+    - Output only a complete HTML document with inline CSS and JavaScript.
+  requirements:
+    - "Autoplay policy: all cue preview buttons are silent until Tone.start() succeeds from a user gesture."
+    - "Gain staging: every cue routes through controlled gains and a final dynamics stage before destination."
+    - "Timing: layered cue events use Tone scheduling primitives or Tone.now() offsets, not unsynchronized timers."
+    - "Cleanup/dispose: destroy releases synths, effects, LFOs, panners, gains, and event handlers."
+    - "Fallback checks: unsupported or suspended audio shows actionable status and leaves the UI stable."
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.2
+output:
+  text_format: html
+  artifact: "Tone.js procedural sound design browser audio source"
+  formats:
+    - format: html
+    - format: js
+  render_expectation: "Interactive browser sound palette with procedural cue playback after audio unlock and visible diagnostics."
+evaluation:
+  checklist:
+    - "YAML parses under schema 0.4, all required fields are present, and all file text is ASCII-only."
+    - "Generated artifact is a complete Tone.js HTML or JavaScript browser asset with no markdown fences."
+    - "At least six named procedural cues are generated from Tone.js synths, noise, envelopes, filters, modulation, panning, or effects."
+    - "Autoplay policy is respected with await Tone.start() inside a user gesture before any cue plays."
+    - "Gain staging prevents clipping when cues overlap and includes bounded master and cue levels."
+    - "Timing for layered cue components uses Tone scheduling, Tone.now() offsets, or Transport time."
+    - "Controls are bounded, accessible, keyboard usable, and do not allow unsafe gain or runaway feedback."
+    - "Cleanup/dispose frees synths, effects, modulation nodes, scheduled events, and UI listeners."
+    - "Fallback checks cover unsupported Web Audio, failed Tone.js load, muted output, suspended context, and reduced sound preference."
+  rubric:
+    - name: "Format validity"
+      weight: 30
+      criteria: "YAML parses, schema 0.4 fields are present, generated output is valid HTML or JavaScript, and file name, id, solution, category, type, and variant align."
+    - name: "Semantic completeness"
+      weight: 30
+      criteria: "The artifact fulfills the procedural sound design scenario and uses Tone.js synthesis, envelopes, modulation, effects, autoplay unlock, and disposal patterns from the references."
+    - name: "Audio/structural quality"
+      weight: 25
+      criteria: "The cues are distinct, intentional, well labeled, dynamically controlled, and free of obvious clicks, clipping, or timing smear."
+    - name: "Robustness"
+      weight: 15
+      criteria: "The artifact handles browser autoplay, overlapping cues, unsupported audio, repeated playback, cleanup, responsive UI, and accessibility states without runtime failure."
+  pass_conditions:
+    - "Rubric weights sum to 100 with Format validity 30, Semantic completeness 30, Audio/structural quality 25, and Robustness 15."
+    - "Score is at least 80 out of 100."
+    - "No critical failure in YAML parsing, Tone.js loading, autoplay unlock, gain staging, timing, cleanup/dispose, or fallback checks."
+    - "Generated content is clearly aligned with Tone.js procedural sound design and does not depend on hidden external media."
+tags:
+  - "fim"
+  - "audio-and-sound"
+  - "tone_js"
+  - "procedural-sound-design"
+  - "sound-effects"
+  - "synthesis"
+  - "browser-audio"

@@ -1,0 +1,84 @@
+schema: "0.4"
+id: "fim-audio-and-sound-tone_js-03-interactive-ui-audio"
+type: interactive
+quality: high
+solution: tone_js
+category: audio-and-sound
+variant: interactive-ui-audio
+references:
+  - "references/fim/overview/music-audio-ml/tone_js.md"
+  - "references/fim/solution/tone_js.md"
+prompt:
+  system: |-
+    Generate production-quality Tone.js browser audio assets for FIM evaluation. Output only the requested source artifact, with no markdown fences or explanatory prose.
+  text: |-
+    Create a self-contained Tone.js interactive UI audio artifact for the audio-and-sound category.
+
+    Scenario:
+    Build an accessible UI sonification layer for a focused application surface, such as a task board, data filter panel, checkout form, or instrument control surface. The artifact must map user actions to concise audio cues while avoiding intrusive autoplay and supporting mute, reduced sound, keyboard users, and screen-reader users.
+
+    Implementation requirements:
+    - Use Tone.js 15 from a CDN or an equivalent import pattern.
+    - Include a first-run Enable Audio control that calls await Tone.start() from a click, tap, or keyboard gesture.
+    - Provide UI controls that trigger at least eight distinct interaction states, such as focus, hover, select, toggle on, toggle off, drag start, drag drop, validation error, success, warning, and disabled.
+    - Use Tone.PolySynth, Synth, FMSynth, AMSynth, MetalSynth, NoiseSynth, Sampler with fallback, or a small reusable cue engine.
+    - Use a restrained design system for cues: short envelopes, limited pitch range, consistent semantic mapping, and no continuous sound unless explicitly held.
+    - Use Tone.Gain, Tone.Channel, Tone.Panner, Tone.Filter, Compressor, Limiter, or equivalent dynamics routing for safe gain staging.
+    - Schedule clustered UI cues with Tone.now() or callback time values and ramp gains to avoid clicks.
+    - Include mute, master volume, reduced sound, and optional haptic-safe visual status without requiring audio to understand the UI.
+    - Include cleanup and dispose behavior for synths, effects, scheduled events, listeners, and transport state if used.
+    - Include fallback checks for unsupported Web Audio, blocked audio context, failed Tone.js loading, screen-reader-only operation, and prefers-reduced-motion or reduced sound assumptions.
+    - Output only a complete HTML document with inline CSS and JavaScript.
+  requirements:
+    - "Autoplay policy: UI sounds remain silent until the user explicitly enables audio."
+    - "Gain staging: semantic cues are short, bounded, routed through a master gain, and protected from clipping."
+    - "Timing: interaction clusters use Tone scheduling and envelope ramps instead of raw timer rhythm."
+    - "Cleanup/dispose: all Tone objects and event listeners can be disposed when the UI surface unmounts."
+    - "Fallback checks: every audio cue has a visible or textual equivalent for accessibility."
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.2
+output:
+  text_format: html
+  artifact: "Tone.js interactive UI audio browser source"
+  formats:
+    - format: html
+    - format: js
+  render_expectation: "Interactive browser UI with optional audio cues after explicit unlock and accessible non-audio equivalents."
+evaluation:
+  checklist:
+    - "YAML parses under schema 0.4, all required fields are present, and all file text is ASCII-only."
+    - "Generated artifact is a complete Tone.js HTML or JavaScript browser asset with no markdown fences."
+    - "At least eight UI interaction states are mapped to concise, labeled, semantically consistent audio cues."
+    - "Autoplay policy is respected with await Tone.start() inside an explicit user gesture before any cue plays."
+    - "Gain staging includes short envelopes, bounded master volume, cue limits, and no clipping-prone overlap."
+    - "Timing uses Tone scheduling or Tone.now() offsets and does not depend on timers for rhythmic UI feedback."
+    - "Accessibility includes mute, reduced sound, keyboard operation, screen-reader text, and non-audio equivalents."
+    - "Cleanup/dispose frees Tone objects, scheduled events, UI listeners, and any transport state."
+    - "Fallback checks cover unsupported Web Audio, blocked context, failed Tone.js load, and sound-disabled operation."
+  rubric:
+    - name: "Format validity"
+      weight: 30
+      criteria: "YAML parses, schema 0.4 fields are present, generated output is valid HTML or JavaScript, and file name, id, solution, category, type, and variant align."
+    - name: "Semantic completeness"
+      weight: 30
+      criteria: "The artifact fulfills the interactive UI audio scenario and uses Tone.js cue synthesis, routing, autoplay unlock, accessibility, and disposal patterns from the references."
+    - name: "Audio/structural quality"
+      weight: 25
+      criteria: "Cues are brief, distinguishable, nonintrusive, semantically mapped, dynamically safe, and synchronized with UI state."
+    - name: "Robustness"
+      weight: 15
+      criteria: "The artifact handles browser autoplay, muted or reduced-sound operation, repeated interactions, cleanup, responsive UI, and accessibility states without runtime failure."
+  pass_conditions:
+    - "Rubric weights sum to 100 with Format validity 30, Semantic completeness 30, Audio/structural quality 25, and Robustness 15."
+    - "Score is at least 80 out of 100."
+    - "No critical failure in YAML parsing, Tone.js loading, autoplay unlock, gain staging, timing, cleanup/dispose, fallback checks, or accessibility equivalents."
+    - "Generated content is clearly aligned with Tone.js interactive UI audio and does not require audio to understand the interface."
+tags:
+  - "fim"
+  - "audio-and-sound"
+  - "tone_js"
+  - "interactive-ui-audio"
+  - "sonification"
+  - "accessibility"
+  - "browser-audio"

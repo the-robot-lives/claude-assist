@@ -1,0 +1,84 @@
+schema: "0.4"
+id: "fim-audio-and-sound-web-audio-api-01-synth-composition"
+type: audio
+quality: high
+solution: web-audio-api
+category: audio-and-sound
+variant: synth-composition
+references:
+  - "references/fim/overview/music-audio-ml/web-audio-api.md"
+  - "references/fim/solution/web-audio-api.md"
+prompt:
+  system: |-
+    Generate production-quality Web Audio API browser audio assets for FIM evaluation. Output only the requested source artifact, with no markdown fences or explanatory prose.
+  text: |-
+    Create a self-contained Web Audio API synth composition artifact for the audio-and-sound category.
+
+    Scenario:
+    Build a short browser composition using only native Web Audio nodes. It must demonstrate a reusable AudioContext lifecycle, oscillator voices, ADSR envelopes, filters, panning, delay or ambience, sample-accurate scheduling, and a visual timeline status panel. The composition must play only after user activation and must support repeated start, stop, reset, and teardown.
+
+    Implementation requirements:
+    - Use native Web Audio API only; do not import Tone.js or another audio framework.
+    - Create one AudioContext or webkitAudioContext for the artifact and resume it from a user gesture when suspended.
+    - Implement at least three musical layers, such as melody, bass, pad, pulse, percussion, or arpeggio, using OscillatorNode, GainNode, BiquadFilterNode, StereoPannerNode, DelayNode, DynamicsCompressorNode, or generated noise buffers.
+    - Schedule notes against audioContext.currentTime with setValueAtTime, linearRampToValueAtTime, exponentialRampToValueAtTime, setTargetAtTime, or setValueCurveAtTime.
+    - Use a look-ahead scheduler only to enqueue future audio events; do not use JavaScript timers as the sound-producing clock.
+    - Include gain staging with per-layer gain, master gain, ramped envelopes, a compressor or limiter-like stage, and no exponential ramp to zero.
+    - Stop and disconnect one-shot OscillatorNode or AudioBufferSourceNode instances after use; never reuse stopped sources.
+    - Include cleanup behavior for scheduler timers, animation frames, live nodes, event listeners, and the AudioContext lifecycle.
+    - Include fallback checks for unsupported AudioContext, suspended or interrupted context, hidden tabs, timer throttling, and reduced sound or muted operation.
+    - Include accessible controls and a text summary that remains useful when audio is disabled.
+    - Output only a complete HTML document with inline CSS and JavaScript.
+  requirements:
+    - "Autoplay policy: AudioContext.resume() happens only inside an explicit user gesture before sound starts."
+    - "Gain staging: layer gains, master gain, ramps, and dynamics protection prevent clipping and clicks."
+    - "Timing: notes are scheduled against audioContext.currentTime, with timers used only for look-ahead enqueueing."
+    - "Cleanup/dispose: stopped sources are disconnected, scheduler loops are cleared, and listeners are removed."
+    - "Fallback checks: unsupported, suspended, hidden-tab, muted, and reduced-sound states are visible and stable."
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.2
+output:
+  text_format: html
+  artifact: "Web Audio API synth composition browser source"
+  formats:
+    - format: html
+    - format: js
+  render_expectation: "Native browser audio composition that plays only after user activation and exposes visible timeline diagnostics."
+evaluation:
+  checklist:
+    - "YAML parses under schema 0.4, all required fields are present, and all file text is ASCII-only."
+    - "Generated artifact is a complete native Web Audio HTML or JavaScript browser asset with no markdown fences."
+    - "Composition uses one AudioContext or webkitAudioContext and at least three scheduled musical layers."
+    - "Autoplay policy is respected with AudioContext.resume() inside a user gesture before sound starts."
+    - "Gain staging includes per-layer gain, master gain, ramped envelopes, and dynamics protection."
+    - "Timing uses audioContext.currentTime and AudioParam scheduling, with JavaScript timers only for look-ahead enqueueing."
+    - "One-shot oscillators and buffer sources are stopped, disconnected, and never reused after stop."
+    - "Cleanup/dispose clears schedulers, animation frames, live nodes, listeners, and context state."
+    - "Fallback checks cover unsupported AudioContext, suspended context, hidden tabs, timer throttling, muted output, and reduced sound."
+  rubric:
+    - name: "Format validity"
+      weight: 30
+      criteria: "YAML parses, schema 0.4 fields are present, generated output is valid HTML or JavaScript, and file name, id, solution, category, type, and variant align."
+    - name: "Semantic completeness"
+      weight: 30
+      criteria: "The artifact fulfills the synth composition scenario and uses native Web Audio context, node graph, scheduling, autoplay unlock, and cleanup patterns from the references."
+    - name: "Audio/structural quality"
+      weight: 25
+      criteria: "The composition has coherent layers, stable timing, clean envelopes, intentional filtering or ambience, readable state, and no obvious clicks or clipping."
+    - name: "Robustness"
+      weight: 15
+      criteria: "The artifact handles browser autoplay, unsupported audio, suspended contexts, hidden tabs, repeated start/stop, cleanup, responsive UI, and accessibility states without runtime failure."
+  pass_conditions:
+    - "Rubric weights sum to 100 with Format validity 30, Semantic completeness 30, Audio/structural quality 25, and Robustness 15."
+    - "Score is at least 80 out of 100."
+    - "No critical failure in YAML parsing, native Web Audio setup, autoplay unlock, gain staging, timing, cleanup/dispose, or fallback checks."
+    - "Generated content is clearly aligned with the Web Audio API and does not substitute Tone.js or another audio framework."
+tags:
+  - "fim"
+  - "audio-and-sound"
+  - "web-audio-api"
+  - "synth-composition"
+  - "audiocontext"
+  - "node-graph"
+  - "browser-audio"

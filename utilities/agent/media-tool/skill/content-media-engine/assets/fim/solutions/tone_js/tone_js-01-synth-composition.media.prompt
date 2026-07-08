@@ -1,0 +1,84 @@
+schema: "0.4"
+id: "fim-audio-and-sound-tone_js-01-synth-composition"
+type: audio
+quality: high
+solution: tone_js
+category: audio-and-sound
+variant: synth-composition
+references:
+  - "references/fim/overview/music-audio-ml/tone_js.md"
+  - "references/fim/solution/tone_js.md"
+prompt:
+  system: |-
+    Generate production-quality Tone.js browser audio assets for FIM evaluation. Output only the requested source artifact, with no markdown fences or explanatory prose.
+  text: |-
+    Create a self-contained Tone.js synth composition artifact for the audio-and-sound category.
+
+    Scenario:
+    Build a short generative browser composition that demonstrates musical structure: tempo, meter, melodic motifs, chords, bass movement, percussion, effects, and a visual transport status panel. The piece must begin only after a user gesture and must be suitable for repeated start, stop, reset, and dispose cycles in a single-page app.
+
+    Implementation requirements:
+    - Use Tone.js 15 from a CDN or an equivalent import pattern.
+    - Provide an explicit Enable Audio or Play button that calls await Tone.start() before any sound.
+    - Use Tone.Transport for tempo, time signature, loop points, and scheduled playback; do not drive musical timing with setTimeout or setInterval.
+    - Use at least three musical sources, such as PolySynth, FMSynth, MembraneSynth, NoiseSynth, MonoSynth, or Sampler with a loading fallback.
+    - Use Tone.Sequence, Tone.Part, Tone.Loop, or Tone.Pattern so every callback passes the provided time argument into triggerAttackRelease.
+    - Include gain staging with a master Tone.Gain or Tone.Channel, conservative levels, a limiter or compressor, and no clipping-prone destination chain.
+    - Shape attacks and releases to avoid clicks, and include effect routing with wet/dry control for delay, reverb, chorus, filter, or EQ.
+    - Include cleanup and dispose behavior for every synth, effect, sequence, part, loop, analyser, and transport state created by the artifact.
+    - Include visible state for stopped, starting, playing, muted, unsupported Web Audio, and sample-load failure if samples are used.
+    - Include accessible controls with labels, keyboard operation, muted default option, and a short text summary of what the audio represents.
+    - Output only a complete HTML document with inline CSS and JavaScript.
+  requirements:
+    - "Autoplay policy: Tone.start() is called only inside a click, tap, or keyboard activation handler."
+    - "Timing: all musical events are scheduled with Tone.Transport and Tone callback time values."
+    - "Gain staging: master level, effect wet levels, and dynamics processing prevent clipping."
+    - "Cleanup/dispose: stop, cancel, and dispose Tone nodes and scheduled events on reset, destroy, and page unload."
+    - "Fallback checks: show clear UI when Web Audio, CDN loading, sample loading, or audio unlock fails."
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.2
+output:
+  text_format: html
+  artifact: "Tone.js synth composition browser audio source"
+  formats:
+    - format: html
+    - format: js
+  render_expectation: "Interactive browser audio that plays only after user activation and can be captured through audio output or inspected through visible transport diagnostics."
+evaluation:
+  checklist:
+    - "YAML parses under schema 0.4, all required fields are present, and all file text is ASCII-only."
+    - "Generated artifact is a complete Tone.js HTML or JavaScript browser asset with no markdown fences."
+    - "Composition uses Tone.Transport plus Tone.Sequence, Tone.Part, Tone.Loop, or Tone.Pattern for musical timing."
+    - "Autoplay policy is respected with await Tone.start() inside a user gesture before sound starts."
+    - "Gain staging includes a master gain or channel, conservative source levels, ramps or envelopes, and clipping protection."
+    - "Audio structure includes melody, harmony or bass, percussion or pulse, and at least one effect chain."
+    - "Timing uses scheduled callback time values and does not rely on JavaScript timers for rhythm."
+    - "Cleanup/dispose stops transport, clears scheduled events, and disposes all created Tone nodes and event objects."
+    - "Fallback checks cover unsupported Web Audio, failed CDN import, sample loading if used, and muted or suspended state."
+  rubric:
+    - name: "Format validity"
+      weight: 30
+      criteria: "YAML parses, schema 0.4 fields are present, generated output is valid HTML or JavaScript, and file name, id, solution, category, type, and variant align."
+    - name: "Semantic completeness"
+      weight: 30
+      criteria: "The artifact fulfills the synth composition scenario and uses Tone.js Transport, sources, scheduling, effects, autoplay unlock, and disposal patterns from the references."
+    - name: "Audio/structural quality"
+      weight: 25
+      criteria: "The composition has coherent musical layers, stable timing, readable state, clean envelopes, intentional timbre, useful effects, and no obvious clipping."
+    - name: "Robustness"
+      weight: 15
+      criteria: "The artifact handles browser autoplay, unsupported audio, load failure, repeated start/stop, cleanup, responsive UI, and accessibility states without runtime failure."
+  pass_conditions:
+    - "Rubric weights sum to 100 with Format validity 30, Semantic completeness 30, Audio/structural quality 25, and Robustness 15."
+    - "Score is at least 80 out of 100."
+    - "No critical failure in YAML parsing, Tone.js loading, autoplay unlock, gain staging, timing, cleanup/dispose, or fallback checks."
+    - "Generated content is clearly aligned with Tone.js and does not substitute raw Web Audio except through Tone.js internals or a documented fallback."
+tags:
+  - "fim"
+  - "audio-and-sound"
+  - "tone_js"
+  - "synth-composition"
+  - "tone-transport"
+  - "sequencing"
+  - "browser-audio"

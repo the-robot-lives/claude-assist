@@ -1,0 +1,76 @@
+---
+schema: "0.4"
+id: fim-math-and-scientific-rendering-geogebra-api-03-instructional-explanatory-figure
+type: interactive
+quality: high
+solution: geogebra-api
+category: math-and-scientific-rendering
+variant: instructional-explanatory-figure
+references:
+- references/fim/overview/geospatial-math-scientific/geogebra-api.md
+- references/fim/solution/geogebra-api.md
+prompt:
+  system: |-
+    You are a senior geometry education engineer. Output only one complete ASCII HTML file using the GeoGebra API. No Markdown fences or prose outside the source.
+  text: |-
+    Create an instructional GeoGebra geometry applet that demonstrates the perpendicular bisector theorem. Construct segment AB, midpoint M, perpendicular bisector l, movable point P constrained to l, segments PA and PB, and live measurements proving PA=PB. Include accessible explanatory steps beside the applet.
+
+    Requirements: use appName geometry, evalCommand constructions, setCaption and label visibility, registerObjectUpdateListener for P, getValue for distances, reset controls, export controls, and a view frame that keeps A, B, M, P, and labels visible.
+  provider_options:
+    temperature: 0.2
+    max_tokens: 8192
+output:
+  text_format: html
+  artifact_kind: geogebra-api-html
+  formats:
+  - format: html
+  - format: ggb
+  - format: png
+  - format: svg
+evaluation:
+  checklist:
+  - "YAML parses and required schema 0.4 fields are present."
+  - "HTML is complete, ASCII-only, and uses GeoGebra geometry constructions."
+  - "Math correctness covers midpoint, perpendicular bisector, constrained point, and equal-distance theorem."
+  - "Notation validity covers GeoGebra command syntax, segment names, distance labels, and explanatory text."
+  - "Renderability covers appletOnLoad, visible geometry view, update listener, reset, and export path."
+  - "Labels and units identify points A, B, M, P, line l, distances PA and PB, and equality status."
+  - "Domain edge cases cover coincident A and B, point dragging bounds, stale measurements, and label overlap."
+  rubric:
+  - name: Format validity
+    weight: 30
+    criteria:
+    - "Output is one complete ASCII HTML file with no Markdown wrapper."
+    - "The file uses valid GeoGebra geometry commands and JavaScript integration."
+    - "The source documents run, reset, export, and applet lifecycle behavior."
+  - name: Semantic completeness
+    weight: 30
+    criteria:
+    - "Construction objects, live measurements, explanatory steps, update listener, reset, and export are all present."
+    - "GeoGebra dependency relationships drive the construction."
+    - "The theorem is demonstrated visually and numerically."
+  - name: Visual/structural quality
+    weight: 25
+    criteria:
+    - "Geometry is clean, labeled, and not visually crowded."
+    - "Equal distances are encoded with labels plus redundant styling."
+    - "Instructional steps are concise and accessible."
+  - name: Robustness
+    weight: 15
+    criteria:
+    - "Handles object update events, reset state, and point dragging without stale UI."
+    - "Avoids degenerate initial geometry and documents limits."
+    - "Provides load and export failure statuses."
+  pass_conditions:
+  - "Rubric weights are exactly Format validity 30, Semantic completeness 30, Visual/structural quality 25, Robustness 15."
+  - "Score is 80 or higher out of 100 with no critical failure in math correctness, notation validity, renderability, or accessibility."
+  - "The artifact teaches the perpendicular bisector theorem through a live GeoGebra construction."
+  - "Labels, units, domain edge cases, and integration behavior are represented."
+tags:
+- fim
+- math-and-scientific-rendering
+- geogebra-api
+- instructional-explanatory-figure
+- geometry
+- theorem
+

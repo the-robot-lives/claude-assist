@@ -1,0 +1,84 @@
+schema: "0.4"
+id: "fim-audio-and-sound-web-audio-api-03-interactive-ui-audio"
+type: interactive
+quality: high
+solution: web-audio-api
+category: audio-and-sound
+variant: interactive-ui-audio
+references:
+  - "references/fim/overview/music-audio-ml/web-audio-api.md"
+  - "references/fim/solution/web-audio-api.md"
+prompt:
+  system: |-
+    Generate production-quality Web Audio API browser audio assets for FIM evaluation. Output only the requested source artifact, with no markdown fences or explanatory prose.
+  text: |-
+    Create a self-contained Web Audio API interactive UI audio artifact for the audio-and-sound category.
+
+    Scenario:
+    Build a native low-latency UI audio layer for a complex browser interface, such as a dashboard, editor toolbar, form workflow, or game menu. It must map common UI states to concise audio cues while remaining optional, accessible, keyboard operable, and safe under rapid interaction.
+
+    Implementation requirements:
+    - Use native Web Audio API only; do not import Tone.js or another audio framework.
+    - Create one AudioContext or webkitAudioContext and resume it from an explicit Enable Audio control.
+    - Provide at least eight distinct UI cues for states such as focus, hover, primary action, toggle on, toggle off, drag start, drop accepted, validation error, warning, success, and disabled.
+    - Implement a reusable cue engine with short OscillatorNode or AudioBufferSourceNode bursts, GainNode envelopes, filters, panning, and shared master routing.
+    - Use audioContext.currentTime and AudioParam ramps for cue onset, release, pitch glide, and gain changes.
+    - Include gain staging with muted default, master volume, per-cue gain, short envelopes, and compressor or limiter-like protection.
+    - Debounce or coalesce high-frequency UI events without using timers as the audio timing source.
+    - Include accessibility alternatives: visible state changes, ARIA labels, screen-reader text, keyboard controls, mute, and reduced sound mode.
+    - Include cleanup behavior for active sources, shared nodes, animation frames, debouncers, event listeners, and AudioContext state.
+    - Include fallback checks for unsupported AudioContext, blocked resume, interrupted context, missing optional nodes, and reduced sound operation.
+    - Output only a complete HTML document with inline CSS and JavaScript.
+  requirements:
+    - "Autoplay policy: UI cues stay silent until AudioContext.resume() succeeds from user activation."
+    - "Gain staging: cues use short envelopes, bounded levels, shared master volume, and clipping protection."
+    - "Timing: cue synthesis uses currentTime and AudioParam ramps, with debouncing separated from audio scheduling."
+    - "Cleanup/dispose: active one-shots stop and disconnect, shared routing is released, and listeners are removed."
+    - "Fallback checks: every cue has visual or textual meaning when audio is muted, blocked, or unavailable."
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.2
+output:
+  text_format: html
+  artifact: "Web Audio API interactive UI audio browser source"
+  formats:
+    - format: html
+    - format: js
+  render_expectation: "Interactive browser UI with optional native audio cues after explicit unlock and accessible non-audio equivalents."
+evaluation:
+  checklist:
+    - "YAML parses under schema 0.4, all required fields are present, and all file text is ASCII-only."
+    - "Generated artifact is a complete native Web Audio HTML or JavaScript browser asset with no markdown fences."
+    - "At least eight UI interaction states are mapped to concise, labeled, semantically consistent audio cues."
+    - "Autoplay policy is respected with AudioContext.resume() inside an explicit user gesture before cues play."
+    - "Gain staging includes muted default, master volume, per-cue gain, short envelopes, and dynamics protection."
+    - "Timing uses audioContext.currentTime and AudioParam ramps for cue onset, release, pitch, and gain."
+    - "Rapid interactions are debounced or coalesced without using timers as the audio clock."
+    - "Cleanup/dispose frees active sources, shared routing, debouncers, animation frames, context state, and listeners."
+    - "Fallback checks cover unsupported AudioContext, blocked resume, interrupted context, missing optional nodes, reduced sound, and non-audio accessibility equivalents."
+  rubric:
+    - name: "Format validity"
+      weight: 30
+      criteria: "YAML parses, schema 0.4 fields are present, generated output is valid HTML or JavaScript, and file name, id, solution, category, type, and variant align."
+    - name: "Semantic completeness"
+      weight: 30
+      criteria: "The artifact fulfills the interactive UI audio scenario and uses native Web Audio cue synthesis, scheduling, routing, autoplay unlock, accessibility, and cleanup patterns from the references."
+    - name: "Audio/structural quality"
+      weight: 25
+      criteria: "Cues are brief, distinguishable, nonintrusive, semantically mapped, dynamically safe, and synchronized with UI state."
+    - name: "Robustness"
+      weight: 15
+      criteria: "The artifact handles browser autoplay, high-frequency interactions, blocked or muted audio, missing optional nodes, cleanup, responsive UI, and accessibility states without runtime failure."
+  pass_conditions:
+    - "Rubric weights sum to 100 with Format validity 30, Semantic completeness 30, Audio/structural quality 25, and Robustness 15."
+    - "Score is at least 80 out of 100."
+    - "No critical failure in YAML parsing, native Web Audio setup, autoplay unlock, gain staging, timing, cleanup/dispose, fallback checks, or accessibility equivalents."
+    - "Generated content is clearly aligned with Web Audio interactive UI audio and does not require audio to understand the interface."
+tags:
+  - "fim"
+  - "audio-and-sound"
+  - "web-audio-api"
+  - "interactive-ui-audio"
+  - "sonification"
+  - "accessibility"
+  - "browser-audio"

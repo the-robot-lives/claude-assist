@@ -1,0 +1,76 @@
+---
+schema: "0.4"
+id: fim-math-and-scientific-rendering-geogebra-api-02-dense-scientific-derivation
+type: interactive
+quality: high
+solution: geogebra-api
+category: math-and-scientific-rendering
+variant: dense-scientific-derivation
+references:
+- references/fim/overview/geospatial-math-scientific/geogebra-api.md
+- references/fim/solution/geogebra-api.md
+prompt:
+  system: |-
+    You are a senior CAS-backed dynamic math engineer. Output only one complete ASCII HTML file using the GeoGebra API. No Markdown fences or prose outside the source.
+  text: |-
+    Create a dense GeoGebra API applet that demonstrates the derivative and integral relationship for f(x)=sin(x)*exp(-k*x/5). Use graphing or classic app mode, create a slider k, the function f, derivative g, tangent at movable point A, shaded integral from u to v, and a CAS readout from evalCommandCAS for the derivative form.
+
+    Requirements: wait for appletOnLoad, create objects with evalCommand, style all objects, expose values with getValue and getValueString, include exportSVG or getPNGBase64, and include guard logic when u>v or when CAS output is unavailable.
+  provider_options:
+    temperature: 0.2
+    max_tokens: 8192
+output:
+  text_format: html
+  artifact_kind: geogebra-api-html
+  formats:
+  - format: html
+  - format: ggb
+  - format: png
+  - format: svg
+evaluation:
+  checklist:
+  - "YAML parses and required schema 0.4 fields are present."
+  - "HTML is complete, ASCII-only, and uses GeoGebra graphing or classic APIs."
+  - "Math correctness covers derivative, tangent slope, integral bounds, CAS derivative text, and parameter k."
+  - "Notation validity covers GeoGebra command syntax, CAS command syntax, labels, and captions."
+  - "Renderability covers appletOnLoad, setCoordSystem, visible objects, and export controls."
+  - "Labels and units identify x, response, damping parameter, tangent point, derivative, and integral interval."
+  - "Domain edge cases cover reversed bounds, CAS failure, object update order, and dense-object performance."
+  rubric:
+  - name: Format validity
+    weight: 30
+    criteria:
+    - "Output is one complete ASCII HTML file with no Markdown wrapper."
+    - "GeoGebra commands and API calls are valid and run only after the applet is ready."
+    - "The source documents local run, app mode choice, licensing, and export behavior."
+  - name: Semantic completeness
+    weight: 30
+    criteria:
+    - "Function, derivative, tangent, integral shading, slider, CAS readout, value readouts, and export are present."
+    - "The implementation uses GeoGebra dynamic dependencies rather than manually redrawing derived objects."
+    - "The derivation and visualization agree mathematically."
+  - name: Visual/structural quality
+    weight: 25
+    criteria:
+    - "Dense elements are styled and layered so the graph remains legible."
+    - "CAS and numeric readouts support the visual without crowding it."
+    - "Labels remain readable through parameter changes."
+  - name: Robustness
+    weight: 15
+    criteria:
+    - "Handles reversed bounds, missing CAS output, and slow first load gracefully."
+    - "Uses existence checks and clear fallback status text."
+    - "Documents performance and integration limitations."
+  pass_conditions:
+  - "Rubric weights are exactly Format validity 30, Semantic completeness 30, Visual/structural quality 25, Robustness 15."
+  - "Score is 80 or higher out of 100 with no critical failure in math correctness, notation validity, or renderability."
+  - "The artifact exposes a dense derivative/integral derivation through native GeoGebra objects."
+  - "Domain edge cases and CAS integration constraints are represented."
+tags:
+- fim
+- math-and-scientific-rendering
+- geogebra-api
+- dense-scientific-derivation
+- cas
+- calculus
+
