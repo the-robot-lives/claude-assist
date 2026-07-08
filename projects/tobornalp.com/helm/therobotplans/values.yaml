@@ -82,10 +82,9 @@ sso:
     idpMetadataUrl: ""
     spEntityId: ""
 # SSO is the only auth method. Domain allowlist = auto-register; others need an
-# invite code at /auth/register. requireInvite gates the registration step.
+# invite code at /auth/register. SSO_REQUIRE_INVITE is emitted by _helpers.tpl
+# from sso.requireInvite above — only add the domain allowlist here.
 extraEnv:
-  - name: SSO_REQUIRE_INVITE
-    value: "true"
   - name: SSO_ALLOWED_DOMAINS
     value: "therobotlives.com,noizu.com,greatnonprofits.org,communityconnectlabs.com"
 configMap:
