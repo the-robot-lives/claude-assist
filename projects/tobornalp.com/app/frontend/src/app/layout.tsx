@@ -12,8 +12,12 @@ import { Toaster } from "sonner";
 export function generateMetadata(): Metadata {
   const config = loadConfig();
   return {
-    title: config.title ?? "Project Name",
-    description: config.description ?? "Built with start-app",
+    title:
+      config.title === "tobornalp"
+        ? "tobornalp — AI-Native Operational Life Platform"
+        : (config.title ?? "tobornalp"),
+    description:
+      "One surface for personal todos, team projects, CI/CD, bug tracking, monitoring, docs, and OKR-driven life planning — with AI agents that are teammates, not tools.",
   };
 }
 
