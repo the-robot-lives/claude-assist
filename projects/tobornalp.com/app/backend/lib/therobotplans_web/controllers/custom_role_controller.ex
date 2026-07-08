@@ -12,8 +12,13 @@ defmodule TherobotplansWeb.CustomRoleController do
 
     case Authz.authorize(user_id, "organization", org_id, "viewer") do
       {:ok, _} ->
-        roles = Therobotplans.Repo.all(from r in RoleSchema, where: r.organization_id == ^org_id and r.is_active == true)
+        roles =
+          Therobotplans.Repo.all(
+            from r in RoleSchema, where: r.organization_id == ^org_id and r.is_active == true
+          )
+
         json(conn, %{roles: Enum.map(roles, &role_to_json/1)})
+
       {:error, _} ->
         conn |> put_status(:forbidden) |> json(%{error: "Insufficient permissions"})
     end
@@ -26,8 +31,11 @@ defmodule TherobotplansWeb.CustomRoleController do
       attrs = Map.put(role_params, "organization_id", org_id)
 
       case %RoleSchema{} |> RoleSchema.changeset(attrs) |> Therobotplans.Repo.insert() do
-        {:ok, role} -> conn |> put_status(:created) |> json(%{role: role_to_json(role)})
-        {:error, changeset} -> conn |> put_status(:unprocessable_entity) |> json(%{errors: format_errors(changeset)})
+        {:ok, role} ->
+          conn |> put_status(:created) |> json(%{role: role_to_json(role)})
+
+        {:error, changeset} ->
+          conn |> put_status(:unprocessable_entity) |> json(%{errors: format_errors(changeset)})
       end
     else
       conn |> put_status(:forbidden) |> json(%{error: "Insufficient permissions"})
@@ -39,12 +47,21 @@ defmodule TherobotplansWeb.CustomRoleController do
 
     case Authz.authorize(user_id, "organization", org_id, "viewer") do
       {:ok, _} ->
-        case Therobotplans.Repo.one(from r in RoleSchema, where: r.id == ^role_id and r.organization_id == ^org_id) do
-          nil -> conn |> put_status(:not_found) |> json(%{error: "Role not found"})
+        case Therobotplans.Repo.one(
+               from r in RoleSchema, where: r.id == ^role_id and r.organization_id == ^org_id
+             ) do
+          nil ->
+            conn |> put_status(:not_found) |> json(%{error: "Role not found"})
+
           role ->
-            permissions = Therobotplans.Repo.all(from p in PermSchema, where: p.role_id == ^role_id, select: p.permission)
+            permissions =
+              Therobotplans.Repo.all(
+                from p in PermSchema, where: p.role_id == ^role_id, select: p.permission
+              )
+
             json(conn, %{role: Map.put(role_to_json(role), :permissions, permissions)})
         end
+
       {:error, _} ->
         conn |> put_status(:forbidden) |> json(%{error: "Insufficient permissions"})
     end
@@ -54,12 +71,21 @@ defmodule TherobotplansWeb.CustomRoleController do
     user_id = get_user_id(conn)
 
     if Authz.check_permission(user_id, "organization", org_id, "organization:manage_settings") do
-      case Therobotplans.Repo.one(from r in RoleSchema, where: r.id == ^role_id and r.organization_id == ^org_id) do
-        nil -> conn |> put_status(:not_found) |> json(%{error: "Role not found"})
+      case Therobotplans.Repo.one(
+             from r in RoleSchema, where: r.id == ^role_id and r.organization_id == ^org_id
+           ) do
+        nil ->
+          conn |> put_status(:not_found) |> json(%{error: "Role not found"})
+
         role ->
           case role |> RoleSchema.changeset(role_params) |> Therobotplans.Repo.update() do
-            {:ok, updated} -> json(conn, %{role: role_to_json(updated)})
-            {:error, changeset} -> conn |> put_status(:unprocessable_entity) |> json(%{errors: format_errors(changeset)})
+            {:ok, updated} ->
+              json(conn, %{role: role_to_json(updated)})
+
+            {:error, changeset} ->
+              conn
+              |> put_status(:unprocessable_entity)
+              |> json(%{errors: format_errors(changeset)})
           end
       end
     else
@@ -71,12 +97,21 @@ defmodule TherobotplansWeb.CustomRoleController do
     user_id = get_user_id(conn)
 
     if Authz.check_permission(user_id, "organization", org_id, "organization:manage_settings") do
-      case Therobotplans.Repo.one(from r in RoleSchema, where: r.id == ^role_id and r.organization_id == ^org_id) do
-        nil -> conn |> put_status(:not_found) |> json(%{error: "Role not found"})
+      case Therobotplans.Repo.one(
+             from r in RoleSchema, where: r.id == ^role_id and r.organization_id == ^org_id
+           ) do
+        nil ->
+          conn |> put_status(:not_found) |> json(%{error: "Role not found"})
+
         role ->
           case role |> Ecto.Changeset.change(is_active: false) |> Therobotplans.Repo.update() do
-            {:ok, _} -> json(conn, %{message: "Role deactivated"})
-            {:error, _} -> conn |> put_status(:unprocessable_entity) |> json(%{error: "Failed to deactivate role"})
+            {:ok, _} ->
+              json(conn, %{message: "Role deactivated"})
+
+            {:error, _} ->
+              conn
+              |> put_status(:unprocessable_entity)
+              |> json(%{error: "Failed to deactivate role"})
           end
       end
     else
@@ -88,23 +123,39 @@ defmodule TherobotplansWeb.CustomRoleController do
     user_id = get_user_id(conn)
 
     if Authz.check_permission(user_id, "organization", org_id, "organization:manage_settings") do
-      case %PermSchema{} |> PermSchema.changeset(%{role_id: role_id, permission: permission}) |> Therobotplans.Repo.insert() do
+      case %PermSchema{}
+           |> PermSchema.changeset(%{role_id: role_id, permission: permission})
+           |> Therobotplans.Repo.insert() do
         {:ok, _} ->
-          permissions = Therobotplans.Repo.all(from p in PermSchema, where: p.role_id == ^role_id, select: p.permission)
+          permissions =
+            Therobotplans.Repo.all(
+              from p in PermSchema, where: p.role_id == ^role_id, select: p.permission
+            )
+
           conn |> put_status(:created) |> json(%{permissions: permissions})
-        {:error, changeset} -> conn |> put_status(:unprocessable_entity) |> json(%{errors: format_errors(changeset)})
+
+        {:error, changeset} ->
+          conn |> put_status(:unprocessable_entity) |> json(%{errors: format_errors(changeset)})
       end
     else
       conn |> put_status(:forbidden) |> json(%{error: "Insufficient permissions"})
     end
   end
 
-  def remove_permission(conn, %{"org_id" => org_id, "role_id" => role_id, "permission_id" => perm_id}) do
+  def remove_permission(conn, %{
+        "org_id" => org_id,
+        "role_id" => role_id,
+        "permission_id" => perm_id
+      }) do
     user_id = get_user_id(conn)
 
     if Authz.check_permission(user_id, "organization", org_id, "organization:manage_settings") do
-      case Therobotplans.Repo.one(from p in PermSchema, where: p.id == ^perm_id and p.role_id == ^role_id) do
-        nil -> conn |> put_status(:not_found) |> json(%{error: "Permission not found"})
+      case Therobotplans.Repo.one(
+             from p in PermSchema, where: p.id == ^perm_id and p.role_id == ^role_id
+           ) do
+        nil ->
+          conn |> put_status(:not_found) |> json(%{error: "Permission not found"})
+
         perm ->
           {:ok, _} = Therobotplans.Repo.delete(perm)
           json(conn, %{message: "Permission removed"})

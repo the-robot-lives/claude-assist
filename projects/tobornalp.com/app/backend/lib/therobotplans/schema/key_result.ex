@@ -28,7 +28,18 @@ defmodule Therobotplans.Schema.KeyResult do
 
   def changeset(kr, attrs) do
     kr
-    |> cast(attrs, [:objective_id, :owner_id, :title, :unit, :target_value, :current_value, :direction, :due_on, :status, :auto_progress])
+    |> cast(attrs, [
+      :objective_id,
+      :owner_id,
+      :title,
+      :unit,
+      :target_value,
+      :current_value,
+      :direction,
+      :due_on,
+      :status,
+      :auto_progress
+    ])
     |> validate_required([:objective_id, :title])
     |> validate_inclusion(:direction, @directions)
     |> validate_inclusion(:status, @statuses)

@@ -64,7 +64,17 @@ defmodule Therobotplans.Domains.Notifications do
   defp insert_for(attrs, recipient, org_id) do
     base =
       attrs
-      |> Map.take([:project_id, :sender, :kind, :subject_type, :subject_id, :body, :payload, :deliver_after, :dedup_key])
+      |> Map.take([
+        :project_id,
+        :sender,
+        :kind,
+        :subject_type,
+        :subject_id,
+        :body,
+        :payload,
+        :deliver_after,
+        :dedup_key
+      ])
       |> Map.put(:organization_id, org_id)
       |> Map.put(:recipient, recipient)
 
@@ -315,7 +325,10 @@ defmodule Therobotplans.Domains.Notifications do
   # ── Rate-limit (Redis) ────────────────────────────────────────
 
   defp rate_limit_remaining(org_id, recipient) do
-    case Therobotplans.Redis.command(["PTTL", Therobotplans.Redis.prefix(rl_key(org_id, recipient))]) do
+    case Therobotplans.Redis.command([
+           "PTTL",
+           Therobotplans.Redis.prefix(rl_key(org_id, recipient))
+         ]) do
       {:ok, ms} when is_integer(ms) and ms > 0 -> ms
       _ -> 0
     end

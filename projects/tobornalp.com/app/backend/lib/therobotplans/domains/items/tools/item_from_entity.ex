@@ -9,10 +9,19 @@ defmodule Therobotplans.Domains.Items.Tools.ItemFromEntity do
   input do
     field :organization, :string, required: true, description: "Organization slug or UUID"
     field :project, :string, description: "Optional project slug or UUID to scope the item to"
-    field :subject_type, :string, required: true, description: "Source entity type (e.g. chat_message, wiki_page, artifact, asset, review)"
+
+    field :subject_type, :string,
+      required: true,
+      description: "Source entity type (e.g. chat_message, wiki_page, artifact, asset, review)"
+
     field :subject_id, :string, required: true, description: "Source entity id"
-    field :title, :string, description: "Item title (defaults to a summary derived from the source)"
-    field :summary, :string, description: "Short summary of the source to embed in the description"
+
+    field :title, :string,
+      description: "Item title (defaults to a summary derived from the source)"
+
+    field :summary, :string,
+      description: "Short summary of the source to embed in the description"
+
     field :item_type, :string, description: "Type slug (default: task)"
     field :priority, :string, description: "low, medium, high, critical"
     field :assignee, :string, description: "Assignee persona slug"
@@ -64,16 +73,26 @@ defmodule Therobotplans.Domains.Items.Tools.ItemFromEntity do
           {:error, "Failed to create item: #{inspect(changeset.errors)}"}
       end
     else
-      {:org, nil} -> {:error, "Organization '#{org_ref}' not found"}
-      {:error, :project_not_found} -> {:error, "Project '#{project_ref}' not found"}
-      {:error, :project_not_in_org} -> {:error, "Project '#{project_ref}' does not belong to this organization"}
+      {:org, nil} ->
+        {:error, "Organization '#{org_ref}' not found"}
+
+      {:error, :project_not_found} ->
+        {:error, "Project '#{project_ref}' not found"}
+
+      {:error, :project_not_in_org} ->
+        {:error, "Project '#{project_ref}' does not belong to this organization"}
     end
   end
 
   defp link_source(item_id, subject_type, subject_id) do
     case Links.link_entity(item_id, subject_type, subject_id, link_type: "references") do
       {:ok, link} ->
-        %{id: link.id, entity_type: link.entity_type, entity_id: link.entity_id, link_type: link.link_type}
+        %{
+          id: link.id,
+          entity_type: link.entity_type,
+          entity_id: link.entity_id,
+          link_type: link.link_type
+        }
 
       _ ->
         nil
@@ -86,7 +105,8 @@ defmodule Therobotplans.Domains.Items.Tools.ItemFromEntity do
   end
 
   defp description(subject_type, subject_id, summary) do
-    pointer = "Converted from #{subject_type} `#{subject_id}` (tobornalp://#{subject_type}/#{subject_id})."
+    pointer =
+      "Converted from #{subject_type} `#{subject_id}` (tobornalp://#{subject_type}/#{subject_id})."
 
     case summary do
       s when is_binary(s) and s != "" -> pointer <> "\n\n" <> s

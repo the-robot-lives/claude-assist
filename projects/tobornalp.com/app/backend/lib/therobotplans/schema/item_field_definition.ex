@@ -29,7 +29,17 @@ defmodule Therobotplans.Schema.ItemFieldDefinition do
 
   def changeset(field_def, attrs) do
     field_def
-    |> cast(attrs, [:organization_id, :project_id, :slug, :label, :field_type, :options, :default_value, :description, :disabled])
+    |> cast(attrs, [
+      :organization_id,
+      :project_id,
+      :slug,
+      :label,
+      :field_type,
+      :options,
+      :default_value,
+      :description,
+      :disabled
+    ])
     |> validate_required([:slug, :label, :field_type])
     |> validate_inclusion(:field_type, @field_types)
     |> validate_scope()

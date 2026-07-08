@@ -12,7 +12,10 @@ defmodule Therobotplans.Domains.Goals.Tools.ObjectiveCreate do
     field :organization, :string, required: true, description: "Organization slug or UUID"
     field :project, :string, description: "Optional project slug or UUID"
     field :title, :string, required: true, description: "Objective title"
-    field :level, :string, description: "company | team | individual | personal (default personal)"
+
+    field :level, :string,
+      description: "company | team | individual | personal (default personal)"
+
     field :owner_id, :string, description: "Owner user UUID (defaults to the caller)"
     field :parent_id, :string, description: "Parent objective UUID (for cascade)"
     field :period, :string, description: "Period e.g. 2026-Q3"
@@ -43,9 +46,14 @@ defmodule Therobotplans.Domains.Goals.Tools.ObjectiveCreate do
         {:error, cs} -> {:error, "Failed: #{inspect(cs.errors)}"}
       end
     else
-      {:scope, {:error, :org_not_found}} -> {:error, "Organization '#{org_ref}' not found"}
-      {:scope, err} -> {:error, "Scope error: #{inspect(err)}"}
-      {:error, :owner_required} -> {:error, "owner_id is required and could not be derived from the auth token"}
+      {:scope, {:error, :org_not_found}} ->
+        {:error, "Organization '#{org_ref}' not found"}
+
+      {:scope, err} ->
+        {:error, "Scope error: #{inspect(err)}"}
+
+      {:error, :owner_required} ->
+        {:error, "owner_id is required and could not be derived from the auth token"}
     end
   end
 

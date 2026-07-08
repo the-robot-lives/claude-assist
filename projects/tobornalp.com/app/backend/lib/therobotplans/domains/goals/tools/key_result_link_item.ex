@@ -1,7 +1,8 @@
 defmodule Therobotplans.Domains.Goals.Tools.KeyResultLinkItem do
   use Noizu.MCP.Server.Tool,
     name: "KeyResult.LinkItem",
-    description: "Link an item to a key result (for auto-progress). The item's completion drives the KR's current_value. Use after creating an auto_progress KR.",
+    description:
+      "Link an item to a key result (for auto-progress). The item's completion drives the KR's current_value. Use after creating an auto_progress KR.",
     hidden: true,
     category: "Goals"
 
@@ -34,8 +35,11 @@ defmodule Therobotplans.Domains.Goals.Tools.KeyResultLinkItem do
 
       true ->
         case Goals.link_item(kr_id, item_id, to_weight(weight)) do
-          {:ok, link} -> {:ok, %{id: link.id, key_result_id: kr_id, item_id: item_id, weight: link.weight}}
-          {:error, cs} -> {:error, "Failed: #{inspect(cs.errors)}"}
+          {:ok, link} ->
+            {:ok, %{id: link.id, key_result_id: kr_id, item_id: item_id, weight: link.weight}}
+
+          {:error, cs} ->
+            {:error, "Failed: #{inspect(cs.errors)}"}
         end
     end
   end

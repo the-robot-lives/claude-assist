@@ -13,9 +13,24 @@ defmodule Therobotplans.MCPServers do
   @servers [
     %{id: "root", label: "Root MCP", required: true, desc: "All domains + discovery"},
     %{id: "projects", label: "Projects", required: false, desc: "Project management"},
-    %{id: "items", label: "Items", required: false, desc: "Item tracking — tasks, bugs, todos, epics, boards & definitions"},
-    %{id: "notifications", label: "Notifications", required: false, desc: "Per-recipient notification inbox"},
-    %{id: "goals", label: "Goals", required: false, desc: "OKRs — objectives, key results, check-ins"}
+    %{
+      id: "items",
+      label: "Items",
+      required: false,
+      desc: "Item tracking — tasks, bugs, todos, epics, boards & definitions"
+    },
+    %{
+      id: "notifications",
+      label: "Notifications",
+      required: false,
+      desc: "Per-recipient notification inbox"
+    },
+    %{
+      id: "goals",
+      label: "Goals",
+      required: false,
+      desc: "OKRs — objectives, key results, check-ins"
+    }
   ]
 
   @server_modules %{

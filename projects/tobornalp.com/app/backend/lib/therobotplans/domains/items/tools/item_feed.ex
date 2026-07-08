@@ -14,10 +14,12 @@ defmodule Therobotplans.Domains.Items.Tools.ItemFeed do
   @impl true
   def call(args, _ctx) do
     item_id = args[:item_id] || args["item_id"]
-    {:ok, %{
-      item_id: item_id,
-      events: [],
-      hint: "Activity feed not yet implemented."
-    }}
+
+    {:ok,
+     %{
+       item_id: item_id,
+       events: [],
+       hint: "Activity feed not yet implemented."
+     }}
   end
 end

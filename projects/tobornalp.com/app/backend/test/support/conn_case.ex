@@ -84,10 +84,16 @@ defmodule TherobotplansWeb.ConnCase do
     }
 
     {:ok, access_token, _claims} =
-      Therobotplans.Guardian.encode_and_sign(session_entity, %{}, token_type: "access", ttl: {1, :hour})
+      Therobotplans.Guardian.encode_and_sign(session_entity, %{},
+        token_type: "access",
+        ttl: {1, :hour}
+      )
 
     {:ok, refresh_token, %{"jti" => jti}} =
-      Therobotplans.Guardian.encode_and_sign(session_entity, %{}, token_type: "refresh", ttl: {7, :day})
+      Therobotplans.Guardian.encode_and_sign(session_entity, %{},
+        token_type: "refresh",
+        ttl: {7, :day}
+      )
 
     Therobotplans.Auth.TokenStore.store_refresh_jti(jti)
 

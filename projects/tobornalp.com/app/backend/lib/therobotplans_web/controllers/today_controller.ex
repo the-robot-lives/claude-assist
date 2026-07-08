@@ -16,7 +16,9 @@ defmodule TherobotplansWeb.TodayController do
 
     # If an org is given, ensure the user is at least a viewer there.
     with :ok <- maybe_authorize(user_id, org_id) do
-      plan = Today.plan(user_id, org_id: org_id, due_window_days: parse_int(params["due_window_days"]))
+      plan =
+        Today.plan(user_id, org_id: org_id, due_window_days: parse_int(params["due_window_days"]))
+
       json(conn, %{plan: plan})
     else
       err -> handle_error(conn, err)
@@ -43,8 +45,11 @@ defmodule TherobotplansWeb.TodayController do
 
   defp handle_error(conn, err) do
     case err do
-      {:error, :not_a_member} -> conn |> put_status(:forbidden) |> json(%{error: "Not a member of this organization"})
-      _ -> conn |> put_status(:forbidden) |> json(%{error: "Insufficient permissions"})
+      {:error, :not_a_member} ->
+        conn |> put_status(:forbidden) |> json(%{error: "Not a member of this organization"})
+
+      _ ->
+        conn |> put_status(:forbidden) |> json(%{error: "Insufficient permissions"})
     end
   end
 

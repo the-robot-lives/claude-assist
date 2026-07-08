@@ -6,7 +6,10 @@ defmodule Therobotplans.Schema.Users.Media.Asset do
   schema "user_media" do
     belongs_to :user, Therobotplans.Schema.Users.User, type: Ecto.UUID
     belongs_to :media, Therobotplans.Schema.Media.Asset, type: Ecto.UUID
-    belongs_to :description, Therobotplans.Schema.Versioned.Descriptions.Description, type: Ecto.UUID
+
+    belongs_to :description, Therobotplans.Schema.Versioned.Descriptions.Description,
+      type: Ecto.UUID
+
     field :media_type, Ecto.Enum, values: [:profile, :cover, :gallery, :other]
     field :settings, :map
     field :deleted_at, :utc_datetime_usec

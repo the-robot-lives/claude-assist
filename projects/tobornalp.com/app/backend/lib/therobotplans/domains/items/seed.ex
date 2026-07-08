@@ -26,8 +26,14 @@ defmodule Therobotplans.Domains.Items.Seed do
       |> Enum.with_index()
       |> Enum.each(fn {{slug, required}, idx} ->
         case Definitions.get_field_in_scope(nil, nil, slug) do
-          nil -> :ok
-          field -> Definitions.add_field_to_type(type_def.id, field.id, required: required, position: idx)
+          nil ->
+            :ok
+
+          field ->
+            Definitions.add_field_to_type(type_def.id, field.id,
+              required: required,
+              position: idx
+            )
         end
       end)
     end)
@@ -35,21 +41,33 @@ defmodule Therobotplans.Domains.Items.Seed do
 
   defp fields do
     [
-      %{slug: "priority", label: "Priority", field_type: "select",
-        options: %{"values" => [
-          %{"value" => "low", "label" => "Low"},
-          %{"value" => "medium", "label" => "Medium"},
-          %{"value" => "high", "label" => "High"},
-          %{"value" => "critical", "label" => "Critical"}
-        ]}},
-      %{slug: "severity", label: "Severity", field_type: "select",
-        options: %{"values" => [
-          %{"value" => "cosmetic", "label" => "Cosmetic"},
-          %{"value" => "minor", "label" => "Minor"},
-          %{"value" => "major", "label" => "Major"},
-          %{"value" => "critical", "label" => "Critical"},
-          %{"value" => "blocker", "label" => "Blocker"}
-        ]}},
+      %{
+        slug: "priority",
+        label: "Priority",
+        field_type: "select",
+        options: %{
+          "values" => [
+            %{"value" => "low", "label" => "Low"},
+            %{"value" => "medium", "label" => "Medium"},
+            %{"value" => "high", "label" => "High"},
+            %{"value" => "critical", "label" => "Critical"}
+          ]
+        }
+      },
+      %{
+        slug: "severity",
+        label: "Severity",
+        field_type: "select",
+        options: %{
+          "values" => [
+            %{"value" => "cosmetic", "label" => "Cosmetic"},
+            %{"value" => "minor", "label" => "Minor"},
+            %{"value" => "major", "label" => "Major"},
+            %{"value" => "critical", "label" => "Critical"},
+            %{"value" => "blocker", "label" => "Blocker"}
+          ]
+        }
+      },
       %{slug: "story_points", label: "Story Points", field_type: "number"},
       %{slug: "acceptance_criteria", label: "Acceptance Criteria", field_type: "markdown"},
       %{slug: "steps_to_reproduce", label: "Steps to Reproduce", field_type: "markdown"},
@@ -57,25 +75,36 @@ defmodule Therobotplans.Domains.Items.Seed do
       %{slug: "actual_behavior", label: "Actual Behavior", field_type: "markdown"},
       %{slug: "environment", label: "Environment", field_type: "text"},
       %{slug: "component", label: "Component", field_type: "text"},
-      %{slug: "labels", label: "Labels", field_type: "multi_select",
-        options: %{"values" => []}},
+      %{slug: "labels", label: "Labels", field_type: "multi_select", options: %{"values" => []}},
       %{slug: "due_date", label: "Due Date", field_type: "date"},
       %{slug: "estimate", label: "Estimate", field_type: "text"},
-      %{slug: "doc_type", label: "Documentation Type", field_type: "select",
-        options: %{"values" => [
-          %{"value" => "api", "label" => "API"},
-          %{"value" => "guide", "label" => "Guide"},
-          %{"value" => "runbook", "label" => "Runbook"},
-          %{"value" => "adr", "label" => "ADR"},
-          %{"value" => "changelog", "label" => "Changelog"}
-        ]}},
-      %{slug: "target_audience", label: "Target Audience", field_type: "select",
-        options: %{"values" => [
-          %{"value" => "internal", "label" => "Internal"},
-          %{"value" => "external", "label" => "External"},
-          %{"value" => "developer", "label" => "Developer"},
-          %{"value" => "end_user", "label" => "End User"}
-        ]}},
+      %{
+        slug: "doc_type",
+        label: "Documentation Type",
+        field_type: "select",
+        options: %{
+          "values" => [
+            %{"value" => "api", "label" => "API"},
+            %{"value" => "guide", "label" => "Guide"},
+            %{"value" => "runbook", "label" => "Runbook"},
+            %{"value" => "adr", "label" => "ADR"},
+            %{"value" => "changelog", "label" => "Changelog"}
+          ]
+        }
+      },
+      %{
+        slug: "target_audience",
+        label: "Target Audience",
+        field_type: "select",
+        options: %{
+          "values" => [
+            %{"value" => "internal", "label" => "Internal"},
+            %{"value" => "external", "label" => "External"},
+            %{"value" => "developer", "label" => "Developer"},
+            %{"value" => "end_user", "label" => "End User"}
+          ]
+        }
+      },
       %{slug: "prd_link", label: "PRD Link", field_type: "url"}
     ]
   end
@@ -86,52 +115,90 @@ defmodule Therobotplans.Domains.Items.Seed do
 
   defp types do
     [
-      {%{slug: "epic", name: "Epic",
+      {%{
+         slug: "epic",
+         name: "Epic",
          description: "Large body of work that can be broken into tasks/stories",
-         status_workflow: workflow(
-           ["open", "in_progress", "done", "closed"],
-           %{"open" => ["in_progress", "closed"],
-             "in_progress" => ["done", "closed"],
-             "done" => ["closed", "open"]})},
-       [{"priority", true}, {"labels", false}, {"due_date", false}, {"acceptance_criteria", false}]},
-
-      {%{slug: "task", name: "Task",
+         status_workflow:
+           workflow(
+             ["open", "in_progress", "done", "closed"],
+             %{
+               "open" => ["in_progress", "closed"],
+               "in_progress" => ["done", "closed"],
+               "done" => ["closed", "open"]
+             }
+           )
+       },
+       [
+         {"priority", true},
+         {"labels", false},
+         {"due_date", false},
+         {"acceptance_criteria", false}
+       ]},
+      {%{
+         slug: "task",
+         name: "Task",
          description: "A unit of work to be completed",
-         status_workflow: workflow(
-           ["open", "in_progress", "done", "closed"],
-           %{"open" => ["in_progress", "closed"],
-             "in_progress" => ["done", "closed"],
-             "done" => ["closed", "open"]})},
-       [{"priority", true}, {"estimate", false}, {"labels", false}, {"component", false}]},
-
-      {%{slug: "bug", name: "Bug",
+         status_workflow:
+           workflow(
+             ["open", "in_progress", "done", "closed"],
+             %{
+               "open" => ["in_progress", "closed"],
+               "in_progress" => ["done", "closed"],
+               "done" => ["closed", "open"]
+             }
+           )
+       }, [{"priority", true}, {"estimate", false}, {"labels", false}, {"component", false}]},
+      {%{
+         slug: "bug",
+         name: "Bug",
          description: "A defect or unexpected behavior",
-         status_workflow: workflow(
-           ["open", "triaged", "in_progress", "in_review", "done", "closed", "wont_fix"],
-           %{"open" => ["triaged", "closed", "wont_fix"],
-             "triaged" => ["in_progress", "closed", "wont_fix"],
-             "in_progress" => ["in_review", "closed"],
-             "in_review" => ["done", "in_progress"],
-             "done" => ["closed", "open"]})},
-       [{"priority", true}, {"severity", true}, {"steps_to_reproduce", true},
-        {"expected_behavior", false}, {"actual_behavior", false},
-        {"environment", false}, {"component", false}, {"labels", false}]},
-
-      {%{slug: "todo", name: "To-Do",
+         status_workflow:
+           workflow(
+             ["open", "triaged", "in_progress", "in_review", "done", "closed", "wont_fix"],
+             %{
+               "open" => ["triaged", "closed", "wont_fix"],
+               "triaged" => ["in_progress", "closed", "wont_fix"],
+               "in_progress" => ["in_review", "closed"],
+               "in_review" => ["done", "in_progress"],
+               "done" => ["closed", "open"]
+             }
+           )
+       },
+       [
+         {"priority", true},
+         {"severity", true},
+         {"steps_to_reproduce", true},
+         {"expected_behavior", false},
+         {"actual_behavior", false},
+         {"environment", false},
+         {"component", false},
+         {"labels", false}
+       ]},
+      {%{
+         slug: "todo",
+         name: "To-Do",
          description: "A quick personal checklist item",
-         status_workflow: workflow(
-           ["open", "done"],
-           %{"open" => ["done"], "done" => ["open"]})},
-       [{"priority", false}, {"due_date", false}]},
-
-      {%{slug: "subtask", name: "Sub-Task",
+         status_workflow:
+           workflow(
+             ["open", "done"],
+             %{"open" => ["done"], "done" => ["open"]}
+           )
+       }, [{"priority", false}, {"due_date", false}]},
+      {%{
+         slug: "subtask",
+         name: "Sub-Task",
          description: "A smaller unit of work within a parent item",
-         status_workflow: workflow(
-           ["open", "in_progress", "done", "closed"],
-           %{"open" => ["in_progress", "closed"],
-             "in_progress" => ["done", "closed"],
-             "done" => ["closed", "open"]})},
-       [{"priority", true}, {"estimate", false}]}
+         status_workflow:
+           workflow(
+             ["open", "in_progress", "done", "closed"],
+             %{
+               "open" => ["in_progress", "closed"],
+               "in_progress" => ["done", "closed"],
+               "done" => ["closed", "open"]
+             }
+           )
+       }, [{"priority", true}, {"estimate", false}]}
     ]
   end
 end

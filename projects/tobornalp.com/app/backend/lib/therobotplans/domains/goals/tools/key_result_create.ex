@@ -13,11 +13,18 @@ defmodule Therobotplans.Domains.Goals.Tools.KeyResultCreate do
     field :objective, :string, required: true, description: "Objective UUID"
     field :title, :string, required: true, description: "Key result title"
     field :target_value, :number, description: "Target value (default 100)"
-    field :current_value, :number, description: "Starting current value (default 0; ignored when auto_progress)"
+
+    field :current_value, :number,
+      description: "Starting current value (default 0; ignored when auto_progress)"
+
     field :unit, :string, description: "Unit of measure (e.g. %, ms, count)"
     field :direction, :string, description: "higher_better (default) | lower_better"
     field :due_on, :string, description: "Due date (YYYY-MM-DD)"
-    field :auto_progress, :boolean, default: false, description: "Compute current_value from linked items"
+
+    field :auto_progress, :boolean,
+      default: false,
+      description: "Compute current_value from linked items"
+
     field :owner_id, :string, description: "Owner user UUID"
   end
 
@@ -37,8 +44,17 @@ defmodule Therobotplans.Domains.Goals.Tools.KeyResultCreate do
       |> maybe_put(:current_value, Args.get(args, :current_value))
 
     case Goals.create_key_result(attrs) do
-      {:ok, kr} -> {:ok, %{id: kr.id, objective_id: kr.objective_id, title: kr.title, auto_progress: kr.auto_progress}}
-      {:error, cs} -> {:error, "Failed: #{inspect(cs.errors)}"}
+      {:ok, kr} ->
+        {:ok,
+         %{
+           id: kr.id,
+           objective_id: kr.objective_id,
+           title: kr.title,
+           auto_progress: kr.auto_progress
+         }}
+
+      {:error, cs} ->
+        {:error, "Failed: #{inspect(cs.errors)}"}
     end
   end
 

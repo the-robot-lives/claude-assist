@@ -40,7 +40,8 @@ defmodule TherobotplansWeb.SSOController do
   def oidc_callback(conn, %{"code" => code}) do
     config = oidc_config()
 
-    with {:ok, tokens} <- OpenIDConnect.fetch_tokens(config, %{code: code, redirect_uri: config.redirect_uri}),
+    with {:ok, tokens} <-
+           OpenIDConnect.fetch_tokens(config, %{code: code, redirect_uri: config.redirect_uri}),
          {:ok, claims} <- OpenIDConnect.verify(config, tokens["id_token"]) do
       handle_sso_callback(conn, :oidc, %{
         email: claims["email"],
@@ -81,9 +82,12 @@ defmodule TherobotplansWeb.SSOController do
 
   def exchange(conn, %{"code" => code}) do
     with {:ok, claimed} <- Therobotplans.Auth.SSO.claim_session(code),
-         {:ok, session} <- Therobotplans.Users.Sessions.get(claimed.id, Noizu.Context.system(), []),
-         {:ok, access_token, _} <- Guardian.encode_and_sign(session, %{}, token_type: "access", ttl: {1, :hour}),
-         {:ok, refresh_token, %{"jti" => refresh_jti}} <- Guardian.encode_and_sign(session, %{}, token_type: "refresh", ttl: {7, :day}) do
+         {:ok, session} <-
+           Therobotplans.Users.Sessions.get(claimed.id, Noizu.Context.system(), []),
+         {:ok, access_token, _} <-
+           Guardian.encode_and_sign(session, %{}, token_type: "access", ttl: {1, :hour}),
+         {:ok, refresh_token, %{"jti" => refresh_jti}} <-
+           Guardian.encode_and_sign(session, %{}, token_type: "refresh", ttl: {7, :day}) do
       # Register the refresh JTI so later /auth/refresh calls validate (mirrors register/2).
       Therobotplans.Auth.TokenStore.store_refresh_jti(refresh_jti)
 
@@ -111,7 +115,10 @@ defmodule TherobotplansWeb.SSOController do
     case Therobotplans.Auth.SSO.authenticate_sso(provider_type, attrs) do
       {:ok, session} ->
         # session.claim_code is the one-time hand-off code (DB-backed, no Redis).
-        redirect(conn, external: "#{frontend_url}/auth/sso-callback?code=#{session.claim_code}&provider=#{provider_type}")
+        redirect(conn,
+          external:
+            "#{frontend_url}/auth/sso-callback?code=#{session.claim_code}&provider=#{provider_type}"
+        )
 
       {:registration_required, identity} ->
         # Brand-new SSO identity: sign a short-lived token carrying the verified
@@ -164,7 +171,8 @@ defmodule TherobotplansWeb.SSOController do
 
     with {:ok, identity} <- Therobotplans.Auth.RegistrationToken.verify(token),
          {:ok, created} <- Therobotplans.Auth.SSO.register_user(identity, attrs),
-         {:ok, session} <- Therobotplans.Users.Sessions.get(created.id, Noizu.Context.system(), []),
+         {:ok, session} <-
+           Therobotplans.Users.Sessions.get(created.id, Noizu.Context.system(), []),
          {:ok, access_token, _} <-
            Guardian.encode_and_sign(session, %{}, token_type: "access", ttl: {1, :hour}),
          {:ok, refresh_token, %{"jti" => refresh_jti}} <-
@@ -187,13 +195,17 @@ defmodule TherobotplansWeb.SSOController do
         conn |> put_status(:unauthorized) |> json(%{error: "Invalid or expired registration"})
 
       {:error, :invite_required} ->
-        conn |> put_status(:forbidden) |> json(%{error: "A valid invite code is required for this email domain"})
+        conn
+        |> put_status(:forbidden)
+        |> json(%{error: "A valid invite code is required for this email domain"})
 
       {:error, :invalid_token} ->
         conn |> put_status(:forbidden) |> json(%{error: "Invalid or expired invite code"})
 
       {:error, :sso_not_allowed} ->
-        conn |> put_status(:forbidden) |> json(%{error: "SSO is not available for this email domain"})
+        conn
+        |> put_status(:forbidden)
+        |> json(%{error: "SSO is not available for this email domain"})
 
       {:error, _} ->
         conn |> put_status(:unprocessable_entity) |> json(%{error: "Registration failed"})
@@ -214,7 +226,9 @@ defmodule TherobotplansWeb.SSOController do
       {:ref, _, id} ->
         {:ok, user} = Therobotplans.Users.get_user(id, Noizu.Context.system())
         user
-      %Therobotplans.Users.User{} = user -> user
+
+      %Therobotplans.Users.User{} = user ->
+        user
     end
   end
 

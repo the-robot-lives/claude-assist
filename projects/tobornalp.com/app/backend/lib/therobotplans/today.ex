@@ -87,7 +87,9 @@ defmodule Therobotplans.Today do
     |> order_by([o], desc: o.inserted_at)
     |> limit(20)
     |> Repo.all()
-    |> Enum.map(fn o -> Map.put(o, :progress, Therobotplans.Domains.Goals.objective_progress(o.id)) end)
+    |> Enum.map(fn o ->
+      Map.put(o, :progress, Therobotplans.Domains.Goals.objective_progress(o.id))
+    end)
   end
 
   defp kr_ids_for_user(user_id, _org_id) do
@@ -101,8 +103,14 @@ defmodule Therobotplans.Today do
     KrItemLink
     |> where([l], l.key_result_id in ^kr_ids)
     |> join(:inner, [l], k in KeyResult, on: k.id == l.key_result_id)
-    |> select([l, k], %{kr_id: k.id, objective_id: k.objective_id, title: k.title,
-                        target: k.target_value, current: k.current_value, item_id: l.item_id})
+    |> select([l, k], %{
+      kr_id: k.id,
+      objective_id: k.objective_id,
+      title: k.title,
+      target: k.target_value,
+      current: k.current_value,
+      item_id: l.item_id
+    })
     |> Repo.all()
   end
 

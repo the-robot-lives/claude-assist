@@ -13,7 +13,9 @@ defmodule Therobotplans.Domains.Notifications.Tools.Watch do
     field :entity_type, :string, required: true, description: "Entity type, e.g. item"
     field :entity_id, :string, required: true, description: "Entity UUID"
     field :action, :string, description: "watch (default) or unwatch"
-    field :filter, :string, description: "Optional substring, or a JSON object {\"type\":\"regex\",\"pattern\":...}"
+
+    field :filter, :string,
+      description: "Optional substring, or a JSON object {\"type\":\"regex\",\"pattern\":...}"
   end
 
   alias Therobotplans.Services.Watch
@@ -40,7 +42,13 @@ defmodule Therobotplans.Domains.Notifications.Tools.Watch do
       action == "unwatch" ->
         case Watch.unwatch(entity_type, entity_id, persona) do
           {:ok, _} ->
-            {:ok, %{action: "unwatch", entity_type: entity_type, entity_id: entity_id, persona: persona}}
+            {:ok,
+             %{
+               action: "unwatch",
+               entity_type: entity_type,
+               entity_id: entity_id,
+               persona: persona
+             }}
 
           {:error, :not_found} ->
             {:error, "Not currently watching that entity"}

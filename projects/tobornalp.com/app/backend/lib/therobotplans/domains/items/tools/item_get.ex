@@ -30,31 +30,34 @@ defmodule Therobotplans.Domains.Items.Tools.ItemGet do
             type_def -> Definitions.type_field_list(type_def)
           end
 
-        {:ok, %{
-          id: item.id,
-          title: item.title,
-          description: item.description,
-          item_type: item.item_type,
-          status: item.status,
-          priority: item.priority,
-          assignee: item.assignee,
-          reporter: item.reporter,
-          project_id: item.project_id,
-          queue_id: item.queue_id,
-          parent_id: item.parent_id,
-          custom_fields: item.custom_fields,
-          type_fields: type_fields,
-          links: %{
-            outgoing: Enum.map(links.outgoing, fn l ->
-              %{item_id: l.target_item_id, link_type: l.link_type}
-            end),
-            incoming: Enum.map(links.incoming, fn l ->
-              %{item_id: l.source_item_id, link_type: l.link_type}
-            end)
-          },
-          created_at: item.inserted_at,
-          updated_at: item.updated_at
-        }}
+        {:ok,
+         %{
+           id: item.id,
+           title: item.title,
+           description: item.description,
+           item_type: item.item_type,
+           status: item.status,
+           priority: item.priority,
+           assignee: item.assignee,
+           reporter: item.reporter,
+           project_id: item.project_id,
+           queue_id: item.queue_id,
+           parent_id: item.parent_id,
+           custom_fields: item.custom_fields,
+           type_fields: type_fields,
+           links: %{
+             outgoing:
+               Enum.map(links.outgoing, fn l ->
+                 %{item_id: l.target_item_id, link_type: l.link_type}
+               end),
+             incoming:
+               Enum.map(links.incoming, fn l ->
+                 %{item_id: l.source_item_id, link_type: l.link_type}
+               end)
+           },
+           created_at: item.inserted_at,
+           updated_at: item.updated_at
+         }}
     end
   end
 end

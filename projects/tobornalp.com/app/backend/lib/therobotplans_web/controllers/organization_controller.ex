@@ -45,7 +45,9 @@ defmodule TherobotplansWeb.OrganizationController do
       {:ok, _membership} ->
         case Organizations.get_organization(id, Noizu.Context.system()) do
           {:ok, org} ->
-            conn |> put_status(:ok) |> json(%{organization: %{id: org.id, slug: org.slug, name: org.name}})
+            conn
+            |> put_status(:ok)
+            |> json(%{organization: %{id: org.id, slug: org.slug, name: org.name}})
 
           _ ->
             conn |> put_status(:not_found) |> json(%{error: "Organization not found"})
@@ -64,7 +66,9 @@ defmodule TherobotplansWeb.OrganizationController do
       {:ref, _, id} ->
         {:ok, user} = Therobotplans.Users.get_user(id, Noizu.Context.system())
         user
-      %Therobotplans.Users.User{} = user -> user
+
+      %Therobotplans.Users.User{} = user ->
+        user
     end
   end
 

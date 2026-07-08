@@ -4,7 +4,8 @@ config :therobotplans, Therobotplans.Repo,
   username: System.get_env("DB_USER", "therobotplans"),
   password: System.get_env("DB_PASS", "tobornalp_dev"),
   hostname: System.get_env("DB_HOST", "localhost"),
-  database: "#{System.get_env("DB_NAME", "therobotplans")}_test#{System.get_env("MIX_TEST_PARTITION")}",
+  database:
+    "#{System.get_env("DB_NAME", "therobotplans")}_test#{System.get_env("MIX_TEST_PARTITION")}",
   port: String.to_integer(System.get_env("DB_PORT") || "5432"),
   pool: Ecto.Adapters.SQL.Sandbox,
   pool_size: System.schedulers_online() * 2

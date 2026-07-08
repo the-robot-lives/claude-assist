@@ -95,7 +95,8 @@ defmodule Therobotplans.Users do
                })
                |> Therobotplans.Repo.insert(),
              hashed_password = Bcrypt.hash_pwd_salt(password),
-             auth_provider_id = UUID.uuid5(:oid, "Therobotplans.Schema.Auth.Providers.Provider@Login"),
+             auth_provider_id =
+               UUID.uuid5(:oid, "Therobotplans.Schema.Auth.Providers.Provider@Login"),
              {:ok, _auth_provider} <-
                Therobotplans.Repo.insert(
                  %ProviderSchema{

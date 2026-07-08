@@ -8,7 +8,11 @@ defmodule Therobotplans.Media.Asset do
   @derive Noizu.Entity.Store.Ecto.EntityProtocol
   def_entity do
     id(:uuid)
-    field :media_type, nil, {:ecto, Therobotplans.Schema.Media.Asset.__schema__(:type, :media_type)}
+
+    field :media_type,
+          nil,
+          {:ecto, Therobotplans.Schema.Media.Asset.__schema__(:type, :media_type)}
+
     field :file_type, nil, {:ecto, Therobotplans.Schema.Media.Asset.__schema__(:type, :file_type)}
     field :file, nil, :string
     field :short_id, nil, :string

@@ -6,7 +6,10 @@ defmodule Therobotplans.Schema.Users.Credentials.UserCredential do
   schema "user_credentials" do
     belongs_to :user, Therobotplans.Schema.Users.User, type: Ecto.UUID
     belongs_to :auth_provider, Therobotplans.Schema.Auth.Providers.Provider, type: Ecto.UUID
-    belongs_to :description, Therobotplans.Schema.Versioned.Descriptions.Description, type: Ecto.UUID
+
+    belongs_to :description, Therobotplans.Schema.Versioned.Descriptions.Description,
+      type: Ecto.UUID
+
     field :status, Ecto.Enum, values: [:active, :disabled, :suspended, :deleted, :other]
     field :settings, :map, default: %{}
     field :state, :map, default: %{}
@@ -17,7 +20,15 @@ defmodule Therobotplans.Schema.Users.Credentials.UserCredential do
 
   def changeset(credential, attrs) do
     credential
-    |> cast(attrs, [:user_id, :auth_provider_id, :description_id, :status, :settings, :state, :fingerprint])
+    |> cast(attrs, [
+      :user_id,
+      :auth_provider_id,
+      :description_id,
+      :status,
+      :settings,
+      :state,
+      :fingerprint
+    ])
     |> validate_required([:user_id, :auth_provider_id, :status])
   end
 end

@@ -17,7 +17,9 @@ defmodule Therobotplans.Schema.Organizations.Organization do
     org
     |> cast(attrs, [:slug, :name, :settings, :key_prefix])
     |> validate_required([:slug, :name])
-    |> validate_format(:key_prefix, ~r/^[A-Z0-9]{2,16}$/, message: "must be 2-16 uppercase alphanumerics")
+    |> validate_format(:key_prefix, ~r/^[A-Z0-9]{2,16}$/,
+      message: "must be 2-16 uppercase alphanumerics"
+    )
     |> unique_constraint(:slug)
     |> unique_constraint(:key_prefix, name: :idx_organizations_key_prefix)
   end

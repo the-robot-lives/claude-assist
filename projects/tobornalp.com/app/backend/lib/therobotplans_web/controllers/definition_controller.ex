@@ -24,11 +24,18 @@ defmodule TherobotplansWeb.DefinitionController do
     user_id = get_user_id(conn)
 
     with {:ok, _} <- Authz.authorize(user_id, "organization", org_id, "member") do
-      attrs = Map.merge(params, %{"organization_id" => org_id, "project_id" => blank_to_nil(params["project_id"])})
+      attrs =
+        Map.merge(params, %{
+          "organization_id" => org_id,
+          "project_id" => blank_to_nil(params["project_id"])
+        })
 
       case Definitions.create_field(attrs) do
-        {:ok, f} -> conn |> put_status(:created) |> json(%{field: field_to_json(f)})
-        {:error, cs} -> conn |> put_status(:unprocessable_entity) |> json(%{errors: format_errors(cs)})
+        {:ok, f} ->
+          conn |> put_status(:created) |> json(%{field: field_to_json(f)})
+
+        {:error, cs} ->
+          conn |> put_status(:unprocessable_entity) |> json(%{errors: format_errors(cs)})
       end
     else
       err -> handle_error(conn, err)
@@ -51,11 +58,18 @@ defmodule TherobotplansWeb.DefinitionController do
     user_id = get_user_id(conn)
 
     with {:ok, _} <- Authz.authorize(user_id, "organization", org_id, "member") do
-      attrs = Map.merge(params, %{"organization_id" => org_id, "project_id" => blank_to_nil(params["project_id"])})
+      attrs =
+        Map.merge(params, %{
+          "organization_id" => org_id,
+          "project_id" => blank_to_nil(params["project_id"])
+        })
 
       case Definitions.create_type(attrs) do
-        {:ok, t} -> conn |> put_status(:created) |> json(%{type: type_to_json(t)})
-        {:error, cs} -> conn |> put_status(:unprocessable_entity) |> json(%{errors: format_errors(cs)})
+        {:ok, t} ->
+          conn |> put_status(:created) |> json(%{type: type_to_json(t)})
+
+        {:error, cs} ->
+          conn |> put_status(:unprocessable_entity) |> json(%{errors: format_errors(cs)})
       end
     else
       err -> handle_error(conn, err)
@@ -63,17 +77,33 @@ defmodule TherobotplansWeb.DefinitionController do
   end
 
   defp field_to_json(f) do
-    %{id: f.id, slug: f.slug, label: f.label, field_type: f.field_type,
-      organization_id: f.organization_id, project_id: f.project_id,
-      options: f.options, default_value: f.default_value, description: f.description,
-      disabled: f.disabled}
+    %{
+      id: f.id,
+      slug: f.slug,
+      label: f.label,
+      field_type: f.field_type,
+      organization_id: f.organization_id,
+      project_id: f.project_id,
+      options: f.options,
+      default_value: f.default_value,
+      description: f.description,
+      disabled: f.disabled
+    }
   end
 
   defp type_to_json(t) do
-    %{id: t.id, slug: t.slug, name: t.name, description: t.description,
-      organization_id: t.organization_id, project_id: t.project_id,
-      icon: t.icon, status_workflow: t.status_workflow, disabled: t.disabled,
-      fields: Definitions.type_field_list(t)}
+    %{
+      id: t.id,
+      slug: t.slug,
+      name: t.name,
+      description: t.description,
+      organization_id: t.organization_id,
+      project_id: t.project_id,
+      icon: t.icon,
+      status_workflow: t.status_workflow,
+      disabled: t.disabled,
+      fields: Definitions.type_field_list(t)
+    }
   end
 
   defp blank_to_nil(nil), do: nil
@@ -82,9 +112,14 @@ defmodule TherobotplansWeb.DefinitionController do
 
   defp handle_error(conn, err) do
     case err do
-      {:error, :not_found} -> conn |> put_status(:not_found) |> json(%{error: "Organization not found"})
-      {:error, :not_a_member} -> conn |> put_status(:forbidden) |> json(%{error: "Not a member of this organization"})
-      _ -> conn |> put_status(:forbidden) |> json(%{error: "Insufficient permissions"})
+      {:error, :not_found} ->
+        conn |> put_status(:not_found) |> json(%{error: "Organization not found"})
+
+      {:error, :not_a_member} ->
+        conn |> put_status(:forbidden) |> json(%{error: "Not a member of this organization"})
+
+      _ ->
+        conn |> put_status(:forbidden) |> json(%{error: "Insufficient permissions"})
     end
   end
 

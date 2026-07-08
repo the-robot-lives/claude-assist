@@ -33,7 +33,8 @@ defmodule Therobotplans.Domains.Goals.Tools.Overview do
            active_objectives: active,
            tools: %{
              objectives: ~w(Objective.Create Objective.Get Objective.Update Objective.List),
-             key_results: ~w(KeyResult.Create KeyResult.Update KeyResult.LinkItem KeyResult.Progress),
+             key_results:
+               ~w(KeyResult.Create KeyResult.Update KeyResult.LinkItem KeyResult.Progress),
              checkins: ~w(Checkin.Create)
            }
          }}

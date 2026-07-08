@@ -61,9 +61,19 @@ defmodule TherobotplansWeb.NotificationController do
   end
 
   defp to_json(n) do
-    %{id: n.id, seq: n.seq, kind: n.kind, sender: n.sender, subject_type: n.subject_type,
-      subject_id: n.subject_id, body: n.body, payload: n.payload, seen: n.seen,
-      read: n.read, inserted_at: n.inserted_at}
+    %{
+      id: n.id,
+      seq: n.seq,
+      kind: n.kind,
+      sender: n.sender,
+      subject_type: n.subject_type,
+      subject_id: n.subject_id,
+      body: n.body,
+      payload: n.payload,
+      seen: n.seen,
+      read: n.read,
+      inserted_at: n.inserted_at
+    }
   end
 
   defp parse_int(nil), do: nil
@@ -78,9 +88,14 @@ defmodule TherobotplansWeb.NotificationController do
 
   defp handle_error(conn, err) do
     case err do
-      {:error, :not_found} -> conn |> put_status(:not_found) |> json(%{error: "Organization not found"})
-      {:error, :not_a_member} -> conn |> put_status(:forbidden) |> json(%{error: "Not a member of this organization"})
-      _ -> conn |> put_status(:forbidden) |> json(%{error: "Insufficient permissions"})
+      {:error, :not_found} ->
+        conn |> put_status(:not_found) |> json(%{error: "Organization not found"})
+
+      {:error, :not_a_member} ->
+        conn |> put_status(:forbidden) |> json(%{error: "Not a member of this organization"})
+
+      _ ->
+        conn |> put_status(:forbidden) |> json(%{error: "Insufficient permissions"})
     end
   end
 

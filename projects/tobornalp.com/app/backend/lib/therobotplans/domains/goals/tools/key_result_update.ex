@@ -1,7 +1,8 @@
 defmodule Therobotplans.Domains.Goals.Tools.KeyResultUpdate do
   use Noizu.MCP.Server.Tool,
     name: "KeyResult.Update",
-    description: "Update a key result. For a manual KR, set current_value; for an auto_progress KR, current_value is ignored (recomputed from items).",
+    description:
+      "Update a key result. For a manual KR, set current_value; for an auto_progress KR, current_value is ignored (recomputed from items).",
     hidden: true,
     category: "Goals"
 
@@ -24,9 +25,20 @@ defmodule Therobotplans.Domains.Goals.Tools.KeyResultUpdate do
       |> Map.put(:due_on, parse_date(Args.get(args, :due_on)))
 
     case Goals.update_key_result(Args.get(args, :key_result), attrs) do
-      {:ok, kr} -> {:ok, %{id: kr.id, current_value: kr.current_value, target_value: kr.target_value, status: kr.status}}
-      {:error, :not_found} -> {:error, "Key result not found"}
-      {:error, cs} -> {:error, "Failed: #{inspect(cs.errors)}"}
+      {:ok, kr} ->
+        {:ok,
+         %{
+           id: kr.id,
+           current_value: kr.current_value,
+           target_value: kr.target_value,
+           status: kr.status
+         }}
+
+      {:error, :not_found} ->
+        {:error, "Key result not found"}
+
+      {:error, cs} ->
+        {:error, "Failed: #{inspect(cs.errors)}"}
     end
   end
 

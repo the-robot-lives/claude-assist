@@ -118,9 +118,10 @@ if config_env() == :prod do
     config :noizu_sendgrid, api_key: sendgrid_key
   end
 
-  config :therobotplans, :mail_from,
-    {System.get_env("MAIL_FROM_NAME", "Therobotplans"),
-     System.get_env("MAIL_FROM_ADDRESS", "noreply@starter.local")}
+  config :therobotplans,
+         :mail_from,
+         {System.get_env("MAIL_FROM_NAME", "Therobotplans"),
+          System.get_env("MAIL_FROM_ADDRESS", "noreply@starter.local")}
 
   # ── Storage (S3/MinIO) ──────────────────────────────────────────
   if s3_bucket = System.get_env("S3_BUCKET") do
@@ -148,13 +149,15 @@ if config_env() == :prod do
     # openid_connect 1.0 takes an explicit config map (atom keys) at each call
     # site rather than a named provider registered in app env.
     config :therobotplans, :oidc_provider, %{
-      discovery_document_uri: System.get_env("OIDC_ISSUER") <> "/.well-known/openid-configuration",
+      discovery_document_uri:
+        System.get_env("OIDC_ISSUER") <> "/.well-known/openid-configuration",
       client_id: oidc_client_id,
       client_secret: System.get_env("OIDC_CLIENT_SECRET"),
       redirect_uri: System.get_env("OIDC_REDIRECT_URI") || "https://#{host}/auth/oidc/callback",
       response_type: "code",
       scope: "openid email profile"
     }
+
     config :therobotplans, :oidc_enabled, true
   end
 
@@ -164,8 +167,23 @@ if config_env() == :prod do
     sp_key = System.get_env("SAML_SP_KEY", "") |> String.replace("\\n", "\n")
 
     config :samly, Samly.Provider,
-      idp: [%{id: "default", sp_id: "default", base_url: "https://#{host}/sso/saml", metadata_url: saml_metadata}],
-      sp: [%{id: "default", entity_id: System.get_env("SAML_SP_ENTITY_ID") || "https://#{host}", certfile_data: sp_cert, keyfile_data: sp_key}]
+      idp: [
+        %{
+          id: "default",
+          sp_id: "default",
+          base_url: "https://#{host}/sso/saml",
+          metadata_url: saml_metadata
+        }
+      ],
+      sp: [
+        %{
+          id: "default",
+          entity_id: System.get_env("SAML_SP_ENTITY_ID") || "https://#{host}",
+          certfile_data: sp_cert,
+          keyfile_data: sp_key
+        }
+      ]
+
     config :therobotplans, :saml_enabled, true
   end
 
@@ -187,6 +205,7 @@ if config_env() == :prod do
       config :ueberauth, Ueberauth.Strategy.Google.OAuth,
         client_id: google_id,
         client_secret: System.get_env("GOOGLE_CLIENT_SECRET")
+
       config :therobotplans, :google_enabled, true
       [{:google, {Ueberauth.Strategy.Google, [default_scope: "email profile"]}} | oauth_providers]
     else
@@ -198,8 +217,13 @@ if config_env() == :prod do
       config :ueberauth, Ueberauth.Strategy.Facebook.OAuth,
         client_id: fb_id,
         client_secret: System.get_env("FACEBOOK_CLIENT_SECRET")
+
       config :therobotplans, :facebook_enabled, true
-      [{:facebook, {Ueberauth.Strategy.Facebook, [default_scope: "email,public_profile"]}} | oauth_providers]
+
+      [
+        {:facebook, {Ueberauth.Strategy.Facebook, [default_scope: "email,public_profile"]}}
+        | oauth_providers
+      ]
     else
       oauth_providers
     end
@@ -209,6 +233,7 @@ if config_env() == :prod do
       config :ueberauth, Ueberauth.Strategy.Github.OAuth,
         client_id: gh_id,
         client_secret: System.get_env("GITHUB_CLIENT_SECRET")
+
       config :therobotplans, :github_enabled, true
       [{:github, {Ueberauth.Strategy.Github, [default_scope: "user:email"]}} | oauth_providers]
     else

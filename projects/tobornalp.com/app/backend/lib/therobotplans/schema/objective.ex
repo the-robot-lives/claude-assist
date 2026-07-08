@@ -28,7 +28,17 @@ defmodule Therobotplans.Schema.Objective do
 
   def changeset(objective, attrs) do
     objective
-    |> cast(attrs, [:organization_id, :project_id, :parent_id, :owner_id, :level, :title, :description, :status, :period])
+    |> cast(attrs, [
+      :organization_id,
+      :project_id,
+      :parent_id,
+      :owner_id,
+      :level,
+      :title,
+      :description,
+      :status,
+      :period
+    ])
     |> validate_required([:organization_id, :title])
     |> validate_inclusion(:level, @levels)
     |> validate_inclusion(:status, @statuses)

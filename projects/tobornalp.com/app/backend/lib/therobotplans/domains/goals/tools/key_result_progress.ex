@@ -1,7 +1,8 @@
 defmodule Therobotplans.Domains.Goals.Tools.KeyResultProgress do
   use Noizu.MCP.Server.Tool,
     name: "KeyResult.Progress",
-    description: "Force-recompute an item-backed key result's current_value from its linked items, and return the recomputed value.",
+    description:
+      "Force-recompute an item-backed key result's current_value from its linked items, and return the recomputed value.",
     hidden: true,
     category: "Goals",
     annotations: [read_only_hint: true]

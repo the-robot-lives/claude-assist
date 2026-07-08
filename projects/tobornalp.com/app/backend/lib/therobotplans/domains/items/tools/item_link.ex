@@ -8,7 +8,10 @@ defmodule Therobotplans.Domains.Items.Tools.ItemLink do
   input do
     field :source_item_id, :string, required: true, description: "Source item UUID"
     field :target_item_id, :string, required: true, description: "Target item UUID"
-    field :link_type, :string, required: true, description: "blocks, blocked_by, relates_to, duplicates, parent_of, child_of"
+
+    field :link_type, :string,
+      required: true,
+      description: "blocks, blocked_by, relates_to, duplicates, parent_of, child_of"
   end
 
   alias Therobotplans.Domains.Items
@@ -22,6 +25,7 @@ defmodule Therobotplans.Domains.Items.Tools.ItemLink do
     case Items.link(source, target, link_type) do
       {:ok, link} ->
         {:ok, %{id: link.id, source: source, target: target, link_type: link_type}}
+
       {:error, changeset} ->
         {:error, "Failed: #{inspect(changeset.errors)}"}
     end

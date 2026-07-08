@@ -9,7 +9,10 @@ defmodule Therobotplans.Schema.Authz.Policy do
     field :policy_document, :map
     field :is_system, :boolean, default: false
     field :is_active, :boolean, default: true
-    belongs_to :created_by_user, Therobotplans.Schema.Users.User, type: Ecto.UUID, foreign_key: :created_by
+
+    belongs_to :created_by_user, Therobotplans.Schema.Users.User,
+      type: Ecto.UUID,
+      foreign_key: :created_by
 
     has_many :group_policies, Therobotplans.Schema.Authz.GroupPolicy
 
@@ -26,7 +29,9 @@ defmodule Therobotplans.Schema.Authz.Policy do
 
   defp validate_policy_document(changeset) do
     case get_change(changeset, :policy_document) do
-      nil -> changeset
+      nil ->
+        changeset
+
       doc ->
         case doc do
           %{"statements" => statements} when is_list(statements) -> changeset

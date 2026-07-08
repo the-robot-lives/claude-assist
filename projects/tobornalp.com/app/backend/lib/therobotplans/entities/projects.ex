@@ -9,8 +9,17 @@ defmodule Therobotplans.Projects do
 
   def create_with_owner(attrs, user_id, context \\ Noizu.Context.system()) do
     Therobotplans.Repo.transaction(fn ->
-      with {:ok, project} <- %Schema{} |> Schema.changeset(Map.put(attrs, :created_by, user_id)) |> Therobotplans.Repo.insert(),
-           {:ok, _membership} <- Therobotplans.Authz.ScopedMemberships.add_member("project", project.id, user_id, "owner") do
+      with {:ok, project} <-
+             %Schema{}
+             |> Schema.changeset(Map.put(attrs, :created_by, user_id))
+             |> Therobotplans.Repo.insert(),
+           {:ok, _membership} <-
+             Therobotplans.Authz.ScopedMemberships.add_member(
+               "project",
+               project.id,
+               user_id,
+               "owner"
+             ) do
         project
       else
         {:error, reason} -> Therobotplans.Repo.rollback(reason)
@@ -25,7 +34,9 @@ defmodule Therobotplans.Projects do
     case Ecto.Adapters.SQL.query(Therobotplans.Repo, sql, params) do
       {:ok, %{rows: rows, columns: cols}} ->
         Enum.map(rows, fn row -> Enum.zip(cols, row) |> Map.new() end)
-      _ -> []
+
+      _ ->
+        []
     end
   end
 
@@ -42,7 +53,9 @@ defmodule Therobotplans.Projects do
 
   def archive(id) do
     case Therobotplans.Repo.get(Schema, id) do
-      nil -> {:error, :not_found}
+      nil ->
+        {:error, :not_found}
+
       project ->
         project
         |> Schema.changeset(%{status: "archived", archived_at: DateTime.utc_now()})
@@ -52,7 +65,9 @@ defmodule Therobotplans.Projects do
 
   def unarchive(id) do
     case Therobotplans.Repo.get(Schema, id) do
-      nil -> {:error, :not_found}
+      nil ->
+        {:error, :not_found}
+
       project ->
         project
         |> Schema.changeset(%{status: "active", archived_at: nil})
@@ -62,7 +77,9 @@ defmodule Therobotplans.Projects do
 
   def delete_project(id) do
     case Therobotplans.Repo.get(Schema, id) do
-      nil -> {:error, :not_found}
+      nil ->
+        {:error, :not_found}
+
       project ->
         project
         |> Schema.changeset(%{status: "deleted"})

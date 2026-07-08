@@ -7,7 +7,10 @@ defmodule Therobotplans.Domains.Items.Tools.ItemList do
     annotations: [read_only_hint: true]
 
   input do
-    field :organization, :string, required: true, description: "Organization slug or UUID (required)"
+    field :organization, :string,
+      required: true,
+      description: "Organization slug or UUID (required)"
+
     field :status, :string, description: "Filter by status"
     field :item_type, :string, description: "Filter by type slug"
     field :priority, :string, description: "Filter by priority"
@@ -43,14 +46,22 @@ defmodule Therobotplans.Domains.Items.Tools.ItemList do
 
         items = Items.list(opts)
 
-        {:ok, %{
-          items: Enum.map(items, fn t ->
-            %{id: t.id, title: t.title, item_type: t.item_type,
-              status: t.status, priority: t.priority, assignee: t.assignee,
-              created_at: t.inserted_at}
-          end),
-          count: length(items)
-        }}
+        {:ok,
+         %{
+           items:
+             Enum.map(items, fn t ->
+               %{
+                 id: t.id,
+                 title: t.title,
+                 item_type: t.item_type,
+                 status: t.status,
+                 priority: t.priority,
+                 assignee: t.assignee,
+                 created_at: t.inserted_at
+               }
+             end),
+           count: length(items)
+         }}
     end
   end
 end

@@ -5,7 +5,10 @@ defmodule Therobotplans.Versioned.Descriptions.Description do
   @repo Therobotplans.Versioned.Descriptions
   @sref "versioned-description"
   @derive Noizu.Entity.Store.Ecto.EntityProtocol
-  @persistence ecto_store(Therobotplans.Schema.Versioned.Descriptions.Description, Therobotplans.Repo)
+  @persistence ecto_store(
+                 Therobotplans.Schema.Versioned.Descriptions.Description,
+                 Therobotplans.Repo
+               )
   def_entity do
     id(:uuid)
     field :title, nil, :string

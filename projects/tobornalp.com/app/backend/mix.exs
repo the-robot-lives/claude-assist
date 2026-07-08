@@ -54,7 +54,6 @@ defmodule Therobotplans.MixProject do
       {:ueberauth_github, "~> 0.8"},
       # {:ueberauth_linkedin, "~> 0.3"}, # incompatible oauth2 dep — needs replacement
 
-
       # Noizu
       {:noizu_labs_entities, "~> 0.3.0"},
       {:semaphore, "~> 1.0"},
@@ -64,7 +63,7 @@ defmodule Therobotplans.MixProject do
 
       # GenAI
       {:genai, "~> 0.3.0"},
-      #{:ex_llama, "~> 0.2.0"},
+      # {:ex_llama, "~> 0.2.0"},
 
       # Routing
       {:syn, "~> 3.3"},
@@ -100,8 +99,6 @@ defmodule Therobotplans.MixProject do
 
       # Test
       {:junit_formatter, "~> 3.4", only: [:test]}
-
-
     ]
   end
 

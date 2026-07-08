@@ -1,5 +1,6 @@
 replicas: 1
 domain: tobornalp.com
+appDomain: app.tobornalp.com
 
 backend:
   image: ops.noizu.com/tobornalp.com/backend:v1.0.0
@@ -72,6 +73,13 @@ mail:
 
 sso:
   requireInvite: false
+  # SSO availability by email domain. Format:
+  # "example.com=oidc;corp.example=google,oidc"
+  domains: "tobornalp.com=oidc"
+  # Domains whose SSO registrations are approved immediately. All other SSO
+  # registrations remain pending unless an invite activates them. Format:
+  # "example.com;corp.example" or "*" for every SSO-enabled domain.
+  autoApproveDomains: ""
   oidc:
     # Default OIDC issuer for portfolio services (Authentik at auth.noizu.com)
     # Example: https://auth.noizu.com/application/o/{app-slug}/
@@ -142,3 +150,20 @@ autoscaling:
 podDisruptionBudget:
   enabled: false
   minAvailable: 1
+
+sandbox:
+  enabled: false
+  image: ops.noizu.com/tobornalp.com/sandbox:v1.0.0
+  resources:
+    requests:
+      cpu: 200m
+      memory: 512Mi
+    limits:
+      cpu: "1"
+      memory: 1Gi
+  persistence:
+    enabled: false
+    size: 5Gi
+    storageClass: ""
+  service:
+    type: ClusterIP

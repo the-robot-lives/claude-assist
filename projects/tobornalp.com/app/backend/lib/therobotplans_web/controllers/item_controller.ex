@@ -52,8 +52,11 @@ defmodule TherobotplansWeb.ItemController do
       }
 
       case Items.create(attrs) do
-        {:ok, item} -> conn |> put_status(:created) |> json(%{item: item_to_json(item)})
-        {:error, changeset} -> conn |> put_status(:unprocessable_entity) |> json(%{errors: format_errors(changeset)})
+        {:ok, item} ->
+          conn |> put_status(:created) |> json(%{item: item_to_json(item)})
+
+        {:error, changeset} ->
+          conn |> put_status(:unprocessable_entity) |> json(%{errors: format_errors(changeset)})
       end
     else
       err -> handle_error(conn, err)
@@ -71,12 +74,21 @@ defmodule TherobotplansWeb.ItemController do
   # PATCH/PUT /api/v1/organizations/:org_id/items/:id
   def update(conn, %{"org_id" => org_id, "id" => id, "item" => attrs}) do
     with_org_item(conn, org_id, id, "member", fn _item ->
-      clean = Map.take(attrs, ~w(title description status priority assignee queue_id parent_id custom_fields stage_id iteration_id))
+      clean =
+        Map.take(
+          attrs,
+          ~w(title description status priority assignee queue_id parent_id custom_fields stage_id iteration_id)
+        )
 
       case Items.update(id, clean) do
-        {:ok, item} -> json(conn, %{item: item_to_json(item)})
-        {:error, :not_found} -> conn |> put_status(:not_found) |> json(%{error: "Item not found"})
-        {:error, changeset} -> conn |> put_status(:unprocessable_entity) |> json(%{errors: format_errors(changeset)})
+        {:ok, item} ->
+          json(conn, %{item: item_to_json(item)})
+
+        {:error, :not_found} ->
+          conn |> put_status(:not_found) |> json(%{error: "Item not found"})
+
+        {:error, changeset} ->
+          conn |> put_status(:unprocessable_entity) |> json(%{errors: format_errors(changeset)})
       end
     end)
   end
@@ -130,13 +142,16 @@ defmodule TherobotplansWeb.ItemController do
 
   defp links_to_json(%{outgoing: out, incoming: inc}) do
     %{
-      outgoing: Enum.map(out, &%{id: &1.id, link_type: &1.link_type, target_item_id: &1.target_item_id}),
-      incoming: Enum.map(inc, &%{id: &1.id, link_type: &1.link_type, source_item_id: &1.source_item_id})
+      outgoing:
+        Enum.map(out, &%{id: &1.id, link_type: &1.link_type, target_item_id: &1.target_item_id}),
+      incoming:
+        Enum.map(inc, &%{id: &1.id, link_type: &1.link_type, source_item_id: &1.source_item_id})
     }
   end
 
   defp validate_project(nil, _org_id), do: {:ok, nil}
   defp validate_project("", _org_id), do: {:ok, nil}
+
   defp validate_project(project_id, org_id) do
     case Therobotplans.Projects.get_project(project_id) do
       nil -> {:error, :project_not_in_org}
@@ -147,10 +162,19 @@ defmodule TherobotplansWeb.ItemController do
 
   defp handle_error(conn, err) do
     case err do
-      {:error, :not_found} -> conn |> put_status(:not_found) |> json(%{error: "Organization not found"})
-      {:error, :not_a_member} -> conn |> put_status(:forbidden) |> json(%{error: "Not a member of this organization"})
-      {:error, :project_not_in_org} -> conn |> put_status(:unprocessable_entity) |> json(%{error: "Project does not belong to this organization"})
-      _ -> conn |> put_status(:forbidden) |> json(%{error: "Insufficient permissions"})
+      {:error, :not_found} ->
+        conn |> put_status(:not_found) |> json(%{error: "Organization not found"})
+
+      {:error, :not_a_member} ->
+        conn |> put_status(:forbidden) |> json(%{error: "Not a member of this organization"})
+
+      {:error, :project_not_in_org} ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> json(%{error: "Project does not belong to this organization"})
+
+      _ ->
+        conn |> put_status(:forbidden) |> json(%{error: "Insufficient permissions"})
     end
   end
 

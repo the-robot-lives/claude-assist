@@ -1,7 +1,8 @@
 defmodule Therobotplans.Domains.Goals.Tools.ObjectiveList do
   use Noizu.MCP.Server.Tool,
     name: "Objective.List",
-    description: "List objectives for an organization, optionally filtered by owner/level/status.",
+    description:
+      "List objectives for an organization, optionally filtered by owner/level/status.",
     hidden: true,
     category: "Goals",
     annotations: [read_only_hint: true]
@@ -28,8 +29,12 @@ defmodule Therobotplans.Domains.Goals.Tools.ObjectiveList do
           if p = Args.get(args, :project), do: Resolve.project(p), else: nil
 
         opts =
-          [owner_id: Args.get(args, :owner_id), level: Args.get(args, :level),
-           status: Args.get(args, :status), project_id: project && project.id]
+          [
+            owner_id: Args.get(args, :owner_id),
+            level: Args.get(args, :level),
+            status: Args.get(args, :status),
+            project_id: project && project.id
+          ]
           |> Enum.reject(fn {_k, v} -> is_nil(v) end)
 
         objs = Goals.list_objectives(org_id, opts)
@@ -38,8 +43,15 @@ defmodule Therobotplans.Domains.Goals.Tools.ObjectiveList do
          %{
            objectives:
              Enum.map(objs, fn o ->
-               %{id: o.id, title: o.title, level: o.level, status: o.status, period: o.period,
-                 owner_id: o.owner_id, progress: Goals.objective_progress(o.id)}
+               %{
+                 id: o.id,
+                 title: o.title,
+                 level: o.level,
+                 status: o.status,
+                 period: o.period,
+                 owner_id: o.owner_id,
+                 progress: Goals.objective_progress(o.id)
+               }
              end)
          }}
     end

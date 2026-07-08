@@ -28,7 +28,12 @@ defmodule Therobotplans.Organizations do
     Therobotplans.Repo.transaction(fn ->
       with {:ok, org} <- %Schema{} |> Schema.changeset(attrs) |> Therobotplans.Repo.insert(),
            {:ok, _membership} <-
-             Therobotplans.Authz.ScopedMemberships.add_member("organization", org.id, user_id, "owner") do
+             Therobotplans.Authz.ScopedMemberships.add_member(
+               "organization",
+               org.id,
+               user_id,
+               "owner"
+             ) do
         org
       else
         {:error, reason} -> Therobotplans.Repo.rollback(reason)

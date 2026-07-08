@@ -23,7 +23,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile.dev
-    image: ${PROJECT_DIR:-therobotplans.com}/backend:dev
+    image: ${PROJECT_DIR:-tobornalp.com}/backend:dev
     depends_on:
       migrations:
         condition: service_completed_successfully
@@ -54,7 +54,7 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile.dev
-    image: ${PROJECT_DIR:-therobotplans.com}/frontend:dev
+    image: ${PROJECT_DIR:-tobornalp.com}/frontend:dev
     command: >
       sh -c "
         if [ -f .npmrc.template ]; then
@@ -85,7 +85,7 @@ services:
     build:
       context: ./nginx
     ports:
-      - "${PORT:-8093}:80"
+      - "${PORT:-8094}:80"
 
 volumes:
   backend_build:

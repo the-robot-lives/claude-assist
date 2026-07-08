@@ -204,6 +204,8 @@ defmodule Therobotplans.Domains.Goals do
   defp maybe_filter(query, _field, nil), do: query
   defp maybe_filter(query, field, val), do: where(query, [o], field(o, ^field) == ^val)
 
-  defp maybe_recompute({:ok, %KeyResult{id: id, auto_progress: true}}), do: recompute_progress(id) |> then(fn _ -> {:ok, Repo.get(KeyResult, id)} end)
+  defp maybe_recompute({:ok, %KeyResult{id: id, auto_progress: true}}),
+    do: recompute_progress(id) |> then(fn _ -> {:ok, Repo.get(KeyResult, id)} end)
+
   defp maybe_recompute(other), do: other
 end

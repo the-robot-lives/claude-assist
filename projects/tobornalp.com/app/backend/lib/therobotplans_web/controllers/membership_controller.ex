@@ -79,5 +79,4 @@ defmodule TherobotplansWeb.MembershipController do
       id -> id
     end
   end
-
 end

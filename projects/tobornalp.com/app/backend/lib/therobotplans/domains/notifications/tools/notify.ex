@@ -15,7 +15,11 @@ defmodule Therobotplans.Domains.Notifications.Tools.Notify do
     field :body, :string, description: "Message body (<=128 chars). Required unless ping/pong."
     field :subject_type, :string, description: "Optional subject pointer type (e.g. item)"
     field :subject_id, :string, description: "Optional subject pointer id"
-    field :ping, :boolean, default: false, description: "Send a ping; recipients should reply with a pong"
+
+    field :ping, :boolean,
+      default: false,
+      description: "Send a ping; recipients should reply with a pong"
+
     field :pong_to, :string, description: "Reply to a ping: the originating ping notification id"
   end
 
@@ -74,11 +78,20 @@ defmodule Therobotplans.Domains.Notifications.Tools.Notify do
           {:error, "Notify failed: #{inspect(reason)}"}
       end
     else
-      {:scope, {:error, :org_not_found}} -> {:error, "Organization '#{org_ref}' not found"}
-      {:scope, {:error, :project_not_found}} -> {:error, "Project '#{project_ref}' not found"}
-      {:scope, {:error, :project_not_in_org}} -> {:error, "Project does not belong to this organization"}
-      {:error, :body_required} -> {:error, "body is required for a #{kind}"}
-      {:error, :too_long} -> {:error, "body exceeds 128 characters"}
+      {:scope, {:error, :org_not_found}} ->
+        {:error, "Organization '#{org_ref}' not found"}
+
+      {:scope, {:error, :project_not_found}} ->
+        {:error, "Project '#{project_ref}' not found"}
+
+      {:scope, {:error, :project_not_in_org}} ->
+        {:error, "Project does not belong to this organization"}
+
+      {:error, :body_required} ->
+        {:error, "body is required for a #{kind}"}
+
+      {:error, :too_long} ->
+        {:error, "body exceeds 128 characters"}
     end
   end
 

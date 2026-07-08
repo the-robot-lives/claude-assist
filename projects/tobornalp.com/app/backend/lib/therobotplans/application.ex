@@ -15,30 +15,33 @@ defmodule Therobotplans.Application do
         []
       end
 
-    children = [
-      TherobotplansWeb.Telemetry,
-      Therobotplans.Repo,
-      {Ecto.Migrator,
-       repos: Application.fetch_env!(:therobotplans, :ecto_repos), skip: skip_migrations?()},
-      {DNSCluster, query: Application.get_env(:therobotplans, :dns_cluster_query) || :ignore},
-      {Phoenix.PubSub, name: Therobotplans.PubSub},
-      Therobotplans.Redis,
-      Noizu.LiveViewEventServer,
-      {Oban, Application.fetch_env!(:therobotplans, Oban)}
-    ] ++ samly_children ++ [
-      Therobotplans.Events.WebhookHandler,
-      # MCP servers (root aggregator + domain servers).
-      # GOTCHA: every server MUST be a child here — the supervised process
-      # starts its SSE Registry; a server omitted from this list compiles and
-      # routes but its /mcp endpoint is dead. Keep in sync with the host:
-      # scopes in TherobotplansWeb.Router and the MCPServers catalog.
-      Therobotplans.MCP,
-      Therobotplans.MCP.Projects,
-      Therobotplans.Domains.Items.MCP,
-      Therobotplans.Domains.Notifications.MCP,
-      Therobotplans.Domains.Goals.MCP,
-      TherobotplansWeb.Endpoint
-    ]
+    children =
+      [
+        TherobotplansWeb.Telemetry,
+        Therobotplans.Repo,
+        {Ecto.Migrator,
+         repos: Application.fetch_env!(:therobotplans, :ecto_repos), skip: skip_migrations?()},
+        {DNSCluster, query: Application.get_env(:therobotplans, :dns_cluster_query) || :ignore},
+        {Phoenix.PubSub, name: Therobotplans.PubSub},
+        Therobotplans.Redis,
+        Noizu.LiveViewEventServer,
+        {Oban, Application.fetch_env!(:therobotplans, Oban)}
+      ] ++
+        samly_children ++
+        [
+          Therobotplans.Events.WebhookHandler,
+          # MCP servers (root aggregator + domain servers).
+          # GOTCHA: every server MUST be a child here — the supervised process
+          # starts its SSE Registry; a server omitted from this list compiles and
+          # routes but its /mcp endpoint is dead. Keep in sync with the host:
+          # scopes in TherobotplansWeb.Router and the MCPServers catalog.
+          Therobotplans.MCP,
+          Therobotplans.MCP.Projects,
+          Therobotplans.Domains.Items.MCP,
+          Therobotplans.Domains.Notifications.MCP,
+          Therobotplans.Domains.Goals.MCP,
+          TherobotplansWeb.Endpoint
+        ]
 
     opts = [strategy: :one_for_one, name: Therobotplans.Supervisor]
     Supervisor.start_link(children, opts)

@@ -7,19 +7,25 @@ defmodule Therobotplans.Schema.Users.User do
     field :user_name, :string
     field :handle, :string
     belongs_to :name, Therobotplans.Schema.Versioned.Names.Name, type: Ecto.UUID
-    belongs_to :description, Therobotplans.Schema.Versioned.Descriptions.Description, type: Ecto.UUID
+
+    belongs_to :description, Therobotplans.Schema.Versioned.Descriptions.Description,
+      type: Ecto.UUID
+
     belongs_to :invite_token, Therobotplans.Schema.Organizations.InviteToken, type: Ecto.UUID
     belongs_to :approved_by_user, __MODULE__, type: Ecto.UUID
     field :email, :string
     field :hashed_password, :string
+
     field :status, Ecto.Enum,
       values: [:active, :pending, :unverified, :waitlist, :suspended, :deleted, :other],
       default: :active
+
     field :mobile_phone, :string
     field :profile_completed_at, :utc_datetime_usec
     field :approved_at, :utc_datetime_usec
     field :verified, :boolean, default: false
     field :flagged, :boolean, default: false
+    field :admin, :boolean, default: false
     field :consent_preferences, :map
     field :consent_updated_at, :utc_datetime_usec
     field :deleted_at, :utc_datetime_usec
@@ -43,6 +49,7 @@ defmodule Therobotplans.Schema.Users.User do
       :approved_at,
       :verified,
       :flagged,
+      :admin,
       :consent_preferences,
       :consent_updated_at
     ])

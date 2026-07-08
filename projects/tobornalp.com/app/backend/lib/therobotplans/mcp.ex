@@ -15,16 +15,16 @@ defmodule Therobotplans.MCP do
         "ToolDefinition, ToolHelp, ToolCall) to find and invoke all available tools."
 
   # Projects
-  tool Therobotplans.MCP.Projects.Tools.Overview, category: "Projects"
-  tool Therobotplans.MCP.Projects.Tools.ProjectCreate, category: "Projects"
-  tool Therobotplans.MCP.Projects.Tools.ProjectGet, category: "Projects"
-  tool Therobotplans.MCP.Projects.Tools.ProjectUpdate, category: "Projects"
-  tool Therobotplans.MCP.Projects.Tools.ProjectList, category: "Projects"
+  tool(Therobotplans.MCP.Projects.Tools.Overview, category: "Projects")
+  tool(Therobotplans.MCP.Projects.Tools.ProjectCreate, category: "Projects")
+  tool(Therobotplans.MCP.Projects.Tools.ProjectGet, category: "Projects")
+  tool(Therobotplans.MCP.Projects.Tools.ProjectUpdate, category: "Projects")
+  tool(Therobotplans.MCP.Projects.Tools.ProjectList, category: "Projects")
 
   # Discovery
-  tool Therobotplans.Tools.ToolSummary
-  tool Therobotplans.Tools.ToolSearch
-  tool Therobotplans.Tools.ToolDefinition
-  tool Therobotplans.Tools.ToolCall
-  tool Therobotplans.Tools.ToolHelp
+  tool(Therobotplans.Tools.ToolSummary)
+  tool(Therobotplans.Tools.ToolSearch)
+  tool(Therobotplans.Tools.ToolDefinition)
+  tool(Therobotplans.Tools.ToolCall)
+  tool(Therobotplans.Tools.ToolHelp)
 end

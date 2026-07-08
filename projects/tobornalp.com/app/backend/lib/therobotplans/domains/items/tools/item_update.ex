@@ -5,7 +5,7 @@ defmodule Therobotplans.Domains.Items.Tools.ItemUpdate do
     hidden: true,
     category: "Items"
 
-  input_schema %{
+  input_schema(%{
     "type" => "object",
     "properties" => %{
       "item_id" => %{"type" => "string", "description" => "Item UUID"},
@@ -17,24 +17,40 @@ defmodule Therobotplans.Domains.Items.Tools.ItemUpdate do
       "project_id" => %{"type" => "string", "description" => "New project UUID"},
       "queue_id" => %{"type" => "string", "description" => "New queue UUID"},
       "parent_id" => %{"type" => "string", "description" => "New parent UUID"},
-      "custom_fields" => %{"type" => "object", "description" => "Fields to merge into existing custom_fields"}
+      "custom_fields" => %{
+        "type" => "object",
+        "description" => "Fields to merge into existing custom_fields"
+      }
     },
     "required" => ["item_id"]
-  }
+  })
 
   alias Therobotplans.Domains.Items
 
   @impl true
   def call(args, _ctx) do
     item_id = args["item_id"]
-    attrs = extract(args, ~w(title description status priority assignee project_id queue_id parent_id custom_fields))
+
+    attrs =
+      extract(
+        args,
+        ~w(title description status priority assignee project_id queue_id parent_id custom_fields)
+      )
 
     case Items.update(item_id, attrs) do
       {:ok, item} ->
-        {:ok, %{id: item.id, title: item.title, status: item.status,
-                priority: item.priority, updated_at: item.updated_at}}
+        {:ok,
+         %{
+           id: item.id,
+           title: item.title,
+           status: item.status,
+           priority: item.priority,
+           updated_at: item.updated_at
+         }}
+
       {:error, :not_found} ->
         {:error, "Item '#{item_id}' not found"}
+
       {:error, changeset} ->
         {:error, "Failed: #{inspect(changeset.errors)}"}
     end

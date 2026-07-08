@@ -64,7 +64,9 @@ defmodule TherobotplansWeb.AuthController do
         conn |> put_status(:unauthorized) |> json(%{error: "Invalid or expired invite token"})
 
       {:error, changeset} when is_struct(changeset, Ecto.Changeset) ->
-        conn |> put_status(:unprocessable_entity) |> json(%{errors: format_changeset_errors(changeset)})
+        conn
+        |> put_status(:unprocessable_entity)
+        |> json(%{errors: format_changeset_errors(changeset)})
 
       {:error, reason} ->
         conn |> put_status(:unprocessable_entity) |> json(%{error: to_string(reason)})
@@ -76,7 +78,11 @@ defmodule TherobotplansWeb.AuthController do
   end
 
   def login(conn, %{"email" => email, "password" => password}) do
-    case Therobotplans.Users.Credentials.authenticate({:login, {email, password}}, Noizu.Context.system(), []) do
+    case Therobotplans.Users.Credentials.authenticate(
+           {:login, {email, password}},
+           Noizu.Context.system(),
+           []
+         ) do
       {:ok, session} ->
         {:ok, access_token, _} =
           Guardian.encode_and_sign(session, %{}, token_type: "access", ttl: {1, :hour})
@@ -240,10 +246,16 @@ defmodule TherobotplansWeb.AuthController do
     end
   end
 
-  def verify_password_reset(conn, %{"email" => email, "code" => code, "new_password" => new_password}) do
+  def verify_password_reset(conn, %{
+        "email" => email,
+        "code" => code,
+        "new_password" => new_password
+      }) do
     case Therobotplans.Auth.SmartTokenAuth.verify_password_reset(email, code, new_password, conn) do
       {:ok, _credential} ->
-        conn |> put_status(:ok) |> json(%{message: "Password has been reset. You can now log in."})
+        conn
+        |> put_status(:ok)
+        |> json(%{message: "Password has been reset. You can now log in."})
 
       {:error, _reason} ->
         conn |> put_status(:unauthorized) |> json(%{error: "Invalid or expired code"})
@@ -329,17 +341,21 @@ defmodule TherobotplansWeb.AuthController do
         conn |> put_status(:ok) |> json(%{message: "Email verified successfully."})
 
       {:error, _} ->
-        conn |> put_status(:unauthorized) |> json(%{error: "Invalid or expired verification link"})
+        conn
+        |> put_status(:unauthorized)
+        |> json(%{error: "Invalid or expired verification link"})
     end
   end
 
   defp create_session_for_user(user) do
     user_ref = Therobotplans.Users.User.ref(user.id)
+
     session_entity = %Therobotplans.Users.Sessions.UserSession{
       user: user_ref,
       status: :active,
       details: %{}
     }
+
     Therobotplans.Users.Sessions.create(session_entity, Noizu.Context.system())
   end
 
@@ -348,7 +364,9 @@ defmodule TherobotplansWeb.AuthController do
       {:ref, _, id} ->
         {:ok, user} = Therobotplans.Users.get_user(id, Noizu.Context.system())
         user
-      %Therobotplans.Users.User{} = user -> user
+
+      %Therobotplans.Users.User{} = user ->
+        user
     end
   end
 
@@ -423,12 +441,14 @@ defmodule TherobotplansWeb.AuthController do
   end
 
   defp derive_host(nil), do: nil
+
   defp derive_host(url) when is_binary(url) do
     case URI.parse(url) do
       %URI{host: host} when is_binary(host) and host != "" -> host
       _ -> nil
     end
   end
+
   defp derive_host(conn) do
     case conn.host do
       host when is_binary(host) and host != "" -> host

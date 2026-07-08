@@ -162,7 +162,9 @@ defmodule Therobotplans.Domains.Items do
 
   defp ensure_prefix(org_id, project_id) do
     project = Repo.get!(Project, project_id)
-    project.key_prefix || claim_prefix(project, Project, org_id, ItemKey.derive_prefix(project.slug), 0)
+
+    project.key_prefix ||
+      claim_prefix(project, Project, org_id, ItemKey.derive_prefix(project.slug), 0)
   end
 
   defp claim_prefix(_row, _mod, _org_id, _base, n) when n >= @max_prefix_attempts do
@@ -195,8 +197,18 @@ defmodule Therobotplans.Domains.Items do
   end
 
   defp prefix_taken?(org_id, candidate) do
-    org_use = Repo.one(from o in Organization, where: o.id == ^org_id and o.key_prefix == ^candidate, select: 1)
-    proj_use = Repo.one(from p in Project, where: p.organization_id == ^org_id and p.key_prefix == ^candidate, select: 1)
+    org_use =
+      Repo.one(
+        from o in Organization, where: o.id == ^org_id and o.key_prefix == ^candidate, select: 1
+      )
+
+    proj_use =
+      Repo.one(
+        from p in Project,
+          where: p.organization_id == ^org_id and p.key_prefix == ^candidate,
+          select: 1
+      )
+
     org_use != nil or proj_use != nil
   end
 
@@ -320,7 +332,8 @@ defmodule Therobotplans.Domains.Items do
     case Repo.get_by(ItemLink,
            source_item_id: source_id,
            target_item_id: target_id,
-           link_type: link_type) do
+           link_type: link_type
+         ) do
       nil -> {:error, :not_found}
       link -> Repo.delete(link)
     end
@@ -346,6 +359,9 @@ defmodule Therobotplans.Domains.Items do
   # a scalar keeps `==`. nil/[] are no-ops.
   defp maybe_filter(query, _field, nil), do: query
   defp maybe_filter(query, _field, []), do: query
-  defp maybe_filter(query, field, vals) when is_list(vals), do: where(query, [t], field(t, ^field) in ^vals)
+
+  defp maybe_filter(query, field, vals) when is_list(vals),
+    do: where(query, [t], field(t, ^field) in ^vals)
+
   defp maybe_filter(query, field, val), do: where(query, [t], field(t, ^field) == ^val)
 end

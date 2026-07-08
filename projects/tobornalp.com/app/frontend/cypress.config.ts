@@ -19,13 +19,13 @@ export default defineConfig({
       return config;
     },
     env: {
-      appName: process.env.CYPRESS_APP_NAME || "Start-App",
-      tagline: process.env.CYPRESS_TAGLINE || "Tagline",
-      siteDomain: process.env.CYPRESS_SITE_DOMAIN || "example.com",
-      appDomain: process.env.CYPRESS_APP_DOMAIN || "app.example.com",
+      appName: process.env.CYPRESS_APP_NAME || "tobornalp",
+      tagline: process.env.CYPRESS_TAGLINE || "AI-Native Operational Life Platform",
+      siteDomain: process.env.CYPRESS_SITE_DOMAIN || "tobornalp.com",
+      appDomain: process.env.CYPRESS_APP_DOMAIN || "app.tobornalp.com",
       apiUrl: process.env.CYPRESS_API_URL || "http://localhost:4000",
-      ssoDomain: process.env.CYPRESS_SSO_DOMAIN || "sso.example.com",
-      passwordDomain: process.env.CYPRESS_PASSWORD_DOMAIN || "example.com",
+      ssoDomain: process.env.CYPRESS_SSO_DOMAIN || "tobornalp.com",
+      passwordDomain: process.env.CYPRESS_PASSWORD_DOMAIN || "tobornalp.com",
     },
   },
 });

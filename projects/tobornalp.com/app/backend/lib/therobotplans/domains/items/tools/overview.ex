@@ -6,7 +6,8 @@ defmodule Therobotplans.Domains.Items.Tools.Overview do
     category: "Items"
 
   input do
-    field :organization, :string, description: "Organization slug or UUID — when given, lists that org's item types"
+    field :organization, :string,
+      description: "Organization slug or UUID — when given, lists that org's item types"
   end
 
   alias Therobotplans.Domains.Items
@@ -24,23 +25,32 @@ defmodule Therobotplans.Domains.Items.Tools.Overview do
 
     status_counts = Items.count_by_status()
 
-    {:ok, %{
-      domain: "Items",
-      subdomain: "items.tobor.locker",
-      status_counts: status_counts,
-      item_types: Enum.map(types, fn t ->
-        %{slug: t.slug, name: t.name, description: t.description}
-      end),
-      tools: %{
-        crud: ["Item.Create", "Item.Get", "Item.Update", "Item.List"],
-        cross_cutting: ["Item.Comment", "Item.Watch", "Item.Attach", "Item.Feed"],
-        links: ["Item.Link", "Item.Unlink"],
-        queues: ["Item.Queue.Create", "Item.Queue.Get", "Item.Queue.List", "Item.Queue.Feed"],
-        definitions: ["Item.Definition.Create", "Item.Definition.Get",
-                       "Item.Definition.Update", "Item.Definition.Delete"],
-        fields: ["Item.Field.Definition.Create", "Item.Field.Definition.Update",
-                  "Item.Field.Definition.Delete"]
-      }
-    }}
+    {:ok,
+     %{
+       domain: "Items",
+       subdomain: "items.tobor.locker",
+       status_counts: status_counts,
+       item_types:
+         Enum.map(types, fn t ->
+           %{slug: t.slug, name: t.name, description: t.description}
+         end),
+       tools: %{
+         crud: ["Item.Create", "Item.Get", "Item.Update", "Item.List"],
+         cross_cutting: ["Item.Comment", "Item.Watch", "Item.Attach", "Item.Feed"],
+         links: ["Item.Link", "Item.Unlink"],
+         queues: ["Item.Queue.Create", "Item.Queue.Get", "Item.Queue.List", "Item.Queue.Feed"],
+         definitions: [
+           "Item.Definition.Create",
+           "Item.Definition.Get",
+           "Item.Definition.Update",
+           "Item.Definition.Delete"
+         ],
+         fields: [
+           "Item.Field.Definition.Create",
+           "Item.Field.Definition.Update",
+           "Item.Field.Definition.Delete"
+         ]
+       }
+     }}
   end
 end

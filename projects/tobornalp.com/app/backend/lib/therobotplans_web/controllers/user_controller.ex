@@ -75,9 +75,7 @@ defmodule TherobotplansWeb.UserController do
 
     {_, _} =
       from(u in UserSchema, where: u.id == ^user.id)
-      |> Therobotplans.Repo.update_all(
-        set: [consent_preferences: prefs, consent_updated_at: now]
-      )
+      |> Therobotplans.Repo.update_all(set: [consent_preferences: prefs, consent_updated_at: now])
 
     conn
     |> put_status(:ok)

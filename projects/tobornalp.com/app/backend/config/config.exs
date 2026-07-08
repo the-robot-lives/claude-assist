@@ -26,8 +26,7 @@ config :therobotplans, TherobotplansWeb.Endpoint,
 config :noizu_sendgrid,
   api_key: System.get_env("SENDGRID_API_KEY") || "SG.dev-placeholder"
 
-config :therobotplans, :mail_from,
-  {"Therobotplans", "noreply@starter.local"}
+config :therobotplans, :mail_from, {"Therobotplans", "noreply@starter.local"}
 
 config :logger, :default_formatter,
   format: "$time $metadata[$level] $message\n",
@@ -60,12 +59,10 @@ config :junit_formatter,
 
 # Rate limiting
 config :hammer,
-  backend: {Hammer.Backend.ETS,
-    [expiry_ms: 60_000 * 60, cleanup_interval_ms: 60_000 * 10]}
+  backend: {Hammer.Backend.ETS, [expiry_ms: 60_000 * 60, cleanup_interval_ms: 60_000 * 10]}
 
 # SAML handler
-config :samly, Samly.Provider,
-  pipeline_handler: TherobotplansWeb.SAMLHandler
+config :samly, Samly.Provider, pipeline_handler: TherobotplansWeb.SAMLHandler
 
 # Background jobs
 config :therobotplans, Oban,

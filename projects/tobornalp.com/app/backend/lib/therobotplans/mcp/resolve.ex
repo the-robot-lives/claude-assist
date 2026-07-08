@@ -25,6 +25,7 @@ defmodule Therobotplans.MCP.Resolve do
 
   @doc "Resolve an organization ref (slug or UUID) to its UUID, or nil."
   def organization_id(nil), do: nil
+
   def organization_id(ref) when is_binary(ref) do
     cond do
       match?({:ok, _}, Ecto.UUID.cast(ref)) ->
@@ -37,6 +38,7 @@ defmodule Therobotplans.MCP.Resolve do
 
   @doc "Resolve an organization ref to its schema record, or nil."
   def organization(nil), do: nil
+
   def organization(ref) do
     case organization_id(ref) do
       nil -> nil
@@ -46,6 +48,7 @@ defmodule Therobotplans.MCP.Resolve do
 
   @doc "Resolve a project ref (slug or UUID) to its schema record, or nil."
   def project(nil), do: nil
+
   def project(ref) do
     case Ecto.UUID.cast(ref) do
       {:ok, uuid} ->
@@ -66,6 +69,7 @@ defmodule Therobotplans.MCP.Resolve do
   """
   def project_in_org(nil, _org_id), do: {:ok, nil}
   def project_in_org("", _org_id), do: {:ok, nil}
+
   def project_in_org(ref, org_id) do
     case project(ref) do
       nil -> {:error, :project_not_found}
@@ -85,6 +89,7 @@ defmodule Therobotplans.MCP.Resolve do
   `{:error, :project_not_in_org}` on failure.
   """
   def scope(org_ref, project_ref) when org_ref in [nil, ""], do: {:ok, nil, nil}
+
   def scope(org_ref, project_ref) do
     case organization_id(org_ref) do
       nil ->

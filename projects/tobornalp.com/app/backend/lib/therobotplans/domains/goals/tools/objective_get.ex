@@ -33,8 +33,15 @@ defmodule Therobotplans.Domains.Goals.Tools.ObjectiveGet do
            progress: Goals.objective_progress(o.id),
            key_results:
              Enum.map(o.key_results || [], fn kr ->
-               %{id: kr.id, title: kr.title, target: kr.target_value, current: kr.current_value,
-                 auto_progress: kr.auto_progress, status: kr.status, due_on: kr.due_on}
+               %{
+                 id: kr.id,
+                 title: kr.title,
+                 target: kr.target_value,
+                 current: kr.current_value,
+                 auto_progress: kr.auto_progress,
+                 status: kr.status,
+                 due_on: kr.due_on
+               }
              end),
            checkins:
              Enum.map(o.checkins || [], fn c ->

@@ -16,6 +16,7 @@ defmodule TherobotplansWeb.Router do
       signing_salt: "sso_session_salt",
       same_site: "Lax",
       max_age: 300
+
     plug :fetch_session
   end
 
@@ -68,6 +69,7 @@ defmodule TherobotplansWeb.Router do
   # children list — a server missing from any of the three is dead.
   scope "/", host: "projects." do
     pipe_through [:api]
+
     forward "/mcp",
             Noizu.MCP.Transport.StreamableHTTP.Plug,
             TherobotplansWeb.MCPConfig.plug_opts(Therobotplans.MCP.Projects)
@@ -75,6 +77,7 @@ defmodule TherobotplansWeb.Router do
 
   scope "/", host: "items." do
     pipe_through [:api]
+
     forward "/mcp",
             Noizu.MCP.Transport.StreamableHTTP.Plug,
             TherobotplansWeb.MCPConfig.plug_opts(Therobotplans.Domains.Items.MCP)
@@ -82,6 +85,7 @@ defmodule TherobotplansWeb.Router do
 
   scope "/", host: "notifications." do
     pipe_through [:api]
+
     forward "/mcp",
             Noizu.MCP.Transport.StreamableHTTP.Plug,
             TherobotplansWeb.MCPConfig.plug_opts(Therobotplans.Domains.Notifications.MCP)
@@ -89,6 +93,7 @@ defmodule TherobotplansWeb.Router do
 
   scope "/", host: "goals." do
     pipe_through [:api]
+
     forward "/mcp",
             Noizu.MCP.Transport.StreamableHTTP.Plug,
             TherobotplansWeb.MCPConfig.plug_opts(Therobotplans.Domains.Goals.MCP)
@@ -265,6 +270,7 @@ defmodule TherobotplansWeb.Router do
   # scopes so the per-domain hosts win for those hosts.
   scope "/", TherobotplansWeb do
     pipe_through [:api]
+
     forward "/mcp",
             Noizu.MCP.Transport.StreamableHTTP.Plug,
             TherobotplansWeb.MCPConfig.plug_opts(Therobotplans.MCP)

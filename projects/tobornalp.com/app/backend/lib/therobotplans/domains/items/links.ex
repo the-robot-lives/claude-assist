@@ -43,7 +43,8 @@ defmodule Therobotplans.Domains.Items.Links do
            item_id: item_id,
            entity_type: to_string(entity_type),
            entity_id: entity_id,
-           link_type: link_type) do
+           link_type: link_type
+         ) do
       nil -> {:error, :not_found}
       link -> Repo.delete(link)
     end

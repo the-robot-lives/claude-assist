@@ -3,7 +3,9 @@ defmodule Therobotplans.Auth.SmartTokenEmail do
     Therobotplans.Mailer.from()
     |> SendGrid.Email.add_to(to_email)
     |> SendGrid.Email.put_subject("Your Magic Link")
-    |> SendGrid.Email.put_text("Click here to sign in: #{magic_link}\n\nThis link expires in 15 minutes.")
+    |> SendGrid.Email.put_text(
+      "Click here to sign in: #{magic_link}\n\nThis link expires in 15 minutes."
+    )
     |> SendGrid.Email.put_html("""
     <h2>Sign In</h2>
     <p>Click the button below to sign in:</p>
@@ -18,7 +20,9 @@ defmodule Therobotplans.Auth.SmartTokenEmail do
     Therobotplans.Mailer.from()
     |> SendGrid.Email.add_to(to_email)
     |> SendGrid.Email.put_subject("Your Login Code: #{otp_code}")
-    |> SendGrid.Email.put_text("Your login code is: #{otp_code}\n\nThis code expires in 10 minutes.")
+    |> SendGrid.Email.put_text(
+      "Your login code is: #{otp_code}\n\nThis code expires in 10 minutes."
+    )
     |> SendGrid.Email.put_html("""
     <h2>Your Login Code</h2>
     <p style="font-size:32px;font-weight:bold;letter-spacing:8px;font-family:monospace;margin:24px 0;">#{otp_code}</p>
@@ -32,7 +36,9 @@ defmodule Therobotplans.Auth.SmartTokenEmail do
     Therobotplans.Mailer.from()
     |> SendGrid.Email.add_to(to_email)
     |> SendGrid.Email.put_subject("Password Reset Code: #{otp_code}")
-    |> SendGrid.Email.put_text("Your password reset code is: #{otp_code}\n\nThis code expires in 10 minutes.")
+    |> SendGrid.Email.put_text(
+      "Your password reset code is: #{otp_code}\n\nThis code expires in 10 minutes."
+    )
     |> SendGrid.Email.put_html("""
     <h2>Password Reset</h2>
     <p>Use this code to reset your password:</p>
@@ -47,7 +53,9 @@ defmodule Therobotplans.Auth.SmartTokenEmail do
     Therobotplans.Mailer.from()
     |> SendGrid.Email.add_to(to_email)
     |> SendGrid.Email.put_subject("Verify Your Email")
-    |> SendGrid.Email.put_text("Verify your email: #{verification_link}\n\nThis link expires in 24 hours.")
+    |> SendGrid.Email.put_text(
+      "Verify your email: #{verification_link}\n\nThis link expires in 24 hours."
+    )
     |> SendGrid.Email.put_html("""
     <h2>Verify Your Email</h2>
     <p>Click the button below to verify your email address:</p>

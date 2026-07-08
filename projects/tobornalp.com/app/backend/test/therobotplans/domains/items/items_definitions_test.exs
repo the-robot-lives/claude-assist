@@ -18,7 +18,8 @@ defmodule Therobotplans.Domains.ItemsDefinitionsTest do
   end
 
   test "global definition is visible from every scope", c do
-    {:ok, _} = Definitions.create_field(%{slug: "priority", label: "Priority", field_type: "select"})
+    {:ok, _} =
+      Definitions.create_field(%{slug: "priority", label: "Priority", field_type: "select"})
 
     assert length(Definitions.list_fields(nil, nil)) == 1
     assert length(Definitions.list_fields(c.org_id, nil)) == 1
@@ -27,20 +28,33 @@ defmodule Therobotplans.Domains.ItemsDefinitionsTest do
   end
 
   test "project scope overrides org scope overrides global", c do
-    {:ok, _} = Definitions.create_field(%{slug: "severity", label: "Global Severity", field_type: "select"})
-
     {:ok, _} =
       Definitions.create_field(%{
-        organization_id: c.org_id, slug: "severity", label: "Org Severity", field_type: "select"
+        slug: "severity",
+        label: "Global Severity",
+        field_type: "select"
       })
 
     {:ok, _} =
       Definitions.create_field(%{
-        organization_id: c.org_id, project_id: c.project_id, slug: "severity",
-        label: "Project Severity", field_type: "select"
+        organization_id: c.org_id,
+        slug: "severity",
+        label: "Org Severity",
+        field_type: "select"
       })
 
-    assert Definitions.resolve_field(c.org_id, c.project_id, "severity").label == "Project Severity"
+    {:ok, _} =
+      Definitions.create_field(%{
+        organization_id: c.org_id,
+        project_id: c.project_id,
+        slug: "severity",
+        label: "Project Severity",
+        field_type: "select"
+      })
+
+    assert Definitions.resolve_field(c.org_id, c.project_id, "severity").label ==
+             "Project Severity"
+
     assert Definitions.resolve_field(c.org_id, nil, "severity").label == "Org Severity"
     assert Definitions.resolve_field(nil, nil, "severity").label == "Global Severity"
   end
@@ -48,13 +62,20 @@ defmodule Therobotplans.Domains.ItemsDefinitionsTest do
   test "a project-scoped tombstone suppresses an inherited org definition", c do
     {:ok, _} =
       Definitions.create_field(%{
-        organization_id: c.org_id, slug: "environment", label: "Env", field_type: "text"
+        organization_id: c.org_id,
+        slug: "environment",
+        label: "Env",
+        field_type: "text"
       })
 
     {:ok, _} =
       Definitions.create_field(%{
-        organization_id: c.org_id, project_id: c.project_id, slug: "environment",
-        label: "suppressed", field_type: "text", disabled: true
+        organization_id: c.org_id,
+        project_id: c.project_id,
+        slug: "environment",
+        label: "suppressed",
+        field_type: "text",
+        disabled: true
       })
 
     assert Definitions.resolve_field(c.org_id, nil, "environment").label == "Env"
@@ -65,8 +86,20 @@ defmodule Therobotplans.Domains.ItemsDefinitionsTest do
   end
 
   test "effective_fields returns one row per slug (no duplicates)", c do
-    {:ok, _} = Definitions.create_field(%{slug: "component", label: "Global Component", field_type: "text"})
-    {:ok, _} = Definitions.create_field(%{organization_id: c.org_id, slug: "component", label: "Org Component", field_type: "text"})
+    {:ok, _} =
+      Definitions.create_field(%{
+        slug: "component",
+        label: "Global Component",
+        field_type: "text"
+      })
+
+    {:ok, _} =
+      Definitions.create_field(%{
+        organization_id: c.org_id,
+        slug: "component",
+        label: "Org Component",
+        field_type: "text"
+      })
 
     effective = Definitions.effective_fields(c.org_id, nil)
     assert Enum.count(effective, &(&1.slug == "component")) == 1

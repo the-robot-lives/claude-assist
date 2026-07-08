@@ -29,7 +29,8 @@ defmodule Therobotplans.Schema.ItemEntityLink do
     |> validate_inclusion(:link_type, @link_types)
     |> foreign_key_constraint(:item_id)
     |> unique_constraint([:item_id, :entity_type, :entity_id, :link_type],
-      name: :idx_item_entity_links_uniq)
+      name: :idx_item_entity_links_uniq
+    )
   end
 
   def link_types, do: @link_types

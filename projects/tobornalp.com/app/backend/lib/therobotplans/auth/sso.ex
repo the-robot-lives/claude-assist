@@ -50,7 +50,8 @@ defmodule Therobotplans.Auth.SSO do
   If `invite_token` is supplied, validates it and grants org membership.
   Returns `{:ok, session}`.
   """
-  def register_user(%{provider: provider, sub: sub} = identity, attrs) when is_binary(provider) and is_binary(sub) do
+  def register_user(%{provider: provider, sub: sub} = identity, attrs)
+      when is_binary(provider) and is_binary(sub) do
     context = Noizu.Context.system()
     provider_type = provider_type(provider)
     email = identity[:email] |> to_string() |> String.trim() |> String.downcase()
@@ -70,13 +71,28 @@ defmodule Therobotplans.Auth.SSO do
          provider_ref = unwrap_ref(@provider_map[provider_type].()),
          provider_id = provider_ref_id(provider_ref),
          {:ok, invite} <- invite_result,
-         {:ok, user} <- create_sso_user(email, attrs, provider_type, attrs[:sub] || sub, invite, identity),
-         _ <- ensure_sso_credential(user, provider_ref, provider_id, provider_type, %{email: email, sub: sub}, context),
+         {:ok, user} <-
+           create_sso_user(email, attrs, provider_type, attrs[:sub] || sub, invite, identity),
+         _ <-
+           ensure_sso_credential(
+             user,
+             provider_ref,
+             provider_id,
+             provider_type,
+             %{email: email, sub: sub},
+             context
+           ),
          {:ok, session} <- create_sso_session(user, provider_type) do
       # If an invite was used, grant org membership + consume it (mirror AuthController.register).
       case invite do
         %{organization_id: org_id} = used when not is_nil(org_id) ->
-          Therobotplans.Authz.ScopedMemberships.add_member("organization", org_id, user.id, "viewer")
+          Therobotplans.Authz.ScopedMemberships.add_member(
+            "organization",
+            org_id,
+            user.id,
+            "viewer"
+          )
+
           Therobotplans.Organizations.redeem_invite_for_user(used, user)
 
         used when not is_nil(used) ->
@@ -99,9 +115,11 @@ defmodule Therobotplans.Auth.SSO do
     first = attrs[:first] || get_in(attrs, [:name, :first]) || ""
     last = attrs[:last] || get_in(attrs, [:name, :last]) || ""
     handle = email |> String.split("@") |> hd() |> String.replace(~r/[^a-z0-9_]/, "_")
+
     auto_approve? =
       identity[:auto_approve] == true ||
         Therobotplans.Auth.SSODomains.auto_approve?(email, provider_type)
+
     approved? = auto_approve? || not is_nil(invite)
     status = if approved?, do: :active, else: :pending
 
@@ -265,7 +283,9 @@ defmodule Therobotplans.Auth.SSO do
   def claim_session(_), do: {:error, :invalid_code}
 
   defp sso_settings(:saml, attrs), do: %{email: attrs[:email], name_id: attrs[:name_id]}
-  defp sso_settings(provider_type, attrs), do: %{email: attrs[:email], sub: attrs[:sub] || attrs[:uid]}
+
+  defp sso_settings(provider_type, attrs),
+    do: %{email: attrs[:email], sub: attrs[:sub] || attrs[:uid]}
 
   defp sso_fingerprint(:saml, attrs), do: "saml:#{attrs[:name_id]}"
   defp sso_fingerprint(provider_type, attrs), do: "#{provider_type}:#{attrs[:sub] || attrs[:uid]}"

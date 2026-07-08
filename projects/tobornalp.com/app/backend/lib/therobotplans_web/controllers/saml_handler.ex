@@ -18,10 +18,16 @@ defmodule TherobotplansWeb.SAMLHandler do
     frontend_url = Application.get_env(:therobotplans, :frontend_url, "http://localhost:3000")
 
     attrs = %{
-      email: get_attribute(assertion, "email") || get_attribute(assertion, "urn:oid:0.9.2342.19200300.100.1.3"),
-      name: get_attribute(assertion, "displayName") || get_attribute(assertion, "urn:oid:2.16.840.1.113730.3.1.241"),
-      first_name: get_attribute(assertion, "firstName") || get_attribute(assertion, "urn:oid:2.5.4.42"),
-      last_name: get_attribute(assertion, "lastName") || get_attribute(assertion, "urn:oid:2.5.4.4"),
+      email:
+        get_attribute(assertion, "email") ||
+          get_attribute(assertion, "urn:oid:0.9.2342.19200300.100.1.3"),
+      name:
+        get_attribute(assertion, "displayName") ||
+          get_attribute(assertion, "urn:oid:2.16.840.1.113730.3.1.241"),
+      first_name:
+        get_attribute(assertion, "firstName") || get_attribute(assertion, "urn:oid:2.5.4.42"),
+      last_name:
+        get_attribute(assertion, "lastName") || get_attribute(assertion, "urn:oid:2.5.4.4"),
       name_id: assertion.name_id,
       sub: assertion.name_id
     }
@@ -29,7 +35,9 @@ defmodule TherobotplansWeb.SAMLHandler do
     case SSO.authenticate_sso(:saml, attrs) do
       {:ok, session} ->
         # session.claim_code is the one-time hand-off code (DB-backed, no Redis).
-        redirect_url = "#{frontend_url}/auth/sso-callback?code=#{session.claim_code}&provider=saml"
+        redirect_url =
+          "#{frontend_url}/auth/sso-callback?code=#{session.claim_code}&provider=saml"
+
         Phoenix.Controller.redirect(conn, external: redirect_url)
 
       {:error, :user_not_provisioned} ->

@@ -18,9 +18,9 @@ services:
     restart: "no"
 
   nginx:
-    image: ${REGISTRY:-ops.noizu.com}/${PROJECT_DIR:-therobotplans.com}/nginx:${TAG:-latest}
+    image: ${REGISTRY:-ops.noizu.com}/${PROJECT_DIR:-tobornalp.com}/nginx:${TAG:-latest}
     ports:
-      - "${PORT:-8093}:80"
+      - "${PORT:-8094}:80"
     depends_on:
       - frontend
       - backend
@@ -29,7 +29,7 @@ services:
     restart: unless-stopped
 
   backend:
-    image: ${REGISTRY:-ops.noizu.com}/${PROJECT_DIR:-therobotplans.com}/backend:${TAG:-latest}
+    image: ${REGISTRY:-ops.noizu.com}/${PROJECT_DIR:-tobornalp.com}/backend:${TAG:-latest}
     env_file: .env
     environment:
       PHX_SERVER: "true"
@@ -45,9 +45,12 @@ services:
     restart: unless-stopped
 
   frontend:
-    image: ${REGISTRY:-ops.noizu.com}/${PROJECT_DIR:-therobotplans.com}/frontend:${TAG:-latest}
+    image: ${REGISTRY:-ops.noizu.com}/${PROJECT_DIR:-tobornalp.com}/frontend:${TAG:-latest}
     environment:
       PORT: "3000"
+      API_URL: "${NEXT_PUBLIC_API_URL:-}"
+      APP_URL: "${NEXT_PUBLIC_APP_URL:-}"
+      COOKIE_DOMAIN: "${NEXT_PUBLIC_COOKIE_DOMAIN:-}"
     expose:
       - "3000"
     depends_on:

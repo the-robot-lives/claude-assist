@@ -26,7 +26,9 @@ defmodule Therobotplans.Domains.ItemsHumanKeyTest do
     t
   end
 
-  defp proj_item(c, title), do: create!(%{organization_id: c.org_id, project_id: c.project_id, title: title})
+  defp proj_item(c, title),
+    do: create!(%{organization_id: c.org_id, project_id: c.project_id, title: title})
+
   defp org_item(c, title), do: create!(%{organization_id: c.org_id, title: title})
 
   test "project items get sequential per-project keys with the derived prefix", c do
@@ -73,7 +75,11 @@ defmodule Therobotplans.Domains.ItemsHumanKeyTest do
     # An item missing its required title fails changeset validation -> the txn
     # (including the counter increment) rolls back.
     assert {:error, %Ecto.Changeset{}} =
-             Items.create(%{organization_id: c.org_id, project_id: c.project_id, item_type: "task"})
+             Items.create(%{
+               organization_id: c.org_id,
+               project_id: c.project_id,
+               item_type: "task"
+             })
 
     a = proj_item(c, "After rollback")
     assert a.number == 1

@@ -9,7 +9,10 @@ defmodule TherobotplansWeb.GroupController do
   end
 
   def show(conn, %{"id" => id}) do
-    group = if uuid?(id), do: Therobotplans.Repo.get(Therobotplans.Schema.Authz.Group, id), else: Groups.get_by_name(id)
+    group =
+      if uuid?(id),
+        do: Therobotplans.Repo.get(Therobotplans.Schema.Authz.Group, id),
+        else: Groups.get_by_name(id)
 
     case group do
       nil -> conn |> put_status(:not_found) |> json(%{error: "Group not found"})
@@ -18,10 +21,15 @@ defmodule TherobotplansWeb.GroupController do
   end
 
   def policies(conn, %{"id" => id}) do
-    group = if uuid?(id), do: Therobotplans.Repo.get(Therobotplans.Schema.Authz.Group, id), else: Groups.get_by_name(id)
+    group =
+      if uuid?(id),
+        do: Therobotplans.Repo.get(Therobotplans.Schema.Authz.Group, id),
+        else: Groups.get_by_name(id)
 
     case group do
-      nil -> conn |> put_status(:not_found) |> json(%{error: "Group not found"})
+      nil ->
+        conn |> put_status(:not_found) |> json(%{error: "Group not found"})
+
       g ->
         policies = Groups.list_policies(g.id)
         json(conn, %{group: group_to_json(g), policies: policies})

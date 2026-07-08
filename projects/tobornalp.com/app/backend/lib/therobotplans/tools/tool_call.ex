@@ -7,7 +7,7 @@ defmodule Therobotplans.Tools.ToolCall do
         "Supports alias resolution for old tool names.",
     category: "Discovery"
 
-  input_schema %{
+  input_schema(%{
     "type" => "object",
     "properties" => %{
       "tool" => %{
@@ -20,7 +20,7 @@ defmodule Therobotplans.Tools.ToolCall do
       }
     },
     "required" => ["tool"]
-  }
+  })
 
   alias Therobotplans.Tools.Catalog
 

@@ -2,3 +2,16 @@
 .env.*
 !.env.example
 docker-compose.local.yaml
+# Generated secrets
+.envrc
+backend/.env
+frontend/.env
+.npmrc
+# OS
+.DS_Store
+
+# Dependencies (if running locally)
+backend/_build/
+backend/deps/
+frontend/node_modules/
+frontend/.next/
