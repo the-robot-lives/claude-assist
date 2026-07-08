@@ -21,10 +21,7 @@ defmodule Starter.Ecto.SerializedTerm do
   Same as `cast/1` but raises `Ecto.CastError` on invalid arguments.
   """
   def cast!(v) do
-    case cast(v) do
-      {:ok, v} -> v
-      _ -> raise ArgumentError, "Unsupported: #{inspect(v)}"
-    end
+    v
   end
 
   @impl true
@@ -54,7 +51,7 @@ defmodule Starter.Ecto.SerializedTerm do
       {:ok, v} ->
         v
 
-      :error ->
+      {:error, _reason} ->
         raise ArgumentError,
               "Invalid value received from database. Expected nil or int: #{inspect(value)}"
     end

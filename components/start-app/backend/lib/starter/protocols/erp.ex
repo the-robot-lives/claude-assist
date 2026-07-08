@@ -2,45 +2,26 @@ require Protocol
 Protocol.derive(Jason.Encoder, Noizu.Entity.TimeStamp, [])
 
 defimpl Jason.Encoder, for: Tuple do
-  def encode({:ref, _, _} = s, {_, _, user_settings} = opts) do
-    json_format = user_settings[:json_format] || :default
-
+  def encode({:ref, _, _} = s, opts) do
     with {:ok, sref} <- Noizu.EntityReference.Protocol.sref(s) do
       sref
-      |> Jason.Encode.string(opts)
+      |> encode_string(opts)
     else
       {:error, _} -> {:error, :invalid_sref}
     end
   end
 
-  def encode(s = {:ref, _, _}, {_, _} = opts) do
-    with {:ok, sref} <- Noizu.EntityReference.Protocol.sref(s) do
-      sref
-      |> Jason.Encode.string(opts)
-    else
-      {:error, _} -> {:error, :invalid_sref}
-    end
-  end
-
-  def encode({:ref, _, _} = s, {_, _, user_settings} = opts) do
-    json_format = user_settings[:json_format] || :default
-
-    with {:ok, sref} <- Noizu.EntityReference.Protocol.sref(s) do
-      sref
-      |> Jason.Encode.string(opts)
-    else
-      {:error, _} -> {:error, :invalid_sref}
-    end
-  end
-
-  def encode(s, {_, _, _} = opts) do
+  def encode(s, opts) do
     "#{inspect(s)}"
-    |> Jason.Encode.string(opts)
+    |> encode_string(opts)
   end
 
-  def encode(s, {_, _} = opts) do
-    "#{inspect(s)}"
-    |> Jason.Encode.string(opts)
+  defp encode_string(value, {escape, encode_map, _user_settings}) do
+    Jason.Encode.string(value, {escape, encode_map})
+  end
+
+  defp encode_string(value, opts) do
+    Jason.Encode.string(value, opts)
   end
 end
 

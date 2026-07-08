@@ -5,9 +5,7 @@ defmodule Starter.Projects do
   use Noizu.Repo
   def_repo(entity: Entity)
 
-  import Ecto.Query
-
-  def create_with_owner(attrs, user_id, context \\ Noizu.Context.system()) do
+  def create_with_owner(attrs, user_id, _context \\ Noizu.Context.system()) do
     Starter.Repo.transaction(fn ->
       with {:ok, project} <-
              %Schema{}

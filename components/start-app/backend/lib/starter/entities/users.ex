@@ -163,13 +163,13 @@ defmodule Starter.Users do
             case user.name do
               %Ecto.Changeset{} ->
                 value =
-                  Starter.Versioned.Names.change_versioned_name(user.name.data, value)
+                  Starter.Versioned.Names.change(user.name.data, value)
 
                 {:name, value}
 
               _ ->
                 value =
-                  Starter.Versioned.Names.change_versioned_name(
+                  Starter.Versioned.Names.change(
                     user.name || %Starter.Versioned.Names.Name{},
                     value
                   )

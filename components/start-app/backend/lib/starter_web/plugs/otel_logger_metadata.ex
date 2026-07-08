@@ -1,7 +1,5 @@
 defmodule StarterWeb.Plugs.OtelLoggerMetadata do
   @behaviour Plug
-  import Plug.Conn
-  require Logger
 
   @impl true
   def init(opts), do: opts

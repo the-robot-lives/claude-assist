@@ -25,8 +25,7 @@ defmodule Starter.Workers.EmailWorker do
   def enqueue(type, to, extra) do
     args = Map.merge(%{"type" => type, "to" => to}, extra)
 
-    %{"type" => type, "to" => to}
-    |> Map.merge(extra)
+    args
     |> __MODULE__.new()
     |> Oban.insert()
   end

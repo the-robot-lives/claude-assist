@@ -108,7 +108,7 @@ defmodule Starter.Users.Credentials do
   # Password Update
   # ---------------------------------------------------------------------------
 
-  def update_password(user, new_password, context) do
+  def update_password(user, new_password, _context) do
     {:ok, auth_provider} = Starter.Auth.Providers.login()
     {:ok, auth_provider_id} = Starter.Auth.Providers.Provider.id(auth_provider)
 
