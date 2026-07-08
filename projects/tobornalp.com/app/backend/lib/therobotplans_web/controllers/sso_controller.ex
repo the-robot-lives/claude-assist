@@ -76,8 +76,8 @@ defmodule TherobotplansWeb.SSOController do
   # ── Code Exchange ────────────────────────────────────────────
 
   def exchange(conn, %{"code" => code}) do
-    with {:ok, session_id} <- Therobotplans.Auth.SSOCode.exchange(code),
-         {:ok, session} <- Therobotplans.Users.Sessions.get(session_id, Noizu.Context.system()),
+    with {:ok, claimed} <- Therobotplans.Auth.SSO.claim_session(code),
+         {:ok, session} <- Therobotplans.Users.Sessions.get(claimed.id, Noizu.Context.system(), []),
          {:ok, access_token, _} <- Guardian.encode_and_sign(session, %{}, token_type: "access", ttl: {1, :hour}),
          {:ok, refresh_token, _} <- Guardian.encode_and_sign(session, %{}, token_type: "refresh", ttl: {7, :day}) do
       user = resolve_user_from_session(session)
@@ -103,8 +103,8 @@ defmodule TherobotplansWeb.SSOController do
 
     case Therobotplans.Auth.SSO.authenticate_sso(provider_type, attrs) do
       {:ok, session} ->
-        {:ok, code} = Therobotplans.Auth.SSOCode.create(session.id)
-        redirect(conn, external: "#{frontend_url}/auth/sso-callback?code=#{code}&provider=#{provider_type}")
+        # session.claim_code is the one-time hand-off code (DB-backed, no Redis).
+        redirect(conn, external: "#{frontend_url}/auth/sso-callback?code=#{session.claim_code}&provider=#{provider_type}")
 
       {:registration_required, identity} ->
         # Brand-new SSO identity: sign a short-lived token carrying the verified
@@ -149,7 +149,8 @@ defmodule TherobotplansWeb.SSOController do
     }
 
     with {:ok, identity} <- Therobotplans.Auth.RegistrationToken.verify(token),
-         {:ok, session} <- Therobotplans.Auth.SSO.register_user(identity, attrs),
+         {:ok, created} <- Therobotplans.Auth.SSO.register_user(identity, attrs),
+         {:ok, session} <- Therobotplans.Users.Sessions.get(created.id, Noizu.Context.system(), []),
          {:ok, access_token, _} <-
            Guardian.encode_and_sign(session, %{}, token_type: "access", ttl: {1, :hour}),
          {:ok, refresh_token, %{"jti" => refresh_jti}} <-

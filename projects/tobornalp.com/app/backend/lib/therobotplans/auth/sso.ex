@@ -1,6 +1,7 @@
 defmodule Therobotplans.Auth.SSO do
   alias Therobotplans.Schema.Users.User, as: UserSchema
   alias Therobotplans.Schema.Users.Credentials.UserCredential, as: CredentialSchema
+  alias Therobotplans.Schema.Users.Sessions.UserSession, as: SessionSchema
   alias Therobotplans.Schema.Versioned.Names.Name
   import Ecto.Query, only: [from: 2]
 
@@ -16,14 +17,14 @@ defmodule Therobotplans.Auth.SSO do
   def authenticate_sso(provider_type, %{email: email} = attrs) do
     context = Noizu.Context.system()
     email = email |> String.trim() |> String.downcase()
-    provider_ref = @provider_map[provider_type].()
-    {:ok, provider_id} = Therobotplans.Auth.Providers.Provider.id(provider_ref)
+    provider_ref = unwrap_ref(@provider_map[provider_type].())
+    provider_id = provider_ref_id(provider_ref)
 
     case find_user_by_email(email) do
       {:ok, user} ->
         # Returning user — link credential if missing, issue a session (login).
         ensure_sso_credential(user, provider_ref, provider_id, provider_type, attrs, context)
-        create_sso_session(user, provider_type, context)
+        create_sso_session(user, provider_type)
 
       :not_found ->
         # Brand-new identity. No users are pre-provisioned (SSO-only), so the
@@ -50,8 +51,8 @@ defmodule Therobotplans.Auth.SSO do
   def register_user(%{provider: provider, sub: sub} = identity, attrs) when is_binary(provider) and is_binary(sub) do
     context = Noizu.Context.system()
     provider_type = String.to_existing_atom(provider)
-    provider_ref = @provider_map[provider_type].()
-    {:ok, provider_id} = Therobotplans.Auth.Providers.Provider.id(provider_ref)
+    provider_ref = unwrap_ref(@provider_map[provider_type].())
+    provider_id = provider_ref_id(provider_ref)
     email = identity[:email] |> to_string() |> String.trim() |> String.downcase()
 
     # Invite gate: required when the domain isn't allowlisted OR explicitly
@@ -73,7 +74,7 @@ defmodule Therobotplans.Auth.SSO do
     with {:ok, _invite} <- invite,
          {:ok, user} <- create_sso_user(email, attrs, provider_type, attrs[:sub] || sub),
          _ <- ensure_sso_credential(user, provider_ref, provider_id, provider_type, %{email: email, sub: sub}, context),
-         {:ok, session} <- create_sso_session(user, provider_type, context) do
+         {:ok, session} <- create_sso_session(user, provider_type) do
       # If an invite was used, grant org membership + consume it (mirror AuthController.register).
       case invite do
         {:ok, %{organization_id: org_id} = used} when not is_nil(org_id) ->
@@ -142,6 +143,19 @@ defmodule Therobotplans.Auth.SSO do
     end
   end
 
+  # Auth.Providers.*/0 return Entity.ref/1 results, which are wrapped as
+  # {:ok, {:ref, module, uuid}}. Normalize to the bare {:ref, module, uuid} so
+  # downstream credential creation gets a real ref (and Provider.id/1 doesn't
+  # choke on the {:ok, _} wrapper — the source of the /auth/oidc/callback 500).
+  defp unwrap_ref({:ok, ref}), do: ref
+  defp unwrap_ref(ref), do: ref
+
+  # provider_ref is a Noizu entity ref ({:ref, module, uuid}); extract the UUID
+  # directly. Provider.id/1 returns {:error, {:unsupported, _}} for a wrapped
+  # ref, so we don't route through it.
+  defp provider_ref_id({:ref, _module, id}), do: id
+  defp provider_ref_id(id) when is_binary(id), do: id
+
   defp sso_subject(attrs), do: attrs[:sub] || attrs[:uid]
 
   defp find_user_by_email(email) do
@@ -181,17 +195,46 @@ defmodule Therobotplans.Auth.SSO do
     end
   end
 
-  defp create_sso_session(user, provider_type, context) do
-    user_ref = Therobotplans.Users.User.ref(user.id)
+  # Returns {:ok, session_schema}. The session carries a one-time claim_code that
+  # the controller/SAML handler puts in the redirect; the SPA exchanges it via
+  # claim_session/1. Replaces the Redis-backed Therobotplans.Auth.SSOCode.
+  defp create_sso_session(user, provider_type) do
+    claim_code = :crypto.strong_rand_bytes(32) |> Base.url_encode64(padding: false)
+    expires = DateTime.utc_now() |> DateTime.add(60, :second)
 
-    %Therobotplans.Users.Sessions.UserSession{
-      user: user_ref,
+    Therobotplans.Repo.insert(%SessionSchema{
+      user_id: user.id,
       status: :active,
       details: %{auth_method: to_string(provider_type)},
-      time_stamp: Noizu.Entity.TimeStamp.now()
-    }
-    |> Therobotplans.EntityRepo.create(context)
+      claim_code: claim_code,
+      claim_code_expires_at: expires
+    })
   end
+
+  @doc """
+  Atomically claim a session by its one-time code (single-use). The UPDATE
+  matches on claim_code and clears it in the same statement, so concurrent
+  (e.g. React StrictMode-doubled) calls can't both succeed.
+  """
+  def claim_session(claim_code) when is_binary(claim_code) do
+    now = DateTime.utc_now()
+
+    {count, rows} =
+      from(s in SessionSchema,
+        where: s.claim_code == ^claim_code,
+        where: s.status == :active,
+        where: s.claim_code_expires_at > ^now,
+        select: s
+      )
+      |> Therobotplans.Repo.update_all(set: [claim_code: nil])
+
+    case {count, rows} do
+      {1, [session]} -> {:ok, session}
+      _ -> {:error, :invalid_code}
+    end
+  end
+
+  def claim_session(_), do: {:error, :invalid_code}
 
   defp sso_settings(:saml, attrs), do: %{email: attrs[:email], name_id: attrs[:name_id]}
   defp sso_settings(provider_type, attrs), do: %{email: attrs[:email], sub: attrs[:sub] || attrs[:uid]}

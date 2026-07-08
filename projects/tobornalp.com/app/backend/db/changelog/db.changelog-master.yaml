@@ -92,3 +92,6 @@ databaseChangeLog:
   - include:
       file: 030-okrs.yaml
       relativeToChangelogFile: true
+  - include:
+      file: 031-session-claim-code.yaml
+      relativeToChangelogFile: true

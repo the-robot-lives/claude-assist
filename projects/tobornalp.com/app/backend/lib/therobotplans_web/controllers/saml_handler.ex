@@ -2,7 +2,6 @@ defmodule TherobotplansWeb.SAMLHandler do
   @behaviour Samly.PipelineHandler
 
   alias Therobotplans.Auth.SSO
-  alias Therobotplans.Auth.SSOCode
 
   @impl true
   def handle_signin_request(conn, _opts), do: conn
@@ -29,8 +28,8 @@ defmodule TherobotplansWeb.SAMLHandler do
 
     case SSO.authenticate_sso(:saml, attrs) do
       {:ok, session} ->
-        {:ok, code} = SSOCode.create(session.id)
-        redirect_url = "#{frontend_url}/auth/sso-callback?code=#{code}&provider=saml"
+        # session.claim_code is the one-time hand-off code (DB-backed, no Redis).
+        redirect_url = "#{frontend_url}/auth/sso-callback?code=#{session.claim_code}&provider=saml"
         Phoenix.Controller.redirect(conn, external: redirect_url)
 
       {:error, :user_not_provisioned} ->

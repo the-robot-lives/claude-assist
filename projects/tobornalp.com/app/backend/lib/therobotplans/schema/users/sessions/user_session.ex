@@ -8,6 +8,8 @@ defmodule Therobotplans.Schema.Users.Sessions.UserSession do
     belongs_to :credential, Therobotplans.Schema.Users.Credentials.UserCredential, type: Ecto.UUID
     field :status, Ecto.Enum, values: [:active, :revoked, :disabled, :suspended, :deleted, :other]
     field :details, :map, default: %{}
+    field :claim_code, :string
+    field :claim_code_expires_at, :utc_datetime_usec
     field :deleted_at, :utc_datetime_usec
     timestamps(type: :utc_datetime_usec)
   end
