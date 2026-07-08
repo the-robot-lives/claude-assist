@@ -98,6 +98,63 @@ def run(cfg: Config, out_path: str) -> None:
                         ext.append((f"robot.probe.{i}.{attr}.{part}",
                                     np.load(f).astype(np.float32)))
 
+    # §1.2b the standardized readout layer (extraction-v1 §4.4) — proj/calib/
+    # overlay per admitted site, emitted whenever cleave_vec has run. Shipped
+    # as an OPTIONAL feature (therobot.features_optional): pure additional
+    # outputs + a dormant write path, so older runtimes ignore it and parity
+    # is untouched. Listing "semvec" in cfg.features instead makes it
+    # REQUIRED (a file that must not load without its readout layer).
+    cvec = lock.section("cleave_vec")
+    if cvec:
+        if cfg.semvec:
+            from .semvec import SemvecSpec  # noqa: PLC0415
+            spec = SemvecSpec.load(cfg.resolve(cfg.semvec))
+            if cvec["semvec"]["hash"] != spec.spec_hash():
+                raise SystemExit("export: lockfile cleave_vec semvec hash "
+                                 f"{cvec['semvec']['hash']} != spec {spec.spec_hash()}")
+            axis_names = [a.name for a in spec.axes]
+            named_dim, latent_dim = spec.named_dim, spec.latent_dim
+        else:
+            axis_names, named_dim, latent_dim = [], 0, 0
+
+        vdir = cfg.resolve(cvec["probe_dir"])
+        sv_sites = []
+        for sname, info in cvec["sites"].items():
+            pf = os.path.join(vdir, f"{sname}.proj.npy")
+            if not os.path.exists(pf) or not info.get("n_admitted"):
+                continue
+            proj = np.load(pf).astype(np.float32)
+            calib = np.load(os.path.join(vdir, f"{sname}.calib.npy")).astype(np.float32)
+            ov = os.path.join(vdir, f"{sname}.overlay.npy")
+            ext.append((f"robot.semvec.{sname}.proj", proj))
+            ext.append((f"robot.semvec.{sname}.calib", calib))
+            if os.path.exists(ov):
+                ext.append((f"robot.semvec.{sname}.overlay", np.load(ov).astype(np.float32)))
+            sv_sites.append((sname, info))
+
+        if sv_sites:
+            if "semvec" not in features:
+                writer.add_array("therobot.features_optional", ["semvec"])
+            writer.add_string("therobot.semvec.version", str(cvec["semvec"]["version"]))
+            writer.add_string("therobot.semvec.hash", str(cvec["semvec"]["hash"]))
+            writer.add_uint32("therobot.semvec.named_dim", int(named_dim))
+            writer.add_uint32("therobot.semvec.latent_dim", int(latent_dim))
+            if axis_names:
+                writer.add_array("therobot.semvec.axes", axis_names)
+            writer.add_uint32("therobot.semvec.site_count", len(sv_sites))
+            site_meta = {s["name"]: s for s in cfg.candidate_sites}
+            for i, (sname, info) in enumerate(sv_sites):
+                p = f"therobot.semvec.site.{i}."
+                sm = site_meta.get(sname, {})
+                writer.add_string(p + "name", sname)
+                if sm:
+                    writer.add_uint32(p + "layer", int(sm["layer"]))
+                    writer.add_string(p + "point", sm["point"])
+                    writer.add_uint32(p + "offset", int(sm["offset"]))
+                    writer.add_uint32(p + "width", int(sm["width"]))
+                writer.add_uint32(p + "n_admitted", int(info["n_admitted"]))
+                writer.add_uint32(p + "n_writable", int(info.get("n_writable", 0)))
+
     # §1.3/§1.4 state + modulator grafts (R3; zero-init when the graft stage
     # hasn't trained them — function-preserving by construction)
     graft = lock.section("graft")

@@ -1,7 +1,13 @@
 # therobot — Overview
 
 **Status:** runtime + conversion pipeline implemented and validated on a real
-donor (Qwen3.5‑0.8B); training-side stages and quality studies pending.
+donor (Qwen3.5‑0.8B); training-side stages and quality studies pending. The
+corpus scale‑up + vectorized extraction track (**semvec**, the standardized
+readout layer) is designed AND its conversion-side core is implemented —
+stratified corpus loader, semvec/v1 spec + tiered labelers, vector cleave
+with the per-site readout/overlay pair — with donor configs for
+Qwen3.5‑0.8B, Qwen3.5‑9B, and Qwen3.6‑35B‑A3B. See
+[`extraction-v1.md`](extraction-v1.md) (§9 for next steps).
 **Last updated:** 2026‑07‑08.
 **Scope of this document:** what was built, why, how, and what we expect it to
 buy us — an executive summary followed by an engineering deep‑dive with
@@ -67,8 +73,9 @@ Two interlocking deliverables, meeting at one contract:
 2. **A Python conversion pipeline** (`projects/therobotgguf/convert`,
    `robotgguf`) that retrofits an existing HF checkpoint onto the runtime by
    *discovering* structure in the frozen model and *grafting* zero‑effect
-   additions — stages **R0–R8**. <!-- TODO: R6 never appears in this doc's
-   diagrams (they jump R5 → R7) — document what R6 is, or renumber. -->
+   additions — stages **R0–R8** (R6 is *settle*: a config passthrough in v0,
+   since the settling decoder's mdlm objective waits on a diffusion‑class
+   donor — see §3.3 E7).
 
 They meet at the **GGUF extension spec** (`therobot.*` metadata + `robot.*`
 tensors), the single contract both sides implement.
@@ -188,7 +195,7 @@ flowchart LR
     subgraph C["Conversion pipeline (Python, robotgguf)"]
         R0[R0 ingest] --> R1[R1 record] --> R2[R2 cleave]
         R2 --> R3[R3 graft] --> R4[R4 calibrate] --> R5[R5 shims]
-        R5 --> R7[R7 export] --> R8[R8 verify]
+        R5 --> R6[R6 settle cfg] --> R7[R7 export] --> R8[R8 verify]
     end
     subgraph SPEC["GGUF extension spec (the contract)"]
         M["therobot.* KV + robot.* tensors"]
@@ -815,14 +822,26 @@ distinguishes real signal from class‑imbalance artifacts.
 
 **v0 is a bootstrap corpus, not the destination.** 300MB of FineWeb plus
 synthetic suites is enough to validate the apparatus, not to map a model. The
-planned corpus is significantly larger and deliberately domain‑stratified —
-code, mathematics, science, literature, and a wide multilingual spread — so
-that cleave can (a) test attributes that only vary across domains
-(code‑vs‑prose, formal‑proof register, symbolic density), (b) admit bottlenecks
-that are stable *across* domains rather than artifacts of web text, and
-(c) give the selectivity control a harder, better‑balanced null. Domain balance
-matters more than raw size — every attribute needs genuine variation, per this
-section's own argument. See §4.6 for the full extraction roadmap.
+v1 corpus ([`extraction-v1.md`](extraction-v1.md) §2) is ~20GB across seven
+domain strata — web, a ~10‑language multilingual spread, code (Stack‑Edu),
+mathematics (FineMath), science (peS2o), literature (PG‑19), long‑form PDFs —
+described by a provenance‑carrying manifest, so that cleave can (a) test
+attributes that only vary across domains (code‑vs‑prose, formal‑proof
+register, symbolic density), (b) admit bottlenecks that are stable *across*
+domains rather than artifacts of web text, and (c) give the selectivity
+control a harder, better‑balanced null. Domain balance matters more than raw
+size — every attribute needs genuine variation, per this section's own
+argument.
+
+**A v0 caveat found while planning v1:** `record`'s corpus loader reads the
+configured files head‑to‑tail and stops at the token budget, so the v0
+recordings drew from roughly the first megabyte of `mixed-text.txt` — the
+head of the English FineWeb stream. The behavioral suites and FineWeb‑2
+language slices likely never entered the recordings (which is also *why* the
+sandbox run was effectively monolingual and `language` was dropped). The v1
+loader interleaves strata by share (extraction‑v1 C1) and the v0 admission
+table gets re‑baselined on the fixed loader before any v0‑vs‑v1 comparison.
+See §4.6 for the full extraction roadmap.
 
 ### 4.4 Feature extraction — how cleave finds and scores typed bottlenecks
 
@@ -923,28 +942,54 @@ that makes LoRA/adapters/steering vectors work on frozen models — and H1 is th
 falsifiable claim that a *trained* state bank actually helps on
 memory‑across‑tokens tasks.
 
-### 4.6 Roadmap — more robust feature extraction
+### 4.6 Roadmap — extraction v1: semvec and the standardized readout layer
 
-v0's extraction stack is deliberately minimal: linear probes, seven heuristic
-weak labelers, one small recording corpus. Three upgrades are planned, in
-order of leverage:
+v0's extraction stack is deliberately minimal: linear classifier probes,
+seven heuristic weak labelers, one small recording corpus. Its successor is
+fully designed in [`extraction-v1.md`](extraction-v1.md) (work packages
+C1–C5); the essentials:
 
-1. **A much larger, domain‑stratified corpus** — code, mathematics, science,
-   literature, and a wide multilingual spread alongside general web text
-   (§4.3). Attributes can only be admitted where they genuinely vary, and
-   cross‑domain stability should become an admission criterion alongside
-   decodability, selectivity, and shard stability.
-2. **Stronger labels** — replace the heuristic weak labelers with a
-   teacher‑LLM labeler through the same recording contract (anticipated in
-   §5), and grow the attribute set beyond the initial seven (e.g.
-   code‑context, mathematical register, factual‑vs‑speculative, domain).
-3. **Stronger probes** — the 1‑hidden‑layer nonlinear fallback where linear
-   decodability fails, a richer slice search (widths and offsets beyond the
-   fixed windows), and per‑domain probe validation so a bottleneck admitted on
-   web text cannot silently fail on code or math.
+**The label side becomes a vector, and the vector becomes a standard.**
+Instead of seven scalar attributes, every sentence (and by inheritance every
+token position) carries a **512‑dim label vector — semvec**: 128 *named*
+axes (affect, register, discourse, epistemics, safety, topic memberships,
+structure, entities — teacher‑scored ordinals) plus 384 *latent* axes from a
+frozen reduction of an open sentence‑embedder's space. The same shape as the
+modulator — named channels plus an unnamed latent space — and, critically, a
+**versioned, donor‑independent standard**: labels are functions of text, not
+of any model, so the spec (axes, ordering, scales, embedder hash, PCA basis)
+is pinned once, versions are append‑only, and one labeled corpus serves every
+donor. Labels come from three cost tiers: structural (free — domain from the
+corpus manifest, language id, symbol densities), open classifiers
+(WebOrganizer topic/format, the embedder), and a teacher LLM that scores only
+a ~100k‑sentence stratified sample whose annotations are distilled into a
+small head that labels the rest — the teacher never sees the whole corpus.
+
+**Cleave becomes a regression map; admission gains a domain bar.** One
+closed‑form ridge solve per site (slice → ℝ⁵¹²) replaces per‑attribute GD —
+~70× more measurement, cheaper to compute. Per‑axis decodability /
+selectivity / stability keep their v0 meaning; **domain stability** (min
+per‑stratum held‑out decodability) joins them, with a within‑domain check
+for axes that could ride the domain signal. A nonlinear (1‑hidden‑layer)
+fallback records "nonlinearly present at site X" as a finding; a two‑pass
+slice search (wide survey at 11 depths → focused re‑record of winners across
+points/offsets/widths) replaces the six fixed slices.
+
+**What ships is the readout layer.** Per admitted site, a projection into
+semvec (`robot.semvec.*.proj` + per‑axis calibration) and a three‑call
+runtime surface: `semvec_read` (current state in standard coordinates),
+`semvec_axis` (calibrated dials — "formality: 3.2/4"), and `semvec_query` —
+the **zero‑shot** mode: any question expressible as text ("the subject is a
+dog") is embedded through the same frozen reduction and answered by
+similarity against the projected state, so new questions need no new probe,
+no retrain, no re‑export. Modules that consume semvec state — shim gates,
+salience features, observers, routers — are donor‑portable by construction;
+shims are *defined* as directions in semvec and *compiled* per donor, with
+the existing admission gate as the per‑donor arbiter.
 
 The admission discipline is unchanged — decodability, selectivity against a
-shuffled control, stability — only the instrument gets sharper and the map
+shuffled control, stability, now per axis and per domain — only the
+instrument gets sharper, the coordinate system standardized, and the map
 larger.
 
 ---
@@ -968,12 +1013,17 @@ larger.
 - E7 masked‑diffusion objective (needs a diffusion‑class donor).
 - Server endpoints and the physical compute‑skip optimization behind E6/E7's
   shared executor.
-- Weak labelers are heuristic v0; a teacher‑LLM labeler can overwrite them
-  through the same recording contract.
-- A significantly larger, domain‑stratified recording corpus (code, math,
-  science, literature, multilingual) and the more robust feature‑extraction
-  stack built on it — nonlinear probe fallback, richer slice search,
-  cross‑domain admission (§4.6).
+- Extraction v1 (§4.6, plan of record in
+  [`extraction-v1.md`](extraction-v1.md)): conversion-side core (C1 loader
+  fix + manifest, C2 semvec + labelers, C4 vector cleave with the
+  readout/overlay pair) is **implemented and unit-tested**
+  (`convert/tests/extraction_test.py`). Remaining (extraction‑v1 §9): the
+  0.8B re‑baseline on real recordings, corpus v1 fetch + Block‑B basis
+  freeze, t1/t2 label passes (teacher = Qwen3.6‑35B‑A3B on Modal,
+  inference‑only), survey/focused recordings on 9B + 35B‑A3B (rented GPU),
+  and the runtime/export plumbing for `robot.semvec.*`
+  (`semvec_read/axis/query`, the overlay‑apply op, R7 packaging, the
+  zero‑shot sanity suite in R8).
 
 ---
 
@@ -1015,4 +1065,6 @@ for running them.
 
 *See also: `arch/runtime/` (specs), `3rd-party/llama.cpp/docs/robot/`
 (patch‑points, validation runbook), `convert/README.md` (pipeline usage),
-`convert/configs/qwen3.5-0.8b.md` (donor‑specific instructions).*
+`convert/configs/qwen3.5-0.8b.md` (donor‑specific instructions),
+[`extraction-v1.md`](extraction-v1.md) (corpus v1 + semvec + the standardized
+readout layer — the plan of record for §4.6).*

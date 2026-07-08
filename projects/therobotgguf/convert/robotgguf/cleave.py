@@ -181,3 +181,8 @@ def run(cfg: Config) -> None:
         print(f"  {bn['name']}: layer {bn['layer']} {bn['point']} "
               f"[{bn['offset']}..{bn['offset'] + bn['width']}) "
               f"attrs={bn['attributes']} decod={bn['decodability']}")
+
+    # extraction-v1: the vector path (ridge map into semvec) runs whenever the
+    # recordings carry labels/vector.npy — same lockfile, its own section
+    from . import cleave_vec  # noqa: PLC0415
+    cleave_vec.run(cfg)

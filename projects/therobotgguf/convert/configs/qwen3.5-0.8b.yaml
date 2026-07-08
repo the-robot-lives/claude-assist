@@ -22,9 +22,30 @@ base_architecture: qwen35
 # stock GGUF from the fork's converter (see qwen3.5-0.8b.md step 2):
 base_gguf: work/qwen3.5-0.8b-f16.gguf
 
+# NOTE loader change (extraction-v1 C1): a bare file list is now read as
+# equal-share strata, interleaved — no longer head-to-tail (the v0 sampling
+# bug). behavioral-suites is tiny, so it exhausts after a few windows and
+# shares renormalize onto mixed-text; each window carries a domain label
+# either way. Swap in corpus/manifest.yaml (tools/fetch_corpus.py) for the
+# full seven-stratum v1 corpus.
 corpus:
   - corpus/mixed-text.txt        # a few hundred MB of mixed text
   - corpus/behavioral-suites.txt # the project's task suites
+
+# semvec — the standardized label vector + readout coordinate system
+# (extraction-v1 §3). With recordings already on disk, re-baseline without
+# re-running the model:  robotgguf relabel  →  robotgguf cleave
+# (relabel rebuilds labels/vector.npy at t0 + the categorical views;
+# cleave then runs the v0 categorical path AND the vector path.)
+semvec: configs/semvec-v1.yaml
+
+# semvec axis admission (extraction-v1 §4.3)
+min_axis_decodability: 0.3
+min_axis_selectivity: 0.05
+min_domain_stability_ratio: 0.9
+mlp_fallback_max: 8
+vec_l2: 10.0
+vec_sample_cap: 1000000
 
 # R2 — text-domain v0 attribute set (conversion-pipeline.md §R2)
 attributes:

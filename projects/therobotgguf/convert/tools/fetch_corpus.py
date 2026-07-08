@@ -1,76 +1,114 @@
 #!/usr/bin/env python3
-"""Stream a diverse calibration corpus from Hugging Face for R2.
+"""Stream the extraction-v1 seven-stratum corpus from Hugging Face (§2.1) and
+write the manifest the stratified loader consumes (§2.2).
 
-Streams (no full dataset download) a mix chosen to give the seven v0
-attributes real class variation:
-  - FineWeb (English web text) → topic / register / sentiment / entity spread
-  - FineWeb-2 slices (a few non-English languages) → the `language` attribute
-    actually varies (a monolingual corpus makes cleave drop it, as we saw)
-
-Writes corpus/mixed-text.txt. Keep the synthetic corpus/behavioral-suites.txt
-from tools/make_corpus.py for the sharp axes web text underrepresents
-(imperative commands, threat-salience, register extremes).
+Per-stratum files land in corpus/<domain>.txt; corpus/manifest.yaml carries
+shares + provenance (dataset, license, fetch date). The behavioral suites
+stay with tools/make_corpus.py — run both.
 
 Usage:
-  pip install 'datasets>=2.19'
-  python3 tools/fetch_corpus.py corpus 300   # ~300 MB target
+  pip install 'datasets>=2.19' pyyaml
+  python3 tools/fetch_corpus.py corpus 20000      # ~20 GB total (disk)
+  python3 tools/fetch_corpus.py corpus 300        # small bootstrap cut
+  python3 tools/fetch_corpus.py corpus 20000 --only=code,math   # refresh strata
+
+Network-heavy: on Modal, run via tools/modal_record.py::fetch_corpus.
 """
+import datetime
 import os
 import sys
 
+import yaml
 from datasets import load_dataset
 
 OUT = sys.argv[1] if len(sys.argv) > 1 else "corpus"
-TARGET_MB = int(sys.argv[2]) if len(sys.argv) > 2 else 300
+TARGET_MB = int(sys.argv[2]) if len(sys.argv) > 2 and not sys.argv[2].startswith("-") else 300
+ONLY = None
+for a in sys.argv[3:]:
+    if a.startswith("--only="):
+        ONLY = set(a.split("=", 1)[1].split(","))
 os.makedirs(OUT, exist_ok=True)
 
-# (dataset, config, split, text-field, share of the byte budget)
-SOURCES = [
-    ("HuggingFaceFW/fineweb",   "sample-10BT",  "train", "text", 0.70),  # English
-    ("HuggingFaceFW/fineweb-2", "fra_Latn",     "train", "text", 0.10),  # French
-    ("HuggingFaceFW/fineweb-2", "deu_Latn",     "train", "text", 0.05),  # German
-    ("HuggingFaceFW/fineweb-2", "rus_Cyrl",     "train", "text", 0.08),  # Russian (Cyrillic)
-    ("HuggingFaceFW/fineweb-2", "jpn_Jpan",     "train", "text", 0.07),  # Japanese (CJK)
-]
+# stratum → (share, [(repo, config, field-candidates)...], license)
+# multi-source strata split their byte budget evenly across sources.
+FW2_LANGS = ["fra_Latn", "deu_Latn", "spa_Latn", "rus_Cyrl", "ukr_Cyrl",
+             "jpn_Jpan", "cmn_Hani", "kor_Hang", "arb_Arab", "hin_Deva"]
+STACK_LANGS = ["python", "cpp", "javascript", "rust", "java", "shell"]
+
+STRATA = {
+    "web-en":       (0.25, [("HuggingFaceFW/fineweb", "sample-10BT", ["text"])], "odc-by"),
+    "multilingual": (0.20, [("HuggingFaceFW/fineweb-2", lang, ["text"]) for lang in FW2_LANGS], "odc-by"),
+    "code":         (0.20, [("HuggingFaceTB/stack-edu", lang, ["text", "content"]) for lang in STACK_LANGS], "odc-by"),
+    "math":         (0.10, [("HuggingFaceTB/finemath", "finemath-4plus", ["text"])], "odc-by"),
+    "science":      (0.10, [("allenai/peS2o", None, ["text"])], "odc-by"),
+    "literature":   (0.10, [("deepmind/pg19", None, ["text"])], "apache-2.0"),
+    "pdf":          (0.05, [("HuggingFaceFW/finepdfs", "eng_Latn", ["text"])], "odc-by"),
+}
 
 target_bytes = TARGET_MB * 1024 * 1024
-out_path = os.path.join(OUT, "mixed-text.txt")
-written = 0
+written_total = 0
+strata_entries, provenance = [], []
 
-with open(out_path, "w", encoding="utf-8") as f:
-    for repo, cfg, split, field, share in SOURCES:
-        budget = int(target_bytes * share)
-        got = 0
-        print(f"streaming {repo}:{cfg} (~{budget/1024/1024:.0f} MB) ...", flush=True)
-        try:
-            ds = load_dataset(repo, name=cfg, split=split, streaming=True)
-        except Exception as e:  # config name drift across dataset versions
-            print(f"  skip {repo}:{cfg} ({e})")
-            continue
-        for row in ds:
-            doc = (row.get(field) or "").strip()
-            if len(doc) < 200:
+for domain, (share, sources, license_) in STRATA.items():
+    path = os.path.join(OUT, f"{domain}.txt")
+    if ONLY and domain not in ONLY:
+        if os.path.exists(path):
+            strata_entries.append({"domain": domain, "file": f"{OUT}/{domain}.txt", "share": share})
+        continue
+    budget = int(target_bytes * share)
+    per_source = budget // len(sources)
+    got_domain = 0
+    with open(path, "w", encoding="utf-8") as f:
+        for repo, cfg_name, fields in sources:
+            print(f"[{domain}] streaming {repo}:{cfg_name or 'default'} "
+                  f"(~{per_source / 1024 / 1024:.0f} MB)...", flush=True)
+            try:
+                ds = load_dataset(repo, name=cfg_name, split="train", streaming=True)
+            except Exception as e:  # config drift across dataset versions
+                print(f"  skip {repo}:{cfg_name} ({e})")
                 continue
-            f.write(doc + "\n\n")
-            n = len(doc.encode("utf-8")) + 2
-            got += n
-            written += n
-            if got >= budget:
-                break
-        print(f"  wrote {got/1024/1024:.0f} MB from {repo}:{cfg}")
+            got = 0
+            for row in ds:
+                doc = ""
+                for fld in fields:
+                    doc = (row.get(fld) or "").strip()
+                    if doc:
+                        break
+                if len(doc) < 200:
+                    continue
+                f.write(doc + "\n\n")
+                n = len(doc.encode("utf-8")) + 2
+                got += n
+                if got >= per_source:
+                    break
+            got_domain += got
+            print(f"  wrote {got / 1024 / 1024:.0f} MB from {repo}:{cfg_name or 'default'}")
+    written_total += got_domain
+    strata_entries.append({"domain": domain, "file": f"{OUT}/{domain}.txt", "share": share})
+    for repo, cfg_name, _ in sources:
+        provenance.append({"domain": domain, "dataset": repo,
+                           **({"config": cfg_name} if cfg_name else {}),
+                           "license": license_})
 
-print(f"corpus: {out_path} — {written/1024/1024:.0f} MB total")
+# behavioral suites ride along as their own (tiny) stratum when present
+suites = os.path.join(OUT, "behavioral-suites.txt")
+if os.path.exists(suites):
+    strata_entries.append({"domain": "behavioral", "file": f"{OUT}/behavioral-suites.txt",
+                           "share": 0.001})
+    provenance.append({"domain": "behavioral",
+                       "dataset": "tools/make_corpus.py (synthetic)",
+                       "license": "project"})
 
-# explicit verdict: require a meaningful fraction of the requested budget
-ok = written >= 0.5 * target_bytes
-if ok:
-    print("FETCH_CORPUS: OK")
-else:
-    print(f"FETCH_CORPUS: FAILED (only {written/1024/1024:.0f} MB of "
-          f"{TARGET_MB} MB target — check HF_TOKEN / dataset access)")
+manifest = {"strata": strata_entries, "provenance": provenance,
+            "fetched": datetime.date.today().isoformat(),
+            "target_mb": TARGET_MB}
+with open(os.path.join(OUT, "manifest.yaml"), "w") as f:
+    yaml.safe_dump(manifest, f, sort_keys=False)
 
-# datasets' streaming backend (fsspec/aiohttp) leaves daemon threads alive,
-# which stalls a normal interpreter exit even though every write is already
-# flushed above. Hard-exit past them — nothing is left to clean up.
+print(f"corpus: {written_total / 1024 / 1024:.0f} MB across "
+      f"{len(strata_entries)} strata → {OUT}/manifest.yaml")
+ok = ONLY is not None or written_total >= 0.4 * target_bytes
+print("FETCH_CORPUS: OK" if ok else
+      f"FETCH_CORPUS: FAILED ({written_total / 1024 / 1024:.0f} MB of {TARGET_MB} MB target)")
 sys.stdout.flush()
-os._exit(0 if ok else 1)
+os._exit(0 if ok else 1)   # datasets' streaming threads stall normal exit

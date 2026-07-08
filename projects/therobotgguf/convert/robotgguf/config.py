@@ -45,6 +45,16 @@ class Config:
     min_decodability: float = 0.7
     min_selectivity: float = 0.05
 
+    # R2 v1 — semvec vector path (extraction-v1 §3-4). `semvec` names the
+    # versioned spec (configs/semvec-v1.yaml); null keeps the pure-v0 path.
+    semvec: Optional[str] = None
+    min_axis_decodability: float = 0.3     # Spearman/Pearson on held-out
+    min_axis_selectivity: float = 0.05     # vs row-shuffled control
+    min_domain_stability_ratio: float = 0.9  # × min_axis_decodability
+    mlp_fallback_max: int = 8              # nonlinear retries per site (findings)
+    vec_l2: float = 10.0                   # ridge strength
+    vec_sample_cap: int = 1_000_000        # solve/scoring sample bound
+
     # R3 graft
     state_banks: list = field(default_factory=lambda: [
         {"name": "fast", "width": 16}, {"name": "glacial", "width": 8}])
@@ -77,7 +87,10 @@ class Config:
         cfg = Config(path=os.path.abspath(path), raw=raw)
         for key in ("donor", "base_architecture", "base_gguf", "corpus",
                     "candidate_sites", "attributes", "max_bottlenecks",
-                    "min_decodability", "min_selectivity", "state_banks",
+                    "min_decodability", "min_selectivity", "semvec",
+                    "min_axis_decodability", "min_axis_selectivity",
+                    "min_domain_stability_ratio", "mlp_fallback_max",
+                    "vec_l2", "vec_sample_cap", "state_banks",
                     "state_layers", "modulator", "delta", "shims", "settle",
                     "features", "level"):
             if key in raw:

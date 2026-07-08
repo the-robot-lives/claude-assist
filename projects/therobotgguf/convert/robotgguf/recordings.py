@@ -25,6 +25,9 @@ class Manifest:
     sites: dict          # name → {layer, point, offset, width}
     attributes: list
     shards: list         # sample-index boundaries, for stability scoring
+    # extraction-v1 additions (defaults keep pre-v1 manifests loadable):
+    domain_names: list = None    # stratum names; labels/domain.npy indexes these
+    semvec: dict = None          # {version, hash} when labels/vector.npy exists
 
     def save(self, root: str) -> None:
         with open(os.path.join(root, "manifest.json"), "w") as f:
@@ -49,7 +52,8 @@ class RecordingStore:
 
     # ---- write (R1 / synthetic fixtures) ----
     def write(self, model: str, corpus: str, sites: dict, acts: dict,
-              labels: dict, n_shards: int = 4) -> None:
+              labels: dict, n_shards: int = 4, domain_names: list = None,
+              semvec: dict = None) -> None:
         os.makedirs(os.path.join(self.root, "labels"), exist_ok=True)
         n = None
         for name, a in acts.items():
@@ -62,10 +66,14 @@ class RecordingStore:
             y = np.asarray(y, dtype=np.int64)
             assert len(y) == n, f"labels {attr}: sample count mismatch"
             np.save(os.path.join(self.root, "labels", f"{attr}.npy"), y)
+        if semvec is None and os.path.exists(os.path.join(self.root, "labels", "vector_sources.json")):
+            with open(os.path.join(self.root, "labels", "vector_sources.json")) as f:
+                src = json.load(f)
+            semvec = {"version": src.get("semvec_version"), "hash": src.get("semvec_hash")}
         bounds = [int(i * n / n_shards) for i in range(n_shards)] + [n]
         Manifest(model=model, corpus=corpus, spec_version=SPEC_VERSION,
                  n_samples=n, sites=sites, attributes=sorted(labels),
-                 shards=bounds).save(self.root)
+                 shards=bounds, domain_names=domain_names, semvec=semvec).save(self.root)
 
     # ---- read (R2/R4/R5) ----
     def activations(self, site: str) -> np.ndarray:
@@ -73,3 +81,15 @@ class RecordingStore:
 
     def labels(self, attribute: str) -> np.ndarray:
         return np.load(os.path.join(self.root, "labels", f"{attribute}.npy"))
+
+    def label_vector(self) -> np.ndarray:
+        """The semvec label vector [N, D] float16, or None (pre-v1 store)."""
+        path = os.path.join(self.root, "labels", "vector.npy")
+        return np.load(path, mmap_mode="r") if os.path.exists(path) else None
+
+    def domains(self):
+        """(domain ids [N] int64, domain names) or (None, None)."""
+        path = os.path.join(self.root, "labels", "domain.npy")
+        if not os.path.exists(path):
+            return None, None
+        return np.load(path), (self.manifest.domain_names or [])
