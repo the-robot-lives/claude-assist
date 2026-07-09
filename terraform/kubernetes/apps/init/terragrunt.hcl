@@ -55,7 +55,7 @@ inputs = {
   derobotis_chart_path        = "${get_terragrunt_dir()}/../../../../projects/derobot.is/helm/derobotis"
   therobotmakes_chart_path    = "${get_terragrunt_dir()}/../../../../projects/therobotmakes.com/helm/therobotmakes"
   tobornalp_chart_path        = "${get_terragrunt_dir()}/../../../../projects/tobornalp.com/app/helm/start-app"
-  foryou_chart_path           = "${get_terragrunt_dir()}/../../../../projects/foryou.therobotlives.com/app/helm/start-app"
+  foryou_chart_path           = "${get_terragrunt_dir()}/../../../../projects/foryou.therobotlives.com/app/helm/foryou"
   start_app_chart_path        = "${get_terragrunt_dir()}/../../../../components/start-app/helm/start-app"
   infra_portal_chart_path     = "${get_terragrunt_dir()}/../../../../projects/infra.noizu.com/helm/infra-portal"
 }

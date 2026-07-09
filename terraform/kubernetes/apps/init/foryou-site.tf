@@ -49,7 +49,7 @@ resource "kubectl_manifest" "infisical_foryou_secrets" {
 resource "helm_release" "foryou_site" {
   name      = "foryou"
   namespace = kubernetes_namespace_v1.apps.metadata[0].name
-  chart     = var.foryou_chart_path != "" ? var.foryou_chart_path : abspath("${path.module}/../../../../projects/foryou.therobotlives.com/app/helm/start-app")
+  chart     = var.foryou_chart_path != "" ? var.foryou_chart_path : abspath("${path.module}/../../../../projects/foryou.therobotlives.com/app/helm/foryou")
 
   values = [
     yamlencode({

@@ -1,8 +1,8 @@
 replicas: 1
-domain: app.example.com
+domain: foryou.therobotlives.com
 
 backend:
-  image: ops.noizu.com/start-app/backend:latest
+  image: ops.noizu.com/foryou.therobotlives.com/backend:latest
   port: 4000
   resources:
     requests:
@@ -13,7 +13,7 @@ backend:
       memory: 512Mi
 
 frontend:
-  image: ops.noizu.com/start-app/frontend:latest
+  image: ops.noizu.com/foryou.therobotlives.com/frontend:latest
   port: 3000
   resources:
     requests:
@@ -25,7 +25,7 @@ frontend:
 
 migrate:
   enabled: true
-  command: ["bin/starter", "eval", "Starter.Release.migrate()"]
+  command: ["bin/foryou", "eval", "Foryou.Release.migrate()"]
   resources:
     requests:
       cpu: 50m
@@ -35,23 +35,33 @@ migrate:
       memory: 256Mi
 
 database:
-  host: shared-postgres.data-ns.svc.cluster.local
+  host: app-timescaledb.apps.svc.cluster.local
   port: 5432
-  name: starter
+  name: foryou
 
 redis:
-  host: shared-redis.data-ns.svc.cluster.local
+  host: app-valkey.apps.svc.cluster.local
   port: 6379
   db: 0
 
 secrets:
-  name: apps-app-secrets
+  name: foryou-secrets
+  infisical:
+    enabled: true
+    resyncInterval: 120
+    hostAPI: "https://infisical.noizu.com/api"
+    credentialsSecret: universal-auth-credentials
+    credentialsNamespace: infra
+    projectSlug: k8-infra
+    envSlug: prod
+    secretsPath: "/apps/foryou"
   keys:
-    dbUser: STARTER_DB_USER
-    dbPassword: STARTER_DB_PASSWORD
-    secretKeyBase: STARTER_SECRET_KEY_BASE
-    guardianSecretKey: STARTER_GUARDIAN_SECRET_KEY
-    redisUrl: STARTER_REDIS_URL
+    dbUser: FORYOU_DB_USER
+    dbPassword: FORYOU_DB_PASSWORD
+    databaseUrl: FORYOU_DATABASE_URL
+    secretKeyBase: FORYOU_SECRET_KEY_BASE
+    guardianSecretKey: FORYOU_GUARDIAN_SECRET_KEY
+    redisUrl: FORYOU_REDIS_URL
     sendgridApiKey: ""
     oidcClientId: ""
     oidcClientSecret: ""
@@ -106,23 +116,24 @@ ingress:
 
 tls:
   enabled: true
-  secretName: start-app-tls
+  secretName: foryou-tls
   infisical:
     enabled: true
-    resyncInterval: 300
+    resyncInterval: 120
+    hostAPI: "https://infisical.noizu.com/api"
     credentialsSecret: universal-auth-credentials
-    credentialsNamespace: infisical-operator-system
+    credentialsNamespace: infra
     projectSlug: k8-infra
     envSlug: prod
-    secretsPath: "/apps/tls/start-app"
-    crtKey: STARTER_TLS_CRT
-    keyKey: STARTER_TLS_KEY
+    secretsPath: "/apps/tls/foryou"
+    crtKey: FORYOU_TLS_CRT
+    keyKey: FORYOU_TLS_KEY
 
 otel:
   enabled: false
   collectorEndpoint: "otel-collector.observability-ns.svc.cluster.local:4317"
   collectorHttpEndpoint: "http://otel-collector.observability-ns.svc.cluster.local:4318"
-  serviceName: "start-app"
+  serviceName: "foryou"
 
 storage:
   enabled: false
@@ -144,7 +155,7 @@ podDisruptionBudget:
 
 sandbox:
   enabled: false
-  image: ops.noizu.com/start-app/sandbox:latest
+  image: ops.noizu.com/foryou.therobotlives.com/sandbox:latest
   resources:
     requests:
       cpu: 200m
