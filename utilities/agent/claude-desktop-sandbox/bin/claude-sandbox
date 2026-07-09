@@ -17,100 +17,285 @@
 # setuid sandbox can't nest inside bwrap's user/mount namespace.
 #
 # Usage:
-#   claude-sandbox <name> [-- extra claude-desktop args]
+#   claude-sandbox <name> [--from <template>] [-- extra claude-desktop args]
 #   claude-sandbox work
 #   claude-sandbox client-a -- claude://claude.ai/new
 #
-# List existing sandboxes:
-#   claude-sandbox --list
+# New sandboxes are seeded (full clone, incl. login) from a template — the
+# sandbox named by --from / $CLAUDE_SANDBOX_TEMPLATE, else the oldest existing
+# sandbox. The very first sandbox starts empty.
 #
-# Remove a sandbox's data (irreversible):
+# List / remove sandboxes:
+#   claude-sandbox --list
 #   claude-sandbox --remove <name>
+#
+# Route inbound claude:// links (e.g. OAuth callbacks) to a sandbox. By default
+# they go to the last-launched sandbox; pin one to override:
+#   claude-sandbox --install-url-handler       # register host claude:// handler
+#   claude-sandbox --pin <name> | --unpin      # force a specific target
+#   claude-sandbox --open-url <claude:// url>   # (invoked by the handler)
 
 set -euo pipefail
 
 SANDBOX_ROOT="${CLAUDE_SANDBOX_ROOT:-$HOME/sandboxes}"
 BIN="${CLAUDE_DESKTOP_BIN:-/usr/lib/claude-desktop/claude-desktop}"
+SELF="$(readlink -f "$0" 2>/dev/null || echo "$0")"
+LAST_FILE="$SANDBOX_ROOT/.last-launched"
+PIN_FILE="$SANDBOX_ROOT/.pinned"
 
 usage() {
-  echo "Usage: $(basename "$0") <name> [-- extra args]" >&2
-  echo "       $(basename "$0") --list" >&2
-  echo "       $(basename "$0") --remove <name>" >&2
+  cat >&2 <<USAGE
+Usage: $(basename "$0") <name> [--from <template>] [-- extra claude-desktop args]
+       $(basename "$0") --list
+       $(basename "$0") --remove <name>
+       $(basename "$0") --pin <name> | --unpin
+       $(basename "$0") --install-url-handler | --uninstall-url-handler
+       $(basename "$0") --open-url <claude:// url>
+USAGE
   exit 1
+}
+
+# Oldest existing sandbox (by mtime), excluding $1. Empty if none.
+oldest_sandbox() {
+  local exclude="$1"
+  find "$SANDBOX_ROOT" -maxdepth 1 -mindepth 1 -type d -name 'claude-desktop-*' \
+    -printf '%T@ %f\n' 2>/dev/null | sort -n | awk '{print $2}' \
+    | sed 's/^claude-desktop-//' | { grep -Fvx -- "$exclude" || true; } | head -n1
+}
+
+# Where inbound claude:// links should go: pinned sandbox if set and present,
+# else the last-launched sandbox. Empty if neither resolves.
+route_target() {
+  local t=""
+  if [ -f "$PIN_FILE" ]; then
+    t="$(cat "$PIN_FILE" 2>/dev/null || true)"
+    { [ -n "$t" ] && [ -d "$SANDBOX_ROOT/claude-desktop-$t" ]; } || t=""
+  fi
+  if [ -z "$t" ] && [ -f "$LAST_FILE" ]; then
+    t="$(cat "$LAST_FILE" 2>/dev/null || true)"
+    { [ -n "$t" ] && [ -d "$SANDBOX_ROOT/claude-desktop-$t" ]; } || t=""
+  fi
+  printf '%s' "$t"
 }
 
 [ $# -ge 1 ] || usage
 
-if [ "$1" = "--list" ]; then
-  if [ -d "$SANDBOX_ROOT" ]; then
-    find "$SANDBOX_ROOT" -maxdepth 1 -mindepth 1 -type d -name 'claude-desktop-*' \
-      -exec basename {} \; | sed 's/^claude-desktop-//'
-  fi
-  exit 0
-fi
-
-if [ "$1" = "--remove" ]; then
-  [ $# -ge 2 ] || usage
-  target="$SANDBOX_ROOT/claude-desktop-$2"
-  if [ -d "$target" ]; then
-    echo "Removing $target"
-    rm -rf -- "$target"
-  else
-    echo "No such sandbox: $2" >&2
-    exit 1
-  fi
-  exit 0
-fi
+case "$1" in
+  --list)
+    if [ -d "$SANDBOX_ROOT" ]; then
+      find "$SANDBOX_ROOT" -maxdepth 1 -mindepth 1 -type d -name 'claude-desktop-*' \
+        -exec basename {} \; | sed 's/^claude-desktop-//'
+    fi
+    exit 0 ;;
+  --remove)
+    [ $# -ge 2 ] || usage
+    target="$SANDBOX_ROOT/claude-desktop-$2"
+    if [ -d "$target" ]; then echo "Removing $target"; rm -rf -- "$target"
+    else echo "No such sandbox: $2" >&2; exit 1; fi
+    exit 0 ;;
+  --pin)
+    [ $# -ge 2 ] || usage
+    mkdir -p "$SANDBOX_ROOT"; printf '%s\n' "$2" > "$PIN_FILE"
+    echo "Pinned claude:// routing to sandbox '$2'."
+    exit 0 ;;
+  --unpin)
+    rm -f "$PIN_FILE"
+    echo "Unpinned claude:// routing (falls back to last-launched sandbox)."
+    exit 0 ;;
+  --open-url)
+    [ $# -ge 2 ] || usage
+    url="$2"; target="$(route_target)"
+    if [ -n "$target" ]; then
+      exec "$SELF" "$target" -- "$url"
+    fi
+    # Nothing to route to yet — fall back to the host claude-desktop so normal
+    # (non-sandbox) deep links still work.
+    exec setsid "$BIN" "$url" >/dev/null 2>&1 </dev/null ;;
+  --install-url-handler)
+    appdir="${XDG_DATA_HOME:-$HOME/.local/share}/applications"
+    mkdir -p "$appdir"
+    desktop="$appdir/claude-sandbox-url.desktop"
+    cat > "$desktop" <<DESKTOP
+[Desktop Entry]
+Type=Application
+Name=Claude Sandbox URL Router
+Comment=Routes claude:// links to the pinned or last-launched sandbox
+Exec=$SELF --open-url %u
+Terminal=false
+NoDisplay=true
+MimeType=x-scheme-handler/claude;
+DESKTOP
+    command -v update-desktop-database >/dev/null 2>&1 && update-desktop-database "$appdir" >/dev/null 2>&1 || true
+    xdg-mime default claude-sandbox-url.desktop x-scheme-handler/claude >/dev/null 2>&1 || true
+    echo "Installed claude:// handler: $desktop"
+    echo "Inbound claude:// links now route to the pinned or last-launched sandbox."
+    echo "Undo with: $(basename "$0") --uninstall-url-handler"
+    exit 0 ;;
+  --uninstall-url-handler)
+    appdir="${XDG_DATA_HOME:-$HOME/.local/share}/applications"
+    rm -f "$appdir/claude-sandbox-url.desktop"
+    command -v update-desktop-database >/dev/null 2>&1 && update-desktop-database "$appdir" >/dev/null 2>&1 || true
+    echo "Removed claude:// handler. Reset the default with:"
+    echo "  xdg-mime default <your-claude>.desktop x-scheme-handler/claude"
+    exit 0 ;;
+  --*)
+    usage ;;
+esac
 
 NAME="$1"
 shift
+TEMPLATE="${CLAUDE_SANDBOX_TEMPLATE:-}"
 EXTRA_ARGS=()
-if [ "${1:-}" = "--" ]; then
-  shift
-  EXTRA_ARGS=("$@")
-fi
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --from)    [ $# -ge 2 ] || usage; TEMPLATE="$2"; shift 2 ;;
+    --from=*)  TEMPLATE="${1#--from=}"; shift ;;
+    --)        shift; EXTRA_ARGS=("$@"); break ;;
+    *)         echo "Unexpected argument: $1" >&2; usage ;;
+  esac
+done
 
 SBHOME="$SANDBOX_ROOT/claude-desktop-$NAME"
-mkdir -p "$SBHOME"/{home,tmp,runtime,home/.local/bin}
+
+# Detect a brand-new sandbox (absent/empty home) BEFORE creating the dir, so we
+# know whether to seed it from a template.
+NEW_SANDBOX=false
+if [ ! -d "$SBHOME/home" ] || [ -z "$(ls -A "$SBHOME/home" 2>/dev/null)" ]; then
+  NEW_SANDBOX=true
+fi
+
+mkdir -p "$SBHOME"/{home,tmp,runtime}
 chmod 700 "$SBHOME"/runtime
+
+# Seed a new sandbox from a template (full clone, incl. login). Template is
+# --from / $CLAUDE_SANDBOX_TEMPLATE, else the oldest existing sandbox.
+if [ "$NEW_SANDBOX" = true ]; then
+  tmpl="$TEMPLATE"
+  [ -z "$tmpl" ] && tmpl="$(oldest_sandbox "$NAME")"
+  if [ -n "$tmpl" ] && [ "$tmpl" != "$NAME" ] && [ -d "$SANDBOX_ROOT/claude-desktop-$tmpl/home" ]; then
+    echo "Seeding '$NAME' from template '$tmpl' (full clone incl. login)…"
+    cp -a "$SANDBOX_ROOT/claude-desktop-$tmpl/home/." "$SBHOME/home/"
+    # Drop Electron single-instance locks so the clone doesn't think another
+    # instance owns its session (they're re-created on launch).
+    find "$SBHOME/home" -depth \( -name 'SingletonLock' -o -name 'SingletonSocket' \
+      -o -name 'SingletonCookie' \) -print0 2>/dev/null | xargs -0 -r rm -f
+  elif [ -n "$TEMPLATE" ]; then
+    echo "Template sandbox '$TEMPLATE' not found or has no home; starting empty." >&2
+  fi
+fi
+
+mkdir -p "$SBHOME/home/.local/bin"
 
 [ -x "$BIN" ] || { echo "claude-desktop binary not found at $BIN" >&2; exit 1; }
 
-# Wrapper so OAuth/login flows that shell out to the default browser (via
-# xdg-open/$BROWSER) launch it with --no-sandbox instead of crashing/hanging:
-# Chromium's own setuid sandbox can't set up nested user namespaces inside
-# bwrap's namespace, the same reason claude-desktop itself needs --no-sandbox.
+# Wrappers so OAuth/login flows that shell out to the default browser launch it
+# with --no-sandbox instead of crashing/hanging: Chromium's own setuid sandbox
+# can't set up nested user namespaces inside bwrap's namespace, the same reason
+# claude-desktop itself needs --no-sandbox.
+#
+# Two layers are needed:
+#   * sandboxed-browser  — picks a working browser and adds --no-sandbox.
+#   * xdg-open / x-www-browser shims — claude-desktop (Electron) opens URLs via
+#     `xdg-open`, which on XFCE delegates to `exo-open` and the desktop's default
+#     handler, bypassing $BROWSER entirely. Because $HOME/.local/bin is first on
+#     PATH, these shims intercept that call and route it through sandboxed-browser.
+#
+# Vivaldi (a native Chromium-engine browser) is the preferred default for the
+# OpenAuth login form. A chromium provided only by snap (or Flatpak) can't run
+# inside bwrap — snap-confine/Flatpak use their own bubblewrap+AppArmor confinement
+# that won't nest — so sandboxed-browser skips snap/stub chromium binaries and
+# walks a fallback list. The launch flag depends on the engine: Chromium-family
+# browsers need --no-sandbox; QtWebEngine (qutebrowser, falkon) needs
+# QTWEBENGINE_DISABLE_SANDBOX=1; Gecko (firefox, librewolf) needs nothing.
+# Only browsers under /usr or /opt are visible in the sandbox (HOME is remapped,
+# so host ~/.local/bin browsers like zen are not). Override the choice with
+# CLAUDE_SANDBOX_BROWSER (name or absolute path).
 write_browser_wrapper() {
-  local wrapper="$SBHOME/home/.local/bin/sandboxed-browser"
-  cat >"$wrapper" <<'EOF'
+  local bindir="$SBHOME/home/.local/bin"
+  cat >"$bindir/sandboxed-browser" <<'EOF'
 #!/usr/bin/env bash
 # Auto-generated by claude-sandbox. Execs the host's default browser with
 # --no-sandbox when it's Chromium-based (needed inside the bwrap sandbox).
 set -euo pipefail
+
+# A candidate is usable only if it can actually run inside bwrap. Snap-packaged
+# browsers (path under /snap) and the Ubuntu transitional chromium-browser stub
+# (which just errors "requires the chromium snap") cannot, so skip them.
+usable() {
+  local bin="$1" real
+  # /snap/bin/* entries are symlinks to /usr/bin/snap, so test the literal path
+  # as well as the resolved target.
+  case "$bin" in
+    /snap/*) return 1 ;;
+  esac
+  real="$(readlink -f "$bin" 2>/dev/null || echo "$bin")"
+  case "$real" in
+    /snap/*|*/snapd/*|/usr/bin/snap|*/bin/snap) return 1 ;;
+  esac
+  grep -qi 'requires the chromium snap' "$bin" 2>/dev/null && return 1
+  return 0
+}
+
 candidates=(
   "${CLAUDE_SANDBOX_BROWSER:-}"
+  vivaldi
+  vivaldi-stable
+  chromium
+  chromium-browser
+  ungoogled-chromium
   brave-browser
   google-chrome
-  chromium-browser
-  chromium
+  librewolf
   firefox
+  zen
+  qutebrowser
+  falkon
   x-www-browser
 )
 for c in "${candidates[@]}"; do
   [ -n "$c" ] || continue
   bin="$(command -v "$c" 2>/dev/null || true)"
   [ -n "$bin" ] || continue
-  case "$c" in
-    brave-browser|google-chrome|chromium-browser|chromium)
+  usable "$bin" || continue
+  case "$(basename "$bin")" in
+    vivaldi*|chromium*|ungoogled-chromium|brave-browser|google-chrome*|chrome|opera*|thorium*)
       exec "$bin" --no-sandbox "$@" ;;
+    qutebrowser|falkon)
+      # QtWebEngine's sandbox likewise can't nest inside bwrap.
+      exec env QTWEBENGINE_DISABLE_SANDBOX=1 "$bin" "$@" ;;
     *)
       exec "$bin" "$@" ;;
   esac
 done
-echo "sandboxed-browser: no browser found on PATH" >&2
+echo "sandboxed-browser: no usable browser found on PATH" >&2
 exit 127
 EOF
-  chmod 755 "$wrapper"
+  chmod 755 "$bindir/sandboxed-browser"
+
+  # xdg-open shim: a claude:// deep link (e.g. an OAuth callback that comes back
+  # inside the sandbox) goes to THIS sandbox's claude-desktop, which forwards it
+  # to its already-running instance via Electron's single-instance lock. Every
+  # other URL goes to the browser wrapper.
+  cat >"$bindir/xdg-open" <<'EOF'
+#!/usr/bin/env bash
+# Auto-generated by claude-sandbox.
+for a in "$@"; do
+  case "$a" in
+    claude://*|claude-desktop://*|anthropic-claude://*)
+      exec "${CLAUDE_DESKTOP_BIN:-/usr/lib/claude-desktop/claude-desktop}" "$@" ;;
+  esac
+done
+exec "$HOME/.local/bin/sandboxed-browser" "$@"
+EOF
+  chmod 755 "$bindir/xdg-open"
+
+  # x-www-browser is browser-only by definition.
+  cat >"$bindir/x-www-browser" <<'EOF'
+#!/usr/bin/env bash
+# Auto-generated by claude-sandbox.
+exec "$HOME/.local/bin/sandboxed-browser" "$@"
+EOF
+  chmod 755 "$bindir/x-www-browser"
 }
 write_browser_wrapper
 
@@ -135,6 +320,7 @@ BWRAP_ARGS=(
   --bind "$SBHOME/tmp" /tmp/claude-sandbox
   --setenv HOME "$HOME"
   --setenv BROWSER "$HOME/.local/bin/sandboxed-browser"
+  --setenv CLAUDE_DESKTOP_BIN "$BIN"
   --setenv PATH "$HOME/.local/bin:${PATH:-/usr/local/bin:/usr/bin:/bin}"
 
   # Isolated XDG_RUNTIME_DIR, but bind through the sockets we need to share
@@ -166,6 +352,10 @@ if [ -d /dev/dri ]; then
 fi
 
 LOGFILE="$SBHOME/tmp/claude-desktop.log"
+
+# Record this as the most-recently-launched sandbox so inbound claude:// links
+# (via --open-url) route here unless a pin overrides it.
+printf '%s\n' "$NAME" > "$LAST_FILE"
 
 setsid nohup bwrap "${BWRAP_ARGS[@]}" -- "$BIN" --no-sandbox "${EXTRA_ARGS[@]}" \
   >>"$LOGFILE" 2>&1 </dev/null &
