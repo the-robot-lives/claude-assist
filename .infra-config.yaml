@@ -1148,6 +1148,13 @@ project:
         registry_path: 3rd/plantuml-server
         single_stage: true
 
+      - name: therobotgguf-runpod
+        context: .
+        dockerfile: projects/therobotgguf/runpod/Dockerfile
+        registry_path: therobotgguf/runpod
+        platform: linux/amd64
+        single_stage: true
+
       - name: webstudio
         context: 3rd-party/webstudio
         dockerfile: Dockerfile.noizu

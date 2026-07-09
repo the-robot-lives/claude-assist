@@ -9,3 +9,9 @@ Provides-Extra: hf
 Requires-Dist: torch; extra == "hf"
 Requires-Dist: transformers; extra == "hf"
 Requires-Dist: datasets; extra == "hf"
+Provides-Extra: label
+Requires-Dist: torch; extra == "label"
+Requires-Dist: transformers; extra == "label"
+Requires-Dist: sentence-transformers; extra == "label"
+Requires-Dist: fasttext-wheel; extra == "label"
+Requires-Dist: huggingface_hub; extra == "label"
