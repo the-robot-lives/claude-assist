@@ -116,8 +116,8 @@ resource "helm_release" "start_app_site" {
       # auto-register the noizu.com / therobotlives.com / derobot.is domains and
       # auto-approve every SSO-enabled domain (no invite needed).
       sso = {
-        requireInvite = false
-        domains         = "noizu.com=oidc;therobotlives.com=oidc;derobot.is=oidc"
+        requireInvite      = false
+        domains            = "noizu.com=oidc;therobotlives.com=oidc;derobot.is=oidc"
         autoApproveDomains = "*"
         oidc = {
           issuer = "https://auth.derobot.is/application/o/startapp"

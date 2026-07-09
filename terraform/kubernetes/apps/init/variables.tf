@@ -423,6 +423,32 @@ variable "tobornalp_chart_path" {
   default = ""
 }
 
+// --- foryou.therobotlives.com (start-app scaffold) ---------------------------
+variable "foryou_domain" {
+  type    = string
+  default = "foryou.therobotlives.com"
+}
+
+variable "foryou_backend_image" {
+  type    = string
+  default = "ops.noizu.com/foryou.therobotlives.com/backend:latest"
+}
+
+variable "foryou_frontend_image" {
+  type    = string
+  default = "ops.noizu.com/foryou.therobotlives.com/frontend:latest"
+}
+
+variable "foryou_tls_secret_name" {
+  type    = string
+  default = "foryou-tls"
+}
+
+variable "foryou_chart_path" {
+  type    = string
+  default = ""
+}
+
 # --- starter.therobotlives.com (start-app scaffold) -------------------------
 variable "start_app_domain" {
   type    = string

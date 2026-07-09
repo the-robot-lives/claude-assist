@@ -99,6 +99,7 @@ tiers:
       - therobotmakes
       - start-app
       - therobotplans
+      - foryou
       - tobornalp
       - ddi
 
@@ -211,6 +212,7 @@ namespace_overrides:
   therobotmakes: apps
   start-app: apps
   therobotplans: apps
+  foryou: apps
   tobornalp: apps
   ddi: apps
   noizu-site: apps
@@ -261,6 +263,7 @@ chart_path_overrides:
   noizu-site: projects/noizu.com/helm/noizu-site
   npl-mcp: projects/NoizuPromptLingo/helm/npl-mcp
   therobotlives: projects/therobotlives.com/helm/therobotlives
+  foryou: projects/foryou.therobotlives.com/app/helm/foryou
   start-app: components/start-app/helm/start-app
   therobotplans: projects/therobotplans.com/helm/therobotplans
   tobornalp: projects/tobornalp.com/helm/therobotplans
@@ -937,6 +940,33 @@ project:
             chart_path: projects/tobornalp.com/helm/therobotplans
             values_path: .frontend.image
             format: image
+
+    - domain: foryou.therobotlives.com
+      services:
+        - name: backend
+          dockerfile: app/backend/Dockerfile
+          context: app/backend
+          registry_path: foryou.therobotlives.com/backend
+          auto_detect: false
+          helm:
+            chart_path: projects/foryou.therobotlives.com/app/helm/foryou
+            values_path: .backend.image
+            format: image
+        - name: frontend
+          dockerfile: app/frontend/Dockerfile
+          context: app/frontend
+          registry_path: foryou.therobotlives.com/frontend
+          build_args:
+            NEXT_PUBLIC_API_URL: "https://foryou.therobotlives.com"
+          auto_detect: false
+          helm:
+            chart_path: projects/foryou.therobotlives.com/app/helm/foryou
+            values_path: .frontend.image
+            format: image
+      helm:
+        charts:
+          - name: foryou
+            path: projects/foryou.therobotlives.com/app/helm/foryou
 
     - domain: designing.derobot.is
       services:

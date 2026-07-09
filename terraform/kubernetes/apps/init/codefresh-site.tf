@@ -95,11 +95,11 @@ resource "helm_release" "codefresh_site" {
       secrets = {
         name = var.codefresh_managed_secret_name
         keys = {
-          dbUser           = "CODEFRESH_DB_USER"
-          dbPassword       = "CODEFRESH_DB_PASSWORD"
-          secretKeyBase    = "CODEFRESH_SECRET_KEY_BASE"
+          dbUser            = "CODEFRESH_DB_USER"
+          dbPassword        = "CODEFRESH_DB_PASSWORD"
+          secretKeyBase     = "CODEFRESH_SECRET_KEY_BASE"
           guardianSecretKey = "CODEFRESH_GUARDIAN_SECRET_KEY"
-          redisUrl         = "CODEFRESH_REDIS_URL"
+          redisUrl          = "CODEFRESH_REDIS_URL"
         }
       }
 
@@ -108,11 +108,11 @@ resource "helm_release" "codefresh_site" {
       ]
 
       ingress = {
-        enabled       = true
-        className     = "nginx"
+        enabled        = true
+        className      = "nginx"
         cloudflareOnly = true
         annotations = {
-          "nginx.ingress.kubernetes.io/ssl-redirect"   = "true"
+          "nginx.ingress.kubernetes.io/ssl-redirect"    = "true"
           "nginx.ingress.kubernetes.io/proxy-body-size" = "10m"
         }
       }

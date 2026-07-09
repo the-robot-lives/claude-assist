@@ -1,18 +1,18 @@
 # ---------------------------------------------------------------------------
-# tobornalp.com — Phoenix API + Next.js frontend (start-app scaffold).
+# foryou.therobotlives.com — Phoenix API + Next.js frontend (start-app scaffold).
 # ---------------------------------------------------------------------------
 
-# App secrets (/apps/tobornalp) -> tobornalp-secrets.
-resource "kubectl_manifest" "infisical_tobornalp_secrets" {
+# App secrets (/apps/foryou) -> foryou-secrets.
+resource "kubectl_manifest" "infisical_foryou_secrets" {
   yaml_body = yamlencode({
     apiVersion = "secrets.infisical.com/v1alpha1"
     kind       = "InfisicalSecret"
     metadata = {
-      name      = "infisical-tobornalp-secrets"
+      name      = "infisical-foryou-secrets"
       namespace = kubernetes_namespace_v1.apps.metadata[0].name
       labels = {
-        "app.kubernetes.io/name"       = "tobornalp-secrets"
-        "app.kubernetes.io/component"  = "tobornalp"
+        "app.kubernetes.io/name"       = "foryou-secrets"
+        "app.kubernetes.io/component"  = "foryou"
         "app.kubernetes.io/managed-by" = "terraform"
       }
     }
@@ -28,12 +28,12 @@ resource "kubectl_manifest" "infisical_tobornalp_secrets" {
           secretsScope = {
             projectSlug = local.infisical_base.project_slug
             envSlug     = local.infisical_base.env_slug
-            secretsPath = "/apps/tobornalp"
+            secretsPath = "/apps/foryou"
           }
         }
       }
       managedSecretReference = {
-        secretName      = "tobornalp-secrets"
+        secretName      = "foryou-secrets"
         secretNamespace = kubernetes_namespace_v1.apps.metadata[0].name
         creationPolicy  = "Owner"
         template = {
@@ -46,18 +46,18 @@ resource "kubectl_manifest" "infisical_tobornalp_secrets" {
   depends_on = [kubernetes_namespace_v1.apps]
 }
 
-resource "helm_release" "tobornalp_site" {
-  name      = "tobornalp"
+resource "helm_release" "foryou_site" {
+  name      = "foryou"
   namespace = kubernetes_namespace_v1.apps.metadata[0].name
-  chart     = var.tobornalp_chart_path != "" ? var.tobornalp_chart_path : abspath("${path.module}/../../../../projects/tobornalp.com/app/helm/start-app")
+  chart     = var.foryou_chart_path != "" ? var.foryou_chart_path : abspath("${path.module}/../../../../projects/foryou.therobotlives.com/app/helm/start-app")
 
   values = [
     yamlencode({
-      domain   = var.tobornalp_domain
+      domain   = var.foryou_domain
       replicas = 1
 
       backend = {
-        image = var.tobornalp_backend_image
+        image = var.foryou_backend_image
         port  = 4000
         resources = {
           requests = { cpu = "100m", memory = "256Mi" }
@@ -66,7 +66,7 @@ resource "helm_release" "tobornalp_site" {
       }
 
       frontend = {
-        image = var.tobornalp_frontend_image
+        image = var.foryou_frontend_image
         port  = 3000
         resources = {
           requests = { cpu = "50m", memory = "128Mi" }
@@ -75,38 +75,29 @@ resource "helm_release" "tobornalp_site" {
       }
 
       migrate = {
-        enabled = false
-      }
-
-      # SSO is the only auth method (Authentik OIDC). Domain allowlist auto-
-      # registers; others need an invite code at /auth/register.
-      sso = {
-        requireInvite = true
-        oidc = {
-          issuer = "https://auth.derobot.is/application/o/tobornalp"
+        enabled = true
+        command = ["bin/foryou", "eval", "Foryou.Release.migrate()"]
+        resources = {
+          requests = { cpu = "50m", memory = "128Mi" }
+          limits   = { cpu = "200m", memory = "256Mi" }
         }
       }
 
-      extraEnv = [
-        { name = "SSO_REQUIRE_INVITE", value = "true" },
-        { name = "SSO_ALLOWED_DOMAINS", value = "therobotlives.com,noizu.com,greatnonprofits.org,communityconnectlabs.com" }
-      ]
-
       database = {
-        host = "app-timescaledb"
+        host = "app-timescaledb.apps.svc.cluster.local"
         port = 5432
-        name = "tobornalp"
+        name = "foryou"
       }
 
       secrets = {
-        name = "tobornalp-secrets"
+        name = "foryou-secrets"
         keys = {
-          dbUser            = "TOBORNALP_DB_USER"
-          dbPassword        = "TOBORNALP_DB_PASSWORD"
-          secretKeyBase     = "TOBORNALP_SECRET_KEY_BASE"
-          guardianSecretKey = "TOBORNALP_GUARDIAN_SECRET_KEY"
-          redisUrl          = "TOBORNALP_REDIS_URL"
-          databaseUrl       = "TOBORNALP_DATABASE_URL"
+          dbUser            = "FORYOU_DB_USER"
+          dbPassword        = "FORYOU_DB_PASSWORD"
+          databaseUrl       = "FORYOU_DATABASE_URL"
+          secretKeyBase     = "FORYOU_SECRET_KEY_BASE"
+          guardianSecretKey = "FORYOU_GUARDIAN_SECRET_KEY"
+          redisUrl          = "FORYOU_REDIS_URL"
         }
       }
 
@@ -126,7 +117,7 @@ resource "helm_release" "tobornalp_site" {
 
       tls = {
         enabled    = true
-        secretName = var.tobornalp_tls_secret_name
+        secretName = var.foryou_tls_secret_name
         infisical = {
           enabled              = true
           resyncInterval       = 300
@@ -135,9 +126,9 @@ resource "helm_release" "tobornalp_site" {
           credentialsNamespace = local.infisical_base.credentials_namespace
           projectSlug          = local.infisical_base.project_slug
           envSlug              = local.infisical_base.env_slug
-          secretsPath          = "/apps/tls/tobornalp"
-          crtKey               = "TOBORNALP_TLS_CRT"
-          keyKey               = "TOBORNALP_TLS_KEY"
+          secretsPath          = "/apps/tls/foryou"
+          crtKey               = "FORYOU_TLS_CRT"
+          keyKey               = "FORYOU_TLS_KEY"
         }
       }
     })
@@ -145,6 +136,8 @@ resource "helm_release" "tobornalp_site" {
 
   depends_on = [
     kubectl_manifest.infisical_ops_pull,
-    kubectl_manifest.infisical_tobornalp_secrets,
+    kubectl_manifest.infisical_foryou_secrets,
+    module.app_timescaledb,
+    module.app_valkey,
   ]
 }

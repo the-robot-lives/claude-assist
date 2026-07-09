@@ -22,6 +22,7 @@ module "app_valkey" {
   acl_users = {
     npl       = { password_key = "NPL_VALKEY_PASSWORD", rules = "~* &* +@all" }
     ddi       = { password_key = "DDI_VALKEY_PASSWORD", rules = "~* &* +@all" }
+    foryou    = { password_key = "FORYOU_VALKEY_PASSWORD", rules = "~* &* +@all" }
     tobornalp = { password_key = "TOBORNALP_VALKEY_PASSWORD", rules = "~* &* +@all" }
     startapp  = { password_key = "START_APP_VALKEY_PASSWORD", rules = "~* &* +@all" }
   }
@@ -51,6 +52,7 @@ module "app_timescaledb" {
     THEROBOTKNOWS = "therobotknows-secrets"
     THEROBOTLIVES = "therobotlives-secrets"
     THEROBOTPLANS = "therobotplans-secrets"
+    FORYOU        = "foryou-secrets"
     TOBORNALP     = "tobornalp-secrets"
   }
 
