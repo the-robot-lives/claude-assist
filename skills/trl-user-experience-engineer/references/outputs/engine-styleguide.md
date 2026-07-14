@@ -17,6 +17,8 @@ This document is the primary integration path between the UX Engineer skill and 
 
 > **New to the engine?** Start with [styleguide-setup-guide.md](styleguide-setup-guide.md) for end-to-end setup instructions, workflow selection (engine viewer vs project-local), and the codefre.sh reference implementation. This document covers YAML extraction from a completed markdown style guide.
 
+> **Treatise-first:** A theme's design rationale is captured in a **theme treatise** (`treatise-{slug}.md`, sibling of `theme-{slug}/`) written before YAML extraction — see [theme-treatise.md](theme-treatise.md).
+
 > **CRITICAL — Theme Hosting Rules:**
 >
 > Themes are **NEVER** manually copied or symlinked into `styleguide-engine/app/src/config/`. Prefer the **npx launcher** — it manages its own cached viewer and needs neither a cloned engine nor a scaffolded app:

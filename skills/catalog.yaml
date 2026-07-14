@@ -1,0 +1,654 @@
+# skill-manage catalog for monorepo skills/
+# Point skill-manage config at this file:
+#   catalog: /path/to/Noizu/skills/catalog.yaml
+# Keys match skill directory names (trl-*).
+version: 1
+
+skills:
+  # ── Passive income & strategy ──────────────────────────────────────────────
+  trl-monetization-strategy:
+    tags: [business, strategy, monetization, passive-income]
+    work_types: [planning, business]
+    providers: [claude, codex, grok]
+    notes: "Choose and sequence income streams first"
+    category: passive-income
+
+  trl-market-intelligence:
+    tags: [business, research, niches, validation]
+    work_types: [planning, business, research]
+    providers: [claude, codex, grok]
+    notes: "Validate niche demand before building"
+    category: passive-income
+
+  trl-conversion-engineer:
+    tags: [business, portfolio, conversion, strategy]
+    work_types: [business, planning]
+    providers: [claude, codex, grok]
+    notes: "Orchestrate multi-stream portfolio"
+    category: passive-income
+
+  trl-ai-templates:
+    tags: [business, products, templates, ai]
+    work_types: [business, feature-dev]
+    providers: [claude, codex, grok]
+    category: passive-income
+
+  trl-content-publishing:
+    tags: [business, content, newsletter, writing]
+    work_types: [business, content, docs]
+    providers: [claude, codex, grok]
+    category: passive-income
+
+  trl-print-on-demand:
+    tags: [business, merch, design, pod]
+    work_types: [business, design]
+    providers: [claude, codex, grok]
+    category: passive-income
+
+  trl-marketing:
+    tags: [marketing, launch, gtm, positioning, social, announcements]
+    work_types: [business, content]
+    providers: [claude, codex, grok]
+    notes: "Launch/GTM execution — not SEO (trl-seo-guru), not newsletters (trl-content-publishing)"
+    category: passive-income
+
+  # ── Knowledge management ─────────────────────────────────────────────────
+  trl-kb:
+    tags: [knowledge, learning, research]
+    work_types: [research, learning, docs]
+    providers: [claude, codex, grok]
+    category: knowledge
+
+  trl-kb-research:
+    tags: [knowledge, research, bibliography]
+    work_types: [research, learning]
+    providers: [claude, codex, grok]
+    category: knowledge
+
+  trl-kb-curriculum:
+    tags: [knowledge, curriculum, learning]
+    work_types: [learning, planning]
+    providers: [claude, codex, grok]
+    category: knowledge
+
+  trl-kb-digest:
+    tags: [knowledge, synthesis, writing]
+    work_types: [research, docs, learning]
+    providers: [claude, codex, grok]
+    category: knowledge
+
+  # ── MCP ──────────────────────────────────────────────────────────────────
+  trl-mcp-builder:
+    tags: [mcp, agents, coordinator]
+    work_types: [feature-dev, mcp, planning]
+    providers: [claude, codex, grok]
+    notes: "Parent coordinator for MCP lifecycle"
+    category: mcp
+
+  trl-mcp-architect:
+    tags: [mcp, design, architecture, security]
+    work_types: [planning, mcp, feature-dev]
+    providers: [claude, codex, grok]
+    category: mcp
+
+  trl-mcp-forge:
+    tags: [mcp, implementation, scaffold]
+    work_types: [feature-dev, mcp]
+    providers: [claude, codex, grok]
+    category: mcp
+
+  # ── AI & agents ──────────────────────────────────────────────────────────
+  trl-agent-architect:
+    tags: [agents, architecture, prompts, multi-agent]
+    work_types: [agents, planning, feature-dev]
+    providers: [claude, codex, grok]
+    category: agents
+
+  trl-agentic-harness-engineer:
+    tags: [agents, harness, production, security]
+    work_types: [agents, feature-dev, security]
+    providers: [claude, codex, grok]
+    category: agents
+
+  trl-rapid-prototype:
+    tags: [prototype, spike, feasibility]
+    work_types: [feature-dev, research, planning]
+    providers: [claude, codex, grok]
+    category: agents
+
+  trl-research-and-development:
+    tags: [research, experiments, r-and-d]
+    work_types: [research, planning]
+    providers: [claude, codex, grok]
+    category: agents
+
+  trl-persona-session:
+    tags: [agents, persona, session]
+    work_types: [agents, feature-dev]
+    providers: [claude, codex, grok]
+    notes: "Hold a persona for the session duration"
+    category: agents
+
+  # ── Mobile & desktop ─────────────────────────────────────────────────────
+  trl-ios-mobile-engineer:
+    tags: [mobile, ios, swiftui, apple]
+    work_types: [feature-dev, mobile]
+    providers: [claude, codex, grok]
+    category: mobile-desktop
+
+  trl-android-mobile:
+    tags: [mobile, android, kotlin, compose]
+    work_types: [feature-dev, mobile]
+    providers: [claude, codex, grok]
+    category: mobile-desktop
+
+  trl-osx-design-and-develop:
+    tags: [desktop, macos, swiftui, apple]
+    work_types: [feature-dev, desktop]
+    providers: [claude, codex, grok]
+    category: mobile-desktop
+
+  trl-unity-developer:
+    tags: [games, unity, csharp, realtime]
+    work_types: [feature-dev, games]
+    providers: [claude, codex, grok]
+    category: mobile-desktop
+
+  trl-metal-graphics-dev:
+    tags: [graphics, metal, gpu, apple]
+    work_types: [feature-dev, graphics]
+    providers: [claude, codex, grok]
+    category: mobile-desktop
+
+  # ── Design & frontend ────────────────────────────────────────────────────
+  trl-user-experience-engineer:
+    tags: [ux, design, frontend, accessibility]
+    work_types: [design, feature-dev, frontend]
+    providers: [claude, codex, grok]
+    category: design-frontend
+
+  trl-react-engineer:
+    tags: [frontend, react, nextjs, typescript]
+    work_types: [feature-dev, frontend, migration]
+    providers: [claude, codex, grok]
+    notes: "React 19 / Next.js 15–16"
+    category: design-frontend
+
+  trl-lit-dev:
+    tags: [frontend, lit, web-components]
+    work_types: [feature-dev, frontend]
+    providers: [claude, codex, grok]
+    category: design-frontend
+
+  trl-seo-guru:
+    tags: [seo, geo, aeo, content]
+    work_types: [content, docs, business]
+    providers: [claude, codex, grok]
+    category: design-frontend
+
+  trl-tui-engineer:
+    tags: [tui, cli, terminal, ratatui]
+    work_types: [feature-dev, desktop, cli]
+    providers: [claude, codex, grok]
+    category: design-frontend
+
+  trl-hologram-engineer:
+    tags: [frontend, hologram, templates, noizu, elixir]
+    work_types: [feature-dev, frontend, elixir]
+    providers: [claude, codex, grok]
+    notes: "Hologram page/component system"
+    category: design-frontend
+
+  trl-theme-designer:
+    tags: [themes, styleguide-engine, design-tokens, yaml, dark-mode]
+    work_types: [design, frontend]
+    providers: [claude, codex, grok]
+    notes: "Fine-tune styleguide-engine theme YAML from UXE treatises — not treatise/style-guide authoring (trl-user-experience-engineer)"
+    category: design-frontend
+
+  trl-ui-test-engineer:
+    tags: [testing, cypress, e2e, selectors, fixtures, anti-flake]
+    work_types: [qa, feature-dev, frontend, audit]
+    providers: [claude, codex, grok]
+    notes: "Non-fragile UI test architecture: data-cy schema, fluent commands, fixture seams, jump-to-SUT — not unit tests, not usability walkthroughs (trl-site-walkthrough)"
+    category: design-frontend
+
+  # ── Backend & infrastructure ─────────────────────────────────────────────
+  trl-kubernetes-engineer:
+    tags: [infra, k8s, helm, gitops]
+    work_types: [infra, deploy, feature-dev]
+    providers: [claude, codex, grok]
+    category: infrastructure
+
+  trl-terraform-engineer:
+    tags: [infra, terraform, iac, cloud]
+    work_types: [infra, deploy]
+    providers: [claude, codex, grok]
+    category: infrastructure
+
+  trl-dba-db-designer-and-tuning:
+    tags: [database, postgres, schema, performance]
+    work_types: [infra, feature-dev, debugging]
+    providers: [claude, codex, grok]
+    category: infrastructure
+
+  trl-threat-modeler:
+    tags: [security, threat-model, stride, owasp]
+    work_types: [security, planning, audit]
+    providers: [claude, codex, grok]
+    category: infrastructure
+
+  trl-media-solution-architect:
+    tags: [media, streaming, cdn, video]
+    work_types: [infra, feature-dev, planning]
+    providers: [claude, codex, grok]
+    category: infrastructure
+
+  trl-plugin-architect:
+    tags: [architecture, plugins, extensibility]
+    work_types: [planning, feature-dev]
+    providers: [claude, codex, grok]
+    category: infrastructure
+
+  trl-signoz-terraform-provider:
+    tags: [infra, observability, signoz, terraform]
+    work_types: [infra, deploy, observability]
+    providers: [claude, codex, grok]
+    category: infrastructure
+
+  # ── API & delivery (category: infrastructure) ────────────────────────────
+  trl-api-designer:
+    tags: [api, rest, graphql, openapi, contracts, versioning]
+    work_types: [feature-dev, planning, api]
+    providers: [claude, codex, grok]
+    notes: "API contract design and evolution — not MCP (trl-mcp-*), not DB schema (trl-dba-*)"
+    category: infrastructure
+
+  trl-story-to-release:
+    tags: [stories, implementation, release, style-guide, personas, delivery]
+    work_types: [feature-dev, planning, qa]
+    providers: [claude, codex, grok]
+    notes: "User stories → shipped release, constrained by style guides and persona expectations"
+    category: infrastructure
+
+  # ── Elixir / Noizu ───────────────────────────────────────────────────────
+  trl-noizu-frameworks:
+    tags: [elixir, noizu, genai, beam]
+    work_types: [elixir, feature-dev, research]
+    providers: [claude, codex, grok]
+    notes: "Noizu Elixir library ecosystem reference"
+    category: elixir
+
+  # ── Docs, services, meta ─────────────────────────────────────────────────
+  trl-technical-writer:
+    tags: [docs, writing, readme]
+    work_types: [docs, feature-dev, planning]
+    providers: [claude, codex, grok]
+    category: docs-meta
+
+  trl-proposal-writer:
+    tags: [docs, business, proposals, consulting]
+    work_types: [planning, business, docs]
+    providers: [claude, codex, grok]
+    category: docs-meta
+
+  trl-content-generator:
+    tags: [content, research, publishing, ideas]
+    work_types: [content, business, research]
+    providers: [claude, codex, grok]
+    category: docs-meta
+
+  trl-skill-engineer:
+    tags: [meta, skills, scaffold]
+    work_types: [meta, agents, planning]
+    providers: [claude, codex, grok]
+    notes: "Build and validate new skills"
+    category: docs-meta
+
+  trl-skill-evaluator:
+    tags: [meta, skills, evals, quality]
+    work_types: [meta, agents, audit]
+    providers: [claude, codex, grok]
+    category: docs-meta
+
+  trl-game-design:
+    tags: [games, design, monetization]
+    work_types: [games, planning, design]
+    providers: [claude, codex, grok]
+    category: docs-meta
+
+  trl-site-walkthrough:
+    tags: [ux, qa, walkthrough, accessibility]
+    work_types: [audit, design, qa]
+    providers: [claude, codex, grok]
+    category: docs-meta
+
+# Work-type bundles (enable-set / profiles TUI)
+work_types:
+  feature-dev:
+    description: Product feature implementation
+    skills:
+      - trl-react-engineer
+      - trl-user-experience-engineer
+      - trl-technical-writer
+      - trl-rapid-prototype
+      - trl-story-to-release
+      - trl-api-designer
+    agents: []
+    commands: []
+    editor_profiles: [vscode-web]
+
+  frontend:
+    description: Web UI and design systems
+    skills:
+      - trl-react-engineer
+      - trl-lit-dev
+      - trl-user-experience-engineer
+      - trl-hologram-engineer
+      - trl-seo-guru
+      - trl-theme-designer
+      - trl-ui-test-engineer
+    agents: []
+    commands: []
+    editor_profiles: [vscode-web]
+
+  mobile:
+    description: iOS / Android mobile apps
+    skills:
+      - trl-ios-mobile-engineer
+      - trl-android-mobile
+      - trl-user-experience-engineer
+    agents: []
+    commands: []
+    editor_profiles: [vscode-mobile]
+
+  desktop:
+    description: macOS / TUI / native desktop
+    skills:
+      - trl-osx-design-and-develop
+      - trl-tui-engineer
+      - trl-metal-graphics-dev
+    agents: []
+    commands: []
+    editor_profiles: [vscode-desktop]
+
+  infra:
+    description: Cluster, IaC, databases, deploy
+    skills:
+      - trl-kubernetes-engineer
+      - trl-terraform-engineer
+      - trl-dba-db-designer-and-tuning
+      - trl-signoz-terraform-provider
+      - trl-media-solution-architect
+    agents: []
+    commands: []
+    editor_profiles: [vscode-infra]
+
+  deploy:
+    description: Deployment and release operations
+    skills:
+      - trl-kubernetes-engineer
+      - trl-terraform-engineer
+    agents: []
+    commands: []
+    editor_profiles: [vscode-infra]
+
+  security:
+    description: Threat modeling and hardening
+    skills:
+      - trl-threat-modeler
+      - trl-agentic-harness-engineer
+      - trl-kubernetes-engineer
+    agents: []
+    commands: []
+    editor_profiles: [vscode-infra]
+
+  agents:
+    description: Agent systems, MCP, personas
+    skills:
+      - trl-agent-architect
+      - trl-agentic-harness-engineer
+      - trl-mcp-builder
+      - trl-mcp-architect
+      - trl-mcp-forge
+      - trl-persona-session
+    agents: []
+    commands: []
+    editor_profiles: [vscode-agents]
+
+  mcp:
+    description: MCP server design and implementation
+    skills:
+      - trl-mcp-builder
+      - trl-mcp-architect
+      - trl-mcp-forge
+    agents: []
+    commands: []
+    editor_profiles: [vscode-agents]
+
+  api:
+    description: API contract design and evolution
+    skills:
+      - trl-api-designer
+      - trl-technical-writer
+      - trl-dba-db-designer-and-tuning
+    agents: []
+    commands: []
+    editor_profiles: [vscode-agents]
+
+  elixir:
+    description: Elixir / BEAM / Noizu framework work
+    skills:
+      - trl-noizu-frameworks
+      - trl-hologram-engineer
+    agents: []
+    commands: []
+    editor_profiles: [vscode-web]
+
+  planning:
+    description: Specs, proposals, strategy
+    skills:
+      - trl-technical-writer
+      - trl-proposal-writer
+      - trl-monetization-strategy
+      - trl-market-intelligence
+    agents: []
+    commands: []
+    editor_profiles: [vscode-docs]
+
+  research:
+    description: Research, R&D, knowledge gathering
+    skills:
+      - trl-research-and-development
+      - trl-kb-research
+      - trl-kb
+      - trl-market-intelligence
+    agents: []
+    commands: []
+    editor_profiles: [vscode-docs]
+
+  learning:
+    description: Curricula and knowledge digests
+    skills:
+      - trl-kb
+      - trl-kb-research
+      - trl-kb-curriculum
+      - trl-kb-digest
+    agents: []
+    commands: []
+    editor_profiles: [vscode-docs]
+
+  docs:
+    description: Documentation and technical writing
+    skills:
+      - trl-technical-writer
+      - trl-seo-guru
+      - trl-content-generator
+    agents: []
+    commands: []
+    editor_profiles: [vscode-docs]
+
+  content:
+    description: Content strategy and publishing
+    skills:
+      - trl-content-generator
+      - trl-content-publishing
+      - trl-seo-guru
+      - trl-marketing
+    agents: []
+    commands: []
+    editor_profiles: [vscode-docs]
+
+  business:
+    description: Monetization and portfolio
+    skills:
+      - trl-monetization-strategy
+      - trl-market-intelligence
+      - trl-conversion-engineer
+      - trl-ai-templates
+      - trl-print-on-demand
+      - trl-proposal-writer
+      - trl-marketing
+    agents: []
+    commands: []
+    editor_profiles: [vscode-docs]
+
+  design:
+    description: UX, visual design, walkthroughs
+    skills:
+      - trl-user-experience-engineer
+      - trl-site-walkthrough
+      - trl-game-design
+      - trl-theme-designer
+    agents: []
+    commands: []
+    editor_profiles: [vscode-web]
+
+  games:
+    description: Game design and Unity development
+    skills:
+      - trl-game-design
+      - trl-unity-developer
+    agents: []
+    commands: []
+    editor_profiles: [vscode-desktop]
+
+  graphics:
+    description: GPU / Metal graphics work
+    skills:
+      - trl-metal-graphics-dev
+      - trl-osx-design-and-develop
+    agents: []
+    commands: []
+    editor_profiles: [vscode-desktop]
+
+  observability:
+    description: Metrics, traces, SigNoz
+    skills:
+      - trl-signoz-terraform-provider
+      - trl-kubernetes-engineer
+    agents: []
+    commands: []
+    editor_profiles: [vscode-infra]
+
+  audit:
+    description: Reviews, walkthroughs, evals
+    skills:
+      - trl-site-walkthrough
+      - trl-threat-modeler
+      - trl-skill-evaluator
+      - trl-seo-guru
+      - trl-ui-test-engineer
+    agents: []
+    commands: []
+    editor_profiles: [vscode-docs]
+
+  debugging:
+    description: Investigating failures
+    skills:
+      - trl-dba-db-designer-and-tuning
+      - trl-kubernetes-engineer
+      - trl-rapid-prototype
+    agents: []
+    commands: []
+    editor_profiles: [vscode-infra]
+
+  migration:
+    description: Framework or platform migrations
+    skills:
+      - trl-react-engineer
+      - trl-terraform-engineer
+      - trl-technical-writer
+    agents: []
+    commands: []
+    editor_profiles: [vscode-web]
+
+  meta:
+    description: Building and evaluating skills
+    skills:
+      - trl-skill-engineer
+      - trl-skill-evaluator
+      - trl-agent-architect
+    agents: []
+    commands: []
+    editor_profiles: [vscode-docs]
+
+  qa:
+    description: Usability and site task validation
+    skills:
+      - trl-site-walkthrough
+      - trl-user-experience-engineer
+      - trl-story-to-release
+      - trl-ui-test-engineer
+    agents: []
+    commands: []
+    editor_profiles: [vscode-web]
+
+  cli:
+    description: Terminal / CLI tooling
+    skills:
+      - trl-tui-engineer
+      - trl-plugin-architect
+    agents: []
+    commands: []
+    editor_profiles: [vscode-desktop]
+
+# Editor profiles (paths are references; skill-manage audits existence only)
+editor_profiles:
+  vscode-web:
+    description: Web / frontend workspaces
+    files:
+      - path: ~/.config/Code/User/settings.json
+        role: settings
+      - path: ~/dotfiles/vscode/web.code-workspace
+        role: workspace
+
+  vscode-infra:
+    description: Infra / k8s / terraform
+    files:
+      - path: ~/dotfiles/vscode/infra.code-workspace
+        role: workspace
+
+  vscode-docs:
+    description: Markdown and docs writing
+    files:
+      - path: ~/dotfiles/vscode/docs.code-workspace
+        role: workspace
+
+  vscode-agents:
+    description: Agent / MCP development
+    files:
+      - path: ~/dotfiles/vscode/agents.code-workspace
+        role: workspace
+
+  vscode-mobile:
+    description: iOS / Android mobile
+    files:
+      - path: ~/dotfiles/vscode/mobile.code-workspace
+        role: workspace
+
+  vscode-desktop:
+    description: macOS / TUI / Unity
+    files:
+      - path: ~/dotfiles/vscode/desktop.code-workspace
+        role: workspace

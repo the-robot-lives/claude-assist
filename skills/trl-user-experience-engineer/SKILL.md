@@ -114,6 +114,7 @@ The styleguide-engine is the **primary rendering target** for all style guides. 
 
 > For the complete YAML schema, section-to-file mapping, and worked examples, see [outputs/engine-styleguide.md](references/outputs/engine-styleguide.md).
 > For end-to-end setup (two workflows, checklist, pitfalls), see [outputs/styleguide-setup-guide.md](references/outputs/styleguide-setup-guide.md).
+> For fine-tuning treatises into engine theme YAML, see **trl-theme-designer**.
 
 ### Package: `@noizu/styleguide`
 
@@ -231,6 +232,7 @@ Format-specific implementations:
   ├── Next.js/React (interactive web)
   ├── HTML/CSS (static/simple)
   ├── Engine style guide (interactive, multi-theme via styleguide-engine)
+  ├── Theme treatise (design-theory doc consumed by trl-theme-designer)
   ├── Landing page (conversion-focused)
   ├── p5.js (interactive prototype)
   ├── Textual TUI (terminal app)
@@ -250,6 +252,7 @@ Format-specific implementations:
 | Marketing/conversion page | Landing Pages | `outputs/landing-pages.md` |
 | Visual style guide | Engine Style Guide | `outputs/engine-styleguide.md` |
 | Style guide setup (end-to-end) | Setup Guide | `outputs/styleguide-setup-guide.md` |
+| Theme design rationale (pre-YAML) | Theme Treatise | `outputs/theme-treatise.md` |
 | Visual direction | SVG Mockups | `outputs/svg-mockups.md` |
 | Brand identity / logos | SVG Logos | `outputs/svg-logos.md` |
 | Interaction testing | p5.js | `outputs/p5js.md` |
@@ -336,6 +339,7 @@ Convert to engine YAML → styleguide-serve (or ./serve-project.sh) → interact
 ```
 
 Start: `process/style-guide-construction.md` → Examples: `styles/examples/`
+Theme treatise (design rationale, written before YAML extraction): `outputs/theme-treatise.md`
 Engine output: `outputs/engine-styleguide.md` (YAML extraction, theme templates, dev server)
 Quick preview: `npx @noizu/styleguide serve ./design/theme/`
 
@@ -443,6 +447,7 @@ Quick preview: `npx @noizu/styleguide serve ./design/theme/`
 | **Running a design sprint** | `process/design-sprint.md` + `process/quality-gates.md` |
 | **Building a style guide** | `process/style-guide-construction.md` + `styles/examples/` |
 | **Engine style guide** | `outputs/engine-styleguide.md` |
+| **Authoring a theme treatise** | `outputs/theme-treatise.md` |
 | **Engine setup (end-to-end)** | `outputs/styleguide-setup-guide.md` |
 | **Package imports & component API** | `outputs/engine-styleguide.md` §10 |
 | **Feedback iteration** | `process/iteration.md` |
@@ -509,6 +514,7 @@ All reference paths are relative to `references/`.
 - [html-css.md](references/outputs/html-css.md) — Vanilla HTML/CSS, design tokens, utility classes, responsive patterns
 - [engine-styleguide.md](references/outputs/engine-styleguide.md) — Styleguide engine integration: YAML extraction from markdown, theme templates, symlink convention, dev server
 - [styleguide-setup-guide.md](references/outputs/styleguide-setup-guide.md) — End-to-end setup: two workflows (engine viewer vs project-local), codefre.sh reference implementation, setup checklist, common pitfalls
+- [theme-treatise.md](references/outputs/theme-treatise.md) — Theme treatise specification: design-theory document per theme (10-section contract), worked example, quality checklist; consumed by trl-theme-designer for YAML fine-tuning
 - [landing-pages.md](references/outputs/landing-pages.md) — Conversion-focused templates, A/B testing, analytics integration
 - [p5js.md](references/outputs/p5js.md) — Interactive prototyping, animations, gesture handling
 - [textual-tui.md](references/outputs/textual-tui.md) — Python TUI components, forms, themes, terminal patterns
@@ -519,3 +525,4 @@ All reference paths are relative to `references/`.
 ### Assets
 - [design-brief-worksheet.md](assets/design-brief-worksheet.md) — Fillable worksheet for capturing design requirements, constraints, and success criteria
 - [project-tracker.md](assets/project-tracker.md) — Project tracking template for monitoring design progress, deliverables, and quality scores
+- [theme-treatise-template.md](assets/theme-treatise-template.md) — Fillable 10-section skeleton for authoring a theme treatise
