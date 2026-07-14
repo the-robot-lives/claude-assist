@@ -1,9 +1,22 @@
 # skills/ — Claude Code Skill Definitions
 
-Skill definitions (NPL/Noizu authored). **Note**: skills exist in two unsynced copies — edit
-the monorepo `skills/` source *and* `cp` to `~/.claude/skills/` (separate git repo, no
-auto-sync). `skills/shared/` holds assets shared across skills; `skills/evals/` holds skill
-evaluation harnesses.
+Skill definitions (NPL/Noizu authored). Canonical source is monorepo `skills/`. Prefer
+**`skill-manage`** (`utilities/agent/skill-manage`) to enable/disable provider installs via
+symlinks instead of manual `cp`:
+
+```bash
+export SKILL_REPO=/path/to/Noizu/skills   # or skill-manage init-config
+skill-manage enable skills <name> --provider claude   # also codex / grok
+skill-manage list skills --provider all
+skill-manage audit skills
+```
+
+Config lives under `~/.config/skill-manage/` (multi-source roots, YAML catalog for tags /
+work types). **Agents** (`~/.claude/agents/*.md`) and **commands** (`~/.claude/commands/*.md`)
+are sibling artifact kinds managed by the same tool — not the same as skills.
+
+`skills/shared/` holds assets shared across skills; `skills/evals/` holds skill evaluation
+harnesses.
 
 ```
 skills/

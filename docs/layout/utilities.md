@@ -41,7 +41,8 @@ utilities/
 │   ├── media-tool/bin/         #   generate-media-prompt, media-eval-port-forward
 │   ├── dangerously-safe/bin/   #   dangerously-safe wrapper
 │   ├── mallm/                  #   multi-LLM helper
-│   └── run-claude/             #   run-claude launcher (e.g. run-claude-timescaledb)
+│   ├── run-claude/             #   run-claude launcher (e.g. run-claude-timescaledb)
+│   └── skill-manage/           #   skill-manage — symlink skills/agents/commands + YAML catalog
 │
 ├── colo/colo-utils/bin/        # Colo/cluster: colo-sync, colo-deploy-relay,
 │                               # colo-local-model-link, cluster-* mirrors
@@ -62,3 +63,4 @@ utilities/
 | `provision-db <target>` | Create DB/role/extensions on a live instance |
 | `infisical-populate-secrets` | Seed Infisical from `.infisical-secrets.yaml` |
 | `init-proj-scaffold` | Scaffold a new project from start-app (run in-repo copy) |
+| `skill-manage` | Symlink-enable skills/agents/commands for Claude/Codex/Grok; audit + work-type catalog |
