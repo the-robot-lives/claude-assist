@@ -16,7 +16,13 @@ work types). **Agents** (`~/.claude/agents/*.md`) and **commands** (`~/.claude/c
 are sibling artifact kinds managed by the same tool — not the same as skills.
 
 `skills/shared/` holds assets shared across skills; `skills/evals/` holds skill evaluation
-harnesses.
+harnesses. Repo-level metadata for skill-manage:
+
+| File | Role |
+|------|------|
+| `skills/catalog.yaml` | Tags, work types, enable-set bundles, editor profiles |
+| `skills/categories.yaml` | Category index + flows |
+| `skills/tags.yaml` | Controlled tag vocabulary |
 
 ```
 skills/
