@@ -192,6 +192,13 @@ skills:
     providers: [claude, codex, grok]
     category: design-frontend
 
+  trl-zellij-engineer:
+    tags: [zellij, terminal, multiplexer, plugins, wasm, rust, kdl]
+    work_types: [feature-dev, cli, rust]
+    providers: [claude, codex, grok]
+    notes: "Zellij itself — plugins, layouts, core, forks. Not general TUI frameworks (trl-tui-engineer)"
+    category: design-frontend
+
   trl-hologram-engineer:
     tags: [frontend, hologram, templates, noizu, elixir]
     work_types: [feature-dev, frontend, elixir]

@@ -75,6 +75,7 @@ Skills are **self-contained**: each can be invoked independently via `/skill-nam
 | [trl-lit-dev](trl-lit-dev/) | Design and implement production-ready Lit v3 web components — from single elements through full design systems |
 | [trl-seo-guru](trl-seo-guru/) | Audit and optimize for search engines and AI answer engines (GEO, AEO, schema markup, llms.txt) |
 | [trl-tui-engineer](trl-tui-engineer/) | Design and build terminal UIs across Rust, Go, C/C++, TypeScript, Java, and shell — dashboards, forms, wizards, and interactive CLI tools |
+| [trl-zellij-engineer](trl-zellij-engineer/) | Extend Zellij itself — WASM plugins, KDL layouts and keybinds, core Rust internals, and fork rebases |
 | [trl-theme-designer](trl-theme-designer/) | Fine-tune styleguide-engine theme YAML from UX treatise documents — seed extraction, facet overrides, variants, contrast verification |
 | [trl-ui-test-engineer](trl-ui-test-engineer/) | Non-fragile UI test architecture — data-cy selector schema, fluent Cypress commands, step libraries, fixture seams, jump-to-SUT sessions, agentic test exploration |
 

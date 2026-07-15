@@ -70,13 +70,14 @@ categories:
 
   design-frontend:
     title: Design & Frontend
-    description: UX, React, Lit, SEO, TUI, Hologram
+    description: UX, React, Lit, SEO, TUI, Zellij, Hologram
     skills:
       - trl-user-experience-engineer
       - trl-react-engineer
       - trl-lit-dev
       - trl-seo-guru
       - trl-tui-engineer
+      - trl-zellij-engineer
       - trl-hologram-engineer
       - trl-theme-designer
       - trl-ui-test-engineer
