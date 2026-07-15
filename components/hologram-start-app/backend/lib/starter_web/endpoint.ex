@@ -1,0 +1,44 @@
+defmodule StarterWeb.Endpoint do
+  use Phoenix.Endpoint, otp_app: :starter
+
+  @session_options [
+    store: :cookie,
+    key: "_starter_key",
+    signing_salt: "hologram_session",
+    same_site: "Lax"
+  ]
+
+  socket "/socket", StarterWeb.UserSocket,
+    websocket: [timeout: 45_000],
+    longpoll: false
+
+  # Style-guide CSS + Hologram client bundles
+  plug Plug.Static,
+    at: "/",
+    from: :starter,
+    gzip: false,
+    only: ~w(themes css hologram favicon.ico robots.txt)
+
+  if code_reloading? do
+    plug Phoenix.CodeReloader
+    plug Phoenix.Ecto.CheckRepoStatus, otp_app: :starter
+  end
+
+  plug StarterWeb.Plugs.CORS
+  plug Plug.RequestId
+  plug StarterWeb.Plugs.OtelLoggerMetadata
+  plug Plug.Telemetry, event_prefix: [:phoenix, :endpoint]
+
+  plug Plug.Parsers,
+    parsers: [:urlencoded, :multipart, :json],
+    pass: ["*/*"],
+    json_decoder: Phoenix.json_library()
+
+  plug Plug.MethodOverride
+  plug Plug.Head
+  plug Plug.Session, @session_options
+
+  # Hologram pages/commands BEFORE the Phoenix JSON API router
+  plug Hologram.Router
+  plug StarterWeb.Router
+end

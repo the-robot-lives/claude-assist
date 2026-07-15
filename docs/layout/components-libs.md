@@ -13,9 +13,14 @@ components/
 │   ├── frontend/               #   Next.js + design system
 │   ├── .env.example            #   Env template (copy to .env)
 │   └── .tool-versions          #   asdf/mise tool pins
+├── hologram-start-app/         # Hologram variant: Elixir backend + Hologram UI (no Next.js)
+│   ├── backend/                #   Phoenix API + Hologram pages/components
+│   ├── assets/theme-style-guide/  # Style-guide YAML themes
+│   └── helm/hologram-start-app/
 ├── static-site/                # Static-site scaffold + Helm chart (helm/static-site)
-└── styleguide/                 # @noizu/styleguide — design-system generator
-    └── app/                    #   Styleguide app (Cypress e2e, theme YAML → CSS)
+└── styleguide/                 # Design system
+    ├── hologram/               #   Canonical viewer: Elixir + Hologram + static HTML/CSS (no TS)
+    └── app/                    #   Optional: Node CSS gen + legacy Next/npm package
 ```
 
 ## libs/ — Shared Libraries
