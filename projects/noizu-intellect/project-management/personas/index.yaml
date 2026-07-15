@@ -1,0 +1,55 @@
+personas:
+  - id: P-001
+    name: Devon Reyes
+    slug: devon-reyes
+    archetype: Solo AI-augmented staff engineer
+    segment: primary
+    file: P-001-devon-reyes.md
+  - id: P-002
+    name: Mara Lindqvist
+    slug: mara-lindqvist
+    archetype: Agent designer / prompt engineer
+    segment: primary
+    file: P-002-mara-lindqvist.md
+  - id: P-003
+    name: Sam Okafor
+    slug: sam-okafor
+    archetype: Technical team lead of a hybrid human+agent team
+    segment: primary
+    file: P-003-sam-okafor.md
+  - id: P-004
+    name: Priya Natarajan
+    slug: priya-natarajan
+    archetype: Non-technical operator / outcome picker
+    segment: secondary
+    file: P-004-priya-natarajan.md
+  - id: P-005
+    name: Dr. Elias Thorn
+    slug: elias-thorn
+    archetype: Multi-agent systems researcher
+    segment: secondary
+    file: P-005-elias-thorn.md
+  - id: P-006
+    name: Nadia Volkov
+    slug: nadia-volkov
+    archetype: Self-hosting platform admin / SRE
+    segment: tertiary
+    file: P-006-nadia-volkov.md
+  - id: P-007
+    name: Ken Watanabe
+    slug: ken-watanabe
+    archetype: Compliance auditor / support operator
+    segment: tertiary
+    file: P-007-ken-watanabe.md
+  - id: P-008
+    name: Alex Marsh
+    slug: alex-marsh
+    archetype: Screen-reader developer
+    segment: edge-case
+    file: P-008-alex-marsh.md
+  - id: P-009
+    name: Rosa Jimenez
+    slug: rosa-jimenez
+    archetype: Cost-conscious hobbyist on constrained resources
+    segment: edge-case
+    file: P-009-rosa-jimenez.md
