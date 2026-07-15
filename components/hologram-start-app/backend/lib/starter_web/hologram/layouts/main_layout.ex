@@ -1,30 +1,46 @@
 defmodule StarterWeb.Hologram.Layouts.MainLayout do
   @moduledoc """
-  Root Hologram layout: style-guide CSS, runtime, navbar, cookie consent.
+  Root Hologram layout: multi-theme style-guide CSS, runtime, navbar, cookie consent.
 
-  Loads the YAML-generated design system from `/themes/design-system.generated.css`
-  (produced by `@noizu/styleguide` from `assets/theme-style-guide/`).
+  Theme YAML lives under `backend/themes/theme-*/`; CSS under `priv/static/themes/`.
+  Cookie `sg-theme` selects the active theme; `color-mode` selects light/dark.
   """
   use Hologram.Component
 
+  alias Hologram.UI.Link
   alias Starter.Hologram.Auth
+  alias Starter.StyleGuide.Catalog
   alias StarterWeb.Hologram.Components.CookieConsent
   alias StarterWeb.Hologram.Components.Navbar
+  alias StarterWeb.Hologram.Pages.AppHomePage
+  alias StarterWeb.Hologram.Pages.StyleGuidePage
+  alias StarterWeb.Hologram.Pages.TailwindPlusPage
 
-  prop :page_title, :string, default: "Start-App: Tagline"
-  prop :brand, :string, default: "Start-App: Tagline"
+  prop :page_title, :string, default: "Start-App"
+  prop :brand, :string, default: "Start-App"
 
   def init(_props, component, server) do
     {user, organizations} = Auth.current_user_and_orgs(server)
     consent = Hologram.Server.get_session(server, :cookie_consent)
     color_mode = Hologram.Server.get_cookie(server, "color-mode", "system")
+    theme_slug = Hologram.Server.get_cookie(server, "sg-theme", "style-guide")
+    theme = Catalog.get_theme(theme_slug)
+    brand = Catalog.brand()
 
     component =
       put_state(component,
         user: user,
         organizations: organizations || [],
         show_cookie_banner: is_nil(consent),
-        color_mode: color_mode
+        color_mode: color_mode,
+        theme_slug: theme.slug,
+        theme_css: theme.css,
+        themes: Catalog.themes(),
+        brand_meta: brand,
+        brand: brand.logo_text || "Start-App",
+        font_url:
+          brand.font_url ||
+            "https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap"
       )
 
     {component, server}
@@ -33,24 +49,44 @@ defmodule StarterWeb.Hologram.Layouts.MainLayout do
   def template do
     ~HOLO"""
     <!DOCTYPE html>
-    <html lang="en" data-design-theme="style-guide" class={html_class(@color_mode)}>
+    <html lang="en" data-design-theme={@theme_slug} class={html_class(@color_mode)}>
       <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <title>{@page_title}</title>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-        <link
-          rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap"
-        />
-        <link rel="stylesheet" href="/themes/design-system.generated.css" />
+        <link rel="stylesheet" href={@font_url} />
+        <link rel="stylesheet" href={@theme_css} />
         <link rel="stylesheet" href="/css/app.css" />
+        <link rel="stylesheet" href="/css/viewer.css" />
         <Hologram.UI.Runtime />
       </head>
       <body>
         <a class="skip-link" href="#main">Skip to content</a>
         <Navbar user={@user} brand={@brand} />
+        <div class="sg-viewer-bar sg-viewer-bar--compact" aria-label="Design system">
+          <div class="sg-viewer-bar__left">
+            <nav class="sg-site-nav" aria-label="Style guide">
+              <Link to={StyleGuidePage} class="sg-site-nav__link">Style guide</Link>
+              <Link to={TailwindPlusPage} class="sg-site-nav__link">Tailwind Plus</Link>
+              {%if @user}
+                <Link to={AppHomePage} class="sg-site-nav__link">App</Link>
+              {/if}
+            </nav>
+          </div>
+          <div class="sg-viewer-bar__controls">
+            <label for="theme-select" style="font-size: var(--font-size-xs); opacity: 0.7">Theme</label>
+            <select id="theme-select" $change={action: :set_theme, target: "layout"}>
+              {%for t <- @themes}
+                <option value={t.slug} selected={t.slug == @theme_slug}>{t.name}</option>
+              {/for}
+            </select>
+            <button type="button" class="btn btn-outline btn-sm" $click={action: :toggle_dark, target: "layout"}>
+              {%if @color_mode == "dark"}Light{%else}Dark{/if}
+            </button>
+          </div>
+        </div>
         <main id="main">
           <slot />
         </main>
@@ -63,7 +99,22 @@ defmodule StarterWeb.Hologram.Layouts.MainLayout do
   def html_class("dark"), do: "dark"
   def html_class(_), do: ""
 
-  # ── actions (layout-owned: cookies + logout) ─────────────────
+  def action(:set_theme, params, component) do
+    slug = params.event.value
+    theme = Catalog.get_theme(slug)
+
+    component
+    |> put_state(theme_slug: theme.slug, theme_css: theme.css)
+    |> put_command(:persist_theme, slug: theme.slug)
+  end
+
+  def action(:toggle_dark, _params, component) do
+    next = if component.state.color_mode == "dark", do: "light", else: "dark"
+
+    component
+    |> put_state(:color_mode, next)
+    |> put_command(:persist_color_mode, mode: next)
+  end
 
   def action(:accept_all_cookies, _params, component) do
     component
@@ -83,7 +134,21 @@ defmodule StarterWeb.Hologram.Layouts.MainLayout do
     |> put_command(:logout)
   end
 
-  # ── commands ─────────────────────────────────────────────────
+  def command(:persist_theme, params, server) do
+    Hologram.Server.put_cookie(server, "sg-theme", params.slug,
+      http_only: false,
+      max_age: 60 * 60 * 24 * 365,
+      secure: false
+    )
+  end
+
+  def command(:persist_color_mode, params, server) do
+    Hologram.Server.put_cookie(server, "color-mode", params.mode,
+      http_only: false,
+      max_age: 60 * 60 * 24 * 365,
+      secure: false
+    )
+  end
 
   def command(:save_cookie_consent, params, server) do
     consent = %{
@@ -104,4 +169,3 @@ defmodule StarterWeb.Hologram.Layouts.MainLayout do
     |> Hologram.Server.put_redirect(StarterWeb.Hologram.Pages.HomePage)
   end
 end
-

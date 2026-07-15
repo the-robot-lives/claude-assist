@@ -1,6 +1,0 @@
-node_modules/
-/_build/
-/deps/
-/priv/static/hologram/
-*.ez
-.elixir_ls/

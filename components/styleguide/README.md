@@ -4,31 +4,20 @@ YAML-driven design system for the Noizu portfolio.
 
 | Path | Role | Status |
 |------|------|--------|
-| **`hologram/`** | Interactive viewer (Elixir + Hologram + static HTML/CSS/YAML) | **Canonical — no TypeScript** |
-| **`app/`** | Optional CSS generator + legacy Next.js / npm package | Not required to run the Hologram viewer |
+| **`../hologram-start-app`** | Interactive viewer + Hologram components | **Canonical** |
+| **`app/`** | Optional CSS generator + legacy Next.js / npm package | Node tooling only |
+| **`hologram/`** | Pointer only — viewer was moved into hologram-start-app | Retired |
 
 ## Run the viewer
 
 ```bash
-cd hologram
+cd ../hologram-start-app/backend
 mix deps.get
 HOLOGRAM_START=1 mix holo
-# http://localhost:4500
-# http://localhost:4500/tailwind-plus
+# /styleguide  ·  /styleguide/tailwind-plus
 ```
 
 ## Roles
 
-- **`hologram/`** — full style guide + Tailwind Plus catalog. Pure Elixir/Hologram; demos and theme CSS are committed static files under `priv/static/`.
-- **`app/`** — historical Next.js engine and `@noizu/styleguide` React package for projects that still need npm. Do not treat as the viewer.
-
-## Assets in Hologram
-
-| Asset | Location |
-|-------|----------|
-| Theme CSS | `hologram/priv/static/themes/*.css` |
-| Tailwind Plus demos | `hologram/priv/static/twp/demos/**/*.html` |
-| Catalog index | `hologram/priv/static/twp/registry.json` |
-| Theme YAML (reference) | `hologram/themes/theme-*/` |
-
-Edit those files in place. There is no TypeScript source of truth inside `hologram/`.
+- **`hologram-start-app`** — full style guide, multi-theme YAML, Tailwind Plus demos, and app scaffold UI.
+- **`app/`** — historical Next.js engine and `@noizu/styleguide` React package for projects that still need npm. Do not treat as the interactive viewer.

@@ -48,29 +48,25 @@ export HOLOGRAM_START=1
 mix holo
 ```
 
-## Style guide components
+## Style guide (canonical Hologram components)
 
-Canonical StyleGuide* Hologram ports live in **`components/styleguide/hologram`** (viewer + component catalog).  
-This scaffold vendors a subset for the app shell under:
+**This app owns the design-system Hologram components and interactive viewer** — not
+`components/styleguide/hologram` (that path is retired; `styleguide/app` remains the
+optional Node CSS generator).
 
 ```
-backend/lib/starter_web/hologram/components/
-  btn.ex          # StyleGuideBtn → btn / btn-{variant}
-  card.ex         # StyleGuideCard
-  card_grid.ex
-  button_row.ex
-  field.ex        # sg-field form chrome
-  navbar.ex       # sg-navbar chrome
-  cookie_consent.ex
+backend/lib/starter_web/hologram/
+  components/     # Btn, Card, ColorSwatch, SectionHeader, AppShell, …
+  sections/       # ColorPalette, ShellLayouts, YamlConfig, ComponentBrowser, HuiShowcase
+  pages/
+    style_guide_page.ex      # /styleguide
+    tailwind_plus_page.ex    # /styleguide/tailwind-plus
+backend/lib/starter/style_guide/
+  catalog.ex / theme_data.ex / component_catalog.ex / twp_catalog.ex
+backend/themes/theme-*/       # Live YAML (discovered at runtime)
+backend/priv/static/themes/   # Prebuilt CSS per theme
+backend/priv/static/twp/      # Tailwind Plus demos + registry.json
 ```
-
-Prefer aligning names with `StyleguideWeb.Hologram.Components.*` when extending.
-
-Theme YAML (from styleguide engine) is in `assets/theme-style-guide/`. Pre-generated CSS is shipped at:
-
-- `backend/priv/static/themes/design-system.generated.css`
-- `backend/priv/static/themes/style-guide.css`
-- `backend/priv/static/css/app.css` (layout helpers)
 
 Regenerate CSS when themes change (optional host tooling with `@noizu/styleguide`):
 
@@ -92,6 +88,8 @@ make regen
 | `/app/:org_id/members` | `OrgMembersPage` (list / invite / role / remove) |
 | `/app/admin/users` | `AdminUsersPage` (list + approve; admin only) |
 | `/app/admin/orgs` | `AdminOrgsPage` (list; admin only) |
+| `/styleguide` | `StyleGuidePage` (YAML themes, components, shells) |
+| `/styleguide/tailwind-plus` | `TailwindPlusPage` |
 | `/complete-registration` | `CompleteRegistrationPage` |
 | `/pending-approval` | `PendingApprovalPage` |
 | `/auth/verify` | Magic link |
@@ -103,7 +101,6 @@ JSON API routes from start-app remain under `/api/v1/*`.
 
 ### Still not ported (vs React start-app)
 
-- In-app `/styleguide` multi-theme viewer (use `components/styleguide/hologram`)
 - Projects list/detail UI
 - Media upload UI
 - Browser analytics / OTEL providers

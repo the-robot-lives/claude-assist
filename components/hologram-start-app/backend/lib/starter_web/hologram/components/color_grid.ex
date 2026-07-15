@@ -1,10 +1,10 @@
-defmodule StarterWeb.Hologram.Components.ButtonRow do
+defmodule StarterWeb.Hologram.Components.ColorGrid do
   use Hologram.Component
   prop :class, :string, default: ""
 
   def template do
     ~HOLO"""
-    <div class={"button-row #{@class}"}><slot /></div>
+    <div class={"swatch-row #{@class}"}><slot /></div>
     """
   end
 end

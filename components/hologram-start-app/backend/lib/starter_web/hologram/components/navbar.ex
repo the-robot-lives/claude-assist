@@ -10,6 +10,7 @@ defmodule StarterWeb.Hologram.Components.Navbar do
   alias StarterWeb.Hologram.Pages.HomePage
   alias StarterWeb.Hologram.Pages.LoginPage
   alias StarterWeb.Hologram.Pages.SignupPage
+  alias StarterWeb.Hologram.Pages.StyleGuidePage
 
   prop :user, :map, default: nil
   prop :brand, :string, default: "Start-App: Tagline"
@@ -21,6 +22,7 @@ defmodule StarterWeb.Hologram.Components.Navbar do
       <div class="sg-navbar__inner">
         <Link to={HomePage} class="sg-navbar__brand">{@brand}</Link>
         <div class="sg-navbar__links">
+          <Link to={StyleGuidePage} class="btn btn-outline btn-sm">Style Guide</Link>
           {%if @loading}
           {%else}
             {%if @user}

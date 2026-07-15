@@ -18,8 +18,8 @@ components/
 │   ├── assets/theme-style-guide/  # Style-guide YAML themes
 │   └── helm/hologram-start-app/
 ├── static-site/                # Static-site scaffold + Helm chart (helm/static-site)
-└── styleguide/                 # Design system
-    ├── hologram/               #   Canonical viewer: Elixir + Hologram + static HTML/CSS (no TS)
+└── styleguide/                 # Design system tooling
+    ├── hologram/               #   Pointer — viewer/components live in hologram-start-app
     └── app/                    #   Optional: Node CSS gen + legacy Next/npm package
 ```
 

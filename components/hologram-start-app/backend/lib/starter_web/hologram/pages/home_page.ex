@@ -10,6 +10,7 @@ defmodule StarterWeb.Hologram.Pages.HomePage do
   alias StarterWeb.Hologram.Pages.LoginPage
   alias StarterWeb.Hologram.Pages.SignupPage
   alias StarterWeb.Hologram.Pages.SitemapPage
+  alias StarterWeb.Hologram.Pages.StyleGuidePage
 
   route "/"
   layout MainLayout, page_title: "Start-App: Tagline"
@@ -30,6 +31,7 @@ defmodule StarterWeb.Hologram.Pages.HomePage do
       <ButtonRow class="sg-page-cta">
         <Link to={LoginPage} class="btn btn-outline">Log In</Link>
         <Link to={SignupPage} class="btn btn-black">Get Started</Link>
+        <Link to={StyleGuidePage} class="btn btn-outline">Style Guide</Link>
         <Link to={SitemapPage} class="btn btn-outline">Site Map</Link>
       </ButtonRow>
       <CardGrid>
@@ -42,8 +44,8 @@ defmodule StarterWeb.Hologram.Pages.HomePage do
           body="After login: /app home, profile, and /app/:org_id dashboard with sidebar chrome."
         />
         <Card
-          title="Isomorphic Elixir"
-          body="Hologram keeps state in the browser — actions are instant, commands hit the server."
+          title="Design system"
+          body="YAML themes + Hologram components live in this app at /styleguide and /styleguide/tailwind-plus."
         />
       </CardGrid>
     </div>

@@ -12,7 +12,9 @@ defmodule StarterWeb.Hologram.Pages.SitemapPage do
     HomePage,
     LoginPage,
     ProfilePage,
-    SignupPage
+    SignupPage,
+    StyleGuidePage,
+    TailwindPlusPage
   }
 
   route "/sitemap"
@@ -29,6 +31,8 @@ defmodule StarterWeb.Hologram.Pages.SitemapPage do
         <li><Link to={LoginPage}>Log In</Link></li>
         <li><Link to={SignupPage}>Sign Up</Link></li>
         <li><Link to={ForgotPasswordPage}>Forgot Password</Link></li>
+        <li><Link to={StyleGuidePage}>Style Guide</Link></li>
+        <li><Link to={TailwindPlusPage}>Tailwind Plus</Link></li>
         <li><Link to={AppHomePage}>App Home</Link></li>
         <li><Link to={ProfilePage}>Profile</Link></li>
         <li><Link to={AdminUsersPage}>Admin · Users</Link></li>
