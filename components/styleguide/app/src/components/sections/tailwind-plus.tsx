@@ -204,6 +204,28 @@ export function TailwindPlusSection({ id }: SectionProps) {
 
   return (
     <div id={`section-${id}`}>
+      <div
+        role="status"
+        style={{
+          marginBottom: "var(--space-4)",
+          padding: "var(--space-3) var(--space-4)",
+          border: "2px solid var(--warning, #eab308)",
+          borderRadius: "var(--radius)",
+          background: "var(--surface-alt, var(--surface))",
+          color: "var(--text)",
+        }}
+      >
+        <div style={{ fontFamily: "var(--font-sans)", fontWeight: 700, fontSize: "var(--font-size-md)", marginBottom: "var(--space-1)" }}>
+          Migrated to Hologram
+        </div>
+        <p style={{ fontFamily: "var(--font-sans)", fontSize: "var(--font-size-sm)", color: "var(--text-secondary)", margin: 0, lineHeight: 1.5 }}>
+          Open the Hologram styleguide at{" "}
+          <code style={{ fontFamily: "var(--font-mono)", fontSize: "var(--font-size-xs)" }}>/tailwind-plus</code>
+          {" "}(or run the hologram viewer:{" "}
+          <code style={{ fontFamily: "var(--font-mono)", fontSize: "var(--font-size-xs)" }}>cd hologram && HOLOGRAM_START=1 mix holo</code>
+          ). This Next.js catalog is deprecated — all 686 widgets are SSR-rendered in Hologram with zero stubs.
+        </p>
+      </div>
       <div style={{
         display: "grid",
         gridTemplateColumns: "260px 1fr",
