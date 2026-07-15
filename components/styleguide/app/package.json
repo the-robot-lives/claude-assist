@@ -2,6 +2,7 @@
   "name": "styleguide-engine",
   "version": "0.1.4",
   "private": true,
+  "description": "YAML→CSS engine + legacy Next.js viewer. Canonical interactive viewer: ../hologram (Hologram).",
   "scripts": {
     "dev": "next dev",
     "generate-css": "tsx src/scripts/generate-css.ts",
