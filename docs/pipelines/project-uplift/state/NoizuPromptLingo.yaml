@@ -16,16 +16,24 @@ stage_a:
   counts: {personas: 8, stories: 104, screens: 47, components: 45}
   blocked: null
 stage_b:
-  status: in-progress
-  attempts: 0
-  effective_theme_count: null    # E, computed by Stage B similitude formula
-  new_themes_needed: null         # ceil(7 - E)
-  themes_written: []
-  allocation_yaml: false
+  status: done
+  attempts: 1
+  effective_theme_count: 3.23    # E, computed by Stage B similitude formula
+  new_themes_needed: 4            # ceil(7 - E)
+  themes_written: [npl-brutalist, npl-editorial, npl-minimal, npl-nocturne, npl-aurora, npl-blueprint, npl-prism, npl-meridian]
+  allocation_yaml: true
   blocked: null
 stage_c:
   status: pending
-  themes: {}    # keyed by theme slug once Stage B allocation.yaml exists; each entry tracks prompts/images/api_calls/avg_eval/yaml/conformance
+  themes:    # keyed by theme slug from Stage B allocation; each entry tracks prompts/images/api_calls/avg_eval/yaml/conformance
+    npl-brutalist: {status: pending}
+    npl-editorial: {status: pending}
+    npl-minimal: {status: pending}
+    npl-nocturne: {status: pending}
+    npl-aurora: {status: pending}
+    npl-blueprint: {status: pending}
+    npl-prism: {status: pending}
+    npl-meridian: {status: pending}
   blocked: null
 stage_d:
   status: done
@@ -44,3 +52,7 @@ notes:
   - "Product has THREE unrelated meanings of 'persona' in this codebase: the product's own Agent Persona entity (bio/journal/knowledge-base), a Customer Persona (marketing ICP) under the Campaigns domain, and the UX-research personas this stage authors. Disambiguated via qualifiers throughout the README; future stage/reader agents should keep the same convention rather than assuming 'persona' means one thing."
   - "Screens count (47) exceeds Stage B verify §B's allocation.yaml hint of 30-40 unique screens unless Stage B sets u==inventory (an allowed pass condition per that check) — sized to real evidence (40+ actual frontend routes per docs/FEATURE-PARITY-AUDIT.md), not trimmed to fit. Flagging so Stage B isn't surprised."
   - "2 of the 47 screens (Campaigns & Ad Groups, Market & Competitor Research) are grounded in confirmed backend/MCP domain evidence (Campaign/AdGroup/AdCopy/LandingPage/Competitor/Keyword/MarketReport schemas + tobor_campaigns/tobor_market MCP servers) but the frontend route sample gathered for this stage didn't enumerate a matching route — noted as inferred in the screen docs themselves; worth a source-tree double-check in a later stage."
+  - "Stage B done 2026-07-16: similitude E=3.23 over 4 shipped themes → ceil(7-E)=4 new directions (aurora/blueprint/prism/meridian); 8 treatises + THEMES.md + allocation.yaml written. verify.md §B: 21/21 PASS."
+  - "Template gap (Stage B §6 commit): shows a grep of state/_pipeline.yaml for repo_lock_session — same forbidden-file bug as Stage A §8. Used the REPO_LOCK_SESSION spawn param directly instead; template should say to expect it as a spawn param, not grep the plan file."
+  - "Stage A census note ('E likely close to or above 7') is unreachable: the E formula caps at n, so for n=4 the max is E=4.0. Measured E=3.23 → 4 new themes (not 0). Suggest fixing that intuition in future census notes."
+  - "Allocation constraint interaction (Stage B §3): with 8 themes and u=clamp(47,30,40)=40, overlap must stay small (used o=2) so total slots u+2o=44 stay within the ~35-45 aim while every theme lands 5-8. Satisfiable but under-explained — the template doesn't spell out how u / o / theme-count / the 35-45 aim reconcile at high theme counts. 5 lower-weight screens intentionally left unallocated (03,16,33,37,38)."
