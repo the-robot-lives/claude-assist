@@ -1,0 +1,89 @@
+schema: "0.4"
+id: workbench-20-integrations
+type: image
+quality: high
+
+# The Robot Learns (a CLI learning tool) — Integrations: git-backed KB versioning + an MCP server for other agents.
+# Theme tenets: warm cream "maker's reference sheet" inside a terminal window; a wiring/patch-bay of pinned integration cards joined by hand-drawn connector arrows; printed labels + handwritten marker titles + mono; 3px cut-paper radius; clay accents.
+# Palette: cream #f5f0e8, brown ink #2c2416, marker blue #2980b9, clay orange #e67e22, marker red #e74c3c, marker green #27ae60, sticky yellow #fef3b5, tan #d4c9b5.
+
+prompt:
+  system: |
+    You are a senior product designer rendering a high-fidelity UI mockup of a
+    command-line tool's INTEGRATIONS surface, skinned as a warm cream "maker's
+    reference sheet" inside a terminal window — wiring the knowledge base outward to
+    git and to an MCP server. Tactile and hands-on: pinned integration cards joined
+    by hand-drawn connector arrows like a patch bay, printed labels, monospace
+    endpoints. It is a text-mode tool window, never a web browser page.
+  text: |
+    A 16:9 high-fidelity mockup of a single TERMINAL WINDOW showing the INTEGRATIONS
+    surface of "The Robot Learns", a command-line learning tool. The content pane is
+    skinned as a warm cream MAKER'S REFERENCE SHEET — a small WIRING / PATCH-BAY
+    diagram of pinned cards joined by hand-drawn arrows on cream paper. Fill the
+    frame with ONE tool window and a thin top title bar; NO web browser chrome, no
+    tabs, no address bar.
+
+    TITLE BAR (thin, top): a warm cream bar with three small window dots and, in
+    fixed-width type, "learn integrations · /setup integrations".
+
+    CENTER — THE KB NODE: a pinned index card in the middle titled in marker "local
+    KB", with a monospace path "~/.config/the-robot-learns-kb" — the hub everything
+    wires into.
+
+    LEFT — GIT card: a pinned note card titled "git versioning" with a monospace
+    remote "git@backup.private:kb.git", a printed status line "last push 2h ago", a
+    green marker tick, and a handwritten margin note "off-machine backup". A
+    HAND-DRAWN ARROW runs from the KB node to this card.
+
+    RIGHT — MCP SERVER card: a pinned note card titled "MCP server" with a monospace
+    endpoint "mcp://localhost:7433", a small ON toggle drawn in marker blue, and a
+    handwritten margin note "other agents can query the KB". A HAND-DRAWN ARROW runs
+    from the KB node out to two tiny client chips ("editor AI", "agent").
+
+    CONFIRM NOTE: a pale-yellow STICKY NOTE, slightly tilted, handwritten "enable
+    git remote + MCP server?" with two small taped buttons "[ enable ]" and
+    "[ cancel ]", the default "[ enable ]" filled in marker blue.
+
+    BOTTOM STATUS RULE: a persistent thin bar with fixed-width keybind hints
+    "^G git   ^M mcp   ^Enter enable   ^Q quit".
+
+    PALETTE & TYPE: warm cream paper with brown-ink text; friendly clay accents —
+    marker blue for the primary toggle and connector arrows, clay orange for tape
+    and accent borders, marker red reserved for an off/disconnected mark, marker
+    green for the connected tick. Handwritten marker script for card titles, arrows
+    and margin notes; a clean printed geometric sans for labels; fixed-width
+    monospace for remotes, endpoints and paths.
+
+    SHAPE & SURFACE: barely-rounded cut-paper corners; cards lifted off the sheet by
+    soft warm-brown drop shadows; the connections drawn as loose hand-inked arrows,
+    not rigid rails; separation by air and shadow rather than ruled boxes; light
+    paper grain that never hurts legibility.
+
+    MOOD: a maker patching the bench into the wider world — hands-on, deliberate,
+    encouraging; a warm paper wiring diagram, never a clinical integrations settings
+    page.
+  negative: "watermark, signature, lorem ipsum placeholder text, low-fidelity wireframe, monitor/device photograph framing, blurry, distorted UI, web browser chrome, address bar, browser tabs, marketing web page, sterile flat corporate settings page, dark terminal background, monochrome CRT"
+
+output:
+  formats:
+    - format: png
+  dimensions:
+    width: 1920
+    height: 1080
+    aspect_ratio: "16:9"
+
+eval:
+  pass_threshold: 0.72
+  criteria:
+    relevance: {weight: 3, description: "Reads as an integrations surface skinned as a maker's cream wiring sheet: a central local-KB node, a GIT card (mono remote + push status + off-machine-backup note) and an MCP-server card (mono endpoint + ON toggle + query note) joined to the KB by hand-drawn connector arrows out to client chips, plus an enable confirmation sticky note; title bar; bottom keybind status rule"}
+    theme_fidelity: {weight: 3, description: "Warm cream paper + brown ink with clay accents; handwritten marker titles/arrows/notes + printed sans labels + monospace endpoints; pinned cards with soft warm shadows joined by hand-inked arrows; cut-paper radius; light not dark"}
+    composition: {weight: 2, description: "Legible hub-and-spoke wiring, air around cards, plausible real tool window"}
+    technical: {weight: 2, description: "Sharp, correct 16:9 aspect, no artifacts"}
+  reject_if:
+    - "lorem ipsum or placeholder text visible"
+    - "watermark or signature visible"
+    - "wireframe-level fidelity instead of high-fidelity mockup"
+    - "web browser chrome or a marketing web page instead of a tool window"
+    - "dark terminal / monochrome CRT instead of warm cream paper skin"
+
+tags: [workbench, therobotlearns.com, screen-mockup]

@@ -1,13 +1,13 @@
 ---
 slug: workbench
 base_theme: theme-style-guide
-status: sketch
-revision: 1
+status: full
+revision: 2
 ---
 
 # Theme Treatise — Workbench
 
-Theme: `theme-workbench/` · Base: `theme-style-guide` · Status: sketch
+Theme: `theme-workbench/` · Base: `theme-style-guide` · Status: full
 
 > **Reverse-engineered** from the shipped `theme-workbench/` YAML (Stage A). The treatise
 > justifies the on-disk values and flags anything arbitrary. **Surface note:** the product is
@@ -83,10 +83,13 @@ Theme: `theme-workbench/` · Base: `theme-style-guide` · Status: sketch
   with a slight negative letter-spacing at the big end). Headings gain personality from the
   handwritten face, not from extreme size.
 - **Weight usage:** Outfit 400–700 (body 400, labels 500–600, emphasis 700); Caveat 400–700
-  for titles/annotations. **Honest flag:** `typography.yaml` defines Display, H1, H2, and Label
-  classes but **no `Body` class** (it jumps H2 → Label) — body text falls back to base
-  defaults; recommend adding an explicit Body class (Outfit 400) so body rhythm is intentional,
-  not inherited.
+  for titles/annotations. **Resolved (Stage C):** the prior `typography.yaml` defined only
+  Display/H1/H2/Label and — because a theme's `typography.yaml` replaces the base **wholesale** —
+  silently dropped Body/Small/Code/Caption/Mono, so body text had no class to resolve to. It now
+  re-declares the full base set in this theme's voice: an explicit **Body class (Outfit 400,
+  1.6 line-height)** plus Small/Caption (Outfit), Code/Mono (Source Code Pro), and H3/H4; the big
+  titles stay handwritten Caveat and Label stays handwritten by intent. Verified in compiled CSS
+  (`.typography-body` resolves `--font-sans` = Outfit).
 - **Rhythm:** Comfortable body line-height; Caveat annotations sit tighter. Mono for code,
   token values, and metadata only.
 
@@ -162,7 +165,7 @@ Theme: `theme-workbench/` · Base: `theme-style-guide` · Status: sketch
 | §3 palette | `style-guide.vars.yaml` / `color-palette.yaml` | 13-hue Flat-UI clay palette; accent orange `#e67e22`, primary/link blue `#2980b9` |
 | §3 semantics | `style-guide.vars.yaml` Semantic | success `#27ae60`, warning `#f39c12`, error `#e74c3c`, info `#2980b9` |
 | §3 modes | `style-guide.color-modes.yaml` | light primary (cream `#f5f0e8`/ink `#2c2416`); dark: surface `#2c2416`, text `#e8dfd0` |
-| §4 | `style-guide.typography.yaml` + `vars.yaml` | font-sans Outfit, font-display Caveat, font-mono Source Code Pro; **add missing Body class (Outfit 400)** |
+| §4 | `style-guide.typography.yaml` + `vars.yaml` | font-sans Outfit, font-display Caveat, font-mono Source Code Pro; **Body class added (Outfit 400) + full base set re-declared (Stage C)** |
 | §5 | `style-guide.vars.yaml` Layout | casual spacing; `card-separator: none`; corkboard reflow |
 | §6 | `style-guide.vars.yaml` radius + `css-snippets.yaml` | radius `3px`; soft warm shadows (2 steps); sanctioned cork/tape/pushpin texture |
 | §7 | `style-guide.css-snippets.yaml` | pin/settle keyframes 200–300ms (slight overshoot ok); reduced-motion guard |

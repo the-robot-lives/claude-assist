@@ -1,18 +1,27 @@
 vars:
   groups:
+    # Seed trap (v3): the base wires accents through brand-red/brand-blue/
+    # brand-yellow, NOT bare red/blue/yellow — those were silent no-ops and are
+    # removed. white/black are the real ramp seeds and stay.
     - name: "Seed Colors"
       vars:
         white: "#f5f0e8"
         black: "#2c2416"
-        red: "#e74c3c"
-        blue: "#2980b9"
-        yellow: "#f1c40f"
 
+    # Overriding brand-* alone is not enough: the base pins each -light/-mid tint
+    # to a color-mix with the OLD Bauhaus hex hard-coded, so re-point them off
+    # var(--brand-*) here or the tints keep the base red/navy/gold in light mode.
     - name: "Primaries"
       vars:
         brand-red: "#e74c3c"
+        brand-red-light: "color-mix(in srgb, var(--brand-red) 12%, var(--surface))"
+        brand-red-mid: "color-mix(in srgb, var(--brand-red) 20%, var(--surface))"
         brand-blue: "#2980b9"
+        brand-blue-light: "color-mix(in srgb, var(--brand-blue) 12%, var(--surface))"
+        brand-blue-mid: "color-mix(in srgb, var(--brand-blue) 20%, var(--surface))"
         brand-yellow: "#f1c40f"
+        brand-yellow-light: "color-mix(in srgb, var(--brand-yellow) 18%, var(--surface))"
+        brand-yellow-mid: "color-mix(in srgb, var(--brand-yellow) 35%, var(--surface))"
 
     - name: "Palette"
       vars:

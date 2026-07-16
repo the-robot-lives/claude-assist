@@ -1,0 +1,95 @@
+schema: "0.4"
+id: workbench-13-settings-and-preferences
+type: image
+quality: high
+
+# The Robot Learns (a CLI learning tool) — Settings & Preferences: a guided terminal editor over local-preference.yaml.
+# Theme tenets: warm cream "maker's reference sheet" inside a terminal window; printed sans labels + handwritten marker titles + mono values; pinned note cards with soft warm shadows, tape, pushpins; 3px cut-paper radius; friendly clay accents.
+# Palette: cream #f5f0e8, brown ink #2c2416, marker blue #2980b9, clay orange #e67e22, marker red #e74c3c, marker green #27ae60, sticky yellow #fef3b5, tan #d4c9b5.
+
+prompt:
+  system: |
+    You are a senior product designer rendering a high-fidelity UI mockup of a
+    command-line learning tool's SETTINGS surface, skinned as a warm cream
+    "maker's reference sheet" inside a terminal window — tactile, informal,
+    encouraging; printed labels paired with handwritten marker margin notes and
+    pinned note cards on warm paper. It is a text-mode tool window, never a web
+    browser page and never a sterile settings form.
+  text: |
+    A 16:9 high-fidelity mockup of a single TERMINAL WINDOW showing the SETTINGS &
+    PREFERENCES surface of "The Robot Learns", a command-line learning tool. The
+    window's content pane is skinned as a warm cream MAKER'S REFERENCE SHEET — a
+    workbench pinboard of note cards, masking tape and pushpins on cream paper.
+    Fill the frame with ONE tool window and a thin top title bar; NO web browser
+    chrome, no tabs, no address bar, no marketing page.
+
+    TITLE BAR (thin, top): a warm cream bar with three small window dots at the
+    left and, in fixed-width type, the run command "learn config ·
+    ~/.config/the-robot-learns/local-preference.yaml".
+
+    OVERALL LAYOUT: the cream sheet holds five PINNED NOTE CARDS laid out like a
+    workbench pinboard — comfortably spaced, each lifted off the paper by a soft
+    warm-brown shadow, a small colored pushpin at one top corner, a couple of cards
+    tilted about a degree (organized, not messy). Card titles are handwritten
+    marker script; body labels are a clean printed sans; every value, path and
+    number is fixed-width monospace.
+
+    THE CARDS:
+    - EXPERTISE LEVELS: per-domain badges — handwritten domain names ("Rust",
+      "Distributed Systems", "Postgres") each beside a printed level pill
+      ("intermediate", "novice", "advanced") in a clay tint, one shown mid-edit.
+    - LEARNING STYLE: a hand-marked VERBOSITY slider (a drawn scale with a marker
+      tick) plus an "examples-first / theory-first" toggle.
+    - MACHINE PROFILE: editor/pager/output-width as monospace key:value rows
+      straight from the YAML ("editor: nvim", "pager: less -R", "width: 92").
+    - THEME: a small card with a row of tiny color swatches, the active one
+      circled in marker.
+    - TELEMETRY: a pale-yellow sticky note, slightly tilted, with a handwritten
+      "opt-in only", an unchecked box, and one plain-language disclosure line.
+
+    A strip of MASKING TAPE divides the personal cards from the machine card, and a
+    small hand-drawn arrow points from Theme toward a note "applies in the quiz".
+
+    BOTTOM STATUS RULE: a persistent thin bar across the full width with fixed-width
+    keybind hints "^S save   ^E edit   ^R reset   ^Q quit".
+
+    PALETTE & TYPE: warm cream paper with brown-ink text; accents are friendly clay
+    tones — marker blue for the primary/active mark and headings, clay orange for
+    tape and accent borders, marker red on the one important pushpin, marker green
+    for a done check. Handwritten marker script for card titles and margin notes, a
+    clean printed geometric sans for labels and body, fixed-width monospace for all
+    values, paths and numbers.
+
+    SHAPE & SURFACE: barely-rounded cut-paper corners; note cards lifted off the
+    sheet by soft warm-brown drop shadows (deliberate elevation), separated by air
+    and shadow rather than ruled boxes; sanctioned paper grain and a little tape
+    texture, never enough to hurt legibility.
+
+    MOOD: a workshop where someone brilliant has been prototyping all night —
+    organized chaos that makes sense, hands-on and encouraging, a maker's bench not
+    a corporate settings panel.
+  negative: "watermark, signature, lorem ipsum placeholder text, low-fidelity wireframe, monitor/device photograph framing, blurry, distorted UI, web browser chrome, address bar, browser tabs, marketing web page, sterile flat corporate settings form, dark terminal background"
+
+output:
+  formats:
+    - format: png
+  dimensions:
+    width: 1920
+    height: 1080
+    aspect_ratio: "16:9"
+
+eval:
+  pass_threshold: 0.72
+  criteria:
+    relevance: {weight: 3, description: "Reads as a CLI tool's settings surface skinned as a maker's cream reference sheet: pinned note cards for expertise levels, learning-style/verbosity, machine profile (mono key:value), theme picker, and an opt-in telemetry sticky note; title bar with run command; bottom keybind status rule"}
+    theme_fidelity: {weight: 3, description: "Warm cream paper + brown ink with clay accents; handwritten marker titles + printed sans labels + monospace values; pinned note cards with soft warm shadows, tape, pushpins; cut-paper radius; light not dark"}
+    composition: {weight: 2, description: "Pinboard arrangement with air around cards, clear hierarchy, plausible real tool window"}
+    technical: {weight: 2, description: "Sharp, correct 16:9 aspect, no artifacts"}
+  reject_if:
+    - "lorem ipsum or placeholder text visible"
+    - "watermark or signature visible"
+    - "wireframe-level fidelity instead of high-fidelity mockup"
+    - "web browser chrome or a marketing web page instead of a tool window"
+    - "dark terminal / monochrome CRT instead of warm cream paper skin"
+
+tags: [workbench, therobotlearns.com, screen-mockup]

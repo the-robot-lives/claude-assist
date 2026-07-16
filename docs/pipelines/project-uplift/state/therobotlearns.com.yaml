@@ -36,7 +36,14 @@ stage_c:
     chalkboard:
       status: in-progress
     workbench:
-      status: in-progress
+      status: done
+      prompts: 5
+      images: 5
+      api_calls: 7
+      avg_eval: null
+      yaml: true
+      conformance: true
+      render_note: "straight to --quality medium; 5 terminal/TUI maker-sheet screens (cream paper skin), hero 09 -n2. 7 api_calls incl 1 re-render of 14 (browser chrome -> terminal window). TUNE pass on existing theme: fixed flagged missing Body class (full typography set re-declared, verified .typography-body=Outfit in CSS); fixed seed-trap (removed bare red/blue/yellow, re-pointed brand-*-light/mid); self-scoped all 5 css-snippets + added foundation (warm lift + §9 blue focus); added scoped-vars.yaml killing base Bauhaus/slate dark leak (grep-verified clay, zero Bauhaus in workbench scope). treatise sketch->full (rev 2)."
     scholar:
       status: done
       prompts: 5

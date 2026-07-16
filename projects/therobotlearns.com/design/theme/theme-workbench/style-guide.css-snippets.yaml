@@ -1,11 +1,47 @@
+# Workbench · component inflections (treatise §6/§7/§8/§9). This facet
+# ACCUMULATES onto the base (unlike vars/color-modes/typography, which replace),
+# so it is the safe home for Workbench's maker-bench sample elements.
+#
+# SELF-SCOPED (v3 remediation): every selector is nested under
+# html[data-design-theme="workbench"]. The generator emits css-snippets VERBATIM
+# (self-scoped facet — components/styleguide/app/src/lib/css-cache.ts), so any
+# bare selector would bleed into every sibling theme. All five original snippets
+# were bare before this pass and are now scoped.
 css-snippets:
+  - name: Workbench Foundation
+    slug: workbench-foundation
+    title: "Cut-paper lift + blue focus ring (§6/§7/§9)"
+    description: "The theme's structural floor: note cards read as paper lifted off the board — a soft warm-brown drop shadow at rest that grows one step on hover with a hint of tilt (§6 deliberate elevation, §7 tactile settle). Focus is a 2px marker-BLUE outline, never the clay orange (§9: clay orange ≈2.8:1 on cream fails the 3:1 ring floor; marker blue clears it). prefers-reduced-motion drops the tilt/settle so cards appear placed, not dropped. Self-scoped so it never touches sibling themes."
+    target-section: interaction
+    body: |
+      html[data-design-theme="workbench"] .card {
+        border-radius: var(--radius);
+        box-shadow: 2px 3px 8px var(--shadow-color);
+        transition: box-shadow 220ms ease, transform 220ms ease;
+      }
+      html[data-design-theme="workbench"] .card:hover {
+        box-shadow: 3px 7px 18px var(--shadow-color);
+        transform: translateY(-1px) rotate(-0.3deg);
+      }
+      html[data-design-theme="workbench"] :focus-visible {
+        outline: 2px solid var(--brand-blue);
+        outline-offset: 2px;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        html[data-design-theme="workbench"] .card,
+        html[data-design-theme="workbench"] .card:hover {
+          transition: none;
+          transform: none;
+        }
+      }
+
   - name: Sticky Note
     slug: sticky-note
     title: "Sticky note callout"
-    description: "Cards styled as colored sticky notes — slightly rotated, drop shadow, torn-edge feel."
+    description: "Cards styled as colored sticky notes — slightly rotated, drop shadow, torn-edge feel. Self-scoped."
     target-section: semantic-classes
     body: |
-      .card.sticky-note {
+      html[data-design-theme="workbench"] .card.sticky-note {
         background: #fef3b5;
         color: #2c2416;
         border: none;
@@ -17,7 +53,7 @@ css-snippets:
         line-height: 1.5;
         position: relative;
       }
-      .card.sticky-note::before {
+      html[data-design-theme="workbench"] .card.sticky-note::before {
         content: '';
         position: absolute;
         top: -4px;
@@ -28,21 +64,21 @@ css-snippets:
         background: rgba(0,0,0,0.08);
         border-radius: 0 0 2px 2px;
       }
-      .card.sticky-note.blue { background: #b3d9ff; transform: rotate(1deg); }
-      .card.sticky-note.green { background: #b5e6c5; transform: rotate(-0.5deg); }
-      .card.sticky-note.pink { background: #ffb3c6; transform: rotate(2deg); }
+      html[data-design-theme="workbench"] .card.sticky-note.blue { background: #b3d9ff; transform: rotate(1deg); }
+      html[data-design-theme="workbench"] .card.sticky-note.green { background: #b5e6c5; transform: rotate(-0.5deg); }
+      html[data-design-theme="workbench"] .card.sticky-note.pink { background: #ffb3c6; transform: rotate(2deg); }
 
   - name: Pushpin
     slug: pushpin
     title: "Pushpin accent"
-    description: "A colored circle pushpin at the top of a card — like pinning it to a cork board."
+    description: "A colored circle pushpin at the top of a card — like pinning it to a cork board. Self-scoped."
     target-section: semantic-classes
     body: |
-      .card.pinned {
+      html[data-design-theme="workbench"] .card.pinned {
         position: relative;
         margin-top: var(--space-2);
       }
-      .card.pinned::before {
+      html[data-design-theme="workbench"] .card.pinned::before {
         content: '';
         position: absolute;
         top: -6px;
@@ -54,16 +90,16 @@ css-snippets:
         box-shadow: 0 1px 3px rgba(0,0,0,0.3), inset 0 -1px 2px rgba(0,0,0,0.15);
         z-index: 1;
       }
-      .card.pinned.blue::before { background: var(--brand-blue); }
-      .card.pinned.green::before { background: var(--success); }
+      html[data-design-theme="workbench"] .card.pinned.blue::before { background: var(--brand-blue); }
+      html[data-design-theme="workbench"] .card.pinned.green::before { background: var(--success); }
 
   - name: Tape Strip
     slug: tape-strip
     title: "Masking tape divider"
-    description: "A masking tape strip across a section — semi-transparent, slightly rotated, textured."
+    description: "A masking tape strip across a section — semi-transparent, slightly rotated, textured. Self-scoped."
     target-section: dividers
     body: |
-      .tape-strip {
+      html[data-design-theme="workbench"] .tape-strip {
         display: block;
         height: 28px;
         background: rgba(245,240,232,0.65);
@@ -73,7 +109,7 @@ css-snippets:
         transform: rotate(-0.3deg);
         position: relative;
       }
-      .tape-strip::after {
+      html[data-design-theme="workbench"] .tape-strip::after {
         content: '';
         position: absolute;
         inset: 0;
@@ -89,10 +125,10 @@ css-snippets:
   - name: Cork Board Background
     slug: cork-board
     title: "Cork board texture"
-    description: "Warm cork texture for pinboard-style surfaces."
+    description: "Warm cork texture for pinboard-style surfaces. Self-scoped."
     target-section: color
     body: |
-      .cork-board {
+      html[data-design-theme="workbench"] .cork-board {
         background-color: #c4a574;
         background-image:
           url("data:image/svg+xml,%3Csvg width='40' height='40' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='0.9' numOctaves='4' seed='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.08'/%3E%3C/svg%3E");
@@ -101,10 +137,10 @@ css-snippets:
   - name: Sketch Arrow
     slug: sketch-arrow
     title: "Hand-drawn arrow connector"
-    description: "SVG-based hand-drawn arrow for connecting ideas between sections."
+    description: "SVG-based hand-drawn arrow for connecting ideas between sections. Self-scoped."
     target-section: dividers
     body: |
-      .sketch-arrow {
+      html[data-design-theme="workbench"] .sketch-arrow {
         display: block;
         width: 120px;
         height: 40px;
