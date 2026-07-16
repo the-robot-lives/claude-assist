@@ -29,11 +29,11 @@ stage_c:
     npl-brutalist: {status: done, prompts: 6, images: 6, api_calls: 9, avg_eval: null, yaml: true, conformance: true}
     npl-editorial: {status: done, prompts: 5, images: 5, api_calls: 6, avg_eval: null, yaml: true, conformance: true}
     npl-minimal: {status: done, prompts: 5, images: 5, api_calls: 7, avg_eval: null, yaml: true, conformance: true}
-    npl-nocturne: {status: pending}
-    npl-aurora: {status: pending}
-    npl-blueprint: {status: pending}
+    npl-nocturne: {status: in-progress}
+    npl-aurora: {status: blocked, blocked: "renders 06+44 deferred — sustained image-API 429 under concurrent-fleet load; prompts+YAML+treatise+conformance complete & verified; top-up renders per §8 when traffic clears", prompts: 5, images: 3, api_calls: 9, avg_eval: null, yaml: true, conformance: true}
+    npl-blueprint: {status: blocked, blocked: "429 rate-limit storm (5 concurrent Stage C agents saturated the image API) — 0/5 PNGs within the 12-call cap; theme YAML + 5 prompts + conformance complete and validated, renders top-up idempotently per stage-c §8", prompts: 5, images: 0, api_calls: 12, avg_eval: null, yaml: true, conformance: true}
     npl-prism: {status: done, prompts: 6, images: 6, api_calls: 7, avg_eval: null, yaml: true, conformance: true}
-    npl-meridian: {status: pending}
+    npl-meridian: {status: in-progress}
   blocked: null
 stage_d:
   status: done
