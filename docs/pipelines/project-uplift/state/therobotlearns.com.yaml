@@ -15,12 +15,19 @@ stage_a:
   counts: {personas: 8, stories: 100, screens: 20, components: 25}
   blocked: null
 stage_b:
-  status: in-progress
-  attempts: 0
-  effective_theme_count: null    # E, computed by Stage B similitude formula
-  new_themes_needed: null         # ceil(7 - E)
-  themes_written: []
-  allocation_yaml: false
+  status: done
+  attempts: 1
+  effective_theme_count: 5.55    # E over 7 existing themes; mean pairwise similitude 0.207
+  new_themes_needed: 2            # ceil(7 - 5.55) = 2 (phosphor, cockpit — both terminal-native)
+  themes_written: [atlas, chalkboard, comic, deep-focus, scholar, spark, workbench, phosphor, cockpit]
+  allocation_yaml: true
+  # Terminal-first product: 19/20 screens are TUI surfaces. allocation.yaml renders the 6
+  # most terminal-natural directions at exactly 5 screens each; the 3 web-leaning directions
+  # are treatise-only this pass (see THEMES.md "Render set vs deferred"). stage_c.themes NOT
+  # seeded here per spawn instruction "targeted Edit ONLY your stage_b block" (live concurrency
+  # with uplift-trl-a/-d). Stage C roster derives from allocation.yaml + these two lists:
+  rendered_themes: [phosphor, cockpit, deep-focus, scholar, chalkboard, workbench]  # stage_c: pending
+  deferred_themes: [atlas, comic, spark]                                            # stage_c: deferred
   blocked: null
 stage_c:
   status: pending
