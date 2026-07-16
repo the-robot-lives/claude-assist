@@ -1,4 +1,4 @@
-# stage-c-theme.md (version: 2)
+# stage-c-theme.md (version: 3)
 
 Stage C — for **one theme** of one project: author render prompts, generate images, read
 them back and reflect, implement the theme's engine YAML, validate, write a conformance
@@ -15,12 +15,16 @@ repo reference docs.
   `unique[].theme` / `overlap[].themes[]`, and the `stage_c.themes.{theme}` state
   key. Every path in this template is built from this one value — copy it as given,
   never strip a prefix or re-derive a shorter form.
-- `eval` — `on`/`off` (check `state/_pipeline.yaml` `preflight.eval.status` if not passed —
-  it's the authority)
-- `media` — `on`/`off` (same — `preflight.media.status`)
-- `REPO_LOCK_SESSION` — the repo-lock session id for your §10 commit. Use this value
-  exactly as given; do not read or grep `state/_pipeline.yaml` for it — that file is
-  off-limits to stage agents (see §10).
+- `eval` — `on`/`off`.
+- `media` — `on`/`off`.
+- `styleguide_serve` — `on`/`off`. Selects which §5 validation path to run.
+- `REPO_LOCK_SESSION` — the repo-lock session id for your §10 commit.
+
+All four above are spawn-time parameters, not live lookups — use each exactly as given
+for your **entire** run, including when you invoke `templates/verify.md` §C (§9). Do
+**not** read or grep `state/_pipeline.yaml` for any of them, even to "double check" a
+value that seems stale: that file is off-limits to stage agents (see §10), and whatever
+you were spawned with is authoritative for the whole run.
 
 ## 0. Setup
 
@@ -122,6 +126,13 @@ model — but everywhere inside `prompt.text` (including PALETTE & TYPE), descri
 colors by name in prose ("cool violet-white", "deep ink", "warm ember"), never by
 hex/hue code.
 
+**Render-model limits (detail in §3):** the image model is reliable for mood, palette
+*family*, and overall layout, but does **not** reliably honor hard/precise signals — an
+exact hex, serif-vs-sans UI type, a small corner radius — no matter how forcefully you
+word the prompt. Don't spend prompt real estate or extra renders chasing precision the
+model structurally can't deliver; describe mood/family here and let §3 judge precision
+from the compiled CSS instead.
+
 ## 2. Render
 
 Render **one file at a time** (never batch `-r`/`-j` — those are interactive-selection modes
@@ -131,8 +142,7 @@ and will hang a non-interactive agent):
 generate-media-prompt --no-eval -n 1 design/asset-prompts/screens/{theme}/{NN}-{screen-slug}.media.prompt
 ```
 
-Drop `--no-eval` only if `state/_pipeline.yaml` `preflight.eval.status: on` at the time you
-run this (check it fresh — don't assume today's `off` from setup is still true later).
+Drop `--no-eval` only if your `eval` spawn param (§0) is `on`.
 Identity-defining **hero screens** (the ones in `allocation.yaml`'s `overlap` list) get
 `-n 2` instead of `-n 1` so you have a choice. **Hard cap: 12 API calls for this theme** —
 budget accordingly (a ~7-screen theme with 1-2 hero screens fits comfortably; if your slice
@@ -155,6 +165,17 @@ the render actually match what the treatise commits to? Two directions of correc
   treatise in place**: bump its `revision:` field, keep `status: sketch` until all screens
   are reviewed, then flip to `status: full` once this pass is done for every screen in your
   slice.
+
+**What a render can and can't tell you:** treat renders as evidence for the *soft*
+signals — mood, palette family, overall layout — where the image model is reliable. Do
+**not** treat them as evidence for *hard* signals (exact accent hex, serif-vs-sans UI
+type, a small/large corner radius): the model doesn't reliably honor these no matter how
+forcefully the prompt insists, so a render "looking a little off" on a hard signal is not
+proof the treatise or YAML is wrong. Judge those precise tokens from the **compiled CSS**
+(§5's validation output) — the treatise/YAML is the source of truth there, the render is
+not. Budget accordingly: keep hero re-renders to **≤1 retry**; a second or third attempt
+to force a hard signal into the image is a near-guaranteed waste of your capped API calls
+(§2).
 
 ## 4. Implement the theme YAML — deltas only
 
@@ -201,6 +222,51 @@ brand-red-light: "color-mix(in srgb, var(--brand-red) 70%, var(--surface))"
 ```
 (same pattern for `brand-blue`/`brand-blue-light` and `brand-yellow`/`brand-yellow-light`.)
 
+**Dark-mode brand-tint leak (scoped-vars fix):** even once the seed trap above is fixed,
+dark mode has a second, deeper leak. The base's own
+`theme-style-guide/style-guide.scoped-vars.yaml` brightens `brand-red`/`brand-blue`/
+`brand-yellow` (and their `-light`/`-mid` siblings) for dark mode from **literal** hex
+values (`#e20613` / `#0047ab` / `#f5c518`) — not `var(--brand-*)`. So a theme with a
+fully correct `style-guide.vars.yaml` still shows its own accent in light mode but
+silently **reverts to Bauhaus red (or navy/gold) in dark mode**. This is a base-cascade
+defect, not something you introduced — it's tracked as a pending escalation against the
+base file (do not attempt to fix the base itself from a Stage C run). Until that
+escalation lands, add your own `style-guide.scoped-vars.yaml` delta whenever this theme's
+accent differs from the base red, re-pointing the dark values of whichever brand-tint
+families it actually uses on working chrome to its own `var(--brand-*)`:
+```yaml
+scoped-vars:
+  prefix: "theme"
+  sections:
+    standard:
+      selector: 'html[data-design-theme="{theme}"]'
+      prefix: "theme"
+    dark:
+      selector: 'html[data-design-theme="{theme}"].dark'
+      prefix: "theme"
+  vars:
+    - name: brand-red
+      value:
+        - section: dark
+          value: "color-mix(in srgb, {your-accent-hex} 75%, white)"
+    - name: brand-red-light
+      value:
+        - section: dark
+          value: "color-mix(in srgb, {your-accent-hex} 18%, var(--surface))"
+    - name: brand-red-mid
+      value:
+        - section: dark
+          value: "color-mix(in srgb, {your-accent-hex} 30%, var(--surface))"
+```
+A scoped-vars file needs its **own `sections` block** — it does not inherit the base
+file's `sections`, unlike `css-snippets`, which accumulates onto the base's list. Repeat
+the same three-var shape for `brand-blue`/`brand-yellow` only for the families this theme
+actually renders on working chrome; a slot that's genuinely reserved/off-chrome
+(documented as such) can be left on the base's dark cascade as a low-impact standing
+caution instead — see `theme-npl-minimal`'s conformance note for a worked example of
+that call. Skip this delta file entirely only if the treatise's accent genuinely **is**
+the base Bauhaus red.
+
 **`branding.yaml`** — always required, mirrors treatise §1 verbatim. Every shipped
 sibling theme includes **`logo-text` and `font-url`** — don't drop them even though
 the skeleton below only shows the minimum shape; `font-sans` in
@@ -244,6 +310,29 @@ overriding one of those three files (not just adding to it), you must re-declare
 This polish is optional-but-expected, not a hard gate; the trap only bites once you
 touch these three specific files.
 
+**Self-scope trap:** css-snippets accumulating onto the base (previous paragraph) does
+**not** mean the engine scopes them for you. The generator marks `css-snippets` (and
+`vars`/`scoped-vars`/`globals`) as **self-scoped**
+(`components/styleguide/app/src/lib/css-cache.ts:88,95`) and emits each snippet body
+**verbatim** — unlike the base's own structural sections (buttons/cards/etc.), which the
+generator prefixes with the theme selector automatically. Any selector you write in
+`style-guide.css-snippets.yaml` that you don't scope yourself lands in the compiled CSS
+bare, and a bare selector matches **every** theme's markup, not just this one — a global
+bleed into every sibling theme. Scope every selector by hand:
+```css
+/* before — bleeds into every other theme */
+.card { border-radius: 12px; }
+
+/* after — confined to this theme */
+html[data-design-theme="{theme}"] .card { border-radius: 12px; }
+```
+This applies to every selector in every snippet body, including ones nested inside
+`@media` blocks and compound/descendant selectors (`.glass :focus-visible` →
+`html[data-design-theme="{theme}"] .glass :focus-visible`). `style-guide.scoped-vars.yaml`
+does not inherit scoping from anywhere either — its `selector:` fields (see the
+dark-mode callout above) are how you declare the scope yourself; you own it explicitly
+there too.
+
 Beyond these four-plus-two, add delta facets **only** where the treatise demands a deviation
 the seed cascade can't produce (see trl-theme-designer's facet override decision table,
 loaded via the Skill invocation in §0) — most themes won't need more than
@@ -252,7 +341,7 @@ loaded via the Skill invocation in §0) — most themes won't need more than
 
 ## 5. Validate
 
-Check `state/_pipeline.yaml` `preflight.styleguide_serve.status` first.
+Check your `styleguide_serve` spawn param (§0) first.
 
 **If `on`:**
 ```bash
@@ -279,7 +368,7 @@ error/exception.
 fallback does **not** emit `style-guide.color-modes.yaml`'s literal light/dark maps
 into the generated output (verified across themes) — only the white/black seed
 cascade resolves modes on this path. An authored `color-modes` dark map is therefore
-**unverifiable** while `styleguide_serve.status: off`: you can confirm the
+**unverifiable** while your `styleguide_serve` spawn param is `off`: you can confirm the
 seed-cascade fallback looks reasonable, not that your literal light/dark maps took
 effect. Full color-modes verification requires the (currently unavailable) `npx
 @noizu/styleguide serve` path — record this limitation explicitly in the
@@ -325,8 +414,10 @@ actually incomplete or wrong.
 
 ## 9. Verify
 
-Run `templates/verify.md` §C with `PROJECT={project}` and `THEME={theme}` set. Paste every
-`PASS:`/`FAIL:` line into your report's `verify:` list.
+Run `templates/verify.md` §C with `PROJECT={project}`, `THEME={theme}`, `MEDIA={media}`,
+`EVAL={eval}`, `STYLEGUIDE_SERVE={styleguide_serve}` set (your spawn params, §0 —
+verify.md §C reads these env vars instead of `state/_pipeline.yaml`; see its header).
+Paste every `PASS:`/`FAIL:` line into your report's `verify:` list.
 
 ## 10. Update state and commit
 

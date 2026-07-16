@@ -1,4 +1,4 @@
-# verify.md (version: 1)
+# verify.md (version: 2)
 
 Copy-pasteable verification per stage. Run from the **repo root**
 (`/home/keithbrings/Work/Space/Infra/Noizu`) with the stated env vars set. Every check prints
@@ -9,6 +9,11 @@ no other dependencies.
 `status: done` requires zero `FAIL` lines in your section. A single `FAIL` means
 `blocked` (top-up and retry) or `failed` (something is actually broken) — see
 `report-format.md`.
+
+**§C only:** also requires `MEDIA`, `EVAL`, `STYLEGUIDE_SERVE` set to `on`/`off` — your
+stage-c-theme.md spawn params (`media`/`eval`/`styleguide_serve`), passed through
+verbatim, see its §9. §C reads these env vars, not `state/_pipeline.yaml`: that file is
+off-limits to stage agents.
 
 ---
 
@@ -144,7 +149,6 @@ PROMPT_DIR="$P/design/asset-prompts/screens/$THEME"
 THEME_DIR="$P/design/theme/theme-$THEME"
 TREATISE="$P/design/theme/treatise-$THEME.md"
 ALLOC="$P/design/asset-prompts/screens/allocation.yaml"
-PIPE_STATE="docs/pipelines/project-uplift/state/_pipeline.yaml"
 PROJ_STATE="docs/pipelines/project-uplift/state/$PROJECT.yaml"
 pass() { echo "PASS: $1"; }
 fail() { echo "FAIL: $1 — $2"; }
@@ -167,7 +171,7 @@ done
 [ "$bad_aspect" -eq 0 ] && pass "all aspect_ratio == 16:9" || fail "aspect_ratio" "$bad_aspect not 16:9"
 
 # PNG per prompt, unless media is off (deferred is the expected/passing state then)
-media_status=$(yq e '.preflight.media.status' "$PIPE_STATE")
+media_status="${MEDIA:?set MEDIA=on/off — your stage-c-theme.md media spawn param, see verify.md header}"
 if [ "$media_status" = "on" ]; then
   missing_png=0
   for f in "$PROMPT_DIR"/*.media.prompt; do
@@ -181,7 +185,7 @@ else
 fi
 
 # eval scores recorded, only if eval is actually on
-eval_status=$(yq e '.preflight.eval.status' "$PIPE_STATE")
+eval_status="${EVAL:?set EVAL=on/off — your stage-c-theme.md eval spawn param, see verify.md header}"
 if [ "$eval_status" = "on" ]; then
   avg=$(yq e ".stage_c.themes.${THEME}.avg_eval" "$PROJ_STATE" 2>/dev/null)
   { [ "$avg" != "null" ] && [ -n "$avg" ]; } && pass "eval scores recorded (avg=$avg)" || fail "eval scores" "not recorded despite eval:on"
@@ -199,11 +203,11 @@ base=$(yq e '."base-theme" // .base_theme' "$THEME_DIR/style-guide.meta.yaml" 2>
 [ "$base" = "theme-style-guide" ] && pass "base-theme == theme-style-guide" || fail "base-theme" "got '$base'"
 
 # serve validation — 0 hard errors. Two acceptable log sources depending on which path ran
-# (see state/_pipeline.yaml preflight.styleguide_serve for which one applies):
+# (see your STYLEGUIDE_SERVE spawn param for which one applies):
 #  - npx path:    /tmp/serve-$THEME.log, grep for "✗"
 #  - legacy path: /tmp/generate-css-$THEME.log, exit code of `npm run generate-css` with
 #                 STYLEGUIDE_CONFIG_ROOT=<repo>/$P/design/theme (see stage-c template §5)
-serve_mode=$(yq e '.preflight.styleguide_serve.status' "$PIPE_STATE")
+serve_mode="${STYLEGUIDE_SERVE:?set STYLEGUIDE_SERVE=on/off — your stage-c-theme.md spawn param, see verify.md header}"
 if [ "$serve_mode" = "on" ] && [ -f "/tmp/serve-$THEME.log" ]; then
   n_x=$(grep -c "✗" "/tmp/serve-$THEME.log" || true)
   [ "$n_x" -eq 0 ] && pass "npx serve log: 0 ✗" || fail "npx serve log" "$n_x ✗ found"
