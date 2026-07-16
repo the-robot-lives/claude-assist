@@ -115,7 +115,7 @@ Personas ride on top of assignments: a persona (reviewer temperament, domain voi
 
 ## Cross-Harness Coordination
 
-All coordination state lives in tobor-* MCP objects:
+All coordination state is modeled as tobor-* MCP objects:
 
 | Object | Used for |
 |--------|----------|
