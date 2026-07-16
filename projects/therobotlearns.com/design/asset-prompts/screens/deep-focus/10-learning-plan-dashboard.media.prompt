@@ -1,0 +1,79 @@
+schema: "0.4"
+id: deep-focus-10-learning-plan-dashboard
+type: image
+quality: high
+
+# The Robot Learns — a terminal study CLI. Learning Plan Dashboard — the goal-tracking home
+# for a multi-week plan (milestones, weekly summary metrics, adaptive pacing), in the terminal.
+# Theme tenets: calm navy-black dark canvas, one desaturated teal accent, 6px soft radius,
+# IBM Plex Sans prose + IBM Plex Mono for metrics, at most one saturated hue on screen.
+# Palette: canvas #0a0e1a, surface #0f1629, border #1e293b, body #cbd5e1, teal accent #14b8a6.
+
+prompt:
+  system: |
+    You are a senior product designer rendering a high-fidelity UI mockup of a calm,
+    immersive dark TERMINAL dashboard — a single focused terminal window, not a web page and
+    not a browser. This is a goal-tracking home for a multi-week learning plan: quiet stat
+    tiles, a milestone tracker, an activity feed, held in a deep navy pane with one desaturated
+    teal signal-light. It stays calm and airy, denser than a reading page but never a busy
+    mission-control cockpit. Labels in a clean humanist sans; numbers, dates and keys in a
+    matched monospace. No neon, no glow, no gloom.
+  text: |
+    A 16:9 high-fidelity mockup of a focused single-pane TERMINAL DASHBOARD — "The Robot
+    Learns" — the learning-plan home for a stated goal (e.g. "AWS Solutions Architect in 10
+    weeks"). One calm dark terminal window fills the frame on a deep navy-black canvas. NO
+    browser chrome, NO tabs, NO address bar, NO web page.
+
+    OVERALL LAYOUT (a header band, a stat-tile row, then two columns):
+    - HEADER BAND: the plan goal title in medium-weight sans, beside an EXPERTISE LEVEL BADGE
+      ("Cloud · Intermediate → Advanced") and a quiet "week 4 of 10" marker in monospace.
+    - STAT-TILE ROW: three or four KB STAT TILES, each a small soft-cornered card one navy step
+      up — a big monospace figure over a muted sans label: "Retention 86%", "Cards due 12",
+      "Streak 9d", "Quizzes 3". Calm, evenly spaced, no loud color.
+    - LEFT COLUMN (dominant): a PROGRESS BAR / MILESTONE TRACKER — a vertical list of plan
+      milestones, each with a small checkbox state (a few done with a teal check, the current
+      one marked by a 2px teal left rail, the rest muted/upcoming) and a thin per-milestone
+      progress bar with a teal fill on a recessed navy track.
+    - RIGHT COLUMN (slim): a SESSION LOG / activity feed — recent activity as short timestamped
+      monospace lines ("reviewed 40 cards", "graded project: passed", "quiz: 8/10"), quiet and
+      muted, newest on top.
+
+    BELOW: a faint status line in monospace: "plan adapts to your quiz + flashcard performance
+    · weekly summary sent sunday".
+
+    PALETTE & TYPE: deep navy-black canvas with one or two barely-lighter navy steps for the
+    stat tiles and tracks; labels and body in bright cool slate, secondary meta in dimmer slate;
+    a single calm desaturated teal as the ONLY saturated element — milestone checks, the current
+    rail, the progress fills. No second bright hue. Labels and headings in a calm humanist sans;
+    figures, dates, streaks and keys in a matched monospace.
+
+    SHAPE & SURFACE: soft-technical small rounded corners on the stat tiles and bars;
+    separation by tonal navy layering, not lines — faint slate hairlines only where a region is
+    genuinely divided. No gradients, no glow, flat calm layering.
+
+    MOOD: focused, immersive, calm — a clear, quiet overview of steady progress.
+  negative: "watermark, signature, lorem ipsum placeholder text, low-fidelity wireframe, monitor/device photograph framing, blurry, distorted UI, browser chrome, address bar, browser tabs, web page, light mode, neon glow, gradient background, busy multi-color dashboard"
+
+output:
+  formats:
+    - format: png
+  dimensions:
+    width: 1920
+    height: 1080
+    aspect_ratio: "16:9"
+
+eval:
+  pass_threshold: 0.72
+  criteria:
+    relevance: {weight: 3, description: "Matches the Learning Plan Dashboard: a goal header with expertise-level badge, a row of KB stat tiles, a milestone/progress tracker column, and a session-log activity feed — inside one terminal pane"}
+    theme_fidelity: {weight: 3, description: "Deep navy-black dark canvas, a single desaturated teal accent (no second saturated hue), soft small radius, calm sans labels + mono figures — a calm nocturne dashboard, not a busy multi-color cockpit or generic UI"}
+    composition: {weight: 2, description: "Airy stat row over a milestone column plus a slim activity feed, clear hierarchy, plausible real-product terminal layout"}
+    technical: {weight: 2, description: "Sharp, correct 16:9 aspect, no artifacts"}
+  reject_if:
+    - "lorem ipsum or placeholder text visible"
+    - "watermark or signature visible"
+    - "wireframe-level fidelity instead of high-fidelity mockup"
+    - "browser chrome, tabs, or address bar instead of a terminal window"
+    - "busy multi-color dashboard or more than one saturated accent hue"
+
+tags: [deep-focus, therobotlearns.com, screen-mockup, terminal]

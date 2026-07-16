@@ -1,8 +1,8 @@
 ---
 slug: deep-focus
 base_theme: theme-style-guide
-status: sketch
-revision: 1
+status: full
+revision: 2
 ---
 
 # Theme Treatise — Deep Focus
@@ -157,3 +157,32 @@ Theme: `theme-deep-focus/` · Base: `theme-style-guide` · Status: sketch
 | §7 | `style-guide.scoped-vars.yaml` | `--motion: 180ms` ease-in-out; reduced-motion guard |
 | §8 | `style-guide.semantic-classes.yaml` | teal primary fill, recessed inputs, borderless cards, teal-rail active nav |
 | §9 | verification across facets | recheck `#64748b`/`#475569` steps and teal-as-text on any canvas change |
+
+## Stage C Review Log
+
+*(Not a numbered treatise section — a render/reflect + implementation record. Revision 2.)*
+
+**Render/reflect (5 terminal-surface mockups, quality medium):** the renders confirmed the
+theme's *soft* commitments — navy-black canvas (§3), single desaturated teal accent, calm
+nocturne mood (§1), soft radius + tonal layering (§6), and terminal-not-web framing all held.
+Cleanest single-accent adherence: the Simulation Room and Query & Answer hero. Two renders
+drifted on the *hard* accent-discipline signal (which is judged from CSS, not the model): the
+Flashcard deck-tile icons and the Learning-Plan stat tiles picked up incidental multi-hue
+(orange/blue) the model added on its own. The treatise's "one saturated hue" stance (§3) is
+**retained** and enforced in YAML, not relaxed — no content change was warranted.
+
+**Implementation corrections (theme YAML brought into line with this treatise):**
+- **Seed-trap fix** — the shipped `style-guide.vars.yaml` set the accent on bare
+  `red`/`blue`/`yellow` keys, which the base does not wire as accent-driving (silent no-op), so
+  the teal §3 accent never actually applied. Moved to `brand-red`/`brand-blue`/`brand-yellow`
+  and re-pointed each `-light`/`-mid` sibling to `var(--brand-*)`.
+- **Teal focus/controls (§8/§9)** — base HUI controls/focus default to `brand-blue`; re-pointed
+  focus ring + control/field/switch/radio accents to the teal `brand-red` so §9's "2px teal
+  ring on every focusable element" holds. This makes `brand-blue`/`brand-yellow` genuinely
+  off-chrome (reserved).
+- **Dark brand-tint re-point** — added `style-guide.scoped-vars.yaml` so the teal accent does
+  not revert to Bauhaus red in dark mode (base-cascade defect; brand-blue/yellow left as
+  documented reserved standing cautions).
+- **`branding.yaml` `font-url`** added for IBM Plex Sans + IBM Plex Mono (§4).
+- **Sample elements** — self-scoped `style-guide.css-snippets.yaml` (answer block, topic chip,
+  flashcard, active nav rail) speaking to the product's real terminal UI patterns (§8).

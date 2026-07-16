@@ -30,8 +30,21 @@ stage_b:
   deferred_themes: [atlas, comic, spark]                                            # stage_c: deferred
   blocked: null
 stage_c:
-  status: pending
-  themes: {}    # keyed by theme slug once Stage B allocation.yaml exists; each entry tracks prompts/images/api_calls/avg_eval/yaml/conformance
+  status: in-progress
+  # keyed by theme slug once Stage B allocation.yaml exists; each entry tracks prompts/images/api_calls/avg_eval/yaml/conformance
+  themes:
+    deep-focus:
+      status: done
+      prompts: 5
+      images: 5
+      api_calls: 7
+      avg_eval: null
+      yaml: true
+      conformance: true
+    phosphor:
+      status: in-progress
+    cockpit:
+      status: in-progress
   blocked: null
 stage_d:
   status: done

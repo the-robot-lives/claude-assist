@@ -1,0 +1,80 @@
+schema: "0.4"
+id: deep-focus-01-query-and-answer
+type: image
+quality: high
+
+# The Robot Learns — a terminal study CLI that answers questions calibrated to your
+# expertise. Query & Answer screen (the /query slash-command output) — the flagship surface.
+# Theme tenets: calm navy-black dark canvas, one desaturated teal accent, 6px soft-technical
+# radius, IBM Plex Sans prose + IBM Plex Mono for code, at most one saturated hue on screen.
+# Palette: canvas #0a0e1a, surface #0f1629, border #1e293b, body #cbd5e1, teal accent #14b8a6.
+
+prompt:
+  system: |
+    You are a senior product designer rendering a high-fidelity UI mockup of a calm,
+    immersive dark TERMINAL session — a single focused terminal window, not a web page and
+    not a browser. The register is a quiet study room at 2 AM: deep navy stillness, one
+    desaturated teal signal-light, nothing competing with the text. It is a modern "rich
+    terminal" that renders the agent's prose answer in a clean humanist sans while code, IDs
+    and file paths stay in a matched monospace. Restrained chrome, generous line-height,
+    excellent small-size legibility. No neon, no glow, no gloom.
+  text: |
+    A 16:9 high-fidelity mockup of a focused single-pane TERMINAL session — "The Robot
+    Learns", a study CLI — showing the output of a /query command. One calm dark terminal
+    window fills the whole frame on a deep navy-black canvas. NO browser chrome, NO tabs, NO
+    address bar, NO web page.
+
+    OVERALL LAYOUT (one immersive pane, top-to-bottom, with a slim right context rail):
+    - TOP: a monospace COMMAND LINE — a teal prompt caret and the typed question, e.g.
+      "> robot-learns  how does SM-2 spaced repetition schedule reviews?".
+    - CENTER (dominant): the CALIBRATED ANSWER BLOCK — the agent's streamed answer set in a
+      calm humanist sans at comfortable line-height, its reading measure capped so lines stay
+      short; two short paragraphs plus one compact fenced CODE SNIPPET in monospace sitting on
+      a slightly-recessed darker-navy strip.
+    - RIGHT RAIL (slim, about a quarter width): ambient context — an EXPERTISE LEVEL BADGE
+      reading "Algorithms · Intermediate", and a small MACHINE / ENVIRONMENT PROFILE card
+      listing OS, shell and toolchain in muted slate.
+
+    BELOW THE ANSWER:
+    - RELATED TOPICS as a row of small pill chips with faint slate outlines (ghost, not
+      filled): "leitner system", "forgetting curve", "anki export".
+    - a compact inline VERBOSITY control shown as a three-segment hint: beginner · normal ·
+      deep, with one segment softly active in teal.
+    - a faint status line in monospace: "saved to kb · article kb-1042 · follow-ups keep context".
+
+    PALETTE & TYPE: deep navy-black canvas with one or two barely-lighter navy surface steps
+    for the recessed strip and the right rail; body text in bright cool slate, secondary labels
+    in a dimmer slate; a single calm, slightly-desaturated teal as the ONLY saturated element —
+    the prompt caret, the active badge, a 2px focus rail. No second bright hue anywhere. Prose
+    in a calm humanist sans; the command, the code, IDs and paths in a matched monospace.
+
+    SHAPE & SURFACE: soft-technical small rounded corners on the card, chips and code strip;
+    regions separate by tonal navy layering, not lines — only faint slate hairlines where a
+    region is genuinely divided. No gradients, no glow, flat calm layering.
+
+    MOOD: focused, immersive, calm — everything clicks, depth and stillness, never neon energy.
+  negative: "watermark, signature, lorem ipsum placeholder text, low-fidelity wireframe, monitor/device photograph framing, blurry, distorted UI, browser chrome, address bar, browser tabs, web page, light mode, neon glow, gradient background"
+
+output:
+  formats:
+    - format: png
+  dimensions:
+    width: 1920
+    height: 1080
+    aspect_ratio: "16:9"
+
+eval:
+  pass_threshold: 0.72
+  criteria:
+    relevance: {weight: 3, description: "Matches the Query & Answer screen: mono command line, calibrated answer block with a code snippet, expertise-level badge, machine/environment profile, related-topics chips, verbosity control — all inside one terminal pane"}
+    theme_fidelity: {weight: 3, description: "Deep navy-black dark canvas, a single desaturated teal accent (no second saturated hue), soft small radius, sans prose + mono code — a calm nocturne terminal, not generic UI defaults"}
+    composition: {weight: 2, description: "Clear reading hierarchy, dominant answer column with a slim context rail, plausible real-product terminal layout"}
+    technical: {weight: 2, description: "Sharp, correct 16:9 aspect, no artifacts"}
+  reject_if:
+    - "lorem ipsum or placeholder text visible"
+    - "watermark or signature visible"
+    - "wireframe-level fidelity instead of high-fidelity mockup"
+    - "browser chrome, tabs, or address bar instead of a terminal window"
+    - "more than one saturated accent hue on screen"
+
+tags: [deep-focus, therobotlearns.com, screen-mockup, terminal, hero]

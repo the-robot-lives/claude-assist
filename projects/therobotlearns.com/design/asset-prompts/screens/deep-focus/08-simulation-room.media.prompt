@@ -1,0 +1,78 @@
+schema: "0.4"
+id: deep-focus-08-simulation-room
+type: image
+quality: high
+
+# The Robot Learns — a terminal study CLI. Simulation Room — a terminal role-play simulation
+# (scripted, agent-driven scenario) with a live transcript and a graded debrief.
+# Theme tenets: calm navy-black dark canvas, one desaturated teal accent, 6px soft radius,
+# IBM Plex Sans prose + IBM Plex Mono for turn markers, at most one saturated hue on screen.
+# Palette: canvas #0a0e1a, surface #0f1629, border #1e293b, body #cbd5e1, teal accent #14b8a6.
+# Semantic (debrief only, sparingly): mint #34d399, amber #fbbf24, soft rose #fb7185.
+
+prompt:
+  system: |
+    You are a senior product designer rendering a high-fidelity UI mockup of a calm,
+    immersive dark TERMINAL session — a single focused terminal window, not a web page and not
+    a browser. The surface is an interactive role-play simulation: a turn-by-turn dialogue log
+    flowing down a deep navy pane, with a quiet graded debrief panel. Deep navy stillness, one
+    desaturated teal signal-light. Dialogue prose in a clean humanist sans; speaker tags,
+    turn markers and scores in a matched monospace. No neon, no glow, no gloom.
+  text: |
+    A 16:9 high-fidelity mockup of a focused single-pane TERMINAL session — "The Robot
+    Learns" — running a role-play simulation (a mock incident-response drill). One calm dark
+    terminal window fills the frame on a deep navy-black canvas. NO browser chrome, NO tabs,
+    NO address bar, NO web page.
+
+    OVERALL LAYOUT (a dominant transcript column with a slim right debrief rail):
+    - TOP: a thin SCENARIO HEADER in monospace — "SIMULATION · incident-response drill ·
+      level: intermediate" — with a small quiet "recording" style status marker in teal.
+    - CENTER (dominant): the ROLEPLAY TRANSCRIPT — a turn-by-turn dialogue log flowing top to
+      bottom, sender-grouped, NOT boxed cards. Each turn: a small monospace SPEAKER TAG
+      ("SYSTEM", "AGENT", "YOU") plus a muted turn timestamp, then the line of dialogue in calm
+      sans. Show four or five alternating turns; the user's own turns sit at a barely-lighter
+      navy step so they read as "mine". The latest line has a soft teal focus rail at its left.
+    - BOTTOM of transcript: a mono INPUT PROMPT line with a teal caret — "> your move…".
+
+    RIGHT RAIL (slim, about a quarter width): a SCORE / RESULTS SUMMARY panel for the
+    post-simulation debrief — a small heading "Debrief", a numeric score in large calm figures,
+    and a short list of "what went well / what to improve" lines each led by a tiny reserved
+    dot (mint for good, amber for caution, soft rose for a miss). Everything else stays slate.
+
+    PALETTE & TYPE: deep navy-black canvas with one or two barely-lighter navy steps for the
+    user's turns and the debrief panel; body dialogue in bright cool slate, speaker tags and
+    meta in dimmer slate; a single calm desaturated teal as the primary saturated element — the
+    recording marker, the input caret, the latest-line rail. The debrief dots (mint, amber,
+    soft rose) are tiny and reserved, the only other color. Dialogue in a calm humanist sans;
+    speaker tags, turn markers, the score and the prompt in a matched monospace.
+
+    SHAPE & SURFACE: soft-technical small rounded corners on the debrief panel; transcript
+    turns separate by tonal navy layering, not boxes — faint slate hairlines only where a
+    region is genuinely divided. No gradients, no glow, flat calm layering.
+
+    MOOD: focused, immersive, calm — an absorbing scripted scenario, deliberate and unhurried.
+  negative: "watermark, signature, lorem ipsum placeholder text, low-fidelity wireframe, monitor/device photograph framing, blurry, distorted UI, browser chrome, address bar, browser tabs, web page, light mode, neon glow, gradient background, boxed chat-bubble cards"
+
+output:
+  formats:
+    - format: png
+  dimensions:
+    width: 1920
+    height: 1080
+    aspect_ratio: "16:9"
+
+eval:
+  pass_threshold: 0.72
+  criteria:
+    relevance: {weight: 3, description: "Matches the Simulation Room: a monospace scenario header, a turn-by-turn roleplay transcript with speaker tags (SYSTEM/AGENT/YOU) and an input prompt, plus a right-rail score/results debrief summary — inside one terminal pane"}
+    theme_fidelity: {weight: 3, description: "Deep navy-black dark canvas, a single desaturated teal accent with only tiny reserved debrief dots, soft small radius, calm sans dialogue + mono tags — a nocturne surface, not boxed chat bubbles or generic UI"}
+    composition: {weight: 2, description: "Dominant flowing transcript with a quiet debrief rail, plausible real-product terminal layout"}
+    technical: {weight: 2, description: "Sharp, correct 16:9 aspect, no artifacts"}
+  reject_if:
+    - "lorem ipsum or placeholder text visible"
+    - "watermark or signature visible"
+    - "wireframe-level fidelity instead of high-fidelity mockup"
+    - "browser chrome, tabs, or address bar instead of a terminal window"
+    - "heavy boxed chat-bubble cards or more than one saturated accent hue"
+
+tags: [deep-focus, therobotlearns.com, screen-mockup, terminal]
