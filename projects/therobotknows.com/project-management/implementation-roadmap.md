@@ -100,6 +100,12 @@ the milestone sections and combined into a single row in Appendix A. Stretch
 items are marked; a stretch item that slips moves to the next milestone under
 the same owner, it is not re-scoped silently.
 
+### 3.6 Decision log
+
+| ID | Decision |
+|---|---|
+| D-001 | Epic K (Collaboration) remains in M5 despite must-priority markers on US-091/US-092. The README v0.1 scope governs; index MoSCoW priorities are product-level, not v0.1-level. Rationale: primary personas (P-001, P-002, P-005) receive full value single-player; backend PBAC v2 already exists, so deferral carries no architectural debt. Hedge: universe ownership is designed membership-based from M1 (see S0.1/S1.1 guardrail) so M5.S5.4 is a role-mapping exercise, not schema surgery. |
+
 ---
 
 ## 4. Milestone Overview
@@ -168,7 +174,11 @@ a solid footing.
 2. **KB domain model design doc:** universe; entry with 7 types (Character,
    Location, Event, Faction, Object, Concept, Rule); link; tag; status enum
    `canon | draft | generated`; versioning approach (snapshot-on-write vs
-   delta) decided here so S2.6 doesn't re-litigate it.
+   delta) decided here so S2.6 doesn't re-litigate it. **Guardrail (D-001):**
+   universe ownership MUST be modeled via a `universe_members` table
+   (member + role, seeded with the creating owner) — not a bare `owner_id`
+   column — and canon entries carry `created_by` attribution, so M5
+   collaboration is a non-breaking addition.
 3. **API contract conventions:** error envelope, pagination, auth header,
    versioned base path `/api/v1`, committed under `app/docs/api/`.
 4. **Contract skeletons:** `/api/v1/universes` and
@@ -237,9 +247,11 @@ on staging.
 
 ### S1.1 — BE universe domain
 
-1. **Changelog 025: universes table** (name, description, genre/tone config as
-   jsonb, owner, soft-delete flag). **First task — this single migration
-   unblocks S1.2.** Land it before anything else.
+1. **Changelog 025: universes + universe_members tables** (name, description,
+   genre/tone config as jsonb, soft-delete flag; membership = member + role,
+   per the D-001 guardrail — no bare `owner_id`). Single-player v0.1 simply
+   always has exactly one member with role `owner`. **First task — this
+   migration unblocks S1.2.** Land it before anything else.
 2. Noizu entity + repo definitions under `entities/universe/` +
    `schema/universe/`.
 3. Universe controller: create/read/update (US-009, US-010) with PBAC scoping
@@ -741,7 +753,12 @@ Gated on S5.1 task 4.
 
 ### S5.4 — Collaboration BE
 
-1. Changelogs 085–089: universe membership, roles, invites, public flags.
+Per D-001 (§3.6): universes have been membership-based since changelog 025 —
+this stream maps roles onto the existing `universe_members` table, not schema
+surgery.
+
+1. Changelogs 085–089: role extensions, invites, public flags (membership
+   table pre-exists from M1).
 2. **Map existing PBAC v2 to universe-level roles** (US-092 BE) — reuse
    groups/policies rather than inventing a parallel permission system.
 3. Invite collaborators (US-091 BE): email invite, accept, revoke.
