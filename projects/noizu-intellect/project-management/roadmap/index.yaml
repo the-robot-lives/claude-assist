@@ -29,3 +29,6 @@ roadmap:
   - id: RM-09
     title: Story Coverage & Traceability Matrix
     file: story-coverage.md
+  - id: RM-10
+    title: "MX — Immersion: Life as Reward (horizon concept + TODO backlog)"
+    file: 09-immersion-life-reward.md
