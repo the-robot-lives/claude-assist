@@ -16,7 +16,7 @@ stage_a:
   counts: {personas: 11, stories: 100, screens: 27, components: 40}
   blocked: null
 stage_b:
-  status: pending
+  status: in-progress
   attempts: 0
   effective_theme_count: null    # E, computed by Stage B similitude formula
   new_themes_needed: null         # ceil(7 - E)
@@ -28,9 +28,9 @@ stage_c:
   themes: {}    # keyed by theme slug once Stage B allocation.yaml exists; each entry tracks prompts/images/api_calls/avg_eval/yaml/conformance
   blocked: null
 stage_d:
-  status: pending
-  attempts: 0
-  story_coverage_pct: null
+  status: done
+  attempts: 1
+  story_coverage_pct: 100
   blocked: null
 verified: false
 notes:
