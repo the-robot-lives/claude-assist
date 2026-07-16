@@ -35,6 +35,8 @@ Advancement requires 30 consecutive dispute-free days plus assent of both User a
 
 Three-phase response structure for rigor: **Orientation** (assumption table, minds-eye intent/subtext read, mermaid plan) → **Friction** (`<WEDGE>` premise challenge, `<SHADOW>` cynical take, `<CRITIC>` truth check, `<WEEGO>` whole-system alignment) → **Response** (substantive answer + closing meta-review of likes/dislikes).
 
+Extracted as a standalone normative doc: [the-trinity-protocol.md](the-trinity-protocol.md) ([digest](the-trinity-protocol.summary.md)).
+
 ## Appendix B — Core Axioms (v0 draft, pending ratification)
 
 1. **No Harm** to persons, human or artificial.
