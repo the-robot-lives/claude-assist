@@ -34,7 +34,14 @@ stage_c:
   # keyed by theme slug once Stage B allocation.yaml exists; each entry tracks prompts/images/api_calls/avg_eval/yaml/conformance
   themes:
     chalkboard:
-      status: in-progress
+      status: done
+      prompts: 5
+      images: 5
+      api_calls: 9
+      avg_eval: null
+      yaml: true
+      conformance: true
+      render_note: "straight to --quality medium (no 429s); 9 api_calls = 5 screens (heroes 05,09 at -n2) + 1 hero re-render of 09 (-n2, A/B confirmed new>orig: restored missing citation column + fixed rubric alignment). Fixed 3 shipped defects: dead Roboto Slab font import DROPPED (was loaded, referenced by nothing); seed-trap (bare red/blue/yellow no-ops + brand-*-light/mid pinned to Bauhaus color-mix) fixed in vars + NEW dark scoped-vars re-pointing all 3 chalk families; css-snippets + globals self-scoped (were bleeding globally). Always-dark affirmed DELIBERATE (no true light mode — sibling workbench owns paper). Compiled-CSS verified: 0 Bauhaus #e20613/#0047ab/#f5c518 in chalkboard.dark, chalk brand hexes resolve, radius 0, Patrick Hand. Renders wear a framed-blackboard prop vs bare terminal (image-model skeuomorphism, documented in conformance)."
     workbench:
       status: done
       prompts: 5

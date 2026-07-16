@@ -2,17 +2,25 @@ vars:
   groups:
     - name: "Seed Colors"
       vars:
-        white: "#e8e4d8"
-        black: "#1e2a1e"
-        red: "#e06060"
-        blue: "#6cb4dc"
-        yellow: "#e8d44c"
+        white: "#e8e4d8"        # §3 chalk "ink" — warm off-white, the lightest value
+        black: "#1e2a1e"        # §3 near-black board green — dark canvas, never #000
+        # bare red/blue/yellow removed (V3 seed-trap): the base wires accents on
+        # brand-red/brand-blue/brand-yellow, so bare keys were silent no-ops.
 
     - name: "Primaries"
+      # §3 three chalk "sticks", used categorically (no single dominant accent). Each -light/-mid
+      # sibling is re-pointed to read var(--brand-*): the base pins them to a color-mix with the
+      # OLD Bauhaus hex baked in, so overriding brand-* alone silently keeps the old tint (V3).
       vars:
         brand-red: "#e06060"
+        brand-red-light: "color-mix(in srgb, var(--brand-red) 12%, var(--surface))"
+        brand-red-mid: "color-mix(in srgb, var(--brand-red) 20%, var(--surface))"
         brand-blue: "#6cb4dc"
+        brand-blue-light: "color-mix(in srgb, var(--brand-blue) 12%, var(--surface))"
+        brand-blue-mid: "color-mix(in srgb, var(--brand-blue) 20%, var(--surface))"
         brand-yellow: "#e8d44c"
+        brand-yellow-light: "color-mix(in srgb, var(--brand-yellow) 18%, var(--surface))"
+        brand-yellow-mid: "color-mix(in srgb, var(--brand-yellow) 35%, var(--surface))"
 
     - name: "Palette"
       vars:

@@ -1,9 +1,14 @@
 ---
 slug: chalkboard
 base_theme: theme-style-guide
-status: sketch
-revision: 1
+status: full
+revision: 2
 ---
+
+<!-- rev2 (Stage C): resolved the two §-flags into deliberate decisions — Roboto Slab dropped
+     (§4), always-dark affirmed as intentional (§3); status sketch→full after all 5 slice screens
+     (01, 05, 09, 11, 12) rendered + reviewed. See conformance-chalkboard.md. -->
+
 
 # Theme Treatise — Chalkboard
 
@@ -66,12 +71,16 @@ Theme: `theme-chalkboard/` · Base: `theme-style-guide` · Status: sketch
   underline/icon so "error" isn't confused with an ordinary red-chalk highlight.
 - **Contrast stance:** High for chalk-on-board; chalk `#e8e4d8` on board `#2d4a2d` ≈ 8:1.
   Colored chalks are lighter and must be verified at text size (see §9).
-- **Mode strategy — honest flag:** the theme defines `light` and `dark` blocks, but **both are
-  dark-toned** — `light` = forest green `#2d4a2d`, `dark` = near-black green `#1e2a1e`. The
-  labels do **not** map to conventional light/dark luminance; this is an *always-dark*
-  chalkboard offering a "board green" vs "darker board" pair, not a true light theme. There is
-  no genuine light mode and no high-contrast mode; a fine-tuner should treat both blocks as
-  dark variants and not expect a pale surface.
+- **Mode strategy — deliberate always-dark (rev2 decision):** the theme defines `light` and
+  `dark` blocks, but **both are dark on purpose** — `light` = forest green `#2d4a2d` (the
+  **daytime board**, under classroom lights), `dark` = near-black green `#1e2a1e` (the **evening
+  board**, after hours). The labels do **not** map to conventional light/dark luminance; this is
+  an *always-dark* theme offering two distinct dark board variants (verified 1.52:1 apart in
+  surface luminance), not a light/dark pair. A true light/paper mode is **rejected by design**:
+  it would betray the chalk-on-dark-board identity (§1/§2) and collapse the distinction from the
+  sibling theme `workbench`, which *is* the light-paper theme (§2 anti-reference). There is no
+  genuine light mode and no high-contrast mode by design; a fine-tuner should treat both blocks
+  as dark variants and never author a pale surface here. (See conformance Deviations & Waivers.)
 
 ## 4. Typographic Voice
 
@@ -85,8 +94,11 @@ Theme: `theme-chalkboard/` · Base: `theme-style-guide` · Status: sketch
 - **Weight usage:** Effectively single-weight (400) across faces — hand lettering doesn't
   bold; emphasis comes from underline, color chalk, and size, per the tone.
 - **Rhythm:** 1.65 body line-height (roomy); mono for equations, code, and technical values
-  only. **Honest flag:** `font-url` imports *Roboto Slab* (400–700) but no font var references
-  it — a dead/unused import; recommend removing it or wiring it to a purpose.
+  only. **Resolved (rev2):** the dead *Roboto Slab* (400–700) import — loaded but referenced by
+  no font var — has been **dropped** from `branding.yaml` `font-url`. Removal was chosen over
+  wiring it to a purpose because a slab serif contradicts this section's core commitment that the
+  whole board is written by hand; the URL now loads exactly the three referenced faces (Patrick
+  Hand, Architects Daughter, Roboto Mono), verified HTTP 200.
 
 ## 5. Space & Density
 

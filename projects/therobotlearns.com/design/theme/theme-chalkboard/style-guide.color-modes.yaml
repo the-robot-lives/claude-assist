@@ -1,3 +1,15 @@
+# DELIBERATE ALWAYS-DARK (Stage C BUG-2 decision). Chalkboard is chalk on a dark green slate
+# board — its identity (treatise §1/§2/§3) is a dark surface, and its anti-reference §2 explicitly
+# rejects "workbench's cream paper" and "a sterile dry-erase whiteboard". Authoring a true
+# light/paper mode here would betray that identity and collapse the distinction from its sibling
+# theme `workbench` (which IS the light paper theme). So BOTH maps below are dark on purpose:
+#   light = "#2d4a2d"  → the DAYTIME board (forest green, board under classroom lights)
+#   dark  = "#1e2a1e"  → the EVENING board (near-black green, the board after hours)
+# These are two distinct dark board variants, not a light/dark luminance pair. There is no
+# genuine light mode and no high-contrast mode by design; see conformance-chalkboard.md
+# Deviations & Waivers. (Note: the legacy generate-css path does not emit these literal maps —
+# only the white/black seed cascade resolves modes there — so the dark map is unverifiable until
+# the npx serve path is available; recorded in the conformance note.)
 color-modes:
   light:
     surface: "#2d4a2d"

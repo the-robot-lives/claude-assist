@@ -1,0 +1,72 @@
+# Chalkboard — dark-mode brand-tint re-point (Stage C V3 fix).
+#
+# The base theme-style-guide/style-guide.scoped-vars.yaml brightens brand-red/-blue/-yellow
+# (and their -light/-mid siblings) for dark mode from LITERAL Bauhaus/navy/gold hex
+# (#e20613 / #0047ab / #f5c518), NOT var(--brand-*). So even with a fully correct vars.yaml,
+# chalkboard's chalk accents would silently revert to Bauhaus red / navy / gold in DARK mode.
+# This delta re-points all three families, because chalkboard uses all three chalk sticks on
+# working chrome (yellow ::selection + underline + doodles; blue links/underline/box; rose
+# error/underline/box). This is a base-cascade defect (escalation pending against the base
+# file); do not fix the base from a Stage C run.
+#
+# No brighten-toward-white (unlike the base's 75%+white and deep-focus's teal): chalkboard is
+# an ALWAYS-DARK theme whose "light" board (#2d4a2d) and "dark" board (#1e2a1e) are both dark,
+# and its chalk hues are already pale, board-tuned pastels. On the darker board the same chalk
+# gains contrast, so the dark accents are pinned to the SAME chalk hex as standard mode — the
+# base value only needs a literal (a var(--brand-*) self-reference would be circular); the
+# -light/-mid siblings then read the now-correct dark var(--brand-*).
+#
+# A scoped-vars file owns its selectors explicitly and does NOT inherit the base's sections.
+scoped-vars:
+  prefix: "theme"
+
+  sections:
+    standard:
+      selector: 'html[data-design-theme="chalkboard"]'
+      prefix: "theme"
+    dark:
+      selector: 'html[data-design-theme="chalkboard"].dark'
+      prefix: "theme"
+
+  vars:
+    # ── rose chalk (brand-red == error == rose) ──
+    - name: brand-red
+      value:
+        - section: dark
+          value: "#e06060"
+    - name: brand-red-light
+      value:
+        - section: dark
+          value: "color-mix(in srgb, var(--brand-red) 12%, var(--surface))"
+    - name: brand-red-mid
+      value:
+        - section: dark
+          value: "color-mix(in srgb, var(--brand-red) 20%, var(--surface))"
+
+    # ── blue chalk (brand-blue == info / links) ──
+    - name: brand-blue
+      value:
+        - section: dark
+          value: "#6cb4dc"
+    - name: brand-blue-light
+      value:
+        - section: dark
+          value: "color-mix(in srgb, var(--brand-blue) 12%, var(--surface))"
+    - name: brand-blue-mid
+      value:
+        - section: dark
+          value: "color-mix(in srgb, var(--brand-blue) 20%, var(--surface))"
+
+    # ── yellow chalk (brand-yellow == emphasis / selection) ──
+    - name: brand-yellow
+      value:
+        - section: dark
+          value: "#e8d44c"
+    - name: brand-yellow-light
+      value:
+        - section: dark
+          value: "color-mix(in srgb, var(--brand-yellow) 18%, var(--surface))"
+    - name: brand-yellow-mid
+      value:
+        - section: dark
+          value: "color-mix(in srgb, var(--brand-yellow) 35%, var(--surface))"
