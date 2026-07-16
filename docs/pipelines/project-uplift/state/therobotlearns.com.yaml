@@ -5,14 +5,14 @@ census:
   readme_stub: false
   personas: 8
   stories: 100
-  screens: 0
-  components: 0
+  screens: 20
+  components: 25
   roadmap_exists: false
   existing_named_themes: [theme-atlas, theme-chalkboard, theme-comic, theme-deep-focus, theme-scholar, theme-spark, theme-workbench]
 stage_a:
-  status: pending
-  attempts: 0
-  counts: {personas: 8, stories: 100, screens: 0, components: 0}
+  status: done
+  attempts: 1
+  counts: {personas: 8, stories: 100, screens: 20, components: 25}
   blocked: null
 stage_b:
   status: pending

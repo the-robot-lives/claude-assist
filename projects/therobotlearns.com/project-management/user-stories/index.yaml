@@ -1,9 +1,41 @@
-user_stories:
+epics:
+  - name: Calibrated Q&A
+    stories: [US-001, US-002, US-003, US-004, US-005, US-006, US-007, US-008, US-009, US-010]
+  - name: Knowledge Base
+    stories: [US-011, US-012, US-013, US-014, US-015, US-016, US-017, US-018]
+  - name: Flashcards & Spaced Repetition
+    stories: [US-019, US-020, US-021, US-022, US-023]
+  - name: Quizzes
+    stories: [US-024, US-025, US-026, US-027, US-028, US-029]
+  - name: Simulations & Projects
+    stories: [US-030, US-031, US-032, US-033]
+  - name: Learning Plans
+    stories: [US-034, US-035, US-036, US-037, US-038]
+  - name: Onboarding & Setup
+    stories: [US-039, US-040, US-041, US-042, US-043, US-044, US-045, US-046, US-047, US-048]
+  - name: Settings & Preferences
+    stories: [US-049, US-050, US-051, US-052, US-053, US-054, US-055]
+  - name: KB Maintenance
+    stories: [US-056, US-057, US-058, US-059, US-060, US-061, US-062, US-063, US-064, US-065]
+  - name: Search & Discovery
+    stories: [US-066, US-067, US-068, US-069, US-070, US-071, US-072, US-073]
+  - name: Collaboration & Cloud
+    stories: [US-074, US-075, US-076, US-077, US-078, US-079, US-080, US-081]
+  - name: Resilience & Errors
+    stories: [US-082, US-083, US-084, US-085, US-086, US-087]
+  - name: Accessibility & i18n
+    stories: [US-088, US-089, US-090, US-091]
+  - name: Performance & Scale
+    stories: [US-092, US-093, US-094, US-095]
+  - name: Integrations
+    stories: [US-096, US-097, US-098, US-099, US-100]
+stories:
   - id: US-001
     title: Ask a Calibrated Question
     slug: ask-a-calibrated-question
     epic: Calibrated Q&A
     priority: must-have
+    complexity: high
     personas: [P-001, P-002, P-003]
     file: US-001-ask-a-calibrated-question.md
   - id: US-002
@@ -11,6 +43,7 @@ user_stories:
     slug: adapt-depth-per-domain
     epic: Calibrated Q&A
     priority: must-have
+    complexity: high
     personas: [P-001, P-002]
     file: US-002-adapt-depth-per-domain.md
   - id: US-003
@@ -18,6 +51,7 @@ user_stories:
     slug: respect-my-machine-profile
     epic: Calibrated Q&A
     priority: must-have
+    complexity: medium
     personas: [P-003, P-001]
     file: US-003-respect-my-machine-profile.md
   - id: US-004
@@ -25,6 +59,7 @@ user_stories:
     slug: auto-save-query-answers-to-kb
     epic: Calibrated Q&A
     priority: must-have
+    complexity: medium
     personas: [P-001, P-002]
     file: US-004-auto-save-query-answers-to-kb.md
   - id: US-005
@@ -32,6 +67,7 @@ user_stories:
     slug: cross-link-related-articles
     epic: Calibrated Q&A
     priority: should-have
+    complexity: medium
     personas: [P-001, P-004]
     file: US-005-cross-link-related-articles.md
   - id: US-006
@@ -39,6 +75,7 @@ user_stories:
     slug: suggest-adjacent-topics-after-query
     epic: Calibrated Q&A
     priority: should-have
+    complexity: medium
     personas: [P-002, P-005]
     file: US-006-suggest-adjacent-topics-after-query.md
   - id: US-007
@@ -46,6 +83,7 @@ user_stories:
     slug: format-articles-per-schema
     epic: Calibrated Q&A
     priority: must-have
+    complexity: medium
     personas: [P-001, P-006]
     file: US-007-format-articles-per-schema.md
   - id: US-008
@@ -53,6 +91,7 @@ user_stories:
     slug: browse-knowledge-article-terminal
     epic: Calibrated Q&A
     priority: must-have
+    complexity: low
     personas: [P-001, P-007]
     file: US-008-browse-knowledge-article-terminal.md
   - id: US-009
@@ -60,6 +99,7 @@ user_stories:
     slug: refresh-a-stale-article
     epic: Calibrated Q&A
     priority: must-have
+    complexity: medium
     personas: [P-001, P-003]
     file: US-009-refresh-a-stale-article.md
   - id: US-010
@@ -67,6 +107,7 @@ user_stories:
     slug: ask-followup-question-with-context
     epic: Calibrated Q&A
     priority: must-have
+    complexity: medium
     personas: [P-001, P-002]
     file: US-010-ask-followup-question-with-context.md
   - id: US-011
@@ -74,6 +115,7 @@ user_stories:
     slug: record-qa-session-to-log
     epic: Knowledge Base
     priority: must-have
+    complexity: low
     personas: [P-001, P-004]
     file: US-011-record-qa-session-to-log.md
   - id: US-012
@@ -81,6 +123,7 @@ user_stories:
     slug: review-past-session-logs
     epic: Knowledge Base
     priority: should-have
+    complexity: low
     personas: [P-002, P-004]
     file: US-012-review-past-session-logs.md
   - id: US-013
@@ -88,6 +131,7 @@ user_stories:
     slug: tag-and-categorize-knowledge-articles
     epic: Knowledge Base
     priority: should-have
+    complexity: low
     personas: [P-001, P-006]
     file: US-013-tag-and-categorize-knowledge-articles.md
   - id: US-014
@@ -95,6 +139,7 @@ user_stories:
     slug: auto-update-kb-index
     epic: Knowledge Base
     priority: must-have
+    complexity: medium
     personas: [P-001, P-006]
     file: US-014-auto-update-kb-index.md
   - id: US-015
@@ -102,6 +147,7 @@ user_stories:
     slug: cite-sources-in-generated-articles
     epic: Knowledge Base
     priority: must-have
+    complexity: medium
     personas: [P-001, P-008]
     file: US-015-cite-sources-in-generated-articles.md
   - id: US-016
@@ -109,6 +155,7 @@ user_stories:
     slug: mark-an-article-as-verified
     epic: Knowledge Base
     priority: must-have
+    complexity: low
     personas: [P-001, P-003]
     file: US-016-mark-an-article-as-verified.md
   - id: US-017
@@ -116,6 +163,7 @@ user_stories:
     slug: override-to-beginner-mode-single-query
     epic: Knowledge Base
     priority: should-have
+    complexity: low
     personas: [P-005, P-002]
     file: US-017-override-to-beginner-mode-single-query.md
   - id: US-018
@@ -123,6 +171,7 @@ user_stories:
     slug: save-compare-contrast-as-comparison-article
     epic: Knowledge Base
     priority: should-have
+    complexity: medium
     personas: [P-002, P-006]
     file: US-018-save-compare-contrast-as-comparison-article.md
   - id: US-019
@@ -130,6 +179,7 @@ user_stories:
     slug: generate-flashcards-from-knowledge-article
     epic: Flashcards & Spaced Repetition
     priority: must-have
+    complexity: medium
     personas: [P-002, P-005]
     file: US-019-generate-flashcards-from-knowledge-article.md
   - id: US-020
@@ -137,6 +187,7 @@ user_stories:
     slug: daily-sm2-review-queue
     epic: Flashcards & Spaced Repetition
     priority: must-have
+    complexity: medium
     personas: [P-002, P-001]
     file: US-020-daily-sm2-review-queue.md
   - id: US-021
@@ -144,6 +195,7 @@ user_stories:
     slug: grade-recall-per-card-to-reschedule
     epic: Flashcards & Spaced Repetition
     priority: must-have
+    complexity: medium
     personas: [P-002, P-001]
     file: US-021-grade-recall-per-card-to-reschedule.md
   - id: US-022
@@ -151,6 +203,7 @@ user_stories:
     slug: due-card-counts-per-deck
     epic: Flashcards & Spaced Repetition
     priority: should-have
+    complexity: low
     personas: [P-002, P-001]
     file: US-022-due-card-counts-per-deck.md
   - id: US-023
@@ -158,6 +211,7 @@ user_stories:
     slug: organize-cards-into-topic-decks
     epic: Flashcards & Spaced Repetition
     priority: must-have
+    complexity: low
     personas: [P-002, P-006]
     file: US-023-organize-cards-into-topic-decks.md
   - id: US-024
@@ -165,6 +219,7 @@ user_stories:
     slug: generate-quiz-on-topic-or-article
     epic: Quizzes
     priority: must-have
+    complexity: medium
     personas: [P-002, P-005]
     file: US-024-generate-quiz-on-topic-or-article.md
   - id: US-025
@@ -172,6 +227,7 @@ user_stories:
     slug: take-quiz-in-terminal
     epic: Quizzes
     priority: must-have
+    complexity: medium
     personas: [P-001, P-002, P-007]
     file: US-025-take-quiz-in-terminal.md
   - id: US-026
@@ -179,6 +235,7 @@ user_stories:
     slug: take-quiz-in-browser-spa
     epic: Quizzes
     priority: could-have
+    complexity: medium
     personas: [P-002, P-005]
     file: US-026-take-quiz-in-browser-spa.md
   - id: US-027
@@ -186,6 +243,7 @@ user_stories:
     slug: store-quiz-results-identify-weak-areas
     epic: Quizzes
     priority: must-have
+    complexity: medium
     personas: [P-002, P-004]
     file: US-027-store-quiz-results-identify-weak-areas.md
   - id: US-028
@@ -193,6 +251,7 @@ user_stories:
     slug: retake-only-missed-questions
     epic: Quizzes
     priority: should-have
+    complexity: low
     personas: [P-002, P-005]
     file: US-028-retake-only-missed-questions.md
   - id: US-029
@@ -200,6 +259,7 @@ user_stories:
     slug: mix-question-types-in-quiz
     epic: Quizzes
     priority: should-have
+    complexity: medium
     personas: [P-002, P-006]
     file: US-029-mix-question-types-in-quiz.md
   - id: US-030
@@ -207,6 +267,7 @@ user_stories:
     slug: run-terminal-roleplay-simulation
     epic: Simulations & Projects
     priority: must-have
+    complexity: high
     personas: [P-003, P-001]
     file: US-030-run-terminal-roleplay-simulation.md
   - id: US-031
@@ -214,6 +275,7 @@ user_stories:
     slug: graded-debrief-after-simulation
     epic: Simulations & Projects
     priority: must-have
+    complexity: medium
     personas: [P-003, P-004]
     file: US-031-graded-debrief-after-simulation.md
   - id: US-032
@@ -221,6 +283,7 @@ user_stories:
     slug: request-graded-project-matched-to-level
     epic: Simulations & Projects
     priority: must-have
+    complexity: medium
     personas: [P-002, P-005]
     file: US-032-request-graded-project-matched-to-level.md
   - id: US-033
@@ -228,6 +291,7 @@ user_stories:
     slug: submit-project-for-grader-evaluation
     epic: Simulations & Projects
     priority: must-have
+    complexity: high
     personas: [P-002, P-005, P-004]
     file: US-033-submit-project-for-grader-evaluation.md
   - id: US-034
@@ -235,6 +299,7 @@ user_stories:
     slug: create-learning-plan-for-goal
     epic: Learning Plans
     priority: must-have
+    complexity: medium
     personas: [P-002, P-005]
     file: US-034-create-learning-plan-for-goal.md
   - id: US-035
@@ -242,6 +307,7 @@ user_stories:
     slug: track-and-check-off-milestones
     epic: Learning Plans
     priority: should-have
+    complexity: low
     personas: [P-002, P-004]
     file: US-035-track-and-check-off-milestones.md
   - id: US-036
@@ -249,6 +315,7 @@ user_stories:
     slug: adapt-plan-based-on-performance-data
     epic: Learning Plans
     priority: should-have
+    complexity: high
     personas: [P-002, P-003]
     file: US-036-adapt-plan-based-on-performance-data.md
   - id: US-037
@@ -256,6 +323,7 @@ user_stories:
     slug: weekly-progress-summary
     epic: Learning Plans
     priority: should-have
+    complexity: medium
     personas: [P-001, P-002, P-004]
     file: US-037-weekly-progress-summary.md
   - id: US-038
@@ -263,6 +331,7 @@ user_stories:
     slug: resurface-decayed-topics-automatically
     epic: Learning Plans
     priority: could-have
+    complexity: medium
     personas: [P-001, P-002, P-008]
     file: US-038-resurface-decayed-topics-automatically.md
   - id: US-039
@@ -270,6 +339,7 @@ user_stories:
     slug: install-and-launch-via-npm
     epic: Onboarding & Setup
     priority: must-have
+    complexity: low
     personas: [P-001, P-002, P-005]
     file: US-039-install-and-launch-via-npm.md
   - id: US-040
@@ -277,6 +347,7 @@ user_stories:
     slug: bootstrap-agent-environment-on-first-run
     epic: Onboarding & Setup
     priority: must-have
+    complexity: medium
     personas: [P-001, P-002]
     file: US-040-bootstrap-agent-environment-on-first-run.md
   - id: US-041
@@ -284,6 +355,7 @@ user_stories:
     slug: guided-user-profile-creation
     epic: Onboarding & Setup
     priority: must-have
+    complexity: medium
     personas: [P-002, P-005, P-004]
     file: US-041-guided-user-profile-creation.md
   - id: US-042
@@ -291,6 +363,7 @@ user_stories:
     slug: confirm-auto-detected-machine-profile
     epic: Onboarding & Setup
     priority: must-have
+    complexity: medium
     personas: [P-001, P-003]
     file: US-042-confirm-auto-detected-machine-profile.md
   - id: US-043
@@ -298,6 +371,7 @@ user_stories:
     slug: detect-and-guide-missing-claude-code-install
     epic: Onboarding & Setup
     priority: must-have
+    complexity: medium
     personas: [P-005, P-002]
     file: US-043-detect-and-guide-missing-claude-code-install.md
   - id: US-044
@@ -305,6 +379,7 @@ user_stories:
     slug: re-run-setup-without-destroying-kb-data
     epic: Onboarding & Setup
     priority: must-have
+    complexity: medium
     personas: [P-001, P-004]
     file: US-044-re-run-setup-without-destroying-kb-data.md
   - id: US-045
@@ -312,6 +387,7 @@ user_stories:
     slug: seed-kb-with-starter-topics-during-onboarding
     epic: Onboarding & Setup
     priority: must-have
+    complexity: low
     personas: [P-002, P-005]
     file: US-045-seed-kb-with-starter-topics-during-onboarding.md
   - id: US-046
@@ -319,6 +395,7 @@ user_stories:
     slug: welcome-tour-of-slash-commands
     epic: Onboarding & Setup
     priority: should-have
+    complexity: low
     personas: [P-005, P-002]
     file: US-046-welcome-tour-of-slash-commands.md
   - id: US-047
@@ -326,6 +403,7 @@ user_stories:
     slug: maintain-and-switch-between-named-profiles
     epic: Onboarding & Setup
     priority: could-have
+    complexity: high
     personas: [P-003, P-006, P-004]
     file: US-047-maintain-and-switch-between-named-profiles.md
   - id: US-048
@@ -333,6 +411,7 @@ user_stories:
     slug: cleanly-uninstall-while-preserving-kb-data
     epic: Onboarding & Setup
     priority: must-have
+    complexity: medium
     personas: [P-008, P-001]
     file: US-048-cleanly-uninstall-while-preserving-kb-data.md
   - id: US-049
@@ -340,6 +419,7 @@ user_stories:
     slug: edit-per-domain-expertise-levels
     epic: Settings & Preferences
     priority: should-have
+    complexity: low
     personas: [P-002, P-001]
     file: US-049-edit-per-domain-expertise-levels.md
   - id: US-050
@@ -347,6 +427,7 @@ user_stories:
     slug: set-learning-style-preferences
     epic: Settings & Preferences
     priority: should-have
+    complexity: low
     personas: [P-005, P-002]
     file: US-050-set-learning-style-preferences.md
   - id: US-051
@@ -354,6 +435,7 @@ user_stories:
     slug: configure-local-preferences-via-schema
     epic: Settings & Preferences
     priority: should-have
+    complexity: medium
     personas: [P-001, P-003, P-006]
     file: US-051-configure-local-preferences-via-schema.md
   - id: US-052
@@ -361,6 +443,7 @@ user_stories:
     slug: choose-visual-theme-for-quiz-spa
     epic: Settings & Preferences
     priority: should-have
+    complexity: medium
     personas: [P-007, P-002]
     file: US-052-choose-visual-theme-for-quiz-spa.md
   - id: US-053
@@ -368,6 +451,7 @@ user_stories:
     slug: configure-review-cadence-and-daily-card-limits
     epic: Settings & Preferences
     priority: should-have
+    complexity: low
     personas: [P-001, P-004]
     file: US-053-configure-review-cadence-and-daily-card-limits.md
   - id: US-054
@@ -375,6 +459,7 @@ user_stories:
     slug: set-default-verbosity-for-query
     epic: Settings & Preferences
     priority: could-have
+    complexity: low
     personas: [P-003, P-001]
     file: US-054-set-default-verbosity-for-query.md
   - id: US-055
@@ -382,6 +467,7 @@ user_stories:
     slug: telemetry-is-opt-in-and-clearly-disclosed
     epic: Settings & Preferences
     priority: must-have
+    complexity: medium
     personas: [P-008, P-007]
     file: US-055-telemetry-is-opt-in-and-clearly-disclosed.md
   - id: US-056
@@ -389,6 +475,7 @@ user_stories:
     slug: validate-kb-against-schemas
     epic: KB Maintenance
     priority: should-have
+    complexity: medium
     personas: [P-006, P-004]
     file: US-056-validate-kb-against-schemas.md
   - id: US-057
@@ -396,6 +483,7 @@ user_stories:
     slug: rebuild-index-from-disk
     epic: KB Maintenance
     priority: must-have
+    complexity: medium
     personas: [P-006, P-001]
     file: US-057-rebuild-index-from-disk.md
   - id: US-058
@@ -403,6 +491,7 @@ user_stories:
     slug: detect-duplicate-articles
     epic: KB Maintenance
     priority: should-have
+    complexity: high
     personas: [P-004, P-001]
     file: US-058-detect-duplicate-articles.md
   - id: US-059
@@ -410,6 +499,7 @@ user_stories:
     slug: prune-stale-articles
     epic: KB Maintenance
     priority: should-have
+    complexity: medium
     personas: [P-004, P-001]
     file: US-059-prune-stale-articles.md
   - id: US-060
@@ -417,6 +507,7 @@ user_stories:
     slug: view-kb-stats
     epic: KB Maintenance
     priority: should-have
+    complexity: medium
     personas: [P-001, P-003, P-004]
     file: US-060-view-kb-stats.md
   - id: US-061
@@ -424,6 +515,7 @@ user_stories:
     slug: migrate-kb-template-version
     epic: KB Maintenance
     priority: must-have
+    complexity: high
     personas: [P-008, P-002, P-006]
     file: US-061-migrate-kb-template-version.md
   - id: US-062
@@ -431,6 +523,7 @@ user_stories:
     slug: automatic-pre-migration-backup
     epic: KB Maintenance
     priority: must-have
+    complexity: medium
     personas: [P-008, P-006]
     file: US-062-automatic-pre-migration-backup.md
   - id: US-063
@@ -438,6 +531,7 @@ user_stories:
     slug: backup-kb-on-demand-or-schedule
     epic: KB Maintenance
     priority: should-have
+    complexity: medium
     personas: [P-008, P-001]
     file: US-063-backup-kb-on-demand-or-schedule.md
   - id: US-064
@@ -445,6 +539,7 @@ user_stories:
     slug: restore-kb-from-backup
     epic: KB Maintenance
     priority: should-have
+    complexity: medium
     personas: [P-008, P-006]
     file: US-064-restore-kb-from-backup.md
   - id: US-065
@@ -452,6 +547,7 @@ user_stories:
     slug: relocate-kb-directory
     epic: KB Maintenance
     priority: could-have
+    complexity: low
     personas: [P-008, P-006]
     file: US-065-relocate-kb-directory.md
   - id: US-066
@@ -459,6 +555,7 @@ user_stories:
     slug: full-text-search-articles
     epic: Search & Discovery
     priority: should-have
+    complexity: medium
     personas: [P-001, P-002, P-003]
     file: US-066-full-text-search-articles.md
   - id: US-067
@@ -466,6 +563,7 @@ user_stories:
     slug: search-flashcards-and-quizzes
     epic: Search & Discovery
     priority: should-have
+    complexity: low
     personas: [P-002, P-005]
     file: US-067-search-flashcards-and-quizzes.md
   - id: US-068
@@ -473,6 +571,7 @@ user_stories:
     slug: browse-kb-by-tag-category
     epic: Search & Discovery
     priority: should-have
+    complexity: medium
     personas: [P-004, P-005]
     file: US-068-browse-kb-by-tag-category.md
   - id: US-069
@@ -480,6 +579,7 @@ user_stories:
     slug: ask-what-do-i-know-about-x
     epic: Search & Discovery
     priority: must-have
+    complexity: high
     personas: [P-001, P-003]
     file: US-069-ask-what-do-i-know-about-x.md
   - id: US-070
@@ -487,6 +587,7 @@ user_stories:
     slug: knowledge-gaps-report
     epic: Search & Discovery
     priority: should-have
+    complexity: high
     personas: [P-003, P-002]
     file: US-070-knowledge-gaps-report.md
   - id: US-071
@@ -494,6 +595,7 @@ user_stories:
     slug: related-article-suggestions
     epic: Search & Discovery
     priority: could-have
+    complexity: medium
     personas: [P-002, P-005]
     file: US-071-related-article-suggestions.md
   - id: US-072
@@ -501,6 +603,7 @@ user_stories:
     slug: recent-articles-feed
     epic: Search & Discovery
     priority: should-have
+    complexity: low
     personas: [P-004, P-001]
     file: US-072-recent-articles-feed.md
   - id: US-073
@@ -508,6 +611,7 @@ user_stories:
     slug: serendipity-mode-random-article
     epic: Search & Discovery
     priority: could-have
+    complexity: low
     personas: [P-001, P-005]
     file: US-073-serendipity-mode-random-article.md
   - id: US-074
@@ -515,6 +619,7 @@ user_stories:
     slug: export-flashcard-deck-or-article-bundle
     epic: Collaboration & Cloud
     priority: should-have
+    complexity: medium
     personas: [P-002, P-004]
     file: US-074-export-flashcard-deck-or-article-bundle.md
   - id: US-075
@@ -522,6 +627,7 @@ user_stories:
     slug: import-shared-bundle-conflict-safe-merge
     epic: Collaboration & Cloud
     priority: should-have
+    complexity: high
     personas: [P-002, P-004]
     file: US-075-import-shared-bundle-conflict-safe-merge.md
   - id: US-076
@@ -529,6 +635,7 @@ user_stories:
     slug: sync-kb-to-cloud-account
     epic: Collaboration & Cloud
     priority: could-have
+    complexity: high
     personas: [P-001, P-008]
     file: US-076-sync-kb-to-cloud-account.md
   - id: US-077
@@ -536,6 +643,7 @@ user_stories:
     slug: shared-team-knowledge-base
     epic: Collaboration & Cloud
     priority: could-have
+    complexity: high
     personas: [P-004]
     file: US-077-shared-team-knowledge-base.md
   - id: US-078
@@ -543,6 +651,7 @@ user_stories:
     slug: team-lead-assigns-learning-plans
     epic: Collaboration & Cloud
     priority: could-have
+    complexity: medium
     personas: [P-004, P-002]
     file: US-078-team-lead-assigns-learning-plans.md
   - id: US-079
@@ -550,6 +659,7 @@ user_stories:
     slug: team-progress-dashboard
     epic: Collaboration & Cloud
     priority: could-have
+    complexity: medium
     personas: [P-004]
     file: US-079-team-progress-dashboard.md
   - id: US-080
@@ -557,6 +667,7 @@ user_stories:
     slug: publish-to-community-library
     epic: Collaboration & Cloud
     priority: wont-have
+    complexity: medium
     personas: [P-002, P-006]
     file: US-080-publish-to-community-library.md
   - id: US-081
@@ -564,6 +675,7 @@ user_stories:
     slug: resolve-merge-conflicts-synced-kb
     epic: Collaboration & Cloud
     priority: could-have
+    complexity: high
     personas: [P-004, P-006]
     file: US-081-resolve-merge-conflicts-synced-kb.md
   - id: US-082
@@ -571,6 +683,7 @@ user_stories:
     slug: corrupted-yaml-quarantine
     epic: Resilience & Errors
     priority: must-have
+    complexity: medium
     personas: [P-006, P-003]
     file: US-082-corrupted-yaml-quarantine.md
   - id: US-083
@@ -578,6 +691,7 @@ user_stories:
     slug: resume-interrupted-quiz-simulation
     epic: Resilience & Errors
     priority: must-have
+    complexity: medium
     personas: [P-003, P-002]
     file: US-083-resume-interrupted-quiz-simulation.md
   - id: US-084
@@ -585,6 +699,7 @@ user_stories:
     slug: clear-error-claude-code-unavailable
     epic: Resilience & Errors
     priority: must-have
+    complexity: low
     personas: [P-003, P-001, P-007]
     file: US-084-clear-error-claude-code-unavailable.md
   - id: US-085
@@ -592,6 +707,7 @@ user_stories:
     slug: atomic-writes-prevent-kb-corruption
     epic: Resilience & Errors
     priority: must-have
+    complexity: high
     personas: [P-008, P-006]
     file: US-085-atomic-writes-prevent-kb-corruption.md
   - id: US-086
@@ -599,6 +715,7 @@ user_stories:
     slug: concurrent-session-lockfile-guard
     epic: Resilience & Errors
     priority: must-have
+    complexity: medium
     personas: [P-001, P-003]
     file: US-086-concurrent-session-lockfile-guard.md
   - id: US-087
@@ -606,6 +723,7 @@ user_stories:
     slug: launcher-template-version-mismatch
     epic: Resilience & Errors
     priority: must-have
+    complexity: medium
     personas: [P-006, P-008]
     file: US-087-launcher-template-version-mismatch.md
   - id: US-088
@@ -613,6 +731,7 @@ user_stories:
     slug: screen-reader-friendly-terminal-output
     epic: Accessibility & i18n
     priority: must-have
+    complexity: medium
     personas: [P-007]
     file: US-088-screen-reader-friendly-terminal-output.md
   - id: US-089
@@ -620,6 +739,7 @@ user_stories:
     slug: quiz-spa-wcag-22-aa-compliance
     epic: Accessibility & i18n
     priority: must-have
+    complexity: high
     personas: [P-007]
     file: US-089-quiz-spa-wcag-22-aa-compliance.md
   - id: US-090
@@ -627,6 +747,7 @@ user_stories:
     slug: preferred-language-content
     epic: Accessibility & i18n
     priority: should-have
+    complexity: medium
     personas: [P-005]
     file: US-090-preferred-language-content.md
   - id: US-091
@@ -634,6 +755,7 @@ user_stories:
     slug: adjustable-text-size-and-high-contrast-theme
     epic: Accessibility & i18n
     priority: must-have
+    complexity: medium
     personas: [P-007]
     file: US-091-adjustable-text-size-and-high-contrast-theme.md
   - id: US-092
@@ -641,6 +763,7 @@ user_stories:
     slug: fast-launcher-startup
     epic: Performance & Scale
     priority: should-have
+    complexity: medium
     personas: [P-003, P-001]
     file: US-092-fast-launcher-startup.md
   - id: US-093
@@ -648,6 +771,7 @@ user_stories:
     slug: kb-scales-to-thousands-of-entries
     epic: Performance & Scale
     priority: should-have
+    complexity: high
     personas: [P-003]
     file: US-093-kb-scales-to-thousands-of-entries.md
   - id: US-094
@@ -655,6 +779,7 @@ user_stories:
     slug: token-frugal-agent-operations
     epic: Performance & Scale
     priority: should-have
+    complexity: high
     personas: [P-003, P-008]
     file: US-094-token-frugal-agent-operations.md
   - id: US-095
@@ -662,6 +787,7 @@ user_stories:
     slug: incremental-index-updates
     epic: Performance & Scale
     priority: should-have
+    complexity: medium
     personas: [P-003]
     file: US-095-incremental-index-updates.md
   - id: US-096
@@ -669,6 +795,7 @@ user_stories:
     slug: export-flashcard-decks-to-anki
     epic: Integrations
     priority: should-have
+    complexity: medium
     personas: [P-002]
     file: US-096-export-flashcard-decks-to-anki.md
   - id: US-097
@@ -676,6 +803,7 @@ user_stories:
     slug: git-integration-for-kb-versioning
     epic: Integrations
     priority: should-have
+    complexity: medium
     personas: [P-008, P-006]
     file: US-097-git-integration-for-kb-versioning.md
   - id: US-098
@@ -683,6 +811,7 @@ user_stories:
     slug: expose-kb-via-mcp-server
     epic: Integrations
     priority: should-have
+    complexity: high
     personas: [P-001, P-006]
     file: US-098-expose-kb-via-mcp-server.md
   - id: US-099
@@ -690,6 +819,7 @@ user_stories:
     slug: open-article-in-editor
     epic: Integrations
     priority: could-have
+    complexity: low
     personas: [P-001, P-006]
     file: US-099-open-article-in-editor.md
   - id: US-100
@@ -697,5 +827,6 @@ user_stories:
     slug: import-external-notes
     epic: Integrations
     priority: could-have
+    complexity: medium
     personas: [P-006]
     file: US-100-import-external-notes.md
