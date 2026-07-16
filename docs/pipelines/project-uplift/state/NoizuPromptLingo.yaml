@@ -28,7 +28,7 @@ stage_c:
   themes:    # keyed by theme slug from Stage B allocation; each entry tracks prompts/images/api_calls/avg_eval/yaml/conformance
     npl-brutalist: {status: in-progress}
     npl-editorial: {status: done, prompts: 5, images: 5, api_calls: 6, avg_eval: null, yaml: true, conformance: true}
-    npl-minimal: {status: in-progress}
+    npl-minimal: {status: done, prompts: 5, images: 5, api_calls: 7, avg_eval: null, yaml: true, conformance: true}
     npl-nocturne: {status: pending}
     npl-aurora: {status: pending}
     npl-blueprint: {status: pending}
