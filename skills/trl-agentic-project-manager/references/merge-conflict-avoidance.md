@@ -100,23 +100,22 @@ The usual conflict magnets and their standing strategy:
 A freeze is what lets a `contract:` path be *read by everyone and written by no one*.
 
 **To freeze:**
-1. Stamp a version in the plan: `contract: api-v1 @ frozen 2026-07-16 (sha abc123)`.
-2. Announce in the coordination room: `CONTRACT-FREEZE api-v1 — tracks pin to this`.
+1. Stamp a version in the plan: `contract: C1 @ frozen v1 — 2026-07-16 (sha abc123)`.
+2. Announce it in the coordination room with a `STATUS`: `STATUS C1 — frozen v1 (sha abc123); tracks pin to this`.
 3. Every track **pins** to the version it built against and does not chase edits.
 
 **To change a frozen contract — CONTRACT-RFC only:**
 
 ```
-CONTRACT-RFC api-v1 → api-v2
-  change:   add `currency` field to POST /orders
-  reason:   backend needs multi-currency
-  impacts:  T1 (form), T3 (e2e assertions), T5 (fixtures)
+CONTRACT-RFC C1 — add `currency` field to POST /orders — impact: T1, T3, T5
+  reason:   backend needs multi-currency (v1 → v2)
+  affects:  T1 (form), T3 (e2e assertions), T5 (fixtures)
 ```
 
 The coordinator — not the requesting track — does the impact analysis:
 1. Enumerate every track consuming the contract.
 2. Accept or **reject** (a change touching 4 tracks may cost more than the feature).
-3. If accepted: broadcast `CONTRACT-BUMP api-v1 → api-v2`, new version stamp, list who must re-pin.
+3. If accepted: broadcast the ruling with a `STATUS` — `STATUS C1 — RFC accepted, v1 → v2; re-pin: T1, T3, T5` — stamp the new version, and list who must re-pin.
 
 Tracks stay on the version they built against until they re-pin at their next gate. **No track edits a `contract:` path directly** — not even the one that requested the RFC. The coordinator (or a delegate it names) applies the change to the frozen artifact; that is what keeps "frozen" true.
 

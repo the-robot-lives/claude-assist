@@ -2,6 +2,8 @@
 
 How agents running in different harnesses coordinate as **peers** through tobor chat rooms, tickets, and the shared plan file. This is the protocol layer; concrete tobor tool calls live in [tobor-mcp-integration.md](tobor-mcp-integration.md), and who to staff on each role in [provider-strengths.md](provider-strengths.md).
 
+> **Transport status (verified 2026-07-16).** The live tobor surface is Organization/Project/Session CRUD plus the discovery meta-tools; **rooms and tickets are not yet callable**. Everywhere below, "room" and "ticket" name the *protocol object*, carried today over the append-only room file (`{slug}.room.md`) and per-unit ticket files (`{slug}.tickets/U{n}.md`) — see [tobor-mcp-integration.md](tobor-mcp-integration.md) for the interim transport and the discovery sweep that detects those tool families when they land. The protocol is transport-agnostic: it reads identically over files today and over `Room.*`/`Ticket.*` tools later.
+
 ## 1. The Peer Model
 
 Coordinating across harnesses buys two things: **resilience** (any peer can drop or be replaced without stalling the plan) and **provider-strength routing** (each track runs on the harness/model best suited to it — see [provider-strengths.md](provider-strengths.md)). Both depend on treating every harness as an equal peer against shared external state.
@@ -51,7 +53,7 @@ Fill honestly per deployment; cells marked **verify per version** change with ha
 
 Each harness configures MCP differently, but the shape is identical:
 
-1. **Register the endpoints.** Add the `tobor-root` (discovery/NPL) and `tobor-sessions` (session/ticket/room) MCP servers to the harness's MCP config, plus `tobor-organizations` if the harness will create orgs. Mechanism varies: Claude Code uses `.claude` MCP config / `claude mcp add`; Codex CLI and OpenCode use their own MCP config blocks; claude.ai uses connectors in settings.
+1. **Register the endpoints.** Add the `tobor-root` (discovery/NPL) and `tobor-sessions` (session CRUD today; ticket/room tools when the surface exposes them) MCP servers to the harness's MCP config, plus `tobor-organizations` if the harness will create orgs. Mechanism varies: Claude Code uses `.claude` MCP config / `claude mcp add`; Codex CLI and OpenCode use their own MCP config blocks; claude.ai uses connectors in settings.
 2. **Provide auth.** Supply the harness's tobor credentials/token (see the tobor-locker MCP auth note in project memory — tokens expire and must be refreshed before session registration).
 3. **Verify with a discovery call.** Confirm the wiring with a read-only call before doing work — e.g. `Session_Overview` or a `ToolSummary`. If discovery returns the tool catalog, the harness is a peer; if it 401s or returns `Organization '$VAR' not found`, auth or slug resolution is broken (the MCP layer does **not** expand env vars — resolve slugs first).
 

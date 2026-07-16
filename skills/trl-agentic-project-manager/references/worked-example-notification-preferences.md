@@ -233,7 +233,7 @@ one line.
 Abridged `notification-preferences.room.md` log (charter omitted):
 
 ```
-2026-07-16T14:02:11Z coord    STATUS  U0 — Phase 0 frozen: C1 v1, C2, C3, C4, C5. Tracks may claim.
+2026-07-16T14:02:11Z coord    STATUS  G0 — Phase 0 frozen: C1 v1, C2, C3, C4, C5. Tracks may claim.
 2026-07-16T14:03:40Z cobbler  CLAIM   U8 — stub server + seed fixtures from C1/C5
 2026-07-16T14:04:02Z mira     CLAIM   U1 — prefs page + row/toggle components (C2,C3)
 2026-07-16T14:04:31Z mira     CLAIM   U2 — api-client slice + save/load wiring (C1)
@@ -319,8 +319,8 @@ No gate failed twice, so no gate was demoted to an investigation unit.
 **Close the session** (real `ToolCall`):
 ```jsonc
 ToolCall(tool: "Session.Update", arguments: {
-  "id":     "9f3b2a7e-1c4d-4a58-b0e2-6d7c8e5f1a90",
-  "status": "completed"
+  "session": "9f3b2a7e-1c4d-4a58-b0e2-6d7c8e5f1a90",
+  "status":  "completed"
 })
 // → { "session": { "id": "9f3b2a7e-…-1a90", "status": "completed" } }
 ```

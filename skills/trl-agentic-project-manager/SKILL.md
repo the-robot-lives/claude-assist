@@ -211,7 +211,7 @@ All reference paths are relative to `references/`.
 - [interface-first-patterns.md](references/interface-first-patterns.md) — Contract-first fan-out patterns: fullstack flagship + variants
 - [provider-strengths.md](references/provider-strengths.md) — Provider/model strength matrix and assignment heuristics
 - [harness-coordination.md](references/harness-coordination.md) — Cross-harness room protocol, message types, harness capability table
-- [tobor-mcp-integration.md](references/tobor-mcp-integration.md) — Concrete tobor-* MCP tool usage: sessions, tickets, stories, rooms, instruction prompts
+- [tobor-mcp-integration.md](references/tobor-mcp-integration.md) — Concrete tobor-* usage: live Session ToolCalls today, plus the interim file transport carrying tickets/stories/rooms until those tool families land
 - [merge-conflict-avoidance.md](references/merge-conflict-avoidance.md) — Ownership maps, contract freeze, workspace isolation, integration order
 - [persona-assignment.md](references/persona-assignment.md) — Persona-task matching and the npl-persona ecosystem
 - [worked-example-notification-preferences.md](references/worked-example-notification-preferences.md) — End-to-end: one feature planned, staffed, coordinated, integrated

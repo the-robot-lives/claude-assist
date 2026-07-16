@@ -82,7 +82,7 @@ steps:
   - id: attack-edges
     action: convert serial to parallel
     description: For each edge ask "could a contract, stub, or fixture remove this?" Replace every edge you can with a Phase 0 contract. Record survivors in the edge audit.
-    output: edge-audit table (class: data/contract/resource/habit + kept-because)
+    output: edge-audit table (class = data/contract/resource/habit + kept-because)
   - id: define-contracts
     action: define Phase 0 contracts
     description: Specify C-series (API spec, UX spec, data-cy selector schema, data-model deltas, fixtures/stubs). Coordinator or a frontier agent owns each; list consumers.
@@ -172,7 +172,7 @@ Next: `provision` the coordination bus → Workflow 3.
 
 ## Workflow 3: provision-coordination
 
-Stand up the live tobor coordination bus: session, story, one ticket per work unit, chat room, pinned charter, and per-agent briefs. **All concrete tool calls (names, arguments, org/project slug resolution) defer to `references/tobor-mcp-integration.md`** — do not invent tool names here.
+Stand up the live tobor coordination bus: session, story, one ticket per work unit, chat room, pinned charter, and per-agent briefs. **All concrete tool calls (names, arguments, org/project slug resolution) defer to `references/tobor-mcp-integration.md`** — do not invent tool names here. As of 2026-07-16 only the session is a live tobor object; the story/ticket/room state runs over the interim file transport documented there until those tool families appear in a discovery sweep.
 
 ### Trigger
 
