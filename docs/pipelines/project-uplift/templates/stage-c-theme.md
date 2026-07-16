@@ -1,4 +1,4 @@
-# stage-c-theme.md (version: 1)
+# stage-c-theme.md (version: 2)
 
 Stage C — for **one theme** of one project: author render prompts, generate images, read
 them back and reflect, implement the theme's engine YAML, validate, write a conformance
@@ -9,10 +9,18 @@ repo reference docs.
 ## Params (from your spawn prompt)
 
 - `project` — the slug under `projects/{project}/`
-- `theme` — the theme slug you're working on this run (matches `theme-{theme}/`)
+- `theme` — the **full** theme slug you're working on this run, e.g. `npl-prism` —
+  **never** a shortened form like `prism`. This exact string is the `theme-{theme}/`
+  dir suffix, the `treatise-{theme}.md` filename, the key under `allocation.yaml`'s
+  `unique[].theme` / `overlap[].themes[]`, and the `stage_c.themes.{theme}` state
+  key. Every path in this template is built from this one value — copy it as given,
+  never strip a prefix or re-derive a shorter form.
 - `eval` — `on`/`off` (check `state/_pipeline.yaml` `preflight.eval.status` if not passed —
   it's the authority)
 - `media` — `on`/`off` (same — `preflight.media.status`)
+- `REPO_LOCK_SESSION` — the repo-lock session id for your §10 commit. Use this value
+  exactly as given; do not read or grep `state/_pipeline.yaml` for it — that file is
+  off-limits to stage agents (see §10).
 
 ## 0. Setup
 
@@ -69,8 +77,9 @@ prompt:
     composer, etc.), not vague gestures. Pull directly from the screen's
     project-management/screens/{NN}-{screen-slug}.md "Key Components" + "Description".}
 
-    PALETTE & TYPE: {treatise §3 palette narrative + §4 type — name the accent hex/hue,
-    the neutral temperature, the font character.}
+    PALETTE & TYPE: {treatise §3 palette narrative + §4 type — name colors
+    descriptively in prose (never a literal hex/hue code — see the no-hex warning
+    below), the neutral temperature, the font character.}
 
     SHAPE & SURFACE: {treatise §6 — radius language, elevation, border/texture policy.}
 
@@ -104,6 +113,14 @@ tags: [{theme}, {project}, screen-mockup]
 the way the NoizuPromptLingo example does (flowing paragraphs with named UI regions in caps
 for scanability). Keep the `eval:` block even though today's render run skips evaluation
 (see §2) — it's a durable part of the file for whenever the evaluator is back online.
+
+**No hex in `prompt.text`:** a literal hex code written into `prompt.text` gets
+rendered as literal on-screen UI text by the image model (e.g. a stray `#f7f8ff` in
+the prompt showed up painted onto the mockup as fake UI copy). Precise hex is fine
+in the `# Palette:` YAML **comment** above — comments aren't transmitted to the
+model — but everywhere inside `prompt.text` (including PALETTE & TYPE), describe
+colors by name in prose ("cool violet-white", "deep ink", "warm ember"), never by
+hex/hue code.
 
 ## 2. Render
 
@@ -169,9 +186,29 @@ actually pins (leave the rest to the base cascade):
 | `font-mono` | §4 | treatise names a mono voice |
 | `radius` | §6 | always — cheapest strong signal (0-2px stern, 6-8px friendly, 12px+ soft) |
 
-**`branding.yaml`** — always required, mirrors treatise §1 verbatim:
+**Seed trap:** the base's accent seeds are named `brand-red` / `brand-blue` /
+`brand-yellow` — **not** bare `red`/`blue`/`yellow` keys (the base doesn't wire
+those as accent-driving keys; overriding them is a silent no-op). Overriding
+`brand-red` alone is also **not enough**: the base pins `brand-red-light` (and
+`brand-blue-light` / `brand-yellow-light`) to a `color-mix(...)` expression with the
+*old* hex hard-coded inside it — e.g. `color-mix(in srgb, #e20613 70%,
+var(--surface))` — **not** `var(--brand-red)`. If you override `brand-red`, also
+re-point its `-light` sibling to read the override, or the tint silently stays the
+old brand color while the base accent changes:
+```yaml
+brand-red: "#{new-hex}"
+brand-red-light: "color-mix(in srgb, var(--brand-red) 70%, var(--surface))"
+```
+(same pattern for `brand-blue`/`brand-blue-light` and `brand-yellow`/`brand-yellow-light`.)
+
+**`branding.yaml`** — always required, mirrors treatise §1 verbatim. Every shipped
+sibling theme includes **`logo-text` and `font-url`** — don't drop them even though
+the skeleton below only shows the minimum shape; `font-sans` in
+`style-guide.vars.yaml` must name the same font family `font-url` loads:
 ```yaml
 name: "{Theme Display Name}"
+logo-text: "{short mark/wordmark, e.g. project initials}"
+font-url: "{Google Fonts (or equivalent) stylesheet URL for font-sans + font-mono}"
 intent: "{treatise §1 Intent}"
 perception: "{treatise §1 Perception}"
 audience: "{treatise §1 Audience}"
@@ -187,12 +224,25 @@ color-modes:
 ```
 
 **Project-specific sample elements** (per the plan's "project-specific sample sections"
-requirement) — override `style-guide.design-sections.yaml` and/or `style-guide.page-sections.yaml`
-with entries that speak to *this product's actual UI patterns* under this theme, not the
-generic base-theme boilerplate ("Visual Foundation / Typography / Color Palette" placeholders).
-E.g. if the product has a distinctive domain object (a fight card, a chat room, a dashboard
-widget), give it a `design-sections` entry describing this theme's specific take on it. This
-is optional-but-expected polish, not a hard gate.
+requirement) — give this theme entries that speak to *this product's actual UI
+patterns*, not the generic base-theme boilerplate ("Visual Foundation / Typography /
+Color Palette" placeholders). E.g. if the product has a distinctive domain object (a
+fight card, a chat room, a dashboard widget), give it a themed treatment.
+
+**Wholesale-replace trap:** `style-guide.typography.yaml`,
+`style-guide.design-sections.yaml`, and `style-guide.page-sections.yaml` each
+**replace the base file wholesale** the moment a theme provides one — unlike
+`css-snippets`/`jsx-snippets`/`scoped-vars`/`css-load`/`jsx-load`, which
+**accumulate** on top of the base. A minimal `style-guide.design-sections.yaml`
+meant to *add* one project-specific section will instead **delete every inherited
+base section**. Default to the safe, accumulating path: add project-specific sample
+elements via `style-guide.css-snippets.yaml`, self-scoped to this theme
+(`html[data-design-theme="{theme}"] ...`), instead of touching
+`design-sections`/`page-sections`/`typography`. If a treatise genuinely requires
+overriding one of those three files (not just adding to it), you must re-declare the
+**full base set plus your additions** in that file — never a diff-sized partial.
+This polish is optional-but-expected, not a hard gate; the trap only bites once you
+touch these three specific files.
 
 Beyond these four-plus-two, add delta facets **only** where the treatise demands a deviation
 the seed cascade can't produce (see trl-theme-designer's facet override decision table,
@@ -224,6 +274,17 @@ grep -iE "error|exception" /tmp/generate-css-{theme}.log   # must be empty
 Note in your conformance note which path you used — the legacy path doesn't have the
 `✗`/`⚠` severity distinction the npx serve command gives you, only pass/fail on
 error/exception.
+
+**Color-modes validation gap on the legacy path:** the legacy `generate-css`
+fallback does **not** emit `style-guide.color-modes.yaml`'s literal light/dark maps
+into the generated output (verified across themes) — only the white/black seed
+cascade resolves modes on this path. An authored `color-modes` dark map is therefore
+**unverifiable** while `styleguide_serve.status: off`: you can confirm the
+seed-cascade fallback looks reasonable, not that your literal light/dark maps took
+effect. Full color-modes verification requires the (currently unavailable) `npx
+@noizu/styleguide serve` path — record this limitation explicitly in the
+conformance note rather than asserting dark-mode conformance you couldn't actually
+verify.
 
 Then run the mode-verification matrix from trl-theme-designer (loaded via §0's Skill
 invocation) — light/dark contrast per treatise §9, focus visibility, mode distinctness —
@@ -278,14 +339,16 @@ Update `docs/pipelines/project-uplift/state/{project}.yaml`'s `stage_c.themes.{t
 ```bash
 git add <specific paths — design/theme/treatise-{theme}.md design/theme/theme-{theme}/... design/theme/conformance-{theme}.md design/asset-prompts/screens/{theme}/*.media.prompt> \
         <and -f any impactful PNGs individually, per §7>
-REPO_LOCK_SESSION=$(grep -oP 'repo_lock_session:\s*\K\S+' docs/pipelines/project-uplift/state/_pipeline.yaml) \
+REPO_LOCK_SESSION={value from your spawn params, §0} \
 repo-lock exec --label "uplift {project} C:{theme}" -- \
   git commit -m "{project}: uplift stage C ({theme}) — {one-line summary}" \
              -m "Co-Authored-By: Loom <loom@therobotlives.com>" \
   -- <same pathspecs> docs/pipelines/project-uplift/state/{project}.yaml
 ```
 
-Trailer is **Loom only**.
+Trailer is **Loom only**. `REPO_LOCK_SESSION` above is the value handed to you as a
+spawn param (§0) — never `grep` or read `state/_pipeline.yaml` to obtain it; that
+file is off-limits to stage agents.
 
 ## 11. Report
 

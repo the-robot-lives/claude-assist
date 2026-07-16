@@ -16,7 +16,7 @@ pilot:
 template_versions:
   stage-a-docs-pm: 1
   stage-b-treatises: 1
-  stage-c-theme: 1
+  stage-c-theme: 2
   stage-d-roadmap: 1
   verify: 1
   report-format: 1
