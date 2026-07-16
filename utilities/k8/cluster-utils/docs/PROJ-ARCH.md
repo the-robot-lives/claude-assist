@@ -1,59 +1,83 @@
-# Cluster Tools — Architecture
+# cluster-utils — Architecture
 
 ## Overview
 
-A collection of Bash CLI utilities for inspecting and monitoring Kubernetes clusters. Each tool is a standalone script that queries the Kubernetes API (via `kubectl`, `helm`, and `metrics-server`) and renders formatted, color-coded terminal dashboards. All scripts share common configuration and formatting through a `share/k8-lib/` shell library.
+`cluster-utils` is a terminal utility package of standalone Bash dashboards for inspecting
+Kubernetes clusters (`cluster-*` commands). Each tool queries the cluster via `kubectl`,
+`helm`, and `metrics-server` against the current kubectl context and renders a color-coded
+terminal dashboard. There is no in-repo library: all shared logic (colors, formatting,
+config resolution, AI-assist) comes from the repo-level **k8-lib** shell library, sourced
+at runtime from `~/.local/share/k8-lib` (overridable via `K8_LIB_DIR`).
+
+Within the wider Noizu utilities ecosystem, this package follows the standard conventions:
+tools install flat into `~/.local/bin` (locally via `make install`, or with everything else
+via the monorepo's `make install-utilities`, which also installs k8-lib), and cluster-aware
+behavior (tier groupings, status patterns, telemetry settings) is driven by the repo-root
+`infra-config.yaml` resolved through k8-lib's `config-resolver.sh`.
 
 ## System Diagram
 
 ```mermaid
 graph TB
-    subgraph "cluster-tools"
-        BIN["bin/cluster-*"]
-        LIB["share/k8-lib/"]
-        BIN -->|sources| LIB
+    subgraph "cluster-utils (bin/)"
+        DASH["cluster-status / nodes / resources /<br/>helm / layout / manticore"]
+        TEL["cluster-setup-telemetry<br/>(runs on remote VM/EC2)"]
     end
 
-    subgraph "Kubernetes Cluster"
-        API["kube-apiserver"]
-        HELM["Helm / Tiller"]
-        METRICS["metrics-server"]
+    subgraph "k8-lib (~/.local/share/k8-lib)"
+        CFG["config.sh + config-resolver.sh"]
+        COM["common.sh (colors, formatting)"]
+        AST["assist.sh (--assist AI help)"]
     end
 
-    BIN -->|kubectl| API
-    BIN -->|helm list| HELM
-    BIN -->|kubectl top| METRICS
-    BIN -->|"aws s3 (manticore)"| S3["S3 Bucket"]
+    DASH -->|source| CFG & COM & AST
+    TEL -.->|optional source| CFG & AST
+    CFG -->|reads| YAML["infra-config.yaml"]
+
+    DASH -->|kubectl / helm / kubectl top| K8S["Kubernetes cluster"]
+    DASH -->|"aws s3 (manticore)"| S3["S3 index bucket"]
+    TEL -->|installs| OTEL["OTel Collector + Fluent Bit"]
 ```
 
 ## Core Components
 
 | Component | Purpose |
 |-----------|---------|
-| `cluster-status` | Pod dashboard grouped by namespace/category with status coloring |
-| `cluster-nodes` | Node layout showing instance types, capacity, CPU/RAM reservations |
-| `cluster-resources` | Per-pod CPU/RAM usage vs requests (requires metrics-server) |
-| `cluster-layout` | Node-to-pod mapping + PVC/PV storage layout as markdown |
-| `cluster-helm` | Helm release listing with failure highlighting |
-| `cluster-manticore` | Manticore Search reader/indexer status, S3 index state |
-| `share/k8-lib/bin/config.sh` | Cluster-specific configuration (namespaces, labels, buckets) |
-| `share/k8-lib/bin/common.sh` | Shared color definitions, formatting helpers, status utilities |
+| `bin/cluster-status` | Tiered pod dashboard grouped by category; `--watch` auto-refresh |
+| `bin/cluster-nodes` | Node layout: capacity type, CPU/RAM reservations; `--pods` placement |
+| `bin/cluster-resources` | Per-pod CPU/RAM usage vs requests (requires metrics-server) |
+| `bin/cluster-helm` | Helm release listing with failure highlighting |
+| `bin/cluster-layout` | Node/pod/PVC/PV layout as markdown, rendered via `glow` |
+| `bin/cluster-manticore` | Manticore Search dashboard: readers, index versions, S3 state, jobs |
+| `bin/cluster-setup-telemetry` | Installs OTel Collector + Fluent Bit on a VM/EC2 (run on target host, needs root) |
+| `Makefile` | `make install` copies `bin/cluster-*` to `INSTALL_DIR` (default `~/.local/bin`) |
 
-## Shared Library (`share/k8-lib/`)
+## Shared Library (k8-lib)
 
-All scripts source `share/k8-lib/bin/config.sh` and `share/k8-lib/bin/common.sh` relative to the script directory. The library provides color constants, status-formatting functions, and cluster-specific configuration variables so individual tools stay focused on data retrieval and presentation.
+Every dashboard sources three k8-lib modules from `$K8_LIB_DIR` (default
+`~/.local/share/k8-lib`): `config.sh` (settings from `infra-config.yaml` via
+`config-resolver.sh`), `common.sh` (color constants, status symbols, formatting), and
+`assist.sh` (adds `--assist "question"` AI help to every tool). Tools pre-parse `--config
+<path>` into `K8_CONFIG` before sourcing so an alternate config file takes effect during
+library init. `cluster-setup-telemetry` treats k8-lib as optional and falls back to
+defaults so it can run on remote VMs without the library installed.
 
 → *See [arch/shared-library.md](arch/shared-library.md) for details*
 
 ## Installation
 
-Scripts install to `~/.local/bin` (overridable via `INSTALL_DIR`) using `make install`. The Makefile globs `bin/cluster-*` and copies each with `install -m 755`.
+`make install` globs `bin/cluster-*` and copies each to `INSTALL_DIR` (default
+`~/.local/bin`) with mode 755. k8-lib is installed separately by the parent monorepo's
+`make install-utilities`; the scripts locate it by absolute path, not relative to
+themselves, so the copies work from anywhere.
 
 → *See [arch/installation.md](arch/installation.md) for details*
 
 ## Key Decisions
 
-- **Standalone Bash scripts**: No compiled dependencies — runs anywhere `kubectl` and `bash` are available
-- **Shared shell library**: Common config/formatting factored into `share/k8-lib/` to avoid duplication across six tools
-- **Markdown output for layout**: `cluster-layout` emits markdown so output can be piped to `glow` or saved as documentation
-- **Color-coded status**: All tools use ANSI color to surface problems (red for failures, yellow for pending, green for running)
+- **Standalone Bash scripts** — no compiled dependencies; runs anywhere `bash` + `kubectl` exist
+- **Runtime-sourced shared library** — k8-lib lives outside this package (`~/.local/share/k8-lib`), avoiding duplication across all Noizu k8 utilities and keeping installed copies path-independent
+- **`--config` pre-parse** — config path must resolve before k8-lib sourcing, so it is parsed ahead of normal arg handling
+- **Optional k8-lib for telemetry setup** — `cluster-setup-telemetry` runs on remote hosts where k8-lib may not exist; everything is overridable via `K8_TELEMETRY_*` env vars
+- **Markdown output for layout** — `cluster-layout` emits markdown pipeable to `glow` or saveable as documentation
+- **Color-coded status everywhere** — red/yellow/green ANSI coloring surfaces problems at a glance

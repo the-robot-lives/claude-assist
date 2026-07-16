@@ -2,7 +2,8 @@
 
 ```
 repo-lock/
-├── Cargo.toml
+├── Cargo.toml + Cargo.lock
+├── .gitignore
 ├── src/{main,registry,record,session,glyph,hook,mutex}.rs
 ├── tests/integration.rs
 ├── Makefile

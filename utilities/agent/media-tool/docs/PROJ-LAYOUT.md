@@ -1,7 +1,7 @@
 # Project Layout
 
 ```
-media-tools/
+media-tool/
 ├── src/                            # Rust source → [layout/src.md](layout/src.md)
 │   ├── main.rs                     #   CLI entry point (clap, pipeline orchestration)
 │   ├── schema.rs                   #   YAML prompt parsing and normalization
@@ -11,28 +11,15 @@ media-tools/
 │   ├── output.rs                   #   Output file naming, format handling
 │   ├── eval.rs                     #   Evaluation criteria and vision-based scoring
 │   ├── refine.rs                   #   Interactive refinement loop
+│   ├── prep.rs                     #   Prompt preparation/expansion via Groq LLM
+│   ├── validate.rs                 #   Output validation (SVG lint + auto-fix loop)
+│   ├── fim.rs                      #   FIM solution loader (skill references/fim library)
 │   ├── ui.rs                       #   TUI (ratatui) and progress indicators
-│   ├── providers/                  #   Generation provider implementations
-│   │   ├── mod.rs                  #     MediaProvider trait, dispatch registry
-│   │   ├── gemini.rs               #     Google Imagen (image)
-│   │   ├── gemini_chat.rs          #     Gemini chat completions (text/code output)
-│   │   ├── anthropic.rs            #     Anthropic Claude (text/code output)
-│   │   ├── openai_chat.rs          #     OpenAI chat completions (text/code output)
-│   │   ├── zai.rs                  #     ZAI image generation
-│   │   ├── suno.rs                 #     Suno music generation (async polling)
-│   │   ├── openai_tts.rs           #     OpenAI TTS (audio)
-│   │   ├── elevenlabs.rs           #     ElevenLabs TTS (audio)
-│   │   ├── qwen_tts.rs             #     Alibaba Qwen TTS (audio)
-│   │   ├── grok_video.rs           #     xAI Grok video (async polling)
-│   │   └── veo.rs                  #     Google Veo video (async polling)
-│   └── renderers/                  #   Markup → visual output renderers
-│       ├── mod.rs                  #     Renderer trait, registry
-│       ├── mermaid.rs              #     Mermaid diagram rendering (mmdc/Puppeteer)
-│       ├── plantuml.rs             #     PlantUML diagram rendering
-│       ├── graphviz.rs             #     Graphviz DOT rendering
-│       └── puppeteer.rs            #     Puppeteer screenshot capture
-├── bin/                            # Legacy entry points
-│   └── generate-media-prompt       #   Bash wrapper (k8-lib, Python engine dispatch)
+│   ├── providers/                  #   13 provider implementations → [layout/src.md](layout/src.md)
+│   └── renderers/                  #   4 markup → visual renderers → [layout/src.md](layout/src.md)
+├── bin/                            # Shell entry points
+│   ├── generate-media-prompt       #   Bash wrapper (k8-lib, Python engine dispatch)
+│   └── media-eval-port-forward     #   kubectl port-forward for in-cluster eval proxy
 ├── lib/                            # Legacy Python engine
 │   └── media-prompt-engine.py      #   Single-file Python engine (stdlib + pyyaml)
 ├── demos/                          # Working .media.prompt examples by asset type
@@ -47,17 +34,17 @@ media-tools/
 ├── skill/                          # Claude Code skill definitions
 │   └── content-media-engine/       #   Content media engine skill
 │       ├── SKILL.md                #     Skill entry point and triggers
-│       ├── assets/                 #     Templates, trackers, example prompts
-│       ├── references/             #     FIM library (120+ visualization tools), guides
-│       └── scripts/                #     Skill utility scripts
+│       ├── assets/                 #     Templates, trackers, example prompts, fim/ assets
+│       └── references/             #     FIM library (fim/, fim-index.md), prompt-templates/, guides
 ├── project-management/             # Product management artifacts
 │   ├── personas/                   #   8 user personas with index.yaml
 │   └── user-stories/               #   100 user stories with index.yaml
 ├── docs/                           # Documentation
-│   ├── PROJ-ARCH.md                #   Architecture and system design
 │   ├── PROJ-LAYOUT.md              #   This file
 │   ├── PROJ-LAYOUT.summary.md      #   Quick-reference tree
-│   └── providers.md                #   Provider implementation guide
+│   ├── layout/                     #   Detailed breakdowns (src.md)
+│   ├── providers.md                #   Provider implementation guide
+│   └── quality-selection-and-eval.md  # Quality selection + eval system design
 ├── .gitignore                      #   Rust target/, Python __pycache__/, IDE files
 ├── Cargo.toml                      #   Rust package definition (bin + deps)
 ├── Cargo.lock                      #   Locked dependency versions

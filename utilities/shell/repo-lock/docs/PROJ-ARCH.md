@@ -231,69 +231,30 @@ installed, a bare commit that bypasses hooks entirely (`git commit --no-verify`,
 disabled in the environment) isn't covered by anything short of a person or process choosing to
 check first.
 
+## Ecosystem Fit
+
+One member of the monorepo's `utilities/shell/` toolbelt: registered in
+`utilities/shell/Makefile` `SUBDIRS`, so root-level `make install-utilities` builds `--release`
+and installs the binary to `~/.local/bin/repo-lock` alongside the other devops tools. Unlike
+the shell-based utilities it does **not** use `share/k8-lib` (it's a Rust binary with its own
+Makefile), and it reads no `.infra-config.yaml` — its only configuration surfaces are the
+`REPO_LOCK_SESSION` env var and the git repo it runs inside (registry root derived from
+`--git-common-dir`). Session identity is intended to come from the tobor session UUID the
+harness registers per CLAUDE.md; cross-host lock coordination is deferred to a future tobor
+MCP `Lock.*` surface (see Non-goals).
+
 ## Key Decisions
 
-- **Central registry vs. per-file sidecars**: a single registry under the git common dir avoids
-  scattering lock files across the tree and lets `dir` locks be expressed as a prefix match over
-  one registry — a sidecar-per-file scheme has no natural home for a directory-scoped lock.
-- **git-common-dir vs. tracked `.locks/`**: lock state is ephemeral session state, not repo
-  content. Living under `--git-common-dir` means it's automatically shared across worktrees,
-  never committed, needs no `.gitignore` entry, and doesn't survive into a fresh clone (nobody
-  should inherit a stale lock from someone else's checkout).
-- **Absolute registry path**: `git rev-parse --git-common-dir` alone can return a path relative
-  to the caller's cwd. repo-lock always resolves it via `--path-format=absolute
-  --git-common-dir`, following `doc-pointers`' `--absolute-git-dir` precedent — a relative root
-  would silently point at the wrong directory the moment a subcommand runs from a cwd other
-  than the repo root. `hook install` separately resolves the per-worktree hooks directory via
-  `--absolute-git-dir` — a different call for a different, worktree-local path.
-- **`REPO_LOCK_SESSION` required, fail closed, no auto-fallback**: mutating commands refuse to
-  run rather than silently generating a session id, because a fallback would mask exactly the
-  harness-wiring bug (missing session export) it should surface; a shared committed `.envrc`
-  value is explicitly forbidden for the same reason — it would make every lock look self-owned
-  to every caller. A set-but-malformed value still errors even for read-only commands, since
-  that signals broken wiring rather than "no session." See Identity & Session Resolution above.
-- **Advisory vs. enforced**: flock + yaml can't stop a direct edit or `rm`. Enforcement is
-  opt-in and layered — a commit-time hook that's installed by default once `hook install` runs,
-  and an edit-time hook that requires explicit harness wiring — rather than filesystem-permission
-  enforcement that would fight normal tooling. See Integration Points for what remains uncovered.
-- **Wrap-and-chain vs. `doc-pointers`' overwrite-or-refuse**: `doc-pointers`' installer refuses
-  to touch an unmanaged pre-commit hook and requires a human to resolve the conflict by hand.
-  `repo-lock` instead preserves and chains any existing hook, because refusing to install would
-  leave the repo without lock protection in the common case where something else already
-  occupies `pre-commit`. Trade-off: the two installers' conventions don't compose automatically
-  (see Integration Points' known interaction note).
-- **`exec` reentrancy via env sentinel**: `REPO_LOCK_IN_EXEC` lets a nested `exec` — or the
-  pre-commit hook firing inside one — recognize its own session's already-held mutex and pass
-  through instead of deadlocking on a self-held flock or spuriously rejecting its own commit.
-- **Rust vs. shell**: correct `flock` semantics, structured yaml I/O, and stable path hashing
-  are all easy to get subtly wrong in bash and prone to TOCTOU races; matches the existing
-  `direnv-config` and `misc-git-utils` precedent instead.
-- **TTL 30m + break vs. manual-only**: sessions crash or get killed without releasing locks. A
-  lock is no guarantee past `expires_at` — holders must heartbeat at an interval shorter than
-  the TTL to keep a lock alive. Expired locks, and same-host locks whose holder pid is confirmed
-  dead, break without `--force`; any other unexpired lock still requires `--force` and journals
-  loudly, preserving the advisory-but-visible contract for the rare deliberate override. 30m
-  keeps a crashed session's exposure window short given heartbeat is cheap. `holder.pid` records
-  the harness/shell's (parent) pid, not repo-lock's own — the CLI process is ephemeral and
-  always exits before anyone reads the record, so its own pid would always read dead and make
-  every same-host lock break freely, defeating the dead-pid check entirely.
-- **`uuid` v4 only**: v5 deterministic derivation is dropped as unused now that session identity
-  comes from the harness via `REPO_LOCK_SESSION`, not generated by `repo-lock` itself.
-- **unicode4 handle reuse, cosmetic only**: reusing `doc-pointers`' 4-glyph base-1072 encoding
-  (U+13000–U+1342F) instead of inventing a new display scheme keeps session handles visually
-  consistent across Noizu tooling. It is explicitly **cosmetic and lossy** (~40 bits of a 128-bit
-  UUID — display collisions are possible); the full session UUID in the lock record is the only
-  authoritative identity, the glyph and its 8-hex fallback are for human/log readability only.
-  The encoder is duplicated verbatim from `doc-pointers` rather than depended on, so `repo-lock`
-  has no Cargo/build dependency on `misc-git-utils`; the 8-hex fallback itself is new for
-  `repo-lock` — no precedent in `doc-pointers`.
-- **clap vs. manual dispatch**: `repo-lock` has 9+ subcommands (including internal `hook run`)
-  and a mixed value/boolean flag surface — closer to `direnv-config`'s `dc` than to
-  `misc-git-utils`' small, hand-rolled match statement, so `clap` derive was chosen over manual
-  dispatch.
-- **Non-goals (v1)**: no section/line-range locks (file/dir only — a file needing finer locking
-  should be split); no per-session `GIT_INDEX_FILE` isolation (too disruptive to git UX for v1,
-  noted as a v2 experiment); no network/cross-host coordination (single-host registry only —
-  cross-host is the tobor MCP `Lock.*` v2 path); no support for network filesystems (`flock`
-  over NFS is unreliable/unsupported — local filesystem only); no enforcement beyond the two
-  opt-in hooks above.
+- **Central registry vs. per-file sidecars**: one registry enables prefix-match `dir` locks.
+- **git-common-dir vs. tracked `.locks/`**: ephemeral state — shared across worktrees, never committed.
+- **Absolute registry path**: `--path-format=absolute` avoids a cwd-relative root pointing at the wrong dir.
+- **`REPO_LOCK_SESSION` fail-closed, no auto-fallback**: a fallback would mask the harness-wiring bug it should surface.
+- **Advisory + layered opt-in enforcement**: commit-time hook plus opt-in edit-time hook, not filesystem permissions.
+- **Wrap-and-chain hook install**: preserves an existing pre-commit hook rather than refusing (contra `doc-pointers`).
+- **`exec` reentrancy via `REPO_LOCK_IN_EXEC`**: nested exec / own-commit hook passes through, no self-deadlock.
+- **Rust over shell**: flock semantics, yaml I/O, path hashing are TOCTOU-prone in bash; matches `direnv-config` precedent.
+- **TTL 30m + heartbeat + break**: crashed sessions expire; dead-pid (parent pid, not repo-lock's own) breaks freely.
+- **unicode4 handle cosmetic only**: lossy display encoding duplicated from `doc-pointers`; UUID is the sole authority.
+- **Non-goals (v1)**: no line-range locks, no `GIT_INDEX_FILE` isolation, no cross-host/NFS, no enforcement beyond the two hooks.
+
+→ *See [arch/decisions.md](arch/decisions.md) for full rationale and trade-offs*

@@ -5,6 +5,8 @@ _status: implemented._
 ```
 repo-lock/
 ├── Cargo.toml                # single bin `repo-lock`, edition 2021 (libc, uuid v4, serde, serde_yaml, clap, sha2, chrono, anyhow)
+├── Cargo.lock                # committed dependency lockfile (bin crate)
+├── .gitignore                # excludes target/, editor swap files
 ├── src/
 │   ├── main.rs                # clap dispatch + the acquire/release/list/status/check/heartbeat/break/exec/doctor implementations
 │   ├── registry.rs            # registry.flock discipline; locks/*.yaml atomic (temp+rename) read-modify-write; journal.log
