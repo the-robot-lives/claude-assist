@@ -1,0 +1,8 @@
+name: "Phosphor"
+logo-text: "TRL"
+font-url: "https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;700&display=swap"
+intent: "A single-phosphor amber CRT terminal. One glowing hue on a warm near-black void, fixed-width type as the primary UI face — the product is a machine you talk to, and Phosphor dresses that machine as a warm vintage instrument where meaning is carried by intensity, not color."
+perception: "Within five seconds: I am at a warm amber terminal — one color, all business, slightly alive. Focus and machine-calm, never kitsch."
+audience: "CLI-native learners who live in a terminal — vim/emacs users, sysadmins, night-shift operators who read monospace fluently."
+tone: "Terse, machine, monospaced. The UI reports; it does not chat or decorate."
+keywords: [amber, monochrome, phosphor, fixed-width, machine]

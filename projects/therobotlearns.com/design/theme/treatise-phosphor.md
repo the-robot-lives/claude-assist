@@ -1,13 +1,15 @@
 ---
 slug: phosphor
 base_theme: theme-style-guide
-status: sketch
-revision: 1
+status: full
+revision: 2
 ---
 
 # Theme Treatise — Phosphor
 
-Theme: `theme-phosphor/` · Base: `theme-style-guide` · Status: sketch
+Theme: `theme-phosphor/` · Base: `theme-style-guide` · Status: full
+(rev 2 — Stage C built `theme-phosphor/` and rendered all five slice screens; the renders
+confirmed the monochrome-amber direction, so the treatise is promoted sketch → full unchanged.)
 
 > **Surface note.** The Robot Learns has no web frontend — its "screens" are a Claude Code
 > agent's output in a terminal. Phosphor is authored for that reality: Stage C renders it

@@ -1,0 +1,72 @@
+# ═══════════════════════════════════════════════════════════════
+# Phosphor · seed deltas over theme-style-guide (treatise §3/§4/§6).
+# Monochrome amber CRT: the entire delta is chromatic (one amber hue),
+# typographic (mono is the ONLY face), and shape (radius 0). Only the
+# seeds this theme pins; everything else rides the base cascade.
+#
+# SEED-TRAP FIX: the cascade's accent slots are named brand-red /
+# brand-blue / brand-yellow — NOT bare red/blue/yellow (silent no-op).
+# Phosphor is MONOCHROME, so all three brand families collapse to the
+# SAME amber (#ffb000): the base spends brand-blue on HUI controls,
+# focus rings, switches, and tabs, so leaving it navy would break the
+# single-hue rule. This is NOT "a second brand hue" (treatise §3 forbids
+# that) — it is the opposite: forcing every accent slot to the one amber.
+# Each -light sibling re-points to var(--brand-*) because the base pins
+# them to a color-mix() with a literal Bauhaus hex hard-coded inside.
+# Dark-mode brightening of these families leaks Bauhaus/navy/gold from
+# the base's dark scoped-vars and is fixed in style-guide.scoped-vars.yaml.
+# ═══════════════════════════════════════════════════════════════
+
+vars:
+  groups:
+    # ── Surfaces ── §3 neutrals: the "gray ramp" becomes an AMBER ramp.
+    # white=bright amber, black=warm near-black, so every derived gray-*
+    # step inherits the amber tint (no true gray anywhere). The actual
+    # page surfaces (cream light / near-black dark) are pinned in
+    # color-modes.yaml + scoped-vars so they don't ride the raw white seed.
+    - name: Surfaces
+      vars:
+        white: "#ffb000"   # bright P3 amber — top of the amber ramp
+        black: "#140c00"   # warm near-black void (~40° hue, very low L)
+
+    # ── Primaries ── §3: monochrome amber. One hue only; all three brand
+    # slots point at the same amber so no base chrome (controls, focus,
+    # switches, tabs) can smuggle in navy/gold. Hierarchy is intensity.
+    - name: Primaries - Monochrome Amber
+      vars:
+        brand-red: "#ffb000"     # PRIMARY (and only) accent — classic P3 amber
+        brand-red-light: "color-mix(in srgb, var(--brand-red) 70%, var(--surface))"
+        brand-blue: "#ffb000"    # collapsed to amber (base uses it for HUI controls/focus)
+        brand-blue-light: "color-mix(in srgb, var(--brand-blue) 70%, var(--surface))"
+        brand-yellow: "#ffb000"  # collapsed to amber
+        brand-yellow-light: "color-mix(in srgb, var(--brand-yellow) 70%, var(--surface))"
+
+    # ── Semantic ── §3/§9: monochrome-first. success/warning/info are amber
+    # INTENSITIES (each pairs with a glyph so meaning never rests on
+    # brightness alone); error is the ONE sanctioned hue break — a
+    # red-shifted phosphor so a failure is unmistakable in the amber field.
+    # Dark values are re-pinned amber in scoped-vars (base brightens these
+    # from green/gold/navy/rose literals).
+    - name: Semantic
+      vars:
+        success: "#ffd050"   # bright amber — pair with a ✓ glyph
+        warning: "#ffb000"   # amber — always prefixed "! "
+        error: "#ff5a3c"     # red-shifted phosphor (~12°) — the only non-amber
+        info: "#c88a00"      # dim amber — pair with an i glyph
+
+    # ── Typography ── §4: a SINGLE fixed-width family is the primary UI face
+    # for EVERYTHING; there is no proportional/sans face anywhere. font-sans
+    # is deliberately set to the mono stack, matching branding.yaml font-url.
+    # Dense terminal rows at 1.4.
+    - name: Typography
+      vars:
+        font-sans: "'IBM Plex Mono', 'Menlo', monospace"
+        font-mono: "'IBM Plex Mono', 'Menlo', monospace"
+        font-size-base: "var(--size-md)"   # pin the base size (silences font-token fallback ⚠); scale stays base
+        line-height-base: "1.4"
+
+    # ── Shape ── §6: radius 0 everywhere, no exceptions — a CRT character
+    # cell is a rectangle. The cheapest strong signal in the theme.
+    - name: Shape
+      vars:
+        radius: "0px"

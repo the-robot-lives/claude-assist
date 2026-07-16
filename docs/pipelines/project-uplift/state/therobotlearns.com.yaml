@@ -42,7 +42,14 @@ stage_c:
       yaml: true
       conformance: true
     phosphor:
-      status: in-progress
+      status: done
+      prompts: 5
+      images: 5
+      api_calls: 7
+      avg_eval: null
+      yaml: true
+      conformance: true
+      render_note: "medium quality — 429 storm forced high->medium tier drop; heroes 01+14 got -n 1 (single candidate) not -n 2 to conserve under the storm; all 5 screens rendered"
     cockpit:
       status: done
       prompts: 5

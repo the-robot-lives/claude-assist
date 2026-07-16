@@ -1,0 +1,87 @@
+schema: "0.4"
+id: phosphor-04-session-log-viewer
+type: image
+quality: high
+
+# The Robot Learns (a CLI learning tool) — Session Log Viewer, a chronological Q&A history pager.
+# Theme tenets: monochrome amber CRT, single glowing hue on warm near-black, fixed-width mono as the primary UI face, radius 0, box-drawing chrome, zero elevation.
+# Palette: amber #ffb000, warm near-black #140c00, dim amber #c88a00, bright amber #ffd050 (no error red on this screen).
+
+prompt:
+  system: |
+    You are a senior product designer rendering a high-fidelity UI mockup of a
+    monochrome amber-CRT terminal — ONE warm amber hue on a warm near-black void,
+    fixed-width monospace as the primary UI face for everything, radius 0, box-drawing
+    chrome, zero elevation. Terse, machine, all-business register — the UI reports, it
+    does not decorate. This is a real terminal pager, never a web page.
+  text: |
+    A 16:9 high-fidelity mockup of a single amber-on-black TERMINAL WINDOW showing a
+    scrollable SESSION LOG pager (in the spirit of "less" or a TUI list) for a
+    command-line learning tool. Fill the frame with ONE terminal window and a thin top
+    title bar reading the working directory; there is NO web browser chrome — no tabs,
+    no address bar, no rounded website panels.
+
+    Strictly one warm AMBER hue on a warm near-black background; hierarchy comes from
+    BRIGHTNESS (dim vs bright amber), never other colors. Fixed-width monospaced type
+    for everything.
+
+    OVERALL LAYOUT (dense pager, top to bottom):
+
+    TITLE RULE: a horizontal box-drawing rule with a notched title "┤ SESSION LOG ├" at
+    the left and a right-aligned count "128 sessions".
+
+    FILTER LINE: a filter/search input row in bright amber — a "/" prompt then
+    "filter: tokio" with a solid block cursor; to the right a dim hint "date | topic".
+
+    COLUMN HEADER: a dim-amber header row aligned to the character grid —
+    "WHEN              DOMAIN     QUESTION                                    KB" —
+    underlined by a thin box-drawing rule.
+
+    LOG ROWS: 26–32 dense monospaced rows, each one session: a timestamp
+    ("2026-07-14 09:12"), a short domain tag ("rust", "k8s", "sql", "async"), the asked
+    question truncated to the measure, and a right-aligned marker ("✓ art" when it saved
+    an article, "·" when not). Rows are tight (real terminal line-height). ONE row is the
+    current selection, drawn as a full reverse-video block (amber fill, near-black text).
+    Keep every column strictly grid-aligned like a real terminal table; vary row emphasis
+    by amber intensity, not by color.
+
+    BOTTOM STATUS RULE: a persistent reverse-video status bar across the full width —
+    left shows the pager position "45 / 128   35%", right shows keybind hints
+    "^F filter   ↵ open   ^Q quit".
+
+    PALETTE & TYPE: monochrome warm amber on warm near-black — one glowing amber with dim
+    and bright steps, nothing else; no green, blue, or rainbow. Fixed-width terminal font
+    throughout, no proportional or sans typeface anywhere. Crisp, high-contrast,
+    information-dense like "less".
+
+    SHAPE & SURFACE: zero rounded corners — sharp rectangles bounded by thin amber
+    box-drawing rules at reduced intensity; no drop shadows, gradients, glow bloom,
+    scanlines, or screen curvature. Flat amber light on a dark void.
+
+    MOOD: a dense, patient amber terminal for retracing your own history — one color, all
+    business, quietly alive.
+  negative: "watermark, signature, lorem ipsum placeholder text, low-fidelity wireframe, monitor/device photograph framing, blurry, distorted UI, web browser chrome, address bar, browser tabs, rounded website cards, syntax-highlighting rainbow, green terminal text, CRT scanlines, screen glow bloom, screen curvature"
+
+output:
+  formats:
+    - format: png
+  dimensions:
+    width: 1920
+    height: 1080
+    aspect_ratio: "16:9"
+
+eval:
+  pass_threshold: 0.72
+  criteria:
+    relevance: {weight: 3, description: "Reads as a session-log pager: titled top rule with count, a filter input line, a grid-aligned column header, 26–32 dense session rows with timestamp/domain/question/KB-marker, one reverse-video selected row, and a bottom pager status rule"}
+    theme_fidelity: {weight: 3, description: "Monochrome amber on warm near-black, fixed-width mono for ALL text (no proportional face), radius 0, box-drawing rules not shadowed cards, dense less-like rows"}
+    composition: {weight: 2, description: "Strict character-grid column alignment; clear hierarchy by brightness; plausible real-CLI pager"}
+    technical: {weight: 2, description: "Sharp, correct 16:9 aspect, no artifacts, no CRT filter kitsch"}
+  reject_if:
+    - "lorem ipsum or placeholder text visible"
+    - "watermark or signature visible"
+    - "wireframe-level fidelity instead of high-fidelity mockup"
+    - "web browser chrome or a marketing web page instead of a terminal window"
+    - "more than one hue (green/blue/rainbow) instead of monochrome amber"
+
+tags: [phosphor, therobotlearns.com, screen-mockup]

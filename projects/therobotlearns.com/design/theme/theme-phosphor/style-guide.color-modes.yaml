@@ -1,0 +1,33 @@
+# Phosphor color modes (treatise §3 Mode strategy).
+# Dark is the ONE true mode: warm near-black void + amber phosphor. Light is a
+# faithful "paper terminal" fallback (cream + darkened amber) that receives no
+# independent design (§3) — secondary, and serve-unverified on the legacy path.
+#
+# VERIFICATION NOTE: the legacy generate-css fallback does NOT emit these literal
+# maps (only the white/black seed cascade + scoped-vars resolve modes on that path),
+# so these values are reasoned, not serve-verified. style-guide.scoped-vars.yaml
+# carries the same per-mode surface/text/border values so the legacy path still
+# lands warm near-black + amber in dark. See conformance-phosphor.md.
+color-modes:
+  light:
+    surface: "#f4ead6"
+    surface-alt: "#ece0c8"
+    surface-inverse: "#140c00"
+    text: "#a85f00"
+    text-secondary: "#8a4e00"
+    text-muted: "#a85f00"
+    text-inverse: "#ffb000"
+    border: "color-mix(in srgb, var(--brand-red) 35%, var(--surface))"
+    border-strong: "color-mix(in srgb, var(--brand-red) 60%, var(--surface))"
+    shadow-color: "transparent"
+  dark:
+    surface: "#140c00"
+    surface-alt: "#1f1400"
+    surface-inverse: "#ffb000"
+    text: "#ffb000"
+    text-secondary: "#c88a00"
+    text-muted: "#c88a00"
+    text-inverse: "#140c00"
+    border: "color-mix(in srgb, var(--brand-red) 32%, var(--surface))"
+    border-strong: "color-mix(in srgb, var(--brand-red) 60%, var(--surface))"
+    shadow-color: "transparent"

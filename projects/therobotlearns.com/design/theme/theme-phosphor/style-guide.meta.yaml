@@ -1,0 +1,5 @@
+name: "Phosphor"
+slug: "phosphor"
+title: "The Robot Learns — Phosphor"
+description: "A single-phosphor amber CRT terminal: one glowing hue on a warm near-black void, fixed-width mono as the primary UI face."
+base-theme: "theme-style-guide"
