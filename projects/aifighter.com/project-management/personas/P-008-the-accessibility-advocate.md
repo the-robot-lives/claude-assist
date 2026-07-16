@@ -1,3 +1,12 @@
+---
+id: P-008
+name: "The Accessibility Advocate"
+slug: "the-accessibility-advocate"
+archetype: "Assistive tech power user"
+segment: "edge-case"
+tags: [underserved, accessibility, assistive-tech]
+---
+
 # Persona 08: The Accessibility Advocate
 
 **Name:** Kai Rivera

@@ -1,3 +1,12 @@
+---
+id: P-001
+name: "The Tinkerer"
+slug: "the-tinkerer"
+archetype: "Systems-thinking engineer"
+segment: "primary"
+tags: [core, graph-editor, competitive, engineering-mindset]
+---
+
 # Persona 01: The Tinkerer
 
 **Name:** Alex Chen

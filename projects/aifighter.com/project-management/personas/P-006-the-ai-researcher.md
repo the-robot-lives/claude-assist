@@ -1,3 +1,12 @@
+---
+id: P-006
+name: "The AI Researcher"
+slug: "the-ai-researcher"
+archetype: "ML academic"
+segment: "tertiary"
+tags: [research, ml-academic, adjacent-market]
+---
+
 # Persona 06: The AI Researcher
 
 **Name:** Dr. Priya Sharma

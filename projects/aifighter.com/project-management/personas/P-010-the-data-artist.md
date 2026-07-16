@@ -1,3 +1,12 @@
+---
+id: P-010
+name: "The Data Artist"
+slug: "the-data-artist"
+archetype: "Visual/generative designer"
+segment: "tertiary"
+tags: [adjacent-market, visual-design, cosmetics]
+---
+
 # Persona 10: The Data Artist
 
 **Name:** Luna Zhang

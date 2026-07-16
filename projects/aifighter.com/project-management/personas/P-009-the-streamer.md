@@ -1,3 +1,12 @@
+---
+id: P-009
+name: "The Streamer"
+slug: "the-streamer"
+archetype: "Content creator"
+segment: "secondary"
+tags: [community, content-creator, streaming]
+---
+
 # Persona 09: The Streamer
 
 **Name:** Tyler "TechBrawl" Jackson

@@ -1,3 +1,12 @@
+---
+id: P-005
+name: "The Competitive Grinder"
+slug: "the-competitive-grinder"
+archetype: "Esports aspirant"
+segment: "primary"
+tags: [core, competitive, esports, ranked]
+---
+
 # Persona 05: The Competitive Grinder
 
 **Name:** Yuki Tanaka

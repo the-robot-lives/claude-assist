@@ -1,3 +1,12 @@
+---
+id: P-004
+name: "The Educator"
+slug: "the-educator"
+archetype: "CS teacher / professor"
+segment: "tertiary"
+tags: [education, classroom, adjacent-market]
+---
+
 # Persona 04: The Educator
 
 **Name:** Dr. Maria Santos

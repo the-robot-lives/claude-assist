@@ -1,3 +1,12 @@
+---
+id: P-007
+name: "The Dad Gamer"
+slug: "the-dad-gamer"
+archetype: "Time-constrained strategist"
+segment: "edge-case"
+tags: [underserved, async, family, time-constrained]
+---
+
 # Persona 07: The Dad Gamer
 
 **Name:** Marcus Williams

@@ -1,3 +1,12 @@
+---
+id: P-003
+name: "The Creator-Spectator"
+slug: "the-creator-spectator"
+archetype: "Community theorycrafter"
+segment: "secondary"
+tags: [community, content, theorycrafting]
+---
+
 # Persona 03: The Creator-Spectator
 
 **Name:** Jordan Reeves

@@ -1,3 +1,12 @@
+---
+id: P-002
+name: "The Curious Casual"
+slug: "the-curious-casual"
+archetype: "Social mobile gamer"
+segment: "primary"
+tags: [core, onboarding, casual, mobile-social]
+---
+
 # Persona 02: The Curious Casual
 
 **Name:** Sam Okafor
