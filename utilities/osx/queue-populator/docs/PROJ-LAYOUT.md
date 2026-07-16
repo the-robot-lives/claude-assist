@@ -65,7 +65,7 @@ queue-populator/
 │   ├── PROJ-ARCH.summary.md            #   Architecture quick reference
 │   ├── PROJ-LAYOUT.md                  #   This file — project structure map
 │   └── PROJ-LAYOUT.summary.md          #   Quick-reference tree for tools/agents
-├── com.noizu.queue-populator.plist     # launchd agent definition (login autostart)
+├── com.noizu.queue-populator.plist     # launchd agent definition (shipped for opt-in autostart; install.sh does NOT load it)
 ├── queue-populator.entitlements        # macOS entitlements (mic, speech)
 ├── Package.swift                       # SwiftPM manifest (executable target)
 ├── Makefile                            # Build shortcuts

@@ -6,6 +6,6 @@ macOS menu bar app (Swift 6 / AppKit / SwiftPM) that captures wake-phrase-trigge
 - **LLM providers**: anthropic (default), openai, groq, cerebras, deepseek, zai, litellm, ollama, custom; keys via SecretStore + env fallbacks
 - **Persistence**: append-only JSONL on local filesystem, no database
 - **Virtual mics**: Driver/build-virtual-mics.sh installs 4 BlackHole-derived HAL loopback devices; app fans mic buffers into open targets
-- **Deploy**: install.sh → /Applications/Queue Populator.app + launchd LaunchAgent (login autostart); Makefile no-ops on non-Darwin
+- **Deploy**: install.sh → /Applications/Queue Populator.app, and removes any LaunchAgent so the app launches manually (no login autostart); Makefile no-ops on non-Darwin
 - **Ecosystem**: self-contained — does not use k8-lib, .infra-config.yaml, or ~/.local/bin install; separate PipeWire-based Linux port exists
 - **Status**: implemented (~4.5k lines Swift); voice channel shipped, README's CLI/SMS channels remain conceptual

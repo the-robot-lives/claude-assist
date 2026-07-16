@@ -57,7 +57,7 @@ Runtime config (phrases, locale, on-device recognition, input device, queue base
 
 ## Deployment
 
-`install.sh` builds with SwiftPM, assembles `/Applications/Queue Populator.app` (binary, icns, Info.plist), and installs a launchd LaunchAgent (`com.noizu.queue-populator.plist`, `RunAtLoad`, logs to `/tmp/queue-populator.{out,err}.log`) for login autostart. `uninstall.sh` reverses it. The HAL driver is a separate one-time install (`Driver/build-virtual-mics.sh`, requires Xcode; restarts `coreaudiod`). Entitlements cover mic + speech recognition; first run (or `--authorize`) prompts for permissions.
+`install.sh` builds with SwiftPM, assembles `/Applications/Queue Populator.app` (binary, icns, Info.plist), and — rather than installing a login autostart agent — actively removes any previously-installed `com.noizu.queue-populator.plist` LaunchAgent (`launchctl bootout` + `rm`) so the app launches manually, not at login. The repo ships the plist file for users who opt into autostart themselves, but install.sh does not load it. `uninstall.sh` also removes the app and any stray LaunchAgent. The HAL driver is a separate one-time install (`Driver/build-virtual-mics.sh`, requires Xcode; restarts `coreaudiod`). Entitlements cover mic + speech recognition; first run (or `--authorize`) prompts for permissions.
 
 ## Place in the Noizu Utilities Ecosystem
 

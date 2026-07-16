@@ -72,7 +72,7 @@ Search embeddings are always local (MiniLM-L6-v2, no network call). LLM-*powered
 
 ### Does the `--interface tui` CLI flag actually switch me into the terminal UI?
 
-No — known gap, not a config mistake on your part. `interface-selection.ts` parses `--interface`/`CLAUDE_ASSIST_DEFAULT_INTERFACE`, but `bin.ts` never calls into it, so the flag is currently inert. Use the explicit `interactive` subcommand to get the TUI.
+Yes — `bin.ts` now calls `parseInvocation()` from `interface-selection.ts`, so `--interface tui` (and `CLAUDE_ASSIST_DEFAULT_INTERFACE`/`CODE_ASSIST_DEFAULT_INTERFACE`) route to the `interactive` command as expected. The explicit `interactive` subcommand still works too.
 
 → *See [PROJ-HOWTO.md](PROJ-HOWTO.md#how-to-launch-the-full-screen-terminal-ui).*
 
