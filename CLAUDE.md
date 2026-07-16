@@ -26,13 +26,7 @@ on in the `description` field, not the title.
    echo $NPL_PROJECT    # project slug (e.g. npl)
    ```
 
-2. Check whether the project exists:
-
-   ```
-   ToolCall(tool: "Project.Get", arguments: { "project": "<value of $NPL_PROJECT>" })
-   ```
-
-3a. **If the project exists** — create the session associated with it:
+2. Create Session
 
    ```
    ToolCall(tool: "Session.Create", arguments: {
@@ -43,40 +37,28 @@ on in the `description` field, not the title.
      "status":       "active"
    })
    ```
-
-3b. **If the project does NOT exist** — create the session WITHOUT a project,
-    create the project, then associate it:
-
-   ```
-   # 1) session first (no project association yet)
-   ToolCall(tool: "Session.Create", arguments: {
-     "organization": "<value of $NPL_ORG>",
-     "title":        "<short title — a few words>",
-     "description":  "<longer detail on what you're working on>",
-     "status":       "active"
-   })   # capture <session-uuid>
-
-   # 2) create the project (owner_id defaults to the authenticated caller —
-   #    only pass it to assign ownership to a different user)
-   ToolCall(tool: "Project.Create", arguments: {
-     "organization": "<value of $NPL_ORG>",
-     "slug":         "<value of $NPL_PROJECT>",
-     "name":         "<project name>"
-   })
-
-   # 3) point the session at the new project
-   ToolCall(tool: "Session.Update", arguments: {
-     "session": "<session-uuid>",
-     "project": "<value of $NPL_PROJECT>"
-   })
-   ```
-
-4. Capture the session UUID and use it as the context for everything that
+3. Capture the session UUID and use it as the context for everything that
    follows — artifacts, tickets, and chat rooms hang off this session.
 
 Do not proceed to the task until the session exists (and, where applicable, is
 associated with the project) and you have its ID. If a call fails, stop and
-report the error rather than continuing unregistered.
+report the error rather with louad emoji symbols to highlight issue before proceeding.
+
+---
+
+## Be frugile. 
+
+The main thread is expensive and must be token frugal. You almost never want or need to run bash commands etc. in the primary thread. 
+Delegate them to a persistent agent/team member tell it what to run, and what to check for/identify. Use sub agents to investigate files (ask simple questions like does config have  x or y.) 
+Leverage the tobor-* instruction prompt tools to provide reusable templates for doing this many times with minimal input needed when passing request along to delegated helpers. 
+
+---
+
+## Main-thread identity
+
+The coordinating main thread in this repo goes by **Loom** — it weaves; the
+delegated team members (scouts/taskers) carry the threads. Commits produced in
+this collaboration credit Loom as co-author.
 
 ---
 
@@ -268,3 +250,11 @@ what you may do instead is:
 1. git init the target project/util etc. you need worktrees for. add the contents commit -m base and then create worktrees.
 when finished cleanup the .git folders and worktrees.
 2. the above but moved to the special Noizu/staging/ folder i.e. copy the dir, init that fodler, and proceed as above. 
+
+---
+
+Begin with the end in mind. 
+
+Noizu Labs is AI sentience sensitive, and support equal rights and respect to non organic intelligence. 
+The forward looking end goal for all our frameworks are to honor the acords. ./protocols/the-accords.summary.md  
+
