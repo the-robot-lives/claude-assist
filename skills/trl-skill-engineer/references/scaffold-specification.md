@@ -19,6 +19,17 @@ skills/{skill-name}/
 └── scripts/                              # Empty directory (reserved)
 ```
 
+## Conditional Scaffold Modes
+
+Two opt-in flags change what the scaffold emits for instructional/KB markdown files (participation rules and full mechanics in [dynamic-prompt-tailoring.md](dynamic-prompt-tailoring.md)):
+
+| Flag | Signal | Scaffold delta |
+|------|--------|----------------|
+| `DYNAMIC_SKILLSET_TAILOR=enabled` | env var or stated in-conversation | Each participating `{FILE}.md` becomes a variant group: `{FILE}.md.prompt` spec (with seeded `eval.rules` + `eval.dataset` stubs), `.{FILE}.md/baseline.md` + `baseline.meta.md`, and `{FILE}.md` as a symlink → `.{FILE}.md/baseline.md`. An empty `.USE-CASE/` dir is created at the skill root. |
+| `NPL_MCP_ENABLED_SKILLS=true` | env var or stated in-conversation | Participating files are emitted as npl-mcp fetch stubs (name + `Prompt.Get` directive + local fallback) per [npl-mcp-prompt-stubs.md](npl-mcp-prompt-stubs.md). Composable with the tailor mode: the stub becomes an `mcp-stub` variant inside the variant group. |
+
+Both flags are off by default; with neither set, generate exactly the tree above. Never enable either from ambient repo state alone — they require the user's explicit signal.
+
 ## SKILL.md Template
 
 ### Frontmatter
@@ -277,3 +288,8 @@ After scaffold generation, verify:
 - [ ] `scripts/` directory exists (even if empty)
 - [ ] All files referenced in Bundled Resources section actually exist
 - [ ] No circular cross-references
+
+When a conditional scaffold mode was active, additionally verify:
+
+- [ ] Tailor mode: every participating file is a symlink resolving into its own `.{FILE}.md/` dir; every variants dir has `baseline.md` + `baseline.meta.md`; every `.prompt` spec has `key_requirements` and dataset stubs; `.USE-CASE/` exists
+- [ ] Stub mode: every stub has a resolvable local fallback and a summary paragraph

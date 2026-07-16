@@ -4,10 +4,13 @@ description: >
   Design, build, and audit AI agent skills from requirements through
   production-ready scaffolds. Use this skill to create or scaffold a Claude
   Code skill module, write an agent playbook, wire MCP/CLI tools into a skill,
-  or quality-check a skill's structure and trigger language — even if the user
+  set up prompt-variant tailoring or use-case overlays for a skill, or
+  quality-check a skill's structure and trigger language — even if the user
   doesn't say "skill engineering." Also trigger on building Claude skills, agent
-  instruction design, skill scaffolding, or MCP tool selection. For testing or
-  scoring a finished skill across scenarios, hand off to trl-skill-evaluator.
+  instruction design, skill scaffolding, MCP tool selection,
+  DYNAMIC_SKILLSET_TAILOR, or NPL_MCP_ENABLED_SKILLS. For testing or
+  scoring a finished skill across scenarios, hand off to trl-skill-evaluator;
+  for generating/scoring the prompt variants themselves, trl-prompt-optimizer.
 ---
 
 # Skill Engineer
@@ -24,6 +27,7 @@ This skill transforms domain knowledge into structured, executable AI agent skil
 - **Quality validation** — Scoring rubrics, checklists, and self-bootstrap testing
 - **Pattern library** — Five skill archetypes with structural templates and trigger language engineering
 - **NPL awareness** — Optional integration with Noizu Prompt Lingua for advanced prompt patterns
+- **Prompt tailoring modes** — Opt-in variant-group scaffolds, checked-in use-case overlays, and npl-mcp fetch stubs for per-usage-profile skill tuning
 
 ## Core Philosophy
 
@@ -44,7 +48,9 @@ This skill transforms domain knowledge into structured, executable AI agent skil
 - **Understanding skill architecture** — Learn the canonical format, layer system, and cross-reference patterns
 - **Integrating NPL into a skill** — Determine if NPL adds value and how to reference it
 - **Scaffolding quickly** — Provide a detailed brief and skip straight to generation
+- **Tailoring a skill to a use case** — Build variant-group layouts, `.USE-CASE/` overlays, or npl-mcp fetch stubs (flag-gated; see Prompt Tailoring Modes)
 
+> For generating and eval-scoring the prompt variants a tailored skill consumes, see **trl-prompt-optimizer** (`references/file-mode-convention.md`).
 > For niche validation before building a skill-based product, see **trl-market-intelligence** (`references/niche-discovery.md`).
 > For landing pages and product pages for a published skill, see **trl-user-experience-engineer** (`references/outputs/landing-pages.md`).
 > For SEO optimization of skill documentation, see **trl-seo-guru** (`kb/01-ai-seo-complete-guide.md`).
@@ -252,6 +258,19 @@ have no NPL prompt-lingua tooling at all.
 
 > For the full NPL integration guide, see [references/npl-integration-guide.md](references/npl-integration-guide.md).
 
+## Prompt Tailoring Modes
+
+Two **opt-in, flag-gated** scaffold modes let a skill's instructional files be tuned per usage profile. Both are off by default and require an explicit user signal (env var or in-conversation statement) — never infer them from repo state.
+
+| Mode | Flag | What it produces |
+|------|------|------------------|
+| **Dynamic tailoring** | `DYNAMIC_SKILLSET_TAILOR=enabled` | Each instructional/KB `{FILE}.md` becomes a variant group — `{FILE}.md.prompt` spec (eval rules + dataset), `.{FILE}.md/` variants dir seeded with `baseline`, live file as a selection symlink — plus checked-in `.USE-CASE/{slug}` overlays: sparse override declarations, a mirrored symlink tree mountable as the skill root, and a `meta.lock` drift ledger with a mirror → drift-check → re-evaluate → override → lock refresh cycle |
+| **MCP fetch stubs** | `NPL_MCP_ENABLED_SKILLS=true` | Instructional files emitted as npl-mcp `Prompt.Get` stubs (`name@variant@version` addressing, mandatory local fallback) instead of full bodies; composable with dynamic tailoring as an `mcp-stub` variant |
+
+The per-file convention (spec format, variants, symlink/pin selection) is owned by **trl-prompt-optimizer**; this skill applies it skill-wide and adds the overlay + enable/disable layer. A use-case-aware `skill-manage enable --use-case/--intent [--optimize]` flow is specced (not yet implemented) that matches existing variants against the stated usage and hands off to trl-prompt-optimizer only when nothing satisfies.
+
+> For the full mechanics, see [references/dynamic-prompt-tailoring.md](references/dynamic-prompt-tailoring.md) and [references/npl-mcp-prompt-stubs.md](references/npl-mcp-prompt-stubs.md).
+
 ## Quality Baselines
 
 Minimum standards for any skill to ship:
@@ -321,6 +340,8 @@ Minimum standards for any skill to ship:
 | **Finding MCP tools** | `mcp-catalog/index.md`, then specific category files |
 | **Evaluating new tools** | `mcp-catalog/discovery-guide.md` |
 | **Adding NPL to a skill** | `npl-integration-guide.md` |
+| **Tailored scaffolds / use-case overlays** | `dynamic-prompt-tailoring.md` |
+| **MCP-served prompt stubs** | `npl-mcp-prompt-stubs.md` |
 | **Targeting Codex or Grok** | `harness-compatibility.md` |
 | **Quality evaluation** | `quality-checklist.md` + `assets/skill-scoring-rubric.md` |
 | **Full build walkthrough** | `worked-example-api-debugger.md` |
@@ -336,6 +357,7 @@ All reference paths are relative to `references/` unless prefixed with `assets/`
 - **trl-agentic-harness-engineer** — Designs the runtime harness (loops, tool sandboxing, guardrails, red-teaming) an agent runs inside.
 - **trl-mcp-architect / trl-mcp-builder / trl-mcp-forge** — Specify and build *MCP servers*. skill-engineer only *selects and wires existing* MCP tools into a skill (see the MCP catalog); it does not author servers.
 - **trl-plugin-architect** — Designs Claude Code plugins (bundled commands/hooks/agents), a layer above individual skills.
+- **trl-prompt-optimizer** — Compresses/restyles individual prompts and owns the per-file variant convention (`.prompt` spec, variants dir, best-eval symlink). skill-engineer applies that convention *skill-wide* (tailored scaffolds, use-case overlays) and hands off variant generation/scoring to it.
 
 **Portfolio / downstream skills:**
 - **trl-user-experience-engineer** — Design landing pages, product pages, and brand identity for published skills
@@ -367,6 +389,10 @@ All reference paths are relative to `references/` unless prefixed with `assets/`
 **Quality** (read before shipping):
 - [quality-checklist.md](references/quality-checklist.md) — Pre-ship quality gate: structural, trigger, content, and integration checks
 - [npl-integration-guide.md](references/npl-integration-guide.md) — NPL detection, capability overview, when to suggest, integration patterns
+
+**Tailoring Modes** (flag-gated):
+- [dynamic-prompt-tailoring.md](references/dynamic-prompt-tailoring.md) — `DYNAMIC_SKILLSET_TAILOR`: variant-group scaffolds, `.USE-CASE/` overlays, `meta.lock` drift ledger, refresh algorithm, use-case-aware enable/disable (SPEC)
+- [npl-mcp-prompt-stubs.md](references/npl-mcp-prompt-stubs.md) — `NPL_MCP_ENABLED_SKILLS`: fetch-stub format, `name@variant@version` addressing, required npl-mcp/media-tool schema extensions (SPEC-dependent)
 
 **Patterns** (`references/patterns/`):
 - [skill-structure-patterns.md](references/patterns/skill-structure-patterns.md) — Five archetypes: catalog, workflow, service, strategy, meta

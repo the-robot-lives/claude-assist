@@ -4,7 +4,7 @@ version: "1.0"
 compatible_with:
   - claude-code
   - claude-teams
-last_updated: 2026-07-15
+last_updated: 2026-07-16
 ---
 
 # Skill Engineer — Introduction
@@ -39,6 +39,15 @@ inputs:
       description: "A filled skill-brief-worksheet capturing domain, audience, use cases"
       example: "assets/skill-brief-worksheet.md"
 
+    - name: tailoring_flags
+      type: flags
+      required: false
+      description: >
+        Opt-in scaffold modes, via env var or stated in-conversation:
+        DYNAMIC_SKILLSET_TAILOR=enabled (variant-group scaffolds + .USE-CASE/ overlays),
+        NPL_MCP_ENABLED_SKILLS=true (npl-mcp fetch-stub files). Off by default;
+        never inferred from repo state.
+
   file_conventions:
     - pattern: "skills/{skill-name}/"
       format: directory-tree
@@ -70,6 +79,14 @@ outputs:
       path: "(inline or skills/{skill-name}/AUDIT.md)"
       format: markdown
       description: "Scoring-rubric results with per-dimension evidence"
+    - name: "Tailored scaffold (flag-gated)"
+      path: "skills/{skill-name}/"
+      format: directory-tree
+      description: >
+        With DYNAMIC_SKILLSET_TAILOR: per-file variant groups ({FILE}.md.prompt spec,
+        .{FILE}.md/baseline.md + meta, live symlink) and .USE-CASE/{slug} overlays with
+        meta.lock. With NPL_MCP_ENABLED_SKILLS: fetch-stub files with local fallbacks.
+        See references/dynamic-prompt-tailoring.md and references/npl-mcp-prompt-stubs.md.
 
   side_effects:
     - "None required — all output is file-based. Slash-command registration is automatic."
@@ -78,6 +95,9 @@ outputs:
     - skill: trl-skill-evaluator
       artifact: "Skill scaffold"
       description: "Run task-flow / exam-based evals against the finished skill"
+    - skill: trl-prompt-optimizer
+      artifact: "Tailored scaffold (flag-gated)"
+      description: "Generate, compress, and eval-score variants for the seeded variant groups"
     - skill: trl-user-experience-engineer
       artifact: "Skill scaffold"
       description: "Design a landing/product page for a published skill"
