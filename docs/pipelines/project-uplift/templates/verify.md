@@ -1,4 +1,4 @@
-# verify.md (version: 2)
+# verify.md (version: 3)
 
 Copy-pasteable verification per stage. Run from the **repo root**
 (`/home/keithbrings/Work/Space/Infra/Noizu`) with the stated env vars set. Every check prints
@@ -10,10 +10,19 @@ no other dependencies.
 `blocked` (top-up and retry) or `failed` (something is actually broken) — see
 `report-format.md`.
 
+No section reads `state/_pipeline.yaml` — that file is off-limits to every stage agent. Any
+pipeline-wide value a check needs (repo-lock session, media/eval/styleguide-serve status)
+arrives as a spawn param the calling stage template passes through verbatim.
+
 **§C only:** also requires `MEDIA`, `EVAL`, `STYLEGUIDE_SERVE` set to `on`/`off` — your
 stage-c-theme.md spawn params (`media`/`eval`/`styleguide_serve`), passed through
-verbatim, see its §9. §C reads these env vars, not `state/_pipeline.yaml`: that file is
-off-limits to stage agents.
+verbatim, see its §9.
+
+These snippets run under the pipeline's default shell, **zsh** — unlike bash, zsh does not
+word-split an unquoted `$var` expansion, so `for x in $var` silently iterates once over the
+whole value instead of splitting it (`for x in $(cmd)` is unaffected — command substitution
+still splits normally). Keep new checks zsh-safe: prefer a `while read -r` loop over a
+multi-line variable to an unquoted `for`.
 
 ---
 
@@ -59,9 +68,11 @@ bad_refs=0
 for f in "$PM"/user-stories/US-*.md; do
   [ -f "$f" ] || continue
   refs=$(awk '/^---$/{c++; next} c==1' "$f" | yq e '.personas[]' - 2>/dev/null)
-  for r in $refs; do
+  # zsh doesn't word-split a bare $refs — read it line-by-line instead (works in bash too)
+  while IFS= read -r r; do
+    [ -n "$r" ] || continue
     ls "$PM"/personas/"${r}"*.md >/dev/null 2>&1 || bad_refs=$((bad_refs + 1))
-  done
+  done <<< "$refs"
 done
 [ "$bad_refs" -eq 0 ] && pass "story persona-refs resolve" || fail "story persona-refs" "$bad_refs unresolved reference(s)"
 

@@ -14,12 +14,12 @@ pilot:
   review_gate_passed: false
 
 template_versions:
-  stage-a-docs-pm: 1
-  stage-b-treatises: 1
+  stage-a-docs-pm: 2
+  stage-b-treatises: 2
   stage-c-theme: 3
-  stage-d-roadmap: 1
-  verify: 1
-  report-format: 1
+  stage-d-roadmap: 2
+  verify: 3
+  report-format: 2
 
 preflight:
   run_at: "2026-07-16T21:37:00+07:00"

@@ -1,15 +1,20 @@
-# stage-a-docs-pm.md (version: 1)
+# stage-a-docs-pm.md (version: 2)
 
 Stage A — README + project-management foundation (personas, user stories, screens,
-components). This template is self-contained: you get this file, your project's state file,
-and your spawn params. You do not have access to the pipeline plan or any other pipeline doc
-— everything you need to act is below.
+components). This template is self-contained together with `templates/verify.md` and
+`templates/report-format.md`, which you also receive: you get these three files, your
+project's state file, and your spawn params. You do not have access to the pipeline plan,
+`state/_pipeline.yaml`, or any other pipeline doc — everything you need to act is in what
+you were given.
 
 ## Params (from your spawn prompt)
 
 - `project` — the slug under `projects/{project}/`
 - `eval`, `media` — pipeline-wide media availability flags (informational only; Stage A does
   not render or evaluate media — that's Stage C)
+- `REPO_LOCK_SESSION` — the pipeline's repo-lock session id; use it directly for your §9
+  commit. Never read or grep `state/_pipeline.yaml` for it — that file is off-limits to
+  stage agents, and whatever you were spawned with is authoritative for your entire run.
 
 ## 0. Setup
 
@@ -18,8 +23,9 @@ and your spawn params. You do not have access to the pipeline plan or any other 
    quirk notes) — this is your starting point, not a blank slate.
 2. Set `stage_a.status: in-progress` in that file now, in your working tree. Do not commit
    yet — this is just so a crash mid-run is visible on resume.
-3. Do **not** create a tobor session. Do not read the pipeline plan file or any file outside
-   this template, your state file, and the target project's own tree.
+3. Do **not** create a tobor session. Do not read the pipeline plan file, `state/_pipeline.yaml`,
+   or any file outside this template, `verify.md`, `report-format.md`, your state file, and
+   the target project's own tree.
 4. Invoke **Skill(trl-user-experience-engineer)** before doing any authoring below — it
    governs the persona/story/screen quality bar this template's schemas assume.
 
@@ -49,7 +55,44 @@ Rules:
 Your project's state file may already flag a known non-standard location (e.g.
 `docs/project-management/`) — if so, this step is not optional.
 
-## 2. README
+## 2. Legacy persona/story reconciliation — before generating anything new
+
+Some projects already have personas or a user-stories index in a shape that predates this
+pipeline. Detect and reconcile these **before** writing a single new persona or story —
+blind-generating on top of unrecognized legacy content creates duplicates. A naive census/
+verify grep for `P-*.md` reports `personas: 0` against a directory that actually holds 10
+personas under legacy filenames; aifighter hit exactly this.
+
+**Legacy personas.** Any file under `project-management/personas/` that doesn't match
+`P-{NNN}-{slug}.md`, or matches but has no YAML frontmatter (bare numeric names like
+`01-name.md` are the common case), is legacy — not absent.
+1. For each, read its content and infer `id`/`name`/`slug`/`archetype`/`segment`/`tags` —
+   don't discard what's already written, reconstruct the frontmatter from it.
+2. `git mv` it to the canonical `P-{NNN}-{slug}.md`, continuing numbering after any files
+   already in canonical form (never renumber a file that's already canonical).
+3. Prepend the standard frontmatter block (§4's schema) built from the inferred values.
+4. Once every legacy file is migrated, (re)build `project-management/personas/index.yaml`
+   from the now-canonical directory listing (same rule as §7's regeneration step).
+
+Only after this reconciliation is your persona count trustworthy — recount before deciding
+how many *new* personas, if any, §4's 5-10 target still needs.
+
+**Legacy user-stories index.** If `project-management/user-stories/index.yaml` exists but
+uses a top-level `user_stories:` key instead of the canonical `stories:` list + `epics:`
+grouping (§5's schema), or existing entries are missing `complexity`, migrate the schema in
+place rather than discarding it:
+1. Reconstruct `epics:` groupings from each entry's `epic:` field.
+2. Rename the top-level key to `stories:`.
+3. Backfill `complexity` (`S|M|L|XL`) on any entry missing it, sized honestly from the
+   story's actual scope, not guessed blind.
+4. Verify nothing was lost: sort the pre- and post-migration ID lists and diff them — they
+   must match exactly.
+
+This reconciliation runs every time, not just on first contact — a legacy shape is
+otherwise indistinguishable from "nothing exists yet," and re-generating over it is the
+failure mode this step exists to prevent.
+
+## 3. README
 
 **Stub test:** README is a stub if it doesn't exist, has fewer than 50 lines, OR its first
 `#` heading is literally `# start-app` (the scaffold boilerplate heading).
@@ -64,7 +107,7 @@ If the README exists and passes the mechanical test but reads as topically unrel
 project (e.g., it describes something else entirely — check your state file's `notes:` for a
 flag like this), verify by reading the whole file before trusting the line-count heuristic.
 
-## 3. Personas — `project-management/personas/`
+## 4. Personas — `project-management/personas/`
 
 **How many:** 5-10, covering all primary/secondary/tertiary segments implied by the README
 and code, plus at least one edge-case/underserved persona. If the system has agent/bot
@@ -132,7 +175,7 @@ tags: [{tag1}, {tag2}, ...]
 ```
 
 **Index** — `project-management/personas/index.yaml` (regenerated from a fresh directory
-listing, see §6):
+listing, see §7):
 
 ```yaml
 personas:
@@ -143,7 +186,7 @@ personas:
     file: P-001-{slug}.md
 ```
 
-## 4. User Stories — `project-management/user-stories/`
+## 5. User Stories — `project-management/user-stories/`
 
 **How many:** exactly 100 minimum (an existing over-target count, e.g. 1000, is a PASS —
 never trim). Every persona must be referenced by at least 3 stories; no orphan personas.
@@ -216,7 +259,7 @@ with 0 backing stories, or personas exist with 0 stories, or vice versa — reco
 than blindly regenerating: author what's missing so cross-references resolve, don't
 duplicate what's already there just because the "expected" artifact was absent.
 
-## 5. Screens + Components (only after personas + stories are solid)
+## 6. Screens + Components (only after personas + stories are solid)
 
 Read ALL user stories. For each distinct screen/view, write:
 
@@ -295,7 +338,7 @@ Forms, Feedback & Indicators, AI-Specific, Modals & Overlays, Domain-Specific, T
 Lists. Focus on components appearing across 2+ screens or representing complex, even if
 single-use, interaction patterns.
 
-## 6. Idempotency — top-up only
+## 7. Idempotency — top-up only
 
 This project may already have some or all of these artifacts (check your state file's
 census). Never delete or blanket-regenerate correct existing content. Read what exists, fill
@@ -306,25 +349,30 @@ numbering rather than renumbering existing files.
 stage** — never hand-append an entry. A stale index (referencing renamed/deleted files, or
 missing newly added ones) is a common and easy-to-avoid bug.
 
-## 7. Verify
+## 8. Verify
 
 Run `templates/verify.md` §A with `PROJECT={project}` set. Paste every `PASS:`/`FAIL:` line
 into your report's `verify:` list.
 
-## 8. Update state and commit
+## 9. Update state and commit
 
 Update `docs/pipelines/project-uplift/state/{project}.yaml`:
-- `stage_a.status: done` (or `blocked`, see §9)
+- `stage_a.status: done` (or `blocked`, see §11)
 - `stage_a.attempts` incremented
 - `stage_a.counts` set to the final personas/stories/screens/components counts
 - `census.*` fields refreshed to match if they changed
+
+Edit only your own `stage_a:` block in this file — a targeted find/replace bounded by the
+`stage_a:` key and the next top-level key, never a full-file rewrite. Stages B/C/D may be
+concurrently writing their own blocks in this same file; overwriting the whole file clobbers
+whatever they just wrote.
 
 **Commit protocol** (pathspec-only — never `git add -A`, never the whole `projects/{project}`
 tree; list every path you actually touched):
 
 ```bash
 git add <specific paths only — e.g. projects/{project}/README.md projects/{project}/project-management/...>
-REPO_LOCK_SESSION=$(grep -oP 'repo_lock_session:\s*\K\S+' docs/pipelines/project-uplift/state/_pipeline.yaml) \
+REPO_LOCK_SESSION="{the REPO_LOCK_SESSION value from your spawn params}" \
 repo-lock exec --label "uplift {project} A" -- \
   git commit -m "{project}: uplift stage A — {one-line summary}" \
              -m "Co-Authored-By: Loom <loom@therobotlives.com>" \
@@ -332,12 +380,19 @@ repo-lock exec --label "uplift {project} A" -- \
 ```
 
 Trailer is **Loom only** — never Claude/Anthropic, never a Claude-Session URL.
+`REPO_LOCK_SESSION` above is the value handed to you as a spawn param — never `grep` or
+read `state/_pipeline.yaml` to obtain it; that file is off-limits to stage agents.
 
-## 9. Report
+## 10. Report
 
-Reply **ONLY** with the `templates/report-format.md` block. No prose before or after.
+Build the `templates/report-format.md` block, then deliver it as an explicit
+`SendMessage({to: "main", message: "<the report block>", summary: "<5-10 word summary>"})`
+call — this **is** your reply; it must be the **last** action you take, with no further
+tool calls after it. Printing the block as plain text is not delivery: a background agent
+that only prints it never reaches the coordinator. See `report-format.md` for the block
+schema and delivery rules.
 
-## 10. Failure handling
+## 11. Failure handling
 
 If a `verify.md` §A check fails and you can't fix it this pass: set `stage_a.status:
 blocked` with a `blocked:` reason string in the state file, still commit the state file

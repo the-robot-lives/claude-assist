@@ -1,14 +1,18 @@
-# stage-b-treatises.md (version: 1)
+# stage-b-treatises.md (version: 2)
 
 Stage B — score existing themes, author enough new theme treatises to reach 7 effective
-directions, and allocate screens across all of them for Stage C to render. Self-contained:
-this file + your state file + spawn params + the repo's own committed reference docs (fair
-game to read — the pipeline plan file is not).
+directions, and allocate screens across all of them for Stage C to render. Self-contained
+together with `templates/verify.md` and `templates/report-format.md` (you receive both):
+this file + those two + your state file + spawn params + the repo's own committed reference
+docs (fair game to read — the pipeline plan file and `state/_pipeline.yaml` are not).
 
 ## Params (from your spawn prompt)
 
 - `project` — the slug under `projects/{project}/`
 - `eval`, `media` — informational only; Stage B does no rendering
+- `REPO_LOCK_SESSION` — the pipeline's repo-lock session id; use it directly for your §6
+  commit. Never read or grep `state/_pipeline.yaml` for it — that file is off-limits to
+  stage agents.
 
 ## 0. Setup
 
@@ -16,7 +20,9 @@ game to read — the pipeline plan file is not).
    lists what's already on disk; `roster.yaml`'s per-project `themes:` block (if you have repo
    access to read it — you do, it's a committed file, just not the plan) has the full paths.
 2. Set `stage_b.status: in-progress` in the state file now, uncommitted.
-3. Do **not** create a tobor session. No skill is invoked for this stage — instead, **read**
+3. Do **not** create a tobor session, and do not read `state/_pipeline.yaml` — it's
+   off-limits to stage agents; your `eval`/`media`/`REPO_LOCK_SESSION` spawn params are the
+   only pipeline-wide values you need. No skill is invoked for this stage — instead, **read**
    `skills/trl-user-experience-engineer/references/outputs/theme-treatise.md` in full. It is
    the canonical treatise contract and includes a complete worked example (`treatise-ember.md`)
    showing the depth and precision expected — read that worked example before drafting your
@@ -158,15 +164,31 @@ overlap:                          # 2-5 identity-defining screens, each assigned
     themes: ["blueprint", "paper"]
 ```
 
-Rules: unique-set size = `clamp(inventory_total, 30, 40)` — if the project has fewer than 30
-screens total, allocate the whole inventory (`unique` count == `inventory_total`, no
-screens left unallocated); overlap set is **2-5** screens, each an identity-defining screen
-(the ones that most say "this is theme X") assigned to exactly 2 themes so Stage C can render
-a direct side-by-side comparison. Deal the rest round-robin, biased by matching a screen's
-category to a theme's mood (e.g., a "storyboard" screen suits a narrative-heavy theme). Every
-theme should end up with **5-8** screens total (unique assignments count once, overlap
-assignments count once per theme listed) — aim for **~35-45 total image slots** across all
-themes combined. `unique[].screen` and `overlap[].screen` values must resolve to real files
+Let `N` = the number of themes this project now has (existing + new, from §1 — may be more
+or fewer than 7; the E-formula only targets 7 *effective* directions, not 7 raw themes, so
+don't assume N==7). Let `inv` = `inventory_total`.
+
+**Unique set (`U`, each screen → exactly one theme):** `U = clamp(inv, 30, 40)` — if
+`inv < 30`, allocate the whole inventory instead (`U == inv`, nothing left unallocated).
+
+**Overlap set (`O`, each screen → exactly two themes):** `O` is **2-5** screens, each an
+identity-defining screen (the ones that most say "this is theme X"), so Stage C can render a
+direct side-by-side comparison for at least a couple of themes.
+
+**Reconciling `U`+`O` against `N` themes at 5-8 screens each:** every theme's final count
+(unique assignments to it, once each, plus overlap assignments listing it, once each) must
+land in **5-8**. The total slot-count is `S = U + 2*O` (each overlap screen contributes to
+two themes' counts), so `S` must satisfy `5*N <= S <= 8*N`. Choose `O` within its 2-5 range
+to land `S` near the low-middle of that band (roughly `5.5*N` — lean toward 5-6 per theme
+rather than maxing at 8, to keep Stage C's render count down) while keeping `S >= 5*N`. If a
+small `inv` pins `U` low and `S` still falls short of `5*N` even at `O=5`, that means this
+project doesn't have enough distinct screens for `N` themes — note it in your report rather
+than forcing an uneven allocation (never let a theme drop below 5 just to make the totals
+close).
+
+Deal screens round-robin across themes, biased by matching a screen's category to a theme's
+mood (e.g., a "storyboard" screen suits a narrative-heavy theme), until every theme's count
+is in range. `unique[].screen` and `overlap[].screen` values must resolve to real files
 under `project-management/screens/`.
 
 ## 4. Idempotency
@@ -193,22 +215,34 @@ Update `docs/pipelines/project-uplift/state/{project}.yaml`:
 - Seed `stage_c.themes` with one entry per theme slug, `status: pending`, so Stage C spawns
   know the full roster without re-deriving it.
 
+Edit only your own `stage_b:` block in this file — a targeted find/replace bounded by the
+`stage_b:` key and the next top-level key, never a full-file rewrite. Stages A/C/D may be
+concurrently writing their own blocks in this same file; overwriting the whole file clobbers
+whatever they just wrote.
+
 **Commit protocol** (pathspec-only):
 
 ```bash
 git add <specific paths only — projects/{project}/design/theme/... projects/{project}/design/asset-prompts/screens/allocation.yaml>
-REPO_LOCK_SESSION=$(grep -oP 'repo_lock_session:\s*\K\S+' docs/pipelines/project-uplift/state/_pipeline.yaml) \
+REPO_LOCK_SESSION="{the REPO_LOCK_SESSION value from your spawn params}" \
 repo-lock exec --label "uplift {project} B" -- \
   git commit -m "{project}: uplift stage B — {one-line summary}" \
              -m "Co-Authored-By: Loom <loom@therobotlives.com>" \
   -- <same pathspecs> docs/pipelines/project-uplift/state/{project}.yaml
 ```
 
-Trailer is **Loom only**.
+Trailer is **Loom only**. `REPO_LOCK_SESSION` above is the value handed to you as a spawn
+param — never `grep` or read `state/_pipeline.yaml` to obtain it; that file is off-limits to
+stage agents.
 
 ## 7. Report
 
-Reply **ONLY** with the `templates/report-format.md` block.
+Build the `templates/report-format.md` block, then deliver it as an explicit
+`SendMessage({to: "main", message: "<the report block>", summary: "<5-10 word summary>"})`
+call — this **is** your reply; it must be the **last** action you take, with no further tool
+calls after it. Printing the block as plain text is not delivery: a background agent that
+only prints it never reaches the coordinator. See `report-format.md` for the block schema
+and delivery rules.
 
 ## 8. Failure handling
 

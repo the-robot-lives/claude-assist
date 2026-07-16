@@ -1,12 +1,17 @@
-# stage-d-roadmap.md (version: 1)
+# stage-d-roadmap.md (version: 2)
 
 Stage D — author a milestone roadmap with verifiable entry/exit gates and full story
 traceability. Runs **parallel to B/C** — its only dependency is Stage A (needs the user
-stories). Self-contained: this file + your state file + spawn params + committed repo docs.
+stories). Self-contained together with `templates/verify.md` and `templates/report-format.md`
+(you receive both): this file + those two + your state file + spawn params + committed repo
+docs (`state/_pipeline.yaml` is not — it's off-limits to stage agents).
 
 ## Params (from your spawn prompt)
 
 - `project` — the slug under `projects/{project}/`
+- `REPO_LOCK_SESSION` — the pipeline's repo-lock session id; use it directly for your §9
+  commit. Never read or grep `state/_pipeline.yaml` for it — that file is off-limits to
+  stage agents.
 
 ## 0. Setup
 
@@ -15,7 +20,9 @@ stories). Self-contained: this file + your state file + spawn params + committed
    note that and proceed only if enough of the story corpus already exists to roadmap against.
    `census.roadmap_exists` tells you whether this is fresh authoring or audit/top-up.
 2. Set `stage_d.status: in-progress` in the state file now, uncommitted.
-3. Do **not** create a tobor session.
+3. Do **not** create a tobor session, and do not read `state/_pipeline.yaml` — it's
+   off-limits to stage agents; `REPO_LOCK_SESSION` above is the only pipeline-wide value you
+   need.
 4. Invoke **Skill(trl-agentic-project-manager)** before planning the milestone/lane
    decomposition below — it governs work-DAG decomposition and parallel-lane discipline.
 5. Read the precedent at `projects/noizu-intellect/project-management/roadmap/` (00-overview.md,
@@ -214,22 +221,34 @@ Update `docs/pipelines/project-uplift/state/{project}.yaml`:
 - `stage_d.attempts` incremented
 - `stage_d.story_coverage_pct` set to your computed coverage percentage
 
+Edit only your own `stage_d:` block in this file — a targeted find/replace bounded by the
+`stage_d:` key and the next top-level key, never a full-file rewrite. Stages A/B/C may be
+concurrently writing their own blocks in this same file; overwriting the whole file clobbers
+whatever they just wrote.
+
 **Commit protocol** (pathspec-only):
 
 ```bash
 git add <specific paths only — projects/{project}/project-management/roadmap/...>
-REPO_LOCK_SESSION=$(grep -oP 'repo_lock_session:\s*\K\S+' docs/pipelines/project-uplift/state/_pipeline.yaml) \
+REPO_LOCK_SESSION="{the REPO_LOCK_SESSION value from your spawn params}" \
 repo-lock exec --label "uplift {project} D" -- \
   git commit -m "{project}: uplift stage D — {one-line summary}" \
              -m "Co-Authored-By: Loom <loom@therobotlives.com>" \
   -- <same pathspecs> docs/pipelines/project-uplift/state/{project}.yaml
 ```
 
-Trailer is **Loom only**.
+Trailer is **Loom only**. `REPO_LOCK_SESSION` above is the value handed to you as a spawn
+param — never `grep` or read `state/_pipeline.yaml` to obtain it; that file is off-limits to
+stage agents.
 
 ## 10. Report
 
-Reply **ONLY** with the `templates/report-format.md` block.
+Build the `templates/report-format.md` block, then deliver it as an explicit
+`SendMessage({to: "main", message: "<the report block>", summary: "<5-10 word summary>"})`
+call — this **is** your reply; it must be the **last** action you take, with no further tool
+calls after it. Printing the block as plain text is not delivery: a background agent that
+only prints it never reaches the coordinator. See `report-format.md` for the block schema
+and delivery rules.
 
 ## 11. Failure handling
 

@@ -1,9 +1,16 @@
-# report-format.md (version: 1)
+# report-format.md (version: 2)
 
-The fixed report block every stage agent replies with — **and only this** (per the stage
-template's instruction to "reply ONLY with the report-format.md block"). No prose before or
+The fixed report block every stage agent delivers — **and only this** (per the stage
+template's instruction to build "ONLY the report-format.md block"). No prose before or
 after. Keep the whole block to **30 lines or fewer**: omit count/detail keys that don't apply
-to your stage rather than padding with `null`/`0`.
+to your stage rather than padding with `null`/`0` (see the grouping rule below for `verify:`
+specifically).
+
+**Delivery — this is not a print statement.** Build the block below, then send it with an
+explicit `SendMessage({to: "main", message: "<the block>", summary: "<5-10 word summary>"})`
+call, as the **last** action you take, with **no tool calls after it**. `SendMessage` to
+`"main"` *is* your reply — printing the block to your own transcript is not delivery, and a
+background agent that only prints it never reaches the coordinator.
 
 ```yaml
 report:
@@ -23,8 +30,10 @@ report:
     api_calls: N                 # Stage C only — must be <= 12
     milestones: N                # Stage D only
     story_coverage_pct: N        # Stage D only
-  verify:                        # one line per check from your templates/verify.md section
+  verify:                        # one line per check; group many uniform per-item PASS lines
+                                  # into one summary line (see Rules) — never group a FAIL
     - "PASS: <check name>"
+    - "PASS: <N>/<N> <uniform check name> — all PASS"
     - "FAIL: <check name> — <one-line reason>"
   committed: "<sha>"              # or false if nothing was committed (blocked/failed)
   notes:
@@ -39,6 +48,11 @@ report:
   FAIL, use `status: blocked` (recoverable — a top-up/retry can fix it) or `status: failed`
   (something broke that needs a human or a different approach) — never report `done` with a
   FAIL line still in `verify:`.
+- When a check repeats per item (one PASS per treatise/theme/prompt/milestone…) and every
+  instance passes, collapse them into a single summary line (`"PASS: 6/6 treatises have 10
+  sections"`) instead of pasting each one — that's how `verify:` stays inside the 30-line cap
+  even on a stage with dozens of per-item checks. Never collapse a FAIL: every failing
+  instance is listed individually with its own reason.
 - `committed:` is the real commit SHA (`git rev-parse HEAD` after the commit) when
   `status: done`. When blocked/failed, still commit the state file alone if you changed it
   (see your stage template's failure-handling step) and report that SHA; if truly nothing
