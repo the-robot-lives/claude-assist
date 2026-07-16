@@ -1,0 +1,40 @@
+# docs/pipelines/project-uplift/state/NoizuPromptLingo.yaml
+project: NoizuPromptLingo
+pilot: true
+pilot_order: 1
+census:
+  readme_stub: true
+  personas: 0
+  stories: 0
+  screens: 0
+  components: 0
+  roadmap_exists: false
+  existing_named_themes: [theme-npl-brutalist, theme-npl-editorial, theme-npl-minimal, theme-npl-nocturne]
+stage_a:
+  status: pending
+  attempts: 0
+  counts: {personas: 0, stories: 0, screens: 0, components: 0}
+  blocked: null
+stage_b:
+  status: pending
+  attempts: 0
+  effective_theme_count: null    # E, computed by Stage B similitude formula
+  new_themes_needed: null         # ceil(7 - E)
+  themes_written: []
+  allocation_yaml: false
+  blocked: null
+stage_c:
+  status: pending
+  themes: {}    # keyed by theme slug once Stage B allocation.yaml exists; each entry tracks prompts/images/api_calls/avg_eval/yaml/conformance
+  blocked: null
+stage_d:
+  status: pending
+  attempts: 0
+  story_coverage_pct: null
+  blocked: null
+verified: false
+notes:
+  - "README is the 170-line start-app scaffold boilerplate (first heading '# start-app') — stub by both tests; Stage A must author a substantial README from backend/ code + design/ + docs/ evidence."
+  - 4 active named themes already exist under design/theme/ (npl-brutalist, npl-editorial, npl-minimal, npl-nocturne) — high existing count, similitude-weighted E likely close to or above 7; Stage B should score before assuming new themes are needed.
+  - "design/themes/ (plural, legacy) contains only a 'starter/' scaffold dir, NOT additional theme-{slug} directories — Stage B must leave it alone (or flag for later cleanup), not count or consolidate it as a 5th theme."
+  - Pilot project 1 — runs fully (A→B→C×themes→D) before aifighter.com and the user review gate.

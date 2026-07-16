@@ -1,0 +1,39 @@
+# docs/pipelines/project-uplift/state/aifighter.com.yaml
+project: aifighter.com
+pilot: true
+pilot_order: 2
+census:
+  readme_stub: false
+  personas: 0
+  stories: 100
+  screens: 27
+  components: 40
+  roadmap_exists: false
+  existing_named_themes: []
+stage_a:
+  status: pending
+  attempts: 0
+  counts: {personas: 0, stories: 100, screens: 27, components: 40}
+  blocked: null
+stage_b:
+  status: pending
+  attempts: 0
+  effective_theme_count: null    # E, computed by Stage B similitude formula
+  new_themes_needed: null         # ceil(7 - E)
+  themes_written: []
+  allocation_yaml: false
+  blocked: null
+stage_c:
+  status: pending
+  themes: {}    # keyed by theme slug once Stage B allocation.yaml exists; each entry tracks prompts/images/api_calls/avg_eval/yaml/conformance
+  blocked: null
+stage_d:
+  status: pending
+  attempts: 0
+  story_coverage_pct: null
+  blocked: null
+verified: false
+notes:
+  - 0 personas despite 100 existing stories — Stage A must author personas ≥5 and backfill persona cross-refs into existing stories rather than regenerating stories from scratch.
+  - "app/frontend/src/config/theme-style-guide/ exists (base scaffold only, correctly excluded from named-theme counts) — this is the worked-example path cited in the plan for Stage C project-specific sample-element overrides. 0 named themes yet: Stage B/C need to create new theme directions essentially from scratch."
+  - Pilot project 2 — runs fully after NoizuPromptLingo, then triggers the user review gate before waves begin.
