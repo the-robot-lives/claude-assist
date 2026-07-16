@@ -1,8 +1,8 @@
 ---
 slug: scholar
 base_theme: theme-style-guide
-status: sketch
-revision: 1
+status: full
+revision: 2
 ---
 
 # Theme Treatise — Scholar

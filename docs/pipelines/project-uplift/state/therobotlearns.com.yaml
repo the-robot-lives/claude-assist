@@ -33,6 +33,19 @@ stage_c:
   status: in-progress
   # keyed by theme slug once Stage B allocation.yaml exists; each entry tracks prompts/images/api_calls/avg_eval/yaml/conformance
   themes:
+    chalkboard:
+      status: in-progress
+    workbench:
+      status: in-progress
+    scholar:
+      status: done
+      prompts: 5
+      images: 5
+      api_calls: 8
+      avg_eval: null
+      yaml: true
+      conformance: true
+      render_note: "straight to --quality medium (no 429s); 8 api_calls incl 1 hero re-render of 05. 4/5 light (07 web hero, 09, 10, 05); 06 drifted dark (model 'terminals are dark' prior, documented — YAML is light-native, verified from compiled CSS). Fixed shipped seed-trap: bare red/blue/yellow no-op'd the indigo accent → moved to brand-red + dark scoped-vars re-point + hui controls re-pointed off base blue; added missing branding font-url. 10 promoted its light -n2 alternate."
     deep-focus:
       status: done
       prompts: 5

@@ -1,0 +1,100 @@
+# Scholar — project-specific sample elements for the terminal study CLI + quiz SPA (treatise §8).
+# css-snippets ACCUMULATE onto the base and are emitted VERBATIM (self-scoped): every selector
+# below is prefixed with html[data-design-theme="scholar"] so nothing bleeds into sibling themes.
+# Tokens (var(--surface), var(--brand-red), var(--radius), var(--border), var(--brand-red-light),
+# var(--hui-focus-ring-color)…) come from the seed cascade / vars.yaml deltas — the single indigo
+# accent, crisp 4px radius, and thin structural borders of §6/§8.
+css-snippets:
+  - name: Quiz Option Row
+    slug: tl-quiz-option
+    title: "Quiz answer option"
+    description: "A quiz answer row — bordered on the surface, 4px radius; the selected option gets a 2px indigo left rail + indigo ring + faint indigo tint (treatise §8). Apply with .tl-quiz-option / .is-selected."
+    target-section: cards
+    body: |
+      html[data-design-theme="scholar"] .tl-quiz-option {
+        display: flex;
+        align-items: center;
+        gap: var(--space-1);
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: var(--space-1) var(--space-2);
+        color: var(--text);
+        transition: border-color var(--transition-base) ease, background var(--transition-base) ease;
+      }
+      html[data-design-theme="scholar"] .tl-quiz-option:hover {
+        background: var(--surface-alt);
+        border-color: var(--border-strong);
+      }
+      html[data-design-theme="scholar"] .tl-quiz-option.is-selected {
+        border-left: 2px solid var(--brand-red);
+        box-shadow: 0 0 0 2px var(--hui-focus-ring-color);
+        background: var(--brand-red-light);
+      }
+
+  - name: Rubric Criterion Row
+    slug: tl-rubric-row
+    title: "Graded-project rubric row"
+    description: "A per-criterion rubric feedback row — thin-bordered, an alt-surface header zone for the criterion name + mono score, an indigo left rail when expanded (treatise §8). Apply with .tl-rubric-row / .is-open."
+    target-section: cards
+    body: |
+      html[data-design-theme="scholar"] .tl-rubric-row {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        margin-bottom: var(--space-half);
+      }
+      html[data-design-theme="scholar"] .tl-rubric-row .tl-rubric-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: var(--surface-alt);
+        padding: var(--space-half) var(--space-2);
+        border-radius: var(--radius) var(--radius) 0 0;
+      }
+      html[data-design-theme="scholar"] .tl-rubric-row .tl-rubric-score {
+        font-family: var(--font-mono);
+        color: var(--text-secondary);
+      }
+      html[data-design-theme="scholar"] .tl-rubric-row.is-open {
+        border-left: 2px solid var(--brand-red);
+      }
+
+  - name: KB Stat Tile
+    slug: tl-stat-tile
+    title: "Dashboard stat tile"
+    description: "A learning-plan KB stat tile — bordered surface card, 4px radius, a big mono figure over a muted label; the active tile carries a 2px indigo bottom underline (treatise §8). Apply with .tl-stat-tile / .is-active."
+    target-section: cards
+    body: |
+      html[data-design-theme="scholar"] .tl-stat-tile {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: var(--space-2);
+        border-bottom: 2px solid transparent;
+      }
+      html[data-design-theme="scholar"] .tl-stat-tile .tl-stat-figure {
+        font-family: var(--font-mono);
+        font-size: var(--font-size-xl);
+        color: var(--text);
+      }
+      html[data-design-theme="scholar"] .tl-stat-tile .tl-stat-label {
+        font-size: var(--font-size-xs);
+        color: var(--text-muted);
+      }
+      html[data-design-theme="scholar"] .tl-stat-tile.is-active {
+        border-bottom-color: var(--brand-red);
+      }
+
+  - name: Active Nav Item
+    slug: tl-nav-active
+    title: "Active nav item"
+    description: "Left-rail / top-bar active state — indigo text + 2px underline + semibold, over a faint indigo tint, no heavy filled background (treatise §8). Apply with .tl-nav-item.is-active."
+    target-section: navigation
+    body: |
+      html[data-design-theme="scholar"] .tl-nav-item.is-active {
+        color: var(--brand-red);
+        font-weight: var(--font-weight-semibold);
+        border-bottom: 2px solid var(--brand-red);
+        background: var(--brand-red-light);
+      }
