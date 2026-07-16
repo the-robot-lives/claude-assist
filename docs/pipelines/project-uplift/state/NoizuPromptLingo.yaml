@@ -3,17 +3,17 @@ project: NoizuPromptLingo
 pilot: true
 pilot_order: 1
 census:
-  readme_stub: true
-  personas: 0
-  stories: 0
-  screens: 0
-  components: 0
+  readme_stub: false
+  personas: 8
+  stories: 104
+  screens: 47
+  components: 45
   roadmap_exists: false
   existing_named_themes: [theme-npl-brutalist, theme-npl-editorial, theme-npl-minimal, theme-npl-nocturne]
 stage_a:
-  status: pending
-  attempts: 0
-  counts: {personas: 0, stories: 0, screens: 0, components: 0}
+  status: done
+  attempts: 1
+  counts: {personas: 8, stories: 104, screens: 47, components: 45}
   blocked: null
 stage_b:
   status: pending
@@ -38,3 +38,9 @@ notes:
   - 4 active named themes already exist under design/theme/ (npl-brutalist, npl-editorial, npl-minimal, npl-nocturne) — high existing count, similitude-weighted E likely close to or above 7; Stage B should score before assuming new themes are needed.
   - "design/themes/ (plural, legacy) contains only a 'starter/' scaffold dir, NOT additional theme-{slug} directories — Stage B must leave it alone (or flag for later cleanup), not count or consolidate it as a 5th theme."
   - Pilot project 1 — runs fully (A→B→C×themes→D) before aifighter.com and the user review gate.
+  - "Stage A done 2026-07-16: README (114 lines) + 8 personas + 104 stories/14 epics + 47 screens + 45 components. verify.md §A: 9/9 PASS."
+  - "Template ambiguity: stage-a-docs-pm.md's intro claims full self-containment ('everything you need is below') but §7/§9 explicitly name templates/verify.md and templates/report-format.md — read both since the template itself points at them; wording should say 'plus verify.md and report-format.md' rather than claiming pure self-containment."
+  - "Template gap: §8's commit protocol greps docs/pipelines/project-uplift/state/_pipeline.yaml for repo_lock_session, but §0.3 forbids reading the pipeline plan file and _pipeline.yaml isn't in the Stage A agent's allowed file set either — unresolvable as written. Loom pre-resolved this for the pilot by passing REPO_LOCK_SESSION directly in the spawn prompt; the template should say to expect it as a spawn param rather than grep a forbidden file."
+  - "Product has THREE unrelated meanings of 'persona' in this codebase: the product's own Agent Persona entity (bio/journal/knowledge-base), a Customer Persona (marketing ICP) under the Campaigns domain, and the UX-research personas this stage authors. Disambiguated via qualifiers throughout the README; future stage/reader agents should keep the same convention rather than assuming 'persona' means one thing."
+  - "Screens count (47) exceeds Stage B verify §B's allocation.yaml hint of 30-40 unique screens unless Stage B sets u==inventory (an allowed pass condition per that check) — sized to real evidence (40+ actual frontend routes per docs/FEATURE-PARITY-AUDIT.md), not trimmed to fit. Flagging so Stage B isn't surprised."
+  - "2 of the 47 screens (Campaigns & Ad Groups, Market & Competitor Research) are grounded in confirmed backend/MCP domain evidence (Campaign/AdGroup/AdCopy/LandingPage/Competitor/Keyword/MarketReport schemas + tobor_campaigns/tobor_market MCP servers) but the frontend route sample gathered for this stage didn't enumerate a matching route — noted as inferred in the screen docs themselves; worth a source-tree double-check in a later stage."
