@@ -110,6 +110,13 @@ skills:
     providers: [claude, codex, grok]
     category: agents
 
+  trl-agentic-project-manager:
+    tags: [agents, planning, parallelization, coordination, multi-agent, tobor]
+    work_types: [planning, agents, feature-dev]
+    providers: [claude, codex, grok]
+    notes: "Work DAGs + interface-first fan-out; fleet staffing and cross-harness coordination via tobor rooms"
+    category: agents
+
   trl-rapid-prototype:
     tags: [prototype, spike, feasibility]
     work_types: [feature-dev, research, planning]

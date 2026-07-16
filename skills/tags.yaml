@@ -107,6 +107,9 @@ tags:
   - id: templates
   - id: products
   - id: multi-agent
+  - id: parallelization
+  - id: coordination
+  - id: tobor
   - id: prompts
   - id: harness
   - id: production
