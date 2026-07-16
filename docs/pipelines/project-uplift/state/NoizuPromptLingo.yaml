@@ -32,7 +32,7 @@ stage_c:
     npl-nocturne: {status: pending}
     npl-aurora: {status: pending}
     npl-blueprint: {status: pending}
-    npl-prism: {status: pending}
+    npl-prism: {status: done, prompts: 6, images: 6, api_calls: 7, avg_eval: null, yaml: true, conformance: true}
     npl-meridian: {status: pending}
   blocked: null
 stage_d:
