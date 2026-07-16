@@ -44,7 +44,14 @@ stage_c:
     phosphor:
       status: in-progress
     cockpit:
-      status: in-progress
+      status: done
+      prompts: 5
+      images: 5
+      api_calls: 8
+      avg_eval: null
+      yaml: true
+      conformance: true
+      render_note: "medium quality — 429 storm forced high->medium tier drop; all 5 screens rendered"
   blocked: null
 stage_d:
   status: done

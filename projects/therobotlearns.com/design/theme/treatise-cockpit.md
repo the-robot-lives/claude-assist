@@ -1,8 +1,8 @@
 ---
 slug: cockpit
 base_theme: theme-style-guide
-status: sketch
-revision: 1
+status: full
+revision: 2
 ---
 
 # Theme Treatise — Cockpit
@@ -180,3 +180,19 @@ Theme: `theme-cockpit/` · Base: `theme-style-guide` · Status: sketch
 | §7 | `style-guide.css-snippets.yaml` / `style-guide.scoped-vars.yaml` | `--motion-micro: 140ms`, `--motion-meter: 200ms`; meter-fill keyframes + reduced-motion guard |
 | §8 | `style-guide.css-snippets.yaml` + `style-guide.semantic-classes.yaml` | magenta primary key, k9s-style prompt input, titled box-drawn panes, keybind footer, selected-row bar |
 | §9 | verification across all facets | recheck warning `#d29922` at text sizes; enforce glyph+color status; magenta focus ≥3:1 |
+
+## Stage C Render Review (rev 2)
+
+Five terminal-mocked screens rendered (03 browse/search, 10 learning-plan, 14 maintenance-console,
+17 cloud-sync, 18 team-lead; heroes 10 & 14). **No substantive change to the design** — the
+coherent renders came directly from following this treatise:
+- **Confirmed (soft signals):** the cool blue-graphite canvas, the single electric-magenta signal
+  on active-pane/selection/active-tab, the disciplined four-color status set paired with glyphs, and
+  the dense box-drawn multi-pane instrument layout all rendered as written on 03/14/17 — a modern
+  cool TUI, unmistakably *not* Phosphor's retro amber CRT (the §2 anti-reference held).
+- **Drift confined to hard signals (per template §3 — not treatise defects):** screens 10 and 18
+  drifted toward softer rounded surfaces (the render model does not reliably honor the §6 `0–1px`
+  radius / flat-box-drawn commitment no matter how the prompt insists), and magenta application was
+  stochastic on 18 (corrected on a single re-render). These precise tokens are pinned in the theme
+  YAML and judged from the compiled CSS, not from the renders. No re-render was spent chasing them.
+- Flipped `status: sketch → full`; the design is locked for the fine-tuner.

@@ -1,0 +1,82 @@
+schema: "0.4"
+id: cockpit-03-kb-browse-and-search
+type: image
+quality: high
+
+# The Robot Learns — a terminal-native personal knowledge base (CLI, no web UI) — KB Browse & Search screen.
+# Theme tenets (Cockpit): cool graphite panes divided by box-drawing rules, ONE electric-magenta signal for
+#   selection/focus, disciplined four-color status set, mono data + tight grotesk labels, radius 0-1px, flat (no shadows).
+# Palette (do NOT write these hex into prompt.text): canvas #0e1116, ink #c9d1d9, active-pane #161b22,
+#   dim border #30363d, magenta accent #ff2e88; status green #3fb950 / amber #d29922 / red #f85149 / blue #58a6ff.
+
+prompt:
+  system: |
+    You are a senior product designer rendering a high-fidelity mockup of a dense TERMINAL user
+    interface (TUI) — a modern "mission control" console in the lineage of k9s, btop, and lazygit.
+    This is rendered INSIDE a terminal window: no browser chrome, no address bar, no marketing
+    whitespace, no rounded cards, no drop shadows. Cool blue-graphite panes are divided by thin
+    box-drawing rules (│ ─ ┌ ┐ └ ┘ ├ ┤); a SINGLE electric-magenta signal marks the active pane and
+    the selected row; status uses a rationed four-color set (signal green, amber, red, blue), each
+    paired with a glyph. Monospaced type for all data, values and tables; a tight grotesk for pane
+    titles and field labels only. Every pixel is instrumentation; nothing is decoration. Competent,
+    cool, awake.
+  text: |
+    A 16:9 high-fidelity screenshot of a dense terminal-UI (TUI) dashboard filling the whole frame,
+    the "KB Browse & Search" console of a terminal knowledge-base tool. Cool dark blue-graphite
+    background; crisp rectangular box-drawn panes; monospaced text; NOT a web page.
+
+    OVERALL LAYOUT (top strip + three panes + bottom footer):
+    - TOP STATUS STRIP: a one-line command/search prompt in the k9s idiom — a magenta ":" caret then
+      the typed query "kb search neural nets", with a small result count and an active tab among
+      "[1]search [2]browse [3]recent" where the active tab is heavier weight with a magenta underline.
+    - LEFT PANE "TAGS / CATEGORIES" (~26% width): a titled box-drawn pane whose label rides its top
+      rule; inside, a hierarchical browse tree using ▸ and ▾ disclosure glyphs and indented mono
+      rows (e.g. "▾ machine-learning", "  ▸ transformers", "  ▸ optimization", "▸ systems",
+      "▸ languages"), each with a small right-aligned count. This pane is inactive (dim graphite border).
+    - CENTER PANE "RESULTS" (dominant, ~46%): the ACTIVE pane — its border is electric magenta and its
+      fill is one graphite step lighter. A monospaced results table with aligned columns
+      TITLE · TYPE · TAGS · UPDATED; ~8 rows mixing article rows with a couple of deck/quiz rows marked
+      by a small type glyph. ONE selected row carries a magenta left-edge bar and a highlighted band.
+    - RIGHT COLUMN, two stacked panes (~28%): top "RELATED TOPICS" showing gap-report suggestion chips
+      as small bracketed mono tags (e.g. "[attention]", "[embeddings]", "[rag]"); bottom "RECENT" a
+      compact feed of recently added/updated entries with tiny relative timestamps and a "⟳ serendipity"
+      toggle line.
+    - BOTTOM KEYBIND FOOTER: a persistent single dim row of bracketed hints —
+      "[/]search  [tab]pane  [↵]open  [t]tags  [r]recent  :cmd  ?help".
+
+    PALETTE & TYPE: cool blue-graphite neutrals throughout (never warm gray), cool off-white ink for
+    data; the ONLY saturated hue on chrome is the electric magenta on the active pane border, the
+    selected-row bar, the active tab underline and the command caret. Status glyphs where present use
+    signal green / amber / blue, each with a symbol. Monospaced tabular figures keep every column
+    aligned; pane titles and field labels are a tight grotesk in small-caps register.
+
+    SHAPE & SURFACE: crisp rectangles, radius 0-1px, no rounded cards, no pills, no drop shadows;
+    depth comes only from the box-drawing rules and the one-step-lighter active-pane tone. Titled
+    panes carry their label inline in the top rule, e.g. "│ RESULTS ├─────┤ 42 hits ├".
+
+    MOOD: a professional instrument panel — many live panes, one signal color, everything measured,
+    current, and packed edge to edge. Dense, cool, legible.
+  negative: "watermark, signature, lorem ipsum placeholder text, low-fidelity wireframe, monitor/device photograph framing, browser window chrome, rounded cards, drop shadows, marketing hero whitespace, blurry, distorted UI"
+
+output:
+  formats:
+    - format: png
+  dimensions:
+    width: 1920
+    height: 1080
+    aspect_ratio: "16:9"
+
+eval:
+  pass_threshold: 0.72
+  criteria:
+    relevance: {weight: 3, description: "Matches the screen: command/search prompt strip, tag/category browse tree, a results table mixing articles with decks/quizzes, related-topic gap chips, a recent feed"}
+    theme_fidelity: {weight: 3, description: "Cool graphite TUI with box-drawing panes, a single magenta signal on active pane/selected row/active tab, four-color status set, mono data + grotesk labels, radius 0-1, no shadows"}
+    composition: {weight: 2, description: "Dense multi-pane terminal layout with clear hierarchy, plausible real TUI; persistent keybind footer"}
+    technical: {weight: 2, description: "Sharp, correct 16:9, terminal window (no browser chrome), no artifacts"}
+  reject_if:
+    - "lorem ipsum or placeholder text visible"
+    - "watermark or signature visible"
+    - "wireframe-level fidelity instead of high-fidelity mockup"
+    - "rendered as a web page / browser instead of a terminal window"
+
+tags: [cockpit, therobotlearns.com, screen-mockup]

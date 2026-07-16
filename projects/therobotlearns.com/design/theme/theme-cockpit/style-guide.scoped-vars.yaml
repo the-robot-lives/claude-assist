@@ -1,0 +1,44 @@
+# Cockpit — scoped-var deltas (ACCUMULATE onto the base).
+#
+# DARK BRAND-TINT LEAK (base-cascade defect): theme-style-guide/style-guide.scoped-vars.yaml
+# brightens the dark brand-red/-blue/-yellow tints from LITERAL hex (#e20613 / #0047ab /
+# #f5c518 — Bauhaus red/navy/gold) rather than var(--brand-*), so in dark mode the base
+# silently reverts every non-Bauhaus theme's accent back to Bauhaus red. (Escalated against
+# the base file in conformance-npl-minimal.md §7; do not edit the base from a Stage C run.)
+#
+# Cockpit is DARK-PRIMARY: the seed brand-red carries the LIGHT magenta (#c81e6e); these
+# entries re-declare the brand-red family's DARK values as the SIGNATURE electric magenta
+# #ff2e88 (treatise §3/§6 — selection, active-pane border, primary action key). Without this
+# the cockpit accent would revert to Bauhaus red at night — exactly the mode that matters most.
+#
+# brand-blue / brand-yellow are NOT re-declared — Cockpit uses ONE brand signal (magenta) plus
+# four status seeds; those reserved slots never appear on working chrome, so they are left on
+# the base dark cascade as a documented low-impact standing caution (the same call
+# theme-npl-minimal makes for its reserved slots — see conformance-cockpit.md §Standing Cautions).
+#
+# A scoped-vars file needs its OWN `sections` (they do not inherit from the base file); the
+# generator substitutes the active theme slug into these selectors. prefix "theme" makes these
+# emit as --theme-brand-red*, which the cascade's --brand-red: var(--theme-brand-red) dark alias
+# then resolves to the signature magenta.
+scoped-vars:
+  prefix: "theme"
+  sections:
+    standard:
+      selector: 'html[data-design-theme="cockpit"]'
+      prefix: "theme"
+    dark:
+      selector: 'html[data-design-theme="cockpit"].dark'
+      prefix: "theme"
+  vars:
+    - name: brand-red
+      value:
+        - section: dark
+          value: "#ff2e88"
+    - name: brand-red-light
+      value:
+        - section: dark
+          value: "color-mix(in srgb, #ff2e88 18%, var(--surface))"
+    - name: brand-red-mid
+      value:
+        - section: dark
+          value: "color-mix(in srgb, #ff2e88 30%, var(--surface))"

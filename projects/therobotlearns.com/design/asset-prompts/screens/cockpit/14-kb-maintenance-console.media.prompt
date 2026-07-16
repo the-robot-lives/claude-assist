@@ -1,0 +1,87 @@
+schema: "0.4"
+id: cockpit-14-kb-maintenance-console
+type: image
+quality: high
+
+# The Robot Learns — a terminal-native personal knowledge base (CLI, no web UI) — KB Maintenance Console.
+# HERO screen (overlap: cockpit vs phosphor side-by-side) — must read as MODERN dense TUI, not retro CRT.
+# This is the treatise density reference (§5): 4-6 live panes on one terminal without scrolling.
+# Theme tenets (Cockpit): cool graphite panes divided by box-drawing rules, ONE electric-magenta signal for
+#   selection/focus, disciplined four-color status set, mono data + tight grotesk labels, radius 0-1px, flat.
+# Palette (do NOT write these hex into prompt.text): canvas #0e1116, ink #c9d1d9, active-pane #161b22,
+#   dim border #30363d, magenta accent #ff2e88; status green #3fb950 / amber #d29922 / red #f85149 / blue #58a6ff.
+
+prompt:
+  system: |
+    You are a senior product designer rendering a high-fidelity mockup of a dense TERMINAL user
+    interface (TUI) — a modern "mission control" console in the lineage of k9s, btop, and lazygit.
+    This is rendered INSIDE a terminal window: no browser chrome, no marketing whitespace, no rounded
+    cards, no drop shadows. Crucially this is MODERN and COOL, not a nostalgic monochrome CRT — cool
+    blue-graphite panes, multiple disciplined signal colors, no amber phosphor glow, no scanlines.
+    Thin box-drawing rules divide panes; a SINGLE electric-magenta signal marks the active pane and
+    selection; status uses a rationed four-color set (green, amber, red, blue) each with a glyph;
+    meters use block glyphs (█████░░). Monospaced data + a tight grotesk for titles/labels only. This
+    is the densest screen of the product — pack 4-6 live panes edge to edge.
+  text: |
+    A 16:9 high-fidelity screenshot of a dense terminal-UI (TUI) console filling the whole frame, the
+    "KB Maintenance Console" of a terminal knowledge-base tool — a health-and-hygiene surface. Cool
+    dark blue-graphite background; crisp box-drawn panes packed with no empty space; monospaced text;
+    block-glyph meters; NOT a web page and NOT a retro amber CRT.
+
+    OVERALL LAYOUT (top health strip + pane cluster + a centered confirm overlay + bottom footer):
+    - TOP "KB HEALTH" STRIP: three compact gauges as block meter bars with labels and mono values —
+      "INDEX ok 4,231", "SCHEMA 3 warn", "DUPES 2" — the health summary line, plus an active tab among
+      "[health] [validate] [index] [prune]" with a magenta underline.
+    - LEFT PANE "STATS" (~30%): key:value mono readouts — "articles 4,231", "decks 68", "quizzes 112",
+      "size 214 MB", "growth ▂▃▄▅▆▇ +6%/wk" — a small growth sparkline in block glyphs.
+    - CENTER PANE "VALIDATION" (dominant, the ACTIVE pane — electric-magenta border, one-step-lighter
+      fill): a monospaced results table FILE · SCHEMA · STATUS, ~9 rows, each status a glyph+color:
+      green ✓ pass, amber ! warning, red ✗ fail; one row selected with a magenta left-edge bar and a
+      highlighted band. A slim "▸ rebuild index" action row sits in the pane.
+    - RIGHT PANE "DUPLICATES" (~26%): a short list of suspected duplicate/overlapping article pairs
+      with a similarity percentage and a "merge?" hint per pair.
+    - A thin ERROR/WARNING BANNER line spanning above the footer in amber with a ! glyph:
+      "! 3 files failed schema validation — review VALIDATION".
+    - CENTERED CONFIRMATION OVERLAY: a small crisp modal box (the ONE place a single soft shadow is
+      allowed) guarding a destructive action — "Prune 14 stale articles?  [↵ apply]  [esc cancel]" with
+      the primary "apply" as a filled magenta action key and "cancel" a dim bracketed ghost.
+    - BOTTOM KEYBIND FOOTER: a persistent dim row —
+      "[v]validate  [r]rebuild  [d]dupes  [p]prune  [tab]pane  :cmd  ?help".
+
+    PALETTE & TYPE: cool blue-graphite neutrals everywhere (never warm gray, never amber), cool
+    off-white ink for data; the ONLY saturated brand hue is the electric magenta (active-pane border,
+    selected-row bar, the filled apply key, active tab). Validation status uses signal green / amber /
+    red / blue, each with a glyph so it survives grayscale. Monospaced tabular figures align every
+    column; titles and labels are a tight grotesk small-caps.
+
+    SHAPE & SURFACE: crisp rectangles, radius 0-1px, no rounded cards, no pills; flat tonal depth from
+    box-drawing rules and the one-step-lighter active tone — the only shadow anywhere is the soft one
+    under the confirm overlay.
+
+    MOOD: a professional instrument panel keeping a large knowledge base correct and fast — many live
+    panes, one signal color, disciplined status, everything measured; dense, cool, modern.
+  negative: "watermark, signature, lorem ipsum placeholder text, low-fidelity wireframe, monitor/device photograph framing, browser window chrome, rounded cards, drop shadows on panes, marketing hero whitespace, amber monochrome CRT, scanlines, retro terminal glow, blurry, distorted UI"
+
+output:
+  formats:
+    - format: png
+  dimensions:
+    width: 1920
+    height: 1080
+    aspect_ratio: "16:9"
+
+eval:
+  pass_threshold: 0.72
+  criteria:
+    relevance: {weight: 3, description: "Matches the screen: KB health gauges, a stats pane, a schema-validation results table with pass/warn/fail states, a duplicate-detection list, an error/warning banner, a destructive-action confirm modal"}
+    theme_fidelity: {weight: 3, description: "MODERN cool graphite TUI (not retro amber CRT), box-drawing panes, single magenta signal, four-color status with glyphs, block meters, mono data + grotesk labels, radius 0-1, flat except the one modal shadow"}
+    composition: {weight: 2, description: "Densest pane cluster of the set, 4-6 live panes packed edge to edge, clear hierarchy, plausible real TUI; persistent keybind footer"}
+    technical: {weight: 2, description: "Sharp, correct 16:9, terminal window (no browser chrome), no artifacts"}
+  reject_if:
+    - "lorem ipsum or placeholder text visible"
+    - "watermark or signature visible"
+    - "wireframe-level fidelity instead of high-fidelity mockup"
+    - "rendered as an amber monochrome CRT / retro terminal instead of a modern cool graphite TUI"
+    - "rendered as a web page / browser instead of a terminal window"
+
+tags: [cockpit, therobotlearns.com, screen-mockup]
