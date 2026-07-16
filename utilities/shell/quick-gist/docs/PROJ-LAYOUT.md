@@ -3,7 +3,9 @@
 ```
 quick-gist/
 ├── quick-gist                  # CLI script (bash) — main executable, single-file tool
-├── Makefile                    # compile/test no-ops + install → ~/.local/bin
+├── Makefile                    # test runner + install → ~/.local/bin
+├── tests/
+│   └── run.sh                 # Mocked end-to-end CLI regression suite
 ├── LICENSE.md                  # MIT license
 ├── README.md                   # Usage guide, options reference, install instructions
 ├── .gitignore                  # Editor swap files, .env, .envrc.local, .DS_Store
@@ -18,11 +20,12 @@ quick-gist/
 
 | File | Purpose |
 |------|---------|
-| `quick-gist` | Single-file bash CLI wrapping `gh gist` with fzf integration — create gists from files/stdin, add to existing gists, list recent gists |
-| `Makefile` | `make install` copies script to `~/.local/bin` (skips if already same file); `compile`/`test` are no-ops |
+| `quick-gist` | Self-contained bash CLI with account selection, filtered fzf integration, incremental uploads, and explicit results |
+| `tests/run.sh` | Dependency-free regression harness with mocked `gh` and `fzf` commands |
+| `Makefile` | `make test` runs the regression suite; `make install` copies the script to `~/.local/bin` |
 | `README.md` | Install, usage, flags, and `QUICK_GIST_VISIBILITY` environment variable docs |
 
 ## Notes
 
-- No `bin/` or `lib/` subfolders — the entire tool is the single `quick-gist` script.
-- Requires `gh` (authenticated); `fzf` optional for interactive picking.
+- No runtime `bin/` or `lib/` subfolders — runtime behavior remains in the single `quick-gist` script.
+- Requires authenticated `gh`; `fzf` and `rg` improve interactive picking, while `find` is the discovery fallback.

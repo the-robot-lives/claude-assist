@@ -4,6 +4,7 @@
 quick-gist/
 ├── quick-gist               # CLI script (bash)
 ├── Makefile                 # install → ~/.local/bin
+├── tests/run.sh             # mocked CLI regression suite
 ├── LICENSE.md
 ├── README.md
 ├── .gitignore

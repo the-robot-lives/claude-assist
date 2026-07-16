@@ -6,7 +6,7 @@ compile:
 	@true
 
 test:
-	@true
+	@./tests/run.sh
 
 install:
 	@mkdir -p $(INSTALL_DIR)
