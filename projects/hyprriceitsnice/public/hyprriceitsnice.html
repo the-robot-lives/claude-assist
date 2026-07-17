@@ -113,6 +113,168 @@
       -webkit-backdrop-filter: blur(12px);
     }
     .hidden { display: none !important; }
+
+    /* ── Mode tabs ── */
+    .mode-tab {
+      border: 1px solid #3b4261;
+      background: #1f2335;
+      color: #565f89;
+      border-radius: 999px;
+      padding: 0.4rem 0.9rem;
+      font-size: 12px;
+      font-weight: 600;
+      transition: all 120ms ease;
+    }
+    .mode-tab:hover { border-color: rgba(122, 162, 247, 0.45); color: #c0caf5; }
+    .mode-tab.active {
+      border-color: rgba(122, 162, 247, 0.7);
+      background: rgba(122, 162, 247, 0.15);
+      color: #7aa2f7;
+    }
+
+    /* ── Flashcard (lifted from therobotlearns flashcard review UX) ── */
+    .fc-scene {
+      perspective: 1200px;
+      width: 100%;
+      max-width: 36rem;
+      margin: 0 auto;
+    }
+    .fc-card {
+      position: relative;
+      width: 100%;
+      min-height: 16rem;
+      transform-style: preserve-3d;
+      transition: transform 0.45s cubic-bezier(0.2, 0.8, 0.2, 1);
+      cursor: pointer;
+    }
+    .fc-card.flipped { transform: rotateY(180deg); }
+    .fc-face {
+      position: absolute;
+      inset: 0;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      border-radius: 1rem;
+      border: 1px solid #3b4261;
+      background: linear-gradient(160deg, #1f2335 0%, #16161e 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      text-align: center;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.35);
+    }
+    .fc-face.back {
+      transform: rotateY(180deg);
+      border-color: rgba(187, 154, 247, 0.45);
+      background: linear-gradient(160deg, rgba(122, 162, 247, 0.12), #16161e 60%);
+    }
+    .grade-btn {
+      flex: 1;
+      min-width: 4.5rem;
+      border-radius: 0.5rem;
+      border: 1px solid #3b4261;
+      padding: 0.55rem 0.4rem;
+      font-size: 11px;
+      font-weight: 600;
+      background: #1f2335;
+      color: #c0caf5;
+      transition: all 100ms;
+    }
+    .grade-btn:hover { filter: brightness(1.15); }
+    .grade-btn.again { border-color: rgba(247, 118, 142, 0.5); color: #f7768e; }
+    .grade-btn.hard { border-color: rgba(224, 175, 104, 0.5); color: #e0af68; }
+    .grade-btn.good { border-color: rgba(122, 162, 247, 0.5); color: #7aa2f7; }
+    .grade-btn.easy { border-color: rgba(158, 206, 106, 0.5); color: #9ece6a; }
+
+    /* ── Quiz SPA patterns (from therobotlearns.com/quiz-app) ── */
+    .mc-options { display: flex; flex-direction: column; gap: 0.5rem; }
+    .mc-option {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      padding: 0.75rem 0.9rem;
+      border: 1px solid #3b4261;
+      border-radius: 0.5rem;
+      background: #16161e;
+      cursor: pointer;
+      transition: border-color 120ms, background 120ms;
+      font-size: 0.9rem;
+    }
+    .mc-option:hover:not(.disabled) { border-color: rgba(122, 162, 247, 0.5); background: #1f2335; }
+    .mc-option.option-selected {
+      border-color: #7aa2f7;
+      background: rgba(122, 162, 247, 0.12);
+    }
+    .mc-option.option-correct {
+      border-color: #9ece6a;
+      background: rgba(158, 206, 106, 0.12);
+    }
+    .mc-option.option-incorrect {
+      border-color: #f7768e;
+      background: rgba(247, 118, 142, 0.12);
+    }
+    .mc-option.disabled { cursor: default; opacity: 0.95; }
+    .mc-option input { accent-color: #7aa2f7; }
+    .explanation-box {
+      margin-top: 0.75rem;
+      padding: 0.75rem 0.9rem;
+      border-radius: 0.5rem;
+      border: 1px solid rgba(224, 175, 104, 0.35);
+      background: rgba(224, 175, 104, 0.08);
+      color: #e0af68;
+      font-size: 0.85rem;
+      line-height: 1.45;
+    }
+    .feedback-icon { margin-left: auto; font-weight: 700; }
+    .feedback-correct { color: #9ece6a; }
+    .feedback-incorrect { color: #f7768e; }
+    .quiz-progress-track {
+      height: 6px;
+      background: #292e42;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .quiz-progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #7aa2f7, #bb9af7);
+      border-radius: 999px;
+      transition: width 0.3s ease;
+    }
+    .pass-badge {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+    }
+    .pass-badge.pass { background: rgba(158, 206, 106, 0.15); color: #9ece6a; border: 1px solid rgba(158, 206, 106, 0.4); }
+    .pass-badge.fail { background: rgba(247, 118, 142, 0.15); color: #f7768e; border: 1px solid rgba(247, 118, 142, 0.4); }
+    .score-big {
+      font-size: 3rem;
+      font-weight: 800;
+      line-height: 1;
+      background: linear-gradient(90deg, #7aa2f7, #bb9af7);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .text-input {
+      width: 100%;
+      border: 1px solid #3b4261;
+      border-radius: 0.5rem;
+      background: #16161e;
+      color: #c0caf5;
+      padding: 0.65rem 0.85rem;
+      font-size: 0.95rem;
+    }
+    .text-input:focus {
+      outline: none;
+      border-color: #7aa2f7;
+      box-shadow: 0 0 0 2px rgba(122, 162, 247, 0.25);
+    }
+    .field-hint { font-size: 0.75rem; color: #565f89; margin-bottom: 0.35rem; }
   </style>
 </head>
 <body>
@@ -153,6 +315,19 @@
         </span>
       </div>
     </header>
+
+    <!-- Mode switcher: cheatsheet | flashcards | quiz -->
+    <nav class="flex flex-wrap items-center gap-2" aria-label="Mode">
+      <button type="button" class="mode-tab active" data-mode="cheatsheet">📋 Cheatsheet</button>
+      <button type="button" class="mode-tab" data-mode="flashcards">🃏 Flashcards</button>
+      <button type="button" class="mode-tab" data-mode="quiz">📝 Quiz</button>
+      <span class="ml-auto text-[10px] text-tn-comment hidden sm:inline">
+        flash / quiz UX lifted from therobotlearns.com quiz-app + flashcard review
+      </span>
+    </nav>
+
+    <!-- ========== VIEW: CHEATSHEET ========== -->
+    <div id="view-cheatsheet" class="flex flex-col gap-6">
 
     <!-- Search + filters -->
     <div class="sticky-bar -mx-1 space-y-3 rounded-xl border border-tn-border/80 bg-tn-dark/90 p-3">
@@ -262,11 +437,74 @@
 
     <!-- Bindings -->
     <section id="bindings" class="space-y-6"></section>
+    </div><!-- /view-cheatsheet -->
+
+    <!-- ========== VIEW: FLASHCARDS ========== -->
+    <div id="view-flashcards" class="hidden flex flex-col gap-5">
+      <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h2 class="text-lg font-semibold text-tn-cyan">Flashcard review</h2>
+          <p class="mt-1 text-sm text-tn-comment">
+            Flip with <kbd class="rounded border border-tn-border bg-tn-dark px-1 font-mono text-[10px]">Space</kbd>
+            · grade with <kbd class="rounded border border-tn-border bg-tn-dark px-1 font-mono text-[10px]">1–4</kbd>
+            (Again / Hard / Good / Easy). Session-only SM-2-ish scheduling.
+          </p>
+        </div>
+        <div class="flex flex-wrap gap-2">
+          <select id="fcDeckFilter" class="rounded-lg border border-tn-border bg-tn-card px-2 py-1.5 text-xs text-tn-fg">
+            <option value="all">All decks</option>
+          </select>
+          <select id="fcDirection" class="rounded-lg border border-tn-border bg-tn-card px-2 py-1.5 text-xs text-tn-fg">
+            <option value="action-keys">Action → Keys</option>
+            <option value="keys-action">Keys → Action</option>
+          </select>
+          <button type="button" id="fcShuffle" class="rounded-lg border border-tn-border bg-tn-card px-3 py-1.5 text-xs font-semibold hover:border-tn-blue/50">
+            Shuffle
+          </button>
+          <button type="button" id="fcReset" class="rounded-lg border border-tn-border bg-tn-card px-3 py-1.5 text-xs font-semibold hover:border-tn-magenta/50">
+            Reset session
+          </button>
+        </div>
+      </div>
+
+      <div class="quiz-progress-track max-w-xl mx-auto w-full">
+        <div id="fcProgressBar" class="quiz-progress-bar" style="width:0%"></div>
+      </div>
+      <div id="fcProgressLabel" class="text-center text-[11px] text-tn-comment">0 / 0</div>
+
+      <div id="fcStage" class="fc-scene">
+        <!-- filled by JS -->
+      </div>
+
+      <div id="fcGradeRow" class="mx-auto flex w-full max-w-xl flex-wrap gap-2 hidden">
+        <button type="button" class="grade-btn again" data-q="1">1 Again</button>
+        <button type="button" class="grade-btn hard" data-q="2">2 Hard</button>
+        <button type="button" class="grade-btn good" data-q="3">3 Good</button>
+        <button type="button" class="grade-btn easy" data-q="4">4 Easy</button>
+      </div>
+
+      <div id="fcDone" class="hidden mx-auto w-full max-w-xl rounded-xl border border-tn-border bg-tn-card p-6 text-center">
+        <div class="text-tn-green text-sm font-semibold uppercase tracking-wider">Deck clear</div>
+        <p id="fcDoneStats" class="mt-2 text-sm text-tn-comment"></p>
+        <button type="button" id="fcRestart" class="mt-4 rounded-lg border border-tn-blue/50 bg-tn-blue/15 px-4 py-2 text-sm font-semibold text-tn-blue">
+          Review again
+        </button>
+      </div>
+    </div>
+
+    <!-- ========== VIEW: QUIZ ========== -->
+    <div id="view-quiz" class="hidden flex flex-col gap-5">
+      <div id="quizShell" class="mx-auto w-full max-w-xl">
+        <!-- intro / questions / results rendered here -->
+      </div>
+    </div>
 
     <footer class="border-t border-tn-border/60 pt-4 pb-8 text-center text-[11px] text-tn-comment">
       Standalone HTML · Tailwind via CDN · data from
       <code class="text-tn-cyan">hyprland.conf</code> +
       <code class="text-tn-cyan">ai-workspace-extension.conf</code>.
+      Flashcards & quiz patterns adapted from
+      <code class="text-tn-magenta">therobotlearns.com/quiz-app</code>.
       SUPER+SHIFT+Q exit disabled · SUPER+Space is launcher (later bind wins).
     </footer>
   </div>
@@ -865,6 +1103,779 @@
       }
     });
 
+    /* ========== MODE SWITCHER ========== */
+    const MODES = ["cheatsheet", "flashcards", "quiz"];
+    let currentMode = "cheatsheet";
+
+    function setMode(mode) {
+      if (!MODES.includes(mode)) return;
+      currentMode = mode;
+      MODES.forEach((m) => {
+        const view = document.getElementById(`view-${m}`);
+        if (view) view.classList.toggle("hidden", m !== mode);
+      });
+      document.querySelectorAll(".mode-tab").forEach((btn) => {
+        btn.classList.toggle("active", btn.getAttribute("data-mode") === mode);
+      });
+      // Listen mode only makes sense on cheatsheet
+      if (mode !== "cheatsheet" && state.listen) setListen(false);
+      if (mode === "flashcards") fcEnsureInit();
+      if (mode === "quiz") quizEnsureInit();
+      try {
+        history.replaceState(null, "", `#${mode}`);
+      } catch (_) {}
+    }
+
+    document.querySelectorAll(".mode-tab").forEach((btn) => {
+      btn.addEventListener("click", () => setMode(btn.getAttribute("data-mode")));
+    });
+
+    /* ========== FLASHCARDS ========== */
+    // Patterns: front/back flip + grade 1–4 (therobotlearns flashcard review / SM-2-ish)
+    const fc = {
+      cards: [],
+      queue: [],
+      index: 0,
+      flipped: false,
+      direction: "action-keys",
+      filter: "all",
+      stats: { again: 0, hard: 0, good: 0, easy: 0, reviewed: 0 },
+      inited: false,
+    };
+
+    function buildFlashcards() {
+      // Basic cards from bindings (skip empty keyIds gestures without clear keys)
+      return BINDINGS.filter((b) => b.keys && b.keys.length && b.id !== "no-exit").map((b) => ({
+        id: b.id,
+        category: b.category,
+        frontAction: b.action,
+        backKeys: formatKeys(b.keys),
+        notes: b.notes || "",
+        tags: b.tags || [],
+      }));
+    }
+
+    function fcPopulateFilters() {
+      const sel = document.getElementById("fcDeckFilter");
+      const cats = CATEGORIES.filter((c) =>
+        fc.cards.some((card) => card.category === c.id)
+      );
+      sel.innerHTML =
+        `<option value="all">All decks (${fc.cards.length})</option>` +
+        cats
+          .map((c) => {
+            const n = fc.cards.filter((card) => card.category === c.id).length;
+            return `<option value="${c.id}">${c.emoji} ${c.label} (${n})</option>`;
+          })
+          .join("");
+    }
+
+    function fcRebuildQueue(shuffle) {
+      let list = fc.cards.filter(
+        (c) => fc.filter === "all" || c.category === fc.filter
+      );
+      if (shuffle) {
+        for (let i = list.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [list[i], list[j]] = [list[j], list[i]];
+        }
+      }
+      fc.queue = list;
+      fc.index = 0;
+      fc.flipped = false;
+      fc.stats = { again: 0, hard: 0, good: 0, easy: 0, reviewed: 0 };
+      fcRender();
+    }
+
+    function fcCurrent() {
+      return fc.queue[fc.index] || null;
+    }
+
+    function fcSides(card) {
+      if (fc.direction === "keys-action") {
+        return { front: card.backKeys, back: card.frontAction, frontLabel: "Keys", backLabel: "Action" };
+      }
+      return { front: card.frontAction, back: card.backKeys, frontLabel: "Action", backLabel: "Keys" };
+    }
+
+    function fcRender() {
+      const stage = document.getElementById("fcStage");
+      const gradeRow = document.getElementById("fcGradeRow");
+      const done = document.getElementById("fcDone");
+      const bar = document.getElementById("fcProgressBar");
+      const label = document.getElementById("fcProgressLabel");
+      const total = fc.queue.length;
+      const doneCount = Math.min(fc.index, total);
+      const pct = total ? Math.round((doneCount / total) * 100) : 0;
+      bar.style.width = `${pct}%`;
+      label.textContent = total
+        ? `Card ${Math.min(fc.index + 1, total)} of ${total} · reviewed ${fc.stats.reviewed}`
+        : "No cards in this deck";
+
+      if (!total || fc.index >= total) {
+        stage.innerHTML = "";
+        gradeRow.classList.add("hidden");
+        done.classList.remove("hidden");
+        document.getElementById("fcDoneStats").textContent =
+          total === 0
+            ? "Pick another deck filter."
+            : `Reviewed ${fc.stats.reviewed} · Again ${fc.stats.again} · Hard ${fc.stats.hard} · Good ${fc.stats.good} · Easy ${fc.stats.easy}`;
+        return;
+      }
+
+      done.classList.add("hidden");
+      const card = fcCurrent();
+      const sides = fcSides(card);
+      const cat = CATEGORIES.find((c) => c.id === card.category);
+      const notes = card.notes
+        ? `<p class="mt-3 text-[11px] text-tn-yellow/90 max-w-sm">${escapeHtml(card.notes)}</p>`
+        : "";
+
+      stage.innerHTML = `
+        <div class="fc-card ${fc.flipped ? "flipped" : ""}" id="fcCard" role="button" tabindex="0" aria-label="Flashcard, click or press Space to flip">
+          <div class="fc-face front">
+            <span class="text-[10px] uppercase tracking-[0.2em] text-tn-comment mb-3">${escapeHtml(sides.frontLabel)}${cat ? ` · ${cat.emoji} ${escapeHtml(cat.label)}` : ""}</span>
+            <div class="text-lg sm:text-xl font-semibold leading-snug text-tn-fg px-2">${escapeHtml(sides.front)}</div>
+            <span class="mt-6 text-[10px] text-tn-comment">Click / Space to reveal</span>
+          </div>
+          <div class="fc-face back">
+            <span class="text-[10px] uppercase tracking-[0.2em] text-tn-magenta mb-3">${escapeHtml(sides.backLabel)}</span>
+            <div class="text-xl sm:text-2xl font-bold leading-snug text-tn-cyan px-2 font-mono">${escapeHtml(sides.back)}</div>
+            ${notes}
+            <span class="mt-6 text-[10px] text-tn-comment">Grade recall below (1–4)</span>
+          </div>
+        </div>`;
+
+      document.getElementById("fcCard").addEventListener("click", fcFlip);
+      gradeRow.classList.toggle("hidden", !fc.flipped);
+    }
+
+    function fcFlip() {
+      if (!fcCurrent()) return;
+      fc.flipped = !fc.flipped;
+      fcRender();
+    }
+
+    function fcGrade(q) {
+      if (!fc.flipped || !fcCurrent()) return;
+      const map = { 1: "again", 2: "hard", 3: "good", 4: "easy" };
+      const key = map[q];
+      if (!key) return;
+      fc.stats[key]++;
+      fc.stats.reviewed++;
+      const card = fc.queue[fc.index];
+      // Again / Hard: requeue later in session (SM-2-ish re-introduce)
+      if (q === 1) {
+        fc.queue.splice(fc.index, 1);
+        const insertAt = Math.min(fc.index + 2 + Math.floor(Math.random() * 3), fc.queue.length);
+        fc.queue.splice(insertAt, 0, card);
+      } else if (q === 2) {
+        fc.queue.splice(fc.index, 1);
+        const insertAt = Math.min(fc.index + 4 + Math.floor(Math.random() * 4), fc.queue.length);
+        fc.queue.splice(insertAt, 0, card);
+      } else {
+        fc.index++;
+      }
+      fc.flipped = false;
+      fcRender();
+    }
+
+    function fcEnsureInit() {
+      if (!fc.inited) {
+        fc.cards = buildFlashcards();
+        fcPopulateFilters();
+        fcRebuildQueue(true);
+        fc.inited = true;
+
+        document.getElementById("fcDeckFilter").addEventListener("change", (e) => {
+          fc.filter = e.target.value;
+          fcRebuildQueue(true);
+        });
+        document.getElementById("fcDirection").addEventListener("change", (e) => {
+          fc.direction = e.target.value;
+          fc.flipped = false;
+          fcRender();
+        });
+        document.getElementById("fcShuffle").addEventListener("click", () => fcRebuildQueue(true));
+        document.getElementById("fcReset").addEventListener("click", () => fcRebuildQueue(true));
+        document.getElementById("fcRestart").addEventListener("click", () => fcRebuildQueue(true));
+        document.getElementById("fcGradeRow").addEventListener("click", (e) => {
+          const btn = e.target.closest("[data-q]");
+          if (!btn) return;
+          fcGrade(Number(btn.getAttribute("data-q")));
+        });
+      } else {
+        fcRender();
+      }
+    }
+
+    /* ========== QUIZ (therobotlearns quiz-app flow) ========== */
+    // intro → questions (MC / TF / multi_select / fill_in_blank) → results
+    const quiz = {
+      state: "intro", // intro | questions | results
+      questions: [],
+      index: 0,
+      answers: {},
+      submitted: {}, // per-question immediate feedback
+      result: null,
+      startTime: 0,
+      feedbackMode: "immediate",
+      passingScore: 70,
+      inited: false,
+    };
+
+    function shuffle(arr) {
+      const a = [...arr];
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+
+    function pickDistractors(correctKeys, n) {
+      const pool = BINDINGS.filter(
+        (b) => formatKeys(b.keys) !== correctKeys && b.keys.length
+      );
+      return shuffle(pool)
+        .slice(0, n)
+        .map((b) => formatKeys(b.keys));
+    }
+
+    function pickActionDistractors(correctAction, n) {
+      const pool = BINDINGS.filter((b) => b.action !== correctAction);
+      return shuffle(pool)
+        .slice(0, n)
+        .map((b) => b.action);
+    }
+
+    function buildQuizQuestions() {
+      const usable = BINDINGS.filter(
+        (b) =>
+          b.keys.length &&
+          !b.keys[0].includes("finger") &&
+          b.category !== "media" &&
+          b.id !== "no-exit"
+      );
+      const sample = shuffle(usable).slice(0, 14);
+      const questions = [];
+
+      // MC: keys for action
+      sample.slice(0, 5).forEach((b, i) => {
+        const correct = formatKeys(b.keys);
+        const options = shuffle([correct, ...pickDistractors(correct, 3)]);
+        questions.push({
+          id: `mc-keys-${b.id}-${i}`,
+          type: "multiple_choice",
+          topic: b.category,
+          difficulty: "easy",
+          question: `Which keybinding: “${b.action}”?`,
+          options,
+          correct_answer: correct,
+          explanation: `${b.action} → ${correct}${b.notes ? ". " + b.notes : ""}`,
+        });
+      });
+
+      // MC: action for keys
+      sample.slice(5, 9).forEach((b, i) => {
+        const correct = b.action;
+        const options = shuffle([correct, ...pickActionDistractors(correct, 3)]);
+        questions.push({
+          id: `mc-act-${b.id}-${i}`,
+          type: "multiple_choice",
+          topic: b.category,
+          difficulty: "medium",
+          question: `What does ${formatKeys(b.keys)} do?`,
+          options,
+          correct_answer: correct,
+          explanation: `${formatKeys(b.keys)} → ${correct}`,
+        });
+      });
+
+      // True / false from rice facts
+      const tfBank = [
+        {
+          id: "tf-exit",
+          question: "SUPER+SHIFT+Q exits Hyprland in this rice.",
+          correct_answer: false,
+          explanation: "Exit is intentionally disabled (commented out) to avoid accidents.",
+          topic: "system",
+        },
+        {
+          id: "tf-ws",
+          question: "Workspaces 1–5 are pinned to the external HDMI monitor.",
+          correct_answer: true,
+          explanation: "HDMI-A-1 owns WS 1–5; eDP-1 owns 6–9.",
+          topic: "workspaces",
+        },
+        {
+          id: "tf-term",
+          question: "The default $terminal is kitty.",
+          correct_answer: false,
+          explanation: "$terminal is ghostty. foot is used for dual-monitor tmux clients.",
+          topic: "launch",
+        },
+        {
+          id: "tf-ai",
+          question: "SUPER+A toggles the special:ai workspace.",
+          correct_answer: true,
+          explanation: "SUPER+A toggles; SUPER+SHIFT+A launches the AI layout script.",
+          topic: "ai",
+        },
+        {
+          id: "tf-space",
+          question: "SUPER+Space opens the terminal (ghostty).",
+          correct_answer: false,
+          explanation: "SUPER+Space is bound twice; the later bind wins → wofi launcher.",
+          topic: "launch",
+        },
+        {
+          id: "tf-layout",
+          question: "This rice uses the master layout by default.",
+          correct_answer: false,
+          explanation: "general.layout = dwindle (with smart_split / preserve_split).",
+          topic: "system",
+        },
+      ];
+      shuffle(tfBank)
+        .slice(0, 3)
+        .forEach((q) => {
+          questions.push({
+            ...q,
+            type: "true_false",
+            difficulty: "easy",
+          });
+        });
+
+      // Multi-select: workspaces / monitors
+      questions.push({
+        id: "ms-hdmi-ws",
+        type: "multi_select",
+        topic: "workspaces",
+        difficulty: "medium",
+        question: "Which workspaces are assigned to the external MSI monitor (HDMI-A-1)? (select all)",
+        options: ["1", "2", "3", "4", "5", "6", "7", "8", "9"],
+        correct_answers: ["1", "2", "3", "4", "5"],
+        explanation: "Workspaces 1–5 → HDMI-A-1; 6–9 → eDP-1 (laptop).",
+      });
+
+      // Fill in the blank
+      const fib = shuffle(
+        usable.filter((b) => b.keys.length <= 3 && b.category !== "media")
+      ).slice(0, 2);
+      fib.forEach((b, i) => {
+        const correct = formatKeys(b.keys);
+        questions.push({
+          id: `fib-${b.id}-${i}`,
+          type: "fill_in_blank",
+          topic: b.category,
+          difficulty: "hard",
+          question: `Type the keybinding for: ${b.action}`,
+          correct_answer: correct,
+          acceptable_answers: [
+            correct.replace(/ \+ /g, "+"),
+            correct.replace(/ \+ /g, " "),
+            correct.toLowerCase(),
+            correct.replace(/ \+ /g, "+").toLowerCase(),
+          ],
+          case_sensitive: false,
+          explanation: `Answer: ${correct}`,
+        });
+      });
+
+      return shuffle(questions).slice(0, 12);
+    }
+
+    function gradeAnswer(q, userAnswer) {
+      if (userAnswer === null || userAnswer === undefined || userAnswer === "") return "skipped";
+      switch (q.type) {
+        case "multiple_choice":
+          return userAnswer === q.correct_answer ? "correct" : "incorrect";
+        case "true_false":
+          return userAnswer === q.correct_answer ? "correct" : "incorrect";
+        case "fill_in_blank": {
+          const ua = String(userAnswer).trim();
+          const norm = (s) => s.toLowerCase().replace(/\s*\+\s*/g, "+").replace(/\s+/g, " ").trim();
+          const ca = q.case_sensitive ? ua === q.correct_answer : norm(ua) === norm(q.correct_answer);
+          if (ca) return "correct";
+          if (q.acceptable_answers?.some((a) => (q.case_sensitive ? ua === a : norm(ua) === norm(a))))
+            return "correct";
+          return "incorrect";
+        }
+        case "multi_select": {
+          const userSet = new Set(userAnswer);
+          const correctSet = new Set(q.correct_answers.map(String));
+          const allMatch =
+            userSet.size === correctSet.size && [...userSet].every((v) => correctSet.has(v));
+          if (allMatch) return "correct";
+          if ([...userSet].some((v) => correctSet.has(v))) return "partial";
+          return "incorrect";
+        }
+        default:
+          return "skipped";
+      }
+    }
+
+    function quizRenderIntro() {
+      const shell = document.getElementById("quizShell");
+      shell.innerHTML = `
+        <div class="rounded-xl border border-tn-border bg-tn-card p-6 sm:p-8 text-center shadow-lg">
+          <p class="text-[10px] uppercase tracking-[0.2em] text-tn-magenta mb-2">Quiz SPA</p>
+          <h2 class="text-2xl font-bold grad-text">Hyprland rice drill</h2>
+          <p class="mt-2 text-sm text-tn-comment">
+            Generated from your binds — multiple choice, true/false, multi-select, fill-in-blank.
+            Immediate feedback mode (therobotlearns quiz-app pattern).
+          </p>
+          <div class="mt-5 flex flex-wrap justify-center gap-3 text-xs text-tn-comment">
+            <span class="rounded-full border border-tn-border px-3 py-1">${quiz.questions.length} questions</span>
+            <span class="rounded-full border border-tn-border px-3 py-1">Pass at ${quiz.passingScore}%</span>
+            <span class="rounded-full border border-tn-border px-3 py-1">Shuffled each run</span>
+          </div>
+          <button type="button" id="quizStart" class="mt-6 rounded-lg border border-tn-blue/60 bg-tn-blue/15 px-5 py-2.5 text-sm font-semibold text-tn-blue hover:bg-tn-blue/25">
+            Start Quiz
+          </button>
+        </div>`;
+      document.getElementById("quizStart").addEventListener("click", () => {
+        quiz.state = "questions";
+        quiz.index = 0;
+        quiz.answers = {};
+        quiz.submitted = {};
+        quiz.startTime = Date.now();
+        quizRenderQuestion();
+      });
+    }
+
+    function quizHasAnswer(q) {
+      const a = quiz.answers[q.id];
+      if (a === undefined || a === null || a === "") return false;
+      if (Array.isArray(a) && a.length === 0) return false;
+      return true;
+    }
+
+    function quizRenderQuestion() {
+      const q = quiz.questions[quiz.index];
+      const shell = document.getElementById("quizShell");
+      const progress = (quiz.index / quiz.questions.length) * 100;
+      const submitted = !!quiz.submitted[q.id];
+      const value = quiz.answers[q.id];
+      const showFeedback = quiz.feedbackMode === "immediate" && submitted;
+      const cat = CATEGORIES.find((c) => c.id === q.topic);
+
+      let body = "";
+      if (q.type === "multiple_choice" || q.type === "true_false") {
+        const opts =
+          q.type === "true_false"
+            ? [
+                { label: "True", val: true },
+                { label: "False", val: false },
+              ]
+            : q.options.map((o) => ({ label: o, val: o }));
+        body = `<div class="mc-options">${opts
+          .map(({ label, val }) => {
+            const isSelected = value === val;
+            const isCorrect =
+              q.type === "true_false" ? val === q.correct_answer : val === q.correct_answer;
+            let cls = "mc-option";
+            if (showFeedback) {
+              if (isCorrect) cls += " option-correct";
+              else if (isSelected && !isCorrect) cls += " option-incorrect";
+              cls += " disabled";
+            } else if (isSelected) cls += " option-selected";
+            const icon = showFeedback
+              ? isCorrect
+                ? '<span class="feedback-icon feedback-correct">✓</span>'
+                : isSelected
+                  ? '<span class="feedback-icon feedback-incorrect">✗</span>'
+                  : ""
+              : "";
+            return `<label class="${cls}" data-val="${escapeHtml(String(val))}">
+              <input type="radio" name="q_${q.id}" ${isSelected ? "checked" : ""} ${showFeedback ? "disabled" : ""} />
+              <span>${escapeHtml(String(label))}</span>${icon}
+            </label>`;
+          })
+          .join("")}</div>`;
+      } else if (q.type === "multi_select") {
+        const selected = value || [];
+        const correctSet = new Set(q.correct_answers.map(String));
+        body = `<p class="field-hint">Select all that apply</p><div class="mc-options">${q.options
+          .map((option) => {
+            const isSelected = selected.includes(option);
+            const isCorrect = correctSet.has(option);
+            let cls = "mc-option";
+            if (showFeedback) {
+              if (isCorrect) cls += " option-correct";
+              else if (isSelected && !isCorrect) cls += " option-incorrect";
+              cls += " disabled";
+            } else if (isSelected) cls += " option-selected";
+            const icon = showFeedback
+              ? isCorrect
+                ? '<span class="feedback-icon feedback-correct">✓</span>'
+                : isSelected
+                  ? '<span class="feedback-icon feedback-incorrect">✗</span>'
+                  : ""
+              : "";
+            return `<label class="${cls}" data-opt="${escapeHtml(option)}">
+              <input type="checkbox" ${isSelected ? "checked" : ""} ${showFeedback ? "disabled" : ""} />
+              <span>${escapeHtml(option)}</span>${icon}
+            </label>`;
+          })
+          .join("")}</div>`;
+      } else if (q.type === "fill_in_blank") {
+        body = `
+          <p class="field-hint">Type the chord (e.g. SUPER + Return). Spacing around + is flexible.</p>
+          <input type="text" class="text-input" id="quizFib" placeholder="SUPER + …" value="${escapeHtml(value || "")}" ${showFeedback ? "disabled" : ""} autocomplete="off" />
+          ${
+            showFeedback
+              ? `<div class="explanation-box"><strong>Correct:</strong> ${escapeHtml(q.correct_answer)}${q.explanation ? `<p class="mt-1">${escapeHtml(q.explanation)}</p>` : ""}</div>`
+              : ""
+          }`;
+      }
+
+      if (showFeedback && q.explanation && q.type !== "fill_in_blank") {
+        body += `<div class="explanation-box">${escapeHtml(q.explanation)}</div>`;
+      }
+
+      const status = submitted ? gradeAnswer(q, value) : null;
+
+      shell.innerHTML = `
+        <div class="quiz-progress-track mb-2">
+          <div class="quiz-progress-bar" style="width:${progress}%"></div>
+        </div>
+        <div class="mb-3 flex justify-between text-[11px] text-tn-comment">
+          <span>Question ${quiz.index + 1} of ${quiz.questions.length}</span>
+          <span>${q.type.replace(/_/g, " ")}</span>
+        </div>
+        <div class="rounded-xl border border-tn-border bg-tn-card p-5 sm:p-6">
+          <div class="mb-3 flex flex-wrap gap-2">
+            ${cat ? `<span class="rounded-full bg-tn-blue/15 px-2 py-0.5 text-[10px] font-semibold text-tn-blue">${cat.emoji} ${escapeHtml(cat.label)}</span>` : ""}
+            ${q.difficulty ? `<span class="rounded-full border border-tn-border px-2 py-0.5 text-[10px] uppercase text-tn-comment">${escapeHtml(q.difficulty)}</span>` : ""}
+            ${status ? `<span class="rounded-full px-2 py-0.5 text-[10px] font-bold ${status === "correct" ? "text-tn-green bg-tn-green/15" : status === "partial" ? "text-tn-yellow bg-tn-yellow/15" : "text-tn-red bg-tn-red/15"}">${status}</span>` : ""}
+          </div>
+          <p class="text-base font-medium leading-snug mb-4">${escapeHtml(q.question)}</p>
+          <div id="quizBody">${body}</div>
+          <div class="mt-5 flex flex-wrap gap-2 justify-end">
+            ${
+              !submitted
+                ? `<button type="button" id="quizCheck" class="rounded-lg border border-tn-border bg-tn-dark px-4 py-2 text-sm font-semibold disabled:opacity-40" ${quizHasAnswer(q) ? "" : "disabled"}>Check</button>`
+                : `<button type="button" id="quizNext" class="rounded-lg border border-tn-blue/50 bg-tn-blue/15 px-4 py-2 text-sm font-semibold text-tn-blue">${
+                    quiz.index < quiz.questions.length - 1 ? "Next →" : "Finish Quiz"
+                  }</button>`
+            }
+          </div>
+        </div>`;
+
+      // wire inputs
+      if (q.type === "multiple_choice" || q.type === "true_false") {
+        shell.querySelectorAll(".mc-option").forEach((lab) => {
+          if (submitted) return;
+          lab.addEventListener("click", (e) => {
+            e.preventDefault();
+            let val = lab.getAttribute("data-val");
+            if (q.type === "true_false") val = val === "true";
+            quiz.answers[q.id] = val;
+            quizRenderQuestion();
+          });
+        });
+      } else if (q.type === "multi_select") {
+        shell.querySelectorAll(".mc-option").forEach((lab) => {
+          if (submitted) return;
+          lab.addEventListener("click", (e) => {
+            e.preventDefault();
+            const opt = lab.getAttribute("data-opt");
+            const cur = new Set(quiz.answers[q.id] || []);
+            if (cur.has(opt)) cur.delete(opt);
+            else cur.add(opt);
+            quiz.answers[q.id] = [...cur];
+            quizRenderQuestion();
+          });
+        });
+      } else if (q.type === "fill_in_blank") {
+        const input = document.getElementById("quizFib");
+        if (input && !submitted) {
+          input.addEventListener("input", () => {
+            quiz.answers[q.id] = input.value;
+            const btn = document.getElementById("quizCheck");
+            if (btn) btn.disabled = !input.value.trim();
+          });
+          input.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              document.getElementById("quizCheck")?.click();
+            }
+          });
+          input.focus();
+        }
+      }
+
+      document.getElementById("quizCheck")?.addEventListener("click", () => {
+        if (!quizHasAnswer(q)) return;
+        quiz.submitted[q.id] = true;
+        quizRenderQuestion();
+      });
+      document.getElementById("quizNext")?.addEventListener("click", () => {
+        if (quiz.index < quiz.questions.length - 1) {
+          quiz.index++;
+          quizRenderQuestion();
+        } else {
+          quizFinish();
+        }
+      });
+    }
+
+    function quizFinish() {
+      const timeTaken = Math.round((Date.now() - quiz.startTime) / 1000);
+      const results = quiz.questions.map((q) => {
+        const userAnswer = quiz.answers[q.id] ?? null;
+        const status = gradeAnswer(q, userAnswer);
+        let correctDisplay = q.correct_answer;
+        if (q.type === "true_false") correctDisplay = q.correct_answer ? "True" : "False";
+        if (q.type === "multi_select") correctDisplay = q.correct_answers.join(", ");
+        return {
+          question_id: q.id,
+          question_type: q.type,
+          question_text: q.question,
+          user_answer: userAnswer,
+          correct_answer: correctDisplay,
+          status,
+          topic: q.topic,
+        };
+      });
+      const correct = results.filter((r) => r.status === "correct").length;
+      const partial = results.filter((r) => r.status === "partial").length;
+      const total = results.length;
+      const score = Math.round(((correct + partial * 0.5) / total) * 100);
+      const topicStats = {};
+      results.forEach((r) => {
+        const t = r.topic || "general";
+        if (!topicStats[t]) topicStats[t] = { c: 0, n: 0 };
+        topicStats[t].n++;
+        if (r.status === "correct") topicStats[t].c++;
+      });
+      const weak = Object.entries(topicStats)
+        .filter(([, s]) => s.c / s.n < 0.6)
+        .map(([t]) => {
+          const cat = CATEGORIES.find((c) => c.id === t);
+          return cat ? `${cat.emoji} ${cat.label}` : t;
+        });
+
+      quiz.result = {
+        score,
+        raw_correct: correct,
+        raw_total: total,
+        passed: score >= quiz.passingScore,
+        time_taken_seconds: timeTaken,
+        questions: results,
+        weak_areas: weak,
+      };
+      quiz.state = "results";
+      quizRenderResults();
+    }
+
+    function quizRenderResults() {
+      const r = quiz.result;
+      const shell = document.getElementById("quizShell");
+      const rows = r.questions
+        .map((q, i) => {
+          const icon =
+            q.status === "correct" ? "✓" : q.status === "partial" ? "~" : q.status === "skipped" ? "—" : "✗";
+          const color =
+            q.status === "correct"
+              ? "text-tn-green"
+              : q.status === "partial"
+                ? "text-tn-yellow"
+                : q.status === "skipped"
+                  ? "text-tn-comment"
+                  : "text-tn-red";
+          const ua = Array.isArray(q.user_answer)
+            ? q.user_answer.join(", ")
+            : q.user_answer === true
+              ? "True"
+              : q.user_answer === false
+                ? "False"
+                : String(q.user_answer ?? "—");
+          return `<tr class="border-t border-tn-border/50">
+            <td class="py-2 pr-2 text-tn-comment">${i + 1}</td>
+            <td class="py-2 pr-2 text-[12px]">${escapeHtml(q.question_text)}</td>
+            <td class="py-2 pr-2 text-[11px] text-tn-dim">${escapeHtml(ua)}</td>
+            <td class="py-2 ${color} font-bold text-center">${icon}</td>
+          </tr>`;
+        })
+        .join("");
+
+      shell.innerHTML = `
+        <div class="rounded-xl border border-tn-border bg-tn-card p-6">
+          <div class="flex items-start justify-between gap-3">
+            <div>
+              <h2 class="text-lg font-semibold">Results</h2>
+              <p class="text-[11px] text-tn-comment mt-0.5">Hyprland rice drill</p>
+            </div>
+            <span class="pass-badge ${r.passed ? "pass" : "fail"}">${r.passed ? "PASSED" : "FAILED"}</span>
+          </div>
+          <div class="mt-5 text-center">
+            <div class="score-big">${r.score}%</div>
+            <div class="mt-2 text-sm text-tn-comment">
+              ${r.raw_correct} / ${r.raw_total} correct
+              · ${Math.floor(r.time_taken_seconds / 60)}m ${r.time_taken_seconds % 60}s
+            </div>
+            <div class="text-[11px] text-tn-comment mt-1">Passing score: ${quiz.passingScore}%</div>
+          </div>
+          ${
+            r.weak_areas.length
+              ? `<div class="mt-5 rounded-lg border border-tn-yellow/30 bg-tn-yellow/5 p-3">
+                  <h3 class="text-xs font-semibold text-tn-yellow mb-1">Areas to review</h3>
+                  <ul class="text-[12px] text-tn-fg/85 space-y-0.5">${r.weak_areas.map((a) => `<li>▹ ${escapeHtml(a)}</li>`).join("")}</ul>
+                </div>`
+              : ""
+          }
+          <div class="mt-5 overflow-x-auto">
+            <table class="w-full text-left text-[12px]">
+              <thead class="text-[10px] uppercase tracking-wider text-tn-comment">
+                <tr><th class="pb-2">#</th><th class="pb-2">Question</th><th class="pb-2">Yours</th><th class="pb-2 text-center">✓</th></tr>
+              </thead>
+              <tbody>${rows}</tbody>
+            </table>
+          </div>
+          <div class="mt-6 flex flex-wrap gap-2 justify-center">
+            <button type="button" id="quizRetry" class="rounded-lg border border-tn-blue/50 bg-tn-blue/15 px-4 py-2 text-sm font-semibold text-tn-blue">Retry Quiz</button>
+            <button type="button" id="quizToCards" class="rounded-lg border border-tn-border bg-tn-dark px-4 py-2 text-sm font-semibold">Practice flashcards</button>
+          </div>
+        </div>`;
+
+      document.getElementById("quizRetry").addEventListener("click", () => {
+        quiz.questions = buildQuizQuestions();
+        quiz.state = "intro";
+        quiz.result = null;
+        quizRenderIntro();
+      });
+      document.getElementById("quizToCards").addEventListener("click", () => setMode("flashcards"));
+    }
+
+    function quizEnsureInit() {
+      if (!quiz.inited) {
+        quiz.questions = buildQuizQuestions();
+        quiz.inited = true;
+      }
+      if (quiz.state === "intro") quizRenderIntro();
+      else if (quiz.state === "questions") quizRenderQuestion();
+      else if (quiz.state === "results") quizRenderResults();
+    }
+
+    /* ========== GLOBAL KEYS (flashcard grades when in that mode) ========== */
+    window.addEventListener("keydown", (e) => {
+      if (currentMode === "flashcards" && !isTypingTarget(e)) {
+        if (e.key === " " || e.code === "Space") {
+          e.preventDefault();
+          fcFlip();
+          return;
+        }
+        if (["1", "2", "3", "4"].includes(e.key) && fc.flipped) {
+          e.preventDefault();
+          fcGrade(Number(e.key));
+          return;
+        }
+      }
+    }, true);
+
     /* ========== INIT ========== */
     // Peer link: when opened as file://, hide Next.js nav (no server). When under Next public/, link home.
     (function peerLink() {
@@ -886,6 +1897,10 @@
     renderKeyboard();
     renderFilters();
     renderBindings();
+
+    // Deep-link: #flashcards | #quiz | #cheatsheet
+    const hash = (location.hash || "").replace(/^#/, "");
+    if (MODES.includes(hash)) setMode(hash);
   </script>
 </body>
 </html>

@@ -5,7 +5,7 @@ Hyprland cheat sheet for the dual-monitor Tokyo Night rice — **three peers, si
 | Peer | Path | When to use |
 |------|------|-------------|
 | **Next.js app** | `src/` · `pnpm dev` | Full app, typed data (`src/lib/bindings.ts`), local server |
-| **Standalone HTML** | `standalone/hyprriceitsnice.html` | Zero install, open in browser, Tailwind CDN |
+| **Standalone HTML** | `standalone/hyprriceitsnice.html` | Zero install · cheatsheet **+ flashcards + quiz** (CDN) |
 | **Markdown** | `cheatsheet.md` | Static notes / grep / offline plain text |
 
 Also mirrored next to the rice:
@@ -53,10 +53,13 @@ pnpm open:html
 
 # or while Next is running
 # http://localhost:3000/hyprriceitsnice.html
+# deep links: #cheatsheet | #flashcards | #quiz
 ```
 
 - One file, vanilla JS  
 - Tailwind via `cdn.tailwindcss.com` (needs network)  
+- **Modes:** Cheatsheet · Flashcards · Quiz  
+- Flashcard/quiz UX lifted from `therobotlearns.com/quiz-app` (MC, T/F, multi-select, fill-in-blank, results) + flashcard flip + 1–4 grade  
 - Keep `standalone/` and `public/` in sync after edits:
 
 ```bash
