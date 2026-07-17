@@ -2,6 +2,7 @@ mod audit;
 mod catalog;
 mod cli;
 mod config;
+mod context;
 mod kinds;
 mod link;
 mod sources;
@@ -46,10 +47,7 @@ fn run() -> Result<ExitCode> {
     }
 
     let cfg = AppConfig::load(cli.config.as_deref())?;
-    let catalog_path = cli
-        .catalog
-        .clone()
-        .or_else(|| cfg.catalog.clone());
+    let catalog_path = cli.catalog.clone().or_else(|| cfg.catalog.clone());
     let cat = catalog::Catalog::load(catalog_path.as_deref())?;
 
     match cli.command {
@@ -331,6 +329,29 @@ fn run() -> Result<ExitCode> {
         Commands::Status => {
             status::print_status(&cfg)?;
         }
+        Commands::Context {
+            kind,
+            provider,
+            selection,
+            context_window,
+            frontmatter_limit_bytes,
+            json,
+        } => {
+            let providers = cfg.resolve_providers(provider.as_deref())?;
+            let reports = context::build_reports(
+                &cfg,
+                &kind.kinds(),
+                &providers,
+                selection,
+                context_window,
+                frontmatter_limit_bytes,
+            )?;
+            if json {
+                println!("{}", serde_json::to_string_pretty(&reports)?);
+            } else {
+                print!("{}", context::format_text(&reports));
+            }
+        }
         Commands::Catalog { action } => match action {
             CatalogCmd::Init { force } => {
                 let path = catalog_path
@@ -427,7 +448,12 @@ fn default_catalog_path() -> PathBuf {
         .join("catalog.yaml")
 }
 
-fn resolve_names(cfg: &AppConfig, kind: Kind, name: Option<&str>, all: bool) -> Result<Vec<String>> {
+fn resolve_names(
+    cfg: &AppConfig,
+    kind: Kind,
+    name: Option<&str>,
+    all: bool,
+) -> Result<Vec<String>> {
     if all {
         let (items, _) = discover(cfg, kind)?;
         return Ok(items.keys().cloned().collect());

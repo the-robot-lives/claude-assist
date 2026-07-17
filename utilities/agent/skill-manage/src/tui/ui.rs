@@ -1,4 +1,5 @@
 use super::app::{App, Mode, Screen};
+use crate::context::codex_fallback_skill_budget_chars;
 use crate::kinds::InstallStatus;
 use ratatui::layout::{Constraint, Direction, Layout, Rect};
 use ratatui::style::{Color, Modifier, Style};
@@ -171,12 +172,27 @@ fn draw_browse(f: &mut Frame, area: Rect, app: &App) {
                 .unwrap_or_default();
             let wts = app.catalog.work_types_for(row.source.kind, &row.name);
             format!(
-                "{}\npath:  {}\ndest:  {}\nstatus: {}  provider: {}\nwork_types: {}\nnotes: {}",
+                "{}\npath:  {}\ndest:  {}\nstatus: {}  provider: {}\nfrontmatter: {} bytes · {} chars · {} fields\nname: {} chars · title: {} chars · description: {} chars\nwork_types: {}\nnotes: {}",
                 row.name,
                 row.path.display(),
                 dest,
                 row.status.as_str(),
                 app.provider,
+                row.source.frontmatter_bytes,
+                row.source.frontmatter_chars,
+                row.source.frontmatter_fields,
+                row.source
+                    .frontmatter_name
+                    .as_deref()
+                    .map_or(0, |value| value.chars().count()),
+                row.source
+                    .title
+                    .as_deref()
+                    .map_or(0, |value| value.chars().count()),
+                row.source
+                    .description
+                    .as_deref()
+                    .map_or(0, |value| value.chars().count()),
                 if wts.is_empty() {
                     "—".into()
                 } else {
@@ -188,14 +204,12 @@ fn draw_browse(f: &mut Frame, area: Rect, app: &App) {
         None => "no items".into(),
     };
     f.render_widget(
-        Paragraph::new(detail)
-            .wrap(Wrap { trim: true })
-            .block(
-                Block::default()
-                    .borders(Borders::ALL)
-                    .title(" Detail ")
-                    .border_style(Style::default().fg(Color::Gray)),
-            ),
+        Paragraph::new(detail).wrap(Wrap { trim: true }).block(
+            Block::default()
+                .borders(Borders::ALL)
+                .title(" Detail ")
+                .border_style(Style::default().fg(Color::Gray)),
+        ),
         cols[1],
     );
 }
@@ -261,9 +275,7 @@ fn draw_profiles(f: &mut Frame, area: Rect, app: &App) {
                 let g = status_glyph(*st);
                 let text = format!(" {g} {:<10} {}", kind.as_str(), name);
                 let style = if sel {
-                    Style::default()
-                        .bg(Color::DarkGray)
-                        .fg(status_color(*st))
+                    Style::default().bg(Color::DarkGray).fg(status_color(*st))
                 } else {
                     Style::default().fg(status_color(*st))
                 };
@@ -280,10 +292,7 @@ fn draw_profiles(f: &mut Frame, area: Rect, app: &App) {
                         lines.push(Line::from(format!(" {ep}: {}", prof.description)));
                         for file in &prof.files {
                             let mark = if file.path.exists() { "ok" } else { "MISSING" };
-                            lines.push(Line::from(format!(
-                                "   [{mark}] {}",
-                                file.path.display()
-                            )));
+                            lines.push(Line::from(format!("   [{mark}] {}", file.path.display())));
                         }
                     } else {
                         lines.push(Line::from(format!(" {ep} (unknown)")));
@@ -313,6 +322,24 @@ fn draw_profiles(f: &mut Frame, area: Rect, app: &App) {
 
 fn draw_footer(f: &mut Frame, area: Rect, app: &App) {
     let (en, dis, real, broken) = app.counts();
+    let (frontmatter_bytes, _, codex_chars) = app.context_totals();
+    let context = codex_chars.map_or_else(
+        || format!("fm {}B", frontmatter_bytes),
+        |chars| {
+            let limit = codex_fallback_skill_budget_chars();
+            let mark = if chars > limit {
+                "EXCEEDED"
+            } else if chars.saturating_mul(100) >= limit.saturating_mul(80) {
+                "NEAR"
+            } else {
+                "ok"
+            };
+            format!(
+                "fm {}B · codex {}/{}c {}",
+                frontmatter_bytes, chars, limit, mark
+            )
+        },
+    );
     let stats = if app.screen == Screen::Profiles {
         format!(
             "{} work types · provider {} · {}",
@@ -322,12 +349,13 @@ fn draw_footer(f: &mut Frame, area: Rect, app: &App) {
         )
     } else {
         format!(
-            "{} shown · {} on · {} off · {} real · {} broken · {}",
+            "{} shown · {} on · {} off · {} real · {} broken · {} · {}",
             app.filtered.len(),
             en,
             dis,
             real,
             broken,
+            context,
             app.message
         )
     };
@@ -392,10 +420,7 @@ fn draw_confirm(f: &mut Frame, area: Rect, app: &App) {
 }
 
 fn draw_edit(f: &mut Frame, area: Rect, app: &App) {
-    let name = app
-        .current_row()
-        .map(|r| r.name.as_str())
-        .unwrap_or("?");
+    let name = app.current_row().map(|r| r.name.as_str()).unwrap_or("?");
     let field_style = |i: usize| {
         if app.edit_field == i {
             Style::default()

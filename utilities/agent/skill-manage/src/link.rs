@@ -25,7 +25,12 @@ pub fn classify(
     dest: &Path,
     expected_source: Option<&Path>,
 ) -> InstallStatus {
-    if !dest.exists() && !dest.symlink_metadata().map(|m| m.file_type().is_symlink()).unwrap_or(false) {
+    if !dest.exists()
+        && !dest
+            .symlink_metadata()
+            .map(|m| m.file_type().is_symlink())
+            .unwrap_or(false)
+    {
         // dangling symlink still "exists" via symlink_metadata
         if dest.symlink_metadata().is_ok() {
             // continue below
@@ -92,10 +97,7 @@ pub fn enable_item(
     dry_run: bool,
 ) -> Result<LinkAction> {
     let Some(kind_dir) = cfg.kind_dir(provider, item.kind) else {
-        bail!(
-            "provider {provider} has no {} dir configured",
-            item.kind
-        );
+        bail!("provider {provider} has no {} dir configured", item.kind);
     };
     // Never touch codex .system
     if kind_dir
@@ -156,8 +158,7 @@ pub fn enable_item(
 
     if !dry_run {
         if let Some(parent) = dest.parent() {
-            fs::create_dir_all(parent)
-                .with_context(|| format!("create {}", parent.display()))?;
+            fs::create_dir_all(parent).with_context(|| format!("create {}", parent.display()))?;
         }
         // Remove leftover after backup if still present
         if dest.symlink_metadata().is_ok() {
@@ -211,7 +212,9 @@ pub fn disable_item(
         });
     }
 
-    let meta = dest.symlink_metadata().with_context(|| format!("stat {}", dest.display()))?;
+    let meta = dest
+        .symlink_metadata()
+        .with_context(|| format!("stat {}", dest.display()))?;
     if !meta.file_type().is_symlink() {
         bail!(
             "{} is a real path (not a managed symlink); refuse to remove: {}",
@@ -274,18 +277,11 @@ fn backup_path(path: &Path) -> Result<()> {
     let ts = Local::now().format("%Y%m%d%H%M%S");
     let bak = path.with_file_name(format!(
         "{}.bak.{}",
-        path.file_name()
-            .and_then(|n| n.to_str())
-            .unwrap_or("item"),
+        path.file_name().and_then(|n| n.to_str()).unwrap_or("item"),
         ts
     ));
-    fs::rename(path, &bak).with_context(|| {
-        format!(
-            "backup {} -> {}",
-            path.display(),
-            bak.display()
-        )
-    })?;
+    fs::rename(path, &bak)
+        .with_context(|| format!("backup {} -> {}", path.display(), bak.display()))?;
     Ok(())
 }
 
@@ -331,7 +327,11 @@ mod tests {
             priority: 10,
             source_root: src.clone(),
             frontmatter_name: Some("demo".into()),
+            title: None,
             description: Some("d".into()),
+            frontmatter_bytes: 0,
+            frontmatter_chars: 0,
+            frontmatter_fields: 0,
         };
 
         let act = enable_item(&cfg, Provider::Claude, &item, false, false).unwrap();
@@ -341,8 +341,15 @@ mod tests {
         let act2 = enable_item(&cfg, Provider::Claude, &item, false, false).unwrap();
         assert!(!act2.changed);
 
-        let dis = disable_item(&cfg, Provider::Claude, Kind::Skills, "demo", Some(&item), false)
-            .unwrap();
+        let dis = disable_item(
+            &cfg,
+            Provider::Claude,
+            Kind::Skills,
+            "demo",
+            Some(&item),
+            false,
+        )
+        .unwrap();
         assert!(dis.changed);
         assert!(!prov.join("skills/demo").exists());
     }
@@ -353,7 +360,11 @@ mod tests {
         let src = tmp.path().join("repo");
         let skill = src.join("demo");
         fs::create_dir_all(&skill).unwrap();
-        fs::write(skill.join("SKILL.md"), "---\nname: demo\ndescription: d\n---\n").unwrap();
+        fs::write(
+            skill.join("SKILL.md"),
+            "---\nname: demo\ndescription: d\n---\n",
+        )
+        .unwrap();
         let prov = tmp.path().join("claude");
         fs::create_dir_all(prov.join("skills/demo")).unwrap();
         let cfg = test_cfg(&src, &prov);
@@ -364,7 +375,11 @@ mod tests {
             priority: 10,
             source_root: src,
             frontmatter_name: None,
+            title: None,
             description: None,
+            frontmatter_bytes: 0,
+            frontmatter_chars: 0,
+            frontmatter_fields: 0,
         };
         assert!(enable_item(&cfg, Provider::Claude, &item, false, false).is_err());
         let act = enable_item(&cfg, Provider::Claude, &item, true, false).unwrap();

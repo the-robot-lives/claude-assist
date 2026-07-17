@@ -1,3 +1,4 @@
+use crate::context::ContextSelection;
 use crate::kinds::{InstallStatus, Kind};
 use clap::{Parser, Subcommand, ValueEnum};
 
@@ -166,6 +167,31 @@ pub enum Commands {
 
     /// Summary counts per kind × provider
     Status,
+
+    /// Measure selected frontmatter and provider context-budget usage
+    Context {
+        #[arg(value_enum, default_value_t = KindFilter::All)]
+        kind: KindFilter,
+
+        /// Provider: claude|codex|grok|all
+        #[arg(long)]
+        provider: Option<String>,
+
+        /// Count active provider entries, managed symlinks only, or all sources
+        #[arg(long, value_enum, default_value_t = ContextSelection::Active)]
+        selection: ContextSelection,
+
+        /// Model context window in tokens; Codex budgets 2% for skill metadata
+        #[arg(long)]
+        context_window: Option<usize>,
+
+        /// Optional raw frontmatter byte cap for any provider/runner
+        #[arg(long)]
+        frontmatter_limit_bytes: Option<usize>,
+
+        #[arg(long)]
+        json: bool,
+    },
 
     /// Catalog operations
     Catalog {

@@ -4,7 +4,9 @@ use std::fmt;
 use std::path::{Path, PathBuf};
 
 /// Artifact kind managed by skill-manage.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, ValueEnum, Serialize, Deserialize)]
+#[derive(
+    Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, ValueEnum, Serialize, Deserialize,
+)]
 #[serde(rename_all = "lowercase")]
 pub enum Kind {
     Skills,
@@ -128,8 +130,13 @@ pub struct SourceItem {
     pub source_root: PathBuf,
     /// YAML frontmatter name if present.
     pub frontmatter_name: Option<String>,
-    #[allow(dead_code)]
+    /// YAML frontmatter title if present.
+    pub title: Option<String>,
     pub description: Option<String>,
+    /// Exact frontmatter size including opening/closing delimiters.
+    pub frontmatter_bytes: usize,
+    pub frontmatter_chars: usize,
+    pub frontmatter_fields: usize,
 }
 
 impl SourceItem {

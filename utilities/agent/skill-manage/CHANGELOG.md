@@ -1,6 +1,9 @@
 # Changelog — utilities/agent/skill-manage
 
 ## [Unreleased]
+- Context-budget reporting added: exact aggregate/per-item YAML frontmatter bytes,
+  characters, estimated tokens, field sizes, Codex skill metadata estimates, and
+  TUI warnings for active selections (2026-07-17)
 - NPL FAQ docs added under `docs/`: `PROJ-FAQ.md` + `.summary.md` — why/when/compared-to-what coverage cross-linked to PROJ-HOWTO (2026-07-17)
 - NPL howto docs added under `docs/`: `PROJ-HOWTO.md` + `.summary.md`, plus `docs/howto/work-type-bundles.md` extraction for catalog-driven bulk enable (2026-07-17)
 - NPL architecture/layout docs added under `docs/`: `PROJ-ARCH.md`, `PROJ-LAYOUT.md` plus their `.summary.md` companions (`ff72b3565bf`, 2026-07-16)

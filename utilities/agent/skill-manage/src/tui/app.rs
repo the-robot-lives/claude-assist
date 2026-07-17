@@ -1,5 +1,6 @@
 use crate::catalog::Catalog;
 use crate::config::AppConfig;
+use crate::context::{active_frontmatter_totals, codex_item_rendered_chars, is_active_status};
 use crate::kinds::{InstallStatus, Kind, Provider, SourceItem};
 use crate::link::{classify, disable_item, enable_item};
 use crate::sources::discover;
@@ -154,7 +155,9 @@ impl App {
             focus_right: false,
             filter: String::new(),
             status_filter: None,
-            message: String::from("space toggle · / filter · 1-3 provider · g profiles · ? help · q quit"),
+            message: String::from(
+                "space toggle · / filter · 1-3 provider · g profiles · ? help · q quit",
+            ),
             pending_replace: None,
             edit_tags: String::new(),
             edit_work_types: String::new(),
@@ -269,10 +272,18 @@ impl App {
         };
         let mut out = Vec::new();
         for n in &wt.skills {
-            out.push((Kind::Skills, n.clone(), status_by_name(&self.cfg, self.provider, Kind::Skills, n)));
+            out.push((
+                Kind::Skills,
+                n.clone(),
+                status_by_name(&self.cfg, self.provider, Kind::Skills, n),
+            ));
         }
         for n in &wt.agents {
-            out.push((Kind::Agents, n.clone(), status_by_name(&self.cfg, self.provider, Kind::Agents, n)));
+            out.push((
+                Kind::Agents,
+                n.clone(),
+                status_by_name(&self.cfg, self.provider, Kind::Agents, n),
+            ));
         }
         for n in &wt.commands {
             out.push((
@@ -462,9 +473,7 @@ impl App {
                 self.apply_filter();
                 self.message = format!(
                     "status filter: {}",
-                    self.status_filter
-                        .map(|s| s.as_str())
-                        .unwrap_or("all")
+                    self.status_filter.map(|s| s.as_str()).unwrap_or("all")
                 );
             }
             _ => {}
@@ -572,14 +581,7 @@ impl App {
         match status {
             InstallStatus::Enabled => {
                 let item = self.rows[fidx].source.clone();
-                match disable_item(
-                    &self.cfg,
-                    self.provider,
-                    kind,
-                    &name,
-                    Some(&item),
-                    false,
-                ) {
+                match disable_item(&self.cfg, self.provider, kind, &name, Some(&item), false) {
                     Ok(act) => {
                         self.message = format!("{} {}/{}", act.message, self.provider, name);
                     }
@@ -620,7 +622,13 @@ impl App {
         let name = item.name.clone();
         match enable_item(&self.cfg, self.provider, &item, replace, false) {
             Ok(act) => {
-                self.message = format!("{} {}/{} -> {}", act.message, act.provider, name, act.dest.display());
+                self.message = format!(
+                    "{} {}/{} -> {}",
+                    act.message,
+                    act.provider,
+                    name,
+                    act.dest.display()
+                );
             }
             Err(e) => self.message = format!("error: {e}"),
         }
@@ -767,6 +775,25 @@ impl App {
         }
         (en, dis, real, broken)
     }
+
+    pub fn context_totals(&self) -> (usize, usize, Option<usize>) {
+        let rows: Vec<_> = self
+            .rows
+            .iter()
+            .map(|row| (row.status, &row.source))
+            .collect();
+        let (bytes, chars) = active_frontmatter_totals(&rows);
+        let codex_chars = (self.provider == Provider::Codex
+            && self.screen.kind() == Some(Kind::Skills))
+        .then(|| {
+            self.rows
+                .iter()
+                .filter(|row| is_active_status(row.status))
+                .map(|row| codex_item_rendered_chars(&row.source))
+                .sum()
+        });
+        (bytes, chars, codex_chars)
+    }
 }
 
 fn split_csv(s: &str) -> Vec<String> {
@@ -793,4 +820,3 @@ fn status_by_name(cfg: &AppConfig, provider: Provider, kind: Kind, name: &str) -
     };
     status_for(cfg, provider, item)
 }
-

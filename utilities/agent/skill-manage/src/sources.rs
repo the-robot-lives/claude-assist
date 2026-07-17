@@ -1,6 +1,7 @@
 use crate::config::{AppConfig, SourceRoot};
 use crate::kinds::{Kind, SourceItem};
 use anyhow::Result;
+use serde_yaml::Value;
 use std::collections::BTreeMap;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -12,7 +13,10 @@ const SKILL_SKIP: &[&str] = &["shared", "evals"];
 pub fn discover(
     cfg: &AppConfig,
     kind: Kind,
-) -> Result<(BTreeMap<String, SourceItem>, Vec<(String, PathBuf, PathBuf)>)> {
+) -> Result<(
+    BTreeMap<String, SourceItem>,
+    Vec<(String, PathBuf, PathBuf)>,
+)> {
     let mut roots: Vec<&SourceRoot> = cfg.source_roots(kind).iter().collect();
     roots.sort_by_key(|r| r.priority);
 
@@ -57,15 +61,19 @@ fn scan_skills(root: &Path, priority: i32) -> Result<Vec<SourceItem>> {
         if !skill_md.is_file() {
             continue;
         }
-        let (fm_name, desc) = parse_frontmatter_meta(&skill_md);
+        let meta = parse_frontmatter(&skill_md);
         out.push(SourceItem {
             kind: Kind::Skills,
             name,
             path,
             priority,
             source_root: root.to_path_buf(),
-            frontmatter_name: fm_name,
-            description: desc,
+            frontmatter_name: meta.name,
+            title: meta.title,
+            description: meta.description,
+            frontmatter_bytes: meta.raw_bytes,
+            frontmatter_chars: meta.raw_chars,
+            frontmatter_fields: meta.field_count,
         });
     }
     Ok(out)
@@ -87,50 +95,91 @@ fn scan_md_files(kind: Kind, root: &Path, priority: i32) -> Result<Vec<SourceIte
             _ => continue,
         };
         let name = fname.trim_end_matches(".md").to_string();
-        let (fm_name, desc) = parse_frontmatter_meta(&path);
+        let meta = parse_frontmatter(&path);
         out.push(SourceItem {
             kind,
             name,
             path,
             priority,
             source_root: root.to_path_buf(),
-            frontmatter_name: fm_name,
-            description: desc,
+            frontmatter_name: meta.name,
+            title: meta.title,
+            description: meta.description,
+            frontmatter_bytes: meta.raw_bytes,
+            frontmatter_chars: meta.raw_chars,
+            frontmatter_fields: meta.field_count,
         });
     }
     Ok(out)
 }
 
-/// Parse simple YAML frontmatter for `name` and `description`.
-pub fn parse_frontmatter_meta(path: &Path) -> (Option<String>, Option<String>) {
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct FrontmatterMeta {
+    pub name: Option<String>,
+    pub title: Option<String>,
+    pub description: Option<String>,
+    pub raw_bytes: usize,
+    pub raw_chars: usize,
+    pub field_count: usize,
+}
+
+/// Parse YAML frontmatter and retain the exact delimited section size.
+pub fn parse_frontmatter(path: &Path) -> FrontmatterMeta {
     let Ok(text) = fs::read_to_string(path) else {
-        return (None, None);
+        return FrontmatterMeta::default();
     };
-    let Some(rest) = text.strip_prefix("---") else {
-        return (None, None);
+    parse_frontmatter_text(&text)
+}
+
+fn parse_frontmatter_text(text: &str) -> FrontmatterMeta {
+    let Some((yaml, raw)) = extract_frontmatter(text) else {
+        return FrontmatterMeta::default();
     };
-    let Some(end) = rest.find("\n---") else {
-        return (None, None);
+    let value: Value = match serde_yaml::from_str(yaml) {
+        Ok(value) => value,
+        Err(_) => Value::Null,
     };
-    let yaml = &rest[..end];
-    let mut name = None;
-    let mut desc = None;
-    for line in yaml.lines() {
-        let line = line.trim();
-        if let Some(v) = line.strip_prefix("name:") {
-            let v = v.trim().trim_matches('"').trim_matches('\'').to_string();
-            if !v.is_empty() {
-                name = Some(v);
-            }
-        } else if let Some(v) = line.strip_prefix("description:") {
-            let v = v.trim().trim_matches('"').trim_matches('\'').to_string();
-            if !v.is_empty() {
-                // may be multi-line quoted; take first line only for list display
-                desc = Some(v);
-            }
-        }
+    let mapping = value.as_mapping();
+    FrontmatterMeta {
+        name: mapping.and_then(|m| string_field(m, "name")),
+        title: mapping.and_then(|m| string_field(m, "title")),
+        description: mapping.and_then(|m| string_field(m, "description")),
+        raw_bytes: raw.len(),
+        raw_chars: raw.chars().count(),
+        field_count: mapping.map_or(0, serde_yaml::Mapping::len),
     }
-    (name, desc)
+}
+
+fn extract_frontmatter(text: &str) -> Option<(&str, &str)> {
+    let first_end = text.find('\n')? + 1;
+    if text[..first_end].trim_end_matches(['\r', '\n']) != "---" {
+        return None;
+    }
+
+    let mut offset = first_end;
+    for line in text[first_end..].split_inclusive('\n') {
+        let next = offset + line.len();
+        if line.trim_end_matches(['\r', '\n']) == "---" {
+            return Some((&text[first_end..offset], &text[..next]));
+        }
+        offset = next;
+    }
+    None
+}
+
+fn string_field(mapping: &serde_yaml::Mapping, key: &str) -> Option<String> {
+    mapping
+        .get(Value::String(key.to_string()))
+        .and_then(Value::as_str)
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
+        .map(ToOwned::to_owned)
+}
+
+/// Parse YAML frontmatter for `name` and `description`.
+pub fn parse_frontmatter_meta(path: &Path) -> (Option<String>, Option<String>) {
+    let meta = parse_frontmatter(path);
+    (meta.name, meta.description)
 }
 
 /// Check skill structure: SKILL.md exists with name + description in frontmatter.
@@ -193,5 +242,22 @@ mod tests {
         }];
         let (items, _) = discover(&cfg, Kind::Agents).unwrap();
         assert!(items.contains_key("npl-tasker"));
+    }
+
+    #[test]
+    fn parses_multiline_frontmatter_and_exact_size() {
+        let text = "---\nname: demo\ntitle: Demo Skill\ndescription: >-\n  Does useful work\n  across lines.\nrunners:\n  - codex\n---\n# Body\n";
+        let meta = parse_frontmatter_text(text);
+        let raw = text.split("# Body").next().unwrap();
+
+        assert_eq!(meta.name.as_deref(), Some("demo"));
+        assert_eq!(meta.title.as_deref(), Some("Demo Skill"));
+        assert_eq!(
+            meta.description.as_deref(),
+            Some("Does useful work across lines.")
+        );
+        assert_eq!(meta.field_count, 4);
+        assert_eq!(meta.raw_bytes, raw.len());
+        assert_eq!(meta.raw_chars, raw.chars().count());
     }
 }
