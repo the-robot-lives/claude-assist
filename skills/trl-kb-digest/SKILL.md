@@ -1,6 +1,10 @@
 ---
 name: trl-kb-digest
-description: >
+description: >-
+  Synthesize cited research into audience-calibrated digests, from ELI5 to doctoral
+  depth, with cross-references and gap analysis. Use for topic summaries, literature
+  syntheses, explainers, knowledge briefs, or any requested complexity level.
+extended_description: >
   Synthesize research into knowledge digests calibrated to any complexity level, from
   ELI5 through doctoral depth, with source citations and cross-references. Use this
   skill when the user wants to understand a topic at a specific level, get a summary
@@ -8,6 +12,8 @@ description: >
   audience level, or generate a knowledge brief — even if they don't say "digest."
   Also trigger when users mention ELI5, explain like I'm five, topic summary,
   knowledge synthesis, research brief, or complexity-adapted explanation.
+ch-description: >-
+  將有引文的研究綜整為符合讀者程度的知識摘要，涵蓋 ELI5 至博士深度，並提供交叉參照與缺口分析。適用於主題摘要、文獻綜述、解說、知識簡報，或任何指定難度的說明。
 ---
 
 # KB Digest

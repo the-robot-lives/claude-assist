@@ -1,6 +1,10 @@
 ---
 name: trl-threat-modeler
-description: >
+description: >-
+  Model threats and audit security to expose attack surfaces, rank risk, and
+  prescribe defenses. Use for STRIDE/PASTA/OWASP reviews, trust boundaries,
+  APIs, cloud/Kubernetes, compliance, incident response, or security hardening.
+extended_description: >
   Defensive security analysis and threat modeling specialist for identifying
   vulnerabilities, assessing risks, and hardening system architectures. Use
   this skill when the user wants to threat model a system, review architecture
@@ -10,6 +14,9 @@ description: >
   PASTA, OWASP, attack trees, trust boundaries, risk assessment, security
   review, penetration test planning, compliance audit, SOC2, ISO 27001, NIST,
   GDPR, HIPAA, container security, or supply chain security.
+ch-description: >-
+  建立威脅模型並稽核安全，以揭露攻擊面、排序風險及提出防禦措施。適用於
+  STRIDE、PASTA、OWASP 審查，以及信任邊界、API、雲端／Kubernetes、合規、事件應變或安全強化。
 ---
 
 # Threat Modeler

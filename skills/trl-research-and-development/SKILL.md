@@ -1,6 +1,10 @@
 ---
 name: trl-research-and-development
 description: >
+  Design rigorous R&D: frame hypotheses; run controlled, A/B, or ablation tests; analyze data;
+  publish findings. Use to validate assumptions or guide evidence-based decisions. Retains key
+  methods and triggers.
+extended_description: >
   Design and execute structured R&D workflows: hypothesis formation, experiment design,
   data collection, analysis, and publication of findings. Use this skill when the user
   wants to test a hypothesis, design an experiment, run an A/B test, analyze results,
@@ -8,6 +12,8 @@ description: >
   — even if they don't say "R&D." Also trigger when users mention hypothesis testing,
   experimental design, control variables, data collection plan, statistical significance,
   research methodology, ablation study, or evidence-based decision making.
+ch-description: >
+  設計嚴謹研發：建立假說，執行對照、A/B 或消融實驗，分析資料並發表結果。用於驗證假設或以證據決策；保留核心方法與觸發詞。
 ---
 
 # Research and Development

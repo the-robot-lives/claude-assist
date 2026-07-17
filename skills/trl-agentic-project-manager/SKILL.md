@@ -1,6 +1,10 @@
 ---
 name: trl-agentic-project-manager
-description: >
+description: >-
+  Plan multi-agent delivery as interface-first DAGs. Use for parallel decomposition,
+  fleet assignment, conflict-safe tracks, cross-harness coordination, or integration
+  gates—not timelines, agent design, or solo implementation.
+extended_description: >
   Plan and coordinate multi-agent software delivery as parallelized work DAGs —
   sequence and fan-out, never timelines — across heterogeneous providers (Claude,
   OpenAI/Codex, DeepSeek, Grok, Groq-hosted fast models, local models) and
@@ -16,6 +20,8 @@ description: >
   NOT for timeline/Gantt/sprint-ceremony planning, designing agents themselves
   (trl-agent-architect), harness internals (trl-agentic-harness-engineer), or
   implementing a single story solo (trl-story-to-release).
+ch-description: >-
+  以介面優先的工作 DAG 規劃多代理軟體交付。適用於平行拆解、代理團隊分派、避免衝突的工作軌、跨執行框架協作與整合關卡；不適用於時程甘特圖、代理設計或單人實作。
 ---
 
 # Agentic Project Manager

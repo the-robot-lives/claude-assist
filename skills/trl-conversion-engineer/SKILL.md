@@ -1,6 +1,10 @@
 ---
 name: trl-conversion-engineer
-description: >
+description: >-
+  Coordinates passive-income portfolios across AI templates, content publishing,
+  and print-on-demand. Use it to prioritize streams, sequence launches, exploit
+  cross-promotion, set cadence, or review multi-stream strategy and performance.
+extended_description: >
   Strategic coordinator for building a passive income portfolio across three
   complementary digital product streams: AI Templates, Content Publishing, and
   Print on Demand. Use this skill when the user wants to plan a multi-stream
@@ -11,6 +15,9 @@ description: >
   "conversion." Also trigger when users mention passive income systems,
   digital product portfolios, or ask about combining templates with content
   or merchandise.
+ch-description: >-
+  協調 AI 範本、內容出版與隨選印刷的被動收入組合。用於決定收入管道優先順序、安排推出次序、
+  運用交叉推廣、設定營運節奏，或檢視多管道策略與績效。
 ---
 
 # Conversion Engineer

@@ -1,6 +1,8 @@
 ---
 name: trl-content-generator
-description: >
+description: >-
+  Research trends, validate demand, and create platform-ready ideas, abstracts, outlines, calendars, funnels, or article visuals. Use for keyword mining, topic validation, editorial planning, cross-posting, and content pipelines.
+extended_description: >
   Research trends, validate topics, generate article ideas, create abstracts, and
   optimize content for specific platforms. Use this skill when the user wants to
   research content opportunities, find trending topics, do keyword research, validate
@@ -11,6 +13,8 @@ description: >
   users mention trend research, keyword mining, topic validation, article ideation,
   content pipeline, abstract generation, editorial calendar, cross-posting strategy,
   article diagrams, data visualization for articles, or content media types.
+ch-description: >-
+  研究趨勢、驗證需求，並製作適合平台的點子、摘要、大綱、日曆、漏斗或文章視覺素材。適用於關鍵字挖掘、主題驗證、編輯規劃、跨平台發布及內容流程。
 ---
 
 # Content Generator

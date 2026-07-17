@@ -1,6 +1,8 @@
 ---
 name: trl-story-to-release
-description: >
+description: >-
+  Ship user stories through grooming, persona- and style-aligned implementation, acceptance checks, rollout, and release notes. Use for story readiness, implementation, definition-of-done checks, or shipping; not PRDs or launch marketing.
+extended_description: >
   Take user stories from backlog to shipped release, implemented faithfully to the
   personas they serve and the project's style guide. Use this skill (/trl-story-to-release)
   to implement a user story, ship a story, groom the backlog, verify acceptance criteria,
@@ -9,6 +11,8 @@ description: >
   story readiness, constraint checklist, rollout plan, persona verification. NOT for
   generating personas/stories/screens or authoring style guides
   (trl-user-experience-engineer), PRD authoring, or launch marketing (trl-marketing).
+ch-description: >-
+  將使用者故事從梳理推進至符合人物角色與風格指南的實作、驗收、上線及發行說明。適用於故事就緒度、實作、完成定義檢查或發布；不適用於 PRD 或上市行銷。
 ---
 
 # Story to Release

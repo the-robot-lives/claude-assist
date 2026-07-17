@@ -1,6 +1,10 @@
 ---
 name: trl-game-design
-description: >
+description: >-
+  Design and ship games from concept through live ops: GDDs, loops, narrative, economy/monetization,
+  production, engines, launch, and multimedia assets. Use for Unity/Unreal/Godot, mobile/F2P/gacha,
+  retention, balancing, prototypes, or game pipelines.
+extended_description: >
   Design, prototype, and produce games across mobile (iOS/Android), PC, console, and cross-platform
   with expertise in Unity, monetization strategy, engagement loops, viral mechanics, rich story design,
   and production planning. Generate game art assets, character portraits, environment backgrounds,
@@ -16,6 +20,9 @@ description: >
   player retention, DAU/MAU, ARPU/ARPPU, LTV, CPI, soft launch, game design document, GDD, core loop,
   meta loop, game production, game art, game assets, sprite sheet, game UI mockup, game music,
   game sound effects, or game trailer.
+ch-description: >-
+  設計從概念到持續營運的遊戲：GDD、循環、敘事、經濟／變現、製作、引擎、上市與多媒體素材。
+  適用於 Unity／Unreal／Godot、手機／F2P／轉蛋、留存、平衡、原型或素材管線。
 ---
 
 # Game Design

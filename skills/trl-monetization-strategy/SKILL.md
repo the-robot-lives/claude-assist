@@ -1,6 +1,8 @@
 ---
 name: trl-monetization-strategy
-description: >
+description: >-
+  Choose and sequence passive-income models by matching skills, goals, time, and risk. Use for comparing business models or income streams, prioritizing side hustles or products, revenue planning, and deciding what to build first.
+extended_description: >
   Strategic decision framework for choosing and planning passive income streams.
   Use this skill whenever someone is deciding between business models, comparing
   income streams, asking "what should I build first," planning a side hustle,
@@ -8,6 +10,8 @@ description: >
   Also trigger when users mention revenue goals, time constraints for building
   products, risk tolerance for new ventures, or want a roadmap for their first
   online product — even if they don't use the word "monetization."
+ch-description: >-
+  依據技能、目標、時間與風險，選擇並安排被動收入模式。適用於比較商業模式或收入來源、排序副業與產品、規劃營收，或決定該先做什麼。
 ---
 
 # Monetization Strategy

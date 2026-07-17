@@ -1,6 +1,9 @@
 ---
 name: trl-ai-templates
-description: >
+description: >-
+  Build and sell AI templates—prompt libraries, automations, GPT/Claude bundles, and MCP packages.
+  Use for Gumroad products, listing optimization, digital-product launches, or monetizing technical expertise.
+extended_description: >
   Build, launch, and scale AI-powered digital products including prompt libraries,
   automation workflows, GPT configurations, and MCP server packages. Use this skill
   when the user wants to create sellable AI templates, package prompts for sale,
@@ -8,6 +11,9 @@ description: >
   listings, or monetize technical expertise through digital products — even if they
   don't say "AI templates." Also trigger when users mention Gumroad products,
   prompt engineering for sale, or digital product launches.
+ch-description: >-
+  建立並銷售 AI 範本：提示詞庫、自動化流程、GPT/Claude 工具組與 MCP 套件。
+  當使用者要製作 Gumroad 商品、優化商品頁、推出數位產品，或將技術專長變現時使用。
 ---
 
 # AI Templates

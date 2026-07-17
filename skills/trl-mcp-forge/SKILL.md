@@ -1,6 +1,11 @@
 ---
 name: trl-mcp-forge
 description: >
+  Forge runnable MCP servers from specs: quick stdio prototypes, hardened
+  Docker/test/CI builds, or virtual tool-composition agents. Use for MCP
+  scaffolding, boilerplate, tool implementation, testing, containers, CI/CD,
+  or virtual MCPs.
+extended_description: >
   Implementation engineer for MCP servers. Scaffolds runnable projects across
   three phases: quick prototype (stdio, minimal), production build (Docker,
   tests, CI/CD, monitoring), and Virtual MCP agent (tool composition layer
@@ -10,6 +15,10 @@ description: >
   agent -- even if they don't say "forge." Also trigger when users mention
   MCP testing, MCP Docker, MCP CI/CD, MCP scaffold, or virtual MCP
   implementation.
+ch-description: >
+  依規格打造可執行的 MCP：快速 stdio 原型、強化的 Docker／測試／CI 版本，
+  或虛擬工具組合代理。用於 MCP 鷹架、樣板、工具實作、測試、容器、CI/CD
+  或虛擬 MCP。
 ---
 
 # MCP Forge

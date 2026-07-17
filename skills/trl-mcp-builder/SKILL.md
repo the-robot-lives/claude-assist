@@ -1,6 +1,8 @@
 ---
 name: trl-mcp-builder
-description: >
+description: >-
+  Design, build, and deploy MCP servers from prototype through production or virtual composition. Use for MCP architecture, tool interfaces, SDKs, transports, scaffolding, LLM-client integrations, or tool-server hardening.
+extended_description: >
   Parent coordinator for designing, building, and deploying MCP (Model Context
   Protocol) servers across three phases: rapid prototype, production hardening,
   and virtual MCP composition. Use this skill when the user wants to build an
@@ -11,6 +13,8 @@ description: >
   Claude Desktop integrations, AI tool APIs, context protocol, MCP tool
   registration, or building plugins for LLM clients like Cursor, Cline, or
   Windsurf.
+ch-description: >-
+  設計、建置與部署 MCP 伺服器，涵蓋原型、正式環境及虛擬組合。適用於 MCP 架構、工具介面、SDK、傳輸、專案骨架、LLM 用戶端整合或工具伺服器強化。
 ---
 
 # MCP Builder

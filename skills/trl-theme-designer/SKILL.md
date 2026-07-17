@@ -1,6 +1,10 @@
 ---
 name: trl-theme-designer
-description: >
+description: >-
+  Tunes styleguide-engine theme YAML from a treatise: extracts vars, writes inheritance/delta
+  facets and dark modes, and fixes WCAG contrast or drift. Use for theme YAML, design-token
+  seeds, theme-{slug}, vars.yaml, color-modes, or treatise conformance.
+extended_description: >
   Fine-tune styleguide-engine themes: turn a theme treatise into tuned theme YAML — seed
   extraction into vars.yaml, delta-only facet overrides, base-theme inheritance, dark mode
   variants, WCAG contrast tuning. Use this skill (/trl-theme-designer) to realize a treatise
@@ -9,6 +13,9 @@ description: >
   css-snippets, color-modes, npx @noizu/styleguide serve, treatise conformance. NOT for
   authoring treatises/brand identity/style guides from scratch (trl-user-experience-engineer),
   app frontend implementation (trl-react-engineer), or engine internals development.
+ch-description: >-
+  依據論述微調 styleguide-engine 主題 YAML：擷取 vars、建立繼承／差異 facet 與深色模式，並修正
+  WCAG 對比或漂移。適用於主題 YAML、設計權杖種子、theme-{slug}、vars.yaml、color-modes 或論述符合性。
 ---
 
 # Theme Designer

@@ -1,12 +1,18 @@
 ---
 name: trl-market-intelligence
-description: >
+description: >-
+  Research, validate, and score niches, audiences, demand, and competitors to choose viable
+  markets and ideas. Use for niche research, market validation, audience discovery,
+  target-market selection, competitor analysis, or “will it sell?” decisions.
+extended_description: >
   Identify, validate, and score underserved niches and audiences across any monetization
   stream. Use this skill whenever the user mentions niche research, market validation,
   audience discovery, competitor analysis, finding a target market, or evaluating whether
   an idea has real demand — even if they don't explicitly say "market intelligence."
   Also trigger when users ask about choosing between business ideas, want to know if
   something will sell, or need to understand who their customers are.
+ch-description: >-
+  研究、驗證並評分利基市場、受眾、需求與競爭者，協助選擇可行市場與商業構想。適用於利基研究、市場驗證、受眾探索、目標市場選擇、競爭分析，或判斷「賣得動嗎？」。
 ---
 
 # Market Intelligence

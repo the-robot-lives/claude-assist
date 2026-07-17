@@ -1,7 +1,11 @@
 ---
 name: trl-rapid-prototype
-description: >
+description: >-
+  Build a minimal software spike to test feasibility, APIs, libraries, integrations, or technology choices, then issue an evidence-backed go/no-go. Use for prototypes, POCs, quick demos, technical spikes, or sanity checks before production investment.
+extended_description: >
   Rapid prototyping and feasibility validation for software concepts — from idea to working demo to go/no-go recommendation in a single session. Use this skill when the user wants to spike a feature, build a proof of concept, validate technical feasibility, test whether an API or library works for their use case, build a throwaway demo, evaluate a technology choice, or produce a go/no-go recommendation with documented findings — even if they don't say "prototype." Also trigger when users mention spike, feasibility study, proof of concept, POC, technical spike, throwaway code, quick demo, can-we-do-this, or sanity check.
+ch-description: >-
+  建立最小可運作的軟體雛形，以驗證可行性、API、函式庫、整合或技術選擇，並依證據提出繼續或停止的建議。適用於原型、概念驗證、快速展示、技術探勘，或正式投入前的合理性檢查。
 ---
 
 # Rapid Prototype

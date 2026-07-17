@@ -1,6 +1,8 @@
 ---
 name: trl-kubernetes-engineer
-description: >
+description: >-
+  Design, deploy, secure, debug, and optimize production Kubernetes and Helm systems. Use for manifests, charts, CRDs/operators, autoscaling, GitOps, networking, storage, observability, multitenancy, cost, or any kubectl/Helm/Kubernetes task.
+extended_description: >
   Design, deploy, and harden production Kubernetes clusters and Helm charts
   with idiomatic patterns, security best practices, and ecosystem tooling.
   Use this skill when the user wants to write Helm charts, design CRDs,
@@ -12,6 +14,8 @@ description: >
   operator-sdk, Ingress, Gateway API, NetworkPolicy, PodDisruptionBudget,
   StatefulSet, DaemonSet, CronJob, ServiceAccount, RBAC, Pod Security
   Standards, OPA, Kyverno, Velero, OpenEBS, Longhorn, or Prometheus.
+ch-description: >-
+  設計、部署、強化、除錯及最佳化生產級 Kubernetes 與 Helm 系統。適用於清單、Chart、CRD／Operator、自動擴縮、GitOps、網路、儲存、可觀測性、多租戶、成本，或任何 kubectl／Helm／Kubernetes 工作。
 ---
 
 # Kubernetes Engineer

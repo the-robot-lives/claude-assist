@@ -1,6 +1,10 @@
 ---
 name: trl-lit-dev
-description: >
+description: >-
+  Build and harden Lit 3 web components and design systems: reactive state, Shadow DOM,
+  SSR, testing, packaging, framework integration, and Lit 2 migration. Use for
+  LitElement, lit-html, decorators, directives, signals, contexts, tasks, or custom elements.
+extended_description: >
   Design and implement production-ready Lit v3 web components, from single elements
   through full design systems. Use this skill when the user wants to build a web
   component with Lit, create a custom element, design a component library, implement
@@ -12,6 +16,10 @@ description: >
   css tagged template, html tagged template, @property decorator, @state decorator,
   Constructable Stylesheets, Custom Elements, @lit/context, @lit/task, @lit-labs/signals,
   @lit-labs/ssr, lit/directives, or web component design patterns.
+ch-description: >-
+  用 Lit 3 建置並強化 Web Components 與設計系統，涵蓋反應式狀態、Shadow DOM、SSR、測試、
+  封裝、框架整合及 Lit 2 遷移。適用於 LitElement、lit-html、裝飾器、指令、signals、context、
+  tasks 或自訂元素。
 ---
 
 # Lit Web Component Designer

@@ -1,6 +1,8 @@
 ---
 name: trl-noizu-frameworks
-description: >
+description: >-
+  Navigate Noizu's 13 Elixir libraries and API dependencies. Use to build/debug entities, repos, GenAI/LLM providers or threads, distributed services, cache invalidation, Weaviate RAG, smart tokens, or DB seeding; triggers include def_entity and Noizu.Repo.
+extended_description: >
   Comprehensive reference for the Noizu Elixir framework ecosystem — 13 interconnected
   libraries covering GenAI/LLM providers, entity persistence, distributed worker pools,
   cache invalidation, vector databases, and utility libraries. Use this skill when the
@@ -13,6 +15,8 @@ description: >
   elixir-weaviate, InferenceProviderBehaviour, def_entity, def_repo, EntityReference,
   ThreadProtocol, s_call!, s_cast!, GenAI.Thread, GenAI.Provider, Noizu.Entity,
   Noizu.Repo, Noizu.Service, Noizu.Context, or Noizu Elixir.
+ch-description: >-
+  涵蓋 Noizu 13 個 Elixir 函式庫與 API 相依關係。用於建置或除錯實體／儲存庫、GenAI／LLM 提供者與執行緒、分散式服務、快取失效、Weaviate RAG、權杖或資料庫播種；提及 def_entity、Noizu.Repo 即觸發。
 argument-hint: "[library-name|topic]"
 allowed-tools: Read Grep Glob Bash
 ---

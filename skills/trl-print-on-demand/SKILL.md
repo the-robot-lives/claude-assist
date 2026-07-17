@@ -1,6 +1,7 @@
 ---
 name: trl-print-on-demand
-description: >
+description: "Design, launch, and optimize inventory-free print-on-demand merchandise and listings. Use for niche merch, T-shirts, AI-assisted art, Redbubble, Printful, Printify, TeePublic, store setup, branding, or monetizing designs."
+extended_description: >
   Used when user wants to design and sell niche merchandise through trl-print-on-demand fulfillment partners
   including apparel, accessories, stickers, and home goods. Use this skill when
   the user wants to create POD products, generate AI-assisted designs, set up
@@ -9,6 +10,7 @@ description: >
   "print on demand." Also trigger when users mention t-shirt designs, merch,
   Redbubble, Printful, Printify, TeePublic, or selling physical products without
   inventory.
+ch-description: "設計、上架並優化無庫存的按需印製商品與銷售頁。適用於利基周邊、T 恤、AI 輔助圖像、Redbubble、Printful、Printify、TeePublic、商店建置、品牌經營或設計變現。"
 ---
 
 # Print on Demand

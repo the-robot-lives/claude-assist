@@ -1,6 +1,8 @@
 ---
 name: trl-agent-architect
-description: "Design, build, and validate AI agents with research-backed patterns. Use this skill when creating Claude Code subagents, multi-agent systems, agent playbooks, persona definitions, or any autonomous AI agent — covers architecture selection, prompt/context engineering, tool design, memory systems, guardrails, NPL integration, and quality evaluation."
+description: "Design, build, and validate reliable AI agents using research-backed architecture, context, tools, memory, guardrails, and evals. Use for subagents, multi-agent systems, playbooks, personas, or autonomous-agent design."
+extended_description: "Design, build, and validate AI agents with research-backed patterns. Use this skill when creating Claude Code subagents, multi-agent systems, agent playbooks, persona definitions, or any autonomous AI agent — covers architecture selection, prompt/context engineering, tool design, memory systems, guardrails, NPL integration, and quality evaluation."
+ch-description: "以研究驗證的架構、情境、工具、記憶、防護與評測，設計、建置並驗證可靠的 AI 代理。適用於子代理、多代理系統、代理手冊、角色設定或自主代理設計。"
 ---
 
 # Agent Architect

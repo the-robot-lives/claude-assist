@@ -1,6 +1,8 @@
 ---
 name: trl-content-publishing
-description: >
+description: >-
+  Create and monetize technical articles, newsletters, tutorials, and strategies for authority and recurring revenue. Use for Substack, Dev.to, Medium, SEO, content calendars, audience growth, subscriptions, sponsorships, or free-to-paid conversion.
+extended_description: >
   Build authority and recurring revenue through technical writing, newsletters,
   tutorials, and educational content. Use this skill when the user wants to start
   a newsletter, write technical articles, build a subscriber base, monetize writing,
@@ -8,6 +10,8 @@ description: >
   subscribers, or develop a content strategy — even if they don't say "content
   publishing." Also trigger when users mention Substack, Dev.to, Medium, blogging
   for income, or building an audience through writing.
+ch-description: >-
+  建立並變現技術文章、電子報、教學與內容策略，以累積權威和經常性收入。適用於 Substack、Dev.to、Medium、SEO、內容日曆、受眾成長、訂閱、贊助或免費轉付費。
 ---
 
 # Content Publishing

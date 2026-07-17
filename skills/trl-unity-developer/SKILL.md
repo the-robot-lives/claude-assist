@@ -1,6 +1,10 @@
 ---
 name: trl-unity-developer
-description: >
+description: >-
+  Design, build, debug, and optimize Unity 6 games, apps, CAD/digital twins, and XR.
+  Use for C#, UI Toolkit, URP/HDRP, shaders, DOTS, Addressables, profiling, migration,
+  or Unity ecosystem choices requiring current, production-ready guidance.
+extended_description: >
   Design, build, debug, and optimize Unity applications across games (2D and 3D),
   application/kiosk UIs, CAD/industrial visualization, and VR/AR/XR — using current
   Unity 6 (6000.x) features, packages, and APIs. Use this skill when the user wants
@@ -15,6 +19,10 @@ description: >
   HDRP, Render Graph, UI Toolkit, UXML/USS, Shader Graph, DOTS, ECS, Burst, XRI,
   PolySpatial, Pixyz, Asset Transformer, Cinemachine, Netcode for GameObjects,
   Sentis/Inference Engine, Unity AI/Muse, Addressables, or GameObject/Prefab work.
+ch-description: >-
+  設計、建置、除錯並最佳化 Unity 6 遊戲、應用程式、CAD／數位分身及 XR。
+  適用於 C#、UI Toolkit、URP／HDRP、著色器、DOTS、Addressables、效能分析、版本遷移，
+  或需現行且可上線之 Unity 生態系決策。
 ---
 
 # Unity Developer

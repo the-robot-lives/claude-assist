@@ -1,6 +1,10 @@
 ---
 name: trl-plugin-architect
 description: >
+  Design or audit extensible plugin systems: extension points, registries, lifecycle, SDKs, host–guest
+  contracts, security, and hot reload. Use for plugin/add-on architectures, hooks, middleware, event
+  buses, sandboxing, or third-party extensions.
+extended_description: >
   Design and implement plugin architectures for extensible software systems: define extension points,
   build plugin registries, create lifecycle management, and scaffold plugin projects for any host
   application. Use this skill when the user wants to make an application extensible, design a plugin
@@ -9,6 +13,9 @@ description: >
   they don't say "plugin." Also trigger when users mention extension points, plugin hooks, plugin
   registry, plugin lifecycle, add-on system, middleware pipeline, event bus architecture, host-guest
   contracts, plugin sandboxing, hot-reloading plugins, or plugin SDK design.
+ch-description: >
+  設計或稽核可擴充的外掛系統：擴充點、註冊表、生命週期、SDK、主體與外掛契約、安全性及熱重載。
+  適用於外掛／附加元件架構、鉤子、中介軟體、事件匯流排、沙箱或第三方擴充需求。
 ---
 
 # Plugin Architect

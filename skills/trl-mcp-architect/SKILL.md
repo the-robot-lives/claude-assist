@@ -1,12 +1,16 @@
 ---
 name: trl-mcp-architect
-description: >
+description: >-
+  Design or audit MCP server specifications before implementation: tools, schemas, transport, auth, hosting, threat models, manifests, and ADRs. Use for MCP planning, security reviews, or tool-surface architecture.
+extended_description: >
   Checklist-driven specification and design for MCP servers. Use this skill when
   the user wants to plan an MCP server, design a tool surface, review security
   posture, choose a transport layer, create a tool manifest, write architecture
   decision records, or audit an existing MCP server design -- even if they don't
   say "architect." Also trigger when users mention MCP specification, MCP
   planning, tool schema design, MCP auth strategy, or MCP hosting decisions.
+ch-description: >-
+  在實作前設計或稽核 MCP 伺服器規格：工具、結構描述、傳輸、驗證、託管、威脅模型、清單與架構決策紀錄。適用於 MCP 規劃、安全審查或工具介面架構。
 ---
 
 # MCP Architect

@@ -1,6 +1,10 @@
 ---
 name: trl-user-experience-engineer
-description: >
+description: >-
+  Design and ship usable, accessible UX/UI for web, terminals, and specs. Use for wireframes, mockups,
+  design systems, WCAG audits, personas, user stories, logos, landing pages, responsive components,
+  prototypes, or design-to-code handoffs.
+extended_description: >
   Design and implement production-ready user interfaces from brief through
   implementation across web, terminal, and specification formats. Use this skill
   when the user wants to design a web app, create a landing page, build UI
@@ -15,6 +19,9 @@ description: >
   libraries, design sprints, Figma specs, logos, brand marks, logomarks,
   logotypes, user stories, personas, screen inventories, or landing page
   optimization.
+ch-description: >-
+  設計並交付實用、無障礙的網頁、終端與規格型 UX/UI。適用於線框稿、視覺稿、設計系統、WCAG 稽核、人物誌、使用者故事、標誌、登陸頁、響應式元件、
+  原型或設計轉程式碼交付。
 ---
 
 # User Experience Engineer

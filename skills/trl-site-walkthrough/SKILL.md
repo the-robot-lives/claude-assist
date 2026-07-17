@@ -1,6 +1,10 @@
 ---
 name: trl-site-walkthrough
 description: >
+  Inventory sites, map goal-directed task flows, and run persona/accessibility
+  walkthroughs to expose broken paths and usability friction. Use for site QA,
+  journey testing, GDTA, cognitive walkthroughs, task graphs, or journey logs.
+extended_description: >
   Model websites as structured inventories, generate directed task-flow graphs
   for user journey validation, and run persona-driven journey logs that capture
   how different users experience each step. Use this skill when the user wants to
@@ -13,6 +17,9 @@ description: >
   analysis, goal-directed task analysis, GDTA, cognitive walkthrough, site QA,
   usability walkthrough, task completion graph, site inventory, persona testing,
   accessibility walkthrough, journey log, or usability observation.
+ch-description: >
+  建立網站清冊與目標導向任務流程，並執行角色與無障礙走查，以揭露中斷路徑及可用性阻力。
+  適用於網站 QA、使用者旅程測試、GDTA、認知走查、任務圖或旅程紀錄。
 ---
 
 # Site Walkthrough

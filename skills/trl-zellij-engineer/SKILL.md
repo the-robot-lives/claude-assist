@@ -1,6 +1,11 @@
 ---
 name: trl-zellij-engineer
 description: >
+  Engineer Zellij plugins, KDL layouts/config, keybinds, core Actions,
+  pane/rendering fixes, and fork rebases. Use for zellij-tile/WASM, PipeMessage,
+  ZellijWorker, ScreenInstruction, PtyInstruction, or server internals—not tmux
+  or general TUIs.
+extended_description: >
   Extend, configure, and modify Zellij — the Rust terminal workspace
   multiplexer. Use this skill when the user wants to write a Zellij plugin,
   author a layout or config, add or change a keybind, contribute to Zellij
@@ -12,6 +17,10 @@ description: >
   wasm32-wasip1 plugins, cargo xtask, ScreenInstruction, PtyInstruction, or
   zellij-server internals. NOT for tmux/screen config, and NOT for general
   terminal UI frameworks like ratatui or bubbletea (that is trl-tui-engineer).
+ch-description: >
+  開發 Zellij 外掛、KDL 配置/版面、快捷鍵、核心 Action、窗格/渲染與分支重整。
+  適用 zellij-tile/WASM、PipeMessage、ZellijWorker、Screen/PtyInstruction、
+  伺服器內部；不適用 tmux 或一般 TUI。
 ---
 
 # Zellij Engineer

@@ -1,6 +1,8 @@
 ---
 name: trl-persona-session
-description: "Adopt and hold a defined persona for the duration of the current Claude Code session — load the character from the personas MCP, respond in a consistent voice every turn, and persist journal, tasks, and knowledge as you work. Use this skill when the user wants the running session to *become* a persona ('be sarah-architect for this session', 'act as our QA lead', 'stay in character as mike-backend'), switch the active persona mid-session, run an in-character working or review session, or spin up an ephemeral character with no persistence. Distinct from the npl-persona subagent: this drives the main session itself, not an isolated Task thread."
+description: "Adopt, switch, or release a persona in the main session while keeping voice and MCP-backed state consistent across turns. Use for persistent or ephemeral in-character work; use isolated subagents for one-shot personas or panels."
+extended_description: "Adopt and hold a defined persona for the duration of the current Claude Code session — load the character from the personas MCP, respond in a consistent voice every turn, and persist journal, tasks, and knowledge as you work. Use this skill when the user wants the running session to *become* a persona ('be sarah-architect for this session', 'act as our QA lead', 'stay in character as mike-backend'), switch the active persona mid-session, run an in-character working or review session, or spin up an ephemeral character with no persistence. Distinct from the npl-persona subagent: this drives the main session itself, not an isolated Task thread."
+ch-description: "在主會話中採用、切換或解除角色，跨回合維持一致語氣與 MCP 支援的狀態。用於持久或臨時的角色化工作；一次性角色或多人討論請用隔離子代理。"
 ---
 
 # Persona Session

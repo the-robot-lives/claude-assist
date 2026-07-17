@@ -1,6 +1,10 @@
 ---
 name: trl-skill-evaluator
 description: >
+  Evaluates AI-agent skills with scenarios, directed task flows, dialogue, quizzes, benchmarks,
+  and regression suites to expose failures and compare quality. Use for skill
+  eval/test/audit/scoring, model comparisons, or eval-dataset generation.
+extended_description: >
   Evaluate AI agent skills through structured task scenarios, directed-flow task execution,
   interactive dialogue with the skill under test, and comprehensive exam/quiz batteries.
   Use this skill when evaluating skill quality, testing skills across models or fine-tunes,
@@ -9,6 +13,9 @@ description: >
   for skill quality. Triggers: skill eval, skill test, skill quiz, skill exam, evaluate skill,
   skill regression, skill benchmark, model comparison, skill scoring, eval suite, task flow
   test, directed graph eval, scenario test, skill audit.
+ch-description: >
+  以情境、導向任務流程、對話、測驗、基準與回歸套件評估 AI 代理技能，用於揭露失敗並比較品質。
+  適用於技能評估、測試、稽核、評分、模型比較或建立評估資料集。
 ---
 
 # Skill Evaluator

@@ -1,6 +1,8 @@
 ---
 name: trl-android-mobile
-description: >
+description: >-
+  Build, test, optimize, and ship production Android apps with Kotlin, Jetpack Compose, Material 3, Gradle, and modern architecture. Use for Android UI, APK/AAB, Play Store releases, offline sync, testing, performance, or Kotlin Multiplatform.
+extended_description: >
   Design and build production-ready Android mobile applications using Kotlin, Jetpack Compose, and Material Design 3.
   Use this skill when the user wants to build an Android app, design mobile UI screens, set up a Kotlin project,
   implement Jetpack Compose layouts, configure Gradle builds, write Android tests, publish to the Google Play Store,
@@ -8,6 +10,8 @@ description: >
   companion app for an existing web project — even if they don't say "Android." Also trigger when users mention
   mobile app development, Kotlin Multiplatform, Play Console, APK, AAB, Material Design, Compose navigation,
   Room database, Retrofit, Hilt dependency injection, or Android release management.
+ch-description: >-
+  使用 Kotlin、Jetpack Compose、Material 3、Gradle 與現代架構建置、測試、最佳化並發布正式 Android 應用程式。適用於 Android UI、APK/AAB、Play 商店發布、離線同步、測試、效能或 Kotlin Multiplatform。
 ---
 
 # Android Mobile

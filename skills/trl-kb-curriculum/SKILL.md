@@ -1,6 +1,8 @@
 ---
 name: trl-kb-curriculum
-description: >
+description: >-
+  Design sequenced curricula with prerequisite maps, calibrated difficulty, milestones, and pacing so learners progress coherently. Use for study plans, learning paths, syllabi, course outlines, lesson plans, self-study programs, or educational roadmaps.
+extended_description: >
   Design structured learning paths with prerequisite mapping, difficulty calibration,
   and milestone-based progression using established pedagogical frameworks. Use this
   skill when the user wants to create a study plan, design a curriculum, sequence
@@ -8,6 +10,8 @@ description: >
   program — even if they don't say "curriculum." Also trigger when users mention
   learning path, syllabus, study schedule, course design, lesson plan, or
   educational roadmap.
+ch-description: >-
+  設計具先備知識圖、難度校準、里程碑與進度節奏的循序課程，讓學習者連貫成長。適用於讀書計畫、學習路徑、教學大綱、課程架構、教案、自學方案或教育藍圖。
 ---
 
 # KB Curriculum

@@ -1,6 +1,10 @@
 ---
 name: trl-marketing
 description: >
+  Plan and execute positioning, messaging, GTM launches, announcements, social campaigns,
+  demo scripts, and landing copy. Use for launch, publicity, press kits, Product Hunt,
+  Hacker News, or changelog marketing; excludes SEO, pricing, and page design.
+extended_description: >
   Product marketing and launch execution: positioning, messaging, go-to-market (GTM)
   planning, and announcement campaigns. Use this skill (or /trl-marketing) to launch a
   product, position or message it, plan a Product Hunt or Hacker News launch, write
@@ -9,6 +13,8 @@ description: >
   press kit, publicity, demo script, changelog marketing. NOT for SEO (trl-seo-guru),
   newsletters (trl-content-publishing), niche validation (trl-market-intelligence),
   page design (trl-user-experience-engineer), or pricing (trl-monetization-strategy).
+ch-description: >
+  規劃產品定位、訊息、上市策略、公告、公關、社群、示範腳本及登陸頁文案。適用於發布、宣傳、媒體包、Product Hunt、Hacker News、更新日誌行銷；不含 SEO、定價、頁面設計。
 ---
 
 # Marketing

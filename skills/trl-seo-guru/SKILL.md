@@ -1,7 +1,9 @@
 ---
 name: trl-seo-guru
-description: Audit and optimize content for search engines and AI answer engines (ChatGPT, Perplexity, Google AI Overviews, Copilot). Covers GEO, AEO, schema markup, robots.txt, llms.txt, platform-specific citation optimization.
-argument-hint: [audit|optimize|generate|measure] [target]
+description: Audit and optimize content for search and AI answer engines so it ranks, earns citations, and stays crawlable. Use for SEO/GEO/AEO audits, schema, robots.txt, llms.txt, citation optimization, content generation, or measurement.
+extended_description: Audit and optimize content for search engines and AI answer engines (ChatGPT, Perplexity, Google AI Overviews, Copilot). Covers GEO, AEO, schema markup, robots.txt, llms.txt, platform-specific citation optimization.
+ch-description: 稽核並優化搜尋引擎與 AI 答案引擎內容，以提升排名、引用率與可檢索性。適用於 SEO／GEO／AEO 稽核、結構化資料、robots.txt、llms.txt、引用優化、內容生成或成效衡量。
+argument-hint: "[audit|optimize|generate|measure] [target]"
 allowed-tools: Read Grep Glob Bash WebFetch WebSearch
 ---
 

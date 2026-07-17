@@ -337,6 +337,207 @@ skills:
     providers: [claude, codex, grok]
     category: docs-meta
 
+# NoizuPromptLingo agent definitions (filename stems under agents/)
+agents:
+  nb:
+    tags: [knowledge, content, writing]
+    work_types: [content, docs, research, learning]
+  nimps:
+    tags: [product, planning, prototype, design, business]
+    work_types: [feature-dev, planning, business, design]
+  npl-author:
+    tags: [npl, prompts, agents, authoring]
+    work_types: [agents, meta, content]
+  npl-build-master:
+    tags: [build, cpp, performance]
+    work_types: [feature-dev, desktop, debugging, migration]
+  npl-cpp-modernizer:
+    tags: [cpp, modernization, legacy]
+    work_types: [feature-dev, desktop, migration]
+  npl-fim:
+    tags: [visualization, frontend, graphics, mermaid]
+    work_types: [frontend, design, graphics]
+  npl-gopher-scout:
+    tags: [reconnaissance, codebase, research, architecture]
+    work_types: [research, audit, planning]
+  npl-grader:
+    tags: [npl, qa, validation, testing]
+    work_types: [qa, audit, meta, agents]
+  npl-idea-to-spec:
+    tags: [product, personas, stories, specs]
+    work_types: [planning, feature-dev]
+  npl-marketing-writer:
+    tags: [marketing, content, copywriting]
+    work_types: [content, business]
+  npl-perf-profiler:
+    tags: [cpp, performance, profiling, database]
+    work_types: [debugging, audit, desktop, observability]
+  npl-persona:
+    tags: [agents, persona, collaboration]
+    work_types: [agents, planning]
+  npl-persona-manager:
+    tags: [agents, persona, inventory, tasks]
+    work_types: [agents, planning]
+  npl-prd-editor:
+    tags: [product, prd, specs, stories]
+    work_types: [planning, feature-dev, docs]
+  npl-prd-manager:
+    tags: [product, prd, requirements, traceability]
+    work_types: [planning, docs]
+  npl-project-coordinator:
+    tags: [agents, orchestration, coordination, planning]
+    work_types: [agents, planning, feature-dev, deploy]
+  npl-sql-architect:
+    tags: [database, sql, mysql, postgresql, architecture]
+    work_types: [feature-dev, api, infra, debugging]
+  npl-tasker:
+    tags: [utility, ephemeral, analysis]
+    work_types: [feature-dev, debugging, research, agents]
+  npl-tasker-fast:
+    tags: [utility, ephemeral, fast]
+    work_types: [feature-dev, debugging, research, agents]
+  npl-tasker-haiku:
+    tags: [utility, ephemeral, haiku]
+    work_types: [feature-dev, debugging, research, agents]
+  npl-tasker-opus:
+    tags: [utility, ephemeral, opus]
+    work_types: [feature-dev, debugging, research, agents]
+  npl-tasker-sonnet:
+    tags: [utility, ephemeral, sonnet]
+    work_types: [feature-dev, debugging, research, agents]
+  npl-tasker-ultra:
+    tags: [utility, ephemeral, ultra]
+    work_types: [feature-dev, debugging, research, agents]
+  npl-tdd-coder:
+    tags: [tdd, implementation, autonomous]
+    work_types: [feature-dev]
+  npl-tdd-debugger:
+    tags: [tdd, debugging, testing]
+    work_types: [feature-dev, debugging, qa]
+  npl-tdd-tester:
+    tags: [tdd, testing, qa]
+    work_types: [feature-dev, qa]
+  npl-technical-writer:
+    tags: [documentation, research, api, writing]
+    work_types: [docs, content, research, learning, api]
+  npl-templater:
+    tags: [npl, templates, agents, prompts]
+    work_types: [agents, meta]
+  npl-thinker:
+    tags: [reasoning, reflection, cognition]
+    work_types: [planning, research, audit]
+  npl-threat-modeler:
+    tags: [security, threat-modeling, stride, audit]
+    work_types: [security, audit]
+  npl-winnower:
+    tags: [context, summarization, files, research]
+    work_types: [research, audit, docs, learning]
+
+# NoizuPromptLingo slash-command definitions (filename stems under commands/)
+commands:
+  annotate:
+    tags: [docs, annotation, footnotes]
+    work_types: [docs, content]
+  extended-manners:
+    tags: [process, rigor, trinity-protocol]
+    work_types: [meta, agents]
+  extract-screens:
+    tags: [ux, screens, components, stories]
+    work_types: [design, frontend, planning]
+  generate-meta-data:
+    tags: [metadata, docs, analysis]
+    work_types: [docs, audit]
+  generate-personas-and-stories:
+    tags: [product, personas, stories]
+    work_types: [planning, design, research]
+  guest:
+    tags: [onboarding, claude, tools]
+    work_types: [agents, meta]
+  hydrate:
+    tags: [agents, bootstrap, configuration]
+    work_types: [agents, meta]
+  init-project:
+    tags: [project, bootstrap, docs, reconnaissance]
+    work_types: [planning, docs, research]
+  init-project-fast:
+    tags: [project, bootstrap, docs, fast]
+    work_types: [planning, docs, research]
+  listen-task-queue:
+    tags: [tasks, queue, monitor, coordination]
+    work_types: [agents, planning, deploy]
+  manners:
+    tags: [process, formatting, conventions]
+    work_types: [meta, agents]
+  memory-compress:
+    tags: [memory, context, maintenance]
+    work_types: [meta, docs]
+  migrate-k8-config:
+    tags: [infra, kubernetes, config, migration]
+    work_types: [infra, migration]
+  npl-annotate:
+    tags: [docs, annotation, footnotes, alias]
+    work_types: [docs, content]
+  npl-guest:
+    tags: [onboarding, claude, tools, alias]
+    work_types: [agents, meta]
+  npl-reflect:
+    tags: [process, reflection, review, alias]
+    work_types: [all]
+  npl-task-wizard:
+    tags: [tasks, planning, coordination, alias]
+    work_types: [planning, agents]
+  npl-track-assumptions:
+    tags: [assumptions, reasoning, process, alias]
+    work_types: [planning, research, audit]
+  npl-update-arch-doc:
+    tags: [docs, architecture, maintenance, alias]
+    work_types: [docs, planning]
+  npl-update-changelog-docs:
+    tags: [docs, changelog, release]
+    work_types: [docs, deploy]
+  npl-update-faq-docs:
+    tags: [docs, faq, maintenance]
+    work_types: [docs, content]
+  npl-update-howto-docs:
+    tags: [docs, howto, maintenance]
+    work_types: [docs, content]
+  npl-update-layout-doc:
+    tags: [docs, layout, maintenance, alias]
+    work_types: [docs, planning]
+  npl-update-schema-doc:
+    tags: [docs, schema, database, erd, alias]
+    work_types: [docs, api, infra]
+  npl-update-state-of-the-union-docs:
+    tags: [docs, status, strategy, positioning]
+    work_types: [docs, planning, business]
+  reflect:
+    tags: [process, reflection, review]
+    work_types: [all]
+  session-info:
+    tags: [session, tobor, project]
+    work_types: [agents, meta]
+  task-wizard:
+    tags: [tasks, planning, coordination]
+    work_types: [planning, agents]
+  track-assumptions:
+    tags: [assumptions, reasoning, process]
+    work_types: [planning, research, audit]
+  update-arch-doc:
+    tags: [docs, architecture, maintenance]
+    work_types: [docs, planning]
+  update-arch-v2:
+    tags: [docs, architecture, maintenance, reconnaissance]
+    work_types: [docs, planning, research]
+  update-layout-doc:
+    tags: [docs, layout, maintenance]
+    work_types: [docs, planning]
+  update-layout-v2:
+    tags: [docs, layout, maintenance, reconnaissance]
+    work_types: [docs, planning, research]
+  update-schema-doc:
+    tags: [docs, schema, database, erd]
+    work_types: [docs, api, infra]
+
 # Work-type bundles (enable-set / profiles TUI)
 work_types:
   feature-dev:
@@ -348,8 +549,24 @@ work_types:
       - trl-rapid-prototype
       - trl-story-to-release
       - trl-api-designer
-    agents: []
-    commands: []
+    agents:
+      - nimps
+      - npl-build-master
+      - npl-cpp-modernizer
+      - npl-idea-to-spec
+      - npl-prd-editor
+      - npl-project-coordinator
+      - npl-sql-architect
+      - npl-tasker
+      - npl-tasker-fast
+      - npl-tasker-haiku
+      - npl-tasker-opus
+      - npl-tasker-sonnet
+      - npl-tasker-ultra
+      - npl-tdd-coder
+      - npl-tdd-debugger
+      - npl-tdd-tester
+    commands: [reflect, task-wizard]
     editor_profiles: [vscode-web]
 
   frontend:
@@ -362,8 +579,8 @@ work_types:
       - trl-seo-guru
       - trl-theme-designer
       - trl-ui-test-engineer
-    agents: []
-    commands: []
+    agents: [npl-fim]
+    commands: [extract-screens]
     editor_profiles: [vscode-web]
 
   mobile:
@@ -382,7 +599,7 @@ work_types:
       - trl-osx-design-and-develop
       - trl-tui-engineer
       - trl-metal-graphics-dev
-    agents: []
+    agents: [npl-build-master, npl-cpp-modernizer, npl-perf-profiler]
     commands: []
     editor_profiles: [vscode-desktop]
 
@@ -394,8 +611,8 @@ work_types:
       - trl-dba-db-designer-and-tuning
       - trl-signoz-terraform-provider
       - trl-media-solution-architect
-    agents: []
-    commands: []
+    agents: [npl-sql-architect]
+    commands: [migrate-k8-config, update-schema-doc]
     editor_profiles: [vscode-infra]
 
   deploy:
@@ -403,8 +620,8 @@ work_types:
     skills:
       - trl-kubernetes-engineer
       - trl-terraform-engineer
-    agents: []
-    commands: []
+    agents: [npl-project-coordinator]
+    commands: [listen-task-queue, npl-update-changelog-docs]
     editor_profiles: [vscode-infra]
 
   security:
@@ -413,8 +630,8 @@ work_types:
       - trl-threat-modeler
       - trl-agentic-harness-engineer
       - trl-kubernetes-engineer
-    agents: []
-    commands: []
+    agents: [npl-threat-modeler]
+    commands: [reflect]
     editor_profiles: [vscode-infra]
 
   agents:
@@ -426,8 +643,27 @@ work_types:
       - trl-mcp-architect
       - trl-mcp-forge
       - trl-persona-session
-    agents: []
-    commands: []
+    agents:
+      - npl-author
+      - npl-grader
+      - npl-persona
+      - npl-persona-manager
+      - npl-project-coordinator
+      - npl-tasker
+      - npl-tasker-fast
+      - npl-tasker-haiku
+      - npl-tasker-opus
+      - npl-tasker-sonnet
+      - npl-tasker-ultra
+      - npl-templater
+    commands:
+      - extended-manners
+      - guest
+      - hydrate
+      - listen-task-queue
+      - manners
+      - session-info
+      - task-wizard
     editor_profiles: [vscode-agents]
 
   mcp:
@@ -436,8 +672,8 @@ work_types:
       - trl-mcp-builder
       - trl-mcp-architect
       - trl-mcp-forge
-    agents: []
-    commands: []
+    agents: [npl-author, npl-grader, npl-project-coordinator, npl-tasker, npl-templater]
+    commands: [reflect]
     editor_profiles: [vscode-agents]
 
   api:
@@ -446,8 +682,8 @@ work_types:
       - trl-api-designer
       - trl-technical-writer
       - trl-dba-db-designer-and-tuning
-    agents: []
-    commands: []
+    agents: [npl-sql-architect, npl-technical-writer]
+    commands: [update-schema-doc]
     editor_profiles: [vscode-agents]
 
   elixir:
@@ -466,8 +702,29 @@ work_types:
       - trl-proposal-writer
       - trl-monetization-strategy
       - trl-market-intelligence
-    agents: []
-    commands: []
+    agents:
+      - nimps
+      - npl-gopher-scout
+      - npl-idea-to-spec
+      - npl-persona
+      - npl-persona-manager
+      - npl-prd-editor
+      - npl-prd-manager
+      - npl-project-coordinator
+      - npl-thinker
+    commands:
+      - extract-screens
+      - generate-personas-and-stories
+      - init-project
+      - init-project-fast
+      - listen-task-queue
+      - npl-update-state-of-the-union-docs
+      - task-wizard
+      - track-assumptions
+      - update-arch-doc
+      - update-arch-v2
+      - update-layout-doc
+      - update-layout-v2
     editor_profiles: [vscode-docs]
 
   research:
@@ -477,8 +734,25 @@ work_types:
       - trl-kb-research
       - trl-kb
       - trl-market-intelligence
-    agents: []
-    commands: []
+    agents:
+      - nb
+      - npl-gopher-scout
+      - npl-tasker
+      - npl-tasker-fast
+      - npl-tasker-haiku
+      - npl-tasker-opus
+      - npl-tasker-sonnet
+      - npl-tasker-ultra
+      - npl-technical-writer
+      - npl-thinker
+      - npl-winnower
+    commands:
+      - generate-personas-and-stories
+      - init-project
+      - init-project-fast
+      - track-assumptions
+      - update-arch-v2
+      - update-layout-v2
     editor_profiles: [vscode-docs]
 
   learning:
@@ -488,8 +762,8 @@ work_types:
       - trl-kb-research
       - trl-kb-curriculum
       - trl-kb-digest
-    agents: []
-    commands: []
+    agents: [nb, npl-technical-writer, npl-winnower]
+    commands: [annotate]
     editor_profiles: [vscode-docs]
 
   docs:
@@ -498,8 +772,22 @@ work_types:
       - trl-technical-writer
       - trl-seo-guru
       - trl-content-generator
-    agents: []
-    commands: []
+    agents: [nb, npl-prd-editor, npl-prd-manager, npl-technical-writer, npl-winnower]
+    commands:
+      - annotate
+      - generate-meta-data
+      - init-project
+      - init-project-fast
+      - memory-compress
+      - npl-update-changelog-docs
+      - npl-update-faq-docs
+      - npl-update-howto-docs
+      - npl-update-state-of-the-union-docs
+      - update-arch-doc
+      - update-arch-v2
+      - update-layout-doc
+      - update-layout-v2
+      - update-schema-doc
     editor_profiles: [vscode-docs]
 
   content:
@@ -509,8 +797,8 @@ work_types:
       - trl-content-publishing
       - trl-seo-guru
       - trl-marketing
-    agents: []
-    commands: []
+    agents: [nb, npl-author, npl-marketing-writer, npl-technical-writer]
+    commands: [annotate, npl-update-faq-docs, npl-update-howto-docs]
     editor_profiles: [vscode-docs]
 
   business:
@@ -523,8 +811,8 @@ work_types:
       - trl-print-on-demand
       - trl-proposal-writer
       - trl-marketing
-    agents: []
-    commands: []
+    agents: [nimps, npl-marketing-writer]
+    commands: [npl-update-state-of-the-union-docs]
     editor_profiles: [vscode-docs]
 
   design:
@@ -534,8 +822,8 @@ work_types:
       - trl-site-walkthrough
       - trl-game-design
       - trl-theme-designer
-    agents: []
-    commands: []
+    agents: [nimps, npl-fim]
+    commands: [extract-screens, generate-personas-and-stories]
     editor_profiles: [vscode-web]
 
   games:
@@ -552,7 +840,7 @@ work_types:
     skills:
       - trl-metal-graphics-dev
       - trl-osx-design-and-develop
-    agents: []
+    agents: [npl-fim]
     commands: []
     editor_profiles: [vscode-desktop]
 
@@ -561,7 +849,7 @@ work_types:
     skills:
       - trl-signoz-terraform-provider
       - trl-kubernetes-engineer
-    agents: []
+    agents: [npl-perf-profiler]
     commands: []
     editor_profiles: [vscode-infra]
 
@@ -573,8 +861,14 @@ work_types:
       - trl-skill-evaluator
       - trl-seo-guru
       - trl-ui-test-engineer
-    agents: []
-    commands: []
+    agents:
+      - npl-gopher-scout
+      - npl-grader
+      - npl-perf-profiler
+      - npl-thinker
+      - npl-threat-modeler
+      - npl-winnower
+    commands: [generate-meta-data, reflect, track-assumptions]
     editor_profiles: [vscode-docs]
 
   debugging:
@@ -583,8 +877,18 @@ work_types:
       - trl-dba-db-designer-and-tuning
       - trl-kubernetes-engineer
       - trl-rapid-prototype
-    agents: []
-    commands: []
+    agents:
+      - npl-build-master
+      - npl-perf-profiler
+      - npl-sql-architect
+      - npl-tasker
+      - npl-tasker-fast
+      - npl-tasker-haiku
+      - npl-tasker-opus
+      - npl-tasker-sonnet
+      - npl-tasker-ultra
+      - npl-tdd-debugger
+    commands: [reflect]
     editor_profiles: [vscode-infra]
 
   migration:
@@ -593,8 +897,8 @@ work_types:
       - trl-react-engineer
       - trl-terraform-engineer
       - trl-technical-writer
-    agents: []
-    commands: []
+    agents: [npl-build-master, npl-cpp-modernizer]
+    commands: [migrate-k8-config, reflect]
     editor_profiles: [vscode-web]
 
   meta:
@@ -603,8 +907,14 @@ work_types:
       - trl-skill-engineer
       - trl-skill-evaluator
       - trl-agent-architect
-    agents: []
-    commands: []
+    agents: [npl-author, npl-grader, npl-templater]
+    commands:
+      - extended-manners
+      - guest
+      - hydrate
+      - manners
+      - memory-compress
+      - session-info
     editor_profiles: [vscode-docs]
 
   qa:
@@ -614,8 +924,8 @@ work_types:
       - trl-user-experience-engineer
       - trl-story-to-release
       - trl-ui-test-engineer
-    agents: []
-    commands: []
+    agents: [npl-grader, npl-tdd-debugger, npl-tdd-tester]
+    commands: [reflect]
     editor_profiles: [vscode-web]
 
   cli:
@@ -623,8 +933,8 @@ work_types:
     skills:
       - trl-tui-engineer
       - trl-plugin-architect
-    agents: []
-    commands: []
+    agents: [npl-tasker]
+    commands: [task-wizard]
     editor_profiles: [vscode-desktop]
 
 # Editor profiles (paths are references; skill-manage audits existence only)

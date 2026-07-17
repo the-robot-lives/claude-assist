@@ -1,6 +1,6 @@
 ---
 name: trl-kb-research
-description: >
+extended_description: >
   Find and evaluate learning resources across books, articles, academic papers, and
   open-access materials using parallel subagent searches. Use this skill when the user
   wants to find books on a topic, build a reading list, discover academic papers,
@@ -8,6 +8,12 @@ description: >
   or compile a bibliography — even if they don't say "research." Also trigger when
   users mention literature review, resource list, book recommendations, reading list,
   or annotated bibliography.
+description: >-
+  Find and assess books, papers, open-access sources, PDFs, ISBNs, and bibliographies through
+  parallel research. Use for literature reviews, reading lists, resource discovery,
+  recommendations, or annotated bibliographies.
+ch-description: >-
+  以平行研究搜尋並評估書籍、論文、開放取用來源、PDF、ISBN 與參考書目。適用於文獻回顧、閱讀清單、資源探索、推薦或註解書目。
 ---
 
 # KB Research

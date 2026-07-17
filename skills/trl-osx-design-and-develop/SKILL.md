@@ -1,6 +1,10 @@
 ---
 name: trl-osx-design-and-develop
-description: >
+description: >-
+  Design and ship production-ready macOS apps with SwiftUI, Swift, and AppKit interop.
+  Use for desktop UI and architecture, windows, documents, menu bars, sandboxing,
+  entitlements, Mac App Store delivery, notarization, Sparkle, or Catalyst.
+extended_description: >
   Design and build production-ready macOS desktop applications using SwiftUI and Swift,
   from concept through Mac App Store submission or notarized direct distribution. Use
   this skill when the user wants to build a macOS app, design desktop interfaces, implement
@@ -11,6 +15,10 @@ description: >
   or "desktop." Also trigger when users mention SwiftUI for Mac, AppKit, NSWindow,
   WindowGroup, MenuBarExtra, NavigationSplitView for desktop, macOS sandbox, entitlements,
   notarization, Sparkle updates, Mac Catalyst, or desktop app architecture.
+ch-description: >-
+  使用 SwiftUI、Swift 與 AppKit 互通設計並交付可上線的 macOS App。
+  適用於桌面介面與架構、視窗、文件、選單列、沙盒、權限、Mac App Store 發佈、
+  公證、Sparkle 或 Catalyst。
 ---
 
 # macOS Design and Develop

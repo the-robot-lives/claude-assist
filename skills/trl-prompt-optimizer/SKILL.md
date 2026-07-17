@@ -1,6 +1,8 @@
 ---
 name: trl-prompt-optimizer
-description: >
+description: >-
+  Compress or restyle prompts while preserving required behavior; measure loss and score variants against evals. Use for token budgets, prompt variants, compact formats, or versioned prompt-store specs.
+extended_description: >-
   Compress prompts to minimum viable size with measured, declared loss, and restyle them into
   equivalent-behavior methodologies (YAML meta-prompt, mermaid, NPL, checklist, pointer-index). Use
   this skill to compress a prompt, shrink a CLAUDE.md or system prompt, hit a token budget, create
@@ -9,6 +11,8 @@ description: >
   meta-prompt, lossless-by-reference, prompt eval. NOT for building skills (trl-skill-engineer), designing
   agents (trl-agent-architect), media assets (content-media-engine), scoring finished skills
   (trl-skill-evaluator), or designing/building MCP servers (trl-mcp-architect / trl-mcp-builder) — specs only a prompt-store record.
+ch-description: >-
+  壓縮或改寫提示詞，同時保留必要行為；記錄損失並以評測比較版本。適用於詞元預算、提示詞變體、緊湊格式或版本化提示詞儲存規格。
 ---
 
 # Prompt Optimizer

@@ -1,6 +1,10 @@
 ---
 name: trl-hologram-engineer
-description: >
+description: >-
+  Build and debug Hologram UIs in isomorphic Elixir: pages/components, ~HOLO/.holo
+  templates, actions/commands, state, routing, events, forms, realtime, JS interop,
+  UX/accessibility. Use for Hologram, Elixir-to-JS, or “LiveView without round trips.”
+extended_description: >
   Expert engineering and UX design for Hologram — the full-stack isomorphic Elixir
   web framework that compiles client-side Elixir to JavaScript on top of Phoenix.
   Use this skill when the user wants to build a Hologram page or component, write
@@ -14,6 +18,10 @@ description: >
   ~HOLO, .holo template, put_state, put_command, put_action, action/3, command/3,
   prop/2, cid, Hologram.UI.Runtime, Hologram.UI.Link, $click, $submit, $key_down,
   Hologram router, client-side Elixir, or "LiveView without the server round-trip."
+ch-description: >-
+  建置與除錯 Hologram 同構 Elixir 介面：頁面/元件、~HOLO/.holo 範本、動作/命令、狀態、
+  路由、事件、表單、即時、JS 互通與無障礙 UX。用於 Hologram、Elixir-to-JS，
+  或「免伺服器往返的 LiveView」。
 ---
 
 # Hologram Engineer

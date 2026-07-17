@@ -1,6 +1,8 @@
 ---
 name: trl-technical-writer
-description: >
+description: >-
+  Author, edit, and audit software documentation—READMEs, API docs, guides, runbooks, changelogs, and architecture docs—for clarity, correctness, completeness, and DX. Use for documentation, proofreading, restructuring, onboarding, or release notes.
+extended_description: >
   Author, proof-edit, and review technical documentation for software
   applications and developer tools including onboarding guides, API docs,
   READMEs, runbooks, changelogs, and architecture documents. Use this skill
@@ -14,6 +16,8 @@ description: >
   editing, doc review, writing style, readability, onboarding docs,
   developer experience, DX, docs-as-code, README improvements, API
   reference, installation instructions, or troubleshooting guides.
+ch-description: >-
+  撰寫、編修與稽核軟體文件：README、API 文件、指南、操作手冊、變更紀錄與架構文件，提升清晰度、正確性、完整性及開發者體驗。適用於撰寫、校對、重整、入門指南或發行說明。
 ---
 
 # Technical Writer

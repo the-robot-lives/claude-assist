@@ -1,6 +1,10 @@
 ---
 name: trl-signoz-terraform-provider
-description: >
+description: >-
+  Manage SigNoz alerts and dashboards as Terraform IaC or through its REST API.
+  Use for provider setup, signoz_alert/signoz_dashboard, import/drift/debugging,
+  CI/CD, metrics or traces, alert history, channels, tokens, and JSON quirks.
+extended_description: >
   Manage SigNoz observability resources as Terraform IaC or via direct REST API.
   Use this skill when the user wants to write, import, update, or debug
   SigNoz alert rules or dashboards via Terraform; call the SigNoz REST API
@@ -11,6 +15,10 @@ description: >
   signoz_alert, signoz_dashboard, SIGNOZ-API-KEY, SIGNOZ_ACCESS_TOKEN,
   query_range, api/v5, api/v2/rules, SigNoz Service Account tokens,
   SigNoz ingestion keys, or SigNoz Terraform import.
+ch-description: >-
+  以 Terraform IaC 或 REST API 管理 SigNoz 告警與儀表板。適用於供應商設定、
+  signoz_alert/signoz_dashboard、匯入、漂移與除錯、CI/CD、指標或追蹤查詢、
+  告警歷史、通知管道、權杖及 JSON 編碼問題。
 ---
 
 # SigNoz Terraform Provider

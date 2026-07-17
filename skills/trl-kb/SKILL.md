@@ -1,6 +1,6 @@
 ---
 name: trl-kb
-description: >
+extended_description: >
   Gather, organize, and structure knowledge into learning paths, annotated bibliographies,
   and research digests at any complexity level. Use this skill when the user wants to
   learn a new subject, build a reading list, create a curriculum, research a topic in depth,
@@ -8,6 +8,11 @@ description: >
   digest — even if they don't say "knowledge base." Also trigger when users mention
   self-study, autodidact, learning path, syllabus, reading list, literature review,
   research compilation, or study guide.
+description: >
+  Builds learner-calibrated paths, reading lists, curricula, and research digests from trusted
+  sources. Use for self-study, syllabi, literature reviews, study plans, or deep topic research.
+ch-description: >
+  從可信資料建立依學習者程度調整的學習路徑、閱讀清單、課程與研究摘要。適用於自學、教學大綱、文獻回顧、讀書計畫或主題深度研究。
 ---
 
 # Knowledge Base

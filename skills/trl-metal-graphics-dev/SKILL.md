@@ -1,6 +1,10 @@
 ---
 name: trl-metal-graphics-dev
-description: >
+description: >-
+  Build and optimize GPU-accelerated Apple apps with Metal: MSL shaders,
+  render/compute pipelines, architecture, and profiling. Use for Metal, MTKView,
+  CAMetalLayer, GPU kernels, real-time rendering, or graphics on macOS/iOS/visionOS.
+extended_description: >
   Design and develop GPU-accelerated macOS applications using Apple's Metal API,
   including shader authoring, render/compute pipelines, and performance profiling.
   Use this skill when the user wants to build a Metal app, write Metal shaders,
@@ -10,6 +14,9 @@ description: >
   Shading Language, GPU programming on macOS, vertex/fragment shaders for Apple
   platforms, CAMetalLayer, MTKView, compute pipelines, or graphics programming
   for iOS/visionOS.
+ch-description: >-
+  使用 Apple Metal 建置與最佳化 GPU 加速應用程式，涵蓋 MSL 著色器、渲染／運算管線、架構與效能分析。
+  適用於 Metal、MTKView、CAMetalLayer、GPU 核心、即時渲染，以及 macOS／iOS／visionOS 圖形開發。
 ---
 
 # Metal Graphics Dev

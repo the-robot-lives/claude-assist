@@ -1,6 +1,10 @@
 ---
 name: trl-tui-engineer
-description: >
+description: >-
+  Design and ship accessible, production-grade terminal UIs across Rust, Go, C/C++, TypeScript,
+  Java, and shell. Use for dashboards, forms, REPLs, log viewers, layouts, input, styling, or
+  tooling; trigger on TUI frameworks and terminal primitives.
+extended_description: >
   Design, build, and ship terminal user interfaces across Rust (ratatui),
   Go (bubbletea/lipgloss), C/C++ (ncurses/FTXUI), TypeScript (Ink), Java
   (Lanterna/JLine), and shell (gum/dialog/ANSI). Use this skill when the
@@ -12,6 +16,8 @@ description: >
   mention ratatui, bubbletea, lipgloss, charm, ncurses, FTXUI, Ink, Lanterna,
   JLine, blessed, terminal widgets, box-drawing characters, ANSI escape codes,
   crossterm, termion, tcell, or terminal color schemes.
+ch-description: >-
+  設計並交付生產級無障礙 TUI，涵蓋 Rust、Go、C/C++、TypeScript、Java、shell。用於儀表板、表單、REPL、日誌檢視、版面、輸入、樣式、工具鏈；提及 TUI 框架或終端基元時啟用。
 ---
 
 # TUI Engineer

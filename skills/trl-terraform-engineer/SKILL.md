@@ -1,6 +1,11 @@
 ---
 name: trl-terraform-engineer
-description: >
+description: >-
+  Design, test, debug, migrate, and secure Terraform/OpenTofu infrastructure,
+  modules, state, providers, and CI/CD. Use for HCL, IaC, Terragrunt/CDKTF,
+  plan/apply failures, imports, backends, policy, testing, cost, or
+  cloud/Kubernetes provisioning.
+extended_description: >
   Design, implement, test, and maintain production-grade Terraform infrastructure
   across AWS, GCP, Azure, Kubernetes, Cloudflare, and 30+ providers. Use this
   skill when the user wants to write Terraform code, design module architectures,
@@ -12,6 +17,9 @@ description: >
   tfstate, remote backend, Atlantis, Spacelift, Terraform Cloud, tflint, tfsec,
   Checkov, Sentinel, Terratest, provider development, infrastructure as code,
   IaC, terraform import, moved blocks, or terraform test.
+ch-description: >-
+  設計、測試、除錯、遷移並強化 Terraform/OpenTofu 基礎設施、模組、狀態、供應商及 CI/CD。
+  適用於 HCL、IaC、Terragrunt/CDKTF、plan/apply 失敗、匯入、後端、政策、測試、成本或雲端／Kubernetes 佈建。
 ---
 
 # Terraform Engineer

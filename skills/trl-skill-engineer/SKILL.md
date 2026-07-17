@@ -1,6 +1,11 @@
 ---
 name: trl-skill-engineer
 description: >
+  Design, scaffold, wire, and audit AI-agent skills, playbooks,
+  MCP/CLI tools, prompt variants, and overlays. Use for Claude skill engineering,
+  trigger design, DYNAMIC_SKILLSET_TAILOR, or NPL_MCP_ENABLED_SKILLS; evaluate
+  finished skills separately.
+extended_description: >
   Design, build, and audit AI agent skills from requirements through
   production-ready scaffolds. Use this skill to create or scaffold a Claude
   Code skill module, write an agent playbook, wire MCP/CLI tools into a skill,
@@ -11,6 +16,10 @@ description: >
   DYNAMIC_SKILLSET_TAILOR, or NPL_MCP_ENABLED_SKILLS. For testing or
   scoring a finished skill across scenarios, hand off to trl-skill-evaluator;
   for generating/scoring the prompt variants themselves, trl-prompt-optimizer.
+ch-description: >
+  設計、建構、整合並稽核 AI 代理技能、操作手冊、MCP/CLI 工具、提示詞變體與覆寫層。
+  適用於 Claude 技能工程、觸發語設計、DYNAMIC_SKILLSET_TAILOR 或
+  NPL_MCP_ENABLED_SKILLS；成品評測另行處理。
 ---
 
 # Skill Engineer

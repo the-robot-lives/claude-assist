@@ -1,6 +1,8 @@
 ---
 name: trl-api-designer
-description: >
+description: >-
+  Design contract-first REST, GraphQL, gRPC, OpenAPI, and webhook APIs: schemas, auth, pagination, errors, versions, and deprecation. Use for new contracts, endpoint audits, protocol choice, or safe evolution; not implementation or MCP/database design.
+extended_description: >
   Design and evolve API contracts — REST resource modeling, GraphQL schemas, gRPC/protobuf,
   OpenAPI 3.1 schema-first workflows, versioning, auth, pagination, RFC 9457 errors, and
   webhooks. Use this skill (or `/trl-api-designer`) to design a new API, review an endpoint
@@ -9,6 +11,8 @@ description: >
   OpenAPI, swagger, contract-first, endpoint design, pagination, webhook design, API review.
   NOT for MCP server design (trl-mcp-architect/builder/forge), database schema design
   (trl-dba-db-designer-and-tuning), or implementing the backend service itself.
+ch-description: >-
+  設計與審查契約優先的 REST、GraphQL、gRPC、OpenAPI 與 webhook API，涵蓋結構、驗證、分頁、錯誤、版本與棄用。適用於新契約、端點稽核、協定選擇及安全演進；不適用於實作或 MCP／資料庫設計。
 ---
 
 # API Designer

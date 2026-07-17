@@ -1,6 +1,14 @@
 ---
 name: trl-ios-mobile-engineer
 description: >
+  Build and ship production-ready iOS apps with Swift/SwiftUI, from architecture and
+  UI through integrations, testing, TestFlight, and App Store release. Use for iOS,
+  SwiftUI/UIKit, Xcode, CloudKit, push, widgets, deep links, accessibility, or ASO.
+ch-description: >
+  以 Swift／SwiftUI 建置並發佈可上線的 iOS App，涵蓋架構、介面、整合、測試、TestFlight
+  與 App Store。當需求涉及 iOS、SwiftUI/UIKit、Xcode、CloudKit、推播、Widget、
+  Deep Link、無障礙或 ASO 時使用。
+extended_description: >
   Design and implement production-ready iOS mobile applications from concept through
   App Store submission using SwiftUI and Swift. Use this skill when the user wants to
   build an iOS app, design mobile interfaces, implement SwiftUI views, architect a

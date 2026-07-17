@@ -1,6 +1,11 @@
 ---
 name: trl-dba-db-designer-and-tuning
-description: >
+description: >-
+  Design and tune PostgreSQL, MySQL/MariaDB, or TimescaleDB schemas, queries,
+  indexes, migrations, and configuration. Use for modeling, EXPLAIN/slow-query
+  analysis, ORM/N+1 issues, pooling, partitioning, replication, or time-series
+  performance.
+extended_description: >
   Design database schemas, optimize queries, plan migrations, and tune
   PostgreSQL, MySQL/MariaDB, and TimescaleDB performance for production
   workloads. Use this skill when the user wants to design a new database
@@ -15,6 +20,9 @@ description: >
   gap locks, MySQL replication, binary log format, TimescaleDB chunks,
   hypertables, continuous aggregates, compression, time-series database
   tuning, chunk sizing, or database engine comparison.
+ch-description: >-
+  設計並調校 PostgreSQL、MySQL/MariaDB 或 TimescaleDB 的結構、查詢、索引、遷移與設定。
+  適用於資料建模、EXPLAIN／慢查詢分析、ORM／N+1、連線池、分區、複寫或時序效能問題。
 ---
 
 # DBA — Database Designer and Tuning

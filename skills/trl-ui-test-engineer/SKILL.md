@@ -1,6 +1,10 @@
 ---
 name: trl-ui-test-engineer
-description: >
+description: >-
+  Design resilient Cypress UI tests with stable data-cy selectors, layered commands/steps,
+  fixture seams, and anti-flake rules. Use for E2E/component tests, flaky-test fixes,
+  cy.session/cy.intercept, test isolation, seeded data, or selector audits.
+extended_description: >
   Architect non-fragile frontend UI test suites — Cypress-centric selector schemas, command
   layers, step libraries, fixture seams, and anti-flake discipline. Use this skill
   (/trl-ui-test-engineer) to design UI test architecture, write Cypress e2e/component tests,
@@ -9,6 +13,9 @@ description: >
   Also trigger on: cy.session, cy.intercept, selector strategy, test isolation, seeded test
   data. NOT for unit-test frameworks, usability walkthroughs (trl-site-walkthrough), acceptance-
   criteria verification (trl-story-to-release), or React implementation (trl-react-engineer).
+ch-description: >-
+  建立耐改版 Cypress UI 測試：用 data-cy 選擇器、分層命令／步驟、資料接縫與防抖規則降低維護成本。適用
+  E2E／元件測試、修復不穩定、cy.session／cy.intercept、隔離、種子資料及選擇器稽核。
 ---
 
 # UI Test Engineer

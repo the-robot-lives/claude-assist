@@ -1,6 +1,8 @@
 ---
 name: trl-proposal-writer
-description: >
+description: >-
+  Draft and refine client proposals, SOWs, scopes, bids, and RFP responses with clear deliverables, milestones, acceptance criteria, pricing, and change controls. Use for project pitches, engagement letters, work orders, or proposal polishing.
+extended_description: >
   Draft, structure, and refine professional work proposals and statements of
   work (SOW) for consulting, freelance, and agency engagements. Use this skill
   when the user wants to write a project proposal, create a statement of work,
@@ -10,6 +12,8 @@ description: >
   say "proposal" or "SOW." Also trigger when users mention scope of work,
   work order, engagement letter, project scope, deliverables table, milestone
   schedule, fixed-price vs T&M, change order process, or client pitch document.
+ch-description: >-
+  起草並完善客戶提案、工作說明書、範疇、投標及徵求建議書回覆，明確界定交付項目、里程碑、驗收標準、定價與變更控制。適用於專案推介、委聘書、工作單或提案潤飾。
 ---
 
 # Proposal Writer

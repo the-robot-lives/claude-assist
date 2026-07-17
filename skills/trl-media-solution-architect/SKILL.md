@@ -1,6 +1,10 @@
 ---
 name: trl-media-solution-architect
-description: >
+description: >-
+  Design and troubleshoot self-hosted CDN/streaming systems to improve quality, latency, scale, and cost.
+  Use for ingest, transcoding, codecs/ABR, FFmpeg/GStreamer/NVENC, HLS/DASH/CMAF/WebRTC/SRT, edge caching,
+  hardware sizing, VMAF, or DRM.
+extended_description: >
   Deep expertise in designing and building fast distributed self-hosted CDN and
   media streaming solutions using custom hardware, off-the-shelf components, or
   hybrid mixes. Use this skill when the user wants to design a streaming
@@ -12,6 +16,9 @@ description: >
   users mention video transcoding, FFmpeg, GStreamer, NVENC, WebRTC, SRT,
   origin servers, edge caching, encoding ladders, VMAF, bitrate optimization,
   PoP placement, media pipelines, or DRM.
+ch-description: >-
+  設計建置、診斷自架 CDN 與串流系統，改善畫質、延遲、擴展性與成本。用於擷取、轉碼、編解碼器／ABR、
+  FFmpeg／GStreamer／NVENC、HLS／DASH／CMAF／WebRTC／SRT、邊緣快取、硬體規模、VMAF 或 DRM。
 ---
 
 # Media Solution Architect
