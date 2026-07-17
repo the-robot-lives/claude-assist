@@ -11,6 +11,7 @@ A fast, ergonomic CLI wrapper around `gh gist` with interactive file picking via
 - Incremental uploads with automatic large-text-file chunking
 - Pipe from stdin
 - Add files to existing gists
+- Automatic `-- pushed with [quick-gist](...)` description attribution
 - Public/secret visibility control (flag or env var)
 - Auto-copies gist URL to clipboard
 - Optional browser open after creation
@@ -53,6 +54,10 @@ quick-gist -o index.html style.css
 # Include a directory recursively, filtered to Elixir source
 quick-gist -x ex -x exs lib test
 ```
+
+Created Gists always link back to `quick-gist`. If you provide a description,
+the attribution is appended to it; otherwise, the attribution becomes the
+description.
 
 ### Account ownership
 

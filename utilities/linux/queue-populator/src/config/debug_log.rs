@@ -4,8 +4,15 @@
 use std::fs::{File, OpenOptions};
 use std::io::Write;
 use std::path::PathBuf;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Mutex;
 use std::sync::OnceLock;
+
+static VERBOSE: AtomicBool = AtomicBool::new(false);
+
+pub fn set_verbose(enabled: bool) {
+    VERBOSE.store(enabled, Ordering::Relaxed);
+}
 
 fn log_path() -> Option<PathBuf> {
     Some(dirs::home_dir()?.join(".config/queue-populator/debug.log"))
@@ -36,5 +43,11 @@ pub fn log(message: &str) {
             let ts = chrono::Local::now().format("%H:%M:%S%.3f");
             let _ = writeln!(file, "[{ts}] {message}");
         }
+    }
+}
+
+pub fn verbose(message: &str) {
+    if VERBOSE.load(Ordering::Relaxed) {
+        log(message);
     }
 }

@@ -11,14 +11,27 @@ extraction, conformance JSONL parsing) are hand-rolled in `Ithkuil.JSON`.
 
 ## API
 
+Full contract: `../SDK-INTERFACE.md` §2 (operations), §3 (error codes).
+
 ```elixir
-{:ok, coord}   = Ithkuil.from_latin("alala")          # romanization -> canonical tuple (partial; see below)
-{:ok, "alala"} = Ithkuil.to_latin(coord)
+{:ok, coord}   = Ithkuil.from_latin("alala")          # romanization profile core-v1 (partial; see below)
+{:ok, "alala"} = Ithkuil.to_latin(coord)              # canonical spelling (lowercase, NFC)
 
 {:ok, n}       = Ithkuil.to_integer(coord)            # codec-v1 ranking (arbitrary precision)
 {:ok, coord}   = Ithkuil.from_integer(n)              # strict: only canonical words decode
 {:ok, s}       = Ithkuil.to_integer_string(coord)     # unsigned decimal string — the boundary form
 {:ok, coord}   = Ithkuil.from_integer_string(s)
+
+{:ok, bytes}   = Ithkuil.to_bytes(coord)              # canonical codec-v1 ser(word)
+{:ok, coord}   = Ithkuil.from_bytes(bytes)            # strict: minimal varints, sorted sockets, no trailing bytes
+
+{:ok, wire}    = Ithkuil.to_wire(coord)               # canonical tagged arrays (Elixir data)
+{:ok, coord}   = Ithkuil.from_wire(wire)              # LENIENT: sorts sockets, drops [id, nil]; duplicates error
+{:ok, json}    = Ithkuil.to_wire_json(coord)          # canonical wire-form JSON text
+{:ok, coord}   = Ithkuil.from_wire_json(json)         # lenient, same rules as from_wire/1
+
+{:ok, coord}   = Ithkuil.validate(coord)              # structural check; input must already be canonical
+{:ok, coord}   = Ithkuil.canonicalize(loose)          # lenient repair (sort, drop empties) + validate
 
 {:ok, model}   = Ithkuil.to_scene(coord)              # deterministic render model (node-for-node = web/src/scene.js)
 svg            = Ithkuil.SVG.render(model, :compact)  # or :exploded
@@ -28,7 +41,10 @@ svg            = Ithkuil.SVG.render(model, :compact)  # or :exploded
 
 Coordinate arguments accept the canonical tuple or the JSON tagged-array wire
 form (as Elixir data) and are canonicalized on entry: sockets sorted
-ascending, duplicates rejected, empty sockets omitted.
+ascending, duplicates rejected, empty sockets omitted. Strictness boundary
+(SDK-INTERFACE.md): byte/integer inputs are STRICT; wire/JSON inputs are
+lenient but canonicalizing. Error tuples carry a code from the
+SDK-INTERFACE.md §3 registry, e.g. `{:error, {:unsupported, detail}}`.
 
 ## Layout
 
@@ -51,9 +67,11 @@ mix test
 ```
 
 - `test/conformance_test.exs` asserts every row of `../conformance/codec_units.jsonl`,
-  `coordinate_to_integer.jsonl` and `invalid_inputs.jsonl` in both directions.
+  `coordinate_to_integer.jsonl`, `invalid_inputs.jsonl` and
+  `latin_to_coordinate.jsonl` in both directions.
 - `test/round_trip_test.exs` runs ~200 seeded pseudo-random coordinates through
-  `from_integer(to_integer(c)) == {:ok, c}` and the SVG-metadata round-trip.
+  the integer, integer-string, bytes, wire, and wire-JSON round-trips
+  (plus `validate`/`canonicalize` fixpoints) and the SVG-metadata round-trip.
 - `test/scene_test.exs` snapshots stable node IDs
   (`g0`, `g0.s1.link`, `g0.s1.marker`, `g0.s1.mod`, `g0.s1.mod.d0`) and placements.
 - `test/romanization_test.exs` covers the supported romanization subset and its
@@ -61,13 +79,15 @@ mix test
 
 ## Romanization coverage (partial by design)
 
-`Ithkuil.Romanization` accepts exactly the formative shape `Vv Cr Vr Ca Vc`
-with closed tables for Vv (stem/version), Vr (function/specification, EXS
-context), Ca (the four default single-consonant forms), Vc (cases 1–9), and
-a 27-consonant root inventory. Everything else — Cc, affixes, VnCn, stress,
-concatenation — returns `{:error, {:unsupported, detail}}` rather than
-guessing. The morpheme→coordinate mapping is **provisional** and documented
-in the moduledoc; the coordinate tuple, not the mapping, is canonical.
+`Ithkuil.Romanization` is the origin of **romanization profile core-v1**
+(`../ROMANIZATION.md`, normative): exactly the formative shape
+`Vv Cr Vr Ca Vc` with closed tables for Vv (stem/version), Vr
+(function/specification, EXS context), Ca (the four default single-consonant
+forms), Vc (cases 1–9), and a 27-consonant root inventory read as a bijective
+base-27 numeral. Everything else — Cc, affixes, VnCn, stress, concatenation —
+returns `{:error, {:unsupported, detail}}` rather than guessing. The
+morpheme→coordinate mapping is **provisional but frozen for core-v1**;
+`../conformance/latin_to_coordinate.jsonl` is the arbiter.
 
 ## Verification status
 

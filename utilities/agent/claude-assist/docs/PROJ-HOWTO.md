@@ -31,11 +31,27 @@ Task-oriented guides for the things you'll actually do with Claude Assist. See [
 **Prereqs:** none — the CLI starts the API for you if it isn't already running.
 
 ```bash
-npx tsx packages/cli/bin.ts search "auth middleware"
+claude-assist search "auth middleware"
 ```
 
 **Verify:** results print with conversation id, project, and matched snippet.
 **Gotchas:** this is FTS5 keyword search, not semantic — for meaning-based search use the Web UI's `/search` page with `mode=semantic`.
+
+## How to: list recent sessions without the web or API server
+
+**Goal:** quickly see what ran recently, where it ran, and the first/last message from each indexed session.
+**Prereqs:** run `claude-assist` at least once so its local SQLite index exists.
+
+```bash
+claude-assist recent                 # last hour
+claude-assist recent 2h              # supplied interval
+claude-assist recent 1 day --full    # untruncated first/last messages
+claude-assist recent 1d --json       # scripting output
+```
+
+Each entry includes its title, session ID, update time, project directory, runner/harness, transcript source path, and first/last message. This command opens the existing database read-only and does not start the API or web UI.
+
+**Gotcha:** results reflect the current local index. If the API watcher has not been running, open `claude-assist` or run `claude-assist index` to refresh it.
 
 ## How to: launch the full-screen terminal UI
 

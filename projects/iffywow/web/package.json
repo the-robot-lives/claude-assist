@@ -20,6 +20,10 @@
     "src",
     "types.d.ts"
   ],
+  "scripts": {
+    "test": "node --test test/",
+    "coverage": "node --test --experimental-test-coverage test/"
+  },
   "peerDependencies": {
     "lit": "^3.0.0"
   },

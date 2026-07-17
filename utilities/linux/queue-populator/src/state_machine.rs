@@ -74,6 +74,7 @@ pub enum AppEvent {
     LlmCompleted(Vec<ProposedEntry>),
     LlmFailed(String),
     WriteCompleted(usize),
+    WriteFailed(String),
     // Handled by the coordinator directly (never reach the state machine):
     MicOpen(MicTarget),
     MicClose(MicTarget),
@@ -113,9 +114,18 @@ impl AppStateMachine {
         use AppState as S;
         use SideEffect as F;
 
-        // WriteCompleted is state-independent, mirroring the Swift `(_, .writeCompleted)`.
-        if let E::WriteCompleted(count) = event {
-            return vec![F::ShowOverlay(format!("Wrote {count} entries")), F::ReturnToIdle];
+        // Queue writes finish outside the state machine. Always reconcile the
+        // internal state as well as the UI when their result comes back.
+        match &event {
+            E::WriteCompleted(count) => {
+                self.state = S::Idle;
+                return vec![F::ShowOverlay(format!("Wrote {count} entries")), F::ReturnToIdle];
+            }
+            E::WriteFailed(error) => {
+                self.state = S::Idle;
+                return vec![F::ShowError(format!("Write error: {error}")), F::ReturnToIdle];
+            }
+            _ => {}
         }
 
         match (self.state.clone(), event) {
@@ -179,7 +189,9 @@ impl AppStateMachine {
             (S::Review(entries), E::ApproveDetected) => {
                 self.state = S::Idle;
                 let count = entries.len();
-                vec![F::WriteEntries(entries), F::ShowOverlay(format!("Writing {count} entries..."))]
+                // Announce before the synchronous write so its completion or
+                // error remains the final status shown to the user.
+                vec![F::ShowOverlay(format!("Writing {count} entries...")), F::WriteEntries(entries)]
             }
 
             (S::Review(entries), E::ReviseDetected) => {
@@ -330,7 +342,13 @@ mod tests {
         let entries = drive_to_review(&mut sm);
         let fx = sm.handle(AppEvent::ApproveDetected);
         assert_eq!(*sm.state(), AppState::Idle);
-        assert!(fx.contains(&SideEffect::WriteEntries(entries)));
+        assert_eq!(
+            fx,
+            vec![
+                SideEffect::ShowOverlay("Writing 1 entries...".into()),
+                SideEffect::WriteEntries(entries),
+            ]
+        );
     }
 
     #[test]
@@ -378,8 +396,25 @@ mod tests {
     #[test]
     fn write_completed_from_any_state() {
         let mut sm = AppStateMachine::new();
+        sm.handle(AppEvent::WakeDetected);
         let fx = sm.handle(AppEvent::WriteCompleted(3));
+        assert_eq!(*sm.state(), AppState::Idle);
         assert!(fx.contains(&SideEffect::ShowOverlay("Wrote 3 entries".into())));
         assert!(fx.contains(&SideEffect::ReturnToIdle));
+    }
+
+    #[test]
+    fn write_failure_returns_to_idle_with_error() {
+        let mut sm = AppStateMachine::new();
+        sm.handle(AppEvent::WakeDetected);
+        let fx = sm.handle(AppEvent::WriteFailed("disk full".into()));
+        assert_eq!(*sm.state(), AppState::Idle);
+        assert_eq!(
+            fx,
+            vec![
+                SideEffect::ShowError("Write error: disk full".into()),
+                SideEffect::ReturnToIdle,
+            ]
+        );
     }
 }

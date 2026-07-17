@@ -21,22 +21,37 @@ Stdlib only (`json`, `dataclasses`, `math`, `unicodedata`,
 | `ithkuil/codec.py` | codec-v1: minimal-LEB128 varints, term algebra ser/de (tags `0x00–0x03`, `0x04` rejected), word↔term mapping, ranking `E = S_m + V256(B)`, strict decode (leading zeros preserved, no trailing bytes), decimal-string boundary |
 | `ithkuil/scene.py` | Deterministic scene compiler + seed geometry registry, ported from `web/src/{scene,registry,util}.js` |
 | `ithkuil/svg.py` | `render(model, mode)` / `extract_coordinate(svg_text)` matching `web/src/metadata.js` byte-for-byte |
-| `ithkuil/romanization.py` | Latin ↔ coordinate for the confidently-encodable subset; refuses (`ValueError("unsupported: ...")`) instead of guessing |
-| `ithkuil/__init__.py` | Public API mirroring Elixir `Ithkuil` |
+| `ithkuil/romanization.py` | Romanization profile core-v1 (`../ROMANIZATION.md`, normative): `Vv Cr Vr Ca Vc` formatives, closed tables, bijective base-27 roots; everything else raises `unsupported` instead of guessing |
+| `ithkuil/__init__.py` | Public API mirroring Elixir `Ithkuil` (SDK-INTERFACE.md §2) |
 
 ## API
+
+Full contract: `../SDK-INTERFACE.md` §2 (operations), §3 (error codes).
 
 ```python
 import ithkuil
 
-word = ithkuil.from_latin("pa")                  # -> Word (subset; see romanization.py)
-text = ithkuil.to_latin(word)                    # -> "pa"
+word = ithkuil.from_latin("alala")               # -> Word (romanization profile core-v1)
+text = ithkuil.to_latin(word)                    # -> "alala" (canonical spelling: lowercase NFC)
 
 n = ithkuil.to_integer(word)                     # -> int (arbitrary precision)
 word2 = ithkuil.from_integer(n)                  # -> Word; word2 == word, exact
 
 s = ithkuil.to_integer_string(word)              # -> unsigned decimal string
 word3 = ithkuil.from_integer_string(s)           # the ONLY cross-boundary integer form
+
+data = ithkuil.to_bytes(word)                    # -> bytes, canonical codec-v1 ser(word)
+word4 = ithkuil.from_bytes(data)                 # strict: minimal varints, sorted sockets,
+                                                 #         no trailing bytes
+
+wire = ithkuil.to_wire(word)                     # -> canonical tagged arrays (lists/ints)
+word5 = ithkuil.from_wire(wire)                  # LENIENT: sorts sockets, drops [id, null];
+                                                 #          duplicates still error
+text = ithkuil.to_wire_json(word)                # -> canonical wire JSON text
+word6 = ithkuil.from_wire_json(text)             # lenient, same rules as from_wire
+
+ithkuil.validate(word)                           # structural check of a native Word
+ithkuil.canonicalize(wire)                       # lenient repair (sort, drop empties) + validate
 
 model = ithkuil.to_scene(word, integer=s)        # {schema, latinized, integer,
                                                  #  coordinate, viewBox, nodes[]}
@@ -46,12 +61,15 @@ ithkuil.svg.extract_coordinate(svg_text)         # == ithkuil.word_to_wire(word)
 
 Accepted coordinate inputs everywhere: a `Word`, a wire array
 (`["ithkuil-word", 1, [...]]`), or its JSON text. `[id, null]` empty sockets
-are accepted on input and canonicalized away. Invalid input raises
-`ithkuil.IthkuilError` (a `ValueError`) whose message starts with a stable
-code (`nonminimal_varint`, `reserved_tag`, `trailing_bytes`, `truncated`,
-`invalid_version`, `invalid_orientation`, `invalid_socket_id`,
-`duplicate_socket`, `invalid_natural_number`, ...) matching
-`conformance/invalid_inputs.jsonl`.
+are accepted on input and canonicalized away. Strictness boundary
+(SDK-INTERFACE.md): byte/integer inputs are STRICT; wire/JSON inputs are
+lenient but canonicalizing. Invalid input raises `ithkuil.IthkuilError` (a
+`ValueError`) whose message starts with a stable code from the
+SDK-INTERFACE.md §3 registry (`nonminimal_varint`, `reserved_tag`,
+`trailing_bytes`, `truncated`, `invalid_version`, `invalid_orientation`,
+`invalid_socket_id`, `duplicate_socket`, `unsorted_sockets`,
+`invalid_natural_number`, `invalid_structure`, `unsupported`, ...) matching
+`conformance/invalid_inputs.jsonl` and `latin_to_coordinate.jsonl`.
 
 ## Running the tests
 
@@ -131,8 +149,9 @@ otherwise.
    nesting level; CPython's default recursion limit (~1000) bounds decodable
    nesting depth. Acceptable for a reference codec; the official script
    needs finite shallow depth anyway.
-5. **Romanization coverage is a deliberate sliver.** Grapheme-level
-   transliteration only (31 consonants, 9 vowels, class 0/1, orientation 0,
-   no sockets). Slot I–IX morphology is registry-first and lands with
-   `spec/*.yaml`; everything else raises `unsupported: ...` rather than
-   minting enum IDs that could never be reassigned.
+5. **Romanization coverage is a deliberate sliver.** Profile core-v1 only
+   (`../ROMANIZATION.md`): unconcatenated `Vv Cr Vr Ca Vc` formatives with
+   closed slot tables and a 27-consonant bijective base-27 root inventory.
+   Full slot I–IX morphology is registry-first and lands with `spec/*.yaml`
+   as a new profile version; everything else raises `unsupported: ...`
+   rather than minting enum IDs that could never be reassigned.

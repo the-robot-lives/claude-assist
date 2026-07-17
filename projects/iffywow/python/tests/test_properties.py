@@ -8,10 +8,12 @@ Acceptance laws (README.md / CODEC.md section 5)::
 
 from __future__ import annotations
 
+import json
 import random
 
 import pytest
 
+import ithkuil
 from genwords import random_word
 from ithkuil import codec, coord, scene, svg
 
@@ -46,6 +48,95 @@ def test_integer_and_svg_round_trips():
         assert svg.extract_coordinate(svg_text) == coord.word_to_wire(word), (
             f"svg round-trip failed at case {i} (mode={mode})"
         )
+
+
+def test_public_wrapper_round_trips():
+    """SDK-INTERFACE.md section 2 wrappers over the seeded generator:
+
+    from_bytes(to_bytes(c)) == c, from_wire(to_wire(c)) == c,
+    from_wire_json(to_wire_json(c)) == c, validate/canonicalize fixpoints.
+    """
+    rnd = random.Random(SEED + 2)
+    for i in range(200):
+        word = random_word(rnd)
+
+        data = ithkuil.to_bytes(word)
+        assert ithkuil.from_bytes(data) == word, f"bytes round-trip failed at case {i}"
+
+        wire = ithkuil.to_wire(word)
+        assert wire == coord.word_to_wire(word)
+        assert ithkuil.from_wire(wire) == word, f"wire round-trip failed at case {i}"
+
+        text = ithkuil.to_wire_json(word)
+        assert json.loads(text) == wire
+        assert ithkuil.from_wire_json(text) == word, f"wire-JSON round-trip failed at case {i}"
+
+        assert ithkuil.validate(word) is word
+        assert ithkuil.canonicalize(wire) == word
+
+
+def test_wire_is_lenient_bytes_are_strict():
+    # Lenient: unsorted sockets + [id, null] empties canonicalize at the
+    # wire boundary...
+    wire = [
+        "ithkuil-word",
+        1,
+        [["glyph", 0, 17, 1, [
+            [3, ["modifier", 6, 2, [3], []]],
+            [1, None],
+            [0, ["modifier", 0, 0, [], []]],
+        ]]],
+    ]
+    word = ithkuil.from_wire(wire)
+    assert [s.socket_id for s in word.glyphs[0].sockets] == [0, 3]
+
+    # ...but duplicates are an error, never repaired.
+    dup = ["ithkuil-word", 1, [["glyph", 0, 1, 0, [[2, None], [2, ["modifier", 0, 0, [], []]]]]]]
+    with pytest.raises(coord.IthkuilError) as e:
+        ithkuil.from_wire(dup)
+    assert e.value.code == "duplicate_socket"
+
+    # Strict: the byte path rejects unsorted sockets outright.
+    def modifier_term():
+        return ("list", (("nat", 0), ("nat", 0), ("list", ()), ("list", ())))
+
+    unsorted_term = (
+        "pair",
+        ("nat", 1),
+        ("list", ((
+            "list",
+            (
+                ("nat", 0),
+                ("nat", 0),
+                ("nat", 0),
+                ("list", (
+                    ("pair", ("nat", 1), modifier_term()),
+                    ("pair", ("nat", 0), modifier_term()),
+                )),
+            ),
+        ),)),
+    )
+    with pytest.raises(coord.IthkuilError) as e:
+        ithkuil.from_bytes(codec.serialize_term(unsorted_term))
+    assert e.value.code == "unsorted_sockets"
+
+
+def test_from_wire_json_requires_valid_json_text():
+    with pytest.raises(coord.IthkuilError) as e:
+        ithkuil.from_wire_json("not json")
+    assert e.value.code == "invalid_structure"
+    with pytest.raises(coord.IthkuilError) as e:
+        ithkuil.from_wire_json(42)
+    assert e.value.code == "invalid_structure"
+
+
+def test_validate_requires_native_word():
+    with pytest.raises(coord.IthkuilError) as e:
+        ithkuil.validate(["ithkuil-word", 1, []])
+    assert e.value.code == "invalid_structure"
+    empty = coord.Word(1, ())
+    assert ithkuil.validate(empty) is empty
+    assert ithkuil.canonicalize(["ithkuil-word", 1, []]) == empty
 
 
 def test_wire_round_trip_is_canonical():

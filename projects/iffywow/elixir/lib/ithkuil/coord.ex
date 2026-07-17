@@ -69,13 +69,15 @@ defmodule Ithkuil.Coord do
 
   @doc """
   Check that `coord` is already in canonical form.
-  Returns `:ok` or `{:error, reason}` (`:not_canonical` when merely non-canonical).
+  Returns `:ok` or `{:error, reason}` (`{:invalid_structure, :not_canonical}`
+  when the value is repairable but not canonical — the code stays inside the
+  SDK-INTERFACE.md §3 registry; the detail is non-normative).
   """
   @spec validate(term()) :: :ok | {:error, reason()}
   def validate(coord) do
     case canonicalize(coord) do
       {:ok, ^coord} -> :ok
-      {:ok, _other} -> {:error, :not_canonical}
+      {:ok, _other} -> {:error, {:invalid_structure, :not_canonical}}
       {:error, reason} -> {:error, reason}
     end
   end

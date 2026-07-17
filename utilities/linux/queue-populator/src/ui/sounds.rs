@@ -40,13 +40,15 @@ fn blip_path(name: &str, freq: f32, seconds: f32) -> Option<PathBuf> {
 }
 
 fn play(path: PathBuf) {
-    std::thread::spawn(move || {
-        let _ = Command::new("pw-play")
-            .arg(&path)
-            .stdout(Stdio::null())
-            .stderr(Stdio::null())
-            .status();
-    });
+    let _ = std::thread::Builder::new()
+        .name("sound-cue".into())
+        .spawn(move || {
+            let _ = Command::new("pw-play")
+                .arg(&path)
+                .stdout(Stdio::null())
+                .stderr(Stdio::null())
+                .status();
+        });
 }
 
 /// Short high blip on any recognized command ("Tink").

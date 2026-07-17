@@ -1,0 +1,40 @@
+{
+  "name": "@noizu/ithkuil",
+  "version": "0.1.0",
+  "description": "New Ithkuil codec-v1 core SDK — canonical coordinate tuples, byte/integer ranking, wire JSON, romanization profile core-v1. Conversions only; zero runtime dependencies.",
+  "license": "MIT",
+  "type": "module",
+  "main": "src/index.js",
+  "types": "types.d.ts",
+  "exports": {
+    ".": {
+      "types": "./types.d.ts",
+      "default": "./src/index.js"
+    },
+    "./errors": "./src/errors.js",
+    "./coord": "./src/coord.js",
+    "./codec": "./src/codec.js",
+    "./wire": "./src/wire.js",
+    "./romanization": "./src/romanization.js",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "src",
+    "types.d.ts",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "test": "node --test test/",
+    "coverage": "node --test --experimental-test-coverage test/"
+  },
+  "keywords": [
+    "ithkuil",
+    "codec",
+    "conlang",
+    "romanization",
+    "bigint"
+  ]
+}

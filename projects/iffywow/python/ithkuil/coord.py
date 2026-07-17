@@ -212,7 +212,8 @@ def word_from_wire(value: Union[str, list, "Word"]) -> Word:
         try:
             value = json.loads(value)
         except json.JSONDecodeError as e:
-            raise IthkuilError("invalid_json", f"invalid coordinate: not JSON ({e})") from None
+            # Code stays inside the SDK-INTERFACE.md section 3 registry.
+            raise IthkuilError("invalid_structure", f"invalid coordinate: not JSON ({e})") from None
     if not isinstance(value, list) or len(value) != 3 or value[0] != WORD_TAG:
         _fail("invalid_structure", f'expected ["{WORD_TAG}", version, glyphs]', "$")
     version = value[1]

@@ -4,7 +4,7 @@
 //! Overlay toasts become desktop notifications (no always-on-top windows on
 //! GNOME Wayland).
 
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, MutexGuard};
 
 use crossbeam_channel::{Receiver, Sender};
 use eframe::egui;
@@ -19,6 +19,10 @@ use crate::state_machine::{AppEvent, AppState};
 use crate::ui::sounds;
 
 const LOG_LIMIT: usize = 500;
+
+fn lock_recover<T>(mutex: &Mutex<T>) -> MutexGuard<'_, T> {
+    mutex.lock().unwrap_or_else(|poisoned| poisoned.into_inner())
+}
 
 struct LogLine {
     text: String,
@@ -49,6 +53,7 @@ pub struct QueuePopulatorApp {
     updates: Receiver<UiUpdate>,
     coordinator: Sender<CoordinatorMsg>,
     show_window: Receiver<()>,
+    quit_window: Receiver<()>,
 
     config: QueuePopulatorConfig,
     state: AppState,
@@ -67,11 +72,13 @@ impl QueuePopulatorApp {
         updates: Receiver<UiUpdate>,
         coordinator: Sender<CoordinatorMsg>,
         show_window: Receiver<()>,
+        quit_window: Receiver<()>,
     ) -> Self {
         Self {
             updates,
             coordinator,
             show_window,
+            quit_window,
             config,
             state: AppState::Idle,
             paused: false,
@@ -325,16 +332,21 @@ impl QueuePopulatorApp {
                             let key = dialog.draft.llm.effective_api_key();
                             let base = dialog.draft.llm.effective_base_url();
                             let slot = dialog.models.clone();
-                            std::thread::spawn(move || {
-                                let models =
-                                    model_fetcher::fetch_models(&provider, key.as_deref(), base.as_deref());
-                                *slot.lock().unwrap() = Some(models);
-                            });
+                            let _ = std::thread::Builder::new()
+                                .name("model-fetch".into())
+                                .spawn(move || {
+                                    let models = model_fetcher::fetch_models(
+                                        &provider,
+                                        key.as_deref(),
+                                        base.as_deref(),
+                                    );
+                                    *lock_recover(&slot) = Some(models);
+                                });
                         }
                     });
                     dialog.draft.llm.model = if model.trim().is_empty() { None } else { Some(model) };
 
-                    if let Some(models) = dialog.models.lock().unwrap().clone() {
+                    if let Some(models) = lock_recover(&dialog.models).clone() {
                         egui::ComboBox::from_label(format!("{} models", models.len()))
                             .selected_text(dialog.draft.llm.model.clone().unwrap_or_default())
                             .show_ui(ui, |ui| {
@@ -379,20 +391,22 @@ impl QueuePopulatorApp {
                             llm.api_key = Some(dialog.api_key_input.trim().to_string());
                         }
                         let slot = dialog.test_result.clone();
-                        *slot.lock().unwrap() = Some("testing…".into());
-                        std::thread::spawn(move || {
-                            let client = LlmClient::new(llm);
-                            let result = client.classify_with_trace(
-                                "Reply with exactly this JSON: {\"entries\": [], \"reasoning\": \"ok\"}",
-                                "ping",
-                            );
-                            *slot.lock().unwrap() = Some(match result {
-                                Ok(_) => "✓ inference OK".into(),
-                                Err(e) => format!("✗ {e}"),
+                        *lock_recover(&slot) = Some("testing…".into());
+                        let _ = std::thread::Builder::new()
+                            .name("inference-test".into())
+                            .spawn(move || {
+                                let client = LlmClient::new(llm);
+                                let result = client.classify_with_trace(
+                                    "Reply with exactly this JSON: {\"entries\": [], \"reasoning\": \"ok\"}",
+                                    "ping",
+                                );
+                                *lock_recover(&slot) = Some(match result {
+                                    Ok(_) => "✓ inference OK".into(),
+                                    Err(e) => format!("✗ {e}"),
+                                });
                             });
-                        });
                     }
-                    if let Some(result) = dialog.test_result.lock().unwrap().clone() {
+                    if let Some(result) = lock_recover(&dialog.test_result).clone() {
                         ui.label(result);
                     }
 
@@ -462,6 +476,10 @@ impl QueuePopulatorApp {
 
 impl eframe::App for QueuePopulatorApp {
     fn logic(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+        if self.quit_window.try_recv().is_ok() {
+            ctx.send_viewport_cmd(egui::ViewportCommand::Close);
+            return;
+        }
         self.drain_updates(ctx);
         // Poll channels even when idle.
         ctx.request_repaint_after(std::time::Duration::from_millis(150));
@@ -493,11 +511,13 @@ fn notify(message: &str, icon: &str, seconds: f64) {
     };
     let body = message.to_string();
     let timeout_ms = (seconds * 1000.0) as i32;
-    std::thread::spawn(move || {
-        let _ = notify_rust::Notification::new()
-            .summary(&summary)
-            .body(&body)
-            .timeout(notify_rust::Timeout::Milliseconds(timeout_ms as u32))
-            .show();
-    });
+    let _ = std::thread::Builder::new()
+        .name("desktop-notification".into())
+        .spawn(move || {
+            let _ = notify_rust::Notification::new()
+                .summary(&summary)
+                .body(&body)
+                .timeout(notify_rust::Timeout::Milliseconds(timeout_ms as u32))
+                .show();
+        });
 }

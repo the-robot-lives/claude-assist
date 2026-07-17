@@ -43,6 +43,9 @@ Canonical names below; each language maps them via §4. `from_X` constructs a
 Strictness boundary (settled): byte/integer inputs are STRICT (one meaning,
 one representation); wire/JSON and language-native inputs are LENIENT but
 canonicalizing. Duplicated sockets are always an error, never repaired.
+Wire JSON numbers must be integral; implementations MAY additionally accept
+integral floats (`2.0`) up to 2^53−1, but MUST reject non-integral values.
+Malformed JSON text maps to `invalid_structure`.
 
 ## 3. Error model
 

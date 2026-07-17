@@ -1,26 +1,31 @@
 //! Port of Sources/LLM/LlmClient.swift — blocking HTTP via ureq (runs on the
 //! coordinator's LLM worker thread).
 
+use std::io::Read;
 use std::time::Duration;
 
 use rand::Rng;
 use serde_json::json;
 
-use crate::config::llm::LlmConfig;
+use crate::config::llm::{self, LlmConfig};
 use crate::llm::response::{ClassificationResponse, ClassificationResult};
 use crate::queue::manifest;
 
 const MAX_RETRIES: u32 = 3;
 const TIMEOUT: Duration = Duration::from_secs(30);
+const MAX_RESPONSE_BYTES: usize = 2 * 1024 * 1024;
+const MAX_ERROR_BODY_BYTES: usize = 64 * 1024;
 
 #[derive(Debug)]
 pub enum LlmError {
     NoApiKey,
+    NoBaseUrl,
     RequestFailed(u16, String),
     Timeout,
     DecodingFailed(String),
     InvalidEntries(Vec<String>),
     EmptyResponse,
+    ResponseTooLarge,
     Transport(String),
 }
 
@@ -28,11 +33,15 @@ impl std::fmt::Display for LlmError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             LlmError::NoApiKey => write!(f, "No API key configured"),
+            LlmError::NoBaseUrl => write!(f, "No base URL configured"),
             LlmError::RequestFailed(code, msg) => write!(f, "HTTP {code}: {msg}"),
             LlmError::Timeout => write!(f, "Request timed out (30s)"),
             LlmError::DecodingFailed(msg) => write!(f, "Failed to parse LLM response: {msg}"),
             LlmError::InvalidEntries(paths) => write!(f, "Invalid queue paths: {}", paths.join(", ")),
             LlmError::EmptyResponse => write!(f, "LLM returned empty response"),
+            LlmError::ResponseTooLarge => {
+                write!(f, "LLM response exceeded {MAX_RESPONSE_BYTES} bytes")
+            }
             LlmError::Transport(msg) => write!(f, "Request failed: {msg}"),
         }
     }
@@ -88,11 +97,19 @@ impl LlmClient {
     }
 
     fn send(&self, system: &str, user: &str) -> Result<String, LlmError> {
+        if llm::needs_base_url(&self.config.provider) && self.config.effective_base_url().is_none() {
+            return Err(LlmError::NoBaseUrl);
+        }
+        let api_key = self.config.effective_api_key();
+        if llm::needs_api_key(&self.config.provider) && api_key.is_none() {
+            return Err(LlmError::NoApiKey);
+        }
+
         if self.config.provider == "anthropic" {
-            let api_key = self.config.effective_api_key().ok_or(LlmError::NoApiKey)?;
+            let api_key = api_key.ok_or(LlmError::NoApiKey)?;
             self.send_anthropic(system, user, &api_key)
         } else {
-            self.send_openai_compatible(system, user, self.config.effective_api_key().as_deref())
+            self.send_openai_compatible(system, user, api_key.as_deref())
         }
     }
 
@@ -102,11 +119,19 @@ impl LlmClient {
             request = request.set(name, value);
         }
         match request.send_json(body) {
-            Ok(response) => response
-                .into_json::<serde_json::Value>()
-                .map_err(|e| LlmError::DecodingFailed(e.to_string())),
+            Ok(response) => {
+                let (body, truncated) = read_limited(response.into_reader(), MAX_RESPONSE_BYTES)?;
+                if truncated {
+                    return Err(LlmError::ResponseTooLarge);
+                }
+                serde_json::from_slice(&body).map_err(|e| LlmError::DecodingFailed(e.to_string()))
+            }
             Err(ureq::Error::Status(code, response)) => {
-                let body = response.into_string().unwrap_or_else(|_| "unknown".into());
+                let (body, truncated) = read_limited(response.into_reader(), MAX_ERROR_BODY_BYTES)?;
+                let mut body = String::from_utf8_lossy(&body).into_owned();
+                if truncated {
+                    body.push_str("… [truncated]");
+                }
                 Err(LlmError::RequestFailed(code, body))
             }
             Err(ureq::Error::Transport(t)) => {
@@ -173,6 +198,19 @@ impl LlmClient {
             .map(String::from)
             .ok_or(LlmError::EmptyResponse)
     }
+}
+
+fn read_limited(reader: impl Read, limit: usize) -> Result<(Vec<u8>, bool), LlmError> {
+    let mut body = Vec::with_capacity(limit.min(16 * 1024));
+    reader
+        .take((limit as u64).saturating_add(1))
+        .read_to_end(&mut body)
+        .map_err(|e| LlmError::Transport(e.to_string()))?;
+    let truncated = body.len() > limit;
+    if truncated {
+        body.truncate(limit);
+    }
+    Ok((body, truncated))
 }
 
 fn join_url(base: &str, path: &str) -> String {
@@ -259,5 +297,36 @@ mod tests {
             Err(LlmError::DecodingFailed(msg)) => assert!(msg.contains("not json at all")),
             other => panic!("expected DecodingFailed, got {other:?}"),
         }
+    }
+
+    #[test]
+    fn cloud_provider_without_key_fails_before_network_request() {
+        let client = LlmClient::new(LlmConfig {
+            provider: "openai".into(),
+            api_key: Some("env:".into()),
+            ..Default::default()
+        });
+        assert!(matches!(client.send("system", "user"), Err(LlmError::NoApiKey)));
+    }
+
+    #[test]
+    fn custom_provider_requires_base_url() {
+        let client = LlmClient::new(LlmConfig {
+            provider: "custom".into(),
+            api_key: Some("token".into()),
+            ..Default::default()
+        });
+        assert!(matches!(client.send("system", "user"), Err(LlmError::NoBaseUrl)));
+    }
+
+    #[test]
+    fn response_reader_is_bounded() {
+        let (body, truncated) = read_limited(std::io::Cursor::new(b"123456789"), 8).unwrap();
+        assert_eq!(body, b"12345678");
+        assert!(truncated);
+
+        let (body, truncated) = read_limited(std::io::Cursor::new(b"short"), 8).unwrap();
+        assert_eq!(body, b"short");
+        assert!(!truncated);
     }
 }

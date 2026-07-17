@@ -125,12 +125,18 @@ Elixir and Python must agree on every vector in `conformance/*.jsonl` (latin↔c
 
 ```text
 projects/iffywow/
+├── SDK-INTERFACE.md          # normative language-agnostic core API (v1)
+├── CODEC.md                  # normative codec-v1 byte/integer contract
+├── ROMANIZATION.md           # normative romanization profile core-v1
 ├── spec/                     # versioned YAML registries + geometry (source of truth)
-├── elixir/                   # production codec, scene, SVG (mix project)
+├── elixir/                   # production codec + scene/SVG extensions (mix project)
 ├── python/                   # reference codec + oracle (pytest)
-├── web/                      # <ithkuil-word> Lit component (TypeScript)
+├── rust/                     # core SDK (cargo, num-bigint)
+├── node/                     # core SDK (@noizu/ithkuil, zero deps, BigInt)
+├── go/                       # core SDK (stdlib, math/big)
+├── web/                      # <ithkuil-word> Lit component (plain ES modules, no build)
 ├── hologram_app/             # Hologram wrapper component
-└── conformance/              # golden JSONL vectors shared by both codecs
+└── conformance/              # golden JSONL vectors — the arbiter for every SDK
 ```
 
 ---

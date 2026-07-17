@@ -61,6 +61,17 @@ LAYOUT
 }
 
 case "${1:-}" in
+  "")
+    if use_zellij; then
+      layout="$(layout_file)"
+      trap "rm -f '$layout'" EXIT
+      echo "[claude-assist] Launching with zellij..."
+      zellij --layout "$layout" options --session-name claude-assist
+    else
+      # Fallback: same as --no-zellij
+      exec "$0" --no-zellij
+    fi
+    ;;
   api)
     start_api
     ;;
@@ -86,14 +97,6 @@ case "${1:-}" in
     start_web
     ;;
   *)
-    if use_zellij; then
-      layout="$(layout_file)"
-      trap "rm -f '$layout'" EXIT
-      echo "[claude-assist] Launching with zellij..."
-      zellij --layout "$layout" options --session-name claude-assist
-    else
-      # Fallback: same as --no-zellij
-      exec "$0" --no-zellij
-    fi
+    exec "$PROJ_DIR/node_modules/.bin/tsx" "$PROJ_DIR/packages/cli/bin.ts" "$@"
     ;;
 esac

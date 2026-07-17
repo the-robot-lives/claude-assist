@@ -38,6 +38,7 @@ export function App({ command, args }: AppProps) {
           <Text dimColor>Search, browse, and extract from Claude Code conversations</Text>
           <Box marginTop={1} flexDirection="column">
             <Text>Commands:</Text>
+            <Text>  <Text color="cyan">recent</Text>       {"  "}Recent sessions (direct DB; default: 1h)</Text>
             <Text>  <Text color="cyan">search</Text>       {"  "}Search conversations</Text>
             <Text>  <Text color="cyan">list</Text>         {"  "}List conversations</Text>
             <Text>  <Text color="cyan">show</Text>         {"  "}View a conversation</Text>

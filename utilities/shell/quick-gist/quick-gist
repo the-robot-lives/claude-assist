@@ -42,7 +42,7 @@ ACCOUNT:
   process-local and does not change the active account in `gh auth`.
 
 UPLOAD:
-  -d, --description DESC   Gist description
+  -d, --description DESC   Gist description (quick-gist attribution is appended)
   -s, --secret             Create a secret gist (default)
       --public             Create a publicly listed gist
   -p, --pipe               Read content from stdin
@@ -96,6 +96,7 @@ account="${QUICK_GIST_ACCOUNT:-}"
 hostname="${QUICK_GIST_HOST:-github.com}"
 chunk_size_input="${QUICK_GIST_CHUNK_SIZE:-8M}"
 description=''
+description_attribution='-- pushed with [quick-gist](https://github.com/noizu/quick-gist)'
 stdin_name='paste.txt'
 append_id=''
 edit_id=''
@@ -403,7 +404,12 @@ show_command_error() {
 
 create_gist() {
     local total="${#upload_files[@]}" index=1 file url output create_args=()
-    [[ -n "$description" ]] && create_args+=(--desc "$description")
+    if [[ -n "$description" ]]; then
+        description="$description $description_attribution"
+    else
+        description="$description_attribution"
+    fi
+    create_args+=(--desc "$description")
     [[ "$visibility" == public ]] && create_args+=(--public)
     ensure_work_dir
     file="${upload_files[0]}"

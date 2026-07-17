@@ -15,10 +15,23 @@ authors = [{ name = "Noizu Labs" }]
 dependencies = []
 
 [project.optional-dependencies]
-dev = ["pytest>=7"]
+dev = ["pytest>=7", "coverage[toml]>=7"]
 
 [tool.setuptools.packages.find]
 include = ["ithkuil*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+
+[tool.coverage.run]
+source = ["ithkuil"]
+branch = true
+
+[tool.coverage.report]
+show_missing = true
+fail_under = 85
+exclude_lines = [
+  "pragma: no cover",
+  "if TYPE_CHECKING:",
+  "raise AssertionError",
+]

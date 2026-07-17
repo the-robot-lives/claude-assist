@@ -73,7 +73,7 @@ pub fn resolve(name: &str) -> Option<String> {
             return Some(val);
         }
     }
-    let mut cache = cache().lock().unwrap();
+    let mut cache = cache().lock().unwrap_or_else(|poisoned| poisoned.into_inner());
     if let Some(cached) = cache.get(name) {
         return cached.clone();
     }

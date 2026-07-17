@@ -82,6 +82,37 @@ defmodule Ithkuil.ConformanceTest do
     end
   end
 
+  describe "latin_to_coordinate.jsonl" do
+    test "romanization profile core-v1 vectors, both directions" do
+      vectors = vectors("latin_to_coordinate.jsonl")
+      assert vectors != []
+
+      for row <- vectors do
+        case row do
+          %{"error" => error} ->
+            expected = String.to_atom(error)
+            result = Ithkuil.from_latin(row["latin"])
+
+            assert match?({:error, {^expected, _detail}}, result),
+                   "expected #{error} for #{inspect(row["latin"])}, got #{inspect(result)}"
+
+          %{"coordinate" => wire, "canonical" => canonical} ->
+            # from_latin(latin) == coordinate
+            assert {:ok, coord} = Ithkuil.from_latin(row["latin"])
+            assert Coord.to_wire(coord) == wire
+            assert {:ok, ^wire} = Ithkuil.to_wire(coord)
+
+            # to_latin(coordinate) == canonical (wire input canonicalized on entry)
+            assert {:ok, ^canonical} = Ithkuil.to_latin(wire)
+            assert {:ok, ^canonical} = Ithkuil.to_latin(coord)
+
+            # round-trip law: from_latin(to_latin(c)) == c
+            assert {:ok, ^coord} = Ithkuil.from_latin(canonical)
+        end
+      end
+    end
+  end
+
   describe "CODEC.md worked example" do
     test "empty word ranks to 8606843649" do
       empty = {:ithkuil_word, 1, []}

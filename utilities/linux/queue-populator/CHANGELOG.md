@@ -1,7 +1,19 @@
 # Changelog — utilities/linux/queue-populator
 
 ## [Unreleased]
-- [Accumulating changes since the last milestone tag]
+
+### Fixed
+- Keep queue-write completion/errors as the final visible status and return the UI/state machine to idle after failures.
+- Prevent repeated virtual-mic commands from one growing speech-recognition partial.
+- Respect PipeWire capture chunk offsets and bounds instead of decoding stale buffer prefixes.
+- Make phrase removal safe when Unicode lowercasing changes UTF-8 byte lengths.
+- Prevalidate queue batches so an invalid later path cannot leave earlier entries partially written.
+- Preserve memo audio as a visible WAV when MP3 conversion fails and avoid overwriting same-second recordings.
+- Treat `--help` as a successful command, make `--verbose` emit partial STT diagnostics, normalize LLM config whitespace, validate required credentials/base URLs before network calls, and normalize model-list endpoints.
+- Eliminate UTF-8 API-key prefix panics, recover poisoned worker locks, replace fallible startup/FFI unwraps, enforce recording duration/memory limits, and make tray Quit close the GUI event loop.
+
+### Added
+- Regression/unit coverage for write state and ordering, repeated mic commands, PipeWire buffer decoding, Unicode phrases, queue batch validation, memo preservation/naming, CLI parsing, and LLM/model URL validation.
 
 ## [m2-arch-docs] — 2026-07-16 — tag: `utilities-linux-queue-populator/m2-arch-docs`
 Milestone summary: added standard PROJ-ARCH/PROJ-LAYOUT documentation set describing the tool's architecture and source layout.

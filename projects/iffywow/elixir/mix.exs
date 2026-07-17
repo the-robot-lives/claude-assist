@@ -8,6 +8,7 @@ defmodule Ithkuil.MixProject do
       elixir: "~> 1.14",
       start_permanent: Mix.env() == :prod,
       deps: [],
+      test_coverage: [summary: [threshold: 80]],
       description: "iffywow New Ithkuil coordinate codec (codec-v1) — production Elixir SDK",
       source_url: "https://github.com/noizu/iffywow"
     ]

@@ -29,6 +29,11 @@ case "${1:-} ${2:-}" in
     ;;
   'gist create')
     if [[ "${GH_FAIL_CREATE:-0}" == 1 ]]; then echo 'API: payload too large (HTTP 422)' >&2; exit 1; fi
+    previous=''
+    for argument in "$@"; do
+      if [[ "$previous" == --desc ]]; then printf '%s' "$argument" >"$GH_TEST_LOG.description"; break; fi
+      previous="$argument"
+    done
     printf 'https://gist.github.com/test-user/abc123\n'
     ;;
   'gist edit')
@@ -78,11 +83,25 @@ assert_contains() {
     fi
 }
 
+assert_equals() {
+    local name="$1" actual="$2" expected="$3"
+    if [[ "$actual" == "$expected" ]]; then
+        PASS=$((PASS + 1)); printf 'ok - %s\n' "$name"
+    else
+        FAIL=$((FAIL + 1)); printf 'not ok - %s (wanted: %s, got: %s)\n' "$name" "$expected" "$actual"
+    fi
+}
+
 case_dir="$TEST_ROOT/setup-success"; mkdir -p "$case_dir"; printf 'one\n' >"$case_dir/a.txt"; printf 'two\n' >"$case_dir/b.txt"
 run_case create-success 0 "$SCRIPT" -d test "$case_dir/a.txt" "$case_dir/b.txt"
 assert_contains create-confirms "$CASE_OUTPUT" 'Created successfully'
 assert_contains create-owner "$CASE_OUTPUT" 'Owner:      @test-user'
 assert_contains create-progress "$(cat "$CASE_DIR/gh.log")" 'gist edit'
+assert_equals create-description-attribution "$(cat "$CASE_DIR/gh.log.description")" 'test -- pushed with [quick-gist](https://github.com/noizu/quick-gist)'
+
+case_dir="$TEST_ROOT/setup-default-description"; mkdir -p "$case_dir"; printf 'one\n' >"$case_dir/a.txt"
+run_case create-default-description 0 "$SCRIPT" "$case_dir/a.txt"
+assert_equals default-description-attribution "$(cat "$CASE_DIR/gh.log.description")" '-- pushed with [quick-gist](https://github.com/noizu/quick-gist)'
 
 case_dir="$TEST_ROOT/setup-fail"; mkdir -p "$case_dir"; printf 'one\n' >"$case_dir/a.txt"
 run_case create-failure 1 env GH_FAIL_CREATE=1 "$SCRIPT" -d test "$case_dir/a.txt"

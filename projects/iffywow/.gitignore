@@ -4,3 +4,18 @@ deps/
 _build/
 __pycache__/
 *.pyc
+
+# test & coverage artifacts
+cover/
+coverage/
+coverage.out
+coverage.html
+coverage.xml
+coverage.lcov
+htmlcov/
+.coverage
+*.coverdata
+.pytest_cache/
+target/
+erl_crash.dump
+*.egg-info/
