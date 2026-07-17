@@ -63,8 +63,7 @@ topology, GenAI provider layer, agent charter). All 100 stories are delivered in
 | US-069 | Search agent memories with semantic vector search | must-have | Memory & Knowledge | L2.E Memory Tools & Recall | `apps/intellect_cognition` + `apps/intellect_recall` + `live/memory/*` | |
 | US-075 | Configure an LLM provider and API key | must-have | Admin & Platform Ops | L2.F Provider Admin | `apps/intellect_admin` + `live/admin/providers/*` | |
 | US-076 | Define a model tier with routing and fallback | must-have | Admin & Platform Ops | L2.F Provider Admin | `apps/intellect_admin` + `live/admin/providers/*` | |
-
-## M3 — Fork Substrate [HP1, HP2]
+| US-101 | Relay a realtime voice session through the delegator pipe to a stronger drafting tier | must-have | Agentic Voice & Visual Collaboration | L2.D Context Assembly & Summarization | `apps/intellect_agent/prompt` | Realtime front-tier class supported by L2.F (T2.F.7); shared capability with therobotdrafts / therobotknows.com / tobornalp.com (each has a counterpart US-101) |
 
 | US-ID | Title | Priority | Epic | Lane | Zone/App | Notes |
 |---|---|---|---|---|---|---|

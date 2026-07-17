@@ -699,3 +699,10 @@ user_stories:
     priority: should-have
     personas: [P-001, P-006]
     file: US-100-stay-responsive-at-scale-with-backpressure-indicators-instead-of-silent-stalls.md
+  - id: US-101
+    title: "Relay a realtime voice session through the delegator pipe to a stronger drafting tier"
+    slug: relay-a-realtime-voice-session-through-the-delegator-pipe-to-a-stronger-drafting-tier
+    epic: "Agentic Voice & Visual Collaboration"
+    priority: must-have
+    personas: [P-006, P-002]
+    file: US-101-relay-a-realtime-voice-session-through-the-delegator-pipe-to-a-stronger-drafting-tier.md

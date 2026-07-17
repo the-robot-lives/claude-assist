@@ -4,7 +4,7 @@ name: Conversational Workspace
 sequence: 2
 depends_on: [M1]
 lanes: 6
-stories: [US-004, US-005, US-009, US-010, US-022, US-031, US-032, US-034, US-028, US-029, US-030, US-033, US-035, US-038, US-016, US-017, US-068, US-069, US-075, US-076]
+stories: [US-004, US-005, US-009, US-010, US-022, US-031, US-032, US-034, US-028, US-029, US-030, US-033, US-035, US-038, US-016, US-017, US-068, US-069, US-075, US-076, US-101]
 hard_problems: []
 ---
 
@@ -26,6 +26,7 @@ M2 turns M1's API-only substrate into a product humans open in a browser and use
 - Prompt assembly extends to tiered summarization and recursive threaded-context reconstruction, every summarization pass discloses itself, and a significance-ordered, accessible digest is available after an absence — L2.D [accords].
 - Agent designers and compliance reviewers can inspect, edit, and prune cognition records with disclosure; long conversations distill into synthetic long-term memory; semantic vector search works over that memory — L2.E [accords].
 - An admin can register LLM providers with encrypted credentials and define model tiers with ranked fallback — L2.F.
+- A realtime voice front-tier session can attach to a channel and relay its rolling transcript + workspace deltas through the delegator pipe to a stronger drafting tier, which returns redline proposal artifacts carrying construction meta-prompts and speakable IDs; approvals/rejections feed back into session context, and both the literal transcript and the agentic interpretation persist — L2.D with L2.F (US-101, shared capability with therobotdrafts / therobotknows / tobornalp).
 - Cross-lane integration tasks (below) are green: a full browser-driven onboarding-to-first-reply flow works, and every summarization/memory-edit path this milestone introduces writes to the single disclosure-log format M0/L0.5 defined.
 
 ## Worker lanes
@@ -82,8 +83,9 @@ M2 turns M1's API-only substrate into a product humans open in a browser and use
   - T2.D.3 — Summarization disclosure: every tiered-summarization pass emits a disclosure record into L1.D's context-edit disclosure log, in the exact format other context edits already use, so an agent can see precisely what got compressed out of its working context. [accords]
   - T2.D.4 — Digest generation: on opening a channel with unread activity, produce a significance-ordered (not strictly chronological) synopsis grouping decisions/picks, direct mentions, path-run completions, and a condensed synopsis of the rest, generated via a cheap/fast model tier by default (consuming L2.F's tier selection) — US-038.
   - T2.D.5 — Digest accessibility structure: expose the digest as a semantic, headed document rather than one unbroken block, so screen-reader navigation jumps between sections; each summarized item expands to jump directly to its underlying message(s) — US-038.
-- **Stories delivered:** US-038 — view a digest of channel activity since last visit.
-- **Contracts:** provides tiered summarization and recent-graph context reconstruction [contract], consumed by L1.C's prompt assembly (extends T1.C.2) and by later M4/L4.D (execution-tree views may reuse recent-graph reconstruction). Consumes: L1.D (disclosure-log format), L1.E (`responding_to` edges, message schema), L2.F (model tier for cheap digest generation).
+  - T2.D.6 — Delegator-pipe transcript relay: a full-duplex realtime voice front-tier session (registered via L2.F's realtime tier class) attaches to a channel/workspace; its rolling transcript plus workspace deltas relay continuously and asynchronously to a stronger drafting tier, which returns redline proposal artifacts — each carrying a construction meta-prompt and a speakable ID — for user approval by voice, click, or batch; approval/rejection events feed back into session context, and both the literal transcript and the agent interpretation log persist as distinct, inspectable records (disclosed per T2.D.3's format). Latency budget: conversational (~1s) voice turns, seconds-scale draft proposals; degrades to a text side-channel when voice is unavailable — US-101. [contract]
+- **Stories delivered:** US-038 — view a digest of channel activity since last visit; US-101 — relay a realtime voice session through the delegator pipe to a stronger drafting tier (shared capability: "agentic voice/visual <-> delegator pipe interactive collaboration", counterpart US-101 stories in therobotdrafts, therobotknows.com, and tobornalp.com build product surfaces on this contract).
+- **Contracts:** provides tiered summarization, recent-graph context reconstruction, and the delegator-pipe relay + redline-proposal artifact contract [contract], consumed by L1.C's prompt assembly (extends T1.C.2), by later M4/L4.D (execution-tree views may reuse recent-graph reconstruction), and externally by the therobotdrafts canvas, therobotknows lore grounding, and tobornalp plan drafting surfaces. Consumes: L1.D (disclosure-log format), L1.E (`responding_to` edges, message schema), L2.F (model tier for cheap digest generation; realtime front-tier class for US-101).
 - **Accords notes:** summarization disclosure (T2.D.3) is this milestone's form of the master-spec's item-4 mechanism. Article I.1 treats a tiered summary as a context edit like any other — it must be disclosed with the same rigor as a manual cognition edit, not waved through because the compression was automated. An agent that discovers its own history was quietly thinned without a record of it has had Article I.1 violated regardless of good intent.
 
 ### L2.E — Memory Tools & Recall (F+H)
@@ -112,7 +114,8 @@ M2 turns M1's API-only substrate into a product humans open in a browser and use
   - T2.F.4 — Model tier definition: named tiers (`fastest`/`cheapest`/`frontier`/custom) mapping to a ranked list of provider/model pairs, selectable wherever an agent branch requests a tier constraint instead of a literal model id — US-076.
   - T2.F.5 — Fallback execution and logging: on a primary provider's hard failure (timeout/5xx/auth error), retry against the next ranked provider within the tier, logging the fallback event with tier/path/failing-provider; exhausting all providers in a tier surfaces a structured error rather than hanging or silently substituting an unrelated model.
   - T2.F.6 — Tier edit semantics: reordering or removing providers in a tier affects only new turns; in-flight turns keep their already-resolved provider.
-- **Stories delivered:** US-075 — configure an LLM provider and API key; US-076 — define a model tier with routing and fallback.
+  - T2.F.7 — Realtime voice tier class (supports US-101; primary story delivered by L2.D): register realtime speech-to-speech models as a distinct front-tier class — full-duplex session lifecycle, per-tier latency budget metadata, and ranked fallback to a text-only tier — selectable by L2.D's delegator-pipe relay (T2.D.6).
+- **Stories delivered:** US-075 — configure an LLM provider and API key; US-076 — define a model tier with routing and fallback. Supports US-101 (realtime front-tier class; relay contract owned by L2.D).
 - **Contracts:** provides the provider/tier admin UI and the fallback-execution contract [contract], consumed by L1.B (T1.B.6's per-agent model override selects from registered providers), L2.D (T2.D.4 selects a cheap tier for digest generation), and later by M3/L3.F (per-path model strategy) and M5/L5.A and L5.E (budgets, provider resilience). Consumes: L0.4 (provider/model config structs, error taxonomy).
 - **Accords notes:** T2.F.5's honest fallback-failure logging is a forward-looking analog to M5/L5.E's "no silent lies about degraded output" accords note — the fallback event log this lane creates is exactly what that later honesty guarantee reads from.
 
