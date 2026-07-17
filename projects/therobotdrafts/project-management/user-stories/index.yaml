@@ -1,13 +1,14 @@
 product: The Robot Draft
 project: therobotdrafts
-total: 100
+total: 101
 generated: 2026-06-26
+updated: 2026-07-17
 personas:
   - id: P-001
     slug: trd-systems-architect
     segment: primary
-    story_count: 18
-    stories: [US-001, US-002, US-003, US-004, US-005, US-006, US-007, US-008, US-009, US-010, US-011, US-012, US-013, US-014, US-015, US-016, US-017, US-018]
+    story_count: 19
+    stories: [US-001, US-002, US-003, US-004, US-005, US-006, US-007, US-008, US-009, US-010, US-011, US-012, US-013, US-014, US-015, US-016, US-017, US-018, US-101]
   - id: P-002
     slug: trd-onboarding-engineer
     segment: primary
@@ -549,3 +550,10 @@ stories:
     title: "Get non-color status feedback for actions"
     epic: "Accessibility (color/keyboard/motion)"
     priority: P1
+  - id: US-101
+    persona: P-001
+    title: "Sketch and talk with a voice pair-designer that drafts ahead of me"
+    epic: "Agentic pair-design & voice collaboration"
+    priority: P0
+    shared_capability: "agentic voice/visual <-> delegator pipe interactive collaboration"
+    shared_with: [noizu-intellect, therobotknows.com, tobornalp.com]

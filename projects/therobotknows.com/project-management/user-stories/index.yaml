@@ -25,6 +25,8 @@ epics:
     stories: [US-096, US-097, US-098]
   - name: "Export & Integration"
     stories: [US-099, US-100]
+  - name: "Agentic Voice & Visual Collaboration"
+    stories: [US-101]
 
 stories:
   - id: US-001
@@ -727,3 +729,10 @@ stories:
     priority: "could-have"
     complexity: "L"
     file: US-100-game-engine-export.md
+  - id: US-101
+    title: "Talk through lore with a canon-grounded voice collaborator that drafts entries in redline"
+    personas: [P-007, P-003]
+    epic: "Agentic Voice & Visual Collaboration"
+    priority: "must-have"
+    complexity: "L"
+    file: US-101-voice-lore-collaborator-drafts-redline-entries.md

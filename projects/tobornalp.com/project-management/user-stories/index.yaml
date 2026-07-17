@@ -1,5 +1,5 @@
 # User Stories Index
-# Auto-generated from frontmatter. 100 stories across 12 domains.
+# Auto-generated from frontmatter. 101 stories across 12 domains.
 # Domains: today-view, inbox, personal, projects, bugs, cicd, monitoring, docs, checklists, goals, agents, prompt-archival, agent-eval
 
 stories:
@@ -703,3 +703,10 @@ stories:
     domain: agent-eval
     priority: high
     mvp_phase: "v1.0"
+  - id: US-101
+    title: "Talk a plan into existence with a voice agent that drafts tasks in redline"
+    file: US-101-talk-a-plan-into-existence-redline.md
+    personas: [lin-zhao, sarah-kim]
+    domain: projects
+    priority: high
+    mvp_phase: "v0.4"
