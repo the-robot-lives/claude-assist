@@ -1,0 +1,39 @@
+# Formative-level closed categories of New Ithkuil: Stem, Version, Function,
+# Specification, Context.
+# Source: A Grammar of New Ithkuil, Ch. 3 "Basic Morphology" (Slot II Vv,
+# Slot IV Vr); verified via pinned toolkit
+# generate/formative/slot-2/{stem,version}.ts and
+# generate/formative/slot-4/{function,specification,context}.ts.
+#
+# IDs are scoped per category (each category's values count from 0).
+
+schema_version: 1
+status: verified
+stability: "An integer ID is never reassigned; removed elements become reserved IDs."
+
+stem: # id == stem number; Vv-table presentation order is S1, S2, S3, S0
+  - {id: 0, name: Stem Zero,  abbr: S0}
+  - {id: 1, name: Stem One,   abbr: S1}
+  - {id: 2, name: Stem Two,   abbr: S2}
+  - {id: 3, name: Stem Three, abbr: S3}
+
+version: # 2 values
+  - {id: 0, name: Processual, abbr: PRC}
+  - {id: 1, name: Completive, abbr: CPT}
+
+function: # 2 values. Official grammar term is "Stative"; the pinned toolkit
+          # renders STA as "Static" (informal variant).
+  - {id: 0, name: Stative, abbr: STA}
+  - {id: 1, name: Dynamic, abbr: DYN}
+
+specification: # 4 values
+  - {id: 0, name: Basic,        abbr: BSC}
+  - {id: 1, name: Contential,   abbr: CTE}
+  - {id: 2, name: Constitutive, abbr: CSV}
+  - {id: 3, name: Objective,    abbr: OBJ}
+
+context: # 4 values
+  - {id: 0, name: Existential,      abbr: EXS}
+  - {id: 1, name: Functional,       abbr: FNC}
+  - {id: 2, name: Representational, abbr: RPS}
+  - {id: 3, name: Amalgamative,     abbr: AMG}

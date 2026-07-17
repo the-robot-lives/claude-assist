@@ -1,0 +1,18 @@
+# The 6 case-scopes of New Ithkuil, in Cn table order.
+# Source: A Grammar of New Ithkuil, Ch. 5/6 (Cn Case-Scope table); verified
+# via pinned toolkit ALL_CASE_SCOPES / CASE_SCOPE_TO_NAME_MAP
+# (generate/formative/slot-8/case-scope.ts).
+
+schema_version: 1
+status: verified
+stability: "An integer ID is never reassigned; removed elements become reserved IDs."
+
+case_scopes:
+  - {id: 0, name: Natural,    abbr: CCN}
+  - {id: 1, name: Antecedent, abbr: CCA}
+  - {id: 2, name: Subaltern,  abbr: CCS}
+  - {id: 3, name: Qualifier,  abbr: CCQ}
+  - {id: 4, name: Precedent,  abbr: CCP}
+  - {id: 5, name: Successive, abbr: CCV}
+
+reserved_ids: []

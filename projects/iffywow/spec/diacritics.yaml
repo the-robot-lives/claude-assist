@@ -1,0 +1,68 @@
+# Diacritic mark registry — the mark shapes used throughout the New Ithkuil
+# script (vowel marks in alphabetic writing, Vv/Vr values on primaries,
+# degree marks under secondaries, mood/case-scope marks on quaternaries,
+# type-2/type-3 dots and bars, etc. — grammar Ch. 12, Secs. 12.2.2, 12.4.1,
+# 12.7).
+#
+# Inventory: the 16 distinct mark shapes digitized by the pinned MIT toolkit
+# (github.com/zsakowitz/ithkuil, script/other/diacritic.tsx CORE_DIACRITICS).
+# The nine vowel keys (a ä e ë i o ö u ü) in that file are aliases of these
+# shapes and are recorded in `vowel_aliases` below rather than as separate
+# IDs.
+#
+# `path: null` entries use the deterministic generated placeholder path
+# (web/src/registry.js diacriticPath(id)) until the official paths are
+# digitized into spec/geometry/.
+
+schema_version: 1
+status: verified # membership per pinned toolkit (2026-07-17); semantic assignments per Ch. 12
+stability: "An integer ID is never reassigned; removed elements become reserved IDs."
+
+diacritics:
+  - {id: 0,  name: dot,                       path: null,  # placeholder — deterministic generated path used until official path is digitized
+     source: "toolkit script/other/diacritic.tsx CORE_DIACRITICS.DOT"}
+  - {id: 1,  name: horiz_bar,                 path: null,  # placeholder — deterministic generated path used until official path is digitized
+     source: "toolkit CORE_DIACRITICS.HORIZ_BAR"}
+  - {id: 2,  name: vert_bar,                  path: null,  # placeholder — deterministic generated path used until official path is digitized
+     source: "toolkit CORE_DIACRITICS.VERT_BAR"}
+  - {id: 3,  name: diag_bar,                  path: null,  # placeholder — deterministic generated path used until official path is digitized
+     source: "toolkit CORE_DIACRITICS.DIAG_BAR"}
+  - {id: 4,  name: two_part_diag_bar,         path: null,  # placeholder — deterministic generated path used until official path is digitized
+     source: "toolkit CORE_DIACRITICS.TWO_PART_DIAG_BAR"}
+  - {id: 5,  name: horiz_with_top_line,       path: null,  # placeholder — deterministic generated path used until official path is digitized
+     source: "toolkit CORE_DIACRITICS.HORIZ_WITH_TOP_LINE"}
+  - {id: 6,  name: horiz_with_bottom_line,    path: null,  # placeholder — deterministic generated path used until official path is digitized
+     source: "toolkit CORE_DIACRITICS.HORIZ_WITH_BOTTOM_LINE"}
+  - {id: 7,  name: vert_with_left_line,       path: null,  # placeholder — deterministic generated path used until official path is digitized
+     source: "toolkit CORE_DIACRITICS.VERT_WITH_LEFT_LINE"}
+  - {id: 8,  name: vert_with_right_line,      path: null,  # placeholder — deterministic generated path used until official path is digitized
+     source: "toolkit CORE_DIACRITICS.VERT_WITH_RIGHT_LINE"}
+  - {id: 9,  name: curve_to_left,             path: null,  # placeholder — deterministic generated path used until official path is digitized
+     source: "toolkit CORE_DIACRITICS.CURVE_TO_LEFT"}
+  - {id: 10, name: curve_to_right,            path: null,  # placeholder — deterministic generated path used until official path is digitized
+     source: "toolkit CORE_DIACRITICS.CURVE_TO_RIGHT"}
+  - {id: 11, name: curve_to_top,              path: null,  # placeholder — deterministic generated path used until official path is digitized
+     source: "toolkit CORE_DIACRITICS.CURVE_TO_TOP"}
+  - {id: 12, name: curve_to_bottom,           path: null,  # placeholder — deterministic generated path used until official path is digitized
+     source: "toolkit CORE_DIACRITICS.CURVE_TO_BOTTOM"}
+  - {id: 13, name: curve_to_bottom_with_line, path: null,  # placeholder — deterministic generated path used until official path is digitized
+     source: "toolkit CORE_DIACRITICS.CURVE_TO_BOTTOM_WITH_LINE"}
+  - {id: 14, name: curve_to_left_with_dot,    path: null,  # placeholder — deterministic generated path used until official path is digitized
+     source: "toolkit CORE_DIACRITICS.CURVE_TO_LEFT_WITH_DOT"}
+  - {id: 15, name: curve_to_right_with_dot,   path: null,  # placeholder — deterministic generated path used until official path is digitized
+     source: "toolkit CORE_DIACRITICS.CURVE_TO_RIGHT_WITH_DOT"}
+
+# Vowel marks in alphabetic writing (grammar §12.7) reuse the shapes above;
+# path identity verified against the toolkit's vowel keys.
+vowel_aliases:
+  "a": dot
+  "ä": horiz_bar
+  "e": horiz_with_bottom_line
+  "ë": horiz_with_top_line
+  "i": diag_bar
+  "o": curve_to_top
+  "ö": curve_to_bottom
+  "u": vert_with_right_line
+  "ü": vert_with_left_line
+
+reserved_ids: []

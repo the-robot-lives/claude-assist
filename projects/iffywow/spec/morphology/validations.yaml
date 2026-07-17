@@ -1,0 +1,27 @@
+# The 9 validations of New Ithkuil (used with ASR illocution), in
+# grammar-table (Vk) order.
+# Source: A Grammar of New Ithkuil, Ch. 5/6 (Vk Validation table); verified
+# via pinned toolkit ALL_VALIDATIONS / VALIDATION_TO_NAME_MAP
+# (generate/formative/slot-9/validation.ts).
+#
+# NOTE: the script uses a different fixed order when validations appear as
+# diacritics on secondary characters (OBS REC PUP RPR IMA CVN ITU INF USP —
+# toolkit ALL_VALIDATIONS_DIACRITIC_ORDER); that is a rendering-order detail,
+# not an ID change.
+
+schema_version: 1
+status: verified
+stability: "An integer ID is never reassigned; removed elements become reserved IDs."
+
+validations:
+  - {id: 0, name: Observational, abbr: OBS}
+  - {id: 1, name: Recollective,  abbr: REC}
+  - {id: 2, name: Purportive,    abbr: PUP}
+  - {id: 3, name: Reportive,     abbr: RPR}
+  - {id: 4, name: Unspecified,   abbr: USP}
+  - {id: 5, name: Imaginary,     abbr: IMA}
+  - {id: 6, name: Conventional,  abbr: CVN}
+  - {id: 7, name: Intuitive,     abbr: ITU}
+  - {id: 8, name: Inferential,   abbr: INF}
+
+reserved_ids: []

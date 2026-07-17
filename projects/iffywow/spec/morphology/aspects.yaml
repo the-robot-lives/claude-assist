@@ -1,0 +1,53 @@
+# The 36 aspects of New Ithkuil, in grammar-table (Vn vowel-table) order —
+# four series of nine.
+# Source: A Grammar of New Ithkuil, Ch. 5/6 (Vn Aspect tables); order and
+# names cross-checked against the pinned toolkit's ALL_ASPECTS /
+# ASPECT_TO_NAME_MAP (generate/formative/slot-8/aspect.ts).
+
+schema_version: 1
+status: verified # via pinned toolkit against ithkuil.net tables (2026-07-17)
+stability: "An integer ID is never reassigned; removed elements become reserved IDs."
+
+aspects:
+  # -- series 1 -----------------------------------------------------------
+  - {id: 0,  name: Retrospective,    abbr: RTR}
+  - {id: 1,  name: Prospective,      abbr: PRS}
+  - {id: 2,  name: Habitual,         abbr: HAB}
+  - {id: 3,  name: Progressive,      abbr: PRG}
+  - {id: 4,  name: Imminent,         abbr: IMM}
+  - {id: 5,  name: Precessive,       abbr: PCS}
+  - {id: 6,  name: Regulative,       abbr: REG}
+  - {id: 7,  name: Summative,        abbr: SMM}
+  - {id: 8,  name: Anticipatory,     abbr: ATP}
+  # -- series 2 -----------------------------------------------------------
+  - {id: 9,  name: Resumptive,       abbr: RSM}
+  - {id: 10, name: Cessative,        abbr: CSS}
+  - {id: 11, name: Pausal,           abbr: PAU}
+  - {id: 12, name: Regressive,       abbr: RGR}
+  - {id: 13, name: Preclusive,       abbr: PCL}
+  - {id: 14, name: Continuative,     abbr: CNT}
+  - {id: 15, name: Incessative,      abbr: ICS}
+  - {id: 16, name: Experiential,     abbr: EXP}
+  - {id: 17, name: Interruptive,     abbr: IRP}
+  # -- series 3 -----------------------------------------------------------
+  - {id: 18, name: Preemptive,       abbr: PMP}
+  - {id: 19, name: Climactic,        abbr: CLM}
+  - {id: 20, name: Dilatory,         abbr: DLT}
+  - {id: 21, name: Temporary,        abbr: TMP}
+  - {id: 22, name: Expenditive,      abbr: XPD}
+  - {id: 23, name: Limitative,       abbr: LIM}
+  - {id: 24, name: Expeditive,       abbr: EPD}
+  - {id: 25, name: Protractive,      abbr: PTC}
+  - {id: 26, name: Preparatory,      abbr: PPR}
+  # -- series 4 -----------------------------------------------------------
+  - {id: 27, name: Disclusive,       abbr: DCL}
+  - {id: 28, name: Conclusive,       abbr: CCL}
+  - {id: 29, name: Culminative,      abbr: CUL}
+  - {id: 30, name: Intermediative,   abbr: IMD}
+  - {id: 31, name: Tardative,        abbr: TRD}
+  - {id: 32, name: Transitional,     abbr: TNS}
+  - {id: 33, name: Intercommutative, abbr: ITC}
+  - {id: 34, name: Motive,           abbr: MTV}
+  - {id: 35, name: Sequential,       abbr: SQN}
+
+reserved_ids: []

@@ -103,6 +103,12 @@ VOWELS: Tuple[str, ...] = (
     "ü",   # 8  u-diaeresis
 )
 
+# Normalize the tables to NFC at load so lookups are canonical regardless of
+# how this source file's non-ASCII literals were encoded (composed vs
+# decomposed): one grapheme, one representation.
+CONSONANTS = tuple(unicodedata.normalize("NFC", c) for c in CONSONANTS)
+VOWELS = tuple(unicodedata.normalize("NFC", v) for v in VOWELS)
+
 _GRAPHEME_TO_GLYPH: Dict[str, Tuple[int, int]] = {}
 for _i, _c in enumerate(CONSONANTS):
     _GRAPHEME_TO_GLYPH[_c] = (CHARACTER_CLASS_CONSONANT, _i)

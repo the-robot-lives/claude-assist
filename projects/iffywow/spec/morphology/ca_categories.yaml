@@ -1,0 +1,57 @@
+# The Ca complex of New Ithkuil: Configuration, Extension, Affiliation,
+# Perspective, Essence — each with its values in grammar-table order.
+# Source: A Grammar of New Ithkuil, Ch. 3 "Basic Morphology"; verified via
+# pinned toolkit generate/ca/{configuration,extension,affiliation,
+# perspective,essence}.ts.
+#
+# IDs are scoped per category (each category's values count from 0).
+
+schema_version: 1
+status: verified
+stability: "An integer ID is never reassigned; removed elements become reserved IDs."
+
+configuration: # 20 values: UPX + DPX + {M,D} x {S,D,F} x {S,C,F}
+  - {id: 0,  name: Uniplex,                       abbr: UPX}
+  - {id: 1,  name: Duplex,                        abbr: DPX}
+  - {id: 2,  name: Multiplex Similar Separate,    abbr: MSS}
+  - {id: 3,  name: Multiplex Similar Connected,   abbr: MSC}
+  - {id: 4,  name: Multiplex Similar Fused,       abbr: MSF}
+  - {id: 5,  name: Multiplex Dissimilar Separate, abbr: MDS}
+  - {id: 6,  name: Multiplex Dissimilar Connected, abbr: MDC}
+  - {id: 7,  name: Multiplex Dissimilar Fused,    abbr: MDF}
+  - {id: 8,  name: Multiplex Fuzzy Separate,      abbr: MFS}
+  - {id: 9,  name: Multiplex Fuzzy Connected,     abbr: MFC}
+  - {id: 10, name: Multiplex Fuzzy Fused,         abbr: MFF}
+  - {id: 11, name: Duplex Similar Separate,       abbr: DSS}
+  - {id: 12, name: Duplex Similar Connected,      abbr: DSC}
+  - {id: 13, name: Duplex Similar Fused,          abbr: DSF}
+  - {id: 14, name: Duplex Dissimilar Separate,    abbr: DDS}
+  - {id: 15, name: Duplex Dissimilar Connected,   abbr: DDC}
+  - {id: 16, name: Duplex Dissimilar Fused,       abbr: DDF}
+  - {id: 17, name: Duplex Fuzzy Separate,         abbr: DFS}
+  - {id: 18, name: Duplex Fuzzy Connected,        abbr: DFC}
+  - {id: 19, name: Duplex Fuzzy Fused,            abbr: DFF}
+
+extension: # 6 values
+  - {id: 0, name: Delimitive,  abbr: DEL}
+  - {id: 1, name: Proximal,    abbr: PRX}
+  - {id: 2, name: Inceptive,   abbr: ICP}
+  - {id: 3, name: Attenuative, abbr: ATV}
+  - {id: 4, name: Graduative,  abbr: GRA}
+  - {id: 5, name: Depletive,   abbr: DPL}
+
+affiliation: # 4 values
+  - {id: 0, name: Consolidative, abbr: CSL}
+  - {id: 1, name: Associative,   abbr: ASO}
+  - {id: 2, name: Coalescent,    abbr: COA}
+  - {id: 3, name: Variative,     abbr: VAR}
+
+perspective: # 4 values
+  - {id: 0, name: Monadic,       abbr: M}
+  - {id: 1, name: Agglomerative, abbr: G}
+  - {id: 2, name: Nomic,         abbr: N}
+  - {id: 3, name: Abstract,      abbr: A}
+
+essence: # 2 values
+  - {id: 0, name: Normal,         abbr: NRM}
+  - {id: 1, name: Representative, abbr: RPV}
