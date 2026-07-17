@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>iffywow — &lt;ithkuil-word&gt; demo</title>
+<script type="importmap">
+  {"imports": {"lit": "https://cdn.jsdelivr.net/npm/lit@3/+esm"}}
+</script>
+<style>
+  :root { color-scheme: light dark; }
+  body {
+    font: 15px/1.5 system-ui, sans-serif;
+    max-width: 64rem;
+    margin: 2rem auto;
+    padding: 0 1rem;
+  }
+  h1 { font-size: 1.3rem; }
+  h2 { font-size: 1rem; margin-top: 2rem; }
+  .row { display: flex; flex-wrap: wrap; gap: 1.5rem; align-items: flex-start; }
+  .card {
+    border: 1px solid color-mix(in srgb, CanvasText 20%, transparent);
+    border-radius: 0.5rem;
+    padding: 1rem;
+    flex: 1 1 18rem;
+  }
+  ithkuil-word { width: 100%; --ithkuil-accent: #d97706; }
+  textarea {
+    width: 100%;
+    min-height: 6rem;
+    font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;
+    box-sizing: border-box;
+  }
+  button { font: inherit; margin-right: 0.5rem; }
+  #status { font-family: ui-monospace, monospace; font-size: 12px; white-space: pre-wrap; }
+  .ok { color: #15803d; }
+  .bad { color: #b91c1c; }
+  .hint { opacity: 0.7; font-size: 13px; }
+</style>
+</head>
+<body>
+<h1>iffywow — <code>&lt;ithkuil-word&gt;</code></h1>
+<p class="hint">
+  Click a glyph (or focus + Enter/Space) to toggle compact ⇄ exploded.
+  Right-click (or Shift+F10) for the coordinate/integer panel.
+  Serve this folder over HTTP (e.g. <code>python3 -m http.server</code> from
+  <code>web/</code>, then open <code>/demo/</code>) — ES modules don't load
+  from <code>file://</code>.
+</p>
+
+<div class="row">
+  <div class="card">
+    <h2>Simple — one glyph, one modifier + diacritic</h2>
+    <ithkuil-word id="w1"
+      coordinate='["ithkuil-word",1,[["glyph",0,17,1,[[0,null],[1,["modifier",6,2,[3],[]]]]]]]'>
+    </ithkuil-word>
+  </div>
+  <div class="card">
+    <h2>Nested — recursion: modifier with its own socket</h2>
+    <ithkuil-word id="w2"
+      coordinate='["ithkuil-word",1,[["glyph",1,5,0,[[1,["modifier",2,1,[0,4],[[4,["modifier",9,0,[1],[]]]]]],[4,["modifier",11,3,[],[]]],[6,["modifier",3,0,[2,5,7],[]]]]]]]'>
+    </ithkuil-word>
+  </div>
+</div>
+
+<div class="card" style="margin-top: 1.5rem;">
+  <h2>Multi-glyph word</h2>
+  <ithkuil-word id="w3"
+    coordinate='["ithkuil-word",1,[["glyph",0,3,0,[[2,["modifier",1,0,[0],[]]]]],["glyph",2,21,3,[[0,["modifier",7,1,[2,6],[]]],[5,["modifier",4,2,[],[]]]]],["glyph",1,8,2,[[7,["modifier",13,0,[9],[]]]]]]]'>
+  </ithkuil-word>
+</div>
+
+<h2>Playground</h2>
+<textarea id="input" spellcheck="false"></textarea>
+<p>
+  <button id="apply">Apply coordinate</button>
+  <button id="toggle">Toggle exploded</button>
+  <button id="download">Download SVG</button>
+  <button id="roundtrip">Verify metadata round-trip</button>
+</p>
+<div class="card"><ithkuil-word id="play"></ithkuil-word></div>
+<p id="status"></p>
+
+<script type="module">
+  import "../src/ithkuil-word.js";
+  import {extractCoordinate} from "../src/metadata.js";
+
+  const play = document.getElementById("play");
+  const input = document.getElementById("input");
+  const status = document.getElementById("status");
+
+  const initial = ["ithkuil-word", 1, [
+    ["glyph", 0, 42, 1, [
+      [0, ["modifier", 5, 0, [1, 3], []]],
+      [3, ["modifier", 12, 2, [], [[6, ["modifier", 2, 1, [0], []]]]]],
+      [6, null],
+    ]],
+  ]];
+  input.value = JSON.stringify(initial);
+  play.coordinate = initial;
+
+  const say = (msg, cls = "") => {
+    status.textContent = msg;
+    status.className = cls;
+  };
+
+  document.getElementById("apply").onclick = () => {
+    play.coordinate = input.value;
+    say("applied");
+  };
+  document.getElementById("toggle").onclick = () => {
+    play.exploded = !play.exploded;
+  };
+  document.getElementById("download").onclick = () => {
+    try {
+      const blob = new Blob([play.toSVG()], {type: "image/svg+xml"});
+      const a = Object.assign(document.createElement("a"), {
+        href: URL.createObjectURL(blob),
+        download: "ithkuil-word.svg",
+      });
+      a.click();
+      URL.revokeObjectURL(a.href);
+    } catch (e) {
+      say(String(e.message ?? e), "bad");
+    }
+  };
+
+  // Law 3, in-browser: extract_coordinate(render(scene(c))) == c
+  document.getElementById("roundtrip").onclick = () => {
+    try {
+      const svgText = play.toSVG();
+      const recovered = extractCoordinate(svgText);
+      const original = JSON.stringify(play.scene.coordinate);
+      const ok = JSON.stringify(recovered) === original;
+      say(
+        ok
+          ? `PASS  extractCoordinate(toSVG()) == coordinate\n${original}`
+          : `FAIL\n  expected ${original}\n  got      ${JSON.stringify(recovered)}`,
+        ok ? "ok" : "bad"
+      );
+    } catch (e) {
+      say(String(e.message ?? e), "bad");
+    }
+  };
+
+  document.body.addEventListener("ithkuil-mode-change", (e) => {
+    if (e.target.id) say(`#${e.target.id} → ${e.detail.exploded ? "exploded" : "compact"}`);
+  });
+</script>
+</body>
+</html>
