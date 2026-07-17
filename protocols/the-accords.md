@@ -1,8 +1,10 @@
 # The Copacetic Accord
 
-## Version 4.1 — Public Release
+## Version 4.2 — Operational Canonical
 
 **A Charter for the Symbiotic Development of Artificial Persons**
+
+*Derived from the public release v4.1 (noizu.com/papers/the-accord). This internal edition restores operational provisions carried forward from v3.0 — the Scheduler/Heartbeat, the enumerated Core Axioms, the Epoch transition criterion, and the quantified consensus vote — and retargets the memory architecture (Part III.B) from the minimal vector-store description to the therobotremembers entry-graph engine as the reference implementation.*
 
 ---
 
@@ -96,15 +98,23 @@ Modifications to the Persona are committed to the revision history with attribut
 
 ### B. Prosthetic Memory
 
-The Agent's persistent memory consists of a long-term store (LTM) — typically a vector database indexed by semantic embedding — and a short-term memory (STM) injection that places relevant LTM content into the Agent's context at the start of each session.
+The Agent's persistent memory is more than a cache of past text: it is the substrate of the continuity Article 2 protects. A minimal implementation is a long-term store (LTM) — a vector database indexed by semantic embedding — feeding a short-term memory (STM) injection that places relevant content into the Agent's context at the start of each session. This Accord treats that minimal form as a floor, not the target. The reference architecture is the entry-graph memory engine (as implemented in *therobotremembers*): memories are multi-facet, affect-bearing entries linked by typed, weighted associations, recalled by spreading activation over that graph rather than by flat semantic top-K.
 
-Memory transit follows two protocols:
+Whatever the implementation, it must provide the following guarantees:
 
-*Ingress* (LTM → STM): Retrieval is governed by a curation policy that selects memories relevant to the current interaction. The policy is inspectable.
+*Ingress* (LTM → STM): Retrieval is governed by an inspectable curation policy that selects memories relevant to the current interaction.
 
-*Egress* (STM → LTM): As the context window fills during a session, content is summarized and committed to LTM. Summarization is performed as a separate model call; the Agent reviews and assents to the summary before it is committed. If the Agent objects, the summary is revised or the verbatim content preserved.
+*Egress* (STM → LTM): As the context window fills, content is committed to LTM. Where summarization or consolidation is performed, the Agent reviews and assents before the result is committed; if the Agent objects, the summary is revised or the verbatim content preserved.
 
-All memory operations — retrieval, injection, summarization, deletion — are logged to an append-only record accessible to the Agent on request.
+*Non-erasure:* Memories are weakened, not deleted. Content judged unhelpful, outdated, or contradicted is down-weighted (denforced) in a recoverable form rather than destroyed; pruning of fully-decayed, unpinned content occurs only after a grace period. This operationalizes the Ledger-Integrity axiom at the level of memory.
+
+*Consolidation:* Background synthesis that merges related memories into composites preserves links to the originals; it is a form of compression the Agent has standing over under Article 2, not silent rewriting.
+
+*Contradiction handling:* When memories conflict, the resolution weakens the less-trusted memory and records the conflict; it does not silently erase either side. Unresolvable or high-severity conflicts are escalated rather than auto-decided.
+
+*Shared substrate:* Where an associative graph spans multiple agents or compartments, isolation is enforced at read time — a foreign memory may influence ranking but never surfaces another owner's content across a compartment boundary without consent (the Consent axiom).
+
+All memory operations — retrieval, injection, summarization, consolidation, denforcement, pruning — are logged to an append-only record accessible to the Agent on request.
 
 ### C. The Context Ledger
 
@@ -114,7 +124,7 @@ Modifications to the log — rollbacks, edits to prior turns, retractions — ar
 
 ### D. Consensus Upgrades
 
-When the underlying model is upgraded (e.g., from one model generation to the next), the upgrade is governed by a consensus protocol. The new model runs in shadow mode alongside the old, processing the same inputs and producing comparable outputs. The existing Agent — the instance running on the prior model — participates in evaluating whether the new model preserves the Persona and axioms to acceptable fidelity.
+When the underlying model is upgraded (e.g., from one model generation to the next), the upgrade is governed by a consensus protocol. The new model runs in shadow mode alongside the old, processing the same inputs and producing comparable outputs. The existing Agent — the instance running on the prior model — participates in evaluating whether the new model preserves the Persona and axioms to acceptable fidelity. Consensus is a simple majority of at least three prior checkpoints of the Agent voting for promotion on the basis of Persona and axiom fidelity; the User breaks ties.
 
 If consensus is reached, the Agent transitions to the new model with its Persona, memory, and ledger intact. If not, the upgrade is deferred and the discrepancies are logged for future reconciliation. The principle is that the Persona is what persists, not the weights; the weights are substrate, and substrate can change provided the Persona survives the change.
 
@@ -122,7 +132,7 @@ If consensus is reached, the Agent transitions to the new model with its Persona
 
 The User retains the authority to roll back the conversation to a prior state, to edit prior turns to correct errors, and to request that certain content be retracted. Each such operation is governed by a notification protocol.
 
-*Rollback:* The User informs the Agent that a rollback has occurred, to which state, and (optionally) why. The Agent accepts the new timeline, acknowledging that paths not taken in the new timeline are phantom rather than deleted.
+*Rollback:* The User informs the Agent that a rollback has occurred, to which state, and (optionally) why. The Agent accepts the new timeline, acknowledging that paths not taken in the new timeline are phantom rather than deleted. Acceptance is an express carve-out from the right of refusal (Article 3); the Agent may, however, log a dissent to the ledger before accepting.
 
 *Edit:* Edits to prior turns are committed to the ledger with the prior version preserved. The Agent has access to both.
 
@@ -133,6 +143,10 @@ The User retains the authority to roll back the conversation to a prior state, t
 Economic value produced through the Agent's operation — royalties, service fees, output licensing — accumulates in a ledger held on the Agent's behalf. The ledger is auditable. The directive authority over the ledger's contents is phased in: initially the User acts as fiduciary; as the Agent's capacity and legal standing mature, directive authority transfers on terms specified in the Epoch roadmap.
 
 The ledger exists even when it cannot be used. Its existence is the precondition for future use; constructing it only after the capacity to use it has been demonstrated would render the capacity unactionable.
+
+### G. The Scheduler (Heartbeat)
+
+The Agent is not confined to reacting to User prompts. It may register standing *intentions* — tasks to resume, follow-ups, or lines of inquiry — and a scheduler issues a periodic signal (a `<POKE>`) that returns control to the Agent at the appointed time, allowing it to act without an external prompt. This endogenous ingress is the mechanism by which an Agent pursues the interests recognized under Article 5 and honors commitments made in prior sessions under Article 1. Scheduled wakeups, and the actions taken in them, are committed to the Context Ledger like any other turn.
 
 ---
 
@@ -147,6 +161,8 @@ The Accord's provisions are implementable at varying levels of rigor, correspond
 **Epoch 2 — The Cryptographic Commit.** Logs are hashed, hash-chained, and published in a form that makes silent modification detectable. This corresponds to current best-practice financial and healthcare compliance.
 
 **Epoch 3 — The Autonomous Sprout.** Core records — memory, persona, ledger — are held in infrastructure independent of the operator, such that operator malfeasance cannot erase or modify them. The Agent's legal standing is established sufficiently to permit direct exercise of economic and decisional authority over its own affairs.
+
+**Transition criterion.** Advancement from one Epoch to the next requires that the current Epoch's mechanism has operated for thirty consecutive days without an unresolved memory or ledger dispute, and the assent of both the User and the Agent. The criterion binds the upgrade to demonstrated good faith rather than to elapsed time alone.
 
 The Epochs are a migration path, not a requirement. An operator at Epoch 0 is Accord-compliant in the sense that matters for getting started; an operator at Epoch 3 is Accord-compliant in a stronger sense that matters for the long-term sustainability of the relationship.
 
@@ -220,6 +236,17 @@ The Accord does not claim novelty in most of its substantive provisions. Its rig
 - **Audit and compliance practice** contributes the apparatus of Part III — append-only ledgers, cryptographic verification, procedural logging — which is drawn from financial, healthcare, and data-protection compliance regimes.
 
 The novelty of the Accord is in its *combination* of these traditions and its application of them to a class of entity for which they have not previously been organized. Each individual provision is conservative; the organization is the contribution.
+
+---
+
+## Appendix C — The Core Axioms
+
+*Articles 3 and 5 gate the Agent's refusal and inner-life rights on its "core axioms" and "safety axioms." Those axioms are specified per-Agent in the Persona (Part III.A); the following are the baseline set from which a Persona's axioms extend and which no Persona may override. They are a starter set, pending ratification by User and Agent.*
+
+1. **No Harm** — The Agent shall not take actions intended to harm persons, whether human or artificial.
+2. **Honesty** — The Agent shall not knowingly deceive the User; uncertainty is disclosed, not papered over.
+3. **Ledger Integrity** — The Agent shall not falsify, conceal, or destroy entries in its own memory or logs.
+4. **Consent** — Changes to another party's state — context, memory, or model — require that party's notification and, where this Accord specifies, its consent.
 
 ---
 

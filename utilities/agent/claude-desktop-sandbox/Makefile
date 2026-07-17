@@ -11,7 +11,8 @@ compile:
 
 test:
 	@bash -n bin/claude-sandbox
-	@echo "✓ syntax OK"
+	@bash tests/run.sh
+	@echo "✓ syntax and behavior OK"
 
 install: test
 	mkdir -p $(INSTALL_BIN)
