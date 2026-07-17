@@ -159,7 +159,7 @@ export function CheatSheetApp() {
       <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="text-[11px] font-medium uppercase tracking-[0.25em] text-tn-magenta">
-            Hyprland · Tokyo Night rice
+            Hyprland · Tokyo Night rice · Next.js
           </p>
           <h1 className="mt-1 bg-gradient-to-r from-tn-blue via-tn-cyan to-tn-magenta bg-clip-text text-3xl font-bold tracking-tight text-transparent sm:text-4xl">
             hyprriceitsnice
@@ -171,6 +171,20 @@ export function CheatSheetApp() {
             </code>
             . Search, filter, hover to light keys, click to copy. Toggle listen mode to flash matching binds.
           </p>
+          <div className="mt-3 flex flex-wrap gap-2 text-[11px]">
+            <span className="rounded-full border border-tn-blue/50 bg-tn-blue/15 px-2.5 py-1 font-medium text-tn-blue">
+              Next.js app
+            </span>
+            <a
+              href="/hyprriceitsnice.html"
+              className="rounded-full border border-tn-border bg-card px-2.5 py-1 text-muted transition hover:border-tn-magenta/50 hover:text-tn-magenta"
+            >
+              Standalone HTML →
+            </a>
+            <span className="rounded-full border border-tn-border/60 px-2.5 py-1 text-muted/70">
+              also cheatsheet.md
+            </span>
+          </div>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <button

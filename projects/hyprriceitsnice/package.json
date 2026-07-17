@@ -4,9 +4,11 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "pnpm sync:html && next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "sync:html": "cp standalone/hyprriceitsnice.html public/hyprriceitsnice.html",
+    "open:html": "xdg-open standalone/hyprriceitsnice.html"
   },
   "dependencies": {
     "next": "16.2.10",

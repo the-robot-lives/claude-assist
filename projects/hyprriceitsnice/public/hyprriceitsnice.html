@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>hyprriceitsnice — Hyprland Cheat Sheet</title>
+  <meta name="description" content="Standalone interactive Hyprland keybinding cheat sheet (Tokyo Night rice)" />
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            tn: {
+              bg: "#1a1b26",
+              dark: "#16161e",
+              card: "#1f2335",
+              hi: "#292e42",
+              fg: "#c0caf5",
+              dim: "#a9b1d6",
+              comment: "#565f89",
+              blue: "#7aa2f7",
+              magenta: "#bb9af7",
+              cyan: "#7dcfff",
+              green: "#9ece6a",
+              yellow: "#e0af68",
+              orange: "#ff9e64",
+              red: "#f7768e",
+              border: "#3b4261",
+            },
+          },
+          fontFamily: {
+            sans: ["ui-sans-serif", "system-ui", "Segoe UI", "Roboto", "sans-serif"],
+            mono: ["ui-monospace", "SFMono-Regular", "Menlo", "Consolas", "monospace"],
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+    :root { color-scheme: dark; }
+    html, body { min-height: 100%; }
+    body {
+      margin: 0;
+      background:
+        radial-gradient(1200px 600px at 10% -10%, rgba(122, 162, 247, 0.12), transparent 55%),
+        radial-gradient(900px 500px at 90% 0%, rgba(187, 154, 247, 0.1), transparent 50%),
+        #1a1b26;
+      color: #c0caf5;
+      font-family: ui-sans-serif, system-ui, Segoe UI, Roboto, sans-serif;
+    }
+    ::selection { background: rgba(122, 162, 247, 0.4); color: #fff; }
+    :focus-visible { outline: 2px solid #7aa2f7; outline-offset: 2px; }
+
+    .keycap {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid #3b4261;
+      background: #16161e;
+      border-radius: 0.375rem;
+      padding: 0.25rem 0.5rem;
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      user-select: none;
+      transition: background 120ms, border-color 120ms, box-shadow 120ms, transform 80ms, color 120ms;
+    }
+    .keycap.active {
+      background: linear-gradient(135deg, rgba(122, 162, 247, 0.35), rgba(187, 154, 247, 0.35));
+      border-color: #7aa2f7;
+      color: #fff;
+      box-shadow: 0 0 16px rgba(122, 162, 247, 0.35);
+      transform: translateY(1px);
+    }
+    .keycap.ghost {
+      background: transparent;
+      border-color: rgba(59, 66, 97, 0.4);
+      color: rgba(86, 95, 137, 0.7);
+    }
+    .binding-row {
+      transition: background 120ms, border-color 120ms, box-shadow 120ms;
+    }
+    .binding-row.hot {
+      border-color: rgba(158, 206, 106, 0.6);
+      background: rgba(158, 206, 106, 0.12);
+      box-shadow: 0 0 20px rgba(158, 206, 106, 0.12);
+    }
+    .binding-row.hover-keys {
+      border-color: rgba(122, 162, 247, 0.55);
+      background: rgba(122, 162, 247, 0.1);
+    }
+    .glow-border {
+      box-shadow:
+        0 0 0 1px rgba(122, 162, 247, 0.55),
+        0 0 24px rgba(187, 154, 247, 0.25);
+    }
+    .scroll-thin::-webkit-scrollbar { width: 8px; height: 8px; }
+    .scroll-thin::-webkit-scrollbar-thumb { background: #3b4261; border-radius: 999px; }
+    .scroll-thin::-webkit-scrollbar-track { background: transparent; }
+    .grad-text {
+      background: linear-gradient(90deg, #7aa2f7, #7dcfff, #bb9af7);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .sticky-bar {
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+  <div class="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8">
+    <!-- Header -->
+    <header class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+      <div>
+        <p class="text-[11px] font-medium uppercase tracking-[0.25em] text-tn-magenta">
+          Hyprland · Tokyo Night rice · standalone HTML
+        </p>
+        <h1 class="mt-1 text-3xl font-bold tracking-tight grad-text sm:text-4xl">hyprriceitsnice</h1>
+        <p class="mt-2 max-w-xl text-sm text-tn-comment">
+          Single-file cheat sheet for
+          <code class="rounded bg-tn-dark px-1.5 py-0.5 font-mono text-[12px] text-tn-cyan">~/.config/hypr</code>.
+          Search, filter, hover to light keys, click to copy. Toggle listen mode to flash matching binds.
+        </p>
+        <div class="mt-3 flex flex-wrap gap-2 text-[11px]">
+          <span class="rounded-full border border-tn-magenta/50 bg-tn-magenta/15 px-2.5 py-1 font-medium text-tn-magenta">
+            Standalone HTML
+          </span>
+          <a href="/" id="nextLink"
+            class="rounded-full border border-tn-border bg-tn-card px-2.5 py-1 text-tn-comment transition hover:border-tn-blue/50 hover:text-tn-blue"
+            title="When served by Next.js dev/start">
+            Next.js app →
+          </a>
+          <span class="rounded-full border border-tn-border/60 px-2.5 py-1 text-tn-comment/70">
+            also cheatsheet.md
+          </span>
+        </div>
+      </div>
+      <div class="flex flex-wrap items-center gap-2">
+        <button id="listenBtn" type="button"
+          class="rounded-lg border border-tn-border bg-tn-card px-3 py-2 text-xs font-semibold text-tn-fg/80 hover:border-tn-blue/50 transition">
+          ○ Listen mode
+        </button>
+        <span id="countBadge" class="rounded-lg border border-tn-border bg-tn-card px-3 py-2 text-[11px] text-tn-comment">
+          — binds
+        </span>
+      </div>
+    </header>
+
+    <!-- Search + filters -->
+    <div class="sticky-bar -mx-1 space-y-3 rounded-xl border border-tn-border/80 bg-tn-dark/90 p-3">
+      <div class="relative">
+        <input id="search" type="search" autocomplete="off" spellcheck="false"
+          placeholder="Search binds, apps, tags…  (Ctrl/⌘+K)"
+          class="w-full rounded-lg border border-tn-border bg-tn-bg/80 py-2.5 pl-3 pr-20 text-sm text-tn-fg placeholder:text-tn-comment focus:border-tn-blue focus:outline-none focus:ring-2 focus:ring-tn-blue/40" />
+        <kbd class="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 rounded border border-tn-border bg-tn-card px-1.5 py-0.5 font-mono text-[10px] text-tn-comment">⌘K</kbd>
+      </div>
+      <div id="filters" class="flex gap-1.5 overflow-x-auto scroll-thin pb-0.5"></div>
+    </div>
+
+    <div id="listenBanner" class="hidden rounded-lg border border-tn-green/40 bg-tn-green/10 px-3 py-2 text-xs text-tn-green">
+      Listen mode: press combos outside the search box. Matching rows flash green.
+      Held: <span id="heldKeys" class="font-mono">—</span>
+    </div>
+
+    <!-- Keyboard + meta -->
+    <div class="grid gap-4 xl:grid-cols-[1.4fr_1fr]">
+      <div class="rounded-xl border border-tn-border bg-tn-dark/80 p-3">
+        <div class="mb-2 flex items-center justify-between px-1">
+          <span class="text-[10px] font-medium uppercase tracking-[0.2em] text-tn-comment">Virtual board</span>
+          <span class="text-[10px] text-tn-comment">hover a bind · or enable listen mode</span>
+        </div>
+        <div id="keyboard" class="flex flex-col gap-1.5"></div>
+        <div id="extraKeys" class="mt-3 flex flex-wrap justify-center gap-1.5 border-t border-tn-border/60 pt-2"></div>
+      </div>
+
+      <aside class="flex flex-col gap-3">
+        <div class="rounded-xl border border-tn-border bg-tn-card/70 p-3">
+          <h3 class="mb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-tn-comment">Default apps</h3>
+          <dl id="appsList" class="space-y-1.5 text-[12px]"></dl>
+        </div>
+        <div class="rounded-xl border border-tn-border bg-tn-card/70 p-3">
+          <h3 class="mb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-tn-comment">Rice</h3>
+          <dl id="riceList" class="space-y-1.5 text-[12px]"></dl>
+          <div class="mt-3 h-2 overflow-hidden rounded-full bg-tn-dark">
+            <div class="h-full w-full" style="background:linear-gradient(90deg,#7aa2f7,#bb9af7)"></div>
+          </div>
+        </div>
+        <div class="rounded-xl border border-tn-border bg-tn-card/70 p-3">
+          <h3 class="mb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-tn-comment">Autostart</h3>
+          <ul id="autostartList" class="space-y-1 text-[12px] text-tn-fg/85"></ul>
+        </div>
+      </aside>
+    </div>
+
+    <!-- Monitors + AI layout -->
+    <section class="grid gap-4 lg:grid-cols-2">
+      <div class="rounded-xl border border-tn-border bg-tn-card/70 p-4">
+        <h2 class="mb-3 text-sm font-semibold tracking-wide text-tn-cyan">Dual stack</h2>
+        <div class="flex flex-col items-center gap-2">
+          <div class="w-full max-w-md rounded-lg border-2 border-tn-blue/70 bg-gradient-to-br from-tn-blue/15 to-tn-magenta/10 p-3">
+            <div class="flex items-start justify-between gap-2">
+              <div>
+                <div class="text-xs font-semibold text-tn-blue">MSI MAG 273Q</div>
+                <div class="font-mono text-[10px] text-tn-comment">HDMI-A-1</div>
+              </div>
+              <div class="rounded-full bg-tn-blue/20 px-2 py-0.5 text-[10px] text-tn-blue">WS 1–5</div>
+            </div>
+            <div class="mt-2 text-[11px] text-tn-fg/80">2560×1440@120 · scale 1</div>
+            <div class="mt-1 text-[10px] text-tn-comment">Primary · top stand</div>
+            <div id="wsHdmi" class="mt-3 flex flex-wrap gap-1"></div>
+          </div>
+          <div class="h-4 w-px bg-tn-border"></div>
+          <div class="w-[75%] max-w-sm rounded-lg border border-tn-magenta/60 bg-gradient-to-br from-tn-magenta/10 to-transparent p-3">
+            <div class="flex items-start justify-between gap-2">
+              <div>
+                <div class="text-xs font-semibold text-tn-magenta">Samsung OLED</div>
+                <div class="font-mono text-[10px] text-tn-comment">eDP-1</div>
+              </div>
+              <div class="rounded-full bg-tn-magenta/20 px-2 py-0.5 text-[10px] text-tn-magenta">WS 6–9</div>
+            </div>
+            <div class="mt-2 text-[11px] text-tn-fg/80">2880×1620@120</div>
+            <div class="mt-0.5 text-[10px] text-tn-comment">scale 1.5 → 1920×1080 logical</div>
+            <div id="wsLaptop" class="mt-3 flex flex-wrap gap-1"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="rounded-xl border border-tn-border bg-tn-card/70 p-4">
+        <h2 class="mb-3 text-sm font-semibold tracking-wide text-tn-green">AI workspace layout</h2>
+        <p class="mb-3 text-[11px] text-tn-comment">
+          special:ai · floats use % of focused monitor · SUPER+A toggle · SUPER+SHIFT+A launch
+        </p>
+        <div class="relative aspect-video w-full overflow-hidden rounded-lg border border-tn-border bg-tn-dark">
+          <div class="absolute left-[1%] top-[1%] h-[72%] w-[58%] rounded-md border border-tn-blue/50 bg-tn-blue/15 p-2">
+            <div class="text-[10px] font-medium text-tn-blue">Chrome</div>
+            <div class="text-[9px] text-tn-comment">58% × 72%</div>
+          </div>
+          <div class="absolute left-[59%] top-[1%] h-[97%] w-[40%] rounded-md border border-tn-magenta/50 bg-tn-magenta/15 p-2">
+            <div class="text-[10px] font-medium text-tn-magenta">Obsidian</div>
+            <div class="text-[9px] text-tn-comment">40% × 97%</div>
+          </div>
+          <div class="absolute bottom-[2%] left-[1%] h-[22%] w-[58%] rounded-md border border-tn-green/50 bg-tn-green/10 p-2">
+            <div class="text-[10px] font-medium text-tn-green">Terminal</div>
+            <div class="text-[9px] text-tn-comment">58% × 22%</div>
+          </div>
+        </div>
+        <ul class="mt-3 space-y-1 text-[11px]">
+          <li class="flex justify-between gap-2"><span>Chrome / Chromium</span><span class="font-mono text-tn-comment">Left 58% × 72%</span></li>
+          <li class="flex justify-between gap-2"><span>Obsidian</span><span class="font-mono text-tn-comment">Right 40% × 97%</span></li>
+          <li class="flex justify-between gap-2"><span>foot / kitty</span><span class="font-mono text-tn-comment">Under chrome 58% × 22%</span></li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- Bindings -->
+    <section id="bindings" class="space-y-6"></section>
+
+    <footer class="border-t border-tn-border/60 pt-4 pb-8 text-center text-[11px] text-tn-comment">
+      Standalone HTML · Tailwind via CDN · data from
+      <code class="text-tn-cyan">hyprland.conf</code> +
+      <code class="text-tn-cyan">ai-workspace-extension.conf</code>.
+      SUPER+SHIFT+Q exit disabled · SUPER+Space is launcher (later bind wins).
+    </footer>
+  </div>
+
+  <script>
+    /* ========== DATA ========== */
+    const CATEGORIES = [
+      { id: "launch", label: "Launch", emoji: "🚀", description: "Apps & menus" },
+      { id: "windows", label: "Windows", emoji: "🪟", description: "Float, pin, kill, split" },
+      { id: "focus", label: "Focus / Move", emoji: "🎯", description: "Vim + arrows + resize" },
+      { id: "workspaces", label: "Workspaces", emoji: "🗂", description: "Jump, move, swipe" },
+      { id: "scratchpad", label: "Scratchpad", emoji: "📎", description: "special:scratchpad" },
+      { id: "ai", label: "AI Workspace", emoji: "🤖", description: "special:ai floating layout" },
+      { id: "clipboard", label: "Clip / Shot", emoji: "📋", description: "cliphist + grim/slurp" },
+      { id: "media", label: "Media / HW", emoji: "🔊", description: "Volume, brightness, player" },
+      { id: "extra", label: "Extra UI", emoji: "✨", description: "Waybar, snapshots, foot+tmux" },
+      { id: "system", label: "System", emoji: "⚙️", description: "Notes & gotchas" },
+    ];
+
+    const WS_TITLES = { "1": "osx", "2": "win", "3": "dev", "4": "web", "5": "ai" };
+
+    const APPS = [
+      { key: "$terminal", value: "ghostty" },
+      { key: "$browser", value: "chromium" },
+      { key: "$fileManager", value: "dolphin" },
+      { key: "$menu", value: "wofi --show drun" },
+    ];
+
+    const RICE = {
+      Layout: "dwindle (smart_split, preserve_split, pseudotile)",
+      Gaps: "in 3 · out 6",
+      Border: "1px · rounding 8",
+      Active: "#7aa2f7 → #bb9af7 (45°)",
+      Blur: "on · size 8 · 4 passes",
+      Theme: "Tokyo Night-ish",
+    };
+
+    const AUTOSTART = [
+      "waybar",
+      "swaync",
+      "polkit-gnome",
+      "wl-paste → cliphist (text + image)",
+      "desktop-snapshots daemon",
+      "foot --server",
+    ];
+
+    const BINDINGS = [
+      { id: "term", keys: ["SUPER", "Return"], keyIds: ["super", "return"], action: "Open terminal (ghostty)", category: "launch", tags: ["terminal", "ghostty"] },
+      { id: "menu-alt", keys: ["ALT", "Space"], keyIds: ["alt", "space"], action: "App launcher (wofi) — Spotlight-style", category: "launch", tags: ["wofi", "menu"] },
+      { id: "menu-super", keys: ["SUPER", "Space"], keyIds: ["super", "space"], action: "App launcher (wofi)", category: "launch", notes: "Also declared as terminal earlier; later bind wins → menu.", tags: ["wofi", "menu"] },
+      { id: "browser", keys: ["SUPER", "B"], keyIds: ["super", "b"], action: "Browser (chromium)", category: "launch", tags: ["chromium"] },
+      { id: "files", keys: ["SUPER", "E"], keyIds: ["super", "e"], action: "File manager (dolphin)", category: "launch", tags: ["dolphin"] },
+      { id: "nomachine", keys: ["SUPER", "M"], keyIds: ["super", "m"], action: "NoMachine player", category: "launch", tags: ["nxplayer"] },
+
+      { id: "kill", keys: ["SUPER", "RCTRL", "Q"], keyIds: ["super", "rctrl", "q"], action: "Kill active window", category: "windows" },
+      { id: "float", keys: ["SUPER", "SHIFT", "V"], keyIds: ["super", "shift", "v"], action: "Toggle floating", category: "windows" },
+      { id: "fullscreen", keys: ["SUPER", "F"], keyIds: ["super", "f"], action: "Fullscreen", category: "windows" },
+      { id: "pseudo", keys: ["SUPER", "P"], keyIds: ["super", "p"], action: "Pseudo-tile (dwindle)", category: "windows" },
+      { id: "togglesplit", keys: ["SUPER", "T"], keyIds: ["super", "t"], action: "Toggle split (dwindle)", category: "windows" },
+      { id: "pin", keys: ["CTRL", "ALT", "P"], keyIds: ["ctrl", "alt", "p"], action: "Float + pin (sticky across workspaces)", category: "windows", tags: ["pin", "sticky"] },
+      { id: "move-mouse", keys: ["SUPER", "LMB drag"], keyIds: ["super", "lmb"], action: "Move window with mouse", category: "windows" },
+      { id: "resize-mouse", keys: ["SUPER", "RMB drag"], keyIds: ["super", "rmb"], action: "Resize window with mouse", category: "windows" },
+
+      { id: "focus-h", keys: ["SUPER", "H"], keyIds: ["super", "h"], action: "Focus left", category: "focus", tags: ["vim"] },
+      { id: "focus-j", keys: ["SUPER", "J"], keyIds: ["super", "j"], action: "Focus down", category: "focus", tags: ["vim"] },
+      { id: "focus-k", keys: ["SUPER", "K"], keyIds: ["super", "k"], action: "Focus up", category: "focus", tags: ["vim"] },
+      { id: "focus-l", keys: ["SUPER", "L"], keyIds: ["super", "l"], action: "Focus right", category: "focus", tags: ["vim"] },
+      { id: "focus-left", keys: ["SUPER", "←"], keyIds: ["super", "left"], action: "Focus left (arrow)", category: "focus" },
+      { id: "focus-right", keys: ["SUPER", "→"], keyIds: ["super", "right"], action: "Focus right (arrow)", category: "focus" },
+      { id: "focus-up", keys: ["SUPER", "↑"], keyIds: ["super", "up"], action: "Focus up (arrow)", category: "focus" },
+      { id: "focus-down", keys: ["SUPER", "↓"], keyIds: ["super", "down"], action: "Focus down (arrow)", category: "focus" },
+      { id: "movewin-h", keys: ["SUPER", "SHIFT", "H"], keyIds: ["super", "shift", "h"], action: "Move window left", category: "focus", tags: ["vim"] },
+      { id: "movewin-j", keys: ["SUPER", "SHIFT", "J"], keyIds: ["super", "shift", "j"], action: "Move window down", category: "focus", tags: ["vim"] },
+      { id: "movewin-k", keys: ["SUPER", "SHIFT", "K"], keyIds: ["super", "shift", "k"], action: "Move window up", category: "focus", tags: ["vim"] },
+      { id: "movewin-l", keys: ["SUPER", "SHIFT", "L"], keyIds: ["super", "shift", "l"], action: "Move window right", category: "focus", tags: ["vim"] },
+      { id: "resize-h", keys: ["SUPER", "CTRL", "H"], keyIds: ["super", "ctrl", "h"], action: "Resize −40px width", category: "focus" },
+      { id: "resize-l", keys: ["SUPER", "CTRL", "L"], keyIds: ["super", "ctrl", "l"], action: "Resize +40px width", category: "focus" },
+      { id: "resize-k", keys: ["SUPER", "CTRL", "K"], keyIds: ["super", "ctrl", "k"], action: "Resize −40px height", category: "focus" },
+      { id: "resize-j", keys: ["SUPER", "CTRL", "J"], keyIds: ["super", "ctrl", "j"], action: "Resize +40px height", category: "focus" },
+
+      // workspaces 1-9 generated below
+      { id: "ws-10", keys: ["SUPER", "0"], keyIds: ["super", "0"], action: "Go to workspace 10", category: "workspaces" },
+      { id: "movews-10", keys: ["SUPER", "SHIFT", "0"], keyIds: ["super", "shift", "0"], action: "Move window → workspace 10", category: "workspaces" },
+      { id: "ws-next", keys: ["SUPER", "Tab"], keyIds: ["super", "tab"], action: "Next workspace", category: "workspaces" },
+      { id: "ws-prev", keys: ["SUPER", "SHIFT", "Tab"], keyIds: ["super", "shift", "tab"], action: "Previous workspace", category: "workspaces" },
+      { id: "ws-scroll", keys: ["SUPER", "Scroll"], keyIds: ["super", "scroll"], action: "Cycle workspaces (mouse wheel)", category: "workspaces" },
+      { id: "ws-swipe", keys: ["3-finger swipe"], keyIds: [], action: "Swipe workspaces (touchpad)", category: "workspaces", notes: "Horizontal 3-finger gesture" },
+
+      { id: "scratch-toggle", keys: ["SUPER", "S"], keyIds: ["super", "s"], action: "Toggle special:scratchpad", category: "scratchpad" },
+      { id: "scratch-send", keys: ["SUPER", "SHIFT", "S"], keyIds: ["super", "shift", "s"], action: "Send window → scratchpad", category: "scratchpad" },
+
+      { id: "ai-toggle", keys: ["SUPER", "A"], keyIds: ["super", "a"], action: "Toggle AI workspace (special:ai)", category: "ai" },
+      { id: "ai-launch", keys: ["SUPER", "SHIFT", "A"], keyIds: ["super", "shift", "a"], action: "Launch AI layout (Chrome + Obsidian + term)", category: "ai", notes: "Runs ~/.config/hypr/bin/ai-workspace-launch", tags: ["script"] },
+      { id: "ai-move-in", keys: ["SUPER", "ALT", "C"], keyIds: ["super", "alt", "c"], action: "Move focused → AI workspace (silent)", category: "ai" },
+      { id: "ai-move-out", keys: ["SUPER", "ALT", "M"], keyIds: ["super", "alt", "m"], action: "Move from special → current workspace", category: "ai" },
+
+      { id: "cliphist", keys: ["SUPER", "V"], keyIds: ["super", "v"], action: "Clipboard history (cliphist → wofi)", category: "clipboard", tags: ["cliphist"] },
+      { id: "shot-region", keys: ["Print"], keyIds: ["print"], action: "Region screenshot → clipboard", category: "clipboard", tags: ["grim", "slurp"] },
+      { id: "shot-full", keys: ["SUPER", "Print"], keyIds: ["super", "print"], action: "Fullscreen screenshot → clipboard", category: "clipboard", tags: ["grim"] },
+      { id: "shot-file", keys: ["SUPER", "SHIFT", "Print"], keyIds: ["super", "shift", "print"], action: "Region screenshot → ~/Pictures/…", category: "clipboard", tags: ["grim", "slurp"] },
+
+      { id: "vol-up", keys: ["Vol ↑"], keyIds: ["volup"], action: "Volume +5% (cap 100%)", category: "media" },
+      { id: "vol-down", keys: ["Vol ↓"], keyIds: ["voldown"], action: "Volume −5%", category: "media" },
+      { id: "mute", keys: ["Mute"], keyIds: ["mute"], action: "Toggle sink mute", category: "media" },
+      { id: "mic-mute", keys: ["Mic mute"], keyIds: ["micmute"], action: "Toggle source mute", category: "media" },
+      { id: "bright-up", keys: ["Bright ↑"], keyIds: ["brightup"], action: "Brightness +5%", category: "media" },
+      { id: "bright-down", keys: ["Bright ↓"], keyIds: ["brightdown"], action: "Brightness −5%", category: "media" },
+      { id: "play", keys: ["Play/Pause"], keyIds: ["play"], action: "playerctl play-pause", category: "media" },
+      { id: "next", keys: ["Next"], keyIds: ["next"], action: "playerctl next", category: "media" },
+      { id: "prev", keys: ["Prev"], keyIds: ["prev"], action: "playerctl previous", category: "media" },
+
+      { id: "waybar-notch", keys: ["SUPER", "ALT", "W"], keyIds: ["super", "alt", "w"], action: "Toggle waybar notch-dock (profile 6 only)", category: "extra" },
+      { id: "snapshots", keys: ["SUPER", "CTRL", "5"], keyIds: ["super", "ctrl", "5"], action: "Desktop snapshots overview", category: "extra", notes: "~/.config/hypr/bin/desktop-snapshots overview" },
+      { id: "foot-big", keys: ["SUPER", "SHIFT", "Return"], keyIds: ["super", "shift", "return"], action: "foot-big on HDMI (tmux session main)", category: "extra", notes: "70%×60% float on external monitor", tags: ["foot", "tmux"] },
+      { id: "foot-pad", keys: ["SUPER", "ALT", "Return"], keyIds: ["super", "alt", "return"], action: "foot-pad on laptop (tmux session main)", category: "extra", notes: "90%×85% float on eDP-1", tags: ["foot", "tmux"] },
+
+      { id: "no-exit", keys: ["SUPER", "SHIFT", "Q"], keyIds: ["super", "shift", "q"], action: "Exit Hyprland — DISABLED on purpose", category: "system", notes: "Commented out in hyprland.conf to avoid accidents" },
+    ];
+
+    // inject workspace 1-9 at correct position
+    (function injectWs() {
+      const extra = [];
+      for (let n = 1; n <= 9; n++) {
+        const digit = String(n);
+        extra.push({
+          id: `ws-${n}`,
+          keys: ["SUPER", digit],
+          keyIds: ["super", digit],
+          action: `Go to workspace ${n}${n <= 5 ? " (HDMI)" : " (laptop)"}`,
+          category: "workspaces",
+          tags: [n <= 5 ? "hdmi" : "laptop"],
+        });
+        extra.push({
+          id: `movews-${n}`,
+          keys: ["SUPER", "SHIFT", digit],
+          keyIds: ["super", "shift", digit],
+          action: `Move window → workspace ${n}`,
+          category: "workspaces",
+        });
+      }
+      const idx = BINDINGS.findIndex((b) => b.id === "ws-10");
+      BINDINGS.splice(idx, 0, ...extra);
+    })();
+
+    /* ========== KEYBOARD LAYOUT ========== */
+    const KEY_LABELS = {
+      super: "SUPER", shift: "SHIFT", ctrl: "CTRL", alt: "ALT", rctrl: "RCTRL",
+      return: "↵", space: "Space", tab: "Tab", print: "PrtSc", escape: "Esc",
+      left: "←", right: "→", up: "↑", down: "↓",
+    };
+
+    const KB_ROWS = [
+      [
+        { id: "escape", label: "Esc", w: "sm" }, { spacer: true },
+        { id: "1" }, { id: "2" }, { id: "3" }, { id: "4" }, { id: "5" },
+        { id: "6" }, { id: "7" }, { id: "8" }, { id: "9" }, { id: "0" },
+        { spacer: true }, { id: "print", label: "PrtSc", w: "md" },
+      ],
+      [
+        { id: "tab", label: "Tab", w: "md" },
+        { id: "q" }, { id: "w" }, { id: "e" }, { label: "R", ghost: true },
+        { id: "t" }, { label: "Y", ghost: true }, { label: "U", ghost: true },
+        { label: "I", ghost: true }, { label: "O", ghost: true }, { id: "p" },
+        { spacer: true }, { id: "up", label: "↑" },
+      ],
+      [
+        { label: "Caps", w: "md", ghost: true },
+        { id: "a" }, { id: "s" }, { label: "D", ghost: true }, { id: "f" },
+        { label: "G", ghost: true }, { id: "h" }, { id: "j" }, { id: "k" }, { id: "l" },
+        { spacer: true },
+        { id: "left", label: "←" }, { id: "down", label: "↓" }, { id: "right", label: "→" },
+      ],
+      [
+        { id: "shift", label: "SHIFT", w: "lg" },
+        { label: "Z", ghost: true }, { label: "X", ghost: true },
+        { id: "c" }, { id: "v" }, { id: "b" }, { label: "N", ghost: true }, { id: "m" },
+        { spacer: true },
+        { id: "shift", label: "SHIFT", w: "lg" },
+      ],
+      [
+        { id: "ctrl", label: "CTRL", w: "md" },
+        { id: "super", label: "SUPER", w: "md" },
+        { id: "alt", label: "ALT", w: "md" },
+        { id: "space", label: "Space", w: "xl" },
+        { id: "alt", label: "ALT", w: "sm" },
+        { id: "rctrl", label: "RCTRL", w: "md" },
+        { id: "return", label: "↵ Enter", w: "lg" },
+      ],
+    ];
+
+    const EXTRA_KEYS = [
+      ["lmb", "LMB"], ["rmb", "RMB"], ["scroll", "Scroll"],
+      ["volup", "Vol+"], ["voldown", "Vol−"], ["mute", "Mute"],
+      ["brightup", "☀+"], ["brightdown", "☀−"], ["play", "⏯"],
+    ];
+
+    const WIDTH = { sm: "min-w-[2.5rem]", md: "min-w-[3.25rem]", lg: "min-w-[4.5rem]", xl: "min-w-[8.5rem] flex-1", def: "min-w-[1.85rem] w-8" };
+
+    /* ========== STATE ========== */
+    const state = {
+      query: "",
+      category: "all",
+      listen: false,
+      activeKeys: new Set(),
+      flashIds: new Set(),
+      copiedId: null,
+      held: [],
+    };
+
+    /* ========== HELPERS ========== */
+    function matchesQuery(b, q) {
+      if (!q) return true;
+      const hay = [b.action, ...b.keys, b.category, b.notes || "", ...(b.tags || [])].join(" ").toLowerCase();
+      return q.toLowerCase().split(/\s+/).filter(Boolean).every((t) => hay.includes(t));
+    }
+
+    function formatKeys(keys) {
+      return keys.join(" + ");
+    }
+
+    function chordHtml(keys) {
+      return keys
+        .map((k, i) => {
+          const plus = i > 0 ? '<span class="text-tn-comment text-[10px] mx-0.5">+</span>' : "";
+          return `${plus}<span class="keycap">${escapeHtml(k)}</span>`;
+        })
+        .join("");
+    }
+
+    function escapeHtml(s) {
+      return String(s)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    function bindingMatchesHeld(held, bindingKeys) {
+      if (!bindingKeys.length) return false;
+      const set = new Set(held);
+      return bindingKeys.every((k) => {
+        if (k === "rctrl") return set.has("rctrl") || set.has("ctrl");
+        if (k === "ctrl") return set.has("ctrl") || set.has("rctrl");
+        return set.has(k);
+      });
+    }
+
+    function eventToKeyIds(e) {
+      const ids = [];
+      if (e.metaKey) ids.push("super");
+      if (e.ctrlKey) ids.push(e.code === "ControlRight" ? "rctrl" : "ctrl");
+      if (e.altKey) ids.push("alt");
+      if (e.shiftKey) ids.push("shift");
+
+      const map = {
+        Enter: "return", " ": "space", Tab: "tab", Escape: "escape", PrintScreen: "print",
+        ArrowLeft: "left", ArrowRight: "right", ArrowUp: "up", ArrowDown: "down",
+      };
+      const letter = e.key.length === 1 ? e.key.toLowerCase() : "";
+      if (map[e.key]) ids.push(map[e.key]);
+      else if (/^[a-z0-9]$/.test(letter)) ids.push(letter);
+      return [...new Set(ids)];
+    }
+
+    function isTypingTarget(e) {
+      const t = e.target;
+      return t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable);
+    }
+
+    /* ========== RENDER ========== */
+    function renderMeta() {
+      document.getElementById("appsList").innerHTML = APPS.map(
+        (a) =>
+          `<div class="flex justify-between gap-2"><dt class="font-mono text-tn-comment">${escapeHtml(a.key)}</dt><dd class="text-tn-cyan">${escapeHtml(a.value)}</dd></div>`
+      ).join("");
+
+      document.getElementById("riceList").innerHTML = Object.entries(RICE)
+        .map(
+          ([k, v]) =>
+            `<div class="flex justify-between gap-3"><dt class="text-tn-comment">${escapeHtml(k)}</dt><dd class="text-right text-tn-fg/85">${escapeHtml(v)}</dd></div>`
+        )
+        .join("");
+
+      document.getElementById("autostartList").innerHTML = AUTOSTART.map(
+        (s) => `<li class="flex gap-2"><span class="text-tn-blue">▹</span>${escapeHtml(s)}</li>`
+      ).join("");
+
+      document.getElementById("wsHdmi").innerHTML = [1, 2, 3, 4, 5]
+        .map(
+          (n) =>
+            `<span class="rounded-md border border-tn-border bg-tn-dark px-2 py-1 text-[10px]"><span class="text-tn-blue">${n}</span>${
+              WS_TITLES[n] ? `<span class="ml-1 text-tn-comment">${WS_TITLES[n]}</span>` : ""
+            }</span>`
+        )
+        .join("");
+
+      document.getElementById("wsLaptop").innerHTML = [6, 7, 8, 9]
+        .map(
+          (n) =>
+            `<span class="rounded-md border border-tn-border bg-tn-dark px-2 py-1 text-[10px]"><span class="text-tn-magenta">${n}</span></span>`
+        )
+        .join("");
+    }
+
+    function renderKeyboard() {
+      const active = state.activeKeys;
+      const rows = KB_ROWS.map((row) => {
+        const cells = row
+          .map((key) => {
+            if (key.spacer) {
+              return `<span class="h-8 w-3 sm:w-4 rounded-md border border-transparent opacity-30"></span>`;
+            }
+            const id = key.id;
+            const lit =
+              id &&
+              (active.has(id) ||
+                (id === "ctrl" && active.has("rctrl")) ||
+                (id === "rctrl" && active.has("ctrl")));
+            const label = key.label || KEY_LABELS[id] || (id ? id.toUpperCase() : "");
+            const w = WIDTH[key.w] || WIDTH.def;
+            const classes = [
+              "keycap",
+              "h-8",
+              "px-1.5",
+              "text-[10px]",
+              w,
+              key.ghost && !lit ? "ghost" : "",
+              lit ? "active" : "",
+            ]
+              .filter(Boolean)
+              .join(" ");
+            return `<span class="${classes}" data-key="${id || ""}">${escapeHtml(label)}</span>`;
+          })
+          .join("");
+        return `<div class="flex flex-wrap justify-center gap-1">${cells}</div>`;
+      }).join("");
+
+      document.getElementById("keyboard").innerHTML = rows;
+
+      document.getElementById("extraKeys").innerHTML = EXTRA_KEYS.map(([id, label]) => {
+        const lit = active.has(id) ? "active" : "";
+        return `<span class="keycap h-7 px-2 text-[10px] ${lit}" data-key="${id}">${escapeHtml(label)}</span>`;
+      }).join("");
+    }
+
+    function renderFilters() {
+      const counts = { all: BINDINGS.length };
+      CATEGORIES.forEach((c) => {
+        counts[c.id] = BINDINGS.filter((b) => b.category === c.id).length;
+      });
+
+      const chips = [
+        { id: "all", label: "All", count: counts.all },
+        ...CATEGORIES.map((c) => ({
+          id: c.id,
+          label: `${c.emoji} ${c.label}`,
+          count: counts[c.id],
+        })),
+      ];
+
+      document.getElementById("filters").innerHTML = chips
+        .map((c) => {
+          const active = state.category === c.id;
+          return `<button type="button" data-cat="${c.id}" class="shrink-0 rounded-full border px-3 py-1.5 text-[11px] font-medium transition ${
+            active
+              ? "border-tn-blue/70 bg-tn-blue/15 text-tn-blue"
+              : "border-tn-border bg-tn-card text-tn-comment hover:border-tn-blue/40 hover:text-tn-fg"
+          }">${escapeHtml(c.label)}<span class="ml-1.5 opacity-70">${c.count}</span></button>`;
+        })
+        .join("");
+
+      document.querySelectorAll("#filters [data-cat]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          state.category = btn.getAttribute("data-cat");
+          renderFilters();
+          renderBindings();
+        });
+      });
+    }
+
+    function filteredBindings() {
+      return BINDINGS.filter((b) => {
+        if (state.category !== "all" && b.category !== state.category) return false;
+        return matchesQuery(b, state.query);
+      });
+    }
+
+    function renderBindings() {
+      const filtered = filteredBindings();
+      document.getElementById("countBadge").textContent = `${filtered.length} / ${BINDINGS.length} binds`;
+
+      const cats =
+        state.category === "all"
+          ? CATEGORIES
+          : CATEGORIES.filter((c) => c.id === state.category);
+
+      const byCat = new Map();
+      filtered.forEach((b) => {
+        if (!byCat.has(b.category)) byCat.set(b.category, []);
+        byCat.get(b.category).push(b);
+      });
+
+      if (!filtered.length) {
+        document.getElementById("bindings").innerHTML = `
+          <div class="rounded-xl border border-dashed border-tn-border px-4 py-12 text-center text-sm text-tn-comment">
+            No binds match “${escapeHtml(state.query)}”.
+          </div>`;
+        return;
+      }
+
+      document.getElementById("bindings").innerHTML = cats
+        .map((cat) => {
+          const items = byCat.get(cat.id);
+          if (!items?.length) return "";
+          const rows = items
+            .map((b) => {
+              const hot = state.flashIds.has(b.id);
+              const hover =
+                !state.listen &&
+                b.keyIds.length &&
+                b.keyIds.every((k) => state.activeKeys.has(k)) &&
+                state.activeKeys.size > 0;
+              const copied = state.copiedId === b.id;
+              const tags = (b.tags || [])
+                .slice(0, 2)
+                .map(
+                  (t) =>
+                    `<span class="rounded-full border border-tn-border/80 px-1.5 py-0.5 text-[9px] uppercase tracking-wider text-tn-comment">${escapeHtml(t)}</span>`
+                )
+                .join("");
+              const notes = b.notes
+                ? `<div class="mt-1 text-[11px] leading-snug text-tn-yellow/90">${escapeHtml(b.notes)}</div>`
+                : "";
+              return `
+                <button type="button" class="binding-row group flex w-full items-start gap-3 rounded-lg border border-tn-border bg-tn-card px-3 py-2.5 text-left hover:border-tn-blue/40 hover:bg-tn-hi ${
+                  hot ? "hot" : hover ? "hover-keys" : ""
+                }" data-id="${b.id}" data-keys="${escapeHtml(b.keyIds.join(","))}">
+                  <div class="min-w-0 flex-1">
+                    <div class="flex flex-wrap items-center gap-2">
+                      <span class="inline-flex flex-wrap items-center gap-1">${chordHtml(b.keys)}</span>
+                      ${tags}
+                    </div>
+                    <div class="mt-1.5 text-[13px] leading-snug text-tn-fg/90">${escapeHtml(b.action)}</div>
+                    ${notes}
+                  </div>
+                  <span class="shrink-0 rounded-md px-2 py-1 text-[10px] font-medium transition ${
+                    copied
+                      ? "bg-tn-green/20 text-tn-green opacity-100"
+                      : "bg-tn-dark text-tn-comment opacity-0 group-hover:opacity-100"
+                  }">${copied ? "copied" : "copy"}</span>
+                </button>`;
+            })
+            .join("");
+
+          return `
+            <div id="${cat.id}" class="scroll-mt-28">
+              <div class="mb-2 flex items-baseline justify-between gap-2">
+                <h2 class="text-sm font-semibold tracking-wide">
+                  <span class="mr-1.5">${cat.emoji}</span>${escapeHtml(cat.label)}
+                  <span class="ml-2 text-[11px] font-normal text-tn-comment">${escapeHtml(cat.description)}</span>
+                </h2>
+                <span class="text-[11px] text-tn-comment">${items.length}</span>
+              </div>
+              <div class="grid gap-2 sm:grid-cols-2">${rows}</div>
+            </div>`;
+        })
+        .join("");
+
+      document.querySelectorAll(".binding-row").forEach((row) => {
+        const id = row.getAttribute("data-id");
+        const binding = BINDINGS.find((b) => b.id === id);
+        row.addEventListener("mouseenter", () => {
+          if (state.listen) return;
+          state.activeKeys = new Set(binding.keyIds);
+          renderKeyboard();
+          // soft highlight without full re-render of all rows
+          document.querySelectorAll(".binding-row").forEach((r) => r.classList.remove("hover-keys"));
+          row.classList.add("hover-keys");
+        });
+        row.addEventListener("mouseleave", () => {
+          if (state.listen) return;
+          state.activeKeys = new Set();
+          renderKeyboard();
+          row.classList.remove("hover-keys");
+        });
+        row.addEventListener("click", async () => {
+          const text = `${formatKeys(binding.keys)}  →  ${binding.action}`;
+          try {
+            await navigator.clipboard.writeText(text);
+          } catch {
+            // file:// may block clipboard; fallback
+            const ta = document.createElement("textarea");
+            ta.value = text;
+            document.body.appendChild(ta);
+            ta.select();
+            try { document.execCommand("copy"); } catch (_) {}
+            ta.remove();
+          }
+          state.copiedId = id;
+          renderBindings();
+          setTimeout(() => {
+            if (state.copiedId === id) {
+              state.copiedId = null;
+              renderBindings();
+            }
+          }, 1400);
+        });
+      });
+    }
+
+    function setListen(on) {
+      state.listen = on;
+      const btn = document.getElementById("listenBtn");
+      const banner = document.getElementById("listenBanner");
+      if (on) {
+        btn.textContent = "● Listen on";
+        btn.className =
+          "rounded-lg border border-tn-green/60 bg-tn-green/15 px-3 py-2 text-xs font-semibold text-tn-green glow-border transition";
+        banner.classList.remove("hidden");
+      } else {
+        btn.textContent = "○ Listen mode";
+        btn.className =
+          "rounded-lg border border-tn-border bg-tn-card px-3 py-2 text-xs font-semibold text-tn-fg/80 hover:border-tn-blue/50 transition";
+        banner.classList.add("hidden");
+        state.held = [];
+        state.flashIds = new Set();
+        state.activeKeys = new Set();
+        document.getElementById("heldKeys").textContent = "—";
+        renderKeyboard();
+        renderBindings();
+      }
+    }
+
+    function applyHeld(heldNow) {
+      state.held = heldNow;
+      state.activeKeys = new Set(heldNow);
+      document.getElementById("heldKeys").textContent = heldNow.length
+        ? heldNow.map((k) => k.toUpperCase()).join(" + ")
+        : "—";
+      const matches = BINDINGS.filter((b) => bindingMatchesHeld(heldNow, b.keyIds));
+      const exact = matches.filter((b) => b.keyIds.length === heldNow.length);
+      const hit = exact.length ? exact : matches;
+      state.flashIds = new Set(hit.map((b) => b.id));
+      renderKeyboard();
+      renderBindings();
+    }
+
+    /* ========== EVENTS ========== */
+    document.getElementById("search").addEventListener("input", (e) => {
+      state.query = e.target.value;
+      renderBindings();
+    });
+
+    document.getElementById("listenBtn").addEventListener("click", () => {
+      setListen(!state.listen);
+    });
+
+    window.addEventListener("keydown", (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        const el = document.getElementById("search");
+        el.focus();
+        el.select();
+        return;
+      }
+      if (e.key === "Escape") {
+        state.query = "";
+        document.getElementById("search").value = "";
+        document.getElementById("search").blur();
+        renderBindings();
+      }
+
+      if (!state.listen || isTypingTarget(e)) return;
+      e.preventDefault();
+      const ids = eventToKeyIds(e);
+      const mods = [];
+      if (e.metaKey) mods.push("super");
+      if (e.ctrlKey) mods.push(e.code === "ControlRight" ? "rctrl" : "ctrl");
+      if (e.altKey) mods.push("alt");
+      if (e.shiftKey) mods.push("shift");
+      const nonMods = ids.filter((k) => !["super", "shift", "ctrl", "alt", "rctrl"].includes(k));
+      applyHeld([...new Set([...mods, ...nonMods])]);
+    });
+
+    window.addEventListener("keyup", (e) => {
+      if (!state.listen || isTypingTarget(e)) return;
+      const mods = [];
+      if (e.metaKey) mods.push("super");
+      if (e.ctrlKey) mods.push("ctrl");
+      if (e.altKey) mods.push("alt");
+      if (e.shiftKey) mods.push("shift");
+      applyHeld(mods);
+      if (!mods.length) {
+        state.flashIds = new Set();
+        renderBindings();
+      }
+    });
+
+    /* ========== INIT ========== */
+    // Peer link: when opened as file://, hide Next.js nav (no server). When under Next public/, link home.
+    (function peerLink() {
+      const a = document.getElementById("nextLink");
+      if (!a) return;
+      if (location.protocol === "file:") {
+        a.href = "#";
+        a.title = "Run: pnpm dev  →  http://localhost:3000";
+        a.addEventListener("click", (e) => {
+          e.preventDefault();
+          alert("Next.js peer app:\n\n  cd hyprriceitsnice && pnpm dev\n\nThen open http://localhost:3000");
+        });
+      } else {
+        a.href = "/";
+      }
+    })();
+
+    renderMeta();
+    renderKeyboard();
+    renderFilters();
+    renderBindings();
+  </script>
+</body>
+</html>
