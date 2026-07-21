@@ -190,7 +190,7 @@ resource "kubernetes_deployment_v1" "oneuptime" {
           }
           env {
             name  = "DISABLE_SIGNUP"
-            value = "true"
+            value = "false"
           }
           env {
             name  = "IS_SAAS_SERVICE"
@@ -247,6 +247,19 @@ resource "kubernetes_deployment_v1" "oneuptime" {
               secret_key_ref {
                 name = var.managed_secret_name
                 key  = "ONEUPTIME_SECRET"
+              }
+            }
+          }
+          env {
+            name  = "GLOBAL_PROBE_1_NAME"
+            value = "default-probe"
+          }
+          env {
+            name = "GLOBAL_PROBE_1_KEY"
+            value_from {
+              secret_key_ref {
+                name = var.managed_secret_name
+                key  = "ONEUPTIME_PROBE_KEY"
               }
             }
           }
@@ -348,11 +361,26 @@ resource "kubernetes_ingress_v1" "oneuptime" {
   spec {
     ingress_class_name = "nginx"
     tls {
-      hosts       = [var.oneuptime_domain]
+      hosts       = [var.oneuptime_domain, var.oneuptime_alias_domain]
       secret_name = var.tls_secret_name
     }
     rule {
       host = var.oneuptime_domain
+      http {
+        path {
+          path      = "/"
+          path_type = "Prefix"
+          backend {
+            service {
+              name = kubernetes_service_v1.oneuptime.metadata[0].name
+              port { number = 3002 }
+            }
+          }
+        }
+      }
+    }
+    rule {
+      host = var.oneuptime_alias_domain
       http {
         path {
           path      = "/"
@@ -413,6 +441,15 @@ resource "kubernetes_deployment_v1" "oneuptime_probe" {
               secret_key_ref {
                 name = var.managed_secret_name
                 key  = "ONEUPTIME_SECRET"
+              }
+            }
+          }
+          env {
+            name = "PROBE_KEY"
+            value_from {
+              secret_key_ref {
+                name = var.managed_secret_name
+                key  = "ONEUPTIME_PROBE_KEY"
               }
             }
           }
