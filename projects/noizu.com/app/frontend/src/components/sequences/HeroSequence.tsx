@@ -6,6 +6,8 @@ import { motion, useTransform } from "framer-motion";
 import { ScrollSequence } from "@/components/ScrollSequence";
 import { useScrollSequence } from "@/components/ScrollSequenceContext";
 import { HeroGridSVG } from "@/components/hero/HeroGridSVG";
+import { HeroCircuitSVG } from "@/components/hero/HeroCircuitSVG";
+import { HeroNodesSVG } from "@/components/hero/HeroNodesSVG";
 import { MagneticButton } from "@/components/MagneticButton";
 import { FadeIn } from "@/components/FadeIn";
 
@@ -27,6 +29,10 @@ function HeroContent() {
 
   // Gold particle overlay
   const particleOpacity = useTransform(progress, [0, 0.2, 0.5], [0.1, 0.25, 0.35]);
+
+  // SVG circuit lines — brighten mid-scroll, then dim
+  const circuitOpacity = useTransform(progress, [0, 0.2, 0.45, 0.8], [0.3, 1, 0.8, 0.3]);
+  const nodesOpacity = useTransform(progress, [0, 0.25, 0.5, 0.8], [0.2, 1, 0.7, 0.2]);
 
   return (
     <div role="region" aria-label="Hero section" className="relative w-full h-[85vh]">
@@ -68,6 +74,24 @@ function HeroContent() {
             WebkitMaskImage: "linear-gradient(to bottom, black 60%, transparent 100%)",
           }}
         />
+      </motion.div>
+
+      {/* SVG circuit lines — brighten mid-scroll, then dim */}
+      <motion.div
+        role="presentation"
+        aria-label="Circuit traces"
+        style={{ opacity: circuitOpacity }}
+        className="absolute inset-0 pointer-events-none"
+      >
+        <HeroCircuitSVG />
+      </motion.div>
+      <motion.div
+        role="presentation"
+        aria-label="Network nodes"
+        style={{ opacity: nodesOpacity }}
+        className="absolute inset-0 pointer-events-none"
+      >
+        <HeroNodesSVG />
       </motion.div>
 
       {/* Content — fully visible on load, fades on scroll */}

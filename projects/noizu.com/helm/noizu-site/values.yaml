@@ -13,7 +13,7 @@ backend:
       memory: 512Mi
 
 frontend:
-  image: ops.noizu.com/noizu.com/frontend:v1.0.edge
+  image: ops.noizu.com/noizu.com/frontend:v1.0.2
   port: 80
   resources:
     requests:
