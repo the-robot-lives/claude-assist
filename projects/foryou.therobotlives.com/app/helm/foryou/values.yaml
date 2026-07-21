@@ -2,7 +2,7 @@ replicas: 1
 domain: foryou.therobotlives.com
 
 backend:
-  image: ops.noizu.com/foryou.therobotlives.com/backend:latest
+  image: ops.noizu.com/foryou.therobotlives.com/backend:v1.0.0
   port: 4000
   resources:
     requests:
@@ -13,7 +13,7 @@ backend:
       memory: 512Mi
 
 frontend:
-  image: ops.noizu.com/foryou.therobotlives.com/frontend:latest
+  image: ops.noizu.com/foryou.therobotlives.com/frontend:v1.0.0
   port: 3000
   resources:
     requests:
@@ -63,8 +63,8 @@ secrets:
     guardianSecretKey: FORYOU_GUARDIAN_SECRET_KEY
     redisUrl: FORYOU_REDIS_URL
     sendgridApiKey: ""
-    oidcClientId: ""
-    oidcClientSecret: ""
+    oidcClientId: FORYOU_OIDC_CLIENT_ID
+    oidcClientSecret: FORYOU_OIDC_CLIENT_SECRET
     googleClientId: ""
     googleClientSecret: ""
     facebookClientId: ""
@@ -85,7 +85,7 @@ sso:
   oidc:
     # Default OIDC issuer for portfolio services (Authentik at auth.noizu.com)
     # Example: https://auth.noizu.com/application/o/{app-slug}/
-    issuer: ""
+    issuer: "https://auth.derobot.is/application/o/foryou"
   saml:
     idpMetadataUrl: ""
     spEntityId: ""

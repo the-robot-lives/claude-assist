@@ -124,9 +124,9 @@ tls:
     credentialsNamespace: infra
     projectSlug: k8-infra
     envSlug: prod
-    secretsPath: "/apps/tls/gotta-cc"
-    crtKey: GOTTA_CC_TLS_CRT
-    keyKey: GOTTA_CC_TLS_KEY
+    secretsPath: "/apps/tls/gottacc"
+    crtKey: GOTTACC_TLS_CRT
+    keyKey: GOTTACC_TLS_KEY
 
 otel:
   enabled: false

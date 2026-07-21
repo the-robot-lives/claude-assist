@@ -9,7 +9,7 @@ import Link from "next/link";
 type LoginMode = "password" | "magic-link" | "otp";
 
 const SSO_LABELS: Record<string, string> = {
-  oidc: "Sign in with SSO",
+  oidc: "Sign in with Authentik",
   google: "Sign in with Google",
   github: "Sign in with GitHub",
   facebook: "Sign in with Facebook",

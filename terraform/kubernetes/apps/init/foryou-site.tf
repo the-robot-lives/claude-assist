@@ -98,6 +98,17 @@ resource "helm_release" "foryou_site" {
           secretKeyBase     = "FORYOU_SECRET_KEY_BASE"
           guardianSecretKey = "FORYOU_GUARDIAN_SECRET_KEY"
           redisUrl          = "FORYOU_REDIS_URL"
+          oidcClientId      = "FORYOU_OIDC_CLIENT_ID"
+          oidcClientSecret  = "FORYOU_OIDC_CLIENT_SECRET"
+        }
+      }
+
+      # Authentik OIDC at auth.derobot.is. Keep invite enforcement off for the
+      # first public deployment so SSO can prove end-to-end account creation.
+      sso = {
+        requireInvite = false
+        oidc = {
+          issuer = "https://auth.derobot.is/application/o/foryou"
         }
       }
 

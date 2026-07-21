@@ -53,6 +53,15 @@ resource "cloudflare_dns_record" "appstarter" {
   ttl     = 1
 }
 
+resource "cloudflare_dns_record" "foryou" {
+  zone_id = local.zone_id
+  name    = "foryou"
+  type    = "A"
+  content = local.ip
+  proxied = true
+  ttl     = 1
+}
+
 resource "cloudflare_dns_record" "mail" {
   zone_id = local.zone_id
   name    = "mail"
