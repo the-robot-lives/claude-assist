@@ -108,6 +108,7 @@ pub(crate) async fn run_codex_thread_interactive(
         code_mode_session_provider: parent_session.services.code_mode_service.session_provider(),
         extensions: Arc::clone(&parent_session.services.extensions),
         conversation_history,
+        requested_history_mode: None,
         session_source: SessionSource::SubAgent(subagent_source.clone()),
         forked_from_thread_id,
         parent_thread_id: Some(parent_session.thread_id),
@@ -298,11 +299,11 @@ async fn forward_events(
                 match event {
                     Event {
                         id: _,
-                        msg: EventMsg::TokenCount(_),
-                    } => {}
-                    Event {
-                        id: _,
-                        msg: EventMsg::SessionConfigured(_),
+                        msg:
+                            EventMsg::TokenCount(_)
+                            | EventMsg::SessionConfigured(_)
+                            | EventMsg::McpStartupUpdate(_)
+                            | EventMsg::McpStartupComplete(_),
                     } => {}
                     Event {
                         id,
@@ -655,11 +656,10 @@ async fn handle_patch_approval(
     let decision = if let Some(decision) = guardian_decision {
         decision
     } else {
-        let decision_rx = parent_session
-            .request_patch_approval(parent_ctx, call_id, changes, reason, grant_root)
-            .await;
+        let decision =
+            parent_session.request_patch_approval(parent_ctx, call_id, changes, reason, grant_root);
         await_approval_with_cancel(
-            async move { decision_rx.await.unwrap_or_default() },
+            decision,
             parent_session,
             &approval_id,
             cancel_token,

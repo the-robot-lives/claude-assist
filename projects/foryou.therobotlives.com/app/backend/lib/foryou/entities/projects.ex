@@ -7,6 +7,14 @@ defmodule Foryou.Projects do
 
   import Ecto.Query
 
+  # System/management create (Terraform provider) — no acting user, so no
+  # per-user owner membership is granted. Org members still see the project via
+  # org-role inheritance in `list_user_accessible_projects/2`. Pass an optional
+  # owner to also grant a project-level membership (see `create_with_owner/3`).
+  def create_project(attrs) do
+    %Schema{} |> Schema.changeset(attrs) |> Foryou.Repo.insert()
+  end
+
   def create_with_owner(attrs, user_id, context \\ Noizu.Context.system()) do
     Foryou.Repo.transaction(fn ->
       with {:ok, project} <- %Schema{} |> Schema.changeset(Map.put(attrs, :created_by, user_id)) |> Foryou.Repo.insert(),

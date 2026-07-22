@@ -1,17 +1,16 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useOrg } from "@/context/org";
 import {
   AdminApiError,
   adminListLists,
   adminListServices,
-  optInMode,
   type AdminList,
 } from "@/components/admin/admin-fetch";
-import { BackLink, Badge, EmptyState, ErrorPanel, OptInBadge, SkeletonRows } from "@/components/admin/ui";
+import { BackLink, EmptyState, ErrorPanel, SkeletonRows } from "@/components/admin/ui";
+import { ListsTable } from "@/components/org/service-tables";
 
 export default function ServiceListsPage() {
   const params = useParams<{ projectId: string }>();
@@ -95,45 +94,7 @@ export default function ServiceListsPage() {
       {lists.length === 0 ? (
         <EmptyState title="No lists yet" message="Lists for this service will appear here once created." />
       ) : (
-        <div className="sg-table--scroll">
-          <table className="sg-table">
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Slug</th>
-                <th>Kind</th>
-                <th>Opt-in</th>
-                <th>Signups</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {lists.map((l) => {
-                const href = `/app/admin/services/${projectId}/lists/${l.id}`;
-                return (
-                  <tr key={l.id}>
-                    <td>
-                      <Link href={href} className="sg-admin-nav-link" style={{ padding: 0 }}>
-                        {l.name}
-                      </Link>
-                    </td>
-                    <td className="sg-td-muted">{l.slug}</td>
-                    <td>
-                      <Badge tone="neutral">{l.kind}</Badge>
-                    </td>
-                    <td>
-                      <OptInBadge mode={optInMode(l)} />
-                    </td>
-                    <td>{l.signup_count}</td>
-                    <td>
-                      {l.status === "archived" ? <Badge tone="muted">Archived</Badge> : <Badge tone="success">Active</Badge>}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+        <ListsTable lists={lists} hrefFor={(l) => `/app/admin/services/${projectId}/lists/${l.id}`} />
       )}
     </div>
   );

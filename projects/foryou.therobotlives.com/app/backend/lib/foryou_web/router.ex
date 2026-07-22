@@ -167,6 +167,9 @@ defmodule ForyouWeb.Router do
     resources "/organizations", Management.OrganizationController, except: [:new, :edit]
     resources "/api-keys", Management.ApiKeyController, only: [:index, :show, :create, :delete]
 
+    # Projects/services (Terraform provider + backfill). System-level, no PBAC.
+    resources "/projects", Management.ProjectsController, except: [:new, :edit]
+
     scope "/organizations/:org_id" do
       get "/memberships", Management.MembershipController, :index
       post "/memberships", Management.MembershipController, :create

@@ -1,15 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { useOrg } from "@/context/org";
-import { adminListServices, adminListLists, type AdminService } from "@/components/admin/admin-fetch";
+import { adminListServices, adminListLists } from "@/components/admin/admin-fetch";
 import { EmptyState, ErrorPanel, SkeletonRows } from "@/components/admin/ui";
-
-interface ServiceRow extends AdminService {
-  list_count: number | null;
-  signup_count: number | null;
-}
+import { ServicesTable, type ServiceRow } from "@/components/org/service-tables";
 
 export default function ServicesPage() {
   const { currentOrg, loading: orgLoading } = useOrg();
@@ -92,32 +87,7 @@ export default function ServicesPage() {
       {rows.length === 0 ? (
         <EmptyState title="No services yet" message="This organization has no services (projects) yet." />
       ) : (
-        <div className="sg-table--scroll">
-          <table className="sg-table">
-            <thead>
-              <tr>
-                <th>Service</th>
-                <th>Slug</th>
-                <th>Lists</th>
-                <th>Signups</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((s) => (
-                <tr key={s.id}>
-                  <td>
-                    <Link href={`/app/admin/services/${s.id}`} className="sg-admin-nav-link" style={{ padding: 0 }}>
-                      {s.name}
-                    </Link>
-                  </td>
-                  <td className="sg-td-muted">{s.slug}</td>
-                  <td>{s.list_count ?? "—"}</td>
-                  <td>{s.signup_count ?? "—"}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <ServicesTable rows={rows} hrefFor={(s) => `/app/admin/services/${s.id}`} />
       )}
     </div>
   );

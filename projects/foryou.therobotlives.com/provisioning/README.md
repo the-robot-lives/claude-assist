@@ -67,12 +67,19 @@ Notes:
    (Chunk B). Verify: `GET https://foryou.therobotlives.com/api/v1/public/lists/therobotlives-waitlist`
    returns the manifest JSON (not 404) once provisioned.
 2. **A management API key** — the management surface is api-key / system-level
-   (no PBAC). Export as `FORYOU_API_KEY`.
-3. **A `project_id`** (UUID) that owns these Lists. Lists belong to a foryou
-   Project, which belongs to an Organization. There is **no `foryou_project` TF
-   resource** yet, so the Project must already exist (created via the app or a
-   seed). Pick one portfolio Project to host all these Lists, or split per-site.
-   Export as `FORYOU_PROJECT_ID`.
+   (no PBAC). Mint one from inside the running foryou pod:
+
+   ```bash
+   bin/foryou eval 'Foryou.Release.mint_api_key("terraform")'
+   ```
+
+   Export the returned token as `FORYOU_API_KEY` (the Terraform provider reads
+   it from that env var, or pass `-var "foryou_api_key=..."`).
+3. **An Organization** the Projects belong to. The Terraform root now manages
+   the Projects itself via the `foryou_project` resource (one per site,
+   `projects.tf`), all under `var.organization_id` (defaults to the operator's
+   real org `fd506a97-c49d-4fef-aa7a-68220af39f33`, created in-app). Each List
+   references its matching Project — no pre-existing `project_id` needed.
 
 ## How to provision
 
@@ -89,20 +96,29 @@ export FORYOU_BASE_URL=https://foryou.therobotlives.com   # optional; this is th
 ./provision-lists.sh --apply       # actually create/update
 ```
 
-### Option B — Terraform (`foryou_list` resource)
+### Option B — Terraform / OpenTofu (`foryou_project` + `foryou_list`)
+
+The provider is a local build resolved through the OpenTofu filesystem mirror
+(`~/.terraformrc` already includes `noizu/foryou`). Build/refresh it first:
+
+```bash
+../terraform-provider-foryou/scripts/build-provider.sh   # installs v0.1.0 into the mirror
+```
+
+Then apply:
 
 ```bash
 cd terraform   # (this provisioning/terraform dir)
-export FORYOU_API_KEY=...
-terraform init
-terraform apply \
-  -var "api_key=$FORYOU_API_KEY" \
-  -var "project_id=<uuid>" \
-  -var "base_url=https://foryou.therobotlives.com"
+export FORYOU_API_KEY=...          # from the mint_api_key step above
+tofu init
+tofu apply -var "foryou_api_key=$FORYOU_API_KEY"
 ```
 
-`lists.tf` declares one `foryou_list` per row above. Removing a resource archives
-(soft-deletes) the List rather than hard-deleting it (US-098).
+`projects.tf` declares one `foryou_project` per site (all under
+`var.organization_id`); `lists.tf` declares one `foryou_list` per row above, each
+wired to its owning Project. Override the org or host with
+`-var "organization_id=<uuid>"` / `-var "foryou_host=..."` if needed. Removing a
+resource archives (soft-deletes) it rather than hard-deleting (US-098).
 
 ## Backfill (do NOT run as part of provisioning — see BACKFILL.md)
 

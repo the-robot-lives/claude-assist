@@ -361,6 +361,7 @@ impl TurnContext {
             current_date: self.current_date.clone(),
             timezone: self.timezone.clone(),
             approval_policy: self.approval_policy.value(),
+            approvals_reviewer: Some(self.config.approvals_reviewer),
             sandbox_policy: self.sandbox_policy(),
             permission_profile: Some(self.permission_profile()),
             network: self.turn_context_network_item(),
@@ -703,6 +704,9 @@ impl Session {
                 &per_turn_config.to_models_manager_config(),
             )
             .await;
+        self.services
+            .thread_extension_data
+            .insert(model_info.clone());
 
         let multi_agent_version = match multi_agent_runtime {
             TurnMultiAgentRuntime::ResolveAndStore => {

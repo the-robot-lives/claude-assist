@@ -108,6 +108,7 @@ func (p *foryouProvider) Resources(_ context.Context) []func() resource.Resource
 		NewMembershipResource,
 		NewFormResource,
 		NewAPIKeyResource,
+		NewProjectResource,
 		NewListResource,
 	}
 }
