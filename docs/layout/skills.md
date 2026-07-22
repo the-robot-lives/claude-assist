@@ -1,22 +1,23 @@
 # skills/ — Claude Code Skill Definitions
 
 Skill definitions (NPL/Noizu authored). Canonical source is monorepo `skills/`. Prefer
-**`skill-manage`** (`utilities/agent/skill-manage`) to enable/disable provider installs via
-symlinks instead of manual `cp`:
+**`llm-toolkit skill`** (skill-manage crate embedded in `utilities/agent/llm-toolkit/`) to
+enable/disable provider installs via symlinks instead of manual `cp`:
 
 ```bash
-export SKILL_REPO=/path/to/Noizu/skills   # or skill-manage init-config
-skill-manage enable skills <name> --provider claude   # also codex / grok
-skill-manage list skills --provider all
-skill-manage audit skills
+export SKILL_REPO=/path/to/Noizu/skills   # or llm-toolkit skill init-config
+llm-toolkit skill enable skills <name> --provider claude   # also codex / grok
+llm-toolkit skill list skills --provider all
+llm-toolkit skill audit skills
 ```
 
 Config lives under `~/.config/skill-manage/` (multi-source roots, YAML catalog for tags /
-work types). **Agents** (`~/.claude/agents/*.md`) and **commands** (`~/.claude/commands/*.md`)
-are sibling artifact kinds managed by the same tool — not the same as skills.
+work types) — paths unchanged from the standalone `skill-manage` tool. **Agents**
+(`~/.claude/agents/*.md`) and **commands** (`~/.claude/commands/*.md`) are sibling artifact
+kinds managed by the same tool — not the same as skills.
 
 `skills/shared/` holds assets shared across skills; `skills/evals/` holds skill evaluation
-harnesses. Repo-level metadata for skill-manage:
+harnesses. Repo-level metadata for `llm-toolkit skill`:
 
 | File | Role |
 |------|------|
