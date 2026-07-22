@@ -51,7 +51,7 @@ export default function NewOrgPage() {
     <div className="content">
       <main>
         <h1 className="sg-page-title">Create Organization</h1>
-        <form onSubmit={handleSubmit} style={{ maxWidth: 400 }}>
+        <form onSubmit={handleSubmit} className="sg-form">
           {error && <p className="sg-error">{error}</p>}
           <div className="sg-field">
             <label htmlFor="org-name">Name</label>
@@ -89,7 +89,7 @@ export default function NewOrgPage() {
           >
             {loading ? "Creating..." : "Create Organization"}
           </button>
-          <p style={{ marginTop: "1rem" }}>
+          <p className="sg-form-note">
             <Link href="/app">Back to your organizations</Link>
           </p>
         </form>

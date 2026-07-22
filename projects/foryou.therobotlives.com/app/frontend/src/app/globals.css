@@ -281,6 +281,9 @@ details[open] > summary .indicator-chevron { transform: rotate(90deg); }
 .sg-field select:focus,
 .sg-field textarea:focus { outline: 2px solid var(--brand-blue, #0047ab); outline-offset: -1px; }
 .sg-error { color: var(--error, #dc2626); font-size: var(--font-size-sm, 0.875rem); margin-bottom: var(--space-3, 0.75rem); }
+.sg-form { max-width: 400px; }
+.sg-form-note { margin-top: var(--space-4, 1rem); }
+.sg-form-note--muted { color: var(--text-muted, #4b5563); }
 
 /* ── Content ─── */
 .content { min-height: 100dvh; container-type: inline-size; }

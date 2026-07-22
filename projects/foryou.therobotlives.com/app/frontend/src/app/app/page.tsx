@@ -34,7 +34,7 @@ export default function AppPage() {
           <Link href="/app/orgs/new" className="sg-btn sg-btn--black">
             Create an organization
           </Link>
-          <p style={{ marginTop: '1rem', color: '#666' }}>
+          <p className="sg-form-note sg-form-note--muted">
             Or ask an organization admin to invite you via email.
           </p>
         </div>
