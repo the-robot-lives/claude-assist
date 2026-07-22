@@ -108,3 +108,20 @@ Or link it locally:
 pnpm --filter @llm-toolkit/cli link --global
 llm-toolkit
 ```
+
+## Shell Completions
+
+```bash
+make install-completions   # or just `make install`, which runs this too
+```
+
+Installs bash completion to
+`${XDG_DATA_HOME:-~/.local/share}/bash-completion/completions/llm-toolkit`
+and zsh completion to
+`${XDG_DATA_HOME:-~/.local/share}/zsh/site-functions/_llm-toolkit`. Add the
+zsh site-functions dir to `fpath` before `compinit` runs (the target prints
+this line if `.zshrc` doesn't already have it):
+
+```zsh
+fpath=(~/.local/share/zsh/site-functions $fpath)
+```

@@ -58,7 +58,39 @@ llm-toolkit show <conversation-id>
 
 # Rebuild the search index
 llm-toolkit index
+
+# Launcher usage (zellij default, api/web/skill overview)
+llm-toolkit --help
+
+# Manage provider skills, agents, and commands (embedded Rust skill-manage crate)
+llm-toolkit skill list
+llm-toolkit skill enable skills my-skill --provider claude
+llm-toolkit skill --help
 ```
+
+### Shell completions
+
+Bash and zsh completions live in `completions/` and cover the launcher (`api`,
+`web`, `skill`, `--no-zellij`), the conversation CLI (`recent`, `search`,
+`list`, `show`, `index`, `serve`, `interactive`, `help`), and the full nested
+`llm-toolkit skill <subcommand>` surface (including `catalog` and
+`work-types`).
+
+```bash
+make -C utilities/agent/llm-toolkit install-completions
+```
+
+installs `completions/llm-toolkit.bash` to
+`${XDG_DATA_HOME:-~/.local/share}/bash-completion/completions/llm-toolkit`
+(auto-loaded by bash-completion v2) and `completions/_llm-toolkit` to
+`${XDG_DATA_HOME:-~/.local/share}/zsh/site-functions/_llm-toolkit`. For zsh,
+make sure that directory is on `fpath` before `compinit` runs:
+
+```zsh
+fpath=(~/.local/share/zsh/site-functions $fpath)
+```
+
+`make install` runs this automatically.
 
 ## Architecture
 
