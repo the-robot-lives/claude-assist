@@ -6,13 +6,11 @@ import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/context/auth";
 
 const NAV_LINKS = [
+  { href: "/app/admin", label: "Dashboard", exact: true },
+  { href: "/app/admin/services", label: "Services" },
+  { href: "/app/admin/inquiries", label: "Inquiries" },
   { href: "/app/admin/users", label: "Users" },
   { href: "/app/admin/orgs", label: "Orgs" },
-];
-
-const PLACEHOLDER_LINKS = [
-  { label: "Lists", badge: "soon" },
-  { label: "Inquiries", badge: "soon" },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -40,7 +38,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <nav>
           <ul className="sg-admin-nav">
             {NAV_LINKS.map((link) => {
-              const active = pathname === link.href || pathname.startsWith(link.href + "/");
+              const active = link.exact
+                ? pathname === link.href
+                : pathname === link.href || pathname.startsWith(link.href + "/");
               return (
                 <li key={link.href}>
                   <Link
@@ -54,14 +54,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 </li>
               );
             })}
-            {PLACEHOLDER_LINKS.map((link) => (
-              <li key={link.label}>
-                <span className="sg-admin-nav-link sg-admin-nav-link--disabled">
-                  {link.label}
-                  <span className="sg-admin-nav-link-badge">{link.badge}</span>
-                </span>
-              </li>
-            ))}
           </ul>
         </nav>
       </aside>

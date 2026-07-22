@@ -17,6 +17,9 @@ export function Navbar() {
           {loading ? null : user ? (
             <>
               <OrgSwitcher />
+              <Link href="/app/me" className="sg-navbar__user">
+                My preferences
+              </Link>
               <span className="sg-navbar__user">{user.email}</span>
               <button onClick={logout} className="sg-btn sg-btn--outline sg-btn--sm">
                 Log Out
