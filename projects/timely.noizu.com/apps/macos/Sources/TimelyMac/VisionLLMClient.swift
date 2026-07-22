@@ -79,6 +79,9 @@ private struct VisionAnalysisPayload: Decodable {
     var projectSwitchDetected: Bool?
     var confidence: Double?
     var evidence: String?
+    var privacySensitive: Bool?
+    var privacyCategory: String?
+    var privacyAction: String?
 
     enum CodingKeys: String, CodingKey {
         case statusUpdate = "status_update"
@@ -87,6 +90,9 @@ private struct VisionAnalysisPayload: Decodable {
         case projectSwitchDetected = "project_switch_detected"
         case confidence
         case evidence
+        case privacySensitive = "privacy_sensitive"
+        case privacyCategory = "privacy_category"
+        case privacyAction = "privacy_action"
     }
 }
 
@@ -146,6 +152,8 @@ actor VisionLLMClient {
                 projectSwitchDetected: false,
                 confidence: 0,
                 evidence: "",
+                privacySensitive: false,
+                privacyCategory: "none",
                 rawResponse: raw,
                 errorMessage: "Could not parse JSON response."
             )
@@ -161,6 +169,9 @@ actor VisionLLMClient {
             && !inferredProject.isEmpty
             && baseline.localizedCaseInsensitiveCompare(inferredProject) != .orderedSame
             && confidence >= settings.confidenceThreshold
+        let privacyAction = payload.privacyAction?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() ?? "keep"
+        let privacyCategory = payload.privacyCategory?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() ?? "none"
+        let privacySensitive = payload.privacySensitive == true || privacyAction == "censor"
 
         return VisionAnalysisRecord(
             id: UUID(),
@@ -173,6 +184,8 @@ actor VisionLLMClient {
             projectSwitchDetected: reportedSwitch || inferredSwitch,
             confidence: confidence,
             evidence: payload.evidence?.trimmingCharacters(in: .whitespacesAndNewlines) ?? "",
+            privacySensitive: privacySensitive,
+            privacyCategory: privacySensitive ? privacyCategory : "none",
             rawResponse: raw,
             errorMessage: nil
         )

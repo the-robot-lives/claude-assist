@@ -10,6 +10,7 @@ final class TimelyStore: ObservableObject {
     @Published var spans: [TrackedTimeSpan] = []
     @Published var screenshots: [ScreenshotRecord] = []
     @Published var visionAnalyses: [VisionAnalysisRecord] = []
+    @Published var censoredScreenshots: [CensoredScreenshotRecord] = []
     @Published var isAnalyzingVisionScreenshot: Bool = false
     @Published var lastInferredProject: String?
     @Published var mode: CaptureMode = .idle
@@ -263,6 +264,7 @@ final class TimelyStore: ObservableObject {
             spans = snapshot.spans.sorted { $0.start > $1.start }
             screenshots = snapshot.screenshots.sorted { $0.capturedAt > $1.capturedAt }
             visionAnalyses = snapshot.visionAnalyses.sorted { $0.analyzedAt > $1.analyzedAt }
+            censoredScreenshots = snapshot.censoredScreenshots.sorted { $0.censoredAt > $1.censoredAt }
             lastInferredProject = snapshot.lastInferredProject
         } catch {
             lastError = "Could not load saved Timely state: \(error.localizedDescription)"
@@ -277,6 +279,7 @@ final class TimelyStore: ObservableObject {
                 spans: spans,
                 screenshots: screenshots,
                 visionAnalyses: visionAnalyses,
+                censoredScreenshots: censoredScreenshots,
                 lastInferredProject: lastInferredProject
             )
             let data = try encoder.encode(snapshot)
@@ -363,6 +366,10 @@ final class TimelyStore: ObservableObject {
             if analysis.projectSwitchDetected && analysis.confidence < settings.vision.confidenceThreshold {
                 analysis.projectSwitchDetected = false
             }
+            if settings.vision.privacyRedactionEnabled && analysis.privacySensitive {
+                censorScreenshot(screenshot, analysis: analysis)
+                return
+            }
             recordVisionAnalysis(analysis)
         } catch {
             let failed = VisionAnalysisRecord(
@@ -376,6 +383,8 @@ final class TimelyStore: ObservableObject {
                 projectSwitchDetected: false,
                 confidence: 0,
                 evidence: "",
+                privacySensitive: false,
+                privacyCategory: "none",
                 rawResponse: "",
                 errorMessage: error.localizedDescription
             )
@@ -399,8 +408,48 @@ final class TimelyStore: ObservableObject {
         save()
     }
 
+    private func censorScreenshot(_ screenshot: ScreenshotRecord, analysis: VisionAnalysisRecord) {
+        let screenshotURL = screenshotsURL.appendingPathComponent(screenshot.fileName)
+        var deletedLocalFile = false
+        if FileManager.default.fileExists(atPath: screenshotURL.path) {
+            do {
+                try FileManager.default.removeItem(at: screenshotURL)
+                deletedLocalFile = true
+            } catch {
+                lastError = "Sensitive screenshot was detached, but the local file could not be deleted: \(error.localizedDescription)"
+            }
+        } else {
+            deletedLocalFile = true
+        }
+
+        screenshots.removeAll { $0.id == screenshot.id }
+        visionAnalyses.removeAll { $0.screenshotID == screenshot.id }
+
+        let record = CensoredScreenshotRecord(
+            id: UUID(),
+            screenshotID: screenshot.id,
+            spanID: screenshot.spanID,
+            fileName: screenshot.fileName,
+            activeAppName: screenshot.activeAppName,
+            capturedAt: screenshot.capturedAt,
+            censoredAt: Date(),
+            model: analysis.model,
+            category: analysis.privacyCategory.isEmpty ? "other_private" : analysis.privacyCategory,
+            reason: analysis.evidence.isEmpty ? "Vision LLM identified private screenshot content." : analysis.evidence,
+            confidence: analysis.confidence,
+            deletedLocalFile: deletedLocalFile
+        )
+        censoredScreenshots.insert(record, at: 0)
+        censoredScreenshots = Array(censoredScreenshots.prefix(200))
+
+        if settings.vision.notifyOnCensoredScreenshot {
+            sendCensoredScreenshotNotification(record)
+        }
+        save()
+    }
+
     private func requestNotificationPermissionIfNeeded() {
-        guard settings.vision.notifyOnProjectSwitch else { return }
+        guard settings.vision.notifyOnProjectSwitch || settings.vision.notifyOnCensoredScreenshot else { return }
         Task {
             let center = UNUserNotificationCenter.current()
             let settings = await center.notificationSettings()
@@ -419,6 +468,20 @@ final class TimelyStore: ObservableObject {
 
         let request = UNNotificationRequest(
             identifier: "timely-project-switch-\(analysis.id.uuidString)",
+            content: content,
+            trigger: nil
+        )
+        UNUserNotificationCenter.current().add(request)
+    }
+
+    private func sendCensoredScreenshotNotification(_ record: CensoredScreenshotRecord) {
+        let content = UNMutableNotificationContent()
+        content.title = "Timely censored a screenshot"
+        content.body = "A \(record.category.replacingOccurrences(of: "_", with: " ")) screenshot was removed from evidence history."
+        content.sound = .default
+
+        let request = UNNotificationRequest(
+            identifier: "timely-censored-\(record.id.uuidString)",
             content: content,
             trigger: nil
         )

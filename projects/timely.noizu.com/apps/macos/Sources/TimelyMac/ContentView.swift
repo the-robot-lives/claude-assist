@@ -23,18 +23,8 @@ struct ContentView: View {
                     switch selectedSection {
                     case .today:
                         TodayScreen(store: store)
-                    case .capture:
-                        CaptureScreen(store: store)
-                    case .manual:
-                        ManualEntryScreen(store: store)
-                    case .timeline:
-                        TimelineScreen(store: store)
-                    case .evidence:
-                        EvidenceScreen(store: store)
-                    case .vision:
-                        VisionLLMScreen(store: store)
-                    case .pomodoro:
-                        PomodoroScreen(store: store)
+                    case .work:
+                        WorkScreen(store: store)
                     case .settings:
                         SettingsView(store: store)
                     }
@@ -60,12 +50,7 @@ struct ContentView: View {
 
 enum TimelySection: String, CaseIterable, Identifiable {
     case today
-    case capture
-    case manual
-    case timeline
-    case evidence
-    case vision
-    case pomodoro
+    case work
     case settings
 
     var id: String { rawValue }
@@ -73,12 +58,7 @@ enum TimelySection: String, CaseIterable, Identifiable {
     var title: String {
         switch self {
         case .today: "Today"
-        case .capture: "Capture"
-        case .manual: "Manual Entry"
-        case .timeline: "Timeline"
-        case .evidence: "Evidence"
-        case .vision: "Vision LLM"
-        case .pomodoro: "Pomodoro"
+        case .work: "Work"
         case .settings: "Settings"
         }
     }
@@ -86,15 +66,18 @@ enum TimelySection: String, CaseIterable, Identifiable {
     var symbol: String {
         switch self {
         case .today: "rectangle.grid.2x2"
-        case .capture: "record.circle"
-        case .manual: "square.and.pencil"
-        case .timeline: "timeline.selection"
-        case .evidence: "photo.on.rectangle"
-        case .vision: "eye"
-        case .pomodoro: "timer"
+        case .work: "rectangle.3.group"
         case .settings: "slider.horizontal.3"
         }
     }
+}
+
+enum WorkTab: String, CaseIterable, Identifiable {
+    case capture = "Capture"
+    case manual = "Manual Entry"
+    case timeline = "Timeline"
+
+    var id: String { rawValue }
 }
 
 struct TodayScreen: View {
@@ -138,6 +121,163 @@ struct TodayScreen: View {
             }
             .frame(maxWidth: 1360, alignment: .topLeading)
         }
+    }
+}
+
+struct WorkScreen: View {
+    @ObservedObject var store: TimelyStore
+    @State private var selectedTab: WorkTab = .capture
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 18) {
+                TimelyPageHeader(
+                    eyebrow: "Work",
+                    title: "Capture and review",
+                    subtitle: "Start focused work, backfill missed time, and inspect the timeline without changing sections."
+                ) {
+                    StatusIndicator(store: store)
+                }
+
+                Picker("Work view", selection: $selectedTab) {
+                    ForEach(WorkTab.allCases) { tab in
+                        Text(tab.rawValue).tag(tab)
+                    }
+                }
+                .pickerStyle(.segmented)
+                .frame(maxWidth: 520)
+
+                switch selectedTab {
+                case .capture:
+                    CaptureTabContent(store: store)
+                case .manual:
+                    ManualEntryTabContent(store: store)
+                case .timeline:
+                    TimelineTabContent(store: store)
+                }
+            }
+            .frame(maxWidth: 1180, alignment: .topLeading)
+        }
+    }
+}
+
+struct CaptureTabContent: View {
+    @ObservedObject var store: TimelyStore
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            HStack(alignment: .top, spacing: 16) {
+                TaskControlCard(store: store)
+                PomodoroCard(store: store)
+            }
+            CapturePolicyCard(store: store)
+            RecentSpansCard(store: store)
+        }
+    }
+}
+
+struct ManualEntryTabContent: View {
+    @ObservedObject var store: TimelyStore
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            ManualSpanCard(store: store)
+            RecentSpansCard(store: store)
+        }
+    }
+}
+
+struct TimelineTabContent: View {
+    @ObservedObject var store: TimelyStore
+    @State private var evidenceSpan: TrackedTimeSpan?
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            if store.spans.isEmpty {
+                EmptyStateView(message: "No captured intervals yet. Start a live span, Pomodoro, or add manual time.")
+            } else {
+                Table(store.spans) {
+                    TableColumn("Work") { span in
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(span.title)
+                                .font(.body.weight(.medium))
+                            Text(span.project.isEmpty ? "No project" : span.project)
+                                .font(.caption)
+                                .foregroundStyle(TimelyTheme.secondaryText)
+                        }
+                    }
+                    TableColumn("Start") { span in Text(span.start.formatted(date: .abbreviated, time: .shortened)) }
+                    TableColumn("End") { span in Text(span.end?.formatted(date: .abbreviated, time: .shortened) ?? "Open") }
+                    TableColumn("Duration") { span in Text(span.duration.timelyClock).monospacedDigit() }
+                    TableColumn("Source") { span in Text(span.source.label) }
+                    TableColumn("Evidence") { span in
+                        let screenshots = screenshotsForSpan(span)
+                        Button {
+                            evidenceSpan = span
+                        } label: {
+                            Label("\(screenshots.count)", systemImage: "photo.on.rectangle")
+                        }
+                        .buttonStyle(.borderless)
+                        .disabled(screenshots.isEmpty)
+                    }
+                    TableColumn("Billable") { span in
+                        Label(span.isBillable ? "Billable" : "Non-billable", systemImage: span.isBillable ? "checkmark.circle.fill" : "circle")
+                            .foregroundStyle(span.isBillable ? TimelyTheme.success : TimelyTheme.secondaryText)
+                    }
+                    TableColumn("Actions") { span in
+                        Button("Delete", role: .destructive) { store.deleteSpan(span) }
+                    }
+                }
+                .timelyCard(padding: 0)
+                .frame(minHeight: 420)
+            }
+        }
+        .sheet(item: $evidenceSpan) { span in
+            SpanEvidenceSheet(store: store, span: span)
+        }
+    }
+
+    private func screenshotsForSpan(_ span: TrackedTimeSpan) -> [ScreenshotRecord] {
+        store.screenshots.filter { $0.spanID == span.id }
+    }
+}
+
+struct SpanEvidenceSheet: View {
+    @ObservedObject var store: TimelyStore
+    let span: TrackedTimeSpan
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            TimelyPageHeader(
+                eyebrow: "Evidence",
+                title: span.title,
+                subtitle: span.project.isEmpty ? "Screenshot evidence attached to this span." : span.project
+            ) {
+                Button("Open folder", systemImage: "folder") { store.openScreenshotsFolder() }
+                    .buttonStyle(TimelySecondaryButtonStyle())
+            }
+
+            let screenshots = screenshotsForSpan()
+            if screenshots.isEmpty {
+                EmptyStateView(message: "No screenshot evidence is attached to this span.")
+            } else {
+                List(screenshots) { screenshot in
+                    EvidenceRow(
+                        screenshot: screenshot,
+                        analysis: store.visionAnalyses.first { $0.screenshotID == screenshot.id },
+                        screenshotURL: store.screenshotsURL.appendingPathComponent(screenshot.fileName)
+                    )
+                }
+                .listStyle(.plain)
+                .timelyCard(padding: 0)
+            }
+        }
+        .padding(24)
+        .frame(width: 760, height: 560)
+    }
+
+    private func screenshotsForSpan() -> [ScreenshotRecord] {
+        store.screenshots.filter { $0.spanID == span.id }
     }
 }
 
@@ -618,6 +758,15 @@ struct VisionConfigCard: View {
                     Task { await store.requestNotificationPermission() }
                 }
 
+            Toggle("Censor screenshots with private content", isOn: $store.settings.vision.privacyRedactionEnabled)
+                .onChange(of: store.settings.vision.privacyRedactionEnabled) { store.settingsChanged() }
+
+            Toggle("Notify when a screenshot is censored", isOn: $store.settings.vision.notifyOnCensoredScreenshot)
+                .onChange(of: store.settings.vision.notifyOnCensoredScreenshot) {
+                    store.settingsChanged()
+                    Task { await store.requestNotificationPermission() }
+                }
+
             Picker("Provider", selection: $store.settings.vision.provider) {
                 ForEach(VisionLLMSettings.providers, id: \.self) { provider in
                     Text(provider).tag(provider)
@@ -774,10 +923,10 @@ struct UseCasesCard: View {
             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
                 UseCaseTile(title: "Start and pause", detail: "Use Capture to name a task, start a span, pause, resume, and stop.")
                 UseCaseTile(title: "Backfill time", detail: "Use Manual Entry for completed work with exact start and end times.")
-                UseCaseTile(title: "Review evidence", detail: "Use Evidence to inspect screenshots and AI observations.")
-                UseCaseTile(title: "Run Pomodoro", detail: "Use Pomodoro to create a timed focus span with a break.")
-                UseCaseTile(title: "Detect switches", detail: "Use Vision LLM to compare screenshots against the known project.")
-                UseCaseTile(title: "Tune privacy", detail: "Use Settings for capture cadence, retention, and local storage.")
+                UseCaseTile(title: "Review evidence", detail: "Open Timeline and click the evidence count on a span.")
+                UseCaseTile(title: "Run Pomodoro", detail: "Use Capture to start a timed focus span with a break.")
+                UseCaseTile(title: "Detect switches", detail: "Use Settings to configure Vision LLM project-switch detection.")
+                UseCaseTile(title: "Tune privacy", detail: "Use Settings for retention, local storage, and screenshot censoring.")
             }
         }
         .timelyCard()

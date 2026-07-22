@@ -10,12 +10,23 @@ struct SettingsView: View {
                 TimelyPageHeader(
                     eyebrow: "Preferences",
                     title: "Settings",
-                    subtitle: "Tune capture cadence, evidence storage, Pomodoro timing, and local state."
+                    subtitle: "Tune capture cadence, evidence storage, Pomodoro timing, Vision LLM behavior, and local state."
                 ) {
-                    Button("Open screenshots", systemImage: "folder") {
-                        store.openScreenshotsFolder()
+                    HStack {
+                        if store.isAnalyzingVisionScreenshot {
+                            ProgressView()
+                                .controlSize(.small)
+                        }
+                        Button("Analyze latest", systemImage: "sparkle.magnifyingglass") {
+                            Task { await store.analyzeLatestScreenshot() }
+                        }
+                        .buttonStyle(TimelyPrimaryButtonStyle())
+                        .disabled(store.screenshots.isEmpty || store.isAnalyzingVisionScreenshot)
+                        Button("Open screenshots", systemImage: "folder") {
+                            store.openScreenshotsFolder()
+                        }
+                        .buttonStyle(TimelySecondaryButtonStyle())
                     }
-                    .buttonStyle(TimelySecondaryButtonStyle())
                 }
 
                 HStack(alignment: .top, spacing: 16) {
@@ -23,9 +34,17 @@ struct SettingsView: View {
                     PomodoroSettingsCard(store: store)
                 }
 
+                HStack(alignment: .top, spacing: 16) {
+                    VisionConfigCard(store: store)
+                    VStack(alignment: .leading, spacing: 16) {
+                        VisionResultCard(store: store)
+                        CensoredHistoryCard(store: store)
+                    }
+                }
+
                 StorageSettingsCard(store: store)
             }
-            .frame(maxWidth: 1080, alignment: .topLeading)
+            .frame(maxWidth: 1240, alignment: .topLeading)
         }
         .onAppear {
             retentionMode = store.settings.retentionDays <= 0 ? .forever : .days
@@ -121,6 +140,52 @@ private struct StorageSettingsCard: View {
             LabeledContent("Screenshots", value: store.screenshotsURL.path)
         }
         .font(.callout)
+        .timelyCard()
+    }
+}
+
+private struct CensoredHistoryCard: View {
+    @ObservedObject var store: TimelyStore
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack {
+                Label("Censored history", systemImage: "eye.slash")
+                    .font(.headline)
+                Spacer()
+                TimelyStatusPill(title: "\(store.censoredScreenshots.count)", systemImage: "shield", tint: TimelyTheme.warning)
+            }
+
+            if store.censoredScreenshots.isEmpty {
+                EmptyStateView(message: "No screenshots have been censored.")
+            } else {
+                ForEach(Array(store.censoredScreenshots.prefix(6))) { record in
+                    VStack(alignment: .leading, spacing: 5) {
+                        HStack {
+                            Text(record.censoredAt.formatted(date: .abbreviated, time: .standard))
+                                .font(.caption)
+                                .foregroundStyle(TimelyTheme.secondaryText)
+                            Spacer()
+                            TimelyStatusPill(
+                                title: record.deletedLocalFile ? "Deleted" : "Detached",
+                                systemImage: record.deletedLocalFile ? "trash" : "paperclip.badge.ellipsis",
+                                tint: record.deletedLocalFile ? TimelyTheme.success : TimelyTheme.warning
+                            )
+                        }
+                        Text(record.category.replacingOccurrences(of: "_", with: " ").capitalized)
+                            .font(.body.weight(.medium))
+                        Text(record.reason)
+                            .font(.caption)
+                            .foregroundStyle(TimelyTheme.secondaryText)
+                            .lineLimit(2)
+                    }
+                    .padding(.vertical, 6)
+                    if record.id != store.censoredScreenshots.prefix(6).last?.id {
+                        Divider()
+                    }
+                }
+            }
+        }
         .timelyCard()
     }
 }

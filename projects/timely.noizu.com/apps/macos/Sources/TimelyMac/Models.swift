@@ -96,6 +96,8 @@ extension AppSettings {
 struct VisionLLMSettings: Codable {
     var analysisEnabled: Bool
     var notifyOnProjectSwitch: Bool
+    var privacyRedactionEnabled: Bool
+    var notifyOnCensoredScreenshot: Bool
     var provider: String
     var model: String
     var apiKey: String
@@ -136,11 +138,17 @@ struct VisionLLMSettings: Codable {
     - project_switch_detected is true only when the screenshot appears to show a different project from the known project or prior inferred project.
     - confidence is a number from 0.0 to 1.0.
     - evidence is a short phrase naming the visible clues.
+    - Also return privacy_sensitive, privacy_category, and privacy_action.
+    - privacy_sensitive is true if the screenshot visibly contains secrets, API keys, passwords, private email, personal chat, adult material, financial or identity records, medical details, or other private material that should not be retained as evidence.
+    - privacy_category is one of none, secret, private_email, personal_chat, adult_material, financial, identity, medical, other_private.
+    - privacy_action is keep when privacy_sensitive is false, or censor when privacy_sensitive is true.
     """
 
     static let defaults = VisionLLMSettings(
         analysisEnabled: false,
         notifyOnProjectSwitch: true,
+        privacyRedactionEnabled: true,
+        notifyOnCensoredScreenshot: true,
         provider: "openai",
         model: "gpt-4o",
         apiKey: "env: OPENAI_API_KEY",
@@ -148,6 +156,58 @@ struct VisionLLMSettings: Codable {
         prompt: defaultPrompt,
         confidenceThreshold: 0.72
     )
+
+    init(
+        analysisEnabled: Bool,
+        notifyOnProjectSwitch: Bool,
+        privacyRedactionEnabled: Bool,
+        notifyOnCensoredScreenshot: Bool,
+        provider: String,
+        model: String,
+        apiKey: String,
+        baseURL: String,
+        prompt: String,
+        confidenceThreshold: Double
+    ) {
+        self.analysisEnabled = analysisEnabled
+        self.notifyOnProjectSwitch = notifyOnProjectSwitch
+        self.privacyRedactionEnabled = privacyRedactionEnabled
+        self.notifyOnCensoredScreenshot = notifyOnCensoredScreenshot
+        self.provider = provider
+        self.model = model
+        self.apiKey = apiKey
+        self.baseURL = baseURL
+        self.prompt = prompt
+        self.confidenceThreshold = confidenceThreshold
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case analysisEnabled
+        case notifyOnProjectSwitch
+        case privacyRedactionEnabled
+        case notifyOnCensoredScreenshot
+        case provider
+        case model
+        case apiKey
+        case baseURL
+        case prompt
+        case confidenceThreshold
+    }
+
+    init(from decoder: Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        let fallback = Self.defaults
+        analysisEnabled = try values.decodeIfPresent(Bool.self, forKey: .analysisEnabled) ?? fallback.analysisEnabled
+        notifyOnProjectSwitch = try values.decodeIfPresent(Bool.self, forKey: .notifyOnProjectSwitch) ?? fallback.notifyOnProjectSwitch
+        privacyRedactionEnabled = try values.decodeIfPresent(Bool.self, forKey: .privacyRedactionEnabled) ?? fallback.privacyRedactionEnabled
+        notifyOnCensoredScreenshot = try values.decodeIfPresent(Bool.self, forKey: .notifyOnCensoredScreenshot) ?? fallback.notifyOnCensoredScreenshot
+        provider = try values.decodeIfPresent(String.self, forKey: .provider) ?? fallback.provider
+        model = try values.decodeIfPresent(String.self, forKey: .model) ?? fallback.model
+        apiKey = try values.decodeIfPresent(String.self, forKey: .apiKey) ?? fallback.apiKey
+        baseURL = try values.decodeIfPresent(String.self, forKey: .baseURL) ?? fallback.baseURL
+        prompt = try values.decodeIfPresent(String.self, forKey: .prompt) ?? fallback.prompt
+        confidenceThreshold = try values.decodeIfPresent(Double.self, forKey: .confidenceThreshold) ?? fallback.confidenceThreshold
+    }
 
     var effectiveModel: String {
         model.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
@@ -189,8 +249,92 @@ struct VisionAnalysisRecord: Identifiable, Codable {
     var projectSwitchDetected: Bool
     var confidence: Double
     var evidence: String
+    var privacySensitive: Bool
+    var privacyCategory: String
     var rawResponse: String
     var errorMessage: String?
+
+    init(
+        id: UUID,
+        screenshotID: UUID,
+        analyzedAt: Date,
+        model: String,
+        statusUpdate: String,
+        inferredProject: String,
+        inferredTask: String,
+        projectSwitchDetected: Bool,
+        confidence: Double,
+        evidence: String,
+        privacySensitive: Bool = false,
+        privacyCategory: String = "none",
+        rawResponse: String,
+        errorMessage: String?
+    ) {
+        self.id = id
+        self.screenshotID = screenshotID
+        self.analyzedAt = analyzedAt
+        self.model = model
+        self.statusUpdate = statusUpdate
+        self.inferredProject = inferredProject
+        self.inferredTask = inferredTask
+        self.projectSwitchDetected = projectSwitchDetected
+        self.confidence = confidence
+        self.evidence = evidence
+        self.privacySensitive = privacySensitive
+        self.privacyCategory = privacyCategory
+        self.rawResponse = rawResponse
+        self.errorMessage = errorMessage
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case screenshotID
+        case analyzedAt
+        case model
+        case statusUpdate
+        case inferredProject
+        case inferredTask
+        case projectSwitchDetected
+        case confidence
+        case evidence
+        case privacySensitive
+        case privacyCategory
+        case rawResponse
+        case errorMessage
+    }
+
+    init(from decoder: Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        id = try values.decode(UUID.self, forKey: .id)
+        screenshotID = try values.decode(UUID.self, forKey: .screenshotID)
+        analyzedAt = try values.decode(Date.self, forKey: .analyzedAt)
+        model = try values.decode(String.self, forKey: .model)
+        statusUpdate = try values.decode(String.self, forKey: .statusUpdate)
+        inferredProject = try values.decode(String.self, forKey: .inferredProject)
+        inferredTask = try values.decode(String.self, forKey: .inferredTask)
+        projectSwitchDetected = try values.decode(Bool.self, forKey: .projectSwitchDetected)
+        confidence = try values.decode(Double.self, forKey: .confidence)
+        evidence = try values.decode(String.self, forKey: .evidence)
+        privacySensitive = try values.decodeIfPresent(Bool.self, forKey: .privacySensitive) ?? false
+        privacyCategory = try values.decodeIfPresent(String.self, forKey: .privacyCategory) ?? "none"
+        rawResponse = try values.decode(String.self, forKey: .rawResponse)
+        errorMessage = try values.decodeIfPresent(String.self, forKey: .errorMessage)
+    }
+}
+
+struct CensoredScreenshotRecord: Identifiable, Codable {
+    var id: UUID
+    var screenshotID: UUID
+    var spanID: UUID?
+    var fileName: String
+    var activeAppName: String
+    var capturedAt: Date
+    var censoredAt: Date
+    var model: String
+    var category: String
+    var reason: String
+    var confidence: Double
+    var deletedLocalFile: Bool
 }
 
 struct TrackedTimeSpan: Identifiable, Codable {
@@ -225,6 +369,7 @@ struct TimelySnapshot: Codable {
     var spans: [TrackedTimeSpan]
     var screenshots: [ScreenshotRecord]
     var visionAnalyses: [VisionAnalysisRecord]
+    var censoredScreenshots: [CensoredScreenshotRecord]
     var lastInferredProject: String?
 
     init(
@@ -232,12 +377,14 @@ struct TimelySnapshot: Codable {
         spans: [TrackedTimeSpan],
         screenshots: [ScreenshotRecord],
         visionAnalyses: [VisionAnalysisRecord],
+        censoredScreenshots: [CensoredScreenshotRecord],
         lastInferredProject: String?
     ) {
         self.settings = settings
         self.spans = spans
         self.screenshots = screenshots
         self.visionAnalyses = visionAnalyses
+        self.censoredScreenshots = censoredScreenshots
         self.lastInferredProject = lastInferredProject
     }
 
@@ -246,6 +393,7 @@ struct TimelySnapshot: Codable {
         case spans
         case screenshots
         case visionAnalyses
+        case censoredScreenshots
         case lastInferredProject
     }
 
@@ -255,6 +403,7 @@ struct TimelySnapshot: Codable {
         spans = try values.decodeIfPresent([TrackedTimeSpan].self, forKey: .spans) ?? []
         screenshots = try values.decodeIfPresent([ScreenshotRecord].self, forKey: .screenshots) ?? []
         visionAnalyses = try values.decodeIfPresent([VisionAnalysisRecord].self, forKey: .visionAnalyses) ?? []
+        censoredScreenshots = try values.decodeIfPresent([CensoredScreenshotRecord].self, forKey: .censoredScreenshots) ?? []
         lastInferredProject = try values.decodeIfPresent(String.self, forKey: .lastInferredProject)
     }
 }
