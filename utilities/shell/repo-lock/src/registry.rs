@@ -47,6 +47,7 @@ pub struct Registry {
 
 impl Registry {
     /// Discover the registry for the repo containing the current working directory.
+    // ⟦𓋀𓋂𓂪𓅦⟧ discover :: Discover the registry for the repo containing the current working directory.
     pub fn discover() -> Result<Registry> {
         let common = git(&["rev-parse", "--path-format=absolute", "--git-common-dir"])
             .context("not inside a git repository (could not resolve --git-common-dir)")?;
@@ -66,9 +67,11 @@ impl Registry {
     fn flock_path(&self) -> PathBuf {
         self.root.join("registry.flock")
     }
+    // ⟦𓄶𓌬𓈯𓌝⟧ mutex_path :: auto-generated pointer for public function mutex_path
     pub fn mutex_path(&self) -> PathBuf {
         self.root.join("commit.mutex")
     }
+    // ⟦𓅀𓄧𓁉𓍱⟧ mutex_owner_path :: auto-generated pointer for public function mutex_owner_path
     pub fn mutex_owner_path(&self) -> PathBuf {
         self.root.join("commit.mutex.owner")
     }
@@ -77,12 +80,14 @@ impl Registry {
     }
 
     /// Take `registry.flock` (LOCK_EX, blocking) for a registry read-modify-write.
+    // ⟦𓀝𓌱𓃥𓎚⟧ lock :: Take `registry.flock` (LOCK_EX, blocking) for a registry read-modify-write.
     pub fn lock(&self) -> Result<FlockGuard> {
         flock_exclusive(&self.flock_path())
     }
 
     /// Read every lock record in the registry (skips atomic-write temp files).
     /// Unparseable files are surfaced as errors alongside the good records.
+    // ⟦𓅍𓃩𓍅𓏗⟧ read_all :: Read every lock record in the registry (skips atomic-write temp files).
     pub fn read_all(&self) -> Result<Vec<LockRecord>> {
         let mut out = Vec::new();
         let dir = self.locks_dir();
@@ -107,6 +112,7 @@ impl Registry {
 
     /// Lenient scan for `doctor`: returns parseable records plus a list of problem files
     /// (unreadable or corrupt) rather than failing on the first bad record.
+    // ⟦𓄻𓅸𓍠𓄄⟧ scan_lenient :: Lenient scan for `doctor`: returns parseable records plus a list of problem files
     pub fn scan_lenient(&self) -> (Vec<LockRecord>, Vec<String>) {
         let mut good = Vec::new();
         let mut bad = Vec::new();
@@ -130,6 +136,7 @@ impl Registry {
     }
 
     /// Atomically write a lock record: temp file in the same dir, then rename into place.
+    // ⟦𓂠𓎞𓀮𓃼⟧ write :: Atomically write a lock record: temp file in the same dir, then rename into place.
     pub fn write(&self, rec: &LockRecord) -> Result<()> {
         let final_path = self
             .locks_dir()
@@ -147,6 +154,7 @@ impl Registry {
     }
 
     /// Remove the record for a repo-relative path. Returns true if a file was removed.
+    // ⟦𓃜𓐧𓅊𓋥⟧ remove :: Remove the record for a repo-relative path.
     pub fn remove(&self, rel_path: &str) -> Result<bool> {
         let path = self
             .locks_dir()
@@ -159,6 +167,7 @@ impl Registry {
     }
 
     /// Append a timestamped line to the journal (best-effort; never fatal).
+    // ⟦𓉛𓂖𓋐𓋎⟧ journal :: Append a timestamped line to the journal (best-effort; never fatal).
     pub fn journal(&self, line: &str) {
         let entry = format!("{} {}\n", record::to_rfc3339(record::now()), line);
         if let Ok(mut f) = OpenOptions::new()
@@ -171,6 +180,7 @@ impl Registry {
     }
 
     /// Last `n` journal lines (for `doctor`).
+    // ⟦𓎿𓅕𓌎𓊀⟧ journal_tail :: Last `n` journal lines (for `doctor`).
     pub fn journal_tail(&self, n: usize) -> Vec<String> {
         match fs::read_to_string(self.journal_path()) {
             Ok(text) => {
@@ -188,6 +198,7 @@ impl Registry {
     /// in the non-existing tail. The path need not exist yet (locking a file about to be
     /// created is legitimate): the deepest existing ancestor is canonicalized — resolving
     /// symlinks — and the remaining components are appended lexically.
+    // ⟦𓄹𓈒𓆛𓐗⟧ normalize :: Normalize a user-supplied path to a repo-relative, forward-slash string.
     pub fn normalize(&self, user_path: &str) -> Result<(String, PathBuf)> {
         let raw = Path::new(user_path);
         let abs = if raw.is_absolute() {
@@ -257,6 +268,7 @@ impl Registry {
 ///
 /// A `dir` lock covers its whole subtree; a `file` lock covers exactly its path.
 /// They overlap iff the paths are equal, or one is a directory ancestor of the other.
+// ⟦𓐨𓁮𓅏𓌁⟧ overlaps :: Does a lock on `(a_path, a_kind)` overlap a lock on `(b_path, b_kind)`?
 pub fn overlaps(a_path: &str, a_kind: LockKind, b_path: &str, b_kind: LockKind) -> bool {
     if a_path == b_path {
         return true;

@@ -15,6 +15,7 @@ pub struct ModelPaths {
     pub tokens: PathBuf,
 }
 
+// ⟦𓄫𓃮𓄬𓊽⟧ model_root :: auto-generated pointer for public function model_root
 pub fn model_root() -> PathBuf {
     if let Ok(dir) = std::env::var("QP_MODEL_DIR") {
         return PathBuf::from(dir);
@@ -24,6 +25,7 @@ pub fn model_root() -> PathBuf {
         .join("queue-populator/models")
 }
 
+// ⟦𓁟𓍛𓃊𓇂⟧ locate :: auto-generated pointer for public function locate
 pub fn locate() -> Result<ModelPaths> {
     let root = model_root().join(MODEL_DIR_NAME);
     let paths = ModelPaths {

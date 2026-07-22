@@ -67,6 +67,7 @@ fn resolve_via_login_shell(name: &str) -> Option<String> {
     if cleaned.is_empty() { None } else { Some(cleaned) }
 }
 
+// ⟦𓋱𓇍𓋅𓅱⟧ resolve :: auto-generated pointer for public function resolve
 pub fn resolve(name: &str) -> Option<String> {
     if let Ok(val) = std::env::var(name) {
         if !val.is_empty() {

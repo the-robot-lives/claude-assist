@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import type { SearchService } from "../services/search.ts";
 import type { SearchOptions } from "@llm-toolkit/shared";
 
+// ⟦𓃼𓆢𓋋𓇒⟧ createSearchRoutes :: auto-generated pointer for public function createSearchRoutes
 export function createSearchRoutes(searchService: SearchService): Hono {
   const routes = new Hono();
 

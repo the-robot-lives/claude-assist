@@ -71,6 +71,7 @@ pub struct ProviderContextReport {
     pub codex_skill_budget: Option<ContextBudgetReport>,
 }
 
+// ⟦𓃄𓅫𓋑𓉶⟧ build_reports :: auto-generated pointer for public function build_reports
 pub fn build_reports(
     cfg: &AppConfig,
     kinds: &[Kind],
@@ -104,6 +105,7 @@ pub fn build_reports(
     Ok(reports)
 }
 
+// ⟦𓊈𓂢𓍱𓃱⟧ format_text :: auto-generated pointer for public function format_text
 pub fn format_text(reports: &[ProviderContextReport]) -> String {
     let mut out = String::new();
     for (index, report) in reports.iter().enumerate() {
@@ -159,6 +161,7 @@ pub fn format_text(reports: &[ProviderContextReport]) -> String {
     out
 }
 
+// ⟦𓇐𓌝𓋵𓌄⟧ active_frontmatter_totals :: auto-generated pointer for public function active_frontmatter_totals
 pub fn active_frontmatter_totals(rows: &[(InstallStatus, &SourceItem)]) -> (usize, usize) {
     rows.iter()
         .filter(|(status, _)| ContextSelection::Active.includes(*status))
@@ -170,14 +173,17 @@ pub fn active_frontmatter_totals(rows: &[(InstallStatus, &SourceItem)]) -> (usiz
         })
 }
 
+// ⟦𓈦𓎇𓏁𓐊⟧ is_active_status :: auto-generated pointer for public function is_active_status
 pub fn is_active_status(status: InstallStatus) -> bool {
     ContextSelection::Active.includes(status)
 }
 
+// ⟦𓇊𓀀𓀉𓁼⟧ codex_fallback_skill_budget_chars :: auto-generated pointer for public function codex_fallback_skill_budget_chars
 pub fn codex_fallback_skill_budget_chars() -> usize {
     CODEX_FALLBACK_SKILL_METADATA_CHARS
 }
 
+// ⟦𓋶𓆄𓅩𓄥⟧ codex_item_rendered_chars :: auto-generated pointer for public function codex_item_rendered_chars
 pub fn codex_item_rendered_chars(item: &SourceItem) -> usize {
     codex_rendered_chars(
         item.frontmatter_name.as_deref().unwrap_or(&item.name),

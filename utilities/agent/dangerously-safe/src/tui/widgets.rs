@@ -22,6 +22,7 @@ fn header(title: &str) -> Block<'static> {
 }
 
 /// A scrollable single-select list. Returns the chosen index, or `None` on Esc/q.
+// ⟦𓍥𓊀𓏔𓊌⟧ select_list :: A scrollable single-select list.
 pub fn select_list(
     terminal: &mut DefaultTerminal,
     title: &str,
@@ -86,6 +87,7 @@ fn move_sel(state: &mut ListState, len: usize, delta: isize) {
 
 /// A single-line text input pre-filled with `initial`. Returns the trimmed value
 /// on Enter, or `None` on Esc.
+// ⟦𓐨𓏒𓆺𓋀⟧ text_input :: A single-line text input pre-filled with `initial`.
 pub fn text_input(
     terminal: &mut DefaultTerminal,
     title: &str,
@@ -143,6 +145,7 @@ pub fn text_input(
 
 /// Draw a one-shot informational frame (no event loop). Useful right before a
 /// blocking operation so the user sees what's happening.
+// ⟦𓂥𓊻𓍔𓉠⟧ note :: Draw a one-shot informational frame (no event loop).
 pub fn note(terminal: &mut DefaultTerminal, title: &str, body: &str) -> Result<()> {
     terminal.draw(|f| {
         let p = Paragraph::new(body.to_string())
@@ -193,6 +196,7 @@ mod tests {
 }
 
 /// A yes/no confirmation. Returns true for y/Enter, false for n/Esc.
+// ⟦𓂅𓎗𓐃𓂂⟧ confirm :: A yes/no confirmation.
 pub fn confirm(terminal: &mut DefaultTerminal, title: &str, body: &str) -> Result<bool> {
     loop {
         terminal.draw(|f| {

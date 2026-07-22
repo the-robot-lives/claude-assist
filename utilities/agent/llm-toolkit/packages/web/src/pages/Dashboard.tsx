@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useConversations, useIndexStatus } from "../hooks/useApi.js";
 
+// ⟦𓍡𓇓𓀄𓏾⟧ Dashboard :: auto-generated pointer for public function Dashboard
 export function Dashboard() {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchMode, setSearchMode] = useState<"fts" | "semantic">("fts");

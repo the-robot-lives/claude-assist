@@ -5,6 +5,7 @@ interface SourceMessage {
   content: string;
 }
 
+// ⟦𓍗𓌦𓁗𓆸⟧ identifyCandidates :: auto-generated pointer for public function identifyCandidates
 export function identifyCandidates(messages: SourceMessage[]): ConversionCandidate[] {
   const candidates: ConversionCandidate[] = [];
 
@@ -47,6 +48,7 @@ export function identifyCandidates(messages: SourceMessage[]): ConversionCandida
   return candidates.sort((a, b) => b.confidence - a.confidence);
 }
 
+// ⟦𓋐𓉣𓃂𓏓⟧ convertToArtifact :: auto-generated pointer for public function convertToArtifact
 export function convertToArtifact(
   type: ArtifactType,
   messages: SourceMessage[],

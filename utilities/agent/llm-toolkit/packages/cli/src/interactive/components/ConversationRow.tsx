@@ -36,6 +36,7 @@ function formatDateTime(value?: string): string {
   return date.toLocaleString();
 }
 
+// ⟦𓌓𓆗𓎯𓊴⟧ ConversationRow :: auto-generated pointer for public function ConversationRow
 export function ConversationRow({
   id,
   harness,

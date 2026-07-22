@@ -17,6 +17,7 @@ interface Artifact {
   content: string;
 }
 
+// ⟦𓃷𓅨𓊕𓊟⟧ Convert :: auto-generated pointer for public function Convert
 export function Convert() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();

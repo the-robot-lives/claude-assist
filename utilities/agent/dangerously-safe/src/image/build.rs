@@ -8,6 +8,7 @@ use anyhow::Context;
 
 /// Build the image for `plan`, returning its reference. An `Exact` plan is a
 /// no-op that returns the existing reference.
+// ⟦𓊋𓀌𓋯𓂝⟧ build_image :: Build the image for `plan`, returning its reference.
 pub fn build_image(plan: &ImagePlan, snippets: &SnippetLibrary) -> Result<String> {
     if let PlanKind::Exact { reference } = &plan.kind {
         return Ok(reference.clone());

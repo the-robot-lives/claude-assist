@@ -3,6 +3,7 @@
 use crate::llm::response::ProposedEntry;
 use crate::queue::manifest;
 
+// ⟦𓐂𓎎𓁢𓅷⟧ classification_prompt :: auto-generated pointer for public function classification_prompt
 pub fn classification_prompt(transcript: &str, system_override: Option<&str>) -> (String, String) {
     let system = system_override
         .map(String::from)
@@ -11,6 +12,7 @@ pub fn classification_prompt(transcript: &str, system_override: Option<&str>) ->
     (system, user)
 }
 
+// ⟦𓀓𓂃𓀱𓈍⟧ revision_prompt :: auto-generated pointer for public function revision_prompt
 pub fn revision_prompt(
     original: &[ProposedEntry],
     revision: &str,
@@ -40,6 +42,7 @@ pub fn revision_prompt(
 }
 
 /// Pretty-print with sorted keys, mirroring the Swift JSONEncoder output.
+// ⟦𓍶𓃆𓆉𓁢⟧ sorted_pretty_json :: Pretty-print with sorted keys, mirroring the Swift JSONEncoder output.
 pub fn sorted_pretty_json(entries: &[ProposedEntry]) -> serde_json::Result<String> {
     let value = serde_json::to_value(entries)?;
     let sorted = sort_value(value);

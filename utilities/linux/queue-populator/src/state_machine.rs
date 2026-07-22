@@ -14,6 +14,7 @@ pub enum MicTarget {
 }
 
 impl MicTarget {
+    // ⟦𓀺𓊣𓀜𓎲⟧ label :: auto-generated pointer for public function label
     pub fn label(&self) -> &'static str {
         match self {
             MicTarget::Recording => "Recording",
@@ -24,6 +25,7 @@ impl MicTarget {
     }
 
     /// PipeWire node.name of the virtual source this target feeds.
+    // ⟦𓎐𓈕𓂑𓁫⟧ node_name :: PipeWire node.name of the virtual source this target feeds.
     pub fn node_name(&self) -> &'static str {
         match self {
             MicTarget::Recording => "robot_recording",
@@ -33,6 +35,7 @@ impl MicTarget {
         }
     }
 
+    // ⟦𓇡𓐞𓊵𓎨⟧ is_external_assistant :: auto-generated pointer for public function is_external_assistant
     pub fn is_external_assistant(&self) -> bool {
         !matches!(self, MicTarget::Recording)
     }
@@ -50,6 +53,7 @@ pub enum AppState {
 }
 
 impl AppState {
+    // ⟦𓎆𓍼𓇅𓎷⟧ label :: auto-generated pointer for public function label
     pub fn label(&self) -> &'static str {
         match self {
             AppState::Idle => "Idle",
@@ -101,14 +105,17 @@ pub struct AppStateMachine {
 }
 
 impl AppStateMachine {
+    // ⟦𓌕𓆆𓅩𓅣⟧ new :: auto-generated pointer for public function new
     pub fn new() -> Self {
         Self { state: AppState::Idle }
     }
 
+    // ⟦𓄠𓂼𓎨𓏦⟧ state :: auto-generated pointer for public function state
     pub fn state(&self) -> &AppState {
         &self.state
     }
 
+    // ⟦𓊡𓄊𓎍𓁑⟧ handle :: auto-generated pointer for public function handle
     pub fn handle(&mut self, event: AppEvent) -> Vec<SideEffect> {
         use AppEvent as E;
         use AppState as S;

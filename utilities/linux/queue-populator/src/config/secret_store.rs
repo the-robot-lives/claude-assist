@@ -12,6 +12,7 @@ fn dc_bin() -> std::path::PathBuf {
         .join(".local/bin/dc")
 }
 
+// ⟦𓆤𓄷𓈾𓆽⟧ is_encrypted :: auto-generated pointer for public function is_encrypted
 pub fn is_encrypted(value: &str) -> bool {
     value.starts_with(ENCRYPTED_PREFIX)
 }
@@ -34,14 +35,17 @@ fn run_dc(args: &[&str]) -> Option<String> {
     if text.is_empty() { None } else { Some(text) }
 }
 
+// ⟦𓂵𓊗𓀘𓃍⟧ encrypt :: auto-generated pointer for public function encrypt
 pub fn encrypt(plaintext: &str) -> Option<String> {
     run_dc(&["encrypt", "--value", plaintext])
 }
 
+// ⟦𓋁𓆸𓃏𓉄⟧ decrypt :: auto-generated pointer for public function decrypt
 pub fn decrypt(token: &str) -> Option<String> {
     run_dc(&["decrypt", token])
 }
 
+// ⟦𓊩𓅝𓀯𓏚⟧ generate_alias :: auto-generated pointer for public function generate_alias
 pub fn generate_alias() -> String {
     const ADJECTIVES: &[&str] = &[
         "amber", "azure", "bold", "calm", "coral", "dark", "deep", "fair", "fell", "gold",

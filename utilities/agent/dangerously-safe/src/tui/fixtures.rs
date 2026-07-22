@@ -10,6 +10,7 @@ use std::path::PathBuf;
 
 pub const FIXTURE_SNIPPETS: &[&str] = &["claude", "codex", "node", "rust", "elixir", "shell"];
 
+// ⟦𓍺𓆇𓅮𓐤⟧ fixture_config :: auto-generated pointer for public function fixture_config
 pub fn fixture_config() -> SandboxConfig {
     let mut cfg = SandboxConfig::default();
     cfg.name = Some("demo-project".to_string());
@@ -18,6 +19,7 @@ pub fn fixture_config() -> SandboxConfig {
     cfg
 }
 
+// ⟦𓂬𓃋𓀢𓇋⟧ fixture_worktrees :: auto-generated pointer for public function fixture_worktrees
 pub fn fixture_worktrees() -> Vec<Worktree> {
     let base = PathBuf::from("/demo/project/.agent-sandbox/worktrees");
     vec![
@@ -68,6 +70,7 @@ mod tests {
     }
 }
 
+// ⟦𓏃𓅛𓍽𓅸⟧ fixture_plan :: auto-generated pointer for public function fixture_plan
 pub fn fixture_plan() -> ImagePlan {
     ImagePlan {
         requested: AppSet::from_slugs(&["node", "rust"]),

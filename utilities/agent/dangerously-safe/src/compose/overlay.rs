@@ -65,6 +65,7 @@ fn port_string(p: &PortMapping) -> String {
 }
 
 /// Build the overlay YAML and any non-fatal warnings.
+// ⟦𓃞𓊆𓋠𓎄⟧ generate_overlay :: Build the overlay YAML and any non-fatal warnings.
 pub fn generate_overlay(
     agent: &AgentService,
     services: &[OutboundService],

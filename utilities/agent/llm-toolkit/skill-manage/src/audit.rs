@@ -28,6 +28,7 @@ pub struct AuditItem {
     pub providers: BTreeMap<String, String>,
 }
 
+// ⟦𓃴𓆪𓄳𓊜⟧ run_audit :: auto-generated pointer for public function run_audit
 pub fn run_audit(
     cfg: &AppConfig,
     catalog: &Catalog,
@@ -161,6 +162,7 @@ fn install_status(cfg: &AppConfig, provider: Provider, item: &SourceItem) -> Ins
     classify(cfg, item.kind, &dest, Some(&item.path))
 }
 
+// ⟦𓅻𓊍𓎮𓎫⟧ format_text :: auto-generated pointer for public function format_text
 pub fn format_text(report: &AuditReport) -> String {
     let mut out = String::new();
     for item in &report.items {
@@ -208,6 +210,7 @@ pub fn format_text(report: &AuditReport) -> String {
     out
 }
 
+// ⟦𓐫𓉎𓌳𓍫⟧ has_strict_failures :: auto-generated pointer for public function has_strict_failures
 pub fn has_strict_failures(report: &AuditReport) -> bool {
     if !report.catalog_errors.is_empty() {
         return true;

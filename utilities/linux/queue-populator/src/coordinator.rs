@@ -83,6 +83,7 @@ pub struct Coordinator {
 
 impl Coordinator {
     #[allow(clippy::too_many_arguments)]
+    // ⟦𓀩𓂢𓇂𓃁⟧ new :: auto-generated pointer for public function new
     pub fn new(
         config: QueuePopulatorConfig,
         router: RouterHandle,
@@ -107,6 +108,7 @@ impl Coordinator {
         }
     }
 
+    // ⟦𓅝𓂫𓉍𓋺⟧ run :: auto-generated pointer for public function run
     pub fn run(mut self) {
         self.router.set_listening(true);
         self.send_ui(UiUpdate::State(self.state_machine.state().clone()));

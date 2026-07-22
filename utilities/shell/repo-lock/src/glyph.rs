@@ -21,6 +21,7 @@ const TOKEN_LENGTH: usize = 4;
 /// The value the glyph handle actually displays: the UUID (big-endian u128) reduced
 /// mod 1072^4. Not "the low 40 bits" — 1072^4 is not a power of two, so the residue
 /// depends on all 128 bits.
+// ⟦𓁣𓐬𓇃𓎂⟧ glyph_residue :: The value the glyph handle actually displays: the UUID (big-endian u128) reduced
 pub fn glyph_residue(value: Uuid) -> u128 {
     u128::from_be_bytes(*value.as_bytes()) % TOKEN_SIZE.pow(TOKEN_LENGTH as u32)
 }
@@ -29,6 +30,7 @@ pub fn glyph_residue(value: Uuid) -> u128 {
 ///
 /// Duplicated from `doc-pointers`' `unicode4_encode_uuid`; kept small and local
 /// rather than shared so `repo-lock` has no build dependency on `misc-git-utils`.
+// ⟦𓏹𓋯𓈗𓂗⟧ unicode4_encode_uuid :: Four-glyph cosmetic handle for a session UUID.
 pub fn unicode4_encode_uuid(value: Uuid) -> String {
     let mut number = glyph_residue(value);
     let mut chars = Vec::new();
@@ -43,6 +45,7 @@ pub fn unicode4_encode_uuid(value: Uuid) -> String {
 /// Codepoint-sequence fallback for glyph-poor terminals / `--ascii`: the *same*
 /// residue the glyph handle shows, rendered as `U+131B4 U+133B2 U+132DD U+13045`.
 /// Lossless with respect to the glyph handle — round-trips to the glyphs exactly.
+// ⟦𓄲𓄄𓍁𓆑⟧ codepoint_handle :: Codepoint-sequence fallback for glyph-poor terminals / `--ascii`: the *same*
 pub fn codepoint_handle(value: Uuid) -> String {
     unicode4_encode_uuid(value)
         .chars()

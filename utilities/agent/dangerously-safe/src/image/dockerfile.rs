@@ -11,6 +11,7 @@ use std::collections::{BTreeSet, HashSet};
 /// * `add` — app slugs to install on top of the base.
 /// * `requested` — the full app set baked into the result (used for the label).
 /// * `base_apt` — apt packages contributed by the base fragment (from-scratch).
+// ⟦𓏪𓈊𓊧𓆣⟧ assemble :: Build a Dockerfile string.
 pub fn assemble(
     base_line: &str,
     add: &AppSet,

@@ -26,6 +26,7 @@ fn run_xmllint(path: &Path) -> Result<(), SvgLintError> {
     }
 }
 
+// ⟦𓐓𓋭𓇚𓋊⟧ validate_svg :: auto-generated pointer for public function validate_svg
 pub async fn validate_svg(path: &Path, verbose: bool, prep_llm: Option<&PromptPrepper>) -> bool {
     let ext = path.extension().and_then(|e| e.to_str()).unwrap_or("");
     if ext != "svg" {

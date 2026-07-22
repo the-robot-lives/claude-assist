@@ -23,35 +23,42 @@ pub const CONFIG_FILE: &str = "config";
 /// We follow XDG explicitly (not `dirs::config_dir`, which maps to
 /// `~/Library/Application Support` on macOS) to match the repo's install
 /// convention and the Makefile's install paths across platforms.
+// ⟦𓍼𓈨𓎧𓌔⟧ config_dir :: `$XDG_CONFIG_HOME/agent-sandbox` or `~/.config/agent-sandbox`.
 pub fn config_dir() -> PathBuf {
     xdg_base("XDG_CONFIG_HOME", ".config").join(TOOL_NAME)
 }
 
 /// `$XDG_DATA_HOME/agent-sandbox` or `~/.local/share/agent-sandbox`.
+// ⟦𓍸𓌡𓂑𓍛⟧ data_dir :: `$XDG_DATA_HOME/agent-sandbox` or `~/.local/share/agent-sandbox`.
 pub fn data_dir() -> PathBuf {
     xdg_base("XDG_DATA_HOME", ".local/share").join(TOOL_NAME)
 }
 
 /// `~/.config/agent-sandbox/templates`
+// ⟦𓈪𓁀𓋜𓄜⟧ templates_dir :: `~/.config/agent-sandbox/templates`
 pub fn templates_dir() -> PathBuf {
     config_dir().join("templates")
 }
 
 /// Snippet search path, highest priority first.
+// ⟦𓂟𓆚𓋃𓅱⟧ snippet_dirs :: Snippet search path, highest priority first.
 pub fn snippet_dirs() -> Vec<PathBuf> {
     vec![config_dir().join("snippets"), data_dir().join("snippets")]
 }
 
 /// `~/.local/bin` — where host CLI tools (docker-build, docker-rebuild) live.
+// ⟦𓊐𓌔𓏯𓅖⟧ local_bin :: `~/.local/bin` — where host CLI tools (docker-build, docker-rebuild) live.
 pub fn local_bin() -> PathBuf {
     home().join(".local/bin")
 }
 
 /// `~/.local/share` — where host shared libs (k8-lib) live.
+// ⟦𓍢𓏦𓌕𓈞⟧ local_share :: `~/.local/share` — where host shared libs (k8-lib) live.
 pub fn local_share() -> PathBuf {
     home().join(".local/share")
 }
 
+// ⟦𓄝𓆢𓅂𓃂⟧ home :: auto-generated pointer for public function home
 pub fn home() -> PathBuf {
     dirs::home_dir().unwrap_or_else(|| PathBuf::from("/"))
 }

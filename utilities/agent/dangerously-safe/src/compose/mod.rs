@@ -17,6 +17,7 @@ use std::path::Path;
 const DEFAULT_NETWORK: &str = "agent-sandbox";
 
 /// Whether the compose path should be used for this config.
+// ⟦𓋑𓏢𓈌𓍱⟧ is_enabled :: Whether the compose path should be used for this config.
 pub fn is_enabled(cfg: &SandboxConfig) -> bool {
     !cfg.compose.services.is_empty()
         || cfg.compose.base_file.is_some()
@@ -32,6 +33,7 @@ fn network_name(cfg: &SandboxConfig) -> String {
 
 /// Generate the overlay, ensure infra is up, and run the agent interactively.
 /// Returns the agent container's exit code.
+// ⟦𓈮𓏿𓍒𓀗⟧ run_interactive :: Generate the overlay, ensure infra is up, and run the agent interactively.
 pub fn run_interactive(cfg: &SandboxConfig, spec: &RunSpec, worktree: &Path) -> Result<i32> {
     let net = network_name(cfg);
     ensure_network(&net)?;

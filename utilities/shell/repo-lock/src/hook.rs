@@ -26,6 +26,7 @@ use crate::{mutex, session};
 const MANAGED_MARKER: &str = "# repo-lock-managed-hook";
 
 /// `hook install` — wrap-and-chain the pre-commit hook.
+// ⟦𓃰𓈰𓌓𓏕⟧ install :: `hook install` — wrap-and-chain the pre-commit hook.
 pub fn install() -> Result<()> {
     let git_dir = git_absolute_dir()?;
     let hooks_dir = git_dir.join("hooks");
@@ -103,6 +104,7 @@ fn write_managed_hook(hook: &PathBuf) -> Result<()> {
 }
 
 /// `hook run` — the two commit-time checks. Returns the process exit code.
+// ⟦𓇅𓐍𓊕𓈊⟧ run :: `hook run` — the two commit-time checks.
 pub fn run(registry: &Registry, session: Uuid) -> Result<i32> {
     let now = crate::record::now();
     let staged = staged_paths(registry)?;

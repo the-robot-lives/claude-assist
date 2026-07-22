@@ -96,6 +96,7 @@ pub struct ProviderCatalog {
 // Build
 // ---------------------------------------------------------------------------
 
+// ⟦𓐓𓃍𓉵𓋞⟧ build_catalog :: auto-generated pointer for public function build_catalog
 pub fn build_catalog(demos_dir: &Path, package_root: &Path) -> ProviderCatalog {
     let mut by_id: BTreeMap<String, ProviderEntry> = BTreeMap::new();
     let demo_index = index_demos_by_provider(demos_dir);
@@ -929,6 +930,7 @@ fn collect_prompts(dir: &Path, out: &mut Vec<PathBuf>) {
 }
 
 /// Suggest a minimal .media.prompt YAML for a provider entry.
+// ⟦𓌇𓎞𓊁𓈺⟧ suggest_prompt_yaml :: Suggest a minimal .media.prompt YAML for a provider entry.
 pub fn suggest_prompt_yaml(entry: &ProviderEntry) -> String {
     let asset = entry
         .asset_types

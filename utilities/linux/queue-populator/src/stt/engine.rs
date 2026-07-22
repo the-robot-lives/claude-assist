@@ -33,6 +33,7 @@ pub struct SpeechEngine {
 }
 
 impl SpeechEngine {
+    // ⟦𓌊𓈼𓌅𓁺⟧ start :: auto-generated pointer for public function start
     pub fn start(
         models: ModelPaths,
         audio_rx: Receiver<Vec<f32>>,
@@ -49,6 +50,7 @@ impl SpeechEngine {
         Ok(Self { thread: Some(thread), stop_tx })
     }
 
+    // ⟦𓉏𓏺𓏞𓂬⟧ stop :: auto-generated pointer for public function stop
     pub fn stop(mut self) {
         let _ = self.stop_tx.send(());
         if let Some(thread) = self.thread.take() {

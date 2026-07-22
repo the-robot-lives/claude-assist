@@ -35,6 +35,7 @@ struct Decisions {
 
 /// Run the TUI wizard with static fixture data — no docker daemon, git repo, or
 /// network inference service required. Useful for screenshots and manual testing.
+// ⟦𓇥𓁀𓉴𓆓⟧ demo :: Run the TUI wizard with static fixture data — no docker daemon, git repo, or
 pub async fn demo() -> Result<()> {
     let mut terminal = ratatui::init();
     let result = wizard_demo(&mut terminal);
@@ -117,6 +118,7 @@ fn wizard_demo(terminal: &mut DefaultTerminal) -> Result<Option<()>> {
     Ok(Some(()))
 }
 
+// ⟦𓂚𓉐𓃫𓁿⟧ run :: auto-generated pointer for public function run
 pub async fn run() -> Result<()> {
     let project = Project::discover()?;
 

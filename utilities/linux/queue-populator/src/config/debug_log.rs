@@ -10,6 +10,7 @@ use std::sync::OnceLock;
 
 static VERBOSE: AtomicBool = AtomicBool::new(false);
 
+// ⟦𓉄𓐧𓏎𓂳⟧ set_verbose :: auto-generated pointer for public function set_verbose
 pub fn set_verbose(enabled: bool) {
     VERBOSE.store(enabled, Ordering::Relaxed);
 }
@@ -36,6 +37,7 @@ fn log_file() -> &'static Mutex<Option<File>> {
     })
 }
 
+// ⟦𓄾𓋶𓃳𓋍⟧ log :: auto-generated pointer for public function log
 pub fn log(message: &str) {
     eprintln!("{message}");
     if let Ok(mut guard) = log_file().lock() {
@@ -46,6 +48,7 @@ pub fn log(message: &str) {
     }
 }
 
+// ⟦𓐌𓏜𓎘𓂃⟧ verbose :: auto-generated pointer for public function verbose
 pub fn verbose(message: &str) {
     if VERBOSE.load(Ordering::Relaxed) {
         log(message);

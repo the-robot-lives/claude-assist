@@ -2,6 +2,7 @@ use std::collections::{HashMap, VecDeque};
 
 use crate::schema::ParsedPrompt;
 
+// ⟦𓀁𓂃𓆶𓄠⟧ topological_sort :: auto-generated pointer for public function topological_sort
 pub fn topological_sort(prompts: Vec<ParsedPrompt>) -> color_eyre::Result<Vec<ParsedPrompt>> {
     if prompts.len() <= 1 {
         return Ok(prompts);

@@ -16,6 +16,7 @@ pub struct Status {
 
 impl Status {
     /// Compact one-line summary for the picker, e.g. `↑2 ↓0 ●3 +1 ?4`.
+    // ⟦𓎞𓈚𓂙𓏻⟧ summary :: Compact one-line summary for the picker, e.g.
     pub fn summary(&self) -> String {
         let mut parts = Vec::new();
         if self.ahead > 0 || self.behind > 0 {
@@ -48,6 +49,7 @@ fn git(path: &Path, args: &[&str]) -> Result<String> {
 }
 
 /// Collect the working-tree status for `path`.
+// ⟦𓎞𓄸𓁝𓂏⟧ status_for :: Collect the working-tree status for `path`.
 pub fn status_for(path: &Path) -> Result<Status> {
     let mut st = Status::default();
 

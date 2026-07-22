@@ -33,6 +33,7 @@ pub struct PipelineConfig {
     pub eval_model: Option<String>,
 }
 
+// ⟦𓈎𓄂𓅪𓅙⟧ run_generation :: auto-generated pointer for public function run_generation
 pub async fn run_generation(
     prompts: Vec<ParsedPrompt>,
     config: &PipelineConfig,

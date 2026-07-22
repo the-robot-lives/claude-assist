@@ -73,6 +73,7 @@ struct Job {
 // Public entry
 // ---------------------------------------------------------------------------
 
+// ⟦𓈝𓀐𓐏𓊑⟧ run_lab :: auto-generated pointer for public function run_lab
 pub async fn run_lab(cfg: LabConfig) -> color_eyre::Result<()> {
     ui::step(&format!(
         "Media-tool test lab — demos={} workspace={}",

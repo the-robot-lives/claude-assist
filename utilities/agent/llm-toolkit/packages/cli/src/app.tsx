@@ -11,6 +11,7 @@ interface AppProps {
   args: string[];
 }
 
+// ⟦𓁵𓆛𓄹𓇍⟧ App :: auto-generated pointer for public function App
 export function App({ command, args }: AppProps) {
   switch (command) {
     case "search":

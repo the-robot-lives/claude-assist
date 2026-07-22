@@ -26,6 +26,7 @@ pub struct StructuralProbe {
 
 /// Score an artifact with structural probes. Returns None if extension is not
 /// audio/video or tools (ffprobe/ffmpeg) are unavailable for a required check.
+// ⟦𓐆𓍨𓋻𓉾⟧ score_structural :: Score an artifact with structural probes.
 pub async fn score_structural(
     path: &Path,
     eval: &EvalSection,
@@ -48,6 +49,7 @@ pub async fn score_structural(
 }
 
 /// True when structural scoring can apply to this path's extension.
+// ⟦𓐦𓐦𓀚𓌥⟧ is_structural_candidate :: True when structural scoring can apply to this path's extension.
 pub fn is_structural_candidate(path: &Path) -> bool {
     matches!(
         path.extension()
@@ -393,6 +395,7 @@ async fn ffmpeg_mean_volume(path: &Path) -> Option<f64> {
 }
 
 /// Synchronous availability check for unit tests / dry diagnostics.
+// ⟦𓌥𓈸𓀙𓀓⟧ ffprobe_available :: Synchronous availability check for unit tests / dry diagnostics.
 pub fn ffprobe_available() -> bool {
     Command::new("ffprobe")
         .arg("-version")

@@ -1,0 +1,5390 @@
+{
+  "𓀁𓂃𓆶𓄠": {
+    "path": "utilities/agent/media-tool/src/dag.rs",
+    "line": 5,
+    "name": "topological_sort",
+    "description": "auto-generated pointer for public function topological_sort"
+  },
+  "𓀁𓂑𓋗𓌪": {
+    "path": "utilities/agent/llm-toolkit/packages/api/src/services/harness-transform.ts",
+    "line": 84,
+    "name": "exportUniversalToHarness",
+    "description": "auto-generated pointer for public function exportUniversalToHarness"
+  },
+  "𓀅𓉾𓉖𓈔": {
+    "path": "utilities/agent/llm-toolkit/packages/web/src/components/Layout.tsx",
+    "line": 24,
+    "name": "Layout",
+    "description": "auto-generated pointer for public function Layout"
+  },
+  "𓀈𓆌𓌅𓐂": {
+    "path": "utilities/shell/tabbing-on/rust/src/recording.rs",
+    "line": 116,
+    "name": "record_start",
+    "description": "Start an asciinema recording for the given tab."
+  },
+  "𓀉𓃑𓌾𓉹": {
+    "path": "utilities/shell/direnv-config/sdk/typescript/src/store.ts",
+    "line": 77,
+    "name": "activePath",
+    "description": "auto-generated pointer for public function activePath"
+  },
+  "𓀋𓀡𓈖𓇬": {
+    "path": "utilities/agent/dangerously-safe/src/worktree/mod.rs",
+    "line": 38,
+    "name": "worktrees_root",
+    "description": "Absolute path to the worktrees root for a project, honoring config override."
+  },
+  "𓀋𓏖𓆲𓋊": {
+    "path": "utilities/agent/llm-toolkit/packages/cli/src/interactive/components/TagChips.tsx",
+    "line": 9,
+    "name": "TagChips",
+    "description": "auto-generated pointer for public function TagChips"
+  },
+  "𓀌𓁹𓁮𓄟": {
+    "path": "utilities/shell/tabbing-on/rust/src/state.rs",
+    "line": 314,
+    "name": "record_event",
+    "description": "auto-generated pointer for public function record_event"
+  },
+  "𓀍𓎃𓈏𓈓": {
+    "path": "utilities/k8/secret-utils/rust/src/api/mod.rs",
+    "line": 166,
+    "name": "set_secret",
+    "description": "Create or update a secret."
+  },
+  "𓀑𓂒𓃾𓉦": {
+    "path": "utilities/linux/queue-populator/src/config/llm.rs",
+    "line": 94,
+    "name": "needs_api_key",
+    "description": "auto-generated pointer for public function needs_api_key"
+  },
+  "𓀒𓆢𓃔𓍥": {
+    "path": "utilities/linux/queue-populator/src/config/store.rs",
+    "line": 30,
+    "name": "load_config",
+    "description": "auto-generated pointer for public function load_config"
+  },
+  "𓀓𓂃𓀱𓈍": {
+    "path": "utilities/linux/queue-populator/src/llm/prompt.rs",
+    "line": 15,
+    "name": "revision_prompt",
+    "description": "auto-generated pointer for public function revision_prompt"
+  },
+  "𓀓𓋍𓋽𓊨": {
+    "path": "utilities/shell/direnv-config/sdk/elixir/lib/direnv_config/merge.ex",
+    "line": 31,
+    "name": "strip_tombstones",
+    "description": "auto-generated pointer for public function strip_tombstones"
+  },
+  "𓀕𓅟𓉒𓎍": {
+    "path": "utilities/linux/queue-populator/src/audio/mod.rs",
+    "line": 108,
+    "name": "open",
+    "description": "Open an assistant target exclusively (mutes the other assistants)."
+  },
+  "𓀕𓇇𓂁𓃼": {
+    "path": "utilities/agent/llm-toolkit/skill-manage/src/config.rs",
+    "line": 114,
+    "name": "builtin_defaults",
+    "description": "Built-in defaults when no config file exists."
+  },
+  "𓀖𓂿𓎇𓃟": {
+    "path": "utilities/agent/media-tool/src/providers/mod.rs",
+    "line": 208,
+    "name": "available",
+    "description": "Returns true if the candidate's required API key env var is set and non-empty."
+  },
+  "𓀙𓁯𓃲𓂥": {
+    "path": "utilities/shell/tabbing-on/rust/src/theme_data.rs",
+    "line": 339,
+    "name": "emit_clear_seq",
+    "description": "Reset stream: OSC 104 (palette), 110 (fg), 111 (bg), 112 (cursor),"
+  },
+  "𓀙𓆋𓎕𓍽": {
+    "path": "utilities/shell/direnv-config/src/secretsmap.rs",
+    "line": 116,
+    "name": "load",
+    "description": "Discover and load the secrets map."
+  },
+  "𓀚𓀈𓇋𓀅": {
+    "path": "utilities/agent/media-tool/src/test_lab/persist.rs",
+    "line": 215,
+    "name": "infer_slug_from_path",
+    "description": "Infer a generator slug from a prompt path under `workspace/prompts/…`."
+  },
+  "𓀚𓂧𓎊𓅗": {
+    "path": "utilities/shell/direnv-config/src/yaml/flatten.rs",
+    "line": 48,
+    "name": "parse_rules",
+    "description": "Parse flatten rules from the `_dc` config's `flatten` mapping."
+  },
+  "𓀚𓃢𓉏𓁶": {
+    "path": "utilities/agent/llm-toolkit/packages/cli/src/interactive/hooks/useApi.ts",
+    "line": 100,
+    "name": "useConversations",
+    "description": "auto-generated pointer for public function useConversations"
+  },
+  "𓀚𓅐𓁎𓄹": {
+    "path": "utilities/shell/tabbing-on/rust/src/plan/types.rs",
+    "line": 46,
+    "name": "all",
+    "description": "auto-generated pointer for public function all"
+  },
+  "𓀜𓀙𓅵𓁋": {
+    "path": "utilities/agent/llm-toolkit/packages/cli/src/interactive/context/HarnessContext.tsx",
+    "line": 22,
+    "name": "useHarness",
+    "description": "auto-generated pointer for public function useHarness"
+  },
+  "𓀝𓄰𓎵𓎃": {
+    "path": "utilities/agent/llm-toolkit/skill-manage/src/link.rs",
+    "line": 188,
+    "name": "disable_item",
+    "description": "auto-generated pointer for public function disable_item"
+  },
+  "𓀝𓌱𓃥𓎚": {
+    "path": "utilities/shell/repo-lock/src/registry.rs",
+    "line": 83,
+    "name": "lock",
+    "description": "Take `registry.flock` (LOCK_EX, blocking) for a registry read-modify-write."
+  },
+  "𓀝𓎕𓎰𓎟": {
+    "path": "utilities/k8/secret-utils/rust/src/tui/theme.rs",
+    "line": 22,
+    "name": "muted",
+    "description": "auto-generated pointer for public function muted"
+  },
+  "𓀞𓎩𓋴𓇨": {
+    "path": "utilities/shell/direnv-config/src/cmd/config.rs",
+    "line": 235,
+    "name": "get",
+    "description": "auto-generated pointer for public function get"
+  },
+  "𓀠𓂮𓌱𓃛": {
+    "path": "utilities/agent/dangerously-safe/src/image/slug.rs",
+    "line": 41,
+    "name": "len",
+    "description": "auto-generated pointer for public function len"
+  },
+  "𓀡𓈠𓉽𓇥": {
+    "path": "utilities/shell/direnv-config/src/kube.rs",
+    "line": 58,
+    "name": "upsert_secret_key",
+    "description": "Create or patch a single data key."
+  },
+  "𓀡𓋸𓉑𓈼": {
+    "path": "utilities/shell/direnv-config/src/cmd/config.rs",
+    "line": 340,
+    "name": "setall",
+    "description": "Insert a YAML section relative to an anchor entry."
+  },
+  "𓀢𓂾𓁴𓂉": {
+    "path": "utilities/agent/llm-toolkit/packages/cli/src/interface-selection.ts",
+    "line": 63,
+    "name": "normalizeInterfaceMode",
+    "description": "auto-generated pointer for public function normalizeInterfaceMode"
+  },
+  "𓀥𓏙𓋒𓋈": {
+    "path": "utilities/agent/llm-toolkit/packages/web/src/pages/StyleGuide.tsx",
+    "line": 12,
+    "name": "StyleGuide",
+    "description": "auto-generated pointer for public function StyleGuide"
+  },
+  "𓀦𓎞𓏄𓉓": {
+    "path": "utilities/agent/dangerously-safe/src/image/slug.rs",
+    "line": 51,
+    "name": "contains",
+    "description": "auto-generated pointer for public function contains"
+  },
+  "𓀨𓏐𓊊𓂳": {
+    "path": "utilities/shell/direnv-config/sdk/elixir/lib/direnv_config/client.ex",
+    "line": 11,
+    "name": "new",
+    "description": "auto-generated pointer for public function new"
+  },
+  "𓀩𓂢𓇂𓃁": {
+    "path": "utilities/linux/queue-populator/src/coordinator.rs",
+    "line": 86,
+    "name": "new",
+    "description": "auto-generated pointer for public function new"
+  },
+  "𓀩𓐚𓏮𓎋": {
+    "path": "utilities/agent/llm-toolkit/skill-manage/src/catalog.rs",
+    "line": 159,
+    "name": "matches_filters",
+    "description": "auto-generated pointer for public function matches_filters"
+  },
+  "𓀫𓈹𓀀𓀟": {
+    "path": "utilities/agent/llm-toolkit/packages/web/src/pages/Datasets.tsx",
+    "line": 14,
+    "name": "Datasets",
+    "description": "auto-generated pointer for public function Datasets"
+  },
+  "𓀫𓉡𓅉𓌴": {
+    "path": "utilities/shell/direnv-config/sdk/rust/src/version.rs",
+    "line": 9,
+    "name": "read_version",
+    "description": "Read the current version from the store's `.version` file."
+  },
+  "𓀬𓉞𓋛𓈑": {
+    "path": "utilities/agent/llm-toolkit/skill-manage/src/tui/app.rs",
+    "line": 40,
+    "name": "next",
+    "description": "auto-generated pointer for public function next"
+  },
+  "𓀭𓏛𓉘𓂛": {
+    "path": "utilities/linux/queue-populator/src/config/store.rs",
+    "line": 35,
+    "name": "load_config_from",
+    "description": "auto-generated pointer for public function load_config_from"
+  },
+  "𓀭𓏫𓎃𓄌": {
+    "path": "utilities/agent/llm-toolkit/packages/api/src/services/harness-transform.ts",
+    "line": 173,
+    "name": "importHarnessToUniversal",
+    "description": "auto-generated pointer for public function importHarnessToUniversal"
+  },
+  "𓀮𓅚𓏵𓃈": {
+    "path": "utilities/shell/tabbing-on/rust/src/state.rs",
+    "line": 203,
+    "name": "ensure_tab_id",
+    "description": "auto-generated pointer for public function ensure_tab_id"
+  },
+  "𓀲𓄢𓌺𓎒": {
+    "path": "utilities/shell/direnv-config/sdk/elixir/lib/direnv_config/client.ex",
+    "line": 89,
+    "name": "get_bool",
+    "description": "auto-generated pointer for public function get_bool"
+  },
+  "𓀲𓇤𓉭𓊆": {
+    "path": "utilities/agent/llm-toolkit/packages/cli/src/interactive/components/Layout.tsx",
+    "line": 16,
+    "name": "Layout",
+    "description": "auto-generated pointer for public function Layout"
+  },
+  "𓀶𓉐𓁁𓋲": {
+    "path": "utilities/agent/llm-toolkit/packages/cli/src/interactive/hooks/useApi.ts",
+    "line": 152,
+    "name": "useIndexStatus",
+    "description": "auto-generated pointer for public function useIndexStatus"
+  },
+  "𓀸𓁘𓊕𓊊": {
+    "path": "utilities/shell/direnv-config/sdk/elixir/lib/direnv_config/version.ex",
+    "line": 3,
+    "name": "read",
+    "description": "auto-generated pointer for public function read"
+  },
+  "𓀺𓊣𓀜𓎲": {
+    "path": "utilities/linux/queue-populator/src/state_machine.rs",
+    "line": 17,
+    "name": "label",
+    "description": "auto-generated pointer for public function label"
+  },
+  "𓀽𓀦𓂯𓅞": {
+    "path": "utilities/agent/llm-toolkit/packages/web/src/services/sessionWorkflow.ts",
+    "line": 158,
+    "name": "buildResumeCommand",
+    "description": "auto-generated pointer for public function buildResumeCommand"
+  },
+  "𓀽𓌑𓋉𓌬": {
+    "path": "utilities/agent/llm-toolkit/packages/cli/src/interactive/hooks/useScroll.ts",
+    "line": 10,
+    "name": "useScroll",
+    "description": "auto-generated pointer for public function useScroll"
+  },
+  "𓀾𓁛𓌑𓃄": {
+    "path": "utilities/k8/secret-utils/rust/src/dc.rs",
+    "line": 130,
+    "name": "find_envrc_dc",
+    "description": "Walk up from cwd to find .envrc.dc"
+  },
+  "𓀾𓃷𓉽𓆽": {
+    "path": "utilities/agent/dangerously-safe/src/config/merge.rs",
+    "line": 16,
+    "name": "config_value",
+    "description": "Read a config file into a raw YAML [`Value`]."
+  },
+  "𓀾𓎇𓁃𓀰": {
+    "path": "utilities/agent/llm-toolkit/skill-manage/src/catalog.rs",
+    "line": 76,
+    "name": "load",
+    "description": "auto-generated pointer for public function load"
+  },
+  "𓀿𓉄𓐪𓐝": {
+    "path": "utilities/shell/direnv-config/src/secretcmp.rs",
+    "line": 30,
+    "name": "missing",
+    "description": "Format a verdict when the remote side is missing."
+  },
+  "𓁄𓀈𓀈𓌾": {
+    "path": "utilities/k8/secret-utils/rust/src/cli.rs",
+    "line": 49,
+    "name": "resolve",
+    "description": "auto-generated pointer for public function resolve"
+  },
+  "𓁅𓇭𓍮𓋚": {
+    "path": "utilities/shell/tabbing-on/rust/src/terminal.rs",
+    "line": 116,
+    "name": "clear_title",
+    "description": "auto-generated pointer for public function clear_title"
+  },
+  "𓁅𓋦𓆡𓂤": {
+    "path": "utilities/agent/llm-toolkit/packages/web/src/hooks/useApi.ts",
+    "line": 140,
+    "name": "useStats",
+    "description": "auto-generated pointer for public function useStats"
+  },
+  "𓁆𓋧𓊵𓀳": {
+    "path": "utilities/shell/direnv-config/sdk/rust/src/store.rs",
+    "line": 51,
+    "name": "find_current_store",
+    "description": "Walk up parent directories from `start_dir` (or CWD) looking for an existing store."
+  },
+  "𓁆𓍵𓀋𓉌": {
+    "path": "utilities/linux/queue-populator/src/audio/memo_recorder.rs",
+    "line": 51,
+    "name": "is_recording",
+    "description": "auto-generated pointer for public function is_recording"
+  },
+  "𓁉𓉱𓏍𓌱": {
+    "path": "utilities/shell/auto-sudo/rust/src/sudoers.rs",
+    "line": 79,
+    "name": "toggle",
+    "description": "auto-generated pointer for public function toggle"
+  },
+  "𓁋𓉀𓍤𓈰": {
+    "path": "utilities/agent/llm-toolkit/skill-manage/src/config.rs",
+    "line": 271,
+    "name": "expand_path",
+    "description": "auto-generated pointer for public function expand_path"
+  },
+  "𓁋𓐞𓇫𓆎": {
+    "path": "utilities/k8/secret-utils/rust/src/api/mod.rs",
+    "line": 231,
+    "name": "ensure_folder",
+    "description": "Ensure an Infisical folder path exists (creates each segment as needed)"
+  },
+  "𓁌𓋪𓃣𓉬": {
+    "path": "utilities/agent/llm-toolkit/packages/api/src/services/harness-transform.ts",
+    "line": 96,
+    "name": "exportUniversalToClaude",
+    "description": "auto-generated pointer for public function exportUniversalToClaude"
+  },
+  "𓁍𓌿𓃃𓂝": {
+    "path": "utilities/shell/repo-lock/src/record.rs",
+    "line": 140,
+    "name": "parse_time",
+    "description": "auto-generated pointer for public function parse_time"
+  },
+  "𓁎𓂎𓄞𓁈": {
+    "path": "utilities/agent/dangerously-safe/src/config/mod.rs",
+    "line": 58,
+    "name": "load_config",
+    "description": "Load the project config, falling back to defaults if none exists."
+  },
+  "𓁎𓃄𓊹𓐌": {
+    "path": "utilities/shell/direnv-config/sdk/rust/src/client.rs",
+    "line": 340,
+    "name": "new",
+    "description": "Create a new client."
+  },
+  "𓁎𓍌𓍩𓍺": {
+    "path": "utilities/shell/direnv-config/src/cmd/bump.rs",
+    "line": 3,
+    "name": "run",
+    "description": "auto-generated pointer for public function run"
+  },
+  "𓁑𓆋𓍄𓂬": {
+    "path": "utilities/shell/tabbing-on/rust/src/claude.rs",
+    "line": 50,
+    "name": "run_claude_statusline",
+    "description": "auto-generated pointer for public function run_claude_statusline"
+  },
+  "𓁓𓁾𓌃𓀰": {
+    "path": "utilities/agent/llm-toolkit/skill-manage/src/kinds.rs",
+    "line": 18,
+    "name": "all",
+    "description": "auto-generated pointer for public function all"
+  },
+  "𓁔𓃇𓅤𓐅": {
+    "path": "utilities/agent/llm-toolkit/skill-manage/src/catalog.rs",
+    "line": 121,
+    "name": "meta",
+    "description": "auto-generated pointer for public function meta"
+  },
+  "𓁔𓃯𓏢𓂽": {
+    "path": "utilities/shell/direnv-config/sdk/typescript/src/resolve.ts",
+    "line": 7,
+    "name": "resolveActive",
+    "description": "auto-generated pointer for public function resolveActive"
+  },
+  "𓁔𓆊𓎢𓃠": {
+    "path": "utilities/shell/repo-lock/src/record.rs",
+    "line": 208,
+    "name": "pid_alive",
+    "description": "`kill(pid, 0)` liveness probe."
+  },
+  "𓁖𓀖𓉁𓏧": {
+    "path": "utilities/shell/direnv-config/sdk/elixir/lib/direnv_config/cli.ex",
+    "line": 3,
+    "name": "get",
+    "description": "auto-generated pointer for public function get"
+  },
+  "𓁗𓏊𓃎𓀾": {
+    "path": "utilities/shell/direnv-config/sdk/elixir/lib/direnv_config/merge.ex",
+    "line": 7,
+    "name": "deep_merge",
+    "description": "auto-generated pointer for public function deep_merge"
+  },
+  "𓁚𓈳𓊹𓄝": {
+    "path": "utilities/linux/queue-populator/src/phrase_detector.rs",
+    "line": 21,
+    "name": "reset",
+    "description": "auto-generated pointer for public function reset"
+  },
+  "𓁚𓊠𓌙𓍗": {
+    "path": "utilities/linux/queue-populator/src/audio/mod.rs",
+    "line": 157,
+    "name": "start",
+    "description": "Spawn the PipeWire thread."
+  },
+  "𓁚𓊢𓀔𓌬": {
+    "path": "utilities/agent/media-tool/src/test_lab/settings.rs",
+    "line": 193,
+    "name": "save",
+    "description": "auto-generated pointer for public function save"
+  },
+  "𓁚𓊻𓈱𓇭": {
+    "path": "utilities/shell/direnv-config/sdk/rust/src/client.rs",
+    "line": 411,
+    "name": "version",
+    "description": "Read the current store version."
+  },
+  "𓁛𓀉𓏙𓊧": {
+    "path": "utilities/shell/tabbing-on/rust/src/toggl.rs",
+    "line": 271,
+    "name": "update_time_entry",
+    "description": "auto-generated pointer for public function update_time_entry"
+  },
+  "𓁛𓋲𓐮𓊩": {
+    "path": "utilities/shell/direnv-config/sdk/rust/src/client.rs",
+    "line": 393,
+    "name": "get_bool",
+    "description": "Get a boolean value at the given path."
+  },
+  "𓁜𓍎𓇲𓊴": {
+    "path": "utilities/shell/direnv-config/sdk/rust/src/client.rs",
+    "line": 386,
+    "name": "get_int",
+    "description": "Get an integer value at the given path."
+  },
+  "𓁞𓅄𓍘𓐂": {
+    "path": "utilities/shell/direnv-config/src/infisical.rs",
+    "line": 131,
+    "name": "login",
+    "description": "Authenticate via universal-auth and resolve the project id."
+  },
+  "𓁟𓍛𓃊𓇂": {
+    "path": "utilities/linux/queue-populator/src/stt/models.rs",
+    "line": 28,
+    "name": "locate",
+    "description": "auto-generated pointer for public function locate"
+  },
+  "𓁣𓁙𓅧𓋗": {
+    "path": "utilities/agent/llm-toolkit/skill-manage/src/cli.rs",
+    "line": 260,
+    "name": "kinds",
+    "description": "auto-generated pointer for public function kinds"
+  },
+  "𓁣𓐬𓇃𓎂": {
+    "path": "utilities/shell/repo-lock/src/glyph.rs",
+    "line": 24,
+    "name": "glyph_residue",
+    "description": "The value the glyph handle actually displays: the UUID (big-endian u128) reduced"
+  },
+  "𓁤𓈱𓊖𓌴": {
+    "path": "utilities/shell/repo-lock/src/record.rs",
+    "line": 130,
+    "name": "now",
+    "description": "auto-generated pointer for public function now"
+  },
+  "𓁥𓁂𓇿𓐈": {
+    "path": "utilities/k8/secret-utils/rust/src/engine/mod.rs",
+    "line": 194,
+    "name": "all_ok",
+    "description": "auto-generated pointer for public function all_ok"
+  },
+  "𓁦𓅋𓀜𓎾": {
+    "path": "utilities/k8/secret-utils/rust/src/tui/fetch_view.rs",
+    "line": 158,
+    "name": "print_secrets_plain",
+    "description": "Plain-text fallback"
+  },
+  "𓁧𓆩𓐍𓍴": {
+    "path": "utilities/k8/secret-utils/rust/src/tui/mod.rs",
+    "line": 45,
+    "name": "read_key",
+    "description": "Read a key event, return (key_code, modifiers)"
+  },
+  "𓁫𓉳𓉎𓅅": {
+    "path": "utilities/agent/llm-toolkit/packages/api/src/routes/config.ts",
+    "line": 113,
+    "name": "createConfigRoutes",
+    "description": "auto-generated pointer for public function createConfigRoutes"
+  },
+  "𓁬𓉋𓐃𓏺": {
+    "path": "utilities/agent/media-tool/src/test_lab/settings.rs",
+    "line": 125,
+    "name": "env_hint",
+    "description": "auto-generated pointer for public function env_hint"
+  },
+  "𓁬𓉌𓋣𓂧": {
+    "path": "utilities/agent/dangerously-safe/src/docker/run.rs",
+    "line": 38,
+    "name": "to_args",
+    "description": "Build the `docker run ...` argument vector (excluding the leading"
+  },
+  "𓁯𓐦𓍑𓅗": {
+    "path": "utilities/agent/dangerously-safe/src/worktree/mod.rs",
+    "line": 137,
+    "name": "current_branch",
+    "description": "The current branch of the project repo (the default origin for new worktrees)."
+  },
+  "𓁰𓆴𓐖𓅵": {
+    "path": "utilities/shell/tabbing-on/rust/src/theme_data.rs",
+    "line": 351,
+    "name": "emit_bg_seq",
+    "description": "Background-only OSC 11 for a resolved color name/hex."
+  },
+  "𓁱𓋖𓄆𓇝": {
+    "path": "utilities/k8/secret-utils/rust/src/config/v1.rs",
+    "line": 90,
+    "name": "resolve_group",
+    "description": "Return all section IDs in a group, or error if not found"
+  },
+  "𓁱𓋡𓀘𓂌": {
+    "path": "utilities/shell/direnv-config/src/store/layout.rs",
+    "line": 90,
+    "name": "ensure_store",
+    "description": "Create the store directory and initialize .meta if it does not exist."
+  },
+  "𓁵𓅊𓏞𓆓": {
+    "path": "utilities/agent/dangerously-safe/src/inference/mod.rs",
+    "line": 24,
+    "name": "is_configured",
+    "description": "True if an inference endpoint key is configured (so callers can decide whether"
+  },
+  "𓁵𓆛𓄹𓇍": {
+    "path": "utilities/agent/llm-toolkit/packages/cli/src/app.tsx",
+    "line": 14,
+    "name": "App",
+    "description": "auto-generated pointer for public function App"
+  },
+  "𓁵𓆟𓏄𓉃": {
+    "path": "utilities/agent/llm-toolkit/skill-manage/src/kinds.rs",
+    "line": 150,
+    "name": "dest_path",
+    "description": "Destination path under a provider kind directory."
+  },
+  "𓁹𓋺𓉋𓋼": {
+    "path": "utilities/agent/dangerously-safe/src/config/mod.rs",
+    "line": 24,
+    "name": "discover",
+    "description": "Discover the enclosing git repository from the current directory."
+  },
+  "𓁺𓀳𓊪𓎾": {
+    "path": "utilities/shell/tabbing-on/rust/src/render.rs",
+    "line": 6,
+    "name": "get_indicator",
+    "description": "auto-generated pointer for public function get_indicator"
+  },
+  "𓁽𓃶𓍟𓊸": {
+    "path": "utilities/agent/llm-toolkit/packages/api/src/routes/prompts.ts",
+    "line": 4,
+    "name": "createPromptRoutes",
+    "description": "auto-generated pointer for public function createPromptRoutes"
+  },
+  "𓁿𓂑𓐨𓄟": {
+    "path": "utilities/agent/media-tool/src/ui.rs",
+    "line": 60,
+    "name": "plan_detail",
+    "description": "auto-generated pointer for public function plan_detail"
+  },
+  "𓂁𓃭𓅔𓇚": {
+    "path": "utilities/shell/tabbing-on/rust/src/init.rs",
+    "line": 225,
+    "name": "run_init",
+    "description": "auto-generated pointer for public function run_init"
+  },
+  "𓂁𓏋𓍃𓍠": {
+    "path": "utilities/shell/tabbing-on/rust/src/theme.rs",
+    "line": 1768,
+    "name": "resolve_alias_pub",
+    "description": "Resolve a theme alias to its canonical name (public for theme_picker)."
+  },
+  "𓂅𓎂𓎘𓅘": {
+    "path": "utilities/agent/media-tool/src/ui.rs",
+    "line": 30,
+    "name": "warn_msg",
+    "description": "auto-generated pointer for public function warn_msg"
+  },
+  "𓂅𓎗𓐃𓂂": {
+    "path": "utilities/agent/dangerously-safe/src/tui/widgets.rs",
+    "line": 199,
+    "name": "confirm",
+    "description": "A yes/no confirmation."
+  },
+  "𓂇𓄳𓍅𓃤": {
+    "path": "utilities/shell/direnv-config/src/crypto.rs",
+    "line": 29,
+    "name": "is_encrypted",
+    "description": "True if `s` is a `dc` encrypted token."
+  },
+  "𓂇𓉅𓍾𓋞": {
+    "path": "utilities/shell/direnv-config/src/store/layout.rs",
+    "line": 53,
+    "name": "layer_path",
+    "description": "Return the path to a specific layer file."
+  },
+  "𓂇𓉬𓍯𓏏": {
+    "path": "utilities/agent/dangerously-safe/src/config/merge.rs",
+    "line": 44,
+    "name": "merge_values",
+    "description": "Deep-merge `over` onto `base`; `over` wins for any non-mapping node."
+  },
+  "𓂉𓐟𓇻𓃻": {
+    "path": "utilities/k8/secret-utils/rust/src/tui/mod.rs",
+    "line": 55,
+    "name": "key_hints",
+    "description": "Render a footer line showing common key hints"
+  },
+  "𓂎𓀅𓄗𓀞": {
+    "path": "utilities/shell/direnv-config/src/cmd/yaml.rs",
+    "line": 6,
+    "name": "run",
+    "description": "auto-generated pointer for public function run"
+  },
+  "𓂎𓄆𓁷𓌓": {
+    "path": "utilities/shell/tabbing-on/rust/src/plan/audio.rs",
+    "line": 38,
+    "name": "start",
+    "description": "Spawn `rec` to capture 16 kHz mono 16-bit WAV into a temp file."
+  },
+  "𓂎𓋮𓄷𓊷": {
+    "path": "utilities/shell/direnv-config/sdk/typescript/src/merge.ts",
+    "line": 27,
+    "name": "deepMerge",
+    "description": "auto-generated pointer for public function deepMerge"
+  },
+  "𓂐𓈫𓏁𓈇": {
+    "path": "utilities/shell/direnv-config/sdk/elixir/lib/direnv_config/watcher.ex",
+    "line": 37,
+    "name": "handle_info",
+    "description": "auto-generated pointer for public function handle_info"
+  },
+  "𓂑𓂘𓉨𓏯": {
+    "path": "utilities/agent/llm-toolkit/packages/shared/src/types/index.ts",
+    "line": 218,
+    "name": "standardizeMessages",
+    "description": "Clone a full message array (user/assistant), standardizing content blocks"
+  },
+  "𓂑𓃐𓍻𓋎": {
+    "path": "utilities/linux/queue-populator/src/audio/mod.rs",
+    "line": 213,
+    "name": "shutdown",
+    "description": "auto-generated pointer for public function shutdown"
+  },
+  "𓂑𓎩𓊉𓉎": {
+    "path": "utilities/shell/direnv-config/sdk/elixir/lib/direnv_config/client.ex",
+    "line": 44,
+    "name": "get",
+    "description": "auto-generated pointer for public function get"
+  },
+  "𓂕𓈋𓌉𓂔": {
+    "path": "utilities/linux/queue-populator/src/queue/entry.rs",
+    "line": 16,
+    "name": "create",
+    "description": "auto-generated pointer for public function create"
+  },
+  "𓂖𓎔𓎨𓋨": {
+    "path": "utilities/shell/direnv-config/src/kube.rs",
+    "line": 30,
+    "name": "secret_exists",
+    "description": "auto-generated pointer for public function secret_exists"
+  },
+  "𓂙𓏢𓎭𓏘": {
+    "path": "utilities/shell/direnv-config/sdk/rust/src/client.rs",
+    "line": 417,
+    "name": "has_changed",
+    "description": "Check whether the store version has changed since `since`."
+  },
+  "𓂚𓉐𓃫𓁿": {
+    "path": "utilities/agent/dangerously-safe/src/tui/mod.rs",
+    "line": 121,
+    "name": "run",
+    "description": "auto-generated pointer for public function run"
+  },
+  "𓂞𓈈𓁨𓎯": {
+    "path": "utilities/agent/llm-toolkit/skill-manage/src/sources.rs",
+    "line": 13,
+    "name": "discover",
+    "description": "Discover all items of a kind from configured sources."
+  },
+  "𓂟𓆚𓋃𓅱": {
+    "path": "utilities/agent/dangerously-safe/src/paths.rs",
+    "line": 44,
+    "name": "snippet_dirs",
+    "description": "Snippet search path, highest priority first."
+  },
+  "𓂠𓎞𓀮𓃼": {
+    "path": "utilities/shell/repo-lock/src/registry.rs",
+    "line": 139,
+    "name": "write",
+    "description": "Atomically write a lock record: temp file in the same dir, then rename into place."
+  },
+  "𓂡𓁒𓂴𓁜": {
+    "path": "utilities/agent/dangerously-safe/src/image/closest.rs",
+    "line": 20,
+    "name": "select_plan",
+    "description": "Pure selection over an already-enumerated image list."
+  },
+  "𓂤𓌺𓋵𓅁": {
+    "path": "utilities/shell/tabbing-on/rust/src/theme.rs",
+    "line": 1335,
+    "name": "clear_theme",
+    "description": "Reset terminal colors to defaults."
+  },
+  "𓂥𓆙𓇾𓅌": {
+    "path": "utilities/agent/llm-toolkit/packages/api/src/routes/index-routes.ts",
+    "line": 4,
+    "name": "createIndexRoutes",
+    "description": "auto-generated pointer for public function createIndexRoutes"
+  },
+  "𓂥𓊻𓍔𓉠": {
+    "path": "utilities/agent/dangerously-safe/src/tui/widgets.rs",
+    "line": 148,
+    "name": "note",
+    "description": "Draw a one-shot informational frame (no event loop)."
+  },
+  "𓂦𓅹𓄸𓇄": {
+    "path": "utilities/shell/tabbing-on/rust/src/plan/audio.rs",
+    "line": 6,
+    "name": "check_sox_installed",
+    "description": "Check whether SoX is available on PATH."
+  },
+  "𓂦𓇭𓂖𓏍": {
+    "path": "utilities/agent/llm-toolkit/skill-manage/src/kinds.rs",
+    "line": 106,
+    "name": "as_str",
+    "description": "auto-generated pointer for public function as_str"
+  },
+  "𓂧𓈇𓁆𓄽": {
+    "path": "utilities/shell/direnv-config/sdk/elixir/lib/direnv_config/cli.ex",
+    "line": 17,
+    "name": "list_configs",
+    "description": "auto-generated pointer for public function list_configs"
+  },
+  "𓂩𓁵𓏫𓉓": {
+    "path": "utilities/linux/queue-populator/src/config/mod.rs",
+    "line": 207,
+    "name": "parse",
+    "description": "auto-generated pointer for public function parse"
+  },
+  "𓂬𓃋𓀢𓇋": {
+    "path": "utilities/agent/dangerously-safe/src/tui/fixtures.rs",
+    "line": 22,
+    "name": "fixture_worktrees",
+    "description": "auto-generated pointer for public function fixture_worktrees"
+  },
+  "𓂯𓈫𓋡𓋳": {
+    "path": "utilities/agent/llm-toolkit/packages/cli/src/commands/recent.ts",
+    "line": 125,
+    "name": "parsePeriod",
+    "description": "auto-generated pointer for public function parsePeriod"
+  },
+  "𓂯𓉻𓍏𓋈": {
+    "path": "utilities/agent/media-tool/src/test_lab/persist.rs",
+    "line": 54,
+    "name": "path",
+    "description": "auto-generated pointer for public function path"
+  },
+  "𓂰𓄧𓌅𓉈": {
+    "path": "utilities/linux/queue-populator/src/llm/model_fetcher.rs",
+    "line": 9,
+    "name": "fetch_models",
+    "description": "auto-generated pointer for public function fetch_models"
+  },
+  "𓂰𓅶𓇉𓏉": {
+    "path": "utilities/shell/tabbing-on/rust/src/theme.rs",
+    "line": 1413,
+    "name": "load_user_theme",
+    "description": "Load a user-defined `.theme` file from `~/.config/tabbing-on/themes/{name}.theme`."
+  },
+  "𓂰𓋒𓀼𓈥": {
+    "path": "utilities/agent/llm-toolkit/packages/cli/src/interactive/components/SelectableList.tsx",
+    "line": 12,
+    "name": "SelectableList",
+    "description": "auto-generated pointer for public function SelectableList"
+  },
+  "𓂱𓅑𓄀𓄵": {
+    "path": "utilities/agent/media-tool/src/providers/openai_chat.rs",
+    "line": 40,
+    "name": "openai_compatible_generate",
+    "description": "auto-generated pointer for public function openai_compatible_generate"
+  },
+  "𓂱𓆲𓈱𓈤": {
+    "path": "utilities/linux/queue-populator/src/audio/memo_recorder.rs",
+    "line": 88,
+    "name": "stop_and_export_mp3",
+    "description": "Stop and export as MP3."
+  },
+  "𓂱𓊯𓎔𓍣": {
+    "path": "utilities/k8/secret-utils/rust/src/commands/view_dc.rs",
+    "line": 7,
+    "name": "run",
+    "description": "auto-generated pointer for public function run"
+  },
+  "𓂲𓅼𓌰𓃤": {
+    "path": "utilities/shell/direnv-config/sdk/rust/src/resolve.rs",
+    "line": 58,
+    "name": "resolve_config",
+    "description": "Resolve a named config across the parent chain by deep-merging"
+  },
+  "𓂲𓆔𓂑𓅵": {
+    "path": "utilities/shell/tabbing-on/rust/src/daemon.rs",
+    "line": 348,
+    "name": "run_daemon",
+    "description": "auto-generated pointer for public function run_daemon"
+  },
+  "𓂳𓃘𓆈𓉐": {
+    "path": "utilities/linux/queue-populator/src/llm/client.rs",
+    "line": 226,
+    "name": "parse_and_validate",
+    "description": "auto-generated pointer for public function parse_and_validate"
+  },
+  "𓂵𓊗𓀘𓃍": {
+    "path": "utilities/linux/queue-populator/src/config/secret_store.rs",
+    "line": 38,
+    "name": "encrypt",
+    "description": "auto-generated pointer for public function encrypt"
+  },
+  "𓂵𓍂𓊎𓎪": {
+    "path": "utilities/shell/direnv-config/sdk/typescript/src/path.ts",
+    "line": 96,
+    "name": "setPath",
+    "description": "auto-generated pointer for public function setPath"
+  },
+  "𓂵𓎖𓀰𓍒": {
+    "path": "utilities/linux/queue-populator/src/queue/manifest.rs",
+    "line": 55,
+    "name": "manifest_text",
+    "description": "auto-generated pointer for public function manifest_text"
+  },
+  "𓂷𓊋𓆦𓅲": {
+    "path": "utilities/agent/llm-toolkit/packages/cli/src/commands/index.tsx",
+    "line": 6,
+    "name": "IndexCommand",
+    "description": "auto-generated pointer for public function IndexCommand"
+  },
+  "𓂷𓐯𓊶𓌏": {
+    "path": "utilities/agent/llm-toolkit/skill-manage/src/tui/app.rs",
+    "line": 20,
+    "name": "title",
+    "description": "auto-generated pointer for public function title"
+  },
+  "𓂹𓉸𓊂𓀕": {
+    "path": "utilities/agent/llm-toolkit/skill-manage/src/catalog.rs",
+    "line": 130,
+    "name": "tags_for",
+    "description": "auto-generated pointer for public function tags_for"
+  },
+  "𓂹𓋁𓌻𓊆": {
+    "path": "utilities/agent/media-tool/src/schema.rs",
+    "line": 405,
+    "name": "is_media_prompt",
+    "description": "auto-generated pointer for public function is_media_prompt"
+  },
+  "𓂺𓄌𓋲𓎫": {
+    "path": "utilities/shell/tabbing-on/rust/src/terminal.rs",
+    "line": 150,
+    "name": "send_bg_color",
+    "description": "auto-generated pointer for public function send_bg_color"
+  },
+  "𓂼𓀆𓄒𓌨": {
+    "path": "utilities/shell/tabbing-on/rust/src/plan/types.rs",
+    "line": 100,
+    "name": "next",
+    "description": "auto-generated pointer for public function next"
+  },
+  "𓂼𓈘𓎕𓀾": {
+    "path": "utilities/agent/llm-toolkit/packages/cli/src/commands/list.tsx",
+    "line": 18,
+    "name": "ListCommand",
+    "description": "auto-generated pointer for public function ListCommand"
+  },
+  "𓂾𓉕𓉡𓋥": {
+    "path": "utilities/agent/llm-toolkit/packages/api/src/services/harness-transform.ts",
+    "line": 184,
+    "name": "isHarnessExportSupported",
+    "description": "auto-generated pointer for public function isHarnessExportSupported"
+  },
+  "𓂾𓏳𓍜𓊖": {
+    "path": "utilities/agent/llm-toolkit/skill-manage/src/config.rs",
+    "line": 77,
+    "name": "default_config_path",
+    "description": "auto-generated pointer for public function default_config_path"
+  },
+  "𓃂𓃽𓂬𓉲": {
+    "path": "utilities/shell/tabbing-on/rust/src/state.rs",
+    "line": 56,
+    "name": "from_session_file",
+    "description": "auto-generated pointer for public function from_session_file"
+  },
+  "𓃂𓇔𓂳𓄭": {
+    "path": "utilities/agent/media-tool/src/test_lab/persist.rs",
+    "line": 165,
+    "name": "ensure_workspace",
+    "description": "Ensure workspace layout exists; migrate from legacy `tmp/live-eval` if needed."
+  },
+  "𓃃𓊰𓂨𓅮": {
+    "path": "utilities/agent/media-tool/src/schema.rs",
+    "line": 257,
+    "name": "effective_pass_threshold",
+    "description": "auto-generated pointer for public function effective_pass_threshold"
+  },
+  "𓃄𓅫𓋑𓉶": {
+    "path": "utilities/agent/llm-toolkit/skill-manage/src/context.rs",
+    "line": 74,
+    "name": "build_reports",
+    "description": "auto-generated pointer for public function build_reports"
+  },
+  "𓃅𓁫𓇊𓊻": {
+    "path": "utilities/agent/media-tool/src/ui.rs",
+    "line": 40,
+    "name": "info",
+    "description": "auto-generated pointer for public function info"
+  },
+  "𓃈𓈅𓐨𓇇": {
+    "path": "utilities/shell/tabbing-on/rust/src/toggl.rs",
+    "line": 93,
+    "name": "from_env",
+    "description": "Create a client from environment variables."
+  },
+  "𓃉𓄓𓋬𓂚": {
+    "path": "utilities/agent/dangerously-safe/src/image/slug.rs",
+    "line": 63,
+    "name": "difference",
+    "description": "Slugs present in `self` but not in `other`."
+  },
+  "𓃉𓋤𓍋𓂔": {
+    "path": "utilities/agent/mallm/src/resolver.ts",
+    "line": 100,
+    "name": "listAvailable",
+    "description": "auto-generated pointer for public function listAvailable"
+  },
+  "𓃋𓇠𓄼𓈽": {
+    "path": "utilities/agent/llm-toolkit/packages/cli/src/interactive/components/Pagination.tsx",
+    "line": 10,
+    "name": "Pagination",
+    "description": "auto-generated pointer for public function Pagination"
+  },
+  "𓃋𓉗𓀔𓎟": {
+    "path": "utilities/k8/secret-utils/rust/src/commands/creds.rs",
+    "line": 20,
+    "name": "build_client",
+    "description": "auto-generated pointer for public function build_client"
+  },
+  "𓃍𓅥𓍠𓆴": {
+    "path": "utilities/shell/direnv-config/sdk/rust/src/store.rs",
+    "line": 27,
+    "name": "path_to_hash",
+    "description": "Convert an absolute directory path to a store directory name."
+  },
+  "𓃍𓈷𓊍𓇻": {
+    "path": "utilities/shell/tabbing-on/rust/src/theme.rs",
+    "line": 1659,
+    "name": "apply_semantics_to_state",
+    "description": "auto-generated pointer for public function apply_semantics_to_state"
+  },
+  "𓃍𓍥𓂞𓊶": {
+    "path": "utilities/agent/llm-toolkit/packages/cli/src/interactive/services/sessionWorkflow.ts",
+    "line": 142,
+    "name": "buildResumeCommand",
+    "description": "auto-generated pointer for public function buildResumeCommand"
+  },
+  "𓃎𓇻𓊴𓏪": {
+    "path": "utilities/agent/media-tool/src/eval.rs",
+    "line": 314,
+    "name": "score_output",
+    "description": "Score a single output artifact against the eval criteria."
+  },
+  "𓃒𓎂𓉕𓏾": {
+    "path": "utilities/shell/tabbing-on/rust/src/terminal.rs",
+    "line": 246,
+    "name": "terminal_info",
+    "description": "auto-generated pointer for public function terminal_info"
+  },
+  "𓃔𓂋𓇹𓈼": {
+    "path": "utilities/agent/llm-toolkit/packages/web/src/pages/Browse.tsx",
+    "line": 14,
+    "name": "Browse",
+    "description": "auto-generated pointer for public function Browse"
+  },
+  "𓃙𓎣𓈅𓈨": {
+    "path": "utilities/shell/direnv-config/src/yaml/flatten.rs",
+    "line": 31,
+    "name": "prefix_path",
+    "description": "The concrete (non-wildcard) prefix of the key path, without the"
+  },
+  "𓃚𓇱𓂱𓏯": {
+    "path": "utilities/agent/llm-toolkit/skill-manage/src/kinds.rs",
+    "line": 64,
+    "name": "as_str",
+    "description": "auto-generated pointer for public function as_str"
+  },
+  "𓃜𓐧𓅊𓋥": {
+    "path": "utilities/shell/repo-lock/src/registry.rs",
+    "line": 157,
+    "name": "remove",
+    "description": "Remove the record for a repo-relative path."
+  },
+  "𓃞𓃓𓍣𓁧": {
+    "path": "utilities/shell/tabbing-on/rust/src/toggl.rs",
+    "line": 249,
+    "name": "get_current_entry",
+    "description": "auto-generated pointer for public function get_current_entry"
+  },
+  "𓃞𓊆𓋠𓎄": {
+    "path": "utilities/agent/dangerously-safe/src/compose/overlay.rs",
+    "line": 68,
+    "name": "generate_overlay",
+    "description": "Build the overlay YAML and any non-fatal warnings."
+  },
+  "𓃟𓋣𓅀𓊏": {
+    "path": "utilities/agent/llm-toolkit/skill-manage/src/config.rs",
+    "line": 213,
+    "name": "source_roots",
+    "description": "auto-generated pointer for public function source_roots"
+  },
+  "𓃠𓁘𓋉𓋃": {
+    "path": "utilities/linux/queue-populator/src/audio/memo_recorder.rs",
+    "line": 43,
+    "name": "set_max_recording_seconds",
+    "description": "auto-generated pointer for public function set_max_recording_seconds"
+  },
+  "𓃠𓌟𓉯𓊩": {
+    "path": "utilities/shell/tabbing-on/rust/src/color.rs",
+    "line": 265,
+    "name": "rgb_to_hsv",
+    "description": "Convert an RGB triple to HSV (h in degrees [0,360), s & v in [0,1])."
+  },
+  "𓃡𓇴𓆖𓏇": {
+    "path": "utilities/k8/secret-utils/rust/src/tui/theme.rs",
+    "line": 14,
+    "name": "warn",
+    "description": "auto-generated pointer for public function warn"
+  },
+  "𓃢𓅓𓂩𓇩": {
+    "path": "utilities/agent/media-tool/src/providers/mod.rs",
+    "line": 244,
+    "name": "is_stub_provider",
+    "description": "auto-generated pointer for public function is_stub_provider"
+  },
+  "𓃤𓎈𓎏𓋢": {
+    "path": "utilities/shell/direnv-config/src/cmd/decrypt.rs",
+    "line": 4,
+    "name": "run",
+    "description": "auto-generated pointer for public function run"
+  },
+  "𓃤𓐮𓆙𓄟": {
+    "path": "utilities/shell/tabbing-on/rust/src/theme_picker.rs",
+    "line": 3148,
+    "name": "clone_theme",
+    "description": "auto-generated pointer for public function clone_theme"
+  },
+  "𓃦𓀜𓆽𓁛": {
+    "path": "utilities/agent/media-tool/src/test_lab/persist.rs",
+    "line": 59,
+    "name": "load",
+    "description": "auto-generated pointer for public function load"
+  },
+  "𓃦𓐬𓃗𓂙": {
+    "path": "utilities/shell/tabbing-on/rust/src/terminal.rs",
+    "line": 22,
+    "name": "as_str",
+    "description": "auto-generated pointer for public function as_str"
+  },
+  "𓃧𓇎𓊭𓆝": {
+    "path": "utilities/agent/llm-toolkit/packages/cli/src/commands/recent.ts",
+    "line": 208,
+    "name": "formatRecentSessions",
+    "description": "auto-generated pointer for public function formatRecentSessions"
+  },
+  "𓃪𓋻𓊜𓎂": {
+    "path": "utilities/shell/tabbing-on/rust/src/history.rs",
+    "line": 532,
+    "name": "report",
+    "description": "Print an ASCII bar chart of time spent in each status for a tab."
+  },
+  "𓃪𓌕𓀬𓊋": {
+    "path": "utilities/agent/llm-toolkit/skill-manage/src/config.rs",
+    "line": 306,
+    "name": "init_config",
+    "description": "Write a starter config if missing."
+  },
+  "𓃫𓊖𓂣𓆡": {
+    "path": "utilities/agent/llm-toolkit/skill-manage/src/link.rs",
+    "line": 22,
+    "name": "classify",
+    "description": "Classify install status of `dest` relative to expected source under cfg."
+  },
+  "𓃬𓄀𓅳𓈘": {
+    "path": "utilities/shell/tabbing-on/rust/src/toggl.rs",
+    "line": 401,
+    "name": "toggl_on_status_change",
+    "description": "Called after status changes in cmd_tabbing_status()."
+  },
+  "𓃬𓌜𓊢𓍖": {
+    "path": "utilities/shell/direnv-config/src/store/layout.rs",
+    "line": 47,
+    "name": "config_dir",
+    "description": "Return the config subdirectory inside a store."
+  },
+  "𓃮𓇋𓊧𓄭": {
+    "path": "utilities/linux/queue-populator/src/config/mod.rs",
+    "line": 126,
+    "name": "expand_tilde",
+    "description": "auto-generated pointer for public function expand_tilde"
+  },
+  "𓃮𓋱𓌀𓎺": {
+    "path": "utilities/shell/tabbing-on/rust/src/history.rs",
+    "line": 631,
+    "name": "report_all",
+    "description": "Run the report for all tabs that have history files."
+  },
+  "𓃯𓌷𓁞𓆝": {
+    "path": "utilities/shell/direnv-config/src/yaml/path.rs",
+    "line": 144,
+    "name": "set_path",
+    "description": "Set a value at the given path, creating intermediate maps and sequences as needed."
+  },
+  "𓃰𓈰𓌓𓏕": {
+    "path": "utilities/shell/repo-lock/src/hook.rs",
+    "line": 29,
+    "name": "install",
+    "description": "`hook install` — wrap-and-chain the pre-commit hook."
+  },
+  "𓃱𓇯𓐒𓉵": {
+    "path": "utilities/shell/tabbing-on/rust/src/theme_picker.rs",
+    "line": 3218,
+    "name": "delete_theme",
+    "description": "auto-generated pointer for public function delete_theme"
+  },
+  "𓃲𓃵𓋳𓈹": {
+    "path": "utilities/agent/llm-toolkit/packages/cli/src/interactive/pages/DatasetsPage.tsx",
+    "line": 21,
+    "name": "DatasetsPage",
+    "description": "auto-generated pointer for public function DatasetsPage"
+  },
+  "𓃲𓇕𓅵𓂩": {
+    "path": "utilities/shell/direnv-config/sdk/elixir/lib/direnv_config/cli.ex",
+    "line": 46,
+    "name": "unset",
+    "description": "auto-generated pointer for public function unset"
+  },
+  "𓃳𓃈𓐟𓏯": {
+    "path": "utilities/k8/secret-utils/rust/src/engine/mod.rs",
+    "line": 122,
+    "name": "verify_section",
+    "description": "Verify all secrets in a section"
+  },
+  "𓃳𓄯𓐘𓊱": {
+    "path": "utilities/shell/direnv-config/src/store/layout.rs",
+    "line": 123,
+    "name": "find_current_store",
+    "description": "Find the store for the current working directory."
+  },
+  "𓃳𓏪𓍫𓈱": {
+    "path": "utilities/shell/tabbing-on/rust/src/theme_data.rs",
+    "line": 362,
+    "name": "cursor_style_code",
+    "description": "DECSCUSR cursor-shape code (0..6) for a style name, or None if unknown."
+  },
+  "𓃴𓆪𓄳𓊜": {
+    "path": "utilities/agent/llm-toolkit/skill-manage/src/audit.rs",
+    "line": 31,
+    "name": "run_audit",
+    "description": "auto-generated pointer for public function run_audit"
+  },
+  "𓃷𓅨𓊕𓊟": {
+    "path": "utilities/agent/llm-toolkit/packages/web/src/pages/Convert.tsx",
+    "line": 20,
+    "name": "Convert",
+    "description": "auto-generated pointer for public function Convert"
+  },
+  "𓃹𓎛𓇔𓈘": {
+    "path": "utilities/shell/tabbing-on/rust/src/plan/filesystem.rs",
+    "line": 130,
+    "name": "resolve_output_dir",
+    "description": "Determine the output directory for saved tickets."
+  },
+  "𓃺𓆬𓂜𓄑": {
+    "path": "utilities/agent/llm-toolkit/packages/web/src/App.tsx",
+    "line": 19,
+    "name": "App",
+    "description": "auto-generated pointer for public function App"
+  },
+  "𓃻𓊒𓉴𓊹": {
+    "path": "utilities/shell/direnv-config/sdk/rust/src/path.rs",
+    "line": 239,
+    "name": "delete_path",
+    "description": "Delete the value at the given path."
+  },
+  "𓃼𓅘𓏠𓈒": {
+    "path": "utilities/shell/tabbing-on/rust/src/color.rs",
+    "line": 119,
+    "name": "urgency_dot",
+    "description": "auto-generated pointer for public function urgency_dot"
+  },
+  "𓃼𓆢𓋋𓇒": {
+    "path": "utilities/agent/llm-toolkit/packages/api/src/routes/search.ts",
+    "line": 5,
+    "name": "createSearchRoutes",
+    "description": "auto-generated pointer for public function createSearchRoutes"
+  },
+  "𓃽𓈏𓉏𓊤": {
+    "path": "utilities/shell/direnv-config/src/infisical.rs",
+    "line": 261,
+    "name": "ensure_folder_path",
+    "description": "Create each folder segment of `path` (idempotent — conflicts ignored)."
+  },
+  "𓃽𓍽𓇂𓋃": {
+    "path": "utilities/shell/repo-lock/src/record.rs",
+    "line": 148,
+    "name": "parse_ttl",
+    "description": "Parse a TTL like `30m`, `2h`, `45s`, `1d`, or a compound `1h30m`."
+  },
+  "𓃾𓂹𓇵𓆰": {
+    "path": "utilities/agent/llm-toolkit/packages/cli/src/interactive/pages/ConvertPage.tsx",
+    "line": 33,
+    "name": "ConvertPage",
+    "description": "auto-generated pointer for public function ConvertPage"
+  },
+  "𓄁𓇽𓈤𓅊": {
+    "path": "utilities/shell/tabbing-on/rust/src/state.rs",
+    "line": 210,
+    "name": "print_exports",
+    "description": "auto-generated pointer for public function print_exports"
+  },
+  "𓄂𓍮𓃃𓄶": {
+    "path": "utilities/linux/queue-populator/src/config/llm.rs",
+    "line": 70,
+    "name": "default_base_url",
+    "description": "auto-generated pointer for public function default_base_url"
+  },
+  "𓄂𓎛𓎡𓅥": {
+    "path": "utilities/shell/tabbing-on/rust/src/theme_data.rs",
+    "line": 110,
+    "name": "get",
+    "description": "get the value at `handle` (empty -> None)"
+  },
+  "𓄃𓉞𓅍𓍺": {
+    "path": "utilities/agent/media-tool/src/providers/mod.rs",
+    "line": 83,
+    "name": "candidates_for",
+    "description": "Returns candidates ordered best-first for the given asset type / audio kind / quality tier."
+  },
+  "𓄅𓐋𓎱𓅩": {
+    "path": "utilities/agent/llm-toolkit/skill-manage/src/tui/mod.rs",
+    "line": 27,
+    "name": "run",
+    "description": "Launch the interactive TUI."
+  },
+  "𓄆𓆣𓁥𓌨": {
+    "path": "utilities/agent/media-tool/src/test_lab/catalog.rs",
+    "line": 432,
+    "name": "urlencoding_path",
+    "description": "Minimal path query encoding (encode special chars)."
+  },
+  "𓄆𓇟𓈁𓌨": {
+    "path": "utilities/agent/llm-toolkit/packages/cli/src/commands/recent.ts",
+    "line": 158,
+    "name": "queryRecentSessions",
+    "description": "auto-generated pointer for public function queryRecentSessions"
+  },
+  "𓄇𓌘𓅯𓊿": {
+    "path": "utilities/k8/secret-utils/rust/src/tui/populate_view.rs",
+    "line": 35,
+    "name": "print_event",
+    "description": "Simple in-place progress list printed to stdout (no alternate screen)"
+  },
+  "𓄈𓄚𓋅𓅎": {
+    "path": "utilities/shell/auto-sudo/rust/src/config.rs",
+    "line": 146,
+    "name": "default_path",
+    "description": "auto-generated pointer for public function default_path"
+  },
+  "𓄈𓎂𓁭𓃍": {
+    "path": "utilities/agent/dangerously-safe/src/inference/mod.rs",
+    "line": 98,
+    "name": "fallback_slug",
+    "description": "Deterministic kebab-case slug from a description (the always-available"
+  },
+  "𓄌𓉵𓉊𓉭": {
+    "path": "utilities/shell/direnv-config/sdk/rust/src/client.rs",
+    "line": 49,
+    "name": "new",
+    "description": "auto-generated pointer for public function new"
+  },
+  "𓄌𓌒𓌲𓊇": {
+    "path": "utilities/agent/media-tool/src/test_lab/settings.rs",
+    "line": 81,
+    "name": "effective_api_key",
+    "description": "Resolve API key: literal, `env: NAME`, or provider env fallbacks."
+  },
+  "𓄍𓈨𓎷𓉀": {
+    "path": "utilities/k8/secret-utils/rust/src/tui/mod.rs",
+    "line": 15,
+    "name": "is_tty",
+    "description": "auto-generated pointer for public function is_tty"
+  },
+  "𓄐𓁸𓇤𓂹": {
+    "path": "utilities/shell/auto-sudo/rust/src/config.rs",
+    "line": 203,
+    "name": "is_any",
+    "description": "auto-generated pointer for public function is_any"
+  },
+  "𓄒𓅔𓌎𓈮": {
+    "path": "utilities/shell/direnv-config/sdk/elixir/lib/direnv_config/store.ex",
+    "line": 12,
+    "name": "path_to_hash",
+    "description": "auto-generated pointer for public function path_to_hash"
+  },
+  "𓄒𓊈𓌏𓇥": {
+    "path": "utilities/agent/media-tool/src/eval.rs",
+    "line": 170,
+    "name": "passes",
+    "description": "True if this score constitutes a pass against the eval section's thresholds."
+  },
+  "𓄔𓈛𓏫𓍂": {
+    "path": "utilities/agent/llm-toolkit/packages/web/src/pages/ContinueSession.tsx",
+    "line": 16,
+    "name": "ContinueSession",
+    "description": "auto-generated pointer for public function ContinueSession"
+  },
+  "𓄔𓊉𓄴𓁭": {
+    "path": "utilities/shell/direnv-config/src/store/version.rs",
+    "line": 8,
+    "name": "read_version",
+    "description": "Read the current version from the store's .version file."
+  },
+  "𓄗𓂼𓊽𓎈": {
+    "path": "utilities/shell/direnv-config/sdk/elixir/lib/direnv_config/path.ex",
+    "line": 9,
+    "name": "parse",
+    "description": "auto-generated pointer for public function parse"
+  },
+  "𓄙𓄖𓋳𓌍": {
+    "path": "utilities/k8/secret-utils/rust/src/engine/mod.rs",
+    "line": 30,
+    "name": "label",
+    "description": "auto-generated pointer for public function label"
+  },
+  "𓄝𓆢𓅂𓃂": {
+    "path": "utilities/agent/dangerously-safe/src/paths.rs",
+    "line": 61,
+    "name": "home",
+    "description": "auto-generated pointer for public function home"
+  },
+  "𓄝𓆺𓂙𓆖": {
+    "path": "utilities/agent/media-tool/src/prep.rs",
+    "line": 514,
+    "name": "refine_prompt",
+    "description": "Refine a prompt based on eval feedback and the actual failed output."
+  },
+  "𓄞𓎰𓅬𓀿": {
+    "path": "utilities/shell/direnv-config/sdk/typescript/src/merge.ts",
+    "line": 45,
+    "name": "deepMergeMulti",
+    "description": "auto-generated pointer for public function deepMergeMulti"
+  },
+  "𓄠𓂼𓎨𓏦": {
+    "path": "utilities/linux/queue-populator/src/state_machine.rs",
+    "line": 113,
+    "name": "state",
+    "description": "auto-generated pointer for public function state"
+  },
+  "𓄤𓋐𓅤𓃒": {
+    "path": "utilities/shell/direnv-config/sdk/elixir/lib/direnv_config/client.ex",
+    "line": 100,
+    "name": "list_configs",
+    "description": "auto-generated pointer for public function list_configs"
+  },
+  "𓄥𓈖𓅛𓅲": {
+    "path": "utilities/linux/queue-populator/src/config/mod.rs",
+    "line": 198,
+    "name": "usage",
+    "description": "auto-generated pointer for public function usage"
+  },
+  "𓄥𓈷𓏕𓌊": {
+    "path": "utilities/shell/direnv-config/sdk/rust/src/store.rs",
+    "line": 84,
+    "name": "ensure_store",
+    "description": "Create the store directory and initialize `.meta` if it does not exist."
+  },
+  "𓄧𓈀𓇉𓂢": {
+    "path": "utilities/agent/llm-toolkit/skill-manage/src/sources.rs",
+    "line": 189,
+    "name": "skill_structure_ok",
+    "description": "Check skill structure: SKILL.md exists with name + description in frontmatter."
+  },
+  "𓄧𓎄𓈝𓏞": {
+    "path": "utilities/shell/tabbing-on/rust/src/color.rs",
+    "line": 43,
+    "name": "style_sequence",
+    "description": "auto-generated pointer for public function style_sequence"
+  },
+  "𓄨𓇺𓏏𓁧": {
+    "path": "utilities/agent/media-tool/src/test_lab/settings.rs",
+    "line": 110,
+    "name": "api_key_display_masked",
+    "description": "auto-generated pointer for public function api_key_display_masked"
+  },
+  "𓄩𓀸𓍄𓌣": {
+    "path": "utilities/shell/direnv-config/sdk/elixir/lib/direnv_config/client.ex",
+    "line": 136,
+    "name": "unset",
+    "description": "auto-generated pointer for public function unset"
+  },
+  "𓄩𓊀𓅑𓌯": {
+    "path": "utilities/shell/tabbing-on/rust/src/todo.rs",
+    "line": 74,
+    "name": "todo_add",
+    "description": "Add a new todo item to the tab's todo file."
+  },
+  "𓄫𓁗𓆙𓐧": {
+    "path": "utilities/agent/media-tool/src/providers/mod.rs",
+    "line": 283,
+    "name": "sanitize_chat_output",
+    "description": "auto-generated pointer for public function sanitize_chat_output"
+  },
+  "𓄫𓃮𓄬𓊽": {
+    "path": "utilities/linux/queue-populator/src/stt/models.rs",
+    "line": 18,
+    "name": "model_root",
+    "description": "auto-generated pointer for public function model_root"
+  },
+  "𓄬𓍜𓎗𓎚": {
+    "path": "utilities/agent/llm-toolkit/skill-manage/src/sources.rs",
+    "line": 182,
+    "name": "parse_frontmatter_meta",
+    "description": "Parse YAML frontmatter for `name` and `description`."
+  },
+  "𓄮𓏃𓈳𓆫": {
+    "path": "utilities/shell/direnv-config/src/cmd/status.rs",
+    "line": 3,
+    "name": "run",
+    "description": "auto-generated pointer for public function run"
+  },
+  "𓄰𓈌𓇄𓎭": {
+    "path": "utilities/shell/tabbing-on/rust/src/toggl.rs",
+    "line": 126,
+    "name": "get_workspaces",
+    "description": "auto-generated pointer for public function get_workspaces"
+  },
+  "𓄲𓄄𓍁𓆑": {
+    "path": "utilities/shell/repo-lock/src/glyph.rs",
+    "line": 48,
+    "name": "codepoint_handle",
+    "description": "Codepoint-sequence fallback for glyph-poor terminals / `--ascii`: the *same*"
+  },
+  "𓄴𓅍𓆡𓉿": {
+    "path": "utilities/shell/direnv-config/src/store/layout.rs",
+    "line": 6,
+    "name": "state_dir",
+    "description": "Root state directory for all dc stores."
+  },
+  "𓄶𓌬𓈯𓌝": {
+    "path": "utilities/shell/repo-lock/src/registry.rs",
+    "line": 70,
+    "name": "mutex_path",
+    "description": "auto-generated pointer for public function mutex_path"
+  },
+  "𓄷𓈆𓀹𓍧": {
+    "path": "utilities/agent/dangerously-safe/src/image/slug.rs",
+    "line": 57,
+    "name": "is_subset_of",
+    "description": "True if every slug in `self` is also present in `other`."
+  },
+  "𓄹𓈒𓆛𓐗": {
+    "path": "utilities/shell/repo-lock/src/registry.rs",
+    "line": 201,
+    "name": "normalize",
+    "description": "Normalize a user-supplied path to a repo-relative, forward-slash string."
+  },
+  "𓄻𓅸𓍠𓄄": {
+    "path": "utilities/shell/repo-lock/src/registry.rs",
+    "line": 115,
+    "name": "scan_lenient",
+    "description": "Lenient scan for `doctor`: returns parseable records plus a list of problem files"
+  },
+  "𓄼𓋂𓀊𓁁": {
+    "path": "utilities/agent/llm-toolkit/skill-manage/src/status.rs",
+    "line": 8,
+    "name": "print_status",
+    "description": "auto-generated pointer for public function print_status"
+  },
+  "𓄾𓀚𓉤𓌄": {
+    "path": "utilities/linux/queue-populator/src/config/store.rs",
+    "line": 92,
+    "name": "save_config_to",
+    "description": "auto-generated pointer for public function save_config_to"
+  },
+  "𓄾𓂘𓍺𓊢": {
+    "path": "utilities/k8/secret-utils/rust/src/dc.rs",
+    "line": 47,
+    "name": "dc_get_optional",
+    "description": "Try `dc get`, return None on failure (for optional lookups)"
+  },
+  "𓄾𓋶𓃳𓋍": {
+    "path": "utilities/linux/queue-populator/src/config/debug_log.rs",
+    "line": 40,
+    "name": "log",
+    "description": "auto-generated pointer for public function log"
+  },
+  "𓅀𓄧𓁉𓍱": {
+    "path": "utilities/shell/repo-lock/src/registry.rs",
+    "line": 74,
+    "name": "mutex_owner_path",
+    "description": "auto-generated pointer for public function mutex_owner_path"
+  },
+  "𓅀𓌋𓄺𓋾": {
+    "path": "utilities/linux/queue-populator/src/audio/mod.rs",
+    "line": 102,
+    "name": "is_listening",
+    "description": "auto-generated pointer for public function is_listening"
+  },
+  "𓅃𓊑𓌕𓊶": {
+    "path": "utilities/agent/media-tool/src/test_lab/catalog.rs",
+    "line": 452,
+    "name": "resolve_safe_media",
+    "description": "Resolve a media path query to an absolute file under allowed roots."
+  },
+  "𓅅𓊝𓏢𓆹": {
+    "path": "utilities/agent/dangerously-safe/src/launch/tools.rs",
+    "line": 13,
+    "name": "stage_tools",
+    "description": "Copy configured tools from `~/.local/{bin,share}` into the worktree's"
+  },
+  "𓅇𓀟𓎁𓏺": {
+    "path": "utilities/shell/direnv-config/src/infisical.rs",
+    "line": 195,
+    "name": "get_secret",
+    "description": "GET a single secret value."
+  },
+  "𓅈𓁛𓐭𓂑": {
+    "path": "utilities/agent/media-tool/src/test_lab/settings.rs",
+    "line": 202,
+    "name": "public_json",
+    "description": "Public JSON for GET /api/settings (never echo full secrets unless env: ref)"
+  },
+  "𓅉𓃇𓍠𓈐": {
+    "path": "utilities/agent/llm-toolkit/skill-manage/src/tui/app.rs",
+    "line": 121,
+    "name": "new",
+    "description": "auto-generated pointer for public function new"
+  },
+  "𓅉𓄩𓐚𓉦": {
+    "path": "utilities/shell/direnv-config/sdk/elixir/lib/direnv_config/client.ex",
+    "line": 56,
+    "name": "get!",
+    "description": "auto-generated pointer for public function get!"
+  },
+  "𓅉𓌾𓈪𓌡": {
+    "path": "utilities/shell/tabbing-on/rust/src/render.rs",
+    "line": 53,
+    "name": "display",
+    "description": "auto-generated pointer for public function display"
+  },
+  "𓅌𓉜𓉏𓄤": {
+    "path": "utilities/shell/direnv-config/src/infisical.rs",
+    "line": 48,
+    "name": "resolve",
+    "description": "Resolve connection settings from env vars, falling back to dc config."
+  },
+  "𓅌𓊢𓊛𓏌": {
+    "path": "utilities/agent/llm-toolkit/packages/cli/src/interactive/pages/ProjectsPage.tsx",
+    "line": 22,
+    "name": "ProjectsPage",
+    "description": "auto-generated pointer for public function ProjectsPage"
+  },
+  "𓅍𓃩𓍅𓏗": {
+    "path": "utilities/shell/repo-lock/src/registry.rs",
+    "line": 90,
+    "name": "read_all",
+    "description": "Read every lock record in the registry (skips atomic-write temp files)."
+  },
+  "𓅏𓃹𓈾𓂑": {
+    "path": "utilities/shell/tabbing-on/rust/src/color.rs",
+    "line": 76,
+    "name": "is_known_color",
+    "description": "auto-generated pointer for public function is_known_color"
+  },
+  "𓅏𓎑𓊑𓎀": {
+    "path": "utilities/shell/direnv-config/src/cmd/init.rs",
+    "line": 3,
+    "name": "run",
+    "description": "auto-generated pointer for public function run"
+  },
+  "𓅑𓁺𓎶𓄯": {
+    "path": "utilities/shell/repo-lock/src/mutex.rs",
+    "line": 54,
+    "name": "acquire",
+    "description": "Acquire `commit.mutex`."
+  },
+  "𓅓𓁶𓆳𓄲": {
+    "path": "utilities/shell/direnv-config/sdk/rust/src/store.rs",
+    "line": 120,
+    "name": "active_path",
+    "description": "Return the path to the `.active` file for a named config."
+  },
+  "𓅔𓃭𓀿𓃿": {
+    "path": "utilities/agent/llm-toolkit/packages/cli/src/interactive/pages/TagsPage.tsx",
+    "line": 37,
+    "name": "TagsPage",
+    "description": "auto-generated pointer for public function TagsPage"
+  },
+  "𓅕𓐫𓁁𓇢": {
+    "path": "utilities/agent/dangerously-safe/src/inference/mod.rs",
+    "line": 56,
+    "name": "branch_slug",
+    "description": "Ask the inference endpoint for a branch slug."
+  },
+  "𓅖𓄷𓏈𓃤": {
+    "path": "utilities/shell/tabbing-on/rust/src/theme_data.rs",
+    "line": 317,
+    "name": "emit_theme_seq",
+    "description": "OSC stream that paints a populated theme blob:"
+  },
+  "𓅖𓎐𓐉𓐋": {
+    "path": "utilities/agent/llm-toolkit/skill-manage/src/config.rs",
+    "line": 222,
+    "name": "provider_dirs",
+    "description": "auto-generated pointer for public function provider_dirs"
+  },
+  "𓅗𓃾𓅞𓈫": {
+    "path": "utilities/agent/media-tool/src/schema.rs",
+    "line": 263,
+    "name": "effective_mode",
+    "description": "Normalized eval mode: llm | structural | hybrid."
+  },
+  "𓅙𓂂𓏽𓊜": {
+    "path": "utilities/agent/llm-toolkit/packages/api/src/routes/projects.ts",
+    "line": 17,
+    "name": "createProjectRoutes",
+    "description": "auto-generated pointer for public function createProjectRoutes"
+  },
+  "𓅙𓄊𓏓𓌫": {
+    "path": "utilities/agent/llm-toolkit/packages/cli/src/interactive/components/SelectedLine.tsx",
+    "line": 21,
+    "name": "SelectedLine",
+    "description": "auto-generated pointer for public function SelectedLine"
+  },
+  "𓅜𓄌𓎠𓈍": {
+    "path": "utilities/agent/llm-toolkit/packages/cli/src/interactive/components/ContentBlockView.tsx",
+    "line": 19,
+    "name": "ContentBlockView",
+    "description": "auto-generated pointer for public function ContentBlockView"
+  },
+  "𓅝𓂫𓉍𓋺": {
+    "path": "utilities/linux/queue-populator/src/coordinator.rs",
+    "line": 111,
+    "name": "run",
+    "description": "auto-generated pointer for public function run"
+  },
+  "𓅝𓃂𓀑𓅴": {
+    "path": "utilities/agent/dangerously-safe/src/image/slug.rs",
+    "line": 46,
+    "name": "slugs",
+    "description": "auto-generated pointer for public function slugs"
+  },
+  "𓅝𓅄𓈈𓉪": {
+    "path": "utilities/shell/tabbing-on/rust/src/recording.rs",
+    "line": 155,
+    "name": "record_stop",
+    "description": "Print a message about stopping the recording."
+  },
+  "𓅞𓃔𓏆𓇴": {
+    "path": "utilities/agent/llm-toolkit/skill-manage/src/tui/app.rs",
+    "line": 262,
+    "name": "current_row",
+    "description": "auto-generated pointer for public function current_row"
+  },
+  "𓅞𓐚𓉥𓏐": {
+    "path": "utilities/k8/secret-utils/rust/src/tui/verify_view.rs",
+    "line": 36,
+    "name": "run",
+    "description": "auto-generated pointer for public function run"
+  },
+  "𓅠𓎼𓈧𓄗": {
+    "path": "utilities/shell/auto-sudo/rust/src/config.rs",
+    "line": 186,
+    "name": "should_wrap",
+    "description": "auto-generated pointer for public function should_wrap"
+  },
+  "𓅢𓏲𓎇𓊅": {
+    "path": "utilities/k8/secret-utils/rust/src/engine/mod.rs",
+    "line": 177,
+    "name": "from_results",
+    "description": "auto-generated pointer for public function from_results"
+  },
+  "𓅣𓉩𓄛𓐜": {
+    "path": "utilities/shell/repo-lock/src/session.rs",
+    "line": 54,
+    "name": "in_exec",
+    "description": "Session UUID currently advertised in `REPO_LOCK_IN_EXEC`, if any (best-effort parse)."
+  },
+  "𓅤𓉫𓌛𓄕": {
+    "path": "utilities/shell/tabbing-on/rust/src/theme_data.rs",
+    "line": 43,
+    "name": "handle_to_line",
+    "description": "logical handle -> 1-based line number"
+  },
+  "𓅥𓂋𓏚𓎁": {
+    "path": "utilities/shell/direnv-config/src/store/resolve.rs",
+    "line": 161,
+    "name": "resolve_active",
+    "description": "Resolve a single store's layers for a named config."
+  },
+  "𓅥𓈲𓃱𓍠": {
+    "path": "utilities/k8/secret-utils/rust/src/engine/mod.rs",
+    "line": 56,
+    "name": "is_ok",
+    "description": "auto-generated pointer for public function is_ok"
+  },
+  "𓅧𓅂𓌰𓌙": {
+    "path": "utilities/agent/dangerously-safe/src/launch/env.rs",
+    "line": 10,
+    "name": "container_env",
+    "description": "Build the ordered container env plus any warnings (e.g."
+  },
+  "𓅨𓏿𓌁𓈵": {
+    "path": "utilities/agent/dangerously-safe/src/config/merge.rs",
+    "line": 28,
+    "name": "parent_config_values",
+    "description": "Parent config layers above the project, ordered lowest→highest priority"
+  },
+  "𓅩𓉭𓏣𓀡": {
+    "path": "utilities/agent/llm-toolkit/packages/cli/src/interactive/services/sessionWorkflow.ts",
+    "line": 89,
+    "name": "buildContinuationPayload",
+    "description": "auto-generated pointer for public function buildContinuationPayload"
+  },
+  "𓅪𓁡𓁪𓈰": {
+    "path": "utilities/agent/llm-toolkit/packages/cli/src/interactive/pages/SafetyWatchPage.tsx",
+    "line": 17,
+    "name": "SafetyWatchPage",
+    "description": "auto-generated pointer for public function SafetyWatchPage"
+  },
+  "𓅬𓍰𓏑𓂓": {
+    "path": "utilities/shell/direnv-config/sdk/typescript/src/store.ts",
+    "line": 65,
+    "name": "ensureConfig",
+    "description": "auto-generated pointer for public function ensureConfig"
+  },
+  "𓅭𓍓𓌡𓁇": {
+    "path": "utilities/shell/direnv-config/sdk/rust/src/version.rs",
+    "line": 22,
+    "name": "bump_version",
+    "description": "Atomically increment the store version."
+  },
+  "𓅰𓆜𓐯𓄹": {
+    "path": "utilities/k8/secret-utils/rust/src/config/mod.rs",
+    "line": 18,
+    "name": "load",
+    "description": "auto-generated pointer for public function load"
+  },
+  "𓅱𓎀𓈫𓎲": {
+    "path": "utilities/shell/direnv-config/sdk/rust/src/client.rs",
+    "line": 364,
+    "name": "get",
+    "description": "Get a config value."
+  },
+  "𓅴𓀆𓄨𓀲": {
+    "path": "utilities/linux/queue-populator/src/queue/writer.rs",
+    "line": 28,
+    "name": "append",
+    "description": "auto-generated pointer for public function append"
+  },
+  "𓅴𓀡𓆙𓏍": {
+    "path": "utilities/k8/secret-utils/rust/src/tui/verify_view.rs",
+    "line": 21,
+    "name": "new",
+    "description": "auto-generated pointer for public function new"
+  },
+  "𓅶𓎍𓀪𓇲": {
+    "path": "utilities/shell/direnv-config/sdk/rust/src/client.rs",
+    "line": 185,
+    "name": "new",
+    "description": "auto-generated pointer for public function new"
+  },
+  "𓅸𓀲𓋬𓃢": {
+    "path": "utilities/agent/media-tool/demos/html/sample-react-landing.tsx",
+    "line": 70,
+    "name": "SaaSLandingPage",
+    "description": "auto-generated pointer for public function SaaSLandingPage"
+  },
+  "𓅸𓌢𓇄𓍝": {
+    "path": "utilities/shell/auto-sudo/rust/src/shell.rs",
+    "line": 9,
+    "name": "render",
+    "description": "auto-generated pointer for public function render"
+  },
+  "𓅸𓏡𓅓𓊖": {
+    "path": "utilities/agent/dangerously-safe/src/launch/env.rs",
+    "line": 91,
+    "name": "host_hook_env",
+    "description": "Host env for before-launch hooks: exposes the real worktree path on the host."
+  },
+  "𓅻𓊍𓎮𓎫": {
+    "path": "utilities/agent/llm-toolkit/skill-manage/src/audit.rs",
+    "line": 165,
+    "name": "format_text",
+    "description": "auto-generated pointer for public function format_text"
+  },
+  "𓅻𓊶𓌷𓇐": {
+    "path": "utilities/shell/tabbing-on/rust/src/plan/audio.rs",
+    "line": 28,
+    "name": "new",
+    "description": "auto-generated pointer for public function new"
+  },
+  "𓅽𓁗𓋙𓏝": {
+    "path": "utilities/shell/tabbing-on/rust/src/plan/audio.rs",
+    "line": 178,
+    "name": "compute_amplitude",
+    "description": "Compute the RMS amplitude of 16-bit LE PCM samples in `wav_data`"
+  },
+  "𓅽𓊧𓍈𓄤": {
+    "path": "utilities/shell/repo-lock/src/record.rs",
+    "line": 190,
+    "name": "session_pid",
+    "description": "The invoking parent's pid — the harness/shell process that represents the session,"
+  },
+  "𓅾𓍣𓍗𓃂": {
+    "path": "utilities/shell/direnv-config/sdk/elixir/lib/direnv_config/store.ex",
+    "line": 94,
+    "name": "layer_path",
+    "description": "auto-generated pointer for public function layer_path"
+  },
+  "𓅿𓀌𓆌𓌴": {
+    "path": "utilities/shell/direnv-config/src/store/version.rs",
+    "line": 21,
+    "name": "bump_version",
+    "description": "Atomically increment the store version."
+  },
+  "𓅿𓏸𓁤𓏔": {
+    "path": "utilities/shell/auto-sudo/rust/src/sudoers.rs",
+    "line": 50,
+    "name": "write_checked",
+    "description": "auto-generated pointer for public function write_checked"
+  },
+  "𓆀𓊤𓈜𓆈": {
+    "path": "utilities/shell/direnv-config/sdk/typescript/src/path.ts",
+    "line": 7,
+    "name": "parsePath",
+    "description": "auto-generated pointer for public function parsePath"
+  },
+  "𓆆𓃺𓎍𓇦": {
+    "path": "utilities/shell/direnv-config/sdk/typescript/src/version.ts",
+    "line": 4,
+    "name": "readVersion",
+    "description": "auto-generated pointer for public function readVersion"
+  },
+  "𓆈𓍧𓌴𓄁": {
+    "path": "utilities/shell/tabbing-on/rust/src/theme_data.rs",
+    "line": 280,
+    "name": "gen_standard_palette",
+    "description": "fill blob lines 144..359 with the canonical 6x6x6 cube and 360..383 with the"
+  },
+  "𓆊𓃝𓎺𓆟": {
+    "path": "utilities/agent/llm-toolkit/packages/web/src/services/sessionWorkflow.ts",
+    "line": 99,
+    "name": "fetchUniversalConversation",
+    "description": "auto-generated pointer for public function fetchUniversalConversation"
+  },
+  "𓆊𓈋𓋤𓋵": {
+    "path": "utilities/shell/tabbing-on/rust/src/emoji.rs",
+    "line": 444,
+    "name": "emoji_search",
+    "description": "auto-generated pointer for public function emoji_search"
+  },
+  "𓆋𓌽𓈕𓏄": {
+    "path": "utilities/shell/tabbing-on/rust/src/render.rs",
+    "line": 19,
+    "name": "render_title",
+    "description": "auto-generated pointer for public function render_title"
+  },
+  "𓆋𓎗𓐣𓅳": {
+    "path": "utilities/shell/tabbing-on/rust/src/marquee.rs",
+    "line": 122,
+    "name": "run_marquee",
+    "description": "auto-generated pointer for public function run_marquee"
+  },
+  "𓆌𓉭𓈳𓐮": {
+    "path": "utilities/agent/media-tool/src/providers/mod.rs",
+    "line": 265,
+    "name": "api_key_env",
+    "description": "auto-generated pointer for public function api_key_env"
+  },
+  "𓆎𓅂𓆓𓆊": {
+    "path": "utilities/agent/llm-toolkit/packages/web/src/context/HarnessContext.tsx",
+    "line": 35,
+    "name": "useHarness",
+    "description": "auto-generated pointer for public function useHarness"
+  },
+  "𓆑𓏹𓊪𓎅": {
+    "path": "utilities/shell/direnv-config/src/secret.rs",
+    "line": 27,
+    "name": "parse_marker",
+    "description": "Detect and strip a `🔒` secret marker."
+  },
+  "𓆓𓏤𓀾𓁛": {
+    "path": "utilities/agent/llm-toolkit/packages/cli/src/interactive/hooks/useApi.ts",
+    "line": 24,
+    "name": "useApiQuery",
+    "description": "auto-generated pointer for public function useApiQuery"
+  },
+  "𓆔𓄞𓋑𓍉": {
+    "path": "utilities/shell/direnv-config/src/cmd/push.rs",
+    "line": 67,
+    "name": "run",
+    "description": "auto-generated pointer for public function run"
+  },
+  "𓆔𓉎𓉊𓆞": {
+    "path": "utilities/shell/tabbing-on/rust/src/todo.rs",
+    "line": 274,
+    "name": "todo_switch",
+    "description": "Switch to a todo: deactivate current active, activate target."
+  },
+  "𓆗𓁌𓍇𓎯": {
+    "path": "utilities/agent/llm-toolkit/skill-manage/src/kinds.rs",
+    "line": 59,
+    "name": "all",
+    "description": "auto-generated pointer for public function all"
+  },
+  "𓆗𓃹𓍑𓐑": {
+    "path": "utilities/shell/tabbing-on/rust/src/recording.rs",
+    "line": 109,
+    "name": "is_recording",
+    "description": "Check if we are currently inside an asciinema recording session."
+  },
+  "𓆗𓏠𓆏𓈹": {
+    "path": "utilities/shell/repo-lock/src/record.rs",
+    "line": 65,
+    "name": "display",
+    "description": "Cosmetic handle for display, honoring `--ascii` (codepoint-sequence rendering)."
+  },
+  "𓆙𓃢𓎰𓃉": {
+    "path": "utilities/shell/tabbing-on/rust/src/terminal.rs",
+    "line": 193,
+    "name": "clear_badge",
+    "description": "auto-generated pointer for public function clear_badge"
+  },
+  "𓆜𓄦𓎭𓁫": {
+    "path": "utilities/shell/tabbing-on/rust/src/theme_data.rs",
+    "line": 300,
+    "name": "empty_blob",
+    "description": "a blob of 383 blank lines"
+  },
+  "𓆜𓏆𓋰𓉏": {
+    "path": "utilities/shell/tabbing-on/rust/src/color.rs",
+    "line": 1,
+    "name": "color_code",
+    "description": "auto-generated pointer for public function color_code"
+  },
+  "𓆣𓎀𓄈𓃝": {
+    "path": "utilities/shell/tabbing-on/rust/src/theme_picker.rs",
+    "line": 3267,
+    "name": "preview_theme",
+    "description": "auto-generated pointer for public function preview_theme"
+  },
+  "𓆤𓄷𓈾𓆽": {
+    "path": "utilities/linux/queue-populator/src/config/secret_store.rs",
+    "line": 15,
+    "name": "is_encrypted",
+    "description": "auto-generated pointer for public function is_encrypted"
+  },
+  "𓆥𓈶𓇔𓅑": {
+    "path": "utilities/agent/llm-toolkit/skill-manage/src/tui/ui.rs",
+    "line": 10,
+    "name": "draw",
+    "description": "auto-generated pointer for public function draw"
+  },
+  "𓆩𓁪𓋻𓆚": {
+    "path": "utilities/agent/llm-toolkit/skill-manage/src/tui/app.rs",
+    "line": 176,
+    "name": "reload",
+    "description": "auto-generated pointer for public function reload"
+  },
+  "𓆩𓏺𓁙𓃦": {
+    "path": "utilities/shell/tabbing-on/rust/src/todo.rs",
+    "line": 516,
+    "name": "todo_pick",
+    "description": "Interactive picker for pending todos."
+  },
+  "𓆪𓃰𓆵𓏁": {
+    "path": "utilities/shell/tabbing-on/rust/src/terminal.rs",
+    "line": 172,
+    "name": "clear_tab_color",
+    "description": "auto-generated pointer for public function clear_tab_color"
+  },
+  "𓆫𓉜𓈧𓆗": {
+    "path": "utilities/shell/direnv-config/sdk/elixir/lib/direnv_config/client.ex",
+    "line": 115,
+    "name": "has_changed?",
+    "description": "auto-generated pointer for public function has_changed?"
+  },
+  "𓆭𓋺𓋣𓁔": {
+    "path": "utilities/agent/media-tool/src/eval.rs",
+    "line": 210,
+    "name": "resolve",
+    "description": "Probe the candidate endpoints (env/CLI override, LAN Qwen host, in-cluster"
+  },
+  "𓆮𓃷𓍁𓅅": {
+    "path": "utilities/k8/secret-utils/rust/src/engine/generate.rs",
+    "line": 9,
+    "name": "generate_value",
+    "description": "auto-generated pointer for public function generate_value"
+  },
+  "𓆱𓈨𓅾𓎓": {
+    "path": "utilities/shell/direnv-config/src/store/meta.rs",
+    "line": 23,
+    "name": "read_meta",
+    "description": "Read and parse the store's `.meta` YAML file."
+  },
+  "𓆲𓍁𓍘𓋇": {
+    "path": "utilities/shell/tabbing-on/rust/src/recording.rs",
+    "line": 34,
+    "name": "recordings_list",
+    "description": "List .cast files for a tab with their sizes."
+  },
+  "𓆲𓎉𓉂𓃟": {
+    "path": "utilities/shell/tabbing-on/rust/src/theme.rs",
+    "line": 1779,
+    "name": "resolve_palette",
+    "description": "Resolve a theme name to its 19-entry palette `[bg, fg, cursor, color0..15]`."
+  },
+  "𓆳𓃒𓐝𓐩": {
+    "path": "utilities/agent/llm-toolkit/skill-manage/src/catalog.rs",
+    "line": 103,
+    "name": "meta_mut",
+    "description": "auto-generated pointer for public function meta_mut"
+  },
+  "𓆳𓅐𓄎𓏰": {
+    "path": "utilities/shell/tabbing-on/rust/src/plan/prompt.rs",
+    "line": 6,
+    "name": "build_system_prompt",
+    "description": "Build the system prompt for the ticket-generation LLM call."
+  },
+  "𓆷𓄂𓊂𓀨": {
+    "path": "utilities/agent/dangerously-safe/src/image/slug.rs",
+    "line": 20,
+    "name": "from_slugs",
+    "description": "auto-generated pointer for public function from_slugs"
+  },
+  "𓆷𓈾𓊲𓅣": {
+    "path": "utilities/agent/llm-toolkit/packages/api/src/routes/conversations.ts",
+    "line": 12,
+    "name": "createConversationRoutes",
+    "description": "auto-generated pointer for public function createConversationRoutes"
+  },
+  "𓆷𓍛𓀒𓅸": {
+    "path": "utilities/agent/media-tool/src/prep.rs",
+    "line": 796,
+    "name": "provider_prompt_guidance",
+    "description": "Static provider/format notes when FIM is unavailable."
+  },
+  "𓆺𓊋𓃉𓍈": {
+    "path": "utilities/agent/dangerously-safe/src/worktree/create.rs",
+    "line": 21,
+    "name": "create_worktree",
+    "description": "Create a worktree for `desired_slug` branched from `origin`."
+  },
+  "𓆺𓍳𓁸𓀭": {
+    "path": "utilities/agent/llm-toolkit/packages/api/src/services/exporter.ts",
+    "line": 31,
+    "name": "exportJsonl",
+    "description": "auto-generated pointer for public function exportJsonl"
+  },
+  "𓆽𓇆𓂯𓇂": {
+    "path": "utilities/shell/direnv-config/src/yaml/merge.rs",
+    "line": 68,
+    "name": "deep_merge_multi",
+    "description": "Merge a slice of layers left-to-right."
+  },
+  "𓆾𓐦𓎽𓅚": {
+    "path": "utilities/shell/tabbing-on/rust/src/doctor.rs",
+    "line": 132,
+    "name": "run_doctor",
+    "description": "auto-generated pointer for public function run_doctor"
+  },
+  "𓇀𓅕𓁷𓍯": {
+    "path": "utilities/shell/tabbing-on/rust/src/theme.rs",
+    "line": 1375,
+    "name": "apply_named_theme",
+    "description": "Look up and apply a named theme."
+  },
+  "𓇁𓏣𓀄𓂒": {
+    "path": "utilities/linux/queue-populator/src/llm/client.rs",
+    "line": 58,
+    "name": "new",
+    "description": "auto-generated pointer for public function new"
+  },
+  "𓇂𓀼𓈴𓀩": {
+    "path": "utilities/agent/llm-toolkit/packages/web/src/hooks/useApi.ts",
+    "line": 129,
+    "name": "useIndexStatus",
+    "description": "auto-generated pointer for public function useIndexStatus"
+  },
+  "𓇅𓐍𓊕𓈊": {
+    "path": "utilities/shell/repo-lock/src/hook.rs",
+    "line": 107,
+    "name": "run",
+    "description": "`hook run` — the two commit-time checks."
+  },
+  "𓇆𓏗𓇕𓇹": {
+    "path": "utilities/shell/tabbing-on/rust/src/theme.rs",
+    "line": 1363,
+    "name": "send_cursor_style",
+    "description": "auto-generated pointer for public function send_cursor_style"
+  },
+  "𓇆𓐣𓌾𓁈": {
+    "path": "utilities/shell/repo-lock/src/session.rs",
+    "line": 35,
+    "name": "require",
+    "description": "Fail-closed session identity for mutating commands."
+  },
+  "𓇈𓆇𓍮𓇜": {
+    "path": "utilities/agent/llm-toolkit/packages/api/src/services/harness-transfer.ts",
+    "line": 16,
+    "name": "exportUniversalThreadToHarness",
+    "description": "auto-generated pointer for public function exportUniversalThreadToHarness"
+  },
+  "𓇉𓃌𓂜𓋶": {
+    "path": "utilities/shell/direnv-config/sdk/elixir/lib/direnv_config/client.ex",
+    "line": 151,
+    "name": "bump",
+    "description": "auto-generated pointer for public function bump"
+  },
+  "𓇊𓀀𓀉𓁼": {
+    "path": "utilities/agent/llm-toolkit/skill-manage/src/context.rs",
+    "line": 181,
+    "name": "codex_fallback_skill_budget_chars",
+    "description": "auto-generated pointer for public function codex_fallback_skill_budget_chars"
+  },
+  "𓇊𓂼𓏒𓄧": {
+    "path": "utilities/shell/direnv-config/sdk/rust/src/resolve.rs",
+    "line": 94,
+    "name": "resolve_active",
+    "description": "Resolve a single store's layers for a named config."
+  },
+  "𓇌𓁕𓆗𓐜": {
+    "path": "utilities/agent/media-tool/src/ui.rs",
+    "line": 20,
+    "name": "step",
+    "description": "auto-generated pointer for public function step"
+  },
+  "𓇏𓌮𓅲𓈅": {
+    "path": "utilities/k8/secret-utils/rust/src/dc.rs",
+    "line": 71,
+    "name": "parse_envrc_dc",
+    "description": "Parse all `dc get SCOPE ITEM.PATH` directives from a .envrc.dc file"
+  },
+  "𓇐𓃉𓀁𓏽": {
+    "path": "utilities/agent/dangerously-safe/src/worktree/mod.rs",
+    "line": 71,
+    "name": "list_worktrees",
+    "description": "List managed worktrees (those living under the configured worktrees root)."
+  },
+  "𓇐𓌝𓋵𓌄": {
+    "path": "utilities/agent/llm-toolkit/skill-manage/src/context.rs",
+    "line": 164,
+    "name": "active_frontmatter_totals",
+    "description": "auto-generated pointer for public function active_frontmatter_totals"
+  },
+  "𓇑𓇏𓃿𓄝": {
+    "path": "utilities/shell/direnv-config/src/cmd/list.rs",
+    "line": 3,
+    "name": "run",
+    "description": "auto-generated pointer for public function run"
+  },
+  "𓇑𓈏𓁫𓊊": {
+    "path": "utilities/agent/llm-toolkit/packages/api/src/services/editor.ts",
+    "line": 16,
+    "name": "applyOperations",
+    "description": "auto-generated pointer for public function applyOperations"
+  },
+  "𓇑𓋁𓏾𓋷": {
+    "path": "utilities/linux/queue-populator/src/audio/mod.rs",
+    "line": 127,
+    "name": "close_all",
+    "description": "auto-generated pointer for public function close_all"
+  },
+  "𓇒𓏞𓁪𓏍": {
+    "path": "utilities/shell/tabbing-on/rust/src/theme_data.rs",
+    "line": 414,
+    "name": "emit_tab_color_seq",
+    "description": "iTerm2 tab background color via OSC 6 (one sequence per channel)."
+  },
+  "𓇓𓃓𓅧𓂠": {
+    "path": "utilities/shell/direnv-config/sdk/elixir/lib/direnv_config/native.ex",
+    "line": 32,
+    "name": "set",
+    "description": "auto-generated pointer for public function set"
+  },
+  "𓇓𓉼𓅒𓍾": {
+    "path": "utilities/shell/tabbing-on/rust/src/bridge.rs",
+    "line": 113,
+    "name": "write_state_file",
+    "description": "Write state to an atomic flat file that the Claude statusline reader"
+  },
+  "𓇓𓎦𓏊𓌔": {
+    "path": "utilities/k8/secret-utils/rust/src/commands/find_dc_line.rs",
+    "line": 6,
+    "name": "run",
+    "description": "auto-generated pointer for public function run"
+  },
+  "𓇔𓅓𓂇𓁦": {
+    "path": "utilities/agent/dangerously-safe/src/docker/mod.rs",
+    "line": 62,
+    "name": "exec_interactive",
+    "description": "Run `docker <args>` with the full terminal handed over (interactive shell)."
+  },
+  "𓇖𓁯𓁃𓀛": {
+    "path": "utilities/linux/queue-populator/src/audio/mod.rs",
+    "line": 97,
+    "name": "set_listening",
+    "description": "auto-generated pointer for public function set_listening"
+  },
+  "𓇖𓊈𓊬𓀃": {
+    "path": "utilities/shell/tabbing-on/rust/src/toggl.rs",
+    "line": 170,
+    "name": "create_time_entry",
+    "description": "auto-generated pointer for public function create_time_entry"
+  },
+  "𓇖𓋪𓆛𓋅": {
+    "path": "utilities/shell/tabbing-on/rust/src/theme.rs",
+    "line": 1313,
+    "name": "send_theme",
+    "description": "Emit OSC escape sequences to apply a 19-color theme to the terminal."
+  },
+  "𓇘𓆜𓁔𓄝": {
+    "path": "utilities/shell/direnv-config/sdk/elixir/lib/direnv_config/watcher.ex",
+    "line": 19,
+    "name": "init",
+    "description": "auto-generated pointer for public function init"
+  },
+  "𓇘𓇠𓋩𓅭": {
+    "path": "utilities/agent/mallm/src/init.ts",
+    "line": 9,
+    "name": "initMallm",
+    "description": "auto-generated pointer for public function initMallm"
+  },
+  "𓇙𓄆𓂜𓏳": {
+    "path": "utilities/agent/llm-toolkit/packages/api/src/routes/datasets.ts",
+    "line": 6,
+    "name": "createDatasetRoutes",
+    "description": "auto-generated pointer for public function createDatasetRoutes"
+  },
+  "𓇙𓈽𓇧𓀆": {
+    "path": "utilities/shell/tabbing-on/rust/src/toggl.rs",
+    "line": 423,
+    "name": "toggl_on_off",
+    "description": "Called from cmd_tabbing_off()."
+  },
+  "𓇜𓌱𓄙𓃴": {
+    "path": "utilities/agent/llm-toolkit/packages/web/src/pages/Tags.tsx",
+    "line": 289,
+    "name": "Tags",
+    "description": "auto-generated pointer for public function Tags"
+  },
+  "𓇝𓂛𓎧𓀍": {
+    "path": "utilities/shell/tabbing-on/rust/src/terminal.rs",
+    "line": 42,
+    "name": "detect",
+    "description": "auto-generated pointer for public function detect"
+  },
+  "𓇝𓌥𓅼𓇄": {
+    "path": "utilities/shell/direnv-config/sdk/rust/src/meta.rs",
+    "line": 35,
+    "name": "write_meta",
+    "description": "Write the store's `.meta` YAML file."
+  },
+  "𓇟𓈪𓌁𓁉": {
+    "path": "utilities/shell/direnv-config/sdk/elixir/lib/direnv_config/path.ex",
+    "line": 164,
+    "name": "delete",
+    "description": "auto-generated pointer for public function delete"
+  },
+  "𓇠𓏈𓊎𓊫": {
+    "path": "utilities/shell/tabbing-on/rust/src/color.rs",
+    "line": 225,
+    "name": "hex_to_rgb",
+    "description": "Parse a `#RRGGBB` string into an RGB triple."
+  },
+  "𓇡𓐞𓊵𓎨": {
+    "path": "utilities/linux/queue-populator/src/state_machine.rs",
+    "line": 38,
+    "name": "is_external_assistant",
+    "description": "auto-generated pointer for public function is_external_assistant"
+  },
+  "𓇣𓁑𓁁𓅄": {
+    "path": "utilities/k8/secret-utils/rust/src/commands/rebuild.rs",
+    "line": 11,
+    "name": "run",
+    "description": "auto-generated pointer for public function run"
+  },
+  "𓇤𓅲𓍔𓊗": {
+    "path": "utilities/linux/queue-populator/src/config/mod.rs",
+    "line": 146,
+    "name": "resolved_queue_base_path",
+    "description": "auto-generated pointer for public function resolved_queue_base_path"
+  },
+  "𓇤𓆘𓇅𓂖": {
+    "path": "utilities/agent/dangerously-safe/src/docker/mod.rs",
+    "line": 44,
+    "name": "run_streaming",
+    "description": "Run `docker <args>` with inherited stdout/stderr (for build output), waiting"
+  },
+  "𓇥𓁀𓉴𓆓": {
+    "path": "utilities/agent/dangerously-safe/src/tui/mod.rs",
+    "line": 38,
+    "name": "demo",
+    "description": "Run the TUI wizard with static fixture data — no docker daemon, git repo, or"
+  },
+  "𓇦𓌻𓎯𓉨": {
+    "path": "utilities/shell/tabbing-on/rust/src/theme_data.rs",
+    "line": 30,
+    "name": "cube_slot",
+    "description": "cube hex RRGGBB -> palette slot 16..231 (None if not a canonical cube color)"
+  },
+  "𓇧𓏚𓎥𓈷": {
+    "path": "utilities/shell/direnv-config/src/cmd/prune.rs",
+    "line": 3,
+    "name": "run",
+    "description": "auto-generated pointer for public function run"
+  },
+  "𓇨𓎉𓉤𓋳": {
+    "path": "utilities/shell/tabbing-on/rust/src/state.rs",
+    "line": 33,
+    "name": "from_env",
+    "description": "auto-generated pointer for public function from_env"
+  },
+  "𓇩𓅟𓆙𓎴": {
+    "path": "utilities/agent/llm-toolkit/skill-manage/src/kinds.rs",
+    "line": 33,
+    "name": "singular",
+    "description": "Singular label for messages."
+  },
+  "𓇩𓇓𓎭𓏀": {
+    "path": "utilities/k8/secret-utils/rust/src/tui/theme.rs",
+    "line": 53,
+    "name": "key_desc",
+    "description": "auto-generated pointer for public function key_desc"
+  },
+  "𓇩𓏆𓐭𓃑": {
+    "path": "utilities/agent/dangerously-safe/src/config/mod.rs",
+    "line": 70,
+    "name": "load_effective",
+    "description": "Effective config = parent configs (far→near) layered, then the project's"
+  },
+  "𓇪𓃏𓊬𓁠": {
+    "path": "utilities/agent/media-tool/src/test_lab/persist.rs",
+    "line": 276,
+    "name": "register_prompt",
+    "description": "Register a newly written prompt and persist the index."
+  },
+  "𓇪𓌾𓊏𓈴": {
+    "path": "utilities/linux/queue-populator/src/audio/mod.rs",
+    "line": 258,
+    "name": "run",
+    "description": "auto-generated pointer for public function run"
+  },
+  "𓇫𓆺𓅬𓈼": {
+    "path": "utilities/shell/direnv-config/sdk/elixir/lib/direnv_config/client.ex",
+    "line": 75,
+    "name": "get_int",
+    "description": "auto-generated pointer for public function get_int"
+  },
+  "𓇬𓂄𓁳𓂢": {
+    "path": "utilities/k8/secret-utils/rust/src/tui/theme.rs",
+    "line": 39,
+    "name": "title",
+    "description": "auto-generated pointer for public function title"
+  },
+  "𓇮𓂹𓌩𓆋": {
+    "path": "utilities/shell/direnv-config/sdk/elixir/lib/direnv_config/client.ex",
+    "line": 109,
+    "name": "version",
+    "description": "auto-generated pointer for public function version"
+  },
+  "𓇮𓆖𓊾𓏋": {
+    "path": "utilities/shell/tabbing-on/rust/src/color.rs",
+    "line": 244,
+    "name": "hsv_to_rgb",
+    "description": "Convert HSV (h in degrees [0,360), s & v in [0,1]) to an RGB triple."
+  },
+  "𓇯𓉄𓐭𓈱": {
+    "path": "utilities/shell/tabbing-on/rust/src/plan/types.rs",
+    "line": 51,
+    "name": "next",
+    "description": "auto-generated pointer for public function next"
+  },
+  "𓇳𓌀𓊬𓈝": {
+    "path": "utilities/shell/repo-lock/src/record.rs",
+    "line": 21,
+    "name": "as_str",
+    "description": "auto-generated pointer for public function as_str"
+  },
+  "𓇴𓂉𓏿𓍐": {
+    "path": "utilities/shell/direnv-config/src/envrc/locator.rs",
+    "line": 140,
+    "name": "index_block",
+    "description": "Index every key within a block to its line location."
+  },
+  "𓇶𓀀𓇝𓇺": {
+    "path": "utilities/agent/dangerously-safe/src/image/slug.rs",
+    "line": 89,
+    "name": "pretty",
+    "description": "Pretty name for display, e.g."
+  },
+  "𓇻𓀳𓃵𓋤": {
+    "path": "utilities/shell/direnv-config/src/shadow.rs",
+    "line": 72,
+    "name": "resolve",
+    "description": "Resolve a `⛔` shadowed secret to its plaintext, if present."
+  },
+  "𓇻𓋁𓅠𓋤": {
+    "path": "utilities/shell/tabbing-on/rust/src/render.rs",
+    "line": 111,
+    "name": "display_stderr",
+    "description": "auto-generated pointer for public function display_stderr"
+  },
+  "𓇻𓋃𓂍𓈨": {
+    "path": "utilities/shell/direnv-config/sdk/elixir/lib/direnv_config/resolve.ex",
+    "line": 9,
+    "name": "resolve_active",
+    "description": "auto-generated pointer for public function resolve_active"
+  },
+  "𓇽𓃩𓉰𓐉": {
+    "path": "utilities/agent/llm-toolkit/packages/cli/src/interactive/components/MessageBlock.tsx",
+    "line": 39,
+    "name": "MessageBlock",
+    "description": "auto-generated pointer for public function MessageBlock"
+  },
+  "𓈀𓉭𓁨𓋐": {
+    "path": "utilities/shell/direnv-config/src/cmd/compare.rs",
+    "line": 24,
+    "name": "compare_local_to_targets",
+    "description": "Shared helper used by both `dc compare` (F) and `dc infisical compare` (G)."
+  },
+  "𓈂𓊟𓋬𓁬": {
+    "path": "utilities/agent/llm-toolkit/packages/cli/src/interactive/components/Header.tsx",
+    "line": 13,
+    "name": "Header",
+    "description": "auto-generated pointer for public function Header"
+  },
+  "𓈄𓁅𓂝𓊓": {
+    "path": "utilities/shell/tabbing-on/rust/src/emoji.rs",
+    "line": 481,
+    "name": "emoji_list",
+    "description": "auto-generated pointer for public function emoji_list"
+  },
+  "𓈆𓋃𓀖𓍊": {
+    "path": "utilities/k8/secret-utils/rust/src/tui/fetch_view.rs",
+    "line": 31,
+    "name": "run",
+    "description": "auto-generated pointer for public function run"
+  },
+  "𓈆𓎫𓁅𓁅": {
+    "path": "utilities/agent/dangerously-safe/src/config/mod.rs",
+    "line": 98,
+    "name": "list_templates",
+    "description": "List installed template names under `~/.config/agent-sandbox/templates`."
+  },
+  "𓈇𓀼𓈧𓌺": {
+    "path": "utilities/linux/queue-populator/src/phrase_detector.rs",
+    "line": 16,
+    "name": "new",
+    "description": "auto-generated pointer for public function new"
+  },
+  "𓈇𓇩𓊑𓉷": {
+    "path": "utilities/linux/queue-populator/src/config/llm.rs",
+    "line": 40,
+    "name": "default_model",
+    "description": "auto-generated pointer for public function default_model"
+  },
+  "𓈇𓏏𓃇𓐎": {
+    "path": "utilities/shell/direnv-config/sdk/rust/src/client.rs",
+    "line": 405,
+    "name": "list_configs",
+    "description": "List all config names in the current store."
+  },
+  "𓈈𓊊𓋞𓄶": {
+    "path": "utilities/shell/direnv-config/sdk/typescript/src/store.ts",
+    "line": 26,
+    "name": "storePath",
+    "description": "auto-generated pointer for public function storePath"
+  },
+  "𓈌𓉋𓅿𓏖": {
+    "path": "utilities/shell/direnv-config/src/store/lock.rs",
+    "line": 20,
+    "name": "lock_store",
+    "description": "Acquire an exclusive advisory lock for the given store directory."
+  },
+  "𓈌𓊛𓂕𓂼": {
+    "path": "utilities/linux/queue-populator/src/config/mod.rs",
+    "line": 151,
+    "name": "sanitized",
+    "description": "auto-generated pointer for public function sanitized"
+  },
+  "𓈌𓋆𓇇𓄈": {
+    "path": "utilities/k8/secret-utils/rust/src/commands/set_secret.rs",
+    "line": 12,
+    "name": "run",
+    "description": "auto-generated pointer for public function run"
+  },
+  "𓈍𓈔𓐠𓂠": {
+    "path": "utilities/shell/tabbing-on/rust/src/toggl.rs",
+    "line": 220,
+    "name": "stop_time_entry",
+    "description": "auto-generated pointer for public function stop_time_entry"
+  },
+  "𓈎𓄂𓅪𓅙": {
+    "path": "utilities/agent/media-tool/src/pipeline.rs",
+    "line": 36,
+    "name": "run_generation",
+    "description": "auto-generated pointer for public function run_generation"
+  },
+  "𓈎𓅚𓀦𓉅": {
+    "path": "utilities/linux/queue-populator/src/audio/memo_recorder.rs",
+    "line": 33,
+    "name": "with_max_recording_seconds",
+    "description": "auto-generated pointer for public function with_max_recording_seconds"
+  },
+  "𓈏𓉡𓂀𓍃": {
+    "path": "utilities/agent/llm-toolkit/packages/web/src/hooks/useApi.ts",
+    "line": 106,
+    "name": "useSearch",
+    "description": "auto-generated pointer for public function useSearch"
+  },
+  "𓈕𓍟𓉩𓐖": {
+    "path": "utilities/shell/tabbing-on/rust/src/plan/filesystem.rs",
+    "line": 35,
+    "name": "get_next_id",
+    "description": "Scan the type subdirectory under `output_dir` for existing files matching"
+  },
+  "𓈘𓆾𓁂𓄒": {
+    "path": "utilities/agent/media-tool/src/prep.rs",
+    "line": 102,
+    "name": "allows_llm_prep",
+    "description": "When false, callers should not send text through the prep LLM (verbatim path)."
+  },
+  "𓈘𓇄𓍀𓆊": {
+    "path": "utilities/shell/repo-lock/src/mutex.rs",
+    "line": 122,
+    "name": "probe",
+    "description": "Non-blocking probe used by the pre-commit hook."
+  },
+  "𓈙𓁒𓏀𓋡": {
+    "path": "utilities/k8/secret-utils/rust/src/tui/populate_view.rs",
+    "line": 21,
+    "name": "symbol",
+    "description": "auto-generated pointer for public function symbol"
+  },
+  "𓈙𓌀𓃔𓃌": {
+    "path": "utilities/shell/direnv-config/sdk/typescript/src/store.ts",
+    "line": 72,
+    "name": "layerPath",
+    "description": "auto-generated pointer for public function layerPath"
+  },
+  "𓈚𓈳𓏟𓌌": {
+    "path": "utilities/agent/llm-toolkit/packages/web/src/pages/Thread.tsx",
+    "line": 51,
+    "name": "Thread",
+    "description": "auto-generated pointer for public function Thread"
+  },
+  "𓈛𓎮𓅂𓃄": {
+    "path": "utilities/shell/tabbing-on/rust/src/plan/llm.rs",
+    "line": 87,
+    "name": "generate_ticket",
+    "description": "Generate a structured ticket from a transcript via chat completions."
+  },
+  "𓈜𓀦𓏨𓌔": {
+    "path": "utilities/shell/direnv-config/src/secret.rs",
+    "line": 58,
+    "name": "split_secrets",
+    "description": "Split an ingested YAML tree into a plain (non-secret) tree and a list of"
+  },
+  "𓈝𓀐𓐏𓊑": {
+    "path": "utilities/agent/media-tool/src/test_lab/server.rs",
+    "line": 76,
+    "name": "run_lab",
+    "description": "auto-generated pointer for public function run_lab"
+  },
+  "𓈝𓏠𓅪𓎭": {
+    "path": "utilities/agent/llm-toolkit/packages/api/src/routes/tags.ts",
+    "line": 4,
+    "name": "createTagRoutes",
+    "description": "auto-generated pointer for public function createTagRoutes"
+  },
+  "𓈞𓎿𓄭𓎵": {
+    "path": "utilities/agent/dangerously-safe/src/image/mod.rs",
+    "line": 76,
+    "name": "resolve_image",
+    "description": "Resolve an app set into a plan using locally available images."
+  },
+  "𓈟𓌔𓎕𓍚": {
+    "path": "utilities/shell/direnv-config/sdk/rust/src/resolve.rs",
+    "line": 39,
+    "name": "resolve_chain",
+    "description": "Walk up the parent chain, returning stores in order from"
+  },
+  "𓈠𓁎𓊃𓀫": {
+    "path": "utilities/agent/media-tool/src/fim.rs",
+    "line": 202,
+    "name": "load_solution",
+    "description": "Read a solution file and strip low-value sections to bound token cost."
+  },
+  "𓈡𓂡𓁵𓀖": {
+    "path": "utilities/shell/direnv-config/src/cmd/infisical.rs",
+    "line": 18,
+    "name": "compare",
+    "description": "`dc infisical compare <infisical-path> --to …` — resolve the local value via"
+  },
+  "𓈡𓅖𓃃𓅤": {
+    "path": "utilities/shell/direnv-config/src/cmd/compare.rs",
+    "line": 50,
+    "name": "run",
+    "description": "auto-generated pointer for public function run"
+  },
+  "𓈡𓏣𓄓𓌨": {
+    "path": "utilities/agent/media-tool/src/schema.rs",
+    "line": 377,
+    "name": "is_chat_type",
+    "description": "True for chat-based generation types."
+  },
+  "𓈣𓀉𓍀𓉅": {
+    "path": "utilities/agent/dangerously-safe/src/image/mod.rs",
+    "line": 87,
+    "name": "build",
+    "description": "Build the image for a plan and return its reference."
+  },
+  "𓈤𓃈𓌂𓃨": {
+    "path": "utilities/shell/tabbing-on/rust/src/terminal.rs",
+    "line": 96,
+    "name": "send_title",
+    "description": "auto-generated pointer for public function send_title"
+  },
+  "𓈥𓄈𓃩𓐏": {
+    "path": "utilities/shell/tabbing-on/rust/src/state.rs",
+    "line": 248,
+    "name": "generate_id",
+    "description": "auto-generated pointer for public function generate_id"
+  },
+  "𓈥𓈊𓀯𓇦": {
+    "path": "utilities/shell/tabbing-on/rust/src/plan/filesystem.rs",
+    "line": 94,
+    "name": "save_ticket",
+    "description": "Save a ticket as a Markdown file with YAML frontmatter."
+  },
+  "𓈦𓎇𓏁𓐊": {
+    "path": "utilities/agent/llm-toolkit/skill-manage/src/context.rs",
+    "line": 176,
+    "name": "is_active_status",
+    "description": "auto-generated pointer for public function is_active_status"
+  },
+  "𓈧𓎂𓄔𓇺": {
+    "path": "utilities/agent/media-tool/src/test_lab/catalog.rs",
+    "line": 111,
+    "name": "scan_catalog",
+    "description": "auto-generated pointer for public function scan_catalog"
+  },
+  "𓈨𓉢𓁕𓃝": {
+    "path": "utilities/shell/direnv-config/src/target.rs",
+    "line": 20,
+    "name": "label",
+    "description": "auto-generated pointer for public function label"
+  },
+  "𓈨𓊬𓂫𓄵": {
+    "path": "utilities/shell/tabbing-on/rust/src/bridge.rs",
+    "line": 14,
+    "name": "write_state_to_pipe",
+    "description": "Write the current tab state to the FIFO named pipe."
+  },
+  "𓈨𓋯𓏰𓍅": {
+    "path": "utilities/shell/tabbing-on/rust/src/recording.rs",
+    "line": 66,
+    "name": "recording_to_gif",
+    "description": "Convert a .cast recording to GIF using `agg`."
+  },
+  "𓈩𓅏𓇩𓐁": {
+    "path": "utilities/agent/media-tool/src/refine.rs",
+    "line": 14,
+    "name": "interactive_refine_loop",
+    "description": "auto-generated pointer for public function interactive_refine_loop"
+  },
+  "𓈪𓁀𓋜𓄜": {
+    "path": "utilities/agent/dangerously-safe/src/paths.rs",
+    "line": 38,
+    "name": "templates_dir",
+    "description": "`~/.config/agent-sandbox/templates`"
+  },
+  "𓈪𓅱𓎑𓊯": {
+    "path": "utilities/shell/tabbing-on/rust/src/state.rs",
+    "line": 132,
+    "name": "save",
+    "description": "auto-generated pointer for public function save"
+  },
+  "𓈫𓇾𓎳𓍍": {
+    "path": "utilities/shell/direnv-config/sdk/typescript/src/path.ts",
+    "line": 86,
+    "name": "getPath",
+    "description": "auto-generated pointer for public function getPath"
+  },
+  "𓈫𓈨𓏌𓈐": {
+    "path": "utilities/agent/llm-toolkit/packages/cli/src/interactive/context/FocusContext.tsx",
+    "line": 20,
+    "name": "useFocusContext",
+    "description": "auto-generated pointer for public function useFocusContext"
+  },
+  "𓈮𓏿𓍒𓀗": {
+    "path": "utilities/agent/dangerously-safe/src/compose/mod.rs",
+    "line": 36,
+    "name": "run_interactive",
+    "description": "Generate the overlay, ensure infra is up, and run the agent interactively."
+  },
+  "𓈯𓂅𓆧𓃸": {
+    "path": "utilities/k8/secret-utils/rust/src/tui/theme.rs",
+    "line": 45,
+    "name": "border",
+    "description": "auto-generated pointer for public function border"
+  },
+  "𓈯𓃚𓅌𓎕": {
+    "path": "utilities/agent/llm-toolkit/packages/api/src/services/exporter.ts",
+    "line": 3,
+    "name": "exportOpenAI",
+    "description": "auto-generated pointer for public function exportOpenAI"
+  },
+  "𓈯𓎬𓌷𓃷": {
+    "path": "utilities/agent/llm-toolkit/packages/cli/src/commands/recent.ts",
+    "line": 45,
+    "name": "runRecentCommand",
+    "description": "auto-generated pointer for public function runRecentCommand"
+  },
+  "𓈲𓄿𓈡𓂝": {
+    "path": "utilities/k8/secret-utils/rust/src/tui/theme.rs",
+    "line": 26,
+    "name": "header",
+    "description": "auto-generated pointer for public function header"
+  },
+  "𓈲𓋛𓁯𓌖": {
+    "path": "utilities/shell/direnv-config/sdk/typescript/src/store.ts",
+    "line": 15,
+    "name": "pathToHash",
+    "description": "auto-generated pointer for public function pathToHash"
+  },
+  "𓈴𓁀𓌍𓏈": {
+    "path": "utilities/shell/direnv-config/src/target.rs",
+    "line": 38,
+    "name": "parse",
+    "description": "auto-generated pointer for public function parse"
+  },
+  "𓈴𓇰𓋖𓌯": {
+    "path": "utilities/agent/llm-toolkit/skill-manage/src/catalog.rs",
+    "line": 144,
+    "name": "allowed_providers",
+    "description": "auto-generated pointer for public function allowed_providers"
+  },
+  "𓈴𓈮𓌑𓇴": {
+    "path": "utilities/linux/queue-populator/src/config/llm.rs",
+    "line": 130,
+    "name": "effective_api_key",
+    "description": "auto-generated pointer for public function effective_api_key"
+  },
+  "𓈵𓌱𓋲𓎐": {
+    "path": "utilities/agent/media-tool/src/test_lab/settings.rs",
+    "line": 276,
+    "name": "llm_ui_meta",
+    "description": "Schema for settings UI (provider dropdown + defaults), queue-populator style."
+  },
+  "𓈶𓀅𓋼𓐝": {
+    "path": "utilities/shell/direnv-config/src/yaml/flatten.rs",
+    "line": 115,
+    "name": "flatten",
+    "description": "Given flatten rules and all resolved named configs, produce env var assignments."
+  },
+  "𓈻𓆯𓉶𓀭": {
+    "path": "utilities/shell/direnv-config/sdk/elixir/lib/direnv_config/merge.ex",
+    "line": 17,
+    "name": "deep_merge_multi",
+    "description": "auto-generated pointer for public function deep_merge_multi"
+  },
+  "𓈼𓋲𓂕𓇻": {
+    "path": "utilities/agent/media-tool/src/ui.rs",
+    "line": 55,
+    "name": "plan_item",
+    "description": "auto-generated pointer for public function plan_item"
+  },
+  "𓈾𓎹𓃵𓇇": {
+    "path": "utilities/shell/tabbing-on/rust/src/color.rs",
+    "line": 106,
+    "name": "urgency_ansi",
+    "description": "auto-generated pointer for public function urgency_ansi"
+  },
+  "𓈾𓐃𓆫𓂕": {
+    "path": "utilities/agent/media-tool/src/test_lab/settings.rs",
+    "line": 67,
+    "name": "effective_base_url",
+    "description": "auto-generated pointer for public function effective_base_url"
+  },
+  "𓉀𓃛𓂕𓏸": {
+    "path": "utilities/k8/secret-utils/rust/src/commands/populate.rs",
+    "line": 12,
+    "name": "run",
+    "description": "auto-generated pointer for public function run"
+  },
+  "𓉄𓐧𓏎𓂳": {
+    "path": "utilities/linux/queue-populator/src/config/debug_log.rs",
+    "line": 13,
+    "name": "set_verbose",
+    "description": "auto-generated pointer for public function set_verbose"
+  },
+  "𓉆𓏎𓇟𓇈": {
+    "path": "utilities/shell/tabbing-on/rust/src/theme.rs",
+    "line": 1752,
+    "name": "theme_dir",
+    "description": "Return the user theme directory path: `~/.config/tabbing-on/themes/`"
+  },
+  "𓉈𓄧𓇵𓂻": {
+    "path": "utilities/k8/secret-utils/rust/src/engine/mod.rs",
+    "line": 144,
+    "name": "verify_all",
+    "description": "Verify all sections"
+  },
+  "𓉈𓉖𓉩𓋆": {
+    "path": "utilities/agent/dangerously-safe/src/config/mod.rs",
+    "line": 81,
+    "name": "template_value",
+    "description": "Load a template's raw YAML value (for use as a merge layer)."
+  },
+  "𓉌𓉡𓏫𓀑": {
+    "path": "utilities/shell/repo-lock/src/record.rs",
+    "line": 105,
+    "name": "holder_dead_here",
+    "description": "True when the holder is on this host and its pid is no longer alive."
+  },
+  "𓉎𓄍𓃈𓈌": {
+    "path": "utilities/agent/llm-toolkit/skill-manage/src/tui/app.rs",
+    "line": 50,
+    "name": "prev",
+    "description": "auto-generated pointer for public function prev"
+  },
+  "𓉏𓊝𓍤𓏖": {
+    "path": "utilities/shell/direnv-config/sdk/rust/src/meta.rs",
+    "line": 24,
+    "name": "read_meta",
+    "description": "Read and parse the store's `.meta` YAML file."
+  },
+  "𓉏𓏺𓏞𓂬": {
+    "path": "utilities/linux/queue-populator/src/stt/engine.rs",
+    "line": 53,
+    "name": "stop",
+    "description": "auto-generated pointer for public function stop"
+  },
+  "𓉐𓅂𓈑𓆀": {
+    "path": "utilities/agent/llm-toolkit/skill-manage/src/tui/app.rs",
+    "line": 30,
+    "name": "kind",
+    "description": "auto-generated pointer for public function kind"
+  },
+  "𓉐𓇏𓐃𓈢": {
+    "path": "utilities/agent/llm-toolkit/packages/api/src/services/exporter.ts",
+    "line": 47,
+    "name": "exportDataset",
+    "description": "auto-generated pointer for public function exportDataset"
+  },
+  "𓉑𓅒𓆆𓏊": {
+    "path": "utilities/agent/llm-toolkit/packages/cli/src/interactive/hooks/useApi.ts",
+    "line": 54,
+    "name": "useApiMutation",
+    "description": "auto-generated pointer for public function useApiMutation"
+  },
+  "𓉓𓃶𓍂𓁠": {
+    "path": "utilities/linux/queue-populator/src/config/store.rs",
+    "line": 87,
+    "name": "save_config",
+    "description": "auto-generated pointer for public function save_config"
+  },
+  "𓉖𓋿𓈳𓏐": {
+    "path": "utilities/shell/direnv-config/src/cmd/purge.rs",
+    "line": 65,
+    "name": "completions",
+    "description": "auto-generated pointer for public function completions"
+  },
+  "𓉙𓁮𓆻𓉇": {
+    "path": "utilities/shell/direnv-config/sdk/rust/src/path.rs",
+    "line": 31,
+    "name": "parse_path",
+    "description": "Parse a dot-separated path string into segments."
+  },
+  "𓉙𓃦𓌽𓉞": {
+    "path": "utilities/shell/direnv-config/src/envrc/locator.rs",
+    "line": 224,
+    "name": "index_file",
+    "description": "Read a file and return all located keys across its heredoc blocks."
+  },
+  "𓉛𓂖𓋐𓋎": {
+    "path": "utilities/shell/repo-lock/src/registry.rs",
+    "line": 170,
+    "name": "journal",
+    "description": "Append a timestamped line to the journal (best-effort; never fatal)."
+  },
+  "𓉜𓊜𓈶𓁊": {
+    "path": "utilities/shell/direnv-config/sdk/typescript/src/path.ts",
+    "line": 171,
+    "name": "deletePath",
+    "description": "auto-generated pointer for public function deletePath"
+  },
+  "𓉝𓀳𓎧𓅉": {
+    "path": "utilities/linux/queue-populator/src/queue/writer.rs",
+    "line": 50,
+    "name": "append_all",
+    "description": "auto-generated pointer for public function append_all"
+  },
+  "𓉞𓄼𓋯𓈬": {
+    "path": "utilities/shell/direnv-config/src/crypto.rs",
+    "line": 48,
+    "name": "encode_token",
+    "description": "Encrypt `plaintext` into a `🔒:v1` token carrying the sensitivity `tier`."
+  },
+  "𓉞𓊧𓏃𓅂": {
+    "path": "utilities/agent/media-tool/src/output.rs",
+    "line": 22,
+    "name": "genai_dir_for",
+    "description": "auto-generated pointer for public function genai_dir_for"
+  },
+  "𓉠𓐀𓈾𓁾": {
+    "path": "utilities/agent/llm-toolkit/packages/api/src/services/session-workflow.ts",
+    "line": 37,
+    "name": "prepareContinuationPayload",
+    "description": "auto-generated pointer for public function prepareContinuationPayload"
+  },
+  "𓉢𓀡𓂟𓅼": {
+    "path": "utilities/agent/media-tool/src/providers/mod.rs",
+    "line": 218,
+    "name": "get_provider",
+    "description": "auto-generated pointer for public function get_provider"
+  },
+  "𓉢𓅷𓀋𓏜": {
+    "path": "utilities/linux/queue-populator/src/audio/memo_recorder.rs",
+    "line": 28,
+    "name": "new",
+    "description": "auto-generated pointer for public function new"
+  },
+  "𓉢𓏈𓆚𓉾": {
+    "path": "utilities/agent/llm-toolkit/skill-manage/src/link.rs",
+    "line": 93,
+    "name": "enable_item",
+    "description": "auto-generated pointer for public function enable_item"
+  },
+  "𓉣𓍃𓎗𓅨": {
+    "path": "utilities/agent/llm-toolkit/packages/cli/src/interactive/components/Sidebar.tsx",
+    "line": 121,
+    "name": "getSidebarItemCount",
+    "description": "auto-generated pointer for public function getSidebarItemCount"
+  },
+  "𓉤𓀡𓆳𓈿": {
+    "path": "utilities/agent/media-tool/src/test_lab/persist.rs",
+    "line": 68,
+    "name": "save",
+    "description": "auto-generated pointer for public function save"
+  },
+  "𓉦𓉖𓊐𓎨": {
+    "path": "utilities/agent/llm-toolkit/packages/shared/src/types/index.ts",
+    "line": 185,
+    "name": "standardizeContentBlocks",
+    "description": "Deep-clone a content block array and strip provider-specific fields"
+  },
+  "𓉦𓋷𓊞𓏝": {
+    "path": "utilities/shell/tabbing-on/rust/src/theme_picker.rs",
+    "line": 3241,
+    "name": "export_theme",
+    "description": "auto-generated pointer for public function export_theme"
+  },
+  "𓉩𓉳𓈅𓊆": {
+    "path": "utilities/agent/llm-toolkit/packages/cli/src/interactive/components/ConfirmDialog.tsx",
+    "line": 11,
+    "name": "ConfirmDialog",
+    "description": "auto-generated pointer for public function ConfirmDialog"
+  },
+  "𓉮𓄓𓉚𓉀": {
+    "path": "utilities/shell/tabbing-on/rust/src/history.rs",
+    "line": 604,
+    "name": "report_mermaid",
+    "description": "Output Mermaid pie chart syntax for a tab's time-in-state."
+  },
+  "𓉮𓅜𓀮𓏶": {
+    "path": "utilities/agent/llm-toolkit/packages/cli/src/interactive/services/sessionWorkflow.ts",
+    "line": 150,
+    "name": "normalizeHarness",
+    "description": "auto-generated pointer for public function normalizeHarness"
+  },
+  "𓉮𓐇𓆂𓃝": {
+    "path": "utilities/shell/direnv-config/sdk/rust/src/path.rs",
+    "line": 144,
+    "name": "set_path",
+    "description": "Set a value at the given path, creating intermediate maps and sequences as needed."
+  },
+  "𓉰𓉝𓊶𓃪": {
+    "path": "utilities/shell/direnv-config/sdk/rust/src/store.rs",
+    "line": 11,
+    "name": "state_dir",
+    "description": "Root state directory for all dc stores."
+  },
+  "𓉰𓋸𓏞𓀏": {
+    "path": "utilities/linux/queue-populator/src/audio/mod.rs",
+    "line": 135,
+    "name": "open_target",
+    "description": "The currently-open assistant, or None if all are muted."
+  },
+  "𓉲𓊑𓍇𓈦": {
+    "path": "utilities/agent/llm-toolkit/packages/cli/src/interactive/components/StatusLine.tsx",
+    "line": 26,
+    "name": "StatusLine",
+    "description": "auto-generated pointer for public function StatusLine"
+  },
+  "𓉵𓈢𓋖𓂘": {
+    "path": "utilities/agent/llm-toolkit/packages/web/src/pages/Search.tsx",
+    "line": 5,
+    "name": "Search",
+    "description": "auto-generated pointer for public function Search"
+  },
+  "𓉸𓀍𓊓𓅗": {
+    "path": "utilities/agent/media-tool/src/schema.rs",
+    "line": 273,
+    "name": "wants_visual",
+    "description": "auto-generated pointer for public function wants_visual"
+  },
+  "𓉸𓄞𓐢𓉭": {
+    "path": "utilities/shell/auto-sudo/rust/src/decision.rs",
+    "line": 19,
+    "name": "decide",
+    "description": "auto-generated pointer for public function decide"
+  },
+  "𓉹𓋠𓌋𓄮": {
+    "path": "utilities/shell/direnv-config/sdk/elixir/lib/direnv_config/native.ex",
+    "line": 17,
+    "name": "list_configs",
+    "description": "auto-generated pointer for public function list_configs"
+  },
+  "𓉺𓁾𓈓𓃦": {
+    "path": "utilities/shell/tabbing-on/rust/src/plan/types.rs",
+    "line": 60,
+    "name": "prev",
+    "description": "auto-generated pointer for public function prev"
+  },
+  "𓉻𓇤𓏷𓂰": {
+    "path": "utilities/shell/direnv-config/sdk/elixir/lib/direnv_config/native.ex",
+    "line": 3,
+    "name": "get",
+    "description": "auto-generated pointer for public function get"
+  },
+  "𓉼𓅅𓎙𓆵": {
+    "path": "utilities/agent/dangerously-safe/src/image/slug.rs",
+    "line": 71,
+    "name": "label_value",
+    "description": "The label value: comma-joined sorted slugs."
+  },
+  "𓉽𓁄𓃳𓁼": {
+    "path": "utilities/shell/direnv-config/sdk/rust/src/merge.rs",
+    "line": 42,
+    "name": "deep_merge",
+    "description": "Deep-merge two YAML value trees."
+  },
+  "𓊂𓀁𓅆𓀑": {
+    "path": "utilities/agent/llm-toolkit/skill-manage/src/config.rs",
+    "line": 238,
+    "name": "is_under_source",
+    "description": "Whether `path` is under any configured source root for `kind`."
+  },
+  "𓊂𓏖𓁸𓊠": {
+    "path": "utilities/shell/tabbing-on/rust/src/theme_data.rs",
+    "line": 387,
+    "name": "emit_cursor_seq",
+    "description": "DECSCUSR escape for a cursor style, or \"\" if the style is unknown."
+  },
+  "𓊃𓇕𓆟𓀡": {
+    "path": "utilities/shell/direnv-config/src/cmd/set.rs",
+    "line": 3,
+    "name": "run",
+    "description": "auto-generated pointer for public function run"
+  },
+  "𓊆𓁌𓊆𓎕": {
+    "path": "utilities/shell/direnv-config/src/secretsmap.rs",
+    "line": 286,
+    "name": "resolve_vars",
+    "description": "Resolve all of a section's `vars` into a map (for ref/template use)."
+  },
+  "𓊆𓊭𓊿𓋼": {
+    "path": "utilities/k8/secret-utils/rust/src/tui/theme.rs",
+    "line": 60,
+    "name": "status_display",
+    "description": "Map VerifyStatus to a colored symbol + style"
+  },
+  "𓊇𓄝𓐔𓊪": {
+    "path": "utilities/agent/llm-toolkit/packages/cli/src/interactive/services/sessionWorkflow.ts",
+    "line": 119,
+    "name": "buildTransferPrompt",
+    "description": "auto-generated pointer for public function buildTransferPrompt"
+  },
+  "𓊇𓈤𓈝𓍕": {
+    "path": "utilities/shell/tabbing-on/rust/src/theme_picker.rs",
+    "line": 955,
+    "name": "run_picker",
+    "description": "auto-generated pointer for public function run_picker"
+  },
+  "𓊈𓂢𓍱𓃱": {
+    "path": "utilities/agent/llm-toolkit/skill-manage/src/context.rs",
+    "line": 108,
+    "name": "format_text",
+    "description": "auto-generated pointer for public function format_text"
+  },
+  "𓊉𓇑𓋃𓂙": {
+    "path": "utilities/agent/llm-toolkit/packages/web/src/pages/Edit.tsx",
+    "line": 660,
+    "name": "Edit",
+    "description": "auto-generated pointer for public function Edit"
+  },
+  "𓊉𓉒𓍉𓌕": {
+    "path": "utilities/agent/llm-toolkit/packages/web/src/services/sessionWorkflow.ts",
+    "line": 135,
+    "name": "buildTransferPrompt",
+    "description": "auto-generated pointer for public function buildTransferPrompt"
+  },
+  "𓊊𓃺𓅄𓅸": {
+    "path": "utilities/agent/llm-toolkit/skill-manage/src/tui/app.rs",
+    "line": 275,
+    "name": "profile_bundle_lines",
+    "description": "Bundle lines for right pane of profiles: (\"skill\", name, status)"
+  },
+  "𓊋𓀌𓋯𓂝": {
+    "path": "utilities/agent/dangerously-safe/src/image/build.rs",
+    "line": 11,
+    "name": "build_image",
+    "description": "Build the image for `plan`, returning its reference."
+  },
+  "𓊋𓇥𓍴𓂽": {
+    "path": "utilities/agent/llm-toolkit/packages/cli/src/interactive/pages/PromptsPage.tsx",
+    "line": 24,
+    "name": "PromptsPage",
+    "description": "auto-generated pointer for public function PromptsPage"
+  },
+  "𓊋𓍂𓉁𓄰": {
+    "path": "utilities/agent/llm-toolkit/skill-manage/src/catalog.rs",
+    "line": 194,
+    "name": "validate",
+    "description": "Validate catalog references; returns (errors, warnings)."
+  },
+  "𓊎𓊂𓎕𓌀": {
+    "path": "utilities/linux/queue-populator/src/llm/client.rs",
+    "line": 66,
+    "name": "classify_with_trace",
+    "description": "auto-generated pointer for public function classify_with_trace"
+  },
+  "𓊐𓌔𓏯𓅖": {
+    "path": "utilities/agent/dangerously-safe/src/paths.rs",
+    "line": 50,
+    "name": "local_bin",
+    "description": "`~/.local/bin` — where host CLI tools (docker-build, docker-rebuild) live."
+  },
+  "𓊑𓂂𓄿𓃃": {
+    "path": "utilities/shell/direnv-config/sdk/rust/src/client.rs",
+    "line": 445,
+    "name": "unset",
+    "description": "Remove one or more keys from a config layer."
+  },
+  "𓊑𓅒𓆇𓆳": {
+    "path": "utilities/k8/secret-utils/rust/src/tui/theme.rs",
+    "line": 18,
+    "name": "info",
+    "description": "auto-generated pointer for public function info"
+  },
+  "𓊑𓐪𓆰𓐗": {
+    "path": "utilities/k8/secret-utils/rust/src/tui/theme.rs",
+    "line": 6,
+    "name": "ok",
+    "description": "auto-generated pointer for public function ok"
+  },
+  "𓊗𓂖𓅦𓈃": {
+    "path": "utilities/agent/dangerously-safe/src/launch/mod.rs",
+    "line": 29,
+    "name": "prepare_and_run",
+    "description": "Run host hooks, stage tools, and exec the interactive container."
+  },
+  "𓊘𓊲𓎕𓅙": {
+    "path": "utilities/shell/tabbing-on/rust/src/terminal.rs",
+    "line": 127,
+    "name": "send_tab_color",
+    "description": "auto-generated pointer for public function send_tab_color"
+  },
+  "𓊚𓉌𓅂𓄚": {
+    "path": "utilities/agent/media-tool/src/attachments.rs",
+    "line": 88,
+    "name": "validate_attachments",
+    "description": "auto-generated pointer for public function validate_attachments"
+  },
+  "𓊛𓀽𓎡𓎩": {
+    "path": "utilities/agent/llm-toolkit/packages/cli/src/commands/recent.ts",
+    "line": 73,
+    "name": "parseRecentArgs",
+    "description": "auto-generated pointer for public function parseRecentArgs"
+  },
+  "𓊛𓋘𓀥𓄯": {
+    "path": "utilities/agent/llm-toolkit/packages/cli/src/interactive/context/RouterContext.tsx",
+    "line": 86,
+    "name": "useRouter",
+    "description": "auto-generated pointer for public function useRouter"
+  },
+  "𓊜𓂛𓃽𓃂": {
+    "path": "utilities/agent/llm-toolkit/packages/cli/src/interactive/pages/ExplorePage.tsx",
+    "line": 52,
+    "name": "ExplorePage",
+    "description": "auto-generated pointer for public function ExplorePage"
+  },
+  "𓊞𓀚𓇚𓍑": {
+    "path": "utilities/agent/llm-toolkit/packages/cli/src/interactive/hooks/useApi.ts",
+    "line": 5,
+    "name": "apiFetch",
+    "description": "auto-generated pointer for public function apiFetch"
+  },
+  "𓊞𓎦𓇱𓌰": {
+    "path": "utilities/agent/llm-toolkit/skill-manage/src/sources.rs",
+    "line": 128,
+    "name": "parse_frontmatter",
+    "description": "Parse YAML frontmatter and retain the exact delimited section size."
+  },
+  "𓊟𓁬𓍁𓄐": {
+    "path": "utilities/agent/media-tool/src/attachments.rs",
+    "line": 31,
+    "name": "resolve_mime_type",
+    "description": "auto-generated pointer for public function resolve_mime_type"
+  },
+  "𓊟𓌹𓅔𓆒": {
+    "path": "utilities/shell/direnv-config/sdk/typescript/src/store.ts",
+    "line": 49,
+    "name": "ensureStore",
+    "description": "auto-generated pointer for public function ensureStore"
+  },
+  "𓊡𓄊𓎍𓁑": {
+    "path": "utilities/linux/queue-populator/src/state_machine.rs",
+    "line": 118,
+    "name": "handle",
+    "description": "auto-generated pointer for public function handle"
+  },
+  "𓊣𓆟𓁹𓈯": {
+    "path": "utilities/shell/tabbing-on/rust/src/color.rs",
+    "line": 238,
+    "name": "rgb_to_hex",
+    "description": "Render an RGB triple as an uppercase `#RRGGBB` string."
+  },
+  "𓊧𓏷𓌮𓈔": {
+    "path": "utilities/shell/direnv-config/src/shadow.rs",
+    "line": 85,
+    "name": "secure",
+    "description": "Move a secret into the shadow store and leave `⛔` sentinels behind in both"
+  },
+  "𓊩𓅝𓀯𓏚": {
+    "path": "utilities/linux/queue-populator/src/config/secret_store.rs",
+    "line": 48,
+    "name": "generate_alias",
+    "description": "auto-generated pointer for public function generate_alias"
+  },
+  "𓊫𓃆𓊴𓋙": {
+    "path": "utilities/shell/tabbing-on/rust/src/plan/audio.rs",
+    "line": 104,
+    "name": "is_recording",
+    "description": "auto-generated pointer for public function is_recording"
+  },
+  "𓊬𓍋𓃭𓁼": {
+    "path": "utilities/shell/direnv-config/src/secretsmap.rs",
+    "line": 146,
+    "name": "find_by_infisical_path",
+    "description": "Find a `(section, spec)` by Infisical path + key."
+  },
+  "𓊭𓈛𓋛𓋤": {
+    "path": "utilities/agent/dangerously-safe/src/config/mod.rs",
+    "line": 88,
+    "name": "load_config_file",
+    "description": "Parse a config file from disk."
+  },
+  "𓊭𓊡𓆐𓆺": {
+    "path": "utilities/agent/llm-toolkit/packages/api/src/services/exporter.ts",
+    "line": 17,
+    "name": "exportAnthropic",
+    "description": "auto-generated pointer for public function exportAnthropic"
+  },
+  "𓊯𓐪𓌉𓃿": {
+    "path": "utilities/shell/direnv-config/src/infisical.rs",
+    "line": 220,
+    "name": "upsert_secret",
+    "description": "Create or update a secret (create-or-update with no-op detection)."
+  },
+  "𓊵𓌶𓅲𓆚": {
+    "path": "utilities/shell/auto-sudo/rust/src/config.rs",
+    "line": 174,
+    "name": "sudo_for_rule",
+    "description": "auto-generated pointer for public function sudo_for_rule"
+  },
+  "𓊶𓈇𓐦𓅱": {
+    "path": "utilities/shell/direnv-config/sdk/elixir/lib/direnv_config/store.ex",
+    "line": 30,
+    "name": "store_path",
+    "description": "auto-generated pointer for public function store_path"
+  },
+  "𓊷𓊾𓍣𓎞": {
+    "path": "utilities/agent/llm-toolkit/packages/web/src/pages/DatasetDetail.tsx",
+    "line": 19,
+    "name": "DatasetDetail",
+    "description": "auto-generated pointer for public function DatasetDetail"
+  },
+  "𓊷𓋔𓁳𓃧": {
+    "path": "utilities/agent/media-tool/src/output.rs",
+    "line": 9,
+    "name": "resolve_output_paths",
+    "description": "Returns (output_path, per_output_description) pairs."
+  },
+  "𓊷𓐂𓐉𓋝": {
+    "path": "utilities/agent/llm-toolkit/packages/cli/src/interactive/components/InputModal.tsx",
+    "line": 14,
+    "name": "InputModal",
+    "description": "auto-generated pointer for public function InputModal"
+  },
+  "𓊻𓇟𓏄𓎜": {
+    "path": "utilities/agent/llm-toolkit/skill-manage/src/tui/app.rs",
+    "line": 791,
+    "name": "context_totals",
+    "description": "auto-generated pointer for public function context_totals"
+  },
+  "𓊻𓏦𓉣𓂌": {
+    "path": "utilities/agent/mallm/src/formatter.ts",
+    "line": 207,
+    "name": "formatJson",
+    "description": "auto-generated pointer for public function formatJson"
+  },
+  "𓊻𓏸𓂓𓂙": {
+    "path": "utilities/shell/tabbing-on/rust/src/todo.rs",
+    "line": 311,
+    "name": "todo_export_switch",
+    "description": "Adapter-facing switch: rewrite the todo file to activate `target_id`, then emit"
+  },
+  "𓊼𓂱𓀬𓋳": {
+    "path": "utilities/shell/tabbing-on/rust/src/theme_data.rs",
+    "line": 444,
+    "name": "emit_all_seq",
+    "description": "The full supported escape bundle for a theme blob plus optional extras."
+  },
+  "𓊿𓂱𓊕𓂖": {
+    "path": "utilities/shell/tabbing-on/rust/src/theme_picker.rs",
+    "line": 3186,
+    "name": "edit_theme",
+    "description": "auto-generated pointer for public function edit_theme"
+  },
+  "𓊿𓊵𓊇𓎸": {
+    "path": "utilities/shell/direnv-config/src/settings.rs",
+    "line": 39,
+    "name": "load",
+    "description": "Load and validate the settings file."
+  },
+  "𓋀𓋂𓂪𓅦": {
+    "path": "utilities/shell/repo-lock/src/registry.rs",
+    "line": 50,
+    "name": "discover",
+    "description": "Discover the registry for the repo containing the current working directory."
+  },
+  "𓋁𓂦𓇻𓅟": {
+    "path": "utilities/shell/direnv-config/src/store/meta.rs",
+    "line": 48,
+    "name": "update_configs_list",
+    "description": "Scan the store directory for config subdirectories and update the"
+  },
+  "𓋁𓆸𓃏𓉄": {
+    "path": "utilities/linux/queue-populator/src/config/secret_store.rs",
+    "line": 43,
+    "name": "decrypt",
+    "description": "auto-generated pointer for public function decrypt"
+  },
+  "𓋃𓌫𓂄𓇈": {
+    "path": "utilities/shell/direnv-config/sdk/typescript/src/store.ts",
+    "line": 8,
+    "name": "stateDir",
+    "description": "auto-generated pointer for public function stateDir"
+  },
+  "𓋄𓄷𓌄𓄱": {
+    "path": "utilities/shell/direnv-config/src/cmd/env.rs",
+    "line": 4,
+    "name": "run",
+    "description": "auto-generated pointer for public function run"
+  },
+  "𓋄𓐄𓃄𓆾": {
+    "path": "utilities/shell/tabbing-on/rust/src/todo.rs",
+    "line": 8,
+    "name": "todo_file",
+    "description": "Return the todo file path for a given tab ID."
+  },
+  "𓋅𓌗𓇴𓂂": {
+    "path": "utilities/linux/queue-populator/src/audio/memo_recorder.rs",
+    "line": 57,
+    "name": "start",
+    "description": "Begin buffering."
+  },
+  "𓋆𓆓𓋏𓊖": {
+    "path": "utilities/agent/llm-toolkit/packages/web/src/pages/Prompts.tsx",
+    "line": 16,
+    "name": "Prompts",
+    "description": "auto-generated pointer for public function Prompts"
+  },
+  "𓋆𓏂𓋂𓆟": {
+    "path": "utilities/agent/dangerously-safe/src/image/slug.rs",
+    "line": 77,
+    "name": "tag",
+    "description": "The docker tag fragment: dash-joined sorted slugs."
+  },
+  "𓋇𓅦𓈒𓐂": {
+    "path": "utilities/k8/secret-utils/rust/src/config/mod.rs",
+    "line": 37,
+    "name": "discover_config",
+    "description": "Walk up from cwd to find the secrets config file."
+  },
+  "𓋋𓉔𓍓𓀧": {
+    "path": "utilities/agent/media-tool/src/ui.rs",
+    "line": 50,
+    "name": "progress_label",
+    "description": "auto-generated pointer for public function progress_label"
+  },
+  "𓋌𓈕𓋠𓄮": {
+    "path": "utilities/linux/queue-populator/src/ui/sounds.rs",
+    "line": 55,
+    "name": "play_command",
+    "description": "Short high blip on any recognized command (\"Tink\")."
+  },
+  "𓋎𓂊𓃵𓎼": {
+    "path": "utilities/agent/llm-toolkit/packages/cli/src/interactive/InteractiveApp.tsx",
+    "line": 57,
+    "name": "InteractiveApp",
+    "description": "auto-generated pointer for public function InteractiveApp"
+  },
+  "𓋎𓋶𓈛𓅁": {
+    "path": "utilities/shell/tabbing-on/rust/src/terminal.rs",
+    "line": 161,
+    "name": "clear_bg_color",
+    "description": "auto-generated pointer for public function clear_bg_color"
+  },
+  "𓋎𓏀𓃄𓀲": {
+    "path": "utilities/shell/direnv-config/src/yaml/merge.rs",
+    "line": 43,
+    "name": "deep_merge",
+    "description": "Deep-merge two YAML value trees."
+  },
+  "𓋏𓊤𓀤𓊞": {
+    "path": "utilities/agent/media-tool/src/prep.rs",
+    "line": 280,
+    "name": "resolve",
+    "description": "Resolve the prompt preparation LLM endpoint."
+  },
+  "𓋐𓉣𓃂𓏓": {
+    "path": "utilities/agent/llm-toolkit/packages/api/src/services/converter.ts",
+    "line": 51,
+    "name": "convertToArtifact",
+    "description": "auto-generated pointer for public function convertToArtifact"
+  },
+  "𓋐𓊴𓅥𓃖": {
+    "path": "utilities/shell/direnv-config/sdk/rust/src/store.rs",
+    "line": 45,
+    "name": "store_path",
+    "description": "Return the store path for a given directory."
+  },
+  "𓋑𓏢𓈌𓍱": {
+    "path": "utilities/agent/dangerously-safe/src/compose/mod.rs",
+    "line": 20,
+    "name": "is_enabled",
+    "description": "Whether the compose path should be used for this config."
+  },
+  "𓋒𓀮𓀵𓏄": {
+    "path": "utilities/agent/llm-toolkit/skill-manage/src/tui/app.rs",
+    "line": 269,
+    "name": "current_profile",
+    "description": "auto-generated pointer for public function current_profile"
+  },
+  "𓋒𓌷𓋋𓂴": {
+    "path": "utilities/shell/direnv-config/src/cmd/gen.rs",
+    "line": 4,
+    "name": "run",
+    "description": "auto-generated pointer for public function run"
+  },
+  "𓋓𓇠𓅣𓇠": {
+    "path": "utilities/shell/tabbing-on/rust/src/plan/audio.rs",
+    "line": 99,
+    "name": "duration_secs",
+    "description": "Elapsed whole seconds since recording started."
+  },
+  "𓋗𓎼𓐒𓁵": {
+    "path": "utilities/agent/llm-toolkit/packages/shared/src/parsers/index.ts",
+    "line": 9,
+    "name": "parseJsonlLine",
+    "description": "auto-generated pointer for public function parseJsonlLine"
+  },
+  "𓋘𓈿𓁀𓃌": {
+    "path": "utilities/agent/media-tool/src/fim.rs",
+    "line": 174,
+    "name": "solution_for",
+    "description": "Resolve the solution file path for a generation target."
+  },
+  "𓋘𓌚𓊇𓍎": {
+    "path": "utilities/shell/direnv-config/sdk/rust/src/client.rs",
+    "line": 457,
+    "name": "bump",
+    "description": "Manually bump the store version."
+  },
+  "𓋜𓁴𓃗𓇥": {
+    "path": "utilities/agent/media-tool/src/prep.rs",
+    "line": 108,
+    "name": "prep_role_preamble",
+    "description": "Role preamble for the prep LLM (first sentence of the instruction)."
+  },
+  "𓋜𓂏𓆬𓐮": {
+    "path": "utilities/agent/dangerously-safe/src/config/merge.rs",
+    "line": 63,
+    "name": "materialize",
+    "description": "Fold-merge ordered layers (lowest priority first) and deserialize."
+  },
+  "𓋝𓀣𓍿𓀿": {
+    "path": "utilities/shell/direnv-config/sdk/elixir/lib/direnv_config/store.ex",
+    "line": 66,
+    "name": "ensure_store",
+    "description": "auto-generated pointer for public function ensure_store"
+  },
+  "𓋝𓃬𓅔𓇴": {
+    "path": "utilities/agent/media-tool/src/schema.rs",
+    "line": 331,
+    "name": "from_extension",
+    "description": "auto-generated pointer for public function from_extension"
+  },
+  "𓋝𓋉𓊣𓀎": {
+    "path": "utilities/agent/llm-toolkit/packages/cli/src/commands/search.tsx",
+    "line": 23,
+    "name": "SearchCommand",
+    "description": "auto-generated pointer for public function SearchCommand"
+  },
+  "𓋝𓐑𓁟𓁘": {
+    "path": "utilities/agent/llm-toolkit/skill-manage/src/tui/app.rs",
+    "line": 223,
+    "name": "apply_filter",
+    "description": "auto-generated pointer for public function apply_filter"
+  },
+  "𓋠𓃽𓁒𓉵": {
+    "path": "utilities/agent/media-tool/src/providers/mod.rs",
+    "line": 350,
+    "name": "constraints",
+    "description": "auto-generated pointer for public function constraints"
+  },
+  "𓋠𓏊𓅦𓋨": {
+    "path": "utilities/shell/direnv-config/src/secret.rs",
+    "line": 102,
+    "name": "build_encrypted_tree",
+    "description": "Build a YAML subtree holding each secret encrypted into a `🔒:v1` token,"
+  },
+  "𓋣𓄪𓃼𓐄": {
+    "path": "utilities/agent/dangerously-safe/src/docker/mod.rs",
+    "line": 26,
+    "name": "run_capture",
+    "description": "Run `docker <args>` and capture stdout."
+  },
+  "𓋤𓇃𓈸𓐊": {
+    "path": "utilities/shell/direnv-config/src/crypto.rs",
+    "line": 94,
+    "name": "b64_standard_decode",
+    "description": "Decode a base64 (standard alphabet) string — used for the key material in settings.yaml."
+  },
+  "𓋧𓏍𓁬𓋟": {
+    "path": "utilities/agent/media-tool/src/schema.rs",
+    "line": 19,
+    "name": "as_str",
+    "description": "auto-generated pointer for public function as_str"
+  },
+  "𓋪𓃂𓎾𓀯": {
+    "path": "utilities/shell/tabbing-on/rust/src/theme_data.rs",
+    "line": 127,
+    "name": "resolve_value",
+    "description": "resolve a value: #RRGGBB / on / off / empty pass through; else named ANSI ->"
+  },
+  "𓋫𓅶𓀊𓎴": {
+    "path": "utilities/agent/llm-toolkit/packages/web/src/components/MarkdownView.tsx",
+    "line": 28,
+    "name": "MarkdownView",
+    "description": "auto-generated pointer for public function MarkdownView"
+  },
+  "𓋫𓇾𓄌𓎨": {
+    "path": "utilities/k8/secret-utils/rust/src/api/mod.rs",
+    "line": 40,
+    "name": "connect",
+    "description": "auto-generated pointer for public function connect"
+  },
+  "𓋫𓎌𓀕𓀍": {
+    "path": "utilities/k8/secret-utils/rust/src/commands/audit.rs",
+    "line": 10,
+    "name": "run",
+    "description": "auto-generated pointer for public function run"
+  },
+  "𓋫𓏔𓅖𓆡": {
+    "path": "utilities/shell/tabbing-on/rust/src/plan/config.rs",
+    "line": 34,
+    "name": "resolve_config",
+    "description": "Resolve the application config from CLI flags, env vars, and defaults."
+  },
+  "𓋯𓆗𓂲𓍦": {
+    "path": "utilities/agent/dangerously-safe/src/image/snippets.rs",
+    "line": 122,
+    "name": "available",
+    "description": "auto-generated pointer for public function available"
+  },
+  "𓋱𓇍𓋅𓅱": {
+    "path": "utilities/linux/queue-populator/src/config/env_resolver.rs",
+    "line": 70,
+    "name": "resolve",
+    "description": "auto-generated pointer for public function resolve"
+  },
+  "𓋱𓈣𓎷𓄇": {
+    "path": "utilities/agent/llm-toolkit/skill-manage/src/catalog.rs",
+    "line": 93,
+    "name": "save",
+    "description": "Persist catalog to disk (paths written as expanded absolute forms)."
+  },
+  "𓋲𓃻𓆶𓊏": {
+    "path": "utilities/shell/tabbing-on/rust/src/bridge.rs",
+    "line": 94,
+    "name": "remove_pipe",
+    "description": "Remove the FIFO pipe file for the given session."
+  },
+  "𓋳𓐘𓆋𓉭": {
+    "path": "utilities/k8/secret-utils/rust/src/commands/bootstrap.rs",
+    "line": 6,
+    "name": "run",
+    "description": "auto-generated pointer for public function run"
+  },
+  "𓋴𓍗𓂤𓉷": {
+    "path": "utilities/shell/repo-lock/src/record.rs",
+    "line": 110,
+    "name": "is_mine",
+    "description": "auto-generated pointer for public function is_mine"
+  },
+  "𓋵𓂥𓇅𓈾": {
+    "path": "utilities/shell/auto-sudo/rust/src/config.rs",
+    "line": 191,
+    "name": "always_sudo",
+    "description": "auto-generated pointer for public function always_sudo"
+  },
+  "𓋵𓄘𓈖𓐑": {
+    "path": "utilities/agent/llm-toolkit/packages/cli/src/interactive/context/RouterContext.tsx",
+    "line": 58,
+    "name": "RouterProvider",
+    "description": "auto-generated pointer for public function RouterProvider"
+  },
+  "𓋵𓏻𓊷𓊩": {
+    "path": "utilities/shell/direnv-config/sdk/elixir/lib/direnv_config/path.ex",
+    "line": 111,
+    "name": "set",
+    "description": "auto-generated pointer for public function set"
+  },
+  "𓋶𓁴𓌺𓁌": {
+    "path": "utilities/shell/direnv-config/src/cmd/secrets.rs",
+    "line": 57,
+    "name": "run",
+    "description": "auto-generated pointer for public function run"
+  },
+  "𓋶𓆄𓅩𓄥": {
+    "path": "utilities/agent/llm-toolkit/skill-manage/src/context.rs",
+    "line": 186,
+    "name": "codex_item_rendered_chars",
+    "description": "auto-generated pointer for public function codex_item_rendered_chars"
+  },
+  "𓋶𓋝𓅚𓃅": {
+    "path": "utilities/shell/tabbing-on/rust/src/toggl.rs",
+    "line": 295,
+    "name": "format_description",
+    "description": "Build a Toggl description from title and status."
+  },
+  "𓋶𓍵𓊤𓏶": {
+    "path": "utilities/shell/direnv-config/src/store/layout.rs",
+    "line": 23,
+    "name": "path_to_hash",
+    "description": "Convert an absolute directory path to a store directory name."
+  },
+  "𓋷𓂅𓀒𓇮": {
+    "path": "utilities/agent/llm-toolkit/packages/cli/src/interactive/components/InlineEdit.tsx",
+    "line": 17,
+    "name": "InlineEdit",
+    "description": "auto-generated pointer for public function InlineEdit"
+  },
+  "𓋻𓆧𓅼𓆆": {
+    "path": "utilities/shell/direnv-config/src/yaml/path.rs",
+    "line": 238,
+    "name": "delete_path",
+    "description": "Delete the value at the given path."
+  },
+  "𓋻𓐢𓁵𓏓": {
+    "path": "utilities/shell/direnv-config/sdk/elixir/lib/direnv_config/store.ex",
+    "line": 3,
+    "name": "state_dir",
+    "description": "auto-generated pointer for public function state_dir"
+  },
+  "𓋿𓍖𓄪𓀋": {
+    "path": "utilities/shell/direnv-config/sdk/rust/src/client.rs",
+    "line": 370,
+    "name": "get_string",
+    "description": "Get a string value at the given path."
+  },
+  "𓌀𓁼𓁵𓁣": {
+    "path": "utilities/agent/media-tool/src/test_lab/catalog.rs",
+    "line": 372,
+    "name": "load_detail",
+    "description": "auto-generated pointer for public function load_detail"
+  },
+  "𓌀𓌢𓂇𓆨": {
+    "path": "utilities/shell/direnv-config/sdk/typescript/src/version.ts",
+    "line": 15,
+    "name": "bumpVersion",
+    "description": "auto-generated pointer for public function bumpVersion"
+  },
+  "𓌂𓄬𓋿𓎱": {
+    "path": "utilities/shell/direnv-config/src/settings.rs",
+    "line": 25,
+    "name": "settings_path",
+    "description": "Resolve the settings file path: `$DC_SETTINGS` → `$XDG_CONFIG_HOME/direnv-config/settings.yaml` → `~"
+  },
+  "𓌄𓅓𓇳𓀸": {
+    "path": "utilities/agent/llm-toolkit/skill-manage/src/config.rs",
+    "line": 258,
+    "name": "resolve_providers",
+    "description": "auto-generated pointer for public function resolve_providers"
+  },
+  "𓌄𓆂𓍨𓏷": {
+    "path": "utilities/agent/media-tool/src/prep.rs",
+    "line": 42,
+    "name": "prep_channel",
+    "description": "Map asset type + audio kind + optional text_format (+ service) to a prep channel."
+  },
+  "𓌇𓉦𓀦𓎦": {
+    "path": "utilities/agent/media-tool/demos/html/.genai.sample-react-landing.tsx/1779886149_22081e16.tsx",
+    "line": 70,
+    "name": "SaaSLandingPage",
+    "description": "auto-generated pointer for public function SaaSLandingPage"
+  },
+  "𓌇𓍖𓊚𓉆": {
+    "path": "utilities/linux/queue-populator/src/phrase_detector.rs",
+    "line": 197,
+    "name": "strip_phrase",
+    "description": "Case-insensitive removal of every occurrence of `phrase` (exact substring),"
+  },
+  "𓌇𓎞𓊁𓈺": {
+    "path": "utilities/agent/media-tool/src/test_lab/registry.rs",
+    "line": 933,
+    "name": "suggest_prompt_yaml",
+    "description": "Suggest a minimal .media.prompt YAML for a provider entry."
+  },
+  "𓌉𓏈𓈳𓋛": {
+    "path": "utilities/agent/llm-toolkit/packages/web/src/services/sessionWorkflow.ts",
+    "line": 105,
+    "name": "buildContinuationPayload",
+    "description": "auto-generated pointer for public function buildContinuationPayload"
+  },
+  "𓌉𓐪𓁓𓐈": {
+    "path": "utilities/agent/llm-toolkit/packages/cli/src/interactive/context/FocusContext.tsx",
+    "line": 15,
+    "name": "useFocusZone",
+    "description": "auto-generated pointer for public function useFocusZone"
+  },
+  "𓌊𓈼𓌅𓁺": {
+    "path": "utilities/linux/queue-populator/src/stt/engine.rs",
+    "line": 36,
+    "name": "start",
+    "description": "auto-generated pointer for public function start"
+  },
+  "𓌋𓊩𓇾𓎿": {
+    "path": "utilities/agent/dangerously-safe/src/docker/mod.rs",
+    "line": 13,
+    "name": "is_available",
+    "description": "True if the docker CLI is present and the daemon is reachable."
+  },
+  "𓌌𓅌𓂻𓄒": {
+    "path": "utilities/shell/tabbing-on/rust/src/theme.rs",
+    "line": 1524,
+    "name": "load_user_theme_semantics",
+    "description": "auto-generated pointer for public function load_user_theme_semantics"
+  },
+  "𓌌𓐕𓌟𓆞": {
+    "path": "utilities/linux/queue-populator/src/ui/tray.rs",
+    "line": 20,
+    "name": "from_app_state",
+    "description": "auto-generated pointer for public function from_app_state"
+  },
+  "𓌍𓈣𓊱𓍫": {
+    "path": "utilities/shell/direnv-config/src/store/layout.rs",
+    "line": 59,
+    "name": "active_path",
+    "description": "Return the path to the .active file for a named config."
+  },
+  "𓌍𓌟𓄒𓏨": {
+    "path": "utilities/shell/direnv-config/sdk/rust/src/store.rs",
+    "line": 114,
+    "name": "layer_path",
+    "description": "Return the path to a specific layer file: `{store}/{name}/{layer}.yaml`."
+  },
+  "𓌎𓎵𓎋𓍷": {
+    "path": "utilities/agent/llm-toolkit/packages/web/src/hooks/useApi.ts",
+    "line": 77,
+    "name": "useConversations",
+    "description": "auto-generated pointer for public function useConversations"
+  },
+  "𓌐𓃡𓀻𓎲": {
+    "path": "utilities/agent/llm-toolkit/packages/web/src/pages/ProjectDetail.tsx",
+    "line": 30,
+    "name": "ProjectDetail",
+    "description": "auto-generated pointer for public function ProjectDetail"
+  },
+  "𓌐𓌉𓂜𓌰": {
+    "path": "utilities/linux/queue-populator/src/config/llm.rs",
+    "line": 85,
+    "name": "env_var_fallbacks",
+    "description": "auto-generated pointer for public function env_var_fallbacks"
+  },
+  "𓌐𓏮𓀤𓃳": {
+    "path": "utilities/agent/llm-toolkit/packages/cli/src/interactive/pages/ThreadPage.tsx",
+    "line": 42,
+    "name": "ThreadPage",
+    "description": "auto-generated pointer for public function ThreadPage"
+  },
+  "𓌒𓉽𓀈𓊬": {
+    "path": "utilities/agent/llm-toolkit/packages/cli/src/interactive/pages/EditPage.tsx",
+    "line": 91,
+    "name": "EditPage",
+    "description": "auto-generated pointer for public function EditPage"
+  },
+  "𓌒𓌌𓊚𓉾": {
+    "path": "utilities/agent/llm-toolkit/packages/cli/src/interactive/components/Sidebar.tsx",
+    "line": 54,
+    "name": "Sidebar",
+    "description": "auto-generated pointer for public function Sidebar"
+  },
+  "𓌓𓆗𓎯𓊴": {
+    "path": "utilities/agent/llm-toolkit/packages/cli/src/interactive/components/ConversationRow.tsx",
+    "line": 39,
+    "name": "ConversationRow",
+    "description": "auto-generated pointer for public function ConversationRow"
+  },
+  "𓌔𓆙𓈹𓋜": {
+    "path": "utilities/agent/media-tool/src/test_lab/settings.rs",
+    "line": 184,
+    "name": "load",
+    "description": "auto-generated pointer for public function load"
+  },
+  "𓌔𓇻𓎧𓋤": {
+    "path": "utilities/shell/repo-lock/src/record.rs",
+    "line": 118,
+    "name": "path_hash",
+    "description": "`sha256-16`: first 16 hex chars of the SHA-256 of the repo-relative path."
+  },
+  "𓌔𓊜𓏺𓃦": {
+    "path": "utilities/agent/llm-toolkit/packages/web/src/hooks/useApi.ts",
+    "line": 5,
+    "name": "apiFetch",
+    "description": "auto-generated pointer for public function apiFetch"
+  },
+  "𓌕𓂆𓁧𓐕": {
+    "path": "utilities/shell/tabbing-on/rust/src/emoji.rs",
+    "line": 439,
+    "name": "is_known_emoji",
+    "description": "auto-generated pointer for public function is_known_emoji"
+  },
+  "𓌕𓂟𓐘𓍋": {
+    "path": "utilities/shell/tabbing-on/rust/src/todo.rs",
+    "line": 240,
+    "name": "todo_done",
+    "description": "Mark a todo as done."
+  },
+  "𓌕𓂴𓄲𓏎": {
+    "path": "utilities/agent/media-tool/src/fim.rs",
+    "line": 244,
+    "name": "guidance_for",
+    "description": "Compose: resolve the solution file for a target, load + strip it, return the"
+  },
+  "𓌕𓆆𓅩𓅣": {
+    "path": "utilities/linux/queue-populator/src/state_machine.rs",
+    "line": 108,
+    "name": "new",
+    "description": "auto-generated pointer for public function new"
+  },
+  "𓌖𓅘𓀇𓏮": {
+    "path": "utilities/shell/direnv-config/src/secretsmap.rs",
+    "line": 214,
+    "name": "resolve_local",
+    "description": "Resolve a spec's value following the populate-secrets precedence."
+  },
+  "𓌖𓋷𓃛𓍉": {
+    "path": "utilities/agent/dangerously-safe/src/image/mod.rs",
+    "line": 42,
+    "name": "summary",
+    "description": "One-line human summary."
+  },
+  "𓌗𓃟𓉱𓁮": {
+    "path": "utilities/shell/direnv-config/src/crypto.rs",
+    "line": 64,
+    "name": "decode_token",
+    "description": "Decrypt a `🔒:v1` (or legacy `dcenc:v1`) token, returning `(tier, plaintext)`."
+  },
+  "𓌗𓈿𓏭𓅈": {
+    "path": "utilities/agent/media-tool/src/output.rs",
+    "line": 48,
+    "name": "link_active",
+    "description": "auto-generated pointer for public function link_active"
+  },
+  "𓌘𓏎𓅀𓃲": {
+    "path": "utilities/linux/queue-populator/src/phrase_detector.rs",
+    "line": 26,
+    "name": "detect",
+    "description": "auto-generated pointer for public function detect"
+  },
+  "𓌙𓊧𓀐𓉭": {
+    "path": "utilities/shell/direnv-config/sdk/elixir/lib/direnv_config/client.ex",
+    "line": 121,
+    "name": "set",
+    "description": "auto-generated pointer for public function set"
+  },
+  "𓌚𓁿𓊳𓊉": {
+    "path": "utilities/shell/direnv-config/src/secretsmap.rs",
+    "line": 92,
+    "name": "parse",
+    "description": "Parse a `.infisical-secrets.yaml` document (already-read string)."
+  },
+  "𓌛𓃶𓇪𓐫": {
+    "path": "utilities/agent/dangerously-safe/src/launch/hooks.rs",
+    "line": 11,
+    "name": "run_host_hook",
+    "description": "Run a host hook (relative to the worktree) with the given extra env."
+  },
+  "𓌛𓋦𓌀𓌷": {
+    "path": "utilities/shell/tabbing-on/rust/src/demo.rs",
+    "line": 136,
+    "name": "run_demo",
+    "description": "auto-generated pointer for public function run_demo"
+  },
+  "𓌝𓍽𓁭𓅮": {
+    "path": "utilities/agent/media-tool/src/ui.rs",
+    "line": 35,
+    "name": "fail_msg",
+    "description": "auto-generated pointer for public function fail_msg"
+  },
+  "𓌠𓆫𓄌𓉲": {
+    "path": "utilities/shell/direnv-config/sdk/rust/src/merge.rs",
+    "line": 66,
+    "name": "deep_merge_multi",
+    "description": "Merge a slice of layers left-to-right."
+  },
+  "𓌢𓃷𓆔𓁧": {
+    "path": "utilities/agent/llm-toolkit/packages/shared/src/parsers/index.ts",
+    "line": 28,
+    "name": "isAssistantMessage",
+    "description": "auto-generated pointer for public function isAssistantMessage"
+  },
+  "𓌤𓆆𓁡𓀤": {
+    "path": "utilities/shell/direnv-config/src/cmd/bat.rs",
+    "line": 284,
+    "name": "run",
+    "description": "auto-generated pointer for public function run"
+  },
+  "𓌥𓀑𓍍𓌲": {
+    "path": "utilities/agent/media-tool/src/test_lab/settings.rs",
+    "line": 54,
+    "name": "effective_model",
+    "description": "auto-generated pointer for public function effective_model"
+  },
+  "𓌥𓄵𓃛𓇴": {
+    "path": "utilities/agent/media-tool/src/schema.rs",
+    "line": 215,
+    "name": "ref_id",
+    "description": "auto-generated pointer for public function ref_id"
+  },
+  "𓌥𓈸𓀙𓀓": {
+    "path": "utilities/agent/media-tool/src/structural.rs",
+    "line": 398,
+    "name": "ffprobe_available",
+    "description": "Synchronous availability check for unit tests / dry diagnostics."
+  },
+  "𓌧𓇁𓇁𓉠": {
+    "path": "utilities/shell/auto-sudo/rust/src/sudoers.rs",
+    "line": 113,
+    "name": "check_file",
+    "description": "auto-generated pointer for public function check_file"
+  },
+  "𓌧𓉺𓈢𓃵": {
+    "path": "utilities/agent/media-tool/src/prep.rs",
+    "line": 334,
+    "name": "prepare_prompt",
+    "description": "auto-generated pointer for public function prepare_prompt"
+  },
+  "𓌩𓅕𓎓𓅏": {
+    "path": "utilities/k8/secret-utils/rust/src/tui/theme.rs",
+    "line": 49,
+    "name": "key_hint",
+    "description": "auto-generated pointer for public function key_hint"
+  },
+  "𓌩𓆡𓂋𓉅": {
+    "path": "utilities/linux/queue-populator/src/config/llm.rs",
+    "line": 102,
+    "name": "needs_base_url",
+    "description": "auto-generated pointer for public function needs_base_url"
+  },
+  "𓌩𓏲𓁙𓃷": {
+    "path": "utilities/shell/direnv-config/src/store/layout.rs",
+    "line": 70,
+    "name": "load_layer",
+    "description": "Load a YAML layer file for a read-modify-write."
+  },
+  "𓌪𓆪𓇃𓆶": {
+    "path": "utilities/k8/secret-utils/rust/src/engine/resolve.rs",
+    "line": 10,
+    "name": "resolve_spec",
+    "description": "Resolve a single SecretSpec to a concrete value."
+  },
+  "𓌫𓍔𓍈𓇥": {
+    "path": "utilities/shell/direnv-config/sdk/rust/src/client.rs",
+    "line": 430,
+    "name": "set",
+    "description": "Set a value in a config layer."
+  },
+  "𓌱𓅒𓄢𓌎": {
+    "path": "utilities/shell/direnv-config/src/secret.rs",
+    "line": 44,
+    "name": "is_restricted_sentinel",
+    "description": "True if the scalar is the `⛔` shadowed-secret sentinel."
+  },
+  "𓌳𓃂𓃃𓅨": {
+    "path": "utilities/agent/media-tool/src/prep.rs",
+    "line": 145,
+    "name": "prep_change_rules",
+    "description": "\"WHAT TO CHANGE\" / cleanup rules for the prep LLM."
+  },
+  "𓌳𓃩𓂏𓀙": {
+    "path": "utilities/shell/direnv-config/src/store/layout.rs",
+    "line": 41,
+    "name": "store_path",
+    "description": "Return the store path for a given directory."
+  },
+  "𓌳𓆈𓎽𓃭": {
+    "path": "utilities/shell/direnv-config/src/cmd/get.rs",
+    "line": 197,
+    "name": "run",
+    "description": "auto-generated pointer for public function run"
+  },
+  "𓌴𓏵𓂊𓋛": {
+    "path": "utilities/agent/llm-toolkit/packages/cli/src/interactive/hooks/useDebouncedValue.ts",
+    "line": 3,
+    "name": "useDebouncedValue",
+    "description": "auto-generated pointer for public function useDebouncedValue"
+  },
+  "𓌶𓃾𓇦𓆑": {
+    "path": "utilities/shell/direnv-config/src/cmd/infisical.rs",
+    "line": 62,
+    "name": "get",
+    "description": "`dc infisical get \"<NAME>\"` — fetch the live Infisical value, locate the"
+  },
+  "𓌽𓎄𓍶𓅤": {
+    "path": "utilities/shell/direnv-config/sdk/elixir/lib/direnv_config/store.ex",
+    "line": 36,
+    "name": "find_current_store",
+    "description": "auto-generated pointer for public function find_current_store"
+  },
+  "𓌿𓊏𓏻𓐠": {
+    "path": "utilities/agent/media-tool/src/output.rs",
+    "line": 31,
+    "name": "genai_candidate_path",
+    "description": "auto-generated pointer for public function genai_candidate_path"
+  },
+  "𓍀𓊥𓄑𓁫": {
+    "path": "utilities/shell/direnv-config/src/yaml/flatten.rs",
+    "line": 210,
+    "name": "emit_exports",
+    "description": "Format flatten results as `export KEY=VALUE\\n` lines suitable for `eval`."
+  },
+  "𓍂𓇑𓃂𓃅": {
+    "path": "utilities/shell/direnv-config/src/audit.rs",
+    "line": 33,
+    "name": "record",
+    "description": "Record a secret reveal."
+  },
+  "𓍂𓋚𓐮𓆊": {
+    "path": "utilities/linux/queue-populator/src/config/llm.rs",
+    "line": 119,
+    "name": "effective_model",
+    "description": "auto-generated pointer for public function effective_model"
+  },
+  "𓍇𓍅𓎿𓂫": {
+    "path": "utilities/shell/tabbing-on/rust/src/toggl.rs",
+    "line": 338,
+    "name": "toggl_on_title_change",
+    "description": "Called after title changes in cmd_tabbing_on()."
+  },
+  "𓍉𓌋𓄓𓏴": {
+    "path": "utilities/agent/media-tool/src/test_lab/settings.rs",
+    "line": 179,
+    "name": "settings_path",
+    "description": "auto-generated pointer for public function settings_path"
+  },
+  "𓍊𓉹𓍰𓀐": {
+    "path": "utilities/agent/llm-toolkit/skill-manage/src/config.rs",
+    "line": 88,
+    "name": "load",
+    "description": "auto-generated pointer for public function load"
+  },
+  "𓍋𓍞𓂫𓉀": {
+    "path": "utilities/agent/dangerously-safe/src/image/mod.rs",
+    "line": 61,
+    "name": "render_dockerfile",
+    "description": "Render the Dockerfile this plan would build, or `None` for `Exact`."
+  },
+  "𓍍𓃁𓃩𓎎": {
+    "path": "utilities/linux/queue-populator/src/ui/app.rs",
+    "line": 70,
+    "name": "new",
+    "description": "auto-generated pointer for public function new"
+  },
+  "𓍎𓄄𓈡𓃌": {
+    "path": "utilities/agent/llm-toolkit/skill-manage/src/tui/app.rs",
+    "line": 309,
+    "name": "handle_key",
+    "description": "Returns true if should quit."
+  },
+  "𓍐𓍹𓆰𓇩": {
+    "path": "utilities/shell/tabbing-on/rust/src/theme_data.rs",
+    "line": 244,
+    "name": "gen_ramp",
+    "description": "integer RGB lerp between two #RRGGBB at `steps` evenly-spaced points,"
+  },
+  "𓍒𓆳𓍝𓌄": {
+    "path": "utilities/shell/auto-sudo/rust/src/config.rs",
+    "line": 165,
+    "name": "sudo_for_command",
+    "description": "auto-generated pointer for public function sudo_for_command"
+  },
+  "𓍒𓏉𓆜𓂰": {
+    "path": "utilities/agent/mallm/src/formatter.ts",
+    "line": 3,
+    "name": "formatMarkdown",
+    "description": "auto-generated pointer for public function formatMarkdown"
+  },
+  "𓍖𓆛𓍅𓆽": {
+    "path": "utilities/shell/tabbing-on/rust/src/history.rs",
+    "line": 97,
+    "name": "history_search",
+    "description": "Search across all history files for a query string (case-insensitive)."
+  },
+  "𓍗𓁅𓍗𓍡": {
+    "path": "utilities/linux/queue-populator/src/config/mod.rs",
+    "line": 141,
+    "name": "default_queue_base_path",
+    "description": "auto-generated pointer for public function default_queue_base_path"
+  },
+  "𓍗𓌦𓁗𓆸": {
+    "path": "utilities/agent/llm-toolkit/packages/api/src/services/converter.ts",
+    "line": 8,
+    "name": "identifyCandidates",
+    "description": "auto-generated pointer for public function identifyCandidates"
+  },
+  "𓍚𓂔𓈍𓊷": {
+    "path": "utilities/linux/queue-populator/src/audio/mod.rs",
+    "line": 119,
+    "name": "close",
+    "description": "Mute an assistant target if it is the one currently open."
+  },
+  "𓍚𓈎𓇑𓍿": {
+    "path": "utilities/shell/tabbing-on/rust/src/plan/types.rs",
+    "line": 110,
+    "name": "prev",
+    "description": "auto-generated pointer for public function prev"
+  },
+  "𓍛𓄓𓁢𓀚": {
+    "path": "utilities/agent/llm-toolkit/packages/cli/src/interactive/pages/ContinueSessionPage.tsx",
+    "line": 22,
+    "name": "ContinueSessionPage",
+    "description": "auto-generated pointer for public function ContinueSessionPage"
+  },
+  "𓍝𓃑𓊩𓇸": {
+    "path": "utilities/agent/llm-toolkit/packages/cli/src/interactive/pages/SettingsPage.tsx",
+    "line": 127,
+    "name": "SettingsPage",
+    "description": "auto-generated pointer for public function SettingsPage"
+  },
+  "𓍝𓌝𓋺𓍦": {
+    "path": "utilities/k8/secret-utils/rust/src/config/v1.rs",
+    "line": 105,
+    "name": "section",
+    "description": "Find section by id"
+  },
+  "𓍞𓁙𓋵𓋻": {
+    "path": "utilities/k8/secret-utils/rust/src/tui/theme.rs",
+    "line": 10,
+    "name": "error",
+    "description": "auto-generated pointer for public function error"
+  },
+  "𓍞𓈣𓉏𓈁": {
+    "path": "utilities/shell/direnv-config/sdk/elixir/lib/direnv_config/native.ex",
+    "line": 94,
+    "name": "bump",
+    "description": "auto-generated pointer for public function bump"
+  },
+  "𓍡𓇓𓀄𓏾": {
+    "path": "utilities/agent/llm-toolkit/packages/web/src/pages/Dashboard.tsx",
+    "line": 5,
+    "name": "Dashboard",
+    "description": "auto-generated pointer for public function Dashboard"
+  },
+  "𓍢𓌿𓊂𓌜": {
+    "path": "utilities/agent/llm-toolkit/skill-manage/src/catalog.rs",
+    "line": 137,
+    "name": "work_types_for",
+    "description": "auto-generated pointer for public function work_types_for"
+  },
+  "𓍢𓏦𓌕𓈞": {
+    "path": "utilities/agent/dangerously-safe/src/paths.rs",
+    "line": 56,
+    "name": "local_share",
+    "description": "`~/.local/share` — where host shared libs (k8-lib) live."
+  },
+  "𓍥𓁟𓄛𓅩": {
+    "path": "utilities/shell/repo-lock/src/session.rs",
+    "line": 45,
+    "name": "optional",
+    "description": "Anonymous-tolerant session for read-only commands."
+  },
+  "𓍥𓃮𓉸𓈄": {
+    "path": "utilities/shell/direnv-config/src/cmd/gen_secrets.rs",
+    "line": 15,
+    "name": "run",
+    "description": "auto-generated pointer for public function run"
+  },
+  "𓍥𓊀𓏔𓊌": {
+    "path": "utilities/agent/dangerously-safe/src/tui/widgets.rs",
+    "line": 25,
+    "name": "select_list",
+    "description": "A scrollable single-select list."
+  },
+  "𓍦𓇯𓄫𓂳": {
+    "path": "utilities/shell/tabbing-on/rust/src/state.rs",
+    "line": 8,
+    "name": "state_dir",
+    "description": "auto-generated pointer for public function state_dir"
+  },
+  "𓍬𓍀𓌬𓍦": {
+    "path": "utilities/shell/tabbing-on/rust/src/color.rs",
+    "line": 199,
+    "name": "resolve_hex",
+    "description": "auto-generated pointer for public function resolve_hex"
+  },
+  "𓍬𓍘𓌍𓁋": {
+    "path": "utilities/shell/direnv-config/sdk/rust/src/path.rs",
+    "line": 76,
+    "name": "get_path",
+    "description": "Resolve a path expression against a YAML Value tree."
+  },
+  "𓍬𓐓𓂏𓌗": {
+    "path": "utilities/agent/dangerously-safe/src/config/mod.rs",
+    "line": 120,
+    "name": "save_template",
+    "description": "Save the current project's config as a named template."
+  },
+  "𓍰𓐗𓌺𓋫": {
+    "path": "utilities/shell/tabbing-on/rust/src/plan/llm.rs",
+    "line": 19,
+    "name": "new",
+    "description": "auto-generated pointer for public function new"
+  },
+  "𓍲𓉝𓀑𓍞": {
+    "path": "utilities/agent/dangerously-safe/src/image/slug.rs",
+    "line": 31,
+    "name": "from_label",
+    "description": "Parse the comma-separated value of the [`APPS_LABEL`]."
+  },
+  "𓍶𓃆𓆉𓁢": {
+    "path": "utilities/linux/queue-populator/src/llm/prompt.rs",
+    "line": 45,
+    "name": "sorted_pretty_json",
+    "description": "Pretty-print with sorted keys, mirroring the Swift JSONEncoder output."
+  },
+  "𓍸𓇿𓏚𓋙": {
+    "path": "utilities/shell/direnv-config/src/cmd/purge.rs",
+    "line": 11,
+    "name": "run",
+    "description": "auto-generated pointer for public function run"
+  },
+  "𓍸𓌡𓂑𓍛": {
+    "path": "utilities/agent/dangerously-safe/src/paths.rs",
+    "line": 32,
+    "name": "data_dir",
+    "description": "`$XDG_DATA_HOME/agent-sandbox` or `~/.local/share/agent-sandbox`."
+  },
+  "𓍹𓐏𓎦𓀇": {
+    "path": "utilities/shell/direnv-config/src/envrc/locator.rs",
+    "line": 236,
+    "name": "envrc_files",
+    "description": "Discover `.envrc*` files in `dir` (non-recursive)."
+  },
+  "𓍺𓆇𓅮𓐤": {
+    "path": "utilities/agent/dangerously-safe/src/tui/fixtures.rs",
+    "line": 13,
+    "name": "fixture_config",
+    "description": "auto-generated pointer for public function fixture_config"
+  },
+  "𓍼𓅣𓊊𓃴": {
+    "path": "utilities/k8/secret-utils/rust/src/tui/mod.rs",
+    "line": 32,
+    "name": "restore_terminal",
+    "description": "auto-generated pointer for public function restore_terminal"
+  },
+  "𓍼𓈨𓎧𓌔": {
+    "path": "utilities/agent/dangerously-safe/src/paths.rs",
+    "line": 26,
+    "name": "config_dir",
+    "description": "`$XDG_CONFIG_HOME/agent-sandbox` or `~/.config/agent-sandbox`."
+  },
+  "𓍼𓊔𓈩𓏇": {
+    "path": "utilities/shell/tabbing-on/rust/src/plan/audio.rs",
+    "line": 65,
+    "name": "stop",
+    "description": "Stop the recording, read the WAV data, clean up the temp file."
+  },
+  "𓍽𓀍𓍇𓅮": {
+    "path": "utilities/agent/llm-toolkit/packages/shared/src/parsers/index.ts",
+    "line": 33,
+    "name": "isCustomTitle",
+    "description": "auto-generated pointer for public function isCustomTitle"
+  },
+  "𓍽𓅼𓍭𓁠": {
+    "path": "utilities/shell/tabbing-on/rust/src/init.rs",
+    "line": 206,
+    "name": "run_ssh_shim",
+    "description": "auto-generated pointer for public function run_ssh_shim"
+  },
+  "𓍾𓈅𓐎𓌟": {
+    "path": "utilities/shell/tabbing-on/rust/src/theme.rs",
+    "line": 1686,
+    "name": "theme_list",
+    "description": "Print a categorized list of available themes to stdout."
+  },
+  "𓍾𓍨𓄂𓍑": {
+    "path": "utilities/shell/direnv-config/sdk/elixir/lib/direnv_config/version.ex",
+    "line": 20,
+    "name": "bump",
+    "description": "auto-generated pointer for public function bump"
+  },
+  "𓍾𓎒𓉎𓎹": {
+    "path": "utilities/agent/llm-toolkit/packages/cli/src/interactive/hooks/useApi.ts",
+    "line": 129,
+    "name": "useSearch",
+    "description": "auto-generated pointer for public function useSearch"
+  },
+  "𓍿𓈸𓇉𓎴": {
+    "path": "utilities/shell/direnv-config/src/cmd/encrypt.rs",
+    "line": 31,
+    "name": "run",
+    "description": "auto-generated pointer for public function run"
+  },
+  "𓎀𓆷𓂨𓋺": {
+    "path": "utilities/shell/tabbing-on/rust/src/plan/llm.rs",
+    "line": 29,
+    "name": "transcribe",
+    "description": "Transcribe audio data via the OpenAI-compatible /audio/transcriptions endpoint."
+  },
+  "𓎀𓏲𓂇𓐊": {
+    "path": "utilities/shell/repo-lock/src/record.rs",
+    "line": 53,
+    "name": "current",
+    "description": "Build a holder for the current session identity."
+  },
+  "𓎁𓇋𓄻𓍕": {
+    "path": "utilities/agent/llm-toolkit/packages/shared/src/parsers/index.ts",
+    "line": 23,
+    "name": "isUserMessage",
+    "description": "auto-generated pointer for public function isUserMessage"
+  },
+  "𓎁𓏿𓅦𓍯": {
+    "path": "utilities/shell/direnv-config/src/store/resolve.rs",
+    "line": 13,
+    "name": "find_parent_store",
+    "description": "Find the parent store by stripping the last path segment from the"
+  },
+  "𓎅𓂒𓌘𓈲": {
+    "path": "utilities/agent/dangerously-safe/src/image/slug.rs",
+    "line": 36,
+    "name": "is_empty",
+    "description": "auto-generated pointer for public function is_empty"
+  },
+  "𓎅𓅙𓆈𓆏": {
+    "path": "utilities/agent/dangerously-safe/src/launch/mod.rs",
+    "line": 297,
+    "name": "doctor",
+    "description": "Environment / dependency check for `agent-sandbox doctor`."
+  },
+  "𓎆𓋦𓏌𓇛": {
+    "path": "utilities/shell/tabbing-on/rust/src/plan/app.rs",
+    "line": 37,
+    "name": "run",
+    "description": "auto-generated pointer for public function run"
+  },
+  "𓎆𓍼𓇅𓎷": {
+    "path": "utilities/linux/queue-populator/src/state_machine.rs",
+    "line": 56,
+    "name": "label",
+    "description": "auto-generated pointer for public function label"
+  },
+  "𓎆𓎩𓋎𓐟": {
+    "path": "utilities/shell/tabbing-on/rust/src/bridge.rs",
+    "line": 73,
+    "name": "create_pipe",
+    "description": "Create a named pipe (FIFO) for the given session."
+  },
+  "𓎉𓉣𓎾𓃰": {
+    "path": "utilities/shell/tabbing-on/rust/src/toggl.rs",
+    "line": 153,
+    "name": "get_projects",
+    "description": "auto-generated pointer for public function get_projects"
+  },
+  "𓎊𓏧𓋼𓍛": {
+    "path": "utilities/linux/queue-populator/src/phrase_detector.rs",
+    "line": 117,
+    "name": "contains_phrase",
+    "description": "Exact (substring) match first, then fuzzy token-window match."
+  },
+  "𓎍𓈑𓉨𓃫": {
+    "path": "utilities/agent/media-tool/src/fim.rs",
+    "line": 34,
+    "name": "resolve_solution_dir",
+    "description": "Resolve the absolute path to the bundled `fim/solution/` directory, if it can be found."
+  },
+  "𓎍𓎹𓍏𓉤": {
+    "path": "utilities/shell/direnv-config/src/target.rs",
+    "line": 29,
+    "name": "display",
+    "description": "A non-secret, human-readable identifier (never the value)."
+  },
+  "𓎎𓏱𓄭𓅵": {
+    "path": "utilities/agent/dangerously-safe/src/config/mod.rs",
+    "line": 52,
+    "name": "has_config",
+    "description": "Whether a project config exists."
+  },
+  "𓎏𓅒𓐞𓐌": {
+    "path": "utilities/shell/tabbing-on/rust/src/render.rs",
+    "line": 223,
+    "name": "apply_urgency_color",
+    "description": "auto-generated pointer for public function apply_urgency_color"
+  },
+  "𓎐𓈕𓂑𓁫": {
+    "path": "utilities/linux/queue-populator/src/state_machine.rs",
+    "line": 28,
+    "name": "node_name",
+    "description": "PipeWire node.name of the virtual source this target feeds."
+  },
+  "𓎑𓌒𓀓𓏢": {
+    "path": "utilities/shell/direnv-config/sdk/elixir/lib/direnv_config/store.ex",
+    "line": 100,
+    "name": "active_path",
+    "description": "auto-generated pointer for public function active_path"
+  },
+  "𓎒𓂐𓂢𓏳": {
+    "path": "utilities/agent/dangerously-safe/src/image/snippets.rs",
+    "line": 115,
+    "name": "get",
+    "description": "auto-generated pointer for public function get"
+  },
+  "𓎒𓅖𓊽𓆣": {
+    "path": "utilities/agent/llm-toolkit/packages/web/src/pages/Explore.tsx",
+    "line": 14,
+    "name": "Explore",
+    "description": "auto-generated pointer for public function Explore"
+  },
+  "𓎒𓐇𓐏𓍖": {
+    "path": "utilities/agent/llm-toolkit/skill-manage/src/catalog.rs",
+    "line": 71,
+    "name": "empty",
+    "description": "auto-generated pointer for public function empty"
+  },
+  "𓎓𓃦𓉬𓆏": {
+    "path": "utilities/shell/tabbing-on/rust/src/todo.rs",
+    "line": 223,
+    "name": "todo_pending",
+    "description": "Print pending todos as \"id title\" lines (for interactive selection)."
+  },
+  "𓎓𓅛𓀡𓊕": {
+    "path": "utilities/shell/tabbing-on/rust/src/history.rs",
+    "line": 25,
+    "name": "history_list_tabs",
+    "description": "List all known tab IDs with started date and latest title."
+  },
+  "𓎓𓇎𓆧𓋫": {
+    "path": "utilities/shell/direnv-config/src/envrc/locator.rs",
+    "line": 111,
+    "name": "scan_blocks",
+    "description": "Scan all `dc_yaml` heredoc blocks in `lines`."
+  },
+  "𓎓𓍥𓅲𓃊": {
+    "path": "utilities/shell/direnv-config/sdk/typescript/src/store.ts",
+    "line": 31,
+    "name": "findCurrentStore",
+    "description": "auto-generated pointer for public function findCurrentStore"
+  },
+  "𓎖𓄽𓈴𓇅": {
+    "path": "utilities/shell/direnv-config/src/store/resolve.rs",
+    "line": 60,
+    "name": "resolve_config",
+    "description": "Resolve a named config across the parent chain by deep-merging"
+  },
+  "𓎖𓐂𓈇𓅲": {
+    "path": "utilities/shell/direnv-config/src/secret.rs",
+    "line": 50,
+    "name": "redaction_for",
+    "description": "Redaction placeholder shown in place of a secret value, annotated by tier."
+  },
+  "𓎗𓍩𓂭𓉣": {
+    "path": "utilities/shell/direnv-config/src/store/meta.rs",
+    "line": 34,
+    "name": "write_meta",
+    "description": "Write the store's `.meta` YAML file."
+  },
+  "𓎘𓂾𓆑𓊪": {
+    "path": "utilities/shell/direnv-config/sdk/typescript/src/version.ts",
+    "line": 26,
+    "name": "watchVersion",
+    "description": "auto-generated pointer for public function watchVersion"
+  },
+  "𓎘𓍷𓍸𓐍": {
+    "path": "utilities/shell/tabbing-on/rust/src/emoji.rs",
+    "line": 1,
+    "name": "emoji_lookup",
+    "description": "auto-generated pointer for public function emoji_lookup"
+  },
+  "𓎘𓏅𓄟𓁓": {
+    "path": "utilities/k8/secret-utils/rust/src/tui/verify_view.rs",
+    "line": 205,
+    "name": "print_results_plain",
+    "description": "Plain-text fallback for non-TTY / --no-tui"
+  },
+  "𓎜𓋼𓄻𓉺": {
+    "path": "utilities/agent/llm-toolkit/skill-manage/src/tui/app.rs",
+    "line": 773,
+    "name": "counts",
+    "description": "auto-generated pointer for public function counts"
+  },
+  "𓎝𓂷𓌣𓅎": {
+    "path": "utilities/agent/media-tool/src/output.rs",
+    "line": 59,
+    "name": "write_metadata",
+    "description": "Write a metadata sidecar file next to a generated candidate."
+  },
+  "𓎞𓄸𓁝𓂏": {
+    "path": "utilities/agent/dangerously-safe/src/worktree/status.rs",
+    "line": 52,
+    "name": "status_for",
+    "description": "Collect the working-tree status for `path`."
+  },
+  "𓎞𓈚𓂙𓏻": {
+    "path": "utilities/agent/dangerously-safe/src/worktree/status.rs",
+    "line": 19,
+    "name": "summary",
+    "description": "Compact one-line summary for the picker, e.g."
+  },
+  "𓎞𓉒𓂡𓏝": {
+    "path": "utilities/linux/queue-populator/src/config/llm.rs",
+    "line": 56,
+    "name": "env_var_key",
+    "description": "auto-generated pointer for public function env_var_key"
+  },
+  "𓎟𓄸𓎽𓅉": {
+    "path": "utilities/k8/secret-utils/rust/src/commands/verify.rs",
+    "line": 11,
+    "name": "run",
+    "description": "auto-generated pointer for public function run"
+  },
+  "𓎟𓍚𓏏𓁤": {
+    "path": "utilities/k8/secret-utils/rust/src/tui/mod.rs",
+    "line": 22,
+    "name": "setup_terminal",
+    "description": "Set up the terminal for TUI rendering."
+  },
+  "𓎠𓃡𓄵𓀭": {
+    "path": "utilities/linux/queue-populator/src/config/store.rs",
+    "line": 25,
+    "name": "config_file",
+    "description": "auto-generated pointer for public function config_file"
+  },
+  "𓎡𓌉𓃹𓊫": {
+    "path": "utilities/agent/media-tool/src/ui.rs",
+    "line": 25,
+    "name": "ok",
+    "description": "auto-generated pointer for public function ok"
+  },
+  "𓎡𓎵𓇷𓁥": {
+    "path": "utilities/agent/llm-toolkit/packages/web/src/pages/Projects.tsx",
+    "line": 143,
+    "name": "Projects",
+    "description": "auto-generated pointer for public function Projects"
+  },
+  "𓎢𓊜𓅰𓃞": {
+    "path": "utilities/agent/llm-toolkit/skill-manage/src/catalog.rs",
+    "line": 290,
+    "name": "init_example",
+    "description": "auto-generated pointer for public function init_example"
+  },
+  "𓎦𓆻𓍂𓋌": {
+    "path": "utilities/shell/direnv-config/src/yaml/flatten.rs",
+    "line": 222,
+    "name": "emit_exports_with_dc_vars",
+    "description": "Emit exports with additional `DC_ROOT`, `DC_VERSION`, and `DC_ENV` variables"
+  },
+  "𓎦𓇭𓉖𓆊": {
+    "path": "utilities/shell/tabbing-on/rust/src/color.rs",
+    "line": 207,
+    "name": "urgency_tab_color",
+    "description": "auto-generated pointer for public function urgency_tab_color"
+  },
+  "𓎦𓏟𓍮𓎷": {
+    "path": "utilities/agent/dangerously-safe/src/config/mod.rs",
+    "line": 40,
+    "name": "sandbox_dir",
+    "description": "Path to the `.agent-sandbox` directory at the project root."
+  },
+  "𓎧𓈬𓁃𓈸": {
+    "path": "utilities/k8/secret-utils/rust/src/dc.rs",
+    "line": 108,
+    "name": "edit_line",
+    "description": "Replace the content of a specific line in a file (1-indexed)"
+  },
+  "𓎩𓅱𓈧𓄎": {
+    "path": "utilities/k8/secret-utils/rust/src/dc.rs",
+    "line": 30,
+    "name": "dc_set",
+    "description": "Run `dc set <scope> <item_path> <value>`"
+  },
+  "𓎪𓈜𓀍𓈂": {
+    "path": "utilities/agent/dangerously-safe/src/image/snippets.rs",
+    "line": 110,
+    "name": "base",
+    "description": "auto-generated pointer for public function base"
+  },
+  "𓎫𓄋𓈕𓉩": {
+    "path": "utilities/k8/secret-utils/rust/src/dc.rs",
+    "line": 11,
+    "name": "dc_get",
+    "description": "Run `dc get <scope> <item_path>` and return the value string"
+  },
+  "𓎬𓇡𓆅𓂴": {
+    "path": "utilities/agent/media-tool/src/ui.rs",
+    "line": 9,
+    "name": "banner",
+    "description": "auto-generated pointer for public function banner"
+  },
+  "𓎭𓋞𓌓𓂿": {
+    "path": "utilities/agent/llm-toolkit/skill-manage/src/kinds.rs",
+    "line": 23,
+    "name": "as_str",
+    "description": "auto-generated pointer for public function as_str"
+  },
+  "𓎱𓄁𓈶𓆋": {
+    "path": "utilities/agent/media-tool/src/eval.rs",
+    "line": 20,
+    "name": "evaluate_candidates",
+    "description": "auto-generated pointer for public function evaluate_candidates"
+  },
+  "𓎱𓋔𓏁𓅡": {
+    "path": "utilities/shell/direnv-config/sdk/elixir/lib/direnv_config/watcher.ex",
+    "line": 7,
+    "name": "start_link",
+    "description": "auto-generated pointer for public function start_link"
+  },
+  "𓎱𓋨𓎷𓉘": {
+    "path": "utilities/shell/tabbing-on/rust/src/toggl.rs",
+    "line": 445,
+    "name": "toggl_status",
+    "description": "Print current Toggl tracking state to stderr."
+  },
+  "𓎲𓊀𓊂𓈏": {
+    "path": "utilities/shell/tabbing-on/rust/src/theme_data.rs",
+    "line": 402,
+    "name": "emit_title_seq",
+    "description": "Window/tab title via OSC 0 (sets both icon name and title)."
+  },
+  "𓎴𓇹𓏅𓊐": {
+    "path": "utilities/k8/secret-utils/rust/src/commands/fetch.rs",
+    "line": 8,
+    "name": "run",
+    "description": "auto-generated pointer for public function run"
+  },
+  "𓎴𓉣𓃤𓌁": {
+    "path": "utilities/shell/direnv-config/sdk/elixir/lib/direnv_config/cli.ex",
+    "line": 32,
+    "name": "set",
+    "description": "auto-generated pointer for public function set"
+  },
+  "𓎹𓁄𓅷𓐗": {
+    "path": "utilities/shell/tabbing-on/rust/src/color.rs",
+    "line": 287,
+    "name": "color_list",
+    "description": "auto-generated pointer for public function color_list"
+  },
+  "𓎻𓁡𓉄𓇲": {
+    "path": "utilities/agent/llm-toolkit/packages/web/src/context/HarnessContext.tsx",
+    "line": 12,
+    "name": "HarnessProvider",
+    "description": "auto-generated pointer for public function HarnessProvider"
+  },
+  "𓎻𓋋𓉱𓍣": {
+    "path": "utilities/linux/queue-populator/src/ui/sounds.rs",
+    "line": 63,
+    "name": "play_memo",
+    "description": "Two-tone lower chime when memo recording starts (\"Glass\")."
+  },
+  "𓎽𓀀𓁕𓈒": {
+    "path": "utilities/agent/llm-toolkit/packages/shared/src/api-launcher.ts",
+    "line": 42,
+    "name": "ensureApi",
+    "description": "auto-generated pointer for public function ensureApi"
+  },
+  "𓎿𓁞𓇝𓏭": {
+    "path": "utilities/agent/media-tool/src/test_lab/persist.rs",
+    "line": 78,
+    "name": "register",
+    "description": "Register a prompt file under a generator slug."
+  },
+  "𓎿𓅕𓌎𓊀": {
+    "path": "utilities/shell/repo-lock/src/registry.rs",
+    "line": 183,
+    "name": "journal_tail",
+    "description": "Last `n` journal lines (for `doctor`)."
+  },
+  "𓏁𓋊𓁹𓏺": {
+    "path": "utilities/agent/llm-toolkit/packages/web/src/pages/Settings.tsx",
+    "line": 41,
+    "name": "Settings",
+    "description": "auto-generated pointer for public function Settings"
+  },
+  "𓏃𓅛𓍽𓅸": {
+    "path": "utilities/agent/dangerously-safe/src/tui/fixtures.rs",
+    "line": 73,
+    "name": "fixture_plan",
+    "description": "auto-generated pointer for public function fixture_plan"
+  },
+  "𓏃𓌊𓍀𓇯": {
+    "path": "utilities/agent/mallm/src/help-parser.ts",
+    "line": 3,
+    "name": "parseHelp",
+    "description": "auto-generated pointer for public function parseHelp"
+  },
+  "𓏇𓁼𓉯𓉥": {
+    "path": "utilities/shell/tabbing-on/rust/src/color.rs",
+    "line": 32,
+    "name": "color_code_or_raw",
+    "description": "auto-generated pointer for public function color_code_or_raw"
+  },
+  "𓏉𓊘𓐗𓆡": {
+    "path": "utilities/agent/dangerously-safe/src/config/mod.rs",
+    "line": 46,
+    "name": "config_path",
+    "description": "Path to the `.agent-sandbox/config` file (may not exist)."
+  },
+  "𓏋𓂞𓊲𓏦": {
+    "path": "utilities/shell/repo-lock/src/record.rs",
+    "line": 135,
+    "name": "to_rfc3339",
+    "description": "auto-generated pointer for public function to_rfc3339"
+  },
+  "𓏌𓅷𓌯𓆰": {
+    "path": "utilities/shell/tabbing-on/rust/src/state.rs",
+    "line": 90,
+    "name": "load",
+    "description": "Backfill from session file, but only for vars not present in the"
+  },
+  "𓏌𓎳𓈔𓏍": {
+    "path": "utilities/agent/media-tool/src/schema.rs",
+    "line": 360,
+    "name": "default_extension",
+    "description": "auto-generated pointer for public function default_extension"
+  },
+  "𓏍𓉅𓉁𓊚": {
+    "path": "utilities/agent/llm-toolkit/packages/cli/src/interactive/pages/StyleGuidePage.tsx",
+    "line": 20,
+    "name": "StyleGuidePage",
+    "description": "auto-generated pointer for public function StyleGuidePage"
+  },
+  "𓏍𓉱𓌳𓇂": {
+    "path": "utilities/shell/tabbing-on/rust/src/todo.rs",
+    "line": 191,
+    "name": "todo_list",
+    "description": "Print a formatted list of todos with status icons."
+  },
+  "𓏏𓄥𓈨𓊞": {
+    "path": "utilities/shell/direnv-config/sdk/elixir/lib/direnv_config/watcher.ex",
+    "line": 13,
+    "name": "stop",
+    "description": "auto-generated pointer for public function stop"
+  },
+  "𓏒𓁑𓅼𓁃": {
+    "path": "utilities/agent/llm-toolkit/packages/cli/src/interactive/context/HarnessContext.tsx",
+    "line": 14,
+    "name": "HarnessProvider",
+    "description": "auto-generated pointer for public function HarnessProvider"
+  },
+  "𓏕𓂠𓁌𓐘": {
+    "path": "utilities/k8/secret-utils/rust/src/api/mod.rs",
+    "line": 134,
+    "name": "get_secret",
+    "description": "auto-generated pointer for public function get_secret"
+  },
+  "𓏖𓀇𓄋𓉭": {
+    "path": "utilities/agent/dangerously-safe/src/image/registry.rs",
+    "line": 17,
+    "name": "list_sandbox_images",
+    "description": "List local images tagged with the apps label."
+  },
+  "𓏖𓊣𓅯𓀽": {
+    "path": "utilities/shell/tabbing-on/rust/src/theme_data.rs",
+    "line": 211,
+    "name": "x11_to_hex",
+    "description": "normalize an X11/Tk color name and look it up in colors.txt"
+  },
+  "𓏗𓋃𓍝𓈅": {
+    "path": "utilities/agent/media-tool/src/test_lab/catalog.rs",
+    "line": 63,
+    "name": "type_label",
+    "description": "auto-generated pointer for public function type_label"
+  },
+  "𓏚𓋮𓏋𓐆": {
+    "path": "utilities/shell/direnv-config/src/settings.rs",
+    "line": 75,
+    "name": "key",
+    "description": "Convenience: load just the AEAD key."
+  },
+  "𓏜𓏜𓐯𓆵": {
+    "path": "utilities/shell/direnv-config/src/store/layout.rs",
+    "line": 111,
+    "name": "ensure_config",
+    "description": "Create the named config subdirectory inside a store if it does not exist."
+  },
+  "𓏝𓊀𓋬𓆷": {
+    "path": "utilities/agent/llm-toolkit/packages/cli/src/commands/show.tsx",
+    "line": 26,
+    "name": "ShowCommand",
+    "description": "auto-generated pointer for public function ShowCommand"
+  },
+  "𓏣𓀧𓎰𓌑": {
+    "path": "utilities/agent/llm-toolkit/packages/cli/src/interactive/components/StepIndicator.tsx",
+    "line": 9,
+    "name": "StepIndicator",
+    "description": "auto-generated pointer for public function StepIndicator"
+  },
+  "𓏤𓍞𓈋𓇗": {
+    "path": "utilities/agent/media-tool/src/schema.rs",
+    "line": 342,
+    "name": "from_type_str",
+    "description": "auto-generated pointer for public function from_type_str"
+  },
+  "𓏪𓈊𓊧𓆣": {
+    "path": "utilities/agent/dangerously-safe/src/image/dockerfile.rs",
+    "line": 14,
+    "name": "assemble",
+    "description": "Build a Dockerfile string."
+  },
+  "𓏬𓁑𓏆𓀌": {
+    "path": "utilities/agent/dangerously-safe/src/image/slug.rs",
+    "line": 83,
+    "name": "image_reference",
+    "description": "Fully qualified `agent-sandbox:slug-set` reference."
+  },
+  "𓏬𓇹𓉝𓀴": {
+    "path": "utilities/agent/llm-toolkit/packages/shared/src/parsers/index.ts",
+    "line": 38,
+    "name": "extractTextContent",
+    "description": "auto-generated pointer for public function extractTextContent"
+  },
+  "𓏭𓀀𓂳𓆣": {
+    "path": "utilities/agent/llm-toolkit/skill-manage/src/tui/mod.rs",
+    "line": 79,
+    "name": "parse_provider",
+    "description": "auto-generated pointer for public function parse_provider"
+  },
+  "𓏭𓈩𓁞𓉒": {
+    "path": "utilities/agent/dangerously-safe/src/image/snippets.rs",
+    "line": 51,
+    "name": "load",
+    "description": "Load all snippets from the search path."
+  },
+  "𓏮𓇮𓊸𓎀": {
+    "path": "utilities/k8/secret-utils/rust/src/api/mod.rs",
+    "line": 106,
+    "name": "list_secrets",
+    "description": "auto-generated pointer for public function list_secrets"
+  },
+  "𓏮𓉽𓃁𓆍": {
+    "path": "utilities/agent/llm-toolkit/packages/api/src/services/harness-transform.ts",
+    "line": 130,
+    "name": "exportUniversalToCodex",
+    "description": "auto-generated pointer for public function exportUniversalToCodex"
+  },
+  "𓏰𓆢𓉢𓏦": {
+    "path": "utilities/shell/direnv-config/src/cmd/unset.rs",
+    "line": 3,
+    "name": "run",
+    "description": "auto-generated pointer for public function run"
+  },
+  "𓏱𓋷𓉒𓅢": {
+    "path": "utilities/agent/media-tool/src/ui.rs",
+    "line": 45,
+    "name": "verbose",
+    "description": "auto-generated pointer for public function verbose"
+  },
+  "𓏲𓌮𓀩𓎑": {
+    "path": "utilities/shell/direnv-config/src/secretcmp.rs",
+    "line": 23,
+    "name": "verdict",
+    "description": "Format a comparison verdict line — `DC == k8  ns/secret/KEY`."
+  },
+  "𓏳𓁞𓌻𓍱": {
+    "path": "utilities/shell/repo-lock/src/record.rs",
+    "line": 94,
+    "name": "is_expired",
+    "description": "True when this lock's `expires_at` is at or before `now`."
+  },
+  "𓏳𓇿𓊚𓈩": {
+    "path": "utilities/shell/direnv-config/sdk/elixir/lib/direnv_config/cli.ex",
+    "line": 60,
+    "name": "bump",
+    "description": "auto-generated pointer for public function bump"
+  },
+  "𓏳𓍎𓏵𓍓": {
+    "path": "utilities/shell/direnv-config/sdk/rust/src/store.rs",
+    "line": 105,
+    "name": "ensure_config",
+    "description": "Create the named config subdirectory inside a store if it does not exist."
+  },
+  "𓏴𓐡𓁑𓏝": {
+    "path": "utilities/agent/llm-toolkit/packages/api/src/routes/llm.ts",
+    "line": 44,
+    "name": "createLlmRoutes",
+    "description": "auto-generated pointer for public function createLlmRoutes"
+  },
+  "𓏹𓋯𓈗𓂗": {
+    "path": "utilities/shell/repo-lock/src/glyph.rs",
+    "line": 33,
+    "name": "unicode4_encode_uuid",
+    "description": "Four-glyph cosmetic handle for a session UUID."
+  },
+  "𓏺𓊫𓉖𓊌": {
+    "path": "utilities/linux/queue-populator/src/audio/memo_recorder.rs",
+    "line": 71,
+    "name": "append",
+    "description": "Append captured samples (48 kHz mono f32)."
+  },
+  "𓏺𓍽𓎭𓇩": {
+    "path": "utilities/agent/media-tool/src/test_lab/settings.rs",
+    "line": 233,
+    "name": "provider_defaults",
+    "description": "auto-generated pointer for public function provider_defaults"
+  },
+  "𓏼𓌘𓉤𓂩": {
+    "path": "utilities/shell/direnv-config/sdk/elixir/lib/direnv_config/client.ex",
+    "line": 65,
+    "name": "get_string",
+    "description": "auto-generated pointer for public function get_string"
+  },
+  "𓏽𓀏𓃛𓍡": {
+    "path": "utilities/agent/media-tool/src/test_lab/mod.rs",
+    "line": 32,
+    "name": "resolve",
+    "description": "auto-generated pointer for public function resolve"
+  },
+  "𓏾𓀂𓊘𓉱": {
+    "path": "utilities/agent/llm-toolkit/packages/cli/src/interactive/hooks/useTerminalSize.ts",
+    "line": 4,
+    "name": "useTerminalSize",
+    "description": "auto-generated pointer for public function useTerminalSize"
+  },
+  "𓏿𓆌𓀦𓌑": {
+    "path": "utilities/linux/queue-populator/src/queue/manifest.rs",
+    "line": 50,
+    "name": "is_valid_path",
+    "description": "auto-generated pointer for public function is_valid_path"
+  },
+  "𓐀𓁊𓄺𓅎": {
+    "path": "utilities/shell/direnv-config/src/yaml/path.rs",
+    "line": 78,
+    "name": "get_path",
+    "description": "Resolve a path expression against a YAML Value tree."
+  },
+  "𓐀𓆩𓎀𓅪": {
+    "path": "utilities/shell/auto-sudo/rust/src/sudoers.rs",
+    "line": 24,
+    "name": "render",
+    "description": "auto-generated pointer for public function render"
+  },
+  "𓐀𓈺𓌭𓊑": {
+    "path": "utilities/shell/direnv-config/src/kube.rs",
+    "line": 37,
+    "name": "read_secret_key",
+    "description": "Read a single data key from a Secret, base64-decoded."
+  },
+  "𓐂𓎎𓁢𓅷": {
+    "path": "utilities/linux/queue-populator/src/llm/prompt.rs",
+    "line": 6,
+    "name": "classification_prompt",
+    "description": "auto-generated pointer for public function classification_prompt"
+  },
+  "𓐃𓁘𓃦𓄵": {
+    "path": "utilities/shell/direnv-config/src/secretsmap.rs",
+    "line": 161,
+    "name": "find_by_name",
+    "description": "Find all `(section, name, spec)` matching a secret NAME (across sections)."
+  },
+  "𓐃𓄇𓃶𓆯": {
+    "path": "utilities/shell/repo-lock/src/record.rs",
+    "line": 196,
+    "name": "hostname",
+    "description": "Local hostname via `gethostname(2)`, falling back to `\"unknown\"`."
+  },
+  "𓐃𓆵𓈓𓃵": {
+    "path": "utilities/agent/media-tool/src/schema.rs",
+    "line": 413,
+    "name": "parse_prompt_file",
+    "description": "auto-generated pointer for public function parse_prompt_file"
+  },
+  "𓐄𓉣𓆬𓆫": {
+    "path": "utilities/shell/direnv-config/src/cmd/infisical.rs",
+    "line": 117,
+    "name": "set",
+    "description": "`dc infisical set \"<NAME>\" …` — locate where the dc secret is set and edit it"
+  },
+  "𓐅𓈿𓋆𓇵": {
+    "path": "utilities/agent/llm-toolkit/skill-manage/src/config.rs",
+    "line": 227,
+    "name": "kind_dir",
+    "description": "auto-generated pointer for public function kind_dir"
+  },
+  "𓐆𓍨𓋻𓉾": {
+    "path": "utilities/agent/media-tool/src/structural.rs",
+    "line": 29,
+    "name": "score_structural",
+    "description": "Score an artifact with structural probes."
+  },
+  "𓐉𓀎𓎕𓌂": {
+    "path": "utilities/k8/secret-utils/rust/src/config/v1.rs",
+    "line": 111,
+    "name": "all_paths",
+    "description": "All section paths"
+  },
+  "𓐉𓂓𓇂𓎉": {
+    "path": "utilities/shell/direnv-config/sdk/elixir/lib/direnv_config/native.ex",
+    "line": 59,
+    "name": "unset",
+    "description": "auto-generated pointer for public function unset"
+  },
+  "𓐉𓆗𓍡𓅪": {
+    "path": "utilities/shell/direnv-config/sdk/elixir/lib/direnv_config/path.ex",
+    "line": 70,
+    "name": "get",
+    "description": "auto-generated pointer for public function get"
+  },
+  "𓐊𓉆𓅣𓈸": {
+    "path": "utilities/shell/direnv-config/src/store/resolve.rs",
+    "line": 40,
+    "name": "resolve_chain",
+    "description": "Walk up the parent chain, returning stores in order from"
+  },
+  "𓐊𓏖𓉺𓐛": {
+    "path": "utilities/shell/direnv-config/src/cmd/config.rs",
+    "line": 257,
+    "name": "set",
+    "description": "auto-generated pointer for public function set"
+  },
+  "𓐌𓂨𓊆𓂏": {
+    "path": "utilities/linux/queue-populator/src/config/store.rs",
+    "line": 18,
+    "name": "config_dir",
+    "description": "auto-generated pointer for public function config_dir"
+  },
+  "𓐌𓍑𓂦𓇥": {
+    "path": "utilities/shell/tabbing-on/rust/src/theme_data.rs",
+    "line": 148,
+    "name": "set",
+    "description": "set the value at `handle`, padding to 383 lines, returning the new blob."
+  },
+  "𓐌𓏜𓎘𓂃": {
+    "path": "utilities/linux/queue-populator/src/config/debug_log.rs",
+    "line": 51,
+    "name": "verbose",
+    "description": "auto-generated pointer for public function verbose"
+  },
+  "𓐎𓍮𓆈𓍆": {
+    "path": "utilities/shell/tabbing-on/rust/src/theme_data.rs",
+    "line": 345,
+    "name": "emit_clear_bg_seq",
+    "description": "Reset background only (OSC 111)."
+  },
+  "𓐏𓆫𓋫𓍱": {
+    "path": "utilities/shell/direnv-config/sdk/elixir/lib/direnv_config/store.ex",
+    "line": 86,
+    "name": "ensure_config",
+    "description": "auto-generated pointer for public function ensure_config"
+  },
+  "𓐑𓃰𓈢𓐦": {
+    "path": "utilities/agent/media-tool/src/renderers/mod.rs",
+    "line": 21,
+    "name": "get_renderer",
+    "description": "auto-generated pointer for public function get_renderer"
+  },
+  "𓐒𓂷𓍰𓇆": {
+    "path": "utilities/k8/secret-utils/rust/src/engine/mod.rs",
+    "line": 65,
+    "name": "verify_secret",
+    "description": "Verify a single secret: compare dc value vs Infisical value"
+  },
+  "𓐓𓃍𓉵𓋞": {
+    "path": "utilities/agent/media-tool/src/test_lab/registry.rs",
+    "line": 99,
+    "name": "build_catalog",
+    "description": "auto-generated pointer for public function build_catalog"
+  },
+  "𓐓𓈾𓇥𓂗": {
+    "path": "utilities/shell/tabbing-on/rust/src/render.rs",
+    "line": 232,
+    "name": "apply_bg_color",
+    "description": "auto-generated pointer for public function apply_bg_color"
+  },
+  "𓐓𓋭𓇚𓋊": {
+    "path": "utilities/agent/media-tool/src/validate.rs",
+    "line": 29,
+    "name": "validate_svg",
+    "description": "auto-generated pointer for public function validate_svg"
+  },
+  "𓐕𓃒𓌷𓅼": {
+    "path": "utilities/agent/llm-toolkit/packages/web/src/pages/SafetyWatch.tsx",
+    "line": 16,
+    "name": "SafetyWatch",
+    "description": "auto-generated pointer for public function SafetyWatch"
+  },
+  "𓐖𓐢𓅈𓏸": {
+    "path": "utilities/agent/dangerously-safe/src/image/snippets.rs",
+    "line": 128,
+    "name": "from_parts",
+    "description": "auto-generated pointer for public function from_parts"
+  },
+  "𓐗𓁎𓍠𓍀": {
+    "path": "utilities/shell/tabbing-on/rust/src/plan/types.rs",
+    "line": 95,
+    "name": "all",
+    "description": "auto-generated pointer for public function all"
+  },
+  "𓐗𓄚𓐟𓏣": {
+    "path": "utilities/linux/queue-populator/src/audio/memo_recorder.rs",
+    "line": 82,
+    "name": "cancel",
+    "description": "auto-generated pointer for public function cancel"
+  },
+  "𓐘𓅨𓉐𓄯": {
+    "path": "utilities/shell/auto-sudo/rust/src/config.rs",
+    "line": 196,
+    "name": "allow_pipes",
+    "description": "auto-generated pointer for public function allow_pipes"
+  },
+  "𓐘𓍫𓆾𓊭": {
+    "path": "utilities/k8/secret-utils/rust/src/engine/mod.rs",
+    "line": 25,
+    "name": "is_ok",
+    "description": "auto-generated pointer for public function is_ok"
+  },
+  "𓐚𓈁𓈑𓉬": {
+    "path": "utilities/agent/llm-toolkit/packages/cli/src/interactive/pages/DatasetDetailPage.tsx",
+    "line": 32,
+    "name": "DatasetDetailPage",
+    "description": "auto-generated pointer for public function DatasetDetailPage"
+  },
+  "𓐝𓇝𓊚𓃘": {
+    "path": "utilities/agent/llm-toolkit/packages/cli/src/interface-selection.ts",
+    "line": 19,
+    "name": "parseInvocation",
+    "description": "auto-generated pointer for public function parseInvocation"
+  },
+  "𓐝𓍵𓅑𓃃": {
+    "path": "utilities/shell/direnv-config/src/crypto.rs",
+    "line": 39,
+    "name": "token_tier",
+    "description": "Parse the sensitivity tier from a token without decrypting it."
+  },
+  "𓐝𓎆𓄮𓀄": {
+    "path": "utilities/shell/direnv-config/sdk/rust/src/resolve.rs",
+    "line": 14,
+    "name": "find_parent_store",
+    "description": "Find the parent store by stripping the last path segment from the"
+  },
+  "𓐞𓏕𓄹𓁐": {
+    "path": "utilities/agent/media-tool/src/test_lab/persist.rs",
+    "line": 114,
+    "name": "paths_for_slug",
+    "description": "auto-generated pointer for public function paths_for_slug"
+  },
+  "𓐟𓀶𓅮𓅻": {
+    "path": "utilities/agent/llm-toolkit/packages/cli/src/interactive/pages/ProjectDetailPage.tsx",
+    "line": 31,
+    "name": "ProjectDetailPage",
+    "description": "auto-generated pointer for public function ProjectDetailPage"
+  },
+  "𓐟𓍈𓃝𓏈": {
+    "path": "utilities/shell/tabbing-on/rust/src/toggl.rs",
+    "line": 76,
+    "name": "new",
+    "description": "auto-generated pointer for public function new"
+  },
+  "𓐣𓀫𓊆𓍳": {
+    "path": "utilities/agent/dangerously-safe/src/worktree/mod.rs",
+    "line": 27,
+    "name": "slug",
+    "description": "Directory name (the branch slug)."
+  },
+  "𓐣𓌆𓅽𓁿": {
+    "path": "utilities/linux/queue-populator/src/config/llm.rs",
+    "line": 155,
+    "name": "effective_base_url",
+    "description": "auto-generated pointer for public function effective_base_url"
+  },
+  "𓐣𓐧𓈌𓉻": {
+    "path": "utilities/shell/auto-sudo/rust/src/config.rs",
+    "line": 153,
+    "name": "load",
+    "description": "auto-generated pointer for public function load"
+  },
+  "𓐤𓉴𓌧𓊰": {
+    "path": "utilities/agent/media-tool/src/prep.rs",
+    "line": 701,
+    "name": "build_prep_instruction",
+    "description": "Build the full prep or refine user instruction (pure; unit-tested)."
+  },
+  "𓐥𓄗𓈥𓉨": {
+    "path": "utilities/agent/media-tool/src/providers/mod.rs",
+    "line": 232,
+    "name": "get_chat_provider",
+    "description": "auto-generated pointer for public function get_chat_provider"
+  },
+  "𓐥𓈥𓏳𓇻": {
+    "path": "utilities/shell/direnv-config/src/yaml/flatten.rs",
+    "line": 24,
+    "name": "is_wildcard",
+    "description": "Whether this rule has a wildcard (`*`) as the final path segment."
+  },
+  "𓐦𓅿𓋚𓅅": {
+    "path": "utilities/k8/secret-utils/rust/src/tui/theme.rs",
+    "line": 32,
+    "name": "selected",
+    "description": "auto-generated pointer for public function selected"
+  },
+  "𓐦𓍍𓁭𓋞": {
+    "path": "utilities/agent/mallm/src/resolver.ts",
+    "line": 87,
+    "name": "resolve_mallm",
+    "description": "auto-generated pointer for public function resolve_mallm"
+  },
+  "𓐦𓐦𓀚𓌥": {
+    "path": "utilities/agent/media-tool/src/structural.rs",
+    "line": 52,
+    "name": "is_structural_candidate",
+    "description": "True when structural scoring can apply to this path's extension."
+  },
+  "𓐧𓉱𓍻𓉋": {
+    "path": "utilities/agent/media-tool/src/providers/mod.rs",
+    "line": 376,
+    "name": "default_model",
+    "description": "auto-generated pointer for public function default_model"
+  },
+  "𓐨𓁮𓅏𓌁": {
+    "path": "utilities/shell/repo-lock/src/registry.rs",
+    "line": 271,
+    "name": "overlaps",
+    "description": "Does a lock on `(a_path, a_kind)` overlap a lock on `(b_path, b_kind)`?"
+  },
+  "𓐨𓆲𓋈𓎑": {
+    "path": "utilities/agent/media-tool/src/attachments.rs",
+    "line": 48,
+    "name": "load_attachments",
+    "description": "auto-generated pointer for public function load_attachments"
+  },
+  "𓐨𓎞𓏢𓈆": {
+    "path": "utilities/agent/llm-toolkit/packages/shared/src/parsers/index.ts",
+    "line": 14,
+    "name": "parseJsonlFile",
+    "description": "auto-generated pointer for public function parseJsonlFile"
+  },
+  "𓐨𓏒𓆺𓋀": {
+    "path": "utilities/agent/dangerously-safe/src/tui/widgets.rs",
+    "line": 90,
+    "name": "text_input",
+    "description": "A single-line text input pre-filled with `initial`."
+  },
+  "𓐩𓇐𓍟𓆶": {
+    "path": "utilities/shell/direnv-config/src/secretcmp.rs",
+    "line": 10,
+    "name": "eq_ct",
+    "description": "Constant-time-ish equality: compare SHA-256 digests of both inputs."
+  },
+  "𓐩𓌐𓉨𓋖": {
+    "path": "utilities/agent/llm-toolkit/packages/cli/src/interactive/services/sessionWorkflow.ts",
+    "line": 83,
+    "name": "fetchUniversalConversation",
+    "description": "auto-generated pointer for public function fetchUniversalConversation"
+  },
+  "𓐪𓎡𓉺𓎳": {
+    "path": "utilities/shell/tabbing-on/rust/src/color.rs",
+    "line": 132,
+    "name": "color_to_hex",
+    "description": "auto-generated pointer for public function color_to_hex"
+  },
+  "𓐫𓉎𓌳𓍫": {
+    "path": "utilities/agent/llm-toolkit/skill-manage/src/audit.rs",
+    "line": 213,
+    "name": "has_strict_failures",
+    "description": "auto-generated pointer for public function has_strict_failures"
+  },
+  "𓐬𓈚𓈈𓍐": {
+    "path": "utilities/k8/secret-utils/rust/src/dc.rs",
+    "line": 94,
+    "name": "find_dc_directive",
+    "description": "Find a specific directive by scope + item_path"
+  },
+  "𓐬𓍇𓋭𓇨": {
+    "path": "utilities/k8/secret-utils/rust/src/tui/fetch_view.rs",
+    "line": 22,
+    "name": "new",
+    "description": "auto-generated pointer for public function new"
+  },
+  "𓐮𓇥𓈥𓌕": {
+    "path": "utilities/agent/media-tool/src/eval.rs",
+    "line": 327,
+    "name": "score_output_with_duration",
+    "description": "Like [`score_output`] but passes expected duration for structural checks."
+  }
+}

@@ -10,6 +10,7 @@ pub const CONTAINER_TOOL_BIN: &str = "/work/.agent-sandbox/local/bin";
 
 /// Copy configured tools from `~/.local/{bin,share}` into the worktree's
 /// `.agent-sandbox/local/{bin,share}`. Returns non-fatal warnings.
+// ⟦𓅅𓊝𓏢𓆹⟧ stage_tools :: Copy configured tools from `~/.local/{bin,share}` into the worktree's
 pub fn stage_tools(cfg: &ToolsConfig, worktree: &Path) -> Vec<String> {
     let mut warnings = Vec::new();
 

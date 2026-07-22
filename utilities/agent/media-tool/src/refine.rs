@@ -11,6 +11,7 @@ use crate::ui;
 
 const REFINE_MODEL: &str = "gemini-2.0-flash";
 
+// ⟦𓈩𓅏𓇩𓐁⟧ interactive_refine_loop :: auto-generated pointer for public function interactive_refine_loop
 pub async fn interactive_refine_loop(
     prompt: &mut ParsedPrompt,
     output_paths: &[std::path::PathBuf],

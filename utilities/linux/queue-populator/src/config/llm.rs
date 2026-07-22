@@ -37,6 +37,7 @@ pub const PROVIDERS: &[&str] = &[
     "anthropic", "openai", "groq", "cerebras", "deepseek", "zai", "litellm", "ollama", "custom",
 ];
 
+// ⟦𓈇𓇩𓊑𓉷⟧ default_model :: auto-generated pointer for public function default_model
 pub fn default_model(provider: &str) -> Option<&'static str> {
     Some(match provider {
         "anthropic" => "claude-sonnet-4-20250514",
@@ -52,6 +53,7 @@ pub fn default_model(provider: &str) -> Option<&'static str> {
     })
 }
 
+// ⟦𓎞𓉒𓂡𓏝⟧ env_var_key :: auto-generated pointer for public function env_var_key
 pub fn env_var_key(provider: &str) -> Option<&'static str> {
     Some(match provider {
         "anthropic" => "ANTHROPIC_API_KEY",
@@ -65,6 +67,7 @@ pub fn env_var_key(provider: &str) -> Option<&'static str> {
     })
 }
 
+// ⟦𓄂𓍮𓃃𓄶⟧ default_base_url :: auto-generated pointer for public function default_base_url
 pub fn default_base_url(provider: &str) -> Option<&'static str> {
     Some(match provider {
         "anthropic" => "https://api.anthropic.com/v1",
@@ -79,6 +82,7 @@ pub fn default_base_url(provider: &str) -> Option<&'static str> {
     })
 }
 
+// ⟦𓌐𓌉𓂜𓌰⟧ env_var_fallbacks :: auto-generated pointer for public function env_var_fallbacks
 pub fn env_var_fallbacks(provider: &str) -> Option<&'static [&'static str]> {
     Some(match provider {
         "zai" => &["ZAI_API_KEY", "ZHIPU_API_KEY"],
@@ -87,6 +91,7 @@ pub fn env_var_fallbacks(provider: &str) -> Option<&'static [&'static str]> {
     })
 }
 
+// ⟦𓀑𓂒𓃾𓉦⟧ needs_api_key :: auto-generated pointer for public function needs_api_key
 pub fn needs_api_key(provider: &str) -> bool {
     matches!(
         provider,
@@ -94,6 +99,7 @@ pub fn needs_api_key(provider: &str) -> bool {
     )
 }
 
+// ⟦𓌩𓆡𓂋𓉅⟧ needs_base_url :: auto-generated pointer for public function needs_base_url
 pub fn needs_base_url(provider: &str) -> bool {
     matches!(provider, "ollama" | "litellm" | "custom")
 }
@@ -110,6 +116,7 @@ pub(crate) fn env_reference(value: &str) -> Option<&str> {
 }
 
 impl LlmConfig {
+    // ⟦𓍂𓋚𓐮𓆊⟧ effective_model :: auto-generated pointer for public function effective_model
     pub fn effective_model(&self) -> String {
         self.model
             .as_deref()
@@ -120,6 +127,7 @@ impl LlmConfig {
             .unwrap_or_else(|| "claude-sonnet-4-20250514".into())
     }
 
+    // ⟦𓈴𓈮𓌑𓇴⟧ effective_api_key :: auto-generated pointer for public function effective_api_key
     pub fn effective_api_key(&self) -> Option<String> {
         if let Some(key) = self.api_key.as_deref().map(str::trim).filter(|k| !k.is_empty()) {
             if let Some(var_name) = env_reference(key) {
@@ -144,6 +152,7 @@ impl LlmConfig {
         None
     }
 
+    // ⟦𓐣𓌆𓅽𓁿⟧ effective_base_url :: auto-generated pointer for public function effective_base_url
     pub fn effective_base_url(&self) -> Option<String> {
         if let Some(url) = self.base_url.as_deref().map(str::trim).filter(|u| !u.is_empty()) {
             return Some(url.to_string());

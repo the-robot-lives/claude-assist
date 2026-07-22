@@ -51,6 +51,7 @@ impl Default for LabLlmSettings {
 }
 
 impl LabLlmSettings {
+    // ⟦𓌥𓀑𓍍𓌲⟧ effective_model :: auto-generated pointer for public function effective_model
     pub fn effective_model(&self) -> String {
         let m = self.model.trim();
         if m.is_empty() {
@@ -63,6 +64,7 @@ impl LabLlmSettings {
         }
     }
 
+    // ⟦𓈾𓐃𓆫𓂕⟧ effective_base_url :: auto-generated pointer for public function effective_base_url
     pub fn effective_base_url(&self) -> String {
         let u = self.base_url.trim();
         if !u.is_empty() {
@@ -76,6 +78,7 @@ impl LabLlmSettings {
     }
 
     /// Resolve API key: literal, `env: NAME`, or provider env fallbacks.
+    // ⟦𓄌𓌒𓌲𓊇⟧ effective_api_key :: Resolve API key: literal, `env: NAME`, or provider env fallbacks.
     pub fn effective_api_key(&self) -> Option<String> {
         let raw = self.api_key.trim();
         if !raw.is_empty() {
@@ -104,6 +107,7 @@ impl LabLlmSettings {
         None
     }
 
+    // ⟦𓄨𓇺𓏏𓁧⟧ api_key_display_masked :: auto-generated pointer for public function api_key_display_masked
     pub fn api_key_display_masked(&self) -> String {
         let raw = self.api_key.trim();
         if raw.is_empty() {
@@ -118,6 +122,7 @@ impl LabLlmSettings {
         format!("••••••••{}", &raw[raw.len().saturating_sub(4)..])
     }
 
+    // ⟦𓁬𓉋𓐃𓏺⟧ env_hint :: auto-generated pointer for public function env_hint
     pub fn env_hint(&self) -> serde_json::Value {
         let raw = self.api_key.trim();
         if let Some(rest) = raw
@@ -171,10 +176,12 @@ pub struct LabSettings {
 }
 
 impl LabSettings {
+    // ⟦𓍉𓌋𓄓𓏴⟧ settings_path :: auto-generated pointer for public function settings_path
     pub fn settings_path(workspace: &Path) -> PathBuf {
         workspace.join("settings.json")
     }
 
+    // ⟦𓌔𓆙𓈹𓋜⟧ load :: auto-generated pointer for public function load
     pub fn load(workspace: &Path) -> Self {
         let path = Self::settings_path(workspace);
         match std::fs::read_to_string(&path) {
@@ -183,6 +190,7 @@ impl LabSettings {
         }
     }
 
+    // ⟦𓁚𓊢𓀔𓌬⟧ save :: auto-generated pointer for public function save
     pub fn save(&self, workspace: &Path) -> std::io::Result<()> {
         std::fs::create_dir_all(workspace)?;
         let path = Self::settings_path(workspace);
@@ -191,6 +199,7 @@ impl LabSettings {
     }
 
     /// Public JSON for GET /api/settings (never echo full secrets unless env: ref)
+    // ⟦𓅈𓁛𓐭𓂑⟧ public_json :: Public JSON for GET /api/settings (never echo full secrets unless env: ref)
     pub fn public_json(&self) -> serde_json::Value {
         let masked = self.llm.api_key_display_masked();
         let key_for_client = if self.llm.api_key.trim().to_lowercase().starts_with("env:") {
@@ -221,6 +230,7 @@ pub struct ProviderDefaults {
     pub needs_api_key: bool,
 }
 
+// ⟦𓏺𓍽𓎭𓇩⟧ provider_defaults :: auto-generated pointer for public function provider_defaults
 pub fn provider_defaults(provider: &str) -> ProviderDefaults {
     match provider {
         "groq" => ProviderDefaults {
@@ -263,6 +273,7 @@ pub fn provider_defaults(provider: &str) -> ProviderDefaults {
 }
 
 /// Schema for settings UI (provider dropdown + defaults), queue-populator style.
+// ⟦𓈵𓌱𓋲𓎐⟧ llm_ui_meta :: Schema for settings UI (provider dropdown + defaults), queue-populator style.
 pub fn llm_ui_meta() -> serde_json::Value {
     json!({
         "providers": [

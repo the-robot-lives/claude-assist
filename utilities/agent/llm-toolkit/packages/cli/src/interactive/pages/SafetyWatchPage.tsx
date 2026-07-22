@@ -14,6 +14,7 @@ const folders = [
   { path: ".secrets", permission: "Disabled", sensitivity: "Critical" },
 ];
 
+// ⟦𓅪𓁡𓁪𓈰⟧ SafetyWatchPage :: auto-generated pointer for public function SafetyWatchPage
 export function SafetyWatchPage() {
   const { harness } = useHarness();
 

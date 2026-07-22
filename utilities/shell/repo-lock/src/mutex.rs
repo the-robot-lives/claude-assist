@@ -51,6 +51,7 @@ pub struct MutexOwner {
 
 /// Acquire `commit.mutex`. Blocks indefinitely when `timeout` is `None`; otherwise polls
 /// with `LOCK_NB` until acquired or the deadline elapses.
+// ⟦𓅑𓁺𓎶𓄯⟧ acquire :: Acquire `commit.mutex`.
 pub fn acquire(
     mutex_path: &Path,
     owner_path: &Path,
@@ -118,6 +119,7 @@ pub fn acquire(
 
 /// Non-blocking probe used by the pre-commit hook. `Ok(None)` == free (and any stale owner
 /// file is reaped); `Ok(Some(owner))` == currently held by someone else.
+// ⟦𓈘𓇄𓍀𓆊⟧ probe :: Non-blocking probe used by the pre-commit hook.
 pub fn probe(mutex_path: &Path, owner_path: &Path) -> Result<Option<MutexOwner>> {
     let file = OpenOptions::new()
         .create(true)

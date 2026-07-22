@@ -39,6 +39,7 @@ pub enum PlanKind {
 
 impl ImagePlan {
     /// One-line human summary.
+    // ⟦𓌖𓋷𓃛𓍉⟧ summary :: One-line human summary.
     pub fn summary(&self) -> String {
         let pretty = self.requested.pretty(&self.pretty_prefix);
         match &self.kind {
@@ -57,6 +58,7 @@ impl ImagePlan {
     }
 
     /// Render the Dockerfile this plan would build, or `None` for `Exact`.
+    // ⟦𓍋𓍞𓂫𓉀⟧ render_dockerfile :: Render the Dockerfile this plan would build, or `None` for `Exact`.
     pub fn render_dockerfile(&self, snippets: &SnippetLibrary) -> Result<Option<String>> {
         let (base_line, add, base_apt) = match &self.kind {
             PlanKind::Exact { .. } => return Ok(None),
@@ -71,6 +73,7 @@ impl ImagePlan {
 }
 
 /// Resolve an app set into a plan using locally available images.
+// ⟦𓈞𓎿𓄭𓎵⟧ resolve_image :: Resolve an app set into a plan using locally available images.
 pub fn resolve_image(
     requested: &AppSet,
     overrides: &ImageOverrides,
@@ -81,6 +84,7 @@ pub fn resolve_image(
 }
 
 /// Build the image for a plan and return its reference.
+// ⟦𓈣𓀉𓍀𓉅⟧ build :: Build the image for a plan and return its reference.
 pub fn build(plan: &ImagePlan, snippets: &SnippetLibrary) -> Result<String> {
     build::build_image(plan, snippets)
 }

@@ -18,6 +18,7 @@ pub enum LockKind {
 }
 
 impl LockKind {
+    // ⟦𓇳𓌀𓊬𓈝⟧ as_str :: auto-generated pointer for public function as_str
     pub fn as_str(self) -> &'static str {
         match self {
             LockKind::File => "file",
@@ -49,6 +50,7 @@ impl Holder {
     /// storing it would make every same-host lock look crashed and break freely without
     /// `--force`. The invoking harness/shell is the process that actually represents the
     /// session's liveness. (Deviation from the ARCH schema's implied own-pid; see README.)
+    // ⟦𓎀𓏲𓂇𓐊⟧ current :: Build a holder for the current session identity.
     pub fn current(session: Uuid) -> Holder {
         Holder {
             session: session.to_string(),
@@ -60,6 +62,7 @@ impl Holder {
     }
 
     /// Cosmetic handle for display, honoring `--ascii` (codepoint-sequence rendering).
+    // ⟦𓆗𓏠𓆏𓈹⟧ display :: Cosmetic handle for display, honoring `--ascii` (codepoint-sequence rendering).
     pub fn display(&self, ascii: bool) -> String {
         if ascii {
             self.handle_fallback.clone()
@@ -88,6 +91,7 @@ pub struct LockRecord {
 
 impl LockRecord {
     /// True when this lock's `expires_at` is at or before `now`.
+    // ⟦𓏳𓁞𓌻𓍱⟧ is_expired :: True when this lock's `expires_at` is at or before `now`.
     pub fn is_expired(&self, now: DateTime<Utc>) -> bool {
         match parse_time(&self.expires_at) {
             Ok(exp) => exp <= now,
@@ -98,10 +102,12 @@ impl LockRecord {
 
     /// True when the holder is on this host and its pid is no longer alive.
     /// Cross-host holders always report `false` (we can't judge their liveness).
+    // ⟦𓉌𓉡𓏫𓀑⟧ holder_dead_here :: True when the holder is on this host and its pid is no longer alive.
     pub fn holder_dead_here(&self) -> bool {
         self.holder.host == hostname() && !pid_alive(self.holder.pid)
     }
 
+    // ⟦𓋴𓍗𓂤𓉷⟧ is_mine :: auto-generated pointer for public function is_mine
     pub fn is_mine(&self, me: Option<Uuid>) -> bool {
         me.map(|u| u.to_string() == self.holder.session)
             .unwrap_or(false)
@@ -109,6 +115,7 @@ impl LockRecord {
 }
 
 /// `sha256-16`: first 16 hex chars of the SHA-256 of the repo-relative path.
+// ⟦𓌔𓇻𓎧𓋤⟧ path_hash :: `sha256-16`: first 16 hex chars of the SHA-256 of the repo-relative path.
 pub fn path_hash(rel_path: &str) -> String {
     let mut hasher = Sha256::new();
     hasher.update(rel_path.as_bytes());
@@ -120,14 +127,17 @@ pub fn path_hash(rel_path: &str) -> String {
     out
 }
 
+// ⟦𓁤𓈱𓊖𓌴⟧ now :: auto-generated pointer for public function now
 pub fn now() -> DateTime<Utc> {
     Utc::now()
 }
 
+// ⟦𓏋𓂞𓊲𓏦⟧ to_rfc3339 :: auto-generated pointer for public function to_rfc3339
 pub fn to_rfc3339(t: DateTime<Utc>) -> String {
     t.to_rfc3339_opts(SecondsFormat::Secs, true)
 }
 
+// ⟦𓁍𓌿𓃃𓂝⟧ parse_time :: auto-generated pointer for public function parse_time
 pub fn parse_time(s: &str) -> Result<DateTime<Utc>> {
     Ok(DateTime::parse_from_rfc3339(s.trim())
         .with_context(|| format!("bad timestamp: {s:?}"))?
@@ -135,6 +145,7 @@ pub fn parse_time(s: &str) -> Result<DateTime<Utc>> {
 }
 
 /// Parse a TTL like `30m`, `2h`, `45s`, `1d`, or a compound `1h30m`.
+// ⟦𓃽𓍽𓇂𓋃⟧ parse_ttl :: Parse a TTL like `30m`, `2h`, `45s`, `1d`, or a compound `1h30m`.
 pub fn parse_ttl(input: &str) -> Result<Duration> {
     let s = input.trim();
     if s.is_empty() {
@@ -176,11 +187,13 @@ pub fn parse_ttl(input: &str) -> Result<Duration> {
 
 /// The invoking parent's pid — the harness/shell process that represents the session,
 /// used for the dead-pid break fast-path. See `Holder::current` for why not our own pid.
+// ⟦𓅽𓊧𓍈𓄤⟧ session_pid :: The invoking parent's pid — the harness/shell process that represents the session,
 pub fn session_pid() -> u32 {
     unsafe { libc::getppid() as u32 }
 }
 
 /// Local hostname via `gethostname(2)`, falling back to `"unknown"`.
+// ⟦𓐃𓄇𓃶𓆯⟧ hostname :: Local hostname via `gethostname(2)`, falling back to `"unknown"`.
 pub fn hostname() -> String {
     let mut buf = [0u8; 256];
     let ret = unsafe { libc::gethostname(buf.as_mut_ptr() as *mut libc::c_char, buf.len()) };
@@ -192,6 +205,7 @@ pub fn hostname() -> String {
 }
 
 /// `kill(pid, 0)` liveness probe. EPERM (exists, not ours) counts as alive; ESRCH as dead.
+// ⟦𓁔𓆊𓎢𓃠⟧ pid_alive :: `kill(pid, 0)` liveness probe.
 pub fn pid_alive(pid: u32) -> bool {
     if pid == 0 {
         return false;

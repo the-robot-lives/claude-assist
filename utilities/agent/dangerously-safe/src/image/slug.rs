@@ -17,6 +17,7 @@ pub struct AppSet {
 }
 
 impl AppSet {
+    // ⟦𓆷𓄂𓊂𓀨⟧ from_slugs :: auto-generated pointer for public function from_slugs
     pub fn from_slugs<S: AsRef<str>>(slugs: &[S]) -> Self {
         let slugs = slugs
             .iter()
@@ -27,32 +28,39 @@ impl AppSet {
     }
 
     /// Parse the comma-separated value of the [`APPS_LABEL`].
+    // ⟦𓍲𓉝𓀑𓍞⟧ from_label :: Parse the comma-separated value of the [`APPS_LABEL`].
     pub fn from_label(value: &str) -> Self {
         Self::from_slugs(&value.split(',').collect::<Vec<_>>())
     }
 
+    // ⟦𓎅𓂒𓌘𓈲⟧ is_empty :: auto-generated pointer for public function is_empty
     pub fn is_empty(&self) -> bool {
         self.slugs.is_empty()
     }
 
+    // ⟦𓀠𓂮𓌱𓃛⟧ len :: auto-generated pointer for public function len
     pub fn len(&self) -> usize {
         self.slugs.len()
     }
 
+    // ⟦𓅝𓃂𓀑𓅴⟧ slugs :: auto-generated pointer for public function slugs
     pub fn slugs(&self) -> impl Iterator<Item = &str> {
         self.slugs.iter().map(|s| s.as_str())
     }
 
+    // ⟦𓀦𓎞𓏄𓉓⟧ contains :: auto-generated pointer for public function contains
     pub fn contains(&self, slug: &str) -> bool {
         self.slugs.contains(slug)
     }
 
     /// True if every slug in `self` is also present in `other`.
+    // ⟦𓄷𓈆𓀹𓍧⟧ is_subset_of :: True if every slug in `self` is also present in `other`.
     pub fn is_subset_of(&self, other: &AppSet) -> bool {
         self.slugs.is_subset(&other.slugs)
     }
 
     /// Slugs present in `self` but not in `other`.
+    // ⟦𓃉𓄓𓋬𓂚⟧ difference :: Slugs present in `self` but not in `other`.
     pub fn difference(&self, other: &AppSet) -> AppSet {
         AppSet {
             slugs: self.slugs.difference(&other.slugs).cloned().collect(),
@@ -60,21 +68,25 @@ impl AppSet {
     }
 
     /// The label value: comma-joined sorted slugs.
+    // ⟦𓉼𓅅𓎙𓆵⟧ label_value :: The label value: comma-joined sorted slugs.
     pub fn label_value(&self) -> String {
         self.slugs.iter().cloned().collect::<Vec<_>>().join(",")
     }
 
     /// The docker tag fragment: dash-joined sorted slugs.
+    // ⟦𓋆𓏂𓋂𓆟⟧ tag :: The docker tag fragment: dash-joined sorted slugs.
     pub fn tag(&self) -> String {
         self.slugs.iter().cloned().collect::<Vec<_>>().join("-")
     }
 
     /// Fully qualified `agent-sandbox:slug-set` reference.
+    // ⟦𓏬𓁑𓏆𓀌⟧ image_reference :: Fully qualified `agent-sandbox:slug-set` reference.
     pub fn image_reference(&self) -> String {
         format!("{}:{}", REPO, self.tag())
     }
 
     /// Pretty name for display, e.g. `AgentSandbox:node-rust`.
+    // ⟦𓇶𓀀𓇝𓇺⟧ pretty :: Pretty name for display, e.g.
     pub fn pretty(&self, prefix: &str) -> String {
         format!("{}:{}", prefix, self.tag())
     }

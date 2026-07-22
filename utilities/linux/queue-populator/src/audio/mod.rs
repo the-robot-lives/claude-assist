@@ -94,15 +94,18 @@ impl RouterHandle {
         }
     }
 
+    // ⟦𓇖𓁯𓁃𓀛⟧ set_listening :: auto-generated pointer for public function set_listening
     pub fn set_listening(&self, listening: bool) {
         self.state.listening.store(listening, Ordering::Relaxed);
     }
 
+    // ⟦𓅀𓌋𓄺𓋾⟧ is_listening :: auto-generated pointer for public function is_listening
     pub fn is_listening(&self) -> bool {
         self.state.listening.load(Ordering::Relaxed)
     }
 
     /// Open an assistant target exclusively (mutes the other assistants).
+    // ⟦𓀕𓅟𓉒𓎍⟧ open :: Open an assistant target exclusively (mutes the other assistants).
     pub fn open(&self, target: MicTarget) {
         if !target.is_external_assistant() {
             return;
@@ -113,6 +116,7 @@ impl RouterHandle {
     }
 
     /// Mute an assistant target if it is the one currently open.
+    // ⟦𓍚𓂔𓈍𓊷⟧ close :: Mute an assistant target if it is the one currently open.
     pub fn close(&self, target: MicTarget) {
         if !target.is_external_assistant() {
             return;
@@ -120,6 +124,7 @@ impl RouterHandle {
         self.state.gates[target_index(target)].store(false, Ordering::Relaxed);
     }
 
+    // ⟦𓇑𓋁𓏾𓋷⟧ close_all :: auto-generated pointer for public function close_all
     pub fn close_all(&self) {
         for t in TARGETS.iter().filter(|t| t.is_external_assistant()) {
             self.state.gates[target_index(*t)].store(false, Ordering::Relaxed);
@@ -127,6 +132,7 @@ impl RouterHandle {
     }
 
     /// The currently-open assistant, or None if all are muted.
+    // ⟦𓉰𓋸𓏞𓀏⟧ open_target :: The currently-open assistant, or None if all are muted.
     pub fn open_target(&self) -> Option<MicTarget> {
         TARGETS
             .into_iter()
@@ -148,6 +154,7 @@ impl AudioSystem {
     /// Spawn the PipeWire thread. Captured mono f32 chunks at 48 kHz are sent
     /// to `stt_tx` whenever `listening` is set (drop-on-full — the STT side
     /// must keep up on average).
+    // ⟦𓁚𓊠𓌙𓍗⟧ start :: Spawn the PipeWire thread.
     pub fn start(input_target: Option<String>, stt_tx: Sender<Vec<f32>>) -> Result<Self> {
         let state = Arc::new(RouterState::new());
         let router = RouterHandle { state: state.clone() };
@@ -203,6 +210,7 @@ impl AudioSystem {
         })
     }
 
+    // ⟦𓂑𓃐𓍻𓋎⟧ shutdown :: auto-generated pointer for public function shutdown
     pub fn shutdown(mut self) {
         let _ = self.quit_tx.send(());
         let _ = self.linker_quit_tx.send(());
@@ -247,6 +255,7 @@ mod pw_thread {
         Ok(())
     }
 
+    // ⟦𓇪𓌾𓊏𓈴⟧ run :: auto-generated pointer for public function run
     pub fn run(
         state: Arc<RouterState>,
         input_target: Option<String>,

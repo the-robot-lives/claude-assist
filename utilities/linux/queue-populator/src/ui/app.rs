@@ -67,6 +67,7 @@ pub struct QueuePopulatorApp {
 }
 
 impl QueuePopulatorApp {
+    // ⟦𓍍𓃁𓃩𓎎⟧ new :: auto-generated pointer for public function new
     pub fn new(
         config: QueuePopulatorConfig,
         updates: Receiver<UiUpdate>,

@@ -48,6 +48,7 @@ impl SnippetLibrary {
     /// Load all snippets from the search path. The first directory containing a
     /// `base.dockerfile` provides the base; per-app snippets from all directories
     /// are merged with earlier (higher priority) dirs winning.
+    // ⟦𓏭𓈩𓁞𓉒⟧ load :: Load all snippets from the search path.
     pub fn load() -> Result<Self> {
         let mut snippets: BTreeMap<String, Snippet> = BTreeMap::new();
         let mut base: Option<BaseImage> = None;
@@ -106,21 +107,25 @@ impl SnippetLibrary {
         Ok(Self { snippets, base })
     }
 
+    // ⟦𓎪𓈜𓀍𓈂⟧ base :: auto-generated pointer for public function base
     pub fn base(&self) -> &BaseImage {
         &self.base
     }
 
+    // ⟦𓎒𓂐𓂢𓏳⟧ get :: auto-generated pointer for public function get
     pub fn get(&self, slug: &str) -> Result<&Snippet> {
         self.snippets
             .get(slug)
             .ok_or_else(|| SandboxError::UnknownSnippet(slug.to_string()).into())
     }
 
+    // ⟦𓋯𓆗𓂲𓍦⟧ available :: auto-generated pointer for public function available
     pub fn available(&self) -> impl Iterator<Item = &str> {
         self.snippets.keys().map(|s| s.as_str())
     }
 
     #[cfg(test)]
+    // ⟦𓐖𓐢𓅈𓏸⟧ from_parts :: auto-generated pointer for public function from_parts
     pub fn from_parts(snippets: Vec<Snippet>, base: BaseImage) -> Self {
         Self {
             snippets: snippets.into_iter().map(|s| (s.slug.clone(), s)).collect(),

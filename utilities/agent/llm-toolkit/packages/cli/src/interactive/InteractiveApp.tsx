@@ -54,6 +54,7 @@ function PageRouter() {
   }
 }
 
+// ⟦𓋎𓂊𓃵𓎼⟧ InteractiveApp :: auto-generated pointer for public function InteractiveApp
 export function InteractiveApp() {
   return (
     <HarnessProvider>

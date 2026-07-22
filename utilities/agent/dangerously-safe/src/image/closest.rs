@@ -17,6 +17,7 @@ fn heavy_overlap(set: &AppSet) -> usize {
 
 /// Pure selection over an already-enumerated image list. Separated from docker
 /// enumeration so it can be unit-tested.
+// ⟦𓂡𓁒𓂴𓁜⟧ select_plan :: Pure selection over an already-enumerated image list.
 pub fn select_plan(
     requested: &AppSet,
     available: &[SandboxImage],

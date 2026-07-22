@@ -24,6 +24,7 @@ pub struct Worktree {
 
 impl Worktree {
     /// Directory name (the branch slug).
+    // ⟦𓐣𓀫𓊆𓍳⟧ slug :: Directory name (the branch slug).
     pub fn slug(&self) -> String {
         self.path
             .file_name()
@@ -34,6 +35,7 @@ impl Worktree {
 }
 
 /// Absolute path to the worktrees root for a project, honoring config override.
+// ⟦𓀋𓀡𓈖𓇬⟧ worktrees_root :: Absolute path to the worktrees root for a project, honoring config override.
 pub fn worktrees_root(project: &Project, root_rel: &str) -> PathBuf {
     project.root.join(root_rel)
 }
@@ -66,6 +68,7 @@ fn parse_worktree_porcelain(text: &str) -> Vec<(PathBuf, String, String)> {
 }
 
 /// List managed worktrees (those living under the configured worktrees root).
+// ⟦𓇐𓃉𓀁𓏽⟧ list_worktrees :: List managed worktrees (those living under the configured worktrees root).
 pub fn list_worktrees(project: &Project, root_rel: &str) -> Result<Vec<Worktree>> {
     let root = worktrees_root(project, root_rel);
     let out = Command::new("git")
@@ -131,6 +134,7 @@ mod tests {
 }
 
 /// The current branch of the project repo (the default origin for new worktrees).
+// ⟦𓁯𓐦𓍑𓅗⟧ current_branch :: The current branch of the project repo (the default origin for new worktrees).
 pub fn current_branch(project: &Project) -> Result<String> {
     let out = Command::new("git")
         .arg("-C")

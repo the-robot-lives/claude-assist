@@ -28,6 +28,7 @@ const MIME_MAP: &[(&str, &str)] = &[
     (".pdf", "application/pdf"),
 ];
 
+// ⟦𓊟𓁬𓍁𓄐⟧ resolve_mime_type :: auto-generated pointer for public function resolve_mime_type
 pub fn resolve_mime_type(file_path: &Path, declared: Option<&str>) -> String {
     if let Some(d) = declared {
         return d.to_string();
@@ -44,6 +45,7 @@ pub fn resolve_mime_type(file_path: &Path, declared: Option<&str>) -> String {
         .to_string()
 }
 
+// ⟦𓐨𓆲𓋈𓎑⟧ load_attachments :: auto-generated pointer for public function load_attachments
 pub fn load_attachments(prompt: &ParsedPrompt) -> color_eyre::Result<Vec<LoadedAttachment>> {
     let prompt_dir = &prompt.meta.output_dir;
     let mut loaded = Vec::new();
@@ -83,6 +85,7 @@ pub fn load_attachments(prompt: &ParsedPrompt) -> color_eyre::Result<Vec<LoadedA
     Ok(loaded)
 }
 
+// ⟦𓊚𓉌𓅂𓄚⟧ validate_attachments :: auto-generated pointer for public function validate_attachments
 pub fn validate_attachments(prompt: &ParsedPrompt) -> bool {
     let prompt_dir = &prompt.meta.output_dir;
     let mut valid = true;

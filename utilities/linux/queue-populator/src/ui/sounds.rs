@@ -52,6 +52,7 @@ fn play(path: PathBuf) {
 }
 
 /// Short high blip on any recognized command ("Tink").
+// ⟦𓋌𓈕𓋠𓄮⟧ play_command :: Short high blip on any recognized command ("Tink").
 pub fn play_command() {
     if let Some(path) = blip_path("command", 1320.0, 0.25) {
         play(path);
@@ -59,6 +60,7 @@ pub fn play_command() {
 }
 
 /// Two-tone lower chime when memo recording starts ("Glass").
+// ⟦𓎻𓋋𓉱𓍣⟧ play_memo :: Two-tone lower chime when memo recording starts ("Glass").
 pub fn play_memo() {
     if let Some(path) = blip_path("memo", 880.0, 0.4) {
         play(path);

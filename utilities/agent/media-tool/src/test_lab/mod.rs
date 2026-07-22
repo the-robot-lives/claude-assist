@@ -29,6 +29,7 @@ pub struct LabConfig {
 }
 
 impl LabConfig {
+    // ⟦𓏽𓀏𓃛𓍡⟧ resolve :: auto-generated pointer for public function resolve
     pub fn resolve(
         port: u16,
         demos: Option<PathBuf>,

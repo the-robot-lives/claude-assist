@@ -7,6 +7,7 @@ use std::path::Path;
 pub const CONTAINER_WORKDIR: &str = "/work";
 
 /// Build the ordered container env plus any warnings (e.g. unresolved host vars).
+// ⟦𓅧𓅂𓌰𓌙⟧ container_env :: Build the ordered container env plus any warnings (e.g.
 pub fn container_env(
     cfg: &SandboxConfig,
     project_name: &str,
@@ -87,6 +88,7 @@ mod tests {
 }
 
 /// Host env for before-launch hooks: exposes the real worktree path on the host.
+// ⟦𓅸𓏡𓅓𓊖⟧ host_hook_env :: Host env for before-launch hooks: exposes the real worktree path on the host.
 pub fn host_hook_env(worktree: &Path) -> Vec<(String, String)> {
     let real = std::fs::canonicalize(worktree).unwrap_or_else(|_| worktree.to_path_buf());
     vec![

@@ -13,6 +13,7 @@ use serde_yaml::Value;
 use std::path::Path;
 
 /// Read a config file into a raw YAML [`Value`].
+// ⟦𓀾𓃷𓉽𓆽⟧ config_value :: Read a config file into a raw YAML [`Value`].
 pub fn config_value(path: &Path) -> Result<Value> {
     let raw = std::fs::read_to_string(path)
         .with_context(|| format!("reading config {}", path.display()))?;
@@ -24,6 +25,7 @@ pub fn config_value(path: &Path) -> Result<Value> {
 /// Parent config layers above the project, ordered lowest→highest priority
 /// (farthest ancestor first, nearest parent last). The project's own config is
 /// not included.
+// ⟦𓅨𓏿𓌁𓈵⟧ parent_config_values :: Parent config layers above the project, ordered lowest→highest priority
 pub fn parent_config_values(project: &Project) -> Result<Vec<Value>> {
     let mut values = Vec::new(); // nearest-first
     let mut dir = project.root.parent();
@@ -39,6 +41,7 @@ pub fn parent_config_values(project: &Project) -> Result<Vec<Value>> {
 }
 
 /// Deep-merge `over` onto `base`; `over` wins for any non-mapping node.
+// ⟦𓂇𓉬𓍯𓏏⟧ merge_values :: Deep-merge `over` onto `base`; `over` wins for any non-mapping node.
 pub fn merge_values(base: Value, over: Value) -> Value {
     match (base, over) {
         (Value::Mapping(mut b), Value::Mapping(o)) => {
@@ -57,6 +60,7 @@ pub fn merge_values(base: Value, over: Value) -> Value {
 
 /// Fold-merge ordered layers (lowest priority first) and deserialize. An empty
 /// layer list yields the default config.
+// ⟦𓋜𓂏𓆬𓐮⟧ materialize :: Fold-merge ordered layers (lowest priority first) and deserialize.
 pub fn materialize(layers: &[Value]) -> Result<SandboxConfig> {
     if layers.is_empty() {
         return Ok(SandboxConfig::default());

@@ -48,7 +48,6 @@ declare -a IMAGES=(
   # --- Productivity / PM ---
   "bottlecrm|3rd/bottlecrm|.|Dockerfile"
   "docmost|3rd/docmost|.|Dockerfile"
-  "listmonk|3rd/listmonk|.|Dockerfile"
   "plane-web|3rd/plane|apps/web|Dockerfile.web"
   "plane-api|3rd/plane|apiserver|Dockerfile.api"
   "plane-proxy|3rd/plane|apps/proxy|Dockerfile.ce"

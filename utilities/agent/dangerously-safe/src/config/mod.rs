@@ -21,6 +21,7 @@ pub struct Project {
 
 impl Project {
     /// Discover the enclosing git repository from the current directory.
+    // ⟦𓁹𓋺𓉋𓋼⟧ discover :: Discover the enclosing git repository from the current directory.
     pub fn discover() -> Result<Self> {
         let out = Command::new("git")
             .args(["rev-parse", "--show-toplevel"])
@@ -36,21 +37,25 @@ impl Project {
     }
 
     /// Path to the `.agent-sandbox` directory at the project root.
+    // ⟦𓎦𓏟𓍮𓎷⟧ sandbox_dir :: Path to the `.agent-sandbox` directory at the project root.
     pub fn sandbox_dir(&self) -> PathBuf {
         self.root.join(paths::PROJECT_DIR)
     }
 
     /// Path to the `.agent-sandbox/config` file (may not exist).
+    // ⟦𓏉𓊘𓐗𓆡⟧ config_path :: Path to the `.agent-sandbox/config` file (may not exist).
     pub fn config_path(&self) -> PathBuf {
         self.sandbox_dir().join(paths::CONFIG_FILE)
     }
 
     /// Whether a project config exists.
+    // ⟦𓎎𓏱𓄭𓅵⟧ has_config :: Whether a project config exists.
     pub fn has_config(&self) -> bool {
         self.config_path().exists()
     }
 
     /// Load the project config, falling back to defaults if none exists.
+    // ⟦𓁎𓂎𓄞𓁈⟧ load_config :: Load the project config, falling back to defaults if none exists.
     pub fn load_config(&self) -> Result<SandboxConfig> {
         let path = self.config_path();
         if !path.exists() {
@@ -62,6 +67,7 @@ impl Project {
     /// Effective config = parent configs (far→near) layered, then the project's
     /// own config on top. Used by the launch path so parent repos can provide
     /// shared defaults.
+    // ⟦𓇩𓏆𓐭𓃑⟧ load_effective :: Effective config = parent configs (far→near) layered, then the project's
     pub fn load_effective(&self) -> Result<SandboxConfig> {
         let mut layers = parent_config_values(self)?;
         if self.has_config() {
@@ -72,12 +78,14 @@ impl Project {
 }
 
 /// Load a template's raw YAML value (for use as a merge layer).
+// ⟦𓉈𓉖𓉩𓋆⟧ template_value :: Load a template's raw YAML value (for use as a merge layer).
 pub fn template_value(name: &str) -> Result<Value> {
     let path = paths::templates_dir().join(name).join("config.yaml");
     config_value(&path)
 }
 
 /// Parse a config file from disk.
+// ⟦𓊭𓈛𓋛𓋤⟧ load_config_file :: Parse a config file from disk.
 pub fn load_config_file(path: &Path) -> Result<SandboxConfig> {
     let raw = std::fs::read_to_string(path)
         .with_context(|| format!("reading config {}", path.display()))?;
@@ -87,6 +95,7 @@ pub fn load_config_file(path: &Path) -> Result<SandboxConfig> {
 }
 
 /// List installed template names under `~/.config/agent-sandbox/templates`.
+// ⟦𓈆𓎫𓁅𓁅⟧ list_templates :: List installed template names under `~/.config/agent-sandbox/templates`.
 pub fn list_templates() -> Result<Vec<String>> {
     let dir = paths::templates_dir();
     if !dir.exists() {
@@ -108,6 +117,7 @@ pub fn list_templates() -> Result<Vec<String>> {
 }
 
 /// Save the current project's config as a named template.
+// ⟦𓍬𓐓𓂏𓌗⟧ save_template :: Save the current project's config as a named template.
 pub fn save_template(project: &Project, name: &str) -> Result<PathBuf> {
     let cfg = project.load_config()?;
     let dir = paths::templates_dir().join(name);

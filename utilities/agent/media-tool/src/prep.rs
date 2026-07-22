@@ -39,6 +39,7 @@ pub enum PrepChannel {
 }
 
 /// Map asset type + audio kind + optional text_format (+ service) to a prep channel.
+// ⟦𓌄𓆂𓍨𓏷⟧ prep_channel :: Map asset type + audio kind + optional text_format (+ service) to a prep channel.
 pub fn prep_channel(
     asset_type: AssetType,
     audio_kind: AudioKind,
@@ -98,11 +99,13 @@ pub fn prep_channel(
 
 /// When false, callers should not send text through the prep LLM (verbatim path).
 /// Voice/TTS must not be rewritten; only hard-truncate if a provider limit forces it.
+// ⟦𓈘𓆾𓁂𓄒⟧ allows_llm_prep :: When false, callers should not send text through the prep LLM (verbatim path).
 pub fn allows_llm_prep(channel: PrepChannel) -> bool {
     !matches!(channel, PrepChannel::Voice)
 }
 
 /// Role preamble for the prep LLM (first sentence of the instruction).
+// ⟦𓋜𓁴𓃗𓇥⟧ prep_role_preamble :: Role preamble for the prep LLM (first sentence of the instruction).
 pub fn prep_role_preamble(channel: PrepChannel) -> &'static str {
     match channel {
         PrepChannel::RasterImage => {
@@ -139,6 +142,7 @@ pub fn prep_role_preamble(channel: PrepChannel) -> &'static str {
 }
 
 /// "WHAT TO CHANGE" / cleanup rules for the prep LLM.
+// ⟦𓌳𓃂𓃃𓅨⟧ prep_change_rules :: "WHAT TO CHANGE" / cleanup rules for the prep LLM.
 pub fn prep_change_rules(channel: PrepChannel) -> &'static str {
     match channel {
         PrepChannel::RasterImage => {
@@ -273,6 +277,7 @@ impl PromptPrepper {
     ///   2. Groq cloud API (GROQ_API_KEY must be set)
     ///
     /// Model: MEDIA_PREP_MODEL env / --prep-model, else default.
+    // ⟦𓋏𓊤𓀤𓊞⟧ resolve :: Resolve the prompt preparation LLM endpoint.
     pub fn resolve(
         cli_url: Option<&str>,
         cli_model: Option<&str>,
@@ -326,6 +331,7 @@ impl PromptPrepper {
         None
     }
 
+    // ⟦𓌧𓉺𓈢𓃵⟧ prepare_prompt :: auto-generated pointer for public function prepare_prompt
     pub async fn prepare_prompt(
         &self,
         prompt_section: &PromptSection,
@@ -505,6 +511,7 @@ impl PromptPrepper {
     /// Refine a prompt based on eval feedback and the actual failed output.
     /// The LLM sees the generated image alongside the eval scores/notes so it
     /// can make targeted corrections based on what the model actually produced.
+    // ⟦𓄝𓆺𓂙𓆖⟧ refine_prompt :: Refine a prompt based on eval feedback and the actual failed output.
     pub async fn refine_prompt(
         &self,
         prompt_section: &PromptSection,
@@ -691,6 +698,7 @@ impl PromptPrepper {
 }
 
 /// Build the full prep or refine user instruction (pure; unit-tested).
+// ⟦𓐤𓉴𓌧𓊰⟧ build_prep_instruction :: Build the full prep or refine user instruction (pure; unit-tested).
 pub fn build_prep_instruction(
     channel: PrepChannel,
     service: &str,
@@ -785,6 +793,7 @@ fn resolve_guidance(
 }
 
 /// Static provider/format notes when FIM is unavailable.
+// ⟦𓆷𓍛𓀒𓅸⟧ provider_prompt_guidance :: Static provider/format notes when FIM is unavailable.
 pub fn provider_prompt_guidance(
     service: &str,
     asset_type: AssetType,

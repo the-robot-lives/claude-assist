@@ -14,6 +14,7 @@ pub struct SandboxImage {
 
 /// List local images tagged with the apps label. Returns an empty vec (not an
 /// error) when docker is unavailable, so callers can still build from scratch.
+// ⟦𓏖𓀇𓄋𓉭⟧ list_sandbox_images :: List local images tagged with the apps label.
 pub fn list_sandbox_images() -> Result<Vec<SandboxImage>> {
     if !docker::is_available() {
         return Ok(Vec::new());

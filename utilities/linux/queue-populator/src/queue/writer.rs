@@ -25,6 +25,7 @@ fn sorted_json_line(entry: &QueueEntry) -> Result<String> {
     Ok(serde_json::to_string(&serde_json::Value::Object(sorted))?)
 }
 
+// ⟦𓅴𓀆𓄨𓀲⟧ append :: auto-generated pointer for public function append
 pub fn append(entry: &QueueEntry, relative_path: &str, base_path: &str) -> Result<()> {
     if !manifest::is_valid_path(relative_path) {
         bail!("invalid queue path: {relative_path}");
@@ -46,6 +47,7 @@ pub fn append(entry: &QueueEntry, relative_path: &str, base_path: &str) -> Resul
     Ok(())
 }
 
+// ⟦𓉝𓀳𓎧𓅉⟧ append_all :: auto-generated pointer for public function append_all
 pub fn append_all(entries: &[ProposedEntry], base_path: &str) -> Result<usize> {
     // Validate the complete batch before touching the filesystem. The LLM
     // path normally validates these too, but this public writer must not leave

@@ -18,6 +18,7 @@ pub struct CreateOutcome {
 
 /// Create a worktree for `desired_slug` branched from `origin`. If the branch
 /// already exists, a numeric suffix is appended. Returns the final path/branch.
+// ⟦𓆺𓊋𓃉𓍈⟧ create_worktree :: Create a worktree for `desired_slug` branched from `origin`.
 pub fn create_worktree(
     project: &Project,
     cfg: &WorktreeConfig,

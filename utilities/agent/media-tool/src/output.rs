@@ -6,6 +6,7 @@ use crate::schema::ParsedPrompt;
 /// Returns (output_path, per_output_description) pairs.
 /// When a format entry has a `description`, it becomes the generation prompt
 /// for that specific output, enabling multi-output prompts (e.g. SFX collections).
+// ⟦𓊷𓋔𓁳𓃧⟧ resolve_output_paths :: Returns (output_path, per_output_description) pairs.
 pub fn resolve_output_paths(prompt: &ParsedPrompt) -> Vec<(PathBuf, Option<String>)> {
     let meta = &prompt.meta;
     meta.output_formats
@@ -18,6 +19,7 @@ pub fn resolve_output_paths(prompt: &ParsedPrompt) -> Vec<(PathBuf, Option<Strin
         .collect()
 }
 
+// ⟦𓉞𓊧𓏃𓅂⟧ genai_dir_for :: auto-generated pointer for public function genai_dir_for
 pub fn genai_dir_for(output_path: &Path) -> PathBuf {
     let name = output_path.file_name().unwrap().to_str().unwrap();
     output_path
@@ -26,6 +28,7 @@ pub fn genai_dir_for(output_path: &Path) -> PathBuf {
         .join(format!(".genai.{}", name))
 }
 
+// ⟦𓌿𓊏𓏻𓐠⟧ genai_candidate_path :: auto-generated pointer for public function genai_candidate_path
 pub fn genai_candidate_path(output_path: &Path) -> PathBuf {
     let gdir = genai_dir_for(output_path);
     std::fs::create_dir_all(&gdir).ok();
@@ -42,6 +45,7 @@ pub fn genai_candidate_path(output_path: &Path) -> PathBuf {
     gdir.join(format!("{}_{}.{}", ts, hex, ext))
 }
 
+// ⟦𓌗𓈿𓏭𓅈⟧ link_active :: auto-generated pointer for public function link_active
 pub fn link_active(genai_path: &Path, output_path: &Path) -> color_eyre::Result<()> {
     if output_path.exists() || output_path.is_symlink() {
         std::fs::remove_file(output_path)?;
@@ -52,6 +56,7 @@ pub fn link_active(genai_path: &Path, output_path: &Path) -> color_eyre::Result<
 
 /// Write a metadata sidecar file next to a generated candidate.
 /// Path: same as candidate but with `.metadata.yaml` replacing the extension.
+// ⟦𓎝𓂷𓌣𓅎⟧ write_metadata :: Write a metadata sidecar file next to a generated candidate.
 pub fn write_metadata(
     genai_path: &Path,
     service: &str,

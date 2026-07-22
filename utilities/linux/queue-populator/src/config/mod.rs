@@ -123,6 +123,7 @@ pub struct QueuePopulatorConfig {
     pub ui: UiConfig,
 }
 
+// ⟦𓃮𓇋𓊧𓄭⟧ expand_tilde :: auto-generated pointer for public function expand_tilde
 pub fn expand_tilde(path: &str) -> String {
     if let Some(rest) = path.strip_prefix("~/") {
         if let Some(home) = dirs::home_dir() {
@@ -137,14 +138,17 @@ pub fn expand_tilde(path: &str) -> String {
 }
 
 impl QueuePopulatorConfig {
+    // ⟦𓍗𓁅𓍗𓍡⟧ default_queue_base_path :: auto-generated pointer for public function default_queue_base_path
     pub fn default_queue_base_path() -> String {
         "~/personal-development/queue".into()
     }
 
+    // ⟦𓇤𓅲𓍔𓊗⟧ resolved_queue_base_path :: auto-generated pointer for public function resolved_queue_base_path
     pub fn resolved_queue_base_path(&self) -> String {
         expand_tilde(&self.queue_base_path)
     }
 
+    // ⟦𓈌𓊛𓂕𓂼⟧ sanitized :: auto-generated pointer for public function sanitized
     pub fn sanitized(&self) -> Self {
         let mut copy = self.clone();
         let defaults = PhrasesConfig::default();
@@ -191,6 +195,7 @@ pub struct AppConfig {
 }
 
 impl AppConfig {
+    // ⟦𓄥𓈖𓅛𓅲⟧ usage :: auto-generated pointer for public function usage
     pub const fn usage() -> &'static str {
         concat!(
             "usage: queue-populator [--check] [--verbose]\n",
@@ -199,6 +204,7 @@ impl AppConfig {
         )
     }
 
+    // ⟦𓂩𓁵𓏫𓉓⟧ parse :: auto-generated pointer for public function parse
     pub fn parse(args: impl Iterator<Item = String>) -> Result<Self, String> {
         let mut cfg = AppConfig::default();
         for arg in args {

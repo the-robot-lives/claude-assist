@@ -40,7 +40,13 @@ set -euo pipefail
 #                  them. Repeatable.
 #
 # Flags:
-#   --tag TAG      Force the edge build tag (e.g. v2.1.edge); rejected with >1 key.
+#   --tag TAG      Force the version. Edge form (vM.m.edge) forces which M.m
+#                  series to build/promote from. A literal vX.Y.Z is written
+#                  to values.yaml verbatim and used as-is for the build tag —
+#                  the path to promote a rolling .edge tag (or an image that
+#                  has never had a versioned release) to its first real
+#                  version, bypassing docker-push's edge-only auto-promotion.
+#                  Rejected with >1 key.
 #   --stage        Set BUILD_ENV=stage.
 #   --prod         Set BUILD_ENV=prod.
 #   --dev          Set BUILD_ENV=dev  (default).
@@ -189,9 +195,34 @@ bump_values() {
   fi
 }
 
+# --- Extract (major minor patch) from a vM.m.p[...] tag; empty on no-match --
+_vsn_tuple() {
+  local t="${1#v}"
+  [[ "$t" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+) ]] || return 1
+  printf '%s %s %s' "${BASH_REMATCH[1]}" "${BASH_REMATCH[2]}" "${BASH_REMATCH[3]}"
+}
+
+# --- Refuse to bump backward vs. the tag already in values.yaml -------------
+# Guards against values.yaml drifting ahead of docker-push's own promotion
+# counter (e.g. hand-edited) and silently getting rewound. Skips the check
+# whenever either side isn't a plain vM.m.p tag (.edge, missing, etc.).
+assert_monotonic() {
+  local cur="$1" new="$2" key="$3" vf="$4" cur_t new_t cM cm cp nM nm np
+  cur_t="$(_vsn_tuple "$cur")" || return 0
+  new_t="$(_vsn_tuple "$new")" || return 0
+  read -r cM cm cp <<<"$cur_t"
+  read -r nM nm np <<<"$new_t"
+  if (( nM < cM || (nM == cM && nm < cm) || (nM == cM && nm == cm && np <= cp) )); then
+    die "$key: refusing to write ${new} over ${cur} in $vf — not an advance. \
+values.yaml is likely ahead of the registry's version counter; pass --tag \
+with a version > ${cur} to override deliberately."
+  fi
+}
+
 # --- Build per-image plan ----------------------------------------------------
 declare -a PLAN_KEYS PLAN_CHART_PATH PLAN_CHART_NAME PLAN_VALUES_FILE
 declare -a PLAN_YQ_PATH PLAN_FORMAT PLAN_CURRENT PLAN_EDGE
+declare -a PLAN_CUR_TAG PLAN_EXPLICIT_FINAL PLAN_FINAL_TAG
 
 for raw in "${IMAGE_KEYS[@]}"; do
   # Canonicalise the key exactly like docker-build (dir names, single-service
@@ -236,17 +267,33 @@ for raw in "${IMAGE_KEYS[@]}"; do
     die "$values_file has no value at $yq_path"
 
   if [[ "$fmt" == "image" ]]; then
-    [[ "$current_val" == *:* ]] || die "image string lacks a tag: $current_val ($values_file)"
-    cur_tag="${current_val##*:}"
+    if [[ "$current_val" == *:* ]]; then
+      cur_tag="${current_val##*:}"
+    elif [[ -n "$TAG_OVERRIDE" ]]; then
+      cur_tag=""   # never had a versioned release — fine, --tag sets it below
+    else
+      die "image string lacks a tag: $current_val ($values_file) (pass --tag vX.Y.Z for a first release)"
+    fi
   else
     cur_tag="$current_val"
   fi
 
   # Derive the edge build tag (v<major>.<minor>.edge[-env]) so version
   # promotion continues the series the chart currently references.
+  # --tag always wins over cur_tag. A literal vX.Y.Z (not *.edge) is a
+  # first-release / explicit-promotion override: it becomes both the build
+  # tag and the final values.yaml tag verbatim, since docker-push's own
+  # promotion bookkeeping only understands vM.m.edge input and would reject
+  # (or silently fail to record) a concrete version.
   clean_cur="${cur_tag#v}"
+  explicit_final=false
+  final_tag=""
   if [[ -n "$TAG_OVERRIDE" ]]; then
     edge="${TAG_OVERRIDE#v}"; edge="v$edge"
+    if [[ ! "${edge#v}" =~ ^[0-9]+\.[0-9]+\.edge([-.].*)?$ ]]; then
+      explicit_final=true
+      final_tag="$edge"
+    fi
   elif [[ "$clean_cur" =~ ^([0-9]+)\.([0-9]+)\.edge([-.].*)?$ ]]; then
     edge="v$clean_cur"
   elif [[ "$clean_cur" =~ ^([0-9]+)\.([0-9]+)\. ]]; then
@@ -255,7 +302,7 @@ for raw in "${IMAGE_KEYS[@]}"; do
     [[ "$env_val" != "prod" && "$env_val" != "production" ]] && env_sfx="-${env_val}"
     edge="v${BASH_REMATCH[1]}.${BASH_REMATCH[2]}.edge${env_sfx}"
   else
-    die "cannot derive an edge tag from current value '$cur_tag' in $values_file (need M.m.patch form, or pass --tag)"
+    die "cannot derive an edge tag from current value '$cur_tag' in $values_file (need M.m.patch or M.m.edge form, or pass --tag vX.Y.Z for a first release)"
   fi
 
   PLAN_KEYS+=("$key")
@@ -266,6 +313,9 @@ for raw in "${IMAGE_KEYS[@]}"; do
   PLAN_FORMAT+=("$fmt")
   PLAN_CURRENT+=("$current_val")
   PLAN_EDGE+=("$edge")
+  PLAN_CUR_TAG+=("$cur_tag")
+  PLAN_EXPLICIT_FINAL+=("$explicit_final")
+  PLAN_FINAL_TAG+=("$final_tag")
 done
 
 # Unique helm releases (chart names), preserving first-seen order.
@@ -286,7 +336,11 @@ for i in "${!PLAN_KEYS[@]}"; do
   printf "      %-14s %s\n" "values.yaml" "${PLAN_VALUES_FILE[$i]#$INFRA_ROOT/}"
   printf "      %-14s %s  [%s]\n" "values_path" "${PLAN_YQ_PATH[$i]}" "${PLAN_FORMAT[$i]}"
   printf "      %-14s %s\n" "current"     "${PLAN_CURRENT[$i]}"
-  printf "      %-14s %s → v<M>.<m>.<next patch> (resolved on push)\n" "edge build" "${PLAN_EDGE[$i]}"
+  if [[ "${PLAN_EXPLICIT_FINAL[$i]}" == "true" ]]; then
+    printf "      %-14s %s  (explicit --tag; written verbatim, no auto-promotion)\n" "final tag" "${PLAN_FINAL_TAG[$i]}"
+  else
+    printf "      %-14s %s → v<M>.<m>.<next patch> (resolved on push)\n" "edge build" "${PLAN_EDGE[$i]}"
+  fi
 done
 echo
 if $FLAG_SKIP_BUILD; then
@@ -330,12 +384,18 @@ if ! $FLAG_SKIP_BUILD; then
     build_args+=("$key")
     run "${build_args[@]}" < /dev/null
 
-    # docker-push recorded the promoted tag to .docker-state/pushes.
-    if promoted="$(last_pushed_vsn "$key")" && [[ -n "$promoted" ]]; then
+    if [[ "${PLAN_EXPLICIT_FINAL[$i]}" == "true" ]]; then
+      # --tag gave a literal vX.Y.Z: docker-build already pushed that exact
+      # tag as part of the build step. Skip docker-push's edge-only
+      # promotion bookkeeping (it rejects non-.edge input) and use it as-is.
+      promoted="${PLAN_FINAL_TAG[$i]}"
+    elif promoted="$(last_pushed_vsn "$key")" && [[ -n "$promoted" ]]; then
       :
     else
       die "could not determine promoted tag for '$key' from ${DOCKER_STATE_DIR}/pushes (push may have failed)"
     fi
+
+    assert_monotonic "${PLAN_CUR_TAG[$i]}" "$promoted" "$key" "${PLAN_VALUES_FILE[$i]}"
 
     step "Bump ${PLAN_VALUES_FILE[$i]#$INFRA_ROOT/}: ${PLAN_YQ_PATH[$i]} → ${promoted}"
     bump_values "${PLAN_VALUES_FILE[$i]}" "${PLAN_YQ_PATH[$i]}" "${PLAN_FORMAT[$i]}" "$promoted"

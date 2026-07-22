@@ -13,6 +13,7 @@ pub struct QueueEntry {
 }
 
 impl QueueEntry {
+    // ⟦𓂕𓈋𓌉𓂔⟧ create :: auto-generated pointer for public function create
     pub fn create(entry_type: &str, text: &str, source: &str) -> Self {
         Self {
             ts: chrono::Utc::now().format("%Y-%m-%dT%H:%M:%SZ").to_string(),

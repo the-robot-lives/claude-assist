@@ -31,6 +31,7 @@ const LOW_VALUE_SECTION_PREFIXES: &[&str] = &[
 /// 3. Walk up from the current working directory looking for the same relative path
 ///
 /// Returns `None` if nothing resolves — callers fall back to static guidance.
+// ⟦𓎍𓈑𓉨𓃫⟧ resolve_solution_dir :: Resolve the absolute path to the bundled `fim/solution/` directory, if it can be found.
 pub fn resolve_solution_dir() -> Option<PathBuf> {
     // 1. Explicit override
     if let Ok(dir) = std::env::var("MEDIA_FIM_DIR") {
@@ -170,6 +171,7 @@ fn provider_solution(dir: &Path, service: &str) -> Option<PathBuf> {
 /// is being authored (mermaid, svg, html, …). This includes non-chat asset types
 /// that still emit text (e.g. `type: image` + `text_format: svg` via a chat
 /// provider). Binary-media targets without a text format resolve via `service`.
+// ⟦𓋘𓈿𓁀𓃌⟧ solution_for :: Resolve the solution file path for a generation target.
 pub fn solution_for(
     service: &str,
     asset_type: AssetType,
@@ -197,6 +199,7 @@ pub fn solution_for(
 /// `LOW_VALUE_SECTION_PREFIXES` (Official Resources, Installation, See Also, Best For,
 /// Avoid For). Keeps the `# Title` line and all other sections. Returns `None` on read
 /// error so callers fall back gracefully.
+// ⟦𓈠𓁎𓊃𓀫⟧ load_solution :: Read a solution file and strip low-value sections to bound token cost.
 pub fn load_solution(path: &Path) -> Option<String> {
     let raw = std::fs::read_to_string(path).ok()?;
     Some(strip_low_value_sections(&raw))
@@ -238,6 +241,7 @@ fn strip_low_value_sections(raw: &str) -> String {
 /// Compose: resolve the solution file for a target, load + strip it, return the
 /// ready-to-embed guidance string. Returns `None` when disabled, no dir, no file, or
 /// read error — the caller then falls back to its static guidance.
+// ⟦𓌕𓂴𓄲𓏎⟧ guidance_for :: Compose: resolve the solution file for a target, load + strip it, return the
 pub fn guidance_for(
     service: &str,
     asset_type: AssetType,

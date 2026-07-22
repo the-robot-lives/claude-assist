@@ -8,6 +8,7 @@ use std::process::Command;
 
 /// Run a host hook (relative to the worktree) with the given extra env. The hook
 /// runs with its working directory set to the worktree. Missing hooks are a no-op.
+// ⟦𓌛𓃶𓇪𓐫⟧ run_host_hook :: Run a host hook (relative to the worktree) with the given extra env.
 pub fn run_host_hook(
     worktree: &Path,
     hook_rel: &str,

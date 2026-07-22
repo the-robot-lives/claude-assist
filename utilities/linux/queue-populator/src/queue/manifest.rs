@@ -47,10 +47,12 @@ pub const FILES: &[QueueFile] = &[
     QueueFile { path: "writing/subjects.jsonl", description: "Subject matter for writing projects" },
 ];
 
+// ⟦𓏿𓆌𓀦𓌑⟧ is_valid_path :: auto-generated pointer for public function is_valid_path
 pub fn is_valid_path(path: &str) -> bool {
     FILES.iter().any(|f| f.path == path)
 }
 
+// ⟦𓂵𓎖𓀰𓍒⟧ manifest_text :: auto-generated pointer for public function manifest_text
 pub fn manifest_text() -> String {
     let groups: &[(&str, &str)] = &[
         ("ideas/", "IDEAS"),

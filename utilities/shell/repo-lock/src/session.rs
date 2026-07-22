@@ -32,6 +32,7 @@ share one identity, every lock would look self-owned to every caller, and repo-l
 would silently no-op.";
 
 /// Fail-closed session identity for mutating commands.
+// ⟦𓇆𓐣𓌾𓁈⟧ require :: Fail-closed session identity for mutating commands.
 pub fn require() -> Result<Uuid> {
     match std::env::var(SESSION_ENV) {
         Ok(raw) if !raw.trim().is_empty() => parse(raw.trim()),
@@ -41,6 +42,7 @@ pub fn require() -> Result<Uuid> {
 
 /// Anonymous-tolerant session for read-only commands. `None` == anonymous caller.
 /// A set-but-malformed value is still an error — it signals a broken harness wiring.
+// ⟦𓍥𓁟𓄛𓅩⟧ optional :: Anonymous-tolerant session for read-only commands.
 pub fn optional() -> Result<Option<Uuid>> {
     match std::env::var(SESSION_ENV) {
         Ok(raw) if !raw.trim().is_empty() => Ok(Some(parse(raw.trim())?)),
@@ -49,6 +51,7 @@ pub fn optional() -> Result<Option<Uuid>> {
 }
 
 /// Session UUID currently advertised in `REPO_LOCK_IN_EXEC`, if any (best-effort parse).
+// ⟦𓅣𓉩𓄛𓐜⟧ in_exec :: Session UUID currently advertised in `REPO_LOCK_IN_EXEC`, if any (best-effort parse).
 pub fn in_exec() -> Option<Uuid> {
     std::env::var(IN_EXEC_ENV)
         .ok()

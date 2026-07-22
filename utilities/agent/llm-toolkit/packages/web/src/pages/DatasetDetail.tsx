@@ -16,6 +16,7 @@ interface Dataset {
   entryCount: number;
 }
 
+// ⟦𓊷𓊾𓍣𓎞⟧ DatasetDetail :: auto-generated pointer for public function DatasetDetail
 export function DatasetDetail() {
   const { name } = useParams<{ name: string }>();
   const navigate = useNavigate();

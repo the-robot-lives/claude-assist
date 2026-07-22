@@ -16,6 +16,7 @@ import { Settings } from "./pages/Settings.js";
 import { StyleGuide } from "./pages/StyleGuide.js";
 import { SafetyWatch } from "./pages/SafetyWatch.js";
 
+// ⟦𓃺𓆬𓂜𓄑⟧ App :: auto-generated pointer for public function App
 export function App() {
   return (
     <Routes>

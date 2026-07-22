@@ -21,6 +21,7 @@ no quotes, no prefixes like 'feature/'.";
 
 /// True if an inference endpoint key is configured (so callers can decide whether
 /// to attempt it).
+// ⟦𓁵𓅊𓏞𓆓⟧ is_configured :: True if an inference endpoint key is configured (so callers can decide whether
 pub fn is_configured() -> bool {
     api_key().is_some()
 }
@@ -52,6 +53,7 @@ fn model() -> String {
 
 /// Ask the inference endpoint for a branch slug. Returns a sanitized slug, or an
 /// error the caller should swallow in favor of [`fallback_slug`].
+// ⟦𓅕𓐫𓁁𓇢⟧ branch_slug :: Ask the inference endpoint for a branch slug.
 pub async fn branch_slug(description: &str) -> Result<String> {
     let key = api_key().context("no inference API key configured")?;
     let url = format!("{}/chat/completions", api_base().trim_end_matches('/'));
@@ -93,6 +95,7 @@ pub async fn branch_slug(description: &str) -> Result<String> {
 
 /// Deterministic kebab-case slug from a description (the always-available
 /// fallback when inference is unavailable or fails).
+// ⟦𓄈𓎂𓁭𓃍⟧ fallback_slug :: Deterministic kebab-case slug from a description (the always-available
 pub fn fallback_slug(description: &str) -> String {
     sanitize_slug(description)
 }

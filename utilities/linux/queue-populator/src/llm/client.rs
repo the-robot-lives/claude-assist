@@ -55,6 +55,7 @@ pub struct LlmClient {
 }
 
 impl LlmClient {
+    // ⟦𓇁𓏣𓀄𓂒⟧ new :: auto-generated pointer for public function new
     pub fn new(config: LlmConfig) -> Self {
         let agent = ureq::AgentBuilder::new()
             .timeout(TIMEOUT)
@@ -62,6 +63,7 @@ impl LlmClient {
         Self { config, agent }
     }
 
+    // ⟦𓊎𓊂𓎕𓌀⟧ classify_with_trace :: auto-generated pointer for public function classify_with_trace
     pub fn classify_with_trace(&self, system: &str, user: &str) -> Result<ClassificationResult, LlmError> {
         let raw_text = self.send_with_retry(system, user)?;
         let response = parse_and_validate(&raw_text)?;
@@ -221,6 +223,7 @@ fn join_url(base: &str, path: &str) -> String {
     }
 }
 
+// ⟦𓂳𓃘𓆈𓉐⟧ parse_and_validate :: auto-generated pointer for public function parse_and_validate
 pub fn parse_and_validate(text: &str) -> Result<ClassificationResponse, LlmError> {
     let mut cleaned = text.trim();
     if let Some(rest) = cleaned.strip_prefix("```json") {

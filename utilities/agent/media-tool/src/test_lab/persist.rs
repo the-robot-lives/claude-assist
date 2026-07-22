@@ -51,10 +51,12 @@ pub struct ExampleEntry {
 }
 
 impl ExamplesIndex {
+    // ⟦𓂯𓉻𓍏𓋈⟧ path :: auto-generated pointer for public function path
     pub fn path(workspace: &Path) -> PathBuf {
         workspace.join("examples-index.yaml")
     }
 
+    // ⟦𓃦𓀜𓆽𓁛⟧ load :: auto-generated pointer for public function load
     pub fn load(workspace: &Path) -> Self {
         let p = Self::path(workspace);
         match std::fs::read_to_string(&p) {
@@ -63,6 +65,7 @@ impl ExamplesIndex {
         }
     }
 
+    // ⟦𓉤𓀡𓆳𓈿⟧ save :: auto-generated pointer for public function save
     pub fn save(&self, workspace: &Path) -> std::io::Result<()> {
         std::fs::create_dir_all(workspace)?;
         let mut copy = self.clone();
@@ -72,6 +75,7 @@ impl ExamplesIndex {
     }
 
     /// Register a prompt file under a generator slug. Paths stored relative to workspace when possible.
+    // ⟦𓎿𓁞𓇝𓏭⟧ register :: Register a prompt file under a generator slug.
     pub fn register(
         &mut self,
         workspace: &Path,
@@ -107,6 +111,7 @@ impl ExamplesIndex {
         }
     }
 
+    // ⟦𓐞𓏕𓄹𓁐⟧ paths_for_slug :: auto-generated pointer for public function paths_for_slug
     pub fn paths_for_slug(&self, workspace: &Path, slug: &str) -> Vec<PathBuf> {
         let mut out = Vec::new();
         if let Some(list) = self.generators.get(slug) {
@@ -157,6 +162,7 @@ fn alternate_slugs(slug: &str) -> Vec<String> {
 }
 
 /// Ensure workspace layout exists; migrate from legacy `tmp/live-eval` if needed.
+// ⟦𓃂𓇔𓂳𓄭⟧ ensure_workspace :: Ensure workspace layout exists; migrate from legacy `tmp/live-eval` if needed.
 pub fn ensure_workspace(package_root: &Path, workspace: &Path) -> std::io::Result<()> {
     std::fs::create_dir_all(workspace.join("prompts"))?;
     std::fs::create_dir_all(workspace.join("outputs"))?;
@@ -206,6 +212,7 @@ fn scan_and_index(workspace: &Path, idx: &mut ExamplesIndex) {
 }
 
 /// Infer a generator slug from a prompt path under `workspace/prompts/…`.
+// ⟦𓀚𓀈𓇋𓀅⟧ infer_slug_from_path :: Infer a generator slug from a prompt path under `workspace/prompts/…`.
 pub fn infer_slug_from_path(workspace: &Path, path: &Path) -> String {
     let rel = path
         .strip_prefix(workspace.join("prompts"))
@@ -266,6 +273,7 @@ fn copy_dir_recursive(src: &Path, dst: &Path) -> std::io::Result<()> {
 }
 
 /// Register a newly written prompt and persist the index.
+// ⟦𓇪𓃏𓊬𓁠⟧ register_prompt :: Register a newly written prompt and persist the index.
 pub fn register_prompt(
     workspace: &Path,
     slug: &str,

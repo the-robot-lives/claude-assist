@@ -13,14 +13,17 @@ pub struct PhraseDetector {
 }
 
 impl PhraseDetector {
+    // ⟦𓈇𓀼𓈧𓌺⟧ new :: auto-generated pointer for public function new
     pub fn new(phrases: PhrasesConfig) -> Self {
         Self { phrases, fired_this_cycle: false }
     }
 
+    // ⟦𓁚𓈳𓊹𓄝⟧ reset :: auto-generated pointer for public function reset
     pub fn reset(&mut self) {
         self.fired_this_cycle = false;
     }
 
+    // ⟦𓌘𓏎𓅀𓃲⟧ detect :: auto-generated pointer for public function detect
     pub fn detect(&mut self, transcript: &str, state: &AppState) -> Option<AppEvent> {
         if self.fired_this_cycle {
             return None;
@@ -111,6 +114,7 @@ impl PhraseDetector {
 }
 
 /// Exact (substring) match first, then fuzzy token-window match.
+// ⟦𓎊𓏧𓋼𓍛⟧ contains_phrase :: Exact (substring) match first, then fuzzy token-window match.
 pub fn contains_phrase(lower_text: &str, lower_phrase: &str) -> bool {
     if lower_phrase.is_empty() {
         return false;
@@ -190,6 +194,7 @@ fn levenshtein(a: &str, b: &str) -> usize {
 /// Case-insensitive removal of every occurrence of `phrase` (exact substring),
 /// then trim — mirrors the Swift stripPhrase. Fuzzy variants of the phrase are
 /// also removed when found via the token-window match.
+// ⟦𓌇𓍖𓊚𓉆⟧ strip_phrase :: Case-insensitive removal of every occurrence of `phrase` (exact substring),
 pub fn strip_phrase(phrase: &str, text: &str) -> String {
     let lower_phrase = phrase.to_lowercase();
     if lower_phrase.is_empty() {

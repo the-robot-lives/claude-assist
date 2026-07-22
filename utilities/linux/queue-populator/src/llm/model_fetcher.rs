@@ -6,6 +6,7 @@ use std::time::Duration;
 
 const MAX_MODEL_RESPONSE_BYTES: u64 = 2 * 1024 * 1024;
 
+// ⟦𓂰𓄧𓌅𓉈⟧ fetch_models :: auto-generated pointer for public function fetch_models
 pub fn fetch_models(provider: &str, api_key: Option<&str>, base_url: Option<&str>) -> Vec<String> {
     match provider {
         "anthropic" => fetch_anthropic(api_key),

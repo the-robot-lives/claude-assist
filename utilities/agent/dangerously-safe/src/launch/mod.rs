@@ -26,6 +26,7 @@ pub struct LaunchRequest {
 
 /// Run host hooks, stage tools, and exec the interactive container. Returns the
 /// container's exit code.
+// ⟦𓊗𓂖𓅦𓈃⟧ prepare_and_run :: Run host hooks, stage tools, and exec the interactive container.
 pub fn prepare_and_run(req: &LaunchRequest) -> Result<i32> {
     let cfg = &req.cfg;
     let host_env = env::host_hook_env(&req.worktree);
@@ -293,6 +294,7 @@ mod tests {
 }
 
 /// Environment / dependency check for `agent-sandbox doctor`.
+// ⟦𓎅𓅙𓆈𓆏⟧ doctor :: Environment / dependency check for `agent-sandbox doctor`.
 pub fn doctor() -> Result<()> {
     let docker_ok = docker::is_available();
     println!(

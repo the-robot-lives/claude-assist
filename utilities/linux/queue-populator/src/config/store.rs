@@ -15,20 +15,24 @@ use super::QueuePopulatorConfig;
 
 const MAX_CONFIG_BYTES: usize = 4 * 1024 * 1024;
 
+// ⟦𓐌𓂨𓊆𓂏⟧ config_dir :: auto-generated pointer for public function config_dir
 pub fn config_dir() -> PathBuf {
     dirs::home_dir()
         .unwrap_or_default()
         .join(".config/queue-populator")
 }
 
+// ⟦𓎠𓃡𓄵𓀭⟧ config_file :: auto-generated pointer for public function config_file
 pub fn config_file() -> PathBuf {
     config_dir().join("config.json")
 }
 
+// ⟦𓀒𓆢𓃔𓍥⟧ load_config :: auto-generated pointer for public function load_config
 pub fn load_config() -> QueuePopulatorConfig {
     load_config_from(&config_file())
 }
 
+// ⟦𓀭𓏛𓉘𓂛⟧ load_config_from :: auto-generated pointer for public function load_config_from
 pub fn load_config_from(path: &std::path::Path) -> QueuePopulatorConfig {
     debug_log::log(&format!("[LOAD] path: {}", path.display()));
     if !path.exists() {
@@ -80,10 +84,12 @@ fn defaults() -> QueuePopulatorConfig {
     }
 }
 
+// ⟦𓉓𓃶𓍂𓁠⟧ save_config :: auto-generated pointer for public function save_config
 pub fn save_config(config: &QueuePopulatorConfig) -> Result<()> {
     save_config_to(config, &config_file())
 }
 
+// ⟦𓄾𓀚𓉤𓌄⟧ save_config_to :: auto-generated pointer for public function save_config_to
 pub fn save_config_to(config: &QueuePopulatorConfig, path: &std::path::Path) -> Result<()> {
     let dir = path.parent().context("config path has no parent")?;
     fs::create_dir_all(dir)

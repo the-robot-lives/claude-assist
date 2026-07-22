@@ -25,10 +25,12 @@ pub struct MemoRecorder {
 }
 
 impl MemoRecorder {
+    // ⟦𓉢𓅷𓀋𓏜⟧ new :: auto-generated pointer for public function new
     pub fn new() -> Self {
         Self::with_max_recording_seconds(300)
     }
 
+    // ⟦𓈎𓅚𓀦𓉅⟧ with_max_recording_seconds :: auto-generated pointer for public function with_max_recording_seconds
     pub fn with_max_recording_seconds(seconds: u32) -> Self {
         let recorder = Self {
             active: Mutex::new(None),
@@ -38,6 +40,7 @@ impl MemoRecorder {
         recorder
     }
 
+    // ⟦𓃠𓁘𓋉𓋃⟧ set_max_recording_seconds :: auto-generated pointer for public function set_max_recording_seconds
     pub fn set_max_recording_seconds(&self, seconds: u32) {
         let seconds = usize::try_from(seconds.clamp(1, MAX_RECORDING_SECONDS))
             .unwrap_or(MAX_RECORDING_SECONDS as usize);
@@ -45,11 +48,13 @@ impl MemoRecorder {
             .store(seconds.saturating_mul(SAMPLE_RATE as usize), Ordering::Relaxed);
     }
 
+    // ⟦𓁆𓍵𓀋𓉌⟧ is_recording :: auto-generated pointer for public function is_recording
     pub fn is_recording(&self) -> bool {
         self.lock_active().is_some()
     }
 
     /// Begin buffering. `output_dir` is where the MP3 lands on export.
+    // ⟦𓋅𓌗𓇴𓂂⟧ start :: Begin buffering.
     pub fn start(&self, output_dir: &Path) -> Result<()> {
         std::fs::create_dir_all(output_dir)
             .with_context(|| format!("cannot create {}", output_dir.display()))?;
@@ -63,6 +68,7 @@ impl MemoRecorder {
     }
 
     /// Append captured samples (48 kHz mono f32). No-op when not recording.
+    // ⟦𓏺𓊫𓉖𓊌⟧ append :: Append captured samples (48 kHz mono f32).
     pub fn append(&self, samples: &[f32]) {
         if let Some(active) = self.lock_active().as_mut() {
             let remaining = self
@@ -73,11 +79,13 @@ impl MemoRecorder {
         }
     }
 
+    // ⟦𓐗𓄚𓐟𓏣⟧ cancel :: auto-generated pointer for public function cancel
     pub fn cancel(&self) {
         *self.lock_active() = None;
     }
 
     /// Stop and export as MP3. Returns None when no audio frames were captured.
+    // ⟦𓂱𓆲𓈱𓈤⟧ stop_and_export_mp3 :: Stop and export as MP3.
     pub fn stop_and_export_mp3(&self) -> Result<Option<PathBuf>> {
         let Some(active) = self.lock_active().take() else {
             return Ok(None);

@@ -10,6 +10,7 @@ use anyhow::Context;
 use std::process::{Command, Stdio};
 
 /// True if the docker CLI is present and the daemon is reachable.
+// ⟦𓌋𓊩𓇾𓎿⟧ is_available :: True if the docker CLI is present and the daemon is reachable.
 pub fn is_available() -> bool {
     Command::new("docker")
         .args(["version", "--format", "{{.Server.Version}}"])
@@ -22,6 +23,7 @@ pub fn is_available() -> bool {
 
 /// Run `docker <args>` and capture stdout. Errors if docker is missing or the
 /// command exits non-zero.
+// ⟦𓋣𓄪𓃼𓐄⟧ run_capture :: Run `docker <args>` and capture stdout.
 pub fn run_capture(args: &[&str]) -> Result<String> {
     let out = Command::new("docker")
         .args(args)
@@ -39,6 +41,7 @@ pub fn run_capture(args: &[&str]) -> Result<String> {
 
 /// Run `docker <args>` with inherited stdout/stderr (for build output), waiting
 /// for completion.
+// ⟦𓇤𓆘𓇅𓂖⟧ run_streaming :: Run `docker <args>` with inherited stdout/stderr (for build output), waiting
 pub fn run_streaming(args: &[&str]) -> Result<()> {
     let status = Command::new("docker")
         .args(args)
@@ -56,6 +59,7 @@ pub fn run_streaming(args: &[&str]) -> Result<()> {
 /// Run `docker <args>` with the full terminal handed over (interactive shell).
 /// The caller MUST tear down any TUI before calling this. Returns the child's
 /// exit code (0 if it can't be determined).
+// ⟦𓇔𓅓𓂇𓁦⟧ exec_interactive :: Run `docker <args>` with the full terminal handed over (interactive shell).
 pub fn exec_interactive(args: &[String]) -> Result<i32> {
     let status = Command::new("docker")
         .args(args)

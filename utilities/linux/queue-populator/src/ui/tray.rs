@@ -17,6 +17,7 @@ pub enum TrayState {
 }
 
 impl TrayState {
+    // ⟦𓌌𓐕𓌟𓆞⟧ from_app_state :: auto-generated pointer for public function from_app_state
     pub fn from_app_state(state: &AppState) -> Self {
         match state {
             AppState::Idle => TrayState::Idle,

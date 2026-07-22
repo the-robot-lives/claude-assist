@@ -18,6 +18,7 @@ pub trait Renderer: Send + Sync {
     fn is_available(&self) -> bool;
 }
 
+// ⟦𓐑𓃰𓈢𓐦⟧ get_renderer :: auto-generated pointer for public function get_renderer
 pub fn get_renderer(tool: &str) -> Option<Box<dyn Renderer>> {
     match tool {
         "mermaid" => Some(Box::new(mermaid::MermaidRenderer)),

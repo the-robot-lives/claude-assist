@@ -74,6 +74,7 @@ fn default_provider_str() -> String {
 }
 
 impl AppConfig {
+    // ⟦𓂾𓏳𓍜𓊖⟧ default_config_path :: auto-generated pointer for public function default_config_path
     pub fn default_config_path() -> PathBuf {
         if let Ok(p) = env::var("SKILL_MANAGE_CONFIG") {
             return expand_path(PathBuf::from(p));
@@ -84,6 +85,7 @@ impl AppConfig {
             .join("config.yaml")
     }
 
+    // ⟦𓍊𓉹𓍰𓀐⟧ load :: auto-generated pointer for public function load
     pub fn load(path: Option<&Path>) -> Result<Self> {
         let path = path
             .map(Path::to_path_buf)
@@ -109,6 +111,7 @@ impl AppConfig {
     }
 
     /// Built-in defaults when no config file exists.
+    // ⟦𓀕𓇇𓂁𓃼⟧ builtin_defaults :: Built-in defaults when no config file exists.
     pub fn builtin_defaults() -> Self {
         let home = dirs::home_dir().unwrap_or_else(|| PathBuf::from("/tmp"));
         let mut providers = BTreeMap::new();
@@ -207,6 +210,7 @@ impl AppConfig {
         }
     }
 
+    // ⟦𓃟𓋣𓅀𓊏⟧ source_roots :: auto-generated pointer for public function source_roots
     pub fn source_roots(&self, kind: Kind) -> &[SourceRoot] {
         match kind {
             Kind::Skills => &self.sources.skills,
@@ -215,10 +219,12 @@ impl AppConfig {
         }
     }
 
+    // ⟦𓅖𓎐𓐉𓐋⟧ provider_dirs :: auto-generated pointer for public function provider_dirs
     pub fn provider_dirs(&self, provider: Provider) -> Option<&ProviderDirs> {
         self.providers.get(provider.as_str())
     }
 
+    // ⟦𓐅𓈿𓋆𓇵⟧ kind_dir :: auto-generated pointer for public function kind_dir
     pub fn kind_dir(&self, provider: Provider, kind: Kind) -> Option<PathBuf> {
         let dirs = self.provider_dirs(provider)?;
         match kind {
@@ -229,6 +235,7 @@ impl AppConfig {
     }
 
     /// Whether `path` is under any configured source root for `kind`.
+    // ⟦𓊂𓀁𓅆𓀑⟧ is_under_source :: Whether `path` is under any configured source root for `kind`.
     pub fn is_under_source(&self, kind: Kind, path: &Path) -> bool {
         let Ok(canon) = path.canonicalize() else {
             return self
@@ -248,6 +255,7 @@ impl AppConfig {
         false
     }
 
+    // ⟦𓌄𓅓𓇳𓀸⟧ resolve_providers :: auto-generated pointer for public function resolve_providers
     pub fn resolve_providers(&self, provider_flag: Option<&str>) -> Result<Vec<Provider>> {
         let raw = provider_flag
             .map(|s| s.to_string())
@@ -260,6 +268,7 @@ impl AppConfig {
     }
 }
 
+// ⟦𓁋𓉀𓍤𓈰⟧ expand_path :: auto-generated pointer for public function expand_path
 pub fn expand_path(path: PathBuf) -> PathBuf {
     let s = path.to_string_lossy().to_string();
     let mut out = s.clone();
@@ -294,6 +303,7 @@ fn resolve_relative(config_path: &Path, catalog: PathBuf) -> PathBuf {
 }
 
 /// Write a starter config if missing.
+// ⟦𓃪𓌕𓀬𓊋⟧ init_config :: Write a starter config if missing.
 pub fn init_config(path: &Path, force: bool) -> Result<()> {
     if path.exists() && !force {
         bail!("config already exists: {}", path.display());
