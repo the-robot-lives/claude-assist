@@ -95,20 +95,31 @@ pub async fn update_thread_settings(
     thread_settings: ThreadSettingsOverrides,
 ) {
     let updates = thread_settings_update(sess, thread_settings).await;
-    let msg = match sess.update_settings(updates).await {
-        Ok(()) => thread_settings_applied_event(sess).await,
-        Err(err) => EventMsg::Error(ErrorEvent {
-            message: format!("invalid thread settings override: {err}"),
-            codex_error_info: Some(CodexErrorInfo::BadRequest),
-        }),
-    };
-    sess.send_event_raw(Event { id: sub_id, msg }).await;
+    match sess.update_settings(updates).await {
+        Ok(()) => {
+            sess.send_event_raw_without_materializing_rollout(Event {
+                id: sub_id,
+                msg: thread_settings_applied_event(sess).await,
+            })
+            .await;
+        }
+        Err(err) => {
+            sess.send_event_raw(Event {
+                id: sub_id,
+                msg: EventMsg::Error(ErrorEvent {
+                    message: format!("invalid thread settings override: {err}"),
+                    codex_error_info: Some(CodexErrorInfo::BadRequest),
+                }),
+            })
+            .await;
+        }
+    }
 }
 
 async fn thread_settings_update(
     sess: &Session,
     thread_settings: ThreadSettingsOverrides,
-) -> SessionSettingsUpdate {
+) -> Result<SessionSettingsUpdate, String> {
     let ThreadSettingsOverrides {
         environments,
         workspace_roots,
@@ -138,7 +149,25 @@ async fn thread_settings_update(
                 .with_updates(model, effort, /*developer_instructions*/ None)
         }
     };
-    SessionSettingsUpdate {
+    let config = sess.get_config().await;
+    let current_model_provider_id = {
+        let state = sess.state.lock().await;
+        state.session_configuration.provider_id.clone()
+    };
+    let model_info = sess
+        .services
+        .models_manager
+        .get_model_info(
+            collaboration_mode.model(),
+            &config.to_models_manager_config(),
+        )
+        .await;
+    let (model_provider_id, provider) = super::model_provider_from_model_info(&config, &model_info)
+        .map_err(|err| err.to_string())?;
+    let model_provider =
+        (model_provider_id != current_model_provider_id).then_some((model_provider_id, provider));
+    Ok(SessionSettingsUpdate {
+        model_provider,
         environments,
         workspace_roots,
         profile_workspace_roots,
@@ -153,7 +182,7 @@ async fn thread_settings_update(
         service_tier,
         personality,
         ..Default::default()
-    }
+    })
 }
 
 async fn thread_settings_applied_event(sess: &Session) -> EventMsg {
@@ -198,7 +227,20 @@ pub(super) async fn user_input_or_turn_inner(
     };
     let emit_thread_settings_applied = thread_settings != ThreadSettingsOverrides::default();
     let mut updates = if emit_thread_settings_applied {
-        thread_settings_update(sess, thread_settings).await
+        match thread_settings_update(sess, thread_settings).await {
+            Ok(updates) => updates,
+            Err(message) => {
+                sess.send_event_raw(Event {
+                    id: sub_id,
+                    msg: EventMsg::Error(ErrorEvent {
+                        message,
+                        codex_error_info: Some(CodexErrorInfo::BadRequest),
+                    }),
+                })
+                .await;
+                return;
+            }
+        }
     } else {
         SessionSettingsUpdate::default()
     };
@@ -209,7 +251,7 @@ pub(super) async fn user_input_or_turn_inner(
         return;
     };
     if emit_thread_settings_applied {
-        sess.send_event_raw(Event {
+        sess.send_event_raw_without_materializing_rollout(Event {
             id: sub_id.clone(),
             msg: thread_settings_applied_event(sess).await,
         })
@@ -285,6 +327,7 @@ pub async fn inter_agent_communication(
     sess.input_queue
         .enqueue_mailbox_communication(communication)
         .await;
+    crate::agent_communication::emit_agent_communication_receive(&sub_id);
     if trigger_turn {
         sess.maybe_start_turn_for_pending_work_with_sub_id(sub_id)
             .await;
@@ -588,8 +631,8 @@ async fn shutdown_session_runtime(sess: &Arc<Session>) {
     if let Some(startup_prewarm) = sess.take_session_startup_prewarm().await {
         startup_prewarm.abort().await;
     }
-    sess.abort_all_tasks(TurnAbortReason::Interrupted).await;
     let _ = sess.conversation.shutdown().await;
+    sess.abort_all_tasks(TurnAbortReason::Interrupted).await;
     sess.services
         .unified_exec_manager
         .terminate_all_processes()
@@ -850,6 +893,11 @@ pub(super) async fn submission_loop(
     if !shutdown_received {
         shutdown_session_runtime(&sess).await;
         emit_thread_stop_lifecycle(sess.as_ref()).await;
+        if let Some(live_thread) = sess.live_thread()
+            && let Err(err) = live_thread.shutdown().await
+        {
+            warn!("failed to shutdown thread persistence after submission channel closed: {err}");
+        }
     }
     debug!("Agent loop exited");
 }

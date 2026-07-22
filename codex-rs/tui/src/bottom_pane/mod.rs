@@ -94,6 +94,7 @@ mod chat_composer;
 mod chat_composer_history;
 mod command_popup;
 pub(crate) mod custom_prompt_view;
+mod edit_convo_view;
 mod experimental_features_view;
 mod file_search_popup;
 mod footer;
@@ -1073,6 +1074,12 @@ impl BottomPane {
             self.app_event_tx.clone(),
             self.keymap.list.clone(),
         );
+        self.push_view(Box::new(view));
+    }
+
+    pub(crate) fn show_edit_convo_view(&mut self, rollout_path: Option<PathBuf>) {
+        let view = edit_convo_view::EditConvoView::new(rollout_path, self.app_event_tx.clone());
+        self.pause_status_timer_for_modal();
         self.push_view(Box::new(view));
     }
 

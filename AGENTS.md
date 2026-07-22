@@ -1,3 +1,20 @@
+## Documentation-First Approach
+
+When understanding code structure, layout, and architecture:
+
+1. **Consult `docs/PROJ-LAYOUT.md` first** — Provides a navigable map of the project structure with component descriptions. Use this to quickly locate files and understand how directories relate.
+2. **Review `docs/PROJ-ARCH.md` for architecture** — Explains system design, components, data flow, and key design decisions. Prefer this over reading code to understand "why" something is structured a certain way.
+3. **Follow subdirectory links** — Each major component has its own `PROJ-LAYOUT.md` and `PROJ-ARCH.md` (e.g., `codex-rs/docs/`, `sdk/docs/`, `bazel/docs/`). These provide detailed context without requiring manual codebase exploration.
+
+Only investigate the codebase directly when:
+- Documentation doesn't answer your question
+- You need to understand implementation details beyond the "what" and "why"
+- You're fixing a specific bug or adding a feature
+
+**After investigation:** If you discover missing or outdated details in the documentation, update the relevant `PROJ-LAYOUT.md` or `PROJ-ARCH.md` files to reflect what you learned. This keeps documentation current and helps future agents work faster.
+
+This approach saves time and context compared to manually exploring files.
+
 # Rust/codex-rs
 
 In the codex-rs folder where the rust code lives:
@@ -253,7 +270,7 @@ Use `just bench-smoke` to dry-run the benchmark for a single iteration to ensure
 
 - Tests should exercise app-server's public JSON-RPC API.
 - Use similar server mocking as for core integration tests.
-- Use `TestAppServer::new_with_auto_env()` and `TestAppServer::send_thread_start_request_with_auto_env()`
+- Use `TestAppServer::builder().build()` and `TestAppServer::send_thread_start_request_with_auto_env()`
   by default to ensure that new tests work with foreign app/exec OSes. See `$remote-tests` for
   details.
 

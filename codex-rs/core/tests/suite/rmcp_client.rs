@@ -1563,7 +1563,7 @@ async fn stdio_image_responses_preserve_original_detail_metadata() -> anyhow::Re
     let rmcp_test_server_bin = remote_aware_stdio_server_bin()?;
 
     let fixture = test_codex()
-        .with_model("gpt-5.3-codex")
+        .with_model("gpt-5.4")
         .with_config(move |config| {
             insert_mcp_server(
                 config,
@@ -1636,6 +1636,7 @@ async fn stdio_image_responses_are_sanitized_for_text_only_model() -> anyhow::Re
                 slug: text_only_model_slug.to_string(),
                 display_name: "RMCP Text Only".to_string(),
                 description: Some("Test model without image input support".to_string()),
+                model_provider: None,
                 default_reasoning_level: None,
                 supported_reasoning_levels: vec![ReasoningEffortPreset {
                     effort: codex_protocol::openai_models::ReasoningEffort::Medium,
@@ -1651,6 +1652,7 @@ async fn stdio_image_responses_are_sanitized_for_text_only_model() -> anyhow::Re
                 upgrade: None,
                 base_instructions: "base instructions".to_string(),
                 model_messages: None,
+                include_skills_usage_instructions: false,
                 supports_reasoning_summaries: false,
                 default_reasoning_summary: ReasoningSummary::Auto,
                 support_verbosity: false,

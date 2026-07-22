@@ -19,6 +19,8 @@ use codex_api::AgentIdentityTelemetry;
 use codex_api::ApiError;
 use codex_api::ResponseEvent;
 use codex_api::TransportError;
+use codex_http_client::HttpClientFactory;
+use codex_http_client::OutboundProxyPolicy;
 use codex_login::AuthCredentialsStoreMode;
 use codex_login::AuthKeyringBackendKind;
 use codex_login::AuthManager;
@@ -103,8 +105,32 @@ fn test_model_client_with_thread_id(
         /*include_timing_metrics*/ false,
         /*beta_features_header*/ None,
         /*item_ids_enabled*/ false,
+        /*concurrent_reasoning_summaries_enabled*/ false,
         /*attestation_provider*/ None,
+        HttpClientFactory::new(OutboundProxyPolicy::ReqwestDefault),
     )
+}
+
+#[tokio::test]
+async fn set_provider_info_changes_resolved_api_provider() -> anyhow::Result<()> {
+    let client = test_model_client(SessionSource::Cli);
+    let initial_setup = client.current_client_setup().await?;
+    assert_eq!(
+        initial_setup.api_provider.base_url,
+        "https://example.com/v1"
+    );
+
+    client.set_provider_info(
+        create_oss_provider_with_base_url("https://inference.noizu.com/v1", WireApi::Responses),
+        /*auth_manager*/ None,
+    );
+
+    let updated_setup = client.current_client_setup().await?;
+    assert_eq!(
+        updated_setup.api_provider.base_url,
+        "https://inference.noizu.com/v1"
+    );
+    Ok(())
 }
 
 #[tokio::test]
@@ -147,7 +173,9 @@ async fn compact_uses_bearer_after_agent_identity_session_fallback() -> anyhow::
         /*include_timing_metrics*/ false,
         /*beta_features_header*/ None,
         /*item_ids_enabled*/ false,
+        /*concurrent_reasoning_summaries_enabled*/ false,
         /*attestation_provider*/ None,
+        HttpClientFactory::new(OutboundProxyPolicy::ReqwestDefault),
     );
     let prompt = Prompt {
         input: vec![ResponseItem::Message {
@@ -217,7 +245,7 @@ async fn compact_uses_bearer_after_agent_identity_session_fallback() -> anyhow::
 }
 
 fn test_model_provider() -> SharedModelProvider {
-    test_model_client(SessionSource::Cli).state.provider.clone()
+    test_model_client(SessionSource::Cli).state.provider()
 }
 
 fn test_responses_metadata_for_client(
@@ -292,10 +320,7 @@ fn ultra_reasoning_uses_max_for_requests() {
             super::reasoning_effort_for_request(ReasoningEffort::Ultra),
             super::reasoning_effort_for_request(ReasoningEffort::High),
         ),
-        (
-            ReasoningEffort::Custom("max".to_string()),
-            ReasoningEffort::High,
-        )
+        (ReasoningEffort::Max, ReasoningEffort::High,)
     );
 }
 
@@ -824,9 +849,11 @@ fn model_client_with_counting_attestation(
         /*include_timing_metrics*/ false,
         /*beta_features_header*/ None,
         /*item_ids_enabled*/ false,
+        /*concurrent_reasoning_summaries_enabled*/ false,
         Some(Arc::new(CountingAttestationProvider {
             calls: attestation_calls.clone(),
         })),
+        HttpClientFactory::new(OutboundProxyPolicy::ReqwestDefault),
     );
     (model_client, attestation_calls)
 }

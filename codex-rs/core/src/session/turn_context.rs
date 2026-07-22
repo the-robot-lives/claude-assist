@@ -361,6 +361,7 @@ impl TurnContext {
             current_date: self.current_date.clone(),
             timezone: self.timezone.clone(),
             approval_policy: self.approval_policy.value(),
+            approvals_reviewer: Some(self.config.approvals_reviewer),
             sandbox_policy: self.sandbox_policy(),
             permission_profile: Some(self.permission_profile()),
             network: self.turn_context_network_item(),
@@ -418,6 +419,8 @@ impl Session {
         // todo(aibrahim): store this state somewhere else so we don't need to mut config
         let config = session_configuration.original_config_do_not_use.clone();
         let mut per_turn_config = (*config).clone();
+        per_turn_config.model_provider_id = session_configuration.provider_id.clone();
+        per_turn_config.model_provider = session_configuration.provider.clone();
         per_turn_config.cwd = cwd;
         per_turn_config.workspace_roots = session_configuration.workspace_roots.clone();
         per_turn_config
@@ -701,6 +704,9 @@ impl Session {
                 &per_turn_config.to_models_manager_config(),
             )
             .await;
+        self.services
+            .thread_extension_data
+            .insert(model_info.clone());
 
         let multi_agent_version = match multi_agent_runtime {
             TurnMultiAgentRuntime::ResolveAndStore => {

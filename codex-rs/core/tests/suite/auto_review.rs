@@ -219,6 +219,7 @@ fn remote_model_with_auto_review_override(slug: &str, review_model: &str) -> Mod
         slug: slug.to_string(),
         display_name: format!("{slug} display"),
         description: Some(format!("{slug} description")),
+        model_provider: None,
         default_reasoning_level: Some(ReasoningEffort::Medium),
         supported_reasoning_levels: vec![ReasoningEffortPreset {
             effort: ReasoningEffort::Medium,
@@ -241,6 +242,7 @@ fn remote_model_with_auto_review_override(slug: &str, review_model: &str) -> Mod
         upgrade: None,
         base_instructions: "base instructions".to_string(),
         model_messages: None,
+        include_skills_usage_instructions: false,
         supports_reasoning_summaries: false,
         default_reasoning_summary: ReasoningSummary::Auto,
         support_verbosity: false,

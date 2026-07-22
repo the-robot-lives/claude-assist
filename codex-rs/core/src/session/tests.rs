@@ -33,6 +33,8 @@ use codex_core_skills::HostSkillsSnapshot;
 use core_test_support::test_codex::local_selections;
 
 use codex_features::Feature;
+use codex_http_client::HttpClientFactory;
+use codex_http_client::OutboundProxyPolicy;
 use codex_login::CodexAuth;
 use codex_login::auth::AgentIdentityAuthPolicy;
 use codex_model_provider_info::ModelProviderInfo;
@@ -110,6 +112,8 @@ use codex_otel::TelemetryAuthMode;
 use codex_protocol::config_types::CollaborationMode;
 use codex_protocol::config_types::ModeKind;
 use codex_protocol::config_types::Settings;
+use codex_protocol::items::HookPromptFragment;
+use codex_protocol::items::build_hook_prompt_message;
 use codex_protocol::models::BaseInstructions;
 use codex_protocol::models::ContentItem;
 use codex_protocol::models::InternalChatMessageMetadataPassthrough;
@@ -490,7 +494,9 @@ fn test_model_client_session() -> crate::client::ModelClientSession {
         /*include_timing_metrics*/ false,
         /*beta_features_header*/ None,
         /*item_ids_enabled*/ false,
+        /*concurrent_reasoning_summaries_enabled*/ false,
         /*attestation_provider*/ None,
+        HttpClientFactory::new(OutboundProxyPolicy::ReqwestDefault),
     )
     .new_session()
 }
@@ -1039,6 +1045,22 @@ async fn danger_full_access_tool_attempts_do_not_enforce_managed_network() -> an
         ) -> futures::future::BoxFuture<'a, ReviewDecision> {
             Box::pin(async { ReviewDecision::Approved })
         }
+
+        fn approval_action(
+            &self,
+            _req: &(),
+            ctx: &crate::tools::sandboxing::ApprovalCtx<'_>,
+        ) -> std::io::Result<crate::tools::sandboxing::ApprovalAction> {
+            Ok(crate::tools::sandboxing::ApprovalAction::Shell {
+                id: ctx.call_id.to_string(),
+                command: Vec::new(),
+                #[allow(deprecated)]
+                cwd: ctx.turn.cwd.clone(),
+                sandbox_permissions: crate::sandboxing::SandboxPermissions::UseDefault,
+                additional_permissions: None,
+                justification: None,
+            })
+        }
     }
 
     impl crate::tools::sandboxing::Sandboxable for ProbeToolRuntime {
@@ -1232,7 +1254,7 @@ async fn get_base_instructions_no_user_content() {
             expects_apply_patch_description: false,
         },
         InstructionsTestCase {
-            slug: "gpt-5.3-codex",
+            slug: "gpt-5.5",
             expects_apply_patch_description: false,
         },
         InstructionsTestCase {
@@ -1741,6 +1763,44 @@ async fn record_conversation_items_stamps_missing_turn_id_and_preserves_existing
         session.clone_history().await.raw_items(),
         expected_items.as_slice()
     );
+}
+
+#[tokio::test]
+async fn record_response_item_and_emit_turn_item_emits_hook_prompt_lifecycle() {
+    let (session, turn_context, rx) = make_session_and_context_with_rx().await;
+    let response_item = build_hook_prompt_message(&[HookPromptFragment::from_single_hook(
+        "Retry with tests.",
+        "hook-run-1",
+    )])
+    .expect("hook prompt message");
+    let response_item_id = response_item.id().expect("hook prompt id").to_string();
+
+    session
+        .record_response_item_and_emit_turn_item(&turn_context, response_item)
+        .await;
+
+    let raw_response = rx.recv().await.expect("raw response item event");
+    assert!(matches!(raw_response.msg, EventMsg::RawResponseItem(_)));
+
+    let started = rx.recv().await.expect("started hook prompt event");
+    assert!(matches!(
+        started.msg,
+        EventMsg::ItemStarted(ItemStartedEvent {
+            item: TurnItem::HookPrompt(item),
+            ..
+        }) if item.id == response_item_id
+    ));
+
+    let completed = rx.recv().await.expect("completed hook prompt event");
+    assert!(matches!(
+        completed.msg,
+        EventMsg::ItemCompleted(ItemCompletedEvent {
+            item: TurnItem::HookPrompt(item),
+            ..
+        }) if item.id == response_item_id
+    ));
+
+    assert!(rx.try_recv().is_err(), "no extra events expected");
 }
 
 #[tokio::test]
@@ -3022,6 +3082,7 @@ async fn record_initial_history_forked_hydrates_previous_turn_settings() {
         current_date: turn_context.current_date.clone(),
         timezone: turn_context.timezone.clone(),
         approval_policy: turn_context.approval_policy.value(),
+        approvals_reviewer: None,
         sandbox_policy: turn_context.sandbox_policy(),
         permission_profile: None,
         network: None,
@@ -3662,6 +3723,7 @@ async fn set_rate_limits_retains_previous_credits() {
         },
     };
     let session_configuration = SessionConfiguration {
+        provider_id: config.model_provider_id.clone(),
         provider: config.model_provider.clone(),
         collaboration_mode,
         model_reasoning_summary: config.model_reasoning_summary,
@@ -3686,6 +3748,7 @@ async fn set_rate_limits_retains_previous_credits() {
         app_server_client_name: None,
         app_server_client_version: None,
         session_source: SessionSource::Exec,
+        history_mode: Default::default(),
         forked_from_thread_id: None,
         parent_thread_id: None,
         thread_source: None,
@@ -3768,6 +3831,7 @@ async fn set_rate_limits_updates_plan_type_when_present() {
         },
     };
     let session_configuration = SessionConfiguration {
+        provider_id: config.model_provider_id.clone(),
         provider: config.model_provider.clone(),
         collaboration_mode,
         model_reasoning_summary: config.model_reasoning_summary,
@@ -3792,6 +3856,7 @@ async fn set_rate_limits_updates_plan_type_when_present() {
         app_server_client_name: None,
         app_server_client_version: None,
         session_source: SessionSource::Exec,
+        history_mode: Default::default(),
         forked_from_thread_id: None,
         parent_thread_id: None,
         thread_source: None,
@@ -4050,6 +4115,7 @@ async fn attach_thread_persistence(session: &mut Session) -> PathBuf {
             dynamic_tools: Vec::new(),
             selected_capability_roots: Vec::new(),
             multi_agent_version: None,
+            history_mode: Default::default(),
             initial_window_id: Uuid::now_v7().to_string(),
             metadata: ThreadPersistenceMetadata {
                 cwd: Some(config.cwd.to_path_buf()),
@@ -4281,6 +4347,24 @@ async fn session_settings_legacy_fast_service_tier_update_uses_priority_request_
     );
 }
 
+#[tokio::test]
+async fn session_settings_model_provider_update_changes_thread_snapshot_provider() {
+    let session_configuration = make_session_configuration_for_tests().await;
+    let mut provider = session_configuration.provider.clone();
+    provider.base_url = Some("https://inference.noizu.com/v1".to_string());
+
+    let updated = session_configuration
+        .apply(&SessionSettingsUpdate {
+            model_provider: Some(("noizu".to_string(), provider.clone())),
+            ..Default::default()
+        })
+        .expect("model provider update should apply");
+
+    assert_eq!(updated.provider_id, "noizu");
+    assert_eq!(updated.provider, provider);
+    assert_eq!(updated.thread_config_snapshot().model_provider_id, "noizu");
+}
+
 pub(crate) async fn make_session_configuration_for_tests() -> SessionConfiguration {
     let codex_home = tempfile::tempdir().expect("create temp dir");
     let config = build_test_config(codex_home.path()).await;
@@ -4299,6 +4383,7 @@ pub(crate) async fn make_session_configuration_for_tests() -> SessionConfigurati
     };
 
     SessionConfiguration {
+        provider_id: config.model_provider_id.clone(),
         provider: config.model_provider.clone(),
         collaboration_mode,
         model_reasoning_summary: config.model_reasoning_summary,
@@ -4323,6 +4408,7 @@ pub(crate) async fn make_session_configuration_for_tests() -> SessionConfigurati
         app_server_client_name: None,
         app_server_client_version: None,
         session_source: SessionSource::Exec,
+        history_mode: Default::default(),
         forked_from_thread_id: None,
         parent_thread_id: None,
         thread_source: None,
@@ -5169,6 +5255,7 @@ async fn session_new_fails_when_zsh_fork_enabled_without_packaged_zsh() {
         },
     };
     let session_configuration = SessionConfiguration {
+        provider_id: config.model_provider_id.clone(),
         provider: config.model_provider.clone(),
         collaboration_mode,
         model_reasoning_summary: config.model_reasoning_summary,
@@ -5193,6 +5280,7 @@ async fn session_new_fails_when_zsh_fork_enabled_without_packaged_zsh() {
         app_server_client_name: None,
         app_server_client_version: None,
         session_source: SessionSource::Exec,
+        history_mode: Default::default(),
         forked_from_thread_id: None,
         parent_thread_id: None,
         thread_source: None,
@@ -5300,6 +5388,7 @@ pub(crate) async fn make_session_and_context() -> (Session, TurnContext) {
     };
     let default_environments = vec![local(config.cwd.clone())];
     let session_configuration = SessionConfiguration {
+        provider_id: config.model_provider_id.clone(),
         provider: config.model_provider.clone(),
         collaboration_mode,
         model_reasoning_summary: config.model_reasoning_summary,
@@ -5324,6 +5413,7 @@ pub(crate) async fn make_session_and_context() -> (Session, TurnContext) {
         app_server_client_name: None,
         app_server_client_version: None,
         session_source: SessionSource::Exec,
+        history_mode: Default::default(),
         forked_from_thread_id: None,
         parent_thread_id: None,
         thread_source: None,
@@ -5378,6 +5468,7 @@ pub(crate) async fn make_session_and_context() -> (Session, TurnContext) {
         unified_exec_manager: UnifiedExecProcessManager::new(
             config.background_terminal_max_timeout,
         ),
+        elicitations: crate::elicitation::ElicitationService::new(),
         shell_zsh_path: None,
         main_execve_wrapper_exe: config.main_execve_wrapper_exe.clone(),
         analytics_events_client: AnalyticsEventsClient::new(
@@ -5437,7 +5528,12 @@ pub(crate) async fn make_session_and_context() -> (Session, TurnContext) {
             config.features.enabled(Feature::RuntimeMetrics),
             Session::build_model_client_beta_features_header(config.as_ref()),
             /*item_ids_enabled*/ config.features.enabled(Feature::ItemIds),
+            /*concurrent_reasoning_summaries_enabled*/
+            config
+                .features
+                .enabled(Feature::ConcurrentReasoningSummaries),
             /*attestation_provider*/ None,
+            config.http_client_factory(),
         ),
         code_mode_service: crate::tools::code_mode::CodeModeService::new(Arc::new(
             codex_code_mode::InProcessCodeModeSessionProvider,
@@ -5488,7 +5584,6 @@ pub(crate) async fn make_session_and_context() -> (Session, TurnContext) {
         installation_id: "11111111-1111-4111-8111-111111111111".to_string(),
         tx_event,
         agent_status: agent_status_tx,
-        out_of_band_elicitation_paused: watch::channel(false).0,
         state: Mutex::new(state),
         managed_network_proxy_refresh_lock: Semaphore::new(/*permits*/ 1),
         features: config.features.clone(),
@@ -5548,6 +5643,7 @@ async fn make_session_with_config_and_rx(
     };
     let default_environments = vec![local(config.cwd.clone())];
     let session_configuration = SessionConfiguration {
+        provider_id: config.model_provider_id.clone(),
         provider: config.model_provider.clone(),
         collaboration_mode,
         model_reasoning_summary: config.model_reasoning_summary,
@@ -5572,6 +5668,7 @@ async fn make_session_with_config_and_rx(
         app_server_client_name: None,
         app_server_client_version: None,
         session_source: SessionSource::Exec,
+        history_mode: Default::default(),
         forked_from_thread_id: None,
         parent_thread_id: None,
         thread_source: None,
@@ -5655,6 +5752,7 @@ async fn make_session_with_history_source_and_agent_control_and_rx(
     };
     let default_environments = vec![local(config.cwd.clone())];
     let session_configuration = SessionConfiguration {
+        provider_id: config.model_provider_id.clone(),
         provider: config.model_provider.clone(),
         collaboration_mode,
         model_reasoning_summary: config.model_reasoning_summary,
@@ -5679,6 +5777,7 @@ async fn make_session_with_history_source_and_agent_control_and_rx(
         app_server_client_name: None,
         app_server_client_version: None,
         session_source: session_source.clone(),
+        history_mode: Default::default(),
         forked_from_thread_id: None,
         parent_thread_id: None,
         thread_source: None,
@@ -6931,6 +7030,7 @@ async fn shutdown_complete_does_not_append_to_thread_store_after_shutdown() {
             dynamic_tools: Vec::new(),
             selected_capability_roots: Vec::new(),
             multi_agent_version: None,
+            history_mode: Default::default(),
             initial_window_id: Uuid::now_v7().to_string(),
             metadata: ThreadPersistenceMetadata {
                 cwd: Some(config.cwd.to_path_buf()),
@@ -6962,7 +7062,7 @@ async fn shutdown_complete_does_not_append_to_thread_store_after_shutdown() {
 }
 
 #[tokio::test]
-async fn submission_loop_channel_close_emits_thread_stop_lifecycle() {
+async fn submission_loop_channel_close_runs_full_thread_teardown() {
     struct SessionStopMarker;
     struct ThreadStopMarker;
 
@@ -6989,6 +7089,41 @@ async fn submission_loop_channel_close_emits_thread_stop_lifecycle() {
     }
 
     let (mut session, turn_context) = make_session_and_context().await;
+    let store = Arc::new(codex_thread_store::InMemoryThreadStore::default());
+    let thread_store: Arc<dyn codex_thread_store::ThreadStore> = store.clone();
+    let config = session.get_config().await;
+    let live_thread = LiveThread::create(
+        Arc::clone(&thread_store),
+        CreateThreadParams {
+            session_id: session.session_id(),
+            thread_id: session.thread_id,
+            extra_config: None,
+            forked_from_id: None,
+            parent_thread_id: None,
+            source: SessionSource::Exec,
+            thread_source: None,
+            originator: "test_originator".to_string(),
+            base_instructions: BaseInstructions::default(),
+            dynamic_tools: Vec::new(),
+            selected_capability_roots: Vec::new(),
+            multi_agent_version: None,
+            history_mode: Default::default(),
+            initial_window_id: Uuid::now_v7().to_string(),
+            metadata: ThreadPersistenceMetadata {
+                cwd: Some(config.cwd.to_path_buf()),
+                model_provider: config.model_provider_id.clone(),
+                memory_mode: if config.memories.generate_memories {
+                    ThreadMemoryMode::Enabled
+                } else {
+                    ThreadMemoryMode::Disabled
+                },
+            },
+        },
+    )
+    .await
+    .expect("create thread persistence");
+    session.services.thread_store = thread_store;
+    session.services.live_thread = Some(live_thread);
     let calls = Arc::new(std::sync::atomic::AtomicUsize::new(0));
     let mut builder = codex_extension_api::ExtensionRegistryBuilder::<crate::config::Config>::new();
     builder.thread_lifecycle_contributor(Arc::new(ThreadStopRecorder {
@@ -7011,6 +7146,14 @@ async fn submission_loop_channel_close_emits_thread_stop_lifecycle() {
     submission_loop(session, Arc::clone(&turn_context.config), rx_sub).await;
 
     assert_eq!(1, calls.load(std::sync::atomic::Ordering::SeqCst));
+    assert_eq!(
+        codex_thread_store::InMemoryThreadStoreCalls {
+            create_thread: 1,
+            shutdown_thread: 1,
+            ..Default::default()
+        },
+        store.calls().await
+    );
 }
 
 #[tokio::test]
@@ -7380,6 +7523,7 @@ where
     };
     let default_environments = vec![local(config.cwd.clone())];
     let session_configuration = SessionConfiguration {
+        provider_id: config.model_provider_id.clone(),
         provider: config.model_provider.clone(),
         collaboration_mode,
         model_reasoning_summary: config.model_reasoning_summary,
@@ -7404,6 +7548,7 @@ where
         app_server_client_name: None,
         app_server_client_version: None,
         session_source: SessionSource::Exec,
+        history_mode: Default::default(),
         forked_from_thread_id: None,
         parent_thread_id: None,
         thread_source: None,
@@ -7457,6 +7602,7 @@ where
         unified_exec_manager: UnifiedExecProcessManager::new(
             config.background_terminal_max_timeout,
         ),
+        elicitations: crate::elicitation::ElicitationService::new(),
         shell_zsh_path: None,
         main_execve_wrapper_exe: config.main_execve_wrapper_exe.clone(),
         analytics_events_client: AnalyticsEventsClient::new(
@@ -7516,7 +7662,12 @@ where
             config.features.enabled(Feature::RuntimeMetrics),
             Session::build_model_client_beta_features_header(config.as_ref()),
             /*item_ids_enabled*/ config.features.enabled(Feature::ItemIds),
+            /*concurrent_reasoning_summaries_enabled*/
+            config
+                .features
+                .enabled(Feature::ConcurrentReasoningSummaries),
             /*attestation_provider*/ None,
+            config.http_client_factory(),
         ),
         code_mode_service: crate::tools::code_mode::CodeModeService::new(Arc::new(
             codex_code_mode::InProcessCodeModeSessionProvider,
@@ -7567,7 +7718,6 @@ where
         installation_id: "11111111-1111-4111-8111-111111111111".to_string(),
         tx_event,
         agent_status: agent_status_tx,
-        out_of_band_elicitation_paused: watch::channel(false).0,
         state: Mutex::new(state),
         managed_network_proxy_refresh_lock: Semaphore::new(/*permits*/ 1),
         features: config.features.clone(),
@@ -7674,6 +7824,91 @@ async fn refresh_mcp_servers_keeps_the_previous_runtime_alive() {
         codex_mcp::configured_mcp_servers(new_runtime.config()),
         refreshed_mcp_servers
     );
+}
+
+#[tokio::test]
+async fn plugin_availability_change_reuses_the_mcp_manager() {
+    struct ReadyPluginContributor;
+
+    impl codex_extension_api::McpServerContributor<Config> for ReadyPluginContributor {
+        fn id(&self) -> &'static str {
+            "ready_plugin_test"
+        }
+
+        fn contribute<'a>(
+            &'a self,
+            context: codex_extension_api::McpServerContributionContext<'a, Config>,
+        ) -> codex_extension_api::ExtensionFuture<'a, Vec<codex_extension_api::McpServerContribution>>
+        {
+            Box::pin(async move {
+                let available = context
+                    .available_environment_ids()
+                    .is_some_and(|ids| ids.iter().any(|id| id == "executor"));
+                available
+                    .then(
+                        || codex_extension_api::McpServerContribution::SelectedPluginPackage {
+                            plugin_id: "skill-only".to_string(),
+                            plugin_display_name: "Skill Only".to_string(),
+                            connector_ids: Vec::new(),
+                        },
+                    )
+                    .into_iter()
+                    .collect()
+            })
+        }
+    }
+
+    let (mut session, turn_context) = make_session_and_context().await;
+    let mut registry = codex_extension_api::ExtensionRegistryBuilder::new();
+    registry.mcp_server_contributor(Arc::new(ReadyPluginContributor));
+    let registry = Arc::new(registry.build());
+    session.services.extensions = Arc::clone(&registry);
+    session.services.mcp_manager = Arc::new(McpManager::new_with_extensions(
+        Arc::clone(&session.services.plugins_manager),
+        registry,
+    ));
+    let session = Arc::new(session);
+    session
+        .refresh_mcp_servers_now(
+            &turn_context,
+            &turn_context.config,
+            /*elicitation_reviewer*/ None,
+        )
+        .await;
+    let old_runtime = session.services.latest_mcp_runtime();
+    let old_manager = old_runtime.manager_arc();
+
+    let selected_root = codex_protocol::capabilities::SelectedCapabilityRoot {
+        id: "skill-only".to_string(),
+        location: codex_protocol::capabilities::CapabilityRootLocation::Environment {
+            environment_id: "executor".to_string(),
+            path: PathUri::from_host_native_path(turn_context.config.cwd.as_path())
+                .expect("selected capability root URI"),
+        },
+    };
+    let environment = Arc::clone(
+        &turn_context
+            .environments
+            .primary()
+            .expect("ready test environment")
+            .environment,
+    );
+    let captured_environments = HashMap::from([("executor".to_string(), Some(environment))]);
+    let resolved_roots = session
+        .services
+        .turn_environments
+        .environment_manager()
+        .resolve_selected_capability_roots(&[selected_root], &captured_environments)
+        .await;
+
+    let new_runtime = session
+        .mcp_runtime_for_step(&turn_context, &turn_context.environments, &resolved_roots)
+        .await;
+
+    assert!(!old_runtime.plugins_available());
+    assert!(new_runtime.plugins_available());
+    assert!(!Arc::ptr_eq(&old_runtime, &new_runtime));
+    assert!(Arc::ptr_eq(&old_manager, &new_runtime.manager_arc()));
 }
 
 #[tokio::test]
@@ -8873,18 +9108,13 @@ async fn record_context_updates_and_set_reference_context_item_reinjects_full_co
 #[tokio::test]
 async fn record_context_updates_and_set_reference_context_item_persists_baseline_without_emitting_diffs()
  {
-    let (mut session, previous_context) = make_session_and_context().await;
-    let next_model = if previous_context.model_info.slug == "gpt-5.4" {
-        "gpt-5.2"
-    } else {
-        "gpt-5.4"
-    };
-    let turn_context = previous_context
-        .with_model(next_model.to_string(), &session.services.models_manager)
-        .await;
-    let previous_context_item = previous_context.to_turn_context_item();
-    let previous_context = Arc::new(previous_context);
+    let (mut session, turn_context) = make_session_and_context().await;
+    let previous_context_item = turn_context.to_turn_context_item();
+    let previous_context = Arc::new(turn_context);
     let world_state = build_world_state_from_turn_context(&session, &previous_context).await;
+    let mut turn_context = Arc::try_unwrap(previous_context)
+        .unwrap_or_else(|_| panic!("previous turn context should have no remaining references"));
+    turn_context.sub_id = format!("{}-next", turn_context.sub_id);
     {
         let mut state = session.state.lock().await;
         state.set_reference_context_item(Some(previous_context_item.clone()));
@@ -9187,6 +9417,7 @@ async fn attach_in_memory_thread_store(
             dynamic_tools: Vec::new(),
             selected_capability_roots: Vec::new(),
             multi_agent_version: None,
+            history_mode: Default::default(),
             initial_window_id: Uuid::now_v7().to_string(),
             metadata: ThreadPersistenceMetadata {
                 cwd: Some(config.cwd.to_path_buf()),
@@ -10428,6 +10659,7 @@ async fn fatal_tool_error_stops_turn_and_reports_error() {
         status: None,
         call_id: "call-1".to_string(),
         name: "shell_command".to_string(),
+        namespace: None,
         input: "{}".to_string(),
         internal_chat_message_metadata_passthrough: None,
     };

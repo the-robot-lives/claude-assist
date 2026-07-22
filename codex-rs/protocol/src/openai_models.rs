@@ -45,6 +45,7 @@ pub enum ReasoningEffort {
     Medium,
     High,
     XHigh,
+    Max,
     Ultra,
     /// A model-defined effort value that this client does not know yet.
     Custom(String),
@@ -60,6 +61,7 @@ impl ReasoningEffort {
             Self::Medium => "medium",
             Self::High => "high",
             Self::XHigh => "xhigh",
+            Self::Max => "max",
             Self::Ultra => "ultra",
             Self::Custom(effort) => effort,
         }
@@ -125,6 +127,7 @@ impl FromStr for ReasoningEffort {
             "medium" => Ok(Self::Medium),
             "high" => Ok(Self::High),
             "xhigh" => Ok(Self::XHigh),
+            "max" => Ok(Self::Max),
             "ultra" => Ok(Self::Ultra),
             "" => Err("reasoning_effort must not be empty".to_string()),
             effort => Ok(Self::Custom(effort.to_string())),
@@ -358,6 +361,9 @@ pub struct ModelInfo {
     pub shell_type: ConfigShellToolType,
     pub visibility: ModelVisibility,
     pub supported_in_api: bool,
+    /// Optional model-provider id to route this model through.
+    #[serde(default, alias = "provider", skip_serializing_if = "Option::is_none")]
+    pub model_provider: Option<String>,
     pub priority: i32,
     #[serde(default)]
     pub additional_speed_tiers: Vec<String>,
@@ -370,6 +376,8 @@ pub struct ModelInfo {
     pub base_instructions: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub model_messages: Option<ModelMessages>,
+    #[serde(default)]
+    pub include_skills_usage_instructions: bool,
     pub supports_reasoning_summaries: bool,
     #[serde(default)]
     pub default_reasoning_summary: ReasoningSummary,
@@ -480,6 +488,13 @@ impl ModelInfo {
 pub struct ModelMessages {
     pub instructions_template: Option<String>,
     pub instructions_variables: Option<ModelInstructionsVariables>,
+    pub approvals: Option<ApprovalMessages>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq, TS, JsonSchema)]
+pub struct ApprovalMessages {
+    pub on_request: Option<String>,
+    pub on_request_auto_review: Option<String>,
 }
 
 impl ModelMessages {
@@ -652,6 +667,7 @@ mod tests {
             slug: "test-model".to_string(),
             display_name: "Test Model".to_string(),
             description: None,
+            model_provider: None,
             default_reasoning_level: None,
             supported_reasoning_levels: vec![],
             shell_type: ConfigShellToolType::ShellCommand,
@@ -665,6 +681,7 @@ mod tests {
             upgrade: None,
             base_instructions: "base".to_string(),
             model_messages: spec,
+            include_skills_usage_instructions: false,
             supports_reasoning_summaries: false,
             default_reasoning_summary: ReasoningSummary::Auto,
             support_verbosity: false,
@@ -699,31 +716,67 @@ mod tests {
     }
 
     #[test]
+    fn model_messages_deserialize_without_approvals() {
+        let messages: ModelMessages =
+            from_str(r#"{"instructions_template":null,"instructions_variables":null}"#)
+                .expect("model messages should deserialize");
+
+        assert_eq!(messages.approvals, None);
+    }
+
+    #[test]
+    fn approval_messages_preserve_missing_and_empty_values() {
+        let messages: ModelMessages = from_str(
+            r#"{
+                "instructions_template": null,
+                "instructions_variables": null,
+                "approvals": {
+                    "on_request": ""
+                }
+            }"#,
+        )
+        .expect("approval messages should deserialize");
+
+        assert_eq!(
+            messages.approvals,
+            Some(ApprovalMessages {
+                on_request: Some(String::new()),
+                on_request_auto_review: None,
+            })
+        );
+    }
+
+    #[test]
     fn reasoning_effort_accepts_known_and_custom_values() {
-        let custom = ReasoningEffort::Custom("max".to_string());
-        let deserialized = from_str::<ReasoningEffort>(r#""max""#)
+        let custom = ReasoningEffort::Custom("future".to_string());
+        let deserialized = from_str::<ReasoningEffort>(r#""future""#)
             .expect("custom reasoning effort should deserialize");
         let serialized = to_string(&custom).expect("custom reasoning effort should serialize");
+        let serialized_max = to_string(&ReasoningEffort::Max).expect("Max should serialize");
         let serialized_ultra = to_string(&ReasoningEffort::Ultra).expect("Ultra should serialize");
 
         assert_eq!(
             (
                 "high".parse(),
-                "ultra".parse(),
                 "max".parse(),
+                "ultra".parse(),
+                "future".parse(),
                 deserialized,
                 serialized,
+                serialized_max,
                 serialized_ultra,
                 custom.to_string(),
             ),
             (
                 Ok(ReasoningEffort::High),
+                Ok(ReasoningEffort::Max),
                 Ok(ReasoningEffort::Ultra),
                 Ok(custom.clone()),
                 custom,
+                r#""future""#.to_string(),
                 r#""max""#.to_string(),
                 r#""ultra""#.to_string(),
-                "max".to_string(),
+                "future".to_string(),
             )
         );
     }
@@ -764,6 +817,7 @@ mod tests {
         let model = test_model(Some(ModelMessages {
             instructions_template: Some("Hello {{ personality }}".to_string()),
             instructions_variables: Some(personality_variables()),
+            approvals: None,
         }));
 
         let instructions = model.get_model_instructions(Some(Personality::Friendly));
@@ -780,6 +834,7 @@ mod tests {
                 personality_friendly: Some("friendly".to_string()),
                 personality_pragmatic: None,
             }),
+            approvals: None,
         }));
         assert_eq!(
             model.get_model_instructions(Some(Personality::Friendly)),
@@ -805,6 +860,7 @@ mod tests {
                 personality_friendly: None,
                 personality_pragmatic: None,
             }),
+            approvals: None,
         }));
         assert_eq!(
             model_no_personality.get_model_instructions(Some(Personality::Friendly)),
@@ -833,6 +889,7 @@ mod tests {
                 personality_friendly: None,
                 personality_pragmatic: None,
             }),
+            approvals: None,
         }));
 
         let instructions = model.get_model_instructions(Some(Personality::Friendly));
@@ -948,6 +1005,7 @@ mod tests {
         .expect("deserialize model info");
 
         assert_eq!(model.availability_nux, None);
+        assert!(!model.include_skills_usage_instructions);
         assert!(!model.supports_image_detail_original);
         assert_eq!(model.web_search_tool_type, WebSearchToolType::Text);
         assert!(!model.supports_search_tool);
@@ -1008,6 +1066,40 @@ mod tests {
         let model = serde_json::from_value::<ModelInfo>(value).expect("deserialize model info");
 
         assert_eq!(model.multi_agent_version, None);
+    }
+
+    #[test]
+    fn model_info_deserializes_model_provider() {
+        let mut value =
+            serde_json::to_value(test_model(/*spec*/ None)).expect("serialize test model");
+        let object = value
+            .as_object_mut()
+            .expect("model info should be an object");
+        object.insert(
+            "model_provider".to_string(),
+            serde_json::Value::String("noizu".to_string()),
+        );
+
+        let model = serde_json::from_value::<ModelInfo>(value).expect("deserialize model info");
+
+        assert_eq!(model.model_provider.as_deref(), Some("noizu"));
+    }
+
+    #[test]
+    fn model_info_accepts_provider_alias() {
+        let mut value =
+            serde_json::to_value(test_model(/*spec*/ None)).expect("serialize test model");
+        let object = value
+            .as_object_mut()
+            .expect("model info should be an object");
+        object.insert(
+            "provider".to_string(),
+            serde_json::Value::String("noizu".to_string()),
+        );
+
+        let model = serde_json::from_value::<ModelInfo>(value).expect("deserialize model info");
+
+        assert_eq!(model.model_provider.as_deref(), Some("noizu"));
     }
 
     #[test]

@@ -331,6 +331,7 @@ fn test_remote_model(slug: &str, priority: i32) -> ModelInfo {
         slug: slug.to_string(),
         display_name: "Remote Test".to_string(),
         description: Some("remote model".to_string()),
+        model_provider: None,
         default_reasoning_level: Some(ReasoningEffort::Medium),
         supported_reasoning_levels: vec![
             ReasoningEffortPreset {
@@ -352,6 +353,7 @@ fn test_remote_model(slug: &str, priority: i32) -> ModelInfo {
         upgrade: None,
         base_instructions: "base instructions".to_string(),
         model_messages: None,
+        include_skills_usage_instructions: false,
         supports_reasoning_summaries: false,
         default_reasoning_summary: ReasoningSummary::Auto,
         support_verbosity: false,
