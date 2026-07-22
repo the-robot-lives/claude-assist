@@ -184,6 +184,7 @@ export function CookieSettingsButton({ className }: { className?: string }) {
 }
 
 export function CookieConsentBanner() {
+  const pathname = usePathname();
   const {
     hasDecision,
     isSettingsOpen,
@@ -201,6 +202,7 @@ export function CookieConsentBanner() {
     }
   }, [hasDecision, isSettingsOpen, preferences]);
 
+  if (pathname === "/") return null;
   if (hasDecision && !isSettingsOpen) return null;
 
   const updateDraft = (category: OptionalConsentCategory, value: boolean) => {

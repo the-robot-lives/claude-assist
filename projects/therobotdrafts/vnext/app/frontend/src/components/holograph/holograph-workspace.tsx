@@ -755,13 +755,13 @@ export function HoloGraphWorkspace() {
 
       {contextMenu ? (
         <div className="hg-context-menu" style={{ left: contextMenu.x, top: contextMenu.y }} role="menu" onClick={(event) => event.stopPropagation()}>
-          <button type="button" onClick={() => executeCommand("add.class")}>Add Class</button>
-          <button type="button" onClick={() => executeCommand("add.interface")}>Add Interface</button>
-          <button type="button" onClick={() => executeCommand("file.importCode")}>Import Code...</button>
-          <button type="button" onClick={() => executeCommand("file.importPlantUml")}>Import PlantUML...</button>
-          <button type="button" onClick={() => executeCommand("export.plantuml")}>Export PlantUML</button>
-          <button type="button" onClick={() => executeCommand("export.code")}>Export Code Skeleton</button>
-          <button type="button" disabled={!contextMenu.nodeId} onClick={() => executeCommand("edit.delete")}>Delete Selection</button>
+          <button type="button" role="menuitem" onClick={() => executeCommand("add.class")}>Add Class</button>
+          <button type="button" role="menuitem" onClick={() => executeCommand("add.interface")}>Add Interface</button>
+          <button type="button" role="menuitem" onClick={() => executeCommand("file.importCode")}>Import Code...</button>
+          <button type="button" role="menuitem" onClick={() => executeCommand("file.importPlantUml")}>Import PlantUML...</button>
+          <button type="button" role="menuitem" onClick={() => executeCommand("export.plantuml")}>Export PlantUML</button>
+          <button type="button" role="menuitem" onClick={() => executeCommand("export.code")}>Export Code Skeleton</button>
+          <button type="button" role="menuitem" disabled={!contextMenu.nodeId} onClick={() => executeCommand("edit.delete")}>Delete Selection</button>
         </div>
       ) : null}
     </main>
