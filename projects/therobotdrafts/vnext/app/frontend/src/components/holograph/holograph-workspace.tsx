@@ -48,7 +48,7 @@ function nextNode(nodes: SceneNode[], currentId: string, direction: 1 | -1) {
 
 export function HoloGraphWorkspace() {
   const [document, setDocument] = useState<GraphDocument>(demoDocument);
-  const [selectedId, setSelectedId] = useState("renderer");
+  const [selectedId, setSelectedId] = useState("renderer-bridge");
   const [focusId, setFocusId] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [traceEnabled, setTraceEnabled] = useState(true);
@@ -105,7 +105,7 @@ export function HoloGraphWorkspace() {
 
   function recenter() {
     setFocusId(null);
-    setSelectedId("renderer");
+    setSelectedId("renderer-bridge");
     setStatus("Recentered to whole-system overview");
   }
 

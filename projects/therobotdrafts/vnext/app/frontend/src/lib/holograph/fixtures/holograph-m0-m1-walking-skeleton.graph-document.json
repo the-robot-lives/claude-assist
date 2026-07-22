@@ -1,0 +1,398 @@
+{
+  "id": "trd-demo",
+  "slug": "holograph-m0-m1-walking-skeleton",
+  "title": "HoloGraph M0/M1 walking skeleton",
+  "version": 2,
+  "updatedAt": "2026-07-22T07:00:00Z",
+  "summary": "Canonical QA fixture for the HoloGraph M0 foundation and M1 load/view workflow. It preserves roadmap-style lane parallelism across data contract, importer, renderer, interaction, and QA lanes.",
+  "nodes": [
+    {
+      "id": "root",
+      "label": "HoloGraph",
+      "kind": "system",
+      "description": "Web-native graph document workspace for roadmap-driven architecture exploration.",
+      "metrics": {
+        "complexity": 70,
+        "churn": 35,
+        "risk": 38
+      },
+      "members": [
+        "GraphDocument",
+        "Roadmap lanes",
+        "Walking skeleton"
+      ],
+      "status": "draft"
+    },
+    {
+      "id": "lane-contract",
+      "label": "M0 Contract Lane",
+      "kind": "package",
+      "parentId": "root",
+      "packageName": "contracts/holograph",
+      "description": "Foundation lane defining the stable GraphDocument shape shared by fixtures, API routes, and renderers.",
+      "metrics": {
+        "complexity": 38,
+        "churn": 16,
+        "risk": 18
+      },
+      "members": [
+        "GraphDocument",
+        "GraphNode",
+        "GraphEdge"
+      ],
+      "status": "stable"
+    },
+    {
+      "id": "lane-import",
+      "label": "M0 Import Lane",
+      "kind": "service",
+      "parentId": "root",
+      "packageName": "frontend/src/app/api/v1/docs",
+      "description": "Fixture-backed import path that returns a canonical graph document before backend persistence lands.",
+      "metrics": {
+        "complexity": 44,
+        "churn": 22,
+        "risk": 20
+      },
+      "members": [
+        "GET /api/v1/docs/trd-demo",
+        "POST /api/v1/docs",
+        "fixture version bump"
+      ],
+      "status": "review"
+    },
+    {
+      "id": "lane-render",
+      "label": "M1 Render Lane",
+      "kind": "service",
+      "parentId": "root",
+      "packageName": "frontend/src/components/holograph",
+      "description": "Renderer lane that turns imported graph documents into an interactive scene payload.",
+      "metrics": {
+        "complexity": 62,
+        "churn": 34,
+        "risk": 31
+      },
+      "members": [
+        "packDocument()",
+        "svg scene",
+        "selection detail panel"
+      ],
+      "status": "draft"
+    },
+    {
+      "id": "lane-interaction",
+      "label": "M1 Interaction Lane",
+      "kind": "package",
+      "parentId": "root",
+      "packageName": "frontend/src/components/holograph/commands",
+      "description": "Interaction lane covering select, focus, drill out, keyboard navigation, and recenter behaviors.",
+      "metrics": {
+        "complexity": 57,
+        "churn": 29,
+        "risk": 27
+      },
+      "members": [
+        "select node",
+        "focus selected",
+        "recenter overview"
+      ],
+      "status": "hot"
+    },
+    {
+      "id": "lane-qa",
+      "label": "M1 QA Lane",
+      "kind": "agent",
+      "parentId": "root",
+      "packageName": "cypress/e2e/holograph-walking-skeleton",
+      "description": "QA lane that documents and verifies the import, render, select, focus, and recenter smoke flow.",
+      "metrics": {
+        "complexity": 40,
+        "churn": 18,
+        "risk": 16
+      },
+      "members": [
+        "fixture schema checks",
+        "render smoke",
+        "focus/recenter smoke"
+      ],
+      "status": "review"
+    },
+    {
+      "id": "doc-contract",
+      "label": "GraphDocument JSON",
+      "kind": "class",
+      "parentId": "lane-contract",
+      "packageName": "fixtures/holograph-m0-m1-walking-skeleton.graph-document.json",
+      "description": "Canonical document object with stable node IDs, edge IDs, and human-readable lane labels.",
+      "metrics": {
+        "complexity": 32,
+        "churn": 12,
+        "risk": 12
+      },
+      "members": [
+        "id",
+        "slug",
+        "nodes[]",
+        "edges[]"
+      ],
+      "status": "stable"
+    },
+    {
+      "id": "api-import",
+      "label": "Fixture Import API",
+      "kind": "interface",
+      "parentId": "lane-import",
+      "packageName": "frontend/src/app/api/v1/docs/[id]/route.ts",
+      "description": "Document fetch route used by the walking skeleton until backend document storage owns import.",
+      "metrics": {
+        "complexity": 36,
+        "churn": 19,
+        "risk": 17
+      },
+      "members": [
+        "load by id",
+        "404 missing document",
+        "fixture response envelope"
+      ],
+      "status": "review"
+    },
+    {
+      "id": "scene-layout",
+      "label": "Scene Layout",
+      "kind": "function",
+      "parentId": "lane-render",
+      "packageName": "frontend/src/lib/holograph/layout.ts",
+      "description": "Deterministic containment-aware layout that makes the smoke test independent from pixel coordinates.",
+      "metrics": {
+        "complexity": 49,
+        "churn": 25,
+        "risk": 22
+      },
+      "members": [
+        "packDocument()",
+        "metricRadius()",
+        "childRing()"
+      ],
+      "status": "draft"
+    },
+    {
+      "id": "renderer-bridge",
+      "label": "Renderer Bridge",
+      "kind": "service",
+      "parentId": "lane-render",
+      "packageName": "frontend/src/components/holograph/holograph-workspace.tsx",
+      "description": "UI bridge that renders the imported scene and exposes stable accessible node selection labels.",
+      "metrics": {
+        "complexity": 58,
+        "churn": 31,
+        "risk": 29
+      },
+      "members": [
+        "aria-label Select",
+        "selectedNode",
+        "detail panel"
+      ],
+      "status": "draft"
+    },
+    {
+      "id": "focus-command",
+      "label": "Focus Command",
+      "kind": "function",
+      "parentId": "lane-interaction",
+      "packageName": "frontend/src/components/holograph/holograph-workspace.tsx",
+      "description": "Command rail action that narrows the scene around the selected node.",
+      "metrics": {
+        "complexity": 45,
+        "churn": 24,
+        "risk": 23
+      },
+      "members": [
+        "Focus selected",
+        "Focused: label",
+        "Escape drill out"
+      ],
+      "status": "draft"
+    },
+    {
+      "id": "recenter-command",
+      "label": "Recenter Command",
+      "kind": "function",
+      "parentId": "lane-interaction",
+      "packageName": "frontend/src/components/holograph/holograph-workspace.tsx",
+      "description": "Command rail action that returns the renderer to whole-system overview after a focused traversal.",
+      "metrics": {
+        "complexity": 34,
+        "churn": 18,
+        "risk": 14
+      },
+      "members": [
+        "Recenter",
+        "Whole system",
+        "renderer selection reset"
+      ],
+      "status": "stable"
+    },
+    {
+      "id": "smoke-spec",
+      "label": "Cypress Smoke Spec",
+      "kind": "class",
+      "parentId": "lane-qa",
+      "packageName": "frontend/cypress/e2e/holograph-walking-skeleton.feature",
+      "description": "Executable QA artifact that proves the M0/M1 walking skeleton remains wired together.",
+      "metrics": {
+        "complexity": 37,
+        "churn": 15,
+        "risk": 15
+      },
+      "members": [
+        "Given fixture API",
+        "When workspace opens",
+        "Then focus and recenter"
+      ],
+      "status": "review"
+    }
+  ],
+  "edges": [
+    {
+      "id": "e-root-contract",
+      "sourceId": "root",
+      "targetId": "lane-contract",
+      "kind": "contains",
+      "label": "M0 lane"
+    },
+    {
+      "id": "e-root-import",
+      "sourceId": "root",
+      "targetId": "lane-import",
+      "kind": "contains",
+      "label": "M0 lane"
+    },
+    {
+      "id": "e-root-render",
+      "sourceId": "root",
+      "targetId": "lane-render",
+      "kind": "contains",
+      "label": "M1 lane"
+    },
+    {
+      "id": "e-root-interaction",
+      "sourceId": "root",
+      "targetId": "lane-interaction",
+      "kind": "contains",
+      "label": "M1 lane"
+    },
+    {
+      "id": "e-root-qa",
+      "sourceId": "root",
+      "targetId": "lane-qa",
+      "kind": "contains",
+      "label": "M1 lane"
+    },
+    {
+      "id": "e-contract-doc",
+      "sourceId": "lane-contract",
+      "targetId": "doc-contract",
+      "kind": "contains",
+      "label": "schema"
+    },
+    {
+      "id": "e-import-api",
+      "sourceId": "lane-import",
+      "targetId": "api-import",
+      "kind": "publishes",
+      "label": "/api/v1"
+    },
+    {
+      "id": "e-api-doc",
+      "sourceId": "api-import",
+      "targetId": "doc-contract",
+      "kind": "depends_on",
+      "label": "fixture envelope"
+    },
+    {
+      "id": "e-render-layout",
+      "sourceId": "lane-render",
+      "targetId": "scene-layout",
+      "kind": "calls",
+      "label": "pack"
+    },
+    {
+      "id": "e-render-bridge",
+      "sourceId": "lane-render",
+      "targetId": "renderer-bridge",
+      "kind": "contains",
+      "label": "ui"
+    },
+    {
+      "id": "e-bridge-layout",
+      "sourceId": "renderer-bridge",
+      "targetId": "scene-layout",
+      "kind": "depends_on",
+      "label": "scene payload"
+    },
+    {
+      "id": "e-interaction-focus",
+      "sourceId": "lane-interaction",
+      "targetId": "focus-command",
+      "kind": "contains",
+      "label": "narrow"
+    },
+    {
+      "id": "e-interaction-recenter",
+      "sourceId": "lane-interaction",
+      "targetId": "recenter-command",
+      "kind": "contains",
+      "label": "reset"
+    },
+    {
+      "id": "e-focus-renderer",
+      "sourceId": "focus-command",
+      "targetId": "renderer-bridge",
+      "kind": "calls",
+      "label": "selected node"
+    },
+    {
+      "id": "e-recenter-renderer",
+      "sourceId": "recenter-command",
+      "targetId": "renderer-bridge",
+      "kind": "calls",
+      "label": "overview"
+    },
+    {
+      "id": "e-qa-spec",
+      "sourceId": "lane-qa",
+      "targetId": "smoke-spec",
+      "kind": "contains",
+      "label": "smoke"
+    },
+    {
+      "id": "e-smoke-import",
+      "sourceId": "smoke-spec",
+      "targetId": "api-import",
+      "kind": "depends_on",
+      "label": "import"
+    },
+    {
+      "id": "e-smoke-render",
+      "sourceId": "smoke-spec",
+      "targetId": "renderer-bridge",
+      "kind": "depends_on",
+      "label": "render/select"
+    },
+    {
+      "id": "e-smoke-focus",
+      "sourceId": "smoke-spec",
+      "targetId": "focus-command",
+      "kind": "depends_on",
+      "label": "focus"
+    },
+    {
+      "id": "e-smoke-recenter",
+      "sourceId": "smoke-spec",
+      "targetId": "recenter-command",
+      "kind": "depends_on",
+      "label": "recenter"
+    }
+  ]
+}

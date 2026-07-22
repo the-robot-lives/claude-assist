@@ -10,7 +10,10 @@ defmodule HoloGraph.Schema.Authz.ScopedMembership do
     field :member_type, :string
     field :member_id, Ecto.UUID
     field :expires_at, :utc_datetime_usec
-    belongs_to :added_by_user, HoloGraph.Schema.Users.User, type: Ecto.UUID, foreign_key: :added_by
+
+    belongs_to :added_by_user, HoloGraph.Schema.Users.User,
+      type: Ecto.UUID,
+      foreign_key: :added_by
 
     timestamps(type: :utc_datetime_usec, inserted_at: :created_at, updated_at: false)
   end

@@ -28,7 +28,12 @@ defmodule HoloGraph.Organizations do
     HoloGraph.Repo.transaction(fn ->
       with {:ok, org} <- %Schema{} |> Schema.changeset(attrs) |> HoloGraph.Repo.insert(),
            {:ok, _membership} <-
-             HoloGraph.Authz.ScopedMemberships.add_member("organization", org.id, user_id, "owner") do
+             HoloGraph.Authz.ScopedMemberships.add_member(
+               "organization",
+               org.id,
+               user_id,
+               "owner"
+             ) do
         org
       else
         {:error, reason} -> HoloGraph.Repo.rollback(reason)

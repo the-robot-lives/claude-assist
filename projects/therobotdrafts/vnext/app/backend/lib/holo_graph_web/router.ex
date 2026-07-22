@@ -63,6 +63,12 @@ defmodule HoloGraphWeb.Router do
     get "/auth/sso/providers", SSOController, :providers
     post "/auth/sso/exchange", SSOController, :exchange
     get "/config/features", ConfigController, :features
+    get "/docs", DocsController, :index
+    post "/docs", DocsController, :import_fixture
+    get "/docs/:id", DocsController, :show
+    get "/holograph/docs", DocsController, :index
+    post "/holograph/docs/import", DocsController, :import_fixture
+    get "/holograph/docs/:id", DocsController, :show
   end
 
   scope "/api/v1", HoloGraphWeb do

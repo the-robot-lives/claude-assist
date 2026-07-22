@@ -77,3 +77,6 @@ databaseChangeLog:
   - include:
       file: 025-auth-registration-consent.yaml
       relativeToChangelogFile: true
+  - include:
+      file: 026-holograph-documents.yaml
+      relativeToChangelogFile: true

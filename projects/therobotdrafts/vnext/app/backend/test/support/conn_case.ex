@@ -86,10 +86,16 @@ defmodule HoloGraphWeb.ConnCase do
     }
 
     {:ok, access_token, _claims} =
-      HoloGraph.Guardian.encode_and_sign(session_entity, %{}, token_type: "access", ttl: {1, :hour})
+      HoloGraph.Guardian.encode_and_sign(session_entity, %{},
+        token_type: "access",
+        ttl: {1, :hour}
+      )
 
     {:ok, refresh_token, %{"jti" => jti}} =
-      HoloGraph.Guardian.encode_and_sign(session_entity, %{}, token_type: "refresh", ttl: {7, :day})
+      HoloGraph.Guardian.encode_and_sign(session_entity, %{},
+        token_type: "refresh",
+        ttl: {7, :day}
+      )
 
     HoloGraph.Auth.TokenStore.store_refresh_jti(jti)
 

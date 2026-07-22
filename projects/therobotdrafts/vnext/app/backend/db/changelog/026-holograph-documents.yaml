@@ -1,0 +1,84 @@
+databaseChangeLog:
+  - changeSet:
+      id: 026-create-table-graph-documents
+      author: therobotdrafts
+      changes:
+        - sql:
+            sql: |
+              CREATE TABLE graph_documents (
+                id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+                organization_id uuid REFERENCES organizations(id) ON DELETE SET NULL,
+                project_id uuid REFERENCES projects(id) ON DELETE SET NULL,
+                slug citext NOT NULL,
+                title varchar(255) NOT NULL,
+                summary text,
+                status varchar(20) NOT NULL DEFAULT 'draft'
+                  CHECK (status IN ('draft', 'active', 'archived', 'deleted')),
+                current_version integer NOT NULL DEFAULT 1 CHECK (current_version > 0),
+                document jsonb NOT NULL DEFAULT '{}',
+                metadata jsonb NOT NULL DEFAULT '{}',
+                inserted_at timestamptz NOT NULL DEFAULT now(),
+                updated_at timestamptz NOT NULL DEFAULT now()
+              );
+
+              CREATE UNIQUE INDEX uq_graph_documents_slug
+                ON graph_documents (slug);
+
+              CREATE INDEX idx_graph_documents_project_status
+                ON graph_documents (project_id, status, updated_at DESC);
+      rollback:
+        - dropTable:
+            tableName: graph_documents
+
+  - changeSet:
+      id: 026-create-table-graph-document-versions
+      author: therobotdrafts
+      changes:
+        - sql:
+            sql: |
+              CREATE TABLE graph_document_versions (
+                id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+                graph_document_id uuid NOT NULL REFERENCES graph_documents(id) ON DELETE CASCADE,
+                version integer NOT NULL CHECK (version > 0),
+                document jsonb NOT NULL DEFAULT '{}',
+                patch jsonb NOT NULL DEFAULT '{}',
+                actor_user_id uuid REFERENCES users(id) ON DELETE SET NULL,
+                metadata jsonb NOT NULL DEFAULT '{}',
+                inserted_at timestamptz NOT NULL DEFAULT now(),
+                CONSTRAINT uq_graph_document_versions_document_version
+                  UNIQUE (graph_document_id, version)
+              );
+
+              CREATE INDEX idx_graph_document_versions_document_inserted
+                ON graph_document_versions (graph_document_id, inserted_at DESC);
+      rollback:
+        - dropTable:
+            tableName: graph_document_versions
+
+  - changeSet:
+      id: 026-create-table-collab-events
+      author: therobotdrafts
+      changes:
+        - sql:
+            sql: |
+              CREATE TABLE collab_events (
+                id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+                graph_document_id uuid NOT NULL REFERENCES graph_documents(id) ON DELETE CASCADE,
+                version integer CHECK (version IS NULL OR version > 0),
+                event_type varchar(64) NOT NULL,
+                client_event_id varchar(128),
+                patch jsonb NOT NULL DEFAULT '{}',
+                actor_user_id uuid REFERENCES users(id) ON DELETE SET NULL,
+                metadata jsonb NOT NULL DEFAULT '{}',
+                inserted_at timestamptz NOT NULL DEFAULT now()
+              );
+
+              CREATE INDEX idx_collab_events_document_inserted
+                ON collab_events (graph_document_id, inserted_at);
+
+              CREATE UNIQUE INDEX uq_collab_events_document_client_event
+                ON collab_events (graph_document_id, client_event_id)
+                WHERE client_event_id IS NOT NULL;
+      rollback:
+        - dropTable:
+            tableName: collab_events

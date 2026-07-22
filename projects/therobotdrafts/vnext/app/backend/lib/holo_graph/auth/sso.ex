@@ -131,7 +131,8 @@ defmodule HoloGraph.Auth.SSO do
       approved_at: auto_approved_at(email, provider_type)
     }
 
-    {:ok, user} = HoloGraph.Repo.insert(user_schema, on_conflict: :nothing, conflict_target: :email)
+    {:ok, user} =
+      HoloGraph.Repo.insert(user_schema, on_conflict: :nothing, conflict_target: :email)
 
     %HoloGraph.Users.Credentials.UserCredential{
       user: {:ref, HoloGraph.Users.User, user.id},
