@@ -37,6 +37,16 @@ namespace TheRobotDraft.Authoring.Interchange
         // component, deployment, sequence, mind-map sources)
         UseCase, State, StateStart, StateEnd, Activity, Decision, ForkJoin, FlowFinal,
         Component, DeploymentNode, Database, Cloud, Lifeline, MindNode,
+        // SysML vocabulary (stereotyped classes / blocks)
+        Block, ValueType, Constraint, Requirement, TestCase,
+        // BPMN 2.0 vocabulary
+        BpmnEvent, BpmnActivity, BpmnGateway, BpmnDataObject, BpmnPool, BpmnLane,
+        // DMN vocabulary (Decision collides with the activity-decision diamond, hence DmnDecision)
+        DmnDecision, InputData, KnowledgeSource, BusinessKnowledge,
+        // UI wireframe vocabulary. Table is already the ERD entity kind above, so the widget uses UiTable.
+        Screen, Panel, UiWidget,
+        Button, Label, Link, TextField, TextArea, Password, Checkbox, Radio, Dropdown, List, UiTable,
+        Tree, Image, Tabs, Menu, Card, Separator, Progress, Slider, Breadcrumb, Toolbar,
         Unknown
     }
 
@@ -46,12 +56,50 @@ namespace TheRobotDraft.Authoring.Interchange
         Generalization, Realization, Dependency, NoteLink, Extension,
         // Behavioral vocabulary
         Include, Extend, Transition, MessageSync, MessageAsync, MessageReply,
+        // SysML / requirements-traceability vocabulary (from «satisfy»/«verify»/«derive»/«refine»/«trace»)
+        Satisfy, Verify, Derive, Refine, Trace, Copy,
+        // BPMN vocabulary
+        SequenceFlow, MessageFlow,
         Unknown
     }
 
     public enum IxVisibility { Public, Private, Protected, Package }
 
     public enum IxLayoutProvenance { Authored, Synthesized }
+
+    // Independent emit-target flags for an aspect (see Authoring.Model.EmitFlags). Duplicated here as a
+    // plain struct so the interchange IR stays free of any Authoring.Model dependency (the format modules
+    // are deliberately engine-/model-free). UmlCanvas.Interchange maps between the two.
+    public struct IxEmitFlags
+    {
+        public bool Annotate;
+        public bool DocTag;
+        public bool Comment;
+        public bool Meta;
+
+        public IxEmitFlags(bool annotate, bool docTag, bool comment, bool meta)
+        { Annotate = annotate; DocTag = docTag; Comment = comment; Meta = meta; }
+
+        public bool IsAny => Annotate || DocTag || Comment || Meta;
+        public static readonly IxEmitFlags None = default;
+    }
+
+    // A sparse aspect attachment in the IR: references the def (name + version) and stores ONLY overridden
+    // field values. Effective value = Overrides[field] ?? def.Default. Pure data — no resolution logic.
+    public sealed class IxAspectInstance
+    {
+        public string DefName;
+        public int DefVersion = 1;
+        public Dictionary<string, string> Overrides = new Dictionary<string, string>();
+        public IxEmitFlags? EmitOverride; // null = use def defaults
+    }
+
+    // Freeform {key, value} escape hatch — no registry def, no typing.
+    public sealed class IxFreeformEntry
+    {
+        public string Key;
+        public string Value;
+    }
 
     public sealed class IxModel
     {
@@ -74,7 +122,12 @@ namespace TheRobotDraft.Authoring.Interchange
         public string GenericParams;      // e.g. "T" or "K,V"; null when non-generic
         public List<IxMember> Members = new List<IxMember>();
         public List<string> EnumLiterals = new List<string>();
+        public List<string> Items = new List<string>(); // wireframe options/rows/columns/tabs/menu entries
         public Dictionary<string, string> Tags = new Dictionary<string, string>(); // tagged values / format extras
+        // Typed, sparse aspect attachments + freeform entries. The typed superset of Tags: an IxAspectInstance
+        // references a registry def (name + version) and stores only overridden field values.
+        public List<IxAspectInstance> Aspects = new List<IxAspectInstance>();
+        public List<IxFreeformEntry> Freeform = new List<IxFreeformEntry>();
         // Visual styling, "#RRGGBB" (or null = format/tool default). Populated on
         // parse only when the source declares it; emitted deterministically on write.
         public string FillColor;
@@ -122,6 +175,9 @@ namespace TheRobotDraft.Authoring.Interchange
         public string ToMultiplicity;
         public string FromRole;
         public string ToRole;
+        // Edges carry no metadata in the base IR; aspects + freeform are the typed metadata channel for links.
+        public List<IxAspectInstance> Aspects = new List<IxAspectInstance>();
+        public List<IxFreeformEntry> Freeform = new List<IxFreeformEntry>();
     }
 
     public sealed class IxDiagram

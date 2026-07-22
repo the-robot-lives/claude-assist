@@ -1,0 +1,75 @@
+---
+schema: "0.4"
+id: fim-math-and-scientific-rendering-jsxgraph-03-instructional-explanatory-figure
+type: interactive
+quality: high
+solution: jsxgraph
+category: math-and-scientific-rendering
+variant: instructional-explanatory-figure
+references:
+- references/fim/overview/geospatial-math-scientific/jsxgraph.md
+- references/fim/solution/jsxgraph.md
+prompt:
+  system: |-
+    You are a senior interactive geometry educator. Output only one complete ASCII HTML file using JSXGraph. No Markdown fences or prose outside the source.
+  text: |-
+    Create an instructional JSXGraph figure for the inscribed angle theorem. Draw a circle, draggable points A, B, and C on the circle as gliders, chord AB, radii OA and OB, angle ACB, central angle AOB, and live text showing that the central angle is twice the inscribed angle.
+
+    Requirements: use board.create circle, glider, segment, angle, text, and button or checkbox controls; keep aspect ratio; use readable labels; include an accessible step explanation outside the board; and handle near-degenerate cases when points get too close.
+  provider_options:
+    temperature: 0.2
+    max_tokens: 8192
+output:
+  text_format: html
+  artifact_kind: jsxgraph-html
+  formats:
+  - format: html
+  - format: png
+  - format: svg
+evaluation:
+  checklist:
+  - "YAML parses and required schema 0.4 fields are present."
+  - "HTML is complete, ASCII-only, and uses native JSXGraph geometry elements."
+  - "Math correctness covers circle gliders, central angle, inscribed angle, and 2-to-1 relationship."
+  - "Notation validity covers point labels, angle labels, degree units, and explanatory text."
+  - "Renderability covers loaded JSXGraph assets, nonzero board size, and visible initial construction."
+  - "Labels and units identify O, A, B, C, angles, chord, radius segments, and degree measurements."
+  - "Domain edge cases cover coincident points, angle wraparound, tiny arcs, and label overlap."
+  rubric:
+  - name: Format validity
+    weight: 30
+    criteria:
+    - "Output is one complete ASCII HTML file with no Markdown wrapper."
+    - "The file uses valid JSXGraph geometry calls and stable object references."
+    - "The artifact documents local run and capture expectations."
+  - name: Semantic completeness
+    weight: 30
+    criteria:
+    - "Circle, glider points, chord, radii, angles, live text, controls, and explanation are all present."
+    - "JSXGraph dependencies drive the geometry and updates."
+    - "The theorem relationship is communicated visually and numerically."
+  - name: Visual/structural quality
+    weight: 25
+    criteria:
+    - "The construction is clean, balanced, and readable at first render."
+    - "Angle highlights and labels remain legible during dragging."
+    - "Instructional text supports the board without visual clutter."
+  - name: Robustness
+    weight: 15
+    criteria:
+    - "Handles near-coincident points and angle wraparound with status messaging."
+    - "Maintains aspect ratio and avoids hidden labels."
+    - "Documents resize and export constraints."
+  pass_conditions:
+  - "Rubric weights are exactly Format validity 30, Semantic completeness 30, Visual/structural quality 25, Robustness 15."
+  - "Score is 80 or higher out of 100 with no critical failure in math correctness, notation validity, renderability, or accessibility."
+  - "The artifact teaches the inscribed angle theorem through a live JSXGraph construction."
+  - "Labels, units, domain edge cases, and accessibility output are represented."
+tags:
+- fim
+- math-and-scientific-rendering
+- jsxgraph
+- instructional-explanatory-figure
+- geometry
+- inscribed-angle
+

@@ -1,0 +1,65 @@
+@startuml
+' ============================================================================
+' METADATA
+'   author:       TheRobotDrafts Examples
+'   description:  Medium SysML BDD - 6-8 blocks with proxy/full/flow ports, interface blocks, flow properties and a flow direction.
+'   usecase:      Teach proxy/full/flow ports, interface blocks, flow properties and direction.
+'   complexity:   medium
+'   domain:       Fluid cooling system
+' ============================================================================
+title Example SysML Block BDD - Medium Interface Blocks
+
+' SysML ports:
+'   - Flow port: passes a flow item in/out (here a coolant stream).
+'   - Proxy port: delegates to an internal block via an interface block.
+'   - Full port: a port that is itself a part (block instance) owned by the parent.
+
+block "Coolant" {
+  value temperature : Real [K]
+  value pressure : Real [Pa]
+}
+
+' An interface block defines the contract a proxy port exposes.
+interface "ICoolantFlow" {
+  flow in  supply : Coolant
+  flow out return : Coolant
+}
+
+block "Pump" {
+  port out "pumpOut" : ICoolantFlow
+  value flowRate : Real [L/min]
+}
+
+block "Radiator" {
+  port in  "radIn"  : ICoolantFlow
+  port out "radOut" : ICoolantFlow
+  value dissipation : Real [W]
+}
+
+block "EngineBlock" {
+  port in  "engIn"  : ICoolantFlow
+  port out "engOut" : ICoolantFlow
+  value heatOutput : Real [W]
+}
+
+block "Reservoir" {
+  port out "resOut" : ICoolantFlow
+  port in  "resIn"  : ICoolantFlow
+  value capacity : Real [L]
+}
+
+block "CoolingLoop" {
+  ' Full ports: the loop owns these part instances as ports.
+  full port pump : Pump
+  full port rad  : Radiator
+  full port eng  : EngineBlock
+  full port res  : Reservoir
+}
+
+' Flow direction follows the supply->return path of the coolant.
+"CoolingLoop" ::pump."pumpOut" -->> "CoolingLoop" ::rad."radIn"
+"CoolingLoop" ::rad."radOut"  -->> "CoolingLoop" ::eng."engIn"
+"CoolingLoop" ::eng."engOut"  -->> "CoolingLoop" ::res."resIn"
+"CoolingLoop" ::res."resOut"  -->> "CoolingLoop" ::pump."pumpOut"
+
+@enduml

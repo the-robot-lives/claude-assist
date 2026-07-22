@@ -1,0 +1,13 @@
+# .trd-yaml — TheRobotDrafts native model (IxModel serialization)
+name: Example Component Diagram - Simple Microservice
+elements:
+  - { id: client, type: Component, name: Web Client }
+  - { id: svc, type: Component, name: Order Service }
+  - { id: db, type: Database, name: Orders DB }
+  - { id: iSubmit, type: Component, name: iSubmit }
+  - { id: ~note1, type: Note, name: '**Provided** "Submit Order" = ball  (this servic…', documentation: '**Provided** "Submit Order" = ball  (this service answers it)\n**Required** "Persist"      = cup   (this service needs it)' }
+edges:
+  - { id: e1, type: Dependency, from: client, to: iSubmit }
+  - { id: e2, type: NoteLink, from: ~note1, to: svc }
+diagrams:
+  - { id: d1, name: Example Component Diagram - Simple Microservice, kind: component, layoutProvenance: Synthesized }

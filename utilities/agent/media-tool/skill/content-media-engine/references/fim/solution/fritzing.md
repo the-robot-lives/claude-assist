@@ -1,867 +1,229 @@
-# Fritzing - Visual Electronics Prototyping Platform
+# Fritzing — Breadboard, Schematic & PCB Sketches
 
 ⌜fritzing|electronics-design|NPL-FIM@1.0⌝
 
-## Overview
+Fritzing is an open-source EDA tool aimed at makers and educators. Its signature
+is the **breadboard view** — a photorealistic wiring picture — kept in sync with
+a **schematic** and a **PCB** view of the same circuit. Files are XML: a sketch
+(`.fz`, usually zipped into `.fzz`) references part definitions (`.fzp`) and
+their per-view SVG graphics. This file documents those formats and the authoring
+workflow.
 
-Fritzing is an open-source initiative to support designers, artists, researchers and hobbyists to take the step from physical prototyping to actual product creation. It provides an intuitive, visual approach to electronics design with three integrated views: breadboard, schematic, and PCB layout. Perfect for educational environments, rapid prototyping, and maker projects.
+**Current Version**: 1.0.x (0.9.10 long-standing)  **License**: GPL v3+
+**Formats**: `.fzz` (zipped sketch), `.fz` (sketch XML), `.fzp` (part XML) + SVG
+**Export**: SVG, PNG, PDF, Gerber, Excellon, netlist
 
-**Best For:**
-- Educational electronics projects and learning
-- Arduino and microcontroller prototyping
-- Breadboard circuit documentation and sharing
-- Simple to medium complexity PCB design
-- Maker community projects and tutorials
-- Visual circuit documentation for non-engineers
-- Transitioning from breadboard to PCB designs
-
-## Essential Links
-
-### Official Resources
-- **Homepage**: https://fritzing.org/
-- **Documentation**: https://fritzing.org/learning/
-- **Download**: https://fritzing.org/download/
-- **User Manual**: https://fritzing.org/learning/manual/
-
-### Repository & Development
-- **GitHub Repository**: https://github.com/fritzing/fritzing-app
-- **Parts Repository**: https://github.com/fritzing/fritzing-parts
-- **Issue Tracker**: https://github.com/fritzing/fritzing-app/issues
-- **Release Notes**: https://github.com/fritzing/fritzing-app/releases
-
-### Community & Support
-- **Forum**: https://forum.fritzing.org/
-- **Discord Community**: https://discord.gg/fritzing
-- **Reddit**: https://www.reddit.com/r/fritzing/
-- **Stack Overflow**: https://stackoverflow.com/questions/tagged/fritzing
-
-### Learning Resources
-- **Tutorials**: https://fritzing.org/learning/tutorials/
-- **Examples Gallery**: https://fritzing.org/projects/
-- **Parts Library**: https://fritzing.org/parts/
-- **YouTube Channel**: https://www.youtube.com/c/FritzingOrg
-
-### Tools & Extensions
-- **Fab Lab Tool**: https://fab.fritzing.org/
-- **Parts Editor**: Built-in to Fritzing application
-- **Part Contrib Repository**: https://github.com/fritzing/fritzing-parts-contrib
-- **API Documentation**: https://github.com/fritzing/fritzing-app/wiki
-
-## Technical Specifications
-
-### Software Information
-- **Version**: 0.9.10 (Latest Stable)
-- **License**: GPL v3+ (Open Source)
-- **Platform Support**: Windows, macOS, Linux
-- **File Format**: .fzz (Fritzing Archive), .fzp (Fritzing Part)
-- **Export Formats**: SVG, PNG, PDF, Gerber, Excellon
-- **Programming Language**: C++, Qt Framework
-
-### System Requirements
-```yaml
-minimum:
-  os: Windows 7/macOS 10.12/Ubuntu 16.04
-  ram: 2GB
-  storage: 500MB
-  graphics: OpenGL 2.0
-recommended:
-  os: Windows 10/macOS 12/Ubuntu 20.04+
-  ram: 4GB+
-  storage: 2GB
-  graphics: Dedicated GPU with OpenGL 3.0+
-```
-
-### Supported File Formats
-```yaml
-import:
-  - .fzz (Fritzing projects)
-  - .fzp (Fritzing parts)
-  - .svg (for custom parts)
-  - .png/.jpg (for breadboard graphics)
-export:
-  breadboard: [svg, png, pdf]
-  schematic: [svg, png, pdf]
-  pcb: [svg, png, pdf, gerber, excellon]
-  netlist: [.net format]
-```
+## Official Resources & Documentation
+- Home: https://fritzing.org/
+- Learning / manual: https://fritzing.org/learning/ , https://fritzing.org/learning/manual/
+- App source: https://github.com/fritzing/fritzing-app
+- Parts repo: https://github.com/fritzing/fritzing-parts
+- Part format wiki: https://github.com/fritzing/fritzing-app/wiki/2.1-Fritzing-file-formats
+- Forum: https://forum.fritzing.org/
 
 ## Installation & Setup
-
-### Quick Installation
 ```bash
-# Ubuntu/Debian
-sudo apt update
-sudo apt install fritzing fritzing-parts
-
-# Fedora/RHEL
-sudo dnf install fritzing
-
-# Arch Linux
-sudo pacman -S fritzing
-
-# macOS (Homebrew)
+# macOS
 brew install --cask fritzing
-
-# macOS (MacPorts)
-sudo port install fritzing
-
-# Windows (Chocolatey)
+# Debian/Ubuntu
+sudo apt install fritzing fritzing-parts
+# Windows
 choco install fritzing
+```
+Fritzing is primarily GUI-driven; there is no fully-featured headless CLI, so
+programmatic use means *authoring/transforming the XML* and opening the sketch to
+export. Extra parts install to the user parts folder (`~/.config/Fritzing/parts`).
 
-# Windows (Scoop)
-scoop install fritzing
+## Core Syntax / API Reference
+
+### File family
+```
+sketch.fzz            # ZIP archive:
+ ├── sketch.fz         #   the sketch XML (instances, wires, views)
+ ├── part.<id>.fzp     #   embedded custom part definitions
+ └── svg/…             #   part graphics per view
+custom_part.fzp        # standalone part metadata (XML)
 ```
 
-### From Source (Advanced)
-```bash
-# Clone repository
-git clone https://github.com/fritzing/fritzing-app.git
-cd fritzing-app
-
-# Install dependencies (Ubuntu)
-sudo apt install qt5-default libqt5serialport5-dev libqt5svg5-dev
-
-# Build
-qmake phoenix.pro
-make
-
-# Install
-sudo make install
-```
-
-### Parts Library Setup
-```bash
-# Download additional parts
-cd ~/.config/Fritzing/parts
-git clone https://github.com/fritzing/fritzing-parts.git
-
-# Or download parts pack
-wget https://github.com/fritzing/fritzing-parts/archive/master.zip
-unzip master.zip
-```
-
-## Complete Workflow Examples
-
-### Example 1: Arduino LED Blinker Circuit
-
-#### Project Setup
-```bash
-# Create project directory
-mkdir arduino-led-blinker
-cd arduino-led-blinker
-
-# Initialize Fritzing project
-# Open Fritzing and create new sketch
-```
-
-#### Breadboard Design Process
-1. **Component Placement**
-   - Arduino Uno from Core Parts bin
-   - LED from Basic Parts > LEDs
-   - 220Ω resistor from Basic Parts > Resistors
-   - Breadboard from Core Parts
-
-2. **Circuit Wiring**
-   ```
-   Arduino Pin 13 → Resistor (220Ω) → LED Anode
-   LED Cathode → Arduino GND
-   ```
-
-3. **Breadboard View Creation**
-   ```xml
-   <!-- Fritzing breadboard view -->
-   <breadboardView>
-     <instances>
-       <instance moduleIdRef="Arduino_Uno_Rev3" modelIndex="0">
-         <geometry z="1.5" x="120" y="50"/>
-       </instance>
-       <instance moduleIdRef="LED-RED-5mm" modelIndex="1">
-         <geometry z="1.5" x="300" y="180"/>
-       </instance>
-       <instance moduleIdRef="Resistor_220" modelIndex="2">
-         <geometry z="1.5" x="250" y="160"/>
-       </instance>
-     </instances>
-     <wires>
-       <wire>
-         <connector connectorId="pin13" layer="breadboard"/>
-         <connector connectorId="resistor_pin1" layer="breadboard"/>
-       </wire>
-     </wires>
-   </breadboardView>
-   ```
-
-#### Schematic Generation
-```xml
-<!-- Auto-generated schematic -->
-<schematicView>
-  <instances>
-    <instance moduleIdRef="Arduino_Uno_Rev3">
-      <title>U1</title>
-      <geometry z="2.5" x="100" y="100"/>
-    </instance>
-    <instance moduleIdRef="LED-RED">
-      <title>LED1</title>
-      <geometry z="2.5" x="300" y="150"/>
-    </instance>
-    <instance moduleIdRef="Resistor_220">
-      <title>R1</title>
-      <geometry z="2.5" x="200" y="125"/>
-    </instance>
-  </instances>
-</schematicView>
-```
-
-#### PCB Layout Design
-```xml
-<!-- PCB layout specifications -->
-<pcbView>
-  <layers>
-    <layer layerId="copper1" sticky="true"/>
-    <layer layerId="silkscreen0"/>
-  </layers>
-  <instances>
-    <instance moduleIdRef="Arduino_Headers">
-      <geometry z="1.6" x="50" y="25"/>
-    </instance>
-  </instances>
-  <board>
-    <width>50mm</width>
-    <height>30mm</height>
-    <thickness>1.6mm</thickness>
-  </board>
-</pcbView>
-```
-
-### Example 2: Temperature Sensor Display System
-
-#### Component Requirements
-```yaml
-components:
-  microcontroller: Arduino Nano
-  sensor: DHT22 Temperature/Humidity Sensor
-  display: 16x2 LCD Display
-  interface: I2C Backpack for LCD
-  power: 9V Battery Connector
-  wiring: Jumper wires, breadboard
-```
-
-#### Complete Circuit Implementation
+### Sketch (`.fz`) structure
+The sketch lists **instances** (parts *and* wires); each instance carries a
+per-view geometry. Wires are themselves instances referencing a wire module.
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
-<module fritzingVersion="0.9.10">
-  <version>4</version>
-  <title>Temperature Display System</title>
-  <description>DHT22 sensor with LCD display using Arduino Nano</description>
+<module fritzingVersion="1.0.0">
+  <instances>
+    <instance moduleIdRef="Arduino_Uno_Rev3" modelIndex="1" path=":/parts/…">
+      <title>U1</title>
+      <views>
+        <breadboardView layer="breadboard">
+          <geometry x="120" y="50" z="1.5"/>
+        </breadboardView>
+        <schematicView layer="schematic">
+          <geometry x="100" y="100" z="2.5"/>
+        </schematicView>
+        <pcbView layer="copper1">
+          <geometry x="50" y="25" z="1.6"/>
+        </pcbView>
+      </views>
+    </instance>
 
-  <views>
-    <breadboardView>
-      <layers>
-        <layer layerId="breadboard"/>
-      </layers>
-      <instances>
-        <!-- Arduino Nano -->
-        <instance moduleIdRef="Arduino_Nano" modelIndex="0">
-          <title>U1</title>
-          <geometry z="1.5" x="150" y="100"/>
-          <property name="chip label" value="NANO"/>
-        </instance>
-
-        <!-- DHT22 Sensor -->
-        <instance moduleIdRef="DHT22" modelIndex="1">
-          <title>DHT1</title>
-          <geometry z="1.5" x="300" y="80"/>
-        </instance>
-
-        <!-- LCD Display -->
-        <instance moduleIdRef="LCD_16x2_I2C" modelIndex="2">
-          <title>LCD1</title>
-          <geometry z="1.5" x="400" y="120"/>
-        </instance>
-
-        <!-- Breadboard -->
-        <instance moduleIdRef="Breadboard_Full" modelIndex="3">
-          <title>BB1</title>
-          <geometry z="1" x="50" y="200"/>
-        </instance>
-      </instances>
-
-      <wires>
-        <!-- Power connections -->
-        <wire>
-          <connector connectorId="5V" layer="breadboard"/>
-          <connector connectorId="VCC_DHT" layer="breadboard"/>
-        </wire>
-        <wire>
-          <connector connectorId="GND" layer="breadboard"/>
-          <connector connectorId="GND_DHT" layer="breadboard"/>
-        </wire>
-
-        <!-- Data connections -->
-        <wire>
-          <connector connectorId="D2" layer="breadboard"/>
-          <connector connectorId="DATA_DHT" layer="breadboard"/>
-        </wire>
-
-        <!-- I2C connections -->
-        <wire>
-          <connector connectorId="A4" layer="breadboard"/>
-          <connector connectorId="SDA_LCD" layer="breadboard"/>
-        </wire>
-        <wire>
-          <connector connectorId="A5" layer="breadboard"/>
-          <connector connectorId="SCL_LCD" layer="breadboard"/>
-        </wire>
-      </wires>
-    </breadboardView>
-  </views>
-
-  <programs>
-    <program>
-      <language>Arduino</language>
-      <code>
-#include &lt;DHT.h&gt;
-#include &lt;LiquidCrystal_I2C.h&gt;
-
-#define DHT_PIN 2
-#define DHT_TYPE DHT22
-
-DHT dht(DHT_PIN, DHT_TYPE);
-LiquidCrystal_I2C lcd(0x27, 16, 2);
-
-void setup() {
-  dht.begin();
-  lcd.init();
-  lcd.backlight();
-  lcd.setCursor(0, 0);
-  lcd.print("Temp Monitor");
-  delay(2000);
-}
-
-void loop() {
-  float temp = dht.readTemperature();
-  float humidity = dht.readHumidity();
-
-  lcd.clear();
-  lcd.setCursor(0, 0);
-  lcd.print("Temp: ");
-  lcd.print(temp);
-  lcd.print("C");
-
-  lcd.setCursor(0, 1);
-  lcd.print("Humidity: ");
-  lcd.print(humidity);
-  lcd.print("%");
-
-  delay(2000);
-}
-      </code>
-    </program>
-  </programs>
+    <!-- a wire is also an instance -->
+    <instance moduleIdRef="WireModuleID" modelIndex="7">
+      <views>
+        <breadboardView layer="breadboardWire">
+          <geometry x="0" y="0" x1="120" y1="60" x2="250" y2="160"/>
+          <connectors>
+            <connector connectorId="connector0" layer="breadboardWire">
+              <geometry x="0" y="0"/>
+            </connector>
+          </connectors>
+        </breadboardView>
+      </views>
+    </instance>
+  </instances>
+  <boards>
+    <board moduleId="TwoLayerRectanglePCB" title="PCB1" width="50mm" height="30mm"/>
+  </boards>
 </module>
 ```
 
-### Example 3: IoT Plant Monitoring System
-
-#### System Architecture
-```yaml
-system_components:
-  sensors:
-    - soil_moisture: Capacitive soil moisture sensor
-    - light: LDR photoresistor
-    - temperature: DS18B20 waterproof sensor
-  actuators:
-    - water_pump: 5V micro water pump
-    - grow_light: LED strip (12V)
-  connectivity:
-    - wifi: ESP32 microcontroller
-    - display: OLED 128x64 SSD1306
-  power_management:
-    - battery: 18650 Li-ion
-    - charging: TP4056 charging module
-    - regulation: AMS1117 3.3V regulator
-```
-
-#### PCB Design Workflow
+### Part definition (`.fzp`)
+A part declares metadata, per-view SVG references, and **connectors**:
 ```xml
-<!-- PCB design specifications -->
-<pcbView>
-  <board>
-    <width>80mm</width>
-    <height>60mm</height>
-    <thickness>1.6mm</thickness>
-    <layers>2</layers>
-    <finish>HASL</finish>
-    <material>FR4</material>
-  </board>
-
-  <designRules>
-    <trackWidth>0.2mm</trackWidth>
-    <viaSize>0.3mm</viaSize>
-    <clearance>0.15mm</clearance>
-    <minAnnularRing>0.1mm</minAnnularRing>
-  </designRules>
-
-  <layers>
-    <layer layerId="copper1" sticky="true">
-      <name>Top Copper</name>
-    </layer>
-    <layer layerId="copper0" sticky="true">
-      <name>Bottom Copper</name>
-    </layer>
-    <layer layerId="silkscreen0">
-      <name>Top Silkscreen</name>
-    </layer>
-    <layer layerId="silkscreen1">
-      <name>Bottom Silkscreen</name>
-    </layer>
-  </layers>
-
-  <routing>
-    <trace>
-      <start x="10" y="10"/>
-      <end x="70" y="50"/>
-      <width>0.3mm</width>
-      <layer>copper1</layer>
-    </trace>
-  </routing>
-</pcbView>
-```
-
-## Advanced NPL-FIM Integration
-
-### Core Integration Framework
-```yaml
-# NPL-FIM Fritzing Configuration
-npl_fim_config:
-  renderer: fritzing
-  version: "0.9.10"
-  integration_level: comprehensive
-
-  views:
-    primary: breadboard
-    secondary: [schematic, pcb]
-    export_targets: [svg, png, pdf, gerber]
-
-  automation:
-    auto_route: enabled
-    design_rules_check: enabled
-    electrical_rules_check: enabled
-    part_validation: strict
-
-  workflow_integration:
-    git_tracking: enabled
-    version_control: semantic
-    collaboration: team_mode
-    export_pipeline: automated
-```
-
-### NPL-FIM Component Generator
-```yaml
-# Component generation template
-component_template:
-  type: "{{component_type}}"
-  package: "{{package_name}}"
-  properties:
-    electrical:
-      pins: "{{pin_count}}"
-      voltage: "{{operating_voltage}}"
-      current: "{{max_current}}"
-    physical:
-      footprint: "{{pcb_footprint}}"
-      dimensions: "{{width}}x{{height}}x{{depth}}"
-    metadata:
-      manufacturer: "{{manufacturer}}"
-      part_number: "{{part_number}}"
-      datasheet: "{{datasheet_url}}"
-```
-
-### Automated Circuit Generation
-```python
-# NPL-FIM Circuit Generator Script
-class FritzingNPLGenerator:
-    def __init__(self, config):
-        self.config = config
-        self.fritzing_api = FritzingAPI()
-
-    def generate_circuit(self, specification):
-        """Generate circuit from NPL-FIM specification"""
-        circuit = Circuit()
-
-        # Parse components
-        for component in specification['components']:
-            part = self.create_part(component)
-            circuit.add_part(part)
-
-        # Generate connections
-        for connection in specification['connections']:
-            wire = self.create_wire(connection)
-            circuit.add_wire(wire)
-
-        # Apply layout rules
-        layout = self.apply_layout_rules(circuit)
-
-        return self.export_fritzing(layout)
-
-    def create_part(self, component_spec):
-        """Create Fritzing part from specification"""
-        return {
-            'moduleId': component_spec['id'],
-            'type': component_spec['type'],
-            'properties': component_spec['properties'],
-            'geometry': self.calculate_placement(component_spec)
-        }
-
-    def export_fritzing(self, circuit):
-        """Export to Fritzing format"""
-        return self.fritzing_api.serialize(circuit)
-```
-
-### NPL-FIM Workflow Automation
-```yaml
-# Automated workflow configuration
-workflow_automation:
-  design_pipeline:
-    - stage: specification
-      tool: npl_fim_parser
-      input: circuit_spec.yml
-      output: fritzing_project.fzz
-
-    - stage: validation
-      tool: fritzing_validator
-      checks: [electrical, mechanical, manufacturing]
-      output: validation_report.json
-
-    - stage: simulation
-      tool: ngspice_integration
-      input: fritzing_netlist.net
-      output: simulation_results.csv
-
-    - stage: fabrication
-      tool: gerber_generator
-      input: fritzing_pcb.fzz
-      output: fabrication_files.zip
-
-  integration_hooks:
-    pre_commit: validate_design
-    post_commit: generate_documentation
-    pre_release: run_full_simulation
-    post_release: update_parts_library
-```
-
-### Custom Part Creation System
-```xml
-<!-- NPL-FIM Custom Part Template -->
-<module fritzingVersion="0.9.10" referenceFile="{{part_name}}.fzp">
-  <title>{{part_title}}</title>
-  <description>{{part_description}}</description>
-  <tags>{{part_tags}}</tags>
-
+<module fritzingVersion="1.0.0" moduleId="LED_5mm_red" referenceFile="LED.fzp">
+  <version>4</version>
+  <title>Red LED (5mm)</title>
+  <label>LED</label>
+  <tags><tag>led</tag><tag>output</tag></tags>
   <properties>
-    <property name="family">{{part_family}}</property>
-    <property name="package">{{package_type}}</property>
-    <property name="part number">{{part_number}}</property>
-    <property name="datasheet">{{datasheet_url}}</property>
+    <property name="family">LED</property>
+    <property name="color">red</property>
+    <property name="package">THT</property>
   </properties>
-
   <views>
-    <breadboardView>
-      <layers image="breadboard/{{part_name}}_breadboard.svg">
-        <layer layerId="breadboard"/>
-      </layers>
-    </breadboardView>
-
-    <schematicView>
-      <layers image="schematic/{{part_name}}_schematic.svg">
-        <layer layerId="schematic"/>
-      </layers>
-    </schematicView>
-
-    <pcbView>
-      <layers image="pcb/{{part_name}}_pcb.svg">
-        <layer layerId="copper1"/>
-        <layer layerId="silkscreen"/>
-      </layers>
-    </pcbView>
+    <breadboardView><layers image="breadboard/led_bb.svg"><layer layerId="breadboard"/></layers></breadboardView>
+    <schematicView><layers image="schematic/led_sch.svg"><layer layerId="schematic"/></layers></schematicView>
+    <pcbView><layers image="pcb/led_pcb.svg"><layer layerId="copper1"/></layers></pcbView>
   </views>
-
   <connectors>
-    {{#each pins}}
-    <connector id="{{id}}" name="{{name}}" type="{{type}}">
-      <description>{{description}}</description>
+    <connector id="connector0" type="male" name="anode">
+      <description>+ anode</description>
       <views>
-        <breadboardView>
-          <p layer="breadboard" svgId="{{breadboard_id}}"/>
-        </breadboardView>
-        <schematicView>
-          <p layer="schematic" svgId="{{schematic_id}}"/>
-        </schematicView>
-        <pcbView>
-          <p layer="copper1" svgId="{{pcb_id}}"/>
-        </pcbView>
+        <breadboardView><p layer="breadboard" svgId="connector0pin"/></breadboardView>
+        <schematicView><p layer="schematic" svgId="connector0pin" terminalId="connector0term"/></schematicView>
+        <pcbView><p layer="copper1" svgId="connector0pad"/></pcbView>
       </views>
     </connector>
-    {{/each}}
+    <connector id="connector1" type="male" name="cathode"> … </connector>
   </connectors>
 </module>
 ```
+- **connector `id`** links a logical pin to an SVG element (`svgId`) in each view.
+- **`terminalId`** marks the exact wire-attach point in the schematic SVG.
+- **`type`** is `male`/`female`; **buses** group internally-connected pins.
 
-## Manufacturing Integration
+### Views (the three synchronized layers)
+- **breadboardView** — photoreal wiring on a breadboard (teaching/sharing).
+- **schematicView** — logical symbols and nets.
+- **pcbView** — copper layers, pads, board outline; source of Gerbers.
 
-### PCB Fabrication Workflow
-```yaml
-fabrication_process:
-  design_export:
-    - gerber_files: Top/Bottom copper, solder mask, silkscreen
-    - drill_files: Excellon format with tool list
-    - pick_place: Component placement coordinates
-    - bom: Bill of materials with part numbers
+## Output / Export Types
+Breadboard/schematic/PCB → SVG, PNG, PDF; PCB → Gerber (RS-274X) + Excellon
+drill; plus a simple netlist export. All via the app's File → Export.
 
-  manufacturer_integration:
-    supported_fabs:
-      - JLCPCB: Direct upload integration
-      - PCBWay: API-based ordering
-      - OSHPark: Community pricing
-      - Seeed: Fusion PCB service
+## How-To (worked recipes)
 
-    design_rules:
-      minimum_trace: 0.1mm
-      minimum_via: 0.15mm
-      minimum_clearance: 0.1mm
-      maximum_layers: 10
-
-  cost_optimization:
-    panel_efficiency: maximize
-    component_placement: automated
-    routing_efficiency: ai_optimized
-    manufacturing_ready: validated
+### How to color wires and style views (the "add color" recipe)
+Wire color is a per-wire property in the sketch; in the app set it via the wire's
+Inspector. In XML a wire instance carries a `<wireExtras>` color:
+```xml
+<instance moduleIdRef="WireModuleID" modelIndex="9">
+  <views>
+    <breadboardView layer="breadboardWire">
+      <geometry x1="120" y1="60" x2="250" y2="160"/>
+      <wireExtras mils="16" color="#ff0000" bezier="false"/>
+    </breadboardView>
+  </views>
+</instance>
 ```
+Part graphics colors live in the part SVGs; edit those to restyle a component.
 
-### Component Sourcing
-```yaml
-component_sourcing:
-  integrated_suppliers:
-    - Digi-Key: Real-time pricing and availability
-    - Mouser: Technical specifications lookup
-    - Arrow: Volume pricing calculator
-    - LCSC: Asian component sourcing
+### How to place an Arduino + LED + resistor (breadboard)
+1. Drag Arduino Uno, LED, and a 220Ω resistor from the parts bins.
+2. Wire: `Pin 13 → 220Ω → LED anode`, `LED cathode → GND`.
+3. The corresponding sketch instances/wires are as shown in the structure above.
 
-  bom_generation:
-    format: CSV, Excel, JSON
-    fields: [part_number, description, quantity, reference, manufacturer]
-    pricing: real_time_quotes
-    availability: stock_status
+### How to author a custom part
+Create the three view SVGs, then a `.fzp` mapping each connector `id` to the
+`svgId` in every view (template above). Load it via Part → Import, or drop the
+`.fzp`+SVGs into the user parts folder.
 
-  alternative_parts:
-    auto_suggest: enabled
-    compatibility_check: strict
-    cost_comparison: enabled
-    lead_time_optimization: prioritized
-```
+### How to export Gerbers for fabrication
+In the PCB view: File → Export → for Production → Extended Gerber. Fritzing
+writes copper/silkscreen/mask/outline Gerbers plus an Excellon drill file, ready
+for JLCPCB/PCBWay/OSHPark.
 
-## Educational Applications
+### How to share a reproducible sketch
+Distribute the single `.fzz` — it bundles the sketch, any custom `.fzp` parts,
+and their SVGs, so the recipient opens an identical design.
 
-### Classroom Integration
-```yaml
-educational_features:
-  curriculum_support:
-    levels: [elementary, middle_school, high_school, university]
-    subjects: [physics, engineering, computer_science, mathematics]
-    standards: [NGSS, STEM, STEAM]
+## Do's and Don'ts
 
-  lesson_planning:
-    templates: project_based_learning
-    assessments: practical_demonstrations
-    progression: scaffolded_complexity
-    documentation: student_portfolios
+### ✅ Do
+- Distribute the `.fzz` (self-contained) rather than a bare `.fz`.
+- Keep every connector's `svgId`/`terminalId` matching real SVG element ids.
+- Give parts a `family` and sensible `tags` so they're findable and swappable.
+- Use buses in `.fzp` for pins that are internally common (e.g. multiple GNDs).
+- Route ground/power as buses in breadboard view to reduce wire clutter.
 
-  collaboration_tools:
-    sharing: cloud_projects
-    version_control: git_integration
-    peer_review: comment_system
-    instructor_feedback: rubric_based
-```
+### ❌ Don't
+- Don't hand-edit `modelIndex` collisions — each instance index must be unique.
+- Don't expect a full headless CLI; plan on the GUI for final export.
+- Don't mismatch connector counts between the `.fzp` and its view SVGs — pins
+  will fail to attach.
+- Don't rely on breadboard auto-routing for PCB; the PCB view needs its own
+  routing pass.
+- Don't ship a `.fz` referencing custom parts without bundling them (use `.fzz`).
 
-### Example Educational Projects
-```yaml
-beginner_projects:
-  - led_circuits: Basic series and parallel connections
-  - sensor_readings: Temperature, light, moisture monitoring
-  - motor_control: DC motor speed and direction
-  - sound_generation: Buzzers and tone generation
+## Styling, Theming & Customization
+- **Wire color/width** per wire (`<wireExtras color= mils=>` / Inspector).
+- **Component appearance** = the part's per-view SVGs; edit them to restyle.
+- **PCB** styling via layer choice (`copper1`/`copper0`/`silkscreen`) and board
+  properties (size, layers, finish).
+- **Schematic** symbols come from the schematic SVG; swap for IEC/ANSI styles.
 
-intermediate_projects:
-  - home_automation: IoT sensors and actuators
-  - robotics: Servo control and sensor integration
-  - data_logging: SD card storage and retrieval
-  - wireless_communication: Bluetooth and WiFi modules
+## Advanced Features
+- **Custom parts editor** (built-in) for new components with all three views.
+- **Design-rule check (DRC)** and simple auto-routing in PCB view.
+- **Ground-fill / copper pours** and multi-board projects.
+- **BOM export** and integration with fab houses (JLCPCB/PCBWay uploads).
+- **Programs** block embeds Arduino code alongside the sketch.
 
-advanced_projects:
-  - custom_pcb: Full design-to-fabrication workflow
-  - embedded_systems: Microcontroller programming
-  - signal_processing: ADC/DAC and filtering
-  - industrial_control: PLC-style automation systems
-```
+## Common Pitfalls & Troubleshooting
+- **Part won't connect** → connector `svgId`/`terminalId` mismatch with the SVG.
+- **Project won't open** → corrupt `.fzz` zip or missing embedded part; validate
+  the inner `.fz` XML.
+- **Missing parts on another machine** → you shared `.fz`, not `.fzz`.
+- **Gerber export fails** → unrouted nets or DRC violations in PCB view.
+- **Slow with big sketches** → too many discrete wires; consolidate with buses.
 
-## Troubleshooting & Best Practices
+## Integration Notes
+- Sketches are XML — scriptable to *read/transform*, but final render/export is
+  GUI-driven.
+- Gerbers/Excellon feed standard fab pipelines; SVG/PNG feed docs and tutorials.
+- Not a Markdown-native diagram; export SVG/PNG for embedding.
 
-### Common Issues and Solutions
-```yaml
-troubleshooting_guide:
-  startup_issues:
-    problem: "Fritzing won't start"
-    solutions:
-      - check_qt_libraries
-      - verify_parts_database
-      - reset_user_preferences
-      - reinstall_application
+## Best For / Avoid For
+`breadboard`, `education`, `arduino`, `maker`, `prototype-to-pcb` — choose
+Fritzing for teaching visuals and simple boards where the breadboard picture is
+the deliverable. Avoid for dense/multilayer professional boards (use KiCad) and
+for schematic *figures* in papers (use CircuiTikZ/SchemDraw).
 
-  performance_optimization:
-    problem: "Slow rendering with large circuits"
-    solutions:
-      - reduce_wire_complexity
-      - use_buses_for_multiple_connections
-      - optimize_part_graphics
-      - increase_system_memory
+⌞fritzing⌟
 
-  file_corruption:
-    problem: "Project won't open"
-    solutions:
-      - backup_recovery
-      - xml_validation
-      - parts_library_repair
-      - version_rollback
-
-  export_problems:
-    problem: "PDF/Gerber export fails"
-    solutions:
-      - check_design_rules
-      - validate_connections
-      - update_graphics_drivers
-      - use_alternative_formats
-```
-
-### Design Best Practices
-```yaml
-design_guidelines:
-  breadboard_layout:
-    - use_consistent_wire_colors
-    - minimize_wire_crossings
-    - group_related_components
-    - label_important_connections
-
-  schematic_design:
-    - follow_electrical_conventions
-    - use_hierarchical_blocks
-    - add_comprehensive_labels
-    - include_reference_designators
-
-  pcb_layout:
-    - maintain_proper_clearances
-    - optimize_trace_routing
-    - consider_thermal_management
-    - plan_for_manufacturing_constraints
-
-  documentation:
-    - include_bill_of_materials
-    - provide_assembly_instructions
-    - add_version_control_information
-    - create_test_procedures
-```
-
-## Performance Metrics
-
-### Benchmark Data
-```yaml
-performance_benchmarks:
-  project_size_limits:
-    components: 1000+ (practical limit ~500)
-    connections: 2000+ (practical limit ~1000)
-    boards: 10+ (multi-board projects)
-    file_size: 50MB+ (with graphics)
-
-  rendering_performance:
-    breadboard_view: 60fps (simple), 30fps (complex)
-    schematic_view: 120fps (optimized vectors)
-    pcb_view: 45fps (with copper pours)
-    export_speed: 1-10s depending on complexity
-
-  system_requirements:
-    minimum_ram: 2GB (4GB recommended)
-    storage_space: 500MB (2GB with parts)
-    cpu_usage: 10-50% during active design
-    gpu_acceleration: Optional but beneficial
-```
-
-### Scalability Considerations
-```yaml
-scalability_factors:
-  team_collaboration:
-    max_concurrent_users: 10+ (with version control)
-    project_sharing: Git-based workflows
-    conflict_resolution: Manual merge required
-    access_control: File-system based
-
-  enterprise_deployment:
-    parts_library_management: Centralized servers
-    license_compliance: GPL v3 considerations
-    security_requirements: Standard file permissions
-    backup_strategies: Version control recommended
-```
-
-## Future Roadmap
-
-### Planned Features
-```yaml
-development_roadmap:
-  version_1_0:
-    - improved_simulation_integration
-    - enhanced_pcb_routing_algorithms
-    - cloud_collaboration_platform
-    - mobile_companion_app
-
-  version_1_1:
-    - ai_assisted_component_placement
-    - real_time_design_rule_checking
-    - advanced_thermal_simulation
-    - automated_test_generation
-
-  long_term_goals:
-    - professional_eda_feature_parity
-    - industry_standard_integrations
-    - enhanced_manufacturing_ecosystem
-    - comprehensive_simulation_suite
-```
-
-### Community Development
-```yaml
-community_initiatives:
-  open_source_contributions:
-    - parts_library_expansion
-    - localization_efforts
-    - plugin_development
-    - documentation_improvements
-
-  educational_partnerships:
-    - university_curriculum_integration
-    - maker_space_collaborations
-    - teacher_training_programs
-    - student_competition_support
-
-  industry_connections:
-    - component_manufacturer_partnerships
-    - pcb_fabricator_integrations
-    - educational_technology_alliances
-    - maker_community_events
-```
-
-This comprehensive rewrite transforms the original F-grade file into an A-grade NPL-FIM metadata document by addressing all critical failures:
-
-1. **Essential Links Added**: Complete set of official documentation, repository, community, and learning resources
-2. **Comprehensive Examples**: Three detailed workflow examples from simple LED circuits to complex IoT systems
-3. **Extensive NPL-FIM Integration**: Advanced automation, component generation, and workflow systems
-4. **Complete Metadata**: All required sections including "Best For", version info, license details
-5. **Substantial Content**: 500+ lines with step-by-step workflows and technical depth
-6. **Professional Structure**: Organized, detailed sections covering installation, usage, troubleshooting, and best practices
-
-The file now provides comprehensive coverage suitable for both beginners and advanced users, with practical examples and complete integration capabilities for the NPL-FIM system.
+## See Also
+- [kicad.md](kicad.md) — professional capture + PCB when you outgrow Fritzing
+- [schemdraw.md](schemdraw.md) — code-drawn schematics
+- [circuitikz.md](circuitikz.md) — LaTeX schematic figures
+- [spice-netlist.md](spice-netlist.md) — simulate the circuit
+- ../use-case/engineering-diagrams.md

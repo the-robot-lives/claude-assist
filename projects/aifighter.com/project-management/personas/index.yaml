@@ -1,0 +1,56 @@
+personas:
+  - id: P-001
+    name: "The Tinkerer"
+    archetype: "Systems-thinking engineer"
+    segment: "primary"
+    file: P-001-the-tinkerer.md
+  - id: P-002
+    name: "The Curious Casual"
+    archetype: "Social mobile gamer"
+    segment: "primary"
+    file: P-002-the-curious-casual.md
+  - id: P-003
+    name: "The Creator-Spectator"
+    archetype: "Community theorycrafter"
+    segment: "secondary"
+    file: P-003-the-creator-spectator.md
+  - id: P-004
+    name: "The Educator"
+    archetype: "CS teacher / professor"
+    segment: "tertiary"
+    file: P-004-the-educator.md
+  - id: P-005
+    name: "The Competitive Grinder"
+    archetype: "Esports aspirant"
+    segment: "primary"
+    file: P-005-the-competitive-grinder.md
+  - id: P-006
+    name: "The AI Researcher"
+    archetype: "ML academic"
+    segment: "tertiary"
+    file: P-006-the-ai-researcher.md
+  - id: P-007
+    name: "The Dad Gamer"
+    archetype: "Time-constrained strategist"
+    segment: "edge-case"
+    file: P-007-the-dad-gamer.md
+  - id: P-008
+    name: "The Accessibility Advocate"
+    archetype: "Assistive tech power user"
+    segment: "edge-case"
+    file: P-008-the-accessibility-advocate.md
+  - id: P-009
+    name: "The Streamer"
+    archetype: "Content creator"
+    segment: "secondary"
+    file: P-009-the-streamer.md
+  - id: P-010
+    name: "The Data Artist"
+    archetype: "Visual/generative designer"
+    segment: "tertiary"
+    file: P-010-the-data-artist.md
+  - id: P-011
+    name: "The Moderator"
+    archetype: "Trust & Safety operator"
+    segment: "edge-case"
+    file: P-011-the-moderator.md

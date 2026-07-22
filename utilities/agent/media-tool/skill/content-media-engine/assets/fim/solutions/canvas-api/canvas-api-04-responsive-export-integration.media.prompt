@@ -1,0 +1,100 @@
+schema: '0.4'
+id: canvas-api-04-responsive-export-integration
+type: interactive
+quality: high
+solution: canvas-api
+category: 2d-canvas-svg-and-creative-coding
+variant: responsive-export-integration
+references:
+- references/fim/overview/canvas-svg-creative-animation/canvas-api.md
+- references/fim/solution/canvas-api.md
+prompt:
+  system: Generate production-quality FIM media assets for the named 2D canvas, SVG, or creative-coding solution. Output only
+    the requested source artifact with no markdown fences or explanatory prose.
+  text: "Create the edge integration responsive export case prompt for HTML5 Canvas 2D API.\n\nScenario:\nCreate an embeddable\
+    \ artwork widget for a CMS article. It must expose render, update, resize, export, and destroy hooks; support compact,\
+    \ wide, and print capture sizes; handle missing assets or empty input; and include an export panel for PNG plus SVG or\
+    \ source export when supported.\n\nImplementation requirements:\n- Category: 2d-canvas-svg-and-creative-coding.\n- Required\
+    \ solution: canvas-api (HTML5 Canvas 2D API).\n- Output: a complete self-contained HTML document with inline CSS and JavaScript.\n\
+    - Native API contract: Use only the native CanvasRenderingContext2D API: getContext(\"2d\"), Path2D, gradients, transforms,\
+    \ clipping, text metrics, requestAnimationFrame, devicePixelRatio scaling, and toBlob or toDataURL export.\n- Native technique\
+    \ focus: raw immediate-mode canvas draw calls with explicit state management, save/restore pairs, clear/redraw behavior,\
+    \ and optional pixel access only when justified.\n- Responsive contract: Resize the canvas buffer and CSS size together,\
+    \ scale by devicePixelRatio, redraw after resize, and keep text and controls legible from 360px to 1440px wide.\n- Export\
+    \ and integration contract: Expose exportPNG(), exportWebP(), resizeCanvas(), render(seed), and destroy() helpers; make\
+    \ export work without tainting the canvas.\n- Determinism contract: Use a small seeded PRNG for all random placements,\
+    \ colors, and motion offsets; display the seed in a diagnostics label.\n- Scenario-specific emphasis: Build an embeddable\
+    \ integration case that handles resize, export, lifecycle cleanup, empty data, fallback rendering, and deterministic regeneration.\n\
+    - Additional edge detail: Include clear error and fallback states that are still nonblank, and test the layout assumptions\
+    \ in code comments or visible diagnostics without printing secrets or external credentials.\n- Include realistic inline\
+    \ sample data, labels, dimensions, seed value, and source note where the scenario needs them.\n- Avoid placeholder lorem\
+    \ ipsum text, external credentials, paid private assets, and hidden dependencies.\n- Output only the final artifact, with\
+    \ no commentary outside the artifact."
+  requirements:
+  - Start from a visible nonblank render state; do not require user input before the first meaningful frame.
+  - Use explicit viewBox, canvas sizing, or equivalent figure bounds; handle device pixel ratio or vector scaling where relevant.
+  - Use deliberate layering order so background, main subject, annotations, and controls do not collide.
+  - Use accessible contrast for text, callouts, controls, and essential marks against their backgrounds.
+  - Include responsive behavior and at least one export path appropriate to the solution.
+  - Use deterministic randomness from a documented seed and make repeated reloads reproducible.
+  - Include a concise diagnostics or source note with renderer, seed, dimensions, and export status.
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.2
+output:
+  text_format: html
+  artifact_kind: canvas-api-html-source-responsive-export-integration
+  formats:
+  - format: html
+  - format: png
+  dimensions:
+    width: 1440
+    height: 900
+  render_expectation: A nonblank artifact suitable for browser or compiler rendering and capture after initial load or compile.
+evaluation:
+  checklist:
+  - YAML parses and required schema 0.4 fields are present.
+  - Generated artifact uses the requested solution and does not substitute a different renderer or library for the core drawing
+    work.
+  - Initial render is nonblank and shows the main subject within the first viewport or figure bounds.
+  - viewBox/canvas sizing or equivalent figure bounds are explicit, responsive, and not blurry at common DPR values.
+  - Layering order is intentional and keeps background, dense marks, labels, controls, and export UI readable.
+  - Contrast is sufficient for text, controls, callouts, and critical marks in both default and compact layouts.
+  - Responsive/export behavior works for compact, wide, and capture-oriented sizes without clipping key content.
+  - Deterministic randomness is seeded, documented, and reproducible across reloads for the same seed.
+  - 'Solution-specific API contract is satisfied for HTML5 Canvas 2D API: raw immediate-mode canvas draw calls with explicit
+    state management, save/restore pairs, clear/redraw behavior, and optional pixel access only when justified.'
+  - 'Export/integration hooks are present where applicable: Expose exportPNG(), exportWebP(), resizeCanvas(), render(seed),
+    and destroy() helpers; make export work without tainting the canvas..'
+  rubric:
+  - name: Format validity
+    weight: 30
+    criteria: YAML uses schema 0.4 with required fields, the generated artifact matches the requested text format, contains
+      no markdown fences, and uses the named solution syntax or API without parse/runtime errors.
+  - name: Semantic completeness
+    weight: 30
+    criteria: The artifact satisfies the scenario, includes solution-specific native capabilities, covers nonblank rendering,
+      sizing, layering, contrast, responsive/export behavior, and deterministic randomness.
+  - name: Visual quality
+    weight: 25
+    criteria: Composition, typography, spacing, color, density, hierarchy, motion, and labels are polished, coherent, legible,
+      and suited to the requested drawing, generative, brand, or integration use case.
+  - name: Robustness
+    weight: 15
+    criteria: The artifact handles resize, missing or empty input, fallback states, lifecycle cleanup, export edge cases,
+      performance limits, and deterministic regeneration without blank screens or broken output.
+  pass_conditions:
+  - Rubric weights sum to 100 with Format validity 30, Semantic completeness 30, Visual quality 25, and Robustness 15.
+  - Score is 80 or higher out of 100 and no rubric dimension scores zero.
+  - Generated result has a nonblank render, explicit viewBox/canvas sizing or equivalent bounds, readable layering, sufficient
+    contrast, responsive/export behavior, and deterministic randomness.
+  - Generated content is aligned with the referenced overview and solution documents for the named solution.
+tags:
+- fim
+- 2d-canvas-svg-and-creative-coding
+- canvas-api
+- responsive-export-integration
+- interactive
+- nonblank-render
+- viewbox-canvas-sizing
+- deterministic-randomness

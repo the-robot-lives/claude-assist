@@ -1,0 +1,118 @@
+actdiag {
+  orientation = landscape;
+
+  recruiter_post_job [label = "Post Job\nRequisition"];
+  recruiter_screen [label = "Screen\nApplications"];
+  recruiter_schedule [label = "Schedule\nInterviews"];
+  recruiter_extend_offer [label = "Extend\nOffer Letter"];
+  recruiter_collect_docs [label = "Collect Signed\nDocuments"];
+  recruiter_notify_it [label = "Notify IT &\nSecurity"];
+  recruiter_confirm_start [label = "Confirm\nStart Date"];
+
+  hm_define_role [label = "Define Role\n& Requirements"];
+  hm_conduct_interview [label = "Conduct\nInterviews"];
+  hm_approve_hire [label = "Approve\nHire Decision"];
+  hm_prepare_plan [label = "Prepare 30-Day\nOnboarding Plan"];
+  hm_day1_welcome [label = "Day 1\nWelcome Meeting"];
+  hm_week1_checkin [label = "Week 1\nCheck-In"];
+  hm_sign_off [label = "Sign Off:\nFirst Week Complete"];
+
+  it_receive_request [label = "Receive\nProvisioning Request"];
+  it_create_accounts [label = "Create User\nAccounts & Email"];
+  it_setup_equipment [label = "Set Up\nLaptop & Hardware"];
+  it_grant_access [label = "Grant System\nAccess"];
+  it_confirm_ready [label = "Confirm Setup\nComplete"];
+
+  sec_receive_request [label = "Receive\nSecurity Request"];
+  sec_background_check [label = "Run Background\nCheck"];
+  sec_issue_badge [label = "Issue Access\nBadge & Credentials"];
+  sec_security_brief [label = "Deliver Security\nOrientation"];
+  sec_confirm_cleared [label = "Confirm\nCleared to Start"];
+
+  nh_accept_offer [label = "Accept Offer\n& Sign Documents"];
+  nh_complete_prework [label = "Complete\nPre-Work Forms"];
+  nh_attend_orientation [label = "Attend Company\nOrientation"];
+  nh_meet_team [label = "Meet Team\n& Stakeholders"];
+  nh_complete_training [label = "Complete\nMandatory Training"];
+  nh_first_week_done [label = "First Week\nMilestone Achieved"];
+
+  lane Recruiter {
+    recruiter_post_job;
+    recruiter_screen;
+    recruiter_schedule;
+    recruiter_extend_offer;
+    recruiter_collect_docs;
+    recruiter_notify_it;
+    recruiter_confirm_start;
+  }
+
+  lane "Hiring Manager" {
+    hm_define_role;
+    hm_conduct_interview;
+    hm_approve_hire;
+    hm_prepare_plan;
+    hm_day1_welcome;
+    hm_week1_checkin;
+    hm_sign_off;
+  }
+
+  lane IT {
+    it_receive_request;
+    it_create_accounts;
+    it_setup_equipment;
+    it_grant_access;
+    it_confirm_ready;
+  }
+
+  lane Security {
+    sec_receive_request;
+    sec_background_check;
+    sec_issue_badge;
+    sec_security_brief;
+    sec_confirm_cleared;
+  }
+
+  lane "New Hire" {
+    nh_accept_offer;
+    nh_complete_prework;
+    nh_attend_orientation;
+    nh_meet_team;
+    nh_complete_training;
+    nh_first_week_done;
+  }
+
+  recruiter_post_job -> recruiter_screen;
+  hm_define_role -> recruiter_post_job;
+  recruiter_screen -> recruiter_schedule;
+  recruiter_schedule -> hm_conduct_interview;
+  hm_conduct_interview -> hm_approve_hire;
+  hm_approve_hire -> recruiter_extend_offer;
+  recruiter_extend_offer -> nh_accept_offer;
+  nh_accept_offer -> recruiter_collect_docs;
+  recruiter_collect_docs -> nh_complete_prework;
+  recruiter_collect_docs -> recruiter_notify_it;
+  recruiter_notify_it -> it_receive_request;
+  recruiter_notify_it -> sec_receive_request;
+  it_receive_request -> sec_background_check;
+  sec_receive_request -> sec_background_check;
+  sec_background_check -> sec_confirm_cleared;
+  sec_confirm_cleared -> it_create_accounts;
+  it_create_accounts -> it_setup_equipment;
+  it_setup_equipment -> it_grant_access;
+  it_grant_access -> it_confirm_ready;
+  it_confirm_ready -> recruiter_confirm_start;
+  sec_confirm_cleared -> sec_issue_badge;
+  sec_issue_badge -> recruiter_confirm_start;
+  recruiter_confirm_start -> hm_prepare_plan;
+  hm_prepare_plan -> hm_day1_welcome;
+  hm_day1_welcome -> nh_attend_orientation;
+  nh_complete_prework -> nh_attend_orientation;
+  sec_issue_badge -> sec_security_brief;
+  sec_security_brief -> nh_attend_orientation;
+  nh_attend_orientation -> nh_meet_team;
+  hm_day1_welcome -> hm_week1_checkin;
+  nh_meet_team -> nh_complete_training;
+  nh_complete_training -> hm_week1_checkin;
+  hm_week1_checkin -> hm_sign_off;
+  hm_sign_off -> nh_first_week_done;
+}

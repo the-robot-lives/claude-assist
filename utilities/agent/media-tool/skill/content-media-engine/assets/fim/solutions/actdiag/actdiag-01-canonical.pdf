@@ -1,0 +1,38 @@
+actdiag {
+  orientation = portrait;
+
+  Employee_Submit -> Manager_Review -> Manager_Decision;
+  Manager_Decision -> Finance_Verify [label = "Approved"];
+  Manager_Decision -> Employee_Revise [label = "Rejected"];
+  Employee_Revise -> Employee_Resubmit -> Manager_Review;
+  Finance_Verify -> Finance_Approve -> Accounting_Reimburse -> Accounting_Archive -> End;
+
+  lane Employee {
+    label = "Employee";
+    Employee_Start [label = "Start", shape = beginpoint];
+    Employee_Submit [label = "Submit Expense Report"];
+    Employee_Revise [label = "Revise Expense Report"];
+    Employee_Resubmit [label = "Resubmit Expense Report"];
+  }
+
+  lane Manager {
+    label = "Manager";
+    Manager_Review [label = "Review Expense Report"];
+    Manager_Decision [label = "Approve or Reject?", shape = diamond];
+  }
+
+  lane Finance {
+    label = "Finance";
+    Finance_Verify [label = "Verify Receipts and Policy Compliance"];
+    Finance_Approve [label = "Authorize Payment"];
+  }
+
+  lane Accounting {
+    label = "Accounting";
+    Accounting_Reimburse [label = "Process Reimbursement to Employee"];
+    Accounting_Archive [label = "Audit Archive and Record Keeping"];
+    End [label = "End", shape = endpoint];
+  }
+
+  Employee_Start -> Employee_Submit;
+}

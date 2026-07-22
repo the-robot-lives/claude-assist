@@ -3,13 +3,17 @@
 //! encrypt-plaintext-API-key-on-save.
 
 use std::fs;
+use std::io::Read;
 use std::path::PathBuf;
 
 use anyhow::{bail, Context, Result};
 
 use super::debug_log;
+use super::llm;
 use super::secret_store;
 use super::QueuePopulatorConfig;
+
+const MAX_CONFIG_BYTES: usize = 4 * 1024 * 1024;
 
 pub fn config_dir() -> PathBuf {
     dirs::home_dir()
@@ -31,7 +35,7 @@ pub fn load_config_from(path: &std::path::Path) -> QueuePopulatorConfig {
         debug_log::log("[LOAD] no config file, using defaults");
         return defaults();
     }
-    match fs::read(path) {
+    match read_config_bytes(path) {
         Ok(data) => match serde_json::from_slice::<QueuePopulatorConfig>(&data) {
             Ok(config) => {
                 debug_log::log(&format!(
@@ -57,6 +61,18 @@ pub fn load_config_from(path: &std::path::Path) -> QueuePopulatorConfig {
     }
 }
 
+fn read_config_bytes(path: &std::path::Path) -> Result<Vec<u8>> {
+    let file = fs::File::open(path).with_context(|| format!("cannot open {}", path.display()))?;
+    let mut data = Vec::with_capacity(16 * 1024);
+    file.take((MAX_CONFIG_BYTES as u64).saturating_add(1))
+        .read_to_end(&mut data)
+        .with_context(|| format!("cannot read {}", path.display()))?;
+    if data.len() > MAX_CONFIG_BYTES {
+        bail!("config exceeds {MAX_CONFIG_BYTES} bytes");
+    }
+    Ok(data)
+}
+
 fn defaults() -> QueuePopulatorConfig {
     QueuePopulatorConfig {
         queue_base_path: QueuePopulatorConfig::default_queue_base_path(),
@@ -77,8 +93,7 @@ pub fn save_config_to(config: &QueuePopulatorConfig, path: &std::path::Path) -> 
 
     // Encrypt a plaintext API key before it hits disk (mirrors ConfigStore.swift).
     if let Some(key) = to_save.llm.api_key.clone().filter(|k| !k.is_empty()) {
-        let is_env_ref = key.len() >= 4 && key[..4].eq_ignore_ascii_case("env:");
-        if !is_env_ref && !secret_store::is_encrypted(&key) {
+        if should_encrypt_api_key(&key) {
             let Some(encrypted) = secret_store::encrypt(&key) else {
                 bail!("failed to encrypt API key — is dc installed at ~/.local/bin/dc?");
             };
@@ -92,6 +107,9 @@ pub fn save_config_to(config: &QueuePopulatorConfig, path: &std::path::Path) -> 
     }
 
     let data = serde_json::to_string_pretty(&to_save).context("failed to encode config")?;
+    if data.len() > MAX_CONFIG_BYTES {
+        bail!("encoded config exceeds {MAX_CONFIG_BYTES} bytes");
+    }
 
     let tmp = path.with_extension("json.tmp");
     fs::write(&tmp, &data).with_context(|| format!("cannot write {}", tmp.display()))?;
@@ -105,6 +123,10 @@ pub fn save_config_to(config: &QueuePopulatorConfig, path: &std::path::Path) -> 
         Err(e) => debug_log::log(&format!("[SAVE] WARNING — written but re-read failed: {e}")),
     }
     Ok(())
+}
+
+fn should_encrypt_api_key(key: &str) -> bool {
+    llm::env_reference(key).is_none() && !secret_store::is_encrypted(key)
 }
 
 #[cfg(test)]
@@ -148,5 +170,25 @@ mod tests {
         save_config_to(&config, &path).unwrap();
         let loaded = load_config_from(&path);
         assert_eq!(loaded.llm.api_key.as_deref(), Some("env:MY_KEY"));
+    }
+
+    #[test]
+    fn unicode_keys_are_classified_without_utf8_slice_panics() {
+        assert!(should_encrypt_api_key("a🔒"));
+        assert!(should_encrypt_api_key("éaé"));
+        assert!(!should_encrypt_api_key("ENV:SOME_KEY"));
+        assert!(!should_encrypt_api_key("🔒:v1:ciphertext"));
+    }
+
+    #[test]
+    fn oversized_config_falls_back_without_unbounded_read() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("config.json");
+        std::fs::write(&path, vec![b' '; MAX_CONFIG_BYTES + 1]).unwrap();
+
+        let loaded = load_config_from(&path);
+
+        assert_eq!(loaded.phrases.wake, "hey robot");
+        assert!(read_config_bytes(&path).is_err());
     }
 }

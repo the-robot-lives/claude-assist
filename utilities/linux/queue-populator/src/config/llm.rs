@@ -98,19 +98,31 @@ pub fn needs_base_url(provider: &str) -> bool {
     matches!(provider, "ollama" | "litellm" | "custom")
 }
 
+/// Return the variable name from an ASCII `env:` reference without slicing at
+/// an arbitrary UTF-8 byte offset.
+pub(crate) fn env_reference(value: &str) -> Option<&str> {
+    let prefix = value.get(..4)?;
+    if prefix.eq_ignore_ascii_case("env:") {
+        value.get(4..).map(str::trim)
+    } else {
+        None
+    }
+}
+
 impl LlmConfig {
     pub fn effective_model(&self) -> String {
         self.model
-            .clone()
+            .as_deref()
+            .map(str::trim)
             .filter(|m| !m.is_empty())
+            .map(String::from)
             .or_else(|| default_model(&self.provider).map(String::from))
             .unwrap_or_else(|| "claude-sonnet-4-20250514".into())
     }
 
     pub fn effective_api_key(&self) -> Option<String> {
-        if let Some(key) = self.api_key.as_deref().filter(|k| !k.is_empty()) {
-            if key.len() >= 4 && key[..4].eq_ignore_ascii_case("env:") {
-                let var_name = key[4..].trim();
+        if let Some(key) = self.api_key.as_deref().map(str::trim).filter(|k| !k.is_empty()) {
+            if let Some(var_name) = env_reference(key) {
                 return env_resolver::resolve(var_name);
             }
             if secret_store::is_encrypted(key) {
@@ -133,7 +145,7 @@ impl LlmConfig {
     }
 
     pub fn effective_base_url(&self) -> Option<String> {
-        if let Some(url) = self.base_url.as_deref().filter(|u| !u.is_empty()) {
+        if let Some(url) = self.base_url.as_deref().map(str::trim).filter(|u| !u.is_empty()) {
             return Some(url.to_string());
         }
         default_base_url(&self.provider).map(String::from)
@@ -175,5 +187,32 @@ mod tests {
     fn plain_key_passthrough() {
         let c = LlmConfig { api_key: Some("sk-plain".into()), ..Default::default() };
         assert_eq!(c.effective_api_key().as_deref(), Some("sk-plain"));
+    }
+
+    #[test]
+    fn effective_values_ignore_surrounding_whitespace() {
+        let c = LlmConfig {
+            provider: "ollama".into(),
+            model: Some("   ".into()),
+            api_key: Some("  token  ".into()),
+            base_url: Some("  http://localhost:11434/  ".into()),
+            ..Default::default()
+        };
+        assert_eq!(c.effective_model(), "llama3");
+        assert_eq!(c.effective_api_key().as_deref(), Some("token"));
+        assert_eq!(c.effective_base_url().as_deref(), Some("http://localhost:11434/"));
+    }
+
+    #[test]
+    fn unicode_api_keys_never_panic_during_env_prefix_detection() {
+        for key in ["a🔒", "éaé", "密钥", "🔑token"] {
+            let c = LlmConfig {
+                api_key: Some(key.into()),
+                ..Default::default()
+            };
+            assert_eq!(c.effective_api_key().as_deref(), Some(key));
+            assert_eq!(env_reference(key), None);
+        }
+        assert_eq!(env_reference("EnV: TOKEN "), Some("TOKEN"));
     }
 }

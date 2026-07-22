@@ -157,6 +157,7 @@ eval:
 
 ```
 generate-media-prompt [flags] <file.prompt|directory> [...]
+generate-media-prompt -r <directory> [-j <panes>]
 ```
 
 ### Flags
@@ -164,6 +165,8 @@ generate-media-prompt [flags] <file.prompt|directory> [...]
 | Flag | Default | Description |
 |------|---------|-------------|
 | `-n <count>` | `1` | Number of variants to generate per prompt |
+| `-r`, `--recursive <dir>` | — | Recursively scan a directory and interactively toggle which prompt files to process |
+| `-j`, `--jobs <count>` | `1` | Split selected prompts across zellij batch panes in the active zellij session; dependencies stay in the same batch |
 | `--dry-run` | off | Show the generation plan without making API calls |
 | `--force` | off | Overwrite existing output files (default: skip existing) |
 | `--refine` | off | Interactive refinement loop — review, give feedback, regenerate |
@@ -181,6 +184,8 @@ generate-media-prompt [flags] <file.prompt|directory> [...]
 
 - **File**: any `*.media.prompt` or `*.{ext}.prompt` file
 - **Directory**: scans recursively for all `*.prompt` files, sorts alphabetically
+- **Selected directory**: `-r assets/` opens a toggle list for all nested `*.prompt` files, defaulting to selected
+- **Zellij batches**: `-j 4` opens up to four panes in the active zellij session and distributes selected prompt files between them
 
 ### Output Naming
 

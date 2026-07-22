@@ -1,0 +1,74 @@
+@startuml
+' ============================================================================
+' METADATA
+'   author:       TheRobotDrafts Examples
+'   description:  Insurance claim lifecycle — 13 business elements.
+'   usecase:      Teaching actors, roles, processes, events, objects, products.
+'   complexity:   complex
+'   domain:       enterprise-architecture / business
+' ============================================================================
+title Example ArchiMate Business - Complex Insurance Claim
+
+note "Business = yellow. Event=amber | Object=pale | Service=gold\nProduct=orange | Sub-process=darker yellow" as Legend
+
+' --- Actors ---
+rectangle "<<business actor>>\nPolicyholder" as A1 #FFF9C4
+rectangle "<<business actor>>\nAssessor" as A2 #FFF9C4
+rectangle "<<business actor>>\nRepair Shop" as A3 #FFF9C4
+
+' --- Roles ---
+rectangle "<<business role>>\nClaims\nHandler" as R1 #FFF9C4
+rectangle "<<business role>>\nFraud\nAnalyst" as R2 #FFF9C4
+
+' --- Processes ---
+rectangle "<<business process>>\nSubmit\nClaim" as P1 #FFF59D
+rectangle "<<business process>>\nIntake &\nLog" as P2 #FFF59D
+rectangle "<<business process>>\nAssess\nDamage" as P3 #FFF59D
+rectangle "<<business process>>\nFraud\nCheck" as P4 #FFF59D
+rectangle "<<business process>>\nAuthorize" as P5 #FFF59D
+rectangle "<<business process (sub)>>\nNegotiate\nSettlement" as P5b #FDD835
+
+' --- Events ---
+rectangle "<<business event>>\nIncident\nReported" as E1 #FFE082
+rectangle "<<business event>>\nClaim\nApproved" as E2 #FFE082
+rectangle "<<business event>>\nClaim\nRejected" as E3 #FFE082
+
+' --- Objects ---
+rectangle "<<business object>>\nClaim\nFile" as O1 #FFFDE7
+rectangle "<<business object>>\nPolicy" as O2 #FFFDE7
+rectangle "<<business object>>\nPolice\nReport" as O3 #FFFDE7
+
+' --- Services & product ---
+rectangle "<<business service>>\nClaims\nProcessing" as S1 #FFF176
+rectangle "<<business service>>\nCustomer\nPortal" as S2 #FFF176
+rectangle "<<product>>\nAuto\nInsurance" as PR #FFE0B2
+
+A1 -[#444]-> E1 : <<triggers>>
+E1 -[#444]-> P1 : <<triggering>>
+A1 -[#444]-> P1 : <<assignment>>
+P1 -[#444]-> P2 : <<triggering>>
+R1 -[#444]-> P2 : <<assignment>>
+P2 -[#444]-> P3 : <<triggering>>
+A2 -[#444]-> P3 : <<assignment>>
+P3 -[#444]-> P4 : <<triggering>>
+R2 -[#444]-> P4 : <<assignment>>
+P4 -[#444]-> P5 : <<triggering>>
+P5 -[#444]-> P5b : <<composition>>
+P5b -[#444]-> E2 : <<triggering>>
+P5 -[#444]-> E3 : <<triggering>>
+
+P2 -[#444]-> O1 : <<access (write)>>
+P3 -[#444]-> O1 : <<access (read)>>
+P3 -[#444]-> O3 : <<access>>
+P4 -[#444]-> O2 : <<access>>
+A3 -[#444]-> P3 : <<serving>>
+
+P5 -[#444]-> S1 : <<realization>>
+S2 -[#444]-> S1 : <<serving>>
+S1 -[#444]-> A1 : <<serving>>
+PR -[#444]-> S1 : <<aggregation>>
+
+E2 -[#444]-> A1 : <<flow>>
+E3 -[#444]-> A1 : <<flow>>
+
+@enduml

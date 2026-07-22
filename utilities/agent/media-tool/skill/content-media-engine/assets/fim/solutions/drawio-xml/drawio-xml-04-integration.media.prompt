@@ -1,0 +1,81 @@
+schema: "0.4"
+id: fim-diagrams-dsl-xml-drawio-xml-04-integration
+type: diagram
+quality: production
+solution: drawio-xml
+category: diagrams-dsl-xml
+variant: integration
+prompt:
+  system: You generate draw.io diagrams.net XML. Output only well-formed XML rooted at mxfile with diagram
+    pages containing mxGraphModel, root, mxCell, and mxGeometry elements. Do not use code fences or explanatory
+    prose.
+  text: Create draw.io XML for a hybrid network integration diagram connecting on-prem datacenter, AWS
+    VPC, GCP project, VPN tunnels, DNS, SIEM, and shared identity. Include edge labels for protocols,
+    dashed links for control-plane flows, and geometry that keeps clouds and zones separate.
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.2
+    top_p: 0.9
+output:
+  text_format: drawio-xml
+  artifact_kind: editable_diagram_xml
+  formats:
+  - format: drawio
+  - format: xml
+  - format: svg
+  - format: png
+  - format: pdf
+evaluation:
+  checklist:
+  - 'Output uses native drawio-xml syntax: mxfile root, diagram pages, mxGraphModel, root cells 0 and
+    1, vertex mxCell geometry, edge mxCell source/target ids, style strings, layers, and optional waypoints.'
+  - 'Output captures the requested semantics: editable technical diagrams with explicit shapes, connectors,
+    labels, layers, pages, and geometry.'
+  - 'Output has solution-appropriate structure: stable ids, non-overlapping coordinates, orthogonal connectors,
+    meaningful styles, and pages/layers for complex content.'
+  - 'Output is robust for the renderer/importer: all edge source and target ids exist, XML entities are
+    escaped, and geometry is present for every visible vertex and edge.'
+  - Models boundaries, external systems, failure paths, references, ids, or import/export assumptions
+    needed for integration work.
+  - Output contains only the requested artifact source, with no Markdown fences, no explanatory prose,
+    and no non-ASCII characters.
+  rubric:
+    Format validity:
+      weight: 30
+      criteria: 'Must parse as drawio-xml and follow drawio-xml-specific grammar: mxfile root, diagram
+        pages, mxGraphModel, root cells 0 and 1, vertex mxCell geometry, edge mxCell source/target ids,
+        style strings, layers, and optional waypoints. Deduct heavily for malformed roots, unmatched blocks/tags,
+        invalid ids, unresolved references, or mixing syntax from another diagram DSL.'
+    Semantic completeness:
+      weight: 30
+      criteria: Must satisfy the full scenario for edge/integration use and include the domain entities,
+        relationships, responsibilities, and edge/failure paths requested in the prompt. The diagram must
+        use drawio-xml for editable technical diagrams with explicit shapes, connectors, labels, layers,
+        pages, and geometry.
+    Visual/structural quality:
+      weight: 25
+      criteria: Must produce a readable rendered or importable artifact with stable ids, non-overlapping
+        coordinates, orthogonal connectors, meaningful styles, and pages/layers for complex content. Labels
+        should be concise, grouping should reduce clutter, and styling/layout choices must match the strengths
+        and limits of drawio-xml.
+    Robustness:
+      weight: 15
+      criteria: Must remain stable under normal rendering, import, export, or documentation use. Check
+        all edge source and target ids exist, XML entities are escaped, and geometry is present for every
+        visible vertex and edge, avoid placeholders that block execution, and keep output ASCII-only and
+        deterministic.
+  pass_conditions:
+  - Total rubric score is at least 85 out of 100.
+  - Format validity score is at least 24 out of 30.
+  - The generated artifact source has no code fences, no prose wrapper, and no non-ASCII characters.
+  - The generated source can be parsed or imported by the normal drawio-xml toolchain without unresolved
+    references or missing required root elements.
+tags:
+- fim
+- diagrams-dsl-xml
+- drawio-xml
+- integration
+- drawio
+- diagrams-net
+- xml
+

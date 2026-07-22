@@ -1,0 +1,75 @@
+---
+schema: "0.4"
+id: fim-math-and-scientific-rendering-katex-03-instructional-explanatory-figure
+type: document
+quality: high
+solution: katex
+category: math-and-scientific-rendering
+variant: instructional-explanatory-figure
+references:
+- references/fim/overview/geospatial-math-scientific/katex.md
+- references/fim/solution/katex.md
+prompt:
+  system: |-
+    You are a senior instructional math publishing engineer. Output only one complete ASCII HTML file using KaTeX. No Markdown fences or prose outside the source.
+  text: |-
+    Create an instructional KaTeX page explaining the chain rule from y=f(g(x)). Show a three-step derivation, a concrete example y=sin(x^2), a highlighted dependency diagram built with accessible HTML/CSS, and a short self-check table with derivative results rendered by KaTeX.
+
+    Requirements: use inline and display KaTeX, renderToString or render calls, htmlAndMathml output, semantic headings, labels for each dependency arrow, and non-color emphasis for the inner and outer functions. Include fallback text for each rendered equation.
+  provider_options:
+    temperature: 0.2
+    max_tokens: 8192
+output:
+  text_format: html
+  artifact_kind: katex-html-document
+  formats:
+  - format: html
+  - format: mathml
+  - format: png
+evaluation:
+  checklist:
+  - "YAML parses and required schema 0.4 fields are present."
+  - "HTML is complete, ASCII-only, and renders all math through KaTeX."
+  - "Math correctness covers chain rule notation, example derivative, and self-check answers."
+  - "Notation validity covers function composition, primes, differentials, and fallback equation text."
+  - "Renderability covers CSS, KaTeX calls, semantic headings, and nonblank accessible output."
+  - "Labels and units identify inner function, outer function, variable, derivative, and example rows."
+  - "Domain edge cases cover missing render targets, unsupported TeX, color-only emphasis, and long equations on small screens."
+  rubric:
+  - name: Format validity
+    weight: 30
+    criteria:
+    - "Output is one complete ASCII HTML file with no Markdown wrapper."
+    - "The file uses valid KaTeX API calls and safe options."
+    - "The document includes deterministic ids, fallback text, and dependency comments."
+  - name: Semantic completeness
+    weight: 30
+    criteria:
+    - "Derivation steps, concrete example, dependency diagram, self-check table, and fallback text are all present."
+    - "KaTeX is the primary notation renderer."
+    - "The chain rule explanation is correct and instructionally coherent."
+  - name: Visual/structural quality
+    weight: 25
+    criteria:
+    - "The page hierarchy supports learning without overcrowding."
+    - "Equations and diagram labels remain readable on mobile and desktop."
+    - "Non-color encodings clarify inner versus outer function."
+  - name: Robustness
+    weight: 15
+    criteria:
+    - "Handles render errors and missing nodes without a blank page."
+    - "Uses safe KaTeX settings and fallback text."
+    - "Documents supported notation and small-screen behavior."
+  pass_conditions:
+  - "Rubric weights are exactly Format validity 30, Semantic completeness 30, Visual/structural quality 25, Robustness 15."
+  - "Score is 80 or higher out of 100 with no critical failure in math correctness, notation validity, renderability, or accessibility."
+  - "The artifact teaches the chain rule with valid KaTeX, labels, and accessible structure."
+  - "Domain edge cases and fallback output are explicit."
+tags:
+- fim
+- math-and-scientific-rendering
+- katex
+- instructional-explanatory-figure
+- chain-rule
+- accessibility
+

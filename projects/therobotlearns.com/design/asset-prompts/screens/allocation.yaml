@@ -1,0 +1,93 @@
+# Stage B screen allocation for therobotlearns.com -> Stage C render targets.
+#
+# TERMINAL-FIRST product: 19 of 20 screens are terminal/TUI surfaces (slash-command
+# output, pagers, wizards, dashboards rendered IN a terminal); only 07-quiz-spa is a
+# real browser page. Stage C should mock a terminal window for the 19, a web page for
+# quiz-spa. See design/theme/THEMES.md for the full framing.
+#
+# Roster: 9 themes have treatises; this allocation renders the 6 most terminal-natural
+# directions (phosphor, cockpit, deep-focus, scholar, chalkboard, workbench). The 3
+# web-leaning directions (atlas, comic, spark) are treatise-only this pass and seeded
+# status: deferred in stage_c.themes.
+#
+# Arithmetic (inventory=20 < 30 => unique holds the WHOLE inventory; overlap capped 5):
+#   N (rendered themes) = 6 ; U = unique = 20 ; O = overlap = 5
+#   S = U + 2*O = 20 + 10 = 30 = 5 * 6  => every rendered theme lands at EXACTLY 5.
+# Because U must equal the full inventory (verify.md §B: u==inv), the 5 overlap screens
+# ALSO appear in unique. Each overlap screen's unique-theme is kept DISJOINT from its
+# overlap pair, so no theme counts a screen twice (Stage C prompt-count stays exact).
+# Consequence of inv=20 at N=6: those 5 screens are rendered by 3 themes each (their
+# unique theme + the 2 comparison themes). Flagged to main as a small-inventory quirk.
+version: 1
+inventory_total: 20
+
+unique:
+  # phosphor — raw amber-CRT terminal: logs, system alerts, low-level ops
+  - screen: "04-session-log-viewer"
+    theme: "phosphor"
+  - screen: "15-backup-and-restore"
+    theme: "phosphor"
+  - screen: "19-error-and-recovery-notices"
+    theme: "phosphor"
+
+  # cockpit — dense TUI mission-control: search panes, status meters, dashboards
+  - screen: "03-kb-browse-and-search"
+    theme: "cockpit"
+  - screen: "17-cloud-sync-and-account"
+    theme: "cockpit"
+  - screen: "18-team-lead-dashboard"
+    theme: "cockpit"
+
+  # deep-focus — calm nocturne: long-form reading, immersive study, quiet overview
+  - screen: "02-knowledge-article-viewer"
+    theme: "deep-focus"
+  - screen: "05-flashcard-decks-and-review"
+    theme: "deep-focus"
+  - screen: "08-simulation-room"
+    theme: "deep-focus"
+  - screen: "10-learning-plan-dashboard"
+    theme: "deep-focus"
+
+  # scholar — minimal tech: quizzes, grading clarity, the one browser page
+  - screen: "06-quiz-generator-and-runner"
+    theme: "scholar"
+  - screen: "07-quiz-spa"
+    theme: "scholar"
+  - screen: "09-graded-projects"
+    theme: "scholar"
+
+  # chalkboard — classroom board: the tutor dialog, teaching walkthroughs
+  - screen: "01-query-and-answer"
+    theme: "chalkboard"
+  - screen: "11-setup-wizard"
+    theme: "chalkboard"
+  - screen: "12-profile-manager"
+    theme: "chalkboard"
+
+  # workbench — maker bench: hands-on config, maintenance, transfer & wiring
+  - screen: "13-settings-and-preferences"
+    theme: "workbench"
+  - screen: "14-kb-maintenance-console"
+    theme: "workbench"
+  - screen: "16-import-export-and-sharing"
+    theme: "workbench"
+  - screen: "20-integrations"
+    theme: "workbench"
+
+overlap:
+  # Identity-defining screens, each rendered by TWO contrasting themes for a side-by-side.
+  # Flagship Q&A: retro amber terminal vs calm teal nocturne — a dark-vs-dark study.
+  - screen: "01-query-and-answer"
+    themes: ["phosphor", "deep-focus"]
+  # Maintenance console: modern dense TUI vs raw retro terminal.
+  - screen: "14-kb-maintenance-console"
+    themes: ["cockpit", "phosphor"]
+  # Learning-plan dashboard: instrument-dense TUI vs clean minimal study.
+  - screen: "10-learning-plan-dashboard"
+    themes: ["cockpit", "scholar"]
+  # Flashcard review: hand-drawn teaching board vs precise minimal.
+  - screen: "05-flashcard-decks-and-review"
+    themes: ["chalkboard", "scholar"]
+  # Graded projects: paper maker-bench vs teaching board.
+  - screen: "09-graded-projects"
+    themes: ["workbench", "chalkboard"]

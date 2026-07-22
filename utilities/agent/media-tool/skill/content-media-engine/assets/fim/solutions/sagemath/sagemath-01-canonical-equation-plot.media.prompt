@@ -1,0 +1,75 @@
+---
+schema: "0.4"
+id: fim-math-and-scientific-rendering-sagemath-01-canonical-equation-plot
+type: visualization
+quality: high
+solution: sagemath
+category: math-and-scientific-rendering
+variant: canonical-equation-plot
+references:
+- references/fim/overview/geospatial-math-scientific/sagemath.md
+- references/fim/solution/sagemath.md
+prompt:
+  system: |-
+    You are a senior SageMath scientific computing engineer. Output only one complete ASCII .sage source file. No Markdown fences or prose outside the source.
+  text: |-
+    Create a canonical SageMath script that solves x^2-5*x+6=0 exactly, verifies the roots by substitution, plots the polynomial with root markers, and saves SVG and PNG outputs. Use var, solve, exact rational or integer values, plot, point, text, axes_labels, and save.
+
+    Requirements: include run comments for sage script.sage, deterministic output filenames, a printed LaTeX form of the equation and roots, axis labels with units, and a warning comment explaining Sage preparser behavior for ^ and exact rationals.
+  provider_options:
+    temperature: 0.2
+    max_tokens: 8192
+output:
+  text_format: sage
+  artifact_kind: sagemath-script
+  formats:
+  - format: sage
+  - format: svg
+  - format: png
+evaluation:
+  checklist:
+  - "YAML parses and required schema 0.4 fields are present."
+  - "Sage source is complete, ASCII-only, and uses SageMath APIs rather than plain NumPy plotting."
+  - "Math correctness covers exact solve, substitution verification, plotted polynomial, and root markers."
+  - "Notation validity covers Sage syntax, LaTeX output, labels, units, and preparser notes."
+  - "Renderability covers sage script execution, save calls, and nonblank SVG/PNG outputs."
+  - "Labels and units identify x, y, roots, equation, exact values, and verification status."
+  - "Domain edge cases cover repeated roots, no real roots, ^ versus ** semantics, and headless save behavior."
+  rubric:
+  - name: Format validity
+    weight: 30
+    criteria:
+    - "Output is one complete ASCII .sage file with no Markdown wrapper."
+    - "The script runs with sage script.sage and declares stable output filenames."
+    - "Syntax follows Sage preparser expectations and valid plotting APIs."
+  - name: Semantic completeness
+    weight: 30
+    criteria:
+    - "Exact solve, verification, plot, markers, LaTeX text, labels, and exports are all present."
+    - "SageMath is the primary symbolic and plotting environment."
+    - "The computed roots and plotted figure agree."
+  - name: Visual/structural quality
+    weight: 25
+    criteria:
+    - "The plot is readable with labeled axes, root markers, legend or annotations, and clear bounds."
+    - "Vector and raster outputs preserve labels."
+    - "Code organization is easy to audit."
+  - name: Robustness
+    weight: 15
+    criteria:
+    - "Handles common quadratic edge cases in comments or helper logic."
+    - "Uses exact arithmetic before numeric plotting."
+    - "Documents Sage runtime and headless export constraints."
+  pass_conditions:
+  - "Rubric weights are exactly Format validity 30, Semantic completeness 30, Visual/structural quality 25, Robustness 15."
+  - "Score is 80 or higher out of 100 with no critical failure in math correctness, notation validity, or renderability."
+  - "The artifact runs in SageMath and writes labeled plot outputs."
+  - "Domain edge cases and Sage integration constraints are represented."
+tags:
+- fim
+- math-and-scientific-rendering
+- sagemath
+- canonical-equation-plot
+- exact-math
+- plotting
+

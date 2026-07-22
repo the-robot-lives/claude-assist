@@ -1,0 +1,68 @@
+schema: "0.4"
+id: fim-notebook-livebook-and-widgets-kino-ets-01-canonical-widget
+type: data
+quality: high
+solution: kino-ets
+category: notebook-livebook-and-widgets
+variant: canonical-widget
+prompt:
+  system: |-
+    You are a senior Elixir Livebook engineer. Output only one complete ASCII Elixir Livebook code cell for Kino.ETS. No Markdown fences, no prose outside code. Use deterministic local ETS data and safe inspection patterns.
+  text: |-
+    Create a canonical Kino.ETS Livebook cell. Install core Kino, create a small public named ETS table with deterministic rows, insert tuple records for metrics or cache entries, render Kino.ETS.new/1, and show a compact :ets.info/1 summary beside or before the widget. Include comments explaining the key position, tuple columns, manual Refresh behavior, and when to use a named table atom versus a table reference.
+
+    Requirements: document Livebook/Kino compatibility and that this is not a Jupyter widget; describe the table type, access mode, and tuple data shape; include accessibility-minded names and readable labels; include fallback creation when the table is missing; and include safe execution checks that avoid private table inspection, production hot-table polling, eval, shell calls, credentials, and remote data.
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.2
+    top_p: 0.9
+output:
+  text_format: elixir
+  artifact_kind: livebook-kino-ets-cell
+  formats:
+  - format: exs
+evaluation:
+  checklist:
+  - "Import check: generated code installs kino, creates an ETS table, inserts rows, and renders Kino.ETS.new/1."
+  - "Notebook compatibility: comments identify Livebook/Kino runtime and distinguish it from Jupyter ipywidgets."
+  - "Reactive state: the prompt describes manual Refresh, rerun behavior, and safe explicit state updates to the ETS table."
+  - "Data shape: table type, access mode, key position, tuple columns, and fallback table creation are documented."
+  - "Accessibility and fallback: table names, info labels, and row values are readable and deterministic."
+  - "Safe execution: no private table access assumptions, production polling, remote data, credentials, eval, or shell commands."
+  rubric:
+  - name: Format validity
+    weight: 30
+    criteria:
+    - "Output is one complete ASCII Elixir Livebook code cell with no Markdown fences or explanatory wrapper."
+    - "The code is valid Elixir and uses Kino.ETS.new/1 with a table id or named table atom."
+    - "The cell includes deterministic local setup and concise compatibility comments."
+  - name: Semantic completeness
+    weight: 30
+    criteria:
+    - "Implements the canonical ETS viewer with table creation, insertion, metadata, and widget rendering."
+    - "Uses current Kino.ETS behavior and avoids non-existent refresh options."
+    - "Includes notebook/livebook compatibility, reactive state, data shape, accessibility, fallback, and safe execution checks."
+  - name: UX/structural quality
+    weight: 25
+    criteria:
+    - "The table purpose, key column, and metadata are easy to inspect in Livebook."
+    - "Rows use readable values and stable labels despite the positional ETS view."
+    - "Fallback status and refresh expectations are clear without relying on color."
+  - name: Robustness
+    weight: 15
+    criteria:
+    - "Handles missing or stale named tables by creating deterministic fallback data."
+    - "Avoids inaccessible private tables and warns about hot production table inspection."
+    - "Keeps row counts bounded and documents when to sample or project into Kino.DataTable."
+  pass_conditions:
+  - "All required YAML fields are present and the generated artifact is one valid ASCII Elixir Livebook cell."
+  - "Rubric weights are exactly Format validity 30, Semantic completeness 30, UX/structural quality 25, Robustness 15."
+  - "The prompt requires notebook/livebook compatibility, reactive state, data shape, accessibility, fallback, and safe execution checks."
+  - "The solution remains Kino.ETS-centered and does not replace raw ETS inspection with a generic table only."
+tags:
+- fim
+- notebook-livebook-and-widgets
+- livebook
+- kino-ets
+- canonical-widget
+

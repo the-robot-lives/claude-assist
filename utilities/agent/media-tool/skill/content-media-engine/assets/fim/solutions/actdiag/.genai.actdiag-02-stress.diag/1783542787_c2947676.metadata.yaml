@@ -1,0 +1,9 @@
+service: anthropic
+model: claude-sonnet-4-6
+timestamp: 1783542805
+provider_options:
+  max_tokens: Number(8192)
+  top_p: Number(0.9)
+  temperature: Number(0.2)
+prompt: |
+  Create an actdiag source diagram for a production incident response workflow with at least six lanes: Monitoring, On Call Engineer, Incident Commander, Service Team, Communications, and Executive Review. Include parallel escalation paths, a severity decision, rollback versus hotfix branches, customer notification, postmortem, and multiple rejoin points.

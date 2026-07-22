@@ -1,0 +1,10 @@
+# .trd-yaml — TheRobotDrafts native model (IxModel serialization)
+name: Example Component Diagram - Provided vs Required Interfaces
+elements:
+  - { id: a, type: Component, name: Component A (Provider) }
+  - { id: b, type: Component, name: Component B (Consumer) }
+  - { id: ~note1, type: Note, name: '**(1) Provided** iProvided   — ball on A; offere…', documentation: '**(1) Provided** iProvided   — ball on A; offered, not yet consumed.\n**(2) Required** iRequired   — cup on B; needed, not yet satisfied.\n**(3) Assembly** iAssembly   — A''s ball plugs into B''s cup = a live link.\n----\nRule: an assembly connector is just a provided and a required interface\nthat reference the SAME contract, drawn so the shapes mate.' }
+edges:
+  - { id: e1, type: NoteLink, from: ~note1, to: b }
+diagrams:
+  - { id: d1, name: Example Component Diagram - Provided vs Required Interfaces, kind: component, layoutProvenance: Synthesized }

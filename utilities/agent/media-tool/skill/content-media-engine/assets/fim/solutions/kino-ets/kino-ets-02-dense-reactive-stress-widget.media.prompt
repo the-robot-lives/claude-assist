@@ -1,0 +1,68 @@
+schema: "0.4"
+id: fim-notebook-livebook-and-widgets-kino-ets-02-dense-reactive-stress-widget
+type: data
+quality: high
+solution: kino-ets
+category: notebook-livebook-and-widgets
+variant: dense-reactive-stress-widget
+prompt:
+  system: |-
+    You are a senior Elixir Livebook runtime engineer. Output only one complete ASCII Elixir Livebook code cell for Kino.ETS. No Markdown fences, no prose outside code. Prioritize bounded stress data and safe refresh behavior.
+  text: |-
+    Create a dense reactive Kino.ETS stress cell. Build a public named ETS table with thousands of deterministic entries, include at least two tuple shapes or a bag-style duplicate-key example where appropriate, and render Kino.ETS.new/1. Add a separate small Kino.DataTable summary from :ets.info/1 and a sampled :ets.tab2list/1 projection, but do not tab2list the full table when it is too large. Demonstrate periodic refresh with Kino.animate/3 at a modest interval as an optional cell-local monitor.
+
+    Requirements: explicitly state that Kino.ETS.new/1 has no refresh: option; document table type, access, row count, and tuple shape; include Livebook compatibility, fallback table creation, readable status labels, and safe execution checks for hot production tables, refresh intervals, memory, eval, shell calls, and credentials.
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.2
+    top_p: 0.9
+output:
+  text_format: elixir
+  artifact_kind: livebook-kino-ets-stress-cell
+  formats:
+  - format: exs
+evaluation:
+  checklist:
+  - "Import check: generated code installs kino, creates a bounded ETS table, renders Kino.ETS.new/1, and optionally uses Kino.DataTable for summaries."
+  - "Notebook compatibility: comments identify Livebook/Kino and explain optional Kino.animate refresh behavior."
+  - "Reactive state: updates happen through explicit ETS writes, manual Refresh, rerun, or Kino.animate, not a refresh option."
+  - "Data shape: table type, access mode, tuple shapes, duplicate-key behavior, row count, and sampling strategy are documented."
+  - "Accessibility and fallback: summaries and labels are readable, deterministic, and clear for large-table inspection."
+  - "Safe execution: no aggressive production polling, unbounded tab2list, credentials, remote data, eval, or shell commands."
+  rubric:
+  - name: Format validity
+    weight: 30
+    criteria:
+    - "Output is one complete ASCII Elixir Livebook code cell with no Markdown fences or explanatory wrapper."
+    - "The code is syntactically valid and uses supported Kino.ETS and Kino.animate patterns."
+    - "The stress data is bounded and generated locally."
+  - name: Semantic completeness
+    weight: 30
+    criteria:
+    - "Implements dense ETS inspection with large bounded rows, summaries, sampling, and optional refresh."
+    - "Correctly states that refresh: is not a Kino.ETS option."
+    - "Includes notebook/livebook compatibility, reactive state, data shape, accessibility, fallback, and safe execution checks."
+  - name: UX/structural quality
+    weight: 25
+    criteria:
+    - "Large-table context, metadata, and sampled rows are presented clearly."
+    - "The refresh workflow is understandable and does not overload the notebook."
+    - "Readable labels compensate for ETS positional column names."
+  - name: Robustness
+    weight: 15
+    criteria:
+    - "Handles stale tables, empty tables, duplicate keys, mixed tuple sizes, and large row counts."
+    - "Uses bounded sampling and modest refresh intervals."
+    - "Documents performance and access limitations for hot or private tables."
+  pass_conditions:
+  - "All required YAML fields are present and the generated artifact is one valid ASCII Elixir Livebook cell."
+  - "Rubric weights are exactly Format validity 30, Semantic completeness 30, UX/structural quality 25, Robustness 15."
+  - "The prompt requires notebook/livebook compatibility, reactive state, data shape, accessibility, fallback, and safe execution checks."
+  - "The solution remains Kino.ETS-centered and handles stress data without unsafe full-table materialization."
+tags:
+- fim
+- notebook-livebook-and-widgets
+- livebook
+- kino-ets
+- dense-reactive-stress-widget
+

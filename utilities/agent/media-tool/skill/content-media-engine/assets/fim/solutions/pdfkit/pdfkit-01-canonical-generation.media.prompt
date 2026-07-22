@@ -1,0 +1,71 @@
+schema: "0.4"
+id: pdfkit-01-canonical-generation
+type: document/data
+quality: high
+solution: pdfkit
+category: document-data-file-processing
+variant: canonical-generation
+references:
+  - "references/fim/overview/electronics-media-docfile/pdfkit.md"
+  - "references/fim/solution/pdfkit.md"
+prompt:
+  system: |-
+    You generate PDFKit programmatic PDF artifacts. Output only one complete ASCII JavaScript file for Node.js. Do not use Markdown fences or explanatory prose.
+  text: |-
+    Create a canonical PDFKit Node.js generator for a structured service receipt.
+
+    Requirements:
+    - Use `pdfkit` and `fs`, pipe the document to a write stream, and call `doc.end()`.
+    - Create a deterministic receipt PDF with company block, customer block, receipt metadata, line items, subtotal, tax, total, payment status, and notes.
+    - Use PDFKit text, line, rect, fillColor, strokeColor, fontSize, and page APIs directly.
+    - Use `heightOfString` or `widthOfString` to prevent overlap in variable-length fields.
+    - Set PDF info metadata including title, author, subject, keywords, creator, and deterministic timestamp text in the document body.
+    - Include a completion callback or stream finish handler that verifies the output file exists and has nonzero size.
+    - Include parseability, pagination, fonts, accessibility, formulas/data types, metadata, and deterministic output safeguards in comments and validation checks.
+    - Output only the final JavaScript artifact.
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.2
+output:
+  text_format: javascript
+  artifact_kind: pdfkit-node-pdf-generator
+  formats:
+    - format: js
+    - format: pdf
+evaluation:
+  checklist:
+    - "Format validity: YAML parses as schema 0.4, generated output is one JavaScript file, and PDFKit APIs are used."
+    - "Parseability: JavaScript is syntactically valid, imports pdfkit/fs, pipes to a stream, and calls doc.end()."
+    - "Semantic completeness: receipt parties, line items, totals, status, notes, and file verification are present."
+    - "Pagination: content uses margins, measured text, and page-add guards where variable content could overflow."
+    - "Fonts: standard PDFKit fonts are selected intentionally and custom font extension points are noted."
+    - "Accessibility: selectable text, high contrast, clear headings, non-color payment status, and descriptive labels are used."
+    - "Formulas/data types: typed numeric, date, boolean, and currency fields drive subtotal, tax, and total calculations."
+    - "Metadata: PDF info, receipt id, source system, output filename, and deterministic timestamp are included."
+    - "Deterministic output: sample data, sorting, calculations, timestamp, and filename are stable."
+  rubric:
+    - name: "Format validity"
+      weight: 30
+      criteria: "The prompt YAML and generated JavaScript are parseable, ASCII-only, and generate a PDF through PDFKit."
+    - name: "Semantic completeness"
+      weight: 30
+      criteria: "The receipt generator includes all requested data, calculations, PDF metadata, and stream verification behavior."
+    - name: "Layout/data quality"
+      weight: 25
+      criteria: "The PDF layout is clean, text does not overlap, totals are accurate, and typography supports document scanning."
+    - name: "Robustness"
+      weight: 15
+      criteria: "The artifact handles long fields, optional notes, output stream errors, metadata, and deterministic reruns."
+  pass_conditions:
+    - "YAML parses successfully and all file text is ASCII-only."
+    - "Rubric weights are exactly 30, 30, 25, and 15."
+    - "Generated JavaScript can run with `node receipt.js` after installing pdfkit and creates a nonempty PDF."
+    - "All checklist items for parseability, pagination, fonts, accessibility, formulas/data types, metadata, and deterministic output are represented."
+tags:
+  - fim
+  - document-data-file-processing
+  - pdfkit
+  - pdf-generation
+  - canonical-generation
+  - node
+

@@ -1,0 +1,73 @@
+schema: "0.4"
+id: velocity_js-03-product-brand-communication-motion
+type: interactive
+quality: high
+solution: velocity_js
+category: animation-and-motion
+variant: product-brand-communication-motion
+references:
+  - "references/fim/overview/canvas-svg-creative-animation/velocity_js.md"
+  - "references/fim/solution/velocity_js.md"
+prompt:
+  system: |-
+    Generate production-quality Velocity.js product communication motion assets for FIM evaluation. Output only a complete self-contained HTML document with inline CSS and JavaScript.
+  text: |-
+    Create a polished product and brand communication sequence using Velocity.js UI transitions.
+
+    Scenario:
+    Build a product onboarding panel with a wordmark, SVG underline, three benefit rows, a proof badge, and a CTA. Use Velocity to reveal content, draw the SVG underline, color-shift the badge, scroll to the CTA inside a contained panel, and play a subtle looped attention cue that can be paused.
+
+    Implementation requirements:
+    - Use velocity-animate 2.0.6 from a CDN or equivalent import and standalone Velocity() calls; include velocity.ui only if using named transition effects.
+    - Validate wordmark, underline path, rows, proof badge, CTA, and scroll container targets before running animations.
+    - Specify durations in milliseconds, easing names or bezier arrays, stagger, delay, loop or repeat bounds, queue behavior, and callbacks.
+    - Use transform, opacity, color, and SVG strokeDashoffset; avoid layout properties and CSS transitions on properties Velocity controls.
+    - Include controls for replay, pause, resume, stop, finish, reduced motion, and scroll-to CTA.
+    - Keep wordmark, copy, rows, badge, CTA, controls, and diagnostics non-overlapping across desktop and mobile layouts.
+    - Honor prefers-reduced-motion by showing the final brand message and disabling scroll animation and attention loops.
+    - Output only the final artifact, with no markdown fences or explanatory prose outside the artifact.
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.24
+output:
+  text_format: html
+  artifact_kind: velocityjs-html-product-brand-motion
+  formats:
+    - format: html
+  dimensions:
+    width: 1440
+    height: 900
+  render_expectation: "Interactive Velocity.js brand motion asset suitable for product communication review."
+evaluation:
+  checklist:
+    - "Format validity: YAML parses under schema 0.4 and generated output is exactly one HTML artifact with no markdown fences."
+    - "Velocity.js API: Uses standalone Velocity() calls, optional UI Pack correctly, SVG stroke animation, scroll command, and valid targets."
+    - "Motion timing: Defines millisecond durations, easing, stagger, delay, loop or repeat bounds, queue behavior, and callbacks."
+    - "Visual quality: Brand hierarchy is clear and wordmark, rows, badge, CTA, controls, and diagnostics do not overlap."
+    - "Reduced motion: Preserves final brand message while disabling scroll animation and attention loops."
+    - "Performance: Uses transform, opacity, color, and SVG properties without CSS transition conflicts or layout thrash."
+  rubric:
+    - name: "Format validity"
+      weight: 30
+      criteria: "YAML and generated HTML are syntactically valid, required fields are present, id and file name match, and the artifact uses Velocity.js rather than a substitute animation library."
+    - name: "Semantic completeness"
+      weight: 30
+      criteria: "The artifact delivers product communication motion with UI transitions, SVG underline drawing, CTA scroll, badge animation, controls, target validation, and reduced motion."
+    - name: "Motion/visual quality"
+      weight: 25
+      criteria: "Motion supports brand hierarchy, uses appropriate easing and rhythm, and keeps product text and controls readable without overlap."
+    - name: "Robustness"
+      weight: 15
+      criteria: "Handles missing targets, responsive layout, reduced motion, loop control, scroll container behavior, and performance constraints without runtime errors."
+  pass_conditions:
+    - "Rubric weights are exactly 30, 30, 25, and 15 for a total of 100."
+    - "YAML parses successfully and all prompt text is ASCII-only."
+    - "Generated artifact runs with no console errors when Velocity.js is available."
+    - "Score is at least 80 out of 100 with no zero score in any rubric dimension."
+tags:
+  - "fim"
+  - "animation-and-motion"
+  - "velocity_js"
+  - "product-brand-communication-motion"
+  - "brand-motion"
+  - "ui-transition"

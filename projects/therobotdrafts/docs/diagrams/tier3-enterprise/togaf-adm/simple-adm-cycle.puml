@@ -1,0 +1,48 @@
+' ============================================================================
+' METADATA
+'   author:       TheRobotDrafts Examples
+'   description:  The TOGAF ADM wheel - phases A-H around a central Requirements mgmt hub.
+'   usecase:      Teach the cyclic phase model and the central Requirements node.
+'   complexity:   simple
+'   domain:       enterprise / architecture-method
+' ============================================================================
+title Example TOGAF ADM - Simple ADM Cycle
+
+' The ADM (Architecture Development Method) is a CYCLE, not a line.
+' Phases A..H repeat each iteration. Requirements Mgmt sits at the CENTER
+' and touches every phase.
+
+note "Requirements Mgmt is central and continuous" as N1
+
+' Central hub
+usecase "Requirements\nManagement" as RM
+
+' Phase nodes around the wheel
+usecase "A: Architecture Vision" as A
+usecase "B: Business Architecture" as B
+usecase "C: Information Systems\nArchitectures" as C
+usecase "D: Technology Architecture" as D
+usecase "E: Opportunities & Solutions" as E
+usecase "F: Migration Planning" as F
+usecase "G: Implementation Governance" as G
+usecase "H: Architecture Change\nManagement" as H
+
+' Cyclic flow around the wheel
+A --> B
+B --> C
+C --> D
+D --> E
+E --> F
+F --> G
+G --> H
+H --> A : next iteration
+
+' Central Requirements touches all phases
+RM --> A : informs
+RM --> B : informs
+RM --> C : informs
+RM --> D : informs
+RM --> E : informs
+RM --> F : informs
+RM --> G : informs
+RM --> H : informs

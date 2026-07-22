@@ -261,7 +261,8 @@ impl Evaluator {
                         env_m
                     } else {
                         // Auto-discover from response
-                        let models_json = resp.json::<serde_json::Value>().await.unwrap_or_default();
+                        let models_json =
+                            resp.json::<serde_json::Value>().await.unwrap_or_default();
                         pick_model(&models_json, verbose)
                     };
 
@@ -280,11 +281,7 @@ impl Evaluator {
                 }
                 Ok(resp) => {
                     if verbose {
-                        ui::verbose(&format!(
-                            "Eval probe {} returned {}",
-                            base,
-                            resp.status()
-                        ));
+                        ui::verbose(&format!("Eval probe {} returned {}", base, resp.status()));
                     }
                 }
                 Err(e) => {
@@ -378,7 +375,8 @@ impl Evaluator {
             }
         };
 
-        self.request_score(content_parts, prompt_text, eval, verbose).await
+        self.request_score(content_parts, prompt_text, eval, verbose)
+            .await
     }
 
     async fn request_score(
@@ -410,7 +408,11 @@ impl Evaluator {
         } else {
             format!(
                 "\nReject if any of these are visible:\n{}\n",
-                eval.reject_if.iter().map(|r| format!("  - {}", r)).collect::<Vec<_>>().join("\n")
+                eval.reject_if
+                    .iter()
+                    .map(|r| format!("  - {}", r))
+                    .collect::<Vec<_>>()
+                    .join("\n")
             )
         };
 
@@ -492,7 +494,10 @@ impl Evaluator {
                 .to_string();
 
             if verbose {
-                ui::verbose(&format!("Eval raw response: {}", &raw[..raw.len().min(400)]));
+                ui::verbose(&format!(
+                    "Eval raw response: {}",
+                    &raw[..raw.len().min(400)]
+                ));
             }
 
             // Strip reasoning output and markdown code fences defensively
@@ -574,7 +579,10 @@ fn pick_model(models_json: &serde_json::Value, verbose: bool) -> String {
     }) {
         return id.to_string();
     }
-    if let Some(id) = non_embedding.iter().find(|id| id.to_lowercase().contains("qwen")) {
+    if let Some(id) = non_embedding
+        .iter()
+        .find(|id| id.to_lowercase().contains("qwen"))
+    {
         return id.to_string();
     }
 
@@ -633,11 +641,7 @@ fn strip_fences(s: &str) -> String {
     s.to_string()
 }
 
-fn build_score(
-    parsed: &serde_json::Value,
-    eval: &EvalSection,
-    verbose: bool,
-) -> Option<EvalScore> {
+fn build_score(parsed: &serde_json::Value, eval: &EvalSection, verbose: bool) -> Option<EvalScore> {
     let scores_map = parsed["scores"].as_object()?;
 
     let mut weighted_sum = 0.0f64;
@@ -645,10 +649,7 @@ fn build_score(
     let mut per_criterion: HashMap<String, f64> = HashMap::new();
 
     for (name, criterion) in &eval.criteria {
-        let raw_score = scores_map
-            .get(name)
-            .and_then(|v| v.as_f64())
-            .unwrap_or(0.0);
+        let raw_score = scores_map.get(name).and_then(|v| v.as_f64()).unwrap_or(0.0);
         // Normalize 0-10 → 0-1
         let normalized = (raw_score / 10.0).clamp(0.0, 1.0);
         let weight = criterion.weight.unwrap_or(1.0);
@@ -674,15 +675,14 @@ fn build_score(
         })
         .unwrap_or_default();
 
-    let notes = parsed["notes"]
-        .as_str()
-        .unwrap_or("")
-        .to_string();
+    let notes = parsed["notes"].as_str().unwrap_or("").to_string();
 
     if verbose {
         ui::verbose(&format!(
             "Eval score: weighted={:.3}, reject_hits={:?}, notes={}",
-            weighted, reject_hits, &notes[..notes.len().min(120)]
+            weighted,
+            reject_hits,
+            &notes[..notes.len().min(120)]
         ));
     }
 
@@ -696,10 +696,7 @@ fn build_score(
 
 /// Extract up to 4 evenly-spaced frames from a video file using ffmpeg.
 /// Returns content parts (image_url entries) or None if ffmpeg is unavailable.
-async fn extract_video_frames(
-    path: &Path,
-    verbose: bool,
-) -> Option<Vec<serde_json::Value>> {
+async fn extract_video_frames(path: &Path, verbose: bool) -> Option<Vec<serde_json::Value>> {
     // Check ffmpeg is on PATH
     let ffprobe_check = tokio::process::Command::new("ffprobe")
         .arg("-version")
@@ -715,9 +712,12 @@ async fn extract_video_frames(
     // Get video duration via ffprobe
     let duration_output = tokio::process::Command::new("ffprobe")
         .args([
-            "-v", "error",
-            "-show_entries", "format=duration",
-            "-of", "default=noprint_wrappers=1:nokey=1",
+            "-v",
+            "error",
+            "-show_entries",
+            "format=duration",
+            "-of",
+            "default=noprint_wrappers=1:nokey=1",
             path.to_str()?,
         ])
         .output()
@@ -753,10 +753,14 @@ async fn extract_video_frames(
 
         let result = tokio::process::Command::new("ffmpeg")
             .args([
-                "-ss", &format!("{:.2}", t),
-                "-i", path.to_str()?,
-                "-vframes", "1",
-                "-q:v", "2",
+                "-ss",
+                &format!("{:.2}", t),
+                "-i",
+                path.to_str()?,
+                "-vframes",
+                "1",
+                "-q:v",
+                "2",
                 frame_path.to_str()?,
                 "-y",
             ])

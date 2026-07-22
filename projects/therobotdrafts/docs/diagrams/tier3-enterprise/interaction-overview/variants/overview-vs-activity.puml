@@ -1,0 +1,33 @@
+@startuml
+' ============================================================================
+' METADATA
+'   author:       TheRobotDrafts Examples
+'   description:  Variant - the same flow shown as an interaction overview (nodes = sequence-diagram refs) vs a plain activity (nodes = actions).
+'   usecase:      Note the ref-to-interaction distinction that separates interaction-overview from ordinary activity diagrams.
+'   complexity:   medium
+'   domain:       Diagram-family comparison
+' ============================================================================
+title Example Interaction Overview (Variant) - Overview vs Activity
+
+' INTERACTION OVERVIEW: nodes are `ref` rectangles pointing at WHOLE interactions.
+'   Each node is itself a sequence diagram; zoom in on a node and you see messages.
+' PLAIN ACTIVITY: nodes are atomic actions; there is nothing to zoom into.
+
+' Here we render the same order flow with interaction-use nodes.
+start
+ref over "ReceiveOrder"
+fork
+  ref over "ChargePayment"
+fork again
+  ref over "ReserveStock"
+end fork
+ref over "ShipOrder"
+stop
+
+note
+  Contrast: a plain activity diagram of this flow would replace each `ref`
+  with discrete actions like :receive; :charge; :reserve; :ship;
+  The overview version preserves each interaction as a reusable, navigable unit.
+end note
+
+@enduml

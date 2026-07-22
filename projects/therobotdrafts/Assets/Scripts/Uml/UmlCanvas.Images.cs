@@ -81,7 +81,7 @@ namespace TheRobotDraft.Uml
             _ctl.EnterAddNode(ElementKind.ObjectInstance);
             var id = _ctl.CommitAddNode(_activePackage, UniqueName("Image"));
             if (!id.IsValid) { Flash("invalid placement"); _ctl.EnterSelect(); return; }
-            _pos[id] = ScreenToModelPx(screenPos);
+            _placements.SetPos(id, ScreenToModelPx(screenPos));
             _ctl.SetZLayer(id, _activeLayer);
             _ctl.EnterSelect();
 

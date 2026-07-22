@@ -1,0 +1,36 @@
+# .trd-yaml — TheRobotDrafts native model (IxModel serialization)
+name: Example Profile Diagram - Complex MDG Profile
+elements:
+  - { id: CloudProfile, type: Package, name: CloudProfile, stereotype: profile }
+  - { id: ScalingPolicy, type: Class, name: ScalingPolicy, parentId: CloudProfile, stereotype: '(E,#C9E7F2) enumeration', members: [{ name: MANUAL, isOperation: false, visibility: Public, rawText: MANUAL }, { name: AUTO_SCALE, isOperation: false, visibility: Public, rawText: AUTO_SCALE }, { name: SCHEDULED, isOperation: false, visibility: Public, rawText: SCHEDULED }] }
+  - { id: 'Component  { }', type: Class, name: 'Component  { }', parentId: CloudProfile, stereotype: '(M,#B4A7E5) metaclass' }
+  - { id: 'Node      { }', type: Class, name: 'Node      { }', parentId: CloudProfile, stereotype: '(M,#B4A7E5) metaclass' }
+  - { id: 'Artifact  { }', type: Class, name: 'Artifact  { }', parentId: CloudProfile, stereotype: '(M,#B4A7E5) metaclass' }
+  - { id: 'Class     { }', type: Class, name: 'Class     { }', parentId: CloudProfile, stereotype: '(M,#B4A7E5) metaclass' }
+  - { id: CloudResource, type: Class, name: CloudResource, parentId: CloudProfile, stereotype: '(S,#F2C9C9) stereotype', members: [{ name: region, isOperation: false, visibility: Public, type: String, rawText: '+ region : String' }, { name: tags, isOperation: false, visibility: Public, type: 'String [*]', rawText: '+ tags   : String [*]' }] }
+  - { id: Compute, type: Class, name: Compute, parentId: CloudProfile, stereotype: '(S,#F2C9C9) stereotype', members: [{ name: cpu, isOperation: false, visibility: Public, type: Integer, rawText: '+ cpu    : Integer' }, { name: memory, isOperation: false, visibility: Public, type: Integer, rawText: '+ memory : Integer' }, { name: scaling, isOperation: false, visibility: Public, type: ScalingPolicy, rawText: '+ scaling : ScalingPolicy' }] }
+  - { id: Storage, type: Class, name: Storage, parentId: CloudProfile, stereotype: '(S,#F2C9C9) stereotype', members: [{ name: sizeGB, isOperation: false, visibility: Public, type: Integer, rawText: '+ sizeGB  : Integer' }, { name: encrypted, isOperation: false, visibility: Public, type: Boolean, rawText: '+ encrypted : Boolean' }] }
+  - { id: Networkable, type: Class, name: Networkable, parentId: CloudProfile, stereotype: '(S,#F2C9C9) stereotype', members: [{ name: cidr, isOperation: false, visibility: Public, type: String, rawText: '+ cidr : String' }, { name: ports, isOperation: false, visibility: Public, type: 'Integer [*]', rawText: '+ ports : Integer [*]' }] }
+  - { id: Container, type: Class, name: Container, parentId: CloudProfile, stereotype: '(S,#F2C9C9) stereotype', members: [{ name: image, isOperation: false, visibility: Public, type: String, rawText: '+ image : String' }] }
+  - { id: Function, type: Class, name: Function, parentId: CloudProfile, stereotype: '(S,#F2C9C9) stereotype', members: [{ name: runtime, isOperation: false, visibility: Public, type: String, rawText: '+ runtime : String' }, { name: handler, isOperation: false, visibility: Public, type: String, rawText: '+ handler : String' }, { name: timeout, isOperation: false, visibility: Public, type: Integer, rawText: '+ timeout : Integer' }] }
+  - { id: Component, type: Class, name: Component, parentId: CloudProfile }
+  - { id: Node, type: Class, name: Node, parentId: CloudProfile }
+  - { id: Artifact, type: Class, name: Artifact, parentId: CloudProfile }
+  - { id: Class, type: Class, name: Class, parentId: CloudProfile }
+  - { id: ~note1, type: Note, name: '<b>Stereotype generalization tree</b>', documentation: '<b>Stereotype generalization tree</b>\nCloudResource is the root; Compute,\nStorage, Networkable inherit region\nand tags.  Container & Function\nSPECIALISE Compute, inheriting cpu,\nmemory, scaling too.  Apply the\nMOST specific stereotype to an\nelement to get every applicable tag.' }
+  - { id: ~note2, type: Note, name: '<b>Enumeration datatype</b>', documentation: '<b>Enumeration datatype</b>\nScalingPolicy is an Enumeration used\nas the TYPE of the Compute.scaling\ntagged value.  Legal values are\nconstrained to MANUAL, AUTO_SCALE,\nSCHEDULED — the profile enforces\nthis at application time.' }
+edges:
+  - { id: e1, type: Generalization, from: Compute, to: CloudResource }
+  - { id: e2, type: Generalization, from: Storage, to: CloudResource }
+  - { id: e3, type: Generalization, from: Networkable, to: CloudResource }
+  - { id: e4, type: Generalization, from: Container, to: Compute }
+  - { id: e5, type: Generalization, from: Function, to: Compute }
+  - { id: e6, type: Extend, from: CloudResource, to: Component }
+  - { id: e7, type: Extend, from: Networkable, to: Node }
+  - { id: e8, type: Extend, from: Container, to: Artifact }
+  - { id: e9, type: Extend, from: Function, to: Class }
+  - { id: e10, type: Dependency, from: Compute, to: ScalingPolicy, label: taggedValue type }
+  - { id: e11, type: NoteLink, from: ~note1, to: CloudResource }
+  - { id: e12, type: NoteLink, from: ~note2, to: ScalingPolicy }
+diagrams:
+  - { id: d1, name: Example Profile Diagram - Complex MDG Profile, kind: class, layoutProvenance: Synthesized }

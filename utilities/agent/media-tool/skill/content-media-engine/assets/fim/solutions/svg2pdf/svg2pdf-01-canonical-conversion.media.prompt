@@ -1,0 +1,72 @@
+schema: "0.4"
+id: svg2pdf-01-canonical-conversion
+type: document/data
+quality: high
+solution: svg2pdf
+category: document-data-file-processing
+variant: canonical-conversion
+references:
+  - "references/fim/overview/electronics-media-docfile/svg2pdf.md"
+  - "references/fim/solution/svg2pdf.md"
+prompt:
+  system: |-
+    You generate svg2pdf.js browser export artifacts. Output only one complete self-contained HTML document with inline SVG, JavaScript, and CSS. Do not use Markdown fences or explanatory prose.
+  text: |-
+    Create a canonical svg2pdf.js conversion example that exports an inline SVG chart to a vector PDF.
+
+    Requirements:
+    - Use jsPDF 2.5.x and svg2pdf.js from CDNs.
+    - Include an inline SVG with viewBox, title, desc, axes, labels, legend, paths, shapes, and selectable text.
+    - Export the live SVG DOM node with `await doc.svg(svgElement, options)` before calling save or Blob output.
+    - Size the PDF in points to match the SVG bounding box plus margins.
+    - Include a preview, export button, deterministic chart data, and a `makeVectorPdf()` function.
+    - Include PDF metadata and visible export metadata.
+    - Include parseability, pagination, fonts, accessibility, formulas/data types, metadata, and deterministic output safeguards in comments and validation checks.
+    - Output only the final HTML artifact.
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.2
+output:
+  text_format: html
+  artifact_kind: svg2pdf-vector-chart-export
+  formats:
+    - format: html
+    - format: svg
+    - format: pdf
+evaluation:
+  checklist:
+    - "Format validity: YAML parses as schema 0.4, generated output is one HTML document, and svg2pdf.js plus jsPDF APIs are used."
+    - "Parseability: JavaScript is syntactically valid, awaits `doc.svg`, and exports a live inline SVG node."
+    - "Semantic completeness: inline chart SVG, preview, export button, vector PDF function, and metadata are present."
+    - "Pagination: PDF page size and margins match the SVG dimensions with no clipping."
+    - "Fonts: SVG text uses declared font families and comments note when jsPDF font registration is needed."
+    - "Accessibility: SVG title/desc, readable labels, high contrast, and labeled controls are included."
+    - "Formulas/data types: chart values are typed numeric data and scales/labels are calculated deterministically."
+    - "Metadata: PDF info, chart id, export profile, source data period, and deterministic timestamp are included."
+    - "Deterministic output: data, scales, ids, filename, timestamp, and export dimensions are stable."
+  rubric:
+    - name: "Format validity"
+      weight: 30
+      criteria: "The prompt YAML and generated HTML are parseable, ASCII-only, and convert SVG to PDF through svg2pdf.js."
+    - name: "Semantic completeness"
+      weight: 30
+      criteria: "The artifact includes a meaningful SVG chart, conversion call, export controls, metadata, and vector output behavior."
+    - name: "Layout/data quality"
+      weight: 25
+      criteria: "The SVG and PDF are crisp, readable, unclipped, data-driven, and retain selectable text where fonts permit."
+    - name: "Robustness"
+      weight: 15
+      criteria: "The artifact handles missing SVG size, font caveats, async export, metadata, and deterministic reruns."
+  pass_conditions:
+    - "YAML parses successfully and all file text is ASCII-only."
+    - "Rubric weights are exactly 30, 30, 25, and 15."
+    - "Generated HTML awaits svg2pdf conversion before saving and produces a vector PDF when CDNs are available."
+    - "All checklist items for parseability, pagination, fonts, accessibility, formulas/data types, metadata, and deterministic output are represented."
+tags:
+  - fim
+  - document-data-file-processing
+  - svg2pdf
+  - svg-to-pdf
+  - canonical-conversion
+  - vector-export
+

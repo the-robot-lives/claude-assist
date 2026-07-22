@@ -1,0 +1,18 @@
+# .trd-yaml — TheRobotDrafts native model (IxModel serialization)
+name: Example ArchiMate Strategy - Variant Strategy vs Business
+elements:
+  - { id: Legend, type: Note, name: 'TOP = Strategy layer (capabilities/outcomes)\nBOTTOM = Business layer (actors/processes)\nStrategy answers WHY; Business answers WHO does WHAT.\nStrategy = light green; Outcome = blue; Business = yellow.', documentation: 'TOP = Strategy layer (capabilities/outcomes)\nBOTTOM = Business layer (actors/processes)\nStrategy answers WHY; Business answers WHO does WHAT.\nStrategy = light green; Outcome = blue; Business = yellow.' }
+  - { id: Strategy Layer (What + Why), type: Package, name: Strategy Layer (What + Why) }
+  - { id: SC1, type: Boundary, name: \nOrder\nFulfillment, parentId: Strategy Layer (What + Why), stereotype: capability }
+  - { id: SC2, type: Boundary, name: \nBilling, parentId: Strategy Layer (What + Why), stereotype: capability }
+  - { id: SCA, type: Boundary, name: \nAutomate\nFulfillment, parentId: Strategy Layer (What + Why), stereotype: course of action }
+  - { id: SO, type: Boundary, name: \nSame-Day\nDelivery, parentId: Strategy Layer (What + Why), stereotype: outcome }
+  - { id: Business Layer (Who + How), type: Package, name: Business Layer (Who + How) }
+  - { id: BA1, type: Boundary, name: \nWarehouse, parentId: Business Layer (Who + How), stereotype: business actor }
+  - { id: BR1, type: Boundary, name: \nBilling\nClerk, parentId: Business Layer (Who + How), stereotype: business role }
+  - { id: BP1, type: Boundary, name: '\nPick &\nShip', parentId: Business Layer (Who + How), stereotype: business process }
+  - { id: BP2, type: Boundary, name: \nInvoice, parentId: Business Layer (Who + How), stereotype: business process }
+  - { id: BS1, type: Boundary, name: \nDelivery\nService, parentId: Business Layer (Who + How), stereotype: business service }
+  - { id: BO1, type: Boundary, name: \nShipment, parentId: Business Layer (Who + How), stereotype: business object }
+diagrams:
+  - { id: d1, name: Example ArchiMate Strategy - Variant Strategy vs Business, kind: component, layoutProvenance: Synthesized }

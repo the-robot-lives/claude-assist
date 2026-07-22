@@ -1,0 +1,16 @@
+# .trd-yaml — TheRobotDrafts native model (IxModel serialization)
+name: Example State Machine - Simple Traffic Light
+elements:
+  - { id: ~start1, type: StateStart, name: start }
+  - { id: Red, type: State, name: Red }
+  - { id: Green, type: State, name: Green }
+  - { id: Yellow, type: State, name: Yellow }
+  - { id: ~end2, type: StateEnd, name: end }
+edges:
+  - { id: e1, type: Transition, from: ~start1, to: Red, label: power_on }
+  - { id: e2, type: Transition, from: Red, to: Green, label: 'timer_expired[phase_complete]/switch_to_green' }
+  - { id: e3, type: Transition, from: Green, to: Yellow, label: 'timer_expired[phase_complete]/switch_to_yellow' }
+  - { id: e4, type: Transition, from: Yellow, to: Red, label: 'timer_expired[phase_complete]/switch_to_red' }
+  - { id: e5, type: Transition, from: Red, to: ~end2, label: power_off }
+diagrams:
+  - { id: d1, name: Example State Machine - Simple Traffic Light, kind: state, layoutProvenance: Synthesized }

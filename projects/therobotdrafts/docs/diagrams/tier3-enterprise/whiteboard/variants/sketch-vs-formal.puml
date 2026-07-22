@@ -1,0 +1,54 @@
+' ============================================================================
+' METADATA
+'   author:       TheRobotDrafts Examples
+'   description:  Same early idea as a whiteboard sketch vs a formal UML diagram.
+'   usecase:      Teach the sketch-first workflow before committing to typed UML.
+'   complexity:   variant
+'   domain:       whiteboard / sketch
+' ============================================================================
+title Example Whiteboard - Sketch vs Formal
+
+note as TopNote
+  VARIANT: same "auth service" idea shown two ways.
+  TOP: freeform whiteboard sketch - stickies, cloud, loose arrows.
+       Low cost to change; invites input.
+  BOTTOM: formal UML class/component diagram - typed classes, interfaces, strict arrows.
+       Higher cost to change; unambiguous.
+  Workflow: sketch first, agree, THEN formalize.
+end note
+
+' ============ TOP: SKETCH ============
+package "SKETCH: Auth Idea" as SK {
+  note "login with email?" as S1
+  note "maybe SSO too" as S2
+  note "issue a token" as S3
+}
+cloud "Auth Cloud" as SC
+S1 --> SC : loose
+S2 --> SC : loose
+SC --> S3 : loose
+
+' ============ BOTTOM: FORMAL UML ============
+interface "IAuthenticator" as IA {
+  + login(creds): Token
+  + verify(t: Token): Boolean
+}
+
+class "AuthService" as Auth {
+  - secret: String
+  + login(creds): Token
+  + verify(t: Token): Boolean
+}
+
+class "Token" as Tok {
+  + value: String
+  + expiresAt: Time
+}
+
+class "SSOProvider" as SSO {
+  + authorize(): Code
+}
+
+IA <|.. Auth : implements
+Auth --> Tok : issues
+SSO --> Auth : feeds code

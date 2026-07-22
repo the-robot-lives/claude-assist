@@ -1,0 +1,72 @@
+@startuml
+' ============================================================================
+' METADATA
+'   author:       TheRobotDrafts Examples
+' '   description:  10+ object distributed-system collaboration with multiple link types, branching numbering, and iterators.
+'   usecase:      Teach multiple link types, branching message numbering, and iterator markers.
+'   complexity:   complex
+'   domain:       distributed-systems
+' ============================================================================
+title Example Communication - Complex Distributed Collaboration
+
+actor "Client" as Client
+participant "Gateway" as Gateway
+participant "AuthSvc" as AuthSvc
+participant "OrderSvc" as OrderSvc
+participant "InventorySvc" as InventorySvc
+participant "PricingSvc" as PricingSvc
+participant "PaymentSvc" as PaymentSvc
+participant "ShippingSvc" as ShippingSvc
+participant "AuditSvc" as AuditSvc
+participant "Cache" as Cache
+database "DB" as DB
+
+' LINK TYPES:
+'   "--" solid association (persistent structural link)
+'   ".." dashed dependency / temporary link
+' Different visual styles distinguish durable from transient relationships.
+
+Client -- Gateway
+Gateway -- AuthSvc
+Gateway -- OrderSvc
+OrderSvc -- InventorySvc
+OrderSvc -- PricingSvc
+OrderSvc -- PaymentSvc
+OrderSvc .. ShippingSvc
+OrderSvc .. AuditSvc
+OrderSvc -- Cache
+OrderSvc -- DB
+
+' MESSAGE FLOW with deep nesting and BRANCHING numbering.
+' Branching: 2.1a and 2.1b are CONCURRENT sub-calls under message 2.
+
+Client --> Gateway : 1: submitOrder(payload)
+Gateway --> AuthSvc : 1.1: verifyToken()
+Gateway --> OrderSvc : 2: placeOrder()
+
+' ITERATOR MARKER: "*" prefix means "for each item in a collection".
+' The message fires once PER element of the iterated set.
+OrderSvc --> InventorySvc : 2.1a: reserveItem()*[for each line item]
+OrderSvc --> PricingSvc : 2.1b: calculateTotals()
+
+OrderSvc --> DB : 2.2: persistOrder()
+OrderSvc --> Cache : 2.3: warmCache(orderId)
+
+OrderSvc --> PaymentSvc : 3: chargeCard()
+
+' BRANCH on a guard — only one of 3.1a / 3.1b fires depending on the result.
+PaymentSvc --> OrderSvc : 3.1a: paymentApproved()
+PaymentSvc --> OrderSvc : 3.1b: paymentDeclined()[auth_failed]
+
+' Downstream fan-out on the success branch.
+OrderSvc --> ShippingSvc : 4: scheduleShipment()
+OrderSvc --> AuditSvc : 5: logTransaction()
+Gateway --> Client : 6: returnConfirmation()
+
+' TEACHING NOTES:
+'   - "*" iterator marker = the message is sent once per element of a set.
+'   - "a"/"b" suffixes (2.1a, 2.1b) denote CONCURRENT sibling calls.
+'   - Guards ([auth_failed]) make a message conditional.
+'   - Solid vs dashed links distinguish durable associations from transient
+'     dependencies — a key structural insight that sequence diagrams hide.
+@enduml

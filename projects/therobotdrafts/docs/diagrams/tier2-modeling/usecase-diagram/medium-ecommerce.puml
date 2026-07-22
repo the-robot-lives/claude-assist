@@ -1,0 +1,77 @@
+@startuml
+' ============================================================================
+' METADATA
+'   author:       TheRobotDrafts Examples
+'   description:  Medium use case diagram — e-commerce with three actors, eight use cases, «include», «extend», and actor generalization.
+'   usecase:      Teach «include» (mandatory delegation), «extend» (optional, condition-gated extension), and actor generalization.
+'   complexity:   medium
+'   domain:       E-Commerce
+' ============================================================================
+title Example Use Case Diagram - Medium E-Commerce
+
+' ---------------------------------------------------------------------------
+' Actors:  Customer, Guest (not yet logged in), Admin.
+# Use cases: Browse Catalog, Search, Add to Cart, Checkout, Pay,
+#            Apply Discount, Ship Order, Manage Products.
+# Relationships:
+#   - «include»  : Checkout MANDATORILY invokes Pay (every checkout pays).
+#   - «extend»   : Apply Discount OPTIONALLY extends Checkout (only if a code
+#                  is entered) — condition shown in a note.
+#   - actor generalization: Guest --|> Customer (a Guest is a kind of Customer
+#                  who can browse but cannot checkout until authenticated).
+' ---------------------------------------------------------------------------
+
+left to right direction
+
+actor "Customer" as cust
+actor "Guest"    as guest
+actor "Admin"    as admin
+
+' ACTOR GENERALIZATION: Guest is-a Customer (inherits all Customer use cases).
+guest --|> cust
+
+rectangle "Online Store" {
+  usecase "Browse Catalog"   as ucBrowse
+  usecase "Search Products"  as ucSearch
+  usecase "Add to Cart"      as ucAdd
+  usecase "Checkout"         as ucCheckout
+  usecase "Pay"              as ucPay
+  usecase "Apply Discount"   as ucDiscount
+  usecase "Ship Order"       as ucShip
+  usecase "Manage Products"  as ucManage
+}
+
+' --- Associations -------------------------------------------------------
+cust  --> ucBrowse
+cust  --> ucSearch
+cust  --> ucAdd
+cust  --> ucCheckout
+admin --> ucManage
+admin --> ucShip
+
+' --- «include»: Checkout always invokes Pay (mandatory) ----------------
+ucCheckout .> ucPay : <<include>>
+
+' --- «extend»: Apply Discount optionally extends Checkout ---------------
+' Dashed arrow points FROM the extending use case TO the base use case.
+ucDiscount .> ucCheckout : <<extend>>
+
+note right of ucDiscount
+  <b>«extend» — optional</b>
+  Apply Discount extends Checkout.
+  Condition: { discount code entered }.
+  The base use case is complete WITHOUT
+  the extension; the extension ADDS
+  behaviour only when the condition holds.
+end note
+
+note bottom of ucPay
+  <b>«include» — mandatory</b>
+  Checkout includes Pay.  Pay ALWAYS
+  executes as part of Checkout — there is
+  no condition.  Use «include» to factor
+  out common, required behaviour that
+  several base use cases share.
+end note
+
+@enduml

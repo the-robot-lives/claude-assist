@@ -1,0 +1,66 @@
+@startuml
+' ============================================================================
+' METADATA
+'   author:       TheRobotDrafts Examples
+'   description:  Medium BPMN choreography — 6-8 tasks, gateway, message variables.
+'   usecase:      Price negotiation between Buyer and Seller with a counter-offer loop.
+'   complexity:   medium
+'   domain:       business-process
+' ============================================================================
+title Example BPMN Choreography - Negotiation
+
+' Choreography: no pools. Each task is banded by participants.
+' Initiator band = white; responder band = shaded.
+' Message variables (e.g. QuoteId, Price) flow between tasks and
+' can be referenced by gateway conditions.
+
+' --- Events ---------------------------------------------------------------
+usecase " " as Start
+usecase " " as EndAccept
+usecase " " as EndReject
+
+' --- Tasks (banded) -------------------------------------------------------
+package "Request Quote\n[ Buyer | Seller ]" as T1
+package "Send Quote\n[ Seller | Buyer ]" as T2
+package "Counter Offer\n[ Buyer | Seller ]" as T3
+package "Evaluate Offer\n[ Seller | Buyer ]" as T4
+package "Accept Quote\n[ Buyer | Seller ]" as T5
+package "Issue PO\n[ Buyer | Seller ]" as T6
+
+' --- Gateway --------------------------------------------------------------
+usecase "Acceptable?" as X1
+
+Start --> T1
+T1 --> T2
+T2 --> X1
+X1 --> T5 : (buyer accepts)
+X1 --> T3 : (buyer counters)
+T3 --> T4
+T4 --> X1 : re-evaluate
+' Buyer's accept path
+T5 --> T6
+T6 --> EndAccept
+' Hard fail after N rounds would route here
+T4 --> EndReject : (seller rejects)
+
+note top of T1
+  <b>Message variables</b>
+  T1 establishes QuoteId; later
+  tasks reference it. Price
+  variable is updated by T2/T3.
+end note
+
+note right of X1
+  <b>Gateway on message data</b>
+  Branch condition reads a
+  variable (e.g. Price <= Budget).
+end note
+
+note bottom of T4
+  <b>Role swap</b>
+  Seller initiates the evaluation
+  message; Buyer responds with
+  acceptance or new counter.
+end note
+
+@enduml

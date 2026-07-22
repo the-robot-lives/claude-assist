@@ -1,0 +1,81 @@
+schema: "0.4"
+id: deck_gl-01-canonical-map-analysis
+type: interactive
+quality: high
+solution: deck_gl
+category: geospatial-and-mapping
+variant: canonical-map-analysis
+references:
+  - "references/fim/overview/geospatial-math-scientific/deck_gl.md"
+  - "references/fim/solution/deck_gl.md"
+prompt:
+  system: |-
+    Generate production-quality deck.gl assets for FIM geospatial-and-mapping evaluation. Follow the referenced solution APIs and return only the requested source artifact.
+  text: |-
+    Create a deck.gl canonical map and analysis asset for the geospatial-and-mapping category.
+
+    Scenario:
+    Create a regional operations map for coastal resilience planning. Combine administrative polygons, critical facilities, evacuation routes, and measured risk or demand values so the artifact proves the solution can render a normal production map and perform the expected geospatial analysis.
+
+    Implementation requirements:
+    - Use native deck.gl patterns from the referenced overview and solution docs; do not replace the requested solution with a generic screenshot or unrelated map library.
+    - Use deck.DeckGL or Deck with native layer classes such as ScatterplotLayer, HexagonLayer, GeoJsonLayer, ArcLayer, TripsLayer, and MapboxOverlay or a standalone Deck view. Use accessors like getPosition, getFillColor, getRadius, getElevation, updateTriggers, pickable layers, and getTooltip. Colors must be RGBA integer arrays and positions must be [lng, lat].
+    - Declare every CRS/projection used. Use EPSG:4326 for interchange unless the solution requires another view projection, and reproject to a metric CRS before distance, area, buffer, or length calculations.
+    - Specify layer order explicitly: basemap first, raster or terrain context next, polygon fills, polygon outlines, lines/routes, points/labels, then popups, tooltips, legends, controls, and diagnostics above the map.
+    - Include legends for color, size, opacity, and aggregation bins; include units, classification method, source note, and missing-data treatment.
+    - Include popups or tooltips with concise feature attributes, computed metrics, and keyboard or screen-reader accessible equivalents.
+    - Fit the initial viewport to the provided bounds or feature group and handle resize, high-DPI, mobile/touch, and empty-data states.
+    - Use high-contrast, colorblind-aware styling, semantic headings, alt or aria text for controls, visible focus states, and a tabular or textual data summary.
+    - Use placeholder tokens or keys only, never print real credentials, never embed unrestricted API keys, and include a no-token-leakage diagnostic check.
+    - Use deterministic inline sample data with realistic names, units, edge cases, and at least one invalid, missing, or out-of-bounds feature that is handled visibly.
+    - Output only the requested source artifact with no markdown fences or explanatory prose outside the artifact.
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.2
+output:
+  text_format: html
+  artifact_kind: deck-gl-html-geospatial-asset
+  formats:
+    - format: html
+evaluation:
+  checklist:
+    - "Format validity: YAML parses under schema 0.4, required fields are present, id matches the file stem, and generated output contains only the requested artifact with no markdown fences."
+    - "Semantic completeness: The prompt requires native deck.gl APIs, realistic geospatial data, scenario-specific analysis, CRS/projection handling, and no substitution with an unrelated solution."
+    - "CRS/projection: Coordinates, axis order, EPSG codes, transformations, metric calculations, and projection mismatch handling are explicit and correct for the solution."
+    - "Layer order: Basemap/context, polygons, outlines, routes, points, labels, controls, popups/tooltips, legends, and diagnostics are stacked deliberately and documented."
+    - "Legends and source notes: Color, size, opacity, aggregation, units, classification, missing data, and data source notes are visible and understandable."
+    - "Popups/tooltips: Interactive feature details expose names, metrics, units, computed values, and accessible text alternatives without occluding the map."
+    - "Viewport fit: Initial camera/view/bounds frame all relevant data, with resize, mobile/touch, high-DPI, empty-data, and out-of-bounds handling."
+    - "Accessibility: Headings, keyboard navigation, focus states, color contrast, non-color encodings, ARIA or textual summaries, and reduced-motion behavior are addressed."
+    - "No token leakage: API keys, map tokens, service credentials, signed URLs, and secrets are placeholders only and no generated artifact prints or logs real credentials."
+    - "Robustness: Missing tiles/assets, unavailable services, invalid geometries, CRS mismatches, large datasets, and offline/geofence edge cases produce visible diagnostics rather than blank output."
+  rubric:
+    - name: "Format validity"
+      weight: 30
+      criteria: "The media prompt YAML and generated artifact are syntactically valid, use schema 0.4, match the requested file/id/solution, and contain no markdown fences or malformed source."
+    - name: "Semantic completeness"
+      weight: 30
+      criteria: "The artifact fulfills the scenario with correct solution-specific APIs, geospatial analysis, CRS/projection handling, layer order, legends, popups/tooltips, viewport fit, accessibility, and token hygiene."
+    - name: "Visual/structural quality"
+      weight: 25
+      criteria: "The map or analysis output is legible, nonblank, well composed, colorblind-aware, appropriately annotated, and structured so data layers, controls, legends, and explanatory text do not collide."
+    - name: "Robustness"
+      weight: 15
+      criteria: "The artifact handles missing data, invalid geometries, projection mismatches, service/token failures, offline assets, dense layers, resize/mobile behavior, and geofence edge cases with clear fallbacks."
+  pass_conditions:
+    - "YAML parses successfully, uses schema 0.4, and all prompt text is ASCII-only."
+    - "Rubric weights are exactly Format validity 30, Semantic completeness 30, Visual/structural quality 25, and Robustness 15."
+    - "Generated artifact uses native deck.gl APIs and does not substitute an unrelated mapping or analysis library except for documented display/integration support."
+    - "CRS/projection, layer order, legends, popups/tooltips, viewport fit, accessibility, and no token leakage checks are all satisfied."
+    - "Generated artifact is nonblank, frames all relevant data on first render or first plot, and exposes diagnostics for missing services, bad geometry, empty data, or offline mode."
+tags:
+  - "fim"
+  - "geospatial-and-mapping"
+  - "deck_gl"
+  - "canonical-map-analysis"
+  - "crs"
+  - "projection"
+  - "legend"
+  - "viewport-fit"
+  - "accessibility"
+  - "no-token-leakage"

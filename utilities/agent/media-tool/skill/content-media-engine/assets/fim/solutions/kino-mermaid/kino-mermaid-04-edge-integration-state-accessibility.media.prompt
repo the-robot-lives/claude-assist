@@ -1,0 +1,67 @@
+schema: "0.4"
+id: fim-notebook-livebook-and-widgets-kino-mermaid-04-edge-integration-state-accessibility
+type: visualization
+quality: high
+solution: kino-mermaid
+category: notebook-livebook-and-widgets
+variant: edge-integration-state-accessibility
+prompt:
+  system: |-
+    You are a senior Elixir Livebook documentation engineer. Output only one complete ASCII Elixir Livebook code cell for Kino.Mermaid. No Markdown fences, no prose outside code. Prioritize source validation, accessibility, and fallback behavior.
+  text: |-
+    Create a Kino.Mermaid edge/integration cell that builds a diagram from potentially messy local records. Validate node ids, labels, edge endpoints, diagram type, and maximum size before rendering. Quote or sanitize labels containing spaces, brackets, parentheses, pipes, or Mermaid control characters. Render the valid diagram with Kino.Mermaid.new/1 and render a companion validation table or text summary for rejected records.
+
+    Requirements: include Livebook compatibility comments, static SVG state behavior, old-Kino fallback notes, accessible text summaries, and safe execution checks. If Kino.Mermaid is unavailable, show a guarded Kino.JS fallback that imports Mermaid only as an optional path and uses text-safe rendering. Do not eval data or require credentials, shell commands, or remote libraries for the primary path.
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.2
+    top_p: 0.9
+output:
+  text_format: elixir
+  artifact_kind: livebook-kino-mermaid-edge-cell
+  formats:
+  - format: exs
+evaluation:
+  checklist:
+  - "Import check: generated code installs kino, validates diagram data, and renders Kino.Mermaid.new/1 for the primary path."
+  - "Notebook compatibility: comments identify Livebook/Kino, static SVG state, and optional old-version fallback."
+  - "Reactive state: diagram state is derived from validated data and changes only by rerun or regeneration."
+  - "Data shape: node ids, labels, edge endpoints, rejected records, and generated Mermaid source are documented."
+  - "Accessibility and fallback: text summary, validation output, safe labels, and optional guarded Kino.JS fallback are present."
+  - "Safe execution: no eval, shell commands, credentials, unguarded remote library dependency, or unescaped control characters from data."
+  rubric:
+  - name: Format validity
+    weight: 30
+    criteria:
+    - "Output is one complete ASCII Elixir Livebook code cell with no Markdown fences or explanatory wrapper."
+    - "The code is valid and separates validation, source generation, and rendering."
+    - "The primary path uses Kino.Mermaid.new/1 with a supported diagram type."
+  - name: Semantic completeness
+    weight: 30
+    criteria:
+    - "Implements messy-record validation, safe label handling, rendering, and rejected-record reporting."
+    - "Uses Kino.Mermaid-specific source constraints and optional guarded fallback correctly."
+    - "Includes notebook/livebook compatibility, reactive state, data shape, accessibility, fallback, and safe execution checks."
+  - name: UX/structural quality
+    weight: 25
+    criteria:
+    - "Valid and rejected data are easy to understand from the notebook output."
+    - "The diagram remains readable after sanitization and size limiting."
+    - "Fallback status and accessibility summaries are explicit."
+  - name: Robustness
+    weight: 15
+    criteria:
+    - "Handles invalid endpoints, duplicate ids, unsafe labels, empty data, unsupported types, and oversized diagrams."
+    - "Keeps all primary data local and deterministic."
+    - "Documents when a richer diagram tool is needed."
+  pass_conditions:
+  - "All required YAML fields are present and the generated artifact is one valid ASCII Elixir Livebook cell."
+  - "Rubric weights are exactly Format validity 30, Semantic completeness 30, UX/structural quality 25, Robustness 15."
+  - "The prompt requires notebook/livebook compatibility, reactive state, data shape, accessibility, fallback, and safe execution checks."
+  - "The solution remains Kino.Mermaid-centered and treats user-derived diagram source as untrusted input."
+tags:
+- fim
+- notebook-livebook-and-widgets
+- livebook
+- kino-mermaid
+- edge-integration-state-accessibility

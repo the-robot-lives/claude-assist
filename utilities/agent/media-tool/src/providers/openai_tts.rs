@@ -47,16 +47,28 @@ impl MediaProvider for OpenAiTtsProvider {
             "response_format": response_format,
         });
 
-        if let Some(speed) = options.provider_options.get("speed").and_then(|v| v.as_f64()) {
+        if let Some(speed) = options
+            .provider_options
+            .get("speed")
+            .and_then(|v| v.as_f64())
+        {
             body["speed"] = json!(speed);
         }
 
         // instructions only supported by gpt-4o-mini-tts
-        if let Some(instructions) = options.provider_options.get("instructions").and_then(|v| v.as_str()) {
+        if let Some(instructions) = options
+            .provider_options
+            .get("instructions")
+            .and_then(|v| v.as_str())
+        {
             body["instructions"] = json!(instructions);
         }
 
-        if let Some(lang) = options.provider_options.get("language").and_then(|v| v.as_str()) {
+        if let Some(lang) = options
+            .provider_options
+            .get("language")
+            .and_then(|v| v.as_str())
+        {
             body["language"] = json!(lang);
         }
 
@@ -68,7 +80,10 @@ impl MediaProvider for OpenAiTtsProvider {
                 preview,
                 if prompt_text.len() > 120 { "..." } else { "" }
             ));
-            ui::verbose(&format!("Model: {}, voice: {}, format: {}", model, voice, response_format));
+            ui::verbose(&format!(
+                "Model: {}, voice: {}, format: {}",
+                model, voice, response_format
+            ));
         }
 
         let client = reqwest::Client::new();

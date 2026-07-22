@@ -1,0 +1,100 @@
+schema: '0.4'
+id: two_js-03-brand-editorial-communication
+type: image
+quality: high
+solution: two_js
+category: 2d-canvas-svg-and-creative-coding
+variant: brand-editorial-communication
+references:
+- references/fim/overview/canvas-svg-creative-animation/two_js.md
+- references/fim/solution/two_js.md
+prompt:
+  system: Generate production-quality FIM media assets for the named 2D canvas, SVG, or creative-coding solution. Output only
+    the requested source artifact with no markdown fences or explanatory prose.
+  text: "Create the brand and editorial communication asset prompt for Two.js.\n\nScenario:\nCreate a launch poster for Signal\
+    \ Bloom 2026, a fictional creative-coding festival. Include a headline, short deck, date line, location line, sponsor\
+    \ strip, abstract hero artwork, and two format-safe crop guides for square and wide editorial reuse.\n\nImplementation\
+    \ requirements:\n- Category: 2d-canvas-svg-and-creative-coding.\n- Required solution: two_js (Two.js).\n- Output: a complete\
+    \ self-contained HTML document that loads Two.js from a CDN.\n- Native API contract: Use Two.js new Two({ type, width,\
+    \ height }), makeCircle, makeRectangle, makePath, makeCurve, makeGroup, makeText, gradients, retained shape properties,\
+    \ bind(\"update\"), play, pause, update, and renderer selection.\n- Native technique focus: Two.js retained scene graph\
+    \ with groups, transforms, renderer-agnostic SVG/Canvas/WebGL output, and animation by mutating existing shapes.\n- Responsive\
+    \ contract: Measure the host, set renderer dimensions, reposition groups from normalized layout data, and keep SVG/Canvas/WebGL\
+    \ renderer choices explicit.\n- Export and integration contract: Expose exportSVG(), exportPNG(), setRenderer(type), resetSeed(seed),\
+    \ resizeScene(), pauseScene(), playScene(), and destroyScene(); document export limits by renderer.\n- Determinism contract:\
+    \ Use a seeded generator for anchors, shape placement, colors, and animation phase offsets; rebuild from seed when requested.\n\
+    - Scenario-specific emphasis: Build a finished brand or editorial communication asset with typography, hierarchy, contrast,\
+    \ and production export behavior.\n- Additional edge detail: Use meaningful text, accessible contrast, and a layout that\
+    \ still works when captured as PNG or serialized as SVG where the solution supports vector export.\n- Include realistic\
+    \ inline sample data, labels, dimensions, seed value, and source note where the scenario needs them.\n- Avoid placeholder\
+    \ lorem ipsum text, external credentials, paid private assets, and hidden dependencies.\n- Output only the final artifact,\
+    \ with no commentary outside the artifact."
+  requirements:
+  - Start from a visible nonblank render state; do not require user input before the first meaningful frame.
+  - Use explicit viewBox, canvas sizing, or equivalent figure bounds; handle device pixel ratio or vector scaling where relevant.
+  - Use deliberate layering order so background, main subject, annotations, and controls do not collide.
+  - Use accessible contrast for text, callouts, controls, and essential marks against their backgrounds.
+  - Include responsive behavior and at least one export path appropriate to the solution.
+  - Use deterministic randomness from a documented seed and make repeated reloads reproducible.
+  - Include a concise diagnostics or source note with renderer, seed, dimensions, and export status.
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.2
+output:
+  text_format: html
+  artifact_kind: two-js-html-scene-brand-editorial-communication
+  formats:
+  - format: html
+  - format: svg
+  - format: png
+  dimensions:
+    width: 1440
+    height: 900
+  render_expectation: A nonblank artifact suitable for browser or compiler rendering and capture after initial load or compile.
+evaluation:
+  checklist:
+  - YAML parses and required schema 0.4 fields are present.
+  - Generated artifact uses the requested solution and does not substitute a different renderer or library for the core drawing
+    work.
+  - Initial render is nonblank and shows the main subject within the first viewport or figure bounds.
+  - viewBox/canvas sizing or equivalent figure bounds are explicit, responsive, and not blurry at common DPR values.
+  - Layering order is intentional and keeps background, dense marks, labels, controls, and export UI readable.
+  - Contrast is sufficient for text, controls, callouts, and critical marks in both default and compact layouts.
+  - Responsive/export behavior works for compact, wide, and capture-oriented sizes without clipping key content.
+  - Deterministic randomness is seeded, documented, and reproducible across reloads for the same seed.
+  - 'Solution-specific API contract is satisfied for Two.js: Two.js retained scene graph with groups, transforms, renderer-agnostic
+    SVG/Canvas/WebGL output, and animation by mutating existing shapes.'
+  - 'Export/integration hooks are present where applicable: Expose exportSVG(), exportPNG(), setRenderer(type), resetSeed(seed),
+    resizeScene(), pauseScene(), playScene(), and destroyScene(); document export limits by renderer..'
+  rubric:
+  - name: Format validity
+    weight: 30
+    criteria: YAML uses schema 0.4 with required fields, the generated artifact matches the requested text format, contains
+      no markdown fences, and uses the named solution syntax or API without parse/runtime errors.
+  - name: Semantic completeness
+    weight: 30
+    criteria: The artifact satisfies the scenario, includes solution-specific native capabilities, covers nonblank rendering,
+      sizing, layering, contrast, responsive/export behavior, and deterministic randomness.
+  - name: Visual quality
+    weight: 25
+    criteria: Composition, typography, spacing, color, density, hierarchy, motion, and labels are polished, coherent, legible,
+      and suited to the requested drawing, generative, brand, or integration use case.
+  - name: Robustness
+    weight: 15
+    criteria: The artifact handles resize, missing or empty input, fallback states, lifecycle cleanup, export edge cases,
+      performance limits, and deterministic regeneration without blank screens or broken output.
+  pass_conditions:
+  - Rubric weights sum to 100 with Format validity 30, Semantic completeness 30, Visual quality 25, and Robustness 15.
+  - Score is 80 or higher out of 100 and no rubric dimension scores zero.
+  - Generated result has a nonblank render, explicit viewBox/canvas sizing or equivalent bounds, readable layering, sufficient
+    contrast, responsive/export behavior, and deterministic randomness.
+  - Generated content is aligned with the referenced overview and solution documents for the named solution.
+tags:
+- fim
+- 2d-canvas-svg-and-creative-coding
+- two_js
+- brand-editorial-communication
+- image
+- nonblank-render
+- viewbox-canvas-sizing
+- deterministic-randomness

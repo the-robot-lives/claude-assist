@@ -1,0 +1,43 @@
+@startgantt
+' ============================================================================
+' METADATA
+'   author:       TheRobotDrafts Examples
+'   description:  Medium Gantt — 7 tasks, milestones, FS/SS deps, critical path.
+'   usecase:      Teaching concurrent tracks, critical path, dependency types.
+'   complexity:   medium
+'   domain:       project-tracking / gantt
+' ============================================================================
+title Example Gantt - Medium Multi-Track
+
+project starts the 2nd of march 2026
+saturday are closed
+sunday are closed
+
+-- Design Track --
+[Spec] lasts 4 days
+[Design] lasts 6 days
+[Design] starts at [Spec]'s end
+
+-- Backend Track --
+[API Design] lasts 3 days
+[API Design] starts at [Spec]'s end
+[Implement API] lasts 8 days
+[Implement API] starts at [API Design]'s end
+
+-- Frontend Track --
+[UI Build] lasts 7 days
+[UI Build] starts at [Design]'s end
+[Integrate] lasts 3 days
+[Integrate] starts at [Implement API]'s end
+[Integrate] starts at [UI Build]'s end
+
+[Milestone: Spec Complete] happens at [Spec]'s end
+[Milestone: Feature Freeze] happens at [Integrate]'s end
+
+-- Critical path highlight --
+[Spec] is colored in salmon
+[Design] is colored in salmon
+[UI Build] is colored in salmon
+[Integrate] is colored in salmon
+
+@endgantt

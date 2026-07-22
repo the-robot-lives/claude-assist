@@ -1,0 +1,74 @@
+# .trd-yaml — TheRobotDrafts native model (IxModel serialization)
+name: Example Deployment Diagram - Complex Multi-Region Production
+elements:
+  - { id: cdn, type: Cloud, name: Global CDN Edge }
+  - { id: edge, type: Artifact, name: Cloudflare\nWorkers, parentId: cdn, stereotype: deploy }
+  - { id: tls, type: Artifact, name: TLS\ntermination, parentId: cdn, stereotype: deploy }
+  - { id: cp, type: Boundary, name: Control Plane (us-east) }
+  - { id: cfg, type: DeploymentNode, name: Config Server, parentId: cp, stereotype: device }
+  - { id: consul, type: Artifact, name: Consul\n1.17, parentId: cfg, stereotype: deploy }
+  - { id: cagent, type: Artifact, name: consul-agent, parentId: cfg, stereotype: deploy }
+  - { id: metrics, type: DeploymentNode, name: Metrics Aggregator, parentId: cp, stereotype: device }
+  - { id: prom, type: Artifact, name: Prometheus\n2.50, parentId: metrics, stereotype: deploy }
+  - { id: grafana, type: Artifact, name: Grafana\n11.0, parentId: metrics, stereotype: deploy }
+  - { id: cicd, type: Database, name: CI/CD State Store, parentId: cp, stereotype: database }
+  - { id: builddb, type: Artifact, name: build-records.db, parentId: cicd, stereotype: deploy }
+  - { id: region1, type: Boundary, name: 'Region: us-east-1' }
+  - { id: lb1, type: DeploymentNode, name: Edge LB (us-east), parentId: region1, stereotype: device }
+  - { id: lb1os, type: Artifact, name: Ubuntu 22.04, parentId: lb1, stereotype: executionEnvironment }
+  - { id: lb1haproxy, type: Artifact, name: HAProxy 2.8, parentId: lb1, stereotype: deploy }
+  - { id: appA1, type: DeploymentNode, name: App Host A1, parentId: region1, stereotype: device }
+  - { id: appA1jar, type: Artifact, name: UML-IDE Backend\n2.0.0.jar, parentId: appA1, stereotype: deploy }
+  - { id: fbA1, type: Artifact, name: Filebeat\n(log shipper), parentId: appA1, stereotype: deploy }
+  - { id: appA2, type: DeploymentNode, name: App Host A2, parentId: region1, stereotype: device }
+  - { id: appA2jar, type: Artifact, name: UML-IDE Backend\n2.0.0.jar, parentId: appA2, stereotype: deploy }
+  - { id: fbA2, type: Artifact, name: Filebeat\n(log shipper), parentId: appA2, stereotype: deploy }
+  - { id: cache1, type: Database, name: Cache (us-east), parentId: region1, stereotype: database }
+  - { id: redis1, type: Artifact, name: redis-server\n7.2, parentId: cache1, stereotype: deploy }
+  - { id: dbPrimary, type: Database, name: Postgres Primary (us-east), parentId: region1, stereotype: database }
+  - { id: schema1, type: Artifact, name: UML-IDE Schema\n2.0.0.sql, parentId: dbPrimary, stereotype: deploy }
+  - { id: region2, type: Boundary, name: 'Region: eu-west-1' }
+  - { id: lb2, type: DeploymentNode, name: Edge LB (eu-west), parentId: region2, stereotype: device }
+  - { id: lb2os, type: Artifact, name: Ubuntu 22.04, parentId: lb2, stereotype: executionEnvironment }
+  - { id: lb2haproxy, type: Artifact, name: HAProxy 2.8, parentId: lb2, stereotype: deploy }
+  - { id: appB1, type: DeploymentNode, name: App Host B1, parentId: region2, stereotype: device }
+  - { id: appB1jar, type: Artifact, name: UML-IDE Backend\n2.0.0.jar, parentId: appB1, stereotype: deploy }
+  - { id: fbB1, type: Artifact, name: Filebeat\n(log shipper), parentId: appB1, stereotype: deploy }
+  - { id: appB2, type: DeploymentNode, name: App Host B2, parentId: region2, stereotype: device }
+  - { id: appB2jar, type: Artifact, name: UML-IDE Backend\n2.0.0.jar, parentId: appB2, stereotype: deploy }
+  - { id: fbB2, type: Artifact, name: Filebeat\n(log shipper), parentId: appB2, stereotype: deploy }
+  - { id: cache2, type: Database, name: Cache (eu-west), parentId: region2, stereotype: database }
+  - { id: redis2, type: Artifact, name: redis-server\n7.2, parentId: cache2, stereotype: deploy }
+  - { id: dbReplica, type: Database, name: Postgres Replica (eu-west), parentId: region2, stereotype: database }
+  - { id: schema2, type: Artifact, name: UML-IDE Schema\n2.0.0.sql, parentId: dbReplica, stereotype: deploy }
+  - { id: net, type: Cloud, name: Internet }
+  - { id: users, type: Actor, name: Global Users, parentId: net }
+  - { id: ~note1, type: Note, name: The us-east Postgres is the WRITE primary., documentation: 'The us-east Postgres is the WRITE primary.\neu-west is a streaming replica —\napp code must route writes here.' }
+  - { id: ~note2, type: Note, name: Control plane is a SHARED, documentation: 'Control plane is a SHARED\ndependency for BOTH regions.\nIf it goes down, deploys and\nconfig updates stall, but\nserving traffic continues.' }
+edges:
+  - { id: e1, type: DirectedAssociation, from: users, to: cdn, label: HTTPS }
+  - { id: e2, type: DirectedAssociation, from: cdn, to: lb1, label: 'HTTPS (geo: us-east)' }
+  - { id: e3, type: DirectedAssociation, from: cdn, to: lb2, label: 'HTTPS (geo: eu-west)' }
+  - { id: e4, type: DirectedAssociation, from: lb1, to: appA1, label: HTTP }
+  - { id: e5, type: DirectedAssociation, from: lb1, to: appA2, label: HTTP }
+  - { id: e6, type: DirectedAssociation, from: appA1, to: cache1, label: 'TCP/Redis :6379' }
+  - { id: e7, type: DirectedAssociation, from: appA2, to: cache1, label: 'TCP/Redis :6379' }
+  - { id: e8, type: DirectedAssociation, from: appA1, to: dbPrimary, label: 'JDBC :5432 (read/write)' }
+  - { id: e9, type: DirectedAssociation, from: appA2, to: dbPrimary, label: 'JDBC :5432 (read/write)' }
+  - { id: e10, type: DirectedAssociation, from: lb2, to: appB1, label: HTTP }
+  - { id: e11, type: DirectedAssociation, from: lb2, to: appB2, label: HTTP }
+  - { id: e12, type: DirectedAssociation, from: appB1, to: cache2, label: 'TCP/Redis :6379' }
+  - { id: e13, type: DirectedAssociation, from: appB2, to: cache2, label: 'TCP/Redis :6379' }
+  - { id: e14, type: DirectedAssociation, from: appB1, to: dbReplica, label: 'JDBC :5432 (local reads)' }
+  - { id: e15, type: DirectedAssociation, from: appB2, to: dbReplica, label: 'JDBC :5432 (local reads)' }
+  - { id: e16, type: DirectedAssociation, from: dbPrimary, to: dbReplica, label: PostgreSQL\nstreaming replication }
+  - { id: e17, type: Dependency, from: appA1, to: cfg, label: config pull\n(gRPC) }
+  - { id: e18, type: Dependency, from: appB1, to: cfg, label: config pull\n(gRPC) }
+  - { id: e19, type: Dependency, from: fbA1, to: metrics, label: metrics push\n(HTTPS) }
+  - { id: e20, type: Dependency, from: fbB1, to: metrics, label: metrics push\n(HTTPS) }
+  - { id: e21, type: Dependency, from: cicd, to: appA1, label: deploy trigger\n(SSH) }
+  - { id: e22, type: Dependency, from: cicd, to: appB1, label: deploy trigger\n(SSH) }
+  - { id: e23, type: NoteLink, from: ~note1, to: dbPrimary }
+  - { id: e24, type: NoteLink, from: ~note2, to: cp }
+diagrams:
+  - { id: d1, name: Example Deployment Diagram - Complex Multi-Region Production, kind: component, layoutProvenance: Synthesized }

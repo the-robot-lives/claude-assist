@@ -1,0 +1,73 @@
+schema: "0.4"
+id: mo_js-03-product-brand-communication-motion
+type: interactive
+quality: high
+solution: mo_js
+category: animation-and-motion
+variant: product-brand-communication-motion
+references:
+  - "references/fim/overview/canvas-svg-creative-animation/mo_js.md"
+  - "references/fim/solution/mo_js.md"
+prompt:
+  system: |-
+    Generate production-quality mo.js product communication motion assets for FIM evaluation. Output only a complete self-contained HTML document with inline CSS and JavaScript.
+  text: |-
+    Create a product and brand communication motion piece using mo.js as a motion-graphics effects layer.
+
+    Scenario:
+    Build a checkout success or product activation panel with a custom brand glyph, a ring pulse, directional accent shapes, a restrained particle burst, and HTML text reveal. The motion should communicate completion and brand delight while keeping product copy legible.
+
+    Implementation requirements:
+    - Use @mojs/core from a CDN or equivalent import with mojs.CustomShape or built-in shapes, mojs.Shape, mojs.Burst, mojs.Html, and mojs.Timeline.
+    - Use delta syntax for fill, stroke, scale, radius, angle, opacity, or x/y; specify durations in milliseconds, easing, delay, repeat or isYoyo, and replay behavior.
+    - Validate the panel, CTA, glyph, and burst parent targets before module creation and display missing-target diagnostics.
+    - Include brand motion tokens for color, duration, easing, particle count, and reduced-motion substitution.
+    - Include play, replay, pause, reduced-motion, and low-power controls.
+    - Keep copy, CTA, glyph, particles, controls, and diagnostics non-overlapping in responsive layouts.
+    - Reuse bursts and remove injected SVG nodes during cleanup or rebuild.
+    - Output only the final artifact, with no markdown fences or explanatory prose outside the artifact.
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.24
+output:
+  text_format: html
+  artifact_kind: mojs-html-product-brand-motion
+  formats:
+    - format: html
+  dimensions:
+    width: 1440
+    height: 900
+  render_expectation: "Interactive mo.js brand motion piece suitable for product communication review."
+evaluation:
+  checklist:
+    - "Format validity: YAML parses under schema 0.4 and generated output is exactly one HTML artifact with no markdown fences."
+    - "mo.js API: Uses CustomShape or built-in shapes, Shape, Burst, Html, Timeline, delta syntax, and valid targets."
+    - "Motion timing: Defines millisecond durations, easing, delay, repeat or isYoyo, replay behavior, and reduced-motion substitutions."
+    - "Visual quality: Product copy, CTA, glyph, particles, controls, and diagnostics remain readable and non-overlapping."
+    - "Reduced motion: Preserves the success message while disabling burst-heavy and looped motion."
+    - "Performance: Reuses modules, limits particle count, and cleans up injected SVG nodes."
+  rubric:
+    - name: "Format validity"
+      weight: 30
+      criteria: "YAML and generated HTML are syntactically valid, required fields are present, id and file name match, and the artifact uses mo.js rather than a substitute animation library."
+    - name: "Semantic completeness"
+      weight: 30
+      criteria: "The artifact delivers product communication motion with brand glyph, shape pulse, burst accents, HTML reveal, controls, target validation, reduced motion, and cleanup."
+    - name: "Motion/visual quality"
+      weight: 25
+      criteria: "Motion feels intentional and brand-aligned, uses expressive easing, and keeps all content readable without overlap."
+    - name: "Robustness"
+      weight: 15
+      criteria: "Handles missing targets, responsive layout, reduced motion, low-power mode, replay, and cleanup without runtime errors."
+  pass_conditions:
+    - "Rubric weights are exactly 30, 30, 25, and 15 for a total of 100."
+    - "YAML parses successfully and all prompt text is ASCII-only."
+    - "Generated artifact runs with no console errors when mo.js is available."
+    - "Score is at least 80 out of 100 with no zero score in any rubric dimension."
+tags:
+  - "fim"
+  - "animation-and-motion"
+  - "mo_js"
+  - "product-brand-communication-motion"
+  - "brand-motion"
+  - "micro-interaction"

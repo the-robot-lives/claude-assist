@@ -1,0 +1,140 @@
+@startuml
+' ============================================================================
+' METADATA
+'   author:       TheRobotDrafts Examples
+'   description:  Complex requirement hierarchy — 16+ requirements, mixed edges, rationale notes.
+'   usecase:      Full traceability for an avionics-style mission system.
+'   complexity:   complex
+'   domain:       systems-engineering
+' ============================================================================
+title Example SysML Requirement - Complex Hierarchy
+
+' Top-level mission requirements derive down through operational, system,
+' subsystem, and component tiers. Mixed edges: deriveReqt, satisfy, verify,
+' refine, trace, copy. Rationale notes capture the "why" behind a derive.
+
+' ---- Mission -------------------------------------------------------------
+class "M: Mission Success" <<requirement>> {
+  id : REQ-M1
+  text : "The mission shall achieve all primary objectives."
+}
+class "M: Crew Safety" <<requirement>> {
+  id : REQ-M2
+  text : "The mission shall preserve crew safety with P > 0.9999."
+}
+
+' ---- Operational ---------------------------------------------------------
+class "O: Reach Orbit" <<requirement>> {
+  id : REQ-O1
+  text : "The launch vehicle shall deliver 10 t to LEO."
+}
+class "O: Re-entry Recovery" <<requirement>> {
+  id : REQ-O2
+  text : "The crew module shall survive re-entry and splash down."
+}
+class "O: Comms Link" <<requirement>> {
+  id : REQ-O3
+  text : "Telemetry shall be available for 95% of the mission."
+}
+
+' ---- System --------------------------------------------------------------
+class "S: Thrust Profile" <<requirement>> {
+  id : REQ-S1
+  text : "Engines shall produce 9 MN total thrust at sea level."
+}
+class "S: Heat Shield" <<requirement>> {
+  id : REQ-S2
+  text : "The TPS shall withstand 3000 K peak."
+}
+class "S: Antenna Gain" <<requirement>> {
+  id : REQ-S3
+  text : "The S-band antenna shall provide 30 dBi gain."
+}
+class "S: Avionics Redundancy" <<requirement>> {
+  id : REQ-S4
+  text : "Flight computers shall be triple-redundant."
+}
+
+' ---- Subsystem / Component ----------------------------------------------
+class "C: Engine Bell Alloy" <<requirement>> {
+  id : REQ-C1
+  text : "The nozzle alloy shall sustain 1100 K continuous."
+}
+class "C: Ablator Density" <<requirement>> {
+  id : REQ-C2
+  text : "Ablator density shall be 0.3 g/cc nominal."
+}
+class "C: RF Amp Output" <<requirement>> {
+  id : REQ-C3
+  text : "RF amplifier shall deliver 20 W saturated."
+}
+class "C: Voter Logic" <<requirement>> {
+  id : REQ-C4
+  text : "Voting shall mask a single fault within 10 ms."
+}
+
+' ---- Blocks / Tests ------------------------------------------------------
+class "EngineBell" <<block>>
+class "HeatShield" <<block>>
+class "RFAmplifier" <<block>>
+class "FlightComputer" <<block>>
+class "EngineStaticFire" <<testCase>> { id : TC-501 }
+class "ArcJetTest" <<testCase>> { id : TC-502 }
+class "RFRangeTest" <<testCase>> { id : TC-503 }
+class "FaultInjectionBench" <<testCase>> { id : TC-504 }
+
+' ---- Derive chain --------------------------------------------------------
+"O: Reach Orbit" ..> "M: Mission Success" : <<deriveReqt>>
+"O: Re-entry Recovery" ..> "M: Crew Safety" : <<deriveReqt>>
+"O: Comms Link" ..> "M: Mission Success" : <<deriveReqt>>
+"S: Thrust Profile" ..> "O: Reach Orbit" : <<deriveReqt>>
+"S: Heat Shield" ..> "O: Re-entry Recovery" : <<deriveReqt>>
+"S: Antenna Gain" ..> "O: Comms Link" : <<deriveReqt>>
+"S: Avionics Redundancy" ..> "M: Crew Safety" : <<deriveReqt>>
+"C: Engine Bell Alloy" ..> "S: Thrust Profile" : <<deriveReqt>>
+"C: Ablator Density" ..> "S: Heat Shield" : <<deriveReqt>>
+"C: RF Amp Output" ..> "S: Antenna Gain" : <<deriveReqt>>
+"C: Voter Logic" ..> "S: Avionics Redundancy" : <<deriveReqt>>
+
+' ---- Refine (narrow a requirement) --------------------------------------
+"C: Ablator Density" ..> "S: Heat Shield" : <<refine>>
+"C: Voter Logic" ..> "S: Avionics Redundancy" : <<refine>>
+
+' ---- Satisfy -------------------------------------------------------------
+"EngineBell" ..> "C: Engine Bell Alloy" : <<satisfy>>
+"HeatShield" ..> "C: Ablator Density" : <<satisfy>>
+"RFAmplifier" ..> "C: RF Amp Output" : <<satisfy>>
+"FlightComputer" ..> "C: Voter Logic" : <<satisfy>>
+
+' ---- Verify --------------------------------------------------------------
+"EngineStaticFire" ..> "S: Thrust Profile" : <<verify>>
+"ArcJetTest" ..> "S: Heat Shield" : <<verify>>
+"RFRangeTest" ..> "S: Antenna Gain" : <<verify>>
+"FaultInjectionBench" ..> "C: Voter Logic" : <<verify>>
+
+' ---- Trace (auxiliary) and Copy -----------------------------------------
+"EngineStaticFire" ..> "M: Mission Success" : <<trace>>
+"C: Voter Logic" ..> "S: Avionics Redundancy" : <<copy>>
+
+' ---- Rationale notes -----------------------------------------------------
+note bottom of "C: Ablator Density"
+  <b>Rationale:</b>
+  Density cap trades mass for
+  insulation performance; chosen
+  via arc-jet trade study ARC-22.
+end note
+
+note bottom of "S: Avionics Redundancy"
+  <b>Rationale:</b>
+  Triple modular redundancy selected
+  over duplex for single-fault masking
+  without reversion logic complexity.
+end note
+
+note bottom of "C: Engine Bell Alloy"
+  <b>Edge legend:</b>
+  «deriveReqt» «satisfy» «verify»
+  «refine» «trace» «copy»
+end note
+
+@enduml

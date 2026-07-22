@@ -1,0 +1,38 @@
+# .trd-yaml — TheRobotDrafts native model (IxModel serialization)
+name: Example Composite Structure - Complex Platform Internals
+elements:
+  - { id: platform, type: Boundary, name: ApplicationPlatform, stereotype: structuredClassifier }
+  - { id: router, type: Component, name: 'router : Router', parentId: platform }
+  - { id: ctrl, type: Component, name: 'ctrl : Controller', parentId: platform }
+  - { id: repo, type: Component, name: 'repo : RepositoryProxy', parentId: platform }
+  - { id: sink, type: Component, name: 'sink : AuditSink', parentId: platform }
+  - { id: pipeline, type: Boundary, name: RequestPipeline, parentId: platform, stereotype: structuredClassifier }
+  - { id: val, type: Component, name: 'val : Validator', parentId: pipeline }
+  - { id: authz, type: Component, name: 'authz : Authorizer', parentId: pipeline }
+  - { id: exec, type: Component, name: 'exec : Executor', parentId: pipeline }
+  - { id: xform, type: Component, name: 'xform : Transformer', parentId: pipeline }
+  - { id: serial, type: Component, name: 'serial : Serializer', parentId: pipeline }
+  - { id: pReqIn, type: Component, name: pReqIn, parentId: pipeline }
+  - { id: pReqOut, type: Component, name: pReqOut, parentId: pipeline }
+  - { id: caching, type: Component, name: 'caching : Caching', parentId: platform, stereotype: collaborationUse }
+  - { id: pHttp, type: Component, name: pHttp, parentId: platform }
+  - { id: pResp, type: Component, name: pResp, parentId: platform }
+  - { id: ~note1, type: Note, name: '<b>Nested classifier</b>', documentation: '<b>Nested classifier</b>\nRequestPipeline is itself a structured\nclassifier nested inside the platform.\nIts internal parts are invisible at\nthe platform level except through its\nown ports (pReqIn / pReqOut).' }
+  - { id: ~note2, type: Note, name: '<b>Collaboration use</b>', documentation: '<b>Collaboration use</b>\n"caching : Caching" is a bound instance of\na reusable collaboration — a named\npattern of roles.  It is how a\ncomposite-structure diagram references\na pattern instead of redrawing it.\n<b>Provided vs required ports</b>\npHttp/pResp are PROVIDED (platform\noffers them). pAuth/pCache/pDb are\nREQUIRED (platform needs them from its\nenvironment) — drawn the same way but\nannotated; the distinction is in the\ninterface direction, not the glyph.' }
+edges:
+  - { id: e1, type: DirectedAssociation, from: val, to: authz, label: check }
+  - { id: e2, type: DirectedAssociation, from: authz, to: exec, label: run }
+  - { id: e3, type: DirectedAssociation, from: exec, to: xform, label: adapt }
+  - { id: e4, type: DirectedAssociation, from: xform, to: serial, label: encode }
+  - { id: e5, type: DirectedAssociation, from: pReqIn, to: val }
+  - { id: e6, type: DirectedAssociation, from: serial, to: pReqOut }
+  - { id: e7, type: DirectedAssociation, from: router, to: ctrl, label: route }
+  - { id: e8, type: DirectedAssociation, from: ctrl, to: pipeline, label: handle }
+  - { id: e9, type: DirectedAssociation, from: ctrl, to: repo, label: persist }
+  - { id: e10, type: DirectedAssociation, from: ctrl, to: sink, label: log }
+  - { id: e11, type: DirectedAssociation, from: pHttp, to: router }
+  - { id: e12, type: DirectedAssociation, from: router, to: pResp }
+  - { id: e13, type: NoteLink, from: ~note1, to: platform }
+  - { id: e14, type: NoteLink, from: ~note2, to: platform }
+diagrams:
+  - { id: d1, name: Example Composite Structure - Complex Platform Internals, kind: component, layoutProvenance: Synthesized }

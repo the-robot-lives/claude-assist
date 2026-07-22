@@ -738,7 +738,7 @@ namespace TheRobotDraft.Uml
                     var id = _ctl.CommitAddNode(parent, txt);
                     if (!id.IsValid) { Flash("invalid placement"); _ctl.EnterSelect(); return; }
                     _ctl.SetDescription(id, descInput.text);
-                    _pos[id] = ScreenToLayer(screenPos);
+                    _placements.SetPos(id, ScreenToLayer(screenPos));
                     RebuildFromModel();
                     SetSelected(id);
                     Flash("added note");

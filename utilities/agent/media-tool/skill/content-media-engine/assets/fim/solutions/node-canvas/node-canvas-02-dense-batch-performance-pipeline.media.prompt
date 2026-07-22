@@ -1,0 +1,81 @@
+schema: "0.4"
+id: node-canvas-02-dense-batch-performance-pipeline
+type: image/visualization/data
+quality: high
+solution: node-canvas
+category: image-and-video-processing
+variant: dense-batch-performance-pipeline
+references:
+  - "references/fim/overview/electronics-media-docfile/node-canvas.md"
+  - "references/fim/solution/node-canvas.md"
+prompt:
+  system: |-
+    You generate node-canvas image-generation artifacts. Output only one complete ASCII JavaScript module. Do not use markdown fences or explanatory prose.
+  text: |-
+    Create a dense batch node-canvas performance pipeline for generating large sets of thumbnails, badges, and report graphics.
+
+    Requirements:
+    - Use createCanvas(), registerFont(), loadImage(), drawImage(), createPNGStream(), createJPEGStream(), and toBuffer() where appropriate.
+    - Register fonts once, cache loaded static assets, and process a stable sorted input manifest with bounded concurrency.
+    - Generate three deterministic outputs per record: 256x256 badge PNG, 640x360 thumbnail JPEG, and 1200x630 social PNG.
+    - Include optional PDF output through createCanvas(width, height, "pdf") for a batch contact sheet, with dimensions expressed in points.
+    - Specify srgb canvas assumptions, alpha preserved for PNG, JPEG flattened to #ffffff, PDF/SVG vector surfaces where requested, and no ICC embedding guarantee.
+    - Support input formats PNG, JPEG, SVG, GIF and output formats PNG, JPEG, PDF, JSON, and stream outputs.
+    - Include memory and performance controls: max canvas count, max area per output, streaming for large outputs, asset cache limits, backpressure on streams, and explicit disposal of buffers.
+    - Emit deterministic metadata JSON per record and a batch manifest with source hash, output dimensions, formats, byte sizes, alpha decisions, font versions, timings, warnings, and stable filenames.
+    - Include deterministic output checks for input sort order, canvas dimensions, draw order, filename templates, stream completion, and manifest key order.
+    - Output only the final JavaScript artifact.
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.2
+output:
+  text_format: javascript
+  artifact_kind: node-canvas-batch-performance-pipeline
+  dimensions:
+    width: 1200
+    height: 630
+  color_profile: srgb-canvas-assumed
+  alpha: png-preserved-jpeg-flattened
+  formats:
+    - format: js
+    - format: png
+    - format: jpg
+    - format: pdf
+    - format: json
+evaluation:
+  checklist:
+    - "Format validity: YAML parses as schema 0.4, generated output is one JavaScript module, and node-canvas APIs are used."
+    - "Semantic completeness: batch manifest, cached fonts/assets, badge, thumbnail, social image, optional PDF, streams, and metadata are present."
+    - "Dimensions: badge is 256x256, thumbnail is 640x360, social image is 1200x630, and PDF dimensions are explicit."
+    - "Color profile and alpha: srgb canvas assumptions, PNG alpha preservation, JPEG flattening, vector surface notes, and ICC limits are explicit."
+    - "File formats: PNG, JPEG, SVG, GIF input and PNG, JPEG, PDF, JSON, stream output are represented."
+    - "Memory and performance: bounded concurrency, max canvas count, max area, streaming, cache limits, backpressure, and buffer disposal are covered."
+    - "Metadata: per-record and batch manifests record hashes, dimensions, formats, byte sizes, alpha decisions, font versions, timings, warnings, and filenames."
+    - "Deterministic output: input sorting, dimensions, draw order, filename templates, stream completion, and manifest keys are stable."
+  rubric:
+    - name: "Format validity"
+      weight: 30
+      criteria: "The prompt YAML and generated JavaScript are parseable, ASCII-only, and use node-canvas APIs for batch rendering."
+    - name: "Semantic completeness"
+      weight: 30
+      criteria: "The artifact covers batch orchestration, output variants, font and asset caching, stream handling, metadata, and deterministic behavior."
+    - name: "Output quality"
+      weight: 25
+      criteria: "The generated badges, thumbnails, social images, and optional PDF are crisp, consistently sized, and visually legible."
+    - name: "Robustness"
+      weight: 15
+      criteria: "The artifact handles native dependency constraints, missing assets, stream failures, memory pressure, queue errors, and deterministic reruns."
+  pass_conditions:
+    - "YAML parses successfully and all file text is ASCII-only."
+    - "Rubric weights are exactly Format validity 30, Semantic completeness 30, Output quality 25, and Robustness 15."
+    - "Generated JavaScript contains no markdown fences and uses node-canvas as the drawing backend."
+    - "All dimensions, color profile/alpha, file format, memory/performance, metadata, and deterministic output checks are represented."
+    - "Rubric score is at least 80 out of 100 and no required checklist item is absent."
+tags:
+  - fim
+  - image-and-video-processing
+  - node-canvas
+  - dense-batch-performance-pipeline
+  - batch-rendering
+  - streams
+  - pdf

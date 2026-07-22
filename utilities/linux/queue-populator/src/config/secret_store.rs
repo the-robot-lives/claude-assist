@@ -59,9 +59,9 @@ pub fn generate_alias() -> String {
     let mut rng = rand::thread_rng();
     format!(
         "{}-{}-{}",
-        ADJECTIVES.choose(&mut rng).unwrap(),
-        NOUNS.choose(&mut rng).unwrap(),
-        NOUNS.choose(&mut rng).unwrap()
+        ADJECTIVES.choose(&mut rng).copied().unwrap_or("safe"),
+        NOUNS.choose(&mut rng).copied().unwrap_or("key"),
+        NOUNS.choose(&mut rng).copied().unwrap_or("alias")
     )
 }
 

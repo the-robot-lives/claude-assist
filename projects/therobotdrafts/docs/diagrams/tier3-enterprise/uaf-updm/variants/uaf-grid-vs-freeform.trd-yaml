@@ -1,0 +1,25 @@
+# .trd-yaml — TheRobotDrafts native model (IxModel serialization)
+name: Example UAF/UPDM - Grid vs Freeform
+elements:
+  - { id: Variant, type: Actor, name: Variant, members: [{ name: same 4-node surveillance story shown TWO ways., isOperation: false, visibility: Public, rawText: same 4-node surveillance story shown TWO ways. }] }
+  - { id: G_OA, type: Package, name: 'GRID: Operational x Activities' }
+  - { id: GA1, type: UseCase, name: Conduct Patrol, parentId: G_OA }
+  - { id: G_OR, type: Package, name: 'GRID: Operational x Resources' }
+  - { id: GP1, type: Actor, name: Patrol Crew, parentId: G_OR }
+  - { id: G_SR, type: Package, name: 'GRID: Systems x Resources' }
+  - { id: GS1, type: DeploymentNode, name: Radar, parentId: G_SR }
+  - { id: G_SP, type: Package, name: 'GRID: Standards x Profiles' }
+  - { id: GST1, type: Boundary, name: 'STD: Link 22', parentId: G_SP }
+  - { id: FP1, type: Actor, name: Patrol Crew (FF) }
+  - { id: FA1, type: UseCase, name: Conduct Patrol (FF) }
+  - { id: FS1, type: DeploymentNode, name: Radar (FF) }
+  - { id: FST1, type: Boundary, name: 'STD: Link 22 (FF)' }
+edges:
+  - { id: e1, type: DirectedAssociation, from: GP1, to: GA1, label: performs }
+  - { id: e2, type: Dependency, from: GA1, to: GS1, label: needline }
+  - { id: e3, type: Dependency, from: GS1, to: GST1, label: conforms }
+  - { id: e4, type: DirectedAssociation, from: FP1, to: FA1, label: performs }
+  - { id: e5, type: DirectedAssociation, from: FA1, to: FS1, label: supported-by }
+  - { id: e6, type: DirectedAssociation, from: FS1, to: FST1, label: conforms }
+diagrams:
+  - { id: d1, name: Example UAF/UPDM - Grid vs Freeform, kind: usecase, layoutProvenance: Synthesized }

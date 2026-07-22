@@ -1,0 +1,97 @@
+# docs/pipelines/project-uplift/state/therobotlearns.com.yaml
+project: therobotlearns.com
+pilot: false
+census:
+  readme_stub: false
+  personas: 8
+  stories: 100
+  screens: 20
+  components: 25
+  roadmap_exists: false
+  existing_named_themes: [theme-atlas, theme-chalkboard, theme-comic, theme-deep-focus, theme-scholar, theme-spark, theme-workbench]
+stage_a:
+  status: done
+  attempts: 1
+  counts: {personas: 8, stories: 100, screens: 20, components: 25}
+  blocked: null
+stage_b:
+  status: done
+  attempts: 1
+  effective_theme_count: 5.55    # E over 7 existing themes; mean pairwise similitude 0.207
+  new_themes_needed: 2            # ceil(7 - 5.55) = 2 (phosphor, cockpit — both terminal-native)
+  themes_written: [atlas, chalkboard, comic, deep-focus, scholar, spark, workbench, phosphor, cockpit]
+  allocation_yaml: true
+  # Terminal-first product: 19/20 screens are TUI surfaces. allocation.yaml renders the 6
+  # most terminal-natural directions at exactly 5 screens each; the 3 web-leaning directions
+  # are treatise-only this pass (see THEMES.md "Render set vs deferred"). stage_c.themes NOT
+  # seeded here per spawn instruction "targeted Edit ONLY your stage_b block" (live concurrency
+  # with uplift-trl-a/-d). Stage C roster derives from allocation.yaml + these two lists:
+  rendered_themes: [phosphor, cockpit, deep-focus, scholar, chalkboard, workbench]  # stage_c: pending
+  deferred_themes: [atlas, comic, spark]                                            # stage_c: deferred
+  blocked: null
+stage_c:
+  status: in-progress
+  # keyed by theme slug once Stage B allocation.yaml exists; each entry tracks prompts/images/api_calls/avg_eval/yaml/conformance
+  themes:
+    chalkboard:
+      status: done
+      prompts: 5
+      images: 5
+      api_calls: 9
+      avg_eval: null
+      yaml: true
+      conformance: true
+      render_note: "straight to --quality medium (no 429s); 9 api_calls = 5 screens (heroes 05,09 at -n2) + 1 hero re-render of 09 (-n2, A/B confirmed new>orig: restored missing citation column + fixed rubric alignment). Fixed 3 shipped defects: dead Roboto Slab font import DROPPED (was loaded, referenced by nothing); seed-trap (bare red/blue/yellow no-ops + brand-*-light/mid pinned to Bauhaus color-mix) fixed in vars + NEW dark scoped-vars re-pointing all 3 chalk families; css-snippets + globals self-scoped (were bleeding globally). Always-dark affirmed DELIBERATE (no true light mode — sibling workbench owns paper). Compiled-CSS verified: 0 Bauhaus #e20613/#0047ab/#f5c518 in chalkboard.dark, chalk brand hexes resolve, radius 0, Patrick Hand. Renders wear a framed-blackboard prop vs bare terminal (image-model skeuomorphism, documented in conformance)."
+    workbench:
+      status: done
+      prompts: 5
+      images: 5
+      api_calls: 7
+      avg_eval: null
+      yaml: true
+      conformance: true
+      render_note: "straight to --quality medium; 5 terminal/TUI maker-sheet screens (cream paper skin), hero 09 -n2. 7 api_calls incl 1 re-render of 14 (browser chrome -> terminal window). TUNE pass on existing theme: fixed flagged missing Body class (full typography set re-declared, verified .typography-body=Outfit in CSS); fixed seed-trap (removed bare red/blue/yellow, re-pointed brand-*-light/mid); self-scoped all 5 css-snippets + added foundation (warm lift + §9 blue focus); added scoped-vars.yaml killing base Bauhaus/slate dark leak (grep-verified clay, zero Bauhaus in workbench scope). treatise sketch->full (rev 2)."
+    scholar:
+      status: done
+      prompts: 5
+      images: 5
+      api_calls: 8
+      avg_eval: null
+      yaml: true
+      conformance: true
+      render_note: "straight to --quality medium (no 429s); 8 api_calls incl 1 hero re-render of 05. 4/5 light (07 web hero, 09, 10, 05); 06 drifted dark (model 'terminals are dark' prior, documented — YAML is light-native, verified from compiled CSS). Fixed shipped seed-trap: bare red/blue/yellow no-op'd the indigo accent → moved to brand-red + dark scoped-vars re-point + hui controls re-pointed off base blue; added missing branding font-url. 10 promoted its light -n2 alternate."
+    deep-focus:
+      status: done
+      prompts: 5
+      images: 5
+      api_calls: 7
+      avg_eval: null
+      yaml: true
+      conformance: true
+    phosphor:
+      status: done
+      prompts: 5
+      images: 5
+      api_calls: 7
+      avg_eval: null
+      yaml: true
+      conformance: true
+      render_note: "medium quality — 429 storm forced high->medium tier drop; heroes 01+14 got -n 1 (single candidate) not -n 2 to conserve under the storm; all 5 screens rendered"
+    cockpit:
+      status: done
+      prompts: 5
+      images: 5
+      api_calls: 8
+      avg_eval: null
+      yaml: true
+      conformance: true
+      render_note: "medium quality — 429 storm forced high->medium tier drop; all 5 screens rendered"
+  blocked: null
+stage_d:
+  status: done
+  attempts: 1
+  story_coverage_pct: 100
+  blocked: null
+verified: false
+notes:
+  []

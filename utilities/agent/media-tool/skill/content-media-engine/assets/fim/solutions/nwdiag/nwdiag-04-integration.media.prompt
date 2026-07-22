@@ -1,0 +1,79 @@
+schema: "0.4"
+id: fim-diagrams-dsl-xml-nwdiag-04-integration
+type: diagram
+quality: production
+solution: nwdiag
+category: diagrams-dsl-xml
+variant: integration
+prompt:
+  system: You generate nwdiag source for network topology diagrams. Output only a valid nwdiag { ... }
+    document with networks, nodes, peer links, and attributes. Do not use code fences or explanatory prose.
+  text: Create nwdiag source for a hybrid cloud integration showing on-prem VLANs, AWS VPC subnets, GCP
+    VPC subnet, site-to-site VPN, NAT gateway, identity provider, SIEM collector, and DNS resolver. Use
+    peer links for VPN/control-plane paths and shared nodes for dual attachment.
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.2
+    top_p: 0.9
+output:
+  text_format: nwdiag
+  artifact_kind: network_diagram_source
+  formats:
+  - format: diag
+  - format: svg
+  - format: png
+  - format: pdf
+evaluation:
+  checklist:
+  - 'Output uses native nwdiag syntax: nwdiag root block, network blocks with address attributes, multi-homed
+    nodes, peer links using --, groups, classes, node attributes, and subnet labels.'
+  - 'Output captures the requested semantics: network topology with subnets, devices, addresses, routers,
+    firewalls, VPN links, and logical groups.'
+  - 'Output has solution-appropriate structure: stacked network segments, clear multi-homed bridge devices,
+    readable subnet labels, and peer links for off-subnet connections.'
+  - 'Output is robust for the renderer/importer: shared nodes represent bridges intentionally, CIDR/address
+    labels are consistent, and peer links do not misuse directed arrows.'
+  - Models boundaries, external systems, failure paths, references, ids, or import/export assumptions
+    needed for integration work.
+  - Output contains only the requested artifact source, with no Markdown fences, no explanatory prose,
+    and no non-ASCII characters.
+  rubric:
+    Format validity:
+      weight: 30
+      criteria: 'Must parse as nwdiag and follow nwdiag-specific grammar: nwdiag root block, network blocks
+        with address attributes, multi-homed nodes, peer links using --, groups, classes, node attributes,
+        and subnet labels. Deduct heavily for malformed roots, unmatched blocks/tags, invalid ids, unresolved
+        references, or mixing syntax from another diagram DSL.'
+    Semantic completeness:
+      weight: 30
+      criteria: Must satisfy the full scenario for edge/integration use and include the domain entities,
+        relationships, responsibilities, and edge/failure paths requested in the prompt. The diagram must
+        use nwdiag for network topology with subnets, devices, addresses, routers, firewalls, VPN links,
+        and logical groups.
+    Visual/structural quality:
+      weight: 25
+      criteria: Must produce a readable rendered or importable artifact with stacked network segments,
+        clear multi-homed bridge devices, readable subnet labels, and peer links for off-subnet connections.
+        Labels should be concise, grouping should reduce clutter, and styling/layout choices must match
+        the strengths and limits of nwdiag.
+    Robustness:
+      weight: 15
+      criteria: Must remain stable under normal rendering, import, export, or documentation use. Check
+        shared nodes represent bridges intentionally, CIDR/address labels are consistent, and peer links
+        do not misuse directed arrows, avoid placeholders that block execution, and keep output ASCII-only
+        and deterministic.
+  pass_conditions:
+  - Total rubric score is at least 85 out of 100.
+  - Format validity score is at least 24 out of 30.
+  - The generated artifact source has no code fences, no prose wrapper, and no non-ASCII characters.
+  - The generated source can be parsed or imported by the normal nwdiag toolchain without unresolved references
+    or missing required root elements.
+tags:
+- fim
+- diagrams-dsl-xml
+- nwdiag
+- integration
+- nwdiag
+- network-topology
+- subnets
+

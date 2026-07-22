@@ -132,6 +132,7 @@ namespace TheRobotDraft.CodeGen
         {
             var sb = new StringBuilder();
             DocComment(sb, ctx, "/// ", "/// ", "/// ");
+            EmitAspects(sb, ctx, Lang.CSharp);
             CollectBases(ctx, out var extends, out var implements);
 
             string name = Sanitize(ctx.Name);
@@ -208,6 +209,7 @@ namespace TheRobotDraft.CodeGen
         {
             var sb = new StringBuilder();
             DocComment(sb, ctx, "/**\n", " * ", " */");
+            EmitAspects(sb, ctx, Lang.Java);
             CollectBases(ctx, out var extends, out var implements);
 
             string name = Sanitize(ctx.Name);
@@ -282,6 +284,7 @@ namespace TheRobotDraft.CodeGen
         {
             var sb = new StringBuilder();
             DocComment(sb, ctx, "/**\n", " * ", " */");
+            EmitAspects(sb, ctx, Lang.TypeScript);
             CollectBases(ctx, out var extends, out var implements);
 
             string name = Sanitize(ctx.Name);
@@ -349,6 +352,7 @@ namespace TheRobotDraft.CodeGen
         {
             var sb = new StringBuilder();
             CollectBases(ctx, out var extends, out var implements);
+            EmitAspects(sb, ctx, Lang.Python);
 
             string name = Sanitize(ctx.Name);
             var bases = new List<string>(extends);
@@ -406,6 +410,7 @@ namespace TheRobotDraft.CodeGen
             var sb = new StringBuilder();
             string name = ModuleName(ctx.Name);
             CollectBases(ctx, out var extends, out var implements);
+            EmitAspects(sb, ctx, Lang.Elixir);
 
             sb.Append("defmodule ").Append(name).Append(" do\n");
             ElixirModuleDoc(sb, ctx);
@@ -584,6 +589,109 @@ namespace TheRobotDraft.CodeGen
             if (block) sb.Append(open);
             foreach (var line in body.Split('\n')) sb.Append(linePrefix).Append(line).Append('\n');
             if (block) sb.Append(close).Append('\n');
+        }
+
+        // --- aspect emit (Track D) ---
+        //
+        // Emits the effective aspects (ctx.Aspects) into generated code, routed by each aspect's effective EmitFlags:
+        //   Annotate → a native attribute/decorator on the type (language-specific syntax).
+        //   DocTag   → a structured <aspect> doc-tag block (rendered as a comment so it survives every language).
+        //   Comment  → a plain line-comment listing the aspect + its values (the universal fallback carrier).
+        //   Meta     → NOT inlined (the .trd.{file}.meta.yaml sidecar owns it — see AspectSidecar); a one-line pointer
+        //              is emitted so a reader knows metadata exists off-file.
+        //
+        // No aspect block is emitted when ctx.Aspects is empty. Aspect values are quoted per language so typed ints /
+        // floats / options / strings all round-trip.
+
+        private static void EmitAspects(StringBuilder sb, CodeGenContext ctx, Lang lang)
+        {
+            if (ctx.Aspects == null || ctx.Aspects.Count == 0) return;
+            string cmt = lang switch { Lang.Python => "# ", Lang.Elixir => "# ", _ => "// ", };
+            foreach (var a in ctx.Aspects)
+            {
+                if (a == null || string.IsNullOrEmpty(a.Name)) continue;
+                bool any = a.Emit.Annotate || a.Emit.DocTag || a.Emit.Comment || a.Emit.Meta;
+                if (!any) continue; // an aspect targeting nothing emits nothing
+
+                // DocTag + Comment both land in comments (DocTag uses a machine-parseable <aspect> form).
+                if (a.Emit.DocTag)
+                {
+                    sb.Append(cmt).Append("<aspect name=\"").Append(a.Name).Append("\" v=\"")
+                        .Append(a.DefVersion).Append("\">\n");
+                    foreach (var kv in a.Values)
+                        sb.Append(cmt).Append("  <field key=\"").Append(kv.Key).Append("\">")
+                            .Append(EscValue(kv.Value, lang)).Append("</field>\n");
+                    sb.Append(cmt).Append("</aspect>\n");
+                }
+                else if (a.Emit.Comment)
+                {
+                    sb.Append(cmt).Append("aspect ").Append(a.Name).Append(" (v").Append(a.DefVersion).Append("):\n");
+                    foreach (var kv in a.Values)
+                        sb.Append(cmt).Append("  ").Append(kv.Key).Append(" = ").Append(EscValue(kv.Value, lang)).Append('\n');
+                }
+                if (a.Emit.Meta)
+                    sb.Append(cmt).Append("aspect \"").Append(a.Name).Append("\" metadata → see .trd.<file>.meta.yaml\n");
+
+                // Native attribute / decorator on the type (above the type keyword). Bracket languages carry key=value
+                // args inside; Python uses @<name>(...) decorators; Elixir uses @<name> module attributes.
+                if (a.Emit.Annotate)
+                {
+                    switch (lang)
+                    {
+                        case Lang.CSharp:
+                            sb.Append('[').Append(ModuleName(a.Name)).Append('(');
+                            sb.Append(AspectArgs(a, lang));
+                            sb.Append(")]\n");
+                            break;
+                        case Lang.Java:
+                            sb.Append('@').Append(ModuleName(a.Name)).Append('(');
+                            sb.Append(AspectArgs(a, lang));
+                            sb.Append(")\n");
+                            break;
+                        case Lang.TypeScript:
+                            // TS has no class attributes — render as an @decorator-style comment for traceability.
+                            sb.Append("// @").Append(a.Name).Append('(').Append(AspectArgs(a, lang)).Append(")\n");
+                            break;
+                        case Lang.Python:
+                            sb.Append("@aspect(\"").Append(a.Name).Append("\", {")
+                                .Append(AspectArgs(a, lang)).Append("})\n");
+                            break;
+                        case Lang.Elixir:
+                            sb.Append("# @").Append(a.Name).Append(" ").Append(AspectArgs(a, lang)).Append('\n');
+                            break;
+                    }
+                }
+            }
+        }
+
+        // key = value, key = value … for the args portion (no surrounding parens). C#/Java use key=value; Python uses
+        // "key": value; Elixir/TS use key: value.
+        private static string AspectArgs(CodeGenContext.AspectView a, Lang lang)
+        {
+            var parts = new List<string>();
+            foreach (var kv in a.Values)
+            {
+                string v = EscValue(kv.Value, lang);
+                switch (lang)
+                {
+                    case Lang.Python: parts.Add("\"" + kv.Key + "\": " + v); break;
+                    case Lang.Elixir: parts.Add(kv.Key + ": " + v); break;
+                    case Lang.TypeScript: parts.Add(kv.Key + ": " + v); break;
+                    default: parts.Add(kv.Key + " = " + v); break;
+                }
+            }
+            return string.Join(", ", parts);
+        }
+
+        // Quote a value appropriately for the language: leave digits/bools bare, else quote. The lang param is kept
+        // for future per-language escaping even though all five currently use double quotes.
+        private static string EscValue(string value, Lang lang)
+        {
+            if (value == null) return "\"\"";
+            string trimmed = value.Trim();
+            if (trimmed == "true" || trimmed == "false") return trimmed;
+            if (double.TryParse(trimmed, out _)) return trimmed;
+            return "\"" + trimmed.Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"";
         }
     }
 }

@@ -1,0 +1,79 @@
+schema: "0.4"
+id: chart_js-04-edge-integration
+type: visualization
+quality: high
+solution: chart_js
+category: js-charting
+variant: edge-integration
+references:
+  - "references/fim/overview/data-visualization/chart_js.md"
+  - "references/fim/solution/chart_js.md"
+  - "assets/example-prompts/landing-page.media.prompt"
+  - "assets/example-prompts/architecture-diagram.media.prompt"
+
+prompt:
+  system: |-
+    You generate Chart.js browser visualization artifacts. Output only a complete self-contained HTML document with inline CSS and JavaScript, using the Chart.js UMD CDN. Do not use markdown fences or explanations.
+  text: |-
+    Create the edge integration output for Chart.js.
+    
+    Scenario:
+    Create an embeddable analytics widget that demonstrates integration behavior. It must support resizing, data refresh, export where the library supports it, cleanup, and visible handling for empty, partial, malformed, and extreme data.
+    
+    Implementation requirements:
+    - Use this library source or equivalent npm import pattern: https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js.
+    - Parser/API contract: Use new Chart(ctx, config) with type, data, options, and plugins; call chart.update, chart.resize, and chart.destroy in the correct places.
+    - Data encoding contract: Encode labels and datasets with supported Chart.js shapes, including object points and parsing keys when useful; specify scales and plugins explicitly.
+    - Responsive contract: Wrap canvas in a sized container, set responsive true and maintainAspectRatio false, and avoid setting conflicting canvas width or height attributes.
+    - Accessibility contract: Provide aria-labels, a fallback summary table, visible title/subtitle, readable colors, and tooltip text that does not depend on color alone.
+    - Edge data contract: Handle null points, negative values, log-scale limits, time-axis adapter notes, duplicate labels, empty datasets, and high-density lines with decimation.
+    - Performance contract: Use decimation, pointRadius 0, animation false, parsing false when data is preformatted, and update("none") for live refresh.
+    - Integration contract: Expose createChart(rows), updateChart(rows), exportPng(), resizeChart(), and destroyChart() around the Chart instance.
+    - Include deterministic inline sample data with realistic field names, units, and at least one edge case row.
+    - Include concise visible titles, legends, units, source note, and no placeholder lorem ipsum text.
+    - Output only the final artifact, with no commentary outside the artifact.
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.2
+
+output:
+  text_format: html
+  artifact_kind: chartjs-html-integration-widget
+  formats:
+    - format: html
+
+evaluation:
+  checklist:
+    - "Format validity: parseable schema 0.4 media prompt and generated artifact is exactly one html output with no markdown fences."
+    - "Parser/API: Use new Chart(ctx, config) with type, data, options, and plugins; call chart.update, chart.resize, and chart.destroy in the correct places."
+    - "Data encoding: Encode labels and datasets with supported Chart.js shapes, including object points and parsing keys when useful; specify scales and plugins explicitly."
+    - "Responsive behavior: Wrap canvas in a sized container, set responsive true and maintainAspectRatio false, and avoid setting conflicting canvas width or height attributes."
+    - "Accessibility: Provide aria-labels, a fallback summary table, visible title/subtitle, readable colors, and tooltip text that does not depend on color alone."
+    - "Edge data: Handle null points, negative values, log-scale limits, time-axis adapter notes, duplicate labels, empty datasets, and high-density lines with decimation."
+    - "Performance/integration: Use decimation, pointRadius 0, animation false, parsing false when data is preformatted, and update(\"none\") for live refresh. Expose createChart(rows), updateChart(rows), exportPng(), resizeChart(), and destroyChart() around the Chart instance."
+  rubric:
+    - name: "Format validity"
+      weight: 30
+      criteria: "The artifact is valid for the requested text format, contains no markdown fences, and uses the required solution parser or API without syntax errors."
+    - name: "Semantic completeness"
+      weight: 30
+      criteria: "The visualization covers the requested scenario, data story, interactions, labels, and solution-specific capabilities."
+    - name: "Visual/structural quality"
+      weight: 25
+      criteria: "The layout, hierarchy, color, typography, chart choice, and dashboard or diagram structure are clear and professional."
+    - name: "Robustness"
+      weight: 15
+      criteria: "The artifact handles responsive layout, accessibility, edge data, update or teardown behavior, and performance constraints without runtime failures."
+  pass_conditions:
+    - "YAML parses successfully and all text is ASCII-only."
+    - "Generated artifact runs without console errors when CDN dependencies are available."
+    - "Parser/API, data encoding, responsive, accessibility, and edge data checklist items are all satisfied."
+    - "Rubric score is at least 80 out of 100 and no rubric dimension scores zero."
+
+tags:
+  - "fim"
+  - "js-charting"
+  - "chart_js"
+  - "edge-integration"
+  - "visualization"
+  - "integration"

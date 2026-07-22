@@ -3,6 +3,7 @@ pub mod elevenlabs;
 pub mod gemini;
 pub mod gemini_chat;
 pub mod grok_video;
+pub mod groq_chat;
 pub mod openai_chat;
 pub mod openai_tts;
 pub mod qwen_tts;
@@ -75,55 +76,105 @@ pub struct Candidate {
 
 /// Returns candidates ordered best-first for the given asset type / audio kind / quality tier.
 /// The list is NOT filtered by API-key availability — call `available()` to filter.
-pub fn candidates_for(asset_type: AssetType, audio_kind: AudioKind, quality: Quality) -> Vec<Candidate> {
+pub fn candidates_for(
+    asset_type: AssetType,
+    audio_kind: AudioKind,
+    quality: Quality,
+) -> Vec<Candidate> {
     match asset_type {
         AssetType::Image => match quality {
-            Quality::Low => vec![
-                Candidate { service: "gemini", model: "imagen-4.0-fast-generate-001" },
-            ],
-            Quality::Medium => vec![
-                Candidate { service: "gemini", model: "imagen-4.0-generate-001" },
-            ],
+            Quality::Low => vec![Candidate {
+                service: "gemini",
+                model: "imagen-4.0-fast-generate-001",
+            }],
+            Quality::Medium => vec![Candidate {
+                service: "gemini",
+                model: "imagen-4.0-generate-001",
+            }],
             Quality::High => vec![
-                Candidate { service: "gemini", model: "imagen-4.0-ultra-generate-001" },
-                Candidate { service: "gemini", model: "imagen-4.0-generate-001" },
+                Candidate {
+                    service: "gemini",
+                    model: "imagen-4.0-ultra-generate-001",
+                },
+                Candidate {
+                    service: "gemini",
+                    model: "imagen-4.0-generate-001",
+                },
             ],
         },
 
         AssetType::Video => match quality {
             Quality::Low => vec![
-                Candidate { service: "grok-video", model: "grok-imagine-video" },
-                Candidate { service: "veo",        model: "veo-3.0-fast-generate-001" },
+                Candidate {
+                    service: "grok-video",
+                    model: "grok-imagine-video",
+                },
+                Candidate {
+                    service: "veo",
+                    model: "veo-3.0-fast-generate-001",
+                },
             ],
             Quality::Medium => vec![
-                Candidate { service: "veo",        model: "veo-3.0-fast-generate-001" },
-                Candidate { service: "grok-video", model: "grok-imagine-video" },
+                Candidate {
+                    service: "veo",
+                    model: "veo-3.0-fast-generate-001",
+                },
+                Candidate {
+                    service: "grok-video",
+                    model: "grok-imagine-video",
+                },
             ],
             Quality::High => vec![
-                Candidate { service: "veo",        model: "veo-3.0-generate-001" },
-                Candidate { service: "grok-video", model: "grok-imagine-video" },
+                Candidate {
+                    service: "veo",
+                    model: "veo-3.0-generate-001",
+                },
+                Candidate {
+                    service: "grok-video",
+                    model: "grok-imagine-video",
+                },
             ],
         },
 
         AssetType::Audio => match audio_kind {
-            AudioKind::Music => vec![
-                Candidate { service: "suno", model: "V5_5" },
-            ],
-            AudioKind::Sfx => vec![
-                Candidate { service: "suno", model: "V5_SOUND" },
-            ],
+            AudioKind::Music => vec![Candidate {
+                service: "suno",
+                model: "V5_5",
+            }],
+            AudioKind::Sfx => vec![Candidate {
+                service: "suno",
+                model: "V5_SOUND",
+            }],
             AudioKind::Voice => match quality {
                 Quality::Low => vec![
-                    Candidate { service: "qwen-tts",    model: "qwen3-tts-flash" },
-                    Candidate { service: "openai-tts",  model: "gpt-4o-mini-tts" },
+                    Candidate {
+                        service: "qwen-tts",
+                        model: "qwen3-tts-flash",
+                    },
+                    Candidate {
+                        service: "openai-tts",
+                        model: "gpt-4o-mini-tts",
+                    },
                 ],
                 Quality::Medium => vec![
-                    Candidate { service: "openai-tts",  model: "gpt-4o-mini-tts" },
-                    Candidate { service: "elevenlabs",  model: "eleven_multilingual_v2" },
+                    Candidate {
+                        service: "openai-tts",
+                        model: "gpt-4o-mini-tts",
+                    },
+                    Candidate {
+                        service: "elevenlabs",
+                        model: "eleven_multilingual_v2",
+                    },
                 ],
                 Quality::High => vec![
-                    Candidate { service: "elevenlabs",  model: "eleven_multilingual_v2" },
-                    Candidate { service: "openai-tts",  model: "gpt-4o-mini-tts" },
+                    Candidate {
+                        service: "elevenlabs",
+                        model: "eleven_multilingual_v2",
+                    },
+                    Candidate {
+                        service: "openai-tts",
+                        model: "gpt-4o-mini-tts",
+                    },
                 ],
             },
         },
@@ -135,25 +186,16 @@ pub fn candidates_for(asset_type: AssetType, audio_kind: AudioKind, quality: Qua
         | AssetType::StyleGuide
         | AssetType::Diagram
         | AssetType::Document => match quality {
-            Quality::Low => vec![
-                Candidate { service: "gemini-chat", model: "gemini-2.5-flash" },
-                Candidate { service: "openai-chat", model: "gpt-4.1" },
-            ],
-            Quality::Medium => vec![
-                Candidate { service: "anthropic",   model: "claude-sonnet-4-6" },
-                Candidate { service: "openai-chat", model: "gpt-4.1" },
-                Candidate { service: "gemini-chat", model: "gemini-2.5-flash" },
-            ],
-            Quality::High => vec![
-                Candidate { service: "anthropic",   model: "claude-opus-4-6" },
-                Candidate { service: "anthropic",   model: "claude-sonnet-4-6" },
-                Candidate { service: "gemini-chat", model: "gemini-2.5-pro" },
-            ],
+            Quality::Low | Quality::Medium | Quality::High => vec![Candidate {
+                service: "groq-chat",
+                model: "meta-llama/llama-4-scout-17b-16e-instruct",
+            }],
         },
 
-        AssetType::Unknown => vec![
-            Candidate { service: "gemini", model: "imagen-4.0-generate-001" },
-        ],
+        AssetType::Unknown => vec![Candidate {
+            service: "gemini",
+            model: "imagen-4.0-generate-001",
+        }],
     }
 }
 
@@ -184,6 +226,7 @@ pub fn get_chat_provider(service: &str) -> Option<Box<dyn ChatProvider>> {
     match service {
         "anthropic" => Some(Box::new(anthropic::AnthropicProvider)),
         "gemini-chat" => Some(Box::new(gemini_chat::GeminiChatProvider)),
+        "groq" | "groq-chat" => Some(Box::new(groq_chat::GroqChatProvider)),
         "openai-chat" => Some(Box::new(openai_chat::OpenAiChatProvider)),
         "zai" | "z.ai" => Some(Box::new(zai::ZaiProvider)),
         _ => None,
@@ -202,6 +245,8 @@ pub fn is_stub_provider(service: &str) -> bool {
             | "veo"
             | "anthropic"
             | "gemini-chat"
+            | "groq"
+            | "groq-chat"
             | "openai-chat"
             | "zai"
             | "z.ai"
@@ -218,6 +263,7 @@ pub fn api_key_env(service: &str) -> &'static str {
         "grok-video" => "XAI_API_KEY",
         "anthropic" => "ANTHROPIC_API_KEY",
         "gemini-chat" => "GEMINI_API_KEY",
+        "groq" | "groq-chat" => "GROQ_API_KEY",
         "openai-chat" => "OPENAI_API_KEY",
         "zai" | "z.ai" => "XAI_API_KEY",
         _ => "GEMINI_API_KEY",
@@ -294,12 +340,24 @@ pub fn constraints(service: &str) -> ProviderConstraints {
     match service {
         // Suno music: 3000 in custom mode (auto-enabled). Sounds endpoint: 500.
         // Use 3000 here; SFX constraint enforced via suno-sfx key below.
-        "suno" => ProviderConstraints { max_prompt_chars: Some(3000) },
-        "suno-sfx" => ProviderConstraints { max_prompt_chars: Some(500) },
-        "gemini" => ProviderConstraints { max_prompt_chars: Some(4000) },
-        "veo" => ProviderConstraints { max_prompt_chars: Some(1000) },
-        "grok-video" => ProviderConstraints { max_prompt_chars: Some(1000) },
-        _ => ProviderConstraints { max_prompt_chars: None },
+        "suno" => ProviderConstraints {
+            max_prompt_chars: Some(3000),
+        },
+        "suno-sfx" => ProviderConstraints {
+            max_prompt_chars: Some(500),
+        },
+        "gemini" => ProviderConstraints {
+            max_prompt_chars: Some(4000),
+        },
+        "veo" => ProviderConstraints {
+            max_prompt_chars: Some(1000),
+        },
+        "grok-video" => ProviderConstraints {
+            max_prompt_chars: Some(1000),
+        },
+        _ => ProviderConstraints {
+            max_prompt_chars: None,
+        },
     }
 }
 
@@ -314,6 +372,7 @@ pub fn default_model(service: &str) -> &'static str {
         "veo" => "veo-3.0-generate-001",
         "anthropic" => "claude-sonnet-4-6",
         "gemini-chat" => "gemini-2.5-flash",
+        "groq" | "groq-chat" => "meta-llama/llama-4-scout-17b-16e-instruct",
         "openai-chat" => "gpt-4.1",
         "zai" | "z.ai" => "grok-4.3",
         _ => "default",

@@ -47,6 +47,17 @@ pub fn append(entry: &QueueEntry, relative_path: &str, base_path: &str) -> Resul
 }
 
 pub fn append_all(entries: &[ProposedEntry], base_path: &str) -> Result<usize> {
+    // Validate the complete batch before touching the filesystem. The LLM
+    // path normally validates these too, but this public writer must not leave
+    // a partial batch behind when called from another source.
+    if let Some(invalid) = entries
+        .iter()
+        .map(|entry| entry.file.as_str())
+        .find(|path| !manifest::is_valid_path(path))
+    {
+        bail!("invalid queue path: {invalid}");
+    }
+
     let mut written = 0;
     for proposed in entries {
         let entry = QueueEntry::create(&proposed.entry_type, &proposed.text, "voice");
@@ -108,5 +119,18 @@ mod tests {
             ProposedEntry { file: "reminders.jsonl".into(), entry_type: "reminder".into(), text: "b".into() },
         ];
         assert_eq!(append_all(&entries, base).unwrap(), 2);
+    }
+
+    #[test]
+    fn append_all_rejects_batch_before_any_write() {
+        let dir = tempfile::tempdir().unwrap();
+        let base = dir.path().to_str().unwrap();
+        let entries = vec![
+            ProposedEntry { file: "todo.jsonl".into(), entry_type: "todo".into(), text: "valid first".into() },
+            ProposedEntry { file: "../escape.jsonl".into(), entry_type: "todo".into(), text: "invalid second".into() },
+        ];
+
+        assert!(append_all(&entries, base).is_err());
+        assert!(!dir.path().join("todo.jsonl").exists());
     }
 }

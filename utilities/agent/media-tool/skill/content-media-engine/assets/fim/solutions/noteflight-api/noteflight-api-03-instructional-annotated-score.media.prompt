@@ -1,0 +1,86 @@
+schema: '0.4'
+id: noteflight-api-03-instructional-annotated-score
+type: interactive
+quality: high
+solution: noteflight-api
+category: music-notation
+variant: instructional-annotated-score
+references:
+- references/fim/overview/music-audio-ml/noteflight-api.md
+- references/fim/solution/noteflight-api.md
+prompt:
+  system: |-
+    You generate Noteflight API embed artifacts. Output only a complete self-contained HTML document with inline CSS and JavaScript. Do not use markdown fences or explanations.
+  text: |
+    Create the instructional annotated score for noteflight-api.
+
+    Scenario:
+    Create an instructional score for teaching a concrete concept such as syncopation, intervals, cadences, transposition, chord tones, tablature reading, or score-following. Include annotations, highlighted moments, measure numbers, and short visible labels inside the artifact.
+
+    Implementation requirements:
+    - Use this solution source: MusicXML loaded into a hosted Noteflight ScoreView.
+    - Load nfclient.js, construct NFClient.ScoreView with a documented role, wait for SCORE_LOADED, call loadMusicXML, and use asynchronous getMusicXML, play, pause, stop, and event listeners.
+    - Syntax contract: Use valid JavaScript for the embed and valid MusicXML for the score body; keep API app IDs as placeholders and do not expose real secrets.
+    - Musical coherence contract: pitches, chords, lyrics, articulations, and form must describe one coherent musical example, not disconnected fragments.
+    - Measure-duration contract: every measure, part, voice, layer, sequence, or track must sum to the declared time signature; pickups, tuplets, ties, repeats, and final bars must be explicitly represented.
+    - Clef/key contract: declare initial clefs, keys, time signatures, part names, and any changes in the solution-native structure; transposed parts must use correct written key signatures and accidentals.
+    - Playback/render compatibility contract: include the exact load, render, playback, export, or fallback path expected for this solution and explain unsupported playback honestly inside code comments or metadata.
+    - Accessibility contract: include title, instrument labels, measure numbers or landmarks, keyboard-operable controls when interactive, and text alternatives for screen readers.
+    - Provide initNoteflight(), loadMusicXmlWhenReady(), saveOnChange(), playFromUserGesture(), exportMusicXml(), resizeEmbed(), and teardown() hooks with domain/auth error states.
+    - Treat Noteflight as a paid hosted editor: include cloud, role, assignment, collaboration, and offline-unavailable states where relevant.
+    - Annotations must point to the correct notes, measures, or phrases.
+    - Include a before-and-after, question-and-answer, or guided-practice structure.
+    - Expose machine-readable labels or IDs so an app can connect instructions to notation elements.
+    - Include deterministic sample score data directly in the artifact; do not depend on private credentials or remote score files except public library CDNs or clearly marked placeholders.
+    - Output only the final artifact requested by the system message, with no commentary outside the artifact.
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.2
+output:
+  text_format: html
+  artifact_kind: noteflight-api-embed-score
+  formats:
+  - format: html
+  - format: musicxml
+  - format: midi
+  - format: pdf
+  - format: audio
+evaluation:
+  checklist:
+  - 'Format validity: prompt YAML parses as schema 0.4 and the generated artifact is exactly the requested output with no markdown fences.'
+  - 'Syntax: generated artifact uses valid noteflight-api syntax or API calls and includes required parser, compiler, renderer, service, or font setup.'
+  - 'Musical coherence: melody, harmony, rhythm, lyrics, annotations, and form describe one coherent score suitable for the scenario.'
+  - 'Measure duration: every measure in every part, voice, layer, sequence, or track sums to the declared meter; pickups, tuplets, ties, repeats, and final bars are handled explicitly.'
+  - 'Clefs and keys: initial clefs, keys, time signatures, part names, transpositions, and any changes are declared in solution-native fields.'
+  - 'Playback/render compatibility: load, render, compile, export, playback, cursor, soundfont, service auth, font, CORS, or fallback behavior is correct for the solution.'
+  - 'Accessibility: artifact includes title, part labels, text fallback or source view, keyboard-operable controls when interactive, and screen-reader friendly summaries.'
+  - 'Robustness: artifact handles missing fonts/assets, malformed notation, large or dense scores, responsive layout, and cleanup or teardown without runtime failure.'
+  rubric:
+  - name: Format validity
+    weight: 30
+    criteria: The prompt YAML and generated artifact use the required schema, file format, solution syntax, parser or API contract, and contain no markdown fences or malformed structures.
+  - name: Semantic completeness
+    weight: 30
+    criteria: The score covers the requested scenario with complete musical content, annotations, metadata, parts, playback or export path, and solution-specific capabilities.
+  - name: Visual/structural quality
+    weight: 25
+    criteria: The notation structure, engraving or layout hierarchy, labels, spacing, page or responsive behavior, and instructional affordances are clear and professional.
+  - name: Robustness
+    weight: 15
+    criteria: The artifact handles dense material, edge notation, transposition, accessibility, missing assets, service/auth errors, render fallback, playback constraints, and teardown safely.
+  pass_conditions:
+  - YAML parses successfully and all prompt file bytes are ASCII-only.
+  - Rubric weights are exactly 30, 30, 25, and 15, summing to 100.
+  - Generated artifact passes solution syntax validation or the closest practical parser/compiler/load check.
+  - Every measure duration is consistent with declared meter across all parts, voices, tracks, layers, or sequences.
+  - Clefs, keys, time signatures, part names, transpositions, and accidentals are explicit and musically coherent.
+  - Playback, render, compile, export, font, service, or fallback compatibility checks are satisfied for the target solution.
+  - Accessibility and robustness checklist items are satisfied; no rubric dimension scores zero.
+tags:
+- fim
+- music-notation
+- noteflight-api
+- instructional-annotated-score
+- interactive
+- instructional
+- annotated

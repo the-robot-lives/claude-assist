@@ -1,0 +1,67 @@
+schema: '0.4'
+id: fim-python-streamlit-04-edge-integration-reproducibility
+type: interactive
+quality: high
+solution: streamlit
+category: python
+variant: edge-integration-reproducibility
+prompt:
+  system: |-
+    You are a senior Python data visualization engineer. Output only one complete ASCII Python file for Streamlit. No Markdown fences, no prose outside code. Include deterministic sample data if input data is not supplied. Use the imports and runtime pattern named in the prompt.
+  text: |-
+    Create a Streamlit edge/integration app. Support uploaded CSV files, validate schema, show actionable errors for malformed or empty data, fall back to deterministic demo data, use st.session_state for saved user choices, cache expensive transformations, and include comments for streamlit run app.py plus notes on secrets and external resources.
+
+    Requirements: include import comments, local run instructions, deterministic sample data, explicit output filenames, accessibility-minded labels and color choices, data edge-case handling, and reproducibility checks. The generated code must use the requested solution as the primary visualization surface.
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.2
+    top_p: 0.9
+output:
+  text_format: python
+  artifact_kind: streamlit-app-script
+  formats:
+  - format: py
+evaluation:
+  checklist:
+  - 'Import check: generated code imports streamlit as st, pandas as pd, numpy as np, plotly.express as px and does not replace Streamlit with an unrelated primary library.'
+  - 'Run check: streamlit run app.py and interact with the served app on the printed local URL. The script must create deterministic sample data and avoid network-only dependencies.'
+  - 'Expected visuals: top-to-bottom Streamlit app with widgets, caching, session_state where needed, layout primitives, and chart display calls. The result must match the edge, integration, and reproducibility output scenario.'
+  - 'Accessibility: include descriptive title, axis labels, readable legend or hover text, colorblind-safe palette, and non-color encoding where practical.'
+  - 'Data edge cases: handle missing values, duplicate categories, empty filtered results, extreme values, and large row counts without crashing.'
+  - 'Reproducibility: set fixed seeds, use stable output filenames, document install/run commands, and keep generated data local to the script.'
+  rubric:
+  - name: Format validity
+    weight: 30
+    criteria:
+    - Output is one complete ASCII Python file with no Markdown fences or explanatory wrapper.
+    - Required imports are present, syntax is valid, and the declared artifact/export path is produced.
+    - The script includes clear install and run comments without relying on network data.
+  - name: Semantic completeness
+    weight: 30
+    criteria:
+    - Implements the requested scenario with the specified solution rather than substituting another library.
+    - Includes all requested controls, encodings, calculations, filters, exports, and annotations.
+    - Demonstrates the solution-specific concepts from the FIM references.
+  - name: Visual/structural quality
+    weight: 25
+    criteria:
+    - Uses readable layout, sensible chart types, labeled axes, title, legend, and consistent visual hierarchy.
+    - Uses colorblind-safe palettes and redundant encodings or hover/detail text where helpful.
+    - Avoids label overlap, clipped elements, misleading scales, and low-contrast styling.
+  - name: Robustness
+    weight: 15
+    criteria:
+    - Handles missing values, empty filters, duplicate categories, extreme values, and large data sensibly.
+    - Sets deterministic seeds and stable output filenames for reproducible local runs.
+    - Documents limitations such as optional export drivers, server commands, or renderer dependencies.
+  pass_conditions:
+  - All required YAML fields are present and the generated artifact is one valid ASCII Python file.
+  - Rubric weights are exactly Format validity 30, Semantic completeness 30, Visual/structural quality 25, Robustness 15.
+  - The solution-specific import and run checks can be performed in a fresh local environment with the documented dependencies.
+  - The expected visual structure, accessibility requirements, data edge cases, and reproducibility safeguards are all represented in the code.
+tags:
+- fim
+- python
+- data-visualization
+- streamlit
+- edge-integration-reproducibility

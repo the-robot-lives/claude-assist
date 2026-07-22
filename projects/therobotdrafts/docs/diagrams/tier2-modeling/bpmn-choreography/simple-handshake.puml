@@ -1,0 +1,57 @@
+@startuml
+' ============================================================================
+' METADATA
+'   author:       TheRobotDrafts Examples
+'   description:  Simple BPMN choreography — 2-3 banded tasks, sequence flow, no enclosing pool.
+'   usecase:      Teach choreography task, participant banding (initiator white, responder grey), no pools.
+'   complexity:   simple
+'   domain:       business-process
+' ============================================================================
+title Example BPMN Choreography - Simple Handshake
+
+' BPMN choreography has NO enclosing pool. Each task is a banded rectangle:
+'   - top band   = initiating participant (white)
+'   - bottom band= responding participant (shaded)
+' Inside the task: the message(s) exchanged (one-way or two-way).
+' PlantUML has no native choreography shape; we model bands using
+' nested rectangles and a `package` per task.
+
+' --- Start / End events (thin / thick circles) ----------------------------
+usecase " " as Start
+usecase " " as End1
+
+' --- Choreography tasks (banded) -----------------------------------------
+package "Request Greeting\n[ Buyer | Seller ]" as CT1 {
+}
+package "Return Quote\n[ Seller | Buyer ]" as CT2 {
+}
+package "Confirm Order\n[ Buyer | Seller ]" as CT3 {
+}
+
+Start --> CT1
+CT1 --> CT2
+CT2 --> CT3
+CT3 --> End1
+
+note top of CT1
+  <b>Choreography task</b>
+  Top band (white)  = <b>Buyer</b> (initiator)
+  Bottom band (grey)= <b>Seller</b> (responder)
+  Task carries the message(s):
+  Buyer -> Seller : "Hello"
+end note
+
+note right of CT2
+  Roles swap:
+  Seller initiates the
+  return quote, Buyer responds.
+end note
+
+note bottom of Start
+  <b>Key difference</b>
+  No enclosing pool. The
+  choreography IS the
+  collaboration's protocol.
+end note
+
+@enduml

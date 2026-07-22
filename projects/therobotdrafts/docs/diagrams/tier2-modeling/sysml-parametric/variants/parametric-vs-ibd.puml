@@ -1,0 +1,65 @@
+@startuml
+' ============================================================================
+' METADATA
+'   author:       TheRobotDrafts Examples
+'   description:  Variant showing the same HeatExchanger block as a SysML Parametric diagram (constraint blocks + bindings) vs an IBD (parts + connectors).
+'   usecase:      Contrast parametric equality bindings against IBD structural connectors and flow.
+'   complexity:   medium
+'   domain:       methodology
+' ============================================================================
+title Example Parametric - Parametric vs IBD
+
+package "SysML Parametric Diagram (equations)" {
+  note top of "HeatBalanceC"
+    BINDING CONNECTORS (==) = equality.
+    Parametric edges are NOT flow.
+  end note
+
+  class "HeatBalanceC" <<constraint>> {
+    { Q_out = Q_in - Q_loss }
+  }
+  class "ThermalConductanceC" <<constraint>> {
+    { Q_loss = k * A * dT / L }
+  }
+
+  object "pQin : HeatFlow" as pQin
+  object "pQout : HeatFlow" as pQout
+  object "pQloss : HeatFlow" as pQloss
+  object "pK : Conductivity" as pK
+
+  class "HeatBalInst" as "hb : HeatBalanceC" <<constraint>> { }
+  class "CondInst" as "tc : ThermalConductanceC" <<constraint>> { }
+
+  pQin == hb
+  pQout == hb
+  pQloss == hb
+  pQloss == tc
+  pK == tc
+}
+
+package "SysML Internal Block Diagram (structure)" {
+  class "HeatExchanger" <<block>> { }
+  package "HeatExchanger interior" {
+    object "hCore : Core" as hCore
+    object "hFluidIn : InletPipe" as hFluidIn
+    object "hFluidOut : OutletPipe" as hFluidOut
+    port "HeatExchanger.coldIn" as coldIn
+    port "HeatExchanger.coldOut" as coldOut
+  }
+  coldIn --> hFluidIn : FluidFlow
+  hFluidIn --> hCore : FluidFlow
+  hCore --> hFluidOut : FluidFlow
+  hFluidOut --> coldOut : FluidFlow
+}
+
+note bottom of "HeatExchanger"
+  PARAMETRIC edges = binding connectors (==): the two
+  ends are EQUAL values; the diagram encodes equations
+  the solver enforces (conservation laws).
+  IBD edges = connectors carrying item FLOW: the two
+  ends are WIRED together; the diagram encodes the
+  physical structure (what connects to what).
+  Same block, two orthogonal views: math vs wiring.
+end note
+
+@enduml

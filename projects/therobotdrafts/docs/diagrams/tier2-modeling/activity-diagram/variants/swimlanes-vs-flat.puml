@@ -1,0 +1,63 @@
+@startuml
+' ============================================================================
+' METADATA
+'   author:       TheRobotDrafts Examples
+' '   description:  Same bug-fix process shown with role swimlanes; the flat variant is described in a note.
+'   usecase:      Contrast swimlane partitions vs partition-less activities; explain when to use each.
+'   complexity:   simple
+'   domain:       software-process
+' ============================================================================
+title Example Activity Variant - Swimlanes vs Flat
+
+' A single process can be drawn two ways:
+'
+'   (A) SWIMLANES  — actions partitioned into columns by responsible ROLE.
+'   (B) FLAT       — the same actions in one un-partitioned flow.
+'
+' The control-flow semantics are IDENTICAL. Partitions are purely a
+' presentation device that surfaces WHO does each step.
+'
+' WHEN TO USE SWIMLANES:
+'   - Accountability or hand-offs between people/teams are the point.
+'   - Business processes where "which role" matters (approvals, escalations).
+'   - Onboarding / SOP diagrams for cross-functional work.
+'
+' WHEN TO USE FLAT:
+'   - The algorithm/logic is the focus, not who performs it.
+'   - Technical pipelines, data transforms, stateless services.
+'   - When the diagram is already dense and lanes would only add noise.
+'
+' BELOW: the SWIMLANE version is rendered. The FLAT equivalent is described
+' in the closing note so you can see both representations of one process.
+
+|Reporter|
+start
+:File bug report;
+
+|Triage|
+:Reproduce issue;
+
+if (Reproducible?) then (yes)
+  |Developer|
+  :Implement fix;
+  |QA|
+  :Verify fix;
+else (no)
+  |Triage|
+  :Close as cannot-reproduce;
+endif
+
+|Reporter|
+:Confirm resolved;
+stop
+
+note over |Reporter|, |QA|
+  <<flat variant>>
+  The SAME process without partitions reads top-to-bottom:
+    start -> File bug -> Reproduce ->
+    (if Reproducible?) yes: Implement fix -> Verify
+                     no:  Close as cannot-reproduce ->
+    Confirm resolved -> stop
+  The actions and control flow are unchanged; only the role columns vanish.
+end note
+@enduml

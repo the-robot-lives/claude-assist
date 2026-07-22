@@ -5,7 +5,10 @@ fstab-mounter/
 ├── fstab-remount                          # Main script — parses osx-fstab, mounts volumes
 ├── com.keithbrings.fstab-remount.plist    # LaunchDaemon plist — runs script at boot
 ├── osx-fstab.stub                         # Config template — installed to /etc/osx-fstab
-├── Makefile                               # install / uninstall / status / logs
+├── mount-ntfs-rw.sh                       # One-off helper — mounts "Extra Bulk Storage" NTFS rw via native /etc/fstab (run as root)
+├── Makefile                               # install / uninstall / status / logs / install-ntfs / check-ntfs
+├── Bulk/                                  # Empty placeholder dir (local mount-point scratch; no tracked contents)
+├── .gitignore                             # Excludes .claude/, .DS_Store, editor swap files
 └── docs/
     ├── PROJ-ARCH.md                       # Architecture overview
     ├── PROJ-ARCH.summary.md               # Architecture quick reference

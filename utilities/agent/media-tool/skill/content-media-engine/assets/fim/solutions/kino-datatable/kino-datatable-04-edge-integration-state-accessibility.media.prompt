@@ -1,0 +1,67 @@
+schema: "0.4"
+id: fim-notebook-livebook-and-widgets-kino-datatable-04-edge-integration-state-accessibility
+type: data
+quality: high
+solution: kino-datatable
+category: notebook-livebook-and-widgets
+variant: edge-integration-state-accessibility
+prompt:
+  system: |-
+    You are a senior Elixir Livebook engineer. Output only one complete ASCII Elixir Livebook code cell for Kino.DataTable. No Markdown fences, no prose outside code. Prioritize validation, integration boundaries, and accessible table output.
+  text: |-
+    Create a Kino.DataTable edge/integration cell that accepts a simulated external query result or CSV-shaped rows without connecting to any external service. Validate expected columns, convert positional rows into named maps, normalize atom/string keys safely, and render a detail table plus a validation issues table. Include fallback demo data when the input is empty or malformed.
+
+    Requirements: document Livebook/Kino compatibility; avoid database credentials and real network calls; handle heterogeneous rows, missing columns, duplicate keys, nils, and oversized input; pre-format dates, currency, and booleans for accessibility; include a note that richly styled or editable cells require Kino.JS; include safe execution checks for atom creation, row limits, and untrusted data.
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.2
+    top_p: 0.9
+output:
+  text_format: elixir
+  artifact_kind: livebook-kino-datatable-edge-cell
+  formats:
+  - format: exs
+evaluation:
+  checklist:
+  - "Import check: generated code installs kino and uses Kino.DataTable.new/2 for detail and validation tables."
+  - "Notebook compatibility: comments identify Livebook/Kino and explain integration boundaries without requiring external services."
+  - "Reactive state: built-in table state handles sorting and pagination; validation state is explicit and deterministic."
+  - "Data shape: positional rows are converted to maps, key normalization is bounded, malformed rows are reported, and fallback rows exist."
+  - "Accessibility and fallback: validation messages, column names, formatted values, and fallback status are readable."
+  - "Safe execution: no live database credentials, remote queries, unsafe atom creation, eval, shell commands, or unbounded row materialization."
+  rubric:
+  - name: Format validity
+    weight: 30
+    criteria:
+    - "Output is one complete ASCII Elixir Livebook code cell with no Markdown fences or explanatory wrapper."
+    - "The code is valid and every table receives supported named-field data."
+    - "The cell includes clear compatibility, fallback, and validation comments."
+  - name: Semantic completeness
+    weight: 30
+    criteria:
+    - "Implements integration-shaped validation, positional-to-named conversion, detail rendering, and issue reporting."
+    - "Uses current Kino.DataTable APIs and avoids unsupported editing, theming, or bare tuple assumptions."
+    - "Includes notebook/livebook compatibility, reactive state, data shape, accessibility, fallback, and safe execution checks."
+  - name: UX/structural quality
+    weight: 25
+    criteria:
+    - "Validation issues and usable data are separated into clearly named tables."
+    - "Column order and formatting make the edge cases easy to inspect."
+    - "Fallback and error states are visible without relying on color."
+  - name: Robustness
+    weight: 15
+    criteria:
+    - "Handles empty, malformed, heterogeneous, oversized, duplicate, and nil-heavy input."
+    - "Limits atom creation and keeps all sample data local and deterministic."
+    - "Documents when to switch to Kino.JS or upstream sampling for richer or larger workflows."
+  pass_conditions:
+  - "All required YAML fields are present and the generated artifact is one valid ASCII Elixir Livebook cell."
+  - "Rubric weights are exactly Format validity 30, Semantic completeness 30, UX/structural quality 25, Robustness 15."
+  - "The prompt requires notebook/livebook compatibility, reactive state, data shape, accessibility, fallback, and safe execution checks."
+  - "The solution remains Kino.DataTable-centered and treats integration data as validated local input."
+tags:
+- fim
+- notebook-livebook-and-widgets
+- livebook
+- kino-datatable
+- edge-integration-state-accessibility

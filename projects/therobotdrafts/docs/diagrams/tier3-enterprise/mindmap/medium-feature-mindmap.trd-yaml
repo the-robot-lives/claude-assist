@@ -1,0 +1,51 @@
+# .trd-yaml — TheRobotDrafts native model (IxModel serialization)
+name: Example Mind Map - Medium Feature Set
+elements:
+  - { id: ~mm1, type: MindNode, name: TheRobotDrafts Platform }
+  - { id: ~mm2, type: MindNode, name: Diagrams }
+  - { id: ~mm3, type: MindNode, name: UML family }
+  - { id: ~mm4, type: MindNode, name: 'Class, Object, Component' }
+  - { id: ~mm5, type: MindNode, name: SysML family }
+  - { id: ~mm6, type: MindNode, name: 'BDD, IBD, Requirements' }
+  - { id: ~mm7, type: MindNode, name: Tier-3 enterprise }
+  - { id: ~mm8, type: MindNode, name: 'ArchiMate, TOGAF, Mind Map' }
+  - { id: ~mm9, type: MindNode, name: Editor }
+  - { id: ~mm10, type: MindNode, name: 3D mesh nodes }
+  - { id: ~mm11, type: MindNode, name: .trd-yaml model files }
+  - { id: ~mm12, type: MindNode, name: multi-diagram support }
+  - { id: ~mm13, type: MindNode, name: Code-gen wizard }
+  - { id: ~mm14, type: MindNode, name: Collaboration }
+  - { id: ~mm15, type: MindNode, name: Real-time multi-user }
+  - { id: ~mm16, type: MindNode, name: Interchange export }
+  - { id: ~mm17, type: MindNode, name: PlantUML / XMI / Mermaid }
+  - { id: ~mm18, type: MindNode, name: Infrastructure }
+  - { id: ~mm19, type: MindNode, name: Build pipeline }
+  - { id: ~mm20, type: MindNode, name: Telemetry }
+  - { id: ~mm21, type: MindNode, name: UX }
+  - { id: ~mm22, type: MindNode, name: VR locomotion }
+  - { id: ~mm23, type: MindNode, name: Accessibility }
+edges:
+  - { id: e1, type: DirectedAssociation, from: ~mm1, to: ~mm2 }
+  - { id: e2, type: DirectedAssociation, from: ~mm2, to: ~mm3 }
+  - { id: e3, type: DirectedAssociation, from: ~mm3, to: ~mm4 }
+  - { id: e4, type: DirectedAssociation, from: ~mm2, to: ~mm5 }
+  - { id: e5, type: DirectedAssociation, from: ~mm5, to: ~mm6 }
+  - { id: e6, type: DirectedAssociation, from: ~mm2, to: ~mm7 }
+  - { id: e7, type: DirectedAssociation, from: ~mm7, to: ~mm8 }
+  - { id: e8, type: DirectedAssociation, from: ~mm1, to: ~mm9 }
+  - { id: e9, type: DirectedAssociation, from: ~mm9, to: ~mm10 }
+  - { id: e10, type: DirectedAssociation, from: ~mm9, to: ~mm11 }
+  - { id: e11, type: DirectedAssociation, from: ~mm11, to: ~mm12 }
+  - { id: e12, type: DirectedAssociation, from: ~mm9, to: ~mm13 }
+  - { id: e13, type: DirectedAssociation, from: ~mm1, to: ~mm14 }
+  - { id: e14, type: DirectedAssociation, from: ~mm14, to: ~mm15 }
+  - { id: e15, type: DirectedAssociation, from: ~mm14, to: ~mm16 }
+  - { id: e16, type: DirectedAssociation, from: ~mm16, to: ~mm17 }
+  - { id: e17, type: DirectedAssociation, from: ~mm1, to: ~mm18 }
+  - { id: e18, type: DirectedAssociation, from: ~mm18, to: ~mm19 }
+  - { id: e19, type: DirectedAssociation, from: ~mm18, to: ~mm20 }
+  - { id: e20, type: DirectedAssociation, from: ~mm1, to: ~mm21 }
+  - { id: e21, type: DirectedAssociation, from: ~mm21, to: ~mm22 }
+  - { id: e22, type: DirectedAssociation, from: ~mm21, to: ~mm23 }
+diagrams:
+  - { id: d1, name: Example Mind Map - Medium Feature Set, kind: mindmap, layoutProvenance: Synthesized }

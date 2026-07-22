@@ -42,6 +42,11 @@ variable "oneuptime_probe_image" {
 
 variable "oneuptime_domain" {
   type    = string
+  default = "uptime.noizu.com"
+}
+
+variable "oneuptime_alias_domain" {
+  type    = string
   default = "oneuptime.noizu.com"
 }
 

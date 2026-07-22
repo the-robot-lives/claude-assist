@@ -1,0 +1,73 @@
+schema: "0.4"
+id: anime_js-01-canonical-motion
+type: interactive
+quality: high
+solution: anime_js
+category: animation-and-motion
+variant: canonical-motion
+references:
+  - "references/fim/overview/canvas-svg-creative-animation/anime_js.md"
+  - "references/fim/solution/anime_js.md"
+prompt:
+  system: |-
+    Generate production-quality Anime.js animation assets for FIM evaluation. Output only a complete self-contained HTML document with inline CSS and JavaScript.
+  text: |-
+    Create a canonical Anime.js browser animation that demonstrates the library's core DOM and SVG capabilities.
+
+    Scenario:
+    Build a compact interaction scene with an SVG mark, three DOM cards, and a status badge. The first load must show a nonblank composed state, then play a looped timeline that draws SVG strokes, staggers card entrances, changes colors, rotates the mark, and exposes play, pause, reverse, restart, and seek controls.
+
+    Implementation requirements:
+    - Use Anime.js 3.2.1 from a CDN or equivalent import and call anime() plus anime.timeline().
+    - Define valid DOM and SVG targets before animation starts; guard query results and show a fallback message if required targets are missing.
+    - Include explicit duration values in milliseconds, named easing, timeline offsets, stagger timing, loop behavior, and controlled direction or reverse behavior.
+    - Animate transform and opacity properties for DOM nodes and SVG strokeDashoffset, fill, stroke, or viewBox attributes where appropriate.
+    - Include prefers-reduced-motion handling that renders the final readable state, disables looping, and keeps controls usable.
+    - Keep labels, controls, and animated elements inside their containers with no overlap at 1440x900 and mobile widths.
+    - Include resize handling and a simple performance note or diagnostic that confirms no unbounded per-frame allocation.
+    - Output only the final artifact, with no markdown fences or explanatory prose outside the artifact.
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.22
+output:
+  text_format: html
+  artifact_kind: animejs-html-canonical-motion
+  formats:
+    - format: html
+  dimensions:
+    width: 1440
+    height: 900
+  render_expectation: "Interactive browser animation suitable for PNG capture after initial load and after the first loop."
+evaluation:
+  checklist:
+    - "Format validity: YAML parses under schema 0.4 and generated output is exactly one HTML artifact with no markdown fences."
+    - "Anime.js API: Uses anime() and anime.timeline() with valid DOM/SVG targets that exist before animation starts."
+    - "Motion timing: Specifies durations in milliseconds, easing, timeline offsets, stagger, looping, direction, and control behavior."
+    - "Visual quality: Initial and animated states are nonblank, readable, and free of label, card, badge, or control overlap."
+    - "Reduced motion: Honors prefers-reduced-motion with a stable final state and no forced infinite motion."
+    - "Performance: Uses transform/opacity or SVG attributes appropriately, avoids layout thrash, and avoids unbounded per-frame allocation."
+  rubric:
+    - name: "Format validity"
+      weight: 30
+      criteria: "YAML and generated HTML are syntactically valid, required fields are present, id and file name match, and the artifact uses Anime.js rather than a substitute animation library."
+    - name: "Semantic completeness"
+      weight: 30
+      criteria: "The artifact covers DOM animation, SVG animation, timeline control, staggered sequencing, looping, controls, target validation, and referenced Anime.js patterns."
+    - name: "Motion/visual quality"
+      weight: 25
+      criteria: "Motion has clear timing, easing, hierarchy, and composition; elements remain legible and do not overlap across desktop and mobile states."
+    - name: "Robustness"
+      weight: 15
+      criteria: "Handles missing targets, resize, reduced motion, control state, and performance limits without blank screens or runtime errors."
+  pass_conditions:
+    - "Rubric weights are exactly 30, 30, 25, and 15 for a total of 100."
+    - "YAML parses successfully and all prompt text is ASCII-only."
+    - "Generated artifact runs with no console errors when Anime.js is available."
+    - "Score is at least 80 out of 100 with no zero score in any rubric dimension."
+tags:
+  - "fim"
+  - "animation-and-motion"
+  - "anime_js"
+  - "canonical-motion"
+  - "dom-animation"
+  - "svg-animation"

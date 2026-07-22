@@ -37,17 +37,27 @@ Open http://localhost:5173. The API auto-indexes conversations from `~/.claude/p
 ### CLI
 
 ```bash
+# The installed launcher keeps bare invocation for the web UI, while any
+# explicit command stays in the terminal.
+claude-assist
+
+# Fast, read-only lookup (no API or web server; defaults to the last hour)
+claude-assist recent
+claude-assist recent 2h
+claude-assist recent --since 30m --limit 10
+claude-assist recent 1d --json
+
 # Search
-npx tsx packages/cli/bin.ts search "auth middleware"
+claude-assist search "auth middleware"
 
 # List recent conversations
-npx tsx packages/cli/bin.ts list
+claude-assist list
 
 # View a conversation
-npx tsx packages/cli/bin.ts show <conversation-id>
+claude-assist show <conversation-id>
 
 # Rebuild the search index
-npx tsx packages/cli/bin.ts index
+claude-assist index
 ```
 
 ## Architecture

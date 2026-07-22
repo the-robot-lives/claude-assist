@@ -1,0 +1,14 @@
+# .trd-yaml — TheRobotDrafts native model (IxModel serialization)
+name: Example ArchiMate Technology - Medium Cloud Platform
+elements:
+  - { id: Legend, type: Note, name: 'Technology = GREEN.\nArtifact=grey | Path=dashed | Software=darker green', documentation: 'Technology = GREEN.\nArtifact=grey | Path=dashed | Software=darker green' }
+  - { id: N1, type: Boundary, name: \nK8s\nCluster, stereotype: node }
+  - { id: N2, type: Boundary, name: \nVM\n(bastion), stereotype: node }
+  - { id: D1, type: Boundary, name: \nCloud LB, stereotype: device }
+  - { id: SW1, type: Boundary, name: \nContainer\nRuntime, stereotype: system software }
+  - { id: SW2, type: Boundary, name: \netcd, stereotype: system software }
+  - { id: ART, type: Boundary, name: '\nDocker\nImage: api:v2', stereotype: artifact }
+  - { id: PATH, type: Boundary, name: \nTLS Tunnel, stereotype: communication path }
+  - { id: NET, type: Boundary, name: \nVPC, stereotype: network }
+diagrams:
+  - { id: d1, name: Example ArchiMate Technology - Medium Cloud Platform, kind: component, layoutProvenance: Synthesized }

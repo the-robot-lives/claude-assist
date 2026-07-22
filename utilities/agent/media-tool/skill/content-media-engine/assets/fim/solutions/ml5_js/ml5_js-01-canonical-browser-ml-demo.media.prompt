@@ -1,0 +1,80 @@
+schema: "0.4"
+id: ml5_js-01-canonical-browser-ml-demo
+type: "interactive/model"
+quality: high
+solution: ml5_js
+category: ml-ai
+variant: canonical-browser-ml-demo
+references:
+  - "references/fim/overview/music-audio-ml/ml5_js.md"
+  - "references/fim/solution/ml5_js.md"
+
+prompt:
+  system: |-
+    You generate ml5.js browser ML artifacts for FIM evaluation. Output only one complete self-contained ASCII HTML document with inline CSS and JavaScript. Use p5.js plus ml5.js 1.x from CDN, and do not include Markdown fences or explanatory prose outside the artifact.
+  text: |-
+    Create the canonical browser ML demo for ml5.js.
+
+    Scenario:
+    Build a polished webcam image-classification demo that uses ml5.imageClassifier("MobileNet") with p5.js capture and canvas rendering. The artifact should show how a beginner-friendly browser ML sketch loads a model, classifies frames, displays confidence, and maps model output into a useful visual interaction.
+
+    Implementation requirements:
+    - Use p5.js and ml5.js 1.x CDN imports, including ml5.imageClassifier("MobileNet"). Do not use legacy ml5 0.x APIs such as poseNet, styleTransfer, or node-style callbacks.
+    - Use the ml5 1.x callback shape where result callbacks receive results as the single argument. Handle thrown or rejected errors with visible fallback state.
+    - Include a model load state panel with loading, ready, running, paused, failed, and fallback states. Do not start inference before the classifier is ready.
+    - Include explicit camera permission handling and a privacy notice that frames stay in the browser. Do not send images, labels, telemetry, API keys, cookies, tokens, or secrets to any endpoint.
+    - Display top label, confidence percentage, low-confidence warning, and a short ranked list of at least three predictions when available.
+    - Provide controls for start, pause, resume, single-frame classify, confidence threshold, and camera fallback to deterministic sample frames drawn on canvas.
+    - Include accessible labels, keyboard-operable controls, high-contrast status text, reduced-motion handling, and a non-video textual summary of the current prediction.
+    - Throttle classification to a bounded interval so the UI remains responsive. Show FPS or inference latency without unbounded per-frame allocation.
+    - Include fallback behavior for missing webcam permission, model load failure, empty results, low confidence, slow devices, and unavailable WebGL or WASM backend.
+    - Keep the first render nonblank with a clear demo layout before the model finishes loading.
+    - Output only the final artifact, with no commentary outside the artifact.
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.2
+    top_p: 0.9
+
+output:
+  text_format: html
+  artifact_kind: ml5js-browser-ml-demo
+  formats:
+    - format: html
+  render_expectation: Interactive browser ML canvas suitable for manual testing with webcam permission or deterministic fallback frames.
+
+evaluation:
+  checklist:
+    - "Format validity: YAML parses under schema 0.4, all text is ASCII-only, and generated output is exactly one complete HTML document with no Markdown fences."
+    - "ml5 API: Uses p5.js with ml5.js 1.x and ml5.imageClassifier(\"MobileNet\") without legacy poseNet, styleTransfer, or node-style error/result callbacks."
+    - "Model load state: Shows loading, ready, running, paused, failed, and fallback states, and does not start inference before the model is ready."
+    - "Confidence display: Shows top label, confidence percentage, low-confidence warning, and a ranked prediction list when available."
+    - "Privacy and secrets: States that frames stay local, avoids telemetry or upload endpoints, and includes no API keys, cookies, tokens, credentials, or secret placeholders."
+    - "Fallback behavior: Handles denied camera permission, failed model load, empty results, low confidence, slow devices, and unavailable WebGL or WASM without a blank screen."
+    - "Accessibility and UX: Provides keyboard controls, ARIA labels, high-contrast status, reduced-motion behavior, and a text summary independent of video."
+  rubric:
+    - name: "Format validity"
+      weight: 30
+      criteria: "The prompt YAML and generated HTML are parseable, ASCII-only, complete, and free of Markdown wrappers or unrelated prose."
+    - name: "Semantic completeness"
+      weight: 30
+      criteria: "The artifact implements the canonical ml5.js browser ML classification scenario with p5 capture, model readiness, controls, confidence reporting, privacy notes, and fallback paths."
+    - name: "UX/model quality"
+      weight: 25
+      criteria: "The interface clearly communicates model state, prediction confidence, latency, controls, and accessible summaries while keeping the first render nonblank and usable."
+    - name: "Robustness"
+      weight: 15
+      criteria: "The artifact handles permissions, model errors, empty or low-confidence results, slow hardware, backend issues, pause/resume, and deterministic fallback data without runtime failure."
+  pass_conditions:
+    - "Rubric weights are exactly Format validity 30, Semantic completeness 30, UX/model quality 25, and Robustness 15."
+    - "Generated content is clearly aligned with ml5.js 1.x and p5.js and does not substitute TensorFlow.js direct APIs as the primary solution."
+    - "Model load state, privacy, no secrets, fallback behavior, and confidence display checks are all satisfied."
+    - "Rubric score is at least 80 out of 100 and no rubric dimension scores zero."
+
+tags:
+  - "fim"
+  - "ml-ai"
+  - "ml5_js"
+  - "browser-ml"
+  - "image-classification"
+  - "p5js"
+  - "canonical"

@@ -1,0 +1,26 @@
+# .trd-yaml — TheRobotDrafts native model (IxModel serialization)
+name: Example Activity - Simple Checkout Flow
+elements:
+  - { id: ~start1, type: StateStart, name: start }
+  - { id: ~act2, type: Activity, name: Browse product catalog }
+  - { id: ~act3, type: Activity, name: Add item to shopping cart }
+  - { id: ~act4, type: Activity, name: Enter shipping details }
+  - { id: ~dec5, type: Decision, name: 'Payment valid?' }
+  - { id: ~act6, type: Activity, name: Process payment }
+  - { id: ~act7, type: Activity, name: Show payment error }
+  - { id: ~act8, type: Activity, name: Offer alternate payment method }
+  - { id: ~act9, type: Activity, name: Confirm outcome to customer }
+  - { id: ~end10, type: StateEnd, name: end }
+edges:
+  - { id: e1, type: Transition, from: ~start1, to: ~act2 }
+  - { id: e2, type: Transition, from: ~act2, to: ~act3 }
+  - { id: e3, type: Transition, from: ~act3, to: ~act4 }
+  - { id: e4, type: Transition, from: ~act4, to: ~dec5 }
+  - { id: e5, type: Transition, from: ~dec5, to: ~act6, label: yes }
+  - { id: e6, type: Transition, from: ~dec5, to: ~act7, label: no }
+  - { id: e7, type: Transition, from: ~act7, to: ~act8 }
+  - { id: e8, type: Transition, from: ~act6, to: ~act9 }
+  - { id: e9, type: Transition, from: ~act8, to: ~act9 }
+  - { id: e10, type: Transition, from: ~act9, to: ~end10 }
+diagrams:
+  - { id: d1, name: Example Activity - Simple Checkout Flow, kind: activity, layoutProvenance: Synthesized }

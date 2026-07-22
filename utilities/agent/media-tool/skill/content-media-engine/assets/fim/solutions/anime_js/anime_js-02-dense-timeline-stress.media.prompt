@@ -1,0 +1,73 @@
+schema: "0.4"
+id: anime_js-02-dense-timeline-stress
+type: interactive
+quality: high
+solution: anime_js
+category: animation-and-motion
+variant: dense-timeline-stress
+references:
+  - "references/fim/overview/canvas-svg-creative-animation/anime_js.md"
+  - "references/fim/solution/anime_js.md"
+prompt:
+  system: |-
+    Generate production-quality Anime.js stress animation assets for FIM evaluation. Output only a complete self-contained HTML document with inline CSS and JavaScript.
+  text: |-
+    Create a dense Anime.js timeline stress scene for validating sequencing, target volume, and animation cleanup.
+
+    Scenario:
+    Build an operations wall with at least 72 small DOM cells, 8 SVG trend paths, and 4 status groups. Animate them with a single orchestrated timeline that includes stagger waves, path drawing, color pulses, numeric object tweening, and a bounded looping attention cycle. Include controls for play, pause, restart, reverse, seek, speed, and reduced-motion preview.
+
+    Implementation requirements:
+    - Use Anime.js 3.2.1 from a CDN or equivalent import with anime.timeline(), anime.stagger(), and at least one JavaScript object tween.
+    - Build every DOM and SVG target before creating tweens; validate selector counts and display a target-count diagnostic.
+    - Use explicit millisecond durations, easing choices, stagger intervals, loop counts or bounded loop sections, and timeline offset labels.
+    - Prefer transform, opacity, color, and SVG stroke animations; avoid repeated layout reads during animation.
+    - Include a reduced-motion path that renders the dense wall as a static readable summary and disables nonessential loops.
+    - Keep all cells, charts, controls, diagnostics, and labels inside responsive containers with no overlap or clipping.
+    - Include cleanup or reset logic that pauses/removes the timeline before rebuilding it.
+    - Output only the final artifact, with no markdown fences or explanatory prose outside the artifact.
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.2
+output:
+  text_format: html
+  artifact_kind: animejs-html-dense-timeline-stress
+  formats:
+    - format: html
+  dimensions:
+    width: 1440
+    height: 900
+  render_expectation: "Dense interactive animation that remains responsive and inspectable during repeated play and reset."
+evaluation:
+  checklist:
+    - "Format validity: YAML parses under schema 0.4 and generated output is exactly one HTML artifact with no markdown fences."
+    - "Anime.js API: Uses anime.timeline(), anime.stagger(), and object tweening with valid DOM/SVG targets."
+    - "Motion timing: Specifies durations in milliseconds, easing, timeline offsets, stagger waves, loop bounds, and speed control."
+    - "Visual quality: Dense elements stay readable, target counts are visible, and controls do not overlap animated content."
+    - "Reduced motion: Provides a static dense summary with nonessential loops disabled."
+    - "Performance: Avoids unbounded per-frame work, validates target count, and includes cleanup before timeline rebuild."
+  rubric:
+    - name: "Format validity"
+      weight: 30
+      criteria: "YAML and generated HTML are syntactically valid, required fields are present, id and file name match, and the artifact uses Anime.js rather than a substitute animation library."
+    - name: "Semantic completeness"
+      weight: 30
+      criteria: "The artifact includes dense DOM/SVG targets, timeline orchestration, stagger waves, path drawing, object tweening, looping, controls, target validation, and cleanup."
+    - name: "Motion/visual quality"
+      weight: 25
+      criteria: "Dense motion remains coherent, eased, and readable; animated groups and labels avoid overlap across desktop and mobile layouts."
+    - name: "Robustness"
+      weight: 15
+      criteria: "Handles reduced motion, resize, reset/rebuild, missing targets, and performance pressure without blank screens or runtime errors."
+  pass_conditions:
+    - "Rubric weights are exactly 30, 30, 25, and 15 for a total of 100."
+    - "YAML parses successfully and all prompt text is ASCII-only."
+    - "Generated artifact runs with no console errors when Anime.js is available."
+    - "Score is at least 80 out of 100 with no zero score in any rubric dimension."
+tags:
+  - "fim"
+  - "animation-and-motion"
+  - "anime_js"
+  - "dense-timeline-stress"
+  - "stagger"
+  - "performance"

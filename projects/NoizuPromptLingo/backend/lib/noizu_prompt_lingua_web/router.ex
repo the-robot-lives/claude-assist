@@ -190,6 +190,12 @@ defmodule NoizuPromptLinguaWeb.Router do
             NoizuPromptLinguaWeb.MCPConfig.plug_opts(NoizuPromptLingua.Domains.Campaigns.MCP)
   end
 
+  scope "/", host: "unicode." do
+    forward "/mcp",
+            Noizu.MCP.Transport.StreamableHTTP.Plug,
+            NoizuPromptLinguaWeb.MCPConfig.plug_opts(NoizuPromptLingua.Domains.UnicodeCodex.MCP)
+  end
+
   # Dynamic mock-MCP gateway. Each mock MCP (defined + activated via the
   # org-scoped management API) is served live at mockmcp.<host>/mcp/<slug>/mcp.
   # This is a per-slug JSON-RPC proxy to an LLM — distinct from the static
@@ -316,6 +322,13 @@ defmodule NoizuPromptLinguaWeb.Router do
     get "/mcp-custom-scopes/:slug", AdminController, :show_mcp_custom_scope
     patch "/mcp-custom-scopes/:slug", AdminController, :update_mcp_custom_scope
     delete "/mcp-custom-scopes/:slug", AdminController, :delete_mcp_custom_scope
+
+    # mcp_overview review flow — list generated overviews, approve/reject/edit
+    # (editing the Markdown implies approval). UI is a follow-up.
+    get "/mcp-overviews", McpOverviewController, :index
+    patch "/mcp-overviews/:id/approve", McpOverviewController, :approve
+    patch "/mcp-overviews/:id/reject", McpOverviewController, :reject
+    patch "/mcp-overviews/:id", McpOverviewController, :update
 
     # LLM model catalog (global) — editable provider/model pairs for the Mock MCP
     # picker / MCP ListModels (drives mock MCPs + asset LLM selection).
@@ -551,6 +564,14 @@ defmodule NoizuPromptLinguaWeb.Router do
       post "/active-version", InstructionController, :set_active_version
       post "/render", InstructionController, :render_instruction
     end
+
+    # Unicode Codex: layered global/org/project reference data for Unicode
+    # glyphs, control codes, invisible characters, and NPL special usages.
+    get "/unicode/elements", UnicodeCodexController, :index_elements
+    get "/unicode/elements/:slug", UnicodeCodexController, :show_element
+    get "/unicode/elements/:slug/relations", UnicodeCodexController, :relations
+    get "/unicode/special-usages", UnicodeCodexController, :index_special_usages
+    get "/unicode/special-usages/:slug", UnicodeCodexController, :show_special_usage
   end
 
   # Wiki: spaces (org-scoped, optional project), pages, comments, attachments,

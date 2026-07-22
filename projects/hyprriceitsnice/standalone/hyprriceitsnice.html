@@ -1,0 +1,1906 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>hyprriceitsnice — Hyprland Cheat Sheet</title>
+  <meta name="description" content="Standalone interactive Hyprland keybinding cheat sheet (Tokyo Night rice)" />
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            tn: {
+              bg: "#1a1b26",
+              dark: "#16161e",
+              card: "#1f2335",
+              hi: "#292e42",
+              fg: "#c0caf5",
+              dim: "#a9b1d6",
+              comment: "#565f89",
+              blue: "#7aa2f7",
+              magenta: "#bb9af7",
+              cyan: "#7dcfff",
+              green: "#9ece6a",
+              yellow: "#e0af68",
+              orange: "#ff9e64",
+              red: "#f7768e",
+              border: "#3b4261",
+            },
+          },
+          fontFamily: {
+            sans: ["ui-sans-serif", "system-ui", "Segoe UI", "Roboto", "sans-serif"],
+            mono: ["ui-monospace", "SFMono-Regular", "Menlo", "Consolas", "monospace"],
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+    :root { color-scheme: dark; }
+    html, body { min-height: 100%; }
+    body {
+      margin: 0;
+      background:
+        radial-gradient(1200px 600px at 10% -10%, rgba(122, 162, 247, 0.12), transparent 55%),
+        radial-gradient(900px 500px at 90% 0%, rgba(187, 154, 247, 0.1), transparent 50%),
+        #1a1b26;
+      color: #c0caf5;
+      font-family: ui-sans-serif, system-ui, Segoe UI, Roboto, sans-serif;
+    }
+    ::selection { background: rgba(122, 162, 247, 0.4); color: #fff; }
+    :focus-visible { outline: 2px solid #7aa2f7; outline-offset: 2px; }
+
+    .keycap {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid #3b4261;
+      background: #16161e;
+      border-radius: 0.375rem;
+      padding: 0.25rem 0.5rem;
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      user-select: none;
+      transition: background 120ms, border-color 120ms, box-shadow 120ms, transform 80ms, color 120ms;
+    }
+    .keycap.active {
+      background: linear-gradient(135deg, rgba(122, 162, 247, 0.35), rgba(187, 154, 247, 0.35));
+      border-color: #7aa2f7;
+      color: #fff;
+      box-shadow: 0 0 16px rgba(122, 162, 247, 0.35);
+      transform: translateY(1px);
+    }
+    .keycap.ghost {
+      background: transparent;
+      border-color: rgba(59, 66, 97, 0.4);
+      color: rgba(86, 95, 137, 0.7);
+    }
+    .binding-row {
+      transition: background 120ms, border-color 120ms, box-shadow 120ms;
+    }
+    .binding-row.hot {
+      border-color: rgba(158, 206, 106, 0.6);
+      background: rgba(158, 206, 106, 0.12);
+      box-shadow: 0 0 20px rgba(158, 206, 106, 0.12);
+    }
+    .binding-row.hover-keys {
+      border-color: rgba(122, 162, 247, 0.55);
+      background: rgba(122, 162, 247, 0.1);
+    }
+    .glow-border {
+      box-shadow:
+        0 0 0 1px rgba(122, 162, 247, 0.55),
+        0 0 24px rgba(187, 154, 247, 0.25);
+    }
+    .scroll-thin::-webkit-scrollbar { width: 8px; height: 8px; }
+    .scroll-thin::-webkit-scrollbar-thumb { background: #3b4261; border-radius: 999px; }
+    .scroll-thin::-webkit-scrollbar-track { background: transparent; }
+    .grad-text {
+      background: linear-gradient(90deg, #7aa2f7, #7dcfff, #bb9af7);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .sticky-bar {
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+    .hidden { display: none !important; }
+
+    /* ── Mode tabs ── */
+    .mode-tab {
+      border: 1px solid #3b4261;
+      background: #1f2335;
+      color: #565f89;
+      border-radius: 999px;
+      padding: 0.4rem 0.9rem;
+      font-size: 12px;
+      font-weight: 600;
+      transition: all 120ms ease;
+    }
+    .mode-tab:hover { border-color: rgba(122, 162, 247, 0.45); color: #c0caf5; }
+    .mode-tab.active {
+      border-color: rgba(122, 162, 247, 0.7);
+      background: rgba(122, 162, 247, 0.15);
+      color: #7aa2f7;
+    }
+
+    /* ── Flashcard (lifted from therobotlearns flashcard review UX) ── */
+    .fc-scene {
+      perspective: 1200px;
+      width: 100%;
+      max-width: 36rem;
+      margin: 0 auto;
+    }
+    .fc-card {
+      position: relative;
+      width: 100%;
+      min-height: 16rem;
+      transform-style: preserve-3d;
+      transition: transform 0.45s cubic-bezier(0.2, 0.8, 0.2, 1);
+      cursor: pointer;
+    }
+    .fc-card.flipped { transform: rotateY(180deg); }
+    .fc-face {
+      position: absolute;
+      inset: 0;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      border-radius: 1rem;
+      border: 1px solid #3b4261;
+      background: linear-gradient(160deg, #1f2335 0%, #16161e 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      text-align: center;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.35);
+    }
+    .fc-face.back {
+      transform: rotateY(180deg);
+      border-color: rgba(187, 154, 247, 0.45);
+      background: linear-gradient(160deg, rgba(122, 162, 247, 0.12), #16161e 60%);
+    }
+    .grade-btn {
+      flex: 1;
+      min-width: 4.5rem;
+      border-radius: 0.5rem;
+      border: 1px solid #3b4261;
+      padding: 0.55rem 0.4rem;
+      font-size: 11px;
+      font-weight: 600;
+      background: #1f2335;
+      color: #c0caf5;
+      transition: all 100ms;
+    }
+    .grade-btn:hover { filter: brightness(1.15); }
+    .grade-btn.again { border-color: rgba(247, 118, 142, 0.5); color: #f7768e; }
+    .grade-btn.hard { border-color: rgba(224, 175, 104, 0.5); color: #e0af68; }
+    .grade-btn.good { border-color: rgba(122, 162, 247, 0.5); color: #7aa2f7; }
+    .grade-btn.easy { border-color: rgba(158, 206, 106, 0.5); color: #9ece6a; }
+
+    /* ── Quiz SPA patterns (from therobotlearns.com/quiz-app) ── */
+    .mc-options { display: flex; flex-direction: column; gap: 0.5rem; }
+    .mc-option {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      padding: 0.75rem 0.9rem;
+      border: 1px solid #3b4261;
+      border-radius: 0.5rem;
+      background: #16161e;
+      cursor: pointer;
+      transition: border-color 120ms, background 120ms;
+      font-size: 0.9rem;
+    }
+    .mc-option:hover:not(.disabled) { border-color: rgba(122, 162, 247, 0.5); background: #1f2335; }
+    .mc-option.option-selected {
+      border-color: #7aa2f7;
+      background: rgba(122, 162, 247, 0.12);
+    }
+    .mc-option.option-correct {
+      border-color: #9ece6a;
+      background: rgba(158, 206, 106, 0.12);
+    }
+    .mc-option.option-incorrect {
+      border-color: #f7768e;
+      background: rgba(247, 118, 142, 0.12);
+    }
+    .mc-option.disabled { cursor: default; opacity: 0.95; }
+    .mc-option input { accent-color: #7aa2f7; }
+    .explanation-box {
+      margin-top: 0.75rem;
+      padding: 0.75rem 0.9rem;
+      border-radius: 0.5rem;
+      border: 1px solid rgba(224, 175, 104, 0.35);
+      background: rgba(224, 175, 104, 0.08);
+      color: #e0af68;
+      font-size: 0.85rem;
+      line-height: 1.45;
+    }
+    .feedback-icon { margin-left: auto; font-weight: 700; }
+    .feedback-correct { color: #9ece6a; }
+    .feedback-incorrect { color: #f7768e; }
+    .quiz-progress-track {
+      height: 6px;
+      background: #292e42;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .quiz-progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #7aa2f7, #bb9af7);
+      border-radius: 999px;
+      transition: width 0.3s ease;
+    }
+    .pass-badge {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+    }
+    .pass-badge.pass { background: rgba(158, 206, 106, 0.15); color: #9ece6a; border: 1px solid rgba(158, 206, 106, 0.4); }
+    .pass-badge.fail { background: rgba(247, 118, 142, 0.15); color: #f7768e; border: 1px solid rgba(247, 118, 142, 0.4); }
+    .score-big {
+      font-size: 3rem;
+      font-weight: 800;
+      line-height: 1;
+      background: linear-gradient(90deg, #7aa2f7, #bb9af7);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .text-input {
+      width: 100%;
+      border: 1px solid #3b4261;
+      border-radius: 0.5rem;
+      background: #16161e;
+      color: #c0caf5;
+      padding: 0.65rem 0.85rem;
+      font-size: 0.95rem;
+    }
+    .text-input:focus {
+      outline: none;
+      border-color: #7aa2f7;
+      box-shadow: 0 0 0 2px rgba(122, 162, 247, 0.25);
+    }
+    .field-hint { font-size: 0.75rem; color: #565f89; margin-bottom: 0.35rem; }
+  </style>
+</head>
+<body>
+  <div class="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8">
+    <!-- Header -->
+    <header class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+      <div>
+        <p class="text-[11px] font-medium uppercase tracking-[0.25em] text-tn-magenta">
+          Hyprland · Tokyo Night rice · standalone HTML
+        </p>
+        <h1 class="mt-1 text-3xl font-bold tracking-tight grad-text sm:text-4xl">hyprriceitsnice</h1>
+        <p class="mt-2 max-w-xl text-sm text-tn-comment">
+          Single-file cheat sheet for
+          <code class="rounded bg-tn-dark px-1.5 py-0.5 font-mono text-[12px] text-tn-cyan">~/.config/hypr</code>.
+          Search, filter, hover to light keys, click to copy. Toggle listen mode to flash matching binds.
+        </p>
+        <div class="mt-3 flex flex-wrap gap-2 text-[11px]">
+          <span class="rounded-full border border-tn-magenta/50 bg-tn-magenta/15 px-2.5 py-1 font-medium text-tn-magenta">
+            Standalone HTML
+          </span>
+          <a href="/" id="nextLink"
+            class="rounded-full border border-tn-border bg-tn-card px-2.5 py-1 text-tn-comment transition hover:border-tn-blue/50 hover:text-tn-blue"
+            title="When served by Next.js dev/start">
+            Next.js app →
+          </a>
+          <span class="rounded-full border border-tn-border/60 px-2.5 py-1 text-tn-comment/70">
+            also cheatsheet.md
+          </span>
+        </div>
+      </div>
+      <div class="flex flex-wrap items-center gap-2">
+        <button id="listenBtn" type="button"
+          class="rounded-lg border border-tn-border bg-tn-card px-3 py-2 text-xs font-semibold text-tn-fg/80 hover:border-tn-blue/50 transition">
+          ○ Listen mode
+        </button>
+        <span id="countBadge" class="rounded-lg border border-tn-border bg-tn-card px-3 py-2 text-[11px] text-tn-comment">
+          — binds
+        </span>
+      </div>
+    </header>
+
+    <!-- Mode switcher: cheatsheet | flashcards | quiz -->
+    <nav class="flex flex-wrap items-center gap-2" aria-label="Mode">
+      <button type="button" class="mode-tab active" data-mode="cheatsheet">📋 Cheatsheet</button>
+      <button type="button" class="mode-tab" data-mode="flashcards">🃏 Flashcards</button>
+      <button type="button" class="mode-tab" data-mode="quiz">📝 Quiz</button>
+      <span class="ml-auto text-[10px] text-tn-comment hidden sm:inline">
+        flash / quiz UX lifted from therobotlearns.com quiz-app + flashcard review
+      </span>
+    </nav>
+
+    <!-- ========== VIEW: CHEATSHEET ========== -->
+    <div id="view-cheatsheet" class="flex flex-col gap-6">
+
+    <!-- Search + filters -->
+    <div class="sticky-bar -mx-1 space-y-3 rounded-xl border border-tn-border/80 bg-tn-dark/90 p-3">
+      <div class="relative">
+        <input id="search" type="search" autocomplete="off" spellcheck="false"
+          placeholder="Search binds, apps, tags…  (Ctrl/⌘+K)"
+          class="w-full rounded-lg border border-tn-border bg-tn-bg/80 py-2.5 pl-3 pr-20 text-sm text-tn-fg placeholder:text-tn-comment focus:border-tn-blue focus:outline-none focus:ring-2 focus:ring-tn-blue/40" />
+        <kbd class="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 rounded border border-tn-border bg-tn-card px-1.5 py-0.5 font-mono text-[10px] text-tn-comment">⌘K</kbd>
+      </div>
+      <div id="filters" class="flex gap-1.5 overflow-x-auto scroll-thin pb-0.5"></div>
+    </div>
+
+    <div id="listenBanner" class="hidden rounded-lg border border-tn-green/40 bg-tn-green/10 px-3 py-2 text-xs text-tn-green">
+      Listen mode: press combos outside the search box. Matching rows flash green.
+      Held: <span id="heldKeys" class="font-mono">—</span>
+    </div>
+
+    <!-- Keyboard + meta -->
+    <div class="grid gap-4 xl:grid-cols-[1.4fr_1fr]">
+      <div class="rounded-xl border border-tn-border bg-tn-dark/80 p-3">
+        <div class="mb-2 flex items-center justify-between px-1">
+          <span class="text-[10px] font-medium uppercase tracking-[0.2em] text-tn-comment">Virtual board</span>
+          <span class="text-[10px] text-tn-comment">hover a bind · or enable listen mode</span>
+        </div>
+        <div id="keyboard" class="flex flex-col gap-1.5"></div>
+        <div id="extraKeys" class="mt-3 flex flex-wrap justify-center gap-1.5 border-t border-tn-border/60 pt-2"></div>
+      </div>
+
+      <aside class="flex flex-col gap-3">
+        <div class="rounded-xl border border-tn-border bg-tn-card/70 p-3">
+          <h3 class="mb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-tn-comment">Default apps</h3>
+          <dl id="appsList" class="space-y-1.5 text-[12px]"></dl>
+        </div>
+        <div class="rounded-xl border border-tn-border bg-tn-card/70 p-3">
+          <h3 class="mb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-tn-comment">Rice</h3>
+          <dl id="riceList" class="space-y-1.5 text-[12px]"></dl>
+          <div class="mt-3 h-2 overflow-hidden rounded-full bg-tn-dark">
+            <div class="h-full w-full" style="background:linear-gradient(90deg,#7aa2f7,#bb9af7)"></div>
+          </div>
+        </div>
+        <div class="rounded-xl border border-tn-border bg-tn-card/70 p-3">
+          <h3 class="mb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-tn-comment">Autostart</h3>
+          <ul id="autostartList" class="space-y-1 text-[12px] text-tn-fg/85"></ul>
+        </div>
+      </aside>
+    </div>
+
+    <!-- Monitors + AI layout -->
+    <section class="grid gap-4 lg:grid-cols-2">
+      <div class="rounded-xl border border-tn-border bg-tn-card/70 p-4">
+        <h2 class="mb-3 text-sm font-semibold tracking-wide text-tn-cyan">Dual stack</h2>
+        <div class="flex flex-col items-center gap-2">
+          <div class="w-full max-w-md rounded-lg border-2 border-tn-blue/70 bg-gradient-to-br from-tn-blue/15 to-tn-magenta/10 p-3">
+            <div class="flex items-start justify-between gap-2">
+              <div>
+                <div class="text-xs font-semibold text-tn-blue">MSI MAG 273Q</div>
+                <div class="font-mono text-[10px] text-tn-comment">HDMI-A-1</div>
+              </div>
+              <div class="rounded-full bg-tn-blue/20 px-2 py-0.5 text-[10px] text-tn-blue">WS 1–5</div>
+            </div>
+            <div class="mt-2 text-[11px] text-tn-fg/80">2560×1440@120 · scale 1</div>
+            <div class="mt-1 text-[10px] text-tn-comment">Primary · top stand</div>
+            <div id="wsHdmi" class="mt-3 flex flex-wrap gap-1"></div>
+          </div>
+          <div class="h-4 w-px bg-tn-border"></div>
+          <div class="w-[75%] max-w-sm rounded-lg border border-tn-magenta/60 bg-gradient-to-br from-tn-magenta/10 to-transparent p-3">
+            <div class="flex items-start justify-between gap-2">
+              <div>
+                <div class="text-xs font-semibold text-tn-magenta">Samsung OLED</div>
+                <div class="font-mono text-[10px] text-tn-comment">eDP-1</div>
+              </div>
+              <div class="rounded-full bg-tn-magenta/20 px-2 py-0.5 text-[10px] text-tn-magenta">WS 6–9</div>
+            </div>
+            <div class="mt-2 text-[11px] text-tn-fg/80">2880×1620@120</div>
+            <div class="mt-0.5 text-[10px] text-tn-comment">scale 1.5 → 1920×1080 logical</div>
+            <div id="wsLaptop" class="mt-3 flex flex-wrap gap-1"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="rounded-xl border border-tn-border bg-tn-card/70 p-4">
+        <h2 class="mb-3 text-sm font-semibold tracking-wide text-tn-green">AI workspace layout</h2>
+        <p class="mb-3 text-[11px] text-tn-comment">
+          special:ai · floats use % of focused monitor · SUPER+A toggle · SUPER+SHIFT+A launch
+        </p>
+        <div class="relative aspect-video w-full overflow-hidden rounded-lg border border-tn-border bg-tn-dark">
+          <div class="absolute left-[1%] top-[1%] h-[72%] w-[58%] rounded-md border border-tn-blue/50 bg-tn-blue/15 p-2">
+            <div class="text-[10px] font-medium text-tn-blue">Chrome</div>
+            <div class="text-[9px] text-tn-comment">58% × 72%</div>
+          </div>
+          <div class="absolute left-[59%] top-[1%] h-[97%] w-[40%] rounded-md border border-tn-magenta/50 bg-tn-magenta/15 p-2">
+            <div class="text-[10px] font-medium text-tn-magenta">Obsidian</div>
+            <div class="text-[9px] text-tn-comment">40% × 97%</div>
+          </div>
+          <div class="absolute bottom-[2%] left-[1%] h-[22%] w-[58%] rounded-md border border-tn-green/50 bg-tn-green/10 p-2">
+            <div class="text-[10px] font-medium text-tn-green">Terminal</div>
+            <div class="text-[9px] text-tn-comment">58% × 22%</div>
+          </div>
+        </div>
+        <ul class="mt-3 space-y-1 text-[11px]">
+          <li class="flex justify-between gap-2"><span>Chrome / Chromium</span><span class="font-mono text-tn-comment">Left 58% × 72%</span></li>
+          <li class="flex justify-between gap-2"><span>Obsidian</span><span class="font-mono text-tn-comment">Right 40% × 97%</span></li>
+          <li class="flex justify-between gap-2"><span>foot / kitty</span><span class="font-mono text-tn-comment">Under chrome 58% × 22%</span></li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- Bindings -->
+    <section id="bindings" class="space-y-6"></section>
+    </div><!-- /view-cheatsheet -->
+
+    <!-- ========== VIEW: FLASHCARDS ========== -->
+    <div id="view-flashcards" class="hidden flex flex-col gap-5">
+      <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h2 class="text-lg font-semibold text-tn-cyan">Flashcard review</h2>
+          <p class="mt-1 text-sm text-tn-comment">
+            Flip with <kbd class="rounded border border-tn-border bg-tn-dark px-1 font-mono text-[10px]">Space</kbd>
+            · grade with <kbd class="rounded border border-tn-border bg-tn-dark px-1 font-mono text-[10px]">1–4</kbd>
+            (Again / Hard / Good / Easy). Session-only SM-2-ish scheduling.
+          </p>
+        </div>
+        <div class="flex flex-wrap gap-2">
+          <select id="fcDeckFilter" class="rounded-lg border border-tn-border bg-tn-card px-2 py-1.5 text-xs text-tn-fg">
+            <option value="all">All decks</option>
+          </select>
+          <select id="fcDirection" class="rounded-lg border border-tn-border bg-tn-card px-2 py-1.5 text-xs text-tn-fg">
+            <option value="action-keys">Action → Keys</option>
+            <option value="keys-action">Keys → Action</option>
+          </select>
+          <button type="button" id="fcShuffle" class="rounded-lg border border-tn-border bg-tn-card px-3 py-1.5 text-xs font-semibold hover:border-tn-blue/50">
+            Shuffle
+          </button>
+          <button type="button" id="fcReset" class="rounded-lg border border-tn-border bg-tn-card px-3 py-1.5 text-xs font-semibold hover:border-tn-magenta/50">
+            Reset session
+          </button>
+        </div>
+      </div>
+
+      <div class="quiz-progress-track max-w-xl mx-auto w-full">
+        <div id="fcProgressBar" class="quiz-progress-bar" style="width:0%"></div>
+      </div>
+      <div id="fcProgressLabel" class="text-center text-[11px] text-tn-comment">0 / 0</div>
+
+      <div id="fcStage" class="fc-scene">
+        <!-- filled by JS -->
+      </div>
+
+      <div id="fcGradeRow" class="mx-auto flex w-full max-w-xl flex-wrap gap-2 hidden">
+        <button type="button" class="grade-btn again" data-q="1">1 Again</button>
+        <button type="button" class="grade-btn hard" data-q="2">2 Hard</button>
+        <button type="button" class="grade-btn good" data-q="3">3 Good</button>
+        <button type="button" class="grade-btn easy" data-q="4">4 Easy</button>
+      </div>
+
+      <div id="fcDone" class="hidden mx-auto w-full max-w-xl rounded-xl border border-tn-border bg-tn-card p-6 text-center">
+        <div class="text-tn-green text-sm font-semibold uppercase tracking-wider">Deck clear</div>
+        <p id="fcDoneStats" class="mt-2 text-sm text-tn-comment"></p>
+        <button type="button" id="fcRestart" class="mt-4 rounded-lg border border-tn-blue/50 bg-tn-blue/15 px-4 py-2 text-sm font-semibold text-tn-blue">
+          Review again
+        </button>
+      </div>
+    </div>
+
+    <!-- ========== VIEW: QUIZ ========== -->
+    <div id="view-quiz" class="hidden flex flex-col gap-5">
+      <div id="quizShell" class="mx-auto w-full max-w-xl">
+        <!-- intro / questions / results rendered here -->
+      </div>
+    </div>
+
+    <footer class="border-t border-tn-border/60 pt-4 pb-8 text-center text-[11px] text-tn-comment">
+      Standalone HTML · Tailwind via CDN · data from
+      <code class="text-tn-cyan">hyprland.conf</code> +
+      <code class="text-tn-cyan">ai-workspace-extension.conf</code>.
+      Flashcards & quiz patterns adapted from
+      <code class="text-tn-magenta">therobotlearns.com/quiz-app</code>.
+      SUPER+SHIFT+Q exit disabled · SUPER+Space is launcher (later bind wins).
+    </footer>
+  </div>
+
+  <script>
+    /* ========== DATA ========== */
+    const CATEGORIES = [
+      { id: "launch", label: "Launch", emoji: "🚀", description: "Apps & menus" },
+      { id: "windows", label: "Windows", emoji: "🪟", description: "Float, pin, kill, split" },
+      { id: "focus", label: "Focus / Move", emoji: "🎯", description: "Vim + arrows + resize" },
+      { id: "workspaces", label: "Workspaces", emoji: "🗂", description: "Jump, move, swipe" },
+      { id: "scratchpad", label: "Scratchpad", emoji: "📎", description: "special:scratchpad" },
+      { id: "ai", label: "AI Workspace", emoji: "🤖", description: "special:ai floating layout" },
+      { id: "clipboard", label: "Clip / Shot", emoji: "📋", description: "cliphist + grim/slurp" },
+      { id: "media", label: "Media / HW", emoji: "🔊", description: "Volume, brightness, player" },
+      { id: "extra", label: "Extra UI", emoji: "✨", description: "Waybar, snapshots, foot+tmux" },
+      { id: "system", label: "System", emoji: "⚙️", description: "Notes & gotchas" },
+    ];
+
+    const WS_TITLES = { "1": "osx", "2": "win", "3": "dev", "4": "web", "5": "ai" };
+
+    const APPS = [
+      { key: "$terminal", value: "ghostty" },
+      { key: "$browser", value: "chromium" },
+      { key: "$fileManager", value: "dolphin" },
+      { key: "$menu", value: "wofi --show drun" },
+    ];
+
+    const RICE = {
+      Layout: "dwindle (smart_split, preserve_split, pseudotile)",
+      Gaps: "in 3 · out 6",
+      Border: "1px · rounding 8",
+      Active: "#7aa2f7 → #bb9af7 (45°)",
+      Blur: "on · size 8 · 4 passes",
+      Theme: "Tokyo Night-ish",
+    };
+
+    const AUTOSTART = [
+      "waybar",
+      "swaync",
+      "polkit-gnome",
+      "wl-paste → cliphist (text + image)",
+      "desktop-snapshots daemon",
+      "foot --server",
+    ];
+
+    const BINDINGS = [
+      { id: "term", keys: ["SUPER", "Return"], keyIds: ["super", "return"], action: "Open terminal (ghostty)", category: "launch", tags: ["terminal", "ghostty"] },
+      { id: "menu-alt", keys: ["ALT", "Space"], keyIds: ["alt", "space"], action: "App launcher (wofi) — Spotlight-style", category: "launch", tags: ["wofi", "menu"] },
+      { id: "menu-super", keys: ["SUPER", "Space"], keyIds: ["super", "space"], action: "App launcher (wofi)", category: "launch", notes: "Also declared as terminal earlier; later bind wins → menu.", tags: ["wofi", "menu"] },
+      { id: "browser", keys: ["SUPER", "B"], keyIds: ["super", "b"], action: "Browser (chromium)", category: "launch", tags: ["chromium"] },
+      { id: "files", keys: ["SUPER", "E"], keyIds: ["super", "e"], action: "File manager (dolphin)", category: "launch", tags: ["dolphin"] },
+      { id: "nomachine", keys: ["SUPER", "M"], keyIds: ["super", "m"], action: "NoMachine player", category: "launch", tags: ["nxplayer"] },
+
+      { id: "kill", keys: ["SUPER", "RCTRL", "Q"], keyIds: ["super", "rctrl", "q"], action: "Kill active window", category: "windows" },
+      { id: "float", keys: ["SUPER", "SHIFT", "V"], keyIds: ["super", "shift", "v"], action: "Toggle floating", category: "windows" },
+      { id: "fullscreen", keys: ["SUPER", "F"], keyIds: ["super", "f"], action: "Fullscreen", category: "windows" },
+      { id: "pseudo", keys: ["SUPER", "P"], keyIds: ["super", "p"], action: "Pseudo-tile (dwindle)", category: "windows" },
+      { id: "togglesplit", keys: ["SUPER", "T"], keyIds: ["super", "t"], action: "Toggle split (dwindle)", category: "windows" },
+      { id: "pin", keys: ["CTRL", "ALT", "P"], keyIds: ["ctrl", "alt", "p"], action: "Float + pin (sticky across workspaces)", category: "windows", tags: ["pin", "sticky"] },
+      { id: "move-mouse", keys: ["SUPER", "LMB drag"], keyIds: ["super", "lmb"], action: "Move window with mouse", category: "windows" },
+      { id: "resize-mouse", keys: ["SUPER", "RMB drag"], keyIds: ["super", "rmb"], action: "Resize window with mouse", category: "windows" },
+
+      { id: "focus-h", keys: ["SUPER", "H"], keyIds: ["super", "h"], action: "Focus left", category: "focus", tags: ["vim"] },
+      { id: "focus-j", keys: ["SUPER", "J"], keyIds: ["super", "j"], action: "Focus down", category: "focus", tags: ["vim"] },
+      { id: "focus-k", keys: ["SUPER", "K"], keyIds: ["super", "k"], action: "Focus up", category: "focus", tags: ["vim"] },
+      { id: "focus-l", keys: ["SUPER", "L"], keyIds: ["super", "l"], action: "Focus right", category: "focus", tags: ["vim"] },
+      { id: "focus-left", keys: ["SUPER", "←"], keyIds: ["super", "left"], action: "Focus left (arrow)", category: "focus" },
+      { id: "focus-right", keys: ["SUPER", "→"], keyIds: ["super", "right"], action: "Focus right (arrow)", category: "focus" },
+      { id: "focus-up", keys: ["SUPER", "↑"], keyIds: ["super", "up"], action: "Focus up (arrow)", category: "focus" },
+      { id: "focus-down", keys: ["SUPER", "↓"], keyIds: ["super", "down"], action: "Focus down (arrow)", category: "focus" },
+      { id: "movewin-h", keys: ["SUPER", "SHIFT", "H"], keyIds: ["super", "shift", "h"], action: "Move window left", category: "focus", tags: ["vim"] },
+      { id: "movewin-j", keys: ["SUPER", "SHIFT", "J"], keyIds: ["super", "shift", "j"], action: "Move window down", category: "focus", tags: ["vim"] },
+      { id: "movewin-k", keys: ["SUPER", "SHIFT", "K"], keyIds: ["super", "shift", "k"], action: "Move window up", category: "focus", tags: ["vim"] },
+      { id: "movewin-l", keys: ["SUPER", "SHIFT", "L"], keyIds: ["super", "shift", "l"], action: "Move window right", category: "focus", tags: ["vim"] },
+      { id: "resize-h", keys: ["SUPER", "CTRL", "H"], keyIds: ["super", "ctrl", "h"], action: "Resize −40px width", category: "focus" },
+      { id: "resize-l", keys: ["SUPER", "CTRL", "L"], keyIds: ["super", "ctrl", "l"], action: "Resize +40px width", category: "focus" },
+      { id: "resize-k", keys: ["SUPER", "CTRL", "K"], keyIds: ["super", "ctrl", "k"], action: "Resize −40px height", category: "focus" },
+      { id: "resize-j", keys: ["SUPER", "CTRL", "J"], keyIds: ["super", "ctrl", "j"], action: "Resize +40px height", category: "focus" },
+
+      // workspaces 1-9 generated below
+      { id: "ws-10", keys: ["SUPER", "0"], keyIds: ["super", "0"], action: "Go to workspace 10", category: "workspaces" },
+      { id: "movews-10", keys: ["SUPER", "SHIFT", "0"], keyIds: ["super", "shift", "0"], action: "Move window → workspace 10", category: "workspaces" },
+      { id: "ws-next", keys: ["SUPER", "Tab"], keyIds: ["super", "tab"], action: "Next workspace", category: "workspaces" },
+      { id: "ws-prev", keys: ["SUPER", "SHIFT", "Tab"], keyIds: ["super", "shift", "tab"], action: "Previous workspace", category: "workspaces" },
+      { id: "ws-scroll", keys: ["SUPER", "Scroll"], keyIds: ["super", "scroll"], action: "Cycle workspaces (mouse wheel)", category: "workspaces" },
+      { id: "ws-swipe", keys: ["3-finger swipe"], keyIds: [], action: "Swipe workspaces (touchpad)", category: "workspaces", notes: "Horizontal 3-finger gesture" },
+
+      { id: "scratch-toggle", keys: ["SUPER", "S"], keyIds: ["super", "s"], action: "Toggle special:scratchpad", category: "scratchpad" },
+      { id: "scratch-send", keys: ["SUPER", "SHIFT", "S"], keyIds: ["super", "shift", "s"], action: "Send window → scratchpad", category: "scratchpad" },
+
+      { id: "ai-toggle", keys: ["SUPER", "A"], keyIds: ["super", "a"], action: "Toggle AI workspace (special:ai)", category: "ai" },
+      { id: "ai-launch", keys: ["SUPER", "SHIFT", "A"], keyIds: ["super", "shift", "a"], action: "Launch AI layout (Chrome + Obsidian + term)", category: "ai", notes: "Runs ~/.config/hypr/bin/ai-workspace-launch", tags: ["script"] },
+      { id: "ai-move-in", keys: ["SUPER", "ALT", "C"], keyIds: ["super", "alt", "c"], action: "Move focused → AI workspace (silent)", category: "ai" },
+      { id: "ai-move-out", keys: ["SUPER", "ALT", "M"], keyIds: ["super", "alt", "m"], action: "Move from special → current workspace", category: "ai" },
+
+      { id: "cliphist", keys: ["SUPER", "V"], keyIds: ["super", "v"], action: "Clipboard history (cliphist → wofi)", category: "clipboard", tags: ["cliphist"] },
+      { id: "shot-region", keys: ["Print"], keyIds: ["print"], action: "Region screenshot → clipboard", category: "clipboard", tags: ["grim", "slurp"] },
+      { id: "shot-full", keys: ["SUPER", "Print"], keyIds: ["super", "print"], action: "Fullscreen screenshot → clipboard", category: "clipboard", tags: ["grim"] },
+      { id: "shot-file", keys: ["SUPER", "SHIFT", "Print"], keyIds: ["super", "shift", "print"], action: "Region screenshot → ~/Pictures/…", category: "clipboard", tags: ["grim", "slurp"] },
+
+      { id: "vol-up", keys: ["Vol ↑"], keyIds: ["volup"], action: "Volume +5% (cap 100%)", category: "media" },
+      { id: "vol-down", keys: ["Vol ↓"], keyIds: ["voldown"], action: "Volume −5%", category: "media" },
+      { id: "mute", keys: ["Mute"], keyIds: ["mute"], action: "Toggle sink mute", category: "media" },
+      { id: "mic-mute", keys: ["Mic mute"], keyIds: ["micmute"], action: "Toggle source mute", category: "media" },
+      { id: "bright-up", keys: ["Bright ↑"], keyIds: ["brightup"], action: "Brightness +5%", category: "media" },
+      { id: "bright-down", keys: ["Bright ↓"], keyIds: ["brightdown"], action: "Brightness −5%", category: "media" },
+      { id: "play", keys: ["Play/Pause"], keyIds: ["play"], action: "playerctl play-pause", category: "media" },
+      { id: "next", keys: ["Next"], keyIds: ["next"], action: "playerctl next", category: "media" },
+      { id: "prev", keys: ["Prev"], keyIds: ["prev"], action: "playerctl previous", category: "media" },
+
+      { id: "waybar-notch", keys: ["SUPER", "ALT", "W"], keyIds: ["super", "alt", "w"], action: "Toggle waybar notch-dock (profile 6 only)", category: "extra" },
+      { id: "snapshots", keys: ["SUPER", "CTRL", "5"], keyIds: ["super", "ctrl", "5"], action: "Desktop snapshots overview", category: "extra", notes: "~/.config/hypr/bin/desktop-snapshots overview" },
+      { id: "foot-big", keys: ["SUPER", "SHIFT", "Return"], keyIds: ["super", "shift", "return"], action: "foot-big on HDMI (tmux session main)", category: "extra", notes: "70%×60% float on external monitor", tags: ["foot", "tmux"] },
+      { id: "foot-pad", keys: ["SUPER", "ALT", "Return"], keyIds: ["super", "alt", "return"], action: "foot-pad on laptop (tmux session main)", category: "extra", notes: "90%×85% float on eDP-1", tags: ["foot", "tmux"] },
+
+      { id: "no-exit", keys: ["SUPER", "SHIFT", "Q"], keyIds: ["super", "shift", "q"], action: "Exit Hyprland — DISABLED on purpose", category: "system", notes: "Commented out in hyprland.conf to avoid accidents" },
+    ];
+
+    // inject workspace 1-9 at correct position
+    (function injectWs() {
+      const extra = [];
+      for (let n = 1; n <= 9; n++) {
+        const digit = String(n);
+        extra.push({
+          id: `ws-${n}`,
+          keys: ["SUPER", digit],
+          keyIds: ["super", digit],
+          action: `Go to workspace ${n}${n <= 5 ? " (HDMI)" : " (laptop)"}`,
+          category: "workspaces",
+          tags: [n <= 5 ? "hdmi" : "laptop"],
+        });
+        extra.push({
+          id: `movews-${n}`,
+          keys: ["SUPER", "SHIFT", digit],
+          keyIds: ["super", "shift", digit],
+          action: `Move window → workspace ${n}`,
+          category: "workspaces",
+        });
+      }
+      const idx = BINDINGS.findIndex((b) => b.id === "ws-10");
+      BINDINGS.splice(idx, 0, ...extra);
+    })();
+
+    /* ========== KEYBOARD LAYOUT ========== */
+    const KEY_LABELS = {
+      super: "SUPER", shift: "SHIFT", ctrl: "CTRL", alt: "ALT", rctrl: "RCTRL",
+      return: "↵", space: "Space", tab: "Tab", print: "PrtSc", escape: "Esc",
+      left: "←", right: "→", up: "↑", down: "↓",
+    };
+
+    const KB_ROWS = [
+      [
+        { id: "escape", label: "Esc", w: "sm" }, { spacer: true },
+        { id: "1" }, { id: "2" }, { id: "3" }, { id: "4" }, { id: "5" },
+        { id: "6" }, { id: "7" }, { id: "8" }, { id: "9" }, { id: "0" },
+        { spacer: true }, { id: "print", label: "PrtSc", w: "md" },
+      ],
+      [
+        { id: "tab", label: "Tab", w: "md" },
+        { id: "q" }, { id: "w" }, { id: "e" }, { label: "R", ghost: true },
+        { id: "t" }, { label: "Y", ghost: true }, { label: "U", ghost: true },
+        { label: "I", ghost: true }, { label: "O", ghost: true }, { id: "p" },
+        { spacer: true }, { id: "up", label: "↑" },
+      ],
+      [
+        { label: "Caps", w: "md", ghost: true },
+        { id: "a" }, { id: "s" }, { label: "D", ghost: true }, { id: "f" },
+        { label: "G", ghost: true }, { id: "h" }, { id: "j" }, { id: "k" }, { id: "l" },
+        { spacer: true },
+        { id: "left", label: "←" }, { id: "down", label: "↓" }, { id: "right", label: "→" },
+      ],
+      [
+        { id: "shift", label: "SHIFT", w: "lg" },
+        { label: "Z", ghost: true }, { label: "X", ghost: true },
+        { id: "c" }, { id: "v" }, { id: "b" }, { label: "N", ghost: true }, { id: "m" },
+        { spacer: true },
+        { id: "shift", label: "SHIFT", w: "lg" },
+      ],
+      [
+        { id: "ctrl", label: "CTRL", w: "md" },
+        { id: "super", label: "SUPER", w: "md" },
+        { id: "alt", label: "ALT", w: "md" },
+        { id: "space", label: "Space", w: "xl" },
+        { id: "alt", label: "ALT", w: "sm" },
+        { id: "rctrl", label: "RCTRL", w: "md" },
+        { id: "return", label: "↵ Enter", w: "lg" },
+      ],
+    ];
+
+    const EXTRA_KEYS = [
+      ["lmb", "LMB"], ["rmb", "RMB"], ["scroll", "Scroll"],
+      ["volup", "Vol+"], ["voldown", "Vol−"], ["mute", "Mute"],
+      ["brightup", "☀+"], ["brightdown", "☀−"], ["play", "⏯"],
+    ];
+
+    const WIDTH = { sm: "min-w-[2.5rem]", md: "min-w-[3.25rem]", lg: "min-w-[4.5rem]", xl: "min-w-[8.5rem] flex-1", def: "min-w-[1.85rem] w-8" };
+
+    /* ========== STATE ========== */
+    const state = {
+      query: "",
+      category: "all",
+      listen: false,
+      activeKeys: new Set(),
+      flashIds: new Set(),
+      copiedId: null,
+      held: [],
+    };
+
+    /* ========== HELPERS ========== */
+    function matchesQuery(b, q) {
+      if (!q) return true;
+      const hay = [b.action, ...b.keys, b.category, b.notes || "", ...(b.tags || [])].join(" ").toLowerCase();
+      return q.toLowerCase().split(/\s+/).filter(Boolean).every((t) => hay.includes(t));
+    }
+
+    function formatKeys(keys) {
+      return keys.join(" + ");
+    }
+
+    function chordHtml(keys) {
+      return keys
+        .map((k, i) => {
+          const plus = i > 0 ? '<span class="text-tn-comment text-[10px] mx-0.5">+</span>' : "";
+          return `${plus}<span class="keycap">${escapeHtml(k)}</span>`;
+        })
+        .join("");
+    }
+
+    function escapeHtml(s) {
+      return String(s)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    function bindingMatchesHeld(held, bindingKeys) {
+      if (!bindingKeys.length) return false;
+      const set = new Set(held);
+      return bindingKeys.every((k) => {
+        if (k === "rctrl") return set.has("rctrl") || set.has("ctrl");
+        if (k === "ctrl") return set.has("ctrl") || set.has("rctrl");
+        return set.has(k);
+      });
+    }
+
+    function eventToKeyIds(e) {
+      const ids = [];
+      if (e.metaKey) ids.push("super");
+      if (e.ctrlKey) ids.push(e.code === "ControlRight" ? "rctrl" : "ctrl");
+      if (e.altKey) ids.push("alt");
+      if (e.shiftKey) ids.push("shift");
+
+      const map = {
+        Enter: "return", " ": "space", Tab: "tab", Escape: "escape", PrintScreen: "print",
+        ArrowLeft: "left", ArrowRight: "right", ArrowUp: "up", ArrowDown: "down",
+      };
+      const letter = e.key.length === 1 ? e.key.toLowerCase() : "";
+      if (map[e.key]) ids.push(map[e.key]);
+      else if (/^[a-z0-9]$/.test(letter)) ids.push(letter);
+      return [...new Set(ids)];
+    }
+
+    function isTypingTarget(e) {
+      const t = e.target;
+      return t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable);
+    }
+
+    /* ========== RENDER ========== */
+    function renderMeta() {
+      document.getElementById("appsList").innerHTML = APPS.map(
+        (a) =>
+          `<div class="flex justify-between gap-2"><dt class="font-mono text-tn-comment">${escapeHtml(a.key)}</dt><dd class="text-tn-cyan">${escapeHtml(a.value)}</dd></div>`
+      ).join("");
+
+      document.getElementById("riceList").innerHTML = Object.entries(RICE)
+        .map(
+          ([k, v]) =>
+            `<div class="flex justify-between gap-3"><dt class="text-tn-comment">${escapeHtml(k)}</dt><dd class="text-right text-tn-fg/85">${escapeHtml(v)}</dd></div>`
+        )
+        .join("");
+
+      document.getElementById("autostartList").innerHTML = AUTOSTART.map(
+        (s) => `<li class="flex gap-2"><span class="text-tn-blue">▹</span>${escapeHtml(s)}</li>`
+      ).join("");
+
+      document.getElementById("wsHdmi").innerHTML = [1, 2, 3, 4, 5]
+        .map(
+          (n) =>
+            `<span class="rounded-md border border-tn-border bg-tn-dark px-2 py-1 text-[10px]"><span class="text-tn-blue">${n}</span>${
+              WS_TITLES[n] ? `<span class="ml-1 text-tn-comment">${WS_TITLES[n]}</span>` : ""
+            }</span>`
+        )
+        .join("");
+
+      document.getElementById("wsLaptop").innerHTML = [6, 7, 8, 9]
+        .map(
+          (n) =>
+            `<span class="rounded-md border border-tn-border bg-tn-dark px-2 py-1 text-[10px]"><span class="text-tn-magenta">${n}</span></span>`
+        )
+        .join("");
+    }
+
+    function renderKeyboard() {
+      const active = state.activeKeys;
+      const rows = KB_ROWS.map((row) => {
+        const cells = row
+          .map((key) => {
+            if (key.spacer) {
+              return `<span class="h-8 w-3 sm:w-4 rounded-md border border-transparent opacity-30"></span>`;
+            }
+            const id = key.id;
+            const lit =
+              id &&
+              (active.has(id) ||
+                (id === "ctrl" && active.has("rctrl")) ||
+                (id === "rctrl" && active.has("ctrl")));
+            const label = key.label || KEY_LABELS[id] || (id ? id.toUpperCase() : "");
+            const w = WIDTH[key.w] || WIDTH.def;
+            const classes = [
+              "keycap",
+              "h-8",
+              "px-1.5",
+              "text-[10px]",
+              w,
+              key.ghost && !lit ? "ghost" : "",
+              lit ? "active" : "",
+            ]
+              .filter(Boolean)
+              .join(" ");
+            return `<span class="${classes}" data-key="${id || ""}">${escapeHtml(label)}</span>`;
+          })
+          .join("");
+        return `<div class="flex flex-wrap justify-center gap-1">${cells}</div>`;
+      }).join("");
+
+      document.getElementById("keyboard").innerHTML = rows;
+
+      document.getElementById("extraKeys").innerHTML = EXTRA_KEYS.map(([id, label]) => {
+        const lit = active.has(id) ? "active" : "";
+        return `<span class="keycap h-7 px-2 text-[10px] ${lit}" data-key="${id}">${escapeHtml(label)}</span>`;
+      }).join("");
+    }
+
+    function renderFilters() {
+      const counts = { all: BINDINGS.length };
+      CATEGORIES.forEach((c) => {
+        counts[c.id] = BINDINGS.filter((b) => b.category === c.id).length;
+      });
+
+      const chips = [
+        { id: "all", label: "All", count: counts.all },
+        ...CATEGORIES.map((c) => ({
+          id: c.id,
+          label: `${c.emoji} ${c.label}`,
+          count: counts[c.id],
+        })),
+      ];
+
+      document.getElementById("filters").innerHTML = chips
+        .map((c) => {
+          const active = state.category === c.id;
+          return `<button type="button" data-cat="${c.id}" class="shrink-0 rounded-full border px-3 py-1.5 text-[11px] font-medium transition ${
+            active
+              ? "border-tn-blue/70 bg-tn-blue/15 text-tn-blue"
+              : "border-tn-border bg-tn-card text-tn-comment hover:border-tn-blue/40 hover:text-tn-fg"
+          }">${escapeHtml(c.label)}<span class="ml-1.5 opacity-70">${c.count}</span></button>`;
+        })
+        .join("");
+
+      document.querySelectorAll("#filters [data-cat]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          state.category = btn.getAttribute("data-cat");
+          renderFilters();
+          renderBindings();
+        });
+      });
+    }
+
+    function filteredBindings() {
+      return BINDINGS.filter((b) => {
+        if (state.category !== "all" && b.category !== state.category) return false;
+        return matchesQuery(b, state.query);
+      });
+    }
+
+    function renderBindings() {
+      const filtered = filteredBindings();
+      document.getElementById("countBadge").textContent = `${filtered.length} / ${BINDINGS.length} binds`;
+
+      const cats =
+        state.category === "all"
+          ? CATEGORIES
+          : CATEGORIES.filter((c) => c.id === state.category);
+
+      const byCat = new Map();
+      filtered.forEach((b) => {
+        if (!byCat.has(b.category)) byCat.set(b.category, []);
+        byCat.get(b.category).push(b);
+      });
+
+      if (!filtered.length) {
+        document.getElementById("bindings").innerHTML = `
+          <div class="rounded-xl border border-dashed border-tn-border px-4 py-12 text-center text-sm text-tn-comment">
+            No binds match “${escapeHtml(state.query)}”.
+          </div>`;
+        return;
+      }
+
+      document.getElementById("bindings").innerHTML = cats
+        .map((cat) => {
+          const items = byCat.get(cat.id);
+          if (!items?.length) return "";
+          const rows = items
+            .map((b) => {
+              const hot = state.flashIds.has(b.id);
+              const hover =
+                !state.listen &&
+                b.keyIds.length &&
+                b.keyIds.every((k) => state.activeKeys.has(k)) &&
+                state.activeKeys.size > 0;
+              const copied = state.copiedId === b.id;
+              const tags = (b.tags || [])
+                .slice(0, 2)
+                .map(
+                  (t) =>
+                    `<span class="rounded-full border border-tn-border/80 px-1.5 py-0.5 text-[9px] uppercase tracking-wider text-tn-comment">${escapeHtml(t)}</span>`
+                )
+                .join("");
+              const notes = b.notes
+                ? `<div class="mt-1 text-[11px] leading-snug text-tn-yellow/90">${escapeHtml(b.notes)}</div>`
+                : "";
+              return `
+                <button type="button" class="binding-row group flex w-full items-start gap-3 rounded-lg border border-tn-border bg-tn-card px-3 py-2.5 text-left hover:border-tn-blue/40 hover:bg-tn-hi ${
+                  hot ? "hot" : hover ? "hover-keys" : ""
+                }" data-id="${b.id}" data-keys="${escapeHtml(b.keyIds.join(","))}">
+                  <div class="min-w-0 flex-1">
+                    <div class="flex flex-wrap items-center gap-2">
+                      <span class="inline-flex flex-wrap items-center gap-1">${chordHtml(b.keys)}</span>
+                      ${tags}
+                    </div>
+                    <div class="mt-1.5 text-[13px] leading-snug text-tn-fg/90">${escapeHtml(b.action)}</div>
+                    ${notes}
+                  </div>
+                  <span class="shrink-0 rounded-md px-2 py-1 text-[10px] font-medium transition ${
+                    copied
+                      ? "bg-tn-green/20 text-tn-green opacity-100"
+                      : "bg-tn-dark text-tn-comment opacity-0 group-hover:opacity-100"
+                  }">${copied ? "copied" : "copy"}</span>
+                </button>`;
+            })
+            .join("");
+
+          return `
+            <div id="${cat.id}" class="scroll-mt-28">
+              <div class="mb-2 flex items-baseline justify-between gap-2">
+                <h2 class="text-sm font-semibold tracking-wide">
+                  <span class="mr-1.5">${cat.emoji}</span>${escapeHtml(cat.label)}
+                  <span class="ml-2 text-[11px] font-normal text-tn-comment">${escapeHtml(cat.description)}</span>
+                </h2>
+                <span class="text-[11px] text-tn-comment">${items.length}</span>
+              </div>
+              <div class="grid gap-2 sm:grid-cols-2">${rows}</div>
+            </div>`;
+        })
+        .join("");
+
+      document.querySelectorAll(".binding-row").forEach((row) => {
+        const id = row.getAttribute("data-id");
+        const binding = BINDINGS.find((b) => b.id === id);
+        row.addEventListener("mouseenter", () => {
+          if (state.listen) return;
+          state.activeKeys = new Set(binding.keyIds);
+          renderKeyboard();
+          // soft highlight without full re-render of all rows
+          document.querySelectorAll(".binding-row").forEach((r) => r.classList.remove("hover-keys"));
+          row.classList.add("hover-keys");
+        });
+        row.addEventListener("mouseleave", () => {
+          if (state.listen) return;
+          state.activeKeys = new Set();
+          renderKeyboard();
+          row.classList.remove("hover-keys");
+        });
+        row.addEventListener("click", async () => {
+          const text = `${formatKeys(binding.keys)}  →  ${binding.action}`;
+          try {
+            await navigator.clipboard.writeText(text);
+          } catch {
+            // file:// may block clipboard; fallback
+            const ta = document.createElement("textarea");
+            ta.value = text;
+            document.body.appendChild(ta);
+            ta.select();
+            try { document.execCommand("copy"); } catch (_) {}
+            ta.remove();
+          }
+          state.copiedId = id;
+          renderBindings();
+          setTimeout(() => {
+            if (state.copiedId === id) {
+              state.copiedId = null;
+              renderBindings();
+            }
+          }, 1400);
+        });
+      });
+    }
+
+    function setListen(on) {
+      state.listen = on;
+      const btn = document.getElementById("listenBtn");
+      const banner = document.getElementById("listenBanner");
+      if (on) {
+        btn.textContent = "● Listen on";
+        btn.className =
+          "rounded-lg border border-tn-green/60 bg-tn-green/15 px-3 py-2 text-xs font-semibold text-tn-green glow-border transition";
+        banner.classList.remove("hidden");
+      } else {
+        btn.textContent = "○ Listen mode";
+        btn.className =
+          "rounded-lg border border-tn-border bg-tn-card px-3 py-2 text-xs font-semibold text-tn-fg/80 hover:border-tn-blue/50 transition";
+        banner.classList.add("hidden");
+        state.held = [];
+        state.flashIds = new Set();
+        state.activeKeys = new Set();
+        document.getElementById("heldKeys").textContent = "—";
+        renderKeyboard();
+        renderBindings();
+      }
+    }
+
+    function applyHeld(heldNow) {
+      state.held = heldNow;
+      state.activeKeys = new Set(heldNow);
+      document.getElementById("heldKeys").textContent = heldNow.length
+        ? heldNow.map((k) => k.toUpperCase()).join(" + ")
+        : "—";
+      const matches = BINDINGS.filter((b) => bindingMatchesHeld(heldNow, b.keyIds));
+      const exact = matches.filter((b) => b.keyIds.length === heldNow.length);
+      const hit = exact.length ? exact : matches;
+      state.flashIds = new Set(hit.map((b) => b.id));
+      renderKeyboard();
+      renderBindings();
+    }
+
+    /* ========== EVENTS ========== */
+    document.getElementById("search").addEventListener("input", (e) => {
+      state.query = e.target.value;
+      renderBindings();
+    });
+
+    document.getElementById("listenBtn").addEventListener("click", () => {
+      setListen(!state.listen);
+    });
+
+    window.addEventListener("keydown", (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        const el = document.getElementById("search");
+        el.focus();
+        el.select();
+        return;
+      }
+      if (e.key === "Escape") {
+        state.query = "";
+        document.getElementById("search").value = "";
+        document.getElementById("search").blur();
+        renderBindings();
+      }
+
+      if (!state.listen || isTypingTarget(e)) return;
+      e.preventDefault();
+      const ids = eventToKeyIds(e);
+      const mods = [];
+      if (e.metaKey) mods.push("super");
+      if (e.ctrlKey) mods.push(e.code === "ControlRight" ? "rctrl" : "ctrl");
+      if (e.altKey) mods.push("alt");
+      if (e.shiftKey) mods.push("shift");
+      const nonMods = ids.filter((k) => !["super", "shift", "ctrl", "alt", "rctrl"].includes(k));
+      applyHeld([...new Set([...mods, ...nonMods])]);
+    });
+
+    window.addEventListener("keyup", (e) => {
+      if (!state.listen || isTypingTarget(e)) return;
+      const mods = [];
+      if (e.metaKey) mods.push("super");
+      if (e.ctrlKey) mods.push("ctrl");
+      if (e.altKey) mods.push("alt");
+      if (e.shiftKey) mods.push("shift");
+      applyHeld(mods);
+      if (!mods.length) {
+        state.flashIds = new Set();
+        renderBindings();
+      }
+    });
+
+    /* ========== MODE SWITCHER ========== */
+    const MODES = ["cheatsheet", "flashcards", "quiz"];
+    let currentMode = "cheatsheet";
+
+    function setMode(mode) {
+      if (!MODES.includes(mode)) return;
+      currentMode = mode;
+      MODES.forEach((m) => {
+        const view = document.getElementById(`view-${m}`);
+        if (view) view.classList.toggle("hidden", m !== mode);
+      });
+      document.querySelectorAll(".mode-tab").forEach((btn) => {
+        btn.classList.toggle("active", btn.getAttribute("data-mode") === mode);
+      });
+      // Listen mode only makes sense on cheatsheet
+      if (mode !== "cheatsheet" && state.listen) setListen(false);
+      if (mode === "flashcards") fcEnsureInit();
+      if (mode === "quiz") quizEnsureInit();
+      try {
+        history.replaceState(null, "", `#${mode}`);
+      } catch (_) {}
+    }
+
+    document.querySelectorAll(".mode-tab").forEach((btn) => {
+      btn.addEventListener("click", () => setMode(btn.getAttribute("data-mode")));
+    });
+
+    /* ========== FLASHCARDS ========== */
+    // Patterns: front/back flip + grade 1–4 (therobotlearns flashcard review / SM-2-ish)
+    const fc = {
+      cards: [],
+      queue: [],
+      index: 0,
+      flipped: false,
+      direction: "action-keys",
+      filter: "all",
+      stats: { again: 0, hard: 0, good: 0, easy: 0, reviewed: 0 },
+      inited: false,
+    };
+
+    function buildFlashcards() {
+      // Basic cards from bindings (skip empty keyIds gestures without clear keys)
+      return BINDINGS.filter((b) => b.keys && b.keys.length && b.id !== "no-exit").map((b) => ({
+        id: b.id,
+        category: b.category,
+        frontAction: b.action,
+        backKeys: formatKeys(b.keys),
+        notes: b.notes || "",
+        tags: b.tags || [],
+      }));
+    }
+
+    function fcPopulateFilters() {
+      const sel = document.getElementById("fcDeckFilter");
+      const cats = CATEGORIES.filter((c) =>
+        fc.cards.some((card) => card.category === c.id)
+      );
+      sel.innerHTML =
+        `<option value="all">All decks (${fc.cards.length})</option>` +
+        cats
+          .map((c) => {
+            const n = fc.cards.filter((card) => card.category === c.id).length;
+            return `<option value="${c.id}">${c.emoji} ${c.label} (${n})</option>`;
+          })
+          .join("");
+    }
+
+    function fcRebuildQueue(shuffle) {
+      let list = fc.cards.filter(
+        (c) => fc.filter === "all" || c.category === fc.filter
+      );
+      if (shuffle) {
+        for (let i = list.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [list[i], list[j]] = [list[j], list[i]];
+        }
+      }
+      fc.queue = list;
+      fc.index = 0;
+      fc.flipped = false;
+      fc.stats = { again: 0, hard: 0, good: 0, easy: 0, reviewed: 0 };
+      fcRender();
+    }
+
+    function fcCurrent() {
+      return fc.queue[fc.index] || null;
+    }
+
+    function fcSides(card) {
+      if (fc.direction === "keys-action") {
+        return { front: card.backKeys, back: card.frontAction, frontLabel: "Keys", backLabel: "Action" };
+      }
+      return { front: card.frontAction, back: card.backKeys, frontLabel: "Action", backLabel: "Keys" };
+    }
+
+    function fcRender() {
+      const stage = document.getElementById("fcStage");
+      const gradeRow = document.getElementById("fcGradeRow");
+      const done = document.getElementById("fcDone");
+      const bar = document.getElementById("fcProgressBar");
+      const label = document.getElementById("fcProgressLabel");
+      const total = fc.queue.length;
+      const doneCount = Math.min(fc.index, total);
+      const pct = total ? Math.round((doneCount / total) * 100) : 0;
+      bar.style.width = `${pct}%`;
+      label.textContent = total
+        ? `Card ${Math.min(fc.index + 1, total)} of ${total} · reviewed ${fc.stats.reviewed}`
+        : "No cards in this deck";
+
+      if (!total || fc.index >= total) {
+        stage.innerHTML = "";
+        gradeRow.classList.add("hidden");
+        done.classList.remove("hidden");
+        document.getElementById("fcDoneStats").textContent =
+          total === 0
+            ? "Pick another deck filter."
+            : `Reviewed ${fc.stats.reviewed} · Again ${fc.stats.again} · Hard ${fc.stats.hard} · Good ${fc.stats.good} · Easy ${fc.stats.easy}`;
+        return;
+      }
+
+      done.classList.add("hidden");
+      const card = fcCurrent();
+      const sides = fcSides(card);
+      const cat = CATEGORIES.find((c) => c.id === card.category);
+      const notes = card.notes
+        ? `<p class="mt-3 text-[11px] text-tn-yellow/90 max-w-sm">${escapeHtml(card.notes)}</p>`
+        : "";
+
+      stage.innerHTML = `
+        <div class="fc-card ${fc.flipped ? "flipped" : ""}" id="fcCard" role="button" tabindex="0" aria-label="Flashcard, click or press Space to flip">
+          <div class="fc-face front">
+            <span class="text-[10px] uppercase tracking-[0.2em] text-tn-comment mb-3">${escapeHtml(sides.frontLabel)}${cat ? ` · ${cat.emoji} ${escapeHtml(cat.label)}` : ""}</span>
+            <div class="text-lg sm:text-xl font-semibold leading-snug text-tn-fg px-2">${escapeHtml(sides.front)}</div>
+            <span class="mt-6 text-[10px] text-tn-comment">Click / Space to reveal</span>
+          </div>
+          <div class="fc-face back">
+            <span class="text-[10px] uppercase tracking-[0.2em] text-tn-magenta mb-3">${escapeHtml(sides.backLabel)}</span>
+            <div class="text-xl sm:text-2xl font-bold leading-snug text-tn-cyan px-2 font-mono">${escapeHtml(sides.back)}</div>
+            ${notes}
+            <span class="mt-6 text-[10px] text-tn-comment">Grade recall below (1–4)</span>
+          </div>
+        </div>`;
+
+      document.getElementById("fcCard").addEventListener("click", fcFlip);
+      gradeRow.classList.toggle("hidden", !fc.flipped);
+    }
+
+    function fcFlip() {
+      if (!fcCurrent()) return;
+      fc.flipped = !fc.flipped;
+      fcRender();
+    }
+
+    function fcGrade(q) {
+      if (!fc.flipped || !fcCurrent()) return;
+      const map = { 1: "again", 2: "hard", 3: "good", 4: "easy" };
+      const key = map[q];
+      if (!key) return;
+      fc.stats[key]++;
+      fc.stats.reviewed++;
+      const card = fc.queue[fc.index];
+      // Again / Hard: requeue later in session (SM-2-ish re-introduce)
+      if (q === 1) {
+        fc.queue.splice(fc.index, 1);
+        const insertAt = Math.min(fc.index + 2 + Math.floor(Math.random() * 3), fc.queue.length);
+        fc.queue.splice(insertAt, 0, card);
+      } else if (q === 2) {
+        fc.queue.splice(fc.index, 1);
+        const insertAt = Math.min(fc.index + 4 + Math.floor(Math.random() * 4), fc.queue.length);
+        fc.queue.splice(insertAt, 0, card);
+      } else {
+        fc.index++;
+      }
+      fc.flipped = false;
+      fcRender();
+    }
+
+    function fcEnsureInit() {
+      if (!fc.inited) {
+        fc.cards = buildFlashcards();
+        fcPopulateFilters();
+        fcRebuildQueue(true);
+        fc.inited = true;
+
+        document.getElementById("fcDeckFilter").addEventListener("change", (e) => {
+          fc.filter = e.target.value;
+          fcRebuildQueue(true);
+        });
+        document.getElementById("fcDirection").addEventListener("change", (e) => {
+          fc.direction = e.target.value;
+          fc.flipped = false;
+          fcRender();
+        });
+        document.getElementById("fcShuffle").addEventListener("click", () => fcRebuildQueue(true));
+        document.getElementById("fcReset").addEventListener("click", () => fcRebuildQueue(true));
+        document.getElementById("fcRestart").addEventListener("click", () => fcRebuildQueue(true));
+        document.getElementById("fcGradeRow").addEventListener("click", (e) => {
+          const btn = e.target.closest("[data-q]");
+          if (!btn) return;
+          fcGrade(Number(btn.getAttribute("data-q")));
+        });
+      } else {
+        fcRender();
+      }
+    }
+
+    /* ========== QUIZ (therobotlearns quiz-app flow) ========== */
+    // intro → questions (MC / TF / multi_select / fill_in_blank) → results
+    const quiz = {
+      state: "intro", // intro | questions | results
+      questions: [],
+      index: 0,
+      answers: {},
+      submitted: {}, // per-question immediate feedback
+      result: null,
+      startTime: 0,
+      feedbackMode: "immediate",
+      passingScore: 70,
+      inited: false,
+    };
+
+    function shuffle(arr) {
+      const a = [...arr];
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+
+    function pickDistractors(correctKeys, n) {
+      const pool = BINDINGS.filter(
+        (b) => formatKeys(b.keys) !== correctKeys && b.keys.length
+      );
+      return shuffle(pool)
+        .slice(0, n)
+        .map((b) => formatKeys(b.keys));
+    }
+
+    function pickActionDistractors(correctAction, n) {
+      const pool = BINDINGS.filter((b) => b.action !== correctAction);
+      return shuffle(pool)
+        .slice(0, n)
+        .map((b) => b.action);
+    }
+
+    function buildQuizQuestions() {
+      const usable = BINDINGS.filter(
+        (b) =>
+          b.keys.length &&
+          !b.keys[0].includes("finger") &&
+          b.category !== "media" &&
+          b.id !== "no-exit"
+      );
+      const sample = shuffle(usable).slice(0, 14);
+      const questions = [];
+
+      // MC: keys for action
+      sample.slice(0, 5).forEach((b, i) => {
+        const correct = formatKeys(b.keys);
+        const options = shuffle([correct, ...pickDistractors(correct, 3)]);
+        questions.push({
+          id: `mc-keys-${b.id}-${i}`,
+          type: "multiple_choice",
+          topic: b.category,
+          difficulty: "easy",
+          question: `Which keybinding: “${b.action}”?`,
+          options,
+          correct_answer: correct,
+          explanation: `${b.action} → ${correct}${b.notes ? ". " + b.notes : ""}`,
+        });
+      });
+
+      // MC: action for keys
+      sample.slice(5, 9).forEach((b, i) => {
+        const correct = b.action;
+        const options = shuffle([correct, ...pickActionDistractors(correct, 3)]);
+        questions.push({
+          id: `mc-act-${b.id}-${i}`,
+          type: "multiple_choice",
+          topic: b.category,
+          difficulty: "medium",
+          question: `What does ${formatKeys(b.keys)} do?`,
+          options,
+          correct_answer: correct,
+          explanation: `${formatKeys(b.keys)} → ${correct}`,
+        });
+      });
+
+      // True / false from rice facts
+      const tfBank = [
+        {
+          id: "tf-exit",
+          question: "SUPER+SHIFT+Q exits Hyprland in this rice.",
+          correct_answer: false,
+          explanation: "Exit is intentionally disabled (commented out) to avoid accidents.",
+          topic: "system",
+        },
+        {
+          id: "tf-ws",
+          question: "Workspaces 1–5 are pinned to the external HDMI monitor.",
+          correct_answer: true,
+          explanation: "HDMI-A-1 owns WS 1–5; eDP-1 owns 6–9.",
+          topic: "workspaces",
+        },
+        {
+          id: "tf-term",
+          question: "The default $terminal is kitty.",
+          correct_answer: false,
+          explanation: "$terminal is ghostty. foot is used for dual-monitor tmux clients.",
+          topic: "launch",
+        },
+        {
+          id: "tf-ai",
+          question: "SUPER+A toggles the special:ai workspace.",
+          correct_answer: true,
+          explanation: "SUPER+A toggles; SUPER+SHIFT+A launches the AI layout script.",
+          topic: "ai",
+        },
+        {
+          id: "tf-space",
+          question: "SUPER+Space opens the terminal (ghostty).",
+          correct_answer: false,
+          explanation: "SUPER+Space is bound twice; the later bind wins → wofi launcher.",
+          topic: "launch",
+        },
+        {
+          id: "tf-layout",
+          question: "This rice uses the master layout by default.",
+          correct_answer: false,
+          explanation: "general.layout = dwindle (with smart_split / preserve_split).",
+          topic: "system",
+        },
+      ];
+      shuffle(tfBank)
+        .slice(0, 3)
+        .forEach((q) => {
+          questions.push({
+            ...q,
+            type: "true_false",
+            difficulty: "easy",
+          });
+        });
+
+      // Multi-select: workspaces / monitors
+      questions.push({
+        id: "ms-hdmi-ws",
+        type: "multi_select",
+        topic: "workspaces",
+        difficulty: "medium",
+        question: "Which workspaces are assigned to the external MSI monitor (HDMI-A-1)? (select all)",
+        options: ["1", "2", "3", "4", "5", "6", "7", "8", "9"],
+        correct_answers: ["1", "2", "3", "4", "5"],
+        explanation: "Workspaces 1–5 → HDMI-A-1; 6–9 → eDP-1 (laptop).",
+      });
+
+      // Fill in the blank
+      const fib = shuffle(
+        usable.filter((b) => b.keys.length <= 3 && b.category !== "media")
+      ).slice(0, 2);
+      fib.forEach((b, i) => {
+        const correct = formatKeys(b.keys);
+        questions.push({
+          id: `fib-${b.id}-${i}`,
+          type: "fill_in_blank",
+          topic: b.category,
+          difficulty: "hard",
+          question: `Type the keybinding for: ${b.action}`,
+          correct_answer: correct,
+          acceptable_answers: [
+            correct.replace(/ \+ /g, "+"),
+            correct.replace(/ \+ /g, " "),
+            correct.toLowerCase(),
+            correct.replace(/ \+ /g, "+").toLowerCase(),
+          ],
+          case_sensitive: false,
+          explanation: `Answer: ${correct}`,
+        });
+      });
+
+      return shuffle(questions).slice(0, 12);
+    }
+
+    function gradeAnswer(q, userAnswer) {
+      if (userAnswer === null || userAnswer === undefined || userAnswer === "") return "skipped";
+      switch (q.type) {
+        case "multiple_choice":
+          return userAnswer === q.correct_answer ? "correct" : "incorrect";
+        case "true_false":
+          return userAnswer === q.correct_answer ? "correct" : "incorrect";
+        case "fill_in_blank": {
+          const ua = String(userAnswer).trim();
+          const norm = (s) => s.toLowerCase().replace(/\s*\+\s*/g, "+").replace(/\s+/g, " ").trim();
+          const ca = q.case_sensitive ? ua === q.correct_answer : norm(ua) === norm(q.correct_answer);
+          if (ca) return "correct";
+          if (q.acceptable_answers?.some((a) => (q.case_sensitive ? ua === a : norm(ua) === norm(a))))
+            return "correct";
+          return "incorrect";
+        }
+        case "multi_select": {
+          const userSet = new Set(userAnswer);
+          const correctSet = new Set(q.correct_answers.map(String));
+          const allMatch =
+            userSet.size === correctSet.size && [...userSet].every((v) => correctSet.has(v));
+          if (allMatch) return "correct";
+          if ([...userSet].some((v) => correctSet.has(v))) return "partial";
+          return "incorrect";
+        }
+        default:
+          return "skipped";
+      }
+    }
+
+    function quizRenderIntro() {
+      const shell = document.getElementById("quizShell");
+      shell.innerHTML = `
+        <div class="rounded-xl border border-tn-border bg-tn-card p-6 sm:p-8 text-center shadow-lg">
+          <p class="text-[10px] uppercase tracking-[0.2em] text-tn-magenta mb-2">Quiz SPA</p>
+          <h2 class="text-2xl font-bold grad-text">Hyprland rice drill</h2>
+          <p class="mt-2 text-sm text-tn-comment">
+            Generated from your binds — multiple choice, true/false, multi-select, fill-in-blank.
+            Immediate feedback mode (therobotlearns quiz-app pattern).
+          </p>
+          <div class="mt-5 flex flex-wrap justify-center gap-3 text-xs text-tn-comment">
+            <span class="rounded-full border border-tn-border px-3 py-1">${quiz.questions.length} questions</span>
+            <span class="rounded-full border border-tn-border px-3 py-1">Pass at ${quiz.passingScore}%</span>
+            <span class="rounded-full border border-tn-border px-3 py-1">Shuffled each run</span>
+          </div>
+          <button type="button" id="quizStart" class="mt-6 rounded-lg border border-tn-blue/60 bg-tn-blue/15 px-5 py-2.5 text-sm font-semibold text-tn-blue hover:bg-tn-blue/25">
+            Start Quiz
+          </button>
+        </div>`;
+      document.getElementById("quizStart").addEventListener("click", () => {
+        quiz.state = "questions";
+        quiz.index = 0;
+        quiz.answers = {};
+        quiz.submitted = {};
+        quiz.startTime = Date.now();
+        quizRenderQuestion();
+      });
+    }
+
+    function quizHasAnswer(q) {
+      const a = quiz.answers[q.id];
+      if (a === undefined || a === null || a === "") return false;
+      if (Array.isArray(a) && a.length === 0) return false;
+      return true;
+    }
+
+    function quizRenderQuestion() {
+      const q = quiz.questions[quiz.index];
+      const shell = document.getElementById("quizShell");
+      const progress = (quiz.index / quiz.questions.length) * 100;
+      const submitted = !!quiz.submitted[q.id];
+      const value = quiz.answers[q.id];
+      const showFeedback = quiz.feedbackMode === "immediate" && submitted;
+      const cat = CATEGORIES.find((c) => c.id === q.topic);
+
+      let body = "";
+      if (q.type === "multiple_choice" || q.type === "true_false") {
+        const opts =
+          q.type === "true_false"
+            ? [
+                { label: "True", val: true },
+                { label: "False", val: false },
+              ]
+            : q.options.map((o) => ({ label: o, val: o }));
+        body = `<div class="mc-options">${opts
+          .map(({ label, val }) => {
+            const isSelected = value === val;
+            const isCorrect =
+              q.type === "true_false" ? val === q.correct_answer : val === q.correct_answer;
+            let cls = "mc-option";
+            if (showFeedback) {
+              if (isCorrect) cls += " option-correct";
+              else if (isSelected && !isCorrect) cls += " option-incorrect";
+              cls += " disabled";
+            } else if (isSelected) cls += " option-selected";
+            const icon = showFeedback
+              ? isCorrect
+                ? '<span class="feedback-icon feedback-correct">✓</span>'
+                : isSelected
+                  ? '<span class="feedback-icon feedback-incorrect">✗</span>'
+                  : ""
+              : "";
+            return `<label class="${cls}" data-val="${escapeHtml(String(val))}">
+              <input type="radio" name="q_${q.id}" ${isSelected ? "checked" : ""} ${showFeedback ? "disabled" : ""} />
+              <span>${escapeHtml(String(label))}</span>${icon}
+            </label>`;
+          })
+          .join("")}</div>`;
+      } else if (q.type === "multi_select") {
+        const selected = value || [];
+        const correctSet = new Set(q.correct_answers.map(String));
+        body = `<p class="field-hint">Select all that apply</p><div class="mc-options">${q.options
+          .map((option) => {
+            const isSelected = selected.includes(option);
+            const isCorrect = correctSet.has(option);
+            let cls = "mc-option";
+            if (showFeedback) {
+              if (isCorrect) cls += " option-correct";
+              else if (isSelected && !isCorrect) cls += " option-incorrect";
+              cls += " disabled";
+            } else if (isSelected) cls += " option-selected";
+            const icon = showFeedback
+              ? isCorrect
+                ? '<span class="feedback-icon feedback-correct">✓</span>'
+                : isSelected
+                  ? '<span class="feedback-icon feedback-incorrect">✗</span>'
+                  : ""
+              : "";
+            return `<label class="${cls}" data-opt="${escapeHtml(option)}">
+              <input type="checkbox" ${isSelected ? "checked" : ""} ${showFeedback ? "disabled" : ""} />
+              <span>${escapeHtml(option)}</span>${icon}
+            </label>`;
+          })
+          .join("")}</div>`;
+      } else if (q.type === "fill_in_blank") {
+        body = `
+          <p class="field-hint">Type the chord (e.g. SUPER + Return). Spacing around + is flexible.</p>
+          <input type="text" class="text-input" id="quizFib" placeholder="SUPER + …" value="${escapeHtml(value || "")}" ${showFeedback ? "disabled" : ""} autocomplete="off" />
+          ${
+            showFeedback
+              ? `<div class="explanation-box"><strong>Correct:</strong> ${escapeHtml(q.correct_answer)}${q.explanation ? `<p class="mt-1">${escapeHtml(q.explanation)}</p>` : ""}</div>`
+              : ""
+          }`;
+      }
+
+      if (showFeedback && q.explanation && q.type !== "fill_in_blank") {
+        body += `<div class="explanation-box">${escapeHtml(q.explanation)}</div>`;
+      }
+
+      const status = submitted ? gradeAnswer(q, value) : null;
+
+      shell.innerHTML = `
+        <div class="quiz-progress-track mb-2">
+          <div class="quiz-progress-bar" style="width:${progress}%"></div>
+        </div>
+        <div class="mb-3 flex justify-between text-[11px] text-tn-comment">
+          <span>Question ${quiz.index + 1} of ${quiz.questions.length}</span>
+          <span>${q.type.replace(/_/g, " ")}</span>
+        </div>
+        <div class="rounded-xl border border-tn-border bg-tn-card p-5 sm:p-6">
+          <div class="mb-3 flex flex-wrap gap-2">
+            ${cat ? `<span class="rounded-full bg-tn-blue/15 px-2 py-0.5 text-[10px] font-semibold text-tn-blue">${cat.emoji} ${escapeHtml(cat.label)}</span>` : ""}
+            ${q.difficulty ? `<span class="rounded-full border border-tn-border px-2 py-0.5 text-[10px] uppercase text-tn-comment">${escapeHtml(q.difficulty)}</span>` : ""}
+            ${status ? `<span class="rounded-full px-2 py-0.5 text-[10px] font-bold ${status === "correct" ? "text-tn-green bg-tn-green/15" : status === "partial" ? "text-tn-yellow bg-tn-yellow/15" : "text-tn-red bg-tn-red/15"}">${status}</span>` : ""}
+          </div>
+          <p class="text-base font-medium leading-snug mb-4">${escapeHtml(q.question)}</p>
+          <div id="quizBody">${body}</div>
+          <div class="mt-5 flex flex-wrap gap-2 justify-end">
+            ${
+              !submitted
+                ? `<button type="button" id="quizCheck" class="rounded-lg border border-tn-border bg-tn-dark px-4 py-2 text-sm font-semibold disabled:opacity-40" ${quizHasAnswer(q) ? "" : "disabled"}>Check</button>`
+                : `<button type="button" id="quizNext" class="rounded-lg border border-tn-blue/50 bg-tn-blue/15 px-4 py-2 text-sm font-semibold text-tn-blue">${
+                    quiz.index < quiz.questions.length - 1 ? "Next →" : "Finish Quiz"
+                  }</button>`
+            }
+          </div>
+        </div>`;
+
+      // wire inputs
+      if (q.type === "multiple_choice" || q.type === "true_false") {
+        shell.querySelectorAll(".mc-option").forEach((lab) => {
+          if (submitted) return;
+          lab.addEventListener("click", (e) => {
+            e.preventDefault();
+            let val = lab.getAttribute("data-val");
+            if (q.type === "true_false") val = val === "true";
+            quiz.answers[q.id] = val;
+            quizRenderQuestion();
+          });
+        });
+      } else if (q.type === "multi_select") {
+        shell.querySelectorAll(".mc-option").forEach((lab) => {
+          if (submitted) return;
+          lab.addEventListener("click", (e) => {
+            e.preventDefault();
+            const opt = lab.getAttribute("data-opt");
+            const cur = new Set(quiz.answers[q.id] || []);
+            if (cur.has(opt)) cur.delete(opt);
+            else cur.add(opt);
+            quiz.answers[q.id] = [...cur];
+            quizRenderQuestion();
+          });
+        });
+      } else if (q.type === "fill_in_blank") {
+        const input = document.getElementById("quizFib");
+        if (input && !submitted) {
+          input.addEventListener("input", () => {
+            quiz.answers[q.id] = input.value;
+            const btn = document.getElementById("quizCheck");
+            if (btn) btn.disabled = !input.value.trim();
+          });
+          input.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              document.getElementById("quizCheck")?.click();
+            }
+          });
+          input.focus();
+        }
+      }
+
+      document.getElementById("quizCheck")?.addEventListener("click", () => {
+        if (!quizHasAnswer(q)) return;
+        quiz.submitted[q.id] = true;
+        quizRenderQuestion();
+      });
+      document.getElementById("quizNext")?.addEventListener("click", () => {
+        if (quiz.index < quiz.questions.length - 1) {
+          quiz.index++;
+          quizRenderQuestion();
+        } else {
+          quizFinish();
+        }
+      });
+    }
+
+    function quizFinish() {
+      const timeTaken = Math.round((Date.now() - quiz.startTime) / 1000);
+      const results = quiz.questions.map((q) => {
+        const userAnswer = quiz.answers[q.id] ?? null;
+        const status = gradeAnswer(q, userAnswer);
+        let correctDisplay = q.correct_answer;
+        if (q.type === "true_false") correctDisplay = q.correct_answer ? "True" : "False";
+        if (q.type === "multi_select") correctDisplay = q.correct_answers.join(", ");
+        return {
+          question_id: q.id,
+          question_type: q.type,
+          question_text: q.question,
+          user_answer: userAnswer,
+          correct_answer: correctDisplay,
+          status,
+          topic: q.topic,
+        };
+      });
+      const correct = results.filter((r) => r.status === "correct").length;
+      const partial = results.filter((r) => r.status === "partial").length;
+      const total = results.length;
+      const score = Math.round(((correct + partial * 0.5) / total) * 100);
+      const topicStats = {};
+      results.forEach((r) => {
+        const t = r.topic || "general";
+        if (!topicStats[t]) topicStats[t] = { c: 0, n: 0 };
+        topicStats[t].n++;
+        if (r.status === "correct") topicStats[t].c++;
+      });
+      const weak = Object.entries(topicStats)
+        .filter(([, s]) => s.c / s.n < 0.6)
+        .map(([t]) => {
+          const cat = CATEGORIES.find((c) => c.id === t);
+          return cat ? `${cat.emoji} ${cat.label}` : t;
+        });
+
+      quiz.result = {
+        score,
+        raw_correct: correct,
+        raw_total: total,
+        passed: score >= quiz.passingScore,
+        time_taken_seconds: timeTaken,
+        questions: results,
+        weak_areas: weak,
+      };
+      quiz.state = "results";
+      quizRenderResults();
+    }
+
+    function quizRenderResults() {
+      const r = quiz.result;
+      const shell = document.getElementById("quizShell");
+      const rows = r.questions
+        .map((q, i) => {
+          const icon =
+            q.status === "correct" ? "✓" : q.status === "partial" ? "~" : q.status === "skipped" ? "—" : "✗";
+          const color =
+            q.status === "correct"
+              ? "text-tn-green"
+              : q.status === "partial"
+                ? "text-tn-yellow"
+                : q.status === "skipped"
+                  ? "text-tn-comment"
+                  : "text-tn-red";
+          const ua = Array.isArray(q.user_answer)
+            ? q.user_answer.join(", ")
+            : q.user_answer === true
+              ? "True"
+              : q.user_answer === false
+                ? "False"
+                : String(q.user_answer ?? "—");
+          return `<tr class="border-t border-tn-border/50">
+            <td class="py-2 pr-2 text-tn-comment">${i + 1}</td>
+            <td class="py-2 pr-2 text-[12px]">${escapeHtml(q.question_text)}</td>
+            <td class="py-2 pr-2 text-[11px] text-tn-dim">${escapeHtml(ua)}</td>
+            <td class="py-2 ${color} font-bold text-center">${icon}</td>
+          </tr>`;
+        })
+        .join("");
+
+      shell.innerHTML = `
+        <div class="rounded-xl border border-tn-border bg-tn-card p-6">
+          <div class="flex items-start justify-between gap-3">
+            <div>
+              <h2 class="text-lg font-semibold">Results</h2>
+              <p class="text-[11px] text-tn-comment mt-0.5">Hyprland rice drill</p>
+            </div>
+            <span class="pass-badge ${r.passed ? "pass" : "fail"}">${r.passed ? "PASSED" : "FAILED"}</span>
+          </div>
+          <div class="mt-5 text-center">
+            <div class="score-big">${r.score}%</div>
+            <div class="mt-2 text-sm text-tn-comment">
+              ${r.raw_correct} / ${r.raw_total} correct
+              · ${Math.floor(r.time_taken_seconds / 60)}m ${r.time_taken_seconds % 60}s
+            </div>
+            <div class="text-[11px] text-tn-comment mt-1">Passing score: ${quiz.passingScore}%</div>
+          </div>
+          ${
+            r.weak_areas.length
+              ? `<div class="mt-5 rounded-lg border border-tn-yellow/30 bg-tn-yellow/5 p-3">
+                  <h3 class="text-xs font-semibold text-tn-yellow mb-1">Areas to review</h3>
+                  <ul class="text-[12px] text-tn-fg/85 space-y-0.5">${r.weak_areas.map((a) => `<li>▹ ${escapeHtml(a)}</li>`).join("")}</ul>
+                </div>`
+              : ""
+          }
+          <div class="mt-5 overflow-x-auto">
+            <table class="w-full text-left text-[12px]">
+              <thead class="text-[10px] uppercase tracking-wider text-tn-comment">
+                <tr><th class="pb-2">#</th><th class="pb-2">Question</th><th class="pb-2">Yours</th><th class="pb-2 text-center">✓</th></tr>
+              </thead>
+              <tbody>${rows}</tbody>
+            </table>
+          </div>
+          <div class="mt-6 flex flex-wrap gap-2 justify-center">
+            <button type="button" id="quizRetry" class="rounded-lg border border-tn-blue/50 bg-tn-blue/15 px-4 py-2 text-sm font-semibold text-tn-blue">Retry Quiz</button>
+            <button type="button" id="quizToCards" class="rounded-lg border border-tn-border bg-tn-dark px-4 py-2 text-sm font-semibold">Practice flashcards</button>
+          </div>
+        </div>`;
+
+      document.getElementById("quizRetry").addEventListener("click", () => {
+        quiz.questions = buildQuizQuestions();
+        quiz.state = "intro";
+        quiz.result = null;
+        quizRenderIntro();
+      });
+      document.getElementById("quizToCards").addEventListener("click", () => setMode("flashcards"));
+    }
+
+    function quizEnsureInit() {
+      if (!quiz.inited) {
+        quiz.questions = buildQuizQuestions();
+        quiz.inited = true;
+      }
+      if (quiz.state === "intro") quizRenderIntro();
+      else if (quiz.state === "questions") quizRenderQuestion();
+      else if (quiz.state === "results") quizRenderResults();
+    }
+
+    /* ========== GLOBAL KEYS (flashcard grades when in that mode) ========== */
+    window.addEventListener("keydown", (e) => {
+      if (currentMode === "flashcards" && !isTypingTarget(e)) {
+        if (e.key === " " || e.code === "Space") {
+          e.preventDefault();
+          fcFlip();
+          return;
+        }
+        if (["1", "2", "3", "4"].includes(e.key) && fc.flipped) {
+          e.preventDefault();
+          fcGrade(Number(e.key));
+          return;
+        }
+      }
+    }, true);
+
+    /* ========== INIT ========== */
+    // Peer link: when opened as file://, hide Next.js nav (no server). When under Next public/, link home.
+    (function peerLink() {
+      const a = document.getElementById("nextLink");
+      if (!a) return;
+      if (location.protocol === "file:") {
+        a.href = "#";
+        a.title = "Run: pnpm dev  →  http://localhost:3000";
+        a.addEventListener("click", (e) => {
+          e.preventDefault();
+          alert("Next.js peer app:\n\n  cd hyprriceitsnice && pnpm dev\n\nThen open http://localhost:3000");
+        });
+      } else {
+        a.href = "/";
+      }
+    })();
+
+    renderMeta();
+    renderKeyboard();
+    renderFilters();
+    renderBindings();
+
+    // Deep-link: #flashcards | #quiz | #cheatsheet
+    const hash = (location.hash || "").replace(/^#/, "");
+    if (MODES.includes(hash)) setMode(hash);
+  </script>
+</body>
+</html>

@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 using TheRobotDraft.Authoring.Debug;
+using TheRobotDraft.Authoring.Interchange;
 using TheRobotDraft.Authoring.Model;
+using TheRobotDraft.Authoring.Rules;
 using TheRobotDraft.Authoring.State;
 
 namespace TheRobotDraft.Uml
@@ -88,6 +90,8 @@ namespace TheRobotDraft.Uml
         public int zLayer;
         public string code;
         public string sourceFile;
+        public List<AspectDto> aspects = new();     // sparse aspect attachments (typed)
+        public List<FreeformDto> freeform = new();  // freeform {key,value} entries
     }
 
     [Serializable]
@@ -101,12 +105,39 @@ namespace TheRobotDraft.Uml
         public string srcMult;
         public string tgtMult;
         public string constraint;
+        public List<AspectDto> aspects = new();
+        public List<FreeformDto> freeform = new();
+    }
+
+    /// <summary>
+    /// A sparse aspect attachment for legacy JSON. <c>overrideKeys/overrideValues</c> are index-aligned and
+    /// hold ONLY overridden field values (defaults live on the registry AspectDef). <c>emitOverride</c> is the
+    /// compact ADCM string ("" = no override). Mirrors Authoring.Model.AspectInstance.
+    /// </summary>
+    [Serializable]
+    public class AspectDto
+    {
+        public string defName;
+        public int defVersion = 1;
+        public List<string> overrideKeys = new();
+        public List<string> overrideValues = new();
+        public string emitOverride;   // "" or null = use def defaults; else letters A/D/C/M
+    }
+
+    /// <summary>Freeform {key, value} escape hatch for legacy JSON.</summary>
+    [Serializable]
+    public class FreeformDto
+    {
+        public string key;
+        public string value;
     }
 
     [Serializable]
     public class NodeGeomDto
     {
         public string id;
+        public string diagramId; // the diagram (package/page id) this placement belongs to; empty in pre-per-diagram
+                                 // saves → migrated to the element's parent-package scope on load.
         public float px, py, sx, sy;
         public float pz; // continuous world-Z offset (default 0; backward-compatible — absent in old saves reads 0)
         public float th; // per-node Z thickness in world units (default 0 ⇒ use Uml3DConfig.NodeThickness)
@@ -147,11 +178,74 @@ namespace TheRobotDraft.Uml
     /// </summary>
     public sealed partial class UmlCanvas
     {
-        private static string DiagramPath => Path.Combine(Application.persistentDataPath, "uml-diagram.json");
+        /// <summary>The native file extension for a multi-diagram TRD model file.</summary>
+        private const string NativeExt = ".trd-yaml";
+
+        /// <summary>The default autosave slot — now the native .trd-yaml format. A legacy uml-diagram.json is still
+        /// read on load (one-diagram back-compat) but not destructively rewritten on disk.</summary>
+        private static string DiagramPath => Path.Combine(Application.persistentDataPath, "diagram" + NativeExt);
+
+        /// <summary>The pre-native autosave slot. Read on load as a one-diagram legacy import; never overwritten.</summary>
+        private static string LegacyDiagramPath => Path.Combine(Application.persistentDataPath, "uml-diagram.json");
 
         // The file Ctrl/Cmd+S writes to. Null ⇒ the default autosave slot (DiagramPath); set by "Save As…" / "Open file…".
         private string _currentDiagramPath;
         private string CurrentPath => string.IsNullOrEmpty(_currentDiagramPath) ? DiagramPath : _currentDiagramPath;
+
+        // --- aspect <-> DTO mapping (shared by elements and edges) ---
+
+        private static AspectDto ToAspectDto(AspectInstance a)
+        {
+            var d = new AspectDto { defName = a.DefName, defVersion = a.DefVersion <= 0 ? 1 : a.DefVersion };
+            if (a.Overrides != null)
+                foreach (var kv in a.Overrides) { d.overrideKeys.Add(kv.Key); d.overrideValues.Add(kv.Value ?? ""); }
+            d.emitOverride = a.EmitOverride.HasValue ? EmitFlagsToString(a.EmitOverride.Value) : "";
+            return d;
+        }
+
+        private static AspectInstance FromAspectDto(AspectDto d)
+        {
+            var a = new AspectInstance { DefName = d.defName, DefVersion = d.defVersion <= 0 ? 1 : d.defVersion };
+            if (d.overrideKeys != null && d.overrideValues != null)
+            {
+                for (int i = 0; i < d.overrideKeys.Count && i < d.overrideValues.Count; i++)
+                    if (!string.IsNullOrEmpty(d.overrideKeys[i]))
+                        a.Overrides[d.overrideKeys[i]] = d.overrideValues[i] ?? "";
+            }
+            a.EmitOverride = string.IsNullOrEmpty(d.emitOverride) ? (EmitFlags?)null : StringToEmitFlags(d.emitOverride);
+            return a;
+        }
+
+        private static FreeformDto ToFreeformDto(FreeformEntry f) =>
+            new FreeformDto { key = f.Key, value = f.Value };
+
+        private static FreeformEntry FromFreeformDto(FreeformDto d) =>
+            new FreeformEntry { Key = d.key, Value = d.value };
+
+        internal static string EmitFlagsToString(EmitFlags f)
+        {
+            var sb = new System.Text.StringBuilder();
+            if (f.Annotate) sb.Append('A');
+            if (f.DocTag) sb.Append('D');
+            if (f.Comment) sb.Append('C');
+            if (f.Meta) sb.Append('M');
+            return sb.Length == 0 ? "" : sb.ToString();
+        }
+
+        internal static EmitFlags StringToEmitFlags(string s)
+        {
+            var f = new EmitFlags();
+            if (string.IsNullOrEmpty(s)) return f;
+            foreach (char c in s)
+                switch (c)
+                {
+                    case 'A': case 'a': f.Annotate = true; break;
+                    case 'D': case 'd': f.DocTag = true; break;
+                    case 'C': case 'c': f.Comment = true; break;
+                    case 'M': case 'm': f.Meta = true; break;
+                }
+            return f;
+        }
 
         /// <summary>Save to the current file (the named file from Save As / Open, else the default autosave slot).</summary>
         public void SaveDiagram()
@@ -165,33 +259,67 @@ namespace TheRobotDraft.Uml
             CloseMenu();
             string path = BrowseForSaveFile(Path.GetFileName(CurrentPath));
             if (string.IsNullOrEmpty(path)) { Flash("save cancelled"); return; }
-            if (!path.EndsWith(".json", StringComparison.OrdinalIgnoreCase)) path += ".json";
-            if (WriteDiagram(path)) { _currentDiagramPath = path; Flash("saved → " + path); }
+            // Do NOT force an extension — the native format is .trd-yaml. If the user typed no extension, append native.
+            bool hasExt = path.EndsWith(NativeExt, StringComparison.OrdinalIgnoreCase)
+                          || path.EndsWith(".json", StringComparison.OrdinalIgnoreCase)
+                          || path.EndsWith(".yaml", StringComparison.OrdinalIgnoreCase)
+                          || path.EndsWith(".yml", StringComparison.OrdinalIgnoreCase);
+            if (!hasExt) path += NativeExt;
+            if (WriteDiagram(path)) { _currentDiagramPath = path; RecentFiles.AddRecent(path); Flash("saved → " + path); }
         }
 
-        /// <summary>Choose a diagram file and load it, replacing the current diagram; Ctrl/Cmd+S then targets it.</summary>
+        /// <summary>Choose a diagram file and load it, replacing the current diagram; Ctrl/Cmd+S then targets it.
+        /// Native <c>.trd-yaml</c> is loaded via the interchange IR; a legacy <c>.json</c> is read as a one-diagram import.</summary>
         public void OpenDiagramFile()
         {
             CloseMenu();
             string path = BrowseForOpenFile();
             if (string.IsNullOrEmpty(path)) { Flash("open cancelled"); return; }
-            try
-            {
-                if (!File.Exists(path)) { Flash("file not found: " + path); return; }
-                var dto = JsonUtility.FromJson<DiagramDto>(File.ReadAllText(path));
-                if (dto?.elements == null || dto.elements.Count == 0) { Flash("not a valid diagram: " + Path.GetFileName(path)); return; }
-                ApplyDto(dto);
-                _currentDiagramPath = path;
-                if (_scene != null) _scene.FrameAll();
-                Flash("opened " + Path.GetFileName(path));
-            }
-            catch (Exception ex) { Flash("open failed: " + ex.Message); }
+            if (!TryOpenPath(path)) return;
+            _currentDiagramPath = path;
+            RecentFiles.AddRecent(path);
+            if (_scene != null) _scene.FrameAll();
+            Flash("opened " + Path.GetFileName(path));
         }
 
-        /// <summary>Write the current diagram DTO to a path. Returns false (and flashes) on an IO error.</summary>
+        /// <summary>Load a file by path, dispatching on extension: .trd-yaml → IR; .json → legacy DiagramDto.</summary>
+        private bool TryOpenPath(string path)
+        {
+            try
+            {
+                if (!File.Exists(path)) { Flash("file not found: " + path); RecentFiles.Remove(path); return false; }
+                string text = File.ReadAllText(path);
+
+                if (path.EndsWith(NativeExt, StringComparison.OrdinalIgnoreCase) || path.EndsWith(".yaml", StringComparison.OrdinalIgnoreCase) || path.EndsWith(".yml", StringComparison.OrdinalIgnoreCase))
+                {
+                    var ix = TrdYamlReader.Parse(text);
+                    var validity = TrdModelValidator.Validate(ix);
+                    if (!validity.IsValid) { Flash("invalid model: " + validity.Reason); return false; }
+                    MaterializeInterchange(ix, path);
+                    return true;
+                }
+
+                var dto = JsonUtility.FromJson<DiagramDto>(text);
+                if (dto?.elements == null || dto.elements.Count == 0) { Flash("not a valid diagram: " + Path.GetFileName(path)); return false; }
+                ApplyDto(dto);
+                return true;
+            }
+            catch (InterchangeException ex) { Flash("open failed: " + ex.Message); return false; }
+            catch (Exception ex) { Flash("open failed: " + ex.Message); return false; }
+        }
+
+        /// <summary>Write the current model to a path. Native <c>.trd-yaml</c> serializes the IxModel (multi-diagram);
+        /// a legacy <c>.json</c> path falls back to the single-diagram DiagramDto. Returns false (and flashes) on IO error.</summary>
         private bool WriteDiagram(string path)
         {
-            try { File.WriteAllText(path, JsonUtility.ToJson(BuildDto(), true)); return true; }
+            try
+            {
+                if (path.EndsWith(".json", StringComparison.OrdinalIgnoreCase))
+                    File.WriteAllText(path, JsonUtility.ToJson(BuildDto(), true));
+                else
+                    File.WriteAllText(path, TrdYamlWriter.Write(BuildInterchangeModel(false)));
+                return true;
+            }
             catch (Exception ex) { Flash("save failed: " + ex.Message); return false; }
         }
 
@@ -200,26 +328,25 @@ namespace TheRobotDraft.Uml
         private static string BrowseForSaveFile(string defaultName)
         {
 #if UNITY_EDITOR
-            string baseName = string.IsNullOrEmpty(defaultName) ? "uml-diagram" : Path.GetFileNameWithoutExtension(defaultName);
-            return UnityEditor.EditorUtility.SaveFilePanel("Save diagram as", "", baseName, "json") ?? "";
+            string baseName = string.IsNullOrEmpty(defaultName) ? "diagram" : Path.GetFileNameWithoutExtension(defaultName);
+            return UnityEditor.EditorUtility.SaveFilePanel("Save model as", "", baseName, "trd-yaml") ?? "";
 #else
             if (Application.platform == RuntimePlatform.OSXPlayer)
             {
-                string nm = (string.IsNullOrEmpty(defaultName) ? "uml-diagram.json" : defaultName).Replace("\"", "");
-                return OsascriptPath("POSIX path of (choose file name with prompt \"Save diagram as\" default name \"" + nm + "\")");
+                string nm = (string.IsNullOrEmpty(defaultName) ? "diagram" + NativeExt : defaultName).Replace("\"", "");
+                return OsascriptPath("POSIX path of (choose file name with prompt \"Save model as\" default name \"" + nm + "\")");
             }
-            // No native dialog on this platform — fall back to the persistent data folder so a save still lands somewhere.
-            return Path.Combine(Application.persistentDataPath, string.IsNullOrEmpty(defaultName) ? "uml-diagram.json" : defaultName);
+            return Path.Combine(Application.persistentDataPath, string.IsNullOrEmpty(defaultName) ? "diagram" + NativeExt : defaultName);
 #endif
         }
 
         private static string BrowseForOpenFile()
         {
 #if UNITY_EDITOR
-            return UnityEditor.EditorUtility.OpenFilePanel("Open diagram", "", "json") ?? "";
+            return UnityEditor.EditorUtility.OpenFilePanel("Open model", "", "trd-yaml") ?? "";
 #else
             if (Application.platform == RuntimePlatform.OSXPlayer)
-                return OsascriptPath("POSIX path of (choose file with prompt \"Open diagram\")");
+                return OsascriptPath("POSIX path of (choose file with prompt \"Open model\")");
             return "";
 #endif
         }
@@ -259,12 +386,33 @@ namespace TheRobotDraft.Uml
         {
             try
             {
-                if (!File.Exists(DiagramPath)) return false;
-                var dto = JsonUtility.FromJson<DiagramDto>(File.ReadAllText(DiagramPath));
-                if (dto?.elements == null || dto.elements.Count == 0) return false;
-                ApplyDto(dto);
-                Flash("loaded diagram");
-                return true;
+                // Native .trd-yaml autosave takes precedence.
+                if (File.Exists(DiagramPath))
+                {
+                    var ix = TrdYamlReader.Parse(File.ReadAllText(DiagramPath));
+                    var validity = TrdModelValidator.Validate(ix);
+                    if (validity.IsValid && ix.Elements != null && ix.Elements.Count > 0)
+                    {
+                        MaterializeInterchange(ix, DiagramPath);
+                        Flash("loaded model");
+                        return true;
+                    }
+                    if (!validity.IsValid)
+                        Debug.LogWarning("Native autosave failed validation: " + validity.Reason);
+                }
+
+                // Legacy one-diagram .json autosave — read but do NOT destructively rewrite on disk.
+                if (File.Exists(LegacyDiagramPath))
+                {
+                    var dto = JsonUtility.FromJson<DiagramDto>(File.ReadAllText(LegacyDiagramPath));
+                    if (dto?.elements != null && dto.elements.Count > 0)
+                    {
+                        ApplyDto(dto);
+                        Flash("loaded diagram (legacy)");
+                        return true;
+                    }
+                }
+                return false;
             }
             catch (Exception ex)
             {
@@ -277,6 +425,7 @@ namespace TheRobotDraft.Uml
         {
             var dto = new DiagramDto();
             foreach (var el in _model.Elements)
+            {
                 dto.elements.Add(new ElementDto
                 {
                     id = el.Id.Value,
@@ -297,8 +446,12 @@ namespace TheRobotDraft.Uml
                     code = el.Code,
                     sourceFile = el.SourceFile,
                 });
+                foreach (var a in el.AspectSet.Aspects) dto.elements[^1].aspects.Add(ToAspectDto(a));
+                foreach (var f in el.AspectSet.Freeform) dto.elements[^1].freeform.Add(ToFreeformDto(f));
+            }
 
             foreach (var e in _model.Edges)
+            {
                 dto.edges.Add(new EdgeDto
                 {
                     id = e.Id.Value,
@@ -310,25 +463,33 @@ namespace TheRobotDraft.Uml
                     tgtMult = e.TargetMultiplicity,
                     constraint = e.Constraint,
                 });
-
-            foreach (var kv in _pos)
-            {
-                if (!_model.Contains(kv.Key)) continue;
-                var nd = new NodeGeomDto { id = kv.Key.Value, px = kv.Value.x, py = kv.Value.y };
-                if (_posZ.TryGetValue(kv.Key, out var pz)) nd.pz = pz;
-                if (_nodeDepth.TryGetValue(kv.Key, out var th)) nd.th = th;
-                if (_size.TryGetValue(kv.Key, out var s)) { nd.sx = s.x; nd.sy = s.y; }
-                if (_styles.TryGetValue(kv.Key, out var st) && st.Has)
-                {
-                    nd.hasStyle = true;
-                    nd.fillR = st.Fill.r; nd.fillG = st.Fill.g; nd.fillB = st.Fill.b; nd.fillA = st.Fill.a;
-                    nd.borderR = st.Border.r; nd.borderG = st.Border.g; nd.borderB = st.Border.b; nd.borderA = st.Border.a;
-                    nd.textR = st.Text.r; nd.textG = st.Text.g; nd.textB = st.Text.b; nd.textA = st.Text.a;
-                    nd.fontSize = st.FontSize; nd.fontName = st.FontName;
-                    nd.radius = st.Radius;
-                }
-                dto.nodeGeom.Add(nd);
+                foreach (var a in e.AspectSet.Aspects) dto.edges[^1].aspects.Add(ToAspectDto(a));
+                foreach (var f in e.AspectSet.Freeform) dto.edges[^1].freeform.Add(ToFreeformDto(f));
             }
+
+            // One geometry row per (diagram, element): an element linked into several diagrams is emitted once per
+            // diagram, each with its own placement. Style is element-global — attached to every row of the element.
+            foreach (var diagram in _placements.Diagrams)
+                foreach (var kv in _placements.InDiagram(diagram))
+                {
+                    var elId = kv.Key;
+                    if (!_model.Contains(elId)) continue;
+                    var pl = kv.Value;
+                    var nd = new NodeGeomDto { id = elId.Value, diagramId = diagram.Value, px = pl.Pos.x, py = pl.Pos.y };
+                    if (pl.PosZ != 0f) nd.pz = pl.PosZ;
+                    if (pl.Depth > 0f) nd.th = pl.Depth;
+                    if (pl.HasSize) { nd.sx = pl.Size.x; nd.sy = pl.Size.y; }
+                    if (_styles.TryGetValue(elId, out var st) && st.Has)
+                    {
+                        nd.hasStyle = true;
+                        nd.fillR = st.Fill.r; nd.fillG = st.Fill.g; nd.fillB = st.Fill.b; nd.fillA = st.Fill.a;
+                        nd.borderR = st.Border.r; nd.borderG = st.Border.g; nd.borderB = st.Border.b; nd.borderA = st.Border.a;
+                        nd.textR = st.Text.r; nd.textG = st.Text.g; nd.textB = st.Text.b; nd.textA = st.Text.a;
+                        nd.fontSize = st.FontSize; nd.fontName = st.FontName;
+                        nd.radius = st.Radius;
+                    }
+                    dto.nodeGeom.Add(nd);
+                }
 
             var edgeIds = new HashSet<EdgeId>();
             foreach (var k in _waypoints.Keys) edgeIds.Add(k);
@@ -379,7 +540,7 @@ namespace TheRobotDraft.Uml
         private void ApplyDto(DiagramDto dto)
         {
             NewWorld();
-            _pos.Clear(); _posZ.Clear(); _size.Clear(); _nodeDepth.Clear();
+            _placements.Clear();
             _waypoints.Clear(); _srcAnchor.Clear(); _tgtAnchor.Clear(); _curved.Clear(); _styles.Clear();
             _msgLevel.Clear(); _msgNumber.Clear(); _packageLink.Clear();
             _nodeImage.Clear(); _imageCache.Clear();
@@ -416,6 +577,10 @@ namespace TheRobotDraft.Uml
                 if (!string.IsNullOrEmpty(elDto.sourceFile))
                     _ctl.SetSourceFile(nid, elDto.sourceFile);
                 _ctl.SetZLayer(nid, elDto.zLayer);
+                if (elDto.aspects != null && elDto.aspects.Count > 0 || elDto.freeform != null && elDto.freeform.Count > 0)
+                    _ctl.SetElementAspects(nid,
+                        elDto.aspects != null ? System.Linq.Enumerable.Select(elDto.aspects, FromAspectDto) : null,
+                        elDto.freeform != null ? System.Linq.Enumerable.Select(elDto.freeform, FromFreeformDto) : null);
             }
 
             var edgeMap = new Dictionary<string, EdgeId>();
@@ -431,6 +596,10 @@ namespace TheRobotDraft.Uml
                     if (!string.IsNullOrEmpty(eDto.label) || !string.IsNullOrEmpty(eDto.srcMult)
                         || !string.IsNullOrEmpty(eDto.tgtMult) || !string.IsNullOrEmpty(eDto.constraint))
                         _ctl.SetEdgeMeta(ne, eDto.label, eDto.srcMult, eDto.tgtMult, eDto.constraint);
+                    if (eDto.aspects != null && eDto.aspects.Count > 0 || eDto.freeform != null && eDto.freeform.Count > 0)
+                        _ctl.SetEdgeAspects(ne,
+                            eDto.aspects != null ? System.Linq.Enumerable.Select(eDto.aspects, FromAspectDto) : null,
+                            eDto.freeform != null ? System.Linq.Enumerable.Select(eDto.freeform, FromFreeformDto) : null);
                 }
             _ctl.EnterSelect();
 
@@ -438,10 +607,21 @@ namespace TheRobotDraft.Uml
                 foreach (var nd in dto.nodeGeom)
                     if (idMap.TryGetValue(nd.id, out var nid))
                     {
-                        _pos[nid] = new Vector2(nd.px, nd.py);
-                        if (nd.pz != 0f) _posZ[nid] = nd.pz;
-                        if (nd.th > 0f) _nodeDepth[nid] = nd.th;
-                        if (nd.sx > 1f && nd.sy > 1f) _size[nid] = new Vector2(nd.sx, nd.sy);
+                        // Diagram scope: new files carry diagramId (remapped through idMap); old files (empty
+                        // diagramId) migrate to the element's parent-package scope — lossless because a legacy
+                        // element had exactly one placement under exactly one parent.
+                        ElementId scope = ElementId.None;
+                        if (!string.IsNullOrEmpty(nd.diagramId) && idMap.TryGetValue(nd.diagramId, out var mapped))
+                            scope = mapped;
+                        else if (_model.TryGet(nid, out var elm))
+                            scope = elm.Parent;
+
+                        var pl = new Placement { Pos = new Vector2(nd.px, nd.py), Rot = Quaternion.identity };
+                        if (nd.pz != 0f) pl.PosZ = nd.pz;
+                        if (nd.th > 0f) pl.Depth = nd.th;
+                        if (nd.sx > 1f && nd.sy > 1f) pl.Size = new Vector2(nd.sx, nd.sy);
+                        _placements.Set(scope, nid, pl);
+
                         if (nd.hasStyle)
                             _styles[nid] = new NodeStyle
                             {
@@ -498,8 +678,8 @@ namespace TheRobotDraft.Uml
                     if (bp != null && idMap.TryGetValue(bp.elementId, out var bnode))
                         _breakpoints.Set(new Breakpoint(bnode, bp.line, bp.condition, bp.enabled));
 
-            _activePackage = (!string.IsNullOrEmpty(dto.activePackage) && idMap.TryGetValue(dto.activePackage, out var ap))
-                ? ap : ElementId.None;
+            SetActivePackage((!string.IsNullOrEmpty(dto.activePackage) && idMap.TryGetValue(dto.activePackage, out var ap))
+                ? ap : ElementId.None);
             _selectedId = ElementId.None;
             _selectedEdge = EdgeId.None;
             _ctl.ClearHistory(); // a load is not an undoable edit
@@ -509,7 +689,7 @@ namespace TheRobotDraft.Uml
         /// <summary>Delete the persisted diagram file (so the next launch opens fresh).</summary>
         public void DeleteSavedDiagram()
         {
-            try { if (File.Exists(DiagramPath)) File.Delete(DiagramPath); Flash("deleted saved file"); }
+            try { if (File.Exists(DiagramPath)) File.Delete(DiagramPath); if (File.Exists(LegacyDiagramPath)) File.Delete(LegacyDiagramPath); Flash("deleted saved file"); }
             catch (Exception ex) { Flash("delete failed: " + ex.Message); }
         }
 

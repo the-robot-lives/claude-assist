@@ -1,0 +1,74 @@
+schema: "0.4"
+id: lottie-03-product-brand-communication-motion
+type: interactive
+quality: high
+solution: lottie
+category: animation-and-motion
+variant: product-brand-communication-motion
+references:
+  - "references/fim/overview/canvas-svg-creative-animation/lottie.md"
+  - "references/fim/solution/lottie.md"
+prompt:
+  system: |-
+    Generate production-quality Lottie product communication assets for FIM evaluation. Output only a complete self-contained HTML document with inline CSS, JavaScript, and compact inline animation data.
+  text: |-
+    Create a Lottie product and brand communication motion asset that treats Lottie as designer-authored playback.
+
+    Scenario:
+    Build a product onboarding panel with a brand illustration player, three segment buttons for "intro", "feature", and "success", a CTA hover segment, and a color theme control. The Lottie data may be compact and synthetic, but the integration must model how Bodymovin-exported JSON would be loaded, themed, segmented, and controlled.
+
+    Implementation requirements:
+    - Use lottie-web 5.12.2 from a CDN or equivalent import with lottie.loadAnimation(), inline animationData, and a validated DOM container.
+    - Include named segment metadata in code and playSegments() calls for intro, feature, success, hover in, and hover out.
+    - Include explicit frame timing, frameRate, segment frame ranges, speed, direction, loop behavior, autoplay choice, and final-state handling.
+    - Demonstrate brand theming by editing known JSON color arrays or applying a documented SVG/CSS fallback after DOMLoaded.
+    - Include play, pause, stop, segment, speed, theme, and reduced-motion controls with accessible labels.
+    - Keep player, copy, CTA, segment controls, and diagnostics non-overlapping at desktop and mobile sizes.
+    - Honor prefers-reduced-motion by disabling autoplay and showing the final success frame or poster.
+    - Destroy the AnimationItem before rebuild or theme reload.
+    - Output only the final artifact, with no markdown fences or explanatory prose outside the artifact.
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.24
+output:
+  text_format: html
+  artifact_kind: lottie-html-product-brand-motion
+  formats:
+    - format: html
+  dimensions:
+    width: 1440
+    height: 900
+  render_expectation: "Interactive Lottie brand motion asset suitable for onboarding and product communication review."
+evaluation:
+  checklist:
+    - "Format validity: YAML parses under schema 0.4 and generated output is exactly one HTML artifact with no markdown fences."
+    - "Lottie API: Uses loadAnimation(), animationData, validated container, playSegments(), playback controls, events, theming, and destroy()."
+    - "Motion timing: Specifies frameRate, segment frame ranges, speed, direction, loop behavior, autoplay, and final-state handling."
+    - "Visual quality: Product message, player, CTA, controls, and diagnostics remain readable and non-overlapping."
+    - "Reduced motion: Disables autoplay and shows a poster or final success frame while preserving the brand message."
+    - "Performance: Uses compact data, explicit renderer choice, and cleanup before rebuild or theme reload."
+  rubric:
+    - name: "Format validity"
+      weight: 30
+      criteria: "YAML and generated HTML are syntactically valid, required fields are present, id and file name match, and the artifact uses Lottie rather than a substitute animation library."
+    - name: "Semantic completeness"
+      weight: 30
+      criteria: "The artifact delivers designer-authored playback with segment controls, theming, event handling, target validation, reduced motion, product copy, CTA motion, and cleanup."
+    - name: "Motion/visual quality"
+      weight: 25
+      criteria: "Playback supports product hierarchy, has clear segment transitions, and keeps all text, controls, and player content legible without overlap."
+    - name: "Robustness"
+      weight: 15
+      criteria: "Handles missing target, data failure, theme reload, reduced motion, resize, and cleanup without blank screens or runtime errors."
+  pass_conditions:
+    - "Rubric weights are exactly 30, 30, 25, and 15 for a total of 100."
+    - "YAML parses successfully and all prompt text is ASCII-only."
+    - "Generated artifact runs with no console errors when lottie-web is available."
+    - "Score is at least 80 out of 100 with no zero score in any rubric dimension."
+tags:
+  - "fim"
+  - "animation-and-motion"
+  - "lottie"
+  - "product-brand-communication-motion"
+  - "segment-playback"
+  - "brand-theming"

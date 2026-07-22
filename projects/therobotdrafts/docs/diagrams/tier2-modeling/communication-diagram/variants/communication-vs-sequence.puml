@@ -1,0 +1,79 @@
+@startuml
+' ============================================================================
+' METADATA
+'   author:       TheRobotDrafts Examples
+' '   description:  The same checkout interaction as a communication diagram, contrasted with the sequence-diagram equivalent in a note.
+'   usecase:      Contrast communication (structure + numbers) vs sequence (lifelines + time); explain the tradeoff.
+'   complexity:   simple
+'   domain:       e-commerce
+' ============================================================================
+title Example Communication Variant - Communication vs Sequence
+
+' COMMUNICATION vs SEQUENCE: two ways to draw the SAME interaction.
+'
+' COMMUNICATION DIAGRAM
+'   - Objects are nodes; associations are LINKS between them.
+'   - Messages ride the links with SEQUENCE NUMBERS (1, 1.1, 2, ...).
+'   - Emphasizes STRUCTURE: who is connected to whom.
+'   - Reading order comes from the numbers, not spatial position.
+'
+' SEQUENCE DIAGRAM
+'   - Objects are LIFELINES (vertical dashed lines descending from each object).
+'   - Messages are horizontal arrows between lifelines, ordered TOP-TO-BOTTOM.
+'   - Emphasizes TIME: the vertical axis is a strict timeline.
+'   - Activation bars show when each object is active.
+'
+' TRADEOFF:
+'   - Use COMMUNICATION when the network of links is the interesting part —
+'     e.g. you want to see the static collaboration topology at a glance.
+'   - Use SEQUENCE when the ORDERING and timing of messages is the interesting
+'     part — e.g. you need to see which call happens before which, or you
+'     want activation bars to reason about concurrency and blocking.
+'   - Communication diagrams become hard to read once message counts get
+'     high (numbers sprawl); sequence diagrams handle high counts better
+'     but bury the link topology.
+'
+' BELOW: the COMMUNICATION version is rendered. PlantUML cannot cleanly
+' render two diagram TYPES in a single @startuml frame, so the equivalent
+' SEQUENCE diagram is described in detail in the closing note.
+
+actor "Customer" as Customer
+participant "Cart" as Cart
+participant "Checkout" as Checkout
+participant "Payment" as Payment
+
+Customer --> Cart : 1: addItem(item)
+Cart --> Checkout : 2: requestCheckout()
+Checkout --> Payment : 3: authorize(amount)
+Payment --> Checkout : 3.1: returnAuthCode()
+Checkout --> Cart : 4: clearCart()
+Checkout --> Customer : 5: confirmOrder()
+
+note over Customer, Payment
+  <<equivalent sequence diagram>>
+  Same interaction drawn as a sequence diagram would show:
+
+    Customer     Cart      Checkout    Payment
+       |          |            |          |
+       |--1: addItem(item)---->|          |
+       |          |            |          |
+       |          |--2: requestCheckout()>|
+       |          |            |          |
+       |          |            |--3: authorize(amount)-->|
+       |          |            |          |
+       |          |            |<--3.1: returnAuthCode()--|
+       |          |            |          |
+       |          |<--4: clearCart()------|          |
+       |          |            |          |
+       |<--5: confirmOrder()---|          |
+       |          |            |          |
+
+  Key differences a reader should notice:
+    - The vertical axis is TIME (top = earliest, bottom = latest).
+    - Lifelines (vertical dashed lines) replace the link network.
+    - Activation bars (narrow rectangles on a lifeline) show WHEN each
+      object is actively executing — a notion communication diagrams lack.
+    - The structural LINKS (Cart-Checkout, Checkout-Payment) are implicit
+      in the arrows but not drawn as first-class associations.
+end note
+@enduml

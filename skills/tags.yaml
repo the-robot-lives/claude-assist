@@ -1,0 +1,139 @@
+# Controlled vocabulary for skill tags (used in catalog.yaml).
+# Prefer these labels when adding or editing skill metadata.
+version: 1
+
+tags:
+  # Domains
+  - id: agents
+    description: AI agents, multi-agent systems, personas
+  - id: mcp
+    description: Model Context Protocol servers
+  - id: frontend
+    description: Web UI frameworks and components
+  - id: backend
+    description: Server-side application logic
+  - id: mobile
+    description: Mobile applications
+  - id: desktop
+    description: Desktop / native applications
+  - id: infra
+    description: Infrastructure and operations
+  - id: database
+    description: Data modeling and database tuning
+  - id: security
+    description: Threat modeling and hardening
+  - id: observability
+    description: Metrics, logs, traces
+  - id: docs
+    description: Technical documentation
+  - id: content
+    description: Content strategy and publishing
+  - id: business
+    description: Monetization and commercial strategy
+  - id: knowledge
+    description: Learning systems and research synthesis
+  - id: games
+    description: Game design and engines
+  - id: graphics
+    description: GPU / real-time graphics
+  - id: media
+    description: Streaming and media delivery
+  - id: design
+    description: UX and visual design
+  - id: meta
+    description: Skills about skills / tooling
+
+  # Stacks & platforms
+  - id: react
+  - id: nextjs
+  - id: typescript
+  - id: lit
+  - id: web-components
+  - id: hologram
+  - id: swiftui
+  - id: ios
+  - id: android
+  - id: kotlin
+  - id: compose
+  - id: macos
+  - id: unity
+  - id: csharp
+  - id: metal
+  - id: gpu
+  - id: apple
+  - id: k8s
+  - id: helm
+  - id: terraform
+  - id: iac
+  - id: cloud
+  - id: postgres
+  - id: gitops
+  - id: signoz
+  - id: elixir
+  - id: noizu
+  - id: genai
+  - id: beam
+  - id: tui
+  - id: cli
+  - id: ratatui
+  - id: seo
+  - id: geo
+  - id: aeo
+
+  # Activities
+  - id: architecture
+  - id: planning
+  - id: research
+  - id: validation
+  - id: scaffold
+  - id: implementation
+  - id: evals
+  - id: quality
+  - id: prototype
+  - id: spike
+  - id: feasibility
+  - id: accessibility
+  - id: walkthrough
+  - id: qa
+  - id: portfolio
+  - id: conversion
+  - id: monetization
+  - id: passive-income
+  - id: niches
+  - id: newsletter
+  - id: writing
+  - id: merch
+  - id: pod
+  - id: templates
+  - id: products
+  - id: multi-agent
+  - id: parallelization
+  - id: coordination
+  - id: tobor
+  - id: prompts
+  - id: harness
+  - id: production
+  - id: session
+  - id: persona
+  - id: coordinator
+  - id: plugins
+  - id: extensibility
+  - id: streaming
+  - id: cdn
+  - id: video
+  - id: schema
+  - id: performance
+  - id: threat-model
+  - id: stride
+  - id: owasp
+  - id: curriculum
+  - id: bibliography
+  - id: synthesis
+  - id: learning
+  - id: strategy
+  - id: proposals
+  - id: consulting
+  - id: skills
+  - id: realtime
+  - id: experiments
+  - id: r-and-d

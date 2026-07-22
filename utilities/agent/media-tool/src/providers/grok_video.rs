@@ -45,7 +45,12 @@ impl MediaProvider for GrokVideoProvider {
         let aspect_ratio = options
             .aspect_ratio
             .as_deref()
-            .or_else(|| options.provider_options.get("aspect_ratio").and_then(|v| v.as_str()))
+            .or_else(|| {
+                options
+                    .provider_options
+                    .get("aspect_ratio")
+                    .and_then(|v| v.as_str())
+            })
             .unwrap_or("16:9");
 
         let resolution = options
@@ -131,7 +136,10 @@ impl MediaProvider for GrokVideoProvider {
         if options.verbose {
             ui::verbose(&format!("Request submitted: {}", request_id));
         }
-        ui::info(&format!("Grok video {} — polling for completion", request_id));
+        ui::info(&format!(
+            "Grok video {} — polling for completion",
+            request_id
+        ));
 
         let poll_url = format!("{}/videos/{}", API_BASE, request_id);
 
@@ -157,21 +165,21 @@ impl MediaProvider for GrokVideoProvider {
 
             if !poll_response.status().is_success() {
                 if options.verbose {
-                    ui::verbose(&format!("Poll attempt {} returned {}", attempt, poll_response.status()));
+                    ui::verbose(&format!(
+                        "Poll attempt {} returned {}",
+                        attempt,
+                        poll_response.status()
+                    ));
                 }
                 continue;
             }
 
             let poll_result: serde_json::Value = poll_response.json().await?;
-            let status_str = poll_result["status"]
-                .as_str()
-                .unwrap_or("unknown");
+            let status_str = poll_result["status"].as_str().unwrap_or("unknown");
 
             match status_str {
                 "done" => {
-                    let video_url = poll_result["video"]["url"]
-                        .as_str()
-                        .unwrap_or("");
+                    let video_url = poll_result["video"]["url"].as_str().unwrap_or("");
 
                     if video_url.is_empty() {
                         ui::fail_msg("Grok returned done but no video URL");

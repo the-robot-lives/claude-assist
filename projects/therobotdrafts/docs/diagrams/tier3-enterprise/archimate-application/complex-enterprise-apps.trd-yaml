@@ -1,0 +1,25 @@
+# .trd-yaml — TheRobotDrafts native model (IxModel serialization)
+name: Example ArchiMate Application - Complex Enterprise Apps
+elements:
+  - { id: Legend, type: Note, name: 'Application = BLUE. Grouped by domain.\nComponent | Service | Interface | Data Object', documentation: 'Application = BLUE. Grouped by domain.\nComponent | Service | Interface | Data Object' }
+  - { id: Sales Domain, type: Package, name: Sales Domain }
+  - { id: A1, type: Boundary, name: \nCRM\nApp, parentId: Sales Domain, stereotype: app component }
+  - { id: A1S, type: Boundary, name: \nLead\nMgmt, parentId: Sales Domain, stereotype: app service }
+  - { id: A2, type: Boundary, name: \nPricing\nEngine, parentId: Sales Domain, stereotype: app component }
+  - { id: AI1, type: Boundary, name: \nREST API, parentId: Sales Domain, stereotype: application interface }
+  - { id: D1, type: Boundary, name: \nCustomer, parentId: Sales Domain, stereotype: data object }
+  - { id: D2, type: Boundary, name: \nPrice List, parentId: Sales Domain, stereotype: data object }
+  - { id: Operations Domain, type: Package, name: Operations Domain }
+  - { id: B1, type: Boundary, name: \nERP, parentId: Operations Domain, stereotype: app component }
+  - { id: B2, type: Boundary, name: \nInventory\nService, parentId: Operations Domain, stereotype: app component }
+  - { id: B2S, type: Boundary, name: \nStock\nQuery, parentId: Operations Domain, stereotype: app service }
+  - { id: D3, type: Boundary, name: \nStock Level, parentId: Operations Domain, stereotype: data object }
+  - { id: Analytics Domain, type: Package, name: Analytics Domain }
+  - { id: C1, type: Boundary, name: \nBI\nDashboard, parentId: Analytics Domain, stereotype: app component }
+  - { id: C2, type: Boundary, name: \nETL\nPipeline, parentId: Analytics Domain, stereotype: app component }
+  - { id: C1S, type: Boundary, name: \nSales\nReport, parentId: Analytics Domain, stereotype: app service }
+  - { id: AI2, type: Boundary, name: \nOData\nFeed, parentId: Analytics Domain, stereotype: application interface }
+  - { id: D4, type: Boundary, name: \nData Mart, parentId: Analytics Domain, stereotype: data object }
+  - { id: EXT, type: Boundary, name: \nPayment\nGateway, stereotype: app component }
+diagrams:
+  - { id: d1, name: Example ArchiMate Application - Complex Enterprise Apps, kind: component, layoutProvenance: Synthesized }

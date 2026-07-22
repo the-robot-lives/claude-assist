@@ -1,0 +1,75 @@
+' ============================================================================
+' METADATA
+'   author:       TheRobotDrafts Examples
+'   description:  Full Zachman 6x6 with every cell holding a representative artifact/primitive.
+'   usecase:      Teach the complete primitive models per cell.
+'   complexity:   complex
+'   domain:       enterprise / classification-taxonomy
+' ============================================================================
+title Example Zachman - Complex Full 6x6 (all cells)
+
+note as TopNote
+  All 36 cells populated with their primitive model type.
+  Each cell is a primitive (single-interrogative) model.
+  Composite models combine cells; Zachman keeps them separate on purpose.
+  Grid via nested packages (row -> column cell).
+end note
+
+package "Planner row" as PR {
+  rectangle "P-What: List of Things" as P1
+  rectangle "P-How: List of Processes" as P2
+  rectangle "P-Where: Locations" as P3
+  rectangle "P-Who: Org Units" as P4
+  rectangle "P-When: Event List" as P5
+  rectangle "P-Why: Vision/Goals" as P6
+}
+
+package "Owner row" as OR {
+  rectangle "O-What: Semantic Model" as O1
+  rectangle "O-How: Business Process" as O2
+  rectangle "O-Where: Logistics Net" as O3
+  rectangle "O-Who: Work Flow" as O4
+  rectangle "O-When: Master Schedule" as O5
+  rectangle "O-Why: Business Plan" as O6
+}
+
+package "Designer row" as DR {
+  rectangle "D-What: Logical Data Model" as D1
+  rectangle "D-How: System Function Model" as D2
+  rectangle "D-Where: System Geography" as D3
+  rectangle "D-Who: Human Interface Arch" as D4
+  rectangle "D-When: Event/Time Model" as D5
+  rectangle "D-Why: Business Rule Model" as D6
+}
+
+package "Builder row" as BR {
+  rectangle "B-What: Physical Data Model" as B1
+  rectangle "B-How: Program Spec" as B2
+  rectangle "B-Where: Network Architecture" as B3
+  rectangle "B-Who: Role/Task Model" as B4
+  rectangle "B-When: Control Structure" as B5
+  rectangle "B-Why: Rule Specification" as B6
+}
+
+package "Programmer row" as PGR {
+  rectangle "Pg-What: Data Definition" as Pg1
+  rectangle "Pg-How: Source Code" as Pg2
+  rectangle "Pg-Where: Network Config" as Pg3
+  rectangle "Pg-Who: User Screen" as Pg4
+  rectangle "Pg-When: Job Schedule" as Pg5
+  rectangle "Pg-Why: Rule Implementation" as Pg6
+}
+
+package "User row" as UR {
+  rectangle "U-What: Usable Data" as U1
+  rectangle "U-How: Executable Function" as U2
+  rectangle "U-Where: Usable Network" as U3
+  rectangle "U-Who: User Role" as U4
+  rectangle "U-When: Trigger Event" as U5
+  rectangle "U-Why: Enforced Strategy" as U6
+}
+
+' Refinement chains down key columns.
+P1 --> O1 --> D1 --> B1 --> Pg1 --> U1 : refines (What column)
+P2 --> O2 --> D2 --> B2 --> Pg2 --> U2 : refines (How column)
+P3 --> O3 --> D3 --> B3 --> Pg3 --> U3 : refines (Where column)

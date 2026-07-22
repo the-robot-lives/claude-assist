@@ -20,7 +20,10 @@ pub fn resolve_output_paths(prompt: &ParsedPrompt) -> Vec<(PathBuf, Option<Strin
 
 pub fn genai_dir_for(output_path: &Path) -> PathBuf {
     let name = output_path.file_name().unwrap().to_str().unwrap();
-    output_path.parent().unwrap().join(format!(".genai.{}", name))
+    output_path
+        .parent()
+        .unwrap()
+        .join(format!(".genai.{}", name))
 }
 
 pub fn genai_candidate_path(output_path: &Path) -> PathBuf {
@@ -30,10 +33,12 @@ pub fn genai_candidate_path(output_path: &Path) -> PathBuf {
         .duration_since(UNIX_EPOCH)
         .unwrap()
         .as_secs();
-    let hex: String = (0..4)
-        .map(|_| format!("{:02x}", rand_byte()))
-        .collect();
-    let ext = output_path.extension().unwrap_or_default().to_str().unwrap();
+    let hex: String = (0..4).map(|_| format!("{:02x}", rand_byte())).collect();
+    let ext = output_path
+        .extension()
+        .unwrap_or_default()
+        .to_str()
+        .unwrap();
     gdir.join(format!("{}_{}.{}", ts, hex, ext))
 }
 
@@ -61,7 +66,8 @@ pub fn write_metadata(
     let mut content = String::new();
     content.push_str(&format!("service: {}\n", service));
     content.push_str(&format!("model: {}\n", model));
-    content.push_str(&format!("timestamp: {}\n",
+    content.push_str(&format!(
+        "timestamp: {}\n",
         std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
             .unwrap()
@@ -72,7 +78,10 @@ pub fn write_metadata(
     }
     if let Some(notes) = eval_notes {
         let escaped = notes.replace('\\', "\\\\").replace('"', "\\\"");
-        content.push_str(&format!("eval_notes: \"{}\"\n", &escaped[..escaped.len().min(500)]));
+        content.push_str(&format!(
+            "eval_notes: \"{}\"\n",
+            &escaped[..escaped.len().min(500)]
+        ));
     }
     if !options.is_empty() {
         content.push_str("provider_options:\n");

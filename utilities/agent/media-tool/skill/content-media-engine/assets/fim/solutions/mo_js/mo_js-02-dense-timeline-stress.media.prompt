@@ -1,0 +1,73 @@
+schema: "0.4"
+id: mo_js-02-dense-timeline-stress
+type: interactive
+quality: high
+solution: mo_js
+category: animation-and-motion
+variant: dense-timeline-stress
+references:
+  - "references/fim/overview/canvas-svg-creative-animation/mo_js.md"
+  - "references/fim/solution/mo_js.md"
+prompt:
+  system: |-
+    Generate production-quality mo.js dense motion assets for FIM evaluation. Output only a complete self-contained HTML document with inline CSS and JavaScript.
+  text: |-
+    Create a dense mo.js timeline and burst stress scene that validates performance and DOM hygiene.
+
+    Scenario:
+    Build a celebration field with 24 reusable burst emitters, 16 shape modules, 8 HTML counters, and one master Timeline. Include controls for play, pause, replay all, scrub progress, speed, low-power mode, and cleanup/rebuild. Show diagnostics for module count, injected SVG count, target count, and reduced-motion state.
+
+    Implementation requirements:
+    - Use @mojs/core from a CDN or equivalent import with mojs.Shape, mojs.Burst, mojs.ShapeSwirl or Shape, mojs.Html, mojs.Tween, and mojs.Timeline.
+    - Use delta syntax, rand() tokens or arrays where appropriate, explicit durations in milliseconds, easing names or custom path easing, delay, repeat, and timeline playback controls.
+    - Validate parent and element targets before constructing modules and report missing targets without crashing.
+    - Reuse modules with tune().replay(), setProgress(), and setSpeed(); do not create unbounded new modules inside pointer handlers.
+    - Keep dense bursts, labels, counters, controls, and diagnostics in bounded responsive regions with no overlap or clipping.
+    - Honor prefers-reduced-motion by rendering static celebration markers and disabling burst loops.
+    - Include cleanup that pauses modules and removes injected SVG nodes before rebuild.
+    - Output only the final artifact, with no markdown fences or explanatory prose outside the artifact.
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.2
+output:
+  text_format: html
+  artifact_kind: mojs-html-dense-timeline-stress
+  formats:
+    - format: html
+  dimensions:
+    width: 1440
+    height: 900
+  render_expectation: "Dense mo.js stress harness that remains responsive through replay, scrub, cleanup, and rebuild."
+evaluation:
+  checklist:
+    - "Format validity: YAML parses under schema 0.4 and generated output is exactly one HTML artifact with no markdown fences."
+    - "mo.js API: Uses Shape, Burst or ShapeSwirl, Html, Tween, Timeline, delta syntax, and valid targets."
+    - "Motion timing: Specifies millisecond durations, easing, delay, repeat, timeline progress, speed, and replay behavior."
+    - "Visual quality: Dense bursts, counters, controls, and diagnostics stay readable and non-overlapping."
+    - "Reduced motion: Provides a static dense state with burst loops disabled."
+    - "Performance: Reuses modules, reports injected SVG count, and cleans up before rebuild."
+  rubric:
+    - name: "Format validity"
+      weight: 30
+      criteria: "YAML and generated HTML are syntactically valid, required fields are present, id and file name match, and the artifact uses mo.js rather than a substitute animation library."
+    - name: "Semantic completeness"
+      weight: 30
+      criteria: "The artifact includes dense reusable bursts, shapes, HTML counters, timeline controls, diagnostics, target validation, reduced motion, and cleanup."
+    - name: "Motion/visual quality"
+      weight: 25
+      criteria: "Dense motion remains expressive, readable, and bounded; animation graphics and UI do not overlap across viewport sizes."
+    - name: "Robustness"
+      weight: 15
+      criteria: "Handles missing targets, reduced motion, replay, scrub, cleanup/rebuild, resize, and performance pressure without runtime errors."
+  pass_conditions:
+    - "Rubric weights are exactly 30, 30, 25, and 15 for a total of 100."
+    - "YAML parses successfully and all prompt text is ASCII-only."
+    - "Generated artifact runs with no console errors when mo.js is available."
+    - "Score is at least 80 out of 100 with no zero score in any rubric dimension."
+tags:
+  - "fim"
+  - "animation-and-motion"
+  - "mo_js"
+  - "dense-timeline-stress"
+  - "burst-stress"
+  - "performance"

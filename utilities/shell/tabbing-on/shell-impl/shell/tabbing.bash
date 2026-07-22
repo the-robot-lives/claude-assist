@@ -24,6 +24,45 @@ source "${_tabbing_root}/lib/theme-data.sh"
 source "${_tabbing_root}/lib/dc.sh"
 export TABBING_ROOT="${_tabbing_root}"
 
+# PS1 is only touched when a theme actually defines a prompt. The pre-theme
+# value is saved at override time and restored when the override goes away
+# (theme without ps1, --no-theme, tabbing-off). A theme with no ps1/ps1_layout
+# never alters the prompt beyond undoing a previous theme's override.
+_tabbing_save_prior_ps1() {
+  if [[ -z "${_TABBING_PRIOR_PS1+x}" ]]; then
+    _TABBING_PRIOR_PS1="${PS1:-}"
+  fi
+}
+
+_tabbing_restore_prior_ps1() {
+  if [[ -n "${_TABBING_PRIOR_PS1+x}" ]]; then
+    PS1="$_TABBING_PRIOR_PS1"
+    unset _TABBING_PRIOR_PS1
+  fi
+}
+
+_tabbing_set_prompt_layout() {
+  local layout="${1:-}" custom="${2:-}"
+  if [[ -n "$custom" ]]; then
+    _tabbing_save_prior_ps1
+    PS1="$custom"
+    return
+  fi
+  case "$layout" in
+    ""|default|custom) _tabbing_restore_prior_ps1; return ;;
+  esac
+  _tabbing_save_prior_ps1
+  case "$layout" in
+    minimal) PS1='\W \$ ' ;;
+    compact) PS1='\u@\h \W \$ ' ;;
+    full) PS1='\u@\h:\w \$ ' ;;
+    two-line) PS1='\u@\h \w\n\$ ' ;;
+    git) PS1='\W$(git branch --show-current 2>/dev/null | sed "s/^/  /") \$ ' ;;
+    tab-status) PS1='$(_tabbing_get_indicator) ${TAB_TITLE:-tab}${TAB_STATUS:+: $TAB_STATUS}  \W \$ ' ;;
+    *) _tabbing_restore_prior_ps1 ;;
+  esac
+}
+
 # Capture the interactive shell's TTY early so the dc daemon can use it
 if [[ -z "${TABBING_TTY:-}" ]]; then
   TABBING_TTY="$(tty 2>/dev/null)" || TABBING_TTY="/dev/tty"
@@ -99,7 +138,7 @@ unset -f _tabbing_install_ssh_shim 2>/dev/null
 # ---------------------------------------------------------------------------
 if [ "${_TABBING_OWNER_PID:-}" != "$$" ]; then
   unset TAB_TITLE TAB_STATUS TAB_HIGHLIGHT TAB_TITLE_STYLE TAB_STATUS_STYLE \
-        TAB_URGENCY TAB_EMOJI TAB_BG TAB_THEME TAB_THEME_DATA TAB_ID TAB_MARQUEE \
+        TAB_URGENCY TAB_EMOJI TAB_BG TAB_THEME TAB_THEME_DATA TAB_PS1_LAYOUT TAB_PS1_CUSTOM TAB_ID TAB_MARQUEE \
         _TABBING_WAS_ACTIVE 2>/dev/null
   unset DC_TAB_NS 2>/dev/null
   TAB_SESSION=""
@@ -713,6 +752,26 @@ tabbing-doctor() {
 
 tabbing-theme() {
   command tabbing-theme "$@"
+  local rc=$?
+  [[ $rc -eq 0 ]] || return $rc
+  case "${1:-pick}" in
+    pick|select|apply|reset|clear|"") ;;
+    list|ls|layouts|preview|clone|copy|edit|delete|rm|export|save|envrc|help|--help|-h|get|set|emit|gen-ramp|x11) return 0 ;;
+    *) ;;
+  esac
+  local _sf="${XDG_STATE_HOME:-$HOME/.local/state}/tabbing/sessions/${TAB_SESSION:-}.env"
+  local _theme=""
+  [[ -f "$_sf" ]] && _theme="$(sed -n 's/^TAB_THEME=//p' "$_sf" | tail -n 1)"
+  _theme="${_theme#\'}"; _theme="${_theme%\'}"
+  _theme="${_theme#\"}"; _theme="${_theme%\"}"
+  TAB_THEME="$_theme"
+  export TAB_THEME
+  if [[ -n "$TAB_THEME" ]]; then
+    _tabbing_apply_named_theme "$TAB_THEME" 2>/dev/null
+  else
+    _tabbing_apply_theme_prompt ""
+  fi
+  return 0
 }
 
 # ---------------------------------------------------------------------------
@@ -912,7 +971,7 @@ tabbing-off() {
   if [[ -n "${TAB_SESSION:-}" ]]; then
     rm -f "${XDG_STATE_HOME:-$HOME/.local/state}/tabbing/sessions/${TAB_SESSION}.env"
   fi
-  unset TAB_TITLE TAB_STATUS TAB_EMOJI TAB_URGENCY TAB_HIGHLIGHT TAB_TITLE_STYLE TAB_STATUS_STYLE TAB_BG TAB_THEME TAB_THEME_DATA TAB_MARQUEE TAB_ID TAB_RECORDING
+  unset TAB_TITLE TAB_STATUS TAB_EMOJI TAB_URGENCY TAB_HIGHLIGHT TAB_TITLE_STYLE TAB_STATUS_STYLE TAB_BG TAB_THEME TAB_THEME_DATA TAB_PS1_LAYOUT TAB_PS1_CUSTOM TAB_MARQUEE TAB_ID TAB_RECORDING
   unset TABBING_DC_UUID DC_TAB_NS TABBING_DC_DAEMON_PID _TABBING_OWNER_PID _TABBING_WAS_ACTIVE CLAUDE_CODE_DISABLE_TERMINAL_TITLE
   _tabbing_out 'tabbing: off\n'
 }

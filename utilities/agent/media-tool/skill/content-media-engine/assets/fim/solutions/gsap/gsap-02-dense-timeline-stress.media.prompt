@@ -1,0 +1,73 @@
+schema: "0.4"
+id: gsap-02-dense-timeline-stress
+type: interactive
+quality: high
+solution: gsap
+category: animation-and-motion
+variant: dense-timeline-stress
+references:
+  - "references/fim/overview/canvas-svg-creative-animation/gsap.md"
+  - "references/fim/solution/gsap.md"
+prompt:
+  system: |-
+    Generate production-quality GSAP dense timeline assets for FIM evaluation. Output only a complete self-contained HTML document with inline CSS and JavaScript.
+  text: |-
+    Create a dense GSAP timeline stress harness for many DOM and SVG targets.
+
+    Scenario:
+    Build a control-room style motion board with at least 96 animated cells, 12 SVG traces, and 5 grouped sections. Use nested GSAP timelines to orchestrate waves, trace draws, counters, alert pulses, and a bounded repeat cycle. Include a live diagnostic panel for target count, active timeline state, timeScale, and reduced-motion status.
+
+    Implementation requirements:
+    - Use GSAP 3 from a CDN or equivalent import with gsap.timeline(), nested timelines, stagger objects, gsap.utils helpers, and at least one tweened JavaScript object.
+    - Validate selectors for every DOM/SVG target group before creating timelines and show missing-target diagnostics.
+    - Specify durations in seconds, easing, labels or position parameters, stagger grid settings, repeat bounds, repeatDelay, and timeScale controls.
+    - Use transforms, opacity, CSS variables, and SVG stroke properties; avoid animating width, left, top, or margins during playback.
+    - Include play, pause, restart, reverse, seek, speed, and kill/rebuild controls.
+    - Honor prefers-reduced-motion by showing the dense final state and disabling nonessential repeats.
+    - Keep dense content, controls, and diagnostics non-overlapping with stable responsive grid dimensions.
+    - Output only the final artifact, with no markdown fences or explanatory prose outside the artifact.
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.2
+output:
+  text_format: html
+  artifact_kind: gsap-html-dense-timeline-stress
+  formats:
+    - format: html
+  dimensions:
+    width: 1440
+    height: 900
+  render_expectation: "Dense GSAP timeline that remains responsive through repeated play, speed changes, kill, and rebuild."
+evaluation:
+  checklist:
+    - "Format validity: YAML parses under schema 0.4 and generated output is exactly one HTML artifact with no markdown fences."
+    - "GSAP API: Uses nested gsap.timeline() instances, stagger objects, gsap.utils, object tweening, and valid DOM/SVG targets."
+    - "Motion timing: Specifies durations in seconds, easing, labels, stagger grid settings, repeat bounds, and timeScale."
+    - "Visual quality: Dense animated content remains readable with no control, diagnostic, label, or cell overlap."
+    - "Reduced motion: Provides a static final dense state and disables nonessential loops."
+    - "Performance: Avoids layout-thrashing properties, supports kill/rebuild, and keeps per-frame work bounded."
+  rubric:
+    - name: "Format validity"
+      weight: 30
+      criteria: "YAML and generated HTML are syntactically valid, required fields are present, id and file name match, and the artifact uses GSAP rather than a substitute animation library."
+    - name: "Semantic completeness"
+      weight: 30
+      criteria: "The artifact includes dense target orchestration, nested timelines, stagger grids, counters, diagnostics, looping, controls, reduced motion, and rebuild cleanup."
+    - name: "Motion/visual quality"
+      weight: 25
+      criteria: "Dense motion is coherent, eased, and visually organized; content remains legible and non-overlapping across viewport sizes."
+    - name: "Robustness"
+      weight: 15
+      criteria: "Handles missing targets, reduced motion, kill/rebuild, speed changes, resize, and performance pressure without runtime errors."
+  pass_conditions:
+    - "Rubric weights are exactly 30, 30, 25, and 15 for a total of 100."
+    - "YAML parses successfully and all prompt text is ASCII-only."
+    - "Generated artifact runs with no console errors when GSAP is available."
+    - "Score is at least 80 out of 100 with no zero score in any rubric dimension."
+tags:
+  - "fim"
+  - "animation-and-motion"
+  - "gsap"
+  - "dense-timeline-stress"
+  - "nested-timeline"
+  - "performance"

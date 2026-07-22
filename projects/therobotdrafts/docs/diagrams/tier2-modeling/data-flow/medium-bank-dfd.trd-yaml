@@ -1,0 +1,42 @@
+# .trd-yaml — TheRobotDrafts native model (IxModel serialization)
+name: Data Flow Diagram - Medium Bank (Context + Level-0)
+elements:
+  - { id: Context Diagram, type: Package, name: Context Diagram }
+  - { id: C1, type: Boundary, name: Customer, parentId: Context Diagram, stereotype: externalEntity }
+  - { id: S1, type: Boundary, name: Statement\nSys, parentId: Context Diagram, stereotype: externalEntity }
+  - { id: Sys0, type: UseCase, name: 0\nDeposit\nSystem, parentId: Context Diagram, stereotype: process }
+  - { id: Level-0 Diagram, type: Package, name: Level-0 Diagram }
+  - { id: C2, type: Boundary, name: Customer, parentId: Level-0 Diagram, stereotype: externalEntity }
+  - { id: S2, type: Boundary, name: Statement\nSys, parentId: Level-0 Diagram, stereotype: externalEntity }
+  - { id: P1, type: UseCase, name: 1\nReceive\nDeposit, parentId: Level-0 Diagram, stereotype: process }
+  - { id: P2, type: UseCase, name: 2\nValidate, parentId: Level-0 Diagram, stereotype: process }
+  - { id: P3, type: UseCase, name: 3\nPost to\nAccount, parentId: Level-0 Diagram, stereotype: process }
+  - { id: P4, type: UseCase, name: 4\nUpdate\nBalance, parentId: Level-0 Diagram, stereotype: process }
+  - { id: P5, type: UseCase, name: 5\nIssue\nReceipt, parentId: Level-0 Diagram, stereotype: process }
+  - { id: D1, type: Component, name: Accounts\n(D1), parentId: Level-0 Diagram, stereotype: dataStore }
+  - { id: D2, type: Component, name: Deposit\nLog (D2), parentId: Level-0 Diagram, stereotype: dataStore }
+  - { id: ~note1, type: Note, name: '**Leveling explained**', documentation: '**Leveling explained**\nCONTEXT: system = one bubble, only externals + boundary flows.\nLEVEL-0: explode that bubble into major processes; SAME boundary\nflows cross in/out; add INTERNAL stores and inter-process flows.\nLEVEL-1: explode any ONE level-0 bubble further (e.g. 3 -> 3.1, 3.2).\n--\nBalance check for THIS diagram:\ncontext boundary = {deposit slip, cash, deposit notice, receipt}\nlevel-0 boundary = {deposit slip, cash, deposit notice, receipt}  MATCH' }
+  - { id: ~note2, type: Note, name: '**Stores are internal**', documentation: '**Stores are internal**\nData stores appear at Level-0 and below,\nNEVER in the context diagram (they are\ninside the system boundary).' }
+edges:
+  - { id: e1, type: DirectedAssociation, from: C1, to: Sys0, label: deposit slip }
+  - { id: e2, type: DirectedAssociation, from: C1, to: Sys0, label: cash }
+  - { id: e3, type: DirectedAssociation, from: Sys0, to: S1, label: deposit notice }
+  - { id: e4, type: DirectedAssociation, from: Sys0, to: C1, label: receipt }
+  - { id: e5, type: DirectedAssociation, from: C2, to: P1, label: deposit slip }
+  - { id: e6, type: DirectedAssociation, from: C2, to: P1, label: cash }
+  - { id: e7, type: DirectedAssociation, from: P5, to: S2, label: deposit notice }
+  - { id: e8, type: DirectedAssociation, from: P5, to: C2, label: receipt }
+  - { id: e9, type: DirectedAssociation, from: P1, to: P2, label: raw deposit }
+  - { id: e10, type: DirectedAssociation, from: P2, to: P3, label: valid deposit }
+  - { id: e11, type: DirectedAssociation, from: P3, to: P4, label: posting }
+  - { id: e12, type: DirectedAssociation, from: P3, to: P5, label: posted deposit }
+  - { id: e13, type: DirectedAssociation, from: P2, to: D2, label: validation event }
+  - { id: e14, type: DirectedAssociation, from: P3, to: D1, label: account update }
+  - { id: e15, type: DirectedAssociation, from: P3, to: D2, label: deposit record }
+  - { id: e16, type: DirectedAssociation, from: D1, to: P4, label: current balance }
+  - { id: e17, type: DirectedAssociation, from: P4, to: D1, label: new balance }
+  - { id: e18, type: DirectedAssociation, from: D2, to: P5, label: log entry }
+  - { id: e19, type: NoteLink, from: ~note1, to: P3 }
+  - { id: e20, type: NoteLink, from: ~note2, to: D1 }
+diagrams:
+  - { id: d1, name: Data Flow Diagram - Medium Bank (Context + Level-0), kind: usecase, layoutProvenance: Synthesized }

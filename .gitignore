@@ -1,3 +1,4 @@
+nohup.*
 .fseventsd
 .Spotlight-V100
 liquibase.properties
@@ -70,3 +71,7 @@ service-account*.json
 .pgpass
 .netrc
 .npmrc
+
+# project-uplift: render variants + low-value finals stay out of git (full corpus → separate tracking repo)
+projects/*/design/asset-prompts/**/.genai.*/
+projects/*/design/asset-prompts/**/*.png

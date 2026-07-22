@@ -1,0 +1,25 @@
+# Socket registry — fixed angular attachment positions around a base glyph.
+# MUST match web/src/registry.js SOCKETS exactly (that file is a stand-in for
+# code generated from this registry).
+#
+# Angles are degrees in SVG y-down convention: -90 is up, 0 is right,
+# 90 is down. Every possible socket has a fixed angular position; empty
+# sockets are hidden and occupied sockets never move.
+
+schema_version: 1
+status: verified # against web/src/registry.js (2026-07-17)
+stability: "An integer ID is never reassigned; removed elements become reserved IDs."
+
+socket_count: 8
+
+sockets:
+  - {id: 0, name: upper,       angle_degrees: -90,  accepts: [modifier, diacritic]}
+  - {id: 1, name: upper_right, angle_degrees: -45,  accepts: [modifier, diacritic]}
+  - {id: 2, name: right,       angle_degrees: 0,    accepts: [modifier, diacritic]}
+  - {id: 3, name: lower_right, angle_degrees: 45,   accepts: [modifier, diacritic]}
+  - {id: 4, name: lower,       angle_degrees: 90,   accepts: [modifier, diacritic]}
+  - {id: 5, name: lower_left,  angle_degrees: 135,  accepts: [modifier, diacritic]}
+  - {id: 6, name: left,        angle_degrees: 180,  accepts: [modifier, diacritic]}
+  - {id: 7, name: upper_left,  angle_degrees: -135, accepts: [modifier, diacritic]}
+
+reserved_ids: []

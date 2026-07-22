@@ -1,0 +1,6 @@
+# .trd-yaml — TheRobotDrafts native model (IxModel serialization)
+name: Example SysML Block BDD - Medium Interface Blocks
+elements:
+  - { id: ICoolantFlow, type: Interface, name: ICoolantFlow, members: [{ name: flow in  supply, isOperation: false, visibility: Public, type: Coolant, rawText: 'flow in  supply : Coolant' }, { name: flow out return, isOperation: false, visibility: Public, type: Coolant, rawText: 'flow out return : Coolant' }] }
+diagrams:
+  - { id: d1, name: Example SysML Block BDD - Medium Interface Blocks, kind: class, layoutProvenance: Synthesized }

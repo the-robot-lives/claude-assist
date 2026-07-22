@@ -1,0 +1,73 @@
+schema: "0.4"
+id: gsap-04-edge-integration-reduced-motion-performance
+type: interactive
+quality: high
+solution: gsap
+category: animation-and-motion
+variant: edge-integration-reduced-motion-performance
+references:
+  - "references/fim/overview/canvas-svg-creative-animation/gsap.md"
+  - "references/fim/solution/gsap.md"
+prompt:
+  system: |-
+    Generate production-quality GSAP integration edge-case assets for FIM evaluation. Output only a complete self-contained HTML document with inline CSS and JavaScript.
+  text: |-
+    Create a GSAP integration harness for lifecycle cleanup, reduced motion, and performance-sensitive animation.
+
+    Scenario:
+    Build a mountable widget with an SVG progress route, a card stack, and a diagnostics strip. It must support initMotion(root), disposeMotion(), rebuildMotion(), setReducedMotion(enabled), and setLowPowerMode(enabled). Include controls that intentionally remove a target, rebuild the timeline, and verify cleanup.
+
+    Implementation requirements:
+    - Use GSAP 3 from a CDN or equivalent import with root-scoped selectors, gsap.context() or equivalent scoped cleanup, and timeline.kill() during disposal.
+    - Validate all DOM/SVG targets before creating tweens and display missing selector diagnostics without throwing.
+    - Specify durations in seconds, easing, labels, repeat or repeatDelay, pause/resume, timeScale, and loop suppression in reduced-motion mode.
+    - Use gsap.matchMedia() or window.matchMedia for prefers-reduced-motion and responsive animation differences.
+    - Include no-overlap responsive constraints for the widget, SVG route, controls, diagnostics, and card stack.
+    - Use transform/opacity and SVG stroke properties, avoid layout-thrashing animation, and include low-power target or loop reduction.
+    - Ensure rebuild does not duplicate timelines, RAF loops, event listeners, or inline transforms that should be reset.
+    - Output only the final artifact, with no markdown fences or explanatory prose outside the artifact.
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.2
+output:
+  text_format: html
+  artifact_kind: gsap-html-edge-integration-reduced-motion-performance
+  formats:
+    - format: html
+  dimensions:
+    width: 1440
+    height: 900
+  render_expectation: "Interactive GSAP robustness harness that survives missing targets, dispose, rebuild, reduced-motion, and low-power modes."
+evaluation:
+  checklist:
+    - "Format validity: YAML parses under schema 0.4 and generated output is exactly one HTML artifact with no markdown fences."
+    - "GSAP API: Uses scoped selectors, gsap.context() or equivalent cleanup, timeline.kill(), and valid DOM/SVG targets."
+    - "Motion timing: Specifies durations in seconds, easing, labels, repeat behavior, timeScale, and loop suppression."
+    - "Visual quality: Widget, controls, diagnostics, SVG route, and cards stay readable and non-overlapping after resize and rebuild."
+    - "Reduced motion: Supports prefers-reduced-motion and manual toggle with static final state and loops disabled."
+    - "Performance: Avoids layout thrash, reduces work in low-power mode, and prevents duplicate timelines or listeners."
+  rubric:
+    - name: "Format validity"
+      weight: 30
+      criteria: "YAML and generated HTML are syntactically valid, required fields are present, id and file name match, and the artifact uses GSAP rather than a substitute animation library."
+    - name: "Semantic completeness"
+      weight: 30
+      criteria: "The artifact covers lifecycle integration, scoped target validation, timing, easing, looping, reduced motion, responsive behavior, diagnostics, cleanup, and performance guards."
+    - name: "Motion/visual quality"
+      weight: 25
+      criteria: "Motion remains smooth, legible, correctly targeted, and non-overlapping across normal, reduced-motion, fault, and rebuild states."
+    - name: "Robustness"
+      weight: 15
+      criteria: "Handles missing targets, dispose/rebuild, reduced motion, resize, and low-power operation without blank screens, duplicate animations, or runtime errors."
+  pass_conditions:
+    - "Rubric weights are exactly 30, 30, 25, and 15 for a total of 100."
+    - "YAML parses successfully and all prompt text is ASCII-only."
+    - "Generated artifact runs with no console errors when GSAP is available."
+    - "Score is at least 80 out of 100 with no zero score in any rubric dimension."
+tags:
+  - "fim"
+  - "animation-and-motion"
+  - "gsap"
+  - "edge-integration-reduced-motion-performance"
+  - "cleanup"
+  - "reduced-motion"

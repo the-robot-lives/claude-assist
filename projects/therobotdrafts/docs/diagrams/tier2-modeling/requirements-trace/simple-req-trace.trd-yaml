@@ -1,0 +1,21 @@
+# .trd-yaml — TheRobotDrafts native model (IxModel serialization)
+name: Requirements Traceability - Simple
+elements:
+  - { id: R1, type: Boundary, name: REQ-001\nThe system shall allow\nusers to export a diagram\nas PNG., stereotype: requirement }
+  - { id: R2, type: Boundary, name: 'REQ-002\nThe exporter shall render\nat >= 300 DPI.', stereotype: requirement }
+  - { id: R3, type: Boundary, name: REQ-003\nThe exporter shall complete\nwithin 5 seconds., stereotype: requirement }
+  - { id: PngModule, type: Boundary, name: PNG Export\nModule, stereotype: component }
+  - { id: T1, type: Boundary, name: 'Test: ExportSpeed', stereotype: testcase }
+  - { id: '"Stakeholder\nRequest', type: Artifact, name: '"Stakeholder\nRequest' }
+  - { id: Source, type: Class, name: Source }
+  - { id: ~note1, type: Note, name: '**Coverage at a glance**', documentation: '**Coverage at a glance**\nR2: satisfied (by PngModule), NOT verified — test gap.\nR3: satisfied AND verified — fully covered.\n--\nEdges read "I depend on that":\ndesign  ..> req  : satisfy\ntest    ..> req  : verify\nsysReq  ..> stkReq: derive\nany     ..> any  : trace' }
+edges:
+  - { id: e1, type: Derive, from: R2, to: R1, label: derive }
+  - { id: e2, type: Derive, from: R3, to: R1, label: derive }
+  - { id: e3, type: Satisfy, from: PngModule, to: R2, label: satisfy }
+  - { id: e4, type: Satisfy, from: PngModule, to: R3, label: satisfy }
+  - { id: e5, type: Verify, from: T1, to: R3, label: verify }
+  - { id: e6, type: Trace, from: R1, to: Source, label: trace }
+  - { id: e7, type: NoteLink, from: ~note1, to: R2 }
+diagrams:
+  - { id: d1, name: Requirements Traceability - Simple, kind: class, layoutProvenance: Synthesized }

@@ -1,19 +1,35 @@
+# Deep Focus — dark-native nocturne. DELTA seeds over base-theme: theme-style-guide.
+# Treatise: navy-black canvas, single teal accent, 6px soft-technical radius, IBM Plex.
+#
+# SEED-TRAP FIX (Stage C): the base wires accents on brand-red/brand-blue/brand-yellow, NOT
+# bare red/blue/yellow (bare keys are silent no-ops). The shipped file used bare keys, so the
+# teal accent never actually applied. Moved to brand-* and re-pointed each -light/-mid sibling
+# to read var(--brand-*) (the base pins them to a color-mix with the OLD hex baked in).
 vars:
   groups:
     - name: "Seed Colors"
       vars:
-        white: "#e2e8f0"
-        black: "#0a0e1a"
-        red: "#14b8a6"
-        blue: "#38bdf8"
-        yellow: "#fbbf24"
+        white: "#e2e8f0"        # §3 lightest surface — cool slate, never pure white
+        black: "#0a0e1a"        # §3 darkest — navy-black dark canvas (not #000)
+
+        brand-red: "#14b8a6"    # §3 the single teal accent — the theme's whole voice
+        brand-red-light: "color-mix(in srgb, var(--brand-red) 12%, var(--surface))"
+        brand-red-mid: "color-mix(in srgb, var(--brand-red) 20%, var(--surface))"
+
+        brand-blue: "#38bdf8"   # §3 sky — info-aligned hue; reserved/off-chrome (see conformance)
+        brand-blue-light: "color-mix(in srgb, var(--brand-blue) 12%, var(--surface))"
+        brand-blue-mid: "color-mix(in srgb, var(--brand-blue) 20%, var(--surface))"
+
+        brand-yellow: "#fbbf24" # §3 amber — warning-aligned hue; reserved/off-chrome
+        brand-yellow-light: "color-mix(in srgb, var(--brand-yellow) 12%, var(--surface))"
+        brand-yellow-mid: "color-mix(in srgb, var(--brand-yellow) 20%, var(--surface))"
 
     - name: "Semantic Colors"
       vars:
-        success: "#34d399"
-        warning: "#fbbf24"
-        error: "#fb7185"
-        info: "#38bdf8"
+        success: "#34d399"      # §3 mint
+        warning: "#fbbf24"      # §3 amber — the single permitted warm break, warnings only
+        error: "#fb7185"        # §3 soft rose — softened from a hard red, warns without alarm
+        info: "#38bdf8"         # §3 sky — set directly so info does not depend on brand-blue
 
     - name: "Typography"
       vars:
@@ -22,4 +38,16 @@ vars:
 
     - name: "Shape"
       vars:
-        radius: "6px"
+        radius: "6px"           # §6 soft-technical — cards, inputs, buttons; no pills
+
+    - name: "Interaction — teal focus & controls (§7/§8/§9)"
+      # §9 commits to a 2px teal ring on every focusable element and teal-active controls.
+      # The base defaults these to var(--brand-blue); re-point them to the teal accent so
+      # focus/controls honor the treatise and brand-blue stays genuinely off-chrome.
+      vars:
+        hui-focus-ring-color: "color-mix(in srgb, var(--brand-red) 30%, transparent)"
+        hui-control-color: "var(--brand-red)"
+        hui-field-focus-border: "var(--brand-red)"
+        hui-switch-track-on-bg: "var(--brand-red)"
+        hui-radio-option-border-active: "var(--brand-red)"
+        hui-radio-option-bg-active: "color-mix(in srgb, var(--brand-red) 8%, var(--surface))"

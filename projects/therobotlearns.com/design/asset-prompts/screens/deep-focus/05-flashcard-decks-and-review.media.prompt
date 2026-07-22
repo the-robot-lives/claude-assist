@@ -1,0 +1,80 @@
+schema: "0.4"
+id: deep-focus-05-flashcard-decks-and-review
+type: image
+quality: high
+
+# The Robot Learns — a terminal study CLI. Flashcard Decks & Review — the spaced-repetition
+# review surface (SM-2 daily queue) rendered in the terminal.
+# Theme tenets: calm navy-black dark canvas, one desaturated teal accent, 6px soft radius,
+# IBM Plex Sans prose + IBM Plex Mono for counts/keys, at most one saturated hue on screen.
+# Palette: canvas #0a0e1a, surface #0f1629, border #1e293b, body #cbd5e1, teal accent #14b8a6.
+# Semantic (grading, used sparingly): mint #34d399, amber #fbbf24, soft rose #fb7185.
+
+prompt:
+  system: |
+    You are a senior product designer rendering a high-fidelity UI mockup of a calm,
+    immersive dark TERMINAL session — a single focused terminal window, not a web page and not
+    a browser. The surface is a spaced-repetition review: one flashcard held in focus in the
+    center of a deep navy pane, quiet deck tiles to the side, a single desaturated teal
+    signal-light. Prose in a clean humanist sans; counts, keys and shortcuts in a matched
+    monospace. Calm and confirmatory, never gamified. No neon, no glow, no gloom.
+  text: |
+    A 16:9 high-fidelity mockup of a focused single-pane TERMINAL session — "The Robot
+    Learns" — running today's flashcard review. One calm dark terminal window fills the frame
+    on a deep navy-black canvas. NO browser chrome, NO tabs, NO address bar, NO web page.
+
+    OVERALL LAYOUT (a centered review card with a slim left deck rail and a top progress bar):
+    - TOP: a slim PROGRESS BAR / milestone tracker for today's queue — a thin teal fill across
+      a recessed navy track — with a monospace count beside it: "12 / 40 due".
+    - LEFT RAIL (narrow): a SEARCH INPUT BAR ("find a deck…") above a short list of DECK
+      SUMMARY TILES, each a small card showing a deck name plus a due/total count in monospace
+      ("Algorithms  8/120", "Elixir/OTP  3/64"); the active deck marked by a 2px teal left rail.
+    - CENTER (dominant): a single FLASHCARD held in focus — a soft-cornered card one navy step
+      up from the canvas, generous padding. The FRONT prompt in calm sans ("What does the SM-2
+      'ease factor' adjust?"), a thin hairline divider, then the revealed BACK answer in
+      slightly dimmer slate with one inline monospace term.
+
+    BELOW THE CARD:
+    - a GRADE ROW: four quiet recall buttons labeled "again · hard · good · easy" — ghost
+      outlines with faint slate borders, each with a small muted next-interval hint under it
+      ("<10m", "1d", "4d", "9d"); the grading tints are used only as tiny dots (rose, amber,
+      mint), never as loud fills.
+    - a faint status line in monospace: "space reveal · 1-4 grade · e export deck to anki".
+
+    PALETTE & TYPE: deep navy-black canvas with one or two barely-lighter navy steps for the
+    card and deck tiles; body text in bright cool slate, secondary counts in dimmer slate; a
+    single calm desaturated teal as the primary saturated element — the progress fill, the
+    active deck rail. The grading dots (soft rose, amber, mint) are the only other color and
+    stay tiny and reserved. Prompts and answers in a calm humanist sans; counts, intervals,
+    keys in a matched monospace.
+
+    SHAPE & SURFACE: soft-technical small rounded corners on the card, tiles and buttons;
+    separation by tonal navy layering, not lines — faint slate hairlines only where divided.
+    No gradients, no glow, flat calm layering.
+
+    MOOD: focused, immersive, calm — quiet, confirmatory practice, one card at a time.
+  negative: "watermark, signature, lorem ipsum placeholder text, low-fidelity wireframe, monitor/device photograph framing, blurry, distorted UI, browser chrome, address bar, browser tabs, web page, light mode, neon glow, gradient background, garish gamified colors"
+
+output:
+  formats:
+    - format: png
+  dimensions:
+    width: 1920
+    height: 1080
+    aspect_ratio: "16:9"
+
+eval:
+  pass_threshold: 0.72
+  criteria:
+    relevance: {weight: 3, description: "Matches Flashcard Decks & Review: a top progress bar with due count, a left deck rail with search and deck summary tiles, a centered front/back flashcard, and an again/hard/good/easy grade row — inside one terminal pane"}
+    theme_fidelity: {weight: 3, description: "Deep navy-black dark canvas, a dominant desaturated teal accent with only tiny reserved semantic dots, soft small radius, calm sans + mono counts — a nocturne study surface, not a gamified or generic UI"}
+    composition: {weight: 2, description: "Single card held in focus, quiet supporting rail, plausible real-product terminal layout"}
+    technical: {weight: 2, description: "Sharp, correct 16:9 aspect, no artifacts"}
+  reject_if:
+    - "lorem ipsum or placeholder text visible"
+    - "watermark or signature visible"
+    - "wireframe-level fidelity instead of high-fidelity mockup"
+    - "browser chrome, tabs, or address bar instead of a terminal window"
+    - "loud gamified colors or more than one dominant accent hue"
+
+tags: [deep-focus, therobotlearns.com, screen-mockup, terminal]

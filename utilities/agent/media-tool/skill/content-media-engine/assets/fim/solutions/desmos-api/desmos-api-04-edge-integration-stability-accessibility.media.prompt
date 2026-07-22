@@ -1,0 +1,74 @@
+---
+schema: "0.4"
+id: fim-math-and-scientific-rendering-desmos-api-04-edge-integration-stability-accessibility
+type: interactive
+quality: high
+solution: desmos-api
+category: math-and-scientific-rendering
+variant: edge-integration-stability-accessibility
+references:
+- references/fim/overview/geospatial-math-scientific/desmos-api.md
+- references/fim/solution/desmos-api.md
+prompt:
+  system: |-
+    You are a senior interactive math reliability engineer. Output only one complete ASCII HTML file using the Desmos API. No Markdown fences or prose outside the source.
+  text: |-
+    Create a Desmos API integration and accessibility harness for plotting rational functions with singularities. Use y=(x^2-1)/(x-1) as the main expression, show the simplified line y=x+1, mark the removable hole at x=1, and include UI controls that toggle original, simplified, and hole markers. Add a status region that explains invalid points and API load state.
+
+    Requirements: use stable setExpression ids, setBlank and restore state safely, HelperExpression where numeric values are needed, asyncScreenshot export, calculator.destroy() cleanup comments, accessible buttons with aria labels, and non-color encodings for original versus simplified curves.
+  provider_options:
+    temperature: 0.2
+    max_tokens: 8192
+output:
+  text_format: html
+  artifact_kind: desmos-api-html
+  formats:
+  - format: html
+  - format: png
+  - format: svg
+evaluation:
+  checklist:
+  - "YAML parses and required schema 0.4 fields are present."
+  - "HTML is complete, ASCII-only, and uses Desmos API integration patterns safely."
+  - "Math correctness covers rational simplification, excluded point, removable hole, and visible equivalence elsewhere."
+  - "Notation validity covers escaped LaTeX, labels, helper expressions, and accessible status text."
+  - "Renderability covers apiKey failure, nonzero container size, nonblank graph, and screenshot export."
+  - "Labels and units identify x, y, original expression, simplified line, and excluded x value."
+  - "Domain edge cases cover x=1 exclusion, stale state after toggles, invalid API key, resize, and color-only accessibility."
+  rubric:
+  - name: Format validity
+    weight: 30
+    criteria:
+    - "Output is one complete ASCII HTML file with no Markdown wrapper."
+    - "The file uses valid JavaScript, accessible controls, and documented Desmos script loading."
+    - "The source includes stable ids, export code, and cleanup notes."
+  - name: Semantic completeness
+    weight: 30
+    criteria:
+    - "Original rational graph, simplified graph, hole marker, toggles, status region, restore behavior, and export are present."
+    - "The implementation uses Desmos expression state rather than a custom plotting substitute."
+    - "The removable discontinuity is mathematically and visually explicit."
+  - name: Visual/structural quality
+    weight: 25
+    criteria:
+    - "The discontinuity and equivalent line are visible and not hidden by labels."
+    - "Styles are distinguishable without color and the status text is concise."
+    - "The layout remains usable with calculator chrome and controls."
+  - name: Robustness
+    weight: 15
+    criteria:
+    - "Handles missing API key, repeated toggles, state reset, screenshot failure, and unmount cleanup."
+    - "Keeps expressions bounded and ids stable for performance."
+    - "Documents accessibility and integration constraints."
+  pass_conditions:
+  - "Rubric weights are exactly Format validity 30, Semantic completeness 30, Visual/structural quality 25, Robustness 15."
+  - "Score is 80 or higher out of 100 with no critical failure in math correctness, notation validity, renderability, or accessibility."
+  - "The artifact safely represents the removable discontinuity and integration lifecycle."
+  - "Domain edge cases and accessibility output are explicit."
+tags:
+- fim
+- math-and-scientific-rendering
+- desmos-api
+- edge-integration-stability-accessibility
+- removable-discontinuity
+- accessibility

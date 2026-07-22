@@ -1,0 +1,87 @@
+schema: "0.4"
+id: phosphor-15-backup-and-restore
+type: image
+quality: high
+
+# The Robot Learns (a CLI learning tool) — Backup & Restore, a snapshot timeline + progress + restore guard.
+# Theme tenets: monochrome amber CRT, single glowing hue on warm near-black, fixed-width mono as the primary UI face, radius 0, box-drawing chrome, zero elevation.
+# Palette: amber #ffb000, warm near-black #140c00, dim amber #c88a00, bright amber #ffd050; warning stays amber and is prefixed "! " (no error red on this screen).
+
+prompt:
+  system: |
+    You are a senior product designer rendering a high-fidelity UI mockup of a
+    monochrome amber-CRT terminal — ONE warm amber hue on a warm near-black void,
+    fixed-width monospace as the primary UI face for everything, radius 0, box-drawing
+    chrome, zero elevation. Terse, machine, all-business register — the UI reports, it
+    does not decorate. This is a real terminal, never a web page.
+  text: |
+    A 16:9 high-fidelity mockup of a single amber-on-black TERMINAL WINDOW showing a
+    BACKUP & RESTORE surface for a command-line knowledge base — a snapshot timeline, a
+    running progress bar, and a restore-overwrite guard, all in text mode. Fill the frame
+    with ONE terminal window and a thin top title bar; there is NO web browser chrome, no
+    tabs, no address bar, no rounded website panels.
+
+    One warm AMBER hue on a warm near-black background; hierarchy comes from BRIGHTNESS
+    (dim vs bright amber), never other colors. Fixed-width monospaced type everywhere.
+
+    OVERALL LAYOUT (top to bottom):
+
+    TOP RULE: a horizontal box-drawing rule with a notched title "┤ BACKUP / RESTORE ├"
+    at the left and a right-aligned status "kb: 1,284 articles".
+
+    SNAPSHOT TIMELINE: a box-drawn pane titled "┤ SNAPSHOTS ├" holding a chronological
+    list of backups, each row a monospaced entry drawn against a left vertical
+    box-drawing rail ("│" with "├" nodes) so it reads as a timeline — timestamp, a type
+    tag ("auto", "manual", "pre-migration"), a size ("4.2 MB"), and a short hash id
+    ("a1f3c9"). Rows are grid-aligned; ONE row is the current selection as a full
+    reverse-video block (amber fill, near-black text).
+
+    PROGRESS PANE: a box-drawn region showing a backup in progress — a bright-amber block
+    progress bar built from block characters "backing up  ▓▓▓▓▓▓▓░░░  72%" with a
+    milestone line beneath in dim amber "924 / 1,284 articles  ·  writing archive".
+
+    RESTORE GUARD: a flat box-drawn confirmation region (no shadow) over a slightly
+    dimmed backdrop, titled "┤ CONFIRM RESTORE ├", prefixed with a "! " glyph and reading
+    "overwrite current KB with snapshot 2026-07-14 09:12?" with two bracketed mono
+    buttons "[ y ]" and "[ N ]" where the default "[ N ]" is reverse-video (amber fill,
+    near-black text).
+
+    BOTTOM STATUS RULE: a persistent reverse-video status bar across the full width with
+    keybind hints "^B backup   ^R restore   ↵ select   ^Q quit".
+
+    PALETTE & TYPE: monochrome warm amber on warm near-black — one glowing amber with dim
+    and bright steps, nothing else; no green, blue, or rainbow. The in-progress bar is
+    the brightest element. Fixed-width terminal font throughout, no proportional or sans
+    typeface anywhere.
+
+    SHAPE & SURFACE: zero rounded corners — every pane is a sharp rectangle bounded by
+    thin amber box-drawing rules at reduced intensity; no drop shadows, gradients, glow
+    bloom, scanlines, or screen curvature. Flat amber light on a dark void.
+
+    MOOD: point-in-time protection rendered calm and legible — one amber, a clear
+    timeline and an honest progress bar, all business.
+  negative: "watermark, signature, lorem ipsum placeholder text, low-fidelity wireframe, monitor/device photograph framing, blurry, distorted UI, web browser chrome, address bar, browser tabs, rounded website cards, syntax-highlighting rainbow, green terminal text, CRT scanlines, screen glow bloom, screen curvature"
+
+output:
+  formats:
+    - format: png
+  dimensions:
+    width: 1920
+    height: 1080
+    aspect_ratio: "16:9"
+
+eval:
+  pass_threshold: 0.72
+  criteria:
+    relevance: {weight: 3, description: "Reads as backup/restore: titled top rule with kb size, a box-drawn snapshot timeline with a left rail and typed/sized/hashed rows plus one reverse-video selection, a block-character progress bar with a milestone line, a flat restore-overwrite confirmation with bracketed buttons, and a bottom keybind status rule"}
+    theme_fidelity: {weight: 3, description: "Monochrome amber on warm near-black, fixed-width mono for ALL text, radius 0, box-drawing panes and rails not shadowed cards, progress by block characters"}
+    composition: {weight: 2, description: "Grid-aligned timeline and columns; clear hierarchy with the progress bar brightest; plausible real-CLI surface"}
+    technical: {weight: 2, description: "Sharp, correct 16:9 aspect, no artifacts, no CRT filter kitsch"}
+  reject_if:
+    - "lorem ipsum or placeholder text visible"
+    - "watermark or signature visible"
+    - "wireframe-level fidelity instead of high-fidelity mockup"
+    - "web browser chrome or a marketing web page instead of a terminal window"
+    - "more than one hue (green/blue/rainbow) instead of monochrome amber"
+
+tags: [phosphor, therobotlearns.com, screen-mockup]

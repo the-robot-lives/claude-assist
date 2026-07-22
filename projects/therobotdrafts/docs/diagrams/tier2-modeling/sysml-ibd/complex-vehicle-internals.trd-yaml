@@ -1,0 +1,51 @@
+# .trd-yaml — TheRobotDrafts native model (IxModel serialization)
+name: Example IBD - Complex Vehicle Internals
+elements:
+  - { id: Vehicle, type: Block, name: Vehicle }
+  - { id: Vehicle interior, type: Package, name: Vehicle interior }
+  - { id: vEcu, type: Class, name: 'vEcu : EngineControlUnit' }
+  - { id: vEngine, type: Class, name: 'vEngine : Engine' }
+  - { id: vThrottle, type: Class, name: 'vThrottle : ThrottleBody' }
+  - { id: vFuelPump, type: Class, name: 'vFuelPump : FuelPump' }
+  - { id: vTank, type: Class, name: 'vTank : FuelTank' }
+  - { id: vTrans, type: Class, name: 'vTrans : Transmission' }
+  - { id: vDiff, type: Class, name: 'vDiff : Differential' }
+  - { id: vAxleF, type: Class, name: 'vAxleF : FrontAxle' }
+  - { id: vAxleR, type: Class, name: 'vAxleR : RearAxle' }
+  - { id: vWheelFL, type: Class, name: 'vWheelFL : Wheel' }
+  - { id: vWheelFR, type: Class, name: 'vWheelFR : Wheel' }
+  - { id: vWheelRL, type: Class, name: 'vWheelRL : Wheel' }
+  - { id: vWheelRR, type: Class, name: 'vWheelRR : Wheel' }
+  - { id: vCoolant, type: Class, name: 'vCoolant : CoolantLoop' }
+  - { id: accelCmd, type: Lifeline, name: accelCmd }
+  - { id: temp, type: Lifeline, name: temp }
+  - { id: fuelIn, type: Lifeline, name: fuelIn }
+  - { id: torqueOut, type: Lifeline, name: torqueOut }
+  - { id: ~note1, type: Note, name: Standard port (accelCmd) carries a, documentation: 'Standard port (accelCmd) carries a\nCommandSignal service request.' }
+  - { id: ~note2, type: Note, name: Flow ports carry item flows with flow, documentation: 'Flow ports carry item flows with flow\nproperties (e.g. AirFlow, LiquidFuel,\nTorqueFlow, HeatFlow). Item flow =\nthe substance moving on the connector.' }
+  - { id: ~note3, type: Note, name: 'Assembly connector: connects internal parts', documentation: 'Assembly connector: connects internal parts\n(vTrans -> vDiff -> axles) to form the\ndriveline path. Delegation forwards a\nboundary port to an internal part\n(fuelIn -> vTank, vDiff -> torqueOut).' }
+edges:
+  - { id: e1, type: MessageReply, from: accelCmd, to: vEcu, label: CommandSignal }
+  - { id: e2, type: MessageReply, from: vEcu, to: vThrottle, label: AirDemand }
+  - { id: e3, type: MessageReply, from: vEcu, to: vFuelPump, label: FuelDemand }
+  - { id: e4, type: MessageReply, from: vFuelPump, to: vTank, label: FuelDraw }
+  - { id: e5, type: MessageReply, from: vTank, to: vFuelPump, label: LiquidFuel }
+  - { id: e6, type: MessageReply, from: vThrottle, to: vEngine, label: AirFlow }
+  - { id: e7, type: MessageReply, from: vFuelPump, to: vEngine, label: LiquidFuel }
+  - { id: e8, type: MessageReply, from: vEngine, to: vTrans, label: TorqueFlow }
+  - { id: e9, type: MessageReply, from: vTrans, to: vDiff, label: TorqueFlow }
+  - { id: e10, type: MessageReply, from: vDiff, to: vAxleF, label: TorqueFlow }
+  - { id: e11, type: MessageReply, from: vDiff, to: vAxleR, label: TorqueFlow }
+  - { id: e12, type: MessageReply, from: vAxleF, to: vWheelFL, label: TorqueFlow }
+  - { id: e13, type: MessageReply, from: vAxleF, to: vWheelFR, label: TorqueFlow }
+  - { id: e14, type: MessageReply, from: vAxleR, to: vWheelRL, label: TorqueFlow }
+  - { id: e15, type: MessageReply, from: vAxleR, to: vWheelRR, label: TorqueFlow }
+  - { id: e16, type: MessageReply, from: vEngine, to: vCoolant, label: HeatFlow }
+  - { id: e17, type: MessageReply, from: vCoolant, to: temp, label: TempReading }
+  - { id: e18, type: MessageReply, from: fuelIn, to: vTank, label: LiquidFuel }
+  - { id: e19, type: MessageReply, from: vDiff, to: torqueOut, label: TorqueFlow }
+  - { id: e20, type: NoteLink, from: ~note1, to: accelCmd }
+  - { id: e21, type: NoteLink, from: ~note2, to: vEngine }
+  - { id: e22, type: NoteLink, from: ~note3, to: vDiff }
+diagrams:
+  - { id: d1, name: Example IBD - Complex Vehicle Internals, kind: sequence, layoutProvenance: Synthesized }

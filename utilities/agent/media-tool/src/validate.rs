@@ -26,11 +26,7 @@ fn run_xmllint(path: &Path) -> Result<(), SvgLintError> {
     }
 }
 
-pub async fn validate_svg(
-    path: &Path,
-    verbose: bool,
-    prep_llm: Option<&PromptPrepper>,
-) -> bool {
+pub async fn validate_svg(path: &Path, verbose: bool, prep_llm: Option<&PromptPrepper>) -> bool {
     let ext = path.extension().and_then(|e| e.to_str()).unwrap_or("");
     if ext != "svg" {
         return true;
@@ -74,7 +70,8 @@ pub async fn validate_svg(
                             if verbose {
                                 ui::verbose(&format!(
                                     "SVG fixed after {} attempt(s): {}",
-                                    attempt, path.display()
+                                    attempt,
+                                    path.display()
                                 ));
                             }
                             return true;

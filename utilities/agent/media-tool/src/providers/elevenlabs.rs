@@ -51,35 +51,66 @@ impl MediaProvider for ElevenLabsProvider {
 
         // Voice settings
         let mut voice_settings = serde_json::Map::new();
-        if let Some(stability) = options.provider_options.get("stability").and_then(|v| v.as_f64()) {
+        if let Some(stability) = options
+            .provider_options
+            .get("stability")
+            .and_then(|v| v.as_f64())
+        {
             voice_settings.insert("stability".into(), json!(stability));
         }
-        if let Some(similarity) = options.provider_options.get("similarity_boost").and_then(|v| v.as_f64()) {
+        if let Some(similarity) = options
+            .provider_options
+            .get("similarity_boost")
+            .and_then(|v| v.as_f64())
+        {
             voice_settings.insert("similarity_boost".into(), json!(similarity));
         }
-        if let Some(style) = options.provider_options.get("style").and_then(|v| v.as_f64()) {
+        if let Some(style) = options
+            .provider_options
+            .get("style")
+            .and_then(|v| v.as_f64())
+        {
             voice_settings.insert("style".into(), json!(style));
         }
-        if let Some(speed) = options.provider_options.get("speed").and_then(|v| v.as_f64()) {
+        if let Some(speed) = options
+            .provider_options
+            .get("speed")
+            .and_then(|v| v.as_f64())
+        {
             voice_settings.insert("speed".into(), json!(speed));
         }
-        if let Some(boost) = options.provider_options.get("use_speaker_boost").and_then(|v| v.as_bool()) {
+        if let Some(boost) = options
+            .provider_options
+            .get("use_speaker_boost")
+            .and_then(|v| v.as_bool())
+        {
             voice_settings.insert("use_speaker_boost".into(), json!(boost));
         }
         if !voice_settings.is_empty() {
             body["voice_settings"] = serde_json::Value::Object(voice_settings);
         }
 
-        if let Some(lang) = options.provider_options.get("language_code").and_then(|v| v.as_str()) {
+        if let Some(lang) = options
+            .provider_options
+            .get("language_code")
+            .and_then(|v| v.as_str())
+        {
             body["language_code"] = json!(lang);
         }
 
-        if let Some(seed) = options.provider_options.get("seed").and_then(|v| v.as_u64()) {
+        if let Some(seed) = options
+            .provider_options
+            .get("seed")
+            .and_then(|v| v.as_u64())
+        {
             body["seed"] = json!(seed);
         }
 
         if options.verbose {
-            ui::verbose(&format!("POST {}/{}?output_format={}", API_BASE, voice_id, output_format));
+            ui::verbose(&format!(
+                "POST {}/{}?output_format={}",
+                API_BASE, voice_id, output_format
+            ));
             let preview: String = prompt_text.chars().take(120).collect();
             ui::verbose(&format!(
                 "Text: {}{}",

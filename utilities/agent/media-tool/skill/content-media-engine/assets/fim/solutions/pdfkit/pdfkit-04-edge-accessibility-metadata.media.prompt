@@ -1,0 +1,71 @@
+schema: "0.4"
+id: pdfkit-04-edge-accessibility-metadata
+type: document/data
+quality: high
+solution: pdfkit
+category: document-data-file-processing
+variant: edge-accessibility-metadata
+references:
+  - "references/fim/overview/electronics-media-docfile/pdfkit.md"
+  - "references/fim/solution/pdfkit.md"
+prompt:
+  system: |-
+    You generate PDFKit programmatic PDF artifacts. Output only one complete ASCII JavaScript file for Node.js. Do not use Markdown fences or explanatory prose.
+  text: |-
+    Create a PDFKit edge-case generator for an accessible metadata-rich intake form PDF.
+
+    Requirements:
+    - Use PDFKit with `doc.initForm()` and AcroForm fields where supported.
+    - Generate a deterministic intake packet with text fields, checkbox, combo box, signature placeholder, instructions, and summary page.
+    - Set PDF info metadata, visible document metadata, form field metadata, and output verification metadata.
+    - Include links, note annotations, outline/bookmark entries, and high-contrast field labels.
+    - Register or clearly stub a custom font path for broader glyph coverage while keeping the generated code runnable with standard fonts if the font is absent.
+    - Use measured text and page-break guards for long instructions and edge values.
+    - Include parseability, pagination, fonts, accessibility, formulas/data types, metadata, and deterministic output safeguards in comments and validation checks.
+    - Output only the final JavaScript artifact.
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.2
+output:
+  text_format: javascript
+  artifact_kind: pdfkit-accessible-form-pdf
+  formats:
+    - format: js
+    - format: pdf
+evaluation:
+  checklist:
+    - "Format validity: YAML parses as schema 0.4, generated output is one JavaScript file, and PDFKit form/document APIs are used."
+    - "Parseability: JavaScript is syntactically valid, handles optional font registration, pipes to a stream, and calls doc.end()."
+    - "Semantic completeness: intake packet, form fields, instructions, annotations, outline, summary, and output verification are present."
+    - "Pagination: long instructions wrap, page breaks are guarded, and final page numbers/footers are applied."
+    - "Fonts: standard font fallback and optional custom font registration are implemented without breaking local runs."
+    - "Accessibility: field labels, high contrast, selectable text, non-color cues, outline entries, and clear reading order are included."
+    - "Formulas/data types: text, checkbox boolean, combo value, dates, ids, and typed metadata fields are represented deterministically."
+    - "Metadata: PDF info, form field metadata, archive id, version, output path, and deterministic timestamp are included."
+    - "Deterministic output: field names, default values, order, timestamp, filename, and metadata keys are stable."
+  rubric:
+    - name: "Format validity"
+      weight: 30
+      criteria: "The prompt YAML and generated JavaScript are parseable, ASCII-only, and generate a PDFKit form PDF."
+    - name: "Semantic completeness"
+      weight: 30
+      criteria: "The intake packet includes all requested form, annotation, outline, accessibility, metadata, and verification features."
+    - name: "Layout/data quality"
+      weight: 25
+      criteria: "The form layout is readable, labels align to fields, metadata is clear, and long instructions paginate cleanly."
+    - name: "Robustness"
+      weight: 15
+      criteria: "The artifact handles optional fonts, form support limits, long values, stream errors, metadata, and deterministic reruns."
+  pass_conditions:
+    - "YAML parses successfully and all file text is ASCII-only."
+    - "Rubric weights are exactly 30, 30, 25, and 15."
+    - "Generated JavaScript creates a PDF and documents any partial PDF accessibility limits honestly."
+    - "All checklist items for parseability, pagination, fonts, accessibility, formulas/data types, metadata, and deterministic output are represented."
+tags:
+  - fim
+  - document-data-file-processing
+  - pdfkit
+  - accessibility
+  - metadata
+  - forms
+

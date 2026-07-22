@@ -194,24 +194,25 @@ tar xzf "$TARBALL" -C "$TARGET"
 echo "Hydrating Elixir files ..."
 
 find "$TARGET/backend" -type f \( -name '*.ex' -o -name '*.exs' \) \
-  -exec sed -i '' \
-    -e "s/StarterWeb/${WEB_MODULE}/g" \
-    -e "s/Starter/${ELIXIR_MODULE}/g" \
-    -e "s/:starter/:${OTP_APP}/g" \
-    -e "s/\"starter\"/\"${OTP_APP}\"/g" \
-    -e "s/starter_dev/${SLUG}_dev/g" \
-    {} +
+  -exec env WEB_MODULE="$WEB_MODULE" ELIXIR_MODULE="$ELIXIR_MODULE" OTP_APP="$OTP_APP" SLUG="$SLUG" \
+    perl -0pi -e '
+      s/StarterWeb/$ENV{WEB_MODULE}/g;
+      s/Starter/$ENV{ELIXIR_MODULE}/g;
+      s/:starter/:$ENV{OTP_APP}/g;
+      s/"starter"/"$ENV{OTP_APP}"/g;
+      s/starter_dev/$ENV{SLUG}_dev/g;
+    ' {} +
 
 echo "Hydrating Dockerfile ..."
-sed -i '' \
-  -e "s|rel/starter|rel/${OTP_APP}|g" \
-  -e "s|bin/starter|bin/${OTP_APP}|g" \
-  "$TARGET/backend/Dockerfile"
+env OTP_APP="$OTP_APP" perl -0pi -e '
+  s{rel/starter}{rel/$ENV{OTP_APP}}g;
+  s{bin/starter}{bin/$ENV{OTP_APP}}g;
+' "$TARGET/backend/Dockerfile"
 
 echo "Hydrating frontend package.json ..."
-sed -i '' \
-  -e "s/starter-frontend/${FRONTEND_NAME}/g" \
-  "$TARGET/frontend/package.json"
+env FRONTEND_NAME="$FRONTEND_NAME" perl -0pi -e '
+  s/starter-frontend/$ENV{FRONTEND_NAME}/g;
+' "$TARGET/frontend/package.json"
 
 # ── Step 3b: Hydrate — file/directory renames (bottom-up) ─────────
 echo "Renaming files and directories ..."

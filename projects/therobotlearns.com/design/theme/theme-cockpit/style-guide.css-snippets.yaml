@@ -1,0 +1,198 @@
+# Cockpit component inflections + project-specific sample elements (treatise §6/§7/§8/§9).
+# This facet ACCUMULATES onto the base (unlike vars/color-modes/typography, which replace),
+# so it is the safe home for Cockpit's TUI surfaces without clobbering the base design-sections.
+#
+# SELF-SCOPED (REQUIRED): the engine treats css-snippets as SELF_SCOPED (css-cache.ts) — it
+# emits each body VERBATIM and does NOT prefix the theme selector for you. Every selector below
+# is therefore nested under html[data-design-theme="cockpit"] so it cannot bleed into sibling
+# themes in a combined stylesheet. This includes selectors inside @media blocks.
+#
+# --brand-red resolves to the light magenta #c81e6e in light mode and to the signature #ff2e88
+# in dark mode (seed + scoped-vars). Buttons/meters read --brand-red so they track both modes.
+# Discipline: ONE saturated brand element per screen (magenta), status is color + glyph, flat.
+css-snippets:
+  - name: Cockpit Focus Ring & Motion Tokens
+    slug: cockpit-focus-motion
+    title: "Magenta focus ring + instrument motion tokens (§7/§9)"
+    description: "A 2px magenta focus outline at 1px offset on every focusable element — never removed (treatise §9); magenta clears 3:1 against every graphite surface. Pins the two motion durations the treatise names (§7): micro-feedback 140ms, meter-fill 200ms. Self-scoped so it does not touch sibling-theme focus."
+    target-section: interaction
+    body: |
+      html[data-design-theme="cockpit"] {
+        --motion-micro: 140ms;
+        --motion-meter: 200ms;
+      }
+      html[data-design-theme="cockpit"] :focus-visible {
+        outline: 2px solid var(--brand-red);
+        outline-offset: 1px;
+      }
+
+  - name: Cockpit Box-Drawn Pane
+    slug: cockpit-pane
+    title: "Flat box-drawn pane, magenta active border (§6/§8)"
+    description: "The workhorse surface (treatise §8): a crisp graphite rectangle with a 1px dim-graphite rule and NO drop shadow (§6 flat tonal depth). The ACTIVE/current pane lightens one graphite step (surface-alt) and takes the magenta border — that border color IS the focus system. Never a rounded card, never a resting shadow."
+    target-section: cards
+    body: |
+      html[data-design-theme="cockpit"] .pane,
+      html[data-design-theme="cockpit"] .card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        box-shadow: none;
+      }
+      html[data-design-theme="cockpit"] .pane.active,
+      html[data-design-theme="cockpit"] .card.active,
+      html[data-design-theme="cockpit"] .pane[aria-current="true"],
+      html[data-design-theme="cockpit"] .card[aria-selected="true"] {
+        background: var(--surface-alt);
+        border-color: var(--brand-red);
+      }
+
+  - name: Cockpit Primary Action Key
+    slug: cockpit-btn-primary
+    title: "Filled magenta action key (§8)"
+    description: "The one saturated fill on a screen (treatise §8): a compact magenta 'action key' (e.g. ⏎ APPLY) in mono uppercase. The label is var(--surface) — the canvas color — so it contrasts the magenta fill in BOTH modes (pale label on #c81e6e ≈ 5.8:1 in light; graphite label on #ff2e88 ≈ 5.9:1 in dark). Secondary/destructive actions never use this fill."
+    target-section: buttons
+    body: |
+      html[data-design-theme="cockpit"] .btn-primary,
+      html[data-design-theme="cockpit"] .btn.primary {
+        background: var(--brand-red);
+        color: var(--surface);
+        border: none;
+        border-radius: var(--radius);
+        font-family: var(--font-mono);
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        box-shadow: none;
+        transition: background var(--motion-micro, 140ms) ease-out;
+      }
+      html[data-design-theme="cockpit"] .btn-primary:hover,
+      html[data-design-theme="cockpit"] .btn.primary:hover {
+        background: color-mix(in srgb, var(--brand-red) 85%, var(--black));
+      }
+      html[data-design-theme="cockpit"] .btn-primary:focus-visible,
+      html[data-design-theme="cockpit"] .btn.primary:focus-visible {
+        outline: 2px solid var(--brand-red);
+        outline-offset: 1px;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        html[data-design-theme="cockpit"] .btn-primary,
+        html[data-design-theme="cockpit"] .btn.primary { transition: none; }
+      }
+
+  - name: Cockpit Data Table & Selected-Row Bar
+    slug: cockpit-data-table
+    title: "Mono data table with magenta selected-row bar (§4/§5/§8)"
+    description: "The density reference (treatise §5): the KB validation / members / results table. Mono tabular figures keep columns aligned; grotesk small-caps column labels; tight rows with dim-graphite hairline separators. The selected row carries a magenta left-edge bar (inset box-shadow) PLUS a surface-alt highlight — selection is never magenta hue alone (§9). Hover lifts one tonal step at low magenta alpha."
+    target-section: tables
+    body: |
+      html[data-design-theme="cockpit"] .data-table,
+      html[data-design-theme="cockpit"] .kb-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-family: var(--font-mono);
+        font-variant-numeric: tabular-nums;
+        font-size: 0.85rem;
+      }
+      html[data-design-theme="cockpit"] .data-table thead th,
+      html[data-design-theme="cockpit"] .kb-table thead th {
+        font-family: var(--font-sans);
+        font-weight: 600;
+        font-size: 0.72rem;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--text-secondary);
+        text-align: left;
+        padding: 6px 10px;
+        border-bottom: 1px solid var(--border-strong);
+      }
+      html[data-design-theme="cockpit"] .data-table tbody td,
+      html[data-design-theme="cockpit"] .kb-table tbody td {
+        padding: 5px 10px;
+        border-bottom: 1px solid var(--border);
+      }
+      html[data-design-theme="cockpit"] .data-table tbody tr:hover,
+      html[data-design-theme="cockpit"] .kb-table tbody tr:hover {
+        background: color-mix(in srgb, var(--brand-red) 8%, var(--surface));
+      }
+      html[data-design-theme="cockpit"] .data-table tbody tr[aria-selected="true"],
+      html[data-design-theme="cockpit"] .data-table tbody tr.selected,
+      html[data-design-theme="cockpit"] .kb-table tbody tr[aria-selected="true"],
+      html[data-design-theme="cockpit"] .kb-table tbody tr.selected {
+        background: var(--surface-alt);
+        box-shadow: inset 3px 0 0 0 var(--brand-red);
+      }
+
+  - name: Cockpit Meter / Spark Bar
+    slug: cockpit-meter
+    title: "Block meter / progress bar with status fills (§6/§7/§8)"
+    description: "Cockpit's signature project-specific chrome — the KB-health / plan-progress / sync meter. A crisp graphite track (1px border, no shadow) with a magenta fill by default; status variants swap the fill to the four semantic hues (always paired with a glyph elsewhere). Fill animates up to 200ms linear (a value changed); reduced-motion swaps instantly."
+    target-section: colors
+    body: |
+      html[data-design-theme="cockpit"] .meter {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-family: var(--font-mono);
+        font-variant-numeric: tabular-nums;
+        font-size: 0.8rem;
+      }
+      html[data-design-theme="cockpit"] .meter-track {
+        position: relative;
+        height: 8px;
+        min-width: 120px;
+        background: var(--surface-alt);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        overflow: hidden;
+      }
+      html[data-design-theme="cockpit"] .meter-fill {
+        height: 100%;
+        background: var(--brand-red);
+        transition: width var(--motion-meter, 200ms) linear;
+      }
+      html[data-design-theme="cockpit"] .meter-fill.ok { background: var(--success); }
+      html[data-design-theme="cockpit"] .meter-fill.warn { background: var(--warning); }
+      html[data-design-theme="cockpit"] .meter-fill.err { background: var(--error); }
+      html[data-design-theme="cockpit"] .meter-fill.info { background: var(--info); }
+      @media (prefers-reduced-motion: reduce) {
+        html[data-design-theme="cockpit"] .meter-fill { transition: none; }
+      }
+
+  - name: Cockpit Keybind Footer & Status Chip
+    slug: cockpit-footer-status
+    title: "Persistent keybind footer + glyph status chip (§8/§9)"
+    description: "The k9s-style persistent command footer (treatise §8: '[1]health [2]index [3]log  :cmd  ?help') — a dim-graphite mono strip with a top rule; the active/hint keys lift to full-strength text. The status chip pairs a semantic color WITH a glyph (✓ ! ✗ i) so status survives grayscale and colorblind viewing (§9): the color is reinforcement, never the sole signal."
+    target-section: navigation
+    body: |
+      html[data-design-theme="cockpit"] .keybind-footer {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 14px;
+        align-items: center;
+        font-family: var(--font-mono);
+        font-size: 0.78rem;
+        color: var(--text-muted);
+        background: var(--surface-alt);
+        border-top: 1px solid var(--border);
+        padding: 6px 12px;
+      }
+      html[data-design-theme="cockpit"] .keybind-footer .key,
+      html[data-design-theme="cockpit"] .keybind-footer kbd {
+        color: var(--text);
+        font-weight: 500;
+      }
+      html[data-design-theme="cockpit"] .status-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        font-family: var(--font-mono);
+        font-size: 0.78rem;
+        padding: 0.05em 0.4em;
+        border-radius: var(--radius);
+        white-space: nowrap;
+      }
+      html[data-design-theme="cockpit"] .status-chip.ok { color: var(--success); }
+      html[data-design-theme="cockpit"] .status-chip.warn { color: var(--warning); }
+      html[data-design-theme="cockpit"] .status-chip.err { color: var(--error); }
+      html[data-design-theme="cockpit"] .status-chip.info { color: var(--info); }

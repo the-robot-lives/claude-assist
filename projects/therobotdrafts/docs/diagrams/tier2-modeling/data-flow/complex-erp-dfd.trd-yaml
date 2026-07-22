@@ -1,0 +1,80 @@
+# .trd-yaml — TheRobotDrafts native model (IxModel serialization)
+name: Data Flow Diagram - Complex ERP (Level-0 + Level-1 zoom)
+elements:
+  - { id: Level-0 — Order to Cash, type: Package, name: Level-0 — Order to Cash }
+  - { id: Cust, type: Boundary, name: Customer, parentId: Level-0 — Order to Cash, stereotype: externalEntity }
+  - { id: Sup, type: Boundary, name: Supplier, parentId: Level-0 — Order to Cash, stereotype: externalEntity }
+  - { id: Bank, type: Boundary, name: Bank, parentId: Level-0 — Order to Cash, stereotype: externalEntity }
+  - { id: P1, type: UseCase, name: 1\nReceive\nOrder, parentId: Level-0 — Order to Cash, stereotype: process }
+  - { id: P2, type: UseCase, name: 2\nCredit\nCheck, parentId: Level-0 — Order to Cash, stereotype: process }
+  - { id: P3, type: UseCase, name: '3\nPrice &\nTax', parentId: Level-0 — Order to Cash, stereotype: process }
+  - { id: P4, type: UseCase, name: 4\nCheck\nStock, parentId: Level-0 — Order to Cash, stereotype: process }
+  - { id: P5, type: UseCase, name: 5\nReserve\nStock, parentId: Level-0 — Order to Cash, stereotype: process }
+  - { id: P6, type: UseCase, name: '6\nPick &\nPack', parentId: Level-0 — Order to Cash, stereotype: process }
+  - { id: P7, type: UseCase, name: 7\nShip, parentId: Level-0 — Order to Cash, stereotype: process }
+  - { id: P8, type: UseCase, name: 8\nInvoice, parentId: Level-0 — Order to Cash, stereotype: process }
+  - { id: P9, type: UseCase, name: 9\nApply\nPayment, parentId: Level-0 — Order to Cash, stereotype: process }
+  - { id: P10, type: UseCase, name: 10\nReorder, parentId: Level-0 — Order to Cash, stereotype: process }
+  - { id: P11, type: UseCase, name: 11\nReceive\nGoods, parentId: Level-0 — Order to Cash, stereotype: process }
+  - { id: P12, type: UseCase, name: 12\nUpdate\nSales Ledger, parentId: Level-0 — Order to Cash, stereotype: process }
+  - { id: P13, type: UseCase, name: 13\nReport\nDashboards, parentId: Level-0 — Order to Cash, stereotype: process }
+  - { id: D1, type: Component, name: Orders\n(D1), parentId: Level-0 — Order to Cash, stereotype: dataStore }
+  - { id: D2, type: Component, name: Inventory\n(D2), parentId: Level-0 — Order to Cash, stereotype: dataStore }
+  - { id: D3, type: Component, name: Customers\n(D3), parentId: Level-0 — Order to Cash, stereotype: dataStore }
+  - { id: D4, type: Component, name: Invoices\n(D4), parentId: Level-0 — Order to Cash, stereotype: dataStore }
+  - { id: D5, type: Component, name: Shipments\n(D5), parentId: Level-0 — Order to Cash, stereotype: dataStore }
+  - { id: D6, type: Component, name: Metrics\n(D6), parentId: Level-0 — Order to Cash, stereotype: dataStore }
+  - { id: 'Level-1 — Explode bubble 6 (Pick & Pack)', type: Package, name: 'Level-1 — Explode bubble 6 (Pick & Pack)' }
+  - { id: Clerk, type: Boundary, name: Fulfillment\nClerk, parentId: 'Level-1 — Explode bubble 6 (Pick & Pack)', stereotype: externalEntity }
+  - { id: P61, type: UseCase, name: 6.1\nGenerate\nPick List, parentId: 'Level-1 — Explode bubble 6 (Pick & Pack)', stereotype: process }
+  - { id: P62, type: UseCase, name: 6.2\nPick\nItems, parentId: 'Level-1 — Explode bubble 6 (Pick & Pack)', stereotype: process }
+  - { id: P63, type: UseCase, name: '6.3\nPack &\nLabel', parentId: 'Level-1 — Explode bubble 6 (Pick & Pack)', stereotype: process }
+  - { id: P64, type: UseCase, name: 6.4\nStage\nfor Ship, parentId: 'Level-1 — Explode bubble 6 (Pick & Pack)', stereotype: process }
+  - { id: D2b, type: Component, name: Inventory\n(D2), parentId: 'Level-1 — Explode bubble 6 (Pick & Pack)', stereotype: dataStore }
+  - { id: D7, type: Component, name: Pick Queue\n(D7), parentId: 'Level-1 — Explode bubble 6 (Pick & Pack)', stereotype: dataStore }
+  - { id: P7b, type: Actor, name: 7\nShip, parentId: 'Level-1 — Explode bubble 6 (Pick & Pack)', stereotype: process }
+  - { id: ~note1, type: Note, name: '**Leveling & balance**', documentation: '**Leveling & balance**\nBubble 6 in Level-0 has inputs {order, pick list} and output\n{packed shipment}. Its Level-1 explosion (6.1..6.4) must carry\nthose SAME flows across its boundary — only the INTERNAL detail\n(pick queue D7, clerk interaction) is new. If a flow is added or\ndropped, the diagrams are out of balance and must be reconciled.' }
+  - { id: ~note2, type: Note, name: '**Shared stores**', documentation: '**Shared stores**\nD2 (Inventory) is written by Reserve (5), Reorder (11), and read by\nCheck Stock (4), Pick & Pack (6). Shared stores are the integration\npoint between functional groups in an ERP — they are expected, not\na smell.' }
+edges:
+  - { id: e1, type: DirectedAssociation, from: Cust, to: P1, label: order }
+  - { id: e2, type: DirectedAssociation, from: P3, to: Cust, label: quote/confirm }
+  - { id: e3, type: DirectedAssociation, from: Sup, to: P11, label: goods received }
+  - { id: e4, type: DirectedAssociation, from: P10, to: Sup, label: purchase order }
+  - { id: e5, type: DirectedAssociation, from: Bank, to: P9, label: payment }
+  - { id: e6, type: DirectedAssociation, from: P13, to: Cust, label: statements }
+  - { id: e7, type: DirectedAssociation, from: P1, to: D1, label: order }
+  - { id: e8, type: DirectedAssociation, from: P1, to: P2, label: order }
+  - { id: e9, type: DirectedAssociation, from: D3, to: P2, label: credit profile }
+  - { id: e10, type: DirectedAssociation, from: P2, to: P3, label: approved order }
+  - { id: e11, type: DirectedAssociation, from: P3, to: D1, label: priced order }
+  - { id: e12, type: DirectedAssociation, from: D1, to: P4, label: order lines }
+  - { id: e13, type: DirectedAssociation, from: D2, to: P4, label: on-hand qty }
+  - { id: e14, type: DirectedAssociation, from: P4, to: P5, label: availability }
+  - { id: e15, type: DirectedAssociation, from: P5, to: D2, label: reservation }
+  - { id: e16, type: DirectedAssociation, from: D1, to: P6, label: order }
+  - { id: e17, type: DirectedAssociation, from: D2, to: P6, label: pick list }
+  - { id: e18, type: DirectedAssociation, from: P6, to: P7, label: packed shipment }
+  - { id: e19, type: DirectedAssociation, from: P7, to: D5, label: shipment record }
+  - { id: e20, type: DirectedAssociation, from: P7, to: Cust, label: delivery }
+  - { id: e21, type: DirectedAssociation, from: D5, to: P8, label: shipment }
+  - { id: e22, type: DirectedAssociation, from: P8, to: D4, label: invoice }
+  - { id: e23, type: DirectedAssociation, from: D4, to: P9, label: invoice }
+  - { id: e24, type: DirectedAssociation, from: P9, to: D4, label: payment applied }
+  - { id: e25, type: DirectedAssociation, from: P9, to: Bank, label: deposit }
+  - { id: e26, type: DirectedAssociation, from: D2, to: P10, label: low stock }
+  - { id: e27, type: DirectedAssociation, from: P11, to: D2, label: restock }
+  - { id: e28, type: DirectedAssociation, from: D1, to: P12, label: orders }
+  - { id: e29, type: DirectedAssociation, from: D4, to: P12, label: invoices }
+  - { id: e30, type: DirectedAssociation, from: P12, to: D6, label: ledger entry }
+  - { id: e31, type: DirectedAssociation, from: D6, to: P13, label: metrics }
+  - { id: e32, type: DirectedAssociation, from: P61, to: D7, label: pick ticket }
+  - { id: e33, type: DirectedAssociation, from: D2b, to: P61, label: stock location }
+  - { id: e34, type: DirectedAssociation, from: D7, to: P62, label: pick ticket }
+  - { id: e35, type: DirectedAssociation, from: P62, to: P63, label: picked items }
+  - { id: e36, type: DirectedAssociation, from: Clerk, to: P62, label: manual pick }
+  - { id: e37, type: DirectedAssociation, from: P63, to: P64, label: packed parcel }
+  - { id: e38, type: DirectedAssociation, from: P64, to: P7b, label: packed shipment }
+  - { id: e39, type: NoteLink, from: ~note1, to: P6 }
+  - { id: e40, type: NoteLink, from: ~note2, to: D2 }
+diagrams:
+  - { id: d1, name: Data Flow Diagram - Complex ERP (Level-0 + Level-1 zoom), kind: usecase, layoutProvenance: Synthesized }

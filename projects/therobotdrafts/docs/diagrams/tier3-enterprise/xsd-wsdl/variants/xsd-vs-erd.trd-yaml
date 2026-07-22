@@ -1,0 +1,17 @@
+# .trd-yaml — TheRobotDrafts native model (IxModel serialization)
+name: Example XSD vs ERD - Schema vs Data Model
+elements:
+  - { id: VARIANT, type: Class, name: VARIANT, members: [{ name: same Order/OrderItem/Customer domain shown two ways., isOperation: false, visibility: Public, rawText: same Order/OrderItem/Customer domain shown two ways. }] }
+  - { id: XSD, type: Package, name: 'XSD: order schema' }
+  - { id: XO, type: Class, name: 'Order (complexType)\n+ id: string\n+ placedAt: dateTime', parentId: XSD }
+  - { id: XOI, type: Class, name: 'OrderItem (complexType)\n+ sku: string\n+ qty: int', parentId: XSD }
+  - { id: XC, type: Class, name: 'Customer (complexType)\n+ id: string\n+ email: string', parentId: XSD }
+  - { id: ERD, type: Package, name: 'ERD: order database' }
+  - { id: EO, type: Table, name: orders, parentId: ERD, members: [{ name: '* id', isOperation: false, visibility: Public, type: PK, rawText: '* id : PK' }, { name: placed_at, isOperation: false, visibility: Public, type: timestamp, rawText: 'placed_at : timestamp' }, { name: customer_id, isOperation: false, visibility: Public, type: FK, rawText: 'customer_id : FK' }] }
+  - { id: EOI, type: Table, name: order_items, parentId: ERD, members: [{ name: '* id', isOperation: false, visibility: Public, type: PK, rawText: '* id : PK' }, { name: order_id, isOperation: false, visibility: Public, type: FK, rawText: 'order_id : FK' }, { name: sku, isOperation: false, visibility: Public, type: varchar, rawText: 'sku : varchar' }, { name: qty, isOperation: false, visibility: Public, type: int, rawText: 'qty : int' }] }
+  - { id: EC, type: Table, name: customers, parentId: ERD, members: [{ name: '* id', isOperation: false, visibility: Public, type: PK, rawText: '* id : PK' }, { name: email, isOperation: false, visibility: Public, type: varchar, rawText: 'email : varchar' }] }
+edges:
+  - { id: e1, type: Composition, from: XO, to: XOI, label: '"element items (1..*)"' }
+  - { id: e2, type: DirectedAssociation, from: XO, to: XC, label: '"element customerRef"' }
+diagrams:
+  - { id: d1, name: Example XSD vs ERD - Schema vs Data Model, kind: class, layoutProvenance: Synthesized }

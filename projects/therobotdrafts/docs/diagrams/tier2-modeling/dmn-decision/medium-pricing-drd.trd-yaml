@@ -1,0 +1,30 @@
+# .trd-yaml — TheRobotDrafts native model (IxModel serialization)
+name: DMN Decision Requirements - Medium Pricing DRD
+elements:
+  - { id: CustomerProfile, type: UseCase, name: Customer\nProfile }
+  - { id: ProductCatalog, type: UseCase, name: Product\nCatalog }
+  - { id: MarketSignals, type: UseCase, name: Market\nSignals }
+  - { id: RateCard, type: Boundary, name: Rate Card\nBK Model, stereotype: businessKnowledge }
+  - { id: StrategyDoc, type: Artifact, name: Pricing\nStrategy Doc }
+  - { id: Eligibility, type: Boundary, name: Eligibility, stereotype: decision }
+  - { id: RiskTier, type: Boundary, name: Risk Tier, stereotype: decision }
+  - { id: FinalRate, type: Boundary, name: Final Rate, stereotype: decision }
+  - { id: Quote, type: Boundary, name: Quote, stereotype: decision }
+  - { id: ~note1, type: Note, name: '**Why BK Model, not Input Data?**', documentation: '**Why BK Model, not Input Data?**\nA Business Knowledge Model is logic a business owns and may change\nindependently (a rate table, a formula). Input Data is a fact observed\nfrom outside. Reusing one BK across decisions keeps a single source of\ntruth for that logic.' }
+  - { id: ~note2, type: Note, name: '**Decision chain note**', documentation: '**Decision chain note**\nInformation requirements can connect:\nInput Data   -> Decision\nDecision     -> Decision   (output of one feeds another)\nBoth use a SOLID arrow. Only knowledge requirements are dashed.' }
+edges:
+  - { id: e1, type: DirectedAssociation, from: CustomerProfile, to: Eligibility }
+  - { id: e2, type: DirectedAssociation, from: CustomerProfile, to: RiskTier }
+  - { id: e3, type: DirectedAssociation, from: ProductCatalog, to: Quote }
+  - { id: e4, type: DirectedAssociation, from: MarketSignals, to: RiskTier }
+  - { id: e5, type: DirectedAssociation, from: MarketSignals, to: FinalRate }
+  - { id: e6, type: DirectedAssociation, from: Eligibility, to: RiskTier }
+  - { id: e7, type: DirectedAssociation, from: RiskTier, to: FinalRate }
+  - { id: e8, type: DirectedAssociation, from: FinalRate, to: Quote }
+  - { id: e9, type: Dependency, from: RiskTier, to: RateCard, label: authority }
+  - { id: e10, type: Dependency, from: FinalRate, to: RateCard, label: authority }
+  - { id: e11, type: Dependency, from: Quote, to: StrategyDoc, label: authority }
+  - { id: e12, type: NoteLink, from: ~note1, to: RateCard }
+  - { id: e13, type: NoteLink, from: ~note2, to: FinalRate }
+diagrams:
+  - { id: d1, name: DMN Decision Requirements - Medium Pricing DRD, kind: usecase, layoutProvenance: Synthesized }

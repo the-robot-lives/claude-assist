@@ -1,0 +1,21 @@
+# .trd-yaml — TheRobotDrafts native model (IxModel serialization)
+name: Example Component Diagram - Medium Layered System
+elements:
+  - { id: ptier, type: Package, name: Presentation Tier }
+  - { id: web, type: Component, name: Web UI, parentId: ptier }
+  - { id: mobile, type: Component, name: Mobile App, parentId: ptier }
+  - { id: atier, type: Package, name: Application Tier }
+  - { id: api, type: Component, name: API Gateway, parentId: atier }
+  - { id: auth, type: Component, name: Auth Service, parentId: atier }
+  - { id: order, type: Component, name: Order Service, parentId: atier }
+  - { id: billing, type: Component, name: Billing Service, parentId: atier }
+  - { id: dtier, type: Package, name: Data Tier }
+  - { id: ordersDb, type: Database, name: Orders DB, parentId: dtier }
+  - { id: usersDb, type: Database, name: Users DB, parentId: dtier }
+  - { id: ~note1, type: Note, name: '**Assembly**    = a provided ball plugs into a r…', documentation: '**Assembly**    = a provided ball plugs into a required socket (REST, Charge, Repos).\n**Delegation**  = API Gateway forwards outer REST calls to inner Order/Auth.\n**Tier rule**   = arrows always point downward; data tier never points up.' }
+edges:
+  - { id: e1, type: Dependency, from: api, to: order, label: delegates }
+  - { id: e2, type: Dependency, from: api, to: auth, label: delegates }
+  - { id: e3, type: NoteLink, from: ~note1, to: dtier }
+diagrams:
+  - { id: d1, name: Example Component Diagram - Medium Layered System, kind: component, layoutProvenance: Synthesized }

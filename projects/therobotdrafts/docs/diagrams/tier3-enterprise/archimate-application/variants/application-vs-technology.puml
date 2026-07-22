@@ -1,0 +1,46 @@
+@startuml
+' ============================================================================
+' METADATA
+'   author:       TheRobotDrafts Examples
+'   description:  Same system at application layer vs technology layer.
+'   usecase:      Contrasting software vs infrastructure that runs it.
+'   complexity:   medium
+'   domain:       enterprise-architecture / application
+' ============================================================================
+title Example ArchiMate Application - Variant Application vs Technology
+
+note "TOP = Application layer (BLUE) — what software\nBOTTOM = Technology layer (GREEN) — what infrastructure runs it\nAssignment edges go FROM technology TO application." as Legend
+
+' ===== APPLICATION =====
+package "Application Layer (What software)" #E3F2FD {
+  rectangle "<<app component>>\nWeb App" as AC1 #BBDEFB
+  rectangle "<<app component>>\nAPI Server" as AC2 #BBDEFB
+  rectangle "<<app service>>\nREST API" as AS #90CAF9
+  rectangle "<<data object>>\nUser DB" as DO #E3F2FD
+
+  AC1 -[#444]-> AC2 : <<serving>>
+  AC2 -[#444]-> AS : <<realization>>
+  AC2 -[#444]-> DO : <<access>>
+}
+
+' ===== TECHNOLOGY =====
+package "Technology Layer (What infra runs it)" #E8F5E9 {
+  rectangle "<<node>>\nApp Server\n(4 vCPU, 8GB)" as N1 #C8E6C9
+  rectangle "<<node>>\nDB Server\n(8 vCPU, 32GB)" as N2 #C8E6C9
+  rectangle "<<system software>>\nNginx" as SW1 #A5D6A7
+  rectangle "<<system software>>\nPostgreSQL" as SW2 #A5D6A7
+  rectangle "<<network>>\nInternal LAN" as NET #81C784
+
+  N1 -[#444]-> SW1 : <<assignment>>
+  N2 -[#444]-> SW2 : <<assignment>>
+  N1 -[#444]-> NET : <<aggregation>>
+  N2 -[#444]-> NET : <<aggregation>>
+}
+
+' --- Cross-layer: technology assigned to application ---
+N1 .[#888].> AC1 : <<assignment>>
+SW1 .[#888].> AC1 : <<realization>>
+N2 .[#888].> AC2 : <<assignment>>
+SW2 .[#888].> DO : <<realization>>
+
+@enduml

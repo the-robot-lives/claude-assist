@@ -1,0 +1,23 @@
+@startuml
+' ============================================================================
+' METADATA
+'   author:       TheRobotDrafts Examples
+'   description:  Business service delivered by actors via a process.
+'   usecase:      Teaching actor, role, process, service.
+'   complexity:   simple
+'   domain:       enterprise-architecture / business
+' ============================================================================
+title Example ArchiMate Business - Simple Business Service
+
+note "ArchiMate Business layer = YELLOW\nActor/Role (active) | Process (behavior)\nService (behavior) | Object (passive)" as Legend
+
+rectangle "<<business actor>>\nCustomer" as A1 #FFF9C4
+rectangle "<<business role>>\nSupport Agent" as R1 #FFF9C4
+rectangle "<<business process>>\nHandle\nTicket" as P1 #FFF59D
+rectangle "<<business service>>\nHelp Desk" as S1 #FFF176
+
+A1 -[#444]-> S1 : <<triggers>>
+R1 -[#444]-> P1 : <<assignment>>
+P1 -[#444]-> S1 : <<realization>>
+
+@enduml

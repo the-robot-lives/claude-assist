@@ -1,0 +1,555 @@
+#!/usr/bin/env bash
+# claude-sandbox: run isolated instances of claude-desktop via bwrap.
+#
+# Each named sandbox gets its own $HOME under ~/sandboxes/claude-desktop-<name>,
+# so each instance has its own config, session, cookies, and MCP server config
+# (~/.config/Claude, ~/.config/claude, etc.) while sharing the Wayland/X11
+# display and audio (pipewire/pulse). Each instance gets a private D-Bus
+# session and private GNOME Secret Service so Electron safeStorage can persist
+# OAuth tokens without sharing or blocking on the host keyring.
+#
+# The sandboxed instance launches fully detached (setsid + nohup) so the
+# invoking shell/terminal is never blocked; stdout/stderr go to a per-sandbox
+# log file instead.
+#
+# OAuth/login flows are sent to the host browser through the host desktop
+# portal. A browser inside bwrap is retained only as a fallback.
+#
+# Usage:
+#   claude-sandbox <name> [--from <template>|--empty] [--foreground]
+#                  [-- extra claude-desktop args]
+#   claude-sandbox work
+#   claude-sandbox client-a -- claude://claude.ai/new
+#
+# New sandboxes are seeded (full clone, incl. login) from a template — the
+# sandbox named by --from / $CLAUDE_SANDBOX_TEMPLATE, else the oldest existing
+# sandbox. The very first sandbox starts empty.
+#
+# List / remove sandboxes:
+#   claude-sandbox --list
+#   claude-sandbox --remove <name>
+#
+# Route inbound claude:// links (e.g. OAuth callbacks) to a sandbox. By default
+# they go to the last-launched sandbox; pin one to override:
+#   claude-sandbox --install-url-handler       # register host claude:// handler
+#   claude-sandbox --pin <name> | --unpin      # force a specific target
+#   claude-sandbox --open-url <claude:// url>   # (invoked by the handler)
+
+set -euo pipefail
+
+SANDBOX_ROOT="${CLAUDE_SANDBOX_ROOT:-$HOME/sandboxes}"
+BIN="${CLAUDE_DESKTOP_BIN:-/usr/lib/claude-desktop/claude-desktop}"
+SELF="$(readlink -f "$0" 2>/dev/null || echo "$0")"
+LAST_FILE="$SANDBOX_ROOT/.last-launched"
+PIN_FILE="$SANDBOX_ROOT/.pinned"
+HOST_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
+SECRET_STORE="${CLAUDE_SANDBOX_SECRET_STORE:-keyring}"
+
+usage() {
+  cat >&2 <<USAGE
+Usage: $(basename "$0") <name> [--from <template>|--empty] [--foreground]
+       [-- extra claude-desktop args]
+       $(basename "$0") --list
+       $(basename "$0") --doctor
+       $(basename "$0") --remove <name>
+       $(basename "$0") --pin <name> | --unpin
+       $(basename "$0") --install-url-handler | --uninstall-url-handler
+       $(basename "$0") --open-url <claude:// url>
+USAGE
+  exit 1
+}
+
+validate_name() {
+  case "$1" in
+    ""|*[!A-Za-z0-9._-]*|.*|-*)
+      echo "Invalid sandbox name '$1' (use letters, numbers, dot, underscore, or dash)." >&2
+      exit 1 ;;
+  esac
+}
+
+doctor() {
+  local failed=0 display_socket=""
+  for cmd in bwrap dbus-run-session dbus-daemon gdbus; do
+    if command -v "$cmd" >/dev/null 2>&1; then
+      printf 'ok   %s: %s\n' "$cmd" "$(command -v "$cmd")"
+    else
+      printf 'FAIL %s: not found\n' "$cmd"
+      failed=1
+    fi
+  done
+  if command -v gnome-keyring-daemon >/dev/null 2>&1; then
+    printf 'ok   secret service: private GNOME Keyring (%s)\n' "$(command -v gnome-keyring-daemon)"
+  else
+    printf 'WARN secret service: gnome-keyring-daemon missing; launches fall back to basic storage\n'
+  fi
+  if [ -S "$HOST_RUNTIME_DIR/bus" ]; then
+    printf 'ok   host session bus socket: %s\n' "$HOST_RUNTIME_DIR/bus"
+  else
+    printf 'WARN host session bus socket missing: OAuth uses the in-sandbox browser fallback\n'
+  fi
+  if [ -n "${WAYLAND_DISPLAY:-}" ]; then
+    case "$WAYLAND_DISPLAY" in
+      /*) display_socket="$WAYLAND_DISPLAY" ;;
+      *)  display_socket="$HOST_RUNTIME_DIR/$WAYLAND_DISPLAY" ;;
+    esac
+    if [ -S "$display_socket" ]; then
+      printf 'ok   Wayland socket: %s\n' "$display_socket"
+    else
+      printf 'FAIL Wayland socket missing: %s\n' "$display_socket"
+      failed=1
+    fi
+  elif [ -n "${DISPLAY:-}" ] && [ -d /tmp/.X11-unix ]; then
+    printf 'ok   X11 display: %s\n' "$DISPLAY"
+  else
+    printf 'FAIL display: neither a usable Wayland nor X11 display was found\n'
+    failed=1
+  fi
+  [ -x "$BIN" ] && printf 'ok   claude-desktop: %s\n' "$BIN" || {
+    printf 'FAIL claude-desktop binary: %s\n' "$BIN"
+    failed=1
+  }
+  return "$failed"
+}
+
+# Oldest existing sandbox (by mtime), excluding $1. Empty if none.
+oldest_sandbox() {
+  local exclude="$1"
+  find "$SANDBOX_ROOT" -maxdepth 1 -mindepth 1 -type d -name 'claude-desktop-*' \
+    -printf '%T@ %f\n' 2>/dev/null | sort -n | awk '{print $2}' \
+    | sed 's/^claude-desktop-//' | { grep -Fvx -- "$exclude" || true; } | head -n1
+}
+
+# Where inbound claude:// links should go: pinned sandbox if set and present,
+# else the last-launched sandbox. Empty if neither resolves.
+route_target() {
+  local t=""
+  if [ -f "$PIN_FILE" ]; then
+    t="$(cat "$PIN_FILE" 2>/dev/null || true)"
+    { [ -n "$t" ] && [ -d "$SANDBOX_ROOT/claude-desktop-$t" ]; } || t=""
+  fi
+  if [ -z "$t" ] && [ -f "$LAST_FILE" ]; then
+    t="$(cat "$LAST_FILE" 2>/dev/null || true)"
+    { [ -n "$t" ] && [ -d "$SANDBOX_ROOT/claude-desktop-$t" ]; } || t=""
+  fi
+  printf '%s' "$t"
+}
+
+[ $# -ge 1 ] || usage
+
+case "$1" in
+  --doctor)
+    doctor
+    exit $? ;;
+  --list)
+    if [ -d "$SANDBOX_ROOT" ]; then
+      find "$SANDBOX_ROOT" -maxdepth 1 -mindepth 1 -type d -name 'claude-desktop-*' \
+        -exec basename {} \; | sed 's/^claude-desktop-//'
+    fi
+    exit 0 ;;
+  --remove)
+    [ $# -ge 2 ] || usage
+    validate_name "$2"
+    target="$SANDBOX_ROOT/claude-desktop-$2"
+    if [ -d "$target" ]; then echo "Removing $target"; rm -rf -- "$target"
+    else echo "No such sandbox: $2" >&2; exit 1; fi
+    exit 0 ;;
+  --pin)
+    [ $# -ge 2 ] || usage
+    validate_name "$2"
+    [ -d "$SANDBOX_ROOT/claude-desktop-$2" ] || {
+      echo "No such sandbox: $2" >&2
+      exit 1
+    }
+    mkdir -p "$SANDBOX_ROOT"; printf '%s\n' "$2" > "$PIN_FILE"
+    echo "Pinned claude:// routing to sandbox '$2'."
+    exit 0 ;;
+  --unpin)
+    rm -f "$PIN_FILE"
+    echo "Unpinned claude:// routing (falls back to last-launched sandbox)."
+    exit 0 ;;
+  --open-url)
+    [ $# -ge 2 ] || usage
+    url="$2"; target="$(route_target)"
+    if [ -n "$target" ]; then
+      exec "$SELF" "$target" -- "$url"
+    fi
+    # Nothing to route to yet — fall back to the host claude-desktop so normal
+    # (non-sandbox) deep links still work.
+    exec setsid "$BIN" "$url" >/dev/null 2>&1 </dev/null ;;
+  --install-url-handler)
+    appdir="${XDG_DATA_HOME:-$HOME/.local/share}/applications"
+    mkdir -p "$appdir"
+    desktop="$appdir/claude-sandbox-url.desktop"
+    cat > "$desktop" <<DESKTOP
+[Desktop Entry]
+Type=Application
+Name=Claude Sandbox URL Router
+Comment=Routes claude:// links to the pinned or last-launched sandbox
+Exec="$SELF" --open-url %u
+Terminal=false
+NoDisplay=true
+MimeType=x-scheme-handler/claude;
+DESKTOP
+    command -v update-desktop-database >/dev/null 2>&1 && update-desktop-database "$appdir" >/dev/null 2>&1 || true
+    xdg-mime default claude-sandbox-url.desktop x-scheme-handler/claude >/dev/null 2>&1 || true
+    echo "Installed claude:// handler: $desktop"
+    echo "Inbound claude:// links now route to the pinned or last-launched sandbox."
+    echo "Undo with: $(basename "$0") --uninstall-url-handler"
+    exit 0 ;;
+  --uninstall-url-handler)
+    appdir="${XDG_DATA_HOME:-$HOME/.local/share}/applications"
+    rm -f "$appdir/claude-sandbox-url.desktop"
+    command -v update-desktop-database >/dev/null 2>&1 && update-desktop-database "$appdir" >/dev/null 2>&1 || true
+    echo "Removed claude:// handler. Reset the default with:"
+    echo "  xdg-mime default <your-claude>.desktop x-scheme-handler/claude"
+    exit 0 ;;
+  --*)
+    usage ;;
+esac
+
+NAME="$1"
+validate_name "$NAME"
+shift
+TEMPLATE="${CLAUDE_SANDBOX_TEMPLATE:-}"
+EMPTY=false
+FOREGROUND=false
+EXTRA_ARGS=()
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --from)    [ $# -ge 2 ] || usage; TEMPLATE="$2"; shift 2 ;;
+    --from=*)  TEMPLATE="${1#--from=}"; shift ;;
+    --empty)   EMPTY=true; shift ;;
+    --foreground) FOREGROUND=true; shift ;;
+    --)        shift; EXTRA_ARGS=("$@"); break ;;
+    *)         echo "Unexpected argument: $1" >&2; usage ;;
+  esac
+done
+
+if [ "$EMPTY" = true ] && [ -n "$TEMPLATE" ]; then
+  echo "--empty cannot be combined with --from or CLAUDE_SANDBOX_TEMPLATE." >&2
+  exit 1
+fi
+[ -z "$TEMPLATE" ] || validate_name "$TEMPLATE"
+
+case "$SECRET_STORE" in
+  keyring|basic) ;;
+  *) echo "CLAUDE_SANDBOX_SECRET_STORE must be 'keyring' or 'basic'." >&2; exit 1 ;;
+esac
+
+SBHOME="$SANDBOX_ROOT/claude-desktop-$NAME"
+
+# Detect a brand-new sandbox (absent/empty home) BEFORE creating the dir, so we
+# know whether to seed it from a template.
+NEW_SANDBOX=false
+if [ ! -d "$SBHOME/home" ] || [ -z "$(ls -A "$SBHOME/home" 2>/dev/null)" ]; then
+  NEW_SANDBOX=true
+fi
+
+mkdir -p "$SBHOME"/{home,tmp,runtime}
+chmod 700 "$SBHOME" "$SBHOME"/{home,tmp,runtime}
+
+# Seed a new sandbox from a template (full clone, incl. login). Template is
+# --from / $CLAUDE_SANDBOX_TEMPLATE, else the oldest existing sandbox.
+if [ "$NEW_SANDBOX" = true ]; then
+  tmpl="$TEMPLATE"
+  if [ "$EMPTY" = false ] && [ -z "$tmpl" ]; then
+    tmpl="$(oldest_sandbox "$NAME")"
+  fi
+  if [ -n "$tmpl" ] && [ "$tmpl" != "$NAME" ] && [ -d "$SANDBOX_ROOT/claude-desktop-$tmpl/home" ]; then
+    echo "Seeding '$NAME' from template '$tmpl' (full clone incl. login)…"
+    cp -a "$SANDBOX_ROOT/claude-desktop-$tmpl/home/." "$SBHOME/home/"
+    # Drop Electron single-instance locks so the clone doesn't think another
+    # instance owns its session (they're re-created on launch).
+    find "$SBHOME/home" -depth \( -name 'SingletonLock' -o -name 'SingletonSocket' \
+      -o -name 'SingletonCookie' \) -print0 2>/dev/null | xargs -0 -r rm -f
+  elif [ -n "$TEMPLATE" ]; then
+    echo "Template sandbox '$TEMPLATE' not found or has no home; starting empty." >&2
+  fi
+fi
+
+mkdir -p "$SBHOME/home/.local/bin"
+
+[ -x "$BIN" ] || { echo "claude-desktop binary not found at $BIN" >&2; exit 1; }
+
+# Browser and session wrappers generated into the private HOME:
+#   * sandboxed-browser first asks the host desktop portal to open OAuth URLs,
+#     so the real browser stays outside bwrap. It only launches an in-sandbox
+#     browser as a fallback.
+#   * xdg-open intercepts Electron's shell.openExternal fallback and keeps
+#     claude:// callbacks in this named profile.
+#   * claude-sandbox-session starts a private GNOME Secret Service on the
+#     private D-Bus before Claude starts. This makes Electron safeStorage usable
+#     and persistent without routing auth through the host D-Bus/keyring.
+write_browser_wrapper() {
+  local bindir="$SBHOME/home/.local/bin"
+  cat >"$bindir/sandboxed-browser" <<'EOF'
+#!/usr/bin/env bash
+# Auto-generated by claude-sandbox.
+set -euo pipefail
+
+open_on_host() {
+  local url="$1"
+  [ -n "${CLAUDE_SANDBOX_HOST_BUS_ADDRESS:-}" ] || return 1
+  command -v gdbus >/dev/null 2>&1 || return 1
+  gdbus call \
+    --address "$CLAUDE_SANDBOX_HOST_BUS_ADDRESS" \
+    --dest org.freedesktop.portal.Desktop \
+    --object-path /org/freedesktop/portal/desktop \
+    --method org.freedesktop.portal.OpenURI.OpenURI \
+    '' "$url" '{}' >/dev/null 2>&1
+}
+
+# Use the host browser by way of xdg-desktop-portal. This avoids nesting a
+# Chromium/Flatpak/Snap sandbox inside bwrap and keeps browser auth state where
+# the user expects it. The host claude:// handler routes the callback back.
+portal_ok=true
+saw_url=false
+for arg in "$@"; do
+  case "$arg" in
+    http://*|https://*) saw_url=true; open_on_host "$arg" || portal_ok=false ;;
+    -*) ;;
+    *) portal_ok=false ;;
+  esac
+done
+[ "$saw_url" = true ] && [ "$portal_ok" = true ] && exit 0
+
+# A candidate is usable only if it can actually run inside bwrap. Snap-packaged
+# browsers (path under /snap) and the Ubuntu transitional chromium-browser stub
+# (which just errors "requires the chromium snap") cannot, so skip them.
+usable() {
+  local bin="$1" real
+  # /snap/bin/* entries are symlinks to /usr/bin/snap, so test the literal path
+  # as well as the resolved target.
+  case "$bin" in
+    /snap/*) return 1 ;;
+  esac
+  real="$(readlink -f "$bin" 2>/dev/null || echo "$bin")"
+  case "$real" in
+    /snap/*|*/snapd/*|/usr/bin/snap|*/bin/snap) return 1 ;;
+  esac
+  grep -qi 'requires the chromium snap' "$bin" 2>/dev/null && return 1
+  return 0
+}
+
+candidates=(
+  "${CLAUDE_SANDBOX_BROWSER:-}"
+  vivaldi
+  vivaldi-stable
+  chromium
+  chromium-browser
+  ungoogled-chromium
+  brave-browser
+  google-chrome
+  librewolf
+  firefox
+  zen
+  qutebrowser
+  falkon
+  x-www-browser
+)
+for c in "${candidates[@]}"; do
+  [ -n "$c" ] || continue
+  bin="$(command -v "$c" 2>/dev/null || true)"
+  [ -n "$bin" ] || continue
+  usable "$bin" || continue
+  case "$(basename "$bin")" in
+    vivaldi*|chromium*|ungoogled-chromium|brave-browser|google-chrome*|chrome|opera*|thorium*)
+      exec "$bin" --no-sandbox "$@" ;;
+    qutebrowser|falkon)
+      # QtWebEngine's sandbox likewise can't nest inside bwrap.
+      exec env QTWEBENGINE_DISABLE_SANDBOX=1 "$bin" "$@" ;;
+    *)
+      exec "$bin" "$@" ;;
+  esac
+done
+echo "sandboxed-browser: no usable browser found on PATH" >&2
+exit 127
+EOF
+  chmod 755 "$bindir/sandboxed-browser"
+
+  # xdg-open shim: a claude:// deep link (e.g. an OAuth callback that comes back
+  # inside the sandbox) goes to THIS sandbox's claude-desktop, which forwards it
+  # to its already-running instance via Electron's single-instance lock. Every
+  # other URL goes to the browser wrapper.
+  cat >"$bindir/xdg-open" <<'EOF'
+#!/usr/bin/env bash
+# Auto-generated by claude-sandbox.
+for a in "$@"; do
+  case "$a" in
+    claude://*|claude-desktop://*|anthropic-claude://*)
+      exec "${CLAUDE_DESKTOP_BIN:-/usr/lib/claude-desktop/claude-desktop}" \
+        --no-sandbox \
+        --password-store="${CLAUDE_SANDBOX_PASSWORD_STORE:-gnome-libsecret}" \
+        --user-data-dir="${CLAUDE_SANDBOX_USER_DATA_DIR:-$HOME/.config/Claude}" \
+        "$@" ;;
+  esac
+done
+exec "$HOME/.local/bin/sandboxed-browser" "$@"
+EOF
+  chmod 755 "$bindir/xdg-open"
+
+  # x-www-browser is browser-only by definition.
+  cat >"$bindir/x-www-browser" <<'EOF'
+#!/usr/bin/env bash
+# Auto-generated by claude-sandbox.
+exec "$HOME/.local/bin/sandboxed-browser" "$@"
+EOF
+  chmod 755 "$bindir/x-www-browser"
+
+  cat >"$bindir/claude-sandbox-session" <<'EOF'
+#!/usr/bin/env bash
+# Auto-generated by claude-sandbox. Runs inside a fresh dbus-run-session.
+set -euo pipefail
+
+store="${CLAUDE_SANDBOX_SECRET_STORE:-keyring}"
+password_store=basic
+if [ "$store" = keyring ] && command -v gnome-keyring-daemon >/dev/null 2>&1; then
+  # A blank unlock password is intentional: the keyring is confined to this
+  # mode-0700 sandbox HOME. Its purpose is independent, persistent Electron
+  # safeStorage without a host keyring prompt or cross-instance D-Bus routing.
+  if printf '\n' | gnome-keyring-daemon --unlock --components=secrets >/dev/null 2>&1 \
+      && gdbus wait --session --activate org.freedesktop.secrets --timeout 3 \
+        org.freedesktop.secrets >/dev/null 2>&1; then
+    password_store=gnome-libsecret
+  else
+    echo "claude-sandbox: private keyring failed; falling back to basic storage" >&2
+  fi
+fi
+
+export CLAUDE_SANDBOX_PASSWORD_STORE="$password_store"
+exec "$@" --password-store="$password_store"
+EOF
+  chmod 755 "$bindir/claude-sandbox-session"
+}
+write_browser_wrapper
+
+BWRAP_ARGS=(
+  --unshare-user-try
+
+  # Filesystem: read-only host runtime, fresh writable HOME and persistent
+  # per-profile /tmp. Keeping /tmp stable is required for Electron's
+  # SingletonSocket, which is how a later claude:// callback reaches the
+  # already-running instance.
+  --ro-bind /usr /usr
+  --ro-bind /etc /etc
+  --ro-bind /opt /opt
+  --ro-bind /sys /sys
+  --symlink usr/lib /lib
+  --symlink usr/lib64 /lib64
+  --symlink usr/bin /bin
+  --symlink usr/sbin /sbin
+  --dir /run
+  --dir /run/dbus
+  --dir /run/user
+  --proc /proc
+  --dev /dev
+  --tmpfs /dev/shm
+  --bind "$SBHOME/tmp" /tmp
+  --bind "$SBHOME/home" "$HOME"
+  --setenv HOME "$HOME"
+  --setenv TMPDIR /tmp
+  --setenv XDG_CONFIG_HOME "$HOME/.config"
+  --setenv XDG_CACHE_HOME "$HOME/.cache"
+  --setenv XDG_DATA_HOME "$HOME/.local/share"
+  --setenv XDG_STATE_HOME "$HOME/.local/state"
+  --setenv BROWSER "$HOME/.local/bin/sandboxed-browser"
+  --setenv CLAUDE_DESKTOP_BIN "$BIN"
+  --setenv CLAUDE_SANDBOX_NAME "$NAME"
+  --setenv CLAUDE_SANDBOX_SECRET_STORE "$SECRET_STORE"
+  --setenv CLAUDE_SANDBOX_USER_DATA_DIR "$HOME/.config/Claude"
+  --setenv PATH "$HOME/.local/bin:${PATH:-/usr/local/bin:/usr/bin:/bin}"
+  --setenv NO_AT_BRIDGE 1
+
+  # The runtime directory is private. Only display/audio sockets and a
+  # separately named host-bus socket are mounted into it below.
+  --bind "$SBHOME/runtime" "$HOST_RUNTIME_DIR"
+  --setenv XDG_RUNTIME_DIR "$HOST_RUNTIME_DIR"
+)
+
+# Share the active display and audio sockets. Do not hard-code wayland-0: this
+# host (and many multi-seat/nested sessions) uses another display name.
+RUNTIME_ENTRIES=(pulse pipewire-0 pipewire-0.lock)
+if [ -n "${WAYLAND_DISPLAY:-}" ]; then
+  case "$WAYLAND_DISPLAY" in
+    /*)
+      [ -e "$WAYLAND_DISPLAY" ] && BWRAP_ARGS+=(--ro-bind "$WAYLAND_DISPLAY" "$WAYLAND_DISPLAY") ;;
+    *)
+      RUNTIME_ENTRIES+=("$WAYLAND_DISPLAY" "$WAYLAND_DISPLAY.lock") ;;
+  esac
+fi
+for entry in "${RUNTIME_ENTRIES[@]}"; do
+  if [ -e "$HOST_RUNTIME_DIR/$entry" ]; then
+    BWRAP_ARGS+=(--ro-bind "$HOST_RUNTIME_DIR/$entry" "$HOST_RUNTIME_DIR/$entry")
+  fi
+done
+
+# Expose the host session bus only under an alternate name. Claude receives a
+# fresh DBUS_SESSION_BUS_ADDRESS from dbus-run-session; the generated browser
+# wrapper alone uses this alternate socket to call xdg-desktop-portal.
+if [ -S "$HOST_RUNTIME_DIR/bus" ]; then
+  BWRAP_ARGS+=(
+    --ro-bind "$HOST_RUNTIME_DIR/bus" "$HOST_RUNTIME_DIR/host-bus"
+    --setenv CLAUDE_SANDBOX_HOST_BUS_ADDRESS "unix:path=$HOST_RUNTIME_DIR/host-bus"
+  )
+fi
+
+# The system bus is not an instance-routing boundary. Sharing it restores
+# UPower and hardware queries without reintroducing session-bus collisions.
+if [ -S /run/dbus/system_bus_socket ]; then
+  BWRAP_ARGS+=(
+    --ro-bind /run/dbus/system_bus_socket /run/dbus/system_bus_socket
+    --setenv DBUS_SYSTEM_BUS_ADDRESS unix:path=/run/dbus/system_bus_socket
+  )
+fi
+
+if [ -n "${DISPLAY:-}" ] && [ -e /tmp/.X11-unix ]; then
+  BWRAP_ARGS+=(--ro-bind /tmp/.X11-unix /tmp/.X11-unix)
+fi
+
+BWRAP_ARGS+=(
+  --setenv DISPLAY "${DISPLAY:-}"
+  --setenv WAYLAND_DISPLAY "${WAYLAND_DISPLAY:-wayland-0}"
+  --setenv XDG_SESSION_TYPE "${XDG_SESSION_TYPE:-wayland}"
+  --setenv XDG_CURRENT_DESKTOP "${XDG_CURRENT_DESKTOP:-}"
+  --setenv DESKTOP_SESSION "${DESKTOP_SESSION:-}"
+)
+
+if [ -S "$HOST_RUNTIME_DIR/pulse/native" ]; then
+  BWRAP_ARGS+=(--setenv PULSE_SERVER "unix:$HOST_RUNTIME_DIR/pulse/native")
+fi
+
+# GPU/DRI passthrough for hardware acceleration
+if [ -d /dev/dri ]; then
+  BWRAP_ARGS+=(--dev-bind /dev/dri /dev/dri)
+fi
+
+LOGFILE="$SBHOME/tmp/claude-desktop.log"
+
+# Record this as the most-recently-launched sandbox so inbound claude:// links
+# (via --open-url) route here unless a pin overrides it.
+printf '%s\n' "$NAME" > "$LAST_FILE"
+
+LAUNCH_CMD=(
+  bwrap "${BWRAP_ARGS[@]}" --
+  dbus-run-session --
+  "$HOME/.local/bin/claude-sandbox-session"
+  "$BIN"
+  --no-sandbox
+  --user-data-dir="$HOME/.config/Claude"
+  "${EXTRA_ARGS[@]}"
+)
+
+if [ "$FOREGROUND" = true ]; then
+  echo "Launching claude-desktop sandbox '$NAME' in foreground (log: $LOGFILE)"
+  set +e
+  "${LAUNCH_CMD[@]}" 2>&1 | tee -a "$LOGFILE"
+  launch_status=${PIPESTATUS[0]}
+  set -e
+  exit "$launch_status"
+fi
+
+setsid nohup "${LAUNCH_CMD[@]}" >>"$LOGFILE" 2>&1 </dev/null &
+launch_pid=$!
+disown
+
+echo "Launched claude-desktop sandbox '$NAME' (pid $launch_pid, home: $SBHOME/home, log: $LOGFILE)"

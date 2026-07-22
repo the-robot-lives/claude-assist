@@ -1,0 +1,57 @@
+@startuml
+' ============================================================================
+' METADATA
+'   author:       TheRobotDrafts Examples
+'   description:  Complex interaction overview - 12+ interaction nodes, nested, with guards and some inline interaction fragments.
+'   usecase:      Teach nested overview, guard conditions, inline interaction fragments vs refs.
+'   complexity:   complex
+'   domain:       Multi-channel support escalation
+' ============================================================================
+title Example Interaction Overview - Complex Support Escalation
+
+start
+
+ref over "Intake"
+ref over "Triage"
+
+if (Channel?) then (web)
+  ref over "WebChatOpen"
+elseif (phone) then (phone)
+  ref over "IVRRoute"
+else (email)
+  ref over "EmailParse"
+endif
+
+ref over "Classify"
+
+if (Auto-resolvable?) then (yes)
+  ref over "BotAnswer"
+else (no)
+  fork
+    ref over "AssignAgent"
+  fork again
+    ref over "LoadHistory"
+  end fork
+
+  if (Tier?) then (tier1)
+    ref over "Tier1Resolve"
+    if (Resolved?) then (no)
+      ref over "EscalateTier2"
+    endif
+  else (tier2)
+    ref over "Tier2Resolve"
+  endif
+endif
+
+' An inline interaction fragment: a small self-contained interaction drawn
+' directly here rather than referenced from another diagram.
+partition "Inline: NotifyCustomer" {
+  :sendAcknowledgement;
+  :awaitReadReceipt;
+}
+
+ref over "CloseTicket"
+
+stop
+
+@enduml

@@ -106,6 +106,7 @@ analytics:
     host: "https://us.i.posthog.com"
 
 ingress:
+  enabled: true
   className: nginx
   annotations:
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
@@ -113,6 +114,7 @@ ingress:
   cloudflareOnly: true
 
 tls:
+  enabled: true
   secretName: iotgo-io-tls
   infisical:
     enabled: true

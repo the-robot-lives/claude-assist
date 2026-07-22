@@ -1,0 +1,151 @@
+actdiag {
+  orientation = landscape
+
+  developer_push -> trigger_pipeline -> fetch_source -> run_unit_tests;
+
+  run_unit_tests -> unit_test_pass [label = "pass"];
+  run_unit_tests -> notify_test_failure [label = "fail"];
+  notify_test_failure -> create_jira_bug -> developer_push;
+
+  unit_test_pass -> run_integration_tests;
+  run_integration_tests -> integration_pass [label = "pass"];
+  run_integration_tests -> notify_integration_failure [label = "fail"];
+  notify_integration_failure -> create_jira_bug;
+
+  integration_pass -> run_security_scan;
+  run_security_scan -> security_pass [label = "clean"];
+  run_security_scan -> triage_findings [label = "findings"];
+  triage_findings -> severity_check;
+  severity_check -> block_pipeline [label = "critical"];
+  severity_check -> create_security_ticket [label = "medium/low"];
+  block_pipeline -> notify_security_team -> developer_push;
+  create_security_ticket -> security_pass;
+
+  security_pass -> build_artifact -> push_container_registry -> update_jira_build_status;
+
+  update_jira_build_status -> deploy_staging;
+  deploy_staging -> run_smoke_tests;
+  run_smoke_tests -> smoke_pass [label = "pass"];
+  run_smoke_tests -> rollback_staging [label = "fail"];
+  rollback_staging -> notify_staging_failure -> create_jira_bug;
+
+  smoke_pass -> run_performance_tests;
+  run_performance_tests -> perf_pass [label = "pass"];
+  run_performance_tests -> perf_fail [label = "fail"];
+  perf_fail -> create_jira_performance_ticket -> notify_team -> manual_approval_gate;
+
+  perf_pass -> generate_release_notes -> update_jira_release_candidate -> manual_approval_gate;
+
+  manual_approval_gate -> approval_decision;
+  approval_decision -> approved [label = "approved"];
+  approval_decision -> rejected [label = "rejected"];
+  rejected -> notify_rejection -> create_jira_rejection_ticket -> developer_push;
+
+  approved -> argocd_sync_production;
+  argocd_sync_production -> argocd_health_check;
+  argocd_health_check -> production_healthy [label = "healthy"];
+  argocd_health_check -> argocd_rollback [label = "degraded"];
+  argocd_rollback -> notify_production_failure -> create_jira_incident -> manual_approval_gate;
+
+  production_healthy -> run_production_smoke_tests;
+  run_production_smoke_tests -> prod_smoke_pass [label = "pass"];
+  run_production_smoke_tests -> prod_smoke_fail [label = "fail"];
+  prod_smoke_fail -> argocd_rollback;
+
+  prod_smoke_pass -> update_jira_released -> close_jira_release_ticket;
+  close_jira_release_ticket -> generate_sbom -> collect_test_reports -> collect_security_reports;
+  collect_security_reports -> collect_deployment_manifest -> collect_approval_evidence -> archive_release_evidence;
+  archive_release_evidence -> publish_audit_log -> notify_stakeholders -> pipeline_complete;
+
+  lane developer {
+    label = "Developer";
+    developer_push;
+    notify_test_failure;
+    notify_integration_failure;
+    notify_staging_failure;
+    notify_rejection;
+  }
+
+  lane ci_pipeline {
+    label = "CI Pipeline";
+    trigger_pipeline;
+    fetch_source;
+    run_unit_tests;
+    unit_test_pass;
+    run_integration_tests;
+    integration_pass;
+    build_artifact;
+    push_container_registry;
+  }
+
+  lane security {
+    label = "Security Gate";
+    run_security_scan;
+    security_pass;
+    triage_findings;
+    severity_check;
+    block_pipeline;
+    create_security_ticket;
+    notify_security_team;
+    collect_security_reports;
+    generate_sbom;
+  }
+
+  lane jira {
+    label = "Jira Integration";
+    create_jira_bug;
+    update_jira_build_status;
+    create_jira_performance_ticket;
+    update_jira_release_candidate;
+    create_jira_rejection_ticket;
+    create_jira_incident;
+    update_jira_released;
+    close_jira_release_ticket;
+    generate_release_notes;
+  }
+
+  lane staging {
+    label = "Staging Environment";
+    deploy_staging;
+    run_smoke_tests;
+    smoke_pass;
+    rollback_staging;
+    run_performance_tests;
+    perf_pass;
+    perf_fail;
+    notify_staging_failure;
+    notify_team;
+  }
+
+  lane approval {
+    label = "Manual Approval Gate";
+    manual_approval_gate;
+    approval_decision;
+    approved;
+    rejected;
+    notify_rejection;
+  }
+
+  lane argocd {
+    label = "Argo CD Production";
+    argocd_sync_production;
+    argocd_health_check;
+    production_healthy;
+    argocd_rollback;
+    notify_production_failure;
+    run_production_smoke_tests;
+    prod_smoke_pass;
+    prod_smoke_fail;
+  }
+
+  lane audit {
+    label = "Audit and Evidence";
+    collect_test_reports;
+    collect_deployment_manifest;
+    collect_approval_evidence;
+    archive_release_evidence;
+    publish_audit_log;
+    notify_stakeholders;
+    pipeline_complete;
+  }
+}

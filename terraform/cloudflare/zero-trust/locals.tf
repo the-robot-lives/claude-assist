@@ -47,6 +47,7 @@ locals {
     "208.64.36.79/32",
     "208.64.36.80/32",
     "153.53.231.246/32",
+    "27.109.112.0/22", # SmartNAS / Smart Axiata (KH) aggregate — covers 27.109.113.117
   ]
 
   cf_service_token_ids = [

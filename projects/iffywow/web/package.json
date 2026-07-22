@@ -1,0 +1,37 @@
+{
+  "name": "@noizu/ithkuil-word",
+  "version": "0.1.0",
+  "description": "<ithkuil-word> — Lit custom element rendering New Ithkuil words from canonical coordinate tuples (compact + exploded SVG projections, embedded-metadata round-trip).",
+  "license": "MIT",
+  "type": "module",
+  "main": "src/ithkuil-word.js",
+  "types": "types.d.ts",
+  "exports": {
+    ".": {
+      "types": "./types.d.ts",
+      "default": "./src/ithkuil-word.js"
+    },
+    "./scene": "./src/scene.js",
+    "./coordinate": "./src/coordinate.js",
+    "./metadata": "./src/metadata.js",
+    "./registry": "./src/registry.js"
+  },
+  "files": [
+    "src",
+    "types.d.ts"
+  ],
+  "scripts": {
+    "test": "node --test test/",
+    "coverage": "node --test --experimental-test-coverage test/"
+  },
+  "peerDependencies": {
+    "lit": "^3.0.0"
+  },
+  "keywords": [
+    "ithkuil",
+    "lit",
+    "web-component",
+    "svg",
+    "conlang"
+  ]
+}

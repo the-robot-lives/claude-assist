@@ -22,6 +22,40 @@ All paths are relative to this file's location (`skill/content-media-engine/refe
 | wavedrom | engineering | `fim/solution/wavedrom.md` | `fim/use-case/engineering-diagrams.md` | .json |
 | katex | math | `fim/solution/katex.md` | `fim/use-case/mathematical-scientific.md` | .tex |
 
+## Literature / Text Genre Mapping
+
+These `text_format` values route to genre-craft solution files (rhetorical conventions,
+structure, and constraints for a specific prose/verse/marketing/doc genre). Output is plain
+text or markdown via a chat provider. The prep agent loads the matching file and shapes the
+generation prompt to the genre's conventions.
+
+| text_format | Category | FIM Solution | Default Extension |
+|-------------|----------|-------------|-------------------|
+| haiku | poetry | `fim/solution/haiku.md` | .txt |
+| epic-poem | poetry | `fim/solution/epic-poem.md` | .txt |
+| sonnet | poetry | `fim/solution/sonnet.md` | .txt |
+| limerick | poetry | `fim/solution/limerick.md` | .txt |
+| short-story | literary | `fim/solution/short-story.md` | .md |
+| novel-chapter | literary | `fim/solution/novel-chapter.md` | .md |
+| ad-copy | marketing | `fim/solution/ad-copy.md` | .txt |
+| marketing-copy | marketing | `fim/solution/marketing-copy.md` | .md |
+| press-release | marketing | `fim/solution/press-release.md` | .md |
+| seo-article | marketing | `fim/solution/seo-article.md` | .md |
+| email-copy | marketing | `fim/solution/email-copy.md` | .md |
+| user-manual | instructional | `fim/solution/user-manual.md` | .md |
+| getting-started | instructional | `fim/solution/getting-started.md` | .md |
+| api-reference | instructional | `fim/solution/api-reference.md` | .md |
+| technical-blog | instructional | `fim/solution/technical-blog.md` | .md |
+| readme | instructional | `fim/solution/readme.md` | .md |
+| ux-microcopy | ux | `fim/solution/ux-microcopy.md` | .txt |
+
+## Provider / Generator Mapping
+
+Binary-media `service` targets route to generator prompt-engineering files under
+`fim/solution/providers/` (see `PROVIDER-INDEX` in that dir). Implemented: `gemini`→imagen,
+`veo`, `grok-video`, `suno`, `elevenlabs`, `openai-tts`, `qwen-tts`. Forward-looking:
+stable-diffusion, flux, midjourney, runway-gen3, sora, udio.
+
 ## Usage
 
 When authoring a `.media.prompt` file for a given format, consult:

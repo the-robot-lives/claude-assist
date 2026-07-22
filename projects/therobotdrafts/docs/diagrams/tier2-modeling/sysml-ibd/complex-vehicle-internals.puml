@@ -1,0 +1,79 @@
+@startuml
+' ============================================================================
+' METADATA
+'   author:       TheRobotDrafts Examples
+'   description:  Complex IBD of a Vehicle interior with 12+ parts across nested blocks, standard and flow ports, item flows with flow properties, and multiple connector types.
+'   usecase:      Teach large IBD: nested part wiring, flow vs standard ports, item flows with flow properties, delegation and assembly connectors.
+'   complexity:   complex
+'   domain:       automotive
+' ============================================================================
+title Example IBD - Complex Vehicle Internals
+
+class "Vehicle" <<block>> {
+}
+
+package "Vehicle interior" {
+  object "vEcu : EngineControlUnit" as vEcu
+  object "vEngine : Engine" as vEngine
+  object "vThrottle : ThrottleBody" as vThrottle
+  object "vFuelPump : FuelPump" as vFuelPump
+  object "vTank : FuelTank" as vTank
+  object "vTrans : Transmission" as vTrans
+  object "vDiff : Differential" as vDiff
+  object "vAxleF : FrontAxle" as vAxleF
+  object "vAxleR : RearAxle" as vAxleR
+  object "vWheelFL : Wheel" as vWheelFL
+  object "vWheelFR : Wheel" as vWheelFR
+  object "vWheelRL : Wheel" as vWheelRL
+  object "vWheelRR : Wheel" as vWheelRR
+  object "vCoolant : CoolantLoop" as vCoolant
+
+  port "Vehicle.accelCmd" as accelCmd
+  port "Vehicle.fuelIn" as fuelIn
+  port "Vehicle.torqueOut" as torqueOut
+  port "Vehicle.temp" as temp
+}
+
+accelCmd --> vEcu : CommandSignal
+vEcu --> vThrottle : AirDemand
+vEcu --> vFuelPump : FuelDemand
+vFuelPump --> vTank : FuelDraw
+vTank --> vFuelPump : LiquidFuel
+vThrottle --> vEngine : AirFlow
+vFuelPump --> vEngine : LiquidFuel
+vEngine --> vTrans : TorqueFlow
+vTrans --> vDiff : TorqueFlow
+vDiff --> vAxleF : TorqueFlow
+vDiff --> vAxleR : TorqueFlow
+vAxleF --> vWheelFL : TorqueFlow
+vAxleF --> vWheelFR : TorqueFlow
+vAxleR --> vWheelRL : TorqueFlow
+vAxleR --> vWheelRR : TorqueFlow
+
+vEngine --> vCoolant : HeatFlow
+vCoolant --> temp : TempReading
+
+fuelIn --> vTank : LiquidFuel
+torqueOut <-- vDiff : TorqueFlow
+
+note right of accelCmd
+  Standard port (accelCmd) carries a
+  CommandSignal service request.
+end note
+
+note right of vEngine
+  Flow ports carry item flows with flow
+  properties (e.g. AirFlow, LiquidFuel,
+  TorqueFlow, HeatFlow). Item flow =
+  the substance moving on the connector.
+end note
+
+note bottom of vDiff
+  Assembly connector: connects internal parts
+  (vTrans -> vDiff -> axles) to form the
+  driveline path. Delegation forwards a
+  boundary port to an internal part
+  (fuelIn -> vTank, vDiff -> torqueOut).
+end note
+
+@enduml

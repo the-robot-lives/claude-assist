@@ -1,0 +1,80 @@
+schema: "0.4"
+id: scholar-06-quiz-generator-and-runner
+type: image
+quality: high
+
+# The Robot Learns — a terminal study CLI. Quiz Generator & Runner — generate a quiz from a
+# topic/article and take it via interactive terminal prompts, in a clean LIGHT terminal.
+# Theme tenets: light-native near-white canvas, single indigo accent, crisp 4px radius,
+# thin visible gray borders (structure from lines, not shadow), Inter + JetBrains Mono.
+# Palette: canvas #fafafa, ink #111118, alt #f5f5f5, border #e0e0e0, indigo accent #6366F1.
+
+prompt:
+  system: |
+    You are a senior product designer rendering a high-fidelity UI mockup of a clean
+    LIGHT terminal window running an interactive quiz — precise, calm, dense but highly
+    legible, a keyboard-fast developer tool where the tool recedes and the knowledge is
+    foreground. The terminal canvas is near-white (a light-mode terminal), NOT dark.
+    Clean humanist sans (Inter) for question prose and labels; a matched monospace for
+    the command prompt, option keys, counters and hints. One single indigo accent;
+    everything else is near-neutral gray. No decoration, no glow.
+  text: |
+    A 16:9 high-fidelity mockup of a clean LIGHT terminal window — "The Robot Learns" —
+    running an interactive quiz session. One near-white terminal pane fills the frame.
+    This is a light-mode terminal (near-white canvas, dark ink), NOT a dark terminal and
+    NOT a browser page.
+
+    OVERALL LAYOUT (a slim title bar, a short command transcript, then the active question):
+    - TITLE BAR: a minimal terminal chrome strip with three small dots and a mono title
+      "the-robot-learns — /quiz", closed by a thin bottom hairline.
+    - TRANSCRIPT: a short scrollback — the /quiz command echoed at a mono prompt, then a
+      confirmation line "Generated 10 questions on 'Kubernetes networking'", and one just-
+      answered line carrying a small green "correct" marker (a hint of scoring).
+    - PROGRESS LINE: a "Question 4 of 10" milestone tracker — a thin indigo progress bar on
+      a recessed gray track beside a mono counter.
+    - ACTIVE QUESTION CARD: the current question in sans, then a vertical list of options as
+      an @inquirer-style prompt (a, b, c, d rows); the highlighted option marked by a 2px
+      indigo left rail and an indigo pointer, the rest neutral; a mono hint line
+      "up/down move · enter select · s skip".
+    - Below: a faint status line and a small ACCESSIBILITY TOGGLE chip
+      "linear screen-reader mode: off".
+
+    PALETTE & TYPE: near-white terminal canvas; deep near-black ink for the question; muted
+    gray for secondary meta and hints; a single saturated indigo as the only color — the
+    progress fill, the selected-option rail and pointer, the active prompt caret. Thin cool-
+    gray hairlines separate the title bar and blocks. Question prose and labels in a clean
+    humanist sans; the command prompt, option keys, counter and hints in a matched monospace.
+
+    SHAPE & SURFACE: crisp small 4px rounded corners on the question card and progress track;
+    thin visible cool-gray borders do the structural work (this theme earns clarity from
+    lines, not shadow); flat surfaces, at most one very faint soft shadow on the card. No
+    gradients, no glow, no texture.
+
+    MOOD: precise, intelligent, trustworthy — a calm, keyboard-fast tool where the knowledge
+    is foreground and the interface recedes.
+  negative: "watermark, signature, lorem ipsum placeholder text, low-fidelity wireframe, monitor/device photograph framing, blurry, distorted UI, browser chrome, address bar, browser tabs, web page, dark terminal, dark mode, black background, neon glow, gradient background, multiple accent colors"
+
+output:
+  formats:
+    - format: png
+  dimensions:
+    width: 1920
+    height: 1080
+    aspect_ratio: "16:9"
+
+eval:
+  pass_threshold: 0.72
+  criteria:
+    relevance: {weight: 3, description: "Matches the Quiz Runner: a terminal command transcript, a 'Question N of 10' progress tracker, an interactive @inquirer-style option list with one highlighted option, and an accessibility (screen-reader mode) toggle"}
+    theme_fidelity: {weight: 3, description: "Light-native near-white terminal canvas, a single indigo accent (no second saturated hue), crisp 4px radius, thin visible gray borders, Inter prose + monospace for keys/counter — not a dark terminal and not generic UI defaults"}
+    composition: {weight: 2, description: "Clear top-to-bottom hierarchy — transcript, progress, active question — plausible real-product terminal layout"}
+    technical: {weight: 2, description: "Sharp, correct 16:9 aspect, no artifacts"}
+  reject_if:
+    - "lorem ipsum or placeholder text visible"
+    - "watermark or signature visible"
+    - "wireframe-level fidelity instead of high-fidelity mockup"
+    - "dark terminal / dark mode instead of a light near-white terminal"
+    - "browser chrome, tabs, or address bar instead of a terminal window"
+    - "more than one saturated accent hue"
+
+tags: [scholar, therobotlearns.com, screen-mockup, terminal]

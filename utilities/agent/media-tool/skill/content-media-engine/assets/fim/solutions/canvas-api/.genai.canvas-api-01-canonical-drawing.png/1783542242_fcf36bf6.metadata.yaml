@@ -1,0 +1,26 @@
+service: gemini
+model: imagen-4.0-ultra-generate-001
+timestamp: 1783542263
+provider_options:
+  temperature: Number(0.2)
+  max_tokens: Number(8192)
+prompt: |
+  Create the canonical drawing and illustration prompt for HTML5 Canvas 2D API.
+  
+  Scenario:
+  Create an illustrated studio workbench scene for a fictional creative systems lab. Include at least six distinct objects, two labeled callouts, a background grid or framing device, foreground/midground/background layering, and a small legend showing the native drawing primitives used.
+  
+  Implementation requirements:
+  - Category: 2d-canvas-svg-and-creative-coding.
+  - Required solution: canvas-api (HTML5 Canvas 2D API).
+  - Output: a complete self-contained HTML document with inline CSS and JavaScript.
+  - Native API contract: Use only the native CanvasRenderingContext2D API: getContext("2d"), Path2D, gradients, transforms, clipping, text metrics, requestAnimationFrame, devicePixelRatio scaling, and toBlob or toDataURL export.
+  - Native technique focus: raw immediate-mode canvas draw calls with explicit state management, save/restore pairs, clear/redraw behavior, and optional pixel access only when justified.
+  - Responsive contract: Resize the canvas buffer and CSS size together, scale by devicePixelRatio, redraw after resize, and keep text and controls legible from 360px to 1440px wide.
+  - Export and integration contract: Expose exportPNG(), exportWebP(), resizeCanvas(), render(seed), and destroy() helpers; make export work without tainting the canvas.
+  - Determinism contract: Use a small seeded PRNG for all random placements, colors, and motion offsets; display the seed in a diagnostics label.
+  - Scenario-specific emphasis: Build a polished canonical drawing or illustration that proves the solution can create a nonblank first render with native primitives, layers, labels, and clean composition.
+  - Additional edge detail: Keep the artwork mostly static, but include one optional hover, focus, or subtle animation state if the solution supports interaction without weakening export quality.
+  - Include realistic inline sample data, labels, dimensions, seed value, and source note where the scenario needs them.
+  - Avoid placeholder lorem ipsum text, external credentials, paid private assets, and hidden dependencies.
+  - Output only the final artifact, with no commentary outside the artifact.

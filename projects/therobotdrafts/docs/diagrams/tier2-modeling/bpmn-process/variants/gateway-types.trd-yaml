@@ -1,0 +1,52 @@
+# .trd-yaml — TheRobotDrafts native model (IxModel serialization)
+name: Example BPMN Process - Gateway Types (Variant)
+elements:
+  - { id: Start, type: UseCase, name: Start }
+  - { id: End, type: UseCase, name: End }
+  - { id: X1, type: UseCase, name: XOR\n(data) }
+  - { id: Xa, type: UseCase, name: XOR\nA }
+  - { id: Xb, type: UseCase, name: XOR\nB }
+  - { id: O1, type: UseCase, name: OR\n(inclusive) }
+  - { id: Oa, type: UseCase, name: OR\nA }
+  - { id: Ob, type: UseCase, name: OR\nB }
+  - { id: Om, type: UseCase, name: OR\nMerge }
+  - { id: A1, type: UseCase, name: AND\n(parallel) }
+  - { id: Aa, type: UseCase, name: AND\nA }
+  - { id: Ab, type: UseCase, name: AND\nB }
+  - { id: Am, type: UseCase, name: AND\nMerge }
+  - { id: E1, type: UseCase, name: Event-based }
+  - { id: Ea, type: UseCase, name: Msg A }
+  - { id: Eb, type: UseCase, name: Timer B }
+  - { id: ~note1, type: Note, name: '<b>Exclusive (XOR)</b>', documentation: '<b>Exclusive (XOR)</b>\nExactly ONE path, chosen by\ndata condition. No concurrency.\nUse: "if/else" branching.' }
+  - { id: ~note2, type: Note, name: '<b>Inclusive (OR)</b>', documentation: '<b>Inclusive (OR)</b>\nONE or MORE paths, each evaluated\nindependently. Merge waits for\nthe active subset only.\nUse: optional add-ons that may stack.' }
+  - { id: ~note3, type: Note, name: '<b>Parallel (AND)</b>', documentation: '<b>Parallel (AND)</b>\nALL paths taken, no conditions.\nMerge waits for ALL.\nUse: independent concurrent work.' }
+  - { id: ~note4, type: Note, name: '<b>Event-based</b>', documentation: '<b>Event-based</b>\nBranch on which EVENT fires first\n(message, timer, signal). The\nwinner cancels the others.\nUse: race between external triggers.' }
+edges:
+  - { id: e1, type: DirectedAssociation, from: Start, to: X1 }
+  - { id: e2, type: DirectedAssociation, from: X1, to: Xa, label: if cond1 }
+  - { id: e3, type: DirectedAssociation, from: X1, to: Xb, label: if cond2 }
+  - { id: e4, type: DirectedAssociation, from: Start, to: O1 }
+  - { id: e5, type: DirectedAssociation, from: O1, to: Oa, label: cond1 }
+  - { id: e6, type: DirectedAssociation, from: O1, to: Ob, label: cond2 }
+  - { id: e7, type: DirectedAssociation, from: Oa, to: Om }
+  - { id: e8, type: DirectedAssociation, from: Ob, to: Om }
+  - { id: e9, type: DirectedAssociation, from: Start, to: A1 }
+  - { id: e10, type: DirectedAssociation, from: A1, to: Aa }
+  - { id: e11, type: DirectedAssociation, from: A1, to: Ab }
+  - { id: e12, type: DirectedAssociation, from: Aa, to: Am }
+  - { id: e13, type: DirectedAssociation, from: Ab, to: Am }
+  - { id: e14, type: DirectedAssociation, from: Start, to: E1 }
+  - { id: e15, type: DirectedAssociation, from: E1, to: Ea, label: message arrives }
+  - { id: e16, type: DirectedAssociation, from: E1, to: Eb, label: 1h timeout }
+  - { id: e17, type: DirectedAssociation, from: Ea, to: End }
+  - { id: e18, type: DirectedAssociation, from: Eb, to: End }
+  - { id: e19, type: DirectedAssociation, from: Xa, to: End }
+  - { id: e20, type: DirectedAssociation, from: Xb, to: End }
+  - { id: e21, type: DirectedAssociation, from: Om, to: End }
+  - { id: e22, type: DirectedAssociation, from: Am, to: End }
+  - { id: e23, type: NoteLink, from: ~note1, to: X1 }
+  - { id: e24, type: NoteLink, from: ~note2, to: O1 }
+  - { id: e25, type: NoteLink, from: ~note3, to: A1 }
+  - { id: e26, type: NoteLink, from: ~note4, to: E1 }
+diagrams:
+  - { id: d1, name: Example BPMN Process - Gateway Types (Variant), kind: usecase, layoutProvenance: Synthesized }

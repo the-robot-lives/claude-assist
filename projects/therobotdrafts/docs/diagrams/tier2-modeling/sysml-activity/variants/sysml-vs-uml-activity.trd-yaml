@@ -1,0 +1,48 @@
+# .trd-yaml — TheRobotDrafts native model (IxModel serialization)
+name: Example SysML Activity - SysML vs UML Activity (Variant)
+elements:
+  - { id: ~start1, type: StateStart, name: start }
+  - { id: ~act2, type: Activity, name: Read Setpoint }
+  - { id: ~act3, type: Activity, name: Read Level }
+  - { id: ~act4, type: Activity, name: Compute Error }
+  - { id: ~dec5, type: Decision, name: 'Error > 0?' }
+  - { id: ~act6, type: Activity, name: Open Valve }
+  - { id: ~act7, type: Activity, name: Close Valve }
+  - { id: ~act8, type: Activity, name: Log State }
+  - { id: ~end9, type: StateEnd, name: end }
+  - { id: ~start10, type: StateStart, name: start }
+  - { id: ~act11, type: Activity, name: Read Setpoint }
+  - { id: ~act12, type: Activity, name: 'Receive Level\n<<continuous>>\n{rate = 10 Hz}' }
+  - { id: ~act13, type: Activity, name: Compute Error }
+  - { id: ~act14, type: Activity, name: '<<controlOperator>' }
+  - { id: ~dec15, type: Decision, name: 'Error > 0?' }
+  - { id: ~act16, type: Activity, name: Open Valve }
+  - { id: ~act17, type: Activity, name: 'Flow Fluid\n<<continuous>>\n{rate = 5 L/s}' }
+  - { id: ~act18, type: Activity, name: Close Valve }
+  - { id: ~act19, type: Activity, name: '<<controlOperator>' }
+  - { id: ~act20, type: Activity, name: Log State }
+  - { id: ~end21, type: StateEnd, name: end }
+edges:
+  - { id: e1, type: Transition, from: ~start1, to: ~act2 }
+  - { id: e2, type: Transition, from: ~act2, to: ~act3 }
+  - { id: e3, type: Transition, from: ~act3, to: ~act4 }
+  - { id: e4, type: Transition, from: ~act4, to: ~dec5 }
+  - { id: e5, type: Transition, from: ~dec5, to: ~act6, label: yes }
+  - { id: e6, type: Transition, from: ~dec5, to: ~act7, label: no }
+  - { id: e7, type: Transition, from: ~act6, to: ~act8 }
+  - { id: e8, type: Transition, from: ~act7, to: ~act8 }
+  - { id: e9, type: Transition, from: ~act8, to: ~end9 }
+  - { id: e10, type: Transition, from: ~start10, to: ~act11 }
+  - { id: e11, type: Transition, from: ~act11, to: ~act12 }
+  - { id: e12, type: Transition, from: ~act12, to: ~act13 }
+  - { id: e13, type: Transition, from: ~act13, to: ~act14 }
+  - { id: e14, type: Transition, from: ~act14, to: ~dec15 }
+  - { id: e15, type: Transition, from: ~dec15, to: ~act16, label: yes }
+  - { id: e16, type: Transition, from: ~act16, to: ~act17 }
+  - { id: e17, type: Transition, from: ~dec15, to: ~act18, label: no }
+  - { id: e18, type: Transition, from: ~act17, to: ~act19 }
+  - { id: e19, type: Transition, from: ~act18, to: ~act19 }
+  - { id: e20, type: Transition, from: ~act19, to: ~act20 }
+  - { id: e21, type: Transition, from: ~act20, to: ~end21 }
+diagrams:
+  - { id: d1, name: Example SysML Activity - SysML vs UML Activity (Variant), kind: activity, layoutProvenance: Synthesized }

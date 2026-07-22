@@ -1,0 +1,13 @@
+# .trd-yaml — TheRobotDrafts native model (IxModel serialization)
+name: Example SysML Requirement - Simple Satisfaction
+elements:
+  - { id: Max Payload, type: Requirement, name: Max Payload, members: [{ name: id, isOperation: false, visibility: Public, type: REQ-001, rawText: 'id : REQ-001' }, { name: text, isOperation: false, visibility: Public, type: '"The robot shall lift at least 5 kg."', rawText: 'text : "The robot shall lift at least 5 kg."' }] }
+  - { id: Reach Distance, type: Requirement, name: Reach Distance, members: [{ name: id, isOperation: false, visibility: Public, type: REQ-002, rawText: 'id : REQ-002' }, { name: text, isOperation: false, visibility: Public, type: '"The robot shall reach 1.2 m horizontally."', rawText: 'text : "The robot shall reach 1.2 m horizontally."' }] }
+  - { id: Cycle Time, type: Requirement, name: Cycle Time, members: [{ name: id, isOperation: false, visibility: Public, type: REQ-003, rawText: 'id : REQ-003' }, { name: text, isOperation: false, visibility: Public, type: '"The robot shall complete a cycle in under 10 s."', rawText: 'text : "The robot shall complete a cycle in under 10 s."' }] }
+  - { id: ArmController, type: Block, name: ArmController, members: [{ name: payloadKg, isOperation: false, visibility: Public, type: 7, rawText: 'payloadKg : 7' }, { name: reachM, isOperation: false, visibility: Public, type: 1.3, rawText: 'reachM : 1.3' }] }
+  - { id: PayloadBenchTest, type: TestCase, name: PayloadBenchTest, members: [{ name: id, isOperation: false, visibility: Public, type: TC-001, rawText: 'id : TC-001' }] }
+  - { id: ~note1, type: Note, name: '<b>Requirement box convention:</b>', documentation: '<b>Requirement box convention:</b>\n- id : the requirement identifier\n- text : the "shall" statement\n- Optional: source, verifyMethod,\nrisk, status.' }
+edges:
+  - { id: e1, type: NoteLink, from: ~note1, to: Max Payload }
+diagrams:
+  - { id: d1, name: Example SysML Requirement - Simple Satisfaction, kind: class, layoutProvenance: Synthesized }

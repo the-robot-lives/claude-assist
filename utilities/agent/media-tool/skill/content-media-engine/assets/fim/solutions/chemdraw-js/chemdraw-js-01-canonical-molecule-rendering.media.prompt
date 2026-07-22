@@ -1,0 +1,86 @@
+schema: "0.4"
+id: fim-math-and-scientific-rendering-chemdraw-js-01-canonical-molecule-rendering
+type: interactive
+quality: high
+solution: chemdraw-js
+category: math-and-scientific-rendering
+variant: canonical-molecule-rendering
+references:
+- references/fim/solution/chemdraw-js.md
+- references/fim/use-case/mathematical-scientific.md
+prompt:
+  system: |-
+    You are a senior web chemistry visualization engineer. Output only one complete ASCII HTML document with inline CSS and JavaScript. Prefer open web chemistry tooling such as RDKit.js, SmilesDrawer, Ketcher, and 3Dmol.js; do not assume commercial ChemDraw JS is available. No Markdown fences or prose outside the artifact.
+  text: |-
+    Create a canonical web chemistry molecule viewer using RDKit.js as the primary rendering and descriptor engine.
+
+    Scenario:
+    Build a self-contained browser artifact that renders aspirin from canonical SMILES, shows the RDKit-generated SVG, computes drug-likeness descriptors, and presents the result as a compact scientific dashboard.
+
+    Requirements:
+    - Load RDKit.js with initRDKitModule and do not call RDKit APIs before the module resolves.
+    - Use the SMILES string CC(=O)Oc1ccccc1C(=O)O and label it as aspirin.
+    - Render a 2D molecule SVG with clear dimensions, a legend, stereo annotation if available, readable atom labels, and a nonblank loading state before the molecule appears.
+    - Parse descriptors from mol.get_descriptors and display at least molecular weight, CrippenClogP, H-bond donors, H-bond acceptors, TPSA, and rotatable bond count.
+    - Include a small validity panel showing canonical SMILES input, render status, descriptor status, and any validation warnings.
+    - Call mol.delete() after SVG and descriptor extraction, and explain this cleanup in code comments.
+    - Include accessible labels, high-contrast colors, keyboard-focusable controls for rerender and copy SMILES, and a text summary of the molecule independent of the SVG.
+    - Handle RDKit load failure and invalid SMILES without a blank screen.
+    - Output only the final HTML artifact.
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.2
+output:
+  text_format: html
+  artifact_kind: rdkit-molecule-dashboard
+  formats:
+  - format: html
+  - format: svg
+  render_expectation: Interactive browser chemistry dashboard with RDKit-generated molecule SVG and descriptor table.
+evaluation:
+  checklist:
+  - "YAML parses under schema 0.4 and the generated artifact is one complete ASCII HTML document with no Markdown wrapper."
+  - "RDKit.js is initialized with initRDKitModule before any RDKit API call."
+  - "The artifact renders aspirin from CC(=O)Oc1ccccc1C(=O)O as a visible 2D SVG with labels or legend."
+  - "Descriptors include molecular weight, logP, HBD, HBA, TPSA, and rotatable bonds from mol.get_descriptors."
+  - "Every RDKit WASM object created by get_mol or related calls is deleted after use."
+  - "Invalid SMILES and RDKit load failure show visible error or fallback states, not a blank page."
+  - "Accessibility includes text summary, focusable controls, clear contrast, and readable status messages."
+  rubric:
+  - name: Format validity
+    weight: 30
+    criteria:
+    - "Generated output is valid HTML with inline CSS and JavaScript."
+    - "RDKit.js API usage is syntactically valid and correctly sequenced after module initialization."
+    - "No commercial ChemDraw JS dependency is required for the canonical path."
+  - name: Semantic completeness
+    weight: 30
+    criteria:
+    - "Aspirin is rendered from the requested SMILES string."
+    - "Descriptor extraction and display cover all requested scientific fields."
+    - "The dashboard includes molecule identity, status, controls, and text summary."
+  - name: Visual/structural quality
+    weight: 25
+    criteria:
+    - "The 2D structure is nonblank, centered, readable, and balanced with descriptor panels."
+    - "Labels, table values, status chips, and controls do not overlap at desktop or mobile widths."
+    - "Colors and typography support scientific inspection rather than decorative ambiguity."
+  - name: Robustness
+    weight: 15
+    criteria:
+    - "Handles invalid SMILES, RDKit load failure, missing descriptor values, rerender, and copy failure."
+    - "Cleans up WASM objects and avoids unbounded memory growth."
+    - "Provides accessible status and fallback content without hiding errors."
+  pass_conditions:
+  - "Rubric weights are exactly Format validity 30, Semantic completeness 30, Visual/structural quality 25, and Robustness 15."
+  - "Score is 80 or higher out of 100 with no critical failure in RDKit initialization, molecule rendering, descriptor extraction, or WASM cleanup."
+  - "The artifact stays aligned with chemdraw-js open web chemistry guidance and does not require unavailable commercial ChemDraw JS."
+tags:
+- fim
+- math-and-scientific-rendering
+- chemdraw-js
+- rdkit-js
+- smiles
+- molecule-2d
+- descriptors
+- canonical-molecule-rendering

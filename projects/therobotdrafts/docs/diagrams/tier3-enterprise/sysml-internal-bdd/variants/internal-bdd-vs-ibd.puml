@@ -1,0 +1,73 @@
+@startuml
+' ============================================================================
+' METADATA
+'   author:       TheRobotDrafts Examples
+'   description:  Variant comparing an INTERNAL-BDD view (internal parts of
+'                 multiple block definitions + cross-block item flows) against
+'                 a single-block IBD view (the interior of ONE block).
+'   usecase:      Teach the distinction: internal-BDD shows inter-block
+'                 internal structure; IBD zooms one block's interior.
+'   complexity:   medium
+'   domain:       sysml internal block definition / view variant
+' ============================================================================
+title Example Internal BDD - Internal BDD vs IBD
+
+' ---------------------------------------------------------------------------
+' Mapping note
+'   Two views of the same system are shown side by side.
+'   LEFT  = INTERNAL-BDD: internals of TWO block definitions (TankBlock,
+'           PumpBlock) plus the item flow crossing their boundary.
+'   RIGHT = IBD: the interior of a SINGLE composite block (PumpStation)
+'           containing the same parts as nested part usages, with one
+'           enclosing boundary.
+'   The internal-BDD is more abstract — it shows how the blocks' internal
+'   parts and ports relate ACROSS block boundaries. The IBD zooms into one
+'   block and treats the others as part usages inside it.
+' ---------------------------------------------------------------------------
+note over "TankBlock", "PumpStation (IBD)"
+  LEFT (internal-BDD): two block definitions,
+  each with its own parts and ports, joined by
+  a cross-block item flow.
+  RIGHT (IBD): one enclosing block owns both
+  parts as part-usages; the cross-block flow
+  becomes an internal connector.
+end note
+
+' ===================== LEFT: INTERNAL-BDD VIEW ============================
+class "TankBlock" <<block>> {
+  +out : FluidPort        '<<flow>>
+  part supply : FluidStore
+}
+
+class "PumpBlock" <<block>> {
+  +in : FluidPort         '<<flow>>
+  part intake : IntakeChamber
+  part impeller : Impeller
+}
+
+' Cross-boundary item flow between two distinct block definitions.
+"TankBlock" -(#darkblue)->[color=#darkblue] "PumpBlock" : FluidFlow { rate, pressure }
+
+' ===================== RIGHT: IBD VIEW ====================================
+class "PumpStation (IBD)" <<block>> {
+  +tankOut : FluidPort    '<<flow>> (delegated)
+  +stationIn : FluidPort  '<<flow>> (delegated)
+  part : TankBlock        'as tank
+  part : PumpBlock        'as pump
+}
+
+' Inside the IBD the cross-block flow is an internal connector between two
+' part-usages under one enclosing boundary.
+"PumpStation (IBD)" -->[color=#darkblue] "PumpStation (IBD)" : <tank.out> FluidFlow { rate, pressure }
+
+note right of "PumpStation (IBD)"
+  ONE block boundary. The tank and pump are
+  PART USAGES inside PumpStation. Outer ports
+  delegate to the parts. The former
+  cross-block flow is now an internal
+  connector. This is what a single-block IBD
+  shows; the internal-BDD on the left is the
+  broader, multi-block definition-level view.
+end note
+
+@enduml

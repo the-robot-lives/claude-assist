@@ -1,0 +1,82 @@
+schema: "0.4"
+id: sharp-01-canonical-transform-pipeline
+type: image/visualization/data
+quality: high
+solution: sharp
+category: image-and-video-processing
+variant: canonical-transform-pipeline
+references:
+  - "references/fim/overview/electronics-media-docfile/sharp.md"
+  - "references/fim/solution/sharp.md"
+prompt:
+  system: |-
+    You generate Sharp image-processing artifacts. Output only one complete ASCII JavaScript module. Do not use markdown fences or explanatory prose.
+  text: |-
+    Create a canonical Sharp transform pipeline for a server-side image optimization API.
+
+    Requirements:
+    - Use sharp v0.33 style APIs: sharp(input), metadata(), rotate(), resize(), extract(), extend(), modulate(), composite(), flatten(), toColourspace("srgb"), jpeg(), webp(), png(), toBuffer(), and toFile().
+    - Accept a file path, Buffer, or readable stream and produce a web hero image, square thumbnail, transparent PNG logo variant, and metadata JSON.
+    - Call rotate() before resize() for EXIF orientation and use withoutEnlargement unless explicit upscale is requested.
+    - Use deterministic dimensions: hero 1600x900, thumbnail 512x512, logo preview 512x512, and optional crop boxes rounded to integers.
+    - Specify srgb output color profile, withMetadata({ icc: "srgb" }) when needed, alpha preserved for PNG/WebP where requested, and alpha flattened to #ffffff before JPEG.
+    - Support input formats JPEG, PNG, WebP, AVIF, TIFF, GIF, and SVG rasterization, and output formats JPEG, PNG, WebP, AVIF, and JSON.
+    - Include memory and performance controls: metadata preflight, limitInputPixels, sequentialRead for large images, stream support, cache/concurrency notes, and clone() for multiple variants.
+    - Emit deterministic metadata JSON with source hash, original metadata summary, output dimensions, format decisions, alpha policy, ICC/color handling, byte sizes, warnings, and stable filenames.
+    - Include deterministic output checks for operation order, crop rounding, encoder quality, filenames, and metadata key order.
+    - Output only the final JavaScript artifact.
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.2
+output:
+  text_format: javascript
+  artifact_kind: sharp-canonical-transform-module
+  dimensions:
+    width: 1600
+    height: 900
+  color_profile: srgb-with-metadata
+  alpha: png-webp-preserved-jpeg-flattened
+  formats:
+    - format: js
+    - format: jpg
+    - format: png
+    - format: webp
+    - format: avif
+    - format: json
+evaluation:
+  checklist:
+    - "Format validity: YAML parses as schema 0.4, generated output is one JavaScript module, and Sharp APIs are used."
+    - "Semantic completeness: metadata preflight, rotate, resize, crop, color, composite, branch outputs, encoders, and metadata JSON are present."
+    - "Dimensions: hero is 1600x900, thumbnail is 512x512, logo preview is 512x512, and crop boxes are rounded deterministically."
+    - "Color profile and alpha: srgb output, ICC handling, PNG/WebP alpha preservation, and JPEG flattening are explicit."
+    - "File formats: JPEG, PNG, WebP, AVIF, TIFF, GIF, SVG input and JPEG, PNG, WebP, AVIF, JSON output are represented."
+    - "Memory and performance: metadata preflight, pixel limits, sequentialRead, streams, cache/concurrency notes, and clone use are covered."
+    - "Metadata: source hash, original metadata, output dimensions, format decisions, alpha policy, color handling, byte sizes, warnings, and filenames are recorded."
+    - "Deterministic output: operation order, crop rounding, quality settings, filenames, and metadata keys are stable."
+  rubric:
+    - name: "Format validity"
+      weight: 30
+      criteria: "The prompt YAML and generated JavaScript are parseable, ASCII-only, and use Sharp as the image engine."
+    - name: "Semantic completeness"
+      weight: 30
+      criteria: "The artifact covers metadata, orientation, transforms, branch outputs, format encoding, alpha/color handling, and deterministic naming."
+    - name: "Output quality"
+      weight: 25
+      criteria: "The generated images are correctly sized, visually sharp, alpha-safe, color-consistent, and encoded with suitable quality settings."
+    - name: "Robustness"
+      weight: 15
+      criteria: "The artifact handles malformed input, large images, platform codec gaps, alpha loss, cache/concurrency pressure, and deterministic reruns."
+  pass_conditions:
+    - "YAML parses successfully and all file text is ASCII-only."
+    - "Rubric weights are exactly Format validity 30, Semantic completeness 30, Output quality 25, and Robustness 15."
+    - "Generated JavaScript contains no markdown fences and uses Sharp rather than Jimp or Canvas."
+    - "All dimensions, color profile/alpha, file format, memory/performance, metadata, and deterministic output checks are represented."
+    - "Rubric score is at least 80 out of 100 and no required checklist item is absent."
+tags:
+  - fim
+  - image-and-video-processing
+  - sharp
+  - canonical-transform-pipeline
+  - libvips
+  - image-optimization
+  - metadata

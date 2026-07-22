@@ -1,0 +1,41 @@
+' ============================================================================
+' METADATA
+'   author:       TheRobotDrafts Examples
+'   description:  Medium UAF/UPDM view across 2 viewpoint rows (CV-1/SV-1 flavor).
+'   usecase:      Teach cross-viewpoint needlines between Strategic and Systems.
+'   complexity:   medium
+'   domain:       enterprise / defense-architecture
+' ============================================================================
+title Example UAF/UPDM - Medium Systems View (CV-1 / SV-1)
+
+note as TopNote
+  Two viewpoint ROWS on the UAF grid:
+  - StrategicVision (CV-1 flavor) top
+  - SystemsView (SV-1 flavor) bottom
+  Cross-row needline links a vision to a fielded system.
+end note
+
+' ---- Row 1: Strategic / Capability Vision (CV-1) ----
+package "Strategic x Capabilities" as S_C {
+  rectangle "Vision: Persistent ISR" as V1
+  rectangle "Capability: Detect Threat" as C1
+  rectangle "Capability: Report Fast" as C2
+}
+
+' ---- Row 2: Systems View (SV-1) ----
+package "Systems x Resources" as SY_R {
+  node "Radar System" as N1
+  node "C2 Node" as N2
+  database "Track DB" as DB1
+}
+
+V1 --> C1 : demands
+V1 --> C2 : demands
+
+' Cross-viewpoint NEEDLINE: strategic capability to fielded system resource.
+C1 ..> N1 : "realized-by (needline)"
+C2 ..> N2 : "realized-by (needline)"
+
+N1 --> N2 : track data
+N2 --> DB1 : persist
+DB1 --> N2 : query

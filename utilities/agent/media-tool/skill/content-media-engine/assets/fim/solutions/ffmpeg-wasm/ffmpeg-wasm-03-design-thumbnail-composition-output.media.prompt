@@ -1,0 +1,81 @@
+schema: "0.4"
+id: ffmpeg-wasm-03-design-thumbnail-composition-output
+type: image/visualization/data
+quality: high
+solution: ffmpeg-wasm
+category: image-and-video-processing
+variant: design-thumbnail-composition-output
+references:
+  - "references/fim/overview/electronics-media-docfile/ffmpeg-wasm.md"
+  - "references/fim/solution/ffmpeg-wasm.md"
+prompt:
+  system: |-
+    You generate FFmpeg.wasm media-processing artifacts. Output only one complete ASCII JavaScript module. Do not use markdown fences or explanatory prose.
+  text: |-
+    Create a FFmpeg.wasm thumbnail and preview composition pipeline for a browser-based video publishing tool.
+
+    Requirements:
+    - Accept a video File plus optional PNG watermark and output a poster JPEG, a PNG frame strip, and a short GIF preview.
+    - Use FFmpeg.wasm command arrays for seek, frame extraction, scaling, tile composition, overlay, drawtext when a font file is present in MEMFS, and GIF palette generation.
+    - Build a deterministic 3x2 frame strip with six timestamps derived from duration metadata supplied by the caller.
+    - Use poster dimensions 1280x720, frame-strip dimensions 960x360, GIF width 540, and watermark max width 180.
+    - Specify srgb display assumptions, yuv420p for any video intermediate, PNG alpha preserved for watermark/frame strip, and JPEG/GIF alpha flattened against a caller-supplied background color.
+    - Support input formats mp4, mov, webm, png, and ttf; output formats jpg, png, gif, and json.
+    - Include memory and performance controls: downscale before tile or GIF steps, delete extracted frames and palette files, expose progress by stage, and abort long GIF encodes.
+    - Emit deterministic metadata JSON with selected timestamps, dimensions, color/alpha decisions, source hash, watermark placement, output filenames, and warnings for missing fonts or unsupported overlays.
+    - Include deterministic output checks for timestamp rounding, file naming, filtergraph string generation, and manifest key ordering.
+    - Output only the final JavaScript artifact.
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.2
+output:
+  text_format: javascript
+  artifact_kind: ffmpeg-wasm-thumbnail-composition-module
+  dimensions:
+    width: 1280
+    height: 720
+  color_profile: srgb-display
+  alpha: png-preserved-jpg-gif-flattened
+  formats:
+    - format: js
+    - format: jpg
+    - format: png
+    - format: gif
+    - format: json
+evaluation:
+  checklist:
+    - "Format validity: YAML parses as schema 0.4, generated output is one JavaScript module, and FFmpeg.wasm command arrays are used."
+    - "Semantic completeness: poster, frame strip, GIF preview, watermark, optional drawtext, palette GIF, metadata, and cleanup are present."
+    - "Dimensions: poster is 1280x720, frame strip is 960x360, GIF width is 540, and watermark max width is 180."
+    - "Color profile and alpha: srgb assumptions, yuv420p intermediates, PNG alpha preservation, and JPEG/GIF flattening are explicit."
+    - "File formats: mp4, mov, webm, png, ttf, jpg, gif, and json handling is represented."
+    - "Memory and performance: downscale-before-compose, frame deletion, palette cleanup, staged progress, and GIF timeout are implemented."
+    - "Metadata: timestamp selection, output dimensions, color/alpha decisions, source hash, placement, filenames, and warnings are recorded."
+    - "Deterministic output: timestamp rounding, filtergraph construction, filenames, and manifest keys are stable."
+  rubric:
+    - name: "Format validity"
+      weight: 30
+      criteria: "The prompt YAML and generated JavaScript are parseable, ASCII-only, and use FFmpeg.wasm as the composition engine."
+    - name: "Semantic completeness"
+      weight: 30
+      criteria: "The artifact covers poster generation, frame strips, GIF previews, watermark/text composition, metadata, and cleanup."
+    - name: "Output quality"
+      weight: 25
+      criteria: "The generated thumbnails and previews are clear, consistently framed, web-compatible, and correctly sized."
+    - name: "Robustness"
+      weight: 15
+      criteria: "The artifact handles missing optional assets, long GIF encodes, unsupported inputs, font absence, memory pressure, and deterministic reruns."
+  pass_conditions:
+    - "YAML parses successfully and all file text is ASCII-only."
+    - "Rubric weights are exactly Format validity 30, Semantic completeness 30, Output quality 25, and Robustness 15."
+    - "Generated JavaScript contains no markdown fences and uses FFmpeg.wasm rather than canvas-only rendering."
+    - "All dimensions, color profile/alpha, file format, memory/performance, metadata, and deterministic output checks are represented."
+    - "Rubric score is at least 80 out of 100 and no required checklist item is absent."
+tags:
+  - fim
+  - image-and-video-processing
+  - ffmpeg-wasm
+  - design-thumbnail-composition-output
+  - poster
+  - gif-preview
+  - frame-strip

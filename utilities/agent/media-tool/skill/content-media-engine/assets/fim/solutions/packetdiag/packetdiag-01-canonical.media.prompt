@@ -1,0 +1,81 @@
+schema: "0.4"
+id: fim-diagrams-dsl-xml-packetdiag-01-canonical
+type: diagram
+quality: production
+solution: packetdiag
+category: diagrams-dsl-xml
+variant: canonical
+prompt:
+  system: You generate packetdiag source for bit-level packet layout diagrams. Output only a valid packetdiag
+    { ... } document with contiguous bit ranges and field attributes. Do not use code fences or explanatory
+    prose.
+  text: Create packetdiag source for an IPv4 header diagram using 32-bit rows. Include version, IHL, DSCP/ECN,
+    total length, identification, flags, fragment offset, TTL, protocol, checksum, source address, destination
+    address, and options/padding fields with color classes.
+  provider_options:
+    max_tokens: 4096
+    temperature: 0.2
+    top_p: 0.9
+output:
+  text_format: packetdiag
+  artifact_kind: packet_layout_source
+  formats:
+  - format: diag
+  - format: svg
+  - format: png
+  - format: pdf
+  - format: eps
+evaluation:
+  checklist:
+  - 'Output uses native packetdiag syntax: packetdiag root block, colwidth, field bit ranges, single-bit
+    fields, class attributes, colors, rotate for narrow labels, and colheight for multi-row fields.'
+  - 'Output captures the requested semantics: protocol headers and binary layouts where bit positions,
+    widths, flags, and variable fields are accurate.'
+  - 'Output has solution-appropriate structure: contiguous non-overlapping ranges, conventional row width,
+    readable flag labels, and color grouping by field category.'
+  - 'Output is robust for the renderer/importer: bit ranges tile the header without overlap, single-bit
+    flags are rotated when needed, and variable payloads use colheight or clear labels.'
+  - Covers the canonical use case with the essential native constructs of this solution, not a generic
+    diagram in another language.
+  - Output contains only the requested artifact source, with no Markdown fences, no explanatory prose,
+    and no non-ASCII characters.
+  rubric:
+    Format validity:
+      weight: 30
+      criteria: 'Must parse as packetdiag and follow packetdiag-specific grammar: packetdiag root block,
+        colwidth, field bit ranges, single-bit fields, class attributes, colors, rotate for narrow labels,
+        and colheight for multi-row fields. Deduct heavily for malformed roots, unmatched blocks/tags,
+        invalid ids, unresolved references, or mixing syntax from another diagram DSL.'
+    Semantic completeness:
+      weight: 30
+      criteria: Must satisfy the full scenario for canonical use and include the domain entities, relationships,
+        responsibilities, and edge/failure paths requested in the prompt. The diagram must use packetdiag
+        for protocol headers and binary layouts where bit positions, widths, flags, and variable fields
+        are accurate.
+    Visual/structural quality:
+      weight: 25
+      criteria: Must produce a readable rendered or importable artifact with contiguous non-overlapping
+        ranges, conventional row width, readable flag labels, and color grouping by field category. Labels
+        should be concise, grouping should reduce clutter, and styling/layout choices must match the strengths
+        and limits of packetdiag.
+    Robustness:
+      weight: 15
+      criteria: Must remain stable under normal rendering, import, export, or documentation use. Check
+        bit ranges tile the header without overlap, single-bit flags are rotated when needed, and variable
+        payloads use colheight or clear labels, avoid placeholders that block execution, and keep output
+        ASCII-only and deterministic.
+  pass_conditions:
+  - Total rubric score is at least 85 out of 100.
+  - Format validity score is at least 24 out of 30.
+  - The generated artifact source has no code fences, no prose wrapper, and no non-ASCII characters.
+  - The generated source can be parsed or imported by the normal packetdiag toolchain without unresolved
+    references or missing required root elements.
+tags:
+- fim
+- diagrams-dsl-xml
+- packetdiag
+- canonical
+- packetdiag
+- protocol
+- bit-layout
+

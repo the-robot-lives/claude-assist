@@ -1,0 +1,85 @@
+schema: '0.4'
+id: osmd-01-lead-sheet-simple-score
+type: interactive
+quality: high
+solution: osmd
+category: music-notation
+variant: lead-sheet-simple-score
+references:
+- references/fim/overview/music-audio-ml/osmd.md
+- references/fim/solution/osmd.md
+prompt:
+  system: |-
+    You generate OpenSheetMusicDisplay browser score-rendering artifacts. Output only a complete self-contained HTML document with inline CSS and JavaScript. Do not use markdown fences or explanations.
+  text: |
+    Create the lead sheet and simple score for osmd.
+
+    Scenario:
+    Create a concise lead sheet or simple score that a musician can sight-read immediately. Use 8 to 16 bars, a clear title, tempo, chord symbols, one primary melody, a simple accompaniment or tab line when the solution supports it, and a final cadence.
+
+    Implementation requirements:
+    - Use this solution source: MusicXML embedded as a string or loaded from a local file input.
+    - Instantiate OpenSheetMusicDisplay, await load(source), set zoom and options before render(), then await render(). Use SVG by default and Canvas for stress cases.
+    - Syntax contract: Use valid MusicXML input plus valid OSMD JavaScript options such as backend, autoResize, drawTitle, drawMeasureNumbers, pageFormat, drawingParameters, and cursor controls.
+    - Musical coherence contract: pitches, chords, lyrics, articulations, and form must describe one coherent musical example, not disconnected fragments.
+    - Measure-duration contract: every measure, part, voice, layer, sequence, or track must sum to the declared time signature; pickups, tuplets, ties, repeats, and final bars must be explicitly represented.
+    - Clef/key contract: declare initial clefs, keys, time signatures, part names, and any changes in the solution-native structure; transposed parts must use correct written key signatures and accidentals.
+    - Playback/render compatibility contract: include the exact load, render, playback, export, or fallback path expected for this solution and explain unsupported playback honestly inside code comments or metadata.
+    - Accessibility contract: include title, instrument labels, measure numbers or landmarks, keyboard-operable controls when interactive, and text alternatives for screen readers.
+    - Provide loadScore(), renderScore(), setZoom(), transposeOrReload(), cursorNext(), exportSvg(), exportPng(), clearScore(), and destroy() hooks, with DOMParser validation before osmd.load.
+    - Do not claim OSMD provides audio; if playback is requested, drive a cursor with a simple Tone.js or WebAudio bridge and filter rests.
+    - Keep the musical idea simple but complete: phrase structure, chords, melody, and ending must agree.
+    - Use one stable key and meter unless a brief pickup or final bar requires explicit handling.
+    - Include lyrics, rehearsal text, or chord names when the solution can encode them.
+    - Include deterministic sample score data directly in the artifact; do not depend on private credentials or remote score files except public library CDNs or clearly marked placeholders.
+    - Output only the final artifact requested by the system message, with no commentary outside the artifact.
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.2
+output:
+  text_format: html
+  artifact_kind: osmd-musicxml-renderer
+  formats:
+  - format: html
+  - format: musicxml
+  - format: svg
+  - format: canvas
+evaluation:
+  checklist:
+  - 'Format validity: prompt YAML parses as schema 0.4 and the generated artifact is exactly the requested output with no markdown fences.'
+  - 'Syntax: generated artifact uses valid osmd syntax or API calls and includes required parser, compiler, renderer, service, or font setup.'
+  - 'Musical coherence: melody, harmony, rhythm, lyrics, annotations, and form describe one coherent score suitable for the scenario.'
+  - 'Measure duration: every measure in every part, voice, layer, sequence, or track sums to the declared meter; pickups, tuplets, ties, repeats, and final bars are handled explicitly.'
+  - 'Clefs and keys: initial clefs, keys, time signatures, part names, transpositions, and any changes are declared in solution-native fields.'
+  - 'Playback/render compatibility: load, render, compile, export, playback, cursor, soundfont, service auth, font, CORS, or fallback behavior is correct for the solution.'
+  - 'Accessibility: artifact includes title, part labels, text fallback or source view, keyboard-operable controls when interactive, and screen-reader friendly summaries.'
+  - 'Robustness: artifact handles missing fonts/assets, malformed notation, large or dense scores, responsive layout, and cleanup or teardown without runtime failure.'
+  rubric:
+  - name: Format validity
+    weight: 30
+    criteria: The prompt YAML and generated artifact use the required schema, file format, solution syntax, parser or API contract, and contain no markdown fences or malformed structures.
+  - name: Semantic completeness
+    weight: 30
+    criteria: The score covers the requested scenario with complete musical content, annotations, metadata, parts, playback or export path, and solution-specific capabilities.
+  - name: Visual/structural quality
+    weight: 25
+    criteria: The notation structure, engraving or layout hierarchy, labels, spacing, page or responsive behavior, and instructional affordances are clear and professional.
+  - name: Robustness
+    weight: 15
+    criteria: The artifact handles dense material, edge notation, transposition, accessibility, missing assets, service/auth errors, render fallback, playback constraints, and teardown safely.
+  pass_conditions:
+  - YAML parses successfully and all prompt file bytes are ASCII-only.
+  - Rubric weights are exactly 30, 30, 25, and 15, summing to 100.
+  - Generated artifact passes solution syntax validation or the closest practical parser/compiler/load check.
+  - Every measure duration is consistent with declared meter across all parts, voices, tracks, layers, or sequences.
+  - Clefs, keys, time signatures, part names, transpositions, and accidentals are explicit and musically coherent.
+  - Playback, render, compile, export, font, service, or fallback compatibility checks are satisfied for the target solution.
+  - Accessibility and robustness checklist items are satisfied; no rubric dimension scores zero.
+tags:
+- fim
+- music-notation
+- osmd
+- lead-sheet-simple-score
+- interactive
+- lead-sheet
+- simple-score

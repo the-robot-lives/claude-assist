@@ -1,0 +1,90 @@
+schema: "0.4"
+id: workbench-09-graded-projects
+type: image
+quality: high
+
+# The Robot Learns (a CLI learning tool) — Graded Projects: a hands-on project graded by the sub-agent against a rubric. HERO screen.
+# Theme tenets: warm cream "maker's reference sheet" on a cork board inside a terminal window; a big handwritten grade + a stack of pinned rubric cards + a taped citation list joined by a hand-drawn arrow; printed labels + marker titles + mono; 3px cut-paper radius; clay accents.
+# Palette: cream #f5f0e8, brown ink #2c2416, cork #c4a574, marker blue #2980b9, clay orange #e67e22, marker red #e74c3c, marker green #27ae60, sticky yellow #fef3b5, tan #d4c9b5.
+
+prompt:
+  system: |
+    You are a senior product designer rendering a high-fidelity, identity-defining
+    HERO mockup of a command-line learning tool's GRADED PROJECTS surface, skinned
+    as a warm cream "maker's reference sheet" pinned to a cork board inside a
+    terminal window — a hands-on project just graded by a sub-agent against a
+    rubric. Tactile, informal, encouraging: a big handwritten grade, pinned rubric
+    index cards, a taped citation list, hand-drawn arrows. This is the maker's-bench
+    voice at its fullest — pen, tape and pushpins on warm paper, the inverse of a
+    dark chalkboard. It is a text-mode tool window, never a web browser page.
+  text: |
+    A 16:9 high-fidelity HERO mockup of a single TERMINAL WINDOW showing the GRADED
+    PROJECTS surface of "The Robot Learns", a command-line learning tool. The
+    content pane is skinned as a warm cream MAKER'S REFERENCE SHEET pinned to a
+    subtle CORK BOARD — note cards, masking tape and pushpins. Fill the frame with
+    ONE tool window and a thin top title bar; NO web browser chrome, no tabs, no
+    address bar.
+
+    TITLE BAR (thin, top): a warm cream bar with three small window dots and, in
+    fixed-width type, "learn project --grade · build-a-cache".
+
+    HERO — THE GRADE (top-left, dominant): a large pinned "graded" note card lifted
+    well off the board by a soft warm-brown shadow, a red pushpin at its corner, a
+    BIG handwritten marker grade "B+" beside a marker-green tick, and a printed
+    sub-line "Build a write-through cache · matched to your level".
+
+    RUBRIC FEEDBACK (center, a stack of pinned index cards): three overlapping
+    PINNED CARDS, each a per-criterion evaluation — a handwritten marker criterion
+    title ("Correctness", "Concurrency safety", "Tests") with a small marker tick or
+    cross, and two printed feedback lines underneath. One card is tilted a degree;
+    each has its own pushpin. Correctness earns a green tick, Concurrency safety a
+    marker-red cross with a "race on eviction" note.
+
+    CITATIONS (right, taped strip): a masking-taped list titled in marker "see also",
+    with monospace KB references ("kb/caching/write-through.md",
+    "kb/concurrency/locks.md"), a pushpin at the top. A loose HAND-DRAWN ARROW curls
+    from the Concurrency-safety rubric card over to the "locks.md" citation.
+
+    BOTTOM STATUS RULE: a persistent thin bar with fixed-width keybind hints
+    "^R resubmit   ^O open citation   ^N next project   ^Q quit".
+
+    PALETTE & TYPE: warm cream paper on a muted cork board, brown-ink text; friendly
+    clay accents — marker blue for headings and the connector arrow, clay orange for
+    tape and accent borders, marker red for the failing cross and pushpins, marker
+    green for the passing ticks and the grade. Handwritten marker script for the
+    grade, criterion titles, arrows and margin notes; a clean printed geometric sans
+    for feedback and labels; fixed-width monospace for the citation paths.
+
+    SHAPE & SURFACE: barely-rounded cut-paper corners; cards lifted off the cork by
+    soft warm-brown drop shadows (deliberate elevation, two steps for the hero
+    grade); slight rotations; separation by air, tape and shadow, never ruled boxes;
+    sanctioned cork and paper grain that never hurts legibility.
+
+    MOOD: a proud, encouraging maker's bench the morning after a build — organized
+    chaos that makes sense, warm and hands-on, pen-and-tape on cream paper; the
+    light maker-bench inverse of a dark slate chalkboard.
+  negative: "watermark, signature, lorem ipsum placeholder text, low-fidelity wireframe, monitor/device photograph framing, blurry, distorted UI, web browser chrome, address bar, browser tabs, marketing web page, sterile flat corporate report card, dark terminal background, dark chalkboard slate, monochrome CRT"
+
+output:
+  formats:
+    - format: png
+  dimensions:
+    width: 1920
+    height: 1080
+    aspect_ratio: "16:9"
+
+eval:
+  pass_threshold: 0.72
+  criteria:
+    relevance: {weight: 3, description: "Reads as a graded-projects surface skinned as a maker's cream sheet on cork: a dominant pinned grade card (big handwritten grade + green tick + project sub-line), a stack of pinned per-criterion rubric feedback cards with ticks/crosses and short feedback, and a taped citation list of monospace KB references joined to a rubric card by a hand-drawn arrow; title bar; bottom keybind status rule"}
+    theme_fidelity: {weight: 3, description: "Warm cream paper on cork + brown ink with clay accents; handwritten marker grade/titles/arrows + printed sans feedback + monospace citations; pinned cards with soft warm shadows, tape, pushpins, slight rotation; cut-paper radius; light maker-bench not dark chalkboard"}
+    composition: {weight: 2, description: "Strong hero hierarchy with the grade dominant, legible rubric stack and citation strip, plausible real tool window"}
+    technical: {weight: 2, description: "Sharp, correct 16:9 aspect, no artifacts"}
+  reject_if:
+    - "lorem ipsum or placeholder text visible"
+    - "watermark or signature visible"
+    - "wireframe-level fidelity instead of high-fidelity mockup"
+    - "web browser chrome or a marketing web page instead of a tool window"
+    - "dark terminal, dark chalkboard, or monochrome CRT instead of warm cream paper skin"
+
+tags: [workbench, therobotlearns.com, screen-mockup, hero]

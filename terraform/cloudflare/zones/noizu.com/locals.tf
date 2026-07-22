@@ -52,6 +52,7 @@ locals {
     "nb",
     "nextcloud",
     "oneuptime",
+    "uptime",
     "penpot",
     "plane",
     "plantuml",

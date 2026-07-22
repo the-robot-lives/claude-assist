@@ -1,0 +1,80 @@
+schema: "0.4"
+id: fim-diagrams-dsl-xml-structurizr-dsl-04-integration
+type: diagram
+quality: production
+solution: structurizr-dsl
+category: diagrams-dsl-xml
+variant: integration
+prompt:
+  system: You generate Structurizr DSL. Output only a valid workspace { model { ... } views { ... } }
+    definition using C4 concepts. Do not use code fences or explanatory prose.
+  text: Create Structurizr DSL for a production deployment integrating Kubernetes, managed database, identity
+    provider, payment gateway, email service, data warehouse, and observability. Include a deploymentEnvironment
+    with deployment nodes, container instances, infrastructure nodes, and a deployment view.
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.2
+    top_p: 0.9
+output:
+  text_format: structurizr-dsl
+  artifact_kind: architecture_model_source
+  formats:
+  - format: dsl
+  - format: plantuml
+  - format: mermaid
+  - format: json
+evaluation:
+  checklist:
+  - 'Output uses native structurizr-dsl syntax: workspace, model, person, softwareSystem, container, component,
+    relationships, groups, views, include/exclude, autoLayout, styles, themes, and deployment environments.'
+  - 'Output captures the requested semantics: C4 architecture-as-code workspaces with reusable model elements
+    and multiple consistent views.'
+  - 'Output has solution-appropriate structure: clear identifiers, scoped views, autoLayout, tags/styles,
+    and relationships reused across context, container, component, dynamic, and deployment views.'
+  - 'Output is robust for the renderer/importer: all relationship endpoints and view scopes reference
+    defined identifiers, hierarchical identifiers are used when needed, and views include the intended
+    elements.'
+  - Models boundaries, external systems, failure paths, references, ids, or import/export assumptions
+    needed for integration work.
+  - Output contains only the requested artifact source, with no Markdown fences, no explanatory prose,
+    and no non-ASCII characters.
+  rubric:
+    Format validity:
+      weight: 30
+      criteria: 'Must parse as structurizr-dsl and follow structurizr-dsl-specific grammar: workspace,
+        model, person, softwareSystem, container, component, relationships, groups, views, include/exclude,
+        autoLayout, styles, themes, and deployment environments. Deduct heavily for malformed roots, unmatched
+        blocks/tags, invalid ids, unresolved references, or mixing syntax from another diagram DSL.'
+    Semantic completeness:
+      weight: 30
+      criteria: Must satisfy the full scenario for edge/integration use and include the domain entities,
+        relationships, responsibilities, and edge/failure paths requested in the prompt. The diagram must
+        use structurizr-dsl for C4 architecture-as-code workspaces with reusable model elements and multiple
+        consistent views.
+    Visual/structural quality:
+      weight: 25
+      criteria: Must produce a readable rendered or importable artifact with clear identifiers, scoped
+        views, autoLayout, tags/styles, and relationships reused across context, container, component,
+        dynamic, and deployment views. Labels should be concise, grouping should reduce clutter, and styling/layout
+        choices must match the strengths and limits of structurizr-dsl.
+    Robustness:
+      weight: 15
+      criteria: Must remain stable under normal rendering, import, export, or documentation use. Check
+        all relationship endpoints and view scopes reference defined identifiers, hierarchical identifiers
+        are used when needed, and views include the intended elements, avoid placeholders that block execution,
+        and keep output ASCII-only and deterministic.
+  pass_conditions:
+  - Total rubric score is at least 85 out of 100.
+  - Format validity score is at least 24 out of 30.
+  - The generated artifact source has no code fences, no prose wrapper, and no non-ASCII characters.
+  - The generated source can be parsed or imported by the normal structurizr-dsl toolchain without unresolved
+    references or missing required root elements.
+tags:
+- fim
+- diagrams-dsl-xml
+- structurizr-dsl
+- integration
+- structurizr
+- c4
+- architecture-as-code
+

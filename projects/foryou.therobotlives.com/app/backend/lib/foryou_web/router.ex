@@ -27,6 +27,10 @@ defmodule ForyouWeb.Router do
     plug ForyouWeb.Plugs.RateLimit, action: :auth_sensitive
   end
 
+  pipeline :rate_limited_inquiry do
+    plug ForyouWeb.Plugs.RateLimit, action: :inquiry
+  end
+
   pipeline :org_viewer do
     plug ForyouWeb.Plugs.RequireRole, role: "viewer"
   end
@@ -60,6 +64,11 @@ defmodule ForyouWeb.Router do
     get "/auth/sso/providers", SSOController, :providers
     post "/auth/sso/exchange", SSOController, :exchange
     get "/config/features", ConfigController, :features
+  end
+
+  scope "/api/v1", ForyouWeb do
+    pipe_through [:api, :rate_limited_inquiry]
+    post "/inquiries", InquiryController, :create
   end
 
   scope "/api/v1", ForyouWeb do

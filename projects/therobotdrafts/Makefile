@@ -5,7 +5,9 @@
 #
 #   make build   # headless macOS .app  -> Builds/macOS/The Robot Draft.app
 #   make run     # build if needed, then open the .app
+#   make install # build if needed, then copy the .app into /Applications
 #   make test    # run the EditMode test suite headless
+#   make check   # verify doc pointers, then run the EditMode test suite
 #   make open    # open the existing build without rebuilding
 #   make clean   # remove Builds/ and test results
 #   make doctor  # report the editor that will be used and whether Mac Build Support is present
@@ -19,6 +21,7 @@ PROJECT_DIR := $(patsubst %/,%,$(dir $(abspath $(lastword $(MAKEFILE_LIST)))))
 HUB         := /Applications/Unity/Hub/Editor
 APP_NAME    := The Robot Draft.app
 APP_PATH    := $(PROJECT_DIR)/Builds/macOS/$(APP_NAME)
+INSTALL_PATH := /Applications/$(APP_NAME)
 DOC_POINTERS := $(PROJECT_DIR)/../../utilities/shell/misc-git-utils/bin/doc-pointers
 PIN         := $(shell awk -F': *' '/^m_EditorVersion:/{print $$2}' "$(PROJECT_DIR)/ProjectSettings/ProjectVersion.txt")
 
@@ -27,14 +30,16 @@ TEST_EDITOR := $(firstword \
   $(wildcard $(HUB)/$(PIN)/Unity.app/Contents/MacOS/Unity) \
   $(shell ls -dt $(HUB)/*/Unity.app/Contents/MacOS/Unity 2>/dev/null | head -n1))
 
-.PHONY: build run open test clean doctor help purge-license doc-pointers doc-pointers-check install-doc-pointer-hook
+.PHONY: build run install open test check clean doctor help purge-license doc-pointers doc-pointers-check install-doc-pointer-hook
 
 help:
 	@echo "The Robot Draft — make targets:"
 	@echo "  build   headless macOS .app  -> Builds/macOS/$(APP_NAME)"
 	@echo "  run     build if needed, then open the app"
+	@echo "  install build if needed, then copy the app into /Applications"
 	@echo "  open    open the existing build (no rebuild)"
 	@echo "  test    run the EditMode test suite headless"
+	@echo "  check   verify doc pointers, then run EditMode tests"
 	@echo "  clean   remove Builds/ and test results"
 	@echo "  doctor  show the editor that will be used"
 	@echo "  purge-license  kill a stuck Unity licensing client (fixes build hangs)"
@@ -59,6 +64,15 @@ open:
 	@test -d "$(APP_PATH)" || { echo "No build yet — run 'make build' first." >&2; exit 1; }
 	@open "$(APP_PATH)"
 
+# Build if needed, then copy the .app into /Applications (ditto preserves the bundle's resource
+# forks/metadata, unlike a plain cp -R). Replaces any existing install at that path.
+install:
+	@test -d "$(APP_PATH)" || "$(PROJECT_DIR)/build-mac.sh"
+	@echo "Installing to $(INSTALL_PATH) ..."
+	@rm -rf "$(INSTALL_PATH)"
+	@ditto "$(APP_PATH)" "$(INSTALL_PATH)"
+	@echo "Installed: $(INSTALL_PATH)"
+
 test:
 	@test -n "$(TEST_EDITOR)" || { \
 	  echo "ERROR: no Unity editor found under $(HUB)." >&2; \
@@ -69,8 +83,10 @@ test:
 	@"$(TEST_EDITOR)" -batchmode -nographics -projectPath "$(PROJECT_DIR)" \
 	  -runTests -testPlatform EditMode \
 	  -testResults "$(PROJECT_DIR)/Logs/test-results.xml" \
-	  -logFile "$(PROJECT_DIR)/Logs/test-run.log"
+		  -logFile "$(PROJECT_DIR)/Logs/test-run.log"
 	@echo "Tests passed."
+
+check: doc-pointers-check test
 
 clean:
 	@rm -rf "$(PROJECT_DIR)/Builds/macOS" "$(PROJECT_DIR)/Builds/build-macos.log" \
@@ -101,10 +117,10 @@ purge-license:
 	fi
 
 doc-pointers:
-	@"$(DOC_POINTERS)" --root "$(PROJECT_DIR)" --write
+	@"$(DOC_POINTERS)" build --root "$(PROJECT_DIR)" --write
 
 doc-pointers-check:
-	@"$(DOC_POINTERS)" --root "$(PROJECT_DIR)" --check
+	@"$(DOC_POINTERS)" build --root "$(PROJECT_DIR)" --check
 
 install-doc-pointer-hook:
-	@"$(DOC_POINTERS)" --root "$(PROJECT_DIR)" --install-hook
+	@"$(DOC_POINTERS)" hook --root "$(PROJECT_DIR)"

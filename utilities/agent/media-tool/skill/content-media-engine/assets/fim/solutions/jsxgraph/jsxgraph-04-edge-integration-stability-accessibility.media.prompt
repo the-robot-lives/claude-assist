@@ -1,0 +1,74 @@
+---
+schema: "0.4"
+id: fim-math-and-scientific-rendering-jsxgraph-04-edge-integration-stability-accessibility
+type: interactive
+quality: high
+solution: jsxgraph
+category: math-and-scientific-rendering
+variant: edge-integration-stability-accessibility
+references:
+- references/fim/overview/geospatial-math-scientific/jsxgraph.md
+- references/fim/solution/jsxgraph.md
+prompt:
+  system: |-
+    You are a senior browser math reliability engineer. Output only one complete ASCII HTML file using JSXGraph. No Markdown fences or prose outside the source.
+  text: |-
+    Create a JSXGraph edge-case harness for f(x)=sin(x)/x. Plot the curve with a safe near-zero branch, mark the removable value f(0)=1, add a zoom slider that changes the board bounding box, and include an accessible status region that explains how x=0 is handled.
+
+    Requirements: use initBoard, functiongraph, point, text, slider, board.setBoundingBox, board.on update handling where useful, non-color line styles, keyboard-accessible HTML controls, and comments describing SVG/PNG capture. Avoid NaN or Infinity in emitted point coordinates.
+  provider_options:
+    temperature: 0.2
+    max_tokens: 8192
+output:
+  text_format: html
+  artifact_kind: jsxgraph-html
+  formats:
+  - format: html
+  - format: png
+  - format: svg
+evaluation:
+  checklist:
+  - "YAML parses and required schema 0.4 fields are present."
+  - "HTML is complete, ASCII-only, and uses JSXGraph board lifecycle and safe function plotting."
+  - "Math correctness covers sinc limit, near-zero branch, plotted curve, and marked f(0)=1 value."
+  - "Notation validity covers labels, status text, dimensionless x, normalized response, and branch comments."
+  - "Renderability covers dependency loading, visible board, bounding-box zoom, and nonblank output."
+  - "Labels and units identify x, normalized f(x), removable point, zoom level, and limit value."
+  - "Domain edge cases cover x=0, near-zero cancellation, NaN or Infinity prevention, resize, and accessible controls."
+  rubric:
+  - name: Format validity
+    weight: 30
+    criteria:
+    - "Output is one complete ASCII HTML file with no Markdown wrapper."
+    - "The file uses valid JSXGraph APIs and accessible HTML controls."
+    - "The source documents capture, dependency, and resize expectations."
+  - name: Semantic completeness
+    weight: 30
+    criteria:
+    - "Safe sinc curve, removable point, zoom slider, status region, and capture notes are all present."
+    - "The implementation uses JSXGraph as the primary render surface."
+    - "The removable singularity is mathematically and visually explicit."
+  - name: Visual/structural quality
+    weight: 25
+    criteria:
+    - "Main curve and point marker are legible at normal and zoomed bounds."
+    - "Non-color encodings and labels make the edge case accessible."
+    - "Controls and status text do not disrupt board dimensions."
+  - name: Robustness
+    weight: 15
+    criteria:
+    - "Handles exact zero, near-zero values, zoom changes, and repeated updates without NaN artifacts."
+    - "Avoids unbounded object creation and stale status text."
+    - "Documents export and browser integration limits."
+  pass_conditions:
+  - "Rubric weights are exactly Format validity 30, Semantic completeness 30, Visual/structural quality 25, Robustness 15."
+  - "Score is 80 or higher out of 100 with no critical failure in math correctness, notation validity, renderability, or accessibility."
+  - "The artifact safely renders the sinc edge case with accessible controls and labels."
+  - "Domain edge cases and integration constraints are explicit."
+tags:
+- fim
+- math-and-scientific-rendering
+- jsxgraph
+- edge-integration-stability-accessibility
+- numeric-stability
+- accessibility

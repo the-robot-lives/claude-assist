@@ -1,0 +1,11 @@
+# .trd-yaml — TheRobotDrafts native model (IxModel serialization)
+name: Example ArchiMate Strategy - Simple Capability
+elements:
+  - { id: Legend, type: Note, name: 'ArchiMate color/layer map:\nStrategy = light (##E8F5E9)\nOutcome   = light blue', documentation: 'ArchiMate color/layer map:\nStrategy = light (##E8F5E9)\nOutcome   = light blue' }
+  - { id: C1, type: Boundary, name: \nCustomer\nOnboarding, stereotype: capability }
+  - { id: C2, type: Boundary, name: \nFraud\nDetection, stereotype: capability }
+  - { id: R1, type: Boundary, name: \nCustomer Data\nPlatform, stereotype: resource }
+  - { id: CA1, type: Boundary, name: \nDigitize\nOnboarding, stereotype: course of action }
+  - { id: O1, type: Boundary, name: \nFaster\nActivation, stereotype: outcome }
+diagrams:
+  - { id: d1, name: Example ArchiMate Strategy - Simple Capability, kind: component, layoutProvenance: Synthesized }

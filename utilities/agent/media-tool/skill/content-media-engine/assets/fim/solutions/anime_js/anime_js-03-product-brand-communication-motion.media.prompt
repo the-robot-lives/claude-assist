@@ -1,0 +1,73 @@
+schema: "0.4"
+id: anime_js-03-product-brand-communication-motion
+type: interactive
+quality: high
+solution: anime_js
+category: animation-and-motion
+variant: product-brand-communication-motion
+references:
+  - "references/fim/overview/canvas-svg-creative-animation/anime_js.md"
+  - "references/fim/solution/anime_js.md"
+prompt:
+  system: |-
+    Generate production-quality Anime.js product communication motion assets for FIM evaluation. Output only a complete self-contained HTML document with inline CSS and JavaScript.
+  text: |-
+    Create a polished product and brand communication animation using Anime.js.
+
+    Scenario:
+    Build a launch card for a fictional analytics product. The sequence should reveal a wordmark, draw an SVG product glyph, animate three value cards, highlight one CTA, and loop a subtle status pulse. The motion must communicate hierarchy and brand personality without behaving like a generic landing page.
+
+    Implementation requirements:
+    - Use Anime.js 3.2.1 from a CDN or equivalent import with anime.timeline(), staggered reveals, SVG stroke drawing, and color or CSS variable tweening.
+    - Define motion tokens in code comments or constants for duration, delay, easing, loop cadence, and reduced-motion substitutions.
+    - Validate that all DOM and SVG targets exist before playing and show a concise fallback if any critical target is missing.
+    - Include play, pause, replay, and "reduce motion" controls that update accessible labels.
+    - Use responsive layout constraints so the wordmark, value cards, CTA, controls, and animated SVG never overlap.
+    - Prefer transform and opacity for movement; avoid animating layout properties except during setup.
+    - Provide a reduced-motion state that preserves the brand message and disables the looped pulse.
+    - Output only the final artifact, with no markdown fences or explanatory prose outside the artifact.
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.24
+output:
+  text_format: html
+  artifact_kind: animejs-html-product-brand-motion
+  formats:
+    - format: html
+  dimensions:
+    width: 1440
+    height: 900
+  render_expectation: "Interactive branded motion composition suitable for product communication review."
+evaluation:
+  checklist:
+    - "Format validity: YAML parses under schema 0.4 and generated output is exactly one HTML artifact with no markdown fences."
+    - "Anime.js API: Uses timeline, stagger, SVG stroke drawing, color or CSS variable tweening, and valid DOM/SVG targets."
+    - "Motion timing: Defines duration, delay, easing, loop cadence, controls, and reduced-motion substitutions."
+    - "Visual quality: Brand hierarchy is clear and text, CTA, cards, SVG, and controls never overlap."
+    - "Reduced motion: Preserves the final brand message while disabling nonessential loops and large movement."
+    - "Performance: Uses transform and opacity for movement and avoids layout thrash."
+  rubric:
+    - name: "Format validity"
+      weight: 30
+      criteria: "YAML and generated HTML are syntactically valid, required fields are present, id and file name match, and the artifact uses Anime.js rather than a substitute animation library."
+    - name: "Semantic completeness"
+      weight: 30
+      criteria: "The artifact delivers product communication motion with brand reveal, SVG drawing, value-card sequencing, CTA emphasis, controls, target validation, and reduced-motion support."
+    - name: "Motion/visual quality"
+      weight: 25
+      criteria: "Motion supports brand hierarchy, uses appropriate easing, avoids distraction, and keeps all content readable without overlap."
+    - name: "Robustness"
+      weight: 15
+      criteria: "Handles missing targets, responsive layout, reduced motion, loop control, and performance constraints without runtime errors."
+  pass_conditions:
+    - "Rubric weights are exactly 30, 30, 25, and 15 for a total of 100."
+    - "YAML parses successfully and all prompt text is ASCII-only."
+    - "Generated artifact runs with no console errors when Anime.js is available."
+    - "Score is at least 80 out of 100 with no zero score in any rubric dimension."
+tags:
+  - "fim"
+  - "animation-and-motion"
+  - "anime_js"
+  - "product-brand-communication-motion"
+  - "brand-motion"
+  - "svg-drawing"

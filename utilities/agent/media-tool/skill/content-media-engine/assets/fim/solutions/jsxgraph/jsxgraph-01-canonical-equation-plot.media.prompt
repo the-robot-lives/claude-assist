@@ -1,0 +1,75 @@
+---
+schema: "0.4"
+id: fim-math-and-scientific-rendering-jsxgraph-01-canonical-equation-plot
+type: interactive
+quality: high
+solution: jsxgraph
+category: math-and-scientific-rendering
+variant: canonical-equation-plot
+references:
+- references/fim/overview/geospatial-math-scientific/jsxgraph.md
+- references/fim/solution/jsxgraph.md
+prompt:
+  system: |-
+    You are a senior self-hosted interactive geometry engineer. Output only one complete ASCII HTML file using JSXGraph. No Markdown fences or prose outside the source.
+  text: |-
+    Create a canonical JSXGraph equation/plot board for f(x)=a*x^2+b*x+c. Use JXG.JSXGraph.initBoard, axes, grid, sliders for a, b, and c, a functiongraph, vertex point, optional roots, and a tangent line at a movable glider point on the curve.
+
+    Requirements: use board.create with native element types, keepaspectratio, pan and zoom, stable object variables, readable labels, colorblind-safe styling, an export note for SVG or PNG capture, and a status panel that reports discriminant and vertex values.
+  provider_options:
+    temperature: 0.2
+    max_tokens: 8192
+output:
+  text_format: html
+  artifact_kind: jsxgraph-html
+  formats:
+  - format: html
+  - format: png
+  - format: svg
+evaluation:
+  checklist:
+  - "YAML parses and required schema 0.4 fields are present."
+  - "HTML is complete, ASCII-only, and initializes a JSXGraph board with axes, grid, pan, and zoom."
+  - "Math correctness covers quadratic graph, sliders, vertex, discriminant, roots, and tangent slope."
+  - "Notation validity covers function labels, point names, slider labels, and status values."
+  - "Renderability covers nonzero board dimensions, loaded JSXGraph CSS/JS, and nonblank first render."
+  - "Labels and units identify x, y, coefficients, roots, vertex, tangent point, and discriminant."
+  - "Domain edge cases cover a=0, negative discriminant, repeated roots, root visibility, and label overlap."
+  rubric:
+  - name: Format validity
+    weight: 30
+    criteria:
+    - "Output is one complete ASCII HTML file with no Markdown wrapper."
+    - "The file uses valid JSXGraph board and board.create calls."
+    - "The artifact documents local run, dependencies, and export or capture expectations."
+  - name: Semantic completeness
+    weight: 30
+    criteria:
+    - "Sliders, functiongraph, vertex, roots, tangent, labels, and status readout are all implemented."
+    - "JSXGraph is the primary rendering and interaction surface."
+    - "Dependent elements update from board state rather than static coordinates."
+  - name: Visual/structural quality
+    weight: 25
+    criteria:
+    - "Initial board bounds frame the curve and important points."
+    - "Styles are readable and distinguishable without color alone."
+    - "The status panel and board do not overlap or resize unpredictably."
+  - name: Robustness
+    weight: 15
+    criteria:
+    - "Handles degenerate linear cases and absent roots without broken objects."
+    - "Uses update-safe functions and avoids excessive object recreation."
+    - "Documents dependency, resize, and export constraints."
+  pass_conditions:
+  - "Rubric weights are exactly Format validity 30, Semantic completeness 30, Visual/structural quality 25, Robustness 15."
+  - "Score is 80 or higher out of 100 with no critical failure in math correctness, notation validity, or renderability."
+  - "The artifact presents a working JSXGraph quadratic explorer with labels, units, and dynamic state."
+  - "Domain edge cases and integration constraints are explicit."
+tags:
+- fim
+- math-and-scientific-rendering
+- jsxgraph
+- canonical-equation-plot
+- self-hosted
+- interactive-plot
+

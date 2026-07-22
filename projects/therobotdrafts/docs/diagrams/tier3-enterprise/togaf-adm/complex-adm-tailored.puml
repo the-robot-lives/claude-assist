@@ -1,0 +1,103 @@
+' ============================================================================
+' METADATA
+'   author:       TheRobotDrafts Examples
+'   description:  Full ADM cycle with artifacts per phase, iteration + architecture continuum,
+'                 and stakeholder concerns feeding in.
+'   usecase:      Teach tailored ADM with iteration, continuum annotations, stakeholder concerns.
+'   complexity:   complex
+'   domain:       enterprise / architecture-method
+' ============================================================================
+title Example TOGAF ADM - Complex Tailored Cycle
+
+note as TopNote
+  Outer ring = phases A..H with their artifacts.
+  Center = Requirements Mgmt.
+  LEFT = Architecture Continuum (reusable assets).
+  RIGHT = Stakeholder Concerns feeding each phase.
+  Dotted iteration arrow = next loop of the cycle.
+end note
+
+' ---- Center ----
+usecase "Requirements\nManagement" as RM
+
+' ---- Phase A ----
+package "A: Architecture Vision" as PA {
+  rectangle "Stakeholder Map" as AA1
+  rectangle "Business Scenarios" as AA2
+  rectangle "Statement of Work" as AA3
+}
+
+' ---- Phase B ----
+package "B: Business Architecture" as PB {
+  rectangle "Business Footprint" as BB1
+  rectangle "Process Catalog" as BB2
+}
+
+' ---- Phase C ----
+package "C: IS Architectures" as PC {
+  rectangle "Data Entity Catalog" as CC1
+  rectangle "App Portfolio" as CC2
+}
+
+' ---- Phase D ----
+package "D: Technology Architecture" as PD {
+  rectangle "Standards Catalog" as DD1
+  rectangle "Platform Model" as DD2
+}
+
+' ---- Phase E ----
+package "E: Opportunities & Solutions" as PE {
+  rectangle "Gap Analysis" as EE1
+  rectangle "Work Packages" as EE2
+}
+
+' ---- Phase F ----
+package "F: Migration Planning" as PF {
+  rectangle "Implementation Roadmap" as FF1
+}
+
+' ---- Phase G ----
+package "G: Implementation Governance" as PG {
+  rectangle "Compliance Reviews" as GG1
+}
+
+' ---- Phase H ----
+package "H: Change Management" as PH {
+  rectangle "Change Request Log" as HH1
+  rectangle "Lessons Learned" as HH2
+}
+
+' Phase sequence
+PA --> PB --> PC --> PD --> PE --> PF --> PG --> PH
+PH ..> PA : next iteration (dotted)
+
+' Requirements to all
+RM --> PA
+RM --> PB
+RM --> PC
+RM --> PD
+RM --> PE
+RM --> PF
+RM --> PG
+RM --> PH
+
+' ---- Architecture Continuum (LEFT) ----
+package "Architecture Continuum" as AC {
+  database "Foundation Architectures" as AC1
+  database "Common Systems Architectures" as AC2
+  database "Industry Architectures" as AC3
+  database "Organization-Specific" as AC4
+}
+AC1 --> AC2 --> AC3 --> AC4 : reuse ladder
+AC2 ..> PD : feeds standards
+AC3 ..> PC : feeds app patterns
+
+' ---- Stakeholder Concerns (RIGHT) ----
+actor "Business Sponsor" as SH1
+actor "CISO" as SH2
+actor "CIO" as SH3
+SH1 --> PA : vision concern
+SH2 --> PD : security concern
+SH2 --> PG : governance concern
+SH3 --> PE : investment concern
+SH3 --> PF : timeline concern

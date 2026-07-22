@@ -50,10 +50,7 @@ pub fn topological_sort(prompts: Vec<ParsedPrompt>) -> color_eyre::Result<Vec<Pa
             };
 
             if resolved == i {
-                color_eyre::eyre::bail!(
-                    "Self-referencing dependency in {}",
-                    p.meta.path.display()
-                );
+                color_eyre::eyre::bail!("Self-referencing dependency in {}", p.meta.path.display());
             }
 
             adj[resolved].push(i);
@@ -86,7 +83,10 @@ pub fn topological_sort(prompts: Vec<ParsedPrompt>) -> color_eyre::Result<Vec<Pa
             .filter(|(i, _)| !sorted_indices.contains(i))
             .map(|(_, p)| p.meta.id.as_str())
             .collect();
-        color_eyre::eyre::bail!("Dependency cycle detected involving: {}", remaining.join(", "));
+        color_eyre::eyre::bail!(
+            "Dependency cycle detected involving: {}",
+            remaining.join(", ")
+        );
     }
 
     let mut prompts = prompts;

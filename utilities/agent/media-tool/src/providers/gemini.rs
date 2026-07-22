@@ -90,14 +90,19 @@ impl GeminiProvider {
             ));
         }
 
-        let result = self.post_with_retry(&url, &body, output_path, options.verbose).await?;
+        let result = self
+            .post_with_retry(&url, &body, output_path, options.verbose)
+            .await?;
         let Some(result) = result else {
             return Ok(false);
         };
 
         let predictions = result["predictions"].as_array();
         if predictions.is_none() || predictions.unwrap().is_empty() {
-            ui::fail_msg(&format!("No predictions returned for {}", output_path.display()));
+            ui::fail_msg(&format!(
+                "No predictions returned for {}",
+                output_path.display()
+            ));
             return Ok(false);
         }
 
@@ -174,7 +179,9 @@ impl GeminiProvider {
             ui::verbose(&format!("Model: {} (generateContent)", model));
         }
 
-        let result = self.post_with_retry(&url, &body, output_path, options.verbose).await?;
+        let result = self
+            .post_with_retry(&url, &body, output_path, options.verbose)
+            .await?;
         let Some(result) = result else {
             return Ok(false);
         };
@@ -182,7 +189,10 @@ impl GeminiProvider {
         // Extract image from generateContent response
         let candidates = result["candidates"].as_array();
         if candidates.is_none() || candidates.unwrap().is_empty() {
-            ui::fail_msg(&format!("No candidates in response for {}", output_path.display()));
+            ui::fail_msg(&format!(
+                "No candidates in response for {}",
+                output_path.display()
+            ));
             return Ok(false);
         }
 
@@ -210,7 +220,10 @@ impl GeminiProvider {
             let truncated: String = resp_preview.chars().take(500).collect();
             ui::verbose(&format!("Response (no image found): {}", truncated));
         }
-        ui::fail_msg(&format!("No image data in response for {}", output_path.display()));
+        ui::fail_msg(&format!(
+            "No image data in response for {}",
+            output_path.display()
+        ));
         Ok(false)
     }
 
@@ -258,7 +271,8 @@ impl GeminiProvider {
                         429 => {
                             ui::fail_msg(&format!(
                                 "Rate limited after {} retries: {}",
-                                MAX_RETRIES, output_path.display()
+                                MAX_RETRIES,
+                                output_path.display()
                             ));
                             return Ok(None);
                         }
@@ -266,7 +280,8 @@ impl GeminiProvider {
                             let preview: String = error_body.chars().take(300).collect();
                             ui::fail_msg(&format!(
                                 "Bad request (400) for {}: {}",
-                                output_path.display(), preview
+                                output_path.display(),
+                                preview
                             ));
                             if verbose {
                                 ui::verbose(&error_body);
@@ -277,21 +292,28 @@ impl GeminiProvider {
                             let preview: String = error_body.chars().take(200).collect();
                             color_eyre::eyre::bail!(
                                 "Authentication failed ({}): {}\n  Check your GEMINI_API_KEY",
-                                status_code, preview
+                                status_code,
+                                preview
                             );
                         }
                         _ => {
                             let preview: String = error_body.chars().take(200).collect();
                             ui::fail_msg(&format!(
                                 "HTTP {} for {}: {}",
-                                status_code, output_path.display(), preview
+                                status_code,
+                                output_path.display(),
+                                preview
                             ));
                             return Ok(None);
                         }
                     }
                 }
                 Err(e) => {
-                    ui::fail_msg(&format!("Network error for {}: {}", output_path.display(), e));
+                    ui::fail_msg(&format!(
+                        "Network error for {}: {}",
+                        output_path.display(),
+                        e
+                    ));
                     if attempt < MAX_RETRIES {
                         ui::warn_msg(&format!(
                             "Retrying in {}s (attempt {}/{})",

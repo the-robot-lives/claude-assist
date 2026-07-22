@@ -18,13 +18,18 @@ Default: `~/.local/bin`. Override with:
 make install INSTALL_DIR=/usr/local/bin
 ```
 
-## Caveat: Library Dependency
+## Library Dependency
 
-Installed scripts source `../share/k8-lib/bin/` relative to their location. When installed to `~/.local/bin`, this path resolves to `~/.local/share/k8-lib`.
-Options:
+Installed scripts source k8-lib by **absolute path** —
+`${K8_LIB_DIR:-$HOME/.local/share/k8-lib}` — not relative to the script location, so
+copies in `~/.local/bin` (or anywhere else) work without a co-located `share/` tree.
 
-1. **Symlink instead of copy** — link scripts from repo into `$PATH`
-2. **Install k8-lib in shared path** — copy to `~/.local/share/k8-lib/` and ensure scripts point to `../share/k8-lib/bin`
-3. **Run from repo** — add the repo's `bin/` to `$PATH` directly
+k8-lib itself is installed by the parent monorepo:
 
-The current Makefile uses option 1's simpler cousin (direct copy), which means the library must be addressed separately if scripts depend on it at runtime.
+```bash
+make install-utilities   # from the Noizu monorepo root — installs all utilities + k8-lib
+```
+
+If k8-lib lives elsewhere, set `K8_LIB_DIR` before invoking any tool.
+`cluster-setup-telemetry` is the exception: it tolerates a missing k8-lib entirely (it
+runs on remote VMs) and falls back to defaults plus `K8_TELEMETRY_*` env overrides.

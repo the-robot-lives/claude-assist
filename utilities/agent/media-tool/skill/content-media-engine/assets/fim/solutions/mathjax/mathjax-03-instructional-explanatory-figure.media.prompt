@@ -1,0 +1,75 @@
+---
+schema: "0.4"
+id: fim-math-and-scientific-rendering-mathjax-03-instructional-explanatory-figure
+type: document
+quality: high
+solution: mathjax
+category: math-and-scientific-rendering
+variant: instructional-explanatory-figure
+references:
+- references/fim/overview/geospatial-math-scientific/mathjax.md
+- references/fim/solution/mathjax.md
+prompt:
+  system: |-
+    You are a senior accessible math education engineer. Output only one complete ASCII HTML file using MathJax. No Markdown fences or prose outside the source.
+  text: |-
+    Create an instructional MathJax page explaining Euler's identity from the power series for exp(i*x), sin(x), and cos(x). Show the series alignment, group real and imaginary terms, evaluate at x=pi, and include an accessible HTML/SVG unit-circle figure.
+
+    Requirements: use MathJax aligned equations, macros for real and imaginary parts, semantic headings, figure caption, keyboard-readable step list, and a dynamic toggle that re-typesets a compact or expanded derivation with MathJax.typesetPromise.
+  provider_options:
+    temperature: 0.2
+    max_tokens: 8192
+output:
+  text_format: html
+  artifact_kind: mathjax-html-document
+  formats:
+  - format: html
+  - format: mathml
+  - format: svg
+evaluation:
+  checklist:
+  - "YAML parses and required schema 0.4 fields are present."
+  - "HTML is complete, ASCII-only, and uses MathJax for static and dynamic math."
+  - "Math correctness covers series expansions, real and imaginary grouping, and evaluation at x=pi."
+  - "Notation validity covers TeX delimiters, aligned equations, macros, and dynamic re-typesetting."
+  - "Renderability covers startup, typesetPromise after DOM updates, fallback text, and nonblank output."
+  - "Labels and units identify angle x in radians, unit-circle axes, real part, imaginary part, and final identity."
+  - "Domain edge cases cover dynamic typesetting reuse, long equations, load failure, and color-only figure labels."
+  rubric:
+  - name: Format validity
+    weight: 30
+    criteria:
+    - "Output is one complete ASCII HTML file with no Markdown wrapper."
+    - "The file uses valid MathJax configuration and dynamic typesetting APIs."
+    - "The source includes deterministic ids and fallback behavior."
+  - name: Semantic completeness
+    weight: 30
+    criteria:
+    - "Series derivation, grouping, x=pi evaluation, unit-circle figure, toggle, and step list are all present."
+    - "MathJax renders all mathematical notation."
+    - "The explanation is mathematically correct and instructionally coherent."
+  - name: Visual/structural quality
+    weight: 25
+    criteria:
+    - "Expanded and compact derivations are readable without overlap."
+    - "The unit-circle figure and labels support the derivation."
+    - "The toggle and step list remain accessible."
+  - name: Robustness
+    weight: 15
+    criteria:
+    - "Handles repeated toggles, typesetClear if needed, long equations, and load failure."
+    - "Uses semantic fallback content."
+    - "Documents dynamic MathJax constraints."
+  pass_conditions:
+  - "Rubric weights are exactly Format validity 30, Semantic completeness 30, Visual/structural quality 25, Robustness 15."
+  - "Score is 80 or higher out of 100 with no critical failure in math correctness, notation validity, renderability, or accessibility."
+  - "The artifact teaches Euler's identity with dynamic MathJax and accessible structure."
+  - "Domain edge cases and dynamic rendering constraints are represented."
+tags:
+- fim
+- math-and-scientific-rendering
+- mathjax
+- instructional-explanatory-figure
+- eulers-identity
+- dynamic-typesetting
+

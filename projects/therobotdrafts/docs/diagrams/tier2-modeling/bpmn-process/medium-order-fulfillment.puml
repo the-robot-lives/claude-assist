@@ -1,0 +1,82 @@
+@startuml
+' ============================================================================
+' METADATA
+'   author:       TheRobotDrafts Examples
+'   description:  Medium BPMN process — service+user tasks, parallel & exclusive gateways, error boundary, 2 lanes.
+'   usecase:      Order fulfillment with payment + shipping handoff.
+'   complexity:   medium
+'   domain:       business-process
+' ============================================================================
+title Example BPMN Process - Order Fulfillment
+
+' Shape -> BPMN mapping (PlantUML has no native BPMN):
+'   circle/usecase (thin) = start event
+'   circle (thick/double) = end event
+'   rectangle             = task (user/service/manual)
+'   usecase diamond       = gateway
+'   -->                    = sequence flow
+'   ..>                    = message flow (dashed)
+' Boundary events: drawn as a small concentric circle on a task.
+
+' --- Lanes (single pool, two lanes) --------------------------------------
+|Order Desk|
+|Warehouse|
+
+' --- Start ----------------------------------------------------------------
+usecase " " as Start
+
+' --- Tasks ----------------------------------------------------------------
+rectangle "Receive Order" as T1
+rectangle "Charge Payment" as T2
+rectangle "Pack Items" as T3
+rectangle "Ship Order" as T4
+rectangle "Refund Customer" as T5
+
+' --- Gateways -------------------------------------------------------------
+usecase "Split (AND)" as And1
+usecase "Paid?" as Xor1
+
+' --- End ------------------------------------------------------------------
+usecase " " as EndOk
+usecase " " as EndFail
+
+Start --> T1
+T1 --> And1
+' Parallel gateway splits into two concurrent branches
+And1 --> T2
+And1 --> T3
+
+' Error boundary on payment — if charge fails, branch to refund
+T2 --> Xor1
+Xor1 --> T4 : (yes)
+Xor1 --> T5 : (no — payment error)
+
+' Boundary event annotation for the error attached to T2
+note right of T2
+  <b>Error boundary event</b>
+  (concentric circle on task)
+  If payment raises an error,
+  the token jumps to the
+  compensation path (Refund).
+end note
+
+T3 --> T4
+T4 --> EndOk
+T5 --> EndFail
+
+note top of And1
+  <b>Parallel gateway (AND)</b>
+  Forks into concurrent branches;
+  the matching join waits for all.
+end note
+
+note right of Xor1
+  <b>Exclusive gateway (XOR)</b>
+  One path taken based on condition.
+end note
+
+note bottom of EndOk
+  <b>End event (thick circle)</b>
+end note
+
+@enduml

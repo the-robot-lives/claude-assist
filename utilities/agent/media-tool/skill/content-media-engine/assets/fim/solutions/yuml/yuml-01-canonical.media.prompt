@@ -1,0 +1,81 @@
+schema: "0.4"
+id: fim-diagrams-dsl-xml-yuml-01-canonical
+type: diagram
+quality: production
+solution: yuml
+category: diagrams-dsl-xml
+variant: canonical
+prompt:
+  system: You generate yUML DSL snippets and, when requested, URL-ready yuml.me paths. Output only valid
+    yUML syntax or URL path text, without code fences or explanatory prose.
+  text: Create yUML class diagram DSL for a shopping cart domain. Include Customer, Cart, CartItem, Product,
+    Coupon, Order, Payment, and Shipment with compartments, composition, aggregation, inheritance if useful,
+    cardinalities, and simple bg colors.
+  provider_options:
+    max_tokens: 4096
+    temperature: 0.2
+    top_p: 0.9
+output:
+  text_format: yuml
+  artifact_kind: url_diagram_source
+  formats:
+  - format: yuml
+  - format: url
+  - format: svg
+  - format: png
+evaluation:
+  checklist:
+  - 'Output uses native yuml syntax: yUML bracketed class nodes, use-case parentheses, activity nodes,
+    supported relationship operators, cardinality labels, inline bg colors, diagram style/type/path segments,
+    and URL-safe content.'
+  - 'Output captures the requested semantics: lightweight UML class, activity, use-case, state, deployment,
+    or package diagrams for remote yuml.me rendering.'
+  - 'Output has solution-appropriate structure: terse relationships, readable node compartments, explicit
+    diagram type, and simple styling that fits URL rendering constraints.'
+  - 'Output is robust for the renderer/importer: DSL is URL-encodable, avoids unsupported rich UML constructs,
+    does not rely on sequence features for serious interactions, and escapes or omits characters that
+    would break a URL.'
+  - Covers the canonical use case with the essential native constructs of this solution, not a generic
+    diagram in another language.
+  - Output contains only the requested artifact source, with no Markdown fences, no explanatory prose,
+    and no non-ASCII characters.
+  rubric:
+    Format validity:
+      weight: 30
+      criteria: 'Must parse as yuml and follow yuml-specific grammar: yUML bracketed class nodes, use-case
+        parentheses, activity nodes, supported relationship operators, cardinality labels, inline bg colors,
+        diagram style/type/path segments, and URL-safe content. Deduct heavily for malformed roots, unmatched
+        blocks/tags, invalid ids, unresolved references, or mixing syntax from another diagram DSL.'
+    Semantic completeness:
+      weight: 30
+      criteria: Must satisfy the full scenario for canonical use and include the domain entities, relationships,
+        responsibilities, and edge/failure paths requested in the prompt. The diagram must use yuml for
+        lightweight UML class, activity, use-case, state, deployment, or package diagrams for remote yuml.me
+        rendering.
+    Visual/structural quality:
+      weight: 25
+      criteria: Must produce a readable rendered or importable artifact with terse relationships, readable
+        node compartments, explicit diagram type, and simple styling that fits URL rendering constraints.
+        Labels should be concise, grouping should reduce clutter, and styling/layout choices must match
+        the strengths and limits of yuml.
+    Robustness:
+      weight: 15
+      criteria: Must remain stable under normal rendering, import, export, or documentation use. Check
+        DSL is URL-encodable, avoids unsupported rich UML constructs, does not rely on sequence features
+        for serious interactions, and escapes or omits characters that would break a URL, avoid placeholders
+        that block execution, and keep output ASCII-only and deterministic.
+  pass_conditions:
+  - Total rubric score is at least 85 out of 100.
+  - Format validity score is at least 24 out of 30.
+  - The generated artifact source has no code fences, no prose wrapper, and no non-ASCII characters.
+  - The generated source can be parsed or imported by the normal yuml toolchain without unresolved references
+    or missing required root elements.
+tags:
+- fim
+- diagrams-dsl-xml
+- yuml
+- canonical
+- yuml
+- url-diagram
+- uml-lite
+

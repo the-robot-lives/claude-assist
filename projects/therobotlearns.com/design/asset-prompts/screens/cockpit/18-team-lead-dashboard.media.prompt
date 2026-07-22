@@ -1,0 +1,81 @@
+schema: "0.4"
+id: cockpit-18-team-lead-dashboard
+type: image
+quality: high
+
+# The Robot Learns — a terminal-native personal knowledge base (CLI, no web UI) — Team Lead Dashboard.
+# Theme tenets (Cockpit): cool graphite panes divided by box-drawing rules, ONE electric-magenta signal for
+#   selection/focus, disciplined four-color status set, mono data + tight grotesk labels, radius 0-1px, flat.
+# Palette (do NOT write these hex into prompt.text): canvas #0e1116, ink #c9d1d9, active-pane #161b22,
+#   dim border #30363d, magenta accent #ff2e88; status green #3fb950 / amber #d29922 / red #f85149 / blue #58a6ff.
+
+prompt:
+  system: |
+    You are a senior product designer rendering a high-fidelity mockup of a dense TERMINAL user
+    interface (TUI) — a modern "mission control" dashboard in the lineage of k9s, btop, and lazygit.
+    This is rendered INSIDE a terminal window: no browser chrome, no marketing whitespace, no rounded
+    cards, no drop shadows. Cool blue-graphite panes divided by thin box-drawing rules; a SINGLE
+    electric-magenta signal marks the active pane and the selected member row; status uses a rationed
+    four-color set (green, amber, red, blue), each with a glyph; per-member progress is drawn as block
+    meter bars. Monospaced data + a tight grotesk for titles/labels only. A roster dashboard for a
+    team lead scanning aggregate progress at a glance.
+  text: |
+    A 16:9 high-fidelity screenshot of a dense terminal-UI (TUI) dashboard filling the whole frame,
+    the "Team Lead Dashboard" of a terminal knowledge-base tool — an aggregate view of a team's
+    learning-plan progress. Cool dark blue-graphite background; crisp box-drawn panes; monospaced
+    text; block-glyph meter bars; NOT a web page.
+
+    OVERALL LAYOUT (top team strip + a dominant members table + right aggregate panes + footer):
+    - TOP "TEAM" STRIP: team name "team: ml-guild", a member count "9 members", and one wide aggregate
+      progress meter drawn as a block bar with a right-aligned "64% avg", plus an active tab among
+      "[team] [members] [plans] [decks]" with a magenta underline.
+    - CENTER "MEMBERS" TABLE dominates the frame as the ACTIVE pane, framed by an ELECTRIC-MAGENTA
+      box-drawing border and a one-step-lighter graphite fill: a monospaced roster table with aligned
+      columns MEMBER · PLAN · PROGRESS · LAST · STATUS.
+      ~8 member rows; the PROGRESS column is a small block meter bar per member (e.g. "███████░ 82%");
+      the STATUS column is a glyph+color — green ✓ on-track, amber ! behind, blue i idle. Two rows
+      carry an amber ! "needs support" flag. ONE row is selected with a magenta left-edge bar and a
+      highlighted band.
+    - RIGHT COLUMN, two stacked panes (~28%): top "AGGREGATE" stat readouts — "assigned plans 6",
+      "avg accuracy 79%  ▄▅▆▆▇", "decks shared 14", "at-risk 2" — mono values with a small sparkline;
+      bottom "NEEDS SUPPORT" a short list of the flagged members with a one-line reason each in amber.
+    - BOTTOM KEYBIND FOOTER: a persistent dim row —
+      "[j/k]move  [↵]drill-in  [a]assign-plan  [f]filter  [tab]pane  :cmd  ?help".
+
+    PALETTE & TYPE: cool blue-graphite neutrals everywhere (never warm gray), cool off-white ink for
+    data; the ONLY saturated brand hue is the electric magenta on the active-pane border, the selected
+    member bar, and the active tab. Member status and the aggregate meter use signal green / amber /
+    blue, each with a glyph so status survives grayscale and is never carried by hue alone. Monospaced
+    tabular figures align every column and progress bar; titles and labels are a tight grotesk small-caps.
+
+    SHAPE & SURFACE: crisp rectangles, radius 0-1px, no rounded cards, no pills, no drop shadows; flat
+    tonal depth from box-drawing rules and the one-step-lighter active tone only. Titled panes carry
+    their label inline in the top rule. The ENTIRE frame is one flat terminal filled edge to edge with
+    rectangular box-drawn panes — never a single rounded floating window on an empty canvas.
+
+    MOOD: a professional instrument panel for a team lead — a live roster, one signal color, disciplined
+    status, everything measured and current; dense, cool, awake.
+  negative: "watermark, signature, lorem ipsum placeholder text, low-fidelity wireframe, monitor/device photograph framing, browser window chrome, rounded cards, drop shadows, marketing hero whitespace, pastel gradient dashboard cards, blurry, distorted UI"
+
+output:
+  formats:
+    - format: png
+  dimensions:
+    width: 1920
+    height: 1080
+    aspect_ratio: "16:9"
+
+eval:
+  pass_threshold: 0.72
+  criteria:
+    relevance: {weight: 3, description: "Matches the screen: team strip with aggregate progress, a members roster table with per-member progress bars and status, aggregate stat readouts, a needs-support flagged list"}
+    theme_fidelity: {weight: 3, description: "Cool graphite TUI with box-drawing panes, single magenta signal on active pane/selected row, block-meter progress, four-color status with glyphs, mono data + grotesk labels, radius 0-1, no shadows"}
+    composition: {weight: 2, description: "Dense roster-dashboard terminal layout with clear hierarchy, plausible real TUI; persistent keybind footer"}
+    technical: {weight: 2, description: "Sharp, correct 16:9, terminal window (no browser chrome), no artifacts"}
+  reject_if:
+    - "lorem ipsum or placeholder text visible"
+    - "watermark or signature visible"
+    - "wireframe-level fidelity instead of high-fidelity mockup"
+    - "rendered as a web page / browser or as big rounded pastel dashboard cards instead of a dense terminal"
+
+tags: [cockpit, therobotlearns.com, screen-mockup]

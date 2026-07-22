@@ -1,0 +1,20 @@
+# .trd-yaml — TheRobotDrafts native model (IxModel serialization)
+name: Example Profile Diagram Variant - Profile Application
+elements:
+  - { id: defProfile, type: Package, name: MicroserviceProfile, stereotype: profile }
+  - { id: Component, type: Class, name: 'defComp { }', parentId: defProfile, stereotype: '(M,#B4A7E5) metaclass' }
+  - { id: Service, type: Class, name: defSvc, parentId: defProfile, stereotype: '(S,#F2C9C9) stereotype', members: [{ name: endpoint, isOperation: false, visibility: Public, type: String, rawText: '+ endpoint : String' }] }
+  - { id: defSvc, type: Class, name: defSvc, parentId: defProfile }
+  - { id: defComp, type: Class, name: defComp, parentId: defProfile }
+  - { id: appModel, type: Package, name: BillingModel, stereotype: model }
+  - { id: gw, type: Class, name: «Service»\nChargeGateway, parentId: appModel, stereotype: '(C,#FFF2CC) component', members: [{ name: endpoint, isOperation: false, visibility: Public, defaultValue: '"/v1/charge"', rawText: 'endpoint = "/v1/charge"' }, { name: charge, isOperation: true, visibility: Public, type: Result, params: [{ name: amount, type: Money }], rawText: '+ charge(amount : Money) : Result' }] }
+  - { id: ~note1, type: Note, name: '<b>PROFILE DEFINITION (meta-level)</b>', documentation: '<b>PROFILE DEFINITION (meta-level)</b>\nDefines WHAT stereotypes exist and\nwhich tagged values they carry.\nNo real element here — this is the\nschema of the extension.' }
+  - { id: ~note2, type: Note, name: '<b>PROFILE APPLICATION (model level)</b>', documentation: '<b>PROFILE APPLICATION (model level)</b>\nChargeGateway is an ordinary user\nComponent.  Applying «Service»\ndecorates it with the stereotype\nlabel and lets the model record a\nconcrete tagged value\nendpoint = "/v1/charge".' }
+  - { id: ~note3, type: Note, name: '<b>Meta-level vs model level</b>', documentation: '<b>Meta-level vs model level</b>\nThe profile DEFINITION lives one meta-level above the model.  It says\n"a Service is a Component with an endpoint tag."  The APPLICATION uses\nthat definition on a real element: "ChargeGateway IS a Service and its\nendpoint is /v1/charge."  A profile with no application shapes nothing.' }
+edges:
+  - { id: e1, type: Extend, from: defSvc, to: defComp }
+  - { id: e2, type: NoteLink, from: ~note1, to: defSvc }
+  - { id: e3, type: NoteLink, from: ~note2, to: gw }
+  - { id: e4, type: NoteLink, from: ~note3, to: appModel }
+diagrams:
+  - { id: d1, name: Example Profile Diagram Variant - Profile Application, kind: class, layoutProvenance: Synthesized }

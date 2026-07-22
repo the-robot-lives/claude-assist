@@ -1,0 +1,68 @@
+schema: "0.4"
+id: fim-notebook-livebook-and-widgets-ipywidgets-02-dense-reactive-stress-widget
+type: interactive
+quality: high
+solution: ipywidgets
+category: notebook-livebook-and-widgets
+variant: dense-reactive-stress-widget
+prompt:
+  system: |-
+    You are a senior Python notebook engineer. Output only one complete ASCII Python notebook cell for Jupyter ipywidgets. No Markdown fences, no prose outside code. Prefer deterministic local data and responsive widget state handling.
+  text: |-
+    Create a dense reactive ipywidgets stress dashboard. Generate at least 5000 local rows with seeded numpy data and mixed column types, then expose filtering and aggregation controls with SelectMultiple, SelectionSlider, BoundedIntText, ToggleButtons, a manual Run button for expensive recomputes, and a Tab or Accordion layout. Use Output widgets for a chart, a summary table, and diagnostics. Use jslink where a browser-side link is useful, and use observe(names="value") only for cheap changes.
+
+    Requirements: document the expected DataFrame columns and row counts; avoid rebuilding widgets during callbacks; throttle or gate expensive work behind interact_manual-style behavior; include Jupyter and Voila compatibility notes; include accessibility labels, keyboard-friendly controls, fallback sample data, static export caveats, and safe execution checks for uploads, HTML, and callback loops.
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.2
+    top_p: 0.9
+output:
+  text_format: python
+  artifact_kind: jupyter-ipywidgets-stress-cell
+  formats:
+  - format: py
+evaluation:
+  checklist:
+  - "Import check: generated code uses ipywidgets widgets, Output, Tab or Accordion, and deterministic numpy/pandas data."
+  - "Notebook compatibility: the cell runs in Jupyter widget frontends and comments explain Voila/static export limits."
+  - "Reactive state: cheap controls observe value changes, expensive work is gated by a button or manual interaction, and widgets are not recreated on every event."
+  - "Data shape: generated data includes thousands of rows, categorical and numeric fields, missing values, duplicates, and documented column expectations."
+  - "Accessibility and fallback: controls have clear descriptions, stable widths, keyboard-friendly choices, readable output, and local fallback data."
+  - "Safe execution: no unbounded callback recursion, eval, shell calls, remote fetches, credential reads, or untrusted HTML insertion."
+  rubric:
+  - name: Format validity
+    weight: 30
+    criteria:
+    - "Output is one complete ASCII Python notebook cell with no Markdown fences or explanatory wrapper."
+    - "The code is syntactically valid and constructs every referenced widget and callback."
+    - "The cell includes local setup or compatibility comments without requiring network data."
+  - name: Semantic completeness
+    weight: 30
+    criteria:
+    - "Implements a dense ipywidgets stress scenario with high-cardinality data, multiple controls, tabs, and diagnostics."
+    - "Uses ipywidgets-specific state APIs including observe, on_click, Output, Tab or Accordion, layout, and optional jslink."
+    - "Explains notebook/livebook category fit by noting that this solution targets Jupyter notebooks, not Elixir Livebook."
+  - name: UX/structural quality
+    weight: 25
+    criteria:
+    - "Dense controls are organized into stable panels and do not crowd or resize unpredictably."
+    - "Charts, summaries, and diagnostics have clear headings, labels, and accessible color or text encodings."
+    - "The user can scan current filters, run status, and fallback state without reading code."
+  - name: Robustness
+    weight: 15
+    criteria:
+    - "Handles empty selections, large row counts, missing values, duplicate labels, and extreme values."
+    - "Uses deterministic seeds and bounded processing to keep notebook interaction responsive."
+    - "Documents static export and widget-manager failure modes with graceful fallback behavior."
+  pass_conditions:
+  - "All required YAML fields are present and the generated artifact is one valid ASCII Python cell."
+  - "Rubric weights are exactly Format validity 30, Semantic completeness 30, UX/structural quality 25, Robustness 15."
+  - "The prompt requires notebook compatibility, reactive state, data shape, accessibility, fallback, and safe execution checks."
+  - "The solution remains ipywidgets-centered and does not replace the widget surface with a standalone web app."
+tags:
+- fim
+- notebook-livebook-and-widgets
+- jupyter
+- ipywidgets
+- dense-reactive-stress-widget
+

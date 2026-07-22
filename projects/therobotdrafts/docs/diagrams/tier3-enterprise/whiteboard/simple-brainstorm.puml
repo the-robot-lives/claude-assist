@@ -1,0 +1,31 @@
+' ============================================================================
+' METADATA
+'   author:       TheRobotDrafts Examples
+'   description:  Freeform whiteboard: frame, sticky notes, card, text, cloud, sketch connector.
+'   usecase:      Teach freeform brainstorming shapes and sketch connectors.
+'   complexity:   simple
+'   domain:       whiteboard / sketch
+' ============================================================================
+title Example Whiteboard - Simple Brainstorm
+
+' Whiteboard elements are FREEFORM. No grid, no viewpoint rules.
+' Shapes: frame (package/rectangle), sticky (note), card, text, cloud, bubble (usecase).
+
+package "Whiteboard Frame: Onboarding Ideas" as FRAME {
+  note "Sticky: make signup 1-click" as S1
+  note "Sticky: add social login" as S2
+  card "Card: Conversion +15%" as C1
+  usecase "Idea bubble" as B1
+}
+
+cloud "Growth Cloud\n(maybe later)" as CL
+
+' Freeform text annotation.
+note "Text: vote with dots!" as T1
+
+' Sketch connectors (freeform arrows, can be dotted/solid).
+S1 --> B1 : sketch arrow
+S2 --> B1 : sketch arrow
+B1 --> C1 : "leads to"
+C1 ..> CL : maybe
+T1 ..> S1 : points at

@@ -266,10 +266,84 @@ left side
         }
 
         [Test]
-        public void Throws_OnEmptyAndOnSalt()
+        public void Throws_OnEmpty_And_Parses_Salt_Widgets()
         {
             Assert.Throws<InterchangeException>(() => PlantUmlReader.Parse("   \n  "));
-            Assert.Throws<InterchangeException>(() => PlantUmlReader.Parse("@startsalt\n{\n[Button]\n}\n@endsalt"));
+            var salt = PlantUmlReader.Parse(@"
+@startsalt
+{
+{+Login+}
+[Submit]
+{""Email""}
+{""******""}
+[X] Remember me
+(X) Admin
+^""Role""^
+}
+@endsalt");
+            Assert.AreEqual("salt", salt.Diagrams[0].Kind);
+            Assert.AreEqual("Login", salt.Name);
+
+            var screen = salt.Elements.Single(e => e.Type == IxElementType.Screen);
+            Assert.AreEqual("Login", screen.Name);
+            Assert.IsTrue(salt.Elements.Any(e => e.ParentId == screen.Id && e.Type == IxElementType.Button && e.Name == "Submit"));
+            Assert.IsTrue(salt.Elements.Any(e => e.ParentId == screen.Id && e.Type == IxElementType.TextField && e.Name == "Email"));
+            Assert.IsTrue(salt.Elements.Any(e => e.ParentId == screen.Id && e.Type == IxElementType.Password));
+            Assert.IsTrue(salt.Elements.Any(e => e.ParentId == screen.Id && e.Type == IxElementType.Checkbox && e.Name == "Remember me"));
+            Assert.IsTrue(salt.Elements.Any(e => e.ParentId == screen.Id && e.Type == IxElementType.Radio && e.Name == "Admin"));
+            Assert.IsTrue(salt.Elements.Any(e => e.ParentId == screen.Id && e.Type == IxElementType.Dropdown && e.Name == "Role"));
+        }
+
+        [Test]
+        public void Salt_Parses_ItemWidgets_And_Preserves_UnknownRows()
+        {
+            var m = PlantUmlReader.Parse(@"
+@startsalt
+{^
+{+Catalog+}
+{+[Details] [Audit]+}
+{+""File"" | ""Edit""+}
+{^""One\nTwo""}^
+{#
+.Name | .Status
+.— | .—
+}#
+?? custom salt
+}
+@endsalt");
+
+            Assert.AreEqual("Catalog", m.Name);
+            Assert.AreEqual(2, m.Elements.Single(e => e.Type == IxElementType.Tabs).Items.Count);
+            Assert.AreEqual(2, m.Elements.Single(e => e.Type == IxElementType.Menu).Items.Count);
+            Assert.AreEqual(2, m.Elements.Single(e => e.Type == IxElementType.List).Items.Count);
+            CollectionAssert.AreEqual(new[] { "Name", "Status" }, m.Elements.Single(e => e.Type == IxElementType.UiTable).Items);
+
+            var raw = m.Elements.Single(e => e.Type == IxElementType.UiWidget);
+            Assert.AreEqual("true", raw.Tags["salt.raw"]);
+            StringAssert.Contains("?? custom salt", raw.Documentation);
+        }
+
+        [Test]
+        public void Salt_Parses_Nested_Panels()
+        {
+            var m = PlantUmlReader.Parse(@"
+@startsalt
+{
+{+Settings+}
+{^
+{+Credentials+}
+{""User name""}
+{[Save]}
+}^
+}
+@endsalt");
+
+            var screen = m.Elements.Single(e => e.Type == IxElementType.Screen);
+            var panel = m.Elements.Single(e => e.Type == IxElementType.Panel);
+            Assert.AreEqual(screen.Id, panel.ParentId);
+            Assert.AreEqual("Credentials", panel.Name);
+            Assert.IsTrue(m.Elements.Any(e => e.ParentId == panel.Id && e.Type == IxElementType.TextField && e.Name == "User name"));
+            Assert.IsTrue(m.Elements.Any(e => e.ParentId == panel.Id && e.Type == IxElementType.Button && e.Name == "Save"));
         }
 
         [Test]

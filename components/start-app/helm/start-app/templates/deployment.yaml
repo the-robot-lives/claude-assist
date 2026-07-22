@@ -63,7 +63,7 @@ spec:
         - name: APP_URL
           value: "https://{{ .Values.appDomain | default .Values.domain }}"
         - name: COOKIE_DOMAIN
-          value: ".{{ .Values.domain }}"
+          value: {{ .Values.cookieDomain | default (printf ".%s" .Values.domain) | quote }}
         - name: PORT
           value: {{ .Values.frontend.port | quote }}
         - name: HOSTNAME

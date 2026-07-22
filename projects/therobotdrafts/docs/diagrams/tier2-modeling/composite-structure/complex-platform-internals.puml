@@ -1,0 +1,103 @@
+@startuml
+' ============================================================================
+' METADATA
+'   author:       TheRobotDrafts Examples
+'   description:  Complex composite-structure view — a nested platform with 12+ parts across collaborating classifiers, multiple ports, and provided/required interfaces.
+'   usecase:      Teach nested structured classifiers, collaboration use, and ports with provided/required interfaces.
+'   complexity:   complex
+'   domain:       Platform / Runtime
+' ============================================================================
+title Example Composite Structure - Complex Platform Internals
+
+' ---------------------------------------------------------------------------
+' The platform is modelled as a top-level structured classifier
+' "ApplicationPlatform" that itself contains a nested structured classifier
+' "RequestPipeline".  Ports expose typed interfaces; some ports are provided
+' (the platform offers them) and some are required (the platform needs them
+' from the environment).  A COLLABORATION USE shows a reusable pattern
+' ("Caching") bound into the structure.
+' ---------------------------------------------------------------------------
+
+rectangle "ApplicationPlatform" <<structuredClassifier>> as platform {
+
+  ' ===== Boundary ports ================================================
+  port "in http : IHttpRequest"   as pHttp
+  port "out resp : IHttpResponse" as pResp
+  port "req auth : IAuthProvider" as pAuth   ' required — external
+  port "req cache : ICache"        as pCache  ' required — external
+  port "req db : IRepository"      as pDb     ' required — external
+
+  ' ===== Top-level parts ===============================================
+  component "router : Router"          as router
+  component "ctrl : Controller"        as ctrl
+  component "repo : RepositoryProxy"   as repo
+  component "sink : AuditSink"         as sink
+
+  ' ----- Nested structured classifier as a part -----------------------
+  rectangle "RequestPipeline" <<structuredClassifier>> as pipeline {
+
+    port "in req : IRequest"    as pReqIn
+    port "out out : IResponse"  as pReqOut
+
+    component "val : Validator"      as val
+    component "authz : Authorizer"   as authz
+    component "exec : Executor"      as exec
+    component "xform : Transformer"  as xform
+    component "serial : Serializer"  as serial
+
+    val   --> authz : check
+    authz --> exec  : run
+    exec  --> xform : adapt
+    xform --> serial : encode
+
+    ' Delegation for the nested classifier's ports.
+    pReqIn  --> val
+    serial  --> pReqOut
+  }
+
+  ' ===== Collaboration use: a reusable Caching pattern ================
+  ' The (caching : Caching) syntax denotes a collaboration USE — a bound
+  ' occurrence of a reusable collaboration.  It is a part typed by a
+  ' collaboration rather than a plain class.
+  component "caching : Caching" <<collaborationUse>> as caching
+
+  ' ===== Wiring between top-level parts ================================
+  router --> ctrl  : route
+  ctrl   --> pipeline : handle
+  ctrl   --> repo   : persist
+  ctrl   --> sink   : log
+
+  ' ===== Delegation from boundary ports to parts =======================
+  pHttp   --> router
+  router  --> pResp
+  authz   --> pAuth    ' required interface satisfied externally
+  repo    --> pDb      ' required interface satisfied externally
+  caching --> pCache   ' collaboration use binds to required ICache
+}
+
+note right of platform
+  <b>Nested classifier</b>
+  RequestPipeline is itself a structured
+  classifier nested inside the platform.
+  Its internal parts are invisible at
+  the platform level except through its
+  own ports (pReqIn / pReqOut).
+end note
+
+note bottom of platform
+  <b>Collaboration use</b>
+  "caching : Caching" is a bound instance of
+  a reusable collaboration — a named
+  pattern of roles.  It is how a
+  composite-structure diagram references
+  a pattern instead of redrawing it.
+  <b>Provided vs required ports</b>
+  pHttp/pResp are PROVIDED (platform
+  offers them). pAuth/pCache/pDb are
+  REQUIRED (platform needs them from its
+  environment) — drawn the same way but
+  annotated; the distinction is in the
+  interface direction, not the glyph.
+end note
+
+@enduml

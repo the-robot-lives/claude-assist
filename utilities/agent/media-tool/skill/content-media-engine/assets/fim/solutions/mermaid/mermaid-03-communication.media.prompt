@@ -1,0 +1,80 @@
+schema: "0.4"
+id: fim-diagrams-dsl-xml-mermaid-03-communication
+type: diagram
+quality: production
+solution: mermaid
+category: diagrams-dsl-xml
+variant: communication
+prompt:
+  system: You generate Mermaid diagram source. Output only valid Mermaid markup with the appropriate diagram
+    keyword on the first non-comment line unless frontmatter is required. Do not use code fences or explanatory
+    prose.
+  text: Create a Mermaid flowchart for a product onboarding journey that nontechnical stakeholders can
+    read in GitHub. Use clear stage labels, subgraphs for discover, trial, activation, retention, and
+    support, and avoid syntax that GitHub Mermaid cannot render.
+  provider_options:
+    max_tokens: 4096
+    temperature: 0.2
+    top_p: 0.9
+output:
+  text_format: mermaid
+  artifact_kind: markdown_diagram_source
+  formats:
+  - format: mmd
+  - format: svg
+  - format: png
+evaluation:
+  checklist:
+  - 'Output uses native mermaid syntax: Mermaid diagram keywords, flowchart or sequence syntax, frontmatter
+    config, subgraphs, participants, alt/loop/par blocks, class definitions, and labels escaped for Mermaid
+    parsers.'
+  - 'Output captures the requested semantics: version-control-friendly documentation diagrams that render
+    in Mermaid-compatible Markdown or mermaid-cli.'
+  - 'Output has solution-appropriate structure: compact syntax, readable subgraphs or lifelines, supported
+    node shapes, and labels that survive Markdown rendering.'
+  - 'Output is robust for the renderer/importer: no unsupported HTML-heavy labels, no malformed frontmatter,
+    balanced blocks, and diagram type syntax is not mixed.'
+  - Optimizes labels, grouping, and visual hierarchy for human review while remaining faithful to the
+    native renderer constraints.
+  - Output contains only the requested artifact source, with no Markdown fences, no explanatory prose,
+    and no non-ASCII characters.
+  rubric:
+    Format validity:
+      weight: 30
+      criteria: 'Must parse as mermaid and follow mermaid-specific grammar: Mermaid diagram keywords,
+        flowchart or sequence syntax, frontmatter config, subgraphs, participants, alt/loop/par blocks,
+        class definitions, and labels escaped for Mermaid parsers. Deduct heavily for malformed roots,
+        unmatched blocks/tags, invalid ids, unresolved references, or mixing syntax from another diagram
+        DSL.'
+    Semantic completeness:
+      weight: 30
+      criteria: Must satisfy the full scenario for design/communication use and include the domain entities,
+        relationships, responsibilities, and edge/failure paths requested in the prompt. The diagram must
+        use mermaid for version-control-friendly documentation diagrams that render in Mermaid-compatible
+        Markdown or mermaid-cli.
+    Visual/structural quality:
+      weight: 25
+      criteria: Must produce a readable rendered or importable artifact with compact syntax, readable
+        subgraphs or lifelines, supported node shapes, and labels that survive Markdown rendering. Labels
+        should be concise, grouping should reduce clutter, and styling/layout choices must match the strengths
+        and limits of mermaid.
+    Robustness:
+      weight: 15
+      criteria: Must remain stable under normal rendering, import, export, or documentation use. Check
+        no unsupported HTML-heavy labels, no malformed frontmatter, balanced blocks, and diagram type
+        syntax is not mixed, avoid placeholders that block execution, and keep output ASCII-only and deterministic.
+  pass_conditions:
+  - Total rubric score is at least 85 out of 100.
+  - Format validity score is at least 24 out of 30.
+  - The generated artifact source has no code fences, no prose wrapper, and no non-ASCII characters.
+  - The generated source can be parsed or imported by the normal mermaid toolchain without unresolved
+    references or missing required root elements.
+tags:
+- fim
+- diagrams-dsl-xml
+- mermaid
+- communication
+- mermaid
+- markdown
+- diagram-dsl
+

@@ -1,0 +1,39 @@
+# docs/pipelines/project-uplift/state/aifighter.com.yaml
+project: aifighter.com
+pilot: true
+pilot_order: 2
+census:
+  readme_stub: false
+  personas: 11
+  stories: 100
+  screens: 27
+  components: 40
+  roadmap_exists: false
+  existing_named_themes: []
+stage_a:
+  status: done
+  attempts: 1
+  counts: {personas: 11, stories: 100, screens: 27, components: 40}
+  blocked: null
+stage_b:
+  status: in-progress
+  attempts: 0
+  effective_theme_count: null    # E, computed by Stage B similitude formula
+  new_themes_needed: null         # ceil(7 - E)
+  themes_written: []
+  allocation_yaml: false
+  blocked: null
+stage_c:
+  status: pending
+  themes: {}    # keyed by theme slug once Stage B allocation.yaml exists; each entry tracks prompts/images/api_calls/avg_eval/yaml/conformance
+  blocked: null
+stage_d:
+  status: done
+  attempts: 1
+  story_coverage_pct: 100
+  blocked: null
+verified: false
+notes:
+  - "STALE CENSUS (corrected by Stage A): personas was 0 in this file but 10 well-formed personas already existed on disk (project-management/personas/01-*.md..10-*.md, full README, no index.yaml) — just not matching the P-*.md naming verify.md greps for. Reconciled per stage-a-docs-pm.md §6 rather than generating 5-10 new personas blind: renamed existing 10 to P-001..P-010 (git mv, content untouched, frontmatter prepended), added 1 new evidence-backed persona (P-011 The Moderator, backing the Content Moderation Queue screen + 2 components that had no first-person actor), and backfilled `personas:`+`epic:` frontmatter arrays into all 100 stories (previously only a singular name-string `persona:` field existed, no index.yaml either). P-011 cross-referenced via secondary personas: tag on 4 stories with direct moderator-action ACs (US-024, US-035, US-066, US-079) — all other 10 personas already had 8-12 primary stories each (existing user-stories/README summary table said a uniform 10/10 which was itself stale; corrected to actual counts: Tinkerer 12, Curious Casual 8, rest 10). Other pilot/wave projects' census.personas may be similarly stale if their PM content predates this pipeline — worth a spot-check before trusting a 0 at face value."
+  - "app/frontend/src/config/theme-style-guide/ exists (base scaffold only, correctly excluded from named-theme counts) — this is the worked-example path cited in the plan for Stage C project-specific sample-element overrides. 0 named themes yet: Stage B/C need to create new theme directions essentially from scratch."
+  - Pilot project 2 — runs fully after NoizuPromptLingo, then triggers the user review gate before waves begin.

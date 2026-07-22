@@ -54,12 +54,38 @@ enum PointerFormat {
 }
 
 fn main() {
-    let mut args: Vec<String> = env::args().skip(1).collect();
-    let result = if matches!(args.first().map(String::as_str), Some("uuid5" | "new")) {
-        args.remove(0);
-        uuid5_command(&args)
-    } else {
-        scan_command(&args)
+    let args: Vec<String> = env::args().skip(1).collect();
+
+    // No arguments at all -> print help and exit 0. Previously this silently ran a
+    // read-only scan, which surprised users who just wanted to know what the tool does.
+    if args.is_empty() {
+        print_help();
+        std::process::exit(0);
+    }
+
+    // First positional token selects the subcommand (build / uuid5 / hook / help).
+    // A leading option (-h/--help, or a legacy build flag like --root/--write/--check)
+    // is treated as the build command so existing scripts keep working.
+    let result = match args.first().map(String::as_str) {
+        Some("build") => scan_command(&args[1..]),
+        Some("uuid5" | "new") => uuid5_command(&args[1..]),
+        Some("hook") => install_command(&args[1..], true),
+        Some("-h" | "--help" | "help") => {
+            print_help();
+            return;
+        }
+        Some("--root" | "--db" | "--write" | "--check" | "--install-hook") => {
+            scan_or_install(&args)
+        }
+        Some(value) => {
+            eprintln!("ERROR: unknown subcommand or option: {value}\n");
+            print_help();
+            std::process::exit(1);
+        }
+        None => {
+            print_help();
+            return;
+        }
     };
 
     if let Err(error) = result {
@@ -68,14 +94,32 @@ fn main() {
     }
 }
 
+// Legacy dispatch: the build/install-hook commands used to share one option namespace at the
+// top level. `--install-hook` installs the pre-commit hook; everything else is a build scan.
+fn scan_or_install(args: &[String]) -> Result<(), String> {
+    if args.iter().any(|arg| arg == "--install-hook") {
+        install_command(args, false)
+    } else {
+        scan_command(args)
+    }
+}
+
+fn install_command(args: &[String], explicit: bool) -> Result<(), String> {
+    let options = parse_scan_options(args)?;
+    // `explicit` = reached via the `hook` subcommand (always install). The legacy
+    // `--install-hook` flag also sets options.install_hook; reject ambiguous calls.
+    if !explicit && !options.install_hook {
+        eprintln!("ERROR: --install-hook requires the hook subcommand or the --install-hook flag");
+        std::process::exit(1);
+    }
+    let root = absolute_path(&options.root)?;
+    install_hook(&root)
+}
+
 fn scan_command(args: &[String]) -> Result<(), String> {
     let options = parse_scan_options(args)?;
     let root = absolute_path(&options.root)?;
     let db_path = absolute_path(&root.join(&options.db))?;
-
-    if options.install_hook {
-        return install_hook(&root);
-    }
 
     let (pointers, mut errors) = collect_pointers(&root, &db_path)?;
     let (changed_links, link_errors) = expand_markdown_links(&root, &pointers, options.write)?;
@@ -292,19 +336,85 @@ fn expect_value<'a>(args: &'a [String], index: usize, flag: &str) -> Result<&'a 
         .ok_or_else(|| format!("{flag} requires a value"))
 }
 
+fn print_help() {
+    println!(
+        "\
+doc-pointers — durable, code-stable cross-document pointers
+
+WHAT
+  Doc pointers are 4-character tokens (drawn from the Unicode U+13000..U+1342F
+  Egyptian Hieroglyphs block) placed as inline declarations inside source files,
+  comments, and Markdown. A declaration looks like:
+
+      ⟦𓆴𓎲𓋝𓁅⟧ Pointer name :: Human readable description.
+
+  Because the token is a fixed Unicode glyph sequence and not a path or line
+  number, it survives renames, refactors, and file moves. Other documents then
+  reference it with a `deeplink:` Markdown link, e.g.
+
+      [see routing](deeplink:⟦𓆴𓎲𓋝𓁅⟧)
+
+  and `doc-pointers` rewrites that link into a concrete `path:line?code=⟦…⟧` target.
+
+HOW
+  1. Place a ⟦token⟧ Name :: Description declaration at the anchor you want to
+     point at (a function, a heading, a config stanza). The token must live in a
+     comment context (//, #, <!--, /*, *, --, ;) or on its own line, so it never
+     collides with string literals or code.
+  2. Generate new tokens with `doc-pointers uuid5` (deterministic UUIDv5,
+     collision-checked against the existing database, copied to your clipboard).
+  3. Reference any token from Markdown with `[label](deeplink:⟦token⟧)`.
+  4. Run `doc-pointers build` to (a) collect every declaration in the repo into
+     `docs/doc-pointer-db.json` and (b) expand every `deeplink:` reference into a
+     real `file:line` target. Run `doc-pointers build --check` in CI / a
+     pre-commit hook to fail when the database or any link is stale.
+
+WHY
+  Ordinary file:line and URL links rot the instant code moves. Branch names and
+  permalinks are worse. A doc pointer decouples the *identity* of an anchor
+  (the token) from its *current location* (which `build` resolves on demand), so
+  docs stay accurate without manual re-pointing. The Hieroglyph block is chosen
+  so tokens are visually distinct and never appear in real source, and the
+  UUIDv5 derivation makes them reproducible and collision-free across machines.
+
+USAGE
+  doc-pointers                       print this help
+  doc-pointers build                 collect declarations + expand deeplinks (read-only)
+  doc-pointers build --write         also write docs/doc-pointer-db.json + expanded links
+  doc-pointers build --check         fail (exit 1) if a write would change anything
+  doc-pointers hook                  install a pre-commit hook that runs --check
+  doc-pointers uuid5 [NAME]          mint a new 4-glyph token, copied to clipboard
+  doc-pointers help                  print this help
+
+SUB-COMMAND HELP
+  doc-pointers build --help          options for the build/scan command
+  doc-pointers uuid5 --help          options for the uuid5 command
+
+LEGACY
+  The bare flags still work for existing scripts:
+    doc-pointers --write        ==  doc-pointers build --write
+    doc-pointers --check        ==  doc-pointers build --check
+    doc-pointers --install-hook ==  doc-pointers hook
+  Prefer the subcommand form in new code."
+    );
+}
+
 fn print_scan_help() {
     println!(
-        "usage: doc-pointers [--root ROOT] [--db DB] [--write] [--check] [--install-hook]\n\n\
-Build the doc pointer database and expand deeplink: markdown links.\n\n\
-options:\n  --root ROOT       repository root, default: current directory\n  --db DB           pointer database path\n  --write           write database and expand markdown deeplinks\n  --check           fail if writes would be needed\n  --install-hook    install a local pre-commit check hook\n\n\
-commands:\n  uuid5 [NAME]      generate a UUIDv5-backed four-character marker and copy it"
+        "usage: doc-pointers build [--root ROOT] [--db DB] [--write] [--check]\n\n\
+Build the doc pointer database and expand deeplink: markdown links.\n\
+Run without --write/--check, this is a dry run: it reports how many\n\
+declarations it found and any errors, but changes nothing.\n\n\
+options:\n  --root ROOT       repository root, default: current directory\n  --db DB           pointer database path (default docs/doc-pointer-db.json)\n  --write           write database and expand markdown deeplinks\n  --check           fail if writes would be needed (CI / pre-commit)"
     );
 }
 
 fn print_uuid5_help() {
     println!(
         "usage: doc-pointers uuid5 [options] [NAME]\n\n\
-Generate a deterministic UUIDv5-backed four-character doc pointer token.\n\n\
+Generate a deterministic UUIDv5-backed four-character doc pointer token.\n\
+The token is collision-checked against the current database and copied to\n\
+the clipboard unless --no-clipboard is given.\n\n\
 options:\n  --root ROOT             repository root, default: current directory\n  --db DB                 pointer database path\n  --namespace NAMESPACE   doc-pointers, dns, url, oid, x500, or a UUID\n  --salt SALT             optional deterministic salt\n  --format FORMAT         marker, code, declaration, or deeplink\n  --description TEXT      description used by --format declaration\n  --no-clipboard          print without copying to clipboard"
     );
 }
@@ -353,6 +463,9 @@ fn collect_pointers(
 
 fn parse_declaration(line: &str) -> Option<(String, String, String)> {
     let start = line.find('⟦')?;
+    if !declaration_context_allows(line, start) {
+        return None;
+    }
     let after_start = start + '⟦'.len_utf8();
     let end_offset = line[after_start..].find('⟧')?;
     let end = after_start + end_offset;
@@ -367,6 +480,33 @@ fn parse_declaration(line: &str) -> Option<(String, String, String)> {
         return None;
     }
     Some((code.to_string(), name, clean_comment_tail(description)))
+}
+
+fn declaration_context_allows(line: &str, start: usize) -> bool {
+    let prefix = &line[..start];
+    let before = prefix.trim_end();
+    if before.is_empty() {
+        return true;
+    }
+
+    let trimmed = before.trim_start();
+    let leading_comment_markers = ["//", "#", "<!--", "/*", "*", "--", ";"];
+    if leading_comment_markers
+        .iter()
+        .any(|marker| trimmed.starts_with(marker))
+    {
+        return true;
+    }
+
+    let inline_comment_markers = ["//", "/*", "<!--", " #", "\t#", " --"];
+    if inline_comment_markers
+        .iter()
+        .any(|marker| trimmed.contains(marker))
+    {
+        return true;
+    }
+
+    false
 }
 
 fn clean_comment_tail(value: &str) -> String {
@@ -386,14 +526,25 @@ fn valid_code(code: &str) -> bool {
 fn scan_files(root: &Path, db_path: &Path) -> Result<Vec<PathBuf>, String> {
     let mut files = Vec::new();
     let skip_dirs: HashSet<&str> = [
+        ".DS_Store",
+        ".Spotlight-V100",
+        ".Trashes",
+        ".fseventsd",
         ".git",
+        ".idea",
         ".vscode",
         "Builds",
+        "DerivedData",
         "Library",
         "Logs",
         "Temp",
         "UserSettings",
+        "build",
+        "coverage",
+        "dist",
+        "node_modules",
         "obj",
+        "target",
     ]
     .into_iter()
     .collect();
@@ -666,7 +817,7 @@ fn unicode4_encode_uuid(value: Uuid) -> String {
     for _ in 0..TOKEN_LENGTH {
         let index = (number % TOKEN_SIZE) as u32;
         number /= TOKEN_SIZE;
-        chars.push(char::from_u32(TOKEN_START + index).expect("valid CJK code point"));
+        chars.push(char::from_u32(TOKEN_START + index).expect("valid token code point"));
     }
     chars.into_iter().rev().collect()
 }
@@ -748,5 +899,114 @@ fn absolute_path(path: &Path) -> Result<PathBuf, String> {
         env::current_dir()
             .map_err(|error| error.to_string())
             .map(|cwd| cwd.join(path))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn parse_declaration_accepts_bare_and_comment_lines() {
+        assert_eq!(
+            parse_declaration("⟦DPTR⟧ Documentation pointer convention :: Defines hard pointers."),
+            Some((
+                "DPTR".to_string(),
+                "Documentation pointer convention".to_string(),
+                "Defines hard pointers.".to_string()
+            ))
+        );
+        assert_eq!(
+            parse_declaration("// ⟦ABCD⟧ Pointer routing :: Centralizes pointer input."),
+            Some((
+                "ABCD".to_string(),
+                "Pointer routing".to_string(),
+                "Centralizes pointer input.".to_string()
+            ))
+        );
+    }
+
+    #[test]
+    fn parse_declaration_ignores_quoted_prompt_examples() {
+        let line = "            \"\\\"⟦𓅕𓀦𓈽𓆡⟧ Name :: uuid5:01234567-89ab-cdef-0123-456789abcdef\\\", remove that line\"";
+        assert_eq!(parse_declaration(line), None);
+    }
+
+    #[test]
+    fn parse_declaration_ignores_non_comment_code_prefixes() {
+        assert_eq!(
+            parse_declaration("let marker = \"⟦ABCD⟧ Name :: Description\";"),
+            None
+        );
+        assert_eq!(
+            parse_declaration("value * \"⟦ABCD⟧ Name :: Description\""),
+            None
+        );
+    }
+
+    #[test]
+    fn generated_token_matches_unity_fixture() {
+        let uuid = Uuid::new_v5(
+            &DOC_POINTER_NAMESPACE,
+            "doc-pointers:TestPointer".as_bytes(),
+        );
+        assert_eq!(uuid.to_string(), "5c692577-ad0c-51f1-992c-759b5e5fffb5");
+        assert_eq!(unicode4_encode_uuid(uuid), "𓆴𓎲𓋝𓁅");
+    }
+
+    #[test]
+    fn collect_pointers_skips_spotlight_cache() {
+        let root = env::temp_dir().join(format!("doc-pointers-test-{}", Uuid::new_v4()));
+        let _ = fs::remove_dir_all(&root);
+        fs::create_dir_all(root.join(".Spotlight-V100/cache")).unwrap();
+        fs::create_dir_all(root.join("docs")).unwrap();
+        fs::write(
+            root.join(".Spotlight-V100/cache/noise.txt"),
+            "⟦NOIS⟧ Noise :: Should be ignored.\n",
+        )
+        .unwrap();
+        fs::write(
+            root.join("docs/real.md"),
+            "<!-- ⟦REAL⟧ Real pointer :: Should be indexed. -->\n",
+        )
+        .unwrap();
+
+        let (pointers, errors) =
+            collect_pointers(&root, &root.join("docs/doc-pointer-db.json")).unwrap();
+        assert!(errors.is_empty());
+        assert!(pointers.contains_key("REAL"));
+        assert!(!pointers.contains_key("NOIS"));
+
+        let _ = fs::remove_dir_all(&root);
+    }
+
+    #[test]
+    fn expand_markdown_links_rewrites_deeplink_targets() {
+        let root = env::temp_dir().join(format!("doc-pointers-test-{}", Uuid::new_v4()));
+        let _ = fs::remove_dir_all(&root);
+        fs::create_dir_all(root.join("docs")).unwrap();
+        fs::write(
+            root.join("docs/target.md"),
+            "<!-- ⟦ABCD⟧ Target pointer :: Used by markdown expansion. -->\n",
+        )
+        .unwrap();
+        fs::write(
+            root.join("docs/ref.md"),
+            "[target](deeplink:⟦ABCD⟧)\n\n```markdown\n[ignored](deeplink:ABCD)\n```\n",
+        )
+        .unwrap();
+
+        let (pointers, errors) =
+            collect_pointers(&root, &root.join("docs/doc-pointer-db.json")).unwrap();
+        assert!(errors.is_empty());
+        let (changed, link_errors) = expand_markdown_links(&root, &pointers, true).unwrap();
+        assert!(link_errors.is_empty());
+        assert_eq!(changed, vec!["docs/ref.md".to_string()]);
+
+        let rewritten = fs::read_to_string(root.join("docs/ref.md")).unwrap();
+        assert!(rewritten.contains("[target](docs/target.md:1?code=⟦ABCD⟧)"));
+        assert!(rewritten.contains("[ignored](deeplink:ABCD)"));
+
+        let _ = fs::remove_dir_all(&root);
     }
 }

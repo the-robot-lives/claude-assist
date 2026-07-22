@@ -1,0 +1,17 @@
+# .trd-yaml — TheRobotDrafts native model (IxModel serialization)
+name: Example Communication Variant - Communication vs Sequence
+elements:
+  - { id: Customer, type: Lifeline, name: Customer, stereotype: actor }
+  - { id: Cart, type: Lifeline, name: Cart }
+  - { id: Checkout, type: Lifeline, name: Checkout }
+  - { id: Payment, type: Lifeline, name: Payment }
+  - { id: is actively executing — a notion communication diagrams lack., type: Class, name: is actively executing — a notion communication diagrams lack. }
+edges:
+  - { id: e1, type: MessageReply, from: Customer, to: Cart, label: '1: addItem(item)' }
+  - { id: e2, type: MessageReply, from: Cart, to: Checkout, label: '2: requestCheckout()' }
+  - { id: e3, type: MessageReply, from: Checkout, to: Payment, label: '3: authorize(amount)' }
+  - { id: e4, type: MessageReply, from: Payment, to: Checkout, label: '3.1: returnAuthCode()' }
+  - { id: e5, type: MessageReply, from: Checkout, to: Cart, label: '4: clearCart()' }
+  - { id: e6, type: MessageReply, from: Checkout, to: Customer, label: '5: confirmOrder()' }
+diagrams:
+  - { id: d1, name: Example Communication Variant - Communication vs Sequence, kind: sequence, layoutProvenance: Synthesized }

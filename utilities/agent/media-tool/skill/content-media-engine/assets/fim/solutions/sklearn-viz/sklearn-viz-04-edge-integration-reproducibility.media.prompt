@@ -1,0 +1,68 @@
+schema: '0.4'
+id: fim-python-sklearn-viz-04-edge-integration-reproducibility
+type: visualization
+quality: high
+solution: sklearn-viz
+category: python
+variant: edge-integration-reproducibility
+prompt:
+  system: |-
+    You are a senior Python data visualization engineer. Output only one complete ASCII Python file for scikit-learn visualization. No Markdown fences, no prose outside code. Include deterministic sample data if input data is not supplied. Use the imports and runtime pattern named in the prompt.
+  text: |-
+    Create a scikit-learn edge/reproducibility script. Handle class imbalance, missing probability outputs, multiclass versus binary ROC constraints, fixed random_state values, scaled features for embeddings, and deprecated plot_* helpers by using Display classes. Include assertions for fitted model, output files, and held-out evaluation.
+
+    Requirements: include import comments, local run instructions, deterministic sample data, explicit output filenames, accessibility-minded labels and color choices, data edge-case handling, and reproducibility checks. The generated code must use the requested solution as the primary visualization surface.
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.2
+    top_p: 0.9
+output:
+  text_format: python
+  artifact_kind: sklearn-diagnostics-script
+  formats:
+  - format: py
+  - format: png
+evaluation:
+  checklist:
+  - 'Import check: generated code imports sklearn Display classes, matplotlib.pyplot as plt, numpy as np, pandas as pd and does not replace scikit-learn visualization with an unrelated primary library.'
+  - 'Run check: python sklearn_viz.py and verify model diagnostics PNG output is saved. The script must create deterministic sample data and avoid network-only dependencies.'
+  - 'Expected visuals: model diagnostic figures using sklearn Display classes on matplotlib axes with held-out or cross-validated data. The result must match the edge, integration, and reproducibility output scenario.'
+  - 'Accessibility: include descriptive title, axis labels, readable legend or hover text, colorblind-safe palette, and non-color encoding where practical.'
+  - 'Data edge cases: handle missing values, duplicate categories, empty filtered results, extreme values, and large row counts without crashing.'
+  - 'Reproducibility: set fixed seeds, use stable output filenames, document install/run commands, and keep generated data local to the script.'
+  rubric:
+  - name: Format validity
+    weight: 30
+    criteria:
+    - Output is one complete ASCII Python file with no Markdown fences or explanatory wrapper.
+    - Required imports are present, syntax is valid, and the declared artifact/export path is produced.
+    - The script includes clear install and run comments without relying on network data.
+  - name: Semantic completeness
+    weight: 30
+    criteria:
+    - Implements the requested scenario with the specified solution rather than substituting another library.
+    - Includes all requested controls, encodings, calculations, filters, exports, and annotations.
+    - Demonstrates the solution-specific concepts from the FIM references.
+  - name: Visual/structural quality
+    weight: 25
+    criteria:
+    - Uses readable layout, sensible chart types, labeled axes, title, legend, and consistent visual hierarchy.
+    - Uses colorblind-safe palettes and redundant encodings or hover/detail text where helpful.
+    - Avoids label overlap, clipped elements, misleading scales, and low-contrast styling.
+  - name: Robustness
+    weight: 15
+    criteria:
+    - Handles missing values, empty filters, duplicate categories, extreme values, and large data sensibly.
+    - Sets deterministic seeds and stable output filenames for reproducible local runs.
+    - Documents limitations such as optional export drivers, server commands, or renderer dependencies.
+  pass_conditions:
+  - All required YAML fields are present and the generated artifact is one valid ASCII Python file.
+  - Rubric weights are exactly Format validity 30, Semantic completeness 30, Visual/structural quality 25, Robustness 15.
+  - The solution-specific import and run checks can be performed in a fresh local environment with the documented dependencies.
+  - The expected visual structure, accessibility requirements, data edge cases, and reproducibility safeguards are all represented in the code.
+tags:
+- fim
+- python
+- data-visualization
+- sklearn-viz
+- edge-integration-reproducibility

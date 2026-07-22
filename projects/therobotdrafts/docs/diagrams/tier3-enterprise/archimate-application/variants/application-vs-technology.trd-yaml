@@ -1,0 +1,17 @@
+# .trd-yaml — TheRobotDrafts native model (IxModel serialization)
+name: Example ArchiMate Application - Variant Application vs Technology
+elements:
+  - { id: Legend, type: Note, name: 'TOP = Application layer (BLUE) — what software\nBOTTOM = Technology layer (GREEN) — what infrastructure runs it\nAssignment edges go FROM technology TO application.', documentation: 'TOP = Application layer (BLUE) — what software\nBOTTOM = Technology layer (GREEN) — what infrastructure runs it\nAssignment edges go FROM technology TO application.' }
+  - { id: Application Layer (What software), type: Package, name: Application Layer (What software) }
+  - { id: AC1, type: Boundary, name: \nWeb App, parentId: Application Layer (What software), stereotype: app component }
+  - { id: AC2, type: Boundary, name: \nAPI Server, parentId: Application Layer (What software), stereotype: app component }
+  - { id: AS, type: Boundary, name: \nREST API, parentId: Application Layer (What software), stereotype: app service }
+  - { id: DO, type: Boundary, name: \nUser DB, parentId: Application Layer (What software), stereotype: data object }
+  - { id: Technology Layer (What infra runs it), type: Package, name: Technology Layer (What infra runs it) }
+  - { id: N1, type: Boundary, name: '\nApp Server\n(4 vCPU, 8GB)', parentId: Technology Layer (What infra runs it), stereotype: node }
+  - { id: N2, type: Boundary, name: '\nDB Server\n(8 vCPU, 32GB)', parentId: Technology Layer (What infra runs it), stereotype: node }
+  - { id: SW1, type: Boundary, name: \nNginx, parentId: Technology Layer (What infra runs it), stereotype: system software }
+  - { id: SW2, type: Boundary, name: \nPostgreSQL, parentId: Technology Layer (What infra runs it), stereotype: system software }
+  - { id: NET, type: Boundary, name: \nInternal LAN, parentId: Technology Layer (What infra runs it), stereotype: network }
+diagrams:
+  - { id: d1, name: Example ArchiMate Application - Variant Application vs Technology, kind: component, layoutProvenance: Synthesized }

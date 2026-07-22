@@ -6,14 +6,16 @@
 //! UI updates over a UiSender so the UI layer stays swappable.
 
 use std::sync::Arc;
+use std::time::{Duration, Instant};
 
-use crossbeam_channel::{Receiver, Sender};
+use crossbeam_channel::{Receiver, RecvTimeoutError, Sender};
 
 use crate::audio::memo_recorder::MemoRecorder;
 use crate::audio::RouterHandle;
 use crate::config::debug_log;
 use crate::config::store;
 use crate::config::QueuePopulatorConfig;
+use crate::config::MAX_RECORDING_SECONDS;
 use crate::llm::client::LlmClient;
 use crate::llm::prompt;
 use crate::llm::response::ProposedEntry;
@@ -71,6 +73,7 @@ pub struct Coordinator {
 
     finalized_chunks: Vec<String>,
     current_partial: String,
+    recording_started_at: Option<Instant>,
     paused: bool,
 
     rx: Receiver<CoordinatorMsg>,
@@ -96,6 +99,7 @@ impl Coordinator {
             memo_recorder,
             finalized_chunks: Vec::new(),
             current_partial: String::new(),
+            recording_started_at: None,
             paused: false,
             rx,
             self_tx,
@@ -114,27 +118,32 @@ impl Coordinator {
         log(&format!("  queue: {}", self.config.resolved_queue_base_path()));
         log(&format!("  llm: {} / {}", self.config.llm.provider, self.config.llm.effective_model()));
 
-        while let Ok(message) = self.rx.recv() {
+        loop {
+            let message = match self.rx.recv_timeout(Duration::from_millis(250)) {
+                Ok(message) => Some(message),
+                Err(RecvTimeoutError::Timeout) => None,
+                Err(RecvTimeoutError::Disconnected) => break,
+            };
             match message {
-                CoordinatorMsg::Speech(event) => self.handle_speech(event),
-                CoordinatorMsg::Ui(event) => self.handle_button(event),
-                CoordinatorMsg::LlmCompleted(entries) => {
+                None => {}
+                Some(CoordinatorMsg::Speech(event)) => self.handle_speech(event),
+                Some(CoordinatorMsg::Ui(event)) => self.handle_button(event),
+                Some(CoordinatorMsg::LlmCompleted(entries)) => {
                     let effects = self.state_machine.handle(AppEvent::LlmCompleted(entries));
                     self.execute(effects);
                 }
-                CoordinatorMsg::LlmFailed(error) => {
+                Some(CoordinatorMsg::LlmFailed(error)) => {
                     let effects = self.state_machine.handle(AppEvent::LlmFailed(error));
                     self.execute(effects);
                 }
-                CoordinatorMsg::ConfigUpdated(updated) => self.apply_config(updated),
-                CoordinatorMsg::TogglePause => self.toggle_pause(),
-                CoordinatorMsg::Quit => {
-                    self.router.close_all();
-                    self.router.set_listening(false);
-                    return;
-                }
+                Some(CoordinatorMsg::ConfigUpdated(updated)) => self.apply_config(updated),
+                Some(CoordinatorMsg::TogglePause) => self.toggle_pause(),
+                Some(CoordinatorMsg::Quit) => break,
             }
+            self.enforce_recording_timeout();
         }
+        self.router.close_all();
+        self.router.set_listening(false);
     }
 
     // ---- transcript buffer (port of buildFullTranscript & clipping) ------
@@ -174,6 +183,39 @@ impl Coordinator {
         self.current_partial.clear();
     }
 
+    fn enforce_recording_timeout(&mut self) {
+        if !matches!(self.state_machine.state(), AppState::Recording | AppState::Revising(_)) {
+            self.recording_started_at = None;
+            return;
+        }
+        let Some(started_at) = self.recording_started_at else {
+            return;
+        };
+        let limit = Duration::from_secs(u64::from(
+            self.config
+                .recognition
+                .max_recording_seconds
+                .clamp(1, MAX_RECORDING_SECONDS),
+        ));
+        if started_at.elapsed() < limit {
+            return;
+        }
+
+        let transcript = match self.state_machine.state() {
+            AppState::Recording => self.extract_memo(&self.build_full_transcript()),
+            AppState::Revising(_) => self.build_full_transcript(),
+            _ => return,
+        };
+        self.send_ui(UiUpdate::Event(format!(
+            "Recording stopped after {} seconds",
+            limit.as_secs()
+        )));
+        let effects = self
+            .state_machine
+            .handle(AppEvent::EndDetected { transcript });
+        self.execute(effects);
+    }
+
     // ---- speech events ---------------------------------------------------
 
     fn handle_speech(&mut self, event: SpeechEvent) {
@@ -182,6 +224,7 @@ impl Coordinator {
         }
         match event {
             SpeechEvent::Partial(text) => {
+                debug_log::verbose(&format!("  [partial] \"{text}\""));
                 self.current_partial = text;
                 self.process_transcript();
             }
@@ -244,7 +287,6 @@ impl Coordinator {
             AppEvent::MicOpen(target) => {
                 log(&format!("━━━ MIC OPEN: {} ━━━", target.label()));
                 self.clear_buffer();
-                self.phrase_detector.reset();
                 self.router.open(target);
                 self.send_ui(UiUpdate::Overlay {
                     message: format!("{} mic open", target.label()),
@@ -257,7 +299,6 @@ impl Coordinator {
             AppEvent::MicClose(target) => {
                 log(&format!("━━━ MIC CLOSE: {} ━━━", target.label()));
                 self.clear_buffer();
-                self.phrase_detector.reset();
                 self.router.close(target);
                 self.send_ui(UiUpdate::Overlay {
                     message: format!("{} mic muted", target.label()),
@@ -303,6 +344,7 @@ impl Coordinator {
         for effect in effects {
             match effect {
                 SideEffect::StartRecording => {
+                    self.recording_started_at = Some(Instant::now());
                     self.phrase_detector.reset();
                     self.send_ui(UiUpdate::State(self.state_machine.state().clone()));
                     self.start_memo_recording_if_needed();
@@ -312,6 +354,7 @@ impl Coordinator {
                 }
 
                 SideEffect::StopRecording => {
+                    self.recording_started_at = None;
                     self.finish_memo_recording_if_needed();
                     self.send_ui(UiUpdate::State(self.state_machine.state().clone()));
                 }
@@ -477,13 +520,18 @@ impl Coordinator {
         self.trace_llm_request(&system, &user, "LLM REQUEST");
         let client = LlmClient::new(self.config.llm.clone());
         let tx = self.self_tx.clone();
+        let failure_tx = self.self_tx.clone();
         let ui = self.ui.clone();
-        std::thread::Builder::new()
+        if let Err(e) = std::thread::Builder::new()
             .name("llm".into())
             .spawn(move || {
                 dispatch_llm_result(client.classify_with_trace(&system, &user), tx, ui, "LLM RESPONSE");
             })
-            .ok();
+        {
+            let _ = failure_tx.send(CoordinatorMsg::LlmFailed(format!(
+                "cannot start LLM worker: {e}"
+            )));
+        }
     }
 
     fn spawn_llm_revise(&self, original: Vec<ProposedEntry>, revision: String) {
@@ -495,8 +543,9 @@ impl Coordinator {
         self.trace_llm_request(&system, &user, "LLM REVISION REQUEST");
         let client = LlmClient::new(self.config.llm.clone());
         let tx = self.self_tx.clone();
+        let failure_tx = self.self_tx.clone();
         let ui = self.ui.clone();
-        std::thread::Builder::new()
+        if let Err(e) = std::thread::Builder::new()
             .name("llm".into())
             .spawn(move || {
                 dispatch_llm_result(
@@ -506,7 +555,11 @@ impl Coordinator {
                     "LLM REVISION RESPONSE",
                 );
             })
-            .ok();
+        {
+            let _ = failure_tx.send(CoordinatorMsg::LlmFailed(format!(
+                "cannot start LLM worker: {e}"
+            )));
+        }
     }
 
     fn trace_llm_request(&self, system: &str, user: &str, title: &str) {
@@ -531,12 +584,9 @@ impl Coordinator {
             }
             Err(e) => {
                 log(&format!("━━━ WRITE ERROR: {e} ━━━"));
-                self.send_ui(UiUpdate::Overlay {
-                    message: format!("Write error: {e}"),
-                    icon: "⚠️".into(),
-                    seconds: 5.0,
-                });
                 self.send_ui(UiUpdate::Event(format!("Write error: {e}")));
+                let effects = self.state_machine.handle(AppEvent::WriteFailed(e.to_string()));
+                self.execute(effects);
             }
         }
     }
@@ -564,6 +614,9 @@ impl Coordinator {
         match store::save_config(&updated) {
             Ok(()) => {
                 self.config = store::load_config();
+                self.memo_recorder.set_max_recording_seconds(
+                    self.config.recognition.max_recording_seconds,
+                );
                 self.phrase_detector = PhraseDetector::new(self.config.phrases.clone());
                 self.send_ui(UiUpdate::ConfigApplied(self.config.clone()));
                 self.send_ui(UiUpdate::Overlay {
@@ -649,5 +702,62 @@ mod tests {
         assert_eq!(tail_chars("hello", 10), "hello");
         assert_eq!(tail_chars("hello", 3), "llo");
         assert_eq!(tail_chars("", 3), "");
+    }
+
+    #[test]
+    fn growing_partial_fires_mic_command_only_once() {
+        let config = QueuePopulatorConfig::default();
+        let router = RouterHandle::for_test();
+        let router_assert = router.clone();
+        let (coord_tx, coord_rx) = crossbeam_channel::unbounded();
+        let (ui_tx, ui_rx) = crossbeam_channel::unbounded();
+        let mut coordinator = Coordinator::new(
+            config,
+            router,
+            Arc::new(MemoRecorder::new()),
+            coord_rx,
+            coord_tx,
+            ui_tx,
+        );
+
+        coordinator.current_partial = "robot open claude".into();
+        coordinator.process_transcript();
+        coordinator.current_partial = "robot open claude can you hear me".into();
+        coordinator.process_transcript();
+
+        assert_eq!(router_assert.open_target(), Some(crate::state_machine::MicTarget::Claude));
+        let command_sounds = ui_rx
+            .try_iter()
+            .filter(|update| matches!(update, UiUpdate::PlayCommandSound))
+            .count();
+        assert_eq!(command_sounds, 1);
+    }
+
+    #[test]
+    fn recording_deadline_forces_review_without_waiting_for_end_phrase() {
+        let mut config = QueuePopulatorConfig::default();
+        config.recognition.max_recording_seconds = 1;
+        let router = RouterHandle::for_test();
+        let (coord_tx, coord_rx) = crossbeam_channel::unbounded();
+        let (ui_tx, _ui_rx) = crossbeam_channel::unbounded();
+        let mut coordinator = Coordinator::new(
+            config,
+            router,
+            Arc::new(MemoRecorder::with_max_recording_seconds(1)),
+            coord_rx,
+            coord_tx,
+            ui_tx,
+        );
+        coordinator.state_machine.handle(AppEvent::WakeDetected);
+        coordinator.current_partial = "hey robot bounded memo".into();
+        coordinator.recording_started_at = Some(Instant::now() - Duration::from_secs(2));
+
+        coordinator.enforce_recording_timeout();
+
+        assert_eq!(
+            coordinator.state_machine.state(),
+            &AppState::MemoReview("bounded memo".into())
+        );
+        assert_eq!(coordinator.recording_started_at, None);
     }
 }

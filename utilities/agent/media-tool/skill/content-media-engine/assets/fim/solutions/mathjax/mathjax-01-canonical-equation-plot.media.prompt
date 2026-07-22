@@ -1,0 +1,75 @@
+---
+schema: "0.4"
+id: fim-math-and-scientific-rendering-mathjax-01-canonical-equation-plot
+type: document
+quality: high
+solution: mathjax
+category: math-and-scientific-rendering
+variant: canonical-equation-plot
+references:
+- references/fim/overview/geospatial-math-scientific/mathjax.md
+- references/fim/solution/mathjax.md
+prompt:
+  system: |-
+    You are a senior accessible web math engineer. Output only one complete ASCII HTML file using MathJax. No Markdown fences or prose outside the source.
+  text: |-
+    Create a canonical MathJax page that renders the quadratic formula, a worked example for x^2-5*x+6=0, and an accessible HTML/SVG sketch of the parabola with root labels. Configure MathJax before loading, use the tex-mml-chtml bundle or equivalent, and show both inline and display math.
+
+    Requirements: include MathJax startup.promise handling, semantic headings, equation labels in prose, axis labels with units, MathML-friendly output, and a fallback paragraph if MathJax fails to load. The generated artifact must use MathJax as the primary math rendering surface.
+  provider_options:
+    temperature: 0.2
+    max_tokens: 8192
+output:
+  text_format: html
+  artifact_kind: mathjax-html-document
+  formats:
+  - format: html
+  - format: mathml
+  - format: svg
+evaluation:
+  checklist:
+  - "YAML parses and required schema 0.4 fields are present."
+  - "HTML is complete, ASCII-only, and configures MathJax before loading the script."
+  - "Math correctness covers quadratic formula, worked roots, substitution checks, and plotted labels."
+  - "Notation validity covers TeX delimiters, display math, inline math, and MathJax configuration."
+  - "Renderability covers startup.promise, fallback status, nonblank page, and CHTML or SVG output."
+  - "Labels and units identify x, y, roots, coefficients, equation steps, and figure caption."
+  - "Domain edge cases cover script load failure, bad TeX, repeated roots, negative discriminant notes, and accessibility output."
+  rubric:
+  - name: Format validity
+    weight: 30
+    criteria:
+    - "Output is one complete ASCII HTML file with no Markdown wrapper."
+    - "The file uses valid MathJax configuration and delimiters."
+    - "The source includes deterministic ids, fallback status, and run comments."
+  - name: Semantic completeness
+    weight: 30
+    criteria:
+    - "Formula, worked example, roots, sketch, labels, caption, and fallback behavior are all present."
+    - "MathJax is the primary math renderer."
+    - "The example is mathematically correct and auditable."
+  - name: Visual/structural quality
+    weight: 25
+    criteria:
+    - "Equation hierarchy, sketch, labels, and caption are readable."
+    - "The document supports screen-reader-friendly structure."
+    - "Long formulas wrap or scale without overlap."
+  - name: Robustness
+    weight: 15
+    criteria:
+    - "Handles load failure, typesetting failure, and malformed TeX gracefully."
+    - "Documents MathJax output mode and accessibility expectations."
+    - "Discusses quadratic domain edge cases."
+  pass_conditions:
+  - "Rubric weights are exactly Format validity 30, Semantic completeness 30, Visual/structural quality 25, Robustness 15."
+  - "Score is 80 or higher out of 100 with no critical failure in math correctness, notation validity, renderability, or accessibility."
+  - "The artifact renders a valid MathJax quadratic document with labels, units, and fallback text."
+  - "Domain edge cases and accessible output are represented."
+tags:
+- fim
+- math-and-scientific-rendering
+- mathjax
+- canonical-equation-plot
+- accessible-math
+- chtml
+

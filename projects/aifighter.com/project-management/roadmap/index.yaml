@@ -1,0 +1,22 @@
+roadmap:
+  - id: RM-00
+    title: Roadmap Overview
+    file: 00-overview.md
+  - id: RM-01
+    title: "M0 — Foundation: Graph Studio & Battle Engine"
+    file: 01-M0-foundation.md
+  - id: RM-02
+    title: "M1 — Core Play Loop"
+    file: 02-M1-core-play-loop.md
+  - id: RM-03
+    title: "M2 — Training, Evolution & Research"
+    file: 03-M2-training-evolution-research.md
+  - id: RM-04
+    title: "M3 — Community, Creation & Visualization"
+    file: 04-M3-community-creation-visualization.md
+  - id: RM-05
+    title: "M4 — Education, Family, Accessibility & Launch Readiness"
+    file: 05-M4-education-family-accessibility.md
+  - id: RM-06
+    title: Story Coverage & Traceability Matrix
+    file: story-coverage.md

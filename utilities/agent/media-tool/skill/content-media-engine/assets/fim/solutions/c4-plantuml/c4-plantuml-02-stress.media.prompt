@@ -1,0 +1,77 @@
+schema: "0.4"
+id: fim-diagrams-dsl-xml-c4-plantuml-02-stress
+type: diagram
+quality: production
+solution: c4-plantuml
+category: diagrams-dsl-xml
+variant: stress
+prompt:
+  system: You generate C4-PlantUML source. Output only valid PlantUML wrapped in @startuml and @enduml
+    with the appropriate C4 include. Do not use code fences or explanatory prose.
+  text: Create a dense C4-PlantUML Component diagram for a multi-tenant SaaS API container. Include at
+    least 18 components across auth, tenant isolation, billing, webhooks, reporting, audit logging, caching,
+    background jobs, and integration adapters. Use tags or styles to identify critical and external components.
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.2
+    top_p: 0.9
+output:
+  text_format: plantuml-c4
+  artifact_kind: architecture_diagram_source
+  formats:
+  - format: puml
+  - format: svg
+  - format: png
+evaluation:
+  checklist:
+  - 'Output uses native c4-plantuml syntax: @startuml/@enduml, C4 include headers, Person/System/Container/Component
+    macros, boundary macros, Rel variants, layout directives, tags, and legend macros.'
+  - 'Output captures the requested semantics: C4 architecture views with correct abstraction level, people,
+    systems, containers, components, and relationships.'
+  - 'Output has solution-appropriate structure: readable C4 layout, appropriate boundaries, concise relationship
+    labels, and useful legends/tags.'
+  - 'Output is robust for the renderer/importer: no undefined aliases, no mixed abstraction levels without
+    purpose, and includes are compatible with the selected C4 diagram level.'
+  - 'Handles density without losing parseability: repeated elements use groups, classes, styles, layout
+    hints, or data-driven structure appropriate to this solution.'
+  - Output contains only the requested artifact source, with no Markdown fences, no explanatory prose,
+    and no non-ASCII characters.
+  rubric:
+    Format validity:
+      weight: 30
+      criteria: 'Must parse as plantuml-c4 and follow c4-plantuml-specific grammar: @startuml/@enduml,
+        C4 include headers, Person/System/Container/Component macros, boundary macros, Rel variants, layout
+        directives, tags, and legend macros. Deduct heavily for malformed roots, unmatched blocks/tags,
+        invalid ids, unresolved references, or mixing syntax from another diagram DSL.'
+    Semantic completeness:
+      weight: 30
+      criteria: Must satisfy the full scenario for dense/stress use and include the domain entities, relationships,
+        responsibilities, and edge/failure paths requested in the prompt. The diagram must use c4-plantuml
+        for C4 architecture views with correct abstraction level, people, systems, containers, components,
+        and relationships.
+    Visual/structural quality:
+      weight: 25
+      criteria: Must produce a readable rendered or importable artifact with readable C4 layout, appropriate
+        boundaries, concise relationship labels, and useful legends/tags. Labels should be concise, grouping
+        should reduce clutter, and styling/layout choices must match the strengths and limits of c4-plantuml.
+    Robustness:
+      weight: 15
+      criteria: Must remain stable under normal rendering, import, export, or documentation use. Check
+        no undefined aliases, no mixed abstraction levels without purpose, and includes are compatible
+        with the selected C4 diagram level, avoid placeholders that block execution, and keep output ASCII-only
+        and deterministic.
+  pass_conditions:
+  - Total rubric score is at least 85 out of 100.
+  - Format validity score is at least 24 out of 30.
+  - The generated artifact source has no code fences, no prose wrapper, and no non-ASCII characters.
+  - The generated source can be parsed or imported by the normal c4-plantuml toolchain without unresolved
+    references or missing required root elements.
+tags:
+- fim
+- diagrams-dsl-xml
+- c4-plantuml
+- stress
+- c4
+- plantuml
+- architecture
+

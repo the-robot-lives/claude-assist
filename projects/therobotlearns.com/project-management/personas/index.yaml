@@ -1,0 +1,49 @@
+personas:
+  - id: P-001
+    name: Maya Okonkwo
+    slug: maya-okonkwo
+    archetype: "The Deep Diver"
+    segment: primary
+    file: P-001-maya-okonkwo.md
+  - id: P-002
+    name: Diego Ramírez
+    slug: diego-ramirez
+    archetype: "The Sprinter"
+    segment: primary
+    file: P-002-diego-ramirez.md
+  - id: P-003
+    name: Priya Sharma
+    slug: priya-sharma
+    archetype: "The Context Switcher"
+    segment: primary
+    file: P-003-priya-sharma.md
+  - id: P-004
+    name: Tam Nguyen
+    slug: tam-nguyen
+    archetype: "The Curator"
+    segment: secondary
+    file: P-004-tam-nguyen.md
+  - id: P-005
+    name: Ana Beatriz Souza
+    slug: ana-beatriz-souza
+    archetype: "The Newcomer"
+    segment: secondary
+    file: P-005-ana-beatriz-souza.md
+  - id: P-006
+    name: Casey Blum
+    slug: casey-blum
+    archetype: "The Mechanic"
+    segment: tertiary
+    file: P-006-casey-blum.md
+  - id: P-007
+    name: Marcus Webb
+    slug: marcus-webb
+    archetype: "The Listener"
+    segment: edge-case
+    file: P-007-marcus-webb.md
+  - id: P-008
+    name: Ingrid Halvorsen
+    slug: ingrid-halvorsen
+    archetype: "The Off-Gridder"
+    segment: edge-case
+    file: P-008-ingrid-halvorsen.md

@@ -1,0 +1,70 @@
+@startuml
+' ============================================================================
+' METADATA
+'   author:       TheRobotDrafts Examples
+' '   description:  Order fulfillment with parallel pack/ship, three swimlanes, and object flow.
+'   usecase:      Teach fork/join bars, swimlane partitions, object nodes, control flow.
+'   complexity:   medium
+'   domain:       logistics
+' ============================================================================
+title Example Activity - Medium Order Fulfillment
+
+' SWIMLANES (partitions) group actions by who performs them.
+' Declare a lane with |LaneName|; subsequent actions belong to it
+' until another |LaneName| header switches the current partition.
+' Rendered as vertical columns separated by dashed lines.
+
+|Customer|
+start
+
+' Actions can produce OBJECT NODES — data tokens that travel along
+' OBJECT FLOW edges (as opposed to pure control flow).
+:Submit order request;
+note right
+  <<object node>>
+  OrderRequest
+  (data token passed downstream)
+end note
+
+|Billing|
+:Validate payment method;
+
+if (Card authorized?) then (yes)
+  :Capture payment;
+else (no)
+  |Customer|
+  :Update payment details;
+  stop
+endif
+
+' A FORK NODE splits one control flow into multiple CONCURRENT flows.
+' It renders as a thick synchronization bar (horizontal/vertical line).
+fork
+  |Billing|
+  :Issue invoice;
+  :Send receipt email;
+fork again
+  |Warehouse|
+  :Reserve inventory;
+  :Pick items from shelf;
+end fork
+' A JOIN NODE ("end fork") WAITS for ALL concurrent flows to arrive
+' before a single flow proceeds. Fork and join are synchronization points.
+
+|Warehouse|
+:Pack shipment;
+
+:Generate shipping label;
+
+:Dispatch with courier;
+
+|Customer|
+:Receive package;
+stop
+
+' TEACHING NOTES:
+'   - Fork/join model true concurrency (parallel execution).
+'   - A decision (if) chooses ONE branch; a fork runs ALL branches.
+'   - Object flow carries data; control flow carries only a token of control.
+'   - Swimlanes are a presentation choice — they do not change semantics.
+@enduml

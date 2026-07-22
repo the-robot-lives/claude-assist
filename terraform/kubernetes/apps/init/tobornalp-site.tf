@@ -101,12 +101,12 @@ resource "helm_release" "tobornalp_site" {
       secrets = {
         name = "tobornalp-secrets"
         keys = {
-          dbUser           = "TOBORNALP_DB_USER"
-          dbPassword       = "TOBORNALP_DB_PASSWORD"
-          secretKeyBase    = "TOBORNALP_SECRET_KEY_BASE"
+          dbUser            = "TOBORNALP_DB_USER"
+          dbPassword        = "TOBORNALP_DB_PASSWORD"
+          secretKeyBase     = "TOBORNALP_SECRET_KEY_BASE"
           guardianSecretKey = "TOBORNALP_GUARDIAN_SECRET_KEY"
-          redisUrl         = "TOBORNALP_REDIS_URL"
-          databaseUrl      = "TOBORNALP_DATABASE_URL"
+          redisUrl          = "TOBORNALP_REDIS_URL"
+          databaseUrl       = "TOBORNALP_DATABASE_URL"
         }
       }
 
@@ -119,7 +119,7 @@ resource "helm_release" "tobornalp_site" {
         className      = "nginx"
         cloudflareOnly = true
         annotations = {
-          "nginx.ingress.kubernetes.io/ssl-redirect"   = "true"
+          "nginx.ingress.kubernetes.io/ssl-redirect"    = "true"
           "nginx.ingress.kubernetes.io/proxy-body-size" = "10m"
         }
       }

@@ -1,0 +1,80 @@
+schema: "0.4"
+id: scholar-07-quiz-spa
+type: image
+quality: high
+
+# The Robot Learns — the ONE real browser page: a single-page React quiz runner (Vite),
+# themeable across Scholar/Atlas/Spark/Deep-Focus, built to WCAG 2.2 AA. Rendered here in
+# the Scholar direction: clean minimal web.
+# Theme tenets: light near-white web canvas, single indigo accent, crisp 4px radius, thin
+# visible gray borders (structure from lines), Inter throughout, mono only for small labels.
+# Palette: canvas #fafafa, ink #111118, alt #f5f5f5, border #e0e0e0, indigo #6366F1, link #4f46e5.
+
+prompt:
+  system: |
+    You are a senior product designer rendering a high-fidelity UI mockup of a clean WEB
+    PAGE — a single-page browser quiz app — in a precise, minimal, light register that
+    feels like a well-made modern web tool (Linear / Vercel dashboard minimalism, not a
+    consumer app). Near-white page, one indigo accent, crisp 4px radius, thin visible
+    borders, Inter throughout with a small monospace only for technical labels. High
+    legibility, WCAG-clean. This is a real browser web page, NOT a terminal.
+  text: |
+    A 16:9 high-fidelity mockup of the Quiz SPA — a browser-rendered single-page quiz
+    runner for "The Robot Learns". A clean light web page, NOT a terminal and NOT a command
+    line.
+
+    OVERALL LAYOUT (a slim top app bar, a centered quiz column, a slim right settings strip):
+    - TOP APP BAR: a small wordmark "THE ROBOT LEARNS" at left in semibold sans; at right a
+      THEME PICKER — four small swatch chips labeled Scholar / Atlas / Spark / Deep Focus,
+      the Scholar chip active with an indigo underline and heavier weight — plus an
+      ACCESSIBILITY cluster (an "A− / A+" text-size stepper and a "High contrast" toggle).
+    - CENTERED QUIZ CARD (dominant, a readable ~720px measure): a bordered near-white card
+      with 4px corners and a thin gray border. Inside: a "Question 4 of 10" progress row
+      with a thin indigo bar; the question in medium-weight sans; four ANSWER OPTIONS as
+      full-width bordered rows each with a radio affordance, one option in a selected state
+      (indigo focus ring + a faint indigo-tint fill); a footer with a bordered ghost "Skip"
+      button and an indigo-filled "Submit" button.
+    - RIGHT SETTINGS STRIP (slim): a quiet bordered card listing quiz meta — topic,
+      difficulty, and a small mono question id — with a compact legend.
+
+    Below the card: a subtle secondary link in indigo, "open the same quiz in the terminal".
+
+    PALETTE & TYPE: near-white page canvas with a faint cool-gray alt surface for grouping;
+    deep near-black headings, muted gray secondary text; one single saturated indigo for the
+    active-theme underline, the progress fill, the selected-option ring, and the primary
+    Submit fill — nothing else is saturated. Inter throughout (neutral, high x-height); a
+    small monospace only for the question id and technical labels.
+
+    SHAPE & SURFACE: crisp 4px rounded corners on cards, inputs and buttons — no pills, no
+    sharp zero; thin visible cool-gray borders delineate every card, option row and input
+    (structure from lines, not shadow); flat surfaces with at most one very soft shadow on
+    the card. No gradients, no glow, no texture.
+
+    MOOD: precise, intelligent, trustworthy — a clean, well-organized web tool that respects
+    the reader's attention; the knowledge is foreground and the chrome recedes.
+  negative: "watermark, signature, lorem ipsum placeholder text, low-fidelity wireframe, monitor/device photograph framing, blurry, distorted UI, terminal window, command-line interface, monospace-only layout, dark mode, black background, neon glow, gradient background, multiple accent colors"
+
+output:
+  formats:
+    - format: png
+  dimensions:
+    width: 1920
+    height: 1080
+    aspect_ratio: "16:9"
+
+eval:
+  pass_threshold: 0.72
+  criteria:
+    relevance: {weight: 3, description: "Matches the Quiz SPA: a centered browser quiz card with a 'Question N of 10' progress row and radio-style answer options (one selected), a Theme Picker (Scholar/Atlas/Spark/Deep-Focus) and accessibility (text-size + high-contrast) controls in the app bar"}
+    theme_fidelity: {weight: 3, description: "Light near-white web canvas, a single indigo accent (underline/progress/selected-ring/primary button), crisp 4px radius, thin visible gray borders, Inter throughout — a real web page, not a terminal, not generic UI defaults"}
+    composition: {weight: 2, description: "Clean centered quiz column with a slim settings strip and a real app bar; clear hierarchy; plausible real web-product layout"}
+    technical: {weight: 2, description: "Sharp, correct 16:9 aspect, no artifacts"}
+  reject_if:
+    - "lorem ipsum or placeholder text visible"
+    - "watermark or signature visible"
+    - "wireframe-level fidelity instead of high-fidelity mockup"
+    - "terminal window or command-line interface instead of a web page"
+    - "dark mode instead of a light near-white page"
+    - "more than one saturated accent hue"
+
+tags: [scholar, therobotlearns.com, screen-mockup, web]

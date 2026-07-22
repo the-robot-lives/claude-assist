@@ -1,0 +1,38 @@
+@startuml
+' ============================================================================
+' METADATA
+'   author:       TheRobotDrafts Examples
+'   description:  Medium interaction overview - 6-8 interaction nodes with a fork/join for parallel interactions and a decision merge.
+'   usecase:      Teach fork/join (parallel interactions) and decision merging in interaction-overview flows.
+'   complexity:   medium
+'   domain:       Order fulfillment
+' ============================================================================
+title Example Interaction Overview - Medium Order Fulfillment
+
+start
+
+ref over "ReceiveOrder"
+
+' A fork splits control so two interactions (e.g. payment + inventory) run concurrently.
+fork
+  ref over "ChargePayment"
+fork again
+  ref over "ReserveStock"
+end fork
+
+' After both parallel interactions complete, the join merges control flow.
+if (Payment approved?) then (yes)
+  if (Stock available?) then (yes)
+    ref over "ShipOrder"
+  else (no)
+    ref over "Backorder"
+  endif
+else (no)
+  ref over "CancelOrder"
+endif
+
+ref over "SendConfirmation"
+
+stop
+
+@enduml

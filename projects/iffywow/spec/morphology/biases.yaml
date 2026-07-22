@@ -1,0 +1,81 @@
+# Bias adjuncts of New Ithkuil, in official table (alphabetical-by-abbr)
+# order.
+# Source: A Grammar of New Ithkuil, Ch. 8 "Adjuncts", Sec. 8.5
+# (https://ithkuil.net/newithkuil_08_adjuncts.htm); cross-checked against
+# the pinned toolkit's ALL_BIAS_ADJUNCTS (generate/adjunct/bias.ts).
+#
+# COUNT NOTE: the official Sec. 8.5 table contains exactly 61 biases
+# (ACC through VEX). The pre-amendment EXPERIENTIAL (EXP) bias was renamed
+# MANIFESTIVE (MNF) in the 2023-02-15 Grammar Design v1.3.2 reconciliation
+# (a legacy "EXP: Experiential" key survives only in the toolkit's name map,
+# with no Cbb form). EXP is therefore recorded as an alias of MNF (id 41),
+# not as its own ID.
+
+schema_version: 1
+status: verified # against ithkuil.net Sec. 8.5 table (2026-07-17); official count = 61
+stability: "An integer ID is never reassigned; removed elements become reserved IDs."
+
+biases:
+  - {id: 0,  name: Accidental,     abbr: ACC}
+  - {id: 1,  name: Archetypal,     abbr: ACH}
+  - {id: 2,  name: Admissive,      abbr: ADS}
+  - {id: 3,  name: Annunciative,   abbr: ANN}
+  - {id: 4,  name: Anticipative,   abbr: ANP}
+  - {id: 5,  name: Approbative,    abbr: APB}
+  - {id: 6,  name: Apprehensive,   abbr: APH}
+  - {id: 7,  name: Arbitrary,      abbr: ARB}
+  - {id: 8,  name: Attentive,      abbr: ATE}
+  - {id: 9,  name: Comedic,        abbr: CMD}
+  - {id: 10, name: Contensive,     abbr: CNV}
+  - {id: 11, name: Coincidental,   abbr: COI}
+  - {id: 12, name: Corruptive,     abbr: CRP}
+  - {id: 13, name: Corrective,     abbr: CRR}
+  - {id: 14, name: Contemptive,    abbr: CTP}
+  - {id: 15, name: Contemplative,  abbr: CTV}
+  - {id: 16, name: Disconcertive,  abbr: DCC}
+  - {id: 17, name: Dejective,      abbr: DEJ}
+  - {id: 18, name: Desperative,    abbr: DES}
+  - {id: 19, name: Diffident,      abbr: DFD}
+  - {id: 20, name: Dismissive,     abbr: DIS}
+  - {id: 21, name: Delectative,    abbr: DLC}
+  - {id: 22, name: Dolorous,       abbr: DOL}
+  - {id: 23, name: Disapprobative, abbr: DPB}
+  - {id: 24, name: Derisive,       abbr: DRS}
+  - {id: 25, name: Dubitative,     abbr: DUB}
+  - {id: 26, name: Euphoric,       abbr: EUH}
+  - {id: 27, name: Euphemistic,    abbr: EUP}
+  - {id: 28, name: Exasperative,   abbr: EXA}
+  - {id: 29, name: Exigent,        abbr: EXG}
+  - {id: 30, name: Fortuitous,     abbr: FOR}
+  - {id: 31, name: Fascinative,    abbr: FSC}
+  - {id: 32, name: Gratificative,  abbr: GRT}
+  - {id: 33, name: Indignative,    abbr: IDG}
+  - {id: 34, name: Infatuative,    abbr: IFT}
+  - {id: 35, name: Implicative,    abbr: IPL}
+  - {id: 36, name: Impatient,      abbr: IPT}
+  - {id: 37, name: Ironic,         abbr: IRO}
+  - {id: 38, name: Insipid,        abbr: ISP}
+  - {id: 39, name: Invidious,      abbr: IVD}
+  - {id: 40, name: Mandatory,      abbr: MAN}
+  - {id: 41, name: Manifestive,    abbr: MNF, aliases: [{abbr: EXP, name: Experiential, note: "pre-v1.3.2 name"}]}
+  - {id: 42, name: Optimal,        abbr: OPT}
+  - {id: 43, name: Pessimistic,    abbr: PES}
+  - {id: 44, name: Propitious,     abbr: PPT}
+  - {id: 45, name: Perplexive,     abbr: PPX}
+  - {id: 46, name: Propositive,    abbr: PPV}
+  - {id: 47, name: Prosaic,        abbr: PSC}
+  - {id: 48, name: Presumptive,    abbr: PSM}
+  - {id: 49, name: Reactive,       abbr: RAC}
+  - {id: 50, name: Reflective,     abbr: RFL}
+  - {id: 51, name: Resignative,    abbr: RSG}
+  - {id: 52, name: Repulsive,      abbr: RPU}
+  - {id: 53, name: Revelative,     abbr: RVL}
+  - {id: 54, name: Satiative,      abbr: SAT}
+  - {id: 55, name: Suggestive,     abbr: SGS}
+  - {id: 56, name: Skeptical,      abbr: SKP}
+  - {id: 57, name: Solicitative,   abbr: SOL}
+  - {id: 58, name: Stupefactive,   abbr: STU}
+  - {id: 59, name: Trepidative,    abbr: TRP}
+  - {id: 60, name: Vexative,       abbr: VEX}
+
+reserved_ids: []

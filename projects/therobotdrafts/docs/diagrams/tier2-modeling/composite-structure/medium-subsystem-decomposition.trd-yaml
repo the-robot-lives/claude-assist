@@ -1,0 +1,23 @@
+# .trd-yaml — TheRobotDrafts native model (IxModel serialization)
+name: Example Composite Structure - Medium Subsystem Decomposition
+elements:
+  - { id: gw, type: Boundary, name: PaymentGateway, stereotype: structuredClassifier }
+  - { id: api, type: Component, name: 'api : ApiFacade', parentId: gw }
+  - { id: fraud, type: Component, name: 'fraud : FraudChecker', parentId: gw }
+  - { id: auth, type: Component, name: 'auth : Authorizer', parentId: gw }
+  - { id: bank, type: Component, name: 'gateway : BankGateway', parentId: gw }
+  - { id: audit, type: Component, name: 'audit : AuditLogger', parentId: gw }
+  - { id: pReq, type: Component, name: pReq, parentId: gw }
+  - { id: pRes, type: Component, name: pRes, parentId: gw }
+  - { id: ~note1, type: Note, name: '<b>Black-box vs white-box</b>', documentation: '<b>Black-box vs white-box</b>\nExternally only the four ports are\nvisible (black box).  This diagram\nopens the box (white box) to show\nthe five parts and how each port\nDELEGATES to an internal part.\nProvided ports (pReq, pRes) fulfil\nan interface the gateway offers.\nRequired ports (pFraud, pLedger)\nname an interface the gateway NEEDS\nfrom its environment.' }
+edges:
+  - { id: e1, type: DirectedAssociation, from: api, to: fraud, label: screen }
+  - { id: e2, type: DirectedAssociation, from: api, to: auth, label: authorize }
+  - { id: e3, type: DirectedAssociation, from: auth, to: bank, label: settle }
+  - { id: e4, type: DirectedAssociation, from: bank, to: audit, label: record }
+  - { id: e5, type: DirectedAssociation, from: fraud, to: audit, label: record }
+  - { id: e6, type: DirectedAssociation, from: pReq, to: api }
+  - { id: e7, type: DirectedAssociation, from: api, to: pRes }
+  - { id: e8, type: NoteLink, from: ~note1, to: gw }
+diagrams:
+  - { id: d1, name: Example Composite Structure - Medium Subsystem Decomposition, kind: component, layoutProvenance: Synthesized }

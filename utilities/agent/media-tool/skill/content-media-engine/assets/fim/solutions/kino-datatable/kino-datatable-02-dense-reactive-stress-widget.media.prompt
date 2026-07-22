@@ -1,0 +1,68 @@
+schema: "0.4"
+id: fim-notebook-livebook-and-widgets-kino-datatable-02-dense-reactive-stress-widget
+type: data
+quality: high
+solution: kino-datatable
+category: notebook-livebook-and-widgets
+variant: dense-reactive-stress-widget
+prompt:
+  system: |-
+    You are a senior Elixir Livebook data engineer. Output only one complete ASCII Elixir Livebook code cell for Kino.DataTable. No Markdown fences, no prose outside code. Prefer bounded deterministic data and Livebook-safe execution.
+  text: |-
+    Create a dense Kino.DataTable stress cell for Livebook. Generate a deterministic dataset of at least 10000 rows with mixed numeric, categorical, datetime, boolean, and nullable fields. Render a paginated Kino.DataTable with explicit keys and num_rows, plus a second smaller summary table that aggregates the same data. Use Explorer DataFrame or Table.Reader when appropriate, but keep a fallback list-of-maps path.
+
+    Requirements: document memory and pagination tradeoffs; include stable seeds and row limits; show how to sample or aggregate before display; handle missing fields, duplicates, and outliers; include accessibility-minded column labels and formatted values; include Livebook compatibility and safe execution checks that avoid multi-million-row materialization, remote data, credentials, eval, and shell calls.
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.2
+    top_p: 0.9
+output:
+  text_format: elixir
+  artifact_kind: livebook-kino-datatable-stress-cell
+  formats:
+  - format: exs
+evaluation:
+  checklist:
+  - "Import check: generated code installs kino and optionally explorer, then uses Kino.DataTable.new/2 for both detail and summary tables."
+  - "Notebook compatibility: comments identify Livebook/Kino runtime and Table.Reader or Explorer interop."
+  - "Reactive state: sorting and pagination are delegated to the widget, with no callback loop or repeated table reconstruction."
+  - "Data shape: dense data has documented fields, bounded row counts, mixed types, missing values, duplicates, and outliers."
+  - "Accessibility and fallback: keys and names are readable, formatted values avoid color-only meaning, and list-of-maps fallback is present."
+  - "Safe execution: no unbounded row generation, remote fetches, credentials, eval, shell commands, or production database calls."
+  rubric:
+  - name: Format validity
+    weight: 30
+    criteria:
+    - "Output is one complete ASCII Elixir Livebook code cell with no Markdown fences or explanatory wrapper."
+    - "The code is valid Elixir and constructs bounded deterministic data before rendering tables."
+    - "Supported Kino.DataTable options are used correctly."
+  - name: Semantic completeness
+    weight: 30
+    criteria:
+    - "Implements dense table inspection with pagination, explicit keys, summary aggregation, and stress-case rows."
+    - "Uses Kino.DataTable-supported input shapes and avoids unsupported bare tuple usage."
+    - "Includes notebook/livebook compatibility, data shape, fallback, accessibility, and safe execution notes."
+  - name: UX/structural quality
+    weight: 25
+    criteria:
+    - "Detail and summary tables are clearly named and column order supports scanning."
+    - "Formatted nulls, dates, numbers, and booleans are readable in a plain table."
+    - "The row count and page size balance density with Livebook responsiveness."
+  - name: Robustness
+    weight: 15
+    criteria:
+    - "Handles empty datasets, missing keys, duplicate categories, outliers, and heterogeneous rows."
+    - "Uses deterministic seeds and bounded generation."
+    - "Documents sampling or Table.Reader strategies for datasets too large to materialize."
+  pass_conditions:
+  - "All required YAML fields are present and the generated artifact is one valid ASCII Elixir Livebook cell."
+  - "Rubric weights are exactly Format validity 30, Semantic completeness 30, UX/structural quality 25, Robustness 15."
+  - "The prompt requires notebook/livebook compatibility, reactive state, data shape, accessibility, fallback, and safe execution checks."
+  - "The solution remains Kino.DataTable-centered and does not replace the table with VegaLite or Plotly."
+tags:
+- fim
+- notebook-livebook-and-widgets
+- livebook
+- kino-datatable
+- dense-reactive-stress-widget
+

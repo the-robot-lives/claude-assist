@@ -1,0 +1,154 @@
+@startuml
+' ============================================================================
+' METADATA
+'   author:       TheRobotDrafts Examples
+'   description:  Complex DMN Decision Requirements Diagram for loan
+'                 underwriting: 13 decisions in a deep dependency tree, multiple
+'                 input data sources, two reused Business Knowledge Models, and
+'                 three Knowledge Sources providing invocation authority.
+'   usecase:      Teaching large DRDs: deep decision trees, fan-out/fan-in,
+'                 reused knowledge models, authority edges, and how to attach an
+'                 illustrative decision-table note showing one decision's logic.
+'   complexity:   complex
+'   domain:       finance / underwriting
+' ============================================================================
+
+title DMN Decision Requirements - Complex Underwriting DRD
+
+' ---------------------------------------------------------------------------
+' TEACHING NOTES
+' ---------------------------------------------------------------------------
+' Large DRDs are read TOP-UP or BOTTOM-UP:
+'   - Top-down:  start at the final decision ("Offer") and ask "what do I need
+'                to know to produce this?" — each answer is an upstream dep.
+'   - Bottom-up: start from raw inputs and decisions at the leaves and compose.
+'
+' Patterns visible here:
+'   1. Fan-out:  one input/decision feeds many downstream decisions.
+'   2. Fan-in:   a decision aggregates several upstream decisions.
+'   3. Shared BK: a Business Knowledge Model invoked by many decisions
+'                 (drawn once, dashed to each consumer).
+'   4. Authority: Knowledge Sources (regulations, policies) govern decisions
+'                 via dashed knowledge-requirement edges.
+'   5. DAG:       the graph is acyclic — no decision (transitively) needs itself.
+'
+' A DRD shows ONLY topology (who needs whom). The LOGIC of any single decision
+' lives in its "boxed expression" — most often a decision table. The note on
+' "Risk Class" below illustrates what that payload looks like.
+' ---------------------------------------------------------------------------
+
+' === Input Data ===
+usecase "Application\nForm"     as AppForm
+usecase "Credit\nBureau Pull"   as CreditBureau
+usecase "Collateral\nAppraisal" as Appraisal
+usecase "Income\nDocs"          as IncomeDocs
+usecase "Market\nData"          as MarketData
+
+' === Business Knowledge Models (reusable logic) ===
+rectangle "Risk Grade\nModel"  as RiskGradeModel <<businessKnowledge>>
+rectangle "Policy\nRules"      as PolicyRules     <<businessKnowledge>>
+
+' === Knowledge Sources (authorities) ===
+file "Regulation\nZ"           as RegZ
+file "Underwriting\nManual"    as UWManual
+file "Capital\nPolicy"         as CapitalPolicy
+
+' === Decisions (13) — dependency tree ===
+' Tier 1 — intake / verification
+rectangle "Identity\nVerified"   as Identity   <<decision>>
+rectangle "Income\nVerified"     as Income     <<decision>>
+rectangle "Collateral\nValue"    as Collateral <<decision>>
+
+' Tier 2 — scoring
+rectangle "Credit\nScore"        as CreditScore <<decision>>
+rectangle "DTI\nRatio"           as DTI         <<decision>>
+rectangle "LTV\nRatio"           as LTV         <<decision>>
+
+' Tier 3 — classification
+rectangle "Risk\nClass"          as RiskClass   <<decision>>
+rectangle "Policy\nFlags"        as PolicyFlags <<decision>>
+
+' Tier 4 — terms
+rectangle "Eligibility"          as Eligibility <<decision>>
+rectangle "Rate\nTier"           as RateTier    <<decision>>
+rectangle "Loan\nSize"           as LoanSize    <<decision>>
+
+' Tier 5 — final
+rectangle "Offer"                as Offer       <<decision>>
+
+' === Information requirements (solid) ===
+' Inputs -> Tier 1
+AppForm     --> Identity
+IncomeDocs  --> Income
+Appraisal   --> Collateral
+CreditBureau --> CreditScore
+MarketData  --> Collateral
+
+' Tier 1 -> Tier 2
+Income      --> DTI
+Collateral  --> LTV
+
+' Tier 2 -> Tier 3
+CreditScore --> RiskClass
+DTI         --> RiskClass
+LTV         --> RiskClass
+RiskClass   --> PolicyFlags
+
+' Tier 3 -> Tier 4
+RiskClass   --> Eligibility
+PolicyFlags --> Eligibility
+RiskClass   --> RateTier
+RiskClass   --> LoanSize
+Collateral  --> LoanSize
+
+' Tier 4 -> Tier 5 (fan-in)
+Eligibility --> Offer
+RateTier    --> Offer
+LoanSize    --> Offer
+
+' === Knowledge requirements (dashed) ===
+' Risk Grade Model reused across scoring decisions.
+CreditScore ..> RiskGradeModel : <<authority>>
+RiskClass   ..> RiskGradeModel : <<authority>>
+
+' Policy Rules reused across compliance + sizing.
+PolicyFlags ..> PolicyRules : <<authority>>
+Eligibility ..> PolicyRules : <<authority>>
+LoanSize    ..> PolicyRules : <<authority>>
+
+' Knowledge Sources govern decisions.
+Offer       ..> RegZ          : <<authority>>
+Eligibility ..> UWManual      : <<authority>>
+LoanSize    ..> CapitalPolicy : <<authority>>
+
+' ---------------------------------------------------------------------------
+' ILLUSTRATIVE DECISION TABLE — the "payload" of the Risk Class decision.
+' The DRD above says Risk Class exists and what feeds it. This note shows WHAT
+' ITS LOGIC MIGHT LOOK LIKE as a decision table (hit policy + input/output cols).
+' It is illustrative only — the table is NOT part of the DRD graph itself.
+' ---------------------------------------------------------------------------
+note right of RiskClass
+  **Illustrative decision table for "Risk Class"**
+  (boxed expression — the decision's payload, not part of the DRD topology)
+  --
+  Hit Policy: **UNIQUE** (at most one matching rule)
+  --
+  | Inputs               |             | Output       |
+  | Credit Score | DTI   | LTV         | Risk Class   |
+  |------------|--------|-------------|--------------|
+  | >= 750     | < 36%  | <= 80%      | A (prime)    |
+  | 680-749    | < 43%  | <= 90%      | B (near)     |
+  | 620-679    | < 50%  | <= 95%      | C (subprime) |
+  | < 620      | --     | --          | D (decline)  |
+  --
+  Hit policies: U=unique, F=first, P=priority, C=collect, A=any, O=output order
+end note
+
+note bottom of Offer
+  **Reading a deep DRD**
+  Offer (final) depends on 3 decisions, each of which depends on more.
+  Trace a SOLID edge backward to find every input that ultimately influences
+  the offer. Trace a DASHED edge to find every rule/regulation that constrains
+  the logic along the way.
+end note
+@enduml

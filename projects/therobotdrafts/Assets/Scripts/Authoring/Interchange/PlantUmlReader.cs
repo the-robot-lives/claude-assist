@@ -14,15 +14,15 @@ namespace TheRobotDraft.Authoring.Interchange
     ///
     /// Families supported: class / ERD (classifiers, members, relations), use case, state machine, activity
     /// (both the arrow-based old syntax and the <c>:action;</c> new syntax), sequence (participants + messages),
-    /// component / deployment, and <c>@startmindmap</c> mind maps. Notes (`note … of X`, `note "…" as N`) become
-    /// <see cref="IxElementType.Note"/> elements with <see cref="IxEdgeType.NoteLink"/> edges.
+    /// component / deployment, <c>@startmindmap</c> mind maps, and <c>@startsalt</c> wireframes. Notes (`note … of X`,
+    /// `note "…" as N`) become <see cref="IxElementType.Note"/> elements with <see cref="IxEdgeType.NoteLink"/> edges.
     /// </summary>
     public static class PlantUmlReader
     {
         // ------------------------------------------------------------------ public API
 
         /// <summary>Parse PlantUML text into an IxModel. Throws <see cref="InterchangeException"/> when the text
-        /// is empty or a wholly unsupported document type (e.g. @startsalt).</summary>
+        /// is empty or has no recognizable model content.</summary>
         public static IxModel Parse(string text)
         {
             if (string.IsNullOrWhiteSpace(text))
@@ -34,7 +34,7 @@ namespace TheRobotDraft.Authoring.Interchange
 
             string family = DetectFamily(text, lines);
             if (family == "salt")
-                throw new InterchangeException("salt wireframe markup isn't supported yet — import it as a UI mockup instead");
+                return ParseSalt(text, lines);
 
             var model = new IxModel { Name = FindTitle(lines) ?? FindStartName(lines) };
             model.Diagrams.Add(new IxDiagram { Id = "d1", Name = model.Name, Kind = family });
@@ -44,6 +44,7 @@ namespace TheRobotDraft.Authoring.Interchange
                 case "mindmap": ParseMindmap(lines, model); break;
                 case "sequence": ParseSequence(lines, model); break;
                 case "activity": ParseActivity(lines, model); break;
+                case "timing": ParseTiming(lines, model); break;
                 default: ParseDeclarative(lines, model, family); break; // class / usecase / state / component
             }
 
@@ -118,6 +119,10 @@ namespace TheRobotDraft.Authoring.Interchange
             if (text.IndexOf("@startmindmap", StringComparison.OrdinalIgnoreCase) >= 0) return "mindmap";
             if (text.IndexOf("@startsalt", StringComparison.OrdinalIgnoreCase) >= 0) return "salt";
             if (text.IndexOf("@startwbs", StringComparison.OrdinalIgnoreCase) >= 0) return "mindmap"; // WBS ≈ mindmap tree
+            // Timing diagrams: PlantUML `robust`/`concise` lifelines plotted against an @N time axis.
+            if (StartsWithWord(text, "robust") || StartsWithWord(text, "concise")
+                || text.IndexOf("robust ", StringComparison.OrdinalIgnoreCase) >= 0
+                || text.IndexOf("concise ", StringComparison.OrdinalIgnoreCase) >= 0) return "timing";
 
             int classScore = 0, seqScore = 0, stateScore = 0, activityScore = 0, usecaseScore = 0, componentScore = 0;
             foreach (var l in lines)
@@ -294,6 +299,484 @@ namespace TheRobotDraft.Authoring.Interchange
             "agent", "storage", "abstract",
         };
 
+        // ------------------------------------------------------------------ timing diagrams
+
+        /// <summary>Minimal UML timing-diagram projection. Each <c>robust</c>/<c>concise</c> declaration is a
+        /// Lifeline; each <c>@N</c> time point with <c>X is "State"</c> becomes a self-transition on that
+        /// lifeline labelled with the time and the new state. The waveform's exact geometry isn't captured,
+        /// but the lifelines, their states, and the ordering of state changes survive into the model.</summary>
+        private static void ParseTiming(List<string> lines, IxModel model)
+        {
+            var aliasToEl = new Dictionary<string, IxElement>(StringComparer.OrdinalIgnoreCase);
+            string currentTime = null;
+            foreach (var raw in lines)
+            {
+                string l = raw.Trim();
+                if (l.Length == 0) continue;
+                // robust "Name" as Alias   /   concise "Name" as Alias
+                var decl = Regex.Match(l, @"^(?:robust|concise)\s+""?([^""]+)""?\s+as\s+(\w+)", RegexOptions.IgnoreCase);
+                if (decl.Success)
+                {
+                    string name = decl.Groups[1].Value, alias = decl.Groups[2].Value;
+                    var el = new IxElement { Id = alias, Name = name, Type = IxElementType.Lifeline };
+                    model.Elements.Add(el);
+                    aliasToEl[alias] = el;
+                    continue;
+                }
+                // @N  — a time observation; remember it for the next "X is State" line.
+                var t = Regex.Match(l, @"^@(\d+)");
+                if (t.Success) { currentTime = t.Groups[1].Value; continue; }
+                // X is "State"  — state change at the current time point.
+                var ch = Regex.Match(l, @"^(\w+)\s+is\s+""?([^""]+)""?", RegexOptions.IgnoreCase);
+                if (ch.Success && aliasToEl.TryGetValue(ch.Groups[1].Value, out var owner))
+                {
+                    string state = ch.Groups[2].Value;
+                    string label = (currentTime != null ? "@" + currentTime + " " : "") + "is " + state;
+                    model.Edges.Add(new IxEdge
+                    {
+                        Id = "t" + model.Edges.Count,
+                        Type = IxEdgeType.Transition,
+                        FromId = owner.Id,
+                        ToId = owner.Id,
+                        Label = label
+                    });
+                }
+            }
+        }
+
+        /// <summary>Degraded model for document types the reader cannot structurally parse. Captures the raw source as a single Note element so the file converts and
+        /// round-trips without loss, and tags the diagram kind so callers can detect the degraded path.</summary>
+        private static IxModel DegradedModel(string text, List<string> lines, string family)
+        {
+            string title = FindTitle(lines) ?? FindStartName(lines) ?? family;
+            var model = new IxModel { Name = title };
+            model.Diagrams.Add(new IxDiagram { Id = "d1", Name = title, Kind = family });
+            model.Elements.Add(new IxElement
+            {
+                Id = "src",
+                Name = family + " source",
+                Type = IxElementType.Note,
+                Documentation = "[degraded — " + family + " markup not structurally parsed]\n" + text,
+                Tags = { ["degraded"] = "true" }
+            });
+            return model;
+        }
+
+        // ------------------------------------------------------------------ salt wireframes
+
+        /// <summary>Minimal Salt → UI projection. It recognizes the wireframe vocabulary emitted by
+        /// WireframeSkeleton and keeps unsupported Salt rows as raw UiWidget nodes instead of degrading
+        /// the whole source.</summary>
+        private static IxModel ParseSalt(string text, List<string> lines)
+        {
+            string title = FindTitle(lines) ?? FindSaltStartName(lines) ?? "Wireframe";
+            var model = new IxModel { Name = title };
+            model.Diagrams.Add(new IxDiagram { Id = "d1", Name = title, Kind = "salt" });
+
+            var screen = new IxElement
+            {
+                Id = "screen",
+                Name = title,
+                Type = IxElementType.Screen,
+                Tags = { ["sourceFamily"] = "salt" }
+            };
+            model.Elements.Add(screen);
+
+            var content = SaltContentLines(lines);
+            int i = 0, seq = 0;
+            bool rootTitleConsumed = false;
+            ParseSaltChildren(content, ref i, model, screen, ref seq, true, ref rootTitleConsumed);
+
+            if (model.Elements.Count == 1)
+            {
+                var raw = AddSaltElement(model, screen, ref seq, IxElementType.UiWidget, "salt source", text);
+                raw.Tags["degraded"] = "true";
+            }
+
+            return model;
+        }
+
+        private static string FindSaltStartName(List<string> lines)
+        {
+            foreach (var l in lines)
+            {
+                var m = Regex.Match(l, @"^@startsalt\s+(.+)$", RegexOptions.IgnoreCase);
+                if (m.Success)
+                {
+                    string n = Unquote(m.Groups[1].Value.Trim());
+                    if (n.Length > 0) return n;
+                }
+            }
+            return null;
+        }
+
+        private static List<string> SaltContentLines(List<string> lines)
+        {
+            var content = new List<string>();
+            foreach (var raw in lines)
+            {
+                string line = raw.Trim();
+                if (line.Length == 0) continue;
+                if (line.StartsWith("@start", StringComparison.OrdinalIgnoreCase)
+                    || line.StartsWith("@end", StringComparison.OrdinalIgnoreCase)
+                    || StartsWithWord(line, "title"))
+                    continue;
+                content.Add(line);
+            }
+            return content;
+        }
+
+        private static void ParseSaltChildren(List<string> lines, ref int i, IxModel model, IxElement parent,
+            ref int seq, bool root, ref bool rootTitleConsumed)
+        {
+            while (i < lines.Count)
+            {
+                string line = lines[i].Trim();
+                if (line.Length == 0) { i++; continue; }
+                if (IsSaltClose(line)) { i++; return; }
+
+                if (TryParseSaltBlock(lines, ref i, model, parent, ref seq, root, ref rootTitleConsumed))
+                    continue;
+
+                if (root && !rootTitleConsumed && TryTakeSaltTitle(line, out string title))
+                {
+                    model.Name = title;
+                    model.Diagrams[0].Name = title;
+                    parent.Name = title;
+                    rootTitleConsumed = true;
+                    i++;
+                    continue;
+                }
+
+                AddSaltLine(line, model, parent, ref seq);
+                i++;
+            }
+        }
+
+        private static bool TryParseSaltBlock(List<string> lines, ref int i, IxModel model, IxElement parent,
+            ref int seq, bool root, ref bool rootTitleConsumed)
+        {
+            string line = lines[i].Trim();
+            if (!IsSaltBlockOpen(line)) return false;
+
+            var inner = CollectSaltBlock(lines, ref i);
+            if (line == "{#")
+            {
+                var table = AddSaltElement(model, parent, ref seq, IxElementType.UiTable, "Table", null, SaltTableColumns(inner));
+                table.Tags["saltLayout"] = "table";
+                return true;
+            }
+
+            if (root && !rootTitleConsumed && (line == "{" || line == "{^"))
+            {
+                int innerIndex = 0;
+                ParseSaltChildren(inner, ref innerIndex, model, parent, ref seq, true, ref rootTitleConsumed);
+                return true;
+            }
+
+            if (LooksLikeSaltCard(inner, out string cardTitle, out var cardLines))
+            {
+                var card = AddSaltElement(model, parent, ref seq, IxElementType.Card,
+                    string.IsNullOrWhiteSpace(cardTitle) ? "Card" : cardTitle, null, cardLines);
+                card.Tags["saltLayout"] = "card";
+                return true;
+            }
+
+            var panel = AddSaltElement(model, parent, ref seq, IxElementType.Panel, "Panel");
+            panel.Tags["saltLayout"] = line == "{+" ? "horizontal" : "vertical";
+            if (inner.Count > 0 && TryTakeSaltTitle(inner[0], out string panelTitle))
+            {
+                panel.Name = panelTitle;
+                inner.RemoveAt(0);
+            }
+            int childIndex = 0;
+            ParseSaltChildren(inner, ref childIndex, model, panel, ref seq, false, ref rootTitleConsumed);
+            return true;
+        }
+
+        private static bool IsSaltBlockOpen(string line) =>
+            line == "{" || line == "{^" || line == "{+" || line == "{#";
+
+        private static bool IsSaltClose(string line) =>
+            line == "}" || line == "}^" || line == "+}" || line == "}#";
+
+        private static List<string> CollectSaltBlock(List<string> lines, ref int i)
+        {
+            var inner = new List<string>();
+            int depth = 1;
+            i++;
+            while (i < lines.Count)
+            {
+                string line = lines[i].Trim();
+                if (IsSaltBlockOpen(line))
+                {
+                    depth++;
+                    inner.Add(line);
+                    i++;
+                    continue;
+                }
+                if (IsSaltClose(line))
+                {
+                    depth--;
+                    if (depth == 0) { i++; break; }
+                    inner.Add(line);
+                    i++;
+                    continue;
+                }
+                inner.Add(line);
+                i++;
+            }
+            return inner;
+        }
+
+        private static void AddSaltLine(string line, IxModel model, IxElement parent, ref int seq)
+        {
+            if (TryParseSaltPlus(line, model, parent, ref seq)) return;
+            if (TryParseSaltList(line, model, parent, ref seq)) return;
+            if (TryParseSaltLeaf(line, model, parent, ref seq)) return;
+
+            var raw = AddSaltElement(model, parent, ref seq, IxElementType.UiWidget, FirstLine(line), line);
+            raw.Tags["salt.raw"] = "true";
+        }
+
+        private static bool TryParseSaltLeaf(string line, IxModel model, IxElement parent, ref int seq)
+        {
+            if (line == "--" || line == "==")
+            {
+                AddSaltElement(model, parent, ref seq, IxElementType.Separator, "Separator");
+                return true;
+            }
+
+            var image = Regex.Match(line, @"^\[\[\[(.*?)\]\]\]$");
+            if (image.Success)
+            {
+                AddSaltElement(model, parent, ref seq, IxElementType.Image, CleanSaltText(image.Groups[1].Value));
+                return true;
+            }
+
+            if (Regex.IsMatch(line, @"^\[#+\s*\]$"))
+            {
+                AddSaltElement(model, parent, ref seq, IxElementType.Progress, "Progress");
+                return true;
+            }
+
+            if (Regex.IsMatch(line, @"^\[o-+\]$"))
+            {
+                AddSaltElement(model, parent, ref seq, IxElementType.Slider, "Slider");
+                return true;
+            }
+
+            var checkbox = Regex.Match(line, @"^\[[ xX]\]\s*(.*)$");
+            if (checkbox.Success)
+            {
+                AddSaltElement(model, parent, ref seq, IxElementType.Checkbox, CleanSaltText(checkbox.Groups[1].Value));
+                return true;
+            }
+
+            var radio = Regex.Match(line, @"^\([ xX]\)\s*(.*)$");
+            if (radio.Success)
+            {
+                AddSaltElement(model, parent, ref seq, IxElementType.Radio, CleanSaltText(radio.Groups[1].Value));
+                return true;
+            }
+
+            var wrappedButton = Regex.Match(line, @"^\{\[([^\]]+)\]\}$");
+            if (wrappedButton.Success)
+            {
+                AddSaltElement(model, parent, ref seq, IxElementType.Button, CleanSaltText(wrappedButton.Groups[1].Value));
+                return true;
+            }
+
+            var bareButton = Regex.Match(line, @"^\[([^\]]+)\]$");
+            if (bareButton.Success)
+            {
+                AddSaltElement(model, parent, ref seq, IxElementType.Button, CleanSaltText(bareButton.Groups[1].Value));
+                return true;
+            }
+
+            var input = Regex.Match(line, @"^\{\s*""((?:[^""\\]|\\.)*)""\s*\}$");
+            if (input.Success)
+            {
+                string value = CleanSaltText(input.Groups[1].Value);
+                IxElementType type = value.Contains("\n") ? IxElementType.TextArea
+                    : Regex.IsMatch(value, @"^\*{3,}$") ? IxElementType.Password
+                    : IxElementType.TextField;
+                AddSaltElement(model, parent, ref seq, type, type == IxElementType.Password ? "Password" : value);
+                return true;
+            }
+
+            var dropdown = Regex.Match(line, @"^\^\s*""((?:[^""\\]|\\.)*)""\s*\^$");
+            if (dropdown.Success)
+            {
+                AddSaltElement(model, parent, ref seq, IxElementType.Dropdown, CleanSaltText(dropdown.Groups[1].Value));
+                return true;
+            }
+
+            var quoted = Regex.Match(line, "^\"((?:[^\"\\\\]|\\\\.)*)\"$");
+            if (quoted.Success)
+            {
+                string label = CleanSaltText(quoted.Groups[1].Value);
+                if (label.Contains("›"))
+                    AddSaltElement(model, parent, ref seq, IxElementType.Breadcrumb, "Breadcrumb", null, SplitSaltBreadcrumb(label));
+                else
+                    AddSaltElement(model, parent, ref seq, IxElementType.Label, label);
+                return true;
+            }
+
+            return false;
+        }
+
+        private static bool TryParseSaltPlus(string line, IxModel model, IxElement parent, ref int seq)
+        {
+            if (!line.StartsWith("{+", StringComparison.Ordinal) || !line.EndsWith("+}", StringComparison.Ordinal))
+                return false;
+
+            string body = line.Substring(2, line.Length - 4).Trim();
+            var tabs = new List<string>();
+            foreach (Match m in Regex.Matches(body, @"\[([^\]]+)\]"))
+                tabs.Add(CleanSaltText(m.Groups[1].Value));
+            if (tabs.Count > 0)
+            {
+                AddSaltElement(model, parent, ref seq, IxElementType.Tabs, "Tabs", null, tabs);
+                return true;
+            }
+
+            var quoted = SaltQuotedItems(body);
+            if (quoted.Count > 1 || body.Contains("|"))
+            {
+                AddSaltElement(model, parent, ref seq, IxElementType.Menu, "Menu", null,
+                    quoted.Count > 0 ? quoted : SplitSaltItems(body));
+                return true;
+            }
+
+            AddSaltElement(model, parent, ref seq, IxElementType.Label, CleanSaltText(body));
+            return true;
+        }
+
+        private static bool TryParseSaltList(string line, IxModel model, IxElement parent, ref int seq)
+        {
+            if (!line.StartsWith("{^", StringComparison.Ordinal) || !line.EndsWith("}^", StringComparison.Ordinal))
+                return false;
+
+            string body = line.Substring(2, line.Length - 4).Trim();
+            var items = SaltQuotedItems(body);
+            AddSaltElement(model, parent, ref seq, IxElementType.List, items.Count > 0 ? "List" : CleanSaltText(body), null, items);
+            return true;
+        }
+
+        private static bool TryTakeSaltTitle(string line, out string title)
+        {
+            title = null;
+            if (!line.StartsWith("{+", StringComparison.Ordinal) || !line.EndsWith("+}", StringComparison.Ordinal))
+                return false;
+            string body = line.Substring(2, line.Length - 4).Trim();
+            if (body.Contains("[") || body.Contains("|") || body.Contains("\"")) return false;
+            title = CleanSaltText(body);
+            return title.Length > 0;
+        }
+
+        private static bool LooksLikeSaltCard(List<string> inner, out string title, out List<string> lines)
+        {
+            title = null;
+            lines = new List<string>();
+            if (inner.Count < 2 || !TryTakeSaltTitle(inner[0], out title)) return false;
+            bool hasSeparator = false;
+            for (int i = 1; i < inner.Count; i++)
+            {
+                string line = inner[i].Trim();
+                if (line == "--" || line == "==") { hasSeparator = true; continue; }
+                var q = Regex.Match(line, "^\"((?:[^\"\\\\]|\\\\.)*)\"(?:\\\\n)?$");
+                if (q.Success) lines.Add(CleanSaltText(q.Groups[1].Value));
+            }
+            return hasSeparator;
+        }
+
+        private static List<string> SaltTableColumns(List<string> inner)
+        {
+            foreach (var raw in inner)
+            {
+                string line = raw.Trim();
+                if (!line.StartsWith(".", StringComparison.Ordinal)) continue;
+                var cols = new List<string>();
+                foreach (var cell in line.Split('|'))
+                {
+                    string c = cell.Trim();
+                    if (c.StartsWith(".", StringComparison.Ordinal)) c = c.Substring(1).Trim();
+                    c = CleanSaltText(c);
+                    if (c.Length > 0) cols.Add(c);
+                }
+                if (cols.Count > 0) return cols;
+            }
+            return new List<string>();
+        }
+
+        private static List<string> SaltQuotedItems(string body)
+        {
+            var items = new List<string>();
+            foreach (Match m in Regex.Matches(body, "\"((?:[^\"\\\\]|\\\\.)*)\""))
+            {
+                string value = CleanSaltText(m.Groups[1].Value);
+                foreach (var part in value.Split('\n'))
+                {
+                    string item = part.Trim();
+                    if (item.Length > 0) items.Add(item);
+                }
+            }
+            return items;
+        }
+
+        private static List<string> SplitSaltItems(string body)
+        {
+            var items = new List<string>();
+            foreach (var raw in body.Split('|'))
+            {
+                string item = CleanSaltText(raw);
+                if (item.Length > 0) items.Add(item);
+            }
+            return items;
+        }
+
+        private static List<string> SplitSaltBreadcrumb(string label)
+        {
+            var items = new List<string>();
+            foreach (var raw in label.Split('›'))
+            {
+                string item = raw.Trim();
+                if (item.Length > 0) items.Add(item);
+            }
+            return items;
+        }
+
+        private static IxElement AddSaltElement(IxModel model, IxElement parent, ref int seq, IxElementType type,
+            string name, string rawSalt = null, List<string> items = null)
+        {
+            string id;
+            do { id = "salt" + (++seq); } while (model.Elements.Exists(e => e.Id == id));
+            var el = new IxElement
+            {
+                Id = id,
+                Type = type,
+                Name = string.IsNullOrWhiteSpace(name) ? type.ToString() : name.Trim(),
+                ParentId = parent != null ? parent.Id : null,
+            };
+            if (!string.IsNullOrWhiteSpace(rawSalt)) el.Documentation = rawSalt;
+            if (items != null)
+                foreach (var item in items)
+                    if (!string.IsNullOrWhiteSpace(item))
+                        el.Items.Add(item.Trim());
+            model.Elements.Add(el);
+            return el;
+        }
+
+        private static string CleanSaltText(string s)
+        {
+            if (s == null) return "";
+            string t = s.Trim();
+            if (t.Length >= 2 && t[0] == '"' && t[t.Length - 1] == '"')
+                t = t.Substring(1, t.Length - 2);
+            return t.Replace("\\n", "\n").Replace("\\\"", "\"").Trim();
+        }
+
         // ------------------------------------------------------------------ declarative families (class / usecase / state / component)
 
         private static void ParseDeclarative(List<string> lines, IxModel model, string family)
@@ -456,6 +939,32 @@ namespace TheRobotDraft.Authoring.Interchange
             {
                 type = IxElementType.Table;
                 stereo = null;
+            }
+
+            // Notation-fidelity stereotypes: a class/rectangle carrying one of these marks is promoted to a
+            // first-class SysML/BPMN/DMN element type. The stereotype text is dropped (the type carries it),
+            // mirroring the «table» rule above.
+            if (stereo != null && type == IxElementType.Class)
+            {
+                string st = stereo.ToLowerInvariant();
+                // SysML
+                if (st == "block") { type = IxElementType.Block; stereo = null; }
+                else if (st == "valuetype") { type = IxElementType.ValueType; stereo = null; }
+                else if (st == "constraint") { type = IxElementType.Constraint; stereo = null; }
+                else if (st == "requirement") { type = IxElementType.Requirement; stereo = null; }
+                else if (st == "testcase" || st == "test") { type = IxElementType.TestCase; stereo = null; }
+                // DMN
+                else if (st == "decision") { type = IxElementType.DmnDecision; stereo = null; }
+                else if (st == "inputdata" || st == "input") { type = IxElementType.InputData; stereo = null; }
+                else if (st == "knowledgesource") { type = IxElementType.KnowledgeSource; stereo = null; }
+                else if (st == "businessknowledge" || st == "businessknowledgemodel") { type = IxElementType.BusinessKnowledge; stereo = null; }
+                // BPMN (also accepts the EA-style activity stereotype)
+                else if (st == "bpmsubprocess" || st == "bpmnactivity" || st == "subprocess") { type = IxElementType.BpmnActivity; stereo = null; }
+                else if (st == "bpmevent" || st == "event") { type = IxElementType.BpmnEvent; stereo = null; }
+                else if (st == "bpmngateway" || st == "gateway") { type = IxElementType.BpmnGateway; stereo = null; }
+                else if (st == "bpmndataobject" || st == "dataobject") { type = IxElementType.BpmnDataObject; stereo = null; }
+                else if (st == "pool") { type = IxElementType.BpmnPool; stereo = null; }
+                else if (st == "lane") { type = IxElementType.BpmnLane; stereo = null; }
             }
 
             element = ctx.Declare(key, display, type);
@@ -698,6 +1207,17 @@ namespace TheRobotDraft.Authoring.Interchange
             else if (stereoInLabel != null && Eq(stereoInLabel, "include")) { type = IxEdgeType.Include; }
             else if (stereoInLabel != null && Eq(stereoInLabel, "extend")) { type = IxEdgeType.Extend; }
             else if (stereoInLabel != null && Eq(stereoInLabel, "extension")) { type = IxEdgeType.Extension; }
+            // SysML / requirements-traceability relationships (from «satisfy», «verify», «deriveReqt», ...)
+            else if (stereoInLabel != null && Eq(stereoInLabel, "satisfy")) { type = IxEdgeType.Satisfy; }
+            else if (stereoInLabel != null && Eq(stereoInLabel, "verify")) { type = IxEdgeType.Verify; }
+            else if (stereoInLabel != null && (Eq(stereoInLabel, "derive") || Eq(stereoInLabel, "derivereqt"))) { type = IxEdgeType.Derive; }
+            else if (stereoInLabel != null && Eq(stereoInLabel, "refine")) { type = IxEdgeType.Refine; }
+            else if (stereoInLabel != null && Eq(stereoInLabel, "trace")) { type = IxEdgeType.Trace; }
+            else if (stereoInLabel != null && Eq(stereoInLabel, "copy")) { type = IxEdgeType.Copy; }
+            // BPMN message flow (dashed arrow with the «messageFlow» stereotype, or the canonical
+            // <<messageFlow>> used to distinguish cross-pool messages from plain sequence flow).
+            else if (stereoInLabel != null && Eq(stereoInLabel, "messageflow")) { type = IxEdgeType.MessageFlow; }
+            else if (stereoInLabel != null && Eq(stereoInLabel, "sequenceflow")) { type = IxEdgeType.SequenceFlow; }
             else if (lh == "<|" || rh == "|>")
             {
                 // arrowhead marks the parent; normalize From=child, To=parent
@@ -720,6 +1240,11 @@ namespace TheRobotDraft.Authoring.Interchange
                 if (reversed) { eFrom = to; eTo = from; string tm = leftMult; leftMult = rightMult; rightMult = tm; }
                 if (family == "state" || family == "activity"
                     || IsBehavioral(eFrom.Type) || IsBehavioral(eTo.Type)) type = IxEdgeType.Transition;
+                else if (IsBpmn(eFrom.Type) || IsBpmn(eTo.Type))
+                {
+                    // BPMN: solid = sequence flow, dotted = message flow (cross-pool).
+                    type = dotted ? IxEdgeType.MessageFlow : IxEdgeType.SequenceFlow;
+                }
                 else if (family == "sequence")
                 {
                     // Sequence-diagram convention: `->` solid call, `-->` (two dashes) IS the dotted reply arrow.
@@ -747,6 +1272,14 @@ namespace TheRobotDraft.Authoring.Interchange
             return t == IxElementType.State || t == IxElementType.StateStart || t == IxElementType.StateEnd
                 || t == IxElementType.Decision || t == IxElementType.ForkJoin || t == IxElementType.Activity
                 || t == IxElementType.FlowFinal;
+        }
+
+        /// <summary>True for BPMN flow-object element types. A plain arrow between two BPMN elements is a
+        /// BPMN sequence flow, not a generic association.</summary>
+        private static bool IsBpmn(IxElementType t)
+        {
+            return t == IxElementType.BpmnEvent || t == IxElementType.BpmnActivity
+                || t == IxElementType.BpmnGateway || t == IxElementType.BpmnDataObject;
         }
 
         private static void SkipWs(string s, ref int pos)

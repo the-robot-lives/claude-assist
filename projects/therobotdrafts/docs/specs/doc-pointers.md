@@ -16,6 +16,9 @@ Use the Unicode bracket pair `⟦` and `⟧` around a four-character Unicode id:
 
 The id is exactly four Unicode code points. Treat it as a compact base-32k-style token: use printable,
 non-whitespace characters, and avoid `⟦`, `⟧`, `/`, `?`, `#`, `:`, and `%` so links stay readable.
+The UUIDv5 generator emits four characters from the Egyptian Hieroglyph block, `U+13000..U+1342F`.
+Generated hieroglyphic tokens are preferred for code-owned pointers. Hand-authored mnemonic ids such
+as `DPTR` are valid for stable documentation/spec anchors when they are unique.
 
 ## Declaration
 
@@ -40,6 +43,8 @@ Declaration grammar:
 - `Description` explains the target's purpose.
 - Each `CODE` must have exactly one declaration in the repository.
 - Plain `⟦CODE⟧` mentions are references, not declarations.
+- Declarations should be on a bare marker line or in a source/doc comment. Quoted examples inside
+  prompts or fixtures are intentionally ignored by the scanner.
 
 ## Database
 
@@ -105,3 +110,14 @@ run `make doc-pointers` and stage the updated Markdown/database files.
 - Keep names short enough to scan in generated reports.
 - Keep descriptions stable and factual.
 - Do not reuse deleted ids; leave a tombstone declaration if old links still matter.
+
+## Retiring Pointers
+
+If a target is removed but old references may still exist, keep one tombstone declaration in a
+nearby changelog, migration note, or deleted-feature section:
+
+```markdown
+<!-- ⟦ABCD⟧ Retired pointer :: Tombstone for removed pointer routing implementation. -->
+```
+
+The tombstone keeps `deeplink:` expansion deterministic and prevents accidental id reuse.

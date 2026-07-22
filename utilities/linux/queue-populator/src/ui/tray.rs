@@ -43,6 +43,8 @@ pub struct QueuePopulatorTray {
     pub coordinator: Sender<CoordinatorMsg>,
     /// Signals the egui side to show the main window.
     pub show_window: Sender<()>,
+    /// Signals the egui event loop to close so tray Quit terminates the process.
+    pub quit_window: Sender<()>,
 }
 
 /// Draw a filled circle "mic dot" as an ARGB32 pixmap.
@@ -115,6 +117,7 @@ impl ksni::Tray for QueuePopulatorTray {
                 label: "Quit".into(),
                 activate: Box::new(|tray: &mut Self| {
                     let _ = tray.coordinator.send(CoordinatorMsg::Quit);
+                    let _ = tray.quit_window.send(());
                 }),
                 ..Default::default()
             }

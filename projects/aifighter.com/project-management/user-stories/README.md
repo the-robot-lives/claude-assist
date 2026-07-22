@@ -109,10 +109,12 @@
 
 ## Stories by Persona
 
+Primary persona (one per story, from each file's `persona:` field) counts:
+
 | Persona | Count |
 |---------|-------|
-| The Tinkerer | 10 |
-| The Curious Casual | 10 |
+| The Tinkerer | 12 |
+| The Curious Casual | 8 |
 | The Creator-Spectator | 10 |
 | The Educator | 10 |
 | The Competitive Grinder | 10 |
@@ -121,6 +123,10 @@
 | The Accessibility Advocate | 10 |
 | The Streamer | 10 |
 | The Data Artist | 10 |
+
+The Moderator (`P-011`, added in the docs-pm uplift pass) has no stories of its own — it's
+tagged as a secondary persona in each story's `personas:` frontmatter array on the 4 stories
+whose acceptance criteria directly involve moderator action: US-024, US-035, US-066, US-079.
 
 ## Stories by Priority
 
@@ -133,5 +139,6 @@
 ## Cross-References
 
 - Personas: [`../personas/`](../personas/)
+- Machine-readable index: [`index.yaml`](index.yaml) (epics + per-story personas/epic/priority)
 - Project README: [`../../README.md`](../../README.md)
 - Style Guide: [`../../STYLE-GUIDE.md`](../../STYLE-GUIDE.md)

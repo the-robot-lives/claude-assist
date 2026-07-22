@@ -1,0 +1,13 @@
+# .trd-yaml — TheRobotDrafts native model (IxModel serialization)
+name: Example Deployment Diagram - Simple Single Server
+elements:
+  - { id: app, type: DeploymentNode, name: App Server, stereotype: device }
+  - { id: backend, type: Artifact, name: UML-IDE Backend\n(web-1.0.0.jar), parentId: app, stereotype: deploy }
+  - { id: db, type: Database, name: PostgreSQL DB, stereotype: database }
+  - { id: schema, type: Artifact, name: UML-IDE Schema\n(schema-1.0.0.sql), parentId: db, stereotype: deploy }
+  - { id: ~note1, type: Note, name: The app connects to the DB, documentation: 'The app connects to the DB\nover the standard JDBC port (5432).' }
+edges:
+  - { id: e1, type: DirectedAssociation, from: app, to: db, label: JDBC }
+  - { id: e2, type: NoteLink, from: ~note1, to: db }
+diagrams:
+  - { id: d1, name: Example Deployment Diagram - Simple Single Server, kind: component, layoutProvenance: Synthesized }

@@ -42,6 +42,14 @@ export function OrgNav({ children }: { children: ReactNode }) {
                 </Link>
               );
             })}
+            {/* Switch between orgs or create a new one (owner of many). The
+                ?create=1 intent flag stops the single-org auto-redirect on /app. */}
+            <Link
+              href="/app?create=1"
+              className="mt-2 block rounded border-t border-border px-2.5 pt-3 text-sm text-text-secondary hover:text-text"
+            >
+              + New organization
+            </Link>
           </nav>
         </aside>
       )}

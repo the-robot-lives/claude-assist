@@ -196,14 +196,50 @@ pub fn strip_phrase(phrase: &str, text: &str) -> String {
         return text.trim().to_string();
     }
 
-    // Exact case-insensitive removal.
+    // Exact case-insensitive removal. Lowercasing can change UTF-8 byte length
+    // (for example, `İ` becomes `i` + a combining mark), so offsets found in a
+    // lowercased copy must be mapped back to boundaries in the original string.
+    let mut lower_text = String::with_capacity(text.len());
+    let mut boundaries = Vec::with_capacity(text.chars().count() + 1);
+    for (original_offset, ch) in text.char_indices() {
+        boundaries.push((lower_text.len(), original_offset));
+        lower_text.extend(ch.to_lowercase());
+    }
+    boundaries.push((lower_text.len(), text.len()));
+
+    let mut ranges = Vec::new();
+    let mut search_from = 0;
+    while let Some(relative) = lower_text[search_from..].find(&lower_phrase) {
+        let lower_start = search_from + relative;
+        let lower_end = lower_start + lower_phrase.len();
+        let original_start = boundaries
+            .binary_search_by_key(&lower_start, |(lower, _)| *lower)
+            .ok()
+            .map(|index| boundaries[index].1);
+        let original_end = boundaries
+            .binary_search_by_key(&lower_end, |(lower, _)| *lower)
+            .ok()
+            .map(|index| boundaries[index].1);
+
+        if let (Some(start), Some(end)) = (original_start, original_end) {
+            ranges.push((start, end));
+            search_from = lower_end;
+        } else {
+            // A match inside one character's lowercase expansion is not a
+            // match of the original character. Advance by one Unicode scalar.
+            search_from = lower_text[lower_start..]
+                .char_indices()
+                .nth(1)
+                .map(|(next, _)| lower_start + next)
+                .unwrap_or(lower_text.len());
+        }
+    }
+
     let mut result = String::with_capacity(text.len());
-    let lower_text = text.to_lowercase();
     let mut cursor = 0;
-    while let Some(pos) = lower_text[cursor..].find(&lower_phrase) {
-        let abs = cursor + pos;
-        result.push_str(&text[cursor..abs]);
-        cursor = abs + lower_phrase.len();
+    for (start, end) in ranges {
+        result.push_str(&text[cursor..start]);
+        cursor = end;
     }
     result.push_str(&text[cursor..]);
 
@@ -332,6 +368,15 @@ mod tests {
         assert_eq!(strip_phrase("that is all", "buy milk that is all"), "buy milk");
         assert_eq!(strip_phrase("that is all", "buy milk that is al"), "buy milk");
         assert_eq!(strip_phrase("hey robot", "Hey Robot buy milk"), "buy milk");
+    }
+
+    #[test]
+    fn strip_phrase_handles_unicode_before_exact_match() {
+        assert_eq!(
+            strip_phrase("hey robot", "İstanbul HEY ROBOT buy milk"),
+            "İstanbul  buy milk"
+        );
+        assert_eq!(strip_phrase("İ", "İstanbul"), "stanbul");
     }
 
     #[test]

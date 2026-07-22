@@ -92,6 +92,20 @@ therobotdrafts/            ← Unity 6.3 project root
     └── diagrams/          ← diagrams of The Robot Draft's own design
 ```
 
+## Git note for agents
+
+This project directory may be mounted as a separate volume inside the Noizu monorepo. Running
+Git from inside `projects/therobotdrafts` can fail because discovery stops at the filesystem
+boundary. Run Git from the monorepo root instead and pass this project as a pathspec:
+
+```bash
+cd /Users/keithbrings/Work/Space/Infra/Noizu
+git status --short -- projects/therobotdrafts
+git diff -- projects/therobotdrafts
+```
+
+Do not treat `git -C projects/therobotdrafts ...` failure as proof that the project is untracked.
+
 ## Running the stub
 
 1. Install the Unity editor pinned in `ProjectSettings/ProjectVersion.txt`

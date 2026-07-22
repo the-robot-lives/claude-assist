@@ -1,0 +1,23 @@
+@startuml
+' ============================================================================
+' METADATA
+'   author:       TheRobotDrafts Examples
+'   description:  Minimal application landscape — components + data object.
+'   usecase:      Teaching app component, app service, data object, serving.
+'   complexity:   simple
+'   domain:       enterprise-architecture / application
+' ============================================================================
+title Example ArchiMate Application - Simple App Landscape
+
+note "ArchiMate Application layer = BLUE\nComponent (active) | Service (behavior) | Data Object (passive)" as Legend
+
+rectangle "<<app component>>\nWeb\nFrontend" as AC1 #BBDEFB
+rectangle "<<app component>>\nOrder\nAPI" as AC2 #BBDEFB
+rectangle "<<app service>>\nCreate\nOrder" as AS1 #90CAF9
+rectangle "<<data object>>\nOrder\nRecord" as DO1 #E3F2FD
+
+AC1 -[#444]-> AC2 : <<serving>>
+AC2 -[#444]-> AS1 : <<realization>>
+AC2 -[#444]-> DO1 : <<access>>
+
+@enduml

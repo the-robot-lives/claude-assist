@@ -1,0 +1,93 @@
+schema: "0.4"
+id: workbench-14-kb-maintenance-console
+type: image
+quality: high
+
+# The Robot Learns (a CLI learning tool) — KB Maintenance Console: index health, schema validation, dedupe, prune, stats.
+# Theme tenets: warm cream "maker's reference sheet" inside a terminal window; pinned index cards with big handwritten numbers; taped marker-red warning; mono validation rows; 3px cut-paper radius; friendly clay accents.
+# Palette: cream #f5f0e8, brown ink #2c2416, marker blue #2980b9, clay orange #e67e22, marker red #e74c3c, marker green #27ae60, sticky yellow #fef3b5, tan #d4c9b5.
+
+prompt:
+  system: |
+    You are a senior product designer rendering a high-fidelity UI mockup of a
+    command-line knowledge-base maintenance console, skinned as a warm cream
+    "maker's reference sheet" inside a terminal window — a workbench where the KB is
+    kept correct and fast. Tactile and hands-on: pinned index cards with
+    handwritten numbers, taped warnings, printed labels, monospace tool output. The
+    frame is a text-mode TERMINAL / TUI application window — a title bar with three
+    window dots and a command line — absolutely NOT a web browser: no browser
+    toolbar, no back/forward arrows, no address or URL bar, no bookmark star.
+  text: |
+    A 16:9 high-fidelity mockup of a single TERMINAL / TUI APPLICATION WINDOW
+    showing a KB MAINTENANCE CONSOLE for "The Robot Learns", a command-line learning
+    tool. This is NOT a web browser: there is no browser toolbar, no back or forward
+    arrows, no address or URL bar, no bookmark star, no tabs. The ONLY window chrome
+    is a thin top title bar with three small window dots and the command line. The
+    content pane below is skinned as a warm cream MAKER'S REFERENCE SHEET — pinned
+    index cards, masking tape, and pushpins on cream paper.
+
+    TITLE BAR (thin, top): a warm cream bar with three small window dots and, in
+    fixed-width type, "learn kb doctor · kb: ~/.config/the-robot-learns-kb".
+
+    STAT TILE ROW: a row of four PINNED INDEX CARDS lifted off the paper by soft
+    warm-brown shadows, each with a pushpin — a big HANDWRITTEN marker number over a
+    small printed label: "1,284 articles", "37 decks", "12 orphans", "index ok".
+    The numbers are the loudest thing on the sheet.
+
+    WARNING NOTE: a masking-taped callout card, tilted a degree, marked with a red
+    pushpin and a handwritten marker-red "schema drift — 3 files fail their schema".
+
+    VALIDATE OUTPUT: a printed reference card titled in marker "validate", holding a
+    scroll of fixed-width monospace result rows led by glyphs: "check 1,281 files
+    ok", "cross 3 files fail schema", "info 4 duplicate candidates", "dot reindex
+    not required" — grid-aligned like real tool output, a green tick on the ok row
+    and a marker-red cross on the failing row.
+
+    CONFIRM NOTE: a pale-yellow STICKY NOTE laid over the sheet, slightly tilted,
+    handwritten "prune 12 stale articles?" with two small taped buttons "[ y ]" and
+    "[ N ]", the default "[ N ]" filled in marker blue.
+
+    A hand-drawn arrow connects the orphans card to the prune sticky note.
+
+    BOTTOM STATUS RULE: a persistent thin bar with fixed-width keybind hints
+    "^V validate   ^R reindex   ^P prune   ^Q quit".
+
+    PALETTE & TYPE: warm cream paper with brown-ink text; friendly clay accents —
+    marker blue for primary marks and the default button, clay orange for tape and
+    accent borders, marker red for the warning pushpin and failing row, marker green
+    for the ok tick. Handwritten marker script for numbers, titles and the warning;
+    a clean printed geometric sans for labels; fixed-width monospace for all
+    validation rows, counts and paths.
+
+    SHAPE & SURFACE: barely-rounded cut-paper corners; cards lifted off the sheet by
+    soft warm-brown drop shadows (deliberate elevation), separated by air and shadow
+    not ruled boxes; light paper grain and tape texture that never hurts legibility.
+
+    MOOD: a capable maker's bench keeping its own house in order — hands-on,
+    encouraging, organized mess that makes sense; a warm paper console, not a
+    clinical dashboard.
+  negative: "watermark, signature, lorem ipsum placeholder text, low-fidelity wireframe, monitor/device photograph framing, blurry, distorted UI, web browser chrome, browser toolbar, back button, forward button, address bar, url bar, bookmark star, search bar, browser tabs, marketing web page, sterile flat corporate dashboard, dark terminal background, monochrome CRT"
+
+output:
+  formats:
+    - format: png
+  dimensions:
+    width: 1920
+    height: 1080
+    aspect_ratio: "16:9"
+
+eval:
+  pass_threshold: 0.72
+  criteria:
+    relevance: {weight: 3, description: "Reads as a KB maintenance console skinned as a maker's cream sheet: a row of pinned stat index cards (articles/decks/orphans/index), a taped marker-red schema-drift warning, a monospace validate-output card with tick/cross/info rows, and a prune confirmation sticky note; title bar with kb path; bottom keybind status rule"}
+    theme_fidelity: {weight: 3, description: "Warm cream paper + brown ink with clay accents; handwritten marker numbers/titles + printed sans labels + monospace validation rows; pinned cards with soft warm shadows, tape, pushpins; cut-paper radius; light not dark"}
+    composition: {weight: 2, description: "Instrument-dense but pinboard-legible with the stat numbers loudest; plausible real tool window"}
+    technical: {weight: 2, description: "Sharp, correct 16:9 aspect, no artifacts"}
+  reject_if:
+    - "lorem ipsum or placeholder text visible"
+    - "watermark or signature visible"
+    - "wireframe-level fidelity instead of high-fidelity mockup"
+    - "web browser chrome or a marketing web page instead of a tool window"
+    - "dark terminal / monochrome CRT instead of warm cream paper skin"
+
+tags: [workbench, therobotlearns.com, screen-mockup]

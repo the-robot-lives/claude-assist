@@ -1,0 +1,82 @@
+# Deep Focus — project-specific sample elements for the terminal study CLI (treatise §8).
+# css-snippets ACCUMULATE onto the base and are emitted VERBATIM (self-scoped): every selector
+# below is prefixed with html[data-design-theme="deep-focus"] so nothing bleeds into sibling
+# themes. Tokens (var(--surface), var(--brand-red), var(--radius)…) come from the seed cascade.
+css-snippets:
+  - name: Calibrated Answer Block
+    slug: tl-answer
+    title: "Answer surface"
+    description: "The /query calibrated-answer surface — one tonal step up, teal left rail, mono code strip. Apply with .tl-answer."
+    target-section: cards
+    body: |
+      html[data-design-theme="deep-focus"] .tl-answer {
+        background: var(--surface);
+        border-radius: var(--radius);
+        border-left: 2px solid var(--brand-red);
+        padding: var(--space-3);
+        color: var(--text);
+        line-height: 1.6;
+      }
+      html[data-design-theme="deep-focus"] .tl-answer pre,
+      html[data-design-theme="deep-focus"] .tl-answer code {
+        font-family: var(--font-mono);
+        background: var(--surface-alt);
+        border-radius: var(--radius);
+      }
+      html[data-design-theme="deep-focus"] .tl-answer .tl-caret {
+        color: var(--brand-red);
+        font-family: var(--font-mono);
+      }
+
+  - name: Related-Topic Chip
+    slug: tl-chip
+    title: "Ghost topic chip"
+    description: "Related-topics suggestion chip — ghost outline, mono, teal on hover. Apply with .tl-chip."
+    target-section: buttons
+    body: |
+      html[data-design-theme="deep-focus"] .tl-chip {
+        display: inline-flex;
+        align-items: center;
+        font-family: var(--font-mono);
+        font-size: var(--font-size-xs);
+        color: var(--text-secondary);
+        background: transparent;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: var(--space-half) var(--space-1);
+      }
+      html[data-design-theme="deep-focus"] .tl-chip:hover {
+        border-color: var(--brand-red);
+        color: var(--text);
+      }
+
+  - name: Flashcard Review Unit
+    slug: tl-flashcard
+    title: "Review card"
+    description: "Spaced-repetition front/back review card — borderless surface, overlay shadow, tonal back divider. Apply with .tl-flashcard."
+    target-section: cards
+    body: |
+      html[data-design-theme="deep-focus"] .tl-flashcard {
+        background: var(--surface);
+        border-radius: var(--radius);
+        padding: var(--space-4);
+        box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+      }
+      html[data-design-theme="deep-focus"] .tl-flashcard .tl-flashcard-back {
+        margin-top: var(--space-2);
+        padding-top: var(--space-2);
+        border-top: 1px solid var(--border);
+        color: var(--text-secondary);
+      }
+
+  - name: Active Nav Rail Item
+    slug: tl-nav-active
+    title: "Active nav item"
+    description: "Section-rail active state — 2px teal left rail + semibold, no filled background (treatise §8). Apply with .tl-nav-item.is-active."
+    target-section: navigation
+    body: |
+      html[data-design-theme="deep-focus"] .tl-nav-item.is-active {
+        border-left: 2px solid var(--brand-red);
+        font-weight: var(--font-weight-semibold);
+        color: var(--text);
+      }

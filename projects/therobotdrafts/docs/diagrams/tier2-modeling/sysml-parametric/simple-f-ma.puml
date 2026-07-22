@@ -1,0 +1,44 @@
+@startuml
+' ============================================================================
+' METADATA
+'   author:       TheRobotDrafts Examples
+'   description:  Simple SysML Parametric Diagram with one constraint block F = m*a binding a parameter to a value property.
+'   usecase:      Teach constraint block, constraint parameters, and binding connectors (equality).
+'   complexity:   simple
+'   domain:       physics
+' ============================================================================
+title Example Parametric - Simple F = m*a
+
+note top of "NewtonLaw"
+  PARAMETRIC DIAGRAM NOTE:
+  Edges here are BINDING CONNECTORS (==).
+  A binding means the two ends are EQUAL
+  (same value), NOT that material flows.
+end note
+
+class "NewtonLaw" <<constraint>> {
+  { F = m * a }
+}
+
+package "Binding context (inside a DynamicBody block)" {
+  object "F : Force" as Fp
+  object "m : Mass" as mp
+  object "a : Acceleration" as ap
+
+  class "NewtonLawInst" as "fma : NewtonLaw" <<constraint>> {
+    }
+}
+
+Fp == fma
+mp == fma
+ap == fma
+
+note right of fma
+  The constraint block exposes PARAMETERS
+  (F, m, a). Each value property of the
+  enclosing block is bound (==) to a
+  parameter port, making them equal and
+  enforcing the equation F = m*a.
+end note
+
+@enduml

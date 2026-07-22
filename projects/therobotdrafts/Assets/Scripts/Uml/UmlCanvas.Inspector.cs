@@ -184,6 +184,11 @@ namespace TheRobotDraft.Uml
                 y -= 30f;
             }
 
+            if (KindInfo.IsDiagramNode(el.Kind) && el.Kind != ElementKind.Note)
+            {
+                InspectorAspectRow(el, _selectedId, ref y);
+            }
+
             var id = _selectedId;
             void Save()
             {

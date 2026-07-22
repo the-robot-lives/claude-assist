@@ -1,0 +1,34 @@
+@startuml
+' ============================================================================
+' METADATA
+'   author:       TheRobotDrafts Examples
+'   description:  Simple traffic-light timing diagram with one lifeline and a state lane.
+'   usecase:      Teach lifeline, state/value lane, time axis, state-change waveform.
+'   complexity:   simple
+'   domain:       Traffic control / embedded timing
+' ============================================================================
+title Example Timing Diagram - Simple Traffic Light
+
+' A UML timing diagram plots a lifeline's state (or value) against a time axis.
+' PlantUML supports timing natively via the `robust` (discrete-state) and
+' `concise` (single-value) keywords inside an @startuml block.
+
+robust "TrafficLight" as TL
+
+' The state lane lists the discrete states this lifeline can hold.
+@0
+TL is "Red"
+
+@5
+TL is "Green"
+
+@10
+TL is "Yellow"
+
+@12
+TL is "Red"
+
+' A time observation labels a point on the time axis (here the cycle restart).
+@12 as :cycleRestart
+
+@enduml

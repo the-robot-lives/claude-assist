@@ -1,0 +1,80 @@
+schema: "0.4"
+id: node-canvas-01-canonical-transform-pipeline
+type: image/visualization/data
+quality: high
+solution: node-canvas
+category: image-and-video-processing
+variant: canonical-transform-pipeline
+references:
+  - "references/fim/overview/electronics-media-docfile/node-canvas.md"
+  - "references/fim/solution/node-canvas.md"
+prompt:
+  system: |-
+    You generate node-canvas image-generation artifacts. Output only one complete ASCII JavaScript module. Do not use markdown fences or explanatory prose.
+  text: |-
+    Create a canonical node-canvas transform and export pipeline for server-side image generation.
+
+    Requirements:
+    - Use canvas APIs: createCanvas(), loadImage(), registerFont(), getContext("2d"), drawImage(), save(), restore(), fillRect(), strokeRect(), fillText(), measureText(), and toBuffer().
+    - Register fonts before createCanvas and include a deterministic fallback if the font file is missing.
+    - Accept a source image Buffer or path, crop and scale it with drawImage's 9-argument form, add a title band and watermark, and output PNG, JPEG, and metadata JSON.
+    - Use deterministic dimensions: working canvas 1200x800, crop preview 800x450, watermark 180x72, and text safe area 1040px.
+    - Specify srgb canvas color assumptions, alpha preserved for PNG, alpha flattened against #ffffff before JPEG, and no embedded ICC profile guarantee.
+    - Support input formats PNG, JPEG, GIF, SVG when librsvg is available, and output formats PNG, JPEG, JSON, and data URL.
+    - Include memory and performance controls: max canvas area, pre-scale crop regions, stream large PNG/JPEG output when requested, avoid repeated font registration, and release references after export.
+    - Emit deterministic metadata JSON with source hash, canvas dimensions, crop box, draw order, font family, color choices, alpha decisions, output formats, byte sizes, and stable filenames.
+    - Include deterministic output checks for draw order, rounded coordinates, text measurement, filenames, and metadata key order.
+    - Output only the final JavaScript artifact.
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.2
+output:
+  text_format: javascript
+  artifact_kind: node-canvas-canonical-transform-module
+  dimensions:
+    width: 1200
+    height: 800
+  color_profile: srgb-canvas-assumed
+  alpha: png-preserved-jpeg-flattened
+  formats:
+    - format: js
+    - format: png
+    - format: jpg
+    - format: json
+evaluation:
+  checklist:
+    - "Format validity: YAML parses as schema 0.4, generated output is one JavaScript module, and node-canvas APIs are used."
+    - "Semantic completeness: font registration, image load, crop/scale, drawing, watermark, PNG/JPEG output, and metadata JSON are present."
+    - "Dimensions: working canvas is 1200x800, crop preview is 800x450, watermark is 180x72, and text safe area is 1040px."
+    - "Color profile and alpha: srgb canvas assumptions, PNG alpha preservation, JPEG flattening, and ICC limitations are explicit."
+    - "File formats: PNG, JPEG, GIF, SVG input and PNG, JPEG, JSON, data URL output are represented."
+    - "Memory and performance: max canvas area, pre-scale crop regions, streaming option, font registration reuse, and reference cleanup are covered."
+    - "Metadata: source hash, dimensions, crop box, draw order, font family, colors, alpha decisions, formats, sizes, and filenames are recorded."
+    - "Deterministic output: draw order, coordinates, text measurement, filenames, and metadata keys are stable."
+  rubric:
+    - name: "Format validity"
+      weight: 30
+      criteria: "The prompt YAML and generated JavaScript are parseable, ASCII-only, and use node-canvas as the rendering engine."
+    - name: "Semantic completeness"
+      weight: 30
+      criteria: "The artifact covers font setup, image loading, transform drawing, export, alpha handling, metadata, and deterministic layout."
+    - name: "Output quality"
+      weight: 25
+      criteria: "The generated PNG and JPEG outputs are crisp, correctly sized, legible, and visually ordered."
+    - name: "Robustness"
+      weight: 15
+      criteria: "The artifact handles missing fonts, unavailable SVG support, large canvases, alpha loss, export errors, and deterministic reruns."
+  pass_conditions:
+    - "YAML parses successfully and all file text is ASCII-only."
+    - "Rubric weights are exactly Format validity 30, Semantic completeness 30, Output quality 25, and Robustness 15."
+    - "Generated JavaScript contains no markdown fences and uses node-canvas rather than browser DOM canvas."
+    - "All dimensions, color profile/alpha, file format, memory/performance, metadata, and deterministic output checks are represented."
+    - "Rubric score is at least 80 out of 100 and no required checklist item is absent."
+tags:
+  - fim
+  - image-and-video-processing
+  - node-canvas
+  - canonical-transform-pipeline
+  - server-side-canvas
+  - cairo
+  - png

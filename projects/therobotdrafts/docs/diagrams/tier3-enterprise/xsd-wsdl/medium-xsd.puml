@@ -1,0 +1,64 @@
+' ============================================================================
+' METADATA
+'   author:       TheRobotDrafts Examples
+'   description:  Medium XSD: extension/restriction, choice/sequence, target namespace.
+'   usecase:      Teach XSD inheritance (extension/restriction) and compositors (choice/sequence).
+'   complexity:   medium
+'   domain:       xsd / xml-schema
+' ============================================================================
+title Example XSD - Medium Schema (extension/restriction, choice/sequence)
+
+' Target namespace: catalog
+package "catalog.xsd (target ns: cat)" as NS_CAT {
+  class "Product\n<<complexType>>\n(sequence)" as Product {
+    + sku: string
+    + name: string
+    + price: decimal
+  }
+  class "Book\n<<complexType>>\n(extends Product)" as Book {
+    + author: string
+    + pages: int
+  }
+  class "Electronic\n<<complexType>>\n(extends Product)" as Electronic {
+    + voltage: int
+    + warranty: duration
+  }
+  class "Shipment\n<<complexType>>\n(choice)" as Shipment {
+    + method: string
+  }
+  class "Address\n<<complexType>>" as Address {
+    + street: string
+    + city: string
+    + zip: string
+  }
+  class "OrderStatus\n<<simpleType>>\n(restriction enum)" as OrderStatus {
+    + PENDING
+    + SHIPPED
+    + DELIVERED
+    + CANCELLED
+  }
+}
+
+' Extension: Book and Electronic extend Product (XSD extension = UML generalization).
+Product <|-- Book : "xs:extension"
+Product <|-- Electronic : "xs:extension"
+
+' Choice compositor: Shipment is one of several carriers (modeled as a note).
+note right of Shipment
+  xs:choice of:
+    AirFreight | Ground | Pickup
+end note
+
+' Sequence: Product uses sequence for its fields (compositor note).
+note left of Product
+  xs:sequence: sku, name, price (ordered)
+end note
+
+' Restriction: OrderStatus is an enum restriction of xs:string.
+note right of OrderStatus
+  xs:restriction base="xs:string"
+  (enumeration facets)
+end note
+
+' Address used by Shipment.
+Shipment --> Address : "destination (element ref)"

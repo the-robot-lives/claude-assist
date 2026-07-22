@@ -1,0 +1,72 @@
+schema: "0.4"
+id: svg2pdf-04-edge-accessibility-metadata
+type: document/data
+quality: high
+solution: svg2pdf
+category: document-data-file-processing
+variant: edge-accessibility-metadata
+references:
+  - "references/fim/overview/electronics-media-docfile/svg2pdf.md"
+  - "references/fim/solution/svg2pdf.md"
+prompt:
+  system: |-
+    You generate svg2pdf.js browser export artifacts. Output only one complete self-contained HTML document with inline SVG, JavaScript, and CSS. Do not use Markdown fences or explanatory prose.
+  text: |-
+    Create an svg2pdf.js edge-case accessibility and metadata exporter.
+
+    Requirements:
+    - Use jsPDF and svg2pdf.js from CDNs.
+    - Include inline SVG cases for gradients, clipPath, nested transforms, text/tspan, images represented as data URI placeholders, and unsupported-feature warnings for filters or foreignObject.
+    - Add SVG `title`, `desc`, ARIA labels, stable ids, and visible text alternatives for the exported content.
+    - Register a font hook placeholder for jsPDF while falling back to standard fonts if no base64 font is configured.
+    - Export a PDF Blob and an audit JSON object containing SVG dimensions, feature flags, metadata, warnings, and deterministic timestamp.
+    - Include page-size validation, zero-size SVG checks, async error handling, and cleanup of object URLs.
+    - Include parseability, pagination, fonts, accessibility, formulas/data types, metadata, and deterministic output safeguards in comments and validation checks.
+    - Output only the final HTML artifact.
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.2
+output:
+  text_format: html
+  artifact_kind: svg2pdf-accessibility-metadata-exporter
+  formats:
+    - format: html
+    - format: svg
+    - format: pdf
+    - format: json
+evaluation:
+  checklist:
+    - "Format validity: YAML parses as schema 0.4, generated output is one HTML document, and svg2pdf.js/jsPDF APIs are used."
+    - "Parseability: JavaScript is syntactically valid, awaits async export, validates SVG size, and catches conversion errors."
+    - "Semantic completeness: gradient, clipPath, transform, text, data image placeholder, warnings, PDF Blob, and audit JSON are present."
+    - "Pagination: PDF dimensions are validated, zero-size SVGs are rejected, and margins prevent clipping."
+    - "Fonts: font hook and standard fallback are implemented with notes about selectable text fidelity."
+    - "Accessibility: SVG title/desc, ARIA labels, text alternatives, high contrast, and labeled controls are included."
+    - "Formulas/data types: dimensions, feature flags, warning counts, booleans, and export metrics are typed deterministically."
+    - "Metadata: PDF info, SVG metadata, audit JSON, warnings, export profile, and deterministic timestamp are included."
+    - "Deterministic output: ids, warnings, feature flags, filenames, timestamp, and audit JSON key order are stable."
+  rubric:
+    - name: "Format validity"
+      weight: 30
+      criteria: "The prompt YAML and generated HTML are parseable, ASCII-only, and use svg2pdf.js with jsPDF correctly."
+    - name: "Semantic completeness"
+      weight: 30
+      criteria: "The exporter covers edge SVG features, accessibility metadata, audit JSON, PDF Blob output, and error handling."
+    - name: "Layout/data quality"
+      weight: 25
+      criteria: "The SVG and PDF remain readable, correctly sized, accessible, data-described, and unclipped."
+    - name: "Robustness"
+      weight: 15
+      criteria: "The artifact handles zero-size SVGs, unsupported features, font fallbacks, async errors, metadata, and deterministic reruns."
+  pass_conditions:
+    - "YAML parses successfully and all file text is ASCII-only."
+    - "Rubric weights are exactly 30, 30, 25, and 15."
+    - "Generated HTML exports a PDF Blob and audit JSON or reports a clear validation error."
+    - "All checklist items for parseability, pagination, fonts, accessibility, formulas/data types, metadata, and deterministic output are represented."
+tags:
+  - fim
+  - document-data-file-processing
+  - svg2pdf
+  - accessibility
+  - metadata
+  - edge-cases

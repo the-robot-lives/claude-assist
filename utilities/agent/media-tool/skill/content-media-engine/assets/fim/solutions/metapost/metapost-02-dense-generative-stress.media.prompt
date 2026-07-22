@@ -1,0 +1,99 @@
+schema: '0.4'
+id: metapost-02-dense-generative-stress
+type: image
+quality: high
+solution: metapost
+category: 2d-canvas-svg-and-creative-coding
+variant: dense-generative-stress
+references:
+- references/fim/overview/canvas-svg-creative-animation/metapost.md
+- references/fim/solution/metapost.md
+prompt:
+  system: Generate production-quality FIM media assets for the named 2D canvas, SVG, or creative-coding solution. Output only
+    the requested source artifact with no markdown fences or explanatory prose.
+  text: "Create the dense generative stress artwork prompt for MetaPost.\n\nScenario:\nCreate a layered generative city-field\
+    \ artwork from a fixed seed. It should contain hundreds of marks or vector objects, repeated motifs, clustering, motion\
+    \ or variation where supported, and visible diagnostics for seed, mark count, frame budget, and renderer mode.\n\nImplementation\
+    \ requirements:\n- Category: 2d-canvas-svg-and-creative-coding.\n- Required solution: metapost (MetaPost).\n- Output:\
+    \ a complete MetaPost .mp source file only.\n- Native API contract: Use MetaPost beginfig/endfig blocks, paths, pairs,\
+    \ equations, loops, colors, pens, labels, draw, fill, filldraw, transforms, and outputformat := \"svg\".\n- Native technique\
+    \ focus: declarative MetaPost geometry with solved point relationships, reusable macros, precise paths, TeX-ready labels,\
+    \ and vector output settings.\n- Responsive contract: Define a clear figure bounding box and scalable units; include comments\
+    \ describing SVG/PDF export dimensions and safe downscaling for narrow layouts.\n- Export and integration contract: Set\
+    \ prologues := 3, outputformat := \"svg\", and outputtemplate; include compile comments for mpost and PDF/SVG export without\
+    \ depending on browser code.\n- Determinism contract: Do not use uncontrolled randomness; if variation is simulated, derive\
+    \ it from deterministic loop indices and documented constants.\n- Scenario-specific emphasis: Build dense deterministic\
+    \ generative artwork that stresses the native drawing model while remaining legible, performant, and exportable.\n- Additional\
+    \ edge detail: Use batching, symbols, retained objects, renderer choice, or redraw discipline appropriate to the solution;\
+    \ do not allocate unbounded objects per frame.\n- Include realistic inline sample data, labels, dimensions, seed value,\
+    \ and source note where the scenario needs them.\n- Avoid placeholder lorem ipsum text, external credentials, paid private\
+    \ assets, and hidden dependencies.\n- Output only the final artifact, with no commentary outside the artifact."
+  requirements:
+  - Start from a visible nonblank render state; do not require user input before the first meaningful frame.
+  - Use explicit viewBox, canvas sizing, or equivalent figure bounds; handle device pixel ratio or vector scaling where relevant.
+  - Use deliberate layering order so background, main subject, annotations, and controls do not collide.
+  - Use accessible contrast for text, callouts, controls, and essential marks against their backgrounds.
+  - Include responsive behavior and at least one export path appropriate to the solution.
+  - Use deterministic randomness from a documented seed and make repeated reloads reproducible.
+  - Include a concise diagnostics or source note with renderer, seed, dimensions, and export status.
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.2
+output:
+  text_format: metapost
+  artifact_kind: metapost-vector-source-dense-generative-stress
+  formats:
+  - format: mp
+  - format: svg
+  - format: pdf
+  dimensions:
+    width: 1440
+    height: 900
+  render_expectation: A nonblank artifact suitable for browser or compiler rendering and capture after initial load or compile.
+evaluation:
+  checklist:
+  - YAML parses and required schema 0.4 fields are present.
+  - Generated artifact uses the requested solution and does not substitute a different renderer or library for the core drawing
+    work.
+  - Initial render is nonblank and shows the main subject within the first viewport or figure bounds.
+  - viewBox/canvas sizing or equivalent figure bounds are explicit, responsive, and not blurry at common DPR values.
+  - Layering order is intentional and keeps background, dense marks, labels, controls, and export UI readable.
+  - Contrast is sufficient for text, controls, callouts, and critical marks in both default and compact layouts.
+  - Responsive/export behavior works for compact, wide, and capture-oriented sizes without clipping key content.
+  - Deterministic randomness is seeded, documented, and reproducible across reloads for the same seed.
+  - 'Solution-specific API contract is satisfied for MetaPost: declarative MetaPost geometry with solved point relationships,
+    reusable macros, precise paths, TeX-ready labels, and vector output settings.'
+  - 'Export/integration hooks are present where applicable: Set prologues := 3, outputformat := "svg", and outputtemplate;
+    include compile comments for mpost and PDF/SVG export without depending on browser code..'
+  rubric:
+  - name: Format validity
+    weight: 30
+    criteria: YAML uses schema 0.4 with required fields, the generated artifact matches the requested text format, contains
+      no markdown fences, and uses the named solution syntax or API without parse/runtime errors.
+  - name: Semantic completeness
+    weight: 30
+    criteria: The artifact satisfies the scenario, includes solution-specific native capabilities, covers nonblank rendering,
+      sizing, layering, contrast, responsive/export behavior, and deterministic randomness.
+  - name: Visual quality
+    weight: 25
+    criteria: Composition, typography, spacing, color, density, hierarchy, motion, and labels are polished, coherent, legible,
+      and suited to the requested drawing, generative, brand, or integration use case.
+  - name: Robustness
+    weight: 15
+    criteria: The artifact handles resize, missing or empty input, fallback states, lifecycle cleanup, export edge cases,
+      performance limits, and deterministic regeneration without blank screens or broken output.
+  pass_conditions:
+  - Rubric weights sum to 100 with Format validity 30, Semantic completeness 30, Visual quality 25, and Robustness 15.
+  - Score is 80 or higher out of 100 and no rubric dimension scores zero.
+  - Generated result has a nonblank render, explicit viewBox/canvas sizing or equivalent bounds, readable layering, sufficient
+    contrast, responsive/export behavior, and deterministic randomness.
+  - Generated content is aligned with the referenced overview and solution documents for the named solution.
+tags:
+- fim
+- 2d-canvas-svg-and-creative-coding
+- metapost
+- dense-generative-stress
+- image
+- nonblank-render
+- viewbox-canvas-sizing
+- deterministic-randomness

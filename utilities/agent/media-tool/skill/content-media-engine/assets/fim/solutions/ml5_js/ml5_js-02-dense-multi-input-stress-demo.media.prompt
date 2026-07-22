@@ -1,0 +1,81 @@
+schema: "0.4"
+id: ml5_js-02-dense-multi-input-stress-demo
+type: "interactive/model"
+quality: high
+solution: ml5_js
+category: ml-ai
+variant: dense-multi-input-stress-demo
+references:
+  - "references/fim/overview/music-audio-ml/ml5_js.md"
+  - "references/fim/solution/ml5_js.md"
+
+prompt:
+  system: |-
+    You generate ml5.js browser ML artifacts for FIM evaluation. Output only one complete self-contained ASCII HTML document with inline CSS and JavaScript. Use p5.js plus ml5.js 1.x from CDN, and do not include Markdown fences or explanatory prose outside the artifact.
+  text: |-
+    Create the dense and multi-input stress demo for ml5.js.
+
+    Scenario:
+    Build an interactive stress demo that combines webcam body tracking, hand tracking, and optional sound classification in one p5.js surface. It should demonstrate how ml5.js handles multiple model streams, dense landmarks, confidence filtering, bounded rendering, and graceful degradation on slower devices.
+
+    Implementation requirements:
+    - Use p5.js and ml5.js 1.x CDN imports. Use ml5.bodyPose("MoveNet") with detectStart, ml5.handPose() with detectStart, and ml5.soundClassifier("SpeechCommands18w") only after explicit microphone opt-in.
+    - Do not use legacy ml5 0.x APIs such as poseNet, handpose, facemesh, styleTransfer, or callbacks with an error first argument.
+    - Include separate model load state indicators for bodyPose, handPose, and soundClassifier: loading, ready, running, throttled, failed, and disabled.
+    - Render body keypoints, skeleton segments, hand landmarks, gesture zones, and sound-command confidence bars. Filter all displayed keypoints and labels by confidence.
+    - Include dense stress controls for video resolution, maximum tracked hands or poses, confidence threshold, smoothing amount, render density, sound classifier opt-in, and pause/resume per model.
+    - Show performance telemetry: frame rate, last inference age, active landmark count, dropped frame count, and active backend or fallback note.
+    - Include privacy controls and copy: camera and microphone data stay in the browser, microphone is disabled by default, no recordings are saved, no telemetry is sent, and no secrets or credentials are embedded.
+    - Provide deterministic fallback simulation for webcam denial, microphone denial, model download failure, empty detections, and low-confidence outputs.
+    - Keep the UI responsive by throttling expensive work, avoiding unbounded arrays, reusing draw buffers, and stopping detection loops when paused or when the page is hidden.
+    - Include accessible keyboard controls, non-color encodings for confidence, text summaries for landmarks and sound labels, and reduced-motion behavior.
+    - Output only the final artifact, with no commentary outside the artifact.
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.2
+    top_p: 0.9
+
+output:
+  text_format: html
+  artifact_kind: ml5js-multi-input-stress-demo
+  formats:
+    - format: html
+  render_expectation: Interactive browser ML stress canvas with deterministic fallback simulation when live camera or microphone access is unavailable.
+
+evaluation:
+  checklist:
+    - "Format validity: YAML parses under schema 0.4, all text is ASCII-only, and generated output is exactly one complete HTML document with no Markdown fences."
+    - "ml5 API: Uses ml5.bodyPose(\"MoveNet\"), ml5.handPose(), and optional ml5.soundClassifier(\"SpeechCommands18w\") with ml5.js 1.x detectStart or classifyStart patterns."
+    - "Model load state: Shows per-model loading, ready, running, throttled, failed, disabled, and fallback states before and during inference."
+    - "Confidence display: Applies confidence thresholds to keypoints, gestures, and sound labels, and displays confidence values or bars with non-color cues."
+    - "Privacy and secrets: Microphone is opt-in, camera and audio stay local, no recordings or telemetry are sent, and no API keys, tokens, cookies, credentials, or secret placeholders appear."
+    - "Fallback behavior: Simulates poses, hands, and sound labels when permissions, models, or backends fail, and handles empty detections without a blank render."
+    - "Performance and accessibility: Includes bounded loops, throttling, pause on hidden page, keyboard controls, text summaries, and reduced-motion behavior."
+  rubric:
+    - name: "Format validity"
+      weight: 30
+      criteria: "The prompt YAML and generated HTML are parseable, ASCII-only, complete, and free of Markdown wrappers or unrelated prose."
+    - name: "Semantic completeness"
+      weight: 30
+      criteria: "The artifact implements a dense multi-input ml5.js scenario with body, hand, and optional sound models, controls, telemetry, confidence filtering, privacy, and fallbacks."
+    - name: "UX/model quality"
+      weight: 25
+      criteria: "The interface makes model streams, confidence, latency, dense landmarks, controls, and degraded states understandable without overwhelming the user."
+    - name: "Robustness"
+      weight: 15
+      criteria: "The artifact handles permissions, failed models, empty results, low confidence, slow hardware, hidden-page lifecycle, throttling, and deterministic simulation without runtime failure."
+  pass_conditions:
+    - "Rubric weights are exactly Format validity 30, Semantic completeness 30, UX/model quality 25, and Robustness 15."
+    - "Generated content is clearly aligned with ml5.js 1.x and p5.js and does not substitute TensorFlow.js direct APIs as the primary solution."
+    - "Model load state, privacy, no secrets, fallback behavior, and confidence display checks are all satisfied."
+    - "Rubric score is at least 80 out of 100 and no rubric dimension scores zero."
+
+tags:
+  - "fim"
+  - "ml-ai"
+  - "ml5_js"
+  - "multi-input"
+  - "bodypose"
+  - "handpose"
+  - "sound-classification"
+  - "stress-test"

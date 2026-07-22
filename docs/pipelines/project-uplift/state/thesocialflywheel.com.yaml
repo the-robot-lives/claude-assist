@@ -1,0 +1,37 @@
+# docs/pipelines/project-uplift/state/thesocialflywheel.com.yaml
+project: thesocialflywheel.com
+pilot: false
+census:
+  readme_stub: false
+  personas: 10
+  stories: 1000
+  screens: 0
+  components: 0
+  roadmap_exists: false
+  existing_named_themes: [theme-commons, theme-orbit, theme-ripple]
+stage_a:
+  status: pending
+  attempts: 0
+  counts: {personas: 10, stories: 1000, screens: 0, components: 0}
+  blocked: null
+stage_b:
+  status: pending
+  attempts: 0
+  effective_theme_count: null    # E, computed by Stage B similitude formula
+  new_themes_needed: null         # ceil(7 - E)
+  themes_written: []
+  allocation_yaml: false
+  blocked: null
+stage_c:
+  status: pending
+  themes: {}    # keyed by theme slug once Stage B allocation.yaml exists; each entry tracks prompts/images/api_calls/avg_eval/yaml/conformance
+  blocked: null
+stage_d:
+  status: pending
+  attempts: 0
+  story_coverage_pct: null
+  blocked: null
+verified: false
+notes:
+  - 1000 user stories already exist — this is a PASS (far exceeds the ≥100 target), not an error; Stage A must not attempt to trim or regenerate them.
+  - "Uses singular design/theme/ only (3 named themes: commons, orbit, ripple) — note: the source plan's risk section lists this project alongside tobornalp.com/NPL as having a plural design/themes/ dir; on-disk verification during setup found that inaccurate for this project specifically. Recorded here as a correction."

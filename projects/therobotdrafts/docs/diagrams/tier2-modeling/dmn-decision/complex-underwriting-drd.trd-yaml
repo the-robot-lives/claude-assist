@@ -1,0 +1,59 @@
+# .trd-yaml — TheRobotDrafts native model (IxModel serialization)
+name: DMN Decision Requirements - Complex Underwriting DRD
+elements:
+  - { id: AppForm, type: UseCase, name: Application\nForm }
+  - { id: CreditBureau, type: UseCase, name: Credit\nBureau Pull }
+  - { id: Appraisal, type: UseCase, name: Collateral\nAppraisal }
+  - { id: IncomeDocs, type: UseCase, name: Income\nDocs }
+  - { id: MarketData, type: UseCase, name: Market\nData }
+  - { id: RiskGradeModel, type: Boundary, name: Risk Grade\nModel, stereotype: businessKnowledge }
+  - { id: PolicyRules, type: Boundary, name: Policy\nRules, stereotype: businessKnowledge }
+  - { id: RegZ, type: Artifact, name: Regulation\nZ }
+  - { id: UWManual, type: Artifact, name: Underwriting\nManual }
+  - { id: CapitalPolicy, type: Artifact, name: Capital\nPolicy }
+  - { id: Identity, type: Boundary, name: Identity\nVerified, stereotype: decision }
+  - { id: Income, type: Boundary, name: Income\nVerified, stereotype: decision }
+  - { id: Collateral, type: Boundary, name: Collateral\nValue, stereotype: decision }
+  - { id: CreditScore, type: Boundary, name: Credit\nScore, stereotype: decision }
+  - { id: DTI, type: Boundary, name: DTI\nRatio, stereotype: decision }
+  - { id: LTV, type: Boundary, name: LTV\nRatio, stereotype: decision }
+  - { id: RiskClass, type: Boundary, name: Risk\nClass, stereotype: decision }
+  - { id: PolicyFlags, type: Boundary, name: Policy\nFlags, stereotype: decision }
+  - { id: Eligibility, type: Boundary, name: Eligibility, stereotype: decision }
+  - { id: RateTier, type: Boundary, name: Rate\nTier, stereotype: decision }
+  - { id: LoanSize, type: Boundary, name: Loan\nSize, stereotype: decision }
+  - { id: Offer, type: Boundary, name: Offer, stereotype: decision }
+  - { id: ~note1, type: Note, name: '**Illustrative decision table for "Risk Class"**', documentation: '**Illustrative decision table for "Risk Class"**\n(boxed expression — the decision''s payload, not part of the DRD topology)\n--\nHit Policy: **UNIQUE** (at most one matching rule)\n--\n| Inputs               |             | Output       |\n| Credit Score | DTI   | LTV         | Risk Class   |\n|------------|--------|-------------|--------------|\n| >= 750     | < 36%  | <= 80%      | A (prime)    |\n| 680-749    | < 43%  | <= 90%      | B (near)     |\n| 620-679    | < 50%  | <= 95%      | C (subprime) |\n| < 620      | --     | --          | D (decline)  |\n--\nHit policies: U=unique, F=first, P=priority, C=collect, A=any, O=output order' }
+  - { id: ~note2, type: Note, name: '**Reading a deep DRD**', documentation: '**Reading a deep DRD**\nOffer (final) depends on 3 decisions, each of which depends on more.\nTrace a SOLID edge backward to find every input that ultimately influences\nthe offer. Trace a DASHED edge to find every rule/regulation that constrains\nthe logic along the way.' }
+edges:
+  - { id: e1, type: DirectedAssociation, from: AppForm, to: Identity }
+  - { id: e2, type: DirectedAssociation, from: IncomeDocs, to: Income }
+  - { id: e3, type: DirectedAssociation, from: Appraisal, to: Collateral }
+  - { id: e4, type: DirectedAssociation, from: CreditBureau, to: CreditScore }
+  - { id: e5, type: DirectedAssociation, from: MarketData, to: Collateral }
+  - { id: e6, type: DirectedAssociation, from: Income, to: DTI }
+  - { id: e7, type: DirectedAssociation, from: Collateral, to: LTV }
+  - { id: e8, type: DirectedAssociation, from: CreditScore, to: RiskClass }
+  - { id: e9, type: DirectedAssociation, from: DTI, to: RiskClass }
+  - { id: e10, type: DirectedAssociation, from: LTV, to: RiskClass }
+  - { id: e11, type: DirectedAssociation, from: RiskClass, to: PolicyFlags }
+  - { id: e12, type: DirectedAssociation, from: RiskClass, to: Eligibility }
+  - { id: e13, type: DirectedAssociation, from: PolicyFlags, to: Eligibility }
+  - { id: e14, type: DirectedAssociation, from: RiskClass, to: RateTier }
+  - { id: e15, type: DirectedAssociation, from: RiskClass, to: LoanSize }
+  - { id: e16, type: DirectedAssociation, from: Collateral, to: LoanSize }
+  - { id: e17, type: DirectedAssociation, from: Eligibility, to: Offer }
+  - { id: e18, type: DirectedAssociation, from: RateTier, to: Offer }
+  - { id: e19, type: DirectedAssociation, from: LoanSize, to: Offer }
+  - { id: e20, type: Dependency, from: CreditScore, to: RiskGradeModel, label: authority }
+  - { id: e21, type: Dependency, from: RiskClass, to: RiskGradeModel, label: authority }
+  - { id: e22, type: Dependency, from: PolicyFlags, to: PolicyRules, label: authority }
+  - { id: e23, type: Dependency, from: Eligibility, to: PolicyRules, label: authority }
+  - { id: e24, type: Dependency, from: LoanSize, to: PolicyRules, label: authority }
+  - { id: e25, type: Dependency, from: Offer, to: RegZ, label: authority }
+  - { id: e26, type: Dependency, from: Eligibility, to: UWManual, label: authority }
+  - { id: e27, type: Dependency, from: LoanSize, to: CapitalPolicy, label: authority }
+  - { id: e28, type: NoteLink, from: ~note1, to: RiskClass }
+  - { id: e29, type: NoteLink, from: ~note2, to: Offer }
+diagrams:
+  - { id: d1, name: DMN Decision Requirements - Complex Underwriting DRD, kind: usecase, layoutProvenance: Synthesized }

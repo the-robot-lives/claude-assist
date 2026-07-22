@@ -1,0 +1,14 @@
+# .trd-yaml — TheRobotDrafts native model (IxModel serialization)
+name: Example Interaction Overview (Variant) - Overview vs Activity
+elements:
+  - { id: ~start1, type: StateStart, name: start }
+  - { id: ~fork2, type: ForkJoin, name: fork }
+  - { id: ~join3, type: ForkJoin, name: join }
+  - { id: ~end4, type: StateEnd, name: end }
+edges:
+  - { id: e1, type: Transition, from: ~start1, to: ~fork2 }
+  - { id: e2, type: Transition, from: ~fork2, to: ~join3 }
+  - { id: e3, type: Transition, from: ~fork2, to: ~join3 }
+  - { id: e4, type: Transition, from: ~join3, to: ~end4 }
+diagrams:
+  - { id: d1, name: Example Interaction Overview (Variant) - Overview vs Activity, kind: activity, layoutProvenance: Synthesized }

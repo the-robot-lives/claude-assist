@@ -11,6 +11,8 @@ use serde::{Deserialize, Serialize};
 
 use llm::LlmConfig;
 
+pub const MAX_RECORDING_SECONDS: u32 = 600;
+
 fn default_wake() -> String { "hey robot".into() }
 fn default_end() -> String { "that is all".into() }
 fn default_approve_memo() -> String { "approve memo".into() }
@@ -167,6 +169,15 @@ impl QueuePopulatorConfig {
         if copy.queue_base_path.trim().is_empty() {
             copy.queue_base_path = Self::default_queue_base_path();
         }
+        copy.recognition.max_recording_seconds = copy
+            .recognition
+            .max_recording_seconds
+            .clamp(1, MAX_RECORDING_SECONDS);
+        if !copy.ui.overlay_dismiss_seconds.is_finite() {
+            copy.ui.overlay_dismiss_seconds = UiConfig::default().overlay_dismiss_seconds;
+        } else {
+            copy.ui.overlay_dismiss_seconds = copy.ui.overlay_dismiss_seconds.clamp(0.1, 60.0);
+        }
         copy
     }
 }
@@ -176,23 +187,25 @@ impl QueuePopulatorConfig {
 pub struct AppConfig {
     pub check: bool,
     pub verbose: bool,
+    pub help: bool,
 }
 
 impl AppConfig {
+    pub const fn usage() -> &'static str {
+        concat!(
+            "usage: queue-populator [--check] [--verbose]\n",
+            "  --check    verify audio devices and STT models are available, then exit\n",
+            "  --verbose  extra stderr logging\n",
+        )
+    }
+
     pub fn parse(args: impl Iterator<Item = String>) -> Result<Self, String> {
         let mut cfg = AppConfig::default();
         for arg in args {
             match arg.as_str() {
                 "--check" => cfg.check = true,
                 "--verbose" | "-v" => cfg.verbose = true,
-                "--help" | "-h" => {
-                    return Err(concat!(
-                        "usage: queue-populator [--check] [--verbose]\n",
-                        "  --check    verify audio devices and STT models are available, then exit\n",
-                        "  --verbose  extra stderr logging\n",
-                    )
-                    .to_string())
-                }
+                "--help" | "-h" => cfg.help = true,
                 other => return Err(format!("unknown argument: {other}")),
             }
         }
@@ -221,10 +234,14 @@ mod tests {
         c.phrases.wake = "  HEY Robot  ".into();
         c.phrases.end = "   ".into();
         c.queue_base_path = " ".into();
+        c.recognition.max_recording_seconds = u32::MAX;
+        c.ui.overlay_dismiss_seconds = f64::INFINITY;
         let s = c.sanitized();
         assert_eq!(s.phrases.wake, "hey robot");
         assert_eq!(s.phrases.end, "that is all");
         assert_eq!(s.queue_base_path, "~/personal-development/queue");
+        assert_eq!(s.recognition.max_recording_seconds, MAX_RECORDING_SECONDS);
+        assert_eq!(s.ui.overlay_dismiss_seconds, 3.0);
     }
 
     #[test]
@@ -245,5 +262,24 @@ mod tests {
         assert!(json.contains("openClaude"));
         let back: QueuePopulatorConfig = serde_json::from_str(&json).unwrap();
         assert_eq!(back, c);
+    }
+
+    #[test]
+    fn cli_help_is_a_successful_option() {
+        let parsed = AppConfig::parse(["--help".to_string()].into_iter()).unwrap();
+        assert!(parsed.help);
+        assert!(AppConfig::usage().starts_with("usage: queue-populator"));
+    }
+
+    #[test]
+    fn cli_rejects_unknown_options() {
+        let error = AppConfig::parse(["--wat".to_string()].into_iter()).unwrap_err();
+        assert_eq!(error, "unknown argument: --wat");
+    }
+
+    #[test]
+    fn cli_verbose_short_flag_is_recorded() {
+        let parsed = AppConfig::parse(["-v".to_string()].into_iter()).unwrap();
+        assert!(parsed.verbose);
     }
 }

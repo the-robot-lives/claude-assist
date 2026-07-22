@@ -4,7 +4,8 @@ defmodule ForyouWeb.Plugs.RateLimit do
 
   @default_limits %{
     auth: {10, 60_000},
-    auth_sensitive: {5, 60_000}
+    auth_sensitive: {5, 60_000},
+    inquiry: {3, 60_000}
   }
 
   @impl true

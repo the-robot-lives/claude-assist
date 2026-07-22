@@ -1,0 +1,80 @@
+schema: "0.4"
+id: ml5_js-03-educational-explanatory-visualization
+type: "interactive/model"
+quality: high
+solution: ml5_js
+category: ml-ai
+variant: educational-explanatory-visualization
+references:
+  - "references/fim/overview/music-audio-ml/ml5_js.md"
+  - "references/fim/solution/ml5_js.md"
+
+prompt:
+  system: |-
+    You generate ml5.js browser ML artifacts for FIM evaluation. Output only one complete self-contained ASCII HTML document with inline CSS and JavaScript. Use p5.js plus ml5.js 1.x from CDN, and do not include Markdown fences or explanatory prose outside the artifact.
+  text: |-
+    Create the educational and explanatory visualization for ml5.js.
+
+    Scenario:
+    Build an interactive teaching sketch that explains the browser ML pipeline: input, preprocessing, model loading, inference, confidence ranking, thresholding, smoothing, and visual response. The artifact should be useful in a classroom or workshop for understanding what ml5.js contributes and what p5.js draws.
+
+    Implementation requirements:
+    - Use p5.js and ml5.js 1.x CDN imports. Use at least one real ml5 model such as ml5.imageClassifier("MobileNet") or ml5.bodyPose("MoveNet"), with a deterministic synthetic fallback path.
+    - Do not use legacy ml5 0.x APIs such as poseNet, styleTransfer, or callbacks with an error first argument.
+    - Include an explanatory pipeline view with labeled stages for input source, model load state, inference call, raw results, confidence threshold, smoothed state, and canvas rendering.
+    - Include a model load state timeline with loading, ready, running, failed, and fallback events. Make the first viewport nonblank before the model loads.
+    - Display confidence values as percentages, ranked labels or keypoint confidence, threshold decisions, and why a result is accepted, rejected, or marked uncertain.
+    - Include guided controls for sample image or webcam mode, confidence threshold, smoothing, pause/play, step one inference, reset, and show raw JSON summary.
+    - Include privacy and classroom safety notes in the UI: inputs stay in the browser, webcam is optional, no uploads or telemetry occur, and no secrets or credentials are embedded.
+    - Include fallback behavior for offline classroom use, blocked camera, failed model load, empty results, low confidence, and unsupported browser features.
+    - Use accessible UI patterns: semantic headings, ARIA labels, keyboard controls, high-contrast palettes, color plus shape encodings, readable status text, and reduced-motion support.
+    - Include concise comments in the generated source that distinguish ml5 model work from p5 drawing work.
+    - Output only the final artifact, with no commentary outside the artifact.
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.2
+    top_p: 0.9
+
+output:
+  text_format: html
+  artifact_kind: ml5js-educational-explainer
+  formats:
+    - format: html
+  render_expectation: Interactive browser explainer that remains useful with live model output or deterministic fallback inference.
+
+evaluation:
+  checklist:
+    - "Format validity: YAML parses under schema 0.4, all text is ASCII-only, and generated output is exactly one complete HTML document with no Markdown fences."
+    - "ml5 API: Uses p5.js with at least one ml5.js 1.x model and current callback or detectStart patterns, without legacy poseNet, styleTransfer, or error-first callbacks."
+    - "Model load state: Shows a clear timeline or panel for loading, ready, running, failed, and fallback states."
+    - "Confidence display: Explains confidence percentages, ranking, threshold decisions, smoothing, and uncertain results."
+    - "Privacy and secrets: States that inputs stay in-browser, webcam is optional, no uploads or telemetry occur, and no API keys, tokens, cookies, credentials, or secret placeholders appear."
+    - "Fallback behavior: Provides deterministic sample input and simulated inference for offline classroom use, blocked camera, model failure, empty results, and unsupported features."
+    - "Educational UX: Clearly separates input, model, inference, confidence, and rendering stages with accessible controls and readable explanatory structure."
+  rubric:
+    - name: "Format validity"
+      weight: 30
+      criteria: "The prompt YAML and generated HTML are parseable, ASCII-only, complete, and free of Markdown wrappers or unrelated prose."
+    - name: "Semantic completeness"
+      weight: 30
+      criteria: "The artifact teaches the ml5.js browser ML pipeline using real ml5 calls, p5 rendering, confidence decisions, privacy notes, and deterministic fallbacks."
+    - name: "UX/model quality"
+      weight: 25
+      criteria: "The explanatory layout, controls, model state, confidence reasoning, and accessibility details make the model behavior understandable to learners."
+    - name: "Robustness"
+      weight: 15
+      criteria: "The artifact handles offline or blocked environments, failed model loads, unsupported browser features, empty results, low confidence, reset, and step mode without runtime failure."
+  pass_conditions:
+    - "Rubric weights are exactly Format validity 30, Semantic completeness 30, UX/model quality 25, and Robustness 15."
+    - "Generated content is clearly aligned with ml5.js 1.x and p5.js and does not substitute TensorFlow.js direct APIs as the primary solution."
+    - "Model load state, privacy, no secrets, fallback behavior, and confidence display checks are all satisfied."
+    - "Rubric score is at least 80 out of 100 and no rubric dimension scores zero."
+
+tags:
+  - "fim"
+  - "ml-ai"
+  - "ml5_js"
+  - "education"
+  - "explanatory-visualization"
+  - "confidence"
+  - "p5js"

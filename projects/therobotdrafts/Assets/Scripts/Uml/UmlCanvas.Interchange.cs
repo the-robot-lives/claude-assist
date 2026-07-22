@@ -84,6 +84,30 @@ namespace TheRobotDraft.Uml
                 case IxElementType.Cloud: return ElementKind.Cloud;
                 case IxElementType.Lifeline: return ElementKind.Lifeline;
                 case IxElementType.MindNode: return ElementKind.MindNode;
+                case IxElementType.Screen: return ElementKind.Screen;
+                case IxElementType.Panel: return ElementKind.Panel;
+                case IxElementType.UiWidget: return ElementKind.UiWidget;
+                case IxElementType.Button: return ElementKind.Button;
+                case IxElementType.Label: return ElementKind.Label;
+                case IxElementType.Link: return ElementKind.Link;
+                case IxElementType.TextField: return ElementKind.TextField;
+                case IxElementType.TextArea: return ElementKind.TextArea;
+                case IxElementType.Password: return ElementKind.Password;
+                case IxElementType.Checkbox: return ElementKind.Checkbox;
+                case IxElementType.Radio: return ElementKind.Radio;
+                case IxElementType.Dropdown: return ElementKind.Dropdown;
+                case IxElementType.List: return ElementKind.List;
+                case IxElementType.UiTable: return ElementKind.Table;
+                case IxElementType.Tree: return ElementKind.Tree;
+                case IxElementType.Image: return ElementKind.Image;
+                case IxElementType.Tabs: return ElementKind.Tabs;
+                case IxElementType.Menu: return ElementKind.Menu;
+                case IxElementType.Card: return ElementKind.Card;
+                case IxElementType.Separator: return ElementKind.Separator;
+                case IxElementType.Progress: return ElementKind.Progress;
+                case IxElementType.Slider: return ElementKind.Slider;
+                case IxElementType.Breadcrumb: return ElementKind.Breadcrumb;
+                case IxElementType.Toolbar: return ElementKind.Toolbar;
                 default: return ElementKind.Class; // Unknown / unmapped → Class (stereotype preserves the original)
             }
         }
@@ -235,7 +259,7 @@ namespace TheRobotDraft.Uml
                 }
 
                 _ctl.EnterSelect();
-                _pos[id] = new Vector2(originX + (gridIndex % 4) * colW, originY - (gridIndex / 4) * rowH);
+                _placements.SetPos(id, new Vector2(originX + (gridIndex % 4) * colW, originY - (gridIndex / 4) * rowH));
                 _ctl.SetZLayer(id, _activeLayer);
                 if (row.Source != null && !created.ContainsKey(row.Source.Id)) created[row.Source.Id] = id;
                 gridIndex++;
@@ -412,6 +436,7 @@ namespace TheRobotDraft.Uml
                 if (!string.IsNullOrEmpty(ix.Stereotype)) _ctl.SetMeta(nid, null, ix.Stereotype);
                 if (!string.IsNullOrEmpty(ix.Documentation)) _ctl.SetDescription(nid, ix.Documentation);
                 if (!string.IsNullOrEmpty(ix.ExternalUuid)) _ctl.SetDeepLink(nid, ix.ExternalUuid, null);
+                if (ix.Items != null && ix.Items.Count > 0) _ctl.SetPropertyItems(nid, ix.Items);
                 ApplyColorsToNode(nid, ix.FillColor, ix.LineColor, ix.TextColor);
 
                 AddIxMembers(nid, ix);
@@ -439,29 +464,32 @@ namespace TheRobotDraft.Uml
                 }
             _ctl.EnterSelect();
 
-            // Geometry — apply the first authored diagram's placements (IR is top-left, Y-down; the canvas stores a
-            // node's centre with Y-up, so add half-extents and flip Y). No authored geometry ⇒ lay out by source.
-            IxDiagram authored = null;
+            // Geometry — apply placements from every authored diagram (IR is top-left, Y-down; the canvas stores a
+            // node's centre Y-up, so add half-extents and flip Y). Per-diagram store: each placement is written into
+            // the placed element's own diagram scope (its parent package/page), so page nodes land on their page — no
+            // first-placement-wins compromise. True cross-diagram LINKS (an element placed in a diagram that is NOT its
+            // parent) will be routed by a diagram→scope map once Track C introduces them. No authored geometry ⇒ source layout.
+            int placed = 0;
             if (model.Diagrams != null)
                 foreach (var d in model.Diagrams)
-                    if (d != null && d.LayoutProvenance == IxLayoutProvenance.Authored) { authored = d; break; }
-
-            int placed = 0;
-            if (authored != null && authored.Nodes != null)
-                foreach (var pl in authored.Nodes)
                 {
-                    if (pl == null || string.IsNullOrEmpty(pl.ElementId)) continue;
-                    if (!idMap.TryGetValue(pl.ElementId, out var nid)) continue;
-                    if (pl.Width > 0f && pl.Height > 0f)
+                    if (d == null || d.LayoutProvenance != IxLayoutProvenance.Authored || d.Nodes == null) continue;
+                    foreach (var pl in d.Nodes)
                     {
-                        _pos[nid] = new Vector2(pl.X + pl.Width * 0.5f, -(pl.Y + pl.Height * 0.5f));
-                        _size[nid] = new Vector2(pl.Width, pl.Height);
+                        if (pl == null || string.IsNullOrEmpty(pl.ElementId)) continue;
+                        if (!idMap.TryGetValue(pl.ElementId, out var nid)) continue;
+                        var scope = _model.TryGet(nid, out var elm) ? elm.Parent : ElementId.None;
+                        var placement = (pl.Width > 0f && pl.Height > 0f)
+                            ? new Placement
+                              {
+                                  Pos = new Vector2(pl.X + pl.Width * 0.5f, -(pl.Y + pl.Height * 0.5f)),
+                                  Size = new Vector2(pl.Width, pl.Height),
+                                  Rot = Quaternion.identity,
+                              }
+                            : new Placement { Pos = new Vector2(pl.X, -pl.Y), Rot = Quaternion.identity };
+                        _placements.Set(scope, nid, placement);
+                        placed++;
                     }
-                    else
-                    {
-                        _pos[nid] = new Vector2(pl.X, -pl.Y);
-                    }
-                    placed++;
                 }
 
             _selectedId = ElementId.None;
@@ -666,6 +694,9 @@ namespace TheRobotDraft.Uml
                     IsAbstract = el.IsAbstract,
                     Documentation = el.Description,
                 };
+                foreach (var item in el.Items)
+                    if (!string.IsNullOrWhiteSpace(item))
+                        ix.Items.Add(item);
                 if (_styles.TryGetValue(el.Id, out var st) && st.Has)
                 {
                     // Only emit colors the node actually carries — never invent them for an unstyled node.
@@ -702,14 +733,53 @@ namespace TheRobotDraft.Uml
                 });
             }
 
-            // Geometry — one authored diagram; centre (Y-up) back to top-left (Y-down) with half-extents.
-            var diagram = new IxDiagram { Id = "d1", Name = diagramName, LayoutProvenance = IxLayoutProvenance.Authored };
-            foreach (var el in _model.Elements)
+            // Geometry — emit one authored IxDiagram per top-level Package (the runtime "tab"). Each diagram carries
+            // the placements of every element whose top-level ancestor is that package. Centre (Y-up) back to top-left
+            // (Y-down) with half-extents. Selection export keeps the single-synthetic-diagram behaviour.
+            if (included != null)
+            {
+                var diagram = new IxDiagram { Id = "d1", Name = diagramName, LayoutProvenance = IxLayoutProvenance.Authored };
+                AddPlacementsTo(diagram, _model.Elements, byId);
+                if (diagram.Nodes.Count > 0) model.Diagrams.Add(diagram);
+            }
+            else
+            {
+                int di = 1;
+                foreach (var topLevel in TopLevelPackages())
+                {
+                    var d = new IxDiagram
+                    {
+                        Id = "d" + di++,
+                        Name = string.IsNullOrEmpty(topLevel.Name) ? diagramName : topLevel.Name,
+                        LayoutProvenance = IxLayoutProvenance.Authored,
+                    };
+                    AddPlacementsTo(d, SubtreeOf(topLevel.Id), byId);
+                    if (d.Nodes.Count > 0) model.Diagrams.Add(d);
+                }
+                // Elements with no top-level package ancestor (rare — orphan placements) land in a catch-all diagram.
+                if (model.Diagrams.Count == 0)
+                {
+                    var fallback = new IxDiagram { Id = "d1", Name = diagramName, LayoutProvenance = IxLayoutProvenance.Authored };
+                    AddPlacementsTo(fallback, _model.Elements, byId);
+                    if (fallback.Nodes.Count > 0) model.Diagrams.Add(fallback);
+                }
+            }
+
+            return model;
+        }
+
+        /// <summary>Append a placement (top-left, Y-down) for every element in <paramref name="elements"/> that has a
+        /// position and an IxElement, into <paramref name="diagram"/>. Centre (Y-up) → top-left (Y-down) + half-extents.</summary>
+        private void AddPlacementsTo(IxDiagram diagram, IEnumerable<ModelElement> elements, Dictionary<string, IxElement> byId)
+        {
+            foreach (var el in elements)
             {
                 if (KindInfo.IsMember(el.Kind) || !byId.ContainsKey(el.Id.Value)) continue;
-                if (!_pos.TryGetValue(el.Id, out var centre)) continue;
+                // Each element's geometry lives in its own diagram scope (its parent package/page).
+                if (!_placements.TryGet(el.Parent, el.Id, out var geo)) continue;
+                var centre = geo.Pos;
                 float w = 0f, h = 0f;
-                if (_size.TryGetValue(el.Id, out var s)) { w = s.x; h = s.y; }
+                if (geo.HasSize) { w = geo.Size.x; h = geo.Size.y; }
 
                 var placement = new IxNodePlacement { ElementId = el.Id.Value };
                 if (w > 0f && h > 0f)
@@ -726,9 +796,34 @@ namespace TheRobotDraft.Uml
                 }
                 diagram.Nodes.Add(placement);
             }
-            model.Diagrams.Add(diagram);
+        }
 
-            return model;
+        /// <summary>Every top-level Package element (a Package with no parent) — these are the runtime "tabs" / diagrams.</summary>
+        private List<ModelElement> TopLevelPackages()
+        {
+            var list = new List<ModelElement>();
+            foreach (var el in _model.Elements)
+            {
+                if (!KindInfo.IsMember(el.Kind) && el.Kind == ElementKind.Package && !el.Parent.IsValid)
+                    list.Add(el);
+            }
+            return list;
+        }
+
+        /// <summary>An element and all its transitive descendants (by containment).</summary>
+        private IEnumerable<ModelElement> SubtreeOf(ElementId root)
+        {
+            var stack = new Stack<ElementId>();
+            stack.Push(root);
+            int guard = 0;
+            while (stack.Count > 0)
+            {
+                var id = stack.Pop();
+                if (!_model.TryGet(id, out var el)) continue;
+                yield return el;
+                foreach (var c in el.ChildIds) stack.Push(c);
+                if (++guard > 1000000) yield break;
+            }
         }
 
         /// <summary>Selected elements + their member children + their ancestor package chain (the export closure).</summary>
@@ -758,12 +853,20 @@ namespace TheRobotDraft.Uml
         private void BuildIxMembers(ModelElement el, IxElement ix, HashSet<ElementId> included)
         {
             bool isEnum = el.Kind == ElementKind.Enum;
+            bool wireframeItemOwner = el.Kind == ElementKind.Table || el.Kind == ElementKind.List
+                || el.Kind == ElementKind.Tree || el.Kind == ElementKind.Dropdown || el.Kind == ElementKind.Menu
+                || el.Kind == ElementKind.Tabs || el.Kind == ElementKind.Toolbar || el.Kind == ElementKind.Breadcrumb;
             foreach (var childId in el.ChildIds)
             {
                 if (included != null && !included.Contains(childId)) continue;
                 if (!_model.TryGet(childId, out var c)) continue;
                 if (c.Kind == ElementKind.Field)
                 {
+                    if (wireframeItemOwner)
+                    {
+                        if (!string.IsNullOrWhiteSpace(c.Name)) ix.Items.Add(c.Name.Trim());
+                        continue;
+                    }
                     var parts = UmlMemberSignature.Parse(ElementKind.Field, c.Name);
                     if (isEnum)
                     {
@@ -835,6 +938,30 @@ namespace TheRobotDraft.Uml
                 case ElementKind.Cloud: return IxElementType.Cloud;
                 case ElementKind.Lifeline: return IxElementType.Lifeline;
                 case ElementKind.MindNode: return IxElementType.MindNode;
+                case ElementKind.Screen: return IxElementType.Screen;
+                case ElementKind.Panel: return IxElementType.Panel;
+                case ElementKind.UiWidget: return IxElementType.UiWidget;
+                case ElementKind.Button: return IxElementType.Button;
+                case ElementKind.Label: return IxElementType.Label;
+                case ElementKind.Link: return IxElementType.Link;
+                case ElementKind.TextField: return IxElementType.TextField;
+                case ElementKind.TextArea: return IxElementType.TextArea;
+                case ElementKind.Password: return IxElementType.Password;
+                case ElementKind.Checkbox: return IxElementType.Checkbox;
+                case ElementKind.Radio: return IxElementType.Radio;
+                case ElementKind.Dropdown: return IxElementType.Dropdown;
+                case ElementKind.List: return IxElementType.List;
+                case ElementKind.Table: return IxElementType.UiTable;
+                case ElementKind.Tree: return IxElementType.Tree;
+                case ElementKind.Image: return IxElementType.Image;
+                case ElementKind.Tabs: return IxElementType.Tabs;
+                case ElementKind.Menu: return IxElementType.Menu;
+                case ElementKind.Card: return IxElementType.Card;
+                case ElementKind.Separator: return IxElementType.Separator;
+                case ElementKind.Progress: return IxElementType.Progress;
+                case ElementKind.Slider: return IxElementType.Slider;
+                case ElementKind.Breadcrumb: return IxElementType.Breadcrumb;
+                case ElementKind.Toolbar: return IxElementType.Toolbar;
                 default: mapped = false; return IxElementType.Unknown;
             }
         }

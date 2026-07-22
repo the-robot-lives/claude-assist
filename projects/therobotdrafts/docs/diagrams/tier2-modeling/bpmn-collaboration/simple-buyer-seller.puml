@@ -1,0 +1,68 @@
+@startuml
+' ============================================================================
+' METADATA
+'   author:       TheRobotDrafts Examples
+'   description:  Simple BPMN collaboration — 2 pools with 1-2 message flows.
+'   usecase:      Teach pool, message flow (dashed, crosses boundary), black-box vs expanded.
+'   complexity:   simple
+'   domain:       business-process
+' ============================================================================
+title Example BPMN Collaboration - Buyer / Seller
+
+' BPMN collaboration = multiple pools exchanging messages.
+' PlantUML shape mapping:
+'   rectangle (large)  = pool (participant)
+'   rectangle (in pool)= task
+'   circle (thin/double/thick) = start/intermediate/end event
+'   usecase diamond    = gateway
+'   -->                = sequence flow (within a pool)
+'   ..> (dashed)       = message flow (crosses pool boundary)
+
+' --- Pools (participants) -------------------------------------------------
+' Expanded pool: shows internal process. Black-box pool: empty, only
+' boundary visible — used when you don't model that participant's internals.
+
+rectangle "**Buyer**" as PoolBuyer {
+  usecase " " as BStart
+  rectangle "Place Order" as B1
+  rectangle "Receive Goods" as B2
+  usecase " " as BEnd
+  BStart --> B1
+  B1 --> B2
+  B2 --> BEnd
+}
+
+rectangle "**Seller**" as PoolSeller {
+  usecase " " as SStart
+  rectangle "Accept Order" as S1
+  rectangle "Ship Goods" as S2
+  usecase " " as SEnd
+  SStart --> S1
+  S1 --> S2
+  S2 --> SEnd
+}
+
+' --- Message flows (dashed, cross pool boundary) -------------------------
+B1 ..> S1 : "Order"
+S2 ..> B2 : "Goods + Invoice"
+
+note top of PoolBuyer
+  <b>Expanded pool</b>
+  Internal process visible.
+  Tasks + sequence flow shown.
+end note
+
+note top of PoolSeller
+  <b>Expanded pool</b>
+  Contrast: a black-box pool
+  would be empty with only
+  message flows touching it.
+end note
+
+note right of PoolSeller
+  <b>Message flow (dashed ..>)</b>
+  Crosses the pool boundary.
+  Sequence flow never crosses pools.
+end note
+
+@enduml

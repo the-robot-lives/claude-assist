@@ -43,7 +43,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <script src="/__env.js" />
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){var s=localStorage.getItem('color-mode');var p=matchMedia('(prefers-color-scheme:dark)').matches;if(s==='dark'||(!s&&p))document.documentElement.classList.add('dark')})()`,
+            __html: `(function(){var s=localStorage.getItem('color-mode');if(s==='dark')document.documentElement.classList.add('dark')})()`,
           }}
         />
       </head>

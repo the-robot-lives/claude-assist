@@ -1,0 +1,58 @@
+# docs/pipelines/project-uplift/state/NoizuPromptLingo.yaml
+project: NoizuPromptLingo
+pilot: true
+pilot_order: 1
+census:
+  readme_stub: false
+  personas: 8
+  stories: 104
+  screens: 47
+  components: 45
+  roadmap_exists: false
+  existing_named_themes: [theme-npl-brutalist, theme-npl-editorial, theme-npl-minimal, theme-npl-nocturne]
+stage_a:
+  status: done
+  attempts: 1
+  counts: {personas: 8, stories: 104, screens: 47, components: 45}
+  blocked: null
+stage_b:
+  status: done
+  attempts: 1
+  effective_theme_count: 3.23    # E, computed by Stage B similitude formula
+  new_themes_needed: 4            # ceil(7 - E)
+  themes_written: [npl-brutalist, npl-editorial, npl-minimal, npl-nocturne, npl-aurora, npl-blueprint, npl-prism, npl-meridian]
+  allocation_yaml: true
+  blocked: null
+stage_c:
+  status: pending
+  themes:    # keyed by theme slug from Stage B allocation; each entry tracks prompts/images/api_calls/avg_eval/yaml/conformance
+    npl-brutalist: {status: done, prompts: 6, images: 6, api_calls: 9, avg_eval: null, yaml: true, conformance: true}
+    npl-editorial: {status: done, prompts: 5, images: 5, api_calls: 6, avg_eval: null, yaml: true, conformance: true}
+    npl-minimal: {status: done, prompts: 5, images: 5, api_calls: 7, avg_eval: null, yaml: true, conformance: true}
+    npl-nocturne: {status: blocked, prompts: 6, images: 0, api_calls: 6, avg_eval: null, yaml: true, conformance: true, blocked: "renders blocked by sustained shared Imagen 429 quota exhaustion (imagen-4.0-ultra; concurrent Stage C agents) — theme YAML + 6 prompts + conformance complete & CSS-verified; PNGs pending a render top-up when quota clears"}
+    npl-aurora: {status: blocked, blocked: "renders 06+44 deferred — sustained image-API 429 under concurrent-fleet load; prompts+YAML+treatise+conformance complete & verified; top-up renders per §8 when traffic clears", prompts: 5, images: 3, api_calls: 9, avg_eval: null, yaml: true, conformance: true}
+    npl-blueprint: {status: blocked, prompts: 5, images: 0, api_calls: 12, avg_eval: null, yaml: true, conformance: true, pending_renders: ["12-admin-authz", "13-admin-github-integration", "14-admin-llm-model-catalog", "15-admin-mcp-custom-scopes", "19-project-detail"], blocked: "images-only, recoverable via render top-up — fleet-wide image-API 429 storm (5 concurrent Stage C agents), all attempts 429'd (0/5 within the 12-call cap). ALL 5 screen renders pending (see pending_renders); prompts ready under design/asset-prompts/screens/npl-blueprint/. Full theme YAML + conformance complete and compiled-CSS-verified (accents #245ea8/#0e9bd6/#c05a3e, 2px radius, IBM Plex; dark-leak fixed 0x #e20613 in-scope, self-scope 0-bleed; treatise rev 2). Only the media renders remain — top-up idempotent when quota clears"}
+    npl-prism: {status: done, prompts: 6, images: 6, api_calls: 7, avg_eval: null, yaml: true, conformance: true}
+    npl-meridian: {status: blocked, prompts: 6, images: deferred, api_calls: 0, avg_eval: null, yaml: true, conformance: true, pending_renders: ["09-admin-home", "17-org-dashboard (hero, -n 2)", "18-projects-list", "22-chat-room-list", "23-chat-room-view", "24-ticket-board"], blocked: "images-only, recoverable via render top-up — image-API 429 storm from concurrent Stage C agents, all attempts 429'd (0 generated). ALL 6 screen renders pending (see pending_renders); prompts ready under design/asset-prompts/screens/npl-meridian/. Full theme YAML + conformance complete and legacy generate-css validated (warm espresso dark + brass confirmed in compiled CSS, self-scope 0-bleed, treatise flipped to full). Only the media renders remain."}
+  blocked: null
+stage_d:
+  status: done
+  attempts: 1
+  story_coverage_pct: 100
+  blocked: null
+verified: false
+notes:
+  - "README is the 170-line start-app scaffold boilerplate (first heading '# start-app') — stub by both tests; Stage A must author a substantial README from backend/ code + design/ + docs/ evidence."
+  - 4 active named themes already exist under design/theme/ (npl-brutalist, npl-editorial, npl-minimal, npl-nocturne) — high existing count, similitude-weighted E likely close to or above 7; Stage B should score before assuming new themes are needed.
+  - "design/themes/ (plural, legacy) contains only a 'starter/' scaffold dir, NOT additional theme-{slug} directories — Stage B must leave it alone (or flag for later cleanup), not count or consolidate it as a 5th theme."
+  - Pilot project 1 — runs fully (A→B→C×themes→D) before aifighter.com and the user review gate.
+  - "Stage A done 2026-07-16: README (114 lines) + 8 personas + 104 stories/14 epics + 47 screens + 45 components. verify.md §A: 9/9 PASS."
+  - "Template ambiguity: stage-a-docs-pm.md's intro claims full self-containment ('everything you need is below') but §7/§9 explicitly name templates/verify.md and templates/report-format.md — read both since the template itself points at them; wording should say 'plus verify.md and report-format.md' rather than claiming pure self-containment."
+  - "Template gap: §8's commit protocol greps docs/pipelines/project-uplift/state/_pipeline.yaml for repo_lock_session, but §0.3 forbids reading the pipeline plan file and _pipeline.yaml isn't in the Stage A agent's allowed file set either — unresolvable as written. Loom pre-resolved this for the pilot by passing REPO_LOCK_SESSION directly in the spawn prompt; the template should say to expect it as a spawn param rather than grep a forbidden file."
+  - "Product has THREE unrelated meanings of 'persona' in this codebase: the product's own Agent Persona entity (bio/journal/knowledge-base), a Customer Persona (marketing ICP) under the Campaigns domain, and the UX-research personas this stage authors. Disambiguated via qualifiers throughout the README; future stage/reader agents should keep the same convention rather than assuming 'persona' means one thing."
+  - "Screens count (47) exceeds Stage B verify §B's allocation.yaml hint of 30-40 unique screens unless Stage B sets u==inventory (an allowed pass condition per that check) — sized to real evidence (40+ actual frontend routes per docs/FEATURE-PARITY-AUDIT.md), not trimmed to fit. Flagging so Stage B isn't surprised."
+  - "2 of the 47 screens (Campaigns & Ad Groups, Market & Competitor Research) are grounded in confirmed backend/MCP domain evidence (Campaign/AdGroup/AdCopy/LandingPage/Competitor/Keyword/MarketReport schemas + tobor_campaigns/tobor_market MCP servers) but the frontend route sample gathered for this stage didn't enumerate a matching route — noted as inferred in the screen docs themselves; worth a source-tree double-check in a later stage."
+  - "Stage B done 2026-07-16: similitude E=3.23 over 4 shipped themes → ceil(7-E)=4 new directions (aurora/blueprint/prism/meridian); 8 treatises + THEMES.md + allocation.yaml written. verify.md §B: 21/21 PASS."
+  - "Template gap (Stage B §6 commit): shows a grep of state/_pipeline.yaml for repo_lock_session — same forbidden-file bug as Stage A §8. Used the REPO_LOCK_SESSION spawn param directly instead; template should say to expect it as a spawn param, not grep the plan file."
+  - "Stage A census note ('E likely close to or above 7') is unreachable: the E formula caps at n, so for n=4 the max is E=4.0. Measured E=3.23 → 4 new themes (not 0). Suggest fixing that intuition in future census notes."
+  - "Allocation constraint interaction (Stage B §3): with 8 themes and u=clamp(47,30,40)=40, overlap must stay small (used o=2) so total slots u+2o=44 stay within the ~35-45 aim while every theme lands 5-8. Satisfiable but under-explained — the template doesn't spell out how u / o / theme-count / the 35-45 aim reconcile at high theme counts. 5 lower-weight screens intentionally left unallocated (03,16,33,37,38)."

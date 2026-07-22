@@ -1,0 +1,75 @@
+---
+schema: "0.4"
+id: fim-math-and-scientific-rendering-sagemath-04-edge-integration-stability-accessibility
+type: data
+quality: high
+solution: sagemath
+category: math-and-scientific-rendering
+variant: edge-integration-stability-accessibility
+references:
+- references/fim/overview/geospatial-math-scientific/sagemath.md
+- references/fim/solution/sagemath.md
+prompt:
+  system: |-
+    You are a senior SageMath reliability engineer. Output only one complete ASCII .sage source file. No Markdown fences or prose outside the source.
+  text: |-
+    Create a SageMath edge-case script for numerically evaluating (1-cos(x))/x^2 near x=0. Compare direct floating evaluation to the stable limit-aware series value 1/2 - x^2/24 + x^4/720, compute errors for selected small x values, assert the exact limit, and save a log-scale error plot.
+
+    Requirements: keep exact symbolic limit computation separate from numeric RDF or RealField evaluations, write a CSV or plain text table, include units for dimensionless x and relative error, handle x=0 without division by zero, and include accessibility alt-text comments for the plot.
+  provider_options:
+    temperature: 0.2
+    max_tokens: 8192
+output:
+  text_format: sage
+  artifact_kind: sagemath-script
+  formats:
+  - format: sage
+  - format: csv
+  - format: svg
+  - format: png
+evaluation:
+  checklist:
+  - "YAML parses and required schema 0.4 fields are present."
+  - "Sage source is complete, ASCII-only, and separates exact symbolic work from numeric evaluation."
+  - "Math correctness covers limit 1/2, series approximation, error computation, and zero handling."
+  - "Notation validity covers Sage syntax, table headers, labels, units, and alt-text comments."
+  - "Renderability covers sage execution, CSV or text output, saved log-scale plot, and no interactive viewer dependence."
+  - "Labels and units identify x, direct value, stable value, relative error, limit, and numeric precision."
+  - "Domain edge cases cover x=0, tiny x cancellation, precision selection, invalid values, and accessibility metadata."
+  rubric:
+  - name: Format validity
+    weight: 30
+    criteria:
+    - "Output is one complete ASCII .sage file with no Markdown wrapper."
+    - "The script runs in Sage and writes deterministic data plus plot outputs."
+    - "The source uses valid Sage exact and numeric APIs."
+  - name: Semantic completeness
+    weight: 30
+    criteria:
+    - "Exact limit, stable series, direct values, error table, log plot, and alt-text comments are all present."
+    - "SageMath is used for exact proof and numeric comparison."
+    - "Numeric-stability conclusions are correct."
+  - name: Visual/structural quality
+    weight: 25
+    criteria:
+    - "The error plot and table are readable and correctly labeled."
+    - "The script output explains the stability result clearly."
+    - "Accessibility comments accurately summarize the plot."
+  - name: Robustness
+    weight: 15
+    criteria:
+    - "Handles x=0, tiny magnitudes, precision choices, and cancellation."
+    - "Uses deterministic samples and output filenames."
+    - "Documents runtime, export, and numeric limitations."
+  pass_conditions:
+  - "Rubric weights are exactly Format validity 30, Semantic completeness 30, Visual/structural quality 25, Robustness 15."
+  - "Score is 80 or higher out of 100 with no critical failure in math correctness, notation validity, renderability, or accessibility."
+  - "The artifact safely evaluates the near-zero expression and exports labeled data and plots."
+  - "Domain edge cases and accessibility output are explicit."
+tags:
+- fim
+- math-and-scientific-rendering
+- sagemath
+- edge-integration-stability-accessibility
+- numeric-stability
+- exact-limit

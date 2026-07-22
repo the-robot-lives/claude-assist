@@ -1,0 +1,57 @@
+@startuml
+' ============================================================================
+' METADATA
+'   author:       TheRobotDrafts Examples
+'   description:  Variant showing the same package tree labeled as SysML blocks vs generic UML, demonstrating identical projection.
+'   usecase:      Note that SysML package reuses UML package notation; the projection is identical, only element stereotypes differ.
+'   complexity:   simple
+'   domain:       methodology
+' ============================================================================
+title Example Package - SysML vs UML Package
+
+package "SysML-labeled tree" {
+  package "SysModel" {
+    package "Blocks" {
+      class "Sensor" <<block>> { }
+      class "Controller" <<block>> { }
+    }
+    package "ValueTypes" {
+      class "Voltage" <<valueType>> { }
+    }
+    package "Requirements" {
+      class "R1" <<requirement>> { }
+    }
+  }
+  "SysModel".Blocks ..> "SysModel".ValueTypes : <<import>>
+  "SysModel".Requirements ..> "SysModel".Blocks : dependency
+}
+
+package "UML-labeled tree (same shape)" {
+  package "UmlModel" {
+    package "Classes" {
+      class "SensorUML" as "Sensor" { }
+      class "ControllerUML" as "Controller" { }
+    }
+    package "DataTypes" {
+      class "VoltageUML" as "Voltage" { }
+    }
+    package "Constraints" {
+      class "R1UML" as "R1" { }
+    }
+  }
+  "UmlModel".Classes ..> "UmlModel".DataTypes : <<import>>
+  "UmlModel".Constraints ..> "UmlModel".Classes : dependency
+}
+
+note bottom of "SysModel"
+  SysML PACKAGE reuses UML package notation exactly:
+  the folder/tab glyph, nesting, «import»/«access»
+  stereotypes, and dependency arrows are identical.
+  The ONLY difference is the CONTENTS — SysML
+  packages hold «block», «valueType», «requirement»
+  elements; UML packages hold generic classes,
+  data types, and constraints. The projection
+  (layout + relationships) is the same.
+end note
+
+@enduml

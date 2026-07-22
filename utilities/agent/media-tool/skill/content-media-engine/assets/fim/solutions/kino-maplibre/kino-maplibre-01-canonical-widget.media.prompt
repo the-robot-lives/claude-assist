@@ -1,0 +1,68 @@
+schema: "0.4"
+id: fim-notebook-livebook-and-widgets-kino-maplibre-01-canonical-widget
+type: visualization
+quality: high
+solution: kino-maplibre
+category: notebook-livebook-and-widgets
+variant: canonical-widget
+prompt:
+  system: |-
+    You are a senior Elixir Livebook geospatial engineer. Output only one complete ASCII Elixir Livebook code cell for Kino.MapLibre. No Markdown fences, no prose outside code. Use deterministic local GeoJSON when no input data is supplied.
+  text: |-
+    Create a canonical Kino.MapLibre Livebook map cell. Install kino_maplibre and kino, alias MapLibre as Ml, build a deterministic local GeoJSON FeatureCollection of points and one line or polygon, create a MapLibre spec with Ml.new/1, add_source before add_layer, style a circle or line layer, wrap it with Kino.MapLibre.new/1 only if dynamic map mutation is needed, and add navigation controls or markers through Kino.MapLibre functions.
+
+    Requirements: document Livebook/Kino compatibility and that this is not a Jupyter ipywidgets map; state that coordinates are {longitude, latitude}; describe GeoJSON data shape and required properties; include accessibility companion text or table for map content; include fallback demo style or clear tile-server warning; and include safe execution checks that avoid API keys, remote data by default, eval, shell calls, credentials, and unbounded inline GeoJSON.
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.2
+    top_p: 0.9
+output:
+  text_format: elixir
+  artifact_kind: livebook-kino-maplibre-cell
+  formats:
+  - format: exs
+evaluation:
+  checklist:
+  - "Import check: generated code installs kino_maplibre and kino, aliases MapLibre as Ml, and uses MapLibre plus Kino.MapLibre APIs."
+  - "Notebook compatibility: comments identify Livebook/Kino runtime and distinguish it from Jupyter widgets."
+  - "Reactive state: dynamic functions are called only on a Kino.MapLibre widget, not on a bare MapLibre spec."
+  - "Data shape: GeoJSON FeatureCollection coordinates, properties, layer ids, and {longitude, latitude} ordering are documented."
+  - "Accessibility and fallback: map has readable labels or companion text/table, clear fallback style notes, and non-map access to key data."
+  - "Safe execution: no embedded API keys, remote data by default, eval, shell commands, credentials, or oversized inline GeoJSON."
+  rubric:
+  - name: Format validity
+    weight: 30
+    criteria:
+    - "Output is one complete ASCII Elixir Livebook code cell with no Markdown fences or explanatory wrapper."
+    - "The code is valid Elixir and adds sources before layers."
+    - "The cell uses supported Kino.MapLibre and MapLibre DSL functions."
+  - name: Semantic completeness
+    weight: 30
+    criteria:
+    - "Implements a canonical interactive map with deterministic GeoJSON, styling, controls, and optional dynamic wrapper."
+    - "Uses solution-specific details including lng/lat order, layer paint properties, and fallback style behavior."
+    - "Includes notebook/livebook compatibility, reactive state, data shape, accessibility, fallback, and safe execution checks."
+  - name: UX/structural quality
+    weight: 25
+    criteria:
+    - "Map center, zoom, labels, and layer styling make the data easy to inspect."
+    - "The visual design includes readable colors, sufficient contrast, and companion non-visual context."
+    - "Controls and fallback status are understandable in a notebook cell."
+  - name: Robustness
+    weight: 15
+    criteria:
+    - "Handles missing features, invalid coordinates, empty GeoJSON, and style/tile failures gracefully."
+    - "Keeps inline data bounded and deterministic."
+    - "Documents when to host large GeoJSON or use vector tiles instead of inline payloads."
+  pass_conditions:
+  - "All required YAML fields are present and the generated artifact is one valid ASCII Elixir Livebook cell."
+  - "Rubric weights are exactly Format validity 30, Semantic completeness 30, UX/structural quality 25, Robustness 15."
+  - "The prompt requires notebook/livebook compatibility, reactive state, data shape, accessibility, fallback, and safe execution checks."
+  - "The solution remains Kino.MapLibre-centered and preserves MapLibre source/layer semantics."
+tags:
+- fim
+- notebook-livebook-and-widgets
+- livebook
+- kino-maplibre
+- canonical-widget
+

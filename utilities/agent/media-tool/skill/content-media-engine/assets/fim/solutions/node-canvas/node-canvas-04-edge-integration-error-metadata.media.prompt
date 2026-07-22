@@ -1,0 +1,81 @@
+schema: "0.4"
+id: node-canvas-04-edge-integration-error-metadata
+type: image/visualization/data
+quality: high
+solution: node-canvas
+category: image-and-video-processing
+variant: edge-integration-error-metadata
+references:
+  - "references/fim/overview/electronics-media-docfile/node-canvas.md"
+  - "references/fim/solution/node-canvas.md"
+prompt:
+  system: |-
+    You generate node-canvas image-generation artifacts. Output only one complete ASCII JavaScript module. Do not use markdown fences or explanatory prose.
+  text: |-
+    Create a node-canvas integration wrapper focused on edge cases, errors, metadata, and deterministic diagnostics.
+
+    Requirements:
+    - Provide createCanvasRenderer(options) that validates native dependency assumptions, font paths, output surface type, dimensions, alpha policy, and file format before drawing.
+    - Handle createCanvas(width, height), createCanvas(width, height, "pdf"), createCanvas(width, height, "svg"), loadImage(), registerFont(), toBuffer(), createPNGStream(), and createJPEGStream().
+    - Cover output dimensions 320x180, 640x360, 1200x630, and PDF Letter 612x792 points with deterministic validation messages.
+    - Specify srgb canvas assumptions, alpha preserved for PNG/SVG, alpha flattened for JPEG, vector surface behavior for PDF/SVG, and no ICC metadata guarantee.
+    - Support input formats PNG, JPEG, GIF, SVG, Buffer, and data URI, with explicit errors for missing librsvg, missing fonts, failed image decoding, and unsupported output MIME types.
+    - Include memory and performance controls: max canvas area, stream backpressure, byte-size checks, asset cache bounds, font registration idempotence, and cleanup of writable streams.
+    - Emit diagnostics JSON with stable error codes, canvas dimensions, surface type, source hashes, font status, alpha policy, output formats, byte sizes, stream status, timings, and warnings.
+    - Include deterministic output checks for validation order, error code strings, font fallback order, metadata key order, and output filenames.
+    - Output only the final JavaScript artifact.
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.2
+output:
+  text_format: javascript
+  artifact_kind: node-canvas-edge-integration-diagnostics
+  dimensions:
+    width: 1200
+    height: 630
+  color_profile: srgb-canvas-assumed
+  alpha: png-svg-preserved-jpeg-flattened
+  formats:
+    - format: js
+    - format: png
+    - format: jpg
+    - format: svg
+    - format: pdf
+    - format: json
+evaluation:
+  checklist:
+    - "Format validity: YAML parses as schema 0.4, generated output is one JavaScript module, and node-canvas APIs are used."
+    - "Semantic completeness: renderer creation, validation, raster/vector surfaces, fonts, image loading, streams, diagnostics, and errors are present."
+    - "Dimensions: 320x180, 640x360, 1200x630, and PDF Letter 612x792 point presets are validated deterministically."
+    - "Color profile and alpha: srgb canvas assumptions, PNG/SVG alpha preservation, JPEG flattening, PDF/SVG vector behavior, and ICC limits are explicit."
+    - "File formats: PNG, JPEG, GIF, SVG, Buffer, data URI, PDF, stream, and JSON handling is represented."
+    - "Memory and performance: canvas area caps, stream backpressure, byte checks, cache bounds, font idempotence, and stream cleanup are covered."
+    - "Metadata: diagnostics JSON records error codes, dimensions, surface type, hashes, font status, alpha policy, formats, sizes, stream status, timings, and warnings."
+    - "Deterministic output: validation order, error codes, font fallback order, metadata keys, and filenames are stable."
+  rubric:
+    - name: "Format validity"
+      weight: 30
+      criteria: "The prompt YAML and generated JavaScript are parseable, ASCII-only, and use node-canvas without browser-only APIs."
+    - name: "Semantic completeness"
+      weight: 30
+      criteria: "The artifact covers integration validation, raster/vector export, fonts, image decoding, stream handling, metadata, and deterministic errors."
+    - name: "Output quality"
+      weight: 25
+      criteria: "The generated outputs and diagnostics are correctly bounded, format-correct, and practical for server integration."
+    - name: "Robustness"
+      weight: 15
+      criteria: "The artifact handles native dependency gaps, missing fonts, decode failures, unsupported formats, stream errors, memory pressure, and deterministic reruns."
+  pass_conditions:
+    - "YAML parses successfully and all file text is ASCII-only."
+    - "Rubric weights are exactly Format validity 30, Semantic completeness 30, Output quality 25, and Robustness 15."
+    - "Generated JavaScript contains no markdown fences and uses node-canvas rather than a headless browser."
+    - "All dimensions, color profile/alpha, file format, memory/performance, metadata, and deterministic output checks are represented."
+    - "Rubric score is at least 80 out of 100 and no required checklist item is absent."
+tags:
+  - fim
+  - image-and-video-processing
+  - node-canvas
+  - edge-integration-error-metadata
+  - diagnostics
+  - native-dependencies
+  - cairo

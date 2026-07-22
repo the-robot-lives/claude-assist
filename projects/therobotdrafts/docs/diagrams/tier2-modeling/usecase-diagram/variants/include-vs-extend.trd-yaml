@@ -1,0 +1,24 @@
+# .trd-yaml — TheRobotDrafts native model (IxModel serialization)
+name: Example Use Case Diagram Variant - Include vs Extend
+elements:
+  - { id: custA, type: Actor, name: Customer }
+  - { id: custB, type: Actor, name: Customer }
+  - { id: inc, type: Package, name: «include» variant }
+  - { id: incCheckout, type: UseCase, name: Checkout, parentId: inc }
+  - { id: incPay, type: UseCase, name: Pay, parentId: inc }
+  - { id: ext, type: Package, name: «extend» variant }
+  - { id: extCheckout, type: UseCase, name: Checkout, parentId: ext }
+  - { id: extDiscount, type: UseCase, name: Apply Discount, parentId: ext }
+  - { id: ~note1, type: Note, name: '<b>«include» — MANDATORY</b>', documentation: '<b>«include» — MANDATORY</b>\nBase: Checkout\nTarget: Pay\nCheckout ALWAYS invokes Pay.\nUse to factor out shared, required\nbehaviour.  The BASE owns the flow.' }
+  - { id: ~note2, type: Note, name: '<b>«extend» — OPTIONAL</b>', documentation: '<b>«extend» — OPTIONAL</b>\nBase: Checkout\nExtension: Apply Discount\nCondition: { code entered }.\nThe base is COMPLETE without it; the\nextension ADDS behaviour only when its\ncondition is true.  The EXTENSION\nowns the trigger.' }
+  - { id: ~note3, type: Note, name: '<b>Semantic difference</b>', documentation: '<b>Semantic difference</b>\n«include»: the base use case REQUIRES the target — arrow leaves the base.\n«extend»:  the target use case ENRICHES the base — arrow leaves the target.\nSame glyph family (dashed), opposite direction & intent.  Mixing them up\nis the single most common use-case modelling error.' }
+edges:
+  - { id: e1, type: DirectedAssociation, from: custA, to: incCheckout }
+  - { id: e2, type: Include, from: incCheckout, to: incPay }
+  - { id: e3, type: DirectedAssociation, from: custB, to: extCheckout }
+  - { id: e4, type: Extend, from: extDiscount, to: extCheckout }
+  - { id: e5, type: NoteLink, from: ~note1, to: incPay }
+  - { id: e6, type: NoteLink, from: ~note2, to: extDiscount }
+  - { id: e7, type: NoteLink, from: ~note3, to: extCheckout }
+diagrams:
+  - { id: d1, name: Example Use Case Diagram Variant - Include vs Extend, kind: usecase, layoutProvenance: Synthesized }

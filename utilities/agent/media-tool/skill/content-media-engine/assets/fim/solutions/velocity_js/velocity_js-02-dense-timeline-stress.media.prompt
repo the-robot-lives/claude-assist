@@ -1,0 +1,73 @@
+schema: "0.4"
+id: velocity_js-02-dense-timeline-stress
+type: interactive
+quality: high
+solution: velocity_js
+category: animation-and-motion
+variant: dense-timeline-stress
+references:
+  - "references/fim/overview/canvas-svg-creative-animation/velocity_js.md"
+  - "references/fim/solution/velocity_js.md"
+prompt:
+  system: |-
+    Generate production-quality Velocity.js dense animation assets for FIM evaluation. Output only a complete self-contained HTML document with inline CSS and JavaScript.
+  text: |-
+    Create a dense Velocity.js sequence stress scene for queues, stagger, SVG animation, and cleanup.
+
+    Scenario:
+    Build a notification operations board with at least 80 DOM rows, 10 badges, and 6 SVG paths. Animate entrance, filtering, attention, and exit transitions using Velocity chains, stagger, queues, and parallel queue:false animations. Include diagnostics for target count, active sequence, queue mode, loop state, and reduced-motion state.
+
+    Implementation requirements:
+    - Use velocity-animate 2.0.6 from a CDN or equivalent import with standalone Velocity() calls and promise chains or complete callbacks.
+    - Validate all DOM and SVG targets before animation and report missing target groups without crashing.
+    - Specify millisecond durations, easing names or spring/bezier arrays, stagger, delay, queue names, queue:false parallel sections, loop or repeat bounds, and stop/finish controls.
+    - Use transform, opacity, color, and SVG strokeDashoffset animations; avoid width, height, top, left, and margin during playback.
+    - Include controls for play sequence, pause, resume, stop, finish, reverse, reduced motion, and rebuild.
+    - Keep dense rows, badges, SVG paths, diagnostics, and controls in stable responsive regions with no overlap.
+    - Include cleanup that stops current animations and resets inline state before rebuild.
+    - Output only the final artifact, with no markdown fences or explanatory prose outside the artifact.
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.2
+output:
+  text_format: html
+  artifact_kind: velocityjs-html-dense-timeline-stress
+  formats:
+    - format: html
+  dimensions:
+    width: 1440
+    height: 900
+  render_expectation: "Dense Velocity.js sequence that remains responsive through queue changes, stop, finish, reduced motion, and rebuild."
+evaluation:
+  checklist:
+    - "Format validity: YAML parses under schema 0.4 and generated output is exactly one HTML artifact with no markdown fences."
+    - "Velocity.js API: Uses standalone Velocity() calls, promise chains or callbacks, stagger, queues, queue:false, and valid targets."
+    - "Motion timing: Specifies millisecond durations, easing, stagger, delay, queue names, loop or repeat bounds, and stop/finish controls."
+    - "Visual quality: Dense rows, badges, SVG paths, controls, and diagnostics stay readable and non-overlapping."
+    - "Reduced motion: Provides a static dense final state and disables loops and attention pulses."
+    - "Performance: Avoids layout-thrashing properties, bounds queue work, stops animations, and resets before rebuild."
+  rubric:
+    - name: "Format validity"
+      weight: 30
+      criteria: "YAML and generated HTML are syntactically valid, required fields are present, id and file name match, and the artifact uses Velocity.js rather than a substitute animation library."
+    - name: "Semantic completeness"
+      weight: 30
+      criteria: "The artifact includes dense targets, Velocity chains, stagger, queues, SVG animation, diagnostics, controls, reduced motion, target validation, and cleanup."
+    - name: "Motion/visual quality"
+      weight: 25
+      criteria: "Dense motion remains clear, eased, and readable; animated rows, badges, labels, and controls do not overlap."
+    - name: "Robustness"
+      weight: 15
+      criteria: "Handles missing targets, reduced motion, stop/finish, rebuild, responsive layout, and performance pressure without runtime errors."
+  pass_conditions:
+    - "Rubric weights are exactly 30, 30, 25, and 15 for a total of 100."
+    - "YAML parses successfully and all prompt text is ASCII-only."
+    - "Generated artifact runs with no console errors when Velocity.js is available."
+    - "Score is at least 80 out of 100 with no zero score in any rubric dimension."
+tags:
+  - "fim"
+  - "animation-and-motion"
+  - "velocity_js"
+  - "dense-timeline-stress"
+  - "queue"
+  - "performance"

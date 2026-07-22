@@ -412,6 +412,14 @@ namespace TheRobotDraft.Uml
             ElementKind.Cloud => UmlShape.Cloud,
             ElementKind.WhiteboardCircle => UmlShape.Ellipse,
             ElementKind.WhiteboardDiamond => UmlShape.Diamond,
+            // Whiteboard primitives — 2-D flat-view reuses the closest existing silhouette.
+            ElementKind.WhiteboardTriangle => UmlShape.Diamond,
+            ElementKind.WhiteboardRectangle => UmlShape.RoundedRect,
+            ElementKind.WhiteboardCube => UmlShape.Cube,
+            ElementKind.WhiteboardSphere => UmlShape.Ellipse,
+            ElementKind.WhiteboardCylinder => UmlShape.Ellipse,
+            ElementKind.WhiteboardDecahedron => UmlShape.Diamond,
+            ElementKind.WhiteboardBlob => UmlShape.Ellipse,
             _ => UmlShape.Actor,
         };
 
@@ -450,6 +458,13 @@ namespace TheRobotDraft.Uml
                 ElementKind.Cloud => new Vector2(176f, 104f),
                 ElementKind.WhiteboardCircle => new Vector2(132f, 90f),
                 ElementKind.WhiteboardDiamond => new Vector2(116f, 82f),
+                ElementKind.WhiteboardTriangle => new Vector2(120f, 104f),
+                ElementKind.WhiteboardRectangle => new Vector2(132f, 84f),
+                ElementKind.WhiteboardCube => new Vector2(110f, 110f),
+                ElementKind.WhiteboardSphere => new Vector2(108f, 108f),
+                ElementKind.WhiteboardCylinder => new Vector2(100f, 120f),
+                ElementKind.WhiteboardDecahedron => new Vector2(108f, 108f),
+                ElementKind.WhiteboardBlob => new Vector2(116f, 104f),
                 _ => new Vector2(120f, 60f),
             };
             float w = sizeOverride.x > 1f ? sizeOverride.x : def.x;

@@ -1,0 +1,74 @@
+---
+schema: "0.4"
+id: fim-math-and-scientific-rendering-katex-04-edge-integration-stability-accessibility
+type: document
+quality: high
+solution: katex
+category: math-and-scientific-rendering
+variant: edge-integration-stability-accessibility
+references:
+- references/fim/overview/geospatial-math-scientific/katex.md
+- references/fim/solution/katex.md
+prompt:
+  system: |-
+    You are a senior web math security and accessibility engineer. Output only one complete ASCII HTML file using KaTeX. No Markdown fences or prose outside the source.
+  text: |-
+    Create a KaTeX integration harness that safely renders a list of user-supplied math snippets, including one valid equation, one aligned derivation, one unsupported command, and one intentionally unsafe href-like input. Show rendered output, plain-text fallback, and per-item status without breaking the page.
+
+    Requirements: use throwOnError false, trust false, maxExpand, strict handling, output htmlAndMathml, escaped text insertion for raw input, accessible status messages, and comments explaining macro-expansion and trust risks. Include labels for notation validity and renderability.
+  provider_options:
+    temperature: 0.2
+    max_tokens: 8192
+output:
+  text_format: html
+  artifact_kind: katex-html-document
+  formats:
+  - format: html
+  - format: mathml
+  - format: png
+evaluation:
+  checklist:
+  - "YAML parses and required schema 0.4 fields are present."
+  - "HTML is complete, ASCII-only, and uses KaTeX safe rendering options."
+  - "Math correctness covers valid examples, aligned derivation meaning, and fallback status for invalid examples."
+  - "Notation validity covers supported TeX, unsupported command reporting, macro limits, and unsafe input handling."
+  - "Renderability covers per-item output, nonblank fallback, CSS dependency, and no page-level crash."
+  - "Labels and units identify snippet state, notation validity, render status, accessibility fallback, and security notes."
+  - "Domain edge cases cover invalid TeX, macro expansion, unsafe trust input, missing CSS, and screen-reader MathML output."
+  rubric:
+  - name: Format validity
+    weight: 30
+    criteria:
+    - "Output is one complete ASCII HTML file with no Markdown wrapper."
+    - "The file uses valid KaTeX API calls and safe DOM insertion."
+    - "The source documents dependency, fallback, and local run expectations."
+  - name: Semantic completeness
+    weight: 30
+    criteria:
+    - "Valid, aligned, unsupported, and unsafe examples plus statuses and fallbacks are all present."
+    - "KaTeX is the primary renderer and MathML accessibility output is requested."
+    - "Security and notation limits are accurately described."
+  - name: Visual/structural quality
+    weight: 25
+    criteria:
+    - "The harness clearly separates input, output, status, and fallback."
+    - "Status indicators use text and shape, not color alone."
+    - "Long equations wrap without overlapping controls."
+  - name: Robustness
+    weight: 15
+    criteria:
+    - "Handles invalid TeX, missing targets, unsafe input, and macro limits without crashing."
+    - "Uses trust false and bounded expansion consistently."
+    - "Documents accessibility and security tradeoffs."
+  pass_conditions:
+  - "Rubric weights are exactly Format validity 30, Semantic completeness 30, Visual/structural quality 25, Robustness 15."
+  - "Score is 80 or higher out of 100 with no critical failure in notation validity, renderability, safety, or accessibility."
+  - "The artifact safely renders mixed-quality KaTeX snippets with explicit statuses."
+  - "Domain edge cases and integration risks are represented."
+tags:
+- fim
+- math-and-scientific-rendering
+- katex
+- edge-integration-stability-accessibility
+- safe-rendering
+- mathml

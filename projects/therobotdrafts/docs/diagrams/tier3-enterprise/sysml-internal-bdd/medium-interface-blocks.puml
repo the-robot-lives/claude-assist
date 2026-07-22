@@ -1,0 +1,94 @@
+@startuml
+' ============================================================================
+' METADATA
+'   author:       TheRobotDrafts Examples
+'   description:  Four interconnected blocks demonstrating proxy ports,
+'                 full ports, flow ports, an interface block typing several
+'                 ports, and flow properties with direction.
+'   usecase:      Teach port kinds (proxy/full/flow), interface blocks,
+'                 and flow-property direction (in/out/inout).
+'   complexity:   medium
+'   domain:       sysml internal block definition / interface blocks
+' ============================================================================
+title Example Internal BDD - Interface Blocks & Port Kinds
+
+' ---------------------------------------------------------------------------
+' Mapping note
+'   - block              -> class <<block>>
+'   - interface block    -> class <<interfaceBlock>> (types one or more ports)
+'   - proxy port         -> port drawn on boundary, provides the interface
+'                           block's features by delegation to an inner part
+'   - full port          -> port owned by the block (part-typed), owns behavior
+'   - flow port          -> port carrying a typed item flow
+'   - flow property      -> property with direction in / out / inout inside
+'                           the interface block; shown in its body
+'   - connector          -> --> edge; the label names the item flow type and
+'                           the flow properties conveyed
+' An INTERNAL-BDD shows the internals of multiple block definitions at once
+' and the item flows that cross between them. This is more abstract than a
+' single-block IBD (which zooms into ONE block's interior).
+' ---------------------------------------------------------------------------
+note over "SourceBlock", "IProcessor"
+  Proxy ports (drawn open) provide IProcessor
+  features by delegation. Full ports (solid)
+  own their behavior. Flow ports (()) carry
+  typed item flows. The interface block
+  IProcessor types several ports at once and
+  declares flow properties with direction.
+end note
+
+' Interface block typing the proxy ports of SourceBlock and SinkBlock and
+' the flow port between ProcessorBlock and CoolerBlock.
+class "IProcessor" <<interfaceBlock>> {
+  +fluidIn : FluidFlow { direction = in }
+  +fluidOut : FluidFlow { direction = out }
+  +control : ControlSignal { direction = inout }
+}
+
+class "SourceBlock" <<block>> {
+  +outProxy : IProcessor   '<<proxy>>
+  +emitter : FluidStore
+}
+
+class "ProcessorBlock" <<block>> {
+  +inProxy : IProcessor    '<<proxy>>
+  +inFlow : FluidPort      '<<flow>>
+  +outFlow : FluidPort     '<<flow>>
+  +controller : FullController '<<full>>
+  part core : CoreUnit
+}
+
+class "CoolerBlock" <<block>> {
+  +inFlow : FluidPort      '<<flow>>
+  +sinkProxy : IProcessor  '<<proxy>>
+  part radiator : Radiator
+}
+
+' Proxy-to-proxy delegation through the interface block.
+' The item flow on the connector is typed by FluidFlow and carries the
+' flow properties declared in IProcessor.
+"SourceBlock" -->[color=#darkgreen] "ProcessorBlock" : <inProxy.out> FluidFlow { rate, temperature }
+
+' Flow-port to flow-port connector inside the multi-block internal view.
+"ProcessorBlock" -(#darkblue)->[color=#darkblue] "CoolerBlock" : FluidFlow { rate, temperature }
+
+' Control-signal flow property is bidirectional (inout).
+"SourceBlock" <.[color=orange].> "ProcessorBlock" : ControlSignal { command, ack }
+
+note right of "IProcessor"
+  INTERFACE BLOCK types multiple ports
+  across block boundaries.
+  Flow properties declare direction:
+    in   = received
+    out  = sent
+    inout = bidirectional
+end note
+
+note bottom of "ProcessorBlock"
+  ProcessorBlock.controller is a FULL PORT
+  (part-typed, owns behavior). inProxy is a
+  PROXY PORT delegating to core. inFlow and
+  outFlow are FLOW PORTS carrying FluidFlow.
+end note
+
+@enduml

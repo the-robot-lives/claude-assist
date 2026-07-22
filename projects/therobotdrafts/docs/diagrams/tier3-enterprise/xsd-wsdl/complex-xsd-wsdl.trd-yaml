@@ -1,0 +1,43 @@
+# .trd-yaml — TheRobotDrafts native model (IxModel serialization)
+name: Example XSD/WSDL - Complex Schema + Service Contract
+elements:
+  - { id: TOP, type: Class, name: TOP, members: [{ name: XSD schema types, isOperation: true, visibility: Public, params: [{ name: 12+ }], rawText: XSD schema types (12+) in a target namespace. }] }
+  - { id: NS_ORD, type: Package, name: 'orders.xsd (ns: ord)' }
+  - { id: Order, type: Class, name: Order\n, parentId: NS_ORD, stereotype: complexType, members: [{ name: id, isOperation: false, visibility: Public, type: string, rawText: '+ id: string' }, { name: placedAt, isOperation: false, visibility: Public, type: dateTime, rawText: '+ placedAt: dateTime' }, { name: status, isOperation: false, visibility: Public, type: OrderStatus, rawText: '+ status: OrderStatus' }] }
+  - { id: OrderItem, type: Class, name: OrderItem\n, parentId: NS_ORD, stereotype: complexType, members: [{ name: sku, isOperation: false, visibility: Public, type: string, rawText: '+ sku: string' }, { name: qty, isOperation: false, visibility: Public, type: int, rawText: '+ qty: int' }] }
+  - { id: Customer, type: Class, name: Customer\n, parentId: NS_ORD, stereotype: complexType, members: [{ name: id, isOperation: false, visibility: Public, type: string, rawText: '+ id: string' }, { name: email, isOperation: false, visibility: Public, type: string, rawText: '+ email: string' }] }
+  - { id: Address, type: Class, name: Address\n, parentId: NS_ORD, stereotype: complexType, members: [{ name: street, isOperation: false, visibility: Public, type: string, rawText: '+ street: string' }, { name: city, isOperation: false, visibility: Public, type: string, rawText: '+ city: string' }] }
+  - { id: Money, type: Class, name: Money\n, parentId: NS_ORD, stereotype: complexType, members: [{ name: amount, isOperation: false, visibility: Public, type: decimal, rawText: '+ amount: decimal' }, { name: currency, isOperation: false, visibility: Public, type: string, rawText: '+ currency: string' }] }
+  - { id: OrderStatus, type: Class, name: OrderStatus\n, parentId: NS_ORD, stereotype: simpleType enum, members: [{ name: PENDING, isOperation: false, visibility: Public, rawText: + PENDING }, { name: SHIPPED, isOperation: false, visibility: Public, rawText: + SHIPPED }, { name: DELIVERED, isOperation: false, visibility: Public, rawText: + DELIVERED }] }
+  - { id: CreateOrderReq, type: Class, name: CreateOrderRequest\n, parentId: NS_ORD, stereotype: complexType, members: [{ name: customerRef, isOperation: false, visibility: Public, type: string, rawText: '+ customerRef: string' }] }
+  - { id: CreateOrderRes, type: Class, name: CreateOrderResponse\n, parentId: NS_ORD, stereotype: complexType, members: [{ name: orderId, isOperation: false, visibility: Public, type: string, rawText: '+ orderId: string' }] }
+  - { id: GetOrderReq, type: Class, name: GetOrderRequest\n, parentId: NS_ORD, stereotype: complexType, members: [{ name: orderId, isOperation: false, visibility: Public, type: string, rawText: '+ orderId: string' }] }
+  - { id: CancelOrderReq, type: Class, name: CancelOrderRequest\n, parentId: NS_ORD, stereotype: complexType, members: [{ name: orderId, isOperation: false, visibility: Public, type: string, rawText: '+ orderId: string' }] }
+  - { id: Fault, type: Class, name: Fault\n, parentId: NS_ORD, stereotype: complexType, members: [{ name: code, isOperation: false, visibility: Public, type: string, rawText: '+ code: string' }, { name: message, isOperation: false, visibility: Public, type: string, rawText: '+ message: string' }] }
+  - { id: Shipment, type: Class, name: Shipment\n, parentId: NS_ORD, stereotype: complexType, members: [{ name: carrier, isOperation: false, visibility: Public, type: string, rawText: '+ carrier: string' }, { name: trackingNo, isOperation: false, visibility: Public, type: string, rawText: '+ trackingNo: string' }] }
+  - { id: PORT, type: Package, name: OrderService (portType) }
+  - { id: OP_CREATE, type: Class, name: createOrder\n, parentId: PORT, stereotype: operation }
+  - { id: OP_GET, type: Class, name: getOrder\n, parentId: PORT, stereotype: operation }
+  - { id: OP_CANCEL, type: Class, name: cancelOrder\n, parentId: PORT, stereotype: operation }
+  - { id: BIND, type: Boundary, name: 'binding: OrderServiceSOAP\n(transport: HTTP, style: document/literal)' }
+  - { id: SVC, type: Boundary, name: 'service: OrderServiceService\nendpoint: https://api.example.com/orders' }
+edges:
+  - { id: e1, type: Composition, from: Order, to: OrderItem, label: '"items"' }
+  - { id: e2, type: DirectedAssociation, from: Order, to: Customer, label: '"ref"' }
+  - { id: e3, type: DirectedAssociation, from: Order, to: OrderStatus, label: '"status"' }
+  - { id: e4, type: Composition, from: OrderItem, to: Money, label: '"price"' }
+  - { id: e5, type: DirectedAssociation, from: Order, to: Address, label: '"shipping address"' }
+  - { id: e6, type: DirectedAssociation, from: Shipment, to: Order, label: '"fulfills"' }
+  - { id: e7, type: Dependency, from: CreateOrderReq, to: OP_CREATE, label: '"input message"' }
+  - { id: e8, type: Dependency, from: OP_CREATE, to: CreateOrderRes, label: '"output message"' }
+  - { id: e9, type: Dependency, from: OP_CREATE, to: Fault, label: '"fault message"' }
+  - { id: e10, type: Dependency, from: GetOrderReq, to: OP_GET, label: '"input message"' }
+  - { id: e11, type: Dependency, from: OP_GET, to: Order, label: '"output message"' }
+  - { id: e12, type: Dependency, from: OP_GET, to: Fault, label: '"fault message"' }
+  - { id: e13, type: Dependency, from: CancelOrderReq, to: OP_CANCEL, label: '"input message"' }
+  - { id: e14, type: Dependency, from: OP_CANCEL, to: CreateOrderRes, label: '"output message"' }
+  - { id: e15, type: Dependency, from: OP_CANCEL, to: Fault, label: '"fault message"' }
+  - { id: e16, type: DirectedAssociation, from: PORT, to: BIND, label: '"wsdl:binding"' }
+  - { id: e17, type: DirectedAssociation, from: BIND, to: SVC, label: '"wsdl:service / port"' }
+diagrams:
+  - { id: d1, name: Example XSD/WSDL - Complex Schema + Service Contract, kind: class, layoutProvenance: Synthesized }

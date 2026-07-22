@@ -1,0 +1,27 @@
+@startuml
+' ============================================================================
+' METADATA
+'   author:       TheRobotDrafts Examples
+'   description:  Strategy layer basics — capabilities, resource, outcome.
+'   usecase:      Teaching capability, resource, course of action, outcome.
+'   complexity:   simple
+'   domain:       enterprise-architecture / strategy
+' ============================================================================
+title Example ArchiMate Strategy - Simple Capability
+
+note "ArchiMate color/layer map:\nStrategy = light (##E8F5E9)\nOutcome   = light blue" as Legend
+
+' --- Strategy layer (light green = strategy) ---
+rectangle "<<capability>>\nCustomer\nOnboarding" as C1 #E8F5E9
+rectangle "<<capability>>\nFraud\nDetection" as C2 #E8F5E9
+rectangle "<<resource>>\nCustomer Data\nPlatform" as R1 #F5F5F5
+rectangle "<<course of action>>\nDigitize\nOnboarding" as CA1 #FFF9C4
+rectangle "<<outcome>>\nFaster\nActivation" as O1 #E3F2FD
+
+C1 -[#444]-> CA1 : <<realization>>
+CA1 -[#444]-> O1 : <<realization>>
+R1 -[#444]-> C1 : <<association>>
+R1 -[#444]-> C2 : <<association>>
+C2 .[#888].> O1 : <<influence +>>
+
+@enduml

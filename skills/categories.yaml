@@ -1,0 +1,115 @@
+# Skill category index for monorepo skills/
+# Mirrors skills/README.md groupings. Directory names are canonical.
+# catalog.yaml references these via each skill's `category` field.
+version: 1
+
+categories:
+  passive-income:
+    title: Passive Income & Strategy
+    description: Choose streams, validate niches, ship monetization products
+    flow:
+      - trl-monetization-strategy
+      - trl-market-intelligence
+      - trl-ai-templates
+      - trl-content-publishing
+      - trl-print-on-demand
+      - trl-conversion-engineer
+    skills:
+      - trl-monetization-strategy
+      - trl-market-intelligence
+      - trl-conversion-engineer
+      - trl-ai-templates
+      - trl-content-publishing
+      - trl-print-on-demand
+      - trl-marketing
+
+  knowledge:
+    title: Knowledge Management & Learning
+    description: Research, curricula, and digests
+    flow:
+      - trl-kb-research
+      - trl-kb-curriculum
+      - trl-kb-digest
+    skills:
+      - trl-kb
+      - trl-kb-research
+      - trl-kb-curriculum
+      - trl-kb-digest
+
+  mcp:
+    title: MCP Server Development
+    description: Specify, implement, and coordinate MCP servers
+    flow:
+      - trl-mcp-builder
+      - trl-mcp-architect
+      - trl-mcp-forge
+    skills:
+      - trl-mcp-builder
+      - trl-mcp-architect
+      - trl-mcp-forge
+
+  agents:
+    title: AI & Agent Engineering
+    description: Agents, harnesses, prototypes, personas
+    skills:
+      - trl-agent-architect
+      - trl-agentic-harness-engineer
+      - trl-rapid-prototype
+      - trl-research-and-development
+      - trl-persona-session
+
+  mobile-desktop:
+    title: Mobile & Desktop Engineering
+    description: iOS, Android, macOS, Unity, Metal
+    skills:
+      - trl-ios-mobile-engineer
+      - trl-android-mobile
+      - trl-osx-design-and-develop
+      - trl-unity-developer
+      - trl-metal-graphics-dev
+
+  design-frontend:
+    title: Design & Frontend
+    description: UX, React, Lit, SEO, TUI, Zellij, Hologram
+    skills:
+      - trl-user-experience-engineer
+      - trl-react-engineer
+      - trl-lit-dev
+      - trl-seo-guru
+      - trl-tui-engineer
+      - trl-zellij-engineer
+      - trl-hologram-engineer
+      - trl-theme-designer
+      - trl-ui-test-engineer
+
+  infrastructure:
+    title: Backend & Infrastructure
+    description: K8s, Terraform, DBA, security, media, plugins, SigNoz
+    skills:
+      - trl-kubernetes-engineer
+      - trl-terraform-engineer
+      - trl-dba-db-designer-and-tuning
+      - trl-threat-modeler
+      - trl-media-solution-architect
+      - trl-plugin-architect
+      - trl-signoz-terraform-provider
+      - trl-api-designer
+      - trl-story-to-release
+
+  elixir:
+    title: Elixir Framework Reference
+    description: Noizu library ecosystem
+    skills:
+      - trl-noizu-frameworks
+
+  docs-meta:
+    title: Documentation, Professional Services & Meta
+    description: Docs, proposals, content, skills meta, games, walkthroughs
+    skills:
+      - trl-technical-writer
+      - trl-proposal-writer
+      - trl-content-generator
+      - trl-skill-engineer
+      - trl-skill-evaluator
+      - trl-game-design
+      - trl-site-walkthrough

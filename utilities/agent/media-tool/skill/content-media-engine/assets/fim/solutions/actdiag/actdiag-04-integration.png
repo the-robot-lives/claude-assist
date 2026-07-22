@@ -1,0 +1,108 @@
+actdiag {
+  orientation = landscape
+
+  developer_push -> trigger_ci -> unit_tests -> integration_tests -> test_gate
+
+  test_gate -> security_scan [label = "tests passed"]
+  test_gate -> notify_test_failure [label = "tests failed"]
+  notify_test_failure -> create_jira_bug -> developer_push
+
+  security_scan -> sast_scan -> sca_scan -> secret_scan -> security_gate
+
+  security_gate -> update_jira_ticket [label = "no findings"]
+  security_gate -> notify_security_failure [label = "findings found"]
+  notify_security_failure -> create_security_jira -> remediate_code -> developer_push
+
+  update_jira_ticket -> build_artifact -> push_registry -> deploy_staging
+
+  deploy_staging -> smoke_tests -> staging_gate
+
+  staging_gate -> request_approval [label = "staging healthy"]
+  staging_gate -> rollback_staging [label = "staging failed"]
+  rollback_staging -> notify_staging_failure -> create_jira_bug
+
+  request_approval -> manual_review -> approval_gate
+
+  approval_gate -> argocd_sync [label = "approved"]
+  approval_gate -> reject_release [label = "rejected"]
+  reject_release -> update_jira_rejected -> developer_push
+
+  argocd_sync -> argocd_health_check -> production_gate
+
+  production_gate -> update_jira_released [label = "production healthy"]
+  production_gate -> argocd_rollback [label = "production failed"]
+  argocd_rollback -> notify_production_failure -> create_jira_incident -> developer_push
+
+  update_jira_released -> collect_evidence -> archive_release -> notify_stakeholders -> close_jira_ticket
+
+  lane developer {
+    label = "Developer"
+    developer_push
+    remediate_code
+    reject_release
+  }
+
+  lane ci_pipeline {
+    label = "CI Pipeline"
+    trigger_ci
+    unit_tests
+    integration_tests
+    test_gate
+    notify_test_failure
+    create_jira_bug
+  }
+
+  lane security {
+    label = "Security Scanning"
+    security_scan
+    sast_scan
+    sca_scan
+    secret_scan
+    security_gate
+    notify_security_failure
+    create_security_jira
+  }
+
+  lane artifact_registry {
+    label = "Artifact Registry"
+    build_artifact
+    push_registry
+    update_jira_ticket
+  }
+
+  lane staging {
+    label = "Staging Environment"
+    deploy_staging
+    smoke_tests
+    staging_gate
+    rollback_staging
+    notify_staging_failure
+  }
+
+  lane approval {
+    label = "Manual Approval"
+    request_approval
+    manual_review
+    approval_gate
+    update_jira_rejected
+  }
+
+  lane argocd {
+    label = "Argo CD Production"
+    argocd_sync
+    argocd_health_check
+    production_gate
+    argocd_rollback
+    notify_production_failure
+    create_jira_incident
+  }
+
+  lane audit {
+    label = "Audit and Evidence"
+    update_jira_released
+    collect_evidence
+    archive_release
+    notify_stakeholders
+    close_jira_ticket
+  }
+}

@@ -1,9 +1,8 @@
 replicas: 1
 domain: tobornalp.com
 appDomain: app.tobornalp.com
-
 backend:
-  image: ops.noizu.com/tobornalp.com/backend:v1.0.12
+  image: ops.noizu.com/tobornalp.com/backend:v1.0.16
   port: 4000
   resources:
     requests:
@@ -12,9 +11,8 @@ backend:
     limits:
       cpu: 500m
       memory: 512Mi
-
 frontend:
-  image: ops.noizu.com/tobornalp.com/frontend:v1.0.11
+  image: ops.noizu.com/tobornalp.com/frontend:v1.0.16
   port: 3000
   resources:
     requests:
@@ -23,7 +21,6 @@ frontend:
     limits:
       cpu: 200m
       memory: 256Mi
-
 migrate:
   enabled: true
   # OTP app/module are still :therobotplans / Therobotplans.*; deploy identity is tobornalp.
@@ -35,17 +32,14 @@ migrate:
     limits:
       cpu: 200m
       memory: 256Mi
-
 database:
   host: app-postgres.apps.svc.cluster.local
   port: 5432
   name: therobotplans
-
 redis:
   host: app-valkey.apps.svc.cluster.local
   port: 6379
   db: 12
-
 secrets:
   name: tobornalp-secrets
   databaseUrlSecretName: therobotplans-secrets
@@ -78,11 +72,9 @@ secrets:
     projectSlug: k8-infra
     envSlug: prod
     secretsPath: "/apps/tobornalp"
-
 mail:
   fromName: ""
   fromAddress: "noreply@tobornalp.com"
-
 sso:
   requireInvite: true
   # SSO availability by email domain. Format:
@@ -99,23 +91,18 @@ sso:
   saml:
     idpMetadataUrl: ""
     spEntityId: ""
-
 extraEnv: []
-
 configMap:
   enabled: false
   data: {}
-
 imagePullSecrets:
   - name: ops-registry-secret
-
 analytics:
   ga:
     measurementId: ""
   posthog:
     key: ""
     host: "https://us.i.posthog.com"
-
 ingress:
   enabled: true
   className: nginx
@@ -123,7 +110,6 @@ ingress:
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
     nginx.ingress.kubernetes.io/proxy-body-size: "10m"
   cloudflareOnly: true
-
 tls:
   enabled: true
   secretName: tobornalp-tls
@@ -138,31 +124,26 @@ tls:
     secretsPath: "/apps/tls/tobornalp"
     crtKey: TOBORNALP_TLS_CRT
     keyKey: TOBORNALP_TLS_KEY
-
 otel:
   enabled: false
   collectorEndpoint: "otel-collector.observability-ns.svc.cluster.local:4317"
   collectorHttpEndpoint: "http://otel-collector.observability-ns.svc.cluster.local:4318"
   serviceName: "tobornalp"
-
 storage:
   enabled: false
   bucket: ""
   region: "us-east-1"
   endpoint: ""
   scheme: "https://"
-
 autoscaling:
   enabled: false
   minReplicas: 1
   maxReplicas: 5
   targetCPUUtilizationPercentage: 70
   targetMemoryUtilizationPercentage: 80
-
 podDisruptionBudget:
   enabled: false
   minAvailable: 1
-
 sandbox:
   enabled: false
   image: ops.noizu.com/tobornalp.com/sandbox:v1.0.0

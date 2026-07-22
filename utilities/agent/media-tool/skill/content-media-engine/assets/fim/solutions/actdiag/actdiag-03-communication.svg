@@ -1,0 +1,42 @@
+actdiag {
+  orientation = landscape
+
+  recruiter_send_offer -> hiring_manager_approve_offer -> recruiter_confirm_acceptance -> recruiter_create_profile -> it_provision_accounts -> security_issue_badge -> new_hire_receive_welcome -> new_hire_complete_paperwork -> hiring_manager_intro_meeting -> it_equipment_setup -> security_orientation -> new_hire_it_training -> hiring_manager_30day_plan -> new_hire_first_week_complete
+
+  lane Recruiter {
+    label = "Recruiter"
+    recruiter_send_offer [label = "Send Offer Letter"]
+    recruiter_confirm_acceptance [label = "Confirm Acceptance\n& Set Start Date"]
+    recruiter_create_profile [label = "Create Employee\nProfile in HRIS"]
+  }
+
+  lane "Hiring Manager" {
+    label = "Hiring Manager"
+    hiring_manager_approve_offer [label = "Review & Approve\nOffer Terms"]
+    hiring_manager_intro_meeting [label = "Welcome Meeting\n& Team Introductions"]
+    hiring_manager_30day_plan [label = "Present 30-Day\nSuccess Plan"]
+  }
+
+  lane IT {
+    label = "IT"
+    it_provision_accounts [label = "Provision Email,\nSystems & Accounts"]
+    it_equipment_setup [label = "Set Up Laptop\n& Peripherals"]
+    it_training [label = "Systems Access\nWalkthrough"]
+  }
+
+  lane Security {
+    label = "Security"
+    security_issue_badge [label = "Issue Access Badge\n& Photo ID"]
+    security_orientation [label = "Conduct Security\n& Compliance Briefing"]
+  }
+
+  lane "New Hire" {
+    label = "New Hire"
+    new_hire_receive_welcome [label = "Receive Welcome\nPacket & Schedule"]
+    new_hire_complete_paperwork [label = "Complete I-9, Tax\n& Benefits Forms"]
+    new_hire_it_training [label = "Complete IT &\nSystems Training"]
+    new_hire_first_week_complete [label = "★ First-Week\nMilestone Complete"]
+  }
+
+  it_training -> new_hire_it_training
+}

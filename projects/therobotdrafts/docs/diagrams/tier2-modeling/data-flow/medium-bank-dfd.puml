@@ -1,0 +1,112 @@
+@startuml
+' ============================================================================
+' METADATA
+'   author:       TheRobotDrafts Examples
+'   description:  Medium Yourdon-style Data Flow Diagram for a bank deposit
+'                 subsystem: a context diagram plus a Level-0 DFD with 5
+'                 processes, multiple stores and externals, and flows between
+'                 processes.
+'   usecase:      Teaching DFD leveling in practice — how a context diagram
+'                 (one process) explodes into a Level-0 DFD (many processes)
+'                 while keeping input/output balance, and inter-process flows.
+'   complexity:   medium
+'   domain:       banking / deposit processing
+' ============================================================================
+
+title Data Flow Diagram - Medium Bank (Context + Level-0)
+
+' ---------------------------------------------------------------------------
+' TEACHING NOTES
+' ---------------------------------------------------------------------------
+' This file contains TWO leveled DFDs for the SAME system:
+'   - CONTEXT diagram: the whole system as ONE process (bubble 0) plus externals.
+'   - LEVEL-0 diagram: bubble 0 EXPLODED into 5 processes (1..5), with stores
+'     and inter-process flows.
+'
+' LEVELING / BALANCE rule (critical):
+'   The flows crossing the SYSTEM BOUNDARY must be IDENTICAL at every level.
+'   In the context diagram Customer->System carries "deposit slip" and "cash";
+'   in the Level-0 those same two flows must enter some process (here process 1).
+'   The Statement->System "deposit notice" likewise must appear. If you add or
+'   drop a flow when exploding, the diagrams are out of balance.
+'
+' Numbering convention:
+'   Context bubble   = 0
+'   Level-0 bubbles  = 1, 2, 3, 4, 5
+'   Level-1 of proc 3 = 3.1, 3.2, 3.3 (each explodes ONE level-0 bubble further)
+' ---------------------------------------------------------------------------
+
+' ============================
+' CONTEXT DIAGRAM (Level -1 / 0)
+' ============================
+package "Context Diagram" {
+  rectangle "Customer"    as C1 <<externalEntity>>
+  rectangle "Statement\nSys" as S1 <<externalEntity>>
+
+  usecase "0\nDeposit\nSystem" as Sys0 <<process>>
+
+  C1 --> Sys0 : deposit slip
+  C1 --> Sys0 : cash
+  Sys0 --> S1 : deposit notice
+  Sys0 --> C1 : receipt
+}
+
+' ============================
+' LEVEL-0 DIAGRAM (explode bubble 0)
+' ============================
+package "Level-0 Diagram" {
+  ' Externals reappear (same boundary flows as context).
+  rectangle "Customer"     as C2 <<externalEntity>>
+  rectangle "Statement\nSys" as S2 <<externalEntity>>
+
+  ' Five processes
+  usecase "1\nReceive\nDeposit"  as P1 <<process>>
+  usecase "2\nValidate"          as P2 <<process>>
+  usecase "3\nPost to\nAccount"  as P3 <<process>>
+  usecase "4\nUpdate\nBalance"   as P4 <<process>>
+  usecase "5\nIssue\nReceipt"    as P5 <<process>>
+
+  ' Data stores (internal)
+  storage "Accounts\n(D1)" as D1 <<dataStore>>
+  storage "Deposit\nLog (D2)" as D2 <<dataStore>>
+
+  ' --- Boundary flows (must match context diagram) ---
+  C2 --> P1 : deposit slip
+  C2 --> P1 : cash
+  P5 --> S2 : deposit notice
+  P5 --> C2 : receipt
+
+  ' --- Inter-process flows ---
+  P1 --> P2 : raw deposit
+  P2 --> P3 : valid deposit
+  P3 --> P4 : posting
+  P3 --> P5 : posted deposit
+
+  ' --- Process <-> store flows ---
+  P2 --> D2 : validation event
+  P3 --> D1 : account update
+  P3 --> D2 : deposit record
+  D1 --> P4 : current balance
+  P4 --> D1 : new balance
+  D2 --> P5 : log entry
+}
+
+note bottom of P3
+  **Leveling explained**
+  CONTEXT: system = one bubble, only externals + boundary flows.
+  LEVEL-0: explode that bubble into major processes; SAME boundary
+           flows cross in/out; add INTERNAL stores and inter-process flows.
+  LEVEL-1: explode any ONE level-0 bubble further (e.g. 3 -> 3.1, 3.2).
+  --
+  Balance check for THIS diagram:
+   context boundary = {deposit slip, cash, deposit notice, receipt}
+   level-0 boundary = {deposit slip, cash, deposit notice, receipt}  MATCH
+end note
+
+note right of D1
+  **Stores are internal**
+  Data stores appear at Level-0 and below,
+  NEVER in the context diagram (they are
+  inside the system boundary).
+end note
+@enduml

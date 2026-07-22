@@ -1,0 +1,58 @@
+@startuml
+' ============================================================================
+' METADATA
+'   author:       TheRobotDrafts Examples
+'   description:  A single microservice exposes one provided interface and
+'                 requires one interface, wired to a client and a database.
+'   usecase:      Teach component box notation and provided vs required
+'                 interfaces (ball/lollipop vs socket/cup).
+'   complexity:   simple
+'   domain:       microservice / component diagram basics
+' ============================================================================
+title Example Component Diagram - Simple Microservice
+
+' ---------------------------------------------------------------------------
+' STYLE: package-free layout so the reader sees raw components first.
+' ---------------------------------------------------------------------------
+skinparam componentStyle uml2
+skinparam shadowing false
+
+' A COMPONENT is drawn as a box with two small tabs on top.
+' Long form:  component "Display Name" as alias
+' Short form: [Display Name]   (alias is auto-derived from the text)
+component "Web Client" as client
+component "Order Service" as svc
+database "Orders DB" as db
+
+' ---------------------------------------------------------------------------
+' PROVIDED INTERFACE (ball / lollipop): the component OFFERS this contract.
+' `() "Name" as id` declares a lollipop. `svc -()- IFoo` attaches it.
+' A provided interface says: "callers may invoke this on me."
+' ---------------------------------------------------------------------------
+() "Submit Order" as iSubmit
+svc -()- iSubmit
+
+' The client CONSUMES the provided interface via a dependency arrow (..>).
+' Dotted line = uses/depends-on (no compile-time binding required here).
+client ..> iSubmit
+
+' ---------------------------------------------------------------------------
+' REQUIRED INTERFACE (socket / cup): the component NEEDS this contract from
+' someone else to do its job. `svc ..() IPersist` attaches a cup shape.
+' ---------------------------------------------------------------------------
+() "Persist" as iPersist
+svc ..() iPersist
+
+' The database SATISFIES the required interface: it realizes (ball) what the
+' service needs (cup). Drawing both ends shows the assembly forms a connection.
+db -()- iPersist
+
+' ---------------------------------------------------------------------------
+' LEGEND: a short note explaining the shapes shown in this diagram.
+' ---------------------------------------------------------------------------
+note bottom of svc
+  **Provided** "Submit Order" = ball  (this service answers it)
+  **Required** "Persist"      = cup   (this service needs it)
+end note
+
+@enduml

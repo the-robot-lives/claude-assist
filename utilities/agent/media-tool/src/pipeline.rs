@@ -26,6 +26,9 @@ pub struct PipelineConfig {
     pub service_override: Option<String>,
     pub no_eval: bool,
     pub no_prep: bool,
+    /// When true, text generation and prep load the matching FIM solution file for
+    /// the target channel. Disabled via --no-fim or MEDIA_FIM_INJECT=0.
+    pub fim_enabled: bool,
     pub eval_url: Option<String>,
     pub eval_model: Option<String>,
 }
@@ -130,7 +133,11 @@ pub async fn run_generation(
             .as_ref()
             .and_then(|d| d.aspect_ratio.as_deref());
 
-        ui::plan_item(&meta.id, &format!("{:?}", meta.asset_type), &display_service);
+        ui::plan_item(
+            &meta.id,
+            &format!("{:?}", meta.asset_type),
+            &display_service,
+        );
         let preview: String = prompt_text.chars().take(100).collect();
         ui::plan_detail(
             "Prompt",
@@ -147,11 +154,7 @@ pub async fn run_generation(
             let preview: String = neg.chars().take(80).collect();
             ui::plan_detail(
                 "Neg.",
-                &format!(
-                    "{}{}",
-                    preview,
-                    if neg.len() > 80 { "..." } else { "" }
-                ),
+                &format!("{}{}", preview, if neg.len() > 80 { "..." } else { "" }),
             );
         }
         ui::plan_detail("Model", &display_model);
@@ -417,8 +420,16 @@ pub async fn run_generation(
                                     ));
                                     match renderer.render(src, &render_output, &pp_step.params) {
                                         Ok(true) => {
-                                            validate::validate_svg(&render_output, config.verbose, prep_llm).await;
-                                            ui::ok(&format!("Rendered: {}", render_output.display()));
+                                            validate::validate_svg(
+                                                &render_output,
+                                                config.verbose,
+                                                prep_llm,
+                                            )
+                                            .await;
+                                            ui::ok(&format!(
+                                                "Rendered: {}",
+                                                render_output.display()
+                                            ));
                                         }
                                         Ok(false) => {
                                             ui::fail_msg(&format!(
@@ -487,7 +498,11 @@ pub async fn run_generation(
 // Candidate resolution
 // ---------------------------------------------------------------------------
 
-fn resolve_candidates(config: &PipelineConfig, prompt: &ParsedPrompt, quality: Quality) -> Vec<Candidate> {
+fn resolve_candidates(
+    config: &PipelineConfig,
+    prompt: &ParsedPrompt,
+    quality: Quality,
+) -> Vec<Candidate> {
     // Priority 1: CLI --service override
     if let Some(ref svc) = config.service_override {
         let model = config
@@ -498,7 +513,10 @@ fn resolve_candidates(config: &PipelineConfig, prompt: &ParsedPrompt, quality: Q
         // Leak to get 'static — safe for CLI strings that live for program duration
         let svc_static: &'static str = Box::leak(svc.clone().into_boxed_str());
         let model_static: &'static str = Box::leak(model.into_boxed_str());
-        return vec![Candidate { service: svc_static, model: model_static }];
+        return vec![Candidate {
+            service: svc_static,
+            model: model_static,
+        }];
     }
 
     // Priority 2: YAML service: pinned
@@ -511,7 +529,10 @@ fn resolve_candidates(config: &PipelineConfig, prompt: &ParsedPrompt, quality: Q
             .to_string();
         let svc_static: &'static str = Box::leak(svc.clone().into_boxed_str());
         let model_static: &'static str = Box::leak(model.into_boxed_str());
-        return vec![Candidate { service: svc_static, model: model_static }];
+        return vec![Candidate {
+            service: svc_static,
+            model: model_static,
+        }];
     }
 
     // Priority 3: Auto-select via candidates_for, filtered by available()
@@ -519,7 +540,11 @@ fn resolve_candidates(config: &PipelineConfig, prompt: &ParsedPrompt, quality: Q
     all.into_iter().filter(|c| available(c)).collect()
 }
 
-fn resolve_display_service(config: &PipelineConfig, prompt: &ParsedPrompt, quality: Quality) -> (String, String) {
+fn resolve_display_service(
+    config: &PipelineConfig,
+    prompt: &ParsedPrompt,
+    quality: Quality,
+) -> (String, String) {
     if let Some(ref svc) = config.service_override {
         let model = config
             .model_override
@@ -550,11 +575,17 @@ fn resolve_display_service(config: &PipelineConfig, prompt: &ParsedPrompt, quali
             quality.as_str(),
             fallback_names.join("\u{2192}")
         );
-        let first_model = all.first().map(|c| c.model.to_string()).unwrap_or_else(|| "unknown".into());
+        let first_model = all
+            .first()
+            .map(|c| c.model.to_string())
+            .unwrap_or_else(|| "unknown".into());
         return (display, first_model);
     }
 
-    let names: Vec<String> = available_candidates.iter().map(|c| c.service.to_string()).collect();
+    let names: Vec<String> = available_candidates
+        .iter()
+        .map(|c| c.service.to_string())
+        .collect();
     let display = format!(
         "auto (quality={}): {}",
         quality.as_str(),
@@ -562,6 +593,43 @@ fn resolve_display_service(config: &PipelineConfig, prompt: &ParsedPrompt, quali
     );
     let first_model = available_candidates[0].model.to_string();
     (display, first_model)
+}
+
+fn text_inference_system_prompt(
+    svc: &str,
+    prompt: &ParsedPrompt,
+    fim_enabled: bool,
+) -> Option<String> {
+    let is_text_inference =
+        prompt.meta.asset_type.is_chat_type() || get_chat_provider(svc).is_some();
+    if !is_text_inference {
+        return prompt.payload.prompt.system.clone();
+    }
+
+    let mut sections = Vec::new();
+    if let Some(solution) = crate::fim::guidance_for(
+        svc,
+        prompt.meta.asset_type,
+        prompt.payload.output.text_format.as_deref(),
+        fim_enabled,
+    ) {
+        let solution = solution.trim();
+        if !solution.is_empty() {
+            sections.push(format!("FIM solution reference:\n\n{}", solution));
+        }
+    }
+
+    if let Some(system) = prompt.payload.prompt.system.as_deref().map(str::trim) {
+        if !system.is_empty() {
+            sections.push(format!("Prompt-specific output contract:\n\n{}", system));
+        }
+    }
+
+    if sections.is_empty() {
+        None
+    } else {
+        Some(sections.join("\n\n"))
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -655,25 +723,38 @@ async fn run_eval_gated(
                 };
 
                 // Use SFX-specific constraint when model targets sound generation
-                let constraint_key = if candidate.model.contains("SOUND") { "suno-sfx" } else { svc };
+                let constraint_key = if candidate.model.contains("SOUND") {
+                    "suno-sfx"
+                } else {
+                    svc
+                };
                 let limit = constraints(constraint_key).max_prompt_chars;
                 if let Some(max) = limit {
                     if raw_text.len() > max {
                         // Prompt exceeds provider limit — must use LLM to condense
                         ui::info(&format!(
                             "Prompt ({} chars) exceeds {} limit ({}) — using LLM to condense",
-                            raw_text.len(), svc, max
+                            raw_text.len(),
+                            svc,
+                            max
                         ));
                         if let Some(prepper) = prep_llm {
-                            match prepper.prepare_prompt(
-                                &prompt.payload.prompt,
-                                svc,
-                                prompt.meta.asset_type,
-                                config.verbose,
-                            ).await {
+                            match prepper
+                                .prepare_prompt(
+                                    &prompt.payload.prompt,
+                                    svc,
+                                    prompt.meta.asset_type,
+                                    prompt.payload.output.text_format.as_deref(),
+                                    config.fim_enabled,
+                                    config.verbose,
+                                )
+                                .await
+                            {
                                 Some(prepared) => (
                                     prepared.text,
-                                    prepared.negative.or_else(|| prompt.payload.prompt.negative.clone()),
+                                    prepared
+                                        .negative
+                                        .or_else(|| prompt.payload.prompt.negative.clone()),
                                 ),
                                 None => {
                                     // Truncate as last resort
@@ -702,39 +783,55 @@ async fn run_eval_gated(
             } else if let (Some(prepper), Some(ref feedback), Some(ref scores)) =
                 (prep_llm, &last_eval_feedback, &last_scores_summary)
             {
-                match prepper.refine_prompt(
-                    &prompt.payload.prompt,
-                    svc,
-                    prompt.meta.asset_type,
-                    feedback,
-                    scores,
-                    last_failed_output.as_deref(),
-                    config.verbose,
-                ).await {
+                match prepper
+                    .refine_prompt(
+                        &prompt.payload.prompt,
+                        svc,
+                        prompt.meta.asset_type,
+                        prompt.payload.output.text_format.as_deref(),
+                        config.fim_enabled,
+                        feedback,
+                        scores,
+                        last_failed_output.as_deref(),
+                        config.verbose,
+                    )
+                    .await
+                {
                     Some(refined) => {
                         ui::info(&format!(
                             "Prompt refined via LLM (attempt {}) for {} provider",
-                            attempt + 1, svc
+                            attempt + 1,
+                            svc
                         ));
                         (
                             refined.text,
-                            refined.negative.or_else(|| prompt.payload.prompt.negative.clone()),
+                            refined
+                                .negative
+                                .or_else(|| prompt.payload.prompt.negative.clone()),
                         )
                     }
                     None => {
                         ui::warn_msg("LLM refinement failed — re-sending raw prompt");
-                        (prompt.payload.prompt.text.clone(), prompt.payload.prompt.negative.clone())
+                        (
+                            prompt.payload.prompt.text.clone(),
+                            prompt.payload.prompt.negative.clone(),
+                        )
                     }
                 }
             } else {
-                (prompt.payload.prompt.text.clone(), prompt.payload.prompt.negative.clone())
+                (
+                    prompt.payload.prompt.text.clone(),
+                    prompt.payload.prompt.negative.clone(),
+                )
             };
+
+            let system_prompt = text_inference_system_prompt(svc, prompt, config.fim_enabled);
 
             let ok = generate_one(
                 svc,
                 &gen_text,
                 gen_negative.as_deref(),
-                prompt.payload.prompt.system.as_deref(),
+                system_prompt.as_deref(),
                 &genai_path,
                 &api_key,
                 &options,
@@ -761,7 +858,12 @@ async fn run_eval_gated(
 
             // Score
             let score = evaluator
-                .score_output(&genai_path, &prompt.payload.prompt.text, eval_section, config.verbose)
+                .score_output(
+                    &genai_path,
+                    &prompt.payload.prompt.text,
+                    eval_section,
+                    config.verbose,
+                )
                 .await;
 
             match score {
@@ -793,11 +895,18 @@ async fn run_eval_gated(
                     if config.verbose {
                         ui::verbose(&format!(
                             "Score for {} via {} (attempt {}): weighted={:.3}, pass={}",
-                            basename, svc, attempt + 1, w, s.passes(eval_section)
+                            basename,
+                            svc,
+                            attempt + 1,
+                            w,
+                            s.passes(eval_section)
                         ));
                     }
 
-                    let is_better = global_best.as_ref().map(|(best, _, _)| w > *best).unwrap_or(true);
+                    let is_better = global_best
+                        .as_ref()
+                        .map(|(best, _, _)| w > *best)
+                        .unwrap_or(true);
                     if is_better {
                         global_best = Some((w, genai_path.clone(), svc.to_string()));
                     }
@@ -816,18 +925,24 @@ async fn run_eval_gated(
                     // Store feedback + failed output for vision-informed refinement
                     last_eval_feedback = Some(s.notes.clone());
                     last_failed_output = Some(genai_path.clone());
-                    let scores_str: Vec<String> = s.per_criterion.iter()
+                    let scores_str: Vec<String> = s
+                        .per_criterion
+                        .iter()
                         .map(|(k, v)| format!("{}={:.1}", k, v * 10.0))
                         .collect();
                     last_scores_summary = Some(format!(
                         "weighted={:.3}, scores=[{}], reject_hits={:?}",
-                        w, scores_str.join(", "), s.reject_hits
+                        w,
+                        scores_str.join(", "),
+                        s.reject_hits
                     ));
 
                     if attempt < MAX_REFINEMENTS && prep_llm.is_some() {
                         ui::info(&format!(
                             "Score {:.3} below threshold {:.2} — refining prompt (attempt {})",
-                            w, eval_section.effective_pass_threshold(), attempt + 2
+                            w,
+                            eval_section.effective_pass_threshold(),
+                            attempt + 2
                         ));
                     }
                 }
@@ -843,10 +958,16 @@ async fn run_eval_gated(
         ));
         link_active(&best_path, output_path)?;
         validate::validate_svg(output_path, config.verbose, prep_llm).await;
-        ui::ok(&format!("Generated (best available): {}", output_path.display()));
+        ui::ok(&format!(
+            "Generated (best available): {}",
+            output_path.display()
+        ));
         Ok(true)
     } else {
-        ui::fail_msg(&format!("All candidates failed for: {}", output_path.display()));
+        ui::fail_msg(&format!(
+            "All candidates failed for: {}",
+            output_path.display()
+        ));
         Ok(false)
     }
 }
@@ -877,8 +998,7 @@ async fn run_legacy_variants(
         return Ok(false);
     }
 
-    let is_chat = prompt.meta.asset_type.is_chat_type()
-        || get_chat_provider(svc).is_some();
+    let is_chat = prompt.meta.asset_type.is_chat_type() || get_chat_provider(svc).is_some();
 
     let supported = if is_chat {
         get_chat_provider(svc).is_some()
@@ -929,24 +1049,37 @@ async fn run_legacy_variants(
         // happened in the outer loop for non-per-output cases).
         let raw_text = prompt.payload.prompt.text.clone();
 
-        let constraint_key = if candidate.model.contains("SOUND") { "suno-sfx" } else { svc };
+        let constraint_key = if candidate.model.contains("SOUND") {
+            "suno-sfx"
+        } else {
+            svc
+        };
         let limit = constraints(constraint_key).max_prompt_chars;
         let (gen_text, gen_neg) = if let Some(max) = limit {
             if raw_text.len() > max {
                 ui::info(&format!(
                     "Prompt ({} chars) exceeds {} limit ({}) — using LLM to condense",
-                    raw_text.len(), svc, max
+                    raw_text.len(),
+                    svc,
+                    max
                 ));
                 if let Some(prepper) = prep_llm {
-                    match prepper.prepare_prompt(
-                        &prompt.payload.prompt,
-                        svc,
-                        prompt.meta.asset_type,
-                        config.verbose,
-                    ).await {
+                    match prepper
+                        .prepare_prompt(
+                            &prompt.payload.prompt,
+                            svc,
+                            prompt.meta.asset_type,
+                            prompt.payload.output.text_format.as_deref(),
+                            config.fim_enabled,
+                            config.verbose,
+                        )
+                        .await
+                    {
                         Some(prepared) => (
                             prepared.text,
-                            prepared.negative.or_else(|| prompt.payload.prompt.negative.clone()),
+                            prepared
+                                .negative
+                                .or_else(|| prompt.payload.prompt.negative.clone()),
                         ),
                         None => {
                             ui::warn_msg(&format!("LLM prep failed — truncating to {} chars", max));
@@ -966,11 +1099,13 @@ async fn run_legacy_variants(
             (raw_text, prompt.payload.prompt.negative.clone())
         };
 
+        let system_prompt = text_inference_system_prompt(svc, prompt, config.fim_enabled);
+
         let ok = generate_one(
             svc,
             &gen_text,
             gen_neg.as_deref(),
-            prompt.payload.prompt.system.as_deref(),
+            system_prompt.as_deref(),
             &genai_path,
             &api_key,
             &options,
@@ -991,11 +1126,7 @@ async fn run_legacy_variants(
             );
             variant_paths.push(genai_path);
         } else {
-            ui::warn_msg(&format!(
-                "Candidate {} failed for {}",
-                v + 1,
-                basename
-            ));
+            ui::warn_msg(&format!("Candidate {} failed for {}", v + 1, basename));
         }
     }
 
@@ -1064,7 +1195,10 @@ async fn run_legacy_variants(
     if config.verbose {
         ui::verbose(&format!(
             "Active link: {} -> {}",
-            variant_paths[best_idx].file_name().unwrap().to_string_lossy(),
+            variant_paths[best_idx]
+                .file_name()
+                .unwrap()
+                .to_string_lossy(),
             basename
         ));
     }
@@ -1092,7 +1226,18 @@ async fn generate_one(
 
     // Show full prompt sent to the provider
     eprintln!();
-    ui::step(&format!("Prompt sent to {} provider ({} chars):", svc, prompt_text.len()));
+    ui::step(&format!(
+        "{} prompt sent to {} provider ({} chars):",
+        if is_chat { "User" } else { "Prompt" },
+        svc,
+        prompt_text.len()
+    ));
+    if is_chat {
+        let system_chars = system.map(|s| s.len()).unwrap_or(0);
+        if system_chars > 0 {
+            ui::plan_detail("System", &format!("{} chars", system_chars));
+        }
+    }
     for line in prompt_text.lines() {
         eprintln!("  {}", line);
     }
@@ -1109,7 +1254,14 @@ async fn generate_one(
             return Ok(false);
         };
         chat_provider
-            .generate(system.unwrap_or(""), prompt_text, output_path, api_key, options, attachments)
+            .generate(
+                system.unwrap_or(""),
+                prompt_text,
+                output_path,
+                api_key,
+                options,
+                attachments,
+            )
             .await
     } else {
         let Some(provider) = get_provider(svc) else {

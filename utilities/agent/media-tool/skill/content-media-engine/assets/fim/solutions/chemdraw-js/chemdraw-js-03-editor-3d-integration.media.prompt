@@ -1,0 +1,88 @@
+schema: "0.4"
+id: fim-math-and-scientific-rendering-chemdraw-js-03-editor-3d-integration
+type: interactive
+quality: high
+solution: chemdraw-js
+category: math-and-scientific-rendering
+variant: editor-3d-integration
+references:
+- references/fim/solution/chemdraw-js.md
+- references/fim/use-case/mathematical-scientific.md
+prompt:
+  system: |-
+    You are a senior web chemistry application engineer. Output only one complete ASCII HTML document with inline CSS and JavaScript. Prefer Ketcher, RDKit.js, and 3Dmol.js integration patterns; do not assume commercial ChemDraw JS availability. No Markdown fences or prose outside the artifact.
+  text: |-
+    Create an interactive molecule editing and 3D handoff prototype.
+
+    Scenario:
+    Build a browser artifact that embeds a Ketcher-style editor panel, synchronizes the current molecule to RDKit.js for 2D SVG plus descriptors, and sends a MOL/SDF representation into 3Dmol.js for a 3D stick/sphere preview.
+
+    Requirements:
+    - Use Ketcher APIs as asynchronous operations: setMolecule, getSmiles, getMolfile, and getKet must be awaited or represented as awaited integration calls.
+    - Include a fallback path for environments where Ketcher assets are unavailable: provide a textarea for SMILES/MOL input and render with RDKit.js instead of failing blank.
+    - Initialize a sample molecule, caffeine, and allow switching to ethanol, benzene, and aspirin.
+    - Use RDKit.js to validate current SMILES, render a 2D SVG, and compute descriptors.
+    - Use 3Dmol.js to create a viewer, addModel with sdf or mol data, setStyle with stick and sphere, zoomTo, and render.
+    - Include visible async state for editor loading, molecule sync, RDKit validation, descriptor extraction, 3D model load, and 3D render completion.
+    - Include a clear warning that ChemDraw JS is commercial and this artifact uses open web chemistry fallbacks.
+    - Clean up RDKit WASM objects and dispose or reset 3D viewer state between molecule changes where practical.
+    - Include keyboard-operable controls, accessible status text, and a non-3D fallback summary.
+    - Output only the final HTML artifact.
+  provider_options:
+    max_tokens: 10000
+    temperature: 0.25
+output:
+  text_format: html
+  artifact_kind: ketcher-rdkit-3dmol-integration-prototype
+  formats:
+  - format: html
+  - format: svg
+  render_expectation: Interactive chemistry editor prototype with 2D validation, descriptor panel, and 3Dmol.js preview or fallback.
+evaluation:
+  checklist:
+  - "YAML parses and generated output is one complete ASCII HTML artifact."
+  - "Ketcher integration is modeled with awaited async methods for setMolecule, getSmiles, getMolfile, and getKet."
+  - "The artifact has a graceful fallback when Ketcher assets or commercial ChemDraw JS are unavailable."
+  - "RDKit.js validates the current molecule, renders 2D SVG, computes descriptors, and deletes WASM objects."
+  - "3Dmol.js creates a viewer, adds mol or sdf data, applies stick/sphere style, zooms, and renders."
+  - "Async status states are visible for editor load, sync, validation, descriptors, 3D load, and render completion."
+  - "Keyboard, text fallback, and accessibility requirements remain usable without WebGL."
+  rubric:
+  - name: Format validity
+    weight: 30
+    criteria:
+    - "Generated HTML, CSS, and JavaScript are structurally valid and can load the referenced open chemistry libraries."
+    - "Async Ketcher calls and 3Dmol.js viewer calls follow the referenced API shape."
+    - "The artifact does not require commercial ChemDraw JS for the main workflow."
+  - name: Semantic completeness
+    weight: 30
+    criteria:
+    - "Editor, RDKit validation, 2D rendering, descriptor extraction, and 3D preview are all represented."
+    - "Sample molecule switching and fallback text input paths are present."
+    - "The artifact makes the commercial/open-source distinction explicit."
+  - name: Visual/structural quality
+    weight: 25
+    criteria:
+    - "The editor, 2D, descriptor, and 3D panes are organized without overlap."
+    - "Status labels and fallback messages are concise, visible, and useful for debugging."
+    - "The 3D view is initialized with a nonblank background and framed molecule when data is valid."
+  - name: Robustness
+    weight: 15
+    criteria:
+    - "Handles missing Ketcher assets, invalid molecule data, RDKit load failure, missing WebGL, and 3D model parse failure."
+    - "Cleans up RDKit objects and resets stale viewer state between molecule changes."
+    - "Keeps text and 2D summaries available when 3D rendering fails."
+  pass_conditions:
+  - "Rubric weights are exactly Format validity 30, Semantic completeness 30, Visual/structural quality 25, and Robustness 15."
+  - "Score is 80 or higher out of 100 with no critical failure in async editor integration, RDKit validation, or 3Dmol render flow."
+  - "The artifact demonstrates editor, 2D, descriptor, and 3D output spaces for the chemdraw-js solution family."
+tags:
+- fim
+- math-and-scientific-rendering
+- chemdraw-js
+- ketcher
+- rdkit-js
+- 3dmol-js
+- molecule-editor
+- molecule-3d
+- integration

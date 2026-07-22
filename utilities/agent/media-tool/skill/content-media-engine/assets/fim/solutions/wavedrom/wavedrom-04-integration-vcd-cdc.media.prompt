@@ -1,0 +1,72 @@
+---
+schema: "0.4"
+id: "fim-electronics-circuits-hdl-and-timing-wavedrom-04-integration-vcd-cdc"
+type: "data"
+quality: "production"
+solution: "wavedrom"
+category: "electronics-circuits-hdl-and-timing"
+variant: "edge-integration-simulation-manufacturing-readiness"
+references:
+  - "references/fim/overview/electronics-media-docfile/wavedrom.md"
+  - "references/fim/solution/wavedrom.md"
+prompt:
+  system: |-
+    You generate complete ASCII WaveDrom JSON. Output only one strict JSON object accepted by WaveDrom, with no Markdown fences or explanatory prose.
+  text: |-
+    Scenario: Create an integration WaveDrom JSON artifact representing a VCD-derived clock-domain-crossing reset release. Include source and destination clocks, async reset, synchronizer flops, req/ack, metastability window annotation, skipped idle cycles, and renderer notes in head/foot text only.
+    
+    Coverage: Cover edge, integration, simulation, or manufacturing-readiness behavior with export commands, compatibility notes, and release-quality validation expectations.
+    
+    Requirements:
+    - Follow the solution reference for wavedrom and stay inside its native artifact model.
+    - The artifact must be strict JSON with a valid signal, reg, or assign body, matching wave/data/node lengths, supported wave characters, and renderer-compatible config/head/foot keys.
+    - Keep signal names, active-low naming, bus data order, node anchors, edge labels, and timing units consistent with the represented digital interface.
+    - Include electrical correctness, timing assumptions, units, labels, net consistency, parser/render compatibility, and safety checks.
+    - Prefer deterministic names and ordering so generated artifacts diff cleanly in git.
+    - Output only the requested artifact source or manifest; do not include commentary outside it.
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.2
+    top_p: 0.9
+output:
+  text_format: "wavedrom-json"
+  artifact_kind: "wavedrom-wavejson-source"
+  formats:
+    - format: "json"
+    - format: "svg"
+    - format: "png"
+evaluation:
+  checklist:
+    - "YAML parses successfully, uses schema 0.4, and includes id, type, quality, solution, category, variant, prompt, output, evaluation, and tags."
+    - "Generated artifact is ASCII-only, contains no Markdown fences, no prose wrapper, and matches the requested output.text_format."
+    - "Electrical correctness is explicit: component values or logic levels are plausible, polarities are clear, grounds or references exist, and unsafe shorts or missing current limits are avoided."
+    - "Timing is explicit where relevant: clocks, delays, setup/hold, transient windows, sample points, or time constants use stated units and align with the scenario."
+    - "Units and labels are complete: voltages, currents, resistance, capacitance, frequency, time, bus widths, active-low names, and probe labels are readable and internally consistent."
+    - "Net consistency is maintained: node names, connector ids, signal names, bus labels, references, and measurement names resolve to the same intended nets throughout the artifact."
+    - "Parser/render compatibility is checked against the normal toolchain for the solution and avoids syntax from sibling tools unless the scenario explicitly asks for an integration handoff."
+    - "Safety checks are present for power, current, voltage stress, ESD, inductive kick, fabrication clearances, or simulation assumptions as appropriate for the artifact."
+  rubric:
+    - name: "Format validity"
+      weight: 30
+      criteria: "Must satisfy schema 0.4 and emit syntactically valid wavedrom-json for wavedrom; parser roots, required wrappers, balanced delimiters, file manifests, and output formats must be correct."
+    - name: "Semantic completeness"
+      weight: 30
+      criteria: "Must fully cover the edge-integration-simulation-manufacturing-readiness scenario, including requested circuit behavior or HDL/timing behavior, electrical correctness, timing relationships, units, labels, and safety assumptions."
+    - name: "Technical/visual quality"
+      weight: 25
+      criteria: "Must be readable and technically useful after rendering or simulation: labels do not collide, dense content is grouped, waveforms align, plots or schematics carry units, and net consistency is visible."
+    - name: "Robustness"
+      weight: 15
+      criteria: "Must remain stable under normal parsing, rendering, simulation, export, or documentation use; handle edge cases, deterministic ordering, missing-backend notes, and compatibility limits for wavedrom."
+  pass_conditions:
+    - "Rubric weights are exactly Format validity 30, Semantic completeness 30, Technical/visual quality 25, Robustness 15."
+    - "Total score is at least 85 out of 100, with Format validity at least 24 out of 30 and no zero-score rubric dimension."
+    - "Generated artifact is ASCII-only, parser/render compatible for the requested solution, and contains no Markdown fences or explanatory prose wrapper."
+    - "Electrical correctness, timing, units, labels, net consistency, parser/render compatibility, and safety checks are all addressed in the generated artifact."
+tags:
+  - "fim"
+  - "electronics-circuits-hdl-and-timing"
+  - "wavedrom"
+  - "edge-integration"
+  - "data"
+  - "wavedrom-json"

@@ -1,0 +1,80 @@
+@startuml
+' ============================================================================
+' METADATA
+'   author:       TheRobotDrafts Examples
+'   description:  Medium profile diagram — a domain profile with four stereotypes extending different metaclasses, tagged values, and stereotype inheritance.
+'   usecase:      Teach multiple stereotypes, tagged values, inheritance between stereotypes, and extending different metaclasses.
+'   complexity:   medium
+'   domain:       Enterprise / SOA
+' ============================================================================
+title Example Profile Diagram - Medium Domain Profile
+
+' ---------------------------------------------------------------------------
+' "EnterpriseProfile" defines four stereotypes for SOA modelling:
+'   «Service»       extends Component
+'   «RESTEndpoint»  extends Class
+'   «Entity»        extends Class
+'   «ValueObject»   extends Class
+' Plus a stereotype GENERALIZATION: «ValueObject» is a kind of «Entity»
+# (specialised stereotype inherits its parent's tagged values).
+' Each stereotype carries tagged values shown as stereotype-scope attributes.
+' ---------------------------------------------------------------------------
+
+package "EnterpriseProfile" <<profile>> {
+
+  ' --- Metaclasses ------------------------------------------------------
+  class Component << (M,#B4A7E5) metaclass >> { }
+  class Class     << (M,#B4A7E5) metaclass >> { }
+
+  ' --- Stereotypes ------------------------------------------------------
+  class Service << (S,#F2C9C9) stereotype >> {
+    + endpoint : String
+    + version  : String
+  }
+
+  class RESTEndpoint << (S,#F2C9C9) stereotype >> {
+    + method : HTTPMethod
+    + path   : String
+  }
+
+  class Entity << (S,#F2C9C9) stereotype >> {
+    + tableName : String
+  }
+
+  class ValueObject << (S,#F2C9C9) stereotype >> {
+    + immutable : Boolean
+  }
+
+  ' --- Extensions (stereotype -> metaclass) -----------------------------
+  Service      ..> Component : <<extend>>
+  RESTEndpoint ..> Class     : <<extend>>
+  Entity       ..> Class     : <<extend>>
+  ValueObject  ..> Class     : <<extend>>
+
+  ' --- Stereotype generalization ----------------------------------------
+  ' ValueObject SPECIALISES Entity — it inherits tableName and adds
+  ' immutable.  Drawn with the hollow-triangle generalization arrow.
+  ValueObject --|> Entity
+}
+
+note right of Service
+  <b>Stereotype generalization</b>
+  ValueObject --|> Entity
+  means «ValueObject» inherits the
+  tableName tagged value from
+  «Entity» and adds its own
+  immutable flag.  The base element
+  type is still Class.
+end note
+
+note bottom of RESTEndpoint
+  <b>Different metaclasses</b>
+  Service extends Component; the
+  others extend Class.  A stereotype
+  must name exactly which metaclass
+  it extends, because the tagged
+  values only become applicable on
+  elements of THAT metaclass.
+end note
+
+@enduml

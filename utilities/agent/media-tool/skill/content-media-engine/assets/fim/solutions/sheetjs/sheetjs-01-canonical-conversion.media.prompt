@@ -1,0 +1,72 @@
+schema: "0.4"
+id: sheetjs-01-canonical-conversion
+type: document/data
+quality: high
+solution: sheetjs
+category: document-data-file-processing
+variant: canonical-conversion
+references:
+  - "references/fim/overview/electronics-media-docfile/sheetjs.md"
+  - "references/fim/solution/sheetjs.md"
+prompt:
+  system: |-
+    You generate SheetJS spreadsheet processing artifacts. Output only one complete ASCII JavaScript file for Node.js. Do not use Markdown fences or explanatory prose.
+  text: |-
+    Create a canonical SheetJS converter that reads CSV data and writes XLSX plus JSON.
+
+    Requirements:
+    - Use `xlsx` as `XLSX`, `fs`, and deterministic inline CSV fallback data when no input path is provided.
+    - Parse rows into typed order records with string ids, dates, numeric quantities, numeric prices, booleans, and status values.
+    - Build a workbook with Orders and Summary sheets using `json_to_sheet`, `aoa_to_sheet`, `book_append_sheet`, and `writeFile`.
+    - Add column widths, autofilter, number formats, date formats, and a formula in the Summary sheet.
+    - Export normalized JSON alongside the XLSX file.
+    - Include metadata in workbook properties where supported and in a sidecar JSON file.
+    - Include parseability, pagination, fonts, accessibility, formulas/data types, metadata, and deterministic output safeguards in comments and validation checks.
+    - Output only the final JavaScript artifact.
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.2
+output:
+  text_format: javascript
+  artifact_kind: sheetjs-csv-to-xlsx-converter
+  formats:
+    - format: js
+    - format: xlsx
+    - format: json
+evaluation:
+  checklist:
+    - "Format validity: YAML parses as schema 0.4, generated output is one JavaScript file, and SheetJS APIs are used."
+    - "Parseability: JavaScript is syntactically valid, imports xlsx/fs, and can run with inline fallback data."
+    - "Semantic completeness: CSV parse, typed rows, workbook creation, sheets, JSON export, and sidecar metadata are present."
+    - "Pagination: spreadsheet print/page setup or notes are included where SheetJS CE supports them, with no false PDF pagination claims."
+    - "Fonts: SheetJS CE style limits are documented and column width/readability choices are used instead of unsupported rich font claims."
+    - "Accessibility: sheet names, headers, column order, summary labels, and metadata help screen-reader and downstream tooling use."
+    - "Formulas/data types: dates, numbers, booleans, strings, statuses, number formats, and a Summary formula are represented."
+    - "Metadata: workbook properties or sidecar metadata include title, author, source, profile, timestamp, and row counts."
+    - "Deterministic output: fallback CSV, row ordering, formulas, filenames, timestamp, and JSON key order are stable."
+  rubric:
+    - name: "Format validity"
+      weight: 30
+      criteria: "The prompt YAML and generated JavaScript are parseable, ASCII-only, and use SheetJS as the spreadsheet parser/writer."
+    - name: "Semantic completeness"
+      weight: 30
+      criteria: "The converter covers CSV ingestion, typed normalization, workbook writing, formulas, JSON export, and metadata."
+    - name: "Layout/data quality"
+      weight: 25
+      criteria: "Workbook sheets are clear, headers and widths are usable, data types are accurate, and formulas are correct."
+    - name: "Robustness"
+      weight: 15
+      criteria: "The artifact handles missing input, blank cells, invalid numbers, formula caveats, metadata, and deterministic reruns."
+  pass_conditions:
+    - "YAML parses successfully and all file text is ASCII-only."
+    - "Rubric weights are exactly 30, 30, 25, and 15."
+    - "Generated JavaScript can run with `node converter.js` after installing xlsx and creates XLSX plus JSON outputs."
+    - "All checklist items for parseability, pagination, fonts, accessibility, formulas/data types, metadata, and deterministic output are represented."
+tags:
+  - fim
+  - document-data-file-processing
+  - sheetjs
+  - csv-to-xlsx
+  - canonical-conversion
+  - spreadsheet
+

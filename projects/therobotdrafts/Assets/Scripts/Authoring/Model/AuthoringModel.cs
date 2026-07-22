@@ -69,6 +69,10 @@ namespace TheRobotDraft.Authoring.Model
         /// </summary>
         internal readonly List<string> PropertyItems = new();
 
+        // Typed, sparse aspect attachments + freeform entries (see Aspects.cs). Sparse: instances store only
+        // overridden field values; defaults + key list live on the registry AspectDef.
+        internal readonly AspectSet Aspects = new();
+
         internal readonly List<ElementId> Children = new();
 
         internal ModelElement(ElementId id, ElementKind kind, string name, ElementId parent)
@@ -84,6 +88,7 @@ namespace TheRobotDraft.Authoring.Model
 
         public IReadOnlyList<ElementId> ChildIds => Children;
         public IReadOnlyList<string> Items => PropertyItems;
+        public AspectSet AspectSet => Aspects;
     }
 
     /// <summary>One relationship (edge) in the unified model. Direction is from→to (§4.2).</summary>
@@ -106,13 +111,27 @@ namespace TheRobotDraft.Authoring.Model
         /// <summary>A constraint on the relationship, drawn in braces (e.g. "{ordered}", "{xor}", a guard). Null = none.</summary>
         public string Constraint { get; internal set; }
 
+        // Typed, sparse aspect attachments + freeform entries for the link (see Aspects.cs).
+        internal readonly AspectSet Aspects = new();
+
+        /// <summary>Stable UUIDv5 identity for the edge (documentation pointers + aspect sidecar keys). Null until computed.</summary>
+        public string DeepLinkUuid { get; internal set; }
+
+        /// <summary>Compact Unicode token (⟦code⟧) derived from <see cref="DeepLinkUuid"/>; the aspect sidecar key.</summary>
+        public string DeepLinkCode { get; internal set; }
+
         internal ModelEdge(EdgeId id, EdgeKind kind, ElementId from, ElementId to)
         {
             Id = id;
             Kind = kind;
             From = from;
             To = to;
+            DeepLinkUuid = DeepLinkIdentity.Uuid5ForEdge(id, kind, from, to, null);
+            try { DeepLinkCode = DeepLinkIdentity.EncodeToken(DeepLinkUuid); }
+            catch { DeepLinkCode = null; }
         }
+
+        public AspectSet AspectSet => Aspects;
     }
 
     /// <summary>
@@ -213,6 +232,51 @@ namespace TheRobotDraft.Authoring.Model
                 list.Add(item.Trim());
             }
         }
+
+        // --- aspect mutators (sparse: instances carry only overridden field values) ---
+        // Keys (def names, field names, freeform keys) must be non-empty + whitespace-free (AspectResolution.IsValidKey);
+        // invalid keys are dropped on set rather than stored, so they can never reach .trd-yaml serialization.
+
+        /// <summary>Replace an element's full aspect set (typed instances + freeform entries).</summary>
+        internal void SetElementAspects(ElementId id, IEnumerable<AspectInstance> aspects, IEnumerable<FreeformEntry> freeform)
+        {
+            var set = _elements[id].Aspects;
+            set.Aspects.Clear();
+            set.Freeform.Clear();
+            if (aspects != null) foreach (var a in aspects) if (a != null && AspectResolution.IsValidKey(a.DefName)) set.Aspects.Add(CleanInstance(a));
+            if (freeform != null) foreach (var f in freeform) if (f != null && AspectResolution.IsValidKey(f.Key)) set.Freeform.Add(f);
+        }
+
+        /// <summary>Drop any override keys that are not valid (non-empty, whitespace-free) — defensive scrub.</summary>
+        private static AspectInstance CleanInstance(AspectInstance a)
+        {
+            if (a.Overrides == null) return a;
+            var bad = new List<string>();
+            foreach (var k in a.Overrides.Keys) if (!AspectResolution.IsValidKey(k)) bad.Add(k);
+            foreach (var k in bad) a.Overrides.Remove(k);
+            return a;
+        }
+
+        /// <summary>
+        /// Sparse single-field edit: set or clear one overridden value on an element's aspect instance. If the
+        /// instance does not yet exist it is added (referencing <paramref name="defName"/>/<paramref name="defVersion"/>).
+        /// Pass a null/empty value to drop the override (revert to the def default).
+        /// </summary>
+        internal void EditAspectOverride(ElementId id, string defName, int defVersion, string field, string value)
+        {
+            if (!AspectResolution.IsValidKey(field)) return; // whitespace/empty keys never stored
+            var set = _elements[id].Aspects;
+            var inst = FindOrAdd(set, defName, defVersion);
+            if (string.IsNullOrEmpty(value)) inst.Overrides.Remove(field);
+            else inst.Overrides[field] = value;
+        }
+
+        /// <summary>Set the per-instance emit-flag override on an element's aspect (null = revert to def defaults).</summary>
+        internal void SetElementAspectEmit(ElementId id, string defName, int defVersion, EmitFlags? emitOverride)
+        {
+            var inst = FindOrAdd(_elements[id].Aspects, defName, defVersion);
+            inst.EmitOverride = emitOverride;
+        }
         internal void SetCode(ElementId id, string code) => _elements[id].Code = code;
         internal void SetSourceFile(ElementId id, string sourceFile) => _elements[id].SourceFile = sourceFile;
         internal void SetZLayer(ElementId id, int z) => _elements[id].ZLayer = z;
@@ -238,6 +302,41 @@ namespace TheRobotDraft.Authoring.Model
             edge.TargetMultiplicity = target;
         }
         internal void SetEdgeConstraint(EdgeId id, string constraint) => _edges[id].Constraint = constraint;
+
+        // --- edge aspect mutators (mirror the element ones) ---
+
+        internal void SetEdgeAspects(EdgeId id, IEnumerable<AspectInstance> aspects, IEnumerable<FreeformEntry> freeform)
+        {
+            var set = _edges[id].Aspects;
+            set.Aspects.Clear();
+            set.Freeform.Clear();
+            if (aspects != null) foreach (var a in aspects) if (a != null && AspectResolution.IsValidKey(a.DefName)) set.Aspects.Add(CleanInstance(a));
+            if (freeform != null) foreach (var f in freeform) if (f != null && AspectResolution.IsValidKey(f.Key)) set.Freeform.Add(f);
+        }
+
+        internal void EditEdgeAspectOverride(EdgeId id, string defName, int defVersion, string field, string value)
+        {
+            if (!AspectResolution.IsValidKey(field)) return;
+            var set = _edges[id].Aspects;
+            var inst = FindOrAdd(set, defName, defVersion);
+            if (string.IsNullOrEmpty(value)) inst.Overrides.Remove(field);
+            else inst.Overrides[field] = value;
+        }
+
+        internal void SetEdgeAspectEmit(EdgeId id, string defName, int defVersion, EmitFlags? emitOverride)
+        {
+            var inst = FindOrAdd(_edges[id].Aspects, defName, defVersion);
+            inst.EmitOverride = emitOverride;
+        }
+
+        private static AspectInstance FindOrAdd(AspectSet set, string defName, int defVersion)
+        {
+            foreach (var a in set.Aspects)
+                if (a != null && a.DefName == defName) return a;
+            var inst = new AspectInstance { DefName = defName, DefVersion = defVersion };
+            set.Aspects.Add(inst);
+            return inst;
+        }
         internal void SetEdgeEndpoints(EdgeId id, ElementId from, ElementId to)
         {
             var edge = _edges[id];

@@ -1,0 +1,87 @@
+@startuml
+' ============================================================================
+' METADATA
+'   author:       TheRobotDrafts Examples
+'   description:  Variant contrasting a DMN Decision Requirements Diagram (the
+'                 decision TOPOLOGY — what feeds what) with a Decision Table
+'                 (one decision's LOGIC payload) for the same "Risk Class"
+'                 decision, to clarify that they are different artifacts.
+'   usecase:      Teaching the difference between the DRD (graph of decisions)
+'                 and the decision table (a single decision's boxed expression),
+'                 and when each view is the right one to show.
+'   complexity:   simple
+'   domain:       finance / underwriting (teaching variant)
+' ============================================================================
+
+title DMN Variant - Decision Table vs DRD (same decision)
+
+' ---------------------------------------------------------------------------
+' TEACHING NOTES
+' ---------------------------------------------------------------------------
+' Two artifacts that are easy to confuse in DMN:
+'
+'   1. DRD (Decision Requirements Diagram) — the GRAPH.
+'      Nodes = decisions, input data, knowledge sources. Edges = requirements.
+'      Answers: "what decisions exist, and what information/logic does each
+'      need?" It is the shape of the decision model.
+'
+'   2. Decision Table — the PAYLOAD of ONE decision node.
+'      A grid with a hit policy, input columns (clauses) and output columns.
+'      Answers: "given these input values, what is this decision's output?"
+'      It lives INSIDE one rectangle on the DRD; it is not itself a diagram.
+'
+' Rule of thumb:
+'   - Use the DRD to talk to stakeholders about SCOPE and DEPENDENCIES.
+'   - Open the decision table to talk to SMEs about RULES and OUTPUTS.
+' ---------------------------------------------------------------------------
+
+' === LEFT: the DRD (topology) for "Risk Class" ===
+together {
+  usecase "Credit\nScore"  as CS
+  usecase "DTI"            as DTI
+  usecase "LTV"            as LTV
+
+  rectangle "Risk\nClass"  as RC <<decision>>
+
+  CS  --> RC
+  DTI --> RC
+  LTV --> RC
+
+  file "Underwriting\nGuide" as Guide
+  RC ..> Guide : <<authority>>
+}
+
+note left of RC
+  **LEFT = DRD (topology)**
+  "Risk Class exists and consumes
+  Credit Score, DTI, LTV, and is
+  governed by the Underwriting
+  Guide."
+  This is a GRAPH view.
+end note
+
+' === RIGHT: the Decision Table (payload) for the SAME decision ===
+' The table is attached as a note because a decision table is data, not a node.
+note right of RC
+  **RIGHT = Decision Table (payload of "Risk Class")**
+  Hit Policy: **UNIQUE**
+  --
+  | Credit Score | DTI  | LTV  | => Risk Class |
+  | >= 750       | <36% | <=80%| A (prime)     |
+  | 680-749      | <43% | <=90%| B (near)      |
+  | 620-679      | <50% | <=95%| C (subprime)  |
+  | < 620        | --   | --   | D (decline)   |
+  --
+  This is the decision's LOGIC, not a
+  node on the graph. One rectangle on
+  the DRD holds this whole table.
+end note
+
+note bottom of RC
+  **Key relationship**
+  The DRD rectangle "Risk Class" is a CONTAINER. Its CONTENTS (the boxed
+  expression) is the decision table on the right. Changing the table edits the
+  decision's rules; it does not change the DRD's topology. Adding/removing
+  inputs or outputs of the table MIGHT change the DRD edges.
+end note
+@enduml

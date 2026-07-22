@@ -293,6 +293,66 @@ namespace TheRobotDraft.Uml3D
             rt.SetSiblingIndex(Mathf.Max(0, idx));
         }
 
+        // The shared-placement badge (a child of the face canvas), kept so it can be updated/cleared without a rebuild.
+        private RectTransform _sharedBadge;
+
+        /// <summary>
+        /// Show (or update) a small always-on corner badge — an amber pill reading "×N" — marking an element that is
+        /// placed (linked) in more than one diagram; <paramref name="otherDiagramCount"/> is how many OTHER diagrams
+        /// also carry it. A count of 0 or less hides the badge. No-op for marker kinds that carry no face canvas.
+        /// </summary>
+        public void SetSharedBadge(int otherDiagramCount)
+        {
+            if (otherDiagramCount <= 0)
+            {
+                if (_sharedBadge != null) { Destroy(_sharedBadge.gameObject); _sharedBadge = null; }
+                return;
+            }
+            if (_faceRt == null) return; // marker / control kind with no face canvas
+
+            if (_sharedBadge == null)
+            {
+                if (_font == null) _font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+
+                float pxW = _faceRt.sizeDelta.x;
+                float bw = Mathf.Clamp(pxW * 0.28f, 24f, 60f);   // ~28% of the face width, clamped to a legible range
+                float bh = Mathf.Clamp(bw * 0.6f, 16f, 34f);
+
+                // Amber pill anchored just inside the top-right corner so it never covers the centered name.
+                var go = new GameObject("SharedBadge", typeof(RectTransform));
+                _sharedBadge = (RectTransform)go.transform;
+                _sharedBadge.SetParent(_faceRt, false);
+                _sharedBadge.anchorMin = _sharedBadge.anchorMax = new Vector2(1f, 1f);
+                _sharedBadge.pivot = new Vector2(1f, 1f);
+                _sharedBadge.sizeDelta = new Vector2(bw, bh);
+                _sharedBadge.anchoredPosition = new Vector2(-3f, -3f);
+                var img = go.AddComponent<Image>();
+                img.color = new Color(0.95f, 0.72f, 0.20f, 1f); // gold / amber
+                img.raycastTarget = false;
+
+                // Dark "×N" count centered on the pill.
+                var txtGo = new GameObject("Count", typeof(RectTransform));
+                var trt = (RectTransform)txtGo.transform;
+                trt.SetParent(_sharedBadge, false);
+                trt.anchorMin = Vector2.zero; trt.anchorMax = Vector2.one;
+                trt.offsetMin = Vector2.zero; trt.offsetMax = Vector2.zero;
+                var t = txtGo.AddComponent<Text>();
+                t.font = _font;
+                t.fontSize = Mathf.RoundToInt(bh * 0.7f);
+                t.color = new Color(0.13f, 0.12f, 0.10f, 1f);
+                t.fontStyle = FontStyle.Bold;
+                t.alignment = TextAnchor.MiddleCenter;
+                t.supportRichText = false;
+                t.raycastTarget = false;
+                t.horizontalOverflow = HorizontalWrapMode.Overflow;
+                t.verticalOverflow = VerticalWrapMode.Overflow;
+            }
+
+            // Update the count each call (the badge may already exist from a prior placement change).
+            var label = _sharedBadge.GetComponentInChildren<Text>();
+            if (label != null) label.text = "×" + otherDiagramCount;
+        }
+
         /// <summary>Toggle the selection highlight (a tinted border box around the slab plus an emissive lift).</summary>
         public void SetSelected(bool on)
         {

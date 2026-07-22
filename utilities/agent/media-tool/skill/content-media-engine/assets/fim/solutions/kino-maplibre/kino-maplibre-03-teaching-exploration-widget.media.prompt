@@ -1,0 +1,68 @@
+schema: "0.4"
+id: fim-notebook-livebook-and-widgets-kino-maplibre-03-teaching-exploration-widget
+type: visualization
+quality: high
+solution: kino-maplibre
+category: notebook-livebook-and-widgets
+variant: teaching-exploration-widget
+prompt:
+  system: |-
+    You are a senior Elixir Livebook geospatial educator. Output only one complete ASCII Elixir Livebook code cell for Kino.MapLibre. No Markdown fences, no prose outside code. Teach through runnable map examples and concise comments.
+  text: |-
+    Create a Kino.MapLibre teaching and exploration cell that demonstrates the difference between a static MapLibre spec and a dynamic Kino.MapLibre widget. Use a small deterministic GeoJSON dataset, show one point layer and one polygon, line, or heatmap layer, and include comments explaining source ids, layer ids, paint properties, data-driven expressions, and the {longitude, latitude} coordinate order. Include a companion table showing the same feature properties.
+
+    Requirements: include Livebook compatibility, fallback style notes, feature schema comments, accessible map summary, and safe execution checks. Do not require an API key or real network data. If dynamic interaction is shown, wrap with Kino.MapLibre.new/1 before calling add_marker, add_hover, add_nav_controls, or update_geojson.
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.2
+    top_p: 0.9
+output:
+  text_format: elixir
+  artifact_kind: livebook-kino-maplibre-teaching-cell
+  formats:
+  - format: exs
+evaluation:
+  checklist:
+  - "Import check: generated code installs kino_maplibre and kino, aliases MapLibre as Ml, and renders a MapLibre spec or Kino.MapLibre widget."
+  - "Notebook compatibility: comments identify Livebook/Kino runtime and style/tile dependencies."
+  - "Reactive state: dynamic examples use Kino.MapLibre.new/1 before widget mutators and explain static versus dynamic state."
+  - "Data shape: GeoJSON features, properties, source ids, layer ids, and lng/lat ordering are documented."
+  - "Accessibility and fallback: companion table or summary, readable labels, fallback style notes, and local data are present."
+  - "Safe execution: no API keys, remote data requirement, eval, shell commands, credentials, or oversized inline GeoJSON."
+  rubric:
+  - name: Format validity
+    weight: 30
+    criteria:
+    - "Output is one complete ASCII Elixir Livebook code cell with no Markdown fences or explanatory wrapper."
+    - "The code is valid and source/layer definitions are ordered correctly."
+    - "Comments teach current MapLibre and Kino.MapLibre APIs without excessive prose."
+  - name: Semantic completeness
+    weight: 30
+    criteria:
+    - "Teaches static spec versus dynamic widget, GeoJSON shape, paint expressions, and coordinates."
+    - "Includes at least two layer examples and a companion data view."
+    - "Includes notebook/livebook compatibility, reactive state, data shape, accessibility, fallback, and safe execution checks."
+  - name: UX/structural quality
+    weight: 25
+    criteria:
+    - "Map examples are visually distinct, readable, and centered on the sample data."
+    - "The companion table or summary makes map content accessible outside the canvas."
+    - "Fallback and tile warning states are easy to understand."
+  - name: Robustness
+    weight: 15
+    criteria:
+    - "Handles invalid coordinates, missing properties, empty feature sets, and style failures."
+    - "Uses local deterministic data and bounded payloads."
+    - "Documents when to switch to hosted data or a simpler mapping library."
+  pass_conditions:
+  - "All required YAML fields are present and the generated artifact is one valid ASCII Elixir Livebook cell."
+  - "Rubric weights are exactly Format validity 30, Semantic completeness 30, UX/structural quality 25, Robustness 15."
+  - "The prompt requires notebook/livebook compatibility, reactive state, data shape, accessibility, fallback, and safe execution checks."
+  - "The solution remains Kino.MapLibre-centered and teaches solution-specific map concepts."
+tags:
+- fim
+- notebook-livebook-and-widgets
+- livebook
+- kino-maplibre
+- teaching-exploration-widget
+

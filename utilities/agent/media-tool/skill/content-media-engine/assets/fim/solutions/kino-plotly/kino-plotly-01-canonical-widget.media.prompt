@@ -1,0 +1,68 @@
+schema: "0.4"
+id: fim-notebook-livebook-and-widgets-kino-plotly-01-canonical-widget
+type: visualization
+quality: high
+solution: kino-plotly
+category: notebook-livebook-and-widgets
+variant: canonical-widget
+prompt:
+  system: |-
+    You are a senior Elixir Livebook scientific visualization engineer. Output only one complete ASCII Elixir Livebook code cell for Kino.Plotly. No Markdown fences, no prose outside code. Use deterministic local data and Plotly trace/layout maps.
+  text: |-
+    Create a canonical Kino.Plotly Livebook cell. Install kino_plotly and kino, generate deterministic scientific data, build a Plotly figure as a list of trace maps plus a layout map, and render it with Kino.Plotly.new(data, layout). Use either a 3D surface, 3D scatter, heatmap, or multi-series line chart. For any 3D chart, put axes under layout.scene rather than layout.xaxis or layout.yaxis.
+
+    Requirements: document Livebook/Kino compatibility and that the figure is Plotly JSON in a notebook cell; describe x, y, z, and trace data shapes; include axis titles, hover text, color scale, accessible labels, fallback local data, and safe execution checks that avoid remote data, credentials, eval, shell calls, oversized traces, and unavailable wrapper assumptions.
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.2
+    top_p: 0.9
+output:
+  text_format: elixir
+  artifact_kind: livebook-kino-plotly-cell
+  formats:
+  - format: exs
+evaluation:
+  checklist:
+  - "Import check: generated code installs kino_plotly and kino, builds a list of trace maps, and calls Kino.Plotly.new(data, layout)."
+  - "Notebook compatibility: comments identify Livebook/Kino runtime and Plotly.js browser rendering."
+  - "Reactive state: figure state is deterministic and can be rerun or rebuilt; wrapper limitations are documented."
+  - "Data shape: trace list, x/y/z arrays or z matrix, layout fields, and 3D scene axes are documented."
+  - "Accessibility and fallback: axis titles, hover text, readable colorscale, and fallback local data are present."
+  - "Safe execution: no remote data, credentials, eval, shell commands, oversized traces, or unguarded dependency assumptions."
+  rubric:
+  - name: Format validity
+    weight: 30
+    criteria:
+    - "Output is one complete ASCII Elixir Livebook code cell with no Markdown fences or explanatory wrapper."
+    - "The code is valid Elixir and passes a list of traces to Kino.Plotly.new/2."
+    - "3D charts use layout.scene for axes and camera."
+  - name: Semantic completeness
+    weight: 30
+    criteria:
+    - "Implements a canonical Plotly visualization with deterministic data, trace maps, layout, labels, and colors."
+    - "Uses Plotly trace type strings and current Kino.Plotly wrapper expectations."
+    - "Includes notebook/livebook compatibility, reactive state, data shape, accessibility, fallback, and safe execution checks."
+  - name: UX/structural quality
+    weight: 25
+    criteria:
+    - "The figure has clear axes, title, legend or hover text, and stable layout dimensions."
+    - "Color scales and annotations are readable and do not rely only on color."
+    - "The chart type matches the data shape and notebook exploration goal."
+  - name: Robustness
+    weight: 15
+    criteria:
+    - "Handles empty data, mismatched array lengths, transposed matrices, extreme values, and wrapper availability notes."
+    - "Uses deterministic bounded data."
+    - "Documents when to downsample or use the Kino.JS fallback."
+  pass_conditions:
+  - "All required YAML fields are present and the generated artifact is one valid ASCII Elixir Livebook cell."
+  - "Rubric weights are exactly Format validity 30, Semantic completeness 30, UX/structural quality 25, Robustness 15."
+  - "The prompt requires notebook/livebook compatibility, reactive state, data shape, accessibility, fallback, and safe execution checks."
+  - "The solution remains Kino.Plotly-centered and preserves Plotly trace/layout semantics."
+tags:
+- fim
+- notebook-livebook-and-widgets
+- livebook
+- kino-plotly
+- canonical-widget
+

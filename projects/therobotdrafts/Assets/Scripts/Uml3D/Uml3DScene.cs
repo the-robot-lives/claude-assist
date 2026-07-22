@@ -174,6 +174,9 @@ namespace TheRobotDraft.Uml3D
             _edges.Clear();
         }
 
+        /// <summary>Show/hide every edge at once (e.g. to isolate a node selection for a snapshot).</summary>
+        public void SetEdgesVisible(bool visible) => _edgeRoot?.gameObject.SetActive(visible);
+
         // --- picking ---
 
         /// <summary>

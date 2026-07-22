@@ -1,0 +1,83 @@
+schema: "0.4"
+id: sharp-04-edge-integration-error-metadata
+type: image/visualization/data
+quality: high
+solution: sharp
+category: image-and-video-processing
+variant: edge-integration-error-metadata
+references:
+  - "references/fim/overview/electronics-media-docfile/sharp.md"
+  - "references/fim/solution/sharp.md"
+prompt:
+  system: |-
+    You generate Sharp image-processing artifacts. Output only one complete ASCII JavaScript module. Do not use markdown fences or explanatory prose.
+  text: |-
+    Create a Sharp integration wrapper focused on edge cases, errors, metadata, and deterministic diagnostics.
+
+    Requirements:
+    - Provide createSharpPipeline(input, options) that validates input source, dimensions, output format, alpha policy, color profile policy, animation policy, and pixel limits before output.
+    - Use sharp(input, { failOn: "none", limitInputPixels, sequentialRead }), metadata(), stats(), rotate(), resize(), flatten(), removeAlpha(), ensureAlpha(), toColourspace("srgb"), withMetadata(), and toBuffer({ resolveWithObject: true }).
+    - Cover output dimensions 128x128, 512x512, 1200x630, 1920x1080, and 3840x2160 with deterministic validation messages.
+    - Specify srgb output color profile, ICC handling through withMetadata, alpha preservation for PNG/WebP/AVIF when requested, JPEG flattening, and animated GIF/WebP handling through { animated: true }.
+    - Support input formats JPEG, PNG, WebP, AVIF, TIFF, GIF, SVG, HEIC caveat warnings, and output formats JPEG, PNG, WebP, AVIF, TIFF, GIF, raw stats, and JSON.
+    - Include memory and performance controls: limitInputPixels, metadata preflight, sequentialRead, concurrency/cache notes, timeout wrapper, stream backpressure, and avoiding repeated output on the same instance.
+    - Emit diagnostics JSON with stable error codes, source hash, metadata summary, stats summary, output info, color/alpha policy, animation policy, pixel estimate, byte sizes, warnings, timings, and stable filenames.
+    - Include deterministic output checks for validation order, error code strings, operation list ordering, metadata key order, warning order, and output filenames.
+    - Output only the final JavaScript artifact.
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.2
+output:
+  text_format: javascript
+  artifact_kind: sharp-edge-integration-diagnostics
+  dimensions:
+    width: 3840
+    height: 2160
+  color_profile: srgb-with-icc-policy
+  alpha: modern-formats-preserved-jpeg-flattened
+  formats:
+    - format: js
+    - format: jpg
+    - format: png
+    - format: webp
+    - format: avif
+    - format: tiff
+    - format: gif
+    - format: json
+evaluation:
+  checklist:
+    - "Format validity: YAML parses as schema 0.4, generated output is one JavaScript module, and Sharp APIs are used."
+    - "Semantic completeness: validation, metadata, stats, transform, color/alpha policy, animation handling, diagnostics, and errors are present."
+    - "Dimensions: 128x128, 512x512, 1200x630, 1920x1080, and 3840x2160 presets are validated deterministically."
+    - "Color profile and alpha: srgb output, ICC policy, modern-format alpha preservation, JPEG flattening, and animated input handling are explicit."
+    - "File formats: JPEG, PNG, WebP, AVIF, TIFF, GIF, SVG, HEIC caveats, raw stats, and JSON handling are represented."
+    - "Memory and performance: pixel limits, metadata preflight, sequentialRead, cache/concurrency notes, timeout, backpressure, and single-use instance safety are covered."
+    - "Metadata: diagnostics JSON records error codes, hash, metadata, stats, output info, color/alpha policy, animation policy, pixel estimate, sizes, warnings, timings, and filenames."
+    - "Deterministic output: validation order, error codes, operation order, metadata keys, warning order, and filenames are stable."
+  rubric:
+    - name: "Format validity"
+      weight: 30
+      criteria: "The prompt YAML and generated JavaScript are parseable, ASCII-only, and use Sharp without replacing it with CLI tools."
+    - name: "Semantic completeness"
+      weight: 30
+      criteria: "The artifact covers edge validation, metadata/statistics, color and alpha policy, animation behavior, diagnostics, errors, and deterministic outputs."
+    - name: "Output quality"
+      weight: 25
+      criteria: "The generated outputs and diagnostics are correctly bounded, format-correct, color-safe, alpha-safe, and practical for production integration."
+    - name: "Robustness"
+      weight: 15
+      criteria: "The artifact handles malformed images, huge inputs, unsupported codecs, HEIC caveats, animation surprises, concurrency/cache pressure, and deterministic reruns."
+  pass_conditions:
+    - "YAML parses successfully and all file text is ASCII-only."
+    - "Rubric weights are exactly Format validity 30, Semantic completeness 30, Output quality 25, and Robustness 15."
+    - "Generated JavaScript contains no markdown fences and uses Sharp rather than Jimp, Canvas, or native CLI commands."
+    - "All dimensions, color profile/alpha, file format, memory/performance, metadata, and deterministic output checks are represented."
+    - "Rubric score is at least 80 out of 100 and no required checklist item is absent."
+tags:
+  - fim
+  - image-and-video-processing
+  - sharp
+  - edge-integration-error-metadata
+  - diagnostics
+  - metadata
+  - libvips

@@ -1,0 +1,43 @@
+# .trd-yaml — TheRobotDrafts native model (IxModel serialization)
+name: Example Activity - Medium Order Fulfillment
+elements:
+  - { id: ~start1, type: StateStart, name: start }
+  - { id: ~act2, type: Activity, name: Submit order request }
+  - { id: ~note3, type: Note, name: '<<object node>>', documentation: '<<object node>>\nOrderRequest\n(data token passed downstream)' }
+  - { id: ~act4, type: Activity, name: Validate payment method }
+  - { id: ~dec5, type: Decision, name: 'Card authorized?' }
+  - { id: ~act6, type: Activity, name: Capture payment }
+  - { id: ~act7, type: Activity, name: Update payment details }
+  - { id: ~end8, type: StateEnd, name: end }
+  - { id: ~fork9, type: ForkJoin, name: fork }
+  - { id: ~act10, type: Activity, name: Issue invoice }
+  - { id: ~act11, type: Activity, name: Send receipt email }
+  - { id: ~act12, type: Activity, name: Reserve inventory }
+  - { id: ~act13, type: Activity, name: Pick items from shelf }
+  - { id: ~join14, type: ForkJoin, name: join }
+  - { id: ~act15, type: Activity, name: Pack shipment }
+  - { id: ~act16, type: Activity, name: Generate shipping label }
+  - { id: ~act17, type: Activity, name: Dispatch with courier }
+  - { id: ~act18, type: Activity, name: Receive package }
+  - { id: ~end19, type: StateEnd, name: end }
+edges:
+  - { id: e1, type: Transition, from: ~start1, to: ~act2 }
+  - { id: e2, type: Transition, from: ~act2, to: ~act4 }
+  - { id: e3, type: Transition, from: ~act4, to: ~dec5 }
+  - { id: e4, type: Transition, from: ~dec5, to: ~act6, label: yes }
+  - { id: e5, type: Transition, from: ~dec5, to: ~act7, label: no }
+  - { id: e6, type: Transition, from: ~act7, to: ~end8 }
+  - { id: e7, type: Transition, from: ~act6, to: ~fork9 }
+  - { id: e8, type: Transition, from: ~fork9, to: ~act10 }
+  - { id: e9, type: Transition, from: ~act10, to: ~act11 }
+  - { id: e10, type: Transition, from: ~fork9, to: ~act12 }
+  - { id: e11, type: Transition, from: ~act12, to: ~act13 }
+  - { id: e12, type: Transition, from: ~act11, to: ~join14 }
+  - { id: e13, type: Transition, from: ~act13, to: ~join14 }
+  - { id: e14, type: Transition, from: ~join14, to: ~act15 }
+  - { id: e15, type: Transition, from: ~act15, to: ~act16 }
+  - { id: e16, type: Transition, from: ~act16, to: ~act17 }
+  - { id: e17, type: Transition, from: ~act17, to: ~act18 }
+  - { id: e18, type: Transition, from: ~act18, to: ~end19 }
+diagrams:
+  - { id: d1, name: Example Activity - Medium Order Fulfillment, kind: activity, layoutProvenance: Synthesized }

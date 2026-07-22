@@ -82,13 +82,7 @@ pub async fn interactive_refine_loop(
                     for output_path in output_paths {
                         let candidate = genai_candidate_path(output_path);
                         match provider
-                            .generate(
-                                &current_text,
-                                &candidate,
-                                api_key,
-                                &options,
-                                &attachments,
-                            )
+                            .generate(&current_text, &candidate, api_key, &options, &attachments)
                             .await
                         {
                             Ok(true) => {

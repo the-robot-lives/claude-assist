@@ -1,257 +1,508 @@
 #!/usr/bin/env bash
-# quick-gist — quick GitHub Gist creation with fzf file picker
-# Usage:
-#   quick-gist                        # fzf picker: select files interactively
-#   quick-gist file1.py file2.js      # gist specific files
-#   quick-gist --public file.py       # public gist
-#   quick-gist --secret file.py       # secret (private) gist
-#   quick-gist -s file.py             # short for --secret
-#   quick-gist -d "description" ...   # add description
-#   quick-gist -p                     # pipe from stdin (provide filename with -n)
-#   quick-gist -n name.txt -p         # name the stdin file
-#   quick-gist -a <gist-id> file.py   # add files to existing gist
-#   quick-gist -e <gist-id>           # edit existing gist (opens fzf to pick files to add)
-#   quick-gist -l                     # list your recent gists
-#   echo "code" | quick-gist -p       # pipe content directly
+# quick-gist — reliable GitHub Gist creation with account and file selection
 
-set -euo pipefail
+set -uo pipefail
 
-# Colors
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-CYAN='\033[0;36m'
-YELLOW='\033[0;33m'
-DIM='\033[2m'
-BOLD='\033[1m'
-RESET='\033[0m'
+if [[ -t 1 && -z "${NO_COLOR:-}" ]]; then
+    RED='\033[0;31m'; GREEN='\033[0;32m'; CYAN='\033[0;36m'
+    YELLOW='\033[0;33m'; DIM='\033[2m'; BOLD='\033[1m'; RESET='\033[0m'
+else
+    RED=''; GREEN=''; CYAN=''; YELLOW=''; DIM=''; BOLD=''; RESET=''
+fi
+
+info()    { printf "%b→%b %s\n" "$CYAN" "$RESET" "$*"; }
+success() { printf "%b✓%b %s\n" "$GREEN" "$RESET" "$*"; }
+warn()    { printf "%b!%b %s\n" "$YELLOW" "$RESET" "$*" >&2; }
+fail()    { printf "%b✗%b %s\n" "$RED" "$RESET" "$*" >&2; }
+die()     { fail "$*"; exit 1; }
 
 usage() {
     cat <<'USAGE'
-quick-gist — quick GitHub Gist creator with fzf support
+quick-gist — reliable GitHub Gist creator with fzf support
 
 USAGE:
-  quick-gist                              Interactive file picker (fzf)
-  quick-gist file1 file2 ...              Gist specific files
-  echo "code" | quick-gist -p             Gist from stdin
-  quick-gist -a <id> file1 ...            Add files to existing gist
-  quick-gist -l                           List recent gists
+  quick-gist [options] [file|directory ...]   Create a gist
+  command | quick-gist -p [options]           Create a gist from stdin
+  quick-gist -a ID [file|directory ...]       Add files to a gist
+  quick-gist -e ID [filters]                  Pick files to add to a gist
+  quick-gist -l [--account USER]              List recent gists
 
-OPTIONS:
-  -d DESC     Description for the gist
-  -s          Create secret (private) gist (same as --secret)
-  --public    Create public gist
-  --secret    Create secret gist (default, or set QUICK_GIST_VISIBILITY)
-  -p          Read from stdin (pipe mode)
-  -n NAME     Filename for stdin content (default: paste.txt)
-  -a ID       Add files to existing gist
-  -e ID       Edit existing gist (fzf picker for new files)
-  -l          List your recent gists
-  -o          Open gist in browser after creation
-  -h          Show this help
+SELECTION:
+  -i, --include GLOB       Include matching picker/directory files (repeatable)
+  -x, --extension EXT      Shorthand for --include '*.EXT' (repeatable)
+      --exclude GLOB       Exclude matching picker/directory files (repeatable)
+  TAB selects multiple files in fzf; CTRL-A toggles all selections.
+
+ACCOUNT:
+  -u, --account USER       Use a stored authenticated personal account
+      --owner USER         Alias for --account
+      --hostname HOST      GitHub host (default: github.com)
+
+  Gists belong to personal accounts, not organizations. Account selection is
+  process-local and does not change the active account in `gh auth`.
+
+UPLOAD:
+  -d, --description DESC   Gist description (quick-gist attribution is appended)
+  -s, --secret             Create a secret gist (default)
+      --public             Create a publicly listed gist
+  -p, --pipe               Read content from stdin
+  -n, --name NAME          Filename for stdin content (default: paste.txt)
+  -a, --append ID          Add files to an existing gist
+  -e, --edit ID            Pick files to add to an existing gist
+  -l, --list               List 20 recent gists
+  -o, --open               Open the result in a browser
+      --chunk-size SIZE    Split larger text files (default: 8M; K/M/G accepted)
+      --no-chunk           Reject files larger than --chunk-size
+  -h, --help               Show this help
+
+ENVIRONMENT:
+  QUICK_GIST_ACCOUNT       Default personal account
+  QUICK_GIST_HOST          Default GitHub host
+  QUICK_GIST_VISIBILITY    secret or public
+  QUICK_GIST_CHUNK_SIZE    Large-file split threshold (default: 8M)
 
 EXAMPLES:
-  quick-gist                              # pick files with fzf
-  quick-gist src/main.py README.md        # gist two files
-  quick-gist -s -d "debug log" crash.log  # secret gist with description
-  quick-gist --public src/main.py         # public gist
-  cat output.json | quick-gist -p -n out.json  # pipe with filename
-  quick-gist -a abc123def file.py         # add file to existing gist
+  quick-gist                              # multi-select with fzf
+  quick-gist src README.md                # recursively include src + README
+  quick-gist -x ex -x exs                 # select only Elixir files
+  quick-gist -i '*.log' --exclude '*old*' # filtered multi-select
+  quick-gist -u monalisa app.py           # create as an authenticated user
+  cat output.json | quick-gist -p -n output.json
 USAGE
-    exit 0
 }
 
-# Defaults
-VISIBILITY="${QUICK_GIST_VISIBILITY:-secret}"
-description=""
+require_value() {
+    [[ $# -ge 2 && -n "$2" ]] || die "Option $1 requires a value."
+}
+
+parse_size() {
+    local value number multiplier=1
+    value="$(printf '%s' "$1" | tr '[:lower:]' '[:upper:]')"
+    if [[ "$value" =~ ^([0-9]+)([KMG]?)(I?B?)$ ]]; then
+        number="${BASH_REMATCH[1]}"
+        case "${BASH_REMATCH[2]}" in
+            K) multiplier=1024 ;;
+            M) multiplier=$((1024 * 1024)) ;;
+            G) multiplier=$((1024 * 1024 * 1024)) ;;
+        esac
+        printf '%s\n' "$((number * multiplier))"
+    else
+        return 1
+    fi
+}
+
+visibility="${QUICK_GIST_VISIBILITY:-secret}"
+account="${QUICK_GIST_ACCOUNT:-}"
+hostname="${QUICK_GIST_HOST:-github.com}"
+chunk_size_input="${QUICK_GIST_CHUNK_SIZE:-8M}"
+description=''
+description_attribution='-- pushed with [quick-gist](https://github.com/noizu/quick-gist)'
+stdin_name='paste.txt'
+append_id=''
+edit_id=''
 pipe_mode=false
-stdin_name="paste.txt"
-append_id=""
-edit_id=""
 list_mode=false
 open_browser=false
+chunk_large=true
+includes=()
+excludes=()
+inputs=()
 
-# Pre-parse long options (getopts doesn't handle them)
-rest=()
-for arg in "$@"; do
-    case "$arg" in
-        --public) VISIBILITY=public ;;
-        --secret) VISIBILITY=secret ;;
-        *)        rest+=("$arg") ;;
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        -d|--description) require_value "$@"; description="$2"; shift 2 ;;
+        --description=*) description="${1#*=}"; shift ;;
+        -s|--secret) visibility=secret; shift ;;
+        --public) visibility=public; shift ;;
+        -p|--pipe) pipe_mode=true; shift ;;
+        -n|--name) require_value "$@"; stdin_name="$2"; shift 2 ;;
+        --name=*) stdin_name="${1#*=}"; shift ;;
+        -a|--append) require_value "$@"; append_id="$2"; shift 2 ;;
+        --append=*) append_id="${1#*=}"; shift ;;
+        -e|--edit) require_value "$@"; edit_id="$2"; shift 2 ;;
+        --edit=*) edit_id="${1#*=}"; shift ;;
+        -l|--list) list_mode=true; shift ;;
+        -o|--open) open_browser=true; shift ;;
+        -u|--account|--owner) require_value "$@"; account="$2"; shift 2 ;;
+        --account=*|--owner=*) account="${1#*=}"; shift ;;
+        --hostname) require_value "$@"; hostname="$2"; shift 2 ;;
+        --hostname=*) hostname="${1#*=}"; shift ;;
+        -i|--include) require_value "$@"; includes+=("$2"); shift 2 ;;
+        --include=*) includes+=("${1#*=}"); shift ;;
+        -x|--extension) require_value "$@"; ext="${2#.}"; includes+=("*.${ext}"); shift 2 ;;
+        --extension=*) ext="${1#*=}"; ext="${ext#.}"; includes+=("*.${ext}"); shift ;;
+        --exclude) require_value "$@"; excludes+=("$2"); shift 2 ;;
+        --exclude=*) excludes+=("${1#*=}"); shift ;;
+        --chunk-size) require_value "$@"; chunk_size_input="$2"; shift 2 ;;
+        --chunk-size=*) chunk_size_input="${1#*=}"; shift ;;
+        --no-chunk) chunk_large=false; shift ;;
+        -h|--help) usage; exit 0 ;;
+        --) shift; while [[ $# -gt 0 ]]; do inputs+=("$1"); shift; done ;;
+        -*) die "Unknown option: $1 (run quick-gist --help)." ;;
+        *) inputs+=("$1"); shift ;;
     esac
 done
-set -- "${rest[@]}"
 
-# Parse options
-while getopts ":d:sn:pa:e:loh" opt; do
-    case $opt in
-        d) description="$OPTARG" ;;
-        s) VISIBILITY=secret ;;
-        n) stdin_name="$OPTARG" ;;
-        p) pipe_mode=true ;;
-        a) append_id="$OPTARG" ;;
-        e) edit_id="$OPTARG" ;;
-        l) list_mode=true ;;
-        o) open_browser=true ;;
-        h) usage ;;
-        \?) echo -e "${RED}Unknown option: -$OPTARG${RESET}" >&2; usage ;;
-        :) echo -e "${RED}Option -$OPTARG requires an argument${RESET}" >&2; usage ;;
-    esac
-done
-shift $((OPTIND - 1))
+[[ "$visibility" == secret || "$visibility" == public ]] || \
+    die "Visibility must be 'secret' or 'public'; got '$visibility'."
+chunk_bytes="$(parse_size "$chunk_size_input")" || \
+    die "Invalid chunk size '$chunk_size_input' (use bytes or K/M/G, for example 8M)."
+((chunk_bytes > 0)) || die "Chunk size must be greater than zero."
 
-# Check gh is authenticated
-if ! gh auth status &>/dev/null; then
-    echo -e "${RED}Not authenticated. Run: gh auth login${RESET}" >&2
-    exit 1
-fi
+mode_count=0
+$pipe_mode && mode_count=$((mode_count + 1))
+$list_mode && mode_count=$((mode_count + 1))
+[[ -n "$append_id" ]] && mode_count=$((mode_count + 1))
+[[ -n "$edit_id" ]] && mode_count=$((mode_count + 1))
+((mode_count <= 1)) || die "Use only one of --pipe, --list, --append, or --edit."
+[[ -z "$edit_id" || ${#inputs[@]} -eq 0 ]] || die "--edit uses the picker; use --append with explicit files."
 
-# --- List mode ---
-if $list_mode; then
-    echo -e "${BOLD}Recent Gists:${RESET}"
-    gh gist list --limit 20
-    exit 0
-fi
+command -v gh >/dev/null 2>&1 || die "GitHub CLI (gh) is required."
 
-# --- Edit mode: add files to existing gist via fzf ---
-if [[ -n "$edit_id" ]]; then
-    if ! command -v fzf &>/dev/null; then
-        echo -e "${RED}fzf required for edit mode. Install: brew install fzf${RESET}" >&2
-        exit 1
+work_dir=''
+actual_account=''
+
+cleanup() {
+    [[ -z "$work_dir" ]] || rm -rf -- "$work_dir"
+}
+trap cleanup EXIT INT TERM
+
+ensure_work_dir() {
+    if [[ -z "$work_dir" ]]; then
+        work_dir="$(mktemp -d "${TMPDIR:-/tmp}/quick-gist.XXXXXX")" || die "Could not create a temporary directory."
+    fi
+}
+
+discover_accounts() {
+    local status
+    status="$(gh auth status --hostname "$hostname" 2>&1 || true)"
+    printf '%s\n' "$status" | sed -nE 's/.*account ([^ ]+).*/\1/p' | awk '!seen[$0]++'
+}
+
+choose_account() {
+    local discovered=() selected='' item index=1 answer=''
+    while IFS= read -r item; do
+        [[ -n "$item" ]] && discovered+=("$item")
+    done < <(discover_accounts)
+
+    if [[ -n "$account" ]]; then
+        return
+    elif [[ ${#discovered[@]} -eq 1 ]]; then
+        account="${discovered[0]}"
+        return
+    elif [[ ${#discovered[@]} -le 1 || ! -r /dev/tty || ! -w /dev/tty ]]; then
+        return
     fi
 
-    echo -e "${CYAN}Select files to add to gist ${BOLD}$edit_id${RESET}${CYAN}:${RESET}"
-    selected=$(fzf --multi --preview 'head -50 {}' --preview-window=right:60%:wrap \
-        --header="TAB=select multiple, ENTER=confirm" \
-        --bind='ctrl-a:toggle-all') || { echo "Cancelled."; exit 0; }
-
-    if [[ -z "$selected" ]]; then
-        echo "No files selected."
-        exit 0
+    if command -v fzf >/dev/null 2>&1; then
+        selected="$(printf '%s\n' "${discovered[@]}" | fzf \
+            --prompt='Create gist as: ' --header='GitHub personal account')" || die "Account selection cancelled."
+    else
+        printf 'Select the personal account that will own the gist:\n' >/dev/tty
+        for item in "${discovered[@]}"; do
+            printf '  %d) %s\n' "$index" "$item" >/dev/tty
+            index=$((index + 1))
+        done
+        printf '> ' >/dev/tty
+        read -r answer </dev/tty || die "Account selection cancelled."
+        [[ "$answer" =~ ^[0-9]+$ ]] && ((answer >= 1 && answer <= ${#discovered[@]})) || die "Invalid account selection."
+        selected="${discovered[answer - 1]}"
     fi
+    account="$selected"
+}
 
-    while IFS= read -r file; do
-        echo -e "${DIM}Adding: $file${RESET}"
-        gh gist edit "$edit_id" --add "$file"
-    done <<< "$selected"
-
-    url=$(gh gist view "$edit_id" --raw 2>/dev/null | head -1 || echo "https://gist.github.com/$edit_id")
-    gist_url="https://gist.github.com/$edit_id"
-    echo -e "${GREEN}${BOLD}Updated:${RESET} ${gist_url}"
-    echo -n "$gist_url" | pbcopy 2>/dev/null && echo -e "${DIM}(copied to clipboard)${RESET}"
-    exit 0
-fi
-
-# --- Append mode: add files to existing gist ---
-if [[ -n "$append_id" ]]; then
-    files=("$@")
-    if [[ ${#files[@]} -eq 0 ]]; then
-        echo -e "${RED}Provide files to add: quick-gist -a <id> file1 file2${RESET}" >&2
-        exit 1
-    fi
-
-    for file in "${files[@]}"; do
-        if [[ ! -f "$file" ]]; then
-            echo -e "${RED}Not found: $file${RESET}" >&2
-            continue
+prepare_auth() {
+    local token=''
+    # A caller-supplied token should win when it works. If it is stale, continue
+    # to stored-account discovery instead of letting it shadow valid gh auth.
+    if [[ -z "$account" && -n "${GH_TOKEN:-}${GITHUB_TOKEN:-}" ]]; then
+        ensure_work_dir
+        if actual_account="$(gh api user --jq .login 2>"$work_dir/env-auth.err")" && [[ -n "$actual_account" ]]; then
+            info "Target account: @$actual_account ($hostname)"
+            return
         fi
-        echo -e "${DIM}Adding: $file${RESET}"
-        gh gist edit "$append_id" --add "$file"
+    fi
+    choose_account
+    if [[ -n "$account" ]]; then
+        ensure_work_dir
+        if ! token="$(env -u GH_TOKEN -u GITHUB_TOKEN gh auth token --hostname "$hostname" --user "$account" 2>"$work_dir/auth-token.err")"; then
+            [[ -s "$work_dir/auth-token.err" ]] && sed 's/^/  /' "$work_dir/auth-token.err" >&2
+            die "No stored authentication for personal account '$account'. GitHub Gists cannot be owned by organizations."
+        fi
+        export GH_TOKEN="$token"
+        export GH_HOST="$hostname"
+    fi
+
+    ensure_work_dir
+    if ! actual_account="$(gh api user --jq .login 2>"$work_dir/auth.err")"; then
+        [[ -s "$work_dir/auth.err" ]] && sed 's/^/  /' "$work_dir/auth.err" >&2
+        die "GitHub authentication failed. Run 'gh auth login --hostname $hostname' or pass --account USER."
+    fi
+    [[ -n "$actual_account" ]] || die "GitHub returned an empty account identity."
+    info "Target account: @$actual_account ($hostname)"
+}
+
+matches_filters() {
+    local path="$1" base pattern matched=false
+    base="$(basename -- "$path")"
+    if [[ ${#includes[@]} -eq 0 ]]; then
+        matched=true
+    else
+        for pattern in "${includes[@]}"; do
+            if [[ "$path" == $pattern || "$base" == $pattern ]]; then matched=true; break; fi
+        done
+    fi
+    $matched || return 1
+    for pattern in "${excludes[@]}"; do
+        [[ "$path" == $pattern || "$base" == $pattern ]] && return 1
+    done
+    return 0
+}
+
+collect_tree() {
+    local root="$1" candidate pattern rg_args=(--files --hidden -0)
+    if command -v rg >/dev/null 2>&1; then
+        for pattern in "${includes[@]}"; do rg_args+=(-g "$pattern"); done
+        for pattern in "${excludes[@]}"; do rg_args+=(-g "!$pattern"); done
+        rg_args+=("$root")
+        while IFS= read -r -d '' candidate; do files+=("$candidate"); done < <(rg "${rg_args[@]}")
+    else
+        while IFS= read -r -d '' candidate; do
+            matches_filters "$candidate" && files+=("$candidate")
+        done < <(find "$root" -type f -print0)
+    fi
+}
+
+pick_files() {
+    local candidates=() candidate status
+    command -v fzf >/dev/null 2>&1 || die "No files specified and fzf is unavailable. Pass files/directories or install fzf."
+    files=()
+    collect_tree .
+    candidates=("${files[@]}")
+    files=()
+    [[ ${#candidates[@]} -gt 0 ]] || die "No files matched the selection filters."
+    ensure_work_dir
+    printf '%s\0' "${candidates[@]}" >"$work_dir/candidates"
+    info "Select files (TAB=multi-select, CTRL-A=toggle all, ENTER=upload)"
+    fzf --multi --read0 --print0 \
+        --preview 'sed -n "1,120p" -- {}' --preview-window=right:60%:wrap \
+        --header='TAB=select multiple · CTRL-A=toggle all · ENTER=confirm' \
+        --bind='ctrl-a:toggle-all' <"$work_dir/candidates" >"$work_dir/selected"
+    status=$?
+    ((status == 0)) || { info "Cancelled; no gist was changed."; exit 0; }
+    while IFS= read -r -d '' candidate; do files+=("$candidate"); done <"$work_dir/selected"
+    [[ ${#files[@]} -gt 0 ]] || { info "No files selected; no gist was changed."; exit 0; }
+}
+
+files=()
+resolve_inputs() {
+    local input
+    files=()
+    for input in "${inputs[@]}"; do
+        if [[ -f "$input" ]]; then
+            files+=("$input")
+        elif [[ -d "$input" ]]; then
+            collect_tree "$input"
+        else
+            warn "Skipping missing or unsupported input: $input"
+        fi
+    done
+}
+
+copy_stdin() {
+    local safe_name
+    ensure_work_dir
+    safe_name="$(basename -- "$stdin_name")"
+    [[ -n "$safe_name" && "$safe_name" != . && "$safe_name" != .. ]] || die "Invalid stdin filename: '$stdin_name'."
+    [[ "$safe_name" == "$stdin_name" ]] || warn "Using basename '$safe_name' for stdin content."
+    cat >"$work_dir/$safe_name" || die "Could not read stdin."
+    [[ -s "$work_dir/$safe_name" ]] || die "No input received on stdin."
+    files=("$work_dir/$safe_name")
+}
+
+is_binary() {
+    LC_ALL=C grep -Iq . "$1" 2>/dev/null
+    [[ $? -eq 1 ]]
+}
+
+split_large_file() {
+    local source="$1" name stem ext prefix raw part index=1 size
+    name="$(basename -- "$source")"
+    stem="$name"; ext=''
+    if [[ "$name" == *.* && "$name" != .* ]]; then stem="${name%.*}"; ext=".${name##*.}"; fi
+    ensure_work_dir
+    mkdir -p "$work_dir/chunks"
+    prefix="$work_dir/chunks/raw.$RANDOM."
+    if split --help 2>&1 | grep -q -- '--line-bytes'; then
+        split --line-bytes="$chunk_bytes" --numeric-suffixes=1 --suffix-length=4 -- "$source" "$prefix" || return 1
+    else
+        split -b "$chunk_bytes" -a 4 -- "$source" "$prefix" || return 1
+    fi
+    for raw in "$prefix"*; do
+        part="$work_dir/chunks/$(printf '%s.part-%03d%s' "$stem" "$index" "$ext")"
+        mv -- "$raw" "$part" || return 1
+        upload_files+=("$part")
+        index=$((index + 1))
+    done
+    size="$(wc -c <"$source" | tr -d ' ')"
+    warn "Split $name ($size bytes) into $((index - 1)) upload-safe parts."
+}
+
+upload_files=()
+prepare_files() {
+    local file size name seen_names='|'
+    upload_files=()
+    for file in "${files[@]}"; do
+        [[ -f "$file" ]] || { warn "Skipping missing file: $file"; continue; }
+        [[ -s "$file" ]] || { warn "Skipping empty file: $file"; continue; }
+        name="$(basename -- "$file")"
+        if [[ "$seen_names" == *"|$name|"* ]]; then
+            die "Duplicate gist filename '$name'. Gists are flat; rename one source file."
+        fi
+        seen_names+="$name|"
+        if is_binary "$file"; then
+            die "'$file' appears to be binary. Gists accept text; use a release, repository, or object storage instead."
+        fi
+        size="$(wc -c <"$file" | tr -d ' ')"
+        if ((size > chunk_bytes)); then
+            $chunk_large || die "'$file' is $size bytes, above the $chunk_bytes-byte limit. Remove --no-chunk or raise --chunk-size."
+            split_large_file "$file" || die "Could not split large file '$file'."
+        else
+            upload_files+=("$file")
+        fi
+    done
+    [[ ${#upload_files[@]} -gt 0 ]] || die "No non-empty text files are available to upload."
+
+    seen_names='|'
+    for file in "${upload_files[@]}"; do
+        name="$(basename -- "$file")"
+        [[ "$seen_names" != *"|$name|"* ]] || die "Generated duplicate gist filename '$name'."
+        seen_names+="$name|"
+    done
+}
+
+gist_url_for() {
+    local id="$1"
+    if [[ "$id" == http://* || "$id" == https://* ]]; then printf '%s\n' "$id"
+    elif [[ "$hostname" == github.com ]]; then printf 'https://gist.github.com/%s\n' "$id"
+    else printf 'https://%s/gist/%s\n' "$hostname" "$id"
+    fi
+}
+
+copy_url() {
+    local url="$1"
+    if command -v pbcopy >/dev/null 2>&1; then printf '%s' "$url" | pbcopy && info "Copied URL to clipboard."
+    elif command -v wl-copy >/dev/null 2>&1; then printf '%s' "$url" | wl-copy && info "Copied URL to clipboard."
+    elif command -v xclip >/dev/null 2>&1; then printf '%s' "$url" | xclip -selection clipboard && info "Copied URL to clipboard."
+    fi
+}
+
+show_command_error() {
+    local error_file="$1"
+    [[ -s "$error_file" ]] && sed 's/^/  /' "$error_file" >&2
+}
+
+create_gist() {
+    local total="${#upload_files[@]}" index=1 file url output create_args=()
+    if [[ -n "$description" ]]; then
+        description="$description $description_attribution"
+    else
+        description="$description_attribution"
+    fi
+    create_args+=(--desc "$description")
+    [[ "$visibility" == public ]] && create_args+=(--public)
+    ensure_work_dir
+    file="${upload_files[0]}"
+    info "Uploading 1/$total: $(basename -- "$file")"
+    if ! output="$(gh gist create "${create_args[@]}" "$file" 2>"$work_dir/create.err")"; then
+        show_command_error "$work_dir/create.err"
+        die "Gist creation failed; no success was reported."
+    fi
+    url="$(printf '%s\n' "$output" | sed -nE 's#.*(https?://[^[:space:]]+).*#\1#p' | tail -1)"
+    if [[ -z "$url" ]]; then
+        [[ -n "$output" ]] && printf '%s\n' "$output" >&2
+        die "GitHub reported success but returned no Gist URL."
+    fi
+    success "Uploaded 1/$total: $(basename -- "$file")"
+
+    for ((index = 2; index <= total; index++)); do
+        file="${upload_files[index - 1]}"
+        info "Uploading $index/$total: $(basename -- "$file")"
+        if ! gh gist edit "$url" --add "$file" >"$work_dir/edit.out" 2>"$work_dir/edit.err"; then
+            show_command_error "$work_dir/edit.err"
+            fail "Upload failed at $index/$total. The partial Gist remains at: $url"
+            return 1
+        fi
+        success "Uploaded $index/$total: $(basename -- "$file")"
     done
 
-    gist_url="https://gist.github.com/$append_id"
-    echo -e "${GREEN}${BOLD}Updated:${RESET} ${gist_url}"
-    echo -n "$gist_url" | pbcopy 2>/dev/null && echo -e "${DIM}(copied to clipboard)${RESET}"
+    printf '\n%b%s%b\n' "$GREEN$BOLD" "Created successfully" "$RESET"
+    printf '  Owner:      @%s\n' "$actual_account"
+    printf '  Visibility: %s\n' "$visibility"
+    printf '  Files:      %d\n' "$total"
+    printf '  URL:        %s\n' "$url"
+    copy_url "$url"
+    if $open_browser && ! gh gist view "$url" --web >/dev/null 2>"$work_dir/open.err"; then
+        show_command_error "$work_dir/open.err"
+        warn "Gist was created, but the browser could not be opened."
+    fi
+}
+
+append_gist() {
+    local id="$1" url total="${#upload_files[@]}" index=1 file
+    url="$(gist_url_for "$id")"
+    ensure_work_dir
+    for file in "${upload_files[@]}"; do
+        info "Adding $index/$total: $(basename -- "$file")"
+        if ! gh gist edit "$id" --add "$file" >"$work_dir/edit.out" 2>"$work_dir/edit.err"; then
+            show_command_error "$work_dir/edit.err"
+            fail "Update failed at $index/$total. Earlier additions may remain at: $url"
+            return 1
+        fi
+        success "Added $index/$total: $(basename -- "$file")"
+        index=$((index + 1))
+    done
+    printf '\n%b%s%b\n' "$GREEN$BOLD" "Updated successfully" "$RESET"
+    printf '  Owner auth: @%s\n' "$actual_account"
+    printf '  Files added: %d\n' "$total"
+    printf '  URL:         %s\n' "$url"
+    copy_url "$url"
+    if $open_browser && ! gh gist view "$id" --web >/dev/null 2>"$work_dir/open.err"; then
+        show_command_error "$work_dir/open.err"
+        warn "Gist was updated, but the browser could not be opened."
+    fi
+}
+
+prepare_auth
+
+if $list_mode; then
+    info "Loading recent Gists for @$actual_account"
+    if ! gh gist list --limit 20; then die "Could not list Gists for @$actual_account."; fi
+    success "Listed recent Gists for @$actual_account."
     exit 0
 fi
 
-# --- Pipe mode: read from stdin ---
 if $pipe_mode; then
-    content=$(cat)
-    if [[ -z "$content" ]]; then
-        echo -e "${RED}No input received on stdin${RESET}" >&2
-        exit 1
-    fi
-
-    args=()
-    [[ -n "$description" ]] && args+=(--desc "$description")
-    [[ "$VISIBILITY" == "public" ]] && args+=(--public)
-    args+=(--filename "$stdin_name")
-
-    url=$(echo "$content" | gh gist create "${args[@]}" 2>&1)
-    echo -e "${GREEN}${BOLD}Created:${RESET} ${url}"
-    echo -n "$url" | pbcopy 2>/dev/null && echo -e "${DIM}(copied to clipboard)${RESET}"
-    $open_browser && gh gist view "$(basename "$url")" --web 2>/dev/null
-    exit 0
+    [[ ${#inputs[@]} -eq 0 ]] || die "Do not combine --pipe with file arguments."
+    copy_stdin
+elif [[ -n "$edit_id" ]]; then
+    pick_files
+else
+    resolve_inputs
+    [[ ${#files[@]} -gt 0 ]] || pick_files
 fi
 
-# --- File selection ---
-files=("$@")
+prepare_files
 
-# If no files given, use fzf
-if [[ ${#files[@]} -eq 0 ]]; then
-    if ! command -v fzf &>/dev/null; then
-        echo -e "${RED}No files specified and fzf not found.${RESET}" >&2
-        echo -e "Usage: quick-gist file1 file2 ... ${DIM}or install fzf for interactive mode${RESET}" >&2
-        exit 1
-    fi
-
-    echo -e "${CYAN}Select files for gist ${DIM}(TAB=multi-select, ENTER=confirm, ESC=cancel)${RESET}"
-    selected=$(fzf --multi \
-        --preview 'head -80 {}' \
-        --preview-window=right:60%:wrap \
-        --header="Select files to gist" \
-        --bind='ctrl-a:toggle-all' \
-        --bind='ctrl-d:half-page-down' \
-        --bind='ctrl-u:half-page-up') || { echo "Cancelled."; exit 0; }
-
-    if [[ -z "$selected" ]]; then
-        echo "No files selected."
-        exit 0
-    fi
-
-    while IFS= read -r f; do
-        files+=("$f")
-    done <<< "$selected"
-fi
-
-# Validate files exist
-valid_files=()
-for file in "${files[@]}"; do
-    if [[ ! -f "$file" ]]; then
-        echo -e "${YELLOW}Skipping (not a file): $file${RESET}" >&2
-    else
-        valid_files+=("$file")
-    fi
-done
-
-if [[ ${#valid_files[@]} -eq 0 ]]; then
-    echo -e "${RED}No valid files to gist.${RESET}" >&2
-    exit 1
-fi
-
-# Show what we're gisting
-echo -e "${CYAN}Creating gist with ${#valid_files[@]} file(s):${RESET}"
-for f in "${valid_files[@]}"; do
-    size=$(wc -c < "$f" | tr -d ' ')
-    echo -e "  ${DIM}$f ($size bytes)${RESET}"
-done
-
-# Prompt for description if not given
-if [[ -z "$description" ]]; then
-    echo -en "${CYAN}Description ${DIM}(optional, ENTER to skip)${RESET}: "
+if [[ -z "$append_id" && -z "$edit_id" && -z "$description" && -r /dev/tty && -w /dev/tty ]]; then
+    printf '%bDescription %b(optional, ENTER to skip)%b: ' "$CYAN" "$DIM" "$RESET" >/dev/tty
     read -r description </dev/tty || true
 fi
 
-# Build gh gist create command
-args=()
-[[ -n "$description" ]] && args+=(--desc "$description")
-[[ "$VISIBILITY" == "public" ]] && args+=(--public)
-
-# Create the gist
-url=$(gh gist create "${args[@]}" "${valid_files[@]}" 2>&1)
-
-echo -e "${GREEN}${BOLD}Created:${RESET} ${url}"
-echo -n "$url" | pbcopy 2>/dev/null && echo -e "${DIM}(copied to clipboard)${RESET}"
-$open_browser && gh gist view "$(basename "$url")" --web 2>/dev/null
-
-exit 0
+if [[ -n "$append_id" ]]; then
+    append_gist "$append_id"
+elif [[ -n "$edit_id" ]]; then
+    append_gist "$edit_id"
+else
+    create_gist
+fi

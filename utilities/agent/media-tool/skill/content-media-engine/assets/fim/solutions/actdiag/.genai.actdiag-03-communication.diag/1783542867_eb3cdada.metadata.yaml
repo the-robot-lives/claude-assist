@@ -1,0 +1,9 @@
+service: anthropic
+model: claude-sonnet-4-6
+timestamp: 1783542886
+provider_options:
+  max_tokens: Number(4096)
+  temperature: Number(0.2)
+  top_p: Number(0.9)
+prompt: |
+  Create an actdiag source diagram for a nontechnical onboarding process that can be pasted into an operations handbook. Use clear lane names for Recruiter, Hiring Manager, IT, Security, and New Hire; keep labels readable; show handoffs, approvals, and the first-week completion milestone.

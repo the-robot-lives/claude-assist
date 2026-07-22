@@ -1,0 +1,68 @@
+# .trd-yaml — TheRobotDrafts native model (IxModel serialization)
+name: Example Activity - Complex Distributed Workflow
+elements:
+  - { id: ~start1, type: StateStart, name: start }
+  - { id: ~act2, type: Activity, name: Receive service request }
+  - { id: ~act3, type: Activity, name: Authenticate caller }
+  - { id: ~dec4, type: Decision, name: 'Authorized?' }
+  - { id: ~act5, type: Activity, name: Return 401 Unauthorized }
+  - { id: ~end6, type: StateEnd, name: end }
+  - { id: ~act7, type: Activity, name: Parse request payload }
+  - { id: ~act8, type: Activity, name: Validate schema }
+  - { id: ~act9, type: Activity, name: Run risk assessment }
+  - { id: ~note10, type: Note, name: '<<call-behavior>>', documentation: '<<call-behavior>>\nInvokes nested activity:\n"RiskAssessment" (rake glyph).\nSee: risk-assessment.puml' }
+  - { id: ~fork11, type: ForkJoin, name: fork }
+  - { id: ~act12, type: Activity, name: Enrich data via Service A }
+  - { id: ~act13, type: Activity, name: Enrich data via Service B }
+  - { id: ~act14, type: Activity, name: Fetch user profile }
+  - { id: ~join15, type: ForkJoin, name: join }
+  - { id: ~act16, type: Activity, name: 'Publish "OrderPending" event' }
+  - { id: ~note17, type: Note, name: '<<send-signal>>\nemits to message bus', documentation: '<<send-signal>>\nemits to message bus' }
+  - { id: ~act18, type: Activity, name: Wait for inventory confirmation }
+  - { id: ~note19, type: Note, name: '<<accept-event>>\nblocks until signal arrives', documentation: '<<accept-event>>\nblocks until signal arrives' }
+  - { id: ~dec20, type: Decision, name: 'Inventory confirmed?' }
+  - { id: ~dec21, type: Decision, name: 'All enrichments ready?' }
+  - { id: ~act22, type: Activity, name: Compose full response }
+  - { id: ~act23, type: Activity, name: Persist result }
+  - { id: ~act24, type: Activity, name: 'Publish "OrderConfirmed" event' }
+  - { id: ~note25, type: Note, name: '<<send-signal>>', documentation: '<<send-signal>>' }
+  - { id: ~act26, type: Activity, name: Compose partial response }
+  - { id: ~act27, type: Activity, name: Log timeout warning }
+  - { id: ~act28, type: Activity, name: Compensate prior steps }
+  - { id: ~act29, type: Activity, name: 'Publish "OrderFailed" event' }
+  - { id: ~note30, type: Note, name: '<<send-signal>>', documentation: '<<send-signal>>' }
+  - { id: ~act31, type: Activity, name: Record audit trail }
+  - { id: ~end32, type: StateEnd, name: end }
+edges:
+  - { id: e1, type: Transition, from: ~start1, to: ~act2 }
+  - { id: e2, type: Transition, from: ~act2, to: ~act3 }
+  - { id: e3, type: Transition, from: ~act3, to: ~dec4 }
+  - { id: e4, type: Transition, from: ~dec4, to: ~act5, label: no }
+  - { id: e5, type: Transition, from: ~act5, to: ~end6 }
+  - { id: e6, type: Transition, from: ~dec4, to: ~act7 }
+  - { id: e7, type: Transition, from: ~act7, to: ~act8 }
+  - { id: e8, type: Transition, from: ~act8, to: ~act9 }
+  - { id: e9, type: Transition, from: ~act9, to: ~fork11 }
+  - { id: e10, type: Transition, from: ~fork11, to: ~act12 }
+  - { id: e11, type: Transition, from: ~fork11, to: ~act13 }
+  - { id: e12, type: Transition, from: ~fork11, to: ~act14 }
+  - { id: e13, type: Transition, from: ~act12, to: ~join15 }
+  - { id: e14, type: Transition, from: ~act13, to: ~join15 }
+  - { id: e15, type: Transition, from: ~act14, to: ~join15 }
+  - { id: e16, type: Transition, from: ~join15, to: ~act16 }
+  - { id: e17, type: Transition, from: ~act16, to: ~act18 }
+  - { id: e18, type: Transition, from: ~act18, to: ~dec20 }
+  - { id: e19, type: Transition, from: ~dec20, to: ~dec21, label: yes }
+  - { id: e20, type: Transition, from: ~dec21, to: ~act22, label: yes }
+  - { id: e21, type: Transition, from: ~act22, to: ~act23 }
+  - { id: e22, type: Transition, from: ~act23, to: ~act24 }
+  - { id: e23, type: Transition, from: ~dec21, to: ~act26, label: timeout }
+  - { id: e24, type: Transition, from: ~act26, to: ~act27 }
+  - { id: e25, type: Transition, from: ~dec20, to: ~act28, label: no }
+  - { id: e26, type: Transition, from: ~act28, to: ~act29 }
+  - { id: e27, type: Transition, from: ~act24, to: ~act31 }
+  - { id: e28, type: Transition, from: ~act27, to: ~act31 }
+  - { id: e29, type: Transition, from: ~act29, to: ~act31 }
+  - { id: e30, type: Transition, from: ~act31, to: ~end32 }
+diagrams:
+  - { id: d1, name: Example Activity - Complex Distributed Workflow, kind: activity, layoutProvenance: Synthesized }

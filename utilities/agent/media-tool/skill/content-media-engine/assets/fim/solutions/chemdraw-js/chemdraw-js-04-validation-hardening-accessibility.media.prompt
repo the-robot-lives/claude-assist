@@ -1,0 +1,88 @@
+schema: "0.4"
+id: fim-math-and-scientific-rendering-chemdraw-js-04-validation-hardening-accessibility
+type: interactive
+quality: high
+solution: chemdraw-js
+category: math-and-scientific-rendering
+variant: validation-hardening-accessibility
+references:
+- references/fim/solution/chemdraw-js.md
+- references/fim/use-case/mathematical-scientific.md
+prompt:
+  system: |-
+    You are a senior secure frontend engineer for chemistry rendering tools. Output only one complete ASCII HTML document with inline CSS and JavaScript. Use RDKit.js and optional SmilesDrawer-style fallbacks. Do not depend on commercial ChemDraw JS. No Markdown fences or prose outside the artifact.
+  text: |-
+    Create a hardened chemistry input validator and renderer for untrusted molecule strings.
+
+    Scenario:
+    Build a browser artifact for a documentation site where readers can paste SMILES, SMARTS, InChI, or MOL blocks and receive safe validation feedback, a 2D preview when possible, and clear guidance on what cannot be rendered locally.
+
+    Requirements:
+    - Provide tabs or segmented controls for SMILES molecule, SMARTS query, InChI identifier, MOL/SDF block, and reaction SMILES.
+    - Validate format-specific input before rendering and show precise error messages for empty input, unsupported type, invalid syntax, too-long input, and unsupported RDKit feature.
+    - Use RDKit.get_mol for molecules, RDKit.get_qmol for SMARTS, and get_rxn for reaction SMILES only if available.
+    - Do not execute user-provided code, inject raw user strings into HTML without escaping, or send input to any network endpoint.
+    - Include length limits, debounce behavior, cancel/stale-result handling, and deterministic sample buttons for each input type.
+    - Render successful molecule output as SVG and show canonical identifiers or descriptors when available.
+    - Delete every RDKit object created, including objects from failed validation paths when they exist.
+    - Include accessibility requirements: ARIA live region for validation, keyboard navigation, high contrast, reduced motion, and text-only rendering summary.
+    - Include performance and memory diagnostics such as render count, last duration, object cleanup count, and failure count.
+    - Output only the final HTML artifact.
+  provider_options:
+    max_tokens: 10000
+    temperature: 0.25
+output:
+  text_format: html
+  artifact_kind: secure-chemistry-input-validator
+  formats:
+  - format: html
+  - format: svg
+  render_expectation: Hardened browser chemistry validator with safe rendering, accessibility states, and memory diagnostics.
+evaluation:
+  checklist:
+  - "YAML parses and the generated output is one ASCII HTML artifact with no Markdown fences."
+  - "Input modes cover SMILES, SMARTS, InChI, MOL/SDF, and reaction SMILES with separate validation behavior."
+  - "RDKit API calls use get_mol for molecules, get_qmol for SMARTS, and get_rxn only when supported."
+  - "User input is escaped or handled as data only; the artifact does not execute pasted code or send input over the network."
+  - "Length limits, debounce, stale-result cancellation, and deterministic samples are implemented."
+  - "All created RDKit objects are deleted, and diagnostics include render count, duration, cleanup count, and failures."
+  - "Accessibility includes ARIA live validation, keyboard controls, high contrast, reduced motion, and text-only summary."
+  rubric:
+  - name: Format validity
+    weight: 30
+    criteria:
+    - "Generated HTML and JavaScript are valid, ASCII-only, and self-contained except for declared library imports."
+    - "RDKit.js API usage matches molecule, query, and reaction object semantics."
+    - "Output has no Markdown wrapper and no dependency on commercial ChemDraw JS."
+  - name: Semantic completeness
+    weight: 30
+    criteria:
+    - "All five input modes, validation paths, samples, rendering outputs, and diagnostics are present."
+    - "The artifact distinguishes unsupported features from invalid input and from library load failures."
+    - "Successful molecules render as SVG and include identifiers or descriptors when available."
+  - name: Visual/structural quality
+    weight: 25
+    criteria:
+    - "Validation states, preview, diagnostics, and help text are organized for quick inspection."
+    - "Error messages are actionable and do not obscure the molecule preview."
+    - "Responsive layout preserves text readability and control usability."
+  - name: Robustness
+    weight: 15
+    criteria:
+    - "Handles empty input, invalid syntax, overly long input, unsupported reaction APIs, RDKit load failure, rapid edits, and missing render output."
+    - "Avoids XSS and network leakage from untrusted input."
+    - "Maintains cleanup counters and avoids WASM object leaks."
+  pass_conditions:
+  - "Rubric weights are exactly Format validity 30, Semantic completeness 30, Visual/structural quality 25, and Robustness 15."
+  - "Score is 80 or higher out of 100 with no critical failure in input safety, RDKit object cleanup, or accessibility validation feedback."
+  - "A reviewer can verify that the artifact safely handles invalid and adversarial chemistry input without executing it or uploading it."
+tags:
+- fim
+- math-and-scientific-rendering
+- chemdraw-js
+- rdkit-js
+- chemistry-validation
+- smiles
+- smarts
+- accessibility
+- security

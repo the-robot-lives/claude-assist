@@ -1,0 +1,75 @@
+---
+schema: "0.4"
+id: fim-math-and-scientific-rendering-geogebra-api-04-edge-integration-stability-accessibility
+type: interactive
+quality: high
+solution: geogebra-api
+category: math-and-scientific-rendering
+variant: edge-integration-stability-accessibility
+references:
+- references/fim/overview/geospatial-math-scientific/geogebra-api.md
+- references/fim/solution/geogebra-api.md
+prompt:
+  system: |-
+    You are a senior dynamic math reliability engineer. Output only one complete ASCII HTML file using the GeoGebra API. No Markdown fences or prose outside the source.
+  text: |-
+    Create a GeoGebra API edge-case harness for the implicit curve x^2+y^2=r^2 with a radius slider r. Show valid positive-radius circles, handle r=0 as a labeled point, reject negative radius input with an accessible status message, and export the current construction as SVG or PNG.
+
+    Requirements: wait for appletOnLoad, use setValue and getValue for the radius, check object existence before styling, use setCoordSystem to frame the view, include reset and teardown comments, and provide non-color encodings plus alt-text metadata in comments.
+  provider_options:
+    temperature: 0.2
+    max_tokens: 8192
+output:
+  text_format: html
+  artifact_kind: geogebra-api-html
+  formats:
+  - format: html
+  - format: ggb
+  - format: png
+  - format: svg
+evaluation:
+  checklist:
+  - "YAML parses and required schema 0.4 fields are present."
+  - "HTML is complete, ASCII-only, and uses GeoGebra API readiness and lifecycle patterns."
+  - "Math correctness covers circle equation, radius constraints, r=0 point case, and invalid negative radius handling."
+  - "Notation validity covers GeoGebra command syntax, equation labels, status text, and captions."
+  - "Renderability covers applet sizing, setCoordSystem, object visibility, export, and load-state diagnostics."
+  - "Labels and units identify x, y, radius r, circle boundary, degenerate point, and invalid input state."
+  - "Domain edge cases cover r=0, r<0, very large r, missing objects, API readiness, and accessibility metadata."
+  rubric:
+  - name: Format validity
+    weight: 30
+    criteria:
+    - "Output is one complete ASCII HTML file with no Markdown wrapper."
+    - "The source uses valid GeoGebra API calls and accessible HTML controls."
+    - "Run, reset, export, licensing, and teardown comments are present."
+  - name: Semantic completeness
+    weight: 30
+    criteria:
+    - "Valid circle, degenerate point, invalid-radius status, slider/input, reset, export, and alt-text comments are present."
+    - "GeoGebra remains the source of visible geometry and measurements."
+    - "The domain restrictions are mathematically correct and visibly communicated."
+  - name: Visual/structural quality
+    weight: 25
+    criteria:
+    - "Valid, degenerate, and invalid states are visually and textually distinct."
+    - "Labels are readable across radius changes and do not rely on color alone."
+    - "The applet and controls remain usable in a responsive layout."
+  - name: Robustness
+    weight: 15
+    criteria:
+    - "Handles r=0, r<0, large radius values, repeated resets, and export failure paths."
+    - "Checks API readiness and object existence before mutations."
+    - "Documents accessibility and commercial embedding constraints."
+  pass_conditions:
+  - "Rubric weights are exactly Format validity 30, Semantic completeness 30, Visual/structural quality 25, Robustness 15."
+  - "Score is 80 or higher out of 100 with no critical failure in math correctness, notation validity, renderability, or accessibility."
+  - "The artifact safely handles circle-domain edge cases in a GeoGebra integration."
+  - "Domain edge cases, export path, and accessibility output are explicit."
+tags:
+- fim
+- math-and-scientific-rendering
+- geogebra-api
+- edge-integration-stability-accessibility
+- domain-edge-cases
+- accessibility

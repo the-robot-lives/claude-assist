@@ -1,0 +1,123 @@
+@startuml
+' ============================================================================
+' METADATA
+'   author:       TheRobotDrafts Examples
+'   description:  Complex BPMN process — multiple event types, sub-process, transaction, all gateways, data stores.
+'   usecase:      Insurance claims handling with timers, messages, signals, errors.
+'   complexity:   complex
+'   domain:       business-process
+' ============================================================================
+title Example BPMN Process - Claims Handling
+
+' PlantUML BPMN shape mapping (no native BPMN):
+'   circle thin   = start event
+'   circle double = intermediate event (timer/message/signal/error)
+'   circle thick  = end event
+'   rectangle     = task
+'   usecase       = gateway (XOR/AND/OR/event-based)
+'   database      = data store / data object
+'   -->           = sequence flow
+'   ..>           = message flow
+' Sub-process (collapsed): rectangle with + marker.
+' Transaction: rectangle group with compensation semantics.
+
+' --- Data stores ----------------------------------------------------------
+database "Claims DB" as DS1
+database "Policy DB" as DS2
+
+' --- Events ---------------------------------------------------------------
+usecase " " as MsgStart   ' message start
+usecase " " as TimerInt   ' timer intermediate
+usecase " " as SigEnd     ' signal end
+usecase " " as ErrEnd     ' error end
+usecase " " as OkEnd      ' normal end
+
+' --- Tasks ----------------------------------------------------------------
+rectangle "Log Claim" as T1
+rectangle "Assign Adjuster" as T2
+rectangle "Gather Docs" as T3
+rectangle "Assess Damage" as T4
+rectangle "Decision Review" as T5
+rectangle "Notify Customer" as T6
+rectangle "Issue Payment" as T7
+rectangle "Close Claim" as T8
+rectangle "Escalate" as T9
+
+' --- Sub-process (collapsed) ---------------------------------------------
+rectangle "Fraud Check [+]" as SP1
+
+' --- Gateways -------------------------------------------------------------
+usecase "Split (AND)" as And1
+usecase "Merge (AND)" as And2
+usecase "Covered?" as Xor1
+usecase "Risk Split (OR)" as Or1
+usecase "Wait For (Event)" as Eb1
+
+' --- Transaction boundary -------------------------------------------------
+package "Settlement Transaction" as TX {
+  T7
+  rectangle "Reconcile" as T10
+}
+
+' --- Flow -----------------------------------------------------------------
+MsgStart --> T1
+T1 --> DS1 : write
+DS2 --> T1 : read policy
+T1 --> And1
+And1 --> T2
+And1 --> SP1
+T2 --> T3
+T3 --> T4
+T4 --> Xor1
+SP1 --> Or1
+Xor1 --> T5 : (yes)
+Xor1 --> T9 : (no — denied)
+
+' OR gateway: 1+ paths based on fraud risk
+Or1 --> T5
+Or1 --> T9
+T5 --> Eb1
+
+' Event-based gateway waits for one of several events
+Eb1 --> TimerInt : customer silent 7d
+Eb1 --> T6 : customer replies
+
+TimerInt --> ErrEnd
+T6 --> And2
+T5 --> And2
+And2 --> T7
+T7 --> T10
+T7 --> T8
+T8 --> SigEnd
+T9 --> ErrEnd
+
+note top of MsgStart
+  <b>Message start event</b>
+  Process starts on inbound
+  claim message.
+end note
+
+note right of SP1
+  <b>Collapsed sub-process (+)</b>
+  Hidden detail; click to expand.
+end note
+
+note right of Eb1
+  <b>Event-based gateway</b>
+  Waits for one of several
+  events; first to fire wins.
+end note
+
+note bottom of TX
+  <b>Transaction</b>
+  Compensable unit — if T7 fails,
+  a compensation handler undoes it.
+end note
+
+note right of DS1
+  <b>Data store</b>
+  Persistent; survives runs.
+  Data object = transient token.
+end note
+
+@enduml

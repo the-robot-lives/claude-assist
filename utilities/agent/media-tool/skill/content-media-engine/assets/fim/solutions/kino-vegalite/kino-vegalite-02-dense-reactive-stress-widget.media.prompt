@@ -1,0 +1,68 @@
+schema: "0.4"
+id: fim-notebook-livebook-and-widgets-kino-vegalite-02-dense-reactive-stress-widget
+type: visualization
+quality: high
+solution: kino-vegalite
+category: notebook-livebook-and-widgets
+variant: dense-reactive-stress-widget
+prompt:
+  system: |-
+    You are a senior Elixir Livebook data visualization engineer. Output only one complete ASCII Elixir Livebook code cell for Kino.VegaLite. No Markdown fences, no prose outside code. Prioritize bounded data, streaming correctness, and Vega-Lite type safety.
+  text: |-
+    Create a dense reactive Kino.VegaLite stress chart. Generate deterministic bounded data with hundreds or low thousands of rows, then aggregate or sample before rendering a layered, faceted, or concatenated Vega-Lite chart. Use Vl.transform, Vl.param for brush or point selections, explicit encode_field types, and color scales. If streaming is demonstrated, create a Kino.VegaLite.new/1 widget and use push, push_many, clear, or periodically with matching field keys.
+
+    Requirements: document Livebook compatibility, field names, field types, selection params, and streaming key shape; include fallback local data and a smaller chart path; include accessible labels, legends, tooltips, and color schemes; include safe execution checks for giant inline data, remote URLs, mismatched push keys, credentials, eval, shell calls, and rebuilding the whole spec on every tick.
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.2
+    top_p: 0.9
+output:
+  text_format: elixir
+  artifact_kind: livebook-kino-vegalite-stress-cell
+  formats:
+  - format: exs
+evaluation:
+  checklist:
+  - "Import check: generated code installs kino_vega_lite, vega_lite, and kino, then uses Vl transforms, params, and Kino.VegaLite streaming APIs when needed."
+  - "Notebook compatibility: comments identify Livebook/Kino runtime and browser rendering limits."
+  - "Reactive state: push, push_many, clear, or periodically operate only on a Kino.VegaLite widget with matching field keys."
+  - "Data shape: dense rows, field names, field types, aggregation or sampling, selection params, and streaming keys are documented."
+  - "Accessibility and fallback: labels, legends, tooltips, color schemes, and fallback smaller data are present."
+  - "Safe execution: no giant inline data, remote data by default, credentials, eval, shell commands, mismatched push keys, or per-tick spec rebuilds."
+  rubric:
+  - name: Format validity
+    weight: 30
+    criteria:
+    - "Output is one complete ASCII Elixir Livebook code cell with no Markdown fences or explanatory wrapper."
+    - "The code is valid and all encoded fields have explicit types."
+    - "Streaming code, if present, uses current Kino.VegaLite widget APIs."
+  - name: Semantic completeness
+    weight: 30
+    criteria:
+    - "Implements dense Vega-Lite visualization with transforms, params, layering/faceting/concat, or streaming."
+    - "Handles field-type correctness and streaming key matching."
+    - "Includes notebook/livebook compatibility, reactive state, data shape, accessibility, fallback, and safe execution checks."
+  - name: UX/structural quality
+    weight: 25
+    criteria:
+    - "Dense charts remain readable through aggregation, faceting, selections, and labels."
+    - "Legends, tooltips, colors, and layout support accessible exploration."
+    - "Fallback and streaming status are clear."
+  - name: Robustness
+    weight: 15
+    criteria:
+    - "Handles empty filters, missing fields, temporal types, duplicate categories, outliers, and high row counts."
+    - "Uses deterministic bounded data and avoids browser overload."
+    - "Documents when to aggregate, sample, or move large data to data_from_url."
+  pass_conditions:
+  - "All required YAML fields are present and the generated artifact is one valid ASCII Elixir Livebook cell."
+  - "Rubric weights are exactly Format validity 30, Semantic completeness 30, UX/structural quality 25, Robustness 15."
+  - "The prompt requires notebook/livebook compatibility, reactive state, data shape, accessibility, fallback, and safe execution checks."
+  - "The solution remains Kino.VegaLite-centered and handles dense/reactive data safely."
+tags:
+- fim
+- notebook-livebook-and-widgets
+- livebook
+- kino-vegalite
+- dense-reactive-stress-widget
+

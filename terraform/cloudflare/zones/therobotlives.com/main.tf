@@ -32,6 +32,36 @@ resource "cloudflare_dns_record" "stage" {
   ttl     = 1
 }
 
+# start-app scaffold → starter.therobotlives.com (main site), auth at
+# appstarter.therobotlives.com (sibling subdomain, not a child of starter, so
+# both fit under the free single-level *.therobotlives.com wildcard cert).
+resource "cloudflare_dns_record" "starter" {
+  zone_id = local.zone_id
+  name    = "starter"
+  type    = "A"
+  content = local.ip
+  proxied = true
+  ttl     = 1
+}
+
+resource "cloudflare_dns_record" "appstarter" {
+  zone_id = local.zone_id
+  name    = "appstarter"
+  type    = "A"
+  content = local.ip
+  proxied = true
+  ttl     = 1
+}
+
+resource "cloudflare_dns_record" "foryou" {
+  zone_id = local.zone_id
+  name    = "foryou"
+  type    = "A"
+  content = local.ip
+  proxied = true
+  ttl     = 1
+}
+
 resource "cloudflare_dns_record" "mail" {
   zone_id = local.zone_id
   name    = "mail"

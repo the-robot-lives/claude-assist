@@ -53,7 +53,11 @@ impl ChatProvider for GeminiChatProvider {
             },
         });
 
-        if let Some(budget) = options.provider_options.get("thinking_budget").and_then(|v| v.as_u64()) {
+        if let Some(budget) = options
+            .provider_options
+            .get("thinking_budget")
+            .and_then(|v| v.as_u64())
+        {
             body["generationConfig"]["thinkingConfig"] = json!({
                 "thinkingBudget": budget,
             });
@@ -65,7 +69,11 @@ impl ChatProvider for GeminiChatProvider {
             });
         }
 
-        if let Some(temp) = options.provider_options.get("temperature").and_then(|v| v.as_f64()) {
+        if let Some(temp) = options
+            .provider_options
+            .get("temperature")
+            .and_then(|v| v.as_f64())
+        {
             body["generationConfig"]["temperature"] = json!(temp);
         }
 
@@ -97,7 +105,12 @@ impl ChatProvider for GeminiChatProvider {
                 if !status.is_success() {
                     let error_body = response.text().await.unwrap_or_default();
                     let preview: String = error_body.chars().take(300).collect();
-                    ui::fail_msg(&format!("HTTP {} for {}: {}", status.as_u16(), output_path.display(), preview));
+                    ui::fail_msg(&format!(
+                        "HTTP {} for {}: {}",
+                        status.as_u16(),
+                        output_path.display(),
+                        preview
+                    ));
                     return Ok(false);
                 }
 
@@ -119,13 +132,20 @@ impl ChatProvider for GeminiChatProvider {
                         Ok(true)
                     }
                     None => {
-                        ui::fail_msg(&format!("No text content in response for {}", output_path.display()));
+                        ui::fail_msg(&format!(
+                            "No text content in response for {}",
+                            output_path.display()
+                        ));
                         Ok(false)
                     }
                 }
             }
             Err(e) => {
-                ui::fail_msg(&format!("Network error for {}: {}", output_path.display(), e));
+                ui::fail_msg(&format!(
+                    "Network error for {}: {}",
+                    output_path.display(),
+                    e
+                ));
                 Ok(false)
             }
         }

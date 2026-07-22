@@ -10,6 +10,9 @@ src/
 ├── output.rs                # Output handling — filename derivation, multi-format, variant numbering
 ├── eval.rs                  # Evaluation — criteria matching, vision-based scoring via LLM
 ├── refine.rs                # Refinement loop — feedback collection, prompt rewriting via LLM
+├── prep.rs                  # Prompt preparation — Groq LLM prompt expansion per asset type
+├── validate.rs              # Output validation — SVG lint errors, bounded auto-fix attempts
+├── fim.rs                   # FIM loader — reads skill/content-media-engine/references/fim/solution/
 ├── ui.rs                    # Terminal UI — ratatui TUI, indicatif progress bars, dialoguer prompts
 ├── providers/               # Generation provider implementations
 │   ├── mod.rs               #   MediaProvider trait definition, provider registry/dispatch
@@ -17,6 +20,7 @@ src/
 │   ├── gemini_chat.rs       #   Gemini chat — text/code generation for markup assets
 │   ├── anthropic.rs         #   Anthropic Claude — text/code generation
 │   ├── openai_chat.rs       #   OpenAI chat — text/code generation
+│   ├── groq_chat.rs         #   Groq chat — fast text/code generation
 │   ├── zai.rs               #   ZAI — image generation
 │   ├── suno.rs              #   Suno — music generation (async polling with timeout)
 │   ├── openai_tts.rs        #   OpenAI TTS — text-to-speech (synchronous)
@@ -45,5 +49,8 @@ main.rs
   │     └── eval.rs      (quality scoring)
   ├── attachments.rs   (file loading)
   ├── refine.rs        (interactive loop)
+  ├── prep.rs          (prompt expansion)
+  ├── validate.rs      (output validation)
+  ├── fim.rs           (FIM reference loading)
   └── ui.rs            (terminal display)
 ```

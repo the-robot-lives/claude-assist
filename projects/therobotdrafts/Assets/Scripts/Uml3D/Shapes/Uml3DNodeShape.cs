@@ -50,6 +50,13 @@ namespace TheRobotDraft.Uml3D
             ElementKind.Decision or ElementKind.BpmnGateway
                 or ElementKind.DecisionTreeNode or ElementKind.WhiteboardDiamond => Uml3DShape_Diamond.Build(w, h, d),
 
+            // Whiteboard primitives (geometric shapes).
+            ElementKind.WhiteboardTriangle or ElementKind.WhiteboardRectangle or ElementKind.WhiteboardCube
+                or ElementKind.WhiteboardSphere or ElementKind.WhiteboardCylinder
+                => Uml3DShape_Primitives.Build(kind, w, h, d),
+            ElementKind.WhiteboardDecahedron => Uml3DShape_Decahedron.Build(w, h, d),
+            ElementKind.WhiteboardBlob => Uml3DShape_Blob.Build(w, h, d),
+
             // Pointy hexagon: BPMN conversation, UAF operational node.
             ElementKind.BpmnConversation or ElementKind.UafOperationalNode => Uml3DShape_Ext.Hexagon(w, h, d),
 
@@ -177,7 +184,9 @@ namespace TheRobotDraft.Uml3D
                 or ElementKind.ArchiTechnologyService or ElementKind.UafService
                 or ElementKind.TogafArchitecturePhase
                 or ElementKind.Function or ElementKind.Field
-                or ElementKind.DmnKnowledgeSource or ElementKind.ArchiDeliverable or ElementKind.ArchiPlateau => true,
+                or ElementKind.DmnKnowledgeSource or ElementKind.ArchiDeliverable or ElementKind.ArchiPlateau
+                or ElementKind.WhiteboardTriangle or ElementKind.WhiteboardSphere or ElementKind.WhiteboardCylinder
+                or ElementKind.WhiteboardDecahedron or ElementKind.WhiteboardBlob => true,
             _ => false,
         };
     }

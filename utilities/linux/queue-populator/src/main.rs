@@ -18,6 +18,13 @@ fn main() {
         }
     };
 
+    if app_config.help {
+        print!("{}", config::AppConfig::usage());
+        return;
+    }
+
+    config::debug_log::set_verbose(app_config.verbose);
+
     let config = store::load_config();
 
     if app_config.check {
@@ -30,6 +37,7 @@ fn main() {
     let (coord_tx, coord_rx) = crossbeam_channel::unbounded::<CoordinatorMsg>();
     let (ui_tx, ui_rx) = crossbeam_channel::unbounded::<UiUpdate>();
     let (show_tx, show_rx) = crossbeam_channel::unbounded::<()>();
+    let (quit_window_tx, quit_window_rx) = crossbeam_channel::bounded::<()>(1);
 
     // ---- audio ---------------------------------------------------------------
     let audio = match AudioSystem::start(config.recognition.input_device_id.clone(), audio_tx) {
@@ -41,7 +49,9 @@ fn main() {
     };
 
     // ---- speech engine ---------------------------------------------------------
-    let memo_recorder = Arc::new(MemoRecorder::new());
+    let memo_recorder = Arc::new(MemoRecorder::with_max_recording_seconds(
+        config.recognition.max_recording_seconds,
+    ));
     let memo_tap = memo_recorder.clone();
     let stt_models = match models::locate() {
         Ok(models) => models,
@@ -66,9 +76,9 @@ fn main() {
     };
 
     // Forward speech events onto the coordinator channel.
-    {
+    let speech_forward_thread = {
         let coord_tx = coord_tx.clone();
-        std::thread::Builder::new()
+        match std::thread::Builder::new()
             .name("speech-forward".into())
             .spawn(move || {
                 for event in speech_rx {
@@ -77,8 +87,16 @@ fn main() {
                     }
                 }
             })
-            .expect("spawn speech-forward");
-    }
+        {
+            Ok(thread) => thread,
+            Err(e) => {
+                eprintln!("queue-populator: cannot start speech-forward thread: {e}");
+                speech_engine.stop();
+                audio.shutdown();
+                std::process::exit(1);
+            }
+        }
+    };
 
     // ---- coordinator -------------------------------------------------------------
     let coordinator = Coordinator::new(
@@ -89,10 +107,19 @@ fn main() {
         coord_tx.clone(),
         ui_tx,
     );
-    let coordinator_thread = std::thread::Builder::new()
+    let coordinator_thread = match std::thread::Builder::new()
         .name("coordinator".into())
         .spawn(move || coordinator.run())
-        .expect("spawn coordinator");
+    {
+        Ok(thread) => thread,
+        Err(e) => {
+            eprintln!("queue-populator: cannot start coordinator thread: {e}");
+            speech_engine.stop();
+            let _ = speech_forward_thread.join();
+            audio.shutdown();
+            std::process::exit(1);
+        }
+    };
 
     // ---- tray ------------------------------------------------------------------
     // ksni runs its own D-Bus service; the handle lets us push state updates.
@@ -102,6 +129,7 @@ fn main() {
         paused: false,
         coordinator: coord_tx.clone(),
         show_window: show_tx,
+        quit_window: quit_window_tx,
     }
     .spawn()
     .map_err(|e| eprintln!("queue-populator: tray unavailable: {e}"))
@@ -109,7 +137,7 @@ fn main() {
 
     // ---- UI updates fan-out: tray mirror + egui feed ------------------------------
     let (ui_app_tx, ui_app_rx) = crossbeam_channel::unbounded::<UiUpdate>();
-    {
+    let ui_fanout_started = {
         let tray_handle = tray_handle.clone();
         std::thread::Builder::new()
             .name("ui-fanout".into())
@@ -133,12 +161,26 @@ fn main() {
                     }
                 }
             })
-            .expect("spawn ui-fanout");
+    };
+    if let Err(e) = ui_fanout_started {
+        eprintln!("queue-populator: cannot start UI fan-out thread: {e}");
+        let _ = coord_tx.send(CoordinatorMsg::Quit);
+        let _ = coordinator_thread.join();
+        speech_engine.stop();
+        let _ = speech_forward_thread.join();
+        audio.shutdown();
+        std::process::exit(1);
     }
 
     // ---- eframe (main thread; blocks until quit) ------------------------------------
     let show_transcript = config.ui.show_transcript_window;
-    let app = QueuePopulatorApp::new(config, ui_app_rx, coord_tx.clone(), show_rx);
+    let app = QueuePopulatorApp::new(
+        config,
+        ui_app_rx,
+        coord_tx.clone(),
+        show_rx,
+        quit_window_rx,
+    );
     let options = eframe::NativeOptions {
         viewport: eframe::egui::ViewportBuilder::default()
             .with_title("Queue Populator")
@@ -158,6 +200,7 @@ fn main() {
     let _ = coord_tx.send(CoordinatorMsg::Quit);
     let _ = coordinator_thread.join();
     speech_engine.stop();
+    let _ = speech_forward_thread.join();
     audio.shutdown();
 }
 

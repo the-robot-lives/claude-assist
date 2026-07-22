@@ -25,6 +25,20 @@ use crate::state_machine::MicTarget;
 
 pub const SAMPLE_RATE: u32 = 48_000;
 
+/// Decode the valid region of a PipeWire f32le chunk. `Data::data()` exposes
+/// the complete mapped buffer; the chunk offset/size identify which bytes in
+/// that mapping belong to the current capture cycle.
+fn decode_f32le_chunk(bytes: &[u8], offset: u32, size: u32) -> Vec<f32> {
+    let start = usize::try_from(offset).unwrap_or(usize::MAX).min(bytes.len());
+    let requested_end = start.saturating_add(usize::try_from(size).unwrap_or(usize::MAX));
+    let end = requested_end.min(bytes.len());
+
+    bytes[start..end]
+        .chunks_exact(std::mem::size_of::<f32>())
+        .map(|sample| f32::from_le_bytes([sample[0], sample[1], sample[2], sample[3]]))
+        .collect()
+}
+
 const TARGETS: [MicTarget; 4] = [
     MicTarget::Recording,
     MicTarget::Claude,
@@ -73,6 +87,13 @@ pub struct RouterHandle {
 }
 
 impl RouterHandle {
+    #[cfg(test)]
+    pub(crate) fn for_test() -> Self {
+        Self {
+            state: Arc::new(RouterState::new()),
+        }
+    }
+
     pub fn set_listening(&self, listening: bool) {
         self.state.listening.store(listening, Ordering::Relaxed);
     }
@@ -119,6 +140,8 @@ pub struct AudioSystem {
     pub router: RouterHandle,
     quit_tx: pipewire::channel::Sender<()>,
     thread: Option<std::thread::JoinHandle<()>>,
+    linker_quit_tx: Sender<()>,
+    linker_thread: Option<std::thread::JoinHandle<()>>,
 }
 
 impl AudioSystem {
@@ -144,9 +167,10 @@ impl AudioSystem {
         // here explicitly. Runs forever (checks every 10s) so links survive a
         // PipeWire restart; `pw-link` exits 0 on create and reports "File exists"
         // when the link is already present.
-        std::thread::Builder::new()
+        let (linker_quit_tx, linker_quit_rx) = crossbeam_channel::bounded::<()>(1);
+        let linker_thread = match std::thread::Builder::new()
             .name("pw-linker".into())
-            .spawn(|| loop {
+            .spawn(move || loop {
                 for target in TARGETS {
                     let output = format!("queue-populator-{}:output_MONO", target.node_name());
                     let input = format!("{}:input_MONO", target.node_name());
@@ -156,19 +180,36 @@ impl AudioSystem {
                         .stderr(std::process::Stdio::null())
                         .status();
                 }
-                std::thread::sleep(std::time::Duration::from_secs(10));
-            })?;
+                match linker_quit_rx.recv_timeout(std::time::Duration::from_secs(10)) {
+                    Ok(()) | Err(crossbeam_channel::RecvTimeoutError::Disconnected) => return,
+                    Err(crossbeam_channel::RecvTimeoutError::Timeout) => {}
+                }
+            })
+        {
+            Ok(thread) => thread,
+            Err(e) => {
+                let _ = quit_tx.send(());
+                let _ = thread.join();
+                return Err(e.into());
+            }
+        };
 
         Ok(Self {
             router,
             quit_tx,
             thread: Some(thread),
+            linker_quit_tx,
+            linker_thread: Some(linker_thread),
         })
     }
 
     pub fn shutdown(mut self) {
         let _ = self.quit_tx.send(());
+        let _ = self.linker_quit_tx.send(());
         if let Some(thread) = self.thread.take() {
+            let _ = thread.join();
+        }
+        if let Some(thread) = self.linker_thread.take() {
             let _ = thread.join();
         }
     }
@@ -266,17 +307,17 @@ mod pw_thread {
                 if datas.is_empty() {
                     return;
                 }
-                let chunk_size = datas[0].chunk().size() as usize;
-                let Some(bytes) = datas[0].data() else { return };
-                let n = (chunk_size / std::mem::size_of::<f32>()).min(bytes.len() / 4);
-                if n == 0 {
+                if datas[0].as_raw().chunk.is_null() {
                     return;
                 }
-                // f32le mono samples
-                let mut samples = Vec::with_capacity(n);
-                for i in 0..n {
-                    let start = i * 4;
-                    samples.push(f32::from_le_bytes(bytes[start..start + 4].try_into().unwrap()));
+                let (chunk_offset, chunk_size) = {
+                    let chunk = datas[0].chunk();
+                    (chunk.offset(), chunk.size())
+                };
+                let Some(bytes) = datas[0].data() else { return };
+                let samples = decode_f32le_chunk(bytes, chunk_offset, chunk_size);
+                if samples.is_empty() {
+                    return;
                 }
 
                 for (idx, target) in TARGETS.iter().enumerate() {
@@ -293,7 +334,9 @@ mod pw_thread {
 
         let mut capture_format = Vec::new();
         audio_format_params(&mut capture_format)?;
-        let mut capture_params = [Pod::from_bytes(&capture_format).unwrap()];
+        let capture_param = Pod::from_bytes(&capture_format)
+            .ok_or_else(|| anyhow::anyhow!("serialized capture format is not a valid SPA POD"))?;
+        let mut capture_params = [capture_param];
         capture.connect(
             spa::utils::Direction::Input,
             None,
@@ -343,8 +386,11 @@ mod pw_thread {
                         return;
                     }
                     let slot = &mut datas[0];
+                    if slot.as_raw().chunk.is_null() {
+                        return;
+                    }
                     let Some(bytes) = slot.data() else { return };
-                    let capacity_samples = bytes.len() / 4;
+                    let capacity_samples = (bytes.len() / 4).min(u32::MAX as usize / 4);
                     let fed = data.state.is_fed(data.target);
 
                     let mut written = 0usize;
@@ -374,7 +420,9 @@ mod pw_thread {
 
             let mut format = Vec::new();
             audio_format_params(&mut format)?;
-            let mut params = [Pod::from_bytes(&format).unwrap()];
+            let playback_param = Pod::from_bytes(&format)
+                .ok_or_else(|| anyhow::anyhow!("serialized playback format is not a valid SPA POD"))?;
+            let mut params = [playback_param];
             stream.connect(
                 spa::utils::Direction::Output,
                 None,
@@ -424,5 +472,26 @@ mod tests {
         router.open(MicTarget::Recording);
         router.close(MicTarget::Recording);
         assert!(state.is_fed(MicTarget::Recording));
+    }
+
+    #[test]
+    fn capture_decode_respects_chunk_offset_and_size() {
+        let mut bytes = Vec::new();
+        for sample in [99.0f32, 1.25, -2.5, 77.0] {
+            bytes.extend_from_slice(&sample.to_le_bytes());
+        }
+
+        assert_eq!(decode_f32le_chunk(&bytes, 4, 8), vec![1.25, -2.5]);
+    }
+
+    #[test]
+    fn capture_decode_clamps_invalid_chunk_bounds() {
+        let mut bytes = Vec::new();
+        bytes.extend_from_slice(&1.0f32.to_le_bytes());
+        bytes.extend_from_slice(&2.0f32.to_le_bytes());
+        bytes.push(0xff); // an incomplete trailing sample must be ignored
+
+        assert_eq!(decode_f32le_chunk(&bytes, 4, u32::MAX), vec![2.0]);
+        assert!(decode_f32le_chunk(&bytes, u32::MAX, 4).is_empty());
     }
 }

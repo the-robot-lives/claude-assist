@@ -1,0 +1,79 @@
+schema: "0.4"
+id: google-charts-02-dense-stress
+type: visualization
+quality: high
+solution: google-charts
+category: js-charting
+variant: dense-stress
+references:
+  - "references/fim/overview/data-visualization/google-charts.md"
+  - "references/fim/solution/google-charts.md"
+  - "assets/example-prompts/landing-page.media.prompt"
+  - "assets/example-prompts/architecture-diagram.media.prompt"
+
+prompt:
+  system: |-
+    You generate Google Charts browser visualization artifacts. Output only a complete self-contained HTML document with inline CSS and JavaScript, using the Google Charts loader. Do not use markdown fences or explanations.
+  text: |-
+    Create the dense stress visualization for Google Charts.
+    
+    Scenario:
+    Create a dense visualization that intentionally stresses the solution with high-volume time series, many categories, or a large graph. Include built-in performance controls, filtering, and a clear explanation in the UI of the active sampling or rendering strategy.
+    
+    Implementation requirements:
+    - Use this library source or equivalent npm import pattern: https://www.gstatic.com/charts/loader.js.
+    - Parser/API contract: Use google.charts.load with required packages, setOnLoadCallback or the promise API, DataTable or arrayToDataTable, and chart.draw(data, options).
+    - Data encoding contract: Encode typed DataTable columns, rows, role columns for tooltip/style/annotation, and DataView or Dashboard controls where useful.
+    - Responsive contract: Redraw charts on debounced resize after containers have nonzero dimensions and calculate width from the container.
+    - Accessibility contract: Provide descriptive titles, HTML tooltip text, visible legends, an adjacent data table, and chart container aria labels.
+    - Edge data contract: Handle loader failure, package mismatch, null cells, Date objects, zero-size containers, public Sheets caveats, and empty DataTables.
+    - Performance contract: Use DataView filtering, pre-aggregation, limited row counts, chartArea tuning, and avoid redrawing before the loader and container are ready.
+    - Integration contract: Expose loadCharts(), drawAll(), updateRows(rows), exportPngWhenReady(), and destroyListeners() hooks.
+    - Include deterministic inline sample data with realistic field names, units, and at least one edge case row.
+    - Include concise visible titles, legends, units, source note, and no placeholder lorem ipsum text.
+    - Output only the final artifact, with no commentary outside the artifact.
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.2
+
+output:
+  text_format: html
+  artifact_kind: google-charts-html-stress-visualization
+  formats:
+    - format: html
+
+evaluation:
+  checklist:
+    - "Format validity: parseable schema 0.4 media prompt and generated artifact is exactly one html output with no markdown fences."
+    - "Parser/API: Use google.charts.load with required packages, setOnLoadCallback or the promise API, DataTable or arrayToDataTable, and chart.draw(data, options)."
+    - "Data encoding: Encode typed DataTable columns, rows, role columns for tooltip/style/annotation, and DataView or Dashboard controls where useful."
+    - "Responsive behavior: Redraw charts on debounced resize after containers have nonzero dimensions and calculate width from the container."
+    - "Accessibility: Provide descriptive titles, HTML tooltip text, visible legends, an adjacent data table, and chart container aria labels."
+    - "Edge data: Handle loader failure, package mismatch, null cells, Date objects, zero-size containers, public Sheets caveats, and empty DataTables."
+    - "Performance/integration: Use DataView filtering, pre-aggregation, limited row counts, chartArea tuning, and avoid redrawing before the loader and container are ready. Expose loadCharts(), drawAll(), updateRows(rows), exportPngWhenReady(), and destroyListeners() hooks."
+  rubric:
+    - name: "Format validity"
+      weight: 30
+      criteria: "The artifact is valid for the requested text format, contains no markdown fences, and uses the required solution parser or API without syntax errors."
+    - name: "Semantic completeness"
+      weight: 30
+      criteria: "The visualization covers the requested scenario, data story, interactions, labels, and solution-specific capabilities."
+    - name: "Visual/structural quality"
+      weight: 25
+      criteria: "The layout, hierarchy, color, typography, chart choice, and dashboard or diagram structure are clear and professional."
+    - name: "Robustness"
+      weight: 15
+      criteria: "The artifact handles responsive layout, accessibility, edge data, update or teardown behavior, and performance constraints without runtime failures."
+  pass_conditions:
+    - "YAML parses successfully and all text is ASCII-only."
+    - "Generated artifact runs without console errors when CDN dependencies are available."
+    - "Parser/API, data encoding, responsive, accessibility, and edge data checklist items are all satisfied."
+    - "Rubric score is at least 80 out of 100 and no rubric dimension scores zero."
+
+tags:
+  - "fim"
+  - "js-charting"
+  - "google-charts"
+  - "dense-stress"
+  - "visualization"
+  - "stress-test"

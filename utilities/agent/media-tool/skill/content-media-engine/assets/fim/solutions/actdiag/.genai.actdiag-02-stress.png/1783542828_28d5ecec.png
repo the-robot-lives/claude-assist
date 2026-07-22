@@ -1,0 +1,154 @@
+actdiag {
+  orientation = portrait
+
+  "Alert Triggered" -> "Evaluate Alert Severity" -> "Severity Decision"
+
+  "Severity Decision" -> "Page On Call Engineer" [label = "SEV3/SEV2"]
+  "Severity Decision" -> "Page On Call Engineer" [label = "SEV1/P0"]
+  "Severity Decision" -> "Trigger Executive Notification" [label = "SEV1/P0"]
+
+  "Page On Call Engineer" -> "Acknowledge Alert"
+  "Acknowledge Alert" -> "Initial Triage"
+  "Initial Triage" -> "Confirm Incident"
+  "Confirm Incident" -> "Declare Incident and Open War Room"
+
+  "Trigger Executive Notification" -> "Executive Briefing Received"
+  "Executive Briefing Received" -> "Executive Monitoring Active"
+
+  "Declare Incident and Open War Room" -> "Assign Incident Commander"
+  "Assign Incident Commander" -> "Coordinate Response Teams"
+  "Coordinate Response Teams" -> "Engage Service Team"
+  "Coordinate Response Teams" -> "Initiate Customer Communication"
+  "Coordinate Response Teams" -> "Executive Status Update"
+
+  "Engage Service Team" -> "Diagnose Root Cause"
+  "Diagnose Root Cause" -> "Identify Fix Strategy"
+  "Identify Fix Strategy" -> "Rollback Decision"
+
+  "Rollback Decision" -> "Execute Rollback" [label = "rollback"]
+  "Rollback Decision" -> "Develop Hotfix" [label = "hotfix"]
+
+  "Execute Rollback" -> "Validate Rollback Success"
+  "Validate Rollback Success" -> "Rollback Approved" [label = "pass"]
+  "Validate Rollback Success" -> "Escalate to Hotfix" [label = "fail"]
+  "Escalate to Hotfix" -> "Develop Hotfix"
+
+  "Develop Hotfix" -> "Code Review and Testing"
+  "Code Review and Testing" -> "Hotfix Approved" [label = "approved"]
+  "Code Review and Testing" -> "Revise Hotfix" [label = "rejected"]
+  "Revise Hotfix" -> "Code Review and Testing"
+
+  "Rollback Approved" -> "Deploy Fix to Production"
+  "Hotfix Approved" -> "Deploy Fix to Production"
+
+  "Initiate Customer Communication" -> "Draft Status Page Update"
+  "Draft Status Page Update" -> "Publish Initial Incident Notice"
+  "Publish Initial Incident Notice" -> "Send Customer Email Alert"
+  "Send Customer Email Alert" -> "Monitor Customer Feedback"
+
+  "Deploy Fix to Production" -> "Verify Service Restoration"
+  "Verify Service Restoration" -> "Service Restored Check"
+  "Service Restored Check" -> "Confirm Full Recovery" [label = "yes"]
+  "Service Restored Check" -> "Diagnose Root Cause" [label = "no"]
+
+  "Confirm Full Recovery" -> "Publish Resolution Notice"
+  "Confirm Full Recovery" -> "Notify Incident Commander of Recovery"
+  "Confirm Full Recovery" -> "Executive Recovery Briefing"
+
+  "Monitor Customer Feedback" -> "Publish Resolution Notice"
+  "Notify Incident Commander of Recovery" -> "Close Incident"
+  "Publish Resolution Notice" -> "Close Incident"
+  "Executive Recovery Briefing" -> "Executive Sign Off"
+  "Executive Sign Off" -> "Close Incident"
+
+  "Executive Status Update" -> "Executive Monitoring Active"
+  "Executive Monitoring Active" -> "Executive Recovery Briefing"
+
+  "Close Incident" -> "Schedule Postmortem"
+  "Schedule Postmortem" -> "Collect Incident Timeline"
+  "Collect Incident Timeline" -> "Identify Contributing Factors"
+  "Identify Contributing Factors" -> "Draft Postmortem Document"
+  "Draft Postmortem Document" -> "Postmortem Review Meeting"
+  "Postmortem Review Meeting" -> "Postmortem Approved" [label = "approved"]
+  "Postmortem Review Meeting" -> "Revise Postmortem" [label = "revisions needed"]
+  "Revise Postmortem" -> "Postmortem Review Meeting"
+  "Postmortem Approved" -> "Define Action Items"
+  "Define Action Items" -> "Assign Owners and Due Dates"
+  "Assign Owners and Due Dates" -> "Track Action Items to Completion"
+  "Track Action Items to Completion" -> "Incident Closed and Archived"
+
+  lane Monitoring {
+    label = "Monitoring"
+    "Alert Triggered"
+    "Evaluate Alert Severity"
+    "Severity Decision"
+    "Verify Service Restoration"
+    "Service Restored Check"
+  }
+
+  lane OnCallEngineer {
+    label = "On Call Engineer"
+    "Page On Call Engineer"
+    "Acknowledge Alert"
+    "Initial Triage"
+    "Confirm Incident"
+    "Rollback Decision"
+    "Execute Rollback"
+    "Validate Rollback Success"
+    "Escalate to Hotfix"
+    "Develop Hotfix"
+    "Code Review and Testing"
+    "Revise Hotfix"
+    "Hotfix Approved"
+    "Rollback Approved"
+  }
+
+  lane IncidentCommander {
+    label = "Incident Commander"
+    "Declare Incident and Open War Room"
+    "Assign Incident Commander"
+    "Coordinate Response Teams"
+    "Deploy Fix to Production"
+    "Confirm Full Recovery"
+    "Notify Incident Commander of Recovery"
+    "Close Incident"
+    "Schedule Postmortem"
+    "Postmortem Review Meeting"
+    "Postmortem Approved"
+    "Revise Postmortem"
+  }
+
+  lane ServiceTeam {
+    label = "Service Team"
+    "Engage Service Team"
+    "Diagnose Root Cause"
+    "Identify Fix Strategy"
+    "Collect Incident Timeline"
+    "Identify Contributing Factors"
+    "Draft Postmortem Document"
+    "Define Action Items"
+    "Assign Owners and Due Dates"
+    "Track Action Items to Completion"
+    "Incident Closed and Archived"
+  }
+
+  lane Communications {
+    label = "Communications"
+    "Initiate Customer Communication"
+    "Draft Status Page Update"
+    "Publish Initial Incident Notice"
+    "Send Customer Email Alert"
+    "Monitor Customer Feedback"
+    "Publish Resolution Notice"
+  }
+
+  lane ExecutiveReview {
+    label = "Executive Review"
+    "Trigger Executive Notification"
+    "Executive Briefing Received"
+    "Executive Monitoring Active"
+    "Executive Status Update"
+    "Executive Recovery Briefing"
+    "Executive Sign Off"
+  }
+}

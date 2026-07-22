@@ -1,0 +1,68 @@
+schema: "0.4"
+id: fim-notebook-livebook-and-widgets-ipywidgets-03-teaching-exploration-widget
+type: interactive
+quality: high
+solution: ipywidgets
+category: notebook-livebook-and-widgets
+variant: teaching-exploration-widget
+prompt:
+  system: |-
+    You are a senior Python notebook educator. Output only one complete ASCII Python notebook cell for Jupyter ipywidgets. No Markdown fences, no prose outside code. Make the cell teach through runnable widget behavior and concise code comments.
+  text: |-
+    Create an ipywidgets teaching and exploration cell for a signal, model, or distribution concept. Use interactive or interact_manual plus explicit widgets to let learners vary parameters, compare scenarios, and view a plot plus a tabular explanation. Include an Output widget, HTML or Label text for accessible status, and a reusable pure-Python compound widget class based on HBox or VBox.
+
+    Requirements: demonstrate at least one automatic interaction and one manual interaction for expensive work; include comments explaining trait state, observe change dictionaries, and browser-side jslink vs kernel-side link; describe data shape and deterministic seed; include Jupyter/Voila compatibility notes, accessibility labels, fallback default values, and safe execution checks that avoid arbitrary code execution and unsafe HTML.
+  provider_options:
+    max_tokens: 8192
+    temperature: 0.2
+    top_p: 0.9
+output:
+  text_format: python
+  artifact_kind: jupyter-ipywidgets-teaching-cell
+  formats:
+  - format: py
+evaluation:
+  checklist:
+  - "Import check: generated code uses ipywidgets, interact or interact_manual, Output, display, and deterministic numeric data."
+  - "Notebook compatibility: comments distinguish Jupyter widget behavior from Livebook and note Voila/static export behavior."
+  - "Reactive state: the example demonstrates automatic value observation, manual execution for expensive work, and a reusable compound widget."
+  - "Data shape: generated data or model parameters are documented, bounded, and reproducible."
+  - "Accessibility and fallback: learner-facing labels are clear, values are readable, color is not the only cue, and defaults recover from invalid inputs."
+  - "Safe execution: no eval, exec, shell commands, remote loads, hidden credential reads, or unsanitized HTML built from user input."
+  rubric:
+  - name: Format validity
+    weight: 30
+    criteria:
+    - "Output is one complete ASCII Python notebook cell with no Markdown fences or explanatory wrapper."
+    - "The code is valid in a notebook and defines any compound widget class before using it."
+    - "Compatibility and run comments are concise and do not require external services."
+  - name: Semantic completeness
+    weight: 30
+    criteria:
+    - "Implements a teaching/exploration widget with parameter controls, explanatory output, and reproducible results."
+    - "Uses ipywidgets concepts from the reference including interact, observe, Output, layout containers, and link or jslink."
+    - "Covers notebook/livebook category compatibility by identifying Jupyter as the supported runtime."
+  - name: UX/structural quality
+    weight: 25
+    criteria:
+    - "The lesson flow is clear: controls, visualization, explanation, and diagnostics are separated but connected."
+    - "Labels, ranges, readouts, and defaults help a learner understand state changes without layout noise."
+    - "Visual output has accessible labels, legends, contrast, and stable dimensions."
+  - name: Robustness
+    weight: 15
+    criteria:
+    - "Handles invalid ranges, empty choices, missing values, and extreme parameter values."
+    - "Uses bounded computations and deterministic seeds."
+    - "Explains widget-manager and static-export fallbacks without breaking the runnable cell."
+  pass_conditions:
+  - "All required YAML fields are present and the generated artifact is one valid ASCII Python cell."
+  - "Rubric weights are exactly Format validity 30, Semantic completeness 30, UX/structural quality 25, Robustness 15."
+  - "The prompt requires notebook compatibility, reactive state, data shape, accessibility, fallback, and safe execution checks."
+  - "The solution remains ipywidgets-centered and teaches through working notebook widgets."
+tags:
+- fim
+- notebook-livebook-and-widgets
+- jupyter
+- ipywidgets
+- teaching-exploration-widget
+

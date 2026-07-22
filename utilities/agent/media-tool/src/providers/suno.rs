@@ -30,8 +30,8 @@ impl MediaProvider for SunoProvider {
             &options.model
         };
 
-        let is_sfx = model.contains("SOUND") || model.contains("sfx")
-            || model.to_lowercase() == "sound";
+        let is_sfx =
+            model.contains("SOUND") || model.contains("sfx") || model.to_lowercase() == "sound";
 
         let callback_url = options
             .provider_options
@@ -42,12 +42,21 @@ impl MediaProvider for SunoProvider {
         // SFX uses a separate endpoint and request shape
         let (url, body) = if is_sfx {
             let sfx_model = "V5";
-            let sound_loop = options.provider_options.get("soundLoop")
-                .and_then(|v| v.as_bool()).unwrap_or(false);
-            let sound_tempo = options.provider_options.get("soundTempo")
-                .and_then(|v| v.as_u64()).unwrap_or(120) as u32;
-            let sound_key = options.provider_options.get("soundKey")
-                .and_then(|v| v.as_str()).unwrap_or("Any");
+            let sound_loop = options
+                .provider_options
+                .get("soundLoop")
+                .and_then(|v| v.as_bool())
+                .unwrap_or(false);
+            let sound_tempo = options
+                .provider_options
+                .get("soundTempo")
+                .and_then(|v| v.as_u64())
+                .unwrap_or(120) as u32;
+            let sound_key = options
+                .provider_options
+                .get("soundKey")
+                .and_then(|v| v.as_str())
+                .unwrap_or("Any");
 
             let mut b = json!({
                 "prompt": prompt_text,
@@ -66,7 +75,11 @@ impl MediaProvider for SunoProvider {
             (format!("{}/api/v1/generate/sounds", API_BASE), b)
         } else {
             // Music generation
-            let has_style = options.provider_options.get("style").and_then(|v| v.as_str()).is_some();
+            let has_style = options
+                .provider_options
+                .get("style")
+                .and_then(|v| v.as_str())
+                .is_some();
             let custom_mode = options
                 .provider_options
                 .get("customMode")
@@ -88,16 +101,32 @@ impl MediaProvider for SunoProvider {
             });
 
             if custom_mode {
-                if let Some(style) = options.provider_options.get("style").and_then(|v| v.as_str()) {
+                if let Some(style) = options
+                    .provider_options
+                    .get("style")
+                    .and_then(|v| v.as_str())
+                {
                     b["style"] = json!(style);
                 }
-                if let Some(title) = options.provider_options.get("title").and_then(|v| v.as_str()) {
+                if let Some(title) = options
+                    .provider_options
+                    .get("title")
+                    .and_then(|v| v.as_str())
+                {
                     b["title"] = json!(title);
                 }
-                if let Some(pid) = options.provider_options.get("personaId").and_then(|v| v.as_str()) {
+                if let Some(pid) = options
+                    .provider_options
+                    .get("personaId")
+                    .and_then(|v| v.as_str())
+                {
                     b["personaId"] = json!(pid);
                 }
-                if let Some(pm) = options.provider_options.get("personaModel").and_then(|v| v.as_str()) {
+                if let Some(pm) = options
+                    .provider_options
+                    .get("personaModel")
+                    .and_then(|v| v.as_str())
+                {
                     b["personaModel"] = json!(pm);
                 }
             }
@@ -107,17 +136,28 @@ impl MediaProvider for SunoProvider {
             }
 
             if let Some(neg) = options.negative_prompt.as_deref().or_else(|| {
-                options.provider_options.get("negativeTags").and_then(|v| v.as_str())
+                options
+                    .provider_options
+                    .get("negativeTags")
+                    .and_then(|v| v.as_str())
             }) {
                 b["negativeTags"] = json!(neg);
             }
 
-            if let Some(vg) = options.provider_options.get("vocalGender").and_then(|v| v.as_str()) {
+            if let Some(vg) = options
+                .provider_options
+                .get("vocalGender")
+                .and_then(|v| v.as_str())
+            {
                 b["vocalGender"] = json!(vg);
             }
 
             for float_key in &["styleWeight", "weirdnessConstraint", "audioWeight"] {
-                if let Some(val) = options.provider_options.get(*float_key).and_then(|v| v.as_f64()) {
+                if let Some(val) = options
+                    .provider_options
+                    .get(*float_key)
+                    .and_then(|v| v.as_f64())
+                {
                     b[*float_key] = json!(val);
                 }
             }
@@ -190,7 +230,10 @@ impl MediaProvider for SunoProvider {
         ui::info(&format!("Suno task {} — polling for completion", task_id));
 
         // Poll for completion
-        let poll_url = format!("{}/api/v1/generate/record-info?taskId={}", API_BASE, task_id);
+        let poll_url = format!(
+            "{}/api/v1/generate/record-info?taskId={}",
+            API_BASE, task_id
+        );
 
         for attempt in 1..=MAX_POLL_ATTEMPTS {
             tokio::time::sleep(Duration::from_secs(POLL_INTERVAL_SECS)).await;
@@ -214,20 +257,23 @@ impl MediaProvider for SunoProvider {
 
             if !poll_response.status().is_success() {
                 if options.verbose {
-                    ui::verbose(&format!("Poll attempt {} returned {}", attempt, poll_response.status()));
+                    ui::verbose(&format!(
+                        "Poll attempt {} returned {}",
+                        attempt,
+                        poll_response.status()
+                    ));
                 }
                 continue;
             }
 
             let poll_result: serde_json::Value = poll_response.json().await?;
-            let status_str = poll_result["data"]["status"]
-                .as_str()
-                .unwrap_or("UNKNOWN");
+            let status_str = poll_result["data"]["status"].as_str().unwrap_or("UNKNOWN");
 
             match status_str {
                 "SUCCESS" => {
                     if options.verbose {
-                        let preview = serde_json::to_string_pretty(&poll_result).unwrap_or_default();
+                        let preview =
+                            serde_json::to_string_pretty(&poll_result).unwrap_or_default();
                         let truncated: String = preview.chars().take(1000).collect();
                         ui::verbose(&format!("Suno SUCCESS response: {}", truncated));
                     }
@@ -261,7 +307,9 @@ impl MediaProvider for SunoProvider {
                                 }
                             }
 
-                            return self.download_audio(audio_url, output_path, &client, options.verbose).await;
+                            return self
+                                .download_audio(audio_url, output_path, &client, options.verbose)
+                                .await;
                         }
                     }
 
@@ -271,7 +319,8 @@ impl MediaProvider for SunoProvider {
                 "FAILED" => {
                     ui::fail_msg(&format!("Suno generation failed for task {}", task_id));
                     if options.verbose {
-                        let preview = serde_json::to_string_pretty(&poll_result).unwrap_or_default();
+                        let preview =
+                            serde_json::to_string_pretty(&poll_result).unwrap_or_default();
                         ui::verbose(&preview[..preview.len().min(500)]);
                     }
                     return Ok(false);

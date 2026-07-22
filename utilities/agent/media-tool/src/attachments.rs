@@ -32,10 +32,7 @@ pub fn resolve_mime_type(file_path: &Path, declared: Option<&str>) -> String {
     if let Some(d) = declared {
         return d.to_string();
     }
-    let ext = file_path
-        .extension()
-        .and_then(|e| e.to_str())
-        .unwrap_or("");
+    let ext = file_path.extension().and_then(|e| e.to_str()).unwrap_or("");
     let dot_ext = format!(".{}", ext.to_lowercase());
     for &(suffix, mime) in MIME_MAP {
         if dot_ext == suffix {
@@ -53,7 +50,9 @@ pub fn load_attachments(prompt: &ParsedPrompt) -> color_eyre::Result<Vec<LoadedA
 
     for att in &prompt.payload.attachments {
         if att.path.is_empty() {
-            eprintln!("  \x1b[1;33m\u{26a0}\u{fe0f}  Attachment with no path \u{2014} skipping\x1b[0m");
+            eprintln!(
+                "  \x1b[1;33m\u{26a0}\u{fe0f}  Attachment with no path \u{2014} skipping\x1b[0m"
+            );
             continue;
         }
 

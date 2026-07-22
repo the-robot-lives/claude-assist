@@ -1,0 +1,40 @@
+actdiag {
+  orientation = portrait;
+
+  Employee -> SubmitReport -> ManagerReview;
+  ManagerReview -> ApprovalDecision;
+  ApprovalDecision -> ReviseReport [label = "Rejected"];
+  ReviseReport -> SubmitReport [label = "Resubmit"];
+  ApprovalDecision -> FinanceReview [label = "Approved"];
+  FinanceReview -> ProcessReimbursement;
+  ProcessReimbursement -> NotifyEmployee;
+  NotifyEmployee -> AuditArchive;
+  AuditArchive -> End;
+
+  lane Employee {
+    label = "Employee";
+    Start [shape = beginpoint];
+    Start -> SubmitReport [label = "Submit Expense Report"];
+    SubmitReport [label = "Submit Expense Report"];
+    ReviseReport [label = "Revise and Correct Report"];
+    NotifyEmployee [label = "Receive Reimbursement Notification"];
+    End [shape = endpoint];
+  }
+
+  lane Manager {
+    label = "Manager";
+    ManagerReview [label = "Review Expense Report"];
+    ApprovalDecision [label = "Approve or Reject?", shape = diamond];
+  }
+
+  lane Finance {
+    label = "Finance";
+    FinanceReview [label = "Finance Verification"];
+    ProcessReimbursement [label = "Process Reimbursement Payment"];
+  }
+
+  lane Accounting {
+    label = "Accounting";
+    AuditArchive [label = "Archive for Audit Records"];
+  }
+}
