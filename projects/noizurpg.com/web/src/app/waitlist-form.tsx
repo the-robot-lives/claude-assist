@@ -2,8 +2,11 @@
 
 import { useState } from "react";
 
-const LISTMONK_URL = "https://listmonk.noizu.com/api/public/subscription";
-const LIST_UUID = "d0611a6b-e9b9-4e4e-9801-15cb8194116b";
+// Signups flow to the foryou signup service (foryou.therobotlives.com).
+// The foryou List with this public_slug must be provisioned before go-live —
+// see projects/foryou.therobotlives.com/provisioning/.
+const FORYOU_BASE_URL = "https://foryou.therobotlives.com";
+const FORYOU_LIST_SLUG = "noizurpg-waitlist";
 
 export function WaitlistForm({
   buttonText = "GET EARLY ACCESS",
@@ -22,15 +25,18 @@ export function WaitlistForm({
     setErrorMsg("");
 
     try {
-      const res = await fetch(LISTMONK_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email,
-          name: "",
-          list_uuids: [LIST_UUID],
-        }),
-      });
+      const res = await fetch(
+        `${FORYOU_BASE_URL}/api/v1/public/lists/${FORYOU_LIST_SLUG}/signups`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            values: { email },
+            source: FORYOU_LIST_SLUG,
+            company_website: "", // honeypot — expected empty
+          }),
+        },
+      );
 
       if (res.ok) {
         setStatus("success");
