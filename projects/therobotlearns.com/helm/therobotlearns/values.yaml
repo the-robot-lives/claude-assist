@@ -2,7 +2,7 @@ static-site:
   nameOverride: therobotlearns
   fullnameOverride: therobotlearns
   domain: therobotlearns.com
-  image: ops.noizu.com/therobotlearns.com/web:latest
+  image: ops.noizu.com/therobotlearns.com/web:8c93d3945a3
   port: 80
   imagePullSecrets:
     - name: ops-registry-secret
