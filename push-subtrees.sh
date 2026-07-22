@@ -121,7 +121,7 @@ SUBTREES=(
   "projects/tobornalp.com|tobornalp|mono-repo-dev|snapshot"
 
   # utilities/agent
-  "utilities/agent/claude-assist|claude-assist|mono-repo-dev"
+  "utilities/agent/llm-toolkit|claude-assist|mono-repo-dev"  # repo still named claude-assist upstream
   "utilities/agent/dangerously-safe|dangerously-safe|mono-repo-dev"
   "utilities/agent/mallm|mallm|mono-repo-dev"
   "utilities/agent/media-tool|media-tool|mono-repo-dev"

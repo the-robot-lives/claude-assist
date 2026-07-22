@@ -97,7 +97,7 @@ echo "# --- projects (TODO: repo not found on GitHub — may be deleted/private)
 echo "# git remote add tobornalp-dot-com              git@github.com:the-robot-lives/tobornalp.com.git  # TODO: 404"
 
 echo "# --- utilities (the-robot-lives) ---"
-git remote add claude-assist                    git@github.com:the-robot-lives/claude-assist.git
+git remote add claude-assist                    git@github.com:the-robot-lives/claude-assist.git  # repo still named claude-assist upstream
 git remote add dangerously-safe                 git@github.com:the-robot-lives/dangerously-safe.git
 git remote add mallm                            git@github.com:the-robot-lives/mallm.git
 git remote add media-tool                       git@github.com:the-robot-lives/media-tools.git
@@ -213,7 +213,7 @@ git subtree add --prefix=projects/vibeucation.com                  vibeucation-d
 git subtree add --prefix=projects/tobornalp.com                  tobornalp                main --squash  
 
 # --- utilities/agent ---
-git subtree add --prefix=utilities/agent/claude-assist     claude-assist                  main --squash
+git subtree add --prefix=utilities/agent/llm-toolkit       claude-assist                  main --squash  # repo still named claude-assist upstream
 git subtree add --prefix=utilities/agent/dangerously-safe  dangerously-safe               main --squash
 git subtree add --prefix=utilities/agent/mallm             mallm                          main --squash
 git subtree add --prefix=utilities/agent/media-tool        media-tool                     main --squash
