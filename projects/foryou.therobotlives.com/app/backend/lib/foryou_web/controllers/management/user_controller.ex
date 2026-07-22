@@ -3,12 +3,21 @@ defmodule ForyouWeb.Management.UserController do
   Management CRUD for users (API-key / system-level). Soft-deletes set
   `deleted_at` + `status: :deleted`; index/show hide deleted rows so the
   Terraform provider sees a destroyed resource as absent.
+
+  NOTE: `create` uses raw schema inserts (mirrors the SSO auto-provision path)
+  rather than `Foryou.Users.register/4`, because the entity `change/2` macro
+  rejects structs passed to `EntityRepo.create` (Protocol.UndefinedError). The
+  register/login paths share that bug and are deferred — see TODO.
   """
   use ForyouWeb, :controller
 
   alias Foryou.Schema.Users.User, as: UserSchema
-  alias Foryou.Users
+  alias Foryou.Schema.Users.Credentials.UserCredential, as: CredentialSchema
+  alias Foryou.Schema.Versioned.Names.Name, as: NameSchema
+  alias Foryou.Schema.Versioned.Descriptions.Description, as: DescriptionSchema
   import Ecto.Query
+
+  @login_provider_id UUID.uuid5(:oid, "Foryou.Schema.Auth.Providers.Provider@Login")
 
   def index(conn, _params) do
     users =
@@ -29,18 +38,58 @@ defmodule ForyouWeb.Management.UserController do
 
   def create(conn, %{"user" => params}) do
     name = params["name"] || %{}
+    first = name["first"] || ""
+    last = name["last"] || ""
+    middle = name["middle"] || []
+    email = params["email"]
+    password = params["password"]
+    user_name = params["user_name"]
 
-    details = %{
-      user_name: params["user_name"],
-      handle: params["handle"],
-      name: %{first: name["first"] || "", last: name["last"] || "", middle: name["middle"]},
-      description: params["description"]
-    }
+    handle =
+      params["handle"] ||
+        (email |> String.split("@") |> hd() |> String.downcase() |> String.replace(~r/[^a-z0-9_]/, "_"))
 
-    auth = {:login, {params["email"], params["password"]}}
+    result =
+      Foryou.Repo.transaction(fn ->
+        {:ok, name_row} =
+          %NameSchema{first: first, middle: middle, last: last}
+          |> Foryou.Repo.insert()
 
-    case Users.register(details, auth, Noizu.Context.system()) do
-      {:ok, {user, _credential}} ->
+        {:ok, desc_row} =
+          %DescriptionSchema{title: "User", body: params["description"] || ""}
+          |> Foryou.Repo.insert()
+
+        {:ok, user} =
+          %UserSchema{
+            user_name: user_name,
+            handle: handle,
+            name_id: name_row.id,
+            description_id: desc_row.id,
+            email: email,
+            status: :active,
+            verified: true,
+            flagged: false
+          }
+          |> Foryou.Repo.insert()
+
+        hashed = Bcrypt.hash_pwd_salt(password)
+
+        {:ok, _cred} =
+          %CredentialSchema{
+            user_id: user.id,
+            auth_provider_id: @login_provider_id,
+            status: :active,
+            settings: %{"email" => email, "password" => hashed},
+            state: %{},
+            fingerprint: "#{email}:#{hashed}"
+          }
+          |> Foryou.Repo.insert()
+
+        user
+      end)
+
+    case result do
+      {:ok, user} ->
         conn |> put_status(:created) |> json(%{user: serialize(user)})
 
       {:error, %Ecto.Changeset{} = cs} ->

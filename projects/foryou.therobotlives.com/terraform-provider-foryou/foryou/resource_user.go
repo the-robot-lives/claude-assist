@@ -97,7 +97,15 @@ func (r *userResource) Create(ctx context.Context, req resource.CreateRequest, r
 		resp.Diagnostics.AddError("Create foryou_user", err.Error())
 		return
 	}
+	// Populate all Computed fields so none remain unknown after apply.
 	m.ID = types.StringValue(out.User.ID)
+	m.UserName = types.StringValue(out.User.UserName)
+	m.Email = types.StringValue(out.User.Email)
+	m.Handle = types.StringValue(out.User.Handle)
+	m.Status = types.StringValue(out.User.Status)
+	m.Verified = types.BoolValue(out.User.Verified)
+	m.Flagged = types.BoolValue(out.User.Flagged)
+	// password preserved from plan (write-only)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &m)...)
 }
 

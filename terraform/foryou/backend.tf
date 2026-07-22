@@ -5,7 +5,7 @@ terraform {
     region = "us-east-1"
 
     endpoints = {
-      s3 = "https://minio.noizu.com"
+      s3 = "http://127.0.0.1:9000"
     }
 
     skip_credentials_validation = true
