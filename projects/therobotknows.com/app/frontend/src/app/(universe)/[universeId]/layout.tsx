@@ -49,7 +49,7 @@ export default function UniverseLayout({
       <Sidebar universeId={universeId} universeName={name} />
 
       <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
-        <TopBar title={name} backHref="/" backLabel="Universes" />
+        <TopBar title={name} backHref="/app" backLabel="Universes" />
 
         <main className="flex-1 overflow-y-auto bg-page">{children}</main>
 

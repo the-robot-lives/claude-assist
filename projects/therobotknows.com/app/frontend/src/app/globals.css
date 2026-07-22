@@ -21,10 +21,11 @@
   --border-subtle: #F0EBE3;
   --border-heavy: #C4BDB3;
 
-  /* Accent — saddle brown */
-  --accent: #8B4513;
-  --accent-hover: #A0522D;
-  --accent-muted: rgba(139, 69, 19, 0.08);
+  /* Accent — warm ink / copper (Vellum & Ink + Illuminated warmth) */
+  --accent: #9A3412;
+  --accent-hover: #C2410C;
+  --accent-muted: rgba(154, 52, 18, 0.09);
+  --accent-glow: rgba(154, 52, 18, 0.14);
 
   /* Links — scholarly blue */
   --link: #2D5A8E;
@@ -123,6 +124,21 @@ body {
 ::selection {
   background: var(--accent-muted);
   color: var(--text-primary);
+}
+
+/* Subtle paper grain for marketing surfaces */
+.bg-paper-grain {
+  background-color: var(--bg-primary);
+  background-image:
+    radial-gradient(ellipse 120% 80% at 10% -10%, var(--accent-glow), transparent 50%),
+    radial-gradient(ellipse 80% 60% at 100% 0%, rgba(45, 90, 142, 0.05), transparent 45%);
+}
+
+/* Soft card elevation utility */
+.shadow-editorial {
+  box-shadow:
+    0 1px 0 rgba(26, 23, 20, 0.04),
+    0 8px 24px rgba(26, 23, 20, 0.05);
 }
 
 /* Scrollbar */

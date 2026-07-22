@@ -83,8 +83,8 @@ export default function AccountSettingsPage() {
   return (
     <div className="min-h-screen bg-page">
       <div className="max-w-xl mx-auto px-6 py-10">
-        <Link href="/" className="text-link text-[14px] hover:underline mb-6 inline-block">
-          ← Dashboard
+        <Link href="/app" className="text-link text-[14px] hover:underline mb-6 inline-block">
+          ← Workspace
         </Link>
         <h1 className="font-serif text-[28px] font-bold text-ink mb-8">
           Account settings

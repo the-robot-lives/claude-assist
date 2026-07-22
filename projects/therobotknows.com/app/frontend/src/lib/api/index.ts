@@ -5,6 +5,7 @@ export { universesApi } from "./universes";
 export { entriesApi } from "./entries";
 export { authApi, clearTokens } from "./auth";
 export type { AuthUser } from "./auth";
+// re-export for convenience
 export { graphApi } from "./graph";
 export type { GraphNode, GraphEdge } from "./graph";
 export { generationsApi } from "./generations";

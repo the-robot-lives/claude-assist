@@ -88,8 +88,8 @@ export default function UniverseOverviewPage() {
     return (
       <div className="px-8 py-10">
         <p className="text-flag-warn mb-4">{error || "Universe not found"}</p>
-        <Link href="/" className="text-accent">
-          ← Dashboard
+        <Link href="/app" className="text-accent">
+          ← Universes
         </Link>
       </div>
     );

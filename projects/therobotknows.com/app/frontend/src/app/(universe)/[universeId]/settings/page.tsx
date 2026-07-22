@@ -82,7 +82,7 @@ export default function UniverseSettingsPage() {
       return;
     try {
       await universesApi.remove(idOrSlug);
-      router.push("/");
+      router.push("/app");
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Delete failed");
     }

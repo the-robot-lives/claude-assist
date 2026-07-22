@@ -1,5 +1,5 @@
 import { request } from "./client";
-import { isMockMode } from "./config";
+import { getBackendOrigin, isMockMode } from "./config";
 
 export interface AuthUser {
   id: string;
@@ -30,25 +30,35 @@ export function clearTokens() {
 }
 
 export const authApi = {
-  async register(email: string, password: string, userName?: string) {
+  async register(opts: {
+    email: string;
+    password: string;
+    userName?: string;
+    inviteToken: string;
+  }) {
     if (isMockMode()) {
       const user: AuthUser = {
         id: crypto.randomUUID(),
-        email,
-        user_name: userName || email.split("@")[0],
+        email: opts.email,
+        user_name: opts.userName || opts.email.split("@")[0],
         verified: false,
       };
       storeTokens("mock-access", "mock-refresh");
-      return { user, access_token: "mock-access", refresh_token: "mock-refresh" };
+      return {
+        user,
+        access_token: "mock-access",
+        refresh_token: "mock-refresh",
+      };
     }
     const data = await request<AuthResponse>("/api/v1/auth/register", {
       method: "POST",
       skipAuth: true,
       body: JSON.stringify({
+        invite_token: opts.inviteToken,
         user: {
-          email,
-          password,
-          user_name: userName || email.split("@")[0],
+          email: opts.email,
+          password: opts.password,
+          user_name: opts.userName || opts.email.split("@")[0],
         },
       }),
     });
@@ -65,7 +75,11 @@ export const authApi = {
         verified: true,
       };
       storeTokens("mock-access", "mock-refresh");
-      return { user, access_token: "mock-access", refresh_token: "mock-refresh" };
+      return {
+        user,
+        access_token: "mock-access",
+        refresh_token: "mock-refresh",
+      };
     }
     const data = await request<AuthResponse>("/api/v1/auth/login", {
       method: "POST",
@@ -79,7 +93,9 @@ export const authApi = {
   async me() {
     if (isMockMode()) {
       const token =
-        typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
+        typeof window !== "undefined"
+          ? localStorage.getItem("access_token")
+          : null;
       if (!token) return null;
       return {
         user: {
@@ -91,6 +107,49 @@ export const authApi = {
       };
     }
     return request<{ user: AuthUser }>("/api/v1/auth/me");
+  },
+
+  async ssoProviders() {
+    if (isMockMode()) {
+      return { providers: ["oidc"] as string[] };
+    }
+    try {
+      return await request<{ providers: string[] }>(
+        "/api/v1/auth/sso/providers",
+        { skipAuth: true },
+      );
+    } catch {
+      return { providers: [] as string[] };
+    }
+  },
+
+  /** Start Authentik / OIDC via backend (never hit IdP from the browser). */
+  startOidcLogin() {
+    const origin = getBackendOrigin();
+    window.location.href = `${origin}/auth/oidc`;
+  },
+
+  async exchangeSsoCode(code: string) {
+    if (isMockMode()) {
+      storeTokens("mock-access", "mock-refresh");
+      return {
+        user: {
+          id: "mock-user",
+          email: "sso@therobotknows.com",
+          user_name: "sso-user",
+          verified: true,
+        } satisfies AuthUser,
+        access_token: "mock-access",
+        refresh_token: "mock-refresh",
+      };
+    }
+    const data = await request<AuthResponse>("/api/v1/auth/sso/exchange", {
+      method: "POST",
+      skipAuth: true,
+      body: JSON.stringify({ code }),
+    });
+    storeTokens(data.access_token, data.refresh_token);
+    return data;
   },
 
   async requestPasswordReset(email: string): Promise<{

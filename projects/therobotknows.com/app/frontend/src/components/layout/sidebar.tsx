@@ -56,7 +56,7 @@ export function Sidebar({ universeId, universeName, entries = [] }: SidebarProps
       {/* Universe name / back to dashboard */}
       <div className="px-5 pt-6 pb-4 border-b border-rule-subtle">
         <Link
-          href="/"
+          href="/app"
           className="text-ink-tertiary hover:text-ink-secondary font-mono text-[11px] uppercase tracking-widest transition-colors duration-200 block mb-2"
         >
           ← All Universes

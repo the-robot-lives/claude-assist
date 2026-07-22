@@ -29,14 +29,14 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Knowledge Base — AI-Powered Structured Writing",
+  title: "TheRobotKnows — Consistent creative knowledge graphs",
   description:
-    "A living wiki that writes itself. Build consistent, cross-referenced knowledge bases for fiction, non-fiction, and technical documentation.",
+    "A living wiki for novels, campaigns, and game lore. Define canon, generate with citations, and catch contradictions. Free beta.",
   openGraph: {
-    title: "Knowledge Base — AI-Powered Structured Writing",
+    title: "TheRobotKnows — Consistent creative knowledge graphs",
     description:
-      "Build consistent, cross-referenced knowledge bases for fiction, non-fiction, and technical documentation.",
-    siteName: "kb.therobotlives.com",
+      "Canon, generation, consistency, and graph for creative universes. Free beta — invite for email signup; Authentik SSO welcome.",
+    siteName: "therobotknows.com",
     type: "website",
   },
 };
