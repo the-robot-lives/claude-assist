@@ -36,35 +36,39 @@ make lab
 make lab PORT=9090
 ```
 
-### Views
+### UX model (map → generator → workspace)
 
-| Tab | Behavior |
-|-----|----------|
-| **Providers** | All providers/channels by category; filter by status (implemented / stub / FIM / local); search; scaffold YAML; scaffold+generate; FIM preview |
-| **Demo types** | Curated demos grouped by media type; generate / eval / synthesize more prompts |
+Landing is an **expandable graph**, not a flat vendor list:
 
-### Registry composition
+1. **Expand** a root section (Media generation · Formats & libraries · Renderers)  
+2. **Drill** into a domain (e.g. Music notation, Diagrams DSL, JS charting)  
+3. **Click a generator** (lilypond, mermaid, image, voice, …)  
+4. **Workspace**: Generate example prompt → Process prompt → View media → Eval  
 
-| Kind | Source |
-|------|--------|
-| Media APIs | Implemented + planned stubs (`gemini`, `suno`, `veo`, …) |
-| Chat APIs | `groq-chat`, `anthropic`, `gemini-chat`, `openai-chat`, `z.ai` |
-| Renderers | `mermaid`, `plantuml`, `graphviz`, `puppeteer` |
-| FIM channels | Every `skill/.../fim/solution/*.md` + category members (~200) |
+Quality low/medium/high drives **auto provider selection** for media kinds. FIM
+channels set `text_format` / guidance; chat model is still auto-selected.
+
+Search on the map filters the full generator set by name.
+
+| Surface | Behavior |
+|---------|----------|
+| **Map** | Hierarchical expand/collapse + search hits |
+| **Workspace** | Scaffold prompt, process, dry-run, eval, preview |
+| **Auto path bar** | Ordered candidates for current quality (media kinds) |
 
 ### API surface
 
-- `GET /api/health` — includes `providers_total` / status counts  
-- `GET /api/providers?category=&status=&kind=&q=` — full registry + filters  
-- `GET /api/providers/{id}` — detail + scaffold YAML + FIM preview (`media:gemini`, `fim:d3_js`, …)  
-- `POST /api/providers/{id}/scaffold` — write workspace test prompt  
-- `GET /api/catalog` — demo type groups  
-- `GET /api/prompt?path=` — full YAML + outputs  
-- `GET /api/media?path=` — safe media bytes  
-- `POST /api/generate` / `POST /api/eval` / `POST /api/prompts/generate`  
-- `GET /api/jobs` / `GET /api/jobs/{id}`  
+- `GET /api/graph` — **primary**: hierarchical map (sections → generators)  
+- `GET /api/kinds` — flat kinds (compat)  
+- `GET /api/health` — readiness + registry counts  
+- `GET /api/catalog` / `GET /api/prompt` / `GET /api/media`  
+- `POST /api/generate` — `{ path, quality?, force?, no_eval?, dry_run? }`  
+- `POST /api/providers/{id}/scaffold` — example prompt for a channel  
+- `POST /api/prompts/generate` / `POST /api/eval`  
+- `GET /api/providers…` — full flat registry (tooling)  
+- `GET /api/jobs/{id}`  
 
-Requires API keys for live generate/synth; eval needs `GROQ_API_KEY` or `MEDIA_EVAL_*` / port-forward.
+Requires API keys for live generate; eval needs `GROQ_API_KEY` or `MEDIA_EVAL_*` / port-forward.
 
 ## What unit tests cover (Phase 0/A)
 

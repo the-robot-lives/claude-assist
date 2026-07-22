@@ -35,7 +35,7 @@ migrate:
       memory: 256Mi
 
 database:
-  host: shared-postgres.data-ns.svc.cluster.local
+  host: app-timescaledb.apps.svc.cluster.local
   port: 5432
   name: gotta_cc
 

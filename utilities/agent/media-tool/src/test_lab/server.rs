@@ -1,6 +1,6 @@
 //! Axum HTTP server + embedded SPA for the media-tool test lab.
 
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::time::Duration;
@@ -99,6 +99,7 @@ pub async fn run_lab(cfg: LabConfig) -> color_eyre::Result<()> {
         .route("/", get(index_page))
         .route("/api/health", get(health))
         .route("/api/kinds", get(api_kinds))
+        .route("/api/graph", get(api_graph))
         .route("/api/catalog", get(api_catalog))
         .route("/api/providers", get(api_providers))
         .route("/api/providers/{id}", get(api_provider_detail))
@@ -118,7 +119,7 @@ pub async fn run_lab(cfg: LabConfig) -> color_eyre::Result<()> {
     let listener = tokio::net::TcpListener::bind(&addr).await?;
     let url = format!("http://{addr}");
     ui::ok(&format!("Test lab listening on {url}"));
-    eprintln!("  Intent-first lab: pick media kind + quality; system chooses providers.");
+    eprintln!("  Graph lab: expand sections → pick a generator → scaffold / generate / view.");
     eprintln!("  Demos:     {}", cfg.demos_dir.display());
     eprintln!("  Workspace: {}", cfg.workspace_dir.display());
     eprintln!("  Ctrl+C to stop.\n");
@@ -176,8 +177,289 @@ async fn api_catalog(State(st): State<AppState>) -> Result<Json<Vec<TypeGroup>>,
     Ok(Json(groups))
 }
 
+/// Hierarchical map for the landing page: sections → generators (media kinds + FIM).
+/// Drill-down navigation; leaf nodes are generators you work with.
+async fn api_graph(State(st): State<AppState>) -> Result<Json<serde_json::Value>, ApiError> {
+    use crate::providers::{self, available, candidates_for};
+    use crate::schema::{AssetType, AudioKind, Quality};
+    use crate::test_lab::registry::ProviderKind;
+
+    let groups = scan_catalog(&st.inner.cfg.demos_dir, &st.inner.cfg.workspace_dir)
+        .map_err(|e| ApiError::bad(e.to_string()))?;
+
+    // --- Media generation section (intent kinds; auto provider) ---
+    let media_kinds: &[(&str, &str, &str, AssetType, AudioKind)] = &[
+        (
+            "image",
+            "Image",
+            "Still images & logos — quality selects Imagen path",
+            AssetType::Image,
+            AudioKind::Voice,
+        ),
+        (
+            "video",
+            "Video",
+            "Short motion clips — quality selects Veo/Grok path",
+            AssetType::Video,
+            AudioKind::Voice,
+        ),
+        (
+            "music",
+            "Music",
+            "Tracks & beds — auto Suno",
+            AssetType::Audio,
+            AudioKind::Music,
+        ),
+        (
+            "voice",
+            "Voice / TTS",
+            "Spoken voiceovers — quality steps TTS engines",
+            AssetType::Audio,
+            AudioKind::Voice,
+        ),
+        (
+            "sfx",
+            "Sound effects",
+            "Short SFX — Suno sound mode",
+            AssetType::Audio,
+            AudioKind::Sfx,
+        ),
+        (
+            "diagram",
+            "Diagram (generic)",
+            "DSL diagrams via chat + render",
+            AssetType::Diagram,
+            AudioKind::Voice,
+        ),
+        (
+            "html",
+            "HTML page",
+            "Self-contained pages",
+            AssetType::Html,
+            AudioKind::Voice,
+        ),
+        (
+            "react-page",
+            "React page",
+            "TSX pages / landings",
+            AssetType::ReactPage,
+            AudioKind::Voice,
+        ),
+        (
+            "component",
+            "Component",
+            "Reusable UI components",
+            AssetType::Component,
+            AudioKind::Voice,
+        ),
+        (
+            "game",
+            "Game",
+            "Playable HTML canvas demos",
+            AssetType::Html,
+            AudioKind::Voice,
+        ),
+        (
+            "document",
+            "Document",
+            "Markdown / text docs",
+            AssetType::Document,
+            AudioKind::Voice,
+        ),
+        (
+            "svg",
+            "SVG vector",
+            "Vector graphics via chat",
+            AssetType::Diagram,
+            AudioKind::Voice,
+        ),
+    ];
+
+    let mut media_children = Vec::new();
+    for (key, label, blurb, asset, audio) in media_kinds {
+        let mut examples = groups
+            .iter()
+            .find(|g| g.type_key == *key)
+            .map(|g| g.prompts.clone())
+            .unwrap_or_default();
+        if *key == "voice" {
+            if let Some(g) = groups.iter().find(|g| g.type_key == "audio") {
+                for p in &g.prompts {
+                    if !examples.iter().any(|e| e.path == p.path) {
+                        examples.push(p.clone());
+                    }
+                }
+            }
+        }
+
+        let mut by_q = serde_json::Map::new();
+        for q in [Quality::Low, Quality::Medium, Quality::High] {
+            let cands: Vec<_> = candidates_for(*asset, *audio, q)
+                .into_iter()
+                .map(|c| {
+                    json!({
+                        "service": c.service,
+                        "model": c.model,
+                        "ready": available(&c),
+                        "api_key_env": providers::api_key_env(c.service),
+                    })
+                })
+                .collect();
+            let ready = cands.iter().any(|c| c["ready"].as_bool() == Some(true));
+            by_q.insert(
+                q.as_str().into(),
+                json!({ "candidates": cands, "ready": ready }),
+            );
+        }
+
+        media_children.push(json!({
+            "id": format!("kind:{key}"),
+            "slug": key,
+            "label": label,
+            "description": blurb,
+            "node_type": "media_kind",
+            "auto_selects": true,
+            "example_count": examples.len(),
+            "examples": examples,
+            "quality": by_q,
+            "children": [],
+        }));
+    }
+
+    // --- FIM category sections (music notation, diagrams, etc.) ---
+    let mut by_cat: BTreeMap<String, Vec<serde_json::Value>> = BTreeMap::new();
+    let mut cat_labels: BTreeMap<String, String> = BTreeMap::new();
+
+    for p in &st.inner.providers.providers {
+        if p.kind != ProviderKind::FimChannel {
+            continue;
+        }
+        // Skip pure media-api/chat/renderer categories
+        if matches!(
+            p.category.as_str(),
+            "media-api" | "chat-api" | "renderer"
+        ) {
+            continue;
+        }
+        cat_labels
+            .entry(p.category.clone())
+            .or_insert_with(|| p.category_label.clone());
+
+        by_cat.entry(p.category.clone()).or_default().push(json!({
+            "id": p.id,
+            "slug": p.slug,
+            "label": p.slug.replace('_', " ").replace('-', " "),
+            "description": p.description,
+            "node_type": "generator",
+            "status": p.status,
+            "kind": p.kind,
+            "asset_types": p.asset_types,
+            "default_extension": p.default_extension,
+            "fim_solution": p.fim_solution,
+            "demo_count": p.demo_count,
+            "demo_paths": p.demo_paths,
+            "auto_selects": true,
+            "auto_note": "Chat model auto-selected; this channel sets text_format / system guidance",
+            "children": [],
+        }));
+    }
+
+    // Sort generators within category by slug
+    for list in by_cat.values_mut() {
+        list.sort_by(|a, b| {
+            a["slug"]
+                .as_str()
+                .unwrap_or("")
+                .cmp(b["slug"].as_str().unwrap_or(""))
+        });
+    }
+
+    let mut format_children = Vec::new();
+    for (cat_key, gens) in &by_cat {
+        let label = cat_labels
+            .get(cat_key)
+            .cloned()
+            .unwrap_or_else(|| cat_key.replace('-', " "));
+        format_children.push(json!({
+            "id": format!("section:{cat_key}"),
+            "slug": cat_key,
+            "label": label,
+            "description": format!("{} generators", gens.len()),
+            "node_type": "section",
+            "count": gens.len(),
+            "children": gens,
+        }));
+    }
+    format_children.sort_by(|a, b| {
+        a["label"]
+            .as_str()
+            .unwrap_or("")
+            .cmp(b["label"].as_str().unwrap_or(""))
+    });
+
+    // --- Renderers section ---
+    let render_children: Vec<_> = st
+        .inner
+        .providers
+        .providers
+        .iter()
+        .filter(|p| p.kind == ProviderKind::Renderer)
+        .map(|p| {
+            json!({
+                "id": p.id,
+                "slug": p.slug,
+                "label": p.slug,
+                "description": p.description,
+                "node_type": "generator",
+                "status": p.status,
+                "kind": p.kind,
+                "demo_count": p.demo_count,
+                "demo_paths": p.demo_paths,
+                "auto_selects": false,
+                "children": [],
+            })
+        })
+        .collect();
+
+    let graph = json!({
+        "roots": [
+            {
+                "id": "root:media",
+                "label": "Media generation",
+                "description": "Image, video, audio, pages — declare kind + quality; system picks providers",
+                "node_type": "root_section",
+                "count": media_children.len(),
+                "children": media_children,
+            },
+            {
+                "id": "root:formats",
+                "label": "Formats & libraries",
+                "description": "Full channel library: music notation, diagrams, charts, 3D, docs, …",
+                "node_type": "root_section",
+                "count": format_children.iter().map(|c| c["count"].as_u64().unwrap_or(0)).sum::<u64>(),
+                "children": format_children,
+            },
+            {
+                "id": "root:renderers",
+                "label": "Local renderers",
+                "description": "Markup → visual tools (mermaid, plantuml, …)",
+                "node_type": "root_section",
+                "count": render_children.len(),
+                "children": render_children,
+            },
+        ],
+        "totals": {
+            "providers": st.inner.providers.total,
+            "fim_channels": st.inner.providers.fim_only,
+            "sections": format_children.len() + 2,
+        }
+    });
+
+    Ok(Json(graph))
+}
+
 /// Intent-first media kinds: type + quality → auto provider candidates.
-/// This is the primary lab navigation model (not the full provider registry).
+/// Kept for compatibility; primary nav is `/api/graph`.
 async fn api_kinds(State(st): State<AppState>) -> Result<Json<serde_json::Value>, ApiError> {
     use crate::providers::{self, available, candidates_for};
     use crate::schema::{AssetType, AudioKind, Quality};
@@ -288,15 +570,43 @@ async fn api_kinds(State(st): State<AppState>) -> Result<Json<serde_json::Value>
 
     let mut kinds = Vec::new();
     for (key, label, blurb, asset, audio) in kinds_meta {
-        let examples = groups
+        // Skip legacy "audio" as its own top-level card — demos fold into voice below.
+        if *key == "audio" {
+            continue;
+        }
+
+        let mut examples = groups
             .iter()
             .find(|g| g.type_key == *key)
             .map(|g| g.prompts.clone())
             .unwrap_or_default();
 
+        // v0.3 demos often use type: audio for voice — surface them under Voice.
+        if *key == "voice" {
+            if let Some(g) = groups.iter().find(|g| g.type_key == "audio") {
+                for p in &g.prompts {
+                    if !examples.iter().any(|e| e.path == p.path) {
+                        examples.push(p.clone());
+                    }
+                }
+            }
+        }
+
+        // Chat-backed kinds: show chat auto-select path, not Imagen.
+        let (cand_asset, cand_audio) = if matches!(
+            *key,
+            "svg" | "diagram" | "html" | "react-page" | "component" | "game" | "document"
+                | "style-guide"
+        ) {
+            // Use Diagram as stand-in for is_chat_type candidate table (same chat list).
+            (AssetType::Diagram, AudioKind::Voice)
+        } else {
+            (*asset, *audio)
+        };
+
         let mut by_quality = serde_json::Map::new();
         for q in [Quality::Low, Quality::Medium, Quality::High] {
-            let all = candidates_for(*asset, *audio, q);
+            let all = candidates_for(cand_asset, cand_audio, q);
             let cands: Vec<serde_json::Value> = all
                 .iter()
                 .map(|c| {

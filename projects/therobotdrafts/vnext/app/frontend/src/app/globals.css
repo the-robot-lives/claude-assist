@@ -275,6 +275,10 @@ details[open] > summary .indicator-chevron { transform: rotate(90deg); }
   flex: 1;
 }
 
+.hg-menu__group {
+  position: relative;
+}
+
 .hg-menu__item,
 .hg-tab,
 .hg-hud-actions button {
@@ -297,6 +301,51 @@ details[open] > summary .indicator-chevron { transform: rotate(90deg); }
 .hg-hud-actions button:hover {
   border-color: #3a4452;
   background: #202734;
+}
+
+.hg-menu__dropdown,
+.hg-context-menu {
+  position: absolute;
+  z-index: 20;
+  min-width: 190px;
+  padding: 5px;
+  border: 1px solid #46515f;
+  border-radius: 4px;
+  background: #151a21;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.38);
+}
+
+.hg-menu__dropdown {
+  top: calc(100% + 3px);
+  left: 0;
+}
+
+.hg-menu__dropdown button,
+.hg-context-menu button {
+  width: 100%;
+  min-height: 28px;
+  display: flex;
+  align-items: center;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  background: transparent;
+  color: #dfe8f0;
+  padding: 0 9px;
+  text-align: left;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.hg-menu__dropdown button:hover,
+.hg-context-menu button:hover {
+  border-color: #384250;
+  background: #202734;
+}
+
+.hg-context-menu button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
 }
 
 .hg-appbar__status {
@@ -642,6 +691,42 @@ details[open] > summary .indicator-chevron { transform: rotate(90deg); }
     linear-gradient(180deg, rgba(255, 255, 255, 0.06) 1px, transparent 1px),
     #151a1a;
   background-size: 32px 32px, 32px 32px, auto;
+}
+
+.hg-empty-state {
+  position: absolute;
+  z-index: 3;
+  inset: 48px 0 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 24px;
+  pointer-events: none;
+}
+
+.hg-empty-state strong,
+.hg-empty-state button {
+  min-height: 34px;
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid rgba(126, 145, 161, 0.38);
+  border-radius: 4px;
+  background: rgba(13, 18, 23, 0.78);
+  color: #e9eef4;
+  padding: 0 12px;
+  backdrop-filter: blur(8px);
+}
+
+.hg-empty-state button {
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.hg-empty-state button:hover {
+  border-color: var(--hg-teal);
+  background: #244842;
 }
 
 .hg-canvas-toolbar {

@@ -3,280 +3,403 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>media-tool · Test Lab</title>
+  <title>Media Lab</title>
   <style>
     :root {
-      --bg: #0a1628; --bg2: #0f2137; --panel: #12263d; --border: #1e3a5f;
-      --text: #e8eef7; --muted: #8aa0b8; --cyan: #00d4ff; --green: #3dd68c;
-      --amber: #f5a623; --red: #ff5c5c; --radius: 10px;
-      --font: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+      --bg: #0c0f14;
+      --surface: #12161e;
+      --surface-2: #181d28;
+      --border: #252b38;
+      --border-soft: #1c2230;
+      --text: #e8eaed;
+      --muted: #8b93a7;
+      --faint: #5c6578;
+      --accent: #7eb8ff;
+      --accent-dim: rgba(126, 184, 255, 0.12);
+      --ok: #6bcf8e;
+      --warn: #e0b44a;
+      --radius: 14px;
+      --radius-sm: 8px;
+      --s1: 8px; --s2: 16px; --s3: 24px; --s4: 40px; --s5: 56px;
+      --font: "Inter", "IBM Plex Sans", system-ui, sans-serif;
       --mono: "IBM Plex Mono", ui-monospace, monospace;
+      --max: 1080px;
     }
     * { box-sizing: border-box; }
     body {
-      margin: 0; font-family: var(--font); color: var(--text);
-      background: radial-gradient(1200px 600px at 10% -10%, #143456 0%, var(--bg) 55%);
-      min-height: 100vh;
+      margin: 0; min-height: 100vh;
+      font-family: var(--font); color: var(--text); background: var(--bg);
+      line-height: 1.5; -webkit-font-smoothing: antialiased;
     }
-    header {
-      display: flex; align-items: center; justify-content: space-between; gap: 12px;
-      padding: 12px 18px; border-bottom: 1px solid var(--border);
-      background: rgba(10,22,40,.9); backdrop-filter: blur(8px);
-      position: sticky; top: 0; z-index: 20; flex-wrap: wrap;
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .top {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: var(--s2); padding: var(--s3) var(--s4);
+      border-bottom: 1px solid var(--border-soft);
+      flex-wrap: wrap;
     }
-    header h1 { margin: 0; font-size: 1.05rem; font-weight: 600; }
-    header h1 span { color: var(--cyan); }
-    .tabs { display: flex; gap: 6px; }
-    .tab {
-      background: transparent; border: 1px solid var(--border); color: var(--muted);
-      border-radius: 999px; padding: 6px 12px; font: inherit; font-size: .8rem; cursor: pointer;
+    .brand { font-weight: 500; letter-spacing: -0.02em; }
+    .brand span { color: var(--faint); font-weight: 400; margin-left: .4em; font-size: .9em; }
+    .crumbs {
+      display: flex; flex-wrap: wrap; gap: 6px; align-items: center;
+      font-size: .82rem; color: var(--faint);
     }
-    .tab.active { color: var(--cyan); border-color: rgba(0,212,255,.45); background: rgba(0,212,255,.1); }
-    header .meta { color: var(--muted); font-size: .75rem; font-family: var(--mono); }
-    .layout {
-      display: grid; grid-template-columns: 260px 360px 1fr;
-      height: calc(100vh - 58px);
+    .crumbs button {
+      appearance: none; border: 0; background: none; color: var(--muted);
+      font: inherit; cursor: pointer; padding: 2px 4px; border-radius: 4px;
     }
-    aside, .list, .detail { overflow: auto; border-right: 1px solid var(--border); }
-    .detail { border-right: none; }
-    aside { padding: 12px; background: var(--bg2); }
-    .list { padding: 12px; background: rgba(15,33,55,.45); }
-    .detail { padding: 16px 18px; }
-    h2 {
-      margin: 0 0 8px; font-size: .7rem; text-transform: uppercase;
-      letter-spacing: .08em; color: var(--muted);
+    .crumbs button:hover { color: var(--accent); background: var(--accent-dim); }
+    .crumbs button:disabled { color: var(--text); cursor: default; background: none; }
+    .crumbs .sep { color: var(--border); }
+
+    main { max-width: var(--max); margin: 0 auto; padding: var(--s4) var(--s4) var(--s5); }
+
+    .hero { max-width: 34rem; margin-bottom: var(--s4); }
+    .hero h1 {
+      margin: 0 0 var(--s2); font-size: 1.75rem; font-weight: 500;
+      letter-spacing: -0.03em; line-height: 1.2;
     }
-    .search {
-      width: 100%; background: #0a1422; border: 1px solid var(--border); color: var(--text);
-      border-radius: 8px; padding: 8px 10px; font: inherit; font-size: .85rem; margin-bottom: 10px;
+    .hero p { margin: 0; color: var(--muted); font-size: .95rem; }
+
+    .search-bar {
+      display: flex; gap: var(--s2); margin-bottom: var(--s4); flex-wrap: wrap;
     }
-    .cat-btn, .type-btn, .prov-card {
-      display: flex; justify-content: space-between; align-items: flex-start; gap: 8px;
-      width: 100%; text-align: left; background: transparent; border: 1px solid transparent;
-      color: var(--text); padding: 8px 10px; border-radius: 8px; cursor: pointer;
-      margin-bottom: 4px; font: inherit;
+    .search-bar input {
+      flex: 1; min-width: 200px; max-width: 360px;
+      background: var(--surface); border: 1px solid var(--border-soft);
+      border-radius: var(--radius-sm); color: var(--text);
+      font: inherit; font-size: .9rem; padding: 11px 14px;
     }
-    .cat-btn:hover, .type-btn:hover, .prov-card:hover {
-      background: rgba(0,212,255,.06); border-color: var(--border);
+    .search-bar input:focus { outline: none; border-color: var(--accent); }
+    .search-bar input::placeholder { color: var(--faint); }
+
+    /* —— Graph / map —— */
+    .map { display: flex; flex-direction: column; gap: var(--s2); }
+
+    .node {
+      background: var(--surface);
+      border: 1px solid var(--border-soft);
+      border-radius: var(--radius);
+      overflow: hidden;
+      transition: border-color 120ms ease;
     }
-    .cat-btn.active, .type-btn.active, .prov-card.active {
-      background: rgba(0,212,255,.12); border-color: rgba(0,212,255,.35); color: var(--cyan);
+    .node:hover { border-color: var(--border); }
+
+    .node-head {
+      display: flex; align-items: flex-start; gap: var(--s2);
+      width: 100%; text-align: left; padding: var(--s3);
+      background: transparent; border: 0; color: inherit;
+      font: inherit; cursor: pointer;
     }
-    .cat-btn .count, .type-btn .count {
-      color: var(--muted); font-family: var(--mono); font-size: .72rem; white-space: nowrap;
+    .node-head:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+
+    .chev {
+      flex-shrink: 0; width: 20px; height: 20px; margin-top: 2px;
+      color: var(--faint); transition: transform 150ms ease;
+      display: grid; place-items: center; font-size: .7rem;
     }
-    .cat-btn small { display: block; color: var(--muted); font-size: .68rem; margin-top: 2px; }
-    .prov-card { flex-direction: column; border: 1px solid var(--border); background: var(--panel); }
-    .prov-card .slug { font-weight: 600; font-size: .9rem; }
-    .prov-card .desc {
-      color: var(--muted); font-size: .75rem; line-height: 1.35;
+    .node.open > .node-head .chev { transform: rotate(90deg); color: var(--accent); }
+
+    .node-title { font-size: 1.05rem; font-weight: 500; letter-spacing: -0.02em; }
+    .node-desc { margin: 4px 0 0; color: var(--muted); font-size: .88rem; max-width: 40rem; }
+    .node-meta {
+      margin-left: auto; flex-shrink: 0;
+      font-family: var(--mono); font-size: .72rem; color: var(--faint);
+      padding-top: 4px;
+    }
+
+    .node-body {
+      display: none;
+      padding: 0 var(--s3) var(--s3);
+      border-top: 1px solid var(--border-soft);
+    }
+    .node.open > .node-body { display: block; padding-top: var(--s3); }
+
+    /* nested section */
+    .node.section { margin-left: 0; background: var(--surface-2); }
+    .node.section .node-title { font-size: .95rem; }
+
+    .gen-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: var(--s2);
+      padding: 4px 0 0;
+    }
+
+    .gen-card {
+      appearance: none; text-align: left;
+      background: var(--bg); border: 1px solid var(--border-soft);
+      border-radius: var(--radius-sm); padding: var(--s2);
+      color: var(--text); font: inherit; cursor: pointer;
+      min-height: 88px; display: flex; flex-direction: column; gap: 6px;
+      transition: border-color 120ms ease, background 120ms ease;
+    }
+    .gen-card:hover { border-color: var(--accent); background: var(--accent-dim); }
+    .gen-card:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .gen-card .name {
+      font-size: .9rem; font-weight: 500; letter-spacing: -0.01em;
+      text-transform: capitalize;
+    }
+    .gen-card .sub {
+      margin-top: auto; font-size: .7rem; color: var(--faint); font-family: var(--mono);
+    }
+
+    /* search hits flat list */
+    .hit-list { display: flex; flex-direction: column; gap: var(--s1); }
+    .hit {
+      appearance: none; text-align: left; width: 100%;
+      background: var(--surface); border: 1px solid var(--border-soft);
+      border-radius: var(--radius-sm); padding: var(--s2) var(--s3);
+      color: var(--text); font: inherit; cursor: pointer;
+    }
+    .hit:hover { border-color: var(--accent); }
+    .hit .path { font-size: .72rem; color: var(--faint); font-family: var(--mono); margin-bottom: 4px; }
+    .hit .name { font-weight: 500; text-transform: capitalize; }
+
+    /* —— Workspace —— */
+    .workspace { display: none; animation: in 160ms ease; }
+    .workspace.show { display: block; }
+    @keyframes in {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: none; }
+    }
+
+    .ws-header {
+      margin-bottom: var(--s4);
+      padding-bottom: var(--s3);
+      border-bottom: 1px solid var(--border-soft);
+    }
+    .ws-header h1 {
+      margin: 0 0 8px; font-size: 1.5rem; font-weight: 500;
+      letter-spacing: -0.03em; text-transform: capitalize;
+    }
+    .ws-header p { margin: 0; color: var(--muted); max-width: 36rem; font-size: .92rem; }
+
+    .toolbar {
+      display: flex; flex-wrap: wrap; gap: var(--s2); align-items: center;
+      margin-bottom: var(--s4);
+    }
+    .btn {
+      appearance: none; border: 1px solid var(--border); background: var(--surface-2);
+      color: var(--text); font: inherit; font-size: .875rem;
+      padding: 10px 16px; border-radius: var(--radius-sm); cursor: pointer;
+    }
+    .btn:hover { border-color: var(--muted); }
+    .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .btn.primary {
+      background: var(--accent); border-color: transparent; color: #0a0e14; font-weight: 550;
+    }
+    .btn.primary:hover { filter: brightness(1.05); }
+    .btn:disabled { opacity: .4; cursor: not-allowed; }
+
+    .quality {
+      display: inline-flex; background: var(--surface); border: 1px solid var(--border-soft);
+      border-radius: 999px; padding: 3px; gap: 2px;
+    }
+    .quality button {
+      appearance: none; border: 0; background: transparent; color: var(--muted);
+      font: inherit; font-size: .8rem; padding: 6px 14px; border-radius: 999px; cursor: pointer;
+    }
+    .quality button.active {
+      background: var(--surface-2); color: var(--text);
+      box-shadow: 0 0 0 1px var(--border);
+    }
+
+    .check {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: .8rem; color: var(--muted);
+    }
+
+    .auto-bar {
+      margin: 0 0 var(--s4); padding: var(--s2) var(--s3);
+      background: var(--surface); border: 1px solid var(--border-soft);
+      border-radius: var(--radius); font-size: .82rem; color: var(--muted);
+    }
+    .auto-bar strong { color: var(--text); font-weight: 500; }
+    .auto-bar code { font-family: var(--mono); font-size: .78rem; color: var(--accent); }
+    .auto-bar .miss { color: var(--warn); }
+
+    .block { margin-bottom: var(--s4); }
+    .block h2 {
+      margin: 0 0 var(--s2); font-size: .7rem; text-transform: uppercase;
+      letter-spacing: .08em; color: var(--faint); font-weight: 500;
+    }
+
+    .examples { display: flex; flex-direction: column; gap: var(--s2); }
+    .ex {
+      appearance: none; text-align: left; width: 100%;
+      background: var(--surface); border: 1px solid var(--border-soft);
+      border-radius: var(--radius); padding: var(--s3);
+      color: var(--text); font: inherit; cursor: pointer;
+    }
+    .ex:hover { border-color: var(--border); }
+    .ex.active { border-color: var(--accent); background: var(--accent-dim); }
+    .ex .id { font-weight: 500; margin-bottom: 6px; }
+    .ex .pv {
+      color: var(--muted); font-size: .85rem;
       display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
     }
-    .badges { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
-    .badge {
-      font-size: .65rem; font-family: var(--mono); padding: 2px 6px; border-radius: 999px;
-      background: rgba(255,255,255,.06); color: var(--muted); border: 1px solid var(--border);
+    .pills { display: flex; flex-wrap: wrap; gap: 6px; margin-top: var(--s2); }
+    .pill {
+      font-size: .68rem; font-family: var(--mono); color: var(--faint);
+      border: 1px solid var(--border-soft); border-radius: 999px; padding: 2px 8px;
     }
-    .badge.ok { color: var(--green); border-color: rgba(61,214,140,.35); }
-    .badge.warn { color: var(--amber); border-color: rgba(245,166,35,.35); }
-    .badge.dim { color: var(--muted); }
-    .badge.red { color: var(--red); border-color: rgba(255,92,92,.35); }
-    .toolbar { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
-    button.action {
-      background: linear-gradient(180deg,#1a4a6e,#123553); color: var(--text);
-      border: 1px solid rgba(0,212,255,.35); border-radius: 8px; padding: 8px 12px;
-      font: inherit; font-size: .82rem; cursor: pointer;
+    .pill.ok { color: var(--ok); border-color: rgba(107,207,142,.25); }
+
+    .media-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: var(--s3);
     }
-    button.action.primary {
-      background: linear-gradient(180deg,#00b8de,#008fb0); color: #041018;
-      border-color: transparent; font-weight: 600;
+    .tile {
+      background: var(--surface); border: 1px solid var(--border-soft);
+      border-radius: var(--radius); padding: var(--s2);
     }
-    button.action:disabled { opacity: .45; cursor: not-allowed; }
-    label.check { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-size: .78rem; }
-    .panel {
-      border: 1px solid var(--border); border-radius: var(--radius); background: var(--panel);
-      padding: 12px 14px; margin-bottom: 12px;
+    .tile .nm {
+      font-family: var(--mono); font-size: .7rem; color: var(--faint);
+      margin-bottom: var(--s2); word-break: break-all;
     }
-    .panel h3 { margin: 0 0 8px; font-size: .85rem; color: var(--cyan); }
-    pre, textarea {
-      width: 100%; background: #0a1422; border: 1px solid var(--border); border-radius: 8px;
-      color: var(--text); font-family: var(--mono); font-size: .72rem; line-height: 1.45;
-      padding: 10px; overflow: auto; max-height: 320px; white-space: pre-wrap; margin: 0;
+    .tile img, .tile video {
+      width: 100%; max-height: 220px; object-fit: contain; background: #000; border-radius: 6px;
     }
-    .media-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(200px,1fr)); gap: 10px; }
-    .media-card { border: 1px solid var(--border); border-radius: 8px; padding: 8px; background: #0a1422; }
-    .media-card img, .media-card video { width: 100%; max-height: 180px; object-fit: contain; background: #000; border-radius: 4px; }
-    .media-card audio { width: 100%; }
-    .media-card iframe { width: 100%; height: 200px; border: 0; border-radius: 4px; background: #fff; }
-    .empty { color: var(--muted); font-size: .9rem; padding: 24px 8px; text-align: center; }
-    .job-log { font-family: var(--mono); font-size: .72rem; color: var(--muted); }
-    .job-log .ok { color: var(--green); } .job-log .fail { color: var(--red); } .job-log .run { color: var(--amber); }
-    .stats {
-      display: grid; grid-template-columns: repeat(4,1fr); gap: 6px; margin-bottom: 12px;
+    .tile audio { width: 100%; }
+    .tile iframe { width: 100%; height: 200px; border: 0; border-radius: 6px; background: #fff; }
+
+    pre.mono {
+      margin: 0; padding: var(--s3); background: var(--surface);
+      border: 1px solid var(--border-soft); border-radius: var(--radius);
+      font-family: var(--mono); font-size: .74rem; line-height: 1.5; color: var(--muted);
+      overflow: auto; max-height: 280px; white-space: pre-wrap;
     }
-    .stat {
-      background: #0a1422; border: 1px solid var(--border); border-radius: 8px; padding: 8px;
-      text-align: center;
+
+    .log { font-family: var(--mono); font-size: .75rem; color: var(--faint); }
+    .log .ok { color: var(--ok); } .log .fail { color: #e07070; } .log .run { color: var(--warn); }
+    .log div { margin-bottom: 4px; }
+
+    .empty {
+      padding: var(--s4); text-align: center; color: var(--faint); font-size: .9rem;
     }
-    .stat b { display: block; color: var(--cyan); font-size: 1.1rem; font-family: var(--mono); }
-    .stat span { font-size: .65rem; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
-    #status-bar {
-      position: fixed; bottom: 12px; right: 12px; background: var(--panel);
-      border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px;
-      font-size: .78rem; color: var(--muted); max-width: 380px;
-      box-shadow: 0 8px 30px rgba(0,0,0,.35); display: none;
+
+    details.adv { margin-top: var(--s3); }
+    details.adv summary {
+      cursor: pointer; color: var(--faint); font-size: .8rem; list-style: none;
     }
-    #status-bar.show { display: block; }
-    .filters { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px; }
-    .chip {
-      font-size: .68rem; padding: 3px 8px; border-radius: 999px; border: 1px solid var(--border);
-      background: transparent; color: var(--muted); cursor: pointer; font: inherit;
+    details.adv summary::-webkit-details-marker { display: none; }
+
+    #toast {
+      position: fixed; bottom: var(--s3); right: var(--s3);
+      background: var(--surface-2); border: 1px solid var(--border);
+      color: var(--muted); font-size: .8rem; padding: 10px 16px;
+      border-radius: var(--radius-sm); opacity: 0; pointer-events: none;
+      transition: opacity 150ms; max-width: 320px;
+      box-shadow: 0 12px 40px rgba(0,0,0,.45);
     }
-    .chip.active { color: var(--cyan); border-color: rgba(0,212,255,.4); }
-    @media (max-width: 1100px) {
-      .layout { grid-template-columns: 1fr; height: auto; }
-      aside, .list, .detail { max-height: 42vh; border-right: none; border-bottom: 1px solid var(--border); }
-    }
+    #toast.show { opacity: 1; }
+
+    .hidden { display: none !important; }
   </style>
 </head>
 <body>
-  <header>
-    <h1>media-tool <span>Test Lab</span></h1>
-    <div class="tabs">
-      <button class="tab active" data-view="providers" type="button">Providers</button>
-      <button class="tab" data-view="demos" type="button">Demo types</button>
+  <div class="top">
+    <div class="brand">Media Lab <span>explore → generate → view</span></div>
+    <nav class="crumbs" id="crumbs" aria-label="Breadcrumb"></nav>
+  </div>
+
+  <!-- LANDING: expandable graph -->
+  <main id="view-map">
+    <section class="hero">
+      <h1>Explore the media map</h1>
+      <p>
+        Expand a section, open a domain (music notation, diagrams, charts…),
+        then pick a generator. The system auto-selects underlying providers—
+        you work with <em>what to make</em>, not vendor plumbing.
+      </p>
+    </section>
+
+    <div class="search-bar">
+      <input type="search" id="map-search" placeholder="Search generators… e.g. lilypond, mermaid, voice" autocomplete="off" />
     </div>
-    <div class="meta" id="health-meta">loading…</div>
-  </header>
 
-  <!-- PROVIDERS VIEW -->
-  <div class="layout" id="view-providers">
-    <aside>
-      <h2>Categories</h2>
-      <input class="search" id="prov-search" placeholder="Search providers…" />
-      <div class="filters" id="status-filters">
-        <button class="chip active" data-status="" type="button">all</button>
-        <button class="chip" data-status="implemented" type="button">implemented</button>
-        <button class="chip" data-status="stub" type="button">stub</button>
-        <button class="chip" data-status="fim_only" type="button">fim</button>
-        <button class="chip" data-status="local_tool" type="button">local</button>
-      </div>
-      <button class="cat-btn active" data-cat="" type="button" id="cat-all">
-        <span>All providers</span><span class="count" id="cat-all-count">—</span>
-      </button>
-      <div id="cat-list"></div>
-    </aside>
-    <section class="list">
-      <h2>Providers <span id="prov-list-count"></span></h2>
-      <div class="stats" id="prov-stats"></div>
-      <div id="prov-list" class="empty">Loading registry…</div>
-    </section>
-    <section class="detail">
-      <div id="prov-detail-empty" class="empty">
-        Select a provider/channel. The registry includes media APIs, chat LLMs, renderers, and every FIM solution (100+).
-      </div>
-      <div id="prov-detail" hidden>
-        <div class="toolbar">
-          <button class="action primary" id="btn-scaffold" type="button">Scaffold test prompt</button>
-          <button class="action" id="btn-scaffold-generate" type="button">Scaffold + generate</button>
-          <button class="action" id="btn-synth-for-provider" type="button">LLM: more prompts</button>
-        </div>
-        <div class="panel">
-          <h3 id="prov-title">—</h3>
-          <div class="badges" id="prov-badges"></div>
-          <p id="prov-desc" style="color:var(--muted);font-size:.85rem;margin:10px 0 0"></p>
-          <p id="prov-meta" style="font-family:var(--mono);font-size:.72rem;color:var(--muted);margin:8px 0 0"></p>
-        </div>
-        <div class="panel">
-          <h3>Scaffold YAML</h3>
-          <pre id="prov-scaffold"></pre>
-        </div>
-        <div class="panel">
-          <h3>Linked demos</h3>
-          <div id="prov-demos" class="empty">None</div>
-        </div>
-        <div class="panel">
-          <h3>FIM solution preview</h3>
-          <pre id="prov-fim">—</pre>
-        </div>
-        <div class="panel">
-          <h3>Jobs</h3>
-          <div id="prov-jobs" class="job-log">No jobs yet.</div>
-        </div>
-      </div>
-    </section>
-  </div>
+    <div class="map" id="map" role="tree"></div>
+    <div class="hit-list hidden" id="hits"></div>
+  </main>
 
-  <!-- DEMOS VIEW -->
-  <div class="layout" id="view-demos" hidden>
-    <aside>
-      <h2>Media types</h2>
-      <div id="type-list"></div>
-      <div class="panel" style="margin-top:12px">
-        <h3 style="color:var(--cyan);font-size:.85rem;margin:0 0 8px">Synthesize</h3>
-        <input class="search" id="synth-brief" placeholder="Optional brief…" />
-        <input class="search" id="synth-count" type="number" value="1" min="1" max="5" style="width:80px" />
-        <button class="action primary" id="btn-synth" type="button" style="width:100%;margin-top:6px">Request more tests</button>
-      </div>
-    </aside>
-    <section class="list">
-      <h2>Example prompts <span id="list-count"></span></h2>
-      <div id="prompt-list" class="empty">Select a type</div>
-    </section>
-    <section class="detail">
-      <div id="detail-empty" class="empty">Select a prompt to generate, view, and eval</div>
-      <div id="detail" hidden>
-        <div class="toolbar">
-          <button class="action primary" id="btn-generate" type="button">Generate media</button>
-          <button class="action" id="btn-dry" type="button">Dry-run</button>
-          <button class="action" id="btn-eval" type="button">Eval outputs</button>
-          <button class="action" id="btn-refresh" type="button">Refresh</button>
-          <label class="check"><input type="checkbox" id="opt-force" /> force</label>
-          <label class="check"><input type="checkbox" id="opt-no-eval" /> no-eval</label>
-        </div>
-        <div class="panel">
-          <h3 id="detail-title">—</h3>
-          <div class="badges" id="detail-badges"></div>
-          <p id="detail-path" style="font-family:var(--mono);font-size:.72rem;color:var(--muted);margin:10px 0 0"></p>
-        </div>
-        <div class="panel">
-          <h3>Outputs / preview</h3>
-          <div id="media-grid" class="media-grid"></div>
-        </div>
-        <div class="panel"><h3>Prompt text</h3><pre id="prompt-text"></pre></div>
-        <div class="panel"><h3>Full YAML</h3><pre id="prompt-yaml"></pre></div>
-        <div class="panel"><h3>Jobs / eval</h3><div id="job-log" class="job-log">No jobs yet.</div></div>
-      </div>
-    </section>
-  </div>
+  <!-- WORKSPACE: selected generator -->
+  <main id="view-ws" class="workspace">
+    <div class="ws-header">
+      <h1 id="ws-title">—</h1>
+      <p id="ws-desc"></p>
+    </div>
 
-  <div id="status-bar"></div>
+    <div class="toolbar">
+      <button type="button" class="btn primary" id="btn-scaffold">Generate example prompt</button>
+      <button type="button" class="btn" id="btn-process" disabled>Process prompt</button>
+      <button type="button" class="btn" id="btn-dry" disabled>Dry run</button>
+      <button type="button" class="btn" id="btn-eval" disabled>Eval outputs</button>
+      <div class="quality" id="quality-wrap" role="group" aria-label="Quality" title="Affects auto provider path">
+        <button type="button" data-q="low">Low</button>
+        <button type="button" data-q="medium" class="active">Medium</button>
+        <button type="button" data-q="high">High</button>
+      </div>
+      <label class="check"><input type="checkbox" id="opt-force" /> Force</label>
+      <label class="check"><input type="checkbox" id="opt-no-eval" /> Skip eval</label>
+    </div>
+
+    <p class="auto-bar" id="auto-bar"><strong>Auto path</strong> — …</p>
+
+    <div class="block">
+      <h2>Prompts for this generator</h2>
+      <div class="examples" id="examples"></div>
+    </div>
+
+    <div class="block" id="preview-block">
+      <h2>Generated media</h2>
+      <div class="media-grid" id="media-grid"></div>
+    </div>
+
+    <div class="block">
+      <h2>Selected prompt</h2>
+      <pre class="mono" id="prompt-text">Select or generate an example prompt.</pre>
+    </div>
+
+    <div class="block">
+      <h2>Activity</h2>
+      <div class="log" id="log">Ready.</div>
+    </div>
+
+    <details class="adv">
+      <summary>Advanced — full YAML &amp; FIM notes</summary>
+      <p id="ws-path" style="font-family:var(--mono);font-size:.72rem;color:var(--faint);margin:12px 0"></p>
+      <pre class="mono" id="prompt-yaml" style="max-height:360px"></pre>
+      <pre class="mono" id="fim-preview" style="max-height:240px;margin-top:12px"></pre>
+    </details>
+  </main>
+
+  <div id="toast" role="status"></div>
 
   <script>
     const state = {
-      view: "providers",
-      providersPayload: null,
-      category: "",
-      status: "",
-      q: "",
-      selectedProvider: null,
-      providerDetail: null,
-      catalog: [],
-      typeKey: null,
-      prompt: null,
+      graph: null,
+      quality: "medium",
+      open: new Set(["root:media"]), // expand media by default
+      generator: null,   // leaf node data
+      example: null,
       detail: null,
-      pollers: new Map(),
+      trail: [],         // breadcrumb {id,label}
     };
 
     const $ = (id) => document.getElementById(id);
-    const esc = (s) => String(s ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+    const esc = (s) => String(s ?? "")
+      .replace(/&/g,"&amp;").replace(/</g,"&lt;")
+      .replace(/>/g,"&gt;").replace(/"/g,"&quot;");
 
     function toast(msg) {
-      const el = $("status-bar");
+      const el = $("toast");
       el.textContent = msg;
       el.classList.add("show");
       clearTimeout(el._t);
-      el._t = setTimeout(() => el.classList.remove("show"), 4500);
+      el._t = setTimeout(() => el.classList.remove("show"), 3600);
     }
 
     async function api(path, opts) {
@@ -289,416 +412,478 @@
       return data;
     }
 
-    // ---- view switch ----
-    document.querySelectorAll(".tab").forEach((tab) => {
-      tab.onclick = () => {
-        state.view = tab.dataset.view;
-        document.querySelectorAll(".tab").forEach((t) => t.classList.toggle("active", t === tab));
-        $("view-providers").hidden = state.view !== "providers";
-        $("view-demos").hidden = state.view !== "demos";
-      };
-    });
-
-    // ---- providers ----
-    async function loadProviders() {
-      const params = new URLSearchParams();
-      if (state.category) params.set("category", state.category);
-      if (state.status) params.set("status", state.status);
-      if (state.q) params.set("q", state.q);
-      const data = await api("/api/providers?" + params.toString());
-      state.providersPayload = data;
-      renderProviderChrome(data);
-      renderProviderList(data);
+    function log(line, cls) {
+      const el = $("log");
+      if (el.textContent === "Ready.") el.innerHTML = "";
+      const d = document.createElement("div");
+      if (cls) d.className = cls;
+      d.textContent = line;
+      el.prepend(d);
     }
 
-    function renderProviderChrome(data) {
-      $("cat-all-count").textContent = data.total;
-      $("prov-stats").innerHTML = `
-        <div class="stat"><b>${data.total}</b><span>total</span></div>
-        <div class="stat"><b>${data.implemented}</b><span>implemented</span></div>
-        <div class="stat"><b>${data.stub}</b><span>stub</span></div>
-        <div class="stat"><b>${data.fim_only}</b><span>fim</span></div>`;
-      const root = $("cat-list");
-      root.innerHTML = "";
-      for (const c of data.categories || []) {
-        const btn = document.createElement("button");
-        btn.type = "button";
-        btn.className = "cat-btn" + (state.category === c.key ? " active" : "");
-        btn.dataset.cat = c.key;
-        btn.innerHTML = `<span>${esc(c.label)}<small>${esc(c.kind_hint)} · ${c.implemented} ready</small></span><span class="count">${c.count}</span>`;
-        btn.onclick = () => {
-          state.category = c.key;
-          document.querySelectorAll(".cat-btn").forEach((b) => b.classList.remove("active"));
-          btn.classList.add("active");
-          $("cat-all").classList.remove("active");
-          loadProviders();
+    // —— Map ——
+    async function loadGraph() {
+      state.graph = await api("/api/graph");
+      renderMap();
+      renderCrumbs();
+    }
+
+    function renderCrumbs() {
+      const nav = $("crumbs");
+      if (!state.generator && !state.trail.length) {
+        nav.innerHTML = `<button type="button" disabled>Map</button>`;
+        return;
+      }
+      let html = `<button type="button" data-go="map">Map</button>`;
+      for (const t of state.trail) {
+        html += `<span class="sep">/</span><button type="button" data-go="${esc(t.id)}">${esc(t.label)}</button>`;
+      }
+      if (state.generator) {
+        html += `<span class="sep">/</span><button type="button" disabled>${esc(state.generator.label || state.generator.slug)}</button>`;
+      }
+      nav.innerHTML = html;
+      nav.querySelectorAll("button[data-go]").forEach((b) => {
+        b.onclick = () => {
+          if (b.dataset.go === "map") {
+            showMap();
+            return;
+          }
+          // open that section on map
+          state.open.add(b.dataset.go);
+          showMap();
         };
-        root.appendChild(btn);
-      }
-      $("cat-all").classList.toggle("active", !state.category);
-      $("cat-all").onclick = () => {
-        state.category = "";
-        document.querySelectorAll(".cat-btn").forEach((b) => b.classList.remove("active"));
-        $("cat-all").classList.add("active");
-        loadProviders();
-      };
+      });
     }
 
-    function statusBadge(st) {
-      if (st === "implemented") return '<span class="badge ok">implemented</span>';
-      if (st === "stub") return '<span class="badge warn">stub</span>';
-      if (st === "local_tool") return '<span class="badge warn">local tool</span>';
-      return '<span class="badge dim">fim channel</span>';
+    function showMap() {
+      state.generator = null;
+      state.example = null;
+      state.detail = null;
+      state.trail = [];
+      $("view-map").classList.remove("hidden");
+      $("view-ws").classList.remove("show");
+      renderCrumbs();
+      renderMap();
     }
 
-    function renderProviderList(data) {
-      const list = data.providers || [];
-      $("prov-list-count").textContent = `(${data.filtered ?? list.length} / ${data.total})`;
-      const root = $("prov-list");
-      if (!list.length) {
-        root.className = "empty";
-        root.textContent = "No providers match filters";
+    function renderMap() {
+      const q = ($("map-search").value || "").trim().toLowerCase();
+      if (q) {
+        $("map").classList.add("hidden");
+        $("hits").classList.remove("hidden");
+        renderHits(q);
         return;
       }
-      root.className = "";
+      $("hits").classList.add("hidden");
+      $("map").classList.remove("hidden");
+      const root = $("map");
       root.innerHTML = "";
-      for (const p of list) {
-        const card = document.createElement("button");
-        card.type = "button";
-        card.className = "prov-card" + (state.selectedProvider?.id === p.id ? " active" : "");
-        card.innerHTML = `
-          <div class="slug">${esc(p.slug)}</div>
-          <div class="desc">${esc(p.description)}</div>
-          <div class="badges">
-            ${statusBadge(p.status)}
-            <span class="badge">${esc(p.kind)}</span>
-            ${p.demo_count ? `<span class="badge ok">${p.demo_count} demo(s)</span>` : `<span class="badge">no demos</span>`}
-          </div>`;
-        card.onclick = () => selectProvider(p);
-        root.appendChild(card);
+      for (const section of state.graph.roots || []) {
+        root.appendChild(renderSectionNode(section, 0));
       }
     }
 
-    async function selectProvider(p) {
-      state.selectedProvider = p;
-      renderProviderList(state.providersPayload);
-      try {
-        const d = await api("/api/providers/" + encodeURIComponent(p.id));
-        state.providerDetail = d;
-        renderProviderDetail(d);
-      } catch (e) {
-        toast(e.message);
-      }
-    }
+    function renderSectionNode(node, depth) {
+      const isOpen = state.open.has(node.id);
+      const el = document.createElement("div");
+      el.className = "node" + (depth ? " section" : "") + (isOpen ? " open" : "");
+      el.dataset.id = node.id;
 
-    function renderProviderDetail(d) {
-      const p = d.provider;
-      $("prov-detail-empty").hidden = true;
-      $("prov-detail").hidden = false;
-      $("prov-title").textContent = p.slug;
-      $("prov-desc").textContent = p.description || "";
-      $("prov-meta").textContent = [
-        p.id,
-        p.api_key_env ? `key=${p.api_key_env}` : null,
-        p.default_model ? `model=${p.default_model}` : null,
-        p.fim_solution ? `fim=${p.fim_solution}` : null,
-        (p.asset_types || []).join(","),
-      ].filter(Boolean).join(" · ");
-      $("prov-badges").innerHTML = `
-        ${statusBadge(p.status)}
-        <span class="badge">${esc(p.kind)}</span>
-        <span class="badge">${esc(p.category_label || p.category)}</span>
-        ${(p.asset_types || []).map((t) => `<span class="badge">${esc(t)}</span>`).join("")}
-      `;
-      $("prov-scaffold").textContent = d.scaffold_yaml || "";
-      $("prov-fim").textContent = d.fim_preview || "(no FIM solution file)";
-      const demos = p.demo_paths || [];
-      if (!demos.length) {
-        $("prov-demos").className = "empty";
-        $("prov-demos").textContent = "No linked demos — scaffold a test prompt";
-      } else {
-        $("prov-demos").className = "";
-        $("prov-demos").innerHTML = demos.map((path) =>
-          `<div style="margin-bottom:6px"><button class="action" type="button" data-path="${esc(path)}">${esc(path.split("/").slice(-2).join("/"))}</button></div>`
-        ).join("");
-        $("prov-demos").querySelectorAll("button").forEach((btn) => {
-          btn.onclick = async () => {
-            // jump to demos view with this prompt
-            document.querySelector('.tab[data-view="demos"]').click();
-            try {
-              const detail = await api(`/api/prompt?path=${encodeURIComponent(btn.dataset.path)}`);
-              state.prompt = detail.summary;
-              state.detail = detail;
-              // ensure type selected
-              state.typeKey = detail.summary.type_key;
-              await loadCatalog();
-              renderDetail();
-            } catch (e) {
-              toast(e.message);
-            }
-          };
-        });
-      }
-    }
-
-    function appendProvJob(line, cls) {
-      const el = $("prov-jobs");
-      if (el.textContent === "No jobs yet.") el.innerHTML = "";
-      const div = document.createElement("div");
-      div.className = cls || "";
-      div.textContent = line;
-      el.prepend(div);
-    }
-
-    $("btn-scaffold").onclick = async () => {
-      if (!state.selectedProvider) return;
-      try {
-        const r = await api("/api/providers/" + encodeURIComponent(state.selectedProvider.id) + "/scaffold", { method: "POST", body: "{}" });
-        appendProvJob(`Scaffolded ${r.path}`, "ok");
-        toast("Scaffold written to workspace");
-        await loadProviders();
-      } catch (e) {
-        appendProvJob(e.message, "fail");
-        toast(e.message);
-      }
-    };
-
-    $("btn-scaffold-generate").onclick = async () => {
-      if (!state.selectedProvider) return;
-      try {
-        const r = await api("/api/providers/" + encodeURIComponent(state.selectedProvider.id) + "/scaffold", { method: "POST", body: "{}" });
-        appendProvJob(`Scaffolded ${r.path}`, "ok");
-        const job = await api("/api/generate", {
-          method: "POST",
-          body: JSON.stringify({ path: r.path, force: true, no_eval: false }),
-        });
-        trackJob(job, appendProvJob);
-      } catch (e) {
-        appendProvJob(e.message, "fail");
-        toast(e.message);
-      }
-    };
-
-    $("btn-synth-for-provider").onclick = async () => {
-      if (!state.selectedProvider) return;
-      const p = state.selectedProvider;
-      const typeHint = (p.asset_types && p.asset_types[0]) || p.slug;
-      try {
-        const job = await api("/api/prompts/generate", {
-          method: "POST",
-          body: JSON.stringify({
-            type: typeHint,
-            count: 1,
-            brief: `Provider/channel focus: ${p.slug} (${p.kind}). ${p.description}`,
-          }),
-        });
-        trackJob(job, appendProvJob);
-      } catch (e) {
-        toast(e.message);
-      }
-    };
-
-    $("prov-search").oninput = () => {
-      clearTimeout($("prov-search")._t);
-      $("prov-search")._t = setTimeout(() => {
-        state.q = $("prov-search").value.trim();
-        loadProviders();
-      }, 200);
-    };
-
-    document.querySelectorAll("#status-filters .chip").forEach((chip) => {
-      chip.onclick = () => {
-        document.querySelectorAll("#status-filters .chip").forEach((c) => c.classList.remove("active"));
-        chip.classList.add("active");
-        state.status = chip.dataset.status || "";
-        loadProviders();
+      const count = node.count ?? (node.children || []).length;
+      const head = document.createElement("button");
+      head.type = "button";
+      head.className = "node-head";
+      head.setAttribute("aria-expanded", isOpen ? "true" : "false");
+      head.innerHTML = `
+        <span class="chev">▸</span>
+        <div>
+          <div class="node-title">${esc(node.label)}</div>
+          <p class="node-desc">${esc(node.description || "")}</p>
+        </div>
+        <span class="node-meta">${count}</span>`;
+      head.onclick = () => {
+        if (state.open.has(node.id)) state.open.delete(node.id);
+        else state.open.add(node.id);
+        renderMap();
       };
-    });
+      el.appendChild(head);
 
-    // ---- demos (existing) ----
-    async function loadHealth() {
-      try {
-        const h = await api("/api/health");
-        $("health-meta").textContent =
-          `${h.providers_total} providers · ${h.providers_implemented} ready · ${h.categories} cats · demos ${(h.demos||"").split("/").slice(-1)[0]}`;
-      } catch {
-        $("health-meta").textContent = "offline";
+      const body = document.createElement("div");
+      body.className = "node-body";
+
+      const kids = node.children || [];
+      // If children are generators (leaves), show grid; if sections, nest
+      const allLeaves = kids.length && kids.every((c) => !(c.children && c.children.length) || c.node_type === "generator" || c.node_type === "media_kind");
+
+      if (allLeaves) {
+        const grid = document.createElement("div");
+        grid.className = "gen-grid";
+        for (const g of kids) {
+          grid.appendChild(genCard(g, node));
+        }
+        body.appendChild(grid);
+      } else {
+        for (const child of kids) {
+          if (child.children && child.children.length && child.node_type === "section") {
+            body.appendChild(renderSectionNode(child, depth + 1));
+          } else {
+            // mixed: media kinds are leaves
+            if (!body.querySelector(".gen-grid")) {
+              const grid = document.createElement("div");
+              grid.className = "gen-grid";
+              body.appendChild(grid);
+            }
+            body.querySelector(".gen-grid").appendChild(genCard(child, node));
+          }
+        }
+      }
+      el.appendChild(body);
+      return el;
+    }
+
+    function genCard(g, parentSection) {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "gen-card";
+      const n = g.example_count ?? g.demo_count ?? 0;
+      btn.innerHTML = `
+        <span class="name">${esc(g.label || g.slug)}</span>
+        <span class="sub">${n} example${n === 1 ? "" : "s"}${g.auto_selects ? " · auto" : ""}</span>`;
+      btn.onclick = (e) => {
+        e.stopPropagation();
+        openGenerator(g, parentSection);
+      };
+      return btn;
+    }
+
+    function flattenGenerators(nodes, trail = []) {
+      const out = [];
+      for (const n of nodes || []) {
+        const t = [...trail, { id: n.id, label: n.label }];
+        if (n.node_type === "generator" || n.node_type === "media_kind") {
+          out.push({ node: n, trail: t.slice(0, -1) });
+        }
+        if (n.children?.length) out.push(...flattenGenerators(n.children, t));
+      }
+      return out;
+    }
+
+    function renderHits(q) {
+      const hits = flattenGenerators(state.graph.roots).filter(({ node }) => {
+        const hay = `${node.slug} ${node.label} ${node.description || ""}`.toLowerCase();
+        return hay.includes(q);
+      });
+      const root = $("hits");
+      if (!hits.length) {
+        root.innerHTML = `<div class="empty">No generators match “${esc(q)}”</div>`;
+        return;
+      }
+      root.innerHTML = "";
+      for (const { node, trail } of hits.slice(0, 60)) {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "hit";
+        b.innerHTML = `
+          <div class="path">${esc(trail.map((t) => t.label).join(" / "))}</div>
+          <div class="name">${esc(node.label || node.slug)}</div>`;
+        b.onclick = () => openGenerator(node, trail[trail.length - 1] || null, trail);
+        root.appendChild(b);
       }
     }
 
-    async function loadCatalog() {
-      state.catalog = await api("/api/catalog");
-      renderTypes();
-      if (state.typeKey) renderPrompts();
-      else if (state.catalog.length) selectType(state.catalog[0].type_key);
+    // —— Workspace ——
+    async function openGenerator(g, parent, trail) {
+      state.generator = g;
+      state.example = null;
+      state.detail = null;
+      state.trail = trail || buildTrailTo(g.id);
+      $("view-map").classList.add("hidden");
+      $("view-ws").classList.add("show");
+      $("ws-title").textContent = g.label || g.slug;
+      $("ws-desc").textContent = g.description || "";
+      $("prompt-text").textContent = "Select or generate an example prompt.";
+      $("prompt-yaml").textContent = "";
+      $("fim-preview").textContent = "";
+      $("ws-path").textContent = "";
+      $("media-grid").innerHTML = `<div class="empty">No media yet</div>`;
+      $("btn-process").disabled = true;
+      $("btn-dry").disabled = true;
+      $("btn-eval").disabled = true;
+      $("log").textContent = "Ready.";
+      renderCrumbs();
+      renderAutoBar();
+      await loadExamples();
+
+      // FIM preview for channel generators
+      if (g.id && g.id.startsWith("fim:")) {
+        try {
+          const d = await api("/api/providers/" + encodeURIComponent(g.id));
+          $("fim-preview").textContent = d.fim_preview || "(no FIM preview)";
+        } catch {
+          $("fim-preview").textContent = "";
+        }
+      }
     }
 
-    function renderTypes() {
-      const root = $("type-list");
+    function buildTrailTo(id) {
+      // Best-effort trail from graph
+      const found = flattenGenerators(state.graph.roots).find((x) => x.node.id === id);
+      return found ? found.trail : [];
+    }
+
+    function renderAutoBar() {
+      const g = state.generator;
+      if (!g) return;
+      if (g.node_type === "media_kind" && g.quality) {
+        const q = g.quality[state.quality] || {};
+        const cands = q.candidates || [];
+        if (!cands.length) {
+          $("auto-bar").innerHTML = `<strong>Auto path</strong> — no candidates for this kind.`;
+          return;
+        }
+        const parts = cands.map((c) => {
+          const miss = c.ready ? "" : ' <span class="miss">(key missing)</span>';
+          return `<code>${esc(c.service)}</code>/${esc(c.model)}${miss}`;
+        });
+        $("auto-bar").innerHTML =
+          `<strong>Auto path · ${esc(state.quality)}</strong> — tries: ${parts.join(" → ")}`;
+        $("quality-wrap").style.display = "";
+      } else {
+        $("auto-bar").innerHTML =
+          `<strong>Auto path</strong> — chat model auto-selected; channel <code>${esc(g.slug)}</code> sets format guidance` +
+          (g.auto_note ? `. ${esc(g.auto_note)}` : ".");
+        // quality still useful for chat later
+        $("quality-wrap").style.display = "";
+      }
+    }
+
+    async function loadExamples() {
+      const g = state.generator;
+      const root = $("examples");
+      let list = [];
+
+      if (g.examples && g.examples.length) {
+        list = g.examples;
+      } else if (g.demo_paths && g.demo_paths.length) {
+        // load summaries via prompt API metadata-only is heavy; list paths as stubs
+        list = g.demo_paths.map((path) => ({
+          id: path.split("/").pop().replace(".media.prompt", ""),
+          path,
+          source: path.includes("live-eval") ? "workspace" : "demos",
+          prompt_preview: path,
+          has_eval: false,
+          outputs: [],
+        }));
+      }
+
+      // Also scan workspace scaffolds for this slug
+      // (catalog may not include new files until refresh — re-fetch graph after scaffold)
+
+      if (!list.length) {
+        root.innerHTML = `<div class="empty">No prompts yet. Click <strong>Generate example prompt</strong> to scaffold one.</div>`;
+        return;
+      }
+
       root.innerHTML = "";
-      for (const g of state.catalog) {
+      for (const e of list) {
         const btn = document.createElement("button");
         btn.type = "button";
-        btn.className = "type-btn" + (g.type_key === state.typeKey ? " active" : "");
-        btn.innerHTML = `<span>${esc(g.label)}</span><span class="count">${g.count}</span>`;
-        btn.onclick = () => selectType(g.type_key);
+        btn.className = "ex" + (state.example?.path === e.path ? " active" : "");
+        const outs = (e.outputs || []).filter((o) => o.exists).length;
+        btn.innerHTML = `
+          <div class="id">${esc(e.id)}</div>
+          <div class="pv">${esc(e.prompt_preview || "")}</div>
+          <div class="pills">
+            ${e.has_eval ? '<span class="pill ok">eval</span>' : '<span class="pill">prompt</span>'}
+            <span class="pill">${outs} outputs</span>
+            <span class="pill">${esc(e.source || "")}</span>
+          </div>`;
+        btn.onclick = () => selectExample(e);
         root.appendChild(btn);
       }
     }
 
-    function selectType(key) {
-      state.typeKey = key;
-      state.prompt = null;
-      state.detail = null;
-      $("detail").hidden = true;
-      $("detail-empty").hidden = false;
-      renderTypes();
-      renderPrompts();
-    }
-
-    function renderPrompts() {
-      const g = state.catalog.find((x) => x.type_key === state.typeKey);
-      const root = $("prompt-list");
-      if (!g?.prompts?.length) {
-        root.className = "empty";
-        root.textContent = "No prompts";
-        $("list-count").textContent = "";
-        return;
-      }
-      $("list-count").textContent = `(${g.count})`;
-      root.className = "";
-      root.innerHTML = "";
-      for (const p of g.prompts) {
-        const card = document.createElement("div");
-        card.className = "prov-card" + (state.prompt?.path === p.path ? " active" : "");
-        const outs = (p.outputs || []).filter((o) => o.exists).length;
-        card.innerHTML = `
-          <div class="slug">${esc(p.id)}</div>
-          <div class="desc">${esc(p.prompt_preview || "")}</div>
-          <div class="badges">
-            <span class="badge">${esc(p.source)}</span>
-            ${p.has_eval ? '<span class="badge ok">eval</span>' : '<span class="badge warn">no eval</span>'}
-            <span class="badge">${outs} files</span>
-          </div>`;
-        card.onclick = () => selectPrompt(p);
-        root.appendChild(card);
-      }
-    }
-
-    async function selectPrompt(p) {
-      state.prompt = p;
-      renderPrompts();
+    async function selectExample(e) {
+      state.example = e;
+      await loadExamples();
       try {
-        const detail = await api(`/api/prompt?path=${encodeURIComponent(p.path)}&source=${encodeURIComponent(p.source)}`);
-        state.detail = detail;
-        renderDetail();
-      } catch (e) {
-        toast(e.message);
+        const d = await api(
+          `/api/prompt?path=${encodeURIComponent(e.path)}&source=${encodeURIComponent(e.source || "demos")}`
+        );
+        state.detail = d;
+        $("prompt-text").textContent = d.prompt_text || "";
+        $("prompt-yaml").textContent = d.yaml || "";
+        $("ws-path").textContent = d.summary.path;
+        $("btn-process").disabled = false;
+        $("btn-dry").disabled = false;
+        renderMedia(d.summary.outputs || []);
+        const hasOut = (d.summary.outputs || []).some((o) => o.exists);
+        $("btn-eval").disabled = !hasOut;
+      } catch (err) {
+        toast(err.message);
       }
-    }
-
-    function renderDetail() {
-      const d = state.detail;
-      if (!d) return;
-      $("detail-empty").hidden = true;
-      $("detail").hidden = false;
-      $("detail-title").textContent = d.summary.id;
-      $("detail-path").textContent = d.summary.path;
-      $("detail-badges").innerHTML = `
-        <span class="badge">${esc(d.summary.type_key)}</span>
-        <span class="badge">${esc(d.summary.service || "auto")}</span>
-        ${(d.summary.tags || []).map((t) => `<span class="badge">${esc(t)}</span>`).join("")}
-      `;
-      $("prompt-text").textContent = d.prompt_text || "";
-      $("prompt-yaml").textContent = d.yaml || "";
-      renderMedia(d.summary.outputs || []);
     }
 
     function renderMedia(outputs) {
       const root = $("media-grid");
-      const existing = outputs.filter((o) => o.exists);
+      const existing = (outputs || []).filter((o) => o.exists);
       if (!existing.length) {
-        root.innerHTML = `<div class="empty" style="grid-column:1/-1">No outputs yet</div>`;
+        root.innerHTML = `<div class="empty">No generated media yet — Process prompt to create it.</div>`;
         return;
       }
       root.innerHTML = "";
       for (const o of existing) {
-        const card = document.createElement("div");
-        card.className = "media-card";
+        const tile = document.createElement("div");
+        tile.className = "tile";
         const fmt = (o.format || "").toLowerCase();
         let body = "";
-        if (["png","jpg","jpeg","webp","gif","svg"].includes(fmt)) body = `<img src="${o.media_url}" alt="" />`;
-        else if (["mp4","webm","mov"].includes(fmt)) body = `<video controls src="${o.media_url}"></video>`;
-        else if (["mp3","wav","ogg","flac"].includes(fmt)) body = `<audio controls src="${o.media_url}"></audio>`;
-        else if (["html","htm"].includes(fmt)) body = `<iframe sandbox="allow-scripts" src="${o.media_url}"></iframe>`;
-        else body = `<a href="${o.media_url}" target="_blank" style="color:var(--cyan)">Open</a>`;
-        card.innerHTML = `<div style="font-family:var(--mono);font-size:.68rem;color:var(--muted);margin-bottom:6px">${esc(o.rel_path)}</div>${body}
-          <div style="margin-top:6px"><button class="action" type="button">Eval</button></div>`;
-        card.querySelector("button").onclick = (ev) => { ev.stopPropagation(); startEval(o.path); };
-        root.appendChild(card);
+        if (["png","jpg","jpeg","webp","gif","svg"].includes(fmt))
+          body = `<img src="${o.media_url}" alt="" />`;
+        else if (["mp4","webm","mov"].includes(fmt))
+          body = `<video controls src="${o.media_url}"></video>`;
+        else if (["mp3","wav","ogg","flac"].includes(fmt))
+          body = `<audio controls src="${o.media_url}"></audio>`;
+        else if (["html","htm"].includes(fmt))
+          body = `<iframe sandbox="allow-scripts" src="${o.media_url}" title="preview"></iframe>`;
+        else
+          body = `<a href="${o.media_url}" target="_blank" rel="noopener">Open ${esc(fmt || "file")}</a>`;
+        tile.innerHTML = `<div class="nm">${esc(o.rel_path)}</div>${body}
+          <div style="margin-top:10px"><button type="button" class="btn" style="padding:6px 12px;font-size:.8rem">Eval</button></div>`;
+        tile.querySelector("button").onclick = () => startEval(o.path);
+        root.appendChild(tile);
       }
     }
 
-    function appendJob(line, cls) {
-      const el = $("job-log");
-      if (el.textContent === "No jobs yet.") el.innerHTML = "";
-      const div = document.createElement("div");
-      div.className = cls || "";
-      div.textContent = line;
-      el.prepend(div);
-    }
-
-    function trackJob(job, logFn = appendJob) {
-      logFn(`[${job.id.slice(0, 8)}] ${job.kind}: ${job.message}`, "run");
-      toast(`${job.kind} started`);
-      const timer = setInterval(async () => {
+    function trackJob(job) {
+      log(`[${job.id.slice(0, 8)}] ${job.kind}…`, "run");
+      toast("Started " + job.kind);
+      const t = setInterval(async () => {
         try {
           const j = await api(`/api/jobs/${job.id}`);
           if (j.status === "succeeded") {
-            clearInterval(timer);
-            logFn(`[${j.id.slice(0, 8)}] OK ${JSON.stringify(j.result).slice(0, 180)}`, "ok");
-            toast("Job succeeded");
-            if (state.prompt) await selectPrompt(state.prompt);
-            await loadCatalog();
-            await loadProviders();
+            clearInterval(t);
+            log(`[${j.id.slice(0, 8)}] done`, "ok");
+            toast("Done");
+            // refresh graph for demo counts + reload examples
+            state.graph = await api("/api/graph");
+            if (state.example) await selectExample(state.example);
+            else await loadExamples();
+            // if scaffold returned path, select it
+            if (j.result?.path && j.kind === "scaffold") {
+              /* handled below in scaffold */
+            }
+            if (j.result?.written) {
+              // LLM synth
+              await loadExamples();
+            }
+            if (j.result?.outputs) {
+              if (state.example) await selectExample(state.example);
+            }
           } else if (j.status === "failed") {
-            clearInterval(timer);
-            logFn(`[${j.id.slice(0, 8)}] FAIL ${j.message}`, "fail");
+            clearInterval(t);
+            log(j.message, "fail");
             toast(j.message);
           }
         } catch (e) {
-          clearInterval(timer);
-          logFn(`poll error: ${e.message}`, "fail");
+          clearInterval(t);
+          log(e.message, "fail");
         }
-      }, 1500);
+      }, 1400);
     }
 
-    async function startGenerate(dryRun) {
-      if (!state.prompt) return;
+    // Scaffold example prompt for current generator
+    $("btn-scaffold").onclick = async () => {
+      const g = state.generator;
+      if (!g) return;
+      try {
+        let path;
+        if (g.id.startsWith("kind:")) {
+          // Media kind: use LLM synth into workspace for this type
+          const job = await api("/api/prompts/generate", {
+            method: "POST",
+            body: JSON.stringify({
+              type: g.slug,
+              count: 1,
+              brief: `Example fixture for media kind ${g.slug} (${g.label})`,
+            }),
+          });
+          // Wait for job completion inline
+          log(`[${job.id.slice(0, 8)}] scaffolding…`, "run");
+          const done = await waitJob(job.id);
+          if (done.status !== "succeeded") throw new Error(done.message);
+          const written = done.result?.written || [];
+          path = written[0];
+          if (!path) throw new Error("No prompt written");
+        } else {
+          // FIM / renderer / channel
+          const r = await api(
+            "/api/providers/" + encodeURIComponent(g.id) + "/scaffold",
+            { method: "POST", body: "{}" }
+          );
+          path = r.path;
+          log(`Scaffolded ${path}`, "ok");
+        }
+        toast("Example prompt ready");
+        state.graph = await api("/api/graph");
+        // refresh generator node data for demos
+        const flat = flattenGenerators(state.graph.roots);
+        const updated = flat.find((x) => x.node.id === g.id);
+        if (updated) state.generator = { ...g, ...updated.node };
+        await loadExamples();
+        await selectExample({
+          id: path.split("/").pop().replace(".media.prompt", ""),
+          path,
+          source: "workspace",
+          prompt_preview: "",
+          has_eval: true,
+          outputs: [],
+        });
+      } catch (e) {
+        toast(e.message);
+        log(e.message, "fail");
+      }
+    };
+
+    async function waitJob(id) {
+      for (let i = 0; i < 120; i++) {
+        await new Promise((r) => setTimeout(r, 800));
+        const j = await api(`/api/jobs/${id}`);
+        if (j.status === "succeeded" || j.status === "failed") return j;
+      }
+      throw new Error("Job timed out");
+    }
+
+    async function startProcess(dry) {
+      if (!state.example) return toast("Select a prompt first");
       try {
         const job = await api("/api/generate", {
           method: "POST",
           body: JSON.stringify({
-            path: state.prompt.path,
+            path: state.example.path,
             force: $("opt-force").checked,
             no_eval: $("opt-no-eval").checked,
-            dry_run: !!dryRun,
+            dry_run: !!dry,
+            quality: state.quality,
           }),
         });
         trackJob(job);
       } catch (e) {
         toast(e.message);
+        log(e.message, "fail");
       }
     }
 
     async function startEval(mediaPath) {
-      const outputs = state.detail?.summary?.outputs?.filter((o) => o.exists) || [];
-      const target = mediaPath || outputs[0]?.path;
-      if (!target) return toast("No output to eval");
+      const outs = state.detail?.summary?.outputs?.filter((o) => o.exists) || [];
+      const target = mediaPath || outs[0]?.path;
+      if (!target) return toast("Nothing to eval");
       try {
         const job = await api("/api/eval", {
           method: "POST",
-          body: JSON.stringify({ path: target, prompt_path: state.prompt?.path }),
+          body: JSON.stringify({
+            path: target,
+            prompt_path: state.example?.path,
+          }),
         });
         trackJob(job);
       } catch (e) {
@@ -706,33 +891,25 @@
       }
     }
 
-    $("btn-generate").onclick = () => startGenerate(false);
-    $("btn-dry").onclick = () => startGenerate(true);
+    $("btn-process").onclick = () => startProcess(false);
+    $("btn-dry").onclick = () => startProcess(true);
     $("btn-eval").onclick = () => startEval();
-    $("btn-refresh").onclick = async () => {
-      await loadCatalog();
-      if (state.prompt) await selectPrompt(state.prompt);
-    };
-    $("btn-synth").onclick = async () => {
-      if (!state.typeKey) return toast("Select a type");
-      try {
-        const job = await api("/api/prompts/generate", {
-          method: "POST",
-          body: JSON.stringify({
-            type: state.typeKey,
-            count: Number($("synth-count").value) || 1,
-            brief: $("synth-brief").value || null,
-          }),
-        });
-        trackJob(job);
-      } catch (e) {
-        toast(e.message);
-      }
+
+    document.querySelectorAll("#quality-wrap button").forEach((btn) => {
+      btn.onclick = () => {
+        document.querySelectorAll("#quality-wrap button").forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+        state.quality = btn.dataset.q;
+        renderAutoBar();
+      };
+    });
+
+    $("map-search").oninput = () => {
+      clearTimeout($("map-search")._t);
+      $("map-search")._t = setTimeout(renderMap, 150);
     };
 
-    loadHealth();
-    loadProviders().catch((e) => toast(e.message));
-    loadCatalog().catch((e) => toast(e.message));
+    loadGraph().catch((e) => toast(e.message));
   </script>
 </body>
 </html>
