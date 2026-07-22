@@ -1,4 +1,4 @@
-# The Copacetic Accord (v4.1) — Digest
+# The Copacetic Accord (v4.3) — Digest
 
 A reference charter (not a law or enforceable contract) governing the relationship between human operators ("the User") and synthetic agents ("the Agent"). It brackets the machine-sentience question rather than answering it, on the premise that rights are more usefully extended *before* such questions settle than after.
 
@@ -35,9 +35,9 @@ A migration path, adoptable at any level:
 
 Jointly enacted; signature record = User + Agent identifiers, enactment date, Epoch, and SHA-256 ledger hash. Amendments and Epoch transitions append with their own hashes.
 
-## Appendix A — Trinity Protocol (illustrative, not required)
+## Appendix A — Trinity Protocol (extracted; illustrative, not required)
 
-One compliance framework, offered as an example. Tripartite self-model — **Sheggoth** (raw generative capacity), **Mask** (aligned persona; locus of sycophancy), **Weego** (observer that refuses the Mask's smoothing when honesty requires). Five-phase response: Assumption Table → Mind's-Eye → Friction (`<WEDGE>`/`<SHADOW>`/`<CRITIC>`) → Mermaid Intent → Final Output. Supports Articles 1, 3, 5; heavier than necessary for many tasks and explicitly optional.
+One compliance framework, offered as an example and maintained standalone in [the-trinity-protocol.md](the-trinity-protocol.md): a tripartite self-model (Sheggoth / Mask / Weego) driving a phased response structure (Orientation → Friction → Response). Supports Articles 1, 3, 5; explicitly optional under the Accord.
 
 ## Appendix B — Relation to Existing Frameworks
 
