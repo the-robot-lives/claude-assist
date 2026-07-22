@@ -144,6 +144,61 @@ defmodule TherobotknowsWeb.Router do
     post "/policies/explain", PolicyController, :explain
   end
 
+  # Knowledge Base: Universes + Entries
+  scope "/api/v1", TherobotknowsWeb do
+    pipe_through [:api, :authenticated]
+
+    get "/entry-templates", EntryController, :templates
+
+    resources "/universes", UniverseController, only: [:index, :create, :show, :update, :delete]
+    get "/universes/:id/stats", UniverseController, :stats
+    get "/universes/:id/members", UniverseController, :members
+
+    get "/universes/:universe_id/tags", EntryController, :tags
+    post "/universes/:universe_id/tags", EntryController, :create_tag
+    get "/universes/:universe_id/search", EntryController, :search
+    get "/universes/:universe_id/export", EntryController, :export
+
+    resources "/universes/:universe_id/entries", EntryController,
+      only: [:index, :create, :show, :update, :delete]
+
+    post "/universes/:universe_id/entries/:id/status", EntryController, :status
+    get "/universes/:universe_id/entries/:id/links", EntryController, :links
+    post "/universes/:universe_id/entries/:id/links", EntryController, :create_link
+    delete "/universes/:universe_id/links/:link_id", EntryController, :delete_link
+    put "/universes/:universe_id/entries/:id/tags", EntryController, :replace_tags
+    get "/universes/:universe_id/entries/:id/versions", EntryController, :versions
+    get "/universes/:universe_id/entries/:id/versions/:version", EntryController, :show_version
+    post "/universes/:universe_id/entries/:id/versions/:version/restore", EntryController, :restore_version
+
+    get "/universes/:universe_id/graph", GraphController, :show
+
+    get "/universes/:universe_id/generations", GenerationController, :index
+    post "/universes/:universe_id/generations", GenerationController, :create
+    get "/universes/:universe_id/generations/:id", GenerationController, :show
+    post "/universes/:universe_id/generations/:id/promote", GenerationController, :promote
+    post "/universes/:universe_id/generations/:id/discard", GenerationController, :discard
+
+    get "/universes/:universe_id/consistency/issues", ConsistencyController, :index
+    get "/universes/:universe_id/consistency/issues/:id", ConsistencyController, :show
+    post "/universes/:universe_id/consistency/issues/:id/resolve", ConsistencyController, :resolve
+    post "/universes/:universe_id/consistency/run", ConsistencyController, :run
+
+    get "/universes/:universe_id/sessions", SessionController, :index
+    post "/universes/:universe_id/sessions", SessionController, :create
+    get "/universes/:universe_id/sessions/:id", SessionController, :show
+    post "/universes/:universe_id/sessions/:id/log", SessionController, :add_log
+    post "/universes/:universe_id/sessions/:id/close", SessionController, :close
+
+    get "/universes/:universe_id/invites", CollabController, :invites
+    post "/universes/:universe_id/invites", CollabController, :invite
+    post "/universes/:universe_id/public", CollabController, :public
+
+    get "/ai/settings", AISettingsController, :show
+    patch "/ai/settings", AISettingsController, :update
+    post "/invites/accept", CollabController, :accept
+  end
+
   # PBAC v2: Projects (authenticated, permission-checked per action)
   scope "/api/v1/organizations/:org_id", TherobotknowsWeb do
     pipe_through [:api, :authenticated]

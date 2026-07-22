@@ -12,10 +12,11 @@ interface EntryCardProps {
 
 export function EntryCard({ entry, universeId }: EntryCardProps) {
   const isCanon = entry.status === "canon";
+  const isGenerated = entry.status === "generated";
 
   return (
     <Link
-      href={`/${universeId}/entries/${entry.id}`}
+      href={`/${universeId}/entries/${entry.apiId || entry.id}`}
       className="group block"
     >
       <article
@@ -27,7 +28,9 @@ export function EntryCard({ entry, universeId }: EntryCardProps) {
           // Canon/generated left border distinction
           isCanon
             ? "border-l-[3px] border-l-canon"
-            : "border-l-[3px] border-l-generated [border-left-style:dashed]"
+            : isGenerated
+              ? "border-l-[3px] border-l-generated [border-left-style:dashed]"
+              : "border-l-[3px] border-l-rule"
         )}
       >
         {/* Header row: type icon + type label + status dot */}

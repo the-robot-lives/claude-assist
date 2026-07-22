@@ -2,8 +2,13 @@
 
 import { Suspense, useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { handleCallback } from "@/lib/auth";
+import { request } from "@/lib/api/client";
+import { isMockMode } from "@/lib/api/config";
 
+/**
+ * Backend SSO callback landing: ?code= from Guardian sso/exchange flow.
+ * Authentik-direct PKCE is removed (ADR-006).
+ */
 function CallbackHandler() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -16,13 +21,31 @@ function CallbackHandler() {
       return;
     }
 
-    handleCallback(code).then((ok) => {
-      if (ok) {
-        router.replace("/dashboard");
-      } else {
+    (async () => {
+      try {
+        if (isMockMode()) {
+          localStorage.setItem("access_token", "mock-access");
+          localStorage.setItem("refresh_token", "mock-refresh");
+          router.replace("/");
+          return;
+        }
+        const data = await request<{
+          access_token: string;
+          refresh_token?: string;
+        }>("/api/v1/auth/sso/exchange", {
+          method: "POST",
+          skipAuth: true,
+          body: JSON.stringify({ code }),
+        });
+        localStorage.setItem("access_token", data.access_token);
+        if (data.refresh_token) {
+          localStorage.setItem("refresh_token", data.refresh_token);
+        }
+        router.replace("/");
+      } catch {
         setError("Authentication failed. Please try again.");
       }
-    });
+    })();
   }, [searchParams, router]);
 
   if (error) {
@@ -30,10 +53,10 @@ function CallbackHandler() {
       <div className="text-center">
         <p className="font-sans text-sm text-[var(--flag-error)] mb-4">{error}</p>
         <a
-          href="/"
+          href="/login"
           className="font-mono text-[11px] uppercase tracking-[0.08em] text-[var(--accent)] hover:text-[var(--accent-hover)] transition-colors"
         >
-          Back to home
+          Back to sign in
         </a>
       </div>
     );

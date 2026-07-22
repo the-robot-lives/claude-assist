@@ -1,5 +1,8 @@
-import { notFound } from "next/navigation";
+"use client";
+
+import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useParams } from "next/navigation";
 import {
   User,
   MapPin,
@@ -11,23 +14,20 @@ import {
   AlertTriangle,
   Network,
   BookOpen,
+  Settings,
+  Loader2,
 } from "lucide-react";
-import { universes } from "@/data/universes";
+import { universesApi, entriesApi } from "@/lib/api";
+import { toUiEntry, toUiUniverse } from "@/lib/api/mappers";
+import type { Universe } from "@/types/universe";
+import type { Entry } from "@/types/entry";
 import type { EntryType } from "@/lib/constants";
-import { ENTRY_TYPE_LABELS } from "@/lib/constants";
+import { ENTRY_TYPE_LABELS, ENTRY_TYPES } from "@/lib/constants";
 
-// Mock per-type counts for demo
-const mockTypeCounts: Record<EntryType, { count: number; latest: string }> = {
-  character: { count: 8, latest: "Kael Ashward" },
-  location: { count: 5, latest: "Thornwall" },
-  event: { count: 4, latest: "The War of Stones" },
-  faction: { count: 3, latest: "Blacksmith Guild" },
-  object: { count: 2, latest: "The Coldsingers' Blade" },
-  concept: { count: 1, latest: "Cold-singing" },
-  rule: { count: 1, latest: "Iron Trade Protocols" },
-};
-
-const typeIconMap: Record<EntryType, React.ComponentType<{ size?: number; strokeWidth?: number; className?: string }>> = {
+const typeIconMap: Record<
+  EntryType,
+  React.ComponentType<{ size?: number; strokeWidth?: number; className?: string }>
+> = {
   character: User,
   location: MapPin,
   event: Swords,
@@ -37,190 +37,221 @@ const typeIconMap: Record<EntryType, React.ComponentType<{ size?: number; stroke
   rule: ScrollText,
 };
 
-const typeColorMap: Record<EntryType, string> = {
-  character: "text-accent bg-accent-muted",
-  location: "text-success bg-success-muted",
-  event: "text-flag-warn bg-flag-warn-muted",
-  faction: "text-link bg-[rgba(45,90,142,0.08)]",
-  object: "text-ink-secondary bg-elevated",
-  concept: "text-[#5B4A8A] bg-[rgba(91,74,138,0.08)]",
-  rule: "text-ink bg-elevated",
-};
+export default function UniverseOverviewPage() {
+  const { universeId } = useParams() as { universeId: string };
+  const [universe, setUniverse] = useState<Universe | null>(null);
+  const [stats, setStats] = useState<{
+    entry_counts_by_type?: Record<string, number>;
+    entry_count: number;
+    flag_count: number;
+    connection_count: number;
+  } | null>(null);
+  const [recent, setRecent] = useState<Entry[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-// Mock recent entries
-const recentEntries = [
-  { id: "kael-ashward", title: "Kael Ashward", type: "character" as EntryType, status: "canon" as const, updatedAt: "2h ago" },
-  { id: "thornwall", title: "Thornwall", type: "location" as EntryType, status: "canon" as const, updatedAt: "2h ago" },
-  { id: "founding-of-thornwall", title: "Founding of Thornwall", type: "event" as EntryType, status: "generated" as const, updatedAt: "2h ago" },
-  { id: "war-of-stones", title: "The War of Stones", type: "event" as EntryType, status: "canon" as const, updatedAt: "yesterday" },
-  { id: "iron-trade-routes", title: "Iron Trade Routes", type: "concept" as EntryType, status: "canon" as const, updatedAt: "3d ago" },
-];
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const [{ universe: u }, statsRes, entriesRes] = await Promise.all([
+          universesApi.get(universeId),
+          universesApi.stats(universeId).catch(() => null),
+          entriesApi.list(universeId, { per_page: 5 }),
+        ]);
+        if (cancelled) return;
+        setUniverse(toUiUniverse(u));
+        if (statsRes) setStats(statsRes.stats);
+        setRecent(entriesRes.entries.map(toUiEntry));
+        setError(null);
+      } catch (e) {
+        if (!cancelled)
+          setError(e instanceof Error ? e.message : "Failed to load universe");
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [universeId]);
 
-interface PageProps {
-  params: Promise<{ universeId: string }>;
-}
-
-export default async function UniverseOverviewPage({ params }: PageProps) {
-  const { universeId } = await params;
-  const universe = universes.find((u) => u.id === universeId);
-
-  if (!universe) {
-    notFound();
+  if (loading) {
+    return (
+      <div className="flex items-center gap-2 px-8 py-10 text-ink-secondary">
+        <Loader2 className="animate-spin" size={16} /> Loading universe…
+      </div>
+    );
   }
 
-  const entryTypes = Object.keys(mockTypeCounts) as EntryType[];
+  if (error || !universe) {
+    return (
+      <div className="px-8 py-10">
+        <p className="text-flag-warn mb-4">{error || "Universe not found"}</p>
+        <Link href="/" className="text-accent">
+          ← Dashboard
+        </Link>
+      </div>
+    );
+  }
+
+  const byType = stats?.entry_counts_by_type ?? {};
 
   return (
     <div className="px-8 py-8 max-w-4xl">
-
-      {/* Universe header */}
-      <div className="mb-8">
-        <h1 className="font-serif text-[32px] font-bold text-ink leading-tight tracking-[-0.01em] mb-1">
-          {universe.name}
-        </h1>
-        <p className="font-mono text-[12px] text-ink-tertiary uppercase tracking-[0.04em]">
-          {universe.genre}
-        </p>
-      </div>
-
-      {/* Quick stats bar */}
-      <div className="flex items-center gap-6 p-4 bg-surface border border-rule-subtle rounded-lg mb-8">
-        <div className="flex items-center gap-2">
-          <BookOpen size={15} strokeWidth={1.5} className="text-ink-tertiary" />
-          <span className="font-sans text-[14px] text-ink font-semibold">
-            {universe.entryCount}
-          </span>
-          <span className="font-sans text-[13px] text-ink-secondary">entries</span>
+      <div className="mb-8 flex items-start justify-between gap-4">
+        <div>
+          <h1 className="font-serif text-[32px] font-bold text-ink leading-tight tracking-[-0.01em] mb-1">
+            {universe.name}
+          </h1>
+          <p className="font-mono text-[12px] text-ink-tertiary uppercase tracking-[0.04em] mb-3">
+            {universe.genre || "Universe"}
+          </p>
+          <p className="font-sans text-[15px] text-ink-secondary leading-relaxed max-w-2xl">
+            {universe.description}
+          </p>
         </div>
-        <span className="text-rule-subtle text-ink-tertiary">|</span>
-        <div className="flex items-center gap-2">
-          <Network size={15} strokeWidth={1.5} className="text-ink-tertiary" />
-          <span className="font-sans text-[14px] text-ink font-semibold">
-            {universe.connectionCount}
-          </span>
-          <span className="font-sans text-[13px] text-ink-secondary">connections</span>
-        </div>
-        <span className="text-rule-subtle text-ink-tertiary">|</span>
-        <div className="flex items-center gap-2">
-          <AlertTriangle
-            size={15}
-            strokeWidth={1.5}
-            className={universe.flagCount > 0 ? "text-flag-warn" : "text-ink-tertiary"}
-          />
-          <span
-            className={`font-sans text-[14px] font-semibold ${
-              universe.flagCount > 0 ? "text-flag-warn" : "text-ink"
-            }`}
-          >
-            {universe.flagCount}
-          </span>
-          <span className="font-sans text-[13px] text-ink-secondary">
-            {universe.flagCount === 1 ? "flag" : "flags"}
-          </span>
-        </div>
-
-        <div className="flex-1" />
-
         <Link
-          href={`/${universeId}/entries/new`}
-          className="font-sans text-[13px] font-semibold text-surface bg-accent hover:bg-accent-hover px-4 py-1.5 rounded transition-colors duration-200"
+          href={`/${universeId}/settings`}
+          className="inline-flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-wide border border-rule rounded-lg px-3 py-2 hover:border-accent shrink-0"
         >
-          + New Entry
+          <Settings size={14} /> Settings
         </Link>
       </div>
 
-      {/* Entry type grid */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-10">
+        <StatTile
+          label="Entries"
+          value={stats?.entry_count ?? universe.entryCount}
+          href={`/${universeId}/entries`}
+          icon={BookOpen}
+        />
+        <StatTile
+          label="Connections"
+          value={stats?.connection_count ?? universe.connectionCount}
+          href={`/${universeId}/graph`}
+          icon={Network}
+        />
+        <StatTile
+          label="Open flags"
+          value={stats?.flag_count ?? universe.flagCount}
+          href={`/${universeId}/consistency`}
+          icon={AlertTriangle}
+        />
+        <StatTile
+          label="Generate"
+          value="→"
+          href={`/${universeId}/generate`}
+          icon={Lightbulb}
+        />
+      </div>
+
       <section className="mb-10">
         <h2 className="font-mono text-[11px] font-semibold uppercase tracking-[0.06em] text-ink-tertiary mb-4">
-          Entry Types
+          By type
         </h2>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-          {entryTypes.map((type) => {
-            const Icon = typeIconMap[type];
-            const colorClasses = typeColorMap[type];
-            const { count, latest } = mockTypeCounts[type];
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {ENTRY_TYPES.map((t) => {
+            const Icon = typeIconMap[t];
+            const count = byType[t] ?? recent.filter((e) => e.type === t).length;
             return (
               <Link
-                key={type}
-                href={`/${universeId}/entries?type=${type}`}
-                className="group bg-surface border border-rule-subtle rounded-lg p-4 transition-all duration-200 hover:border-rule hover:shadow-[0_2px_8px_rgba(0,0,0,0.04)]"
+                key={t}
+                href={`/${universeId}/entries?type=${t}`}
+                className="border border-rule rounded-lg p-4 bg-surface hover:border-rule-heavy transition-colors"
               >
-                <div
-                  className={`inline-flex items-center justify-center w-8 h-8 rounded ${colorClasses} mb-3`}
-                >
-                  <Icon size={15} strokeWidth={1.5} />
+                <div className="flex items-center gap-2 mb-2">
+                  <Icon size={14} strokeWidth={1.5} className="text-ink-tertiary" />
+                  <span className="font-mono text-[11px] uppercase text-ink-tertiary">
+                    {ENTRY_TYPE_LABELS[t]}
+                  </span>
                 </div>
-                <div className="font-sans text-[13px] font-semibold text-ink mb-0.5">
-                  {ENTRY_TYPE_LABELS[type]}
+                <div className="font-serif text-[22px] font-semibold text-ink">
+                  {count}
                 </div>
-                <div className="font-mono text-[11px] text-ink-tertiary mb-2">
-                  {count} {count === 1 ? "entry" : "entries"}
-                </div>
-                {count > 0 && (
-                  <div className="font-serif text-[12px] text-ink-secondary truncate">
-                    {latest}
-                  </div>
-                )}
               </Link>
             );
           })}
         </div>
       </section>
 
-      {/* Recent entries */}
       <section>
         <div className="flex items-center justify-between mb-4">
           <h2 className="font-mono text-[11px] font-semibold uppercase tracking-[0.06em] text-ink-tertiary">
-            Recent Entries
+            Recent entries
           </h2>
           <Link
-            href={`/${universeId}/entries`}
-            className="font-sans text-[12px] text-ink-secondary hover:text-accent transition-colors duration-200"
+            href={`/${universeId}/entries/new`}
+            className="font-sans text-[13px] text-accent hover:underline"
           >
-            View all →
+            + New entry
           </Link>
         </div>
-
-        <div className="border-t border-rule-subtle">
-          {recentEntries.map((entry) => {
-            const Icon = typeIconMap[entry.type];
-            const isCanon = entry.status === "canon";
-            return (
-              <Link
-                key={entry.id}
-                href={`/${universeId}/entries/${entry.id}`}
-                className="flex items-center gap-4 py-3 border-b border-rule-subtle hover:bg-elevated/50 -mx-2 px-2 rounded transition-colors duration-200"
-              >
-                {/* Canon/generated indicator */}
-                <span
-                  className={`text-[8px] shrink-0 ${
-                    isCanon ? "text-canon" : "text-generated"
-                  }`}
-                  title={isCanon ? "Canon" : "Generated"}
+        {recent.length === 0 ? (
+          <div className="border border-dashed border-rule rounded-xl p-10 text-center">
+            <p className="font-serif text-[18px] text-ink-secondary mb-2">
+              No entries yet
+            </p>
+            <p className="font-sans text-[14px] text-ink-tertiary mb-4">
+              Seed the canon with characters, places, and rules.
+            </p>
+            <Link
+              href={`/${universeId}/entries/new`}
+              className="text-accent font-sans text-[14px] hover:underline"
+            >
+              Create first entry
+            </Link>
+          </div>
+        ) : (
+          <ul className="border-t border-rule-subtle">
+            {recent.map((e) => (
+              <li key={e.id} className="border-b border-rule-subtle">
+                <Link
+                  href={`/${universeId}/entries/${e.id}`}
+                  className="flex items-center gap-3 py-3 hover:bg-elevated/50 px-1"
                 >
-                  {isCanon ? "■" : "□"}
-                </span>
-
-                {/* Entry title */}
-                <span className="font-serif text-[15px] text-ink flex-1 truncate">
-                  {entry.title}
-                </span>
-
-                {/* Type badge */}
-                <span className="flex items-center gap-1 font-mono text-[11px] text-ink-tertiary shrink-0">
-                  <Icon size={12} strokeWidth={1.5} />
-                  {ENTRY_TYPE_LABELS[entry.type]}
-                </span>
-
-                {/* Time */}
-                <span className="font-mono text-[11px] text-ink-tertiary shrink-0 w-20 text-right">
-                  {entry.updatedAt}
-                </span>
-              </Link>
-            );
-          })}
-        </div>
+                  <span className="font-mono text-[11px] uppercase text-ink-tertiary w-20 shrink-0">
+                    {e.type}
+                  </span>
+                  <span className="font-serif text-[15px] text-ink flex-1">
+                    {e.title}
+                  </span>
+                  <span className="font-mono text-[11px] text-ink-tertiary">
+                    {e.status}
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
       </section>
     </div>
+  );
+}
+
+function StatTile({
+  label,
+  value,
+  href,
+  icon: Icon,
+}: {
+  label: string;
+  value: string | number;
+  href: string;
+  icon: React.ComponentType<{ size?: number; strokeWidth?: number; className?: string }>;
+}) {
+  return (
+    <Link
+      href={href}
+      className="border border-rule rounded-xl p-4 bg-surface hover:border-accent transition-colors"
+    >
+      <div className="flex items-center gap-2 mb-2 text-ink-tertiary">
+        <Icon size={14} strokeWidth={1.5} />
+        <span className="font-mono text-[11px] uppercase tracking-wide">
+          {label}
+        </span>
+      </div>
+      <div className="font-serif text-[24px] font-semibold text-ink">{value}</div>
+    </Link>
   );
 }

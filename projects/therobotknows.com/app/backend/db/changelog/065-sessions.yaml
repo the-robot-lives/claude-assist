@@ -1,0 +1,34 @@
+databaseChangeLog:
+  - changeSet:
+      id: 065-session-companion
+      author: therobotknows
+      changes:
+        - sql:
+            sql: |
+              CREATE TABLE play_sessions (
+                id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+                universe_id uuid NOT NULL REFERENCES universes(id) ON DELETE CASCADE,
+                title varchar(255) NOT NULL DEFAULT 'Session',
+                notes text NOT NULL DEFAULT '',
+                status varchar(20) NOT NULL DEFAULT 'active'
+                  CHECK (status IN ('active', 'closed')),
+                created_by uuid REFERENCES users(id) ON DELETE SET NULL,
+                inserted_at timestamptz NOT NULL DEFAULT now(),
+                updated_at timestamptz NOT NULL DEFAULT now()
+              );
+
+              CREATE TABLE play_session_log_entries (
+                id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+                session_id uuid NOT NULL REFERENCES play_sessions(id) ON DELETE CASCADE,
+                body text NOT NULL,
+                entry_id uuid REFERENCES entries(id) ON DELETE SET NULL,
+                created_by uuid REFERENCES users(id) ON DELETE SET NULL,
+                inserted_at timestamptz NOT NULL DEFAULT now()
+              );
+
+              CREATE INDEX idx_play_sessions_universe ON play_sessions (universe_id, updated_at DESC);
+      rollback:
+        - sql:
+            sql: |
+              DROP TABLE IF EXISTS play_session_log_entries;
+              DROP TABLE IF EXISTS play_sessions;

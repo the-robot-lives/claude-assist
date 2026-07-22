@@ -1,186 +1,282 @@
 "use client";
 
 import * as React from "react";
-import { GenerationForm } from "@/components/generation/generation-form";
-import { SourceList } from "@/components/generation/source-list";
-import { GenerationOutput } from "@/components/generation/generation-output";
-import { RecentGenerations } from "@/components/generation/recent-generations";
-import type { EntryType } from "@/lib/constants";
-import type { Generation } from "@/types/generation";
-
-// ── Mock sources ──────────────────────────────────────────────────────────
-const INITIAL_SOURCES = [
-  { id: "thornwall",   type: "location" as EntryType, label: "Thornwall",         included: true  },
-  { id: "blacksmiths", type: "faction"  as EntryType, label: "Blacksmith Guild",  included: true  },
-  { id: "north-reach", type: "location" as EntryType, label: "Northern Reach",    included: true  },
-  { id: "iron-routes", type: "concept"  as EntryType, label: "Iron Trade Routes", included: true  },
-  {
-    id: "war-stones",
-    type: "event" as EntryType,
-    label: "War of Stones",
-    included: false,
-    note: "post-dates founding",
-  },
-];
-
-// ── Mock recent generations ───────────────────────────────────────────────
-const MOCK_RECENT: Generation[] = [
-  {
-    id: "gen-1",
-    prompt: "Write climate patterns for the Northern Reach",
-    entryType: "concept",
-    status: "complete",
-    outputTitle: "Northern Reach Climate Patterns",
-    outputBody: "",
-    sourceEntryIds: ["north-reach"],
-    createdAt: new Date(Date.now() - 3_600_000).toISOString(),
-  },
-  {
-    id: "gen-2",
-    prompt: "Write Mira Ashward's backstory",
-    entryType: "character",
-    status: "promoted",
-    outputTitle: "Mira Ashward Backstory",
-    outputBody: "",
-    sourceEntryIds: ["kael", "thornwall"],
-    createdAt: new Date(Date.now() - 7_200_000).toISOString(),
-  },
-  {
-    id: "gen-3",
-    prompt: "Describe the hierarchy of the Blacksmith Guild",
-    entryType: "faction",
-    status: "pending",
-    outputTitle: "Guild Hierarchy",
-    outputBody: "",
-    sourceEntryIds: ["blacksmiths"],
-    createdAt: new Date(Date.now() - 14_400_000).toISOString(),
-  },
-];
-
-// ── Mock generated content ────────────────────────────────────────────────
-const MOCK_OUTPUT_TITLE = "Founding of Thornwall — An Elder's Account";
-const MOCK_OUTPUT_BODY = `In the years before the iron roads ran straight, when the Northern Reach was still a name men whispered rather than a territory they mapped, there came to the coastal cliffs a company of smiths led by a woman whose name the records have not kept but whose hammer-mark we still know. She called the place Thornwall for the sea-bramble that had to be cleared before the first forge could be set.
-
-The Guild was not founded — it accreted, the way trade always does. The first season there were four smiths and a boy who carried charcoal. By the third winter there were forty, and the coastal merchants had begun rerouting their iron shipments east to avoid the tolls on the old lowland passes. Thornwall became, almost without deciding to, the linchpin of the Northern iron trade.
-
-What the elders remember — and what the merchants prefer to forget — is that the Guild's first law was not a law about iron at all. It was a law about water. Every smith who joined the Guild pledged to keep the coastal wells shared and untaxed. The iron trade made Thornwall wealthy. The water law is what kept it a town worth living in.
-
-The cold-singing technique comes later, three generations on, brought down from the high passes by a journeyman whose name was recorded only as Kael's grandfather. He taught the hammer-tone method to anyone who would learn it, which is how the Guild stayed a Guild and did not become a monopoly.`;
-// ──────────────────────────────────────────────────────────────────────────
+import { useParams } from "next/navigation";
+import { generationsApi, entriesApi, type Generation } from "@/lib/api";
+import { ENTRY_TYPES, ENTRY_TYPE_LABELS, type EntryType } from "@/lib/constants";
+import { Loader2 } from "lucide-react";
 
 export default function GeneratePage() {
-  const [sources, setSources]         = React.useState(INITIAL_SOURCES);
-  const [isGenerating, setIsGenerating] = React.useState(false);
-  const [showOutput, setShowOutput]   = React.useState(false);
-  const [isPromoted, setIsPromoted]   = React.useState(false);
-  const [recentGens, setRecentGens]   = React.useState<Generation[]>(MOCK_RECENT);
+  const { universeId } = useParams() as { universeId: string };
+  const [prompt, setPrompt] = React.useState("");
+  const [entryType, setEntryType] = React.useState<EntryType>("concept");
+  const [sources, setSources] = React.useState<
+    { id: string; title: string; included: boolean }[]
+  >([]);
+  const [active, setActive] = React.useState<Generation | null>(null);
+  const [history, setHistory] = React.useState<Generation[]>([]);
+  const [busy, setBusy] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
 
-  function handleGenerate() {
-    setIsGenerating(true);
-    setShowOutput(false);
-    setIsPromoted(false);
-    setTimeout(() => {
-      setIsGenerating(false);
-      setShowOutput(true);
-    }, 1_800);
+  const loadHistory = React.useCallback(async () => {
+    const res = await generationsApi.list(universeId);
+    setHistory(res.generations || []);
+  }, [universeId]);
+
+  React.useEffect(() => {
+    entriesApi.list(universeId, { per_page: 50 }).then((res) => {
+      setSources(
+        res.entries.slice(0, 12).map((e) => ({
+          id: e.id,
+          title: e.title,
+          included: true,
+        })),
+      );
+    });
+    loadHistory().catch(() => {});
+  }, [universeId, loadHistory]);
+
+  React.useEffect(() => {
+    if (!active || !["pending", "running"].includes(active.status)) return;
+    const t = setInterval(async () => {
+      try {
+        const { generation } = await generationsApi.get(universeId, active.id);
+        setActive(generation);
+        if (!["pending", "running"].includes(generation.status)) {
+          loadHistory();
+        }
+      } catch {
+        /* ignore poll errors */
+      }
+    }, 700);
+    return () => clearInterval(t);
+  }, [active, universeId, loadHistory]);
+
+  async function onGenerate(e: React.FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    setError(null);
+    try {
+      const { generation } = await generationsApi.create(universeId, {
+        prompt,
+        entry_type: entryType,
+        source_entry_ids: sources.filter((s) => s.included).map((s) => s.id),
+      });
+      setActive(generation);
+      await loadHistory();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Generation failed");
+    } finally {
+      setBusy(false);
+    }
   }
 
-  function handleToggleSource(id: string) {
-    setSources((prev) =>
-      prev.map((s) => (s.id === id ? { ...s, included: !s.included } : s))
-    );
+  async function onPromote() {
+    if (!active) return;
+    setBusy(true);
+    try {
+      const { generation } = await generationsApi.promote(universeId, active.id);
+      setActive(generation);
+      await loadHistory();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Promote failed");
+    } finally {
+      setBusy(false);
+    }
   }
 
-  function handlePromote() {
-    setIsPromoted(true);
-    const newGen: Generation = {
-      id: `gen-${Date.now()}`,
-      prompt: MOCK_OUTPUT_TITLE,
-      entryType: "event",
-      status: "promoted",
-      outputTitle: MOCK_OUTPUT_TITLE,
-      outputBody: MOCK_OUTPUT_BODY,
-      sourceEntryIds: sources.filter((s) => s.included).map((s) => s.id),
-      createdAt: new Date().toISOString(),
-    };
-    setRecentGens((prev) => [newGen, ...prev]);
+  async function onDiscard() {
+    if (!active) return;
+    setBusy(true);
+    try {
+      const { generation } = await generationsApi.discard(universeId, active.id);
+      setActive(generation);
+      await loadHistory();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Discard failed");
+    } finally {
+      setBusy(false);
+    }
   }
 
-  function handleDiscard() {
-    setShowOutput(false);
-    setIsPromoted(false);
-  }
+  const bodyText =
+    active?.output_body &&
+    typeof active.output_body === "object" &&
+    "text" in active.output_body
+      ? String(active.output_body.text || "")
+      : "";
 
   return (
-    <div className="min-h-full bg-page">
-      {/* Page header */}
-      <div className="px-6 pt-8 pb-6 border-b border-rule-subtle">
-        <h2 className="font-serif text-[28px] font-bold text-ink">Generation Studio</h2>
-        <p className="font-sans text-[14px] text-ink-secondary mt-1">
-          Describe what to generate — the AI reads all referenced canon before writing.
-        </p>
-      </div>
+    <div className="max-w-4xl mx-auto px-6 py-10">
+      <h1 className="font-serif text-[28px] font-bold text-ink mb-2">
+        Generation studio
+      </h1>
+      <p className="font-sans text-[14px] text-ink-secondary mb-8">
+        v0.1: single-entry context + selected sources (not full-universe RAG).
+      </p>
 
-      {/* Two-column layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-rule-subtle">
-        {/* Left: Form + sources */}
-        <div className="p-6 space-y-6">
-          <GenerationForm onGenerate={handleGenerate} isGenerating={isGenerating} />
-          <SourceList
-            sources={sources}
-            onToggle={handleToggleSource}
-            onEditSources={() => {}}
-          />
-        </div>
-
-        {/* Right: Output + recent */}
-        <div className="p-6 space-y-6">
-          {/* Loading skeleton */}
-          {isGenerating && (
-            <div className="rounded-md border border-rule-subtle bg-surface p-6">
-              <div className="space-y-2.5">
-                <div className="h-2.5 bg-elevated rounded animate-pulse w-1/3" />
-                <div className="h-2.5 bg-elevated rounded animate-pulse w-full" />
-                <div className="h-2.5 bg-elevated rounded animate-pulse w-5/6" />
-                <div className="h-2.5 bg-elevated rounded animate-pulse w-full" />
-                <div className="h-2.5 bg-elevated rounded animate-pulse w-4/5" />
-              </div>
-              <p className="font-mono text-[11px] text-ink-tertiary mt-4 animate-pulse">
-                Reading canon entries…
-              </p>
-            </div>
-          )}
-
-          {/* Generated output */}
-          {showOutput && !isGenerating && (
-            <GenerationOutput
-              title={MOCK_OUTPUT_TITLE}
-              body={MOCK_OUTPUT_BODY}
-              onPromoteToCanon={handlePromote}
-              onEdit={() => {}}
-              onDiscard={handleDiscard}
-              isPromoted={isPromoted}
+      <form onSubmit={onGenerate} className="space-y-4 mb-10">
+        <div className="grid sm:grid-cols-3 gap-4">
+          <div className="sm:col-span-2">
+            <label className="block font-mono text-[11px] uppercase text-ink-tertiary mb-1.5">
+              Prompt
+            </label>
+            <textarea
+              required
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
+              rows={4}
+              className="w-full rounded-lg border border-rule px-3 py-2.5 font-sans text-[14px]"
+              placeholder="Write the founding myth of Thornwall…"
             />
-          )}
-
-          {/* Empty state */}
-          {!showOutput && !isGenerating && (
-            <div className="rounded-md border border-dashed border-rule p-8 text-center bg-surface">
-              <p className="font-serif text-[15px] text-ink-tertiary italic">
-                Generated content will appear here.
-              </p>
-              <p className="font-sans text-[12px] text-ink-tertiary mt-1">
-                Write a prompt on the left and click Generate.
-              </p>
-            </div>
-          )}
-
-          {/* Recent generations */}
-          <div className="border-t border-rule-subtle pt-6">
-            <RecentGenerations generations={recentGens} onSelect={() => {}} />
+          </div>
+          <div>
+            <label className="block font-mono text-[11px] uppercase text-ink-tertiary mb-1.5">
+              Entry type
+            </label>
+            <select
+              value={entryType}
+              onChange={(e) => setEntryType(e.target.value as EntryType)}
+              className="w-full rounded-lg border border-rule px-3 py-2.5 font-sans text-[14px]"
+            >
+              {ENTRY_TYPES.map((t) => (
+                <option key={t} value={t}>
+                  {ENTRY_TYPE_LABELS[t]}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
-      </div>
+
+        <div>
+          <p className="font-mono text-[11px] uppercase text-ink-tertiary mb-2">
+            Source entries
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {sources.map((s) => (
+              <label
+                key={s.id}
+                className="inline-flex items-center gap-1.5 font-mono text-[11px] border border-rule rounded-full px-3 py-1"
+              >
+                <input
+                  type="checkbox"
+                  checked={s.included}
+                  onChange={() =>
+                    setSources((prev) =>
+                      prev.map((x) =>
+                        x.id === s.id ? { ...x, included: !x.included } : x,
+                      ),
+                    )
+                  }
+                />
+                {s.title}
+              </label>
+            ))}
+            {sources.length === 0 && (
+              <span className="text-[13px] text-ink-tertiary">
+                No entries yet — generation will run without sources.
+              </span>
+            )}
+          </div>
+        </div>
+
+        {error && (
+          <p className="text-[13px] text-flag-warn bg-flag-warn-muted px-3 py-2 rounded-md">
+            {error}
+          </p>
+        )}
+
+        <button
+          type="submit"
+          disabled={busy || !prompt.trim()}
+          className="rounded-lg bg-accent text-white px-5 py-2.5 text-[14px] disabled:opacity-60"
+        >
+          {busy ? "Working…" : "Generate"}
+        </button>
+      </form>
+
+      {active && (
+        <section className="border border-rule rounded-xl p-6 mb-10 bg-surface">
+          <div className="flex items-center justify-between gap-3 mb-3">
+            <h2 className="font-serif text-[20px] font-semibold text-ink">
+              {active.output_title || "In progress…"}
+            </h2>
+            <span className="font-mono text-[11px] uppercase text-ink-tertiary">
+              {active.status}
+              {["pending", "running"].includes(active.status) && (
+                <Loader2 className="inline ml-2 animate-spin" size={12} />
+              )}
+            </span>
+          </div>
+          {bodyText && (
+            <pre className="font-body text-[14px] text-ink whitespace-pre-wrap mb-4">
+              {bodyText}
+            </pre>
+          )}
+          {active.citations && active.citations.length > 0 && (
+            <div className="mb-4">
+              <p className="font-mono text-[11px] uppercase text-ink-tertiary mb-1">
+                Citations
+              </p>
+              <ul className="list-disc pl-5 font-sans text-[13px] text-ink-secondary">
+                {active.citations.map((c, i) => (
+                  <li key={i}>{c.title}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {active.status === "complete" && (
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={onPromote}
+                disabled={busy}
+                className="rounded-lg bg-accent text-white px-4 py-2 text-[13px]"
+              >
+                Promote to entry
+              </button>
+              <button
+                type="button"
+                onClick={onDiscard}
+                disabled={busy}
+                className="rounded-lg border border-rule px-4 py-2 text-[13px]"
+              >
+                Discard
+              </button>
+            </div>
+          )}
+        </section>
+      )}
+
+      <section>
+        <h2 className="font-mono text-[11px] uppercase text-ink-tertiary mb-3">
+          History
+        </h2>
+        <ul className="border-t border-rule-subtle">
+          {history.map((g) => (
+            <li key={g.id} className="border-b border-rule-subtle py-3 flex gap-3">
+              <button
+                type="button"
+                onClick={() => setActive(g)}
+                className="text-left flex-1"
+              >
+                <span className="font-sans text-[14px] text-ink block">
+                  {g.prompt.slice(0, 80)}
+                </span>
+                <span className="font-mono text-[11px] text-ink-tertiary">
+                  {g.entry_type} · {g.status}
+                  {g.cost_cents != null ? ` · ${g.cost_cents}¢` : ""}
+                </span>
+              </button>
+            </li>
+          ))}
+          {history.length === 0 && (
+            <li className="py-6 text-ink-tertiary text-[14px]">
+              No generations yet.
+            </li>
+          )}
+        </ul>
+      </section>
     </div>
   );
 }

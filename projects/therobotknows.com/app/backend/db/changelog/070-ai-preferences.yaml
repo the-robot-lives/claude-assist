@@ -1,0 +1,33 @@
+databaseChangeLog:
+  - changeSet:
+      id: 070-ai-preferences-and-budgets
+      author: therobotknows
+      changes:
+        - sql:
+            sql: |
+              CREATE TABLE user_ai_preferences (
+                user_id uuid PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+                model varchar(100) NOT NULL DEFAULT 'default',
+                monthly_budget_cents integer NOT NULL DEFAULT 1000,
+                settings jsonb NOT NULL DEFAULT '{}',
+                updated_at timestamptz NOT NULL DEFAULT now()
+              );
+
+              CREATE TABLE generation_usage (
+                id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+                user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                universe_id uuid REFERENCES universes(id) ON DELETE SET NULL,
+                generation_id uuid REFERENCES generations(id) ON DELETE SET NULL,
+                cost_cents integer NOT NULL DEFAULT 0,
+                tokens integer NOT NULL DEFAULT 0,
+                period_ym varchar(7) NOT NULL,
+                inserted_at timestamptz NOT NULL DEFAULT now()
+              );
+
+              CREATE INDEX idx_generation_usage_user_period
+                ON generation_usage (user_id, period_ym);
+      rollback:
+        - sql:
+            sql: |
+              DROP TABLE IF EXISTS generation_usage;
+              DROP TABLE IF EXISTS user_ai_preferences;

@@ -1,88 +1,234 @@
 # Domain Model
 
-## Entity Types
+Canonical knowledge-base domain model for therobotknows.com. Aligns with
+[implementation-roadmap.md](../../project-management/implementation-roadmap.md)
+M0.S0.1 and D-001. Wire shapes live under `app/docs/api/`.
 
-### Universe
+---
 
-Top-level container for a creative world. Each universe is independently scoped — entries, connections, flags, and generations are all universe-local.
+## Design Guardrails
+
+| Guardrail | Rule |
+|---|---|
+| Membership (D-001 / ADR-008) | Universe access via `universe_members` (member + role). No bare `owner_id`. |
+| Attribution | Canon entries carry `created_by` (user UUID). |
+| Entry types (ADR-005) | Fixed enum of 7 types. |
+| Entry status | `canon` \| `draft` \| `generated`. |
+| Versioning (ADR-007) | Snapshot-on-write into `entry_versions` (tables in M2). |
+| Scope | All KB entities are universe-local. |
+
+---
+
+## Universe
+
+Top-level container for a creative world. Independently scoped: entries, links,
+tags, flags, and generations are all universe-local.
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `id` | string | URL-safe slug (e.g., `ashward-chronicles`) |
+| `id` | uuid | Primary key |
+| `slug` | string | URL-safe unique slug (e.g. `ashward-chronicles`) |
 | `name` | string | Display name |
-| `genre` | string | Genre label (e.g., "Dark Fantasy") |
-| `description` | string | Short summary |
-| `entryCount` | number | Denormalized count of entries |
-| `flagCount` | number | Denormalized count of unresolved flags |
-| `connectionCount` | number | Denormalized count of connections |
-| `updatedAt` | string (ISO 8601) | Last modification timestamp |
+| `description` | string? | Short summary |
+| `genre` | string? | Genre label (e.g. "Dark Fantasy") |
+| `tone` | string? | Tone label for generation (e.g. "grim, lyrical") |
+| `config` | object | Genre/tone/naming/constraints (jsonb); see genre-tone config |
+| `status` | enum | `active` \| `deleted` (soft-delete) |
+| `created_by` | uuid? | Creating user |
+| `deleted_at` | datetime? | Soft-delete timestamp |
+| `inserted_at` / `updated_at` | datetime | Audit timestamps |
 
-### Entry
+### Denormalized / computed (API list/detail)
 
-A knowledge article within a universe. The fundamental unit of the knowledge graph.
+| Field | Description |
+|-------|-------------|
+| `entry_count` | Count of non-deleted entries |
+| `flag_count` | Unresolved consistency issues |
+| `connection_count` | Count of entry links |
+| `role` | Caller's membership role on this universe |
+
+### universe_members
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `id` | string | Unique identifier |
-| `type` | EntryType | One of: `character`, `location`, `event`, `faction`, `object`, `concept`, `rule` |
-| `status` | EntryStatus | `canon` (human-approved) or `generated` (AI-produced, pending review) |
+| `id` | uuid | Primary key |
+| `universe_id` | uuid | FK → universes |
+| `user_id` | uuid | FK → users |
+| `role` | enum | `owner` \| `editor` \| `viewer` (v0.1 always `owner` for the sole member) |
+| `inserted_at` / `updated_at` | datetime | Audit timestamps |
+
+Unique: `(universe_id, user_id)`.
+
+### Genre / tone config (`config` jsonb)
+
+```json
+{
+  "genre": "Dark Fantasy",
+  "tone": "grim, lyrical",
+  "naming_conventions": "Anglo-Saxon + Nordic compounds",
+  "constraints": ["No modern firearms", "Magic costs aether"]
+}
+```
+
+Top-level `genre` / `tone` columns mirror common config keys for list filters;
+full config is the source of truth for generation (M3+).
+
+---
+
+## Entry (Canon Entry)
+
+A knowledge article within a universe — fundamental unit of the knowledge graph.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | uuid | Primary key |
+| `universe_id` | uuid | FK → universes |
+| `type` | EntryType | See enumerations |
+| `status` | EntryStatus | `canon` \| `draft` \| `generated` |
 | `title` | string | Entry heading |
-| `excerpt` | string | Short summary for cards/lists |
-| `body` | string | Full content |
-| `tags` | string[] | Freeform tags |
-| `era` | string? | Optional temporal grouping |
-| `region` | string? | Optional spatial grouping |
-| `wordCount` | number | Body word count |
-| `version` | number | Revision counter |
-| `createdAt` | string (ISO 8601) | Creation timestamp |
-| `updatedAt` | string (ISO 8601) | Last edit timestamp |
-| `connectionIds` | string[] | IDs of related connections |
+| `slug` | string? | Optional URL slug within universe |
+| `excerpt` | string? | Short summary for cards/lists |
+| `body` | object \| string | Rich document (ProseMirror/Tiptap JSON preferred) or plain text |
+| `era` | string? | Temporal grouping |
+| `region` | string? | Spatial grouping |
+| `metadata` | object | Type-specific structured fields (jsonb) |
+| `word_count` | integer | Derived from body |
+| `version` | integer | Monotonic revision counter (snapshot index) |
+| `created_by` | uuid? | Authoring user |
+| `deleted_at` | datetime? | Soft-delete |
+| `inserted_at` / `updated_at` | datetime | Audit timestamps |
 
-### Connection
+### EntryType
 
-A typed, directed relationship between two entries.
+`character` · `location` · `event` · `faction` · `object` · `concept` · `rule`
+
+### EntryStatus
+
+| Value | Meaning |
+|-------|---------|
+| `canon` | Human-approved source of truth |
+| `draft` | Work in progress, not yet canon |
+| `generated` | AI-produced, pending review |
+
+### Allowed status transitions
+
+| From | To |
+|------|----|
+| `draft` | `canon`, `generated` (rare) |
+| `generated` | `canon` (promote), `draft` (adopt for edit) |
+| `canon` | `draft` (unpublish for rework) |
+
+Delete is soft-delete, not a status.
+
+---
+
+## Entry Link (Connection)
+
+Typed, directed relationship between two entries in the same universe.
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `id` | string | Unique identifier |
-| `sourceId` | string | Origin entry ID |
-| `targetId` | string | Destination entry ID |
-| `relationship` | string | Freeform label (e.g., "ruler of", "located in") |
+| `id` | uuid | Primary key |
+| `universe_id` | uuid | FK → universes (denormalized for scoping) |
+| `source_entry_id` | uuid | Origin entry |
+| `target_entry_id` | uuid | Destination entry |
+| `relationship` | string | Label (e.g. "ruler of", "located in") |
+| `excerpt` | string? | Source excerpt / note |
+| `created_by` | uuid? | Attributing user |
+| `inserted_at` / `updated_at` | datetime | Audit timestamps |
 
-### Flag
+Unique soft constraint: avoid exact duplicate `(source, target, relationship)`.
 
-A consistency issue detected across entries.
+---
+
+## Tag
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `id` | string | Unique identifier |
-| `severity` | FlagSeverity | `error` (contradiction), `warning` (possible conflict), `suggestion` |
+| `id` | uuid | Primary key |
+| `universe_id` | uuid | Scope |
+| `name` | string | Tag label (case-preserving display) |
+| `slug` | string | Normalized key within universe |
+| `inserted_at` | datetime | Created |
+
+### entry_tags
+
+Join table: `(entry_id, tag_id)` unique.
+
+---
+
+## Entry Version (M2 schema; model locked here)
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | uuid | Primary key |
+| `entry_id` | uuid | FK → entries |
+| `version` | integer | Snapshot number matching entry.version after write |
+| `snapshot` | object | Full mutable field snapshot |
+| `created_by` | uuid? | Actor |
+| `reason` | string? | `create` \| `update` \| `promote` \| `restore` \| … |
+| `inserted_at` | datetime | When snapshot was taken |
+
+---
+
+## Consistency Flag (issue)
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | uuid | Primary key |
+| `universe_id` | uuid | Scope |
+| `severity` | FlagSeverity | `error` \| `warning` \| `suggestion` |
+| `kind` | string | Check id (e.g. `duplicate_name`, `timeline_conflict`) |
 | `title` | string | Short description |
-| `detail` | string | Explanation of the inconsistency |
-| `entryIds` | string[] | Entries involved |
-| `resolved` | boolean | Whether the flag has been addressed |
+| `detail` | string | Explanation |
+| `entry_ids` | uuid[] | Involved entries |
+| `status` | enum | `open` \| `resolved` \| `dismissed` |
+| `resolution` | object? | Resolution payload |
+| `inserted_at` / `updated_at` | datetime | Audit |
 
-### Generation
+---
 
-An AI generation request and its output.
+## Generation
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `id` | string | Unique identifier |
-| `prompt` | string | User's generation prompt |
-| `entryType` | EntryType | Type of entry to generate |
-| `status` | GenerationStatus | `pending`, `complete`, `promoted` (accepted as canon), `discarded` |
-| `outputTitle` | string? | Generated entry title |
-| `outputBody` | string? | Generated entry content |
-| `sourceEntryIds` | string[] | Context entries fed to the LLM |
-| `createdAt` | string (ISO 8601) | Request timestamp |
+| `id` | uuid | Primary key |
+| `universe_id` | uuid | Scope |
+| `prompt` | string | User prompt |
+| `entry_type` | EntryType | Target type |
+| `status` | GenerationStatus | `pending` \| `running` \| `complete` \| `failed` \| `promoted` \| `discarded` |
+| `params` | object | Length, tone overrides, etc. |
+| `output_entry_id` | uuid? | Created generated entry |
+| `source_entry_ids` | uuid[] | Context entries |
+| `citations` | object[] | Source citations |
+| `created_by` | uuid? | Requesting user |
+| `inserted_at` / `updated_at` | datetime | Audit |
 
-## Type Enumerations
+---
 
-**EntryType**: `character` · `location` · `event` · `faction` · `object` · `concept` · `rule`
+## Type Enumerations (summary)
 
-**EntryStatus**: `canon` · `generated`
+- **EntryType**: `character` · `location` · `event` · `faction` · `object` · `concept` · `rule`
+- **EntryStatus**: `canon` · `draft` · `generated`
+- **MemberRole**: `owner` · `editor` · `viewer`
+- **FlagSeverity**: `error` · `warning` · `suggestion`
+- **GenerationStatus**: `pending` · `running` · `complete` · `failed` · `promoted` · `discarded`
 
-**FlagSeverity**: `error` · `warning` · `suggestion`
+---
 
-**GenerationStatus**: `pending` · `complete` · `promoted` · `discarded`
+## Entity Relationship (logical)
+
+```mermaid
+erDiagram
+    users ||--o{ universe_members : membership
+    universes ||--o{ universe_members : has
+    universes ||--o{ entries : contains
+    entries ||--o{ entry_links : source
+    entries ||--o{ entry_links : target
+    entries ||--o{ entry_tags : tagged
+    tags ||--o{ entry_tags : applied
+    entries ||--o{ entry_versions : history
+    universes ||--o{ tags : owns
+    universes ||--o{ consistency_issues : flags
+    universes ||--o{ generations : jobs
+```

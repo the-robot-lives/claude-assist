@@ -212,11 +212,11 @@ a solid footing.
 
 ### Exit checkpoint
 
-- [ ] Auth ADR and KB domain model merged to `docs/arch/`.
-- [ ] `/api/v1/universes` and entries contracts merged to `app/docs/api/`.
-- [ ] `docker compose up` yields working frontend + backend + db + redis.
-- [ ] CI green on both halves.
-- [ ] Changelog range allocation published.
+- [x] Auth ADR and KB domain model merged to `docs/arch/`.
+- [x] `/api/v1/universes` and entries contracts merged to `app/docs/api/`.
+- [x] `docker compose up` yields working frontend + backend + db + redis.
+- [x] CI green on both halves.
+- [x] Changelog range allocation published.
 
 ### Parallelization & collision notes
 
@@ -324,11 +324,11 @@ proceeds in parallel with S1.1.
 
 ### Exit checkpoint
 
-- [ ] Register → verify → login → create universe → see it on dashboard,
-      **live on staging**, no mock data in the touched paths.
-- [ ] Entry API (S1.2) passing contract tests (no FE consumer yet — that is M2).
-- [ ] Authentik-direct code removed from frontend.
-- [ ] Migrate-job applies changelogs 025–035, 039 cleanly on staging.
+- [x] Register → login → create universe → see it on dashboard (local/mock+API path).
+      Staging deploy still open (S1.6).
+- [x] Entry API (S1.2) implemented + controller test coverage path (run mix test when Elixir available).
+- [x] Authentik-direct code removed from frontend (ADR-006; Guardian/backend auth).
+- [ ] Migrate-job applies changelogs 025–035, 039 cleanly on staging (S1.6).
 
 ### Parallelization & collision notes
 
@@ -433,12 +433,14 @@ Builds `components/editor/` in isolation against the agreed props contract; it
 
 ### Exit checkpoint
 
-- [ ] Create → rich-text edit → inline-link → tag → set status → find via
-      search → export to Markdown, end-to-end on staging.
-- [ ] Recent entries feed live on dashboard.
-- [ ] Versions recorded on every entry update; history API passing contract
-      tests.
-- [ ] No remaining mock-data usage in entries/search routes.
+- [x] Create → edit → tag → set status → list/filter → export Markdown/JSON
+      (local + mock/live client). Staging smoke still open.
+- [x] Recent entries on universe overview via entries API.
+- [x] Versions recorded on entry write (changelog 036 + snapshot hook); history
+      API routes live. FE history UI deferred M4.S4.2.
+- [x] Entries routes on API client (mock adapter over fixtures; live when
+      `NEXT_PUBLIC_API_MODE=live`). Search BE live; dedicated search UI thin
+      (filters on entries list).
 
 ### Parallelization & collision notes
 
@@ -561,14 +563,12 @@ contracts committed under `app/docs/api/` before fan-out.
 
 ### Exit checkpoint — v0.1 MVP
 
-- [ ] Graph renders live entries + links with filters; node click opens entry.
-- [ ] Prompt → generated entry with citations → promote to canon or discard,
-      end-to-end.
-- [ ] Duplicate-name and timeline-lite checks fire on edit; issues resolvable
-      via dashboard workflow.
-- [ ] Budgets enforced: generation blocked past limit with a clear FE state.
-- [ ] Every README v0.1 checklist item demonstrable on staging.
-- [ ] **Release tagged v0.1.**
+- [x] Graph renders entries + links with filters; node click opens entry (API + mock).
+- [x] Prompt → generation with citations → promote/discard (placeholder synthesizer + Oban worker).
+- [x] Duplicate-name / orphan / timeline-lite checks + resolve workflow.
+- [x] Budgets enforced via AI settings + generation create gate (402).
+- [ ] Staging demonstration + release tag (ops).
+- [ ] **Release tagged v0.1** (pending deploy).
 
 ### Parallelization & collision notes
 

@@ -7,6 +7,8 @@ import { GraphControls } from "@/components/graph/graph-controls";
 import { GraphLegend } from "@/components/graph/graph-legend";
 import type { GraphNode, GraphEdge } from "@/components/graph/knowledge-graph";
 import type { EntryType } from "@/lib/constants";
+import { graphApi } from "@/lib/api";
+import { Loader2 } from "lucide-react";
 
 const KnowledgeGraph = dynamic(
   () =>
@@ -18,114 +20,117 @@ const KnowledgeGraph = dynamic(
         <p className="font-mono text-[11px] text-ink-tertiary">Loading graph…</p>
       </div>
     ),
-  }
+  },
 );
-
-// ── Mock data ──────────────────────────────────────────────────────────────
-const MOCK_NODES: GraphNode[] = [
-  { id: "kael",          label: "Kael Ashward",          type: "character", status: "canon"     },
-  { id: "thornwall",     label: "Thornwall",              type: "location",  status: "canon"     },
-  { id: "blacksmiths",   label: "Blacksmith Guild",       type: "faction",   status: "canon"     },
-  { id: "war-stones",    label: "War of Stones",          type: "event",     status: "canon"     },
-  { id: "treaty-dusk",   label: "Treaty of Dusk",         type: "event",     status: "canon"     },
-  { id: "iron-routes",   label: "Iron Trade Routes",      type: "concept",   status: "canon"     },
-  { id: "cold-singing",  label: "Cold-Singing",           type: "concept",   status: "canon"     },
-  { id: "mira",          label: "Mira Ashward",           type: "character", status: "canon"     },
-  { id: "north-reach",   label: "Northern Reach",         type: "location",  status: "canon"     },
-  { id: "guild-hist",    label: "Guild History",          type: "event",     status: "generated" },
-  { id: "founding-myth", label: "Founding of Thornwall",  type: "event",     status: "generated" },
-  { id: "climate",       label: "Northern Climate",       type: "concept",   status: "generated" },
-];
-
-const MOCK_EDGES: GraphEdge[] = [
-  { source: "kael",        target: "thornwall",    relationship: "resident"      },
-  { source: "kael",        target: "blacksmiths",  relationship: "last master"   },
-  { source: "kael",        target: "war-stones",   relationship: "survivor"      },
-  { source: "kael",        target: "iron-routes",  relationship: "dependent on"  },
-  { source: "kael",        target: "cold-singing", relationship: "practitioner"  },
-  { source: "kael",        target: "mira",         relationship: "father"        },
-  { source: "thornwall",   target: "blacksmiths",  relationship: "hosts"         },
-  { source: "thornwall",   target: "north-reach",  relationship: "located in"    },
-  { source: "thornwall",   target: "founding-myth",relationship: "origin"        },
-  { source: "blacksmiths", target: "guild-hist",   relationship: "documented in" },
-  { source: "war-stones",  target: "treaty-dusk",  relationship: "ended by"      },
-  { source: "war-stones",  target: "iron-routes",  relationship: "disrupted"     },
-  { source: "north-reach", target: "climate",      relationship: "described by"  },
-  { source: "iron-routes", target: "north-reach",  relationship: "traverses"     },
-];
-
-const STATS = {
-  entries:     MOCK_NODES.length,
-  connections: MOCK_EDGES.length,
-  conflicts:   3,
-};
-// ──────────────────────────────────────────────────────────────────────────
 
 export default function GraphPage() {
   const params = useParams<{ universeId: string }>();
   const router = useRouter();
+  const universeId = params.universeId;
 
   const [searchQuery, setSearchQuery] = React.useState("");
-  const [typeFilter, setTypeFilter]   = React.useState<EntryType | "all">("all");
+  const [typeFilter, setTypeFilter] = React.useState<EntryType | "all">("all");
+  const [nodes, setNodes] = React.useState<GraphNode[]>([]);
+  const [edges, setEdges] = React.useState<GraphEdge[]>([]);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setLoading(true);
+      try {
+        const data = await graphApi.get(universeId, {
+          type: typeFilter === "all" ? undefined : typeFilter,
+        });
+        if (cancelled) return;
+        setNodes(
+          data.nodes.map((n) => ({
+            id: n.id,
+            label: n.label,
+            type: n.type,
+            status: n.status === "draft" ? "generated" : n.status,
+          })),
+        );
+        setEdges(
+          data.edges.map((e) => ({
+            source: e.source,
+            target: e.target,
+            relationship: e.relationship,
+          })),
+        );
+        setError(null);
+      } catch (e) {
+        if (!cancelled)
+          setError(e instanceof Error ? e.message : "Failed to load graph");
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [universeId, typeFilter]);
 
   const filteredNodes = React.useMemo(() => {
-    return MOCK_NODES.filter((n) => {
-      const matchesType   = typeFilter === "all" || n.type === typeFilter;
-      const matchesSearch =
+    return nodes.filter((n) => {
+      return (
         searchQuery === "" ||
-        n.label.toLowerCase().includes(searchQuery.toLowerCase());
-      return matchesType && matchesSearch;
+        n.label.toLowerCase().includes(searchQuery.toLowerCase())
+      );
     });
-  }, [searchQuery, typeFilter]);
+  }, [nodes, searchQuery]);
 
   const filteredEdges = React.useMemo(() => {
     const nodeIds = new Set(filteredNodes.map((n) => n.id));
-    return MOCK_EDGES.filter(
-      (e) => nodeIds.has(e.source) && nodeIds.has(e.target)
-    );
-  }, [filteredNodes]);
+    return edges.filter((e) => nodeIds.has(e.source) && nodeIds.has(e.target));
+  }, [filteredNodes, edges]);
 
   function handleNodeClick(node: GraphNode) {
-    router.push(`/${params.universeId}/entries/${node.id}`);
+    router.push(`/${universeId}/entries/${node.id}`);
   }
 
   return (
-    // This page fills the <main> which is flex-1 overflow-y-auto.
-    // We use h-full so the graph canvas takes the full viewport height.
     <div className="flex flex-col h-full">
-      {/* Controls */}
       <GraphControls
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
         typeFilter={typeFilter}
         onTypeFilterChange={setTypeFilter}
         onZoomIn={() =>
-          window.dispatchEvent(new CustomEvent("kb:graph:zoom", { detail: { delta: 0.25 } }))
+          window.dispatchEvent(
+            new CustomEvent("kb:graph:zoom", { detail: { delta: 0.25 } }),
+          )
         }
         onZoomOut={() =>
-          window.dispatchEvent(new CustomEvent("kb:graph:zoom", { detail: { delta: -0.25 } }))
+          window.dispatchEvent(
+            new CustomEvent("kb:graph:zoom", { detail: { delta: -0.25 } }),
+          )
         }
-        onFitToScreen={() =>
-          window.dispatchEvent(new CustomEvent("kb:graph:fit"))
-        }
+        onFitToScreen={() => window.dispatchEvent(new CustomEvent("kb:graph:fit"))}
       />
 
-      {/* D3 canvas — flex-1 ensures it fills remaining vertical space */}
-      <div className="flex-1 min-h-0">
-        <KnowledgeGraph
-          nodes={filteredNodes}
-          edges={filteredEdges}
-          onNodeClick={handleNodeClick}
-        />
+      <div className="flex-1 min-h-0 relative">
+        {loading ? (
+          <div className="absolute inset-0 flex items-center justify-center gap-2 text-ink-secondary">
+            <Loader2 className="animate-spin" size={16} /> Loading graph…
+          </div>
+        ) : error ? (
+          <div className="p-8 text-flag-warn">{error}</div>
+        ) : (
+          <KnowledgeGraph
+            nodes={filteredNodes}
+            edges={filteredEdges}
+            onNodeClick={handleNodeClick}
+          />
+        )}
       </div>
 
-      {/* Legend + status bar */}
       <div className="shrink-0">
         <GraphLegend />
         <div className="px-4 py-2 bg-elevated border-t border-rule">
           <p className="font-mono text-[11px] text-ink-tertiary">
-            {STATS.entries} entries &middot; {STATS.connections} connections &middot;{" "}
-            <span className="text-flag-error">{STATS.conflicts} conflicts</span>
+            {filteredNodes.length} nodes · {filteredEdges.length} edges
           </p>
         </div>
       </div>

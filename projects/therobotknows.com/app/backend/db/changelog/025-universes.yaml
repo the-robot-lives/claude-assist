@@ -1,0 +1,60 @@
+databaseChangeLog:
+  - changeSet:
+      id: 025-create-table-universes
+      author: therobotknows
+      changes:
+        - sql:
+            sql: |
+              CREATE TABLE universes (
+                id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+                slug citext NOT NULL,
+                name varchar(255) NOT NULL,
+                description text,
+                genre varchar(255),
+                tone varchar(255),
+                config jsonb NOT NULL DEFAULT '{}',
+                status varchar(20) NOT NULL DEFAULT 'active'
+                  CHECK (status IN ('active', 'deleted')),
+                created_by uuid REFERENCES users(id) ON DELETE SET NULL,
+                deleted_at timestamptz,
+                inserted_at timestamptz NOT NULL DEFAULT now(),
+                updated_at timestamptz NOT NULL DEFAULT now(),
+                CONSTRAINT uq_universes_slug UNIQUE (slug)
+              );
+
+              CREATE INDEX idx_universes_status_updated
+                ON universes (status, updated_at DESC)
+                WHERE status = 'active';
+
+              CREATE INDEX idx_universes_created_by
+                ON universes (created_by)
+                WHERE created_by IS NOT NULL;
+      rollback:
+        - dropTable:
+            tableName: universes
+
+  - changeSet:
+      id: 025-create-table-universe-members
+      author: therobotknows
+      changes:
+        - sql:
+            sql: |
+              CREATE TABLE universe_members (
+                id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+                universe_id uuid NOT NULL REFERENCES universes(id) ON DELETE CASCADE,
+                user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                role varchar(20) NOT NULL DEFAULT 'owner'
+                  CHECK (role IN ('owner', 'editor', 'viewer')),
+                inserted_at timestamptz NOT NULL DEFAULT now(),
+                updated_at timestamptz NOT NULL DEFAULT now(),
+                CONSTRAINT uq_universe_members_universe_user UNIQUE (universe_id, user_id)
+              );
+
+              CREATE INDEX idx_universe_members_user
+                ON universe_members (user_id);
+
+              CREATE INDEX idx_universe_members_universe_role
+                ON universe_members (universe_id, role);
+      rollback:
+        - dropTable:
+            tableName: universe_members

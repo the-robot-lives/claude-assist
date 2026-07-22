@@ -74,3 +74,45 @@ databaseChangeLog:
   - include:
       file: 024-media-variants-cache.yaml
       relativeToChangelogFile: true
+  - include:
+      file: 025-universes.yaml
+      relativeToChangelogFile: true
+  - include:
+      file: 030-entries.yaml
+      relativeToChangelogFile: true
+  - include:
+      file: 031-entry-links.yaml
+      relativeToChangelogFile: true
+  - include:
+      file: 032-tags.yaml
+      relativeToChangelogFile: true
+  - include:
+      file: 033-entry-tags.yaml
+      relativeToChangelogFile: true
+  - include:
+      file: 034-entry-templates.yaml
+      relativeToChangelogFile: true
+  - include:
+      file: 036-entry-versions.yaml
+      relativeToChangelogFile: true
+  - include:
+      file: 039-entry-template-seeds.yaml
+      relativeToChangelogFile: true
+  - include:
+      file: 040-generations.yaml
+      relativeToChangelogFile: true
+  - include:
+      file: 050-consistency.yaml
+      relativeToChangelogFile: true
+  - include:
+      file: 060-entry-search.yaml
+      relativeToChangelogFile: true
+  - include:
+      file: 065-sessions.yaml
+      relativeToChangelogFile: true
+  - include:
+      file: 070-ai-preferences.yaml
+      relativeToChangelogFile: true
+  - include:
+      file: 085-collab-invites.yaml
+      relativeToChangelogFile: true

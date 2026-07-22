@@ -1,0 +1,20 @@
+databaseChangeLog:
+  - changeSet:
+      id: 032-create-table-tags
+      author: therobotknows
+      changes:
+        - sql:
+            sql: |
+              CREATE TABLE tags (
+                id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+                universe_id uuid NOT NULL REFERENCES universes(id) ON DELETE CASCADE,
+                name varchar(100) NOT NULL,
+                slug citext NOT NULL,
+                inserted_at timestamptz NOT NULL DEFAULT now(),
+                CONSTRAINT uq_tags_universe_slug UNIQUE (universe_id, slug)
+              );
+
+              CREATE INDEX idx_tags_universe ON tags (universe_id);
+      rollback:
+        - dropTable:
+            tableName: tags

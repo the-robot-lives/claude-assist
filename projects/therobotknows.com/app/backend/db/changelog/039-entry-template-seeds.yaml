@@ -1,0 +1,33 @@
+databaseChangeLog:
+  - changeSet:
+      id: 039-seed-entry-templates
+      author: therobotknows
+      changes:
+        - sql:
+            sql: |
+              INSERT INTO entry_templates (id, type, name, fields, body_skeleton, inserted_at) VALUES
+              (gen_random_uuid(), 'character', 'Character',
+                '["aliases","occupation","affiliation"]'::jsonb,
+                E'## Appearance\n\n## History\n\n## Relationships\n', now()),
+              (gen_random_uuid(), 'location', 'Location',
+                '["climate","population","notable_features"]'::jsonb,
+                E'## Geography\n\n## History\n\n## Inhabitants\n', now()),
+              (gen_random_uuid(), 'event', 'Event',
+                '["date","location","participants"]'::jsonb,
+                E'## Summary\n\n## Prelude\n\n## Aftermath\n', now()),
+              (gen_random_uuid(), 'faction', 'Faction',
+                '["leader","territory","goals"]'::jsonb,
+                E'## Structure\n\n## History\n\n## Relations\n', now()),
+              (gen_random_uuid(), 'object', 'Object',
+                '["origin","powers","current_holder"]'::jsonb,
+                E'## Description\n\n## History\n\n## Significance\n', now()),
+              (gen_random_uuid(), 'concept', 'Concept',
+                '["domain","related_rules"]'::jsonb,
+                E'## Definition\n\n## Implications\n\n## Examples\n', now()),
+              (gen_random_uuid(), 'rule', 'Rule',
+                '["scope","exceptions"]'::jsonb,
+                E'## Statement\n\n## Edge Cases\n\n## Examples\n', now())
+              ON CONFLICT (type) DO NOTHING;
+      rollback:
+        - sql:
+            sql: DELETE FROM entry_templates;

@@ -9,6 +9,9 @@ import {
   Clock,
   Sparkles,
   AlertTriangle,
+  Download,
+  Settings,
+  Dices,
 } from "lucide-react";
 import { cn } from "@/lib/cn";
 import type { Entry } from "@/types/entry";
@@ -36,6 +39,9 @@ export function Sidebar({ universeId, universeName, entries = [] }: SidebarProps
     { label: "Timeline", href: `${base}/timeline`, icon: Clock },
     { label: "Generate", href: `${base}/generate`, icon: Sparkles },
     { label: "Flags", href: `${base}/consistency`, icon: AlertTriangle },
+    { label: "Sessions", href: `${base}/sessions`, icon: Dices },
+    { label: "Export", href: `${base}/export`, icon: Download },
+    { label: "Settings", href: `${base}/settings`, icon: Settings },
   ];
 
   function isActive(href: string) {

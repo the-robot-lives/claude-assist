@@ -15,6 +15,8 @@ export interface Entry {
   createdAt: string;
   updatedAt: string;
   connectionIds: string[];
+  /** Backend UUID when distinct from slug/id used in routes */
+  apiId?: string;
 }
 
 export interface Connection {

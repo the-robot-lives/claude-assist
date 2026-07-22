@@ -100,6 +100,7 @@ HELM_OCI_REGISTRY = oci://ghcr.io/the-robot-lives/charts
 	frontend frontend-no-cache \
 	nginx nginx-no-cache \
 	run stop restart logs clean push \
+	up seed test \
 	run-dev run-dev-d stop-dev logs-dev \
 	dev-setup dev-migrate dev-regen dev-seed \
 	dev-shell-backend dev-shell-frontend dev-clean \
@@ -173,6 +174,16 @@ run: .env ## Start all containers (nginx + backend + frontend)
 	@echo "  /        → frontend"
 	@echo "  /api/*   → backend"
 	@echo "  /health  → backend"
+
+up: run-dev ## Alias: full-stack dev (frontend + backend + migrations; requires infra network)
+
+seed: dev-seed ## Alias: run backend seeds
+
+test: ## Run frontend lint + backend tests (local)
+	@echo "==> frontend lint"
+	cd frontend && npm run lint
+	@echo "==> backend test"
+	cd backend && mix test
 
 stop: ## Stop containers
 	$(PROD_COMPOSE) down

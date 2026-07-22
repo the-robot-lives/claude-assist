@@ -30,7 +30,7 @@ export const ENTRY_TYPE_ICONS: Record<EntryType, string> = {
   rule: "ScrollText",
 };
 
-export type EntryStatus = "canon" | "generated";
+export type EntryStatus = "canon" | "draft" | "generated";
 
 export type FlagSeverity = "error" | "warning" | "suggestion";
 
