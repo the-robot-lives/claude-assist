@@ -1,6 +1,7 @@
 .PHONY: install-utilities install \
         trd-build trd-run trd-test trd-open trd-clean trd-doctor \
-        rtui-build rtui-run rtui-shim rtui-rebuild rtui-clean rtui-log
+        rtui-build rtui-run rtui-shim rtui-rebuild rtui-clean rtui-log \
+        doc-pointers doc-pointers-check doc-pointers-annotate
 
 install-utilities:
 	@HOME_DIR="$(HOME)"; \
@@ -24,3 +25,20 @@ trd-build trd-run trd-test trd-open trd-clean trd-doctor:
 # --- robot-tui (therobot terminal UI) — delegate to the crate Makefile ---
 rtui-build rtui-run rtui-shim rtui-rebuild rtui-clean rtui-log:
 	@$(MAKE) -C 3rd-party/llama.cpp/tools/robot-tui $(patsubst rtui-%,%,$@)
+
+# --- doc-pointers (root DB) — canonical scoped invocation for the monorepo root.
+# Never sweeps projects/ (therobotdrafts owns its own DB). Keep flags in sync with
+# utilities/shell/misc-git-utils/docs/howto/doc-pointers-annotate.md.
+DOC_POINTERS_SCOPE = --include utilities --include share --include libs \
+        --include components --include docs \
+        --exclude utilities/agent/run-claude/repos \
+        --exclude components/styleguide/app/out
+
+doc-pointers:
+	doc-pointers build --root . $(DOC_POINTERS_SCOPE) --write
+
+doc-pointers-check:
+	doc-pointers build --root . $(DOC_POINTERS_SCOPE) --check
+
+doc-pointers-annotate:
+	doc-pointers annotate --root . $(DOC_POINTERS_SCOPE) --write
