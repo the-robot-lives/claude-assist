@@ -1,11 +1,11 @@
 import type { NextConfig } from "next";
 
 /**
- * Static export (ADR-001) was for the portfolio prototype.
- * Product API integration needs dynamic routes + client fetch; export removed.
- * Revisit CDN/static strategy once SSR/edge deploy is decided.
+ * Standalone Node server for k8s (matches start-app / helm frontend:3000).
+ * Static export was removed so dynamic App Router routes work with live API.
  */
 const nextConfig: NextConfig = {
+  output: "standalone",
   images: {
     unoptimized: true,
   },
