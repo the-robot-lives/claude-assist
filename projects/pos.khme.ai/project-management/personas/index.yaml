@@ -1,0 +1,41 @@
+personas:
+  - id: P-001
+    name: "Sokha Chea"
+    archetype: "Market-Stall Matriarch"
+    segment: "primary"
+    file: P-001-sokha-chea.md
+  - id: P-002
+    name: "Dara Lim"
+    archetype: "Minimart Modernizer"
+    segment: "primary"
+    file: P-002-dara-lim.md
+  - id: P-003
+    name: "Vanna Sok"
+    archetype: "Front-Counter Cashier"
+    segment: "primary"
+    file: P-003-vanna-sok.md
+  - id: P-004
+    name: "Chenda Prak"
+    archetype: "Multi-Store Operator"
+    segment: "secondary"
+    file: P-004-chenda-prak.md
+  - id: P-005
+    name: "Rithy Noun"
+    archetype: "Stockroom Runner"
+    segment: "secondary"
+    file: P-005-rithy-noun.md
+  - id: P-006
+    name: "Sophal Meas"
+    archetype: "Numbers Keeper"
+    segment: "secondary"
+    file: P-006-sophal-meas.md
+  - id: P-007
+    name: "Marie Dubois"
+    archetype: "NGO Program Enabler"
+    segment: "edge-case"
+    file: P-007-marie-dubois.md
+  - id: P-008
+    name: "Kimly Heng"
+    archetype: "Rural Pharmacy Owner"
+    segment: "edge-case"
+    file: P-008-kimly-heng.md
