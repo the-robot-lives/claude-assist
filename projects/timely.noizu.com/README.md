@@ -118,6 +118,7 @@ Concept
 ## Key Documents
 
 - [docs/UX-BRIEF.md](docs/UX-BRIEF.md) - Product positioning, UX principles, workflows, and IA summary
+- [docs/ROADMAP.md](docs/ROADMAP.md) - Phased product and UX roadmap from design foundation through paid production
 - [design/SITEMAP.md](design/SITEMAP.md) - Route map and overlay/navigation model
 - [project-management/personas/](project-management/personas/) - 8 target personas
 - [project-management/user-stories/](project-management/user-stories/) - 100 prioritized user stories

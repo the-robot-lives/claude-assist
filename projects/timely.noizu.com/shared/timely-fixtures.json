@@ -1,0 +1,162 @@
+{
+  "workspace": {
+    "name": "Noizu Labs Alpha",
+    "date": "2026-07-22",
+    "reviewedHours": 6.4,
+    "billableHours": 5.75,
+    "confidence": 87,
+    "unresolvedGaps": 3
+  },
+  "policy": {
+    "captureIntervalMinutes": 5,
+    "localOnlyScreenshots": true,
+    "retentionDays": 21,
+    "excludedApps": ["1Password", "Messages"],
+    "excludedDomains": ["bank.example", "health.example"]
+  },
+  "projects": [
+    {
+      "client": "Aster Systems",
+      "project": "Incident Review",
+      "color": "#2563eb",
+      "billable": true
+    },
+    {
+      "client": "Noizu Labs",
+      "project": "Timely Alpha",
+      "color": "#10b981",
+      "billable": false
+    },
+    {
+      "client": "HelioWorks",
+      "project": "Dashboard Polish",
+      "color": "#f97316",
+      "billable": true
+    }
+  ],
+  "intervals": [
+    {
+      "id": "int-1001",
+      "start": "08:45",
+      "end": "10:05",
+      "project": "Timely Alpha",
+      "task": "Timeline keyboard prototype",
+      "state": "captured",
+      "confidence": 92,
+      "billable": false,
+      "lane": 0,
+      "width": 18
+    },
+    {
+      "id": "int-1002",
+      "start": "10:05",
+      "end": "10:42",
+      "project": "Incident Review",
+      "task": "Deploy monitor and client update",
+      "state": "overlap",
+      "confidence": 81,
+      "billable": true,
+      "lane": 1,
+      "width": 12
+    },
+    {
+      "id": "int-1003",
+      "start": "10:31",
+      "end": "11:18",
+      "project": "Dashboard Polish",
+      "task": "Visual QA pass",
+      "state": "inferred",
+      "confidence": 74,
+      "billable": true,
+      "lane": 2,
+      "width": 14
+    },
+    {
+      "id": "int-1004",
+      "start": "11:18",
+      "end": "11:52",
+      "project": "Idle",
+      "task": "Away from keyboard",
+      "state": "idle",
+      "confidence": 66,
+      "billable": false,
+      "lane": 0,
+      "width": 10
+    },
+    {
+      "id": "int-1005",
+      "start": "12:20",
+      "end": "14:05",
+      "project": "Incident Review",
+      "task": "Root cause notes",
+      "state": "manual",
+      "confidence": 88,
+      "billable": true,
+      "lane": 0,
+      "width": 24
+    },
+    {
+      "id": "int-1006",
+      "start": "14:05",
+      "end": "15:12",
+      "project": "Dashboard Polish",
+      "task": "Client export review",
+      "state": "private",
+      "confidence": 79,
+      "billable": true,
+      "lane": 1,
+      "width": 18
+    }
+  ],
+  "screenshots": [
+    {
+      "time": "08:50",
+      "label": "Timeline canvas",
+      "visibility": "shareable"
+    },
+    {
+      "time": "10:15",
+      "label": "Deploy logs",
+      "visibility": "shareable"
+    },
+    {
+      "time": "10:35",
+      "label": "Design review",
+      "visibility": "redacted"
+    },
+    {
+      "time": "14:12",
+      "label": "Invoice draft",
+      "visibility": "private"
+    }
+  ],
+  "idlePrompts": [
+    {
+      "from": "11:18",
+      "to": "11:52",
+      "suggestion": "Discard idle time",
+      "reason": "No input, screen locked"
+    },
+    {
+      "from": "15:12",
+      "to": "15:31",
+      "suggestion": "Resume Dashboard Polish",
+      "reason": "Returned to same app and document"
+    }
+  ],
+  "reports": [
+    {
+      "client": "Aster Systems",
+      "hours": 3.05,
+      "confidence": 84,
+      "evidence": "selected screenshots"
+    },
+    {
+      "client": "HelioWorks",
+      "hours": 2.7,
+      "confidence": 77,
+      "evidence": "metadata only"
+    }
+  ]
+}
+

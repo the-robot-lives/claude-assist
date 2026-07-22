@@ -1,0 +1,81 @@
+#compdef infra-config
+# zsh completion for infra-config.
+#
+# Install (either works):
+#   1. Copy onto $fpath as `_infra-config` (done by `make install-completions`),
+#      then ensure the directory is in fpath before compinit runs.
+#   2. Source this file directly from .zshrc (after compinit).
+
+_infra-config_resources() {
+  local -a resources
+  resources=(
+    'helm-dir:helm_scan_dirs[] array'
+    'helm-alias:chart_path_overrides map'
+    'namespace:namespace_overrides map'
+    'timeout:timeout_overrides map'
+    'tier-chart:charts within deployment tiers'
+    'docker-image:standalone Docker image entries'
+    'docker-dir:shorthand: add image from directory'
+    'project:composite project entries (by domain)'
+    'service:services within a composite project'
+    'docker-group:shorthand: add project + services'
+  )
+  _describe -t resources 'resource' resources
+}
+
+_infra-config_keys() {
+  local -a keys
+  local r="$1"
+  [[ -z "$r" ]] && return 1
+  # Call infra-config list <resource> and strip ANSI / headers / separators.
+  # Guard: missing infra-config or error ⇒ keys stays empty ⇒ nothing emitted.
+  keys=(${(f)"$(infra-config list "$r" 2>/dev/null \
+    | sed $'s/\x1b\\[[0-9;]*m//g' \
+    | grep -vE '[▶─]|^[[:space:]]*$|^  [A-Z]' \
+    | awk '{print $1}')"})
+  _describe -t keys "$r entry" keys
+}
+
+_infra-config() {
+  local curcontext="$curcontext" state line ret=1
+  typeset -A opt_args
+
+  _arguments -C \
+    '(- *)'{-h,--help}'[show help and exit]' \
+    '--config=[path to .infra-config.yaml]:config:_files' \
+    '--dry-run[preview changes without writing]' \
+    '(-y --yes)'{-y,--yes}'[skip confirmation prompt]' \
+    '--assist=[AI-assisted help]:query:' \
+    '1:action:->action' \
+    '*:::rest:->args' && ret=0
+
+  case $state in
+    action)
+      local -a actions=(
+        'list:show current values for a resource'
+        'add:add an entry'
+        'remove:remove an entry'
+      )
+      _describe -t actions 'action' actions && ret=0
+      ;;
+    args)
+      # In this state $words[1] = action, $words[2] = resource, CURRENT counts from 1.
+      if (( CURRENT == 2 )); then
+        _infra-config_resources && ret=0
+      elif (( CURRENT == 3 )); then
+        case "$words[1]" in
+          add|remove) _infra-config_keys "$words[2]" && ret=0 ;;
+        esac
+      fi
+      ;;
+  esac
+
+  return ret
+}
+
+# Dual-mode: autoloaded from fpath (#compdef) vs sourced from .zshrc.
+if [[ "${funcstack[1]}" == "_infra-config" ]]; then
+  _infra-config "$@"
+elif (( ${+functions[compdef]} )); then
+  compdef _infra-config infra-config
+fi

@@ -1,0 +1,701 @@
+user_stories:
+  - id: US-001
+    title: Create secure account
+    slug: create-secure-account
+    epic: Onboarding and Access
+    priority: must-have
+    personas: [P-001, P-002, P-007]
+    file: US-001-create-secure-account.md
+  - id: US-002
+    title: Sign in with protected session
+    slug: sign-in-with-protected-session
+    epic: Onboarding and Access
+    priority: must-have
+    personas: [P-001, P-002]
+    file: US-002-sign-in-with-protected-session.md
+  - id: US-003
+    title: Reset forgotten password
+    slug: reset-forgotten-password
+    epic: Onboarding and Access
+    priority: must-have
+    personas: [P-002, P-007]
+    file: US-003-reset-forgotten-password.md
+  - id: US-004
+    title: Invite billing teammate
+    slug: invite-billing-teammate
+    epic: Onboarding and Access
+    priority: must-have
+    personas: [P-001, P-002]
+    file: US-004-invite-billing-teammate.md
+  - id: US-005
+    title: Accept workspace invitation
+    slug: accept-workspace-invitation
+    epic: Onboarding and Access
+    priority: must-have
+    personas: [P-002, P-003, P-006]
+    file: US-005-accept-workspace-invitation.md
+  - id: US-006
+    title: Assign role permissions
+    slug: assign-role-permissions
+    epic: Onboarding and Access
+    priority: must-have
+    personas: [P-001, P-002]
+    file: US-006-assign-role-permissions.md
+  - id: US-007
+    title: Switch between workspaces
+    slug: switch-between-workspaces
+    epic: Onboarding and Access
+    priority: should-have
+    personas: [P-001, P-002]
+    file: US-007-switch-between-workspaces.md
+  - id: US-008
+    title: Complete billing setup checklist
+    slug: complete-billing-setup-checklist
+    epic: Onboarding and Access
+    priority: must-have
+    personas: [P-001, P-002, P-007]
+    file: US-008-complete-billing-setup-checklist.md
+  - id: US-009
+    title: Preview sample invoice during setup
+    slug: preview-sample-invoice-during-setup
+    epic: Onboarding and Access
+    priority: should-have
+    personas: [P-001, P-004]
+    file: US-009-preview-sample-invoice-during-setup.md
+  - id: US-010
+    title: Recover from setup validation errors
+    slug: recover-from-setup-validation-errors
+    epic: Onboarding and Access
+    priority: must-have
+    personas: [P-007, P-002]
+    file: US-010-recover-from-setup-validation-errors.md
+  - id: US-011
+    title: Create customer profile
+    slug: create-customer-profile
+    epic: Customers and Contacts
+    priority: must-have
+    personas: [P-001, P-002]
+    file: US-011-create-customer-profile.md
+  - id: US-012
+    title: Edit customer profile
+    slug: edit-customer-profile
+    epic: Customers and Contacts
+    priority: must-have
+    personas: [P-001, P-002]
+    file: US-012-edit-customer-profile.md
+  - id: US-013
+    title: Archive inactive customer
+    slug: archive-inactive-customer
+    epic: Customers and Contacts
+    priority: should-have
+    personas: [P-001, P-002]
+    file: US-013-archive-inactive-customer.md
+  - id: US-014
+    title: Add customer contact
+    slug: add-customer-contact
+    epic: Customers and Contacts
+    priority: must-have
+    personas: [P-001, P-002]
+    file: US-014-add-customer-contact.md
+  - id: US-015
+    title: Set primary billing contact
+    slug: set-primary-billing-contact
+    epic: Customers and Contacts
+    priority: must-have
+    personas: [P-001, P-002]
+    file: US-015-set-primary-billing-contact.md
+  - id: US-016
+    title: Store billing and shipping addresses
+    slug: store-billing-and-shipping-addresses
+    epic: Customers and Contacts
+    priority: must-have
+    personas: [P-001, P-002, P-004]
+    file: US-016-store-billing-and-shipping-addresses.md
+  - id: US-017
+    title: Capture customer tax ID
+    slug: capture-customer-tax-id
+    epic: Customers and Contacts
+    priority: must-have
+    personas: [P-002, P-005]
+    file: US-017-capture-customer-tax-id.md
+  - id: US-018
+    title: Set customer payment terms
+    slug: set-customer-payment-terms
+    epic: Customers and Contacts
+    priority: must-have
+    personas: [P-001, P-002]
+    file: US-018-set-customer-payment-terms.md
+  - id: US-019
+    title: Set customer currency preference
+    slug: set-customer-currency-preference
+    epic: Customers and Contacts
+    priority: should-have
+    personas: [P-001, P-002]
+    file: US-019-set-customer-currency-preference.md
+  - id: US-020
+    title: Add internal customer notes
+    slug: add-internal-customer-notes
+    epic: Customers and Contacts
+    priority: should-have
+    personas: [P-002, P-006]
+    file: US-020-add-internal-customer-notes.md
+  - id: US-021
+    title: Tag and filter customers
+    slug: tag-and-filter-customers
+    epic: Customers and Contacts
+    priority: should-have
+    personas: [P-001, P-002, P-006]
+    file: US-021-tag-and-filter-customers.md
+  - id: US-022
+    title: View customer billing history
+    slug: view-customer-billing-history
+    epic: Customers and Contacts
+    priority: must-have
+    personas: [P-001, P-002, P-006]
+    file: US-022-view-customer-billing-history.md
+  - id: US-023
+    title: Create billable project
+    slug: create-billable-project
+    epic: Projects and Service Catalog
+    priority: must-have
+    personas: [P-001, P-003]
+    file: US-023-create-billable-project.md
+  - id: US-024
+    title: Assign project to customer
+    slug: assign-project-to-customer
+    epic: Projects and Service Catalog
+    priority: must-have
+    personas: [P-003, P-002]
+    file: US-024-assign-project-to-customer.md
+  - id: US-025
+    title: Create reusable service item
+    slug: create-reusable-service-item
+    epic: Projects and Service Catalog
+    priority: must-have
+    personas: [P-001, P-002]
+    file: US-025-create-reusable-service-item.md
+  - id: US-026
+    title: Edit service item pricing
+    slug: edit-service-item-pricing
+    epic: Projects and Service Catalog
+    priority: should-have
+    personas: [P-002]
+    file: US-026-edit-service-item-pricing.md
+  - id: US-027
+    title: Set project billing code
+    slug: set-project-billing-code
+    epic: Projects and Service Catalog
+    priority: should-have
+    personas: [P-003, P-005]
+    file: US-027-set-project-billing-code.md
+  - id: US-028
+    title: Mark project billable status
+    slug: mark-project-billable-status
+    epic: Projects and Service Catalog
+    priority: should-have
+    personas: [P-003, P-002]
+    file: US-028-mark-project-billable-status.md
+  - id: US-029
+    title: Track project service period
+    slug: track-project-service-period
+    epic: Projects and Service Catalog
+    priority: must-have
+    personas: [P-003, P-004]
+    file: US-029-track-project-service-period.md
+  - id: US-030
+    title: Attach delivery notes to project
+    slug: attach-delivery-notes-to-project
+    epic: Projects and Service Catalog
+    priority: should-have
+    personas: [P-003, P-006]
+    file: US-030-attach-delivery-notes-to-project.md
+  - id: US-031
+    title: Map external project references
+    slug: map-external-project-references
+    epic: Projects and Service Catalog
+    priority: could-have
+    personas: [P-003, P-001]
+    file: US-031-map-external-project-references.md
+  - id: US-032
+    title: Import service catalog CSV
+    slug: import-service-catalog-csv
+    epic: Projects and Service Catalog
+    priority: could-have
+    personas: [P-002, P-005]
+    file: US-032-import-service-catalog-csv.md
+  - id: US-033
+    title: Create draft invoice
+    slug: create-draft-invoice
+    epic: Invoices and Delivery
+    priority: must-have
+    personas: [P-001, P-002]
+    file: US-033-create-draft-invoice.md
+  - id: US-034
+    title: Add invoice line item
+    slug: add-invoice-line-item
+    epic: Invoices and Delivery
+    priority: must-have
+    personas: [P-001, P-002, P-003]
+    file: US-034-add-invoice-line-item.md
+  - id: US-035
+    title: Edit draft invoice
+    slug: edit-draft-invoice
+    epic: Invoices and Delivery
+    priority: must-have
+    personas: [P-001, P-002]
+    file: US-035-edit-draft-invoice.md
+  - id: US-036
+    title: Calculate invoice totals
+    slug: calculate-invoice-totals
+    epic: Invoices and Delivery
+    priority: must-have
+    personas: [P-001, P-002, P-005]
+    file: US-036-calculate-invoice-totals.md
+  - id: US-037
+    title: Validate invoice before send
+    slug: validate-invoice-before-send
+    epic: Invoices and Delivery
+    priority: must-have
+    personas: [P-002, P-007]
+    file: US-037-validate-invoice-before-send.md
+  - id: US-038
+    title: Render branded invoice PDF
+    slug: render-branded-invoice-pdf
+    epic: Invoices and Delivery
+    priority: must-have
+    personas: [P-001, P-002, P-004]
+    file: US-038-render-branded-invoice-pdf.md
+  - id: US-039
+    title: Preview invoice email
+    slug: preview-invoice-email
+    epic: Invoices and Delivery
+    priority: must-have
+    personas: [P-001, P-002, P-006]
+    file: US-039-preview-invoice-email.md
+  - id: US-040
+    title: Send invoice by email
+    slug: send-invoice-by-email
+    epic: Invoices and Delivery
+    priority: must-have
+    personas: [P-001, P-002, P-004]
+    file: US-040-send-invoice-by-email.md
+  - id: US-041
+    title: Resend invoice email
+    slug: resend-invoice-email
+    epic: Invoices and Delivery
+    priority: should-have
+    personas: [P-002, P-006]
+    file: US-041-resend-invoice-email.md
+  - id: US-042
+    title: Track invoice viewed state
+    slug: track-invoice-viewed-state
+    epic: Invoices and Delivery
+    priority: should-have
+    personas: [P-002, P-006]
+    file: US-042-track-invoice-viewed-state.md
+  - id: US-043
+    title: Void sent invoice
+    slug: void-sent-invoice
+    epic: Invoices and Delivery
+    priority: must-have
+    personas: [P-002, P-005]
+    file: US-043-void-sent-invoice.md
+  - id: US-044
+    title: Write off invoice balance
+    slug: write-off-invoice-balance
+    epic: Invoices and Delivery
+    priority: should-have
+    personas: [P-002, P-005]
+    file: US-044-write-off-invoice-balance.md
+  - id: US-045
+    title: Duplicate invoice as draft
+    slug: duplicate-invoice-as-draft
+    epic: Invoices and Delivery
+    priority: should-have
+    personas: [P-001, P-002]
+    file: US-045-duplicate-invoice-as-draft.md
+  - id: US-046
+    title: Convert draft to final invoice number
+    slug: convert-draft-to-final-invoice-number
+    epic: Invoices and Delivery
+    priority: must-have
+    personas: [P-001, P-002, P-005]
+    file: US-046-convert-draft-to-final-invoice-number.md
+  - id: US-047
+    title: Search and filter invoices
+    slug: search-and-filter-invoices
+    epic: Invoices and Delivery
+    priority: must-have
+    personas: [P-001, P-002, P-006]
+    file: US-047-search-and-filter-invoices.md
+  - id: US-048
+    title: Show invoice activity timeline
+    slug: show-invoice-activity-timeline
+    epic: Invoices and Delivery
+    priority: must-have
+    personas: [P-002, P-005, P-006]
+    file: US-048-show-invoice-activity-timeline.md
+  - id: US-049
+    title: Download invoice PDF
+    slug: download-invoice-pdf
+    epic: Invoices and Delivery
+    priority: must-have
+    personas: [P-002, P-004, P-005]
+    file: US-049-download-invoice-pdf.md
+  - id: US-050
+    title: Handle invoice send failure
+    slug: handle-invoice-send-failure
+    epic: Invoices and Delivery
+    priority: must-have
+    personas: [P-002, P-007]
+    file: US-050-handle-invoice-send-failure.md
+  - id: US-051
+    title: Create estimate
+    slug: create-estimate
+    epic: Estimates and Proposals
+    priority: should-have
+    personas: [P-001, P-003]
+    file: US-051-create-estimate.md
+  - id: US-052
+    title: Add estimate line items
+    slug: add-estimate-line-items
+    epic: Estimates and Proposals
+    priority: should-have
+    personas: [P-003]
+    file: US-052-add-estimate-line-items.md
+  - id: US-053
+    title: Send estimate for approval
+    slug: send-estimate-for-approval
+    epic: Estimates and Proposals
+    priority: should-have
+    personas: [P-003, P-004]
+    file: US-053-send-estimate-for-approval.md
+  - id: US-054
+    title: Track estimate viewed status
+    slug: track-estimate-viewed-status
+    epic: Estimates and Proposals
+    priority: could-have
+    personas: [P-003, P-006]
+    file: US-054-track-estimate-viewed-status.md
+  - id: US-055
+    title: Record estimate approval
+    slug: record-estimate-approval
+    epic: Estimates and Proposals
+    priority: should-have
+    personas: [P-003, P-004]
+    file: US-055-record-estimate-approval.md
+  - id: US-056
+    title: Revise estimate
+    slug: revise-estimate
+    epic: Estimates and Proposals
+    priority: should-have
+    personas: [P-003, P-005]
+    file: US-056-revise-estimate.md
+  - id: US-057
+    title: Compare estimate revisions
+    slug: compare-estimate-revisions
+    epic: Estimates and Proposals
+    priority: could-have
+    personas: [P-003]
+    file: US-057-compare-estimate-revisions.md
+  - id: US-058
+    title: Convert estimate to invoice
+    slug: convert-estimate-to-invoice
+    epic: Estimates and Proposals
+    priority: should-have
+    personas: [P-001, P-002, P-003]
+    file: US-058-convert-estimate-to-invoice.md
+  - id: US-059
+    title: Decline estimate with reason
+    slug: decline-estimate-with-reason
+    epic: Estimates and Proposals
+    priority: could-have
+    personas: [P-003, P-006]
+    file: US-059-decline-estimate-with-reason.md
+  - id: US-060
+    title: Expire stale estimate
+    slug: expire-stale-estimate
+    epic: Estimates and Proposals
+    priority: could-have
+    personas: [P-003]
+    file: US-060-expire-stale-estimate.md
+  - id: US-061
+    title: Create Stripe payment link
+    slug: create-stripe-payment-link
+    epic: Payments and Credits
+    priority: must-have
+    personas: [P-001, P-002, P-004]
+    file: US-061-create-stripe-payment-link.md
+  - id: US-062
+    title: Record manual payment
+    slug: record-manual-payment
+    epic: Payments and Credits
+    priority: must-have
+    personas: [P-002, P-005]
+    file: US-062-record-manual-payment.md
+  - id: US-063
+    title: Record partial payment
+    slug: record-partial-payment
+    epic: Payments and Credits
+    priority: must-have
+    personas: [P-002, P-004]
+    file: US-063-record-partial-payment.md
+  - id: US-064
+    title: Mark invoice paid
+    slug: mark-invoice-paid
+    epic: Payments and Credits
+    priority: must-have
+    personas: [P-001, P-002]
+    file: US-064-mark-invoice-paid.md
+  - id: US-065
+    title: Apply customer credit
+    slug: apply-customer-credit
+    epic: Payments and Credits
+    priority: should-have
+    personas: [P-002, P-005]
+    file: US-065-apply-customer-credit.md
+  - id: US-066
+    title: Create credit note
+    slug: create-credit-note
+    epic: Payments and Credits
+    priority: should-have
+    personas: [P-002, P-005]
+    file: US-066-create-credit-note.md
+  - id: US-067
+    title: Record refund
+    slug: record-refund
+    epic: Payments and Credits
+    priority: should-have
+    personas: [P-002, P-005]
+    file: US-067-record-refund.md
+  - id: US-068
+    title: Reconcile Stripe webhook payment
+    slug: reconcile-stripe-webhook-payment
+    epic: Payments and Credits
+    priority: should-have
+    personas: [P-002, P-005]
+    file: US-068-reconcile-stripe-webhook-payment.md
+  - id: US-069
+    title: Review unmatched payment event
+    slug: review-unmatched-payment-event
+    epic: Payments and Credits
+    priority: should-have
+    personas: [P-002]
+    file: US-069-review-unmatched-payment-event.md
+  - id: US-070
+    title: Show payment history
+    slug: show-payment-history
+    epic: Payments and Credits
+    priority: must-have
+    personas: [P-001, P-002, P-006]
+    file: US-070-show-payment-history.md
+  - id: US-071
+    title: Protect payment data scope
+    slug: protect-payment-data-scope
+    epic: Payments and Credits
+    priority: must-have
+    personas: [P-001, P-002, P-005]
+    file: US-071-protect-payment-data-scope.md
+  - id: US-072
+    title: Send payment receipt
+    slug: send-payment-receipt
+    epic: Payments and Credits
+    priority: should-have
+    personas: [P-002, P-004]
+    file: US-072-send-payment-receipt.md
+  - id: US-073
+    title: Capture expense
+    slug: capture-expense
+    epic: Expense Rebilling
+    priority: should-have
+    personas: [P-001, P-002]
+    file: US-073-capture-expense.md
+  - id: US-074
+    title: Attach receipt file
+    slug: attach-receipt-file
+    epic: Expense Rebilling
+    priority: should-have
+    personas: [P-002, P-005]
+    file: US-074-attach-receipt-file.md
+  - id: US-075
+    title: Assign expense to customer
+    slug: assign-expense-to-customer
+    epic: Expense Rebilling
+    priority: should-have
+    personas: [P-002]
+    file: US-075-assign-expense-to-customer.md
+  - id: US-076
+    title: Assign expense to project
+    slug: assign-expense-to-project
+    epic: Expense Rebilling
+    priority: should-have
+    personas: [P-002, P-003]
+    file: US-076-assign-expense-to-project.md
+  - id: US-077
+    title: Mark expense billable
+    slug: mark-expense-billable
+    epic: Expense Rebilling
+    priority: should-have
+    personas: [P-002, P-003]
+    file: US-077-mark-expense-billable.md
+  - id: US-078
+    title: Apply expense markup
+    slug: apply-expense-markup
+    epic: Expense Rebilling
+    priority: could-have
+    personas: [P-002, P-005]
+    file: US-078-apply-expense-markup.md
+  - id: US-079
+    title: Convert expenses to invoice lines
+    slug: convert-expenses-to-invoice-lines
+    epic: Expense Rebilling
+    priority: should-have
+    personas: [P-001, P-002, P-003]
+    file: US-079-convert-expenses-to-invoice-lines.md
+  - id: US-080
+    title: Export expense records
+    slug: export-expense-records
+    epic: Expense Rebilling
+    priority: could-have
+    personas: [P-002, P-005]
+    file: US-080-export-expense-records.md
+  - id: US-081
+    title: View accounts receivable dashboard
+    slug: view-accounts-receivable-dashboard
+    epic: Reporting and Exports
+    priority: must-have
+    personas: [P-001, P-002]
+    file: US-081-view-accounts-receivable-dashboard.md
+  - id: US-082
+    title: View receivables aging report
+    slug: view-receivables-aging-report
+    epic: Reporting and Exports
+    priority: must-have
+    personas: [P-001, P-002, P-005]
+    file: US-082-view-receivables-aging-report.md
+  - id: US-083
+    title: View revenue by customer
+    slug: view-revenue-by-customer
+    epic: Reporting and Exports
+    priority: should-have
+    personas: [P-001, P-002]
+    file: US-083-view-revenue-by-customer.md
+  - id: US-084
+    title: View revenue by project
+    slug: view-revenue-by-project
+    epic: Reporting and Exports
+    priority: should-have
+    personas: [P-001, P-003]
+    file: US-084-view-revenue-by-project.md
+  - id: US-085
+    title: View tax summary
+    slug: view-tax-summary
+    epic: Reporting and Exports
+    priority: should-have
+    personas: [P-002, P-005]
+    file: US-085-view-tax-summary.md
+  - id: US-086
+    title: Export customers CSV
+    slug: export-customers-csv
+    epic: Reporting and Exports
+    priority: must-have
+    personas: [P-002, P-005]
+    file: US-086-export-customers-csv.md
+  - id: US-087
+    title: Export invoices CSV
+    slug: export-invoices-csv
+    epic: Reporting and Exports
+    priority: must-have
+    personas: [P-002, P-005]
+    file: US-087-export-invoices-csv.md
+  - id: US-088
+    title: Export payments CSV
+    slug: export-payments-csv
+    epic: Reporting and Exports
+    priority: must-have
+    personas: [P-002, P-005]
+    file: US-088-export-payments-csv.md
+  - id: US-089
+    title: Draft invoice from milestone
+    slug: draft-invoice-from-milestone
+    epic: Agent-Assisted Billing
+    priority: could-have
+    personas: [P-001, P-003]
+    file: US-089-draft-invoice-from-milestone.md
+  - id: US-090
+    title: Draft invoice from time entries
+    slug: draft-invoice-from-time-entries
+    epic: Agent-Assisted Billing
+    priority: could-have
+    personas: [P-001, P-002, P-003]
+    file: US-090-draft-invoice-from-time-entries.md
+  - id: US-091
+    title: Flag overdue risk
+    slug: flag-overdue-risk
+    epic: Agent-Assisted Billing
+    priority: should-have
+    personas: [P-001, P-002, P-006]
+    file: US-091-flag-overdue-risk.md
+  - id: US-092
+    title: Summarize customer billing history
+    slug: summarize-customer-billing-history
+    epic: Agent-Assisted Billing
+    priority: should-have
+    personas: [P-002, P-006]
+    file: US-092-summarize-customer-billing-history.md
+  - id: US-093
+    title: Draft overdue follow-up email
+    slug: draft-overdue-follow-up-email
+    epic: Agent-Assisted Billing
+    priority: should-have
+    personas: [P-002, P-006]
+    file: US-093-draft-overdue-follow-up-email.md
+  - id: US-094
+    title: Reconcile imported payment events
+    slug: reconcile-imported-payment-events
+    epic: Agent-Assisted Billing
+    priority: could-have
+    personas: [P-002, P-005]
+    file: US-094-reconcile-imported-payment-events.md
+  - id: US-095
+    title: Explain invoice balance changes
+    slug: explain-invoice-balance-changes
+    epic: Agent-Assisted Billing
+    priority: should-have
+    personas: [P-002, P-005, P-007]
+    file: US-095-explain-invoice-balance-changes.md
+  - id: US-096
+    title: Configure invoice branding
+    slug: configure-invoice-branding
+    epic: Settings, Audit, and Accessibility
+    priority: must-have
+    personas: [P-001]
+    file: US-096-configure-invoice-branding.md
+  - id: US-097
+    title: Configure payment methods
+    slug: configure-payment-methods
+    epic: Settings, Audit, and Accessibility
+    priority: must-have
+    personas: [P-001, P-002]
+    file: US-097-configure-payment-methods.md
+  - id: US-098
+    title: Manage invoice numbering rules
+    slug: manage-invoice-numbering-rules
+    epic: Settings, Audit, and Accessibility
+    priority: must-have
+    personas: [P-002, P-005]
+    file: US-098-manage-invoice-numbering-rules.md
+  - id: US-099
+    title: Review audit log
+    slug: review-audit-log
+    epic: Settings, Audit, and Accessibility
+    priority: must-have
+    personas: [P-002, P-005]
+    file: US-099-review-audit-log.md
+  - id: US-100
+    title: Use accessible keyboard-first workflows
+    slug: use-accessible-keyboard-first-workflows
+    epic: Settings, Audit, and Accessibility
+    priority: must-have
+    personas: [P-007, P-002]
+    file: US-100-use-accessible-keyboard-first-workflows.md

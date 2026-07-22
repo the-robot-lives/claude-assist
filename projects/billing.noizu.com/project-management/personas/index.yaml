@@ -1,0 +1,43 @@
+personas:
+  - id: P-001
+    name: Maya Rivera
+    slug: founder-operator
+    archetype: Founder operator
+    segment: primary
+    file: P-001-founder-operator.md
+  - id: P-002
+    name: Nadia Okafor
+    slug: finance-admin
+    archetype: Finance and billing admin
+    segment: primary
+    file: P-002-finance-admin.md
+  - id: P-003
+    name: Owen Patel
+    slug: project-delivery-lead
+    archetype: Project delivery lead
+    segment: secondary
+    file: P-003-project-delivery-lead.md
+  - id: P-004
+    name: Clara Jensen
+    slug: client-ap-contact
+    archetype: Client accounts payable contact
+    segment: secondary
+    file: P-004-client-ap-contact.md
+  - id: P-005
+    name: Mateo Silva
+    slug: bookkeeper-accountant
+    archetype: Bookkeeper and accountant
+    segment: tertiary
+    file: P-005-bookkeeper-accountant.md
+  - id: P-006
+    name: Leah Brooks
+    slug: account-manager
+    archetype: Account manager
+    segment: tertiary
+    file: P-006-account-manager.md
+  - id: P-007
+    name: Eli Freeman
+    slug: accessibility-conscious-owner
+    archetype: Accessibility-conscious owner
+    segment: edge-case
+    file: P-007-accessibility-conscious-owner.md
