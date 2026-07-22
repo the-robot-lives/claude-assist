@@ -17,13 +17,12 @@ README depth, recency, and arch-doc signals, not lines of code.
 
 | Tool | What | How / why | Maturity |
 |------|------|-----------|----------|
-| [claude-assist](agent/claude-assist/docs/PROJ-ARCH.md#overview) | Agent-transcript indexer/browser | REST + SPA + TUI over SQLite FTS5/vec (pnpm/TS) | beta |
+| [llm-toolkit](agent/llm-toolkit/docs/PROJ-ARCH.md#overview) | Agent-transcript indexer/browser + skill symlink/catalog manager | TS conversation index/search (pnpm) over SQLite FTS5/vec, plus embedded `skill-manage` Rust crate (`llm-toolkit skill …`) as the canonical `skills/` enable mechanism per provider | beta |
 | [claude-desktop-sandbox](agent/claude-desktop-sandbox/docs/PROJ-ARCH.md#overview) | Multi-instance claude-desktop launcher | bwrap per-sandbox `$HOME` isolation (bash) | stable |
 | [dangerously-safe](agent/dangerously-safe/docs/PROJ-ARCH.md#overview) | Sandboxed auto-approve agent runner (agent-sandbox) | Rust TUI + Docker composer; Rust successor to the legacy bash sandbox | beta |
 | [mallm](agent/mallm/docs/PROJ-ARCH.md#overview) | LLM-friendly CLI docs resolver | Surfaces repo DevOps-tool docs to agents (Node CLI) | beta |
 | [media-tool](agent/media-tool/docs/PROJ-ARCH.md#overview) | `.media.prompt` YAML → media generation | 13 providers, DAG + LLM-eval quality selection (Rust) | mature |
 | [run-claude](agent/run-claude/docs/PROJ-ARCH.md#overview) | Directory-aware model routing | Front proxy :4443 → LiteLLM :4444, self-healing watchdog (Python) | stable |
-| [skill-manage](agent/skill-manage/docs/PROJ-ARCH.md#overview) | Skill symlink/catalog manager | Canonical `skills/` enable mechanism per provider (Rust) | stable |
 
 ### colo/ — colo-host helpers ([overview](colo/docs/PROJ-ARCH.md#overview))
 

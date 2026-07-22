@@ -6,7 +6,12 @@ covers group-level history — cross-tool workflow additions and when each child
 Per-child history lives in each child's own `CHANGELOG.md`.
 
 ## [Unreleased]
-- No changes since the `m4-skill-manage-and-docs` milestone.
+
+### Changed — 2026-07-22
+- `skill-manage` folded into `claude-assist` as an embedded crate; the combined tool renamed
+  `llm-toolkit`. `llm-toolkit skill …` replaces the standalone `skill-manage` binary (all prior
+  subcommands unchanged). Legacy `claude-assist` and `skill-manage` bins removed on install;
+  only `llm-toolkit` is installed to `~/.local/bin` going forward.
 
 ## [m4-skill-manage-and-docs] — 2026-07-16 — tag: `utilities-agent/m4-skill-manage-and-docs`
 Milestone summary: added `skill-manage` (Rust Claude Code skill symlink/catalog manager) as a
