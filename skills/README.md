@@ -109,13 +109,13 @@ Skills are **self-contained**: each can be invoked independently via `/skill-nam
 | [trl-skill-engineer](trl-skill-engineer/) | Design, build, and validate new skills from requirements through production-ready scaffolds |
 | [trl-game-design](trl-game-design/) | End-to-end game design, production, and monetization across mobile, PC, console, and cross-platform — from concept through live ops |
 
-## Metadata (skill-manage)
+## Metadata (llm-toolkit skill)
 
 YAML metadata for listing, tagging, work-type profiles, and enable-sets:
 
 | File | Purpose |
 |------|---------|
-| [`catalog.yaml`](catalog.yaml) | skill-manage catalog — per-skill tags, work_types, providers; work-type bundles; editor profiles |
+| [`catalog.yaml`](catalog.yaml) | llm-toolkit skill catalog — per-skill tags, work_types, providers; work-type bundles; editor profiles |
 | [`categories.yaml`](categories.yaml) | README-aligned category index + recommended flows |
 | [`tags.yaml`](tags.yaml) | Controlled tag vocabulary |
 
@@ -124,9 +124,9 @@ export SKILL_REPO=/path/to/Noizu/skills
 # In ~/.config/skill-manage/config.yaml:
 #   catalog: /path/to/Noizu/skills/catalog.yaml
 
-skill-manage list skills --tag infra
-skill-manage enable-set --work-type agents --provider claude
-skill-manage profiles -i
+llm-toolkit skill list skills --tag infra
+llm-toolkit skill enable-set --work-type agents --provider claude
+llm-toolkit skill profiles -i
 ```
 
 Keys in `catalog.yaml` match **directory names** (`trl-*`).

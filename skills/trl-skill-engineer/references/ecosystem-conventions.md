@@ -190,8 +190,8 @@ All three CLI harnesses natively route on SKILL.md folders — same anatomy, dif
 | **Grok** (xAI) | `/{skill-name}` + description auto-trigger | `~/.grok/skills/` or `<repo>/.grok/skills/` | Strictest name rule (2–64 chars `[a-z0-9-]`); body is a prompt, not docs; auto-reloads on change |
 | **Claude Teams** | Instruction / pasted into context | — | `references/` may not be loaded — SKILL.md must stand alone |
 
-Install/enable per provider with `skill-manage` (symlinks from provider roots into `skills/`),
-never by hand-copying.
+Install/enable per provider with `llm-toolkit skill` (symlinks from provider roots into
+`skills/`), never by hand-copying.
 
 Portability rules:
 - SKILL.md contains enough to be useful on its own; references provide depth, not essentials

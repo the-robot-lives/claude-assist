@@ -166,12 +166,15 @@ The ordering matters: overrides are applied **after** the mirror pass so a refre
 
 ## Use-Case-Aware Enable / Disable
 
-> **STATUS: SPEC.** Extends `utilities/agent/skill-manage/` (Rust CLI; today `enable`/`disable` plant plain symlinks from provider install roots into source trees). Until it ships, run the flow manually: build/refresh the overlay per the algorithm above, then `ln -s $SKILL_ROOT/.USE-CASE/{slug}/overlay ~/.claude/skills/{skill-name}`.
+> **STATUS: SPEC.** Extends the skill-manage crate embedded in `utilities/agent/llm-toolkit/`
+> (Rust; today `enable`/`disable` plant plain symlinks from provider install roots into source
+> trees). Until it ships, run the flow manually: build/refresh the overlay per the algorithm
+> above, then `ln -s $SKILL_ROOT/.USE-CASE/{slug}/overlay ~/.claude/skills/{skill-name}`.
 
 ```
-skill-manage enable skill <name> --use-case <slug>            # mount an existing overlay
-skill-manage enable skill <name> --intent "<free text>" [--use-case <slug>] [--optimize]
-skill-manage disable skill <name>                             # unchanged; removes managed symlink
+llm-toolkit skill enable skill <name> --use-case <slug>            # mount an existing overlay
+llm-toolkit skill enable skill <name> --intent "<free text>" [--use-case <slug>] [--optimize]
+llm-toolkit skill disable skill <name>                             # unchanged; removes managed symlink
 ```
 
 Enable flow with `--intent`:

@@ -276,7 +276,7 @@ Two **opt-in, flag-gated** scaffold modes let a skill's instructional files be t
 | **Dynamic tailoring** | `DYNAMIC_SKILLSET_TAILOR=enabled` | Each instructional/KB `{FILE}.md` becomes a variant group — `{FILE}.md.prompt` spec (eval rules + dataset), `.{FILE}.md/` variants dir seeded with `baseline`, live file as a selection symlink — plus checked-in `.USE-CASE/{slug}` overlays: sparse override declarations, a mirrored symlink tree mountable as the skill root, and a `meta.lock` drift ledger with a mirror → drift-check → re-evaluate → override → lock refresh cycle |
 | **MCP fetch stubs** | `NPL_MCP_ENABLED_SKILLS=true` | Instructional files emitted as npl-mcp `Prompt.Get` stubs (`name@variant@version` addressing, mandatory local fallback) instead of full bodies; composable with dynamic tailoring as an `mcp-stub` variant |
 
-The per-file convention (spec format, variants, symlink/pin selection) is owned by **trl-prompt-optimizer**; this skill applies it skill-wide and adds the overlay + enable/disable layer. A use-case-aware `skill-manage enable --use-case/--intent [--optimize]` flow is specced (not yet implemented) that matches existing variants against the stated usage and hands off to trl-prompt-optimizer only when nothing satisfies.
+The per-file convention (spec format, variants, symlink/pin selection) is owned by **trl-prompt-optimizer**; this skill applies it skill-wide and adds the overlay + enable/disable layer. A use-case-aware `llm-toolkit skill enable --use-case/--intent [--optimize]` flow is specced (not yet implemented) that matches existing variants against the stated usage and hands off to trl-prompt-optimizer only when nothing satisfies.
 
 > For the full mechanics, see [references/dynamic-prompt-tailoring.md](references/dynamic-prompt-tailoring.md) and [references/npl-mcp-prompt-stubs.md](references/npl-mcp-prompt-stubs.md).
 
@@ -390,7 +390,7 @@ All reference paths are relative to `references/` unless prefixed with `assets/`
 - [skill-design-principles.md](references/skill-design-principles.md) — General best practices: trigger language, layering, agent persona design, prompt testing, failure modes
 - [ecosystem-conventions.md](references/ecosystem-conventions.md) — This repo's canonical format, layer architecture, ADRs, cross-reference rules
 - [introduction-specification.md](references/introduction-specification.md) — INTRODUCTION.md contract format, template, and validation checklist
-- [harness-compatibility.md](references/harness-compatibility.md) — Per-harness requirements (Claude Code, Codex, Grok): frontmatter deltas, discovery paths, `agents/openai.yaml`, skill-manage install, portable authoring checklist
+- [harness-compatibility.md](references/harness-compatibility.md) — Per-harness requirements (Claude Code, Codex, Grok): frontmatter deltas, discovery paths, `agents/openai.yaml`, `llm-toolkit skill` install, portable authoring checklist
 - [agent-playbook.claude-code.md](references/agent-playbook.claude-code.md) — This skill's own agent role definition + execution workflows (also the format reference for skills you build)
 - [discovery-workflow.md](references/discovery-workflow.md) — Interactive discovery protocol: question sequence, adaptive branching, completeness scoring
 - [scaffold-specification.md](references/scaffold-specification.md) — Output format spec: file tree, SKILL.md sections, naming conventions, slash command registration

@@ -1,5 +1,5 @@
-# skill-manage catalog for monorepo skills/
-# Point skill-manage config at this file:
+# llm-toolkit skill catalog for monorepo skills/
+# Point llm-toolkit skill config at this file:
 #   catalog: /path/to/Noizu/skills/catalog.yaml
 # Keys match skill directory names (trl-*).
 version: 1
@@ -937,7 +937,7 @@ work_types:
     commands: [task-wizard]
     editor_profiles: [vscode-desktop]
 
-# Editor profiles (paths are references; skill-manage audits existence only)
+# Editor profiles (paths are references; llm-toolkit skill audits existence only)
 editor_profiles:
   vscode-web:
     description: Web / frontend workspaces

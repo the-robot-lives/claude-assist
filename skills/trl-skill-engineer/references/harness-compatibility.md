@@ -44,13 +44,14 @@ but Claude Code doesn't scan it, so symlink into `.claude/skills/` for Claude. A
 same skill name at multiple scopes: duplicate handling differs per harness (Codex shows
 both; Claude Code project-over-user precedence).
 
-In this monorepo, use **`skill-manage`** (`utilities/agent/skill-manage`) to enable/disable
-skills per provider via symlinks from these roots into the canonical `skills/` source tree:
+In this monorepo, use **`llm-toolkit skill`** (skill-manage crate embedded in
+`utilities/agent/llm-toolkit/`) to enable/disable skills per provider via symlinks from
+these roots into the canonical `skills/` source tree:
 
 ```bash
 export SKILL_REPO=/path/to/Noizu/skills
-skill-manage enable skills trl-skill-engineer --provider claude   # also: codex / grok
-skill-manage audit skills --strict
+llm-toolkit skill enable skills trl-skill-engineer --provider claude   # also: codex / grok
+llm-toolkit skill audit skills --strict
 ```
 
 Never hand-`cp` into provider roots; symlinks keep one canonical source.
@@ -134,7 +135,7 @@ references one level deep with paths relative to the skill root.
 | Claude-specific tools in workflows (Task/Agent spawning, MCP wiring) | Absent on Grok, different on Codex | Isolate in `references/`; mark `> **Requires:** ...` |
 | `allowed-tools` frontmatter | Claude Code only; spec-experimental | Optional; never load-bearing for safety |
 | Claude Code extras (`disable-model-invocation`, `context: fork`, `` !`command` `` preprocessing, plugin packaging) | Not in the open spec; Codex won't honor; Grok subset unverified | Don't use in portable skills; isolate in Claude-only variants |
-| Enable/disable state | `[[skills.config]]` TOML (Codex) vs config.toml + extensions modal (Grok) vs settings (Claude) | Document per harness; skill-manage abstracts this locally |
+| Enable/disable state | `[[skills.config]]` TOML (Codex) vs config.toml + extensions modal (Grok) vs settings (Claude) | Document per harness; `llm-toolkit skill` abstracts this locally |
 | Codex path churn | `~/.codex/skills` legacy vs `.agents/skills` documented | Mention both until openai/skills#420 resolves |
 
 ## Portable Authoring Checklist
@@ -146,4 +147,4 @@ references one level deep with paths relative to the skill root.
 - [ ] No load-bearing content in frontmatter keys beyond name/description
 - [ ] Harness-specific instructions isolated in `references/` with `> **Requires:**` markers
 - [ ] `agents/openai.yaml` generated and in sync with the description (if targeting Codex)
-- [ ] Enabled per provider via `skill-manage`, not copied
+- [ ] Enabled per provider via `llm-toolkit skill`, not copied
