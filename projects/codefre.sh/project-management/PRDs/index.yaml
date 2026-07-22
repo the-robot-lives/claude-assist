@@ -1,0 +1,28 @@
+prds:
+  - id: PRD-001
+    title: "M0 — Foundation & Contract Freeze (tenancy, API tokens, platform stand-up)"
+    file: PRD-001-m0-foundation-tenancy.md
+    status: draft
+    milestone: M0
+    stories: [US-039, US-040, US-096, US-097]
+  - id: PRD-002
+    title: "M1 Lane A — Prompts Domain"
+    file: PRD-002-m1-prompts.md
+    status: draft
+    milestone: M1
+    lane: "A — Prompts"
+    stories: [US-009, US-010, US-011, US-048, US-049, US-050, US-114, US-115]
+  - id: PRD-003
+    title: "M1 Lane B — Rubrics (LLM-as-judge scoring primitive)"
+    file: PRD-003-m1-rubrics.md
+    status: draft
+    milestone: M1
+    lane: "B — Rubrics"
+    stories: [US-033, US-034, US-056, US-057, US-058, US-119, US-120]
+  - id: PRD-004
+    title: "M1 Lane C — Personas (authoring primitive)"
+    file: PRD-004-m1-personas.md
+    status: draft
+    milestone: M1
+    lane: "C — Personas"
+    stories: [US-035, US-036, US-051, US-053, US-055, US-116]

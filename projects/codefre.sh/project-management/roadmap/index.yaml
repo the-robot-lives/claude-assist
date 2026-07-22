@@ -1,0 +1,28 @@
+roadmap:
+  - id: RM-00
+    title: Roadmap Overview
+    file: 00-overview.md
+  - id: RM-01
+    title: "M0 — Foundation & Contract Freeze"
+    file: 01-M0-foundation.md
+  - id: RM-02
+    title: "M1 — Authoring Primitives: Prompts, Rubrics, Personas"
+    file: 02-M1-authoring-primitives.md
+  - id: RM-03
+    title: "M2 — Script Graph & Agent Connectors"
+    file: 03-M2-script-graph-and-agents.md
+  - id: RM-04
+    title: "M3 — Execution Engine: Runs & Freeball"
+    file: 04-M3-execution-engine.md
+  - id: RM-05
+    title: "M4 — Results, Dashboards & CLI (MVP close)"
+    file: 05-M4-results-and-cli.md
+  - id: RM-06
+    title: "M5 — Review, Datasets & Captures"
+    file: 06-M5-review-datasets-captures.md
+  - id: RM-07
+    title: "M6 — Telemetry, SDKs & Enterprise"
+    file: 07-M6-telemetry-sdks-enterprise.md
+  - id: RM-08
+    title: Story Coverage & Traceability Matrix
+    file: story-coverage.md
