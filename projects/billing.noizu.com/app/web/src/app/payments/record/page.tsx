@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { Route } from "next";
 import { AppShell } from "@/components/app-shell";
 import { paymentMethods } from "@/lib/billing-data";
 
@@ -10,7 +11,7 @@ export default function RecordPaymentPage() {
           <p className="eyebrow">Record payment</p>
           <h1>Apply payment to invoice</h1>
         </div>
-        <Link className="button ghost" href="/payments/methods">
+        <Link className="button ghost" href={"/payments/methods" as Route}>
           Payment methods
         </Link>
       </header>

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { Route } from "next";
 import type { ReactNode } from "react";
 
 const navItems = [
@@ -20,7 +21,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </Link>
         <nav className="nav">
           {navItems.map((item) => (
-            <Link key={item.href} href={item.href}>
+            <Link key={item.href} href={item.href as Route}>
               {item.label}
             </Link>
           ))}

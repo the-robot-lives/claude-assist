@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { Route } from "next";
 import { AppShell } from "@/components/app-shell";
 import { EmptyState } from "@/components/empty-state";
 import { paymentMethods, payments } from "@/lib/billing-data";
@@ -12,8 +13,8 @@ export default function PaymentsPage() {
           <h1>Payment operations</h1>
         </div>
         <div className="actions">
-          <Link className="button ghost" href="/payments/methods">Payment methods</Link>
-          <Link className="button primary" href="/payments/record">Record payment</Link>
+          <Link className="button ghost" href={"/payments/methods" as Route}>Payment methods</Link>
+          <Link className="button primary" href={"/payments/record" as Route}>Record payment</Link>
         </div>
       </header>
 
@@ -30,7 +31,7 @@ export default function PaymentsPage() {
               eyebrow="No payments"
               title="No payment events have been recorded."
               body="Stripe, PayPal, ACH, and manual payment records will appear here after the ledger API is connected."
-              actionHref="/payments/record"
+              actionHref={"/payments/record" as Route}
               actionLabel="Record payment"
             />
           ) : null}

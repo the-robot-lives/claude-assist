@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { Route } from "next";
 import { AppShell } from "@/components/app-shell";
 import { paymentMethods } from "@/lib/billing-data";
 
@@ -10,7 +11,7 @@ export default function PaymentMethodsPage() {
           <p className="eyebrow">Payment methods</p>
           <h1>Configure payment rails</h1>
         </div>
-        <Link className="button primary" href="/payments/record">
+        <Link className="button primary" href={"/payments/record" as Route}>
           Record payment
         </Link>
       </header>

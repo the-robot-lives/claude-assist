@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { Route } from "next";
 import { AppShell } from "@/components/app-shell";
 import { EmptyState } from "@/components/empty-state";
 import { invoices, paymentMethods } from "@/lib/billing-data";
@@ -19,10 +20,10 @@ export default async function InvoiceViewPage({ params }: PageProps) {
           <h1>{invoice ? invoice.number : "Invoice detail"}</h1>
         </div>
         <div className="actions">
-          <Link className="button ghost" href={`/invoices/${invoiceId}/send`}>
+          <Link className="button ghost" href={`/invoices/${invoiceId}/send` as Route}>
             Send invoice
           </Link>
-          <Link className="button primary" href="/payments/record">
+          <Link className="button primary" href={"/payments/record" as Route}>
             Record payment
           </Link>
         </div>
@@ -62,7 +63,7 @@ export default async function InvoiceViewPage({ params }: PageProps) {
             eyebrow="Invoice unavailable"
             title="No invoice record exists for this route yet."
             body="The detail shell is ready for live invoice data, send actions, payment links, and payment history once the API is wired."
-            actionHref="/invoices"
+            actionHref={"/invoices" as Route}
             actionLabel="Back to invoices"
           />
         </section>

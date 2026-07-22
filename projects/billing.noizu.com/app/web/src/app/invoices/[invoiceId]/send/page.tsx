@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { Route } from "next";
 import { AppShell } from "@/components/app-shell";
 import { paymentMethods } from "@/lib/billing-data";
 
@@ -16,7 +17,7 @@ export default async function SendInvoicePage({ params }: PageProps) {
           <p className="eyebrow">Send invoice</p>
           <h1>Review delivery before sending</h1>
         </div>
-        <Link className="button ghost" href={`/invoices/${invoiceId}`}>
+        <Link className="button ghost" href={`/invoices/${invoiceId}` as Route}>
           View invoice
         </Link>
       </header>
