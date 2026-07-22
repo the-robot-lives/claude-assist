@@ -1,0 +1,68 @@
+databaseChangeLog:
+  - changeSet:
+      id: 026-create-directory-submissions
+      author: starter-scaffold
+      changes:
+        - sql:
+            sql: |
+              CREATE TABLE directory_submissions (
+                id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+                submitter_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                name varchar(160) NOT NULL,
+                url text NOT NULL,
+                domain citext NOT NULL,
+                summary text,
+                proposed_category_slug citext,
+                tags text[] NOT NULL DEFAULT '{}',
+                sug_originality int CHECK (sug_originality IS NULL OR sug_originality BETWEEN 0 AND 100),
+                sug_human_authorship int CHECK (sug_human_authorship IS NULL OR sug_human_authorship BETWEEN 0 AND 100),
+                sug_depth int CHECK (sug_depth IS NULL OR sug_depth BETWEEN 0 AND 100),
+                sug_freshness int CHECK (sug_freshness IS NULL OR sug_freshness BETWEEN 0 AND 100),
+                sug_design_quality int CHECK (sug_design_quality IS NULL OR sug_design_quality BETWEEN 0 AND 100),
+                status varchar(20) NOT NULL DEFAULT 'pending'
+                  CHECK (status IN ('pending', 'in_review', 'approved', 'rejected', 'published')),
+                reviewer_id uuid REFERENCES users(id) ON DELETE SET NULL,
+                reviewer_notes text,
+                published_site_id uuid REFERENCES directory_sites(id) ON DELETE SET NULL,
+                inserted_at timestamptz NOT NULL,
+                updated_at timestamptz NOT NULL
+              );
+
+              CREATE INDEX idx_directory_submissions_submitter
+                ON directory_submissions (submitter_id);
+              CREATE INDEX idx_directory_submissions_status
+                ON directory_submissions (status);
+              CREATE INDEX idx_directory_submissions_queue
+                ON directory_submissions (inserted_at)
+                WHERE status IN ('pending', 'in_review');
+
+              CREATE TABLE directory_site_claims (
+                id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+                site_id uuid NOT NULL REFERENCES directory_sites(id) ON DELETE CASCADE,
+                user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                method varchar(16) NOT NULL CHECK (method IN ('meta_tag', 'dns_txt')),
+                token varchar(64) NOT NULL,
+                status varchar(16) NOT NULL DEFAULT 'pending'
+                  CHECK (status IN ('pending', 'verified', 'rejected')),
+                verified_at timestamptz,
+                inserted_at timestamptz NOT NULL,
+                updated_at timestamptz NOT NULL,
+                UNIQUE (site_id, user_id)
+              );
+
+              CREATE INDEX idx_directory_site_claims_user
+                ON directory_site_claims (user_id);
+
+              ALTER TABLE directory_sites
+                ADD COLUMN claimed_by_user_id uuid REFERENCES users(id) ON DELETE SET NULL,
+                ADD COLUMN claim_verified boolean NOT NULL DEFAULT false;
+      rollback:
+        - sql:
+            sql: |
+              ALTER TABLE directory_sites
+                DROP COLUMN IF EXISTS claim_verified,
+                DROP COLUMN IF EXISTS claimed_by_user_id;
+        - dropTable:
+            tableName: directory_site_claims
+        - dropTable:
+            tableName: directory_submissions

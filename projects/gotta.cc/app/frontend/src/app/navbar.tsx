@@ -1,8 +1,10 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { startLogin } from "@/lib/auth";
+import { isAuthed, clearSession } from "@/lib/session";
 
 function AsteriskMark({ className = "h-7 w-7" }: { className?: string }) {
   return (
@@ -46,6 +48,21 @@ export function NavBar() {
   const browseActive = pathname === "/";
   const searchActive = pathname?.startsWith("/search") ?? false;
   const aboutActive = pathname?.startsWith("/about") ?? false;
+  const submitActive = pathname?.startsWith("/submit") ?? false;
+  const mySubmissionsActive = pathname?.startsWith("/my-submissions") ?? false;
+
+  // Native session is client-only (localStorage). Start logged-out so the
+  // server render matches the first client render, then resolve in an effect.
+  const [authed, setAuthed] = useState(false);
+  useEffect(() => {
+    setAuthed(isAuthed());
+  }, [pathname]);
+
+  function handleSignOut() {
+    clearSession();
+    setAuthed(false);
+    window.location.assign("/");
+  }
 
   return (
     <nav className="sticky top-0 z-50 border-b border-rule bg-cream/95 backdrop-blur-sm">
@@ -63,6 +80,29 @@ export function NavBar() {
           <NavLink href="/" label="Browse" active={browseActive} />
           <NavLink href="/search" label="Search" active={searchActive} />
           <NavLink href="/about" label="About" active={aboutActive} />
+          <NavLink href="/submit" label="Submit" active={submitActive} />
+          {authed && (
+            <NavLink
+              href="/my-submissions"
+              label="My Submissions"
+              active={mySubmissionsActive}
+            />
+          )}
+          {authed ? (
+            <button
+              onClick={handleSignOut}
+              className="hidden font-ui text-sm font-semibold text-olive transition-colors duration-200 hover:text-olive-hover sm:inline"
+            >
+              Sign out
+            </button>
+          ) : (
+            <Link
+              href="/login"
+              className="hidden font-ui text-sm font-semibold text-olive transition-colors duration-200 hover:text-olive-hover sm:inline"
+            >
+              Log in
+            </Link>
+          )}
           <button
             onClick={() => startLogin()}
             className="font-ui text-sm font-semibold text-olive hover:text-olive-hover transition-colors duration-200"

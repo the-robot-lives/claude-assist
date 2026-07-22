@@ -17,6 +17,7 @@ defmodule GottaCcWeb.AuthController do
                email: user_params["email"],
                password: user_params["password"]
              },
+             {:login, {user_params["email"], user_params["password"]}},
              Noizu.Context.system(),
              []
            ),
@@ -57,9 +58,64 @@ defmodule GottaCcWeb.AuthController do
     end
   end
 
+  # Open self-registration (no invite_token). Guarded by the :open_registration
+  # config flag so invite-only deployments keep the invite requirement. Creates
+  # an unverified account (verified: false) with no organization membership.
+  def register(conn, %{"user" => user_params}) do
+    if Application.get_env(:gotta_cc, :open_registration, true) do
+      email = user_params["email"]
+      password = user_params["password"]
+
+      with {:ok, {user, _credential}} <-
+             GottaCc.Users.register(
+               %{
+                 user_name: user_params["user_name"] || user_params["email"],
+                 name: %{
+                   first: user_params["first_name"] || "",
+                   last: user_params["last_name"] || ""
+                 },
+                 email: email,
+                 password: password
+               },
+               {:login, {email, password}},
+               Noizu.Context.system(),
+               []
+             ),
+           {:ok, session} <- create_session_for_user(user),
+           {:ok, access_token, _} <-
+             Guardian.encode_and_sign(session, %{}, token_type: "access", ttl: {1, :hour}),
+           {:ok, refresh_token, %{"jti" => refresh_jti}} <-
+             Guardian.encode_and_sign(session, %{}, token_type: "refresh", ttl: {7, :day}) do
+        GottaCc.Auth.TokenStore.store_refresh_jti(refresh_jti)
+        GottaCc.Events.dispatch(:user_registered, %{user_id: user.id, email: user.email})
+
+        conn
+        |> put_status(:created)
+        |> json(%{
+          user: serialize_user(user),
+          organizations: [],
+          access_token: access_token,
+          refresh_token: refresh_token
+        })
+      else
+        {:error, changeset} when is_struct(changeset, Ecto.Changeset) ->
+          conn |> put_status(:unprocessable_entity) |> json(%{errors: format_changeset_errors(changeset)})
+
+        {:error, reason} ->
+          conn |> put_status(:unprocessable_entity) |> json(%{error: to_string_reason(reason)})
+      end
+    else
+      conn |> put_status(:bad_request) |> json(%{error: "invite_token is required"})
+    end
+  end
+
   def register(conn, _params) do
     conn |> put_status(:bad_request) |> json(%{error: "invite_token is required"})
   end
+
+  defp to_string_reason(reason) when is_binary(reason), do: reason
+  defp to_string_reason(reason) when is_atom(reason), do: to_string(reason)
+  defp to_string_reason(reason), do: inspect(reason)
 
   def login(conn, %{"email" => email, "password" => password}) do
     case GottaCc.Users.Credentials.authenticate({:login, {email, password}}, Noizu.Context.system(), []) do
@@ -317,7 +373,10 @@ defmodule GottaCcWeb.AuthController do
   end
 
   defp create_session_for_user(user) do
-    user_ref = GottaCc.Users.User.ref(user.id)
+    # User.ref/1 returns {:ok, ref}; unwrap it (as register/4 does for name and
+    # description refs) so the UserSession.user reference field encodes to
+    # user_id. Leaving it wrapped persists a null user_id (NOT NULL violation).
+    {:ok, user_ref} = GottaCc.Users.User.ref(user.id)
     session_entity = %GottaCc.Users.Sessions.UserSession{
       user: user_ref,
       status: :active,

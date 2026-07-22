@@ -52,6 +52,12 @@ config :gotta_cc, :github_enabled, false
 config :gotta_cc, :linkedin_enabled, false
 config :gotta_cc, :sso_require_invite, false
 
+# Open self-registration: when true, POST /api/v1/auth/register accepts a bare
+# {user: {...}} body (no invite_token) and creates an unverified account. The
+# public directory needs this so anyone can register and submit sites. Set to
+# false to force invite-only registration.
+config :gotta_cc, :open_registration, true
+
 config :junit_formatter,
   report_file: "results.xml"
 

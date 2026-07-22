@@ -77,3 +77,6 @@ databaseChangeLog:
   - include:
       file: 025-directory.yaml
       relativeToChangelogFile: true
+  - include:
+      file: 026-directory-submissions.yaml
+      relativeToChangelogFile: true

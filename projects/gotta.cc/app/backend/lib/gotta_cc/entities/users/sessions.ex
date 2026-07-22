@@ -20,9 +20,21 @@ defmodule GottaCc.Users.Sessions do
 
   def get_session(id, context, options \\ []), do: get(id, context, options)
 
-  def create(session, context, options \\ []) do
+  def create(session, context, options \\ [])
+
+  # An already-built %UserSession{} struct (or changeset) is handed straight to
+  # the framework create (super -> Noizu.Repo.Meta.create). Routing a struct
+  # through change/2 would Enum.map over the struct and raise `Enumerable not
+  # implemented for GottaCc.Users.Sessions.UserSession`. The attrs-map clause
+  # keeps the change/2 build path.
+  def create(%Ecto.Changeset{} = changeset, context, options),
+    do: super(changeset, context, options)
+
+  def create(%Entity{} = session, context, options), do: super(session, context, options)
+
+  def create(attrs, context, options) do
     %Entity{}
-    |> change(session)
+    |> change(attrs)
     |> super(context, options)
   end
 

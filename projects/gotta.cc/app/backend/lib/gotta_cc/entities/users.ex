@@ -74,6 +74,7 @@ defmodule GottaCc.Users do
                handle: handle,
                name: name_ref,
                description: description_ref,
+               email: email,
                status: :active,
                verified: false,
                flagged: false,

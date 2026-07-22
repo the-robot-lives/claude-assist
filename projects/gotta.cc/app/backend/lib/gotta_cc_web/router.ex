@@ -83,6 +83,16 @@ defmodule GottaCcWeb.Router do
     post "/media/presign", MediaController, :presign
     post "/media/download", MediaController, :download
     post "/media/register", MediaController, :register
+
+    # Directory submissions (authed users propose sites)
+    post "/directory/submissions", DirectorySubmissionController, :create
+    get "/directory/submissions", DirectorySubmissionController, :index
+    get "/directory/submissions/:id", DirectorySubmissionController, :show
+
+    # Directory ownership claims
+    post "/directory/sites/:slug/claim", DirectoryClaimController, :create
+    get "/directory/claims", DirectoryClaimController, :index
+    post "/directory/claims/:id/verify", DirectoryClaimController, :verify
   end
 
   scope "/api/v1/organizations/:org_id", GottaCcWeb do
@@ -96,6 +106,11 @@ defmodule GottaCcWeb.Router do
     get "/users/:id", AdminController, :show_user
     get "/organizations", AdminController, :list_organizations
     get "/organizations/:id", AdminController, :show_organization
+
+    # Directory moderation queue
+    get "/directory/submissions", DirectoryModerationController, :index
+    post "/directory/submissions/:id/approve", DirectoryModerationController, :approve
+    post "/directory/submissions/:id/reject", DirectoryModerationController, :reject
   end
 
   # Public directory (browse + search, no auth)

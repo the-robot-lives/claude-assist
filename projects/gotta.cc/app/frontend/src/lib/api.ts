@@ -1,3 +1,5 @@
+import { getAccessToken, getRefreshToken } from "./session";
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "";
 
 export interface User {
@@ -7,6 +9,45 @@ export interface User {
   handle?: string;
   status?: string;
   verified?: boolean;
+}
+
+// Native-auth user is structurally the same as User. Aliased so the
+// native-auth surface (session store, auth methods) reads intentionally.
+export type AuthUser = User;
+
+export interface DirectorySubmission {
+  id: string;
+  name: string;
+  url: string;
+  domain: string;
+  summary: string;
+  proposed_category_slug: string;
+  tags: string[];
+  status: "pending" | "in_review" | "approved" | "rejected" | "published";
+  reviewer_notes: string | null;
+  published_site_slug: string | null;
+  inserted_at: string;
+  // Present only on the admin moderation queue.
+  submitter_email?: string;
+}
+
+export interface SiteClaim {
+  id: string;
+  site_slug?: string;
+  method: "meta_tag" | "dns_txt";
+  status?: "pending" | "verified" | "failed";
+  token: string;
+  // Copy-paste guidance returned when a claim is started.
+  instructions?: string;
+  verified_at?: string | null;
+}
+
+export interface SubmissionScores {
+  originality: number;
+  human_authorship: number;
+  depth: number;
+  freshness: number;
+  design_quality: number;
 }
 
 export interface Organization {
@@ -44,8 +85,8 @@ export interface DirectorySite {
   featured: boolean;
 }
 
-interface AuthResponse {
-  user: User;
+export interface AuthResponse {
+  user: AuthUser;
   access_token: string;
   refresh_token: string;
   organizations?: Organization[];
@@ -69,7 +110,7 @@ interface PasswordResetResponse {
 let refreshPromise: Promise<string | null> | null = null;
 
 async function attemptRefresh(): Promise<string | null> {
-  const refreshToken = typeof window !== "undefined" ? localStorage.getItem("refresh_token") : null;
+  const refreshToken = getRefreshToken();
   if (!refreshToken) return null;
 
   try {
@@ -98,7 +139,7 @@ async function attemptRefresh(): Promise<string | null> {
 }
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
-  const token = typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
+  const token = getAccessToken();
 
   const res = await fetch(`${API_URL}${path}`, {
     ...options,
@@ -354,5 +395,116 @@ export const api = {
 
   getFeatureFlags() {
     return request<{ features: string[] }>("/api/v1/config/features");
+  },
+
+  // ── Native auth (parallel to the Authentik OIDC client) ──────────────────
+
+  authRegister(email: string, password: string, userName: string) {
+    return request<AuthResponse>("/api/v1/auth/register", {
+      method: "POST",
+      body: JSON.stringify({ email, password, user_name: userName }),
+    });
+  },
+
+  authLogin(email: string, password: string) {
+    return request<AuthResponse>("/api/v1/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ email, password }),
+    });
+  },
+
+  authRefresh(refreshToken: string) {
+    return request<{ access_token: string; refresh_token: string }>("/api/v1/auth/refresh", {
+      method: "POST",
+      body: JSON.stringify({ refresh_token: refreshToken }),
+    });
+  },
+
+  authMe() {
+    return request<{ user: AuthUser; organizations?: Organization[] }>("/api/v1/auth/me");
+  },
+
+  // ── Site submissions ─────────────────────────────────────────────────────
+
+  submitSite(input: {
+    name: string;
+    url: string;
+    summary: string;
+    category_slug: string;
+    tags: string[];
+  }) {
+    return request<{ submission: DirectorySubmission }>("/api/v1/directory/submissions", {
+      method: "POST",
+      body: JSON.stringify(input),
+    });
+  },
+
+  mySubmissions() {
+    return request<{ submissions: DirectorySubmission[] }>("/api/v1/directory/submissions");
+  },
+
+  getSubmission(id: string) {
+    return request<{ submission: DirectorySubmission }>(
+      `/api/v1/directory/submissions/${encodeURIComponent(id)}`,
+    );
+  },
+
+  // ── Ownership claims ─────────────────────────────────────────────────────
+
+  claimSite(slug: string, method: "meta_tag" | "dns_txt") {
+    return request<{ claim: SiteClaim }>(
+      `/api/v1/directory/sites/${encodeURIComponent(slug)}/claim`,
+      {
+        method: "POST",
+        body: JSON.stringify({ method }),
+      },
+    );
+  },
+
+  verifyClaim(id: string) {
+    return request<{ claim: SiteClaim }>(
+      `/api/v1/directory/claims/${encodeURIComponent(id)}/verify`,
+      { method: "POST" },
+    );
+  },
+
+  myClaims() {
+    return request<{ claims: SiteClaim[] }>("/api/v1/directory/claims");
+  },
+
+  // ── Admin moderation (admin only; 403 for non-admins) ────────────────────
+
+  modSubmissions(status: DirectorySubmission["status"] = "pending") {
+    return request<{ submissions: DirectorySubmission[] }>(
+      `/api/v1/admin/directory/submissions?status=${encodeURIComponent(status)}`,
+    );
+  },
+
+  approveSubmission(
+    id: string,
+    input: {
+      scores: SubmissionScores;
+      category_slug: string;
+      summary: string;
+      featured: boolean;
+    },
+  ) {
+    return request<{ submission: DirectorySubmission; site: DirectorySite }>(
+      `/api/v1/admin/directory/submissions/${encodeURIComponent(id)}/approve`,
+      {
+        method: "POST",
+        body: JSON.stringify(input),
+      },
+    );
+  },
+
+  rejectSubmission(id: string, reason: string) {
+    return request<{ submission: DirectorySubmission }>(
+      `/api/v1/admin/directory/submissions/${encodeURIComponent(id)}/reject`,
+      {
+        method: "POST",
+        body: JSON.stringify({ reason }),
+      },
+    );
   },
 };

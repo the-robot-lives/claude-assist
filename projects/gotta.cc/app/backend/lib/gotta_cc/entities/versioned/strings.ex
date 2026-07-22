@@ -16,10 +16,21 @@ defmodule GottaCc.Versioned.Strings do
 
   def get_versioned_string(id, context, options \\ []), do: get(id, context, options)
 
-  def create(string, context, options \\ []) do
+  def create(string, context, options \\ [])
+
+  # An already-built entity struct (or changeset) is handed straight to the
+  # framework create (super -> Noizu.Repo.Meta.create). Routing a struct
+  # through change/2 would Enum.map over the struct and raise `Enumerable not
+  # implemented`. The attrs-map clause keeps the change/2 build path.
+  def create(%Ecto.Changeset{} = changeset, context, options),
+    do: super(changeset, context, options)
+
+  def create(%Entity{} = string, context, options), do: super(string, context, options)
+
+  def create(attrs, context, options) do
     %Entity{}
-    |> change(string)
-    |> create(context, options)
+    |> change(attrs)
+    |> super(context, options)
   end
 
   def update(%Entity{} = string, attrs, context, options \\ []) do
