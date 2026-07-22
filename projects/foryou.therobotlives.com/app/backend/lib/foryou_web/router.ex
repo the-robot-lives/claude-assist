@@ -66,6 +66,12 @@ defmodule ForyouWeb.Router do
     plug ForyouWeb.Plugs.ApiKeyAuth
   end
 
+  # Downloads negotiate csv (and json) so an `Accept: text/csv` request from the
+  # admin console's export fetch is not 406'd by a json-only :accepts.
+  pipeline :api_download do
+    plug :accepts, ["csv", "json"]
+  end
+
   scope "/", ForyouWeb do
     pipe_through :api
     get "/health", HealthController, :index
@@ -144,6 +150,11 @@ defmodule ForyouWeb.Router do
     get "/users/:id", AdminController, :show_user
     get "/organizations", AdminController, :list_organizations
     get "/organizations/:id", AdminController, :show_organization
+
+    # Signup-domain admin console (Chunk D): dashboard aggregate + inquiries.
+    get "/overview", AdminController, :overview
+    get "/inquiries", AdminController, :list_inquiries
+    get "/inquiries/:id", AdminController, :show_inquiry
   end
 
   # Management surface for API-key-authenticated clients (Terraform provider).
@@ -235,7 +246,20 @@ defmodule ForyouWeb.Router do
 
     get "/me/signups", MeController, :signups
     get "/me/inquiries", MeController, :inquiries
+    get "/me/export", MeController, :export
+    post "/me/deletion-request", MeController, :deletion_request
+    patch "/me/signups/:id", MeController, :update_signup
+    post "/me/signups/:id/resubscribe", MeController, :resubscribe_signup
+    post "/me/signups/:id/resume", MeController, :resume_signup
     delete "/me/signups/:id", MeController, :delete_signup
+  end
+
+  # Signups CSV export (admin console, D5) — csv-negotiating pipeline so an
+  # `Accept: text/csv` fetch is not rejected. PBAC checked inside the controller.
+  scope "/api/v1", ForyouWeb do
+    pipe_through [:api_download, :authenticated]
+
+    get "/lists/:id/signups/export", ListsController, :export_signups
   end
 
   # PBAC v2: Projects (authenticated, permission-checked per action)

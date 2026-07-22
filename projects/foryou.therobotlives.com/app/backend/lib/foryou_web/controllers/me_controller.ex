@@ -57,6 +57,89 @@ defmodule ForyouWeb.MeController do
     end
   end
 
+  # PATCH /me/signups/:id — update contact prefs / pause (Chunk E, FR-006).
+  def update_signup(conn, %{"id" => id} = params) do
+    with_owned_signup(conn, id, fn signup ->
+      case Signups.update_prefs(signup, Map.drop(params, ["id"])) do
+        {:ok, updated} ->
+          json(conn, %{signup: serialize_signup(reload(updated))})
+
+        {:error, :unknown_frequency} ->
+          conn |> put_status(:unprocessable_entity) |> json(%{error: "unknown frequency"})
+
+        {:error, :invalid_pause_until} ->
+          conn |> put_status(:unprocessable_entity) |> json(%{error: "invalid pause_until"})
+
+        {:error, :list_archived} ->
+          conn |> put_status(:conflict) |> json(%{error: "list archived"})
+
+        {:error, _} ->
+          conn |> put_status(:unprocessable_entity) |> json(%{error: "could not update preferences"})
+      end
+    end)
+  end
+
+  # POST /me/signups/:id/resubscribe (Chunk E, FR-007 / D15).
+  def resubscribe_signup(conn, %{"id" => id}) do
+    with_owned_signup(conn, id, fn signup ->
+      case Signups.resubscribe(signup) do
+        {:ok, updated} ->
+          status = if updated.status == "pending_optin", do: :accepted, else: :ok
+          conn |> put_status(status) |> json(%{signup: serialize_signup(reload(updated))})
+
+        {:error, :list_archived} ->
+          conn |> put_status(:conflict) |> json(%{error: "list archived"})
+
+        {:error, _} ->
+          conn |> put_status(:unprocessable_entity) |> json(%{error: "could not re-subscribe"})
+      end
+    end)
+  end
+
+  # POST /me/signups/:id/resume (Chunk E, FR-007).
+  def resume_signup(conn, %{"id" => id}) do
+    with_owned_signup(conn, id, fn signup ->
+      case Signups.resume(signup) do
+        {:ok, updated} -> json(conn, %{signup: serialize_signup(reload(updated))})
+        {:error, _} -> conn |> put_status(:unprocessable_entity) |> json(%{error: "could not resume"})
+      end
+    end)
+  end
+
+  # GET /me/export — synchronous JSON dump of the caller's data (D11/FR-009).
+  def export(conn, _params) do
+    user = current_user(conn)
+    email = user_email(user)
+    %{signups: signups, inquiry_signups: inquiry_signups} = Signups.export_for_user(user.id)
+    legacy = if email, do: legacy_inquiries(email), else: []
+
+    payload = %{
+      user: %{id: user.id, email: email},
+      generated_at: DateTime.utc_now(),
+      signups: Enum.map(signups, &serialize_signup/1),
+      inquiries: Enum.map(inquiry_signups, &serialize_signup/1) ++ legacy
+    }
+
+    conn
+    |> put_resp_header("content-disposition", ~s(attachment; filename="foryou-export.json"))
+    |> json(payload)
+  end
+
+  # POST /me/deletion-request — stub queuer, no immediate erasure (D11/FR-010).
+  def deletion_request(conn, _params) do
+    user = current_user(conn)
+    _ = Signups.request_deletion(user.id)
+
+    conn
+    |> put_status(:accepted)
+    |> json(%{
+      status: "queued",
+      message:
+        "Your deletion request has been queued. We'll process the erasure of your personal " <>
+          "data per policy; some records may be retained where legally required."
+    })
+  end
+
   # ── helpers ────────────────────────────────────────────────────
 
   # Legacy inquiries table (changelog 025) — pre-dual-write rows matched by
@@ -88,6 +171,7 @@ defmodule ForyouWeb.MeController do
 
   defp serialize_signup(s) do
     list = if Ecto.assoc_loaded?(s.list), do: s.list, else: nil
+    service = if list && Ecto.assoc_loaded?(list.project), do: list.project, else: nil
 
     %{
       id: s.id,
@@ -98,10 +182,44 @@ defmodule ForyouWeb.MeController do
       pause_until: s.pause_until,
       source: s.source,
       inserted_at: s.inserted_at,
+      subscribed_at: s.inserted_at,
+      can_resubscribe: !!list && list.status == "active",
       list:
         list &&
-          %{id: list.id, name: list.name, public_slug: list.public_slug, kind: list.kind}
+          %{
+            id: list.id,
+            name: list.name,
+            public_slug: list.public_slug,
+            kind: list.kind,
+            settings: list_settings(list.settings)
+          },
+      service:
+        service &&
+          %{id: service.id, name: service.name, slug: service.slug, branding: branding(service)}
     }
+  end
+
+  # Public-safe list settings the Preference Center inherits from (list defaults).
+  defp list_settings(settings) when is_map(settings) do
+    Map.take(settings, ["contact_prefs", "available_channels", "preference_defaults"])
+  end
+
+  defp list_settings(_), do: %{}
+
+  defp branding(%{settings: %{"branding" => b}}) when is_map(b), do: b
+  defp branding(%{name: name}), do: %{"name" => name}
+
+  # Fetch a fresh, list+service-preloaded copy for serialization after a write.
+  defp reload(%{id: id}), do: Foryou.Signups.get_signup(id) |> Repo.preload(list: :project)
+
+  # Resolve the caller's own signup by id; 404 (no-leak) on foreign/missing id.
+  defp with_owned_signup(conn, id, fun) do
+    user = current_user(conn)
+
+    case Signups.get_signup(id) do
+      %{user_id: uid} = signup when not is_nil(uid) and uid == user.id -> fun.(signup)
+      _ -> conn |> put_status(:not_found) |> json(%{error: "not found"})
+    end
   end
 
   defp current_user(conn) do
