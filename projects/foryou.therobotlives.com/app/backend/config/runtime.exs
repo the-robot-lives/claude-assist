@@ -8,6 +8,11 @@ config :foryou, :redis,
   uri: System.get_env("REDIS_URL") || "redis://localhost:6379/0",
   key_prefix: System.get_env("REDIS_KEY_PREFIX", "starter:")
 
+# CORS allowlist. Non-empty ⇒ only listed Origins get access-control-allow-origin.
+# Empty (dev/default) ⇒ reflect any Origin. Set via CORS_ORIGINS (comma-separated).
+config :foryou, :cors_origins,
+  System.get_env("CORS_ORIGINS", "") |> String.split(",", trim: true)
+
 # ── OpenTelemetry ────────────────────────────────────────────────
 if otel_endpoint = System.get_env("OTEL_EXPORTER_OTLP_ENDPOINT") do
   config :opentelemetry_exporter,

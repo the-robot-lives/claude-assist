@@ -7,6 +7,7 @@ export interface User {
   handle?: string;
   status?: string;
   verified?: boolean;
+  admin?: boolean;
 }
 
 export interface Organization {

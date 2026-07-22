@@ -15,6 +15,7 @@ defmodule Foryou.Schema.Users.User do
       default: :active
     field :verified, :boolean, default: false
     field :flagged, :boolean, default: false
+    field :admin, :boolean, default: false
     field :deleted_at, :utc_datetime_usec
     timestamps(type: :utc_datetime_usec)
   end
@@ -22,7 +23,7 @@ defmodule Foryou.Schema.Users.User do
   def changeset(user, attrs) do
     user
     |> cast(attrs, [:user_name, :handle, :name_id, :description_id, :email,
-                    :hashed_password, :status, :verified, :flagged])
+                    :hashed_password, :status, :verified, :flagged, :admin])
     |> validate_required([:email])
     |> unique_constraint(:email)
     |> unique_constraint(:user_name)

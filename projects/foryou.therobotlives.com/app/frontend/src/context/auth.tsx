@@ -11,6 +11,7 @@ interface User {
   handle?: string;
   status?: string;
   verified?: boolean;
+  admin?: boolean;
 }
 
 interface AuthContextType {

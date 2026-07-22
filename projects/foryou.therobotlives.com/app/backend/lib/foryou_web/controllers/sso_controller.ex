@@ -137,7 +137,8 @@ defmodule ForyouWeb.SSOController do
       user_name: user.user_name,
       handle: user.handle,
       status: user.status,
-      verified: user.verified
+      verified: user.verified,
+      admin: user.admin
     }
   end
 

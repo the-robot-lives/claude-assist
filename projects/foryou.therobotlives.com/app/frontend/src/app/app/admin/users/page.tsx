@@ -27,37 +27,37 @@ export default function AdminUsersPage() {
     }).catch(() => setLoading(false));
   }, [page]);
 
-  if (loading) return <p style={{ padding: 40 }}>Loading...</p>;
+  if (loading) return <p className="sg-admin-loading">Loading...</p>;
 
   return (
-    <div style={{ maxWidth: 800, margin: "40px auto", padding: "0 24px" }}>
-      <h1 style={{ fontSize: 24, marginBottom: 8 }}>Users ({total})</h1>
-      <table style={{ width: "100%", borderCollapse: "collapse" }}>
+    <div>
+      <h1 className="sg-section-heading">Users ({total})</h1>
+      <table className="sg-table">
         <thead>
-          <tr style={{ borderBottom: "2px solid #eee", textAlign: "left" }}>
-            <th style={{ padding: 8 }}>Email</th>
-            <th style={{ padding: 8 }}>Username</th>
-            <th style={{ padding: 8 }}>Status</th>
-            <th style={{ padding: 8 }}>Verified</th>
-            <th style={{ padding: 8 }}>Admin</th>
+          <tr>
+            <th>Email</th>
+            <th>Username</th>
+            <th>Status</th>
+            <th>Verified</th>
+            <th>Admin</th>
           </tr>
         </thead>
         <tbody>
           {users.map((u) => (
-            <tr key={u.id} style={{ borderBottom: "1px solid #eee" }}>
-              <td style={{ padding: 8 }}>{u.email}</td>
-              <td style={{ padding: 8 }}>{u.user_name}</td>
-              <td style={{ padding: 8 }}>{u.status}</td>
-              <td style={{ padding: 8 }}>{u.verified ? "Yes" : "No"}</td>
-              <td style={{ padding: 8 }}>{u.admin ? "Yes" : "No"}</td>
+            <tr key={u.id}>
+              <td>{u.email}</td>
+              <td>{u.user_name}</td>
+              <td>{u.status}</td>
+              <td>{u.verified ? "Yes" : "No"}</td>
+              <td>{u.admin ? "Yes" : "No"}</td>
             </tr>
           ))}
         </tbody>
       </table>
-      <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
-        <button disabled={page <= 1} onClick={() => setPage(page - 1)} style={{ padding: "4px 12px" }}>Prev</button>
-        <span style={{ padding: "4px 8px" }}>Page {page}</span>
-        <button disabled={users.length < 50} onClick={() => setPage(page + 1)} style={{ padding: "4px 12px" }}>Next</button>
+      <div className="sg-pagination">
+        <button className="sg-btn sg-btn--outline sg-btn--sm" disabled={page <= 1} onClick={() => setPage(page - 1)}>Prev</button>
+        <span className="sg-pagination__status">Page {page}</span>
+        <button className="sg-btn sg-btn--outline sg-btn--sm" disabled={users.length < 50} onClick={() => setPage(page + 1)}>Next</button>
       </div>
     </div>
   );
