@@ -1,0 +1,25 @@
+# Local Preference Contract
+---
+domain_overrides: {}
+quiz_ui: web
+interaction_mode: mcp
+flashcard_format: anki
+auto_expand_topics: true
+session_logging: true
+max_concurrent_agents: 3
+background_task_output: summary
+paths:
+  knowledge_root: null
+  sessions_dir: null
+  exports_dir: null
+review_reminder: daily
+review_reminder_threshold: 5
+telemetry:
+  enabled: false
+  disclosure_version: "2026-07-22"
+  opted_in_at: null
+experimental:
+  simulation_voice_mode: false
+  peer_review_mode: false
+  concept_graph: false
+

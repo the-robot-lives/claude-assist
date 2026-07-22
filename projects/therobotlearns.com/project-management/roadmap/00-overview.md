@@ -2,13 +2,13 @@
 
 ## Mission
 
-This roadmap sequences The Robot Learns — a local-first, Claude-Code-agent-powered personal
-knowledge base and learning system — from an installable launcher to a cloud-connected,
-team-shareable product. It orders work by **dependency, not calendar time**: each milestone
-lists only what must be true before it starts and before it exits. The spine is the data: the
-nine YAML schemas freeze first, the knowledge-article contract freezes next, and every
-retention, search, maintenance, and sharing feature downstream is keyed to those frozen
-contracts so lanes can be built in parallel without colliding.
+This roadmap sequences The Robot Learns — a cloud application for personal and team knowledge
+retention, assessment, and learning workflows — with a local Claude Code workspace agent as a
+supporting capture/generation surface. It orders work by **dependency, not calendar time**:
+each milestone lists only what must be true before it starts and before it exits. The spine is
+the data: the nine YAML schemas freeze first, the knowledge-article contract freezes next, and
+every retention, search, maintenance, sync, team, and sharing feature downstream is keyed to
+those frozen contracts so lanes can be built in parallel without colliding.
 
 ## Core principles
 
@@ -38,7 +38,7 @@ contracts so lanes can be built in parallel without colliding.
 | M2 | Retention & Assessment | Flashcards, quizzes (terminal + SPA), simulations, projects, learning plans | 4 | 20 |
 | M3 | Navigate & Tune | Full-text/structured search and the settings surface | 2 | 14 |
 | M4 | Maintain, Harden & Scale | Hygiene, backup/restore/migration, resilience, performance, accessibility | 4 | 21 |
-| M5 | Collaboration, Cloud & Integrations | Export/import, cloud sync, team KBs, git/MCP/`$EDITOR` | 3 | 13 |
+| M5 | Collaboration, Cloud & Integrations | Cloud sync, team KBs, export/import, git/MCP/`$EDITOR` | 3 | 13 |
 
 Story count check: M0=14, M1=18, M2=20, M3=14, M4=21, M5=13 → 100, matching the 100-story
 corpus. See [`story-coverage.md`](story-coverage.md) for the full traceability matrix.

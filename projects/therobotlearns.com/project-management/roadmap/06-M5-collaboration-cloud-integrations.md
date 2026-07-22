@@ -9,10 +9,10 @@ stories: [US-074, US-075, US-076, US-077, US-078, US-079, US-080, US-081, US-096
 
 # M5 — Collaboration, Cloud & Integrations
 
-The outermost layer: move knowledge in and out (bundles, Anki, external notes), sync and share
-it (cloud accounts, team KBs, team dashboards), and wire the local KB into the wider tool
-ecosystem (git, MCP, `$EDITOR`). Sequenced last because every feature here assumes a healthy,
-backed-up, scalable local KB from M4.
+The cloud and integration layer: sync the workspace to therobotlearns.com accounts, operate
+shared team KBs and dashboards, move knowledge in and out (bundles, Anki, external notes), and
+wire the workspace into developer tools (git, MCP, `$EDITOR`). Sequenced last because every
+feature here assumes a healthy, backed-up, scalable workspace contract from M4.
 
 ## Entry criteria
 
@@ -64,8 +64,7 @@ backed-up, scalable local KB from M4.
 ### L5.B — Cloud & Team
 - **Zone / exclusive paths:** the cloud-sync client, the shared/team KB layer, plan assignment,
   the team progress dashboard, the (deferred) community-publish stub.
-- **Mission:** Extend the local-first KB to the future therobotlearns.com cloud service and
-  team workflows.
+- **Mission:** Implement the therobotlearns.com cloud service integration and team workflows.
 - **Tasks:**
   - T5.B.1 — Sync KB to a therobotlearns.com cloud account (US-076).
   - T5.B.2 — Shared team knowledge base; team lead assigns learning plans (US-077, US-078).

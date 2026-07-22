@@ -1,10 +1,10 @@
 # The Robot Learns
 
 **Project ID:** TRL-KB
-**Domain:** therobotlearns.com (future cloud service)
+**Domain:** therobotlearns.com (cloud application)
 **Status:** Pre-development / Architecture
 
-Agent-powered personal knowledge base and learning system.
+Cloud knowledge and learning application with a local agent workspace.
 
 **Distribution:** Shell script (`bin/robot-learns`) + npm package (`the-robot-learns`)
 
@@ -12,16 +12,22 @@ Agent-powered personal knowledge base and learning system.
 
 ## Problem
 
-Users accumulate knowledge across scattered sources with no system to retain, test, or surface it. There's no way to ask questions and get answers calibrated to your expertise level, build a growing personal knowledge base from those Q&A sessions, or track what you know vs. what you've forgotten.
+Users accumulate knowledge across scattered sources with no shared system to retain, test, sync, or surface it across devices and teams. There's no way to ask questions and get answers calibrated to your expertise level, build a growing knowledge base from those Q&A sessions, or track what you know vs. what you've forgotten.
 
 ## Solution
 
-A local-first, Claude Code agent-powered knowledge system. The "backend" IS Claude Code — no server, no web app. A CLI launcher boots the agent environment in `~/.config/the-robot-learns-kb/`, which reads user profiles, searches existing knowledge, answers questions, and simultaneously builds documentation, flashcards, quizzes, and topic stubs.
+A cloud-first, agent-powered knowledge and learning system. `therobotlearns.com` is the primary product surface for accounts, sync, shared KBs, team learning, dashboards, and integrations. The `robot-learns` CLI boots a local agent workspace in `~/.config/the-robot-learns-kb/` for developer workflows, offline capture, bulk import/export, and Claude Code-assisted content generation; it syncs that workspace with the cloud app when credentials are configured.
 
 ## Architecture
 
 ```
-robot-learns (CLI)
+therobotlearns.com cloud app
+        |
+        v
+cloud account / team KB / dashboards / sync API
+        ^
+        |
+robot-learns (CLI workspace agent)
         |
         v
 ~/.config/the-robot-learns-kb/
@@ -51,8 +57,9 @@ robot-learns (CLI)
 
 | Component | Description |
 |-----------|-------------|
-| **CLI launcher** | `bin/robot-learns` (shell) + `the-robot-learns` (npm). Bootstraps config dir, launches Claude Code. |
-| **Template system** | `template/` dir copied to `~/.config/` on first run. Self-contained agent environment. |
+| **Cloud app** | Primary hosted product: accounts, synced KBs, shared team spaces, dashboards, cloud search, and API integrations. |
+| **CLI launcher** | `bin/robot-learns` (shell) + `the-robot-learns` (npm). Bootstraps a local workspace, launches Claude Code, and syncs with the cloud API. |
+| **Template system** | `template/` dir copied to `~/.config/` on first run. Local agent workspace contract used by the cloud sync client. |
 | **6 slash commands** | query, learning-plan, quiz, flashcard, simulate, setup |
 | **5 sub-agents** | doc-writer (sonnet), flashcard-generator (haiku), topic-expander (haiku), quiz-generator (sonnet), grader (sonnet) |
 | **React quiz SPA** | Standalone single-HTML quiz runner. Vite + React, builds to one file. |
@@ -90,7 +97,7 @@ design/theme/theme-{name}/
 
 | Service | Role |
 |---------|------|
-| therobotlearns.com | Cloud sync, shared KBs, team learning (future) |
+| therobotlearns.com | Primary cloud app: accounts, sync, shared KBs, team learning |
 | therobotwrites.com | Documentation generation; feeds into KB content |
 
 ## Usage
@@ -99,10 +106,50 @@ design/theme/theme-{name}/
 # From the monorepo (bin/ is on PATH via .envrc)
 robot-learns                          # Launch agent in KB directory
 robot-learns what is a zebra          # Ask a question directly
+robot-learns --validate               # Validate workspace KB layout/contracts
+robot-learns --rebuild-index          # Rebuild article indexes from disk
+robot-learns --search linux           # Search articles, decks, and quizzes
+robot-learns --what "async rust"      # Summarize saved knowledge on a topic
+robot-learns --stats                  # Show KB counts
+robot-learns --backup                 # Create a local backup directory
+robot-learns --export kb-bundle.json  # Export articles and flashcard decks
 
 # Via npm (for distribution)
 npx the-robot-learns
 npx the-robot-learns how do I mount ntfs
 ```
 
-First run bootstraps `~/.config/the-robot-learns-kb/` and walks through profile setup.
+First run bootstraps a local workspace at `~/.config/the-robot-learns-kb/` and walks through profile setup. For production use, configure cloud credentials so that workspace syncs to therobotlearns.com.
+
+Additional local flags cover roadmap maintenance and interchange flows:
+
+```bash
+robot-learns --view computing/learning-systems
+robot-learns --logs
+robot-learns --due
+robot-learns --review-card flashcards/deck.yaml card-001 4
+robot-learns --dedupe
+robot-learns --prune 180
+robot-learns --restore ~/.config/the-robot-learns-kb/backups/kb-...
+robot-learns --anki flashcards/deck.yaml deck.tsv
+robot-learns --notes ~/notes
+robot-learns --git status
+robot-learns --mcp
+robot-learns --editor computing/learning-systems
+```
+
+Cloud sync defaults to a local mirror bundle:
+
+```bash
+robot-learns --cloud-sync ~/.cache/the-robot-learns-cloud
+```
+
+For a real therobotlearns.com-compatible endpoint, set:
+
+```bash
+export TRL_CLOUD_URL=https://therobotlearns.com
+export TRL_CLOUD_TOKEN=<account-token>
+robot-learns --cloud-sync
+```
+
+The client posts the local bundle to `POST $TRL_CLOUD_URL/api/kb/sync` with a bearer token.

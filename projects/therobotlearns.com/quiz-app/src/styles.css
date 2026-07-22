@@ -37,6 +37,46 @@ body {
   min-height: 100vh;
 }
 
+:focus-visible {
+  outline: 3px solid var(--color-border-focus);
+  outline-offset: 3px;
+}
+
+html[data-text-size="large"] { font-size: 18px; }
+html[data-text-size="xlarge"] { font-size: 20px; }
+
+html[data-contrast="high"] {
+  --color-bg: #ffffff;
+  --color-surface: #ffffff;
+  --color-border: #111827;
+  --color-border-focus: #000000;
+  --color-text: #000000;
+  --color-text-muted: #1f2937;
+  --color-primary: #000000;
+  --color-primary-hover: #374151;
+  --color-progress: #000000;
+}
+
+@media (prefers-contrast: more) {
+  :root {
+    --color-border: #111827;
+    --color-border-focus: #000000;
+    --color-text: #000000;
+    --color-text-muted: #1f2937;
+    --color-primary: #000000;
+    --color-primary-hover: #374151;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
 /* ── Shell ───────────────────────────────────────────────────────────────────── */
 .quiz-shell {
   min-height: 100vh;

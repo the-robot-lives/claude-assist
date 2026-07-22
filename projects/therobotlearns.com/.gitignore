@@ -1,0 +1,8 @@
+node_modules/
+quiz-app/node_modules/
+quiz-cli/node_modules/
+dist/
+quiz-app/dist/
+quiz-cli/dist/
+*.tgz
+

@@ -1,6 +1,6 @@
 # Screens
 
-20 screens extracted from the 100 user stories in `project-management/user-stories/`. The product is a **local-first, terminal/CLI agent tool** — most "screens" here are distinct terminal command surfaces (slash-command output), not web pages. Exactly one screen (`quiz-spa`) is a real browser page; two screens (`team-lead-dashboard`, `cloud-sync-and-account`) describe the therobotlearns.com cloud tier, which is still future/pre-development per the project README.
+20 screens extracted from the 100 user stories in `project-management/user-stories/`. The product is a **cloud application with a local terminal/CLI workspace agent**. Some screens are hosted cloud surfaces, some are terminal command surfaces, and the quiz SPA can run standalone or as a cloud app surface.
 
 ## Category Index
 

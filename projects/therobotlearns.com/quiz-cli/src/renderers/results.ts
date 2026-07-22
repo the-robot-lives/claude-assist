@@ -1,4 +1,4 @@
-import chalk from 'chalk';
+import chalk, { type ChalkInstance } from 'chalk';
 import type { QuizResult, QuestionResult } from '../types.js';
 
 function formatDuration(ms: number): string {
@@ -8,7 +8,7 @@ function formatDuration(ms: number): string {
   return `${s}s`;
 }
 
-function scoreColor(score: number, passed: boolean): chalk.Chalk {
+function scoreColor(score: number, passed: boolean): ChalkInstance {
   if (passed) return chalk.green;
   if (score >= 50) return chalk.yellow;
   return chalk.red;

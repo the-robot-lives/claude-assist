@@ -1,0 +1,26 @@
+# Machine Profile Contract
+---
+os:
+  name: macOS
+  version: "15.4"
+  arch: arm64
+  codename: "Sequoia"
+shell: zsh
+shell_config: "~/.zshrc"
+version_manager: asdf
+package_managers:
+  - brew
+  - npm
+tools:
+  git:
+    installed: true
+    version: "2.44.0"
+    path: /usr/bin/git
+    via: system
+    usage_tips: null
+env_vars_set: []
+network:
+  vpn_required_for: []
+  proxy: null
+  offline_capable: false
+

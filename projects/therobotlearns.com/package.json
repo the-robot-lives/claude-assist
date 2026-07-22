@@ -1,16 +1,21 @@
 {
   "name": "the-robot-learns",
   "version": "0.1.0",
+  "type": "module",
   "description": "Agent-powered personal knowledge base and learning system for Claude Code",
   "license": "MIT",
   "repository": {
     "type": "git",
     "url": "https://github.com/the-robot-lives/lets-go.git",
-    "directory": "projects/my-knowledge-base"
+    "directory": "projects/therobotlearns.com"
   },
   "bin": {
     "robot-learns": "./bin/robot-learns.js",
     "the-robot-learns": "./bin/robot-learns.js"
+  },
+  "scripts": {
+    "check": "node --check bin/robot-learns.js && node --check bin/kb-tools.js && node --check bin/kb-mcp-server.js && node --check template/bin/atomic-write.js && node --check test/smoke.mjs",
+    "test:smoke": "node test/smoke.mjs"
   },
   "files": [
     "bin/",
@@ -21,6 +26,11 @@
   ],
   "engines": {
     "node": ">=18"
+  },
+  "dependencies": {
+    "@inquirer/prompts": "^7.0.0",
+    "chalk": "^5.3.0",
+    "yaml": "^2.6.0"
   },
   "keywords": [
     "knowledge-base",

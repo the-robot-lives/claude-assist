@@ -1,0 +1,27 @@
+# Learning Plan Contract
+---
+plan_id: learn-rust-async
+title: "Learn Rust Async"
+goal: "Build and explain a production-grade async Rust service."
+created: "2026-05-06"
+updated: "2026-05-06"
+target_completion: "2026-08-01"
+status: active
+expertise_start: intermediate
+expertise_target: advanced
+milestones:
+  - id: m1
+    title: "Understand futures and executors"
+    status: in_progress
+    due: "2026-06-01"
+    evidence:
+      quizzes: []
+      flashcard_decks: []
+      projects: []
+weekly_summary:
+  last_generated: null
+  cadence: weekly
+adaptation_rules:
+  weak_topic_threshold: 60
+  mastery_threshold: 85
+

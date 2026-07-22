@@ -1,0 +1,20 @@
+# Flashcard Deck Contract
+---
+deck_id: computing-linux-ntfs
+title: "Linux NTFS"
+source_article: computing/linux/mount-ntfs
+created: "2026-05-06"
+updated: "2026-05-06"
+cards:
+  - id: card-001
+    front: "Which Linux driver provides FUSE-based NTFS write support?"
+    back: "ntfs-3g"
+    tags:
+      - linux
+      - ntfs
+    difficulty: medium
+    interval: 0
+    repetitions: 0
+    ease_factor: 2.5
+    next_review: "2026-05-07"
+

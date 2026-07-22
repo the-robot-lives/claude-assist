@@ -1,6 +1,6 @@
 # Project Architecture — Summary
 
-**TRL-KB** is a local-first, agent-powered personal knowledge base using Claude Code as its runtime. No server — a CLI bootstraps `~/.config/the-robot-learns-kb/` and Claude Code operates as the backend.
+**TRL-KB** is a cloud knowledge and learning application with a local Claude Code workspace agent. The cloud app is primary; the CLI bootstraps `~/.config/the-robot-learns-kb/` for offline/dev capture, artifact generation, and sync.
 
 **Components**: CLI launcher (Node.js), template system (copied on first run), agent brain (CLAUDE.md), 5 sub-agents (doc-writer, flashcard-gen, topic-expander, quiz-gen, grader), 6 slash commands, React quiz SPA, terminal quiz CLI, 9 YAML schemas.
 
@@ -10,4 +10,4 @@
 
 **Quiz runners**: Two consumers of the same quiz YAML format — a React SPA (single HTML build) and a terminal CLI (@inquirer/prompts). Both pre-built and shipped in the npm package.
 
-**Key decisions**: Claude Code as runtime (no custom server), local-first with human-readable formats, expertise-calibrated responses, SM-2 spaced repetition, dual quiz distribution.
+**Key decisions**: cloud app as the primary product surface, Claude Code as local workspace runtime, human-readable sync formats, expertise-calibrated responses, SM-2 spaced repetition, dual quiz distribution.

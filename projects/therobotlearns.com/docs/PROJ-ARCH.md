@@ -2,7 +2,7 @@
 
 ## Overview
 
-TRL-KB (The Robot Learns KB) is a **local-first, agent-powered personal knowledge base** that uses Claude Code as its runtime engine. There is no server or web app — the CLI launcher bootstraps a config directory at `~/.config/the-robot-learns-kb/`, and Claude Code operates as the "backend," reading user profiles, answering questions calibrated to expertise level, and generating documentation, flashcards, quizzes, and simulations as persistent YAML/Markdown artifacts.
+TRL-KB (The Robot Learns KB) is a **cloud application with a local agent workspace**. The hosted therobotlearns.com app is the primary product surface for accounts, synced knowledge bases, team learning, dashboards, and integrations. The CLI launcher bootstraps a workspace directory at `~/.config/the-robot-learns-kb/`; Claude Code operates there as a capture and generation agent, reading user profiles, answering questions calibrated to expertise level, and generating documentation, flashcards, quizzes, and simulations as persistent YAML/Markdown artifacts that can sync to the cloud app.
 
 Distribution is dual: a shell script (`bin/robot-learns`) for monorepo use, and an npm package (`the-robot-learns`) for standalone installation.
 

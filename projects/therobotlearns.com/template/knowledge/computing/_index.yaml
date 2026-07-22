@@ -1,4 +1,6 @@
-topics:
+domain: computing
+title: Computing
+entries:
   - path: computing/learning-systems.md
     title: Learning Systems
     domain: computing
@@ -15,3 +17,4 @@ topics:
     status: stub
     related_topics:
       - computing/learning-systems.md
+
