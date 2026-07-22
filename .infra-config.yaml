@@ -255,6 +255,7 @@ chart_path_overrides:
   infra-portal: projects/infra.noizu.com/helm/infra-portal
   aifighter: projects/aifighter.com/helm/aifighter
   therobotknows: projects/therobotknows.com/helm/therobotknows
+  therobotlearns: projects/therobotlearns.com/helm/therobotlearns
   codefresh-landing: projects/codefre.sh/helm/codefresh-landing
   gotta-cc: projects/gotta.cc/helm/gotta-cc
   derobotis: projects/derobot.is/helm/derobotis
@@ -883,6 +884,23 @@ project:
         charts:
           - name: therobotknows
             path: projects/therobotknows.com/helm/therobotknows
+    - domain: therobotlearns.com
+      base_path: projects/therobotlearns.com
+      services:
+        - name: web
+          dockerfile: Dockerfile
+          context: .
+          registry_path: therobotlearns.com/web
+          platform: linux/amd64
+          auto_detect: false
+          helm:
+            chart_path: projects/therobotlearns.com/helm/therobotlearns
+            values_path: .static-site.image
+            format: image
+      helm:
+        charts:
+          - name: therobotlearns
+            path: projects/therobotlearns.com/helm/therobotlearns
     - domain: therobotlives.com
       services:
         - name: backend

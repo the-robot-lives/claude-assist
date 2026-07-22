@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>The Robot Learns</title>
+    <meta
+      name="description"
+      content="The Robot Learns cloud workspace for synced knowledge, learning plans, quiz results, and MCP content operations."
+    />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <aside class="rail" aria-label="Primary navigation">
+      <div class="mark" aria-hidden="true">TRL</div>
+      <nav>
+        <a href="#workspace" class="active">Workspace</a>
+        <a href="#learning">Learning</a>
+        <a href="#planning">Planning</a>
+        <a href="#connector">MCP</a>
+      </nav>
+    </aside>
+
+    <main>
+      <section class="topbar" aria-labelledby="app-title">
+        <div>
+          <p class="eyebrow">therobotlearns.com</p>
+          <h1 id="app-title">Cloud learning workspace</h1>
+        </div>
+        <div class="sync-pill" title="Cloud sync status">
+          <span class="dot"></span>
+          Ready for connector sync
+        </div>
+      </section>
+
+      <section id="workspace" class="band workspace-grid" aria-label="Workspace overview">
+        <article class="panel primary-panel">
+          <div class="panel-head">
+            <h2>Knowledge Base</h2>
+            <span>Account: cloud beta</span>
+          </div>
+          <div class="metric-row">
+            <div>
+              <strong>128</strong>
+              <span>articles</span>
+            </div>
+            <div>
+              <strong>42</strong>
+              <span>flashcards due</span>
+            </div>
+            <div>
+              <strong>9</strong>
+              <span>open goals</span>
+            </div>
+          </div>
+          <div class="activity-list" id="activity-list"></div>
+        </article>
+
+        <article class="panel">
+          <div class="panel-head">
+            <h2>Sync Queue</h2>
+            <span id="queue-count">0 pending</span>
+          </div>
+          <form id="sync-form" class="stack">
+            <label>
+              Content bundle
+              <textarea
+                id="bundle-input"
+                rows="7"
+                spellcheck="false"
+                placeholder="Paste a YAML or JSON bundle from the local MCP connector"></textarea>
+            </label>
+            <button type="submit">Queue Sync</button>
+          </form>
+        </article>
+      </section>
+
+      <section id="learning" class="band split" aria-label="Learning queue">
+        <div>
+          <p class="eyebrow">Retention</p>
+          <h2>Learning Queue</h2>
+        </div>
+        <div class="table-shell">
+          <table>
+            <thead>
+              <tr>
+                <th>Topic</th>
+                <th>Signal</th>
+                <th>Next action</th>
+              </tr>
+            </thead>
+            <tbody id="learning-table"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="planning" class="band card-grid" aria-label="Learning plans">
+        <article class="plan-card">
+          <span>Plan</span>
+          <h2>Build a durable AI memory loop</h2>
+          <p>Sequence articles, flashcards, and quizzes around recall quality and weak-area repair.</p>
+          <progress value="68" max="100">68%</progress>
+        </article>
+        <article class="plan-card">
+          <span>Team</span>
+          <h2>Shared KB beta</h2>
+          <p>Prepare content bundle review, conflict resolution, and team progress reporting.</p>
+          <progress value="41" max="100">41%</progress>
+        </article>
+        <article class="plan-card">
+          <span>Eval</span>
+          <h2>Headless quiz scoring</h2>
+          <p>Use quiz results to measure whether memory recall improves across agent sessions.</p>
+          <progress value="54" max="100">54%</progress>
+        </article>
+      </section>
+
+      <section id="connector" class="band connector" aria-label="MCP connector">
+        <div>
+          <p class="eyebrow">Local connector</p>
+          <h2>MCP content operations</h2>
+          <p>
+            Local tooling exists to push and read knowledge artifacts, learning plans, quiz
+            results, and planning content. The cloud app is the system of record once sync is
+            configured.
+          </p>
+        </div>
+        <dl>
+          <div><dt>KB read</dt><dd>knowledge articles, tags, links, and indexes</dd></div>
+          <div><dt>Learning write</dt><dd>flashcards, quiz attempts, weak areas, plans</dd></div>
+          <div><dt>Planning write</dt><dd>goals, milestones, progress notes, team assignments</dd></div>
+        </dl>
+        <a class="quiz-link" href="/quiz/">Open Quiz SPA</a>
+      </section>
+    </main>
+
+    <script src="/app.js"></script>
+  </body>
+</html>
