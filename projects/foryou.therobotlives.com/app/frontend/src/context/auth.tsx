@@ -44,6 +44,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [organizations, setOrganizations] = useState<Organization[]>([]);
 
   const loadUser = useCallback(async () => {
+    // Skip the initial /me fetch on the SSO callback route: ssoExchange() runs
+    // there and populates the session. Calling /me with a stale token here would
+    // 401 and hard-redirect to /login before ssoExchange finishes (race condition).
+    if (typeof window !== "undefined" && window.location.pathname.startsWith("/auth/sso-callback")) {
+      setLoading(false);
+      return;
+    }
+
     const token = localStorage.getItem("access_token");
     if (!token) {
       setLoading(false);

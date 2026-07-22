@@ -125,77 +125,48 @@ defmodule GottaCc.Directory do
   def search_sites(q, opts \\ []) when is_binary(q) do
     limit = opts[:limit] || 24
 
-    trimmed = String.trim(q)
+    case String.trim(q) do
+      "" ->
+        []
 
-    if trimmed == "" do
-      []
-    else
-      ts_sql = """
-      SELECT s.*, ts_rank(s.search_vector, q) AS rank
-      FROM directory_sites s, websearch_to_tsquery('english', $1) AS q
-      WHERE s.search_vector @@ q AND s.status = 'published'
-      ORDER BY rank DESC, s.overall_score DESC
-      LIMIT $2
-      """
+      trimmed ->
+        # Ecto query (not raw SQL) so Postgrex type decoders apply — uuid columns
+        # come back as strings, overall_score as Decimal, and :category preloads.
+        ts =
+          from s in SiteSchema,
+            where: fragment("search_vector @@ websearch_to_tsquery('english', ?)", ^trimmed),
+            where: s.status == "published",
+            order_by: [
+              desc: fragment("ts_rank(search_vector, websearch_to_tsquery('english', ?))", ^trimmed),
+              desc: s.overall_score
+            ],
+            limit: ^limit,
+            preload: [:category]
 
-      rows =
-        case Ecto.Adapters.SQL.query(GottaCc.Repo, ts_sql, [trimmed, limit]) do
-          {:ok, %{rows: rows, columns: cols}} -> rows |> Enum.map(&row_to_site(&1, cols))
-          _ -> []
+        case GottaCc.Repo.all(ts) do
+          [] -> trigram_search(trimmed, limit)
+          sites -> sites
         end
-
-      if rows != [] do
-        preload_categories(rows)
-      else
-        trigram_search(trimmed, limit)
-      end
     end
   end
 
   defp trigram_search(q, limit) do
     pattern = "%#{String.replace(q, "%", "\\%")}%"
 
-    sql = """
-    SELECT *
-    FROM directory_sites
-    WHERE status = 'published'
-      AND (name ILIKE $1 OR domain ILIKE $1 OR summary ILIKE $1)
-    ORDER BY similarity(domain, $2) DESC, overall_score DESC
-    LIMIT $3
-    """
+    query =
+      from s in SiteSchema,
+        where: s.status == "published",
+        where:
+          fragment("? ILIKE ?", s.name, ^pattern) or
+            fragment("? ILIKE ?", s.domain, ^pattern) or
+            fragment("? ILIKE ?", s.summary, ^pattern),
+        order_by: [
+          desc: fragment("similarity(domain, ?)", ^q),
+          desc: s.overall_score
+        ],
+        limit: ^limit,
+        preload: [:category]
 
-    case Ecto.Adapters.SQL.query(GottaCc.Repo, sql, [pattern, q, limit]) do
-      {:ok, %{rows: rows, columns: cols}} -> rows |> Enum.map(&row_to_site(&1, cols)) |> preload_categories()
-      _ -> []
-    end
-  end
-
-  # Re-hydrates a raw row (with extra generated/rank columns stripped) into the
-  # Ecto schema struct so downstream `site.category` preloads work uniformly.
-  defp row_to_site(row, cols) do
-    valid = SiteSchema.__schema__(:fields) |> MapSet.new(&to_string/1)
-
-    {fields, _dropped} =
-      cols
-      |> Enum.zip(row)
-      |> Enum.reduce({%{}, MapSet.new([])}, fn {col, val}, {acc, d} ->
-        if MapSet.member?(valid, col) do
-          {Map.put(acc, String.to_existing_atom(col), val), d}
-        else
-          {acc, d}
-        end
-      end)
-
-    struct(SiteSchema, fields)
-  end
-
-  defp preload_categories(sites) do
-    ids = sites |> Enum.map(& &1.category_id) |> Enum.uniq()
-
-    categories =
-      GottaCc.Repo.all(from c in CategorySchema, where: c.id in ^ids)
-      |> Map.new(fn c -> {c.id, c} end)
-
-    Enum.map(sites, fn s -> %{s | category: Map.get(categories, s.category_id)} end)
+    GottaCc.Repo.all(query)
   end
 end

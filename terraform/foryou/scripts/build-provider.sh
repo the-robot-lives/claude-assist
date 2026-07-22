@@ -3,8 +3,8 @@
 # via the dev_overrides filesystem mirror in ~/.terraformrc.
 set -euo pipefail
 
-REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../.." && pwd)"
-PROVIDER_DIR="$REPO_ROOT/3rd-party/terraform-provider-foryou"
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
+PROVIDER_DIR="$REPO_ROOT/projects/foryou.therobotlives.com/terraform-provider-foryou"
 PLUGIN_DIR="${HOME}/.local/share/terraform/plugins"
 
 if [[ ! -d "$PROVIDER_DIR" ]]; then
