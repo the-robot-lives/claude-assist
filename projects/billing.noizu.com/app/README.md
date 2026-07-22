@@ -26,12 +26,13 @@ npm run dev
 
 ## Implementation Scope
 
-The web prototype implements the MVP product shape: receivables summary, invoice queue, customer risk, platform readiness, and invoice action details. The Next.js tree turns that shape into routeable pages. Native app folders contain package/project manifests plus source-level starting points that consume the same concepts and contracts.
+The web prototype implements the MVP product shape: receivables summary, invoice queue, invoice detail/send scaffolds, payment-method readiness, record-payment workflow, customer risk, platform readiness, and audit states. The Next.js tree turns that shape into routeable pages. Native app folders contain package/project manifests plus source-level starting points that consume the same concepts and contracts.
 
 ## Next Engineering Steps
 
 1. Scaffold the production web app with the repo's `start-app` pattern when backend/API work starts.
 2. Convert `shared/contracts/billing-api.yaml` into generated clients.
-3. Replace Swift Package manifests with full Xcode projects when signing, previews, and TestFlight are needed.
-4. Wire Android Gradle builds into CI once Android SDK tooling is available.
-5. Replace fixture data with Phoenix API responses.
+3. Implement the Phoenix invoice, send, payment-method, and payment-record endpoints behind the route scaffolds.
+4. Replace Swift Package manifests with full Xcode projects when signing, previews, and TestFlight are needed.
+5. Wire Android Gradle builds into CI once Android SDK tooling is available.
+6. Replace empty readiness data with Phoenix API responses.

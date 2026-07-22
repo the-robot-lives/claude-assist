@@ -53,13 +53,26 @@ data class ReadinessItem(
     val state: String
 )
 
+data class PaymentRail(
+    val label: String,
+    val state: String
+)
+
 private val invoices = emptyList<BillingInvoice>()
 
 private val readinessItems = listOf(
     ReadinessItem("Phoenix API", "Contract drafted"),
     ReadinessItem("PostgreSQL ledger", "Schema pending"),
     ReadinessItem("Stripe webhooks", "Not connected"),
+    ReadinessItem("PayPal webhooks", "Not connected"),
+    ReadinessItem("ACH processor", "Not connected"),
     ReadinessItem("PDF worker", "Not connected")
+)
+
+private val paymentRails = listOf(
+    PaymentRail("Stripe", "Hosted links not connected"),
+    PaymentRail("PayPal", "Checkout not connected"),
+    PaymentRail("ACH", "Settlement rules pending")
 )
 
 @Composable
@@ -69,7 +82,7 @@ fun BillingDashboard() {
             NavigationBar {
                 NavigationBarItem(selected = true, onClick = {}, label = { Text("Dashboard") }, icon = {})
                 NavigationBarItem(selected = false, onClick = {}, label = { Text("Invoices") }, icon = {})
-                NavigationBarItem(selected = false, onClick = {}, label = { Text("Alerts") }, icon = {})
+                NavigationBarItem(selected = false, onClick = {}, label = { Text("Payments") }, icon = {})
             }
         }
     ) { padding ->
@@ -102,6 +115,9 @@ fun BillingDashboard() {
             }
             item {
                 ReadinessCard()
+            }
+            item {
+                PaymentRailsCard()
             }
         }
     }
@@ -140,6 +156,9 @@ private fun EmptyCard(title: String, body: String) {
             Button(onClick = {}) {
                 Text("Create draft")
             }
+            Button(onClick = {}) {
+                Text("Record payment")
+            }
         }
     }
 }
@@ -153,6 +172,21 @@ private fun ReadinessCard() {
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                     Text(item.label)
                     Text(item.state, fontWeight = FontWeight.SemiBold)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun PaymentRailsCard() {
+    Card(colors = CardDefaults.cardColors(containerColor = Color(0xFFFCFDFB))) {
+        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Text("Payment methods", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            paymentRails.forEach { rail ->
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    Text(rail.label)
+                    Text(rail.state, fontWeight = FontWeight.SemiBold)
                 }
             }
         }
@@ -175,6 +209,12 @@ private fun InvoiceCard(invoice: BillingInvoice) {
             }
             Button(onClick = {}) {
                 Text(invoice.nextAction)
+            }
+            Button(onClick = {}) {
+                Text("Send invoice")
+            }
+            Button(onClick = {}) {
+                Text("Record payment")
             }
         }
     }
