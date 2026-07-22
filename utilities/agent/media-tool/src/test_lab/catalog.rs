@@ -440,32 +440,60 @@ pub fn urlencoding_path(s: &str) -> String {
 }
 
 /// Resolve a media path query to an absolute file under allowed roots.
+///
+/// Accepts:
+/// - workspace-relative (`prompts/fim/…`)
+/// - demos-relative (`image/…` or `demos/image/…`)
+/// - absolute paths under demos_dir or workspace_dir
 pub fn resolve_safe_media(
-    rel: &str,
+    raw: &str,
     demos_dir: &Path,
     workspace_dir: &Path,
 ) -> color_eyre::Result<PathBuf> {
-    let rel = rel.trim_start_matches('/');
-    if rel.contains("..") {
+    let raw = raw.trim();
+    if raw.is_empty() || raw.contains("..") {
         color_eyre::eyre::bail!("path traversal rejected");
     }
-    let candidates = [
-        demos_dir.join(rel),
-        workspace_dir.join(rel),
-        // also allow absolute if under roots
-        PathBuf::from(rel),
-    ];
-    for c in candidates {
-        if c.is_file() {
-            let canon = c.canonicalize()?;
-            let demos = demos_dir.canonicalize().unwrap_or_else(|_| demos_dir.to_path_buf());
-            let ws = workspace_dir
-                .canonicalize()
-                .unwrap_or_else(|_| workspace_dir.to_path_buf());
-            if canon.starts_with(&demos) || canon.starts_with(&ws) {
-                return Ok(canon);
-            }
+
+    let demos = demos_dir
+        .canonicalize()
+        .unwrap_or_else(|_| demos_dir.to_path_buf());
+    let ws = workspace_dir
+        .canonicalize()
+        .unwrap_or_else(|_| workspace_dir.to_path_buf());
+
+    let mut candidates: Vec<PathBuf> = Vec::new();
+
+    // Absolute path (do NOT strip leading '/')
+    let as_path = PathBuf::from(raw);
+    if as_path.is_absolute() {
+        candidates.push(as_path);
+    } else {
+        let rel = raw.trim_start_matches('/');
+        // strip optional demos/ or lab-workspace/ prefixes from UI links
+        let rel = rel
+            .strip_prefix("lab-workspace/")
+            .or_else(|| rel.strip_prefix("demos/"))
+            .unwrap_or(rel);
+        candidates.push(workspace_dir.join(rel));
+        candidates.push(demos_dir.join(rel));
+        // also: path already includes prompts/ under workspace
+        if !rel.starts_with("prompts/") {
+            candidates.push(workspace_dir.join("prompts").join(rel));
         }
     }
-    color_eyre::eyre::bail!("media not found or outside allowed roots: {rel}")
+
+    for c in candidates {
+        if !c.is_file() {
+            continue;
+        }
+        let canon = match c.canonicalize() {
+            Ok(p) => p,
+            Err(_) => continue,
+        };
+        if canon.starts_with(&demos) || canon.starts_with(&ws) {
+            return Ok(canon);
+        }
+    }
+    color_eyre::eyre::bail!("media not found or outside allowed roots: {raw}")
 }

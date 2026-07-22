@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Media Viewer</title>
+  <style>
+    :root {
+      --bg: #0c0f14;
+      --surface: #12161e;
+      --surface-2: #181d28;
+      --border: #252b38;
+      --border-soft: #1c2230;
+      --text: #e8eaed;
+      --muted: #8b93a7;
+      --faint: #5c6578;
+      --accent: #7eb8ff;
+      --accent-dim: rgba(126, 184, 255, 0.12);
+      --ok: #6bcf8e;
+      --warn: #e0b44a;
+      --danger: #e07070;
+      --radius: 12px;
+      --font: "Inter", "IBM Plex Sans", system-ui, sans-serif;
+      --mono: "IBM Plex Mono", ui-monospace, monospace;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; min-height: 100vh;
+      font-family: var(--font); color: var(--text); background: var(--bg);
+      line-height: 1.5;
+    }
+    a { color: var(--accent); }
+    header {
+      display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-start;
+      justify-content: space-between;
+      padding: 16px 20px; border-bottom: 1px solid var(--border-soft);
+      background: var(--surface);
+    }
+    header h1 {
+      margin: 0; font-size: 1.15rem; font-weight: 500; letter-spacing: -0.02em;
+    }
+    header .meta { color: var(--muted); font-size: .85rem; margin-top: 4px; max-width: 52rem; }
+    header .path {
+      font-family: var(--mono); font-size: .72rem; color: var(--faint); margin-top: 6px;
+      word-break: break-all;
+    }
+    .pills { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+    .pill {
+      font-size: .68rem; font-family: var(--mono); color: var(--faint);
+      border: 1px solid var(--border-soft); border-radius: 999px; padding: 2px 8px;
+    }
+    .pill.ok { color: var(--ok); border-color: rgba(107,207,142,.3); }
+    .actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    .btn {
+      appearance: none; border: 1px solid var(--border); background: var(--surface-2);
+      color: var(--text); font: inherit; font-size: .82rem;
+      padding: 8px 14px; border-radius: 999px; cursor: pointer; text-decoration: none;
+    }
+    .btn:hover { border-color: #3a4558; }
+    .btn.primary { background: var(--accent); color: #0a0e14; border-color: transparent; font-weight: 500; }
+    .btn:disabled { opacity: .45; cursor: not-allowed; }
+    main {
+      display: grid; grid-template-columns: 1fr minmax(300px, 380px);
+      gap: 0; min-height: calc(100vh - 88px);
+    }
+    @media (max-width: 960px) {
+      main { grid-template-columns: 1fr; }
+    }
+    .preview-pane {
+      padding: 16px 20px 28px; border-right: 1px solid var(--border-soft);
+      display: flex; flex-direction: column; gap: 12px; min-width: 0;
+    }
+    .preview-pane h2, .side h2 {
+      margin: 0; font-size: .7rem; text-transform: uppercase; letter-spacing: .08em;
+      color: var(--faint); font-weight: 500;
+    }
+    .stage {
+      flex: 1; min-height: 420px; background: #fff; border-radius: var(--radius);
+      border: 1px solid var(--border-soft); overflow: hidden; position: relative;
+    }
+    .stage iframe { width: 100%; height: 100%; min-height: 480px; border: 0; display: block; background: #fff; }
+    .stage img, .stage video { max-width: 100%; max-height: 70vh; display: block; margin: 0 auto; }
+    .stage audio { width: 100%; margin-top: 24px; }
+    .stage .empty {
+      color: #666; padding: 40px; text-align: center; font-size: .95rem;
+    }
+    .side {
+      padding: 16px 18px 28px; background: var(--surface);
+      display: flex; flex-direction: column; gap: 12px; min-height: 0;
+    }
+    .side label {
+      display: block; font-size: .72rem; text-transform: uppercase; letter-spacing: .06em;
+      color: var(--faint); margin-bottom: 6px;
+    }
+    textarea, input[type="text"] {
+      width: 100%; background: var(--bg); border: 1px solid var(--border-soft);
+      border-radius: 8px; color: var(--text); font: inherit; font-size: .85rem;
+      padding: 10px 12px; resize: vertical;
+    }
+    textarea.mono { font-family: var(--mono); font-size: .75rem; line-height: 1.45; }
+    textarea:focus, input:focus { outline: none; border-color: var(--accent); }
+    .toast {
+      position: fixed; bottom: 20px; right: 20px; z-index: 50;
+      background: var(--surface-2); border: 1px solid var(--border);
+      padding: 10px 14px; border-radius: 10px; font-size: .85rem;
+      box-shadow: 0 8px 30px rgba(0,0,0,.35); display: none; max-width: 360px;
+    }
+    .toast.show { display: block; }
+    .toast.ok { border-color: rgba(107,207,142,.4); color: var(--ok); }
+    .toast.fail { border-color: rgba(224,112,112,.4); color: var(--danger); }
+    .tabs { display: flex; gap: 4px; margin-bottom: 8px; }
+    .tabs button {
+      appearance: none; border: 0; background: transparent; color: var(--muted);
+      font: inherit; font-size: .8rem; padding: 6px 10px; border-radius: 8px; cursor: pointer;
+    }
+    .tabs button.active { background: var(--accent-dim); color: var(--accent); }
+    .panel { display: none; flex: 1; min-height: 0; flex-direction: column; }
+    .panel.active { display: flex; }
+    .panel textarea { flex: 1; min-height: 220px; }
+    .status { font-size: .75rem; color: var(--faint); font-family: var(--mono); }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1 id="title">Loading…</h1>
+      <div class="meta" id="description"></div>
+      <div class="path" id="paths"></div>
+      <div class="pills" id="pills"></div>
+    </div>
+    <div class="actions">
+      <a class="btn primary" id="btn-lab" href="javascript:history.length>1?history.back():location.href='/'">← Back to lab</a>
+      <a class="btn" id="btn-raw" href="#" target="_blank" rel="noopener">Raw file</a>
+      <button type="button" class="btn" id="btn-reload">Reload preview</button>
+      <button type="button" class="btn primary" id="btn-save">Save prompt</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="preview-pane">
+      <h2>Preview <span id="viewer-kind" style="color:var(--accent);text-transform:none;letter-spacing:0;font-weight:400"></span></h2>
+      <div class="stage" id="stage"><div class="empty">Loading media…</div></div>
+      <div class="status" id="status"></div>
+    </section>
+
+    <aside class="side">
+      <h2>Prompt</h2>
+      <div class="tabs">
+        <button type="button" class="active" data-tab="text">Prompt text</button>
+        <button type="button" data-tab="yaml">Full YAML</button>
+        <button type="button" data-tab="source">Media source</button>
+      </div>
+      <div class="panel active" id="panel-text">
+        <label for="prompt-text">prompt.text (editable)</label>
+        <textarea id="prompt-text" class="mono" spellcheck="false"></textarea>
+      </div>
+      <div class="panel" id="panel-yaml">
+        <label for="prompt-yaml">.media.prompt YAML (editable)</label>
+        <textarea id="prompt-yaml" class="mono" spellcheck="false"></textarea>
+      </div>
+      <div class="panel" id="panel-source">
+        <label for="media-source">Generated file (read-only)</label>
+        <textarea id="media-source" class="mono" readonly spellcheck="false"></textarea>
+      </div>
+      <div class="status" id="save-status"></div>
+    </aside>
+  </main>
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const params = new URLSearchParams(location.search);
+    const state = {
+      mediaPath: params.get("media") || params.get("path") || "",
+      promptPath: params.get("prompt") || params.get("prompt_path") || "",
+      channel: params.get("channel") || params.get("type") || "",
+      format: params.get("format") || "",
+      detail: null,
+      mediaText: "",
+      mediaUrl: "",
+    };
+
+    function toast(msg, ok) {
+      const t = $("toast");
+      t.textContent = msg;
+      t.className = "toast show " + (ok ? "ok" : "fail");
+      clearTimeout(t._t);
+      t._t = setTimeout(() => { t.className = "toast"; }, 3200);
+    }
+
+    function esc(s) {
+      return String(s || "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+    }
+
+    function mediaApiUrl(absOrRel) {
+      // Normalize to a path the media API accepts (relative under workspace/demos, or absolute).
+      let p = String(absOrRel || "");
+      const ws = p.indexOf("/lab-workspace/");
+      if (ws >= 0) {
+        p = p.slice(ws + "/lab-workspace/".length); // e.g. prompts/fim/anime_js/foo.js
+      } else {
+        const d = p.indexOf("/demos/");
+        if (d >= 0) {
+          p = p.slice(d + "/demos/".length);
+        }
+      }
+      return "/api/media?path=" + encodeURIComponent(p);
+    }
+
+    // ---- CDN + host builders (local-first) ----
+    const CDN = {
+      d3: "https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js",
+      cola: "https://cdn.jsdelivr.net/npm/webcola@3.4.0/WebCola/cola.min.js",
+      p5: "https://cdn.jsdelivr.net/npm/p5@1.9.0/lib/p5.min.js",
+      paper: "https://cdn.jsdelivr.net/npm/paper@0.12.17/dist/paper-full.min.js",
+      mermaid: "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js",
+      marked: "https://cdn.jsdelivr.net/npm/marked@12.0.0/marked.min.js",
+      viz: "https://cdn.jsdelivr.net/npm/@viz-js/viz@3.7.0/lib/viz-standalone.js",
+      plantumlEncoder: "https://cdn.jsdelivr.net/npm/plantuml-encoder@1.4.0/dist/plantuml-encoder.min.js",
+      nomnoml: "https://cdn.jsdelivr.net/npm/nomnoml@1.6.2/dist/nomnoml.js",
+      chartjs: "https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js",
+      echarts: "https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js",
+      three: "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js",
+      abcjs: "https://cdn.jsdelivr.net/npm/abcjs@6.3.0/dist/abcjs-basic-min.js",
+      vega: "https://cdn.jsdelivr.net/npm/vega@5.28.0/build/vega.min.js",
+      vegaLite: "https://cdn.jsdelivr.net/npm/vega-lite@5.16.3/build/vega-lite.min.js",
+      vegaEmbed: "https://cdn.jsdelivr.net/npm/vega-embed@6.24.0/build/vega-embed.min.js",
+      cytoscape: "https://cdn.jsdelivr.net/npm/cytoscape@3.28.1/dist/cytoscape.min.js",
+      anime: "https://cdn.jsdelivr.net/npm/animejs@3.2.2/lib/anime.min.js",
+      tone: "https://cdn.jsdelivr.net/npm/tone@14.8.49/build/Tone.js",
+      katex: "https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js",
+      katexCss: "https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css",
+      katexAuto: "https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js",
+      hljs: "https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/highlight.min.js",
+      hljsCss: "https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/styles/github-dark.min.css",
+    };
+
+    function stripEsm(src) {
+      return String(src || "")
+        .replace(/^\s*import\s+[\s\S]*?from\s+['"][^'"]+['"]\s*;?\s*$/gm, "")
+        .replace(/^\s*export\s+\{[^}]*\}\s*;?\s*$/gm, "")
+        .replace(/^\s*export\s+default\s+/gm, "")
+        .replace(/^\s*export\s+(const|let|var|function|class)\s+/gm, "$1 ");
+    }
+    function stripFences(src, lang) {
+      let t = String(src || "").trim();
+      const re = lang ? new RegExp("^```(?:" + lang + ")?\\s*", "i") : /^```[a-z0-9_-]*\s*/i;
+      return t.replace(re, "").replace(/```\s*$/, "").trim();
+    }
+
+    function hostShell({ title, scripts, css, body, boot }) {
+      const sc = (scripts || []).map((u) => `<script src="${u}"><\/script>`).join("\n");
+      const st = (css || []).map((u) => `<link rel="stylesheet" href="${u}"/>`).join("\n");
+      return `<!DOCTYPE html><html><head><meta charset="utf-8"/><title>${esc(title || "preview")}</title>
+${st}
+<style>
+  html,body{margin:0;padding:0;background:#fff;color:#111;font:14px/1.4 system-ui,sans-serif;height:100%}
+  #root{min-height:100%;width:100%}
+  #err{color:#b00020;white-space:pre-wrap;font:12px ui-monospace,monospace;padding:12px}
+  canvas{display:block;margin:0 auto}
+  svg{max-width:100%;height:auto}
+</style>
+${sc}
+</head><body>
+<div id="root"></div>
+<div id="err"></div>
+${body || ""}
+<script>
+${boot || ""}
+<\/script>
+</body></html>`;
+    }
+
+    function buildP5Host(src) {
+      // Global-mode p5: define setup/draw then let p5 auto-start
+      const code = stripEsm(src);
+      return hostShell({
+        title: "p5.js",
+        scripts: [CDN.p5],
+        body: "",
+        boot: `
+try {
+${code}
+  // If sketch forgot createCanvas, ensure one exists
+  if (typeof setup === "function") {
+    const _setup = setup;
+    setup = function() {
+      _setup.apply(this, arguments);
+      if (!document.querySelector("canvas")) {
+        createCanvas(windowWidth || 640, Math.min(windowHeight || 480, 640));
+      }
+    };
+  }
+} catch (e) {
+  document.getElementById("err").textContent = String(e && e.stack || e);
+}
+`,
+      });
+    }
+
+    function buildGenericJsHost(src, scripts, extras) {
+      const code = stripEsm(src);
+      const prep = extras || "";
+      return hostShell({
+        title: "JS preview",
+        scripts: scripts || [CDN.d3],
+        body: `<canvas id="c" width="800" height="480" style="max-width:100%"></canvas>`,
+        boot: `
+try {
+  if (typeof d3 !== "undefined") window.d3 = d3;
+  if (typeof cola !== "undefined") { window.cola = cola; window.webcola = cola; }
+  if (typeof paper !== "undefined" && paper.install) {
+    paper.install(window);
+    const c = document.getElementById("c");
+    if (c) paper.setup(c);
+  }
+  ${prep}
+${code}
+} catch (e) {
+  document.getElementById("err").textContent = String(e && e.stack || e);
+}
+`,
+      });
+    }
+
+    function buildMermaidHost(src) {
+      const body = stripFences(src, "mermaid");
+      return hostShell({
+        title: "Mermaid",
+        scripts: [CDN.mermaid],
+        body: `<pre class="mermaid" style="display:flex;justify-content:center;padding:16px">${body.replace(/</g, "&lt;")}</pre>`,
+        boot: `mermaid.initialize({startOnLoad:true,theme:"neutral",securityLevel:"loose"});`,
+      });
+    }
+
+    function buildGraphvizHost(src) {
+      const dot = stripFences(src, "dot|graphviz");
+      return hostShell({
+        title: "Graphviz",
+        scripts: [CDN.viz],
+        body: `<div id="out" style="padding:16px;text-align:center">Rendering…</div>`,
+        boot: `
+(async () => {
+  const dot = ${JSON.stringify(dot)};
+  try {
+    const viz = await Viz.instance();
+    const svg = viz.renderSVGElement(dot);
+    const out = document.getElementById("out");
+    out.innerHTML = "";
+    out.appendChild(svg);
+  } catch (e) {
+    document.getElementById("out").textContent = String(e);
+  }
+})();
+`,
+      });
+    }
+
+    function buildPlantumlHost(src) {
+      const raw = stripFences(src, "plantuml|puml");
+      return hostShell({
+        title: "PlantUML",
+        scripts: [CDN.plantumlEncoder],
+        body: `<div id="out" style="padding:16px;text-align:center"></div>`,
+        boot: `
+try {
+  const enc = plantumlEncoder.encode(${JSON.stringify(raw)});
+  document.getElementById("out").innerHTML = '<img alt="plantuml" style="max-width:100%" src="https://www.plantuml.com/plantuml/svg/'+enc+'"/>';
+} catch (e) { document.getElementById("out").textContent = String(e); }
+`,
+      });
+    }
+
+    function buildMarkdownHost(src) {
+      return hostShell({
+        title: "Markdown",
+        scripts: [CDN.marked],
+        body: `<div id="c" style="padding:20px;max-width:760px;margin:0 auto"></div>`,
+        boot: `document.getElementById("c").innerHTML = marked.parse(${JSON.stringify(String(src || ""))});`,
+      });
+    }
+
+    function buildCodeHost(src, lang) {
+      return hostShell({
+        title: "Source",
+        css: [CDN.hljsCss],
+        scripts: [CDN.hljs],
+        body: `<pre style="margin:0;padding:16px;background:#0d1117;min-height:100%"><code class="language-${lang || "plaintext"}"></code></pre>`,
+        boot: `
+document.querySelector("code").textContent = ${JSON.stringify(String(src || "").slice(0, 20000))};
+hljs.highlightAll();
+`,
+      });
+    }
+
+    function buildAbcHost(src) {
+      return hostShell({
+        title: "ABC",
+        scripts: [CDN.abcjs],
+        body: `<div id="p" style="padding:12px"></div>`,
+        boot: `try { ABCJS.renderAbc("p", ${JSON.stringify(stripFences(src, "abc"))}, {responsive:"resize"}); } catch(e){ document.getElementById("p").textContent=String(e);} `,
+      });
+    }
+
+    function buildVegaHost(src) {
+      return hostShell({
+        title: "Vega",
+        scripts: [CDN.vega, CDN.vegaLite, CDN.vegaEmbed],
+        body: `<div id="vis" style="padding:12px"></div>`,
+        boot: `vegaEmbed("#vis", ${src}, {actions:false}).catch(e=>{document.getElementById("vis").textContent=String(e);});`,
+      });
+    }
+
+    function buildKatexHost(src) {
+      return hostShell({
+        title: "KaTeX",
+        css: [CDN.katexCss],
+        scripts: [CDN.katex, CDN.katexAuto],
+        body: `<div id="c" style="padding:20px"></div>`,
+        boot: `
+const src = ${JSON.stringify(stripFences(src, "latex|tex|katex"))};
+const el = document.getElementById("c");
+try {
+  if (/\\$|\\\\[|\\\\begin/.test(src)) {
+    el.innerHTML = src.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/\\n/g,"<br/>");
+    renderMathInElement(el, {delimiters:[
+      {left:"$$",right:"$$",display:true},{left:"$",right:"$",display:false}
+    ], throwOnError:false});
+  } else {
+    katex.render(src.trim(), el, {displayMode:true, throwOnError:false});
+  }
+} catch(e) { el.textContent = src + "\\n" + e; }
+`,
+      });
+    }
+
+    function inferKind(channel, fmt, text) {
+      const ch = String(channel || "").toLowerCase().replace(/-/g, "_");
+      const f = String(fmt || "").toLowerCase();
+      const head = String(text || "").trimStart().slice(0, 300).toLowerCase();
+      if (["png","jpg","jpeg","webp","gif","svg"].includes(f)) return f === "svg" ? "svg" : "img";
+      if (["mp4","webm","mov"].includes(f)) return "video";
+      if (["mp3","wav","ogg","flac"].includes(f)) return "audio";
+      if (["pdf"].includes(f)) return "pdf";
+      if (["html","htm"].includes(f) || head.startsWith("<!doctype html") || head.startsWith("<html")) return "html";
+      if (head.startsWith("<svg")) return "svg";
+      if (ch.includes("p5") || /function\s+setup\s*\(/.test(text || "")) return "p5";
+      if (ch.includes("paper") || /paper\./.test(text || "")) return "paper";
+      if (ch.includes("cola") || /webcola|cola\.d3adaptor/.test(text || "")) return "cola";
+      if (ch.includes("mermaid") || f === "mmd" || /^(graph|flowchart)\b/m.test(text || "")) return "mermaid";
+      if (ch.includes("graphviz") || f === "dot" || /^\s*(di)?graph\b/i.test(text || "")) return "graphviz";
+      if (ch.includes("plantuml") || f === "puml" || /@startuml/i.test(text || "")) return "plantuml";
+      if (ch.includes("nomnoml")) return "nomnoml";
+      if (ch.includes("vega") || ch.includes("altair")) return "vega";
+      if (ch.includes("abc")) return "abc";
+      if (ch.includes("katex") || ch.includes("latex") || f === "tex") return "katex";
+      if (ch.includes("markdown") || f === "md" || /article|readme|copy|poem|haiku|sonnet/.test(ch)) return "markdown";
+      if (ch.includes("chart")) return "chart";
+      if (ch.includes("echart")) return "echarts";
+      if (ch.includes("three")) return "three";
+      if (ch.includes("cytoscape")) return "cytoscape";
+      if (ch.includes("d3")) return "d3";
+      if (["js","ts","tsx","jsx","mjs"].includes(f) || /_js$/.test(ch)) return "js";
+      return "code";
+    }
+
+    function buildPreviewHtml(kind, text, channel) {
+      switch (kind) {
+        case "p5": return buildP5Host(text);
+        case "paper": return buildGenericJsHost(text, [CDN.paper], "");
+        case "cola": return buildGenericJsHost(text, [CDN.d3, CDN.cola], "");
+        case "d3": return buildGenericJsHost(text, [CDN.d3], "");
+        case "cytoscape": return buildGenericJsHost(text, [CDN.cytoscape], "");
+        case "chart": return buildGenericJsHost(text, [CDN.chartjs], "");
+        case "echarts": return buildGenericJsHost(text, [CDN.echarts], "");
+        case "three": return buildGenericJsHost(text, [CDN.three], "");
+        case "mermaid": return buildMermaidHost(text);
+        case "graphviz": return buildGraphvizHost(text);
+        case "plantuml": return buildPlantumlHost(text);
+        case "nomnoml":
+          return hostShell({
+            title: "Nomnoml",
+            scripts: [CDN.nomnoml],
+            body: `<canvas id="c" style="margin:16px auto;display:block"></canvas>`,
+            boot: `try{nomnoml.draw(document.getElementById("c"), ${JSON.stringify(stripFences(text))});}catch(e){document.getElementById("err").textContent=String(e);}`,
+          });
+        case "markdown": return buildMarkdownHost(text);
+        case "vega": return buildVegaHost(text);
+        case "abc": return buildAbcHost(text);
+        case "katex": return buildKatexHost(text);
+        case "js": return buildGenericJsHost(text, [CDN.d3], "");
+        default: return buildCodeHost(text, state.format || "plaintext");
+      }
+    }
+
+    function setStageHtml(html) {
+      const stage = $("stage");
+      stage.innerHTML = "";
+      const f = document.createElement("iframe");
+      f.setAttribute("sandbox", "allow-scripts allow-same-origin allow-popups");
+      f.setAttribute("title", "preview");
+      f.srcdoc = html;
+      stage.appendChild(f);
+    }
+
+    function setStageMedia(kind, url) {
+      const stage = $("stage");
+      stage.innerHTML = "";
+      if (kind === "img" || kind === "svg") {
+        const img = document.createElement("img");
+        img.src = url; img.alt = "media";
+        stage.appendChild(img);
+      } else if (kind === "video") {
+        const v = document.createElement("video");
+        v.controls = true; v.src = url; v.style.width = "100%";
+        stage.appendChild(v);
+      } else if (kind === "audio") {
+        const a = document.createElement("audio");
+        a.controls = true; a.src = url; a.style.width = "90%"; a.style.margin = "40px";
+        stage.appendChild(a);
+      } else if (kind === "pdf" || kind === "html") {
+        const f = document.createElement("iframe");
+        f.src = url; f.title = "media";
+        stage.appendChild(f);
+      }
+    }
+
+    async function loadAll() {
+      if (!state.mediaPath && !state.promptPath) {
+        $("title").textContent = "No file specified";
+        $("description").textContent = "Open from the lab with ?media=…&prompt=…";
+        $("stage").innerHTML = `<div class="empty">Missing media/prompt query params.</div>`;
+        return;
+      }
+
+      // Resolve prompt detail first (title/description)
+      if (state.promptPath) {
+        try {
+          const q = "/api/prompt?path=" + encodeURIComponent(state.promptPath);
+          const d = await fetch(q).then((r) => {
+            if (!r.ok) throw new Error("prompt " + r.status);
+            return r.json();
+          });
+          state.detail = d;
+          if (!state.channel) state.channel = d.summary?.text_format || "";
+          if (!state.mediaPath) {
+            const outs = (d.summary?.outputs || []).filter((o) => o.exists);
+            if (outs[0]) {
+              state.mediaPath = outs[0].path;
+              state.format = outs[0].format || state.format;
+              state.channel = outs[0].channel || outs[0].text_format || state.channel;
+            }
+          } else {
+            const match = (d.summary?.outputs || []).find((o) => o.path === state.mediaPath || (o.rel_path && state.mediaPath.endsWith(o.rel_path)));
+            if (match) {
+              state.format = match.format || state.format;
+              state.channel = match.channel || match.text_format || state.channel;
+            }
+          }
+          $("title").textContent = d.summary?.id || "Prompt";
+          $("description").textContent =
+            (d.prompt_text || d.summary?.prompt_preview || "").trim().slice(0, 400) ||
+            "No prompt text";
+          $("prompt-text").value = d.prompt_text || "";
+          $("prompt-yaml").value = d.yaml || "";
+          const pills = $("pills");
+          pills.innerHTML = "";
+          const add = (t, ok) => {
+            const s = document.createElement("span");
+            s.className = "pill" + (ok ? " ok" : "");
+            s.textContent = t;
+            pills.appendChild(s);
+          };
+          if (d.summary?.type_key) add(d.summary.type_key);
+          if (state.channel) add(state.channel, true);
+          if (d.summary?.quality) add(d.summary.quality);
+          if (d.summary?.source) add(d.summary.source);
+        } catch (e) {
+          $("title").textContent = "Prompt load failed";
+          $("description").textContent = String(e);
+        }
+      }
+
+      if (!state.mediaPath) {
+        $("stage").innerHTML = `<div class="empty">No media output yet — Process the prompt in the lab first.</div>`;
+        $("paths").textContent = state.promptPath || "";
+        return;
+      }
+
+      state.mediaUrl = mediaApiUrl(state.mediaPath);
+      $("btn-raw").href = state.mediaUrl;
+      $("paths").textContent =
+        (state.promptPath ? "prompt: " + state.promptPath + "\n" : "") +
+        "media: " + state.mediaPath;
+
+      if (!state.format) {
+        const m = state.mediaPath.match(/\.([a-z0-9]+)$/i);
+        state.format = m ? m[1].toLowerCase() : "";
+      }
+
+      // Binary fast-path
+      const f = state.format;
+      if (["png","jpg","jpeg","webp","gif"].includes(f)) {
+        setStageMedia("img", state.mediaUrl);
+        $("viewer-kind").textContent = "· Image";
+        $("status").textContent = "image · " + f;
+        return;
+      }
+      if (f === "svg") {
+        setStageMedia("svg", state.mediaUrl);
+        $("viewer-kind").textContent = "· SVG";
+        return;
+      }
+      if (["mp4","webm","mov"].includes(f)) {
+        setStageMedia("video", state.mediaUrl);
+        $("viewer-kind").textContent = "· Video";
+        return;
+      }
+      if (["mp3","wav","ogg","flac"].includes(f)) {
+        setStageMedia("audio", state.mediaUrl);
+        $("viewer-kind").textContent = "· Audio";
+        return;
+      }
+      if (f === "pdf") {
+        setStageMedia("pdf", state.mediaUrl);
+        $("viewer-kind").textContent = "· PDF";
+        return;
+      }
+      if (["html","htm"].includes(f)) {
+        setStageMedia("html", state.mediaUrl);
+        $("viewer-kind").textContent = "· HTML";
+        return;
+      }
+
+      // Fetch text media
+      try {
+        const r = await fetch(state.mediaUrl);
+        if (!r.ok) throw new Error("media HTTP " + r.status);
+        state.mediaText = await r.text();
+        $("media-source").value = state.mediaText;
+      } catch (e) {
+        $("stage").innerHTML = `<div class="empty">${esc(String(e))}</div>`;
+        return;
+      }
+
+      // Full HTML document stored as .js/.tsx etc.
+      const head = state.mediaText.trimStart().slice(0, 200).toLowerCase();
+      if (head.startsWith("<!doctype html") || head.startsWith("<html")) {
+        setStageHtml(state.mediaText);
+        $("viewer-kind").textContent = "· HTML document";
+        $("status").textContent = "self-contained HTML";
+        return;
+      }
+
+      const kind = inferKind(state.channel, state.format, state.mediaText);
+      $("viewer-kind").textContent = "· " + kind;
+      $("status").textContent =
+        "channel=" + (state.channel || "—") +
+        " · format=" + (state.format || "—") +
+        " · viewer=" + kind;
+      setStageHtml(buildPreviewHtml(kind, state.mediaText, state.channel));
+    }
+
+    // Tabs
+    document.querySelectorAll(".tabs button").forEach((btn) => {
+      btn.onclick = () => {
+        document.querySelectorAll(".tabs button").forEach((b) => b.classList.remove("active"));
+        document.querySelectorAll(".panel").forEach((p) => p.classList.remove("active"));
+        btn.classList.add("active");
+        $("panel-" + btn.dataset.tab).classList.add("active");
+      };
+    });
+
+    $("btn-reload").onclick = () => loadAll();
+
+    $("btn-save").onclick = async () => {
+      if (!state.promptPath) {
+        toast("No prompt path to save", false);
+        return;
+      }
+      const text = $("prompt-text").value;
+      const yaml = $("prompt-yaml").value;
+      const yamlTab = document.querySelector('.tabs button[data-tab="yaml"]')?.classList.contains("active");
+      if (!text.trim() && !(yamlTab && yaml.trim())) {
+        toast("Prompt text is empty", false);
+        return;
+      }
+      $("btn-save").disabled = true;
+      $("save-status").textContent = "Saving…";
+      try {
+        // Server patches prompt.text into YAML (reliable). Optionally send full YAML if on that tab.
+        const body = yamlTab && yaml.trim()
+          ? { path: state.promptPath, yaml, text }
+          : { path: state.promptPath, text };
+        const res = await fetch("/api/prompt/save", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
+        const j = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(j.error || j.message || ("HTTP " + res.status));
+        toast("Saved prompt", true);
+        $("save-status").textContent = "Saved " + new Date().toLocaleTimeString();
+        state.detail = state.detail || {};
+        state.detail.prompt_text = j.prompt_text || text;
+        $("description").textContent = (j.prompt_text || text).trim().slice(0, 400);
+        // Refresh YAML from disk via re-fetch
+        try {
+          const d = await fetch("/api/prompt?path=" + encodeURIComponent(state.promptPath)).then((r) => r.json());
+          if (d.yaml) $("prompt-yaml").value = d.yaml;
+          if (d.prompt_text) $("prompt-text").value = d.prompt_text;
+        } catch (_) { /* ignore */ }
+      } catch (e) {
+        toast(String(e), false);
+        $("save-status").textContent = String(e);
+      } finally {
+        $("btn-save").disabled = false;
+      }
+    };
+
+    loadAll().catch((e) => {
+      $("stage").innerHTML = `<div class="empty">${esc(String(e))}</div>`;
+      toast(String(e), false);
+    });
+  </script>
+</body>
+</html>

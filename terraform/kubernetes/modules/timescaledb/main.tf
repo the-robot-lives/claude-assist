@@ -18,6 +18,13 @@ locals {
   app_dbs       = [for f in local.app_scripts : upper(dirname(f))]
   app_env_keys  = flatten([for a in local.app_dbs : ["${a}_DB_USER", "${a}_DB_PASSWORD"]])
   app_db_secret = var.app_db_secret_name != "" ? var.app_db_secret_name : var.managed_secret_name
+
+  # Credential source. When existing_password_secret_name is set the Infisical CR
+  # is skipped entirely and POSTGRES_PASSWORD is read from the given Secret (e.g.
+  # a SealedSecret-managed one); otherwise the Infisical operator syncs it.
+  use_existing_secret  = var.existing_password_secret_name != ""
+  password_secret_name = local.use_existing_secret ? var.existing_password_secret_name : var.managed_secret_name
+  password_secret_key  = local.use_existing_secret && var.existing_password_secret_key != "" ? var.existing_password_secret_key : var.password_key
   use_per_app_secrets = length(var.app_db_secrets_map) > 0
   app_env_entries = local.use_per_app_secrets ? flatten([
     for a in local.app_dbs : [
@@ -29,10 +36,12 @@ locals {
   # uuid-ossp + pgcrypto are commonly needed; timescaledb/age are preloaded. The
   # shared lib is "_lib" (no .sh) so the base runner ignores it; per-app scripts
   # source it and are keyed "1NN-<app>.sh" to run after the image's baked 0xx set.
+  extra_ext_sql = join("", [for e in var.extra_extensions : "CREATE EXTENSION IF NOT EXISTS \"${e}\";\n"])
   extensions_file = {
     "00-extensions.sql" = <<-SQL
       CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
       CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+      ${local.extra_ext_sql}
     SQL
   }
   lib_file = (length(local.app_scripts) > 0 && fileexists("${var.initdb_scripts_dir}/_lib.sh")) ? {
@@ -46,6 +55,8 @@ locals {
 }
 
 resource "kubectl_manifest" "infisical" {
+  count = local.use_existing_secret ? 0 : 1
+
   yaml_body = yamlencode({
     apiVersion = "secrets.infisical.com/v1alpha1"
     kind       = "InfisicalSecret"
@@ -159,8 +170,8 @@ resource "kubernetes_deployment_v1" "timescaledb" {
             name = "POSTGRES_PASSWORD"
             value_from {
               secret_key_ref {
-                name = var.managed_secret_name
-                key  = var.password_key
+                name = local.password_secret_name
+                key  = local.password_secret_key
               }
             }
           }

@@ -47,6 +47,11 @@ tiers:
       - posthog
       - oneuptime
       - metabase
+      # Lacrosse staging data + observability stack (terragrunt-managed, like
+      # oneuptime — no Helm chart). One terragrunt module (terraform/kubernetes/
+      # platform/lacrosse) stands up 2x TimescaleDB + Valkey + Manticore + a
+      # dedicated SigNoz/OTel in the lacrosse-infra namespace.
+      - lacrosse-infra
 
   - name: "Platform & Admin"
     tier: 2
@@ -155,6 +160,11 @@ namespace_overrides:
   # Tier 1 — Observability
   signoz: observability-ns
   otel-collector: observability-ns
+  # Tier 1 — Lacrosse staging data + observability (terragrunt stack)
+  lacrosse-infra: lacrosse-infra
+  # Tier 3 — Lacrosse app (Helm chart authored separately; confirm chart name).
+  # The app deploys into the `lacrosse` namespace.
+  lacrosse-ingressor: lacrosse
   phoenix: observability-ns
   posthog: observability-ns
   oneuptime: platform-observability

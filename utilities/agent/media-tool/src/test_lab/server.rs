@@ -114,6 +114,7 @@ pub async fn run_lab(cfg: LabConfig) -> color_eyre::Result<()> {
 
     let app = Router::new()
         .route("/", get(index_page))
+        .route("/view", get(viewer_page))
         .route("/api/health", get(health))
         .route("/api/kinds", get(api_kinds))
         .route("/api/graph", get(api_graph))
@@ -185,6 +186,11 @@ fn open_browser(url: &str) -> std::io::Result<()> {
 
 async fn index_page() -> Html<&'static str> {
     Html(include_str!("static/index.html"))
+}
+
+/// Full-page media viewer: `?media=&prompt=&channel=&format=`
+async fn viewer_page() -> Html<&'static str> {
+    Html(include_str!("static/viewer.html"))
 }
 
 async fn health(State(st): State<AppState>) -> Json<serde_json::Value> {
@@ -1602,7 +1608,12 @@ async fn run_synthesize_prompts(
          {text_format_rule}\
          - Include quality: medium\n\
          - Do NOT pin service: — prefer quality so the tool auto-selects providers\n\
-         - prompt.text must be a concrete creative brief (not a meta placeholder)\n\
+         - prompt.text MUST be a multi-sentence concrete creative brief (what to draw/build).\n\
+         - NEVER leave prompt.text empty. NEVER use the literal string \"|\". NEVER write only `text: |` with no body.\n\
+         - Correct block scalar example:\n\
+           prompt:\n\
+             text: |\n\
+               Create an animated spiral using p5.js with clear colors and interaction.\n\
          - Include eval with pass_threshold: 0.7 and 2-4 criteria maps with weight + description\n\
          - Unique id fields (kebab-case)\n\
          - No markdown fences in the JSON response"
@@ -1694,11 +1705,19 @@ async fn run_synthesize_prompts(
             );
         }
         let raw_yaml = item["yaml"].as_str().unwrap_or("").trim().to_string();
+        // Prefer model-provided brief field, then lab brief, then filename stem
+        let item_brief = item["brief"]
+            .as_str()
+            .or_else(|| item["prompt_text"].as_str())
+            .or(brief)
+            .unwrap_or("")
+            .trim();
         if raw_yaml.is_empty() {
             // Sometimes models put the whole prompt at the top level
             if let Some(y) = item.as_str() {
                 if y.contains("prompt:") {
-                    let repaired = repair_media_prompt_yaml(y, type_key, text_format);
+                    let repaired =
+                        repair_media_prompt_yaml(y, type_key, text_format, Some(item_brief));
                     if let Ok(path) = write_validated_prompt(&out_dir, &filename, &repaired) {
                         written.push(path);
                     }
@@ -1706,13 +1725,15 @@ async fn run_synthesize_prompts(
             }
             continue;
         }
-        let repaired = repair_media_prompt_yaml(&raw_yaml, type_key, text_format);
+        let repaired =
+            repair_media_prompt_yaml(&raw_yaml, type_key, text_format, Some(item_brief));
         match write_validated_prompt(&out_dir, &filename, &repaired) {
             Ok(path) => written.push(path),
             Err(e) => {
                 last_err = format!("{filename}: {e}");
                 // try once more with a known-good skeleton merge
-                let fallback = merge_with_skeleton(&repaired, type_key, text_format);
+                let fallback =
+                    merge_with_skeleton(&repaired, type_key, text_format, Some(item_brief));
                 if let Ok(path) = write_validated_prompt(
                     &out_dir,
                     &filename.replace(".media.prompt", "-fixed.media.prompt"),
@@ -1781,17 +1802,22 @@ fn register_written_prompt(workspace: &Path, slug: &str, path_str: &str, generat
 }
 
 /// Normalize common LLM YAML mistakes so fixtures parse with schema.rs.
-fn repair_media_prompt_yaml(yaml: &str, type_key: &str, text_format: Option<&str>) -> String {
+fn repair_media_prompt_yaml(
+    yaml: &str,
+    type_key: &str,
+    text_format: Option<&str>,
+    brief: Option<&str>,
+) -> String {
     let mut doc: serde_yaml::Value = match serde_yaml::from_str(yaml) {
         Ok(v) => v,
         Err(_) => {
-            return merge_with_skeleton(yaml, type_key, text_format);
+            return merge_with_skeleton(yaml, type_key, text_format, brief);
         }
     };
 
     let map = match doc.as_mapping_mut() {
         Some(m) => m,
-        None => return merge_with_skeleton(yaml, type_key, text_format),
+        None => return merge_with_skeleton(yaml, type_key, text_format, brief),
     };
 
     // schema / type / quality defaults
@@ -1838,21 +1864,26 @@ fn repair_media_prompt_yaml(yaml: &str, type_key: &str, text_format: Option<&str
     }
 
     // Ensure prompt.text exists and is not a YAML block-scalar artifact ("|" alone)
+    let fallback_text = brief
+        .map(str::trim)
+        .filter(|s| s.len() >= 12 && *s != "|")
+        .map(|s| s.to_string())
+        .unwrap_or_else(|| {
+            format!(
+                "Create a polished, self-contained {} demo that clearly shows core features of the library. Prefer a single runnable example with clear structure. Keep it concise but real — not a placeholder or stub.",
+                text_format.unwrap_or(type_key)
+            )
+        });
+
     let prompt_key = serde_yaml::Value::String("prompt".into());
     if let Some(serde_yaml::Value::Mapping(p)) = map.get_mut(&prompt_key) {
         let text_key = serde_yaml::Value::String("text".into());
         let text_val = p.get(&text_key).and_then(|v| v.as_str()).unwrap_or("");
-        let empty = {
-            let t = text_val.trim();
-            t.is_empty() || t == "|" || t == ">" || t == "|-|" || t == "..." || t.len() < 8
-        };
+        let empty = is_empty_prompt_text(text_val);
         if empty {
             p.insert(
                 text_key,
-                serde_yaml::Value::String(format!(
-                    "Create a polished, self-contained {} demo that clearly shows core features of the library. Prefer a single runnable example with clear structure. Keep it concise but real — not a placeholder or stub.",
-                    text_format.unwrap_or(type_key)
-                )),
+                serde_yaml::Value::String(fallback_text.clone()),
             );
         }
         // system for channels
@@ -1871,10 +1902,7 @@ fn repair_media_prompt_yaml(yaml: &str, type_key: &str, text_format: Option<&str
         let mut p = serde_yaml::Mapping::new();
         p.insert(
             serde_yaml::Value::String("text".into()),
-            serde_yaml::Value::String(format!(
-                "Create a polished, self-contained {} example.",
-                text_format.unwrap_or(type_key)
-            )),
+            serde_yaml::Value::String(fallback_text),
         );
         if let Some(tf) = text_format {
             p.insert(
@@ -1890,7 +1918,21 @@ fn repair_media_prompt_yaml(yaml: &str, type_key: &str, text_format: Option<&str
     // Strip accidental service pin from lab fixtures (auto-select)
     map.remove(serde_yaml::Value::String("service".into()));
 
-    serde_yaml::to_string(&doc).unwrap_or_else(|_| merge_with_skeleton(yaml, type_key, text_format))
+    serde_yaml::to_string(&doc)
+        .unwrap_or_else(|_| merge_with_skeleton(yaml, type_key, text_format, brief))
+}
+
+fn is_empty_prompt_text(text_val: &str) -> bool {
+    let t = text_val.trim();
+    t.is_empty()
+        || t == "|"
+        || t == ">"
+        || t == "|-"
+        || t == "|+"
+        || t == "..."
+        || t == "placeholder"
+        || t == "TODO"
+        || t.len() < 12
 }
 
 fn ensure_str_key(map: &mut serde_yaml::Mapping, key: &str, default: &str) {
@@ -1990,7 +2032,12 @@ fn default_ext_for_type(type_key: &str) -> &'static str {
     }
 }
 
-fn merge_with_skeleton(yaml: &str, type_key: &str, text_format: Option<&str>) -> String {
+fn merge_with_skeleton(
+    yaml: &str,
+    type_key: &str,
+    text_format: Option<&str>,
+    brief: Option<&str>,
+) -> String {
     let ext = text_format
         .map(default_ext_for_channel)
         .unwrap_or_else(|| default_ext_for_type(type_key));
@@ -2015,13 +2062,37 @@ fn merge_with_skeleton(yaml: &str, type_key: &str, text_format: Option<&str>) ->
             )
         })
         .unwrap_or_default();
-    // Prefer LLM text if we can snatch it
-    let text = yaml
+    // Prefer explicit brief, then snatch from broken YAML, then default
+    let text = brief
+        .map(str::trim)
+        .filter(|s| !is_empty_prompt_text(s))
+        .map(|s| s.to_string())
+        .or_else(|| {
+            yaml.lines()
+                .find(|l| l.trim_start().starts_with("text:"))
+                .map(|l| {
+                    l.trim()
+                        .trim_start_matches("text:")
+                        .trim()
+                        .trim_matches('"')
+                        .trim_matches('\'')
+                        .to_string()
+                })
+                .filter(|s| !is_empty_prompt_text(s))
+        })
+        .unwrap_or_else(|| {
+            format!(
+                "Create a polished, self-contained {} demonstration of the core features.",
+                text_format.unwrap_or(type_key)
+            )
+        });
+
+    // Use block scalar so multi-line briefs stay valid YAML
+    let text_block = text
         .lines()
-        .find(|l| l.trim_start().starts_with("text:"))
-        .map(|l| l.trim().trim_start_matches("text:").trim().trim_matches('"'))
-        .filter(|s| !s.is_empty() && !s.contains("test fixture"))
-        .unwrap_or("Create a polished, self-contained demonstration of the core features.");
+        .map(|l| format!("    {l}"))
+        .collect::<Vec<_>>()
+        .join("\n");
 
     format!(
         r#"schema: "0.4"
@@ -2030,7 +2101,8 @@ type: {t}
 quality: medium
 
 prompt:
-{sys}  text: "{text}"
+{sys}  text: |
+{text_block}
 
 output:
 {tf_line}  formats:
@@ -2051,7 +2123,7 @@ tags: [lab, generated, {slug}]
         slug = text_format.unwrap_or(type_key).replace('_', "-"),
         t = t,
         sys = sys,
-        text = text.replace('"', "'"),
+        text_block = text_block,
         tf_line = tf_line,
         ext = ext,
     )
@@ -2151,7 +2223,12 @@ struct SavePromptBody {
     #[serde(rename = "type")]
     type_key: Option<String>,
     filename: Option<String>,
-    yaml: String,
+    /// Full YAML document (optional if `text` is set and path already exists)
+    #[serde(default)]
+    yaml: Option<String>,
+    /// Patch only prompt.text on an existing file (preferred for the edit modal)
+    #[serde(default)]
+    text: Option<String>,
 }
 
 async fn api_save_prompt(
@@ -2162,6 +2239,8 @@ async fn api_save_prompt(
         let pb = PathBuf::from(p);
         if pb.is_absolute() {
             pb
+        } else if p.starts_with("prompts/") || p.starts_with("prompts\\") {
+            st.inner.cfg.workspace_dir.join(p)
         } else {
             st.inner.cfg.workspace_dir.join("prompts").join(p)
         }
@@ -2199,16 +2278,37 @@ async fn api_save_prompt(
         ));
     }
 
+    // Build YAML: full body, or load existing + patch prompt.text
+    let yaml = if let Some(ref t) = body.text {
+        let base = if let Some(ref y) = body.yaml {
+            y.clone()
+        } else if dest.is_file() {
+            std::fs::read_to_string(&dest).map_err(|e| ApiError::bad(e.to_string()))?
+        } else {
+            return Err(ApiError::bad(
+                "path not found — provide yaml when creating a new prompt".into(),
+            ));
+        };
+        patch_prompt_text_yaml(&base, t).map_err(ApiError::bad)?
+    } else if let Some(ref y) = body.yaml {
+        y.clone()
+    } else {
+        return Err(ApiError::bad("provide yaml and/or text".into()));
+    };
+
     // Validate YAML parses
     let tmp = st.inner.cfg.workspace_dir.join(".validate-tmp.media.prompt");
-    std::fs::write(&tmp, &body.yaml).map_err(|e| ApiError::bad(e.to_string()))?;
-    if let Err(e) = parse_prompt_file(&tmp) {
-        let _ = std::fs::remove_file(&tmp);
-        return Err(ApiError::bad(format!("invalid .media.prompt: {e}")));
-    }
+    std::fs::write(&tmp, &yaml).map_err(|e| ApiError::bad(e.to_string()))?;
+    let parsed = match parse_prompt_file(&tmp) {
+        Ok(p) => p,
+        Err(e) => {
+            let _ = std::fs::remove_file(&tmp);
+            return Err(ApiError::bad(format!("invalid .media.prompt: {e}")));
+        }
+    };
     let _ = std::fs::remove_file(&tmp);
 
-    std::fs::write(&dest, &body.yaml).map_err(|e| ApiError::bad(e.to_string()))?;
+    std::fs::write(&dest, &yaml).map_err(|e| ApiError::bad(e.to_string()))?;
 
     let path_str = dest.display().to_string();
     let slug = body
@@ -2223,8 +2323,31 @@ async fn api_save_prompt(
         "ok": true,
         "path": path_str,
         "slug": slug,
+        "prompt_text": parsed.payload.prompt.text,
         "index": ExamplesIndex::path(&st.inner.cfg.workspace_dir).display().to_string(),
     })))
+}
+
+/// Set `prompt.text` in a .media.prompt YAML document (serde round-trip).
+fn patch_prompt_text_yaml(yaml: &str, text: &str) -> Result<String, String> {
+    let mut doc: serde_yaml::Value =
+        serde_yaml::from_str(yaml).map_err(|e| format!("YAML parse: {e}"))?;
+    let map = doc
+        .as_mapping_mut()
+        .ok_or_else(|| "YAML root must be a mapping".to_string())?;
+    let prompt_key = serde_yaml::Value::String("prompt".into());
+    if !map.contains_key(&prompt_key) {
+        map.insert(prompt_key.clone(), serde_yaml::Value::Mapping(Default::default()));
+    }
+    let prompt = map
+        .get_mut(&prompt_key)
+        .and_then(|v| v.as_mapping_mut())
+        .ok_or_else(|| "prompt: must be a mapping".to_string())?;
+    prompt.insert(
+        serde_yaml::Value::String("text".into()),
+        serde_yaml::Value::String(text.to_string()),
+    );
+    serde_yaml::to_string(&doc).map_err(|e| format!("YAML serialize: {e}"))
 }
 
 async fn api_list_jobs(State(st): State<AppState>) -> Json<Vec<Job>> {

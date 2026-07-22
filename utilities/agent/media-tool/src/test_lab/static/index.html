@@ -412,6 +412,53 @@
     }
     details.adv summary::-webkit-details-marker { display: none; }
 
+    /* Edit prompt modal */
+    .modal-backdrop {
+      display: none; position: fixed; inset: 0; z-index: 80;
+      background: rgba(0,0,0,.55); align-items: center; justify-content: center;
+      padding: 24px;
+    }
+    .modal-backdrop.open { display: flex; }
+    .modal {
+      width: min(720px, 100%); max-height: min(86vh, 900px);
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); display: flex; flex-direction: column;
+      box-shadow: 0 20px 60px rgba(0,0,0,.45);
+    }
+    .modal header {
+      display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;
+      padding: 16px 18px; border-bottom: 1px solid var(--border-soft);
+    }
+    .modal header h3 { margin: 0; font-size: 1rem; font-weight: 500; }
+    .modal header .sub {
+      margin: 4px 0 0; font-size: .78rem; color: var(--faint); font-family: var(--mono);
+      word-break: break-all;
+    }
+    .modal .body { padding: 16px 18px; overflow: auto; flex: 1; }
+    .modal .body label {
+      display: block; font-size: .72rem; text-transform: uppercase; letter-spacing: .06em;
+      color: var(--faint); margin: 0 0 6px;
+    }
+    .modal textarea {
+      width: 100%; min-height: 160px; background: var(--bg); border: 1px solid var(--border-soft);
+      border-radius: 8px; color: var(--text); font-family: var(--mono); font-size: .78rem;
+      line-height: 1.45; padding: 10px 12px; resize: vertical;
+    }
+    .modal textarea:focus { outline: none; border-color: var(--accent); }
+    .modal footer {
+      display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end;
+      padding: 12px 18px 16px; border-top: 1px solid var(--border-soft);
+    }
+    .modal .tabs { display: flex; gap: 4px; margin-bottom: 10px; }
+    .modal .tabs button {
+      appearance: none; border: 0; background: transparent; color: var(--muted);
+      font: inherit; font-size: .8rem; padding: 6px 10px; border-radius: 8px; cursor: pointer;
+    }
+    .modal .tabs button.active { background: var(--accent-dim); color: var(--accent); }
+    .modal .mpanel { display: none; }
+    .modal .mpanel.active { display: block; }
+    .modal .hint { font-size: .8rem; color: var(--muted); margin: 0 0 10px; }
+
     #toast {
       position: fixed; bottom: var(--s3); right: var(--s3);
       background: var(--surface-2); border: 1px solid var(--border);
@@ -557,6 +604,40 @@
       <pre class="mono" id="prompt-yaml" style="max-height:360px"></pre>
       <pre class="mono" id="fim-preview" style="max-height:240px;margin-top:12px"></pre>
     </details>
+
+  <!-- Edit prompt modal (stays on this page) -->
+  <div class="modal-backdrop" id="edit-modal" role="dialog" aria-modal="true" aria-labelledby="edit-modal-title">
+    <div class="modal">
+      <header>
+        <div>
+          <h3 id="edit-modal-title">Edit prompt</h3>
+          <p class="sub" id="edit-modal-path"></p>
+        </div>
+        <button type="button" class="btn sm" id="edit-modal-close" title="Close">✕ Close</button>
+      </header>
+      <div class="body">
+        <p class="hint">Edit the creative brief or full YAML, then Save. Close returns to the lab — no separate page.</p>
+        <div class="tabs" id="edit-tabs">
+          <button type="button" class="active" data-mtab="text">Prompt text</button>
+          <button type="button" data-mtab="yaml">Full YAML</button>
+        </div>
+        <div class="mpanel active" id="mpanel-text">
+          <label for="edit-prompt-text">prompt.text</label>
+          <textarea id="edit-prompt-text" spellcheck="false"></textarea>
+        </div>
+        <div class="mpanel" id="mpanel-yaml">
+          <label for="edit-prompt-yaml">.media.prompt YAML</label>
+          <textarea id="edit-prompt-yaml" style="min-height:280px" spellcheck="false"></textarea>
+        </div>
+        <p class="hint" id="edit-modal-status" style="margin-top:10px"></p>
+      </div>
+      <footer>
+        <button type="button" class="btn" id="edit-modal-cancel">Cancel</button>
+        <a class="btn" id="edit-modal-open-tab" href="#" target="_blank" rel="noopener">Open full viewer</a>
+        <button type="button" class="btn primary" id="edit-modal-save">Save</button>
+      </footer>
+    </div>
+  </div>
   </main>
 
   <div id="toast" role="status"></div>
@@ -1037,6 +1118,7 @@
           </div>
           <div class="ex-actions">
             <button type="button" class="btn sm" data-act="select">Select</button>
+            <button type="button" class="btn sm" data-act="open">View / edit</button>
             <button type="button" class="btn sm primary" data-act="process">Process → generate media</button>
             <button type="button" class="btn sm" data-act="dry">Dry run</button>
             <button type="button" class="btn sm" data-act="view"${outs ? "" : " disabled"}>View outputs</button>
@@ -1050,6 +1132,7 @@
           selectExample(e);
         };
         bind("select", () => selectExample(e));
+        bind("open", () => openPromptViewer(e));
         bind("process", async () => { await selectExample(e); await startProcess(false); });
         bind("dry", async () => { await selectExample(e); await startProcess(true); });
         bind("view", async () => {
@@ -2210,6 +2293,140 @@ hljs.highlightAll();
       return { label, wide: true };
     }
 
+    function viewerUrl(opts) {
+      const q = new URLSearchParams();
+      if (opts.media) q.set("media", opts.media);
+      if (opts.prompt) q.set("prompt", opts.prompt);
+      if (opts.channel) q.set("channel", opts.channel);
+      if (opts.format) q.set("format", opts.format);
+      return "/view?" + q.toString();
+    }
+
+    // ---- Edit modal (in-page; Close returns to lab) ----
+    const editState = { path: null, source: "workspace" };
+
+    function closeEditModal() {
+      $("edit-modal")?.classList.remove("open");
+      editState.path = null;
+    }
+
+    async function openEditModal(e) {
+      if (!e?.path) return toast("No prompt path");
+      editState.path = e.path;
+      editState.source = e.source || "workspace";
+      $("edit-modal-path").textContent = e.path;
+      $("edit-modal-title").textContent = e.id || "Edit prompt";
+      $("edit-modal-status").textContent = "Loading…";
+      $("edit-modal").classList.add("open");
+      try {
+        const d = await api(
+          `/api/prompt?path=${encodeURIComponent(e.path)}&source=${encodeURIComponent(editState.source)}`
+        );
+        $("edit-prompt-text").value = d.prompt_text || "";
+        $("edit-prompt-yaml").value = d.yaml || "";
+        $("edit-modal-status").textContent = "";
+        const outs = (d.summary?.outputs || e.outputs || []).filter((o) => o && o.exists);
+        const first = outs[0];
+        $("edit-modal-open-tab").href = viewerUrl({
+          prompt: e.path,
+          media: first?.path || "",
+          channel: first?.channel || first?.text_format || state.generator?.slug || "",
+          format: first?.format || "",
+        });
+        // Select this example in the lab too
+        state.example = {
+          ...e,
+          id: d.summary?.id || e.id,
+          path: d.summary?.path || e.path,
+          prompt_preview: d.summary?.prompt_preview || e.prompt_preview,
+          outputs: d.summary?.outputs || e.outputs || [],
+        };
+        state.detail = d;
+        $("prompt-text").textContent = d.prompt_text || "(empty)";
+        $("prompt-yaml").textContent = d.yaml || "";
+      } catch (err) {
+        $("edit-modal-status").textContent = err.message || String(err);
+        toast(err.message || String(err));
+      }
+    }
+
+    function openPromptViewer(e) {
+      // In-page modal for edit/view — not a separate page
+      openEditModal(e);
+    }
+
+    function openMediaViewer(o) {
+      const url = viewerUrl({
+        media: o.path,
+        prompt: state.example?.path || state.detail?.summary?.path || "",
+        channel: o.channel || o.text_format || state.generator?.slug || state.detail?.summary?.text_format || "",
+        format: o.format || "",
+      });
+      window.open(url, "_blank", "noopener");
+    }
+
+    // Modal wiring (once)
+    (() => {
+      const backdrop = $("edit-modal");
+      if (!backdrop) return;
+      $("edit-modal-close").onclick = closeEditModal;
+      $("edit-modal-cancel").onclick = closeEditModal;
+      backdrop.addEventListener("click", (ev) => {
+        if (ev.target === backdrop) closeEditModal();
+      });
+      document.addEventListener("keydown", (ev) => {
+        if (ev.key === "Escape" && backdrop.classList.contains("open")) closeEditModal();
+      });
+      document.querySelectorAll("#edit-tabs button").forEach((btn) => {
+        btn.onclick = () => {
+          document.querySelectorAll("#edit-tabs button").forEach((b) => b.classList.remove("active"));
+          document.querySelectorAll(".mpanel").forEach((p) => p.classList.remove("active"));
+          btn.classList.add("active");
+          $("mpanel-" + btn.dataset.mtab)?.classList.add("active");
+        };
+      });
+      $("edit-modal-save").onclick = async () => {
+        if (!editState.path) return;
+        const text = $("edit-prompt-text").value;
+        const yamlPanel = $("mpanel-yaml")?.classList.contains("active");
+        const yaml = $("edit-prompt-yaml").value;
+        $("edit-modal-save").disabled = true;
+        $("edit-modal-status").textContent = "Saving…";
+        try {
+          // Prefer text patch (server merges into YAML). If on YAML tab, send full yaml + text.
+          const body = yamlPanel
+            ? { path: editState.path, yaml, text }
+            : { path: editState.path, text };
+          const res = await fetch("/api/prompt/save", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+          });
+          const j = await res.json().catch(() => ({}));
+          if (!res.ok) throw new Error(j.error || j.message || ("HTTP " + res.status));
+          $("edit-modal-status").textContent = "Saved.";
+          toast("Prompt saved");
+          // Refresh selection + list
+          const refreshed = {
+            id: state.example?.id,
+            path: j.path || editState.path,
+            source: editState.source,
+            prompt_preview: (j.prompt_text || text || "").slice(0, 160),
+            outputs: state.example?.outputs || [],
+          };
+          await selectExample(refreshed);
+          // reload yaml into modal
+          if (state.detail?.yaml) $("edit-prompt-yaml").value = state.detail.yaml;
+          if (j.prompt_text) $("edit-prompt-text").value = j.prompt_text;
+        } catch (err) {
+          $("edit-modal-status").textContent = err.message || String(err);
+          toast(err.message || String(err));
+        } finally {
+          $("edit-modal-save").disabled = false;
+        }
+      };
+    })();
+
     function renderMedia(outputs) {
       const root = $("media-grid");
       const existing = (outputs || []).filter((o) => o && o.exists);
@@ -2223,15 +2440,24 @@ hljs.highlightAll();
       for (const o of existing) {
         const tile = document.createElement("div");
         tile.className = "tile wide";
+        const openHref = viewerUrl({
+          media: o.path,
+          prompt: state.example?.path || state.detail?.summary?.path || "",
+          channel: o.channel || o.text_format || state.generator?.slug || "",
+          format: o.format || "",
+        });
         tile.innerHTML = `
           <div class="nm">${esc(o.rel_path || o.path)}</div>
           <div class="viewer-label">Loading viewer…</div>
           <div class="viewer-stage"></div>
           <div class="ex-actions">
+            <a class="btn sm primary" href="${openHref}" target="_blank" rel="noopener">Open tab</a>
             <button type="button" class="btn sm" data-act="eval">Eval</button>
-            <a class="btn sm" href="${o.media_url}" target="_blank" rel="noopener">Open file</a>
+            <a class="btn sm" href="${o.media_url}" target="_blank" rel="noopener">Raw file</a>
           </div>`;
         tile.querySelector('[data-act="eval"]').onclick = () => startEval(o.path);
+        // Double-click stage opens full viewer
+        tile.querySelector(".viewer-stage").addEventListener("dblclick", () => openMediaViewer(o));
         root.appendChild(tile);
         const stage = tile.querySelector(".viewer-stage");
         const labelEl = tile.querySelector(".viewer-label");

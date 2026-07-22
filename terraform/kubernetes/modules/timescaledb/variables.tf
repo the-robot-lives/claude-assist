@@ -86,10 +86,23 @@ variable "app_db_secrets_map" {
   default     = {}
 }
 
-# --- Infisical secret management -------------------------------------------
+variable "extra_extensions" {
+  description = "Extra Postgres extensions to CREATE EXTENSION IF NOT EXISTS in POSTGRES_DB on first init, appended to the baked 00-extensions.sql (uuid-ossp + pgcrypto). Empty = current behaviour. e.g. [\"timescaledb\"] to enable TimescaleDB in the target database."
+  type        = list(string)
+  default     = []
+}
+
+# --- Secret management ------------------------------------------------------
+# Two mutually exclusive credential sources:
+#   * Infisical (default): set `managed_secret_name` + `infisical`; the operator
+#     syncs POSTGRES_PASSWORD (and any per-app keys) into the managed Secret.
+#   * Existing secret (sealed-secrets, etc.): set `existing_password_secret_name`
+#     to read POSTGRES_PASSWORD from a pre-existing Secret and SKIP the Infisical
+#     CR entirely. Used by stacks that manage credentials via SealedSecrets.
 variable "managed_secret_name" {
-  description = "Name of the Secret the Infisical operator creates."
+  description = "Name of the Secret the Infisical operator creates. Required for the Infisical path; ignored when existing_password_secret_name is set."
   type        = string
+  default     = ""
 }
 
 variable "password_key" {
@@ -98,8 +111,20 @@ variable "password_key" {
   default     = "POSTGRES_PASSWORD"
 }
 
+variable "existing_password_secret_name" {
+  description = "When set, read POSTGRES_PASSWORD from this pre-existing Secret and do NOT create an InfisicalSecret. Bypasses the Infisical wiring (e.g. for SealedSecret-managed credentials). Empty = use Infisical (current behaviour)."
+  type        = string
+  default     = ""
+}
+
+variable "existing_password_secret_key" {
+  description = "Key in existing_password_secret_name holding POSTGRES_PASSWORD. Empty falls back to password_key."
+  type        = string
+  default     = ""
+}
+
 variable "infisical" {
-  description = "Infisical operator universalAuth config + secrets scope."
+  description = "Infisical operator universalAuth config + secrets scope. May be null when existing_password_secret_name is set."
   type = object({
     host_api              = string
     project_slug          = string
@@ -109,4 +134,5 @@ variable "infisical" {
     credentials_namespace = string
     resync_interval       = number
   })
+  default = null
 }
