@@ -78,7 +78,7 @@ defmodule ForyouWeb.SSOController do
 
   def exchange(conn, %{"code" => code}) do
     with {:ok, session_id} <- Foryou.Auth.SSOCode.exchange(code),
-         {:ok, session} <- Foryou.Users.Sessions.get(session_id, Noizu.Context.system()),
+         {:ok, session} <- Foryou.Users.Sessions.get_session(session_id, Noizu.Context.system()),
          {:ok, access_token, _} <- Guardian.encode_and_sign(session, %{}, token_type: "access", ttl: {1, :hour}),
          {:ok, refresh_token, _} <- Guardian.encode_and_sign(session, %{}, token_type: "refresh", ttl: {7, :day}) do
       user = resolve_user_from_session(session)
