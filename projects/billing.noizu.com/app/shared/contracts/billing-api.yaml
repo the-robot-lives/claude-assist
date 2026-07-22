@@ -65,6 +65,20 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Invoice"
+  /workspaces/{workspaceId}/invoices/{invoiceId}:
+    get:
+      summary: View invoice
+      operationId: getInvoice
+      parameters:
+        - $ref: "#/components/parameters/WorkspaceId"
+        - $ref: "#/components/parameters/InvoiceId"
+      responses:
+        "200":
+          description: Invoice detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InvoiceDetail"
   /workspaces/{workspaceId}/invoices/{invoiceId}/send:
     post:
       summary: Send invoice
@@ -72,6 +86,12 @@ paths:
       parameters:
         - $ref: "#/components/parameters/WorkspaceId"
         - $ref: "#/components/parameters/InvoiceId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SendInvoiceRequest"
       responses:
         "202":
           description: Invoice send accepted
@@ -79,6 +99,88 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/BillingEvent"
+  /workspaces/{workspaceId}/payment-methods:
+    get:
+      summary: List payment methods
+      operationId: listPaymentMethods
+      parameters:
+        - $ref: "#/components/parameters/WorkspaceId"
+      responses:
+        "200":
+          description: Configured payment methods
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/PaymentMethod"
+    post:
+      summary: Configure payment method
+      operationId: configurePaymentMethod
+      parameters:
+        - $ref: "#/components/parameters/WorkspaceId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ConfigurePaymentMethodRequest"
+      responses:
+        "202":
+          description: Payment method configuration accepted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentMethod"
+  /workspaces/{workspaceId}/payments:
+    get:
+      summary: List payments
+      operationId: listPayments
+      parameters:
+        - $ref: "#/components/parameters/WorkspaceId"
+        - name: invoiceId
+          in: query
+          schema:
+            type: string
+        - name: provider
+          in: query
+          schema:
+            $ref: "#/components/schemas/PaymentProvider"
+      responses:
+        "200":
+          description: Payment history
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Payment"
+    post:
+      summary: Record payment
+      operationId: recordPayment
+      parameters:
+        - $ref: "#/components/parameters/WorkspaceId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RecordPaymentRequest"
+      responses:
+        "201":
+          description: Payment recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Payment"
   /workspaces/{workspaceId}/notifications/preferences:
     get:
       summary: Get notification preferences
@@ -152,6 +254,36 @@ components:
         dueDate:
           type: string
           format: date
+    InvoiceDetail:
+      allOf:
+        - $ref: "#/components/schemas/Invoice"
+        - type: object
+          required: [lineItems, paymentMethods, events]
+          properties:
+            lineItems:
+              type: array
+              items:
+                $ref: "#/components/schemas/InvoiceLineItem"
+            paymentMethods:
+              type: array
+              items:
+                $ref: "#/components/schemas/PaymentProvider"
+            events:
+              type: array
+              items:
+                $ref: "#/components/schemas/BillingEvent"
+    InvoiceLineItem:
+      type: object
+      required: [description, quantity, unitPrice, total]
+      properties:
+        description:
+          type: string
+        quantity:
+          type: number
+        unitPrice:
+          $ref: "#/components/schemas/Money"
+        total:
+          $ref: "#/components/schemas/Money"
     CreateInvoiceRequest:
       type: object
       required: [customerId, lineItems]
@@ -172,6 +304,98 @@ components:
                 type: number
               unitPrice:
                 $ref: "#/components/schemas/Money"
+    SendInvoiceRequest:
+      type: object
+      required: [recipientEmail, subject, message, paymentProviders]
+      properties:
+        recipientEmail:
+          type: string
+          format: email
+        subject:
+          type: string
+        message:
+          type: string
+        paymentProviders:
+          type: array
+          minItems: 1
+          items:
+            $ref: "#/components/schemas/PaymentProvider"
+        requireHumanApproval:
+          type: boolean
+          default: true
+    PaymentProvider:
+      type: string
+      enum: [stripe, paypal, ach, manual]
+    PaymentMethod:
+      type: object
+      required: [id, provider, label, state]
+      properties:
+        id:
+          type: string
+        provider:
+          $ref: "#/components/schemas/PaymentProvider"
+        label:
+          type: string
+        state:
+          type: string
+          enum: [ready, not_connected, needs_review, disabled]
+        webhookEndpoint:
+          type: string
+          format: uri
+        publicPaymentInstructions:
+          type: string
+    ConfigurePaymentMethodRequest:
+      type: object
+      required: [provider, label]
+      properties:
+        provider:
+          $ref: "#/components/schemas/PaymentProvider"
+        label:
+          type: string
+        webhookEndpoint:
+          type: string
+          format: uri
+        publicPaymentInstructions:
+          type: string
+    Payment:
+      type: object
+      required: [id, invoiceId, provider, amount, receivedAt, status]
+      properties:
+        id:
+          type: string
+        invoiceId:
+          type: string
+        provider:
+          $ref: "#/components/schemas/PaymentProvider"
+        amount:
+          $ref: "#/components/schemas/Money"
+        receivedAt:
+          type: string
+          format: date-time
+        processorReference:
+          type: string
+        status:
+          type: string
+          enum: [pending, settled, failed, reversed]
+        note:
+          type: string
+    RecordPaymentRequest:
+      type: object
+      required: [invoiceId, provider, amount, receivedAt]
+      properties:
+        invoiceId:
+          type: string
+        provider:
+          $ref: "#/components/schemas/PaymentProvider"
+        amount:
+          $ref: "#/components/schemas/Money"
+        receivedAt:
+          type: string
+          format: date-time
+        processorReference:
+          type: string
+        note:
+          type: string
     BillingEvent:
       type: object
       required: [id, type, occurredAt]

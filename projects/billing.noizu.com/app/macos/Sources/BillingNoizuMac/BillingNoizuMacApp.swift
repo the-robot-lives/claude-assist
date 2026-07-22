@@ -10,6 +10,8 @@ struct BillingNoizuMacApp: App {
             CommandMenu("Billing") {
                 Button("New Invoice") {}
                     .keyboardShortcut("n")
+                Button("Record Payment") {}
+                    .keyboardShortcut("p")
                 Button("Refresh Receivables") {}
                     .keyboardShortcut("r")
             }
@@ -37,13 +39,27 @@ struct MacReadinessItem: Identifiable {
     let state: String
 }
 
+struct MacPaymentRail: Identifiable {
+    let id = UUID()
+    let label: String
+    let state: String
+}
+
 private let macInvoices: [MacInvoice] = []
 
 private let macReadiness = [
     MacReadinessItem(label: "Phoenix API", state: "Contract drafted"),
     MacReadinessItem(label: "PostgreSQL ledger", state: "Schema pending"),
     MacReadinessItem(label: "Stripe webhooks", state: "Not connected"),
+    MacReadinessItem(label: "PayPal webhooks", state: "Not connected"),
+    MacReadinessItem(label: "ACH processor", state: "Not connected"),
     MacReadinessItem(label: "PDF worker", state: "Not connected")
+]
+
+private let macPaymentRails = [
+    MacPaymentRail(label: "Stripe", state: "Hosted links not connected"),
+    MacPaymentRail(label: "PayPal", state: "Checkout not connected"),
+    MacPaymentRail(label: "ACH", state: "Settlement rules pending")
 ]
 
 struct ReceivablesCockpitView: View {
@@ -90,6 +106,7 @@ struct ReceivablesCockpitView: View {
         .toolbar {
             ToolbarItemGroup {
                 Button("New Invoice", systemImage: "plus") {}
+                Button("Record Payment", systemImage: "creditcard.and.123") {}
                 Button("Export", systemImage: "square.and.arrow.down") {}
                 Button("Inspector", systemImage: "sidebar.right") {}
             }
@@ -113,6 +130,8 @@ struct InvoiceInspector: View {
             }
             Divider()
             Button("Open payment history") {}
+            Button("Send invoice") {}
+            Button("Record payment") {}
             Button("Approve follow-up draft") {}
             Spacer()
         }
@@ -136,6 +155,17 @@ struct ReadinessInspector: View {
                     }
                 }
             }
+            Divider()
+            Text("Payment rails")
+                .font(.headline)
+            Grid(alignment: .leading, horizontalSpacing: 24, verticalSpacing: 12) {
+                ForEach(macPaymentRails) { rail in
+                    GridRow {
+                        Text(rail.label)
+                        Text(rail.state).bold()
+                    }
+                }
+            }
             Spacer()
         }
         .padding(28)
@@ -151,6 +181,7 @@ struct MenuBarCollectionsView: View {
             LabeledContent("Receivables", value: "Pending")
             LabeledContent("At risk", value: "Pending")
             LabeledContent("Payments", value: "Pending")
+            LabeledContent("Rails", value: "Stripe, PayPal, ACH pending")
             Divider()
             Button("Open receivables cockpit") {}
         }

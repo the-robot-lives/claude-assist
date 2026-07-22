@@ -811,3 +811,45 @@ user_stories:
     priority: must-have
     personas: [P-002, P-005, P-007, P-008, P-009]
     file: US-116-platform-privacy-and-secure-storage.md
+  - id: US-117
+    title: View invoice detail workspace
+    slug: view-invoice-detail-workspace
+    epic: Invoices and Delivery
+    priority: must-have
+    personas: [P-001, P-002, P-005]
+    file: US-117-view-invoice-detail-workspace.md
+  - id: US-118
+    title: Send invoice workflow
+    slug: send-invoice-workflow
+    epic: Invoices and Delivery
+    priority: must-have
+    personas: [P-001, P-002, P-007]
+    file: US-118-send-invoice-workflow.md
+  - id: US-119
+    title: Configure Stripe payment method
+    slug: configure-stripe-payment-method
+    epic: Payments and Credits
+    priority: must-have
+    personas: [P-001, P-002]
+    file: US-119-configure-stripe-payment-method.md
+  - id: US-120
+    title: Configure PayPal payment method
+    slug: configure-paypal-payment-method
+    epic: Payments and Credits
+    priority: should-have
+    personas: [P-001, P-002]
+    file: US-120-configure-paypal-payment-method.md
+  - id: US-121
+    title: Configure ACH payment method
+    slug: configure-ach-payment-method
+    epic: Payments and Credits
+    priority: must-have
+    personas: [P-001, P-002, P-005]
+    file: US-121-configure-ach-payment-method.md
+  - id: US-122
+    title: Record provider payment
+    slug: record-provider-payment
+    epic: Payments and Credits
+    priority: must-have
+    personas: [P-002, P-005]
+    file: US-122-record-provider-payment.md

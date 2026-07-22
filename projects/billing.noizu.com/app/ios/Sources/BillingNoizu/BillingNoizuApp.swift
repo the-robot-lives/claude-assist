@@ -27,13 +27,27 @@ struct ReadinessItem: Identifiable {
     let systemImage: String
 }
 
+struct PaymentRail: Identifiable {
+    let id = UUID()
+    let label: String
+    let state: String
+}
+
 private let invoices: [BillingInvoice] = []
 
 private let readinessItems = [
     ReadinessItem(label: "Phoenix API", state: "Contract drafted", systemImage: "curlybraces"),
     ReadinessItem(label: "PostgreSQL ledger", state: "Schema pending", systemImage: "cylinder.split.1x2"),
     ReadinessItem(label: "Stripe webhooks", state: "Not connected", systemImage: "bolt.horizontal.circle"),
+    ReadinessItem(label: "PayPal webhooks", state: "Not connected", systemImage: "p.circle"),
+    ReadinessItem(label: "ACH processor", state: "Not connected", systemImage: "building.columns"),
     ReadinessItem(label: "PDF worker", state: "Not connected", systemImage: "doc.richtext")
+]
+
+private let paymentRails = [
+    PaymentRail(label: "Stripe", state: "Hosted links not connected"),
+    PaymentRail(label: "PayPal", state: "Checkout not connected"),
+    PaymentRail(label: "ACH", state: "Settlement rules pending")
 ]
 
 struct BillingDashboardView: View {
@@ -73,7 +87,18 @@ struct BillingDashboardView: View {
                     }
                 }
 
+                Section("Payment methods") {
+                    ForEach(paymentRails) { rail in
+                        LabeledContent(rail.label, value: rail.state)
+                    }
+                    Button {
+                    } label: {
+                        Label("Record payment", systemImage: "creditcard.and.123")
+                    }
+                }
+
                 Section("Mobile actions") {
+                    Label("Invoice send review pending", systemImage: "paperplane")
                     Label("Push approval hooks pending", systemImage: "bell.badge")
                     Label("Deep links use canonical web URLs", systemImage: "link")
                     Label("Offline records remain read-only", systemImage: "icloud.slash")
@@ -161,6 +186,8 @@ struct InvoiceDetailView: View {
 
             Section("Approval") {
                 Button(invoice.nextAction) {}
+                Button("Send invoice") {}
+                Button("Record payment") {}
                 Button("Open web workspace") {}
             }
         }

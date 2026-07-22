@@ -4,6 +4,8 @@ const integrationReadiness = [
   { label: "Phoenix API", state: "Contract drafted", tone: "info" },
   { label: "PostgreSQL ledger", state: "Schema pending", tone: "warning" },
   { label: "Stripe webhooks", state: "Not connected", tone: "danger" },
+  { label: "PayPal webhooks", state: "Not connected", tone: "danger" },
+  { label: "ACH processor", state: "Not connected", tone: "danger" },
   { label: "PDF worker", state: "Not connected", tone: "danger" }
 ];
 
@@ -11,6 +13,7 @@ const list = document.querySelector("#invoice-list");
 const detail = document.querySelector("#invoice-detail");
 const filter = document.querySelector("#status-filter");
 const dialog = document.querySelector("#invoice-dialog");
+const paymentDialog = document.querySelector("#payment-dialog");
 
 let selectedId = null;
 
@@ -96,6 +99,10 @@ filter.addEventListener("change", renderList);
 
 document.querySelector("#new-invoice").addEventListener("click", () => {
   dialog.showModal();
+});
+
+document.querySelector("#record-payment").addEventListener("click", () => {
+  paymentDialog.showModal();
 });
 
 document.querySelector("#copy-link").addEventListener("click", async () => {

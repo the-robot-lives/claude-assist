@@ -1,0 +1,49 @@
+schema: "0.4"
+id: billing-noizu-app-icon-001
+type: image
+service: gemini
+model: gemini-2.5-flash-image
+quality: high
+
+attachments:
+  - path: ./billing-brand-reference.png
+    role: style
+    description: "Bureau Signal palette and layout rhythm: graphite, paper, teal, blue ledger, amber hold, lilac agent accent."
+
+prompt:
+  text: |
+    Create a polished application icon for Billing Noizu, a secure invoicing, receivables, and revenue operations product.
+
+    Visual concept:
+    - Rounded-square app icon with generous platform-safe padding.
+    - Main symbol combines a ledger/invoice sheet, precise payment checkmark, and compact revenue signal bars.
+    - It should feel like a secure back-office command surface, not a generic accounting logo.
+    - Use the Bureau Signal palette from the reference: graphite, paper, teal signal, blue ledger, amber hold, and a restrained lilac agent accent.
+    - Refined dimensional product icon style with crisp edges, subtle depth, and small highlights.
+
+    Composition:
+    - Output exactly one app icon only.
+    - Fill the square canvas with the icon, using normal app icon padding.
+    - Centered emblem, no text, no letters, no currency symbols, no numbers.
+    - The ledger, payment, and revenue ideas should be integrated into one memorable mark.
+    - Recognizable at 32x32.
+    - Do not include preview thumbnails, size labels, mockups, surrounding canvas labels, multiple variants, or presentation boards.
+  negative: "text, words, letters, numbers, dollar signs, currency symbols, size labels, preview thumbnails, multiple icons, mockup board, watermark, signature, realistic photo, clutter, tiny details, busy scene, people, animals, generic blue SaaS logo"
+  provider_options:
+    generate_content_model: gemini-2.5-flash-image
+
+output:
+  formats:
+    - format: png
+      quality: 100
+      filename: BillingNoizuIcon-1024
+  dimensions:
+    width: 1024
+    height: 1024
+    aspect_ratio: "1:1"
+  transparency: none
+  color_space: sRGB
+  dpi: 144
+
+tags: [billing-noizu, app-icon, brand]
+product_targets: [web-favicon, app-icon]

@@ -11,7 +11,10 @@ export default function InvoicesPage() {
           <p className="eyebrow">Invoices</p>
           <h1>Invoice operations</h1>
         </div>
-        <a className="button primary" href="/invoices/new">New invoice</a>
+        <div className="actions">
+          <a className="button ghost" href="/payments/record">Record payment</a>
+          <a className="button primary" href="/invoices/new">New invoice</a>
+        </div>
       </header>
       <Metrics />
       <section className="panel" style={{ marginTop: 16 }}>

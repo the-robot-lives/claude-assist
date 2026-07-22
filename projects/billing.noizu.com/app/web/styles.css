@@ -348,7 +348,8 @@ dialog label {
   gap: 6px;
 }
 
-dialog input {
+dialog input,
+dialog select {
   border: 1px solid var(--line);
   border-radius: 6px;
   min-height: 42px;
@@ -374,7 +375,7 @@ dialog menu {
   }
 
   nav {
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-template-columns: repeat(6, minmax(0, 1fr));
   }
 
   .metrics,

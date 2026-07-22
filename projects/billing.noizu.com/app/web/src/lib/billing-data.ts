@@ -40,11 +40,24 @@ export type AuditEvent = {
   occurredAt: string;
 };
 
+export type PaymentProvider = "stripe" | "paypal" | "ach";
+
+export type PaymentMethodState = "ready" | "not_connected" | "needs_review";
+
+export type PaymentMethod = {
+  provider: PaymentProvider;
+  label: string;
+  state: PaymentMethodState;
+  description: string;
+};
+
 export const invoices: Invoice[] = [];
 
 export const customers: CustomerPressure[] = [];
 
 export const auditEvents: AuditEvent[] = [];
+
+export const payments = [];
 
 export function formatMoney(money: Money): string {
   return new Intl.NumberFormat("en-US", {
@@ -66,5 +79,28 @@ export const integrationReadiness = [
   { label: "Phoenix API", state: "Contract drafted", tone: "info" },
   { label: "PostgreSQL ledger", state: "Schema pending", tone: "warning" },
   { label: "Stripe webhooks", state: "Not connected", tone: "danger" },
+  { label: "PayPal webhooks", state: "Not connected", tone: "danger" },
+  { label: "ACH processor", state: "Not connected", tone: "danger" },
   { label: "PDF worker", state: "Not connected", tone: "danger" },
 ] as const;
+
+export const paymentMethods: PaymentMethod[] = [
+  {
+    provider: "stripe",
+    label: "Stripe",
+    state: "not_connected",
+    description: "Hosted card payment links and webhook reconciliation.",
+  },
+  {
+    provider: "paypal",
+    label: "PayPal",
+    state: "not_connected",
+    description: "PayPal checkout links and transaction reference matching.",
+  },
+  {
+    provider: "ach",
+    label: "ACH",
+    state: "not_connected",
+    description: "Bank transfer instructions, settlement tracking, and manual reference capture.",
+  },
+];

@@ -16,6 +16,7 @@
         <nav>
           <a class="active" href="#dashboard">Dashboard</a>
           <a href="#invoices">Invoices</a>
+          <a href="#payments">Payments</a>
           <a href="#customers">Customers</a>
           <a href="#platforms">Apps</a>
           <a href="#audit">Audit</a>
@@ -30,6 +31,7 @@
           </div>
           <div class="actions">
             <button class="ghost" type="button" id="copy-link">Copy setup link</button>
+            <button class="ghost" type="button" id="record-payment">Record payment</button>
             <button class="primary" type="button" id="new-invoice">New invoice</button>
           </div>
         </header>
@@ -98,6 +100,21 @@
             </div>
           </article>
 
+          <article class="panel" id="payments">
+            <div class="panel-heading">
+              <div>
+                <p class="eyebrow">Payments</p>
+                <h2>Collection rails</h2>
+              </div>
+            </div>
+            <div class="platform-grid">
+              <div><strong>Stripe</strong><span>Not connected</span></div>
+              <div><strong>PayPal</strong><span>Not connected</span></div>
+              <div><strong>ACH</strong><span>Not connected</span></div>
+              <div><strong>Manual entry</strong><span>Append-only event pending API</span></div>
+            </div>
+          </article>
+
           <article class="panel" id="platforms">
             <div class="panel-heading">
               <div>
@@ -141,6 +158,27 @@
         <menu>
           <button value="cancel">Cancel</button>
           <button class="primary" value="create">Create draft</button>
+        </menu>
+      </form>
+    </dialog>
+
+    <dialog id="payment-dialog">
+      <form method="dialog">
+        <h2>Record payment</h2>
+        <label>Invoice ID <input placeholder="Invoice reference"></label>
+        <label>Payment rail
+          <select>
+            <option>Stripe</option>
+            <option>PayPal</option>
+            <option>ACH</option>
+            <option>Manual adjustment</option>
+          </select>
+        </label>
+        <label>Amount <input inputmode="decimal" placeholder="Amount received"></label>
+        <label>Processor reference <input placeholder="Transaction or trace ID"></label>
+        <menu>
+          <button value="cancel">Cancel</button>
+          <button class="primary" value="record">Queue record</button>
         </menu>
       </form>
     </dialog>
