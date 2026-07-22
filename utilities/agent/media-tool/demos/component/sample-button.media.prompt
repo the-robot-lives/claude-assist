@@ -1,0 +1,28 @@
+schema: "0.4"
+id: component-button-001
+type: component
+quality: medium
+
+prompt:
+  system: |
+    Output ONLY valid TypeScript React code. No markdown fences. Export a named Button component.
+  text: |
+    Create a simple accessible Button component with variants primary|secondary,
+    optional disabled prop, and TypeScript props interface.
+
+output:
+  formats:
+    - format: tsx
+  text_format: tsx
+
+tags: [component, fixture]
+eval:
+  pass_threshold: 0.7
+  required_pass: [completeness]
+  criteria:
+    completeness:
+      weight: 3
+      description: "Button export and variants present"
+    type_safety_signals:
+      weight: 2
+      description: "Props interface / TypeScript types present"

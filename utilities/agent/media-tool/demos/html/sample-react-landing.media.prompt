@@ -22,3 +22,17 @@ output:
     - format: tsx
 
 tags: [landing-page, react, saas]
+
+eval:
+  pass_threshold: 0.7
+  required_pass: [completeness]
+  criteria:
+    completeness:
+      weight: 3
+      description: "Component structure and key sections present"
+    type_safety_signals:
+      weight: 2
+      description: "Exports and TypeScript patterns present"
+    self_contained:
+      weight: 2
+      description: "Valid TSX without unexplained external deps"

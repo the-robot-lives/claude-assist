@@ -17,8 +17,18 @@ output:
   formats:
     - format: mp3
 
-# eval: omitted — audio is not yet auto-gradable by the eval system.
-# The tool warns and accepts the first successful generation for music types.
-
 tags: [background, lofi, ambient]
 product_targets: [video-background, podcast-intro]
+
+eval:
+  mode: structural
+  pass_threshold: 0.45
+  criteria:
+    technical:
+      weight: 3
+      description: "Non-silent audio with reasonable duration"
+    genre_fit:
+      weight: 1
+      description: "Structural stand-in for genre (manual/LLM later)"
+  reject_if:
+    - "silence or near-silence"

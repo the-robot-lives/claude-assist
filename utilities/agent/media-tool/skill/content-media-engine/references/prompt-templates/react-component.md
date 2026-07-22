@@ -9,9 +9,10 @@ You are a React component generator. Output a single self-contained TSX file usi
 ## Example .media.prompt
 
 ```yaml
-schema: "0.3"
+schema: "0.4"
 id: hero-component
 type: html
+quality: medium
 service: anthropic
 model: claude-opus-4-6
 
@@ -28,6 +29,13 @@ output:
   text_format: tsx
 
 tags: [react, hero, component]
+
+eval:
+  pass_threshold: 0.7
+  criteria:
+    relevance:
+      weight: 3
+      description: "Matches generation brief"
 ```
 
 ## Format Tips

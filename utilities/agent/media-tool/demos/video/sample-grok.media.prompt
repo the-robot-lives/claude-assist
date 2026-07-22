@@ -18,3 +18,20 @@ output:
 
 tags: [promo, saas, cinematic]
 product_targets: [landing-page-hero, social-media]
+
+eval:
+  mode: hybrid
+  pass_threshold: 0.65
+  criteria:
+    motion_quality:
+      weight: 3
+      description: "Smooth motion; no severe warping in frames"
+    prompt_adherence:
+      weight: 3
+      description: "Key subjects from brief visible"
+    technical:
+      weight: 2
+      description: "Duration and streams OK"
+  reject_if:
+    - "watermark visible"
+    - "no video stream"

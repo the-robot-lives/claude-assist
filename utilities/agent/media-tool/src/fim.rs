@@ -89,6 +89,14 @@ fn text_format_solution(dir: &Path, text_format: &str) -> Option<PathBuf> {
         "lilypond" | "ly" => &["lilypond.md"],
         "wavedrom" | "wavejson" => &["wavedrom.md"],
         "katex" | "mathjax" => &["katex.md"],
+        // Markup / page formats used by demos and skill templates
+        "html" | "htm" => &["html.md"],
+        "md" | "markdown" | "document" => &["markdown.md"],
+        // No dedicated pure-SVG solution yet; svg_js is the closest vector guidance.
+        "svg" => &["svg_js.md"],
+        // React / TS component formats — no dedicated solution; leave unmapped
+        // so static chat guidance applies (react-three-fiber is 3D-specific).
+        "react" | "react-page" | "tsx" | "jsx" | "component" => &[],
         _ => &[],
     };
     for cand in candidates {
@@ -158,9 +166,10 @@ fn provider_solution(dir: &Path, service: &str) -> Option<PathBuf> {
 
 /// Resolve the solution file path for a generation target.
 ///
-/// Text formats (chat asset types) resolve via `text_format`; binary-media targets
-/// resolve via `service`. When both could apply, text_format takes precedence
-/// (the format is the more specific signal of what's being authored).
+/// `text_format` (when set) always wins — it is the most specific signal of what
+/// is being authored (mermaid, svg, html, …). This includes non-chat asset types
+/// that still emit text (e.g. `type: image` + `text_format: svg` via a chat
+/// provider). Binary-media targets without a text format resolve via `service`.
 pub fn solution_for(
     service: &str,
     asset_type: AssetType,
@@ -168,15 +177,16 @@ pub fn solution_for(
 ) -> Option<PathBuf> {
     let dir = resolve_solution_dir()?;
 
-    // Text-format targets first (diagrams, documents, components, etc.)
-    if asset_type.is_chat_type() {
-        if let Some(tf) = text_format {
-            if let Some(p) = text_format_solution(&dir, tf) {
-                return Some(p);
-            }
+    // Text-format targets first (diagrams, SVG, documents, components, etc.)
+    if let Some(tf) = text_format {
+        if let Some(p) = text_format_solution(&dir, tf) {
+            return Some(p);
         }
-        // No text_format on a chat type: try the service (rare for chat) then give up.
     }
+
+    // Chat types with no resolvable text_format: no provider solution for
+    // anthropic/openai-chat/etc., so fall through to None → static guidance.
+    let _ = asset_type;
 
     provider_solution(&dir, service)
 }
@@ -316,5 +326,64 @@ mod tests {
             true
         )
         .is_none());
+    }
+
+    #[test]
+    fn text_format_aliases_map_to_files_when_tree_present() {
+        let Some(dir) = resolve_solution_dir() else {
+            eprintln!("[fim] solution dir not resolvable — skipping alias map check");
+            return;
+        };
+        let cases = [
+            ("mermaid", true),
+            ("mmd", true),
+            ("plantuml", true),
+            ("puml", true),
+            ("dot", true),
+            ("html", true),
+            ("md", true),
+            ("svg", true), // maps to svg_js.md
+            ("react-page", false), // intentionally unmapped
+            ("totally-not-a-format-xyz", false),
+        ];
+        for (tf, expect_some) in cases {
+            let got = text_format_solution(&dir, tf);
+            assert_eq!(
+                got.is_some(),
+                expect_some,
+                "text_format '{tf}' expected some={expect_some}, got={got:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn svg_text_format_resolves_for_image_asset_type() {
+        // Regression: type:image + text_format:svg must still hit text_format map
+        // (not only is_chat_type paths).
+        if resolve_solution_dir().is_none() {
+            return;
+        }
+        let path = solution_for("gemini-chat", AssetType::Image, Some("svg"));
+        assert!(
+            path.is_some(),
+            "image+svg should resolve a FIM solution via text_format"
+        );
+    }
+
+    #[test]
+    fn provider_solution_maps_core_media_services() {
+        if resolve_solution_dir().is_none() {
+            return;
+        }
+        for svc in ["gemini", "veo", "grok-video", "suno", "openai-tts", "elevenlabs"] {
+            let p = solution_for(svc, AssetType::Image, None);
+            // gemini maps via provider; non-image types still use provider map by service
+            let p = p.or_else(|| {
+                // force provider path only
+                let dir = resolve_solution_dir().unwrap();
+                provider_solution(&dir, svc)
+            });
+            assert!(p.is_some(), "provider solution missing for {svc}");
+        }
     }
 }

@@ -242,11 +242,32 @@ pub struct EvalSection {
     pub criteria: HashMap<String, EvalCriterion>,
     #[serde(default)]
     pub reject_if: Vec<String>,
+    /// Scoring mode: `llm` (default for most types), `structural` (ffprobe/heuristics),
+    /// or `hybrid` (structural + LLM when both available).
+    #[serde(default)]
+    pub mode: Option<String>,
+    /// When true, HTML/SVG may be rasterized (Puppeteer/rsvg) for vision scoring.
+    #[serde(default)]
+    pub visual: Option<bool>,
 }
 
 impl EvalSection {
     pub fn effective_pass_threshold(&self) -> f64 {
         self.pass_threshold.unwrap_or(0.7)
+    }
+
+    /// Normalized eval mode: llm | structural | hybrid.
+    pub fn effective_mode(&self) -> &str {
+        match self.mode.as_deref().map(|s| s.trim().to_lowercase()) {
+            Some(ref m) if m == "structural" || m == "struct" => "structural",
+            Some(ref m) if m == "hybrid" => "hybrid",
+            Some(ref m) if m == "llm" || m == "vision" => "llm",
+            _ => "llm", // default; callers may override for audio
+        }
+    }
+
+    pub fn wants_visual(&self) -> bool {
+        self.visual.unwrap_or(false)
     }
 }
 

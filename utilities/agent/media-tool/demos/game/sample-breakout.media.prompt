@@ -30,3 +30,17 @@ output:
     - format: html
 
 tags: [game, breakout, canvas, interactive]
+
+eval:
+  pass_threshold: 0.7
+  required_pass: [feature_coverage]
+  criteria:
+    feature_coverage:
+      weight: 3
+      description: "Core mechanics from brief implemented"
+    playability_signals:
+      weight: 2
+      description: "Input loop, win/lose, restart"
+    self_contained:
+      weight: 2
+      description: "Opens in browser without build step"

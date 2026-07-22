@@ -17,3 +17,23 @@ output:
     - format: html
 
 tags: [landing-page, pricing, html]
+
+eval:
+  pass_threshold: 0.7
+  required_pass: [completeness]
+  visual: false
+  criteria:
+    completeness:
+      weight: 3
+      description: "All requested sections and features present"
+    responsiveness:
+      weight: 2
+      description: "Mobile-friendly layout signals in CSS"
+    cta_clarity:
+      weight: 2
+      description: "Primary CTA visible"
+    a11y_basics:
+      weight: 1
+      description: "Semantic headings; controls labeled"
+  reject_if:
+    - "empty body"

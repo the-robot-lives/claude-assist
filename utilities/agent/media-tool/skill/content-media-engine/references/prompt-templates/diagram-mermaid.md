@@ -9,9 +9,10 @@ You are a Mermaid diagram generator. Output ONLY valid Mermaid markup. No code f
 ## Example .media.prompt
 
 ```yaml
-schema: "0.3"
+schema: "0.4"
 id: arch-diagram
 type: diagram
+quality: medium
 service: anthropic
 model: claude-sonnet-4-6
 
@@ -37,6 +38,13 @@ post_processing:
       background: transparent
 
 tags: [architecture, mermaid]
+
+eval:
+  pass_threshold: 0.7
+  criteria:
+    relevance:
+      weight: 3
+      description: "Matches generation brief"
 ```
 
 ## Format Tips

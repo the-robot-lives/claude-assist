@@ -32,3 +32,22 @@ post_processing:
       output_format: svg
 
 tags: [class-diagram, uml, ecommerce]
+
+eval:
+  pass_threshold: 0.7
+  required_pass: [prompt_coverage]
+  criteria:
+    prompt_coverage:
+      weight: 3
+      description: "Primary entities and edges from the brief are present"
+    syntax_quality:
+      weight: 2
+      description: "Valid DSL; no markdown fences"
+    readability:
+      weight: 2
+      description: "Labels short and legible when rendered"
+    layout:
+      weight: 1
+      description: "Logical flow"
+  reject_if:
+    - "missing primary node named in brief"

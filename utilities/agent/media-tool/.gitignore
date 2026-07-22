@@ -22,3 +22,7 @@ Thumbs.db
 # Environment
 .env
 .envrc.local
+
+# test lab workspace
+tmp/
+

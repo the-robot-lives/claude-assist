@@ -378,3 +378,45 @@ pub fn default_model(service: &str) -> &'static str {
         _ => "default",
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::schema::{AssetType, AudioKind, Quality};
+
+    #[test]
+    fn image_candidates_by_quality() {
+        let low = candidates_for(AssetType::Image, AudioKind::Voice, Quality::Low);
+        assert_eq!(low[0].model, "imagen-4.0-fast-generate-001");
+        let high = candidates_for(AssetType::Image, AudioKind::Voice, Quality::High);
+        assert!(high.iter().any(|c| c.model.contains("ultra")));
+    }
+
+    #[test]
+    fn video_has_fallback_chain() {
+        let med = candidates_for(AssetType::Video, AudioKind::Voice, Quality::Medium);
+        assert!(med.len() >= 2);
+        assert_eq!(med[0].service, "veo");
+    }
+
+    #[test]
+    fn voice_and_music_routes() {
+        let music = candidates_for(AssetType::Audio, AudioKind::Music, Quality::Medium);
+        assert_eq!(music[0].service, "suno");
+        let voice = candidates_for(AssetType::Audio, AudioKind::Voice, Quality::Medium);
+        assert!(voice.iter().any(|c| c.service == "openai-tts"));
+    }
+
+    #[test]
+    fn chat_auto_select_is_groq() {
+        for at in [
+            AssetType::Html,
+            AssetType::Diagram,
+            AssetType::ReactPage,
+            AssetType::Document,
+        ] {
+            let c = candidates_for(at, AudioKind::Voice, Quality::High);
+            assert_eq!(c[0].service, "groq-chat");
+        }
+    }
+}

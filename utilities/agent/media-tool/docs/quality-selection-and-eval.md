@@ -59,11 +59,15 @@ If empty after filtering → hard error listing the missing env vars.
 |---|---|---|---|
 | image | gemini/imagen-4.0-fast-generate-001 | gemini/imagen-4.0-generate-001 | gemini/imagen-4.0-ultra-generate-001 → gemini/imagen-4.0-generate-001 |
 | video | grok-video/grok-imagine-video → veo/veo-3.0-fast-generate-001 | veo/veo-3.0-fast-generate-001 → grok-video | veo/veo-3.0-generate-001 → grok-video |
-| music | suno/V4 | suno/V4_5ALL | suno/V4_5ALL |
+| music / sfx | suno/V5_5 (music) · suno/V5_SOUND (sfx) | same | same |
 | voice | qwen-tts/qwen3-tts-flash → openai-tts/gpt-4o-mini-tts | openai-tts/gpt-4o-mini-tts → elevenlabs/eleven_multilingual_v2 | elevenlabs/eleven_multilingual_v2 → openai-tts/gpt-4o-mini-tts |
-| chat (component/react-page/html/style-guide/diagram/document/svg) | gemini-chat/gemini-2.5-flash → openai-chat/gpt-4.1 | anthropic/claude-sonnet-4-6 → openai-chat/gpt-4.1 → gemini-chat/gemini-2.5-flash | anthropic/claude-opus-4-6 → anthropic/claude-sonnet-4-6 → gemini-chat/gemini-2.5-pro |
+| chat (component/react-page/html/style-guide/diagram/document) | groq-chat/meta-llama/llama-4-scout-17b-16e-instruct | same (all quality tiers today) | same |
+
+**Chat auto-select (current code):** all chat asset types resolve to a single `groq-chat` candidate regardless of quality tier. Pin `service:` / `model:` (or CLI `--service`/`--model`) for Anthropic, Gemini chat, OpenAI chat, or z.ai — those providers are implemented and work when pinned. Multi-provider quality tiers for chat remain a future enhancement.
 
 CLI `--service`/`--model` override everything; YAML `service:` pins; otherwise table order.
+
+See also: [prompt-quality-audit.md](prompt-quality-audit.md), [testing.md](testing.md).
 
 ## Generation loop (pipeline)
 
@@ -107,11 +111,13 @@ retry once, then treat as un-scorable.
 
 Artifact handling by output extension:
 - images (png/jpg/jpeg/webp): base64 `image_url` part
-- text-like (svg/mmd/puml/dot/html/tsx/ts/js/md/json/txt/css): inline text content (truncate ~32KB)
-- video (mp4/webm/mov): if `ffmpeg` on PATH, extract ≤4 evenly-spaced frames to temp PNGs and send as images; else un-scorable
-- audio (mp3/wav/ogg/flac): un-scorable (warn, accept) — until an audio-capable eval model is wired
+- text-like (svg/mmd/puml/dot/html/tsx/ts/js/md/json/txt/css): inline text (truncate ~32KB); with `eval.visual: true`, HTML may use Puppeteer screenshot and SVG may rasterize via rsvg-convert/convert for vision
+- video (mp4/webm/mov): hybrid — ≤4 ffmpeg frames for vision when possible + structural stream/duration probes
+- audio (mp3/wav/ogg/flac): **structural** scoring via ffprobe duration + ffmpeg volumedetect (no audio-LLM yet)
 
-Un-scorable artifacts never block: warn + accept first successful generation.
+`eval.mode` (optional): `llm` | `structural` | `hybrid`. Audio/video default to hybrid when mode is omitted so structural never silently no-ops.
+
+When no scorer can run, generation warns and accepts (legacy). Structural reject hits (e.g. silence) can fail the eval gate.
 
 ## Duration
 

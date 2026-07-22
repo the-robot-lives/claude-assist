@@ -55,9 +55,14 @@ post_processing:
 | Provider | Type | Status | Priority | Effort | API Key Env |
 |----------|------|--------|----------|--------|-------------|
 | `gemini` | Image | **Done** | — | — | `GEMINI_API_KEY` |
+| `suno` | Music/SFX | **Done** | — | — | `SUNO_API_KEY` |
+| `openai-tts` | Voice | **Done** | — | — | `OPENAI_API_KEY` |
+| `elevenlabs` | Voice | **Done** | — | — | `ELEVENLABS_API_KEY` |
+| `qwen-tts` | Voice | **Done** | — | — | `DASHSCOPE_API_KEY` |
+| `veo` | Video | **Done** | — | — | `GEMINI_API_KEY` |
+| `grok-video` | Video | **Done** | — | — | `XAI_API_KEY` |
 | `openai` | Image | Todo | P0 | Low | `OPENAI_API_KEY` |
 | `stability` | Image | Todo | P0 | Low | `STABILITY_API_KEY` |
-| `elevenlabs` | Audio | Todo | P1 | Low | `ELEVENLABS_API_KEY` |
 | `replicate` | Image | Todo | P1 | Medium | `REPLICATE_API_TOKEN` |
 | `runway` | Video | Todo | P1 | Medium | `RUNWAY_API_KEY` |
 | `ideogram` | Image | Todo | P2 | Low | `IDEOGRAM_API_KEY` |
@@ -69,7 +74,6 @@ post_processing:
 | `midjourney` | Image | Todo | P3 | High | varies |
 | `bark` | Audio | Todo | P3 | Medium | none |
 | `musicgen` | Audio | Todo | P3 | Medium | none |
-| `suno` | Audio | Todo | P3 | High | `SUNO_API_KEY` |
 | `udio` | Audio | Todo | P3 | High | `UDIO_API_KEY` |
 | `pika` | Video | Todo | P3 | Medium | `PIKA_API_KEY` |
 | `kling` | Video | Todo | P3 | Medium | `KLING_API_KEY` |
@@ -77,21 +81,22 @@ post_processing:
 
 ### Chat Completion Providers
 
-| Provider | Status | Priority | Effort | API Key Env | Default Model |
-|----------|--------|----------|--------|-------------|---------------|
-| `z.ai` | Todo | P0 | Low | `ZAI_API_KEY` | varies |
-| `anthropic` | Todo | P0 | Low | `ANTHROPIC_API_KEY` | `claude-sonnet-4-6` |
-| `gemini-chat` | Todo | P0 | Low | `GEMINI_API_KEY` (shared) | `gemini-2.5-flash` |
-| `openai-chat` | Todo | P0 | Low | `OPENAI_API_KEY` (shared) | `gpt-4o` |
+| Provider | Status | Priority | Effort | API Key Env | Notes |
+|----------|--------|----------|--------|-------------|-------|
+| `groq-chat` / `groq` | **Done** | — | — | `GROQ_API_KEY` | Default auto-select for chat asset types |
+| `anthropic` | **Done** | — | — | `ANTHROPIC_API_KEY` | Pin via `service:` |
+| `gemini-chat` | **Done** | — | — | `GEMINI_API_KEY` | Pin via `service:` |
+| `openai-chat` | **Done** | — | — | `OPENAI_API_KEY` | Pin via `service:` |
+| `z.ai` / `zai` | **Done** | — | — | `XAI_API_KEY` | Pin via `service:` |
 
 ### Renderers (local tools)
 
 | Renderer | Status | Priority | Effort | Dependency |
 |----------|--------|----------|--------|------------|
-| `mermaid` | Todo | P0 | Low | `npm install -g @mermaid-js/mermaid-cli` |
-| `plantuml` | Todo | P1 | Low | `brew install plantuml` (Java) |
-| `graphviz` | Todo | P1 | Low | `brew install graphviz` |
-| `puppeteer` | Todo | P1 | Medium | `npm install puppeteer` |
+| `mermaid` | **Done** | — | — | `mmdc` (`@mermaid-js/mermaid-cli`) |
+| `plantuml` | **Done** | — | — | `plantuml` (Java) |
+| `graphviz` | **Done** | — | — | `dot` (graphviz) |
+| `puppeteer` | **Done** | — | — | Puppeteer / Chromium for HTML screenshots |
 
 ---
 

@@ -1,0 +1,24 @@
+schema: "0.4"
+id: sfx-whoosh-001
+type: sfx
+quality: low
+
+prompt:
+  text: "A short airy whoosh sound effect for a UI transition, clean and modern."
+  negative: "music, melody, speech"
+
+output:
+  duration: 2
+  formats:
+    - format: mp3
+
+tags: [sfx, fixture]
+eval:
+  mode: structural
+  pass_threshold: 0.4
+  criteria:
+    technical:
+      weight: 3
+      description: "Short non-silent audio clip"
+  reject_if:
+    - "silence or near-silence"

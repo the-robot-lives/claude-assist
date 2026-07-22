@@ -9,6 +9,8 @@ mod providers;
 mod refine;
 mod renderers;
 mod schema;
+mod structural;
+mod test_lab;
 mod ui;
 mod validate;
 
@@ -16,7 +18,7 @@ use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
-use clap::Parser;
+use clap::{Parser, Subcommand};
 use dialoguer::MultiSelect;
 
 use pipeline::PipelineConfig;
@@ -29,6 +31,9 @@ use schema::{parse_prompt_file, ParsedPrompt, Quality};
     version
 )]
 struct Cli {
+    #[command(subcommand)]
+    command: Option<Commands>,
+
     /// Prompt files or directories to process. Directories are processed without selection.
     inputs: Vec<PathBuf>,
 
@@ -93,10 +98,52 @@ struct Cli {
     eval_model: Option<String>,
 }
 
+#[derive(Subcommand, Debug)]
+enum Commands {
+    /// Interactive web lab: browse types, generate, view, and eval media
+    Lab {
+        /// Listen port (default 8787)
+        #[arg(long, default_value_t = 8787)]
+        port: u16,
+        /// Curated demos directory (default: package demos/)
+        #[arg(long)]
+        demos: Option<PathBuf>,
+        /// Writable workspace for synthesized prompts + live outputs
+        #[arg(long)]
+        workspace: Option<PathBuf>,
+        /// Open the default browser after start
+        #[arg(long, default_value_t = true)]
+        open: bool,
+        /// Do not open a browser
+        #[arg(long, default_value_t = false)]
+        no_open: bool,
+        /// Verbose logging
+        #[arg(long, default_value_t = false)]
+        verbose: bool,
+    },
+}
+
 #[tokio::main]
 async fn main() -> color_eyre::Result<()> {
     color_eyre::install()?;
     let cli = Cli::parse();
+
+    // Load .envrc.k8.dc for API keys (GEMINI, SUNO, OPENAI, ELEVENLABS, DASHSCOPE)
+    try_load_envrc();
+
+    if let Some(Commands::Lab {
+        port,
+        demos,
+        workspace,
+        open,
+        no_open,
+        verbose,
+    }) = cli.command
+    {
+        let open_browser = open && !no_open;
+        let cfg = test_lab::LabConfig::resolve(port, demos, workspace, verbose, open_browser)?;
+        return test_lab::run_lab(cfg).await;
+    }
 
     if cli.variants < 1 {
         color_eyre::eyre::bail!("Variant count must be at least 1");
@@ -116,9 +163,6 @@ async fn main() -> color_eyre::Result<()> {
     } else {
         None
     };
-
-    // Load .envrc.k8.dc for API keys (GEMINI, SUNO, OPENAI, ELEVENLABS, DASHSCOPE)
-    try_load_envrc();
 
     // Expand inputs: plain directories become all *.prompt files within. Directories passed
     // via -r/--recursive are shown in an interactive multi-select first.

@@ -19,3 +19,17 @@ output:
 
 tags: [voiceover, dramatic]
 product_targets: [trailer, podcast-intro]
+
+eval:
+  mode: structural
+  pass_threshold: 0.45
+  required_pass: [technical]
+  criteria:
+    technical:
+      weight: 3
+      description: "Speech audio present, not silence, plausible duration"
+    intelligibility:
+      weight: 2
+      description: "Structural volume proxy for intelligibility"
+  reject_if:
+    - "silence or near-silence"

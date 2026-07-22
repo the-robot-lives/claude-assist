@@ -2,11 +2,257 @@ use std::time::Duration;
 
 use serde_json::json;
 
-use crate::schema::{AssetType, PromptSection};
+use crate::schema::{AssetType, AudioKind, PromptSection};
 use crate::ui;
 
 const GROQ_API_URL: &str = "https://api.groq.com/openai/v1/chat/completions";
 const DEFAULT_PREP_MODEL: &str = "meta-llama/llama-4-scout-17b-16e-instruct";
+
+// ---------------------------------------------------------------------------
+// Prep channel — branches instruction rules by media kind / text format
+// ---------------------------------------------------------------------------
+
+/// Which prep/refine rule set to apply. Derived from asset type + text_format
+/// (+ service for TTS detection on generic Audio).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum PrepChannel {
+    /// Raster image models (Imagen, etc.)
+    RasterImage,
+    /// SVG / vector via chat (type image + text_format svg, or format svg)
+    Svg,
+    /// Video generation models
+    Video,
+    /// Music generation (Suno)
+    Music,
+    /// TTS — speaking text must stay verbatim; prefer no LLM rewrite
+    Voice,
+    /// Chat: diagrams (mermaid/plantuml/graphviz/…)
+    Diagram,
+    /// Chat: HTML pages / style guides
+    Html,
+    /// Chat: React / TS / components
+    Code,
+    /// Chat: markdown / documents
+    Document,
+    /// Fallback when nothing more specific matches
+    Generic,
+}
+
+/// Map asset type + audio kind + optional text_format (+ service) to a prep channel.
+pub fn prep_channel(
+    asset_type: AssetType,
+    audio_kind: AudioKind,
+    text_format: Option<&str>,
+    service: &str,
+) -> PrepChannel {
+    let tf = text_format
+        .map(|s| s.trim().to_lowercase())
+        .unwrap_or_default();
+    let svc = service.trim().to_lowercase();
+
+    // Text-format overrides (including image+svg chat path)
+    if matches!(tf.as_str(), "svg") {
+        return PrepChannel::Svg;
+    }
+    if matches!(
+        tf.as_str(),
+        "mermaid" | "mmd" | "plantuml" | "puml" | "graphviz" | "dot" | "drawio" | "wavedrom"
+    ) {
+        return PrepChannel::Diagram;
+    }
+    if matches!(tf.as_str(), "html" | "htm") {
+        return PrepChannel::Html;
+    }
+    if matches!(
+        tf.as_str(),
+        "tsx" | "jsx" | "ts" | "js" | "react" | "react-page" | "component"
+    ) {
+        return PrepChannel::Code;
+    }
+    if matches!(tf.as_str(), "md" | "markdown" | "document") {
+        return PrepChannel::Document;
+    }
+
+    // TTS services always voice channel
+    if matches!(svc.as_str(), "openai-tts" | "elevenlabs" | "qwen-tts") {
+        return PrepChannel::Voice;
+    }
+    if matches!(svc.as_str(), "suno") {
+        return PrepChannel::Music;
+    }
+
+    match asset_type {
+        AssetType::Image => PrepChannel::RasterImage,
+        AssetType::Video => PrepChannel::Video,
+        AssetType::Audio => match audio_kind {
+            AudioKind::Music | AudioKind::Sfx => PrepChannel::Music,
+            AudioKind::Voice => PrepChannel::Voice,
+        },
+        AssetType::Diagram => PrepChannel::Diagram,
+        AssetType::Html | AssetType::StyleGuide => PrepChannel::Html,
+        AssetType::Component | AssetType::ReactPage => PrepChannel::Code,
+        AssetType::Document => PrepChannel::Document,
+        AssetType::Unknown => PrepChannel::Generic,
+    }
+}
+
+/// When false, callers should not send text through the prep LLM (verbatim path).
+/// Voice/TTS must not be rewritten; only hard-truncate if a provider limit forces it.
+pub fn allows_llm_prep(channel: PrepChannel) -> bool {
+    !matches!(channel, PrepChannel::Voice)
+}
+
+/// Role preamble for the prep LLM (first sentence of the instruction).
+pub fn prep_role_preamble(channel: PrepChannel) -> &'static str {
+    match channel {
+        PrepChannel::RasterImage => {
+            "You are preparing a prompt for an AI image generator. The source is a detailed creative specification. Your job is to CLEAN it for the target provider — NOT to summarize or shorten it unless a length constraint requires it. The detailed descriptions, mood language, and specific visual directions are what make the prompt effective. Preserve them."
+        }
+        PrepChannel::Svg => {
+            "You are preparing a brief for an SVG/vector graphic generator (chat model). Preserve exact colors (including hex codes), viewBox sizes, stroke widths, and geometric constraints. Do NOT convert the brief into a photographic image prompt."
+        }
+        PrepChannel::Video => {
+            "You are preparing a prompt for an AI video generator. Lead with scene, action, and camera motion. Keep the prompt tight (typically 60–120 words) unless a longer limit is allowed."
+        }
+        PrepChannel::Music => {
+            "You are preparing a prompt for an AI music generator. Lead with genre and mood, list instruments, and describe structure as emotional phases (not bar-by-bar timestamps)."
+        }
+        PrepChannel::Voice => {
+            "You are preparing spoken text for a TTS engine. Return the speaking text VERBATIM — do not paraphrase, dramatize, or restructure. Only strip non-speech markup (bullets, markdown headers)."
+        }
+        PrepChannel::Diagram => {
+            "You are preparing a brief for a diagram DSL generator (Mermaid/PlantUML/Graphviz/etc.). Preserve entity names, relationships, and ordered structure. Do NOT flatten lists into free prose that loses graph topology."
+        }
+        PrepChannel::Html => {
+            "You are preparing a brief for an HTML/CSS/JS page generator. Preserve layout requirements, dimensions, fonts, interaction behavior, and feature checklists. Do NOT strip implementation details or convert everything to a visual-only prose description."
+        }
+        PrepChannel::Code => {
+            "You are preparing a brief for a code/component generator (React/TS/JS). Preserve exports, props, framework constraints, and structural requirements. Keep bullet lists and API contracts intact."
+        }
+        PrepChannel::Document => {
+            "You are preparing a brief for a document/markdown generator. Preserve section structure, headings, and factual requirements. Keep lists and tables when present."
+        }
+        PrepChannel::Generic => {
+            "You are preparing a prompt for a media/code generator. Clean formatting artifacts but preserve descriptive and structural content needed for the target."
+        }
+    }
+}
+
+/// "WHAT TO CHANGE" / cleanup rules for the prep LLM.
+pub fn prep_change_rules(channel: PrepChannel) -> &'static str {
+    match channel {
+        PrepChannel::RasterImage => {
+            "WHAT TO CHANGE:\n\
+- Merge any \"Art Direction\" / system context into the main prompt as a style preamble\n\
+- Replace hex color codes with descriptive color names (e.g. #C0503A → warm muted red)\n\
+- Remove pixel dimensions, percentage values, and CSS-like specs — describe relative sizes instead\n\
+- Remove section headers, bullet formatting, and numbered lists — flow into natural prose paragraphs\n\
+- Remove implementation/interaction instructions — describe the static visual appearance only\n\
+- Remove font specifications — describe the feel instead\n\
+- Keep ALL descriptive content: colors, materials, textures, spatial arrangement, mood, style references, named elements, quantities\n\
+- Keep overall length similar unless a length constraint requires condensation\n\
+- Negative prompt: minimal formatting cleanup only"
+        }
+        PrepChannel::Svg => {
+            "WHAT TO CHANGE:\n\
+- KEEP hex color codes (#00D4FF etc.) — SVG generators need exact brand colors\n\
+- KEEP numeric viewBox / size constraints when specified (e.g. 0 0 200 200, stroke-width 2)\n\
+- Preserve geometric and composition requirements as structured bullets if present\n\
+- Remove markdown code fences and meta-instructions about how to call APIs\n\
+- Do NOT rewrite into a photographic or raster-image style prompt\n\
+- Do NOT invent new decorative elements beyond the brief\n\
+- Negative prompt: keep exclusions that forbid text/photos/3D when present"
+        }
+        PrepChannel::Video => {
+            "WHAT TO CHANGE:\n\
+- Lead with scene + action + camera movement; put art style early\n\
+- Prefer motion and temporal flow over static layout details\n\
+- Replace hex codes with color names\n\
+- Remove pixel dimensions and UI implementation details\n\
+- Aim for concise cinematic language (≈60–120 words) unless length limit differs\n\
+- Negative prompt: minimal cleanup only"
+        }
+        PrepChannel::Music => {
+            "WHAT TO CHANGE:\n\
+- Lead with genre and mood; list instruments and overall sound\n\
+- Describe structure as phases (intro/build/climax/outro), not exact timestamps or bar numbers\n\
+- Keep under ~200 words unless a limit says otherwise\n\
+- Preserve negative/excluded styles\n\
+- Do not invent lyrics unless the brief requests vocals"
+        }
+        PrepChannel::Voice => {
+            "WHAT TO CHANGE:\n\
+- Return speaking text VERBATIM\n\
+- Only remove bullets, markdown headers, or stage directions that are not spoken\n\
+- Do not rewrite tone into the text if style belongs in provider_options\n\
+- Negative is usually empty for TTS"
+        }
+        PrepChannel::Diagram => {
+            "WHAT TO CHANGE:\n\
+- Preserve node/entity names and relationships exactly\n\
+- Keep ordered lists of components and connections — do NOT collapse into unstructured prose\n\
+- Remove requests for markdown fences or explanatory essays around the diagram\n\
+- Do not invent extra subsystems not in the brief\n\
+- Hex colors may be kept if the DSL supports them; otherwise descriptive colors are fine"
+        }
+        PrepChannel::Html => {
+            "WHAT TO CHANGE:\n\
+- KEEP layout dimensions, spacing, fonts, color values (including hex), and interaction behavior\n\
+- KEEP feature checklists (tiers, FAQ, CTAs) as structure the generator must implement\n\
+- Do NOT strip JavaScript/CSS requirements or convert the page brief into a static screenshot description\n\
+- Remove only meta-instructions about tooling (\"use Claude\", \"don't explain\") if redundant with system\n\
+- Negative: rare; pass through if present"
+        }
+        PrepChannel::Code => {
+            "WHAT TO CHANGE:\n\
+- KEEP exports, props, types, framework constraints, and file-structure requirements\n\
+- Preserve bullet lists of behaviors and edge cases\n\
+- Do not convert the brief into natural-language-only prose that loses API contracts\n\
+- Remove only redundant meta-commentary\n\
+- Negative: rare; pass through if present"
+        }
+        PrepChannel::Document => {
+            "WHAT TO CHANGE:\n\
+- Preserve section outline, headings, and required topics\n\
+- Keep lists and tables of facts\n\
+- Light cleanup of meta-instructions only\n\
+- Do not invent claims not in the brief"
+        }
+        PrepChannel::Generic => {
+            "WHAT TO CHANGE:\n\
+- Clean technical tokens and formatting artifacts\n\
+- Preserve descriptive and structural content\n\
+- Do not over-summarize"
+        }
+    }
+}
+
+/// Refine-specific extra rules (appended after channel change rules).
+fn prep_refine_extra(channel: PrepChannel) -> &'static str {
+    match channel {
+        PrepChannel::RasterImage | PrepChannel::Video => {
+            "REFINEMENT FOCUS:\n\
+- Start from the full original description — do NOT summarize or shorten\n\
+- Make targeted adjustments for the eval feedback (anatomy, style, composition, missing elements, reject hits)\n\
+- Reinforce weak criteria more prominently; move critical subject terms earlier"
+        }
+        PrepChannel::Svg | PrepChannel::Diagram | PrepChannel::Html | PrepChannel::Code | PrepChannel::Document => {
+            "REFINEMENT FOCUS:\n\
+- Start from the full original brief — do NOT rewrite from scratch\n\
+- Address eval failures with concrete constraints (missing nodes, invalid markup, missing CTA, etc.)\n\
+- Prefer adding explicit requirements over vague style adjectives"
+        }
+        PrepChannel::Music => {
+            "REFINEMENT FOCUS:\n\
+- Adjust genre/mood/instrument language to address eval feedback\n\
+- Strengthen exclusions in the negative when reject-style issues appear"
+        }
+        PrepChannel::Voice | PrepChannel::Generic => {
+            "REFINEMENT FOCUS:\n\
+- Minimal edits only; address eval notes without inventing new content"
+        }
+    }
+}
 
 pub struct PreparedPrompt {
     pub text: String,
@@ -85,10 +331,22 @@ impl PromptPrepper {
         prompt_section: &PromptSection,
         service: &str,
         asset_type: AssetType,
+        audio_kind: AudioKind,
         text_format: Option<&str>,
         fim_enabled: bool,
         verbose: bool,
     ) -> Option<PreparedPrompt> {
+        let channel = prep_channel(asset_type, audio_kind, text_format, service);
+        if !allows_llm_prep(channel) {
+            if verbose {
+                ui::verbose(&format!(
+                    "Prep skipped for {:?} channel — using verbatim text",
+                    channel
+                ));
+            }
+            return None;
+        }
+
         let system_context = prompt_section.system.as_deref().unwrap_or("");
         let raw_text = &prompt_section.text;
         let raw_negative = prompt_section.negative.as_deref().unwrap_or("");
@@ -100,49 +358,27 @@ impl PromptPrepper {
             format!(
                 "\nCRITICAL LENGTH CONSTRAINT: The target provider has a {} character prompt limit. \
                  The source is {} chars. You MUST condense the output to fit within {} characters \
-                 while preserving the most important creative details. Prioritize: subject description, \
-                 art style, mood, key visual elements. Cut: timestamps, section headers, redundant \
-                 phrasings, implementation details.\n",
-                max, prompt_section.text.len(), max
+                 while preserving the most important creative details for this asset type.\n",
+                max,
+                prompt_section.text.len(),
+                max
             )
         } else {
             String::new()
         };
 
-        let instruction = format!(
-            r#"You are preparing a prompt for an AI image/media generator. The source is a detailed creative specification. Your job is to CLEAN it for the target provider — NOT to summarize or shorten it unless a length constraint requires it. The detailed descriptions, mood language, and specific visual directions are what make the prompt effective. Preserve them.{length_instruction}
-
-SOURCE SPECIFICATION:
-{system_section}
---- Creative Brief ---
-{raw_text}
-
---- Negative/Exclusions ---
-{raw_negative}
-
-TARGET PROVIDER: {service}
-ASSET TYPE: {asset_type:?}
-
-{provider_guidance}
-
-WHAT TO CHANGE:
-- Merge any "Art Direction" / system context into the main prompt as a style preamble
-- Replace hex color codes with descriptive color names (e.g. #C0503A → warm muted red, #FFB347 → warm amber, #3E2723 → dark warm brown, #FFF8E1 → warm cream)
-- Remove pixel dimensions, percentage values, and CSS-like specs (e.g. "80px wide", "32x32", "15% of screen space") — describe relative sizes instead ("small", "subtle", "compact")
-- Remove section headers, bullet formatting, and numbered lists — flow the descriptions into natural prose paragraphs
-- Remove implementation instructions ("opens on click", "slides in from edges", "transitions implied") — describe the static visual appearance only
-- Remove font specifications — describe the feel instead ("warm hand-lettered style", "clean readable numerals")
-- Keep ALL descriptive content: colors, materials, textures, spatial arrangement, mood language, style references, specific named elements, quantities/values shown in UI
-- Keep the overall length similar to the original — do NOT compress into a short summary
-- The negative prompt should pass through with minimal changes (just clean formatting)
-
-Reply with ONLY valid JSON (no markdown fences, no commentary):
-{{"prompt": "the cleaned prompt text", "negative": "cleaned negative prompt or empty string"}}"#,
-            system_section = if system_context.is_empty() {
-                String::new()
-            } else {
-                format!("--- Art Direction ---\n{}\n", system_context)
-            },
+        let instruction = build_prep_instruction(
+            channel,
+            service,
+            asset_type,
+            system_context,
+            raw_text,
+            raw_negative,
+            &provider_guidance,
+            &length_instruction,
+            false,
+            "",
+            "",
         );
 
         let url = if self.base_url.ends_with("/chat/completions") {
@@ -274,6 +510,7 @@ Reply with ONLY valid JSON (no markdown fences, no commentary):
         prompt_section: &PromptSection,
         service: &str,
         asset_type: AssetType,
+        audio_kind: AudioKind,
         text_format: Option<&str>,
         fim_enabled: bool,
         eval_notes: &str,
@@ -281,6 +518,17 @@ Reply with ONLY valid JSON (no markdown fences, no commentary):
         failed_output: Option<&std::path::Path>,
         verbose: bool,
     ) -> Option<PreparedPrompt> {
+        let channel = prep_channel(asset_type, audio_kind, text_format, service);
+        if !allows_llm_prep(channel) {
+            if verbose {
+                ui::verbose(&format!(
+                    "Refine skipped for {:?} channel — voice text stays verbatim",
+                    channel
+                ));
+            }
+            return None;
+        }
+
         let system_context = prompt_section.system.as_deref().unwrap_or("");
         let raw_text = &prompt_section.text;
         let raw_negative = prompt_section.negative.as_deref().unwrap_or("");
@@ -288,45 +536,18 @@ Reply with ONLY valid JSON (no markdown fences, no commentary):
         let provider_guidance =
             resolve_guidance(service, asset_type, text_format, fim_enabled, verbose);
 
-        let instruction = format!(
-            r#"You are refining a generation prompt that failed quality evaluation. The original specification is rich and detailed — your job is to adjust the prompt to fix the specific issues the evaluator identified, NOT to rewrite from scratch.
-
-ORIGINAL SPECIFICATION:
-{system_section}
---- Creative Brief ---
-{raw_text}
-
---- Negative/Exclusions ---
-{raw_negative}
-
-TARGET PROVIDER: {service}
-ASSET TYPE: {asset_type:?}
-
-EVALUATION FEEDBACK (why the previous generation failed):
-Scores: {scores_summary}
-Notes: {eval_notes}
-
-{provider_guidance}
-
-REFINEMENT RULES:
-- Start from the full original description — do NOT summarize or shorten
-- Make targeted adjustments to address the eval feedback:
-  - Low anatomy/proportion scores → add explicit proportion/anatomy guidance ("correct human proportions", "anatomically accurate hands")
-  - Low style scores → reinforce style terms more prominently at the start
-  - Low composition scores → strengthen spatial arrangement descriptions
-  - Low prompt_fidelity → ensure missing elements are described more prominently
-  - Reject hits → add explicit exclusions to the negative prompt
-  - Text rendering issues → describe text content differently, or add "no visible text" if labels aren't needed
-- Keep descriptive richness — the detailed language is what makes the prompt effective
-- Replace hex codes with color names, remove pixel dimensions (same cleanup as initial prep)
-
-Reply with ONLY valid JSON (no markdown fences, no commentary):
-{{"prompt": "the refined prompt text", "negative": "refined negative prompt or empty string"}}"#,
-            system_section = if system_context.is_empty() {
-                String::new()
-            } else {
-                format!("--- Art Direction ---\n{}\n", system_context)
-            },
+        let instruction = build_prep_instruction(
+            channel,
+            service,
+            asset_type,
+            system_context,
+            raw_text,
+            raw_negative,
+            &provider_guidance,
+            "",
+            true,
+            scores_summary,
+            eval_notes,
         );
 
         let url = if self.base_url.ends_with("/chat/completions") {
@@ -469,6 +690,67 @@ Reply with ONLY valid JSON (no markdown fences, no commentary):
     }
 }
 
+/// Build the full prep or refine user instruction (pure; unit-tested).
+pub fn build_prep_instruction(
+    channel: PrepChannel,
+    service: &str,
+    asset_type: AssetType,
+    system_context: &str,
+    raw_text: &str,
+    raw_negative: &str,
+    provider_guidance: &str,
+    length_instruction: &str,
+    is_refine: bool,
+    scores_summary: &str,
+    eval_notes: &str,
+) -> String {
+    let system_section = if system_context.is_empty() {
+        String::new()
+    } else {
+        format!("--- Art Direction / System ---\n{}\n", system_context)
+    };
+
+    let role = if is_refine {
+        "You are refining a generation prompt that failed quality evaluation. Adjust the prompt to fix the evaluator issues — do NOT rewrite from scratch."
+    } else {
+        prep_role_preamble(channel)
+    };
+
+    let eval_block = if is_refine {
+        format!(
+            "\nEVALUATION FEEDBACK (why the previous generation failed):\nScores: {scores_summary}\nNotes: {eval_notes}\n"
+        )
+    } else {
+        String::new()
+    };
+
+    let refine_extra = if is_refine {
+        format!("\n{}\n", prep_refine_extra(channel))
+    } else {
+        String::new()
+    };
+
+    format!(
+        "{role}{length_instruction}\n\n\
+SOURCE SPECIFICATION:\n\
+{system_section}\
+--- Creative Brief ---\n\
+{raw_text}\n\n\
+--- Negative/Exclusions ---\n\
+{raw_negative}\n\n\
+TARGET PROVIDER: {service}\n\
+ASSET TYPE: {asset_type:?}\n\
+PREP CHANNEL: {channel:?}\n\
+{eval_block}\n\
+{provider_guidance}\n\n\
+{change_rules}\n\
+{refine_extra}\n\
+Reply with ONLY valid JSON (no markdown fences, no commentary):\n\
+{{\"prompt\": \"the cleaned prompt text\", \"negative\": \"cleaned negative prompt or empty string\"}}",
+        change_rules = prep_change_rules(channel),
+    )
+}
+
 /// Resolve the channel guidance for the prep/refine instruction.
 ///
 /// When FIM injection is enabled and a solution file resolves for this target, the
@@ -498,13 +780,19 @@ fn resolve_guidance(
                 "No FIM solution for {service}/{asset_type:?}/{label} — using static guidance"
             ));
         }
-        provider_prompt_guidance(service, asset_type).to_string()
+        provider_prompt_guidance(service, asset_type, text_format).to_string()
     }
 }
 
-fn provider_prompt_guidance(service: &str, asset_type: AssetType) -> &'static str {
+/// Static provider/format notes when FIM is unavailable.
+pub fn provider_prompt_guidance(
+    service: &str,
+    asset_type: AssetType,
+    text_format: Option<&str>,
+) -> &'static str {
+    let channel = prep_channel(asset_type, AudioKind::Voice, text_format, service);
     match (service, asset_type) {
-        ("gemini", AssetType::Image) => {
+        ("gemini", AssetType::Image) if !matches!(channel, PrepChannel::Svg) => {
             "PROVIDER NOTES (Gemini Imagen):\n\
              - Imagen handles rich, detailed prompts well — do NOT shorten or summarize\n\
              - Front-load the subject and art style in the first sentence\n\
@@ -535,18 +823,61 @@ fn provider_prompt_guidance(service: &str, asset_type: AssetType) -> &'static st
              - Only clean formatting (remove bullets, headers)\n\
              - Voice style direction belongs in provider_options, not the prompt"
         }
-        (_, AssetType::Image) => {
-            "PROVIDER NOTES (Image generation):\n\
-             - Detailed prompts work well — do NOT shorten or summarize\n\
-             - Front-load subject and art style\n\
-             - Replace hex codes with color names, remove pixel dimensions\n\
-             - Keep all descriptive and mood language"
-        }
-        _ => {
-            "PROVIDER NOTES:\n\
-             - Clean technical tokens but preserve descriptive content\n\
-             - Remove formatting artifacts (bullets, headers) — flow into prose"
-        }
+        _ => match channel {
+            PrepChannel::Svg => {
+                "PROVIDER NOTES (SVG via chat):\n\
+                 - Output contract belongs in system: raw <svg>…</svg>, no fences, no prose\n\
+                 - Prefer compact path data and explicit viewBox\n\
+                 - Hex brand colors and stroke widths are intentional — keep them\n\
+                 - Avoid photographic language"
+            }
+            PrepChannel::Diagram => {
+                "PROVIDER NOTES (Diagram DSL):\n\
+                 - System should require raw DSL only (no ``` fences, no explanation)\n\
+                 - Preserve entity names and edges from the brief\n\
+                 - Prefer low temperature for valid syntax"
+            }
+            PrepChannel::Html => {
+                "PROVIDER NOTES (HTML page):\n\
+                 - Prefer self-contained HTML with inline CSS/JS unless brief says otherwise\n\
+                 - Preserve feature checklists, CTAs, and interaction requirements\n\
+                 - Keep responsive and accessibility notes"
+            }
+            PrepChannel::Code => {
+                "PROVIDER NOTES (React/component):\n\
+                 - Require valid code only (no markdown fences, no commentary)\n\
+                 - Preserve exports, props, and framework constraints\n\
+                 - TypeScript preferred when format is tsx/ts"
+            }
+            PrepChannel::Document => {
+                "PROVIDER NOTES (Document):\n\
+                 - Preserve outline and factual claims from the brief\n\
+                 - Prefer clean markdown structure"
+            }
+            PrepChannel::RasterImage => {
+                "PROVIDER NOTES (Image generation):\n\
+                 - Detailed prompts work well — do NOT shorten or summarize\n\
+                 - Front-load subject and art style\n\
+                 - Replace hex codes with color names, remove pixel dimensions\n\
+                 - Keep all descriptive and mood language"
+            }
+            PrepChannel::Video => {
+                "PROVIDER NOTES (Video):\n\
+                 - Lead with scene, action, camera; keep prompts tight"
+            }
+            PrepChannel::Music => {
+                "PROVIDER NOTES (Music):\n\
+                 - Genre, mood, instruments, phase structure; avoid bar-level detail"
+            }
+            PrepChannel::Voice => {
+                "PROVIDER NOTES (TTS):\n\
+                 - Verbatim speech text only; style in provider_options"
+            }
+            PrepChannel::Generic => {
+                "PROVIDER NOTES:\n\
+                 - Clean artifacts but preserve descriptive and structural content"
+            }
+        },
     }
 }
 
@@ -630,5 +961,112 @@ fn truncate_at_sentence(text: &str, max: usize) -> String {
         cut[..pos].trim().to_string()
     } else {
         cut.trim().to_string()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn channel_raster_vs_svg() {
+        assert_eq!(
+            prep_channel(AssetType::Image, AudioKind::Voice, None, "gemini"),
+            PrepChannel::RasterImage
+        );
+        assert_eq!(
+            prep_channel(AssetType::Image, AudioKind::Voice, Some("svg"), "gemini-chat"),
+            PrepChannel::Svg
+        );
+    }
+
+    #[test]
+    fn channel_audio_kinds() {
+        assert_eq!(
+            prep_channel(AssetType::Audio, AudioKind::Music, None, "suno"),
+            PrepChannel::Music
+        );
+        assert_eq!(
+            prep_channel(AssetType::Audio, AudioKind::Voice, None, "openai-tts"),
+            PrepChannel::Voice
+        );
+        assert_eq!(
+            prep_channel(AssetType::Audio, AudioKind::Voice, None, "elevenlabs"),
+            PrepChannel::Voice
+        );
+    }
+
+    #[test]
+    fn channel_chat_types() {
+        assert_eq!(
+            prep_channel(AssetType::Diagram, AudioKind::Voice, Some("mermaid"), "anthropic"),
+            PrepChannel::Diagram
+        );
+        assert_eq!(
+            prep_channel(AssetType::Html, AudioKind::Voice, None, "openai-chat"),
+            PrepChannel::Html
+        );
+        assert_eq!(
+            prep_channel(AssetType::ReactPage, AudioKind::Voice, Some("tsx"), "z.ai"),
+            PrepChannel::Code
+        );
+        assert_eq!(
+            prep_channel(AssetType::Document, AudioKind::Voice, Some("md"), "groq-chat"),
+            PrepChannel::Document
+        );
+    }
+
+    #[test]
+    fn voice_disallows_llm_prep() {
+        assert!(!allows_llm_prep(PrepChannel::Voice));
+        assert!(allows_llm_prep(PrepChannel::RasterImage));
+        assert!(allows_llm_prep(PrepChannel::Svg));
+        assert!(allows_llm_prep(PrepChannel::Html));
+    }
+
+    #[test]
+    fn svg_rules_preserve_hex_not_strip() {
+        let rules = prep_change_rules(PrepChannel::Svg);
+        assert!(rules.contains("KEEP hex") || rules.contains("hex color"));
+        assert!(!rules.contains("Replace hex color codes with descriptive"));
+
+        let raster = prep_change_rules(PrepChannel::RasterImage);
+        assert!(raster.contains("Replace hex color codes"));
+    }
+
+    #[test]
+    fn html_rules_keep_implementation_details() {
+        let rules = prep_change_rules(PrepChannel::Html);
+        assert!(rules.contains("KEEP layout") || rules.contains("feature checklist"));
+        assert!(!rules.contains("Remove implementation/interaction instructions"));
+    }
+
+    #[test]
+    fn build_instruction_includes_channel_and_rules() {
+        let instr = build_prep_instruction(
+            PrepChannel::Svg,
+            "gemini-chat",
+            AssetType::Image,
+            "",
+            "hex #00D4FF logo",
+            "photos",
+            "PROVIDER NOTES (SVG)",
+            "",
+            false,
+            "",
+            "",
+        );
+        assert!(instr.contains("PREP CHANNEL: Svg"));
+        assert!(instr.contains("KEEP hex") || instr.contains("hex color"));
+        assert!(instr.contains("#00D4FF"));
+        assert!(!instr.contains("Replace hex color codes with descriptive color names"));
+    }
+
+    #[test]
+    fn static_guidance_svg_vs_imagen() {
+        let svg = provider_prompt_guidance("gemini-chat", AssetType::Image, Some("svg"));
+        assert!(svg.to_lowercase().contains("svg"));
+        let imagen = provider_prompt_guidance("gemini", AssetType::Image, None);
+        assert!(imagen.contains("Imagen") || imagen.contains("hex codes"));
     }
 }

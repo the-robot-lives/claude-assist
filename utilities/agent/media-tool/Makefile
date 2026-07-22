@@ -1,7 +1,7 @@
 INSTALL_DIR ?= $(HOME)/.local/bin
 LIB_INSTALL_DIR ?= $(HOME)/.local/lib/media-tools
 
-.PHONY: compile build test install clean uninstall install-legacy
+.PHONY: compile build test test-unit test-structural test-live install clean uninstall install-legacy lab report
 
 compile: build
 
@@ -13,14 +13,42 @@ build:
 		echo "✓ Built target/release/generate-media-prompt"; \
 	fi
 
-test:
+## L0–L2: unit tests + demos dry-run (no paid APIs)
+test: test-unit
+	@if ! command -v cargo >/dev/null 2>&1; then \
+		echo "media-tool: cargo not found; skipping dry-run."; \
+	else \
+		cargo run -- --dry-run demos/; \
+		echo "✓ Unit tests + demos dry-run passed"; \
+	fi
+
+test-unit:
 	@if ! command -v cargo >/dev/null 2>&1; then \
 		echo "media-tool: cargo not found; skipping tests."; \
 	else \
-		cargo build; \
-		cargo run -- --dry-run test/; \
-		echo "✓ Dry-run test passed"; \
+		cargo test; \
 	fi
+
+## Structural probes on existing demo AV outputs (ffprobe)
+test-structural: test-unit
+	@./scripts/live-eval-report.sh
+
+## L3 live generate (API cost). Optional: TYPE=image make test-live
+test-live: build
+	@./scripts/live-eval-report.sh --generate
+
+## Markdown report only (no cargo test)
+report:
+	@./scripts/live-eval-report.sh
+
+## Interactive web lab (types · prompts · generate · view · eval)
+## Usage: make lab   OR   make lab PORT=9090
+PORT ?= 8787
+lab:
+	@if ! command -v cargo >/dev/null 2>&1; then \
+		echo "media-tool: cargo not found"; exit 1; \
+	fi
+	cargo run -- lab --port $(PORT) --verbose
 
 install: build
 	@if ! command -v cargo >/dev/null 2>&1; then \

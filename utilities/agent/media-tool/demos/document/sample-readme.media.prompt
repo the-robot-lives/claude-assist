@@ -1,0 +1,29 @@
+schema: "0.4"
+id: doc-readme-001
+type: document
+quality: medium
+
+prompt:
+  system: |
+    You are a technical documentation writer. Output ONLY valid Markdown.
+    No code fences wrapping the entire document. Start with a # title.
+  text: |
+    Write a short README for a fictional CLI called "media-lab" that lists types,
+    generates media, and evals outputs. Include Install, Quick Start, and License sections.
+
+output:
+  formats:
+    - format: md
+  text_format: md
+
+tags: [document, fixture]
+eval:
+  pass_threshold: 0.7
+  required_pass: [completeness]
+  criteria:
+    completeness:
+      weight: 3
+      description: "Install, Quick Start, and License sections present"
+    structure:
+      weight: 2
+      description: "Valid markdown with a top-level title"

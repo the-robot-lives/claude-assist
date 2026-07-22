@@ -23,6 +23,10 @@ generate-media-prompt --dry-run --verbose assets/
 
 # Interactive refinement — regenerate until satisfied
 generate-media-prompt --refine hero.media.prompt
+
+# Test lab UI — browse types, generate, view, eval, synthesize prompts
+generate-media-prompt lab
+# → http://127.0.0.1:8787
 ```
 
 ---
@@ -103,7 +107,7 @@ tags: [hero, landing]
 product_targets: [hero-image, og-card]
 
 eval:
-  pass_threshold: 3.5
+  pass_threshold: 0.75   # weighted score in [0,1] after normalizing criterion scores 0-10 → 0-1
   required_pass: [relevance]
   criteria:
     relevance:

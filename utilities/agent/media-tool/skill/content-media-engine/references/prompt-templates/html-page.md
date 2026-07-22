@@ -9,9 +9,10 @@ Generate a complete, self-contained HTML page with inline CSS and optional inlin
 ## Example .media.prompt
 
 ```yaml
-schema: "0.3"
+schema: "0.4"
 id: pricing-page
 type: html
+quality: medium
 service: anthropic
 model: claude-sonnet-4-6
 
@@ -40,6 +41,13 @@ post_processing:
         height: 900
 
 tags: [landing-page, pricing, html]
+
+eval:
+  pass_threshold: 0.7
+  criteria:
+    relevance:
+      weight: 3
+      description: "Matches generation brief"
 ```
 
 ## Format Tips

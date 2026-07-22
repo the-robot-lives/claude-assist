@@ -31,3 +31,23 @@ output:
   text_format: svg
 
 tags: [logo, svg, icon]
+
+eval:
+  pass_threshold: 0.7
+  required_pass: [validity]
+  criteria:
+    validity:
+      weight: 3
+      description: "Well-formed SVG with viewBox; raw markup only"
+    brand_fit:
+      weight: 2
+      description: "Brand colors and geometry match brief"
+    simplicity:
+      weight: 2
+      description: "Readable at small sizes; compact paths"
+    relevance:
+      weight: 2
+      description: "Subject matches brief"
+  reject_if:
+    - "contains explanatory prose outside SVG"
+    - "photorealistic raster embedded"

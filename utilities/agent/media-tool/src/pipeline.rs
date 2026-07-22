@@ -595,6 +595,46 @@ fn resolve_display_service(
     (display, first_model)
 }
 
+/// Prefer explicit `text_format`, then `diagram_type`, then first output format
+/// for chat/SVG-style targets so FIM + prep resolve correctly for demos that
+/// only set `diagram_type: mermaid` (no text_format).
+fn effective_text_format(prompt: &ParsedPrompt) -> Option<&str> {
+    if let Some(tf) = prompt.payload.output.text_format.as_deref() {
+        if !tf.trim().is_empty() {
+            return Some(tf);
+        }
+    }
+    if let Some(dt) = prompt.payload.output.diagram_type.as_deref() {
+        if !dt.trim().is_empty() {
+            return Some(dt);
+        }
+    }
+    // Fall back to first declared format when it looks like a text/markup format
+    prompt
+        .meta
+        .output_formats
+        .first()
+        .map(|f| f.format.as_str())
+        .filter(|f| {
+            matches!(
+                f.to_lowercase().as_str(),
+                "svg"
+                    | "mmd"
+                    | "mermaid"
+                    | "puml"
+                    | "plantuml"
+                    | "dot"
+                    | "html"
+                    | "tsx"
+                    | "ts"
+                    | "jsx"
+                    | "js"
+                    | "md"
+                    | "markdown"
+            )
+        })
+}
+
 fn text_inference_system_prompt(
     svc: &str,
     prompt: &ParsedPrompt,
@@ -610,7 +650,7 @@ fn text_inference_system_prompt(
     if let Some(solution) = crate::fim::guidance_for(
         svc,
         prompt.meta.asset_type,
-        prompt.payload.output.text_format.as_deref(),
+        effective_text_format(prompt),
         fim_enabled,
     ) {
         let solution = solution.trim();
@@ -744,7 +784,8 @@ async fn run_eval_gated(
                                     &prompt.payload.prompt,
                                     svc,
                                     prompt.meta.asset_type,
-                                    prompt.payload.output.text_format.as_deref(),
+                                    prompt.meta.audio_kind,
+                                    effective_text_format(prompt),
                                     config.fim_enabled,
                                     config.verbose,
                                 )
@@ -757,9 +798,10 @@ async fn run_eval_gated(
                                         .or_else(|| prompt.payload.prompt.negative.clone()),
                                 ),
                                 None => {
-                                    // Truncate as last resort
+                                    // Truncate as last resort (also used when prep
+                                    // channel disallows LLM rewrite, e.g. voice)
                                     ui::warn_msg(&format!(
-                                        "LLM prep failed — truncating to {} chars (quality may suffer)",
+                                        "LLM prep unavailable — truncating to {} chars (quality may suffer)",
                                         max
                                     ));
                                     let truncated: String = raw_text.chars().take(max).collect();
@@ -788,7 +830,8 @@ async fn run_eval_gated(
                         &prompt.payload.prompt,
                         svc,
                         prompt.meta.asset_type,
-                        prompt.payload.output.text_format.as_deref(),
+                        prompt.meta.audio_kind,
+                        effective_text_format(prompt),
                         config.fim_enabled,
                         feedback,
                         scores,
@@ -856,12 +899,13 @@ async fn run_eval_gated(
                 &prompt.payload.prompt.provider_options,
             );
 
-            // Score
+            // Score (pass duration for structural/hybrid audio-video checks)
             let score = evaluator
-                .score_output(
+                .score_output_with_duration(
                     &genai_path,
                     &prompt.payload.prompt.text,
                     eval_section,
+                    prompt.meta.duration,
                     config.verbose,
                 )
                 .await;
@@ -1069,7 +1113,8 @@ async fn run_legacy_variants(
                             &prompt.payload.prompt,
                             svc,
                             prompt.meta.asset_type,
-                            prompt.payload.output.text_format.as_deref(),
+                            prompt.meta.audio_kind,
+                            effective_text_format(prompt),
                             config.fim_enabled,
                             config.verbose,
                         )
@@ -1082,7 +1127,10 @@ async fn run_legacy_variants(
                                 .or_else(|| prompt.payload.prompt.negative.clone()),
                         ),
                         None => {
-                            ui::warn_msg(&format!("LLM prep failed — truncating to {} chars", max));
+                            ui::warn_msg(&format!(
+                                "LLM prep unavailable — truncating to {} chars",
+                                max
+                            ));
                             let truncated: String = raw_text.chars().take(max).collect();
                             (truncated, prompt.payload.prompt.negative.clone())
                         }

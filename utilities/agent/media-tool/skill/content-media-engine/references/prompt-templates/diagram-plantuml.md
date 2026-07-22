@@ -9,9 +9,10 @@ You are a PlantUML generator. Output ONLY valid PlantUML markup starting with @s
 ## Example .media.prompt
 
 ```yaml
-schema: "0.3"
+schema: "0.4"
 id: class-diagram
 type: diagram
+quality: medium
 service: anthropic
 model: claude-sonnet-4-6
 
@@ -35,6 +36,13 @@ post_processing:
       output_format: svg
 
 tags: [class-diagram, auth, plantuml]
+
+eval:
+  pass_threshold: 0.7
+  criteria:
+    relevance:
+      weight: 3
+      description: "Matches generation brief"
 ```
 
 ## Format Tips

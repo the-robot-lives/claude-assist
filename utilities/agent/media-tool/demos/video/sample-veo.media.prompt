@@ -20,6 +20,7 @@ tags: [promo, robot, cinematic]
 product_targets: [landing-page, youtube-ad]
 
 eval:
+  mode: hybrid
   pass_threshold: 0.7
   criteria:
     motion_quality:
