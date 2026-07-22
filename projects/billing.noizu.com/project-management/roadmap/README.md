@@ -9,7 +9,7 @@ generated: 2026-07-22
 
 ## Purpose
 
-`billing.noizu.com` is a finance operations dashboard for invoicing, client billing, payments, estimates, expense rebilling, and revenue tracking across Noizu-operated products and services. The project currently had a concept README and no PM artifact tree; this roadmap seeds 7 personas and 100 user stories so design, PRD, and engineering work can proceed against stable IDs.
+`billing.noizu.com` is a finance operations dashboard for invoicing, client billing, payments, estimates, expense rebilling, and revenue tracking across Noizu-operated products and services. The project currently had a concept README and no PM artifact tree; this roadmap seeds 9 personas and 116 user stories so design, PRD, and engineering work can proceed against stable IDs.
 
 ## Roadmap Principles
 
@@ -18,6 +18,17 @@ generated: 2026-07-22
 3. Stripe-first without PCI expansion. Hosted payment links and webhooks are preferred; raw card or bank data is never stored locally.
 4. Project context differentiates the product. Customers, invoices, estimates, and expenses should carry delivery context from projects, milestones, time entries, and support/account notes.
 5. Quiet, accessible finance UX. Dense information is acceptable, but flows must remain keyboard-friendly, readable, recoverable, and low-friction.
+
+## Platform Scope
+
+| Platform | Role | First-Class Requirements |
+|----------|------|--------------------------|
+| Web app | Canonical full-function workspace | Deep-linkable routes, responsive dashboard, server-rendered app shell, full invoice/customer/payment/report workflows |
+| iOS app | Mobile approval and status companion | SwiftUI-native review flows, push notifications, safe approvals, offline read cache, universal links |
+| Android app | Mobile approval and status companion | Jetpack Compose/Material 3 review flows, notification channels, offline read cache, Android app links |
+| macOS app | Desktop finance power surface | Sidebar/detail cockpit, multi-window workbench, keyboard shortcuts, menu bar receivables status, desktop notifications |
+
+The web app remains the MVP implementation target. Native app work should start only after the API, auth, audit, notification, and deep-link contracts are stable enough that platform clients do not duplicate billing rules.
 
 ## Persona Coverage
 
@@ -30,6 +41,8 @@ generated: 2026-07-22
 | [P-005 Mateo Silva](../personas/P-005-bookkeeper-accountant.md) | tertiary | Bookkeeper and accountant |
 | [P-006 Leah Brooks](../personas/P-006-account-manager.md) | tertiary | Account manager |
 | [P-007 Eli Freeman](../personas/P-007-accessibility-conscious-owner.md) | edge-case | Accessibility-conscious owner |
+| [P-008 Rina Kim](../personas/P-008-mobile-approval-operator.md) | secondary | Mobile approval operator |
+| [P-009 Victor Han](../personas/P-009-desktop-finance-power-user.md) | primary | Desktop finance power user |
 
 ## Workstream Lanes
 
@@ -45,6 +58,7 @@ generated: 2026-07-22
 | WS-H | Reporting and Exports | AR dashboard, aging, revenue, tax, CSV exports | US-081..US-088 |
 | WS-I | Agent-Assisted Billing | Invoice drafting, risk flags, summaries, follow-ups, explanations | US-089..US-095 |
 | WS-J | Settings, Audit, and Accessibility | Branding, payment config, numbering, audit log, keyboard-first UX | US-096..US-100 |
+| WS-K | Cross-Platform Apps | Web app hardening, iOS, Android, macOS, shared API/deep-link/release contracts | US-101..US-116 |
 
 ## Milestone Summaries
 
@@ -56,17 +70,19 @@ Stories: [US-001](../user-stories/US-001-create-secure-account.md), [US-002](../
 
 **M2 - Invoice Operations and Collections.** Round out daily billing operations: customer defaults, invoice lifecycle, email resend/view states, credits, partial payments, and activity timelines.
 
-Stories: [US-007](../user-stories/US-007-switch-between-workspaces.md), [US-009](../user-stories/US-009-preview-sample-invoice-during-setup.md), [US-010](../user-stories/US-010-recover-from-setup-validation-errors.md), [US-015](../user-stories/US-015-set-primary-billing-contact.md), [US-016](../user-stories/US-016-store-billing-and-shipping-addresses.md), [US-017](../user-stories/US-017-capture-customer-tax-id.md), [US-019](../user-stories/US-019-set-customer-currency-preference.md), [US-020](../user-stories/US-020-add-internal-customer-notes.md), [US-022](../user-stories/US-022-view-customer-billing-history.md), [US-026](../user-stories/US-026-edit-service-item-pricing.md), [US-027](../user-stories/US-027-set-project-billing-code.md), [US-028](../user-stories/US-028-mark-project-billable-status.md), [US-030](../user-stories/US-030-attach-delivery-notes-to-project.md), [US-031](../user-stories/US-031-map-external-project-references.md), [US-032](../user-stories/US-032-import-service-catalog-csv.md), [US-041](../user-stories/US-041-resend-invoice-email.md), [US-042](../user-stories/US-042-track-invoice-viewed-state.md), [US-043](../user-stories/US-043-void-sent-invoice.md), [US-044](../user-stories/US-044-write-off-invoice-balance.md), [US-045](../user-stories/US-045-duplicate-invoice-as-draft.md), [US-047](../user-stories/US-047-search-and-filter-invoices.md), [US-049](../user-stories/US-049-download-invoice-pdf.md), [US-061](../user-stories/US-061-create-stripe-payment-link.md), [US-063](../user-stories/US-063-record-partial-payment.md), [US-065](../user-stories/US-065-apply-customer-credit.md), [US-066](../user-stories/US-066-create-credit-note.md), [US-067](../user-stories/US-067-record-refund.md), [US-068](../user-stories/US-068-reconcile-stripe-webhook-payment.md), [US-069](../user-stories/US-069-review-unmatched-payment-event.md), [US-071](../user-stories/US-071-protect-payment-data-scope.md), [US-072](../user-stories/US-072-send-payment-receipt.md), [US-083](../user-stories/US-083-view-revenue-by-customer.md), [US-084](../user-stories/US-084-view-revenue-by-project.md), [US-085](../user-stories/US-085-view-tax-summary.md), [US-092](../user-stories/US-092-summarize-customer-billing-history.md), [US-093](../user-stories/US-093-draft-overdue-follow-up-email.md).
+Stories: [US-007](../user-stories/US-007-switch-between-workspaces.md), [US-009](../user-stories/US-009-preview-sample-invoice-during-setup.md), [US-010](../user-stories/US-010-recover-from-setup-validation-errors.md), [US-015](../user-stories/US-015-set-primary-billing-contact.md), [US-016](../user-stories/US-016-store-billing-and-shipping-addresses.md), [US-017](../user-stories/US-017-capture-customer-tax-id.md), [US-019](../user-stories/US-019-set-customer-currency-preference.md), [US-020](../user-stories/US-020-add-internal-customer-notes.md), [US-022](../user-stories/US-022-view-customer-billing-history.md), [US-026](../user-stories/US-026-edit-service-item-pricing.md), [US-027](../user-stories/US-027-set-project-billing-code.md), [US-028](../user-stories/US-028-mark-project-billable-status.md), [US-030](../user-stories/US-030-attach-delivery-notes-to-project.md), [US-031](../user-stories/US-031-map-external-project-references.md), [US-032](../user-stories/US-032-import-service-catalog-csv.md), [US-041](../user-stories/US-041-resend-invoice-email.md), [US-042](../user-stories/US-042-track-invoice-viewed-state.md), [US-043](../user-stories/US-043-void-sent-invoice.md), [US-044](../user-stories/US-044-write-off-invoice-balance.md), [US-045](../user-stories/US-045-duplicate-invoice-as-draft.md), [US-047](../user-stories/US-047-search-and-filter-invoices.md), [US-049](../user-stories/US-049-download-invoice-pdf.md), [US-061](../user-stories/US-061-create-stripe-payment-link.md), [US-063](../user-stories/US-063-record-partial-payment.md), [US-065](../user-stories/US-065-apply-customer-credit.md), [US-066](../user-stories/US-066-create-credit-note.md), [US-067](../user-stories/US-067-record-refund.md), [US-068](../user-stories/US-068-reconcile-stripe-webhook-payment.md), [US-069](../user-stories/US-069-review-unmatched-payment-event.md), [US-071](../user-stories/US-071-protect-payment-data-scope.md), [US-072](../user-stories/US-072-send-payment-receipt.md), [US-083](../user-stories/US-083-view-revenue-by-customer.md), [US-084](../user-stories/US-084-view-revenue-by-project.md), [US-085](../user-stories/US-085-view-tax-summary.md), [US-092](../user-stories/US-092-summarize-customer-billing-history.md), [US-093](../user-stories/US-093-draft-overdue-follow-up-email.md), [US-101](../user-stories/US-101-web-app-responsive-billing-dashboard.md), [US-102](../user-stories/US-102-web-app-deep-linkable-workspace-state.md), [US-112](../user-stories/US-112-shared-api-contract-for-native-apps.md), [US-113](../user-stories/US-113-cross-platform-design-tokens.md).
 
 **M3 - Estimates, Expenses, and Project Context.** Add estimate-to-invoice workflows, expense rebilling, delivery context, richer reports, and bookkeeping support.
 
-Stories: [US-051](../user-stories/US-051-create-estimate.md), [US-052](../user-stories/US-052-add-estimate-line-items.md), [US-053](../user-stories/US-053-send-estimate-for-approval.md), [US-054](../user-stories/US-054-track-estimate-viewed-status.md), [US-055](../user-stories/US-055-record-estimate-approval.md), [US-056](../user-stories/US-056-revise-estimate.md), [US-057](../user-stories/US-057-compare-estimate-revisions.md), [US-058](../user-stories/US-058-convert-estimate-to-invoice.md), [US-059](../user-stories/US-059-decline-estimate-with-reason.md), [US-060](../user-stories/US-060-expire-stale-estimate.md), [US-073](../user-stories/US-073-capture-expense.md), [US-074](../user-stories/US-074-attach-receipt-file.md), [US-075](../user-stories/US-075-assign-expense-to-customer.md), [US-076](../user-stories/US-076-assign-expense-to-project.md), [US-077](../user-stories/US-077-mark-expense-billable.md), [US-078](../user-stories/US-078-apply-expense-markup.md), [US-079](../user-stories/US-079-convert-expenses-to-invoice-lines.md), [US-080](../user-stories/US-080-export-expense-records.md), [US-089](../user-stories/US-089-draft-invoice-from-milestone.md), [US-090](../user-stories/US-090-draft-invoice-from-time-entries.md).
+Stories: [US-051](../user-stories/US-051-create-estimate.md), [US-052](../user-stories/US-052-add-estimate-line-items.md), [US-053](../user-stories/US-053-send-estimate-for-approval.md), [US-054](../user-stories/US-054-track-estimate-viewed-status.md), [US-055](../user-stories/US-055-record-estimate-approval.md), [US-056](../user-stories/US-056-revise-estimate.md), [US-057](../user-stories/US-057-compare-estimate-revisions.md), [US-058](../user-stories/US-058-convert-estimate-to-invoice.md), [US-059](../user-stories/US-059-decline-estimate-with-reason.md), [US-060](../user-stories/US-060-expire-stale-estimate.md), [US-073](../user-stories/US-073-capture-expense.md), [US-074](../user-stories/US-074-attach-receipt-file.md), [US-075](../user-stories/US-075-assign-expense-to-customer.md), [US-076](../user-stories/US-076-assign-expense-to-project.md), [US-077](../user-stories/US-077-mark-expense-billable.md), [US-078](../user-stories/US-078-apply-expense-markup.md), [US-079](../user-stories/US-079-convert-expenses-to-invoice-lines.md), [US-080](../user-stories/US-080-export-expense-records.md), [US-089](../user-stories/US-089-draft-invoice-from-milestone.md), [US-090](../user-stories/US-090-draft-invoice-from-time-entries.md), [US-103](../user-stories/US-103-ios-app-mobile-invoice-review.md), [US-106](../user-stories/US-106-android-app-mobile-invoice-review.md), [US-109](../user-stories/US-109-macos-receivables-cockpit.md), [US-114](../user-stories/US-114-cross-platform-deep-links.md).
 
 **M4 - Automation and Integrations.** Introduce higher leverage automation and external coordination, including Stripe webhook reconciliation, time-entry invoice drafting, and client-sensitive follow-up assistance.
 
-Stories: [US-048](../user-stories/US-048-show-invoice-activity-timeline.md), [US-091](../user-stories/US-091-flag-overdue-risk.md), [US-094](../user-stories/US-094-reconcile-imported-payment-events.md), [US-095](../user-stories/US-095-explain-invoice-balance-changes.md).
+Stories: [US-048](../user-stories/US-048-show-invoice-activity-timeline.md), [US-091](../user-stories/US-091-flag-overdue-risk.md), [US-094](../user-stories/US-094-reconcile-imported-payment-events.md), [US-095](../user-stories/US-095-explain-invoice-balance-changes.md), [US-104](../user-stories/US-104-ios-push-notifications-for-billing-events.md), [US-105](../user-stories/US-105-ios-offline-review-cache.md), [US-107](../user-stories/US-107-android-push-notifications-for-billing-events.md), [US-108](../user-stories/US-108-android-offline-first-sync.md), [US-110](../user-stories/US-110-macos-multi-window-workbench.md), [US-111](../user-stories/US-111-macos-menu-bar-collections-status.md).
 
-**M5 - Release Hardening.** Validate full persona journeys, accessibility, auditability, export correctness, data migration/import needs, and operational readiness. No new backlog scope unless release testing exposes a blocker.
+**M5 - Release Hardening.** Validate full persona journeys, accessibility, auditability, export correctness, data migration/import needs, and operational readiness. Platform release gates cover web browser E2E, TestFlight, Play internal testing, notarized/test-signed macOS builds, privacy review, and secure local storage.
+
+Stories: [US-115](../user-stories/US-115-cross-platform-release-qa.md), [US-116](../user-stories/US-116-platform-privacy-and-secure-storage.md).
 
 ## Story Assignment Matrix
 
@@ -172,6 +188,22 @@ Stories: [US-048](../user-stories/US-048-show-invoice-activity-timeline.md), [US
 | [US-098](../user-stories/US-098-manage-invoice-numbering-rules.md) | Manage invoice numbering rules | Settings, Audit, and Accessibility | WS-J | M1 | must-have | M | M0 platform contracts |
 | [US-099](../user-stories/US-099-review-audit-log.md) | Review audit log | Settings, Audit, and Accessibility | WS-J | M1 | must-have | M | M0 platform contracts |
 | [US-100](../user-stories/US-100-use-accessible-keyboard-first-workflows.md) | Use accessible keyboard-first workflows | Settings, Audit, and Accessibility | WS-J | M1 | must-have | M | M0 platform contracts |
+| [US-101](../user-stories/US-101-web-app-responsive-billing-dashboard.md) | Web app responsive billing dashboard | Cross-Platform Apps | WS-K | M2 | must-have | M | US-081, US-082 |
+| [US-102](../user-stories/US-102-web-app-deep-linkable-workspace-state.md) | Web app deep-linkable workspace state | Cross-Platform Apps | WS-K | M2 | must-have | M | US-047 |
+| [US-103](../user-stories/US-103-ios-app-mobile-invoice-review.md) | iOS app mobile invoice review | Cross-Platform Apps | WS-K | M3 | should-have | H | US-112 |
+| [US-104](../user-stories/US-104-ios-push-notifications-for-billing-events.md) | iOS push notifications for billing events | Cross-Platform Apps | WS-K | M4 | should-have | M | US-103, notification contract |
+| [US-105](../user-stories/US-105-ios-offline-review-cache.md) | iOS offline review cache | Cross-Platform Apps | WS-K | M4 | could-have | H | US-103 |
+| [US-106](../user-stories/US-106-android-app-mobile-invoice-review.md) | Android app mobile invoice review | Cross-Platform Apps | WS-K | M3 | should-have | H | US-112 |
+| [US-107](../user-stories/US-107-android-push-notifications-for-billing-events.md) | Android push notifications for billing events | Cross-Platform Apps | WS-K | M4 | should-have | M | US-106, notification contract |
+| [US-108](../user-stories/US-108-android-offline-first-sync.md) | Android offline-first sync | Cross-Platform Apps | WS-K | M4 | could-have | H | US-106 |
+| [US-109](../user-stories/US-109-macos-receivables-cockpit.md) | macOS receivables cockpit | Cross-Platform Apps | WS-K | M3 | should-have | H | US-112 |
+| [US-110](../user-stories/US-110-macos-multi-window-workbench.md) | macOS multi-window workbench | Cross-Platform Apps | WS-K | M4 | could-have | H | US-109 |
+| [US-111](../user-stories/US-111-macos-menu-bar-collections-status.md) | macOS menu bar collections status | Cross-Platform Apps | WS-K | M4 | could-have | M | US-109, notification contract |
+| [US-112](../user-stories/US-112-shared-api-contract-for-native-apps.md) | Shared API contract for native apps | Cross-Platform Apps | WS-K | M2 | must-have | H | M0 platform contracts |
+| [US-113](../user-stories/US-113-cross-platform-design-tokens.md) | Cross-platform design tokens | Cross-Platform Apps | WS-K | M2 | should-have | M | M0 design direction |
+| [US-114](../user-stories/US-114-cross-platform-deep-links.md) | Cross-platform deep links | Cross-Platform Apps | WS-K | M3 | should-have | H | US-102, US-112 |
+| [US-115](../user-stories/US-115-cross-platform-release-qa.md) | Cross-platform release QA | Cross-Platform Apps | WS-K | M5 | must-have | H | M3/M4 platform app stories |
+| [US-116](../user-stories/US-116-platform-privacy-and-secure-storage.md) | Platform privacy and secure storage | Cross-Platform Apps | WS-K | M5 | must-have | H | US-103, US-106, US-109 |
 
 Complexity key: `L` = low, `M` = medium, `H` = high.
 
@@ -183,6 +215,7 @@ Complexity key: `L` = low, `M` = medium, `H` = high.
 - PDF worker contract defines input HTML, template variables, storage key format, retry behavior, and failure states.
 - Export contract defines stable IDs, timestamps, currency formatting, and tax/discount fields for CSV and JSON.
 - Agent-assisted workflows disclose generated content and require human confirmation before external communication or balance changes.
+- Cross-platform contracts define canonical web URLs, native deep-link resolution, notification payloads, secure local storage expectations, and read-cache rules before native app implementation starts.
 
 ## Release Readiness Gates
 

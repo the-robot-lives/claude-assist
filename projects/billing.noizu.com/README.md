@@ -145,3 +145,14 @@ time tracking, consulting portals, support desks, and subscription systems.
 ## Status
 
 Concept
+
+## Implementation
+
+Initial implementation lives in [`app/`](app/):
+
+- `design/STYLEGUIDE.md` - Bureau Signal visual system and UX rules.
+- `app/web/` - static web prototype for the canonical billing workspace.
+- `app/shared/` - API and design-token contracts for all platform clients.
+- `app/ios/` - SwiftUI source for the iOS review companion.
+- `app/macos/` - SwiftUI source for the macOS receivables cockpit.
+- `app/android/` - Kotlin/Jetpack Compose source for the Android review companion.

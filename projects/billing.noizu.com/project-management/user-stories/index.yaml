@@ -699,3 +699,115 @@ user_stories:
     priority: must-have
     personas: [P-007, P-002]
     file: US-100-use-accessible-keyboard-first-workflows.md
+  - id: US-101
+    title: Web app responsive billing dashboard
+    slug: web-app-responsive-billing-dashboard
+    epic: Cross-Platform Apps
+    priority: must-have
+    personas: [P-001, P-002, P-007]
+    file: US-101-web-app-responsive-billing-dashboard.md
+  - id: US-102
+    title: Web app deep-linkable workspace state
+    slug: web-app-deep-linkable-workspace-state
+    epic: Cross-Platform Apps
+    priority: must-have
+    personas: [P-001, P-002, P-006]
+    file: US-102-web-app-deep-linkable-workspace-state.md
+  - id: US-103
+    title: iOS app mobile invoice review
+    slug: ios-app-mobile-invoice-review
+    epic: Cross-Platform Apps
+    priority: should-have
+    personas: [P-001, P-008]
+    file: US-103-ios-app-mobile-invoice-review.md
+  - id: US-104
+    title: iOS push notifications for billing events
+    slug: ios-push-notifications-for-billing-events
+    epic: Cross-Platform Apps
+    priority: should-have
+    personas: [P-006, P-008]
+    file: US-104-ios-push-notifications-for-billing-events.md
+  - id: US-105
+    title: iOS offline review cache
+    slug: ios-offline-review-cache
+    epic: Cross-Platform Apps
+    priority: could-have
+    personas: [P-008, P-007]
+    file: US-105-ios-offline-review-cache.md
+  - id: US-106
+    title: Android app mobile invoice review
+    slug: android-app-mobile-invoice-review
+    epic: Cross-Platform Apps
+    priority: should-have
+    personas: [P-001, P-008]
+    file: US-106-android-app-mobile-invoice-review.md
+  - id: US-107
+    title: Android push notifications for billing events
+    slug: android-push-notifications-for-billing-events
+    epic: Cross-Platform Apps
+    priority: should-have
+    personas: [P-006, P-008]
+    file: US-107-android-push-notifications-for-billing-events.md
+  - id: US-108
+    title: Android offline-first sync
+    slug: android-offline-first-sync
+    epic: Cross-Platform Apps
+    priority: could-have
+    personas: [P-008, P-007]
+    file: US-108-android-offline-first-sync.md
+  - id: US-109
+    title: macOS receivables cockpit
+    slug: macos-receivables-cockpit
+    epic: Cross-Platform Apps
+    priority: should-have
+    personas: [P-002, P-009]
+    file: US-109-macos-receivables-cockpit.md
+  - id: US-110
+    title: macOS multi-window workbench
+    slug: macos-multi-window-workbench
+    epic: Cross-Platform Apps
+    priority: could-have
+    personas: [P-002, P-005, P-009]
+    file: US-110-macos-multi-window-workbench.md
+  - id: US-111
+    title: macOS menu bar collections status
+    slug: macos-menu-bar-collections-status
+    epic: Cross-Platform Apps
+    priority: could-have
+    personas: [P-006, P-009]
+    file: US-111-macos-menu-bar-collections-status.md
+  - id: US-112
+    title: Shared API contract for native apps
+    slug: shared-api-contract-for-native-apps
+    epic: Cross-Platform Apps
+    priority: must-have
+    personas: [P-001, P-002, P-008, P-009]
+    file: US-112-shared-api-contract-for-native-apps.md
+  - id: US-113
+    title: Cross-platform design tokens
+    slug: cross-platform-design-tokens
+    epic: Cross-Platform Apps
+    priority: should-have
+    personas: [P-007, P-008, P-009]
+    file: US-113-cross-platform-design-tokens.md
+  - id: US-114
+    title: Cross-platform deep links
+    slug: cross-platform-deep-links
+    epic: Cross-Platform Apps
+    priority: should-have
+    personas: [P-002, P-006, P-008, P-009]
+    file: US-114-cross-platform-deep-links.md
+  - id: US-115
+    title: Cross-platform release QA
+    slug: cross-platform-release-qa
+    epic: Cross-Platform Apps
+    priority: must-have
+    personas: [P-001, P-002, P-008, P-009]
+    file: US-115-cross-platform-release-qa.md
+  - id: US-116
+    title: Platform privacy and secure storage
+    slug: platform-privacy-and-secure-storage
+    epic: Cross-Platform Apps
+    priority: must-have
+    personas: [P-002, P-005, P-007, P-008, P-009]
+    file: US-116-platform-privacy-and-secure-storage.md

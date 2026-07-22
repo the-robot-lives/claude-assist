@@ -41,3 +41,15 @@ personas:
     archetype: Accessibility-conscious owner
     segment: edge-case
     file: P-007-accessibility-conscious-owner.md
+  - id: P-008
+    name: Rina Kim
+    slug: mobile-approval-operator
+    archetype: Mobile approval operator
+    segment: secondary
+    file: P-008-mobile-approval-operator.md
+  - id: P-009
+    name: Victor Han
+    slug: desktop-finance-power-user
+    archetype: Desktop finance power user
+    segment: primary
+    file: P-009-desktop-finance-power-user.md

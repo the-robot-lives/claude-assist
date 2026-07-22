@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Billing Noizu</title>
+    <link rel="stylesheet" href="./styles.css">
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar" aria-label="Billing navigation">
+        <a class="brand" href="#dashboard" aria-label="Billing Noizu dashboard">
+          <img src="./assets/billing-mark.svg" alt="" width="40" height="40">
+          <span>Billing Noizu</span>
+        </a>
+        <nav>
+          <a class="active" href="#dashboard">Dashboard</a>
+          <a href="#invoices">Invoices</a>
+          <a href="#customers">Customers</a>
+          <a href="#platforms">Apps</a>
+          <a href="#audit">Audit</a>
+        </nav>
+      </aside>
+
+      <main>
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Bureau Signal</p>
+            <h1>Noizu Operations Billing</h1>
+          </div>
+          <div class="actions">
+            <button class="ghost" type="button" id="copy-link">Copy setup link</button>
+            <button class="primary" type="button" id="new-invoice">New invoice</button>
+          </div>
+        </header>
+
+        <section class="metrics" aria-label="Receivables summary">
+          <article>
+            <span>Outstanding</span>
+            <strong>Pending</strong>
+            <small>No live ledger connected</small>
+          </article>
+          <article>
+            <span>Overdue</span>
+            <strong>Pending</strong>
+            <small>Awaiting invoice import</small>
+          </article>
+          <article>
+            <span>Paid this month</span>
+            <strong>Pending</strong>
+            <small>Awaiting payment sync</small>
+          </article>
+          <article>
+            <span>Collection risk</span>
+            <strong>Pending</strong>
+            <small>Agent rules not armed</small>
+          </article>
+        </section>
+
+        <section class="workspace-grid">
+          <article class="panel invoice-panel" id="invoices">
+            <div class="panel-heading">
+              <div>
+                <p class="eyebrow">Invoice queue</p>
+                <h2>Prioritized work</h2>
+              </div>
+              <label>
+                <span>Status</span>
+                <select id="status-filter">
+                  <option value="all">All</option>
+                  <option value="overdue">Overdue</option>
+                  <option value="draft">Draft</option>
+                  <option value="paid">Paid</option>
+                </select>
+              </label>
+            </div>
+            <div class="invoice-list" id="invoice-list" aria-live="polite"></div>
+          </article>
+
+          <aside class="panel detail-panel" aria-label="Billing readiness">
+            <p class="eyebrow">Readiness</p>
+            <div id="invoice-detail"></div>
+          </aside>
+
+          <article class="panel" id="customers">
+            <div class="panel-heading">
+              <div>
+                <p class="eyebrow">Customers</p>
+                <h2>Account pressure</h2>
+              </div>
+            </div>
+            <div class="customer-list">
+              <div class="empty-state">
+                <p class="eyebrow">No customers</p>
+                <h3>Customer records have not been imported.</h3>
+                <p>Create a customer or connect CRM/accounting records before showing balances and risk.</p>
+              </div>
+            </div>
+          </article>
+
+          <article class="panel" id="platforms">
+            <div class="panel-heading">
+              <div>
+                <p class="eyebrow">Cross-platform apps</p>
+                <h2>Implementation map</h2>
+              </div>
+            </div>
+            <div class="platform-grid">
+              <div><strong>Web app</strong><span>Canonical full workspace</span></div>
+              <div><strong>iOS</strong><span>Mobile approvals and push</span></div>
+              <div><strong>Android</strong><span>Compose companion app</span></div>
+              <div><strong>macOS</strong><span>Desktop receivables cockpit</span></div>
+            </div>
+          </article>
+
+          <article class="panel audit-panel" id="audit">
+            <div class="panel-heading">
+              <div>
+                <p class="eyebrow">Audit trail</p>
+                <h2>Recent financial events</h2>
+              </div>
+            </div>
+            <ol class="audit-list">
+              <li class="empty-state">
+                <p class="eyebrow">No events</p>
+                <h3>No billing events have been recorded.</h3>
+                <p>Invoice creation, approvals, payment events, and agent actions will appear here once connected.</p>
+              </li>
+            </ol>
+          </article>
+        </section>
+      </main>
+    </div>
+
+    <dialog id="invoice-dialog">
+      <form method="dialog">
+        <h2>Create draft invoice</h2>
+        <label>Customer <input placeholder="Customer name"></label>
+        <label>Service period <input placeholder="Service period"></label>
+        <label>Amount <input inputmode="decimal" placeholder="Amount"></label>
+        <menu>
+          <button value="cancel">Cancel</button>
+          <button class="primary" value="create">Create draft</button>
+        </menu>
+      </form>
+    </dialog>
+
+    <script src="./app.js"></script>
+  </body>
+</html>

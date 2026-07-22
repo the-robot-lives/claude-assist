@@ -1,0 +1,197 @@
+openapi: 3.1.0
+info:
+  title: Billing Noizu Platform API
+  version: 0.1.0
+  description: Shared contract for Billing Noizu web, iOS, Android, and macOS clients.
+servers:
+  - url: https://billing.noizu.com/api
+paths:
+  /workspaces/{workspaceId}/summary:
+    get:
+      summary: Receivables summary
+      operationId: getReceivablesSummary
+      parameters:
+        - $ref: "#/components/parameters/WorkspaceId"
+      responses:
+        "200":
+          description: Current receivables summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReceivablesSummary"
+  /workspaces/{workspaceId}/invoices:
+    get:
+      summary: List invoices
+      operationId: listInvoices
+      parameters:
+        - $ref: "#/components/parameters/WorkspaceId"
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [draft, sent, viewed, partially_paid, paid, overdue, void, written_off]
+        - name: customer
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Invoice list
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Invoice"
+    post:
+      summary: Create draft invoice
+      operationId: createDraftInvoice
+      parameters:
+        - $ref: "#/components/parameters/WorkspaceId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateInvoiceRequest"
+      responses:
+        "201":
+          description: Draft invoice created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Invoice"
+  /workspaces/{workspaceId}/invoices/{invoiceId}/send:
+    post:
+      summary: Send invoice
+      operationId: sendInvoice
+      parameters:
+        - $ref: "#/components/parameters/WorkspaceId"
+        - $ref: "#/components/parameters/InvoiceId"
+      responses:
+        "202":
+          description: Invoice send accepted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BillingEvent"
+  /workspaces/{workspaceId}/notifications/preferences:
+    get:
+      summary: Get notification preferences
+      operationId: getNotificationPreferences
+      parameters:
+        - $ref: "#/components/parameters/WorkspaceId"
+      responses:
+        "200":
+          description: Notification preferences
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotificationPreferences"
+components:
+  parameters:
+    WorkspaceId:
+      name: workspaceId
+      in: path
+      required: true
+      schema:
+        type: string
+    InvoiceId:
+      name: invoiceId
+      in: path
+      required: true
+      schema:
+        type: string
+  schemas:
+    Money:
+      type: object
+      required: [amount, currency]
+      properties:
+        amount:
+          type: integer
+          description: Minor currency units.
+        currency:
+          type: string
+          minLength: 3
+          maxLength: 3
+    ReceivablesSummary:
+      type: object
+      required: [workspaceId, outstanding, overdue, paidThisMonth, collectionRiskCount]
+      properties:
+        workspaceId:
+          type: string
+        outstanding:
+          $ref: "#/components/schemas/Money"
+        overdue:
+          $ref: "#/components/schemas/Money"
+        paidThisMonth:
+          $ref: "#/components/schemas/Money"
+        collectionRiskCount:
+          type: integer
+    Invoice:
+      type: object
+      required: [id, number, customerName, status, total, balanceDue, dueDate]
+      properties:
+        id:
+          type: string
+        number:
+          type: string
+        customerName:
+          type: string
+        status:
+          type: string
+          enum: [draft, sent, viewed, partially_paid, paid, overdue, void, written_off]
+        total:
+          $ref: "#/components/schemas/Money"
+        balanceDue:
+          $ref: "#/components/schemas/Money"
+        dueDate:
+          type: string
+          format: date
+    CreateInvoiceRequest:
+      type: object
+      required: [customerId, lineItems]
+      properties:
+        customerId:
+          type: string
+        projectId:
+          type: string
+        lineItems:
+          type: array
+          items:
+            type: object
+            required: [description, quantity, unitPrice]
+            properties:
+              description:
+                type: string
+              quantity:
+                type: number
+              unitPrice:
+                $ref: "#/components/schemas/Money"
+    BillingEvent:
+      type: object
+      required: [id, type, occurredAt]
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+        occurredAt:
+          type: string
+          format: date-time
+    NotificationPreferences:
+      type: object
+      required: [overdue, paymentReceived, sendFailed, approvalNeeded]
+      properties:
+        overdue:
+          type: boolean
+        paymentReceived:
+          type: boolean
+        sendFailed:
+          type: boolean
+        approvalNeeded:
+          type: boolean
