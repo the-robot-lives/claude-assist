@@ -15,7 +15,7 @@ use crate::ui;
 // ---------------------------------------------------------------------------
 
 const GROQ_API_URL: &str = "https://api.groq.com/openai/v1/chat/completions";
-const DEFAULT_GROQ_MODEL: &str = "meta-llama/llama-4-scout-17b-16e-instruct";
+const DEFAULT_GROQ_MODEL: &str = "openai/gpt-oss-120b";
 
 pub async fn evaluate_candidates(
     candidate_paths: &[&Path],

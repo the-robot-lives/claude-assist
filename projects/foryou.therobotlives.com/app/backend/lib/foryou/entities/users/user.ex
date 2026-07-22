@@ -24,6 +24,7 @@ defmodule Foryou.Users.User do
     field :status, nil, {:ecto, Foryou.Schema.Users.User.__schema__(:type, :status)}
     field :verified, nil, :boolean
     field :flagged, nil, :boolean
+    field :admin, nil, :boolean
     field :time_stamp, nil, Noizu.Entity.TimeStamp
   end
 

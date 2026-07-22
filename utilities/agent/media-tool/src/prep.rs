@@ -6,7 +6,7 @@ use crate::schema::{AssetType, AudioKind, PromptSection};
 use crate::ui;
 
 const GROQ_API_URL: &str = "https://api.groq.com/openai/v1/chat/completions";
-const DEFAULT_PREP_MODEL: &str = "meta-llama/llama-4-scout-17b-16e-instruct";
+const DEFAULT_PREP_MODEL: &str = "openai/gpt-oss-120b";
 
 // ---------------------------------------------------------------------------
 // Prep channel — branches instruction rules by media kind / text format

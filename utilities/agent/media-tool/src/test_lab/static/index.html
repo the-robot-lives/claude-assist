@@ -359,22 +359,37 @@
     .pill.ok { color: var(--ok); border-color: rgba(107,207,142,.25); }
 
     .media-grid {
-      display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
       gap: var(--s3);
     }
     .tile {
       background: var(--surface); border: 1px solid var(--border-soft);
       border-radius: var(--radius); padding: var(--s2);
+      display: flex; flex-direction: column; gap: 8px;
     }
+    .tile.wide { grid-column: 1 / -1; }
     .tile .nm {
       font-family: var(--mono); font-size: .7rem; color: var(--faint);
-      margin-bottom: var(--s2); word-break: break-all;
+      word-break: break-all;
+    }
+    .tile .viewer-label {
+      font-size: .68rem; color: var(--accent); text-transform: uppercase;
+      letter-spacing: .06em;
     }
     .tile img, .tile video {
-      width: 100%; max-height: 220px; object-fit: contain; background: #000; border-radius: 6px;
+      width: 100%; max-height: 320px; object-fit: contain; background: #000; border-radius: 6px;
     }
     .tile audio { width: 100%; }
-    .tile iframe { width: 100%; height: 200px; border: 0; border-radius: 6px; background: #fff; }
+    .tile iframe {
+      width: 100%; height: 360px; border: 1px solid var(--border-soft);
+      border-radius: 6px; background: #fff;
+    }
+    .tile iframe.tall { height: 480px; }
+    .tile .viewer-stage { min-height: 120px; }
+    .tile .code-toggle { font-size: .75rem; color: var(--muted); cursor: pointer; border: 0; background: none; font: inherit; padding: 0; }
+    .tile .code-toggle:hover { color: var(--accent); }
+    .tile details.raw summary { cursor: pointer; color: var(--faint); font-size: .75rem; }
+    .tile details.raw pre { max-height: 200px; margin-top: 8px; }
 
     pre.mono {
       margin: 0; padding: var(--s3); background: var(--surface);
@@ -427,7 +442,8 @@
       <h1>Settings</h1>
       <p class="lead">
         LLM used for <strong>Generate example prompt</strong>. Defaults to Groq
-        <code style="font-family:var(--mono);font-size:.85em;color:var(--accent)">openai/gpt-oss-120b</code>.
+        <code style="font-family:var(--mono);font-size:.85em;color:var(--accent)">openai/gpt-oss-120b</code>
+        (full model id — not <code style="font-family:var(--mono);font-size:.85em">gpt-oss-120b</code> alone).
         Pattern matches Queue Populator / Timely: provider, model, base URL, API key or <code style="font-family:var(--mono);font-size:.85em">env: VAR</code>.
       </p>
 
@@ -1120,9 +1136,370 @@
       }
     }
 
+    // ---------- Output viewers (graph libs, diagrams, media) ----------
+    const CDN = {
+      d3: "https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js",
+      cola: "https://cdn.jsdelivr.net/npm/webcola@3.4.0/WebCola/cola.min.js",
+      cytoscape: "https://cdn.jsdelivr.net/npm/cytoscape@3.28.1/dist/cytoscape.min.js",
+      chartjs: "https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js",
+      paper: "https://cdn.jsdelivr.net/npm/paper@0.12.17/dist/paper-full.min.js",
+      three: "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js",
+      anime: "https://cdn.jsdelivr.net/npm/animejs@3.2.2/lib/anime.min.js",
+      echarts: "https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js",
+      mermaid: "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js",
+      viz: "https://cdn.jsdelivr.net/npm/@hpcc-js/wasm@2.16.2/dist/graphviz.umd.js",
+      marked: "https://cdn.jsdelivr.net/npm/marked@12.0.0/marked.min.js",
+      vega: "https://cdn.jsdelivr.net/npm/vega@5.28.0/build/vega.min.js",
+      vegaLite: "https://cdn.jsdelivr.net/npm/vega-lite@5.16.3/build/vega-lite.min.js",
+      vegaEmbed: "https://cdn.jsdelivr.net/npm/vega-embed@6.24.0/build/vega-embed.min.js",
+    };
+
+    /** Map channel / filename hints → script host recipe */
+    function jsHostRecipe(channel, src) {
+      const ch = (channel || "").toLowerCase().replace(/-/g, "_");
+      const s = (src || "").toLowerCase();
+      if (ch.includes("cola") || s.includes("webcola") || s.includes("cola.d3adaptor") || s.includes("from 'webcola'"))
+        return { label: "Cola.js graph", scripts: [CDN.d3, CDN.cola], wide: true };
+      if (ch.includes("cytoscape") || s.includes("cytoscape"))
+        return { label: "Cytoscape", scripts: [CDN.cytoscape], wide: true };
+      if (ch.includes("chart") || s.includes("chart.js") || s.includes("new chart("))
+        return { label: "Chart.js", scripts: [CDN.chartjs], wide: true, canvas: true };
+      if (ch.includes("paper") || s.includes("paper.") || s.includes("paperscope"))
+        return { label: "Paper.js", scripts: [CDN.paper], wide: true, canvas: true };
+      if (ch.includes("three") || ch.includes("babylon") || s.includes("THREE.") || s.includes("from 'three'"))
+        return { label: "Three.js", scripts: [CDN.three], wide: true };
+      if (ch.includes("anime") || s.includes("anime("))
+        return { label: "Anime.js", scripts: [CDN.anime], wide: true };
+      if (ch.includes("echart") || s.includes("echarts"))
+        return { label: "ECharts", scripts: [CDN.echarts], wide: true };
+      if (ch.includes("d3") || s.includes("d3.") || s.includes("from 'd3'") || s.includes('from "d3"'))
+        return { label: "D3", scripts: [CDN.d3], wide: true };
+      // Generic JS graph / viz fallback — load d3 (common dependency)
+      if (ch.endsWith("_js") || ch.endsWith("js"))
+        return { label: ch || "JS", scripts: [CDN.d3], wide: true };
+      return null;
+    }
+
+    function stripEsmImports(src) {
+      return String(src || "")
+        .replace(/^\s*import\s+[\s\S]*?from\s+['"][^'"]+['"]\s*;?\s*$/gm, "")
+        .replace(/^\s*export\s+\{[^}]*\}\s*;?\s*$/gm, "")
+        .replace(/^\s*export\s+default\s+/gm, "")
+        .replace(/^\s*export\s+(const|let|var|function|class)\s+/gm, "$1 ");
+    }
+
+    function buildJsHostHtml(src, recipe) {
+      const scripts = (recipe.scripts || [])
+        .map((u) => `<script src="${u}"><\/script>`)
+        .join("\n");
+      const bodyBits = recipe.canvas
+        ? `<canvas id="c" width="800" height="480" style="display:block;width:100%;max-width:800px;margin:0 auto;background:#fafafa"></canvas>
+           <div id="root" style="width:100%;min-height:200px"></div>`
+        : `<div id="root" style="width:100%;min-height:360px"></div>`;
+      const code = stripEsmImports(src);
+      return `<!DOCTYPE html>
+<html><head>
+<meta charset="utf-8"/>
+<style>
+  html,body{margin:0;padding:8px;background:#fff;color:#111;font:14px/1.4 system-ui,sans-serif}
+  svg{max-width:100%;height:auto;display:block;margin:0 auto}
+  #err{color:#b00020;white-space:pre-wrap;font:12px ui-monospace,monospace;padding:8px}
+</style>
+${scripts}
+</head><body>
+${bodyBits}
+<div id="err"></div>
+<script>
+try {
+  // Common aliases so ESM-style demos work with UMD globals
+  if (typeof d3 !== "undefined" && typeof window.d3 === "undefined") window.d3 = d3;
+  if (typeof cola !== "undefined") { window.cola = cola; window.webcola = cola; }
+  if (typeof paper !== "undefined" && paper.install) { paper.install(window); const c=document.getElementById("c"); if(c) paper.setup(c); }
+${code}
+} catch (e) {
+  document.getElementById("err").textContent = String(e && e.stack || e);
+  console.error(e);
+}
+<\/script>
+</body></html>`;
+    }
+
+    function buildMermaidHtml(src) {
+      const body = String(src || "").replace(/^```(?:mermaid)?\s*/i, "").replace(/```\s*$/, "").trim();
+      return `<!DOCTYPE html><html><head><meta charset="utf-8"/>
+<script src="${CDN.mermaid}"><\/script>
+<style>body{margin:16px;background:#fff} .mermaid{display:flex;justify-content:center}</style>
+</head><body>
+<pre class="mermaid">${body.replace(/</g, "&lt;")}</pre>
+<script>mermaid.initialize({startOnLoad:true,theme:"neutral"});<\/script>
+</body></html>`;
+    }
+
+    function buildGraphvizHtml(src) {
+      const dot = String(src || "").replace(/^```(?:dot|graphviz)?\s*/i, "").replace(/```\s*$/, "").trim();
+      // Use viz-js lightweight via hpcc wasm graphviz if available; fallback kroki img
+      const b64 = btoa(unescape(encodeURIComponent(dot)));
+      return `<!DOCTYPE html><html><head><meta charset="utf-8"/>
+<style>body{margin:16px;background:#fff;text-align:center} #out svg{max-width:100%}</style>
+</head><body>
+<div id="out">Rendering Graphviz…</div>
+<script src="https://cdn.jsdelivr.net/npm/@viz-js/viz@3.7.0/lib/viz-standalone.js"><\/script>
+<script>
+(async () => {
+  try {
+    const viz = await Viz.instance();
+    const svg = viz.renderSVGElement(${JSON.stringify(dot)});
+    const out = document.getElementById("out");
+    out.innerHTML = "";
+    out.appendChild(svg);
+  } catch (e) {
+    // Kroki fallback
+    document.getElementById("out").innerHTML =
+      '<p style="color:#666">Local Graphviz failed; trying Kroki…</p>' +
+      '<img alt="graphviz" style="max-width:100%" src="https://kroki.io/graphviz/svg/' +
+      ${JSON.stringify(b64)} + '"/>';
+  }
+})();
+<\/script>
+</body></html>`;
+    }
+
+    function buildPlantumlHtml(src) {
+      // Kroki plantuml (encode raw path via POST is better; use GET with deflate is hard —
+      // serve as img via plantuml server ~1.plantuml.com with encoded, or show + kroki form)
+      const raw = String(src || "").replace(/^```(?:plantuml|puml)?\s*/i, "").replace(/```\s*$/, "").trim();
+      return `<!DOCTYPE html><html><head><meta charset="utf-8"/>
+<style>body{margin:16px;background:#fff;text-align:center;font:14px system-ui}</style>
+</head><body>
+<p style="color:#666">PlantUML preview (Kroki)</p>
+<div id="out">Loading…</div>
+<script>
+(async () => {
+  try {
+    const r = await fetch("https://kroki.io/plantuml/svg", {
+      method: "POST",
+      headers: { "Content-Type": "text/plain" },
+      body: ${JSON.stringify(raw)},
+    });
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    const svg = await r.text();
+    document.getElementById("out").innerHTML = svg;
+  } catch (e) {
+    document.getElementById("out").innerHTML =
+      "<pre style='text-align:left;background:#f6f6f6;padding:12px;overflow:auto'>" +
+      ${JSON.stringify(raw)}.replace(/</g,"&lt;") + "</pre><p style='color:#b00'>" + e + "</p>";
+  }
+})();
+<\/script>
+</body></html>`;
+    }
+
+    function buildMarkdownHtml(src) {
+      return `<!DOCTYPE html><html><head><meta charset="utf-8"/>
+<script src="${CDN.marked}"><\/script>
+<style>
+  body{margin:0;padding:20px;background:#fff;color:#111;font:15px/1.55 system-ui,sans-serif;max-width:720px}
+  pre{background:#f4f4f5;padding:12px;overflow:auto;border-radius:8px}
+  code{font-family:ui-monospace,monospace;font-size:.9em}
+  img{max-width:100%}
+</style></head><body>
+<div id="c"></div>
+<script>
+document.getElementById("c").innerHTML = marked.parse(${JSON.stringify(String(src || ""))});
+<\/script>
+</body></html>`;
+    }
+
+    function buildVegaHtml(specText) {
+      return `<!DOCTYPE html><html><head><meta charset="utf-8"/>
+<script src="${CDN.vega}"><\/script>
+<script src="${CDN.vegaLite}"><\/script>
+<script src="${CDN.vegaEmbed}"><\/script>
+<style>body{margin:12px;background:#fff} #vis{width:100%}</style>
+</head><body><div id="vis"></div>
+<script>
+vegaEmbed("#vis", ${specText}, {actions:false}).catch(e => {
+  document.getElementById("vis").textContent = String(e);
+});
+<\/script></body></html>`;
+    }
+
+    function looksHtml(text) {
+      const head = (text || "").trimStart().slice(0, 240).toLowerCase();
+      return (
+        head.startsWith("<!doctype html") ||
+        head.startsWith("<html") ||
+        (head.startsWith("<") && (head.includes("<body") || head.includes("<svg")))
+      );
+    }
+
+    function looksSvg(text) {
+      const t = (text || "").trimStart().slice(0, 200).toLowerCase();
+      return t.startsWith("<svg") || (t.startsWith("<?xml") && t.includes("<svg"));
+    }
+
+    function looksMermaid(text, fmt, channel) {
+      if (["mmd", "mermaid"].includes(fmt) || (channel || "").includes("mermaid")) return true;
+      const t = (text || "").trim();
+      return /^(graph|flowchart|sequenceDiagram|classDiagram|stateDiagram|erDiagram|gantt|pie|mindmap)\b/m.test(t);
+    }
+
+    function looksDot(text, fmt, channel) {
+      if (["dot", "gv"].includes(fmt) || (channel || "").includes("graphviz")) return true;
+      return /^\s*(strict\s+)?(di)?graph\b/i.test(text || "");
+    }
+
+    function looksPlantuml(text, fmt, channel) {
+      if (["puml", "plantuml"].includes(fmt) || (channel || "").includes("plantuml")) return true;
+      return /@startuml/i.test(text || "");
+    }
+
+    function looksVega(text, fmt, channel) {
+      if ((channel || "").includes("vega") || (channel || "").includes("altair")) return true;
+      try {
+        const j = JSON.parse(text);
+        return !!(j && (j.$schema || j.mark || j.layer || j.vconcat || j.hconcat));
+      } catch (_) {
+        return false;
+      }
+    }
+
+    function resolveChannel(o) {
+      return (
+        o.channel ||
+        o.text_format ||
+        state.generator?.slug ||
+        state.detail?.summary?.text_format ||
+        ""
+      ).toString();
+    }
+
+    function iframeSrcdoc(html, tall) {
+      const el = document.createElement("iframe");
+      el.setAttribute("sandbox", "allow-scripts allow-same-origin");
+      el.setAttribute("title", "preview");
+      el.className = tall ? "tall" : "";
+      el.srcdoc = html;
+      return el;
+    }
+
+    function codeDetails(src, label) {
+      const d = document.createElement("details");
+      d.className = "raw";
+      d.innerHTML = `<summary>${esc(label || "Show source")}</summary><pre class="mono"></pre>`;
+      d.querySelector("pre").textContent = (src || "").slice(0, 12000);
+      return d;
+    }
+
+    async function mountViewer(stage, o) {
+      const fmt = (o.format || "").toLowerCase();
+      const channel = resolveChannel(o).toLowerCase();
+      const url = o.media_url;
+
+      // Binary / direct media
+      if (["png", "jpg", "jpeg", "webp", "gif"].includes(fmt)) {
+        stage.innerHTML = `<img src="${url}" alt="" />`;
+        return { label: "Image", wide: false };
+      }
+      if (fmt === "svg") {
+        stage.innerHTML = `<img src="${url}" alt="" />`;
+        return { label: "SVG", wide: false };
+      }
+      if (["mp4", "webm", "mov"].includes(fmt)) {
+        stage.innerHTML = `<video controls src="${url}"></video>`;
+        return { label: "Video", wide: true };
+      }
+      if (["mp3", "wav", "ogg", "flac"].includes(fmt)) {
+        stage.innerHTML = `<audio controls src="${url}"></audio>`;
+        return { label: "Audio", wide: false };
+      }
+      if (["html", "htm"].includes(fmt)) {
+        stage.innerHTML = "";
+        const f = document.createElement("iframe");
+        f.sandbox = "allow-scripts allow-same-origin";
+        f.src = url;
+        f.className = "tall";
+        stage.appendChild(f);
+        return { label: "HTML", wide: true };
+      }
+
+      // Text-ish formats — fetch then pick viewer
+      let text = "";
+      try {
+        const r = await fetch(url);
+        text = await r.text();
+      } catch (e) {
+        stage.innerHTML = `<div class="empty">Could not load file</div>`;
+        return { label: "Error", wide: false };
+      }
+
+      if (looksHtml(text)) {
+        stage.innerHTML = "";
+        const f = document.createElement("iframe");
+        f.sandbox = "allow-scripts allow-same-origin";
+        f.src = url;
+        f.className = "tall";
+        stage.appendChild(f);
+        stage.appendChild(codeDetails(text, "Show source"));
+        return { label: "HTML document", wide: true };
+      }
+      if (looksSvg(text) || fmt === "svg") {
+        stage.innerHTML = `<img src="${url}" alt="svg" />`;
+        stage.appendChild(codeDetails(text, "Show SVG source"));
+        return { label: "SVG", wide: false };
+      }
+      if (looksMermaid(text, fmt, channel)) {
+        stage.innerHTML = "";
+        stage.appendChild(iframeSrcdoc(buildMermaidHtml(text), true));
+        stage.appendChild(codeDetails(text, "Show Mermaid source"));
+        return { label: "Mermaid diagram", wide: true };
+      }
+      if (looksDot(text, fmt, channel)) {
+        stage.innerHTML = "";
+        stage.appendChild(iframeSrcdoc(buildGraphvizHtml(text), true));
+        stage.appendChild(codeDetails(text, "Show DOT source"));
+        return { label: "Graphviz", wide: true };
+      }
+      if (looksPlantuml(text, fmt, channel)) {
+        stage.innerHTML = "";
+        stage.appendChild(iframeSrcdoc(buildPlantumlHtml(text), true));
+        stage.appendChild(codeDetails(text, "Show PlantUML source"));
+        return { label: "PlantUML", wide: true };
+      }
+      if (looksVega(text, fmt, channel) || (fmt === "json" && looksVega(text, fmt, channel))) {
+        stage.innerHTML = "";
+        stage.appendChild(iframeSrcdoc(buildVegaHtml(text), true));
+        stage.appendChild(codeDetails(text, "Show Vega spec"));
+        return { label: "Vega / Vega-Lite", wide: true };
+      }
+      if (["md", "markdown"].includes(fmt) || channel.includes("markdown")) {
+        stage.innerHTML = "";
+        stage.appendChild(iframeSrcdoc(buildMarkdownHtml(text), true));
+        stage.appendChild(codeDetails(text, "Show Markdown"));
+        return { label: "Markdown", wide: true };
+      }
+
+      // JS / TS / graph libraries (cola, d3, …)
+      if (["js", "ts", "tsx", "jsx", "mjs", "cjs"].includes(fmt) || channel.endsWith("_js") || channel.endsWith("js")) {
+        const recipe = jsHostRecipe(channel, text) || { label: "JavaScript", scripts: [CDN.d3], wide: true };
+        stage.innerHTML = "";
+        stage.appendChild(iframeSrcdoc(buildJsHostHtml(text, recipe), true));
+        stage.appendChild(codeDetails(text, "Show source code"));
+        return { label: recipe.label, wide: true };
+      }
+
+      // Fallback: monospace source
+      stage.innerHTML = "";
+      const pre = document.createElement("pre");
+      pre.className = "mono";
+      pre.textContent = text.slice(0, 12000);
+      stage.appendChild(pre);
+      return { label: fmt ? `.${fmt}` : "File", wide: false };
+    }
+
     function renderMedia(outputs) {
       const root = $("media-grid");
-      const existing = (outputs || []).filter((o) => o.exists);
+      const existing = (outputs || []).filter((o) => o && o.exists);
       $("media-count").textContent = existing.length ? `(${existing.length})` : "";
       if (!existing.length) {
         root.innerHTML = `<div class="empty">No generated media yet.<br/><br/>
@@ -1132,38 +1509,29 @@
       root.innerHTML = "";
       for (const o of existing) {
         const tile = document.createElement("div");
-        tile.className = "tile";
-        const fmt = (o.format || "").toLowerCase();
-        let body = "";
-        if (["png","jpg","jpeg","webp","gif","svg"].includes(fmt))
-          body = `<img src="${o.media_url}" alt="" />`;
-        else if (["mp4","webm","mov"].includes(fmt))
-          body = `<video controls src="${o.media_url}"></video>`;
-        else if (["mp3","wav","ogg","flac"].includes(fmt))
-          body = `<audio controls src="${o.media_url}"></audio>`;
-        else if (["html","htm"].includes(fmt))
-          body = `<iframe sandbox="allow-scripts allow-same-origin" src="${o.media_url}" title="preview"></iframe>`;
-        else if (["js","ts","tsx","jsx","md","mmd","puml","css","json","txt"].includes(fmt))
-          body = `<a class="btn sm" href="${o.media_url}" target="_blank" rel="noopener">Open .${esc(fmt)}</a>
-            <pre class="mono" style="max-height:160px;margin-top:10px;font-size:.7rem" data-src="${o.media_url}">Loading…</pre>`;
-        else
-          body = `<a href="${o.media_url}" target="_blank" rel="noopener">Open ${esc(fmt || "file")}</a>`;
-        tile.innerHTML = `<div class="nm">${esc(o.rel_path || o.path)}</div>${body}
+        tile.className = "tile wide";
+        tile.innerHTML = `
+          <div class="nm">${esc(o.rel_path || o.path)}</div>
+          <div class="viewer-label">Loading viewer…</div>
+          <div class="viewer-stage"></div>
           <div class="ex-actions">
             <button type="button" class="btn sm" data-act="eval">Eval</button>
-            <a class="btn sm" href="${o.media_url}" target="_blank" rel="noopener">Open</a>
+            <a class="btn sm" href="${o.media_url}" target="_blank" rel="noopener">Open file</a>
           </div>`;
         tile.querySelector('[data-act="eval"]').onclick = () => startEval(o.path);
-        const pre = tile.querySelector("pre[data-src]");
-        if (pre) {
-          fetch(pre.getAttribute("data-src"))
-            .then((r) => r.text())
-            .then((t) => { pre.textContent = t.slice(0, 4000); })
-            .catch(() => { pre.textContent = "(could not load)"; });
-        }
         root.appendChild(tile);
+        const stage = tile.querySelector(".viewer-stage");
+        const labelEl = tile.querySelector(".viewer-label");
+        mountViewer(stage, o)
+          .then((info) => {
+            if (labelEl) labelEl.textContent = info?.label || "Preview";
+            if (info && info.wide === false) tile.classList.remove("wide");
+          })
+          .catch((e) => {
+            if (labelEl) labelEl.textContent = "Viewer error";
+            stage.innerHTML = `<pre class="mono">${esc(String(e))}</pre>`;
+          });
       }
-      // Auto-scroll to results when we have outputs
       if (existing.length) {
         $("preview-block").scrollIntoView({ behavior: "smooth", block: "nearest" });
       }
@@ -1178,18 +1546,29 @@
             const j = await api(`/api/jobs/${job.id}`);
             if (j.status === "succeeded") {
               clearInterval(t);
-              log(`[${j.id.slice(0, 8)}] done`, "ok");
-              toast("Done");
+              const outs = (j.result && j.result.outputs) || [];
+              const n = outs.filter((o) => o && o.exists).length;
+              if (job.kind === "generate" && n === 0 && !j.result?.dry_run) {
+                log(`[${j.id.slice(0, 8)}] done but 0 output files`, "fail");
+                toast("Process reported success but wrote 0 files — check Settings model / API key");
+              } else {
+                log(`[${j.id.slice(0, 8)}] done${n ? ` · ${n} output(s)` : ""}`, "ok");
+                toast(n ? `Done — ${n} output(s)` : "Done");
+              }
               if (state.example?.path) {
                 await selectExample(state.example);
               } else {
                 await loadExamples();
               }
+              if (n > 0) {
+                $("preview-block")?.scrollIntoView({ behavior: "smooth", block: "start" });
+              }
               resolve(j);
             } else if (j.status === "failed") {
               clearInterval(t);
-              log(j.message, "fail");
-              toast(j.message);
+              const msg = j.message || "Job failed";
+              log(`[${j.id.slice(0, 8)}] failed: ${msg}`, "fail");
+              toast(msg.length > 180 ? msg.slice(0, 180) + "…" : msg);
               resolve(j);
             }
           } catch (e) {
@@ -1297,18 +1676,34 @@
       }
       $("btn-process").disabled = true;
       $("btn-dry").disabled = true;
+      // Disable per-card process buttons while running
+      document.querySelectorAll('[data-act="process"], [data-act="dry"]').forEach((b) => {
+        b.disabled = true;
+      });
       try {
+        log(
+          `${dry ? "Dry run" : "Process"} ${state.example.path} (force=${!!$("opt-force")?.checked})…`,
+          "run"
+        );
         const job = await api("/api/generate", {
           method: "POST",
           body: JSON.stringify({
             path: state.example.path,
-            force: true,
-            no_eval: $("opt-no-eval").checked,
+            force: !!$("opt-force")?.checked,
+            no_eval: !!$("opt-no-eval")?.checked,
             dry_run: !!dry,
             quality: state.quality,
           }),
         });
-        await trackJob(job);
+        const done = await trackJob(job);
+        if (done?.status === "failed") {
+          // already toasted
+        } else if (!dry) {
+          const outs = (done?.result?.outputs || []).filter((o) => o && o.exists);
+          if (outs.length) {
+            log(`Outputs ready (${outs.length}) — open Preview below`, "ok");
+          }
+        }
       } catch (e) {
         toast(e.message);
         log(e.message, "fail");
@@ -1317,6 +1712,10 @@
           $("btn-process").disabled = false;
           $("btn-dry").disabled = false;
         }
+        // Re-enable after list refresh (selectExample → loadExamples rebuilds cards)
+        try {
+          await loadExamples();
+        } catch (_) { /* ignore */ }
       }
     }
 

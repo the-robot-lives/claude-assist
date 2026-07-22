@@ -9,7 +9,7 @@ use std::path::{Path, PathBuf};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
-/// Default model for generating example prompts — Groq-hosted 120B.
+/// Default Groq chat model — exact id from Groq `/v1/models` (prefix required).
 pub const DEFAULT_EXAMPLE_MODEL: &str = "openai/gpt-oss-120b";
 pub const DEFAULT_PROVIDER: &str = "groq";
 pub const DEFAULT_GROQ_BASE: &str = "https://api.groq.com/openai/v1";
@@ -267,10 +267,11 @@ pub fn llm_ui_meta() -> serde_json::Value {
     json!({
         "providers": [
             {"id": "groq", "label": "Groq", "default_model": DEFAULT_EXAMPLE_MODEL, "default_base_url": DEFAULT_GROQ_BASE, "env_key": "GROQ_API_KEY", "models": [
-                DEFAULT_EXAMPLE_MODEL,
+                "openai/gpt-oss-120b",
+                "openai/gpt-oss-20b",
                 "llama-3.3-70b-versatile",
-                "meta-llama/llama-4-scout-17b-16e-instruct",
-                "qwen/qwen3-32b"
+                "llama-3.1-8b-instant",
+                "qwen/qwen3.6-27b"
             ]},
             {"id": "openai", "label": "OpenAI", "default_model": "gpt-4.1", "default_base_url": "https://api.openai.com/v1", "env_key": "OPENAI_API_KEY", "models": ["gpt-4.1", "gpt-4o"]},
             {"id": "anthropic", "label": "Anthropic", "default_model": "claude-sonnet-4-6", "default_base_url": "https://api.anthropic.com/v1", "env_key": "ANTHROPIC_API_KEY", "models": ["claude-sonnet-4-6", "claude-opus-4-6"]},
@@ -279,7 +280,7 @@ pub fn llm_ui_meta() -> serde_json::Value {
             {"id": "custom", "label": "Custom OpenAI-compatible", "default_model": "model-name", "default_base_url": "http://127.0.0.1:8000/v1", "env_key": null, "models": []},
         ],
         "default": LabLlmSettings::default(),
-        "notes": "Example-prompt generation uses this LLM. Default is Groq openai/gpt-oss-120b. API key may be env: VAR_NAME."
+        "notes": "Default Groq model id is openai/gpt-oss-120b (full path required). API key may be env: VAR_NAME."
     })
 }
 
@@ -288,10 +289,10 @@ mod tests {
     use super::*;
 
     #[test]
-    fn default_is_groq_120b() {
+    fn default_is_groq_gpt_oss_120b() {
         let s = LabSettings::default();
         assert_eq!(s.llm.provider, "groq");
-        assert_eq!(s.llm.effective_model(), DEFAULT_EXAMPLE_MODEL);
+        assert_eq!(s.llm.effective_model(), "openai/gpt-oss-120b");
         assert!(s.llm.effective_base_url().contains("groq.com"));
     }
 

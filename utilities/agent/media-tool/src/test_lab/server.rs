@@ -1017,9 +1017,43 @@ async fn api_media(
     let data = tokio::fs::read(&file)
         .await
         .map_err(|e| ApiError::bad(e.to_string()))?;
-    let mime = mime_guess::from_path(&file)
+    // Path-based mime first; sniff content so previews (HTML, SVG, JS modules) work.
+    let ext = file
+        .extension()
+        .and_then(|e| e.to_str())
+        .unwrap_or("")
+        .to_ascii_lowercase();
+    let mut mime = mime_guess::from_path(&file)
         .first_or_octet_stream()
         .to_string();
+    // Force JS/TS to script-friendly types (mime_guess often yields octet-stream for .tsx)
+    if matches!(
+        ext.as_str(),
+        "js" | "mjs" | "cjs" | "ts" | "tsx" | "jsx"
+    ) {
+        mime = "text/javascript; charset=utf-8".into();
+    } else if matches!(ext.as_str(), "mmd" | "mermaid" | "dot" | "gv" | "puml" | "plantuml" | "ly" | "abc")
+    {
+        mime = "text/plain; charset=utf-8".into();
+    }
+    if mime.starts_with("text/")
+        || mime == "application/octet-stream"
+        || mime.contains("javascript")
+    {
+        let head = String::from_utf8_lossy(&data[..data.len().min(256)])
+            .trim_start()
+            .to_ascii_lowercase();
+        if head.starts_with("<!doctype html")
+            || head.starts_with("<html")
+            || (head.starts_with('<') && head.contains("<body"))
+        {
+            mime = "text/html; charset=utf-8".into();
+        } else if head.starts_with("<svg") || (head.starts_with("<?xml") && head.contains("<svg")) {
+            mime = "image/svg+xml".into();
+        } else if mime == "application/octet-stream" {
+            mime = "text/plain; charset=utf-8".into();
+        }
+    }
     Ok((
         StatusCode::OK,
         [(header::CONTENT_TYPE, mime)],
@@ -1087,15 +1121,35 @@ async fn run_generate_job(
         .as_deref()
         .and_then(|q| q.parse::<crate::schema::Quality>().ok());
 
+    // Chat / FIM channels: use lab Settings LLM (default openai/gpt-oss-120b).
+    // Media APIs (image/video/music/tts) keep auto-select — do not pin service.
+    let (service_override, model_override) = {
+        let settings = st.inner.settings.lock().await;
+        let is_chat = prompt.meta.asset_type.is_chat_type()
+            || prompt.payload.output.text_format.as_ref().is_some_and(|tf| !tf.is_empty());
+        if is_chat {
+            let svc = match settings.llm.provider.as_str() {
+                "openai" => "openai-chat".to_string(),
+                "anthropic" => "anthropic".to_string(),
+                "gemini" | "gemini-chat" => "gemini-chat".to_string(),
+                // groq | litellm | ollama | custom → OpenAI-compatible via groq-chat path when base is groq
+                _ => "groq-chat".to_string(),
+            };
+            (Some(svc), Some(settings.llm.effective_model()))
+        } else {
+            (None, None)
+        }
+    };
+
     let config = PipelineConfig {
         variant_count: body.variants.max(1),
         dry_run: body.dry_run,
         force: body.force,
-        model_override: None,
+        model_override,
         verbose: st.inner.cfg.verbose,
         refine: false,
         quality_override,
-        service_override: None, // intent-first: never pin from lab UI
+        service_override,
         no_eval: body.no_eval,
         no_prep: false,
         fim_enabled: std::env::var("MEDIA_FIM_INJECT").ok().as_deref() != Some("0"),
@@ -1114,9 +1168,26 @@ async fn run_generate_job(
         "demos"
     };
     let detail = load_detail(path, &media_root, source).map_err(|e| e.to_string())?;
+    let existing: Vec<_> = detail
+        .summary
+        .outputs
+        .iter()
+        .filter(|o| o.exists)
+        .collect();
+    if existing.is_empty() && !body.dry_run {
+        return Err(
+            "Generation finished but no output files were written. \
+             Open Settings and confirm the LLM model id is valid on the provider \
+             (default: openai/gpt-oss-120b) and the API key is set."
+                .into(),
+        );
+    }
     Ok(json!({
         "prompt_id": detail.summary.id,
         "outputs": detail.summary.outputs,
+        "written": existing.len(),
+        "model": config.model_override,
+        "service": config.service_override,
     }))
 }
 
@@ -1477,7 +1548,7 @@ async fn run_synthesize_prompts(
     text_format: Option<&str>,
     out_subdir: Option<&str>,
 ) -> Result<serde_json::Value, String> {
-    // Prefer lab settings (default: Groq openai/gpt-oss-120b); fall back to prepper env.
+    // Prefer lab settings (default: openai/gpt-oss-120b); fall back to prepper env.
     let (base_url, model, api_key) = {
         let settings = st.inner.settings.lock().await;
         let llm = &settings.llm;
@@ -1766,20 +1837,20 @@ fn repair_media_prompt_yaml(yaml: &str, type_key: &str, text_format: Option<&str
         out.insert(formats_key, fixed);
     }
 
-    // Ensure prompt.text exists
+    // Ensure prompt.text exists and is not a YAML block-scalar artifact ("|" alone)
     let prompt_key = serde_yaml::Value::String("prompt".into());
     if let Some(serde_yaml::Value::Mapping(p)) = map.get_mut(&prompt_key) {
         let text_key = serde_yaml::Value::String("text".into());
-        let empty = p
-            .get(&text_key)
-            .and_then(|v| v.as_str())
-            .map(|s| s.trim().is_empty())
-            .unwrap_or(true);
+        let text_val = p.get(&text_key).and_then(|v| v.as_str()).unwrap_or("");
+        let empty = {
+            let t = text_val.trim();
+            t.is_empty() || t == "|" || t == ">" || t == "|-|" || t == "..." || t.len() < 8
+        };
         if empty {
             p.insert(
                 text_key,
                 serde_yaml::Value::String(format!(
-                    "Create a polished, self-contained {} example that demonstrates core features.",
+                    "Create a polished, self-contained {} demo that clearly shows core features of the library. Prefer a single runnable example with clear structure. Keep it concise but real — not a placeholder or stub.",
                     text_format.unwrap_or(type_key)
                 )),
             );

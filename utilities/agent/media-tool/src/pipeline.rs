@@ -491,6 +491,16 @@ pub async fn run_generation(
     }
     eprintln!();
 
+    // Surface total failure as an error so lab jobs / CLI exit codes reflect reality.
+    // (Previously always Ok(()) even when every candidate 404'd — UI showed "Done" with 0 files.)
+    if succeeded == 0 && failed > 0 {
+        color_eyre::eyre::bail!(
+            "Generation failed: 0 outputs written ({} attempt(s) failed). \
+             Check API keys and model names (Groq default: openai/gpt-oss-120b).",
+            failed
+        );
+    }
+
     Ok(())
 }
 

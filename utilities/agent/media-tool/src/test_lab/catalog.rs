@@ -23,6 +23,8 @@ pub struct PromptSummary {
     pub quality: String,
     pub service: Option<String>,
     pub model: Option<String>,
+    /// FIM / text channel (cola_js, mermaid, paper_js, …) when set on the prompt.
+    pub text_format: Option<String>,
     pub path: String,
     pub rel_path: String,
     pub source: String, // "demos" | "workspace"
@@ -40,6 +42,12 @@ pub struct OutputFile {
     pub exists: bool,
     pub size_bytes: Option<u64>,
     pub media_url: String,
+    /// Inherited from prompt.output.text_format when known.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub text_format: Option<String>,
+    /// Best-effort channel slug from path (e.g. cola_js under prompts/fim/cola_js/).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub channel: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -194,7 +202,8 @@ fn summarize_prompt(
         .collect::<String>()
         .replace('\n', " ");
 
-    let outputs = resolve_outputs(&parsed, path, media_root);
+    let text_format = parsed.payload.output.text_format.clone();
+    let outputs = resolve_outputs(&parsed, path, media_root, text_format.as_deref());
 
     Ok(PromptSummary {
         id: parsed.meta.id.clone(),
@@ -203,6 +212,7 @@ fn summarize_prompt(
         quality: parsed.meta.quality.as_str().to_string(),
         service: parsed.meta.service.clone(),
         model: parsed.meta.model.clone(),
+        text_format,
         path: path.display().to_string(),
         rel_path: rel,
         source: source.to_string(),
@@ -217,6 +227,7 @@ fn resolve_outputs(
     parsed: &crate::schema::ParsedPrompt,
     prompt_path: &Path,
     media_root: &Path,
+    text_format: Option<&str>,
 ) -> Vec<OutputFile> {
     let parent = prompt_path.parent().unwrap_or(Path::new("."));
     let stem = prompt_path
@@ -225,6 +236,7 @@ fn resolve_outputs(
         .unwrap_or("out")
         .strip_suffix(".media.prompt")
         .unwrap_or("out");
+    let channel = infer_channel(prompt_path, text_format);
 
     let mut formats: Vec<String> = parsed
         .meta
@@ -247,10 +259,22 @@ fn resolve_outputs(
             .and_then(|f| f.filename.clone())
         {
             let p = parent.join(&filename);
-            found.push(output_entry(&p, media_root, fmt));
+            found.push(output_entry(
+                &p,
+                media_root,
+                fmt,
+                text_format,
+                channel.as_deref(),
+            ));
         } else {
             let p = parent.join(format!("{stem}.{fmt}"));
-            found.push(output_entry(&p, media_root, fmt));
+            found.push(output_entry(
+                &p,
+                media_root,
+                fmt,
+                text_format,
+                channel.as_deref(),
+            ));
         }
     }
 
@@ -266,6 +290,7 @@ fn resolve_outputs(
                 && !name.ends_with(".media.prompt")
                 && !name.ends_with(".meta.yaml")
                 && !name.ends_with(".meta.yml")
+                && !name.ends_with(".metadata.yaml")
             {
                 let ext = p
                     .extension()
@@ -273,7 +298,13 @@ fn resolve_outputs(
                     .unwrap_or("")
                     .to_string();
                 if !found.iter().any(|o| o.path == p.display().to_string()) {
-                    found.push(output_entry(&p, media_root, &ext));
+                    found.push(output_entry(
+                        &p,
+                        media_root,
+                        &ext,
+                        text_format,
+                        channel.as_deref(),
+                    ));
                 }
             }
         }
@@ -282,7 +313,40 @@ fn resolve_outputs(
     found
 }
 
-fn output_entry(path: &Path, media_root: &Path, format: &str) -> OutputFile {
+/// Infer FIM channel from path segments (…/fim/cola_js/…) or text_format.
+fn infer_channel(prompt_path: &Path, text_format: Option<&str>) -> Option<String> {
+    if let Some(tf) = text_format.map(str::trim).filter(|s| !s.is_empty()) {
+        return Some(tf.to_string());
+    }
+    let parts: Vec<_> = prompt_path
+        .components()
+        .filter_map(|c| c.as_os_str().to_str().map(|s| s.to_string()))
+        .collect();
+    for i in 0..parts.len() {
+        if parts[i] == "fim" {
+            if let Some(next) = parts.get(i + 1) {
+                return Some(next.clone());
+            }
+        }
+    }
+    // prompts/<slug>/...
+    if let Some(i) = parts.iter().position(|p| p == "prompts") {
+        if let Some(next) = parts.get(i + 1) {
+            if next != "fim" {
+                return Some(next.clone());
+            }
+        }
+    }
+    None
+}
+
+fn output_entry(
+    path: &Path,
+    media_root: &Path,
+    format: &str,
+    text_format: Option<&str>,
+    channel: Option<&str>,
+) -> OutputFile {
     let exists = path.is_file();
     let size_bytes = if exists {
         std::fs::metadata(path).ok().map(|m| m.len())
@@ -298,6 +362,8 @@ fn output_entry(path: &Path, media_root: &Path, format: &str) -> OutputFile {
         exists,
         size_bytes,
         media_url,
+        text_format: text_format.map(|s| s.to_string()),
+        channel: channel.map(|s| s.to_string()),
     }
 }
 

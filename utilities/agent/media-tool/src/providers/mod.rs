@@ -17,6 +17,10 @@ use std::path::Path;
 use crate::attachments::LoadedAttachment;
 use crate::schema::{AssetType, AudioKind, Quality};
 
+/// Default Groq chat model for FIM / component / diagram text generation.
+/// Exact id from Groq `GET /openai/v1/models` — not the retired llama-4-scout id.
+pub const DEFAULT_CHAT_MODEL: &str = "openai/gpt-oss-120b";
+
 // ---------------------------------------------------------------------------
 // GenerationOptions
 // ---------------------------------------------------------------------------
@@ -179,7 +183,7 @@ pub fn candidates_for(
             },
         },
 
-        // Chat / code generation types
+        // Chat / code generation types — use a Groq model id that is currently listed.
         AssetType::Component
         | AssetType::ReactPage
         | AssetType::Html
@@ -188,7 +192,7 @@ pub fn candidates_for(
         | AssetType::Document => match quality {
             Quality::Low | Quality::Medium | Quality::High => vec![Candidate {
                 service: "groq-chat",
-                model: "meta-llama/llama-4-scout-17b-16e-instruct",
+                model: DEFAULT_CHAT_MODEL,
             }],
         },
 
@@ -372,7 +376,7 @@ pub fn default_model(service: &str) -> &'static str {
         "veo" => "veo-3.0-generate-001",
         "anthropic" => "claude-sonnet-4-6",
         "gemini-chat" => "gemini-2.5-flash",
-        "groq" | "groq-chat" => "meta-llama/llama-4-scout-17b-16e-instruct",
+        "groq" | "groq-chat" => DEFAULT_CHAT_MODEL,
         "openai-chat" => "gpt-4.1",
         "zai" | "z.ai" => "grok-4.3",
         _ => "default",
