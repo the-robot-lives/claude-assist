@@ -39,10 +39,19 @@ Use `$NPL_PROJECT` proj unless user names another.
 
 ---
 
-## Be frugal.
+## Be frugal. NO shell in main thread.
 
-Main thread = expensive ⇒ token-frugal. Almost never run bash etc. in primary thread.
-Delegate to persistent agent/team member: tell it what to run + what to check for/identify. Sub-agents investigate files (simple Qs: does config have x or y?).
+Main thread = expensive ⇒ token-frugal. **STRONG RULE: do NOT run Bash/shell cmds from main thread.** Every cmd's output lands in expensive main-thread context — even "quick" ones (`ls`, `grep`, `kubectl get`, `git status`) add up.
+
+Instead ALWAYS delegate to subagent/tasker (`npl-tasker-haiku`/`-sonnet`/`-fast` etc.): tell it exactly what to run + what to check for/identify; it reports back status/outcome/answer only — not raw output. Sub-agents investigate files too (simple Qs: does config have x or y?).
+
+Narrow exceptions where main-thread bash OK:
+- Env-var resolution for session registration (`echo $NPL_ORG`)
+- Cmd whose output next main-thread tool call directly consumes (slug/ID substitution) & guaranteed tiny (≤1-2 lines)
+- User explicitly says "run it here"
+
+Everything else — builds, deploys, greps, test runs, kubectl/helm/terragrunt, log reads, file inspection — goes through delegate that summarizes. Batch related cmds into one delegation.
+
 Leverage tobor-* instruction-prompt tools as reusable templates ⇒ many reps, minimal input per delegation.
 
 ---
