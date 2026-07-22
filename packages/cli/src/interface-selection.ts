@@ -16,6 +16,7 @@ export interface ParsedInvocation {
   warnings: string[];
 }
 
+// ⟦𓐝𓇝𓊚𓃘⟧ parseInvocation :: auto-generated pointer for public function parseInvocation
 export function parseInvocation(rawArgs: string[], env: NodeJS.ProcessEnv = process.env): ParsedInvocation {
   const warnings: string[] = [];
   let interfaceMode = interfaceFromEnv(env, warnings);
@@ -59,6 +60,7 @@ export function parseInvocation(rawArgs: string[], env: NodeJS.ProcessEnv = proc
   };
 }
 
+// ⟦𓀢𓂾𓁴𓂉⟧ normalizeInterfaceMode :: auto-generated pointer for public function normalizeInterfaceMode
 export function normalizeInterfaceMode(value: string | undefined | null): InterfaceMode | null {
   const normalized = value?.trim().toLowerCase();
   if (!normalized) return null;

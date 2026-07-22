@@ -6,6 +6,7 @@ interface StepIndicatorProps {
   currentStep: number;
 }
 
+// ⟦𓏣𓀧𓎰𓌑⟧ StepIndicator :: auto-generated pointer for public function StepIndicator
 export function StepIndicator({ steps, currentStep }: StepIndicatorProps) {
   return (
     <Box gap={1}>

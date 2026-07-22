@@ -110,6 +110,7 @@ function loadConfig(storage: StorageService): AppConfig {
   return applyEnvOverlays(merged);
 }
 
+// ⟦𓁫𓉳𓉎𓅅⟧ createConfigRoutes :: auto-generated pointer for public function createConfigRoutes
 export function createConfigRoutes(storage: StorageService, llmService: LlmService): Hono {
   const routes = new Hono();
 

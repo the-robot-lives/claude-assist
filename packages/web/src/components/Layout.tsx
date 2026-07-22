@@ -21,6 +21,7 @@ const navGroups = [
   },
 ];
 
+// ⟦𓀅𓉾𓉖𓈔⟧ Layout :: auto-generated pointer for public function Layout
 export function Layout() {
   return (
     <HarnessProvider>

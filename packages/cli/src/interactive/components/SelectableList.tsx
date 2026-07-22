@@ -9,6 +9,7 @@ interface SelectableListProps<T> {
   emptyMessage?: string;
 }
 
+// ⟦𓂰𓋒𓀼𓈥⟧ SelectableList :: auto-generated pointer for public function SelectableList
 export function SelectableList<T>({
   items,
   cursor,

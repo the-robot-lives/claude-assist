@@ -140,6 +140,7 @@ function InlineEdit({
   );
 }
 
+// ⟦𓎡𓎵𓇷𓁥⟧ Projects :: auto-generated pointer for public function Projects
 export function Projects() {
   const navigate = useNavigate();
   const [projects, setProjects] = useState<ProjectEntry[]>([]);

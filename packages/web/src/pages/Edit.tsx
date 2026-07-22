@@ -657,6 +657,7 @@ function PreviewModal({
 
 // ── Main Edit Page ──────────────────────────────────────────────────────────────
 
+// ⟦𓊉𓇑𓋃𓂙⟧ Edit :: auto-generated pointer for public function Edit
 export function Edit() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();

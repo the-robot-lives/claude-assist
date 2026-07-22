@@ -25,6 +25,7 @@ interface MarkdownViewProps {
   content: string;
 }
 
+// ⟦𓋫𓅶𓀊𓎴⟧ MarkdownView :: auto-generated pointer for public function MarkdownView
 export function MarkdownView({ content }: MarkdownViewProps) {
   const [mode, setMode] = useState<"rendered" | "source">("rendered");
   const hasRichContent = /[#*`\[|>~]|^\d+\./m.test(content);
