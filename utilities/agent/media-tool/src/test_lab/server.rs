@@ -98,6 +98,7 @@ pub async fn run_lab(cfg: LabConfig) -> color_eyre::Result<()> {
     let app = Router::new()
         .route("/", get(index_page))
         .route("/api/health", get(health))
+        .route("/api/kinds", get(api_kinds))
         .route("/api/catalog", get(api_catalog))
         .route("/api/providers", get(api_providers))
         .route("/api/providers/{id}", get(api_provider_detail))
@@ -117,7 +118,7 @@ pub async fn run_lab(cfg: LabConfig) -> color_eyre::Result<()> {
     let listener = tokio::net::TcpListener::bind(&addr).await?;
     let url = format!("http://{addr}");
     ui::ok(&format!("Test lab listening on {url}"));
-    eprintln!("  Open the lab: browse ALL providers/channels, demos, generate, view, eval.");
+    eprintln!("  Intent-first lab: pick media kind + quality; system chooses providers.");
     eprintln!("  Demos:     {}", cfg.demos_dir.display());
     eprintln!("  Workspace: {}", cfg.workspace_dir.display());
     eprintln!("  Ctrl+C to stop.\n");
@@ -173,6 +174,166 @@ async fn api_catalog(State(st): State<AppState>) -> Result<Json<Vec<TypeGroup>>,
     let groups = scan_catalog(&st.inner.cfg.demos_dir, &st.inner.cfg.workspace_dir)
         .map_err(|e| ApiError::bad(e.to_string()))?;
     Ok(Json(groups))
+}
+
+/// Intent-first media kinds: type + quality → auto provider candidates.
+/// This is the primary lab navigation model (not the full provider registry).
+async fn api_kinds(State(st): State<AppState>) -> Result<Json<serde_json::Value>, ApiError> {
+    use crate::providers::{self, available, candidates_for};
+    use crate::schema::{AssetType, AudioKind, Quality};
+
+    let groups = scan_catalog(&st.inner.cfg.demos_dir, &st.inner.cfg.workspace_dir)
+        .map_err(|e| ApiError::bad(e.to_string()))?;
+
+    let kinds_meta: &[(&str, &str, &str, AssetType, AudioKind)] = &[
+        (
+            "image",
+            "Image",
+            "Still images and logos. Quality picks Imagen speed vs fidelity.",
+            AssetType::Image,
+            AudioKind::Voice,
+        ),
+        (
+            "svg",
+            "SVG / vector",
+            "Vector graphics via chat generation (auto chat model).",
+            AssetType::Image,
+            AudioKind::Voice,
+        ),
+        (
+            "video",
+            "Video",
+            "Short motion clips. Quality balances speed (Grok/Veo-fast) vs fidelity.",
+            AssetType::Video,
+            AudioKind::Voice,
+        ),
+        (
+            "music",
+            "Music",
+            "Background tracks and songs (Suno).",
+            AssetType::Audio,
+            AudioKind::Music,
+        ),
+        (
+            "voice",
+            "Voice",
+            "Spoken voiceovers. Quality steps through TTS engines.",
+            AssetType::Audio,
+            AudioKind::Voice,
+        ),
+        (
+            "audio",
+            "Voice (audio)",
+            "Legacy type: audio treated as voice TTS.",
+            AssetType::Audio,
+            AudioKind::Voice,
+        ),
+        (
+            "sfx",
+            "Sound effects",
+            "Short SFX clips (Suno sound mode).",
+            AssetType::Audio,
+            AudioKind::Sfx,
+        ),
+        (
+            "diagram",
+            "Diagram",
+            "Architecture and flow diagrams (markup + local render).",
+            AssetType::Diagram,
+            AudioKind::Voice,
+        ),
+        (
+            "html",
+            "HTML page",
+            "Self-contained pages and landing layouts.",
+            AssetType::Html,
+            AudioKind::Voice,
+        ),
+        (
+            "react-page",
+            "React page",
+            "TSX page/component generation.",
+            AssetType::ReactPage,
+            AudioKind::Voice,
+        ),
+        (
+            "component",
+            "Component",
+            "Reusable UI components.",
+            AssetType::Component,
+            AudioKind::Voice,
+        ),
+        (
+            "game",
+            "Game",
+            "Playable HTML canvas / interactive demos.",
+            AssetType::Html,
+            AudioKind::Voice,
+        ),
+        (
+            "document",
+            "Document",
+            "Markdown and text documents.",
+            AssetType::Document,
+            AudioKind::Voice,
+        ),
+        (
+            "style-guide",
+            "Style guide",
+            "Design-system style guide pages.",
+            AssetType::StyleGuide,
+            AudioKind::Voice,
+        ),
+    ];
+
+    let mut kinds = Vec::new();
+    for (key, label, blurb, asset, audio) in kinds_meta {
+        let examples = groups
+            .iter()
+            .find(|g| g.type_key == *key)
+            .map(|g| g.prompts.clone())
+            .unwrap_or_default();
+
+        let mut by_quality = serde_json::Map::new();
+        for q in [Quality::Low, Quality::Medium, Quality::High] {
+            let all = candidates_for(*asset, *audio, q);
+            let cands: Vec<serde_json::Value> = all
+                .iter()
+                .map(|c| {
+                    let ready = available(c);
+                    json!({
+                        "service": c.service,
+                        "model": c.model,
+                        "ready": ready,
+                        "api_key_env": providers::api_key_env(c.service),
+                    })
+                })
+                .collect();
+            let any_ready = cands.iter().any(|c| c["ready"].as_bool() == Some(true));
+            by_quality.insert(
+                q.as_str().to_string(),
+                json!({
+                    "candidates": cands,
+                    "ready": any_ready,
+                }),
+            );
+        }
+
+        kinds.push(json!({
+            "key": key,
+            "label": label,
+            "description": blurb,
+            "example_count": examples.len(),
+            "examples": examples,
+            "quality": by_quality,
+            "auto_selects": true,
+        }));
+    }
+
+    Ok(Json(json!({
+        "kinds": kinds,
+        "note": "Declare type + quality; the tool auto-selects providers. Pin service only when needed.",
+    })))
 }
 
 #[derive(Deserialize)]
@@ -364,6 +525,8 @@ struct GenerateBody {
     dry_run: bool,
     #[serde(default = "default_variants")]
     variants: usize,
+    /// Optional quality override: low | medium | high (drives auto provider selection)
+    quality: Option<String>,
 }
 
 fn default_variants() -> usize {
@@ -405,6 +568,11 @@ async fn run_generate_job(
     body: &GenerateBody,
 ) -> Result<serde_json::Value, String> {
     let prompt = parse_prompt_file(path).map_err(|e| e.to_string())?;
+    let quality_override = body
+        .quality
+        .as_deref()
+        .and_then(|q| q.parse::<crate::schema::Quality>().ok());
+
     let config = PipelineConfig {
         variant_count: body.variants.max(1),
         dry_run: body.dry_run,
@@ -412,8 +580,8 @@ async fn run_generate_job(
         model_override: None,
         verbose: st.inner.cfg.verbose,
         refine: false,
-        quality_override: None,
-        service_override: None,
+        quality_override,
+        service_override: None, // intent-first: never pin from lab UI
         no_eval: body.no_eval,
         no_prep: false,
         fim_enabled: std::env::var("MEDIA_FIM_INJECT").ok().as_deref() != Some("0"),
