@@ -94,10 +94,14 @@ defmodule Codefresh.Agents.AgentVersion do
         "adapter=#{Map.get(config, :adapter) || Map.get(config, "adapter")}",
         "endpoint_url=#{Map.get(config, :endpoint_url) || Map.get(config, "endpoint_url")}",
         "model=#{Map.get(config, :model) || Map.get(config, "model")}",
-        "auth_ref=" <> stable_encode(Map.get(config, :auth_ref) || Map.get(config, "auth_ref") || %{}),
-        "headers=" <> stable_encode(Map.get(config, :headers) || Map.get(config, "headers") || %{}),
+        "auth_ref=" <>
+          stable_encode(Map.get(config, :auth_ref) || Map.get(config, "auth_ref") || %{}),
+        "headers=" <>
+          stable_encode(Map.get(config, :headers) || Map.get(config, "headers") || %{}),
         "request_template=" <>
-          stable_encode(Map.get(config, :request_template) || Map.get(config, "request_template") || %{}),
+          stable_encode(
+            Map.get(config, :request_template) || Map.get(config, "request_template") || %{}
+          ),
         "response_jsonpath=#{Map.get(config, :response_jsonpath) || Map.get(config, "response_jsonpath")}",
         "model_tier=#{Map.get(config, :model_tier) || Map.get(config, "model_tier")}"
       ]

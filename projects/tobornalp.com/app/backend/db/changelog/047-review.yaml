@@ -1,0 +1,62 @@
+databaseChangeLog:
+  # ── Reviews: code/content reviews over an artifact revision ──
+  # Org-required, project-optional. A review targets a specific artifact revision
+  # (immutable lineage: artifact_id + revision_id fixed at create); reviewer leaves
+  # overlay annotations (review_overlays) and a verdict on completion. Review
+  # comments reuse the polymorphic trp_comments table (entity_type = "review"), so
+  # NO review_comments table is created here. Org scoping mirrors artifacts/items.
+  # Ported from NPL changelog 033-reviews.yaml; tuned for tobornalp (org NOT NULL,
+  # nullable project_id, FK→organizations/projects/artifacts/artifact_revisions).
+
+  # ── reviews ──────────────────────────────────────────────────────────────────
+  - changeSet:
+      id: 047-create-table-reviews
+      author: therobotplans
+      changes:
+        - sql:
+            sql: |
+              CREATE TABLE reviews (
+                id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+                organization_id uuid NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+                project_id uuid REFERENCES projects(id) ON DELETE SET NULL,
+                artifact_id uuid NOT NULL REFERENCES artifacts(id) ON DELETE CASCADE,
+                revision_id uuid NOT NULL REFERENCES artifact_revisions(id) ON DELETE CASCADE,
+                reviewer_persona varchar(255) NOT NULL,
+                title varchar(255),
+                status varchar(255) NOT NULL DEFAULT 'open',
+                summary text,
+                verdict varchar(255),
+                inserted_at timestamptz NOT NULL DEFAULT now(),
+                updated_at timestamptz NOT NULL DEFAULT now()
+              );
+              CREATE INDEX idx_reviews_organization_id ON reviews (organization_id);
+              CREATE INDEX idx_reviews_project_id ON reviews (project_id);
+              CREATE INDEX idx_reviews_artifact_id ON reviews (artifact_id);
+              CREATE INDEX idx_reviews_status ON reviews (status);
+      rollback:
+        - dropTable:
+            tableName: reviews
+
+  # ── review_overlays (positional annotations on the revision) ─────────────────
+  - changeSet:
+      id: 047-create-table-review-overlays
+      author: therobotplans
+      changes:
+        - sql:
+            sql: |
+              CREATE TABLE review_overlays (
+                id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+                review_id uuid NOT NULL REFERENCES reviews(id) ON DELETE CASCADE,
+                x integer NOT NULL,
+                y integer NOT NULL,
+                width integer,
+                height integer,
+                comment text NOT NULL,
+                persona varchar(255) NOT NULL,
+                inserted_at timestamptz NOT NULL DEFAULT now(),
+                updated_at timestamptz NOT NULL DEFAULT now()
+              );
+              CREATE INDEX idx_review_overlays_review_id ON review_overlays (review_id);
+      rollback:
+        - dropTable:
+            tableName: review_overlays

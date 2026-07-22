@@ -1,8 +1,8 @@
 export const CONSENT_VERSION = 1;
-export const CONSENT_STORAGE_KEY = `start-app.cookie-consent.v${CONSENT_VERSION}`;
-export const BROWSER_SESSION_STORAGE_KEY = "start-app.browser-session-id";
+export const CONSENT_STORAGE_KEY = `trl.cookie-consent.v${CONSENT_VERSION}`;
+export const BROWSER_SESSION_STORAGE_KEY = "trl.browser-session-id";
 
-const CONSENT_EVENT_NAME = "start-app:cookie-consent-change";
+const CONSENT_EVENT_NAME = "trl:cookie-consent-change";
 
 export interface ConsentPreferences {
   necessary: true;

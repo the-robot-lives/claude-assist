@@ -78,9 +78,16 @@ defmodule Codefresh.Agents.Adapters.HTTP do
 
   defp validate_headers(config) do
     case fetch(config, :headers) do
-      nil -> :ok
-      %{} = h -> if Enum.all?(h, &header_pair?/1), do: :ok, else: {:error, "headers must be string → string"}
-      _ -> {:error, "headers must be a map"}
+      nil ->
+        :ok
+
+      %{} = h ->
+        if Enum.all?(h, &header_pair?/1),
+          do: :ok,
+          else: {:error, "headers must be string → string"}
+
+      _ ->
+        {:error, "headers must be a map"}
     end
   end
 

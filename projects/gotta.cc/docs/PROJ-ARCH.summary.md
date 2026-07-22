@@ -6,11 +6,11 @@
 
 ## Current Architecture
 
-Static Next.js 16 landing page exported to HTML and served by Nginx in a Docker container. No backend. Waitlist form POSTs directly from the browser to an external Listmonk instance at listmonk.noizu.com.
+Static Next.js 16 landing page exported to HTML and served by Nginx in a Docker container. No backend. Waitlist form POSTs directly from the browser to the foryou signup service at foryou.therobotlives.com (`POST /api/v1/public/lists/gotta-cc-waitlist/signups`).
 
 ## Stack
 
-Next.js 16 (static export), React 19, Tailwind CSS 4, TypeScript 5, Node.js 22, Docker multi-stage (node:22-alpine -> nginx:alpine), Listmonk (email), Cloudflare (DNS/TLS planned).
+Next.js 16 (static export), React 19, Tailwind CSS 4, TypeScript 5, Node.js 22, Docker multi-stage (node:22-alpine -> nginx:alpine), foryou signup service (email), Cloudflare (DNS/TLS planned).
 
 ## Components
 
@@ -20,7 +20,7 @@ Next.js 16 (static export), React 19, Tailwind CSS 4, TypeScript 5, Node.js 22, 
 
 ## Data Flow
 
-Browser fetches static HTML from Nginx. Waitlist form POSTs to Listmonk public API. No server-side processing.
+Browser fetches static HTML from Nginx. Waitlist form POSTs to the foryou public signup API. No server-side processing.
 
 ## Deployment
 
@@ -32,4 +32,4 @@ LLM scoring pipeline, category taxonomy, submission pipeline, community features
 
 ## Key Decisions
 
-Static export over SSR. Direct browser-to-Listmonk (no proxy). Nginx over Node.js serving. Design direction not yet selected.
+Static export over SSR. Direct browser-to-foryou (no proxy). Nginx over Node.js serving. Design direction not yet selected.

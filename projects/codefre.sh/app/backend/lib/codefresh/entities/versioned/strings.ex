@@ -6,6 +6,7 @@ defmodule Codefresh.Versioned.Strings do
 
   def list(context, options \\ []) do
     settings = Noizu.Entity.Meta.persistence(Entity) |> hd
+
     Codefresh.Repo.all(Schema)
     |> Enum.map(fn record ->
       {:ok, entity} = Entity.from_record(record, settings, context, options)
@@ -16,7 +17,13 @@ defmodule Codefresh.Versioned.Strings do
 
   def get_versioned_string(id, context, options \\ []), do: get(id, context, options)
 
-  def create(string, context, options \\ []) do
+  def create(string, context, options \\ [])
+
+  def create(%Entity{} = string, context, options) do
+    super(string, context, options)
+  end
+
+  def create(string, context, options) do
     %Entity{}
     |> change(string)
     |> create(context, options)

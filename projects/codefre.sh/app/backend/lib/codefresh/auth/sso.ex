@@ -1,7 +1,6 @@
 defmodule Codefresh.Auth.SSO do
   alias Codefresh.Schema.Users.User, as: UserSchema
   alias Codefresh.Schema.Users.Credentials.UserCredential, as: CredentialSchema
-  alias Codefresh.Schema.Versioned.Names.Name
   import Ecto.Query, only: [from: 2]
 
   @provider_map %{
@@ -82,18 +81,20 @@ defmodule Codefresh.Auth.SSO do
     |> Codefresh.EntityRepo.create(context)
   end
 
-  defp auto_provision_user(email, attrs, provider_ref, provider_id, provider_type, context) do
+  defp auto_provision_user(email, attrs, provider_ref, _provider_id, provider_type, context) do
     first = attrs[:name][:first] || ""
     last = attrs[:name][:last] || ""
     handle = email |> String.split("@") |> hd() |> String.replace(~r/[^a-z0-9_]/, "_")
 
     {:ok, name} =
       Codefresh.EntityRepo.create(
-        %Codefresh.Versioned.Names.Name{first: first, last: last, time_stamp: Noizu.Entity.TimeStamp.now()},
+        %Codefresh.Versioned.Names.Name{
+          first: first,
+          last: last,
+          time_stamp: Noizu.Entity.TimeStamp.now()
+        },
         context
       )
-
-    {:ok, name_ref} = Noizu.EntityReference.Protocol.ref(name)
 
     user_schema = %UserSchema{
       id: UUID.uuid4(),
@@ -106,7 +107,8 @@ defmodule Codefresh.Auth.SSO do
       flagged: false
     }
 
-    {:ok, user} = Codefresh.Repo.insert(user_schema, on_conflict: :nothing, conflict_target: :email)
+    {:ok, user} =
+      Codefresh.Repo.insert(user_schema, on_conflict: :nothing, conflict_target: :email)
 
     %Codefresh.Users.Credentials.UserCredential{
       user: Codefresh.Users.User.ref(user.id),
@@ -123,7 +125,9 @@ defmodule Codefresh.Auth.SSO do
   end
 
   defp sso_settings(:saml, attrs), do: %{email: attrs[:email], name_id: attrs[:name_id]}
-  defp sso_settings(provider_type, attrs), do: %{email: attrs[:email], sub: attrs[:sub] || attrs[:uid]}
+
+  defp sso_settings(_provider_type, attrs),
+    do: %{email: attrs[:email], sub: attrs[:sub] || attrs[:uid]}
 
   defp sso_fingerprint(:saml, attrs), do: "saml:#{attrs[:name_id]}"
   defp sso_fingerprint(provider_type, attrs), do: "#{provider_type}:#{attrs[:sub] || attrs[:uid]}"

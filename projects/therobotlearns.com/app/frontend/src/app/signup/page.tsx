@@ -5,7 +5,7 @@ import { useAuth } from "@/context/auth";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import type { SsoDomainMap } from "@/lib/api";
-import { emailDomain, matchingSsoProviders, postAuthPath } from "@/lib/auth-flow";
+import { emailDomain, matchingSsoProviders, navigateTo, postAuthPath } from "@/lib/auth-flow";
 import Link from "next/link";
 
 const SSO_LABELS: Record<string, string> = {
@@ -86,7 +86,7 @@ export default function SignupPage() {
         mobilePhone,
         inviteToken,
       });
-      router.push(postAuthPath(user));
+      navigateTo(router, postAuthPath(user));
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Registration failed");
     } finally {

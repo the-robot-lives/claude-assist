@@ -183,7 +183,8 @@ defmodule Codefresh.Datasets do
     # Checksum for an empty draft is a unique per-dataset seed so two concurrent
     # empty drafts don't collide on the (dataset_id, checksum) unique index. We
     # recompute the real content-checksum at publish time (US-102).
-    seed_checksum = :crypto.hash(:sha256, "draft:#{dataset.id}:#{next}:#{System.unique_integer()}")
+    seed_checksum =
+      :crypto.hash(:sha256, "draft:#{dataset.id}:#{next}:#{System.unique_integer()}")
 
     changeset =
       DatasetVersion.create_changeset(%DatasetVersion{}, %{
@@ -347,7 +348,16 @@ defmodule Codefresh.Datasets do
         notes_col = Map.get(mapping, "notes") || "notes"
 
         with {:ok, draft} <- ensure_draft(dataset) do
-          do_import_rows(dataset, draft, header, body, input_col, expected_col, tags_col, notes_col)
+          do_import_rows(
+            dataset,
+            draft,
+            header,
+            body,
+            input_col,
+            expected_col,
+            tags_col,
+            notes_col
+          )
         end
     end
   end
@@ -838,7 +848,8 @@ defmodule Codefresh.Datasets do
       DatasetEntry.create_changeset(%DatasetEntry{}, %{
         dataset_version_id: draft.id,
         organization_id: dataset.organization_id,
-        entry_key: "capture-#{String.slice(capture.id, 0, 8)}-#{System.unique_integer([:positive])}",
+        entry_key:
+          "capture-#{String.slice(capture.id, 0, 8)}-#{System.unique_integer([:positive])}",
         input: capture.input,
         expected_output: expected,
         tags: Enum.uniq((capture.tags || []) ++ extra_tags),

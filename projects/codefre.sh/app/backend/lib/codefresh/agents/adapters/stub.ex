@@ -25,8 +25,7 @@ defmodule Codefresh.Agents.Adapters.Stub do
           fetch(metadata, :stub_response) ||
             default_response(adapter, config, request)
 
-        {:ok, response,
-         %{input_tokens: 0, output_tokens: 0, stub: true, adapter: adapter}}
+        {:ok, response, %{input_tokens: 0, output_tokens: 0, stub: true, adapter: adapter}}
 
       err when is_map(err) ->
         {:error,

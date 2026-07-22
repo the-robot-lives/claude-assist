@@ -4,7 +4,7 @@ import { Suspense, useEffect, useState } from "react";
 import { useAuth } from "@/context/auth";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { postAuthPath } from "@/lib/auth-flow";
+import { navigateTo, postAuthPath } from "@/lib/auth-flow";
 
 const ERROR_MESSAGES: Record<string, string> = {
   not_provisioned: "No account exists for this email. Please contact your administrator.",
@@ -41,7 +41,7 @@ function SSOCallback() {
     }
 
     ssoExchange(code)
-      .then((user) => router.push(postAuthPath(user)))
+      .then((user) => navigateTo(router, postAuthPath(user)))
       .catch(() => {
         setError("Failed to complete sign-in. The code may have expired.");
         setVerifying(false);

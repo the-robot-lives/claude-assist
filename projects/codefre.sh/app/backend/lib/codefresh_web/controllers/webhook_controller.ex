@@ -120,6 +120,7 @@ defmodule CodefreshWeb.WebhookController do
 
   def retry_delivery(conn, %{"webhook_id" => wh_id, "delivery_id" => del_id}) do
     org = conn.assigns.organization
+
     with {:ok, delivery} <- Webhooks.retry_delivery(org.id, wh_id, del_id) do
       json(conn, %{delivery: render_delivery(delivery)})
     end
@@ -152,11 +153,12 @@ defmodule CodefreshWeb.WebhookController do
       attempted_at: d.sent_at,
       error_message: d.error_message,
       inserted_at: d.inserted_at,
-      status: cond do
-        d.http_status != nil and d.http_status < 400 -> "delivered"
-        d.next_retry_at == nil and d.retry_count > 0 -> "dead"
-        true -> "failed"
-      end
+      status:
+        cond do
+          d.http_status != nil and d.http_status < 400 -> "delivered"
+          d.next_retry_at == nil and d.retry_count > 0 -> "dead"
+          true -> "failed"
+        end
     }
   end
 

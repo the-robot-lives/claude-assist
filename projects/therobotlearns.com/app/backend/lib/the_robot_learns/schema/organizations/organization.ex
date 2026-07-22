@@ -7,12 +7,13 @@ defmodule TheRobotLearns.Schema.Organizations.Organization do
     field :slug, :string
     field :name, :string
     field :settings, :map, default: %{}
+    field :personal, :boolean, default: false
     timestamps(type: :utc_datetime_usec)
   end
 
   def changeset(org, attrs) do
     org
-    |> cast(attrs, [:slug, :name, :settings])
+    |> cast(attrs, [:slug, :name, :settings, :personal])
     |> validate_required([:slug, :name])
     |> unique_constraint(:slug)
   end

@@ -36,7 +36,15 @@ defmodule Therobotplans.MCPServers do
       label: "Personal",
       required: false,
       desc: "Personal todos — a user's private todo list (due dates, tags, recurrence)"
-    }
+    },
+    %{
+      id: "artifacts",
+      label: "Artifacts",
+      required: false,
+      desc: "Versioned typed content — code, document, image, wiki, config, binary"
+    },
+    %{id: "wiki", label: "Wiki", required: false, desc: "Wiki — spaces, pages, comments, attachments, reactions"},
+    %{id: "review", label: "Review", required: false, desc: "Code/content reviews over artifact revisions — overlays + verdict"}
   ]
 
   @server_modules %{
@@ -44,7 +52,10 @@ defmodule Therobotplans.MCPServers do
     "items" => Therobotplans.Domains.Items.MCP,
     "notifications" => Therobotplans.Domains.Notifications.MCP,
     "goals" => Therobotplans.Domains.Goals.MCP,
-    "personal" => Therobotplans.Domains.Personal.MCP
+    "personal" => Therobotplans.Domains.Personal.MCP,
+    "artifacts" => Therobotplans.Domains.Artifacts.MCP,
+    "wiki" => Therobotplans.Domains.Wiki.MCP,
+    "review" => Therobotplans.Domains.Review.MCP
   }
 
   @doc "All configured MCP servers."

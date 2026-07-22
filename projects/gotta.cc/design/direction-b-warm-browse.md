@@ -40,7 +40,7 @@
 
 ## Scenario
 
-Gotta.cc is **"The Yahoo Directory for the post-slop web"** — an AI-curated website directory that combines human-browsable categories with AI quality scoring, editorial summaries, and discovery tools. Every listed site is scored across five dimensions: originality, depth, freshness, human authorship, and design quality. The web is big again — gotta.cc helps you find the good parts.
+Gotta.cc is **"a web directory for the post-AI age"** — an AI-curated website directory that combines human-browsable categories with AI quality scoring, editorial summaries, and discovery tools. Every listed site is scored across five dimensions: originality, depth, freshness, human authorship, and design quality. The web is big again — gotta.cc helps you find the good parts.
 
 The design must send two signals simultaneously. First, **authority and curation** — this directory has editorial standards. Sites are scored, summaries are opinionated, categories are carefully maintained. Users need to trust that the quality bar is real. Second, **warmth and discovery** — browsing the directory should feel like exploration, not research. The category grid should invite clicking. The "Surprise Me" button should feel like a gift. Finding a great site should feel like a recommendation from a friend with good taste.
 

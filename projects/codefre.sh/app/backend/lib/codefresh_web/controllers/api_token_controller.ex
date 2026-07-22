@@ -19,11 +19,12 @@ defmodule CodefreshWeb.ApiTokenController do
   def create(conn, %{"organization_id" => org_id, "token" => token_params}) do
     user = Guardian.Plug.current_resource(conn)
 
-    with {:ok, _} <- Organizations.authorize(user, org_id, "admin") do
+    with {:ok, _} <- Organizations.authorize(user, org_id, "admin"),
+         {:ok, user_id} <- Organizations.user_id(user) do
       attrs =
         token_params
         |> Map.put("organization_id", org_id)
-        |> Map.put("created_by_user_id", user.id)
+        |> Map.put("created_by_user_id", user_id)
 
       case ApiTokens.create_token(attrs) do
         {:ok, token, raw} ->

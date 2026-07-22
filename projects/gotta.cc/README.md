@@ -4,9 +4,9 @@
 
 ## Elevator Pitch
 
-**The Yahoo Directory for the post-slop web.** Gotta.cc is an AI-curated website directory that combines human-browsable categories with AI quality scoring, editorial summaries, and discovery tools. Browse the web by topic, not by keyword. Every listed site is scored for originality, depth, and human authorship. The web is big again — gotta.cc helps you find the good parts.
+**A web directory for the post-AI age.** Gotta.cc is an AI-curated website directory that combines human-browsable categories with AI quality scoring, editorial summaries, and discovery tools. Browse the web by topic, not by keyword. Every listed site is scored for originality, depth, and human authorship. The web is big again — gotta.cc helps you find the good parts.
 
-Think: Yahoo Directory (1994) meets Wirecutter-level editorial, powered by AI that rates quality instead of gaming it.
+Think: a 90s-style web directory meets Wirecutter-level editorial, powered by AI that rates quality instead of gaming it.
 
 ---
 

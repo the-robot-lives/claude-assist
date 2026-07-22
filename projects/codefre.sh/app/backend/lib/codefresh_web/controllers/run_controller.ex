@@ -72,17 +72,27 @@ defmodule CodefreshWeb.RunController do
           |> json(%{error: inspect(reason)})
       end
     else
-      nil -> send_resp(conn, 404, "")
-      {:error, :forbidden} -> send_resp(conn, 403, "")
-      {:error, :not_a_member} -> send_resp(conn, 404, "")
-      {:error, :missing_field, f} -> conn |> put_status(:bad_request) |> json(%{error: "#{f} is required"})
+      nil ->
+        send_resp(conn, 404, "")
+
+      {:error, :forbidden} ->
+        send_resp(conn, 403, "")
+
+      {:error, :not_a_member} ->
+        send_resp(conn, 404, "")
+
+      {:error, :missing_field, f} ->
+        conn |> put_status(:bad_request) |> json(%{error: "#{f} is required"})
     end
   end
 
   def create(conn, _params) do
     conn
     |> put_status(:bad_request)
-    |> json(%{error: "Expected {run: {script_id, agent_id, persona_version_ids?, run_config?, trigger_source?}}"})
+    |> json(%{
+      error:
+        "Expected {run: {script_id, agent_id, persona_version_ids?, run_config?, trigger_source?}}"
+    })
   end
 
   # ──────────────────────────────────────────────────────────────────────────
@@ -161,9 +171,14 @@ defmodule CodefreshWeb.RunController do
          {:ok, cancelled} <- Runs.cancel_run(run) do
       json(conn, %{run: render_run(cancelled)})
     else
-      nil -> send_resp(conn, 404, "")
-      {:error, :forbidden} -> send_resp(conn, 403, "")
-      {:error, :not_a_member} -> send_resp(conn, 404, "")
+      nil ->
+        send_resp(conn, 404, "")
+
+      {:error, :forbidden} ->
+        send_resp(conn, 403, "")
+
+      {:error, :not_a_member} ->
+        send_resp(conn, 404, "")
 
       {:error, %Ecto.Changeset{} = cs} ->
         conn
@@ -279,17 +294,46 @@ defmodule CodefreshWeb.RunController do
       cost_cap_usd: r.cost_cap_usd,
       inserted_at: r.inserted_at,
       short_id: String.slice(r.id, 0, 8),
-      script_id: if(Map.get(r, :script_version) && r.script_version, do: r.script_version.script_id, else: nil),
-      script_name: if(Map.get(r, :script_version) && r.script_version && Map.get(r.script_version, :script) && r.script_version.script, do: r.script_version.script.name, else: nil),
-      script_version_number: if(Map.get(r, :script_version) && r.script_version, do: r.script_version.version_number, else: nil),
-      agent_id: if(Map.get(r, :agent_version) && r.agent_version, do: r.agent_version.agent_id, else: nil),
-      agent_name: if(Map.get(r, :agent_version) && r.agent_version && Map.get(r.agent_version, :agent) && r.agent_version.agent, do: r.agent_version.agent.name, else: nil),
-      agent_version_number: if(Map.get(r, :agent_version) && r.agent_version, do: r.agent_version.version_number, else: nil),
+      script_id:
+        if(Map.get(r, :script_version) && r.script_version,
+          do: r.script_version.script_id,
+          else: nil
+        ),
+      script_name:
+        if(
+          Map.get(r, :script_version) && r.script_version && Map.get(r.script_version, :script) &&
+            r.script_version.script,
+          do: r.script_version.script.name,
+          else: nil
+        ),
+      script_version_number:
+        if(Map.get(r, :script_version) && r.script_version,
+          do: r.script_version.version_number,
+          else: nil
+        ),
+      agent_id:
+        if(Map.get(r, :agent_version) && r.agent_version, do: r.agent_version.agent_id, else: nil),
+      agent_name:
+        if(
+          Map.get(r, :agent_version) && r.agent_version && Map.get(r.agent_version, :agent) &&
+            r.agent_version.agent,
+          do: r.agent_version.agent.name,
+          else: nil
+        ),
+      agent_version_number:
+        if(Map.get(r, :agent_version) && r.agent_version,
+          do: r.agent_version.version_number,
+          else: nil
+        ),
       persona_id: nil,
       persona_name: nil,
       verdict: get_in(r.summary_metrics || %{}, ["verdict"]),
       score: get_in(r.summary_metrics || %{}, ["score"]),
-      duration_ms: if(r.started_at && r.finished_at, do: DateTime.diff(r.finished_at, r.started_at, :millisecond), else: nil)
+      duration_ms:
+        if(r.started_at && r.finished_at,
+          do: DateTime.diff(r.finished_at, r.started_at, :millisecond),
+          else: nil
+        )
     }
   end
 
@@ -325,11 +369,12 @@ defmodule CodefreshWeb.RunController do
       run_id: step.run_id,
       script_node_id: step.to_node_id || step.from_node_id,
       sequence: step.step_index,
-      voice: cond do
-        step.agent_message != nil -> "agent"
-        step.user_message != nil -> "author"
-        true -> "evaluator"
-      end,
+      voice:
+        cond do
+          step.agent_message != nil -> "agent"
+          step.user_message != nil -> "author"
+          true -> "evaluator"
+        end,
       content: step.agent_message || step.user_message || "",
       verdict: Map.get(step, :status, nil),
       rationale: nil,
@@ -346,7 +391,8 @@ defmodule CodefreshWeb.RunController do
       run_id: if(Map.get(sc, :run_step) && sc.run_step, do: sc.run_step.run_id, else: nil),
       run_step_id: sc.run_step_id,
       expectation_id: sc.expectation_id,
-      label: if(Map.get(sc, :expectation) && sc.expectation, do: sc.expectation.label, else: "score"),
+      label:
+        if(Map.get(sc, :expectation) && sc.expectation, do: sc.expectation.label, else: "score"),
       value: if(is_struct(sc.score, Decimal), do: Decimal.to_float(sc.score), else: sc.score),
       verdict: sc.verdict,
       rationale: sc.rationale,

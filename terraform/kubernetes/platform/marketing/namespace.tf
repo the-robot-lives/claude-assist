@@ -1,5 +1,5 @@
 # ---------------------------------------------------------------------------
-# Platform-marketing tier namespace. Holds listmonk (newsletters) + mautic (marketing automation).
+# Platform-marketing tier namespace. Holds mautic (marketing automation).
 # Credentials managed by Infisical (syncs /marketing + /shared/* into the managed Secrets). Requires
 # the infisical operator + universal-auth-credentials (set up by infra-services).
 # ---------------------------------------------------------------------------

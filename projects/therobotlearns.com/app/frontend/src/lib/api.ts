@@ -21,7 +21,22 @@ export interface Organization {
   id: string;
   slug: string;
   name: string;
+  /** Auto-created per-user "Personal" org, distinct from real orgs. */
+  personal?: boolean;
   role?: string;
+}
+
+export interface Project {
+  id: string;
+  organization_id: string;
+  name: string;
+  slug: string;
+  description?: string | null;
+  settings?: Record<string, unknown>;
+  status: "active" | "archived" | "deleted" | string;
+  archived_at?: string | null;
+  inserted_at?: string;
+  updated_at?: string;
 }
 
 interface AuthResponse {
@@ -294,6 +309,36 @@ export const api = {
 
   listOrganizations() {
     return request<{ organizations: Organization[] }>("/api/v1/organizations");
+  },
+
+  listProjects(orgId: string) {
+    return request<{ projects: Project[] }>(`/api/v1/organizations/${orgId}/projects`);
+  },
+
+  createProject(orgId: string, data: { name: string; slug: string; description?: string }) {
+    return request<{ project: Project }>(`/api/v1/organizations/${orgId}/projects`, {
+      method: "POST",
+      body: JSON.stringify({ project: data }),
+    });
+  },
+
+  getProject(orgId: string, projectId: string) {
+    return request<{ project: Project }>(`/api/v1/organizations/${orgId}/projects/${projectId}`);
+  },
+
+  updateProject(orgId: string, projectId: string, data: Partial<Pick<Project, "name" | "description" | "settings">>) {
+    return request<{ project: Project }>(`/api/v1/organizations/${orgId}/projects/${projectId}`, {
+      method: "PATCH",
+      body: JSON.stringify({ project: data }),
+    });
+  },
+
+  archiveProject(orgId: string, projectId: string) {
+    return request<{ project: Project }>(`/api/v1/organizations/${orgId}/projects/${projectId}/archive`, { method: "POST" });
+  },
+
+  unarchiveProject(orgId: string, projectId: string) {
+    return request<{ project: Project }>(`/api/v1/organizations/${orgId}/projects/${projectId}/unarchive`, { method: "POST" });
   },
 
   createOrganization(slug: string, name: string) {

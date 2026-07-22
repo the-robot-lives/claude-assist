@@ -120,7 +120,7 @@ flowchart TB
     end
 
     subgraph "platform ns"
-        PlatPG["platform-postgres\n:5432\nApps: bottlecrm, docmost,\nghost, keygen, langfuse,\nlistmonk, mermaid, n8n,\nnextcloud, penpot, plane,\npostiz, taiga, webstudio"]
+        PlatPG["platform-postgres\n:5432\nApps: bottlecrm, docmost,\nghost, keygen, langfuse,\nmermaid, n8n,\nnextcloud, penpot, plane,\npostiz, taiga, webstudio"]
     end
 
     subgraph "apps ns"

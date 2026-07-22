@@ -147,6 +147,53 @@ defmodule Codefresh.Otel do
     |> Repo.all()
   end
 
+  def search_logs(organization_id, query \\ %{}) when is_binary(organization_id) do
+    limit =
+      query
+      |> Map.get(:page)
+      |> parse_limit(100)
+
+    attrs = Map.get(query, :attributes) || %{}
+
+    q =
+      from l in Log,
+        where: l.organization_id == ^organization_id,
+        order_by: [desc: l.timestamp],
+        limit: ^limit
+
+    q =
+      case Map.get(query, :run_id) do
+        nil -> q
+        "" -> q
+        run_id -> from l in q, where: l.run_id == ^run_id
+      end
+
+    q =
+      case attrs do
+        filter when is_map(filter) and map_size(filter) > 0 ->
+          from l in q, where: fragment("? @> ?", l.attributes, ^filter)
+
+        _ ->
+          q
+      end
+
+    logs = Repo.all(q)
+    {logs, length(logs)}
+  end
+
+  defp parse_limit(%{"limit" => limit}, default), do: parse_limit(limit, default)
+  defp parse_limit(%{limit: limit}, default), do: parse_limit(limit, default)
+
+  defp parse_limit(limit, default) when is_binary(limit),
+    do: parse_limit(Integer.parse(limit), default)
+
+  defp parse_limit({limit, _}, _default) when limit > 0 and limit <= 500, do: limit
+
+  defp parse_limit(limit, _default) when is_integer(limit) and limit > 0 and limit <= 500,
+    do: limit
+
+  defp parse_limit(_, default), do: default
+
   defp maybe_since(q, nil), do: q
   defp maybe_since(q, %DateTime{} = dt), do: from(s in q, where: s.start_time >= ^dt)
 
@@ -335,6 +382,7 @@ defmodule Codefresh.Otel do
   defp extract_any_value(%{"int_value" => v}), do: to_int(v)
   defp extract_any_value(%{"doubleValue" => v}) when is_number(v), do: v
   defp extract_any_value(%{"double_value" => v}) when is_number(v), do: v
+
   defp extract_any_value(%{"arrayValue" => %{"values" => vs}}) when is_list(vs),
     do: Enum.map(vs, &extract_any_value/1)
 

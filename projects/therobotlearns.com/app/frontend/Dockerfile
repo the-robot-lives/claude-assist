@@ -18,6 +18,10 @@ COPY . .
 
 ARG NEXT_PUBLIC_API_URL
 ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+# Inlined into Next.js middleware (src/proxy.ts) at build time so the apex
+# /app/* -> app-subdomain redirect works; runtime pages use window.__ENV instead.
+ARG NEXT_PUBLIC_APP_URL
+ENV NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL}
 
 RUN npm run build
 
@@ -34,6 +38,9 @@ RUN addgroup --system --gid 1001 nodejs && \
 COPY --from=build --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=build --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=build --chown=nextjs:nodejs /app/public ./public
+# @noizu/styleguide loadConfig() scans src/config/theme-style-guide from disk at
+# SSR time; standalone output omits it, 500ing dynamic routes (ENOENT scandir).
+COPY --from=build --chown=nextjs:nodejs /app/src/config ./src/config
 COPY --chown=nextjs:nodejs docker-entrypoint.sh ./
 
 USER nextjs

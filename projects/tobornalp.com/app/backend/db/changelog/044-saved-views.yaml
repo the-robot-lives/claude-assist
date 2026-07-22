@@ -1,0 +1,41 @@
+databaseChangeLog:
+  # ── Saved views: persisted filter/sort/groupBy config for a list/board/gantt/
+  # calendar. Org-required, project-optional. Ownership: owner_user_id NULL =
+  # shared/org view; non-NULL = a user's personal view. `config` is opaque jsonb
+  # (filters, sort, groupBy, swimlane, column layout); never introspected by SQL.
+  # Scoping mirrors items/artifacts (organization_id NOT NULL REFERENCES
+  # organizations(id) ON DELETE CASCADE); project_id optional.
+
+  # ── saved_views ───────────────────────────────────────────────────────────────
+  - changeSet:
+      id: 044-create-table-saved-views
+      author: therobotplans
+      changes:
+        - sql:
+            sql: |
+              CREATE TABLE saved_views (
+                id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+                organization_id uuid NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+                project_id uuid NULL REFERENCES projects(id) ON DELETE CASCADE,
+                owner_user_id uuid NULL REFERENCES users(id) ON DELETE SET NULL,
+                name varchar(255) NOT NULL,
+                entity_type varchar(64) NOT NULL DEFAULT 'item',
+                view_type varchar(64) NOT NULL DEFAULT 'list',
+                config jsonb NOT NULL DEFAULT '{}'::jsonb,
+                is_shared boolean NOT NULL DEFAULT false,
+                inserted_at timestamptz NOT NULL DEFAULT now(),
+                updated_at timestamptz NOT NULL DEFAULT now()
+              );
+              -- Scope lookups: (org, project, entity_type) + per-owner.
+              CREATE INDEX idx_saved_views_scope
+                ON saved_views (organization_id, project_id, entity_type);
+              CREATE INDEX idx_saved_views_owner_user_id
+                ON saved_views (owner_user_id);
+              -- Shared view names unique per scope: a view with no owner (org
+              -- view) cannot collide on name within the (org, project) scope.
+              CREATE UNIQUE INDEX idx_saved_views_shared_name
+                ON saved_views (organization_id, project_id, name)
+                WHERE owner_user_id IS NULL;
+      rollback:
+        - dropTable:
+            tableName: saved_views

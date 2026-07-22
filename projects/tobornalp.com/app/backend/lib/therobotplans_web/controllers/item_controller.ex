@@ -93,6 +93,116 @@ defmodule TherobotplansWeb.ItemController do
     end)
   end
 
+  # DELETE /api/v1/organizations/:org_id/items/:id
+  def delete(conn, %{"org_id" => org_id, "id" => id}) do
+    with_org_item(conn, org_id, id, "member", fn item ->
+      case Items.delete(item.id) do
+        {:ok, _} ->
+          send_resp(conn, :no_content, "")
+
+        {:error, :not_found} ->
+          conn |> put_status(:not_found) |> json(%{error: "Item not found"})
+
+        {:error, changeset} ->
+          conn |> put_status(:unprocessable_entity) |> json(%{errors: format_errors(changeset)})
+      end
+    end)
+  end
+
+  # ── Links (item ↔ item) ──────────────────────────────────────────────────
+
+  # GET /api/v1/organizations/:org_id/items/:id/links
+  def links(conn, %{"org_id" => org_id, "id" => id}) do
+    with_org_item(conn, org_id, id, "viewer", fn item ->
+      json(conn, %{links: links_to_json(Items.get_links(item.id))})
+    end)
+  end
+
+  # POST /api/v1/organizations/:org_id/items/:id/links   body: {link: {target_item_id, link_type}}
+  def create_link(conn, %{"org_id" => org_id, "id" => id, "link" => params}) do
+    with_org_item(conn, org_id, id, "member", fn item ->
+      case Items.link(item.id, params["target_item_id"], params["link_type"]) do
+        {:ok, link} ->
+          conn
+          |> put_status(:created)
+          |> json(%{
+            link: %{
+              id: link.id,
+              source_item_id: link.source_item_id,
+              target_item_id: link.target_item_id,
+              link_type: link.link_type
+            }
+          })
+
+        {:error, changeset} ->
+          conn |> put_status(:unprocessable_entity) |> json(%{errors: format_errors(changeset)})
+      end
+    end)
+  end
+
+  # DELETE /api/v1/organizations/:org_id/items/links/:id
+  def delete_link(conn, %{"org_id" => org_id, "id" => id}) do
+    with_org_link(conn, org_id, id, "member", fn _link ->
+      case Items.delete_link(id) do
+        {:ok, _} ->
+          send_resp(conn, :no_content, "")
+
+        {:error, :not_found} ->
+          conn |> put_status(:not_found) |> json(%{error: "Link not found"})
+      end
+    end)
+  end
+
+  # ── Comments (polymorphic trp_comments, entity_type = "item") ────────────
+
+  # GET /api/v1/organizations/:org_id/items/:id/comments
+  def comments(conn, %{"org_id" => org_id, "id" => id}) do
+    with_org_item(conn, org_id, id, "viewer", fn item ->
+      json(conn, %{comments: Enum.map(Items.list_comments(item.id), &comment_to_json/1)})
+    end)
+  end
+
+  # POST /api/v1/organizations/:org_id/items/:id/comments   body: {comment: {content, author?, reply_to_id?}}
+  def create_comment(conn, %{"org_id" => org_id, "id" => id, "comment" => attrs}) do
+    with_org_item(conn, org_id, id, "member", fn item ->
+      params = %{
+        content: attrs["content"],
+        author: attrs["author"] || get_user_id(conn),
+        reply_to_id: blank_to_nil(attrs["reply_to_id"])
+      }
+
+      case Items.add_comment(item.id, params) do
+        {:ok, comment} ->
+          conn |> put_status(:created) |> json(%{comment: comment_to_json(comment)})
+
+        {:error, changeset} ->
+          conn |> put_status(:unprocessable_entity) |> json(%{errors: format_errors(changeset)})
+      end
+    end)
+  end
+
+  # DELETE /api/v1/organizations/:org_id/items/comments/:id
+  def delete_comment(conn, %{"org_id" => org_id, "id" => id}) do
+    with_org_comment(conn, org_id, id, "member", fn comment ->
+      case Items.delete_comment(comment.id) do
+        {:ok, _} ->
+          send_resp(conn, :no_content, "")
+
+        {:error, :not_found} ->
+          conn |> put_status(:not_found) |> json(%{error: "Comment not found"})
+      end
+    end)
+  end
+
+  # ── Activity feed (item_events append-only audit) ────────────────────────
+
+  # GET /api/v1/organizations/:org_id/items/:id/activity
+  def activity(conn, %{"org_id" => org_id, "id" => id}) do
+    with_org_item(conn, org_id, id, "viewer", fn item ->
+      json(conn, %{activity: Enum.map(Items.list_events(item.id), &event_to_json/1)})
+    end)
+  end
+
   # Resolve org, authorize, load the item, ensure it belongs to the org.
   defp with_org_item(conn, org_id, id, role, fun) do
     user_id = get_user_id(conn)
@@ -114,6 +224,63 @@ defmodule TherobotplansWeb.ItemController do
       {:ok, uuid} -> Items.get(uuid)
       :error -> Items.get_by_key(org_id, id_or_key)
     end
+  end
+
+  # An item comment lives in trp_comments with entity_type = "item"; its
+  # entity_id is the item id, so resolve comment → item → org (blocks cross-org
+  # comment probing by UUID — mirrors the OKR/wiki comment chain).
+  defp with_org_comment(conn, org_id, comment_id, role, fun) do
+    user_id = get_user_id(conn)
+
+    with {:ok, _} <- Authz.authorize(user_id, "organization", org_id, role),
+         comment when not is_nil(comment) <- Items.get_comment(comment_id),
+         item when not is_nil(item) <- Items.get(comment.entity_id),
+         true <- item.organization_id == org_id do
+      fun.(comment)
+    else
+      nil -> conn |> put_status(:not_found) |> json(%{error: "Comment not found"})
+      false -> conn |> put_status(:not_found) |> json(%{error: "Comment not found"})
+      err -> handle_error(conn, err)
+    end
+  end
+
+  # An item↔item link is org-scoped through its source item.
+  defp with_org_link(conn, org_id, link_id, role, fun) do
+    user_id = get_user_id(conn)
+
+    with {:ok, _} <- Authz.authorize(user_id, "organization", org_id, role),
+         link when not is_nil(link) <- Items.get_link(link_id),
+         item when not is_nil(item) <- Items.get(link.source_item_id),
+         true <- item.organization_id == org_id do
+      fun.(link)
+    else
+      nil -> conn |> put_status(:not_found) |> json(%{error: "Link not found"})
+      false -> conn |> put_status(:not_found) |> json(%{error: "Link not found"})
+      err -> handle_error(conn, err)
+    end
+  end
+
+  defp comment_to_json(c) do
+    %{
+      id: c.id,
+      item_id: c.entity_id,
+      content: c.content,
+      author: c.author,
+      reply_to_id: c.reply_to_id,
+      inserted_at: c.inserted_at
+    }
+  end
+
+  defp event_to_json(e) do
+    %{
+      id: e.id,
+      item_id: e.item_id,
+      actor: e.actor,
+      field: e.field,
+      old_value: e.old_value,
+      new_value: e.new_value,
+      occurred_at: e.occurred_at
+    }
   end
 
   defp item_to_json(t) do
@@ -185,6 +352,10 @@ defmodule TherobotplansWeb.ItemController do
   defp maybe_opt(opts, _key, nil), do: opts
   defp maybe_opt(opts, _key, ""), do: opts
   defp maybe_opt(opts, key, val), do: Keyword.put(opts, key, val)
+
+  defp blank_to_nil(nil), do: nil
+  defp blank_to_nil(""), do: nil
+  defp blank_to_nil(v), do: v
 
   defp get_user_id(conn) do
     case Therobotplans.Guardian.Plug.current_resource(conn) do

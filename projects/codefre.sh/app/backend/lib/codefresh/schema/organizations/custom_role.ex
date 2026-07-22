@@ -10,7 +10,8 @@ defmodule Codefresh.Schema.Organizations.CustomRole do
     field :description, :string
     field :is_active, :boolean, default: true
 
-    has_many :permissions, Codefresh.Schema.Organizations.CustomRolePermission, foreign_key: :role_id
+    has_many :permissions, Codefresh.Schema.Organizations.CustomRolePermission,
+      foreign_key: :role_id
 
     timestamps(type: :utc_datetime_usec)
   end

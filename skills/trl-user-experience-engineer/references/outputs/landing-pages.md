@@ -555,17 +555,18 @@ export function LimitedSpots({ remaining, total }: { remaining: number; total: n
 
 ## 6. Form Patterns
 
-### 6.1 Email-Only Form (Listmonk Waitlist)
+### 6.1 Email-Only Form (foryou Waitlist)
 
-All portfolio landing pages use a shared waitlist form pattern backed by Listmonk (self-hosted email list manager at `listmonk.noizu.com`). See `outputs/nextjs.md` § 6.1 for the full implementation reference including the `WaitlistForm` component code and known list UUIDs.
+All portfolio landing pages use a shared waitlist form pattern backed by the foryou signup service (`foryou.therobotlives.com`). See `outputs/nextjs.md` § 6.1 for the full implementation reference including the `WaitlistForm` component code and slug provisioning notes.
 
 **Key conventions:**
 - Client-side `"use client"` component — no server actions needed
-- POSTs to `https://listmonk.noizu.com/api/public/subscription`
-- Each project has its own Listmonk list UUID
+- POSTs to `https://foryou.therobotlives.com/api/v1/public/lists/<slug>/signups`
+- Each project has its own foryou List `public_slug`, provisioned server-side ahead of go-live (see `projects/foryou.therobotlives.com/provisioning/`)
 - `useState` for email + status (`idle` | `loading` | `success` | `error`)
 - Accepts `buttonText` prop for reuse in hero + final CTA sections
-- Listmonk handles double-opt-in automatically
+- Email must be nested under `values`, with an empty `company_website` honeypot field; the endpoint always returns a no-leak `202 {"accepted":true}`
+- Waitlist Lists default to double opt-in, handled automatically by foryou
 
 **Typical placement on landing pages:**
 1. Hero section — primary CTA ("Get Early Access")

@@ -710,16 +710,20 @@ export function Testimonials({ title, testimonials }: TestimonialsProps) {
 
 ## 6. Form Patterns
 
-### 6.1 Waitlist Form (Listmonk Integration)
+### 6.1 Waitlist Form (foryou Signup Service Integration)
 
-All portfolio project waitlist/signup forms use the same pattern: a client-side `"use client"` component that POSTs directly to the Listmonk public subscription API. No server actions needed — Listmonk's public API handles validation and double-opt-in.
+All portfolio project waitlist/signup forms use the same pattern: a client-side `"use client"` component that POSTs directly to the foryou public signups API. No server actions needed — foryou's public endpoint handles validation, rate-limiting, and (by default) double-opt-in.
 
 **Convention:**
-- Listmonk instance: `https://listmonk.noizu.com/api/public/subscription`
-- Each project gets its own list with a unique UUID (created in Listmonk admin)
+- foryou instance: `https://foryou.therobotlives.com`
+- Endpoint: `POST /api/v1/public/lists/<public_slug>/signups`
+- Each project gets its own foryou List identified by a `public_slug`, provisioned server-side ahead of go-live — see `projects/foryou.therobotlives.com/provisioning/`. An unknown slug silently drops the signup, so confirm provisioning before launch.
+- Request body must nest the email under `values`: `{ "values": { "email": "<addr>" }, "source": "<public_slug>", "company_website": "" }`. The empty `company_website` field is foryou's honeypot — leave it blank.
+- No auth required, CORS-open, rate-limited to 5 requests/min/IP.
+- The endpoint always returns a no-leak `202 {"accepted":true}` for any well-formed POST — it never reveals whether the email was new, a duplicate, or invalid. Treat any non-2xx as the only real error signal.
 - The form is a `"use client"` component with `useState` for email and status
 - Status states: `idle` → `loading` → `success` | `error`
-- On success, show a confirmation message (Listmonk sends the double-opt-in email)
+- On success, show a confirmation message (waitlist Lists default to double opt-in, so foryou sends a confirmation email)
 - The component accepts a `buttonText` prop for reuse across hero and final CTA sections
 
 ```tsx
@@ -728,18 +732,19 @@ All portfolio project waitlist/signup forms use the same pattern: a client-side 
 
 import { useState } from "react";
 
-const LISTMONK_URL = "https://listmonk.noizu.com/api/public/subscription";
-const LIST_UUID = "your-list-uuid-here"; // From Listmonk admin → Lists → UUID
+// Signups flow to the foryou signup service (foryou.therobotlives.com).
+// The foryou List with this public_slug must be provisioned before go-live —
+// see projects/foryou.therobotlives.com/provisioning/.
+const FORYOU_BASE_URL = "https://foryou.therobotlives.com";
+const FORYOU_LIST_SLUG = "<your-list-slug>"; // e.g. "myproject-waitlist"
 
-export function WaitlistForm({
-  buttonText = "Join the Waitlist",
+export default function WaitlistForm({
+  buttonText = "Join Waitlist",
 }: {
   buttonText?: string;
 }) {
   const [email, setEmail] = useState("");
-  const [status, setStatus] = useState<
-    "idle" | "loading" | "success" | "error"
-  >("idle");
+  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState("");
 
   async function handleSubmit(e: React.FormEvent) {
@@ -748,15 +753,18 @@ export function WaitlistForm({
     setErrorMsg("");
 
     try {
-      const res = await fetch(LISTMONK_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email,
-          name: "",
-          list_uuids: [LIST_UUID],
-        }),
-      });
+      const res = await fetch(
+        `${FORYOU_BASE_URL}/api/v1/public/lists/${FORYOU_LIST_SLUG}/signups`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            values: { email },
+            source: FORYOU_LIST_SLUG,
+            company_website: "", // honeypot — expected empty
+          }),
+        },
+      );
 
       if (res.ok) {
         setStatus("success");
@@ -773,37 +781,25 @@ export function WaitlistForm({
 
   if (status === "success") {
     return (
-      <div className="/* success styling per design system */">
-        <p>You're on the list.</p>
-        <p>Check your inbox to confirm your subscription.</p>
+      <div className="form-success">
+        <p>You&apos;re on the list.</p>
+        <span>Check your inbox to confirm your subscription.</span>
       </div>
     );
   }
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="mx-auto flex max-w-lg flex-col gap-3 sm:flex-row"
-    >
-      <div className="flex flex-1 flex-col gap-1">
-        <input
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="you@example.com"
-          required
-          disabled={status === "loading"}
-          className="/* input styling per design system */"
-        />
-        {status === "error" && (
-          <p className="text-xs text-error">{errorMsg}</p>
-        )}
-      </div>
-      <button
-        type="submit"
+    <form className="email-form" onSubmit={handleSubmit}>
+      <input
+        type="email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        placeholder="you@example.com"
+        required
         disabled={status === "loading"}
-        className="/* button styling per design system */"
-      >
+        aria-label="Email address"
+      />
+      <button type="submit" disabled={status === "loading"}>
         {status === "loading" ? "Joining..." : buttonText}
       </button>
     </form>
@@ -814,7 +810,7 @@ export function WaitlistForm({
 **Usage in page.tsx** — typically placed in hero and final CTA sections:
 
 ```tsx
-import { WaitlistForm } from "./waitlist-form";
+import WaitlistForm from "./waitlist-form";
 
 // In hero section:
 <WaitlistForm buttonText="Get Early Access" />
@@ -823,11 +819,7 @@ import { WaitlistForm } from "./waitlist-form";
 <WaitlistForm buttonText="Join the Waitlist" />
 ```
 
-**Known list UUIDs:**
-| Project | Domain | List UUID |
-|---------|--------|-----------|
-| IoTGo | iotgo.io | `90a7e213-44a9-4c64-a6cd-df28703f4556` |
-| Gotta.cc | gotta.cc | `b5ddf546-2ea1-4a5f-882c-f48612377f0e` |
+**List slugs:** foryou List `public_slug` values are project-specific and provisioned per `projects/foryou.therobotlives.com/provisioning/` — confirm the slug there rather than hardcoding a known-good list here.
 
 **Styling notes:**
 - The form layout (`flex-col sm:flex-row`), input, button, success, and error styles are all applied per the chosen design system — the structure stays the same, only class names change

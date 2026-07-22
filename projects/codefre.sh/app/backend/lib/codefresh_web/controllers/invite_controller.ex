@@ -2,10 +2,9 @@ defmodule CodefreshWeb.InviteController do
   use CodefreshWeb, :controller
 
   alias Codefresh.{Accounts, Organizations}
-  alias Codefresh.Accounts.Membership
   alias Codefresh.Guardian
 
-  @invitable_roles ~w(admin editor viewer ci)
+  @invitable_roles ~w(admin editor viewer)
 
   def index(conn, %{"organization_id" => org_id}) do
     user = Guardian.Plug.current_resource(conn)
@@ -37,12 +36,13 @@ defmodule CodefreshWeb.InviteController do
     user = Guardian.Plug.current_resource(conn)
     requested_role = invite_params["role"]
 
-    with {:ok, granter_role} <- Organizations.authorize(user, org_id, "admin"),
+    with {:ok, user_id} <- Organizations.user_id(user),
+         {:ok, %{role: granter_role}} <- Organizations.authorize(user_id, org_id, "admin"),
          :ok <- validate_requested_role(requested_role, granter_role),
          email when is_binary(email) and email != "" <- invite_params["email"] do
       case Accounts.get_user_by_email(email) do
         nil ->
-          issue_invite(conn, org_id, user.id, invite_params)
+          issue_invite(conn, org_id, user_id, invite_params)
 
         existing_user ->
           create_membership_directly(conn, org_id, existing_user.id, requested_role)
@@ -186,7 +186,4 @@ defmodule CodefreshWeb.InviteController do
   rescue
     Ecto.Query.CastError -> nil
   end
-
-  # suppress unused-alias warning
-  _ = Membership
 end

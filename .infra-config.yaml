@@ -76,7 +76,6 @@ tiers:
       - ghost
       - espocrm
       - mautic
-      - listmonk
       - postiz
       - bottlecrm
       - growthbook
@@ -189,7 +188,6 @@ namespace_overrides:
   ghost: apps
   espocrm: apps
   mautic: apps
-  listmonk: apps
   postiz: apps
   bottlecrm: apps
   growthbook: apps
@@ -266,7 +264,10 @@ chart_path_overrides:
   aifighter: projects/aifighter.com/helm/aifighter
   therobotknows: projects/therobotknows.com/helm/therobotknows
   therobotlearns: projects/therobotlearns.com/app/helm/therobotlearns
+  codefresh: projects/codefre.sh/helm/codefresh
   codefresh-landing: projects/codefre.sh/helm/codefresh-landing
+  noizurpg: projects/noizurpg.com/helm/noizurpg
+  robots-unite: projects/robots-unite.com/helm/robots-unite
   gotta-cc: projects/gotta.cc/helm/gotta-cc
   derobotis: projects/derobot.is/helm/derobotis
   iotgo: projects/iotgo.io/helm/iotgo
@@ -665,8 +666,8 @@ project:
           registry_path: codefre.sh/backend
           auto_detect: false
           helm:
-            chart_path: kubernetes/helm/apps/codefresh
-            values_path: .codefresh.backend.image
+            chart_path: projects/codefre.sh/helm/codefresh
+            values_path: .backend.image
             format: image
         - name: frontend
           dockerfile: app/frontend/Dockerfile
@@ -676,8 +677,8 @@ project:
             NEXT_PUBLIC_API_URL: https://api.codefre.sh
           auto_detect: false
           helm:
-            chart_path: kubernetes/helm/apps/codefresh
-            values_path: .codefresh.frontend.image
+            chart_path: projects/codefre.sh/helm/codefresh
+            values_path: .frontend.image
             format: image
         - name: web-landing
           dockerfile: web/Dockerfile
@@ -691,7 +692,7 @@ project:
       helm:
         charts:
           - name: codefresh
-            path: kubernetes/helm/apps/codefresh
+            path: projects/codefre.sh/helm/codefresh
     - domain: start-app
       base_path: components/start-app
       services:
@@ -890,11 +891,31 @@ project:
         - name: web
           dockerfile: web/Dockerfile
           context: web
+          registry_path: app-noizurpg
+          auto_detect: false
+          helm:
+            chart_path: projects/noizurpg.com/helm/noizurpg
+            values_path: .static-site.image
+            format: image
+      helm:
+        charts:
+          - name: noizurpg
+            path: projects/noizurpg.com/helm/noizurpg
     - domain: robots-unite.com
       services:
         - name: web
           dockerfile: web/Dockerfile
           context: web
+          registry_path: app-robots-unite
+          auto_detect: false
+          helm:
+            chart_path: projects/robots-unite.com/helm/robots-unite
+            values_path: .static-site.image
+            format: image
+      helm:
+        charts:
+          - name: robots-unite
+            path: projects/robots-unite.com/helm/robots-unite
     - domain: therobotknows.com
       services:
         - name: backend
@@ -942,6 +963,7 @@ project:
           auto_detect: false
           build_args:
             NEXT_PUBLIC_API_URL: https://therobotlearns.com
+            NEXT_PUBLIC_APP_URL: https://app.therobotlearns.com
           helm:
             chart_path: projects/therobotlearns.com/app/helm/therobotlearns
             values_path: .frontend.image

@@ -244,6 +244,7 @@ namespace TheRobotDraft.Uml
                     Flash("framed diagram"); break;
                 case NativeMacMenu.CycleNav: CycleNavMode(false); break;
                 case NativeMacMenu.Toggle2D: Toggle2DMode(); break;
+                default: RunRedesignMenuCommand(cmd); break; // IA v2 ids (1xx–7xx)
             }
         }
 
@@ -884,10 +885,20 @@ namespace TheRobotDraft.Uml
             // Watch any shadow source files opened in VS Code; a save there re-syncs the node from its code.
             PollShadowFiles();
 
+            // Keep the bottom status strip's mode/breadcrumb/selection echo current (4 Hz poll).
+            RefreshStatusStrip();
+
             // Run any commands clicked in the native macOS menu bar (queued on the AppKit thread).
             NativeMacMenu.Drain();
 
-            if (Input.GetKeyDown(KeyCode.Escape)) { CloseMenu(); return; }
+            if (Input.GetKeyDown(KeyCode.Escape))
+            {
+                // First press closes an open menu; otherwise back out of the tool interaction
+                // (pending connect source → cleared, Connect/Place → Select).
+                if (_menu != null) CloseMenu();
+                else CancelToolInteraction();
+                return;
+            }
 
             // Don't steal typing from the name prompt.
             if (EventSystem.current != null && EventSystem.current.currentSelectedGameObject != null
@@ -896,6 +907,7 @@ namespace TheRobotDraft.Uml
 
             bool ctrl = CtrlOrCmd();
             bool shift = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
+            if (ctrl && Input.GetKeyDown(KeyCode.K)) { ToggleCommandPalette(); return; }
             if (ctrl && Input.GetKeyDown(KeyCode.S)) { if (shift) SaveDiagramAs(); else SaveDiagram(); return; }
             if (ctrl && Input.GetKeyDown(KeyCode.O)) { OpenDiagramFile(); return; }
             if (ctrl && Input.GetKeyDown(KeyCode.C)) { if (_selectedId.IsValid) CopyElement(_selectedId); return; }
@@ -921,6 +933,9 @@ namespace TheRobotDraft.Uml
 
             // N cycles the empty-space drag mode (orbit → pan → X → Y → Z); Shift+N reverses.
             if (!ctrl && Input.GetKeyDown(KeyCode.N)) CycleNavMode(shift);
+
+            // V / C / P switch the context-toolbar tool mode (Select / Connect / Place).
+            HandleToolModeKeys(ctrl);
 
             // Volumetric marquee depth (Shift-held only — see EndMarquee3D): Shift+D / Shift+"+"/"=" grow the
             // depth reach one step, Shift+"-" shrinks it, Shift+F collapses back to 0 (flat "square" select).
@@ -1109,11 +1124,20 @@ namespace TheRobotDraft.Uml
                         _rotatingNode = true;
                         _dragNode = hit.Id;
                     }
-                    else
+                    else if (_toolMode == ToolMode.Connect)
                     {
                         _connecting = true;
                         _connectSource = hit.Id;
                         _connectPlaneZ = hit.transform.position.z;
+                    }
+                    else
+                    {
+                        // Select / Place mode: a plain drag on a node moves it (the redesigned toolbar
+                        // makes connecting an explicit mode; Ctrl+drag keeps working as before too).
+                        _draggingNode = true;
+                        _dragNode = hit.Id;
+                        _dragPlaneZ = hit.transform.position.z;
+                        _dragLastWorld = ProjectToPlane(_pressScreenPos, _dragPlaneZ);
                     }
                     _panGesture = false;
                 }
@@ -1282,6 +1306,12 @@ namespace TheRobotDraft.Uml
                             _lastNodeClick = ElementId.None;
                         }
                     }
+                    else if (_toolMode == ToolMode.Connect)
+                    {
+                        // Connect mode click-pair: first click = source, second click = commit edge.
+                        _lastNodeClick = ElementId.None;
+                        HandleConnectClick(hit.Id);
+                    }
                     else
                     {
                         // Double-click opens the node's edit modal; a single click just selects.
@@ -1305,6 +1335,16 @@ namespace TheRobotDraft.Uml
                 {
                     if (_resizeModeNode.IsValid) ExitResizeMode();
                     _lastNodeClick = ElementId.None;
+                    // Place mode: a plain click on empty canvas drops the armed kind at the cursor.
+                    if (_toolMode == ToolMode.Place && !ctrl && !shift)
+                    {
+                        var placeEid = PickEdge3D(Input.mousePosition);
+                        if (!placeEid.IsValid)
+                        {
+                            CreateNodeFromPalette(_toolPlaceKind, Input.mousePosition);
+                            return;
+                        }
+                    }
                     var eid = PickEdge3D(Input.mousePosition);
                     if (eid.IsValid) Select3DEdge(eid);
                     else { ClearSelectedEdge(); Select((UmlNodeView)null); }
@@ -2154,8 +2194,8 @@ namespace TheRobotDraft.Uml
                 MenuItem.Separator(),
                 new MenuItem("Generate ▸", true, () => ShowCanvasGenerateMenu(screenPos)),
                 MenuItem.Separator(),
-                new MenuItem("Export ▸   (code · PNG · 3D model)", true, () => ShowExportMenu(screenPos)),
-                new MenuItem("Settings ▸   (LLM · vision · database)", true, () => ShowSettingsMenu(screenPos)),
+                new MenuItem("Export ▸   (interchange · PNG · 3D model)", true, () => ShowFileExportMenu(screenPos)),
+                new MenuItem("Settings ▸   (LLM · vision · help)", true, () => ShowViewMenuV2(screenPos)),
             };
 
             CreateMenu(screenPos, _activePackage.IsValid ? PackageName(_activePackage) : "Canvas (no package yet)", items);
@@ -4697,14 +4737,20 @@ namespace TheRobotDraft.Uml
             // In-app menu bar (File / Edit / Add / Generate / Layout / Export / Settings) — the tab bar sits below it.
             BuildMenuBar();
 
-            // Tab bar (top strip, under the menu bar).
+            // Context toolbar (Select | Connect | Place tool modes + pickers) under the menu bar.
+            BuildContextToolbar();
+
+            // Status strip along the bottom (mode echo · breadcrumb · selection · view state).
+            BuildStatusStrip();
+
+            // Tab bar (top strip, under the menu bar + context toolbar).
             var tabGo = new GameObject("TabBar", typeof(RectTransform));
             _tabBar = (RectTransform)tabGo.transform;
             _tabBar.SetParent(_root, false);
             _tabBar.anchorMin = new Vector2(0f, 1f); _tabBar.anchorMax = new Vector2(1f, 1f);
             _tabBar.pivot = new Vector2(0f, 1f);
             _tabBar.sizeDelta = new Vector2(0f, 38f);
-            _tabBar.anchoredPosition = new Vector2(0f, -32f);
+            _tabBar.anchoredPosition = new Vector2(0f, -32f - ContextToolbarHeight);
             var tabBg = tabGo.AddComponent<Image>();
             tabBg.color = new Color(0.11f, 0.12f, 0.15f, 1f);
             tabBg.raycastTarget = false;
@@ -4716,7 +4762,7 @@ namespace TheRobotDraft.Uml
             hintRt.anchorMin = new Vector2(0f, 1f); hintRt.anchorMax = new Vector2(1f, 1f);
             hintRt.pivot = new Vector2(0f, 1f);
             hintRt.sizeDelta = new Vector2(0f, 26f);
-            hintRt.anchoredPosition = new Vector2(12f, -74f);
+            hintRt.anchoredPosition = new Vector2(12f, -74f - ContextToolbarHeight);
             _hint = hintGo.AddComponent<Text>();
             _hint.font = _font; _hint.fontSize = 17;
             _hint.color = new Color(0.34f, 0.38f, 0.45f, 1f);
@@ -5681,11 +5727,10 @@ namespace TheRobotDraft.Uml
         public void OnPointerClick(PointerEventData eventData) { }
     }
 
-    /// <summary>A toolbar palette entry: drag it onto the canvas to drop a new node of its kind.</summary>
-    // Palette items insert ONLY via drag-and-drop onto the canvas — a plain click does nothing (no
-    // IPointerClickHandler), so clicking a kind in the rail never spawns a node at screen center.
+    /// <summary>A toolbar palette entry: drag it onto the canvas to drop a new node of its kind, or
+    /// click it to arm Place mode with that kind (the next canvas click places — never screen center).</summary>
     public sealed class UmlPaletteItem : MonoBehaviour,
-        IBeginDragHandler, IDragHandler, IEndDragHandler
+        IBeginDragHandler, IDragHandler, IEndDragHandler, IPointerClickHandler
     {
         public UmlCanvas Canvas;
         public ElementKind Kind;
@@ -5694,5 +5739,8 @@ namespace TheRobotDraft.Uml
         public void OnBeginDrag(PointerEventData e) => Canvas.BeginPaletteDrag(Kind, Label);
         public void OnDrag(PointerEventData e) => Canvas.UpdatePaletteDrag(e.position);
         public void OnEndDrag(PointerEventData e) => Canvas.EndPaletteDrag(e.position);
+        // A click (no drag) arms Place mode with this kind; EventSystem only fires this when
+        // no drag started, so drag-to-drop and click-to-arm coexist cleanly.
+        public void OnPointerClick(PointerEventData e) { if (!e.dragging) Canvas.ArmPlaceKind(Kind); }
     }
 }

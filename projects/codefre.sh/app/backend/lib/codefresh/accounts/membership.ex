@@ -5,7 +5,7 @@ defmodule Codefresh.Accounts.Membership do
   @primary_key {:id, :binary_id, autogenerate: true}
   @foreign_key_type :binary_id
 
-  @roles ~w(owner admin editor viewer ci)
+  @roles ~w(owner admin editor viewer)
 
   schema "memberships" do
     field :role, :string

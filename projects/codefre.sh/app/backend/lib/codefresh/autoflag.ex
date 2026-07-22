@@ -133,7 +133,12 @@ defmodule Codefresh.AutoFlag do
               MapSet.member?(seen_inner, key) ->
                 {count, seen_inner}
 
-              evaluate_rule(rule, step, Map.get(spans_by_step, step.id, []), Map.get(scores_by_step, step.id, [])) ->
+              evaluate_rule(
+                rule,
+                step,
+                Map.get(spans_by_step, step.id, []),
+                Map.get(scores_by_step, step.id, [])
+              ) ->
                 case create_auto_capture(rule, run, step) do
                   {:ok, _cap} ->
                     bump_match_count!(rule, 1)
@@ -162,8 +167,12 @@ defmodule Codefresh.AutoFlag do
     threshold = numeric(cfg, ["score_below"])
 
     cond do
-      is_nil(threshold) -> false
-      scores == [] -> false
+      is_nil(threshold) ->
+        false
+
+      scores == [] ->
+        false
+
       true ->
         Enum.any?(scores, fn s ->
           case s.score do
@@ -319,8 +328,12 @@ defmodule Codefresh.AutoFlag do
   defp numeric(cfg, keys) do
     Enum.find_value(keys, fn k ->
       case Map.get(cfg, k) || Map.get(cfg, to_string(k)) do
-        nil -> nil
-        n when is_number(n) -> n
+        nil ->
+          nil
+
+        n when is_number(n) ->
+          n
+
         s when is_binary(s) ->
           case Float.parse(s) do
             {f, ""} -> f

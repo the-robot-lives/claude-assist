@@ -381,11 +381,12 @@ defmodule CodefreshWeb.PersonaController do
       script_node_id: pe.script_node_id,
       label: pe.label,
       weight: if(is_struct(pe.weight, Decimal), do: Decimal.to_float(pe.weight), else: pe.weight),
-      direction: case pe.direction do
-        "positive" -> "pass"
-        "negative" -> "fail"
-        other -> other
-      end,
+      direction:
+        case pe.direction do
+          "positive" -> "pass"
+          "negative" -> "fail"
+          other -> other
+        end,
       scoring_method: pe.scoring_method,
       config: pe.config,
       rubric_version_id: pe.rubric_version_id,

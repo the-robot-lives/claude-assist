@@ -47,6 +47,8 @@ defmodule TheRobotLearnsWeb.UserController do
          {:ok, invite} <- resolve_invite(invite_token, user.email),
          {:ok, updated_user} <- apply_profile_updates(user, user_params, true),
          {:ok, activated_user} <- maybe_activate_with_invite(updated_user, invite, conn) do
+      Organizations.ensure_personal_org(activated_user.id)
+
       conn
       |> put_status(:ok)
       |> json(%{user: serialize_user(activated_user)})

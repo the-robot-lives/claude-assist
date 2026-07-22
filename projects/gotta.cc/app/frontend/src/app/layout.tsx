@@ -6,7 +6,7 @@ import { OtelProvider } from "@/components/otel-provider";
 import { loadConfig, loadAllBrandings } from "@noizu/styleguide/css-gen";
 import { Toaster } from "sonner";
 
-const SITE_TITLE = "Gotta.cc — The Yahoo Directory for the Post-Slop Web";
+const SITE_TITLE = "Gotta.cc — The Web Directory for the Post-AI Age";
 const SITE_DESC =
   "Browse curated categories. Read editorial summaries. Discover sites scored for originality, depth, and human authorship.";
 

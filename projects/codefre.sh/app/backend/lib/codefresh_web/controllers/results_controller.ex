@@ -147,10 +147,17 @@ defmodule CodefreshWeb.ResultsController do
         steps: diff.steps
       })
     else
-      {:error, :not_found} -> send_resp(conn, 404, "")
-      {:error, :missing_field, f} -> conn |> put_status(:bad_request) |> json(%{error: "#{f} is required"})
-      {:error, :forbidden} -> send_resp(conn, 403, "")
-      {:error, :not_a_member} -> send_resp(conn, 404, "")
+      {:error, :not_found} ->
+        send_resp(conn, 404, "")
+
+      {:error, :missing_field, f} ->
+        conn |> put_status(:bad_request) |> json(%{error: "#{f} is required"})
+
+      {:error, :forbidden} ->
+        send_resp(conn, 403, "")
+
+      {:error, :not_a_member} ->
+        send_resp(conn, 404, "")
     end
   end
 
@@ -297,9 +304,14 @@ defmodule CodefreshWeb.ResultsController do
          {:ok, _archived} <- Results.archive_dashboard(d) do
       send_resp(conn, 204, "")
     else
-      nil -> send_resp(conn, 404, "")
-      {:error, :forbidden} -> send_resp(conn, 403, "")
-      {:error, :not_a_member} -> send_resp(conn, 404, "")
+      nil ->
+        send_resp(conn, 404, "")
+
+      {:error, :forbidden} ->
+        send_resp(conn, 403, "")
+
+      {:error, :not_a_member} ->
+        send_resp(conn, 404, "")
 
       {:error, %Ecto.Changeset{} = cs} ->
         conn
@@ -467,7 +479,9 @@ defmodule CodefreshWeb.ResultsController do
   defp split_csv_or_nil(""), do: nil
 
   defp split_csv_or_nil(s) when is_binary(s) do
-    case String.split(s, ",", trim: true) |> Enum.map(&String.trim/1) |> Enum.reject(&(&1 == "")) do
+    case String.split(s, ",", trim: true)
+         |> Enum.map(&String.trim/1)
+         |> Enum.reject(&(&1 == "")) do
       [] -> nil
       [only] -> only
       many -> many

@@ -41,6 +41,11 @@ defmodule Therobotknows.MixProject do
       {:bandit, "~> 1.5"},
       {:guardian, "~> 2.3"},
       {:bcrypt_elixir, "~> 3.0"},
+      # Explicit (not just transitive-optional) so Mint/Finch/Redix HTTPS
+      # clients (OIDC discovery, outbound Redis TLS, etc.) always have a CA
+      # trust store — without this, HTTPS requests raise
+      # "default CA trust store not available".
+      {:castore, "~> 1.0"},
 
       # SSO / OAuth
       {:openid_connect, "~> 1.0"},

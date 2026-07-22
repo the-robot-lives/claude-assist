@@ -153,6 +153,9 @@ defmodule Therobotplans.Domains.Items.Queues do
     |> Repo.all()
   end
 
+  @doc "Fetch a single stage by id (org-resolution done by the caller via its queue)."
+  def get_stage(id), do: Repo.get(BoardStage, id)
+
   # ── Iterations (sprints / cycles) ─────────────────────────────
 
   def add_iteration(attrs),
@@ -178,6 +181,9 @@ defmodule Therobotplans.Domains.Items.Queues do
     |> order_by([i], asc: i.sequence)
     |> Repo.all()
   end
+
+  @doc "Fetch a single iteration by id (org-resolution done by the caller via its queue)."
+  def get_iteration(id), do: Repo.get(BoardIteration, id)
 
   # ── Internals ─────────────────────────────────────────────────
 

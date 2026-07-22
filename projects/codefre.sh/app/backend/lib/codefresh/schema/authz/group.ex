@@ -18,7 +18,7 @@ defmodule Codefresh.Schema.Authz.Group do
     group
     |> cast(attrs, [:name, :display_name, :description, :is_system])
     |> validate_required([:name, :display_name])
-    |> validate_inclusion(:name, ["owner", "admin", "member", "viewer"])
+    |> validate_inclusion(:name, ["owner", "admin", "editor", "member", "viewer", "ci"])
     |> unique_constraint(:name)
   end
 end

@@ -1,5 +1,12 @@
 defmodule Codefresh.Authz do
-  @role_ranks %{"owner" => 0, "admin" => 1, "member" => 2, "viewer" => 3}
+  @role_ranks %{
+    "owner" => 0,
+    "admin" => 1,
+    "editor" => 2,
+    "member" => 3,
+    "viewer" => 4,
+    "ci" => 5
+  }
 
   def check_permission(user_id, resource_type, resource_id, action) do
     sql = "SELECT check_user_permission($1::uuid, $2, $3::uuid, $4)"
@@ -25,6 +32,7 @@ defmodule Codefresh.Authz do
     case get_user_role(user_id, resource_type, resource_id) do
       nil ->
         {:error, :not_a_member}
+
       role ->
         if Map.get(@role_ranks, role, 99) <= Map.get(@role_ranks, required_role, 99) do
           {:ok, %{role: role, resource_type: resource_type, resource_id: resource_id}}
@@ -41,8 +49,13 @@ defmodule Codefresh.Authz do
       %{allowed: false, reason: :not_a_member, matching_statements: []}
     else
       policies = get_effective_policies(user_id, resource_type, resource_id)
+
       Codefresh.Authz.PolicyEvaluator.evaluate(
-        policies, action, resource_type, resource_id, role,
+        policies,
+        action,
+        resource_type,
+        resource_id,
+        role,
         %{user_id: user_id}
       )
     end
@@ -62,14 +75,21 @@ defmodule Codefresh.Authz do
     ORDER BY gp.priority ASC
     """
 
-    case Ecto.Adapters.SQL.query(Codefresh.Repo, sql, [uuid_to_bin(user_id), resource_type, uuid_to_bin(resource_id)]) do
+    case Ecto.Adapters.SQL.query(Codefresh.Repo, sql, [
+           uuid_to_bin(user_id),
+           resource_type,
+           uuid_to_bin(resource_id)
+         ]) do
       {:ok, %{rows: rows, columns: cols}} ->
         Enum.map(rows, fn row -> Enum.zip(cols, row) |> Map.new() end)
-      _ -> []
+
+      _ ->
+        []
     end
   end
 
   defp uuid_to_bin(nil), do: nil
+
   defp uuid_to_bin(uuid) when is_binary(uuid) do
     case Ecto.UUID.dump(uuid) do
       {:ok, bin} -> bin

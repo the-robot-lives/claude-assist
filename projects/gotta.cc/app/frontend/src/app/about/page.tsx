@@ -6,7 +6,7 @@ import { Footer } from "@/components/footer";
 export const metadata: Metadata = {
   title: "About — gotta.cc",
   description:
-    "Our manifesto: an AI-curated web directory that scores sites for originality, depth, and human authorship. Like the Yahoo directory, but for the post-slop web.",
+    "Our manifesto: a human-curated web directory that scores sites for originality, depth, and human authorship — a directory for the post-AI age.",
 };
 
 /* ═══════════════════════════════════════════════
@@ -85,7 +85,7 @@ function Hero() {
           We built gotta.cc because search is SEO-gamed and discovery is broken.
           It is a curated directory of the post-slop web: personal sites, niche
           blogs, and indie tools, scored by AI for originality, depth, and human
-          authorship. Like the Yahoo directory, but for a web worth reading.
+          authorship. A directory for a web worth reading.
         </p>
 
         <div className="mt-8">

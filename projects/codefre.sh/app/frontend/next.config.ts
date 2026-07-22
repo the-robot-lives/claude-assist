@@ -7,6 +7,24 @@ const engineSrc = path.resolve(pkgRoot, "dist", "engine-src");
 const nextConfig: NextConfig = {
   output: "standalone",
   transpilePackages: ["@noizu/styleguide"],
+  async rewrites() {
+    const apiProxyTarget = process.env.API_PROXY_TARGET;
+
+    if (!apiProxyTarget) {
+      return [];
+    }
+
+    return [
+      {
+        source: "/api/:path*",
+        destination: `${apiProxyTarget}/api/:path*`,
+      },
+      {
+        source: "/health",
+        destination: `${apiProxyTarget}/health`,
+      },
+    ];
+  },
   turbopack: {
     resolveAlias: {
       "@styleguide-engine": engineSrc,

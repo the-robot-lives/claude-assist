@@ -43,32 +43,6 @@ variable "mariadb_host" {
   default = "platform-mariadb.platform.svc.cluster.local"
 }
 
-# --- listmonk --------------------------------------------------------------
-variable "listmonk_image" {
-  type    = string
-  default = "listmonk/listmonk:latest"
-}
-
-variable "listmonk_domain" {
-  type    = string
-  default = "listmonk.noizu.com"
-}
-
-variable "listmonk_db_name" {
-  type    = string
-  default = "listmonk"
-}
-
-variable "listmonk_db_user" {
-  type    = string
-  default = "listmonk"
-}
-
-variable "listmonk_storage" {
-  type    = string
-  default = "5Gi"
-}
-
 # --- mautic ----------------------------------------------------------------
 variable "mautic_image" {
   type    = string

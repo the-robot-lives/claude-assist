@@ -21,7 +21,7 @@ defmodule CodefreshWeb.SSOController do
   # ── OIDC ──────────────────────────────────────────────────────
 
   def oidc_init(conn, _params) do
-    {:ok, uri} = OpenIDConnect.authorization_uri(:default)
+    {:ok, uri} = OpenIDConnect.authorization_uri(:default, %{})
     redirect(conn, external: uri)
   end
 
@@ -67,9 +67,11 @@ defmodule CodefreshWeb.SSOController do
 
   def exchange(conn, %{"code" => code}) do
     with {:ok, session_id} <- Codefresh.Auth.SSOCode.exchange(code),
-         {:ok, session} <- Codefresh.Users.Sessions.get(session_id, Noizu.Context.system()),
-         {:ok, access_token, _} <- Guardian.encode_and_sign(session, %{}, token_type: "access", ttl: {1, :hour}),
-         {:ok, refresh_token, _} <- Guardian.encode_and_sign(session, %{}, token_type: "refresh", ttl: {7, :day}) do
+         {:ok, session} <- Codefresh.Users.Sessions.get(session_id, Noizu.Context.system(), []),
+         {:ok, access_token, _} <-
+           Guardian.encode_and_sign(session, %{}, token_type: "access", ttl: {1, :hour}),
+         {:ok, refresh_token, _} <-
+           Guardian.encode_and_sign(session, %{}, token_type: "refresh", ttl: {7, :day}) do
       user = resolve_user_from_session(session)
       orgs = Organizations.list_user_organizations(user.id)
 
@@ -94,7 +96,10 @@ defmodule CodefreshWeb.SSOController do
     case Codefresh.Auth.SSO.authenticate_sso(provider_type, attrs) do
       {:ok, session} ->
         {:ok, code} = Codefresh.Auth.SSOCode.create(session.id)
-        redirect(conn, external: "#{frontend_url}/auth/sso-callback?code=#{code}&provider=#{provider_type}")
+
+        redirect(conn,
+          external: "#{frontend_url}/auth/sso-callback?code=#{code}&provider=#{provider_type}"
+        )
 
       {:error, :user_not_provisioned} ->
         redirect(conn, external: "#{frontend_url}/auth/sso-callback?error=not_provisioned")
@@ -114,7 +119,9 @@ defmodule CodefreshWeb.SSOController do
       {:ref, _, id} ->
         {:ok, user} = Codefresh.Users.get_user(id, Noizu.Context.system())
         user
-      %Codefresh.Users.User{} = user -> user
+
+      %Codefresh.Users.User{} = user ->
+        user
     end
   end
 

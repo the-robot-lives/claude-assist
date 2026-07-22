@@ -1,0 +1,7 @@
+service: gemini
+model: imagen-4.0-generate-001
+timestamp: 1784746811
+prompt: |
+  Professional macOS desktop application UI mockup for a 3D UML modeling tool, "studio split" layout: native macOS menu bar on top; left column is a project browser panel with a model file tree, diagram list with small kind badges (class, sequence, ERD) and a Recents section; center column has a tab strip of open diagrams above a large dark 3D viewport with floating UML class boxes and glowing edges; above the viewport a contextual ribbon toolbar that shows authoring tools for the active mode (segmented Select/Connect/Place control, relationship type dropdown, layout button); right column is a tall inspector with form fields (Name, Stereotype, Package, Attributes list). Dark graphite theme, single violet accent, precise 1px borders, Unity-editor-like dockable panel headers, flat professional design. Clean legible UI labels.
+negative: |
+  photograph, hands, people, watermark, blurry text, light theme, rounded playful style

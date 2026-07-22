@@ -2,7 +2,7 @@ replicas: 1
 domain: tobornalp.com
 appDomain: app.tobornalp.com
 backend:
-  image: ops.noizu.com/tobornalp.com/backend:v1.0.18
+  image: ops.noizu.com/tobornalp.com/backend:v1.0.19
   port: 4000
   resources:
     requests:

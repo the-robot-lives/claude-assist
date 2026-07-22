@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useAuth } from "@/context/auth";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
+import { AuthCard, AuthFooterLink } from "@/components/auth-card";
 
 export default function SignupPage() {
   const { register } = useAuth();
@@ -34,15 +34,18 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="content">
-      <main>
-        <h1 className="sg-page-title">Sign Up</h1>
-        <form onSubmit={handleSubmit} style={{ maxWidth: 400 }}>
-          {error && <p className="sg-error">{error}</p>}
+    <AuthCard
+      title="Sign Up"
+      cyId="signup"
+      error={error}
+      footer={<AuthFooterLink prompt="Already have an account?" href="/login" label="Log in" cy="login-link" />}
+    >
+        <form onSubmit={handleSubmit} data-cy="auth-form" data-cy-id="signup">
           <div className="sg-field">
             <label htmlFor="invite-token">Invite Token</label>
             <input
               id="invite-token"
+              data-cy="invite-token-input"
               type="text"
               value={inviteToken}
               onChange={(e) => setInviteToken(e.target.value)}
@@ -54,6 +57,7 @@ export default function SignupPage() {
             <label htmlFor="email">Email</label>
             <input
               id="email"
+              data-cy="email-input"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -65,6 +69,7 @@ export default function SignupPage() {
             <label htmlFor="password">Password</label>
             <input
               id="password"
+              data-cy="password-input"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -73,14 +78,10 @@ export default function SignupPage() {
               autoComplete="new-password"
             />
           </div>
-          <button type="submit" className="sg-btn sg-btn--black" disabled={loading}>
+          <button type="submit" className="sg-btn sg-btn--black" data-cy="submit-signup" disabled={loading}>
             {loading ? "Creating account..." : "Sign Up"}
           </button>
-          <p style={{ marginTop: "1rem" }}>
-            Already have an account? <Link href="/login">Log in</Link>
-          </p>
         </form>
-      </main>
-    </div>
+    </AuthCard>
   );
 }

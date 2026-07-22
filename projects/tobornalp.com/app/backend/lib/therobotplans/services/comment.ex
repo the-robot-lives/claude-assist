@@ -40,6 +40,17 @@ defmodule Therobotplans.Services.Comment do
     |> Repo.all()
   end
 
+  @doc "Fetch a single comment by id (any entity_type — caller scopes by org)."
+  def get(id), do: Repo.get(Comment, id)
+
+  @doc "Delete a comment by id. Returns {:error, :not_found} when absent."
+  def delete(id) do
+    case Repo.get(Comment, id) do
+      nil -> {:error, :not_found}
+      comment -> Repo.delete(comment)
+    end
+  end
+
   defp maybe_dispatch_comment(comment) do
     case Code.ensure_loaded?(Therobotplans.Domains.Notifications.Dispatch) do
       true -> apply(Therobotplans.Domains.Notifications.Dispatch, :comment, [comment])

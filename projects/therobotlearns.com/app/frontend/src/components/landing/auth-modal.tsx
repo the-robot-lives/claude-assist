@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/auth";
-import { postAuthPath } from "@/lib/auth-flow";
+import { navigateTo, postAuthPath } from "@/lib/auth-flow";
 import { getRuntimeConfig } from "@/lib/runtime-config";
 
 const AUTHENTIK_URL = "/auth/oidc";
@@ -129,7 +129,7 @@ export function AuthModal({ mode, onClose }: AuthModalProps) {
     setLoginStatus(null);
     try {
       const user = await login(email, password);
-      router.push(postAuthPath(user));
+      navigateTo(router, postAuthPath(user));
     } catch {
       setLoginStatus({ state: "error", message: "Invalid email or password." });
     } finally {

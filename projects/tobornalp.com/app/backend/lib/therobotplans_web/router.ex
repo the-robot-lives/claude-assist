@@ -107,6 +107,30 @@ defmodule TherobotplansWeb.Router do
             TherobotplansWeb.MCPConfig.plug_opts(Therobotplans.Domains.Personal.MCP)
   end
 
+  scope "/", host: "artifacts." do
+    pipe_through [:api]
+
+    forward "/mcp",
+            Noizu.MCP.Transport.StreamableHTTP.Plug,
+            TherobotplansWeb.MCPConfig.plug_opts(Therobotplans.Domains.Artifacts.MCP)
+  end
+
+  scope "/", host: "wiki." do
+    pipe_through [:api]
+
+    forward "/mcp",
+            Noizu.MCP.Transport.StreamableHTTP.Plug,
+            TherobotplansWeb.MCPConfig.plug_opts(Therobotplans.Domains.Wiki.MCP)
+  end
+
+  scope "/", host: "review." do
+    pipe_through [:api]
+
+    forward "/mcp",
+            Noizu.MCP.Transport.StreamableHTTP.Plug,
+            TherobotplansWeb.MCPConfig.plug_opts(Therobotplans.Domains.Review.MCP)
+  end
+
   scope "/api/v1", TherobotplansWeb do
     pipe_through [:api, :rate_limited_auth]
     post "/auth/register", AuthController, :register
@@ -225,10 +249,60 @@ defmodule TherobotplansWeb.Router do
     end
 
     # Items (work tracking) — basic CRUD. :id accepts UUID or human key (PREFIX-NNN).
-    resources "/items", ItemController, only: [:index, :create, :show, :update]
+    resources "/items", ItemController, only: [:index, :create, :show, :update, :delete]
+    get "/items/:id/activity", ItemController, :activity
+    get "/items/:id/links", ItemController, :links
+    post "/items/:id/links", ItemController, :create_link
+    delete "/items/links/:id", ItemController, :delete_link
+    get "/items/:id/comments", ItemController, :comments
+    post "/items/:id/comments", ItemController, :create_comment
+    delete "/items/comments/:id", ItemController, :delete_comment
+
+    # Artifacts (versioned typed content) — code/document/image/wiki/config/binary.
+    resources "/artifacts", ArtifactController, only: [:index, :create, :show]
+    get "/artifacts/:artifact_id/revisions", ArtifactController, :index_revisions
+    post "/artifacts/:artifact_id/revisions", ArtifactController, :create_revision
+
+    # Wiki — spaces, pages, comments, attachments, reactions.
+    get "/wiki/spaces", WikiController, :index_spaces
+    post "/wiki/spaces", WikiController, :create_space
+    get "/wiki/spaces/:id", WikiController, :show_space
+    put "/wiki/spaces/:id", WikiController, :update_space
+    delete "/wiki/spaces/:id", WikiController, :delete_space
+    get "/wiki/spaces/:space_id/pages", WikiController, :index_pages
+    post "/wiki/spaces/:space_id/pages", WikiController, :create_page
+    get "/wiki/pages/:id", WikiController, :show_page
+    put "/wiki/pages/:id", WikiController, :update_page
+    delete "/wiki/pages/:id", WikiController, :delete_page
+    get "/wiki/pages/:page_id/comments", WikiController, :index_comments
+    post "/wiki/pages/:page_id/comments", WikiController, :create_comment
+    delete "/wiki/comments/:id", WikiController, :delete_comment
+    get "/wiki/pages/:page_id/attachments", WikiController, :index_attachments
+    post "/wiki/pages/:page_id/attachments", WikiController, :create_attachment
+    delete "/wiki/attachments/:id", WikiController, :delete_attachment
+    get "/wiki/pages/:page_id/reactions", WikiController, :index_page_reactions
+    post "/wiki/pages/:page_id/reactions", WikiController, :add_page_reaction
+    delete "/wiki/pages/:page_id/reactions", WikiController, :remove_page_reaction
+    get "/wiki/comments/:comment_id/reactions", WikiController, :index_comment_reactions
+    post "/wiki/comments/:comment_id/reactions", WikiController, :add_comment_reaction
+    delete "/wiki/comments/:comment_id/reactions", WikiController, :remove_comment_reaction
 
     # Boards (queues) — methodology-aware kanban/scrum/waterfall/spiral boards.
-    resources "/queues", QueueController, only: [:index, :create, :show, :update]
+    resources "/queues", QueueController, only: [:index, :create, :show, :update, :delete]
+    get "/queues/:queue_id/stages", QueueController, :stages
+    post "/queues/:queue_id/stages", QueueController, :create_stage
+    put "/queues/:queue_id/stages/:id", QueueController, :update_stage
+    delete "/queues/:queue_id/stages/:id", QueueController, :delete_stage
+    get "/queues/:queue_id/iterations", QueueController, :iterations
+    post "/queues/:queue_id/iterations", QueueController, :create_iteration
+    put "/queues/:queue_id/iterations/:id", QueueController, :update_iteration
+    delete "/queues/:queue_id/iterations/:id", QueueController, :delete_iteration
+
+    # Saved views — per-user/project persisted list/board filters.
+    resources "/saved-views", SavedViewController, only: [:index, :create, :show, :update, :delete]
+    # Reviews — code/content reviews over an artifact revision.
+    resources "/reviews", ReviewController, only: [:index, :create, :show, :update]
+    post "/reviews/:review_id/complete", ReviewController, :complete
 
     # Tri-scoped item type/field definitions.
     get "/definitions/fields", DefinitionController, :index_fields

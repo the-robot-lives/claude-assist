@@ -35,7 +35,14 @@ defmodule Codefresh.Enterprise.SsoConfig do
   """
   def changeset(sso_config, attrs) do
     sso_config
-    |> cast(attrs, [:organization_id, :provider, :enabled, :sso_required, :metadata, :role_mapping])
+    |> cast(attrs, [
+      :organization_id,
+      :provider,
+      :enabled,
+      :sso_required,
+      :metadata,
+      :role_mapping
+    ])
     |> validate_required([:organization_id, :provider])
     |> validate_inclusion(:provider, @valid_providers)
     |> validate_saml_metadata()

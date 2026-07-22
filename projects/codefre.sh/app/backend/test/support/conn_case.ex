@@ -84,10 +84,16 @@ defmodule CodefreshWeb.ConnCase do
     }
 
     {:ok, access_token, _claims} =
-      Codefresh.Guardian.encode_and_sign(session_entity, %{}, token_type: "access", ttl: {1, :hour})
+      Codefresh.Guardian.encode_and_sign(session_entity, %{},
+        token_type: "access",
+        ttl: {1, :hour}
+      )
 
     {:ok, refresh_token, %{"jti" => jti}} =
-      Codefresh.Guardian.encode_and_sign(session_entity, %{}, token_type: "refresh", ttl: {7, :day})
+      Codefresh.Guardian.encode_and_sign(session_entity, %{},
+        token_type: "refresh",
+        ttl: {7, :day}
+      )
 
     Codefresh.Auth.TokenStore.store_refresh_jti(jti)
 

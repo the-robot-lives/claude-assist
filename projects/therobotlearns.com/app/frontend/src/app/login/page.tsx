@@ -5,7 +5,7 @@ import { useAuth } from "@/context/auth";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import type { SsoDomainMap } from "@/lib/api";
-import { matchingSsoProviders, postAuthPath } from "@/lib/auth-flow";
+import { matchingSsoProviders, navigateTo, postAuthPath } from "@/lib/auth-flow";
 import Link from "next/link";
 
 const SSO_LABELS: Record<string, string> = {
@@ -66,7 +66,7 @@ export default function LoginPage() {
     setLoading(true);
     try {
       const user = await login(email, password);
-      router.push(postAuthPath(user));
+      navigateTo(router, postAuthPath(user));
     } catch {
       setError("Invalid email or password");
     } finally {

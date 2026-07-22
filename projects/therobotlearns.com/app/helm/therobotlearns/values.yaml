@@ -1,7 +1,10 @@
 replicas: 1
 domain: therobotlearns.com
+appDomain: app.therobotlearns.com
+# Dot-prefixed apex so auth cookies span therobotlearns.com and app.therobotlearns.com.
+cookieDomain: ".therobotlearns.com"
 backend:
-  image: ops.noizu.com/therobotlearns.com/backend:v1.0.0
+  image: ops.noizu.com/therobotlearns.com/backend:v1.0.5
   port: 4000
   resources:
     requests:
@@ -11,7 +14,7 @@ backend:
       cpu: 500m
       memory: 512Mi
 frontend:
-  image: ops.noizu.com/therobotlearns.com/frontend:v1.0.0
+  image: ops.noizu.com/therobotlearns.com/frontend:v1.0.5
   port: 3000
   resources:
     requests:
@@ -76,6 +79,11 @@ mail:
   fromAddress: ""
 sso:
   requireInvite: false
+  # domain=providers entries (";"/space separated); domains absent from this
+  # map cannot use SSO at all (backend defaults closed).
+  domains: "noizu.com=oidc;therobotlives.com=oidc"
+  # New SSO users from these domains are active immediately (others pend approval).
+  autoApproveDomains: "noizu.com,therobotlives.com"
   oidc:
     issuer: "https://auth.derobot.is/application/o/therobotlearns"
   saml:

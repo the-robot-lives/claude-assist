@@ -4,7 +4,7 @@ import { Suspense, useEffect, useState } from "react";
 import { useAuth } from "@/context/auth";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { postAuthPath } from "@/lib/auth-flow";
+import { navigateTo, postAuthPath } from "@/lib/auth-flow";
 
 function VerifyMagicLink() {
   const { loginWithMagicLink } = useAuth();
@@ -22,7 +22,7 @@ function VerifyMagicLink() {
     }
 
     loginWithMagicLink(token)
-      .then((user) => router.push(postAuthPath(user)))
+      .then((user) => navigateTo(router, postAuthPath(user)))
       .catch(() => {
         setError("Invalid or expired magic link");
         setVerifying(false);

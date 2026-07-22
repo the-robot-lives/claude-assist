@@ -351,8 +351,7 @@ defmodule Codefresh.Scripts.YamlCodec do
       from pv in PromptVersion,
         join: p in Prompt,
         on: p.id == pv.prompt_id,
-        where:
-          p.organization_id == ^org_id and p.slug == ^slug and pv.version_number == ^version,
+        where: p.organization_id == ^org_id and p.slug == ^slug and pv.version_number == ^version,
         select: pv.id
 
     case Repo.one(q) do
@@ -366,8 +365,7 @@ defmodule Codefresh.Scripts.YamlCodec do
       from rv in RubricVersion,
         join: r in Rubric,
         on: r.id == rv.rubric_id,
-        where:
-          r.organization_id == ^org_id and r.slug == ^slug and rv.version_number == ^version,
+        where: r.organization_id == ^org_id and r.slug == ^slug and rv.version_number == ^version,
         select: rv.id
 
     case Repo.one(q) do

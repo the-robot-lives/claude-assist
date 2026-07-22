@@ -37,8 +37,7 @@ defmodule Codefresh.Runs.Run do
     belongs_to :script_version, Codefresh.Scripts.ScriptVersion
     belongs_to :agent_version, Codefresh.Agents.AgentVersion
 
-    belongs_to :triggered_by, Codefresh.Accounts.User,
-      foreign_key: :triggered_by_user_id
+    belongs_to :triggered_by, Codefresh.Accounts.User, foreign_key: :triggered_by_user_id
 
     belongs_to :retry_parent_run, __MODULE__, foreign_key: :retry_parent_run_id
 

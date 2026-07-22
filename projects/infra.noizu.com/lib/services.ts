@@ -381,16 +381,6 @@ export const services: Service[] = [
     tags: ["blog", "publishing", "content", "newsletter"],
   },
   {
-    slug: "listmonk",
-    name: "Listmonk",
-    domain: "listmonk.noizu.com",
-    description: "Newsletter and mailing list manager",
-    group: "Marketing & Content",
-    icon: "\u{1F4EC}",
-    status: "active",
-    tags: ["newsletter", "mailing-list", "email", "subscribers"],
-  },
-  {
     slug: "postiz",
     name: "Postiz",
     domain: "postiz.noizu.com",

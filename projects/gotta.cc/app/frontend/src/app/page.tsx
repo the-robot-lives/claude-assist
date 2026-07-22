@@ -44,6 +44,17 @@ const CATEGORY_TOKENS: Record<
     text: "text-cat-weird-text",
     dot: "bg-cat-weird",
   },
+  // Live backend slugs use the full names; map them to the short token classes.
+  "making-crafts": {
+    bg: "bg-cat-making-bg",
+    text: "text-cat-making-text",
+    dot: "bg-cat-making",
+  },
+  "weird-wonderful": {
+    bg: "bg-cat-weird-bg",
+    text: "text-cat-weird-text",
+    dot: "bg-cat-weird",
+  },
 };
 
 export default function Home() {
@@ -96,7 +107,7 @@ export default function Home() {
             className="font-display text-[clamp(36px,5vw+1rem,56px)] font-semibold leading-[1.15] tracking-tight text-ink"
             style={{ fontVariationSettings: "'WONK' 1" }}
           >
-            The web is big again.
+            Discover sites worth reading.
           </h1>
           <p className="mt-6 max-w-2xl font-body text-lg leading-relaxed text-ink-secondary">
             A curated directory of the post-slop web — personal sites, niche
@@ -125,7 +136,7 @@ export default function Home() {
               href="/about"
               className="font-ui text-sm font-semibold text-olive hover:text-olive-hover transition-colors duration-200"
             >
-              How scoring works &rarr;
+              About gotta.cc &rarr;
             </Link>
           </div>
         </div>
@@ -158,7 +169,11 @@ export default function Home() {
               </p>
             ) : (
               categories!.map((cat, i) => {
-                const tokens = CATEGORY_TOKENS[cat.slug];
+                const tokens = CATEGORY_TOKENS[cat.slug] ?? {
+                  bg: "bg-surface",
+                  text: "text-ink",
+                  dot: "bg-coral",
+                };
                 const span =
                   i === 0 || i === 4 || i === 5 ? "md:col-span-2" : "";
                 return (

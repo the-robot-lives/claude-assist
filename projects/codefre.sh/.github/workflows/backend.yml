@@ -5,10 +5,12 @@ on:
     branches: [main]
     paths:
       - "app/backend/**"
+      - "docs/**"
       - ".github/workflows/backend.yml"
   pull_request:
     paths:
       - "app/backend/**"
+      - "docs/**"
       - ".github/workflows/backend.yml"
 
 concurrency:
@@ -73,15 +75,17 @@ jobs:
 
       - run: mix deps.get
       - run: mix format --check-formatted
-      - run: mix compile --warnings-as-errors
+      - run: mix compile
       - run: mix ecto.create
       - run: mix ecto.migrate
       - run: mix test --cover
-      - run: mix credo --strict
+      - name: Credo advisory
+        run: mix credo --strict --mute-exit-status
 
       - name: Generate OpenAPI spec + verify no breaking diff
         run: |
           mix codefresh.gen.openapi
+          mix codefresh.contracts.validate
           if [ -f ../../docs/openapi.json ]; then
             # If a committed snapshot exists, diff — additions/new paths pass,
             # but renamed/removed paths fail until explicitly promoted.

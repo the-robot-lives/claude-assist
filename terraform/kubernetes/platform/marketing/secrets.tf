@@ -31,7 +31,7 @@ moved {
 }
 
 # App secrets (/marketing) -> marketing-app-secrets.
-# Keys: LISTMONK_DB_PASSWORD; MAUTIC_DB_PASSWORD, MAUTIC_SECRET_KEY.
+# Keys: MAUTIC_DB_PASSWORD, MAUTIC_SECRET_KEY.
 #   (<APP>_DB_PASSWORD must match /platform/postgres or /platform/mariadb.)
 resource "kubectl_manifest" "infisical_app_secrets" {
   yaml_body = yamlencode({

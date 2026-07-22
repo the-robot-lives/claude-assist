@@ -21,13 +21,17 @@ defmodule TherobotknowsWeb.SSOController do
   # ── OIDC ──────────────────────────────────────────────────────
 
   def oidc_init(conn, _params) do
-    {:ok, uri} = OpenIDConnect.authorization_uri(:default)
+    config = oidc_config()
+    {:ok, uri} = OpenIDConnect.authorization_uri(config, config.redirect_uri)
     redirect(conn, external: uri)
   end
 
   def oidc_callback(conn, %{"code" => code}) do
-    with {:ok, tokens} <- OpenIDConnect.fetch_tokens(:default, code),
-         {:ok, claims} <- OpenIDConnect.verify(:default, tokens["id_token"]) do
+    config = oidc_config()
+
+    with {:ok, tokens} <-
+           OpenIDConnect.fetch_tokens(config, %{code: code, redirect_uri: config.redirect_uri}),
+         {:ok, claims} <- OpenIDConnect.verify(config, tokens["id_token"]) do
       handle_sso_callback(conn, :oidc, %{
         email: claims["email"],
         name: %{first: claims["given_name"] || "", last: claims["family_name"] || ""},
@@ -67,7 +71,7 @@ defmodule TherobotknowsWeb.SSOController do
 
   def exchange(conn, %{"code" => code}) do
     with {:ok, session_id} <- Therobotknows.Auth.SSOCode.exchange(code),
-         {:ok, session} <- Therobotknows.Users.Sessions.get(session_id, Noizu.Context.system()),
+         {:ok, session} <- Therobotknows.Users.Sessions.get_session(session_id, Noizu.Context.system()),
          {:ok, access_token, _} <- Guardian.encode_and_sign(session, %{}, token_type: "access", ttl: {1, :hour}),
          {:ok, refresh_token, _} <- Guardian.encode_and_sign(session, %{}, token_type: "refresh", ttl: {7, :day}) do
       user = resolve_user_from_session(session)
@@ -107,6 +111,13 @@ defmodule TherobotknowsWeb.SSOController do
   defp redirect_with_error(conn, error) do
     frontend_url = Application.get_env(:therobotknows, :frontend_url, "http://localhost:3000")
     redirect(conn, external: "#{frontend_url}/auth/sso-callback?error=#{error}")
+  end
+
+  defp oidc_config do
+    :openid_connect
+    |> Application.fetch_env!(:providers)
+    |> Keyword.fetch!(:default)
+    |> Map.new()
   end
 
   defp resolve_user_from_session(%Therobotknows.Users.Sessions.UserSession{} = session) do

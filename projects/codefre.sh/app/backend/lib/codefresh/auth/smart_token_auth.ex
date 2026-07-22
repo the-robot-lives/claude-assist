@@ -78,6 +78,7 @@ defmodule Codefresh.Auth.SmartTokenAuth do
     case find_active_user_by_email(email) do
       {:ok, user} ->
         {:ok, user_ref} = Noizu.EntityReference.Protocol.ref(user)
+
         case find_and_authorize_otp(user_ref, otp_code, {:auth, :otp_login}, conn, context) do
           {:ok, _token} ->
             %Codefresh.Users.Sessions.UserSession{
@@ -121,6 +122,7 @@ defmodule Codefresh.Auth.SmartTokenAuth do
     case find_active_user_by_email(email) do
       {:ok, user} ->
         {:ok, user_ref} = Noizu.EntityReference.Protocol.ref(user)
+
         case find_and_authorize_otp(user_ref, otp_code, {:auth, :password_reset}, conn, context) do
           {:ok, _token} ->
             Codefresh.Users.Credentials.update_password(user, new_password, context)

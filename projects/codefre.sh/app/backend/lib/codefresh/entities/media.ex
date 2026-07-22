@@ -6,6 +6,7 @@ defmodule Codefresh.Media do
 
   def list(context, options \\ []) do
     settings = Noizu.Entity.Meta.persistence(Entity) |> hd
+
     Codefresh.Repo.all(Schema)
     |> Enum.map(fn record ->
       {:ok, entity} = Entity.from_record(record, settings, context, options)
@@ -51,6 +52,7 @@ defmodule Codefresh.Media do
 
   def get_by_short_id(short_id) do
     import Ecto.Query
+
     Codefresh.Repo.one(
       from a in Schema,
         where: a.short_id == ^short_id and is_nil(a.deleted_at)
@@ -59,6 +61,7 @@ defmodule Codefresh.Media do
 
   def get_cached_variant(media_id, canonical_params) do
     import Ecto.Query
+
     Codefresh.Repo.one(
       from v in Codefresh.Schema.Media.Variant,
         where: v.media_id == ^media_id and v.params == ^canonical_params
@@ -73,6 +76,7 @@ defmodule Codefresh.Media do
 
   def fetch_from_s3(key) do
     config = Application.get_env(:codefresh, Codefresh.Storage, [])
+
     case ExAws.S3.get_object(config[:bucket], key) |> ExAws.request(config) do
       {:ok, %{body: body}} -> {:ok, body}
       error -> error
@@ -81,6 +85,7 @@ defmodule Codefresh.Media do
 
   def upload_variant_to_s3(key, binary, content_type) do
     config = Application.get_env(:codefresh, Codefresh.Storage, [])
+
     ExAws.S3.put_object(config[:bucket], key, binary, content_type: content_type)
     |> ExAws.request(config)
   end

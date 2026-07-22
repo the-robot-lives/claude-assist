@@ -74,6 +74,7 @@ defmodule Codefresh.Users do
                handle: handle,
                name: name_ref,
                description: description_ref,
+               email: email,
                status: :active,
                verified: false,
                flagged: false,
@@ -126,13 +127,13 @@ defmodule Codefresh.Users do
             case user.name do
               %Ecto.Changeset{} ->
                 value =
-                  Codefresh.Versioned.Names.change_versioned_name(user.name.data, value)
+                  Codefresh.Versioned.Names.change(user.name.data, value)
 
                 {:name, value}
 
               _ ->
                 value =
-                  Codefresh.Versioned.Names.change_versioned_name(
+                  Codefresh.Versioned.Names.change(
                     user.name || %Codefresh.Versioned.Names.Name{},
                     value
                   )

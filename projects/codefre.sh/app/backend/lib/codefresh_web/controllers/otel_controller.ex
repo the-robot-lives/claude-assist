@@ -139,11 +139,13 @@ defmodule CodefreshWeb.OtelController do
 
   def logs_by_attr(conn, params) do
     org = conn.assigns.organization
+
     query = %{
       run_id: params["run_id"],
       attributes: params["attributes"],
       page: params["page"]
     }
+
     {logs, total} = Otel.search_logs(org.id, query)
     json(conn, %{logs: Enum.map(logs, &render_log/1), total: total})
   end

@@ -101,9 +101,14 @@ defmodule CodefreshWeb.CaptureController do
          {:ok, updated} <- Datasets.promote_to_script_node(c, node_id) do
       json(conn, %{capture: render_capture(updated)})
     else
-      nil -> send_resp(conn, 404, "")
-      {:error, :forbidden} -> send_resp(conn, 403, "")
-      {:error, :not_a_member} -> send_resp(conn, 404, "")
+      nil ->
+        send_resp(conn, 404, "")
+
+      {:error, :forbidden} ->
+        send_resp(conn, 403, "")
+
+      {:error, :not_a_member} ->
+        send_resp(conn, 404, "")
 
       {:error, cs} ->
         conn
@@ -116,11 +121,14 @@ defmodule CodefreshWeb.CaptureController do
   # Promote to dataset entry (US-109)
   # ──────────────────────────────────────────────────────────────────────────
 
-  def promote_to_dataset_entry(conn, %{
-        "organization_id" => org_id,
-        "id" => id,
-        "dataset_id" => dataset_id
-      } = params) do
+  def promote_to_dataset_entry(
+        conn,
+        %{
+          "organization_id" => org_id,
+          "id" => id,
+          "dataset_id" => dataset_id
+        } = params
+      ) do
     user = Guardian.Plug.current_resource(conn)
     negative? = truthy?(params["negative"])
     extra_tags = params["extra_tags"] || []

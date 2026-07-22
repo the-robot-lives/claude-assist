@@ -46,7 +46,7 @@ defined in `.infra-config.yaml` (`tiers:` + `namespace_overrides:`).
 | 0 | Secrets Management | `infisical` | infisical |
 | 1 | Data & Observability | `data-ns`, `observability-ns`, `platform-observability` | shared-{postgres,mysql,redis,valkey,mongodb,clickhouse,zookeeper}, signoz, otel-collector, phoenix, posthog, oneuptime, metabase |
 | 2 | Platform & Admin | `platform-ns`, `apps` | argocd, authentik, minio, docker-registry, verdaccio, headlamp, cockpit, keygen, infra-portal |
-| 3 | Core Applications | `apps` | codefresh, npl-mcp, docmost, plane, ghost, mautic, listmonk, n8n, + portfolio sites (aifighter, noizu, therobot*, ddi, …) |
+| 3 | Core Applications | `apps` | codefresh, npl-mcp, docmost, plane, ghost, mautic, n8n, + portfolio sites (aifighter, noizu, therobot*, ddi, …) |
 | 4 | User-Facing & Creative | `creative-ns`, `apps`, `ai-ns` | penpot, webstudio, excalidraw, drawio, mermaid, kroki, plantuml, open-webui, langfuse, livebook, jupyterhub, code-server |
 | 5 | Auxiliary & AI Infrastructure | `ai-ns`, `mail-ns`, `accounting-ns` | accounting-infra, mailu, vllm, weaviate, qdrant, chatterbox-tts, kitten-tts |
 | 9 | Health Tests | `platform-ns` | health-tests |

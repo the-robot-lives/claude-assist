@@ -2,7 +2,7 @@ import Config
 
 config :codefresh, Codefresh.Repo,
   username: System.get_env("DB_USER", "codefresh"),
-  password: System.get_env("DB_PASS", "codefresh_dev"),
+  password: System.get_env("DB_PASS") || System.get_env("DB_PASSWORD", "codefresh_dev"),
   hostname: System.get_env("DB_HOST", "localhost"),
   database: System.get_env("DB_NAME", "codefresh_dev"),
   port: String.to_integer(System.get_env("DB_PORT") || "5432"),

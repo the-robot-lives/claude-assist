@@ -5,6 +5,7 @@ defmodule Codefresh.Mailer do
 
   def from() do
     {name, address} = Application.get_env(:codefresh, :mail_from, {"App", "noreply@localhost"})
+
     %SendGrid.Email{}
     |> SendGrid.Email.put_from(address, name)
   end

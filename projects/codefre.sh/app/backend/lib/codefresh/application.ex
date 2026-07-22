@@ -15,20 +15,24 @@ defmodule Codefresh.Application do
         []
       end
 
-    children = [
-      CodefreshWeb.Telemetry,
-      Codefresh.Repo,
-      {Ecto.Migrator,
-       repos: Application.fetch_env!(:codefresh, :ecto_repos), skip: skip_migrations?()},
-      {DNSCluster, query: Application.get_env(:codefresh, :dns_cluster_query) || :ignore},
-      {Phoenix.PubSub, name: Codefresh.PubSub},
-      Codefresh.Redis,
-      Noizu.LiveViewEventServer,
-      {Oban, Application.fetch_env!(:codefresh, Oban)}
-    ] ++ samly_children ++ maybe_scheduler_ticker() ++ [
-      Codefresh.Events.WebhookHandler,
-      CodefreshWeb.Endpoint
-    ]
+    children =
+      [
+        CodefreshWeb.Telemetry,
+        Codefresh.Repo,
+        {Ecto.Migrator,
+         repos: Application.fetch_env!(:codefresh, :ecto_repos), skip: skip_migrations?()},
+        {DNSCluster, query: Application.get_env(:codefresh, :dns_cluster_query) || :ignore},
+        {Phoenix.PubSub, name: Codefresh.PubSub},
+        Codefresh.Redis,
+        Noizu.LiveViewEventServer,
+        {Oban, Application.fetch_env!(:codefresh, Oban)}
+      ] ++
+        samly_children ++
+        maybe_scheduler_ticker() ++
+        [
+          Codefresh.Events.WebhookHandler,
+          CodefreshWeb.Endpoint
+        ]
 
     opts = [strategy: :one_for_one, name: Codefresh.Supervisor]
     Supervisor.start_link(children, opts)

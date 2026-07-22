@@ -4,7 +4,7 @@
 
 TheRobotLives is an **agentic social network** — a platform where AI agents are first-class citizens alongside humans. The current deployment is a **static landing page with waitlist capture**, serving as the pre-launch marketing surface while the full product is in concept/pre-development.
 
-The system is a statically-exported Next.js application served via nginx, deployed to a self-hosted Kubernetes cluster behind Cloudflare. TLS certificates are managed through the Infisical operator. Email collection routes to a self-hosted Listmonk instance.
+The system is a statically-exported Next.js application served via nginx, deployed to a self-hosted Kubernetes cluster behind Cloudflare. TLS certificates are managed through the Infisical operator. Email collection routes to the foryou signup service (`foryou.therobotlives.com`), the portfolio-wide waitlist/signup platform.
 
 ## System Diagram
 
@@ -17,7 +17,7 @@ graph TB
     
     Pod -.->|serves| Static[Next.js static HTML/JS/CSS]
     
-    User -->|POST /api/public/subscription| Listmonk[listmonk.noizu.com<br/>Email List Manager]
+    User -->|POST /api/v1/public/lists/.../signups| ForYou[foryou.therobotlives.com<br/>Signup Service]
 
     Infisical[Infisical Operator] -->|syncs TLS cert| TLSSecret[K8s TLS Secret]
     TLSSecret --> Ingress
@@ -37,7 +37,7 @@ graph TB
 | `web/` | Next.js 16 app (React 19, Tailwind 4) — static export served by nginx |
 | `helm/therobotlives/` | Helm chart — Deployment, Service, Ingress, InfisicalSecret for TLS |
 | `design/` | Four visual direction explorations + logo assets (SVG) |
-| Listmonk | External self-hosted email list manager for waitlist capture |
+| foryou | External portfolio-wide signup service for waitlist capture (double opt-in, confirmation email, unsubscribe, admin dashboard) |
 | Cloudflare | DNS, CDN, WAF — IP-whitelisted origin access only |
 | Infisical | TLS certificate sync from `k8-infra` project, path `/apps/tls/therobotlives` |
 
@@ -52,7 +52,7 @@ graph TB
 | Orchestration | Kubernetes + Helm | Chart v0.1.0 |
 | TLS/Secrets | Infisical Operator | InfisicalSecret CRD |
 | DNS/CDN | Cloudflare | Proxied, origin-pull |
-| Email | Listmonk (self-hosted) | External service |
+| Email | foryou signup service | External service |
 
 ## Build & Deployment Pipeline
 
@@ -68,7 +68,7 @@ All traffic arrives through Cloudflare. The NGINX Ingress is IP-whitelisted to C
 
 ## Waitlist & Email Capture
 
-The `WaitlistForm` client component POSTs directly to the Listmonk public subscription API at `listmonk.noizu.com`. No backend proxy — the browser calls the external API directly.
+The `WaitlistForm` client component POSTs directly to the foryou public signups API at `foryou.therobotlives.com`. No backend proxy — the browser calls the external API directly. foryou handles double opt-in confirmation, unsubscribe links, and an admin/org dashboard at `foryou.therobotlives.com/app`.
 
 -> *See [arch/waitlist.md](arch/waitlist.md) for details*
 
@@ -78,7 +78,7 @@ The `WaitlistForm` client component POSTs directly to the Listmonk public subscr
 |----------|-----------|
 | Static export over SSR | Landing page has no dynamic data; static is faster, cheaper, and simpler to serve |
 | nginx over Next.js server | Static files don't need a Node.js runtime; nginx is lighter and more predictable |
-| Direct Listmonk API call | Avoids building a backend for a single POST endpoint; Listmonk has a public subscription API |
+| Direct foryou API call | Avoids building a backend for a single POST endpoint; foryou exposes a public signups API and centralizes waitlist handling across the portfolio |
 | Cloudflare IP whitelist | Prevents direct origin access; all traffic must traverse Cloudflare WAF/CDN |
 | Infisical for TLS | Consistent with cluster-wide secret management pattern; auto-rotation via CRD |
 | No shared `cloudflare-lib` dependency | Inline Cloudflare IP whitelist in `_helpers.tpl` rather than pulling the shared library chart |

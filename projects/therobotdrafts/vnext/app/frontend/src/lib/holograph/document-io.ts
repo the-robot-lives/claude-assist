@@ -8,6 +8,42 @@ export interface TextFilePayload {
 const nodeKinds = new Set<NodeKind>(["system", "package", "service", "class", "interface", "function", "database", "agent"]);
 const edgeKinds = new Set<EdgeKind>(["contains", "calls", "depends_on", "publishes", "stores", "patches"]);
 
+export type UmlRelationship = NonNullable<GraphEdge["uml"]>["relationship"];
+
+export const UML_RELATIONSHIPS: UmlRelationship[] = [
+  "association",
+  "dependency",
+  "generalization",
+  "realization",
+  "composition",
+  "aggregation",
+  "deployment",
+  "trace",
+];
+
+// GraphEdge.kind must stay within EdgeKind or normalizeGraphDocument drops the edge on load.
+export const relationshipEdgeKind: Record<UmlRelationship, EdgeKind> = {
+  association: "calls",
+  dependency: "depends_on",
+  generalization: "depends_on",
+  realization: "depends_on",
+  composition: "contains",
+  aggregation: "contains",
+  deployment: "stores",
+  trace: "depends_on",
+};
+
+export const relationshipStyle: Record<UmlRelationship, { dashed?: boolean; arrow: NonNullable<GraphEdge["uml"]>["arrow"] }> = {
+  association: { arrow: "open" },
+  dependency: { dashed: true, arrow: "open" },
+  generalization: { arrow: "triangle" },
+  realization: { dashed: true, arrow: "triangle" },
+  composition: { arrow: "diamond" },
+  aggregation: { arrow: "diamond" },
+  deployment: { arrow: "open" },
+  trace: { dashed: true, arrow: "open" },
+};
+
 function slugify(value: string) {
   return (
     value
@@ -118,79 +154,189 @@ export function readGraphDocumentJson(text: string): GraphDocument {
   return normalizeGraphDocument(parsed);
 }
 
+function classifyArrow(arrow: string): { relationship: UmlRelationship; swap: boolean } {
+  const dotted = arrow.includes(".");
+  if (arrow.startsWith("<|") || arrow.endsWith("|>")) {
+    // Triangle points at the parent; edge direction is child -> parent.
+    return { relationship: dotted ? "realization" : "generalization", swap: arrow.startsWith("<|") };
+  }
+  if (arrow.startsWith("*") || arrow.endsWith("*")) {
+    // Diamond sits on the whole; edge direction is whole -> part.
+    return { relationship: "composition", swap: arrow.endsWith("*") };
+  }
+  if (arrow.startsWith("o") || arrow.endsWith("o")) {
+    return { relationship: "aggregation", swap: arrow.endsWith("o") };
+  }
+  const leftHead = arrow.startsWith("<");
+  if (dotted) return { relationship: "dependency", swap: leftHead };
+  return { relationship: "association", swap: leftHead };
+}
+
+function plantUmlNodeKind(rawKind: string): NodeKind {
+  if (rawKind.includes("interface")) return "interface";
+  if (rawKind.includes("component")) return "service";
+  if (rawKind.includes("package")) return "package";
+  if (rawKind.includes("database")) return "database";
+  if (rawKind.includes("actor")) return "agent";
+  return "class";
+}
+
 export function importPlantUml(text: string, sourceName = "imported.puml"): GraphDocument {
   const used = new Set<string>();
   const aliasToId = new Map<string, string>();
   const nodes: GraphNode[] = [];
   const edges: GraphEdge[] = [];
-  const titleMatch = text.match(/^\s*title\s+(.+)$/im);
-  const title = titleMatch?.[1]?.trim() || sourceName.replace(/\.[^.]+$/, "") || "Imported PlantUML model";
+  const packageStack: Array<{ id: string; label: string }> = [];
+  let title = "";
+  let currentClass: GraphNode | null = null;
 
-  const nodePattern =
-    /^\s*(abstract\s+class|class|interface|enum|component|package|database|actor)\s+"?([A-Za-z0-9_.:$ -]+)"?(?:\s+as\s+([A-Za-z0-9_.$:-]+))?/gim;
-  for (const match of text.matchAll(nodePattern)) {
-    const rawKind = match[1].toLowerCase();
-    const label = match[2].trim();
-    const alias = match[3]?.trim() || label.replace(/[^A-Za-z0-9_]/g, "_");
-    const kind: NodeKind =
-      rawKind.includes("interface")
-        ? "interface"
-        : rawKind.includes("component")
-          ? "service"
-          : rawKind.includes("package")
-            ? "package"
-            : rawKind.includes("database")
-              ? "database"
-              : rawKind.includes("actor")
-                ? "agent"
-                : "class";
+  const nodeDeclPattern =
+    /^(abstract\s+class|abstract|class|interface|enum|entity|component|package|database|actor)\s+(?:"([^"]+)"|([A-Za-z0-9_.:$-]+))(?:\s+as\s+([A-Za-z0-9_.$:-]+))?(?:\s*<<\s*([^>]+?)\s*>>)?\s*(\{)?$/i;
+  const edgePattern =
+    /^(?:"([^"]+)"|([A-Za-z0-9_.$:-]+))\s*(?:"([^"]*)")?\s+((?:<\||<|\*|o)?[-.]+(?:\|>|\*|o|>)?)\s+(?:"([^"]*)")?\s*(?:"([^"]+)"|([A-Za-z0-9_.$:-]+))\s*(?::\s*(.+))?$/;
+  const memberPattern = /^([+\-#~])?\s*(?:\{(?:abstract|static|field|method)\}\s*)?(.+?)$/;
+
+  function packageQualifier() {
+    return packageStack.map((entry) => entry.label).join(".") || undefined;
+  }
+
+  function registerNode(
+    label: string,
+    kind: NodeKind,
+    options: { alias?: string; stereotype?: string; abstract?: boolean },
+  ): GraphNode {
     const id = idFor(kind, label, used);
-    aliasToId.set(alias, id);
-    aliasToId.set(label, id);
-    nodes.push({
+    const parent = packageStack.at(-1);
+    const node: GraphNode = {
       id,
       label,
       kind,
-      stereotype: rawKind.replace(/\s+/g, " "),
+      parentId: parent?.id,
+      packageName: packageQualifier(),
+      stereotype: options.stereotype ?? kind,
       description: `Imported from ${sourceName}.`,
       uml: {
         elementType: kind === "service" ? "Component" : kind[0].toUpperCase() + kind.slice(1),
         visibility: "public",
+        abstract: options.abstract || undefined,
+        attributes: [],
+        operations: [],
       },
       metrics: metricsFor(label),
       members: [],
       status: "draft",
-    });
+    };
+    nodes.push(node);
+    if (parent) {
+      edges.push({ id: `contains-${parent.id}-${id}`, sourceId: parent.id, targetId: id, kind: "contains", label: "contains" });
+    }
+    if (options.alias) aliasToId.set(options.alias, id);
+    aliasToId.set(label, id);
+    aliasToId.set(label.replace(/[^A-Za-z0-9_]/g, "_"), id);
+    return node;
   }
 
-  const edgePattern = /^\s*([A-Za-z0-9_.$:-]+)\s+([.o*<|}-]*[-.]+[->|o*]+)\s+([A-Za-z0-9_.$:-]+)(?:\s*:\s*(.+))?/gim;
+  function resolveEndpoint(raw: string): string {
+    const existing = aliasToId.get(raw);
+    if (existing) return existing;
+    // PlantUML implicitly declares classes referenced only by relationships.
+    return registerNode(raw, "class", {}).id;
+  }
+
   let edgeIndex = 1;
-  for (const match of text.matchAll(edgePattern)) {
-    const sourceId = aliasToId.get(match[1]);
-    const targetId = aliasToId.get(match[3]);
-    if (!sourceId || !targetId) continue;
-    const arrow = match[2];
-    const relationship = arrow.includes("|>") ? "generalization" : arrow.includes("..") ? "dependency" : "association";
-    edges.push({
-      id: `edge-${edgeIndex}`,
-      sourceId,
-      targetId,
-      kind: relationship === "dependency" ? "depends_on" : "calls",
-      label: match[4]?.trim() || relationship,
-      uml: {
-        relationship,
-        dashed: arrow.includes(".."),
-        arrow: relationship === "generalization" ? "triangle" : "open",
-      },
-    });
-    edgeIndex += 1;
+  for (const rawLine of text.split(/\r?\n/)) {
+    const line = rawLine.trim();
+    if (!line || line.startsWith("'") || line.startsWith("@") || /^(hide|show|skinparam|scale|left|right|top|bottom)\b/i.test(line)) continue;
+
+    const titleMatch = line.match(/^title\s+(.+)$/i);
+    if (titleMatch) {
+      title = titleMatch[1].trim();
+      continue;
+    }
+
+    if (currentClass) {
+      if (line === "}") {
+        currentClass = null;
+        continue;
+      }
+      if (/^[-=._]{2,}$/.test(line)) continue; // PlantUML section separators inside a body
+      const member = line.match(memberPattern);
+      if (member) {
+        const marker = member[1];
+        const body = member[2].trim();
+        if (!body) continue;
+        const formatted = marker ? `${marker} ${body}` : body;
+        const uml = currentClass.uml!;
+        if (body.includes("(")) uml.operations = [...(uml.operations ?? []), formatted];
+        else uml.attributes = [...(uml.attributes ?? []), formatted];
+        currentClass.members = [...(currentClass.members ?? []), formatted];
+      }
+      continue;
+    }
+
+    if (line === "}") {
+      packageStack.pop();
+      continue;
+    }
+
+    const decl = line.match(nodeDeclPattern);
+    if (decl) {
+      const rawKind = decl[1].toLowerCase().replace(/\s+/g, " ");
+      const label = (decl[2] ?? decl[3]).trim();
+      const alias = decl[4]?.trim();
+      const stereotype = decl[5]?.trim();
+      const opensBody = Boolean(decl[6]);
+      const kind = plantUmlNodeKind(rawKind);
+      const node = registerNode(label, kind, {
+        alias,
+        stereotype: stereotype ?? (rawKind === "abstract" ? "abstract class" : rawKind),
+        abstract: rawKind.startsWith("abstract"),
+      });
+      if (opensBody) {
+        if (kind === "package") packageStack.push({ id: node.id, label });
+        else currentClass = node;
+      }
+      continue;
+    }
+
+    const edge = line.match(edgePattern);
+    if (edge) {
+      const leftRaw = (edge[1] ?? edge[2]).trim();
+      const rightRaw = (edge[6] ?? edge[7]).trim();
+      const arrow = edge[4];
+      const { relationship, swap } = classifyArrow(arrow);
+      let sourceId = resolveEndpoint(leftRaw);
+      let targetId = resolveEndpoint(rightRaw);
+      let sourceMultiplicity = edge[3]?.trim() || undefined;
+      let targetMultiplicity = edge[5]?.trim() || undefined;
+      if (swap) {
+        [sourceId, targetId] = [targetId, sourceId];
+        [sourceMultiplicity, targetMultiplicity] = [targetMultiplicity, sourceMultiplicity];
+      }
+      edges.push({
+        id: `edge-${edgeIndex}`,
+        sourceId,
+        targetId,
+        kind: relationshipEdgeKind[relationship],
+        label: edge[8]?.trim() || relationship,
+        uml: {
+          relationship,
+          sourceMultiplicity,
+          targetMultiplicity,
+          ...relationshipStyle[relationship],
+        },
+      });
+      edgeIndex += 1;
+      continue;
+    }
   }
 
+  const resolvedTitle = title || sourceName.replace(/\.[^.]+$/, "") || "Imported PlantUML model";
   return normalizeGraphDocument({
     ...createEmptyDocument(),
-    id: `trd-${slugify(title)}-${Date.now().toString(36)}`,
-    slug: slugify(title),
-    title,
+    id: `trd-${slugify(resolvedTitle)}-${Date.now().toString(36)}`,
+    slug: slugify(resolvedTitle),
+    title: resolvedTitle,
     summary: `Imported PlantUML model from ${sourceName}.`,
     nodes,
     edges,
@@ -310,19 +456,88 @@ export function exportDot(document: GraphDocument) {
   return lines.join("\n");
 }
 
-export function exportCodeSkeleton(document: GraphDocument) {
-  const lines = [
+export type SkeletonLanguage = "csharp" | "typescript" | "python" | "java" | "go";
+
+export const skeletonLanguages: Array<{ value: SkeletonLanguage; label: string; extension: string }> = [
+  { value: "csharp", label: "C#", extension: "cs" },
+  { value: "typescript", label: "TypeScript", extension: "ts" },
+  { value: "python", label: "Python", extension: "py" },
+  { value: "java", label: "Java", extension: "java" },
+  { value: "go", label: "Go", extension: "go" },
+];
+
+function skeletonMembers(node: GraphNode) {
+  return [...(node.uml?.attributes ?? []), ...(node.uml?.operations ?? [])];
+}
+
+export function exportCodeSkeleton(document: GraphDocument, language: SkeletonLanguage = "csharp") {
+  const types = document.nodes.filter((node) => node.kind === "class" || node.kind === "interface");
+  const safe = (label: string) => label.replace(/[^A-Za-z0-9_]/g, "_");
+
+  if (language === "typescript") {
+    return [
+      `// Generated from ${document.title}`,
+      "",
+      ...types.flatMap((node) => [
+        node.kind === "interface" ? `export interface ${safe(node.label)} {` : `export class ${safe(node.label)} {`,
+        ...skeletonMembers(node).map((member) => `  // ${member}`),
+        "}",
+        "",
+      ]),
+    ].join("\n");
+  }
+
+  if (language === "python") {
+    return [
+      `# Generated from ${document.title}`,
+      "",
+      ...types.flatMap((node) => [
+        `class ${safe(node.label)}:`,
+        `    """${node.kind === "interface" ? "Interface" : "Class"} ${node.label}."""`,
+        ...skeletonMembers(node).map((member) => `    # ${member}`),
+        "    pass",
+        "",
+      ]),
+    ].join("\n");
+  }
+
+  if (language === "java") {
+    return [
+      `// Generated from ${document.title}`,
+      "package therobotdraft.roundtrip;",
+      "",
+      ...types.flatMap((node) => [
+        node.kind === "interface" ? `public interface ${safe(node.label)} {` : `public class ${safe(node.label)} {`,
+        ...skeletonMembers(node).map((member) => `    // ${member}`),
+        "}",
+        "",
+      ]),
+    ].join("\n");
+  }
+
+  if (language === "go") {
+    return [
+      `// Generated from ${document.title}`,
+      "package roundtrip",
+      "",
+      ...types.flatMap((node) => [
+        node.kind === "interface" ? `type ${safe(node.label)} interface {` : `type ${safe(node.label)} struct {`,
+        ...skeletonMembers(node).map((member) => `\t// ${member}`),
+        "}",
+        "",
+      ]),
+    ].join("\n");
+  }
+
+  return [
     `// Generated from ${document.title}`,
     "namespace TheRobotDraft.RoundTrip;",
     "",
-    ...document.nodes
-      .filter((node) => node.kind === "class" || node.kind === "interface")
-      .flatMap((node) => {
-        const declaration = node.kind === "interface" ? `public interface I${node.label}` : `public class ${node.label}`;
-        return [declaration, "{", ...(node.uml?.attributes ?? []).map((attr) => `    // ${attr}`), ...(node.uml?.operations ?? []).map((op) => `    // ${op}`), "}", ""];
-      }),
-  ];
-  return lines.join("\n");
+    ...types.flatMap((node) => {
+      const declaration = node.kind === "interface" ? `public interface I${safe(node.label)}` : `public class ${safe(node.label)}`;
+      return [declaration, "{", ...skeletonMembers(node).map((member) => `    // ${member}`), "}", ""];
+    }),
+  ].join("\n");
 }
 
 export function downloadText(filename: string, body: string, mimeType = "text/plain") {

@@ -26,6 +26,27 @@ export function postAuthPath(user: User) {
   return appUrl("/app");
 }
 
+/**
+ * Navigate to a postAuthPath/appUrl result. appUrl returns an absolute URL
+ * (the app subdomain), which Next's app-router `push` silently no-ops on —
+ * same-origin absolute URLs are rewritten to paths, cross-origin ones get a
+ * full browser navigation.
+ */
+export function navigateTo(router: { push: (path: string) => void }, target: string) {
+  if (!/^https?:\/\//.test(target)) {
+    router.push(target);
+    return;
+  }
+  if (typeof window === "undefined") return;
+
+  const url = new URL(target);
+  if (url.origin === window.location.origin) {
+    router.push(url.pathname + url.search + url.hash);
+  } else {
+    window.location.assign(target);
+  }
+}
+
 export function emailDomain(email: string) {
   const [, domain] = email.trim().toLowerCase().split("@");
   return domain || "";

@@ -178,8 +178,11 @@ defmodule CodefreshWeb.DatasetController do
 
     with {:ok, _} <- Organizations.authorize(user, org_id, "viewer") do
       case Datasets.resolve_current_version(org_id, id) do
-        {:ok, v} -> json(conn, %{version: render_version(v)})
-        {:error, :not_found} -> send_resp(conn, 404, "")
+        {:ok, v} ->
+          json(conn, %{version: render_version(v)})
+
+        {:error, :not_found} ->
+          send_resp(conn, 404, "")
 
         {:error, :not_published} ->
           conn

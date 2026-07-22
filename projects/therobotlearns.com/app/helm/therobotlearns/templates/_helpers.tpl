@@ -73,7 +73,7 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 - name: PHX_HOST
   value: {{ .Values.domain | quote }}
 - name: FRONTEND_URL
-  value: "https://{{ .Values.domain }}"
+  value: "https://{{ .Values.appDomain | default .Values.domain }}"
 - name: PHX_SERVER
   value: "true"
 - name: PORT
@@ -104,6 +104,14 @@ app.kubernetes.io/instance: {{ .Release.Name }}
       key: {{ .Values.secrets.keys.oidcClientSecret }}
 - name: OIDC_REDIRECT_URI
   value: "https://{{ .Values.domain }}/auth/oidc/callback"
+{{- end }}
+{{- if .Values.sso.domains }}
+- name: SSO_DOMAINS
+  value: {{ .Values.sso.domains | quote }}
+{{- end }}
+{{- if .Values.sso.autoApproveDomains }}
+- name: SSO_AUTO_APPROVE_DOMAINS
+  value: {{ .Values.sso.autoApproveDomains | quote }}
 {{- end }}
 {{- if .Values.secrets.keys.googleClientId }}
 - name: GOOGLE_CLIENT_ID

@@ -3,8 +3,9 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/context/auth";
 import { api } from "@/lib/api";
-import { appUrl, postAuthPath, userPendingApproval } from "@/lib/auth-flow";
+import { appUrl, navigateTo, postAuthPath, userPendingApproval } from "@/lib/auth-flow";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 export default function CompleteRegistrationPage() {
   const { user, loading } = useAuth();
@@ -37,7 +38,8 @@ export default function CompleteRegistrationPage() {
         mobilePhone,
         inviteToken,
       });
-      router.push(userPendingApproval(res.user) ? "/pending-approval" : appUrl("/app"));
+      toast.success("Registration complete — welcome!");
+      navigateTo(router, userPendingApproval(res.user) ? "/pending-approval" : appUrl("/app"));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unable to complete registration");
     } finally {
@@ -48,7 +50,7 @@ export default function CompleteRegistrationPage() {
   if (loading || !user) return null;
 
   if (!user.requires_profile_completion && !userPendingApproval(user)) {
-    router.push(postAuthPath(user));
+    navigateTo(router, postAuthPath(user));
     return null;
   }
 
@@ -58,10 +60,14 @@ export default function CompleteRegistrationPage() {
         <h1 className="sg-page-title">Complete Registration</h1>
         <form onSubmit={handleSubmit} style={{ maxWidth: 420 }}>
           {error && <p className="sg-error">{error}</p>}
-          <div className="sg-field">
-            <label htmlFor="invite-token">Invite Token</label>
-            <input id="invite-token" type="text" value={inviteToken} onChange={(e) => setInviteToken(e.target.value)} autoComplete="off" />
-          </div>
+          {/* SSO-approved (active) users need no invite; only pending/waitlist
+              accounts can use one here to activate immediately. */}
+          {userPendingApproval(user) && (
+            <div className="sg-field">
+              <label htmlFor="invite-token">Invite Token (optional)</label>
+              <input id="invite-token" type="text" value={inviteToken} onChange={(e) => setInviteToken(e.target.value)} autoComplete="off" />
+            </div>
+          )}
           <div className="sg-field">
             <label htmlFor="user-name">User Name</label>
             <input id="user-name" type="text" value={userName} onChange={(e) => setUserName(e.target.value)} required autoComplete="username" />

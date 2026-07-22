@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TRD — Navigation Demo (Concept D)</title>
+<style>
+  :root {
+    --bg: #14181b; --bg2: #1a1f23; --bg3: #20262b; --panel: #171c20;
+    --line: #2a3238; --line2: #333c43;
+    --text: #d7dee2; --text-dim: #8a969e; --text-faint: #5b666d;
+    --accent: #37c8c3; --accent-dim: #2a807d; --accent-glow: rgba(55,200,195,.35);
+    --warm: #ffd9a0; --warm-glow: rgba(255,205,130,.45);
+    --danger: #e06c60;
+    --font: -apple-system, "SF Pro Text", Inter, ui-sans-serif, system-ui, sans-serif;
+    --mono: ui-monospace, "SF Mono", Menlo, monospace;
+    --radius: 6px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; }
+  body { font-family: var(--font); background: #0b0e10; color: var(--text); font-size: 13px;
+         display: flex; align-items: center; justify-content: center; overflow: hidden; }
+
+  .app { width: min(1520px, 98vw); height: min(920px, 96vh); background: var(--bg);
+         border-radius: 10px; border: 1px solid #000; box-shadow: 0 30px 80px rgba(0,0,0,.7);
+         display: grid; grid-template-rows: 38px 40px 1fr 26px; overflow: hidden; position: relative; }
+
+  /* ============ title bar + menu bar ============ */
+  .titlebar { display: flex; align-items: center; gap: 8px; padding: 0 12px;
+              background: var(--bg2); border-bottom: 1px solid var(--line); user-select: none; }
+  .lights { display: flex; gap: 8px; margin-right: 10px; }
+  .light { width: 12px; height: 12px; border-radius: 50%; }
+  .light.r { background: #ff5f57; } .light.y { background: #febc2e; } .light.g { background: #28c840; }
+  .menubar { display: flex; gap: 2px; }
+  .menu { position: relative; }
+  .menu > button { background: none; border: 0; color: var(--text); font: inherit;
+                   padding: 5px 10px; border-radius: 5px; cursor: pointer; }
+  .menu > button:hover, .menu.open > button { background: var(--bg3); }
+  .menu.open > button { color: var(--accent); }
+  .dropdown { display: none; position: absolute; top: 30px; left: 0; min-width: 230px;
+              background: #1d2327ee; backdrop-filter: blur(18px); border: 1px solid var(--line2);
+              border-radius: 8px; padding: 5px; z-index: 60; box-shadow: 0 16px 44px rgba(0,0,0,.55); }
+  .menu.open .dropdown { display: block; }
+  .mi { display: flex; align-items: center; justify-content: space-between; gap: 24px;
+        padding: 5px 10px; border-radius: 5px; cursor: pointer; white-space: nowrap; position: relative; }
+  .mi:hover { background: var(--accent-dim); color: #fff; }
+  .mi .kbd { color: var(--text-dim); font-family: var(--mono); font-size: 11px; }
+  .mi:hover .kbd { color: #d5f5f3; }
+  .mi.sub::after { content: "›"; color: var(--text-dim); }
+  .sep { height: 1px; background: var(--line); margin: 5px 8px; }
+  .submenu { display: none; position: absolute; left: calc(100% - 4px); top: -6px; min-width: 190px;
+             background: #1d2327ee; backdrop-filter: blur(18px); border: 1px solid var(--line2);
+             border-radius: 8px; padding: 5px; box-shadow: 0 16px 44px rgba(0,0,0,.55); }
+  .mi.sub:hover .submenu { display: block; }
+  .title-app { margin-left: auto; color: var(--text-faint); font-size: 12px; }
+
+  /* ============ context toolbar ============ */
+  .ctxbar { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center;
+            background: var(--bg2); border-bottom: 1px solid var(--line); padding: 0 10px; }
+  .ctx-left { display: flex; align-items: center; gap: 8px; }
+  .icon-btn { width: 26px; height: 26px; display: grid; place-items: center; border-radius: 5px;
+              background: none; border: 0; color: var(--text-dim); cursor: pointer; font-size: 13px; }
+  .icon-btn:hover { background: var(--bg3); color: var(--text); }
+  .crumb { color: var(--text-dim); font-size: 12px; }
+  .crumb b { color: var(--text); font-weight: 500; }
+  .crumb span { color: var(--text-faint); padding: 0 4px; }
+  .modes { display: flex; background: var(--bg); border: 1px solid var(--line2); border-radius: 7px;
+           padding: 2px; gap: 2px; }
+  .mode-btn { border: 0; background: none; color: var(--text-dim); font: inherit; font-size: 12px;
+              padding: 4px 16px; border-radius: 5px; cursor: pointer; }
+  .mode-btn.active { background: var(--accent); color: #062a29; font-weight: 600; }
+  .mode-btn:not(.active):hover { color: var(--text); }
+  .rel-wrap { overflow: hidden; max-width: 0; transition: max-width .25s ease; display: flex; align-items: center; }
+  .rel-wrap.show { max-width: 200px; }
+  select.rel { margin-left: 8px; background: var(--bg); color: var(--text); border: 1px solid var(--line2);
+               border-radius: 6px; padding: 4px 8px; font: inherit; font-size: 12px; }
+  .ctx-center { display: flex; align-items: center; }
+  .ctx-right { display: flex; justify-content: flex-end; gap: 4px; }
+
+  /* ============ body ============ */
+  .body { display: grid; grid-template-columns: auto auto auto 1fr auto; min-height: 0; }
+
+  /* element palette dock */
+  .palette-dock { width: 64px; background: var(--panel); border-right: 1px solid var(--line);
+                  display: flex; flex-direction: column; align-items: center; padding: 8px 4px;
+                  gap: 4px; overflow: auto; }
+  .palette-dock h5 { font-size: 8.5px; letter-spacing: .1em; color: var(--text-faint);
+                     text-transform: uppercase; margin: 2px 0 4px; }
+  .chip { width: 56px; display: flex; flex-direction: column; align-items: center; gap: 1px;
+          padding: 5px 0 4px; border-radius: 6px; border: 1px solid transparent; background: none;
+          color: var(--text-dim); cursor: grab; font: inherit; font-size: 9px; }
+  .chip .glyph { width: 26px; height: 22px; display: grid; place-items: center; border-radius: 5px;
+                 border: 1px solid var(--accent-dim); color: var(--accent); font-family: var(--mono);
+                 font-size: 10.5px; font-weight: 600; }
+  .chip:hover { background: var(--bg3); color: var(--text); border-color: var(--line2); }
+  .chip.armed { border-color: var(--accent); color: var(--accent); background: var(--bg3); }
+
+  /* left: rail + browser */
+  .rail { width: 44px; background: var(--panel); border-right: 1px solid var(--line);
+          display: flex; flex-direction: column; align-items: center; padding-top: 8px; gap: 4px; }
+  .rail .icon-btn { width: 32px; height: 32px; font-size: 15px; }
+  .rail .icon-btn.active { background: var(--bg3); color: var(--accent); }
+  .browser { width: 240px; background: var(--panel); border-right: 1px solid var(--line);
+             display: flex; flex-direction: column; transition: width .22s ease, opacity .18s; overflow: hidden; }
+  .app.browser-collapsed .browser { width: 0; opacity: 0; }
+  .tabs { display: flex; gap: 2px; padding: 8px 8px 0; }
+  .tab { flex: 1; background: none; border: 0; color: var(--text-dim); font: inherit; font-size: 12px;
+         padding: 5px 0; border-radius: 5px 5px 0 0; cursor: pointer; border-bottom: 2px solid transparent; }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .pane { padding: 10px 12px; overflow: auto; flex: 1; }
+  .tree div { padding: 3px 6px; border-radius: 4px; color: var(--text-dim); cursor: pointer;
+              white-space: nowrap; font-size: 12.5px; }
+  .tree div:hover { background: var(--bg3); color: var(--text); }
+  .tree .lvl1 { padding-left: 20px; } .tree .lvl2 { padding-left: 34px; }
+  .tree .sel { background: var(--bg3); color: var(--accent); }
+  .badge { display: inline-block; font-size: 9.5px; font-family: var(--mono); color: var(--accent);
+           border: 1px solid var(--accent-dim); border-radius: 4px; padding: 0 4px; margin-right: 6px;
+           vertical-align: 1px; }
+  .badge.warm { color: var(--warm); border-color: #8a6f45; }
+  .pane h4 { font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase;
+             color: var(--text-faint); margin: 10px 0 6px; }
+
+  /* viewport */
+  .viewport { position: relative; overflow: hidden; perspective: 1300px; transform-style: preserve-3d;
+      background:
+      radial-gradient(1200px 500px at 50% 20%, #1b2226 0%, transparent 60%),
+      linear-gradient(#141a1d, #0e1316); }
+  .floor { position: absolute; inset: auto 0 0 0; height: 46%; transform: perspective(600px) rotateX(58deg) scale(1.6);
+           transform-origin: bottom center; opacity: .5;
+           background-image: linear-gradient(#233036 1px, transparent 1px), linear-gradient(90deg, #233036 1px, transparent 1px);
+           background-size: 44px 44px; }
+  .edges { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+  .node { position: absolute; width: 148px; background: #1c2529; border: 1px solid #31555a;
+          border-radius: 6px; cursor: pointer; box-shadow: 0 0 18px rgba(55,200,195,.12), 0 10px 26px rgba(0,0,0,.5);
+          transform: translate(-50%, -50%) translateZ(var(--tz, 0px)) rotateX(7deg) rotateY(-7deg);
+          user-select: none; }
+  .node header { padding: 5px 8px 3px; text-align: center; border-bottom: 1px solid #26333a; }
+  .node header small { display: block; color: var(--text-faint); font-family: var(--mono); font-size: 9px; }
+  .node header b { font-size: 12px; font-weight: 600; color: #bfe9e7; }
+  .node ul { list-style: none; padding: 4px 8px; font-family: var(--mono); font-size: 9.5px; color: var(--text-dim); }
+  .node.small { width: 110px; } .node.small ul { display: none; }
+  .node.selected { border-color: var(--warm); box-shadow: 0 0 0 1px var(--warm), 0 0 30px var(--warm-glow), 0 12px 30px rgba(0,0,0,.55); }
+  .node.selected header b { color: var(--warm); }
+  .handle { position: absolute; width: 9px; height: 9px; background: var(--accent); border-radius: 2px;
+            transform: rotate(45deg); display: none; box-shadow: 0 0 8px var(--accent-glow); }
+  .node.selected .handle { display: block; }
+  .handle.n { top: -5px; left: calc(50% - 4px); } .handle.s { bottom: -5px; left: calc(50% - 4px); }
+  .handle.e { right: -5px; top: calc(50% - 4px); } .handle.w { left: -5px; top: calc(50% - 4px); }
+
+  /* contextual toolbar */
+  .seltools { position: absolute; display: none; background: #1d2327f2; backdrop-filter: blur(14px);
+              border: 1px solid var(--line2); border-radius: 8px; padding: 4px; z-index: 30;
+              box-shadow: 0 10px 30px rgba(0,0,0,.5); gap: 2px; }
+  .seltools.show { display: flex; }
+  .seltools button { border: 0; background: none; color: var(--text-dim); width: 28px; height: 28px;
+                     border-radius: 5px; cursor: pointer; font-size: 13px; }
+  .seltools button:hover { background: var(--bg3); color: var(--text); }
+  .seltools button.danger:hover { color: var(--danger); }
+
+  /* command palette */
+  .palette-scrim { position: absolute; inset: 0; z-index: 80; display: none; background: rgba(5,8,10,.35); }
+  .palette-scrim.show { display: block; }
+  .palette { position: absolute; top: 90px; left: 50%; transform: translateX(-50%); width: 480px;
+             background: #1c2226f5; backdrop-filter: blur(22px); border: 1px solid var(--line2);
+             border-radius: 10px; box-shadow: 0 24px 70px rgba(0,0,0,.6); overflow: hidden; }
+  .palette input { width: 100%; background: none; border: 0; outline: 0; color: var(--text);
+                   font: inherit; font-size: 14px; padding: 13px 16px; border-bottom: 1px solid var(--line); }
+  .palette ul { list-style: none; max-height: 260px; overflow: auto; padding: 5px; }
+  .palette li { display: flex; justify-content: space-between; padding: 7px 11px; border-radius: 6px;
+                cursor: pointer; font-size: 12.5px; }
+  .palette li:hover, .palette li.hot { background: var(--accent-dim); color: #fff; }
+  .palette li .kbd { color: var(--text-dim); font-family: var(--mono); font-size: 11px; }
+  .palette li em { font-style: normal; color: var(--text-faint); font-size: 11px; margin-right: 8px; }
+  .palette li:hover em, .palette li.hot em { color: #cfeeec; }
+
+  /* inspector */
+  .inspector { width: 272px; background: var(--panel); border-left: 1px solid var(--line);
+               overflow: auto; transition: width .22s ease, opacity .18s; }
+  .app.focus-mode .inspector, .app.focus-mode .browser, .app.focus-mode .rail { width: 0; opacity: 0; border: 0; }
+  .isec { border-bottom: 1px solid var(--line); }
+  .isec > h3 { display: flex; justify-content: space-between; align-items: center; font-size: 11px;
+               letter-spacing: .07em; text-transform: uppercase; color: var(--text-dim);
+               padding: 9px 12px; cursor: pointer; user-select: none; }
+  .isec > h3::after { content: "⌄"; color: var(--text-faint); transition: transform .15s; }
+  .isec.closed > h3::after { transform: rotate(-90deg); }
+  .isec .ibody { padding: 2px 12px 12px; display: grid; gap: 8px; }
+  .isec.closed .ibody { display: none; }
+  .field label { display: block; font-size: 10.5px; color: var(--text-faint); margin-bottom: 3px; }
+  .field input, .field select, .field textarea { width: 100%; background: var(--bg); color: var(--text);
+      border: 1px solid var(--line2); border-radius: 5px; padding: 5px 8px; font: inherit; font-size: 12px; }
+  .field input:focus, .field select:focus, .field textarea:focus { outline: none; border-color: var(--accent-dim); }
+  .members { font-family: var(--mono); font-size: 10.5px; color: var(--text-dim); display: grid; gap: 3px; }
+  .members i { font-style: normal; color: var(--accent); }
+
+  /* status strip */
+  .status { display: flex; align-items: center; gap: 14px; padding: 0 12px; background: var(--bg2);
+            border-top: 1px solid var(--line); font-size: 11px; color: var(--text-dim); }
+  .chip { background: var(--accent); color: #062a29; font-weight: 600; border-radius: 4px;
+          padding: 1px 8px; font-size: 10.5px; }
+  .chip.connect { background: var(--warm); color: #3a2c12; }
+  .status .grow { flex: 1; }
+  .status .mono { font-family: var(--mono); font-size: 10.5px; }
+
+  .hint { position: absolute; bottom: 38px; left: 50%; transform: translateX(-50%); z-index: 20;
+          background: #1d2327cc; border: 1px solid var(--line2); color: var(--text-dim);
+          padding: 5px 14px; border-radius: 20px; font-size: 11.5px; backdrop-filter: blur(10px); }
+</style>
+</head>
+<body>
+<div class="app" id="app">
+
+  <!-- title + menus -->
+  <div class="titlebar">
+    <div class="lights"><span class="light r"></span><span class="light y"></span><span class="light g"></span></div>
+    <nav class="menubar" id="menubar">
+      <div class="menu"><button>File</button>
+        <div class="dropdown">
+          <div class="mi">New Model <span class="kbd">⌘N</span></div>
+          <div class="mi">New Diagram… <span class="kbd">⇧⌘N</span></div>
+          <div class="mi">Open… <span class="kbd">⌘O</span></div>
+          <div class="mi sub">Open Recent
+            <div class="submenu"><div class="mi">authoring-core.trd-yaml</div><div class="mi">billing-domain.trd-yaml</div><div class="mi">robot-model.trd.json</div></div>
+          </div>
+          <div class="sep"></div>
+          <div class="mi">Save <span class="kbd">⌘S</span></div>
+          <div class="mi">Save As… <span class="kbd">⇧⌘S</span></div>
+          <div class="sep"></div>
+          <div class="mi sub">Import
+            <div class="submenu"><div class="mi">PlantUML…</div><div class="mi">XMI…</div><div class="mi">Mermaid…</div><div class="mi">EA Project (.qea)…</div><div class="sep"></div><div class="mi">Source Code (paste)…</div><div class="mi">Source Folder…</div><div class="mi">Database (Postgres/MySQL)…</div><div class="mi">From Image…</div></div>
+          </div>
+          <div class="mi sub">Export
+            <div class="submenu"><div class="mi">TRD YAML</div><div class="mi">PlantUML</div><div class="mi">Mermaid</div><div class="mi">XMI</div><div class="mi">EA Project (.qea)</div><div class="sep"></div><div class="mi">Snapshot as PNG…</div><div class="mi">Copy Snapshot <span class="kbd">⌃⌘C</span></div><div class="mi">3D Scene (OBJ + MTL)…</div></div>
+          </div>
+          <div class="sep"></div>
+          <div class="mi">Close Diagram <span class="kbd">⌘W</span></div>
+        </div>
+      </div>
+      <div class="menu"><button>Edit</button>
+        <div class="dropdown">
+          <div class="mi">Undo <span class="kbd">⌘Z</span></div>
+          <div class="mi">Redo <span class="kbd">⇧⌘Z</span></div>
+          <div class="sep"></div>
+          <div class="mi">Cut <span class="kbd">⌘X</span></div>
+          <div class="mi">Copy <span class="kbd">⌘C</span></div>
+          <div class="mi">Paste <span class="kbd">⌘V</span></div>
+          <div class="mi">Duplicate <span class="kbd">⌘D</span></div>
+          <div class="mi">Paste Image as Node</div>
+          <div class="mi sub">Delete
+            <div class="submenu"><div class="mi">Unlink from This Diagram <span class="kbd">⌫</span></div><div class="mi">Remove from Model Everywhere <span class="kbd">⌥⌫</span></div></div>
+          </div>
+          <div class="sep"></div>
+          <div class="mi">Select All <span class="kbd">⌘A</span></div>
+          <div class="mi">Select Volume <span class="kbd">⇧⌘A</span></div>
+          <div class="mi">Find Element… <span class="kbd">⌘F</span></div>
+        </div>
+      </div>
+      <div class="menu"><button>Model</button>
+        <div class="dropdown">
+          <div class="mi sub">Add Element
+            <div class="submenu"><div class="mi">Class</div><div class="mi">Interface</div><div class="mi">Enum</div><div class="mi">Package</div><div class="mi">Component</div><div class="mi">Actor</div><div class="mi">Datastore</div><div class="mi">Note</div><div class="mi">Region</div><div class="sep"></div><div class="mi">More… <span class="kbd">⇧⌘K</span></div></div>
+          </div>
+          <div class="mi sub">Members
+            <div class="submenu"><div class="mi">Add Attribute <span class="kbd">⌥A</span></div><div class="mi">Add Operation <span class="kbd">⌥O</span></div></div>
+          </div>
+          <div class="sep"></div>
+          <div class="mi">Connect <span class="kbd">C</span></div>
+          <div class="mi sub">Relationship Type
+            <div class="submenu"><div class="mi">Association ✓</div><div class="mi">Dependency</div><div class="mi">Generalization</div><div class="mi">Realization</div><div class="mi">Composition</div><div class="mi">Aggregation</div><div class="mi">Deployment</div><div class="mi">Trace</div></div>
+          </div>
+          <div class="sep"></div>
+          <div class="mi sub">Aspects
+            <div class="submenu"><div class="mi">Attach Aspect…</div><div class="mi">Aspect Registry…</div><div class="mi">Emit to Code…</div><div class="mi">Ingest from Code…</div></div>
+          </div>
+          <div class="mi">Validate Model <span class="kbd">⇧⌘V</span></div>
+        </div>
+      </div>
+      <div class="menu"><button>Diagram</button>
+        <div class="dropdown">
+          <div class="mi sub">New From Model
+            <div class="submenu">
+              <div class="mi sub">UML<div class="submenu"><div class="mi">Class</div><div class="mi">Sequence</div><div class="mi">Package</div><div class="mi">Component</div><div class="mi">Deployment</div><div class="mi">State</div><div class="mi">Activity</div><div class="mi">Use Case</div><div class="mi">Object</div><div class="mi">Timing</div></div></div>
+              <div class="mi sub">Data<div class="submenu"><div class="mi">ERD</div><div class="mi">C4</div></div></div>
+              <div class="mi sub">Process<div class="submenu"><div class="mi">BPMN</div><div class="mi">DMN</div><div class="mi">Flowchart</div></div></div>
+              <div class="mi sub">Systems<div class="submenu"><div class="mi">SysML</div><div class="mi">ArchiMate</div><div class="mi">Network</div></div></div>
+              <div class="mi sub">Sketch<div class="submenu"><div class="mi">Mind Map</div><div class="mi">Whiteboard</div><div class="mi">Wireframe</div></div></div>
+            </div>
+          </div>
+          <div class="mi">Duplicate Diagram</div>
+          <div class="mi">Link Element Here…</div>
+          <div class="sep"></div>
+          <div class="mi sub">Layout
+            <div class="submenu"><div class="mi">Cluster (post-import)</div><div class="mi">Layered Hierarchy</div><div class="mi">Force-Directed</div><div class="mi">Grid</div><div class="mi">AI Layout…</div><div class="sep"></div><div class="mi">Keep Hand Placements ✓</div></div>
+          </div>
+          <div class="sep"></div>
+          <div class="mi">Previous Diagram <span class="kbd">⌘{</span></div>
+          <div class="mi">Next Diagram <span class="kbd">⌘}</span></div>
+        </div>
+      </div>
+      <div class="menu"><button>Code</button>
+        <div class="dropdown">
+          <div class="mi">Generate for Selection <span class="kbd">⌘G</span></div>
+          <div class="mi">Code Export Wizard… <span class="kbd">⇧⌘G</span></div>
+          <div class="mi sub">Refactor
+            <div class="submenu"><div class="mi">Rename Symbol…</div><div class="mi">Move to File…</div><div class="mi">AI Refactor…</div></div>
+          </div>
+          <div class="sep"></div>
+          <div class="mi sub">Shadow Files
+            <div class="submenu"><div class="mi">Open in Editor <span class="kbd">⇧⌘O</span></div><div class="mi">Re-ingest Edits</div><div class="mi">Watch for Changes ✓</div></div>
+          </div>
+          <div class="mi sub">Database
+            <div class="submenu"><div class="mi">Connect…</div><div class="mi">Diff vs Baseline</div><div class="mi">Emit Liquibase Changelog…</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="menu"><button>Go</button>
+        <div class="dropdown">
+          <div class="mi" data-cmd="palette">Command Palette <span class="kbd">⌘K</span></div>
+          <div class="mi">Jump to Element… <span class="kbd">⌘J</span></div>
+          <div class="mi">Back <span class="kbd">⌃[</span></div>
+          <div class="mi">Forward <span class="kbd">⌃]</span></div>
+          <div class="sep"></div>
+          <div class="mi">Frame Selected <span class="kbd">F</span></div>
+          <div class="mi">Frame All <span class="kbd">Home</span></div>
+          <div class="mi sub">Z-Layer
+            <div class="submenu"><div class="mi">Up <span class="kbd">⌥↑</span></div><div class="mi">Down <span class="kbd">⌥↓</span></div><div class="mi">Jump…</div><div class="mi">Follow Edge Across Layers <span class="kbd">⌥⏎</span></div></div>
+          </div>
+          <div class="sep"></div>
+          <div class="mi sub">Trace
+            <div class="submenu"><div class="mi">Start Trace Here <span class="kbd">⌘T</span></div><div class="mi">Open Call Site as Bubble</div><div class="mi">Close Trace</div><div class="sep"></div><div class="mi">Launch Debug <span class="kbd">⌘R</span></div><div class="mi">Continue <span class="kbd">⌃⌘Y</span></div><div class="mi">Step <span class="kbd">F7</span></div><div class="mi">Toggle Breakpoint <span class="kbd">⌘\</span></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="menu"><button>View</button>
+        <div class="dropdown">
+          <div class="mi" data-cmd="toggle-browser">Model Browser <span class="kbd">⌥⌘1</span></div>
+          <div class="mi">Inspector <span class="kbd">⌥⌘2</span></div>
+          <div class="mi">Outline <span class="kbd">⌥⌘3</span></div>
+          <div class="sep"></div>
+          <div class="mi sub">Camera
+            <div class="submenu"><div class="mi">Camera Controls… <span class="kbd">⇧⌘C</span></div><div class="mi">Overview</div><div class="mi">Focus</div><div class="mi">Top</div><div class="mi">Drag Mode Cycle <span class="kbd">⌥M</span></div><div class="mi">Reset</div></div>
+          </div>
+          <div class="mi sub">Appearance
+            <div class="submenu"><div class="mi">Grid ✓</div><div class="mi">Depth Cues ✓</div><div class="mi">Labels ✓</div><div class="mi">Trace Neighbors ✓</div><div class="mi">Regions ✓</div><div class="mi sub">Theme<div class="submenu"><div class="mi">Dark ✓</div><div class="mi">Light</div><div class="mi">Edit Tokens…</div></div></div></div>
+          </div>
+          <div class="mi sub">Overlays
+            <div class="submenu"><div class="mi">Color by Metric</div><div class="mi">Dependency Cycles</div><div class="mi">Version Compare</div></div>
+          </div>
+          <div class="sep"></div>
+          <div class="mi" data-cmd="focus-mode">Focus Mode <span class="kbd">⌃⌘F</span></div>
+        </div>
+      </div>
+      <div class="menu"><button>Window</button>
+        <div class="dropdown"><div class="mi">Minimize <span class="kbd">⌘M</span></div><div class="mi">Zoom</div><div class="sep"></div><div class="mi">authoring-core ✓</div></div>
+      </div>
+      <div class="menu"><button>Help</button>
+        <div class="dropdown"><div class="mi">Documentation</div><div class="mi">Keyboard Shortcuts <span class="kbd">⌘/</span></div><div class="mi sub">Sample Models<div class="submenu"><div class="mi">Banking Domain</div><div class="mi">Order Fulfillment (BPMN)</div><div class="mi">Pump Station (SysML)</div></div></div></div>
+      </div>
+    </nav>
+    <span class="title-app">TheRobotDrafts — authoring-core</span>
+  </div>
+
+  <!-- context toolbar -->
+  <div class="ctxbar">
+    <div class="ctx-left">
+      <button class="icon-btn" id="collapseBtn" title="Toggle Model Browser (⌥⌘1)">⟨</button>
+      <span class="crumb"><b>authoring-core</b><span>▸</span>Authoring<span>▸</span>Core Classes</span>
+    </div>
+    <div class="ctx-center">
+      <div class="modes" id="modes">
+        <button class="mode-btn active" data-mode="select">Select</button>
+        <button class="mode-btn" data-mode="connect">Connect</button>
+        <button class="mode-btn" data-mode="place">Place</button>
+      </div>
+      <div class="rel-wrap" id="relWrap">
+        <select class="rel" id="relType">
+          <option>Association</option><option>Dependency</option><option>Generalization</option>
+          <option>Realization</option><option>Composition</option><option>Aggregation</option>
+          <option>Deployment</option><option>Trace</option>
+        </select>
+      </div>
+    </div>
+    <div class="ctx-right">
+      <select class="rel" title="Layout algorithm"><option>Cluster</option><option>Hierarchy</option><option>Force</option><option>Grid</option><option>AI Layout…</option></select>
+      <button class="icon-btn" title="Camera Controls (⇧⌘C)">🎥</button>
+      <button class="icon-btn" title="Viewport Snapshot">📷</button>
+      <button class="icon-btn" title="Start Trace Here (⌘T)">⟠</button>
+      <button class="icon-btn" id="paletteBtn" title="Command Palette (⌘K)">⌘K</button>
+    </div>
+  </div>
+
+  <!-- body -->
+  <div class="body">
+    <div class="rail">
+      <button class="icon-btn active" title="Model Browser">▤</button>
+      <button class="icon-btn" title="Search (⌘F)">⌕</button>
+      <button class="icon-btn" title="Add Element">＋</button>
+      <button class="icon-btn" title="Aspects">◈</button>
+      <button class="icon-btn" title="Import / Export">⇅</button>
+    </div>
+
+    <aside class="browser" id="browser">
+      <div class="tabs" id="browserTabs">
+        <button class="tab active" data-pane="files">Files</button>
+        <button class="tab" data-pane="diagrams">Outline</button>
+        <button class="tab" data-pane="recents">Recents</button>
+      </div>
+      <div class="pane tree" data-pane-body="files">
+        <div>▾ authoring-core</div>
+        <div class="lvl1">▾ Authoring</div>
+        <div class="lvl2 sel">Core Classes</div>
+        <div class="lvl2">Command Pipeline</div>
+        <div class="lvl1">▸ Interchange</div>
+        <div class="lvl1">▸ Persistence</div>
+        <div>▸ billing-domain</div>
+      </div>
+      <div class="pane tree" data-pane-body="diagrams" hidden>
+        <h4>This model</h4>
+        <div class="sel"><span class="badge">cls</span>Core Classes</div>
+        <div><span class="badge">seq</span>Command Flow</div>
+        <div><span class="badge warm">erd</span>Model Store</div>
+        <div><span class="badge">dep</span>Deploy Topology</div>
+        <h4>Kinds</h4>
+        <div>Class · Sequence · ERD · State · BPMN · SysML · …</div>
+      </div>
+      <div class="pane tree" data-pane-body="recents" hidden>
+        <div><span class="badge">cls</span>banking-domain</div>
+        <div><span class="badge warm">erd</span>order-fulfillment</div>
+        <div><span class="badge">bpm</span>claims-process</div>
+      </div>
+    </aside>
+
+    <aside class="palette-dock" id="paletteDock" aria-label="Element palette">
+      <h5>Elements</h5>
+      <button class="chip" draggable="true" data-kind="class"><span class="glyph">Cl</span>Class</button>
+      <button class="chip" draggable="true" data-kind="interface"><span class="glyph">If</span>Interface</button>
+      <button class="chip" draggable="true" data-kind="enum"><span class="glyph">En</span>Enum</button>
+      <button class="chip" draggable="true" data-kind="package"><span class="glyph">Pk</span>Package</button>
+      <button class="chip" draggable="true" data-kind="component"><span class="glyph">Co</span>Component</button>
+      <button class="chip" draggable="true" data-kind="actor"><span class="glyph">Ac</span>Actor</button>
+      <button class="chip" draggable="true" data-kind="datastore"><span class="glyph">Db</span>Datastore</button>
+      <button class="chip" draggable="true" data-kind="note"><span class="glyph">Nt</span>Note</button>
+      <button class="chip" draggable="true" data-kind="region"><span class="glyph">Rg</span>Region</button>
+      <button class="chip" data-kind="more"><span class="glyph">…</span>More</button>
+    </aside>
+
+    <main class="viewport" id="viewport">
+      <div class="floor"></div>
+      <svg class="edges" id="edges">
+        <defs>
+          <filter id="glow"><feGaussianBlur stdDeviation="2.2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+        </defs>
+      </svg>
+      <div class="node" style="left:44%; top:30%;" data-name="ModelCommand"><span class="handle n"></span><span class="handle s"></span><span class="handle e"></span><span class="handle w"></span>
+        <header><small>&lt;&lt;class&gt;&gt;</small><b>ModelCommand</b></header>
+        <ul><li>+ id : <i>CommandId</i></li><li>+ apply() : <i>Result</i></li></ul>
+      </div>
+      <div class="node" style="left:22%; top:52%;" data-name="UmlCanvas"><span class="handle n"></span><span class="handle s"></span><span class="handle e"></span><span class="handle w"></span>
+        <header><small>&lt;&lt;class&gt;&gt;</small><b>UmlCanvas</b></header>
+        <ul><li>+ scene : <i>Scene3D</i></li><li>+ frame(id)</li></ul>
+      </div>
+      <div class="node small" style="left:70%; top:46%;" data-name="IxModel"><span class="handle n"></span><span class="handle s"></span><span class="handle e"></span><span class="handle w"></span>
+        <header><small>&lt;&lt;interface&gt;&gt;</small><b>IxModel</b></header><ul></ul>
+      </div>
+      <div class="node small" style="left:56%; top:68%;" data-name="ModelStore"><span class="handle n"></span><span class="handle s"></span><span class="handle e"></span><span class="handle w"></span>
+        <header><small>&lt;&lt;repository&gt;&gt;</small><b>ModelStore</b></header><ul></ul>
+      </div>
+      <div class="node small" style="left:33%; top:76%;" data-name="PlacementStore"><span class="handle n"></span><span class="handle s"></span><span class="handle e"></span><span class="handle w"></span>
+        <header><small>&lt;&lt;repository&gt;&gt;</small><b>PlacementStore</b></header><ul></ul>
+      </div>
+
+      <div class="seltools" id="seltools">
+        <button title="Connect from here">⤳</button>
+        <button title="Edit in Inspector">✎</button>
+        <button title="Frame (F)">⌖</button>
+        <button class="danger" title="Delete">🗑</button>
+      </div>
+
+      <div class="hint" id="hint">Click a node to select · C for Connect mode · ⌘K for commands</div>
+
+      <div class="palette-scrim" id="scrim">
+        <div class="palette">
+          <input id="palInput" placeholder="Type a command…" autocomplete="off">
+          <ul id="palList"></ul>
+        </div>
+      </div>
+    </main>
+
+    <aside class="inspector" id="inspector">
+      <div class="isec">
+        <h3>Element</h3>
+        <div class="ibody">
+          <div class="field"><label>Name</label><input id="insName" value="ModelCommand"></div>
+          <div class="field"><label>Stereotype</label><input value="class"></div>
+          <div class="field"><label>Package</label><input value="Authoring.Core"></div>
+          <div class="field"><label>Status</label><select><option>stable</option><option selected>draft</option><option>review</option><option>hot</option></select></div>
+        </div>
+      </div>
+      <div class="isec">
+        <h3>Members</h3>
+        <div class="ibody">
+          <div class="members"><span>+ id : <i>CommandId</i></span><span>+ issuedAt : <i>DateTime</i></span><span>+ apply() : <i>Result</i></span><span>+ undo() : <i>Result</i></span></div>
+        </div>
+      </div>
+      <div class="isec closed">
+        <h3>Aspects</h3>
+        <div class="ibody"><div class="members"><span>'persistence' <i>_defv:2</i></span><span>'audit' <i>_emit:AD</i></span></div></div>
+      </div>
+      <div class="isec closed">
+        <h3>Metrics</h3>
+        <div class="ibody"><div class="members"><span>complexity 58 · churn 28 · risk 27</span></div></div>
+      </div>
+      <div class="isec closed">
+        <h3>Notes</h3>
+        <div class="ibody"><div class="field"><textarea rows="3">UI-agnostic model commands reused by exports and the 3D scene.</textarea></div></div>
+      </div>
+    </aside>
+  </div>
+
+  <!-- status -->
+  <div class="status">
+    <span class="chip" id="modeChip">Select</span>
+    <span>authoring-core ▸ Core Classes</span>
+    <span class="grow"></span>
+    <span id="selInfo">ModelCommand selected</span>
+    <span class="mono">cam 54.3° / −34.9° · d 46.7</span>
+    <span>autosaved · v4</span>
+  </div>
+</div>
+
+<script>
+(function () {
+  const app = document.getElementById("app");
+
+  /* menus */
+  const menus = [...document.querySelectorAll(".menu")];
+  let menuOpen = false;
+  menus.forEach(m => {
+    m.querySelector("button").addEventListener("click", e => { e.stopPropagation(); const was = m.classList.contains("open"); closeMenus(); if (!was) { m.classList.add("open"); menuOpen = true; } });
+    m.addEventListener("mouseenter", () => { if (menuOpen) { closeMenus(); m.classList.add("open"); menuOpen = true; } });
+  });
+  function closeMenus() { menus.forEach(m => m.classList.remove("open")); menuOpen = false; }
+  document.addEventListener("click", closeMenus);
+
+  /* mode switching */
+  const modeChip = document.getElementById("modeChip");
+  const relWrap = document.getElementById("relWrap");
+  const hint = document.getElementById("hint");
+  let mode = "select";
+  function setMode(next) {
+    mode = next;
+    document.querySelectorAll(".mode-btn").forEach(b => b.classList.toggle("active", b.dataset.mode === next));
+    relWrap.classList.toggle("show", next === "connect");
+    modeChip.textContent = next[0].toUpperCase() + next.slice(1);
+    modeChip.classList.toggle("connect", next === "connect");
+    hint.textContent = next === "connect" ? `Connect (${document.getElementById("relType").value}): pick a source node`
+      : next === "place" ? "Place: drag an element kind from the rail into the scene"
+      : "Click a node to select · C for Connect mode · ⌘K for commands";
+  }
+  document.getElementById("modes").addEventListener("click", e => { const b = e.target.closest(".mode-btn"); if (b) setMode(b.dataset.mode); });
+
+  /* browser */
+  const collapseBtn = document.getElementById("collapseBtn");
+  collapseBtn.addEventListener("click", () => { app.classList.toggle("browser-collapsed"); collapseBtn.textContent = app.classList.contains("browser-collapsed") ? "⟩" : "⟨"; });
+  document.getElementById("browserTabs").addEventListener("click", e => {
+    const t = e.target.closest(".tab"); if (!t) return;
+    document.querySelectorAll(".tab").forEach(x => x.classList.toggle("active", x === t));
+    document.querySelectorAll("[data-pane-body]").forEach(p => p.hidden = p.dataset.paneBody !== t.dataset.pane);
+  });
+
+  /* inspector sections */
+  document.querySelectorAll(".isec > h3").forEach(h => h.addEventListener("click", () => h.parentElement.classList.toggle("closed")));
+
+  /* nodes + selection + contextual toolbar + edges */
+  const viewport = document.getElementById("viewport");
+  const seltools = document.getElementById("seltools");
+  const selInfo = document.getElementById("selInfo");
+  const nodes = [...document.querySelectorAll(".node")];
+  let connectSource = null;
+  function select(node) {
+    nodes.forEach(n => n.classList.toggle("selected", n === node));
+    if (node) {
+      const r = node.getBoundingClientRect(), vr = viewport.getBoundingClientRect();
+      seltools.style.left = (r.right - vr.left + 10) + "px";
+      seltools.style.top = (r.top - vr.top) + "px";
+      seltools.classList.add("show");
+      selInfo.textContent = node.dataset.name + " selected";
+      document.getElementById("insName").value = node.dataset.name;
+    } else { seltools.classList.remove("show"); selInfo.textContent = "No selection"; }
+  }
+  nodes.forEach(n => n.addEventListener("click", e => {
+    e.stopPropagation();
+    if (mode === "connect") {
+      if (!connectSource) { connectSource = n; select(n); hint.textContent = `Connect (${document.getElementById("relType").value}): source ${n.dataset.name} — pick a target`; }
+      else if (connectSource !== n) { drawEdge(connectSource, n, true); hint.textContent = `Connected ${connectSource.dataset.name} → ${n.dataset.name}`; connectSource = null; select(n); }
+      return;
+    }
+    select(n);
+  }));
+  viewport.addEventListener("click", () => { if (mode !== "connect") select(null); });
+
+  const svg = document.getElementById("edges");
+  function center(n) { const r = n.getBoundingClientRect(), v = viewport.getBoundingClientRect(); return [r.left - v.left + r.width / 2, r.top - v.top + r.height / 2]; }
+  function drawEdge(a, b, dashed) {
+    const [x1, y1] = center(a), [x2, y2] = center(b);
+    const l = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    l.setAttribute("x1", x1); l.setAttribute("y1", y1); l.setAttribute("x2", x2); l.setAttribute("y2", y2);
+    l.setAttribute("stroke", "#37c8c3"); l.setAttribute("stroke-width", "1.4"); l.setAttribute("opacity", ".75");
+    if (dashed) l.setAttribute("stroke-dasharray", "6 4");
+    l.setAttribute("filter", "url(#glow)");
+    svg.appendChild(l);
+  }
+  const byName = Object.fromEntries(nodes.map(n => [n.dataset.name, n]));
+  requestAnimationFrame(() => {
+    drawEdge(byName.ModelCommand, byName.UmlCanvas); drawEdge(byName.ModelCommand, byName.IxModel);
+    drawEdge(byName.UmlCanvas, byName.PlacementStore); drawEdge(byName.IxModel, byName.ModelStore);
+    drawEdge(byName.UmlCanvas, byName.ModelStore);
+    select(byName.ModelCommand);
+  });
+
+  /* element palette dock: click = arm Place, drag = drop into scene */
+  const paletteDock = document.getElementById("paletteDock");
+  let armedKind = null;
+  function makeNode(kind, name, x, y) {
+    const el = document.createElement("div");
+    el.className = "node small"; el.dataset.name = name;
+    el.style.left = x + "px"; el.style.top = y + "px"; el.style.setProperty("--tz", "10px");
+    el.innerHTML = `<span class="handle n"></span><span class="handle s"></span><span class="handle e"></span><span class="handle w"></span>
+      <header><small>&lt;&lt;${kind}&gt;&gt;</small><b>${name}</b></header><ul></ul>`;
+    el.addEventListener("click", ev => { ev.stopPropagation(); select(el); });
+    viewport.appendChild(el);
+    byName[name] = el; nodes.push(el);
+    return el;
+  }
+  let kindCount = {};
+  function placeKind(kind, x, y) {
+    kindCount[kind] = (kindCount[kind] || 0) + 1;
+    const name = kind[0].toUpperCase() + kind.slice(1) + (kindCount[kind] + 1);
+    const el = makeNode(kind, name, x, y);
+    select(el);
+    hint.textContent = `Placed ${name}`;
+    document.getElementById("selInfo").textContent = name + " selected";
+  }
+  paletteDock.addEventListener("click", e => {
+    const chip = e.target.closest(".chip"); if (!chip) return;
+    if (chip.dataset.kind === "more") { hint.textContent = "Kind browser (⇧⌘K): 185 kinds by family"; return; }
+    armedKind = chip.dataset.kind;
+    [...paletteDock.querySelectorAll(".chip")].forEach(c => c.classList.toggle("armed", c === chip));
+    setMode("place");
+    hint.textContent = `Place: click in the scene to add a ${armedKind} (or drag the chip in)`;
+  });
+  paletteDock.addEventListener("dragstart", e => {
+    const chip = e.target.closest(".chip"); if (!chip || chip.dataset.kind === "more") return;
+    e.dataTransfer.setData("application/x-trd-kind", chip.dataset.kind);
+    e.dataTransfer.effectAllowed = "copy";
+  });
+  viewport.addEventListener("dragover", e => {
+    if (e.dataTransfer.types.includes("application/x-trd-kind")) { e.preventDefault(); e.dataTransfer.dropEffect = "copy"; }
+  });
+  viewport.addEventListener("drop", e => {
+    const kind = e.dataTransfer.getData("application/x-trd-kind"); if (!kind) return;
+    e.preventDefault();
+    const vr = viewport.getBoundingClientRect();
+    placeKind(kind, e.clientX - vr.left, e.clientY - vr.top);
+  });
+  viewport.addEventListener("click", e => {
+    if (mode === "place" && armedKind && e.target === viewport) {
+      const vr = viewport.getBoundingClientRect();
+      placeKind(armedKind, e.clientX - vr.left, e.clientY - vr.top);
+    }
+  });
+
+  /* command palette */
+  const scrim = document.getElementById("scrim"), palInput = document.getElementById("palInput"), palList = document.getElementById("palList");
+  const commands = [
+    ["File", "New Model", "⌘N"], ["File", "New Diagram…", "⇧⌘N"], ["File", "Open…", "⌘O"], ["File", "Save", "⌘S"],
+    ["File", "Import PlantUML…", ""], ["File", "Export TRD YAML", ""], ["File", "Export Code Skeleton (TypeScript)", ""],
+    ["Edit", "Undo", "⌘Z"], ["Edit", "Find Element…", "⌘F"],
+    ["Model", "Add Class", ""], ["Model", "Connect", "C"], ["Model", "Attach Aspect…", ""], ["Model", "Validate Model", "⇧⌘V"],
+    ["Diagram", "Auto-Layout All", "⇧⌘L"], ["Diagram", "New ERD From Model", ""],
+    ["Code", "Generate for Selection", "⌘G"], ["Code", "Code Export Wizard…", "⇧⌘G"], ["Code", "AI Refactor…", ""],
+    ["Code", "Connect Database…", ""], ["Code", "Emit Liquibase Changelog…", ""],
+    ["Go", "Jump to Element…", "⌘J"], ["Go", "Frame All", "Home"], ["Go", "Start Trace Here", "⌘T"],
+    ["Go", "Z-Layer Up", "⌥↑"], ["View", "Camera Controls…", "⇧⌘C"], ["View", "Focus Mode", "⌃⌘F"],
+    ["View", "Color by Metric", ""],
+  ];
+  function renderPal(filter) {
+    palList.innerHTML = "";
+    commands.filter(c => !filter || c[1].toLowerCase().includes(filter.toLowerCase()))
+      .forEach((c, i) => {
+        const li = document.createElement("li"); if (i === 0) li.className = "hot";
+        li.innerHTML = `<span><em>${c[0]}</em>${c[1]}</span><span class="kbd">${c[2]}</span>`;
+        li.addEventListener("click", closePal);
+        palList.appendChild(li);
+      });
+  }
+  function openPal() { scrim.classList.add("show"); palInput.value = ""; renderPal(""); palInput.focus(); }
+  function closePal() { scrim.classList.remove("show"); }
+  palInput.addEventListener("input", () => renderPal(palInput.value));
+  scrim.addEventListener("click", e => { if (e.target === scrim) closePal(); });
+  document.getElementById("paletteBtn").addEventListener("click", openPal);
+
+  /* menu data-cmd wiring */
+  document.querySelectorAll("[data-cmd]").forEach(el => el.addEventListener("click", () => {
+    const c = el.dataset.cmd;
+    if (c === "palette") openPal();
+    if (c === "focus-mode") app.classList.toggle("focus-mode");
+    if (c === "toggle-browser") collapseBtn.click();
+  }));
+
+  /* keyboard */
+  document.addEventListener("keydown", e => {
+    const typing = /INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName);
+    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") { e.preventDefault(); openPal(); return; }
+    if (e.key === "Escape") { closePal(); closeMenus(); if (connectSource) { connectSource = null; hint.textContent = "Connect: source cleared"; } else if (mode === "connect") setMode("select"); return; }
+    if (typing) return;
+    if (e.key === "v" || e.key === "V") setMode("select");
+    if (e.key === "c" || e.key === "C") setMode("connect");
+    if (e.key === "p" || e.key === "P") setMode("place");
+  });
+})();
+</script>
+</body>
+</html>

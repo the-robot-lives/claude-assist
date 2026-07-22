@@ -502,7 +502,9 @@ defmodule CodefreshWeb.ScriptController do
           |> json(%{script: render_script(fork), draft_version: render_version(draft)})
 
         {:error, :not_published} ->
-          conn |> put_status(:conflict) |> json(%{error: "source script has no published version to fork"})
+          conn
+          |> put_status(:conflict)
+          |> json(%{error: "source script has no published version to fork"})
 
         {:error, reason} ->
           conn |> put_status(:unprocessable_entity) |> json(%{error: inspect(reason)})
@@ -518,8 +520,12 @@ defmodule CodefreshWeb.ScriptController do
   # US-042 — Diff two script versions
   # ──────────────────────────────────────────────────────────────────────────
 
-  def diff_versions(conn, %{"organization_id" => org_id, "id" => _script_id,
-                             "version_a_id" => va_id, "version_b_id" => vb_id}) do
+  def diff_versions(conn, %{
+        "organization_id" => org_id,
+        "id" => _script_id,
+        "version_a_id" => va_id,
+        "version_b_id" => vb_id
+      }) do
     user = Guardian.Plug.current_resource(conn)
 
     with {:ok, _} <- Organizations.authorize(user, org_id, "viewer"),
@@ -531,9 +537,10 @@ defmodule CodefreshWeb.ScriptController do
         diff: %{
           added_nodes: Enum.map(diff.added_nodes, &render_node/1),
           removed_nodes: Enum.map(diff.removed_nodes, &render_node/1),
-          changed_nodes: Enum.map(diff.changed_nodes, fn %{before: a, after: b} ->
-            %{before: render_node(a), after: render_node(b)}
-          end),
+          changed_nodes:
+            Enum.map(diff.changed_nodes, fn %{before: a, after: b} ->
+              %{before: render_node(a), after: render_node(b)}
+            end),
           added_edges: Enum.map(diff.added_edges, &render_edge/1),
           removed_edges: Enum.map(diff.removed_edges, &render_edge/1)
         }
@@ -545,14 +552,22 @@ defmodule CodefreshWeb.ScriptController do
     end
   end
 
-  def diff_versions(conn, _), do: bad_request(conn, "Expected version_a_id and version_b_id query params")
+  def diff_versions(conn, _),
+    do: bad_request(conn, "Expected version_a_id and version_b_id query params")
 
   # ──────────────────────────────────────────────────────────────────────────
   # US-043 — Bulk node operations
   # ──────────────────────────────────────────────────────────────────────────
 
-  def bulk_nodes(conn, %{"organization_id" => org_id, "id" => script_id,
-                          "action" => action, "node_ids" => node_ids} = params)
+  def bulk_nodes(
+        conn,
+        %{
+          "organization_id" => org_id,
+          "id" => script_id,
+          "action" => action,
+          "node_ids" => node_ids
+        } = params
+      )
       when action in ["archive", "retag"] do
     user = Guardian.Plug.current_resource(conn)
     tags = Map.get(params, "tags", [])
@@ -622,8 +637,11 @@ defmodule CodefreshWeb.ScriptController do
     end
   end
 
-  def add_node_comment(conn, %{"organization_id" => org_id, "node_id" => node_id,
-                                "comment" => params}) do
+  def add_node_comment(conn, %{
+        "organization_id" => org_id,
+        "node_id" => node_id,
+        "comment" => params
+      }) do
     user = Guardian.Plug.current_resource(conn)
 
     with {:ok, _} <- Organizations.authorize(user, org_id, "viewer"),
@@ -753,12 +771,14 @@ defmodule CodefreshWeb.ScriptController do
       id: exp.id,
       script_node_id: exp.script_node_id,
       label: exp.label,
-      weight: if(is_struct(exp.weight, Decimal), do: Decimal.to_float(exp.weight), else: exp.weight),
-      direction: case exp.direction do
-        "positive" -> "maximize"
-        "negative" -> "minimize"
-        other -> other
-      end,
+      weight:
+        if(is_struct(exp.weight, Decimal), do: Decimal.to_float(exp.weight), else: exp.weight),
+      direction:
+        case exp.direction do
+          "positive" -> "maximize"
+          "negative" -> "minimize"
+          other -> other
+        end,
       scoring_method: exp.scoring_method,
       config: exp.config,
       rubric_version_id: exp.rubric_version_id

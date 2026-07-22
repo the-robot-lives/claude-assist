@@ -30,6 +30,7 @@ defmodule Codefresh.Runs.Score do
     belongs_to :expectation, Codefresh.Scripts.Expectation
     belongs_to :freeball_expectation, Codefresh.Runs.FreeballExpectation
     belongs_to :rubric_version, Codefresh.Rubrics.RubricVersion
+
     belongs_to :judge_prompt_version, Codefresh.Prompts.PromptVersion,
       foreign_key: :judge_prompt_version_id
 

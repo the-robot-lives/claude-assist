@@ -22,8 +22,7 @@ defmodule Codefresh.Datasets.DatasetVersion do
     belongs_to :dataset, Codefresh.Datasets.Dataset
     belongs_to :organization, Codefresh.Schema.Organizations.Organization
 
-    belongs_to :parent_version, Codefresh.Datasets.DatasetVersion,
-      foreign_key: :parent_version_id
+    belongs_to :parent_version, Codefresh.Datasets.DatasetVersion, foreign_key: :parent_version_id
 
     belongs_to :default_rubric_version, Codefresh.Rubrics.RubricVersion,
       foreign_key: :default_rubric_version_id

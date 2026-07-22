@@ -1,7 +1,7 @@
 replicas: 1
 domain: therobotknows.com
 backend:
-  image: ops.noizu.com/therobotknows.com/backend:v1.0.5
+  image: ops.noizu.com/therobotknows.com/backend:v1.0.6
   port: 4000
   resources:
     requests:

@@ -80,3 +80,6 @@ databaseChangeLog:
   - include:
       file: 026-trl-waitlist.yaml
       relativeToChangelogFile: true
+  - include:
+      file: 027-personal-orgs.yaml
+      relativeToChangelogFile: true

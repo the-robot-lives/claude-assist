@@ -11,6 +11,7 @@ defmodule Therobotplans.Domains.Items do
   alias Therobotplans.Schema.Projects.Project
   alias Therobotplans.Schema.Organizations.Organization
   alias Therobotplans.Domains.Items.ItemKey
+  alias Therobotplans.Services.Comment
 
   @max_prefix_attempts 50
 
@@ -352,7 +353,7 @@ defmodule Therobotplans.Domains.Items do
     |> maybe_filter(:priority, opts[:priority])
     |> maybe_filter(:assignee, opts[:assignee])
     |> maybe_filter(:queue_id, opts[:queue_id])
-    |> maybe_filter(:parent_id, opts[:parent_id])
+    |> maybe_filter_parent(opts[:parent_id])
     |> maybe_filter(:project_id, opts[:project_id])
     |> maybe_filter(:stage_id, opts[:stage_id])
     |> maybe_filter(:iteration_id, opts[:iteration_id])
@@ -409,6 +410,63 @@ defmodule Therobotplans.Domains.Items do
     %{outgoing: outgoing, incoming: incoming}
   end
 
+  @doc "Fetch a single item↔item link by its id."
+  def get_link(id), do: Repo.get(ItemLink, id)
+
+  @doc "Delete an item↔item link by its id."
+  def delete_link(id) do
+    case Repo.get(ItemLink, id) do
+      nil -> {:error, :not_found}
+      link -> Repo.delete(link)
+    end
+  end
+
+  @doc """
+  Hard-delete an item. item_events cascade (ON DELETE CASCADE); item_links are
+  subject to their FK constraints and block if dependent rows remain.
+  """
+  def delete(id) do
+    case Repo.get(Item, id) do
+      nil -> {:error, :not_found}
+      item -> Repo.delete(item)
+    end
+  end
+
+  # ── Comments (delegate to polymorphic Services.Comment, entity_type "item") ─
+
+  def list_comments(item_id, opts \\ []), do: Comment.list("item", item_id, opts)
+
+  def add_comment(item_id, attrs), do: Comment.add("item", item_id, attrs)
+
+  def get_comment(comment_id), do: Comment.get(comment_id)
+
+  def delete_comment(comment_id), do: Comment.delete(comment_id)
+
+  # ── Activity (item_events append-only audit trail) ──────────────────────────
+
+  @doc """
+  Append-only field-transition events for an item (powers the activity feed and
+  burndown). Queries the raw `item_events` table (no Ecto schema — written via
+  insert_all in update/3).
+  """
+  def list_events(item_id, opts \\ []) do
+    from(e in "item_events",
+      where: e.item_id == ^item_id,
+      order_by: [asc: e.occurred_at],
+      limit: ^(opts[:limit] || 50),
+      select: %{
+        id: e.id,
+        item_id: e.item_id,
+        actor: e.actor,
+        field: e.field,
+        old_value: e.old_value,
+        new_value: e.new_value,
+        occurred_at: e.occurred_at
+      }
+    )
+    |> Repo.all()
+  end
+
   # Scalar OR list value per field (multi-select). A list filters with `in`;
   # a scalar keeps `==`. nil/[] are no-ops.
   defp maybe_filter(query, _field, nil), do: query
@@ -418,4 +476,12 @@ defmodule Therobotplans.Domains.Items do
     do: where(query, [t], field(t, ^field) in ^vals)
 
   defp maybe_filter(query, field, val), do: where(query, [t], field(t, ^field) == ^val)
+
+  # parent_id special-case: "root" sentinel selects top-level (parent_id IS NULL)
+  # items — epics/parents without a parent of their own. nil is a no-op.
+  defp maybe_filter_parent(query, nil), do: query
+  defp maybe_filter_parent(query, "root"), do: where(query, [t], is_nil(t.parent_id))
+
+  defp maybe_filter_parent(query, parent_id),
+    do: where(query, [t], t.parent_id == ^parent_id)
 end

@@ -128,9 +128,14 @@ defmodule CodefreshWeb.ReviewController do
     end
   end
 
-  defp dispatch_resolve(item, actor_id, "approve", attrs), do: Review.approve(item, actor_id, attrs)
+  defp dispatch_resolve(item, actor_id, "approve", attrs),
+    do: Review.approve(item, actor_id, attrs)
+
   defp dispatch_resolve(item, actor_id, "reject", attrs), do: Review.reject(item, actor_id, attrs)
-  defp dispatch_resolve(item, actor_id, "dismiss", attrs), do: Review.dismiss(item, actor_id, attrs)
+
+  defp dispatch_resolve(item, actor_id, "dismiss", attrs),
+    do: Review.dismiss(item, actor_id, attrs)
+
   defp dispatch_resolve(_item, _actor_id, _other, _attrs), do: {:error, :unknown_action}
 
   # ---------------------------------------------------------------------------
@@ -179,7 +184,10 @@ defmodule CodefreshWeb.ReviewController do
     opts =
       []
       |> Keyword.put(:target_kind, Map.get(params, "target_kind", "script_version"))
-      |> maybe_put(:target_script_version_id, param_uuid(Map.get(params, "target_script_version_id")))
+      |> maybe_put(
+        :target_script_version_id,
+        param_uuid(Map.get(params, "target_script_version_id"))
+      )
       |> maybe_put(:notes, Map.get(params, "notes"))
 
     with {:ok, _} <- Organizations.authorize(user, org_id, "editor"),
@@ -283,14 +291,23 @@ defmodule CodefreshWeb.ReviewController do
       id: ri.id,
       organization_id: ri.organization_id,
       freeball_node_id: ri.freeball_node_id,
-      run_id: if(ri.freeball_node && ri.freeball_node != %Ecto.Association.NotLoaded{}, do: ri.freeball_node.run_id, else: nil),
-      status: case ri.status do
-        s when s in ["approved", "rejected", "promoted"] -> "resolved"
-        other -> other
-      end,
+      run_id:
+        if(ri.freeball_node && ri.freeball_node != %Ecto.Association.NotLoaded{},
+          do: ri.freeball_node.run_id,
+          else: nil
+        ),
+      status:
+        case ri.status do
+          s when s in ["approved", "rejected", "promoted"] -> "resolved"
+          other -> other
+        end,
       priority: ri.priority,
       assignee_id: ri.assigned_to_user_id,
-      assignee_email: if(ri.assigned_to_user && ri.assigned_to_user != %Ecto.Association.NotLoaded{}, do: ri.assigned_to_user.email, else: nil),
+      assignee_email:
+        if(ri.assigned_to_user && ri.assigned_to_user != %Ecto.Association.NotLoaded{},
+          do: ri.assigned_to_user.email,
+          else: nil
+        ),
       claimed_at: ri.claimed_at,
       resolved_at: ri.resolved_at,
       notes: ri.resolution_notes,

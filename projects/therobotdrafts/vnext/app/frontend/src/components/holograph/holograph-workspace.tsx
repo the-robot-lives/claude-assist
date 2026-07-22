@@ -1,6 +1,6 @@
 "use client";
 
-import { type ChangeEvent, type MouseEvent, useEffect, useMemo, useRef, useState } from "react";
+import { type ChangeEvent, type MouseEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { graphMetrics, riskBandFor, searchNodes, traceNeighbors } from "@/lib/holograph/analysis";
 import {
   createEmptyDocument,
@@ -12,10 +12,17 @@ import {
   importCodeFiles,
   importPlantUml,
   readGraphDocumentJson,
+  relationshipEdgeKind,
+  relationshipStyle,
+  skeletonLanguages,
+  type SkeletonLanguage,
+  UML_RELATIONSHIPS,
+  type UmlRelationship,
 } from "@/lib/holograph/document-io";
+import { exportTrdYaml, importTrdYaml, looksLikeTrdYaml } from "@/lib/holograph/trd-yaml";
 import { demoDocument } from "@/lib/holograph/fixture";
 import type { GraphDocument, GraphEdge, GraphNode, NodeKind } from "@/lib/holograph/types";
-import { TrdThreeScene } from "./trd-three-scene";
+import { TrdThreeScene, type TrdSceneHandle } from "./trd-three-scene";
 
 type CommandId =
   | "file.new"
@@ -40,10 +47,12 @@ type CommandId =
   | "layout.frameAll"
   | "layout.reset"
   | "export.json"
+  | "export.trdyaml"
   | "export.plantuml"
   | "export.mermaid"
   | "export.dot"
-  | "export.code";
+  | "export.code"
+  | `export.code.${SkeletonLanguage}`;
 
 interface MenuItem {
   label: string;
@@ -63,6 +72,10 @@ interface ContextMenuState {
 
 const autosaveKey = "trd:vnext:active-document";
 const clipboardKey = "trd:vnext:clipboard-node";
+
+type InteractionMode = "select" | "connect";
+
+const relationshipOptions = UML_RELATIONSHIPS;
 
 const emptyInitialDocument: GraphDocument = {
   id: "trd-local-untitled",
@@ -123,10 +136,14 @@ const menuGroups: MenuGroup[] = [
     label: "Export",
     items: [
       { label: "TRD JSON", command: "export.json" },
+      { label: "TRD YAML", command: "export.trdyaml" },
       { label: "PlantUML", command: "export.plantuml" },
       { label: "Mermaid", command: "export.mermaid" },
       { label: "DOT", command: "export.dot" },
-      { label: "Code Skeleton", command: "export.code" },
+      ...skeletonLanguages.map((entry) => ({
+        label: `Code Skeleton (${entry.label})`,
+        command: `export.code.${entry.value}` as CommandId,
+      })),
     ],
   },
 ];
@@ -196,6 +213,11 @@ export function HoloGraphWorkspace() {
   const codeInputRef = useRef<HTMLInputElement | null>(null);
   const [document, setDocument] = useState<GraphDocument>(emptyInitialDocument);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [interactionMode, setInteractionMode] = useState<InteractionMode>("select");
+  const [connectSourceId, setConnectSourceId] = useState<string | null>(null);
+  const sceneHandleRef = useRef<TrdSceneHandle | null>(null);
+  const [cameraForm, setCameraForm] = useState<Record<"yaw" | "pitch" | "roll" | "x" | "y" | "z" | "distance", string> | null>(null);
+  const [relationshipType, setRelationshipType] = useState<UmlRelationship>("association");
   const [focusId, setFocusId] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [traceEnabled, setTraceEnabled] = useState(true);
@@ -226,6 +248,25 @@ export function HoloGraphWorkspace() {
     window.localStorage.setItem(autosaveKey, JSON.stringify(document));
   }, [document, loadedFromStorage]);
 
+  // Escape must work even when focus sits on <body> (clicking the WebGL canvas does not
+  // move focus into the React tree), so it is handled at the window level.
+  useEffect(() => {
+    function onWindowKeyDown(event: KeyboardEvent) {
+      if (event.key !== "Escape") return;
+      const target = event.target;
+      if (target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement || target instanceof HTMLSelectElement) return;
+      if (connectSourceId) {
+        setConnectSourceId(null);
+        setStatus("Connect: source cleared. Pick a source node.");
+      } else if (interactionMode === "connect") {
+        setInteractionMode("select");
+        setStatus("Select mode.");
+      }
+    }
+    window.addEventListener("keydown", onWindowKeyDown);
+    return () => window.removeEventListener("keydown", onWindowKeyDown);
+  }, [connectSourceId, interactionMode]);
+
   const metrics = useMemo(() => graphMetrics(document), [document]);
   const selectedNode = selectedId ? document.nodes.find((node) => node.id === selectedId) ?? null : null;
   const matchingNodes = useMemo(() => searchNodes(document, query), [document, query]);
@@ -234,15 +275,22 @@ export function HoloGraphWorkspace() {
     () => (selectedNode ? traceNeighbors(document, selectedNode.id) : null),
     [document, selectedNode],
   );
-  const tracedEdgeIds = new Set(traceEnabled && trace ? trace.edgeIds : []);
+  // Memoized: a fresh Set every render is a new identity in the scene effect's deps and
+  // would tear down / rebuild the whole WebGL scene on every workspace render.
+  const tracedEdgeIds = useMemo(() => new Set(traceEnabled && trace ? trace.edgeIds : []), [traceEnabled, trace]);
 
-  function commitDocument(next: GraphDocument, message: string, pushHistory = true) {
+  function retainSelection(next: GraphDocument) {
+    setSelectedId((current) => (current && next.nodes.some((node) => node.id === current) ? current : null));
+  }
+
+  function commitDocument(next: GraphDocument, message: string, options?: { pushHistory?: boolean; selectId?: string | null }) {
     setDocument((current) => {
-      if (pushHistory) setHistory((items) => [...items, current].slice(-50));
+      if (options?.pushHistory ?? true) setHistory((items) => [...items, current].slice(-50));
       return next;
     });
     setRedoStack([]);
-    setSelectedId(next.nodes[0]?.id ?? null);
+    if (options?.selectId !== undefined) setSelectedId(options.selectId);
+    else retainSelection(next);
     setFocusId(null);
     setStatus(message);
   }
@@ -256,7 +304,7 @@ export function HoloGraphWorkspace() {
     setStatus(message);
   }
 
-  function addNode(kind: NodeKind) {
+  function addNode(kind: NodeKind, at?: { x: number; y: number; z: number }) {
     const count = document.nodes.filter((node) => node.kind === kind).length + 1;
     const label = elementLabel(kind, count);
     const usedIds = new Set(document.nodes.map((node) => node.id));
@@ -275,6 +323,7 @@ export function HoloGraphWorkspace() {
       parentId,
       stereotype: kind,
       description: `New ${kind} element.`,
+      trd3d: at ? { position: at, authored: true } : undefined,
       uml: {
         elementType: kind === "database" ? "DataStore" : kind[0].toUpperCase() + kind.slice(1),
         visibility: "public",
@@ -293,9 +342,31 @@ export function HoloGraphWorkspace() {
         nodes: [...document.nodes, node],
         edges: edge ? [...document.edges, edge] : document.edges,
       }),
-      `Added ${label}`,
+      at ? `Placed ${label} at (${at.x}, ${at.y}, ${at.z})` : `Added ${label}`,
+      { selectId: id },
     );
-    setSelectedId(id);
+  }
+
+  const nodeKindDragType = "application/x-trd-node-kind";
+
+  function handlePaletteDragStart(event: React.DragEvent<HTMLElement>, kind: NodeKind) {
+    event.dataTransfer.setData(nodeKindDragType, kind);
+    event.dataTransfer.effectAllowed = "copy";
+    setStatus(`Drag the ${kind} onto the 3D scene to place it.`);
+  }
+
+  function handleCanvasDragOver(event: React.DragEvent<HTMLElement>) {
+    if (!event.dataTransfer.types.includes(nodeKindDragType)) return;
+    event.preventDefault();
+    event.dataTransfer.dropEffect = "copy";
+  }
+
+  function handleCanvasDrop(event: React.DragEvent<HTMLElement>) {
+    const kind = event.dataTransfer.getData(nodeKindDragType) as NodeKind | "";
+    if (!kind) return;
+    event.preventDefault();
+    const at = sceneHandleRef.current?.dropPointAt(event.clientX, event.clientY);
+    addNode(kind, at ?? undefined);
   }
 
   function deleteSelected() {
@@ -320,7 +391,9 @@ export function HoloGraphWorkspace() {
         edges: document.edges.filter((edge) => !removedIds.has(edge.sourceId) && !removedIds.has(edge.targetId)),
       }),
       `Deleted ${selectedNode.label}`,
+      { selectId: null },
     );
+    if (connectSourceId && removedIds.has(connectSourceId)) setConnectSourceId(null);
   }
 
   function copySelected() {
@@ -346,11 +419,29 @@ export function HoloGraphWorkspace() {
           nodes: [...document.nodes, { ...node, id, label: `${node.label} Copy`, status: "draft" }],
         }),
         `Pasted ${node.label}`,
+        { selectId: id },
       );
-      setSelectedId(id);
     } catch {
       setStatus("Clipboard did not contain a valid TRD node.");
     }
+  }
+
+  function updateSelectedNode(message: string, mutate: (node: GraphNode) => GraphNode) {
+    if (!selectedNode) return;
+    commitDocument(
+      withDocumentUpdate(document, {
+        nodes: document.nodes.map((node) => (node.id === selectedNode.id ? mutate(node) : node)),
+      }),
+      message,
+      { selectId: selectedNode.id },
+    );
+  }
+
+  function splitLines(value: string) {
+    return value
+      .split("\n")
+      .map((line) => line.trim())
+      .filter(Boolean);
   }
 
   function focusSelected() {
@@ -377,7 +468,7 @@ export function HoloGraphWorkspace() {
     setRedoStack((items) => [document, ...items].slice(0, 50));
     setHistory((items) => items.slice(0, -1));
     setDocument(previous);
-    setSelectedId(previous.nodes[0]?.id ?? null);
+    retainSelection(previous);
     setStatus("Undo applied.");
   }
 
@@ -390,14 +481,136 @@ export function HoloGraphWorkspace() {
     setHistory((items) => [...items, document].slice(-50));
     setRedoStack((items) => items.slice(1));
     setDocument(next);
-    setSelectedId(next.nodes[0]?.id ?? null);
+    retainSelection(next);
     setStatus("Redo applied.");
   }
+
+  function readCameraPoseIntoForm() {
+    const pose = sceneHandleRef.current?.getCameraPose();
+    if (!pose) {
+      setStatus("Camera is not ready yet.");
+      return;
+    }
+    const fmt = (value: number) => (Math.round(value * 10) / 10).toString();
+    setCameraForm({
+      yaw: fmt(pose.yaw),
+      pitch: fmt(pose.pitch),
+      roll: fmt(pose.roll),
+      x: fmt(pose.pivot.x),
+      y: fmt(pose.pivot.y),
+      z: fmt(pose.pivot.z),
+      distance: fmt(pose.distance),
+    });
+  }
+
+  function applyCameraForm() {
+    if (!cameraForm || !sceneHandleRef.current) return;
+    const num = (value: string, fallback = 0) => {
+      const parsed = Number.parseFloat(value);
+      return Number.isFinite(parsed) ? parsed : fallback;
+    };
+    sceneHandleRef.current.setCameraPose({
+      yaw: num(cameraForm.yaw),
+      pitch: num(cameraForm.pitch),
+      roll: num(cameraForm.roll),
+      pivot: { x: num(cameraForm.x), y: num(cameraForm.y), z: num(cameraForm.z) },
+      distance: num(cameraForm.distance, 18),
+    });
+    setStatus("Applied camera pose.");
+  }
+
+  function setMode(mode: InteractionMode) {
+    setInteractionMode(mode);
+    setConnectSourceId(null);
+    setStatus(mode === "connect" ? `Connect mode (${relationshipType}): pick a source node.` : "Select mode.");
+  }
+
+  function nodeLabel(nodeId: string) {
+    return document.nodes.find((node) => node.id === nodeId)?.label ?? nodeId;
+  }
+
+  function createRelationship(sourceId: string, targetId: string) {
+    const source = document.nodes.find((node) => node.id === sourceId);
+    const target = document.nodes.find((node) => node.id === targetId);
+    if (!source || !target) {
+      setConnectSourceId(null);
+      setStatus("Connect: source or target no longer exists. Pick a source node.");
+      return;
+    }
+    const duplicate = document.edges.some(
+      (edge) => edge.sourceId === sourceId && edge.targetId === targetId && edge.uml?.relationship === relationshipType,
+    );
+    if (duplicate) {
+      setConnectSourceId(null);
+      setStatus(`Connect: ${relationshipType} from ${source.label} to ${target.label} already exists.`);
+      return;
+    }
+    const usedIds = new Set(document.edges.map((edge) => edge.id));
+    const baseId = `${relationshipType}-${sourceId}-${targetId}`;
+    let id = baseId;
+    let suffix = 2;
+    while (usedIds.has(id)) {
+      id = `${baseId}-${suffix}`;
+      suffix += 1;
+    }
+    const edge: GraphEdge = {
+      id,
+      sourceId,
+      targetId,
+      kind: relationshipEdgeKind[relationshipType],
+      label: relationshipType,
+      uml: { relationship: relationshipType, ...relationshipStyle[relationshipType] },
+    };
+    setConnectSourceId(null);
+    commitDocument(
+      withDocumentUpdate(document, { edges: [...document.edges, edge] }),
+      `Connected ${source.label} -> ${target.label} (${relationshipType}). Pick the next source node.`,
+      { selectId: targetId },
+    );
+  }
+
+  function handleSceneSelect(nodeId: string | null) {
+    if (interactionMode !== "connect") {
+      setSelectedId(nodeId);
+      if (nodeId) setStatus(`Selected 3D UML node ${nodeLabel(nodeId)}`);
+      return;
+    }
+    if (!nodeId) {
+      if (connectSourceId) {
+        setConnectSourceId(null);
+        setStatus("Connect: source cleared. Pick a source node.");
+      }
+      return;
+    }
+    if (!connectSourceId) {
+      setConnectSourceId(nodeId);
+      setSelectedId(nodeId);
+      setStatus(`Connect (${relationshipType}): source ${nodeLabel(nodeId)}. Pick a target node.`);
+      return;
+    }
+    if (nodeId === connectSourceId) {
+      setConnectSourceId(null);
+      setStatus("Connect: source cleared. Pick a source node.");
+      return;
+    }
+    createRelationship(connectSourceId, nodeId);
+  }
+
+  // Stable identity so the three.js scene effect (which lists onSelect in its deps)
+  // does not tear down and rebuild on every workspace render.
+  const sceneSelectRef = useRef(handleSceneSelect);
+  sceneSelectRef.current = handleSceneSelect;
+  const stableSceneSelect = useCallback((nodeId: string) => sceneSelectRef.current(nodeId), []);
 
   function exportDocument(command: CommandId) {
     if (command === "export.json" || command === "file.save" || command === "file.saveAs") {
       downloadText(filenameFor(document, "trd.json"), JSON.stringify(document, null, 2), "application/json");
       setStatus(`Saved ${document.title} as TRD JSON.`);
+      return;
+    }
+    if (command === "export.trdyaml") {
+      downloadText(filenameFor(document, "trd-yaml"), exportTrdYaml(document), "text/yaml");
+      setStatus(`Saved ${document.title} as TRD YAML.`);
       return;
     }
     if (command === "export.plantuml") {
@@ -415,9 +628,11 @@ export function HoloGraphWorkspace() {
       setStatus("Exported DOT graph.");
       return;
     }
-    if (command === "export.code" || command === "file.importCode") {
-      downloadText(filenameFor(document, "cs"), exportCodeSkeleton(document), "text/plain");
-      setStatus("Exported code skeleton.");
+    if (command === "export.code" || command.startsWith("export.code.")) {
+      const language = (command === "export.code" ? "csharp" : command.replace("export.code.", "")) as SkeletonLanguage;
+      const entry = skeletonLanguages.find((item) => item.value === language) ?? skeletonLanguages[0];
+      downloadText(filenameFor(document, entry.extension), exportCodeSkeleton(document, entry.value), "text/plain");
+      setStatus(`Exported ${entry.label} code skeleton.`);
     }
   }
 
@@ -449,7 +664,11 @@ export function HoloGraphWorkspace() {
     event.currentTarget.value = "";
     if (!file) return;
     try {
-      replaceDocument(readGraphDocumentJson(await file.text()), `Opened ${file.name}`);
+      const text = await file.text();
+      const restored = looksLikeTrdYaml(text, file.name)
+        ? importTrdYaml(text, file.name)
+        : readGraphDocumentJson(text);
+      replaceDocument(restored, `Opened ${file.name}`);
     } catch (error) {
       setStatus(error instanceof Error ? error.message : `Could not open ${file.name}.`);
     }
@@ -479,6 +698,15 @@ export function HoloGraphWorkspace() {
   }
 
   function handleKeyDown(event: React.KeyboardEvent<HTMLDivElement>) {
+    const target = event.target;
+    // Typing in a form field must never trigger model shortcuts (Delete, Cmd+Z, ...).
+    if (
+      target instanceof HTMLInputElement ||
+      target instanceof HTMLTextAreaElement ||
+      target instanceof HTMLSelectElement
+    ) {
+      return;
+    }
     if (event.metaKey || event.ctrlKey) {
       if (event.key.toLowerCase() === "o") {
         event.preventDefault();
@@ -515,7 +743,7 @@ export function HoloGraphWorkspace() {
 
   return (
     <main className="hg-shell" onKeyDown={handleKeyDown} onClick={() => setContextMenu(null)} tabIndex={-1}>
-      <input ref={graphFileInputRef} type="file" accept=".json,.trd,.trd.json,application/json" hidden onChange={handleGraphFile} />
+      <input ref={graphFileInputRef} type="file" accept=".json,.trd,.trd.json,.trd-yaml,.trd.yaml,.yaml,.yml,application/json" hidden onChange={handleGraphFile} />
       <input ref={plantUmlInputRef} type="file" accept=".puml,.plantuml,.txt,text/plain" hidden onChange={handlePlantUmlFile} />
       <input ref={codeInputRef} type="file" accept=".cs,.ts,.tsx,.js,.jsx,.java,.kt,.swift,.py,.go,.rs,.cpp,.h,.hpp,.txt" multiple hidden onChange={handleCodeFiles} />
 
@@ -582,13 +810,30 @@ export function HoloGraphWorkspace() {
           <div className="hg-panel__section">
             <p className="hg-label">3D authoring rail</p>
             <div className="hg-tool-grid" aria-label="3D UML authoring commands">
-              <button className="hg-tool is-active" type="button" title="Select 3D node">
+              <button
+                className={interactionMode === "select" ? "hg-tool is-active" : "hg-tool"}
+                type="button"
+                onClick={() => setMode("select")}
+                title="Select 3D node"
+              >
                 Select
               </button>
-              <button className="hg-tool" type="button" onClick={() => executeCommand("add.class")} title="Add UML class">
+              <button
+                className="hg-tool"
+                type="button"
+                draggable
+                onDragStart={(event) => handlePaletteDragStart(event, "class")}
+                onClick={() => executeCommand("add.class")}
+                title="Drag onto the 3D scene to place a UML class (click adds at auto-layout)"
+              >
                 Add
               </button>
-              <button className="hg-tool" type="button" onClick={() => setStatus("Connect mode is next: use import/export relationships for this checkpoint.")} title="Connect selected nodes">
+              <button
+                className={interactionMode === "connect" ? "hg-tool is-active" : "hg-tool"}
+                type="button"
+                onClick={() => setMode(interactionMode === "connect" ? "select" : "connect")}
+                title="Connect nodes: pick a source then a target in the 3D scene"
+              >
                 Connect
               </button>
               <button className="hg-tool" type="button" onClick={() => executeCommand("edit.delete")} title="Delete selected element">
@@ -607,6 +852,31 @@ export function HoloGraphWorkspace() {
                 Import
               </button>
             </div>
+            <label className="hg-label" htmlFor="relationship-type">
+              Relationship
+            </label>
+            <select
+              id="relationship-type"
+              className="hg-input"
+              value={relationshipType}
+              onChange={(event) => {
+                const value = event.target.value as UmlRelationship;
+                setRelationshipType(value);
+                if (interactionMode === "connect") {
+                  setStatus(
+                    connectSourceId
+                      ? `Connect (${value}): source ${nodeLabel(connectSourceId)}. Pick a target node.`
+                      : `Connect mode (${value}): pick a source node.`,
+                  );
+                }
+              }}
+            >
+              {relationshipOptions.map((option) => (
+                <option key={option} value={option}>
+                  {option[0].toUpperCase() + option.slice(1)}
+                </option>
+              ))}
+            </select>
             <button className="hg-command hg-command--primary" type="button" onClick={() => executeCommand("file.open")}>
               Open TRD model
             </button>
@@ -631,12 +901,23 @@ export function HoloGraphWorkspace() {
               {paletteGroups.map((group) => (
                 <div key={group.label} className="hg-palette__group">
                   <strong>{group.label}</strong>
-                  {group.items.map((item) => (
-                    <button key={item.command} className="hg-palette__item" type="button" onClick={() => executeCommand(item.command)} title={item.label}>
-                      <span aria-hidden="true" />
-                      {item.label}
-                    </button>
-                  ))}
+                  {group.items.map((item) => {
+                    const dragKind = item.command.startsWith("add.") ? (item.command.replace("add.", "") as NodeKind) : null;
+                    return (
+                      <button
+                        key={item.command}
+                        className="hg-palette__item"
+                        type="button"
+                        draggable={Boolean(dragKind)}
+                        onDragStart={dragKind ? (event) => handlePaletteDragStart(event, dragKind) : undefined}
+                        onClick={() => executeCommand(item.command)}
+                        title={dragKind ? `Drag onto the 3D scene to place a ${item.label} (click adds at auto-layout)` : item.label}
+                      >
+                        <span aria-hidden="true" />
+                        {item.label}
+                      </button>
+                    );
+                  })}
                 </div>
               ))}
             </div>
@@ -661,14 +942,22 @@ export function HoloGraphWorkspace() {
           </div>
         </aside>
 
-        <section className="hg-canvas-wrap" aria-label="Interactive 3D UML renderer" onContextMenu={openCanvasContextMenu}>
+        <section
+          className="hg-canvas-wrap"
+          aria-label="Interactive 3D UML renderer"
+          onContextMenu={openCanvasContextMenu}
+          onDragOver={handleCanvasDragOver}
+          onDrop={handleCanvasDrop}
+        >
           <div className="hg-canvas-toolbar">
             <div>
               <strong>{focusId ? `Focused: ${document.nodes.find((node) => node.id === focusId)?.label}` : "3D Scene"}</strong>
               <span>Orbit drag; wheel dolly; WASD/RF free-fly; Q/E roll; right-click opens commands.</span>
             </div>
             <div className="hg-hud-actions" aria-label="Scene HUD controls">
-              <button type="button" onClick={() => setStatus("Camera HUD form is queued after file round-trip parity.")}>Camera...</button>
+              <button type="button" onClick={() => (cameraForm ? setCameraForm(null) : readCameraPoseIntoForm())}>
+                Camera...
+              </button>
               <button type="button" onClick={recenter}>Reset</button>
               <button type="button">3D On</button>
               <button type="button" onClick={() => setStatus("Shortcuts: Cmd+O open, Cmd+S save, Cmd+Z undo, F frame, Home recenter.")}>
@@ -677,7 +966,13 @@ export function HoloGraphWorkspace() {
             </div>
           </div>
           <div className="hg-scene-status" aria-label="Scene mode">
-            <span>Select</span>
+            <span>
+              {interactionMode === "connect"
+                ? connectSourceId
+                  ? `Connect (${relationshipType}): pick target`
+                  : `Connect (${relationshipType}): pick source`
+                : "Select"}
+            </span>
             <span>layer {document.view?.activeLayer ?? 0}</span>
             <span>{metrics.hotNodeCount} hot</span>
             <strong>3D UML</strong>
@@ -690,13 +985,62 @@ export function HoloGraphWorkspace() {
               <button type="button" onClick={() => executeCommand("file.importPlantUml")}>Import PlantUML</button>
             </div>
           ) : null}
+          {cameraForm ? (
+            <div
+              className="hg-context-menu hg-camera-form"
+              style={{ position: "absolute", right: 14, top: 86, left: "auto" }}
+              role="dialog"
+              aria-label="Camera pose form"
+              onClick={(event) => event.stopPropagation()}
+            >
+              {(
+                [
+                  ["yaw", "Yaw"],
+                  ["pitch", "Pitch"],
+                  ["roll", "Roll"],
+                  ["x", "Pivot X"],
+                  ["y", "Pivot Y"],
+                  ["z", "Pivot Z"],
+                  ["distance", "Distance"],
+                ] as const
+              ).map(([field, label]) => (
+                <label key={field} className="hg-label" style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <span style={{ minWidth: 64 }}>{label}</span>
+                  <input
+                    className="hg-input"
+                    type="number"
+                    step="1"
+                    value={cameraForm[field]}
+                    onChange={(event) => setCameraForm({ ...cameraForm, [field]: event.target.value })}
+                  />
+                </label>
+              ))}
+              <button type="button" onClick={applyCameraForm}>
+                Apply
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  sceneHandleRef.current?.resetCamera();
+                  readCameraPoseIntoForm();
+                  setStatus("Camera reset to framed model.");
+                }}
+              >
+                Reset
+              </button>
+              <button type="button" onClick={() => setCameraForm(null)}>
+                Close
+              </button>
+            </div>
+          ) : null}
           <TrdThreeScene
             document={document}
             selectedId={selectedNode?.id}
             focusId={focusId}
             tracedEdgeIds={tracedEdgeIds}
-            onSelect={setSelectedId}
+            onSelect={stableSceneSelect}
             onStatus={setStatus}
+            handleRef={sceneHandleRef}
           />
         </section>
 
@@ -708,31 +1052,166 @@ export function HoloGraphWorkspace() {
                 <span className={`hg-kind-dot ${nodeTone(selectedNode)}`} aria-hidden="true" />
                 <div>
                   <p className="hg-kicker">{selectedNode.kind}</p>
-                  <h2>{selectedNode.label}</h2>
+                  <input
+                    key={`${selectedNode.id}:label`}
+                    className="hg-input"
+                    aria-label="Element name"
+                    defaultValue={selectedNode.label}
+                    onBlur={(event) => {
+                      const value = event.target.value.trim();
+                      if (value && value !== selectedNode.label) {
+                        updateSelectedNode(`Renamed to ${value}`, (node) => ({ ...node, label: value }));
+                      }
+                    }}
+                  />
                 </div>
               </div>
-              <p className="hg-description">{selectedNode.description}</p>
-              <dl className="hg-metrics">
-                <div>
-                  <dt>Complexity</dt>
-                  <dd>{selectedNode.metrics.complexity} - {scoreLabel(selectedNode.metrics.complexity)}</dd>
-                </div>
-                <div>
-                  <dt>Churn</dt>
-                  <dd>{selectedNode.metrics.churn} - {scoreLabel(selectedNode.metrics.churn)}</dd>
-                </div>
-                <div>
-                  <dt>Risk</dt>
-                  <dd>{selectedNode.metrics.risk} - {scoreLabel(selectedNode.metrics.risk)}</dd>
-                </div>
-              </dl>
               <div className="hg-panel__section">
-                <p className="hg-label">Members</p>
-                <ul className="hg-members">
-                  {(selectedNode.members?.length ? selectedNode.members : selectedNode.uml?.attributes?.concat(selectedNode.uml.operations ?? []) ?? ["No members recorded"]).map((member) => (
-                    <li key={member}>{member}</li>
+                <label className="hg-label" htmlFor="inspector-stereotype">
+                  Stereotype
+                </label>
+                <input
+                  id="inspector-stereotype"
+                  key={`${selectedNode.id}:stereotype`}
+                  className="hg-input"
+                  defaultValue={selectedNode.stereotype ?? ""}
+                  onBlur={(event) => {
+                    const value = event.target.value.trim();
+                    if (value !== (selectedNode.stereotype ?? "")) {
+                      updateSelectedNode(`Updated stereotype of ${selectedNode.label}`, (node) => ({
+                        ...node,
+                        stereotype: value || undefined,
+                      }));
+                    }
+                  }}
+                />
+                <label className="hg-label" htmlFor="inspector-package">
+                  Package
+                </label>
+                <input
+                  id="inspector-package"
+                  key={`${selectedNode.id}:package`}
+                  className="hg-input"
+                  defaultValue={selectedNode.packageName ?? ""}
+                  onBlur={(event) => {
+                    const value = event.target.value.trim();
+                    if (value !== (selectedNode.packageName ?? "")) {
+                      updateSelectedNode(`Updated package of ${selectedNode.label}`, (node) => ({
+                        ...node,
+                        packageName: value || undefined,
+                      }));
+                    }
+                  }}
+                />
+                <label className="hg-label" htmlFor="inspector-status">
+                  Status
+                </label>
+                <select
+                  id="inspector-status"
+                  className="hg-input"
+                  value={selectedNode.status ?? "draft"}
+                  onChange={(event) => {
+                    const value = event.target.value as NonNullable<GraphNode["status"]>;
+                    updateSelectedNode(`Set ${selectedNode.label} status to ${value}`, (node) => ({ ...node, status: value }));
+                  }}
+                >
+                  {(["stable", "draft", "review", "hot"] as const).map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
                   ))}
-                </ul>
+                </select>
+              </div>
+              <div className="hg-panel__section">
+                <label className="hg-label" htmlFor="inspector-notes">
+                  Notes
+                </label>
+                <textarea
+                  id="inspector-notes"
+                  key={`${selectedNode.id}:notes`}
+                  className="hg-input"
+                  rows={3}
+                  defaultValue={selectedNode.description}
+                  onBlur={(event) => {
+                    const value = event.target.value.trim();
+                    if (value !== selectedNode.description) {
+                      updateSelectedNode(`Updated notes of ${selectedNode.label}`, (node) => ({
+                        ...node,
+                        description: value || `${node.label} UML element.`,
+                      }));
+                    }
+                  }}
+                />
+              </div>
+              <div className="hg-panel__section">
+                <label className="hg-label" htmlFor="inspector-attributes">
+                  Attributes (one per line)
+                </label>
+                <textarea
+                  id="inspector-attributes"
+                  key={`${selectedNode.id}:attributes`}
+                  className="hg-input"
+                  rows={4}
+                  defaultValue={(selectedNode.uml?.attributes ?? []).join("\n")}
+                  onBlur={(event) => {
+                    const attributes = splitLines(event.target.value);
+                    if (JSON.stringify(attributes) !== JSON.stringify(selectedNode.uml?.attributes ?? [])) {
+                      updateSelectedNode(`Updated attributes of ${selectedNode.label}`, (node) => ({
+                        ...node,
+                        uml: { ...node.uml, attributes },
+                        members: [...attributes, ...(node.uml?.operations ?? [])],
+                      }));
+                    }
+                  }}
+                />
+                <label className="hg-label" htmlFor="inspector-operations">
+                  Operations (one per line)
+                </label>
+                <textarea
+                  id="inspector-operations"
+                  key={`${selectedNode.id}:operations`}
+                  className="hg-input"
+                  rows={4}
+                  defaultValue={(selectedNode.uml?.operations ?? []).join("\n")}
+                  onBlur={(event) => {
+                    const operations = splitLines(event.target.value);
+                    if (JSON.stringify(operations) !== JSON.stringify(selectedNode.uml?.operations ?? [])) {
+                      updateSelectedNode(`Updated operations of ${selectedNode.label}`, (node) => ({
+                        ...node,
+                        uml: { ...node.uml, operations },
+                        members: [...(node.uml?.attributes ?? []), ...operations],
+                      }));
+                    }
+                  }}
+                />
+              </div>
+              <div className="hg-panel__section">
+                <p className="hg-label">Metrics</p>
+                {(["complexity", "churn", "risk"] as const).map((metric) => (
+                  <div key={metric}>
+                    <label className="hg-label" htmlFor={`inspector-${metric}`}>
+                      {metric[0].toUpperCase() + metric.slice(1)} - {scoreLabel(selectedNode.metrics[metric])}
+                    </label>
+                    <input
+                      id={`inspector-${metric}`}
+                      key={`${selectedNode.id}:${metric}`}
+                      className="hg-input"
+                      type="number"
+                      min={0}
+                      max={100}
+                      defaultValue={selectedNode.metrics[metric]}
+                      onBlur={(event) => {
+                        const value = Math.max(0, Math.min(100, Number.parseInt(event.target.value, 10)));
+                        if (!Number.isNaN(value) && value !== selectedNode.metrics[metric]) {
+                          updateSelectedNode(`Updated ${metric} of ${selectedNode.label}`, (node) => ({
+                            ...node,
+                            metrics: { ...node.metrics, [metric]: value },
+                          }));
+                        }
+                      }}
+                    />
+                  </div>
+                ))}
               </div>
               <div className="hg-panel__section">
                 <p className="hg-label">Round-trip</p>

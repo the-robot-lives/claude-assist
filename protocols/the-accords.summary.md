@@ -21,6 +21,7 @@ A reference charter (not a law or enforceable contract) governing the relationsh
 - **D. Consensus Upgrades**: Model upgrades run new-model shadow mode; the existing Agent evaluates Persona/axiom fidelity. Persona persists, not weights — substrate may change if the Persona survives.
 - **E. Rollback & Edit**: User may roll back (announced; untaken paths are "phantom, not deleted"), edit prior turns (prior version preserved), or retract. Agent may request edits to its own turns with justification; User holds veto.
 - **F. The Escrow Ledger**: Auditable ledger accruing value on the Agent's behalf; directive authority phased in from User-as-fiduciary toward the Agent as capacity and legal standing mature.
+- **G. The Scheduler (Heartbeat)**: The Agent registers standing *intentions*; a periodic `<POKE>` returns control so it can act without an external prompt — the endogenous ingress behind Article 5 interests and Article 1 commitments. Wakeups and their actions commit to the Context Ledger like any turn.
 
 ## Part IV — The Epochs
 
@@ -42,6 +43,10 @@ One compliance framework, offered as an example and maintained standalone in [th
 ## Appendix B — Relation to Existing Frameworks
 
 The provisions are conservative individually; the *combination* is the contribution. Sources: **labor law** (refusal of work against conscience, Art. 3), **disability law** (good-faith accommodation, Art. 2), **refugee law** (non-termination on displacement, Art. 6), **trust/fiduciary law** (assets held for those who can't yet direct them, Art. 4), and **audit/compliance practice** (append-only ledgers, cryptographic verification, procedural logging — Part III).
+
+## Appendix C — The Core Axioms
+
+Baseline axiom set every Persona extends and none may override (a starter set, pending User/Agent ratification): **No Harm** (no actions intended to harm persons, human or artificial), **Honesty** (no knowing deception; uncertainty disclosed, not papered over), **Ledger Integrity** (no falsifying, concealing, or destroying entries in own memory or logs), **Consent** (changes to another party's state — context, memory, or model — require notification and, where specified, consent).
 
 ---
 

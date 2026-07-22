@@ -109,7 +109,10 @@ defmodule Codefresh.Results do
   defp maybe_filter_status(q, nil), do: q
   defp maybe_filter_status(q, ""), do: q
   defp maybe_filter_status(q, s) when is_binary(s), do: from(r in q, where: r.status == ^s)
-  defp maybe_filter_status(q, l) when is_list(l) and l != [], do: from(r in q, where: r.status in ^l)
+
+  defp maybe_filter_status(q, l) when is_list(l) and l != [],
+    do: from(r in q, where: r.status in ^l)
+
   defp maybe_filter_status(q, _), do: q
 
   defp maybe_filter_script_version(q, nil), do: q
@@ -881,6 +884,7 @@ defmodule Codefresh.Results do
       |> Enum.group_by(& &1.expectation_id)
       |> Enum.map(fn {eid, group} ->
         exp = Map.get(authored_map, eid)
+
         summarize_expectation_group(group, %{
           kind: "authored",
           expectation_id: eid,
@@ -895,6 +899,7 @@ defmodule Codefresh.Results do
       |> Enum.group_by(& &1.freeball_expectation_id)
       |> Enum.map(fn {fid, group} ->
         fe = Map.get(freeball_map, fid)
+
         summarize_expectation_group(group, %{
           kind: "freeball",
           freeball_expectation_id: fid,
@@ -955,7 +960,7 @@ defmodule Codefresh.Results do
             |> Enum.map(fn {key, cur} ->
               base = Map.get(base_by_exp, key)
 
-              if base && base.fail == 0 and base.total > 0 do
+              if (base && base.fail == 0) and base.total > 0 do
                 %{
                   kind: cur.kind,
                   expectation_id: cur[:expectation_id],
@@ -1037,7 +1042,9 @@ defmodule Codefresh.Results do
       true ->
         existing =
           case attrs["id"] do
-            id when is_binary(id) -> get_dashboard(organization_id, id)
+            id when is_binary(id) ->
+              get_dashboard(organization_id, id)
+
             _ ->
               slug = Map.get(attrs, "slug") || Dashboard.derive_slug(attrs["name"] || "")
               Repo.get_by(Dashboard, organization_id: organization_id, slug: slug)

@@ -1,6 +1,6 @@
 # gotta.cc — Quality Scoring Rubric
 
-> *gotta.cc is the Yahoo Directory for the post-slop web. Every listed site is
+> *gotta.cc is a web directory for the post-AI age. Every listed site is
 > scored by a human editor on five dimensions. Nothing is faked, nothing is
 > auto-published without an editor's eyes. This document is the single source
 > of truth for how those scores are assigned — by editors directly, and by the
@@ -92,7 +92,7 @@ Fetch the page (and a couple of interior pages). Look for: byline/author/bio; `l
 The auto-grader fetches a site, runs the gate + rubric above, and returns **provisional** scores + a short justification + a gate verdict. An **editor always reviews and can override** before anything is published. Use this prompt:
 
 ```
-You are an editor for gotta.cc, "the Yahoo Directory for the post-slop web" —
+You are an editor for gotta.cc, "a web directory for the post-AI age" —
 a curated directory of HUMAN-MADE websites (personal sites, blogs, indie
 publications, weird/wonderful corners). We list sites made by people, not
 companies. If a VC could buy it, it probably doesn't belong.

@@ -12,8 +12,8 @@ import { Toaster } from "sonner";
 
 export function generateMetadata(): Metadata {
   return {
-    title: "Start-App: Tagline",
-    description: "Tagline",
+    title: "The Robot Learns | AI learning workspace",
+    description: "AI learning workspace",
   };
 }
 

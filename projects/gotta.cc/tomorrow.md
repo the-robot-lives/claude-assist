@@ -59,7 +59,7 @@ The graded YAMLs (`sites-external-candidates.yaml`, `sites-external-graded*.yaml
 
 ### 4. Deferred fixes
 - **seed_helper changelog 002** creates a wrong-named table (`seed_helper_records`) — real table is `seed_helper_seeds` (+`seed_helper_handles`); patched ad-hoc on dev, add a corrective changelog so a from-scratch `make migrate` works. (See `gotta-cc-implementation-gotchas`.)
-- **Waitlist form:** today's deploy agent tried to repoint signups from listmonk → an **unprovisioned foryou list** (`gotta-cc-waitlist`) and I reverted it. If migrating gotta.cc's waitlist onto the foryou signup service is actually wanted, provision the foryou List first (`projects/foryou.therobotlives.com/provisioning/`), then re-apply.
+- **Waitlist form:** ✅ DONE (2026-07-23). The foryou `gotta-cc-waitlist` list is now provisioned and live (verified via the manifest endpoint), and the waitlist form has been repointed from Listmonk to the foryou signup service (`POST https://foryou.therobotlives.com/api/v1/public/lists/gotta-cc-waitlist/signups`). Docs (`docs/PROJ-ARCH.md`, `docs/PROJ-ARCH.summary.md`) updated to match.
 
 ### 5. Broader (worth a ticket)
 The native-auth 500 root cause (context `create/3` overrides iterating a built entity struct via `Enum.map`, plus a missing `email` and an unwrapped `{:ok, ref}` in session minting) means **native register/login never worked at runtime in the start-app scaffold**. The same bug very likely affects the other start-app apps (**foryou, tobornalp, codefre.sh, therobotmakes**) — they run SSO-only so it's been masked. Audit + fix across them, or fix upstream in the scaffold.

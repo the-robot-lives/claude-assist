@@ -6,6 +6,7 @@ defmodule Codefresh.Versioned.Descriptions do
 
   def list(context, options \\ []) do
     settings = Noizu.Entity.Meta.persistence(Entity) |> hd
+
     Codefresh.Repo.all(Schema)
     |> Enum.map(fn record ->
       {:ok, entity} = Entity.from_record(record, settings, context, options)
@@ -16,7 +17,13 @@ defmodule Codefresh.Versioned.Descriptions do
 
   def get_versioned_description(id, context, options \\ []), do: get(id, context, options)
 
-  def create(description, context, options \\ []) do
+  def create(description, context, options \\ [])
+
+  def create(%Entity{} = description, context, options) do
+    super(description, context, options)
+  end
+
+  def create(description, context, options) do
     %Entity{}
     |> change(description)
     |> create(context, options)

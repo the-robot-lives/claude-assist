@@ -67,7 +67,8 @@ defmodule Codefresh.Runs do
 
     with {:ok, script_version} <- resolve_script_version(script),
          {:ok, agent_version} <- resolve_agent_version(organization_id, agent_id),
-         {:ok, persona_ids} <- validate_persona_scope(organization_id, opts[:persona_version_ids] || []) do
+         {:ok, persona_ids} <-
+           validate_persona_scope(organization_id, opts[:persona_version_ids] || []) do
       run_attrs = %{
         organization_id: organization_id,
         script_version_id: script_version.id,
@@ -363,6 +364,8 @@ defmodule Codefresh.Runs do
     )
   end
 
+  def list_run_steps(%Run{} = run), do: list_steps(run)
+
   def get_step(organization_id, run_id, step_index) when is_integer(step_index) do
     Repo.one(
       from s in RunStep,
@@ -374,6 +377,25 @@ defmodule Codefresh.Runs do
 
   def list_step_scores(%RunStep{id: step_id}) do
     Repo.all(from sc in Score, where: sc.run_step_id == ^step_id, order_by: [asc: sc.inserted_at])
+  end
+
+  def list_run_scores(%Run{} = run) do
+    step_ids =
+      run
+      |> list_steps()
+      |> Enum.map(& &1.id)
+
+    case step_ids do
+      [] ->
+        []
+
+      ids ->
+        Repo.all(
+          from sc in Score,
+            where: sc.run_step_id in ^ids,
+            order_by: [asc: sc.inserted_at]
+        )
+    end
   end
 
   @doc """

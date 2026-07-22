@@ -10,7 +10,7 @@
 
 ## Scenario
 
-Gotta.cc is "The Yahoo Directory for the post-slop web." It's a browsable, AI-curated directory of quality websites — scored for originality, depth, and human authorship. The product is explicitly nostalgic: it wants to resurrect the experience of *exploring* the web through categories, not searching it through keywords.
+Gotta.cc is "a web directory for the post-AI age." It's a browsable, AI-curated directory of quality websites — scored for originality, depth, and human authorship. The product is explicitly nostalgic: it wants to resurrect the experience of *exploring* the web through categories, not searching it through keywords.
 
 Direction C leans into that nostalgia. The visual language draws directly from the era when directories were how you found things: Yahoo Directory (1994–2014), DMOZ, webrings, the blogosphere. Chunky borders, warm yellows, hyperlink blue, visible structure, dense lists of sites. It felt like a *place* you could wander through. This design makes it feel like that again.
 

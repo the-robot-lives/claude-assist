@@ -79,5 +79,4 @@ defmodule CodefreshWeb.MembershipController do
       id -> id
     end
   end
-
 end

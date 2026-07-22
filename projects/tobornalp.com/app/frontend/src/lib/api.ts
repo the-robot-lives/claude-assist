@@ -4,6 +4,27 @@ function apiUrl() {
   return getRuntimeConfig().API_URL || process.env.NEXT_PUBLIC_API_URL || "";
 }
 
+// Array-aware query serializer. Serializes scalar params as `key=value` and
+// array params as repeated `key[]=v1&key[]=v2` brackets — the form Plug's
+// `fetch_query_params` parses into a list, which the tobornalp item_controller
+// forwards verbatim to `Items.maybe_filter/2` (list ⇒ SQL `IN`, scalar ⇒ `=`).
+// Empty strings, empty arrays, and null/undefined are omitted so they stay
+// no-ops on the backend. Centralized so every list method serializes
+// multi-select facets identically (no per-method drift).
+function buildQuery(params: Record<string, string | string[] | number | undefined | null>): string {
+  const qs = new URLSearchParams();
+  for (const [key, value] of Object.entries(params)) {
+    if (value == null) continue;
+    if (Array.isArray(value)) {
+      for (const v of value) if (v != null && v !== "") qs.append(`${key}[]`, String(v));
+    } else if (value !== "") {
+      qs.set(key, String(value));
+    }
+  }
+  const s = qs.toString();
+  return s ? `?${s}` : "";
+}
+
 export interface User {
   id: string;
   email: string;
@@ -409,24 +430,89 @@ export const api = {
   },
 
   // ── Items (work tracking) ──────────────────────────────────────────────────
-  listItems(orgId: string, params?: { project_id?: string; status?: string; item_type?: string; priority?: string; assignee?: string; queue_id?: string; stage_id?: string }) {
-    const qs = new URLSearchParams(Object.entries(params || {}).filter(([, v]) => v != null && v !== "") as [string, string][]).toString();
-    return request<{ items: Item[] }>(`/api/v1/organizations/${orgId}/items${qs ? `?${qs}` : ""}`);
+  listItems(
+    orgId: string,
+    params?: {
+      project_id?: string;
+      // Facetable filters accept a single value OR an array (multi-select → BE
+      // `in` filter via Plug's `key[]=v` parsing; see Items.maybe_filter/2).
+      status?: string | string[];
+      item_type?: string | string[];
+      priority?: string | string[];
+      assignee?: string | string[];
+      queue_id?: string;
+      // "root" sentinel selects top-level (parent_id IS NULL) items.
+      parent_id?: string;
+      stage_id?: string;
+      iteration_id?: string;
+    },
+  ) {
+    const suffix = buildQuery({
+      project_id: params?.project_id,
+      status: params?.status,
+      item_type: params?.item_type,
+      priority: params?.priority,
+      assignee: params?.assignee,
+      queue_id: params?.queue_id,
+      parent_id: params?.parent_id,
+      stage_id: params?.stage_id,
+      iteration_id: params?.iteration_id,
+    });
+    return request<{ items: Item[] }>(`/api/v1/organizations/${orgId}/items${suffix}`);
   },
   getItem(orgId: string, id: string) {
     return request<{ item: Item; links: { outgoing: ItemLink[]; incoming: ItemLink[] } }>(`/api/v1/organizations/${orgId}/items/${id}`);
   },
-  createItem(orgId: string, data: Partial<Item>) {
+  createItem(orgId: string, data: ItemInput) {
     return request<{ item: Item }>(`/api/v1/organizations/${orgId}/items`, {
       method: "POST",
       body: JSON.stringify({ item: data }),
     });
   },
-  updateItem(orgId: string, id: string, data: Partial<Item>) {
+  updateItem(orgId: string, id: string, data: ItemInput) {
     return request<{ item: Item }>(`/api/v1/organizations/${orgId}/items/${id}`, {
       method: "PATCH",
       body: JSON.stringify({ item: data }),
     });
+  },
+  deleteItem(orgId: string, id: string) {
+    return request<void>(`/api/v1/organizations/${orgId}/items/${id}`, { method: "DELETE" });
+  },
+
+  // Item comments (polymorphic trp_comments, entity_type = "item").
+  listItemComments(orgId: string, id: string) {
+    return request<{ comments: ItemComment[] }>(`/api/v1/organizations/${orgId}/items/${id}/comments`);
+  },
+  addItemComment(orgId: string, id: string, comment: { content: string; author?: string; reply_to_id?: string | null }) {
+    return request<{ comment: ItemComment }>(`/api/v1/organizations/${orgId}/items/${id}/comments`, {
+      method: "POST",
+      body: JSON.stringify({ comment }),
+    });
+  },
+  deleteItemComment(orgId: string, commentId: string) {
+    return request<void>(`/api/v1/organizations/${orgId}/items/comments/${commentId}`, { method: "DELETE" });
+  },
+
+  // Item activity feed (item_events append-only audit).
+  listItemActivity(orgId: string, id: string) {
+    return request<{ activity: ItemEvent[] }>(`/api/v1/organizations/${orgId}/items/${id}/activity`);
+  },
+
+  // Item ↔ item links. Note: delete + list operate off the flat /items/links/:id
+  // and /items/:id/links surfaces respectively (see router.ex).
+  listItemLinks(orgId: string, id: string) {
+    return request<{ links: { outgoing: ItemLink[]; incoming: ItemLink[] } }>(
+      `/api/v1/organizations/${orgId}/items/${id}/links`,
+    );
+  },
+  addItemLink(orgId: string, id: string, link: { target_item_id: string; link_type: string }) {
+    return request<{ link: ItemLink }>(`/api/v1/organizations/${orgId}/items/${id}/links`, {
+      method: "POST",
+      body: JSON.stringify({ link }),
+    });
+  },
+  deleteItemLink(orgId: string, linkId: string) {
+    return request<void>(`/api/v1/organizations/${orgId}/items/links/${linkId}`, { method: "DELETE" });
   },
 
   // ── Boards (queues + stages + iterations) ─────────────────────────────────
@@ -441,6 +527,57 @@ export const api = {
     return request<{ queue: ItemQueue }>(`/api/v1/organizations/${orgId}/queues`, {
       method: "POST",
       body: JSON.stringify({ queue: data }),
+    });
+  },
+  updateQueue(orgId: string, id: string, data: Partial<{ name: string; slug: string; description: string; methodology: string; config: Record<string, unknown> }>) {
+    return request<{ queue: ItemQueue }>(`/api/v1/organizations/${orgId}/queues/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify({ queue: data }),
+    });
+  },
+  deleteQueue(orgId: string, id: string) {
+    return request<void>(`/api/v1/organizations/${orgId}/queues/${id}`, { method: "DELETE" });
+  },
+
+  // Stages (columns) under a board.
+  listStages(orgId: string, queueId: string) {
+    return request<{ stages: BoardStage[] }>(`/api/v1/organizations/${orgId}/queues/${queueId}/stages`);
+  },
+  createStage(orgId: string, queueId: string, stage: StageInput) {
+    return request<{ stage: BoardStage }>(`/api/v1/organizations/${orgId}/queues/${queueId}/stages`, {
+      method: "POST",
+      body: JSON.stringify({ stage }),
+    });
+  },
+  updateStage(orgId: string, queueId: string, stageId: string, stage: StageInput) {
+    return request<{ stage: BoardStage }>(`/api/v1/organizations/${orgId}/queues/${queueId}/stages/${stageId}`, {
+      method: "PUT",
+      body: JSON.stringify({ stage }),
+    });
+  },
+  deleteStage(orgId: string, queueId: string, stageId: string) {
+    return request<void>(`/api/v1/organizations/${orgId}/queues/${queueId}/stages/${stageId}`, { method: "DELETE" });
+  },
+
+  // Iterations (sprints/cycles) under a board.
+  listIterations(orgId: string, queueId: string) {
+    return request<{ iterations: BoardIteration[] }>(`/api/v1/organizations/${orgId}/queues/${queueId}/iterations`);
+  },
+  createIteration(orgId: string, queueId: string, iteration: IterationInput) {
+    return request<{ iteration: BoardIteration }>(`/api/v1/organizations/${orgId}/queues/${queueId}/iterations`, {
+      method: "POST",
+      body: JSON.stringify({ iteration }),
+    });
+  },
+  updateIteration(orgId: string, queueId: string, iterationId: string, iteration: IterationInput) {
+    return request<{ iteration: BoardIteration }>(
+      `/api/v1/organizations/${orgId}/queues/${queueId}/iterations/${iterationId}`,
+      { method: "PUT", body: JSON.stringify({ iteration }) },
+    );
+  },
+  deleteIteration(orgId: string, queueId: string, iterationId: string) {
+    return request<void>(`/api/v1/organizations/${orgId}/queues/${queueId}/iterations/${iterationId}`, {
+      method: "DELETE",
     });
   },
 
@@ -499,6 +636,59 @@ export const api = {
   listTypeDefinitions(orgId: string, projectId?: string) {
     const qs = projectId ? `?project_id=${projectId}` : "";
     return request<{ types: ItemTypeDefinition[] }>(`/api/v1/organizations/${orgId}/definitions/types${qs}`);
+  },
+  // Create/update bodies use the controller's `{field}` / `{type}` envelope. The
+  // server merges organization_id from the URL; project_id is passed to convey
+  // project scope (nil/omit ⇒ org scope).
+  createFieldDefinition(orgId: string, field: FieldDefinitionInput) {
+    return request<{ field: ItemFieldDefinition }>(
+      `/api/v1/organizations/${orgId}/definitions/fields`,
+      { method: "POST", body: JSON.stringify({ field }) },
+    );
+  },
+  // NOTE: get/update/delete target RESTful :id routes. The Definitions domain
+  // already implements get_field/update_field/delete_field, but the controller
+  // and router only expose index+create today — these will 404 until those
+  // routes are wired (reported as a backend gap for this wave).
+  getFieldDefinition(orgId: string, id: string) {
+    return request<{ field: ItemFieldDefinition }>(
+      `/api/v1/organizations/${orgId}/definitions/fields/${id}`,
+    );
+  },
+  updateFieldDefinition(orgId: string, id: string, field: FieldDefinitionInput) {
+    return request<{ field: ItemFieldDefinition }>(
+      `/api/v1/organizations/${orgId}/definitions/fields/${id}`,
+      { method: "PUT", body: JSON.stringify({ field }) },
+    );
+  },
+  deleteFieldDefinition(orgId: string, id: string) {
+    return request<{ message: string }>(
+      `/api/v1/organizations/${orgId}/definitions/fields/${id}`,
+      { method: "DELETE" },
+    );
+  },
+  createTypeDefinition(orgId: string, type: TypeDefinitionInput) {
+    return request<{ type: ItemTypeDefinition }>(
+      `/api/v1/organizations/${orgId}/definitions/types`,
+      { method: "POST", body: JSON.stringify({ type }) },
+    );
+  },
+  getTypeDefinition(orgId: string, id: string) {
+    return request<{ type: ItemTypeDefinition }>(
+      `/api/v1/organizations/${orgId}/definitions/types/${id}`,
+    );
+  },
+  updateTypeDefinition(orgId: string, id: string, type: TypeDefinitionInput) {
+    return request<{ type: ItemTypeDefinition }>(
+      `/api/v1/organizations/${orgId}/definitions/types/${id}`,
+      { method: "PUT", body: JSON.stringify({ type }) },
+    );
+  },
+  deleteTypeDefinition(orgId: string, id: string) {
+    return request<{ message: string }>(
+      `/api/v1/organizations/${orgId}/definitions/types/${id}`,
+      { method: "DELETE" },
+    );
   },
 
   // ── Notifications inbox (recipient = authenticated user) ───────────────────
@@ -634,6 +824,212 @@ export const api = {
       method: "DELETE",
     });
   },
+
+  // ── Saved views (per-user/project persisted list/board filters) ──────────────
+  listSavedViews(orgId: string, opts?: { project_id?: string; view_type?: string; entity_type?: string }) {
+    const suffix = buildQuery({ project_id: opts?.project_id, view_type: opts?.view_type, entity_type: opts?.entity_type });
+    return request<{ saved_views: SavedView[] }>(`/api/v1/organizations/${orgId}/saved-views${suffix}`);
+  },
+  getSavedView(orgId: string, id: string) {
+    return request<{ saved_view: SavedView }>(`/api/v1/organizations/${orgId}/saved-views/${id}`);
+  },
+  createSavedView(orgId: string, data: SavedViewInput) {
+    return request<{ saved_view: SavedView }>(`/api/v1/organizations/${orgId}/saved-views`, {
+      method: "POST",
+      body: JSON.stringify({ saved_view: data }),
+    });
+  },
+  updateSavedView(orgId: string, id: string, data: Partial<SavedViewInput>) {
+    return request<{ saved_view: SavedView }>(`/api/v1/organizations/${orgId}/saved-views/${id}`, {
+      method: "PUT",
+      body: JSON.stringify({ saved_view: data }),
+    });
+  },
+  deleteSavedView(orgId: string, id: string) {
+    return request<{ ok: boolean }>(`/api/v1/organizations/${orgId}/saved-views/${id}`, { method: "DELETE" });
+  },
+
+  // ── Artifacts (versioned typed content) ─────────────────────────────────────
+  listArtifacts(orgId: string, opts?: { project_id?: string; kind?: string | string[]; search?: string }) {
+    const suffix = buildQuery({ project_id: opts?.project_id, kind: opts?.kind, search: opts?.search });
+    return request<{ artifacts: Artifact[] }>(`/api/v1/organizations/${orgId}/artifacts${suffix}`);
+  },
+  getArtifact(orgId: string, id: string, revisionId?: string) {
+    const suffix = buildQuery({ revision_id: revisionId });
+    return request<{ artifact: ArtifactDetail }>(`/api/v1/organizations/${orgId}/artifacts/${id}${suffix}`);
+  },
+  createArtifact(orgId: string, data: ArtifactInput) {
+    return request<{ artifact: ArtifactDetail }>(`/api/v1/organizations/${orgId}/artifacts`, {
+      method: "POST",
+      body: JSON.stringify({ artifact: data }),
+    });
+  },
+  listArtifactRevisions(orgId: string, artifactId: string) {
+    return request<{ revisions: ArtifactRevision[] }>(
+      `/api/v1/organizations/${orgId}/artifacts/${artifactId}/revisions`,
+    );
+  },
+  // Edit = append a new revision (history-preserving). Returns the artifact with
+  // its new current revision so the editor reconciles in one round-trip.
+  createArtifactRevision(orgId: string, artifactId: string, body: { content: string; note?: string }) {
+    return request<{ artifact: ArtifactDetail }>(
+      `/api/v1/organizations/${orgId}/artifacts/${artifactId}/revisions`,
+      { method: "POST", body: JSON.stringify(body) },
+    );
+  },
+
+  // ── Wiki (spaces, pages, comments, attachments, reactions) ──────────────────
+  listWikiSpaces(orgId: string, opts?: { project_id?: string; search?: string }) {
+    const suffix = buildQuery({ project_id: opts?.project_id, search: opts?.search });
+    return request<{ spaces: WikiSpace[] }>(`/api/v1/organizations/${orgId}/wiki/spaces${suffix}`);
+  },
+  getWikiSpace(orgId: string, id: string) {
+    return request<{ space: WikiSpace; pages: WikiPageSummary[] }>(
+      `/api/v1/organizations/${orgId}/wiki/spaces/${id}`,
+    );
+  },
+  createWikiSpace(orgId: string, data: WikiSpaceInput) {
+    return request<{ space: WikiSpace }>(`/api/v1/organizations/${orgId}/wiki/spaces`, {
+      method: "POST",
+      body: JSON.stringify({ space: data }),
+    });
+  },
+  updateWikiSpace(orgId: string, id: string, data: Partial<WikiSpaceInput>) {
+    return request<{ space: WikiSpace }>(`/api/v1/organizations/${orgId}/wiki/spaces/${id}`, {
+      method: "PUT",
+      body: JSON.stringify({ space: data }),
+    });
+  },
+  deleteWikiSpace(orgId: string, id: string) {
+    return request<{ message: string }>(`/api/v1/organizations/${orgId}/wiki/spaces/${id}`, { method: "DELETE" });
+  },
+  listWikiPages(orgId: string, spaceId: string, opts?: { search?: string }) {
+    const suffix = buildQuery({ search: opts?.search });
+    return request<{ pages: WikiPageSummary[] }>(
+      `/api/v1/organizations/${orgId}/wiki/spaces/${spaceId}/pages${suffix}`,
+    );
+  },
+  getWikiPage(orgId: string, id: string) {
+    return request<{ page: WikiPageDetail }>(`/api/v1/organizations/${orgId}/wiki/pages/${id}`);
+  },
+  createWikiPage(orgId: string, spaceId: string, data: WikiPageInput) {
+    return request<{ page: WikiPage }>(`/api/v1/organizations/${orgId}/wiki/spaces/${spaceId}/pages`, {
+      method: "POST",
+      body: JSON.stringify({ page: data }),
+    });
+  },
+  updateWikiPage(orgId: string, id: string, data: Partial<WikiPageInput>) {
+    return request<{ page: WikiPage }>(`/api/v1/organizations/${orgId}/wiki/pages/${id}`, {
+      method: "PUT",
+      body: JSON.stringify({ page: data }),
+    });
+  },
+  deleteWikiPage(orgId: string, id: string) {
+    return request<{ message: string }>(`/api/v1/organizations/${orgId}/wiki/pages/${id}`, { method: "DELETE" });
+  },
+  // Wiki comments use polymorphic trp_comments: content + reply_to_id (NOT body/parent_id).
+  listWikiComments(orgId: string, pageId: string) {
+    return request<{ comments: WikiComment[] }>(
+      `/api/v1/organizations/${orgId}/wiki/pages/${pageId}/comments`,
+    );
+  },
+  createWikiComment(orgId: string, pageId: string, comment: { content: string; reply_to_id?: string | null; author?: string }) {
+    return request<{ comment: WikiComment }>(`/api/v1/organizations/${orgId}/wiki/pages/${pageId}/comments`, {
+      method: "POST",
+      body: JSON.stringify({ comment }),
+    });
+  },
+  deleteWikiComment(orgId: string, commentId: string) {
+    return request<{ message: string }>(`/api/v1/organizations/${orgId}/wiki/comments/${commentId}`, {
+      method: "DELETE",
+    });
+  },
+  listWikiAttachments(orgId: string, pageId: string) {
+    return request<{ attachments: WikiAttachment[] }>(
+      `/api/v1/organizations/${orgId}/wiki/pages/${pageId}/attachments`,
+    );
+  },
+  createWikiAttachment(
+    orgId: string,
+    pageId: string,
+    attachment: { artifact_type?: string; url?: string; git_branch?: string; description?: string; filename?: string; created_by?: string },
+  ) {
+    return request<{ attachment: WikiAttachment }>(
+      `/api/v1/organizations/${orgId}/wiki/pages/${pageId}/attachments`,
+      { method: "POST", body: JSON.stringify({ attachment }) },
+    );
+  },
+  deleteWikiAttachment(orgId: string, attachmentId: string) {
+    return request<{ message: string }>(`/api/v1/organizations/${orgId}/wiki/attachments/${attachmentId}`, {
+      method: "DELETE",
+    });
+  },
+  // Reactions: page + comment scoped; emoji passed in the JSON body.
+  listWikiPageReactions(orgId: string, pageId: string) {
+    return request<{ reactions: WikiReaction[] }>(
+      `/api/v1/organizations/${orgId}/wiki/pages/${pageId}/reactions`,
+    );
+  },
+  addWikiPageReaction(orgId: string, pageId: string, emoji: string) {
+    return request<{ reaction: WikiReaction }>(`/api/v1/organizations/${orgId}/wiki/pages/${pageId}/reactions`, {
+      method: "POST",
+      body: JSON.stringify({ emoji }),
+    });
+  },
+  removeWikiPageReaction(orgId: string, pageId: string, emoji: string) {
+    return request<{ message: string }>(`/api/v1/organizations/${orgId}/wiki/pages/${pageId}/reactions`, {
+      method: "DELETE",
+      body: JSON.stringify({ emoji }),
+    });
+  },
+  listWikiCommentReactions(orgId: string, commentId: string) {
+    return request<{ reactions: WikiReaction[] }>(
+      `/api/v1/organizations/${orgId}/wiki/comments/${commentId}/reactions`,
+    );
+  },
+  addWikiCommentReaction(orgId: string, commentId: string, emoji: string) {
+    return request<{ reaction: WikiReaction }>(
+      `/api/v1/organizations/${orgId}/wiki/comments/${commentId}/reactions`,
+      { method: "POST", body: JSON.stringify({ emoji }) },
+    );
+  },
+  removeWikiCommentReaction(orgId: string, commentId: string, emoji: string) {
+    return request<{ message: string }>(
+      `/api/v1/organizations/${orgId}/wiki/comments/${commentId}/reactions`,
+      { method: "DELETE", body: JSON.stringify({ emoji }) },
+    );
+  },
+
+  // ── Reviews (code/content reviews over an artifact revision) ────────────────
+  listReviews(orgId: string, opts?: { project_id?: string; artifact_id?: string; status?: string | string[] }) {
+    const suffix = buildQuery({ project_id: opts?.project_id, artifact_id: opts?.artifact_id, status: opts?.status });
+    return request<{ reviews: Review[] }>(`/api/v1/organizations/${orgId}/reviews${suffix}`);
+  },
+  getReview(orgId: string, id: string) {
+    return request<{ review: Review; comments: unknown[]; overlays: ReviewOverlay[] }>(
+      `/api/v1/organizations/${orgId}/reviews/${id}`,
+    );
+  },
+  createReview(orgId: string, data: ReviewInput) {
+    return request<{ review: Review }>(`/api/v1/organizations/${orgId}/reviews`, {
+      method: "POST",
+      body: JSON.stringify({ review: data }),
+    });
+  },
+  // Update a non-completed review's mutable metadata. A completed review is
+  // frozen (BE 409); finalize via completeReview.
+  updateReview(orgId: string, id: string, data: Partial<{ title: string; reviewer_persona: string; summary: string; verdict: string | null; status: string }>) {
+    return request<{ review: Review }>(`/api/v1/organizations/${orgId}/reviews/${id}`, {
+      method: "PUT",
+      body: JSON.stringify({ review: data }),
+    });
+  },
+  completeReview(orgId: string, id: string, body?: { summary?: string; verdict?: string }) {
+    return request<{ review: Review }>(`/api/v1/organizations/${orgId}/reviews/${id}/complete`, {
+      method: "POST",
+      body: JSON.stringify(body ?? {}),
+    });
+  },
 };
 
 // ── Domain types (mirror the backend schemas) ─────────────────────────────────
@@ -661,6 +1057,54 @@ export interface Item {
   custom_fields?: Record<string, unknown>;
   inserted_at?: string;
   updated_at?: string;
+}
+
+// Create/update payload shape (distinct from the read model). The backend's
+// item_controller accepts these fields under `{ item: {...} }`; `reporter` and
+// `organization_id`/`project_id` are set server-side from the route + actor but
+// may be supplied. Update (PATCH) ignores identity fields and only applies
+// `Map.take(~w(title description status priority assignee queue_id parent_id
+// custom_fields stage_id iteration_id rank start_date due_date estimate))`.
+export interface ItemInput {
+  title?: string;
+  description?: string;
+  item_type?: string;
+  status?: string;
+  priority?: string;
+  assignee?: string;
+  reporter?: string;
+  queue_id?: string;
+  parent_id?: string;
+  stage_id?: string;
+  iteration_id?: string;
+  rank?: string;
+  start_date?: string | null;
+  due_date?: string | null;
+  estimate?: number | string | null;
+  custom_fields?: Record<string, unknown>;
+  project_id?: string;
+  organization_id?: string;
+}
+
+// Comment on an item (polymorphic trp_comments, entity_type = "item").
+export interface ItemComment {
+  id: string;
+  item_id: string;
+  content: string;
+  author?: string;
+  reply_to_id?: string | null;
+  inserted_at?: string;
+}
+
+// Activity feed entry (item_events append-only audit).
+export interface ItemEvent {
+  id: string;
+  item_id: string;
+  actor?: string;
+  field?: string;
+  old_value?: string | null;
+  new_value?: string | null;
+  occurred_at?: string;
 }
 
 export interface ItemLink {
@@ -710,20 +1154,46 @@ export interface Project {
 
 export interface BoardStage {
   id: string;
+  queue_id?: string;
   slug: string;
   name: string;
   kind?: string;
   position: number;
   wip_limit?: number;
+  config?: Record<string, unknown>;
+}
+
+// Create/update payload for a stage (queue_id is taken from the URL).
+export interface StageInput {
+  slug?: string;
+  name?: string;
+  kind?: string;
+  position?: number;
+  wip_limit?: number;
+  config?: Record<string, unknown>;
 }
 
 export interface BoardIteration {
   id: string;
+  queue_id?: string;
   name: string;
   sequence: number;
   status: string;
-  starts_on?: string;
-  ends_on?: string;
+  goal?: string;
+  starts_on?: string | null;
+  ends_on?: string | null;
+  config?: Record<string, unknown>;
+}
+
+// Create/update payload for an iteration (queue_id is taken from the URL).
+export interface IterationInput {
+  name?: string;
+  sequence?: number;
+  status?: string;
+  goal?: string;
+  starts_on?: string | null;
+  ends_on?: string | null;
+  config?: Record<string, unknown>;
 }
 
 export interface ItemFieldDefinition {
@@ -750,6 +1220,62 @@ export interface ItemTypeDefinition {
   status_workflow?: Record<string, unknown>;
   disabled?: boolean;
   fields?: Array<{ id: string; slug: string; label: string; field_type: string; required: boolean; position: number }>;
+}
+
+// Field type whitelist — mirrors Therobotplans.Schema.ItemFieldDefinition @field_types.
+export const FIELD_TYPES = [
+  "text",
+  "rich_text",
+  "markdown",
+  "radio",
+  "select",
+  "multi_select",
+  "number",
+  "date",
+  "persona",
+  "url",
+] as const;
+export type FieldType = (typeof FIELD_TYPES)[number];
+
+// Scope is not stored on a definition row — it is DERIVED from which owner
+// columns are set (global = both null, org = organization_id only, project =
+// both). Matches Definitions.scope_of/1 on the backend.
+export type DefinitionScope = "global" | "org" | "project";
+
+export function definitionScope(d: {
+  organization_id?: string | null;
+  project_id?: string | null;
+}): DefinitionScope {
+  if (d.project_id) return "project";
+  if (d.organization_id) return "org";
+  return "global";
+}
+
+// Create/update payloads. project_id conveys project scope on create
+// (organization_id is set by the server from the URL); omit/nil for org scope.
+export interface FieldDefinitionInput {
+  slug?: string;
+  label?: string;
+  field_type?: string;
+  options?: Record<string, unknown> | null;
+  default_value?: string | null;
+  description?: string | null;
+  disabled?: boolean;
+  project_id?: string | null;
+}
+
+export interface TypeDefinitionInput {
+  slug?: string;
+  name?: string;
+  description?: string | null;
+  icon?: string | null;
+  status_workflow?: Record<string, unknown> | null;
+  disabled?: boolean;
+  project_id?: string | null;
+  // Field assignments reference field-definition ids. The backend does not yet
+  // persist these through create/update (add_field_to_type is unwired); Ecto
+  // silently drops the key, so sending it is forward-compatible and harmless.
+  fields?: { id: string; required: boolean }[];
 }
 
 export interface Notification {
@@ -901,3 +1427,190 @@ export interface PersonalItemInput {
 export type PersonalListResponse =
   | { groups: Record<PersonalBucket, PersonalItem[]> }
   | { items: PersonalItem[] };
+
+// ── Saved views ────────────────────────────────────────────────────────────────
+export interface SavedView {
+  id: string;
+  organization_id: string;
+  project_id?: string | null;
+  owner_user_id?: string | null;
+  name: string;
+  entity_type?: string;
+  view_type?: string;
+  config?: Record<string, unknown>;
+  is_shared?: boolean;
+  inserted_at?: string;
+  updated_at?: string;
+}
+
+export interface SavedViewInput {
+  name: string;
+  project_id?: string;
+  owner_user_id?: string;
+  entity_type?: string;
+  view_type?: string;
+  config?: Record<string, unknown>;
+  is_shared?: boolean;
+}
+
+// ── Artifacts (versioned typed content) ─────────────────────────────────────────
+export type ArtifactKind = "code" | "document" | "image" | "wiki" | "config" | "binary";
+
+export interface Artifact {
+  id: string;
+  organization_id: string;
+  project_id?: string | null;
+  kind: ArtifactKind | string;
+  title: string;
+  mime_type?: string;
+  inserted_at?: string;
+  updated_at?: string;
+}
+
+// Artifact read shape with a pinned revision: show/create/createRevision responses
+// include content + the revision pointer; list shape omits them.
+export interface ArtifactDetail extends Artifact {
+  content?: string | null;
+  revision_id?: string;
+  revision_number?: number;
+}
+
+export interface ArtifactInput {
+  kind: ArtifactKind | string;
+  title: string;
+  project_id?: string;
+  mime_type?: string;
+  content?: string;
+}
+
+// Revision list entry (metadata only — content is NOT included; fetch via
+// getArtifact with revision_id). Note: the BE maps inserted_at → created_at here.
+export interface ArtifactRevision {
+  id: string;
+  revision_number: number;
+  note?: string | null;
+  created_at?: string;
+}
+
+// ── Wiki ────────────────────────────────────────────────────────────────────────
+export interface WikiSpace {
+  id: string;
+  organization_id: string;
+  project_id?: string | null;
+  slug: string;
+  name: string;
+  description?: string;
+  inserted_at?: string;
+  updated_at?: string;
+}
+
+export interface WikiSpaceInput {
+  slug: string;
+  name: string;
+  project_id?: string;
+  description?: string;
+}
+
+// Compact page ref returned by space show + page index.
+export interface WikiPageSummary {
+  id: string;
+  space_id: string;
+  parent_id?: string | null;
+  slug: string;
+  title: string;
+  position?: number;
+  updated_at?: string;
+}
+
+export interface WikiPage {
+  id: string;
+  space_id: string;
+  parent_id?: string | null;
+  slug: string;
+  title: string;
+  content?: string;
+  position?: number;
+  inserted_at?: string;
+  updated_at?: string;
+}
+
+// Page show response also embeds comments/attachments/reactions.
+export interface WikiPageDetail extends WikiPage {
+  comments?: WikiComment[];
+  attachments?: WikiAttachment[];
+  reactions?: WikiReaction[];
+}
+
+export interface WikiPageInput {
+  slug: string;
+  title: string;
+  content?: string;
+  parent_id?: string | null;
+  position?: number;
+}
+
+// Polymorphic trp_comments shape: content / reply_to_id (not body / parent_id).
+export interface WikiComment {
+  id: string;
+  page_id: string;
+  author?: string;
+  content: string;
+  reply_to_id?: string | null;
+  inserted_at?: string;
+}
+
+// Polymorphic trp_attachments shape.
+export interface WikiAttachment {
+  id: string;
+  page_id: string;
+  artifact_type?: string;
+  url?: string;
+  description?: string;
+  created_by?: string;
+  inserted_at?: string;
+}
+
+// Polymorphic trp_reactions shape (persona, not actor).
+export interface WikiReaction {
+  id: string;
+  target_type?: string;
+  target_id?: string;
+  emoji: string;
+  persona?: string;
+  inserted_at?: string;
+}
+
+// ── Reviews ─────────────────────────────────────────────────────────────────────
+export interface Review {
+  id: string;
+  organization_id: string;
+  project_id?: string | null;
+  artifact_id?: string;
+  revision_id?: string;
+  reviewer_persona?: string;
+  title?: string;
+  status: string;
+  summary?: string | null;
+  verdict?: string | null;
+  inserted_at?: string;
+  updated_at?: string;
+}
+
+export interface ReviewInput {
+  artifact_id?: string;
+  revision_id?: string;
+  project_id?: string;
+  reviewer_persona?: string;
+  title?: string;
+}
+
+// A positioned overlay comment on the artifact under review.
+export interface ReviewOverlay {
+  id: string;
+  x?: number | string;
+  y?: number | string;
+  width?: number | string;
+  height?: number | string;
+  comment?: string;
+  persona?: string;
+}

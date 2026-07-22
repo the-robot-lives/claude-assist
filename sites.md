@@ -102,7 +102,6 @@ Self-hosted tools provisioned via Terraform, exposed on `*.noizu.com` (mail stac
 ### platform/marketing
 | Site | Terraform | Purpose |
 |---|---|---|
-| [listmonk.noizu.com](https://listmonk.noizu.com) | `platform/marketing/listmonk.tf` | Listmonk — newsletter/mailing list |
 | [mautic.noizu.com](https://mautic.noizu.com) | `platform/marketing/mautic.tf` | Mautic — marketing automation |
 
 ### platform/observability

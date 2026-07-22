@@ -26,8 +26,7 @@ config :codefresh, CodefreshWeb.Endpoint,
 config :noizu_sendgrid,
   api_key: System.get_env("SENDGRID_API_KEY") || "SG.dev-placeholder"
 
-config :codefresh, :mail_from,
-  {"Codefresh", "noreply@starter.local"}
+config :codefresh, :mail_from, {"Codefresh", "noreply@starter.local"}
 
 config :logger, :default_formatter,
   format: "$time $metadata[$level] $message\n",
@@ -57,12 +56,10 @@ config :junit_formatter,
 
 # Rate limiting
 config :hammer,
-  backend: {Hammer.Backend.ETS,
-    [expiry_ms: 60_000 * 60, cleanup_interval_ms: 60_000 * 10]}
+  backend: {Hammer.Backend.ETS, [expiry_ms: 60_000 * 60, cleanup_interval_ms: 60_000 * 10]}
 
 # SAML handler
-config :samly, Samly.Provider,
-  pipeline_handler: CodefreshWeb.SAMLHandler
+config :samly, Samly.Provider, pipeline_handler: CodefreshWeb.SAMLHandler
 
 # Background jobs
 config :codefresh, Oban,

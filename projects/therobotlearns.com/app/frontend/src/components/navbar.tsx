@@ -4,7 +4,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/context/auth";
 import { OrgSwitcher } from "@/components/org-switcher";
-import { CookieSettingsButton } from "@/components/cookie-consent";
 
 export function Navbar() {
   const { user, loading, logout } = useAuth();
@@ -17,10 +16,9 @@ export function Navbar() {
     <nav className="sg-navbar">
       <div className="sg-navbar__inner">
         <Link href="/" className="sg-navbar__brand">
-          Start-App: Tagline
+          The Robot Learns
         </Link>
         <div className="sg-navbar__links">
-          <CookieSettingsButton />
           {loading ? null : user ? (
             <>
               <OrgSwitcher />

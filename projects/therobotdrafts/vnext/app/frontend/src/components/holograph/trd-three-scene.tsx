@@ -1,10 +1,27 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { type MutableRefObject, useEffect, useRef } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { buildTrd3dScene, type Trd3dNodeShapeKind } from "@/lib/trd-3d";
 import type { GraphDocument, GraphEdge, GraphNode } from "@/lib/holograph/types";
+
+export interface TrdCameraPose {
+  yaw: number;
+  pitch: number;
+  roll: number;
+  pivot: { x: number; y: number; z: number };
+  distance: number;
+}
+
+export interface TrdSceneHandle {
+  getCameraPose(): TrdCameraPose;
+  setCameraPose(pose: TrdCameraPose): void;
+  resetCamera(): void;
+  /** Project a screen point onto the scene's placement plane (z = orbit target z, camera-facing
+   * fallback). Returns null when the point is outside the canvas. */
+  dropPointAt(clientX: number, clientY: number): { x: number; y: number; z: number } | null;
+}
 
 interface TrdThreeSceneProps {
   document: GraphDocument;
@@ -13,6 +30,7 @@ interface TrdThreeSceneProps {
   tracedEdgeIds?: Set<string>;
   onSelect?: (nodeId: string) => void;
   onStatus?: (message: string) => void;
+  handleRef?: MutableRefObject<TrdSceneHandle | null>;
 }
 
 interface RenderNode {
@@ -21,7 +39,17 @@ interface RenderNode {
   body: THREE.Object3D;
   label: THREE.Mesh;
   farLabel: THREE.Sprite;
+  handles: THREE.Group;
   baseColor: THREE.Color;
+}
+
+interface EdgeRender {
+  edge: GraphEdge;
+  line: THREE.Line;
+  cone: THREE.Mesh | null;
+  baseColor: THREE.Color;
+  baseOpacity: number;
+  traced: boolean;
 }
 
 const defaultDimensions = { width: 2.8, height: 1.45, depth: 0.22 };
@@ -196,7 +224,26 @@ function makeRenderNode(node: GraphNode) {
   farLabel.userData.nodeId = node.id;
   group.add(farLabel);
 
-  return { node, group, body, label, farLabel, baseColor };
+  // Connection handles on the four side midpoints; shown only while selected.
+  const handles = new THREE.Group();
+  handles.visible = false;
+  const handleMaterial = new THREE.MeshBasicMaterial({ color: "#63c7ff", depthTest: false, transparent: true, opacity: 0.95 });
+  const handleOffsets = [
+    new THREE.Vector3(dims.width * 0.5 + 0.14, 0, 0),
+    new THREE.Vector3(-(dims.width * 0.5 + 0.14), 0, 0),
+    new THREE.Vector3(0, dims.height * 0.5 + 0.14, 0),
+    new THREE.Vector3(0, -(dims.height * 0.5 + 0.14), 0),
+  ];
+  for (const offset of handleOffsets) {
+    const handle = new THREE.Mesh(new THREE.OctahedronGeometry(0.11), handleMaterial);
+    handle.position.copy(offset);
+    handle.userData.nodeId = node.id;
+    handle.renderOrder = 3;
+    handles.add(handle);
+  }
+  group.add(handles);
+
+  return { node, group, body, label, farLabel, handles, baseColor };
 }
 
 function edgeColor(edge: GraphEdge, traced: boolean) {
@@ -207,7 +254,7 @@ function edgeColor(edge: GraphEdge, traced: boolean) {
   return new THREE.Color("#9ab0ba");
 }
 
-function addEdge(scene: THREE.Scene, edge: GraphEdge, nodes: Map<string, RenderNode>, traced: boolean) {
+function addEdge(scene: THREE.Scene, edge: GraphEdge, nodes: Map<string, RenderNode>, traced: boolean): EdgeRender | null {
   const source = nodes.get(edge.sourceId);
   const target = nodes.get(edge.targetId);
   if (!source || !target) return null;
@@ -219,9 +266,10 @@ function addEdge(scene: THREE.Scene, edge: GraphEdge, nodes: Map<string, RenderN
   ];
 
   const color = edgeColor(edge, traced);
+  const baseOpacity = traced ? 1 : 0.72;
   const dashed = edge.uml?.dashed || edge.kind === "depends_on";
   const material = dashed
-    ? new THREE.LineDashedMaterial({ color, dashSize: 0.24, gapSize: 0.14, transparent: true, opacity: traced ? 1 : 0.72 })
+    ? new THREE.LineDashedMaterial({ color, dashSize: 0.24, gapSize: 0.14, transparent: true, opacity: baseOpacity })
     : new THREE.LineBasicMaterial({ color, transparent: true, opacity: traced ? 1 : 0.68 });
 
   const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(points), material);
@@ -230,11 +278,12 @@ function addEdge(scene: THREE.Scene, edge: GraphEdge, nodes: Map<string, RenderN
   if (dashed) line.computeLineDistances();
   scene.add(line);
 
+  let cone: THREE.Mesh | null = null;
   if (edge.uml?.arrow !== "none") {
     const end = points[points.length - 1];
     const prev = points[points.length - 2];
     const dir = end.clone().sub(prev).normalize();
-    const cone = new THREE.Mesh(
+    cone = new THREE.Mesh(
       new THREE.ConeGeometry(edge.uml?.arrow === "diamond" ? 0.18 : 0.13, edge.uml?.arrow === "diamond" ? 0.34 : 0.28, 4),
       new THREE.MeshStandardMaterial({ color, roughness: 0.55 }),
     );
@@ -242,13 +291,12 @@ function addEdge(scene: THREE.Scene, edge: GraphEdge, nodes: Map<string, RenderN
     cone.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir);
     cone.userData.edgeId = edge.id;
     scene.add(cone);
-    return [line, cone];
   }
 
-  return [line];
+  return { edge, line, cone, baseColor: color.clone(), baseOpacity, traced };
 }
 
-export function TrdThreeScene({ document, selectedId, focusId, tracedEdgeIds, onSelect, onStatus }: TrdThreeSceneProps) {
+export function TrdThreeScene({ document, selectedId, focusId, tracedEdgeIds, onSelect, onStatus, handleRef }: TrdThreeSceneProps) {
   const hostRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -264,6 +312,12 @@ export function TrdThreeScene({ document, selectedId, focusId, tracedEdgeIds, on
     const trdScene = buildTrd3dScene(document, { focusNodeId: focusId ?? selectedId });
     const sceneNodeById = new Map(trdScene.nodes.map((node) => [node.id, node]));
     const sceneEdgeById = new Map(trdScene.edges.map((edge) => [edge.id, edge]));
+    // Hand-placed nodes (trd3d.authored) keep their document position; everything else uses
+    // the synthesized layout. Edges touching a hand-placed node drop their synthesized
+    // waypoints so they anchor to the live node positions instead.
+    const authoredIds = new Set(
+      document.nodes.filter((node) => node.trd3d?.authored && node.trd3d.position).map((node) => node.id),
+    );
     const renderDocument: GraphDocument = {
       ...document,
       nodes: document.nodes.map((node) => {
@@ -273,7 +327,7 @@ export function TrdThreeScene({ document, selectedId, focusId, tracedEdgeIds, on
           ...node,
           trd3d: {
             ...node.trd3d,
-            position: sceneNode.position,
+            position: authoredIds.has(node.id) && node.trd3d ? node.trd3d.position : sceneNode.position,
             dimensions: sceneNode.slab,
             layer: sceneNode.zLayer,
             shape: shapeHint(sceneNode.shapeKind),
@@ -283,11 +337,12 @@ export function TrdThreeScene({ document, selectedId, focusId, tracedEdgeIds, on
       edges: document.edges.map((edge) => {
         const sceneEdge = sceneEdgeById.get(edge.id);
         if (!sceneEdge) return edge;
+        const touchesAuthored = authoredIds.has(edge.sourceId) || authoredIds.has(edge.targetId);
         return {
           ...edge,
           trd3d: {
             ...edge.trd3d,
-            waypoints: sceneEdge.waypoints,
+            waypoints: touchesAuthored ? undefined : sceneEdge.waypoints,
             layer: sceneEdge.zLayer,
           },
         };
@@ -296,7 +351,9 @@ export function TrdThreeScene({ document, selectedId, focusId, tracedEdgeIds, on
 
     const scene = new THREE.Scene();
     scene.background = new THREE.Color("#162022");
-    scene.fog = new THREE.FogExp2("#162022", 0.0012);
+    // Fog stays extremely low: depth is communicated by lighting, grid, and layer tinting,
+    // never by hiding distant nodes.
+    scene.fog = new THREE.FogExp2("#162022", 0.0005);
 
     const camera = new THREE.PerspectiveCamera(50, Math.max(1, host.clientWidth) / Math.max(1, host.clientHeight), 0.05, 1200);
     const preset = trdScene.cameraPresets.focus ?? trdScene.cameraPresets.overview;
@@ -347,21 +404,46 @@ export function TrdThreeScene({ document, selectedId, focusId, tracedEdgeIds, on
       const depthTint = Math.min(0.58, Math.max(0, Math.abs(layer) * 0.18));
       material.color.copy(renderNode.baseColor.clone().lerp(new THREE.Color("#70777c"), depthTint));
       renderNodes.set(node.id, renderNode);
-      pickTargets.push(renderNode.body);
+      // Body plus both labels are pickable, so distant nodes offer large camera-scaled
+      // hit targets via their sprite labels.
+      pickTargets.push(renderNode.body, renderNode.label, renderNode.farLabel);
       scene.add(renderNode.group);
     }
 
-    const edgeObjects: THREE.Object3D[] = [];
+    const edgeRenders = new Map<string, EdgeRender>();
+    const edgePickables: THREE.Line[] = [];
     for (const edge of renderDocument.edges) {
       const created = addEdge(scene, edge, renderNodes, Boolean(tracedEdgeIds?.has(edge.id)));
-      if (created) edgeObjects.push(...created);
+      if (created) {
+        edgeRenders.set(edge.id, created);
+        edgePickables.push(created.line);
+      }
     }
 
     const raycaster = new THREE.Raycaster();
     const pointer = new THREE.Vector2();
     let hoverId: string | null = null;
+    let hoverEdgeId: string | null = null;
+    let selectedEdgeId: string | null = null;
 
-    function frame(nodeId?: string | null) {
+    function paintEdges() {
+      for (const item of edgeRenders.values()) {
+        const lineMaterial = item.line.material as THREE.LineBasicMaterial | THREE.LineDashedMaterial;
+        const coneMaterial = item.cone?.material as THREE.MeshStandardMaterial | undefined;
+        const isSelected = item.edge.id === selectedEdgeId;
+        const isHovered = item.edge.id === hoverEdgeId;
+        const color = isSelected
+          ? new THREE.Color("#ffd36b")
+          : isHovered
+            ? item.baseColor.clone().lerp(new THREE.Color("#ffffff"), 0.55)
+            : item.baseColor;
+        lineMaterial.color.copy(color);
+        lineMaterial.opacity = isSelected || isHovered ? 1 : item.baseOpacity;
+        if (coneMaterial) coneMaterial.color.copy(color);
+      }
+    }
+
+    function frame(nodeId?: string | null, announce = false) {
       tempBox.makeEmpty();
       if (nodeId) {
         const node = renderNodes.get(nodeId);
@@ -379,7 +461,9 @@ export function TrdThreeScene({ document, selectedId, focusId, tracedEdgeIds, on
       camera.far = Math.max(1000, radius * 80);
       camera.updateProjectionMatrix();
       controls.update();
-      onStatus?.(nodeId ? `Framed ${renderNodes.get(nodeId)?.node.label}` : "Framed whole 3D UML model");
+      // Only explicit framing (F / Home) announces; silent on scene rebuilds so commit
+      // status messages ("Renamed ...", "Connected ...") are not stomped.
+      if (announce) onStatus?.(nodeId ? `Framed ${renderNodes.get(nodeId)?.node.label}` : "Framed whole 3D UML model");
     }
 
     function paintSelection() {
@@ -397,6 +481,7 @@ export function TrdThreeScene({ document, selectedId, focusId, tracedEdgeIds, on
         );
         material.emissiveIntensity = selected ? 0.85 : hovered ? 0.42 : baseGlow;
         item.group.scale.setScalar(selected ? 1.055 : hovered ? 1.025 : 1);
+        item.handles.visible = item.node.id === selectedId;
       }
     }
 
@@ -407,14 +492,35 @@ export function TrdThreeScene({ document, selectedId, focusId, tracedEdgeIds, on
       raycaster.setFromCamera(pointer, camera);
       const hit = raycaster.intersectObjects(pickTargets, false)[0];
       hoverId = hit?.object.userData.nodeId ?? null;
-      renderer.domElement.style.cursor = hoverId ? "pointer" : "grab";
+      if (hoverId) {
+        hoverEdgeId = null;
+      } else {
+        // Edge hit tolerance grows with camera distance so thin lines stay clickable from afar.
+        const cameraDistance = camera.position.distanceTo(controls.target);
+        raycaster.params.Line = { threshold: THREE.MathUtils.clamp(cameraDistance * 0.014, 0.06, 1.4) };
+        const edgeHit = raycaster.intersectObjects(edgePickables, false)[0];
+        hoverEdgeId = edgeHit?.object.userData.edgeId ?? null;
+      }
+      renderer.domElement.style.cursor = hoverId || hoverEdgeId ? "pointer" : "grab";
       paintSelection();
+      paintEdges();
     }
 
     function click() {
-      if (!hoverId) return;
-      onSelect?.(hoverId);
-      onStatus?.(`Selected 3D UML node ${renderNodes.get(hoverId)?.node.label ?? hoverId}`);
+      if (hoverId) {
+        if (selectedEdgeId) {
+          selectedEdgeId = null;
+          paintEdges();
+        }
+        onSelect?.(hoverId);
+        return;
+      }
+      if (hoverEdgeId) {
+        selectedEdgeId = hoverEdgeId;
+        const edge = edgeRenders.get(hoverEdgeId)?.edge;
+        onStatus?.(`Selected edge ${edge?.label ?? hoverEdgeId}${edge?.uml?.relationship ? ` (${edge.uml.relationship})` : ""}`);
+        paintEdges();
+      }
     }
 
     const pressed = new Set<string>();
@@ -422,11 +528,11 @@ export function TrdThreeScene({ document, selectedId, focusId, tracedEdgeIds, on
       if (["KeyW", "KeyA", "KeyS", "KeyD", "KeyR", "KeyQ", "KeyE"].includes(event.code)) pressed.add(event.code);
       if (event.code === "KeyF") {
         event.preventDefault();
-        frame(selectedId);
+        frame(selectedId, true);
       }
       if (event.code === "Home") {
         event.preventDefault();
-        frame(null);
+        frame(null, true);
       }
     }
     function keyUp(event: KeyboardEvent) {
@@ -490,9 +596,93 @@ export function TrdThreeScene({ document, selectedId, focusId, tracedEdgeIds, on
     });
     observer.observe(host);
 
+    const worldUp = new THREE.Vector3(0, 1, 0);
+    if (handleRef) {
+      handleRef.current = {
+        getCameraPose() {
+          const offset = camera.position.clone().sub(controls.target);
+          const distance = Math.max(offset.length(), 1e-6);
+          const yaw = THREE.MathUtils.radToDeg(Math.atan2(offset.x, offset.z));
+          const pitch = THREE.MathUtils.radToDeg(Math.asin(THREE.MathUtils.clamp(offset.y / distance, -1, 1)));
+          const dir = offset.clone().negate().normalize();
+          const right0 = new THREE.Vector3().crossVectors(dir, worldUp);
+          let roll = 0;
+          if (right0.lengthSq() > 1e-8) {
+            right0.normalize();
+            const up0 = new THREE.Vector3().crossVectors(right0, dir).normalize();
+            const upProj = camera.up.clone().projectOnPlane(dir);
+            if (upProj.lengthSq() > 1e-8) {
+              upProj.normalize();
+              roll = THREE.MathUtils.radToDeg(Math.acos(THREE.MathUtils.clamp(up0.dot(upProj), -1, 1)));
+              if (right0.dot(upProj) > 0) roll = -roll;
+            }
+          }
+          return {
+            yaw,
+            pitch,
+            roll,
+            pivot: { x: controls.target.x, y: controls.target.y, z: controls.target.z },
+            distance,
+          };
+        },
+        setCameraPose(pose) {
+          const pivot = new THREE.Vector3(pose.pivot.x, pose.pivot.y, pose.pivot.z);
+          const distance = Math.max(0.5, pose.distance);
+          const yawR = THREE.MathUtils.degToRad(pose.yaw);
+          const pitchR = THREE.MathUtils.degToRad(THREE.MathUtils.clamp(pose.pitch, -89, 89));
+          const offset = new THREE.Vector3(
+            Math.sin(yawR) * Math.cos(pitchR),
+            Math.sin(pitchR),
+            Math.cos(yawR) * Math.cos(pitchR),
+          ).multiplyScalar(distance);
+          controls.target.copy(pivot);
+          camera.position.copy(pivot.clone().add(offset));
+          const dir = offset.clone().negate().normalize();
+          const right0 = new THREE.Vector3().crossVectors(dir, worldUp);
+          if (right0.lengthSq() > 1e-8) {
+            right0.normalize();
+            const up0 = new THREE.Vector3().crossVectors(right0, dir).normalize();
+            camera.up.copy(up0.applyAxisAngle(dir, THREE.MathUtils.degToRad(-pose.roll)));
+          } else {
+            camera.up.set(0, 0, pose.pitch > 0 ? -1 : 1);
+          }
+          camera.lookAt(pivot);
+          controls.update();
+        },
+        resetCamera() {
+          camera.up.copy(worldUp);
+          frame(null);
+        },
+        dropPointAt(clientX, clientY) {
+          const rect = renderer.domElement.getBoundingClientRect();
+          if (clientX < rect.left || clientX > rect.right || clientY < rect.top || clientY > rect.bottom) return null;
+          const point = new THREE.Vector2(
+            ((clientX - rect.left) / rect.width) * 2 - 1,
+            -((clientY - rect.top) / rect.height) * 2 + 1,
+          );
+          raycaster.setFromCamera(point, camera);
+          const out = new THREE.Vector3();
+          // Placement plane: z = orbit target z (the layer plane the user is looking at).
+          const layerPlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), -controls.target.z);
+          let hit = raycaster.ray.intersectPlane(layerPlane, out);
+          if (!hit) {
+            const facing = new THREE.Plane().setFromNormalAndCoplanarPoint(
+              camera.getWorldDirection(new THREE.Vector3()).negate(),
+              controls.target,
+            );
+            hit = raycaster.ray.intersectPlane(facing, out);
+          }
+          if (!hit) return null;
+          const round = (value: number) => Math.round(value * 100) / 100;
+          return { x: round(out.x), y: round(out.y), z: round(out.z) };
+        },
+      };
+    }
+
     frame(selectedId ?? focusId ?? null);
 
     return () => {
+      if (handleRef) handleRef.current = null;
       observer.disconnect();
       renderer.setAnimationLoop(null);
       renderer.domElement.removeEventListener("pointermove", updatePointer);
@@ -509,17 +699,20 @@ export function TrdThreeScene({ document, selectedId, focusId, tracedEdgeIds, on
           else material?.dispose?.();
         });
       }
-      for (const object of edgeObjects) {
-        const mesh = object as THREE.Mesh | THREE.Line;
-        mesh.geometry?.dispose?.();
-        const material = mesh.material;
-        if (Array.isArray(material)) material.forEach((m) => m.dispose());
-        else material?.dispose?.();
+      for (const item of edgeRenders.values()) {
+        for (const object of [item.line, item.cone]) {
+          if (!object) continue;
+          const mesh = object as THREE.Mesh | THREE.Line;
+          mesh.geometry?.dispose?.();
+          const material = mesh.material;
+          if (Array.isArray(material)) material.forEach((m) => m.dispose());
+          else material?.dispose?.();
+        }
       }
       renderer.dispose();
       host.replaceChildren();
     };
-  }, [document, focusId, onSelect, onStatus, selectedId, tracedEdgeIds]);
+  }, [document, focusId, handleRef, onSelect, onStatus, selectedId, tracedEdgeIds]);
 
   return <div ref={hostRef} className="trd-three-scene" aria-label="Interactive 3D UML scene" />;
 }

@@ -38,6 +38,9 @@ export interface GraphNode {
     layer?: number;
     shape?: "slab" | "package" | "component" | "cylinder" | "sphere" | "actor" | "interface";
     color?: string;
+    /** True when the position was placed by hand (drag-drop); the renderer then keeps it
+     * instead of the synthesized layout position (mirrors Unity's layoutProvenance). */
+    authored?: boolean;
   };
   metrics: {
     complexity: number;

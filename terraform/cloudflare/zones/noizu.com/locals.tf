@@ -37,7 +37,6 @@ locals {
     "kroki",
     "labelstudio",
     "langfuse",
-    "listmonk",
     "litellm",
     "livecodes",
     "matomo",

@@ -51,7 +51,6 @@ defmodule Codefresh.MixProject do
       {:ueberauth_github, "~> 0.8"},
       # {:ueberauth_linkedin, "~> 0.3"}, # incompatible oauth2 dep — needs replacement
 
-
       # Noizu
       {:noizu_labs_entities, "~> 0.3.0"},
       {:semaphore, "~> 1.0"},
@@ -60,7 +59,7 @@ defmodule Codefresh.MixProject do
 
       # GenAI
       {:genai, "~> 0.3.0"},
-      #{:ex_llama, "~> 0.2.0"},
+      # {:ex_llama, "~> 0.2.0"},
 
       # Routing
       {:syn, "~> 3.3"},
@@ -93,11 +92,14 @@ defmodule Codefresh.MixProject do
       {:opentelemetry_ecto, "~> 1.2"},
       {:opentelemetry_bandit, "~> 0.2"},
       {:logger_json, "~> 6.0"},
+      {:open_api_spex, "~> 3.22"},
 
       # Test
-      {:junit_formatter, "~> 3.4", only: [:test]}
-
-
+      {:junit_formatter, "~> 3.4", only: [:test]},
+      {:stream_data, "~> 1.1", only: [:test]},
+      {:excoveralls, "~> 0.18", only: [:test]},
+      {:credo, "~> 1.7", runtime: false},
+      {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false}
     ]
   end
 

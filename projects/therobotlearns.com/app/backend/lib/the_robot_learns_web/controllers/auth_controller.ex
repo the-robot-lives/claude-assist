@@ -12,7 +12,7 @@ defmodule TheRobotLearnsWeb.AuthController do
          {:ok, {user, _credential}} <-
            TheRobotLearns.Users.register(
              %{
-               user_name: user_params["user_name"] || email,
+               user_name: user_params["user_name"] || default_user_name(email),
                name: %{
                  first: user_params["first_name"] || "",
                  last: user_params["last_name"] || ""
@@ -49,6 +49,7 @@ defmodule TheRobotLearnsWeb.AuthController do
       TheRobotLearns.Auth.TokenStore.store_refresh_jti(refresh_jti)
       TheRobotLearns.Events.dispatch(:user_registered, %{user_id: user.id, email: user.email})
 
+      Organizations.ensure_personal_org(user.id)
       orgs = Organizations.list_user_organizations(user.id)
 
       conn
@@ -76,12 +77,29 @@ defmodule TheRobotLearnsWeb.AuthController do
         |> json(%{errors: format_changeset_errors(changeset)})
 
       {:error, reason} ->
-        conn |> put_status(:unprocessable_entity) |> json(%{error: to_string(reason)})
+        conn |> put_status(:unprocessable_entity) |> json(%{error: format_error_reason(reason)})
     end
   end
 
   def register(conn, _params) do
     conn |> put_status(:bad_request) |> json(%{error: "user params required"})
+  end
+
+  # Error reasons arrive as atoms, strings, or {field, detail} tuples
+  # (e.g. {:user_name, :invalid}) — only the first two implement String.Chars.
+  defp format_error_reason({field, detail}), do: "#{field}: #{format_error_reason(detail)}"
+  defp format_error_reason(reason) when is_atom(reason) or is_binary(reason), do: to_string(reason)
+  defp format_error_reason(reason), do: inspect(reason)
+
+  # user_name permits only [a-zA-Z0-9_-] (max 32); a raw email never passes.
+  defp default_user_name(nil), do: nil
+
+  defp default_user_name(email) do
+    email
+    |> String.split("@")
+    |> List.first()
+    |> String.replace(~r/[^a-zA-Z0-9_\-]/, "-")
+    |> String.slice(0, 32)
   end
 
   def login(conn, %{"email" => email, "password" => password}) do

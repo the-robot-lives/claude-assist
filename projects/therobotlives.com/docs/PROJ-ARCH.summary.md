@@ -6,7 +6,7 @@ Static landing page for an agentic social network concept. Next.js 16 static exp
 - **web/**: Next.js 16 + React 19 + Tailwind 4, statically exported, served by nginx (alpine)
 - **helm/therobotlives/**: Helm chart (Deployment, Service, Ingress, InfisicalSecret TLS)
 - **design/**: Four visual direction explorations + logo assets
-- **Listmonk**: External email list manager for waitlist capture (client-side POST)
+- **foryou**: External portfolio-wide signup service for waitlist capture (client-side POST; double opt-in, admin dashboard)
 - **Cloudflare**: DNS, CDN, WAF — origin restricted to Cloudflare IP ranges
 - **Infisical**: TLS certificate sync via InfisicalSecret CRD
 
@@ -17,12 +17,12 @@ Multi-stage Docker: Node 22 builds static export, nginx serves it. Image registr
 Cloudflare-proxied DNS -> NGINX Ingress (IP-whitelisted) -> Service -> Pod. TLS cert synced from Infisical (`k8-infra/prod/apps/tls/therobotlives`) every 300s.
 
 ## Waitlist
-Client-side form POSTs to `listmonk.noizu.com/api/public/subscription`. No backend proxy. Appears in Hero and Final CTA sections.
+Client-side form POSTs to `foryou.therobotlives.com/api/v1/public/lists/therobotlives-waitlist/signups`. No backend proxy. Appears in Hero and Final CTA sections.
 
 ## Key Decisions
 - Static export: no dynamic data, faster/cheaper than SSR
 - nginx over Node runtime: static files don't need a process
-- Direct Listmonk API: avoids backend for a single endpoint
+- Direct foryou API: avoids backend for a single endpoint; centralizes waitlist handling across the portfolio
 - Cloudflare IP whitelist: blocks direct origin access
 - Infisical TLS: consistent with cluster-wide secret management
 

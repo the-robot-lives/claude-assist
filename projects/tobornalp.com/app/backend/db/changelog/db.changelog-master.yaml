@@ -131,3 +131,15 @@ databaseChangeLog:
   - include:
       file: 043-okr-cycle-depth-trigger.yaml
       relativeToChangelogFile: true
+  - include:
+      file: 044-saved-views.yaml
+      relativeToChangelogFile: true
+  - include:
+      file: 045-artifacts.yaml
+      relativeToChangelogFile: true
+  - include:
+      file: 046-wiki.yaml
+      relativeToChangelogFile: true
+  - include:
+      file: 047-review.yaml
+      relativeToChangelogFile: true

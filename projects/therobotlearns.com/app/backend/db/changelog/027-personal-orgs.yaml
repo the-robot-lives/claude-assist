@@ -1,0 +1,14 @@
+databaseChangeLog:
+  - changeSet:
+      id: organizations-personal-flag
+      author: trl
+      changes:
+        - sql:
+            sql: |
+              ALTER TABLE organizations ADD COLUMN personal boolean NOT NULL DEFAULT false;
+              CREATE INDEX organizations_personal_idx ON organizations (personal) WHERE personal;
+      rollback:
+        - sql:
+            sql: |
+              DROP INDEX IF EXISTS organizations_personal_idx;
+              ALTER TABLE organizations DROP COLUMN IF EXISTS personal;

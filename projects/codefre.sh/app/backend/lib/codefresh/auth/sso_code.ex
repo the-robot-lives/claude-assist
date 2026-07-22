@@ -9,6 +9,7 @@ defmodule Codefresh.Auth.SSOCode do
 
   def exchange(code) do
     key = Codefresh.Redis.prefix("sso_code:#{code}")
+
     case Codefresh.Redis.command(["GETDEL", key]) do
       {:ok, nil} -> {:error, :invalid_code}
       {:ok, session_id} -> {:ok, session_id}

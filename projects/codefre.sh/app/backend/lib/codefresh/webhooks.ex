@@ -95,6 +95,26 @@ defmodule Codefresh.Webhooks do
 
   def get_delivery!(id), do: Repo.get!(WebhookDelivery, id)
 
+  def retry_delivery(organization_id, webhook_id, delivery_id) do
+    with %WebhookDelivery{sent_at: nil} = delivery <-
+           Repo.one(
+             from d in WebhookDelivery,
+               where:
+                 d.organization_id == ^organization_id and d.webhook_id == ^webhook_id and
+                   d.id == ^delivery_id
+           ),
+         {:ok, updated} <- Codefresh.Webhooks.Worker.deliver(delivery.id) do
+      {:ok, updated}
+    else
+      nil -> {:error, :not_found}
+      %WebhookDelivery{} = delivery -> {:ok, delivery}
+      {:error, reason} -> {:error, reason}
+      {:error, reason, _delivery} -> {:error, reason}
+    end
+  rescue
+    Ecto.Query.CastError -> {:error, :not_found}
+  end
+
   # ──────────────────────────────────────────────────────────────────────────
   # Event dispatch (US-145) — called from Runs / Review / Freeball contexts
   # ──────────────────────────────────────────────────────────────────────────

@@ -94,7 +94,13 @@ defmodule Codefresh.Runs.Worker do
     {:max_steps, run}
   end
 
-  defp walk_graph(%Run{} = run, %ScriptVersion{} = version, %ScriptNode{} = node, step_index, history) do
+  defp walk_graph(
+         %Run{} = run,
+         %ScriptVersion{} = version,
+         %ScriptNode{} = node,
+         step_index,
+         history
+       ) do
     run = Repo.get!(Run, run.id)
 
     cond do
@@ -469,7 +475,15 @@ defmodule Codefresh.Runs.Worker do
   # Persist run_step rows
   # ──────────────────────────────────────────────────────────────────────────
 
-  defp persist_step(%Run{} = run, %ScriptNode{} = node, request, response, usage, latency_ms, chosen) do
+  defp persist_step(
+         %Run{} = run,
+         %ScriptNode{} = node,
+         request,
+         response,
+         usage,
+         latency_ms,
+         chosen
+       ) do
     {status, to_node_id, edge_id, freeball_node_id} =
       case chosen do
         {:matched, edge, to_node} -> {"ok", to_node.id, edge.id, nil}
@@ -582,7 +596,13 @@ defmodule Codefresh.Runs.Worker do
   # Freeball fall-through (US-022, US-023, US-024)
   # ──────────────────────────────────────────────────────────────────────────
 
-  defp handle_freeball(%Run{} = run, %ScriptVersion{} = version, %ScriptNode{} = parent_node, %RunStep{} = step, response) do
+  defp handle_freeball(
+         %Run{} = run,
+         %ScriptVersion{} = version,
+         %ScriptNode{} = parent_node,
+         %RunStep{} = step,
+         response
+       ) do
     # For Stage 5: create a freeball_node anchored at parent_node with a
     # minimal generated prompt + one runtime-generated expectation. A real
     # generator runs in Stage 6. We pull the next node (if any) from the
@@ -675,7 +695,10 @@ defmodule Codefresh.Runs.Worker do
   # ──────────────────────────────────────────────────────────────────────────
 
   defp finalize({:done, %Run{} = run}), do: finalize_run(run)
-  defp finalize({:max_steps, %Run{} = run}), do: finalize_run(run, extra: %{"reason" => "max_steps"})
+
+  defp finalize({:max_steps, %Run{} = run}),
+    do: finalize_run(run, extra: %{"reason" => "max_steps"})
+
   defp finalize({:cancelled, %Run{} = run}), do: {:ok, run}
   defp finalize({:cancelled_for_cost, %Run{} = run}), do: {:ok, run}
 

@@ -21,10 +21,12 @@ defmodule TheRobotLearns.Auth.SSO do
          true <- TheRobotLearns.Auth.SSODomains.sso_available?(email, provider_type) do
       provider_ref = provider_ref(provider_type)
       {:ok, provider_id} = TheRobotLearns.Auth.Providers.Provider.id(provider_ref)
+      ensure_provider_row(provider_id, provider_type)
 
       case find_user_by_email(email) do
         {:ok, user} ->
           ensure_sso_credential(user, provider_ref, provider_id, provider_type, attrs, context)
+          TheRobotLearns.Organizations.ensure_personal_org(user.id)
           create_sso_session(user, provider_type, context)
 
         :not_found ->
@@ -34,6 +36,29 @@ defmodule TheRobotLearns.Auth.SSO do
       _ -> {:error, :sso_not_allowed}
     end
   end
+
+  # Provider rows are referenced by deterministic UUID5 id but only the
+  # password-register path upserts its row (Login); SSO must do the same or the
+  # first SSO login per provider hits user_credentials_auth_provider_id_fkey.
+  defp ensure_provider_row(provider_id, provider_type) do
+    title = provider_title(provider_type)
+
+    TheRobotLearns.Repo.insert(
+      %TheRobotLearns.Schema.Auth.Providers.Provider{
+        id: provider_id,
+        title: title,
+        description: "#{title} single sign-on"
+      },
+      on_conflict: :nothing,
+      conflict_target: :id
+    )
+  end
+
+  defp provider_title(:oidc), do: "OIDC"
+  defp provider_title(:saml), do: "SAML"
+  defp provider_title(:github), do: "GitHub"
+  defp provider_title(:linkedin), do: "LinkedIn"
+  defp provider_title(type), do: type |> to_string() |> String.capitalize()
 
   defp find_user_by_email(email) do
     q = from u in UserSchema, where: u.email == ^email, where: u.status != :deleted, limit: 1
@@ -144,6 +169,7 @@ defmodule TheRobotLearns.Auth.SSO do
     }
     |> TheRobotLearns.EntityRepo.create(context)
 
+    TheRobotLearns.Organizations.ensure_personal_org(user.id)
     create_sso_session(user, provider_type, context)
   end
 

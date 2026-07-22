@@ -14,7 +14,9 @@ defmodule CodefreshWeb.AuthControllerTest do
     end
 
     test "returns 401 on invalid credentials", %{conn: conn} do
-      conn = post(conn, "/api/v1/auth/login", %{email: "nobody@example.com", password: "wrongpassword"})
+      conn =
+        post(conn, "/api/v1/auth/login", %{email: "nobody@example.com", password: "wrongpassword"})
+
       assert json_response(conn, 401)["error"]
     end
   end

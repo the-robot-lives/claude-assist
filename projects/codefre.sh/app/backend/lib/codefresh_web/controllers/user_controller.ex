@@ -94,7 +94,11 @@ defmodule CodefreshWeb.UserController do
     end
 
     if params["new_password"] do
-      Codefresh.Users.Credentials.update_password(user, params["new_password"], Noizu.Context.system())
+      Codefresh.Users.Credentials.update_password(
+        user,
+        params["new_password"],
+        Noizu.Context.system()
+      )
     end
 
     {:ok, user} = Users.get_user(user.id, Noizu.Context.system())

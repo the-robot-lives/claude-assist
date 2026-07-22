@@ -4,7 +4,7 @@
 
 Gotta.cc is an AI-curated web directory — a browsable, scored catalog of quality websites organized by topic. The current build is a **static landing page with waitlist capture**, serving as a pre-launch validation artifact. The planned full product adds an LLM-powered scoring pipeline, category browser, community submissions, and search.
 
-The architecture is intentionally minimal at this stage: a statically-exported Next.js 16 site served by Nginx in a Docker container, with email capture routed to an external Listmonk instance.
+The architecture is intentionally minimal at this stage: a statically-exported Next.js 16 site served by Nginx in a Docker container, with email capture routed to the foryou signup service.
 
 ## System Diagram
 
@@ -17,7 +17,7 @@ graph LR
     end
 
     U[User Browser] -->|HTTPS via Cloudflare| NG
-    U -->|Waitlist POST| LM["Listmonk<br/>listmonk.noizu.com"]
+    U -->|Waitlist POST| FY["foryou signup service<br/>foryou.therobotlives.com"]
 ```
 
 ## Core Components
@@ -25,24 +25,24 @@ graph LR
 | Component | Purpose | Technology |
 |-----------|---------|------------|
 | Landing Page | Product pitch, waitlist capture, design validation | Next.js 16, React 19, Tailwind CSS 4 |
-| Waitlist Form | Email subscription via Listmonk public API | Client-side fetch to `listmonk.noizu.com` |
+| Waitlist Form | Email subscription via foryou public signup API | Client-side fetch to `foryou.therobotlives.com` |
 | Container | Static export served by Nginx with gzip + caching | Docker multi-stage (node:22-alpine -> nginx:alpine) |
 | Design Assets | Logo variants (mark, combo, mono, reversed, favicon) + 3 visual directions | SVG, HTML mockups |
 
 ## Data Flow
 
-All data flow is client-side in the current build. The landing page is statically generated at build time and served as plain HTML/CSS/JS by Nginx. The only dynamic interaction is the waitlist form, which POSTs directly from the browser to the Listmonk API — no backend proxy.
+All data flow is client-side in the current build. The landing page is statically generated at build time and served as plain HTML/CSS/JS by Nginx. The only dynamic interaction is the waitlist form, which POSTs directly from the browser to the foryou signup API — no backend proxy.
 
 ```mermaid
 sequenceDiagram
     participant B as Browser
     participant N as Nginx Container
-    participant L as Listmonk
+    participant F as foryou signup service
 
     B->>N: GET / (static page)
     N-->>B: HTML + JS + CSS
-    B->>L: POST /api/public/subscription
-    L-->>B: 200 OK / error
+    B->>F: POST /api/v1/public/lists/gotta-cc-waitlist/signups
+    F-->>B: 200 OK / error
 ```
 
 ## Deployment
@@ -63,7 +63,7 @@ Intended deployment target is the `*.noizu.com` Kubernetes cluster via Helm, fol
 | Typography | Iowan Old Style (display), system sans (UI), monospace (scores) |
 | Build | Node.js 22, TypeScript 5 |
 | Container | Docker (multi-stage), Nginx Alpine |
-| Email | Listmonk (external, self-hosted at listmonk.noizu.com) |
+| Email | foryou signup service (external, self-hosted at foryou.therobotlives.com) |
 | DNS/TLS | Cloudflare (planned) |
 | Runtime | Node.js 22.22.0 (pinned via `.tool-versions`) |
 
@@ -85,6 +85,6 @@ These components are described in `README.md` but have no implementation yet. Ar
 ## Key Decisions
 
 - **Static export over SSR**: No server-side rendering needed for a landing page. Static export simplifies deployment and eliminates Node.js runtime in production.
-- **Direct Listmonk integration**: Browser-to-Listmonk POST avoids building a backend proxy for email capture. Listmonk's public subscription API handles this natively.
+- **Direct foryou integration**: Browser-to-foryou POST avoids building a backend proxy for email capture. The foryou public signup API (`POST /api/v1/public/lists/gotta-cc-waitlist/signups`, unauthenticated, CORS-open, rate-limited, double opt-in) handles this natively.
 - **Nginx over Node.js serving**: Static files served by Nginx are faster and use less memory than a Node.js process.
 - **Three design directions deferred**: `design/` contains three visual directions (Ink & Paper, Warm Browse, Retro Revival) pending user selection before the design system is locked.

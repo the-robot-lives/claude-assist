@@ -36,6 +36,35 @@ defmodule TheRobotLearns.Organizations do
     end)
   end
 
+  @doc """
+  Idempotently ensure the user has their auto-created "Personal" organization
+  (flagged `personal: true` to distinguish it from real orgs). Called on every
+  registration/SSO path so pre-existing accounts backfill on next login.
+  """
+  def ensure_personal_org(user_id) do
+    existing =
+      from(sm in ScopedMembershipSchema,
+        join: o in Schema,
+        on: o.id == sm.resource_id,
+        where:
+          sm.member_type == "user" and sm.member_id == ^user_id and
+            sm.resource_type == "organization",
+        where: o.personal == true,
+        limit: 1,
+        select: o
+      )
+      |> TheRobotLearns.Repo.one()
+
+    if existing do
+      {:ok, existing}
+    else
+      create_organization_with_owner(
+        %{name: "Personal", slug: "personal-#{user_id}", personal: true},
+        user_id
+      )
+    end
+  end
+
   def list_user_organizations(user_id) do
     from(sm in ScopedMembershipSchema,
       join: o in Schema,
@@ -46,7 +75,7 @@ defmodule TheRobotLearns.Organizations do
         sm.member_type == "user" and sm.member_id == ^user_id and
           sm.resource_type == "organization",
       where: is_nil(sm.expires_at) or sm.expires_at > ^DateTime.utc_now(),
-      select: %{id: o.id, slug: o.slug, name: o.name, role: g.name}
+      select: %{id: o.id, slug: o.slug, name: o.name, personal: o.personal, role: g.name}
     )
     |> TheRobotLearns.Repo.all()
   end
@@ -60,7 +89,9 @@ defmodule TheRobotLearns.Organizations do
   end
 
   def create_invite_token(attrs) do
-    raw_token = :crypto.strong_rand_bytes(32) |> Base.url_encode64(padding: false)
+    # TRL-prefixed Base32 so raw tokens satisfy the ~r/^TRL-[A-Z0-9-]{6,}$/i
+    # format enforced by the waitlist endpoint and the landing-page modal.
+    raw_token = "TRL-" <> (:crypto.strong_rand_bytes(20) |> Base.encode32(padding: false))
     key_prefix = String.slice(raw_token, 0, 8)
     token_hash = Bcrypt.hash_pwd_salt(raw_token)
 

@@ -319,21 +319,32 @@ defmodule Codefresh.Scripts do
     node_ids = MapSet.new(nodes, & &1.id)
 
     cond do
-      nodes == [] -> {:error, :no_nodes}
-      is_nil(draft.root_node_id) -> {:error, :root_not_set}
-      exp_count == 0 -> {:error, :no_expectations}
+      nodes == [] ->
+        {:error, :no_nodes}
+
+      is_nil(draft.root_node_id) ->
+        {:error, :root_not_set}
+
+      exp_count == 0 ->
+        {:error, :no_expectations}
+
       bad = Enum.find(edges, fn e -> not MapSet.member?(node_ids, e.from_node_id) end) ->
         {:error, {:edge_from_missing, bad.id}}
+
       bad = Enum.find(edges, fn e -> not MapSet.member?(node_ids, e.to_node_id) end) ->
         {:error, {:edge_to_missing, bad.id}}
-      true -> :ok
+
+      true ->
+        :ok
     end
   end
 
   defp check_duplicate(%Script{id: script_id}, checksum) do
     case Repo.one(
            from sv in ScriptVersion,
-             where: sv.script_id == ^script_id and sv.checksum == ^checksum and not is_nil(sv.yaml_source),
+             where:
+               sv.script_id == ^script_id and sv.checksum == ^checksum and
+                 not is_nil(sv.yaml_source),
              limit: 1
          ) do
       nil -> :no_dup
@@ -390,7 +401,8 @@ defmodule Codefresh.Scripts do
 
     with {:ok, decoded} <- YamlCodec.decode(yaml, organization_id),
          checksum = :crypto.hash(:sha256, yaml),
-         {:ok, script, version} <- find_or_create_from_yaml(decoded, organization_id, imported_by, yaml, checksum) do
+         {:ok, script, version} <-
+           find_or_create_from_yaml(decoded, organization_id, imported_by, yaml, checksum) do
       {:ok, script, version}
     end
   end
@@ -451,7 +463,13 @@ defmodule Codefresh.Scripts do
     {:error, {:script_slug_conflict, script.slug}}
   end
 
-  defp build_graph(%ScriptVersion{} = draft, %{canonical: doc, prompts: prompts, rubrics: rubrics}, yaml, checksum, user_id) do
+  defp build_graph(
+         %ScriptVersion{} = draft,
+         %{canonical: doc, prompts: prompts, rubrics: rubrics},
+         yaml,
+         checksum,
+         user_id
+       ) do
     nodes_spec = doc["nodes"]
     edges_spec = doc["edges"]
     root_key = doc["root"]
@@ -460,7 +478,8 @@ defmodule Codefresh.Scripts do
       # Insert nodes; build key → struct map
       nodes_by_key =
         Enum.reduce(nodes_spec, %{}, fn nspec, acc ->
-          prompt_id = if nspec["prompt"], do: Map.fetch!(prompts, yaml_ref_key(nspec["prompt"])), else: nil
+          prompt_id =
+            if nspec["prompt"], do: Map.fetch!(prompts, yaml_ref_key(nspec["prompt"])), else: nil
 
           {:ok, n} =
             add_node(draft, %{
@@ -476,7 +495,11 @@ defmodule Codefresh.Scripts do
 
           # Insert expectations for this node
           Enum.each(nspec["expectations"], fn espec ->
-            rubric_id = if espec["rubric"], do: Map.fetch!(rubrics, yaml_ref_key(espec["rubric"])), else: nil
+            rubric_id =
+              if espec["rubric"],
+                do: Map.fetch!(rubrics, yaml_ref_key(espec["rubric"])),
+                else: nil
+
             {:ok, _} =
               add_expectation(n, %{
                 "label" => espec["label"],
@@ -583,13 +606,16 @@ defmodule Codefresh.Scripts do
         fork_slug = derive_unique_slug(source.organization_id, "#{source.slug}-fork-#{short}")
 
         Multi.new()
-        |> Multi.insert(:fork, Script.create_changeset(%Script{}, %{
-          organization_id: source.organization_id,
-          name: "#{source.name} (fork)",
-          slug: fork_slug,
-          description: source.description,
-          created_by_user_id: forked_by
-        }))
+        |> Multi.insert(
+          :fork,
+          Script.create_changeset(%Script{}, %{
+            organization_id: source.organization_id,
+            name: "#{source.name} (fork)",
+            slug: fork_slug,
+            description: source.description,
+            created_by_user_id: forked_by
+          })
+        )
         |> Multi.insert(:draft, fn %{fork: fork} ->
           ScriptVersion.create_changeset(%ScriptVersion{}, %{
             script_id: fork.id,
@@ -615,7 +641,9 @@ defmodule Codefresh.Scripts do
     slug = String.slice(base_slug, 0, 120)
 
     case get_script_by_slug(org_id, slug) do
-      nil -> slug
+      nil ->
+        slug
+
       _ ->
         suffix = :crypto.strong_rand_bytes(2) |> Base.encode16(case: :lower)
         derive_unique_slug(org_id, "#{String.slice(base_slug, 0, 115)}-#{suffix}")
@@ -702,6 +730,7 @@ defmodule Codefresh.Scripts do
       |> Enum.filter(fn key ->
         na = nodes_a[key]
         nb = nodes_b[key]
+
         na.kind != nb.kind or na.tone != nb.tone or na.eval_tags != nb.eval_tags or
           na.prompt_version_id != nb.prompt_version_id or na.position != nb.position
       end)
@@ -761,7 +790,8 @@ defmodule Codefresh.Scripts do
     nodes =
       Repo.all(
         from n in ScriptNode,
-          where: n.script_version_id == ^sv.id and n.organization_id == ^org_id and n.id in ^node_ids
+          where:
+            n.script_version_id == ^sv.id and n.organization_id == ^org_id and n.id in ^node_ids
       )
 
     missing = MapSet.difference(MapSet.new(node_ids), MapSet.new(nodes, & &1.id))
@@ -884,7 +914,8 @@ defmodule Codefresh.Scripts do
         if MapSet.member?(v, child_id) do
           {q, dm, v}
         else
-          {q ++ [{child_id, depth + 1}], Map.put(dm, child_id, depth + 1), MapSet.put(v, child_id)}
+          {q ++ [{child_id, depth + 1}], Map.put(dm, child_id, depth + 1),
+           MapSet.put(v, child_id)}
         end
       end)
 

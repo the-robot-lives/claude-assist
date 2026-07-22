@@ -1,6 +1,6 @@
 apiVersion: v2
-name: start-app
-description: "Start-App — Phoenix API + Next.js frontend scaffold chart"
+name: therobotlearns
+description: "The Robot Learns — Phoenix API + Next.js frontend (start-app pattern)"
 version: 0.1.2
 appVersion: "0.1.0"
 type: application

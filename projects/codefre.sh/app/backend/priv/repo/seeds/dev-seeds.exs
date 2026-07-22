@@ -1,10 +1,12 @@
 dir = Path.dirname(__ENV__.file)
 Code.eval_file("#{dir}/prod-seeds.exs")
 
+require SeedHelper
+import SeedHelper
+
 alias Codefresh.Schema.Users.User
 alias Codefresh.Schema.Organizations.Organization
-alias Codefresh.Schema.Organizations.Membership
-alias Codefresh.Schema.Organizations.InviteToken
+alias Codefresh.Accounts.InviteToken
 alias Codefresh.Schema.Users.Credentials.UserCredential
 alias Codefresh.Schema.Versioned.Names.Name
 alias Codefresh.Schema.Versioned.Descriptions.Description
@@ -13,7 +15,7 @@ admin_id = UUID.uuid5(:oid, "Codefresh.Dev.Admin")
 dev_org_id = UUID.uuid5(:oid, "Codefresh.Dev.Organization")
 login_provider_id = UUID.uuid5(:oid, "Codefresh.Schema.Auth.Providers.Provider@Login")
 
-seed "dev:admin-name" do
+seed {"dev:admin-name", "1"} do
   Codefresh.Repo.insert!(
     %Name{id: UUID.uuid5(:oid, "Codefresh.Dev.Admin.Name"), first: "Admin", last: "User"},
     on_conflict: :nothing,
@@ -21,7 +23,7 @@ seed "dev:admin-name" do
   )
 end
 
-seed "dev:admin-description" do
+seed {"dev:admin-description", "1"} do
   Codefresh.Repo.insert!(
     %Description{
       id: UUID.uuid5(:oid, "Codefresh.Dev.Admin.Description"),
@@ -33,7 +35,7 @@ seed "dev:admin-description" do
   )
 end
 
-seed "dev:admin-user" do
+seed {"dev:admin-user", "1"} do
   Codefresh.Repo.insert!(
     %User{
       id: admin_id,
@@ -52,7 +54,7 @@ seed "dev:admin-user" do
   )
 end
 
-seed "dev:admin-credential" do
+seed {"dev:admin-credential", "1"} do
   Codefresh.Repo.insert!(
     %UserCredential{
       id: UUID.uuid5(:oid, "Codefresh.Dev.Admin.Credential"),
@@ -71,7 +73,7 @@ seed "dev:admin-credential" do
   )
 end
 
-seed "dev:organization" do
+seed {"dev:organization", "1"} do
   Codefresh.Repo.insert!(
     %Organization{
       id: dev_org_id,
@@ -83,36 +85,53 @@ seed "dev:organization" do
   )
 end
 
-seed "dev:admin-membership" do
-  Codefresh.Repo.insert!(
-    %Membership{
-      id: UUID.uuid5(:oid, "Codefresh.Dev.Admin.Membership"),
-      organization_id: dev_org_id,
-      user_id: admin_id,
-      role: "owner"
-    },
-    on_conflict: :nothing,
-    conflict_target: :id
-  )
+seed {"dev:admin-membership", "1"} do
+  {:ok, _membership} =
+    Codefresh.Authz.ScopedMemberships.add_member(
+      "organization",
+      dev_org_id,
+      admin_id,
+      "owner",
+      admin_id
+    )
 end
 
-seed "dev:bootstrap-invite" do
+seed {"dev:bootstrap-invite", "1"} do
   raw_token = "dev-bootstrap-invite-token-do-not-use-in-prod"
   token_hash = Bcrypt.hash_pwd_salt(raw_token)
   key_prefix = String.slice(raw_token, 0, 8)
+  expires_at = DateTime.utc_now() |> DateTime.add(365 * 24 * 60 * 60, :second) |> DateTime.truncate(:second)
 
   Codefresh.Repo.insert!(
     %InviteToken{
       id: UUID.uuid5(:oid, "Codefresh.Dev.BootstrapInvite"),
       organization_id: dev_org_id,
-      created_by_user_id: admin_id,
+      invited_by_user_id: admin_id,
+      email: nil,
+      role: "viewer",
       token_hash: token_hash,
       key_prefix: key_prefix,
-      max_uses: nil,
-      uses: 0,
-      revoked: false
+      expires_at: expires_at,
+      max_uses: 100,
+      use_count: 0,
+      revoked_at: nil,
+      metadata: %{"seed" => "dev-bootstrap"}
     },
-    on_conflict: :nothing,
+    on_conflict:
+      {:replace,
+       [
+         :invited_by_user_id,
+         :email,
+         :role,
+         :token_hash,
+         :key_prefix,
+         :expires_at,
+         :max_uses,
+         :use_count,
+         :revoked_at,
+         :metadata,
+         :updated_at
+       ]},
     conflict_target: :id
   )
 
@@ -130,8 +149,8 @@ seed "dev:bootstrap-invite" do
   """)
 end
 
-seed "dev:admin-magic-link-token" do
-  admin_ref = Codefresh.Users.User.ref(admin_id)
+seed {"dev:admin-magic-link-token", "1"} do
+  {:ok, admin_ref} = Codefresh.Users.User.ref(admin_id)
   context = Noizu.Context.system()
 
   token =

@@ -5,6 +5,7 @@ import { useAuth } from "@/context/auth";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import Link from "next/link";
+import { AuthCard } from "@/components/auth-card";
 
 type LoginMode = "password" | "magic-link" | "otp";
 
@@ -116,31 +117,30 @@ export default function LoginPage() {
   const modeLinks = (
     <div style={{ marginTop: "1rem" }}>
       {mode !== "password" && (
-        <p><a href="#" onClick={(e) => { e.preventDefault(); switchMode("password"); }}>Sign in with password</a></p>
+        <p><a href="#" data-cy="auth-mode-password" onClick={(e) => { e.preventDefault(); switchMode("password"); }}>Sign in with password</a></p>
       )}
       {mode !== "magic-link" && (
-        <p><a href="#" onClick={(e) => { e.preventDefault(); switchMode("magic-link"); }}>Sign in with magic link</a></p>
+        <p><a href="#" data-cy="auth-mode-magic-link" onClick={(e) => { e.preventDefault(); switchMode("magic-link"); }}>Sign in with magic link</a></p>
       )}
       {mode !== "otp" && (
-        <p><a href="#" onClick={(e) => { e.preventDefault(); switchMode("otp"); }}>Sign in with email code</a></p>
+        <p><a href="#" data-cy="auth-mode-otp" onClick={(e) => { e.preventDefault(); switchMode("otp"); }}>Sign in with email code</a></p>
       )}
-      <p><Link href="/forgot-password">Forgot password?</Link></p>
-      <p>Don&apos;t have an account? <Link href="/signup">Sign up</Link></p>
+      <p><Link href="/forgot-password" data-cy="forgot-password-link">Forgot password?</Link></p>
+      <p>Don&apos;t have an account? <Link href="/signup" data-cy="signup-link">Sign up</Link></p>
     </div>
   );
 
   return (
-    <div className="content">
-      <main>
-        <h1 className="sg-page-title">Log In</h1>
-
+    <AuthCard title="Log In" cyId="login" error={error}>
         {ssoProviders.length > 0 && (
-          <div style={{ maxWidth: 400, marginBottom: "2rem" }}>
+          <div style={{ marginBottom: "2rem" }} data-cy="sso-provider-list">
             {ssoProviders.map((provider) => (
               <a
                 key={provider}
                 href={SSO_PATHS[provider] || `/auth/${provider}`}
                 className="sg-btn sg-btn--black"
+                data-cy="sso-provider-link"
+                data-cy-id={provider}
                 style={{ display: "block", textAlign: "center", marginBottom: "0.5rem" }}
               >
                 {SSO_LABELS[provider] || `Sign in with ${provider}`}
@@ -155,17 +155,16 @@ export default function LoginPage() {
         )}
 
         {mode === "password" && (
-          <form onSubmit={handlePasswordSubmit} style={{ maxWidth: 400 }}>
-            {error && <p className="sg-error">{error}</p>}
+          <form onSubmit={handlePasswordSubmit} data-cy="auth-form" data-cy-id="password">
             <div className="sg-field">
               <label htmlFor="email">Email</label>
-              <input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" />
+              <input id="email" data-cy="email-input" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" />
             </div>
             <div className="sg-field">
               <label htmlFor="password">Password</label>
-              <input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required autoComplete="current-password" />
+              <input id="password" data-cy="password-input" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required autoComplete="current-password" />
             </div>
-            <button type="submit" className="sg-btn sg-btn--black" disabled={loading}>
+            <button type="submit" className="sg-btn sg-btn--black" data-cy="submit-login" disabled={loading}>
               {loading ? "Logging in..." : "Log In"}
             </button>
             {modeLinks}
@@ -173,14 +172,13 @@ export default function LoginPage() {
         )}
 
         {mode === "magic-link" && !magicLinkSent && (
-          <form onSubmit={handleMagicLinkSubmit} style={{ maxWidth: 400 }}>
-            {error && <p className="sg-error">{error}</p>}
+          <form onSubmit={handleMagicLinkSubmit} data-cy="auth-form" data-cy-id="magic-link">
             <p>Enter your email and we&apos;ll send you a sign-in link.</p>
             <div className="sg-field">
               <label htmlFor="magic-email">Email</label>
-              <input id="magic-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" />
+              <input id="magic-email" data-cy="email-input" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" />
             </div>
-            <button type="submit" className="sg-btn sg-btn--black" disabled={loading}>
+            <button type="submit" className="sg-btn sg-btn--black" data-cy="submit-magic-link" disabled={loading}>
               {loading ? "Sending..." : "Send Magic Link"}
             </button>
             {modeLinks}
@@ -188,7 +186,7 @@ export default function LoginPage() {
         )}
 
         {mode === "magic-link" && magicLinkSent && (
-          <div style={{ maxWidth: 400 }}>
+          <div data-cy="magic-link-sent">
             <p>Check your email for a magic link to sign in.</p>
             {devLink && (
               <p style={{ marginTop: "1rem", padding: "0.75rem", background: "var(--surface-alt, #f5f5f5)", borderRadius: "4px" }}>
@@ -200,14 +198,13 @@ export default function LoginPage() {
         )}
 
         {mode === "otp" && !otpSent && (
-          <form onSubmit={handleOtpRequest} style={{ maxWidth: 400 }}>
-            {error && <p className="sg-error">{error}</p>}
+          <form onSubmit={handleOtpRequest} data-cy="auth-form" data-cy-id="otp-request">
             <p>Enter your email and we&apos;ll send you a login code.</p>
             <div className="sg-field">
               <label htmlFor="otp-email">Email</label>
-              <input id="otp-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" />
+              <input id="otp-email" data-cy="email-input" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" />
             </div>
-            <button type="submit" className="sg-btn sg-btn--black" disabled={loading}>
+            <button type="submit" className="sg-btn sg-btn--black" data-cy="submit-otp-request" disabled={loading}>
               {loading ? "Sending..." : "Send Login Code"}
             </button>
             {modeLinks}
@@ -215,8 +212,7 @@ export default function LoginPage() {
         )}
 
         {mode === "otp" && otpSent && (
-          <form onSubmit={handleOtpVerify} style={{ maxWidth: 400 }}>
-            {error && <p className="sg-error">{error}</p>}
+          <form onSubmit={handleOtpVerify} data-cy="auth-form" data-cy-id="otp-verify">
             <p>Enter the 6-digit code sent to {email}.</p>
             {devCode && (
               <p style={{ marginBottom: "1rem", padding: "0.75rem", background: "var(--surface-alt, #f5f5f5)", borderRadius: "4px" }}>
@@ -227,6 +223,7 @@ export default function LoginPage() {
               <label htmlFor="otp-code">Code</label>
               <input
                 id="otp-code"
+                data-cy="otp-code-input"
                 type="text"
                 inputMode="numeric"
                 pattern="[0-9]*"
@@ -238,13 +235,12 @@ export default function LoginPage() {
                 style={{ letterSpacing: "0.5em", fontSize: "1.5rem", textAlign: "center" }}
               />
             </div>
-            <button type="submit" className="sg-btn sg-btn--black" disabled={loading || otpCode.length !== 6}>
+            <button type="submit" className="sg-btn sg-btn--black" data-cy="submit-otp-verify" disabled={loading || otpCode.length !== 6}>
               {loading ? "Verifying..." : "Verify Code"}
             </button>
             {modeLinks}
           </form>
         )}
-      </main>
-    </div>
+    </AuthCard>
   );
 }

@@ -5,18 +5,24 @@ defmodule CodefreshWeb.AuthController do
   alias Codefresh.Organizations
 
   def register(conn, %{"invite_token" => raw_token, "user" => user_params}) do
+    email = user_params["email"] || ""
+    user_name = user_params["user_name"] || default_user_name(email)
+    first_name = user_params["first_name"] || "User"
+    last_name = user_params["last_name"] || user_name
+
     with {:ok, invite} <- Organizations.find_active_invite_by_raw_token(raw_token),
          {:ok, {user, _credential}} <-
            Codefresh.Users.register(
              %{
-               user_name: user_params["user_name"] || user_params["email"],
+               user_name: user_name,
                name: %{
-                 first: user_params["first_name"] || "",
-                 last: user_params["last_name"] || ""
+                 first: first_name,
+                 last: last_name
                },
-               email: user_params["email"],
+               email: email,
                password: user_params["password"]
              },
+             {:login, {email, user_params["password"]}},
              Noizu.Context.system(),
              []
            ),
@@ -27,7 +33,10 @@ defmodule CodefreshWeb.AuthController do
            Guardian.encode_and_sign(session, %{}, token_type: "refresh", ttl: {7, :day}) do
       if invite.organization_id do
         Codefresh.Authz.ScopedMemberships.add_member(
-          "organization", invite.organization_id, user.id, "viewer"
+          "organization",
+          invite.organization_id,
+          user.id,
+          invite.role || "viewer"
         )
       end
 
@@ -50,10 +59,12 @@ defmodule CodefreshWeb.AuthController do
         conn |> put_status(:unauthorized) |> json(%{error: "Invalid or expired invite token"})
 
       {:error, changeset} when is_struct(changeset, Ecto.Changeset) ->
-        conn |> put_status(:unprocessable_entity) |> json(%{errors: format_changeset_errors(changeset)})
+        conn
+        |> put_status(:unprocessable_entity)
+        |> json(%{errors: format_changeset_errors(changeset)})
 
       {:error, reason} ->
-        conn |> put_status(:unprocessable_entity) |> json(%{error: to_string(reason)})
+        conn |> put_status(:unprocessable_entity) |> json(%{error: format_error_reason(reason)})
     end
   end
 
@@ -62,7 +73,11 @@ defmodule CodefreshWeb.AuthController do
   end
 
   def login(conn, %{"email" => email, "password" => password}) do
-    case Codefresh.Users.Credentials.authenticate({:login, {email, password}}, Noizu.Context.system(), []) do
+    case Codefresh.Users.Credentials.authenticate(
+           {:login, {email, password}},
+           Noizu.Context.system(),
+           []
+         ) do
       {:ok, session} ->
         {:ok, access_token, _} =
           Guardian.encode_and_sign(session, %{}, token_type: "access", ttl: {1, :hour})
@@ -223,10 +238,16 @@ defmodule CodefreshWeb.AuthController do
     end
   end
 
-  def verify_password_reset(conn, %{"email" => email, "code" => code, "new_password" => new_password}) do
+  def verify_password_reset(conn, %{
+        "email" => email,
+        "code" => code,
+        "new_password" => new_password
+      }) do
     case Codefresh.Auth.SmartTokenAuth.verify_password_reset(email, code, new_password, conn) do
       {:ok, _credential} ->
-        conn |> put_status(:ok) |> json(%{message: "Password has been reset. You can now log in."})
+        conn
+        |> put_status(:ok)
+        |> json(%{message: "Password has been reset. You can now log in."})
 
       {:error, _reason} ->
         conn |> put_status(:unauthorized) |> json(%{error: "Invalid or expired code"})
@@ -312,17 +333,21 @@ defmodule CodefreshWeb.AuthController do
         conn |> put_status(:ok) |> json(%{message: "Email verified successfully."})
 
       {:error, _} ->
-        conn |> put_status(:unauthorized) |> json(%{error: "Invalid or expired verification link"})
+        conn
+        |> put_status(:unauthorized)
+        |> json(%{error: "Invalid or expired verification link"})
     end
   end
 
   defp create_session_for_user(user) do
-    user_ref = Codefresh.Users.User.ref(user.id)
+    {:ok, user_ref} = Codefresh.Users.User.ref(user.id)
+
     session_entity = %Codefresh.Users.Sessions.UserSession{
       user: user_ref,
       status: :active,
       details: %{}
     }
+
     Codefresh.Users.Sessions.create(session_entity, Noizu.Context.system())
   end
 
@@ -331,7 +356,9 @@ defmodule CodefreshWeb.AuthController do
       {:ref, _, id} ->
         {:ok, user} = Codefresh.Users.get_user(id, Noizu.Context.system())
         user
-      %Codefresh.Users.User{} = user -> user
+
+      %Codefresh.Users.User{} = user ->
+        user
     end
   end
 
@@ -352,5 +379,22 @@ defmodule CodefreshWeb.AuthController do
         opts |> Keyword.get(String.to_existing_atom(key), key) |> to_string()
       end)
     end)
+  end
+
+  defp format_error_reason(reason) when is_binary(reason), do: reason
+  defp format_error_reason(reason) when is_atom(reason), do: Atom.to_string(reason)
+  defp format_error_reason(reason), do: inspect(reason)
+
+  defp default_user_name(email) do
+    email
+    |> String.split("@", parts: 2)
+    |> List.first()
+    |> Kernel.||("user")
+    |> String.replace(~r/[^a-zA-Z0-9_-]+/, "-")
+    |> String.trim("-")
+    |> case do
+      "" -> "user"
+      value -> String.slice(value, 0, 32)
+    end
   end
 end

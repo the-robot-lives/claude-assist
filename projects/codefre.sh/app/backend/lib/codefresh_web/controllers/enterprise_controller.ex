@@ -46,7 +46,9 @@ defmodule CodefreshWeb.EnterpriseController do
   def put_sso_config(conn, _params) do
     conn
     |> put_status(:bad_request)
-    |> json(%{error: "Expected {sso_config: {provider, enabled?, sso_required?, metadata, role_mapping?}}"})
+    |> json(%{
+      error: "Expected {sso_config: {provider, enabled?, sso_required?, metadata, role_mapping?}}"
+    })
   end
 
   # GET /api/v1/organizations/:organization_id/audit-log.csv

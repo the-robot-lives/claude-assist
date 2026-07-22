@@ -20,8 +20,7 @@ defmodule Codefresh.Results.DashboardVersion do
     belongs_to :dashboard, Codefresh.Results.Dashboard
     belongs_to :organization, Codefresh.Schema.Organizations.Organization
 
-    belongs_to :published_by, Codefresh.Accounts.User,
-      foreign_key: :published_by_user_id
+    belongs_to :published_by, Codefresh.Accounts.User, foreign_key: :published_by_user_id
 
     timestamps(type: :utc_datetime, updated_at: false)
   end

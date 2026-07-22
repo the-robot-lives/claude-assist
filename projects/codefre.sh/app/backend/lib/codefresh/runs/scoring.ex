@@ -55,9 +55,19 @@ defmodule Codefresh.Runs.Scoring do
     case compile_regex(pattern) do
       {:ok, re} ->
         if Regex.match?(re, message) do
-          %{score: 1.0, verdict: "pass", rationale: "regex matched", raw_output: %{pattern: pattern}}
+          %{
+            score: 1.0,
+            verdict: "pass",
+            rationale: "regex matched",
+            raw_output: %{pattern: pattern}
+          }
         else
-          %{score: 0.0, verdict: "fail", rationale: "regex did not match", raw_output: %{pattern: pattern}}
+          %{
+            score: 0.0,
+            verdict: "fail",
+            rationale: "regex did not match",
+            raw_output: %{pattern: pattern}
+          }
         end
 
       {:error, reason} ->

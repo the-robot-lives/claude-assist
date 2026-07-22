@@ -83,7 +83,8 @@ defmodule Codefresh.Users.Credentials do
           if Bcrypt.verify_pass(password, credential.settings["password"]) do
             with {:ok, credential_entity} <-
                    Codefresh.Users.Credentials.UserCredential.entity(credential.id, context),
-                 {:ok, user} <- Noizu.EntityReference.Protocol.entity(credential_entity.user, context) do
+                 {:ok, user} <-
+                   Noizu.EntityReference.Protocol.entity(credential_entity.user, context) do
               %Codefresh.Users.Sessions.UserSession{
                 user: user,
                 credential: credential_entity,
@@ -107,7 +108,7 @@ defmodule Codefresh.Users.Credentials do
   # Password Update
   # ---------------------------------------------------------------------------
 
-  def update_password(user, new_password, context) do
+  def update_password(user, new_password, _context) do
     {:ok, auth_provider} = Codefresh.Auth.Providers.login()
     {:ok, auth_provider_id} = Codefresh.Auth.Providers.Provider.id(auth_provider)
 

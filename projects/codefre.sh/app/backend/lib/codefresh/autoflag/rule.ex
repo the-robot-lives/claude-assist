@@ -173,8 +173,12 @@ defmodule Codefresh.AutoFlag.Rule do
   defp fetch_numeric(cfg, keys) when is_list(keys) do
     Enum.reduce_while(keys, :error, fn k, acc ->
       case Map.get(cfg, k) || Map.get(cfg, String.to_atom(k)) do
-        nil -> {:cont, acc}
-        v when is_number(v) -> {:halt, {:ok, v}}
+        nil ->
+          {:cont, acc}
+
+        v when is_number(v) ->
+          {:halt, {:ok, v}}
+
         v when is_binary(v) ->
           case Float.parse(v) do
             {f, ""} -> {:halt, {:ok, f}}

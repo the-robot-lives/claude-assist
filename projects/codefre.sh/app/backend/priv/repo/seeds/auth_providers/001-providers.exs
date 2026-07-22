@@ -1,9 +1,12 @@
+require SeedHelper
+import SeedHelper
+
 alias Codefresh.Schema.Auth.Providers.Provider
 
 login_id = UUID.uuid5(:oid, "Codefresh.Schema.Auth.Providers.Provider@Login")
 smart_token_id = UUID.uuid5(:oid, "Codefresh.Schema.Auth.Providers.Provider@SmartToken")
 
-seed "auth-provider:login" do
+seed {"auth-provider:login", "1"} do
   Codefresh.Repo.insert!(
     %Provider{
       id: login_id,
@@ -15,7 +18,7 @@ seed "auth-provider:login" do
   )
 end
 
-seed "auth-provider:smart-token" do
+seed {"auth-provider:smart-token", "1"} do
   Codefresh.Repo.insert!(
     %Provider{
       id: smart_token_id,

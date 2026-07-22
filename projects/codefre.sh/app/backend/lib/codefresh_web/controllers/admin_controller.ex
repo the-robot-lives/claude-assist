@@ -38,16 +38,20 @@ defmodule CodefreshWeb.AdminController do
         conn |> put_status(:not_found) |> json(%{error: "User not found"})
 
       user ->
-        conn |> put_status(:ok) |> json(%{user: %{
-          id: user.id,
-          email: user.email,
-          user_name: user.user_name,
-          handle: user.handle,
-          status: user.status,
-          verified: user.verified,
-          admin: user.admin,
-          created_at: user.inserted_at
-        }})
+        conn
+        |> put_status(:ok)
+        |> json(%{
+          user: %{
+            id: user.id,
+            email: user.email,
+            user_name: user.user_name,
+            handle: user.handle,
+            status: user.status,
+            verified: user.verified,
+            admin: user.admin,
+            created_at: user.inserted_at
+          }
+        })
     end
   end
 
@@ -72,7 +76,9 @@ defmodule CodefreshWeb.AdminController do
 
     total = Codefresh.Repo.aggregate(OrgSchema, :count, :id)
 
-    conn |> put_status(:ok) |> json(%{organizations: orgs, total: total, page: page, per_page: per_page})
+    conn
+    |> put_status(:ok)
+    |> json(%{organizations: orgs, total: total, page: page, per_page: per_page})
   end
 
   def show_organization(conn, %{"id" => id}) do
@@ -82,12 +88,18 @@ defmodule CodefreshWeb.AdminController do
 
       org ->
         members = Codefresh.Organizations.list_members(org.id)
-        conn |> put_status(:ok) |> json(%{organization: %{
-          id: org.id,
-          slug: org.slug,
-          name: org.name,
-          created_at: org.inserted_at
-        }, members: members})
+
+        conn
+        |> put_status(:ok)
+        |> json(%{
+          organization: %{
+            id: org.id,
+            slug: org.slug,
+            name: org.name,
+            created_at: org.inserted_at
+          },
+          members: members
+        })
     end
   end
 end
