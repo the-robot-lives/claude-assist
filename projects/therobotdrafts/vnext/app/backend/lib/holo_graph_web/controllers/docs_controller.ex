@@ -27,7 +27,10 @@ defmodule HoloGraphWeb.DocsController do
       {:ok, document} ->
         conn
         |> put_status(:created)
-        |> json(%{data: GraphDocument.to_map(document), meta: %{imported: true, source: "fixture"}})
+        |> json(%{
+          data: GraphDocument.to_map(document),
+          meta: %{imported: true, source: "fixture"}
+        })
 
       {:error, :not_found} ->
         conn

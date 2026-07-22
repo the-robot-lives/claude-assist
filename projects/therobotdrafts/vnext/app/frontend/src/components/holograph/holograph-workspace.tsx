@@ -1,20 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { graphMetrics, riskBandFor, searchNodes, traceNeighbors } from "@/lib/holograph/analysis";
 import { demoDocument, demoPatches } from "@/lib/holograph/fixture";
-import { packDocument } from "@/lib/holograph/layout";
-import type { GraphDocument, PatchOperation, SceneNode } from "@/lib/holograph/types";
-
-const kindLabels: Record<SceneNode["kind"], string> = {
-  system: "SYS",
-  package: "PKG",
-  service: "SVC",
-  class: "CLS",
-  interface: "API",
-  function: "FN",
-  database: "DB",
-  agent: "AI",
-};
+import type { GraphDocument, GraphNode, PatchOperation } from "@/lib/holograph/types";
+import { CollabStrip } from "./collab-strip";
+import { TrdThreeScene } from "./trd-three-scene";
 
 const roadmap = [
   { id: "M0", label: "Foundation", status: "complete" },
@@ -25,13 +16,27 @@ const roadmap = [
   { id: "M5", label: "Interchange", status: "next" },
 ];
 
+const menuGroups = [
+  { label: "File", items: ["New", "Open...", "Save", "Save As...", "Import PlantUML...", "Export Code..."] },
+  { label: "Edit", items: ["Undo", "Redo", "Copy", "Paste", "Delete"] },
+  { label: "Add", items: ["Class", "Interface", "Package", "Service", "Agent", "Datastore", "Region"] },
+  { label: "Generate", items: ["Draft patch", "Generate code", "LLM settings", "Test connection"] },
+  { label: "Layout", items: ["Frame All", "Hierarchy", "Cluster", "Reflow layer", "Reset view"] },
+  { label: "Export", items: ["PlantUML", "Mermaid", "DOT", "PNG render"] },
+  { label: "Settings", items: ["Camera", "Notation", "Accessibility", "Shortcuts"] },
+];
+
+const paletteGroups = [
+  { label: "UML", items: ["Class", "Interface", "Enum", "Struct", "Operation", "Field", "Note"] },
+  { label: "Architecture", items: ["Package", "Component", "Service", "Database", "Boundary", "Actor"] },
+  { label: "Round-trip", items: ["Import code", "Generate code", "Patch review"] },
+];
+
 function scoreLabel(value: number) {
-  if (value >= 60) return "high";
-  if (value >= 35) return "medium";
-  return "low";
+  return riskBandFor(value);
 }
 
-function nodeTone(node: SceneNode) {
+function nodeTone(node: GraphNode) {
   if (node.kind === "system") return "node-system";
   if (node.kind === "agent") return "node-agent";
   if (node.kind === "database") return "node-store";
@@ -40,7 +45,7 @@ function nodeTone(node: SceneNode) {
   return "node-default";
 }
 
-function nextNode(nodes: SceneNode[], currentId: string, direction: 1 | -1) {
+function nextNode(nodes: GraphNode[], currentId: string, direction: 1 | -1) {
   const index = nodes.findIndex((node) => node.id === currentId);
   const nextIndex = index < 0 ? 0 : (index + direction + nodes.length) % nodes.length;
   return nodes[nextIndex]?.id ?? currentId;
@@ -48,12 +53,12 @@ function nextNode(nodes: SceneNode[], currentId: string, direction: 1 | -1) {
 
 export function HoloGraphWorkspace() {
   const [document, setDocument] = useState<GraphDocument>(demoDocument);
-  const [selectedId, setSelectedId] = useState("renderer-bridge");
+  const [selectedId, setSelectedId] = useState("root");
   const [focusId, setFocusId] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [traceEnabled, setTraceEnabled] = useState(true);
   const [patches, setPatches] = useState<PatchOperation[]>(demoPatches);
-  const [status, setStatus] = useState("Fixture graph loaded from local route handlers");
+  const [status, setStatus] = useState("3D UML fixture loaded from local route handlers");
 
   useEffect(() => {
     let active = true;
@@ -73,29 +78,15 @@ export function HoloGraphWorkspace() {
     };
   }, []);
 
-  const scene = useMemo(() => packDocument(document, focusId), [document, focusId]);
-  const selectedNode = scene.nodes.find((node) => node.id === selectedId) ?? scene.nodes[0];
-  const normalizedQuery = query.trim().toLowerCase();
-  const matchingIds = new Set(
-    normalizedQuery
-      ? document.nodes
-          .filter((node) => {
-            const haystack = `${node.label} ${node.kind} ${node.packageName ?? ""} ${node.description}`.toLowerCase();
-            return haystack.includes(normalizedQuery);
-          })
-          .map((node) => node.id)
-      : [],
+  const metrics = useMemo(() => graphMetrics(document), [document]);
+  const selectedNode = document.nodes.find((node) => node.id === selectedId) ?? document.nodes[0];
+  const matchingNodes = useMemo(() => searchNodes(document, query), [document, query]);
+  const matchingIds = new Set(matchingNodes.map((node) => node.id));
+  const trace = useMemo(
+    () => (selectedNode ? traceNeighbors(document, selectedNode.id) : null),
+    [document, selectedNode],
   );
-  const visibleMatchingIds = new Set(scene.nodes.filter((node) => matchingIds.has(node.id)).map((node) => node.id));
-
-  const tracedIds = new Set<string>();
-  if (traceEnabled && selectedNode) {
-    tracedIds.add(selectedNode.id);
-    for (const edge of document.edges) {
-      if (edge.sourceId === selectedNode.id) tracedIds.add(edge.targetId);
-      if (edge.targetId === selectedNode.id) tracedIds.add(edge.sourceId);
-    }
-  }
+  const tracedEdgeIds = new Set(traceEnabled && trace ? trace.edgeIds : []);
 
   function focusSelected() {
     if (!selectedNode) return;
@@ -105,7 +96,7 @@ export function HoloGraphWorkspace() {
 
   function recenter() {
     setFocusId(null);
-    setSelectedId("renderer-bridge");
+    setSelectedId("root");
     setStatus("Recentered to whole-system overview");
   }
 
@@ -120,7 +111,7 @@ export function HoloGraphWorkspace() {
     setDocument({ ...demoDocument, version: document.version + 1, updatedAt: new Date().toISOString() });
     setFocusId(null);
     setSelectedId("root");
-    setStatus("Imported demo .trd-yaml fixture as a new document version");
+    setStatus("Imported Unity-parity 3D UML fixture as a new document version");
   }
 
   function applyPatch() {
@@ -130,6 +121,14 @@ export function HoloGraphWorkspace() {
       return;
     }
 
+    fetch(`/api/v1/docs/${document.id}/patches`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ patchId: nextPatch.id, operation: nextPatch }),
+    }).catch(() => {
+      setStatus("Patch applied locally; API acknowledgement was unavailable");
+    });
+
     setPatches((current) =>
       current.map((patch) => (patch.id === nextPatch.id ? { ...patch, status: "applied" } : patch)),
     );
@@ -137,7 +136,7 @@ export function HoloGraphWorkspace() {
   }
 
   function handleKeyDown(event: React.KeyboardEvent<HTMLDivElement>) {
-    if (!scene.nodes.length) return;
+    if (!document.nodes.length) return;
     if (event.key === "f" || event.key === "F") {
       event.preventDefault();
       focusSelected();
@@ -148,11 +147,11 @@ export function HoloGraphWorkspace() {
     }
     if (event.key === "ArrowRight") {
       event.preventDefault();
-      setSelectedId(nextNode(scene.nodes, selectedId, 1));
+      setSelectedId(nextNode(document.nodes, selectedId, 1));
     }
     if (event.key === "ArrowLeft") {
       event.preventDefault();
-      setSelectedId(nextNode(scene.nodes, selectedId, -1));
+      setSelectedId(nextNode(document.nodes, selectedId, -1));
     }
     if (event.key === "Escape") {
       event.preventDefault();
@@ -162,42 +161,84 @@ export function HoloGraphWorkspace() {
 
   return (
     <main className="hg-shell" onKeyDown={handleKeyDown} tabIndex={-1}>
-      <section className="hg-topbar" aria-label="Workspace status">
-        <div>
-          <p className="hg-kicker">The Robot Drafts vnext</p>
-          <h1>HoloGraph workspace</h1>
+      <section className="hg-appbar" aria-label="The Robot Draft application menu">
+        <div className="hg-appbar__brand">
+          <strong>The Robot Draft</strong>
+          <span>{document.title}</span>
         </div>
-        <div className="hg-topbar__stats" aria-label="Document metrics">
+        <nav className="hg-menu" aria-label="Application commands">
+          {menuGroups.map((group) => (
+            <button key={group.label} className="hg-menu__item" type="button" title={group.items.join(" / ")}>
+              {group.label}
+            </button>
+          ))}
+        </nav>
+        <div className="hg-appbar__status" aria-label="Document metrics">
+          <span>saved</span>
           <span>v{document.version}</span>
-          <span>{document.nodes.length} nodes</span>
-          <span>{document.edges.length} edges</span>
-          <span>{status}</span>
+          <span>{document.nodes.length} elements</span>
         </div>
       </section>
 
+      <section className="hg-tabbar" aria-label="Open model tabs">
+        <button className="hg-tab is-active" type="button">
+          {document.slug}
+        </button>
+        <button className="hg-tab" type="button">
+          Unity parity fixture
+        </button>
+        <div className="hg-tabbar__hint">{status}</div>
+      </section>
+
       <section className="hg-workspace" aria-label="Graph document workspace">
-        <aside className="hg-panel hg-panel--left" aria-label="Project controls">
+        <aside className="hg-panel hg-panel--left" aria-label="Creation palette and project controls">
           <div className="hg-panel__section">
             <label className="hg-label" htmlFor="graph-search">
-              Search graph
+              Search / jump
             </label>
             <input
               id="graph-search"
               className="hg-input"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="service, patch, renderer"
+              placeholder="class, edge, package"
             />
-            <p className="hg-help">{matchingIds.size || scene.nodes.length} matching nodes</p>
+            <p className="hg-help">{query.trim() ? matchingIds.size : document.nodes.length} matching nodes</p>
           </div>
 
           <div className="hg-panel__section">
-            <p className="hg-label">Command rail</p>
+            <p className="hg-label">3D authoring rail</p>
+            <div className="hg-tool-grid" aria-label="3D UML authoring commands">
+              <button className="hg-tool is-active" type="button" title="Select 3D node">
+                Select
+              </button>
+              <button className="hg-tool" type="button" title="Add UML element">
+                Add
+              </button>
+              <button className="hg-tool" type="button" title="Connect selected nodes">
+                Connect
+              </button>
+              <button className="hg-tool" type="button" title="Delete selected element">
+                Delete
+              </button>
+              <button className="hg-tool" type="button" title="Undo last model edit">
+                Undo
+              </button>
+              <button className="hg-tool" type="button" title="Redo last model edit">
+                Redo
+              </button>
+              <button className="hg-tool" type="button" title="Project 3D model to UML export">
+                Project
+              </button>
+              <button className="hg-tool" type="button" title="Generate reviewed draft patches">
+                AI Draft
+              </button>
+            </div>
             <button className="hg-command hg-command--primary" type="button" onClick={importFixture}>
-              Import fixture
+              Import 3D UML fixture
             </button>
             <button className="hg-command" type="button" onClick={focusSelected}>
-              Focus selected
+              Frame selected
             </button>
             <button className="hg-command" type="button" onClick={recenter}>
               Recenter
@@ -216,6 +257,23 @@ export function HoloGraphWorkspace() {
           </div>
 
           <div className="hg-panel__section">
+            <p className="hg-label">Creation palette</p>
+            <div className="hg-palette">
+              {paletteGroups.map((group) => (
+                <div key={group.label} className="hg-palette__group">
+                  <strong>{group.label}</strong>
+                  {group.items.map((item) => (
+                    <button key={item} className="hg-palette__item" type="button" title={`Add ${item}`}>
+                      <span aria-hidden="true" />
+                      {item}
+                    </button>
+                  ))}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="hg-panel__section">
             <p className="hg-label">Roadmap progress</p>
             <ol className="hg-roadmap">
               {roadmap.map((item) => (
@@ -227,79 +285,59 @@ export function HoloGraphWorkspace() {
               ))}
             </ol>
           </div>
+
+          <div className="hg-panel__section">
+            <p className="hg-label">Graph health</p>
+            <dl className="hg-health">
+              <div>
+                <dt>Lanes</dt>
+                <dd>{metrics.laneCount}</dd>
+              </div>
+              <div>
+                <dt>Relations</dt>
+                <dd>{metrics.crossLaneEdgeCount}</dd>
+              </div>
+              <div>
+                <dt>Avg risk</dt>
+                <dd>{metrics.averageRisk}</dd>
+              </div>
+            </dl>
+          </div>
         </aside>
 
         <section className="hg-canvas-wrap" aria-label="Interactive graph renderer">
           <div className="hg-canvas-toolbar">
             <div>
-              <strong>{focusId ? `Focused: ${document.nodes.find((node) => node.id === focusId)?.label}` : "Whole system"}</strong>
-              <span>Arrow keys select; F focuses; Home recenters; Esc drills out.</span>
+              <strong>{focusId ? `Focused: ${document.nodes.find((node) => node.id === focusId)?.label}` : "3D Scene"}</strong>
+              <span>Orbit drag; wheel dolly; WASD/RF free-fly; Q/E roll; F frames; Home recenters.</span>
             </div>
-            <div className="hg-mode-chip">M1 renderer payload</div>
+            <div className="hg-hud-actions" aria-label="Scene HUD controls">
+              <button type="button" title="Open camera form">Camera...</button>
+              <button type="button" onClick={recenter} title="Reset view">Reset</button>
+              <button type="button" title="3D mode is active">3D On</button>
+              <button type="button" title="Controls and shortcuts">? Help</button>
+            </div>
           </div>
-          <svg className="hg-canvas" viewBox="0 0 100 100" role="img" aria-label="3D graph renderer stand-in">
-            <defs>
-              <radialGradient id="nodeGlow" cx="36%" cy="28%" r="70%">
-                <stop offset="0%" stopColor="#ffffff" stopOpacity="0.98" />
-                <stop offset="48%" stopColor="#8ed7d1" stopOpacity="0.88" />
-                <stop offset="100%" stopColor="#2a756d" stopOpacity="0.95" />
-              </radialGradient>
-              <radialGradient id="nodeHot" cx="36%" cy="28%" r="70%">
-                <stop offset="0%" stopColor="#fff7d6" stopOpacity="0.98" />
-                <stop offset="52%" stopColor="#f2bd52" stopOpacity="0.92" />
-                <stop offset="100%" stopColor="#8b4a11" stopOpacity="0.95" />
-              </radialGradient>
-            </defs>
-            {scene.edges.map((edge) => {
-              const isTrace = tracedIds.has(edge.sourceId) && tracedIds.has(edge.targetId);
-              return (
-                <g key={edge.id} className={isTrace ? "hg-edge hg-edge--trace" : "hg-edge"}>
-                  <line x1={edge.source.x} y1={edge.source.y} x2={edge.target.x} y2={edge.target.y} />
-                  <text x={(edge.source.x + edge.target.x) / 2} y={(edge.source.y + edge.target.y) / 2}>
-                    {edge.label}
-                  </text>
-                </g>
-              );
-            })}
-            {scene.nodes.map((node) => {
-              const selected = node.id === selectedNode?.id;
-              const matched = visibleMatchingIds.has(node.id);
-              const traced = tracedIds.has(node.id);
-              return (
-                <g
-                  key={node.id}
-                  className={[
-                    "hg-node",
-                    nodeTone(node),
-                    selected ? "is-selected" : "",
-                    matched ? "is-matched" : "",
-                    traced ? "is-traced" : "",
-                  ].join(" ")}
-                  transform={`translate(${node.x} ${node.y})`}
-                  onClick={() => setSelectedId(node.id)}
-                  tabIndex={0}
-                  role="button"
-                  aria-label={`Select ${node.label}`}
-                >
-                  <circle r={node.radius} />
-                  <text className="hg-node__kind" y={-2}>
-                    {kindLabels[node.kind]}
-                  </text>
-                  <text className="hg-node__label" y={3.8}>
-                    {node.label}
-                  </text>
-                  <text className="hg-node__meta" y={7.8}>
-                    risk {node.metrics.risk}
-                  </text>
-                </g>
-              );
-            })}
-          </svg>
+          <div className="hg-scene-status" aria-label="Scene mode">
+            <span>Select</span>
+            <span>layer {document.view?.activeLayer ?? 0}</span>
+            <span>{metrics.hotNodeCount} hot</span>
+            <strong>Unity-parity 3D UML</strong>
+          </div>
+          <TrdThreeScene
+            document={document}
+            selectedId={selectedNode?.id}
+            focusId={focusId}
+            tracedEdgeIds={tracedEdgeIds}
+            onSelect={setSelectedId}
+            onStatus={setStatus}
+          />
         </section>
 
         <aside className="hg-panel hg-panel--right" aria-label="Selection detail panel">
           {selectedNode ? (
             <>
+              <p className="hg-label">Inspector</p>
               <div className="hg-detail-heading">
                 <span className={`hg-kind-dot ${nodeTone(selectedNode)}`} aria-hidden="true" />
                 <div>
@@ -344,6 +382,9 @@ export function HoloGraphWorkspace() {
                 <button className="hg-command hg-command--primary" type="button" onClick={applyPatch}>
                   Apply next patch
                 </button>
+              </div>
+              <div className="hg-panel__section">
+                <CollabStrip document={document} focusNodeId={focusId} selectedNodeId={selectedNode.id} />
               </div>
             </>
           ) : null}

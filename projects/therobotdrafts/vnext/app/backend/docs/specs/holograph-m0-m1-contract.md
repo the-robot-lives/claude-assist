@@ -7,6 +7,9 @@ This backend lane exposes a fixture-backed JSON surface for early frontend integ
 - `GET /api/v1/holograph/docs` lists fixture document summaries.
 - `GET /api/v1/holograph/docs/:id` returns a fixture document by `id` or `slug`.
 - `POST /api/v1/holograph/docs/import` imports a fixture by `fixture`, `slug`, or `id` request field and returns the document contract.
+- `GET /api/v1/docs`, `GET /api/v1/docs/:id`, and `POST /api/v1/docs` are short aliases for the same fixture-backed controller.
+
+Successful responses use `{data, meta}`. Error responses use `{error: {code, message}}`.
 
 ## Runtime Contract
 

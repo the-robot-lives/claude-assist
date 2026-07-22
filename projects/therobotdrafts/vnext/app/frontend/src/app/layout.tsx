@@ -12,8 +12,8 @@ import { Toaster } from "sonner";
 
 export function generateMetadata(): Metadata {
   return {
-    title: "HoloGraph: Web-native 3D code graph drafting workspace",
-    description: "Web-native 3D code graph drafting workspace",
+    title: "The Robot Draft: Web-native 3D UML workspace",
+    description: "Web-native 3D UML authoring workspace for The Robot Draft",
   };
 }
 

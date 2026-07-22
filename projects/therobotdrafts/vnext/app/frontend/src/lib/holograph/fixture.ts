@@ -7,22 +7,22 @@ export const demoPatches: PatchOperation[] = [
   {
     id: "p-001",
     type: "add_node",
-    targetId: "renderer-bridge",
-    label: "Add minimap overlay to renderer bridge",
+    targetId: "uml-scene",
+    label: "Add orientation gizmo to the 3D scene",
     status: "applied",
   },
   {
     id: "p-002",
     type: "connect",
-    targetId: "focus-command",
-    label: "Link focus command to patch review queue",
+    targetId: "camera-rig",
+    label: "Link frame selected command to the camera rig",
     status: "review",
   },
   {
     id: "p-003",
     type: "rename",
-    targetId: "scene-layout",
-    label: "Rename sphere pack seam to ILayout",
+    targetId: "node-shape",
+    label: "Rename shape contract to IRenderer3D",
     status: "queued",
   },
 ];

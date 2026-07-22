@@ -1,18 +1,22 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useAuth } from "@/context/auth";
 import { OrgSwitcher } from "@/components/org-switcher";
 import { CookieSettingsButton } from "@/components/cookie-consent";
 
 export function Navbar() {
   const { user, loading, logout } = useAuth();
+  const pathname = usePathname();
+
+  if (pathname === "/") return null;
 
   return (
     <nav className="sg-navbar">
       <div className="sg-navbar__inner">
         <Link href="/" className="sg-navbar__brand">
-          HoloGraph
+          The Robot Draft
         </Link>
         <div className="sg-navbar__links">
           <CookieSettingsButton />
