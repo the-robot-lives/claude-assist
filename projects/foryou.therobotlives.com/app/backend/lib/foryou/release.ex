@@ -18,8 +18,11 @@ defmodule Foryou.Release do
     {:ok, _, _} = Ecto.Migrator.with_repo(repo, &Ecto.Migrator.run(&1, :down, to: version))
   end
 
-  def seed do
+  def seed(env \\ System.get_env("SEED_ENV") || "prod") do
     load_app()
+    # Accept atom (:prod) or string ("prod") — normalize to a string once.
+    env = to_string(env)
+    System.put_env("SEED_ENV", env)
 
     for repo <- repos() do
       {:ok, _, _} =

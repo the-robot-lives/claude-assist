@@ -43,6 +43,9 @@ defmodule Foryou.MixProject do
       {:bcrypt_elixir, "~> 3.0"},
 
       # SSO / OAuth
+      # castore provides the CA trust store for openid_connect's Finch/Mint
+      # HTTPS calls (fetching discovery doc + token exchange).
+      {:castore, "~> 1.0"},
       {:openid_connect, "~> 1.0"},
       {:samly, "~> 1.4"},
       {:ueberauth, "~> 0.10"},

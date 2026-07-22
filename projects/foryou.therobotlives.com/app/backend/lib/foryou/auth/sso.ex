@@ -1,6 +1,7 @@
 defmodule Foryou.Auth.SSO do
   alias Foryou.Schema.Users.User, as: UserSchema
   alias Foryou.Schema.Users.Credentials.UserCredential, as: CredentialSchema
+  alias Foryou.Schema.Users.Sessions.UserSession, as: SessionSchema
   alias Foryou.Schema.Versioned.Names.Name
   import Ecto.Query, only: [from: 2]
 
@@ -16,8 +17,8 @@ defmodule Foryou.Auth.SSO do
   def authenticate_sso(provider_type, %{email: email} = attrs) do
     context = Noizu.Context.system()
     email = email |> String.trim() |> String.downcase()
-    provider_ref = @provider_map[provider_type].()
-    {:ok, provider_id} = Foryou.Auth.Providers.Provider.id(provider_ref)
+    provider_ref = unwrap_ref(@provider_map[provider_type].())
+    provider_id = provider_ref_id(provider_ref)
 
     case find_user_by_email(email) do
       {:ok, user} ->
@@ -33,6 +34,15 @@ defmodule Foryou.Auth.SSO do
     end
   end
 
+  defp unwrap_ref({:ok, ref}), do: ref
+  defp unwrap_ref(ref), do: ref
+
+  # provider_ref is a Noizu entity ref ({:ref, module, uuid}); extract the UUID
+  # directly. Provider.id/1 returns {:error, {:unsupported, _}} for a wrapped
+  # ref, so we don't route through it.
+  defp provider_ref_id({:ref, _module, id}), do: id
+  defp provider_ref_id(id) when is_binary(id), do: id
+
   defp find_user_by_email(email) do
     q = from u in UserSchema, where: u.email == ^email, where: u.status == :active, limit: 1
 
@@ -42,7 +52,9 @@ defmodule Foryou.Auth.SSO do
     end
   end
 
-  defp ensure_sso_credential(user, provider_ref, provider_id, provider_type, attrs, context) do
+  # Raw insert of the credential schema (mirrors tobornalp/NPL) — same reason as
+  # the Name insert: entity create/change expects an attrs map, not a struct.
+  defp ensure_sso_credential(user, _provider_ref, provider_id, provider_type, attrs, _context) do
     fingerprint = sso_fingerprint(provider_type, attrs)
 
     q =
@@ -54,46 +66,39 @@ defmodule Foryou.Auth.SSO do
 
     case Foryou.Repo.one(q) do
       nil ->
-        %Foryou.Users.Credentials.UserCredential{
-          user: Foryou.Users.User.ref(user.id),
-          auth_provider: provider_ref,
+        Foryou.Repo.insert!(%CredentialSchema{
+          user_id: user.id,
+          auth_provider_id: provider_id,
           status: :active,
           settings: sso_settings(provider_type, attrs),
           state: %{},
-          fingerprint: fingerprint,
-          time_stamp: Noizu.Entity.TimeStamp.now()
-        }
-        |> Foryou.EntityRepo.create(context)
+          fingerprint: fingerprint
+        })
 
       _existing ->
         :ok
     end
   end
 
-  defp create_sso_session(user, provider_type, context) do
-    user_ref = Foryou.Users.User.ref(user.id)
-
-    %Foryou.Users.Sessions.UserSession{
-      user: user_ref,
+  # Raw insert of the session schema (mirrors tobornalp/NPL) — same reason as
+  # the Name insert. The Redis-backed SSOCode flow only needs the row's id.
+  defp create_sso_session(user, provider_type, _context) do
+    Foryou.Repo.insert(%SessionSchema{
+      user_id: user.id,
       status: :active,
-      details: %{auth_method: to_string(provider_type)},
-      time_stamp: Noizu.Entity.TimeStamp.now()
-    }
-    |> Foryou.EntityRepo.create(context)
+      details: %{auth_method: to_string(provider_type)}
+    })
   end
 
-  defp auto_provision_user(email, attrs, provider_ref, provider_id, provider_type, context) do
+  defp auto_provision_user(email, attrs, _provider_ref, provider_id, provider_type, context) do
     first = attrs[:name][:first] || ""
     last = attrs[:name][:last] || ""
     handle = email |> String.split("@") |> hd() |> String.replace(~r/[^a-z0-9_]/, "_")
 
-    {:ok, name} =
-      Foryou.EntityRepo.create(
-        %Foryou.Versioned.Names.Name{first: first, last: last, time_stamp: Noizu.Entity.TimeStamp.now()},
-        context
-      )
-
-    {:ok, name_ref} = Noizu.EntityReference.Protocol.ref(name)
+    # Raw insert of the versioned-name schema (mirrors tobornalp/NPL). The
+    # entity Names.create/change expects an attrs *map*, not a %Name{} struct —
+    # passing a struct makes change/2 call Enum.map on it → Protocol.UndefinedError.
+    name = Foryou.Repo.insert!(%Name{first: first, last: last, middle: []})
 
     user_schema = %UserSchema{
       id: UUID.uuid4(),
@@ -108,16 +113,14 @@ defmodule Foryou.Auth.SSO do
 
     {:ok, user} = Foryou.Repo.insert(user_schema, on_conflict: :nothing, conflict_target: :email)
 
-    %Foryou.Users.Credentials.UserCredential{
-      user: Foryou.Users.User.ref(user.id),
-      auth_provider: provider_ref,
+    Foryou.Repo.insert!(%CredentialSchema{
+      user_id: user.id,
+      auth_provider_id: provider_id,
       status: :active,
       settings: sso_settings(provider_type, attrs),
       state: %{},
-      fingerprint: sso_fingerprint(provider_type, attrs),
-      time_stamp: Noizu.Entity.TimeStamp.now()
-    }
-    |> Foryou.EntityRepo.create(context)
+      fingerprint: sso_fingerprint(provider_type, attrs)
+    })
 
     create_sso_session(user, provider_type, context)
   end

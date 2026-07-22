@@ -1,3 +1,8 @@
+# Code.eval_file compiles this file in a fresh env — the seed/2 macro must be
+# imported here; the caller's import does not carry over.
+require SeedHelper
+import SeedHelper
+
 alias Foryou.Schema.Auth.Providers.Provider
 
 login_id = UUID.uuid5(:oid, "Foryou.Schema.Auth.Providers.Provider@Login")
