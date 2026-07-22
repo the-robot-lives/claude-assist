@@ -217,8 +217,12 @@ pull_subtree() {
   fi
 }
 
+TOTAL=${#CANDIDATES[@]}
+IDX=0
 for e in "${CANDIDATES[@]}"; do
   IFS='|' read -r prefix remote branch <<<"$e"
+  ((++IDX))
+  echo "[$IDX of $TOTAL] $prefix"
   pull_subtree "$prefix" "$remote" "$branch"
 done
 
