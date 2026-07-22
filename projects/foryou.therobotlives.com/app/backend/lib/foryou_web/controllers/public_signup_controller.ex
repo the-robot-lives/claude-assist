@@ -11,7 +11,9 @@ defmodule ForyouWeb.PublicSignupController do
   alias Foryou.{Lists, Signups}
 
   @generic_body %{accepted: true}
-  @honeypot_fields ~w(company_website website hp_field)
+  # Collision-safe honeypot names only — a bare "website" could shadow a real
+  # declared attribute and silently drop legitimate signups.
+  @honeypot_fields ~w(company_website hp_field _gotcha)
 
   # ── Manifest (widget reads the attribute schema at runtime) ─────
 
