@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/context/auth";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
+import { Button, FieldLabel, Input, SectionCard } from "@/components/ui";
 
 export default function ProfilePage() {
   const { user } = useAuth();
@@ -52,38 +53,64 @@ export default function ProfilePage() {
   if (!user) return null;
 
   return (
-    <div style={{ maxWidth: 480, margin: "40px auto", padding: "0 24px" }}>
-      <h1 style={{ fontSize: 24, marginBottom: 24 }}>Profile</h1>
+    <div className="mx-auto max-w-lg px-4 py-10">
+      <h1 className="mb-6 text-2xl font-bold text-text">Profile</h1>
 
-      <form onSubmit={handleProfileUpdate} style={{ marginBottom: 32 }}>
-        <h2 style={{ fontSize: 18, marginBottom: 16 }}>Account</h2>
-        <label style={{ display: "block", marginBottom: 12 }}>
-          <span style={{ display: "block", fontSize: 14, marginBottom: 4 }}>Username</span>
-          <input type="text" value={userName} onChange={(e) => setUserName(e.target.value)} style={{ width: "100%", padding: 8, border: "1px solid #ccc", borderRadius: 4 }} />
-        </label>
-        <label style={{ display: "block", marginBottom: 12 }}>
-          <span style={{ display: "block", fontSize: 14, marginBottom: 4 }}>Email</span>
-          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} style={{ width: "100%", padding: 8, border: "1px solid #ccc", borderRadius: 4 }} />
-        </label>
-        <button type="submit" disabled={saving} style={{ padding: "8px 16px", background: "#000", color: "#fff", border: "none", borderRadius: 4, cursor: "pointer" }}>
-          {saving ? "Saving..." : "Save Profile"}
-        </button>
-      </form>
+      <div className="flex flex-col gap-6">
+        <SectionCard title="Account">
+          <form onSubmit={handleProfileUpdate} className="flex flex-col gap-4">
+            <FieldLabel label="Username" htmlFor="profile-username">
+              <Input
+                id="profile-username"
+                type="text"
+                value={userName}
+                onChange={(e) => setUserName(e.target.value)}
+              />
+            </FieldLabel>
+            <FieldLabel label="Email" htmlFor="profile-email">
+              <Input
+                id="profile-email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+            </FieldLabel>
+            <div>
+              <Button type="submit" disabled={saving}>
+                {saving ? "Saving…" : "Save profile"}
+              </Button>
+            </div>
+          </form>
+        </SectionCard>
 
-      <form onSubmit={handlePasswordChange}>
-        <h2 style={{ fontSize: 18, marginBottom: 16 }}>Change Password</h2>
-        <label style={{ display: "block", marginBottom: 12 }}>
-          <span style={{ display: "block", fontSize: 14, marginBottom: 4 }}>Current Password</span>
-          <input type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} style={{ width: "100%", padding: 8, border: "1px solid #ccc", borderRadius: 4 }} />
-        </label>
-        <label style={{ display: "block", marginBottom: 12 }}>
-          <span style={{ display: "block", fontSize: 14, marginBottom: 4 }}>New Password</span>
-          <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} style={{ width: "100%", padding: 8, border: "1px solid #ccc", borderRadius: 4 }} />
-        </label>
-        <button type="submit" disabled={saving || !currentPassword || !newPassword} style={{ padding: "8px 16px", background: "#000", color: "#fff", border: "none", borderRadius: 4, cursor: "pointer" }}>
-          {saving ? "Saving..." : "Change Password"}
-        </button>
-      </form>
+        <SectionCard title="Change password">
+          <form onSubmit={handlePasswordChange} className="flex flex-col gap-4">
+            <FieldLabel label="Current password" htmlFor="current-password">
+              <Input
+                id="current-password"
+                type="password"
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                autoComplete="current-password"
+              />
+            </FieldLabel>
+            <FieldLabel label="New password" htmlFor="new-password">
+              <Input
+                id="new-password"
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                autoComplete="new-password"
+              />
+            </FieldLabel>
+            <div>
+              <Button type="submit" disabled={saving || !currentPassword || !newPassword}>
+                {saving ? "Saving…" : "Change password"}
+              </Button>
+            </div>
+          </form>
+        </SectionCard>
+      </div>
     </div>
   );
 }

@@ -101,3 +101,6 @@ databaseChangeLog:
   - include:
       file: 033-start-app-registration-sync.yaml
       relativeToChangelogFile: true
+  - include:
+      file: 034-item-rank-dates-events.yaml
+      relativeToChangelogFile: true

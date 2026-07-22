@@ -4,6 +4,7 @@ import { useAuth } from '@/context/auth';
 import { useOrg } from '@/context/org';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
+import Link from 'next/link';
 
 export default function AppPage() {
   const { user, loading: authLoading } = useAuth();
@@ -28,7 +29,15 @@ export default function AppPage() {
     <div style={{ maxWidth: 600, margin: '2rem auto', padding: '0 1rem' }}>
       <h1>Your Organizations</h1>
       {organizations.length === 0 ? (
-        <p>You are not a member of any organization yet.</p>
+        <div>
+          <p>You are not a member of any organization yet.</p>
+          <Link href="/app/orgs/new" className="sg-btn sg-btn--black">
+            Create an organization
+          </Link>
+          <p style={{ marginTop: '1rem', color: '#666' }}>
+            Or ask an organization admin to invite you via email.
+          </p>
+        </div>
       ) : (
         <ul style={{ listStyle: 'none', padding: 0 }}>
           {organizations.map((org) => (

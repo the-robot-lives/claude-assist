@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://therobotdrafts.com/contracts/graph-document.schema.json",
+  "title": "HoloGraph GraphDocument",
+  "type": "object",
+  "required": ["id", "slug", "title", "version", "updatedAt", "summary", "nodes", "edges"],
+  "properties": {
+    "id": { "type": "string", "minLength": 1 },
+    "slug": { "type": "string", "minLength": 1 },
+    "title": { "type": "string", "minLength": 1 },
+    "version": { "type": "integer", "minimum": 1 },
+    "updatedAt": { "type": "string", "format": "date-time" },
+    "summary": { "type": "string" },
+    "nodes": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/node" }
+    },
+    "edges": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/edge" }
+    }
+  },
+  "$defs": {
+    "node": {
+      "type": "object",
+      "required": ["id", "label", "kind", "description", "metrics"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "label": { "type": "string", "minLength": 1 },
+        "kind": {
+          "type": "string",
+          "enum": ["system", "package", "service", "class", "interface", "function", "database", "agent"]
+        },
+        "parentId": { "type": "string" },
+        "packageName": { "type": "string" },
+        "description": { "type": "string" },
+        "metrics": {
+          "type": "object",
+          "required": ["complexity", "churn", "risk"],
+          "properties": {
+            "complexity": { "type": "integer", "minimum": 0, "maximum": 100 },
+            "churn": { "type": "integer", "minimum": 0, "maximum": 100 },
+            "risk": { "type": "integer", "minimum": 0, "maximum": 100 }
+          }
+        },
+        "members": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "status": {
+          "type": "string",
+          "enum": ["stable", "draft", "review", "hot"]
+        }
+      }
+    },
+    "edge": {
+      "type": "object",
+      "required": ["id", "sourceId", "targetId", "kind", "label"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "sourceId": { "type": "string", "minLength": 1 },
+        "targetId": { "type": "string", "minLength": 1 },
+        "kind": {
+          "type": "string",
+          "enum": ["contains", "calls", "depends_on", "publishes", "stores", "patches"]
+        },
+        "label": { "type": "string" }
+      }
+    }
+  }
+}

@@ -77,10 +77,10 @@ defmodule TherobotplansWeb.ItemController do
       clean =
         Map.take(
           attrs,
-          ~w(title description status priority assignee queue_id parent_id custom_fields stage_id iteration_id)
+          ~w(title description status priority assignee queue_id parent_id custom_fields stage_id iteration_id rank start_date due_date estimate)
         )
 
-      case Items.update(id, clean) do
+      case Items.update(id, clean, actor: get_user_id(conn)) do
         {:ok, item} ->
           json(conn, %{item: item_to_json(item)})
 
@@ -134,6 +134,10 @@ defmodule TherobotplansWeb.ItemController do
       parent_id: t.parent_id,
       stage_id: t.stage_id,
       iteration_id: t.iteration_id,
+      rank: t.rank,
+      start_date: t.start_date,
+      due_date: t.due_date,
+      estimate: t.estimate,
       custom_fields: t.custom_fields,
       inserted_at: t.inserted_at,
       updated_at: t.updated_at

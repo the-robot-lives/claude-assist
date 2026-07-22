@@ -18,6 +18,12 @@ defmodule Therobotplans.Schema.Item do
     field :reporter, :string
     field :custom_fields, :map, default: %{}
 
+    # Board ordering (lexorank string) + scheduling + sizing.
+    field :rank, :string
+    field :start_date, :date
+    field :due_date, :date
+    field :estimate, :decimal
+
     # Human key (e.g. NOZINF-023): immutable, assigned on insert by the domain (NOT cast).
     field :number, :integer
     field :key, :string
@@ -47,7 +53,11 @@ defmodule Therobotplans.Schema.Item do
       :parent_id,
       :custom_fields,
       :stage_id,
-      :iteration_id
+      :iteration_id,
+      :rank,
+      :start_date,
+      :due_date,
+      :estimate
     ])
     |> validate_required([:organization_id, :title, :item_type])
     |> validate_inclusion(:priority, @priorities ++ [nil])
@@ -78,7 +88,11 @@ defmodule Therobotplans.Schema.Item do
       :parent_id,
       :custom_fields,
       :stage_id,
-      :iteration_id
+      :iteration_id,
+      :rank,
+      :start_date,
+      :due_date,
+      :estimate
     ])
     |> validate_inclusion(:priority, @priorities ++ [nil])
     |> foreign_key_constraint(:stage_id)

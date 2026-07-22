@@ -1,0 +1,12 @@
+app_name=HoloGraph
+tagline=Web-native 3D code graph drafting workspace
+site=therobotdrafts.com
+app_domain=app.therobotdrafts.com
+theme=holograph
+target=/Users/keithbrings/Work/Space/Infra/Noizu/projects/therobotdrafts/vnext/app
+db_name=therobotdrafts_dev
+db_user=holograph
+valkey_user=holograph
+postgres_sql=/Users/keithbrings/Work/Space/Infra/Noizu/projects/therobotdrafts/vnext/app/.start-app-provision/provision-postgres.sql
+valkey_acl=/Users/keithbrings/Work/Space/Infra/Noizu/projects/therobotdrafts/vnext/app/.start-app-provision/provision-valkey.acl
+helm_values=/Users/keithbrings/Work/Space/Infra/Noizu/projects/therobotdrafts/vnext/app/.start-app-provision/helm-values.generated.yaml

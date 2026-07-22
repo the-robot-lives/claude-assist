@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useState } from 'react';
 import { api } from '@/lib/api';
 import { userPendingApproval } from '@/lib/auth-flow';
+import { Button, FieldLabel, Input, Spinner } from '@/components/ui';
 
 // Derive a URL-safe slug from a free-text org name. Editable by the user; the
 // backend enforces uniqueness and returns a 422 we surface inline.
@@ -18,9 +19,18 @@ function slugify(value: string) {
     .slice(0, 48);
 }
 
+function LoadingScreen() {
+  return (
+    <div className="flex min-h-[40dvh] items-center justify-center gap-2 text-text-muted">
+      <Spinner size={20} />
+      <span className="text-sm">Loading…</span>
+    </div>
+  );
+}
+
 export default function AppPage() {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={<LoadingScreen />}>
       <AppHub />
     </Suspense>
   );
@@ -41,7 +51,7 @@ function AppHub() {
     }
   }, [user, authLoading, router]);
 
-  if (authLoading || orgLoading) return <div>Loading...</div>;
+  if (authLoading || orgLoading) return <LoadingScreen />;
   if (!user) return null;
 
   if (organizations.length === 1 && !createMode) {
@@ -53,19 +63,19 @@ function AppHub() {
   const canCreate = !userPendingApproval(user);
 
   return (
-    <div style={{ maxWidth: 600, margin: '2rem auto', padding: '0 1rem' }}>
-      <h1>{hasOrgs ? 'Your Organizations' : 'Welcome'}</h1>
+    <div className="mx-auto max-w-xl px-4 py-10">
+      <h1 className="mb-6 text-2xl font-bold text-text">{hasOrgs ? 'Your organizations' : 'Welcome'}</h1>
 
       {hasOrgs ? (
-        <ul style={{ listStyle: 'none', padding: 0 }}>
+        <ul className="mb-8 flex flex-col gap-3">
           {organizations.map((org) => (
-            <li key={org.id} style={{ marginBottom: '1rem' }}>
+            <li key={org.id}>
               <a
                 href={`/app/${org.id}`}
-                style={{ display: 'block', padding: '1rem', border: '1px solid #ccc', borderRadius: '8px', textDecoration: 'none' }}
+                className="flex items-center justify-between rounded-lg border border-border bg-surface px-4 py-3 text-text shadow-sm transition-colors hover:border-border-strong hover:bg-surface-alt focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue/40"
               >
-                <strong>{org.name}</strong>
-                <span style={{ marginLeft: '0.5rem', color: '#666' }}>({org.role})</span>
+                <span className="font-semibold">{org.name}</span>
+                {org.role && <span className="text-sm text-text-muted">{org.role}</span>}
               </a>
             </li>
           ))}
@@ -94,7 +104,7 @@ function CreateOrgSection({ canCreate, hasOrgs }: { canCreate: boolean; hasOrgs:
 
   if (!canCreate) {
     return (
-      <p>
+      <p className="text-sm text-text-secondary">
         Your account is registered and waiting for approval. You can create an
         organization once it&apos;s approved.
       </p>
@@ -103,23 +113,9 @@ function CreateOrgSection({ canCreate, hasOrgs }: { canCreate: boolean; hasOrgs:
 
   if (hasOrgs && !open) {
     return (
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        style={{
-          marginTop: '0.5rem',
-          padding: '0.6rem 1.2rem',
-          borderRadius: '8px',
-          border: '1px solid #234e23',
-          background: 'transparent',
-          color: '#234e23',
-          fontWeight: 600,
-          fontSize: '0.95rem',
-          cursor: 'pointer',
-        }}
-      >
+      <Button variant="outline" onClick={() => setOpen(true)}>
         + Create organization
-      </button>
+      </Button>
     );
   }
 
@@ -147,27 +143,26 @@ function CreateOrgSection({ canCreate, hasOrgs }: { canCreate: boolean; hasOrgs:
   };
 
   return (
-    <div style={{ marginTop: hasOrgs ? '1rem' : 0 }}>
-      <p style={{ color: '#444' }}>
+    <div className={hasOrgs ? 'mt-4' : undefined}>
+      <p className="text-sm text-text-secondary">
         {hasOrgs
           ? 'Create another organization — you’ll be its owner.'
           : 'You’re not part of an organization yet. Create one to get started — you’ll be its owner and can invite your team.'}
       </p>
-      <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '1rem' }}>
-        <label style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-          <span style={{ fontWeight: 600 }}>Organization name</span>
-          <input
+      <form onSubmit={submit} className="mt-4 flex flex-col gap-3">
+        <FieldLabel label="Organization name" htmlFor="org-name" required>
+          <Input
+            id="org-name"
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="Acme Inc."
             autoFocus
-            style={{ padding: '0.6rem', border: '1px solid #ccc', borderRadius: '8px', fontSize: '1rem' }}
           />
-        </label>
-        <label style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-          <span style={{ fontWeight: 600 }}>URL slug</span>
-          <input
+        </FieldLabel>
+        <FieldLabel label="URL slug" htmlFor="org-slug">
+          <Input
+            id="org-slug"
             type="text"
             value={effectiveSlug}
             onChange={(e) => {
@@ -175,38 +170,17 @@ function CreateOrgSection({ canCreate, hasOrgs }: { canCreate: boolean; hasOrgs:
               setSlug(slugify(e.target.value));
             }}
             placeholder="acme"
-            style={{ padding: '0.6rem', border: '1px solid #ccc', borderRadius: '8px', fontSize: '1rem' }}
           />
-        </label>
-        {error ? <p style={{ color: '#b00020', margin: 0 }}>{error}</p> : null}
-        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
-          <button
-            type="submit"
-            className="sg-btn sg-btn--black"
-            disabled={submitting || !name.trim()}
-            style={{
-              padding: '0.7rem 1.4rem',
-              borderRadius: '8px',
-              border: 'none',
-              background: '#234e23',
-              color: '#fff',
-              fontWeight: 600,
-              fontSize: '1rem',
-              cursor: submitting ? 'default' : 'pointer',
-              opacity: submitting || !name.trim() ? 0.6 : 1,
-            }}
-          >
+        </FieldLabel>
+        {error ? <p className="text-sm text-error">{error}</p> : null}
+        <div className="flex items-center gap-3">
+          <Button type="submit" disabled={submitting || !name.trim()}>
             {submitting ? 'Creating…' : 'Create organization'}
-          </button>
+          </Button>
           {hasOrgs ? (
-            <button
-              type="button"
-              onClick={() => setOpen(false)}
-              disabled={submitting}
-              style={{ background: 'none', border: 'none', color: '#666', cursor: 'pointer', fontSize: '0.95rem' }}
-            >
+            <Button type="button" variant="ghost" onClick={() => setOpen(false)} disabled={submitting}>
               Cancel
-            </button>
+            </Button>
           ) : null}
         </div>
       </form>

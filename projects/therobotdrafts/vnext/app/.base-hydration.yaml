@@ -1,0 +1,48 @@
+schema: "noizu.start_app.base_hydration.v1"
+start_app:
+  version: "0.1.0"
+  source:
+    template_path: "/Users/keithbrings/Work/Space/Infra/Noizu/components/start-app"
+    tarball_path: "/Users/keithbrings/Work/Space/Infra/Noizu/components/start-app/start-app.tar.gz"
+    tarball_md5: "32511f21e3cd6f239e0232910874a098"
+hydration:
+  tool: "init-proj-scaffold"
+  hydrated_at: "2026-07-22T06:55:08Z"
+  args:
+    project_dir: "therobotdrafts"
+    slug: "holograph"
+    elixir_module: "HoloGraph"
+    target: "/Users/keithbrings/Work/Space/Infra/Noizu/projects/therobotdrafts/vnext/app"
+    helm_mode: "skip"
+  derived:
+    web_module: "HoloGraphWeb"
+    otp_app: "holo_graph"
+    otp_app_web: "holo_graph_web"
+    db_name: "therobotdrafts_dev"
+    db_name_test: "therobotdrafts_test"
+    frontend_name: "holograph-frontend"
+    host_port: "8080"
+start_app_scaffold:
+  applied: true
+  applied_at: "2026-07-22T06:55:09Z"
+  tool: "start-app-scaffold"
+  args:
+    app_name: "HoloGraph"
+    tagline: "Web-native 3D code graph drafting workspace"
+    site: "therobotdrafts.com"
+    target: "/Users/keithbrings/Work/Space/Infra/Noizu/projects/therobotdrafts/vnext/app"
+    registry: "ops.noizu.com"
+    themes:
+      - "holograph"
+    db_name: "therobotdrafts_dev"
+    db_user: "holograph"
+    db_password_source: "generated"
+    valkey_user: "holograph"
+    valkey_password_source: "generated"
+    postgres_url_provided: false
+    valkey_url_provided: false
+    execute: false
+  derived:
+    app_domain: "app.therobotdrafts.com"
+    cookie_domain: ".therobotdrafts.com"
+    active_theme: "holograph"

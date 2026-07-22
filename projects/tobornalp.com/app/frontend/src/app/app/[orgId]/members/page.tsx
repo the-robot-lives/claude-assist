@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { api } from "@/lib/api";
 import { useAuth } from "@/context/auth";
 import { toast } from "sonner";
+import { Button, Input, Select, Spinner } from "@/components/ui";
 
 interface Member {
   id: string;
@@ -27,7 +28,13 @@ export default function MembersPage() {
 
   useEffect(() => {
     if (orgId) {
-      api.listMembers(orgId).then((res) => { setMembers(res.members); setLoading(false); }).catch(() => setLoading(false));
+      api
+        .listMembers(orgId)
+        .then((res) => {
+          setMembers(res.members);
+          setLoading(false);
+        })
+        .catch(() => setLoading(false));
     }
   }, [orgId]);
 
@@ -65,50 +72,94 @@ export default function MembersPage() {
     }
   }
 
-  if (loading) return <p style={{ padding: 40 }}>Loading...</p>;
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center gap-2 p-16 text-text-muted">
+        <Spinner size={20} />
+        <span className="text-sm">Loading…</span>
+      </div>
+    );
+  }
 
   return (
-    <div style={{ maxWidth: 640, margin: "40px auto", padding: "0 24px" }}>
-      <h1 style={{ fontSize: 24, marginBottom: 24 }}>Members</h1>
+    <div className="mx-auto max-w-2xl px-4 py-10">
+      <h1 className="mb-6 text-2xl font-bold text-text">Members</h1>
 
-      <form onSubmit={handleInvite} style={{ display: "flex", gap: 8, marginBottom: 24 }}>
-        <input type="email" placeholder="Email address" value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} style={{ flex: 1, padding: 8, border: "1px solid #ccc", borderRadius: 4 }} />
-        <select value={inviteRole} onChange={(e) => setInviteRole(e.target.value)} style={{ padding: 8, border: "1px solid #ccc", borderRadius: 4 }}>
-          {ROLES.filter((r) => r !== "owner").map((r) => <option key={r} value={r}>{r}</option>)}
-        </select>
-        <button type="submit" style={{ padding: "8px 16px", background: "#000", color: "#fff", border: "none", borderRadius: 4, cursor: "pointer" }}>Add</button>
+      <form onSubmit={handleInvite} className="mb-6 flex flex-col gap-2 sm:flex-row">
+        <Input
+          type="email"
+          placeholder="Email address"
+          aria-label="Invite email address"
+          value={inviteEmail}
+          onChange={(e) => setInviteEmail(e.target.value)}
+          className="sm:flex-1"
+        />
+        <Select
+          aria-label="Invite role"
+          value={inviteRole}
+          onChange={(e) => setInviteRole(e.target.value)}
+          className="sm:w-40"
+        >
+          {ROLES.filter((r) => r !== "owner").map((r) => (
+            <option key={r} value={r}>
+              {r}
+            </option>
+          ))}
+        </Select>
+        <Button type="submit">Add</Button>
       </form>
 
-      <table style={{ width: "100%", borderCollapse: "collapse" }}>
-        <thead>
-          <tr style={{ borderBottom: "2px solid #eee", textAlign: "left" }}>
-            <th style={{ padding: 8 }}>Email</th>
-            <th style={{ padding: 8 }}>Role</th>
-            <th style={{ padding: 8 }}></th>
-          </tr>
-        </thead>
-        <tbody>
-          {members.map((m) => (
-            <tr key={m.id} style={{ borderBottom: "1px solid #eee" }}>
-              <td style={{ padding: 8 }}>{m.email}</td>
-              <td style={{ padding: 8 }}>
-                {m.role === "owner" ? (
-                  <span>owner</span>
-                ) : (
-                  <select value={m.role} onChange={(e) => handleRoleChange(m.id, e.target.value)} style={{ padding: 4, border: "1px solid #ccc", borderRadius: 4 }}>
-                    {ROLES.filter((r) => r !== "owner").map((r) => <option key={r} value={r}>{r}</option>)}
-                  </select>
-                )}
-              </td>
-              <td style={{ padding: 8 }}>
-                {m.role !== "owner" && m.user_id !== user?.id && (
-                  <button onClick={() => handleRemove(m.id)} style={{ color: "#dc2626", background: "none", border: "none", cursor: "pointer" }}>Remove</button>
-                )}
-              </td>
+      <div className="overflow-x-auto rounded-lg border border-border bg-surface shadow-sm">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-border text-left text-text-secondary">
+              <th className="px-3 py-2 font-medium">Email</th>
+              <th className="px-3 py-2 font-medium">Role</th>
+              <th className="px-3 py-2 font-medium">
+                <span className="sr-only">Actions</span>
+              </th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {members.map((m) => (
+              <tr key={m.id} className="border-b border-border last:border-0 text-text">
+                <td className="px-3 py-2">{m.email}</td>
+                <td className="px-3 py-2">
+                  {m.role === "owner" ? (
+                    <span className="text-text-secondary">owner</span>
+                  ) : (
+                    <Select
+                      aria-label={`Role for ${m.email}`}
+                      value={m.role}
+                      onChange={(e) => handleRoleChange(m.id, e.target.value)}
+                      className="w-32"
+                    >
+                      {ROLES.filter((r) => r !== "owner").map((r) => (
+                        <option key={r} value={r}>
+                          {r}
+                        </option>
+                      ))}
+                    </Select>
+                  )}
+                </td>
+                <td className="px-3 py-2 text-right">
+                  {m.role !== "owner" && m.user_id !== user?.id && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-error"
+                      aria-label={`Remove ${m.email}`}
+                      onClick={() => handleRemove(m.id)}
+                    >
+                      Remove
+                    </Button>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

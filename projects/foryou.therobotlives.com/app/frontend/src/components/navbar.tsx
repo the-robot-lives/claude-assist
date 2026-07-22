@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useAuth } from "@/context/auth";
 import { OrgSwitcher } from "@/components/org-switcher";
-import { CookieSettingsButton } from "@/components/cookie-consent";
 
 export function Navbar() {
   const { user, loading, logout } = useAuth();
@@ -15,7 +14,6 @@ export function Navbar() {
           FORYOU
         </Link>
         <div className="sg-navbar__links">
-          <CookieSettingsButton />
           {loading ? null : user ? (
             <>
               <OrgSwitcher />

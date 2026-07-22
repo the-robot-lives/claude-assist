@@ -212,7 +212,11 @@ defmodule Therobotplans.Domains.Items do
     org_use != nil or proj_use != nil
   end
 
-  def update(id, attrs) do
+  @event_fields ~w(status stage_id iteration_id estimate assignee priority)a
+
+  def update(id, attrs, opts \\ []) do
+    actor = Keyword.get(opts, :actor)
+
     case Repo.get(Item, id) do
       nil ->
         {:error, :not_found}
@@ -225,9 +229,20 @@ defmodule Therobotplans.Domains.Items do
           end
 
         prev_assignee = item.assignee
+        old_snapshot = Map.take(item, @event_fields)
+
+        # Normalize to all-string keys: attrs may arrive atom-keyed (domain/MCP
+        # callers) or string-keyed (REST controller). Ecto's cast rejects a map
+        # with mixed key types, so we can't just Map.put an atom :custom_fields
+        # onto a string-keyed map.
+        params =
+          attrs
+          |> Map.drop([:custom_fields, "custom_fields"])
+          |> Map.new(fn {k, v} -> {to_string(k), v} end)
+          |> Map.put("custom_fields", merged_custom)
 
         item
-        |> Item.update_changeset(Map.put(attrs, :custom_fields, merged_custom))
+        |> Item.update_changeset(params)
         |> Repo.update()
         |> tap(fn
           {:ok, updated} ->
@@ -236,11 +251,50 @@ defmodule Therobotplans.Domains.Items do
             # a linked KR's completion). Guarded so a Goals failure never breaks
             # the item write.
             maybe_recompute_krs(updated)
+            # Append-only field-change audit. Guarded + OUTSIDE any txn: a failed
+            # event insert must never roll back the item write (best-effort).
+            record_item_events(updated, old_snapshot, actor)
 
           _ ->
             :ok
         end)
     end
+  end
+
+  # Diff the tracked fields against the pre-update snapshot and append one
+  # item_events row per changed field. Uses insert_all against the raw table
+  # (append-only, no changeset/validation) and is fully guarded — it MUST NEVER
+  # raise into the caller's write path (mirrors the dispatch_update guard).
+  defp record_item_events(updated, old_snapshot, actor) do
+    now = DateTime.utc_now() |> DateTime.truncate(:second)
+
+    rows =
+      Enum.flat_map(@event_fields, fn field ->
+        old_val = Map.get(old_snapshot, field)
+        new_val = Map.get(updated, field)
+
+        if old_val == new_val do
+          []
+        else
+          [
+            %{
+              item_id: uuid_bin(updated.id),
+              actor: actor,
+              field: to_string(field),
+              old_value: inspect(old_val),
+              new_value: inspect(new_val),
+              occurred_at: now
+            }
+          ]
+        end
+      end)
+
+    if rows != [], do: Repo.insert_all("item_events", rows)
+    :ok
+  rescue
+    _ -> :ok
+  catch
+    _, _ -> :ok
   end
 
   # Best-effort notification fan-out after a successful update. A change to the

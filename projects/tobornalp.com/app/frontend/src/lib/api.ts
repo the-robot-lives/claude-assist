@@ -530,6 +530,10 @@ export interface Item {
   parent_id?: string;
   stage_id?: string;
   iteration_id?: string;
+  rank?: string;
+  start_date?: string | null;
+  due_date?: string | null;
+  estimate?: number | string | null;
   custom_fields?: Record<string, unknown>;
   inserted_at?: string;
   updated_at?: string;

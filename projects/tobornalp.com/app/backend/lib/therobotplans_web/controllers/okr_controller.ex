@@ -50,57 +50,82 @@ defmodule TherobotplansWeb.OkrController do
   end
 
   # GET /api/v1/organizations/:org_id/objectives/:id
-  def show(conn, %{"org_id" => _org_id, "id" => id}) do
-    case Goals.get_objective(id) do
-      nil -> conn |> put_status(:not_found) |> json(%{error: "Objective not found"})
-      o -> json(conn, %{objective: objective_detail_json(o)})
-    end
+  def show(conn, %{"org_id" => org_id, "id" => id}) do
+    with_org_objective(conn, org_id, id, "viewer", fn o ->
+      json(conn, %{objective: objective_detail_json(o)})
+    end)
   end
 
-  def update(conn, %{"org_id" => _org_id, "id" => id, "objective" => attrs}) do
-    case Goals.update_objective(id, attrs) do
-      {:ok, o} ->
-        json(conn, %{objective: objective_json(o)})
+  def update(conn, %{"org_id" => org_id, "id" => id, "objective" => attrs}) do
+    with_org_objective(conn, org_id, id, "member", fn _o ->
+      # Never let a member relocate an objective to a different org via update.
+      attrs = Map.drop(attrs, ["organization_id"])
 
-      {:error, :not_found} ->
-        conn |> put_status(:not_found) |> json(%{error: "Objective not found"})
+      case Goals.update_objective(id, attrs) do
+        {:ok, o} ->
+          json(conn, %{objective: objective_json(o)})
 
-      {:error, cs} ->
-        conn |> put_status(:unprocessable_entity) |> json(%{errors: format_errors(cs)})
-    end
+        {:error, :not_found} ->
+          conn |> put_status(:not_found) |> json(%{error: "Objective not found"})
+
+        {:error, cs} ->
+          conn |> put_status(:unprocessable_entity) |> json(%{errors: format_errors(cs)})
+      end
+    end)
   end
 
   # POST /api/v1/organizations/:org_id/objectives/:id/key_results
-  def create_key_result(conn, %{"id" => objective_id, "key_result" => params}) do
-    attrs = Map.put(params, "objective_id", objective_id)
+  def create_key_result(conn, %{"org_id" => org_id, "id" => objective_id, "key_result" => params}) do
+    with_org_objective(conn, org_id, objective_id, "member", fn _o ->
+      attrs = Map.put(params, "objective_id", objective_id)
 
-    case Goals.create_key_result(attrs) do
-      {:ok, kr} ->
-        conn |> put_status(:created) |> json(%{key_result: kr_json(kr)})
+      case Goals.create_key_result(attrs) do
+        {:ok, kr} ->
+          conn |> put_status(:created) |> json(%{key_result: kr_json(kr)})
 
-      {:error, cs} ->
-        conn |> put_status(:unprocessable_entity) |> json(%{errors: format_errors(cs)})
-    end
+        {:error, cs} ->
+          conn |> put_status(:unprocessable_entity) |> json(%{errors: format_errors(cs)})
+      end
+    end)
   end
 
   # POST /api/v1/organizations/:org_id/objectives/:id/checkins
-  def create_checkin(conn, %{"id" => objective_id, "checkin" => params}) do
+  def create_checkin(conn, %{"org_id" => org_id, "id" => objective_id, "checkin" => params}) do
+    with_org_objective(conn, org_id, objective_id, "member", fn _o ->
+      user_id = get_user_id(conn)
+
+      attrs =
+        Map.merge(params, %{
+          "objective_id" => objective_id,
+          "author_id" => params["author_id"] || user_id
+        })
+
+      case Goals.create_checkin(attrs) do
+        {:ok, c} ->
+          conn
+          |> put_status(:created)
+          |> json(%{checkin: %{id: c.id, body: c.body, period: c.period}})
+
+        {:error, cs} ->
+          conn |> put_status(:unprocessable_entity) |> json(%{errors: format_errors(cs)})
+      end
+    end)
+  end
+
+  # Resolve org, authorize the caller, load the objective, ensure it belongs to
+  # the org. Mirrors ItemController.with_org_item/5 — without this any
+  # authenticated user could read/edit any org's OKRs by UUID.
+  defp with_org_objective(conn, org_id, objective_id, role, fun) do
     user_id = get_user_id(conn)
 
-    attrs =
-      Map.merge(params, %{
-        "objective_id" => objective_id,
-        "author_id" => params["author_id"] || user_id
-      })
-
-    case Goals.create_checkin(attrs) do
-      {:ok, c} ->
-        conn
-        |> put_status(:created)
-        |> json(%{checkin: %{id: c.id, body: c.body, period: c.period}})
-
-      {:error, cs} ->
-        conn |> put_status(:unprocessable_entity) |> json(%{errors: format_errors(cs)})
+    with {:ok, _} <- Authz.authorize(user_id, "organization", org_id, role),
+         obj when not is_nil(obj) <- Goals.get_objective(objective_id),
+         true <- obj.organization_id == org_id do
+      fun.(obj)
+    else
+      nil -> conn |> put_status(:not_found) |> json(%{error: "Objective not found"})
+      false -> conn |> put_status(:not_found) |> json(%{error: "Objective not found"})
+      err -> handle_error(conn, err)
     end
   end
 

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { api } from "@/lib/api";
+import { Button, Spinner, StatusBadge } from "@/components/ui";
 
 interface AdminUser {
   id: string;
@@ -20,44 +21,66 @@ export default function AdminUsersPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api.adminListUsers(page).then((res) => {
-      setUsers(res.users);
-      setTotal(res.total);
-      setLoading(false);
-    }).catch(() => setLoading(false));
+    api
+      .adminListUsers(page)
+      .then((res) => {
+        setUsers(res.users);
+        setTotal(res.total);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
   }, [page]);
 
-  if (loading) return <p style={{ padding: 40 }}>Loading...</p>;
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center gap-2 p-16 text-text-muted">
+        <Spinner size={20} />
+        <span className="text-sm">Loading…</span>
+      </div>
+    );
+  }
 
   return (
-    <div style={{ maxWidth: 800, margin: "40px auto", padding: "0 24px" }}>
-      <h1 style={{ fontSize: 24, marginBottom: 8 }}>Users ({total})</h1>
-      <table style={{ width: "100%", borderCollapse: "collapse" }}>
-        <thead>
-          <tr style={{ borderBottom: "2px solid #eee", textAlign: "left" }}>
-            <th style={{ padding: 8 }}>Email</th>
-            <th style={{ padding: 8 }}>Username</th>
-            <th style={{ padding: 8 }}>Status</th>
-            <th style={{ padding: 8 }}>Verified</th>
-            <th style={{ padding: 8 }}>Admin</th>
-          </tr>
-        </thead>
-        <tbody>
-          {users.map((u) => (
-            <tr key={u.id} style={{ borderBottom: "1px solid #eee" }}>
-              <td style={{ padding: 8 }}>{u.email}</td>
-              <td style={{ padding: 8 }}>{u.user_name}</td>
-              <td style={{ padding: 8 }}>{u.status}</td>
-              <td style={{ padding: 8 }}>{u.verified ? "Yes" : "No"}</td>
-              <td style={{ padding: 8 }}>{u.admin ? "Yes" : "No"}</td>
+    <div className="mx-auto max-w-4xl px-4 py-10">
+      <h1 className="mb-4 text-2xl font-bold text-text">
+        Users <span className="text-text-muted">({total})</span>
+      </h1>
+
+      <div className="overflow-x-auto rounded-lg border border-border bg-surface shadow-sm">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-border text-left text-text-secondary">
+              <th className="px-3 py-2 font-medium">Email</th>
+              <th className="px-3 py-2 font-medium">Username</th>
+              <th className="px-3 py-2 font-medium">Status</th>
+              <th className="px-3 py-2 font-medium">Verified</th>
+              <th className="px-3 py-2 font-medium">Admin</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
-      <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
-        <button disabled={page <= 1} onClick={() => setPage(page - 1)} style={{ padding: "4px 12px" }}>Prev</button>
-        <span style={{ padding: "4px 8px" }}>Page {page}</span>
-        <button disabled={users.length < 50} onClick={() => setPage(page + 1)} style={{ padding: "4px 12px" }}>Next</button>
+          </thead>
+          <tbody>
+            {users.map((u) => (
+              <tr key={u.id} className="border-b border-border last:border-0 text-text">
+                <td className="px-3 py-2">{u.email}</td>
+                <td className="px-3 py-2">{u.user_name}</td>
+                <td className="px-3 py-2">
+                  <StatusBadge status={u.status} />
+                </td>
+                <td className="px-3 py-2 text-text-secondary">{u.verified ? "Yes" : "No"}</td>
+                <td className="px-3 py-2 text-text-secondary">{u.admin ? "Yes" : "No"}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="mt-4 flex items-center gap-3">
+        <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage(page - 1)}>
+          Prev
+        </Button>
+        <span className="text-sm text-text-muted">Page {page}</span>
+        <Button variant="outline" size="sm" disabled={users.length < 50} onClick={() => setPage(page + 1)}>
+          Next
+        </Button>
       </div>
     </div>
   );
