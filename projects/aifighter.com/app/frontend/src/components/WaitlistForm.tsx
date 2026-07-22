@@ -2,8 +2,11 @@
 
 import { useState } from "react";
 
-const LISTMONK_URL = "https://listmonk.noizu.com/api/public/subscription";
-const LIST_UUID = "3d7f6e9c-da0c-40e1-8989-1e2ecf7f6a35";
+// Signups flow to the foryou signup service (foryou.therobotlives.com).
+// The foryou List with this public_slug must be provisioned before go-live —
+// see projects/foryou.therobotlives.com/provisioning/.
+const FORYOU_BASE_URL = "https://foryou.therobotlives.com";
+const FORYOU_LIST_SLUG = "aifighter-waitlist";
 
 export default function WaitlistForm({
   buttonText = "Join Waitlist",
@@ -22,15 +25,18 @@ export default function WaitlistForm({
     setErrorMsg("");
 
     try {
-      const res = await fetch(LISTMONK_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email,
-          name: "",
-          list_uuids: [LIST_UUID],
-        }),
-      });
+      const res = await fetch(
+        `${FORYOU_BASE_URL}/api/v1/public/lists/${FORYOU_LIST_SLUG}/signups`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            values: { email },
+            source: FORYOU_LIST_SLUG,
+            company_website: "", // honeypot — expected empty
+          }),
+        },
+      );
 
       if (res.ok) {
         setStatus("success");
