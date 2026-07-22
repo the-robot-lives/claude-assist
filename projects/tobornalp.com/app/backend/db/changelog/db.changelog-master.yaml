@@ -104,3 +104,30 @@ databaseChangeLog:
   - include:
       file: 034-item-rank-dates-events.yaml
       relativeToChangelogFile: true
+  - include:
+      file: 035-projects-methodology.yaml
+      relativeToChangelogFile: true
+  - include:
+      file: 036-items-personal-tags.yaml
+      relativeToChangelogFile: true
+  - include:
+      file: 037-recurrence-rules.yaml
+      relativeToChangelogFile: true
+  - include:
+      file: 038-item-recurrence-links.yaml
+      relativeToChangelogFile: true
+  - include:
+      file: 039-objectives-rollup-fields.yaml
+      relativeToChangelogFile: true
+  - include:
+      file: 040-key-result-weight.yaml
+      relativeToChangelogFile: true
+  - include:
+      file: 041-objectives-cached-progress.yaml
+      relativeToChangelogFile: true
+  - include:
+      file: 042-okr-tree-indexes.yaml
+      relativeToChangelogFile: true
+  - include:
+      file: 043-okr-cycle-depth-trigger.yaml
+      relativeToChangelogFile: true

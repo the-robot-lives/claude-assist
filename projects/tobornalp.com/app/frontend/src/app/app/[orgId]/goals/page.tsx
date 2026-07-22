@@ -3,9 +3,10 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { useOrg } from "@/context/org";
-import { api, type Objective, type ObjectiveDetail } from "@/lib/api";
+import { api, type Objective } from "@/lib/api";
 import { toast } from "sonner";
-import { ProgressBar, SectionCard, Empty } from "@/components/pm/priority-badge";
+import { ProgressBar, SectionCard, Empty, Button, Input, Select, FieldLabel } from "@/components/ui";
+import { OkrTree } from "@/components/okr/okr-tree";
 
 const LEVELS = ["company", "team", "individual", "personal"];
 
@@ -14,30 +15,10 @@ export default function GoalsPage() {
   const { currentOrg } = useOrg();
   const orgId = currentOrg?.id || params.orgId;
 
-  const [objectives, setObjectives] = useState<Objective[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [expanded, setExpanded] = useState<Record<string, ObjectiveDetail | null>>({});
+  const [view, setView] = useState<"tree" | "list">("tree");
   const [showCreate, setShowCreate] = useState(false);
-
-  const load = () => {
-    setLoading(true);
-    api.listObjectives(orgId).then((r) => setObjectives(r.objectives)).catch((e) => toast.error(e.message)).finally(() => setLoading(false));
-  };
-
-  useEffect(load, [orgId]);
-
-  const toggle = async (o: Objective) => {
-    if (expanded[o.id]) {
-      setExpanded((e) => ({ ...e, [o.id]: null }));
-      return;
-    }
-    try {
-      const r = await api.getObjective(orgId, o.id);
-      setExpanded((e) => ({ ...e, [o.id]: r.objective }));
-    } catch (e) {
-      toast.error((e as Error).message);
-    }
-  };
+  // Bumped after a create so the tree re-fetches from the server.
+  const [reloadKey, setReloadKey] = useState(0);
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-6">
@@ -46,70 +27,107 @@ export default function GoalsPage() {
           <h1 className="text-2xl font-bold text-text">Goals</h1>
           <p className="text-sm text-text-secondary">{currentOrg?.name || "Organization"} · OKRs</p>
         </div>
-        <button onClick={() => setShowCreate((s) => !s)} className="sg-btn sg-btn--black sg-btn--sm">
-          {showCreate ? "Cancel" : "+ New objective"}
-        </button>
+        <div className="flex items-center gap-2">
+          <div className="flex overflow-hidden rounded-md border border-border text-xs">
+            <button
+              onClick={() => setView("tree")}
+              className={`px-2.5 py-1.5 ${view === "tree" ? "bg-surface-alt text-text" : "text-text-muted"}`}
+            >
+              Tree
+            </button>
+            <button
+              onClick={() => setView("list")}
+              className={`px-2.5 py-1.5 ${view === "list" ? "bg-surface-alt text-text" : "text-text-muted"}`}
+            >
+              List
+            </button>
+          </div>
+          <Button size="sm" onClick={() => setShowCreate((s) => !s)}>
+            {showCreate ? "Cancel" : "+ New objective"}
+          </Button>
+        </div>
       </header>
 
-      {showCreate && <CreateObjective orgId={orgId} onCreated={(o) => { setObjectives((p) => [o, ...p]); setShowCreate(false); }} />}
+      {showCreate && (
+        <CreateObjective
+          orgId={orgId}
+          onCreated={() => {
+            setShowCreate(false);
+            setReloadKey((k) => k + 1);
+          }}
+        />
+      )}
 
-      {loading ? (
-        <p className="text-text-muted">Loading…</p>
-      ) : objectives.length === 0 ? (
-        <SectionCard title="No objectives"><Empty>Set your first objective.</Empty></SectionCard>
+      {view === "tree" ? (
+        <OkrTree orgId={orgId} reloadKey={reloadKey} />
       ) : (
-        <ul className="space-y-2">
-          {objectives.map((o) => (
-            <li key={o.id} className="rounded-lg border border-border bg-surface">
-              <button onClick={() => toggle(o)} className="flex w-full items-center gap-3 px-4 py-3 text-left">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-text">{o.title}</span>
-                    <span className="rounded border border-border px-1.5 py-0.5 text-[11px] text-text-secondary">{o.level}</span>
-                  </div>
-                  <div className="mt-2">
-                    <ProgressBar value={o.progress} />
-                  </div>
-                </div>
-                <span className="text-xs text-text-muted">{expanded[o.id] ? "hide" : "KRs"}</span>
-              </button>
-              {expanded[o.id] && (
-                <div className="border-t border-border px-4 py-3">
-                  <KeyResults detail={expanded[o.id]!} />
-                </div>
-              )}
-            </li>
-          ))}
-        </ul>
+        <FlatList orgId={orgId} reloadKey={reloadKey} />
       )}
     </div>
   );
 }
 
-function KeyResults({ detail }: { detail: ObjectiveDetail }) {
-  const krs = detail.key_results || [];
-  if (krs.length === 0) return <p className="py-2 text-sm text-text-muted">No key results.</p>;
+// Flat, filterable overview (retains the pre-hierarchy list). Tree view owns the
+// full inline editing; this is a scan-and-filter surface.
+function FlatList({ orgId, reloadKey }: { orgId: string; reloadKey: number }) {
+  const [objectives, setObjectives] = useState<Objective[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [level, setLevel] = useState("");
+  const [status, setStatus] = useState("");
+
+  useEffect(() => {
+    setLoading(true);
+    api
+      .listObjectives(orgId, { level: level || undefined, status: status || undefined })
+      .then((r) => setObjectives(r.objectives))
+      .catch((e) => toast.error((e as Error).message))
+      .finally(() => setLoading(false));
+  }, [orgId, level, status, reloadKey]);
+
   return (
-    <ul className="space-y-2.5">
-      {krs.map((kr) => {
-        const cur = parseFloat(String(kr.current_value ?? "0"));
-        const tgt = parseFloat(String(kr.target_value ?? "1"));
-        const ratio = tgt === 0 ? 0 : cur / tgt;
-        return (
-          <li key={kr.id}>
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-text">{kr.title}</span>
-              <span className="text-xs text-text-muted">
-                {String(kr.current_value ?? "0")}/{String(kr.target_value ?? "")}
-                {kr.unit ? ` ${kr.unit}` : ""}
-                {kr.auto_progress && " · auto"}
-              </span>
-            </div>
-            <div className="mt-1"><ProgressBar value={ratio} /></div>
-          </li>
-        );
-      })}
-    </ul>
+    <div>
+      <div className="mb-3 flex gap-2">
+        <Select value={level} onChange={(e) => setLevel(e.target.value)} className="w-40">
+          <option value="">All levels</option>
+          {LEVELS.map((l) => (
+            <option key={l} value={l}>
+              {l}
+            </option>
+          ))}
+        </Select>
+        <Select value={status} onChange={(e) => setStatus(e.target.value)} className="w-40">
+          <option value="">All statuses</option>
+          {["draft", "active", "at_risk", "off_track", "completed", "archived"].map((s) => (
+            <option key={s} value={s}>
+              {s}
+            </option>
+          ))}
+        </Select>
+      </div>
+
+      {loading ? (
+        <p className="text-text-muted">Loading…</p>
+      ) : objectives.length === 0 ? (
+        <SectionCard title="No objectives">
+          <Empty>No objectives match these filters.</Empty>
+        </SectionCard>
+      ) : (
+        <ul className="space-y-2">
+          {objectives.map((o) => (
+            <li key={o.id} className="rounded-lg border border-border bg-surface px-4 py-3">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-text">{o.title}</span>
+                <span className="rounded border border-border px-1.5 py-0.5 text-[11px] text-text-secondary">{o.level}</span>
+                <span className="text-[11px] text-text-muted">{o.status}</span>
+              </div>
+              <div className="mt-2">
+                <ProgressBar value={o.progress} />
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
   );
 }
 
@@ -137,24 +155,27 @@ function CreateObjective({ orgId, onCreated }: { orgId: string; onCreated: (o: O
 
   return (
     <form onSubmit={submit} className="mb-4 rounded-lg border border-border bg-surface p-4">
-      <label className="block text-sm">
-        <span className="mb-1 block text-text-secondary">Objective</span>
-        <input value={title} onChange={(e) => setTitle(e.target.value)} className="w-full rounded border border-border bg-surface-alt px-2 py-1.5 text-text" placeholder="e.g. Ship tobornalp MVP" autoFocus />
-      </label>
+      <FieldLabel label="Objective">
+        <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Ship tobornalp MVP" autoFocus />
+      </FieldLabel>
       <div className="mt-3 grid gap-3 sm:grid-cols-2">
-        <label className="text-sm">
-          <span className="mb-1 block text-text-secondary">Level</span>
-          <select value={level} onChange={(e) => setLevel(e.target.value)} className="w-full rounded border border-border bg-surface-alt px-2 py-1.5 text-text">
-            {LEVELS.map((l) => <option key={l} value={l}>{l}</option>)}
-          </select>
-        </label>
-        <label className="text-sm">
-          <span className="mb-1 block text-text-secondary">Period</span>
-          <input value={period} onChange={(e) => setPeriod(e.target.value)} className="w-full rounded border border-border bg-surface-alt px-2 py-1.5 text-text" placeholder="2026-Q3" />
-        </label>
+        <FieldLabel label="Level">
+          <Select value={level} onChange={(e) => setLevel(e.target.value)}>
+            {LEVELS.map((l) => (
+              <option key={l} value={l}>
+                {l}
+              </option>
+            ))}
+          </Select>
+        </FieldLabel>
+        <FieldLabel label="Period">
+          <Input value={period} onChange={(e) => setPeriod(e.target.value)} placeholder="2026-Q3" />
+        </FieldLabel>
       </div>
       <div className="mt-3 flex justify-end">
-        <button type="submit" disabled={submitting} className="sg-btn sg-btn--black sg-btn--sm">{submitting ? "Creating…" : "Create"}</button>
+        <Button type="submit" size="sm" disabled={submitting}>
+          {submitting ? "Creating…" : "Create"}
+        </Button>
       </div>
     </form>
   );

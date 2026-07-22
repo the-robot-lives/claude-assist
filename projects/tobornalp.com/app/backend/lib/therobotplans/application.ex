@@ -40,6 +40,7 @@ defmodule Therobotplans.Application do
           Therobotplans.Domains.Items.MCP,
           Therobotplans.Domains.Notifications.MCP,
           Therobotplans.Domains.Goals.MCP,
+          Therobotplans.Domains.Personal.MCP,
           TherobotplansWeb.Endpoint
         ]
 

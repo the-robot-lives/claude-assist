@@ -1,13 +1,27 @@
 # PRD-M1: Service / List / Attribute / Signup Backend Domain (Chunk B)
 
-**Version**: 1.0
+**Version**: 1.2
 **Status**: Draft (PRD gate for Chunk B / Milestone M1)
 **Author**: npl-prd-editor
 **Created**: 2026-07-22
 **Updated**: 2026-07-22
 **Plan ref**: `~/.claude/plans/resilient-beaming-wozniak.md` (Chunk B + "Spec model → backend mapping")
 **Roadmap ref**: `projects/foryou.therobotlives.com/project-management/roadmap/README.md` (M1)
+**Decisions ref**: `projects/foryou.therobotlives.com/project-management/PRDs/DECISIONS.md` (D1, D2, D4, D5, D6, D9, D10, D12 folded in)
 **Backend root**: `projects/foryou.therobotlives.com/app/backend/`
+
+> **v1.1 changes:** corrected against the actual `develop` backend (management API, `api_keys`,
+> and `forms` already exist — reuse, don't rebuild); changelogs renumbered to **028-lists** /
+> **029-signups**; expanded to the **full list-domain API surface** (D1: public manifest READ,
+> JWT PBAC admin reads, `/me/signups`+`/me/inquiries`+`DELETE /me/signups/:id`); no-leak tightened
+> to always-202-and-silently-drop (D2); added `signups.attribs` GIN index (D4), CSV export (D5),
+> offset/limit pagination (D6), `/me/inquiries` legacy UNION (D9), and `signups.contact_prefs` +
+> `pause_until` (D10).
+>
+> **v1.2 changes:** §17 open items A–F reconciled to authoritative `DECISIONS.md` D13–D17 (all
+> resolved: `public_slug` canonical D13; admin/owner-only writes D14; no silent re-subscribe D15;
+> TF-provisioned default inquiry list D16; rate limit 5/60s D17; `forms` deferred). §6 write-perm
+> and §8.1 cross-refs updated to D14.
 
 ---
 
@@ -102,7 +116,7 @@ CREATE TABLE lists (
   description     text,
   kind            varchar(16) NOT NULL DEFAULT 'newsletter'
                     CHECK (kind IN ('newsletter','waitlist','inquiry','contact','mixed')),
-  settings        jsonb NOT NULL DEFAULT '{}',  -- {opt_in_mode, sender_identity, preference_defaults, ...}
+  settings        jsonb NOT NULL DEFAULT '{}',  -- {opt_in_mode, sender_identity, contact_prefs, available_channels}
   status          varchar(16) NOT NULL DEFAULT 'active'
                     CHECK (status IN ('active','archived')),
   inserted_at     timestamptz NOT NULL DEFAULT now(),
@@ -141,14 +155,17 @@ CREATE INDEX idx_list_attributes_list_order ON list_attributes (list_id, sort_or
 **Column notes**
 - `public_slug`: globally unique. Canonical public key for the signup endpoint and the
   embeddable widget. Removes the cross-org ambiguity of resolving by `(service_slug,
-  list_slug)` alone (see §7 & open question §13-A).
+  list_slug)` alone (see §7 & open question §17-A).
 - `settings.opt_in_mode`: `"double" | "single"`. Default derived from `kind`:
   `newsletter`/`mixed` → `"double"`; `waitlist`/`inquiry`/`contact` → `"single"`. Editors
   may override (US-024).
 - `settings.sender_identity`: `{from_name, from_email, reply_to}` (US-017); falls back to
   platform default.
-- `settings.preference_defaults`: per-list contact-preference defaults (US-054, stored now,
-  consumed Chunk E).
+- `settings.contact_prefs` + `settings.available_channels`: the **list-default contact-preference
+  baseline** (decision D10) — `{frequency, channels[], quiet_periods}` plus the channels a
+  subscriber may choose among. The effective subscriber pref = this list-default **overridden by**
+  `signups.contact_prefs` (Chunk E consumes the inheritance; Chunk B only stores both ends).
+  (US-054.)
 - `is_identity`: each list has **exactly one** email-type attribute marked identity
   (enforced by partial unique index). Its submitted value populates `signups.email`.
 - `validation` per type: `string`/`text` → `{length}`; `int`/`float` → `{min,max}`;
@@ -173,6 +190,8 @@ CREATE TABLE signups (
   unsub_token     varchar(64) NOT NULL,        -- always present => unsubscribe link always valid
   source          varchar(120),
   submitter_ip    varchar(64),
+  contact_prefs   jsonb NOT NULL DEFAULT '{}', -- D10: {frequency, channels[], quiet_periods}
+  pause_until     timestamptz,                 -- D10: paused-until date (null = not paused)
   inserted_at     timestamptz NOT NULL DEFAULT now(),
   updated_at      timestamptz NOT NULL DEFAULT now(),
   CONSTRAINT uq_signups_list_email UNIQUE (list_id, email)  -- == (list_id, lower(email))
@@ -181,6 +200,7 @@ CREATE INDEX idx_signups_user_id      ON signups (user_id) WHERE user_id IS NOT 
 CREATE INDEX idx_signups_list_status  ON signups (list_id, status);
 CREATE INDEX idx_signups_unsub_token  ON signups (unsub_token);
 CREATE INDEX idx_signups_confirm_token ON signups (confirm_token) WHERE confirm_token IS NOT NULL;
+CREATE INDEX idx_signups_attribs_gin  ON signups USING GIN (attribs); -- D4: attribute-value search
 ```
 
 **Column notes**
@@ -194,6 +214,11 @@ CREATE INDEX idx_signups_confirm_token ON signups (confirm_token) WHERE confirm_
   Center; `bounced` set by a future bounce processor.
 - `confirm_token` is nullable and **rotated** on each resend (prior tokens invalidated,
   US-041). `unsub_token` is non-null and stable so unsubscribe links remain valid.
+- `contact_prefs` + `pause_until` (D10): per-subscriber contact preferences live **on the signup
+  row** so Chunk E needs no separate changelog. `contact_prefs` defaults to `{}` (meaning "use the
+  list-default baseline from `lists.settings.contact_prefs`"); `pause_until` is nullable.
+- `idx_signups_attribs_gin` (D4): GIN on `attribs` so the admin console can filter signups by
+  attribute value without a seqscan.
 
 **No changelog for `api_keys`** — it already exists at `026-api-keys.yaml` (schema
 `Foryou.Schema.Auth.ApiKey`, context `Foryou.Auth.ApiKeys`).
@@ -220,8 +245,8 @@ lib/foryou/schema/signups/signup.ex        → Foryou.Schema.Signups.Signup
   :is_identity, :options, :validation, :sort_order, :status]`.
 - `Signup` `belongs_to :list`, `belongs_to :user, Foryou.Schema.Users.User`; casts
   `[:list_id, :email, :user_id, :attribs, :status, :confirm_token, :confirm_sent_at,
-  :unsub_token, :source, :submitter_ip]`; normalizes email to lowercase;
-  `unique_constraint([:list_id, :email])`.
+  :unsub_token, :source, :submitter_ip, :contact_prefs, :pause_until]`; normalizes email to
+  lowercase; `unique_constraint([:list_id, :email])`.
 
 ---
 
@@ -273,13 +298,16 @@ unknown fields** (US-039 "extra or unknown fields are ignored"). It also extract
 def add_signup(list, values, meta, context)
 
 def get_signup(id)
-def list_signups(list_id, opts \\ [])        # filter by status, cursor paginate
-def list_signups_for_user(user_id)           # for /me/signups (Chunk E)
+def list_signups(list_id, opts \\ [])        # filter by status + attribs; offset/limit (D6)
+def list_signups_for_user(user_id)           # for /me/signups (Chunk E); includes contact_prefs
+def list_inquiries_for_user(user_id)         # D9: inquiry-kind signups UNION legacy inquiries(025)
+def to_csv(signups, list)                     # D5: RFC-4180 UTF-8/BOM, one col per attribute
 
 # opt-in lifecycle
 def confirm_signup(confirm_token)            # -> {:ok, subscribed} | {:error, :invalid | :expired}
 def resend_confirmation(list, email)         # rotates token; throttled
 def unsubscribe_by_token(unsub_token)        # -> {:ok, unsubscribed} | {:error, :invalid}
+def unsubscribe_owned(signup_id, user_id)    # /me delete: verify user_id ownership, set unsubscribed
 
 # identity reconcile (US-050) — called by Oban SignupReconcileWorker
 @spec reconcile_user(user_id :: binary(), email :: binary()) :: {non_neg_integer(), term()}
@@ -328,12 +356,13 @@ Foryou.Authz.check_permission(user_id, "project", project_id, "signup:list")
 the enum — `"project"` is valid; the action strings above are matched by the seed wildcard
 statements (`*:view`, `*:list`, and `*` for owner/admin).
 
-**Policy gap to resolve (open — see §13-B): list/attribute *write* actions.** The seed member
-policy grants only `*:view`,`*:list` + a few `project:*` verbs — **not** `list:create` /
-`list:update` / `list:archive`. Owner/admin are covered by `*`. For the authed list-management
-surface (Chunk D Admin Console), either (a) gate list writes behind `admin`/`owner`, or (b)
-extend the member/editor seed policy with `list:create,list:update,list:archive,signup:export`.
-Chunk B's **management** API needs none of this — it is API-key/system-level (`Noizu.Context.system()`).
+**List/attribute *write* actions (resolved → D14).** For M1, list/attribute writes are
+**admin/owner-only** (owner/admin covered by `*`); the seed member policy is **unchanged** — it
+grants only `*:view`,`*:list` + a few `project:*` verbs, so members/viewers get list **reads**
+but not writes. Extending the member/editor seed policy with explicit `list:create/update/archive`
+verbs is deferred. Chunk B's **management** API needs none of this — it is
+API-key/system-level (`Noizu.Context.system()`); the admin/owner gate applies to the Chunk D
+authed console (§8.1).
 
 Routes use `ForyouWeb.Plugs.RequirePermission` (`resource_type: "project"`,
 `resource_id_param: "project_id"`) for authed list endpoints.
@@ -351,18 +380,26 @@ end
 
 scope "/api/v1/public", ForyouWeb do
   pipe_through [:api, :rate_limited_signup]
-  post "/lists/:public_slug/signups",                   PublicSignupController, :create
-  post "/services/:service_slug/lists/:list_slug/signups", PublicSignupController, :create_alias
-  post "/signups/resend",                               PublicSignupController, :resend
-  get  "/signups/confirm",                              PublicSignupController, :confirm   # ?token=
-  get  "/signups/unsubscribe",                          PublicSignupController, :unsubscribe # ?token=
+  # Manifest READ (D1): widget fetches the attribute schema at runtime. Unknown slug => 404
+  # (list existence is public — there is a signup form — so this is NOT a membership leak).
+  get  "/services/:service_slug/lists/:list_slug",         PublicListController, :show
+  get  "/lists/:public_slug",                              PublicListController, :show_by_public_slug
+  # Signup intake — always-202-and-silently-drop (D2); only 4xx for malformed email / unknown slug.
+  post "/services/:service_slug/lists/:list_slug/signups", PublicSignupController, :create
+  post "/lists/:public_slug/signups",                      PublicSignupController, :create_by_public_slug
+  post "/signups/resend",                                  PublicSignupController, :resend
+  get  "/signups/confirm",                                 PublicSignupController, :confirm      # ?token=
+  get  "/signups/unsubscribe",                             PublicSignupController, :unsubscribe  # ?token=
 end
 ```
 
-`PublicSignupController` (`use ForyouWeb, :controller`) mirrors `FormSubmissionController`'s
-shape. Add a `signup` entry to `Plugs.RateLimit`'s `@default_limits` (e.g.
-`signup: {5, 60_000}` — 5/min/IP; tune). The `:rate_limited_inquiry` pattern is reused by
-analogy; a dedicated `:rate_limited_signup` keeps inquiry and signup budgets independent.
+`PublicListController` and `PublicSignupController` (`use ForyouWeb, :controller`) mirror
+`FormSubmissionController`'s shape. The slug path (`services/:svc/lists/:list`) is the
+documented widget path per D1; `lists/:public_slug` is the deterministic alternative that
+ sidesteps the cross-org `(service_slug, list_slug)` collision (see open question §17-A). Add
+a `signup` entry to `Plugs.RateLimit`'s `@default_limits` (e.g. `signup: {5, 60_000}` —
+5/min/IP; tune). The `:rate_limited_inquiry` pattern is reused by analogy; a dedicated
+`:rate_limited_signup` keeps inquiry and signup budgets independent.
 
 ### 7.2 CORS (US-018, US-096) — no code
 
@@ -370,7 +407,10 @@ analogy; a dedicated `:rate_limited_signup` keeps inquiry and signup budgets ind
 `Application.get_env(:foryou, :cors_origins, [])`, populated from `CORS_ORIGINS` (comma
 separated, `runtime.exs:13`). **Action: set `CORS_ORIGINS` in each environment** to the
 portfolio domains (e.g. `https://therobotlives.com,https://codefre.sh,https://noizu.com,…`).
-The OPTIONS preflight is handled (204). No new plug.
+The OPTIONS preflight is handled (204). No new plug. Per decision D3: this env-floor allowlist
+is sufficient for M2/M3; the dynamic DB-backed allowlist (US-018 "without redeploy") is a
+fast-follow. Note the **iframe** widget variant is same-origin → needs no CORS; only the
+**script** variant's cross-origin fetch depends on `CORS_ORIGINS`.
 
 ### 7.3 Honeypot (US-049)
 
@@ -378,14 +418,16 @@ The public payload may include a hidden honeypot field (conventional name `"comp
 or `"website"`). If present and non-empty → **silently return the generic 202** and create no
 signup. Indistinguishable from a normal response.
 
-### 7.4 Generic 202, no-leak (US-045) — load-bearing
+### 7.4 Generic 202, no-leak (US-045) — load-bearing (decision D2)
 
-`PublicSignupController.create/2` returns **HTTP 202 with an identical body** for *every*
-well-formed request, regardless of whether the email was new, already a member, previously
-unsubscribed, opt-in mode, or a duplicate. Validation failures and honeypot hits also return
-the same 202 (a real user re-submits; an attacker learns nothing). Only transport-level
-rejections (429 rate limit, malformed JSON) differ. Keep the handler constant-time-ish: do not
-short-circuit visibly on existence. Recommended body:
+`PublicSignupController.create/2` returns **HTTP 202 `{"accepted":true}` for every well-formed
+request** — new email, already a member, previously unsubscribed, duplicate, soft-validation
+miss, and honeypot hit are all indistinguishable (**always-202-and-silently-drop**). The
+**only** non-202 responses are (a) **429** rate-limit, and (b) **4xx for malformed input** — a
+structurally invalid email format or an unresolvable service/list slug that a real user/widget
+must correct. A malformed-input 4xx does **not** leak membership (the request can't be tied to a
+member row). Do not short-circuit visibly on existence; keep the existing-member vs new-member
+paths constant-time-ish.
 
 ```json
 { "accepted": true }
@@ -417,9 +459,76 @@ signups; rotates `confirm_token` (invalidates prior), enqueues fresh email. Thro
 `:rate_limited_signup` pipeline (and an additional per-email throttle). If already subscribed →
 generic success (no leak).
 
+### 7.8 Public manifest READ — widget schema fetch (D1)
+
+`GET /api/v1/public/services/:svc/lists/:list` (or `/lists/:public_slug`) returns the list's
+**public manifest**: `name`, `kind`, `settings.opt_in_mode`, the service branding/sender-identity
+metadata the widget needs, and the ordered **attribute schema** (each: `slug, name, type,
+required, options, validation`) so the widget renders the correct fields client-side
+(US-038/035). Unknown/archived slug → 404 — list existence is public (there is a signup form),
+not a membership secret. The manifest exposes **only** what the public form needs, never
+subscriber data. A lightly cached read (per-list ETag) is fine since attributes change rarely.
+
 ---
 
-## 8. Management API + Terraform provider (US-036, US-098)
+## 8. Authed API surface — admin-console reads (JWT PBAC) + self-service `/me` (D1)
+
+Chunk B owns the **full** list-domain API surface (decision D1), not just the public POST. These
+routes live in the existing `:authenticated` scope; admin reads gate with
+`ForyouWeb.Plugs.RequirePermission` (`resource_type: "project"`, `resource_id_param:
+"project_id"`).
+
+### 8.1 Admin-console reads (JWT, project-scoped PBAC — feeds Chunk D)
+
+```elixir
+# inside the existing scope "/api/v1/organizations/:org_id", project-scoped:
+scope "/projects/:project_id" do
+  pipe_through [:api, :authenticated]   # + RequirePermission per action (see §6)
+  get "/lists",            ListController, :index        # list:view   — lists for the service
+  get "/lists/:id",        ListController, :show         # list:view
+  get "/lists/:id/signups", SignupController, :index     # signup:list — paginated (D6)
+end
+```
+
+- `GET .../lists` → `Foryou.Lists.list_lists(project_id)` with per-list signup counts.
+- `GET .../lists/:id/signups` → `Foryou.Signups.list_signups(list_id, filters)`. **Pagination
+  (D6):** offset/limit (default fine for M3 <~50k/list; revisit keyset after listmonk backfill).
+  Filtering by `status` and by attribute value uses the `attribs` GIN index (D4). **CSV export
+  (D5):** RFC-4180, UTF-8 **with BOM**, streamed; standard columns (`email, name, status, source,
+  created_at`) + one column per declared attribute; honors active filters; column-for-column
+  compatible with the management backfill export (`§9`).
+- Permissions: `list:view`, `signup:list` — covered by seed `*:view`/`*:list` for member/viewer
+  (§6). List/attribute **write** actions are Chunk D, admin/owner-only per D14 (§6); Chunk B
+  ships the reads.
+
+### 8.2 Self-service `/me` (JWT — feeds Chunk E Preference Center)
+
+```elixir
+scope "/api/v1/me", ForyouWeb do
+  pipe_through [:api, :authenticated]
+  get    "/signups",     MeController, :signups        # signups reconciled to current user
+  delete "/signups/:id", MeController, :delete_signup  # authed unsubscribe
+  get    "/inquiries",   MeController, :inquiries      # D9 union (see below)
+end
+```
+
+- `GET /me/signups` → `Foryou.Signups.list_signups_for_user(current_user.id)` — all lists,
+  cross-service (Preference Center view, US-050/US-061). Includes `contact_prefs`/`pause_until`
+  for Chunk E to read/edit (D10).
+- `DELETE /me/signups/:id` → sets that signup `unsubscribed`; **must verify** the signup's
+  `user_id` == current user (no cross-account delete). Authed mirror of the token unsubscribe
+  (US-042).
+- `GET /me/inquiries` (decision **D9**): returns **inquiry-kind signups** UNIONed with rows from
+  the legacy `inquiries` table (changelog 025 — pre-dual-write noizu.com rows) matched by the
+  user's email(s); legacy rows tagged `source: "legacy"` so US-065 history is complete.
+  (`Foryou.Signups.list_inquiries_for_user/1` performs the union.)
+
+`/app/me` is account-scoped (D12): these endpoints resolve the user directly and must **not**
+require an active org context (orgless users can still see their subscriptions/inquiries).
+
+---
+
+## 9. Management API + Terraform provider (US-036, US-098)
 
 **Reuse the existing `/api/v1/management` scope and `:api_key` pipeline.** Add a
 `Management.ListsController` (`use ForyouWeb, :controller`) mirroring `Management.FormsController`.
@@ -459,7 +568,7 @@ One `foryou_list` per site is the listmonk-cutover vehicle (Chunk G).
 
 ---
 
-## 9. Reconcile-on-login (US-050)
+## 10. Reconcile-on-login (US-050)
 
 New worker `Foryou.Workers.SignupReconcileWorker` (Oban; queues reuse existing `mailer`/`default`
 or a new `reconcile` queue). Fire-and-forget enqueue at two hook points:
@@ -483,7 +592,7 @@ makes this testable synchronously.
 
 ---
 
-## 10. Inquiries dual-write (US-088)
+## 11. Inquiries dual-write (US-088)
 
 Keep `POST /api/v1/inquiries` (`InquiryController.create/2`) as the primary write — it must keep
 working unchanged for legacy home forms (US-088 AC1). After a successful
@@ -499,7 +608,7 @@ either way. The default list must exist (seeded via TF) before enabling.
 
 ---
 
-## 11. listmonk backfill import (US-093)
+## 12. listmonk backfill import (US-093)
 
 `POST /api/v1/management/lists/:id/signups/import` accepts a subscriber export (JSON/CSV rows)
 and enqueues `Foryou.Workers.ListmonkImportWorker`. Per row: normalize email, call
@@ -511,7 +620,7 @@ import; **never overwrite an existing `unsubscribed`** row. Bounce/list status m
 
 ---
 
-## 12. Relationship to the existing `forms` system (open — see §13-D)
+## 13. Relationship to the existing `forms` system (deferred — §17-D)
 
 A generic `forms`/`form_versions`/`form_submissions` system already exists (027) and is
 structurally similar (definitions + public submit + management CRUD + TF-managed). This PRD does
@@ -519,12 +628,12 @@ structurally similar (definitions + public submit + management CRUD + TF-managed
 project/service-scoped; (b) the Signup semantics (email identity, opt-in lifecycle, tokens,
 reconcile, unsubscribe, listmonk import) are specific and not present in generic submissions;
 (c) the plan mandates a dedicated `lists`/`signups` domain with the README vocabulary. **Open
-question §13-D:** confirm whether `forms` should be deprecated/removed or kept for non-signup
+question §17-D:** confirm whether `forms` should be deprecated/removed or kept for non-signup
 use cases — it is out of scope for Chunk B either way.
 
 ---
 
-## 13. Non-functional requirements
+## 14. Non-functional requirements
 
 | ID | Requirement | Metric / target |
 |----|-------------|-----------------|
@@ -538,13 +647,14 @@ use cases — it is out of scope for Chunk B either way.
 
 ---
 
-## 14. Acceptance criteria (mapped to stories)
+## 15. Acceptance criteria (mapped to stories)
 
 ### Data model & lists
 - **US-023** Create List: `create_list/2` creates under a project; duplicate slug within a
   service rejected (`uq_lists_project_slug`); created list ready for attributes.
 - **US-024** List settings: name/slug/description persist; `opt_in_mode` selectable (double for
-  newsletter, single for waitlist/contact); `preference_defaults` stored.
+  newsletter, single for waitlist/contact); `settings.contact_prefs` + `available_channels`
+  list-default baseline stored (D10).
 - **US-025** Archive list: archived list's public endpoint stops accepting signups (returns
   generic 202, creates nothing); data retained read-only; restorable.
 - **US-036 / US-098** Provision via management API / TF: idempotent create + in-place update;
@@ -560,10 +670,12 @@ use cases — it is out of scope for Chunk B either way.
   form, **retains stored jsonb values** on historical signups.
 
 ### Signups & opt-in (US-037–US-045, US-049, US-100)
-- **US-037** `POST /public/lists/:public_slug/signups` accepts unauthenticated signups; generic
-  acknowledgment; double-optin lists say "check email".
-- **US-038/035** form fields rendered from declared attributes (renderer is Chunk C; backend
-  exposes attribute set + validation contract).
+- **US-037** `POST /public/services/:svc/lists/:list/signups` (or `/public/lists/:public_slug/...`)
+  accepts unauthenticated signups; generic **202** acknowledgment (D2); double-opt-in lists say
+  "check email". Only 4xx for malformed email / unknown slug.
+- **US-038/035** form fields rendered from declared attributes; the **public manifest READ**
+  (`GET /public/services/:svc/lists/:list`, D1) returns the attribute schema the widget renders
+  from (renderer itself is Chunk C).
 - **US-039** server-side validation authoritative; unknown fields dropped; payload size bounded.
 - **US-040** double opt-in: new signup `pending_optin` + token email; confirm → `subscribed`;
   invalid/expired/reused token fails safely, can request new (US-041).
@@ -582,6 +694,18 @@ use cases — it is out of scope for Chunk B either way.
 - **US-088** legacy `POST /inquiries` stores inquiry exactly as before **and** dual-writes a
   signup to the default list; inquiry never lost on dual-write failure.
 
+### Authed API surface — admin + self-service (D1)
+- **Admin reads (feeds Chunk D):** `GET /organizations/:org_id/projects/:project_id/lists` and
+  `.../lists/:id/signups` (offset/limit pagination D6, status + attribute-value filtering via the
+  GIN index D4, streamed CSV export D5), gated by `Authz.check_permission(uid,"project",...,
+  "list:view"|"signup:list")`.
+- **US-061** `GET /me/signups` returns all signups reconciled to the user (cross-service),
+  including `contact_prefs`/`pause_until` (D10) for the Preference Center to read/edit.
+- **US-042 (authed mirror)** `DELETE /me/signups/:id` unsubscribes; verifies the signup's
+  `user_id` == caller (no cross-account delete).
+- **US-065** `GET /me/inquiries` returns inquiry-kind signups UNIONed with legacy `inquiries`
+  (changelog 025) rows by email, tagged `source:"legacy"` (D9).
+
 ### Services & branding (US-013–US-022)
 - A Service = a `projects` row (existing). Chunk B adds only what lists need: lists are
   queryable per service (US-015/020 reads), archived services stop accepting signups (US-021),
@@ -590,7 +714,7 @@ use cases — it is out of scope for Chunk B either way.
 
 ---
 
-## 15. Out of scope (later milestones)
+## 16. Out of scope (later milestones)
 
 - Multi-channel senders: SMS (US-058), push (US-059), webhook/physical mail (US-060) — post-M5.
 - Campaign authoring / broadcast sending ("beyond listmonk").
@@ -603,26 +727,19 @@ use cases — it is out of scope for Chunk B either way.
 
 ---
 
-## 16. Open questions / ambiguities (surfaced for team-lead)
+## 17. Resolved decisions (was: open questions)
 
-- **A. Public-list identity.** The plan/stories specify a slug path
-  `services/:svc/lists/:list`, but `(project.slug, list.slug)` is **not globally unique** (two
-  orgs can both have a `noizu` service + `waitlist` list). This PRD resolves it with a
-  globally-unique `lists.public_slug` as the canonical public key (widget-friendly), keeping
-  the slug path as a best-effort alias. **Confirm this is acceptable** vs. requiring the org in
-  the path (`/public/orgs/:org/…`) or using the list UUID.
-- **B. List write permissions.** Seed member policy lacks `list:create/update/archive`. Decide:
-  admin/owner-only for list writes, or extend the member/editor seed policy (one-line changelog
-  add). No impact on Chunk B's system-level management API; affects Chunk D authed console.
-- **C. Re-subscription of an `unsubscribed` row.** This PRD does **not** silently flip an
-  explicit opt-out back to subscribed on a bare repeat POST; it requires a fresh confirmation
-  when the list is double-opt-in (and stays unsubscribed for single-opt-in until an explicit
-  re-subscribe path exists). Confirm this stricter reading of US-043 AC2 is intended.
-- **D. `forms` system disposition.** Existing `forms`/`form_versions`/`form_submissions` +
-  `FormSubmissionController` + `Management.FormsController` overlap with the List domain. Keep,
-  repurpose, or deprecate? Out of scope for Chunk B but affects cleanup.
-- **E. Default inquiry list.** Dual-write (US-088) needs a seeded default list
-  (`FORYOU_DEFAULT_INQUIRY_LIST_ID`). Confirm which org/project it lives under and that TF
-  provisions it before the dual-write is enabled.
-- **F. Rate-limit value.** Proposed `signup: {5, 60_000}` per IP. Confirm, and whether resends
-  need a tighter per-email throttle in addition.
+All items below are **resolved** in `DECISIONS.md` (authoritative on any conflict). Cross-chunk
+decisions D1, D2, D4, D5, D6, D9, D10, D12 are folded into the spec above; D13–D17 resolve the
+items this PRD originally surfaced:
+
+- **A. Public-list identity → D13.** Global `lists.public_slug` is the **canonical** public key;
+  the `services/:svc/lists/:list` slug path is an alias. (Spec already supports both — §3.1, §7.)
+- **B. List write permissions → D14.** For M1, list/attribute writes are **admin/owner-only**;
+  the seed policy is unchanged. (Reads remain member/viewer-accessible via `*:view`/`*:list`.)
+- **C. Re-subscription of an `unsubscribed` row → D15.** **No silent flip.** An explicit opt-out
+  is only re-activated via a fresh confirmation (double opt-in) — matches the spec in §5.2.
+- **D. `forms` system disposition → deferred.** Out of scope for Chunk B (see §13); keep as-is.
+- **E. Default inquiry list → D16.** The dual-write default list is **TF-provisioned** and
+  referenced via `FORYOU_DEFAULT_INQUIRY_LIST_ID` (§11). Provision it before enabling the dual-write.
+- **F. Rate-limit value → D17.** `signup: {5, 60_000}` per IP (5/min), as proposed in §7.1.

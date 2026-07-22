@@ -19,6 +19,15 @@ defmodule ForyouWeb.InquiryController do
 
     case Inquiries.create_inquiry(attrs) do
       {:ok, inquiry} ->
+        # Dual-write a signup to the default inquiry list (US-088/D16). Best-effort:
+        # the inquiry is the source of truth and is already committed here.
+        Foryou.Workers.InquirySignupWorker.enqueue(%{
+          email: inquiry.email,
+          name: inquiry.name,
+          message: inquiry.message,
+          source: inquiry.source
+        })
+
         conn
         |> put_status(:created)
         |> json(%{inquiry: %{id: inquiry.id, status: inquiry.status}})

@@ -31,6 +31,16 @@ defmodule ForyouWeb.Router do
     plug ForyouWeb.Plugs.RateLimit, action: :inquiry
   end
 
+  pipeline :rate_limited_signup do
+    plug ForyouWeb.Plugs.RateLimit, action: :signup
+  end
+
+  # Public signup confirm/unsubscribe render HTML pages, so they accept html
+  # rather than forcing json (which would 406 a browser GET).
+  pipeline :public_browser do
+    plug :accepts, ["html"]
+  end
+
   pipeline :org_viewer do
     plug ForyouWeb.Plugs.RequireRole, role: "viewer"
   end
@@ -75,6 +85,29 @@ defmodule ForyouWeb.Router do
     pipe_through [:api, :rate_limited_inquiry]
     post "/inquiries", InquiryController, :create
     post "/forms/:form_id/submit", FormSubmissionController, :submit
+  end
+
+  # Public signup surface — unauthenticated, CORS-open (endpoint-global plug),
+  # rate-limited 5/60s per IP (D17), no-leak generic 202 (D2).
+  scope "/api/v1/public", ForyouWeb do
+    pipe_through [:api, :rate_limited_signup]
+    post "/lists/:public_slug/signups", PublicSignupController, :create
+    post "/services/:service_slug/lists/:list_slug/signups", PublicSignupController, :create_alias
+    post "/signups/resend", PublicSignupController, :resend
+  end
+
+  # Public manifest reads (widget fetches the attribute schema at runtime).
+  scope "/api/v1/public", ForyouWeb do
+    pipe_through [:api]
+    get "/lists/:public_slug", PublicSignupController, :manifest
+    get "/services/:service_slug/lists/:list_slug", PublicSignupController, :manifest
+  end
+
+  # Public token confirm/unsubscribe (HTML, no login).
+  scope "/api/v1/public", ForyouWeb do
+    pipe_through [:public_browser]
+    get "/signups/confirm", PublicSignupController, :confirm
+    get "/signups/unsubscribe", PublicSignupController, :unsubscribe
   end
 
   scope "/api/v1", ForyouWeb do
@@ -133,6 +166,15 @@ defmodule ForyouWeb.Router do
     resources "/forms", Management.FormsController, except: [:new, :edit]
     get "/forms/:id/versions", Management.FormsController, :versions
     get "/forms/:id/submissions", Management.FormsController, :submissions
+
+    # Lists (Terraform provider + listmonk backfill). System-level, no PBAC.
+    resources "/lists", Management.ListsController, except: [:new, :edit]
+    get "/lists/:id/signups", Management.ListsController, :signups
+    post "/lists/:id/signups/import", Management.ListsController, :import_signups
+    get "/lists/:id/attributes", Management.ListAttributesController, :index
+    post "/lists/:id/attributes", Management.ListAttributesController, :create
+    patch "/lists/:id/attributes/:attribute_id", Management.ListAttributesController, :update
+    delete "/lists/:id/attributes/:attribute_id", Management.ListAttributesController, :delete
   end
 
   # Media serving (public/conditional auth — checked inline in controller)
@@ -179,6 +221,21 @@ defmodule ForyouWeb.Router do
     get "/policies/me", PolicyController, :my_policies
     post "/policies/check", PolicyController, :check
     post "/policies/explain", PolicyController, :explain
+  end
+
+  # Lists domain: authed project-scoped reads (admin console) + self-service.
+  # Permissions inherit through the parent Service(project); writes go through
+  # the system-level management API (TF), not here.
+  scope "/api/v1", ForyouWeb do
+    pipe_through [:api, :authenticated]
+
+    get "/organizations/:org_id/projects/:project_id/lists", ListsController, :index
+    get "/lists/:id", ListsController, :show
+    get "/lists/:id/signups", ListsController, :signups
+
+    get "/me/signups", MeController, :signups
+    get "/me/inquiries", MeController, :inquiries
+    delete "/me/signups/:id", MeController, :delete_signup
   end
 
   # PBAC v2: Projects (authenticated, permission-checked per action)

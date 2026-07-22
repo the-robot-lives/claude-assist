@@ -14,6 +14,18 @@ func parseJSONMap(s string) (map[string]any, bool) {
 	return m, true
 }
 
+// parseJSONArray decodes a JSON array string; returns ok=false on empty/invalid.
+func parseJSONArray(s string) ([]any, bool) {
+	if s == "" {
+		return nil, false
+	}
+	var a []any
+	if err := json.Unmarshal([]byte(s), &a); err != nil {
+		return nil, false
+	}
+	return a, true
+}
+
 // encodeJSON marshals v; empty string on error/nil.
 func encodeJSON(v any) string {
 	if v == nil {

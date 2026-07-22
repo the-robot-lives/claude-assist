@@ -23,6 +23,7 @@ defmodule Foryou.Auth.SSO do
     case find_user_by_email(email) do
       {:ok, user} ->
         ensure_sso_credential(user, provider_ref, provider_id, provider_type, attrs, context)
+        Foryou.Workers.SignupReconcileWorker.enqueue(user.id, email)
         create_sso_session(user, provider_type, context)
 
       :not_found ->
@@ -112,6 +113,8 @@ defmodule Foryou.Auth.SSO do
     }
 
     {:ok, user} = Foryou.Repo.insert(user_schema, on_conflict: :nothing, conflict_target: :email)
+
+    Foryou.Workers.SignupReconcileWorker.enqueue(user.id, email)
 
     Foryou.Repo.insert!(%CredentialSchema{
       user_id: user.id,

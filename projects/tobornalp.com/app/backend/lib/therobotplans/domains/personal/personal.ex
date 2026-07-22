@@ -98,8 +98,9 @@ defmodule Therobotplans.Domains.Personal do
   defp filter_tags(q, nil), do: q
   defp filter_tags(q, []), do: q
   # AND-semantics: the item's tags array must contain ALL requested tags (@>).
+  # Explicit array type on the param so Postgres compares text[] @> text[].
   defp filter_tags(q, tags) when is_list(tags),
-    do: where(q, [i], fragment("? @> ?", i.tags, ^normalize_tags(tags)))
+    do: where(q, [i], fragment("? @> ?", i.tags, type(^normalize_tags(tags), {:array, :string})))
 
   defp filter_tags(q, tag), do: filter_tags(q, [tag])
 

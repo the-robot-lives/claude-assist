@@ -99,6 +99,14 @@ defmodule TherobotplansWeb.Router do
             TherobotplansWeb.MCPConfig.plug_opts(Therobotplans.Domains.Goals.MCP)
   end
 
+  scope "/", host: "personal." do
+    pipe_through [:api]
+
+    forward "/mcp",
+            Noizu.MCP.Transport.StreamableHTTP.Plug,
+            TherobotplansWeb.MCPConfig.plug_opts(Therobotplans.Domains.Personal.MCP)
+  end
+
   scope "/api/v1", TherobotplansWeb do
     pipe_through [:api, :rate_limited_auth]
     post "/auth/register", AuthController, :register
@@ -209,6 +217,7 @@ defmodule TherobotplansWeb.Router do
       post "/archive", ProjectController, :archive
       post "/unarchive", ProjectController, :unarchive
       post "/leave", ProjectController, :leave
+      post "/provision", ProjectController, :provision
       get "/members", ProjectController, :members
       post "/members", ProjectController, :add_member
       patch "/members/:member_user_id", ProjectController, :update_member
@@ -232,10 +241,31 @@ defmodule TherobotplansWeb.Router do
     get "/notifications/count", NotificationController, :count
     post "/notifications/mark_read", NotificationController, :mark_read
 
+    # Personal items (per-user lightweight tasks, tags, recurrence).
+    scope "/personal" do
+      get "/items", PersonalItemController, :index
+      get "/tags", PersonalItemController, :tags
+      post "/items", PersonalItemController, :create
+      patch "/items/:id", PersonalItemController, :update
+      post "/items/:id/complete", PersonalItemController, :complete
+      post "/items/:id/recurrence", PersonalItemController, :set_recurrence
+      delete "/items/:id/recurrence", PersonalItemController, :clear_recurrence
+    end
+
     # OKRs (objectives + key results + check-ins).
-    resources "/objectives", OkrController, only: [:index, :create, :show, :update]
+    # ORDER MATTERS: /objectives/tree MUST precede the resources block, else
+    # "tree" is captured as :id.
+    get "/objectives/tree", OkrController, :tree
+    resources "/objectives", OkrController, only: [:index, :create, :show, :update, :delete]
+    post "/objectives/:id/children", OkrController, :create_child
     post "/objectives/:id/key_results", OkrController, :create_key_result
     post "/objectives/:id/checkins", OkrController, :create_checkin
+    get "/objectives/:id/checkins", OkrController, :list_checkins
+    patch "/key_results/:id", OkrController, :update_key_result
+    delete "/key_results/:id", OkrController, :delete_key_result
+    post "/key_results/:id/items", OkrController, :link_item
+    delete "/key_results/:id/items/:item_id", OkrController, :unlink_item
+    delete "/checkins/:id", OkrController, :delete_checkin
   end
 
   # PBAC v2: Custom Roles (authenticated, permission-checked per action)
@@ -267,8 +297,10 @@ defmodule TherobotplansWeb.Router do
   end
 
   # Root MCP aggregator — bare host `/mcp`. Must come after the subdomain
-  # scopes so the per-domain hosts win for those hosts.
-  scope "/", TherobotplansWeb do
+  # scopes so the per-domain hosts win for those hosts. No alias prefix here:
+  # the forward target is the fully-qualified Noizu.MCP plug, so a scope alias
+  # would corrupt it to TherobotplansWeb.Noizu.MCP.* (mirrors the host scopes).
+  scope "/" do
     pipe_through [:api]
 
     forward "/mcp",

@@ -30,6 +30,12 @@ defmodule Therobotplans.MCPServers do
       label: "Goals",
       required: false,
       desc: "OKRs — objectives, key results, check-ins"
+    },
+    %{
+      id: "personal",
+      label: "Personal",
+      required: false,
+      desc: "Personal todos — a user's private todo list (due dates, tags, recurrence)"
     }
   ]
 
@@ -37,7 +43,8 @@ defmodule Therobotplans.MCPServers do
     "projects" => Therobotplans.MCP.Projects,
     "items" => Therobotplans.Domains.Items.MCP,
     "notifications" => Therobotplans.Domains.Notifications.MCP,
-    "goals" => Therobotplans.Domains.Goals.MCP
+    "goals" => Therobotplans.Domains.Goals.MCP,
+    "personal" => Therobotplans.Domains.Personal.MCP
   }
 
   @doc "All configured MCP servers."

@@ -6,8 +6,6 @@ defmodule Therobotplans.Projects do
   use Noizu.Repo
   def_repo(entity: Entity)
 
-  import Ecto.Query
-
   # Board methodology to materialize per project methodology. `custom` falls
   # through to the kanban default stage set (the escape hatch — user edits
   # stages afterward via the existing stage CRUD).
@@ -15,7 +13,7 @@ defmodule Therobotplans.Projects do
   defp board_methodology(m) when m in ~w(kanban scrum waterfall spiral), do: m
   defp board_methodology(_), do: "kanban"
 
-  def create_with_owner(attrs, user_id, context \\ Noizu.Context.system()) do
+  def create_with_owner(attrs, user_id, _context \\ Noizu.Context.system()) do
     Therobotplans.Repo.transaction(fn ->
       with {:ok, project} <-
              %Schema{}

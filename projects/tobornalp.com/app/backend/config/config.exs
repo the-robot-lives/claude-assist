@@ -86,4 +86,15 @@ config :therobotplans, :feature_flags, %{
 # i18n
 config :therobotplans, TherobotplansWeb.Gettext, default_locale: "en"
 
+# Time zone database (named-zone bucketing for personal-item due dates).
+config :elixir, :time_zone_database, Tz.TimeZoneDatabase
+
+# Today view providers — registered inert; the aggregator lands in chunk E.
+config :therobotplans, Therobotplans.Today,
+  providers: [
+    Therobotplans.Domains.Items.ProjectsTodayProvider,
+    Therobotplans.Domains.Personal.TodayProvider,
+    Therobotplans.Domains.Goals.TodayProvider
+  ]
+
 import_config "#{config_env()}.exs"

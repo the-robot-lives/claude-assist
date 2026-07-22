@@ -83,3 +83,9 @@ databaseChangeLog:
   - include:
       file: 027-forms.yaml
       relativeToChangelogFile: true
+  - include:
+      file: 028-lists.yaml
+      relativeToChangelogFile: true
+  - include:
+      file: 029-signups.yaml
+      relativeToChangelogFile: true

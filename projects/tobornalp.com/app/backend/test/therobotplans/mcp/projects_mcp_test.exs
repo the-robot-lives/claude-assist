@@ -1,5 +1,7 @@
 defmodule Therobotplans.MCP.ProjectsMCPTest do
   use TherobotplansWeb.ConnCase, async: false
+  # ConnCase does not pull in verified routes; this module uses the ~p sigil.
+  use TherobotplansWeb, :verified_routes
 
   @moduledoc """
   Phase 0 smoke test — proves the MCP loop end to end:
@@ -18,16 +20,18 @@ defmodule Therobotplans.MCP.ProjectsMCPTest do
   describe "MCP API keys" do
     test "generate + verify round-trips a raw key", %{conn: _} do
       %{user: user} = setup_user_and_token()
+      user_id = user.id
       {:ok, key, raw_key} = MCPApiKeys.generate_api_key(user.id, "test")
       assert key.key_prefix == String.slice(raw_key, 0, 8)
-      assert %{user_id: ^user.id} = MCPApiKeys.verify_api_key(raw_key)
+      assert %{user_id: ^user_id} = MCPApiKeys.verify_api_key(raw_key)
       assert MCPApiKeys.verify_api_key("not-a-real-key") == nil
     end
 
     test "a revoked key no longer verifies", %{conn: _} do
       %{user: user} = setup_user_and_token()
       {:ok, key, raw_key} = MCPApiKeys.generate_api_key(user.id)
-      assert %{id: ^key.id} = MCPApiKeys.verify_api_key(raw_key)
+      key_id = key.id
+      assert %{id: ^key_id} = MCPApiKeys.verify_api_key(raw_key)
       {:ok, _} = MCPApiKeys.revoke(key.id)
       assert MCPApiKeys.verify_api_key(raw_key) == nil
     end
@@ -60,16 +64,26 @@ defmodule Therobotplans.MCP.ProjectsMCPTest do
       assert "ToolSummary" in names
     end
 
-    test "ToolCall invokes the hidden Project.Overview tool" do
-      alias Therobotplans.Tools.{ToolCall, Catalog}
+    test "ToolCall guards an MCP-visible tool — Project.Overview must be called directly" do
+      alias Therobotplans.Tools.ToolCall
 
       ctx = %Noizu.MCP.Ctx{server: Therobotplans.MCP.Projects}
       {:ok, result} = ToolCall.call(%{"tool" => "Project.Overview", "arguments" => %{}}, ctx)
 
-      assert result.domain == "Projects"
-      assert %{"crud" => _} = result.tools
-      # Overview counts active projects from the DB (sandbox → 0 here)
-      assert is_integer(result.active_projects)
+      # Project.Overview is registered without `hidden: true`, so it is
+      # MCP-visible. ToolCall proxies only hidden/discoverable tools; for a
+      # visible tool it returns the "call it directly" guard rather than
+      # invoking it. (See Catalog.call_hidden_tool / ToolCall.call.)
+      assert result.status == "mcp"
+      assert result.message =~ "Project.Overview"
+    end
+
+    test "ToolCall reports an unknown tool as an error" do
+      alias Therobotplans.Tools.ToolCall
+
+      ctx = %Noizu.MCP.Ctx{server: Therobotplans.MCP.Projects}
+      assert {:error, _reason} =
+               ToolCall.call(%{"tool" => "Project.NoSuchTool", "arguments" => %{}}, ctx)
     end
   end
 end

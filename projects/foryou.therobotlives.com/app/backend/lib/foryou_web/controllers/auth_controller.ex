@@ -34,6 +34,8 @@ defmodule ForyouWeb.AuthController do
       Organizations.increment_invite_uses(invite)
       Foryou.Auth.TokenStore.store_refresh_jti(refresh_jti)
       Foryou.Events.dispatch(:user_registered, %{user_id: user.id, email: user.email})
+      # Reconcile any prior anonymous signups made with this email (US-050).
+      user.email && Foryou.Workers.SignupReconcileWorker.enqueue(user.id, user.email)
 
       orgs = Organizations.list_user_organizations(user.id)
 

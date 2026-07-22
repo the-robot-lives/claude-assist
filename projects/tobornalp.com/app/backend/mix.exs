@@ -37,6 +37,10 @@ defmodule Therobotplans.MixProject do
       {:telemetry_poller, "~> 1.0"},
       {:gettext, "~> 0.26"},
       {:jason, "~> 1.2"},
+      # Pure-Elixir tz database (Calendar.TimeZoneDatabase) for named-zone
+      # bucketing. Chosen over :tzdata, whose hackney/idna-6.x stack is
+      # incompatible with this app's req/mint/finch tree (idna 7.x).
+      {:tz, "~> 0.28"},
       {:dns_cluster, "~> 0.2.0"},
       {:bandit, "~> 1.5"},
       {:guardian, "~> 2.3"},
@@ -107,7 +111,7 @@ defmodule Therobotplans.MixProject do
       setup: ["deps.get", "ecto.setup"],
       "ecto.setup": ["ecto.create", "ecto.migrate", "run priv/repo/seeds.exs"],
       "ecto.reset": ["ecto.drop", "ecto.setup"],
-      test: ["ecto.create --quiet", "liquibase.update --quiet", "test"]
+      test: ["ecto.create --quiet", "liquibase.update --quiet", "ecto.migrate --quiet", "test"]
     ]
   end
 end

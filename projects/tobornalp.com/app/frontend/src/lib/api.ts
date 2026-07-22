@@ -523,8 +523,18 @@ export const api = {
   getObjective(orgId: string, id: string) {
     return request<{ objective: ObjectiveDetail }>(`/api/v1/organizations/${orgId}/objectives/${id}`);
   },
+  // Nested forest with rolled-up progress (US-069 tree endpoint).
+  getObjectiveTree(orgId: string) {
+    return request<{ tree: ObjectiveTreeNode[] }>(`/api/v1/organizations/${orgId}/objectives/tree`);
+  },
   createObjective(orgId: string, data: Partial<Objective>) {
     return request<{ objective: Objective }>(`/api/v1/organizations/${orgId}/objectives`, {
+      method: "POST",
+      body: JSON.stringify({ objective: data }),
+    });
+  },
+  createChildObjective(orgId: string, parentId: string, data: Partial<Objective>) {
+    return request<{ objective: Objective }>(`/api/v1/organizations/${orgId}/objectives/${parentId}/children`, {
       method: "POST",
       body: JSON.stringify({ objective: data }),
     });
@@ -535,17 +545,44 @@ export const api = {
       body: JSON.stringify({ objective: data }),
     });
   },
+  deleteObjective(orgId: string, id: string) {
+    return request<void>(`/api/v1/organizations/${orgId}/objectives/${id}`, { method: "DELETE" });
+  },
   createKeyResult(orgId: string, objectiveId: string, data: Partial<KeyResult>) {
     return request<{ key_result: KeyResult }>(`/api/v1/organizations/${orgId}/objectives/${objectiveId}/key_results`, {
       method: "POST",
       body: JSON.stringify({ key_result: data }),
     });
   },
+  updateKeyResult(orgId: string, krId: string, data: Partial<KeyResult>) {
+    return request<{ key_result: KeyResult }>(`/api/v1/organizations/${orgId}/key_results/${krId}`, {
+      method: "PATCH",
+      body: JSON.stringify({ key_result: data }),
+    });
+  },
+  deleteKeyResult(orgId: string, krId: string) {
+    return request<void>(`/api/v1/organizations/${orgId}/key_results/${krId}`, { method: "DELETE" });
+  },
+  linkKrItem(orgId: string, krId: string, itemId: string, weight?: number | string) {
+    return request<{ link: KrItemLink }>(`/api/v1/organizations/${orgId}/key_results/${krId}/items`, {
+      method: "POST",
+      body: JSON.stringify({ item_id: itemId, weight }),
+    });
+  },
+  unlinkKrItem(orgId: string, krId: string, itemId: string) {
+    return request<void>(`/api/v1/organizations/${orgId}/key_results/${krId}/items/${itemId}`, { method: "DELETE" });
+  },
   createCheckin(orgId: string, objectiveId: string, data: { body: string; period?: string }) {
     return request<{ checkin: OkrCheckin }>(`/api/v1/organizations/${orgId}/objectives/${objectiveId}/checkins`, {
       method: "POST",
       body: JSON.stringify({ checkin: data }),
     });
+  },
+  listCheckins(orgId: string, objectiveId: string) {
+    return request<{ checkins: OkrCheckin[] }>(`/api/v1/organizations/${orgId}/objectives/${objectiveId}/checkins`);
+  },
+  deleteCheckin(orgId: string, checkinId: string) {
+    return request<void>(`/api/v1/organizations/${orgId}/checkins/${checkinId}`, { method: "DELETE" });
   },
 
   // ── Today (unified daily plan for the authenticated user) ──────────────────
@@ -556,6 +593,46 @@ export const api = {
         .map(([k, v]) => [k, String(v)]),
     ).toString();
     return request<{ plan: TodayPlan }>(`/api/v1/today${qs ? `?${qs}` : ""}`);
+  },
+
+  // ── Personal todos (WS-A US-011 — owner-scoped, project-less items) ─────────
+  listPersonalItems(orgId: string, params?: { group?: "grouped" | "all"; tag?: string; status?: string; q?: string; tz?: string }) {
+    const qs = new URLSearchParams(
+      Object.entries(params || {}).filter(([, v]) => v != null && v !== "") as [string, string][],
+    ).toString();
+    return request<PersonalListResponse>(`/api/v1/organizations/${orgId}/personal/items${qs ? `?${qs}` : ""}`);
+  },
+  personalTags(orgId: string) {
+    return request<{ tags: string[] }>(`/api/v1/organizations/${orgId}/personal/tags`);
+  },
+  createPersonalItem(orgId: string, data: PersonalItemInput) {
+    return request<{ item: PersonalItem }>(`/api/v1/organizations/${orgId}/personal/items`, {
+      method: "POST",
+      body: JSON.stringify({ item: data }),
+    });
+  },
+  updatePersonalItem(orgId: string, id: string, data: Partial<PersonalItemInput>) {
+    return request<{ item: PersonalItem }>(`/api/v1/organizations/${orgId}/personal/items/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify({ item: data }),
+    });
+  },
+  completePersonalItem(orgId: string, id: string, tz?: string) {
+    return request<{ completed: PersonalItem; next: PersonalItem | null }>(
+      `/api/v1/organizations/${orgId}/personal/items/${id}/complete`,
+      { method: "POST", body: JSON.stringify({ tz }) },
+    );
+  },
+  setRecurrence(orgId: string, id: string, recurrence: RecurrenceInput) {
+    return request<{ item: PersonalItem }>(`/api/v1/organizations/${orgId}/personal/items/${id}/recurrence`, {
+      method: "POST",
+      body: JSON.stringify({ recurrence }),
+    });
+  },
+  clearRecurrence(orgId: string, id: string) {
+    return request<{ item: PersonalItem }>(`/api/v1/organizations/${orgId}/personal/items/${id}/recurrence`, {
+      method: "DELETE",
+    });
   },
 };
 
@@ -604,6 +681,31 @@ export interface ItemQueue {
   config?: Record<string, unknown>;
   stages?: BoardStage[];
   iterations?: BoardIteration[];
+}
+
+// Compact ref to a project's provisioned default board (methodology + stage count).
+export interface ProjectBoardRef {
+  id: string;
+  slug: string;
+  methodology: string;
+  stage_count: number;
+}
+
+export type Methodology = "kanban" | "scrum" | "waterfall" | "spiral" | "custom";
+
+export interface Project {
+  id: string;
+  organization_id?: string;
+  name: string;
+  slug: string;
+  description?: string;
+  status?: string;
+  key_prefix?: string;
+  default_methodology?: string;
+  default_queue?: ProjectBoardRef | null;
+  archived_at?: string | null;
+  inserted_at?: string;
+  updated_at?: string;
 }
 
 export interface BoardStage {
@@ -664,6 +766,8 @@ export interface Notification {
   inserted_at?: string;
 }
 
+export type RollupStrategy = "weighted_avg" | "min_children" | "custom";
+
 export interface Objective {
   id: string;
   title: string;
@@ -673,13 +777,24 @@ export interface Objective {
   owner_id?: string;
   organization_id?: string;
   project_id?: string;
+  parent_id?: string | null;
   description?: string;
   progress?: string;
+  // ── US-069 hierarchy / rollup ──
+  rollup_strategy?: RollupStrategy;
+  weight?: string | number;
+  sort_order?: number;
 }
 
 export interface ObjectiveDetail extends Objective {
   key_results?: KeyResult[];
   checkins?: OkrCheckin[];
+}
+
+// A node in the objective forest (US-069 tree endpoint): objective fields + rolled-up
+// progress + nested children.
+export interface ObjectiveTreeNode extends Objective {
+  children: ObjectiveTreeNode[];
 }
 
 export interface KeyResult {
@@ -692,6 +807,15 @@ export interface KeyResult {
   status?: string;
   due_on?: string;
   unit?: string;
+  direction?: "higher_better" | "lower_better";
+  weight?: string | number;
+}
+
+export interface KrItemLink {
+  id: string;
+  key_result_id: string;
+  item_id: string;
+  weight?: string | number;
 }
 
 export interface OkrCheckin {
@@ -709,3 +833,71 @@ export interface TodayPlan {
   key_results?: Array<{ kr_id: string; objective_id: string; title: string; target: string | number; current: string | number }>;
   unread_notifications?: number | null;
 }
+
+// ── Personal todos (WS-A US-011) ──────────────────────────────────────────────
+export type PersonalBucket = "overdue" | "today" | "upcoming" | "someday";
+
+export interface RecurrenceRuleSummary {
+  rule_id: string;
+  freq: string;
+  interval: number;
+  by_day: string[];
+  by_month_day: number[];
+  until?: string | null;
+  count?: number | null;
+  timezone: string;
+  roll_on_skip: boolean;
+  recurrence_parent_id?: string | null;
+}
+
+export interface RecurrenceInput {
+  // Either a named preset (daily/weekdays/weekly/biweekly/monthly) or raw fields.
+  preset?: "daily" | "weekdays" | "weekly" | "biweekly" | "monthly" | "custom";
+  freq?: "daily" | "weekly" | "monthly";
+  interval?: number;
+  by_day?: string[];
+  by_month_day?: number[];
+  until?: string | null;
+  count?: number | null;
+  timezone?: string;
+}
+
+export interface PersonalItem {
+  id: string;
+  key?: string;
+  number?: number;
+  organization_id: string;
+  owner_user_id?: string;
+  project_id?: string | null;
+  title: string;
+  description?: string;
+  item_type: string;
+  status: string;
+  priority?: string;
+  rank?: string;
+  due_date?: string | null;
+  start_date?: string | null;
+  tags: string[];
+  recurrence?: RecurrenceRuleSummary | null;
+  overdue: boolean;
+  bucket: PersonalBucket;
+  inserted_at?: string;
+  updated_at?: string;
+}
+
+export interface PersonalItemInput {
+  title?: string;
+  description?: string;
+  item_type?: string;
+  status?: string;
+  priority?: string;
+  due_date?: string | null;
+  tags?: string[];
+  rank?: string;
+  recurrence?: RecurrenceInput;
+  tz?: string;
+}
+
+export type PersonalListResponse =
+  | { groups: Record<PersonalBucket, PersonalItem[]> }
+  | { items: PersonalItem[] };

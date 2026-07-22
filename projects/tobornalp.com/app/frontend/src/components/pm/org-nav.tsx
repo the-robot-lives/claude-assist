@@ -10,7 +10,9 @@ import { ReactNode } from "react";
 // `usePathname` highlights the active section.
 const SECTIONS = [
   { slug: "today", label: "Today" },
+  { slug: "projects", label: "Projects" },
   { slug: "items", label: "Items" },
+  { slug: "personal", label: "Personal" },
   { slug: "inbox", label: "Inbox" },
   { slug: "goals", label: "Goals" },
 ];
