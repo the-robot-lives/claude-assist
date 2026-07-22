@@ -8,3 +8,7 @@ static-site:
     - name: ops-registry-secret
   tls:
     secretName: therobotlearns-com-tls
+    infisical:
+      secretsPath: "/apps/tls/therobotlearns"
+      crtKey: THEROBOTLEARNS_TLS_CRT
+      keyKey: THEROBOTLEARNS_TLS_KEY
