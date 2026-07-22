@@ -66,11 +66,16 @@ export function ContactModal({ open, onClose }: ContactModalProps) {
 
     // Structured optional fields → foryou List Attributes (typed), keyed by attribute slug.
     // Only include non-empty values so the signup's attribs jsonb stays clean.
+    // The foryou public endpoint reads the identity email (and all attributes)
+    // from INSIDE `values`, keyed by attribute slug — a top-level `email` is
+    // dropped. So email/name go into `values`, not alongside it.
     const values: Record<string, string> = {};
     const setValue = (slug: string, raw: FormDataEntryValue | null) => {
       const v = typeof raw === "string" ? raw.trim() : "";
       if (v) values[slug] = v;
     };
+    if (email.trim()) values.email = email.trim();
+    if (name.trim()) values.name = name.trim();
     setValue("company", formData.get("company"));
     setValue("project_type", formData.get("project_type"));
     setValue("budget_range", formData.get("budget_range"));
@@ -84,9 +89,7 @@ export function ContactModal({ open, onClose }: ContactModalProps) {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            email,
-            name,
-            values,
+            values, // email + name + optional attrs, all keyed by slug
             source: "noizu-website-contact",
             company_website: companyWebsite, // honeypot — expected empty
           }),
