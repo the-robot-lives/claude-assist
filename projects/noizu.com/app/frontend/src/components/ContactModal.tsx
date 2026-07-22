@@ -7,6 +7,30 @@ interface ContactModalProps {
   onClose: () => void;
 }
 
+// Contact submissions flow to the foryou signup service (foryou.therobotlives.com).
+// TODO(provisioning): the foryou List with public_slug `noizu-contact` must be
+// provisioned (via foryou's management API / TF provider) with matching typed
+// attributes — company:string, project_type:select, budget_range:select,
+// timeline:select — before this goes live. Until then the public signup endpoint
+// still returns 202 and drops unknown attribs harmlessly.
+const FORYOU_BASE_URL = "https://foryou.therobotlives.com";
+const NOIZU_CONTACT_LIST_SLUG = "noizu-contact";
+
+const PROJECT_TYPE_OPTIONS = [
+  "Consulting",
+  "Product/App",
+  "AI/ML",
+  "Infrastructure",
+  "Collaboration",
+  "Other",
+];
+const BUDGET_RANGE_OPTIONS = ["<$10k", "$10–50k", "$50–100k", "$100k+", "Not sure"];
+const TIMELINE_OPTIONS = ["ASAP", "1–3 months", "3–6 months", "6+ months", "Exploring"];
+
+const fieldClass =
+  "w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white text-sm placeholder:text-zinc-500 focus:outline-none focus:border-gold-400/50 focus:ring-1 focus:ring-gold-400/25 transition-colors";
+const selectClass = `${fieldClass} appearance-none bg-no-repeat cursor-pointer`;
+
 export function ContactModal({ open, onClose }: ContactModalProps) {
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState("");
@@ -35,26 +59,41 @@ export function ContactModal({ open, onClose }: ContactModalProps) {
     if (!form) return;
 
     const formData = new FormData(form);
-    const email = formData.get("email") as string;
-    const name = formData.get("name") as string;
-    const inquiry = formData.get("inquiry") as string;
+    const email = (formData.get("email") as string) ?? "";
+    const name = (formData.get("name") as string) ?? "";
+    const inquiry = (formData.get("inquiry") as string) ?? "";
+    const companyWebsite = (formData.get("company_website") as string) ?? "";
+
+    // Structured optional fields → foryou List Attributes (typed), keyed by attribute slug.
+    // Only include non-empty values so the signup's attribs jsonb stays clean.
+    const values: Record<string, string> = {};
+    const setValue = (slug: string, raw: FormDataEntryValue | null) => {
+      const v = typeof raw === "string" ? raw.trim() : "";
+      if (v) values[slug] = v;
+    };
+    setValue("company", formData.get("company"));
+    setValue("project_type", formData.get("project_type"));
+    setValue("budget_range", formData.get("budget_range"));
+    setValue("timeline", formData.get("timeline"));
+    if (inquiry.trim()) values.inquiry = inquiry.trim();
 
     try {
-      const res = await fetch("https://listmonk.noizu.com/api/public/subscription", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email,
-          name,
-          list_uuids: ["b64a0218-37cd-40a0-a110-85aaf6cdad87"],
-          attribs: {
-            inquiry,
+      const res = await fetch(
+        `${FORYOU_BASE_URL}/api/v1/public/lists/${NOIZU_CONTACT_LIST_SLUG}/signups`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email,
+            name,
+            values,
             source: "noizu-website-contact",
-            submitted_at: new Date().toISOString(),
-          },
-        }),
-      });
+            company_website: companyWebsite, // honeypot — expected empty
+          }),
+        },
+      );
 
+      // The public signup endpoint always returns 202; treat any 2xx as success.
       if (!res.ok) {
         const data = await res.json().catch(() => null);
         throw new Error(data?.message || `Request failed (${res.status})`);
@@ -115,6 +154,15 @@ export function ContactModal({ open, onClose }: ContactModalProps) {
                 onSubmit={handleSubmit}
                 className="space-y-4"
               >
+                {/* Honeypot — hidden from users; bots that fill it are flagged by foryou. */}
+                <input
+                  type="text"
+                  name="company_website"
+                  tabIndex={-1}
+                  autoComplete="off"
+                  aria-hidden="true"
+                  className="hidden"
+                />
                 <div>
                   <label htmlFor="contact-name" className="block text-sm text-zinc-300 mb-1.5">Name</label>
                   <input
@@ -122,7 +170,7 @@ export function ContactModal({ open, onClose }: ContactModalProps) {
                     type="text"
                     name="name"
                     required
-                    className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white text-sm placeholder:text-zinc-500 focus:outline-none focus:border-gold-400/50 focus:ring-1 focus:ring-gold-400/25 transition-colors"
+                    className={fieldClass}
                     placeholder="Your name"
                   />
                 </div>
@@ -133,7 +181,7 @@ export function ContactModal({ open, onClose }: ContactModalProps) {
                     type="email"
                     name="email"
                     required
-                    className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white text-sm placeholder:text-zinc-500 focus:outline-none focus:border-gold-400/50 focus:ring-1 focus:ring-gold-400/25 transition-colors"
+                    className={fieldClass}
                     placeholder="you@example.com"
                   />
                 </div>
@@ -143,10 +191,66 @@ export function ContactModal({ open, onClose }: ContactModalProps) {
                     id="contact-inquiry"
                     name="inquiry"
                     rows={4}
-                    className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white text-sm placeholder:text-zinc-500 focus:outline-none focus:border-gold-400/50 focus:ring-1 focus:ring-gold-400/25 transition-colors resize-none"
+                    className={`${fieldClass} resize-none`}
                     placeholder="Tell me about your project..."
                   />
                 </div>
+
+                <div className="pt-1 border-t border-white/5">
+                  <p className="text-xs uppercase tracking-wide text-zinc-500 mt-4 mb-3">
+                    A few optional details
+                  </p>
+                  <div className="space-y-4">
+                    <div>
+                      <label htmlFor="contact-company" className="block text-sm text-zinc-300 mb-1.5">
+                        Company / Organization <span className="text-zinc-500">(optional)</span>
+                      </label>
+                      <input
+                        id="contact-company"
+                        type="text"
+                        name="company"
+                        className={fieldClass}
+                        placeholder="Acme Inc."
+                      />
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label htmlFor="contact-project-type" className="block text-sm text-zinc-300 mb-1.5">
+                          Project type <span className="text-zinc-500">(optional)</span>
+                        </label>
+                        <select id="contact-project-type" name="project_type" defaultValue="" className={selectClass}>
+                          <option value="" className="bg-zinc-900">Select…</option>
+                          {PROJECT_TYPE_OPTIONS.map((opt) => (
+                            <option key={opt} value={opt} className="bg-zinc-900">{opt}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label htmlFor="contact-budget" className="block text-sm text-zinc-300 mb-1.5">
+                          Budget range <span className="text-zinc-500">(optional)</span>
+                        </label>
+                        <select id="contact-budget" name="budget_range" defaultValue="" className={selectClass}>
+                          <option value="" className="bg-zinc-900">Select…</option>
+                          {BUDGET_RANGE_OPTIONS.map((opt) => (
+                            <option key={opt} value={opt} className="bg-zinc-900">{opt}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                    <div>
+                      <label htmlFor="contact-timeline" className="block text-sm text-zinc-300 mb-1.5">
+                        Timeline <span className="text-zinc-500">(optional)</span>
+                      </label>
+                      <select id="contact-timeline" name="timeline" defaultValue="" className={selectClass}>
+                        <option value="" className="bg-zinc-900">Select…</option>
+                        {TIMELINE_OPTIONS.map((opt) => (
+                          <option key={opt} value={opt} className="bg-zinc-900">{opt}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
                 {status === "error" && (
                   <p className="text-sm text-red-400">{errorMsg || "Something went wrong. Please try again."}</p>
                 )}
