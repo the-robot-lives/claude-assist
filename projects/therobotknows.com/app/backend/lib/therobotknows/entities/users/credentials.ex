@@ -6,6 +6,7 @@ defmodule Therobotknows.Users.Credentials do
   alias Therobotknows.Schema.Users.Credentials.UserCredential, as: Schema
   use Noizu.Repo
   import Ecto.Query, only: [from: 2]
+  require Logger
 
   def_repo(entity: Therobotknows.Users.Credentials.UserCredential)
 
@@ -75,30 +76,42 @@ defmodule Therobotknows.Users.Credentials do
           where: u.settings["email"] == ^email,
           select: u
 
-      case Therobotknows.Repo.all(q) do
-        [] ->
-          {:error, :invalid_credentials}
+      try do
+        case Therobotknows.Repo.all(q) do
+          [] ->
+            {:error, :invalid_credentials}
 
-        [credential] ->
-          if Bcrypt.verify_pass(password, credential.settings["password"]) do
-            with {:ok, credential_entity} <-
-                   Therobotknows.Users.Credentials.UserCredential.entity(credential.id, context),
-                 {:ok, user} <- Noizu.EntityReference.Protocol.entity(credential_entity.user, context) do
-              %Therobotknows.Users.Sessions.UserSession{
-                user: user,
-                credential: credential_entity,
-                status: :active,
-                details: %{},
-                time_stamp: Noizu.Entity.TimeStamp.now()
-              }
-              |> Therobotknows.EntityRepo.create(context, options)
+          [credential] ->
+            if Bcrypt.verify_pass(password, credential.settings["password"]) do
+              with {:ok, credential_entity} <-
+                     Therobotknows.Users.Credentials.UserCredential.entity(credential.id, context),
+                   {:ok, user} <- Noizu.EntityReference.Protocol.entity(credential_entity.user, context) do
+                %Therobotknows.Users.Sessions.UserSession{
+                  user: user,
+                  credential: credential_entity,
+                  status: :active,
+                  details: %{},
+                  time_stamp: Noizu.Entity.TimeStamp.now()
+                }
+                |> Therobotknows.EntityRepo.create(context, options)
+              end
+            else
+              {:error, {:login, :invalid_credentials}}
             end
-          else
-            {:error, {:login, :invalid_credentials}}
-          end
 
-        _error ->
-          {:error, {:login, :internal_error}}
+          _error ->
+            {:error, {:login, :internal_error}}
+        end
+      rescue
+        # Fail closed: any unexpected DB/query error (e.g. undefined_table on
+        # an unapplied Liquibase changelog) must never surface as a raised
+        # exception (500) from an auth endpoint — treat it as a failed login.
+        e ->
+          Logger.error(
+            "Credentials.authenticate query failed: #{Exception.format(:error, e, __STACKTRACE__)}"
+          )
+
+          {:error, :invalid_credentials}
       end
     end
   end

@@ -30,6 +30,7 @@ namespace TheRobotDraft.Uml
         private GameObject _toolPlaceGroup;
         private Text _toolPlaceText;
         private Text _toolModeChip;
+        private Text _toolCrumb;
 
         private static readonly Color ToolBarBg = new Color(0.075f, 0.085f, 0.105f, 1f);
         private static readonly Color ToolAccent = new Color(0.216f, 0.784f, 0.765f, 1f);      // cyan-teal
@@ -70,13 +71,15 @@ namespace TheRobotDraft.Uml
             bg.color = ToolBarBg;
             bg.raycastTarget = false;
 
-            // Centered segmented mode control.
+            // Segmented mode control, left-flowed after the breadcrumb (center-anchoring collides with
+            // the right cluster at narrow window widths).
             var segGo = new GameObject("ToolModes", typeof(RectTransform));
             var seg = (RectTransform)segGo.transform;
             seg.SetParent(bar, false);
-            seg.anchorMin = seg.anchorMax = new Vector2(0.5f, 0.5f);
-            seg.pivot = new Vector2(0.5f, 0.5f);
+            seg.anchorMin = seg.anchorMax = new Vector2(0f, 0.5f);
+            seg.pivot = new Vector2(0f, 0.5f);
             const float segBtnW = 88f, segBtnH = 24f;
+            seg.anchoredPosition = new Vector2(286f, 0f);
             seg.sizeDelta = new Vector2(segBtnW * 3f + 4f, segBtnH + 4f);
             var segBg = segGo.AddComponent<Image>();
             segBg.color = new Color(0.055f, 0.065f, 0.08f, 1f);
@@ -106,10 +109,10 @@ namespace TheRobotDraft.Uml
             _toolRelGroup = new GameObject("RelPicker", typeof(RectTransform));
             var relRt = (RectTransform)_toolRelGroup.transform;
             relRt.SetParent(bar, false);
-            relRt.anchorMin = relRt.anchorMax = new Vector2(0.5f, 0.5f);
+            relRt.anchorMin = relRt.anchorMax = new Vector2(0f, 0.5f);
             relRt.pivot = new Vector2(0f, 0.5f);
             relRt.sizeDelta = new Vector2(170f, 24f);
-            relRt.anchoredPosition = new Vector2(segBtnW * 1.5f + 14f, 0f);
+            relRt.anchoredPosition = new Vector2(286f + segBtnW * 3f + 14f, 0f);
             var relImg = _toolRelGroup.AddComponent<Image>();
             relImg.color = ToolIdleBg;
             var relBtn = _toolRelGroup.AddComponent<Button>();
@@ -127,10 +130,10 @@ namespace TheRobotDraft.Uml
             _toolPlaceGroup = new GameObject("PlaceKind", typeof(RectTransform));
             var plRt = (RectTransform)_toolPlaceGroup.transform;
             plRt.SetParent(bar, false);
-            plRt.anchorMin = plRt.anchorMax = new Vector2(0.5f, 0.5f);
+            plRt.anchorMin = plRt.anchorMax = new Vector2(0f, 0.5f);
             plRt.pivot = new Vector2(0f, 0.5f);
             plRt.sizeDelta = new Vector2(150f, 24f);
-            plRt.anchoredPosition = new Vector2(segBtnW * 1.5f + 14f, 0f);
+            plRt.anchoredPosition = new Vector2(286f + segBtnW * 3f + 14f, 0f);
             var plImg = _toolPlaceGroup.AddComponent<Image>();
             plImg.color = ToolIdleBg;
             var plBtn = _toolPlaceGroup.AddComponent<Button>();
@@ -144,16 +147,45 @@ namespace TheRobotDraft.Uml
             _toolPlaceText = MakeText(plRt, _toolPlaceKind + "  ▾", new Vector2(8f, 0f),
                 new Vector2(140f, 24f), 13, ToolAccent, TextAnchor.MiddleLeft);
 
-            // Mode chip on the right edge — the always-on textual echo of the active mode
-            // (state is never encoded by color alone).
-            _toolModeChip = MakeText(bar, "SELECT", Vector2.zero, new Vector2(150f, ContextToolbarHeight), 13,
+            // Breadcrumb on the left edge (model ▸ … ▸ active page), kept fresh by the status poll.
+            _toolCrumb = MakeText(bar, "", new Vector2(14f, 0f), new Vector2(264f, ContextToolbarHeight), 12,
+                new Color(0.55f, 0.61f, 0.69f, 1f), TextAnchor.MiddleLeft);
+
+            // Right cluster (compact): 2D · ⟲ · Cam · Layout ▾ · ⌘K · mode chip.
+            float rx = -8f;
+            _toolModeChip = MakeText(bar, "SELECT", Vector2.zero, new Vector2(170f, ContextToolbarHeight), 13,
                 ToolAccent, TextAnchor.MiddleRight);
             var chipRt = (RectTransform)_toolModeChip.transform;
             chipRt.anchorMin = chipRt.anchorMax = new Vector2(1f, 1f);
             chipRt.pivot = new Vector2(1f, 1f);
-            chipRt.anchoredPosition = new Vector2(-14f, 0f);
+            chipRt.anchoredPosition = new Vector2(rx, 0f);
+            rx -= 178f;
 
+            AddToolbarRightButton(bar, "⌘K", 40f, ref rx, () => ToggleCommandPalette());
+            AddToolbarRightButton(bar, "Layout ▾", 84f, ref rx, () =>
+                ShowCanvasLayoutMenu(new Vector2(Screen.width - 320f * ScaleFactor, (Screen.height / ScaleFactor - 64f) * ScaleFactor)));
+
+            BuildSelectionToolbar();
             RefreshToolBar();
+        }
+
+        private void AddToolbarRightButton(RectTransform bar, string label, float width, ref float rx, System.Action onClick)
+        {
+            var go = new GameObject("ToolbarBtn:" + label, typeof(RectTransform));
+            var rt = (RectTransform)go.transform;
+            rt.SetParent(bar, false);
+            rt.anchorMin = rt.anchorMax = new Vector2(1f, 0.5f);
+            rt.pivot = new Vector2(1f, 0.5f);
+            rt.sizeDelta = new Vector2(width, 24f);
+            rt.anchoredPosition = new Vector2(rx, 0f);
+            var img = go.AddComponent<Image>();
+            img.color = ToolIdleBg;
+            var btn = go.AddComponent<Button>();
+            btn.targetGraphic = img;
+            btn.onClick.AddListener(() => onClick());
+            MakeText(rt, label, Vector2.zero, new Vector2(width, 24f), 12,
+                new Color(0.72f, 0.77f, 0.83f, 1f), TextAnchor.MiddleCenter).raycastTarget = false;
+            rx -= width + 8f;
         }
 
         private static string RelLabel(EdgeKind kind) => kind switch
@@ -255,6 +287,169 @@ namespace TheRobotDraft.Uml
                 };
                 _toolModeChip.color = _toolMode == ToolMode.Connect ? ToolAccentWarm : ToolAccent;
             }
+        }
+
+        // ------------------------------------------------------------------ kind browser (⇧⌘K)
+
+        /// <summary>The full element-kind browser: search across every palette section, click a kind
+        /// to arm Place mode with it. The "More…" path when the quick chips aren't enough.</summary>
+        internal void ShowKindBrowser()
+        {
+            CloseMenu();
+            var backdrop = new GameObject("KindBrowserBackdrop", typeof(RectTransform));
+            var bdRt = (RectTransform)backdrop.transform;
+            bdRt.SetParent(_root, false);
+            Stretch(bdRt);
+            var bdImg = backdrop.AddComponent<Image>();
+            bdImg.color = new Color(0f, 0f, 0f, 0.35f);
+            var bdBtn = backdrop.AddComponent<Button>();
+            bdBtn.targetGraphic = bdImg;
+            bdBtn.onClick.AddListener(CloseMenu);
+            _menu = backdrop;
+
+            const float w = 480f, inputH = 40f, rowH = 26f;
+            const int maxRows = 16;
+            var panel = new GameObject("KindBrowser", typeof(RectTransform));
+            var rt = (RectTransform)panel.transform;
+            rt.SetParent(bdRt, false);
+            rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 1f);
+            rt.pivot = new Vector2(0.5f, 1f);
+            rt.sizeDelta = new Vector2(w, inputH + maxRows * rowH + 12f);
+            rt.anchoredPosition = new Vector2(0f, -100f);
+            panel.AddComponent<Image>().color = new Color(0.10f, 0.115f, 0.14f, 0.99f);
+
+            var inputGo = new GameObject("KindInput", typeof(RectTransform));
+            var inRt = (RectTransform)inputGo.transform;
+            inRt.SetParent(rt, false);
+            inRt.anchorMin = new Vector2(0f, 1f); inRt.anchorMax = new Vector2(1f, 1f);
+            inRt.pivot = new Vector2(0f, 1f);
+            inRt.sizeDelta = new Vector2(0f, inputH);
+            inputGo.AddComponent<Image>().color = new Color(0.075f, 0.085f, 0.105f, 1f);
+            var input = inputGo.AddComponent<InputField>();
+            var textComp = MakeText(inRt, "", new Vector2(12f, 0f), new Vector2(w - 24f, inputH), 16,
+                new Color(0.95f, 0.97f, 1f, 1f), TextAnchor.MiddleLeft);
+            textComp.raycastTarget = true;
+            var ph = MakeText(inRt, "Element kind…  (click to arm Place)", new Vector2(12f, 0f),
+                new Vector2(w - 24f, inputH), 16, new Color(0.45f, 0.5f, 0.58f, 1f), TextAnchor.MiddleLeft);
+            ph.fontStyle = FontStyle.Italic;
+            input.textComponent = textComp;
+            input.placeholder = ph;
+
+            var results = new GameObject("KindResults", typeof(RectTransform));
+            var resRt = (RectTransform)results.transform;
+            resRt.SetParent(rt, false);
+            resRt.anchorMin = new Vector2(0f, 1f); resRt.anchorMax = new Vector2(1f, 1f);
+            resRt.pivot = new Vector2(0f, 1f);
+            resRt.sizeDelta = new Vector2(0f, maxRows * rowH);
+            resRt.anchoredPosition = new Vector2(0f, -(inputH + 6f));
+
+            void Refresh(string filter)
+            {
+                for (int i = resRt.childCount - 1; i >= 0; i--) Destroy(resRt.GetChild(i).gameObject);
+                string f = (filter ?? "").Trim().ToLowerInvariant();
+                var seen = new HashSet<string>();
+                float ky = 0f; int count = 0;
+                foreach (var sec in PaletteSections())
+                    foreach (var it in sec.items)
+                    {
+                        if (count >= maxRows) break;
+                        if (f.Length > 0
+                            && it.label.ToLowerInvariant().IndexOf(f, System.StringComparison.Ordinal) < 0
+                            && sec.title.ToLowerInvariant().IndexOf(f, System.StringComparison.Ordinal) < 0) continue;
+                        if (!seen.Add(it.kind + "|" + it.label)) continue;
+                        var kind = it.kind;
+                        var item = new MenuItem(sec.title + " · " + it.label, true, () =>
+                        {
+                            CloseMenu();
+                            ArmPlaceKind(kind);
+                        });
+                        MakeMenuButton(resRt, item, new Vector2(6f, ky), new Vector2(w - 12f, rowH - 2f));
+                        ky -= rowH;
+                        count++;
+                    }
+            }
+            Refresh("");
+            input.onValueChanged.AddListener(Refresh);
+
+            if (UnityEngine.EventSystems.EventSystem.current != null)
+                UnityEngine.EventSystems.EventSystem.current.SetSelectedGameObject(inputGo);
+            input.ActivateInputField();
+        }
+
+        // ------------------------------------------------------------------ floating selection toolbar
+
+        private RectTransform _selToolbar;
+
+        /// <summary>The contextual toolbar that floats beside the selected node (demo parity):
+        /// Link (connect from here) · Edit · Frame · Del.</summary>
+        private void BuildSelectionToolbar()
+        {
+            var go = new GameObject("SelectionToolbar", typeof(RectTransform));
+            _selToolbar = (RectTransform)go.transform;
+            _selToolbar.SetParent(_root, false);
+            _selToolbar.anchorMin = _selToolbar.anchorMax = new Vector2(0f, 0f);
+            _selToolbar.pivot = new Vector2(0f, 0.5f);
+            _selToolbar.sizeDelta = new Vector2(4f + 4f * 48f, 30f);
+            go.AddComponent<Image>().color = new Color(0.10f, 0.115f, 0.14f, 0.96f);
+
+            float bx = 2f;
+            void Btn(string label, System.Action act)
+            {
+                var b = new GameObject("Sel:" + label, typeof(RectTransform));
+                var brt = (RectTransform)b.transform;
+                brt.SetParent(_selToolbar, false);
+                brt.anchorMin = brt.anchorMax = new Vector2(0f, 0.5f);
+                brt.pivot = new Vector2(0f, 0.5f);
+                brt.sizeDelta = new Vector2(46f, 26f);
+                brt.anchoredPosition = new Vector2(bx, 0f);
+                var img = b.AddComponent<Image>();
+                img.color = new Color(0.118f, 0.137f, 0.161f, 1f);
+                var btn = b.AddComponent<Button>();
+                btn.targetGraphic = img;
+                btn.onClick.AddListener(() => act());
+                MakeText(brt, label, Vector2.zero, brt.sizeDelta, 12,
+                    new Color(0.78f, 0.83f, 0.89f, 1f), TextAnchor.MiddleCenter).raycastTarget = false;
+                bx += 48f;
+            }
+            Btn("Link", () =>
+            {
+                if (!_selectedId.IsValid) return;
+                var source = _selectedId;
+                SetToolMode(ToolMode.Connect);
+                _toolConnectSource = source;
+                Flash("connect (" + RelLabel(_toolConnectKind) + "): source set — click the target");
+            });
+            Btn("Edit", () => { if (_selectedId.IsValid) OpenNodeEditModal(_selectedId, Input.mousePosition); });
+            Btn("Frame", () => { if (_selectedId.IsValid) FocusOnNode(_selectedId); });
+            Btn("Del", () => DeleteSelected());
+            _selToolbar.gameObject.SetActive(false);
+        }
+
+        /// <summary>Keep the floating toolbar glued beside the selected node (called every frame).</summary>
+        private void UpdateSelectionToolbar()
+        {
+            if (_selToolbar == null) return;
+            bool show = _selectedId.IsValid && _menu == null && _scene != null
+                && _scene.TryGetNode(_selectedId, out var node) && node != null;
+            if (!show)
+            {
+                if (_selToolbar.gameObject.activeSelf) _selToolbar.gameObject.SetActive(false);
+                return;
+            }
+            _scene.TryGetNode(_selectedId, out var n);
+            var cam = _scene.Rig != null ? _scene.Rig.Cam : null;
+            if (cam == null) { _selToolbar.gameObject.SetActive(false); return; }
+            // Anchor just past the node's actual right edge (collider extents), not a fixed offset,
+            // so wide nodes don't swallow the toolbar.
+            var col = n.GetComponentInChildren<BoxCollider>();
+            Vector3 edge = col != null
+                ? n.transform.position + n.transform.right * (col.bounds.extents.x + 0.15f)
+                : n.transform.position;
+            Vector3 sp = cam.WorldToScreenPoint(edge);
+            if (sp.z <= 0f) { _selToolbar.gameObject.SetActive(false); return; }
+            if (!_selToolbar.gameObject.activeSelf) _selToolbar.gameObject.SetActive(true);
+            float sf = Mathf.Max(ScaleFactor, 0.0001f);
+            _selToolbar.anchoredPosition = new Vector2(sp.x / sf + 10f, sp.y / sf + 14f);
         }
 
         /// <summary>V / C / P mode shortcuts (called from <c>Update</c> after the modifier shortcuts).</summary>

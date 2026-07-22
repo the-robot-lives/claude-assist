@@ -88,8 +88,10 @@ namespace TheRobotDraft.Uml
         // Code 5xx
         public const int CodeWizard = 500, CodeImport = 501, CodeLiquibase = 502, CodeDbConnect = 503;
         // Go 6xx
-        public const int GoFrameAll = 600, GoZUp = 601, GoZDown = 602, GoCycleNav = 603;
+        public const int GoFrameAll = 600, GoZUp = 601, GoZDown = 602, GoCycleNav = 603, GoTrace = 604;
         // View 7xx
         public const int ViewToggle2D = 700, ViewHelp = 701, ViewLlmSettings = 702, ViewVisionSettings = 703;
+        // Window / Help 8xx
+        public const int WindowFullScreen = 800, HelpSample = 801;
     }
 }

@@ -310,6 +310,19 @@ defmodule TherobotplansWeb.Router do
     get "/definitions/types", DefinitionController, :index_types
     post "/definitions/types", DefinitionController, :create_type
 
+    get "/definitions/fields/:id", DefinitionController, :show_field
+    put "/definitions/fields/:id", DefinitionController, :update_field
+    patch "/definitions/fields/:id", DefinitionController, :update_field
+    delete "/definitions/fields/:id", DefinitionController, :delete_field
+
+    get "/definitions/types/:id", DefinitionController, :show_type
+    put "/definitions/types/:id", DefinitionController, :update_type
+    patch "/definitions/types/:id", DefinitionController, :update_type
+    delete "/definitions/types/:id", DefinitionController, :delete_type
+
+    post "/definitions/types/:id/fields", DefinitionController, :add_field
+    delete "/definitions/types/:id/fields/:field_id", DefinitionController, :remove_field
+
     # Notifications inbox (recipient = authenticated user).
     get "/notifications", NotificationController, :index
     get "/notifications/count", NotificationController, :count

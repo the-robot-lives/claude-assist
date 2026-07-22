@@ -23,11 +23,11 @@ defmodule Codefresh.Application do
          repos: Application.fetch_env!(:codefresh, :ecto_repos), skip: skip_migrations?()},
         {DNSCluster, query: Application.get_env(:codefresh, :dns_cluster_query) || :ignore},
         {Phoenix.PubSub, name: Codefresh.PubSub},
-        Codefresh.Redis,
         Noizu.LiveViewEventServer,
         {Oban, Application.fetch_env!(:codefresh, Oban)}
       ] ++
         samly_children ++
+        maybe_redis() ++
         maybe_scheduler_ticker() ++
         [
           Codefresh.Events.WebhookHandler,
@@ -46,6 +46,14 @@ defmodule Codefresh.Application do
 
   defp skip_migrations?() do
     System.get_env("RELEASE_NAME") == nil
+  end
+
+  defp maybe_redis do
+    if Application.get_env(:codefresh, :token_store, :memory) == :redis do
+      [Codefresh.Redis]
+    else
+      []
+    end
   end
 
   # US-069: start the scheduled-run ticker outside of tests. Tests drive the

@@ -77,6 +77,12 @@ namespace TheRobotDraft.Uml
                 case NativeMacMenu.GoZUp: JumpCameraZ(1); break;
                 case NativeMacMenu.GoZDown: JumpCameraZ(-1); break;
                 case NativeMacMenu.GoCycleNav: CycleNavMode(false); break;
+                case NativeMacMenu.GoTrace:
+                    if (_selectedId.IsValid) ShowTraceView(_selectedId);
+                    else Flash("select an element to trace");
+                    break;
+                case NativeMacMenu.WindowFullScreen: Screen.fullScreen = !Screen.fullScreen; break;
+                case NativeMacMenu.HelpSample: ResetToSample(); break;
 
                 // ---------------------------------------------------------- View
                 case NativeMacMenu.ViewToggle2D: Toggle2DMode(); break;

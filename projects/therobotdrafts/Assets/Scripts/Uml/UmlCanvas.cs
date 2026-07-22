@@ -50,8 +50,8 @@ namespace TheRobotDraft.Uml
             ElementKind.Class, ElementKind.Interface, ElementKind.Enum, ElementKind.Struct,
         };
 
-        private static readonly Color EdgeColor = new Color(0.28f, 0.30f, 0.36f, 1f);
-        private static readonly Color EdgeSelectedColor = new Color(0.12f, 0.55f, 0.85f, 1f);
+        private static readonly Color EdgeColor = new Color(0.216f, 0.784f, 0.765f, 0.85f);
+        private static readonly Color EdgeSelectedColor = new Color(1f, 0.83f, 0.42f, 1f);
         private const float EdgePickPx = 14f; // screen-space pick radius for selecting a link
 
         private Canvas _canvas;
@@ -888,6 +888,9 @@ namespace TheRobotDraft.Uml
             // Keep the bottom status strip's mode/breadcrumb/selection echo current (4 Hz poll).
             RefreshStatusStrip();
 
+            // Keep the floating selection toolbar glued beside the selected node.
+            UpdateSelectionToolbar();
+
             // Run any commands clicked in the native macOS menu bar (queued on the AppKit thread).
             NativeMacMenu.Drain();
 
@@ -907,7 +910,8 @@ namespace TheRobotDraft.Uml
 
             bool ctrl = CtrlOrCmd();
             bool shift = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
-            if (ctrl && Input.GetKeyDown(KeyCode.K)) { ToggleCommandPalette(); return; }
+            if (ctrl && Input.GetKeyDown(KeyCode.K)) { if (shift) ShowKindBrowser(); else ToggleCommandPalette(); return; }
+            if (ctrl && Input.GetKeyDown(KeyCode.Slash)) { ShowHelp(); return; }
             if (ctrl && Input.GetKeyDown(KeyCode.S)) { if (shift) SaveDiagramAs(); else SaveDiagram(); return; }
             if (ctrl && Input.GetKeyDown(KeyCode.O)) { OpenDiagramFile(); return; }
             if (ctrl && Input.GetKeyDown(KeyCode.C)) { if (_selectedId.IsValid) CopyElement(_selectedId); return; }
@@ -1008,7 +1012,7 @@ namespace TheRobotDraft.Uml
         private UmlEdge3D _connectRubber;
         private ElementId _connectHover = ElementId.None;
         private const float RotateDegPerPx = 0.3f;
-        private static readonly Color ConnectColor = new Color(0.20f, 0.55f, 0.85f, 1f);
+        private static readonly Color ConnectColor = new Color(1f, 0.83f, 0.42f, 1f); // warm — connect is the warm-accent mode
 
         // Per-second rates for the 6-DOF camera keys (roll in deg/s, fly/strafe/rise in MoveLocal units/s).
         private const float RollDegPerSec = 90f;
@@ -1586,9 +1590,9 @@ namespace TheRobotDraft.Uml
             brt.SetParent(_root, false);
             brt.anchorMin = brt.anchorMax = new Vector2(1f, 1f);
             brt.pivot = new Vector2(1f, 1f);
-            brt.anchoredPosition = new Vector2(-8f, -72f);
+            brt.anchoredPosition = new Vector2(-8f, -142f); // below menu bar + toolbar + tabs + hint
             var bg = bar.AddComponent<Image>();
-            bg.color = new Color(0.12f, 0.13f, 0.16f, 0.92f);
+            bg.color = new Color(0.075f, 0.085f, 0.105f, 0.94f);
 
             var modes = new (NavMode m, Sprite icon)[]
             {
@@ -1657,8 +1661,8 @@ namespace TheRobotDraft.Uml
             foreach (var kv in _navButtons)
                 if (kv.Value != null)
                     kv.Value.color = kv.Key == _navMode
-                        ? new Color(0.20f, 0.55f, 0.85f, 1f)
-                        : new Color(0.20f, 0.23f, 0.28f, 1f);
+                        ? new Color(0.216f, 0.784f, 0.765f, 1f)
+                        : new Color(0.118f, 0.137f, 0.161f, 1f);
         }
 
         /// <summary>The per-frame screen-space mouse delta (Input has no UI delta outside the EventSystem). Computed
@@ -1750,10 +1754,10 @@ namespace TheRobotDraft.Uml
             rt.anchorMin = rt.anchorMax = new Vector2(0f, 0f);
             rt.pivot = new Vector2(0f, 0f);
             var img = _marquee.AddComponent<Image>();
-            img.color = new Color(0.12f, 0.55f, 0.85f, 0.18f);
+            img.color = new Color(0.216f, 0.784f, 0.765f, 0.14f);
             img.raycastTarget = false;
             var outline = _marquee.AddComponent<Outline>();
-            outline.effectColor = new Color(0.12f, 0.55f, 0.85f, 0.8f);
+            outline.effectColor = new Color(0.216f, 0.784f, 0.765f, 0.8f);
             outline.effectDistance = new Vector2(1f, 1f);
             UpdateMarquee(screenPos);
         }
@@ -2213,6 +2217,8 @@ namespace TheRobotDraft.Uml
                     items.Add(new MenuItem($"Add {k}", true, () => PromptAndAdd(_activePackage, kind, screenPos)));
                 }
                 items.Add(new MenuItem("Add Note", true, () => ShowNoteEditor(_activePackage, ElementId.None, screenPos)));
+                items.Add(MenuItem.Separator());
+                items.Add(new MenuItem("More kinds…  (Ctrl/Cmd+Shift+K)", true, () => { CloseMenu(); ShowKindBrowser(); }));
             }
             else
             {
@@ -2700,12 +2706,15 @@ namespace TheRobotDraft.Uml
                 || el.Kind == ElementKind.Junction || el.Kind == ElementKind.Terminate
                 || el.Kind == ElementKind.FlowFinal;
             bool eaNeutral = KindInfo.UsesEaNeutralNotation(el.Kind);
+            // Dark theme (nav-redesign): charcoal cards with a per-kind hue hint; notes keep their
+            // sticky-yellow identity (with dark text) as the one intentionally light surface.
+            var darkCard = new Color(0.110f, 0.145f, 0.161f, 1f);
             Color defaultFill =
                 note ? new Color(0.99f, 0.96f, 0.74f, 1f)
-                : darkFill ? new Color(0.20f, 0.21f, 0.25f, 1f)
-                : eaNeutral ? new Color(0.98f, 0.985f, 0.99f, 1f)
-                : Color.Lerp(hue, Color.white, 0.88f);
-            Color defaultText = note ? new Color(0.16f, 0.15f, 0.06f, 1f) : new Color(0.13f, 0.15f, 0.19f, 1f);
+                : darkFill ? new Color(0.16f, 0.17f, 0.20f, 1f)
+                : eaNeutral ? new Color(0.125f, 0.152f, 0.168f, 1f)
+                : Color.Lerp(hue, darkCard, 0.84f);
+            Color defaultText = note ? new Color(0.16f, 0.15f, 0.06f, 1f) : new Color(0.85f, 0.89f, 0.92f, 1f);
 
             var style = _styles.TryGetValue(el.Id, out var st) ? st : default;
             fill = style.Has ? style.Fill : defaultFill;
@@ -4752,7 +4761,7 @@ namespace TheRobotDraft.Uml
             _tabBar.sizeDelta = new Vector2(0f, 38f);
             _tabBar.anchoredPosition = new Vector2(0f, -32f - ContextToolbarHeight);
             var tabBg = tabGo.AddComponent<Image>();
-            tabBg.color = new Color(0.11f, 0.12f, 0.15f, 1f);
+            tabBg.color = new Color(0.086f, 0.098f, 0.113f, 1f);
             tabBg.raycastTarget = false;
 
             // Hint line under the tabs.
@@ -4774,26 +4783,12 @@ namespace TheRobotDraft.Uml
                          "right-click box → edit element · right-click canvas → add / paste · " +
                          "Ctrl/Cmd C/V copy · Ctrl/Cmd S save · Ctrl/Cmd Z undo";
 
-            // Help button (top-right): opens the controls / shortcuts reference.
-            var helpGo = new GameObject("HelpButton", typeof(RectTransform));
-            var helpRt = (RectTransform)helpGo.transform;
-            helpRt.SetParent(_root, false);
-            helpRt.anchorMin = helpRt.anchorMax = new Vector2(1f, 1f);
-            helpRt.pivot = new Vector2(1f, 1f);
-            helpRt.sizeDelta = new Vector2(64f, 28f);
-            helpRt.anchoredPosition = new Vector2(-8f, -6f);
-            var helpImg = helpGo.AddComponent<Image>();
-            helpImg.color = new Color(0.20f, 0.42f, 0.52f, 1f);
-            var helpBtn = helpGo.AddComponent<Button>();
-            helpBtn.targetGraphic = helpImg;
-            helpBtn.onClick.AddListener(() => ShowHelp());
-            MakeText(helpRt, "? Help", new Vector2(0f, 0f), new Vector2(64f, 28f), 14,
-                new Color(0.95f, 0.98f, 1f, 1f), TextAnchor.MiddleCenter).raycastTarget = false;
+            // The old "? Help" button is gone — Help is a real menu now (Help ▸ Documentation, ⌘/).
 
-            // Camera controls (to the left of Help): manual location/direction form + a quick view reset.
-            MakeHudButton("CameraButton", "Camera…", -78f, 84f, () => ShowCameraForm(Input.mousePosition));
-            MakeHudButton("ResetViewButton", "⟲ Reset", -168f, 78f, () => CameraReset());
-            Make2DModeSwitch(-254f);
+            // Camera / view controls, folded compact into the context-toolbar right cluster (demo layout).
+            MakeHudButton("CameraButton", "Cam", -318f, 48f, () => ShowCameraForm(Input.mousePosition));
+            MakeHudButton("ResetViewButton", "⟲", -374f, 40f, () => CameraReset());
+            Make2DModeSwitch(-422f);
             // Floating glyph toolbar: choose what an empty-space drag controls (orbit / pan / move along an axis).
             BuildNavBar();
 
@@ -4810,15 +4805,15 @@ namespace TheRobotDraft.Uml
             rt.SetParent(_root, false);
             rt.anchorMin = rt.anchorMax = new Vector2(1f, 1f);
             rt.pivot = new Vector2(1f, 1f);
-            rt.sizeDelta = new Vector2(width, 28f);
-            rt.anchoredPosition = new Vector2(xFromRight, -6f);
+            rt.sizeDelta = new Vector2(width, 24f);
+            rt.anchoredPosition = new Vector2(xFromRight, -35f);
             var img = go.AddComponent<Image>();
-            img.color = new Color(0.18f, 0.22f, 0.28f, 1f);
+            img.color = new Color(0.10f, 0.115f, 0.14f, 1f);
             var btn = go.AddComponent<Button>();
             btn.targetGraphic = img;
             btn.onClick.AddListener(() => onClick());
-            var t = MakeText(rt, label, new Vector2(0f, 0f), new Vector2(width, 28f), 13,
-                new Color(0.92f, 0.95f, 1f, 1f), TextAnchor.MiddleCenter);
+            var t = MakeText(rt, label, new Vector2(0f, 0f), new Vector2(width, 24f), 12,
+                new Color(0.72f, 0.77f, 0.83f, 1f), TextAnchor.MiddleCenter);
             t.raycastTarget = false;
             return t;
         }
@@ -4830,14 +4825,14 @@ namespace TheRobotDraft.Uml
             rt.SetParent(_root, false);
             rt.anchorMin = rt.anchorMax = new Vector2(1f, 1f);
             rt.pivot = new Vector2(1f, 1f);
-            rt.sizeDelta = new Vector2(78f, 28f);
-            rt.anchoredPosition = new Vector2(xFromRight, -6f);
+            rt.sizeDelta = new Vector2(78f, 24f);
+            rt.anchoredPosition = new Vector2(xFromRight, -35f);
             _mode2DButtonBg = go.AddComponent<Image>();
             var btn = go.AddComponent<Button>();
             btn.targetGraphic = _mode2DButtonBg;
             btn.onClick.AddListener(Toggle2DMode);
-            _mode2DButtonText = MakeText(rt, "", new Vector2(0f, 0f), new Vector2(78f, 28f), 13,
-                new Color(0.92f, 0.95f, 1f, 1f), TextAnchor.MiddleCenter);
+            _mode2DButtonText = MakeText(rt, "", new Vector2(0f, 0f), new Vector2(78f, 24f), 12,
+                new Color(0.85f, 0.89f, 0.94f, 1f), TextAnchor.MiddleCenter);
             _mode2DButtonText.raycastTarget = false;
             Refresh2DModeSwitch();
         }
@@ -4861,8 +4856,8 @@ namespace TheRobotDraft.Uml
         {
             if (_mode2DButtonBg != null)
                 _mode2DButtonBg.color = _mode2D
-                    ? new Color(0.20f, 0.55f, 0.85f, 1f)
-                    : new Color(0.18f, 0.22f, 0.28f, 1f);
+                    ? new Color(0.216f, 0.784f, 0.765f, 1f)
+                    : new Color(0.118f, 0.137f, 0.161f, 1f);
             if (_mode2DButtonText != null) _mode2DButtonText.text = _mode2D ? "2D On" : "2D Off";
         }
 
@@ -5059,7 +5054,7 @@ namespace TheRobotDraft.Uml
         private bool _paletteDefaultsCollapsed;
         private bool _paletteSidebarCollapsed;
 
-        private float PaletteActiveWidth => _paletteSidebarCollapsed ? CollapsedSidebarWidth : PaletteWidth;
+        private float PaletteActiveWidth => RailWidth + (_paletteSidebarCollapsed ? CollapsedSidebarWidth : PaletteWidth);
 
         private static (string title, (ElementKind kind, string label)[] items)[] PaletteSections() => new[]
         {
@@ -5265,22 +5260,67 @@ namespace TheRobotDraft.Uml
             ("Timing", new[] { (ElementKind.TimingLifeline, "Timing Lifeline") }),
         };
 
+        internal const float RailWidth = 44f;
+
+        /// <summary>The 44px icon rail on the far-left edge (demo parity): quick jumps into the
+        /// left panel's tabs plus aspects / import-export shortcuts.</summary>
+        private void BuildIconRail()
+        {
+            var railGo = new GameObject("IconRail", typeof(RectTransform));
+            var rail = (RectTransform)railGo.transform;
+            rail.SetParent(_root, false);
+            rail.anchorMin = new Vector2(0f, 0f); rail.anchorMax = new Vector2(0f, 1f);
+            rail.pivot = new Vector2(0f, 1f);
+            rail.offsetMin = new Vector2(0f, 8f);
+            rail.offsetMax = new Vector2(RailWidth, -70f - ContextToolbarHeight);
+            var bg = railGo.AddComponent<Image>();
+            bg.color = new Color(0.062f, 0.070f, 0.086f, 1f);
+            bg.raycastTarget = false;
+
+            float ry = -8f;
+            void RailBtn(string glyph, string tip, System.Action act)
+            {
+                var go = new GameObject("Rail:" + tip, typeof(RectTransform));
+                var rt = (RectTransform)go.transform;
+                rt.SetParent(rail, false);
+                rt.anchorMin = rt.anchorMax = new Vector2(0f, 1f);
+                rt.pivot = new Vector2(0f, 1f);
+                rt.sizeDelta = new Vector2(32f, 32f);
+                rt.anchoredPosition = new Vector2(6f, ry);
+                var img = go.AddComponent<Image>();
+                img.color = new Color(0.075f, 0.085f, 0.105f, 1f);
+                var btn = go.AddComponent<Button>();
+                btn.targetGraphic = img;
+                btn.onClick.AddListener(() => act());
+                MakeText(rt, glyph, Vector2.zero, rt.sizeDelta, 16,
+                    new Color(0.62f, 0.67f, 0.74f, 1f), TextAnchor.MiddleCenter).raycastTarget = false;
+                ry -= 36f;
+            }
+            RailBtn("≡", "Outline", () => SetPaletteTab("outline"));
+            RailBtn("+", "Palette", () => SetPaletteTab("palette"));
+            RailBtn("/", "Search", () => { SetPaletteTab("palette"); if (_paletteSearchGo != null && EventSystem.current != null) EventSystem.current.SetSelectedGameObject(_paletteSearchGo); });
+            RailBtn("◇", "Aspects", () => ShowAspectRegistryModal());
+            RailBtn("↕", "Import / Export", () => ShowImportMenu(new Vector2((RailWidth + 8f) * ScaleFactor, Screen.height * 0.6f)));
+        }
+
         private void BuildPalette()
         {
             const float width = PaletteWidth;
             const float searchH = 30f;
 
-            // Container pinned to the left edge. A fixed search box sits at the top; the diagram-family sections
-            // scroll below it. Sections are collapsed by default (the long family list stays compact) — type in
-            // the search box, or click a ▸ header, to reveal kinds.
+            BuildIconRail();
+
+            // Container pinned right of the icon rail. A fixed search box sits at the top; the diagram-family
+            // sections scroll below it. Sections are collapsed by default (the long family list stays compact) —
+            // type in the search box, or click a ▸ header, to reveal kinds.
             var container = new GameObject("Palette", typeof(RectTransform));
             _palette = (RectTransform)container.transform;
             _palette.SetParent(_root, false);
             _palette.anchorMin = new Vector2(0f, 0f); _palette.anchorMax = new Vector2(0f, 1f);
             _palette.pivot = new Vector2(0f, 1f);
-            _palette.offsetMin = new Vector2(0f, 8f);      // left = 0, bottom = 8
-            _palette.offsetMax = new Vector2(width, -70f); // right = width, top = -70 (clears the tabs + hint line)
-            container.AddComponent<Image>().color = new Color(0.12f, 0.13f, 0.16f, 0.97f);
+            _palette.offsetMin = new Vector2(RailWidth, 8f);          // left = rail edge, bottom = 8
+            _palette.offsetMax = new Vector2(RailWidth + width, -70f); // top clears the tabs + hint line
+            container.AddComponent<Image>().color = new Color(0.075f, 0.085f, 0.105f, 0.98f);
 
             var bodyGo = new GameObject("Body", typeof(RectTransform));
             _paletteBody = (RectTransform)bodyGo.transform;
@@ -5288,19 +5328,23 @@ namespace TheRobotDraft.Uml
             _paletteBody.anchorMin = Vector2.zero; _paletteBody.anchorMax = Vector2.one;
             _paletteBody.offsetMin = Vector2.zero; _paletteBody.offsetMax = Vector2.zero;
 
-            // Fixed search/filter box at the very top (not part of the scrolled content).
-            var search = MakeInput(_paletteBody, new Vector2(6f, -6f), width - 12f, _paletteSearch, "search nodes…");
+            // Tab row (Palette | Outline | Recents) at the very top — the demo's left-browser tabs.
+            BuildPaletteTabs(width);
+
+            // Fixed search/filter box under the tabs (not part of the scrolled content).
+            var search = MakeInput(_paletteBody, new Vector2(6f, -30f), width - 12f, _paletteSearch, "search nodes…");
+            _paletteSearchGo = search.gameObject; // toggled off on the Outline / Recents tabs
             ((RectTransform)search.transform).sizeDelta = new Vector2(width - 12f, searchH);
             search.onValueChanged.AddListener(v => { _paletteSearch = v ?? ""; RebuildPaletteContent(); });
 
-            // Scrolling viewport below the search box; it masks the content.
+            // Scrolling viewport below the tabs + search box; it masks the content.
             var viewport = new GameObject("Viewport", typeof(RectTransform));
             var vrt = (RectTransform)viewport.transform;
             vrt.SetParent(_paletteBody, false);
             vrt.anchorMin = new Vector2(0f, 0f); vrt.anchorMax = new Vector2(1f, 1f);
             vrt.pivot = new Vector2(0f, 1f);
             vrt.offsetMin = Vector2.zero;
-            vrt.offsetMax = new Vector2(0f, -(searchH + 10f)); // clear the search box
+            vrt.offsetMax = new Vector2(0f, -(searchH + 36f)); // clear the tabs + search box
             viewport.AddComponent<RectMask2D>();
 
             var scroll = container.AddComponent<ScrollRect>();
@@ -5340,7 +5384,7 @@ namespace TheRobotDraft.Uml
             rt.sizeDelta = new Vector2(CollapsedSidebarWidth, 44f);
             rt.anchoredPosition = Vector2.zero;
             var img = go.AddComponent<Image>();
-            img.color = new Color(0.18f, 0.22f, 0.28f, 1f);
+            img.color = new Color(0.118f, 0.137f, 0.161f, 1f);
             var btn = go.AddComponent<Button>();
             btn.targetGraphic = img;
             btn.onClick.AddListener(() =>
@@ -5357,12 +5401,67 @@ namespace TheRobotDraft.Uml
         private void ApplyPaletteCollapse()
         {
             if (_palette == null) return;
-            _palette.offsetMax = new Vector2(PaletteActiveWidth, -70f);
+            _palette.offsetMax = new Vector2(PaletteActiveWidth, -70f); // PaletteActiveWidth already includes RailWidth
             if (_paletteBody != null) _paletteBody.gameObject.SetActive(!_paletteSidebarCollapsed);
             if (_paletteToggleText != null) _paletteToggleText.text = _paletteSidebarCollapsed ? ">" : "<";
         }
 
-        /// <summary>(Re)populate the palette body, honoring each section's collapsed state.</summary>
+        // Left-browser tab state (Palette | Outline | Recents — demo parity).
+        private string _paletteTab = "palette";
+        private readonly Dictionary<string, Image> _paletteTabButtons = new();
+        private readonly Dictionary<string, Text> _paletteTabTexts = new();
+        private GameObject _paletteSearchGo;
+
+        private void BuildPaletteTabs(float width)
+        {
+            float tw = (width - 12f) / 3f;
+            float tx = 6f;
+            foreach (var (key, label) in new[] { ("palette", "Palette"), ("outline", "Outline"), ("recents", "Recents") })
+            {
+                var go = new GameObject("PaletteTab:" + key, typeof(RectTransform));
+                var rt = (RectTransform)go.transform;
+                rt.SetParent(_paletteBody, false);
+                rt.anchorMin = rt.anchorMax = new Vector2(0f, 1f);
+                rt.pivot = new Vector2(0f, 1f);
+                rt.sizeDelta = new Vector2(tw - 2f, 20f);
+                rt.anchoredPosition = new Vector2(tx, -4f);
+                var img = go.AddComponent<Image>();
+                var btn = go.AddComponent<Button>();
+                btn.targetGraphic = img;
+                var k = key;
+                btn.onClick.AddListener(() => SetPaletteTab(k));
+                var t = MakeText(rt, label, Vector2.zero, rt.sizeDelta, 12,
+                    new Color(0.62f, 0.67f, 0.74f, 1f), TextAnchor.MiddleCenter);
+                t.raycastTarget = false;
+                _paletteTabButtons[key] = img;
+                _paletteTabTexts[key] = t;
+                tx += tw;
+            }
+            RefreshPaletteTabs();
+        }
+
+        private void SetPaletteTab(string tab)
+        {
+            _paletteTab = tab;
+            if (_paletteSearchGo != null) _paletteSearchGo.SetActive(tab == "palette");
+            RefreshPaletteTabs();
+            RebuildPaletteContent();
+        }
+
+        private void RefreshPaletteTabs()
+        {
+            foreach (var kv in _paletteTabButtons)
+            {
+                bool active = kv.Key == _paletteTab;
+                if (kv.Value != null) kv.Value.color = active
+                    ? new Color(0.118f, 0.137f, 0.161f, 1f)
+                    : new Color(0.075f, 0.085f, 0.105f, 1f);
+                if (_paletteTabTexts.TryGetValue(kv.Key, out var t) && t != null)
+                    t.color = active ? new Color(0.216f, 0.784f, 0.765f, 1f) : new Color(0.62f, 0.67f, 0.74f, 1f);
+            }
+        }
+
+        /// <summary>(Re)populate the palette body, honoring the active tab and each section's collapsed state.</summary>
         private void RebuildPaletteContent()
         {
             if (_paletteContent == null) return;
@@ -5370,6 +5469,9 @@ namespace TheRobotDraft.Uml
 
             const float width = PaletteWidth;
             float y = -8f;
+
+            if (_paletteTab == "outline") { BuildOutlineRows(width, ref y); _paletteContent.sizeDelta = new Vector2(0f, -y + 4f); return; }
+            if (_paletteTab == "recents") { BuildRecentRows(width, ref y); _paletteContent.sizeDelta = new Vector2(0f, -y + 4f); return; }
 
             string q = (_paletteSearch ?? "").Trim();
             if (q.Length > 0)
@@ -5411,6 +5513,93 @@ namespace TheRobotDraft.Uml
             _paletteContent.sizeDelta = new Vector2(0f, -y + 4f);
         }
 
+        /// <summary>Outline tab: Diagrams → Pages tree (click = open); the demo's browse-nav.</summary>
+        private void BuildOutlineRows(float width, ref float y)
+        {
+            bool any = false;
+            foreach (var el in _model.Elements)
+            {
+                if (el.Kind != ElementKind.Package || el.Parent.IsValid) continue;
+                any = true;
+                var pages = new List<(ElementId id, int depth)>();
+                CollectPages(el.Id, 0, pages);
+                foreach (var (pid, depth) in pages)
+                {
+                    var id = pid;
+                    bool active = id == _activePackage;
+                    var go = new GameObject("Outline:" + id, typeof(RectTransform));
+                    var rt = (RectTransform)go.transform;
+                    rt.SetParent(_paletteContent, false);
+                    rt.anchorMin = rt.anchorMax = new Vector2(0f, 1f);
+                    rt.pivot = new Vector2(0f, 1f);
+                    rt.sizeDelta = new Vector2(width - 16f, 23f);
+                    rt.anchoredPosition = new Vector2(6f, y);
+                    var img = go.AddComponent<Image>();
+                    img.color = active ? new Color(0.118f, 0.137f, 0.161f, 1f) : new Color(0.075f, 0.085f, 0.105f, 0f);
+                    var btn = go.AddComponent<Button>();
+                    btn.targetGraphic = img;
+                    btn.onClick.AddListener(() => { GoToPackage(id); RebuildPaletteContent(); });
+                    MakeText(rt, PackageName(id), new Vector2(8f + depth * 14f, 0f),
+                        new Vector2(width - 24f - depth * 14f, 23f), 13,
+                        active ? new Color(0.216f, 0.784f, 0.765f, 1f) : new Color(0.78f, 0.83f, 0.89f, 1f),
+                        TextAnchor.MiddleLeft).raycastTarget = false;
+                    y -= 26f;
+                }
+            }
+            if (!any)
+            {
+                MakeText(_paletteContent, "no diagrams yet", new Vector2(8f, y), new Vector2(width - 16f, 22f),
+                    13, new Color(0.55f, 0.60f, 0.68f, 1f), TextAnchor.MiddleLeft).raycastTarget = false;
+                y -= 26f;
+            }
+        }
+
+        /// <summary>Recents tab: the MRU model files (click = open).</summary>
+        private void BuildRecentRows(float width, ref float y)
+        {
+            var recent = RecentFiles.GetRecent();
+            if (recent.Count == 0)
+            {
+                MakeText(_paletteContent, "no recent files", new Vector2(8f, y), new Vector2(width - 16f, 22f),
+                    13, new Color(0.55f, 0.60f, 0.68f, 1f), TextAnchor.MiddleLeft).raycastTarget = false;
+                y -= 26f;
+                return;
+            }
+            foreach (var p in recent)
+            {
+                var path = p;
+                bool exists = System.IO.File.Exists(path);
+                var go = new GameObject("Recent:" + path, typeof(RectTransform));
+                var rt = (RectTransform)go.transform;
+                rt.SetParent(_paletteContent, false);
+                rt.anchorMin = rt.anchorMax = new Vector2(0f, 1f);
+                rt.pivot = new Vector2(0f, 1f);
+                rt.sizeDelta = new Vector2(width - 16f, 23f);
+                rt.anchoredPosition = new Vector2(6f, y);
+                var img = go.AddComponent<Image>();
+                img.color = new Color(0.075f, 0.085f, 0.105f, 0f);
+                if (exists)
+                {
+                    var btn = go.AddComponent<Button>();
+                    btn.targetGraphic = img;
+                    btn.onClick.AddListener(() =>
+                    {
+                        if (TryOpenPath(path))
+                        {
+                            _currentDiagramPath = path;
+                            RecentFiles.AddRecent(path);
+                            if (_scene != null) _scene.FrameAll();
+                            Flash("opened " + System.IO.Path.GetFileName(path));
+                        }
+                    });
+                }
+                MakeText(rt, System.IO.Path.GetFileName(path), new Vector2(8f, 0f), new Vector2(width - 24f, 23f), 13,
+                    exists ? new Color(0.78f, 0.83f, 0.89f, 1f) : new Color(0.45f, 0.50f, 0.58f, 1f),
+                    TextAnchor.MiddleLeft).raycastTarget = false;
+                y -= 26f;
+            }
+        }
+
         private void MakePaletteHeader(RectTransform parent, string title, bool collapsed, float y, float width)
         {
             var go = new GameObject("Header:" + title, typeof(RectTransform));
@@ -5421,7 +5610,7 @@ namespace TheRobotDraft.Uml
             rt.sizeDelta = new Vector2(width, 20f);
             rt.anchoredPosition = new Vector2(6f, y);
             var img = go.AddComponent<Image>();
-            img.color = new Color(0.17f, 0.19f, 0.24f, 1f);
+            img.color = new Color(0.098f, 0.114f, 0.133f, 1f);
             var btn = go.AddComponent<Button>();
             btn.targetGraphic = img;
             btn.onClick.AddListener(() =>
@@ -5430,7 +5619,7 @@ namespace TheRobotDraft.Uml
                 RebuildPaletteContent();
             });
             var t = MakeText(rt, (collapsed ? "▸  " : "▾  ") + title.ToUpper(), new Vector2(6f, 0f),
-                new Vector2(width - 10f, 20f), 12, new Color(0.62f, 0.69f, 0.79f, 1f), TextAnchor.MiddleLeft);
+                new Vector2(width - 10f, 20f), 11, new Color(0.42f, 0.47f, 0.54f, 1f), TextAnchor.MiddleLeft);
             t.fontStyle = FontStyle.Bold; t.raycastTarget = false;
         }
 
@@ -5443,11 +5632,11 @@ namespace TheRobotDraft.Uml
             rt.pivot = new Vector2(0f, 1f);
             rt.sizeDelta = new Vector2(width, 23f);
             rt.anchoredPosition = new Vector2(6f, y);
-            go.AddComponent<Image>().color = new Color(0.20f, 0.23f, 0.28f, 1f);
+            go.AddComponent<Image>().color = new Color(0.118f, 0.137f, 0.161f, 1f);
             var item = go.AddComponent<UmlPaletteItem>();
             item.Canvas = this; item.Kind = kind; item.Label = label;
-            MakeText(rt, label, new Vector2(8f, 0f), new Vector2(width - 12f, 23f), 14,
-                new Color(0.90f, 0.93f, 0.98f, 1f), TextAnchor.MiddleLeft);
+            MakeText(rt, label, new Vector2(8f, 0f), new Vector2(width - 12f, 23f), 13,
+                new Color(0.78f, 0.83f, 0.89f, 1f), TextAnchor.MiddleLeft);
         }
 
         private RectTransform NewLayer(string name)
@@ -5474,7 +5663,7 @@ namespace TheRobotDraft.Uml
             float bodyH = 0f;
             foreach (var item in items) bodyH += item.IsSeparator ? sh : ih;
             float h = hh + pad + bodyH + pad;
-            var go = NewPanel("Menu", screenPos, new Vector2(w, h), new Color(0.12f, 0.14f, 0.17f, 0.98f));
+            var go = NewPanel("Menu", screenPos, new Vector2(w, h), new Color(0.10f, 0.115f, 0.14f, 0.985f));
             var rt = (RectTransform)go.transform;
             _menu = go;
 
@@ -5517,7 +5706,7 @@ namespace TheRobotDraft.Uml
             rt.pivot = new Vector2(0.5f, 0.5f);
             rt.sizeDelta = new Vector2(w, h);
             rt.anchoredPosition = Vector2.zero;
-            panel.AddComponent<Image>().color = new Color(0.14f, 0.16f, 0.20f, 1f);
+            panel.AddComponent<Image>().color = new Color(0.10f, 0.115f, 0.14f, 1f);
 
             MakeText(rt, title, new Vector2(16f, -12f), new Vector2(w - 32f, 24f), 16,
                 new Color(0.84f, 0.88f, 0.94f, 1f), TextAnchor.MiddleLeft).fontStyle = FontStyle.Bold;
@@ -5529,7 +5718,7 @@ namespace TheRobotDraft.Uml
             inRt.pivot = new Vector2(0f, 1f);
             inRt.sizeDelta = new Vector2(w - 32f, 38f);
             inRt.anchoredPosition = new Vector2(16f, -48f);
-            inputGo.AddComponent<Image>().color = new Color(0.20f, 0.22f, 0.27f, 1f);
+            inputGo.AddComponent<Image>().color = new Color(0.078f, 0.09f, 0.106f, 1f);
             var input = inputGo.AddComponent<InputField>();
 
             var textComp = MakeText(inRt, "", new Vector2(10f, 0f), new Vector2(w - 56f, 38f), 18,
@@ -5627,7 +5816,7 @@ namespace TheRobotDraft.Uml
             rt.pivot = new Vector2(0f, 0.5f);
             rt.sizeDelta = new Vector2(width, 1f);
             rt.anchoredPosition = topLeft;
-            go.AddComponent<Image>().color = new Color(0.28f, 0.31f, 0.38f, 1f);
+            go.AddComponent<Image>().color = new Color(0.165f, 0.196f, 0.22f, 1f);
         }
 
         private void MakeMenuButton(RectTransform parent, MenuItem item, Vector2 topLeft, Vector2 size)
@@ -5640,7 +5829,7 @@ namespace TheRobotDraft.Uml
             rt.sizeDelta = size;
             rt.anchoredPosition = topLeft;
             var img = go.AddComponent<Image>();
-            img.color = new Color(0.16f, 0.18f, 0.22f, item.Enabled ? 1f : 0.4f);
+            img.color = new Color(0.118f, 0.137f, 0.161f, item.Enabled ? 1f : 0.4f);
             if (item.Enabled && item.Action != null)
             {
                 var btn = go.AddComponent<Button>();

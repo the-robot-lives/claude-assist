@@ -151,6 +151,8 @@ extern "C" void RDInstallMenu(RDCommandCallback cb) {
         RDAdd(go, @"Camera Z Up",       601, @"", 0);
         RDAdd(go, @"Camera Z Down",     602, @"", 0);
         RDAdd(go, @"Cycle Drag-Nav Mode", 603, @"", 0);
+        [go addItem:[NSMenuItem separatorItem]];
+        RDAdd(go, @"Start Trace at Selection", 604, @"t", cmd);
 
         // ------------------------------------------------------------------ View
         NSMenu *view = RDEnsure(main, @"View", at + 6);
@@ -160,5 +162,15 @@ extern "C" void RDInstallMenu(RDCommandCallback cb) {
         RDAdd(view, @"Vision LLM Settings…",    703, @"", 0);
         [view addItem:[NSMenuItem separatorItem]];
         RDAdd(view, @"Help && Shortcuts…",      701, @"/", cmd);
+
+        // ------------------------------------------------------------------ Window / Help
+        NSMenu *window = RDEnsure(main, @"Window", at + 7);
+        RDAdd(window, @"Toggle Full Screen", 800, @"", 0);
+
+        NSMenu *help = RDEnsure(main, @"Help", at + 8);
+        RDAdd(help, @"Documentation",        701, @"", 0);
+        RDAdd(help, @"Keyboard Shortcuts",   701, @"", 0);
+        [help addItem:[NSMenuItem separatorItem]];
+        RDAdd(help, @"Sample Model: Banking Domain", 801, @"", 0);
     });
 }

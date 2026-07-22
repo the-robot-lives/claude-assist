@@ -44,8 +44,8 @@ namespace TheRobotDraft.Uml3D
         private Vector3 _basePos = Vector3.zero;   // world pose set by the layer (before LocalRotation)
         private Quaternion _baseRot = Quaternion.identity;
 
-        private Color _fill = Color.white;          // resting slab tint
-        private Color _text = new Color(0.13f, 0.15f, 0.19f, 1f);
+        private Color _fill = new Color(0.110f, 0.145f, 0.161f, 1f); // resting slab tint (dark card)
+        private Color _text = new Color(0.85f, 0.89f, 0.92f, 1f);
         private float _localPitch, _localYaw;       // accumulated per-node rotation (degrees)
         private float _depthT;                      // 0 = active/full-color, 1 = fully grayed (below layer)
 
@@ -376,8 +376,8 @@ namespace TheRobotDraft.Uml3D
 
         private void ApplyTint()
         {
-            var gray = new Color(0.5f, 0.52f, 0.55f, 1f);
-            Color lift = _selected ? new Color(0.10f, 0.32f, 0.50f, 1f) : Color.black;
+            var gray = new Color(0.30f, 0.33f, 0.36f, 1f);
+            Color lift = _selected ? new Color(0.45f, 0.34f, 0.16f, 1f) : Color.black; // warm selection glow
 
             if (_slabMaterial != null)
             {
@@ -638,9 +638,9 @@ namespace TheRobotDraft.Uml3D
                     _ => "✉",
                 };
                 Label(parent, marker, Vector2.zero, Mathf.Min(pxW, pxH) * 0.72f, 28f, 21,
-                    new Color(0.10f, 0.12f, 0.16f, 1f), new Color(1f, 1f, 1f, 0.7f), true);
+                    new Color(0.85f, 0.89f, 0.92f, 1f), new Color(0f, 0f, 0f, 0.6f), true);
                 Label(parent, evt, new Vector2(0f, -pxH * 0.32f), pxW - 8f, 18f, 10,
-                    new Color(0.10f, 0.12f, 0.16f, 1f), new Color(1f, 1f, 1f, 0.7f), false);
+                    new Color(0.85f, 0.89f, 0.92f, 1f), new Color(0f, 0f, 0f, 0.6f), false);
                 return;
             }
             if (kind == ElementKind.BpmnGateway)
@@ -648,31 +648,31 @@ namespace TheRobotDraft.Uml3D
                 string gateway = Prop(rows, "gateway", "exclusive").ToLowerInvariant();
                 string marker = gateway.Contains("parallel") ? "+" : gateway.Contains("inclusive") ? "O" : "X";
                 Label(parent, marker, Vector2.zero, pxW - 10f, pxH - 10f, 24,
-                    new Color(0.10f, 0.12f, 0.16f, 1f), new Color(1f, 1f, 1f, 0.7f), true);
+                    new Color(0.85f, 0.89f, 0.92f, 1f), new Color(0f, 0f, 0f, 0.6f), true);
                 return;
             }
             if (kind == ElementKind.DmnDecision || kind == ElementKind.DecisionTreeNode)
             {
                 Label(parent, name, new Vector2(0f, 8f), pxW - 14f, 30f, NameSize,
-                    new Color(0.10f, 0.12f, 0.16f, 1f), new Color(1f, 1f, 1f, 0.7f), true);
+                    new Color(0.85f, 0.89f, 0.92f, 1f), new Color(0f, 0f, 0f, 0.6f), true);
                 string sub = kind == ElementKind.DmnDecision ? Prop(rows, "logic", "decision") : Prop(rows, "condition", "condition");
                 Label(parent, sub, new Vector2(0f, -16f), pxW - 18f, 18f, 11,
-                    new Color(0.22f, 0.24f, 0.28f, 1f), new Color(1f, 1f, 1f, 0.7f), false);
+                    new Color(0.72f, 0.77f, 0.82f, 1f), new Color(0f, 0f, 0f, 0.6f), false);
                 return;
             }
             if (kind == ElementKind.BpmnConversation)
             {
                 Label(parent, "conversation", new Vector2(0f, 15f), pxW - 10f, 18f, 11,
-                    new Color(0.22f, 0.24f, 0.28f, 1f), new Color(1f, 1f, 1f, 0.7f), false);
+                    new Color(0.72f, 0.77f, 0.82f, 1f), new Color(0f, 0f, 0f, 0.6f), false);
                 Label(parent, name, new Vector2(0f, -4f), pxW - 12f, 30f, 15,
-                    new Color(0.10f, 0.12f, 0.16f, 1f), new Color(1f, 1f, 1f, 0.7f), true);
+                    new Color(0.85f, 0.89f, 0.92f, 1f), new Color(0f, 0f, 0f, 0.6f), true);
                 return;
             }
             if (kind == ElementKind.SysmlProxyPort || kind == ElementKind.SysmlFullPort || kind == ElementKind.SysmlParameter)
             {
                 string dir = Prop(rows, "direction", kind == ElementKind.SysmlParameter ? "param" : "inout");
                 Label(parent, dir, Vector2.zero, pxW - 4f, pxH - 4f, 9,
-                    new Color(0.10f, 0.12f, 0.16f, 1f), new Color(1f, 1f, 1f, 0.7f), true);
+                    new Color(0.85f, 0.89f, 0.92f, 1f), new Color(0f, 0f, 0f, 0.6f), true);
                 return;
             }
 
@@ -795,10 +795,14 @@ namespace TheRobotDraft.Uml3D
         /// </summary>
         private void BuildFacePanel(RectTransform parent, float pxW, float pxH)
         {
-            // Lighten the fill toward white when it's too dark for the dark member text to read against.
+            // Dark theme (nav-redesign): the face card is charcoal; a bright fill is pulled down toward
+            // the card tone (keeping a hue hint) so LIGHT member text stays readable. Fills paired with
+            // DARK text (sticky notes) are intentionally light surfaces and are left untouched.
             Color panelColor = _fill;
             float lum = 0.2126f * panelColor.r + 0.7152f * panelColor.g + 0.0722f * panelColor.b;
-            if (lum < 0.55f) panelColor = Color.Lerp(panelColor, Color.white, 0.55f);
+            float textLum = 0.2126f * _text.r + 0.7152f * _text.g + 0.0722f * _text.b;
+            if (lum > 0.40f && textLum > 0.5f)
+                panelColor = Color.Lerp(new Color(0.110f, 0.145f, 0.161f, 1f), panelColor, 0.22f);
             panelColor.a = 1f;
 
             // Border: a slightly larger panel in a darker tone, placed first (drawn furthest back).
@@ -811,7 +815,7 @@ namespace TheRobotDraft.Uml3D
             borderRt.sizeDelta = new Vector2(pxW, pxH);
             borderRt.anchoredPosition = Vector2.zero;
             var borderImg = borderGo.AddComponent<Image>();
-            borderImg.color = new Color(0.30f, 0.32f, 0.37f, 1f);
+            borderImg.color = new Color(0.19f, 0.33f, 0.35f, 1f); // teal-tinted card border
             borderImg.raycastTarget = false;
             borderRt.SetAsFirstSibling();
 
@@ -920,7 +924,7 @@ namespace TheRobotDraft.Uml3D
             rt.sizeDelta = new Vector2(pxW, 2f);
             rt.anchoredPosition = new Vector2(0f, topY);
             var img = go.AddComponent<Image>();
-            img.color = new Color(0.66f, 0.68f, 0.73f, 1f);
+            img.color = new Color(0.24f, 0.28f, 0.31f, 1f);
             img.raycastTarget = false;
         }
 
@@ -937,8 +941,8 @@ namespace TheRobotDraft.Uml3D
             lr.useWorldSpace = false;
             lr.loop = false;
             lr.widthMultiplier = 0.02f;
-            lr.material = CreateMaterial(new Color(0.12f, 0.55f, 0.85f, 1f));
-            lr.startColor = lr.endColor = new Color(0.12f, 0.55f, 0.85f, 1f);
+            lr.material = CreateMaterial(new Color(1f, 0.83f, 0.42f, 1f)); // warm selection cage (nav-redesign)
+            lr.startColor = lr.endColor = new Color(1f, 0.83f, 0.42f, 1f);
             // Front face loop, then a hop to the back face loop (a single continuous polyline traces the cage).
             var pts = new[]
             {

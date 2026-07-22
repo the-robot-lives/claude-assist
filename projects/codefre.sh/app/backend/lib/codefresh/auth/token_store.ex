@@ -46,7 +46,7 @@ defmodule Codefresh.Auth.TokenStore do
     end
   end
 
-  defp backend, do: Application.get_env(:codefresh, :token_store, :redis)
+  defp backend, do: Application.get_env(:codefresh, :token_store, :memory)
 
   defp expires_at, do: System.system_time(:second) + @refresh_ttl
 

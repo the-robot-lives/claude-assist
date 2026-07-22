@@ -1,12 +1,76 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import {
+  DndContext,
+  DragOverlay,
+  KeyboardSensor,
+  PointerSensor,
+  closestCorners,
+  useDroppable,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+  type DragOverEvent,
+  type DragStartEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { useOrg } from "@/context/org";
-import { api, type ItemQueue, type Item } from "@/lib/api";
+import { api, type Item, type ItemInput, type ItemQueue } from "@/lib/api";
+import { useMutation } from "@/lib/use-api";
 import { toast } from "sonner";
 import { PriorityBadge } from "@/components/pm/priority-badge";
+
+// ── Lexicographic rank helpers ───────────────────────────────────────────────
+// The backend stores `rank` as an opaque string and orders lexicographically
+// (see Item.rank / ItemInput.rank — backend `Map.take` allowlist includes rank).
+// We compute a string strictly between the moved item's new neighbors so the
+// persisted order survives reloads. Works on any existing rank format because
+// lexicographic ordering is format-agnostic; generated strings stay in the
+// printable-ASCII range ([!..~]) with floor 33 to avoid control chars/spaces.
+
+const RANK_MID = "G"; // ~middle of the printable range; used to grow a rank (append).
+const RANK_FLOOR = 33; // '!'
+
+function lexMidpoint(a: string, b: string): string {
+  // Precondition: a < b. Returns m with a < m < b.
+  let i = 0;
+  while (i < a.length && i < b.length && a.charCodeAt(i) === b.charCodeAt(i)) i++;
+  const aCode = i < a.length ? a.charCodeAt(i) : -1; // -1 ⇒ a is a proper prefix of b
+  const bCode = i < b.length ? b.charCodeAt(i) : 127; // 127 ⇒ b exhausted past a (b prefix of a — impossible when a < b)
+  if (aCode === -1) {
+    // a is a prefix of b: m = a + (char strictly less than b[i]).
+    if (bCode > RANK_FLOOR) return a + String.fromCharCode(RANK_FLOOR);
+    // b[i] is at the floor — no smaller printable char; recurse past it.
+    return a + b[i] + lexMidpoint("", b.slice(i + 1));
+  }
+  if (bCode - aCode > 1) {
+    // gap at position i: bump a[i] by one.
+    return a.slice(0, i) + String.fromCharCode(aCode + 1);
+  }
+  // consecutive at i (no gap): carry a[i] (== b[i]-1) and append a mid char.
+  // m shares prefix a[0..i] with a; at i, m[i]=a[i] < b[i] ⇒ m < b, and m is
+  // longer than a ⇒ m > a.
+  return a.slice(0, i) + a[i] + RANK_MID;
+}
+
+function rankBetween(prev?: string | null, next?: string | null): string {
+  if (prev && next) {
+    if (prev >= next) return prev + RANK_MID; // out-of-order guard; still > prev
+    return lexMidpoint(prev, next);
+  }
+  if (prev) return prev + RANK_MID; // append after predecessor
+  if (next) return lexMidpoint("", next); // prepend before successor
+  return RANK_MID; // fresh column
+}
 
 export default function BoardPage() {
   const params = useParams<{ orgId: string; boardId: string }>();
@@ -17,6 +81,16 @@ export default function BoardPage() {
   const [board, setBoard] = useState<ItemQueue | null>(null);
   const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeId, setActiveId] = useState<string | null>(null);
+
+  // Live mirror of `items` so DnD handlers can read synchronous current state.
+  const itemsRef = useRef<Item[]>(items);
+  itemsRef.current = items;
+
+  // Captured at dragStart: source stage, index within it, and full snapshot for revert.
+  const dragSource = useRef<{ stageId: string | null; index: number; snapshot: Item } | null>(null);
+  // useMutation.revert only receives the error; hand it the snapshot via this ref.
+  const revertSnapshot = useRef<Item | null>(null);
 
   useEffect(() => {
     if (!orgId || !boardId) return;
@@ -27,21 +101,134 @@ export default function BoardPage() {
     ]).finally(() => setLoading(false));
   }, [orgId, boardId]);
 
-  const stages = (board?.stages || []).slice().sort((a, b) => a.position - b.position);
-  const byStage = (stageId?: string) => items.filter((i) => (i.stage_id || null) === (stageId || null));
+  const stages = useMemo(
+    () => (board?.stages || []).slice().sort((a, b) => a.position - b.position),
+    [board],
+  );
+  const stageIds = useMemo(() => new Set(stages.map((s) => s.id)), [stages]);
 
-  const moveItem = async (item: Item, stageId: string | "") => {
-    const prev = item.stage_id;
-    setItems((cur) => cur.map((i) => (i.id === item.id ? { ...i, stage_id: stageId || undefined } : i)));
-    try {
-      const res = await api.updateItem(orgId, item.id, { stage_id: stageId || undefined });
-      setItems((cur) => cur.map((i) => (i.id === item.id ? res.item : i)));
-    } catch (e) {
-      // revert on failure
-      setItems((cur) => cur.map((i) => (i.id === item.id ? { ...i, stage_id: prev } : i)));
-      toast.error((e as Error).message);
-    }
+  const stageIdOf = (id: string, list: Item[] = itemsRef.current): string | null => {
+    const it = list.find((i) => i.id === id);
+    return it ? it.stage_id ?? null : null;
   };
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
+
+  // Persist a stage/rank move. Optimistic state is applied in the drag handler;
+  // on failure, useMutation calls revert → restore the pre-drag snapshot.
+  const persistMove = useMutation<{ item: Item }, { itemId: string; patch: ItemInput }>(
+    (input) => api.updateItem(orgId, input.itemId, input.patch),
+    {
+      revert: (err: Error) => {
+        const snap = revertSnapshot.current;
+        if (snap) setItems((prev) => prev.map((i) => (i.id === snap.id ? snap : i)));
+        toast.error(err.message);
+      },
+    },
+  );
+
+  const activeItem = activeId ? items.find((i) => i.id === activeId) ?? null : null;
+
+  function handleDragStart(e: DragStartEvent) {
+    const id = String(e.active.id);
+    setActiveId(id);
+    const list = itemsRef.current;
+    const item = list.find((i) => i.id === id);
+    if (!item) {
+      dragSource.current = null;
+      return;
+    }
+    const stageId = item.stage_id ?? null;
+    const stageList = list.filter((i) => (i.stage_id ?? null) === stageId);
+    dragSource.current = { stageId, index: stageList.findIndex((i) => i.id === id), snapshot: item };
+  }
+
+  function handleDragOver(e: DragOverEvent) {
+    const { active, over } = e;
+    if (!over) return;
+    const activeId = String(active.id);
+    const overId = String(over.id);
+    const list = itemsRef.current;
+    const activeStage = stageIdOf(activeId, list);
+    if (activeStage == null) return;
+    const overStage = stageIds.has(overId) ? overId : stageIdOf(overId, list);
+    if (overStage == null || overStage === activeStage) return;
+    // Cross-column live preview: flip the card into the over column so the
+    // target SortableContext picks it up and the user sees the move.
+    setItems((prev) => prev.map((i) => (i.id === activeId ? { ...i, stage_id: overStage } : i)));
+  }
+
+  function handleDragEnd(e: DragEndEvent) {
+    const { over } = e;
+    setActiveId(null);
+    const src = dragSource.current;
+    dragSource.current = null;
+
+    if (!src) return;
+
+    if (!over) {
+      // Drag canceled: undo any cross-column preview back to the source snapshot.
+      setItems((prev) => prev.map((i) => (i.id === src.snapshot.id ? src.snapshot : i)));
+      return;
+    }
+
+    const activeId = src.snapshot.id;
+    const overId = String(over.id);
+    const list = itemsRef.current;
+    const moving = list.find((i) => i.id === activeId);
+    if (!moving) return;
+
+    const overIsStage = stageIds.has(overId);
+    const targetStage: string | null = overIsStage ? overId : stageIdOf(overId, list) ?? src.stageId;
+
+    // Compute the committed ordering synchronously.
+    const without = list.filter((i) => i.id !== activeId);
+    const targetList = without.filter((i) => (i.stage_id ?? null) === (targetStage ?? null));
+    let gIdx: number;
+    if (overIsStage) {
+      gIdx = targetList.length === 0 ? without.length : without.indexOf(targetList[targetList.length - 1]) + 1;
+    } else {
+      const overCard = targetList.find((i) => i.id === overId);
+      gIdx = overCard ? without.indexOf(overCard) : without.length;
+    }
+    const updatedItem: Item = { ...moving, stage_id: targetStage || undefined };
+    const next = [...without];
+    next.splice(gIdx, 0, updatedItem);
+
+    const newList = next.filter((i) => (i.stage_id ?? null) === (targetStage ?? null));
+    const finalIndex = newList.findIndex((i) => i.id === activeId);
+    const crossColumn = (src.stageId ?? null) !== (targetStage ?? null);
+
+    // No-op within-column drop (same position): commit nothing.
+    if (!crossColumn && src.index === finalIndex) {
+      setItems(next);
+      return;
+    }
+
+    // Recompute rank from the new neighbors and persist.
+    const prevRank = finalIndex > 0 ? newList[finalIndex - 1].rank : undefined;
+    const nextRank = finalIndex < newList.length - 1 ? newList[finalIndex + 1].rank : undefined;
+    updatedItem.rank = rankBetween(prevRank, nextRank);
+    setItems(next);
+
+    const patch: ItemInput = crossColumn
+      ? { stage_id: targetStage || undefined, rank: updatedItem.rank }
+      : { rank: updatedItem.rank };
+
+    revertSnapshot.current = src.snapshot;
+    persistMove
+      .trigger({ itemId: activeId, patch })
+      .then((res) => {
+        // Reconcile with the server's authoritative item.
+        setItems((prev) => prev.map((i) => (i.id === activeId ? res.item : i)));
+      })
+      .catch(() => {
+        /* revert handled by useMutation via revertSnapshot */
+      });
+  }
 
   if (loading) return <div className="p-8 text-text-muted">Loading board…</div>;
   if (!board) return <div className="p-8 text-text-muted">Board not found.</div>;
@@ -49,57 +236,96 @@ export default function BoardPage() {
   return (
     <div className="px-4 py-6">
       <header className="mb-6">
-        <Link href={`/app/${orgId}/items`} className="text-xs text-text-muted hover:underline">← boards</Link>
+        <Link href={`/app/${orgId}/items`} className="text-xs text-text-muted hover:underline">
+          ← boards
+        </Link>
         <h1 className="mt-1 text-2xl font-bold text-text">{board.name}</h1>
-        <p className="text-sm text-text-secondary">{board.methodology} · {items.length} items</p>
+        <p className="text-sm text-text-secondary">
+          {board.methodology} · {items.length} items
+        </p>
+        <p className="mt-1 text-xs text-text-muted">
+          Drag cards between columns to change stage; reorder within a column to set rank.
+        </p>
       </header>
 
-      <div className="flex gap-3 overflow-x-auto pb-4">
-        {stages.map((stage) => {
-          const cards = byStage(stage.id);
-          return (
-            <div key={stage.id} className="flex w-72 shrink-0 flex-col rounded-lg border border-border bg-surface-alt">
-              <div className="flex items-center justify-between border-b border-border px-3 py-2">
-                <span className="text-sm font-semibold text-text">{stage.name}</span>
-                <span className="text-xs text-text-muted">
-                  {cards.length}
-                  {stage.wip_limit ? `/${stage.wip_limit}` : ""}
-                </span>
-              </div>
-              <div className="flex flex-col gap-2 p-2">
-                {cards.map((it) => (
-                  <Card key={it.id} item={it} stages={stages} onMove={(sid) => moveItem(it, sid)} />
-                ))}
-                {cards.length === 0 && <p className="px-1 py-4 text-center text-xs text-text-muted">empty</p>}
-              </div>
-            </div>
-          );
-        })}
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCorners}
+        onDragStart={handleDragStart}
+        onDragOver={handleDragOver}
+        onDragEnd={handleDragEnd}
+      >
+        <div className="flex gap-3 overflow-x-auto pb-4">
+          {stages.map((stage) => {
+            const cards = items.filter((i) => (i.stage_id ?? null) === stage.id);
+            return <Column key={stage.id} stage={stage} cards={cards} />;
+          })}
+        </div>
+
+        <DragOverlay dropAnimation={null}>{activeItem ? <CardView item={activeItem} /> : null}</DragOverlay>
+      </DndContext>
+    </div>
+  );
+}
+
+function Column({ stage, cards }: { stage: NonNullable<ItemQueue["stages"]>[number]; cards: Item[] }) {
+  const { setNodeRef, isOver } = useDroppable({ id: stage.id });
+  const overLimit = stage.wip_limit ? cards.length > stage.wip_limit : false;
+  return (
+    <div
+      className={`flex w-72 shrink-0 flex-col rounded-lg border bg-surface-alt ${
+        isOver ? "border-brand-blue ring-2 ring-brand-blue/40" : "border-border"
+      }`}
+    >
+      <div className="flex items-center justify-between border-b border-border px-3 py-2">
+        <span className="text-sm font-semibold text-text">{stage.name}</span>
+        <span className={`text-xs ${overLimit ? "font-semibold text-status-red" : "text-text-muted"}`}>
+          {cards.length}
+          {stage.wip_limit ? `/${stage.wip_limit}` : ""}
+        </span>
+      </div>
+      <div ref={setNodeRef} className="flex min-h-[4rem] flex-col gap-2 p-2">
+        <SortableContext items={cards.map((c) => c.id)} strategy={verticalListSortingStrategy}>
+          {cards.map((it) => (
+            <BoardCard key={it.id} item={it} />
+          ))}
+        </SortableContext>
+        {cards.length === 0 && <p className="px-1 py-4 text-center text-xs text-text-muted">empty</p>}
       </div>
     </div>
   );
 }
 
-function Card({ item, stages, onMove }: { item: Item; stages: { id: string; name: string }[]; onMove: (stageId: string) => void }) {
+// Presentational card body (shared by the live card and the drag overlay).
+function CardView({ item }: { item: Item }) {
   return (
     <div className="rounded border border-border bg-surface p-2.5 shadow-sm">
-      <Link href={`#`} className="block text-sm text-text hover:text-brand-blue">
+      <div className="block text-sm text-text">
         <span className="font-mono text-xs text-text-muted">{item.key || item.id.slice(0, 8)}</span>
         <div className="mt-0.5 line-clamp-2">{item.title}</div>
-      </Link>
+      </div>
       <div className="mt-2 flex items-center justify-between gap-2">
         <PriorityBadge priority={item.priority} />
-        <select
-          value={item.stage_id || ""}
-          onChange={(e) => onMove(e.target.value)}
-          className="rounded border border-border bg-surface-alt px-1 py-0.5 text-xs text-text outline-none"
-          aria-label="Move to stage"
-        >
-          {stages.map((s) => (
-            <option key={s.id} value={s.id}>{s.name}</option>
-          ))}
-        </select>
       </div>
+    </div>
+  );
+}
+
+function BoardCard({ item }: { item: Item }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.id });
+  return (
+    <div
+      ref={setNodeRef}
+      style={{
+        transform: CSS.Translate.toString(transform),
+        transition,
+        opacity: isDragging ? 0.35 : 1,
+      }}
+      {...attributes}
+      {...listeners}
+      className="touch-none cursor-grab active:cursor-grabbing"
+    >
+      <CardView item={item} />
     </div>
   );
 }

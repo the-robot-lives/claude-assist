@@ -45,7 +45,7 @@ namespace TheRobotDraft.Uml3D
         // Thickness of the invisible pick collider straddling each edge.
         private const float EdgePick = 0.13f;
 
-        private static readonly Color SelColor = new Color(0.12f, 0.55f, 0.85f, 1f);
+        private static readonly Color SelColor = new Color(0.216f, 0.784f, 0.765f, 1f);
 
         /// <summary>Create a region cube parented under <paramref name="parent"/> for the given element.</summary>
         public static UmlRegion3D Create(Transform parent, ElementId id, string name, Color color)

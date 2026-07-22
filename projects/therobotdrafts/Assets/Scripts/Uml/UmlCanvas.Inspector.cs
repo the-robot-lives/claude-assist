@@ -27,7 +27,7 @@ namespace TheRobotDraft.Uml
             _inspector.pivot = new Vector2(1f, 1f);
             _inspector.offsetMin = new Vector2(-InspectorWidth, 8f);
             _inspector.offsetMax = new Vector2(0f, -70f);
-            go.AddComponent<Image>().color = new Color(0.12f, 0.13f, 0.16f, 0.97f);
+            go.AddComponent<Image>().color = new Color(0.075f, 0.085f, 0.105f, 0.98f);
 
             var bodyGo = new GameObject("Body", typeof(RectTransform));
             _inspectorBody = (RectTransform)bodyGo.transform;
@@ -77,7 +77,7 @@ namespace TheRobotDraft.Uml
             rt.sizeDelta = new Vector2(CollapsedSidebarWidth, 44f);
             rt.anchoredPosition = Vector2.zero;
             var img = go.AddComponent<Image>();
-            img.color = new Color(0.18f, 0.22f, 0.28f, 1f);
+            img.color = new Color(0.118f, 0.137f, 0.161f, 1f);
             var btn = go.AddComponent<Button>();
             btn.targetGraphic = img;
             btn.onClick.AddListener(() =>
@@ -107,21 +107,22 @@ namespace TheRobotDraft.Uml
 
             const float w = InspectorWidth;
             float y = -12f;
-            MakeText(_inspectorContent, "Properties", new Vector2(12f, y), new Vector2(w - 24f, 24f), 16,
-                new Color(0.88f, 0.92f, 0.98f, 1f), TextAnchor.MiddleLeft).fontStyle = FontStyle.Bold;
-            y -= 34f;
+            MakeText(_inspectorContent, "INSPECTOR", new Vector2(12f, y), new Vector2(w - 24f, 20f), 11,
+                new Color(0.42f, 0.47f, 0.54f, 1f), TextAnchor.MiddleLeft).fontStyle = FontStyle.Bold;
+            y -= 28f;
 
             if (!_selectedId.IsValid || !_model.TryGet(_selectedId, out var el))
             {
                 MakeText(_inspectorContent, "Select an element to edit its properties.", new Vector2(12f, y),
-                    new Vector2(w - 24f, 44f), 13, new Color(0.62f, 0.68f, 0.78f, 1f), TextAnchor.UpperLeft);
+                    new Vector2(w - 24f, 44f), 13, new Color(0.55f, 0.61f, 0.69f, 1f), TextAnchor.UpperLeft);
                 _inspectorContent.sizeDelta = new Vector2(0f, 160f);
                 return;
             }
 
-            MakeText(_inspectorContent, el.Kind.ToString(), new Vector2(12f, y), new Vector2(w - 24f, 20f), 13,
-                new Color(0.62f, 0.68f, 0.78f, 1f), TextAnchor.MiddleLeft);
-            y -= 28f;
+            InspectorSection("ELEMENT", ref y);
+            MakeText(_inspectorContent, el.Kind.ToString(), new Vector2(12f, y), new Vector2(w - 24f, 20f), 12,
+                new Color(0.216f, 0.784f, 0.765f, 1f), TextAnchor.MiddleLeft);
+            y -= 26f;
 
             InspectorLabel("Name", ref y);
             var nameInput = MakeInput(_inspectorContent, new Vector2(12f, y), w - 24f, el.Name, "name");
@@ -147,11 +148,52 @@ namespace TheRobotDraft.Uml
                 }
             }
 
-            InspectorLabel("Description", ref y);
+            // Section order mirrors the approved demo: ELEMENT → MEMBERS → ASPECTS → NOTES → CODE.
+            if (KindInfo.IsClassifier(el.Kind))
+            {
+                InspectorSection("MEMBERS", ref y);
+                int shown = 0, total = 0;
+                foreach (bool wantOps in new[] { false, true })
+                    foreach (var childId in el.ChildIds)
+                    {
+                        if (!_model.TryGet(childId, out var m)) continue;
+                        if (m.Kind != ElementKind.Field && m.Kind != ElementKind.Function) continue;
+                        bool isOp = m.Kind == ElementKind.Function;
+                        if (isOp != wantOps) continue;
+                        total++;
+                        if (shown >= 14) continue;
+                        MakeText(_inspectorContent, m.Name, new Vector2(12f, y), new Vector2(w - 24f, 16f), 12,
+                            isOp ? new Color(0.216f, 0.784f, 0.765f, 1f) : new Color(0.72f, 0.77f, 0.83f, 1f),
+                            TextAnchor.MiddleLeft);
+                        y -= 18f; shown++;
+                    }
+                if (total == 0)
+                {
+                    MakeText(_inspectorContent, "no members yet  (Model → Members)", new Vector2(12f, y),
+                        new Vector2(w - 24f, 16f), 11, new Color(0.45f, 0.50f, 0.58f, 1f), TextAnchor.MiddleLeft);
+                    y -= 18f;
+                }
+                else if (total > shown)
+                {
+                    MakeText(_inspectorContent, $"+{total - shown} more…", new Vector2(12f, y),
+                        new Vector2(w - 24f, 16f), 11, new Color(0.45f, 0.50f, 0.58f, 1f), TextAnchor.MiddleLeft);
+                    y -= 18f;
+                }
+                y -= 8f;
+            }
+
+            if (KindInfo.IsDiagramNode(el.Kind) && el.Kind != ElementKind.Note)
+            {
+                InspectorSection("ASPECTS", ref y);
+                InspectorAspectRow(el, _selectedId, ref y);
+            }
+
+            InspectorSection("NOTES", ref y);
             var descInput = MakeMultilineInput(_inspectorContent, new Vector2(12f, y), w - 24f, 70f,
                 el.Description, "UML/product description");
             y -= 84f;
 
+            InspectorSection("CODE", ref y);
             InspectorLabel("Code docs", ref y);
             var docInput = MakeMultilineInput(_inspectorContent, new Vector2(12f, y), w - 24f, 84f,
                 el.CodeDoc, "Source-code comment emitted above this element");
@@ -175,18 +217,6 @@ namespace TheRobotDraft.Uml
                 itemsInput = MakeMultilineInput(_inspectorContent, new Vector2(12f, y), w - 24f, 104f,
                     JoinLines(el.Items), "One item per line");
                 y -= 118f;
-            }
-
-            if (KindInfo.IsClassifier(el.Kind))
-            {
-                MakeText(_inspectorContent, MemberSummary(el), new Vector2(12f, y), new Vector2(w - 24f, 20f), 12,
-                    new Color(0.62f, 0.68f, 0.78f, 1f), TextAnchor.MiddleLeft);
-                y -= 30f;
-            }
-
-            if (KindInfo.IsDiagramNode(el.Kind) && el.Kind != ElementKind.Note)
-            {
-                InspectorAspectRow(el, _selectedId, ref y);
             }
 
             var id = _selectedId;
@@ -236,9 +266,28 @@ namespace TheRobotDraft.Uml
 
         private void InspectorLabel(string text, ref float y)
         {
-            MakeText(_inspectorContent, text, new Vector2(12f, y), new Vector2(InspectorWidth - 24f, 18f), 12,
-                new Color(0.62f, 0.68f, 0.78f, 1f), TextAnchor.MiddleLeft);
+            MakeText(_inspectorContent, text, new Vector2(12f, y), new Vector2(InspectorWidth - 24f, 18f), 11,
+                new Color(0.45f, 0.50f, 0.58f, 1f), TextAnchor.MiddleLeft);
             y -= 20f;
+        }
+
+        /// <summary>Uppercase section header with a hairline rule — the demo inspector's section style.</summary>
+        private void InspectorSection(string text, ref float y)
+        {
+            y -= 6f;
+            var rule = new GameObject("SectionRule", typeof(RectTransform));
+            var ruleRt = (RectTransform)rule.transform;
+            ruleRt.SetParent(_inspectorContent, false);
+            ruleRt.anchorMin = ruleRt.anchorMax = new Vector2(0f, 1f);
+            ruleRt.pivot = new Vector2(0f, 1f);
+            ruleRt.sizeDelta = new Vector2(InspectorWidth - 24f, 1f);
+            ruleRt.anchoredPosition = new Vector2(12f, y);
+            rule.AddComponent<Image>().color = new Color(0.165f, 0.196f, 0.22f, 1f);
+            y -= 8f;
+            var t = MakeText(_inspectorContent, text.ToUpperInvariant(), new Vector2(12f, y),
+                new Vector2(InspectorWidth - 24f, 18f), 11, new Color(0.42f, 0.47f, 0.54f, 1f), TextAnchor.MiddleLeft);
+            t.fontStyle = FontStyle.Bold;
+            y -= 24f;
         }
 
         private bool SupportsItemList(ElementKind kind) => KindInfo.HasPropertyRows(kind);

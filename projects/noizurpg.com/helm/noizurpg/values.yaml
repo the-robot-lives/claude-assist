@@ -2,10 +2,9 @@ static-site:
   nameOverride: noizurpg
   fullnameOverride: noizurpg
   domain: noizurpg.com
-  image: ops.noizu.com/app-noizurpg:latest
+  image: ops.noizu.com/app-noizurpg:v1.0.1
   port: 80
   imagePullSecrets:
     - name: ops-registry-secret
   tls:
     secretName: noizurpg-com-tls
-

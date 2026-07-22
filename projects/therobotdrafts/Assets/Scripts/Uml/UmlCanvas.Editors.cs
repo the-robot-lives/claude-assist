@@ -764,7 +764,7 @@ namespace TheRobotDraft.Uml
             inRt.pivot = new Vector2(0f, 1f);
             inRt.sizeDelta = new Vector2(width, height);
             inRt.anchoredPosition = topLeft;
-            inputGo.AddComponent<Image>().color = new Color(0.20f, 0.22f, 0.27f, 1f);
+            inputGo.AddComponent<Image>().color = new Color(0.078f, 0.090f, 0.106f, 1f);
             var input = inputGo.AddComponent<InputField>();
 
             var textComp = MakeText(inRt, "", new Vector2(8f, -4f), new Vector2(width - 16f, height - 8f), 15,
@@ -902,7 +902,7 @@ namespace TheRobotDraft.Uml
             inRt.pivot = new Vector2(0f, 1f);
             inRt.sizeDelta = new Vector2(width, 32f);
             inRt.anchoredPosition = topLeft;
-            inputGo.AddComponent<Image>().color = new Color(0.20f, 0.22f, 0.27f, 1f);
+            inputGo.AddComponent<Image>().color = new Color(0.078f, 0.090f, 0.106f, 1f);
             var input = inputGo.AddComponent<InputField>();
 
             var textComp = MakeText(inRt, "", new Vector2(8f, 0f), new Vector2(width - 16f, 32f), 16,

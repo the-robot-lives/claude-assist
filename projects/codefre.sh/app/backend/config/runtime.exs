@@ -8,6 +8,14 @@ config :codefresh, :redis,
   uri: System.get_env("REDIS_URL") || "redis://localhost:6379/0",
   key_prefix: System.get_env("REDIS_KEY_PREFIX", "starter:")
 
+token_store =
+  case System.get_env("TOKEN_STORE", "memory") do
+    "redis" -> :redis
+    _ -> :memory
+  end
+
+config :codefresh, :token_store, token_store
+
 # ── OpenTelemetry ────────────────────────────────────────────────
 if otel_endpoint = System.get_env("OTEL_EXPORTER_OTLP_ENDPOINT") do
   config :opentelemetry_exporter,
@@ -23,10 +31,24 @@ if otel_endpoint = System.get_env("OTEL_EXPORTER_OTLP_ENDPOINT") do
 end
 
 if config_env() == :prod do
+  database_url_from_parts = fn ->
+    with db_host when is_binary(db_host) <- System.get_env("DB_HOST"),
+         db_user when is_binary(db_user) <- System.get_env("DB_USER"),
+         db_password when is_binary(db_password) <- System.get_env("DB_PASSWORD"),
+         db_name when is_binary(db_name) <- System.get_env("DB_NAME") do
+      db_port = System.get_env("DB_PORT", "5432")
+
+      "ecto://#{URI.encode_www_form(db_user)}:#{URI.encode_www_form(db_password)}@#{db_host}:#{db_port}/#{db_name}"
+    else
+      _ -> nil
+    end
+  end
+
   database_url =
     System.get_env("DATABASE_URL") ||
+      database_url_from_parts.() ||
       raise """
-      environment variable DATABASE_URL is missing.
+      environment variable DATABASE_URL is missing and DB_HOST/DB_USER/DB_PASSWORD/DB_NAME were not complete.
       For example: ecto://user:pass@host/database
       """
 

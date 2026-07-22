@@ -67,6 +67,7 @@ namespace TheRobotDraft.Uml
             _statusLeft.color = _toolMode == ToolMode.Connect ? ToolAccentWarm : ToolAccent;
 
             string crumb = _activePackage.IsValid ? PackagePath(_activePackage) : "no diagram";
+            if (_toolCrumb != null) _toolCrumb.text = crumb;
             string sel = "";
             if (_selection.Count > 1) sel = "  ·  " + _selection.Count + " selected";
             else if (_selectedId.IsValid && _model != null && _model.TryGet(_selectedId, out var e))

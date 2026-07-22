@@ -38,6 +38,39 @@ namespace TheRobotDraft.Uml
             AddMenuBarButton(bar, "Code", ref x, pos => ShowCodeMenu(pos));
             AddMenuBarButton(bar, "Go", ref x, pos => ShowGoMenu(pos));
             AddMenuBarButton(bar, "View", ref x, pos => ShowViewMenuV2(pos));
+            AddMenuBarButton(bar, "Window", ref x, pos => ShowWindowMenu(pos));
+            AddMenuBarButton(bar, "Help", ref x, pos => ShowHelpMenu(pos));
+        }
+
+        // ------------------------------------------------------------------ Window
+
+        private void ShowWindowMenu(Vector2 screenPos)
+        {
+            CloseMenu();
+            var items = new List<MenuItem>
+            {
+                new MenuItem(Screen.fullScreen ? "Exit Full Screen" : "Enter Full Screen", true,
+                    () => { CloseMenu(); Screen.fullScreen = !Screen.fullScreen; }),
+                MenuItem.Separator(),
+                new MenuItem("✓ " + (_activePackage.IsValid ? PackageName(TopLevelOf(_activePackage)) : "Untitled"),
+                    false, null),
+            };
+            CreateMenu(screenPos, "Window", items);
+        }
+
+        // ------------------------------------------------------------------ Help
+
+        private void ShowHelpMenu(Vector2 screenPos)
+        {
+            CloseMenu();
+            var items = new List<MenuItem>
+            {
+                new MenuItem("Documentation", true, () => { CloseMenu(); ShowHelp(); }),
+                new MenuItem("Keyboard Shortcuts  (Ctrl/Cmd+/)", true, () => { CloseMenu(); ShowHelp(); }),
+                MenuItem.Separator(),
+                new MenuItem("Sample Model: Banking Domain", true, () => ResetToSample()),
+            };
+            CreateMenu(screenPos, "Help", items);
         }
 
         /// <summary>One menu-bar button; opens its dropdown anchored at the button's bottom-left corner.</summary>
@@ -222,6 +255,9 @@ namespace TheRobotDraft.Uml
                 new MenuItem("Camera Z up  (Alt+wheel)", true, () => { CloseMenu(); JumpCameraZ(1); }),
                 new MenuItem("Camera Z down  (Alt+wheel)", true, () => { CloseMenu(); JumpCameraZ(-1); }),
                 new MenuItem("⟳ Cycle drag-navigation mode  (N)", true, () => { CloseMenu(); CycleNavMode(false); }),
+                MenuItem.Separator(),
+                new MenuItem("Start Trace at selection", _selectedId.IsValid,
+                    () => { CloseMenu(); ShowTraceView(_selectedId); }),
             };
             CreateMenu(screenPos, "Go", items);
         }

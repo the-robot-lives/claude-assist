@@ -58,10 +58,64 @@ namespace TheRobotDraft.Uml3D
             if (_rig.Cam != null)
             {
                 _rig.Cam.clearFlags = CameraClearFlags.SolidColor;
-                _rig.Cam.backgroundColor = new Color(0.70f, 0.73f, 0.78f, 1f); // light slate
+                _rig.Cam.backgroundColor = new Color(0.078f, 0.102f, 0.114f, 1f); // dark charcoal (nav-redesign Nocturne)
             }
 
             EnsureLight();
+            BuildGridFloor();
+        }
+
+        /// <summary>
+        /// The subtle grid floor beneath the diagram (nav-redesign): a large unlit quad carrying a
+        /// procedurally drawn line grid, sitting well below the content as a depth/orientation cue.
+        /// Purely decorative — no collider, so it never interferes with node raycasts.
+        /// </summary>
+        private void BuildGridFloor()
+        {
+            const int tex = 512, cells = 16;
+            var t = new Texture2D(tex, tex, TextureFormat.RGBA32, false);
+            var clear = new Color32(0, 0, 0, 0);
+            var line = new Color32(53, 74, 84, 140); // #354A54, subtle teal-gray
+            var px = new Color32[tex * tex];
+            for (int i = 0; i < px.Length; i++) px[i] = clear;
+            int step = tex / cells;
+            for (int g = 0; g <= cells; g++)
+            {
+                int p = Mathf.Clamp(g * step, 0, tex - 1);
+                for (int q = 0; q < tex; q++) { px[p * tex + q] = line; px[q * tex + p] = line; }
+            }
+            t.SetPixels32(px);
+            t.wrapMode = TextureWrapMode.Repeat;
+            t.filterMode = FilterMode.Bilinear;
+            t.Apply();
+
+            var floor = GameObject.CreatePrimitive(PrimitiveType.Quad);
+            floor.name = "GridFloor";
+            Object.Destroy(floor.GetComponent<Collider>()); // decorative only — never hit-tested
+            floor.transform.SetParent(transform, false);
+            floor.transform.position = new Vector3(0f, -14f, 0f);
+            floor.transform.rotation = Quaternion.Euler(90f, 0f, 0f); // face up
+            floor.transform.localScale = new Vector3(400f, 400f, 1f);
+
+            Shader sh = Shader.Find("Universal Render Pipeline/Unlit");
+            if (sh == null) sh = Shader.Find("Unlit/Transparent");
+            if (sh == null) sh = Shader.Find("Sprites/Default");
+            var m = new Material(sh) { mainTexture = t };
+            m.mainTextureScale = new Vector2(24f, 24f);
+            if (m.HasProperty("_BaseMap")) m.SetTexture("_BaseMap", t);
+            if (m.HasProperty("_Surface")) m.SetFloat("_Surface", 1f); // URP transparent
+            if (m.HasProperty("_Blend")) m.SetFloat("_Blend", 0f);
+            m.renderQueue = 2900; // just before transparents, behind nodes
+            try
+            {
+                m.SetOverrideTag("RenderType", "Transparent");
+                m.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
+                m.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+                m.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+                m.SetInt("_ZWrite", 0);
+            }
+            catch (System.Exception) { }
+            floor.GetComponent<MeshRenderer>().sharedMaterial = m;
         }
 
         /// <summary>
@@ -116,8 +170,8 @@ namespace TheRobotDraft.Uml3D
             try
             {
                 RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Trilight;
-                RenderSettings.ambientSkyColor = new Color(0.62f, 0.66f, 0.72f);
-                RenderSettings.ambientEquatorColor = new Color(0.42f, 0.44f, 0.48f);
+                RenderSettings.ambientSkyColor = new Color(0.34f, 0.38f, 0.42f);
+                RenderSettings.ambientEquatorColor = new Color(0.24f, 0.27f, 0.30f);
                 RenderSettings.ambientGroundColor = new Color(0.20f, 0.21f, 0.24f);
                 QualitySettings.shadowDistance = Mathf.Max(QualitySettings.shadowDistance, 60f);
             }

@@ -34,6 +34,11 @@ RUN addgroup --system --gid 1001 nodejs && \
 COPY --from=build --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=build --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=build --chown=nextjs:nodejs /app/public ./public
+# style-guide config (src/config/theme-style-guide) is read at runtime by
+# loadConfig()/loadAllBrandings() during SSR of dynamic routes (e.g. /category/[slug]).
+# Next.js standalone file-tracing doesn't see these dynamic fs reads, so copy the
+# config dir into the runtime image to avoid ENOENT 500s on dynamic routes.
+COPY --from=build --chown=nextjs:nodejs /app/src/config ./src/config
 COPY --chown=nextjs:nodejs docker-entrypoint.sh ./
 
 USER nextjs
