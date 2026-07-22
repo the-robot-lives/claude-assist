@@ -87,9 +87,9 @@ signupForm.addEventListener("submit", (event) => {
     return;
   }
 
-  if (!INVITE_PATTERN.test(invite)) {
+  if (invite && !INVITE_PATTERN.test(invite)) {
     signupStatus.dataset.state = "error";
-    signupStatus.textContent = "Direct beta signup requires a valid invite token.";
+    signupStatus.textContent = "Invite tokens look like TRL-XXXXXX. Leave the field blank to join the waitlist.";
     return;
   }
 
@@ -100,6 +100,7 @@ signupForm.addEventListener("submit", (event) => {
   }
 
   const request = {
+    type: invite ? "invite" : "waitlist",
     email,
     invite,
     focus,
@@ -107,7 +108,9 @@ signupForm.addEventListener("submit", (event) => {
   };
   localStorage.setItem("trl-beta-request", JSON.stringify(request));
   signupStatus.dataset.state = "ok";
-  signupStatus.textContent = "Beta request staged. Authentik users can continue without an invite token.";
+  signupStatus.textContent = invite
+    ? "Invite accepted — direct beta request staged. Authentik users can continue without a token."
+    : "You're on the beta waitlist. Authentik users can continue without waiting.";
 });
 
 loginForm.addEventListener("submit", (event) => {
@@ -115,3 +118,13 @@ loginForm.addEventListener("submit", (event) => {
   loginStatus.dataset.state = "error";
   loginStatus.textContent = "Email login needs the account backend. Use Authentik for active beta access.";
 });
+
+if (sessionStorage.getItem("trl-auth-method") === "authentik") {
+  sessionStorage.removeItem("trl-auth-method");
+  const note = document.createElement("p");
+  note.className = "auth-return-note";
+  note.setAttribute("role", "status");
+  note.textContent =
+    "You're back from Authentik. The beta workspace hasn't opened yet — Authentik identities get direct access the moment it launches, no waitlist token needed.";
+  document.querySelector(".hero-copy")?.prepend(note);
+}

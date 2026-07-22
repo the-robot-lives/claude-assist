@@ -8,7 +8,7 @@
       name="description"
       content="The Robot Learns is a cloud workspace for durable knowledge, adaptive study plans, quizzes, and MCP-assisted learning content."
     />
-    <link rel="stylesheet" href="/styles.css?v=20260722-beta-ux-2" />
+    <link rel="stylesheet" href="/styles.css?v=20260722-beta-ux-3" />
   </head>
   <body>
     <a class="skip-link" href="#main">Skip to main content</a>
@@ -28,7 +28,7 @@
 
       <div class="header-actions">
         <button class="button button-ghost" type="button" data-open-auth="login">Log in</button>
-        <button class="button button-primary" type="button" data-open-auth="signup">Join beta</button>
+        <button class="button button-primary" type="button" data-open-auth="signup">Join waitlist</button>
       </div>
     </header>
 
@@ -43,12 +43,13 @@
           </p>
           <div class="hero-actions">
             <button class="button button-primary button-large" type="button" data-open-auth="signup">
-              Sign up as a free beta user
+              Sign up for the beta waitlist
             </button>
             <a class="button button-secondary button-large" href="#features">See features</a>
           </div>
           <p class="trust-note">
-            Invite token required for direct beta signup. Authentik signups use your existing trusted identity.
+            Join the waitlist with just an email. Invite tokens unlock direct beta access, and
+            Authentik signups use your existing trusted identity.
           </p>
         </div>
 
@@ -148,8 +149,8 @@
         </div>
         <div class="security-grid">
           <article>
-            <h3>Direct signup needs an invite token</h3>
-            <p>Beta tokens keep onboarding intentional while the cloud workspace is still taking shape.</p>
+            <h3>Direct access needs an invite token</h3>
+            <p>No token yet? Join the beta waitlist. Invite tokens keep onboarding intentional while the cloud workspace is still taking shape.</p>
           </article>
           <article>
             <h3>Authentik is the trusted path</h3>
@@ -165,12 +166,12 @@
       <section class="section final-cta" aria-labelledby="beta-title">
         <div>
           <p class="eyebrow">Free beta</p>
-          <h2 id="beta-title">Join the beta and help shape the learning workspace.</h2>
+          <h2 id="beta-title">Join the beta waitlist and help shape the learning workspace.</h2>
           <p>No sales pitch here. The beta is about fit, feedback, and proving the learning loop.</p>
         </div>
         <div class="hero-actions">
           <button class="button button-primary button-large" type="button" data-open-auth="signup">
-            Sign up as a free beta user
+            Sign up for the beta waitlist
           </button>
           <button class="button button-secondary button-large" type="button" data-open-auth="login">
             Log in
@@ -205,7 +206,7 @@
         <section class="auth-panel auth-panel-muted">
           <div class="auth-tabs" role="tablist" aria-label="Beta access forms">
             <button class="auth-tab is-active" type="button" role="tab" aria-selected="true" data-auth-tab="signup">
-              Sign up
+              Join waitlist
             </button>
             <button class="auth-tab" type="button" role="tab" aria-selected="false" data-auth-tab="login">
               Email login
@@ -218,14 +219,13 @@
               <input name="email" type="email" autocomplete="email" required />
             </label>
             <label>
-              Invite token
+              Invite token (optional)
               <input
                 name="invite"
                 type="text"
                 autocomplete="one-time-code"
                 inputmode="text"
-                placeholder="TRL-..."
-                required />
+                placeholder="TRL-... for direct beta access" />
             </label>
             <label>
               Learning focus
@@ -237,7 +237,7 @@
                 <option>Personal study loop</option>
               </select>
             </label>
-            <button class="button button-primary button-block" type="submit">Request beta access</button>
+            <button class="button button-primary button-block" type="submit">Join the beta waitlist</button>
             <p class="form-status" id="signup-status" aria-live="polite"></p>
           </form>
 
@@ -257,6 +257,6 @@
       </div>
     </dialog>
 
-    <script src="/app.js?v=20260722-beta-ux-2"></script>
+    <script src="/app.js?v=20260722-beta-ux-3"></script>
   </body>
 </html>
