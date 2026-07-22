@@ -38,7 +38,7 @@ struct AppSettings: Codable {
 
     static let defaults = AppSettings(
         screenshotIntervalMinutes: 5,
-        screenshotCaptureEnabled: false,
+        screenshotCaptureEnabled: true,
         pomodoroWorkMinutes: 25,
         pomodoroBreakMinutes: 5,
         localOnlyScreenshots: true,
@@ -340,7 +340,9 @@ struct CensoredScreenshotRecord: Identifiable, Codable {
 struct TrackedTimeSpan: Identifiable, Codable {
     var id: UUID
     var title: String
+    var client: String
     var project: String
+    var ticket: String
     var start: Date
     var end: Date?
     var source: SpanSource
@@ -354,6 +356,78 @@ struct TrackedTimeSpan: Identifiable, Codable {
     var isOpen: Bool {
         end == nil
     }
+
+    init(
+        id: UUID,
+        title: String,
+        client: String = "",
+        project: String,
+        ticket: String = "",
+        start: Date,
+        end: Date?,
+        source: SpanSource,
+        isBillable: Bool,
+        notes: String
+    ) {
+        self.id = id
+        self.title = title
+        self.client = client
+        self.project = project
+        self.ticket = ticket
+        self.start = start
+        self.end = end
+        self.source = source
+        self.isBillable = isBillable
+        self.notes = notes
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case title
+        case client
+        case project
+        case ticket
+        case start
+        case end
+        case source
+        case isBillable
+        case notes
+    }
+
+    init(from decoder: Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        id = try values.decode(UUID.self, forKey: .id)
+        title = try values.decode(String.self, forKey: .title)
+        client = try values.decodeIfPresent(String.self, forKey: .client) ?? ""
+        project = try values.decode(String.self, forKey: .project)
+        ticket = try values.decodeIfPresent(String.self, forKey: .ticket) ?? ""
+        start = try values.decode(Date.self, forKey: .start)
+        end = try values.decodeIfPresent(Date.self, forKey: .end)
+        source = try values.decode(SpanSource.self, forKey: .source)
+        isBillable = try values.decode(Bool.self, forKey: .isBillable)
+        notes = try values.decode(String.self, forKey: .notes)
+    }
+}
+
+struct ClientRecord: Identifiable, Codable {
+    var id: UUID
+    var name: String
+    var notes: String
+}
+
+struct ProjectRecord: Identifiable, Codable {
+    var id: UUID
+    var clientName: String
+    var name: String
+    var notes: String
+}
+
+struct TicketRecord: Identifiable, Codable {
+    var id: UUID
+    var clientName: String
+    var projectName: String
+    var name: String
+    var notes: String
 }
 
 struct ScreenshotRecord: Identifiable, Codable {
@@ -370,6 +444,9 @@ struct TimelySnapshot: Codable {
     var screenshots: [ScreenshotRecord]
     var visionAnalyses: [VisionAnalysisRecord]
     var censoredScreenshots: [CensoredScreenshotRecord]
+    var clients: [ClientRecord]
+    var projects: [ProjectRecord]
+    var tickets: [TicketRecord]
     var lastInferredProject: String?
 
     init(
@@ -378,6 +455,9 @@ struct TimelySnapshot: Codable {
         screenshots: [ScreenshotRecord],
         visionAnalyses: [VisionAnalysisRecord],
         censoredScreenshots: [CensoredScreenshotRecord],
+        clients: [ClientRecord],
+        projects: [ProjectRecord],
+        tickets: [TicketRecord],
         lastInferredProject: String?
     ) {
         self.settings = settings
@@ -385,6 +465,9 @@ struct TimelySnapshot: Codable {
         self.screenshots = screenshots
         self.visionAnalyses = visionAnalyses
         self.censoredScreenshots = censoredScreenshots
+        self.clients = clients
+        self.projects = projects
+        self.tickets = tickets
         self.lastInferredProject = lastInferredProject
     }
 
@@ -394,6 +477,9 @@ struct TimelySnapshot: Codable {
         case screenshots
         case visionAnalyses
         case censoredScreenshots
+        case clients
+        case projects
+        case tickets
         case lastInferredProject
     }
 
@@ -404,6 +490,9 @@ struct TimelySnapshot: Codable {
         screenshots = try values.decodeIfPresent([ScreenshotRecord].self, forKey: .screenshots) ?? []
         visionAnalyses = try values.decodeIfPresent([VisionAnalysisRecord].self, forKey: .visionAnalyses) ?? []
         censoredScreenshots = try values.decodeIfPresent([CensoredScreenshotRecord].self, forKey: .censoredScreenshots) ?? []
+        clients = try values.decodeIfPresent([ClientRecord].self, forKey: .clients) ?? []
+        projects = try values.decodeIfPresent([ProjectRecord].self, forKey: .projects) ?? []
+        tickets = try values.decodeIfPresent([TicketRecord].self, forKey: .tickets) ?? []
         lastInferredProject = try values.decodeIfPresent(String.self, forKey: .lastInferredProject)
     }
 }

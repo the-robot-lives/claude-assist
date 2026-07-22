@@ -1043,24 +1043,37 @@ tags: [lab, renderer-fixture, {tool}]
         ),
         ProviderKind::FimChannel => {
             let text_format = &entry.slug;
+            let ext = entry
+                .default_extension
+                .as_deref()
+                .unwrap_or("js");
+            let asset = entry
+                .asset_types
+                .first()
+                .map(|s| s.as_str())
+                .unwrap_or("component");
             format!(
                 r#"schema: "0.4"
 id: {id}
 type: {asset}
 quality: medium
-service: groq-chat
 
 prompt:
-  system: "You generate {text_format} artifacts. Output ONLY the raw artifact — no markdown fences, no commentary."
-  text: "Create a small, self-contained {text_format} example suitable for a test fixture. Keep it short and valid."
+  system: |
+    You generate {text_format} artifacts.
+    Output ONLY the raw artifact — no markdown fences, no commentary, no explanation.
+  text: |
+    Create a polished, self-contained {text_format} demo that clearly shows core features
+    of the library. Prefer a single runnable example with clear structure. Keep it concise
+    but real — not a placeholder or stub.
   provider_options:
     max_tokens: 4096
-    temperature: 0.2
+    temperature: 0.3
 
 output:
+  text_format: {text_format}
   formats:
     - format: {ext}
-  text_format: {text_format}
 
 eval:
   pass_threshold: 0.65

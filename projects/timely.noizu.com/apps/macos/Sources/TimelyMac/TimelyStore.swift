@@ -11,18 +11,31 @@ final class TimelyStore: ObservableObject {
     @Published var screenshots: [ScreenshotRecord] = []
     @Published var visionAnalyses: [VisionAnalysisRecord] = []
     @Published var censoredScreenshots: [CensoredScreenshotRecord] = []
+    @Published var clients: [ClientRecord] = []
+    @Published var projects: [ProjectRecord] = []
+    @Published var tickets: [TicketRecord] = []
     @Published var isAnalyzingVisionScreenshot: Bool = false
     @Published var lastInferredProject: String?
     @Published var mode: CaptureMode = .idle
     @Published var activeSpanID: UUID?
     @Published var currentTask: String = ""
+    @Published var currentClient: String = ""
     @Published var currentProject: String = ""
+    @Published var currentTicket: String = ""
     @Published var manualTitle: String = ""
+    @Published var manualClient: String = ""
     @Published var manualProject: String = ""
+    @Published var manualTicket: String = ""
     @Published var manualStart: Date = Calendar.current.date(byAdding: .hour, value: -1, to: Date()) ?? Date()
     @Published var manualEnd: Date = Date()
     @Published var manualNotes: String = ""
     @Published var manualBillable: Bool = true
+    @Published var draftClientName: String = ""
+    @Published var draftProjectClient: String = ""
+    @Published var draftProjectName: String = ""
+    @Published var draftTicketClient: String = ""
+    @Published var draftTicketProject: String = ""
+    @Published var draftTicketName: String = ""
     @Published var now: Date = Date()
     @Published var pomodoroRemaining: TimeInterval = 0
     @Published var lastError: String?
@@ -91,7 +104,9 @@ final class TimelyStore: ObservableObject {
         let span = TrackedTimeSpan(
             id: UUID(),
             title: trimmedTask,
+            client: currentClient.trimmingCharacters(in: .whitespacesAndNewlines),
             project: currentProject.trimmingCharacters(in: .whitespacesAndNewlines),
+            ticket: currentTicket.trimmingCharacters(in: .whitespacesAndNewlines),
             start: Date(),
             end: nil,
             source: .timer,
@@ -100,6 +115,7 @@ final class TimelyStore: ObservableObject {
         )
 
         spans.insert(span, at: 0)
+        upsertAssignment(client: span.client, project: span.project, ticket: span.ticket)
         activeSpanID = span.id
         mode = .running
         lastError = nil
@@ -148,7 +164,9 @@ final class TimelyStore: ObservableObject {
         let span = TrackedTimeSpan(
             id: UUID(),
             title: trimmedTask,
+            client: manualClient.trimmingCharacters(in: .whitespacesAndNewlines),
             project: manualProject.trimmingCharacters(in: .whitespacesAndNewlines),
+            ticket: manualTicket.trimmingCharacters(in: .whitespacesAndNewlines),
             start: manualStart,
             end: manualEnd,
             source: .manual,
@@ -156,8 +174,11 @@ final class TimelyStore: ObservableObject {
             notes: manualNotes.trimmingCharacters(in: .whitespacesAndNewlines)
         )
         spans.insert(span, at: 0)
+        upsertAssignment(client: span.client, project: span.project, ticket: span.ticket)
         manualTitle = ""
+        manualClient = ""
         manualProject = ""
+        manualTicket = ""
         manualNotes = ""
         manualEnd = Date()
         manualStart = Calendar.current.date(byAdding: .hour, value: -1, to: manualEnd) ?? manualEnd
@@ -186,7 +207,9 @@ final class TimelyStore: ObservableObject {
         let span = TrackedTimeSpan(
             id: UUID(),
             title: trimmedTask,
+            client: currentClient.trimmingCharacters(in: .whitespacesAndNewlines),
             project: currentProject.trimmingCharacters(in: .whitespacesAndNewlines),
+            ticket: currentTicket.trimmingCharacters(in: .whitespacesAndNewlines),
             start: Date(),
             end: nil,
             source: .pomodoro,
@@ -195,6 +218,7 @@ final class TimelyStore: ObservableObject {
         )
 
         spans.insert(span, at: 0)
+        upsertAssignment(client: span.client, project: span.project, ticket: span.ticket)
         activeSpanID = span.id
         pomodoroWorkSpanID = span.id
         pomodoroRemaining = settings.pomodoroWorkMinutes * 60
@@ -254,6 +278,48 @@ final class TimelyStore: ObservableObject {
         configureScreenshotTimer()
     }
 
+    func addClient() {
+        let name = draftClientName.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !name.isEmpty else {
+            lastError = "Enter a client name."
+            return
+        }
+        upsertClient(name)
+        draftClientName = ""
+        lastError = nil
+        save()
+    }
+
+    func addProject() {
+        let client = draftProjectClient.trimmingCharacters(in: .whitespacesAndNewlines)
+        let name = draftProjectName.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !name.isEmpty else {
+            lastError = "Enter a project name."
+            return
+        }
+        upsertAssignment(client: client, project: name, ticket: "")
+        draftProjectClient = ""
+        draftProjectName = ""
+        lastError = nil
+        save()
+    }
+
+    func addTicket() {
+        let client = draftTicketClient.trimmingCharacters(in: .whitespacesAndNewlines)
+        let project = draftTicketProject.trimmingCharacters(in: .whitespacesAndNewlines)
+        let name = draftTicketName.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !name.isEmpty else {
+            lastError = "Enter a ticket name."
+            return
+        }
+        upsertAssignment(client: client, project: project, ticket: name)
+        draftTicketClient = ""
+        draftTicketProject = ""
+        draftTicketName = ""
+        lastError = nil
+        save()
+    }
+
     func load() {
         ensureDirectories()
         guard FileManager.default.fileExists(atPath: snapshotURL.path) else { return }
@@ -265,6 +331,9 @@ final class TimelyStore: ObservableObject {
             screenshots = snapshot.screenshots.sorted { $0.capturedAt > $1.capturedAt }
             visionAnalyses = snapshot.visionAnalyses.sorted { $0.analyzedAt > $1.analyzedAt }
             censoredScreenshots = snapshot.censoredScreenshots.sorted { $0.censoredAt > $1.censoredAt }
+            clients = snapshot.clients.sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+            projects = snapshot.projects.sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+            tickets = snapshot.tickets.sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
             lastInferredProject = snapshot.lastInferredProject
         } catch {
             lastError = "Could not load saved Timely state: \(error.localizedDescription)"
@@ -280,6 +349,9 @@ final class TimelyStore: ObservableObject {
                 screenshots: screenshots,
                 visionAnalyses: visionAnalyses,
                 censoredScreenshots: censoredScreenshots,
+                clients: clients,
+                projects: projects,
+                tickets: tickets,
                 lastInferredProject: lastInferredProject
             )
             let data = try encoder.encode(snapshot)
@@ -317,6 +389,46 @@ final class TimelyStore: ObservableObject {
               let index = spans.firstIndex(where: { $0.id == activeSpanID }),
               spans[index].end == nil else { return }
         spans[index].end = Date()
+    }
+
+    private func upsertAssignment(client: String, project: String, ticket: String) {
+        upsertClient(client)
+        upsertProject(name: project, client: client)
+        upsertTicket(name: ticket, project: project, client: client)
+    }
+
+    private func upsertClient(_ name: String) {
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+        guard !clients.contains(where: { $0.name.localizedCaseInsensitiveCompare(trimmed) == .orderedSame }) else { return }
+        clients.append(ClientRecord(id: UUID(), name: trimmed, notes: ""))
+        clients.sort { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+    }
+
+    private func upsertProject(name: String, client: String) {
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+        let clientName = client.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !projects.contains(where: {
+            $0.name.localizedCaseInsensitiveCompare(trimmed) == .orderedSame
+                && $0.clientName.localizedCaseInsensitiveCompare(clientName) == .orderedSame
+        }) else { return }
+        projects.append(ProjectRecord(id: UUID(), clientName: clientName, name: trimmed, notes: ""))
+        projects.sort { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+    }
+
+    private func upsertTicket(name: String, project: String, client: String) {
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+        let projectName = project.trimmingCharacters(in: .whitespacesAndNewlines)
+        let clientName = client.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !tickets.contains(where: {
+            $0.name.localizedCaseInsensitiveCompare(trimmed) == .orderedSame
+                && $0.projectName.localizedCaseInsensitiveCompare(projectName) == .orderedSame
+                && $0.clientName.localizedCaseInsensitiveCompare(clientName) == .orderedSame
+        }) else { return }
+        tickets.append(TicketRecord(id: UUID(), clientName: clientName, projectName: projectName, name: trimmed, notes: ""))
+        tickets.sort { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
     }
 
     private func configureScreenshotTimer() {

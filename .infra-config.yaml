@@ -786,7 +786,7 @@ project:
           context: app/frontend
           registry_path: gotta.cc/frontend
           build_args:
-            NEXT_PUBLIC_API_URL: https://api.gotta.cc
+            NEXT_PUBLIC_API_URL: https://gotta.cc
           auto_detect: false
           helm:
             chart_path: projects/gotta.cc/helm/gotta-cc

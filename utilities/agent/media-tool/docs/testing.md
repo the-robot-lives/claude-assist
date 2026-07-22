@@ -70,6 +70,29 @@ Search on the map filters the full generator set by name.
 
 Requires API keys for live generate; eval needs `GROQ_API_KEY` or `MEDIA_EVAL_*` / port-forward.
 
+### Settings (LLM for example prompts)
+
+**Settings** in the lab UI configures the model used for *Generate example prompt*.
+
+Default (queue-populator style):
+
+| Field | Default |
+|-------|---------|
+| Provider | `groq` |
+| Model | `openai/gpt-oss-120b` |
+| Base URL | `https://api.groq.com/openai/v1` |
+| API key | `env: GROQ_API_KEY` |
+
+Persists to `tmp/live-eval/settings.json` (workspace). Supports `env: VAR_NAME` like
+OSX Queue Populator / Timely vision settings.
+
+```bash
+GET  /api/settings
+GET  /api/settings/llm-meta    # provider dropdown + defaults
+PUT  /api/settings             # { "llm": { provider, model, base_url, api_key } }
+POST /api/settings/test-llm    # ping chat/completions
+```
+
 ## What unit tests cover (Phase 0/A)
 
 - **prep**: `PrepChannel` routing (raster vs svg vs voice vs chat), hex-preserving SVG rules, voice disallows LLM prep, instruction assembly

@@ -67,6 +67,20 @@ struct TimelySecondaryButtonStyle: ButtonStyle {
     }
 }
 
+struct TimelyIconButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(.system(size: 14, weight: .semibold))
+            .foregroundStyle(.primary)
+            .background(TimelyTheme.surface.opacity(configuration.isPressed ? 0.72 : 1))
+            .overlay(
+                RoundedRectangle(cornerRadius: 6)
+                    .stroke(TimelyTheme.border)
+            )
+            .clipShape(RoundedRectangle(cornerRadius: 6))
+    }
+}
+
 struct TimelyCardModifier: ViewModifier {
     var padding: CGFloat = 16
 
@@ -75,14 +89,10 @@ struct TimelyCardModifier: ViewModifier {
             .frame(maxWidth: .infinity, alignment: .topLeading)
             .padding(padding)
             .background(
-                ZStack(alignment: .top) {
+                ZStack {
                     TimelyTheme.elevated
                     TimelyTheme.warmGradient
-                        .frame(height: 54)
-                        .opacity(0.72)
-                    Rectangle()
-                        .fill(TimelyTheme.brandGradient)
-                        .frame(height: 3)
+                        .opacity(0.16)
                 }
             )
             .overlay(

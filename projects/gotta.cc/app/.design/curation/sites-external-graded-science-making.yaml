@@ -1,0 +1,348 @@
+# gotta.cc — graded external candidates (science + making). Provisional; human-approve before insert.
+# Graded 2026-07-22 against docs/scoring-rubric.md (Section 3 gate + Section 4 bands).
+# overall = round(originality*0.30 + human_authorship*0.25 + depth*0.20 + freshness*0.15 + design_quality*0.10)
+# NOTE: paulsellers.com returned HTTP 403 (WAF bot-block) on homepage AND RSS feed — live server, not parked.
+#       Scored from prior knowledge; flagged PASS-provisional. EDITOR: verify before publish.
+graded:
+
+  # ============================================================
+  # SCIENCE (14)
+  # ============================================================
+  - name: "Scott Aaronson (Shtetl-Optimized)"
+    url: "https://scottaaronson.blog/"
+    domain: "scottaaronson.blog"
+    category: "science"
+    tags: ["quantum", "computer-science", "essays", "academic"]
+    gate: "PASS"
+    gate_reason: "Named theorist writing long-form, ad-free, fiercely personal essays with a 20-year archive."
+    scores: { originality: 88, human_authorship: 95, depth: 92, freshness: 95, design_quality: 72 }
+    overall: 90
+    summary: "A quantum-computing theorist's blunt, funny, unmistakably personal 20-year blog on his field and its fights."
+    justification: "Archive dates to 2005 with a post dated July 18 2026 on quantum supremacy; voice is self-reflective, opinionated, admits mistakes. Ad-free, exclusively human long-form; design is clean-but-plain traditional blog, hence lower Design."
+
+  - name: "Terence Tao (What's new)"
+    url: "https://terrytao.wordpress.com/"
+    domain: "terrytao.wordpress.com"
+    category: "science"
+    tags: ["mathematics", "research", "expository", "academic"]
+    gate: "PASS"
+    gate_reason: "A Fields medalist's own decades-long blog of substantive expository math, ad-free."
+    scores: { originality: 85, human_authorship: 92, depth: 95, freshness: 95, design_quality: 70 }
+    overall: 89
+    summary: "A Fields medalist writes generous expository mathematics and shares research in progress on his own blog."
+    justification: "Posts dated July 21 2026 ('Jacobian conjecture counterexample') atop an archive spanning decades; long-form proofs, interactive applets, candid methodology notes. WordPress template keeps Design modest against deep, current, personal scholarship."
+
+  - name: "Azimuth (John Baez)"
+    url: "https://johncarlosbaez.wordpress.com/"
+    domain: "johncarlosbaez.wordpress.com"
+    category: "science"
+    tags: ["mathematics", "physics", "climate", "essays"]
+    gate: "PASS"
+    gate_reason: "One mathematician's heavily-cited long-form essays across math, physics, and climate, ad-free."
+    scores: { originality: 86, human_authorship: 90, depth: 90, freshness: 93, design_quality: 68 }
+    overall: 87
+    summary: "A mathematical physicist connects category theory, chemistry, and the climate crisis in cited long essays."
+    justification: "Posts dated July 18 2026 and June 2026; pieces run 2,000-8,000+ words with heavy citation and personal curiosity ('somewhat mysterious to me'). Plain WordPress theme; strong voice, depth, and recency carry it."
+
+  - name: "Sean Carroll (Preposterous Universe)"
+    url: "https://www.preposterousuniverse.com/blog/"
+    domain: "preposterousuniverse.com"
+    category: "science"
+    tags: ["physics", "cosmology", "philosophy", "podcast"]
+    gate: "PASS"
+    gate_reason: "A physicist's ~two-decade personal site of accessible long-form cosmology and idea essays, minimal ads."
+    scores: { originality: 82, human_authorship: 90, depth: 88, freshness: 78, design_quality: 72 }
+    overall: 84
+    summary: "A physicist's two-decade personal blog of accessible cosmology and thoughtful public-science essays."
+    justification: "Most recent post is the Nov 27 2025 'Thanksgiving' essay on information — maintained but posting has slowed, hence mid-70s Freshness. Clean text-focused layout; long-form original essays, not aggregation; promotes his own books rather than ads."
+
+  - name: "Backreaction (Sabine Hossenfelder)"
+    url: "https://backreaction.blogspot.com/"
+    domain: "backreaction.blogspot.com"
+    category: "science"
+    tags: ["physics", "criticism", "blog", "academic"]
+    gate: "SOFT_FLAG"
+    gate_reason: "Substantive personal physics blog, but carries an Amazon affiliate book link alongside content."
+    scores: { originality: 84, human_authorship: 90, depth: 85, freshness: 92, design_quality: 68 }
+    overall: 85
+    summary: "A physicist's contrarian, deeply personal blog questioning the sociology of her own discipline."
+    justification: "Archive back to 2006 with posts July 20/19/17 2026; long-form written companions to her videos on quantum mechanics and dark matter. Monetization is light (Patreon + one Amazon affiliate link) — soft-flagged, not disqualifying; standard Blogger template limits Design."
+
+  - name: "Gowers's Weblog (Tim Gowers)"
+    url: "https://gowers.wordpress.com/"
+    domain: "gowers.wordpress.com"
+    category: "science"
+    tags: ["mathematics", "research", "open-science", "academic"]
+    gate: "PASS"
+    gate_reason: "A Fields medalist thinks out loud about proofs and policy in long-form posts, negligible ads."
+    scores: { originality: 82, human_authorship: 88, depth: 86, freshness: 82, design_quality: 66 }
+    overall: 83
+    summary: "A Fields medalist thinks out loud about proofs and academia — and launched Polymath collaborative math here."
+    justification: "Archive to 2007; most recent post May 8 2026 with earlier 2026 entries — active but not frequent. Substantive intellectual posts (e.g. on ChatGPT's math ability); readability-first WordPress layout keeps Design low."
+
+  - name: "The Last Word On Nothing"
+    url: "https://www.lastwordonnothing.com/"
+    domain: "lastwordonnothing.com"
+    category: "science"
+    tags: ["science-writing", "essays", "collective", "nature"]
+    gate: "PASS"
+    gate_reason: "A named collective of veteran science journalists posting original bylined personal essays, ad-light."
+    scores: { originality: 80, human_authorship: 88, depth: 88, freshness: 92, design_quality: 74 }
+    overall: 85
+    summary: "A collective of veteran science journalists posts personal, literary essays outside the newsroom."
+    justification: "18+ named contributors with distinct voices; posts dated July 20 2026 atop archives to 2010. Original narrative science essays, not aggregation; clean readable layout with bylines and categories."
+
+  - name: "Deep Sea News"
+    url: "https://www.deepseanews.com/"
+    domain: "deepseanews.com"
+    category: "science"
+    tags: ["marine-biology", "ocean", "humor", "outreach"]
+    gate: "SOFT_FLAG"
+    gate_reason: "Genuine first-person marine-biology writing, but the site appears dormant since mid-2024."
+    scores: { originality: 78, human_authorship: 85, depth: 85, freshness: 60, design_quality: 72 }
+    overall: 78
+    summary: "Working marine biologists write funny, first-person dispatches about the deep ocean — lately gone quiet."
+    justification: "Craig McClain's personal voice across a huge archive (pagination reaches page 420), but the most recent posts are June 2024, so Freshness sits in the dormant-but-intact band. Clean WordPress, Creative-Commons licensed, real expertise not aggregation."
+
+  - name: "Tetrapod Zoology (Darren Naish)"
+    url: "https://tetzoo.com/"
+    domain: "tetzoo.com"
+    category: "science"
+    tags: ["paleontology", "zoology", "cryptids", "blog"]
+    gate: "PASS"
+    gate_reason: "A paleozoologist's obsessive, current long-form blog on obscure animals living and extinct, ad-light."
+    scores: { originality: 84, human_authorship: 88, depth: 86, freshness: 90, design_quality: 76 }
+    overall: 86
+    summary: "A paleozoologist's obsessive, long-running blog on obscure animals — living, extinct, and cryptid."
+    justification: "Named author Darren Naish; posts July 9 2026 and June 24 2026 over an archive stretching back years across amphibians, reptiles, and paleontology. Substantive species deep-dives on a clean Squarespace build; Patreon rather than ad-driven."
+
+  - name: "Why Evolution Is True (Jerry Coyne)"
+    url: "https://whyevolutionistrue.com/"
+    domain: "whyevolutionistrue.com"
+    category: "science"
+    tags: ["biology", "evolution", "essays", "cats"]
+    gate: "SOFT_FLAG"
+    gate_reason: "An evolutionary biologist's near-daily personal blog, with moderate ad presence."
+    scores: { originality: 76, human_authorship: 88, depth: 85, freshness: 94, design_quality: 70 }
+    overall: 83
+    summary: "An evolutionary biologist's daily mix of science, argument, and beloved duck-and-cat photography."
+    justification: "Named, opinionated voice; posts timestamped July 21 2026 (near-daily) over a deep categorized archive. Familiar personal-blog format redeemed by voice; moderate ads soft-flagged, functional WordPress design."
+
+  - name: "RealClimate"
+    url: "https://www.realclimate.org/"
+    domain: "realclimate.org"
+    category: "science"
+    tags: ["climate", "research", "explainer", "scientists"]
+    gate: "PASS"
+    gate_reason: "Working climate scientists explaining their own field directly to the public, ad-free since 2004."
+    scores: { originality: 80, human_authorship: 82, depth: 90, freshness: 88, design_quality: 70 }
+    overall: 83
+    summary: "Climate scientists explain their own field directly to the public, ad-free, since 2004."
+    justification: "1,410 posts and 252k comments since 2004 with entries dated July 8 2026; named scientists (Gavin, Rasmus) offer technical critique. Group-authorship model keeps Human Authorship a touch below the solo blogs; original analysis, not aggregation."
+
+  - name: "NeuroLogica (Steven Novella)"
+    url: "https://theness.com/neurologicablog/"
+    domain: "theness.com"
+    category: "science"
+    tags: ["neuroscience", "skepticism", "medicine", "daily"]
+    gate: "PASS"
+    gate_reason: "A neurologist's near-daily first-person skeptical essays with a nearly two-decade archive, ad-light."
+    scores: { originality: 78, human_authorship: 88, depth: 88, freshness: 92, design_quality: 64 }
+    overall: 83
+    summary: "A neurologist applies careful skepticism to science and medicine claims in near-daily first-person essays."
+    justification: "Steven Novella MD writes in the first person (personal anecdotes, clear opinions) with posts dated July 14 2026 over archives to 2007. Long-form analysis, not aggregation; the dated WordPress template drags Design into the functional-rough band."
+
+  - name: "10,000 Birds"
+    url: "https://www.10000birds.com/"
+    domain: "10000birds.com"
+    category: "science"
+    tags: ["birding", "nature", "field-notes", "community"]
+    gate: "SOFT_FLAG"
+    gate_reason: "Original bylined birding field-notes, but with tour-operator ads and thin author bios."
+    scores: { originality: 72, human_authorship: 80, depth: 85, freshness: 92, design_quality: 74 }
+    overall: 80
+    summary: "Birders worldwide file first-hand field notes and photography in a long-running independent nature blog."
+    justification: "Many named contributors and posts dated July 21 2026 across ~15,000 posts; original reporting and photography, not aggregation. Below-the-fold tour ads and shallow bios soft-flag it; professional, readable layout."
+
+  - name: "Skulls in the Stars"
+    url: "https://skullsinthestars.com/"
+    domain: "skullsinthestars.com"
+    category: "science"
+    tags: ["physics", "history", "optics", "blog"]
+    gate: "PASS"
+    gate_reason: "A physics professor's distinctive, current blog on optics history and pulp science-fiction, ad-free."
+    scores: { originality: 84, human_authorship: 82, depth: 85, freshness: 92, design_quality: 68 }
+    overall: 83
+    summary: "A physicist blogs the odd history of optics and forgotten weird-fiction science, one deep post at a time."
+    justification: "Sidebar bio identifies a UNC Charlotte optics professor; posts July 21 and July 18 2026 over an archive since January 2008. Distinctive physics-meets-pulp-horror niche; a pseudonymous handle (identity stated) trims Human Authorship slightly; plain WordPress theme."
+
+  # ============================================================
+  # MAKING & CRAFTS (14)
+  # ============================================================
+  - name: "Nicky Case"
+    url: "https://ncase.me/"
+    domain: "ncase.me"
+    category: "making"
+    tags: ["explorables", "interactive", "games", "learning"]
+    gate: "PASS"
+    gate_reason: "Hand-built original explorable explanations, ad-free, supported by Patreon/Ko-fi."
+    scores: { originality: 92, human_authorship: 90, depth: 82, freshness: 72, design_quality: 85 }
+    overall: 86
+    summary: "Hand-built explorable explanations that teach systems thinking through play — open, free, and singular."
+    justification: "Named author with a playful signature voice ('shtuff for curious & playful folks') and a recognizable original format (interactive explorables like 'The Evolution of Trust'). No dated posts on the homepage and an admittedly-infrequent output pull Freshness down; craft is in the making, so Design and Originality carry it."
+
+  - name: "Bartosz Ciechanowski"
+    url: "https://ciechanow.ski/"
+    domain: "ciechanow.ski"
+    category: "making"
+    tags: ["interactive", "explainers", "physics", "engineering"]
+    gate: "PASS"
+    gate_reason: "One person hand-codes singular, monumental interactive explainers of how things work, ad-free."
+    scores: { originality: 95, human_authorship: 88, depth: 92, freshness: 76, design_quality: 95 }
+    overall: 90
+    summary: "One person hand-codes breathtaking interactive explainers of gears, cameras, orbits, and how things work."
+    justification: "Each piece (e.g. 'Moon', Dec 17 2024) runs ~15,000 words with dozens of custom draggable simulations — process/craft depth the Making rubric explicitly rewards. Posts are rare by nature (Freshness within the 2-year 'maintained' band); design is considered craft. Nothing else on the web is quite like it."
+
+  - name: "Gurney Journey (James Gurney)"
+    url: "https://gurneyjourney.blogspot.com/"
+    domain: "gurneyjourney.blogspot.com"
+    category: "making"
+    tags: ["painting", "art", "plein-air", "tutorials"]
+    gate: "PASS"
+    gate_reason: "The Dinotopia painter's 5,000+ post archive of daily studio craft, ad-light — now migrating to Substack."
+    scores: { originality: 82, human_authorship: 90, depth: 92, freshness: 72, design_quality: 64 }
+    overall: 83
+    summary: "The Dinotopia painter shares a lifetime of studio wisdom on color, light, and working from life."
+    justification: "James Gurney's reflective practitioner voice across 5,000+ categorized posts (2007-2026) — deep process documentation the Making rubric favors. A Jan 21 2026 'Find Me at Substack' post signals the blog may be winding down, softening Freshness; dated Blogger template keeps Design low."
+
+  - name: "Lines and Colors"
+    url: "https://linesandcolors.com/"
+    domain: "linesandcolors.com"
+    category: "making"
+    tags: ["art", "illustration", "history", "blog"]
+    gate: "SOFT_FLAG"
+    gate_reason: "Original commentary but curation-heavy, with sidebar affiliate and sponsored ads."
+    scores: { originality: 70, human_authorship: 82, depth: 85, freshness: 90, design_quality: 72 }
+    overall: 79
+    summary: "One writer's long-running daily blog spotlighting painters and illustrators across history."
+    justification: "Charley Parker pairs original commentary with heavy curation of others' art (posts July 16/11 2026, archive to 2005); Originality reflects the curatorial taste rather than owned work. Affiliate/sponsored sidebar ads soft-flag it; clean, maintained WordPress."
+
+  - name: "Matthias Wandel (woodgears)"
+    url: "https://woodgears.ca/"
+    domain: "woodgears.ca"
+    category: "making"
+    tags: ["woodworking", "diy", "jigs", "engineering"]
+    gate: "PASS"
+    gate_reason: "A self-taught tinkerer documents homemade wooden machines with engineering rigor, ad-light."
+    scores: { originality: 84, human_authorship: 86, depth: 88, freshness: 90, design_quality: 74 }
+    overall: 85
+    summary: "An engineer's-approach tinkerer documents homemade wooden machines and shop jigs with real rigor."
+    justification: "'An engineer's approach to Woodworking' with content dated Jul 17 2026 across years of tools, joinery, and machine builds — hands-on process depth. Named maker, well-organized grid layout, minimal ads; distinctive homemade-machine niche."
+
+  - name: "Emily Murphy (Pottery Blog)"
+    url: "https://www.potteryblog.com/"
+    domain: "potteryblog.com"
+    category: "making"
+    tags: ["pottery", "ceramics", "studio", "tutorials"]
+    gate: "SOFT_FLAG"
+    gate_reason: "Genuine deep craft documentation, but the blog appears dormant since ~late 2019."
+    scores: { originality: 68, human_authorship: 85, depth: 78, freshness: 38, design_quality: 76 }
+    overall: 71
+    summary: "A working potter's studio blog of glaze recipes and firing technique — a founding voice, now dormant."
+    justification: "Emily Murphy's named, reflective voice with detailed glaze recipes and clay-body comparisons since 2007, but the latest posts are July/Nov 2019, so Freshness lands in the stale band (~7 years). Clean Squarespace, real craft depth; sincere-but-familiar format keeps Originality mid."
+
+  - name: "bigclive.com"
+    url: "https://www.bigclive.com/"
+    domain: "bigclive.com"
+    category: "making"
+    tags: ["electronics", "teardowns", "reverse-engineering", "diy"]
+    gate: "SOFT_FLAG"
+    gate_reason: "Deep hand-drawn teardown content, but the homepage carries Google AdSense panels."
+    scores: { originality: 82, human_authorship: 82, depth: 82, freshness: 68, design_quality: 66 }
+    overall: 78
+    summary: "An electronics hobbyist reverse-engineers cheap gadgets and reconstructs their schematics by hand."
+    justification: "'Big Clive's' casual first-person persona and extensive teardown/schematic archive (linked 'things to make and do', very active YouTube) give real Making depth. AdSense panels soft-flag it and the deliberately lean-HTML portal shows no dates, so Freshness/Design sit mid — the retro build is a legible choice, not a defect."
+
+  - name: "Kate Davies Designs"
+    url: "https://katedaviesdesigns.com/"
+    domain: "katedaviesdesigns.com"
+    category: "making"
+    tags: ["knitting", "textiles", "scotland", "essays"]
+    gate: "PASS"
+    gate_reason: "A knitwear designer blends patterns with rich personal essays over a 20-year archive, ad-free."
+    scores: { originality: 80, human_authorship: 88, depth: 86, freshness: 90, design_quality: 80 }
+    overall: 85
+    summary: "A knitwear designer weaves patterns with rich personal essays on landscape, wool, and Scottish craft."
+    justification: "Kate Davies has blogged continuously for 20 years (posts July 17/14 2026), integrating knitting tutorials with essays on textile history and landscape — a distinctive craft-plus-essay blend. Hybrid shop/blog but writing is foregrounded; clean, considered design, no ads."
+
+  - name: "Paul Sellers"
+    url: "https://paulsellers.com/"
+    domain: "paulsellers.com"
+    category: "making"
+    tags: ["woodworking", "hand-tools", "teaching", "blog"]
+    gate: "PASS"
+    gate_reason: "PROVISIONAL — homepage and RSS returned HTTP 403 (WAF bot-block); live server, not parked. Scored from prior knowledge; editor must verify."
+    scores: { originality: 80, human_authorship: 88, depth: 90, freshness: 88, design_quality: 70 }
+    overall: 84
+    summary: "A master joiner blogs a lifetime of hand-tool woodworking with a craftsman's insistence on doing it by hand."
+    justification: "AUTOMATED FETCH BLOCKED: both paulsellers.com and its /feed/ returned 403 (WAF), a live-but-bot-blocked server rather than a dead domain, so this was not rejected. Scores reflect the well-established public record — a near-daily hand-tool woodworking blog with deep tutorial/process content and a large archive — and MUST be confirmed by an editor before publish."
+
+  - name: "Golan Levin (Flong)"
+    url: "https://www.flong.com/"
+    domain: "flong.com"
+    category: "making"
+    tags: ["generative-art", "code-art", "interactive", "teaching"]
+    gate: "SOFT_FLAG"
+    gate_reason: "A serious computational-art archive, but dormant with materials ending ~2017-2019."
+    scores: { originality: 84, human_authorship: 84, depth: 86, freshness: 45, design_quality: 68 }
+    overall: 77
+    summary: "A pioneer of computational art archives his experiments and openly shares code-as-craft teaching."
+    justification: "Golan Levin (CMU) documents 25 years of work (Archive of Works 1994-2019) plus course sites — real code-as-craft depth. But CV, press, and archive all end around 2017-2019, so Freshness is stale; ad-free early-web design is functional, not crafted."
+
+  - name: "Amy Goodchild"
+    url: "https://www.amygoodchild.com/"
+    domain: "amygoodchild.com"
+    category: "making"
+    tags: ["generative-art", "creative-coding", "essays", "process"]
+    gate: "PASS"
+    gate_reason: "A generative artist writes warm, accessible process notes demystifying making art with code, ad-free."
+    scores: { originality: 82, human_authorship: 86, depth: 78, freshness: 72, design_quality: 84 }
+    overall: 81
+    summary: "A generative artist writes warm, accessible process notes that demystify making art with code."
+    justification: "Named artist ('code to explore randomness, nonsense and meaning') with process-focused blog articles ('Coding my handwriting') and algorithmic print work — process documentation the Making rubric rewards. No dates on the homepage (a Friday newsletter suggests activity) keep Freshness mid; high-quality portfolio design."
+
+  - name: "Windytan (Oona Räisänen)"
+    url: "https://www.windytan.com/"
+    domain: "windytan.com"
+    category: "making"
+    tags: ["signals", "dsp", "hacking", "curiosity"]
+    gate: "PASS"
+    gate_reason: "A signals hacker's singular hobby diary decoding mystery sounds with exceptional process depth, ad-free."
+    scores: { originality: 90, human_authorship: 88, depth: 88, freshness: 76, design_quality: 72 }
+    overall: 85
+    summary: "A signals hacker decodes mystery sounds and radio transmissions with infectious, methodical curiosity."
+    justification: "Oona Räisänen's 'personal hobby diary' (2012-present, latest Apr 16 2025) methodically documents hypothesis-to-solution investigations with spectrograms and code — a singular niche and deep process work. Ad-free Blogger; infrequent deep posts keep Freshness in the maintained band."
+
+  - name: "mitxela"
+    url: "https://mitxela.com/projects"
+    domain: "mitxela.com"
+    category: "making"
+    tags: ["electronics", "music", "miniature", "diy"]
+    gate: "PASS"
+    gate_reason: "A maker's deliberately-crafted portfolio of tiny synths/MIDI gadgets with full schematics, ad-free."
+    scores: { originality: 86, human_authorship: 84, depth: 84, freshness: 70, design_quality: 78 }
+    overall: 82
+    summary: "A maker builds absurdly tiny synths and MIDI gadgets, documenting each with wit and full schematics."
+    justification: "Curated project index (Concepts/Misc/Hardware/Software) with a crafted custom-graphic design; individual project write-ups carry detailed electronics documentation and schematics — Making-rewarded process depth. The project index shows no dates, so Freshness is mid; ad-free, distinctive miniature-electronics niche."
+
+  - name: "Public Domain Review"
+    url: "https://publicdomainreview.org/"
+    domain: "publicdomainreview.org"
+    category: "making"
+    tags: ["archives", "art-history", "curation", "essays"]
+    gate: "PASS"
+    gate_reason: "A nonprofit's original commissioned essays excavating public-domain works, ad-free. (Category borderline Culture.)"
+    scores: { originality: 82, human_authorship: 82, depth: 90, freshness: 88, design_quality: 84 }
+    overall: 85
+    summary: "A nonprofit project of original essays excavating strange and beautiful public-domain works."
+    justification: "UK CIC with bylined, commissioned essays (e.g. 8 Jul 2026, 17 Jun 2026) over a deep archive of essays and collections — original scholarship, not aggregation. Ad-free, clean, considered design; editorial (vs single-person) authorship trims Human Authorship. NOTE: category is defensible as Making (archives/craft-of-curation) but leans Culture — editor's call."

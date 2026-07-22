@@ -40,8 +40,48 @@
       border-bottom: 1px solid var(--border-soft);
       flex-wrap: wrap;
     }
+    .top-left { display: flex; align-items: center; gap: var(--s3); flex-wrap: wrap; }
     .brand { font-weight: 500; letter-spacing: -0.02em; }
     .brand span { color: var(--faint); font-weight: 400; margin-left: .4em; font-size: .9em; }
+    .top-actions { display: flex; align-items: center; gap: var(--s2); }
+    .icon-btn {
+      appearance: none; border: 1px solid var(--border-soft); background: var(--surface);
+      color: var(--muted); font: inherit; font-size: .82rem;
+      padding: 8px 14px; border-radius: 999px; cursor: pointer;
+    }
+    .icon-btn:hover { color: var(--text); border-color: var(--border); }
+    .icon-btn.active { color: var(--accent); border-color: rgba(126,184,255,.4); background: var(--accent-dim); }
+
+    /* Settings form (queue-populator style: labeled rows) */
+    .settings-card {
+      max-width: 520px; background: var(--surface); border: 1px solid var(--border-soft);
+      border-radius: var(--radius); padding: var(--s4);
+    }
+    .settings-card h1 {
+      margin: 0 0 4px; font-size: 1.25rem; font-weight: 500; letter-spacing: -0.02em;
+    }
+    .settings-card .lead { margin: 0 0 var(--s4); color: var(--muted); font-size: .9rem; }
+    .section-h {
+      margin: var(--s3) 0 var(--s2); font-size: .68rem; font-weight: 600;
+      letter-spacing: .08em; text-transform: uppercase; color: var(--faint);
+    }
+    .form-row {
+      display: grid; grid-template-columns: 110px 1fr; gap: var(--s2);
+      align-items: center; margin-bottom: var(--s2);
+    }
+    .form-row label { font-size: .85rem; color: var(--muted); }
+    .form-row input, .form-row select {
+      width: 100%; background: var(--bg); border: 1px solid var(--border-soft);
+      border-radius: var(--radius-sm); color: var(--text); font: inherit; font-size: .875rem;
+      padding: 9px 12px;
+    }
+    .form-row input.mono { font-family: var(--mono); font-size: .8rem; }
+    .form-row input:focus, .form-row select:focus { outline: none; border-color: var(--accent); }
+    .env-hint { grid-column: 2; font-size: .75rem; margin: -4px 0 var(--s2); min-height: 1.2em; }
+    .env-hint.ok { color: var(--ok); }
+    .env-hint.bad { color: #e07070; }
+    .form-actions { display: flex; flex-wrap: wrap; gap: var(--s2); margin-top: var(--s3); }
+    .persist-path { margin-top: var(--s3); font-size: .72rem; color: var(--faint); font-family: var(--mono); }
     .crumbs {
       display: flex; flex-wrap: wrap; gap: 6px; align-items: center;
       font-size: .82rem; color: var(--faint);
@@ -76,67 +116,97 @@
     .search-bar input::placeholder { color: var(--faint); }
 
     /* —— Graph / map —— */
-    .map { display: flex; flex-direction: column; gap: var(--s2); }
+    .map {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
 
     .node {
       background: var(--surface);
-      border: 1px solid var(--border-soft);
+      border: 1.5px solid var(--border);
       border-radius: var(--radius);
       overflow: hidden;
-      transition: border-color 120ms ease;
+      transition: border-color 120ms ease, box-shadow 120ms ease;
+      box-shadow: 0 1px 0 rgba(255,255,255,0.03);
     }
-    .node:hover { border-color: var(--border); }
+    .node:hover {
+      border-color: #3a4558;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.25);
+    }
+    .node.open {
+      border-color: rgba(126, 184, 255, 0.35);
+    }
 
     .node-head {
       display: flex; align-items: flex-start; gap: var(--s2);
-      width: 100%; text-align: left; padding: var(--s3);
+      width: 100%; text-align: left; padding: 20px 22px;
       background: transparent; border: 0; color: inherit;
       font: inherit; cursor: pointer;
     }
     .node-head:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 
     .chev {
-      flex-shrink: 0; width: 20px; height: 20px; margin-top: 2px;
+      flex-shrink: 0; width: 22px; height: 22px; margin-top: 2px;
       color: var(--faint); transition: transform 150ms ease;
-      display: grid; place-items: center; font-size: .7rem;
+      display: grid; place-items: center; font-size: .75rem;
+      border: 1px solid var(--border); border-radius: 6px;
+      background: var(--bg);
     }
-    .node.open > .node-head .chev { transform: rotate(90deg); color: var(--accent); }
+    .node.open > .node-head .chev { transform: rotate(90deg); color: var(--accent); border-color: rgba(126,184,255,.4); }
 
     .node-title { font-size: 1.05rem; font-weight: 500; letter-spacing: -0.02em; }
-    .node-desc { margin: 4px 0 0; color: var(--muted); font-size: .88rem; max-width: 40rem; }
+    .node-desc { margin: 6px 0 0; color: var(--muted); font-size: .88rem; max-width: 40rem; line-height: 1.45; }
     .node-meta {
       margin-left: auto; flex-shrink: 0;
       font-family: var(--mono); font-size: .72rem; color: var(--faint);
-      padding-top: 4px;
+      padding: 4px 10px; border: 1px solid var(--border-soft); border-radius: 999px;
     }
 
     .node-body {
       display: none;
-      padding: 0 var(--s3) var(--s3);
-      border-top: 1px solid var(--border-soft);
+      padding: 0 22px 22px;
+      border-top: 1.5px solid var(--border);
+      background: rgba(0,0,0,0.15);
     }
-    .node.open > .node-body { display: block; padding-top: var(--s3); }
+    .node.open > .node-body { display: block; padding-top: 20px; }
 
     /* nested section */
-    .node.section { margin-left: 0; background: var(--surface-2); }
+    .node.section {
+      margin: 0 0 14px;
+      background: var(--surface-2);
+      border: 1.5px solid var(--border);
+    }
+    .node.section:last-child { margin-bottom: 0; }
     .node.section .node-title { font-size: .95rem; }
+    .node.section .node-head { padding: 16px 18px; }
+    .node.section .node-body {
+      padding: 16px 18px 18px;
+      border-top: 1px solid var(--border);
+    }
 
     .gen-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-      gap: var(--s2);
+      grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
+      gap: 14px;
       padding: 4px 0 0;
     }
 
     .gen-card {
       appearance: none; text-align: left;
-      background: var(--bg); border: 1px solid var(--border-soft);
-      border-radius: var(--radius-sm); padding: var(--s2);
+      background: var(--bg);
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 14px;
       color: var(--text); font: inherit; cursor: pointer;
-      min-height: 88px; display: flex; flex-direction: column; gap: 6px;
-      transition: border-color 120ms ease, background 120ms ease;
+      min-height: 96px; display: flex; flex-direction: column; gap: 8px;
+      transition: border-color 120ms ease, background 120ms ease, transform 120ms ease;
     }
-    .gen-card:hover { border-color: var(--accent); background: var(--accent-dim); }
+    .gen-card:hover {
+      border-color: var(--accent);
+      background: var(--accent-dim);
+      transform: translateY(-1px);
+    }
     .gen-card:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
     .gen-card .name {
       font-size: .9rem; font-weight: 500; letter-spacing: -0.01em;
@@ -144,6 +214,14 @@
     }
     .gen-card .sub {
       margin-top: auto; font-size: .7rem; color: var(--faint); font-family: var(--mono);
+    }
+
+    .examples { display: flex; flex-direction: column; gap: 12px; }
+    .ex {
+      border: 1.5px solid var(--border) !important;
+    }
+    .tile {
+      border: 1.5px solid var(--border) !important;
     }
 
     /* search hits flat list */
@@ -182,17 +260,45 @@
       margin-bottom: var(--s4);
     }
     .btn {
-      appearance: none; border: 1px solid var(--border); background: var(--surface-2);
+      appearance: none; border: 1.5px solid var(--border); background: var(--surface-2);
       color: var(--text); font: inherit; font-size: .875rem;
       padding: 10px 16px; border-radius: var(--radius-sm); cursor: pointer;
     }
-    .btn:hover { border-color: var(--muted); }
+    .btn:hover:not(:disabled) { border-color: var(--muted); background: #1e2533; }
     .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
     .btn.primary {
       background: var(--accent); border-color: transparent; color: #0a0e14; font-weight: 550;
     }
-    .btn.primary:hover { filter: brightness(1.05); }
-    .btn:disabled { opacity: .4; cursor: not-allowed; }
+    .btn.primary:hover:not(:disabled) { filter: brightness(1.08); }
+    .btn:disabled {
+      opacity: 0.35; cursor: not-allowed; border-color: var(--border-soft);
+      background: var(--surface);
+    }
+    .btn.primary:disabled {
+      background: #2a3548; color: var(--faint); opacity: 1; border-color: var(--border-soft);
+    }
+    .btn.sm { padding: 7px 12px; font-size: .78rem; }
+
+    .steps {
+      display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
+      margin: 0 0 var(--s3); padding: 12px 16px;
+      border: 1.5px solid var(--border); border-radius: var(--radius);
+      background: var(--surface);
+      font-size: .8rem; color: var(--faint);
+    }
+    .steps .step { display: inline-flex; align-items: center; gap: 8px; }
+    .steps .n {
+      width: 22px; height: 22px; border-radius: 50%;
+      border: 1.5px solid var(--border); display: grid; place-items: center;
+      font-family: var(--mono); font-size: .7rem; color: var(--muted);
+    }
+    .steps .step.on .n { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+    .steps .step.done .n { border-color: var(--ok); color: var(--ok); }
+    .steps .arrow { color: var(--border); margin: 0 2px; }
+
+    .ex-actions {
+      display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px;
+    }
 
     .quality {
       display: inline-flex; background: var(--surface); border: 1px solid var(--border-soft);
@@ -230,12 +336,16 @@
     .examples { display: flex; flex-direction: column; gap: var(--s2); }
     .ex {
       appearance: none; text-align: left; width: 100%;
-      background: var(--surface); border: 1px solid var(--border-soft);
+      background: var(--surface); border: 1.5px solid var(--border);
       border-radius: var(--radius); padding: var(--s3);
       color: var(--text); font: inherit; cursor: pointer;
     }
-    .ex:hover { border-color: var(--border); }
-    .ex.active { border-color: var(--accent); background: var(--accent-dim); }
+    .ex:hover { border-color: #3a4558; }
+    .ex.active {
+      border-color: var(--accent);
+      background: var(--accent-dim);
+      box-shadow: 0 0 0 1px rgba(126,184,255,.2);
+    }
     .ex .id { font-weight: 500; margin-bottom: 6px; }
     .ex .pv {
       color: var(--muted); font-size: .85rem;
@@ -302,9 +412,55 @@
 </head>
 <body>
   <div class="top">
-    <div class="brand">Media Lab <span>explore → generate → view</span></div>
-    <nav class="crumbs" id="crumbs" aria-label="Breadcrumb"></nav>
+    <div class="top-left">
+      <div class="brand">Media Lab <span>explore → generate → view</span></div>
+      <nav class="crumbs" id="crumbs" aria-label="Breadcrumb"></nav>
+    </div>
+    <div class="top-actions">
+      <button type="button" class="icon-btn" id="btn-settings" title="LLM & lab settings">Settings</button>
+    </div>
   </div>
+
+  <!-- SETTINGS -->
+  <main id="view-settings" class="hidden">
+    <div class="settings-card">
+      <h1>Settings</h1>
+      <p class="lead">
+        LLM used for <strong>Generate example prompt</strong>. Defaults to Groq
+        <code style="font-family:var(--mono);font-size:.85em;color:var(--accent)">openai/gpt-oss-120b</code>.
+        Pattern matches Queue Populator / Timely: provider, model, base URL, API key or <code style="font-family:var(--mono);font-size:.85em">env: VAR</code>.
+      </p>
+
+      <div class="section-h">LLM inference</div>
+
+      <div class="form-row">
+        <label for="set-provider">Provider</label>
+        <select id="set-provider"></select>
+      </div>
+      <div class="form-row">
+        <label for="set-model">Model</label>
+        <input id="set-model" list="model-list" placeholder="openai/gpt-oss-120b" />
+        <datalist id="model-list"></datalist>
+      </div>
+      <div class="form-row">
+        <label for="set-base">Base URL</label>
+        <input id="set-base" class="mono" placeholder="https://api.groq.com/openai/v1" />
+      </div>
+      <div class="form-row">
+        <label for="set-key">API key</label>
+        <input id="set-key" class="mono" placeholder="env: GROQ_API_KEY" autocomplete="off" />
+      </div>
+      <div class="env-hint" id="env-hint"></div>
+
+      <div class="form-actions">
+        <button type="button" class="btn primary" id="btn-save-settings">Save</button>
+        <button type="button" class="btn" id="btn-test-llm">Test connection</button>
+        <button type="button" class="btn" id="btn-settings-back">Back to map</button>
+      </div>
+      <p class="persist-path" id="settings-path"></p>
+      <p class="env-hint" id="test-result" style="grid-column:auto;margin-top:12px"></p>
+    </div>
+  </main>
 
   <!-- LANDING: expandable graph -->
   <main id="view-map">
@@ -332,17 +488,25 @@
       <p id="ws-desc"></p>
     </div>
 
+    <div class="steps" id="flow-steps" aria-label="Workflow">
+      <span class="step on" data-step="1"><span class="n">1</span> Create example prompt</span>
+      <span class="arrow">→</span>
+      <span class="step" data-step="2"><span class="n">2</span> Process (generate media)</span>
+      <span class="arrow">→</span>
+      <span class="step" data-step="3"><span class="n">3</span> View / eval outputs</span>
+    </div>
+
     <div class="toolbar">
-      <button type="button" class="btn primary" id="btn-scaffold">Generate example prompt</button>
-      <button type="button" class="btn" id="btn-process" disabled>Process prompt</button>
+      <button type="button" class="btn" id="btn-scaffold">1 · Generate example prompt</button>
+      <button type="button" class="btn primary" id="btn-process" disabled title="Select a prompt below first">2 · Process selected prompt</button>
       <button type="button" class="btn" id="btn-dry" disabled>Dry run</button>
-      <button type="button" class="btn" id="btn-eval" disabled>Eval outputs</button>
+      <button type="button" class="btn" id="btn-eval" disabled>3 · Eval outputs</button>
       <div class="quality" id="quality-wrap" role="group" aria-label="Quality" title="Affects auto provider path">
         <button type="button" data-q="low">Low</button>
         <button type="button" data-q="medium" class="active">Medium</button>
         <button type="button" data-q="high">High</button>
       </div>
-      <label class="check"><input type="checkbox" id="opt-force" /> Force</label>
+      <label class="check"><input type="checkbox" id="opt-force" checked /> Force</label>
       <label class="check"><input type="checkbox" id="opt-no-eval" /> Skip eval</label>
     </div>
 
@@ -350,11 +514,14 @@
 
     <div class="block">
       <h2>Prompts for this generator</h2>
+      <p style="margin:0 0 12px;color:var(--muted);font-size:.85rem">
+        Select a prompt, then use <strong>Process</strong> on the card (or the toolbar) to generate assets.
+      </p>
       <div class="examples" id="examples"></div>
     </div>
 
     <div class="block" id="preview-block">
-      <h2>Generated media</h2>
+      <h2>Generated media <span id="media-count" style="color:var(--faint);font-weight:400;text-transform:none;letter-spacing:0"></span></h2>
       <div class="media-grid" id="media-grid"></div>
     </div>
 
@@ -387,6 +554,9 @@
       example: null,
       detail: null,
       trail: [],         // breadcrumb {id,label}
+      llmMeta: null,
+      settings: null,
+      view: "map", // map | workspace | settings
     };
 
     const $ = (id) => document.getElementById(id);
@@ -456,15 +626,136 @@
     }
 
     function showMap() {
+      state.view = "map";
       state.generator = null;
       state.example = null;
       state.detail = null;
       state.trail = [];
       $("view-map").classList.remove("hidden");
       $("view-ws").classList.remove("show");
+      $("view-settings").classList.add("hidden");
+      $("btn-settings").classList.remove("active");
       renderCrumbs();
       renderMap();
     }
+
+    function showSettings() {
+      state.view = "settings";
+      $("view-map").classList.add("hidden");
+      $("view-ws").classList.remove("show");
+      $("view-settings").classList.remove("hidden");
+      $("btn-settings").classList.add("active");
+      loadSettingsUi();
+    }
+
+    async function loadSettingsUi() {
+      if (!state.llmMeta) state.llmMeta = await api("/api/settings/llm-meta");
+      const s = await api("/api/settings");
+      state.settings = s;
+      const sel = $("set-provider");
+      sel.innerHTML = "";
+      for (const p of state.llmMeta.providers || []) {
+        const o = document.createElement("option");
+        o.value = p.id;
+        o.textContent = p.label;
+        sel.appendChild(o);
+      }
+      const llm = s.llm || {};
+      sel.value = llm.provider || "groq";
+      $("set-model").value = llm.model || "openai/gpt-oss-120b";
+      $("set-base").value = llm.base_url || "";
+      $("set-key").value = llm.api_key_edit ?? llm.api_key ?? "env: GROQ_API_KEY";
+      if (llm.api_key_is_set && !(llm.api_key_edit || "").startsWith("env:")) {
+        $("set-key").placeholder = "•••• key set — enter new or env: VAR to replace";
+      }
+      $("settings-path").textContent = "Saved at " + (s.path || "workspace/settings.json");
+      fillModelList(sel.value);
+      updateEnvHint(llm.env_hint);
+      $("test-result").textContent = "";
+    }
+
+    function fillModelList(providerId) {
+      const p = (state.llmMeta?.providers || []).find((x) => x.id === providerId);
+      const dl = $("model-list");
+      dl.innerHTML = "";
+      for (const m of p?.models || []) {
+        const o = document.createElement("option");
+        o.value = m;
+        dl.appendChild(o);
+      }
+    }
+
+    function updateEnvHint(hint) {
+      const el = $("env-hint");
+      if (!hint) { el.textContent = ""; el.className = "env-hint"; return; }
+      el.textContent = hint.message || "";
+      el.className = "env-hint " + (hint.ok ? "ok" : "bad");
+    }
+
+    $("btn-settings").onclick = () => showSettings();
+    $("btn-settings-back").onclick = () => showMap();
+
+    $("set-provider").onchange = () => {
+      const id = $("set-provider").value;
+      const p = (state.llmMeta?.providers || []).find((x) => x.id === id);
+      if (p) {
+        $("set-model").value = p.default_model || "";
+        $("set-base").value = p.default_base_url || "";
+        if (p.env_key) $("set-key").value = "env: " + p.env_key;
+        fillModelList(id);
+      }
+    };
+
+    $("btn-save-settings").onclick = async () => {
+      try {
+        const body = {
+          llm: {
+            provider: $("set-provider").value,
+            model: $("set-model").value,
+            base_url: $("set-base").value,
+            api_key: $("set-key").value,
+          },
+        };
+        const s = await api("/api/settings", { method: "PUT", body: JSON.stringify(body) });
+        state.settings = s;
+        updateEnvHint(s.llm?.env_hint);
+        $("settings-path").textContent = "Saved at " + (s.path || "");
+        toast("Settings saved");
+        $("test-result").textContent = `Using ${s.llm?.provider} / ${s.llm?.model}`;
+        $("test-result").className = "env-hint ok";
+      } catch (e) {
+        toast(e.message);
+        $("test-result").textContent = e.message;
+        $("test-result").className = "env-hint bad";
+      }
+    };
+
+    $("btn-test-llm").onclick = async () => {
+      $("test-result").textContent = "Testing…";
+      $("test-result").className = "env-hint";
+      try {
+        // Save first so test uses current form values
+        await api("/api/settings", {
+          method: "PUT",
+          body: JSON.stringify({
+            llm: {
+              provider: $("set-provider").value,
+              model: $("set-model").value,
+              base_url: $("set-base").value,
+              api_key: $("set-key").value,
+            },
+          }),
+        });
+        const r = await api("/api/settings/test-llm", { method: "POST", body: "{}" });
+        $("test-result").textContent = r.message || (r.ok ? "ok" : "failed");
+        $("test-result").className = "env-hint " + (r.ok ? "ok" : "bad");
+        toast(r.message || "test done");
+      } catch (e) {
+        $("test-result").textContent = e.message;
+        $("test-result").className = "env-hint bad";
+        toast(e.message);
+      }
+    };
 
     function renderMap() {
       const q = ($("map-search").value || "").trim().toLowerCase();
@@ -593,11 +884,14 @@
 
     // —— Workspace ——
     async function openGenerator(g, parent, trail) {
+      state.view = "workspace";
       state.generator = g;
       state.example = null;
       state.detail = null;
       state.trail = trail || buildTrailTo(g.id);
       $("view-map").classList.add("hidden");
+      $("view-settings").classList.add("hidden");
+      $("btn-settings").classList.remove("active");
       $("view-ws").classList.add("show");
       $("ws-title").textContent = g.label || g.slug;
       $("ws-desc").textContent = g.description || "";
@@ -610,8 +904,11 @@
       $("btn-dry").disabled = true;
       $("btn-eval").disabled = true;
       $("log").textContent = "Ready.";
+      $("media-grid").innerHTML = `<div class="empty">No generated media yet.<br/><br/>Select a prompt, then click <strong>Process → generate media</strong>.</div>`;
+      $("media-count").textContent = "";
       renderCrumbs();
       renderAutoBar();
+      updateFlowSteps();
       await loadExamples();
 
       // FIM preview for channel generators
@@ -660,75 +957,176 @@
     async function loadExamples() {
       const g = state.generator;
       const root = $("examples");
+      if (!g || !root) return [];
       let list = [];
 
-      if (g.examples && g.examples.length) {
-        list = g.examples;
-      } else if (g.demo_paths && g.demo_paths.length) {
-        // load summaries via prompt API metadata-only is heavy; list paths as stubs
+      try {
+        const slug = g.slug || String(g.id || "").replace(/^.*:/, "");
+        const q = new URLSearchParams({ slug });
+        if (g.id) q.set("id", g.id);
+        const data = await api("/api/prompts/list?" + q.toString());
+        list = Array.isArray(data.prompts) ? data.prompts : [];
+      } catch (e) {
+        console.warn("prompts/list failed", e);
+        log("List prompts failed: " + e.message, "fail");
+      }
+
+      if (!list.length && g.examples?.length) list = g.examples.slice();
+      if (!list.length && g.demo_paths?.length) {
         list = g.demo_paths.map((path) => ({
           id: path.split("/").pop().replace(".media.prompt", ""),
           path,
-          source: path.includes("live-eval") ? "workspace" : "demos",
-          prompt_preview: path,
+          source: path.includes("live-eval") || path.includes("workspace") ? "workspace" : "demos",
+          prompt_preview: "",
           has_eval: false,
           outputs: [],
         }));
       }
 
-      // Also scan workspace scaffolds for this slug
-      // (catalog may not include new files until refresh — re-fetch graph after scaffold)
+      if (state.example?.path && !list.some((x) => samePath(x.path, state.example.path))) {
+        list = [state.example, ...list];
+      }
+
+      // Prefer newest workspace prompts first
+      list.sort((a, b) => {
+        const aw = (a.source === "workspace") ? 0 : 1;
+        const bw = (b.source === "workspace") ? 0 : 1;
+        if (aw !== bw) return aw - bw;
+        return String(b.path || "").localeCompare(String(a.path || ""));
+      });
 
       if (!list.length) {
-        root.innerHTML = `<div class="empty">No prompts yet. Click <strong>Generate example prompt</strong> to scaffold one.</div>`;
-        return;
+        root.innerHTML = `<div class="empty">No prompts yet. Click <strong>1 · Generate example prompt</strong>.</div>`;
+        updateFlowSteps();
+        return list;
       }
 
       root.innerHTML = "";
       for (const e of list) {
-        const btn = document.createElement("button");
-        btn.type = "button";
-        btn.className = "ex" + (state.example?.path === e.path ? " active" : "");
-        const outs = (e.outputs || []).filter((o) => o.exists).length;
-        btn.innerHTML = `
-          <div class="id">${esc(e.id)}</div>
-          <div class="pv">${esc(e.prompt_preview || "")}</div>
+        if (!e?.path) continue;
+        const card = document.createElement("div");
+        const selected = samePath(state.example?.path, e.path);
+        card.className = selected ? "ex active" : "ex";
+        card.style.cursor = "pointer";
+        const outs = (e.outputs || []).filter((o) => o && o.exists).length;
+        const preview = (e.prompt_preview || "").trim() || e.path || "";
+        card.innerHTML = `
+          <div class="id">${esc(e.id || "prompt")}</div>
+          <div class="pv">${esc(preview)}</div>
           <div class="pills">
             ${e.has_eval ? '<span class="pill ok">eval</span>' : '<span class="pill">prompt</span>'}
-            <span class="pill">${outs} outputs</span>
+            <span class="pill">${outs} output${outs === 1 ? "" : "s"}</span>
             <span class="pill">${esc(e.source || "")}</span>
+            ${selected ? '<span class="pill ok">selected</span>' : ""}
+          </div>
+          <div class="ex-actions">
+            <button type="button" class="btn sm" data-act="select">Select</button>
+            <button type="button" class="btn sm primary" data-act="process">Process → generate media</button>
+            <button type="button" class="btn sm" data-act="dry">Dry run</button>
+            <button type="button" class="btn sm" data-act="view"${outs ? "" : " disabled"}>View outputs</button>
           </div>`;
-        btn.onclick = () => selectExample(e);
-        root.appendChild(btn);
+        const bind = (act, fn) => {
+          const b = card.querySelector(`[data-act="${act}"]`);
+          if (b) b.onclick = (ev) => { ev.stopPropagation(); fn(); };
+        };
+        card.onclick = (ev) => {
+          if (ev.target.closest("button")) return;
+          selectExample(e);
+        };
+        bind("select", () => selectExample(e));
+        bind("process", async () => { await selectExample(e); await startProcess(false); });
+        bind("dry", async () => { await selectExample(e); await startProcess(true); });
+        bind("view", async () => {
+          await selectExample(e);
+          $("preview-block")?.scrollIntoView({ behavior: "smooth", block: "start" });
+        });
+        root.appendChild(card);
       }
+      updateFlowSteps();
+      return list;
+    }
+
+    function samePath(a, b) {
+      if (!a || !b) return false;
+      const norm = (p) => String(p).replace(/\/+$/, "");
+      return norm(a) === norm(b) || norm(a).endsWith(norm(b)) || norm(b).endsWith(norm(a));
+    }
+
+    function updateFlowSteps() {
+      const hasPrompt = !!state.example?.path;
+      const outs = state.example?.outputs || state.detail?.summary?.outputs || [];
+      const hasOut = outs.some((o) => o && o.exists);
+      document.querySelectorAll("#flow-steps .step").forEach((el) => {
+        el.classList.remove("on", "done");
+        const n = el.getAttribute("data-step");
+        let cls = "";
+        if (n === "1") cls = hasPrompt ? "done" : "on";
+        else if (n === "2") cls = hasOut ? "done" : hasPrompt ? "on" : "";
+        else if (n === "3") cls = hasOut ? "on" : "";
+        if (cls) el.classList.add(cls); // never classList.add("")
+      });
+      const proc = $("btn-process");
+      const scaf = $("btn-scaffold");
+      const dry = $("btn-dry");
+      const ev = $("btn-eval");
+      if (!proc || !scaf) return;
+      if (hasPrompt) {
+        proc.classList.add("primary");
+        scaf.classList.remove("primary");
+        proc.disabled = false;
+        if (dry) dry.disabled = false;
+      } else {
+        proc.classList.remove("primary");
+        scaf.classList.add("primary");
+        proc.disabled = true;
+        if (dry) dry.disabled = true;
+      }
+      if (ev) ev.disabled = !hasOut;
     }
 
     async function selectExample(e) {
+      if (!e?.path) {
+        toast("Invalid prompt path");
+        return;
+      }
       state.example = e;
-      await loadExamples();
       try {
         const d = await api(
-          `/api/prompt?path=${encodeURIComponent(e.path)}&source=${encodeURIComponent(e.source || "demos")}`
+          `/api/prompt?path=${encodeURIComponent(e.path)}&source=${encodeURIComponent(e.source || "workspace")}`
         );
         state.detail = d;
-        $("prompt-text").textContent = d.prompt_text || "";
+        state.example = {
+          ...e,
+          id: d.summary.id || e.id,
+          path: d.summary.path || e.path,
+          prompt_preview: d.summary.prompt_preview || e.prompt_preview,
+          has_eval: d.summary.has_eval,
+          outputs: d.summary.outputs || [],
+          source: e.source || "workspace",
+        };
+        $("prompt-text").textContent = d.prompt_text || "(empty prompt.text)";
         $("prompt-yaml").textContent = d.yaml || "";
         $("ws-path").textContent = d.summary.path;
-        $("btn-process").disabled = false;
-        $("btn-dry").disabled = false;
         renderMedia(d.summary.outputs || []);
-        const hasOut = (d.summary.outputs || []).some((o) => o.exists);
-        $("btn-eval").disabled = !hasOut;
+        updateFlowSteps();
+        // Refresh list selection styling without clearing state.example
+        await loadExamples();
+        log(`Selected ${d.summary.path}`, "ok");
+        toast("Prompt selected — click Process to generate media");
       } catch (err) {
         toast(err.message);
+        log(err.message, "fail");
+        updateFlowSteps();
       }
     }
 
     function renderMedia(outputs) {
       const root = $("media-grid");
       const existing = (outputs || []).filter((o) => o.exists);
+      $("media-count").textContent = existing.length ? `(${existing.length})` : "";
       if (!existing.length) {
-        root.innerHTML = `<div class="empty">No generated media yet — Process prompt to create it.</div>`;
+        root.innerHTML = `<div class="empty">No generated media yet.<br/><br/>
+          Select a prompt above, then click <strong>Process → generate media</strong> on the card (or toolbar step 2).</div>`;
         return;
       }
       root.innerHTML = "";
@@ -744,103 +1142,142 @@
         else if (["mp3","wav","ogg","flac"].includes(fmt))
           body = `<audio controls src="${o.media_url}"></audio>`;
         else if (["html","htm"].includes(fmt))
-          body = `<iframe sandbox="allow-scripts" src="${o.media_url}" title="preview"></iframe>`;
+          body = `<iframe sandbox="allow-scripts allow-same-origin" src="${o.media_url}" title="preview"></iframe>`;
+        else if (["js","ts","tsx","jsx","md","mmd","puml","css","json","txt"].includes(fmt))
+          body = `<a class="btn sm" href="${o.media_url}" target="_blank" rel="noopener">Open .${esc(fmt)}</a>
+            <pre class="mono" style="max-height:160px;margin-top:10px;font-size:.7rem" data-src="${o.media_url}">Loading…</pre>`;
         else
           body = `<a href="${o.media_url}" target="_blank" rel="noopener">Open ${esc(fmt || "file")}</a>`;
-        tile.innerHTML = `<div class="nm">${esc(o.rel_path)}</div>${body}
-          <div style="margin-top:10px"><button type="button" class="btn" style="padding:6px 12px;font-size:.8rem">Eval</button></div>`;
-        tile.querySelector("button").onclick = () => startEval(o.path);
+        tile.innerHTML = `<div class="nm">${esc(o.rel_path || o.path)}</div>${body}
+          <div class="ex-actions">
+            <button type="button" class="btn sm" data-act="eval">Eval</button>
+            <a class="btn sm" href="${o.media_url}" target="_blank" rel="noopener">Open</a>
+          </div>`;
+        tile.querySelector('[data-act="eval"]').onclick = () => startEval(o.path);
+        const pre = tile.querySelector("pre[data-src]");
+        if (pre) {
+          fetch(pre.getAttribute("data-src"))
+            .then((r) => r.text())
+            .then((t) => { pre.textContent = t.slice(0, 4000); })
+            .catch(() => { pre.textContent = "(could not load)"; });
+        }
         root.appendChild(tile);
+      }
+      // Auto-scroll to results when we have outputs
+      if (existing.length) {
+        $("preview-block").scrollIntoView({ behavior: "smooth", block: "nearest" });
       }
     }
 
     function trackJob(job) {
       log(`[${job.id.slice(0, 8)}] ${job.kind}…`, "run");
       toast("Started " + job.kind);
-      const t = setInterval(async () => {
-        try {
-          const j = await api(`/api/jobs/${job.id}`);
-          if (j.status === "succeeded") {
+      return new Promise((resolve) => {
+        const t = setInterval(async () => {
+          try {
+            const j = await api(`/api/jobs/${job.id}`);
+            if (j.status === "succeeded") {
+              clearInterval(t);
+              log(`[${j.id.slice(0, 8)}] done`, "ok");
+              toast("Done");
+              if (state.example?.path) {
+                await selectExample(state.example);
+              } else {
+                await loadExamples();
+              }
+              resolve(j);
+            } else if (j.status === "failed") {
+              clearInterval(t);
+              log(j.message, "fail");
+              toast(j.message);
+              resolve(j);
+            }
+          } catch (e) {
             clearInterval(t);
-            log(`[${j.id.slice(0, 8)}] done`, "ok");
-            toast("Done");
-            // refresh graph for demo counts + reload examples
-            state.graph = await api("/api/graph");
-            if (state.example) await selectExample(state.example);
-            else await loadExamples();
-            // if scaffold returned path, select it
-            if (j.result?.path && j.kind === "scaffold") {
-              /* handled below in scaffold */
-            }
-            if (j.result?.written) {
-              // LLM synth
-              await loadExamples();
-            }
-            if (j.result?.outputs) {
-              if (state.example) await selectExample(state.example);
-            }
-          } else if (j.status === "failed") {
-            clearInterval(t);
-            log(j.message, "fail");
-            toast(j.message);
+            log(e.message, "fail");
+            resolve(null);
           }
-        } catch (e) {
-          clearInterval(t);
-          log(e.message, "fail");
-        }
-      }, 1400);
+        }, 1400);
+      });
     }
 
-    // Scaffold example prompt for current generator
+    // Generate example prompt via configured LLM (Groq 120b by default)
     $("btn-scaffold").onclick = async () => {
       const g = state.generator;
       if (!g) return;
+      $("btn-scaffold").disabled = true;
       try {
-        let path;
-        if (g.id.startsWith("kind:")) {
-          // Media kind: use LLM synth into workspace for this type
-          const job = await api("/api/prompts/generate", {
-            method: "POST",
-            body: JSON.stringify({
-              type: g.slug,
-              count: 1,
-              brief: `Example fixture for media kind ${g.slug} (${g.label})`,
-            }),
-          });
-          // Wait for job completion inline
-          log(`[${job.id.slice(0, 8)}] scaffolding…`, "run");
-          const done = await waitJob(job.id);
-          if (done.status !== "succeeded") throw new Error(done.message);
-          const written = done.result?.written || [];
-          path = written[0];
-          if (!path) throw new Error("No prompt written");
-        } else {
-          // FIM / renderer / channel
-          const r = await api(
-            "/api/providers/" + encodeURIComponent(g.id) + "/scaffold",
-            { method: "POST", body: "{}" }
-          );
-          path = r.path;
-          log(`Scaffolded ${path}`, "ok");
+        const isKind = (g.id || "").startsWith("kind:");
+        const isFim = (g.id || "").startsWith("fim:") || g.node_type === "generator";
+        const assetType = isKind
+          ? g.slug
+          : (g.asset_types && g.asset_types[0]) || "component";
+        const textFormat = isKind ? null : (g.slug || null);
+        const outSubdir = isFim && g.slug ? `fim/${g.slug}` : null;
+
+        log(`Generating example via Settings LLM…`, "run");
+        toast("Generating example prompt…");
+        const job = await api("/api/prompts/generate", {
+          method: "POST",
+          body: JSON.stringify({
+            type: assetType,
+            text_format: textFormat,
+            out_subdir: outSubdir,
+            count: 1,
+            brief: `High-quality example fixture for ${g.label || g.slug} (${g.id || g.slug}). ${g.description || ""} Concrete creative brief, not a placeholder.`,
+          }),
+        });
+        log(`[${job.id.slice(0, 8)}] LLM generating…`, "run");
+        const done = await waitJob(job.id);
+        if (done.status !== "succeeded") {
+          throw new Error(done.message || "Generation failed");
         }
-        toast("Example prompt ready");
-        state.graph = await api("/api/graph");
-        // refresh generator node data for demos
-        const flat = flattenGenerators(state.graph.roots);
-        const updated = flat.find((x) => x.node.id === g.id);
-        if (updated) state.generator = { ...g, ...updated.node };
-        await loadExamples();
-        await selectExample({
-          id: path.split("/").pop().replace(".media.prompt", ""),
+        const path = done.result?.path || (done.result?.written && done.result.written[0]);
+        if (!path) throw new Error("No prompt file written");
+
+        log(`Created ${path}`, "ok");
+        toast("Example prompt ready — Process to generate media");
+        const created = {
+          id: String(path).split("/").pop().replace(/\.media\.prompt$/, ""),
           path,
           source: "workspace",
           prompt_preview: "",
           has_eval: true,
           outputs: [],
-        });
+        };
+        state.example = created;
+        await loadExamples(); // show list first
+        await selectExample(created);
+        toast("Example ready — click “Process → generate media”");
       } catch (e) {
         toast(e.message);
         log(e.message, "fail");
+        try {
+          if (g.id && !g.id.startsWith("kind:")) {
+            log("Falling back to static scaffold…", "run");
+            const r = await api(
+              "/api/providers/" + encodeURIComponent(g.id) + "/scaffold",
+              { method: "POST", body: "{}" }
+            );
+            const created = {
+              id: r.path.split("/").pop().replace(/\.media\.prompt$/, ""),
+              path: r.path,
+              source: "workspace",
+              prompt_preview: "",
+              has_eval: true,
+              outputs: [],
+            };
+            state.example = created;
+            await loadExamples();
+            await selectExample(created);
+            toast("Static scaffold ready — click Process → generate media");
+          }
+        } catch (e2) {
+          log(e2.message, "fail");
+        }
+      } finally {
+        $("btn-scaffold").disabled = false;
+        try { updateFlowSteps(); } catch (_) { /* ignore */ }
       }
     };
 
@@ -854,22 +1291,32 @@
     }
 
     async function startProcess(dry) {
-      if (!state.example) return toast("Select a prompt first");
+      if (!state.example?.path) {
+        toast("Generate or select an example prompt first");
+        return;
+      }
+      $("btn-process").disabled = true;
+      $("btn-dry").disabled = true;
       try {
         const job = await api("/api/generate", {
           method: "POST",
           body: JSON.stringify({
             path: state.example.path,
-            force: $("opt-force").checked,
+            force: true,
             no_eval: $("opt-no-eval").checked,
             dry_run: !!dry,
             quality: state.quality,
           }),
         });
-        trackJob(job);
+        await trackJob(job);
       } catch (e) {
         toast(e.message);
         log(e.message, "fail");
+      } finally {
+        if (state.example?.path) {
+          $("btn-process").disabled = false;
+          $("btn-dry").disabled = false;
+        }
       }
     }
 

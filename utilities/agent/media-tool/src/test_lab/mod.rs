@@ -7,6 +7,7 @@
 mod catalog;
 mod registry;
 mod server;
+mod settings;
 
 use std::path::PathBuf;
 

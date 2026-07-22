@@ -25,6 +25,8 @@ struct ContentView: View {
                         TodayScreen(store: store)
                     case .work:
                         WorkScreen(store: store)
+                    case .clients:
+                        ClientsScreen(store: store)
                     case .settings:
                         SettingsView(store: store)
                     }
@@ -51,6 +53,7 @@ struct ContentView: View {
 enum TimelySection: String, CaseIterable, Identifiable {
     case today
     case work
+    case clients
     case settings
 
     var id: String { rawValue }
@@ -59,6 +62,7 @@ enum TimelySection: String, CaseIterable, Identifiable {
         switch self {
         case .today: "Today"
         case .work: "Work"
+        case .clients: "Clients"
         case .settings: "Settings"
         }
     }
@@ -67,6 +71,7 @@ enum TimelySection: String, CaseIterable, Identifiable {
         switch self {
         case .today: "rectangle.grid.2x2"
         case .work: "rectangle.3.group"
+        case .clients: "folder.badge.person.crop"
         case .settings: "slider.horizontal.3"
         }
     }
@@ -80,8 +85,32 @@ enum WorkTab: String, CaseIterable, Identifiable {
     var id: String { rawValue }
 }
 
+enum CapturePanelMode: String, CaseIterable, Identifiable {
+    case live = "Live"
+    case pomodoro = "Pomodoro"
+
+    var id: String { rawValue }
+}
+
+enum DirectoryTab: String, CaseIterable, Identifiable {
+    case clients = "Clients"
+    case projects = "Projects"
+    case tickets = "Tickets"
+
+    var id: String { rawValue }
+}
+
+enum TodayDetailTab: String, CaseIterable, Identifiable {
+    case activity = "Activity"
+    case evidence = "Evidence"
+    case ai = "AI"
+
+    var id: String { rawValue }
+}
+
 struct TodayScreen: View {
     @ObservedObject var store: TimelyStore
+    @State private var selectedDetail: TodayDetailTab = .activity
 
     var body: some View {
         ScrollView {
@@ -89,7 +118,7 @@ struct TodayScreen: View {
                 TimelyPageHeader(
                     eyebrow: "Desktop Agent",
                     title: "Today",
-                    subtitle: store.activeSpan.map { "\($0.title) has been active for \($0.duration.timelyClock)." } ?? "Start a named span, capture evidence, or add recovered time."
+                    subtitle: store.activeSpan.map { "\($0.title) has been active for \($0.duration.timelyClock)." } ?? "Set the work, start the clock, and let evidence collect quietly."
                 ) {
                     StatusIndicator(store: store)
                 }
@@ -98,28 +127,211 @@ struct TodayScreen: View {
                     ErrorBanner(message: error)
                 }
 
-                LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 14), count: 4), spacing: 14) {
-                    TimelyMetricTile(label: "Tracked", value: store.reviewedDuration.timelyClock, detail: "all spans", systemImage: "clock")
-                    TimelyMetricTile(label: "Billable", value: store.billableDuration.timelyClock, detail: "invoice-ready", systemImage: "dollarsign.circle", tint: TimelyTheme.success)
-                    TimelyMetricTile(label: "Evidence", value: "\(store.screenshots.count)", detail: store.settings.screenshotCaptureEnabled ? "\(Int(store.settings.screenshotIntervalMinutes))m cadence" : "manual capture", systemImage: "camera")
-                    TimelyMetricTile(label: "AI Review", value: "\(store.visionAnalyses.count)", detail: store.settings.vision.analysisEnabled ? "vision enabled" : "disabled", systemImage: "eye", tint: store.settings.vision.analysisEnabled ? TimelyTheme.accent : TimelyTheme.secondaryText)
-                }
+                FocusSessionCard(store: store)
 
-                HStack(alignment: .top, spacing: 16) {
-                    TaskControlCard(store: store)
-                        .frame(minWidth: 420)
-                    InsightCard(store: store)
-                        .frame(minWidth: 320)
-                }
+                TodayStatusStrip(store: store)
 
-                HStack(alignment: .top, spacing: 16) {
-                    RecentSpansCard(store: store)
-                    EvidenceSummaryCard(store: store)
-                }
-
-                UseCasesCard()
+                TodayDetailTabs(store: store, selectedTab: $selectedDetail)
             }
-            .frame(maxWidth: 1360, alignment: .topLeading)
+            .frame(maxWidth: 960, alignment: .topLeading)
+        }
+    }
+}
+
+struct FocusSessionCard: View {
+    @ObservedObject var store: TimelyStore
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 18) {
+            HStack(alignment: .top, spacing: 18) {
+                VStack(alignment: .leading, spacing: 8) {
+                    Label(store.mode.label, systemImage: modeSymbol)
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(modeTint)
+                    Text(store.activeSpan?.title ?? "What are you working on?")
+                        .font(.system(size: 30, weight: .semibold, design: .rounded))
+                        .lineLimit(2)
+                    Text(activeAssignment)
+                        .font(.callout)
+                        .foregroundStyle(TimelyTheme.secondaryText)
+                }
+                Spacer()
+                Text(store.activeSpan?.duration.timelyClock ?? "00:00")
+                    .font(.system(size: 46, weight: .semibold, design: .rounded))
+                    .monospacedDigit()
+                    .minimumScaleFactor(0.72)
+            }
+
+            if store.activeSpan == nil {
+                Grid(alignment: .leading, horizontalSpacing: 12, verticalSpacing: 12) {
+                    GridRow {
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text("Task")
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(TimelyTheme.secondaryText)
+                            TextField("e.g. Implement timeline review", text: $store.currentTask)
+                                .textFieldStyle(.roundedBorder)
+                        }
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text("Client")
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(TimelyTheme.secondaryText)
+                            TextField("e.g. Noizu", text: $store.currentClient)
+                                .textFieldStyle(.roundedBorder)
+                        }
+                    }
+                    GridRow {
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text("Project")
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(TimelyTheme.secondaryText)
+                            TextField("e.g. timely.noizu.com", text: $store.currentProject)
+                                .textFieldStyle(.roundedBorder)
+                        }
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text("Ticket")
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(TimelyTheme.secondaryText)
+                            TextField("e.g. TIM-124", text: $store.currentTicket)
+                                .textFieldStyle(.roundedBorder)
+                        }
+                    }
+                }
+            }
+
+            HStack(spacing: 10) {
+                if store.activeSpan == nil {
+                    Button("Start", systemImage: "play.fill") { store.startSpan() }
+                        .buttonStyle(TimelyPrimaryButtonStyle())
+                }
+                Button(store.mode == .paused ? "Resume" : "Pause", systemImage: store.mode == .paused ? "play.fill" : "pause.fill") {
+                    store.mode == .paused ? store.resume() : store.pause()
+                }
+                .buttonStyle(TimelySecondaryButtonStyle())
+                .disabled(store.activeSpanID == nil)
+                Button("Stop", systemImage: "stop.fill") { store.stopActiveSpan() }
+                    .buttonStyle(TimelySecondaryButtonStyle())
+                    .disabled(store.activeSpanID == nil)
+                Spacer()
+                Button {
+                    store.captureScreenshotNow()
+                } label: {
+                    Image(systemName: "camera")
+                        .frame(width: 34, height: 34)
+                }
+                .buttonStyle(TimelyIconButtonStyle())
+                .help("Capture screenshot now")
+            }
+        }
+        .timelyCard(padding: 20)
+    }
+
+    private var modeTint: Color {
+        switch store.mode {
+        case .idle: TimelyTheme.secondaryText
+        case .running, .pomodoroWork: TimelyTheme.success
+        case .paused, .pomodoroBreak: TimelyTheme.warning
+        }
+    }
+
+    private var modeSymbol: String {
+        switch store.mode {
+        case .idle: "circle"
+        case .running: "record.circle"
+        case .paused: "pause.circle"
+        case .pomodoroWork: "timer"
+        case .pomodoroBreak: "cup.and.saucer"
+        }
+    }
+
+    private var activeAssignment: String {
+        guard let span = store.activeSpan else { return "No client, project, or ticket selected" }
+        let parts = [span.client, span.project, span.ticket].filter { !$0.isEmpty }
+        return parts.isEmpty ? "No client, project, or ticket selected" : parts.joined(separator: " / ")
+    }
+}
+
+struct TodayStatusStrip: View {
+    @ObservedObject var store: TimelyStore
+
+    var body: some View {
+        HStack(spacing: 0) {
+            CompactFact(label: "Tracked", value: store.reviewedDuration.timelyClock, systemImage: "clock")
+            Divider().frame(height: 34)
+            CompactFact(label: "Billable", value: store.billableDuration.timelyClock, systemImage: "dollarsign.circle", tint: TimelyTheme.success)
+            Divider().frame(height: 34)
+            CompactFact(label: "Evidence", value: "\(store.screenshots.count)", systemImage: "camera", detail: evidenceDetail)
+            Divider().frame(height: 34)
+            CompactFact(label: "AI", value: store.settings.vision.analysisEnabled ? "On" : "Off", systemImage: "eye", detail: "\(store.visionAnalyses.count) reviews", tint: store.settings.vision.analysisEnabled ? TimelyTheme.accent : TimelyTheme.secondaryText)
+        }
+        .timelyCard(padding: 0)
+    }
+
+    private var evidenceDetail: String {
+        store.settings.screenshotCaptureEnabled ? "\(Int(store.settings.screenshotIntervalMinutes))m" : "manual"
+    }
+}
+
+struct CompactFact: View {
+    let label: String
+    let value: String
+    let systemImage: String
+    var detail: String? = nil
+    var tint: Color = TimelyTheme.accent
+
+    var body: some View {
+        HStack(spacing: 10) {
+            Image(systemName: systemImage)
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(tint)
+                .frame(width: 28, height: 28)
+                .background(tint.opacity(0.10))
+                .clipShape(RoundedRectangle(cornerRadius: 6))
+            VStack(alignment: .leading, spacing: 1) {
+                Text(label)
+                    .font(.caption)
+                    .foregroundStyle(TimelyTheme.secondaryText)
+                HStack(spacing: 6) {
+                    Text(value)
+                        .font(.callout.weight(.semibold))
+                        .monospacedDigit()
+                    if let detail {
+                        Text(detail)
+                            .font(.caption)
+                            .foregroundStyle(TimelyTheme.secondaryText)
+                    }
+                }
+            }
+            Spacer(minLength: 8)
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+struct TodayDetailTabs: View {
+    @ObservedObject var store: TimelyStore
+    @Binding var selectedTab: TodayDetailTab
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Picker("Today detail", selection: $selectedTab) {
+                ForEach(TodayDetailTab.allCases) { tab in
+                    Text(tab.rawValue).tag(tab)
+                }
+            }
+            .pickerStyle(.segmented)
+            .frame(maxWidth: 360)
+
+            switch selectedTab {
+            case .activity:
+                RecentSpansCard(store: store)
+            case .evidence:
+                EvidenceSummaryCard(store: store)
+            case .ai:
+                InsightCard(store: store)
+            }
         }
     }
 }
@@ -163,16 +375,199 @@ struct WorkScreen: View {
 
 struct CaptureTabContent: View {
     @ObservedObject var store: TimelyStore
+    @State private var mode: CapturePanelMode = .live
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            HStack(alignment: .top, spacing: 16) {
+            Picker("Capture mode", selection: $mode) {
+                ForEach(CapturePanelMode.allCases) { mode in
+                    Text(mode.rawValue).tag(mode)
+                }
+            }
+            .pickerStyle(.segmented)
+            .frame(maxWidth: 300)
+
+            switch mode {
+            case .live:
                 TaskControlCard(store: store)
+            case .pomodoro:
                 PomodoroCard(store: store)
             }
             CapturePolicyCard(store: store)
             RecentSpansCard(store: store)
         }
+    }
+}
+
+struct ClientsScreen: View {
+    @ObservedObject var store: TimelyStore
+    @State private var selectedTab: DirectoryTab = .clients
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 18) {
+                TimelyPageHeader(
+                    eyebrow: "Directory",
+                    title: "Clients and work",
+                    subtitle: "Keep reusable clients, projects, and tickets available for time spans."
+                ) {
+                    TimelyStatusPill(title: "\(store.clients.count) clients", systemImage: "person.2", tint: TimelyTheme.accent)
+                }
+
+                Picker("Directory view", selection: $selectedTab) {
+                    ForEach(DirectoryTab.allCases) { tab in
+                        Text(tab.rawValue).tag(tab)
+                    }
+                }
+                .pickerStyle(.segmented)
+                .frame(maxWidth: 420)
+
+                switch selectedTab {
+                case .clients:
+                    ClientDirectoryCard(store: store)
+                case .projects:
+                    ProjectDirectoryCard(store: store)
+                case .tickets:
+                    TicketDirectoryCard(store: store)
+                }
+            }
+            .frame(maxWidth: 960, alignment: .topLeading)
+        }
+    }
+}
+
+struct ClientDirectoryCard: View {
+    @ObservedObject var store: TimelyStore
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Label("Clients", systemImage: "person.2")
+                .font(.headline)
+            HStack(spacing: 10) {
+                TextField("Client name", text: $store.draftClientName)
+                    .textFieldStyle(.roundedBorder)
+                Button("Add", systemImage: "plus") { store.addClient() }
+                    .buttonStyle(TimelyPrimaryButtonStyle())
+                    .disabled(store.draftClientName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+            }
+
+            if store.clients.isEmpty {
+                EmptyStateView(message: "No clients yet. Add one here or start a span with a client name.")
+            } else {
+                ForEach(store.clients) { client in
+                    DirectoryRow(
+                        title: client.name,
+                        subtitle: "\(store.projects.filter { $0.clientName.localizedCaseInsensitiveCompare(client.name) == .orderedSame }.count) projects / \(store.tickets.filter { $0.clientName.localizedCaseInsensitiveCompare(client.name) == .orderedSame }.count) tickets",
+                        systemImage: "person.crop.square"
+                    )
+                    if client.id != store.clients.last?.id {
+                        Divider()
+                    }
+                }
+            }
+        }
+        .timelyCard()
+    }
+}
+
+struct ProjectDirectoryCard: View {
+    @ObservedObject var store: TimelyStore
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Label("Projects", systemImage: "folder")
+                .font(.headline)
+            Grid(horizontalSpacing: 10, verticalSpacing: 10) {
+                GridRow {
+                    TextField("Client", text: $store.draftProjectClient)
+                    TextField("Project name", text: $store.draftProjectName)
+                    Button("Add", systemImage: "plus") { store.addProject() }
+                        .buttonStyle(TimelyPrimaryButtonStyle())
+                        .disabled(store.draftProjectName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                }
+            }
+            .textFieldStyle(.roundedBorder)
+
+            if store.projects.isEmpty {
+                EmptyStateView(message: "No projects yet.")
+            } else {
+                ForEach(store.projects) { project in
+                    DirectoryRow(
+                        title: project.name,
+                        subtitle: project.clientName.isEmpty ? "No client" : project.clientName,
+                        systemImage: "folder"
+                    )
+                    if project.id != store.projects.last?.id {
+                        Divider()
+                    }
+                }
+            }
+        }
+        .timelyCard()
+    }
+}
+
+struct TicketDirectoryCard: View {
+    @ObservedObject var store: TimelyStore
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Label("Tickets", systemImage: "ticket")
+                .font(.headline)
+            Grid(horizontalSpacing: 10, verticalSpacing: 10) {
+                GridRow {
+                    TextField("Client", text: $store.draftTicketClient)
+                    TextField("Project", text: $store.draftTicketProject)
+                    TextField("Ticket name", text: $store.draftTicketName)
+                    Button("Add", systemImage: "plus") { store.addTicket() }
+                        .buttonStyle(TimelyPrimaryButtonStyle())
+                        .disabled(store.draftTicketName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                }
+            }
+            .textFieldStyle(.roundedBorder)
+
+            if store.tickets.isEmpty {
+                EmptyStateView(message: "No tickets yet.")
+            } else {
+                ForEach(store.tickets) { ticket in
+                    DirectoryRow(
+                        title: ticket.name,
+                        subtitle: [ticket.clientName, ticket.projectName].filter { !$0.isEmpty }.joined(separator: " / "),
+                        systemImage: "ticket"
+                    )
+                    if ticket.id != store.tickets.last?.id {
+                        Divider()
+                    }
+                }
+            }
+        }
+        .timelyCard()
+    }
+}
+
+struct DirectoryRow: View {
+    let title: String
+    let subtitle: String
+    let systemImage: String
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Image(systemName: systemImage)
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundStyle(TimelyTheme.accent)
+                .frame(width: 30, height: 30)
+                .background(TimelyTheme.accentSoft)
+                .clipShape(RoundedRectangle(cornerRadius: 7))
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(.body.weight(.medium))
+                Text(subtitle.isEmpty ? "No assignment" : subtitle)
+                    .font(.caption)
+                    .foregroundStyle(TimelyTheme.secondaryText)
+            }
+            Spacer()
+        }
+        .padding(.vertical, 4)
     }
 }
 
@@ -201,7 +596,7 @@ struct TimelineTabContent: View {
                         VStack(alignment: .leading, spacing: 2) {
                             Text(span.title)
                                 .font(.body.weight(.medium))
-                            Text(span.project.isEmpty ? "No project" : span.project)
+                            Text(spanAssignment(span))
                                 .font(.caption)
                                 .foregroundStyle(TimelyTheme.secondaryText)
                         }
@@ -239,6 +634,11 @@ struct TimelineTabContent: View {
 
     private func screenshotsForSpan(_ span: TrackedTimeSpan) -> [ScreenshotRecord] {
         store.screenshots.filter { $0.spanID == span.id }
+    }
+
+    private func spanAssignment(_ span: TrackedTimeSpan) -> String {
+        let parts = [span.client, span.project, span.ticket].filter { !$0.isEmpty }
+        return parts.isEmpty ? "No client, project, or ticket" : parts.joined(separator: " / ")
     }
 }
 
@@ -347,7 +747,7 @@ struct TimelineScreen: View {
                         VStack(alignment: .leading, spacing: 2) {
                             Text(span.title)
                                 .font(.body.weight(.medium))
-                            Text(span.project.isEmpty ? "No project" : span.project)
+                            Text(spanAssignment(span))
                                 .font(.caption)
                                 .foregroundStyle(TimelyTheme.secondaryText)
                         }
@@ -367,6 +767,11 @@ struct TimelineScreen: View {
                 .timelyCard(padding: 0)
             }
         }
+    }
+
+    private func spanAssignment(_ span: TrackedTimeSpan) -> String {
+        let parts = [span.client, span.project, span.ticket].filter { !$0.isEmpty }
+        return parts.isEmpty ? "No client, project, or ticket" : parts.joined(separator: " / ")
     }
 }
 
@@ -521,10 +926,26 @@ struct TaskControlCard: View {
                             .textFieldStyle(.roundedBorder)
                     }
                     VStack(alignment: .leading, spacing: 6) {
-                        Text("Project or client")
+                        Text("Client")
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(TimelyTheme.secondaryText)
+                        TextField("e.g. Noizu", text: $store.currentClient)
+                            .textFieldStyle(.roundedBorder)
+                    }
+                }
+                GridRow {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("Project")
                             .font(.caption.weight(.semibold))
                             .foregroundStyle(TimelyTheme.secondaryText)
                         TextField("e.g. timely.noizu.com", text: $store.currentProject)
+                            .textFieldStyle(.roundedBorder)
+                    }
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("Ticket")
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(TimelyTheme.secondaryText)
+                        TextField("e.g. TIM-124", text: $store.currentTicket)
                             .textFieldStyle(.roundedBorder)
                     }
                 }
@@ -541,8 +962,14 @@ struct TaskControlCard: View {
                 Button("Stop", systemImage: "stop.fill") { store.stopActiveSpan() }
                     .buttonStyle(TimelySecondaryButtonStyle())
                     .disabled(store.activeSpanID == nil)
-                Button("Screenshot", systemImage: "camera") { store.captureScreenshotNow() }
-                    .buttonStyle(TimelySecondaryButtonStyle())
+                Button {
+                    store.captureScreenshotNow()
+                } label: {
+                    Image(systemName: "camera")
+                        .frame(width: 34, height: 34)
+                }
+                .buttonStyle(TimelyIconButtonStyle())
+                .help("Capture screenshot now")
             }
 
             if let active = store.activeSpan {
@@ -570,7 +997,11 @@ struct ManualSpanCard: View {
             Grid(horizontalSpacing: 12, verticalSpacing: 12) {
                 GridRow {
                     TextField("Title", text: $store.manualTitle)
-                    TextField("Project or client", text: $store.manualProject)
+                    TextField("Client", text: $store.manualClient)
+                }
+                GridRow {
+                    TextField("Project", text: $store.manualProject)
+                    TextField("Ticket", text: $store.manualTicket)
                 }
                 GridRow {
                     DatePicker("Start", selection: $store.manualStart)
@@ -702,7 +1133,7 @@ struct RecentSpansCard: View {
                             Text(span.title)
                                 .font(.body.weight(.medium))
                                 .lineLimit(1)
-                            Text(span.project.isEmpty ? span.source.label : span.project)
+                            Text(spanAssignment(span))
                                 .font(.caption)
                                 .foregroundStyle(TimelyTheme.secondaryText)
                         }
@@ -717,6 +1148,11 @@ struct RecentSpansCard: View {
             }
         }
         .timelyCard()
+    }
+
+    private func spanAssignment(_ span: TrackedTimeSpan) -> String {
+        let parts = [span.client, span.project, span.ticket].filter { !$0.isEmpty }
+        return parts.isEmpty ? span.source.label : parts.joined(separator: " / ")
     }
 }
 

@@ -26,6 +26,7 @@ use super::catalog::{
     load_detail, resolve_safe_media, scan_catalog, type_label, PromptDetail, TypeGroup,
 };
 use super::registry::{self, ProviderCatalog, ProviderEntry};
+use super::settings::{self, LabSettings};
 use super::LabConfig;
 
 // ---------------------------------------------------------------------------
@@ -42,6 +43,8 @@ struct AppInner {
     jobs: Mutex<HashMap<String, Job>>,
     /// Full provider/channel registry (≥100 entries), built at startup.
     providers: ProviderCatalog,
+    /// Persisted lab settings (LLM for example-prompt generation, etc.)
+    settings: Mutex<LabSettings>,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -87,11 +90,24 @@ pub async fn run_lab(cfg: LabConfig) -> color_eyre::Result<()> {
         providers.local_tool
     ));
 
+    let settings = LabSettings::load(&cfg.workspace_dir);
+    ui::ok(&format!(
+        "Example-prompt LLM: {} / {} ({})",
+        settings.llm.provider,
+        settings.llm.effective_model(),
+        if settings.llm.effective_api_key().is_some() {
+            "key ok"
+        } else {
+            "no key"
+        }
+    ));
+
     let state = AppState {
         inner: Arc::new(AppInner {
             cfg: cfg.clone(),
             jobs: Mutex::new(HashMap::new()),
             providers,
+            settings: Mutex::new(settings),
         }),
     };
 
@@ -111,7 +127,11 @@ pub async fn run_lab(cfg: LabConfig) -> color_eyre::Result<()> {
         .route("/api/generate", post(api_generate))
         .route("/api/eval", post(api_eval))
         .route("/api/prompts/generate", post(api_generate_prompts))
+        .route("/api/prompts/list", get(api_prompts_list))
         .route("/api/prompt/save", post(api_save_prompt))
+        .route("/api/settings", get(api_settings_get).put(api_settings_put))
+        .route("/api/settings/llm-meta", get(api_settings_llm_meta))
+        .route("/api/settings/test-llm", post(api_settings_test_llm))
         .layer(CorsLayer::permissive())
         .with_state(state);
 
@@ -159,6 +179,7 @@ async fn index_page() -> Html<&'static str> {
 }
 
 async fn health(State(st): State<AppState>) -> Json<serde_json::Value> {
+    let settings = st.inner.settings.lock().await;
     Json(json!({
         "ok": true,
         "demos": st.inner.cfg.demos_dir.display().to_string(),
@@ -168,7 +189,166 @@ async fn health(State(st): State<AppState>) -> Json<serde_json::Value> {
         "providers_stub": st.inner.providers.stub,
         "providers_fim_only": st.inner.providers.fim_only,
         "categories": st.inner.providers.categories.len(),
+        "llm": {
+            "provider": settings.llm.provider,
+            "model": settings.llm.effective_model(),
+            "ready": settings.llm.effective_api_key().is_some()
+                || !settings::provider_defaults(&settings.llm.provider).needs_api_key,
+        },
     }))
+}
+
+async fn api_settings_get(State(st): State<AppState>) -> Json<serde_json::Value> {
+    let settings = st.inner.settings.lock().await;
+    let mut pubj = settings.public_json();
+    pubj["path"] = json!(LabSettings::settings_path(&st.inner.cfg.workspace_dir).display().to_string());
+    // Return editable api_key field: prefer env: refs as-is; for real keys send empty + has_key
+    if !settings.llm.api_key.trim().to_lowercase().starts_with("env:")
+        && !settings.llm.api_key.trim().is_empty()
+    {
+        pubj["llm"]["api_key_edit"] = json!("");
+        pubj["llm"]["api_key_is_set"] = json!(true);
+    } else {
+        pubj["llm"]["api_key_edit"] = json!(settings.llm.api_key);
+        pubj["llm"]["api_key_is_set"] = json!(settings.llm.effective_api_key().is_some());
+    }
+    Json(pubj)
+}
+
+async fn api_settings_llm_meta() -> Json<serde_json::Value> {
+    Json(settings::llm_ui_meta())
+}
+
+#[derive(Deserialize)]
+struct SettingsPutBody {
+    llm: Option<LlmPutBody>,
+}
+
+#[derive(Deserialize)]
+struct LlmPutBody {
+    provider: Option<String>,
+    model: Option<String>,
+    base_url: Option<String>,
+    /// If null/omitted and previous was a stored secret, keep previous.
+    /// Empty string clears. `env: VAR` sets env ref.
+    api_key: Option<String>,
+}
+
+async fn api_settings_put(
+    State(st): State<AppState>,
+    Json(body): Json<SettingsPutBody>,
+) -> Result<Json<serde_json::Value>, ApiError> {
+    let mut settings = st.inner.settings.lock().await;
+    if let Some(llm) = body.llm {
+        if let Some(p) = llm.provider {
+            let p = p.trim().to_lowercase();
+            if !p.is_empty() {
+                settings.llm.provider = p;
+            }
+        }
+        if let Some(m) = llm.model {
+            settings.llm.model = m.trim().to_string();
+        }
+        if let Some(u) = llm.base_url {
+            settings.llm.base_url = u.trim().to_string();
+        }
+        if let Some(k) = llm.api_key {
+            let k = k.trim().to_string();
+            // Empty means "leave unchanged" when a non-env secret is already stored
+            // and the client sent blank to avoid round-tripping secrets.
+            if k.is_empty() {
+                // keep existing unless it was empty
+            } else if k == "—" || k.starts_with("••••") {
+                // ignore masked placeholders
+            } else {
+                settings.llm.api_key = k;
+            }
+        }
+        // If model empty after provider change, fill default
+        if settings.llm.model.trim().is_empty() {
+            settings.llm.model = settings::provider_defaults(&settings.llm.provider)
+                .model
+                .unwrap_or(settings::DEFAULT_EXAMPLE_MODEL)
+                .to_string();
+        }
+        if settings.llm.base_url.trim().is_empty() {
+            if let Some(u) = settings::provider_defaults(&settings.llm.provider).base_url {
+                settings.llm.base_url = u.to_string();
+            }
+        }
+    }
+    settings
+        .save(&st.inner.cfg.workspace_dir)
+        .map_err(|e| ApiError::bad(format!("save settings: {e}")))?;
+
+    let mut pubj = settings.public_json();
+    pubj["path"] = json!(LabSettings::settings_path(&st.inner.cfg.workspace_dir).display().to_string());
+    pubj["saved"] = json!(true);
+    Ok(Json(pubj))
+}
+
+async fn api_settings_test_llm(State(st): State<AppState>) -> Result<Json<serde_json::Value>, ApiError> {
+    let llm = st.inner.settings.lock().await.llm.clone();
+
+    let key = llm.effective_api_key();
+    if settings::provider_defaults(&llm.provider).needs_api_key && key.is_none() {
+        return Err(ApiError::bad(
+            "No API key resolved — set key or env: GROQ_API_KEY".into(),
+        ));
+    }
+    let base = llm.effective_base_url();
+    let model = llm.effective_model();
+    let url = if base.ends_with("/chat/completions") {
+        base.clone()
+    } else {
+        format!("{}/chat/completions", base)
+    };
+
+    let body = json!({
+        "model": model,
+        "messages": [
+            {"role": "user", "content": "Reply with exactly: ok"}
+        ],
+        "max_tokens": 16,
+        "temperature": 0,
+    });
+
+    let client = reqwest::Client::new();
+    let mut req = client
+        .post(&url)
+        .header("Content-Type", "application/json")
+        .json(&body)
+        .timeout(Duration::from_secs(60));
+    if let Some(k) = key {
+        req = req.header("Authorization", format!("Bearer {k}"));
+    }
+    // Anthropic needs special headers — if provider is anthropic use messages API differently
+    // For simplicity, only support OpenAI-compatible endpoints in test (groq, openai, litellm, ollama)
+    if llm.provider == "anthropic" {
+        return Ok(Json(json!({
+            "ok": false,
+            "message": "Anthropic test via OpenAI-compat not configured; save settings and use groq/openai for example prompts.",
+        })));
+    }
+
+    let resp = req.send().await.map_err(|e| ApiError::bad(e.to_string()))?;
+    let status = resp.status();
+    let text = resp.text().await.unwrap_or_default();
+    if !status.is_success() {
+        return Ok(Json(json!({
+            "ok": false,
+            "message": format!("HTTP {status}: {}", text.chars().take(200).collect::<String>()),
+            "model": model,
+            "base_url": base,
+        })));
+    }
+    Ok(Json(json!({
+        "ok": true,
+        "message": format!("Connected — model {model}"),
+        "model": model,
+        "base_url": base,
+        "sample": text.chars().take(120).collect::<String>(),
+    })))
 }
 
 async fn api_catalog(State(st): State<AppState>) -> Result<Json<Vec<TypeGroup>>, ApiError> {
@@ -1068,17 +1248,156 @@ fn find_sibling_prompt(media: &Path) -> Option<PathBuf> {
 
 #[derive(Deserialize)]
 struct GeneratePromptsBody {
-    /// Asset type key: image, video, music, voice, diagram, html, svg, ...
+    /// Asset type key: image, video, music, voice, diagram, html, svg, component, ...
     #[serde(rename = "type")]
     type_key: String,
     #[serde(default = "default_count")]
     count: usize,
     /// Optional creative brief / focus for the generated prompts
     brief: Option<String>,
+    /// FIM / format channel slug (e.g. paper_js, lilypond) → sets text_format
+    text_format: Option<String>,
+    /// Optional folder under workspace/prompts (e.g. fim/paper_js)
+    out_subdir: Option<String>,
 }
 
 fn default_count() -> usize {
     1
+}
+
+#[derive(Deserialize)]
+struct PromptsListQuery {
+    /// Generator slug (paper_js, lilypond, image, …)
+    slug: String,
+    /// Optional node id (fim:paper_js, kind:image)
+    id: Option<String>,
+}
+
+/// List demo + workspace prompts for a generator so the UI can refresh after scaffold.
+async fn api_prompts_list(
+    State(st): State<AppState>,
+    Query(q): Query<PromptsListQuery>,
+) -> Result<Json<serde_json::Value>, ApiError> {
+    let slug = q.slug.trim();
+    if slug.is_empty() {
+        return Err(ApiError::bad("slug required".into()));
+    }
+
+    let mut paths: Vec<PathBuf> = Vec::new();
+
+    // Workspace: prompts/**/slug* and prompts/fim/slug/
+    let ws_prompts = st.inner.cfg.workspace_dir.join("prompts");
+    collect_prompts_matching(&ws_prompts, slug, &mut paths);
+
+    // Demos linked via registry
+    if let Some(entry) = st.inner.providers.providers.iter().find(|p| {
+        p.slug == slug || q.id.as_deref() == Some(p.id.as_str())
+    }) {
+        for p in &entry.demo_paths {
+            paths.push(PathBuf::from(p));
+        }
+    }
+
+    // Demos by type folder name
+    let demo_type_dir = st.inner.cfg.demos_dir.join(slug);
+    if demo_type_dir.is_dir() {
+        collect_prompts_matching(&demo_type_dir, slug, &mut paths);
+    }
+    // Also scan demos for matching stem
+    collect_prompts_matching(&st.inner.cfg.demos_dir, slug, &mut paths);
+
+    // Dedup
+    paths.sort();
+    paths.dedup();
+
+    let mut items = Vec::new();
+    for path in paths {
+        if !path.is_file() {
+            continue;
+        }
+        let media_root = media_root_for(&path, &st.inner.cfg);
+        let source = if path.starts_with(&st.inner.cfg.workspace_dir) {
+            "workspace"
+        } else {
+            "demos"
+        };
+        match load_detail(&path, &media_root, source) {
+            Ok(d) => {
+                items.push(json!({
+                    "id": d.summary.id,
+                    "path": d.summary.path,
+                    "rel_path": d.summary.rel_path,
+                    "source": source,
+                    "prompt_preview": d.summary.prompt_preview,
+                    "has_eval": d.summary.has_eval,
+                    "outputs": d.summary.outputs,
+                    "type_key": d.summary.type_key,
+                }));
+            }
+            Err(_) => {
+                items.push(json!({
+                    "id": path.file_stem().and_then(|s| s.to_str()).unwrap_or("prompt"),
+                    "path": path.display().to_string(),
+                    "source": source,
+                    "prompt_preview": "",
+                    "has_eval": false,
+                    "outputs": [],
+                }));
+            }
+        }
+    }
+
+    Ok(Json(json!({ "slug": slug, "prompts": items })))
+}
+
+fn collect_prompts_matching(dir: &Path, slug: &str, out: &mut Vec<PathBuf>) {
+    if !dir.is_dir() {
+        return;
+    }
+    let slug_l = slug.to_lowercase();
+    let Ok(rd) = std::fs::read_dir(dir) else {
+        return;
+    };
+    for ent in rd.flatten() {
+        let p = ent.path();
+        if p.is_dir() {
+            let name = p
+                .file_name()
+                .and_then(|n| n.to_str())
+                .unwrap_or("")
+                .to_lowercase();
+            // Recurse into matching or generic folders
+            if name == slug_l
+                || name.contains(&slug_l)
+                || name == "fim"
+                || name == "workspace"
+                || dir.ends_with("prompts")
+                || dir.ends_with("demos")
+            {
+                collect_prompts_matching(&p, slug, out);
+            }
+        } else if p
+            .file_name()
+            .and_then(|n| n.to_str())
+            .map(|n| n.ends_with(".media.prompt"))
+            .unwrap_or(false)
+        {
+            let name = p
+                .file_name()
+                .and_then(|n| n.to_str())
+                .unwrap_or("")
+                .to_lowercase();
+            let parent = p
+                .parent()
+                .and_then(|x| x.file_name())
+                .and_then(|n| n.to_str())
+                .unwrap_or("")
+                .to_lowercase();
+            if name.contains(&slug_l) || parent == slug_l || parent.contains(&slug_l) {
+                out.push(p);
+            }
+        }
+    }
 }
 
 async fn api_generate_prompts(
@@ -1086,18 +1405,30 @@ async fn api_generate_prompts(
     Json(body): Json<GeneratePromptsBody>,
 ) -> Result<Json<Job>, ApiError> {
     let count = body.count.clamp(1, 5);
+    let label = body
+        .text_format
+        .clone()
+        .unwrap_or_else(|| body.type_key.clone());
     let job = enqueue_job(
         &st,
         "generate_prompts",
         None,
-        format!("Synthesize {count} {} test prompt(s)", body.type_key),
+        format!("Synthesize {count} {label} test prompt(s)"),
     )
     .await;
     let st2 = st.clone();
     let job_id = job.id.clone();
     tokio::spawn(async move {
         set_job_running(&st2, &job_id).await;
-        let result = run_synthesize_prompts(&st2, &body.type_key, count, body.brief.as_deref()).await;
+        let result = run_synthesize_prompts(
+            &st2,
+            &body.type_key,
+            count,
+            body.brief.as_deref(),
+            body.text_format.as_deref(),
+            body.out_subdir.as_deref(),
+        )
+        .await;
         finish_job(&st2, &job_id, result).await;
     });
     Ok(Json(job))
@@ -1108,62 +1439,111 @@ async fn run_synthesize_prompts(
     type_key: &str,
     count: usize,
     brief: Option<&str>,
+    text_format: Option<&str>,
+    out_subdir: Option<&str>,
 ) -> Result<serde_json::Value, String> {
-    let prepper = PromptPrepper::resolve(None, None, st.inner.cfg.verbose)
-        .ok_or_else(|| {
-            "No LLM for prompt synthesis (set GROQ_API_KEY or MEDIA_PREP_BASE_URL)".to_string()
-        })?;
+    // Prefer lab settings (default: Groq openai/gpt-oss-120b); fall back to prepper env.
+    let (base_url, model, api_key) = {
+        let settings = st.inner.settings.lock().await;
+        let llm = &settings.llm;
+        let key = llm.effective_api_key();
+        if key.is_some() || !settings::provider_defaults(&llm.provider).needs_api_key {
+            (
+                llm.effective_base_url(),
+                llm.effective_model(),
+                key.unwrap_or_else(|| "none".into()),
+            )
+        } else if let Some(prepper) = PromptPrepper::resolve(None, None, st.inner.cfg.verbose) {
+            (prepper.base_url, prepper.model, prepper.api_key)
+        } else {
+            return Err(
+                "No LLM for prompt synthesis — open Settings and configure Groq (openai/gpt-oss-120b) or set GROQ_API_KEY"
+                    .into(),
+            );
+        }
+    };
 
-    // Reuse the prepper HTTP path with a custom instruction by calling the same
-    // chat endpoint via a one-off request (PromptPrepper only exposes prepare/refine).
-    // We'll use a lightweight internal call:
-    let examples = load_type_examples(&st.inner.cfg.demos_dir, type_key, 2);
+    let format_hint = text_format.unwrap_or("");
+    let examples = load_type_examples(
+        &st.inner.cfg.demos_dir,
+        if format_hint.is_empty() {
+            type_key
+        } else {
+            format_hint
+        },
+        2,
+    );
+    let text_format_rule = if format_hint.is_empty() {
+        String::new()
+    } else {
+        format!(
+            "- MUST set output.text_format: \"{format_hint}\" and use a suitable output format extension\n\
+             - prompt.system should instruct: output ONLY valid {format_hint} (no markdown fences)\n\
+             - type should be one of: component, html, diagram, document (pick best for {format_hint})\n"
+        )
+    };
     let system = format!(
         "You write .media.prompt YAML test fixtures for the Noizu media-tool.\n\
          Schema version must be \"0.4\". Output ONLY a JSON array of objects:\n\
-         [{{\"filename\": \"descriptive-slug.media.prompt\", \"yaml\": \"...full yaml...\"}}, ...]\n\
+         [{{\"filename\": \"descriptive-slug.media.prompt\", \"yaml\": \"...full yaml string...\"}}, ...]\n\
+         CRITICAL YAML shape for output.formats (every entry MUST be a map with key format):\n\
+         output:\n\
+           formats:\n\
+             - format: js\n\
+         NEVER write bare strings like `- js` or `formats: [js]`.\n\
          Rules:\n\
-         - type: {type_key} (use voice not audio; svg may use type image + text_format svg + format svg)\n\
+         - Base type key context: {type_key}\n\
+         {text_format_rule}\
          - Include quality: medium\n\
-         - Include a realistic prompt.text and output.formats\n\
-         - Include a simple eval block with pass_threshold 0.7 and 2-4 criteria\n\
-         - Unique id fields\n\
+         - Do NOT pin service: — prefer quality so the tool auto-selects providers\n\
+         - prompt.text must be a concrete creative brief (not a meta placeholder)\n\
+         - Include eval with pass_threshold: 0.7 and 2-4 criteria maps with weight + description\n\
+         - Unique id fields (kebab-case)\n\
          - No markdown fences in the JSON response"
     );
     let user = format!(
-        "Generate {count} diverse test prompt file(s) for media type `{type_key}`.\n\
+        "Generate {count} diverse test prompt file(s) for `{}`.\n\
          Focus: {}\n\n\
          Example snippets from existing demos:\n{}\n",
+        if format_hint.is_empty() {
+            type_key
+        } else {
+            format_hint
+        },
         brief.unwrap_or("general coverage of common use cases"),
         examples
     );
 
-    let url = if prepper.base_url.ends_with("/chat/completions") {
-        prepper.base_url.clone()
+    let url = if base_url.ends_with("/chat/completions") {
+        base_url.clone()
     } else {
-        format!("{}/chat/completions", prepper.base_url)
+        format!("{}/chat/completions", base_url.trim_end_matches('/'))
     };
 
     let body = json!({
-        "model": prepper.model,
+        "model": model,
         "messages": [
             {"role": "system", "content": system},
             {"role": "user", "content": user}
         ],
         "temperature": 0.7,
-        "max_tokens": 4096,
+        "max_tokens": 8192,
     });
 
+    if st.inner.cfg.verbose {
+        ui::verbose(&format!("Example-prompt LLM POST {url} model={model}"));
+    }
+
     let client = reqwest::Client::new();
-    let resp = client
+    let mut req = client
         .post(&url)
-        .header("Authorization", format!("Bearer {}", prepper.api_key))
         .header("Content-Type", "application/json")
         .json(&body)
-        .timeout(Duration::from_secs(120))
-        .send()
-        .await
-        .map_err(|e| e.to_string())?;
+        .timeout(Duration::from_secs(180));
+    if api_key != "none" && !api_key.is_empty() {
+        req = req.header("Authorization", format!("Bearer {api_key}"));
+    }
+    let resp = req.send().await.map_err(|e| e.to_string())?;
 
     if !resp.status().is_success() {
         return Err(format!("LLM HTTP {}", resp.status()));
@@ -1178,38 +1558,368 @@ async fn run_synthesize_prompts(
     let items: Vec<serde_json::Value> =
         serde_json::from_str(&cleaned).map_err(|e| format!("JSON parse: {e}; raw={}", &cleaned[..cleaned.len().min(200)]))?;
 
-    let out_dir = st
-        .inner
-        .cfg
-        .workspace_dir
-        .join("prompts")
-        .join(sanitize_type_dir(type_key));
+    let sub = out_subdir
+        .map(|s| s.trim().trim_start_matches('/').to_string())
+        .filter(|s| !s.is_empty() && !s.contains(".."))
+        .unwrap_or_else(|| {
+            if let Some(tf) = text_format.filter(|s| !s.is_empty()) {
+                format!("fim/{}", sanitize_type_dir(tf))
+            } else {
+                sanitize_type_dir(type_key)
+            }
+        });
+    let out_dir = st.inner.cfg.workspace_dir.join("prompts").join(&sub);
     std::fs::create_dir_all(&out_dir).map_err(|e| e.to_string())?;
 
     let mut written = Vec::new();
-    for item in items.into_iter().take(count) {
-        let filename = item["filename"]
+    let mut last_err = String::new();
+    for item in items.into_iter().take(count.max(1) + 2) {
+        if written.len() >= count {
+            break;
+        }
+        let mut filename = item["filename"]
             .as_str()
             .unwrap_or("generated.media.prompt")
             .replace("..", "_");
-        let yaml = item["yaml"].as_str().unwrap_or("").trim();
-        if yaml.is_empty() {
+        if !filename.ends_with(".media.prompt") {
+            filename = format!(
+                "{}.media.prompt",
+                filename.trim_end_matches(".yaml").trim_end_matches(".yml")
+            );
+        }
+        let raw_yaml = item["yaml"].as_str().unwrap_or("").trim().to_string();
+        if raw_yaml.is_empty() {
+            // Sometimes models put the whole prompt at the top level
+            if let Some(y) = item.as_str() {
+                if y.contains("prompt:") {
+                    let repaired = repair_media_prompt_yaml(y, type_key, text_format);
+                    if let Ok(path) = write_validated_prompt(&out_dir, &filename, &repaired) {
+                        written.push(path);
+                    }
+                }
+            }
             continue;
         }
-        let dest = out_dir.join(&filename);
-        std::fs::write(&dest, yaml).map_err(|e| e.to_string())?;
-        written.push(dest.display().to_string());
+        let repaired = repair_media_prompt_yaml(&raw_yaml, type_key, text_format);
+        match write_validated_prompt(&out_dir, &filename, &repaired) {
+            Ok(path) => written.push(path),
+            Err(e) => {
+                last_err = format!("{filename}: {e}");
+                // try once more with a known-good skeleton merge
+                let fallback = merge_with_skeleton(&repaired, type_key, text_format);
+                if let Ok(path) = write_validated_prompt(
+                    &out_dir,
+                    &filename.replace(".media.prompt", "-fixed.media.prompt"),
+                    &fallback,
+                ) {
+                    written.push(path);
+                }
+            }
+        }
     }
 
     if written.is_empty() {
-        return Err("LLM returned no writable prompts".into());
+        return Err(if last_err.is_empty() {
+            "LLM returned no writable prompts".into()
+        } else {
+            format!("LLM YAML invalid — {last_err}")
+        });
     }
 
     Ok(json!({
         "type": type_key,
+        "text_format": text_format,
         "written": written,
+        "path": written.first(),
         "label": type_label(type_key),
     }))
+}
+
+fn write_validated_prompt(out_dir: &Path, filename: &str, yaml: &str) -> Result<String, String> {
+    let dest = out_dir.join(filename);
+    std::fs::write(&dest, yaml).map_err(|e| e.to_string())?;
+    parse_prompt_file(&dest).map_err(|e| {
+        let _ = std::fs::remove_file(&dest);
+        e.to_string()
+    })?;
+    Ok(dest.display().to_string())
+}
+
+/// Normalize common LLM YAML mistakes so fixtures parse with schema.rs.
+fn repair_media_prompt_yaml(yaml: &str, type_key: &str, text_format: Option<&str>) -> String {
+    let mut doc: serde_yaml::Value = match serde_yaml::from_str(yaml) {
+        Ok(v) => v,
+        Err(_) => {
+            return merge_with_skeleton(yaml, type_key, text_format);
+        }
+    };
+
+    let map = match doc.as_mapping_mut() {
+        Some(m) => m,
+        None => return merge_with_skeleton(yaml, type_key, text_format),
+    };
+
+    // schema / type / quality defaults
+    ensure_str_key(map, "schema", "0.4");
+    if !map.contains_key(serde_yaml::Value::String("type".into())) {
+        let t = if text_format.is_some() {
+            // channel generators → chat asset type
+            match type_key {
+                "html" | "game" => "html",
+                "diagram" => "diagram",
+                "document" => "document",
+                "image" | "svg" => "image",
+                _ => "component",
+            }
+        } else {
+            type_key
+        };
+        map.insert(
+            serde_yaml::Value::String("type".into()),
+            serde_yaml::Value::String(t.into()),
+        );
+    }
+    ensure_str_key(map, "quality", "medium");
+
+    // Fix output.formats
+    let default_ext = text_format
+        .map(|tf| default_ext_for_channel(tf))
+        .unwrap_or_else(|| default_ext_for_type(type_key));
+
+    let output_key = serde_yaml::Value::String("output".into());
+    if !map.contains_key(&output_key) {
+        map.insert(output_key.clone(), serde_yaml::Value::Mapping(Default::default()));
+    }
+    if let Some(serde_yaml::Value::Mapping(out)) = map.get_mut(&output_key) {
+        if let Some(tf) = text_format.filter(|s| !s.is_empty()) {
+            out.insert(
+                serde_yaml::Value::String("text_format".into()),
+                serde_yaml::Value::String(tf.into()),
+            );
+        }
+        let formats_key = serde_yaml::Value::String("formats".into());
+        let fixed = normalize_formats(out.get(&formats_key), default_ext);
+        out.insert(formats_key, fixed);
+    }
+
+    // Ensure prompt.text exists
+    let prompt_key = serde_yaml::Value::String("prompt".into());
+    if let Some(serde_yaml::Value::Mapping(p)) = map.get_mut(&prompt_key) {
+        let text_key = serde_yaml::Value::String("text".into());
+        let empty = p
+            .get(&text_key)
+            .and_then(|v| v.as_str())
+            .map(|s| s.trim().is_empty())
+            .unwrap_or(true);
+        if empty {
+            p.insert(
+                text_key,
+                serde_yaml::Value::String(format!(
+                    "Create a polished, self-contained {} example that demonstrates core features.",
+                    text_format.unwrap_or(type_key)
+                )),
+            );
+        }
+        // system for channels
+        if let Some(tf) = text_format.filter(|s| !s.is_empty()) {
+            let sys_key = serde_yaml::Value::String("system".into());
+            if !p.contains_key(&sys_key) {
+                p.insert(
+                    sys_key,
+                    serde_yaml::Value::String(format!(
+                        "You generate {tf} artifacts. Output ONLY the raw artifact — no markdown fences, no commentary."
+                    )),
+                );
+            }
+        }
+    } else {
+        let mut p = serde_yaml::Mapping::new();
+        p.insert(
+            serde_yaml::Value::String("text".into()),
+            serde_yaml::Value::String(format!(
+                "Create a polished, self-contained {} example.",
+                text_format.unwrap_or(type_key)
+            )),
+        );
+        if let Some(tf) = text_format {
+            p.insert(
+                serde_yaml::Value::String("system".into()),
+                serde_yaml::Value::String(format!(
+                    "You generate {tf} artifacts. Output ONLY the raw artifact — no markdown fences."
+                )),
+            );
+        }
+        map.insert(prompt_key, serde_yaml::Value::Mapping(p));
+    }
+
+    // Strip accidental service pin from lab fixtures (auto-select)
+    map.remove(serde_yaml::Value::String("service".into()));
+
+    serde_yaml::to_string(&doc).unwrap_or_else(|_| merge_with_skeleton(yaml, type_key, text_format))
+}
+
+fn ensure_str_key(map: &mut serde_yaml::Mapping, key: &str, default: &str) {
+    let k = serde_yaml::Value::String(key.into());
+    if !map.contains_key(&k) {
+        map.insert(k, serde_yaml::Value::String(default.into()));
+    }
+}
+
+fn normalize_formats(existing: Option<&serde_yaml::Value>, default_ext: &str) -> serde_yaml::Value {
+    let mut entries: Vec<serde_yaml::Value> = Vec::new();
+    match existing {
+        Some(serde_yaml::Value::Sequence(seq)) => {
+            for item in seq {
+                match item {
+                    serde_yaml::Value::String(s) => {
+                        let mut m = serde_yaml::Mapping::new();
+                        m.insert(
+                            serde_yaml::Value::String("format".into()),
+                            serde_yaml::Value::String(s.clone()),
+                        );
+                        entries.push(serde_yaml::Value::Mapping(m));
+                    }
+                    serde_yaml::Value::Mapping(m) => {
+                        let mut m = m.clone();
+                        let fk = serde_yaml::Value::String("format".into());
+                        if !m.contains_key(&fk) {
+                            // common mistake: { js: true } or { ext: "js" }
+                            let guess = m
+                                .get(serde_yaml::Value::String("ext".into()))
+                                .or_else(|| m.get(serde_yaml::Value::String("type".into())))
+                                .and_then(|v| v.as_str())
+                                .unwrap_or(default_ext);
+                            m.insert(fk, serde_yaml::Value::String(guess.into()));
+                        }
+                        entries.push(serde_yaml::Value::Mapping(m));
+                    }
+                    _ => {}
+                }
+            }
+        }
+        Some(serde_yaml::Value::String(s)) => {
+            let mut m = serde_yaml::Mapping::new();
+            m.insert(
+                serde_yaml::Value::String("format".into()),
+                serde_yaml::Value::String(s.clone()),
+            );
+            entries.push(serde_yaml::Value::Mapping(m));
+        }
+        _ => {}
+    }
+    if entries.is_empty() {
+        let mut m = serde_yaml::Mapping::new();
+        m.insert(
+            serde_yaml::Value::String("format".into()),
+            serde_yaml::Value::String(default_ext.into()),
+        );
+        entries.push(serde_yaml::Value::Mapping(m));
+    }
+    serde_yaml::Value::Sequence(entries)
+}
+
+fn default_ext_for_channel(tf: &str) -> &'static str {
+    let t = tf.to_lowercase();
+    if t.contains("mermaid") {
+        "mmd"
+    } else if t.contains("plantuml") || t == "puml" {
+        "puml"
+    } else if t.contains("graphviz") || t == "dot" {
+        "dot"
+    } else if t == "html" || t.contains("html") {
+        "html"
+    } else if t.contains("svg") {
+        "svg"
+    } else if t.contains("react") || t == "tsx" {
+        "tsx"
+    } else if t.contains("paper") || t.ends_with("_js") || t.contains("js") {
+        "js"
+    } else if t.contains("lily") || t == "ly" {
+        "ly"
+    } else if t == "abc" || t.contains("abc") {
+        "abc"
+    } else {
+        "md"
+    }
+}
+
+fn default_ext_for_type(type_key: &str) -> &'static str {
+    match type_key {
+        "image" | "svg" => "png",
+        "video" => "mp4",
+        "music" | "voice" | "audio" | "sfx" => "mp3",
+        "html" | "game" | "style-guide" => "html",
+        "react-page" | "component" => "tsx",
+        "diagram" => "mmd",
+        _ => "md",
+    }
+}
+
+fn merge_with_skeleton(yaml: &str, type_key: &str, text_format: Option<&str>) -> String {
+    let ext = text_format
+        .map(default_ext_for_channel)
+        .unwrap_or_else(|| default_ext_for_type(type_key));
+    let t = if text_format.is_some() {
+        match type_key {
+            "html" | "game" => "html",
+            "diagram" => "diagram",
+            "document" => "document",
+            "image" | "svg" => "image",
+            _ => "component",
+        }
+    } else {
+        type_key
+    };
+    let tf_line = text_format
+        .map(|tf| format!("  text_format: {tf}\n"))
+        .unwrap_or_default();
+    let sys = text_format
+        .map(|tf| {
+            format!(
+                "  system: |\n    You generate {tf} artifacts. Output ONLY the raw artifact. No markdown fences.\n"
+            )
+        })
+        .unwrap_or_default();
+    // Prefer LLM text if we can snatch it
+    let text = yaml
+        .lines()
+        .find(|l| l.trim_start().starts_with("text:"))
+        .map(|l| l.trim().trim_start_matches("text:").trim().trim_matches('"'))
+        .filter(|s| !s.is_empty() && !s.contains("test fixture"))
+        .unwrap_or("Create a polished, self-contained demonstration of the core features.");
+
+    format!(
+        r#"schema: "0.4"
+id: lab-{slug}-001
+type: {t}
+quality: medium
+
+prompt:
+{sys}  text: "{text}"
+
+output:
+{tf_line}  formats:
+    - format: {ext}
+
+eval:
+  pass_threshold: 0.7
+  criteria:
+    relevance:
+      weight: 3
+      description: "Matches the brief for {slug}"
+    completeness:
+      weight: 2
+      description: "Self-contained valid output"
+
+tags: [lab, generated, {slug}]
+"#,
+        slug = text_format.unwrap_or(type_key).replace('_', "-"),
+        t = t,
+        sys = sys,
+        text = text.replace('"', "'"),
+        tf_line = tf_line,
+        ext = ext,
+    )
 }
 
 fn load_type_examples(demos: &Path, type_key: &str, limit: usize) -> String {
@@ -1273,9 +1983,27 @@ fn sanitize_type_dir(type_key: &str) -> String {
 
 fn strip_json_fences(s: &str) -> String {
     let s = s.trim();
-    if s.starts_with("```") {
+    // Drop reasoning blocks if present
+    let s = if let Some(i) = s.rfind("</think>") {
+        s[i + "</think>".len()..].trim()
+    } else {
+        s
+    };
+    let s = if s.starts_with("```") {
         let after = s.find('\n').map(|i| &s[i + 1..]).unwrap_or(s);
-        return after.trim_end_matches("```").trim().to_string();
+        after.trim_end_matches("```").trim()
+    } else {
+        s
+    };
+    // Extract first JSON array if model added prose
+    if !s.starts_with('[') {
+        if let Some(start) = s.find('[') {
+            if let Some(end) = s.rfind(']') {
+                if end > start {
+                    return s[start..=end].to_string();
+                }
+            }
+        }
     }
     s.to_string()
 }

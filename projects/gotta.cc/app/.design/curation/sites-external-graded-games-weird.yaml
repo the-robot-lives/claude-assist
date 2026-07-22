@@ -1,0 +1,347 @@
+# gotta.cc — graded external candidates (games + weird). Provisional; human-approve before insert.
+# Graded 2026-07-22 by auto-grader against docs/scoring-rubric.md (Sections 3, 4, 6).
+# overall = round(O*0.30 + HA*0.25 + D*0.20 + F*0.15 + Des*0.10). DB recomputes on approve.
+# 28 candidates: 14 games, 14 weird. 1 REJECT (auntiepixelante.com — parked).
+graded:
+
+  # ============================================================
+  # GAMES
+  # ============================================================
+  - name: "The CRPG Addict"
+    url: "https://crpgaddict.blogspot.com/"
+    domain: "crpgaddict.blogspot.com"
+    category: "games"
+    tags: ["crpg", "retro", "playthrough", "history"]
+    gate: "PASS"
+    gate_reason: "Labor-of-love personal blog with a singular decade-plus chronological quest, no ads."
+    scores: { originality: 90, human_authorship: 85, depth: 95, freshness: 95, design_quality: 65 }
+    overall: 88
+    summary: "One obsessive plays and GIMLET-scores every computer RPG ever made, in order, since 2010."
+    justification: "A singular self-imposed project — reviewing every CRPG chronologically with a consistent GIMLET rubric — running strong into July 2026 with 16 years of dense archives. Pseudonymous but unmistakable first-person voice; standard Blogger template is the only weak spot."
+
+  - name: "Derek Yu"
+    url: "https://www.derekyu.com/"
+    domain: "derekyu.com"
+    category: "games"
+    tags: ["indie", "game-design", "spelunky", "hub"]
+    gate: "PASS"
+    gate_reason: "Personal landing page of a named indie legend; no ads, no slop."
+    scores: { originality: 72, human_authorship: 72, depth: 40, freshness: 70, design_quality: 72 }
+    overall: 65
+    summary: "The Spelunky creator's retro GIF-lined landing page pointing out to his games and work."
+    justification: "A charming intentional web-1.0 hub (copyright 2009-2026) for Derek Yu's projects — Spelunky, UFO 50, Aquaria — but the site itself is a thin splash that directs visitors elsewhere rather than hosting substantial content. Originality and design read distinctive; depth is honestly low."
+
+  - name: "increpare (Stephen Lavelle)"
+    url: "https://www.increpare.com/"
+    domain: "increpare.com"
+    category: "games"
+    tags: ["experimental", "puzzlescript", "prolific", "weird"]
+    gate: "PASS"
+    gate_reason: "Vast personal archive of one maker's experimental games; no ads, no aggregation."
+    scores: { originality: 93, human_authorship: 78, depth: 92, freshness: 92, design_quality: 65 }
+    overall: 86
+    summary: "508 tiny experimental games and the PuzzleScript engine, all from one relentlessly prolific maker."
+    justification: "A staggering catalog of 508 projects (390 browser-playable, 130 PuzzleScript) with the most recent release in March 2026, the output of a single distinctive experimental designer. Voice is muted on the catalog homepage, and the filterable index is functional-but-plain rather than crafted."
+
+  - name: "Bennett Foddy"
+    url: "https://www.foddy.net/"
+    domain: "foddy.net"
+    category: "games"
+    tags: ["indie", "physics-games", "qwop", "hand-made"]
+    gate: "PASS"
+    gate_reason: "Named designer's minimalist portfolio, explicit no-cookies/no-spam ethos."
+    scores: { originality: 75, human_authorship: 72, depth: 48, freshness: 72, design_quality: 75 }
+    overall: 68
+    summary: "QWOP and Getting Over It creator's spare, no-cookies portfolio and only-if-I-ship newsletter."
+    justification: "Bennett Foddy's clean minimalist hub for QWOP, Getting Over It, and Baby Steps, with a deliberately low-frequency 'I'll only email when I release a game' newsletter and a no-cookies footer. His work is singular but the on-site content is a thin portfolio, so depth scores honestly low."
+
+  - name: "Pentadact (Tom Francis)"
+    url: "https://www.pentadact.com/"
+    domain: "pentadact.com"
+    category: "games"
+    tags: ["game-design", "devlog", "essays", "indie"]
+    gate: "PASS"
+    gate_reason: "Named developer's ad-free personal blog of candid design essays and devlogs."
+    scores: { originality: 80, human_authorship: 90, depth: 85, freshness: 90, design_quality: 78 }
+    overall: 85
+    summary: "Gunpoint and Heat Signature dev writes candid design essays and devlogs, 15 years and counting."
+    justification: "Tom Francis blogs with a clear named first-person voice and full bio about making Gunpoint, Heat Signature, and Tactical Breach Wizards, with fresh 2025-2026 devlogs atop a 13-year archive. Clean, searchable, ad-free — strong across the board."
+
+  - name: "Auntie Pixelante (Anna Anthropy)"
+    url: "https://auntiepixelante.com/"
+    domain: "auntiepixelante.com"
+    category: "games"
+    tags: ["radical-games", "design", "queer", "zines"]
+    gate: "REJECT"
+    gate_reason: "Domain is parked — serves only a JS redirect to a GoDaddy parking lander; original site gone."
+    scores: { originality: 0, human_authorship: 0, depth: 0, freshness: 0, design_quality: 0 }
+    overall: 0
+    summary: "Parked/expired domain — original radical game-design writing no longer served."
+    justification: "The domain returns HTTP 200 but only a 114-byte JS shim redirecting to /lander, which loads a GoDaddy parking page (window._trfd.push({ap:'parking'}), wsimg.com/parking-lander). The original Anna Anthropy site is no longer there; do not list. If her writing has moved, re-source the live URL."
+
+  - name: "Distractionware (Terry Cavanagh)"
+    url: "https://distractionware.com/blog/"
+    domain: "distractionware.com"
+    category: "games"
+    tags: ["indie", "devlog", "vvvvvv", "personal"]
+    gate: "PASS"
+    gate_reason: "Named solo creator's honest personal devblog, ad-free, ~17 years running."
+    scores: { originality: 80, human_authorship: 88, depth: 85, freshness: 88, design_quality: 72 }
+    overall: 83
+    summary: "VVVVVV and Super Hexagon creator's honest personal devblog, prototypes and all, since 2008."
+    justification: "Terry Cavanagh's minimal WordPress devblog spans 2008 to a December 2025 game-jam post, with design docs, prototypes, and personal essays organized by year. Named, first-person, and unmistakably a working designer's notebook."
+
+  - name: "Emily Short's Interactive Storytelling"
+    url: "https://emshort.blog/"
+    domain: "emshort.blog"
+    category: "games"
+    tags: ["interactive-fiction", "narrative", "criticism", "design"]
+    gate: "PASS"
+    gate_reason: "The foremost IF-criticism voice; deep original analysis, ad-free — but posting has gone quiet."
+    scores: { originality: 90, human_authorship: 85, depth: 95, freshness: 55, design_quality: 75 }
+    overall: 83
+    summary: "The definitive voice in interactive-fiction criticism — 20+ years, 1,400+ posts of narrative-design depth."
+    justification: "Emily Short's blog is a deep well of narrative-design criticism dating to 2002 with 1,400+ IF posts, written by a named working professional. The single knock is freshness: the most recent post is November 2023, so it reads dormant-but-intact rather than lively."
+
+  - name: "Critical Distance"
+    url: "https://www.critical-distance.com/"
+    domain: "critical-distance.com"
+    category: "games"
+    tags: ["criticism", "curation", "community", "roundup"]
+    gate: "SOFT_FLAG"
+    gate_reason: "Value is in curation (a weekly link-roundup of others' games writing), so Originality reflects taste, not source work."
+    scores: { originality: 62, human_authorship: 72, depth: 80, freshness: 85, design_quality: 72 }
+    overall: 73
+    summary: "Volunteer-run weekly roundup pointing to the best independent games writing across the web."
+    justification: "A respected, long-running volunteer project whose 'This Week in Videogame Blogging' roundups curate others' work rather than originate it, which caps Originality per the aggregator rule. Live and active into 2026 (the WebFetch 403 was Cloudflare blocking the fetcher; curl returns a full 2026-dated page). Solid archive and editorial care carry it."
+
+  - name: "Hardcore Gaming 101"
+    url: "http://www.hardcoregaming101.net/"
+    domain: "hardcoregaming101.net"
+    category: "games"
+    tags: ["retro", "history", "deep-dives", "obscure"]
+    gate: "SOFT_FLAG"
+    gate_reason: "Original deep-dive writing, but Amazon affiliate links and thin homepage bylines soft-flag it."
+    scores: { originality: 82, human_authorship: 70, depth: 92, freshness: 90, design_quality: 68 }
+    overall: 81
+    summary: "An obsessive volunteer encyclopedia of forgotten and obscure games, researched in exhaustive detail."
+    justification: "Thousands of genuinely original, deeply-researched articles on obscure titles (366 pages of archive) with weekly output into July 2026 and a long-running podcast. Amazon affiliate links and book-promo sections plus a faceless 'HG101 gang' homepage attribution keep Human Authorship and Design mid-band; the writing itself is not slop."
+
+  - name: "The Digital Antiquarian (Jimmy Maher)"
+    url: "https://www.filfre.net/"
+    domain: "filfre.net"
+    category: "games"
+    tags: ["history", "longform", "adventure-games", "essays"]
+    gate: "PASS"
+    gate_reason: "Sole-authored, footnoted, ad-free book-length game history; the opposite of slop."
+    scores: { originality: 90, human_authorship: 88, depth: 97, freshness: 95, design_quality: 75 }
+    overall: 90
+    summary: "One historian's book-length, meticulously footnoted chronicle of computer-game history, chapter by chapter."
+    justification: "Jimmy Maher's sole-authored 3,000-8,000-word articles with full source citations form a definitive narrative history, fresh to July 17 2026 atop a 14-year archive. Ad-free, Patreon-supported, and clean-reading — a near-model candidate for the directory."
+
+  - name: "Renga in Blue (Jason Dyer)"
+    url: "https://bluerenga.blog/"
+    domain: "bluerenga.blog"
+    category: "games"
+    tags: ["text-adventures", "history", "playthrough", "archaeology"]
+    gate: "PASS"
+    gate_reason: "Named solo historian playing every text adventure in order; ad-free, original analysis."
+    scores: { originality: 90, human_authorship: 85, depth: 90, freshness: 95, design_quality: 70 }
+    overall: 88
+    summary: "A solo project playing every text adventure in chronological order, resurrecting lost games as it goes."
+    justification: "Jason Dyer's 'All the Adventures' works chronologically through 1970s-80s text games with hand-made maps and archival sourcing, fresh to July 20 2026. Clean, ad-free, and a genuine act of preservation — Originality and Depth carry a games entry as the rubric intends."
+
+  - name: "Michael Brough (smestorp)"
+    url: "http://www.smestorp.com/"
+    domain: "smestorp.com"
+    category: "games"
+    tags: ["experimental", "roguelike", "design", "indie"]
+    gate: "PASS"
+    gate_reason: "Named designer's living web-1.0 personal hub; note the apex HTTPS cert is broken (use www/http)."
+    scores: { originality: 80, human_authorship: 82, depth: 42, freshness: 65, design_quality: 58 }
+    overall: 68
+    summary: "868-HACK and Imbroglio designer's warm web-1.0 hub linking to twice-monthly videos and his blog."
+    justification: "A hand-styled dark web-1.0 page ('Hi, I'm Michael. I make videogames... slowed down but still working,' from Lisbon) for a singular experimental designer, pointing to an active twice-monthly video series and an off-site blog. Thin as an on-site archive, and the apex domain's TLS handshake fails (only www/http serves), which dents Design and Freshness though the intent is clearly legible."
+
+  - name: "SpyParty (Chris Hecker)"
+    url: "https://www.spyparty.com/"
+    domain: "spyparty.com"
+    category: "games"
+    tags: ["indie", "devlog", "single-developer", "design"]
+    gate: "PASS"
+    gate_reason: "Named developer's decade-plus openly-built game and devblog; no ads, deeply original."
+    scores: { originality: 88, human_authorship: 82, depth: 82, freshness: 75, design_quality: 72 }
+    overall: 82
+    summary: "A veteran dev has openly built one deeply original espionage-of-perception game for over a decade."
+    justification: "Chris Hecker's SpyParty is a singular design — spot the human among AI partygoers — built in the open with detailed release-notes devblogging (latest August 2025) and a famously engaged community thread. Small named team, personal dev voice, functional clean site; freshness sits at ~a year since the last public note."
+
+  # ============================================================
+  # WEIRD & WONDERFUL
+  # ============================================================
+  - name: "Everest Pipkin"
+    url: "https://everest-pipkin.com/"
+    domain: "everest-pipkin.com"
+    category: "weird"
+    tags: ["art", "generative", "essays", "archives"]
+    gate: "PASS"
+    gate_reason: "Named artist's intentional frameset art-hub; retro-by-choice, not a defect (weird category)."
+    scores: { originality: 90, human_authorship: 85, depth: 80, freshness: 68, design_quality: 70 }
+    overall: 81
+    summary: "An artist-writer's tender, weird corner of generative work, bots, and essays on landscape and data."
+    justification: "Everest Pipkin's deliberately archaic frameset/monospace site hubs a distinctive body of generative art, bots, and essays (e.g. desirepaths), with an RSS feed signalling upkeep. Per the weird rubric the web-1.0 aesthetic is a reward for Originality, not a Freshness or Design penalty."
+
+  - name: "Kicks Condor"
+    url: "https://www.kickscondor.com/"
+    domain: "kickscondor.com"
+    category: "weird"
+    tags: ["indie-web", "directory", "essays", "hypertext"]
+    gate: "SOFT_FLAG"
+    gate_reason: "Pseudonymous author (caps Human Authorship) and posting has gone quiet since 2022."
+    scores: { originality: 88, human_authorship: 70, depth: 80, freshness: 52, design_quality: 70 }
+    overall: 75
+    summary: "An anonymous indie-web explorer writes playful hypertext and runs the href.cool directory of oddities."
+    justification: "A singular playful-hypertext voice behind href.cool and Fraidycat, richly interlinked and webmention-enabled, but pseudonymous ('Kicks Condor') and last posted July 2022, so it reads dormant-but-intact. Weird tolerates the low freshness; Originality carries it."
+
+  - name: "Cameron's World"
+    url: "https://www.cameronsworld.net/"
+    domain: "cameronsworld.net"
+    category: "weird"
+    tags: ["geocities", "collage", "nostalgia", "web-art"]
+    gate: "PASS"
+    gate_reason: "Named artist's singular web-art collage; live and working, no slop."
+    scores: { originality: 95, human_authorship: 78, depth: 55, freshness: 65, design_quality: 82 }
+    overall: 77
+    summary: "A lovingly assembled collage of salvaged GeoCities pages, an elegy for the amateur old web."
+    justification: "Cameron Askin's iconic collage stitches thousands of archived GeoCities fragments into a navigable 'Catscape Navigator' experience — singular and beautifully crafted, live and working. It's one art object rather than a deep archive, so Depth is honestly mid-band while Originality and Design shine."
+
+  - name: "The Useless Web"
+    url: "https://theuselessweb.com/"
+    domain: "theuselessweb.com"
+    category: "weird"
+    tags: ["random", "toys", "silly", "discovery"]
+    gate: "PASS"
+    gate_reason: "Named creator's playful single-purpose toy; maintained, no ads, quintessentially weird."
+    scores: { originality: 88, human_authorship: 62, depth: 35, freshness: 78, design_quality: 78 }
+    overall: 68
+    summary: "One button flings you to a hand-picked pointless-but-delightful corner of the human-made web."
+    justification: "Tim Holman's one-button random-redirect toy is an iconic, hand-curated gateway to the web's silly corners, actively maintained with submission and archive features. It's a single-purpose page — shallow and faceless by nature — which the low Depth/Human-Authorship scores reflect without contradicting a clear PASS."
+
+  - name: "Nicholas Rougeux (c82)"
+    url: "https://www.c82.net/"
+    domain: "c82.net"
+    category: "weird"
+    tags: ["data-art", "typography", "classics", "visualization"]
+    gate: "PASS"
+    gate_reason: "Named designer's meticulously crafted historic-book reinterpretations; deeply researched, no slop."
+    scores: { originality: 92, human_authorship: 85, depth: 85, freshness: 92, design_quality: 92 }
+    overall: 89
+    summary: "A designer painstakingly reimagines historic books and diagrams as gorgeous interactive artworks."
+    justification: "Nicholas Rougeux turns works like Byrne's Euclid and Werner's Nomenclature of Colours into meticulous interactive artworks, with a July 7 2026 project post describing research across 1,200+ books. Considered craft end to end — one of the strongest Design scores in the set."
+
+  - name: "Radio Garden"
+    url: "https://radio.garden/"
+    domain: "radio.garden"
+    category: "weird"
+    tags: ["radio", "map", "interactive", "world"]
+    gate: "PASS"
+    gate_reason: "Beloved interactive art project, live and functional; team-made rather than personal (caps Human Authorship)."
+    scores: { originality: 92, human_authorship: 60, depth: 55, freshness: 80, design_quality: 85 }
+    overall: 74
+    summary: "Spin a globe and drop into live local radio anywhere on Earth — a hand-built interactive art project."
+    justification: "A singular, polished interactive globe that surfaces live radio worldwide — original and well-crafted, live and maintained. It's a studio/team art project rather than one person's personal site, so Human Authorship and on-site Depth sit lower even as Originality and Design carry it."
+
+  - name: "sadgrl.online"
+    url: "https://sadgrl.online/"
+    domain: "sadgrl.online"
+    category: "weird"
+    tags: ["indie-web", "tools", "webmastering", "resources"]
+    gate: "PASS"
+    gate_reason: "Personal indie-web hub with a first-person voice and widely-used layout tool; no ads."
+    scores: { originality: 82, human_authorship: 75, depth: 78, freshness: 82, design_quality: 78 }
+    overall: 79
+    summary: "A personal site and toolbox evangelizing the DIY revival, home of the layout builder many small sites use."
+    justification: "A recently-redesigned personal indie-web hub (Astro) mixing intense first-person essays, guides, and the layout builder that seeded countless small sites, with a guestbook and active upkeep. Pseudonymous 'sadgrl' caps Human Authorship slightly; otherwise a well-rounded, living small-web anchor."
+
+  - name: "Gossip's Web"
+    url: "https://gossipsweb.net/"
+    domain: "gossipsweb.net"
+    category: "weird"
+    tags: ["directory", "personal-sites", "curation", "small-web"]
+    gate: "SOFT_FLAG"
+    gate_reason: "It's a curated link-directory, so Originality reflects the curation's taste rather than source work."
+    scores: { originality: 68, human_authorship: 68, depth: 68, freshness: 82, design_quality: 78 }
+    overall: 71
+    summary: "A hand-curated directory pointing only to non-commercial, personal, and independent websites."
+    justification: "A tasteful, tag-organized 'directory of handmade webpages' with active submissions, badges, and a clean hand-drawn aesthetic — human-curated, not scraped. As a link-feed its Originality is capped per the curator rule, but the taste and community focus make it a fitting weird listing."
+
+  - name: "nownownow"
+    url: "https://nownownow.com/"
+    domain: "nownownow.com"
+    category: "weird"
+    tags: ["now-pages", "directory", "personal-sites", "community"]
+    gate: "SOFT_FLAG"
+    gate_reason: "A plain directory/index of others' /now pages — an aggregator, so Originality reflects the index, not content."
+    scores: { originality: 65, human_authorship: 62, depth: 52, freshness: 88, design_quality: 68 }
+    overall: 65
+    summary: "Derek Sivers's directory of thousands of personal '/now' pages telling you what people are up to."
+    justification: "The canonical index of /now pages across 190+ locations, updated the day it was graded (2026-07-22) and offered as an open dataset. The /now concept is singular but the site itself is a faceless plain-text directory, so Depth and Originality land mid/low while Freshness is high."
+
+  - name: "Derek Sivers (sive.rs)"
+    url: "https://sive.rs/"
+    domain: "sive.rs"
+    category: "weird"
+    tags: ["essays", "personal", "minimal", "philosophy"]
+    gate: "PASS"
+    gate_reason: "Named author, explicitly '100% me, no AI'; radically personal and ad-free."
+    scores: { originality: 85, human_authorship: 92, depth: 90, freshness: 92, design_quality: 83 }
+    overall: 89
+    summary: "A radically plain, radically personal site of blunt essays, answered emails, and life experiments."
+    justification: "Derek Sivers's canonical home — 550+ essays, 430+ book notes, 250+ transcripts, fresh to July 2026 — with an explicit 'Everything here is 100% me, no AI' stance. Radical intentional minimalism that is fast and accessible; unmistakably human across the board."
+
+  - name: "Dinosaur Comics (Ryan North)"
+    url: "https://www.qwantz.com/"
+    domain: "qwantz.com"
+    category: "weird"
+    tags: ["webcomic", "humor", "constrained", "longtime"]
+    gate: "PASS"
+    gate_reason: "Named author's constrained daily webcomic, 20+ years, no traditional ads."
+    scores: { originality: 95, human_authorship: 90, depth: 92, freshness: 95, design_quality: 72 }
+    overall: 91
+    summary: "The same six dinosaur panels, new words every weekday since 2003, from one relentlessly funny writer."
+    justification: "Ryan North's constrained-comic conceit — identical art, new dialogue daily — is genuinely singular and running fresh to July 20 2026 across a 20+ year archive. Named, unmistakable comedic voice; merch/Patreon rather than ads. A top-of-set candidate."
+
+  - name: "Wondermark (David Malki)"
+    url: "https://wondermark.com/"
+    domain: "wondermark.com"
+    category: "weird"
+    tags: ["webcomic", "collage", "victorian", "humor"]
+    gate: "PASS"
+    gate_reason: "Named artist's two-decade hand-collaged webcomic; no traditional ads, deeply original."
+    scores: { originality: 90, human_authorship: 88, depth: 92, freshness: 92, design_quality: 75 }
+    overall: 89
+    summary: "A hand-collaged webcomic built from Victorian engravings, self-published by one artist for two decades."
+    justification: "David Malki's Victorian-engraving collage comic reached #1588 on June 11 2026, backed by 20 years of archive and blog. A singular visual method, a named personal voice, and a working creative business (Patreon, board games) — Depth and Originality both strong."
+
+  - name: "SpaceHey"
+    url: "https://spacehey.com/"
+    domain: "spacehey.com"
+    category: "weird"
+    tags: ["social", "retro", "myspace-revival", "diy"]
+    gate: "PASS"
+    gate_reason: "One young dev's nonprofit MySpace revival; explicitly no ads, no tracking, no algorithms."
+    scores: { originality: 90, human_authorship: 72, depth: 78, freshness: 90, design_quality: 78 }
+    overall: 82
+    summary: "A teenage developer rebuilt MySpace as a nonprofit, letting people hand-code profiles with real HTML again."
+    justification: "A genuine, mission-driven MySpace revival that hands people raw HTML/CSS profiles with no ads, tracking, or algorithms, actively growing past 4.5M profiles. Made by one young developer (An / tibush labs) — a platform rather than personal content, which keeps Human Authorship mid-band while Originality and Freshness carry it."
+
+  - name: "Peter Watts (Rifters)"
+    url: "https://www.rifters.com/crawl/"
+    domain: "rifters.com"
+    category: "weird"
+    tags: ["science-fiction", "blog", "biology", "essays"]
+    gate: "PASS"
+    gate_reason: "Named SF novelist's blunt, ad-free personal blog ('No Moods, Ads or Cutesy Fucking Icons')."
+    scores: { originality: 85, human_authorship: 92, depth: 90, freshness: 90, design_quality: 70 }
+    overall: 87
+    summary: "A marine-biologist-turned-SF-novelist gives away his books and blogs bleakly funny science rants."
+    justification: "Peter Watts's Rifters 'crawl' is a bluntly personal author blog dating to 2007, fresh to May 2026, with free fiction and a densely-sourced running climate/science sidebar. The 'No Moods, Ads or Cutesy Fucking Icons' plainness is intentional and legible; Human Authorship and Depth are the standouts."

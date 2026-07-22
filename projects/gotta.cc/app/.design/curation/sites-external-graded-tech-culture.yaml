@@ -1,0 +1,359 @@
+# gotta.cc — graded external candidates (tech + culture). Provisional; human-approve before insert.
+# Graded 2026-07-22 by the auto-grading editor against docs/scoring-rubric.md (Section 3 gate + Section 4 bands).
+# Overall = round(O*0.30 + HA*0.25 + D*0.20 + F*0.15 + Des*0.10). Evidence gathered via homepage (+ interior) fetches.
+# 29 entries: 15 technology + 14 culture. REJECTs retained but gated so the merge step excludes them.
+graded:
+
+  # ============================================================
+  # TECHNOLOGY
+  # ============================================================
+  - name: "Simon Willison"
+    url: "https://simonwillison.net/"
+    domain: "simonwillison.net"
+    category: "technology"
+    tags: ["blog", "python", "llms", "til"]
+    gate: "PASS"
+    gate_reason: "Original daily first-person tech writing spanning 24 years; no ads, no slop signals."
+    scores: { originality: 88, human_authorship: 95, depth: 96, freshness: 98, design_quality: 78 }
+    overall: 92
+    summary: "One engineer's daily TILs and hand-run LLM deep dives — a 24-year single-voice archive updated hourly."
+    justification: "Footer nav spans 2002-2026 with multiple posts daily (latest 2026-07-21) in a consistent first-person voice ('I decided to have a poke'). Clean text-focused HTML, one modest sponsor line, no trackers; every post is live experimentation and analysis, not aggregation."
+
+  - name: "Rachel Kroll (rachelbythebay)"
+    url: "https://rachelbythebay.com/w/"
+    domain: "rachelbythebay.com"
+    category: "technology"
+    tags: ["ops", "war-stories", "systems", "essays"]
+    gate: "REJECT"
+    gate_reason: "Unreachable via automated fetch (404 on /w/, socket-close on root — bot-blocked, NOT parked); likely live, needs manual editor review."
+    scores: { originality: 0, human_authorship: 0, depth: 0, freshness: 0, design_quality: 0 }
+    overall: 0
+    summary: "EDITOR: canonical plain-HTML ops war-stories blog; auto-fetch bot-blocked. Verify manually, do not treat as dead."
+    justification: "Three fetch attempts failed (HTTP 404 on the writing index, socket-close on the domain root) — a signature of user-agent/bot blocking, not a parked or dead domain. This is a well-known active single-author operations blog; gated REJECT only so it is excluded from an auto-merge, with a note that a human should re-fetch in a browser and score it (expect high Originality/Human Authorship)."
+
+  - name: "Dan Luu"
+    url: "https://danluu.com/"
+    domain: "danluu.com"
+    category: "technology"
+    tags: ["essays", "performance", "data", "longform"]
+    gate: "PASS"
+    gate_reason: "Original data-driven long-form essays, no ads; deliberately minimal but wholly human-authored."
+    scores: { originality: 90, human_authorship: 88, depth: 92, freshness: 72, design_quality: 60 }
+    overall: 84
+    summary: "No-CSS essays that argue from first-hand measurement, not received wisdom — a decade of empirical tech writing."
+    justification: "Archive runs from 2013 to a July-2024 public post (Patreon to June 2026), ~100+ pieces in a recognizable measure-it-yourself style with first-person voice. Plain-HTML, JS-free, ad-free; the sparse design is intentional and legible, not hostile, so it scores low Design but high Originality/Depth."
+
+  - name: "Fabien Sanglard"
+    url: "https://fabiensanglard.net/"
+    domain: "fabiensanglard.net"
+    category: "technology"
+    tags: ["game-engines", "reverse-engineering", "books", "graphics"]
+    gate: "PASS"
+    gate_reason: "Obsessive first-person engine teardowns and self-published 'Black Books'; primary-source, no ads."
+    scores: { originality: 90, human_authorship: 90, depth: 92, freshness: 90, design_quality: 78 }
+    overall: 89
+    summary: "One person's reverse-engineering teardowns of classic game engines, hand-illustrated and given away free."
+    justification: "200+ articles from 2008 to 2026-07-13, byline 'Fabien Sanglard' with an explicit personal-site disclaimer and first-person framing. Code reviews and hardware teardowns are primary research; clean semantic HTML, no ads or trackers detected."
+
+  - name: "antirez (Salvatore Sanfilippo)"
+    url: "http://antirez.com/latest/0"
+    domain: "antirez.com"
+    category: "technology"
+    tags: ["c", "redis", "essays", "programming"]
+    gate: "PASS"
+    gate_reason: "Redis creator's candid first-person essays on craft and burnout; austere plain HTML, no ads."
+    scores: { originality: 85, human_authorship: 94, depth: 85, freshness: 88, design_quality: 60 }
+    overall: 85
+    summary: "The creator of Redis writes candidly about code, craft, and burnout on a spare, unmistakably personal page."
+    justification: "170+ numbered posts since 2009, latest ~8 days before fetch, in a strong first-person voice ('I love writing software, line by line'). Austere plain-HTML with uncertain mobile support pulls Design down, but the writing is original and opinionated with no commercial layer."
+
+  - name: "Eli Bendersky"
+    url: "https://eli.thegreenplace.net/"
+    domain: "eli.thegreenplace.net"
+    category: "technology"
+    tags: ["compilers", "go", "tutorials", "cs"]
+    gate: "PASS"
+    gate_reason: "23 years of worked-example programming tutorials from one practitioner; ad-light, human-written."
+    scores: { originality: 74, human_authorship: 82, depth: 90, freshness: 90, design_quality: 76 }
+    overall: 82
+    summary: "Patient, worked-example CS and compiler tutorials — a deep single-author well running since 2003."
+    justification: "Copyright '2003-2026 Eli Bendersky' with a fresh 2026-07-14 post and sharp LaTeX rendering; the tutorial format is familiar but executed with genuine depth over 23 years. Clean legible design, minimal ads, no aggregation or LLM markers."
+
+  - name: "Russ Cox (research!rsc)"
+    url: "https://research.swtch.com/"
+    domain: "research.swtch.com"
+    category: "technology"
+    tags: ["go", "version-control", "cs", "essays"]
+    gate: "PASS"
+    gate_reason: "Careful long-form CS essays by a Go designer; original research, no ads or trackers."
+    scores: { originality: 82, human_authorship: 84, depth: 88, freshness: 78, design_quality: 74 }
+    overall: 82
+    summary: "Long, careful essays on Go, version control, and computing history from one of the language's designers."
+    justification: "~150 posts across 2008-2026 (latest Jan 2026), including original work like the xz-attack timeline, written in first person with proofs and detailed walkthroughs. Sparse 2-4-posts/year cadence tempers Freshness; minimal JS-free HTML is clean and mobile-friendly."
+
+  - name: "Xe Iaso"
+    url: "https://xeiaso.net/"
+    domain: "xeiaso.net"
+    category: "technology"
+    tags: ["blog", "nixos", "essays", "personal"]
+    gate: "PASS"
+    gate_reason: "Idiosyncratic infra-plus-fiction blog with a strong single voice; sponsor-funded, not ad-driven."
+    scores: { originality: 86, human_authorship: 92, depth: 90, freshness: 94, design_quality: 80 }
+    overall: 89
+    summary: "Infra deep dives, fiction, and personal reflection in one unmistakable voice — 400+ posts, weekly cadence."
+    justification: "Copyright 2012-2026, 400+ articles, latest 2026-07-14, with heavy first-person framing ('I'm Xe Iaso... I taught a bucket to speak git'). Patreon/GitHub-Sponsors funded rather than ad-laden; clean responsive layout with clear navigation."
+
+  - name: "Evan Miller"
+    url: "https://www.evanmiller.org/"
+    domain: "evanmiller.org"
+    category: "technology"
+    tags: ["statistics", "essays", "software", "math"]
+    gate: "PASS"
+    gate_reason: "Playful original essays on statistics, language, and software; substantial bio, ad-free."
+    scores: { originality: 84, human_authorship: 88, depth: 82, freshness: 66, design_quality: 66 }
+    overall: 80
+    summary: "Opinionated, playful essays where statistics, language, and software craft collide — with real papers behind them."
+    justification: "60+ articles from 2008 to a Nov-2024 latest post, first-person throughout with a full bio (physics degree, Anthropic). Sporadic ~1-2/year cadence and a plain, dated layout pull Freshness/Design down, but the writing is genuinely novel (Frisch-Waugh-Lovell explainer) and ad-free."
+
+  - name: "Bert Hubert"
+    url: "https://berthub.eu/"
+    domain: "berthub.eu"
+    category: "technology"
+    tags: ["dns", "europe", "policy", "essays"]
+    gate: "PASS"
+    gate_reason: "PowerDNS founder writing with real stakes on DNS internals and EU tech sovereignty; original, ad-free."
+    scores: { originality: 82, human_authorship: 88, depth: 85, freshness: 74, design_quality: 70 }
+    overall: 82
+    summary: "A working engineer writes with real stakes about DNS internals and European technological sovereignty."
+    justification: "Opens 'Hi! I'm bert hubert' with a substantial bio (PowerDNS 1999, government advisory), 2024 posts, and peer-reviewed publications alongside blog essays. Minimal functional HTML, no ads or trackers; primary-source technical and policy writing."
+
+  - name: "Tania Rascia"
+    url: "https://www.taniarascia.com/"
+    domain: "taniarascia.com"
+    category: "technology"
+    tags: ["web-dev", "tutorials", "learn-in-public", "personal"]
+    gate: "PASS"
+    gate_reason: "Warm learn-in-public web-dev tutorials with an explicit 'written by me, not AI' pledge; ad-free."
+    scores: { originality: 72, human_authorship: 90, depth: 85, freshness: 88, design_quality: 86 }
+    overall: 83
+    summary: "A self-taught engineer documents her learning in public with warm, jargon-free tutorials — and no AI."
+    justification: "Active (latest 2026-03-31), bio 'software engineer... former professional chef... making websites since 1998,' and an explicit 'Everything on this site is written by me, not AI.' Standard tutorial format is redeemed by a warm personal voice; polished dark/light responsive design and no ads."
+
+  - name: "Manuel Moreale"
+    url: "https://manuelmoreale.com/"
+    domain: "manuelmoreale.com"
+    category: "technology"
+    tags: ["blog", "indie-web", "interviews", "minimal"]
+    gate: "PASS"
+    gate_reason: "Near-daily personal essays plus the original 'People and Blogs' interview series; ad-free, opt-in support."
+    scores: { originality: 80, human_authorship: 90, depth: 84, freshness: 95, design_quality: 82 }
+    overall: 86
+    summary: "Near-daily essays and the 'People and Blogs' interview series — modeling the small, ad-free web he champions."
+    justification: "Nine-year archive (2017-2026) with a 2026-07-20 post and near-daily cadence, consistent first-person reflection, and the recurring People-and-Blogs original reporting. Clean minimal layout, Ko-Fi/newsletter opt-in only, no trackers."
+
+  - name: "Seirdy"
+    url: "https://seirdy.one/"
+    domain: "seirdy.one"
+    category: "technology"
+    tags: ["accessibility", "search", "privacy", "indie-web"]
+    gate: "PASS"
+    gate_reason: "Meticulous 7k-23k-word posts on search and accessibility, explicitly not AI-written; a11y-forward design."
+    scores: { originality: 84, human_authorship: 88, depth: 84, freshness: 78, design_quality: 82 }
+    overall: 84
+    summary: "Exhaustive, opinionated posts on search engines and a lighter, more accessible web — cross-hosted to Gemini."
+    justification: "Articles run 7,000-23,000 words with 'updated' timestamps into July 2025 and an explicit 'authored by me, not generative AI' note; first-person and cross-posted to Gemini/Tildeverse. Self-described brutalist design is accessibility-forward (semantic HTML, ISO-8601 timestamps), respecting visitors rather than harming them."
+
+  - name: "Jake Archibald"
+    url: "https://jakearchibald.com/"
+    domain: "jakearchibald.com"
+    category: "technology"
+    tags: ["web", "performance", "demos", "humor"]
+    gate: "PASS"
+    gate_reason: "Browser-internals write-ups with hand-built demos and dry wit; refuses sponsored content, no trackers."
+    scores: { originality: 86, human_authorship: 90, depth: 85, freshness: 88, design_quality: 82 }
+    overall: 87
+    summary: "Browser-internals deep dives delivered with hand-built interactive demos and dry British wit."
+    justification: "Named byline with photo ('Hello, I'm Jake'), latest post 2026-06-29, 10+ pages of archive, and strong first-person opinion ('I hate footnotes...'). Explicitly rejects sponsored content; clean legible design with the interactive demos that are his signature."
+
+  - name: "Susam Pal"
+    url: "https://susam.net/"
+    domain: "susam.net"
+    category: "technology"
+    tags: ["lisp", "math", "minimal", "essays"]
+    gate: "PASS"
+    gate_reason: "Featherweight hand-coded site of Lisp, math puzzles, and computing curiosities; ad-free, intentional minimalism."
+    scores: { originality: 78, human_authorship: 80, depth: 74, freshness: 60, design_quality: 74 }
+    overall: 75
+    summary: "A lovingly hand-coded, featherweight corner of Lisp, math puzzles, and computing curiosities."
+    justification: "45 posts across 2001-2022 (newest fetched was 2022-02-24) on niche topics like Langford pairing and shell eval, in a consistent personal voice; ad-free and highly legible. Freshness scored dormant-but-intact because auto-fetch could not confirm a post newer than 2022 (interior /blog paths 404'd) — an editor should verify, as the site may be more current."
+
+  # ============================================================
+  # CULTURE
+  # ============================================================
+  - name: "Austin Kleon"
+    url: "https://austinkleon.com/"
+    domain: "austinkleon.com"
+    category: "culture"
+    tags: ["creativity", "art", "daily-blog", "notebooks"]
+    gate: "PASS"
+    gate_reason: "Genuinely frequent creative-process blog by a named bestselling author; unobtrusive affiliate links only."
+    scores: { originality: 82, human_authorship: 92, depth: 86, freshness: 94, design_quality: 84 }
+    overall: 87
+    summary: "The 'Steal Like an Artist' author keeps a near-daily blog of reading notes, mixtapes, and studio thinking."
+    justification: "650+ indexed pages, posting 2-3x weekly (latest 2026-07-14), with strong first-person creative reflection ('I told my kids that story years ago'). Amazon affiliate links are present but unobtrusive; clean typographic layout with clear hierarchy."
+
+  - name: "Warren Ellis (LTD)"
+    url: "https://www.warrenellis.ltd/"
+    domain: "warrenellis.ltd"
+    category: "culture"
+    tags: ["writing", "comics", "newsletter", "essays"]
+    gate: "PASS"
+    gate_reason: "Veteran comics writer's personal notebook in a singular gothic voice; minimal affiliate links, no trackers."
+    scores: { originality: 85, human_authorship: 92, depth: 86, freshness: 95, design_quality: 78 }
+    overall: 88
+    summary: "A veteran comics writer's daily notebook and newsletter, in one unmistakable gothic voice."
+    justification: "394 pages of archive, posting 2-4x weekly (latest 2026-07-22), with memoir-like first-person entries ('I grew lilies'). Sparse Amazon affiliate links only, clean WordPress layout; original writing with clearly attributed quotes."
+
+  - name: "Alan Jacobs (Snakes and Ladders)"
+    url: "https://blog.ayjay.org/"
+    domain: "ayjay.org"
+    category: "culture"
+    tags: ["literature", "essays", "reading", "technology-criticism"]
+    gate: "PASS"
+    gate_reason: "A literature professor's contemplative blog on books and attention; original, near-ad-free (single tip jar)."
+    scores: { originality: 78, human_authorship: 82, depth: 84, freshness: 90, design_quality: 78 }
+    overall: 82
+    summary: "A literature professor's quiet, humane blog on books, attention, and living with technology."
+    justification: "Active into 2026-07-20 with multiple posts monthly engaging Kołakowski, Auden, and Gilgamesh in a first-person contemplative tone. Byline is muted on the homepage (branded 'The Homebound Symphony') which caps Human Authorship slightly; clean Anders-Norén theme, only a Buy-Me-a-Coffee link."
+
+  - name: "A Working Library (Mandy Brown)"
+    url: "https://aworkinglibrary.com/"
+    domain: "aworkinglibrary.com"
+    category: "culture"
+    tags: ["reading", "essays", "work", "notes"]
+    gate: "PASS"
+    gate_reason: "Eighteen years of one writer's essays and reading notes on work and language; ad-free, subscriber-supported."
+    scores: { originality: 80, human_authorship: 88, depth: 86, freshness: 80, design_quality: 82 }
+    overall: 83
+    summary: "Two decades of reading notes and essays on work, reading, and language, tended by one thoughtful writer."
+    justification: "Copyright '2008-2026' with a 2026-07-07 post and a monthly cadence, bylined 'by mandy brown' with personal first-person essays. No ads (free-or-sustainer model); clean typography-forward layout with clear hierarchy."
+
+  - name: "Tom MacWright"
+    url: "https://macwright.com/"
+    domain: "macwright.com"
+    category: "culture"
+    tags: ["maps", "book-reviews", "essays", "personal"]
+    gate: "PASS"
+    gate_reason: "A mapmaker's personal blend of technical notes, book reviews, and life writing; no ads or trackers."
+    scores: { originality: 80, human_authorship: 88, depth: 84, freshness: 90, design_quality: 88 }
+    overall: 85
+    summary: "A mapmaker's personal site blending technical notes with candid book reviews and life writing."
+    justification: "Active (latest 2026-07-16) with monthly writing plus micro-posts, photos, and drawings in a personal first-person voice ('I haven't made anything with AT Proto yet'). No visible trackers; excellent minimalist design with light/dark toggle and clear navigation."
+
+  - name: "Frank Chimero"
+    url: "https://frankchimero.com/"
+    domain: "frankchimero.com"
+    category: "culture"
+    tags: ["design", "essays", "writing", "craft"]
+    gate: "SOFT_FLAG"
+    gate_reason: "No recency signal on the homepage (latest dated work 2017-2020); listable but freshness unconfirmed."
+    scores: { originality: 84, human_authorship: 84, depth: 80, freshness: 64, design_quality: 90 }
+    overall: 81
+    summary: "A designer-essayist whose slow, carefully made pieces ('The Web's Grain') read like literature."
+    justification: "Archive spans 2009-2025 and the design is considered craft (typography-forward, hierarchical), but the homepage surfaces no post dates and the most recent named project is 'Dust Collages 2017-2020,' so recency is unconfirmed. Personal first-person portfolio with authored book/essays, no ads — strong Originality/Design, cautious Freshness."
+
+  - name: "Nadia Eghbal (Asparouhova)"
+    url: "https://nadia.xyz/"
+    domain: "nadia.xyz"
+    category: "culture"
+    tags: ["open-source", "essays", "community", "public-goods"]
+    gate: "SOFT_FLAG"
+    gate_reason: "No date signal on-site and primary output has moved to Substack; listable but recency unconfirmed."
+    scores: { originality: 86, human_authorship: 86, depth: 80, freshness: 62, design_quality: 82 }
+    overall: 81
+    summary: "Original long-form thinking on open-source labor and online communities from an independent researcher."
+    justification: "Genuinely original essays ('Idea machines,' 'Working in Public,' 'Antimemetics') in a first-person research voice, but the site itself is undated and points to a Substack, so on-site freshness can't be confirmed. Clean minimal design, no ads; Depth reflects the curated-hub nature of the site rather than a dense on-site archive."
+
+  - name: "Rob Walker (The Art of Noticing)"
+    url: "https://robwalker.net/"
+    domain: "robwalker.net"
+    category: "culture"
+    tags: ["attention", "essays", "objects", "noticing"]
+    gate: "SOFT_FLAG"
+    gate_reason: "Homepage's newest post is ~Sept 2022; the .net hub reads stale (his active newsletter lives elsewhere)."
+    scores: { originality: 80, human_authorship: 84, depth: 80, freshness: 55, design_quality: 78 }
+    overall: 77
+    summary: "A journalist's ongoing project on paying attention to overlooked objects and everyday life."
+    justification: "Bylined journalist with original projects (Significant Objects, PROJECT:OBJECT) dating to 2013 and a clean grid layout, but the most recent post shown is 'Lost Objects' (Sept 2022), so the .net hub scores stale-to-dormant. Original authored work and no ads keep the other dimensions solid; his active 'Art of Noticing' output has largely shifted to a newsletter."
+
+  - name: "Paul Ford (Ftrain)"
+    url: "https://www.ftrain.com/"
+    domain: "ftrain.com"
+    category: "culture"
+    tags: ["essays", "internet", "fiction", "personal"]
+    gate: "PASS"
+    gate_reason: "An original web essayist's handmade site, currently active with alt-texted images; no ads or trackers."
+    scores: { originality: 84, human_authorship: 88, depth: 85, freshness: 88, design_quality: 76 }
+    overall: 85
+    summary: "One of the original web essayists still keeps his handmade site of internet reflection, fiction, and photos."
+    justification: "Contrary to its archival reputation the site is active (latest 2026-07-20, ~3-4 updates weekly) with strong first-person commentary ('I finally found,' 'I rewatched'). Simple functional layout with image alt-text (an accessibility signal), decades of essays/fiction behind it, and no commercial layer."
+
+  - name: "Sara Hendren"
+    url: "https://sarahendren.com/"
+    domain: "sarahendren.com"
+    category: "culture"
+    tags: ["design", "disability", "essays", "bodies"]
+    gate: "SOFT_FLAG"
+    gate_reason: "Deliberately sparse portfolio hub with no dated content on-site; listable but on-site depth/recency thin."
+    scores: { originality: 82, human_authorship: 86, depth: 74, freshness: 58, design_quality: 78 }
+    overall: 77
+    summary: "A design researcher writes originally about disability, tools, and the built world from lived inquiry."
+    justification: "Named author with a strong verified body of work — award-winning book 'What Can a Body Do?', essays in Harper's/NYT/Wired, museum exhibitions — but the homepage is a deliberately sparse hub with no dated posts, so on-site Depth and Freshness are modest. Third-person homepage framing mutes the personal voice slightly; clean minimal design, no ads."
+
+  - name: "Om Malik"
+    url: "https://om.co/"
+    domain: "om.co"
+    category: "culture"
+    tags: ["tech-culture", "photography", "essays", "blog"]
+    gate: "PASS"
+    gate_reason: "A tech-journalism pioneer's personal blog of essays and photography; minimal ads, original commentary."
+    scores: { originality: 78, human_authorship: 90, depth: 84, freshness: 90, design_quality: 80 }
+    overall: 84
+    summary: "A tech-journalism pioneer now blogs personally, mixing photography with slow cultural observation."
+    justification: "Frequent original analysis (latest 2026-06-24) in a strong first-person voice, with a full bio and a 30-year journalism background. WordPress/Automattic standard tracking is non-intrusive and ad load is minimal; clean legible layout with clear Latest/Notes/Top-Reads navigation."
+
+  - name: "The Marginalian (Maria Popova)"
+    url: "https://www.themarginalian.org/"
+    domain: "themarginalian.org"
+    category: "culture"
+    tags: ["essays", "literature", "art", "reader-supported"]
+    gate: "PASS"
+    gate_reason: "Two decades of one woman's ad-free, explicitly AI-free literary essays; reader-supported, disclosed affiliates."
+    scores: { originality: 88, human_authorship: 94, depth: 96, freshness: 92, design_quality: 84 }
+    overall: 91
+    summary: "Twenty years of one writer's ad-free, reader-supported essays connecting art, science, and philosophy."
+    justification: "Pagination reads 'page 1 of 1,665' across ~20 years, active into 2026-07-21, explicitly 'ad-free, AI-free' and 'a thoroughly one-woman labor of love' with heavy first-person voice. Amazon affiliate links are transparently disclosed; clean, high-legibility typography with generous whitespace — a rare deep well."
+
+  - name: "Spitalfields Life"
+    url: "https://spitalfieldslife.com/"
+    domain: "spitalfieldslife.com"
+    category: "culture"
+    tags: ["london", "history", "stories", "daily"]
+    gate: "PASS"
+    gate_reason: "A daily 17-year single-voice chronicle of East London people and crafts; modest book/tour promos, not ad-farm."
+    scores: { originality: 86, human_authorship: 86, depth: 94, freshness: 94, design_quality: 74 }
+    overall: 88
+    summary: "'The Gentle Author' has posted a story a day about East London's people and crafts for over a decade."
+    justification: "Archives run Jan-2009 to 2026-07-22 with 5,000+ daily stories and 45,000+ photographs in a consistent first-person voice ('I woke to find myself living...'). Pseudonymous authorship and a dated serif aesthetic with sidebar book/tour promos temper Human Authorship and Design; monetization is bookshop/tours, not an ad network — a genuine deep well."
+
+  - name: "Colossal"
+    url: "https://www.thisiscolossal.com/"
+    domain: "thisiscolossal.com"
+    category: "culture"
+    tags: ["art", "craft", "curation", "visual"]
+    gate: "SOFT_FLAG"
+    gate_reason: "Above-the-fold ads and an institutional (multi-staff, membership) publication model rather than a personal site."
+    scores: { originality: 72, human_authorship: 78, depth: 88, freshness: 94, design_quality: 82 }
+    overall: 81
+    summary: "A small independent art blog surfacing overlooked makers and craft, human-curated with bylines since 2010."
+    justification: "Bylined staff (e.g., Kate Mothes), an About page, original interview series ('Colossal in Conversation'), and a 16-year daily archive (latest 19h before fetch) mark it as a real editorial publication, not a scraper. Soft-flagged because ad units sit above the fold and it is an institutional/membership operation rather than a one-person site, so Originality/Human-Authorship reflect the curatorial-brand nature."
