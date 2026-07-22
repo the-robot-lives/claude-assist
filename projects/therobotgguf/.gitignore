@@ -1,3 +1,6 @@
+llms/
+convert/corpus/
+
 convert/work/
 convert/corpus/
 __pycache__/

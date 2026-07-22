@@ -1,5 +1,5 @@
 SUBDIRS := agent shell k8 terraform database colo start-app-scaffold linux osx
-SUBDIRS_NO_OSX := $(filter-out osx,$(SUBDIRS))
+SUBDIRS_DEFAULT := $(filter-out osx linux,$(SUBDIRS))
 SUBDIR_TARGETS := build compile test clean
 SUBDIR_DESCRIPTION := Utility groups
 
@@ -7,7 +7,7 @@ SUBDIR_DESCRIPTION := Utility groups
 
 _utilities_install:
 	@set -e; \
-	for dir in $(SUBDIRS_NO_OSX); do \
+	for dir in $(SUBDIRS_DEFAULT); do \
 		target=install; \
 		if [ -f "$$dir/Makefile" ]; then \
 			echo "--- $$dir ($@ -> $$target) ---"; \
