@@ -1,0 +1,34 @@
+databaseChangeLog:
+  # ── Personal-todo ownership + first-class tags (WS-A US-011) ────────────────
+  # A personal todo is an items row scoped to a user (owner_user_id) and NOT to a
+  # project (project_id IS NULL). Tags are a free-form, cross-scope text[] with a
+  # GIN index — deliberately a dedicated column, NOT a multi_select custom field
+  # (free-form entry + one index powering both cross-scope filter and
+  # SELECT DISTINCT unnest(tags) autocomplete). users(id) + organizations(id) are
+  # uuid.
+  - changeSet:
+      id: 036-items-personal-ownership-and-tags
+      author: therobotplans
+      changes:
+        - sql:
+            sql: |
+              ALTER TABLE items
+                ADD COLUMN owner_user_id uuid REFERENCES users(id) ON DELETE CASCADE,
+                ADD COLUMN tags text[] NOT NULL DEFAULT '{}';
+
+              -- Personal list query: owner + due-date bucketing, org-scoped.
+              -- Partial (owner IS NOT NULL) so project items don't bloat it.
+              CREATE INDEX idx_items_owner_due
+                ON items (organization_id, owner_user_id, due_date)
+                WHERE owner_user_id IS NOT NULL;
+
+              -- Cross-scope tag search + autocomplete (personal AND project items).
+              CREATE INDEX items_tags_gin ON items USING gin (tags);
+      rollback:
+        - sql:
+            sql: |
+              DROP INDEX IF EXISTS items_tags_gin;
+              DROP INDEX IF EXISTS idx_items_owner_due;
+              ALTER TABLE items
+                DROP COLUMN IF EXISTS tags,
+                DROP COLUMN IF EXISTS owner_user_id;

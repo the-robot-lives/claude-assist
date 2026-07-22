@@ -1,0 +1,31 @@
+databaseChangeLog:
+  # ── Item ↔ recurrence links + series lineage (WS-A US-011) ──────────────────
+  # Links an item occurrence to its rule and its series seed. Kept as a side table
+  # (not columns on the shared items) so the personal-todo lane owns recurrence
+  # wiring end-to-end. recurrence_parent_id is the seed item's id, shared by every
+  # occurrence in the series (the seed's own link points to itself) — giving O(1)
+  # series-history / streak scans (US-012, US-014) without an occurrences table.
+  # One link per item (unique item_id).
+  - changeSet:
+      id: 038-create-table-item-recurrence-links
+      author: therobotplans
+      changes:
+        - sql:
+            sql: |
+              CREATE TABLE item_recurrence_links (
+                id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+                item_id uuid NOT NULL REFERENCES items(id) ON DELETE CASCADE,
+                rule_id uuid NOT NULL REFERENCES recurrence_rules(id) ON DELETE CASCADE,
+                recurrence_parent_id uuid REFERENCES items(id) ON DELETE SET NULL,
+                inserted_at timestamptz NOT NULL DEFAULT now(),
+                updated_at timestamptz NOT NULL DEFAULT now()
+              );
+              CREATE UNIQUE INDEX item_recurrence_links_item_id_index
+                ON item_recurrence_links (item_id);
+              CREATE INDEX idx_item_recurrence_links_parent
+                ON item_recurrence_links (recurrence_parent_id);
+              CREATE INDEX idx_item_recurrence_links_rule
+                ON item_recurrence_links (rule_id);
+      rollback:
+        - dropTable:
+            tableName: item_recurrence_links

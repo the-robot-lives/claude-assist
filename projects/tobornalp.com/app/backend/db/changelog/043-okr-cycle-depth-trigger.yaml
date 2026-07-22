@@ -1,0 +1,48 @@
+databaseChangeLog:
+  # ── US-069 OKR hierarchy — authoritative graph integrity ───────────────────
+  # Defense in depth for cycle + depth. Domains.Goals guards these app-side with a
+  # friendly {:error, :cycle}/{:error, :max_depth} → 422; this trigger is the
+  # backstop against direct DB writes and races. Fires ONLY on parent_id change
+  # (insert or reparent), so ordinary title/status updates + KR writes are
+  # unaffected. Walks NEW.parent_id's ancestor chain via recursive CTE; rejects
+  # when NEW.id appears among ancestors (cycle) or the resulting depth exceeds the
+  # cap (@max_depth = 6, root counted as depth 1).
+  - changeSet:
+      id: 043-okr-cycle-depth-trigger
+      author: therobotplans
+      changes:
+        - sql:
+            splitStatements: false
+            sql: |
+              CREATE OR REPLACE FUNCTION objectives_guard_hierarchy() RETURNS trigger AS $$
+              DECLARE ancestor_depth int;
+              BEGIN
+                IF NEW.parent_id IS NULL THEN RETURN NEW; END IF;
+                IF NEW.parent_id = NEW.id THEN
+                  RAISE EXCEPTION 'objective_cycle' USING ERRCODE = 'check_violation';
+                END IF;
+                WITH RECURSIVE anc AS (
+                  SELECT id, parent_id, 1 AS depth FROM objectives WHERE id = NEW.parent_id
+                  UNION ALL
+                  SELECT o.id, o.parent_id, anc.depth + 1
+                    FROM objectives o JOIN anc ON o.id = anc.parent_id
+                    WHERE anc.depth < 64
+                )
+                SELECT max(depth) INTO ancestor_depth FROM anc;
+                IF EXISTS (SELECT 1 FROM anc WHERE id = NEW.id) THEN
+                  RAISE EXCEPTION 'objective_cycle' USING ERRCODE = 'check_violation';
+                END IF;
+                IF ancestor_depth >= 6 THEN
+                  RAISE EXCEPTION 'objective_max_depth' USING ERRCODE = 'check_violation';
+                END IF;
+                RETURN NEW;
+              END; $$ LANGUAGE plpgsql;
+
+              CREATE TRIGGER trg_objectives_guard_hierarchy
+                BEFORE INSERT OR UPDATE OF parent_id ON objectives
+                FOR EACH ROW EXECUTE FUNCTION objectives_guard_hierarchy();
+      rollback:
+        - sql:
+            sql: |
+              DROP TRIGGER IF EXISTS trg_objectives_guard_hierarchy ON objectives;
+              DROP FUNCTION IF EXISTS objectives_guard_hierarchy();

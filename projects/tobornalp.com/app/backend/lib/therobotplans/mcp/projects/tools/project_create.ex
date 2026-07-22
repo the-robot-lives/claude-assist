@@ -13,6 +13,12 @@ defmodule Therobotplans.MCP.Projects.Tools.ProjectCreate do
     field :slug, :string, required: true, description: "Unique URL slug (within the org)"
     field :description, :string, description: "Project description"
 
+    field :methodology, :string,
+      description: "Delivery methodology: kanban | scrum | waterfall | spiral | custom (default kanban)"
+
+    field :key_prefix, :string,
+      description: "Item key prefix, 2-16 uppercase alnum (auto-derived from slug if omitted)"
+
     field :owner_id, :string,
       description: "Owner user UUID (defaults to the authenticated caller)"
   end
@@ -26,18 +32,23 @@ defmodule Therobotplans.MCP.Projects.Tools.ProjectCreate do
          {:org, org_id} when not is_nil(org_id) <- {:org, Resolve.organization_id(org_ref)} do
       attrs =
         args
-        |> Args.take([:name, :slug, :description])
+        |> Args.take([:name, :slug, :description, :key_prefix])
         |> Map.put(:organization_id, org_id)
 
-      case Therobotplans.Projects.create_with_owner(attrs, owner_id) do
-        {:ok, project} ->
+      methodology = Args.get(args, :methodology) || "kanban"
+
+      case Therobotplans.Projects.create_with_methodology(attrs, methodology, owner_id) do
+        {:ok, %{project: project, board: board}} ->
           {:ok,
            %{
              id: project.id,
              name: project.name,
              slug: project.slug,
              status: project.status,
-             organization_id: project.organization_id
+             organization_id: project.organization_id,
+             default_methodology: project.default_methodology,
+             key_prefix: project.key_prefix,
+             default_queue_id: board.id
            }}
 
         {:error, changeset} when is_struct(changeset, Ecto.Changeset) ->

@@ -444,6 +444,53 @@ export const api = {
     });
   },
 
+  // ── Projects (methodology-provisioned boards) ─────────────────────────────
+  listProjects(orgId: string) {
+    return request<{ projects: Project[] }>(`/api/v1/organizations/${orgId}/projects`);
+  },
+  getProject(orgId: string, id: string) {
+    return request<{ project: Project }>(`/api/v1/organizations/${orgId}/projects/${id}`);
+  },
+  createProject(
+    orgId: string,
+    data: { name: string; slug: string; methodology: string; key_prefix?: string; description?: string },
+  ) {
+    return request<{ project: Project }>(`/api/v1/organizations/${orgId}/projects`, {
+      method: "POST",
+      body: JSON.stringify({ project: data }),
+    });
+  },
+  updateProject(
+    orgId: string,
+    id: string,
+    data: Partial<{ name: string; slug: string; description: string; key_prefix: string; settings: Record<string, unknown> }>,
+  ) {
+    return request<{ project: Project }>(`/api/v1/organizations/${orgId}/projects/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify({ project: data }),
+    });
+  },
+  archiveProject(orgId: string, id: string) {
+    return request<{ project: Project }>(`/api/v1/organizations/${orgId}/projects/${id}/archive`, {
+      method: "POST",
+    });
+  },
+  unarchiveProject(orgId: string, id: string) {
+    return request<{ project: Project }>(`/api/v1/organizations/${orgId}/projects/${id}/unarchive`, {
+      method: "POST",
+    });
+  },
+  provisionProject(orgId: string, id: string, methodology: string) {
+    return request<{
+      default_queue: ProjectBoardRef | null;
+      migration_required: boolean;
+      stage_map: Record<string, string | null>;
+    }>(`/api/v1/organizations/${orgId}/projects/${id}/provision`, {
+      method: "POST",
+      body: JSON.stringify({ methodology }),
+    });
+  },
+
   // ── Item type/field definitions (tri-scoped) ───────────────────────────────
   listFieldDefinitions(orgId: string, projectId?: string) {
     const qs = projectId ? `?project_id=${projectId}` : "";

@@ -1,0 +1,33 @@
+databaseChangeLog:
+  # ── Recurrence rules (WS-A US-011) ─────────────────────────────────────────
+  # A simplified RFC-5545-flavored rule sufficient for the six personal-todo
+  # presets (daily/weekdays/weekly/biweekly/monthly) + custom. freq ∈
+  # daily|weekly|monthly; weekdays/biweekly/weekly all resolve onto weekly via
+  # by_day/interval. until XOR count (or neither = open-ended) is enforced in the
+  # changeset, not the DB. The anchor is the linked item's due_date, so no dtstart
+  # column is stored. roll_on_skip is the habits (US-012) opt-in for the nightly
+  # sweep; default false for plain todos.
+  - changeSet:
+      id: 037-create-table-recurrence-rules
+      author: therobotplans
+      changes:
+        - sql:
+            sql: |
+              CREATE TABLE recurrence_rules (
+                id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+                owner_user_id uuid REFERENCES users(id) ON DELETE CASCADE,
+                freq varchar NOT NULL,
+                interval integer NOT NULL DEFAULT 1,
+                by_day varchar[] NOT NULL DEFAULT '{}',
+                by_month_day integer[] NOT NULL DEFAULT '{}',
+                until date,
+                count integer,
+                timezone varchar NOT NULL DEFAULT 'Etc/UTC',
+                roll_on_skip boolean NOT NULL DEFAULT false,
+                inserted_at timestamptz NOT NULL DEFAULT now(),
+                updated_at timestamptz NOT NULL DEFAULT now()
+              );
+              CREATE INDEX idx_recurrence_rules_owner ON recurrence_rules (owner_user_id);
+      rollback:
+        - dropTable:
+            tableName: recurrence_rules

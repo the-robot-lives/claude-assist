@@ -19,6 +19,8 @@ defmodule Therobotplans.Schema.KeyResult do
     field :status, :string, default: "on_track"
     # When true, current_value is auto-computed from linked item completion.
     field :auto_progress, :boolean, default: false
+    # This KR's contribution when its objective aggregates under weighted_avg (US-069).
+    field :weight, :decimal, default: Decimal.new("1.0")
 
     belongs_to :objective, Therobotplans.Schema.Objective
     has_many :item_links, Therobotplans.Schema.KrItemLink, foreign_key: :key_result_id
@@ -38,7 +40,8 @@ defmodule Therobotplans.Schema.KeyResult do
       :direction,
       :due_on,
       :status,
-      :auto_progress
+      :auto_progress,
+      :weight
     ])
     |> validate_required([:objective_id, :title])
     |> validate_inclusion(:direction, @directions)

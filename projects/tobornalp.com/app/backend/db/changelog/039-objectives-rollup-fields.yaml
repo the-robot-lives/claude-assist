@@ -1,0 +1,24 @@
+databaseChangeLog:
+  # ── US-069 OKR hierarchy — objectives rollup config ────────────────────────
+  # Turns the flat OKR graph into a true hierarchy. rollup_strategy controls how
+  # a parent combines its child objectives + own KRs; weight is this objective's
+  # contribution to its parent; sort_order is sibling ordering (drag-reorder).
+  # See Domains.Goals rollup engine + 043-objectives-cycle-depth-trigger.yaml.
+  - changeSet:
+      id: 039-objectives-rollup-fields
+      author: therobotplans
+      changes:
+        - sql:
+            sql: |
+              ALTER TABLE objectives
+                ADD COLUMN rollup_strategy varchar(16) NOT NULL DEFAULT 'weighted_avg'
+                  CHECK (rollup_strategy IN ('weighted_avg', 'min_children', 'custom')),
+                ADD COLUMN weight numeric NOT NULL DEFAULT 1.0,
+                ADD COLUMN sort_order integer NOT NULL DEFAULT 0;
+      rollback:
+        - sql:
+            sql: |
+              ALTER TABLE objectives
+                DROP COLUMN rollup_strategy,
+                DROP COLUMN weight,
+                DROP COLUMN sort_order;

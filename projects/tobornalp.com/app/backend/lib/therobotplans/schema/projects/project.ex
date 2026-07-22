@@ -14,6 +14,15 @@ defmodule Therobotplans.Schema.Projects.Project do
     # from slug, overridable. Added by changelog 028a.
     field :key_prefix, :string
 
+    # Delivery methodology chosen at creation; drives board provisioning + the
+    # dashboard badge. CHECK-constrained superset of the board's four (adds
+    # `custom`). Immutable in-place — switching methodology re-provisions the
+    # board (see Therobotplans.Projects.provision/3). Added by changelog 035.
+    field :default_methodology, :string, default: "kanban"
+    # The project's provisioned default board (item_queues). Nullable FK,
+    # ON DELETE SET NULL. Added by changelog 035.
+    field :default_queue_id, Ecto.UUID
+
     belongs_to :created_by_user, Therobotplans.Schema.Users.User,
       type: Ecto.UUID,
       foreign_key: :created_by
@@ -33,10 +42,15 @@ defmodule Therobotplans.Schema.Projects.Project do
       :settings,
       :status,
       :key_prefix,
+      :default_methodology,
+      :default_queue_id,
       :created_by,
       :archived_at
     ])
     |> validate_required([:organization_id, :name, :slug])
+    |> validate_inclusion(:default_methodology, ~w(kanban scrum waterfall spiral custom),
+      message: "must be one of kanban, scrum, waterfall, spiral, custom"
+    )
     |> validate_format(:slug, ~r/^[a-z0-9][a-z0-9-]*[a-z0-9]$|^[a-z0-9]$/,
       message: "must be lowercase alphanumeric with hyphens, no leading/trailing hyphens"
     )

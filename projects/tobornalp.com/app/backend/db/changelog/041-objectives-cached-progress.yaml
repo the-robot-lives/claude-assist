@@ -1,0 +1,21 @@
+databaseChangeLog:
+  # ── US-069 OKR hierarchy — memoized rollup progress ────────────────────────
+  # cached_progress (0..1) is written bottom-up by Goals.recompute_objective_chain/1
+  # on any KR/item/checkin/child change. Reads (index/tree/Today) serve the cache,
+  # falling back to on-demand computation when NULL. cached_progress_at is the
+  # freshness stamp.
+  - changeSet:
+      id: 041-objectives-cached-progress
+      author: therobotplans
+      changes:
+        - sql:
+            sql: |
+              ALTER TABLE objectives
+                ADD COLUMN cached_progress numeric,
+                ADD COLUMN cached_progress_at timestamptz;
+      rollback:
+        - sql:
+            sql: |
+              ALTER TABLE objectives
+                DROP COLUMN cached_progress,
+                DROP COLUMN cached_progress_at;

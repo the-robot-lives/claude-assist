@@ -30,11 +30,14 @@ defmodule TherobotplansWeb.ProjectController do
         name: project_params["name"],
         slug: project_params["slug"],
         description: project_params["description"],
+        key_prefix: project_params["key_prefix"],
         settings: project_params["settings"] || %{}
       }
 
-      case Projects.create_with_owner(attrs, user_id) do
-        {:ok, project} ->
+      methodology = project_params["methodology"] || "kanban"
+
+      case Projects.create_with_methodology(attrs, methodology, user_id) do
+        {:ok, %{project: project, board: board}} ->
           conn
           |> put_status(:created)
           |> json(%{
@@ -42,9 +45,44 @@ defmodule TherobotplansWeb.ProjectController do
               id: project.id,
               name: project.name,
               slug: project.slug,
-              organization_id: project.organization_id
+              organization_id: project.organization_id,
+              default_methodology: project.default_methodology,
+              key_prefix: project.key_prefix,
+              default_queue: Projects.board_ref(board)
             }
           })
+
+        {:error, changeset} when is_struct(changeset, Ecto.Changeset) ->
+          conn |> put_status(:unprocessable_entity) |> json(%{errors: format_errors(changeset)})
+
+        {:error, reason} ->
+          conn |> put_status(:unprocessable_entity) |> json(%{error: to_string(reason)})
+      end
+    else
+      conn |> put_status(:forbidden) |> json(%{error: "Insufficient permissions"})
+    end
+  end
+
+  @doc """
+  Idempotently (re-)provision a project's default board for a methodology.
+  `POST /organizations/:org_id/projects/:project_id/provision` with
+  `{"methodology": "scrum"}`. Gated by `project:update`.
+  """
+  def provision(conn, %{"project_id" => project_id} = params) do
+    user_id = get_user_id(conn)
+    methodology = params["methodology"] || get_in(params, ["provision", "methodology"])
+
+    if Authz.check_permission(user_id, "project", project_id, "project:update") do
+      case Projects.provision(project_id, methodology) do
+        {:ok, %{board: board, migration_required: migration_required, stage_map: stage_map}} ->
+          json(conn, %{
+            default_queue: Projects.board_ref(board),
+            migration_required: migration_required,
+            stage_map: stage_map
+          })
+
+        {:error, :not_found} ->
+          conn |> put_status(:not_found) |> json(%{error: "Project not found"})
 
         {:error, changeset} when is_struct(changeset, Ecto.Changeset) ->
           conn |> put_status(:unprocessable_entity) |> json(%{errors: format_errors(changeset)})
@@ -252,6 +290,9 @@ defmodule TherobotplansWeb.ProjectController do
       description: project.description,
       settings: project.settings,
       status: project.status,
+      key_prefix: project.key_prefix,
+      default_methodology: project.default_methodology,
+      default_queue: Projects.default_queue_ref(project.default_queue_id),
       archived_at: project.archived_at,
       inserted_at: project.inserted_at,
       updated_at: project.updated_at

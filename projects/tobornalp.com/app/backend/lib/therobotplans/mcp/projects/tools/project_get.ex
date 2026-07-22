@@ -29,6 +29,8 @@ defmodule Therobotplans.MCP.Projects.Tools.ProjectGet do
            slug: project.slug,
            description: project.description,
            status: project.status,
+           default_methodology: Map.get(project, :default_methodology),
+           default_queue_id: Map.get(project, :default_queue_id),
            created_at: project.inserted_at
          }}
     end
