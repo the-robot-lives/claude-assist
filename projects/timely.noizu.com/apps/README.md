@@ -1,6 +1,6 @@
 # Timely App Surfaces
 
-This directory contains the initial implementation scaffolds for Timely's four product surfaces.
+This directory contains the initial implementation scaffolds for Timely's product surfaces.
 
 | Surface | Path | Purpose | Current State |
 |---------|------|---------|---------------|
@@ -10,7 +10,7 @@ This directory contains the initial implementation scaffolds for Timely's four p
 | Web app | `web-app/` | Authenticated dashboard, timeline review, billing/reporting workspace | Dependency-free prototype |
 | Web portal | `web-portal/` | Public product portal for positioning, trust, and alpha signup | Dependency-free prototype |
 
-The dependency-free web surfaces can be opened directly in a browser, though a local static server is cleaner for loading shared fixtures.
+The dependency-free web surfaces can be opened directly in a browser, though a local static server is cleaner.
 
 ```bash
 cd projects/timely.noizu.com

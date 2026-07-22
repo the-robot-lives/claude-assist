@@ -1,44 +1,20 @@
-const fallbackData = {
-  workspace: { reviewedHours: 6.4, billableHours: 5.75, confidence: 87, unresolvedGaps: 3 },
+const initialState = {
+  workspace: { reviewedHours: 0, billableHours: 0, confidence: 0, unresolvedGaps: 0 },
   policy: {
-    captureIntervalMinutes: 5,
-    localOnlyScreenshots: true,
-    retentionDays: 21,
-    excludedApps: ["1Password", "Messages"],
-    excludedDomains: ["bank.example", "health.example"]
+    captureIntervalMinutes: 0,
+    localOnlyScreenshots: false,
+    retentionDays: 0,
+    excludedApps: [],
+    excludedDomains: []
   },
-  intervals: [
-    { start: "08:45", end: "10:05", project: "Timely Alpha", task: "Timeline keyboard prototype", state: "captured", confidence: 92, lane: 0, width: 18 },
-    { start: "10:05", end: "10:42", project: "Incident Review", task: "Deploy monitor and client update", state: "overlap", confidence: 81, lane: 1, width: 12 },
-    { start: "10:31", end: "11:18", project: "Dashboard Polish", task: "Visual QA pass", state: "inferred", confidence: 74, lane: 2, width: 14 },
-    { start: "11:18", end: "11:52", project: "Idle", task: "Away from keyboard", state: "idle", confidence: 66, lane: 0, width: 10 },
-    { start: "12:20", end: "14:05", project: "Incident Review", task: "Root cause notes", state: "manual", confidence: 88, lane: 0, width: 24 },
-    { start: "14:05", end: "15:12", project: "Dashboard Polish", task: "Client export review", state: "private", confidence: 79, lane: 1, width: 18 }
-  ],
-  screenshots: [
-    { time: "08:50", label: "Timeline canvas", visibility: "shareable" },
-    { time: "10:15", label: "Deploy logs", visibility: "shareable" },
-    { time: "10:35", label: "Design review", visibility: "redacted" },
-    { time: "14:12", label: "Invoice draft", visibility: "private" }
-  ],
-  idlePrompts: [
-    { from: "11:18", to: "11:52", suggestion: "Discard idle time", reason: "No input, screen locked" },
-    { from: "15:12", to: "15:31", suggestion: "Resume Dashboard Polish", reason: "Returned to same app and document" }
-  ],
-  reports: [
-    { client: "Aster Systems", hours: 3.05, confidence: 84, evidence: "selected screenshots" },
-    { client: "HelioWorks", hours: 2.7, confidence: 77, evidence: "metadata only" }
-  ]
+  intervals: [],
+  screenshots: [],
+  idlePrompts: [],
+  reports: []
 };
 
-async function loadData() {
-  try {
-    const response = await fetch("../../shared/timely-fixtures.json");
-    if (!response.ok) throw new Error(`Fixture load failed: ${response.status}`);
-    return await response.json();
-  } catch {
-    return fallbackData;
-  }
+function loadData() {
+  return initialState;
 }
 
 function setText(id, value) {
@@ -55,6 +31,10 @@ function renderMetrics(data) {
 function renderTimeline(intervals) {
   const lanes = document.getElementById("timeline-lanes");
   lanes.innerHTML = "";
+  if (intervals.length === 0) {
+    lanes.innerHTML = `<div class="empty-state">No captured intervals yet. Start capture from the desktop agent, then review the day here.</div>`;
+    return;
+  }
   for (let laneIndex = 0; laneIndex < 3; laneIndex += 1) {
     const lane = document.createElement("div");
     lane.className = "lane";
@@ -76,6 +56,10 @@ function renderTimeline(intervals) {
 
 function renderScreenshots(screenshots) {
   const strip = document.getElementById("screenshot-strip");
+  if (screenshots.length === 0) {
+    strip.innerHTML = `<div class="empty-state">No screenshot evidence has been captured.</div>`;
+    return;
+  }
   strip.innerHTML = screenshots
     .map((shot) => `
       <div class="shot">
@@ -89,6 +73,10 @@ function renderScreenshots(screenshots) {
 
 function renderPrompts(prompts) {
   const list = document.getElementById("idle-prompts");
+  if (prompts.length === 0) {
+    list.innerHTML = `<div class="empty-state">No idle or resumption prompts need review.</div>`;
+    return;
+  }
   list.innerHTML = prompts
     .map((prompt) => `
       <div class="prompt">
@@ -102,6 +90,10 @@ function renderPrompts(prompts) {
 
 function renderReports(reports) {
   const rows = document.getElementById("report-rows");
+  if (reports.length === 0) {
+    rows.innerHTML = `<tr><td colspan="4" class="empty-table">No reportable time yet.</td></tr>`;
+    return;
+  }
   rows.innerHTML = reports
     .map((report) => `
       <tr>
@@ -119,25 +111,23 @@ function renderPolicy(policy) {
   const rows = [
     ["Screenshot interval", `${policy.captureIntervalMinutes} minutes`],
     ["Local-only screenshots", policy.localOnlyScreenshots ? "Enabled" : "Disabled"],
-    ["Retention", `${policy.retentionDays} days`],
-    ["Excluded apps", policy.excludedApps.join(", ")],
-    ["Excluded domains", policy.excludedDomains.join(", ")]
+    ["Retention", policy.retentionDays > 0 ? `${policy.retentionDays} days` : "Not configured"],
+    ["Excluded apps", policy.excludedApps.length > 0 ? policy.excludedApps.join(", ") : "None"],
+    ["Excluded domains", policy.excludedDomains.length > 0 ? policy.excludedDomains.join(", ") : "None"]
   ];
   list.innerHTML = rows.map(([label, value]) => `<dt>${label}</dt><dd>${value}</dd>`).join("");
 }
 
 function bindCaptureToggle() {
   const button = document.getElementById("capture-toggle");
-  let paused = false;
+  let active = false;
   button.addEventListener("click", () => {
-    paused = !paused;
-    button.textContent = paused ? "Resume capture" : "Pause capture";
-    button.classList.toggle("secondary", paused);
-    button.classList.toggle("primary", !paused);
+    active = !active;
+    button.textContent = active ? "Stop capture" : "Start capture";
   });
 }
 
-const data = await loadData();
+const data = loadData();
 renderMetrics(data);
 renderTimeline(data.intervals);
 renderScreenshots(data.screenshots);
@@ -145,4 +135,3 @@ renderPrompts(data.idlePrompts);
 renderReports(data.reports);
 renderPolicy(data.policy);
 bindCaptureToggle();
-

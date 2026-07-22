@@ -2,7 +2,7 @@ import SwiftUI
 
 @main
 struct TimelyiOSApp: App {
-    @State private var store = TimelyStore.sample
+    @State private var store = TimelyStore.empty
 
     var body: some Scene {
         WindowGroup {
@@ -10,4 +10,3 @@ struct TimelyiOSApp: App {
         }
     }
 }
-

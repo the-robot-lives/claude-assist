@@ -142,6 +142,11 @@ h2 {
   cursor: pointer;
 }
 
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+}
+
 .primary {
   border-color: var(--ink);
   background: var(--ink);
@@ -283,13 +288,19 @@ dt {
 }
 
 .shot,
-.prompt {
+.prompt,
+.empty-state {
   display: grid;
   gap: 8px;
   padding: 14px;
   border: 1px solid var(--line);
   border-radius: 8px;
   background: #fbfbf9;
+}
+
+.empty-state,
+.empty-table {
+  color: var(--muted);
 }
 
 .shot-preview {
@@ -379,4 +390,3 @@ dd {
     scroll-behavior: auto !important;
   }
 }
-

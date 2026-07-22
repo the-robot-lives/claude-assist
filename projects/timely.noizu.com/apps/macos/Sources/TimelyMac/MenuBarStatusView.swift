@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct MenuBarStatusView: View {
-    @Binding var captureState: CaptureState
+    @ObservedObject var store: TimelyStore
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
@@ -9,29 +9,50 @@ struct MenuBarStatusView: View {
                 VStack(alignment: .leading) {
                     Text("Timely Capture")
                         .font(.headline)
-                    Text(captureState.isPaused ? "Paused" : captureState.activeTask)
+                    Text(menuSubtitle)
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
                 Spacer()
                 Circle()
-                    .fill(captureState.isPaused ? .orange : .green)
+                    .fill(store.mode == .paused ? .orange : store.activeSpanID == nil ? .secondary : .green)
                     .frame(width: 10, height: 10)
             }
 
-            Button(captureState.isPaused ? "Resume capture" : "Pause capture") {
-                captureState.isPaused.toggle()
+            HStack {
+                Button("Start") { store.startSpan() }
+                    .disabled(store.currentTask.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                Button(store.mode == .paused ? "Resume" : "Pause") {
+                    store.mode == .paused ? store.resume() : store.pause()
+                }
+                .disabled(store.activeSpanID == nil)
+                Button("Stop") { store.stopActiveSpan() }
+                    .disabled(store.activeSpanID == nil)
             }
-            .buttonStyle(.borderedProminent)
+
+            Button("Capture screenshot now") {
+                store.captureScreenshotNow()
+            }
 
             Divider()
 
-            Label("\(captureState.unresolvedPrompts) unresolved prompts", systemImage: "questionmark.bubble")
-            Label(captureState.syncStatus, systemImage: "externaldrive")
-            Label("\(captureState.policy.screenshotIntervalMinutes)m screenshot interval", systemImage: "camera")
+            Label("Tracked \(store.reviewedDuration.timelyClock)", systemImage: "clock")
+            Label("\(store.screenshots.count) screenshots", systemImage: "camera")
+            Label(store.settings.screenshotCaptureEnabled ? "Periodic capture on" : "Periodic capture off", systemImage: "repeat")
+
+            if store.pomodoroRemaining > 0 {
+                Label("Pomodoro \(store.pomodoroRemaining.timelyClock)", systemImage: "timer")
+            }
         }
         .padding()
-        .frame(width: 320)
+        .frame(width: 340)
+    }
+
+    private var menuSubtitle: String {
+        if let active = store.activeSpan {
+            return "\(active.title) / \(active.duration.timelyClock)"
+        }
+        return store.mode.label
     }
 }
 

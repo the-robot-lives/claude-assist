@@ -1,0 +1,22 @@
+service: gemini
+model: gemini-2.5-flash-image
+timestamp: 1784709770
+provider_options:
+  generate_content_model: String("gemini-2.5-flash-image")
+prompt: |
+  Create a polished macOS application icon for Timely, an evidence-backed time tracking and screenshot capture app.
+  
+  Visual concept:
+  - Rounded-square macOS app icon with generous padding.
+  - Main symbol combines a precise clock face, timeline interval blocks, and a subtle camera aperture/screenshot frame.
+  - The symbol should read clearly at small sizes in the Dock.
+  - Use a refined product icon style: dimensional but not photorealistic, crisp edges, premium macOS finish.
+  - Palette should build from Timely's current magenta accent with supporting teal, warm gold, deep ink, and clean white highlights.
+  - Add tasteful depth, glassy highlights, and soft internal shadows; no busy background.
+  
+  Composition:
+  - Centered emblem, no text, no letters, no numbers.
+  - The clock/timeline/camera idea should be integrated into one memorable mark, not three separate icons.
+  - Works as a 1024x1024 app icon and remains recognizable down to 32x32.
+negative: |
+  text, words, letters, numbers, watermark, signature, realistic photo, clutter, tiny details, busy scene, people, animals, dark blurry background, app screenshot inside icon

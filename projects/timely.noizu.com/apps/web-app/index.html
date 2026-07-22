@@ -13,7 +13,7 @@
           <span class="brand-mark">T</span>
           <div>
             <strong>Timely</strong>
-            <span>Alpha workspace</span>
+            <span>No workspace connected</span>
           </div>
         </div>
         <nav>
@@ -27,10 +27,10 @@
       <main>
         <header class="topbar">
           <div>
-            <p class="eyebrow">Wednesday, July 22, 2026</p>
+            <p class="eyebrow">No reviewed day selected</p>
             <h1>Evidence-backed time review</h1>
           </div>
-          <button id="capture-toggle" class="primary" type="button">Pause capture</button>
+          <button id="capture-toggle" class="primary" type="button">Start capture</button>
         </header>
 
         <section id="dashboard" class="metrics" aria-label="Daily metrics">
@@ -78,7 +78,7 @@
                 <p class="eyebrow">Evidence</p>
                 <h2>Screenshots</h2>
               </div>
-              <button class="secondary" type="button">Redact</button>
+              <button class="secondary" type="button" disabled>Redact</button>
             </div>
             <div id="screenshot-strip" class="screenshot-strip"></div>
           </article>
@@ -89,7 +89,7 @@
                 <p class="eyebrow">Return prompts</p>
                 <h2>Idle and resumption</h2>
               </div>
-              <button class="secondary" type="button">Review all</button>
+              <button class="secondary" type="button" disabled>Review all</button>
             </div>
             <div id="idle-prompts" class="prompt-list"></div>
           </article>
@@ -101,7 +101,7 @@
               <p class="eyebrow">Billing</p>
               <h2>Client-ready reports</h2>
             </div>
-            <button class="primary" type="button">Export CSV</button>
+            <button class="primary" type="button" disabled>Export CSV</button>
           </div>
           <table>
             <thead>
@@ -128,4 +128,3 @@
     <script type="module" src="./assets/app.js"></script>
   </body>
 </html>
-

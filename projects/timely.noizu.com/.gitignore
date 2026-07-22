@@ -1,0 +1,5 @@
+dist/
+apps/*/.build/
+apps/android/.gradle/
+apps/android/app/build/
+

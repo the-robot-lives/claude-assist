@@ -119,9 +119,26 @@ Concept
 
 - [docs/UX-BRIEF.md](docs/UX-BRIEF.md) - Product positioning, UX principles, workflows, and IA summary
 - [docs/ROADMAP.md](docs/ROADMAP.md) - Phased product and UX roadmap from design foundation through paid production
+- [docs/MACOS-STYLEGUIDE.md](docs/MACOS-STYLEGUIDE.md) - macOS visual system, layout rules, components, and screen UX standards
 - [apps/](apps/) - Initial macOS, iOS, Android, web app, and web portal implementation scaffolds
 - [design/SITEMAP.md](design/SITEMAP.md) - Route map and overlay/navigation model
 - [project-management/personas/](project-management/personas/) - 8 target personas
 - [project-management/user-stories/](project-management/user-stories/) - 100 prioritized user stories
 - [project-management/screens/](project-management/screens/) - 20 screen definitions
 - [project-management/components/](project-management/components/) - 36 reusable component definitions
+
+## App Commands
+
+From this directory:
+
+```bash
+make help
+make serve
+make build-macos
+make run-macos
+make build-ios
+make build-android
+make build-web
+make local-build
+make install
+```

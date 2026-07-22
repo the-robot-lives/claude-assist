@@ -58,6 +58,10 @@ struct DashboardScreen: View {
 
                     SectionHeading(title: "Idle prompts", detail: "Resolve useful decisions from return events")
 
+                    if store.prompts.isEmpty {
+                        EmptyStateView(message: "No idle or resumption prompts need review.")
+                    }
+
                     ForEach(store.prompts) { prompt in
                         PromptRow(prompt: prompt)
                     }
@@ -99,8 +103,15 @@ struct TimelineScreen: View {
 
     var body: some View {
         NavigationStack {
-            List(intervals) { interval in
-                IntervalRow(interval: interval)
+            Group {
+                if intervals.isEmpty {
+                    EmptyStateView(message: "No captured intervals yet.")
+                        .padding()
+                } else {
+                    List(intervals) { interval in
+                        IntervalRow(interval: interval)
+                    }
+                }
             }
             .navigationTitle("Timeline")
         }
@@ -139,14 +150,21 @@ struct ReportsScreen: View {
 
     var body: some View {
         NavigationStack {
-            List(reports) { report in
-                VStack(alignment: .leading, spacing: 8) {
-                    Text(report.client)
-                        .font(.headline)
-                    Text(String(format: "%.2f hours / %d%% confidence", report.hours, report.confidence))
-                        .foregroundStyle(.secondary)
-                    Text(report.evidence)
-                        .font(.caption)
+            Group {
+                if reports.isEmpty {
+                    EmptyStateView(message: "No reportable time yet.")
+                        .padding()
+                } else {
+                    List(reports) { report in
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text(report.client)
+                                .font(.headline)
+                            Text(String(format: "%.2f hours / %d%% confidence", report.hours, report.confidence))
+                                .foregroundStyle(.secondary)
+                            Text(report.evidence)
+                                .font(.caption)
+                        }
+                    }
                 }
             }
             .navigationTitle("Reports")
@@ -162,8 +180,8 @@ struct PrivacyScreen: View {
             Form {
                 LabeledContent("Screenshot interval", value: "\(policy.screenshotIntervalMinutes) minutes")
                 LabeledContent("Local-only screenshots", value: policy.localOnlyScreenshots ? "Enabled" : "Disabled")
-                LabeledContent("Retention", value: "\(policy.retentionDays) days")
-                LabeledContent("Excluded apps", value: policy.excludedApps.joined(separator: ", "))
+                LabeledContent("Retention", value: policy.retentionDays > 0 ? "\(policy.retentionDays) days" : "Not configured")
+                LabeledContent("Excluded apps", value: policy.excludedApps.isEmpty ? "None" : policy.excludedApps.joined(separator: ", "))
             }
             .navigationTitle("Privacy")
         }
@@ -203,3 +221,16 @@ struct SectionHeading: View {
     }
 }
 
+struct EmptyStateView: View {
+    let message: String
+
+    var body: some View {
+        Text(message)
+            .foregroundStyle(.secondary)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding()
+            .background(.background)
+            .clipShape(RoundedRectangle(cornerRadius: 8))
+            .shadow(color: .black.opacity(0.04), radius: 12, y: 6)
+    }
+}

@@ -1,0 +1,50 @@
+schema: "0.4"
+id: timely-macos-app-icon-001
+type: image
+service: gemini
+model: gemini-2.5-flash-image
+quality: high
+
+attachments:
+  - path: ./timely-ui-reference.png
+    role: style
+    description: "Reference for Timely's magenta accent, calm desktop product tone, and clean macOS UI context."
+
+prompt:
+  text: |
+    Create a polished macOS application icon for Timely, an evidence-backed time tracking and screenshot capture app.
+
+    Visual concept:
+    - Rounded-square macOS app icon with generous padding.
+    - Main symbol combines a precise clock face, timeline interval blocks, and a subtle camera aperture/screenshot frame.
+    - The symbol should read clearly at small sizes in the Dock.
+    - Use a refined product icon style: dimensional but not photorealistic, crisp edges, premium macOS finish.
+    - Palette should build from Timely's current magenta accent with supporting teal, warm gold, deep ink, and clean white highlights.
+    - Add tasteful depth, glassy highlights, and soft internal shadows; no busy background.
+
+    Composition:
+    - Output exactly one app icon only.
+    - Fill the square canvas with the icon, using normal macOS icon padding.
+    - Centered emblem, no text, no letters, no numbers.
+    - The clock/timeline/camera idea should be integrated into one memorable mark, not three separate icons.
+    - Works as a 1024x1024 app icon and remains recognizable down to 32x32.
+    - Do not include preview thumbnails, size labels, mockups, surrounding canvas labels, multiple variants, or presentation boards.
+  negative: "text, words, letters, numbers, size labels, preview thumbnails, multiple icons, mockup board, watermark, signature, realistic photo, clutter, tiny details, busy scene, people, animals, dark blurry background, app screenshot inside icon"
+  provider_options:
+    generate_content_model: gemini-2.5-flash-image
+
+output:
+  formats:
+    - format: png
+      quality: 100
+      filename: TimelyIcon-1024
+  dimensions:
+    width: 1024
+    height: 1024
+    aspect_ratio: "1:1"
+  transparency: none
+  color_space: sRGB
+  dpi: 144
+
+tags: [timely, macos, app-icon, brand]
+product_targets: [macos-app-icon]

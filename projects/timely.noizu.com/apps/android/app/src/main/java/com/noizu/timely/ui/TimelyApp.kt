@@ -25,7 +25,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.noizu.timely.data.TimelyFixtures
+import com.noizu.timely.data.TimelyState
 import com.noizu.timely.data.TimelyInterval
 
 @Composable
@@ -47,8 +47,14 @@ fun TimelyApp() {
         item {
             SectionTitle("Daily timeline", "Review intervals, idle gaps, and confidence")
         }
-        items(TimelyFixtures.intervals) { interval ->
-            IntervalRow(interval)
+        if (TimelyState.intervals.isEmpty()) {
+            item {
+                EmptyStateCard("No captured intervals yet.")
+            }
+        } else {
+            items(TimelyState.intervals) { interval ->
+                IntervalRow(interval)
+            }
         }
         item {
             PrivacyCard()
@@ -78,7 +84,7 @@ private fun Header(paused: Boolean, onToggle: () -> Unit) {
 
 @Composable
 private fun SummaryGrid() {
-    val summary = TimelyFixtures.summary
+    val summary = TimelyState.summary
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             MetricCard("Reviewed", "%.1f".format(summary.reviewedHours), Modifier.weight(1f))
@@ -135,7 +141,7 @@ private fun IntervalRow(interval: TimelyInterval) {
 
 @Composable
 private fun PrivacyCard() {
-    val policy = TimelyFixtures.policy
+    val policy = TimelyState.policy
     Card(
         shape = RoundedCornerShape(8.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White)
@@ -143,11 +149,24 @@ private fun PrivacyCard() {
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Text("Privacy policy", fontSize = 22.sp, fontWeight = FontWeight.SemiBold)
             Divider()
-            Text("Screenshots every ${policy.screenshotIntervalMinutes} minutes")
+            Text(if (policy.screenshotIntervalMinutes > 0) "Screenshots every ${policy.screenshotIntervalMinutes} minutes" else "Screenshot interval not configured")
             Text("Local-only screenshots: ${if (policy.localOnlyScreenshots) "enabled" else "disabled"}")
-            Text("Retention: ${policy.retentionDays} days")
-            Text("Excluded apps: ${policy.excludedApps.joinToString()}")
+            Text(if (policy.retentionDays > 0) "Retention: ${policy.retentionDays} days" else "Retention not configured")
+            Text("Excluded apps: ${policy.excludedApps.ifEmpty { listOf("None") }.joinToString()}")
         }
     }
 }
 
+@Composable
+private fun EmptyStateCard(message: String) {
+    Card(
+        shape = RoundedCornerShape(8.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White)
+    ) {
+        Text(
+            text = message,
+            modifier = Modifier.padding(16.dp),
+            color = Color(0xFF647067)
+        )
+    }
+}
