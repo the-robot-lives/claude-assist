@@ -2,7 +2,7 @@
 #
 # `compile`/`test`/`install` are dispatched by ../../mk/subdirs.mk.
 
-.PHONY: compile test install uninstall clean dev
+.PHONY: compile test install install-completions uninstall clean dev
 
 PROJ_DIR := $(shell cd "$(dir $(abspath $(lastword $(MAKEFILE_LIST))))" && pwd)
 PREFIX   ?= $(HOME)/.local
@@ -33,7 +33,24 @@ install: compile test ## Install deps + symlink llm-toolkit to ~/.local/bin
 	@echo "==> Symlinking llm-toolkit → $(PREFIX)/bin/llm-toolkit"
 	@ln -sf "$(PROJ_DIR)/bin/llm-toolkit" "$(PREFIX)/bin/llm-toolkit"
 	@rm -f "$(PREFIX)/bin/claude-assist" "$(PREFIX)/bin/skill-manage"
+	@$(MAKE) install-completions
 	@echo "Done. Run 'llm-toolkit' from anywhere ('llm-toolkit skill ...' for skill management)."
+
+install-completions: ## Install bash/zsh completions only
+	@DATA_DIR="$${XDG_DATA_HOME:-$$HOME/.local/share}"; \
+	BASH_DIR="$$DATA_DIR/bash-completion/completions"; \
+	ZSH_DIR="$$DATA_DIR/zsh/site-functions"; \
+	if ! mkdir -p "$$BASH_DIR" "$$ZSH_DIR" 2>/dev/null; then \
+		echo "llm-toolkit: cannot write completion dirs; skipping."; \
+		exit 0; \
+	fi; \
+	cp "$(PROJ_DIR)/completions/llm-toolkit.bash" "$$BASH_DIR/llm-toolkit"; \
+	cp "$(PROJ_DIR)/completions/_llm-toolkit" "$$ZSH_DIR/_llm-toolkit"; \
+	echo "llm-toolkit: completions installed (bash-completion + zsh)"; \
+	if ! grep -qs "zsh/site-functions" "$$HOME/.zshrc" 2>/dev/null; then \
+		echo "llm-toolkit: zsh users — add to .zshrc before compinit:"; \
+		echo "  fpath=($$ZSH_DIR \$$fpath)"; \
+	fi
 
 uninstall: ## Remove symlink + skill-manage share dir
 	rm -f "$(PREFIX)/bin/llm-toolkit"

@@ -96,6 +96,23 @@ case "${1:-}" in
     fi
     start_web
     ;;
+  --help|-h)
+    cat <<USAGE
+llm-toolkit — Claude Code conversation browser (TS/pnpm) + skill-manage (Rust)
+
+Usage:
+  llm-toolkit                    Launch API + web UI (zellij split pane if available)
+  llm-toolkit api                Start only the API server
+  llm-toolkit web                Start only the web UI (dev server, foreground)
+  llm-toolkit --no-zellij        Launch API + web without zellij (API backgrounded)
+  llm-toolkit skill <cmd>        Manage provider skills/agents/commands (see below)
+  llm-toolkit <cmd> [args]       Conversation CLI: recent, search, list, show,
+                                  index, serve, interactive, help
+
+Run 'llm-toolkit skill --help' for the full skill-manage subcommand list.
+Run 'llm-toolkit help' for the conversation CLI's own usage output.
+USAGE
+    ;;
   skill)
     shift
     SKILL_BIN="$PROJ_DIR/skill-manage/target/release/skill-manage"
