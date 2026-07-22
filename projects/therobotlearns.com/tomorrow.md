@@ -68,7 +68,7 @@ chart retained for rollback only).
 - [ ] Test data in prod DB: users `cutover-probe@noizu.com`, waitlist rows `cutover-waitlist*-probe@noizu.com`, one 1-use-consumed invite — clean or keep
 - [ ] Mail is unconfigured (SENDGRID key empty in values) — verification/magic-link emails silently disabled
 - [ ] OTEL exporter econnrefused log spam (localhost:4318) — no collector sidecar; point at cluster collector or disable
-- [ ] Rotate `authentik_api_token` + `authentik_bootstrap_password` "when we start marketing" (Keith's explicit deferral; transcript exposure 2026-07-22)
+- [x] ~~Rotate `authentik_api_token` + `authentik_bootstrap_password`~~ — Keith ruled rotation unnecessary (2026-07-23); exposure was local-transcript only
 - [ ] Uncommitted changes on `develop` — backend fixes, chart rename+templates, values v1.0.2/v1.0.1, `.infra-config.yaml`, zone terragrunt, tomorrow.md
 - [ ] Remove legacy static chart/`web` image after soak; drop rollback note in `.infra-config.yaml` comment
 - [ ] deploy-service `--tag vX.Y.Z` builds+pushes fine but errors at promotion (wants `vM.m.edge`) and aborts first-release promotion headless — workaround used: `docker-build --prod --push --vsn vX.Y.Z` + hand-pin values; consider tool fix
