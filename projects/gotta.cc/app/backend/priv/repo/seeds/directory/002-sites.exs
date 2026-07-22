@@ -1,3 +1,6 @@
+require SeedHelper
+import SeedHelper
+
 alias GottaCc.Schema.Directory.Site
 # Directory sites (changelog 025), converted from .design/curation/sites-human-web.yaml.
 # overall_score + search_vector are GENERATED columns (not set here). Idempotent by id.
@@ -11,7 +14,7 @@ category_ids = %{
   "Weird & Wonderful" => UUID.uuid5(:oid, "GottaCc.Directory.Category@Weird & Wonderful"),
 }
 
-seed "directory-site:usesthis" do
+seed {"directory-site:usesthis", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@usesthis"),
@@ -35,7 +38,7 @@ seed "directory-site:usesthis" do
   )
 end
 
-seed "directory-site:lwn" do
+seed {"directory-site:lwn", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@lwn"),
@@ -59,7 +62,7 @@ seed "directory-site:lwn" do
   )
 end
 
-seed "directory-site:hackaday" do
+seed {"directory-site:hackaday", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@hackaday"),
@@ -83,7 +86,7 @@ seed "directory-site:hackaday" do
   )
 end
 
-seed "directory-site:lemire" do
+seed {"directory-site:lemire", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@lemire"),
@@ -107,7 +110,7 @@ seed "directory-site:lemire" do
   )
 end
 
-seed "directory-site:benborgers" do
+seed {"directory-site:benborgers", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@benborgers"),
@@ -131,7 +134,7 @@ seed "directory-site:benborgers" do
   )
 end
 
-seed "directory-site:daringfireball" do
+seed {"directory-site:daringfireball", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@daringfireball"),
@@ -155,7 +158,7 @@ seed "directory-site:daringfireball" do
   )
 end
 
-seed "directory-site:tildes" do
+seed {"directory-site:tildes", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@tildes"),
@@ -179,7 +182,7 @@ seed "directory-site:tildes" do
   )
 end
 
-seed "directory-site:ycombinator" do
+seed {"directory-site:ycombinator", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@ycombinator"),
@@ -203,7 +206,7 @@ seed "directory-site:ycombinator" do
   )
 end
 
-seed "directory-site:lobste" do
+seed {"directory-site:lobste", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@lobste"),
@@ -227,7 +230,7 @@ seed "directory-site:lobste" do
   )
 end
 
-seed "directory-site:jvns" do
+seed {"directory-site:jvns", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@jvns"),
@@ -251,7 +254,7 @@ seed "directory-site:jvns" do
   )
 end
 
-seed "directory-site:drewdevault" do
+seed {"directory-site:drewdevault", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@drewdevault"),
@@ -275,7 +278,7 @@ seed "directory-site:drewdevault" do
   )
 end
 
-seed "directory-site:ploum" do
+seed {"directory-site:ploum", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@ploum"),
@@ -299,7 +302,7 @@ seed "directory-site:ploum" do
   )
 end
 
-seed "directory-site:musicforprogramming" do
+seed {"directory-site:musicforprogramming", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@musicforprogramming"),
@@ -323,7 +326,7 @@ seed "directory-site:musicforprogramming" do
   )
 end
 
-seed "directory-site:tilde" do
+seed {"directory-site:tilde", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@tilde"),
@@ -347,7 +350,7 @@ seed "directory-site:tilde" do
   )
 end
 
-seed "directory-site:tilde-2" do
+seed {"directory-site:tilde-2", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@tilde-2"),
@@ -371,7 +374,7 @@ seed "directory-site:tilde-2" do
   )
 end
 
-seed "directory-site:32bit" do
+seed {"directory-site:32bit", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@32bit"),
@@ -395,7 +398,7 @@ seed "directory-site:32bit" do
   )
 end
 
-seed "directory-site:neocities" do
+seed {"directory-site:neocities", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@neocities"),
@@ -419,7 +422,7 @@ seed "directory-site:neocities" do
   )
 end
 
-seed "directory-site:omg" do
+seed {"directory-site:omg", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@omg"),
@@ -443,7 +446,7 @@ seed "directory-site:omg" do
   )
 end
 
-seed "directory-site:status" do
+seed {"directory-site:status", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@status"),
@@ -467,7 +470,7 @@ seed "directory-site:status" do
   )
 end
 
-seed "directory-site:indieweb" do
+seed {"directory-site:indieweb", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@indieweb"),
@@ -491,7 +494,7 @@ seed "directory-site:indieweb" do
   )
 end
 
-seed "directory-site:pleroma" do
+seed {"directory-site:pleroma", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@pleroma"),
@@ -515,7 +518,7 @@ seed "directory-site:pleroma" do
   )
 end
 
-seed "directory-site:are" do
+seed {"directory-site:are", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@are"),
@@ -539,7 +542,7 @@ seed "directory-site:are" do
   )
 end
 
-seed "directory-site:tynan" do
+seed {"directory-site:tynan", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@tynan"),
@@ -563,7 +566,7 @@ seed "directory-site:tynan" do
   )
 end
 
-seed "directory-site:cabel" do
+seed {"directory-site:cabel", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@cabel"),
@@ -587,7 +590,7 @@ seed "directory-site:cabel" do
   )
 end
 
-seed "directory-site:lowtechmagazine" do
+seed {"directory-site:lowtechmagazine", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@lowtechmagazine"),
@@ -611,7 +614,7 @@ seed "directory-site:lowtechmagazine" do
   )
 end
 
-seed "directory-site:100r" do
+seed {"directory-site:100r", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@100r"),
@@ -635,7 +638,7 @@ seed "directory-site:100r" do
   )
 end
 
-seed "directory-site:kottke" do
+seed {"directory-site:kottke", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@kottke"),
@@ -659,7 +662,7 @@ seed "directory-site:kottke" do
   )
 end
 
-seed "directory-site:craigmod" do
+seed {"directory-site:craigmod", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@craigmod"),
@@ -683,7 +686,7 @@ seed "directory-site:craigmod" do
   )
 end
 
-seed "directory-site:waxy" do
+seed {"directory-site:waxy", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@waxy"),
@@ -707,7 +710,7 @@ seed "directory-site:waxy" do
   )
 end
 
-seed "directory-site:robinsloan" do
+seed {"directory-site:robinsloan", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@robinsloan"),
@@ -731,7 +734,7 @@ seed "directory-site:robinsloan" do
   )
 end
 
-seed "directory-site:jennyodell" do
+seed {"directory-site:jennyodell", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@jennyodell"),
@@ -755,7 +758,7 @@ seed "directory-site:jennyodell" do
   )
 end
 
-seed "directory-site:meredithwhittaker" do
+seed {"directory-site:meredithwhittaker", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@meredithwhittaker"),
@@ -779,7 +782,7 @@ seed "directory-site:meredithwhittaker" do
   )
 end
 
-seed "directory-site:maggieappleton" do
+seed {"directory-site:maggieappleton", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@maggieappleton"),
@@ -803,7 +806,7 @@ seed "directory-site:maggieappleton" do
   )
 end
 
-seed "directory-site:andymatuschak" do
+seed {"directory-site:andymatuschak", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@andymatuschak"),
@@ -827,7 +830,7 @@ seed "directory-site:andymatuschak" do
   )
 end
 
-seed "directory-site:gwern" do
+seed {"directory-site:gwern", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@gwern"),
@@ -851,7 +854,7 @@ seed "directory-site:gwern" do
   )
 end
 
-seed "directory-site:paulgraham" do
+seed {"directory-site:paulgraham", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@paulgraham"),
@@ -875,7 +878,7 @@ seed "directory-site:paulgraham" do
   )
 end
 
-seed "directory-site:patrickcollison" do
+seed {"directory-site:patrickcollison", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@patrickcollison"),
@@ -899,7 +902,7 @@ seed "directory-site:patrickcollison" do
   )
 end
 
-seed "directory-site:pinboard" do
+seed {"directory-site:pinboard", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@pinboard"),
@@ -923,7 +926,7 @@ seed "directory-site:pinboard" do
   )
 end
 
-seed "directory-site:bloomberg" do
+seed {"directory-site:bloomberg", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@bloomberg"),
@@ -947,7 +950,7 @@ seed "directory-site:bloomberg" do
   )
 end
 
-seed "directory-site:stratechery" do
+seed {"directory-site:stratechery", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@stratechery"),
@@ -971,7 +974,7 @@ seed "directory-site:stratechery" do
   )
 end
 
-seed "directory-site:honest-broker" do
+seed {"directory-site:honest-broker", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@honest-broker"),
@@ -995,7 +998,7 @@ seed "directory-site:honest-broker" do
   )
 end
 
-seed "directory-site:ribbonfarm" do
+seed {"directory-site:ribbonfarm", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@ribbonfarm"),
@@ -1019,7 +1022,7 @@ seed "directory-site:ribbonfarm" do
   )
 end
 
-seed "directory-site:pudding" do
+seed {"directory-site:pudding", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@pudding"),
@@ -1043,7 +1046,7 @@ seed "directory-site:pudding" do
   )
 end
 
-seed "directory-site:are-2" do
+seed {"directory-site:are-2", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@are-2"),
@@ -1067,7 +1070,7 @@ seed "directory-site:are-2" do
   )
 end
 
-seed "directory-site:thebrowser" do
+seed {"directory-site:thebrowser", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@thebrowser"),
@@ -1091,7 +1094,7 @@ seed "directory-site:thebrowser" do
   )
 end
 
-seed "directory-site:longreads" do
+seed {"directory-site:longreads", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@longreads"),
@@ -1115,7 +1118,7 @@ seed "directory-site:longreads" do
   )
 end
 
-seed "directory-site:niemanlab" do
+seed {"directory-site:niemanlab", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@niemanlab"),
@@ -1139,7 +1142,7 @@ seed "directory-site:niemanlab" do
   )
 end
 
-seed "directory-site:3quarksdaily" do
+seed {"directory-site:3quarksdaily", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@3quarksdaily"),
@@ -1163,7 +1166,7 @@ seed "directory-site:3quarksdaily" do
   )
 end
 
-seed "directory-site:thenewinquiry" do
+seed {"directory-site:thenewinquiry", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@thenewinquiry"),
@@ -1187,7 +1190,7 @@ seed "directory-site:thenewinquiry" do
   )
 end
 
-seed "directory-site:reallifemag" do
+seed {"directory-site:reallifemag", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@reallifemag"),
@@ -1211,7 +1214,7 @@ seed "directory-site:reallifemag" do
   )
 end
 
-seed "directory-site:clivethompson" do
+seed {"directory-site:clivethompson", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@clivethompson"),
@@ -1235,7 +1238,7 @@ seed "directory-site:clivethompson" do
   )
 end
 
-seed "directory-site:anildash" do
+seed {"directory-site:anildash", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@anildash"),
@@ -1259,7 +1262,7 @@ seed "directory-site:anildash" do
   )
 end
 
-seed "directory-site:interconnected" do
+seed {"directory-site:interconnected", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@interconnected"),
@@ -1283,7 +1286,7 @@ seed "directory-site:interconnected" do
   )
 end
 
-seed "directory-site:quantamagazine" do
+seed {"directory-site:quantamagazine", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@quantamagazine"),
@@ -1307,7 +1310,7 @@ seed "directory-site:quantamagazine" do
   )
 end
 
-seed "directory-site:nautil" do
+seed {"directory-site:nautil", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@nautil"),
@@ -1331,7 +1334,7 @@ seed "directory-site:nautil" do
   )
 end
 
-seed "directory-site:jstor" do
+seed {"directory-site:jstor", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@jstor"),
@@ -1355,7 +1358,7 @@ seed "directory-site:jstor" do
   )
 end
 
-seed "directory-site:nasa" do
+seed {"directory-site:nasa", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@nasa"),
@@ -1379,7 +1382,7 @@ seed "directory-site:nasa" do
   )
 end
 
-seed "directory-site:astrobio" do
+seed {"directory-site:astrobio", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@astrobio"),
@@ -1403,7 +1406,7 @@ seed "directory-site:astrobio" do
   )
 end
 
-seed "directory-site:fnal" do
+seed {"directory-site:fnal", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@fnal"),
@@ -1427,7 +1430,7 @@ seed "directory-site:fnal" do
   )
 end
 
-seed "directory-site:sciencenews" do
+seed {"directory-site:sciencenews", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@sciencenews"),
@@ -1451,7 +1454,7 @@ seed "directory-site:sciencenews" do
   )
 end
 
-seed "directory-site:wordpress" do
+seed {"directory-site:wordpress", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@wordpress"),
@@ -1475,7 +1478,7 @@ seed "directory-site:wordpress" do
   )
 end
 
-seed "directory-site:scienceblogs" do
+seed {"directory-site:scienceblogs", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@scienceblogs"),
@@ -1499,7 +1502,7 @@ seed "directory-site:scienceblogs" do
   )
 end
 
-seed "directory-site:columbia" do
+seed {"directory-site:columbia", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@columbia"),
@@ -1523,7 +1526,7 @@ seed "directory-site:columbia" do
   )
 end
 
-seed "directory-site:blogspot" do
+seed {"directory-site:blogspot", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@blogspot"),
@@ -1547,7 +1550,7 @@ seed "directory-site:blogspot" do
   )
 end
 
-seed "directory-site:discovermagazine" do
+seed {"directory-site:discovermagazine", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@discovermagazine"),
@@ -1571,7 +1574,7 @@ seed "directory-site:discovermagazine" do
   )
 end
 
-seed "directory-site:royalsocietypublishing" do
+seed {"directory-site:royalsocietypublishing", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@royalsocietypublishing"),
@@ -1595,7 +1598,7 @@ seed "directory-site:royalsocietypublishing" do
   )
 end
 
-seed "directory-site:arxiv" do
+seed {"directory-site:arxiv", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@arxiv"),
@@ -1619,7 +1622,7 @@ seed "directory-site:arxiv" do
   )
 end
 
-seed "directory-site:syfy" do
+seed {"directory-site:syfy", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@syfy"),
@@ -1643,7 +1646,7 @@ seed "directory-site:syfy" do
   )
 end
 
-seed "directory-site:edwardyong" do
+seed {"directory-site:edwardyong", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@edwardyong"),
@@ -1667,7 +1670,7 @@ seed "directory-site:edwardyong" do
   )
 end
 
-seed "directory-site:carlzimmer" do
+seed {"directory-site:carlzimmer", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@carlzimmer"),
@@ -1691,7 +1694,7 @@ seed "directory-site:carlzimmer" do
   )
 end
 
-seed "directory-site:kalzumeus" do
+seed {"directory-site:kalzumeus", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@kalzumeus"),
@@ -1715,7 +1718,7 @@ seed "directory-site:kalzumeus" do
   )
 end
 
-seed "directory-site:spaceweather" do
+seed {"directory-site:spaceweather", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@spaceweather"),
@@ -1739,7 +1742,7 @@ seed "directory-site:spaceweather" do
   )
 end
 
-seed "directory-site:ourworldindata" do
+seed {"directory-site:ourworldindata", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@ourworldindata"),
@@ -1763,7 +1766,7 @@ seed "directory-site:ourworldindata" do
   )
 end
 
-seed "directory-site:waitbutwhy" do
+seed {"directory-site:waitbutwhy", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@waitbutwhy"),
@@ -1787,7 +1790,7 @@ seed "directory-site:waitbutwhy" do
   )
 end
 
-seed "directory-site:instructables" do
+seed {"directory-site:instructables", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@instructables"),
@@ -1811,7 +1814,7 @@ seed "directory-site:instructables" do
   )
 end
 
-seed "directory-site:hackster" do
+seed {"directory-site:hackster", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@hackster"),
@@ -1835,7 +1838,7 @@ seed "directory-site:hackster" do
   )
 end
 
-seed "directory-site:wizardzines" do
+seed {"directory-site:wizardzines", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@wizardzines"),
@@ -1859,7 +1862,7 @@ seed "directory-site:wizardzines" do
   )
 end
 
-seed "directory-site:ravelry" do
+seed {"directory-site:ravelry", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@ravelry"),
@@ -1883,7 +1886,7 @@ seed "directory-site:ravelry" do
   )
 end
 
-seed "directory-site:adafruit" do
+seed {"directory-site:adafruit", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@adafruit"),
@@ -1907,7 +1910,7 @@ seed "directory-site:adafruit" do
   )
 end
 
-seed "directory-site:textile" do
+seed {"directory-site:textile", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@textile"),
@@ -1931,7 +1934,7 @@ seed "directory-site:textile" do
   )
 end
 
-seed "directory-site:hackclub" do
+seed {"directory-site:hackclub", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@hackclub"),
@@ -1955,7 +1958,7 @@ seed "directory-site:hackclub" do
   )
 end
 
-seed "directory-site:atlasobscura" do
+seed {"directory-site:atlasobscura", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@atlasobscura"),
@@ -1979,7 +1982,7 @@ seed "directory-site:atlasobscura" do
   )
 end
 
-seed "directory-site:core77" do
+seed {"directory-site:core77", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@core77"),
@@ -2003,7 +2006,7 @@ seed "directory-site:core77" do
   )
 end
 
-seed "directory-site:craftsmanship" do
+seed {"directory-site:craftsmanship", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@craftsmanship"),
@@ -2027,7 +2030,7 @@ seed "directory-site:craftsmanship" do
   )
 end
 
-seed "directory-site:makezine" do
+seed {"directory-site:makezine", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@makezine"),
@@ -2051,7 +2054,7 @@ seed "directory-site:makezine" do
   )
 end
 
-seed "directory-site:dangerousprototypes" do
+seed {"directory-site:dangerousprototypes", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@dangerousprototypes"),
@@ -2075,7 +2078,7 @@ seed "directory-site:dangerousprototypes" do
   )
 end
 
-seed "directory-site:bunniestudios" do
+seed {"directory-site:bunniestudios", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@bunniestudios"),
@@ -2099,7 +2102,7 @@ seed "directory-site:bunniestudios" do
   )
 end
 
-seed "directory-site:beckystern" do
+seed {"directory-site:beckystern", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@beckystern"),
@@ -2123,7 +2126,7 @@ seed "directory-site:beckystern" do
   )
 end
 
-seed "directory-site:asherv" do
+seed {"directory-site:asherv", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@asherv"),
@@ -2147,7 +2150,7 @@ seed "directory-site:asherv" do
   )
 end
 
-seed "directory-site:finehomebuilding" do
+seed {"directory-site:finehomebuilding", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@finehomebuilding"),
@@ -2171,7 +2174,7 @@ seed "directory-site:finehomebuilding" do
   )
 end
 
-seed "directory-site:sketchplanations" do
+seed {"directory-site:sketchplanations", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@sketchplanations"),
@@ -2195,7 +2198,7 @@ seed "directory-site:sketchplanations" do
   )
 end
 
-seed "directory-site:karenx" do
+seed {"directory-site:karenx", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@karenx"),
@@ -2219,7 +2222,7 @@ seed "directory-site:karenx" do
   )
 end
 
-seed "directory-site:itch" do
+seed {"directory-site:itch", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@itch"),
@@ -2243,7 +2246,7 @@ seed "directory-site:itch" do
   )
 end
 
-seed "directory-site:galaxy" do
+seed {"directory-site:galaxy", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@galaxy"),
@@ -2267,7 +2270,7 @@ seed "directory-site:galaxy" do
   )
 end
 
-seed "directory-site:itch-2" do
+seed {"directory-site:itch-2", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@itch-2"),
@@ -2291,7 +2294,7 @@ seed "directory-site:itch-2" do
   )
 end
 
-seed "directory-site:neal" do
+seed {"directory-site:neal", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@neal"),
@@ -2315,7 +2318,7 @@ seed "directory-site:neal" do
   )
 end
 
-seed "directory-site:ldjam" do
+seed {"directory-site:ldjam", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@ldjam"),
@@ -2339,7 +2342,7 @@ seed "directory-site:ldjam" do
   )
 end
 
-seed "directory-site:incrementaldb" do
+seed {"directory-site:incrementaldb", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@incrementaldb"),
@@ -2363,7 +2366,7 @@ seed "directory-site:incrementaldb" do
   )
 end
 
-seed "directory-site:rockpapershotgun" do
+seed {"directory-site:rockpapershotgun", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@rockpapershotgun"),
@@ -2387,7 +2390,7 @@ seed "directory-site:rockpapershotgun" do
   )
 end
 
-seed "directory-site:pixelprospector" do
+seed {"directory-site:pixelprospector", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@pixelprospector"),
@@ -2411,7 +2414,7 @@ seed "directory-site:pixelprospector" do
   )
 end
 
-seed "directory-site:play" do
+seed {"directory-site:play", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@play"),
@@ -2435,7 +2438,7 @@ seed "directory-site:play" do
   )
 end
 
-seed "directory-site:lexaloffle" do
+seed {"directory-site:lexaloffle", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@lexaloffle"),
@@ -2459,7 +2462,7 @@ seed "directory-site:lexaloffle" do
   )
 end
 
-seed "directory-site:boardgamegeek" do
+seed {"directory-site:boardgamegeek", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@boardgamegeek"),
@@ -2483,7 +2486,7 @@ seed "directory-site:boardgamegeek" do
   )
 end
 
-seed "directory-site:indiegamemag" do
+seed {"directory-site:indiegamemag", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@indiegamemag"),
@@ -2507,7 +2510,7 @@ seed "directory-site:indiegamemag" do
   )
 end
 
-seed "directory-site:home" do
+seed {"directory-site:home", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@home"),
@@ -2531,7 +2534,7 @@ seed "directory-site:home" do
   )
 end
 
-seed "directory-site:tigsource" do
+seed {"directory-site:tigsource", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@tigsource"),
@@ -2555,7 +2558,7 @@ seed "directory-site:tigsource" do
   )
 end
 
-seed "directory-site:smwhr" do
+seed {"directory-site:smwhr", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@smwhr"),
@@ -2579,7 +2582,7 @@ seed "directory-site:smwhr" do
   )
 end
 
-seed "directory-site:marginalia" do
+seed {"directory-site:marginalia", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@marginalia"),
@@ -2603,7 +2606,7 @@ seed "directory-site:marginalia" do
   )
 end
 
-seed "directory-site:wiby" do
+seed {"directory-site:wiby", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@wiby"),
@@ -2627,7 +2630,7 @@ seed "directory-site:wiby" do
   )
 end
 
-seed "directory-site:window-swap" do
+seed {"directory-site:window-swap", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@window-swap"),
@@ -2651,7 +2654,7 @@ seed "directory-site:window-swap" do
   )
 end
 
-seed "directory-site:pointerpointer" do
+seed {"directory-site:pointerpointer", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@pointerpointer"),
@@ -2675,7 +2678,7 @@ seed "directory-site:pointerpointer" do
   )
 end
 
-seed "directory-site:cosmos" do
+seed {"directory-site:cosmos", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@cosmos"),
@@ -2699,7 +2702,7 @@ seed "directory-site:cosmos" do
   )
 end
 
-seed "directory-site:merveilles" do
+seed {"directory-site:merveilles", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@merveilles"),
@@ -2723,7 +2726,7 @@ seed "directory-site:merveilles" do
   )
 end
 
-seed "directory-site:melonland" do
+seed {"directory-site:melonland", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@melonland"),
@@ -2747,7 +2750,7 @@ seed "directory-site:melonland" do
   )
 end
 
-seed "directory-site:512kb" do
+seed {"directory-site:512kb", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@512kb"),
@@ -2771,7 +2774,7 @@ seed "directory-site:512kb" do
   )
 end
 
-seed "directory-site:1mb" do
+seed {"directory-site:1mb", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@1mb"),
@@ -2795,7 +2798,7 @@ seed "directory-site:1mb" do
   )
 end
 
-seed "directory-site:xxiivv" do
+seed {"directory-site:xxiivv", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@xxiivv"),
@@ -2819,7 +2822,7 @@ seed "directory-site:xxiivv" do
   )
 end
 
-seed "directory-site:xxiivv-2" do
+seed {"directory-site:xxiivv-2", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@xxiivv-2"),
@@ -2843,7 +2846,7 @@ seed "directory-site:xxiivv-2" do
   )
 end
 
-seed "directory-site:cloak" do
+seed {"directory-site:cloak", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@cloak"),
@@ -2867,7 +2870,7 @@ seed "directory-site:cloak" do
   )
 end
 
-seed "directory-site:searx" do
+seed {"directory-site:searx", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@searx"),
@@ -2891,7 +2894,7 @@ seed "directory-site:searx" do
   )
 end
 
-seed "directory-site:robotie" do
+seed {"directory-site:robotie", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@robotie"),
@@ -2915,7 +2918,7 @@ seed "directory-site:robotie" do
   )
 end
 
-seed "directory-site:lurk" do
+seed {"directory-site:lurk", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@lurk"),
@@ -2939,7 +2942,7 @@ seed "directory-site:lurk" do
   )
 end
 
-seed "directory-site:yesterlinks" do
+seed {"directory-site:yesterlinks", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@yesterlinks"),
@@ -2963,7 +2966,7 @@ seed "directory-site:yesterlinks" do
   )
 end
 
-seed "directory-site:r4fo" do
+seed {"directory-site:r4fo", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@r4fo"),
@@ -2987,7 +2990,7 @@ seed "directory-site:r4fo" do
   )
 end
 
-seed "directory-site:midnight" do
+seed {"directory-site:midnight", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@midnight"),
@@ -3011,7 +3014,7 @@ seed "directory-site:midnight" do
   )
 end
 
-seed "directory-site:blogspot-2" do
+seed {"directory-site:blogspot-2", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@blogspot-2"),
@@ -3035,7 +3038,7 @@ seed "directory-site:blogspot-2" do
   )
 end
 
-seed "directory-site:stumblerz" do
+seed {"directory-site:stumblerz", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@stumblerz"),
@@ -3059,7 +3062,7 @@ seed "directory-site:stumblerz" do
   )
 end
 
-seed "directory-site:defuse" do
+seed {"directory-site:defuse", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@defuse"),
@@ -3083,7 +3086,7 @@ seed "directory-site:defuse" do
   )
 end
 
-seed "directory-site:caramel" do
+seed {"directory-site:caramel", "1"} do
   GottaCc.Repo.insert!(
     %Site{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Site@caramel"),

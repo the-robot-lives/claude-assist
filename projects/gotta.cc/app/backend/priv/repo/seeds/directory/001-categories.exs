@@ -1,6 +1,9 @@
+require SeedHelper
+import SeedHelper
+
 alias GottaCc.Schema.Directory.Category
 # Directory categories (changelog 025). Idempotent: on_conflict :nothing by id.
-seed "directory-category:technology" do
+seed {"directory-category:technology", "1"} do
   GottaCc.Repo.insert!(
     %Category{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Category@Technology"),
@@ -13,7 +16,7 @@ seed "directory-category:technology" do
   )
 end
 
-seed "directory-category:culture" do
+seed {"directory-category:culture", "1"} do
   GottaCc.Repo.insert!(
     %Category{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Category@Culture"),
@@ -26,7 +29,7 @@ seed "directory-category:culture" do
   )
 end
 
-seed "directory-category:science" do
+seed {"directory-category:science", "1"} do
   GottaCc.Repo.insert!(
     %Category{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Category@Science"),
@@ -39,7 +42,7 @@ seed "directory-category:science" do
   )
 end
 
-seed "directory-category:making-crafts" do
+seed {"directory-category:making-crafts", "1"} do
   GottaCc.Repo.insert!(
     %Category{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Category@Making & Crafts"),
@@ -52,7 +55,7 @@ seed "directory-category:making-crafts" do
   )
 end
 
-seed "directory-category:games" do
+seed {"directory-category:games", "1"} do
   GottaCc.Repo.insert!(
     %Category{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Category@Games"),
@@ -65,7 +68,7 @@ seed "directory-category:games" do
   )
 end
 
-seed "directory-category:weird-wonderful" do
+seed {"directory-category:weird-wonderful", "1"} do
   GottaCc.Repo.insert!(
     %Category{
       id: UUID.uuid5(:oid, "GottaCc.Directory.Category@Weird & Wonderful"),

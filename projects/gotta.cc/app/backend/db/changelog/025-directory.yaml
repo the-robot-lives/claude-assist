@@ -38,14 +38,31 @@ databaseChangeLog:
                 featured boolean NOT NULL DEFAULT false,
                 status varchar(20) NOT NULL DEFAULT 'published'
                   CHECK (status IN ('published', 'draft', 'hidden')),
-                search_vector tsvector GENERATED ALWAYS AS (
-                  setweight(to_tsvector('english', coalesce(name, '')), 'A')
-                  || setweight(to_tsvector('english', coalesce(array_to_string(tags, ' '), '')), 'B')
-                  || setweight(to_tsvector('english', coalesce(summary, '')), 'C')
-                ) STORED,
+                search_vector tsvector,
                 inserted_at timestamptz NOT NULL,
                 updated_at timestamptz NOT NULL
               );
+        - sql:
+            splitStatements: false
+            sql: |
+              -- search_vector maintained by the trigger below. to_tsvector() is
+              -- STABLE (not IMMUTABLE), so PG forbids it in a STORED generated
+              -- column ("generation expression is not immutable").
+              CREATE OR REPLACE FUNCTION directory_sites_set_search_vector()
+              RETURNS trigger AS $$
+              BEGIN
+                NEW.search_vector :=
+                  setweight(to_tsvector('english', coalesce(NEW.name, '')), 'A')
+                  || setweight(to_tsvector('english', coalesce(array_to_string(NEW.tags, ' '), '')), 'B')
+                  || setweight(to_tsvector('english', coalesce(NEW.summary, '')), 'C');
+                RETURN NEW;
+              END;
+              $$ LANGUAGE plpgsql;
+        - sql:
+            sql: |
+              CREATE TRIGGER directory_sites_search_vector_trigger
+                BEFORE INSERT OR UPDATE ON directory_sites
+                FOR EACH ROW EXECUTE FUNCTION directory_sites_set_search_vector();
 
               CREATE INDEX idx_directory_sites_category
                 ON directory_sites (category_id) WHERE status = 'published';
@@ -60,6 +77,10 @@ databaseChangeLog:
               CREATE INDEX idx_directory_sites_domain_trgm
                 ON directory_sites USING gin (domain gin_trgm_ops);
       rollback:
+        - sql:
+            sql: |
+              DROP TRIGGER IF EXISTS directory_sites_search_vector_trigger ON directory_sites;
+              DROP FUNCTION IF EXISTS directory_sites_set_search_vector();
         - dropTable:
             tableName: directory_sites
         - dropTable:

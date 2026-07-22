@@ -1,3 +1,6 @@
+require SeedHelper
+import SeedHelper
+
 dir = Path.dirname(__ENV__.file)
 Code.eval_file("#{dir}/prod-seeds.exs")
 
@@ -13,7 +16,7 @@ admin_id = UUID.uuid5(:oid, "GottaCc.Dev.Admin")
 dev_org_id = UUID.uuid5(:oid, "GottaCc.Dev.Organization")
 login_provider_id = UUID.uuid5(:oid, "GottaCc.Schema.Auth.Providers.Provider@Login")
 
-seed "dev:admin-name" do
+seed {"dev:admin-name", "1"} do
   GottaCc.Repo.insert!(
     %Name{id: UUID.uuid5(:oid, "GottaCc.Dev.Admin.Name"), first: "Admin", last: "User"},
     on_conflict: :nothing,
@@ -21,7 +24,7 @@ seed "dev:admin-name" do
   )
 end
 
-seed "dev:admin-description" do
+seed {"dev:admin-description", "1"} do
   GottaCc.Repo.insert!(
     %Description{
       id: UUID.uuid5(:oid, "GottaCc.Dev.Admin.Description"),
@@ -33,7 +36,7 @@ seed "dev:admin-description" do
   )
 end
 
-seed "dev:admin-user" do
+seed {"dev:admin-user", "1"} do
   GottaCc.Repo.insert!(
     %User{
       id: admin_id,
@@ -52,7 +55,7 @@ seed "dev:admin-user" do
   )
 end
 
-seed "dev:admin-credential" do
+seed {"dev:admin-credential", "1"} do
   GottaCc.Repo.insert!(
     %UserCredential{
       id: UUID.uuid5(:oid, "GottaCc.Dev.Admin.Credential"),
@@ -71,7 +74,7 @@ seed "dev:admin-credential" do
   )
 end
 
-seed "dev:organization" do
+seed {"dev:organization", "1"} do
   GottaCc.Repo.insert!(
     %Organization{
       id: dev_org_id,
@@ -83,7 +86,7 @@ seed "dev:organization" do
   )
 end
 
-seed "dev:admin-membership" do
+seed {"dev:admin-membership", "1"} do
   GottaCc.Repo.insert!(
     %Membership{
       id: UUID.uuid5(:oid, "GottaCc.Dev.Admin.Membership"),
@@ -96,7 +99,7 @@ seed "dev:admin-membership" do
   )
 end
 
-seed "dev:bootstrap-invite" do
+seed {"dev:bootstrap-invite", "1"} do
   raw_token = "dev-bootstrap-invite-token-do-not-use-in-prod"
   token_hash = Bcrypt.hash_pwd_salt(raw_token)
   key_prefix = String.slice(raw_token, 0, 8)
@@ -130,7 +133,7 @@ seed "dev:bootstrap-invite" do
   """)
 end
 
-seed "dev:admin-magic-link-token" do
+seed {"dev:admin-magic-link-token", "1"} do
   admin_ref = GottaCc.Users.User.ref(admin_id)
   context = Noizu.Context.system()
 
