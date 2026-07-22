@@ -1,0 +1,49 @@
+personas:
+  - id: P-001
+    name: Maya Okonkwo
+    slug: subscriber
+    archetype: Portfolio-site subscriber who wants one inbox
+    segment: primary
+    file: P-001-subscriber.md
+  - id: P-002
+    name: Dario Fenn
+    slug: orgless-new-user
+    archetype: New authenticated user with no organization yet
+    segment: secondary
+    file: P-002-orgless-new-user.md
+  - id: P-003
+    name: Keith (Site Owner / Admin)
+    slug: site-owner-admin
+    archetype: Portfolio operator provisioning services and reading signups
+    segment: tertiary
+    file: P-003-site-owner-admin.md
+  - id: P-004
+    name: Priya Raman
+    slug: service-editor
+    archetype: Service editor who defines lists and typed attributes
+    segment: secondary
+    file: P-004-service-editor.md
+  - id: P-005
+    name: Tom Alvarez
+    slug: lead-inquirer
+    archetype: Prospective client sending a project inquiry
+    segment: secondary
+    file: P-005-lead-inquirer.md
+  - id: P-006
+    name: Sasha Vetrov
+    slug: embedder-dev
+    archetype: Developer embedding the signup widget on an external site
+    segment: secondary
+    file: P-006-embedder-dev.md
+  - id: P-007
+    name: Grace Whitfield
+    slug: accessibility-low-bandwidth
+    archetype: Assistive-tech user on a constrained connection
+    segment: edge-case
+    file: P-007-accessibility-low-bandwidth.md
+  - id: P-008
+    name: Botnet / Spam Signup
+    slug: abusive-spam-signup
+    archetype: Adversarial actor abusing public signup endpoints
+    segment: edge-case
+    file: P-008-abusive-spam-signup.md

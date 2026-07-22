@@ -16,8 +16,7 @@ __infra_config_keys() {
     # Guard: missing infra-config or error ⇒ emit nothing.
     infra-config list "$r" 2>/dev/null \
         | sed $'s/\x1b\\[[0-9;]*m//g' \
-        | grep -vE '[▶─]|^[[:space:]]*$|^  [A-Z]' \
-        | awk '{print $1}'
+        | awk '/▶/ || /─/ {next} /^  [A-Z]/ {next} NF==0 {next} {print $1}'
 }
 
 _infra_config() {

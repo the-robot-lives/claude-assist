@@ -1,0 +1,701 @@
+user_stories:
+  - id: US-001
+    title: Log in via SSO
+    slug: sso-login
+    epic: Onboarding & Auth
+    priority: must-have
+    personas: [P-001, P-002, P-003]
+    file: US-001-sso-login.md
+  - id: US-002
+    title: Register and log in with email
+    slug: register-and-login
+    epic: Onboarding & Auth
+    priority: must-have
+    personas: [P-001, P-002]
+    file: US-002-register-and-login.md
+  - id: US-003
+    title: Keep me signed in across sessions
+    slug: session-persistence
+    epic: Onboarding & Auth
+    priority: must-have
+    personas: [P-001, P-003]
+    file: US-003-session-persistence.md
+  - id: US-004
+    title: Log out
+    slug: logout
+    epic: Onboarding & Auth
+    priority: must-have
+    personas: [P-001, P-003]
+    file: US-004-logout.md
+  - id: US-005
+    title: See a first-run path when I have no organization
+    slug: orgless-first-run
+    epic: Onboarding & Auth
+    priority: must-have
+    personas: [P-002]
+    file: US-005-orgless-first-run.md
+  - id: US-006
+    title: Create an organization
+    slug: create-organization
+    epic: Onboarding & Auth
+    priority: must-have
+    personas: [P-002]
+    file: US-006-create-organization.md
+  - id: US-007
+    title: Switch between organizations
+    slug: switch-organization
+    epic: Onboarding & Auth
+    priority: should-have
+    personas: [P-002, P-003]
+    file: US-007-switch-organization.md
+  - id: US-008
+    title: Add a new organization from the switcher
+    slug: add-org-from-switcher
+    epic: Onboarding & Auth
+    priority: should-have
+    personas: [P-002]
+    file: US-008-add-org-from-switcher.md
+  - id: US-009
+    title: Invite a member to my organization
+    slug: invite-member
+    epic: Onboarding & Auth
+    priority: should-have
+    personas: [P-003]
+    file: US-009-invite-member.md
+  - id: US-010
+    title: Accept an organization invitation
+    slug: accept-invitation
+    epic: Onboarding & Auth
+    priority: should-have
+    personas: [P-002, P-004]
+    file: US-010-accept-invitation.md
+  - id: US-011
+    title: Remove the cookie-settings button from the navbar
+    slug: remove-cookie-settings-button
+    epic: Onboarding & Auth
+    priority: must-have
+    personas: [P-001, P-007]
+    file: US-011-remove-cookie-settings-button.md
+  - id: US-012
+    title: Use accessible authentication forms
+    slug: accessible-auth-forms
+    epic: Onboarding & Auth
+    priority: should-have
+    personas: [P-007]
+    file: US-012-accessible-auth-forms.md
+  - id: US-013
+    title: Create a Service
+    slug: create-service
+    epic: Services & Branding
+    priority: must-have
+    personas: [P-003, P-002]
+    file: US-013-create-service.md
+  - id: US-014
+    title: Edit Service settings
+    slug: edit-service-settings
+    epic: Services & Branding
+    priority: must-have
+    personas: [P-004, P-003]
+    file: US-014-edit-service-settings.md
+  - id: US-015
+    title: View a Service overview
+    slug: service-overview
+    epic: Services & Branding
+    priority: must-have
+    personas: [P-003, P-004]
+    file: US-015-service-overview.md
+  - id: US-016
+    title: Configure Service branding
+    slug: service-branding
+    epic: Services & Branding
+    priority: should-have
+    personas: [P-004]
+    file: US-016-service-branding.md
+  - id: US-017
+    title: Set a Service's sender identity
+    slug: service-sender-identity
+    epic: Services & Branding
+    priority: should-have
+    personas: [P-004, P-003]
+    file: US-017-service-sender-identity.md
+  - id: US-018
+    title: Map a Service to a site domain
+    slug: map-service-domain
+    epic: Services & Branding
+    priority: should-have
+    personas: [P-003]
+    file: US-018-map-service-domain.md
+  - id: US-019
+    title: Manage Service members and roles
+    slug: service-members
+    epic: Services & Branding
+    priority: should-have
+    personas: [P-003]
+    file: US-019-service-members.md
+  - id: US-020
+    title: List and switch between Services
+    slug: list-and-switch-services
+    epic: Services & Branding
+    priority: should-have
+    personas: [P-002, P-003]
+    file: US-020-list-and-switch-services.md
+  - id: US-021
+    title: Archive or deactivate a Service
+    slug: archive-service
+    epic: Services & Branding
+    priority: could-have
+    personas: [P-003]
+    file: US-021-archive-service.md
+  - id: US-022
+    title: Preview a Service's public appearance
+    slug: preview-service-public-branding
+    epic: Services & Branding
+    priority: could-have
+    personas: [P-004, P-001]
+    file: US-022-preview-service-public-branding.md
+  - id: US-023
+    title: Create a List within a Service
+    slug: create-list
+    epic: Lists & Attributes
+    priority: must-have
+    personas: [P-004, P-003]
+    file: US-023-create-list.md
+  - id: US-024
+    title: Configure a List's settings
+    slug: configure-list-settings
+    epic: Lists & Attributes
+    priority: must-have
+    personas: [P-004]
+    file: US-024-configure-list-settings.md
+  - id: US-025
+    title: Archive or deactivate a List
+    slug: archive-list
+    epic: Lists & Attributes
+    priority: could-have
+    personas: [P-004, P-003]
+    file: US-025-archive-list.md
+  - id: US-026
+    title: Declare an email attribute
+    slug: declare-email-attribute
+    epic: Lists & Attributes
+    priority: must-have
+    personas: [P-004]
+    file: US-026-declare-email-attribute.md
+  - id: US-027
+    title: Declare a text attribute
+    slug: declare-string-attribute
+    epic: Lists & Attributes
+    priority: must-have
+    personas: [P-004]
+    file: US-027-declare-string-attribute.md
+  - id: US-028
+    title: Declare numeric attributes
+    slug: declare-numeric-attribute
+    epic: Lists & Attributes
+    priority: should-have
+    personas: [P-004]
+    file: US-028-declare-numeric-attribute.md
+  - id: US-029
+    title: Declare a date attribute
+    slug: declare-date-attribute
+    epic: Lists & Attributes
+    priority: should-have
+    personas: [P-004]
+    file: US-029-declare-date-attribute.md
+  - id: US-030
+    title: Declare a guid attribute
+    slug: declare-guid-attribute
+    epic: Lists & Attributes
+    priority: should-have
+    personas: [P-004]
+    file: US-030-declare-guid-attribute.md
+  - id: US-031
+    title: Declare a select attribute with options
+    slug: declare-select-attribute
+    epic: Lists & Attributes
+    priority: must-have
+    personas: [P-004]
+    file: US-031-declare-select-attribute.md
+  - id: US-032
+    title: Declare a multi-select attribute
+    slug: declare-multiselect-attribute
+    epic: Lists & Attributes
+    priority: should-have
+    personas: [P-004]
+    file: US-032-declare-multiselect-attribute.md
+  - id: US-033
+    title: Mark attributes required and set validation
+    slug: attribute-required-and-validation
+    epic: Lists & Attributes
+    priority: must-have
+    personas: [P-004]
+    file: US-033-attribute-required-and-validation.md
+  - id: US-034
+    title: Reorder and deprecate attributes safely
+    slug: reorder-and-deprecate-attributes
+    epic: Lists & Attributes
+    priority: should-have
+    personas: [P-004]
+    file: US-034-reorder-and-deprecate-attributes.md
+  - id: US-035
+    title: Preview a List's public form
+    slug: preview-list-public-form
+    epic: Lists & Attributes
+    priority: must-have
+    personas: [P-004]
+    file: US-035-preview-list-public-form.md
+  - id: US-036
+    title: Provision a List via the management API / Terraform provider
+    slug: provision-list-via-terraform
+    epic: Lists & Attributes
+    priority: should-have
+    personas: [P-003]
+    file: US-036-provision-list-via-terraform.md
+  - id: US-037
+    title: Submit a public signup form
+    slug: submit-public-signup
+    epic: Signups & Subscriptions
+    priority: must-have
+    personas: [P-001, P-007]
+    file: US-037-submit-public-signup.md
+  - id: US-038
+    title: Render signup fields from declared attributes
+    slug: dynamic-field-rendering
+    epic: Signups & Subscriptions
+    priority: must-have
+    personas: [P-001, P-006]
+    file: US-038-dynamic-field-rendering.md
+  - id: US-039
+    title: Validate signups on client and server
+    slug: validate-signup
+    epic: Signups & Subscriptions
+    priority: must-have
+    personas: [P-001, P-008]
+    file: US-039-validate-signup.md
+  - id: US-040
+    title: Confirm a subscription via double opt-in
+    slug: double-opt-in
+    epic: Signups & Subscriptions
+    priority: must-have
+    personas: [P-001, P-008]
+    file: US-040-double-opt-in.md
+  - id: US-041
+    title: Resend a confirmation email
+    slug: resend-confirmation
+    epic: Signups & Subscriptions
+    priority: should-have
+    personas: [P-001]
+    file: US-041-resend-confirmation.md
+  - id: US-042
+    title: Unsubscribe via a tokenized link
+    slug: unsubscribe-via-token
+    epic: Signups & Subscriptions
+    priority: must-have
+    personas: [P-001]
+    file: US-042-unsubscribe-via-token.md
+  - id: US-043
+    title: Re-signup idempotently without duplicates
+    slug: idempotent-resignup
+    epic: Signups & Subscriptions
+    priority: should-have
+    personas: [P-001]
+    file: US-043-idempotent-resignup.md
+  - id: US-044
+    title: See a clear signup success state
+    slug: signup-success-state
+    epic: Signups & Subscriptions
+    priority: should-have
+    personas: [P-001, P-007]
+    file: US-044-signup-success-state.md
+  - id: US-045
+    title: Return a generic response that never leaks membership
+    slug: generic-202-no-leak
+    epic: Signups & Subscriptions
+    priority: must-have
+    personas: [P-008, P-001]
+    file: US-045-generic-202-no-leak.md
+  - id: US-046
+    title: Embed a drop-in signup widget
+    slug: embeddable-signup-widget
+    epic: Signups & Subscriptions
+    priority: must-have
+    personas: [P-006, P-007]
+    file: US-046-embeddable-signup-widget.md
+  - id: US-047
+    title: Theme the embeddable widget to match a site
+    slug: widget-theming
+    epic: Signups & Subscriptions
+    priority: could-have
+    personas: [P-006]
+    file: US-047-widget-theming.md
+  - id: US-048
+    title: Submit signups cross-origin from external sites
+    slug: cross-origin-submission
+    epic: Signups & Subscriptions
+    priority: must-have
+    personas: [P-006]
+    file: US-048-cross-origin-submission.md
+  - id: US-049
+    title: Block spam signups with a honeypot
+    slug: honeypot-anti-spam
+    epic: Signups & Subscriptions
+    priority: should-have
+    personas: [P-008]
+    file: US-049-honeypot-anti-spam.md
+  - id: US-050
+    title: Reconcile anonymous signups to my account
+    slug: reconcile-anonymous-signup
+    epic: Signups & Subscriptions
+    priority: should-have
+    personas: [P-001]
+    file: US-050-reconcile-anonymous-signup.md
+  - id: US-051
+    title: Set my contact frequency
+    slug: set-contact-frequency
+    epic: Contact Preferences
+    priority: must-have
+    personas: [P-001]
+    file: US-051-set-contact-frequency.md
+  - id: US-052
+    title: Choose my contact channels
+    slug: choose-contact-channels
+    epic: Contact Preferences
+    priority: must-have
+    personas: [P-001]
+    file: US-052-choose-contact-channels.md
+  - id: US-053
+    title: Set quiet periods for contact
+    slug: set-quiet-periods
+    epic: Contact Preferences
+    priority: should-have
+    personas: [P-001]
+    file: US-053-set-quiet-periods.md
+  - id: US-054
+    title: Set per-list preference defaults
+    slug: list-preference-defaults
+    epic: Contact Preferences
+    priority: should-have
+    personas: [P-004]
+    file: US-054-list-preference-defaults.md
+  - id: US-055
+    title: Override list defaults for my subscription
+    slug: override-list-defaults
+    epic: Contact Preferences
+    priority: should-have
+    personas: [P-001]
+    file: US-055-override-list-defaults.md
+  - id: US-056
+    title: Pause all contact temporarily
+    slug: pause-contact
+    epic: Contact Preferences
+    priority: could-have
+    personas: [P-001]
+    file: US-056-pause-contact.md
+  - id: US-057
+    title: Use accessible preference controls
+    slug: accessible-preference-controls
+    epic: Contact Preferences
+    priority: should-have
+    personas: [P-007]
+    file: US-057-accessible-preference-controls.md
+  - id: US-058
+    title: Deliver messages via SMS
+    slug: deliver-via-sms
+    epic: Contact Preferences
+    priority: wont-have
+    personas: [P-001]
+    file: US-058-deliver-via-sms.md
+  - id: US-059
+    title: Deliver messages via mobile push
+    slug: deliver-via-push
+    epic: Contact Preferences
+    priority: wont-have
+    personas: [P-001]
+    file: US-059-deliver-via-push.md
+  - id: US-060
+    title: Deliver via webhook and physical mail
+    slug: deliver-via-webhook-and-physical-mail
+    epic: Contact Preferences
+    priority: wont-have
+    personas: [P-001, P-003]
+    file: US-060-deliver-via-webhook-and-physical-mail.md
+  - id: US-061
+    title: View my subscriptions and inquiries in one place
+    slug: unified-preference-center
+    epic: Preference Center
+    priority: must-have
+    personas: [P-001, P-007]
+    file: US-061-unified-preference-center.md
+  - id: US-062
+    title: Unsubscribe from a list in the preference center
+    slug: unsubscribe-in-center
+    epic: Preference Center
+    priority: must-have
+    personas: [P-001]
+    file: US-062-unsubscribe-in-center.md
+  - id: US-063
+    title: Edit contact preferences per subscription
+    slug: edit-preferences-per-subscription
+    epic: Preference Center
+    priority: should-have
+    personas: [P-001]
+    file: US-063-edit-preferences-per-subscription.md
+  - id: US-064
+    title: Group my subscriptions by site
+    slug: cross-site-grouping
+    epic: Preference Center
+    priority: must-have
+    personas: [P-001]
+    file: US-064-cross-site-grouping.md
+  - id: US-065
+    title: View my submitted inquiries
+    slug: view-my-inquiries
+    epic: Preference Center
+    priority: should-have
+    personas: [P-001, P-005]
+    file: US-065-view-my-inquiries.md
+  - id: US-066
+    title: Re-subscribe or resume a paused list
+    slug: resubscribe-and-resume
+    epic: Preference Center
+    priority: could-have
+    personas: [P-001]
+    file: US-066-resubscribe-and-resume.md
+  - id: US-067
+    title: Export my data
+    slug: export-my-data
+    epic: Preference Center
+    priority: should-have
+    personas: [P-001]
+    file: US-067-export-my-data.md
+  - id: US-068
+    title: Request account and data deletion
+    slug: request-account-deletion
+    epic: Preference Center
+    priority: could-have
+    personas: [P-001]
+    file: US-068-request-account-deletion.md
+  - id: US-069
+    title: Use an accessible preference-center dashboard
+    slug: accessible-preference-center
+    epic: Preference Center
+    priority: should-have
+    personas: [P-007]
+    file: US-069-accessible-preference-center.md
+  - id: US-070
+    title: See a helpful empty state with no subscriptions
+    slug: preference-center-empty-state
+    epic: Preference Center
+    priority: should-have
+    personas: [P-001]
+    file: US-070-preference-center-empty-state.md
+  - id: US-071
+    title: Access a guarded admin console
+    slug: guarded-admin-layout
+    epic: Admin Console
+    priority: must-have
+    personas: [P-003]
+    file: US-071-guarded-admin-layout.md
+  - id: US-072
+    title: See an admin dashboard overview
+    slug: admin-dashboard
+    epic: Admin Console
+    priority: must-have
+    personas: [P-003]
+    file: US-072-admin-dashboard.md
+  - id: US-073
+    title: List Services with signup counts
+    slug: admin-services-with-counts
+    epic: Admin Console
+    priority: must-have
+    personas: [P-003]
+    file: US-073-admin-services-with-counts.md
+  - id: US-074
+    title: List Lists per Service with signup counts
+    slug: admin-lists-with-counts
+    epic: Admin Console
+    priority: must-have
+    personas: [P-003, P-004]
+    file: US-074-admin-lists-with-counts.md
+  - id: US-075
+    title: View signups to my lists across services
+    slug: view-signups-per-list
+    epic: Admin Console
+    priority: must-have
+    personas: [P-003, P-004]
+    file: US-075-view-signups-per-list.md
+  - id: US-076
+    title: Search and filter signups
+    slug: search-filter-signups
+    epic: Admin Console
+    priority: should-have
+    personas: [P-003, P-004]
+    file: US-076-search-filter-signups.md
+  - id: US-077
+    title: Sort and paginate the signups table
+    slug: sort-paginate-signups
+    epic: Admin Console
+    priority: should-have
+    personas: [P-003]
+    file: US-077-sort-paginate-signups.md
+  - id: US-078
+    title: Export signups to CSV
+    slug: export-signups-csv
+    epic: Admin Console
+    priority: must-have
+    personas: [P-003]
+    file: US-078-export-signups-csv.md
+  - id: US-079
+    title: View a single signup's detail
+    slug: signup-detail
+    epic: Admin Console
+    priority: must-have
+    personas: [P-003]
+    file: US-079-signup-detail.md
+  - id: US-080
+    title: Review inquiries in the admin console
+    slug: admin-inquiries-view
+    epic: Admin Console
+    priority: should-have
+    personas: [P-003]
+    file: US-080-admin-inquiries-view.md
+  - id: US-081
+    title: Submit a rich noizu.com project inquiry
+    slug: enhance-noizu-contact-form
+    epic: Inquiries & Lead Capture
+    priority: must-have
+    personas: [P-005]
+    file: US-081-enhance-noizu-contact-form.md
+  - id: US-082
+    title: Submit a basic inquiry
+    slug: submit-basic-inquiry
+    epic: Inquiries & Lead Capture
+    priority: must-have
+    personas: [P-005, P-001]
+    file: US-082-submit-basic-inquiry.md
+  - id: US-083
+    title: Get confirmation that my inquiry was received
+    slug: inquiry-confirmation
+    epic: Inquiries & Lead Capture
+    priority: must-have
+    personas: [P-005]
+    file: US-083-inquiry-confirmation.md
+  - id: US-084
+    title: Notify the site owner of a new inquiry
+    slug: notify-owner-of-inquiry
+    epic: Inquiries & Lead Capture
+    priority: should-have
+    personas: [P-003, P-005]
+    file: US-084-notify-owner-of-inquiry.md
+  - id: US-085
+    title: Model an inquiry as a contact-list signup
+    slug: model-inquiry-as-contact-list
+    epic: Inquiries & Lead Capture
+    priority: should-have
+    personas: [P-003, P-004]
+    file: US-085-model-inquiry-as-contact-list.md
+  - id: US-086
+    title: Validate inquiry fields
+    slug: validate-inquiry-fields
+    epic: Inquiries & Lead Capture
+    priority: should-have
+    personas: [P-005]
+    file: US-086-validate-inquiry-fields.md
+  - id: US-087
+    title: Protect the inquiry form from spam
+    slug: inquiry-spam-protection
+    epic: Inquiries & Lead Capture
+    priority: could-have
+    personas: [P-008, P-003]
+    file: US-087-inquiry-spam-protection.md
+  - id: US-088
+    title: Keep the existing inquiries endpoint working
+    slug: backward-compatible-inquiries-endpoint
+    epic: Inquiries & Lead Capture
+    priority: should-have
+    personas: [P-003, P-001]
+    file: US-088-backward-compatible-inquiries-endpoint.md
+  - id: US-089
+    title: Migrate every site's listmonk signups to foryou
+    slug: migrate-all-listmonk-signups
+    epic: listmonk Migration
+    priority: must-have
+    personas: [P-003]
+    file: US-089-migrate-all-listmonk-signups.md
+  - id: US-090
+    title: Provision a foryou List per site for cutover
+    slug: provision-foryou-list-per-site
+    epic: listmonk Migration
+    priority: should-have
+    personas: [P-003]
+    file: US-090-provision-foryou-list-per-site.md
+  - id: US-091
+    title: Repoint a site's signup form to foryou
+    slug: repoint-site-to-foryou
+    epic: listmonk Migration
+    priority: must-have
+    personas: [P-006, P-003]
+    file: US-091-repoint-site-to-foryou.md
+  - id: US-092
+    title: Verify a site no longer sends to listmonk
+    slug: verify-cutover
+    epic: listmonk Migration
+    priority: must-have
+    personas: [P-003]
+    file: US-092-verify-cutover.md
+  - id: US-093
+    title: Backfill listmonk subscribers into foryou
+    slug: backfill-listmonk-subscribers
+    epic: listmonk Migration
+    priority: must-have
+    personas: [P-003]
+    file: US-093-backfill-listmonk-subscribers.md
+  - id: US-094
+    title: Track migration status across all sites
+    slug: migration-status-tracking
+    epic: listmonk Migration
+    priority: should-have
+    personas: [P-003]
+    file: US-094-migration-status-tracking.md
+  - id: US-095
+    title: Decommission listmonk after cutover
+    slug: decommission-listmonk
+    epic: listmonk Migration
+    priority: must-have
+    personas: [P-003]
+    file: US-095-decommission-listmonk.md
+  - id: US-096
+    title: Configure CORS for cross-origin signups
+    slug: cors-configuration
+    epic: Infrastructure
+    priority: must-have
+    personas: [P-003, P-006]
+    file: US-096-cors-configuration.md
+  - id: US-097
+    title: Configure the transactional mailer
+    slug: transactional-mailer
+    epic: Infrastructure
+    priority: must-have
+    personas: [P-003]
+    file: US-097-transactional-mailer.md
+  - id: US-098
+    title: Provision lists as code via the Terraform provider
+    slug: terraform-provider-provisioning
+    epic: Infrastructure
+    priority: should-have
+    personas: [P-003]
+    file: US-098-terraform-provider-provisioning.md
+  - id: US-099
+    title: Observe signups, rate-limits, and abuse
+    slug: observability
+    epic: Infrastructure
+    priority: should-have
+    personas: [P-003, P-008]
+    file: US-099-observability.md
+  - id: US-100
+    title: Rate-limit and protect the public signup endpoint
+    slug: rate-limiting-abuse-protection
+    epic: Infrastructure
+    priority: must-have
+    personas: [P-008, P-003]
+    file: US-100-rate-limiting-abuse-protection.md
