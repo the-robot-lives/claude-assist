@@ -31,10 +31,12 @@ impl LockKind {
 pub struct Holder {
     /// REPO_LOCK_SESSION UUID — the only authoritative identity.
     pub session: String,
-    /// unicode4 display handle — cosmetic, lossy, not authoritative.
+    /// unicode4 display handle — cosmetic, lossy, not authoritative. Canonical display form.
     pub handle: String,
-    /// 8-hex fallback for glyph-poor terminals.
-    pub handle_hex: String,
+    /// Codepoint-sequence fallback (`U+131B4 U+133B2 …`) for glyph-poor terminals —
+    /// the same residue as `handle`, round-trips to the glyphs exactly.
+    #[serde(default, alias = "handle_hex")]
+    pub handle_fallback: String,
     pub host: String,
     pub pid: u32,
 }
@@ -51,16 +53,16 @@ impl Holder {
         Holder {
             session: session.to_string(),
             handle: glyph::unicode4_encode_uuid(session),
-            handle_hex: glyph::hex8(session),
+            handle_fallback: glyph::codepoint_handle(session),
             host: hostname(),
             pid: session_pid(),
         }
     }
 
-    /// Cosmetic handle for display, honoring `--ascii`.
+    /// Cosmetic handle for display, honoring `--ascii` (codepoint-sequence rendering).
     pub fn display(&self, ascii: bool) -> String {
         if ascii {
-            self.handle_hex.clone()
+            self.handle_fallback.clone()
         } else {
             self.handle.clone()
         }

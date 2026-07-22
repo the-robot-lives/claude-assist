@@ -40,7 +40,8 @@ impl Drop for MutexGuard {
 pub struct MutexOwner {
     pub session: String,
     pub handle: String,
-    pub handle_hex: String,
+    #[serde(default, alias = "handle_hex")]
+    pub handle_fallback: String,
     pub host: String,
     pub pid: u32,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -100,7 +101,7 @@ pub fn acquire(
     let owner = MutexOwner {
         session: holder.session,
         handle: holder.handle,
-        handle_hex: holder.handle_hex,
+        handle_fallback: holder.handle_fallback,
         host: holder.host,
         pid: holder.pid,
         label,
@@ -145,7 +146,7 @@ pub fn probe(mutex_path: &Path, owner_path: &Path) -> Result<Option<MutexOwner>>
     Ok(Some(owner.unwrap_or(MutexOwner {
         session: "unknown".into(),
         handle: "????".into(),
-        handle_hex: "????????".into(),
+        handle_fallback: "U+???? U+???? U+???? U+????".into(),
         host: "unknown".into(),
         pid: 0,
         label: None,

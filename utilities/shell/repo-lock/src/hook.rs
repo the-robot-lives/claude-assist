@@ -126,7 +126,7 @@ pub fn run(registry: &Registry, session: Uuid) -> Result<i32> {
                         "  {}  locked by {} ({}, {}) on {} until {} — {}",
                         path,
                         rec.holder.handle,
-                        rec.holder.handle_hex,
+                        rec.holder.handle_fallback,
                         rec.path,
                         rec.holder.host,
                         rec.expires_at,
@@ -154,7 +154,7 @@ pub fn run(registry: &Registry, session: Uuid) -> Result<i32> {
                 let label = owner.label.as_deref().unwrap_or("(no label)");
                 eprintln!(
                     "repo-lock: commit blocked — commit.mutex held by {} ({}) on {} pid {} since {} — {}",
-                    owner.handle, owner.handle_hex, owner.host, owner.pid, owner.since, label
+                    owner.handle, owner.handle_fallback, owner.host, owner.pid, owner.since, label
                 );
                 eprintln!(
                     "  another session is mid stage+commit ritual; wait or run your commit via `repo-lock exec -- git commit ...`"

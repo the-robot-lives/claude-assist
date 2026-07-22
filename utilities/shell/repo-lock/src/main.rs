@@ -64,7 +64,7 @@ enum Cmd {
         others: bool,
         #[arg(long)]
         stale: bool,
-        /// Show the 8-hex handle instead of the unicode glyph.
+        /// Show the codepoint-sequence handle (`U+131B4 …`) instead of the unicode glyph.
         #[arg(long)]
         ascii: bool,
     },
@@ -200,7 +200,7 @@ fn acquire(paths: Vec<String>, dir: bool, ttl: String, intent: Option<String>) -
                     "repo-lock: {} is locked by {} ({}) via {} — {} (expires {})",
                     rel,
                     rec.holder.handle,
-                    rec.holder.handle_hex,
+                    rec.holder.handle_fallback,
                     rec.path,
                     rec.intent.as_deref().unwrap_or("(no intent)"),
                     rec.expires_at
@@ -236,7 +236,7 @@ fn acquire(paths: Vec<String>, dir: bool, ttl: String, intent: Option<String>) -
             rel,
             kind.as_str(),
             session,
-            holder.handle_hex,
+            holder.handle_fallback,
             holder.host,
             holder.pid,
             ttl
@@ -410,7 +410,7 @@ fn check(paths: Vec<String>) -> Result<i32> {
             if registry::overlaps(&rel, LockKind::File, &rec.path, rec.kind) {
                 eprintln!(
                     "repo-lock: {} locked by {} ({})",
-                    rel, rec.holder.handle, rec.holder.handle_hex
+                    rel, rec.holder.handle, rec.holder.handle_fallback
                 );
                 locked = true;
             }
@@ -504,7 +504,7 @@ fn break_lock(path: String, force: bool) -> Result<i32> {
     };
     reg.journal(&format!(
         "break path={} reason={} broken_by={} prev_holder={} prev_host={} prev_pid={}",
-        rel, reason, session, rec.holder.handle_hex, rec.holder.host, rec.holder.pid
+        rel, reason, session, rec.holder.handle_fallback, rec.holder.host, rec.holder.pid
     ));
     if reason == "force" {
         println!(
@@ -591,7 +591,7 @@ fn doctor() -> Result<i32> {
                 "  {} [{}] {} exp={}",
                 r.path,
                 r.kind.as_str(),
-                r.holder.handle_hex,
+                r.holder.handle_fallback,
                 r.expires_at
             );
         }
