@@ -1136,7 +1136,8 @@
       }
     }
 
-    // ---------- Output viewers (graph libs, diagrams, media) ----------
+    // ---------- Universal local-first output viewers (every FIM channel) ----------
+    // Prefer browser CDN / local renderers. Kroki is last-resort for obscure DSLs only.
     const CDN = {
       d3: "https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js",
       cola: "https://cdn.jsdelivr.net/npm/webcola@3.4.0/WebCola/cola.min.js",
@@ -1147,37 +1148,492 @@
       anime: "https://cdn.jsdelivr.net/npm/animejs@3.2.2/lib/anime.min.js",
       echarts: "https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js",
       mermaid: "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js",
-      viz: "https://cdn.jsdelivr.net/npm/@hpcc-js/wasm@2.16.2/dist/graphviz.umd.js",
       marked: "https://cdn.jsdelivr.net/npm/marked@12.0.0/marked.min.js",
       vega: "https://cdn.jsdelivr.net/npm/vega@5.28.0/build/vega.min.js",
       vegaLite: "https://cdn.jsdelivr.net/npm/vega-lite@5.16.3/build/vega-lite.min.js",
       vegaEmbed: "https://cdn.jsdelivr.net/npm/vega-embed@6.24.0/build/vega-embed.min.js",
+      plotly: "https://cdn.jsdelivr.net/npm/plotly.js-dist-min@2.27.0/plotly.min.js",
+      leaflet: "https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js",
+      leafletCss: "https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css",
+      p5: "https://cdn.jsdelivr.net/npm/p5@1.9.0/lib/p5.min.js",
+      two: "https://cdn.jsdelivr.net/npm/two.js@0.8.12/build/two.min.js",
+      gsap: "https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js",
+      rough: "https://cdn.jsdelivr.net/npm/roughjs@4.6.6/bundled/rough.js",
+      sigma: "https://cdn.jsdelivr.net/npm/sigma@2.4.0/build/sigma.min.js",
+      graphology: "https://cdn.jsdelivr.net/npm/graphology@0.25.4/dist/graphology.umd.min.js",
+      visNetwork: "https://cdn.jsdelivr.net/npm/vis-network@9.1.9/standalone/umd/vis-network.min.js",
+      gojs: "https://cdn.jsdelivr.net/npm/gojs@2.3.17/release/go.js",
+      aframe: "https://cdn.jsdelivr.net/npm/aframe@1.5.0/dist/aframe-master.min.js",
+      abcjs: "https://cdn.jsdelivr.net/npm/abcjs@6.3.0/dist/abcjs-basic-min.js",
+      vexflow: "https://cdn.jsdelivr.net/npm/vexflow@4.2.3/build/cjs/vexflow.js",
+      tone: "https://cdn.jsdelivr.net/npm/tone@14.8.49/build/Tone.js",
+      katex: "https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js",
+      katexCss: "https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css",
+      katexAuto: "https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js",
+      wavedrom: "https://cdn.jsdelivr.net/npm/wavedrom@3.5.0/wavedrom.min.js",
+      wavedromSkin: "https://cdn.jsdelivr.net/npm/wavedrom@3.5.0/skins/default.js",
+      lottie: "https://cdn.jsdelivr.net/npm/lottie-web@5.12.2/build/player/lottie.min.js",
+      highcharts: "https://cdn.jsdelivr.net/npm/highcharts@11.3.0/highcharts.js",
+      maplibre: "https://cdn.jsdelivr.net/npm/maplibre-gl@3.6.2/dist/maplibre-gl.js",
+      maplibreCss: "https://cdn.jsdelivr.net/npm/maplibre-gl@3.6.2/dist/maplibre-gl.css",
+      svgjs: "https://cdn.jsdelivr.net/npm/@svgdotjs/svg.js@3.2.0/dist/svg.min.js",
+      mojs: "https://cdn.jsdelivr.net/npm/@mojs/core@1.5.0/dist/mo.umd.js",
+      pts: "https://cdn.jsdelivr.net/npm/pts@0.11.4/dist/pts.min.js",
+      fabric: "https://cdn.jsdelivr.net/npm/fabric@5.3.0/dist/fabric.min.js",
+      konva: "https://cdn.jsdelivr.net/npm/konva@9.3.0/konva.min.js",
+      zdog: "https://cdn.jsdelivr.net/npm/zdog@1.1.3/js/zdog.dist.min.js",
+      nomnoml: "https://cdn.jsdelivr.net/npm/nomnoml@1.6.2/dist/nomnoml.js",
+      plantumlEncoder: "https://cdn.jsdelivr.net/npm/plantuml-encoder@1.4.0/dist/plantuml-encoder.min.js",
+      bpmnJs: "https://cdn.jsdelivr.net/npm/bpmn-js@17.2.1/dist/bpmn-viewer.production.min.js",
+      bpmnCss: "https://cdn.jsdelivr.net/npm/bpmn-js@17.2.1/dist/assets/diagram-js.css",
+      bpmnCss2: "https://cdn.jsdelivr.net/npm/bpmn-js@17.2.1/dist/assets/bpmn-js.css",
+      bpmnFont: "https://cdn.jsdelivr.net/npm/bpmn-js@17.2.1/dist/assets/bpmn-font/css/bpmn.css",
+      osmd: "https://cdn.jsdelivr.net/npm/opensheetmusicdisplay@1.8.7/build/opensheetmusicdisplay.min.js",
+      openlayers: "https://cdn.jsdelivr.net/npm/ol@8.2.0/dist/ol.js",
+      openlayersCss: "https://cdn.jsdelivr.net/npm/ol@8.2.0/ol.css",
+      viz: "https://cdn.jsdelivr.net/npm/@viz-js/viz@3.7.0/lib/viz-standalone.js",
+      hljs: "https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/highlight.min.js",
+      hljsCss: "https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/styles/github-dark.min.css",
     };
 
-    /** Map channel / filename hints → script host recipe */
-    function jsHostRecipe(channel, src) {
-      const ch = (channel || "").toLowerCase().replace(/-/g, "_");
+    /** Every FIM solution stem in the package */
+    const ALL_FIM_CHANNELS = [
+      'a-frame',
+      'abcjs',
+      'actdiag',
+      'ad-copy',
+      'alphatab',
+      'altair',
+      'anime_js',
+      'apache-echarts',
+      'api-reference',
+      'asciidoc',
+      'asymptote',
+      'babylon_js',
+      'blockdiag',
+      'bokeh',
+      'bpmn-xml',
+      'c4-plantuml',
+      'canvas-api',
+      'cesium_js',
+      'chart_js',
+      'chemdraw-js',
+      'circuitikz',
+      'cola_js',
+      'cytoscape_js',
+      'd3-force',
+      'd3_js',
+      'dash',
+      'deck_gl',
+      'desmos-api',
+      'digital-timing',
+      'dita',
+      'docbook',
+      'drawio-xml',
+      'email-copy',
+      'epic-poem',
+      'ffmpeg-wasm',
+      'flat-api',
+      'folium',
+      'fritzing',
+      'gadfly_jl',
+      'geogebra-api',
+      'geopandas',
+      'gephi',
+      'getting-started',
+      'ggplot2',
+      'go_js',
+      'google-charts',
+      'google-maps-api',
+      'graphviz',
+      'graphviz-dot',
+      'gsap',
+      'haiku',
+      'here-maps',
+      'highcharts',
+      'holoviews',
+      'html',
+      'hugo',
+      'igraph',
+      'ipywidgets',
+      'jekyll',
+      'jimp',
+      'jspdf',
+      'jsxgraph',
+      'katex',
+      'kepler_gl',
+      'kicad',
+      'kino-datatable',
+      'kino-ets',
+      'kino-js',
+      'kino-maplibre',
+      'kino-mermaid',
+      'kino-plotly',
+      'kino-process',
+      'kino-vegalite',
+      'latex',
+      'lcapy',
+      'leaflet_js',
+      'lilypond',
+      'limerick',
+      'lottie',
+      'mammoth_js',
+      'mapbox-gl-js',
+      'maplibre-gl-js',
+      'markdown',
+      'marketing-copy',
+      'mathbox',
+      'mathjax',
+      'matplotlib',
+      'mei',
+      'mermaid',
+      'metapost',
+      'mkdocs',
+      'ml5_js',
+      'mnx',
+      'mo_js',
+      'music21j',
+      'musicxml',
+      'networkx',
+      'node-canvas',
+      'nomnoml',
+      'noteflight-api',
+      'novel-chapter',
+      'nwdiag',
+      'observable-plot',
+      'openlayers',
+      'osmd',
+      'p5_js',
+      'packetdiag',
+      'pandas-plotting',
+      'pandoc',
+      'panel',
+      'paper_js',
+      'paraview-web',
+      'pdf_js',
+      'pdfkit',
+      'plantuml',
+      'playcanvas',
+      'plotly-python',
+      'plotly_js',
+      'plots_jl',
+      'press-release',
+      'processing_js',
+      'pts_js',
+      'pyspice',
+      'quarto',
+      'r-markdown',
+      'rackdiag',
+      'react-three-fiber',
+      'readme',
+      'restructuredtext',
+      'rough_js',
+      'sagemath',
+      'schemdraw',
+      'seaborn',
+      'seo-article',
+      'seqdiag',
+      'sharp',
+      'sheetjs',
+      'short-story',
+      'sigma_js',
+      'sklearn-viz',
+      'smufl',
+      'sonnet',
+      'sphinx',
+      'spice-netlist',
+      'spline',
+      'springy_js',
+      'streamlit',
+      'structurizr-dsl',
+      'svg2pdf',
+      'svg_js',
+      'sympy',
+      'technical-blog',
+      'three_js',
+      'tikz-pgf',
+      'tone_js',
+      'turf_js',
+      'two_js',
+      'typst',
+      'uml-xmi',
+      'user-manual',
+      'ux-microcopy',
+      'vega',
+      'vega-lite',
+      'velocity_js',
+      'verge3d',
+      'verilog-diag',
+      'vexflow',
+      'vis_js',
+      'vtk_js',
+      'wavedrom',
+      'wavejson',
+      'web-audio-api',
+      'webgl',
+      'x3dom',
+      'yfiles',
+      'yuml',
+      'zdog'
+    ];
+
+    function normCh(s) {
+      return String(s || "").toLowerCase().trim().replace(/-/g, "_");
+    }
+
+    function jsRec(label, scripts, extra = {}) {
+      return { kind: "js", label, scripts: scripts || [], wide: true, ...extra };
+    }
+    function mdRec(label) {
+      return { kind: "markdown", label: label || "Markdown", wide: true };
+    }
+    function codeRec(label, hint) {
+      return { kind: "code", label: label || "Source", wide: true, hint: hint || null };
+    }
+
+    /** Local-first classification for one channel slug */
+    function classifyChannel(raw) {
+      const ch = normCh(raw);
+      const label = raw;
+
+      // --- Docs / prose ---
+      if (/^(markdown|md|readme|r_markdown|asciidoc|restructuredtext|rst|hugo|jekyll|mkdocs|sphinx|quarto|pandoc|seo_article|technical_blog|press_release|ad_copy|email_copy|marketing_copy|ux_microcopy|user_manual|api_reference|short_story|novel_chapter|epic_poem|sonnet|haiku|limerick|getting_started)$/.test(ch))
+        return mdRec(label);
+      if (/html/.test(ch) && !/xhtml|dhtml/.test(ch)) return { kind: "html", label: "HTML", wide: true };
+
+      // --- Diagram DSLs (browser-local where possible) ---
+      if (/mermaid/.test(ch)) return { kind: "mermaid", label: "Mermaid", wide: true };
+      if (/graphviz|graphviz_dot|^dot$/.test(ch)) return { kind: "graphviz", label: "Graphviz", wide: true };
+      if (/plantuml|c4_plantuml|c4plantuml/.test(ch)) return { kind: "plantuml", label: "PlantUML", wide: true };
+      if (/nomnoml/.test(ch)) return { kind: "nomnoml", label: "Nomnoml", wide: true };
+      if (/wavedrom|wavejson|digital_timing/.test(ch)) return { kind: "wavedrom", label: "WaveDrom", wide: true };
+      if (/bpmn/.test(ch)) return { kind: "bpmn", label: "BPMN", wide: true };
+      if (/drawio/.test(ch)) return { kind: "drawio", label: "draw.io", wide: true };
+      if (/yuml/.test(ch)) return { kind: "yuml", label: "yUML", wide: true };
+      if (/blockdiag|seqdiag|actdiag|nwdiag|packetdiag|rackdiag/.test(ch))
+        return { kind: "blockdiag", label: label, wide: true, diag: ch.replace(/_.*/, "") || ch };
+      if (/structurizr/.test(ch)) return { kind: "plantuml", label: "Structurizr→PlantUML-ish", wide: true, hint: "Structurizr DSL shown; export PlantUML for full render" };
+      if (/tikz|circuitikz|metapost|asymptote/.test(ch)) return { kind: "code", label: label, wide: true, hint: "Vector DSL — Process post-render to SVG/PDF when available; source below" };
+      if (/uml_xmi|verilog/.test(ch)) return codeRec(label, "Open in specialized tool / convert to SVG");
+
+      // --- Charts ---
+      if (/chart_js/.test(ch)) return jsRec("Chart.js", [CDN.chartjs], { canvas: true });
+      if (/echart|apache_echarts/.test(ch)) return jsRec("ECharts", [CDN.echarts]);
+      if (/highcharts/.test(ch)) return jsRec("Highcharts", [CDN.highcharts]);
+      if (/plotly/.test(ch)) return jsRec("Plotly", [CDN.plotly]);
+      if (/vega|altair|kino_vegalite/.test(ch)) return { kind: "vega", label: "Vega / Vega-Lite", wide: true };
+      if (/observable_plot/.test(ch)) return jsRec("Observable Plot", [CDN.d3]);
+      if (/google_charts/.test(ch)) return jsRec("Google Charts", [CDN.d3], { note: "Snippet should load gstatic charts loader if needed" });
+      if (/ggplot|matplotlib|seaborn|sklearn|pandas_plot|bokeh|holoviews|plots_jl|gadfly/.test(ch))
+        return { kind: "img_or_code", label: label, wide: true, hint: "Prefer PNG/SVG sibling output; else source" };
+
+      // --- Graph / network JS ---
+      if (/cola/.test(ch)) return jsRec("Cola.js", [CDN.d3, CDN.cola]);
+      if (/cytoscape/.test(ch)) return jsRec("Cytoscape", [CDN.cytoscape]);
+      if (/^d3|d3_js|d3_force/.test(ch)) return jsRec("D3", [CDN.d3]);
+      if (/go_js/.test(ch)) return jsRec("GoJS", [CDN.gojs]);
+      if (/sigma/.test(ch)) return jsRec("Sigma", [CDN.graphology, CDN.sigma]);
+      if (/vis_js/.test(ch)) return jsRec("vis-network", [CDN.visNetwork]);
+      if (/springy/.test(ch)) return jsRec("Springy", [CDN.d3]);
+      if (/yfiles/.test(ch)) return jsRec("yFiles", [CDN.d3], { note: "Commercial lib — source runs if global present" });
+      if (/networkx|gephi|igraph/.test(ch)) return codeRec(label, "Export Graphviz/GEXF or generate SVG for preview");
+
+      // --- Canvas / 2D ---
+      if (/paper_js|paper/.test(ch) && !/paraview/.test(ch)) return jsRec("Paper.js", [CDN.paper], { canvas: true });
+      if (/p5_js|processing/.test(ch)) return jsRec("p5.js", [CDN.p5], { canvas: true });
+      if (/two_js/.test(ch)) return jsRec("Two.js", [CDN.two]);
+      if (/canvas_api|canvas/.test(ch) && !/node_canvas/.test(ch)) return jsRec("Canvas API", [], { canvas: true });
+      if (/anime/.test(ch)) return jsRec("Anime.js", [CDN.anime]);
+      if (/gsap|velocity/.test(ch)) return jsRec("GSAP", [CDN.gsap]);
+      if (/mo_js/.test(ch)) return jsRec("mo.js", [CDN.mojs]);
+      if (/rough/.test(ch)) return jsRec("Rough.js", [CDN.rough]);
+      if (/svg_js/.test(ch)) return jsRec("SVG.js", [CDN.svgjs]);
+      if (/pts_js/.test(ch)) return jsRec("Pts.js", [CDN.pts]);
+      if (/zdog/.test(ch)) return jsRec("Zdog", [CDN.zdog]);
+      if (/lottie/.test(ch)) return { kind: "lottie", label: "Lottie", wide: true };
+      if (/node_canvas|jimp|sharp|svg2pdf/.test(ch)) return { kind: "img_or_code", label: label, wide: true };
+
+      // --- 3D ---
+      if (/three|react_three/.test(ch)) return jsRec("Three.js", [CDN.three]);
+      if (/babylon/.test(ch)) return jsRec("Babylon-ish", [CDN.three], { note: "Prefer THREE-compatible snippet or full HTML" });
+      if (/a_frame|aframe/.test(ch)) return jsRec("A-Frame", [CDN.aframe]);
+      if (/cesium|deck_gl|playcanvas|webgl|x3dom|vtk|verge3d|mathbox|paraview|spline/.test(ch))
+        return jsRec(label, [CDN.three], { note: "3D channel — full HTML preferred; THREE available" });
+
+      // --- Maps ---
+      if (/leaflet/.test(ch)) return jsRec("Leaflet", [CDN.leaflet], { css: [CDN.leafletCss], map: true });
+      if (/maplibre|mapbox|kino_maplibre/.test(ch)) return jsRec("MapLibre", [CDN.maplibre], { css: [CDN.maplibreCss], map: true });
+      if (/openlayers/.test(ch)) return jsRec("OpenLayers", [CDN.openlayers], { css: [CDN.openlayersCss], map: true });
+      if (/google_maps|here_maps|kepler|turf|folium|geopandas/.test(ch))
+        return jsRec(label, [CDN.leaflet], { css: [CDN.leafletCss], map: true, note: "Map host (Leaflet fallback)" });
+
+      // --- Music ---
+      if (/^abc|abcjs/.test(ch)) return { kind: "abc", label: "ABC", wide: true };
+      if (/vexflow/.test(ch)) return jsRec("VexFlow", [CDN.vexflow], { canvas: true });
+      if (/tone|web_audio/.test(ch)) return jsRec("Tone.js / Web Audio", [CDN.tone]);
+      if (/musicxml|osmd|mei|mnx/.test(ch)) return { kind: "osmd", label: "MusicXML / OSMD", wide: true };
+      if (/alphatab/.test(ch)) return { kind: "code", label: "alphaTab", wide: true, hint: "Prefer generated SVG/HTML; alphaTab needs assets" };
+      if (/lilypond|^ly$/.test(ch)) return { kind: "img_or_code", label: "LilyPond", wide: true, hint: "Show sibling SVG/PDF if Process rendered; else source" };
+      if (/music21|smufl|noteflight|flat_api/.test(ch)) return codeRec(label);
+
+      // --- Math / science ---
+      if (/katex|mathjax|latex|typst/.test(ch)) return { kind: "katex", label: "TeX / KaTeX", wide: true };
+      if (/desmos|geogebra|jsxgraph|chemdraw/.test(ch)) return jsRec(label, [CDN.d3]);
+      if (/sympy|sagemath|lcapy|pyspice|spice|kicad|fritzing|schemdraw/.test(ch))
+        return { kind: "img_or_code", label: label, wide: true };
+
+      // --- Data apps ---
+      if (/kino_js/.test(ch)) return jsRec("Kino JS", [CDN.d3]);
+      if (/kino_datatable|kino_ets|kino_process|dash|streamlit|panel|ipywidgets|pandas(?!_plot)/.test(ch))
+        return codeRec(label, "Notebook/server channel — emit HTML/JSON for lab preview");
+
+      // --- PDF / office ---
+      if (/pdf/.test(ch)) return { kind: "pdf", label: "PDF", wide: true };
+      if (/jspdf|pdfkit|mammoth|sheetjs/.test(ch)) return jsRec(label, [CDN.d3], { note: "Document generator — download or HTML output preferred" });
+
+      // --- ML / media util ---
+      if (/ml5|ffmpeg/.test(ch)) return jsRec(label, [CDN.d3]);
+
+      // Generic JS channels
+      if (/_js$|js$/.test(ch) || /_api$/.test(ch)) return jsRec(label, [CDN.d3]);
+
+      // Default: treat as document-ish if prose-like name else code
+      return codeRec(label, "Rendered preview when HTML/SVG/PNG sibling exists");
+    }
+
+    /** Full channel → recipe map (all FIM stems + aliases) */
+    const CHANNEL_VIEWERS = (() => {
+      const out = {};
+      for (const c of ALL_FIM_CHANNELS) {
+        const rec = classifyChannel(c);
+        out[c] = rec;
+        out[normCh(c)] = rec;
+        out[c.replace(/_/g, "-")] = rec;
+        out[c.replace(/-/g, "_")] = rec;
+      }
+      // asset-type roots
+      for (const [k, rec] of Object.entries({
+        image: { kind: "img", label: "Image" },
+        video: { kind: "video", label: "Video", wide: true },
+        music: { kind: "audio", label: "Audio" },
+        voice: { kind: "audio", label: "Voice" },
+        sfx: { kind: "audio", label: "SFX" },
+        svg: { kind: "svg", label: "SVG", wide: true },
+        component: jsRec("Component", [CDN.d3]),
+        document: mdRec("Document"),
+        game: { kind: "html", label: "Game HTML", wide: true },
+        diagram: { kind: "mermaid", label: "Diagram", wide: true },
+      })) {
+        out[k] = rec;
+        out[normCh(k)] = rec;
+      }
+      return out;
+    })();
+
+    const EXT_VIEWERS = {
+      png: { kind: "img", label: "PNG" }, jpg: { kind: "img", label: "JPEG" }, jpeg: { kind: "img", label: "JPEG" },
+      webp: { kind: "img", label: "WebP" }, gif: { kind: "img", label: "GIF" }, bmp: { kind: "img", label: "BMP" },
+      avif: { kind: "img", label: "AVIF" }, ico: { kind: "img", label: "Icon" },
+      svg: { kind: "svg", label: "SVG" },
+      mp4: { kind: "video", label: "Video" }, webm: { kind: "video", label: "Video" }, mov: { kind: "video", label: "Video" },
+      mkv: { kind: "video", label: "Video" },
+      mp3: { kind: "audio", label: "Audio" }, wav: { kind: "audio", label: "Audio" }, ogg: { kind: "audio", label: "Audio" },
+      flac: { kind: "audio", label: "Audio" }, m4a: { kind: "audio", label: "Audio" }, aac: { kind: "audio", label: "Audio" },
+      pdf: { kind: "pdf", label: "PDF" },
+      html: { kind: "html", label: "HTML" }, htm: { kind: "html", label: "HTML" },
+      mmd: { kind: "mermaid", label: "Mermaid" }, mermaid: { kind: "mermaid", label: "Mermaid" },
+      dot: { kind: "graphviz", label: "Graphviz" }, gv: { kind: "graphviz", label: "Graphviz" },
+      puml: { kind: "plantuml", label: "PlantUML" }, plantuml: { kind: "plantuml", label: "PlantUML" },
+      md: { kind: "markdown", label: "Markdown" }, markdown: { kind: "markdown", label: "Markdown" },
+      rst: { kind: "markdown", label: "reST" }, adoc: { kind: "markdown", label: "AsciiDoc" },
+      tex: { kind: "katex", label: "LaTeX" }, latex: { kind: "katex", label: "LaTeX" },
+      ly: { kind: "img_or_code", label: "LilyPond" }, abc: { kind: "abc", label: "ABC" },
+      musicxml: { kind: "osmd", label: "MusicXML" }, mxl: { kind: "download", label: "MusicXML zip" },
+      mid: { kind: "download", label: "MIDI" }, midi: { kind: "download", label: "MIDI" },
+      json: { kind: "json", label: "JSON" }, yaml: { kind: "code", label: "YAML" }, yml: { kind: "code", label: "YAML" },
+      xml: { kind: "xml", label: "XML" }, csv: { kind: "code", label: "CSV" },
+      js: { kind: "js", label: "JavaScript" }, mjs: { kind: "js", label: "JavaScript" }, cjs: { kind: "js", label: "JavaScript" },
+      ts: { kind: "js", label: "TypeScript" }, tsx: { kind: "js", label: "TSX" }, jsx: { kind: "js", label: "JSX" },
+      css: { kind: "code", label: "CSS" }, txt: { kind: "code", label: "Text" }, py: { kind: "code", label: "Python" },
+      r: { kind: "code", label: "R" }, jl: { kind: "code", label: "Julia" }, glsl: { kind: "code", label: "GLSL" },
+      wasm: { kind: "download", label: "WASM" }, zip: { kind: "download", label: "ZIP" },
+      bpmn: { kind: "bpmn", label: "BPMN" }, drawio: { kind: "drawio", label: "draw.io" },
+    };
+
+    function resolveChannel(o) {
+      return (
+        o.channel || o.text_format || state.generator?.slug ||
+        state.detail?.summary?.text_format || ""
+      ).toString();
+    }
+
+    function sniffViewer(fmt, channel, text) {
+      const ch = normCh(channel);
+      const f = (fmt || "").toLowerCase();
+      const head = (text || "").trimStart().slice(0, 500);
+      const low = head.toLowerCase();
+
+      const byCh = CHANNEL_VIEWERS[channel] || CHANNEL_VIEWERS[ch] || CHANNEL_VIEWERS[String(channel).toLowerCase()];
+      if (byCh) return { ...byCh };
+
+      for (const [key, rec] of Object.entries(CHANNEL_VIEWERS)) {
+        const nk = normCh(key);
+        if (ch && nk.length > 2 && (ch.includes(nk) || nk.includes(ch))) return { ...rec };
+      }
+      if (EXT_VIEWERS[f]) return { ...EXT_VIEWERS[f] };
+
+      if (low.startsWith("<!doctype html") || low.startsWith("<html") || (low.startsWith("<") && low.includes("<body")))
+        return { kind: "html", label: "HTML", wide: true };
+      if (low.startsWith("<svg") || (low.startsWith("<?xml") && low.includes("<svg")))
+        return { kind: "svg", label: "SVG", wide: true };
+      if (/@startuml/i.test(head)) return { kind: "plantuml", label: "PlantUML", wide: true };
+      if (/^(graph|flowchart|sequenceDiagram|classDiagram|stateDiagram|erDiagram|gantt|pie|mindmap)\b/m.test(head))
+        return { kind: "mermaid", label: "Mermaid", wide: true };
+      if (/^\s*(strict\s+)?(di)?graph\b/i.test(head)) return { kind: "graphviz", label: "Graphviz", wide: true };
+      if (/@startwave|\{[\s\S]*"signal"\s*:/i.test(head)) return { kind: "wavedrom", label: "WaveDrom", wide: true };
+      if (/^X:\s*\d/m.test(head) || /^T:/.test(head)) return { kind: "abc", label: "ABC", wide: true };
+      if (/\\begin\{|\\frac\{|\$\$/.test(head)) return { kind: "katex", label: "TeX", wide: true };
+      if (/<definitions[\s\S]*bpmn|bpmn2?:/i.test(head)) return { kind: "bpmn", label: "BPMN", wide: true };
+      if (/mxfile|draw\.io|diagrams\.net/i.test(head)) return { kind: "drawio", label: "draw.io", wide: true };
+      if (/<score-partwise|<mei\b/i.test(head)) return { kind: "osmd", label: "MusicXML", wide: true };
+      if (/^\[.*\]\s*\n\[.*\]\s*\n/.test(head) || /\[->\]/.test(head)) return { kind: "nomnoml", label: "Nomnoml", wide: true };
+      try {
+        const j = JSON.parse(text);
+        if (j && (j.$schema || j.mark || j.layer || j.vconcat || j.hconcat))
+          return { kind: "vega", label: "Vega", wide: true };
+        if (j && (j.v === "5" || j.layers) && (j.fr || j.op || j.assets))
+          return { kind: "lottie", label: "Lottie", wide: true };
+        if (j && (j.signal || j.edge) && (Array.isArray(j.signal) || j.head))
+          return { kind: "wavedrom", label: "WaveJSON", wide: true };
+      } catch (_) {}
+
+      if (["js","ts","tsx","jsx","mjs","cjs"].includes(f) || /_js$|js$/.test(ch))
+        return resolveJsRecipe(ch, text);
+      return { kind: "code", label: f ? "." + f : "File", wide: false };
+    }
+
+    function resolveJsRecipe(ch, src) {
       const s = (src || "").toLowerCase();
-      if (ch.includes("cola") || s.includes("webcola") || s.includes("cola.d3adaptor") || s.includes("from 'webcola'"))
-        return { label: "Cola.js graph", scripts: [CDN.d3, CDN.cola], wide: true };
-      if (ch.includes("cytoscape") || s.includes("cytoscape"))
-        return { label: "Cytoscape", scripts: [CDN.cytoscape], wide: true };
-      if (ch.includes("chart") || s.includes("chart.js") || s.includes("new chart("))
-        return { label: "Chart.js", scripts: [CDN.chartjs], wide: true, canvas: true };
-      if (ch.includes("paper") || s.includes("paper.") || s.includes("paperscope"))
-        return { label: "Paper.js", scripts: [CDN.paper], wide: true, canvas: true };
-      if (ch.includes("three") || ch.includes("babylon") || s.includes("THREE.") || s.includes("from 'three'"))
-        return { label: "Three.js", scripts: [CDN.three], wide: true };
-      if (ch.includes("anime") || s.includes("anime("))
-        return { label: "Anime.js", scripts: [CDN.anime], wide: true };
-      if (ch.includes("echart") || s.includes("echarts"))
-        return { label: "ECharts", scripts: [CDN.echarts], wide: true };
-      if (ch.includes("d3") || s.includes("d3.") || s.includes("from 'd3'") || s.includes('from "d3"'))
-        return { label: "D3", scripts: [CDN.d3], wide: true };
-      // Generic JS graph / viz fallback — load d3 (common dependency)
-      if (ch.endsWith("_js") || ch.endsWith("js"))
-        return { label: ch || "JS", scripts: [CDN.d3], wide: true };
-      return null;
+      const hits = [
+        [/cola|webcola/, "cola_js"], [/cytoscape/, "cytoscape_js"],
+        [/chart\.js|new chart\(/, "chart_js"], [/echarts/, "apache-echarts"],
+        [/plotly/, "plotly_js"], [/highcharts/, "highcharts"],
+        [/paper\./, "paper_js"], [/p5\.|createcanvas/, "p5_js"],
+        [/three\.|from ['"]three['"]/, "three_js"], [/babylon/, "babylon_js"],
+        [/a-frame|aframe/, "a-frame"], [/anime\(/, "anime_js"], [/gsap/, "gsap"],
+        [/leaflet/, "leaflet_js"], [/maplibre|mapbox/, "maplibre-gl-js"],
+        [/tone\./, "tone_js"], [/vexflow|vex\./, "vexflow"], [/abcjs/, "abcjs"],
+        [/two\./, "two_js"], [/rough\./, "rough_js"], [/sigma/, "sigma_js"],
+        [/vis\.network|vis-network/, "vis_js"], [/go\.diagram|go\.graph/, "go_js"],
+        [/d3\.|from ['"]d3['"]/, "d3_js"], [/nomnoml/, "nomnoml"],
+      ];
+      for (const [re, key] of hits) {
+        if (re.test(s) || re.test(ch)) {
+          const rec = CHANNEL_VIEWERS[key] || CHANNEL_VIEWERS[normCh(key)];
+          if (rec) return { ...rec };
+        }
+      }
+      return jsRec(ch || "JavaScript", [CDN.d3]);
     }
 
     function stripEsmImports(src) {
@@ -1187,314 +1643,571 @@
         .replace(/^\s*export\s+default\s+/gm, "")
         .replace(/^\s*export\s+(const|let|var|function|class)\s+/gm, "$1 ");
     }
+    function stripFences(src, lang) {
+      let t = String(src || "").trim();
+      const re = lang ? new RegExp("^```(?:" + lang + ")?\\s*", "i") : /^```[a-z0-9_-]*\s*/i;
+      return t.replace(re, "").replace(/```\s*$/, "").trim();
+    }
 
     function buildJsHostHtml(src, recipe) {
-      const scripts = (recipe.scripts || [])
-        .map((u) => `<script src="${u}"><\/script>`)
-        .join("\n");
+      const scripts = (recipe.scripts || []).map((u) => `<script src="${u}"><\/script>`).join("\n");
+      const css = (recipe.css || []).map((u) => `<link rel="stylesheet" href="${u}"/>`).join("\n");
       const bodyBits = recipe.canvas
-        ? `<canvas id="c" width="800" height="480" style="display:block;width:100%;max-width:800px;margin:0 auto;background:#fafafa"></canvas>
-           <div id="root" style="width:100%;min-height:200px"></div>`
-        : `<div id="root" style="width:100%;min-height:360px"></div>`;
+        ? `<canvas id="c" width="800" height="480" style="display:block;width:100%;max-width:900px;margin:0 auto;background:#fafafa"></canvas><div id="root" style="width:100%;min-height:200px"></div>`
+        : recipe.map
+          ? `<div id="map" style="width:100%;height:420px;background:#e8eef5"></div><div id="root"></div>`
+          : `<div id="root" style="width:100%;min-height:360px"></div>`;
       const code = stripEsmImports(src);
-      return `<!DOCTYPE html>
-<html><head>
-<meta charset="utf-8"/>
-<style>
-  html,body{margin:0;padding:8px;background:#fff;color:#111;font:14px/1.4 system-ui,sans-serif}
-  svg{max-width:100%;height:auto;display:block;margin:0 auto}
-  #err{color:#b00020;white-space:pre-wrap;font:12px ui-monospace,monospace;padding:8px}
-</style>
-${scripts}
-</head><body>
-${bodyBits}
-<div id="err"></div>
+      const note = recipe.note ? `<p style="color:#666;font:12px system-ui"></p>` : "";
+      return `<!DOCTYPE html><html><head><meta charset="utf-8"/>${css}
+<style>html,body{margin:0;padding:8px;background:#fff;color:#111;font:14px/1.4 system-ui,sans-serif}
+svg{max-width:100%;height:auto;display:block;margin:0 auto}#err{color:#b00020;white-space:pre-wrap;font:12px ui-monospace,monospace;padding:8px}</style>
+${scripts}</head><body>
+${recipe.note ? `<p style="color:#666;font:12px system-ui">${String(recipe.note).replace(/</g,"&lt;")}</p>` : ""}
+${bodyBits}<div id="err"></div>
 <script>
 try {
-  // Common aliases so ESM-style demos work with UMD globals
-  if (typeof d3 !== "undefined" && typeof window.d3 === "undefined") window.d3 = d3;
-  if (typeof cola !== "undefined") { window.cola = cola; window.webcola = cola; }
-  if (typeof paper !== "undefined" && paper.install) { paper.install(window); const c=document.getElementById("c"); if(c) paper.setup(c); }
+  if (typeof d3!=="undefined") window.d3=d3;
+  if (typeof cola!=="undefined"){window.cola=cola;window.webcola=cola;}
+  if (typeof paper!=="undefined"&&paper.install){paper.install(window);const c=document.getElementById("c");if(c)paper.setup(c);}
+  if (typeof Chart!=="undefined") window.Chart=Chart;
+  if (typeof echarts!=="undefined") window.echarts=echarts;
+  if (typeof Plotly!=="undefined") window.Plotly=Plotly;
+  if (typeof THREE!=="undefined") window.THREE=THREE;
+  if (typeof L!=="undefined") window.L=L;
+  if (typeof maplibregl!=="undefined") window.maplibregl=maplibregl;
+  if (typeof Tone!=="undefined") window.Tone=Tone;
+  if (typeof Vex!=="undefined") window.Vex=Vex;
+  if (typeof go!=="undefined") window.go=go;
+  if (typeof nomnoml!=="undefined") window.nomnoml=nomnoml;
 ${code}
-} catch (e) {
-  document.getElementById("err").textContent = String(e && e.stack || e);
-  console.error(e);
-}
-<\/script>
-</body></html>`;
+} catch(e){ document.getElementById("err").textContent=String(e&&e.stack||e); console.error(e); }
+<\/script></body></html>`;
     }
 
     function buildMermaidHtml(src) {
-      const body = String(src || "").replace(/^```(?:mermaid)?\s*/i, "").replace(/```\s*$/, "").trim();
+      const body = stripFences(src, "mermaid");
       return `<!DOCTYPE html><html><head><meta charset="utf-8"/>
 <script src="${CDN.mermaid}"><\/script>
-<style>body{margin:16px;background:#fff} .mermaid{display:flex;justify-content:center}</style>
-</head><body>
-<pre class="mermaid">${body.replace(/</g, "&lt;")}</pre>
-<script>mermaid.initialize({startOnLoad:true,theme:"neutral"});<\/script>
+<style>body{margin:16px;background:#fff}.mermaid{display:flex;justify-content:center}</style></head><body>
+<pre class="mermaid">${body.replace(/</g,"&lt;")}</pre>
+<script>mermaid.initialize({startOnLoad:true,theme:"neutral",securityLevel:"loose"});<\/script>
 </body></html>`;
     }
 
     function buildGraphvizHtml(src) {
-      const dot = String(src || "").replace(/^```(?:dot|graphviz)?\s*/i, "").replace(/```\s*$/, "").trim();
-      // Use viz-js lightweight via hpcc wasm graphviz if available; fallback kroki img
-      const b64 = btoa(unescape(encodeURIComponent(dot)));
+      const dot = stripFences(src, "dot|graphviz");
       return `<!DOCTYPE html><html><head><meta charset="utf-8"/>
-<style>body{margin:16px;background:#fff;text-align:center} #out svg{max-width:100%}</style>
-</head><body>
-<div id="out">Rendering Graphviz…</div>
-<script src="https://cdn.jsdelivr.net/npm/@viz-js/viz@3.7.0/lib/viz-standalone.js"><\/script>
+<style>body{margin:16px;background:#fff;text-align:center}#out svg{max-width:100%}</style></head><body>
+<div id="out">Rendering Graphviz (local Viz.js)…</div>
+<script src="${CDN.viz}"><\/script>
 <script>
-(async () => {
-  try {
-    const viz = await Viz.instance();
-    const svg = viz.renderSVGElement(${JSON.stringify(dot)});
-    const out = document.getElementById("out");
-    out.innerHTML = "";
-    out.appendChild(svg);
-  } catch (e) {
-    // Kroki fallback
-    document.getElementById("out").innerHTML =
-      '<p style="color:#666">Local Graphviz failed; trying Kroki…</p>' +
-      '<img alt="graphviz" style="max-width:100%" src="https://kroki.io/graphviz/svg/' +
-      ${JSON.stringify(b64)} + '"/>';
+(async()=>{
+  const dot=${JSON.stringify(dot)};
+  try{
+    const viz=await Viz.instance();
+    const svg=viz.renderSVGElement(dot);
+    const out=document.getElementById("out"); out.innerHTML=""; out.appendChild(svg);
+  }catch(e){
+    document.getElementById("out").innerHTML="<pre style='text-align:left'>"+String(e).replace(/</g,"&lt;")+"</pre><pre style='text-align:left;background:#f6f6f6;padding:8px'>"+dot.replace(/</g,"&lt;")+"</pre>";
   }
 })();
-<\/script>
-</body></html>`;
+<\/script></body></html>`;
     }
 
     function buildPlantumlHtml(src) {
-      // Kroki plantuml (encode raw path via POST is better; use GET with deflate is hard —
-      // serve as img via plantuml server ~1.plantuml.com with encoded, or show + kroki form)
-      const raw = String(src || "").replace(/^```(?:plantuml|puml)?\s*/i, "").replace(/```\s*$/, "").trim();
+      const raw = stripFences(src, "plantuml|puml");
       return `<!DOCTYPE html><html><head><meta charset="utf-8"/>
-<style>body{margin:16px;background:#fff;text-align:center;font:14px system-ui}</style>
-</head><body>
-<p style="color:#666">PlantUML preview (Kroki)</p>
-<div id="out">Loading…</div>
+<script src="${CDN.plantumlEncoder}"><\/script>
+<style>body{margin:16px;background:#fff;text-align:center;font:14px system-ui}img{max-width:100%}</style></head><body>
+<p style="color:#666">PlantUML (plantuml.com encoder — not Kroki)</p>
+<div id="out">Encoding…</div>
 <script>
-(async () => {
-  try {
-    const r = await fetch("https://kroki.io/plantuml/svg", {
-      method: "POST",
-      headers: { "Content-Type": "text/plain" },
-      body: ${JSON.stringify(raw)},
-    });
-    if (!r.ok) throw new Error("HTTP " + r.status);
-    const svg = await r.text();
-    document.getElementById("out").innerHTML = svg;
-  } catch (e) {
-    document.getElementById("out").innerHTML =
-      "<pre style='text-align:left;background:#f6f6f6;padding:12px;overflow:auto'>" +
-      ${JSON.stringify(raw)}.replace(/</g,"&lt;") + "</pre><p style='color:#b00'>" + e + "</p>";
+try{
+  const raw=${JSON.stringify(raw)};
+  const enc=window.plantumlEncoder.encode(raw);
+  document.getElementById("out").innerHTML='<img alt="plantuml" src="https://www.plantuml.com/plantuml/svg/'+enc+'"/>';
+}catch(e){
+  document.getElementById("out").innerHTML="<pre style='text-align:left'>"+${JSON.stringify(raw)}.replace(/</g,"&lt;")+"</pre><p style='color:#b00'>"+e+"</p>";
+}
+<\/script></body></html>`;
+    }
+
+    function buildNomnomlHtml(src) {
+      const raw = stripFences(src, "nomnoml");
+      return `<!DOCTYPE html><html><head><meta charset="utf-8"/>
+<script src="${CDN.nomnoml}"><\/script>
+<style>body{margin:16px;background:#fff;text-align:center}canvas{max-width:100%}</style></head><body>
+<canvas id="c"></canvas>
+<pre id="err" style="color:#b00;text-align:left"></pre>
+<script>
+try{
+  const src=${JSON.stringify(raw)};
+  const canvas=document.getElementById("c");
+  nomnoml.draw(canvas, src);
+}catch(e){ document.getElementById("err").textContent=String(e); }
+<\/script></body></html>`;
+    }
+
+    function buildBpmnHtml(src) {
+      const xml = stripFences(src, "xml|bpmn");
+      return `<!DOCTYPE html><html><head><meta charset="utf-8"/>
+<link rel="stylesheet" href="${CDN.bpmnCss}"/>
+<link rel="stylesheet" href="${CDN.bpmnCss2}"/>
+<link rel="stylesheet" href="${CDN.bpmnFont}"/>
+<script src="${CDN.bpmnJs}"><\/script>
+<style>html,body,#c{height:100%;margin:0}#c{height:480px;border:1px solid #ddd}</style></head><body>
+<div id="c"></div>
+<script>
+(async()=>{
+  const xml=${JSON.stringify(xml)};
+  const viewer=new BpmnJS({container:"#c"});
+  try{ await viewer.importXML(xml); viewer.get("canvas").zoom("fit-viewport"); }
+  catch(e){ document.getElementById("c").innerHTML="<pre>"+String(e)+"</pre><pre>"+xml.replace(/</g,"&lt;").slice(0,4000)+"</pre>"; }
+})();
+<\/script></body></html>`;
+    }
+
+    function buildDrawioHtml(src) {
+      // diagrams.net can open compressed mxfile via postMessage; simplest: embed viewer with XML in local iframe as SVG export note
+      const xml = stripFences(src, "xml");
+      // Use diagrams.net lightbox with base64 raw xml (works for many mxfiles)
+      return `<!DOCTYPE html><html><head><meta charset="utf-8"/>
+<style>body{margin:0;background:#fff}iframe{border:0;width:100%;height:520px}</style></head><body>
+<p style="margin:8px;font:13px system-ui;color:#555">draw.io / diagrams.net viewer</p>
+<iframe id="f" src="https://viewer.diagrams.net/?highlight=0000ff&editable=false&layers=1&nav=1"></iframe>
+<script>
+// Fallback: show source if viewer can't load remote
+const xml=${JSON.stringify(xml)};
+const f=document.getElementById("f");
+f.addEventListener("load",()=>{
+  try{
+    f.contentWindow.postMessage(JSON.stringify({action:"load",xml:xml}),"*");
+  }catch(e){}
+});
+setTimeout(()=>{
+  // Always expose raw for offline
+  if(!document.getElementById("raw")){
+    const pre=document.createElement("pre");
+    pre.id="raw"; pre.style.cssText="margin:12px;padding:12px;background:#f6f6f6;max-height:200px;overflow:auto;font:11px monospace";
+    pre.textContent=xml.slice(0,8000);
+    document.body.appendChild(pre);
+  }
+}, 800);
+<\/script></body></html>`;
+    }
+
+    function buildYumlHtml(src) {
+      const raw = stripFences(src).replace(/\n/g, ",");
+      const enc = encodeURIComponent(raw);
+      return `<!DOCTYPE html><html><head><meta charset="utf-8"/>
+<style>body{margin:16px;text-align:center;background:#fff}</style></head><body>
+<p style="color:#666;font:13px system-ui">yUML (yuml.me)</p>
+<img alt="yuml" src="https://yuml.me/diagram/scruffy/class/${enc}"/>
+</body></html>`;
+    }
+
+    function buildBlockdiagHtml(src, diagType) {
+      // Local-ish: use plantuml-style ASCII not available; render via Kroki only as last resort —
+      // Primary: try to display as prettified structure + optional plantuml conversion tip
+      // Use ditaa-less approach: fetch from blockdiag online is dead; use Kroki as optional secondary
+      const raw = stripFences(src);
+      const type = diagType || "blockdiag";
+      return `<!DOCTYPE html><html><head><meta charset="utf-8"/>
+<style>body{margin:16px;background:#fff;font:14px system-ui}#out{text-align:center}pre{text-align:left;background:#f6f6f6;padding:12px;overflow:auto}</style></head><body>
+<p style="color:#666">${type} — local source view; attempting public renderer…</p>
+<div id="out">Rendering…</div>
+<script>
+(async()=>{
+  const raw=${JSON.stringify(raw)};
+  const type=${JSON.stringify(type)};
+  // 1) try kroki only as fallback after plantuml.com fails for non-uml
+  try{
+    const r=await fetch("https://kroki.io/"+type+"/svg",{method:"POST",headers:{"Content-Type":"text/plain"},body:raw});
+    if(r.ok){ document.getElementById("out").innerHTML=await r.text(); return; }
+  }catch(e){}
+  document.getElementById("out").innerHTML="<pre>"+raw.replace(/</g,"&lt;")+"</pre><p style='color:#888'>No browser-native ${type} engine; source shown. Install blockdiag or use Process→SVG.</p>";
+})();
+<\/script></body></html>`;
+    }
+
+    function buildOsmdHtml(src) {
+      const xml = stripFences(src, "xml");
+      return `<!DOCTYPE html><html><head><meta charset="utf-8"/>
+<script src="${CDN.osmd}"><\/script>
+<style>body{margin:8px;background:#fff}#c{width:100%;overflow:auto}</style></head><body>
+<div id="c"></div>
+<script>
+(async()=>{
+  const xml=${JSON.stringify(xml)};
+  try{
+    const osmd=new opensheetmusicdisplay.OpenSheetMusicDisplay("c",{autoResize:true,backend:"svg",drawingParameters:"compacttight"});
+    await osmd.load(xml); osmd.render();
+  }catch(e){
+    document.getElementById("c").innerHTML="<pre style='color:#b00'>"+String(e)+"</pre><pre>"+xml.replace(/</g,"&lt;").slice(0,5000)+"</pre>";
   }
 })();
-<\/script>
-</body></html>`;
+<\/script></body></html>`;
     }
 
     function buildMarkdownHtml(src) {
       return `<!DOCTYPE html><html><head><meta charset="utf-8"/>
 <script src="${CDN.marked}"><\/script>
-<style>
-  body{margin:0;padding:20px;background:#fff;color:#111;font:15px/1.55 system-ui,sans-serif;max-width:720px}
-  pre{background:#f4f4f5;padding:12px;overflow:auto;border-radius:8px}
-  code{font-family:ui-monospace,monospace;font-size:.9em}
-  img{max-width:100%}
-</style></head><body>
+<style>body{margin:0;padding:20px;background:#fff;color:#111;font:15px/1.55 system-ui,sans-serif;max-width:760px}
+pre{background:#f4f4f5;padding:12px;overflow:auto;border-radius:8px}code{font-family:ui-monospace,monospace;font-size:.9em}img{max-width:100%}</style></head><body>
 <div id="c"></div>
-<script>
-document.getElementById("c").innerHTML = marked.parse(${JSON.stringify(String(src || ""))});
-<\/script>
+<script>document.getElementById("c").innerHTML=marked.parse(${JSON.stringify(String(src||""))});<\/script>
 </body></html>`;
     }
 
     function buildVegaHtml(specText) {
+      let spec = specText;
+      try { JSON.parse(specText); } catch(_) {
+        spec = JSON.stringify({description:"invalid",data:{values:[]},mark:"point",encoding:{}});
+      }
       return `<!DOCTYPE html><html><head><meta charset="utf-8"/>
-<script src="${CDN.vega}"><\/script>
-<script src="${CDN.vegaLite}"><\/script>
-<script src="${CDN.vegaEmbed}"><\/script>
-<style>body{margin:12px;background:#fff} #vis{width:100%}</style>
-</head><body><div id="vis"></div>
+<script src="${CDN.vega}"><\/script><script src="${CDN.vegaLite}"><\/script><script src="${CDN.vegaEmbed}"><\/script>
+<style>body{margin:12px;background:#fff}#vis{width:100%}</style></head><body><div id="vis"></div>
+<script>vegaEmbed("#vis",${spec},{actions:false}).catch(e=>{document.getElementById("vis").textContent=String(e);});<\/script>
+</body></html>`;
+    }
+
+    function buildKatexHtml(src) {
+      const body = stripFences(src, "latex|tex|katex");
+      return `<!DOCTYPE html><html><head><meta charset="utf-8"/>
+<link rel="stylesheet" href="${CDN.katexCss}"/>
+<script src="${CDN.katex}"><\/script><script src="${CDN.katexAuto}"><\/script>
+<style>body{margin:20px;background:#fff;font:16px/1.6 system-ui;max-width:720px}</style></head><body>
+<div id="c"></div>
 <script>
-vegaEmbed("#vis", ${specText}, {actions:false}).catch(e => {
-  document.getElementById("vis").textContent = String(e);
-});
+const src=${JSON.stringify(body)};
+const el=document.getElementById("c");
+try{
+  if(/\\$|\\\\\\[|\\\\begin/.test(src)){
+    el.innerHTML=src.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/\\n/g,"<br/>");
+    renderMathInElement(el,{delimiters:[
+      {left:"$$",right:"$$",display:true},{left:"$",right:"$",display:false},
+      {left:"\\\\[",right:"\\\\]",display:true},{left:"\\\\(",right:"\\\\)",display:false}
+    ],throwOnError:false});
+  } else {
+    katex.render(src.trim(), el, {displayMode:true, throwOnError:false});
+  }
+}catch(e){ el.textContent=src+"\\n"+e; }
 <\/script></body></html>`;
     }
 
-    function looksHtml(text) {
-      const head = (text || "").trimStart().slice(0, 240).toLowerCase();
-      return (
-        head.startsWith("<!doctype html") ||
-        head.startsWith("<html") ||
-        (head.startsWith("<") && (head.includes("<body") || head.includes("<svg")))
-      );
+    function buildAbcHtml(src) {
+      const abc = stripFences(src, "abc");
+      return `<!DOCTYPE html><html><head><meta charset="utf-8"/>
+<script src="${CDN.abcjs}"><\/script>
+<style>body{margin:12px;background:#fff}#p{overflow:auto}</style></head><body>
+<div id="p"></div>
+<script>try{ABCJS.renderAbc("p",${JSON.stringify(abc)},{responsive:"resize"});}catch(e){document.getElementById("p").textContent=String(e);}<\/script>
+</body></html>`;
     }
 
-    function looksSvg(text) {
-      const t = (text || "").trimStart().slice(0, 200).toLowerCase();
-      return t.startsWith("<svg") || (t.startsWith("<?xml") && t.includes("<svg"));
+    function buildWavedromHtml(src) {
+      const body = stripFences(src, "wavedrom|json");
+      return `<!DOCTYPE html><html><head><meta charset="utf-8"/>
+<script src="${CDN.wavedromSkin}"><\/script><script src="${CDN.wavedrom}"><\/script>
+<style>body{margin:16px;background:#fff}</style></head><body>
+<script type="WaveDrom">
+${body}
+<\/script>
+<script>window.addEventListener("load",()=>{window.WaveDrom&&WaveDrom.ProcessAll();});<\/script>
+</body></html>`;
     }
 
-    function looksMermaid(text, fmt, channel) {
-      if (["mmd", "mermaid"].includes(fmt) || (channel || "").includes("mermaid")) return true;
-      const t = (text || "").trim();
-      return /^(graph|flowchart|sequenceDiagram|classDiagram|stateDiagram|erDiagram|gantt|pie|mindmap)\b/m.test(t);
-    }
-
-    function looksDot(text, fmt, channel) {
-      if (["dot", "gv"].includes(fmt) || (channel || "").includes("graphviz")) return true;
-      return /^\s*(strict\s+)?(di)?graph\b/i.test(text || "");
-    }
-
-    function looksPlantuml(text, fmt, channel) {
-      if (["puml", "plantuml"].includes(fmt) || (channel || "").includes("plantuml")) return true;
-      return /@startuml/i.test(text || "");
-    }
-
-    function looksVega(text, fmt, channel) {
-      if ((channel || "").includes("vega") || (channel || "").includes("altair")) return true;
-      try {
-        const j = JSON.parse(text);
-        return !!(j && (j.$schema || j.mark || j.layer || j.vconcat || j.hconcat));
-      } catch (_) {
-        return false;
+    function buildLottieHtml(srcOrUrl, isUrl) {
+      if (isUrl) {
+        return `<!DOCTYPE html><html><head><meta charset="utf-8"/><script src="${CDN.lottie}"><\/script>
+<style>body{margin:0;display:flex;justify-content:center;background:#111}#c{width:100%;max-width:480px}</style></head><body><div id="c"></div>
+<script>lottie.loadAnimation({container:document.getElementById("c"),renderer:"svg",loop:true,autoplay:true,path:${JSON.stringify(srcOrUrl)}});<\/script></body></html>`;
       }
+      return `<!DOCTYPE html><html><head><meta charset="utf-8"/><script src="${CDN.lottie}"><\/script>
+<style>body{margin:0;display:flex;justify-content:center;background:#111}#c{width:100%;max-width:480px}</style></head><body><div id="c"></div>
+<script>lottie.loadAnimation({container:document.getElementById("c"),renderer:"svg",loop:true,autoplay:true,animationData:${srcOrUrl}});<\/script></body></html>`;
     }
 
-    function resolveChannel(o) {
-      return (
-        o.channel ||
-        o.text_format ||
-        state.generator?.slug ||
-        state.detail?.summary?.text_format ||
-        ""
-      ).toString();
+    function buildCodeHighlightHtml(src, lang) {
+      return `<!DOCTYPE html><html><head><meta charset="utf-8"/>
+<link rel="stylesheet" href="${CDN.hljsCss}"/>
+<script src="${CDN.hljs}"><\/script>
+<style>body{margin:0;background:#0d1117}pre{margin:0;padding:16px;overflow:auto;max-height:520px;font:12px/1.45 ui-monospace,monospace}</style></head><body>
+<pre><code class="language-${lang||"plaintext"}"></code></pre>
+<script>
+document.querySelector("code").textContent=${JSON.stringify(String(src||"").slice(0,20000))};
+hljs.highlightAll();
+<\/script></body></html>`;
     }
 
     function iframeSrcdoc(html, tall) {
       const el = document.createElement("iframe");
-      el.setAttribute("sandbox", "allow-scripts allow-same-origin");
+      el.setAttribute("sandbox", "allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox");
       el.setAttribute("title", "preview");
       el.className = tall ? "tall" : "";
       el.srcdoc = html;
       return el;
     }
-
     function codeDetails(src, label) {
       const d = document.createElement("details");
       d.className = "raw";
       d.innerHTML = `<summary>${esc(label || "Show source")}</summary><pre class="mono"></pre>`;
-      d.querySelector("pre").textContent = (src || "").slice(0, 12000);
+      d.querySelector("pre").textContent = (src || "").slice(0, 16000);
       return d;
+    }
+    function codeBlock(src, hint) {
+      const wrap = document.createElement("div");
+      if (hint) {
+        const p = document.createElement("p");
+        p.style.cssText = "margin:0 0 8px;font-size:.8rem;color:var(--muted)";
+        p.textContent = hint;
+        wrap.appendChild(p);
+      }
+      const pre = document.createElement("pre");
+      pre.className = "mono";
+      pre.textContent = (src || "").slice(0, 16000);
+      wrap.appendChild(pre);
+      return wrap;
+    }
+
+    /** Prefer sibling rendered assets (svg/png/html/pdf) next to DSL sources */
+    async function trySiblingRenders(o) {
+      const path = o.path || o.rel_path || "";
+      const base = path.replace(/\.[^.]+$/, "");
+      const mediaBase = (o.media_url || "").replace(/\?.*$/, "");
+      // media_url like /api/media?path=...
+      const q = new URL(o.media_url, location.origin);
+      const rel = q.searchParams.get("path") || "";
+      const relBase = rel.replace(/\.[^.]+$/, "");
+      const candidates = ["svg", "png", "html", "htm", "pdf", "jpg", "webp"];
+      for (const ext of candidates) {
+        const tryPath = relBase + "." + ext;
+        const url = "/api/media?path=" + encodeURIComponent(tryPath);
+        try {
+          const r = await fetch(url, { method: "GET" });
+          if (r.ok && Number(r.headers.get("content-length") || "1") > 0) {
+            const ct = r.headers.get("content-type") || "";
+            return { ext, url, ct };
+          }
+        } catch (_) {}
+      }
+      return null;
     }
 
     async function mountViewer(stage, o) {
       const fmt = (o.format || "").toLowerCase();
-      const channel = resolveChannel(o).toLowerCase();
+      const channel = resolveChannel(o);
       const url = o.media_url;
+      const binaryKinds = new Set(["img", "video", "audio", "pdf", "download"]);
 
-      // Binary / direct media
-      if (["png", "jpg", "jpeg", "webp", "gif"].includes(fmt)) {
-        stage.innerHTML = `<img src="${url}" alt="" />`;
-        return { label: "Image", wide: false };
+      const extRec = EXT_VIEWERS[fmt];
+      if (extRec && binaryKinds.has(extRec.kind)) {
+        if (extRec.kind === "img") { stage.innerHTML = `<img src="${url}" alt="" />`; return { label: extRec.label || "Image", wide: false }; }
+        if (extRec.kind === "video") { stage.innerHTML = `<video controls src="${url}"></video>`; return { label: "Video", wide: true }; }
+        if (extRec.kind === "audio") { stage.innerHTML = `<audio controls src="${url}"></audio>`; return { label: "Audio", wide: false }; }
+        if (extRec.kind === "pdf") { stage.innerHTML = `<iframe class="tall" src="${url}" title="pdf"></iframe>`; return { label: "PDF", wide: true }; }
+        if (extRec.kind === "download") { stage.innerHTML = `<a class="btn" href="${url}" download>Download .${esc(fmt)}</a>`; return { label: extRec.label || "File", wide: false }; }
       }
-      if (fmt === "svg") {
-        stage.innerHTML = `<img src="${url}" alt="" />`;
-        return { label: "SVG", wide: false };
-      }
-      if (["mp4", "webm", "mov"].includes(fmt)) {
-        stage.innerHTML = `<video controls src="${url}"></video>`;
-        return { label: "Video", wide: true };
-      }
-      if (["mp3", "wav", "ogg", "flac"].includes(fmt)) {
-        stage.innerHTML = `<audio controls src="${url}"></audio>`;
-        return { label: "Audio", wide: false };
-      }
+      if (fmt === "svg") { stage.innerHTML = `<img src="${url}" alt="svg" />`; return { label: "SVG", wide: true }; }
       if (["html", "htm"].includes(fmt)) {
-        stage.innerHTML = "";
+        const f = document.createElement("iframe");
+        f.sandbox = "allow-scripts allow-same-origin"; f.src = url; f.className = "tall";
+        stage.innerHTML = ""; stage.appendChild(f); return { label: "HTML", wide: true };
+      }
+
+      let text = "";
+      try { text = await (await fetch(url)).text(); }
+      catch (e) { stage.innerHTML = `<div class="empty">Could not load file</div>`; return { label: "Error", wide: false }; }
+
+      const rec = sniffViewer(fmt, channel, text);
+      const kind = rec.kind;
+      const label = rec.label || kind;
+      stage.innerHTML = "";
+
+      // Sibling rendered media for DSL sources
+      if (["plantuml","mermaid","graphviz","nomnoml","blockdiag","code","img_or_code","lilypond"].includes(kind) || rec.hint) {
+        const sib = await trySiblingRenders(o);
+        if (sib) {
+          if (sib.ext === "html" || sib.ext === "htm") {
+            const f = document.createElement("iframe"); f.sandbox="allow-scripts allow-same-origin"; f.src=sib.url; f.className="tall";
+            stage.appendChild(f);
+          } else if (sib.ext === "pdf") {
+            stage.innerHTML = `<iframe class="tall" src="${sib.url}" title="pdf"></iframe>`;
+          } else {
+            stage.innerHTML = `<img src="${sib.url}" alt="render" />`;
+          }
+          stage.appendChild(codeDetails(text, "Show source (" + (fmt||"dsl") + ")"));
+          return { label: label + " (rendered)", wide: true };
+        }
+      }
+
+      if (kind === "html" || (kind === "js" && /<!doctype html|<html/i.test(text.trimStart().slice(0,200)))) {
         const f = document.createElement("iframe");
         f.sandbox = "allow-scripts allow-same-origin";
-        f.src = url;
+        if (!["html","htm"].includes(fmt) && /<!doctype html|<html/i.test(text)) { f.srcdoc = text; }
+        else { f.src = url; }
         f.className = "tall";
-        stage.appendChild(f);
+        stage.appendChild(f); stage.appendChild(codeDetails(text, "Show source"));
         return { label: "HTML", wide: true };
       }
-
-      // Text-ish formats — fetch then pick viewer
-      let text = "";
-      try {
-        const r = await fetch(url);
-        text = await r.text();
-      } catch (e) {
-        stage.innerHTML = `<div class="empty">Could not load file</div>`;
-        return { label: "Error", wide: false };
-      }
-
-      if (looksHtml(text)) {
-        stage.innerHTML = "";
-        const f = document.createElement("iframe");
-        f.sandbox = "allow-scripts allow-same-origin";
-        f.src = url;
-        f.className = "tall";
-        stage.appendChild(f);
-        stage.appendChild(codeDetails(text, "Show source"));
-        return { label: "HTML document", wide: true };
-      }
-      if (looksSvg(text) || fmt === "svg") {
+      if (kind === "svg") {
         stage.innerHTML = `<img src="${url}" alt="svg" />`;
         stage.appendChild(codeDetails(text, "Show SVG source"));
-        return { label: "SVG", wide: false };
+        return { label: "SVG", wide: true };
       }
-      if (looksMermaid(text, fmt, channel)) {
-        stage.innerHTML = "";
+      if (kind === "mermaid") {
         stage.appendChild(iframeSrcdoc(buildMermaidHtml(text), true));
         stage.appendChild(codeDetails(text, "Show Mermaid source"));
-        return { label: "Mermaid diagram", wide: true };
+        return { label, wide: true };
       }
-      if (looksDot(text, fmt, channel)) {
-        stage.innerHTML = "";
+      if (kind === "graphviz") {
         stage.appendChild(iframeSrcdoc(buildGraphvizHtml(text), true));
         stage.appendChild(codeDetails(text, "Show DOT source"));
-        return { label: "Graphviz", wide: true };
+        return { label, wide: true };
       }
-      if (looksPlantuml(text, fmt, channel)) {
-        stage.innerHTML = "";
+      if (kind === "plantuml") {
         stage.appendChild(iframeSrcdoc(buildPlantumlHtml(text), true));
         stage.appendChild(codeDetails(text, "Show PlantUML source"));
-        return { label: "PlantUML", wide: true };
+        return { label, wide: true };
       }
-      if (looksVega(text, fmt, channel) || (fmt === "json" && looksVega(text, fmt, channel))) {
-        stage.innerHTML = "";
+      if (kind === "nomnoml") {
+        stage.appendChild(iframeSrcdoc(buildNomnomlHtml(text), true));
+        stage.appendChild(codeDetails(text, "Show Nomnoml source"));
+        return { label, wide: true };
+      }
+      if (kind === "bpmn") {
+        stage.appendChild(iframeSrcdoc(buildBpmnHtml(text), true));
+        stage.appendChild(codeDetails(text, "Show BPMN XML"));
+        return { label, wide: true };
+      }
+      if (kind === "drawio") {
+        stage.appendChild(iframeSrcdoc(buildDrawioHtml(text), true));
+        stage.appendChild(codeDetails(text, "Show draw.io XML"));
+        return { label, wide: true };
+      }
+      if (kind === "yuml") {
+        stage.appendChild(iframeSrcdoc(buildYumlHtml(text), true));
+        stage.appendChild(codeDetails(text, "Show yUML source"));
+        return { label, wide: true };
+      }
+      if (kind === "blockdiag") {
+        stage.appendChild(iframeSrcdoc(buildBlockdiagHtml(text, rec.diag || "blockdiag"), true));
+        stage.appendChild(codeDetails(text, "Show source"));
+        return { label, wide: true };
+      }
+      if (kind === "osmd") {
+        stage.appendChild(iframeSrcdoc(buildOsmdHtml(text), true));
+        stage.appendChild(codeDetails(text, "Show MusicXML"));
+        return { label, wide: true };
+      }
+      if (kind === "vega") {
         stage.appendChild(iframeSrcdoc(buildVegaHtml(text), true));
         stage.appendChild(codeDetails(text, "Show Vega spec"));
-        return { label: "Vega / Vega-Lite", wide: true };
+        return { label, wide: true };
       }
-      if (["md", "markdown"].includes(fmt) || channel.includes("markdown")) {
-        stage.innerHTML = "";
+      if (kind === "markdown") {
         stage.appendChild(iframeSrcdoc(buildMarkdownHtml(text), true));
         stage.appendChild(codeDetails(text, "Show Markdown"));
-        return { label: "Markdown", wide: true };
+        return { label, wide: true };
       }
-
-      // JS / TS / graph libraries (cola, d3, …)
-      if (["js", "ts", "tsx", "jsx", "mjs", "cjs"].includes(fmt) || channel.endsWith("_js") || channel.endsWith("js")) {
-        const recipe = jsHostRecipe(channel, text) || { label: "JavaScript", scripts: [CDN.d3], wide: true };
-        stage.innerHTML = "";
+      if (kind === "katex") {
+        stage.appendChild(iframeSrcdoc(buildKatexHtml(text), true));
+        stage.appendChild(codeDetails(text, "Show TeX source"));
+        return { label, wide: true };
+      }
+      if (kind === "abc") {
+        stage.appendChild(iframeSrcdoc(buildAbcHtml(text), true));
+        stage.appendChild(codeDetails(text, "Show ABC source"));
+        return { label, wide: true };
+      }
+      if (kind === "wavedrom") {
+        stage.appendChild(iframeSrcdoc(buildWavedromHtml(text), true));
+        stage.appendChild(codeDetails(text, "Show WaveJSON"));
+        return { label, wide: true };
+      }
+      if (kind === "lottie") {
+        try { JSON.parse(text); stage.appendChild(iframeSrcdoc(buildLottieHtml(text, false), true)); }
+        catch(_) { stage.appendChild(iframeSrcdoc(buildLottieHtml(url, true), true)); }
+        return { label: "Lottie", wide: true };
+      }
+      if (kind === "json") {
+        try {
+          const j = JSON.parse(text);
+          if (j && (j.$schema || j.mark || j.layer || j.vconcat || j.hconcat)) {
+            stage.appendChild(iframeSrcdoc(buildVegaHtml(text), true));
+            stage.appendChild(codeDetails(text, "Show Vega spec"));
+            return { label: "Vega / Vega-Lite", wide: true };
+          }
+          if (j && (j.v === "5" || j.layers) && (j.fr || j.op || j.assets)) {
+            stage.appendChild(iframeSrcdoc(buildLottieHtml(text, false), true));
+            return { label: "Lottie", wide: true };
+          }
+          if (j && (j.signal || j.edge) && (Array.isArray(j.signal) || j.head)) {
+            stage.appendChild(iframeSrcdoc(buildWavedromHtml(text), true));
+            return { label: "WaveDrom", wide: true };
+          }
+          stage.appendChild(iframeSrcdoc(buildCodeHighlightHtml(JSON.stringify(j, null, 2), "json"), true));
+        } catch(_) { stage.appendChild(codeBlock(text)); }
+        return { label: "JSON", wide: true };
+      }
+      if (kind === "xml") {
+        if (/bpmn/i.test(text)) {
+          stage.appendChild(iframeSrcdoc(buildBpmnHtml(text), true));
+          return { label: "BPMN", wide: true };
+        }
+        if (/score-partwise|mei/i.test(text)) {
+          stage.appendChild(iframeSrcdoc(buildOsmdHtml(text), true));
+          return { label: "MusicXML", wide: true };
+        }
+        if (/mxfile|draw\.io/i.test(text)) {
+          stage.appendChild(iframeSrcdoc(buildDrawioHtml(text), true));
+          return { label: "draw.io", wide: true };
+        }
+        stage.appendChild(iframeSrcdoc(buildCodeHighlightHtml(text, "xml"), true));
+        return { label: "XML", wide: true };
+      }
+      if (kind === "js") {
+        const recipe = {
+          label,
+          scripts: rec.scripts || resolveJsRecipe(normCh(channel), text).scripts || [CDN.d3],
+          css: rec.css, canvas: rec.canvas, map: rec.map, note: rec.note, wide: true,
+        };
         stage.appendChild(iframeSrcdoc(buildJsHostHtml(text, recipe), true));
         stage.appendChild(codeDetails(text, "Show source code"));
         return { label: recipe.label, wide: true };
       }
+      if (kind === "img" || kind === "img_or_code") {
+        // try as image url first
+        const img = document.createElement("img");
+        img.src = url; img.alt = "";
+        img.onerror = () => {
+          stage.innerHTML = "";
+          stage.appendChild(iframeSrcdoc(buildCodeHighlightHtml(text, fmt || "plaintext"), true));
+          if (rec.hint) stage.appendChild(codeBlock("", rec.hint));
+        };
+        stage.appendChild(img);
+        stage.appendChild(codeDetails(text, "Show source"));
+        return { label, wide: true };
+      }
+      if (kind === "pdf") {
+        stage.innerHTML = `<iframe class="tall" src="${url}" title="pdf"></iframe>`;
+        return { label: "PDF", wide: true };
+      }
+      if (kind === "download") {
+        stage.innerHTML = `<a class="btn" href="${url}" download>Download</a>`;
+        return { label, wide: false };
+      }
 
-      // Fallback: monospace source
-      stage.innerHTML = "";
-      const pre = document.createElement("pre");
-      pre.className = "mono";
-      pre.textContent = text.slice(0, 12000);
-      stage.appendChild(pre);
-      return { label: fmt ? `.${fmt}` : "File", wide: false };
+      // highlighted source fallback for everything else
+      stage.appendChild(iframeSrcdoc(buildCodeHighlightHtml(text, fmt || "plaintext"), true));
+      if (rec.hint) {
+        const p = document.createElement("p");
+        p.style.cssText = "margin:8px 0 0;font-size:.8rem;color:var(--muted)";
+        p.textContent = rec.hint;
+        stage.appendChild(p);
+      }
+      return { label, wide: true };
     }
 
     function renderMedia(outputs) {

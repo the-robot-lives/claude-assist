@@ -1,7 +1,7 @@
 replicas: 1
 domain: foryou.therobotlives.com
 backend:
-  image: ops.noizu.com/foryou.therobotlives.com/backend:v1.0.6
+  image: ops.noizu.com/foryou.therobotlives.com/backend:v1.0.7
   port: 4000
   resources:
     requests:
