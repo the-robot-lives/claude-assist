@@ -255,7 +255,7 @@ chart_path_overrides:
   infra-portal: projects/infra.noizu.com/helm/infra-portal
   aifighter: projects/aifighter.com/helm/aifighter
   therobotknows: projects/therobotknows.com/helm/therobotknows
-  therobotlearns: projects/therobotlearns.com/helm/therobotlearns
+  therobotlearns: projects/therobotlearns.com/app/helm/therobotlearns
   codefresh-landing: projects/codefre.sh/helm/codefresh-landing
   gotta-cc: projects/gotta.cc/helm/gotta-cc
   derobotis: projects/derobot.is/helm/derobotis
@@ -411,6 +411,33 @@ liquibase_targets:
     # superuser-only extensions the changelog needs pre-created (pgvector et al.)
     extensions: [citext, uuid-ossp, vector, cube, pg_trgm, earthdistance]
     changelog_dir: projects/designing.derobot.is/app/backend/db
+    changelog_file: changelog/db.changelog-master.yaml
+
+  therobotlearns:
+    description: "The Robot Learns app database on app-timescaledb"
+    namespace: apps
+    service: svc/app-timescaledb
+    remote_port: 5432
+    local_port: 54340
+    db_type: postgresql
+    db_name: therobotlearns
+    schema: public
+    secret_name: therobotlearns-secrets
+    secret_namespace: apps
+    username: therobotlearns
+    secret_key: THEROBOTLEARNS_DB_PASSWORD
+    safety: destructive
+    # provision-db: role creds from dc, superuser from the live instance secret
+    role_password_dc: "services apps.therobotlearns_db_password"
+    admin_secret: app-timescaledb-secrets
+    # Valkey/Redis ACL user on app-valkey (provision: `provision-db therobotlearns --redis-only`)
+    redis_password_dc: "services apps.therobotlearns_valkey_password"
+    redis_service: svc/app-valkey
+    redis_user: therobotlearns
+    redis_admin_secret: app-valkey-secrets
+    # superuser-only extensions the changelog needs pre-created (pgvector et al.)
+    extensions: [citext, uuid-ossp, vector, cube, pg_trgm, earthdistance]
+    changelog_dir: projects/therobotlearns.com/app/backend/db
     changelog_file: changelog/db.changelog-master.yaml
 
   foryou:
@@ -887,20 +914,39 @@ project:
     - domain: therobotlearns.com
       base_path: projects/therobotlearns.com
       services:
+        - name: backend
+          dockerfile: app/backend/Dockerfile
+          context: app/backend
+          registry_path: therobotlearns.com/backend
+          platform: linux/amd64
+          auto_detect: false
+          helm:
+            chart_path: projects/therobotlearns.com/app/helm/therobotlearns
+            values_path: .backend.image
+            format: image
+        - name: frontend
+          dockerfile: app/frontend/Dockerfile
+          context: app/frontend
+          registry_path: therobotlearns.com/frontend
+          platform: linux/amd64
+          auto_detect: false
+          build_args:
+            NEXT_PUBLIC_API_URL: https://therobotlearns.com
+          helm:
+            chart_path: projects/therobotlearns.com/app/helm/therobotlearns
+            values_path: .frontend.image
+            format: image
+        # legacy static landing image; kept buildable for rollback, no helm stanza
         - name: web
           dockerfile: Dockerfile
           context: .
           registry_path: therobotlearns.com/web
           platform: linux/amd64
           auto_detect: false
-          helm:
-            chart_path: projects/therobotlearns.com/helm/therobotlearns
-            values_path: .static-site.image
-            format: image
       helm:
         charts:
           - name: therobotlearns
-            path: projects/therobotlearns.com/helm/therobotlearns
+            path: projects/therobotlearns.com/app/helm/therobotlearns
     - domain: therobotlives.com
       services:
         - name: backend
