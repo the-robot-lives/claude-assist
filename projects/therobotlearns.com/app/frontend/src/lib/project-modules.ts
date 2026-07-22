@@ -25,6 +25,12 @@ export interface ProjectLearningSettings {
 
 export interface ModuleDef {
   key: string;
+  /** REST content type segment (backend Learning context registry key). */
+  contentType: string;
+  /** Field names on the backend record. */
+  titleField: string;
+  bodyField?: string;
+  urlField?: string;
   label: string;
   description: string;
   itemNoun: string;
@@ -36,6 +42,9 @@ export interface ModuleDef {
 export const MODULE_DEFS: ModuleDef[] = [
   {
     key: "lesson_plans",
+    contentType: "lesson-plans",
+    titleField: "title",
+    bodyField: "body",
     label: "Lesson Plans",
     description: "Structured plans for what to learn and in what order.",
     itemNoun: "lesson plan",
@@ -44,14 +53,21 @@ export const MODULE_DEFS: ModuleDef[] = [
   },
   {
     key: "quizzes",
+    contentType: "quizzes",
+    titleField: "title",
+    bodyField: "description",
     label: "Quizzes",
     description: "Self-tests and question sets to check retention.",
     itemNoun: "quiz",
     titleLabel: "Quiz topic",
-    bodyLabel: "Questions / scope",
+    bodyLabel: "Description / scope",
   },
   {
     key: "references",
+    contentType: "references",
+    titleField: "title",
+    bodyField: "notes",
+    urlField: "url",
     label: "References",
     description: "Books, articles, videos, and docs worth keeping close.",
     itemNoun: "reference",
@@ -61,6 +77,9 @@ export const MODULE_DEFS: ModuleDef[] = [
   },
   {
     key: "wiki",
+    contentType: "wiki-pages",
+    titleField: "title",
+    bodyField: "body",
     label: "Wiki",
     description: "Free-form notes and pages that grow with the project.",
     itemNoun: "page",
@@ -69,8 +88,11 @@ export const MODULE_DEFS: ModuleDef[] = [
   },
   {
     key: "flashcards",
+    contentType: "decks",
+    titleField: "name",
+    bodyField: "description",
     label: "Flashcard Decks",
-    description: "Spaced-repetition decks (syncs with the local CLI workspace later).",
+    description: "Spaced-repetition decks — push cards from the CLI or add them here.",
     itemNoun: "deck",
     titleLabel: "Deck name",
     bodyLabel: "Coverage / notes",

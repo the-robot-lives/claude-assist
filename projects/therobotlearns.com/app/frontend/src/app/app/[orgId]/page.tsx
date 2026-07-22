@@ -233,7 +233,7 @@ export default function OrgDashboard() {
       </section>
 
       <section>
-        <h2 className="sg-section-heading">Learning workspace</h2>
+        <h2 className="sg-section-heading">Push content from anywhere</h2>
         <div
           style={{
             border: "1px solid var(--border, #333)",
@@ -243,10 +243,9 @@ export default function OrgDashboard() {
           }}
         >
           <p className="sg-page-intro" style={{ marginTop: 0 }}>
-            Your learning content — plans, decks, retention stats — lives in your local
-            robot-learns workspace via the CLI and MCP connector. Cloud sync of learning
-            progress into this dashboard is coming; for now this workspace manages your
-            account, projects, and team.
+            Your learning content — plans, quizzes, references, wikis, decks — lives here,
+            inside your projects. Add it directly in the app, or hook up the CLI and MCP
+            connector to push new material straight from your editor, notes, and agents.
           </p>
           <a
             href="https://therobotlearns.com/#mcp"

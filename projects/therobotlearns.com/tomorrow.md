@@ -2,7 +2,23 @@
 
 ## Post-cutover session additions (same day)
 
-Live now: backend v1.0.5 / frontend v1.0.4.
+Live now: backend v1.0.6 / frontend v1.0.8.
+
+### Learning content model (changelog 028, be v1.0.6 / fe v1.0.8)
+
+Cloud app = system of record (Keith's correction; see memory trl-product-model-cloud-is-system-of-record).
+- 7 tables: lesson_plans, wiki_pages (slug auto, unique per project), quizzes, quiz_questions, reference_entries, decks, deck_cards. FK-cascaded to projects; child types validated through parent.
+- Generic API (also the CLI/MCP PUSH surface): `/api/v1/organizations/:org_id/projects/:project_id/content/:content_type` — GET (list; `?parent_id=` for quiz-questions/deck-cards), POST `{item:{...}}`, PATCH `/:id`, DELETE `/:id`. Bearer JWT; PBAC project:view / project:update; created_by stamped. Types: lesson-plans, wiki-pages, quizzes, quiz-questions, references, decks, deck-cards.
+- Frontend: wizard (3-step: basics/modules/review) at /app/[orgId]/projects/new; project workspace at /app/[orgId]/projects/[projectId] reads/writes real tables; settings jsonb now only stores module-enabled flags. Buttons restyled w/ TRL accent (#d85a24); dark-mode-legible outline buttons.
+- Smoke-verified all types incl. parent-scoped question/card, 404 unknown type, 401 unauthed.
+
+### Valkey incident + repair (same session)
+
+app-valkey pod restart dropped the live-only `therobotlearns` ACL user → backend crash-loop (Redix WRONGPASS → app exit). Fixes:
+- Immediate: `provision-db therobotlearns --redis-only` re-created the user.
+- Durable: added therobotlearns to `acl_users` in terraform/kubernetes/apps/init/main.tf; `terragrunt apply -target=module.app_valkey` (full-stack plan has unrelated drift incl. helm_release churn + a foryou_site create — do NOT apply untargeted).
+- Found + repaired REDACTED-MARKER contamination in Infisical /apps/valkey: THEROBOTLEARNS/AIFIGHTER/JAILBREAKING_VALKEY_PASSWORD all held the literal `🔒 **redacted**` string (past non-override populate); repopulated with real values (dc primary, k8s-secret fallback). aifighter/jailbreaking ACL users were broken this whole time.
+- Gotcha: `dc get auto <key>` empty for apps_valkey_password (auto-layer CLI drift; value only lives in Infisical/k8s).
 
 - OIDC round-trip CLOSED — Keith logged in end-to-end. Fixes along the way: SSO_DOMAINS
   default-closed policy (noizu.com + therobotlives.com allowed w/ auto-approve), missing

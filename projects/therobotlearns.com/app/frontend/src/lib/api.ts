@@ -39,6 +39,14 @@ export interface Project {
   updated_at?: string;
 }
 
+/** Generic learning-content record (lesson plan, wiki page, quiz, reference, deck, …). */
+export interface ContentItem {
+  id: string;
+  inserted_at?: string;
+  updated_at?: string;
+  [key: string]: unknown;
+}
+
 interface AuthResponse {
   user: User;
   access_token: string;
@@ -331,6 +339,34 @@ export const api = {
       method: "PATCH",
       body: JSON.stringify({ project: data }),
     });
+  },
+
+  listContent(orgId: string, projectId: string, type: string, parentId?: string) {
+    const qs = parentId ? `?parent_id=${encodeURIComponent(parentId)}` : "";
+    return request<{ items: ContentItem[] }>(
+      `/api/v1/organizations/${orgId}/projects/${projectId}/content/${type}${qs}`,
+    );
+  },
+
+  createContent(orgId: string, projectId: string, type: string, item: Record<string, unknown>) {
+    return request<{ item: ContentItem }>(
+      `/api/v1/organizations/${orgId}/projects/${projectId}/content/${type}`,
+      { method: "POST", body: JSON.stringify({ item }) },
+    );
+  },
+
+  updateContent(orgId: string, projectId: string, type: string, id: string, item: Record<string, unknown>) {
+    return request<{ item: ContentItem }>(
+      `/api/v1/organizations/${orgId}/projects/${projectId}/content/${type}/${id}`,
+      { method: "PATCH", body: JSON.stringify({ item }) },
+    );
+  },
+
+  deleteContent(orgId: string, projectId: string, type: string, id: string) {
+    return request<{ ok: boolean }>(
+      `/api/v1/organizations/${orgId}/projects/${projectId}/content/${type}/${id}`,
+      { method: "DELETE" },
+    );
   },
 
   archiveProject(orgId: string, projectId: string) {

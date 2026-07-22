@@ -4,10 +4,9 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { toast } from "sonner";
-import { api, type Project } from "@/lib/api";
+import { api, type ContentItem, type Project } from "@/lib/api";
 import {
   MODULE_DEFS,
-  newModuleItem,
   type ModuleDef,
   type ModuleState,
   type ProjectLearningSettings,
@@ -17,10 +16,23 @@ function readSettings(project: Project | null): ProjectLearningSettings {
   return (project?.settings as ProjectLearningSettings) ?? {};
 }
 
+function itemTitleOf(def: ModuleDef, item: ContentItem): string {
+  return String(item[def.titleField] ?? "Untitled");
+}
+
+function itemBodyOf(def: ModuleDef, item: ContentItem): string {
+  return def.bodyField ? String(item[def.bodyField] ?? "") : "";
+}
+
+function itemUrlOf(def: ModuleDef, item: ContentItem): string {
+  return def.urlField ? String(item[def.urlField] ?? "") : "";
+}
+
 export default function ProjectWorkspace() {
   const { orgId, projectId } = useParams<{ orgId: string; projectId: string }>();
 
   const [project, setProject] = useState<Project | null>(null);
+  const [items, setItems] = useState<Record<string, ContentItem[]>>({});
   const [loadError, setLoadError] = useState("");
   const [addingTo, setAddingTo] = useState<string | null>(null);
   const [itemTitle, setItemTitle] = useState("");
@@ -34,6 +46,20 @@ export default function ProjectWorkspace() {
     try {
       const res = await api.getProject(orgId, projectId);
       setProject(res.project);
+
+      const settings = (res.project.settings as ProjectLearningSettings) ?? {};
+      const enabledDefs = MODULE_DEFS.filter((d) => settings.modules?.[d.key]?.enabled);
+      const results = await Promise.all(
+        enabledDefs.map(async (def) => {
+          try {
+            const listing = await api.listContent(orgId, projectId, def.contentType);
+            return [def.key, listing.items] as const;
+          } catch {
+            return [def.key, [] as ContentItem[]] as const;
+          }
+        }),
+      );
+      setItems(Object.fromEntries(results));
     } catch (err) {
       setLoadError(err instanceof Error ? err.message : "Unable to load project");
     }
@@ -46,64 +72,66 @@ export default function ProjectWorkspace() {
   const settings = readSettings(project);
   const modules = settings.modules ?? {};
 
-  async function persistSettings(next: ProjectLearningSettings, successMsg: string) {
+  async function handleAddItem(def: ModuleDef, e: React.FormEvent) {
+    e.preventDefault();
     if (!orgId || !projectId) return;
     setSaving(true);
     try {
-      const res = await api.updateProject(orgId, projectId, { settings: next });
-      setProject(res.project);
-      toast.success(successMsg);
+      const payload: Record<string, unknown> = { [def.titleField]: itemTitle.trim() };
+      if (def.bodyField && itemBody.trim()) payload[def.bodyField] = itemBody.trim();
+      if (def.urlField && itemUrl.trim()) payload[def.urlField] = itemUrl.trim();
+      const res = await api.createContent(orgId, projectId, def.contentType, payload);
+      setItems((prev) => ({ ...prev, [def.key]: [...(prev[def.key] ?? []), res.item] }));
+      setItemTitle("");
+      setItemBody("");
+      setItemUrl("");
+      setAddingTo(null);
+      toast.success(`Added ${def.itemNoun}`);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Unable to save");
+      toast.error(err instanceof Error ? err.message : `Unable to add ${def.itemNoun}`);
     } finally {
       setSaving(false);
     }
   }
 
-  async function handleAddItem(def: ModuleDef, e: React.FormEvent) {
-    e.preventDefault();
-    const state: ModuleState = modules[def.key] ?? { enabled: true, items: [] };
-    const next: ProjectLearningSettings = {
-      ...settings,
-      modules: {
-        ...modules,
-        [def.key]: {
-          ...state,
-          enabled: true,
-          items: [
-            ...state.items,
-            newModuleItem({ title: itemTitle.trim(), body: itemBody.trim(), url: itemUrl.trim() }),
-          ],
-        },
-      },
-    };
-    setItemTitle("");
-    setItemBody("");
-    setItemUrl("");
-    setAddingTo(null);
-    await persistSettings(next, `Added ${def.itemNoun}`);
-  }
-
   async function handleRemoveItem(def: ModuleDef, itemId: string) {
-    const state = modules[def.key];
-    if (!state) return;
-    const next: ProjectLearningSettings = {
-      ...settings,
-      modules: {
-        ...modules,
-        [def.key]: { ...state, items: state.items.filter((i) => i.id !== itemId) },
-      },
-    };
-    await persistSettings(next, `Removed ${def.itemNoun}`);
+    if (!orgId || !projectId) return;
+    setSaving(true);
+    try {
+      await api.deleteContent(orgId, projectId, def.contentType, itemId);
+      setItems((prev) => ({
+        ...prev,
+        [def.key]: (prev[def.key] ?? []).filter((i) => i.id !== itemId),
+      }));
+      toast.success(`Removed ${def.itemNoun}`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Unable to remove");
+    } finally {
+      setSaving(false);
+    }
   }
 
   async function handleToggleModule(def: ModuleDef) {
+    if (!orgId || !projectId) return;
     const state: ModuleState = modules[def.key] ?? { enabled: false, items: [] };
     const next: ProjectLearningSettings = {
       ...settings,
       modules: { ...modules, [def.key]: { ...state, enabled: !state.enabled } },
     };
-    await persistSettings(next, `${def.label} ${state.enabled ? "disabled" : "enabled"}`);
+    setSaving(true);
+    try {
+      const res = await api.updateProject(orgId, projectId, { settings: next });
+      setProject(res.project);
+      if (!state.enabled) {
+        const listing = await api.listContent(orgId, projectId, def.contentType).catch(() => ({ items: [] }));
+        setItems((prev) => ({ ...prev, [def.key]: listing.items }));
+      }
+      toast.success(`${def.label} ${state.enabled ? "disabled" : "enabled"}`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Unable to save");
+    } finally {
+      setSaving(false);
+    }
   }
 
   if (loadError) {
@@ -151,7 +179,7 @@ export default function ProjectWorkspace() {
       )}
 
       {enabledDefs.map((def) => {
-        const state = modules[def.key];
+        const moduleItems = items[def.key] ?? [];
         return (
           <section key={def.key} style={{ marginBottom: "2rem" }}>
             <div
@@ -219,7 +247,7 @@ export default function ProjectWorkspace() {
                       value={itemBody}
                       onChange={(e) => setItemBody(e.target.value)}
                       rows={3}
-                      maxLength={4000}
+                      maxLength={10000}
                       style={{ width: "100%" }}
                     />
                   </div>
@@ -247,49 +275,55 @@ export default function ProjectWorkspace() {
               </form>
             )}
 
-            {state.items.length === 0 ? (
-              <p className="sg-page-intro">No {def.itemNoun}s yet.</p>
+            {moduleItems.length === 0 ? (
+              <p className="sg-page-intro">
+                No {def.itemNoun}s yet — add one here or push from the CLI/MCP connector.
+              </p>
             ) : (
               <ul style={{ listStyle: "none", padding: 0, margin: "0.75rem 0", display: "grid", gap: "0.5rem" }}>
-                {state.items.map((item) => (
-                  <li
-                    key={item.id}
-                    style={{
-                      border: "1px solid var(--border, #333)",
-                      borderRadius: 8,
-                      padding: "0.75rem 1rem",
-                      display: "flex",
-                      justifyContent: "space-between",
-                      gap: "1rem",
-                      alignItems: "flex-start",
-                    }}
-                  >
-                    <div>
-                      <strong>
-                        {item.url ? (
-                          <a href={item.url} target="_blank" rel="noreferrer">
-                            {item.title}
-                          </a>
-                        ) : (
-                          item.title
-                        )}
-                      </strong>
-                      {item.body && (
-                        <p className="sg-page-intro" style={{ margin: "0.25rem 0 0", whiteSpace: "pre-wrap" }}>
-                          {item.body}
-                        </p>
-                      )}
-                    </div>
-                    <button
-                      type="button"
-                      className="sg-btn sg-btn--outline sg-btn--sm"
-                      onClick={() => handleRemoveItem(def, item.id)}
-                      disabled={saving}
+                {moduleItems.map((item) => {
+                  const url = itemUrlOf(def, item);
+                  const body = itemBodyOf(def, item);
+                  return (
+                    <li
+                      key={item.id}
+                      style={{
+                        border: "1px solid var(--border, #333)",
+                        borderRadius: 8,
+                        padding: "0.75rem 1rem",
+                        display: "flex",
+                        justifyContent: "space-between",
+                        gap: "1rem",
+                        alignItems: "flex-start",
+                      }}
                     >
-                      Remove
-                    </button>
-                  </li>
-                ))}
+                      <div>
+                        <strong>
+                          {url ? (
+                            <a href={url} target="_blank" rel="noreferrer">
+                              {itemTitleOf(def, item)}
+                            </a>
+                          ) : (
+                            itemTitleOf(def, item)
+                          )}
+                        </strong>
+                        {body && (
+                          <p className="sg-page-intro" style={{ margin: "0.25rem 0 0", whiteSpace: "pre-wrap" }}>
+                            {body}
+                          </p>
+                        )}
+                      </div>
+                      <button
+                        type="button"
+                        className="sg-btn sg-btn--outline sg-btn--sm"
+                        onClick={() => handleRemoveItem(def, item.id)}
+                        disabled={saving}
+                      >
+                        Remove
+                      </button>
+                    </li>
+                  );
+                })}
               </ul>
             )}
           </section>

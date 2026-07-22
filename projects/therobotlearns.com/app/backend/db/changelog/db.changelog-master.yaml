@@ -83,3 +83,6 @@ databaseChangeLog:
   - include:
       file: 027-personal-orgs.yaml
       relativeToChangelogFile: true
+  - include:
+      file: 028-learning-content.yaml
+      relativeToChangelogFile: true

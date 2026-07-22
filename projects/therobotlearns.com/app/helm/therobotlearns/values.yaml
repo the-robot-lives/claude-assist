@@ -4,7 +4,7 @@ appDomain: app.therobotlearns.com
 # Dot-prefixed apex so auth cookies span therobotlearns.com and app.therobotlearns.com.
 cookieDomain: ".therobotlearns.com"
 backend:
-  image: ops.noizu.com/therobotlearns.com/backend:v1.0.5
+  image: ops.noizu.com/therobotlearns.com/backend:v1.0.6
   port: 4000
   resources:
     requests:
@@ -14,7 +14,7 @@ backend:
       cpu: 500m
       memory: 512Mi
 frontend:
-  image: ops.noizu.com/therobotlearns.com/frontend:v1.0.5
+  image: ops.noizu.com/therobotlearns.com/frontend:v1.0.8
   port: 3000
   resources:
     requests:

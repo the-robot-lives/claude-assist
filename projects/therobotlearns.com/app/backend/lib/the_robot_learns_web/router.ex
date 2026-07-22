@@ -163,6 +163,16 @@ defmodule TheRobotLearnsWeb.Router do
       post "/members", ProjectController, :add_member
       patch "/members/:member_user_id", ProjectController, :update_member
       delete "/members/:member_user_id", ProjectController, :remove_member
+
+      # Learning content (also the CLI/MCP push surface). content_type ∈
+      # lesson-plans | wiki-pages | quizzes | quiz-questions | references |
+      # decks | deck-cards (child types take parent_id / quiz_id / deck_id).
+      scope "/content/:content_type" do
+        get "/", LearningController, :index
+        post "/", LearningController, :create
+        patch "/:id", LearningController, :update
+        delete "/:id", LearningController, :delete
+      end
     end
   end
 
