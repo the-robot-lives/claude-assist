@@ -2,11 +2,13 @@
 defmodule GenAI.Provider.LocalLLamaSupervisor do
   use Supervisor
 
+  # ⟦𓎮𓉯𓉽𓐅⟧ start_link :: auto-generated pointer for public function start_link
   def start_link(opts) do
     Supervisor.start_link(__MODULE__, opts, name: __MODULE__)
   end
 
   @impl true
+  # ⟦𓉃𓊉𓎎𓆇⟧ init :: auto-generated pointer for public function init
   def init(_opts) do
     children = [
       %{

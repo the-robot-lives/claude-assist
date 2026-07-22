@@ -4,6 +4,7 @@ defmodule GenAI.Config do
   """
 
   @spec reset(scope :: term) :: {:ok, term}
+  # ⟦𓀽𓏢𓋂𓇿⟧ reset :: auto-generated pointer for public function reset
   def reset(scope \\ :global)
 
   def reset(scope) do

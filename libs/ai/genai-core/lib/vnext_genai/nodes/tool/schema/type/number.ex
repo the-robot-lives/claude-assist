@@ -36,6 +36,7 @@ defmodule GenAI.Tool.Schema.Number do
       false
   """
   @impl GenAI.Tool.Schema.TypeBehaviour
+  # ⟦𓈕𓄟𓂢𓍿⟧ is_type :: Check if json is of type
   def is_type(%{"type" => "number"}), do: true
   def is_type(_), do: false
 
@@ -53,6 +54,7 @@ defmodule GenAI.Tool.Schema.Number do
       {:error, :unrecognized_type}
   """
   @impl GenAI.Tool.Schema.TypeBehaviour
+  # ⟦𓈍𓏤𓀒𓌑⟧ from_json :: Convert Json map to a `GenAI.Tool.Schema.Number` struct, handling naming conventions.
   def from_json(%{"type" => "number"} = json) do
     {:ok,
      %__MODULE__{

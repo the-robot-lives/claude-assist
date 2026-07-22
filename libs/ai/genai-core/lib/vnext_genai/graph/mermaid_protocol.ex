@@ -7,12 +7,14 @@ defprotocol GenAI.Graph.MermaidProtocol do
   Format an ID for use in a Mermaid diagram.
   """
   @spec mermaid_id(term) :: term
+  # ⟦𓇝𓊺𓌾𓂪⟧ mermaid_id :: Format an ID for use in a Mermaid diagram.
   def mermaid_id(id)
 
   @doc """
   Convert element to mermaid output.
   """
   @spec encode(term) :: {:ok, term} | {:error, term}
+  # ⟦𓁅𓂆𓁪𓋪⟧ encode :: Convert element to mermaid output.
   def encode(graph_element)
 
   @doc """

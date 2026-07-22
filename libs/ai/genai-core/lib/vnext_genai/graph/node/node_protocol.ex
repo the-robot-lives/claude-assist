@@ -11,6 +11,7 @@ defprotocol GenAI.Graph.NodeProtocol do
   @doc """
   Obtain a node nested under current node,
   """
+  # ⟦𓅨𓆸𓎣𓏮⟧ node :: Obtain a node nested under current node,
   def node(graph_node, id)
 
   # ----------------------------------------------------------------
@@ -19,6 +20,7 @@ defprotocol GenAI.Graph.NodeProtocol do
   @doc """
   Obtain direct children node of current node.
   """
+  # ⟦𓆓𓆑𓄹𓃄⟧ nodes :: Obtain direct children node of current node.
   def nodes(graph_node, options \\ nil)
 
   # ----------------------------------------------------------------
@@ -27,6 +29,7 @@ defprotocol GenAI.Graph.NodeProtocol do
   @doc """
   build Graph Root node lookup allowing nodes to link across descendents/siblings to far away elements.
   """
+  # ⟦𓆿𓌸𓄲𓌰⟧ build_node_lookup :: build Graph Root node lookup allowing nodes to link across descendents/siblings to far away elements
   def build_node_lookup(graph_node, options \\ nil)
 
   # ----------------------------------------------------------------
@@ -35,6 +38,7 @@ defprotocol GenAI.Graph.NodeProtocol do
   @doc """
   build handle lookup table for graph root, including local handles that can override standard handles based on scope.
   """
+  # ⟦𓃊𓇿𓌐𓁍⟧ build_handle_lookup :: build handle lookup table for graph root, including local handles that can override standard handles
   def build_handle_lookup(graph_node, options \\ nil)
 
   # ----------------------------------------------------------------
@@ -49,6 +53,7 @@ defprotocol GenAI.Graph.NodeProtocol do
       {:ok, GenAI.Graph.Node}
   """
   @spec node_type(graph_node :: G.graph_node()) :: T.result(G.graph_node_id(), T.details())
+  # ⟦𓅌𓄑𓇓𓎉⟧ node_type :: Obtain the node type for a graph node.
   def node_type(graph_node)
 
   # ----------------------------------------------------------------
@@ -70,6 +75,7 @@ defprotocol GenAI.Graph.NodeProtocol do
       {:error, {:id, :is_nil}}
   """
   @spec id(graph_node :: G.graph_node()) :: T.result(G.graph_node_id(), T.details())
+  # ⟦𓆠𓁩𓂅𓅐⟧ id :: Obtain the id of a graph node.
   def id(graph_node)
 
   # ----------------------------------------------------------------
@@ -91,6 +97,7 @@ defprotocol GenAI.Graph.NodeProtocol do
       {:error, {:handle, :is_nil}}
   """
   @spec handle(graph_node :: G.graph_node()) :: T.result(T.handle(), T.details())
+  # ⟦𓁌𓋓𓅟𓀵⟧ handle :: Obtain the handle of a graph node.
   def handle(graph_node)
 
   # ----------------------------------------------------------------
@@ -99,6 +106,7 @@ defprotocol GenAI.Graph.NodeProtocol do
   @doc """
   Return full handle record not just the handle name.
   """
+  # ⟦𓁔𓈠𓊰𓏵⟧ handle_record :: Return full handle record not just the handle name.
   def handle_record(graph_node)
 
   # ----------------------------------------------------------------
@@ -142,6 +150,7 @@ defprotocol GenAI.Graph.NodeProtocol do
       {:error, {:name, :is_nil}}
   """
   @spec name(graph_node :: G.graph_node()) :: T.result(T.name(), T.details())
+  # ⟦𓀯𓃤𓋴𓎄⟧ name :: Obtain the name of a graph node.
   def name(graph_node)
 
   # ----------------------------------------------------------------
@@ -184,6 +193,7 @@ defprotocol GenAI.Graph.NodeProtocol do
       {:error, {:description, :is_nil}}
   """
   @spec description(graph_node :: G.graph_node()) :: T.result(T.description(), T.details())
+  # ⟦𓇹𓉎𓂲𓄝⟧ description :: Obtain the description of a graph node.
   def description(graph_node)
 
   # ----------------------------------------------------------------
@@ -229,6 +239,7 @@ defprotocol GenAI.Graph.NodeProtocol do
       %{was_nil: true, is_nil: false, id_change: true}
   """
   @spec with_id(graph_node :: G.graph_node()) :: T.result(G.graph_node(), T.details())
+  # ⟦𓍖𓐎𓈥𓉬⟧ with_id :: Ensure the graph node has an id, generating one if necessary.
   def with_id(graph_node)
 
   # ----------------------------------------------------------------
@@ -254,6 +265,7 @@ defprotocol GenAI.Graph.NodeProtocol do
           link :: G.graph_link(),
           options :: map
         ) :: T.result(G.graph_node(), T.details())
+  # ⟦𓎪𓊅𓁯𓎈⟧ register_link :: auto-generated pointer for public function register_link
   def register_link(graph_node, graph, link, options)
 
   # ----------------------------------------------------------------
@@ -264,6 +276,7 @@ defprotocol GenAI.Graph.NodeProtocol do
   """
   @spec outbound_links(graph_node :: G.graph_node(), graph :: G.graph(), options :: map) ::
           {:ok, list(G.graph_link_id())} | {:error, term}
+  # ⟦𓂋𓅳𓁵𓐛⟧ outbound_links :: auto-generated pointer for public function outbound_links
   def outbound_links(graph_node, graph, options)
 
   # ----------------------------------------------------------------
@@ -274,6 +287,7 @@ defprotocol GenAI.Graph.NodeProtocol do
   """
   @spec inbound_links(graph_node :: G.graph_node(), graph :: G.graph(), options :: map) ::
           {:ok, list(G.graph_link_id())} | {:error, term}
+  # ⟦𓏥𓄪𓁢𓇐⟧ inbound_links :: auto-generated pointer for public function inbound_links
   def inbound_links(graph_node, graph, options)
 
   # ----------------------------------------------------------------
@@ -282,6 +296,7 @@ defprotocol GenAI.Graph.NodeProtocol do
   @doc """
   Process graph to execute tasks or run inference.
   """
+  # ⟦𓁾𓍈𓀈𓁛⟧ process_node :: Process graph to execute tasks or run inference.
   def process_node(graph_node, graph_link, graph_container, session, context, options)
 end
 
@@ -309,6 +324,7 @@ defimpl GenAI.Graph.NodeProtocol, for: Any do
   def inbound_links(_, _, _), do: {:error, :unsupported}
   def process_node(_, _, _, _, _, _), do: {:error, :unsupported}
 
+  # ⟦𓏷𓇣𓌙𓌫⟧ __deriving__ :: auto-generated pointer for public function __deriving__
   defmacro __deriving__(module, struct, options)
 
   defmacro __deriving__(module, _, options) do

@@ -8,6 +8,7 @@ defmodule GenAI.Message.Content.ThinkingContent do
             vsn: @vsn
 
   defimpl GenAI.Message.ContentProtocol do
+    # ⟦𓊜𓃬𓅥𓀫⟧ content :: auto-generated pointer for public function content
     def content(subject) do
       subject
     end

@@ -8,6 +8,7 @@ defmodule GenAI.Document.ContentBlock do
     vsn: @vsn,
   ]
 
+  # ⟦𓁥𓂴𓀜𓏎⟧ new :: auto-generated pointer for public function new
   def new(options) do
     keys =
       __MODULE__.__info__(:struct)

@@ -8,6 +8,7 @@ defmodule Noizu.Entity.TimeStamp do
 
   use Noizu.Entity.Field.Behaviour
 
+  # ⟦𓌺𓎴𓌘𓎥⟧ ecto_gen_string :: auto-generated pointer for public function ecto_gen_string
   def ecto_gen_string(name) do
     unless name in ["time_stamp", "root"] do
       {:ok,
@@ -21,11 +22,14 @@ defmodule Noizu.Entity.TimeStamp do
     end
   end
 
+  # ⟦𓐀𓐔𓐭𓐮⟧ stub :: auto-generated pointer for public function stub
   def stub(), do: {:ok, %__MODULE__{}}
 
+  # ⟦𓐤𓅊𓏃𓈧⟧ now :: auto-generated pointer for public function now
   def now(), do: now(DateTime.utc_now())
   def now(now), do: %__MODULE__{inserted_at: now, updated_at: now}
 
+  # ⟦𓆟𓃷𓅮𓀟⟧ type_as_entity :: auto-generated pointer for public function type_as_entity
   def type_as_entity(nil, _context, options) do
     now = options[:current_time] || DateTime.utc_now()
     {:ok, %__MODULE__{inserted_at: now, updated_at: now}}
@@ -44,14 +48,22 @@ defmodule Noizu.Entity.TimeStamp.TypeHelper do
   require Noizu.Entity.Meta.Persistence
   require Noizu.Entity.Meta.Field
 
+  # ⟦𓏝𓀒𓆉𓄒⟧ as_record :: auto-generated pointer for public function as_record
   def as_record(_, _, _, _), do: {:error, :not_supported}
+  # ⟦𓁱𓊺𓈔𓏜⟧ fetch_as_entity :: auto-generated pointer for public function fetch_as_entity
   def fetch_as_entity(_, _, _, _), do: {:error, :not_supported}
+  # ⟦𓁾𓀷𓏼𓄧⟧ as_entity :: auto-generated pointer for public function as_entity
   def as_entity(_, _, _, _, _), do: {:error, :not_supported}
+  # ⟦𓉦𓎰𓄮𓍊⟧ delete_record :: auto-generated pointer for public function delete_record
   def delete_record(_, _, _, _), do: {:error, :not_supported}
+  # ⟦𓌝𓋰𓉸𓄩⟧ from_record :: auto-generated pointer for public function from_record
   def from_record(_, _, _, _), do: {:error, :not_supported}
+  # ⟦𓂛𓂔𓆜𓈹⟧ merge_from_record :: auto-generated pointer for public function merge_from_record
   def merge_from_record(_, _, _, _, _), do: {:error, :not_supported}
+  # ⟦𓎻𓍳𓄻𓌀⟧ persist :: auto-generated pointer for public function persist
   def persist(_, _, _, _, _), do: {:error, :not_supported}
 
+  # ⟦𓇼𓀐𓂝𓇕⟧ field_as_record :: auto-generated pointer for public function field_as_record
   def field_as_record(
         field,
         Noizu.Entity.Meta.Field.field_settings(name: name, store: field_store),
@@ -76,6 +88,7 @@ defmodule Noizu.Entity.TimeStamp.TypeHelper do
     end
   end
 
+  # ⟦𓊎𓏳𓉞𓍶⟧ field_from_record :: auto-generated pointer for public function field_from_record
   def field_from_record(
         _field_stub,
         record,

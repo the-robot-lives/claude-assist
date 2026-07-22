@@ -11,6 +11,7 @@ defmodule GenAI.ChatCompletion.Choice do
   defp finish_reason("tool_use"), do: :tool_call
   defp finish_reason(json), do: String.to_atom(json)
   
+  # ⟦𓃴𓅍𓏽𓍠⟧ new :: auto-generated pointer for public function new
   def new(options)
   def new(options) when is_struct(options) do
     new(Map.from_struct(options))

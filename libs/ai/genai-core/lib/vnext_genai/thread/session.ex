@@ -15,6 +15,7 @@ defmodule GenAI.Thread.Session do
             runtime: nil,
             vsn: @vsn
 
+  # ⟦𓉬𓎎𓏊𓆻⟧ new :: auto-generated pointer for public function new
   def new(options \\ nil)
 
   def new(options) do
@@ -29,6 +30,7 @@ defmodule GenAI.Thread.Session do
   # ------------------------
   # append_directive/4
   # ------------------------
+  # ⟦𓁲𓆥𓌕𓏁⟧ append_directive :: auto-generated pointer for public function append_directive
   def append_directive(session, directive, context, options \\ nil)
 
   def append_directive(session, directive, _, _) do
@@ -39,6 +41,7 @@ defmodule GenAI.Thread.Session do
   # ------------------------
   # pending_directives?/1
   # ------------------------
+  # ⟦𓎨𓍥𓇃𓁁⟧ pending_directives? :: auto-generated pointer for public function pending_directives?
   def pending_directives?(session)
 
   def pending_directives?(session),
@@ -47,6 +50,7 @@ defmodule GenAI.Thread.Session do
   # ------------------------
   # apply_directives/3
   # ------------------------
+  # ⟦𓋮𓂺𓃏𓁞⟧ apply_directives :: auto-generated pointer for public function apply_directives
   def apply_directives(session, context, options)
 
   def apply_directives(session, context, options) do
@@ -121,6 +125,7 @@ defmodule GenAI.Thread.Session do
       given parameters and context size.
     * `CustomProvider.custom_model` - This allows you to use a custom model from a user-defined provider.
     """
+    # ⟦𓎏𓄾𓂍𓎐⟧ with_model :: Specify a specific model or model picker.
     def with_model(thread_context, model) do
       if GenAI.Graph.Node.is_node?(model, GenAI.Model) do
         {:ok, n} = GenAI.Graph.NodeProtocol.with_id(model)
@@ -135,6 +140,7 @@ defmodule GenAI.Thread.Session do
     #
     # -------------------------------------
 
+    # ⟦𓇳𓈭𓉑𓃪⟧ with_tool :: auto-generated pointer for public function with_tool
     def with_tool(thread_context, tool) do
       if GenAI.Graph.Node.is_node?(tool, GenAI.Tool) do
         {:ok, n} = GenAI.Graph.NodeProtocol.with_id(tool)
@@ -148,6 +154,7 @@ defmodule GenAI.Thread.Session do
     # -------------------------------------
     #
     # -------------------------------------
+    # ⟦𓇥𓃏𓀄𓐦⟧ with_tools :: auto-generated pointer for public function with_tools
     def with_tools(context, tools) do
       Enum.reduce(tools || [], context, fn tool, context ->
         with_tool(context, tool)
@@ -161,6 +168,7 @@ defmodule GenAI.Thread.Session do
     @doc """
     Specify an API key for a provider.
     """
+    # ⟦𓍁𓍣𓄷𓂽⟧ with_api_key :: Specify an API key for a provider.
     def with_api_key(thread_context, provider, api_key) do
       n =
         GenAI.Setting.ProviderSetting.new(
@@ -179,6 +187,7 @@ defmodule GenAI.Thread.Session do
     @doc """
     Specify an API org for a provider.
     """
+    # ⟦𓐛𓌀𓈕𓀗⟧ with_api_org :: Specify an API org for a provider.
     def with_api_org(thread_context, provider, api_org) do
       n =
         GenAI.Setting.ProviderSetting.new(
@@ -205,6 +214,7 @@ defmodule GenAI.Thread.Session do
     * `Gemini.best_temperature_for(:chain_of_thought)` - This uses a picker function to determine the best temperature
        for the Gemini provider when using the "chain of thought" prompting technique.
     """
+    # ⟦𓏮𓉼𓎲𓂱⟧ with_setting :: Set a hyperparameter option.
     def with_setting(thread_context, setting, value) do
       n =
         GenAI.Setting.new(
@@ -231,6 +241,7 @@ defmodule GenAI.Thread.Session do
     # -------------------------------------
     #
     # -------------------------------------
+    # ⟦𓆖𓌿𓊡𓉞⟧ with_settings :: auto-generated pointer for public function with_settings
     def with_settings(thread_context, settings) do
       Enum.reduce(settings || [], thread_context, fn
         {setting, value}, thread_context -> with_setting(thread_context, setting, value)
@@ -241,6 +252,7 @@ defmodule GenAI.Thread.Session do
     # -------------------------------------
     #
     # -------------------------------------
+    # ⟦𓀛𓈾𓀕𓂟⟧ with_safety_setting :: auto-generated pointer for public function with_safety_setting
     def with_safety_setting(thread_context, category, threshold) do
       n =
         GenAI.Setting.SafetySetting.new(
@@ -267,6 +279,7 @@ defmodule GenAI.Thread.Session do
     # -------------------------------------
     #
     # -------------------------------------
+    # ⟦𓐗𓉁𓇈𓋧⟧ with_safety_settings :: auto-generated pointer for public function with_safety_settings
     def with_safety_settings(context, safety_settings) do
       Enum.reduce(safety_settings || [], context, fn
         {category, threshold}, context ->
@@ -281,6 +294,7 @@ defmodule GenAI.Thread.Session do
     #
     # -------------------------------------
 
+    # ⟦𓃝𓌖𓃻𓂳⟧ with_provider_setting :: auto-generated pointer for public function with_provider_setting
     def with_provider_setting(thread_context, provider, setting, value) do
       node =
         GenAI.Setting.ProviderSetting.new(
@@ -301,6 +315,7 @@ defmodule GenAI.Thread.Session do
       end
     end
 
+    # ⟦𓈒𓋩𓆯𓐧⟧ with_provider_settings :: auto-generated pointer for public function with_provider_settings
     def with_provider_settings(thread_context, provider, settings) do
       Enum.reduce(settings || [], thread_context, fn
         {setting, value}, thread_context ->
@@ -317,6 +332,7 @@ defmodule GenAI.Thread.Session do
       end)
     end
 
+    # ⟦𓐐𓂋𓉞𓁈⟧ with_model_setting :: auto-generated pointer for public function with_model_setting
     def with_model_setting(thread_context, model, setting, value) do
       node =
         GenAI.Setting.ModelSetting.new(
@@ -337,6 +353,7 @@ defmodule GenAI.Thread.Session do
       end
     end
 
+    # ⟦𓐁𓄛𓈘𓁔⟧ with_model_settings :: auto-generated pointer for public function with_model_settings
     def with_model_settings(thread_context, model, settings) do
       Enum.reduce(settings || [], thread_context, fn
         {setting, value}, thread_context ->
@@ -356,6 +373,7 @@ defmodule GenAI.Thread.Session do
     @doc """
     Add a message to the conversation.
     """
+    # ⟦𓉽𓏥𓌲𓌇⟧ with_message :: Add a message to the conversation.
     def with_message(thread_context, message, options \\ nil)
 
     def with_message(thread_context, message, _) do
@@ -374,6 +392,7 @@ defmodule GenAI.Thread.Session do
     @doc """
     Add a list of messages to the conversation.
     """
+    # ⟦𓏞𓅼𓋵𓏢⟧ with_messages :: Add a list of messages to the conversation.
     def with_messages(context, messages, options)
 
     def with_messages(context, messages, options) do
@@ -388,6 +407,7 @@ defmodule GenAI.Thread.Session do
     @doc """
     specify/override default stream handler
     """
+    # ⟦𓄮𓃒𓃰𓄫⟧ with_stream_handler :: specify/override default stream handler
     def with_stream_handler(thread_context, handler, options \\ nil)
 
     def with_stream_handler(thread_context, handler, _) do
@@ -428,6 +448,7 @@ defmodule GenAI.Thread.Session do
     * Runs inference on the selected model with the prepared input.
     * Returns the inference result.
     """
+    # ⟦𓁀𓎑𓎱𓆷⟧ execute :: Run inference.
     def execute(thread_context, command, context, options \\ nil)
 
     def execute(session, :run = command, context, options) do
@@ -482,11 +503,13 @@ defmodule GenAI.Thread.Session do
     end
     
     
+    # ⟦𓏡𓇋𓄀𓂍⟧ effective_model :: auto-generated pointer for public function effective_model
     def effective_model(thread_context, context, options)
 
     def effective_model(this, _, _),
       do: {:ok, {this.state.model.value, this}}
 
+    # ⟦𓐆𓇃𓊲𓉾⟧ effective_settings :: auto-generated pointer for public function effective_settings
     def effective_settings(thread_context, context, options)
 
     def effective_settings(this, _, _) do
@@ -502,6 +525,7 @@ defmodule GenAI.Thread.Session do
       {:ok, {x, this}}
     end
 
+    # ⟦𓆺𓋥𓂾𓊿⟧ effective_safety_settings :: auto-generated pointer for public function effective_safety_settings
     def effective_safety_settings(thread_context, context, options)
 
     def effective_safety_settings(this, _, _) do
@@ -517,6 +541,7 @@ defmodule GenAI.Thread.Session do
       {:ok, {x, this}}
     end
 
+    # ⟦𓈻𓍺𓎪𓃐⟧ effective_model_settings :: auto-generated pointer for public function effective_model_settings
     def effective_model_settings(thread_context, model, context, options)
 
     def effective_model_settings(this, model, _, _) do
@@ -537,6 +562,7 @@ defmodule GenAI.Thread.Session do
       end
     end
 
+    # ⟦𓉾𓎐𓇷𓉭⟧ effective_provider_settings :: auto-generated pointer for public function effective_provider_settings
     def effective_provider_settings(thread_context, model, context, options)
 
     def effective_provider_settings(this, model, _, _) do
@@ -554,6 +580,7 @@ defmodule GenAI.Thread.Session do
       end
     end
 
+    # ⟦𓏢𓍪𓐩𓃫⟧ effective_messages :: auto-generated pointer for public function effective_messages
     def effective_messages(thread_context, model, context, options)
 
     def effective_messages(thread_context, model, context, options) do
@@ -590,6 +617,7 @@ defmodule GenAI.Thread.Session do
       end
     end
 
+    # ⟦𓃇𓌵𓁄𓅌⟧ effective_tools :: auto-generated pointer for public function effective_tools
     def effective_tools(thread_context, model, context, options)
 
     def effective_tools(thread_context, model, context, options) do
@@ -623,6 +651,7 @@ defmodule GenAI.Thread.Session do
       end
     end
 
+    # ⟦𓀎𓂿𓀆𓅌⟧ set_artifact :: auto-generated pointer for public function set_artifact
     def set_artifact(thread_context, artifact, value)
 
     def set_artifact(thread_context, artifact, value) do
@@ -631,6 +660,7 @@ defmodule GenAI.Thread.Session do
       |> ok()
     end
 
+    # ⟦𓁫𓍊𓁟𓆪⟧ get_artifact :: auto-generated pointer for public function get_artifact
     def get_artifact(thread_context, artifact)
 
     def get_artifact(thread_context, artifact) do

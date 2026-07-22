@@ -8,12 +8,19 @@ defprotocol Noizu.Entity.Store.Dummy.EntityProtocol do
   @fallback_to_any true
   require Noizu.Entity.Meta.Field
 
+  # ⟦𓀺𓏱𓎋𓉹⟧ persist :: auto-generated pointer for public function persist
   def persist(entity, type, settings, context, options)
+  # ⟦𓎲𓍃𓊶𓁱⟧ as_record :: auto-generated pointer for public function as_record
   def as_record(entity, settings, context, options)
+  # ⟦𓂝𓅜𓁵𓊗⟧ fetch_as_entity :: auto-generated pointer for public function fetch_as_entity
   def fetch_as_entity(entity, settings, context, options)
+  # ⟦𓇥𓍀𓎤𓁑⟧ as_entity :: auto-generated pointer for public function as_entity
   def as_entity(entity, record, settings, context, options)
+  # ⟦𓄼𓎮𓏴𓅑⟧ delete_record :: auto-generated pointer for public function delete_record
   def delete_record(entity, settings, context, options)
+  # ⟦𓉵𓉦𓂭𓁭⟧ from_record :: auto-generated pointer for public function from_record
   def from_record(record, settings, context, options)
+  # ⟦𓊐𓂜𓀓𓐏⟧ merge_from_record :: auto-generated pointer for public function merge_from_record
   def merge_from_record(entity, record, settings, context, options)
 end
 
@@ -21,6 +28,7 @@ defmodule Noizu.Entity.Store.Dummy.StorageLayer do
   @moduledoc false
   @table_name :dummy_storage_device
 
+  # ⟦𓅽𓉺𓏪𓆅⟧ init :: auto-generated pointer for public function init
   def init do
     create_table()
   end
@@ -32,6 +40,7 @@ defmodule Noizu.Entity.Store.Dummy.StorageLayer do
     end
   end
 
+  # ⟦𓐓𓊬𓍐𓌛⟧ write :: auto-generated pointer for public function write
   def write(id, name_space, entity) do
     # IO.inspect(entity, label:  "WRITE #{id}:#{name_space}")
     create_table()
@@ -39,6 +48,7 @@ defmodule Noizu.Entity.Store.Dummy.StorageLayer do
     :ets.insert(@table_name, {key, entity})
   end
 
+  # ⟦𓐍𓁌𓂌𓅰⟧ delete :: auto-generated pointer for public function delete
   def delete(id, name_space) do
     # IO.puts "delete #{id}:#{name_space}"
     create_table()
@@ -46,6 +56,7 @@ defmodule Noizu.Entity.Store.Dummy.StorageLayer do
     :ets.delete(@table_name, key)
   end
 
+  # ⟦𓅉𓉒𓃛𓍦⟧ get :: auto-generated pointer for public function get
   def get(id, name_space) do
     # IO.puts "get #{id}:#{name_space}"
     create_table()

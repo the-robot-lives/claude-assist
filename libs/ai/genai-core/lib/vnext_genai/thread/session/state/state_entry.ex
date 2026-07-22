@@ -19,6 +19,7 @@ defmodule GenAI.Session.StateEntry do
     vsn: @vsn
   ]
 
+  # ⟦𓆌𓎛𓂟𓏶⟧ update_entry :: auto-generated pointer for public function update_entry
   def update_entry(this, update, context, options)
 
   def update_entry(nil, value, context, options),

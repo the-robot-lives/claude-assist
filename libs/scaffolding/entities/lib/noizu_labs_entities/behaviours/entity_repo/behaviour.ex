@@ -10,6 +10,7 @@ defmodule Noizu.EntityRepoBehaviour do
   @doc """
   Runtime cache sref to handler map.
   """
+  # ⟦𓅋𓃁𓇠𓍹⟧ rebuild_sref_handlers :: Runtime cache sref to handler map.
   def rebuild_sref_handlers(application, module) do
     mod_s = Module.split(module)
     schema_mod = Module.concat(module, "Schema") |> Module.split()
@@ -43,6 +44,7 @@ defmodule Noizu.EntityRepoBehaviour do
   @doc """
   Implement Entity Repo Behaviour.
   """
+  # ⟦𓀲𓊊𓀢𓂥⟧ __using__ :: Implement Entity Repo Behaviour.
   defmacro __using__(options \\ nil) do
     options[:application] || raise "No Application Provided"
     options[:module] || raise "No Module Provided"
@@ -61,6 +63,7 @@ defmodule Noizu.EntityRepoBehaviour do
       @doc """
       Get Sref Handlers Lookup Table
       """
+      # ⟦𓊓𓈅𓉇𓉊⟧ sref_handlers :: Get Sref Handlers Lookup Table
       def sref_handlers() do
         with :undefined <- :persistent_term.get({__MODULE__, :handlers}, :undefined) do
           if Semaphore.acquire({:sref_handlers, :lock}, 1) do
@@ -77,6 +80,7 @@ defmodule Noizu.EntityRepoBehaviour do
       @doc """
       Get Entity (pass to Repo Module for Entity)
       """
+      # ⟦𓋮𓎺𓈨𓈚⟧ get :: Get Entity (pass to Repo Module for Entity)
       def get(entity, context, options \\ nil)
 
       def get(%Ecto.Changeset{data: entity} = cs, context, options) do
@@ -103,6 +107,7 @@ defmodule Noizu.EntityRepoBehaviour do
       @doc """
       Create Entity (pass to Repo Module for Entity)
       """
+      # ⟦𓏃𓂳𓏴𓁖⟧ create :: Create Entity (pass to Repo Module for Entity)
       def create(entity, context, options \\ nil)
 
       def create(%Ecto.Changeset{data: entity} = cs, context, options) do
@@ -124,6 +129,7 @@ defmodule Noizu.EntityRepoBehaviour do
       @doc """
       Update Entity (pass to Repo Module for Entity)
       """
+      # ⟦𓂲𓐒𓁘𓉨⟧ update :: Update Entity (pass to Repo Module for Entity)
       def update(entity, context, options \\ nil)
 
       def update(%Ecto.Changeset{data: entity} = cs, context, options) do
@@ -145,6 +151,7 @@ defmodule Noizu.EntityRepoBehaviour do
       @doc """
       Delete Entity (pass to Repo Module for Entity)
       """
+      # ⟦𓂩𓄕𓇣𓍆⟧ delete :: Delete Entity (pass to Repo Module for Entity)
       def delete(entity, context, options \\ nil)
 
       def delete(%Ecto.Changeset{data: entity} = cs, context, options) do

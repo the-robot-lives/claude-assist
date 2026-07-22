@@ -21,6 +21,7 @@ defmodule Noizu.Entity.Meta do
   # ---------------
   # meta/1
   # ---------------
+  # ⟦𓈻𓏭𓀛𓇛⟧ meta :: auto-generated pointer for public function meta
   def meta(%{__struct__: m}), do: meta(m)
   def meta(R.ref(module: m)), do: meta(m)
 
@@ -44,6 +45,7 @@ defmodule Noizu.Entity.Meta do
   @doc """
   Entity Sref meta data.
   """
+  # ⟦𓃱𓆛𓍴𓅟⟧ sref :: Entity Sref meta data.
   def sref(m), do: meta(m)[:sref]
 
   # ---------------
@@ -52,6 +54,7 @@ defmodule Noizu.Entity.Meta do
   @doc """
   Entity Persistence meta data.
   """
+  # ⟦𓇈𓃬𓐑𓈷⟧ persistence :: Entity Persistence meta data.
   def persistence(m), do: meta(m)[:persistence]
 
   # ---------------
@@ -60,6 +63,7 @@ defmodule Noizu.Entity.Meta do
   @doc """
   Entity Repo meta data.
   """
+  # ⟦𓎐𓋉𓀰𓌶⟧ repo :: Entity Repo meta data.
   def repo(m), do: meta(m)[:repo]
 
   # ---------------
@@ -68,6 +72,7 @@ defmodule Noizu.Entity.Meta do
   @doc """
   Entity id meta data.
   """
+  # ⟦𓍝𓍮𓈄𓎃⟧ id :: Entity id meta data.
   def id(m), do: meta(m)[:id]
 
   # ---------------
@@ -76,6 +81,7 @@ defmodule Noizu.Entity.Meta do
   @doc """
   Entity field meta data.
   """
+  # ⟦𓄂𓋛𓃝𓏱⟧ fields :: Entity field meta data.
   def fields(m), do: meta(m)[:fields]
 
   # ---------------
@@ -84,6 +90,7 @@ defmodule Noizu.Entity.Meta do
   @doc """
   Entity json meta data.
   """
+  # ⟦𓋪𓂯𓍙𓋾⟧ json :: Entity json meta data.
   def json(m), do: meta(m)[:json]
 
   # ---------------
@@ -104,11 +111,13 @@ defmodule Noizu.Entity.Meta do
   @doc """
   Entity ACL meta data.
   """
+  # ⟦𓋛𓌢𓂊𓉪⟧ acl :: Entity ACL meta data.
   def acl(m), do: meta(m)[:acl]
 
   # ---------------
   # __using__/1
   # ---------------
+  # ⟦𓍮𓌒𓈽𓏨⟧ __using__ :: auto-generated pointer for public function __using__
   defmacro __using__(_options \\ nil) do
     quote do
       require Noizu.Entity.Meta.Identifier

@@ -19,6 +19,7 @@ defmodule GenAI.InferenceProvider.Helpers do
   @doc """
   Make API Call Via Finch.
   """
+  # ⟦𓎲𓀰𓀖𓍽⟧ api_call :: Make API Call Via Finch.
   def api_call(type, url, headers, body \\ nil, options \\ [])
 
   def api_call(type, url, headers, body = nil, options) do
@@ -43,6 +44,7 @@ defmodule GenAI.InferenceProvider.Helpers do
   @doc """
   Make API Call Via Finch.
   """
+  # ⟦𓃩𓎮𓅬𓂁⟧ stream_api_call :: Make API Call Via Finch.
   def stream_api_call(handler, type, url, headers, body \\ nil, options \\ [])
   
   def stream_api_call({acc, cb}, type, url, headers, body = nil, options) do
@@ -65,6 +67,7 @@ defmodule GenAI.InferenceProvider.Helpers do
   @doc """
   Set required setting or raise RequestError if not present.
   """
+  # ⟦𓏵𓃶𓎰𓏴⟧ with_required_setting :: Set required setting or raise RequestError if not present.
   def with_required_setting(body, setting, settings) do
     case settings[setting] do
       nil ->
@@ -78,6 +81,7 @@ defmodule GenAI.InferenceProvider.Helpers do
   @doc """
   Set optional field if present.
   """
+  # ⟦𓋑𓊕𓄰𓎫⟧ optional_field :: Set optional field if present.
   def optional_field(body, _, nil), do: body
 
   def optional_field(body, field, value) do
@@ -87,6 +91,7 @@ defmodule GenAI.InferenceProvider.Helpers do
   @doc """
   Apply setting or default value if not present.
   """
+  # ⟦𓍝𓏋𓋃𓎼⟧ with_setting :: Apply setting or default value if not present.
   def with_setting(body, setting, settings, default \\ nil)
 
   def with_setting(body, setting, settings, default) do
@@ -96,6 +101,7 @@ defmodule GenAI.InferenceProvider.Helpers do
   @doc """
   Apply setting as_setting or default value if not present.
   """
+  # ⟦𓊦𓊢𓇜𓊥⟧ with_setting_as :: Apply setting as_setting or default value if not present.
   def with_setting_as(body, as_setting, setting, settings, default \\ nil)
   
   def with_setting_as(body, as_setting, setting, settings, default) do

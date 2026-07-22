@@ -95,6 +95,7 @@ defmodule GenAI.Graph.Link do
     # from node struct (requires protocol impl)
   """
   @spec new(term, term, term) :: __MODULE__.t()
+  # ⟦𓁒𓉎𓆛𓄘⟧ new :: Create a new link.
   def new(source, target, options \\ nil)
 
   def new(source, target, options) do
@@ -145,6 +146,7 @@ defmodule GenAI.Graph.Link do
 
   """
   @spec id(graph_link :: T.Graph.graph_link()) :: T.result(T.Graph.graph_link_id(), T.details())
+  # ⟦𓁖𓌌𓃃𓂱⟧ id :: Obtain the id of a graph link.
   def id(graph_link)
   def id(%__MODULE__{id: nil}), do: {:error, {:id, :is_nil}}
   def id(%__MODULE__{id: id}), do: {:ok, id}
@@ -174,6 +176,7 @@ defmodule GenAI.Graph.Link do
 
   """
   @spec handle(graph_link :: T.Graph.graph_link()) :: T.result(T.handle(), T.details())
+  # ⟦𓁈𓄎𓋾𓅇⟧ handle :: Obtain the handle of a graph link.
   def handle(graph_link)
   def handle(%__MODULE__{handle: nil}), do: {:error, {:handle, :is_nil}}
   def handle(%__MODULE__{handle: handle}), do: {:ok, handle}
@@ -234,6 +237,7 @@ defmodule GenAI.Graph.Link do
 
   """
   @spec name(graph_link :: T.Graph.graph_link()) :: T.result(T.name(), T.details())
+  # ⟦𓌚𓉾𓐘𓁵⟧ name :: Obtain the name of a graph link.
   def name(graph_link)
   def name(%__MODULE__{name: nil}), do: {:error, {:name, :is_nil}}
   def name(%__MODULE__{name: name}), do: {:ok, name}
@@ -293,6 +297,7 @@ defmodule GenAI.Graph.Link do
 
   """
   @spec description(graph_link :: T.Graph.graph_link()) :: T.result(T.description(), T.details())
+  # ⟦𓊍𓏜𓈑𓇫⟧ description :: Obtain the description of a graph link.
   def description(graph_link)
   def description(%__MODULE__{description: nil}), do: {:error, {:description, :is_nil}}
   def description(%__MODULE__{description: description}), do: {:ok, description}
@@ -351,6 +356,7 @@ defmodule GenAI.Graph.Link do
 
   """
   @spec type(__MODULE__.t()) :: T.result(T.Graph.link_type(), T.details())
+  # ⟦𓃋𓇽𓌢𓍝⟧ type :: Obtain the type of a graph link.
   def type(graph_link)
   def type(%__MODULE__{type: nil}), do: {:error, {:type, :is_nil}}
   def type(%__MODULE__{type: type}), do: {:ok, type}
@@ -406,6 +412,7 @@ defmodule GenAI.Graph.Link do
 
   """
   @spec label(__MODULE__.t()) :: T.result(T.Graph.link_label(), T.details())
+  # ⟦𓇇𓐁𓃔𓏳⟧ label :: Obtain the label of a graph link.
   def label(graph_link)
   def label(%__MODULE__{label: nil}), do: {:error, {:label, :is_nil}}
   def label(%__MODULE__{label: label}), do: {:ok, label}
@@ -463,6 +470,7 @@ defmodule GenAI.Graph.Link do
 
   """
   @spec with_id(graph_link :: T.Graph.graph_link()) :: T.result(T.Graph.graph_link(), T.details())
+  # ⟦𓈜𓅿𓍱𓐧⟧ with_id :: Ensure the graph link has an id, generating one if necessary.
   def with_id(graph_link) do
     graph_link
     |> with_id!()
@@ -470,6 +478,7 @@ defmodule GenAI.Graph.Link do
   end
 
   @spec with_id!(__MODULE__.t()) :: __MODULE__.t()
+  # ⟦𓋯𓅇𓋳𓋽⟧ with_id! :: auto-generated pointer for public function with_id!
   def with_id!(graph_link) do
     cond do
       graph_link.id == nil ->
@@ -508,6 +517,7 @@ defmodule GenAI.Graph.Link do
   """
   @spec source_connector(graph_link :: T.Graph.graph_link()) ::
           T.result(R.Link.connector(), T.details())
+  # ⟦𓄺𓋵𓊬𓆴⟧ source_connector :: auto-generated pointer for public function source_connector
   def source_connector(%__MODULE__{source: nil}), do: {:error, {:source, :is_nil}}
   def source_connector(%__MODULE__{source: connector}), do: {:ok, connector}
 
@@ -535,6 +545,7 @@ defmodule GenAI.Graph.Link do
   """
   @spec target_connector(graph_link :: T.Graph.graph_link()) ::
           T.result(R.Link.connector(), T.details())
+  # ⟦𓐈𓊸𓊸𓌝⟧ target_connector :: auto-generated pointer for public function target_connector
   def target_connector(%__MODULE__{target: nil}), do: {:error, {:target, :is_nil}}
   def target_connector(%__MODULE__{target: connector}), do: {:ok, connector}
 
@@ -579,6 +590,7 @@ defmodule GenAI.Graph.Link do
 
   """
   @spec putnew_target(graph_link :: T.Graph.graph_link(), target :: term) :: T.Graph.graph_link()
+  # ⟦𓂙𓂻𓇼𓄃⟧ putnew_target :: Set the target connector of a graph link, if it is not already set.
   def putnew_target(
         %__MODULE__{} = graph_link,
         R.Link.connector(
@@ -687,6 +699,7 @@ defmodule GenAI.Graph.Link do
 
   """
   @spec putnew_source(graph_link :: T.Graph.graph_link(), source :: term) :: T.Graph.graph_link()
+  # ⟦𓊟𓆔𓈤𓆫⟧ putnew_source :: Set the source connector of a graph link, if it is not already set.
   def putnew_source(
         %__MODULE__{} = graph_link,
         R.Link.connector(

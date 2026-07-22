@@ -20,6 +20,7 @@ defmodule GenAI.Tool.Schema.Bool do
       false
   """
   @impl GenAI.Tool.Schema.TypeBehaviour
+  # ⟦𓂹𓄓𓃲𓃢⟧ is_type :: Check if json is of type
   def is_type(%{"type" => "boolean"}), do: true
   def is_type(_), do: false
 
@@ -37,6 +38,7 @@ defmodule GenAI.Tool.Schema.Bool do
       {:error, :unrecognized_type}
   """
   @impl GenAI.Tool.Schema.TypeBehaviour
+  # ⟦𓌨𓄐𓎇𓍕⟧ from_json :: Convert Json map to a `GenAI.Tool.Schema.Bool` struct, handling naming conventions.
   def from_json(%{"type" => "boolean"} = json) do
     {:ok, %__MODULE__{description: json["description"]}}
   end

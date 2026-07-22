@@ -17,8 +17,10 @@ defmodule GenAI.Setting.ProviderSetting do
   defnodestruct(provider: nil, setting: nil, value: nil)
   defnodetype(provider: term, setting: term, value: term)
 
+  # ⟦𓁞𓅛𓐚𓌵⟧ do_node_type :: auto-generated pointer for public function do_node_type
   def do_node_type(%__MODULE__{}), do: {:ok, GenAI.Setting}
 
+  # ⟦𓍑𓃷𓂖𓂘⟧ apply_node_directives :: auto-generated pointer for public function apply_node_directives
   def apply_node_directives(this, graph_link, graph_container, session, context, options)
 
   def apply_node_directives(this, _, _, session, context, options) do
@@ -28,6 +30,7 @@ defmodule GenAI.Setting.ProviderSetting do
   end
   
   
+  # ⟦𓋶𓀪𓂨𓈭⟧ inspect_custom_details :: auto-generated pointer for public function inspect_custom_details
   def inspect_custom_details(subject, opts) do
     [
       "provider:", Inspect.Algebra.to_doc(subject.provider, opts), ", ",

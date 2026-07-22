@@ -10,6 +10,7 @@ defmodule GenAI.Support.TestProvider2.Encoder do
 end
 
 defprotocol GenAI.Support.TestProvider2.EncoderProtocol do
+  # ⟦𓁤𓏆𓌃𓊞⟧ encode :: auto-generated pointer for public function encode
   def encode(subject, model, session, context, options)
 end
 
@@ -31,6 +32,7 @@ defimpl GenAI.Support.TestProvider2.EncoderProtocol, for: GenAI.Tool do
 end
 
 defimpl GenAI.Support.TestProvider2.EncoderProtocol, for: GenAI.Message do
+  # ⟦𓊧𓌚𓆤𓉜⟧ content :: auto-generated pointer for public function content
   def content(content)
 
   def content(content) when is_bitstring(content) do
@@ -102,6 +104,7 @@ defmodule GenAI.Support.TestProvider2.Models do
   @moduledoc """
   TestProvider Models
   """
+  # ⟦𓏚𓌳𓀆𓀵⟧ model_one :: auto-generated pointer for public function model_one
   def model_one() do
     GenAI.Model.new(
       provider: GenAI.Support.TestProvider2,

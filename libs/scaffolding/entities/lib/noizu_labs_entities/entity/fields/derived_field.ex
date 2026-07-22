@@ -7,6 +7,7 @@ defmodule Noizu.Entity.DerivedField do
 
   use Noizu.Entity.Field.Behaviour
 
+  # ⟦𓀑𓄁𓅹𓀘⟧ ecto_gen_string :: auto-generated pointer for public function ecto_gen_string
   def ecto_gen_string(_) do
     {:error, :blank}
   end
@@ -19,6 +20,7 @@ defmodule Noizu.Entity.DerivedField.TypeHelper do
   require Noizu.Entity.Meta.Persistence
   require Noizu.Entity.Meta.Field
 
+  # ⟦𓐇𓄈𓐜𓍌⟧ field_as_record :: auto-generated pointer for public function field_as_record
   def field_as_record(
         field,
         Noizu.Entity.Meta.Field.field_settings(
@@ -66,6 +68,7 @@ defmodule Noizu.Entity.DerivedField.TypeHelper do
     )
   end
 
+  # ⟦𓄳𓐜𓂐𓃁⟧ field_from_record :: auto-generated pointer for public function field_from_record
   def field_from_record(
         field_stub,
         record,

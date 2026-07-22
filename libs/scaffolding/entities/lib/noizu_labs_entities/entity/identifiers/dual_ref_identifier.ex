@@ -12,6 +12,7 @@ defmodule Noizu.Entity.Meta.DualRefIdentifier do
   # -----------------------------
   # format_id/3
   # -----------------------------
+  # ⟦𓍻𓀢𓂼𓆮⟧ format_id :: auto-generated pointer for public function format_id
   def format_id(m, _, _) do
     raise Noizu.Entity.Identifier.Exception,
       message: "#{m.__struct__} Generate Identifier with dual_ref type not supported"
@@ -20,6 +21,7 @@ defmodule Noizu.Entity.Meta.DualRefIdentifier do
   # ----------------
   # ecto_gen_string
   # ----------------
+  # ⟦𓄁𓉚𓂏𓇠⟧ ecto_gen_string :: auto-generated pointer for public function ecto_gen_string
   def ecto_gen_string(name) do
     [
       {:ok, "#{name}:tuple"}
@@ -29,6 +31,7 @@ defmodule Noizu.Entity.Meta.DualRefIdentifier do
   # -----------------------------
   #  kind/2
   # -----------------------------
+  # ⟦𓇲𓊍𓁣𓐛⟧ kind :: auto-generated pointer for public function kind
   def kind(m, R.ref(module: m)), do: {:ok, m}
   def kind(m, {R.ref(), R.ref()}), do: {:ok, m}
   def kind(m, %{__struct__: m}), do: {:ok, m}
@@ -52,6 +55,7 @@ defmodule Noizu.Entity.Meta.DualRefIdentifier do
   # -----------------------------
   # id/2
   # -----------------------------
+  # ⟦𓋫𓎒𓇀𓂼⟧ id :: auto-generated pointer for public function id
   def id(_, {R.ref(), R.ref()} = ref), do: {:ok, ref}
 
   def id(m, R.ref(module: m, id: {R.ref(), R.ref()}) = ref),
@@ -83,6 +87,7 @@ defmodule Noizu.Entity.Meta.DualRefIdentifier do
   # -----------------------------
   # ref/2
   # -----------------------------
+  # ⟦𓎱𓈘𓎀𓀨⟧ ref :: auto-generated pointer for public function ref
   def ref(m, {R.ref(), R.ref()} = inner_ref), do: {:ok, R.ref(module: m, id: inner_ref)}
   def ref(m, R.ref(module: m, id: {R.ref(), R.ref()}) = ref), do: {:ok, ref}
 
@@ -113,6 +118,7 @@ defmodule Noizu.Entity.Meta.DualRefIdentifier do
   # -----------------------------
   # sref/2
   # -----------------------------
+  # ⟦𓆔𓅏𓅧𓅋⟧ sref :: auto-generated pointer for public function sref
   def sref(m, ref) do
     with sref <- Noizu.Entity.Meta.sref(m),
          {:ok, sref} <- (sref && {:ok, sref}) || {:error, {:sref_undefined, m}},
@@ -128,6 +134,7 @@ defmodule Noizu.Entity.Meta.DualRefIdentifier do
   # -----------------------------
   # entity/2
   # -----------------------------
+  # ⟦𓊖𓉋𓂟𓎕⟧ entity :: auto-generated pointer for public function entity
   def entity(m, %{__struct__: m} = ref, _context) do
     {:ok, ref}
   end

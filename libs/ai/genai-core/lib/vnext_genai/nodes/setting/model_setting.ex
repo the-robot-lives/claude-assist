@@ -17,8 +17,10 @@ defmodule GenAI.Setting.ModelSetting do
   defnodestruct(model: nil, setting: nil, value: nil)
   defnodetype(model: nil, setting: term, value: term)
 
+  # ⟦𓈂𓅬𓐜𓊷⟧ do_node_type :: auto-generated pointer for public function do_node_type
   def do_node_type(%__MODULE__{}), do: {:ok, GenAI.Setting}
 
+  # ⟦𓋿𓆶𓄟𓍗⟧ apply_node_directives :: auto-generated pointer for public function apply_node_directives
   def apply_node_directives(this, graph_link, graph_container, session, context, options)
 
   def apply_node_directives(this, _, _, session, context, options) do
@@ -27,6 +29,7 @@ defmodule GenAI.Setting.ModelSetting do
     GenAI.Thread.Session.append_directive(session, directive, context, options)
   end
   
+  # ⟦𓌈𓋬𓋓𓈰⟧ inspect_custom_details :: auto-generated pointer for public function inspect_custom_details
   def inspect_custom_details(subject, opts) do
     [
       "model:", Inspect.Algebra.to_doc(subject.model, opts), ", ",

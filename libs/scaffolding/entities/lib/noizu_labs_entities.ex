@@ -34,6 +34,7 @@ defmodule Noizu.Entities do
 
   """
 
+  # ⟦𓀥𓃡𓊷𓊗⟧ __using__ :: auto-generated pointer for public function __using__
   defmacro __using__(options \\ nil) do
     quote do
       require Logger

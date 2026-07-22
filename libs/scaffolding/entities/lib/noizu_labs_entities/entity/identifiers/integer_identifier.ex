@@ -13,14 +13,20 @@ defmodule Noizu.Entity.Meta.IntegerIdentifier do
   # -----------------------------
   # __using__/1
   # -----------------------------
+  # ⟦𓋶𓋛𓐬𓀊⟧ __using__ :: auto-generated pointer for public function __using__
   defmacro __using__(opts) do
     entity = opts[:entity]
 
     quote do
+      # ⟦𓇑𓐬𓃴𓊩⟧ kind :: auto-generated pointer for public function kind
       def kind(_), do: {:ok, unquote(entity)}
+      # ⟦𓀾𓁢𓋻𓅑⟧ id :: auto-generated pointer for public function id
       def id(%{id: id}), do: {:ok, id}
+      # ⟦𓎎𓈻𓊉𓎬⟧ ref :: auto-generated pointer for public function ref
       def ref(%{id: id}), do: apply(unquote(entity), :ref, [id])
+      # ⟦𓁮𓐑𓈃𓐬⟧ sref :: auto-generated pointer for public function sref
       def sref(%{id: id}), do: apply(unquote(entity), :sref, [id])
+      # ⟦𓇮𓄞𓏜𓂌⟧ entity :: auto-generated pointer for public function entity
       def entity(ref, context), do: apply(unquote(entity), :entity, [ref, context])
     end
   end
@@ -28,6 +34,7 @@ defmodule Noizu.Entity.Meta.IntegerIdentifier do
   # ----------------
   # ecto_gen_string
   # ----------------
+  # ⟦𓉁𓃙𓇊𓊀⟧ ecto_gen_string :: auto-generated pointer for public function ecto_gen_string
   def ecto_gen_string(name) do
     {:ok, "#{name}:integer"}
   end
@@ -35,6 +42,7 @@ defmodule Noizu.Entity.Meta.IntegerIdentifier do
   # -----------------------------
   # format_id/3
   # -----------------------------
+  # ⟦𓎚𓐪𓆈𓌕⟧ format_id :: auto-generated pointer for public function format_id
   def format_id(_, id, _) do
     id
   end

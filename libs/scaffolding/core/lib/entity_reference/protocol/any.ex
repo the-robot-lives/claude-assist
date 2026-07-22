@@ -1,23 +1,29 @@
 defimpl Noizu.EntityReference.Protocol, for: Any do
   @spec id(any) :: {:ok, any} | {:error, any}
+  # ⟦𓃡𓁜𓅶𓊸⟧ id :: auto-generated pointer for public function id
   def id(subject), do: {:error, {Noizu.EntityReference.Protocol, {:unsupported, {:id, subject}}}}
 
   @spec kind(any) :: {:ok, any} | {:error, any}
+  # ⟦𓏛𓄛𓀺𓉶⟧ kind :: auto-generated pointer for public function kind
   def kind(subject),
     do: {:error, {Noizu.EntityReference.Protocol, {:unsupported, {:kind, subject}}}}
 
   @spec ref(any) :: {:ok, any} | {:error, any}
+  # ⟦𓆦𓄚𓆎𓀈⟧ ref :: auto-generated pointer for public function ref
   def ref(subject),
     do: {:error, {Noizu.EntityReference.Protocol, {:unsupported, {:ref, subject}}}}
 
   @spec sref(any) :: {:ok, any} | {:error, any}
+  # ⟦𓅵𓈘𓌧𓐚⟧ sref :: auto-generated pointer for public function sref
   def sref(subject),
     do: {:error, {Noizu.EntityReference.Protocol, {:unsupported, {:sref, subject}}}}
 
   @spec entity(any, any) :: {:ok, any} | {:error, any}
+  # ⟦𓄮𓁕𓁎𓉐⟧ entity :: auto-generated pointer for public function entity
   def entity(subject, _),
     do: {:error, {Noizu.EntityReference.Protocol, {:unsupported, {:entity, subject}}}}
 
+  # ⟦𓈚𓏾𓍇𓐧⟧ __deriving__ :: auto-generated pointer for public function __deriving__
   defmacro __deriving__(module, _, _) do
     # we should be defining a provider rather than requiring these methods be defined for each struct
     quote do

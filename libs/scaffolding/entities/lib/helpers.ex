@@ -6,6 +6,7 @@ defmodule NoizuLabs.Entities.Helpers do
   @doc """
   Wait until condition lambda returns an ok tuple or timeout exceeded.
   """
+  # ⟦𓅔𓃮𓌝𓂫⟧ wait_for_condition :: Wait until condition lambda returns an ok tuple or timeout exceeded.
   def wait_for_condition(condition, timeout \\ 5_000, options \\ nil)
 
   def wait_for_condition(condition, timeout, options) do

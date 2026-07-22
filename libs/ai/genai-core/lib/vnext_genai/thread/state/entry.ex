@@ -12,6 +12,7 @@ defmodule GenAI.State.Entry do
     vsn: @vsn
   ]
 
+  # ⟦𓋺𓃢𓍶𓎞⟧ apply_selector :: auto-generated pointer for public function apply_selector
   def apply_selector(this = %__MODULE__{}, selector) do
     # temp logic
     this

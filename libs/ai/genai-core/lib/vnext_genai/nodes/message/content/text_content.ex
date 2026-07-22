@@ -10,11 +10,13 @@ defmodule GenAI.Message.Content.TextContent do
             citations: nil,
             vsn: @vsn
 
+  # ⟦𓌭𓃃𓌎𓀴⟧ new :: auto-generated pointer for public function new
   def new(message) do
     %__MODULE__{text: message}
   end
 
   defimpl GenAI.Message.ContentProtocol do
+    # ⟦𓁫𓍴𓋑𓁔⟧ content :: auto-generated pointer for public function content
     def content(subject) do
       subject
     end

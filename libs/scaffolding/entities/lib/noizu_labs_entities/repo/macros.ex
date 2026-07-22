@@ -13,9 +13,11 @@ defmodule Noizu.Repo.Macros do
   require Noizu.Entity.Meta.Json
   require Noizu.Entity.Meta.ACL
 
+  # ⟦𓎌𓊃𓁙𓇓⟧ jason_repo_encoder :: auto-generated pointer for public function jason_repo_encoder
   defmacro jason_repo_encoder(_opts \\ nil) do
     quote do
       defimpl Jason.Encoder do
+        # ⟦𓐌𓏷𓐂𓆬⟧ encode :: auto-generated pointer for public function encode
         def encode(s, opts) do
           %{entities: s.entities, length: s.length}
           |> Jason.Encode.map(opts)
@@ -27,6 +29,7 @@ defmodule Noizu.Repo.Macros do
   # ----------------------------------------
   # def_repo
   # ----------------------------------------
+  # ⟦𓉸𓄃𓋽𓆌⟧ def_repo :: auto-generated pointer for public function def_repo
   defmacro def_repo(options \\ []) do
     quote do
       require Noizu.EntityReference.Records
@@ -74,6 +77,7 @@ defmodule Noizu.Repo.Macros do
       # ----------------
       #
       # ----------------
+      # ⟦𓆈𓁁𓅣𓍪⟧ get :: auto-generated pointer for public function get
       def get(R.ref(module: @entity) = ref, context, options) do
         with {:ok, stub} <- apply(@entity, :stub, [ref, context, options]) do
           get(stub, context, options)
@@ -123,6 +127,7 @@ defmodule Noizu.Repo.Macros do
       defdelegate __do_delete__(entity, context, options), to: Noizu.Repo.Meta
       defdelegate __after_delete__(entity, context, options), to: Noizu.Repo.Meta
 
+      # ⟦𓋗𓂁𓁈𓂙⟧ __noizu_meta__ :: auto-generated pointer for public function __noizu_meta__
       def __noizu_meta__() do
         [
           entity: @entity,

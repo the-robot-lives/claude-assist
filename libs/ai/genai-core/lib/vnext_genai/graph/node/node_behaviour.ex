@@ -36,6 +36,7 @@ defmodule GenAI.Graph.NodeBehaviour do
   ```
 
   """
+  # ⟦𓌤𓁟𓂈𓉬⟧ defnodetype :: Define the type of a node with default fields included.
   defmacro defnodetype(types) do
     types = Macro.expand_once(types, __CALLER__)
 
@@ -72,6 +73,7 @@ defmodule GenAI.Graph.NodeBehaviour do
     ]
   ```
   """
+  # ⟦𓃰𓋩𓐇𓊆⟧ defnodestruct :: Define the struct of a node with default fields included.
   defmacro defnodestruct(values) do
     quote do
       @vsn Module.get_attribute(__MODULE__, :vsn, 1.0)
@@ -101,6 +103,7 @@ defmodule GenAI.Graph.NodeBehaviour do
   # ==================================
   # Using Macro
   # ==================================
+  # ⟦𓅃𓌈𓇊𓊚⟧ __using__ :: auto-generated pointer for public function __using__
   defmacro __using__(opts \\ nil) do
     quote do
       @provider unquote(opts[:provider]) || GenAI.Graph.NodeProtocol.DefaultProvider
@@ -116,6 +119,7 @@ defmodule GenAI.Graph.NodeBehaviour do
       defdelegate inspect_full_detail(subject, opts), to: @provider
 
       @defimpl GenAI.Graph.NodeBehaviour
+      # ⟦𓆎𓃐𓁼𓎸⟧ new :: auto-generated pointer for public function new
       def new(options \\ nil) do
         @provider.new(__MODULE__, options)
       end

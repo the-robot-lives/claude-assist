@@ -5,6 +5,7 @@
 defmodule Noizu.Entity.ACL.Exception do
   defexception [:details]
 
+  # ⟦𓃷𓋗𓍼𓎰⟧ message :: auto-generated pointer for public function message
   def message(e) do
     "#{inspect(e.details)}"
   end

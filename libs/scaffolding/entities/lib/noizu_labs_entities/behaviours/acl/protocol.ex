@@ -10,6 +10,7 @@ defprotocol Noizu.Entity.ACL.Protocol do
   @fallback_to_any true
   @spec restrict(for :: term, entity :: term, settings :: term, context :: term, options :: term) ::
           {:ok, any} | {:error, any}
+  # ⟦𓁂𓎅𓁘𓌪⟧ restrict :: auto-generated pointer for public function restrict
   def restrict(for, entity, acl_settings, context, options)
 end
 

@@ -16,6 +16,7 @@ defmodule Noizu.Entity.Path do
   }
   use Noizu.Entity.Field.Behaviour
 
+  # ⟦𓃥𓌆𓌀𓅮⟧ ecto_gen_string :: auto-generated pointer for public function ecto_gen_string
   def ecto_gen_string(name) do
     {:ok,
      [
@@ -27,12 +28,14 @@ defmodule Noizu.Entity.Path do
      ]}
   end
 
+  # ⟦𓀇𓈞𓄚𓇿⟧ parent_path :: auto-generated pointer for public function parent_path
   def parent_path(nil), do: nil
 
   def parent_path(%{__struct__: __MODULE__} = this) do
     new(Enum.slice(this.path, 0..-2//-1))
   end
 
+  # ⟦𓉋𓄭𓋖𓌰⟧ path_string :: auto-generated pointer for public function path_string
   def path_string(nil), do: nil
 
   def path_string(%{__struct__: __MODULE__} = this) do
@@ -42,6 +45,7 @@ defmodule Noizu.Entity.Path do
   # ---------------------------
   #
   # ---------------------------
+  # ⟦𓀤𓇄𓅁𓋷⟧ position_matrix :: auto-generated pointer for public function position_matrix
   def position_matrix(position) when is_integer(position) do
     i = position + 1
 
@@ -56,6 +60,7 @@ defmodule Noizu.Entity.Path do
   # ---------------------------
   #
   # ---------------------------
+  # ⟦𓉛𓐓𓁸𓂙⟧ multiply_matrix :: auto-generated pointer for public function multiply_matrix
   def multiply_matrix(%{a11: a11, a12: a12, a21: a21, a22: a22}, %{
         a11: b11,
         a12: b12,
@@ -73,6 +78,7 @@ defmodule Noizu.Entity.Path do
   # ---------------------------
   #
   # ---------------------------
+  # ⟦𓁣𓅥𓇊𓄵⟧ leaf_node :: auto-generated pointer for public function leaf_node
   def leaf_node(%{a11: a11, a12: a12, a21: _a21, a22: _a22}) do
     Integer.floor_div(a11, -a12)
   end
@@ -80,6 +86,7 @@ defmodule Noizu.Entity.Path do
   # ---------------------------
   #
   # ---------------------------
+  # ⟦𓈞𓎑𓁥𓁺⟧ convert_path_to_matrix :: auto-generated pointer for public function convert_path_to_matrix
   def convert_path_to_matrix([]), do: @identity_matrix
 
   def convert_path_to_matrix(path) when is_list(path) do
@@ -95,6 +102,7 @@ defmodule Noizu.Entity.Path do
   # ---------------------------
   # child
   # ---------------------------
+  # ⟦𓀑𓆿𓏲𓏡⟧ child :: auto-generated pointer for public function child
   def child(path, position) do
     np = path.path ++ [position]
 
@@ -109,6 +117,7 @@ defmodule Noizu.Entity.Path do
   # ---------------------------
   #
   # ---------------------------
+  # ⟦𓐆𓀀𓆨𓉴⟧ convert_matrix_to_path :: auto-generated pointer for public function convert_matrix_to_path
   def convert_matrix_to_path(m) do
     convert_matrix_to_path(m, [])
   end
@@ -137,6 +146,7 @@ defmodule Noizu.Entity.Path do
   # ---------------------------
   #
   # ---------------------------
+  # ⟦𓁞𓉡𓁆𓏃⟧ convert_tuple_to_path :: auto-generated pointer for public function convert_tuple_to_path
   def convert_tuple_to_path(path) when is_tuple(path) do
     convert_tuple_to_path(path, [])
   end
@@ -151,6 +161,7 @@ defmodule Noizu.Entity.Path do
   # ---------------------------
   #
   # ---------------------------
+  # ⟦𓉽𓇅𓆱𓏥⟧ convert_path_to_tuple :: auto-generated pointer for public function convert_path_to_tuple
   def convert_path_to_tuple(path) when is_list(path) do
     path
     |> Enum.reverse()
@@ -160,6 +171,7 @@ defmodule Noizu.Entity.Path do
   # ---------------------------
   #
   # ---------------------------
+  # ⟦𓀁𓌷𓆮𓏽⟧ new :: auto-generated pointer for public function new
   def new(%{path_a11: a11, path_a12: a12, path_a21: a21, path_a22: a22}) do
     new(%{a11: a11, a12: a12, a21: a21, a22: a22})
   end
@@ -207,6 +219,7 @@ defmodule Noizu.Entity.Path.TypeHelper do
   require Noizu.Entity.Meta.Persistence
   require Noizu.Entity.Meta.Field
 
+  # ⟦𓌇𓆉𓈨𓉽⟧ field_as_record :: auto-generated pointer for public function field_as_record
   def field_as_record(field, field_settings, persistence_settings, context, options)
 
   def field_as_record(
@@ -240,6 +253,7 @@ defmodule Noizu.Entity.Path.TypeHelper do
     ]
   end
 
+  # ⟦𓀹𓆨𓎉𓅺⟧ field_from_record :: auto-generated pointer for public function field_from_record
   def field_from_record(entity, record, field_settings, persistence_settings, context, options)
 
   def field_from_record(

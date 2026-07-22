@@ -47,6 +47,7 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
     )
   end
 
+  # ⟦𓍙𓊰𓁀𓍱⟧ run :: auto-generated pointer for public function run
   def run(args) do
     options = gen_options(args)
     check_files(options)
@@ -182,6 +183,7 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
     end
   end
 
+  # ⟦𓅴𓁜𓌸𓌧⟧ ecto_gen :: auto-generated pointer for public function ecto_gen
   def ecto_gen(options) do
     meta = extract_meta(options)
 
@@ -236,6 +238,7 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
       |> Enum.filter(& &1)
   end
 
+  # ⟦𓏦𓊋𓌎𓉶⟧ context_template :: auto-generated pointer for public function context_template
   def context_template(options) do
     author =
       cond do
@@ -270,6 +273,7 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
         @doc \"""
         Returns the list of #{plural}.
         \"""
+        # ⟦𓎬𓂙𓍈𓆤⟧ list_ :: auto-generated pointer for public function list_
         def list_#{plural}(context, options \\\\ []) do
           # list(context)
           []
@@ -279,11 +283,13 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
         Gets a single #{singular}.
 
         \"""
+        # ⟦𓂥𓊘𓁭𓎝⟧ get_ :: auto-generated pointer for public function get_
         def get_#{singular}(id, context, options \\\\ []), do: get(id, context, options)
 
         @doc \"""
         Creates a #{singular}.
         \"""
+        # ⟦𓏣𓀕𓉨𓁡⟧ create_ :: auto-generated pointer for public function create_
         def create_#{singular}(#{singular}, context, options \\\\ []) do
           create(#{singular}, context, options)
         end
@@ -291,6 +297,7 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
         @doc \"""
         Updates a #{singular}.
         \"""
+        # ⟦𓄠𓍠𓇔𓇹⟧ update_ :: auto-generated pointer for public function update_
         def update_#{singular}(%#{entity_alias}{} = #{singular}, attrs, context, options \\\\ []) do
           #{singular}
           |> change_#{singular}(attrs)
@@ -300,6 +307,7 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
         @doc \"""
         Deletes a #{singular}.
         \"""
+        # ⟦𓂻𓈏𓆫𓄸⟧ delete_ :: auto-generated pointer for public function delete_
         def delete_#{singular}(%#{entity_alias}{} = #{singular}, context, options \\\\ []) do
           delete(#{singular}, context, options)
         end
@@ -307,6 +315,7 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
         @doc \"""
         Returns an Changeset for tracking #{singular} changes.
         \"""
+        # ⟦𓉻𓋺𓁅𓆄⟧ change_ :: auto-generated pointer for public function change_
         def change_#{singular}(%#{entity_alias}{} = #{singular}, attrs \\\\ %{}) do
           # NYI: Implement custom changeset logic here.
           #{singular}
@@ -317,6 +326,7 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
     {:ok, template}
   end
 
+  # ⟦𓎌𓁍𓊒𓊕⟧ entity_template :: auto-generated pointer for public function entity_template
   def entity_template(options) do
     author =
       cond do
@@ -461,6 +471,7 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
     {:ok, template}
   end
 
+  # ⟦𓍶𓉐𓉇𓊹⟧ indent :: auto-generated pointer for public function indent
   def indent(string, indent \\ "  ")
 
   def indent(string, indent) when is_integer(indent) do
@@ -473,6 +484,7 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
     |> Enum.map_join("\n", fn x -> indent <> x end)
   end
 
+  # ⟦𓃪𓃔𓀲𓍩⟧ dedent :: auto-generated pointer for public function dedent
   def dedent(string) do
     lines = String.split(string, "\n")
     first_line = Enum.at(lines, 0)
@@ -483,6 +495,7 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
     |> Enum.map_join("\n", &String.trim_leading(&1, strip))
   end
 
+  # ⟦𓄲𓀕𓅦𓋟⟧ extract_sref :: auto-generated pointer for public function extract_sref
   def extract_sref(options) do
     cond do
       sref = options.args[:sref] -> sref
@@ -490,6 +503,7 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
     end
   end
 
+  # ⟦𓇓𓆨𓏻𓄿⟧ extract_id :: auto-generated pointer for public function extract_id
   def extract_id(options) do
     case options.args[:id] do
       "atom" -> ":atom"
@@ -502,6 +516,7 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
     end
   end
 
+  # ⟦𓁱𓆇𓁛𓁹⟧ extract_stores :: auto-generated pointer for public function extract_stores
   def extract_stores(options) do
     Keyword.get_values(options.args, :store)
     |> Enum.map(fn
@@ -513,6 +528,7 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
     end)
   end
 
+  # ⟦𓐠𓁎𓏓𓐎⟧ extract_fields :: auto-generated pointer for public function extract_fields
   def extract_fields(meta, options) do
     fields = Keyword.get_values(options.args, :field)
 
@@ -566,6 +582,7 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
     {order, fields}
   end
 
+  # ⟦𓁐𓋾𓄭𓋓⟧ extract_meta :: auto-generated pointer for public function extract_meta
   def extract_meta(options) do
     Keyword.get_values(options.args, :meta)
     |> Enum.map(fn
@@ -593,6 +610,7 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
     |> Map.new()
   end
 
+  # ⟦𓌦𓐄𓃠𓃶⟧ usage :: auto-generated pointer for public function usage
   def usage do
     """
     mix nz.gen.entity Repo Entity schema --sref=reference --store=ecto --id=uuid --field=field_name:type --meta=field_name:opt --meta=field_name:opt=value
@@ -601,6 +619,7 @@ defmodule Mix.Tasks.Nz.Gen.Entity do
     """
   end
 
+  # ⟦𓌶𓍄𓇖𓎪⟧ gen_options :: auto-generated pointer for public function gen_options
   def gen_options([context, entity, table | argv]) do
     Mix.Task.run("app.config", [])
     {args, params, errors} = extract_args(argv)

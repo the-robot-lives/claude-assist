@@ -23,6 +23,7 @@ defmodule Noizu.Repo.Meta do
   # -------------------
   # create/3
   # -------------------
+  # ⟦𓆻𓃀𓏅𓄀⟧ create :: auto-generated pointer for public function create
   def create(%Ecto.Changeset{} = changeset, context, options) do
     if changeset.valid? do
       Enum.reduce(changeset.changes, changeset.data, fn {field, value}, acc ->
@@ -46,6 +47,7 @@ defmodule Noizu.Repo.Meta do
   # -------------------
   # update/3
   # -------------------
+  # ⟦𓊫𓀭𓉬𓇓⟧ update :: auto-generated pointer for public function update
   def update(%Ecto.Changeset{} = changeset, context, options) do
     if changeset.valid? do
       Enum.reduce(changeset.changes, changeset.data, fn {field, value}, acc ->
@@ -69,6 +71,7 @@ defmodule Noizu.Repo.Meta do
   # -------------------
   # get/3
   # -------------------
+  # ⟦𓂨𓌈𓇫𓎺⟧ get :: auto-generated pointer for public function get
   def get(entity, context, options) do
     with repo <- Noizu.Entity.Meta.repo(entity),
          {:ok, entity} <- apply(repo, :__before_get__, [entity, context, options]),
@@ -81,6 +84,7 @@ defmodule Noizu.Repo.Meta do
   # -------------------
   # delete/3
   # -------------------
+  # ⟦𓁕𓎘𓇆𓋂⟧ delete :: auto-generated pointer for public function delete
   def delete(entity, context, options) do
     with repo <- Noizu.Entity.Meta.repo(entity),
          {:ok, entity} <- apply(repo, :__before_delete__, [entity, context, options]),
@@ -141,6 +145,7 @@ defmodule Noizu.Repo.Meta do
   # -------------------
   # __before_create__3
   # -------------------
+  # ⟦𓆯𓊘𓅁𓏇⟧ __before_create__ :: auto-generated pointer for public function __before_create__
   def __before_create__(entity, context, options) do
     entity
     |> __before_create__generate_id(context, options)
@@ -150,6 +155,7 @@ defmodule Noizu.Repo.Meta do
   # -------------------
   #
   # -------------------
+  # ⟦𓎊𓋱𓊔𓎜⟧ __do_create__ :: auto-generated pointer for public function __do_create__
   def __do_create__(entity, context, options) do
     Noizu.Entity.Meta.persistence(entity)
     |> Enum.map(fn settings ->
@@ -167,6 +173,7 @@ defmodule Noizu.Repo.Meta do
   # -------------------
   #
   # -------------------
+  # ⟦𓏰𓁉𓀖𓋦⟧ __after_create__ :: auto-generated pointer for public function __after_create__
   def __after_create__(entity, _context, _options) do
     {:ok, entity}
   end
@@ -204,6 +211,7 @@ defmodule Noizu.Repo.Meta do
   # -------------------
   #
   # -------------------
+  # ⟦𓀱𓁣𓄨𓆱⟧ __before_update__ :: auto-generated pointer for public function __before_update__
   def __before_update__(entity, context, options) do
     cond do
       entity.id ->
@@ -218,6 +226,7 @@ defmodule Noizu.Repo.Meta do
   # -------------------
   #
   # -------------------
+  # ⟦𓂢𓏘𓌖𓁮⟧ __do_update__ :: auto-generated pointer for public function __do_update__
   def __do_update__(entity, context, options) do
     Noizu.Entity.Meta.persistence(entity)
     |> Enum.map(fn settings ->
@@ -235,6 +244,7 @@ defmodule Noizu.Repo.Meta do
   # -------------------
   #
   # -------------------
+  # ⟦𓅗𓅾𓐠𓍫⟧ __after_update__ :: auto-generated pointer for public function __after_update__
   def __after_update__(entity, _context, _options) do
     {:ok, entity}
   end
@@ -242,6 +252,7 @@ defmodule Noizu.Repo.Meta do
   # -------------------
   #
   # -------------------
+  # ⟦𓎹𓂉𓍎𓊛⟧ __before_get__ :: auto-generated pointer for public function __before_get__
   def __before_get__(entity, _context, _options) do
     {:ok, entity}
   end
@@ -249,6 +260,7 @@ defmodule Noizu.Repo.Meta do
   # -------------------
   #
   # -------------------
+  # ⟦𓌕𓃤𓏨𓃡⟧ __do_get__ :: auto-generated pointer for public function __do_get__
   def __do_get__(entity, context, options) do
     Noizu.Entity.Meta.persistence(entity)
     |> Enum.reduce_while({:error, :not_found}, fn settings, _ ->
@@ -267,6 +279,7 @@ defmodule Noizu.Repo.Meta do
   # -------------------
   #
   # -------------------
+  # ⟦𓄍𓁔𓍝𓀌⟧ __after_get__ :: auto-generated pointer for public function __after_get__
   def __after_get__(entity, _context, _options) do
     {:ok, entity}
   end
@@ -274,6 +287,7 @@ defmodule Noizu.Repo.Meta do
   # -------------------
   #
   # -------------------
+  # ⟦𓂍𓁈𓀬𓅺⟧ __before_delete__ :: auto-generated pointer for public function __before_delete__
   def __before_delete__(entity, _context, _options) do
     cond do
       entity.id -> {:ok, entity}
@@ -283,6 +297,7 @@ defmodule Noizu.Repo.Meta do
   # -------------------
   #
   # -------------------
+  # ⟦𓇧𓌮𓌸𓅢⟧ __do_delete__ :: auto-generated pointer for public function __do_delete__
   def __do_delete__(entity, context, options) do
     Noizu.Entity.Meta.persistence(entity.__struct__)
     |> Enum.reverse()
@@ -327,6 +342,7 @@ defmodule Noizu.Repo.Meta do
   # -------------------
   #
   # -------------------
+  # ⟦𓊩𓀅𓄡𓐄⟧ __after_delete__ :: auto-generated pointer for public function __after_delete__
   def __after_delete__(entity, context, options) do
     __after_delete__type(entity, context, options)
   end

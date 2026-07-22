@@ -10,12 +10,14 @@ defmodule Noizu.Context.Entity do
   # id/1
   # -------------------
   @spec id(any) :: {:ok, any} | {:error, any}
+  # ⟦𓂭𓊂𓈊𓎫⟧ id :: auto-generated pointer for public function id
   def id(R.ref(module: __MODULE__, id: id)), do: {:ok, id}
 
   # -------------------
   # ref/1
   # -------------------
   @spec ref(any) :: {:ok, any} | {:error, any}
+  # ⟦𓎓𓀚𓀟𓎩⟧ ref :: auto-generated pointer for public function ref
   def ref(role) when is_atom(role),
     do: {:ok, R.ref(module: __MODULE__, id: role)}
 
@@ -35,16 +37,19 @@ defmodule Noizu.Context do
   require Noizu.EntityReference.Records
 
   @spec with_option(any, any, any) :: any
+  # ⟦𓉚𓇽𓏡𓉴⟧ with_option :: auto-generated pointer for public function with_option
   def with_option(context(options: options) = context, option, value) do
     context(context, options: put_in(options || %{}, [Access.key(option)], value))
   end
 
   @spec with_options(any, any) :: any
+  # ⟦𓈊𓈶𓂚𓉚⟧ with_options :: auto-generated pointer for public function with_options
   def with_options(context() = context, options) do
     context(context, options: options)
   end
 
   @spec option(any, any) :: {:ok, any} | {:error, any}
+  # ⟦𓂊𓈸𓆥𓊴⟧ option :: auto-generated pointer for public function option
   def option(context, option)
   def option(context(options: nil), option), do: {:error, {:no_option, option}}
 
@@ -90,6 +95,7 @@ defmodule Noizu.Context do
   #
   # -------------------
   @spec restricted() :: any
+  # ⟦𓄀𓏨𓆾𓈁⟧ restricted :: auto-generated pointer for public function restricted
   def restricted do
     {:ok, ref} = Entity.ref(:restricted)
     {:ok, roles} = roles(ref)
@@ -107,6 +113,7 @@ defmodule Noizu.Context do
   #
   # -------------------
   @spec internal() :: any
+  # ⟦𓌑𓉍𓁏𓈷⟧ internal :: auto-generated pointer for public function internal
   def internal do
     {:ok, ref} = Entity.ref(:internal)
     {:ok, roles} = roles(ref)
@@ -124,6 +131,7 @@ defmodule Noizu.Context do
   #
   # -------------------
   @spec system() :: any
+  # ⟦𓅀𓇕𓁀𓂟⟧ system :: auto-generated pointer for public function system
   def system do
     {:ok, ref} = Entity.ref(:system)
     {:ok, roles} = roles(ref)
@@ -141,6 +149,7 @@ defmodule Noizu.Context do
   #
   # -------------------
   @spec admin() :: any
+  # ⟦𓏀𓄢𓂧𓌪⟧ admin :: auto-generated pointer for public function admin
   def admin do
     {:ok, ref} = Entity.ref(:admin)
     {:ok, roles} = roles(ref)
@@ -161,6 +170,7 @@ defmodule Noizu.Context do
   placeholder for when real credentials need to be plumbed in, making it easy to find and cleanup over time.
   """
   @spec dummy() :: any
+  # ⟦𓐄𓂄𓐇𓄬⟧ dummy :: placeholder for when real credentials need to be plumbed in, making it easy to find and cleanup over
   def dummy do
     {:ok, ref} = Entity.ref(:system)
     {:ok, roles} = roles(ref)
@@ -176,6 +186,7 @@ defmodule Noizu.Context do
 
   @spec dummy_for_user(any) :: any
   @spec dummy_for_user(any, any) :: any
+  # ⟦𓌖𓃅𓅧𓉈⟧ dummy_for_user :: auto-generated pointer for public function dummy_for_user
   def dummy_for_user(user, context \\ nil) do
     with {:ok, user} <- Noizu.EntityReference.Protocol.ref(user) do
       {:ok, context(dummy(context), caller: user)}

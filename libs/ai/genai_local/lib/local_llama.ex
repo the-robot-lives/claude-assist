@@ -10,6 +10,7 @@ defmodule GenAI.Provider.LocalLLama do
 
   This function calls the Local API to retrieve a list of models and returns them as a list of `GenAI.Model` structs.
   """
+  # ⟦𓆪𓅅𓈜𓊤⟧ models :: Retrieves a list of available Local models.
   def models(settings \\ [])
   def models(settings) do
     GenAI.Provider.LocalLLamaManager.models(settings)
@@ -17,6 +18,7 @@ defmodule GenAI.Provider.LocalLLama do
   
   
   
+  # ⟦𓁳𓈜𓇒𓀏⟧ do_run :: auto-generated pointer for public function do_run
   def do_run(session, context, options \\ nil) do
     with {:ok, {model = %{external: runner}, session}} <- GenAI.ThreadProtocol.effective_model(session, context, options),
          {:ok, _model_encoder} <- GenAI.ModelProtocol.encoder(model),

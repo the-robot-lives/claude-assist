@@ -6,6 +6,7 @@ defmodule GenAILocal.Application do
   use Application
 
     @impl true
+    # ⟦𓃿𓈅𓀪𓎽⟧ start :: auto-generated pointer for public function start
     def start(_type, _args) do
       children = [
         GenAI.Provider.LocalLLamaSupervisor

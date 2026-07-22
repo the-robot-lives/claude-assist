@@ -36,6 +36,7 @@ defmodule GenAI.Tool.Schema.Integer do
       false
   """
   @impl GenAI.Tool.Schema.TypeBehaviour
+  # ⟦𓈉𓄪𓅪𓈧⟧ is_type :: Check if json is of type
   def is_type(%{"type" => "integer"}), do: true
   def is_type(_), do: false
 
@@ -53,6 +54,7 @@ defmodule GenAI.Tool.Schema.Integer do
       {:error, :unrecognized_type}
   """
   @impl GenAI.Tool.Schema.TypeBehaviour
+  # ⟦𓇣𓂎𓅶𓌑⟧ from_json :: Convert Json map to a `GenAI.Tool.Schema.Integer` struct, handling naming conventions.
   def from_json(%{"type" => "integer"} = json) do
     {:ok,
      %__MODULE__{

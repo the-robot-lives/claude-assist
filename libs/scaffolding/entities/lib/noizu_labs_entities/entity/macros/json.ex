@@ -13,6 +13,7 @@ defmodule Noizu.Entity.Macros.Json do
   # ----------------------------------------
   #
   # ----------------------------------------
+  # ⟦𓅀𓍰𓄧𓂛⟧ register_attributes :: auto-generated pointer for public function register_attributes
   def register_attributes(mod) do
     Module.register_attribute(mod, :__nz_json, accumulate: true)
     Module.register_attribute(mod, :json, accumulate: true)
@@ -21,6 +22,7 @@ defmodule Noizu.Entity.Macros.Json do
   # ----------------------------------------
   #
   # ----------------------------------------
+  # ⟦𓀺𓌜𓃭𓂎⟧ merge_json_settings :: auto-generated pointer for public function merge_json_settings
   def merge_json_settings([], _, _), do: []
 
   def merge_json_settings([h], template, field) do
@@ -49,6 +51,7 @@ defmodule Noizu.Entity.Macros.Json do
     merge_json_settings([h | t], template, field)
   end
 
+  # ⟦𓈄𓎆𓎑𓆎⟧ expand_json_settings :: auto-generated pointer for public function expand_json_settings
   def expand_json_settings(json_list, fields) do
     # {:special, :json_template_specific2,
     #   [special: {:settings, :special, :json_template_specific2, :bop2, false, nil}]},
@@ -134,6 +137,7 @@ defmodule Noizu.Entity.Macros.Json do
   # ----------------------------------------
   #
   # ----------------------------------------
+  # ⟦𓌴𓂐𓐦𓋬⟧ exact_json__settings :: auto-generated pointer for public function exact_json__settings
   def exact_json__settings(settings) do
     case settings do
       true ->
@@ -160,6 +164,7 @@ defmodule Noizu.Entity.Macros.Json do
     end
   end
 
+  # ⟦𓅩𓅺𓁀𓀕⟧ extract_json :: auto-generated pointer for public function extract_json
   defmacro extract_json(field) do
     quote bind_quoted: [field: field] do
       Module.get_attribute(__MODULE__, :json, [])
@@ -177,6 +182,7 @@ defmodule Noizu.Entity.Macros.Json do
     end
   end
 
+  # ⟦𓉚𓏓𓄀𓎂⟧ extract_json__inner :: auto-generated pointer for public function extract_json__inner
   def extract_json__inner(json, field) do
     json
     # |> IO.inspect(label: "EXTRACT JSON 0 (#{field})")
@@ -249,6 +255,7 @@ defmodule Noizu.Entity.Macros.Json do
     # |> IO.inspect(label: "EXTRACT JSON 2 (#{field})")
   end
 
+  # ⟦𓄃𓄃𓄞𓉒⟧ __extract_json__ :: auto-generated pointer for public function __extract_json__
   defmacro __extract_json__(field) do
     quote do
       json = Module.get_attribute(__MODULE__, :json, [])

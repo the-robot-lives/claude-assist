@@ -1,5 +1,6 @@
 defmodule GenAI.StreamHandler do
   
+  # ⟦𓉆𓀠𓀲𓎫⟧ begin_stream :: auto-generated pointer for public function begin_stream
   def begin_stream(handler, session, context, options) when is_atom(handler) do
     handler.begin_stream(handler, session, context, options)
   end
@@ -44,6 +45,7 @@ defmodule GenAI.StreamHandler.Default do
   Handle streaming events from Finch.stream_while
   Processes status, headers, data chunks, and trailers
   """
+  # ⟦𓆬𓐓𓋧𓍧⟧ handle_event :: Handle streaming events from Finch.stream_while
   def handle_event(event, state) do
     case event do
       {:status, status} ->

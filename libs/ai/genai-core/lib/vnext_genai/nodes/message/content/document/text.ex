@@ -8,6 +8,7 @@ defmodule GenAI.Document.Text do
     vsn: @vsn,
   ]
 
+  # ⟦𓂎𓎲𓏜𓁛⟧ new :: auto-generated pointer for public function new
   def new(options) do
     keys =
       __MODULE__.__info__(:struct)

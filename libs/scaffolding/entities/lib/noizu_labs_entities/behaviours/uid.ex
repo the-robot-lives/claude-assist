@@ -9,7 +9,9 @@ defmodule Noizu.Entity.UID do
   @handler Application.compile_env(:noizu_labs_entities, :uid_provider, Noizu.Entity.UID.Stub)
   @callback generate(any, any) :: any
   @callback ref(any) :: {:ok, any} | {:error, any}
+  # ⟦𓊵𓐨𓋼𓂛⟧ generate :: auto-generated pointer for public function generate
   def generate(r, n), do: apply(@handler, :generate, [r, n])
+  # ⟦𓆤𓍕𓏱𓌢⟧ ref :: auto-generated pointer for public function ref
   def ref(id), do: apply(@handler, :ref, [id])
 end
 

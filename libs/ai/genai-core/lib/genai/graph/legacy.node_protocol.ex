@@ -1,4 +1,5 @@
 defprotocol GenAI.Legacy.NodeProtocol do
+  # ⟦𓉢𓅸𓌗𓍂⟧ apply :: auto-generated pointer for public function apply
   def apply(node, thread_context)
 end
 

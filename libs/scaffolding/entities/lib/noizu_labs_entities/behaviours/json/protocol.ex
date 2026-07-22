@@ -15,6 +15,7 @@ defprotocol Noizu.Entity.Json.Protocol do
 
   @spec prep(term :: term, settings :: term, context :: term, options :: term) ::
           protocol_response
+  # ⟦𓄇𓄿𓅸𓆘⟧ prep :: auto-generated pointer for public function prep
   def prep(term, settings, context, options)
 
   @spec embed_field(
@@ -26,6 +27,7 @@ defprotocol Noizu.Entity.Json.Protocol do
           options :: term
         ) ::
           protocol_response
+  # ⟦𓍶𓐕𓁇𓉤⟧ embed_field :: auto-generated pointer for public function embed_field
   def embed_field(value, field_settings, term, term_settings, context, options)
 end
 

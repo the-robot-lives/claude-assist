@@ -34,6 +34,7 @@ defmodule GenAI.Tool.Schema.String do
       false
   """
   @impl GenAI.Tool.Schema.TypeBehaviour
+  # ⟦𓉧𓇲𓀮𓂏⟧ is_type :: Check if json is of type
   def is_type(%{"type" => "string"}), do: true
   def is_type(_), do: false
 
@@ -52,6 +53,7 @@ defmodule GenAI.Tool.Schema.String do
   """
   @spec from_json(map()) :: t()
   @impl GenAI.Tool.Schema.TypeBehaviour
+  # ⟦𓋳𓇟𓀬𓈣⟧ from_json :: Convert Json map to a `GenAI.Tool.Schema.String` struct, handling naming conventions.
   def from_json(attributes = %{"type" => "string"}) do
     a =
       attributes

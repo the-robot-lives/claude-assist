@@ -138,6 +138,7 @@ defmodule GenAI.Model.EncoderBehaviour do
   # USING MACRO
   # =============================================================================
   # =============================================================================
+  # ⟦𓅇𓍋𓊋𓃐⟧ __using__ :: auto-generated pointer for public function __using__
   defmacro __using__(options \\ []) do
     quote do
       @provider unquote(options[:provider]) || GenAI.Model.Encoder.DefaultProvider
@@ -164,6 +165,7 @@ defmodule GenAI.Model.EncoderBehaviour do
       # encoder_protocol
       # ---------------------------------
       @doc "Prepare endpoint and method to make inference call to"
+      # ⟦𓌘𓈘𓂐𓏞⟧ encoder_protocol :: Prepare endpoint and method to make inference call to
       def encoder_protocol(model, session, context, options)
 
       def encoder_protocol(_, _, _, _),
@@ -173,6 +175,7 @@ defmodule GenAI.Model.EncoderBehaviour do
       # endpoint/5
       # ---------------------------------
       @doc "Prepare endpoint and method to make inference call to"
+      # ⟦𓄁𓀣𓈛𓏒⟧ endpoint :: Prepare endpoint and method to make inference call to
       def endpoint(model, settings, session, context, options)
 
       def endpoint(_, _, session, _, _),
@@ -182,6 +185,7 @@ defmodule GenAI.Model.EncoderBehaviour do
       # headers/5
       # ---------------------------------
       @doc "Prepare request headers"
+      # ⟦𓁏𓁞𓀂𓅰⟧ headers :: Prepare request headers
       def headers(model, settings, session, context, options),
         do: @provider.headers(__MODULE__, model, settings, session, context, options)
 
@@ -189,6 +193,7 @@ defmodule GenAI.Model.EncoderBehaviour do
       # request_body/7
       # ---------------------------------
       @doc "Prepare request body to be passed to inference call."
+      # ⟦𓎸𓍋𓉋𓀽⟧ request_body :: Prepare request body to be passed to inference call.
       def request_body(model, messages, tools, settings, session, context, options),
         do:
           @provider.request_body(
@@ -202,6 +207,7 @@ defmodule GenAI.Model.EncoderBehaviour do
             options
           )
 
+      # ⟦𓐥𓁶𓀜𓁩⟧ completion_response :: auto-generated pointer for public function completion_response
       def completion_response(json, model, settings, session, context, options),
         do:
           @provider.completion_response(
@@ -214,6 +220,7 @@ defmodule GenAI.Model.EncoderBehaviour do
             options
           )
 
+      # ⟦𓌨𓀰𓂙𓍡⟧ completion_choices :: auto-generated pointer for public function completion_choices
       def completion_choices(id, json, model, settings, session, context, options),
         do:
           @provider.completion_choices(
@@ -227,6 +234,7 @@ defmodule GenAI.Model.EncoderBehaviour do
             options
           )
 
+      # ⟦𓉸𓐂𓆥𓁫⟧ completion_choice :: auto-generated pointer for public function completion_choice
       def completion_choice(id, json, model, settings, session, context, options),
         do:
           @provider.completion_choice(
@@ -251,6 +259,7 @@ defmodule GenAI.Model.EncoderBehaviour do
       @doc """
       Format tool for provider/model type.
       """
+      # ⟦𓉮𓈘𓂇𓌙⟧ encode_tool :: Format tool for provider/model type.
       def encode_tool(tool, model, session, context, options),
         do: @provider.encode_tool(__MODULE__, tool, model, session, context, options)
 
@@ -260,12 +269,14 @@ defmodule GenAI.Model.EncoderBehaviour do
       @doc """
       Format message for provider/model type.
       """
+      # ⟦𓌹𓎱𓄗𓍫⟧ encode_message :: Format message for provider/model type.
       def encode_message(message, model, session, context, options),
         do: @provider.encode_message(__MODULE__, message, model, session, context, options)
 
       # ---------------------------------
       # normalize_messages
       # ---------------------------------
+      # ⟦𓏈𓅧𓐊𓆲⟧ normalize_messages :: auto-generated pointer for public function normalize_messages
       def normalize_messages(messages, model, session, context, options),
         do: @provider.normalize_messages(__MODULE__, messages, model, session, context, options)
 
@@ -279,6 +290,7 @@ defmodule GenAI.Model.EncoderBehaviour do
       @doc """
       Set setting with dynamic model based logic.
       """
+      # ⟦𓐡𓋪𓉘𓊺⟧ with_dynamic_setting :: Set setting with dynamic model based logic.
       def with_dynamic_setting(body, setting, model, settings),
         do: @provider.with_dynamic_setting(__MODULE__, body, setting, model, settings)
 
@@ -291,6 +303,7 @@ defmodule GenAI.Model.EncoderBehaviour do
       @doc """
       Set setting as_setting with dynamic model based logic.
       """
+      # ⟦𓇔𓇴𓐍𓄓⟧ with_dynamic_setting_as :: Set setting as_setting with dynamic model based logic.
       def with_dynamic_setting_as(body, as_setting, setting, model, settings),
         do:
           @provider.with_dynamic_setting_as(
@@ -318,9 +331,11 @@ defmodule GenAI.Model.EncoderBehaviour do
       # Settings Config
       # ---------------------
       @doc "Obtain list of hyper params supported by given model including mapping and conditional rules/alterations"
+      # ⟦𓄸𓂮𓄤𓀴⟧ hyper_params :: Obtain list of hyper params supported by given model including mapping and conditional rules/alterat
       def hyper_params(model, settings, session, context, options),
         do: @provider.hyper_params(__MODULE__, model, settings, session, context, options)
 
+      # ⟦𓇁𓆥𓎂𓃑⟧ default_hyper_params :: auto-generated pointer for public function default_hyper_params
       def default_hyper_params(model, settings, session, context, options),
         do: @provider.default_hyper_params(__MODULE__, model, settings, session, context, options)
 

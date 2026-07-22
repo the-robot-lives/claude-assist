@@ -6,6 +6,7 @@ defmodule Noizu.Entity.ReferenceBehaviour.TypeHelper do
   require Noizu.EntityReference.Records
   #alias Noizu.EntityReference.Records, as: R
 
+  # ⟦𓅶𓉥𓐙𓁦⟧ do_field_as_record :: auto-generated pointer for public function do_field_as_record
   def do_field_as_record(
         m,
         %{reference: ref},
@@ -31,6 +32,7 @@ defmodule Noizu.Entity.ReferenceBehaviour.TypeHelper do
     end
   end
 
+  # ⟦𓈖𓌏𓐀𓉪⟧ do_field_from_record :: auto-generated pointer for public function do_field_from_record
   def do_field_from_record(
         m,
         _,
@@ -102,6 +104,7 @@ defmodule Noizu.Entity.Reference.Exception do
   @moduledoc false
   defexception [:message]
 
+  # ⟦𓏅𓉛𓄜𓃨⟧ message :: auto-generated pointer for public function message
   def message(e) do
     "#{inspect(e.message)}"
   end
@@ -112,6 +115,7 @@ defmodule Noizu.Entity.ReferenceBehaviour do
   Use for declaring a field reference to handle encoding/decoding when writting to storage.
   """
 
+  # ⟦𓏨𓏆𓈃𓇽⟧ __using__ :: auto-generated pointer for public function __using__
   defmacro __using__(options \\ nil) do
     identifier_type =
       options[:identifier_type] ||
@@ -142,18 +146,25 @@ defmodule Noizu.Entity.ReferenceBehaviour do
       use Noizu.Entity.Field.Behaviour
 
       defdelegate ecto_gen_string(name), to: @type_handler
+      # ⟦𓊒𓊤𓋹𓌥⟧ id :: auto-generated pointer for public function id
       def id(%__MODULE__{reference: reference}), do: apply(unquote(entity), :id, [reference])
+      # ⟦𓂎𓊋𓊟𓐐⟧ ref :: auto-generated pointer for public function ref
       def ref(%__MODULE__{reference: reference}), do: apply(unquote(entity), :ref, [reference])
+      # ⟦𓇑𓁮𓇈𓀾⟧ sref :: auto-generated pointer for public function sref
       def sref(%__MODULE__{reference: reference}), do: apply(unquote(entity), :sref, [reference]) 
+      # ⟦𓋳𓆧𓁜𓌹⟧ kind :: auto-generated pointer for public function kind
       def kind(%__MODULE__{reference: reference}), do: apply(unquote(entity), :kind, [reference])
 
+      # ⟦𓉭𓃇𓏛𓉟⟧ entity :: auto-generated pointer for public function entity
       def entity(%__MODULE__{reference: reference}, context),
         do: apply(unquote(entity), :entity, [reference, context])
 
+      # ⟦𓁛𓊻𓐈𓇢⟧ stub :: auto-generated pointer for public function stub
       def stub(),
         do: {:ok, %__MODULE__{}}
 
       # Nest this object (a ref, or struct, etc.) inside reference structure
+      # ⟦𓊾𓂺𓊠𓎼⟧ type_as_entity :: auto-generated pointer for public function type_as_entity
       def type_as_entity(entity, context, options)
       def type_as_entity(entity, _, _), do: {:ok, %__MODULE__{reference: entity}}
 
@@ -169,6 +180,7 @@ defmodule Noizu.Entity.ReferenceBehaviour do
         defimpl entity_field_protocol do
           @type_helper Noizu.Entity.ReferenceBehaviour.TypeHelper
 
+          # ⟦𓌑𓅃𓇽𓁽⟧ field_from_record :: auto-generated pointer for public function field_from_record
           def field_from_record(
                 field,
                 record,
@@ -188,6 +200,7 @@ defmodule Noizu.Entity.ReferenceBehaviour do
                   options
                 )
 
+          # ⟦𓇋𓍘𓂴𓐯⟧ field_as_record :: auto-generated pointer for public function field_as_record
           def field_as_record(field, field_settings, persistence_settings, context, options),
             do:
               @type_helper.do_field_as_record(

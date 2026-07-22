@@ -4,6 +4,7 @@ defmodule GenAI.Support.TestProvider do
   """
   use GenAI.InferenceProviderBehaviour
 
+  # ⟦𓇔𓋤𓅳𓂍⟧ run_inference :: auto-generated pointer for public function run_inference
   def run_inference(thread_context, body, model_name, provider)
 
   def run_inference(thread_context, _, model_name, provider) do
@@ -31,6 +32,7 @@ defmodule GenAI.Support.TestProvider do
     {:ok, {completion, thread_context}}
   end
 
+  # ⟦𓈃𓈭𓆻𓅩⟧ do_run :: auto-generated pointer for public function do_run
   def do_run(thread_context, context, options)
 
   def do_run(thread_context, context, options) do
@@ -117,18 +119,21 @@ defmodule GenAI.Support.TestProvider.EncoderOne do
 
   require GenAI.Records.Directive
 
+  # ⟦𓎪𓆘𓇐𓂑⟧ headers :: auto-generated pointer for public function headers
   def headers(model, settings, session, context, options)
 
   def headers(_, _, session, _, _) do
     {:ok, {[], session}}
   end
 
+  # ⟦𓋸𓍻𓁩𓂠⟧ endpoint :: auto-generated pointer for public function endpoint
   def endpoint(model, settings, session, context, options)
 
   def endpoint(_, _, session, _, _) do
     {:ok, {{:get, "https://noizu.com"}, session}}
   end
 
+  # ⟦𓍈𓆟𓃂𓊺⟧ request_body :: auto-generated pointer for public function request_body
   def request_body(model, messages, tools, settings, session, _, _) do
     with {:ok, model_name} <- GenAI.ModelProtocol.name(model) do
       # TODO Enum map hyper_params
@@ -170,6 +175,7 @@ defmodule GenAI.Support.TestProvider.EncoderOne do
   # ----------------------
   #
   # ----------------------
+  # ⟦𓍶𓌏𓄅𓆺⟧ encode_tool :: auto-generated pointer for public function encode_tool
   def encode_tool(tool = %GenAI.Tool{}, _, thread_context, _, _) do
     encoded = %{
       type: :function,
@@ -186,6 +192,7 @@ defmodule GenAI.Support.TestProvider.EncoderOne do
   # ----------------------
   #
   # ----------------------
+  # ⟦𓇛𓋦𓍌𓄜⟧ encode_message :: auto-generated pointer for public function encode_message
   def encode_message(message, model, thread_context, context, options)
 
   def encode_message(message = %GenAI.Message{}, _, thread_context, _, _) do
@@ -228,6 +235,7 @@ defmodule GenAI.Support.TestProvider.EncoderOne do
   # ----------------------
   #
   # ----------------------
+  # ⟦𓃵𓌇𓁐𓅺⟧ normalize_messages :: auto-generated pointer for public function normalize_messages
   def normalize_messages(messages, model, thread_context, context, options)
 
   def normalize_messages(messages, _, thread_context, _, _) do
@@ -237,6 +245,7 @@ defmodule GenAI.Support.TestProvider.EncoderOne do
   # ----------------------
   #
   # ----------------------
+  # ⟦𓋷𓏙𓐟𓅙⟧ with_dynamic_setting :: auto-generated pointer for public function with_dynamic_setting
   def with_dynamic_setting(body, setting, model, settings, default \\ nil)
 
   def with_dynamic_setting(body, setting, model, settings, default) do
@@ -246,6 +255,7 @@ defmodule GenAI.Support.TestProvider.EncoderOne do
   # ----------------------
   #
   # ----------------------
+  # ⟦𓏏𓅼𓏜𓐘⟧ with_dynamic_setting_as :: auto-generated pointer for public function with_dynamic_setting_as
   def with_dynamic_setting_as(body, as_setting, setting, model, settings, default \\ nil)
 
   def with_dynamic_setting_as(body, as_setting, setting, _, settings, default) do
@@ -255,6 +265,7 @@ defmodule GenAI.Support.TestProvider.EncoderOne do
   # ----------------------
   #
   # ----------------------
+  # ⟦𓆮𓆛𓆙𓐧⟧ hyper_params :: auto-generated pointer for public function hyper_params
   def hyper_params(model, settings, session, context, options \\ nil)
 
   def hyper_params(_, _, _, _, _) do
@@ -413,6 +424,7 @@ defmodule GenAI.Support.TestProvider.EncoderThree do
 end
 
 defprotocol GenAI.Support.TestProvider.EncoderProtocol do
+  # ⟦𓀛𓊺𓇛𓎚⟧ encode :: auto-generated pointer for public function encode
   def encode(subject, model, session, context, options)
 end
 
@@ -480,6 +492,7 @@ defmodule GenAI.Support.TestProvider.Models do
   @moduledoc """
   TestProvider Models
   """
+  # ⟦𓎸𓆰𓊦𓈓⟧ model_one :: auto-generated pointer for public function model_one
   def model_one() do
     GenAI.Model.new(
       provider: GenAI.Support.TestProvider,
@@ -488,6 +501,7 @@ defmodule GenAI.Support.TestProvider.Models do
     )
   end
 
+  # ⟦𓍇𓄑𓍹𓎁⟧ model_two :: auto-generated pointer for public function model_two
   def model_two() do
     GenAI.Model.new(
       provider: GenAI.Support.TestProvider,

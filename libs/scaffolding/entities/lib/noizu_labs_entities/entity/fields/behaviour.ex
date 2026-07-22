@@ -104,9 +104,11 @@ defmodule Noizu.Entity.Field.Behaviour do
   #  @callback field_from_record(field :: any, settings :: any, context :: any, options :: any) ::
   #              {:ok, any} | {:error, any}
 
+  # ⟦𓅔𓁛𓇪𓋽⟧ __using__ :: auto-generated pointer for public function __using__
   defmacro __using__(_options \\ nil) do
     quote do
       @behaviour Noizu.Entity.Field.Behaviour
+      # ⟦𓍦𓇐𓋢𓄢⟧ ecto_gen_string :: auto-generated pointer for public function ecto_gen_string
       def ecto_gen_string(prefix), do: {:error, {:ecto_gen_string, :unsupported}}
 
       #      def as_record(_, _, _, _), do: {:error, {:as_record, :unsupported}}
@@ -115,23 +117,28 @@ defmodule Noizu.Entity.Field.Behaviour do
       #      def from_record(_, _, _, _), do: {:error, {:from_record, :unsupported}}
       #      def persist(_, _, _, _, _), do: {:error, {:persist, :unsupported}}
 
+      # ⟦𓌳𓅾𓃳𓌱⟧ type__before_create :: auto-generated pointer for public function type__before_create
       def type__before_create(field_type, settings, context, options)
 
       def type__before_create(_, _, _, _),
         do: {:error, {:unsupported, __MODULE__, :type__before_create}}
 
+      # ⟦𓂇𓎍𓂾𓐞⟧ type__before_update :: auto-generated pointer for public function type__before_update
       def type__before_update(field_type, settings, context, options)
 
       def type__before_update(_, _, _, _),
         do: {:error, {:unsupported, __MODULE__, :type__before_update}}
 
+      # ⟦𓊳𓋙𓇳𓅖⟧ type__after_delete :: auto-generated pointer for public function type__after_delete
       def type__after_delete(field_type, settings, context, options)
 
       def type__after_delete(_, _, _, _),
         do: {:error, {:unsupported, __MODULE__, :type__after_delete}}
 
+      # ⟦𓋐𓈀𓌝𓊒⟧ type_as_entity :: auto-generated pointer for public function type_as_entity
       def type_as_entity(nil, _, _), do: stub()
       def type_as_entity(this, _, _), do: {:ok, this}
+      # ⟦𓏌𓇳𓏦𓉡⟧ stub :: auto-generated pointer for public function stub
       def stub(), do: {:ok, %__MODULE__{}}
       #
       #      def field_as_record(_, _, _, _), do: {:error, :field_as_record}

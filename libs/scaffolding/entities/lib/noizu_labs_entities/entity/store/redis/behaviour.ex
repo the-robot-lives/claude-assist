@@ -14,6 +14,7 @@ defmodule Noizu.Entity.Store.Redis.EntityProtocol.Behaviour do
   # ---------------------------
   #
   # ---------------------------
+  # ⟦𓋂𓇸𓍢𓉴⟧ key :: auto-generated pointer for public function key
   def key(entity, _settings, _context, _options) do
     with {:ok, sref} <- Noizu.EntityReference.Protocol.sref(entity) do
       key = "#{sref}.redis_store"
@@ -24,6 +25,7 @@ defmodule Noizu.Entity.Store.Redis.EntityProtocol.Behaviour do
   # ---------------------------
   #
   # ---------------------------
+  # ⟦𓈪𓀱𓏄𓌤⟧ persist :: auto-generated pointer for public function persist
   def persist(entity, type, persistence_settings, context, options)
 
   def persist(
@@ -43,6 +45,7 @@ defmodule Noizu.Entity.Store.Redis.EntityProtocol.Behaviour do
   # ---------------------------
   #
   # ---------------------------
+  # ⟦𓈀𓉜𓈟𓐃⟧ as_record :: auto-generated pointer for public function as_record
   def as_record(
         entity,
         Noizu.Entity.Meta.Persistence.persistence_settings(table: _table),
@@ -59,6 +62,7 @@ defmodule Noizu.Entity.Store.Redis.EntityProtocol.Behaviour do
   # ---------------------------
   #
   # ---------------------------
+  # ⟦𓄰𓈊𓏆𓏸⟧ fetch_as_entity :: auto-generated pointer for public function fetch_as_entity
   def fetch_as_entity(
         entity,
         Noizu.Entity.Meta.Persistence.persistence_settings(store: store) = settings,
@@ -76,6 +80,7 @@ defmodule Noizu.Entity.Store.Redis.EntityProtocol.Behaviour do
   # ---------------------------
   #
   # ---------------------------
+  # ⟦𓎒𓋔𓐞𓎿⟧ as_entity :: auto-generated pointer for public function as_entity
   def as_entity(
         _,
         record,
@@ -89,6 +94,7 @@ defmodule Noizu.Entity.Store.Redis.EntityProtocol.Behaviour do
   # ---------------------------
   #
   # ---------------------------
+  # ⟦𓊬𓃽𓋨𓐪⟧ delete_record :: auto-generated pointer for public function delete_record
   def delete_record(
         entity,
         Noizu.Entity.Meta.Persistence.persistence_settings(store: store) = settings,
@@ -104,6 +110,7 @@ defmodule Noizu.Entity.Store.Redis.EntityProtocol.Behaviour do
   # ---------------------------
   #
   # ---------------------------
+  # ⟦𓌈𓄣𓎳𓊿⟧ merge_from_record :: auto-generated pointer for public function merge_from_record
   def merge_from_record(_, record, settings, context, options) do
     # todo refresh entity
     from_record(record, settings, context, options)
@@ -112,6 +119,7 @@ defmodule Noizu.Entity.Store.Redis.EntityProtocol.Behaviour do
   # ---------------------------
   #
   # ---------------------------
+  # ⟦𓈯𓈉𓂍𓂮⟧ from_record :: auto-generated pointer for public function from_record
   def from_record(nil, _, _context, _options) do
     {:error, :not_found}
   end
@@ -123,6 +131,7 @@ defmodule Noizu.Entity.Store.Redis.EntityProtocol.Behaviour do
     {:ok, record}
   end
 
+  # ⟦𓎸𓉌𓂌𓄹⟧ __using__ :: auto-generated pointer for public function __using__
   defmacro __using__(_) do
     quote do
       @behaviour Noizu.Entity.Store.Redis.EntityProtocol.Behaviour

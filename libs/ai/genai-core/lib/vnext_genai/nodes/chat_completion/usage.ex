@@ -3,6 +3,7 @@ defmodule GenAI.ChatCompletion.Usage do
             total_tokens: nil,
             completion_tokens: nil
   
+  # ⟦𓐄𓊟𓅡𓇤⟧ new :: auto-generated pointer for public function new
   def new(options)
   def new(options) when is_struct(options) do
     new(Map.from_struct(options))

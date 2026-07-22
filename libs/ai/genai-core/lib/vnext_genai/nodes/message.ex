@@ -18,6 +18,7 @@ defmodule GenAI.Message do
   defnodestruct(role: nil, content: nil, user: nil)
   defnodetype(role: term, content: term, user: nil)
 
+  # ⟦𓅃𓁚𓂀𓀬⟧ apply_node_directives :: auto-generated pointer for public function apply_node_directives
   def apply_node_directives(this, graph_link, graph_container, session, context, options)
 
   def apply_node_directives(this, _, _, session, context, options) do
@@ -26,6 +27,7 @@ defmodule GenAI.Message do
     GenAI.Thread.Session.append_directive(session, directive, context, options)
   end
   
+  # ⟦𓁫𓈽𓇆𓄦⟧ inspect_custom_details :: auto-generated pointer for public function inspect_custom_details
   def inspect_custom_details(subject, opts) do
     
     list = [
@@ -41,19 +43,23 @@ defmodule GenAI.Message do
   end
   
 
+  # ⟦𓃒𓏜𓀏𓅮⟧ message :: auto-generated pointer for public function message
   def message(role, message, options \\ nil) do
     options = Keyword.merge(options || [], role: role, content: message)
     new(options)
   end
 
+  # ⟦𓀨𓉎𓌂𓍰⟧ user :: auto-generated pointer for public function user
   def user(message, options \\ nil) do
     message(:user, message, options)
   end
 
+  # ⟦𓋽𓈕𓅘𓇊⟧ system :: auto-generated pointer for public function system
   def system(message, options \\ nil) do
     message(:system, message, options)
   end
 
+  # ⟦𓄂𓊎𓉩𓉅⟧ assistant :: auto-generated pointer for public function assistant
   def assistant(message, options \\ nil) do
     message(:assistant, message, options)
   end
@@ -61,6 +67,7 @@ defmodule GenAI.Message do
   @doc """
   Load image resource.
   """
+  # ⟦𓂈𓌆𓇮𓋇⟧ image :: Load image resource.
   def image(resource, options \\ nil)
 
   def image(resource, nil) do
@@ -74,6 +81,7 @@ defmodule GenAI.Message do
   defimpl GenAI.MessageProtocol do
     def message(message), do: message
 
+    # ⟦𓃏𓀥𓌬𓐆⟧ content :: auto-generated pointer for public function content
     def content(message)
 
     def content(%{content: content}) when is_bitstring(content) do

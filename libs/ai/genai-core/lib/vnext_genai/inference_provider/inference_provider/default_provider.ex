@@ -12,6 +12,7 @@ defmodule GenAI.InferenceProvider.DefaultProvider do
   @doc """
   Run inference and return completion response and updated session
   """
+  # ⟦𓆸𓄢𓊢𓌔⟧ run :: Run inference and return completion response and updated session
   def run(module, session, context, options \\ nil) do
     if Code.ensure_loaded?(module) and function_exported?(module, :do_run, 3) do
       module.do_run(session, context, options)
@@ -26,6 +27,7 @@ defmodule GenAI.InferenceProvider.DefaultProvider do
   @doc """
   Run inference in streaming mode and return completion response and updated session
   """
+  # ⟦𓉂𓌿𓆒𓃤⟧ stream :: Run inference in streaming mode and return completion response and updated session
   def stream(module, session, context, options \\ nil) do
     if Code.ensure_loaded?(module) and function_exported?(module, :do_stream, 3) do
       module.do_stream(session, context, options)
@@ -34,14 +36,17 @@ defmodule GenAI.InferenceProvider.DefaultProvider do
     end
   end
 
+  # ⟦𓀦𓈐𓂱𓆟⟧ do_run :: auto-generated pointer for public function do_run
   def do_run(module, session, context, options \\ nil) do
     do_run_or_stream(:run, module, session, context, options)
   end
   
+  # ⟦𓁖𓈳𓀳𓐁⟧ do_stream :: auto-generated pointer for public function do_stream
   def do_stream(module, session, context, options \\ nil) do
     do_run_or_stream(:stream, module, session, context, options)
   end
   
+  # ⟦𓌼𓍈𓐩𓆿⟧ do_run_or_stream :: auto-generated pointer for public function do_run_or_stream
   def do_run_or_stream(mode, module, session, context, options \\ nil) do
     with {:ok, {model, session}} <- ThreadProtocol.effective_model(session, context, options),
          {:ok, model_encoder} <- GenAI.ModelProtocol.encoder(model),
@@ -99,6 +104,7 @@ defmodule GenAI.InferenceProvider.DefaultProvider do
   Low level inference, pass in model, messages, tools, and various settings to prepare final provider specific API requires.
   """
 
+  # ⟦𓎧𓅔𓂑𓆲⟧ chat :: auto-generated pointer for public function chat
   def chat(
         module,
         model,
@@ -135,6 +141,7 @@ defmodule GenAI.InferenceProvider.DefaultProvider do
     end
   end
 
+  # ⟦𓅻𓊥𓃭𓎎⟧ do_chat :: auto-generated pointer for public function do_chat
   def do_chat(
         module,
         model,
@@ -217,6 +224,7 @@ defmodule GenAI.InferenceProvider.DefaultProvider do
   # endpoint/6
   # ----------------------
   @doc "Prepare endpoint and method to make inference call to"
+  # ⟦𓋆𓁽𓁦𓎴⟧ endpoint :: Prepare endpoint and method to make inference call to
   def endpoint(module, model, settings, session, context, options \\ nil)
 
   def endpoint(module, model, settings, session, context, options) do
@@ -227,6 +235,7 @@ defmodule GenAI.InferenceProvider.DefaultProvider do
     end
   end
 
+  # ⟦𓂅𓈭𓐢𓅍⟧ do_endpoint :: auto-generated pointer for public function do_endpoint
   def do_endpoint(_, model, settings, session, context, options) do
     with {:ok, model_encoder} <- GenAI.ModelProtocol.encoder(model) do
       model_encoder.endpoint(model, settings, session, context, options)
@@ -236,6 +245,7 @@ defmodule GenAI.InferenceProvider.DefaultProvider do
   # ----------------------
   # headers/2
   # ----------------------
+  # ⟦𓃼𓁿𓈖𓉾⟧ headers :: auto-generated pointer for public function headers
   def headers(module, options) do
     config_settings = Application.get_env(:genai, module.config_key(), [])
     context = Noizu.Context.system()
@@ -266,6 +276,7 @@ defmodule GenAI.InferenceProvider.DefaultProvider do
     end
   end
 
+  # ⟦𓏁𓅘𓅃𓆭⟧ do_headers :: auto-generated pointer for public function do_headers
   def do_headers(module, model, settings, session, context, options)
 
   def do_headers(_, model, settings, session, context, options) do
@@ -278,6 +289,7 @@ defmodule GenAI.InferenceProvider.DefaultProvider do
   # request_body/8
   # ----------------------
   @doc "Prepare request body to be passed to inference call."
+  # ⟦𓂣𓀿𓍿𓂶⟧ request_body :: Prepare request body to be passed to inference call.
   def request_body(module, model, messages, tools, settings, session, context, options \\ nil)
 
   def request_body(module, model, messages, tools, settings, session, context, options) do
@@ -288,6 +300,7 @@ defmodule GenAI.InferenceProvider.DefaultProvider do
     end
   end
 
+  # ⟦𓃒𓈡𓅇𓈳⟧ do_request_body :: auto-generated pointer for public function do_request_body
   def do_request_body(module, model, messages, tools, settings, session, context, options)
 
   def do_request_body(_, model, messages, tools, settings, session, context, options) do
@@ -304,6 +317,7 @@ defmodule GenAI.InferenceProvider.DefaultProvider do
   # effective_settings/5
   # ----------------------
   @doc "Obtain map of effective settings: settings, model_settings, provider_settings, config_settings, etc."
+  # ⟦𓅡𓃱𓏇𓎆⟧ effective_settings :: Obtain map of effective settings: settings, model_settings, provider_settings, config_settings, etc.
   def effective_settings(module, model, session, context, options \\ nil)
 
   def effective_settings(module, model, session, context, options) do
@@ -314,6 +328,7 @@ defmodule GenAI.InferenceProvider.DefaultProvider do
     end
   end
 
+  # ⟦𓉨𓌉𓈫𓂩⟧ do_effective_settings :: auto-generated pointer for public function do_effective_settings
   def do_effective_settings(module, model, session, context, options)
 
   def do_effective_settings(module, model, session, context, options) do
@@ -337,6 +352,7 @@ defmodule GenAI.InferenceProvider.DefaultProvider do
     end
   end
 
+  # ⟦𓀮𓇅𓁤𓏛⟧ standardize_model :: auto-generated pointer for public function standardize_model
   def standardize_model(module, encoder, model)
 
   def standardize_model(module, encoder, model) when is_atom(model),

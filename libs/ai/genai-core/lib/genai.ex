@@ -2,6 +2,7 @@ defmodule GenAI do
   @doc """
   Creates a new chat context.
   """
+  # ⟦𓀗𓁈𓃨𓊪⟧ chat :: Creates a new chat context.
   def chat(context_type \\ :default, options \\ nil)
   def chat(:default, options), do: GenAI.Thread.Standard.new(options)
   def chat(:standard, options), do: GenAI.Thread.Standard.new(options)
@@ -102,6 +103,7 @@ defmodule GenAI do
   @doc """
   Shorthand for execute report
   """
+  # ⟦𓏓𓈍𓁈𓐞⟧ report :: Shorthand for execute report
   def report(thread_context, context, options \\ nil) do
     GenAI.ThreadProtocol.execute(thread_context, :report, context, options)
   end
@@ -109,6 +111,7 @@ defmodule GenAI do
   @doc """
   Run inference in streaming mode, interstitial messages (dynamics) if any will sent to the stream handler using the interstitial handle
   """
+  # ⟦𓀤𓏘𓉈𓂃⟧ stream :: Run inference in streaming mode, interstitial messages (dynamics) if any will sent to the stream han
   def stream(thread_context, context, options \\ nil) do
     GenAI.ThreadProtocol.execute(thread_context, :stream, context, options)
   end
@@ -116,6 +119,7 @@ defmodule GenAI do
   @doc """
   Run inference. Returning update chat completion and updated thread state.
   """
+  # ⟦𓋩𓁻𓋑𓉓⟧ run :: Run inference.
   def run(thread_context) do
     context = Noizu.Context.system()
 
@@ -138,6 +142,7 @@ defmodule GenAI do
   (image INPUT -> text generation) is NOT this path — it rides the normal chat/Thread
   run via the encoder protocol.
   """
+  # ⟦𓌞𓀿𓌺𓀺⟧ generate_media :: Generate media (ADR-016): route a `GenAI.Media.Request` to a provider that declares
   def generate_media(request, options \\ [])
 
   def generate_media(%GenAI.Media.Request{} = request, options) do

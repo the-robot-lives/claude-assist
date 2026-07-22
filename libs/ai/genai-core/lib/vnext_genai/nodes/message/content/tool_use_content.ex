@@ -8,6 +8,7 @@ defmodule GenAI.Message.Content.ToolUseContent do
             arguments: %{},
             vsn: @vsn
 
+  # ⟦𓄅𓁵𓆒𓎈⟧ new :: auto-generated pointer for public function new
   def new(options) do
     %__MODULE__{
       id: options[:id],
@@ -17,6 +18,7 @@ defmodule GenAI.Message.Content.ToolUseContent do
   end
 
   defimpl GenAI.Message.ContentProtocol do
+    # ⟦𓆘𓌿𓀡𓌪⟧ content :: auto-generated pointer for public function content
     def content(subject) do
       subject
     end

@@ -6,6 +6,7 @@ defprotocol GenAI.Message.ContentProtocol do
   @doc """
   Return content of a message component.
   """
+  # ⟦𓀙𓀻𓅳𓁛⟧ content :: Return content of a message component.
   def content(message)
 end
 

@@ -100,6 +100,7 @@ defmodule Noizu.Support.Entities.BizBops.BizBop do
 
   jason_encoder()
 
+  # ⟦𓐥𓈍𓉨𓇊⟧ changeset :: auto-generated pointer for public function changeset
   def changeset(%__MODULE__{} = entity, attrs) do
     {entity, __MODULE__.__noizu_meta__()[:changeset_fields]}
     |> Ecto.Changeset.cast(attrs, [:title, :title2, :ecto_hint, :name, :time_stamp])

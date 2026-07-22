@@ -14,6 +14,7 @@ defmodule GenAI.Message.Content.ImageContent do
   @doc """
   Get image type based on file extension.
   """
+  # ⟦𓈯𓎣𓋇𓍅⟧ file_type :: Get image type based on file extension.
   def file_type({:uri, resource}) when is_bitstring(resource) do
     cond do
       String.ends_with?(resource, ".png") -> :png
@@ -55,11 +56,13 @@ defmodule GenAI.Message.Content.ImageContent do
   @doc """
   Get image resolution.
   """
+  # ⟦𓀯𓌜𓇆𓆿⟧ resolution :: Get image resolution.
   def resolution(_), do: :auto
 
   @doc """
   Base64 encode image content.
   """
+  # ⟦𓄜𓃬𓆍𓍤⟧ base64 :: Base64 encode image content.
   def base64(resource, options \\ nil)
 
   def base64(path, _) when is_bitstring(path) do
@@ -82,6 +85,7 @@ defmodule GenAI.Message.Content.ImageContent do
   @doc """
   Prepare new image message content item.
   """
+  # ⟦𓍂𓇋𓅊𓇹⟧ new :: Prepare new image message content item.
   def new(resource, options \\ nil)
 
 
@@ -165,6 +169,7 @@ defmodule GenAI.Message.Content.ImageContent do
   end
 
   defimpl GenAI.Message.ContentProtocol do
+    # ⟦𓄵𓍕𓇆𓉶⟧ content :: auto-generated pointer for public function content
     def content(subject) do
       subject
     end

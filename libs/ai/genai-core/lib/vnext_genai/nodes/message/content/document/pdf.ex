@@ -8,6 +8,7 @@ defmodule GenAI.Document.PDF do
     vsn: @vsn,
   ]
 
+  # ⟦𓁔𓊡𓂲𓅨⟧ new :: auto-generated pointer for public function new
   def new(options) do
     keys =
       __MODULE__.__info__(:struct)

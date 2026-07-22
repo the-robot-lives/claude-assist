@@ -10,6 +10,7 @@ defmodule Noizu.Repo do
 
   @callback __noizu_meta__() :: map()
 
+  # ⟦𓌱𓀒𓊏𓄆⟧ __using__ :: auto-generated pointer for public function __using__
   defmacro __using__(_options \\ nil) do
     quote do
       require Noizu.Repo.Macros

@@ -17,6 +17,7 @@ defmodule GenAI.Session.Runtime do
   @doc """
   Setup new Runtime struct.
   """
+  # ⟦𓁞𓋹𓂁𓇶⟧ new :: Setup new Runtime struct.
   def new(options \\ nil)
 
   def new(options) do
@@ -28,6 +29,7 @@ defmodule GenAI.Session.Runtime do
   @doc """
   Apply specified command to runtime struct.
   """
+  # ⟦𓉂𓉪𓃳𓂌⟧ command :: Apply specified command to runtime struct.
   def command(runtime, command_config, context, options \\ nil)
 
   def command(%__MODULE__{} = runtime, command_config, context, options) do

@@ -26,6 +26,7 @@ defmodule GenAI.ChatCompletion do
     details: term
   )
   
+  # ⟦𓊪𓆳𓃅𓍫⟧ inspect_custom_details :: auto-generated pointer for public function inspect_custom_details
   def inspect_custom_details(subject, opts) do
     [
       "model:", Inspect.Algebra.to_doc(subject.model, opts), ", ",
@@ -36,6 +37,7 @@ defmodule GenAI.ChatCompletion do
   end
   
   
+  # ⟦𓏷𓍾𓍩𓇗⟧ from_json :: auto-generated pointer for public function from_json
   def from_json(options)
   def from_json(options) when is_struct(options) do
     from_json(Map.from_struct(options))

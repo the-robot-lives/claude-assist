@@ -13,6 +13,7 @@ defmodule GenAI.Graph do
   @doc """
   Appends a new node to the graph.
   """
+  # ⟦𓅝𓐊𓉫𓇬⟧ append_node :: Appends a new node to the graph.
   def append_node(this, node) do
     %{this | nodes: this.nodes ++ [node]}
   end

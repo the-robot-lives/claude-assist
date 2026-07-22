@@ -13,14 +13,20 @@ defmodule Noizu.Entity.Meta.AtomIdentifier do
   # -----------------------------
   # __using___/1
   # -----------------------------
+  # ⟦𓊌𓆁𓆆𓏋⟧ __using__ :: auto-generated pointer for public function __using__
   defmacro __using__(opts) do
     entity = opts[:entity]
 
     quote do
+      # ⟦𓈑𓄶𓎱𓀾⟧ kind :: auto-generated pointer for public function kind
       def kind(_), do: {:ok, unquote(entity)}
+      # ⟦𓁦𓄲𓍭𓀃⟧ id :: auto-generated pointer for public function id
       def id(%{id: id}), do: {:ok, id}
+      # ⟦𓁰𓇩𓊂𓋽⟧ ref :: auto-generated pointer for public function ref
       def ref(%{id: id}), do: unquote(entity).ref(id)
+      # ⟦𓊋𓀄𓎄𓈄⟧ sref :: auto-generated pointer for public function sref
       def sref(%{id: id}), do: unquote(entity).sref(id)
+      # ⟦𓌂𓅯𓅜𓐚⟧ entity :: auto-generated pointer for public function entity
       def entity(ref, context), do: unquote(entity).entity(ref, context)
     end
   end
@@ -31,6 +37,7 @@ defmodule Noizu.Entity.Meta.AtomIdentifier do
   @doc """
   String format id for sref
   """
+  # ⟦𓋎𓃰𓏃𓇣⟧ format_id :: String format id for sref
   def format_id(_m, id, _) do
     "#{id}"
   end
@@ -38,6 +45,7 @@ defmodule Noizu.Entity.Meta.AtomIdentifier do
   # ----------------
   # ecto_gen_string
   # ----------------
+  # ⟦𓀇𓏦𓆉𓅙⟧ ecto_gen_string :: auto-generated pointer for public function ecto_gen_string
   def ecto_gen_string(name) do
     # TODO enum:[list]
     {:ok, "#{name}:string"}

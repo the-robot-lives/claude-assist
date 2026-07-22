@@ -5,7 +5,9 @@
 
 defprotocol Noizu.Entity.Store.Ecto.Entity.FieldProtocol do
   @fallback_to_any true
+  # ⟦𓉝𓀐𓂪𓁩⟧ field_as_record :: auto-generated pointer for public function field_as_record
   def field_as_record(field, field_settings, persistence_settings, context, options)
+  # ⟦𓀇𓊚𓈱𓌘⟧ field_from_record :: auto-generated pointer for public function field_from_record
   def field_from_record(field, record, field_settings, persistence_settings, context, options)
 end
 

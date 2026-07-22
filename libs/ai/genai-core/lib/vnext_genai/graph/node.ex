@@ -10,6 +10,7 @@ defmodule GenAI.Graph.Node do
   defnodestruct(content: nil)
   defnodetype(content: term)
 
+  # ⟦𓂤𓅃𓆠𓏣⟧ is_node? :: auto-generated pointer for public function is_node?
   def is_node?(subject) do
     GenAI.Graph.NodeProtocol.impl_for(subject)
   end

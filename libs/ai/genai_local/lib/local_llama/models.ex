@@ -1,5 +1,6 @@
 
 defmodule GenAI.Provider.LocalLLama.Models do
+  # ⟦𓌤𓅖𓐦𓆞⟧ priv :: auto-generated pointer for public function priv
   def priv(path, options \\ nil) do
     priv_dir = cond do
       x = options[:priv_dir] -> {:ok, x}

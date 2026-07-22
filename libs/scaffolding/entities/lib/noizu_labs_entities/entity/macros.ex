@@ -16,9 +16,11 @@ defmodule Noizu.Entity.Macros do
   require Noizu.Entity.Macros.Json
   require Noizu.Entity.Macros.ACL
 
+  # ⟦𓂔𓏾𓇌𓄰⟧ jason_encoder :: auto-generated pointer for public function jason_encoder
   defmacro jason_encoder(_opts \\ nil) do
     quote do
       defimpl Jason.Encoder do
+        # ⟦𓆐𓅝𓍸𓇈⟧ encode :: auto-generated pointer for public function encode
         def encode(s, {_, _, user_settings} = opts) do
           json_format = user_settings[:json_format] || :default
 
@@ -49,6 +51,7 @@ defmodule Noizu.Entity.Macros do
   # ----------------------------------------
   # def_entity
   # ----------------------------------------
+  # ⟦𓍮𓍉𓏒𓂆⟧ def_entity :: auto-generated pointer for public function def_entity
   defmacro def_entity(do: block) do
     quote do
       import Noizu.Entity.Macros,
@@ -130,7 +133,9 @@ defmodule Noizu.Entity.Macros do
 
       @vsn vsn
       @nz_meta nz_meta
+      # ⟦𓁰𓊔𓈰𓌆⟧ vsn :: auto-generated pointer for public function vsn
       def vsn(), do: @vsn
+      # ⟦𓈜𓇳𓇳𓎞⟧ __noizu_meta__ :: auto-generated pointer for public function __noizu_meta__
       def __noizu_meta__(), do: @nz_meta
 
       # ERP Hooks
@@ -141,6 +146,7 @@ defmodule Noizu.Entity.Macros do
   # ----------------------------------------
   #
   # ----------------------------------------
+  # ⟦𓁊𓅛𓂨𓇙⟧ extract_simple :: auto-generated pointer for public function extract_simple
   defmacro extract_simple(attribute, attribute_default, default \\ false) do
     quote bind_quoted: [
             attribute: attribute,
@@ -165,6 +171,7 @@ defmodule Noizu.Entity.Macros do
   @doc """
   Todo support different id types
   """
+  # ⟦𓂨𓈉𓁦𓂋⟧ erp :: Todo support different id types
   defmacro erp(ids) do
     quote do
       require Noizu.Entity.Meta
@@ -184,21 +191,27 @@ defmodule Noizu.Entity.Macros do
                              @erp_type_handlers[type] || type
                          end)
 
+      # ⟦𓀬𓈬𓌼𓅏⟧ kind :: auto-generated pointer for public function kind
       def kind(ref),
         do: @erp_type_handler.kind(__MODULE__, ref)
 
+      # ⟦𓊜𓌰𓊱𓂼⟧ id :: auto-generated pointer for public function id
       def id(ref),
         do: @erp_type_handler.id(__MODULE__, ref)
 
+      # ⟦𓈆𓉰𓊌𓏃⟧ ref :: auto-generated pointer for public function ref
       def ref(ref),
         do: @erp_type_handler.ref(__MODULE__, ref)
 
+      # ⟦𓏱𓅾𓅚𓇰⟧ sref :: auto-generated pointer for public function sref
       def sref(ref),
         do: @erp_type_handler.sref(__MODULE__, ref)
 
+      # ⟦𓄂𓌨𓁤𓄢⟧ entity :: auto-generated pointer for public function entity
       def entity(ref, context),
         do: @erp_type_handler.entity(__MODULE__, ref, context)
 
+      # ⟦𓄀𓏚𓊏𓂠⟧ stub :: auto-generated pointer for public function stub
       def stub(),
         do: {:ok, %__MODULE__{}}
 
@@ -218,6 +231,7 @@ defmodule Noizu.Entity.Macros do
     end
   end
 
+  # ⟦𓊿𓊒𓍩𓎤⟧ common :: auto-generated pointer for public function common
   defmacro common() do
     quote do
       def id(_), do: :nyi
@@ -252,6 +266,7 @@ defmodule Noizu.Entity.Macros do
   # ----------------------------------------
   # field
   # ----------------------------------------
+  # ⟦𓌢𓁴𓅠𓍦⟧ field :: auto-generated pointer for public function field
   defmacro field(name, default \\ nil, type \\ nil, opts \\ []) do
     quote bind_quoted: [name: name, type: type, default: default, opts: opts] do
       Noizu.Entity.Macros.Json.extract_json(name)
@@ -360,6 +375,7 @@ defmodule Noizu.Entity.Macros do
   # ----------------------------------------
   # transient
   # ----------------------------------------
+  # ⟦𓁇𓌒𓐟𓃁⟧ transient :: auto-generated pointer for public function transient
   defmacro transient(do: block) do
     quote do
       Noizu.Entity.Macros.push_attribute_queue(
@@ -382,6 +398,7 @@ defmodule Noizu.Entity.Macros do
   # ----------------------------------------
   # pii
   # ----------------------------------------
+  # ⟦𓇳𓆗𓐭𓆞⟧ pii :: auto-generated pointer for public function pii
   defmacro pii(level \\ :sensitive, do: block) do
     quote do
       Noizu.Entity.Macros.push_attribute_queue(
@@ -403,6 +420,7 @@ defmodule Noizu.Entity.Macros do
   # ----------------------------------------
   #
   # ----------------------------------------
+  # ⟦𓏰𓊉𓄶𓋇⟧ push_attribute_queue :: auto-generated pointer for public function push_attribute_queue
   def push_attribute_queue(module, a_d, a_d_q, value) do
     q = [value | Module.get_attribute(module, a_d_q, [])]
     Module.put_attribute(module, a_d_q, q)
@@ -412,6 +430,7 @@ defmodule Noizu.Entity.Macros do
   # ----------------------------------------
   #
   # ----------------------------------------
+  # ⟦𓉖𓊈𓌀𓌦⟧ pop_attribute_queue :: auto-generated pointer for public function pop_attribute_queue
   def pop_attribute_queue(module, a_d, a_d_q) do
     with [_ | t] <- Module.get_attribute(module, a_d_q, []) do
       Module.put_attribute(module, a_d_q, t)
@@ -433,6 +452,7 @@ defmodule Noizu.Entity.Macros do
   # ----------------------------------------
   #
   # ----------------------------------------
+  # ⟦𓁲𓀟𓂼𓋏⟧ extract_persistence :: auto-generated pointer for public function extract_persistence
   defmacro extract_persistence() do
     quote do
       case Noizu.Entity.Macros.extract_simple(:persistence, :persistence, []) do
@@ -466,6 +486,7 @@ defmodule Noizu.Entity.Macros do
   # ----------------------------------------
   #
   # ----------------------------------------
+  # ⟦𓐝𓋶𓏒𓈘⟧ extract_repo :: auto-generated pointer for public function extract_repo
   defmacro extract_repo() do
     quote do
       case Noizu.Entity.Macros.extract_simple(:repo, :repo, []) do
@@ -492,6 +513,7 @@ defmodule Noizu.Entity.Macros do
   # ----------------------------------------
   #
   # ----------------------------------------
+  # ⟦𓁠𓇍𓊷𓏏⟧ extract_sref :: auto-generated pointer for public function extract_sref
   defmacro extract_sref() do
     quote do
       case Noizu.Entity.Macros.extract_simple(:sref, :sref, nil) do
@@ -507,6 +529,7 @@ defmodule Noizu.Entity.Macros do
   # ----------------------------------------
   #
   # ----------------------------------------
+  # ⟦𓍸𓂱𓍨𓇅⟧ register_attributes :: auto-generated pointer for public function register_attributes
   def register_attributes(mod) do
     Module.register_attribute(mod, :__nz_ids, accumulate: true)
     Module.register_attribute(mod, :__nz_fields, accumulate: true)
@@ -522,6 +545,7 @@ defmodule Noizu.Entity.Macros do
   # ----------------------------------------
   #
   # ----------------------------------------
+  # ⟦𓐈𓆗𓊋𓈎⟧ field_set? :: auto-generated pointer for public function field_set?
   def field_set?(field, declared_fields) do
     get_in(declared_fields, [field])
   end
@@ -529,6 +553,7 @@ defmodule Noizu.Entity.Macros do
   # ----------------------------------------
   #
   # ----------------------------------------
+  # ⟦𓍗𓅮𓅨𓁃⟧ prepare_struct :: auto-generated pointer for public function prepare_struct
   def prepare_struct(fields) do
     fields
     |> Enum.map(fn {name, Noizu.Entity.Meta.Field.field_settings(default: dv)} -> {name, dv} end)
@@ -538,6 +563,7 @@ defmodule Noizu.Entity.Macros do
   # ----------------------------------------
   #
   # ----------------------------------------
+  # ⟦𓊍𓌥𓉸𓁷⟧ inject_entity_impl :: auto-generated pointer for public function inject_entity_impl
   def inject_entity_impl(
         v__nz_ids,
         v__nz_persistence,

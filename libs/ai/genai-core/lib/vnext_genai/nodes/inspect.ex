@@ -14,6 +14,7 @@ defimpl Inspect,
   ] do
   #import Inspect.Algebra
 
+  # ⟦𓂼𓁵𓎩𓈜⟧ inspect :: auto-generated pointer for public function inspect
   def inspect(%{__struct__: module} = subject, opts) do
     limit =
       cond do

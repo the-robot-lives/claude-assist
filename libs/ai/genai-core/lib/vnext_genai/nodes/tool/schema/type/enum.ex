@@ -28,6 +28,7 @@ defmodule GenAI.Tool.Schema.Enum do
       false
   """
   @impl GenAI.Tool.Schema.TypeBehaviour
+  # ⟦𓏠𓉥𓎵𓉌⟧ is_type :: Check if json is of type
   def is_type(%{"type" => "string", "enum" => _}), do: true
   def is_type(_), do: false
 
@@ -45,6 +46,7 @@ defmodule GenAI.Tool.Schema.Enum do
       {:error, :unrecognized_type}
   """
   @impl GenAI.Tool.Schema.TypeBehaviour
+  # ⟦𓀇𓍩𓌽𓋡⟧ from_json :: Convert Json map to a `GenAI.Tool.Schema.Enum` struct, handling naming conventions.
   def from_json(%{"type" => "string", "enum" => _} = json) do
     %__MODULE__{
       type: "string",

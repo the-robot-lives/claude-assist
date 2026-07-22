@@ -7,19 +7,27 @@ defmodule Noizu.Entity.Extended.UUIDReference do
   defstruct reference: nil
   use Noizu.Entity.Field.Behaviour
 
+  # ⟦𓅔𓄀𓎞𓄐⟧ ecto_gen_string :: auto-generated pointer for public function ecto_gen_string
   def ecto_gen_string(name) do
     {:ok, ["#{name}_ref:uuid", "#{name}_ref_type:uuid"]}
   end
 
+  # ⟦𓏹𓍊𓎦𓁊⟧ id :: auto-generated pointer for public function id
   def id(%__MODULE__{reference: reference}), do: Noizu.EntityReference.Protocol.id(reference)
+  # ⟦𓄪𓋩𓏬𓃊⟧ ref :: auto-generated pointer for public function ref
   def ref(%__MODULE__{reference: reference}), do: Noizu.EntityReference.Protocol.ref(reference)
+  # ⟦𓏢𓇔𓈸𓉢⟧ sref :: auto-generated pointer for public function sref
   def sref(%__MODULE__{reference: reference}), do: Noizu.EntityReference.Protocol.sref(reference)
+  # ⟦𓏥𓏙𓉭𓀆⟧ kind :: auto-generated pointer for public function kind
   def kind(%__MODULE__{reference: reference}), do: Noizu.EntityReference.Protocol.kind(reference)
+  # ⟦𓎉𓎦𓋿𓂦⟧ entity :: auto-generated pointer for public function entity
   def entity(%__MODULE__{reference: reference}, context),
     do: Noizu.EntityReference.Protocol.entity(reference, context)
 
+  # ⟦𓆉𓇬𓇵𓃇⟧ type_as_entity :: auto-generated pointer for public function type_as_entity
   def type_as_entity(this, _, _), do: {:ok, %__MODULE__{reference: this}}
 
+  # ⟦𓉐𓈢𓇡𓏍⟧ stub :: auto-generated pointer for public function stub
   def stub(), do: {:ok, %__MODULE__{}}
 end
 
@@ -31,6 +39,7 @@ defmodule Noizu.Entity.Extended.UUIDReference.TypeHelper do
   require Noizu.EntityReference.Records
   alias Noizu.EntityReference.Records, as: R
 
+  # ⟦𓍧𓊗𓎿𓁒⟧ field_as_record :: auto-generated pointer for public function field_as_record
   def field_as_record(field, field_settings, persistence_settings, context, options)
 
   def field_as_record(
@@ -68,6 +77,7 @@ defmodule Noizu.Entity.Extended.UUIDReference.TypeHelper do
     end
   end
 
+  # ⟦𓇃𓄶𓎹𓏑⟧ field_from_record :: auto-generated pointer for public function field_from_record
   def field_from_record(entity, record, field_settings, persistence_settings, context, options)
 
   def field_from_record(

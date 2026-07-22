@@ -16,6 +16,7 @@ defmodule GenAI.Tool.Schema.Type do
     GenAI.Tool.Schema.Bool
   ]
 
+  # ⟦𓐠𓃠𓂑𓍣⟧ from_json :: auto-generated pointer for public function from_json
   def from_json(json) do
     @schema_types
     |> Enum.find_value({:error, :pending}, &((&1.is_type(json) && &1.from_json(json)) || nil))

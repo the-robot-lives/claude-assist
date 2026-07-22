@@ -45,6 +45,7 @@ defmodule GenAI.VNext.Graph do
   
   
   
+  # ⟦𓇈𓊥𓎓𓄠⟧ inspect_custom_details :: auto-generated pointer for public function inspect_custom_details
   def inspect_custom_details(subject, opts) do
     [
       "nodes:", Inspect.Algebra.to_doc(subject.nodes, opts), ", ",
@@ -57,12 +58,14 @@ defmodule GenAI.VNext.Graph do
   end
   
   
+  # ⟦𓇽𓎇𓈣𓃊⟧ process_node :: auto-generated pointer for public function process_node
   def process_node(%__MODULE__{} = subject, link, _, session, context, options) do
     with {:ok, head} <- GenAI.VNext.Graph.head(subject) do
       do_process_node(head, link, subject, session, context, options)
     end
   end
 
+  # ⟦𓊨𓀛𓄇𓀰⟧ do_process_node :: auto-generated pointer for public function do_process_node
   def do_process_node(subject, link, container, session, context, options) do
     case GenAI.Graph.NodeProtocol.process_node(
            subject,
@@ -91,6 +94,7 @@ defmodule GenAI.VNext.Graph do
 
   @spec do_new() :: __MODULE__.t()
   @spec do_new(keyword) :: __MODULE__.t()
+  # ⟦𓌇𓍅𓍑𓈘⟧ do_new :: auto-generated pointer for public function do_new
   def do_new(options \\ nil)
 
   def do_new(options) do
@@ -122,6 +126,7 @@ defmodule GenAI.VNext.Graph do
   end
 
   @spec setting(__MODULE__.t(), atom, keyword, any) :: any
+  # ⟦𓃊𓎏𓃊𓉺⟧ setting :: auto-generated pointer for public function setting
   def setting(%__MODULE__{settings: settings}, setting, options, default \\ nil) do
     x = options[setting]
 
@@ -166,6 +171,7 @@ defmodule GenAI.VNext.Graph do
   """
   @spec node(graph :: T.Graph.graph(), id :: T.Graph.graph_node_id()) ::
           T.result(T.Graph.graph_node(), T.details())
+  # ⟦𓇲𓉽𓅉𓌊⟧ node :: auto-generated pointer for public function node
   def node(graph, graph_node)
 
   def node(graph, R.Link.connector(node: id)) do
@@ -186,10 +192,12 @@ defmodule GenAI.VNext.Graph do
     end
   end
 
+  # ⟦𓆚𓁎𓁞𓈖⟧ do_node :: auto-generated pointer for public function do_node
   def do_node(graph, graph_node), do: node(graph, graph_node)
 
   @spec nodes(T.Graph.graph()) :: {:ok, list(T.Graph.graph_node())}
   @spec nodes(T.Graph.graph(), keyword) :: {:ok, list(T.Graph.graph_node())}
+  # ⟦𓈂𓀃𓉸𓂃⟧ nodes :: auto-generated pointer for public function nodes
   def nodes(graph, options \\ nil)
 
   def nodes(graph, _) do
@@ -202,6 +210,7 @@ defmodule GenAI.VNext.Graph do
   # -------------------------
   @spec nodes!(T.Graph.graph()) :: list(T.Graph.graph_node())
   @spec nodes!(T.Graph.graph(), keyword) :: list(T.Graph.graph_node())
+  # ⟦𓃋𓌻𓅍𓇮⟧ nodes! :: auto-generated pointer for public function nodes!
   def nodes!(graph, options \\ nil)
 
   def nodes!(graph, _) do
@@ -235,6 +244,7 @@ defmodule GenAI.VNext.Graph do
   """
   @spec link(graph :: T.Graph.graph(), id :: T.Graph.graph_link_id()) ::
           T.result(T.Graph.graph_link(), T.details())
+  # ⟦𓐊𓎒𓇒𓆳⟧ link :: auto-generated pointer for public function link
   def link(graph, graph_link)
 
   def link(graph, graph_link) when T.Graph.is_link_id(graph_link) do
@@ -271,6 +281,7 @@ defmodule GenAI.VNext.Graph do
       false
   """
   @spec member?(graph :: T.Graph.graph(), id :: T.Graph.graph_node_id()) :: boolean
+  # ⟦𓉼𓈮𓈎𓍒⟧ member? :: Check if a node is a member of the graph.
   def member?(graph, graph_node)
 
   def member?(graph, graph_node) when T.Graph.is_node_id(graph_node) do
@@ -306,6 +317,7 @@ defmodule GenAI.VNext.Graph do
   """
   @spec by_handle(graph :: T.Graph.graph(), handle :: T.handle()) ::
           T.result(T.Graph.graph_node(), T.details())
+  # ⟦𓋁𓉊𓈪𓇣⟧ by_handle :: auto-generated pointer for public function by_handle
   def by_handle(graph, handle)
 
   def by_handle(graph, handle) do
@@ -343,6 +355,7 @@ defmodule GenAI.VNext.Graph do
   """
   @spec link_by_handle(graph :: T.Graph.graph(), handle :: T.handle()) ::
           T.result(T.Graph.graph_link(), T.details())
+  # ⟦𓋋𓀡𓌨𓍩⟧ link_by_handle :: auto-generated pointer for public function link_by_handle
   def link_by_handle(graph, handle)
 
   def link_by_handle(graph, handle) do
@@ -357,6 +370,7 @@ defmodule GenAI.VNext.Graph do
   # head/1
   # -------------------------
   @spec head(T.Graph.graph()) :: T.result(T.Graph.graph_node(), T.details())
+  # ⟦𓆪𓂧𓁨𓆹⟧ head :: auto-generated pointer for public function head
   def head(graph)
   def head(%__MODULE__{head: nil}), do: {:error, {:head, :is_nil}}
   def head(graph = %__MODULE__{head: x}), do: node(graph, x)
@@ -365,6 +379,7 @@ defmodule GenAI.VNext.Graph do
   # last_node/1
   # -------------------------
   @spec last_node(T.Graph.graph()) :: T.result(T.Graph.graph_node(), T.details())
+  # ⟦𓋰𓆛𓉡𓍟⟧ last_node :: auto-generated pointer for public function last_node
   def last_node(graph)
   def last_node(%__MODULE__{last_node: nil}), do: {:error, {:last_node, :is_nil}}
   def last_node(graph = %__MODULE__{last_node: x}), do: node(graph, x)
@@ -373,6 +388,7 @@ defmodule GenAI.VNext.Graph do
   # last_link/1
   # -------------------------
   @spec last_link(T.Graph.graph()) :: T.result(T.Graph.graph_link(), T.details())
+  # ⟦𓎕𓍅𓍰𓎖⟧ last_link :: auto-generated pointer for public function last_link
   def last_link(graph)
   def last_link(%__MODULE__{last_link: nil}), do: {:error, {:last_link, :is_nil}}
   def last_link(graph = %__MODULE__{last_link: x}), do: link(graph, x)
@@ -490,6 +506,7 @@ defmodule GenAI.VNext.Graph do
 
   @spec attempt_set_node(T.Graph.graph(), T.Graph.graph_node_id(), T.Graph.graph_node(), keyword) ::
           T.Graph.graph()
+  # ⟦𓅝𓀿𓍯𓍟⟧ attempt_set_node :: auto-generated pointer for public function attempt_set_node
   def attempt_set_node(graph, node_id, graph_node, options)
 
   def attempt_set_node(graph, node_id, graph_node, _) do
@@ -519,6 +536,7 @@ defmodule GenAI.VNext.Graph do
   """
   @spec attach_node(graph :: T.Graph.graph(), node :: T.Graph.graph_node(), options :: map) ::
           T.result(T.Graph.graph(), T.details())
+  # ⟦𓋓𓃐𓂒𓂼⟧ attach_node :: auto-generated pointer for public function attach_node
   def attach_node(graph, graph_node, options \\ nil)
 
   def attach_node(graph, graph_node, options) do
@@ -548,6 +566,7 @@ defmodule GenAI.VNext.Graph do
   """
   @spec add_node(graph :: T.Graph.graph(), node :: T.Graph.graph_node(), options :: map) ::
           T.result(T.Graph.graph(), T.details())
+  # ⟦𓇫𓃲𓆁𓍾⟧ add_node :: auto-generated pointer for public function add_node
   def add_node(graph, graph_node, options \\ nil)
 
   def add_node(graph, graph_node, options) do
@@ -593,6 +612,7 @@ defmodule GenAI.VNext.Graph do
   """
   @spec add_link(graph :: T.Graph.graph(), link :: T.Graph.graph_link(), options :: map) ::
           T.result(T.Graph.graph(), T.details())
+  # ⟦𓄑𓍀𓅑𓈲⟧ add_link :: auto-generated pointer for public function add_link
   def add_link(graph, graph_link, options \\ nil)
 
   def add_link(graph, graph_link, options) do
@@ -678,11 +698,13 @@ end
 
 defimpl GenAI.Graph.MermaidProtocol, for: GenAI.VNext.Graph do
   @spec mermaid_id(any) :: any
+  # ⟦𓂅𓈕𓆗𓍎⟧ mermaid_id :: auto-generated pointer for public function mermaid_id
   def mermaid_id(subject) do
     GenAI.Graph.MermaidProtocol.Helpers.mermaid_id(subject.id)
   end
 
   @spec encode(any) :: {:ok, String.t()} | {:error, any}
+  # ⟦𓈡𓆘𓊸𓂩⟧ encode :: auto-generated pointer for public function encode
   def encode(graph_element), do: encode(graph_element, [])
 
   @spec encode(any, any) :: {:ok, String.t()} | {:error, any}
@@ -697,6 +719,7 @@ defimpl GenAI.Graph.MermaidProtocol, for: GenAI.VNext.Graph do
   end
 
   @spec state_diagram_v2(any, keyword, map) :: {:ok, String.t()} | {:error, any}
+  # ⟦𓏔𓈗𓋟𓁢⟧ state_diagram_v2 :: auto-generated pointer for public function state_diagram_v2
   def state_diagram_v2(graph_element, options, state) do
     identifier = mermaid_id(graph_element)
 

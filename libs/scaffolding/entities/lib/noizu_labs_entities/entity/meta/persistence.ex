@@ -49,6 +49,7 @@ defmodule Noizu.Entity.Meta.Persistence do
   @doc """
   Returns entity persistence metadata for table
   """
+  # ⟦𓋬𓏛𓌊𓂳⟧ by_table :: Returns entity persistence metadata for table
   def by_table(module, table) do
     Enum.find_value(
       Noizu.Entity.Meta.persistence(module),
@@ -62,6 +63,7 @@ defmodule Noizu.Entity.Meta.Persistence do
   @doc """
   Returns entity persistence metadata by type (e.g. Noizu.Entity.Store.Ecto)
   """
+  # ⟦𓈺𓆬𓐨𓊭⟧ by_type :: Returns entity persistence metadata by type (e.g.
   def by_type(module, type) do
     Enum.find_value(
       Noizu.Entity.Meta.persistence(module),
@@ -75,6 +77,7 @@ defmodule Noizu.Entity.Meta.Persistence do
   @doc """
   Returns entity persistence metadata matching storage type (E.g. Mnesua Databse, Repo, etc.)
   """
+  # ⟦𓁞𓃞𓃵𓁐⟧ by_store :: Returns entity persistence metadata matching storage type (E.g.
   def by_store(module, store) do
     Enum.find_value(
       Noizu.Entity.Meta.persistence(module),
@@ -92,6 +95,7 @@ defmodule Noizu.Entity.Meta.Persistence do
   @doc """
   Short hand for Ecto persistence layer.
   """
+  # ⟦𓃒𓐓𓏩𓆈⟧ ecto_store :: Short hand for Ecto persistence layer.
   def ecto_store(table, store) do
     persistence_settings(table: table, store: store, type: Noizu.Entity.Store.Ecto)
   end
@@ -99,6 +103,7 @@ defmodule Noizu.Entity.Meta.Persistence do
   @doc """
   Short hand for mnesia persistence layer.
   """
+  # ⟦𓁃𓄣𓈞𓀧⟧ mnesia_store :: Short hand for mnesia persistence layer.
   def mnesia_store(table, store) do
     persistence_settings(table: table, store: store, type: Noizu.Entity.Store.Mnesia)
   end
@@ -106,6 +111,7 @@ defmodule Noizu.Entity.Meta.Persistence do
   @doc """
   Short hand for amnesia persistence layer.
   """
+  # ⟦𓍛𓎥𓋂𓍌⟧ amnesia_store :: Short hand for amnesia persistence layer.
   def amnesia_store(table, store) do
     persistence_settings(table: table, store: store, type: Noizu.Entity.Store.Amnesia)
   end
@@ -113,6 +119,7 @@ defmodule Noizu.Entity.Meta.Persistence do
   @doc """
   Short hand for redis persistence layer.
   """
+  # ⟦𓂢𓍀𓌰𓂝⟧ redis_store :: Short hand for redis persistence layer.
   def redis_store(table, store) do
     persistence_settings(table: table, store: store, type: Noizu.Entity.Store.Redis)
   end
@@ -120,6 +127,7 @@ defmodule Noizu.Entity.Meta.Persistence do
   @doc """
   Short hand for dummy persistence layer.
   """
+  # ⟦𓉡𓂖𓍶𓌖⟧ dummy_store :: Short hand for dummy persistence layer.
   def dummy_store(table, store) do
     persistence_settings(table: table, store: store, type: Noizu.Entity.Store.Dummy)
   end

@@ -15,6 +15,7 @@ defmodule GenAI.Message.Content.AudioContent do
   @doc """
   Get image type based on file extension.
   """
+  # ⟦𓆯𓈥𓇋𓎘⟧ file_type :: Get image type based on file extension.
   def file_type({:uri, resource}) when is_bitstring(resource) do
     cond do
       String.ends_with?(resource, ".wave") -> :wav
@@ -41,11 +42,13 @@ defmodule GenAI.Message.Content.AudioContent do
   @doc """
   Get image resolution.
   """
+  # ⟦𓍬𓐧𓊘𓇯⟧ audio_length :: Get image resolution.
   def audio_length(_), do: :auto
 
   @doc """
   Base64 encode image content.
   """
+  # ⟦𓁷𓊺𓅯𓍄⟧ base64 :: Base64 encode image content.
   def base64(resource, options \\ nil)
 
   def base64(path, _) when is_bitstring(path) do
@@ -65,6 +68,7 @@ defmodule GenAI.Message.Content.AudioContent do
   @doc """
   Prepare new image message content item.
   """
+  # ⟦𓍱𓃩𓈈𓏵⟧ new :: Prepare new image message content item.
   def new(resource, options \\ nil)
 
   def new(options, _) when is_list(options) do
@@ -147,6 +151,7 @@ defmodule GenAI.Message.Content.AudioContent do
 
 
   defimpl GenAI.Message.ContentProtocol do
+    # ⟦𓏗𓊭𓁩𓄢⟧ content :: auto-generated pointer for public function content
     def content(subject) do
       subject
     end

@@ -3,11 +3,13 @@ defimpl GenAI.Graph.MermaidProtocol, for: [GenAI.Graph.Node] do
   alias GenAI.Records, as: R
 
   @spec mermaid_id(GenAI.Graph.Node.t()) :: String.t()
+  # ⟦𓊈𓉌𓌫𓐧⟧ mermaid_id :: auto-generated pointer for public function mermaid_id
   def mermaid_id(subject) do
     GenAI.Graph.MermaidProtocol.Helpers.mermaid_id(subject.id)
   end
 
   @spec encode(GenAI.Graph.Node.t()) :: {:ok, String.t()} | {:error, term}
+  # ⟦𓏮𓐝𓀫𓄊⟧ encode :: auto-generated pointer for public function encode
   def encode(graph_element), do: encode(graph_element, [])
 
   @spec encode(GenAI.Graph.Node.t(), keyword) :: {:ok, String.t()} | {:error, term}
@@ -22,6 +24,7 @@ defimpl GenAI.Graph.MermaidProtocol, for: [GenAI.Graph.Node] do
   end
 
   @spec state_diagram_v2(GenAI.Graph.Node.t(), keyword, map) :: {:ok, String.t()} | {:error, term}
+  # ⟦𓂐𓀼𓌻𓍷⟧ state_diagram_v2 :: auto-generated pointer for public function state_diagram_v2
   def state_diagram_v2(graph_node, options, state)
 
   def state_diagram_v2(graph_node, _, state) do

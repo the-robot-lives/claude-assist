@@ -23,6 +23,7 @@ defmodule GenAI.Graph.Root do
   @doc """
   Retrieve a element_lookup entry by element id.
   """
+  # ⟦𓐗𓆑𓈈𓉍⟧ element_entry :: Retrieve a element_lookup entry by element id.
   def element_entry(this, element)
   def element_entry(_, error = {:error, _}), do: error
   def element_entry(this, element_lookup(element: element)), do: element_entry(this, element)
@@ -38,6 +39,7 @@ defmodule GenAI.Graph.Root do
   @doc """
   Retrieve an element_lookup entry by handle and base node
   """
+  # ⟦𓁔𓅋𓁯𓍭⟧ handle_entry :: Retrieve an element_lookup entry by handle and base node
   def handle_entry(this, handle, base \\ nil)
 
   def handle_entry(%__MODULE__{} = this, graph_handle(name: handle), base),
@@ -102,6 +104,7 @@ defmodule GenAI.Graph.Root do
   If a standard entry is found and under base it will be used.
   Only if no standard or global entry under base exists will locals be checked.
   """
+  # ⟦𓌯𓃒𓄄𓈡⟧ nearest_handle_entry :: Retrieve closest nested handle nested under base.
   def nearest_handle_entry(this, handle, base)
 
   def nearest_handle_entry(%__MODULE__{} = this, graph_handle(name: handle), base),
@@ -147,6 +150,7 @@ defmodule GenAI.Graph.Root do
   @doc """
   Retrieve a nested element by id from graph
   """
+  # ⟦𓊲𓁑𓊶𓍁⟧ element :: Retrieve a nested element by id from graph
   def element(%__MODULE__{} = this, id) do
     with {:ok, element_lookup(path: [_ | path])} <- element_entry(this, id) do
       get_nested_element(this.graph, path)
@@ -156,6 +160,7 @@ defmodule GenAI.Graph.Root do
   @doc """
   Retrieve a nested element by handle from graph
   """
+  # ⟦𓃯𓇐𓈙𓄶⟧ element_by_handle :: Retrieve a nested element by handle from graph
   def element_by_handle(%__MODULE__{} = this, handle, base \\ nil) do
     with {:ok, element_lookup(path: [_ | path])} <- handle_entry(this, handle, base) do
       get_nested_element(this.graph, path)
@@ -165,6 +170,7 @@ defmodule GenAI.Graph.Root do
   @doc """
   extract nested entry by path from source element.
   """
+  # ⟦𓏁𓋮𓃕𓎼⟧ get_nested_element :: extract nested entry by path from source element.
   def get_nested_element(source, path)
 
   def get_nested_element(nil, _) do
@@ -184,6 +190,7 @@ defmodule GenAI.Graph.Root do
   @doc """
   Merge element lookup entries
   """
+  # ⟦𓅗𓎥𓋡𓃪⟧ merge_lookup_table_entries :: Merge element lookup entries
   def merge_lookup_table_entries(%__MODULE__{} = this, entries) do
     update_in(
       this,
@@ -195,6 +202,7 @@ defmodule GenAI.Graph.Root do
   @doc """
   Merge list of {handle, element or path to element} entries into lookup table.
   """
+  # ⟦𓌭𓋂𓐟𓏷⟧ merge_handles :: Merge list of {handle, element or path to element} entries into lookup table.
   def merge_handles(%__MODULE__{} = this, handles) when is_list(handles) do
     Enum.reduce(handles, this, &merge_handle(&2, &1))
   end
@@ -202,6 +210,7 @@ defmodule GenAI.Graph.Root do
   @doc """
   Merge a single graph handle entry into lookup table.
   """
+  # ⟦𓏭𓐕𓇊𓆟⟧ merge_handle :: Merge a single graph handle entry into lookup table.
   def merge_handle(this, {handle = graph_handle(scope: :global), element}) do
     put_in(this, [Access.key(:lookup_table), Access.key(:by_handle), handle], element)
   end
@@ -223,6 +232,7 @@ defmodule GenAI.Graph.Root do
   @doc """
   Retrieve graph context by link
   """
+  # ⟦𓀖𓌂𓃊𓍢⟧ graph_context_by_link :: Retrieve graph context by link
   def graph_context_by_link(this, link, from_element)
 
   def graph_context_by_link(
@@ -319,6 +329,7 @@ defmodule GenAI.Graph.Root do
     end)
   end
 
+  # ⟦𓂦𓌤𓅘𓐟⟧ process_node :: auto-generated pointer for public function process_node
   def process_node(subject, _, _, session, context, options) do
     subject =
       subject

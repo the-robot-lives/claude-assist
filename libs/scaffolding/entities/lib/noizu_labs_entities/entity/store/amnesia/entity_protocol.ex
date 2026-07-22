@@ -29,28 +29,34 @@ defprotocol Noizu.Entity.Store.Amnesia.EntityProtocol do
 
   @doc "Save entity to store."
   @spec persist(entity, type, settings, context, options) :: {:ok, entity} | {:error, any}
+  # ⟦𓋇𓈩𓈣𓉹⟧ persist :: Save entity to store.
   def persist(entity, type, settings, context, options)
 
   @doc "Transform to expected entity record format."
   @spec as_record(entity, settings, context, options) :: {:ok, record} | {:error, any}
+  # ⟦𓇨𓁫𓀕𓐣⟧ as_record :: Transform to expected entity record format.
   def as_record(entity, settings, context, options)
 
   @doc "Transform record to entity"
   @spec fetch_as_entity(entity, settings, context, options) :: {:ok, entity} | {:error, any}
+  # ⟦𓎒𓃾𓋫𓉝⟧ fetch_as_entity :: Transform record to entity
   def fetch_as_entity(entity, settings, context, options)
 
   @doc "Transform record to entity"
   @spec as_entity(entity, record, settings, context, options) :: {:ok, entity} | {:error, any}
+  # ⟦𓋣𓃨𓌅𓎕⟧ as_entity :: Transform record to entity
   def as_entity(entity, record, settings, context, options)
 
   @doc "Delete record entity"
   @spec delete_record(entity, settings, context, options) :: {:ok, entity} | {:error, any}
+  # ⟦𓊌𓋓𓍴𓃒⟧ delete_record :: Delete record entity
   def delete_record(entity, settings, context, options)
 
   @doc """
   as_entity helper convert record to entity - fetch
   """
   @spec from_record(record, settings, context, options) :: {:ok, entity} | {:error, any}
+  # ⟦𓍾𓊂𓏬𓐇⟧ from_record :: as_entity helper convert record to entity - fetch
   def from_record(record, settings, context, options)
 
   @doc """
@@ -58,6 +64,7 @@ defprotocol Noizu.Entity.Store.Amnesia.EntityProtocol do
   """
   @spec merge_from_record(entity, record, settings, context, options) ::
           {:ok, entity} | {:error, any}
+  # ⟦𓈻𓀾𓋛𓈴⟧ merge_from_record :: auto-generated pointer for public function merge_from_record
   def merge_from_record(entity, record, settings, context, options)
 end
 

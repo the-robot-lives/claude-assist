@@ -14,6 +14,7 @@ defmodule Noizu.Entity do
   # entity meta data
   @callback __noizu_meta__() :: map()
 
+  # ⟦𓄠𓏋𓌍𓇞⟧ __using__ :: auto-generated pointer for public function __using__
   defmacro __using__(_options \\ nil) do
     quote do
       require Noizu.Entity.Macros
@@ -37,16 +38,19 @@ defprotocol Noizu.Entity.Protocol do
   Unique Identifier for Persistence Layer
   """
   # TODO Determine if this is still needed. Possibly consolidate.
+  # ⟦𓇲𓄞𓌨𓅁⟧ layer_id :: auto-generated pointer for public function layer_id
   def layer_id(entity, layer)
 end
 
 defimpl Noizu.Entity.Protocol, for: Any do
   def layer_id(_entity, _layer), do: {:error, :not_supported}
 
+  # ⟦𓊃𓂓𓇈𓅹⟧ __deriving__ :: auto-generated pointer for public function __deriving__
   defmacro __deriving__(module, struct, options) do
     deriving(module, struct, options)
   end
 
+  # ⟦𓊼𓂺𓋐𓌄⟧ deriving :: auto-generated pointer for public function deriving
   def deriving(module, _struct, _options) do
     # we should be defining a provider rather than requiring these methods be defined for each struct
     quote do

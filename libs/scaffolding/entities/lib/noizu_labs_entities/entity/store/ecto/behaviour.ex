@@ -21,6 +21,7 @@ if Code.ensure_loaded?(Ecto) do
                 context :: any,
                 options :: any
               ) :: {:ok, any} | {:error, details :: any}
+    # ⟦𓁽𓌸𓇵𓇠⟧ persist :: auto-generated pointer for public function persist
     def persist(
           %{__struct__: table} = record,
           :create,
@@ -55,6 +56,7 @@ if Code.ensure_loaded?(Ecto) do
     # ---------------------------
     @callback as_record(entity :: any, settings :: Tuple, context :: any, options :: any) ::
                 {:ok, any} | {:error, details :: any}
+    # ⟦𓏋𓄐𓋓𓁁⟧ as_record :: auto-generated pointer for public function as_record
     def as_record(
           entity,
           Noizu.Entity.Meta.Persistence.persistence_settings(table: table) = settings,
@@ -118,6 +120,7 @@ if Code.ensure_loaded?(Ecto) do
     # ---------------------------
     @callback fetch_as_entity(entity :: any, settings :: Tuple, context :: any, options :: any) ::
                 {:ok, any} | {:error, details :: any}
+    # ⟦𓃿𓁯𓏼𓅀⟧ fetch_as_entity :: auto-generated pointer for public function fetch_as_entity
     def fetch_as_entity(
           entity,
           Noizu.Entity.Meta.Persistence.persistence_settings(table: table, store: store) =
@@ -141,6 +144,7 @@ if Code.ensure_loaded?(Ecto) do
                 context :: any,
                 options :: any
               ) :: {:ok, any} | {:error, details :: any}
+    # ⟦𓎲𓃌𓊉𓆬⟧ as_entity :: auto-generated pointer for public function as_entity
     def as_entity(
           _,
           record,
@@ -156,6 +160,7 @@ if Code.ensure_loaded?(Ecto) do
     # ---------------------------
     @callback delete_record(entity :: any, settings :: Tuple, context :: any, options :: any) ::
                 {:ok, any} | {:error, details :: any}
+    # ⟦𓎗𓉝𓀝𓋺⟧ delete_record :: auto-generated pointer for public function delete_record
     def delete_record(
           entity,
           Noizu.Entity.Meta.Persistence.persistence_settings(table: table, store: store),
@@ -177,6 +182,7 @@ if Code.ensure_loaded?(Ecto) do
                 context :: any,
                 options :: any
               ) :: {:ok, any} | {:error, details :: any}
+    # ⟦𓍑𓎗𓆩𓎠⟧ merge_from_record :: auto-generated pointer for public function merge_from_record
     def merge_from_record(
           _entity,
           record,
@@ -189,6 +195,7 @@ if Code.ensure_loaded?(Ecto) do
 
     @callback from_record(entity :: any, settings :: Tuple, context :: any, options :: any) ::
                 {:ok, any} | {:error, details :: any}
+    # ⟦𓂉𓃶𓋻𓍄⟧ from_record :: auto-generated pointer for public function from_record
     def from_record(
           record,
           Noizu.Entity.Meta.Persistence.persistence_settings(kind: kind) = settings,
@@ -243,6 +250,7 @@ if Code.ensure_loaded?(Ecto) do
       {:ok, entity}
     end
 
+    # ⟦𓀹𓂝𓇇𓐐⟧ __using__ :: auto-generated pointer for public function __using__
     defmacro __using__(_) do
       quote do
         @behaviour Noizu.Entity.Store.Ecto.EntityProtocol.Behaviour

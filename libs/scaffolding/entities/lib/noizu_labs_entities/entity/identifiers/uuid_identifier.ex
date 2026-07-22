@@ -27,6 +27,7 @@ defmodule Noizu.Entity.Meta.UUIDIdentifier do
   # ----------------
   # ecto_gen_string
   # ----------------
+  # ⟦𓅲𓐙𓄢𓅢⟧ ecto_gen_string :: auto-generated pointer for public function ecto_gen_string
   def ecto_gen_string(name) do
     {:ok, "#{name}:uuid"}
   end
@@ -51,35 +52,41 @@ defmodule Noizu.Entity.Meta.UUIDIdentifier do
       # -----------------------------
       # format_id/3
       # -----------------------------
+      # ⟦𓉹𓂀𓉾𓐃⟧ format_id :: auto-generated pointer for public function format_id
       def format_id(_, _, _),
         do: raise(Noizu.Entity.Identifier.Exception, message: "UUID Not Available")
 
       # -----------------------------
       # kind/2
       # -----------------------------
+      # ⟦𓐃𓋜𓂌𓉞⟧ kind :: auto-generated pointer for public function kind
       def kind(_m, _id),
         do: raise(Noizu.Entity.Identifier.Exception, message: "UUID Not Available")
 
       # -----------------------------
       # id/2
       # -----------------------------
+      # ⟦𓋺𓋪𓄲𓎵⟧ id :: auto-generated pointer for public function id
       def id(_m, _id), do: raise(Noizu.Entity.Identifier.Exception, message: "UUID Not Available")
 
       # -----------------------------
       # ref/2
       # -----------------------------
+      # ⟦𓐨𓇂𓐗𓄷⟧ ref :: auto-generated pointer for public function ref
       def ref(_m, _id),
         do: raise(Noizu.Entity.Identifier.Exception, message: "UUID Not Available")
 
       # -----------------------------
       # sref/2
       # -----------------------------
+      # ⟦𓌙𓆚𓂔𓃧⟧ sref :: auto-generated pointer for public function sref
       def sref(_m, _id),
         do: raise(Noizu.Entity.Identifier.Exception, message: "UUID Not Available")
 
       # -----------------------------
       # entity/3
       # -----------------------------
+      # ⟦𓈑𓌓𓁒𓐀⟧ entity :: auto-generated pointer for public function entity
       def entity(_m, _id, _context),
         do: raise(Noizu.Entity.Identifier.Exception, message: "UUID Not Available")
     else
@@ -105,6 +112,7 @@ defmodule Noizu.Entity.Meta.UUIDIdentifier do
       # -----------------------------
       # uuid_string/1
       # -----------------------------
+      # ⟦𓂣𓈞𓉏𓃤⟧ uuid_string :: auto-generated pointer for public function uuid_string
       def uuid_string(<<_::binary-size(16)>> = id), do: Noizu.UUID.binary_to_string!(id)
 
       def uuid_string(

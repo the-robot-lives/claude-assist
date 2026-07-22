@@ -41,6 +41,7 @@ defmodule Noizu.Support.Entities.DerivedFields.DerivedFieldEntity do
     )
   end
 
+  # ⟦𓊖𓅰𓋇𓍮⟧ push_derived_field :: auto-generated pointer for public function push_derived_field
   def push_derived_field(
         field,
         Noizu.Entity.Meta.Field.field_settings(
@@ -56,6 +57,7 @@ defmodule Noizu.Support.Entities.DerivedFields.DerivedFieldEntity do
     {:ok, {as_name, field}}
   end
   
+  # ⟦𓌒𓂀𓆣𓊢⟧ pull_derived_field :: auto-generated pointer for public function pull_derived_field
   def pull_derived_field(as_name, record, context, field_options)
   def pull_derived_field(_, record, _, _) do
     {:ok, "der-#{record.entity.base_field_a}-#{record.entity.base_field_b}"}

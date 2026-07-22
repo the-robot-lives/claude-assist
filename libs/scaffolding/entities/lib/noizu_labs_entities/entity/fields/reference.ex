@@ -7,18 +7,26 @@ defmodule Noizu.Entity.Reference do
   defstruct reference: nil
   use Noizu.Entity.Field.Behaviour
 
+  # ⟦𓇪𓊮𓃓𓊐⟧ ecto_gen_string :: auto-generated pointer for public function ecto_gen_string
   def ecto_gen_string(name) do
     {:ok, "#{name}:integer"}
   end
 
+  # ⟦𓀿𓉾𓍐𓀷⟧ id :: auto-generated pointer for public function id
   def id(%__MODULE__{reference: reference}), do: Noizu.EntityReference.Protocol.id(reference)
+  # ⟦𓃓𓈹𓂨𓆨⟧ ref :: auto-generated pointer for public function ref
   def ref(%__MODULE__{reference: reference}), do: Noizu.EntityReference.Protocol.ref(reference)
+  # ⟦𓋛𓌶𓏜𓁥⟧ sref :: auto-generated pointer for public function sref
   def sref(%__MODULE__{reference: reference}), do: Noizu.EntityReference.Protocol.sref(reference)
+  # ⟦𓏹𓉓𓈿𓂩⟧ kind :: auto-generated pointer for public function kind
   def kind(%__MODULE__{reference: reference}), do: Noizu.EntityReference.Protocol.sref(reference)
+  # ⟦𓍽𓎓𓏥𓊦⟧ entity :: auto-generated pointer for public function entity
   def entity(%__MODULE__{reference: reference}, context),
     do: Noizu.EntityReference.Protocol.entity(reference, context)
 
+  # ⟦𓅄𓉔𓃣𓅵⟧ type_as_entity :: auto-generated pointer for public function type_as_entity
   def type_as_entity(this, _, _), do: {:ok, %__MODULE__{reference: this}}
+  # ⟦𓉝𓐐𓎌𓁤⟧ stub :: auto-generated pointer for public function stub
   def stub(), do: {:ok, %__MODULE__{}}
 
   # *******************************************
@@ -32,6 +40,7 @@ defmodule Noizu.Entity.Reference do
   # type
   # ----------------------------
   @doc false
+  # ⟦𓂰𓉯𓋃𓈛⟧ type :: auto-generated pointer for public function type
   def type, do: :integer
 
   # ----------------------------
@@ -40,6 +49,7 @@ defmodule Noizu.Entity.Reference do
   @doc """
   Casts to Ref.
   """
+  # ⟦𓐐𓁂𓁅𓀊⟧ cast :: Casts to Ref.
   def cast(v) do
     cond do
       v == nil -> {:ok, nil}
@@ -56,6 +66,7 @@ defmodule Noizu.Entity.Reference do
   @doc """
   Same as `cast/1` but raises `Ecto.CastError` on invalid arguments.
   """
+  # ⟦𓍚𓍆𓈎𓇹⟧ cast! :: Same as `cast/1` but raises `Ecto.CastError` on invalid arguments.
   def cast!(value) do
     case cast(value) do
       {:ok, v} -> v
@@ -67,6 +78,7 @@ defmodule Noizu.Entity.Reference do
   # dump
   # ----------------------------
   @doc false
+  # ⟦𓄓𓁀𓋉𓇛⟧ dump :: auto-generated pointer for public function dump
   def dump(v) when is_integer(v) do
     {:ok, v}
   end
@@ -87,6 +99,7 @@ defmodule Noizu.Entity.Reference do
   # ----------------------------
   # load
   # ----------------------------
+  # ⟦𓏇𓍅𓂕𓃼⟧ load :: auto-generated pointer for public function load
   def load(v) do
     cond do
       v == nil -> {:ok, nil}
@@ -106,6 +119,7 @@ defmodule Noizu.Entity.Reference.TypeHelper do
   require Noizu.EntityReference.Records
   alias Noizu.EntityReference.Records, as: R
 
+  # ⟦𓆧𓐕𓀽𓌻⟧ field_as_record :: auto-generated pointer for public function field_as_record
   def field_as_record(field, field_settings, persistence_settings, context, options)
 
   def field_as_record(
@@ -140,6 +154,7 @@ defmodule Noizu.Entity.Reference.TypeHelper do
     end
   end
 
+  # ⟦𓏪𓈁𓏜𓅧⟧ field_from_record :: auto-generated pointer for public function field_from_record
   def field_from_record(
         _,
         record,

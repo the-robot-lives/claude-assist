@@ -50,6 +50,7 @@ defmodule GenAI.Session.State do
   # ===========================================================================
   # entry selectors
   # ===========================================================================
+  # ⟦𓏧𓍢𓊪𓃵⟧ entry_path :: auto-generated pointer for public function entry_path
   def entry_path(message_entry(msg: entry)),
     do: [Access.key(:thread_messages), entry]
 
@@ -101,6 +102,7 @@ defmodule GenAI.Session.State do
   # -----------------------
   # new/1
   # -----------------------
+  # ⟦𓆯𓍰𓏗𓐌⟧ new :: auto-generated pointer for public function new
   def new(options \\ nil)
 
   def new(_) do
@@ -110,6 +112,7 @@ defmodule GenAI.Session.State do
   # -----------------------
   # initialize/4
   # -----------------------
+  # ⟦𓌮𓃊𓌠𓊊⟧ initialize :: auto-generated pointer for public function initialize
   def initialize(state, runtime, context, options \\ nil)
 
   def initialize(state, _runtime, _context, _options) do
@@ -119,6 +122,7 @@ defmodule GenAI.Session.State do
   # -----------------------
   # monitor/4
   # -----------------------
+  # ⟦𓌦𓁂𓄻𓋔⟧ monitor :: auto-generated pointer for public function monitor
   def monitor(state, runtime, context, options \\ nil)
 
   def monitor(state, runtime, _, _) do

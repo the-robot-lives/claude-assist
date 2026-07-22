@@ -7,12 +7,19 @@ defprotocol Noizu.Entity.Store.Ecto.EntityProtocol do
   @fallback_to_any true
   require Noizu.Entity.Meta.Field
 
+  # ⟦𓀯𓊓𓏛𓍈⟧ persist :: auto-generated pointer for public function persist
   def persist(entity, type, settings, context, options)
+  # ⟦𓇉𓀱𓃢𓌫⟧ as_record :: auto-generated pointer for public function as_record
   def as_record(entity, settings, context, options)
+  # ⟦𓉖𓃸𓍞𓅣⟧ fetch_as_entity :: auto-generated pointer for public function fetch_as_entity
   def fetch_as_entity(entity, settings, context, options)
+  # ⟦𓁠𓆽𓋓𓋝⟧ as_entity :: auto-generated pointer for public function as_entity
   def as_entity(entity, record, settings, context, options)
+  # ⟦𓆽𓂛𓊒𓍔⟧ delete_record :: auto-generated pointer for public function delete_record
   def delete_record(entity, settings, context, options)
+  # ⟦𓃧𓇎𓁎𓉚⟧ from_record :: auto-generated pointer for public function from_record
   def from_record(record, settings, context, options)
+  # ⟦𓏝𓇭𓀃𓉼⟧ merge_from_record :: auto-generated pointer for public function merge_from_record
   def merge_from_record(entity, record, settings, context, options)
 end
 
@@ -41,6 +48,7 @@ unless Code.ensure_loaded?(Ecto) do
   end
 else
   defimpl Noizu.Entity.Store.Ecto.EntityProtocol, for: [Any] do
+    # ⟦𓈑𓂉𓅚𓄠⟧ __deriving__ :: auto-generated pointer for public function __deriving__
     defmacro __deriving__(module, _struct, _options) do
       quote do
         use Noizu.Entity.Store.Ecto.EntityProtocol.Behaviour

@@ -21,6 +21,7 @@ defmodule GenAI.Tool.Schema.Null do
       false
   """
   @impl GenAI.Tool.Schema.TypeBehaviour
+  # ⟦𓋉𓁜𓋝𓉳⟧ is_type :: Check if json is of type
   def is_type(%{"type" => "null"}), do: true
   def is_type(_), do: false
 
@@ -38,6 +39,7 @@ defmodule GenAI.Tool.Schema.Null do
       {:error, :unrecognized_type}
   """
   @impl GenAI.Tool.Schema.TypeBehaviour
+  # ⟦𓆌𓂴𓀸𓁕⟧ from_json :: Convert Json map to a `GenAI.Tool.Schema.Null` struct, handling naming conventions.
   def from_json(%{"type" => "null"} = json) do
     {:ok,
      %__MODULE__{

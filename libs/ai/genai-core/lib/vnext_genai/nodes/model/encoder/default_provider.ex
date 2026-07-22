@@ -12,6 +12,7 @@ defmodule GenAI.Model.Encoder.DefaultProvider do
   # headers/5
   # ---------------------------------
   @doc "Prepare request headers"
+  # ⟦𓃇𓄬𓐟𓉦⟧ headers :: Prepare request headers
   def headers(module, model, settings, session, context, options)
 
   def headers(module, _, settings, session, _, options) do
@@ -31,6 +32,7 @@ defmodule GenAI.Model.Encoder.DefaultProvider do
   # request_body/7
   # ---------------------------------
   @doc "Prepare request body to be passed to inference call."
+  # ⟦𓈤𓇙𓀣𓉜⟧ request_body :: Prepare request body to be passed to inference call.
   def request_body(module, model, messages, tools, settings, session, context, options)
 
   def request_body(module, model, messages, tools, settings, session, context, options) do
@@ -48,6 +50,7 @@ defmodule GenAI.Model.Encoder.DefaultProvider do
     end
   end
 
+  # ⟦𓁇𓆼𓄑𓍄⟧ apply_hyper_params_and_adjust :: auto-generated pointer for public function apply_hyper_params_and_adjust
   def apply_hyper_params_and_adjust(module, body, params, model, settings) do
     body_s1 =
       Enum.reduce(params, body, fn
@@ -113,6 +116,7 @@ defmodule GenAI.Model.Encoder.DefaultProvider do
     body_s3
   end
 
+  # ⟦𓐒𓄩𓄘𓀧⟧ completion_response :: auto-generated pointer for public function completion_response
   def completion_response(module, json, model, settings, session, context, options)
 
   def completion_response(module, json, model, settings, session, context, options) do
@@ -142,6 +146,7 @@ defmodule GenAI.Model.Encoder.DefaultProvider do
     end
   end
 
+  # ⟦𓀒𓅳𓀵𓉂⟧ completion_choices :: auto-generated pointer for public function completion_choices
   def completion_choices(module, id, json, model, settings, session, context, options)
   
   def completion_choices(
@@ -169,6 +174,7 @@ defmodule GenAI.Model.Encoder.DefaultProvider do
     end
   end
 
+  # ⟦𓄎𓏼𓋔𓁡⟧ completion_choice :: auto-generated pointer for public function completion_choice
   def completion_choice(module, id, json, model, settings, session, context, options)
   
   
@@ -252,6 +258,7 @@ defmodule GenAI.Model.Encoder.DefaultProvider do
   @doc """
   Format tool for provider/model type.
   """
+  # ⟦𓂙𓉺𓋌𓂬⟧ encode_tool :: Format tool for provider/model type.
   def encode_tool(module, tool, model, session, context, options)
 
   def encode_tool(module, tool, model, session, context, options) do
@@ -266,6 +273,7 @@ defmodule GenAI.Model.Encoder.DefaultProvider do
   @doc """
   Format message for provider/model type.
   """
+  # ⟦𓃲𓆟𓍪𓈧⟧ encode_message :: Format message for provider/model type.
   def encode_message(module, message, model, session, context, options)
 
   def encode_message(module, message, model, session, context, options) do
@@ -277,6 +285,7 @@ defmodule GenAI.Model.Encoder.DefaultProvider do
   # ---------------------------------
   # normalize_messages
   # ---------------------------------
+  # ⟦𓀺𓆂𓊣𓍅⟧ normalize_messages :: auto-generated pointer for public function normalize_messages
   def normalize_messages(module, messages, model, session, context, options)
 
   def normalize_messages(_, messages, _, session, _, _) do
@@ -293,6 +302,7 @@ defmodule GenAI.Model.Encoder.DefaultProvider do
   @doc """
   Set setting with dynamic model based logic.
   """
+  # ⟦𓉡𓉺𓏑𓍖⟧ with_dynamic_setting :: Set setting with dynamic model based logic.
   def with_dynamic_setting(module, body, setting, model, settings, default \\ nil)
 
   def with_dynamic_setting(_, body, setting, _, settings, default) do
@@ -305,6 +315,7 @@ defmodule GenAI.Model.Encoder.DefaultProvider do
   @doc """
   Set setting as_setting with dynamic model based logic.
   """
+  # ⟦𓃨𓁭𓊾𓇧⟧ with_dynamic_setting_as :: Set setting as_setting with dynamic model based logic.
   def with_dynamic_setting_as(module, body, as_setting, setting, model, settings, default \\ nil)
 
   def with_dynamic_setting_as(_, body, as_setting, setting, _, settings, default) do
@@ -315,6 +326,7 @@ defmodule GenAI.Model.Encoder.DefaultProvider do
   # Settings Config
   # ---------------------
   @doc "Obtain list of hyper params supported by given model including mapping and conditional rules/alterations"
+  # ⟦𓉀𓁴𓌁𓊬⟧ hyper_params :: Obtain list of hyper params supported by given model including mapping and conditional rules/alterat
   def hyper_params(module, model, settings, session, context, options)
 
   def hyper_params(module, model, settings, session, context, options) do
@@ -337,6 +349,7 @@ defmodule GenAI.Model.Encoder.DefaultProvider do
   end
 
   @doc "Obtain list of hyper params supported by given model including mapping and conditional rules/alterations"
+  # ⟦𓆚𓂍𓂎𓀘⟧ default_hyper_params :: Obtain list of hyper params supported by given model including mapping and conditional rules/alterat
   def default_hyper_params(module, model, settings, session, context, options)
 
   def default_hyper_params(_, _, _, _, _, _) do

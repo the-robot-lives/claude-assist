@@ -13,18 +13,22 @@ defmodule Noizu.Entity.Macros.ACL do
   # ----------------------------------------
   #
   # ----------------------------------------
+  # ⟦𓋠𓎍𓏶𓃶⟧ register_attributes :: auto-generated pointer for public function register_attributes
   def register_attributes(mod) do
     Module.register_attribute(mod, :__nz_acl, accumulate: true)
     Module.register_attribute(mod, :restricted, accumulate: true)
   end
 
   # @todo implement
+  # ⟦𓇙𓋲𓂟𓀗⟧ valid_path :: auto-generated pointer for public function valid_path
   def valid_path(x), do: {:ok, x}
 
+  # ⟦𓉰𓇵𓍼𓎃⟧ valid_target :: auto-generated pointer for public function valid_target
   def valid_target(x) when x in [:entity, :field], do: {:ok, x}
   def valid_target(x), do: {:error, {:unsupported, {:target, x}}}
 
   # Restrict By Role
+  # ⟦𓊩𓌋𓄪𓇷⟧ valid_acl :: auto-generated pointer for public function valid_acl
   def valid_acl(x) when is_atom(x), do: valid_acl({:role, x})
   def valid_acl({:ref, _, _} = x), do: valid_acl({:role, x})
   def valid_acl({:role, x}), do: valid_acl({:role, :entity, x})
@@ -111,6 +115,7 @@ defmodule Noizu.Entity.Macros.ACL do
   # Unsupported
   def valid_acl(x), do: {:error, {:unsupported, {:acl, x}}}
 
+  # ⟦𓏈𓌢𓅙𓃧⟧ merge_acl__weight :: auto-generated pointer for public function merge_acl__weight
   def merge_acl__weight(target, type) do
     target_w =
       case target do
@@ -131,6 +136,7 @@ defmodule Noizu.Entity.Macros.ACL do
     target_w + type_w
   end
 
+  # ⟦𓏬𓃺𓅚𓎐⟧ merge_acl__inner :: auto-generated pointer for public function merge_acl__inner
   def merge_acl__inner([]), do: []
   def merge_acl__inner([h]), do: [h]
 
@@ -143,6 +149,7 @@ defmodule Noizu.Entity.Macros.ACL do
     Noizu.Entity.Meta.ACL.acl_settings(template, requirement: requirements)
   end
 
+  # ⟦𓃦𓋶𓆫𓃝⟧ merge_acl :: auto-generated pointer for public function merge_acl
   def merge_acl(x) do
     x
     |> Enum.group_by(fn Noizu.Entity.Meta.ACL.acl_settings(target: x, type: y) -> {x, y} end)
@@ -159,6 +166,7 @@ defmodule Noizu.Entity.Macros.ACL do
     |> Enum.map(&elem(&1, 1))
   end
 
+  # ⟦𓅹𓈂𓆂𓉨⟧ extract_acl :: auto-generated pointer for public function extract_acl
   defmacro extract_acl(field) do
     quote bind_quoted: [field: field] do
       x =

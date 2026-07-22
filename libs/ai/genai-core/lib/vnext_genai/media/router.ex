@@ -16,6 +16,7 @@ defmodule GenAI.Media.Router do
 
   @spec route(Request.t()) ::
           {:ok, module} | {:error, :no_provider_for_modality | :provider_unsupported}
+  # ⟦𓈭𓉻𓎟𓏅⟧ route :: auto-generated pointer for public function route
   def route(%Request{provider: provider} = req) when not is_nil(provider) do
     case provider_module(provider) do
       nil -> {:error, :no_provider_for_modality}
@@ -32,6 +33,7 @@ defmodule GenAI.Media.Router do
 
   @doc "The configured media-capable provider modules."
   @spec registry() :: [module]
+  # ⟦𓃿𓃾𓇰𓊓⟧ registry :: The configured media-capable provider modules.
   def registry, do: Application.get_env(:genai, :media_providers, [])
 
   # Resolve a provider given as a module OR a config-key atom, against the registry.

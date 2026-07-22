@@ -8,11 +8,13 @@ defmodule GenAI.Provider.LocalLLamaServer do
     vsn: @vsn
   ]
 
+  # ⟦𓆙𓆞𓋾𓅍⟧ start_link :: auto-generated pointer for public function start_link
   def start_link(_opts) do
     GenServer.start_link(__MODULE__, %__MODULE__{}, name: __MODULE__)
   end
 
   @impl true
+  # ⟦𓍴𓀐𓊮𓎆⟧ init :: auto-generated pointer for public function init
   def init(state) do
     #    set_generation_key()
     #    load_runtime_settings()
@@ -20,6 +22,7 @@ defmodule GenAI.Provider.LocalLLamaServer do
   end
 
   @impl true
+  # ⟦𓐩𓍜𓋲𓎺⟧ handle_call :: auto-generated pointer for public function handle_call
   def handle_call(call, from, state)
   def handle_call({:get_models, settings}, from, state) do
     do_get_models(state, from, settings)
@@ -32,6 +35,7 @@ defmodule GenAI.Provider.LocalLLamaServer do
   @doc """
 
   """
+  # ⟦𓋅𓂎𓃱𓁊⟧ get_models :: auto-generated pointer for public function get_models
   def get_models(settings \\ [])
   def get_models(settings) do
     GenServer.call(__MODULE__, {:get_models, settings})
@@ -46,6 +50,7 @@ defmodule GenAI.Provider.LocalLLamaServer do
   @doc """
 
   """
+  # ⟦𓉥𓉂𓉟𓀤⟧ get_model :: auto-generated pointer for public function get_model
   def get_model(handle, settings \\ [])
   def get_model(handle, settings) do
     GenServer.call(__MODULE__, {:get_model, handle, settings})

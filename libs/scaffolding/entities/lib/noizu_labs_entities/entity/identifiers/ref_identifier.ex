@@ -11,6 +11,7 @@ defmodule Noizu.Entity.Meta.RefIdentifier do
   # ----------------
   # ecto_gen_string
   # ----------------
+  # ⟦𓅵𓏱𓎑𓆐⟧ ecto_gen_string :: auto-generated pointer for public function ecto_gen_string
   def ecto_gen_string(name) do
     {:ok, "#{name}:tuple"}
   end
@@ -18,6 +19,7 @@ defmodule Noizu.Entity.Meta.RefIdentifier do
   # -----------------------------
   # format_id/3
   # -----------------------------
+  # ⟦𓈡𓁬𓈘𓐄⟧ format_id :: auto-generated pointer for public function format_id
   def format_id(m, _, _) do
     raise Noizu.Entity.Identifier.Exception,
       message: "#{m.__struct__} Generate Identifier with ref type not supported"
@@ -27,6 +29,7 @@ defmodule Noizu.Entity.Meta.RefIdentifier do
   # kind/2
   # -----------------------------
   # def kind(m, R.ref(module: m)), do: {:ok, m}
+  # ⟦𓁾𓍵𓋼𓁍⟧ kind :: auto-generated pointer for public function kind
   def kind(m, R.ref(module: _)), do: {:ok, m}
   def kind(m, %{__struct__: m}), do: {:ok, m}
 
@@ -49,6 +52,7 @@ defmodule Noizu.Entity.Meta.RefIdentifier do
   # -----------------------------
   # id/2
   # -----------------------------
+  # ⟦𓎡𓃻𓂿𓉟⟧ id :: auto-generated pointer for public function id
   def id(m, R.ref(module: n, id: _) = ref) when m != n, do: {:ok, ref}
 
   def id(m, R.ref(module: m, id: R.ref(module: _, id: _)) = ref),
@@ -81,6 +85,7 @@ defmodule Noizu.Entity.Meta.RefIdentifier do
   # -----------------------------
   # ref/2
   # -----------------------------
+  # ⟦𓄍𓌋𓈌𓎎⟧ ref :: auto-generated pointer for public function ref
   def ref(m, R.ref(module: n, id: _) = inner_ref) when m != n,
     do: {:ok, R.ref(module: m, id: inner_ref)}
 
@@ -113,6 +118,7 @@ defmodule Noizu.Entity.Meta.RefIdentifier do
   # -----------------------------
   # sref/2
   # -----------------------------
+  # ⟦𓆿𓏐𓋂𓇘⟧ sref :: auto-generated pointer for public function sref
   def sref(m, ref) do
     with sref <- Noizu.Entity.Meta.sref(m),
          {:ok, sref} <- (sref && {:ok, sref}) || {:error, {:sref_undefined, m}},
@@ -127,6 +133,7 @@ defmodule Noizu.Entity.Meta.RefIdentifier do
   # -----------------------------
   # entity/3
   # -----------------------------
+  # ⟦𓇨𓐀𓌀𓁧⟧ entity :: auto-generated pointer for public function entity
   def entity(m, %{__struct__: m} = ref, _context) do
     {:ok, ref}
   end
