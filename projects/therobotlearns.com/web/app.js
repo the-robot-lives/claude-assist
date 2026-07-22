@@ -1,70 +1,117 @@
-const activities = [
-  ["Imported", "learning-systems article bundle"],
-  ["Queued", "SM-2 review cards for computing"],
-  ["Planned", "weekly recall repair milestone"],
-  ["Measured", "quiz weak area: spaced repetition"]
-];
+const AUTHENTIK_URL = "/auth/oidc";
+const INVITE_PATTERN = /^TRL-[A-Z0-9-]{6,}$/i;
 
-const learningRows = [
-  ["Spaced repetition", "Recall drift", "Review due cards"],
-  ["Learning systems", "Strong", "Generate applied project"],
-  ["Agent memory", "Mixed", "Run headless quiz eval"],
-  ["Knowledge graphs", "Needs links", "Expand related topics"]
-];
+const dialog = document.querySelector("#auth-dialog");
+const openButtons = document.querySelectorAll("[data-open-auth]");
+const tabs = document.querySelectorAll("[data-auth-tab]");
+const forms = document.querySelectorAll("[data-auth-form]");
+const signupForm = document.querySelector("#signup-form");
+const loginForm = document.querySelector("#login-form");
+const signupStatus = document.querySelector("#signup-status");
+const loginStatus = document.querySelector("#login-status");
 
-const activityList = document.querySelector("#activity-list");
-const learningTable = document.querySelector("#learning-table");
-const syncForm = document.querySelector("#sync-form");
-const bundleInput = document.querySelector("#bundle-input");
-const queueCount = document.querySelector("#queue-count");
+let lastTrigger = null;
 
-function renderActivities(extra = []) {
-  activityList.innerHTML = "";
-  [...extra, ...activities].slice(0, 6).forEach(([verb, detail]) => {
-    const row = document.createElement("div");
-    row.className = "activity";
-    row.innerHTML = `<strong>${verb}</strong><span>${detail}</span>`;
-    activityList.appendChild(row);
+function activateTab(tabName) {
+  tabs.forEach((tab) => {
+    const active = tab.dataset.authTab === tabName;
+    tab.classList.toggle("is-active", active);
+    tab.setAttribute("aria-selected", String(active));
+  });
+
+  forms.forEach((form) => {
+    form.classList.toggle("is-active", form.dataset.authForm === tabName);
   });
 }
 
-function renderLearningRows() {
-  learningRows.forEach(([topic, signal, action]) => {
-    const row = document.createElement("tr");
-    row.innerHTML = `<td>${topic}</td><td>${signal}</td><td>${action}</td>`;
-    learningTable.appendChild(row);
-  });
+function openAuth(mode) {
+  lastTrigger = document.activeElement;
+  activateTab(mode === "login" ? "login" : "signup");
+  dialog.showModal();
+  const firstInput = dialog.querySelector(".auth-form.is-active input");
+  firstInput?.focus();
 }
 
-function loadQueue() {
-  try {
-    return JSON.parse(localStorage.getItem("trl-sync-queue") || "[]");
-  } catch {
-    return [];
-  }
-}
-
-function saveQueue(queue) {
-  localStorage.setItem("trl-sync-queue", JSON.stringify(queue));
-  queueCount.textContent = `${queue.length} pending`;
-  renderActivities(queue.map((item) => ["Queued", item.label]));
-}
-
-syncForm.addEventListener("submit", (event) => {
-  event.preventDefault();
-  const content = bundleInput.value.trim();
-  if (!content) return;
-  const firstLine = content.split("\n").find(Boolean) || "content bundle";
-  const queue = loadQueue();
-  queue.unshift({
-    label: firstLine.slice(0, 72),
-    content,
-    createdAt: new Date().toISOString()
-  });
-  saveQueue(queue);
-  bundleInput.value = "";
+openButtons.forEach((button) => {
+  button.addEventListener("click", () => openAuth(button.dataset.openAuth));
 });
 
-renderActivities(loadQueue().map((item) => ["Queued", item.label]));
-renderLearningRows();
-saveQueue(loadQueue());
+tabs.forEach((tab) => {
+  tab.addEventListener("click", () => {
+    activateTab(tab.dataset.authTab);
+    dialog.querySelector(".auth-form.is-active input")?.focus();
+  });
+});
+
+dialog.addEventListener("close", () => {
+  if (lastTrigger && typeof lastTrigger.focus === "function") {
+    lastTrigger.focus();
+  }
+});
+
+dialog.addEventListener("keydown", (event) => {
+  if (event.key !== "Tab") return;
+  const focusable = dialog.querySelectorAll(
+    'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+  );
+  const first = focusable[0];
+  const last = focusable[focusable.length - 1];
+
+  if (event.shiftKey && document.activeElement === first) {
+    event.preventDefault();
+    last.focus();
+  } else if (!event.shiftKey && document.activeElement === last) {
+    event.preventDefault();
+    first.focus();
+  }
+});
+
+document.querySelectorAll(`a[href="${AUTHENTIK_URL}"]`).forEach((link) => {
+  link.addEventListener("click", () => {
+    sessionStorage.setItem("trl-auth-method", "authentik");
+  });
+});
+
+signupForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  const data = new FormData(signupForm);
+  const email = String(data.get("email") || "").trim();
+  const invite = String(data.get("invite") || "").trim();
+  const focus = String(data.get("focus") || "").trim();
+
+  signupStatus.removeAttribute("data-state");
+
+  if (!email || !email.includes("@")) {
+    signupStatus.dataset.state = "error";
+    signupStatus.textContent = "Enter a valid email address.";
+    return;
+  }
+
+  if (!INVITE_PATTERN.test(invite)) {
+    signupStatus.dataset.state = "error";
+    signupStatus.textContent = "Direct beta signup requires a valid invite token.";
+    return;
+  }
+
+  if (!focus) {
+    signupStatus.dataset.state = "error";
+    signupStatus.textContent = "Choose a learning focus for onboarding.";
+    return;
+  }
+
+  const request = {
+    email,
+    invite,
+    focus,
+    requestedAt: new Date().toISOString()
+  };
+  localStorage.setItem("trl-beta-request", JSON.stringify(request));
+  signupStatus.dataset.state = "ok";
+  signupStatus.textContent = "Beta request staged. Authentik users can continue without an invite token.";
+});
+
+loginForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  loginStatus.dataset.state = "error";
+  loginStatus.textContent = "Email login needs the account backend. Use Authentik for active beta access.";
+});

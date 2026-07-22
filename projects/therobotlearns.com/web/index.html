@@ -3,136 +3,259 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>The Robot Learns</title>
+    <title>The Robot Learns | AI learning workspace</title>
     <meta
       name="description"
-      content="The Robot Learns cloud workspace for synced knowledge, learning plans, quiz results, and MCP content operations."
+      content="The Robot Learns is a cloud workspace for durable knowledge, adaptive study plans, quizzes, and MCP-assisted learning content."
     />
     <link rel="stylesheet" href="/styles.css" />
   </head>
   <body>
-    <aside class="rail" aria-label="Primary navigation">
-      <div class="mark" aria-hidden="true">TRL</div>
-      <nav>
-        <a href="#workspace" class="active">Workspace</a>
-        <a href="#learning">Learning</a>
-        <a href="#planning">Planning</a>
-        <a href="#connector">MCP</a>
+    <a class="skip-link" href="#main">Skip to main content</a>
+
+    <header class="site-header">
+      <a class="brand" href="/" aria-label="The Robot Learns home">
+        <span class="brand-mark" aria-hidden="true">TRL</span>
+        <span>The Robot Learns</span>
+      </a>
+
+      <nav class="nav-links" aria-label="Primary navigation">
+        <a href="#features">Features</a>
+        <a href="#workflow">Workflow</a>
+        <a href="#mcp">MCP</a>
+        <a href="#security">Security</a>
       </nav>
-    </aside>
 
-    <main>
-      <section class="topbar" aria-labelledby="app-title">
-        <div>
-          <p class="eyebrow">therobotlearns.com</p>
-          <h1 id="app-title">Cloud learning workspace</h1>
-        </div>
-        <div class="sync-pill" title="Cloud sync status">
-          <span class="dot"></span>
-          Ready for connector sync
-        </div>
-      </section>
+      <div class="header-actions">
+        <button class="button button-ghost" type="button" data-open-auth="login">Log in</button>
+        <button class="button button-primary" type="button" data-open-auth="signup">Join beta</button>
+      </div>
+    </header>
 
-      <section id="workspace" class="band workspace-grid" aria-label="Workspace overview">
-        <article class="panel primary-panel">
-          <div class="panel-head">
-            <h2>Knowledge Base</h2>
-            <span>Account: cloud beta</span>
+    <main id="main">
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="hero-copy">
+          <p class="eyebrow">Cloud beta now onboarding</p>
+          <h1 id="hero-title">The Robot Learns</h1>
+          <p class="hero-lede">
+            A cloud learning workspace that turns study sessions into durable knowledge,
+            adaptive plans, quizzes, flashcards, and MCP-ready content.
+          </p>
+          <div class="hero-actions">
+            <button class="button button-primary button-large" type="button" data-open-auth="signup">
+              Sign up as a free beta user
+            </button>
+            <a class="button button-secondary button-large" href="#features">See features</a>
           </div>
-          <div class="metric-row">
-            <div>
-              <strong>128</strong>
-              <span>articles</span>
-            </div>
-            <div>
-              <strong>42</strong>
-              <span>flashcards due</span>
-            </div>
-            <div>
-              <strong>9</strong>
-              <span>open goals</span>
-            </div>
-          </div>
-          <div class="activity-list" id="activity-list"></div>
-        </article>
-
-        <article class="panel">
-          <div class="panel-head">
-            <h2>Sync Queue</h2>
-            <span id="queue-count">0 pending</span>
-          </div>
-          <form id="sync-form" class="stack">
-            <label>
-              Content bundle
-              <textarea
-                id="bundle-input"
-                rows="7"
-                spellcheck="false"
-                placeholder="Paste a YAML or JSON bundle from the local MCP connector"></textarea>
-            </label>
-            <button type="submit">Queue Sync</button>
-          </form>
-        </article>
-      </section>
-
-      <section id="learning" class="band split" aria-label="Learning queue">
-        <div>
-          <p class="eyebrow">Retention</p>
-          <h2>Learning Queue</h2>
-        </div>
-        <div class="table-shell">
-          <table>
-            <thead>
-              <tr>
-                <th>Topic</th>
-                <th>Signal</th>
-                <th>Next action</th>
-              </tr>
-            </thead>
-            <tbody id="learning-table"></tbody>
-          </table>
-        </div>
-      </section>
-
-      <section id="planning" class="band card-grid" aria-label="Learning plans">
-        <article class="plan-card">
-          <span>Plan</span>
-          <h2>Build a durable AI memory loop</h2>
-          <p>Sequence articles, flashcards, and quizzes around recall quality and weak-area repair.</p>
-          <progress value="68" max="100">68%</progress>
-        </article>
-        <article class="plan-card">
-          <span>Team</span>
-          <h2>Shared KB beta</h2>
-          <p>Prepare content bundle review, conflict resolution, and team progress reporting.</p>
-          <progress value="41" max="100">41%</progress>
-        </article>
-        <article class="plan-card">
-          <span>Eval</span>
-          <h2>Headless quiz scoring</h2>
-          <p>Use quiz results to measure whether memory recall improves across agent sessions.</p>
-          <progress value="54" max="100">54%</progress>
-        </article>
-      </section>
-
-      <section id="connector" class="band connector" aria-label="MCP connector">
-        <div>
-          <p class="eyebrow">Local connector</p>
-          <h2>MCP content operations</h2>
-          <p>
-            Local tooling exists to push and read knowledge artifacts, learning plans, quiz
-            results, and planning content. The cloud app is the system of record once sync is
-            configured.
+          <p class="trust-note">
+            Invite token required for direct beta signup. Authentik signups use your existing trusted identity.
           </p>
         </div>
-        <dl>
-          <div><dt>KB read</dt><dd>knowledge articles, tags, links, and indexes</dd></div>
-          <div><dt>Learning write</dt><dd>flashcards, quiz attempts, weak areas, plans</dd></div>
-          <div><dt>Planning write</dt><dd>goals, milestones, progress notes, team assignments</dd></div>
-        </dl>
-        <a class="quiz-link" href="/quiz/">Open Quiz SPA</a>
+
+        <div class="product-visual" aria-label="Product preview">
+          <div class="visual-toolbar">
+            <span></span><span></span><span></span>
+            <strong>learning workspace</strong>
+          </div>
+          <div class="visual-grid">
+            <section class="visual-panel visual-panel-main">
+              <span class="visual-label">Plan</span>
+              <h2>Memory systems for working engineers</h2>
+              <div class="progress-line"><i style="width: 72%"></i></div>
+              <p>Article draft, card deck, quiz run, weak-area repair.</p>
+            </section>
+            <section class="visual-panel">
+              <span class="visual-label">Queue</span>
+              <ul>
+                <li>Review cards</li>
+                <li>Run quiz</li>
+                <li>Update plan</li>
+              </ul>
+            </section>
+            <section class="visual-panel dark-panel">
+              <span class="visual-label">MCP</span>
+              <code>push_learning_plan</code>
+              <code>read_kb_index</code>
+              <code>record_quiz_result</code>
+            </section>
+          </div>
+        </div>
+      </section>
+
+      <section id="features" class="section" aria-labelledby="features-title">
+        <div class="section-head">
+          <p class="eyebrow">Features</p>
+          <h2 id="features-title">A learning system with enough structure to survive real work.</h2>
+        </div>
+        <div class="feature-grid">
+          <article>
+            <span class="feature-icon">01</span>
+            <h3>Knowledge that compounds</h3>
+            <p>Save calibrated explanations, source notes, tags, and related-topic links into a searchable KB.</p>
+          </article>
+          <article>
+            <span class="feature-icon">02</span>
+            <h3>Plans that adapt</h3>
+            <p>Turn goals into milestones, then adjust the plan when quizzes and reviews expose weak areas.</p>
+          </article>
+          <article>
+            <span class="feature-icon">03</span>
+            <h3>Recall, not vibes</h3>
+            <p>Generate flashcards and quizzes from actual notes so progress is measured by what you can retrieve.</p>
+          </article>
+          <article>
+            <span class="feature-icon">04</span>
+            <h3>Agent-ready content</h3>
+            <p>Use the MCP connector to push, read, learn, and plan with durable Markdown and YAML artifacts.</p>
+          </article>
+        </div>
+      </section>
+
+      <section id="workflow" class="section workflow" aria-labelledby="workflow-title">
+        <div>
+          <p class="eyebrow">Workflow</p>
+          <h2 id="workflow-title">From messy notes to an accountable learning loop.</h2>
+        </div>
+        <ol class="steps">
+          <li><strong>Capture</strong><span>Bring in notes, articles, questions, and session output.</span></li>
+          <li><strong>Structure</strong><span>Promote useful material into KB entries, decks, quizzes, and plans.</span></li>
+          <li><strong>Practice</strong><span>Run reviews and quizzes that reveal what is actually sticking.</span></li>
+          <li><strong>Sync</strong><span>Keep the cloud workspace aligned with your local MCP-assisted content flow.</span></li>
+        </ol>
+      </section>
+
+      <section id="mcp" class="section mcp-section" aria-labelledby="mcp-title">
+        <div class="mcp-copy">
+          <p class="eyebrow">MCP connector</p>
+          <h2 id="mcp-title">The local surface is for content operations.</h2>
+          <p>
+            The local connector exists to push and read learning content, work with plans,
+            and move structured artifacts between your workspace and the cloud app.
+          </p>
+        </div>
+        <div class="command-list" aria-label="Connector capability examples">
+          <span>read_kb_index</span>
+          <span>push_article_bundle</span>
+          <span>record_quiz_result</span>
+          <span>sync_learning_plan</span>
+        </div>
+      </section>
+
+      <section id="security" class="section security" aria-labelledby="security-title">
+        <div>
+          <p class="eyebrow">Access</p>
+          <h2 id="security-title">Beta access is gated on purpose.</h2>
+        </div>
+        <div class="security-grid">
+          <article>
+            <h3>Direct signup needs an invite token</h3>
+            <p>Beta tokens keep onboarding intentional while the cloud workspace is still taking shape.</p>
+          </article>
+          <article>
+            <h3>Authentik is the trusted path</h3>
+            <p>Users coming through Authentik can enter without a separate invite token.</p>
+          </article>
+          <article>
+            <h3>Local-first content remains portable</h3>
+            <p>Knowledge, plans, quizzes, and review data stay represented as inspectable artifacts.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="section final-cta" aria-labelledby="beta-title">
+        <div>
+          <p class="eyebrow">Free beta</p>
+          <h2 id="beta-title">Join the beta and help shape the learning workspace.</h2>
+          <p>No sales pitch here. The beta is about fit, feedback, and proving the learning loop.</p>
+        </div>
+        <div class="hero-actions">
+          <button class="button button-primary button-large" type="button" data-open-auth="signup">
+            Sign up as a free beta user
+          </button>
+          <button class="button button-secondary button-large" type="button" data-open-auth="login">
+            Log in
+          </button>
+        </div>
       </section>
     </main>
+
+    <footer class="site-footer">
+      <span>The Robot Learns</span>
+      <a href="/quiz/">Quiz SPA</a>
+      <a href="#mcp">MCP connector</a>
+      <button class="footer-button" type="button" data-open-auth="login">Account access</button>
+    </footer>
+
+    <dialog class="auth-dialog" id="auth-dialog" aria-labelledby="auth-title">
+      <form method="dialog" class="dialog-close-form">
+        <button class="icon-button" value="close" aria-label="Close dialog">x</button>
+      </form>
+
+      <div class="auth-layout">
+        <section class="auth-panel">
+          <p class="eyebrow">Account access</p>
+          <h2 id="auth-title">Log in with Authentik</h2>
+          <p>
+            Authentik is the primary identity path for beta users. It does not require a separate invite token.
+          </p>
+          <a class="button button-primary button-block" href="/auth/oidc">Continue with Authentik</a>
+          <p class="small-note">You will be redirected to the configured Authentik application.</p>
+        </section>
+
+        <section class="auth-panel auth-panel-muted">
+          <div class="auth-tabs" role="tablist" aria-label="Beta access forms">
+            <button class="auth-tab is-active" type="button" role="tab" aria-selected="true" data-auth-tab="signup">
+              Sign up
+            </button>
+            <button class="auth-tab" type="button" role="tab" aria-selected="false" data-auth-tab="login">
+              Email login
+            </button>
+          </div>
+
+          <form class="auth-form is-active" id="signup-form" data-auth-form="signup" novalidate>
+            <label>
+              Work email
+              <input name="email" type="email" autocomplete="email" required />
+            </label>
+            <label>
+              Invite token
+              <input
+                name="invite"
+                type="text"
+                autocomplete="one-time-code"
+                inputmode="text"
+                placeholder="TRL-..."
+                required />
+            </label>
+            <label>
+              Learning focus
+              <select name="focus" required>
+                <option value="">Choose one</option>
+                <option>AI engineering</option>
+                <option>Systems architecture</option>
+                <option>Team enablement</option>
+                <option>Personal study loop</option>
+              </select>
+            </label>
+            <button class="button button-primary button-block" type="submit">Request beta access</button>
+            <p class="form-status" id="signup-status" aria-live="polite"></p>
+          </form>
+
+          <form class="auth-form" id="login-form" data-auth-form="login" novalidate>
+            <label>
+              Email
+              <input name="email" type="email" autocomplete="email" required />
+            </label>
+            <label>
+              Password
+              <input name="password" type="password" autocomplete="current-password" required />
+            </label>
+            <button class="button button-secondary button-block" type="submit">Log in with email</button>
+            <p class="form-status" id="login-status" aria-live="polite"></p>
+          </form>
+        </section>
+      </div>
+    </dialog>
 
     <script src="/app.js"></script>
   </body>
