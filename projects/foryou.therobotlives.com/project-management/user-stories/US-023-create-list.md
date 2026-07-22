@@ -30,5 +30,6 @@ tags: [list, create, service, item-3, item-4]
   **Then** I can add attributes (US-026+) and preview its public form (US-035)
 
 ## Notes
-MANDATORY — the "create a channel/List per project/service" ask (plan items 3/4).
-One List per site is the migration vehicle.
+MANDATORY — the "create a List per project/service" ask (plan items 3/4); the
+user informally called a List a "channel". One List per site is the migration
+vehicle.

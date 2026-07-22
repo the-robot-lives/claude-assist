@@ -30,5 +30,6 @@ tags: [list, api, terraform, iac, provisioning]
   **Then** it appears identically to a UI-created List
 
 ## Notes
-MANDATORY — one List per site for the listmonk migration (US-089+). Mirrors the
-existing `Management.FormsController` pattern.
+MANDATORY — one List per site for the listmonk migration (US-089+). The
+management API is greenfield (foryou has no forms system or management surface
+today); build it fresh alongside the List/Attribute/Signup domain.

@@ -30,5 +30,6 @@ tags: [infra, terraform, iac, provisioning]
   **Then** it is deprovisioned safely
 
 ## Notes
-Underpins per-site list provisioning for migration (US-090). Mirrors
-`Management.FormsController`/`resource_user.go` provider patterns.
+Underpins per-site list provisioning for migration (US-090). The backing
+management API is greenfield (no existing forms system or management controllers
+to reuse); build it fresh. The `resource_user.go` provider is a shape reference.
