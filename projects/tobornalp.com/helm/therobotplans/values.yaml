@@ -12,7 +12,7 @@ backend:
       cpu: 500m
       memory: 512Mi
 frontend:
-  image: ops.noizu.com/tobornalp.com/frontend:v1.0.16
+  image: ops.noizu.com/tobornalp.com/frontend:v1.0.17
   port: 3000
   resources:
     requests:

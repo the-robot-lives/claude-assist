@@ -20,14 +20,25 @@ defmodule ForyouWeb.SSOController do
 
   # ── OIDC ──────────────────────────────────────────────────────
 
+  # openid_connect 1.0 takes an explicit config map (atom keys) at each call
+  # site, read from :oidc_provider app env (set in runtime.exs).
+  defp oidc_config do
+    Application.get_env(:foryou, :oidc_provider) ||
+      raise "OIDC provider not configured (set OIDC_CLIENT_ID/OIDC_ISSUER)"
+  end
+
   def oidc_init(conn, _params) do
-    {:ok, uri} = OpenIDConnect.authorization_uri(:default)
+    config = oidc_config()
+    {:ok, uri} = OpenIDConnect.authorization_uri(config, config.redirect_uri)
     redirect(conn, external: uri)
   end
 
   def oidc_callback(conn, %{"code" => code}) do
-    with {:ok, tokens} <- OpenIDConnect.fetch_tokens(:default, code),
-         {:ok, claims} <- OpenIDConnect.verify(:default, tokens["id_token"]) do
+    config = oidc_config()
+
+    with {:ok, tokens} <-
+           OpenIDConnect.fetch_tokens(config, %{code: code, redirect_uri: config.redirect_uri}),
+         {:ok, claims} <- OpenIDConnect.verify(config, tokens["id_token"]) do
       handle_sso_callback(conn, :oidc, %{
         email: claims["email"],
         name: %{first: claims["given_name"] || "", last: claims["family_name"] || ""},
@@ -67,9 +78,10 @@ defmodule ForyouWeb.SSOController do
 
   def exchange(conn, %{"code" => code}) do
     with {:ok, session_id} <- Foryou.Auth.SSOCode.exchange(code),
-         {:ok, session} <- Foryou.Users.Sessions.get(session_id, Noizu.Context.system()),
+         {:ok, session} <- Foryou.Users.Sessions.get_session(session_id, Noizu.Context.system()),
          {:ok, access_token, _} <- Guardian.encode_and_sign(session, %{}, token_type: "access", ttl: {1, :hour}),
-         {:ok, refresh_token, _} <- Guardian.encode_and_sign(session, %{}, token_type: "refresh", ttl: {7, :day}) do
+         {:ok, refresh_token, %{"jti" => refresh_jti}} <- Guardian.encode_and_sign(session, %{}, token_type: "refresh", ttl: {7, :day}) do
+      Foryou.Auth.TokenStore.store_refresh_jti(refresh_jti)
       user = resolve_user_from_session(session)
       orgs = Organizations.list_user_organizations(user.id)
 

@@ -77,3 +77,9 @@ databaseChangeLog:
   - include:
       file: 025-inquiries.yaml
       relativeToChangelogFile: true
+  - include:
+      file: 026-api-keys.yaml
+      relativeToChangelogFile: true
+  - include:
+      file: 027-forms.yaml
+      relativeToChangelogFile: true

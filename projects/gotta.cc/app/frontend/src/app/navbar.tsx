@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { startLogin } from "@/lib/auth";
 
 function AsteriskMark({ className = "h-7 w-7" }: { className?: string }) {
@@ -18,11 +20,37 @@ function AsteriskMark({ className = "h-7 w-7" }: { className?: string }) {
   );
 }
 
+function NavLink({
+  href,
+  label,
+  active,
+}: {
+  href: string;
+  label: string;
+  active: boolean;
+}) {
+  return (
+    <Link
+      href={href}
+      className={`hidden font-ui text-sm font-semibold transition-colors duration-200 hover:text-ink sm:inline ${
+        active ? "text-ink" : "text-ink-secondary"
+      }`}
+    >
+      {label}
+    </Link>
+  );
+}
+
 export function NavBar() {
+  const pathname = usePathname();
+  const browseActive = pathname === "/";
+  const searchActive = pathname?.startsWith("/search") ?? false;
+  const aboutActive = pathname?.startsWith("/about") ?? false;
+
   return (
     <nav className="sticky top-0 z-50 border-b border-rule bg-cream/95 backdrop-blur-sm">
       <div className="mx-auto flex max-w-[960px] items-center justify-between px-6 py-4">
-        <a href="/" className="flex items-center gap-2.5">
+        <Link href="/" className="flex items-center gap-2.5">
           <AsteriskMark className="h-7 w-7" />
           <span
             className="font-display text-2xl font-bold text-ink"
@@ -30,32 +58,23 @@ export function NavBar() {
           >
             gotta.cc
           </span>
-        </a>
+        </Link>
         <div className="flex items-center gap-8">
-          <a
-            href="#categories"
-            className="hidden font-ui text-sm font-semibold text-ink-secondary transition-colors duration-200 hover:text-ink sm:inline"
-          >
-            Browse
-          </a>
-          <a
-            href="#scoring"
-            className="hidden font-ui text-sm font-semibold text-ink-secondary transition-colors duration-200 hover:text-ink sm:inline"
-          >
-            How It Works
-          </a>
+          <NavLink href="/" label="Browse" active={browseActive} />
+          <NavLink href="/search" label="Search" active={searchActive} />
+          <NavLink href="/about" label="About" active={aboutActive} />
           <button
             onClick={() => startLogin()}
             className="font-ui text-sm font-semibold text-olive hover:text-olive-hover transition-colors duration-200"
           >
             Sign In
           </button>
-          <a
-            href="#waitlist"
+          <Link
+            href="/about#waitlist"
             className="rounded-xl bg-coral px-5 py-2 font-ui text-sm font-semibold text-white transition-all duration-150 hover:-translate-y-0.5 hover:bg-coral-hover"
           >
             Join Waitlist
-          </a>
+          </Link>
         </div>
       </div>
     </nav>

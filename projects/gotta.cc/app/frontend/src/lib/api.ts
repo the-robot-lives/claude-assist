@@ -16,6 +16,34 @@ export interface Organization {
   role?: string;
 }
 
+export interface DirectoryCategory {
+  id: string;
+  slug: string;
+  name: string;
+  display_order: number;
+  site_count: number;
+}
+
+export interface DirectorySite {
+  id: string;
+  slug: string;
+  name: string;
+  url: string;
+  domain: string;
+  summary: string;
+  category: { slug: string; name: string };
+  tags: string[];
+  scores: {
+    originality: number;
+    human_authorship: number;
+    depth: number;
+    freshness: number;
+    design_quality: number;
+    overall: number;
+  };
+  featured: boolean;
+}
+
 interface AuthResponse {
   user: User;
   access_token: string;
@@ -125,6 +153,34 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 }
 
 export const api = {
+  directoryCategories() {
+    return request<{ categories: DirectoryCategory[] }>("/api/v1/directory/categories");
+  },
+
+  directorySites(params?: {
+    category?: string;
+    tag?: string;
+    sort?: "featured" | "top" | "newest" | "random";
+    q?: string;
+    limit?: number;
+    offset?: number;
+  }) {
+    const qs = new URLSearchParams(
+      Object.entries(params || {})
+        .filter(([, v]) => v != null && v !== "")
+        .map(([k, v]) => [k, String(v)])
+    ).toString();
+    return request<{ sites: DirectorySite[] }>(`/api/v1/directory/sites${qs ? `?${qs}` : ""}`);
+  },
+
+  directorySite(slug: string) {
+    return request<{ site: DirectorySite }>(`/api/v1/directory/sites/${encodeURIComponent(slug)}`);
+  },
+
+  directorySearch(q: string) {
+    return request<{ sites: DirectorySite[] }>(`/api/v1/directory/search?q=${encodeURIComponent(q)}`);
+  },
+
   register(email: string, password: string, inviteToken: string) {
     return request<AuthResponse>("/api/v1/auth/register", {
       method: "POST",

@@ -98,6 +98,15 @@ defmodule GottaCcWeb.Router do
     get "/organizations/:id", AdminController, :show_organization
   end
 
+  # Public directory (browse + search, no auth)
+  scope "/api/v1", GottaCcWeb do
+    pipe_through [:api]
+    get "/directory/categories", DirectoryCategoryController, :index
+    get "/directory/sites", DirectorySiteController, :index
+    get "/directory/sites/:slug", DirectorySiteController, :show
+    get "/directory/search", DirectorySiteController, :index
+  end
+
   # Media serving (public/conditional auth — checked inline in controller)
   scope "/media", GottaCcWeb do
     pipe_through [:api]

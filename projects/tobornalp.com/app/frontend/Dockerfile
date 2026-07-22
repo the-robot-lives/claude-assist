@@ -34,6 +34,9 @@ RUN addgroup --system --gid 1001 nodejs && \
 COPY --from=build --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=build --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=build --chown=nextjs:nodejs /app/public ./public
+# layout.tsx loadConfig()/loadAllBrandings() scan src/config at request time on
+# dynamic routes; standalone tracing does not capture the YAML config dir.
+COPY --from=build --chown=nextjs:nodejs /app/src/config ./src/config
 COPY --chown=nextjs:nodejs docker-entrypoint.sh ./
 
 USER nextjs

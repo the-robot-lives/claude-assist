@@ -1,0 +1,3 @@
+foryou_host = "https://foryou.therobotlives.com"
+# Source the token via env (direnv): export TF_VAR_foryou_api_token="$FORYOU_API_TOKEN"
+# Do NOT commit a real key here.

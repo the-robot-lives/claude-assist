@@ -51,6 +51,11 @@ defmodule ForyouWeb.Router do
     plug ForyouWeb.Plugs.RequireAdmin
   end
 
+  pipeline :api_key do
+    plug :accepts, ["json"]
+    plug ForyouWeb.Plugs.ApiKeyAuth
+  end
+
   scope "/", ForyouWeb do
     pipe_through :api
     get "/health", HealthController, :index
@@ -69,6 +74,7 @@ defmodule ForyouWeb.Router do
   scope "/api/v1", ForyouWeb do
     pipe_through [:api, :rate_limited_inquiry]
     post "/inquiries", InquiryController, :create
+    post "/forms/:form_id/submit", FormSubmissionController, :submit
   end
 
   scope "/api/v1", ForyouWeb do
@@ -105,6 +111,28 @@ defmodule ForyouWeb.Router do
     get "/users/:id", AdminController, :show_user
     get "/organizations", AdminController, :list_organizations
     get "/organizations/:id", AdminController, :show_organization
+  end
+
+  # Management surface for API-key-authenticated clients (Terraform provider).
+  # System-level keys grant full access.
+  scope "/api/v1/management", ForyouWeb do
+    pipe_through [:api_key]
+    get "/ping", ManagementController, :ping
+
+    resources "/users", Management.UserController, except: [:new, :edit]
+    resources "/organizations", Management.OrganizationController, except: [:new, :edit]
+    resources "/api-keys", Management.ApiKeyController, only: [:index, :show, :create, :delete]
+
+    scope "/organizations/:org_id" do
+      get "/memberships", Management.MembershipController, :index
+      post "/memberships", Management.MembershipController, :create
+      patch "/memberships/:user_id", Management.MembershipController, :update
+      delete "/memberships/:user_id", Management.MembershipController, :delete
+    end
+
+    resources "/forms", Management.FormsController, except: [:new, :edit]
+    get "/forms/:id/versions", Management.FormsController, :versions
+    get "/forms/:id/submissions", Management.FormsController, :submissions
   end
 
   # Media serving (public/conditional auth — checked inline in controller)
