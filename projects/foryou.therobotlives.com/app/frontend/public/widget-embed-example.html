@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>foryou signup widget — embed reference</title>
+  <style>
+    body { font: 15px/1.6 system-ui, sans-serif; max-width: 46rem; margin: 3rem auto; padding: 0 1rem; color: #111; }
+    h1 { font-size: 1.5rem; } h2 { font-size: 1.1rem; margin-top: 2.5rem; }
+    pre { background: #0c1018; color: #e6e9ef; padding: 1rem; border-radius: 8px; overflow: auto; font-size: 13px; }
+    code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+    .demo { margin: 1.5rem 0; }
+  </style>
+</head>
+<body>
+  <h1>foryou signup widget</h1>
+  <p>
+    Drop a signup form on any site with one line. The form's fields come from the List's
+    declared attributes at runtime — change a List's attributes and every embed updates with
+    no code change. All submissions honor the no-leak contract (identical success whether the
+    email is new, already subscribed, or a bot).
+  </p>
+
+  <h2>Variant A — Script embed (default)</h2>
+  <p>
+    Native feel, themeable, isolated in a Shadow DOM. Submits cross-origin — the host origin
+    must be in the foryou <code>CORS_ORIGINS</code> allowlist.
+  </p>
+  <pre><code>&lt;div data-foryou-service="therobotlives"
+     data-foryou-list="beta-access"
+     data-foryou-theme='{"accent":"#4aedc4","mode":"dark"}'&gt;&lt;/div&gt;
+&lt;script src="https://foryou.therobotlives.com/widget.js" async defer&gt;&lt;/script&gt;</code></pre>
+
+  <p>
+    You can target a List by its globally-unique public slug instead of service+list:
+  </p>
+  <pre><code>&lt;div data-foryou-slug="beta-access"&gt;&lt;/div&gt;
+&lt;script src="https://foryou.therobotlives.com/widget.js" async defer&gt;&lt;/script&gt;</code></pre>
+
+  <h3>Placeholder attributes</h3>
+  <ul>
+    <li><code>data-foryou-service</code> + <code>data-foryou-list</code> — the Service and List slugs.</li>
+    <li><code>data-foryou-slug</code> — canonical public slug (alternative to service+list).</li>
+    <li><code>data-foryou-theme</code> — JSON theme overrides (see below). Optional.</li>
+    <li><code>data-foryou-source</code> — provenance tag stored on the signup. Optional.</li>
+    <li><code>data-foryou-api</code> — API base override (defaults to the script's origin). Optional.</li>
+  </ul>
+
+  <h2>Variant B — Iframe embed (zero-CORS fallback)</h2>
+  <p>
+    Maximal isolation, no CORS needed (the form posts from within foryou's own origin). Best
+    for sites that disallow third-party script. The iframe auto-reports its height; add the
+    tiny resize listener below (or omit it and set a generous <code>min-height</code>).
+  </p>
+  <pre><code>&lt;iframe id="foryou-embed"
+        src="https://foryou.therobotlives.com/embed/therobotlives/beta-access?accent=%234aedc4&amp;mode=dark"
+        title="Sign up" loading="lazy" scrolling="no"
+        style="border:0;width:100%;min-height:220px"&gt;&lt;/iframe&gt;
+&lt;script&gt;
+  window.addEventListener("message", function (e) {
+    if (e.origin !== "https://foryou.therobotlives.com") return;
+    var d = e.data;
+    if (d &amp;&amp; d.source === "foryou-widget" &amp;&amp; d.type === "height") {
+      document.getElementById("foryou-embed").style.height = d.height + "px";
+    }
+  });
+&lt;/script&gt;</code></pre>
+  <p>
+    Theme the iframe via query params: <code>?theme=&lt;url-encoded-json&gt;</code> or flat keys
+    (<code>accent</code>, <code>mode</code>, <code>surface</code>, <code>text</code>,
+    <code>radius</code>, <code>font</code>, …).
+  </p>
+
+  <h3>postMessage protocol</h3>
+  <p>The embed page posts to <code>window.parent</code>:</p>
+  <pre><code>{ source: "foryou-widget", type: "height", height: &lt;pixels&gt; }</code></pre>
+  <p>Always validate <code>event.origin === "https://foryou.therobotlives.com"</code> before acting.</p>
+
+  <h2>Theme object</h2>
+  <pre><code>{
+  "accent":      "#4aedc4",   // primary / button background
+  "accentText":  "#05070c",   // button label (auto-clamped for WCAG-AA contrast)
+  "surface":     "#0c1018",   // form background
+  "text":        "#e6e9ef",   // body text (auto-clamped for WCAG-AA contrast)
+  "radius":      "0.6rem",
+  "font":        "\"Space Grotesk\", system-ui, sans-serif",
+  "mode":        "auto"        // "light" | "dark" | "auto" (follows prefers-color-scheme)
+}</code></pre>
+  <p>
+    Any pair that would drop below WCAG-AA contrast is clamped to a readable value automatically.
+    Omitted keys fall back to the Service's branding, then to foryou defaults.
+  </p>
+</body>
+</html>
