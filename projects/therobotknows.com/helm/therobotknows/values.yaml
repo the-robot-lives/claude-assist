@@ -48,8 +48,8 @@ secrets:
     redisUrl: THEROBOTKNOWS_REDIS_URL
     databaseUrl: THEROBOTKNOWS_DATABASE_URL
     sendgridApiKey: ""
-    oidcClientId: ""
-    oidcClientSecret: ""
+    oidcClientId: THEROBOTKNOWS_OIDC_CLIENT_ID
+    oidcClientSecret: THEROBOTKNOWS_OIDC_CLIENT_SECRET
     googleClientId: ""
     googleClientSecret: ""
     facebookClientId: ""
@@ -75,7 +75,8 @@ mail:
 sso:
   requireInvite: false
   oidc:
-    issuer: ""
+    # Authentik provider at auth.derobot.is (same pattern as foryou/tobornalp)
+    issuer: "https://auth.derobot.is/application/o/therobotknows"
   saml:
     idpMetadataUrl: ""
     spEntityId: ""
