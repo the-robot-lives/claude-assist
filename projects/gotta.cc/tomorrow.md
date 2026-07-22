@@ -21,21 +21,26 @@ _Handoff written 2026-07-22 (session `96934223-e372-463d-955b-985994ca9a34`). To
 - ✅ **Frontend image** built + pushed — multi-arch manifest is up at `ops.noizu.com/gotta.cc/frontend:v1.0.edge` (fresh digest `sha256:08ea6ae6…`). ⚠️ The build wrapper exited 1 on "1/3 tags pushed": two auxiliary immutable tags (git-sha, timestamp) failed on **transient** buildkit `ref layer locked … Unavailable` errors (registry was saturated — ~12 apps pushing `v1.0.edge` at once). `:v1.0.edge` (the tag the chart pulls) DID push, so the rollout is fine. Optional: re-run `docker-build gotta.cc/frontend --push` to backfill the immutable tags. Sanity-check the digest is current before rolling: `docker buildx imagetools inspect ops.noizu.com/gotta.cc/frontend:v1.0.edge`.
 - ⛔ **NOT yet done:** `rollout restart` + live smoke. (Both images are pushed; this is genuinely the only remaining step.) The chart pins the rolling `:v1.0.edge` tag, so a plain `helm upgrade` sees "no change" — you MUST `kubectl -n apps rollout restart deploy/gotta-cc` to pull the new images. `gotta-cc` is a **single deploy, two containers** (backend + frontend) in ns `apps`.
 
-**Finish-the-deploy commands:**
+**Finish-the-deploy commands** — use **versioned `v1.0.X` tags, not `edge`** (user directive: immutable tags ⇒ `helm upgrade` rolls on its own, real provenance; see memory `deploy-use-versioned-image-tags`). Images are already pushed as `:v1.0.edge`, so just re-tag those exact digests to `v1.0.1` in the registry (cheap, no rebuild):
 ```bash
 export KUBECONFIG=~/.kube/noizu/config INFRA_ROOT=/Users/keithbrings/Work/Space/Infra/Noizu
-# 1. confirm frontend pushed
-docker buildx imagetools inspect ops.noizu.com/gotta.cc/frontend:v1.0.edge --format 'digest={{.Manifest.Digest}}'
-# 2. roll the deploy (rolling tag ⇒ restart, not upgrade)
-kubectl -n apps rollout restart deploy/gotta-cc
-kubectl -n apps rollout status  deploy/gotta-cc --timeout=180s
-# 3. smoke
+# 1. re-tag the already-pushed digests as v1.0.1 (immutable)
+docker buildx imagetools create -t ops.noizu.com/gotta.cc/backend:v1.0.1  ops.noizu.com/gotta.cc/backend:v1.0.edge
+docker buildx imagetools create -t ops.noizu.com/gotta.cc/frontend:v1.0.1 ops.noizu.com/gotta.cc/frontend:v1.0.edge
+# 2. bump values.yaml image tags edge → v1.0.1 (both containers)
+#    projects/gotta.cc/helm/gotta-cc/values.yaml  .backend.image / .frontend.image
+# 3. normal upgrade — the tag changed, so pods roll automatically (no rollout-restart hack)
+helm-upgrade --include gotta-cc
+kubectl -n apps rollout status deploy/gotta-cc --timeout=180s
+# 4. smoke
 curl -sS https://gotta.cc/api/v1/directory/categories        # 6 categories
 curl -sS 'https://gotta.cc/api/v1/directory/sites?limit=3'
 # register→submit round-trip (clean up the smoke rows after), then:
 # open https://gotta.cc/  → must be the product (search + live category tiles), NOT "Join the Waitlist"
 ```
-If `gotta.cc/` still shows the waitlist page after rollout, the frontend image didn't update — recheck the pushed digest / imagePullPolicy.
+If `gotta.cc/` still shows the waitlist page after the upgrade, the image didn't update — recheck the values.yaml tag + pushed digest.
+
+**Also:** find where the build tooling emits `:v1.0.edge` (docker-build / deploy-service / `.infra-config.yaml` / a VERSION source) and switch the default to incrementing `v1.0.X` so this isn't per-app manual — applies to all portfolio apps, not just gotta.cc.
 
 ---
 

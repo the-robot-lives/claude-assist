@@ -23,6 +23,7 @@ Thumbs.db
 .env
 .envrc.local
 
-# test lab workspace
+# test lab workspace (generated prompts, settings, examples index)
 tmp/
+lab-workspace/
 

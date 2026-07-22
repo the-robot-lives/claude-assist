@@ -5,6 +5,7 @@
 //! and every FIM solution — 100+ entries).
 
 mod catalog;
+mod persist;
 mod registry;
 mod server;
 mod settings;
@@ -37,8 +38,9 @@ impl LabConfig {
     ) -> color_eyre::Result<Self> {
         let package_root = find_package_root()?;
         let demos_dir = demos.unwrap_or_else(|| package_root.join("demos"));
+        // Stable workspace (not under tmp/) so examples + YAML persist across runs.
         let workspace_dir =
-            workspace.unwrap_or_else(|| package_root.join("tmp").join("live-eval"));
+            workspace.unwrap_or_else(|| package_root.join("lab-workspace"));
 
         if !demos_dir.is_dir() {
             color_eyre::eyre::bail!(
@@ -46,9 +48,7 @@ impl LabConfig {
                 demos_dir.display()
             );
         }
-        std::fs::create_dir_all(&workspace_dir)?;
-        std::fs::create_dir_all(workspace_dir.join("prompts"))?;
-        std::fs::create_dir_all(workspace_dir.join("outputs"))?;
+        persist::ensure_workspace(&package_root, &workspace_dir)?;
 
         Ok(Self {
             port,

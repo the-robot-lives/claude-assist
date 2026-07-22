@@ -25,6 +25,7 @@ use crate::ui;
 use super::catalog::{
     load_detail, resolve_safe_media, scan_catalog, type_label, PromptDetail, TypeGroup,
 };
+use super::persist::{self, ExamplesIndex};
 use super::registry::{self, ProviderCatalog, ProviderEntry};
 use super::settings::{self, LabSettings};
 use super::LabConfig;
@@ -142,6 +143,14 @@ pub async fn run_lab(cfg: LabConfig) -> color_eyre::Result<()> {
     eprintln!("  Graph lab: expand sections → pick a generator → scaffold / generate / view.");
     eprintln!("  Demos:     {}", cfg.demos_dir.display());
     eprintln!("  Workspace: {}", cfg.workspace_dir.display());
+    eprintln!(
+        "  Index:     {}",
+        ExamplesIndex::path(&cfg.workspace_dir).display()
+    );
+    eprintln!(
+        "  Settings:  {}",
+        LabSettings::settings_path(&cfg.workspace_dir).display()
+    );
     eprintln!("  Ctrl+C to stop.\n");
 
     if cfg.open_browser {
@@ -180,10 +189,16 @@ async fn index_page() -> Html<&'static str> {
 
 async fn health(State(st): State<AppState>) -> Json<serde_json::Value> {
     let settings = st.inner.settings.lock().await;
+    let idx = ExamplesIndex::load(&st.inner.cfg.workspace_dir);
+    let indexed_prompts: usize = idx.generators.values().map(|v| v.len()).sum();
     Json(json!({
         "ok": true,
         "demos": st.inner.cfg.demos_dir.display().to_string(),
         "workspace": st.inner.cfg.workspace_dir.display().to_string(),
+        "examples_index": ExamplesIndex::path(&st.inner.cfg.workspace_dir).display().to_string(),
+        "indexed_generators": idx.generators.len(),
+        "indexed_prompts": indexed_prompts,
+        "settings": LabSettings::settings_path(&st.inner.cfg.workspace_dir).display().to_string(),
         "providers_total": st.inner.providers.total,
         "providers_implemented": st.inner.providers.implemented,
         "providers_stub": st.inner.providers.stub,
@@ -940,11 +955,20 @@ async fn api_provider_scaffold(
     // Validate
     parse_prompt_file(&dest).map_err(|e| ApiError::bad(format!("invalid scaffold: {e}")))?;
 
+    let path_str = dest.display().to_string();
+    register_written_prompt(
+        &st.inner.cfg.workspace_dir,
+        &entry.slug,
+        &path_str,
+        Some(&entry.id),
+    );
+
     Ok(Json(json!({
         "ok": true,
-        "path": dest.display().to_string(),
+        "path": path_str,
         "provider_id": entry.id,
         "yaml": yaml,
+        "index": ExamplesIndex::path(&st.inner.cfg.workspace_dir).display().to_string(),
     })))
 }
 
@@ -1284,6 +1308,17 @@ async fn api_prompts_list(
     }
 
     let mut paths: Vec<PathBuf> = Vec::new();
+
+    // Persistent index first (survives restarts)
+    let idx = ExamplesIndex::load(&st.inner.cfg.workspace_dir);
+    for p in idx.paths_for_slug(&st.inner.cfg.workspace_dir, slug) {
+        paths.push(p);
+    }
+    if let Some(ref id) = q.id {
+        for p in idx.paths_for_slug(&st.inner.cfg.workspace_dir, id) {
+            paths.push(p);
+        }
+    }
 
     // Workspace: prompts/**/slug* and prompts/fim/slug/
     let ws_prompts = st.inner.cfg.workspace_dir.join("prompts");
@@ -1626,12 +1661,26 @@ async fn run_synthesize_prompts(
         });
     }
 
+    let index_slug = text_format
+        .filter(|s| !s.is_empty())
+        .unwrap_or(type_key);
+    for path in &written {
+        register_written_prompt(
+            &st.inner.cfg.workspace_dir,
+            index_slug,
+            path,
+            None,
+        );
+    }
+
     Ok(json!({
         "type": type_key,
         "text_format": text_format,
         "written": written,
         "path": written.first(),
         "label": type_label(type_key),
+        "workspace": st.inner.cfg.workspace_dir.display().to_string(),
+        "index": ExamplesIndex::path(&st.inner.cfg.workspace_dir).display().to_string(),
     }))
 }
 
@@ -1643,6 +1692,21 @@ fn write_validated_prompt(out_dir: &Path, filename: &str, yaml: &str) -> Result<
         e.to_string()
     })?;
     Ok(dest.display().to_string())
+}
+
+fn register_written_prompt(workspace: &Path, slug: &str, path_str: &str, generator_id: Option<&str>) {
+    let path = PathBuf::from(path_str);
+    let id = path
+        .file_name()
+        .and_then(|n| n.to_str())
+        .map(|n| n.trim_end_matches(".media.prompt").to_string());
+    persist::register_prompt(
+        workspace,
+        slug,
+        &path,
+        id,
+        generator_id.map(|s| s.to_string()),
+    );
 }
 
 /// Normalize common LLM YAML mistakes so fixtures parse with schema.rs.
@@ -2074,9 +2138,21 @@ async fn api_save_prompt(
     let _ = std::fs::remove_file(&tmp);
 
     std::fs::write(&dest, &body.yaml).map_err(|e| ApiError::bad(e.to_string()))?;
+
+    let path_str = dest.display().to_string();
+    let slug = body
+        .type_key
+        .as_deref()
+        .filter(|s| !s.is_empty())
+        .map(|s| sanitize_type_dir(s))
+        .unwrap_or_else(|| persist::infer_slug_from_path(&st.inner.cfg.workspace_dir, &dest));
+    register_written_prompt(&st.inner.cfg.workspace_dir, &slug, &path_str, None);
+
     Ok(Json(json!({
         "ok": true,
-        "path": dest.display().to_string(),
+        "path": path_str,
+        "slug": slug,
+        "index": ExamplesIndex::path(&st.inner.cfg.workspace_dir).display().to_string(),
     })))
 }
 
