@@ -42,6 +42,8 @@ secrets/
 !.env.*.example
 !.env.sample
 # Terraform / OpenTofu state and var files (may embed secrets)
+tfplan
+*.tfplan
 *.tfstate
 *.tfstate.*
 *.tfvars

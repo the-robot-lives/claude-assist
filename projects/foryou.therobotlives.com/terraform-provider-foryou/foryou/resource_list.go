@@ -33,7 +33,7 @@ func (r *listResource) Schema(_ context.Context, _ resource.SchemaRequest, resp 
 			"kind":        schema.StringAttribute{Optional: true, Computed: true, Description: "newsletter | waitlist | inquiry | contact | mixed"},
 			"status":      schema.StringAttribute{Optional: true, Computed: true},
 			"settings":    schema.StringAttribute{Optional: true, Description: "Arbitrary settings as a JSON string (use jsonencode()); e.g. opt_in_mode, sender_identity."},
-			"attributes":  schema.StringAttribute{Optional: true, Description: "Typed attributes as a JSON array string (use jsonencode([...])). Upserted idempotently by slug."},
+			"attributes":  schema.StringAttribute{Optional: true, Description: "Typed attributes as a JSON array string (use jsonencode([...])). Write-only idempotent upsert by slug: sent on create/update but never read back into state (the server enriches the objects), so state keeps your config value and there is no drift detection on this field."},
 		},
 	}
 }
@@ -169,9 +169,18 @@ func (r *listResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 	}
 }
 
-// applyListAPI maps a server response onto the model. `settings` and
-// `attributes` are re-encoded to canonical JSON strings only when the config set
-// them, so an unset optional stays null and plan diffs stay stable.
+// applyListAPI maps a server response onto the model. `settings` is re-encoded
+// to a canonical JSON string only when the config set it, so an unset optional
+// stays null and plan diffs stay stable.
+//
+// `attributes` is deliberately NOT read back from the server: it is a write-only
+// idempotent upsert. The server enriches each attribute object on read (adds
+// id/status and null-valued options/validation), so echoing that enriched JSON
+// into state would never match the sparse config's jsonencode — causing
+// "inconsistent result after apply" on create and perpetual in-place diffs
+// thereafter. Leaving m.Attributes untouched preserves the config/plan value on
+// Create/Update and the prior state value on Read (the owner_user_id pattern in
+// resource_project.go).
 func applyListAPI(m *listModel, l listAPI) {
 	m.ID = types.StringValue(l.ID)
 	m.ProjectID = types.StringValue(l.ProjectID)
@@ -185,8 +194,5 @@ func applyListAPI(m *listModel, l listAPI) {
 	}
 	if !m.Settings.IsNull() && l.Settings != nil {
 		m.Settings = types.StringValue(encodeJSON(l.Settings))
-	}
-	if !m.Attributes.IsNull() && l.Attributes != nil {
-		m.Attributes = types.StringValue(encodeJSON(l.Attributes))
 	}
 }

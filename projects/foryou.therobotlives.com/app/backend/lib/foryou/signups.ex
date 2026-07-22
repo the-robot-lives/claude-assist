@@ -294,7 +294,9 @@ defmodule Foryou.Signups do
     WHERE lower(email::text) = lower($2) AND user_id IS NULL
     """
 
-    case Ecto.Adapters.SQL.query(Repo, sql, [user_id, email]) do
+    # Dump the uuid to 16-byte binary — a raw string param to `$1::uuid` raises
+    # DBConnection.EncodeError (Postgrex expects the binary uuid format).
+    case Ecto.Adapters.SQL.query(Repo, sql, [Ecto.UUID.dump!(user_id), email]) do
       {:ok, %{num_rows: n}} -> {n, nil}
       _ -> {0, nil}
     end

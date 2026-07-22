@@ -17,7 +17,14 @@ defmodule Foryou.Projects do
 
   def create_with_owner(attrs, user_id, context \\ Noizu.Context.system()) do
     Foryou.Repo.transaction(fn ->
-      with {:ok, project} <- %Schema{} |> Schema.changeset(Map.put(attrs, :created_by, user_id)) |> Foryou.Repo.insert(),
+      # `put_change/3` (not `Map.put`) so `created_by` is set regardless of
+      # whether `attrs` is atom-keyed (authed ProjectController) or string-keyed
+      # (Management.ProjectsController) — mixing key types raises Ecto.CastError.
+      with {:ok, project} <-
+             %Schema{}
+             |> Schema.changeset(attrs)
+             |> Ecto.Changeset.put_change(:created_by, user_id)
+             |> Foryou.Repo.insert(),
            {:ok, _membership} <- Foryou.Authz.ScopedMemberships.add_member("project", project.id, user_id, "owner") do
         project
       else
@@ -28,12 +35,35 @@ defmodule Foryou.Projects do
 
   def list_for_user(user_id, organization_id \\ nil) do
     sql = "SELECT * FROM list_user_accessible_projects($1::uuid, $2::uuid)"
-    params = [user_id, organization_id]
+    # Raw-SQL uuid params must be dumped to 16-byte binary (Postgrex uuid format);
+    # passing the string raises DBConnection.EncodeError. Matches Foryou.Authz.
+    params = [uuid_to_bin(user_id), uuid_to_bin(organization_id)]
 
     case Ecto.Adapters.SQL.query(Foryou.Repo, sql, params) do
       {:ok, %{rows: rows, columns: cols}} ->
-        Enum.map(rows, fn row -> Enum.zip(cols, row) |> Map.new() end)
+        Enum.map(rows, fn row -> Enum.zip(cols, row) |> Map.new() |> load_uuid_columns() end)
       _ -> []
+    end
+  end
+
+  # Postgrex returns uuid columns as raw 16-byte binaries; load them back to
+  # canonical strings so the response is JSON-encodable (Jason chokes on the raw
+  # bytes). Converted by explicit column name — a blanket "16-byte binary" rule
+  # would corrupt a 16-char slug/name, which are also binaries.
+  @uuid_result_columns ~w(id organization_id)
+  defp load_uuid_columns(map) do
+    Enum.reduce(@uuid_result_columns, map, fn col, acc ->
+      case Map.fetch(acc, col) do
+        {:ok, bin} when is_binary(bin) -> Map.put(acc, col, load_uuid(bin))
+        _ -> acc
+      end
+    end)
+  end
+
+  defp load_uuid(bin) do
+    case Ecto.UUID.load(bin) do
+      {:ok, uuid} -> uuid
+      :error -> bin
     end
   end
 
@@ -80,5 +110,14 @@ defmodule Foryou.Projects do
 
   def list_members(project_id) do
     Foryou.Authz.ScopedMemberships.list_for_resource("project", project_id)
+  end
+
+  defp uuid_to_bin(nil), do: nil
+
+  defp uuid_to_bin(uuid) when is_binary(uuid) do
+    case Ecto.UUID.dump(uuid) do
+      {:ok, bin} -> bin
+      :error -> uuid
+    end
   end
 end
