@@ -2,6 +2,7 @@
 // @ts-nocheck
 'use client'
 
+// ⟦𓁖𓆵𓀽𓋃⟧ CircularAvatarsWithTopNotification03 :: auto-generated pointer for public function CircularAvatarsWithTopNotification03
 export function CircularAvatarsWithTopNotification03() {
   return (
     <>

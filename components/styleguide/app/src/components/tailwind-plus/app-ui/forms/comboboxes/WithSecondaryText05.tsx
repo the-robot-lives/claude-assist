@@ -12,6 +12,7 @@ const people = [
   // More users...
 ]
 
+// ⟦𓄘𓍒𓃙𓉷⟧ WithSecondaryText05 :: auto-generated pointer for public function WithSecondaryText05
 export function WithSecondaryText05() {
   const [query, setQuery] = useState('')
   const [selectedPerson, setSelectedPerson] = useState(null)

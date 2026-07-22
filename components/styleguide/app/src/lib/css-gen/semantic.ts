@@ -22,6 +22,7 @@ function resolveAccent(sc: { vars: { name: string; value: string }[] }, flatVars
   return resolved ? contrastText(resolved) : "var(--white)";
 }
 
+// ⟦𓎜𓌔𓋧𓐟⟧ generateSemanticCSS :: auto-generated pointer for public function generateSemanticCSS
 export function generateSemanticCSS(config: StyleGuideConfig): string {
   if (!config.semanticClasses?.length) return "";
   return config.semanticClasses

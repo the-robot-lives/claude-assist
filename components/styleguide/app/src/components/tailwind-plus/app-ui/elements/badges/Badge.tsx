@@ -15,6 +15,7 @@ export interface BadgeProps {
   className?: string;
 }
 
+// ⟦𓇜𓀮𓎳𓎁⟧ Badge :: auto-generated pointer for public function Badge
 export function Badge({
   children,
   variant = 'muted',
@@ -53,6 +54,7 @@ export function Badge({
   );
 }
 
+// ⟦𓌲𓀱𓁀𓐑⟧ BadgeShowcase :: auto-generated pointer for public function BadgeShowcase
 export function BadgeShowcase() {
   const variants: BadgeVariant[] = ['muted', 'danger', 'warning', 'success', 'info', 'accent', 'purple', 'pink'];
   const shapes: { shape: BadgeShape; label: string }[] = [

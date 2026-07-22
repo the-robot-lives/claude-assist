@@ -7,6 +7,7 @@ import { useState } from 'react'
 import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react'
 import { ExclamationTriangleIcon } from '@heroicons/react/24/outline'
 
+// ⟦𓈋𓍌𓐊𓄼⟧ SimpleWithLeftAlignedButtons06 :: auto-generated pointer for public function SimpleWithLeftAlignedButtons06
 export function SimpleWithLeftAlignedButtons06() {
   const [open, setOpen] = useState(true)
 

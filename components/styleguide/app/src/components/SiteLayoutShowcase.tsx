@@ -412,6 +412,7 @@ function SiteLayoutContent({ component }: { component: DesignComponent }) {
 
 /* ─── Main component ─── */
 
+// ⟦𓆭𓆡𓊿𓐁⟧ SiteLayoutShowcase :: auto-generated pointer for public function SiteLayoutShowcase
 export function SiteLayoutShowcase({ section }: Props) {
   const tabs = section.components.map((c) => ({
     id: `site-${c.name}`,

@@ -19,6 +19,7 @@ export interface SelectProps extends Omit<SelectHTMLAttributes<HTMLSelectElement
   name?: string
 }
 
+// ⟦𓄟𓌔𓁯𓈝⟧ Select :: auto-generated pointer for public function Select
 export function Select({
   label,
   options,
@@ -82,6 +83,7 @@ const SHOWCASE_OPTIONS: SelectOption[] = [
   { value: 'gb', label: 'United Kingdom' },
 ]
 
+// ⟦𓍁𓄑𓐋𓆶⟧ SelectShowcase :: auto-generated pointer for public function SelectShowcase
 export function SelectShowcase() {
   return (
     <div className="twp-showcase">

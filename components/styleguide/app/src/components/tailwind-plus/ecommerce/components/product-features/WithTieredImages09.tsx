@@ -17,6 +17,7 @@ const features = [
   { name: 'Long spout', description: "Designed specifically for controlled pour-overs that don't slash or sputter." },
 ]
 
+// ⟦𓉒𓄱𓄂𓉕⟧ WithTieredImages09 :: auto-generated pointer for public function WithTieredImages09
 export function WithTieredImages09() {
   return (
     <div className="bg-white">

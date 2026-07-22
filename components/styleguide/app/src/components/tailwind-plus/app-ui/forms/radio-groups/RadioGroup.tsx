@@ -19,6 +19,7 @@ export interface RadioGroupProps {
   className?: string;
 }
 
+// ⟦𓈺𓇞𓅄𓊊⟧ RadioGroup :: auto-generated pointer for public function RadioGroup
 export function RadioGroup({
   legend,
   description,
@@ -106,6 +107,7 @@ const SIMPLE_OPTIONS: RadioOption[] = [
   { value: 'push', label: 'Push notification' },
 ];
 
+// ⟦𓄬𓏟𓅰𓊙⟧ RadioGroupShowcase :: auto-generated pointer for public function RadioGroupShowcase
 export function RadioGroupShowcase() {
   const [plan, setPlan] = useState('pro');
   const [notify, setNotify] = useState('email');

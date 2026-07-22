@@ -13,6 +13,7 @@ defmodule StarterWeb.Hologram.Pages.AuthSsoCallbackPage do
   route "/auth/sso-callback"
   layout MainLayout, page_title: "Signing in…"
 
+  # ⟦𓊷𓉘𓍓𓆳⟧ init :: auto-generated pointer for public function init
   def init(_params, component, server) do
     code = query_param(server, "code")
     error = query_param(server, "error")
@@ -32,6 +33,7 @@ defmodule StarterWeb.Hologram.Pages.AuthSsoCallbackPage do
     end
   end
 
+  # ⟦𓋝𓃀𓆭𓊥⟧ template :: auto-generated pointer for public function template
   def template do
     ~HOLO"""
     <div class="content">

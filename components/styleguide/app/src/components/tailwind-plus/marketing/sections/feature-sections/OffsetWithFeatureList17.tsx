@@ -21,6 +21,7 @@ const features = [
   { name: 'Mobile app', description: 'Nulla est saepe accusamus nostrum est est fugit omnis.' },
 ]
 
+// ⟦𓋳𓁟𓉵𓐍⟧ OffsetWithFeatureList17 :: auto-generated pointer for public function OffsetWithFeatureList17
 export function OffsetWithFeatureList17() {
   return (
     <div className="bg-white py-24 sm:py-32 dark:bg-gray-900">

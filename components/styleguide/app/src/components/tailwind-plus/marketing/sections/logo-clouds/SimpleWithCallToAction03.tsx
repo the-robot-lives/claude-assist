@@ -2,6 +2,7 @@
 // @ts-nocheck
 'use client'
 
+// ⟦𓆩𓉕𓂑𓂟⟧ SimpleWithCallToAction03 :: auto-generated pointer for public function SimpleWithCallToAction03
 export function SimpleWithCallToAction03() {
   return (
     <div className="bg-white py-24 sm:py-32 dark:bg-gray-900">

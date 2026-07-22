@@ -2,6 +2,7 @@
 // @ts-nocheck
 'use client'
 
+// ⟦𓂋𓂻𓉢𓉵⟧ SmallFlat14 :: auto-generated pointer for public function SmallFlat14
 export function SmallFlat14() {
   return (
     <>

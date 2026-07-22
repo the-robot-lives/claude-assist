@@ -9,6 +9,7 @@ export interface SectionHeadingProps {
   className?: string;
 }
 
+// ⟦𓏗𓋻𓀜𓀎⟧ SectionHeading :: auto-generated pointer for public function SectionHeading
 export function SectionHeading({ title, subtitle, actions, className = '' }: SectionHeadingProps) {
   return (
     <div className={['twp-heading twp-section-heading', className].filter(Boolean).join(' ')}>
@@ -21,6 +22,7 @@ export function SectionHeading({ title, subtitle, actions, className = '' }: Sec
   );
 }
 
+// ⟦𓁌𓀴𓏟𓌋⟧ SectionHeadingShowcase :: auto-generated pointer for public function SectionHeadingShowcase
 export function SectionHeadingShowcase() {
   return (
     <div className="twp-showcase">

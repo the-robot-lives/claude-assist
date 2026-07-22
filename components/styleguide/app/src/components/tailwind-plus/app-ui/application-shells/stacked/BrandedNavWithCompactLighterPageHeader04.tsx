@@ -28,6 +28,7 @@ function classNames(...classes) {
   return classes.filter(Boolean).join(' ')
 }
 
+// ⟦𓊇𓁊𓌁𓋵⟧ BrandedNavWithCompactLighterPageHeader04 :: auto-generated pointer for public function BrandedNavWithCompactLighterPageHeader04
 export function BrandedNavWithCompactLighterPageHeader04() {
   return (
     <>

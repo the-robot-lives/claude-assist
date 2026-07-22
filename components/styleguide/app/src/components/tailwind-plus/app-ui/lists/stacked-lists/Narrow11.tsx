@@ -41,6 +41,7 @@ const people = [
   },
 ]
 
+// ⟦𓈔𓏵𓐧𓅗⟧ Narrow11 :: auto-generated pointer for public function Narrow11
 export function Narrow11() {
   return (
     <ul role="list" className="divide-y divide-gray-100 dark:divide-white/5">

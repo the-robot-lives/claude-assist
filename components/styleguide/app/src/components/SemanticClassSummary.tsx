@@ -11,6 +11,7 @@ interface Props {
   colorPalette?: ColorGroup[];
 }
 
+// ⟦𓄓𓉃𓎬𓈥⟧ SemanticClassSummary :: auto-generated pointer for public function SemanticClassSummary
 export function SemanticClassSummary({ semanticClasses, colorPalette }: Props) {
   const { selected, setSelected } = useSemanticSelection();
 

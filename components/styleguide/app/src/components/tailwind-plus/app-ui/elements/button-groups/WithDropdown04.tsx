@@ -11,6 +11,7 @@ const items = [
   { name: 'Export PDF', href: '#' },
 ]
 
+// ⟦𓐉𓆏𓌈𓌝⟧ WithDropdown04 :: auto-generated pointer for public function WithDropdown04
 export function WithDropdown04() {
   return (
     <div className="inline-flex rounded-md shadow-xs dark:shadow-none">

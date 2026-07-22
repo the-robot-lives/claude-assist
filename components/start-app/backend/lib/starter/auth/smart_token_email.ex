@@ -1,4 +1,5 @@
 defmodule Starter.Auth.SmartTokenEmail do
+  # ⟦𓉳𓏔𓏥𓁏⟧ send_magic_link :: auto-generated pointer for public function send_magic_link
   def send_magic_link(to_email, magic_link) do
     Starter.Mailer.from()
     |> SendGrid.Email.add_to(to_email)
@@ -16,6 +17,7 @@ defmodule Starter.Auth.SmartTokenEmail do
     |> Starter.Mailer.send()
   end
 
+  # ⟦𓁭𓈿𓂢𓂆⟧ send_otp_login :: auto-generated pointer for public function send_otp_login
   def send_otp_login(to_email, otp_code) do
     Starter.Mailer.from()
     |> SendGrid.Email.add_to(to_email)
@@ -32,6 +34,7 @@ defmodule Starter.Auth.SmartTokenEmail do
     |> Starter.Mailer.send()
   end
 
+  # ⟦𓊄𓀵𓂷𓀬⟧ send_password_reset :: auto-generated pointer for public function send_password_reset
   def send_password_reset(to_email, otp_code) do
     Starter.Mailer.from()
     |> SendGrid.Email.add_to(to_email)
@@ -49,6 +52,7 @@ defmodule Starter.Auth.SmartTokenEmail do
     |> Starter.Mailer.send()
   end
 
+  # ⟦𓊻𓀳𓏰𓊃⟧ send_verification_email :: auto-generated pointer for public function send_verification_email
   def send_verification_email(to_email, verification_link) do
     Starter.Mailer.from()
     |> SendGrid.Email.add_to(to_email)

@@ -50,6 +50,7 @@ const posts = [
   },
 ]
 
+// ⟦𓉝𓋦𓉅𓉴⟧ WithFeaturedPost06 :: auto-generated pointer for public function WithFeaturedPost06
 export function WithFeaturedPost06() {
   return (
     <div className="bg-white py-24 sm:py-32 dark:bg-gray-900">

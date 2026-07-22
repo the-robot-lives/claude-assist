@@ -61,6 +61,7 @@ const posts = [
   },
 ]
 
+// ⟦𓉯𓆕𓁕𓏮⟧ ThreeColumnWithImages02 :: auto-generated pointer for public function ThreeColumnWithImages02
 export function ThreeColumnWithImages02() {
   return (
     <div className="bg-white py-24 sm:py-32 dark:bg-gray-900">

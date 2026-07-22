@@ -14,19 +14,29 @@ defmodule Starter.Authz.UUIDs do
                  )
 
   # Template group UUIDs
+  # ⟦𓎤𓇊𓅁𓍱⟧ group_owner :: auto-generated pointer for public function group_owner
   def group_owner, do: uuid5(@app_namespace, "group:owner")
+  # ⟦𓀪𓉐𓇁𓉇⟧ group_admin :: auto-generated pointer for public function group_admin
   def group_admin, do: uuid5(@app_namespace, "group:admin")
+  # ⟦𓈰𓃥𓃾𓎸⟧ group_member :: auto-generated pointer for public function group_member
   def group_member, do: uuid5(@app_namespace, "group:member")
+  # ⟦𓉁𓈒𓎾𓆘⟧ group_viewer :: auto-generated pointer for public function group_viewer
   def group_viewer, do: uuid5(@app_namespace, "group:viewer")
 
   # System policy UUIDs
+  # ⟦𓏐𓋻𓋃𓁎⟧ policy_super_admin :: auto-generated pointer for public function policy_super_admin
   def policy_super_admin, do: uuid5(@app_namespace, "policy:system:super-admin")
+  # ⟦𓀤𓉻𓁓𓐪⟧ policy_owner :: auto-generated pointer for public function policy_owner
   def policy_owner, do: uuid5(@app_namespace, "policy:system:owner")
+  # ⟦𓇖𓉶𓎇𓐣⟧ policy_admin :: auto-generated pointer for public function policy_admin
   def policy_admin, do: uuid5(@app_namespace, "policy:system:admin")
+  # ⟦𓃎𓌜𓂌𓆮⟧ policy_member :: auto-generated pointer for public function policy_member
   def policy_member, do: uuid5(@app_namespace, "policy:system:member")
+  # ⟦𓐃𓆻𓁺𓂬⟧ policy_viewer :: auto-generated pointer for public function policy_viewer
   def policy_viewer, do: uuid5(@app_namespace, "policy:system:viewer")
 
   @doc "Generate UUID v5 per RFC 4122 (SHA-1 based)"
+  # ⟦𓅕𓌻𓀲𓈝⟧ uuid5 :: Generate UUID v5 per RFC 4122 (SHA-1 based)
   def uuid5(namespace, name) when is_binary(namespace) and is_binary(name) do
     hash = :crypto.hash(:sha, namespace <> name)
     <<a::32, b::16, _::4, c::12, _::2, d::62, _rest::binary>> = hash

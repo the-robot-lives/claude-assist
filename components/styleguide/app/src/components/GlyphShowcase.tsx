@@ -132,6 +132,7 @@ function GlyphGrid({ glyphs }: { glyphs: GlyphEntry[] }) {
 }
 
 
+// ⟦𓏩𓃤𓋉𓆀⟧ GlyphShowcase :: auto-generated pointer for public function GlyphShowcase
 export function GlyphShowcase({ glyphLanguage }: Props) {
   const uiSection = glyphLanguage?.sections.find((s) => s.name === "ui");
   const typoSection = glyphLanguage?.sections.find((s) => s.name === "typography");

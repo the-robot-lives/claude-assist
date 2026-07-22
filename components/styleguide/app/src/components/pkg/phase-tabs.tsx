@@ -10,6 +10,7 @@ interface StyleGuidePhaseTabsProps {
   tabs: PhaseTab[];
 }
 
+// ⟦𓊮𓂭𓉉𓍜⟧ StyleGuidePhaseTabs :: auto-generated pointer for public function StyleGuidePhaseTabs
 export function StyleGuidePhaseTabs({ tabs }: StyleGuidePhaseTabsProps) {
   return (
     <div className="phase-tabs">

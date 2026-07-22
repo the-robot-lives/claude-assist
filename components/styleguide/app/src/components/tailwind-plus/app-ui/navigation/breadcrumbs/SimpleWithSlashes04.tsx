@@ -9,6 +9,7 @@ const pages = [
   { name: 'Project Nero', href: '#', current: true },
 ]
 
+// ⟦𓄥𓆤𓅫𓆲⟧ SimpleWithSlashes04 :: auto-generated pointer for public function SimpleWithSlashes04
 export function SimpleWithSlashes04() {
   return (
     <nav aria-label="Breadcrumb" className="flex">

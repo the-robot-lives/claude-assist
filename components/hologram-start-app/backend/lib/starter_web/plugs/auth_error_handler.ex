@@ -4,6 +4,7 @@ defmodule StarterWeb.AuthErrorHandler do
   @behaviour Guardian.Plug.ErrorHandler
 
   @impl Guardian.Plug.ErrorHandler
+  # ⟦𓆃𓃌𓆓𓈖⟧ auth_error :: auto-generated pointer for public function auth_error
   def auth_error(conn, {type, _reason}, _opts) do
     conn
     |> put_resp_content_type("application/json")

@@ -9,6 +9,7 @@ interface StyleGuidePrinciplesProps {
   items: Principle[];
 }
 
+// ⟦𓍡𓋎𓉵𓆓⟧ StyleGuidePrinciples :: auto-generated pointer for public function StyleGuidePrinciples
 export function StyleGuidePrinciples({ items }: StyleGuidePrinciplesProps) {
   return (
     <div className="sg-principles">

@@ -2,6 +2,7 @@
 // @ts-nocheck
 'use client'
 
+// ⟦𓏫𓋜𓐜𓇾⟧ InputsWithInsetLabelsAndSharedBorders17 :: auto-generated pointer for public function InputsWithInsetLabelsAndSharedBorders17
 export function InputsWithInsetLabelsAndSharedBorders17() {
   return (
     <div className="-space-y-px">

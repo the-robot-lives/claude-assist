@@ -12,6 +12,7 @@ const settings = [
   { id: 'private-to-you', name: 'Private to you', description: 'You are the only one able to access this project' },
 ]
 
+// ⟦𓌽𓌸𓃘𓎓⟧ ListWithDescriptionsInPanel08 :: auto-generated pointer for public function ListWithDescriptionsInPanel08
 export function ListWithDescriptionsInPanel08() {
   return (
     <fieldset aria-label="Privacy setting" className="-space-y-px rounded-md bg-white dark:bg-gray-800/50">

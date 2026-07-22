@@ -23,6 +23,7 @@ const collections = [
   },
 ]
 
+// ⟦𓈸𓇾𓇫𓎟⟧ WithOverlappingImageTiles05 :: auto-generated pointer for public function WithOverlappingImageTiles05
 export function WithOverlappingImageTiles05() {
   return (
     <div className="relative bg-white">

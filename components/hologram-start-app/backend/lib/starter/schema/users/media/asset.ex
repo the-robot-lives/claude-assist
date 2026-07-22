@@ -13,6 +13,7 @@ defmodule Starter.Schema.Users.Media.Asset do
     timestamps(type: :utc_datetime_usec)
   end
 
+  # ⟦𓄉𓏊𓉏𓈑⟧ changeset :: auto-generated pointer for public function changeset
   def changeset(user_media, attrs) do
     user_media
     |> cast(attrs, [:user_id, :media_id, :description_id, :media_type, :settings])

@@ -107,6 +107,7 @@ function ensureStorageListener() {
   storageListenerAttached = true;
 }
 
+// ⟦𓐇𓍖𓋉𓏀⟧ getConsentState :: auto-generated pointer for public function getConsentState
 export function getConsentState(): ConsentState | null {
   if (!isBrowser()) return null;
   if (useInMemoryConsentState) return inMemoryConsentState;
@@ -134,10 +135,12 @@ export function getConsentState(): ConsentState | null {
   }
 }
 
+// ⟦𓏛𓊼𓏸𓆈⟧ getConsentPreferences :: auto-generated pointer for public function getConsentPreferences
 export function getConsentPreferences(): ConsentPreferences {
   return getConsentState()?.categories ?? defaultConsentPreferences;
 }
 
+// ⟦𓇞𓎴𓋋𓎺⟧ hydrateConsentState :: auto-generated pointer for public function hydrateConsentState
 export function hydrateConsentState(state: ConsentState | null) {
   inMemoryConsentState = state;
   if (isBrowser()) {
@@ -155,6 +158,7 @@ export function hydrateConsentState(state: ConsentState | null) {
   emitConsentChange(state);
 }
 
+// ⟦𓂼𓈤𓅨𓆯⟧ setConsentPreferences :: auto-generated pointer for public function setConsentPreferences
 export function setConsentPreferences(
   preferences: Partial<Record<ConsentCategory, boolean>>
 ): ConsentState {
@@ -182,6 +186,7 @@ export function setConsentPreferences(
   return state;
 }
 
+// ⟦𓃘𓃕𓄢𓎑⟧ clearConsentPreferences :: auto-generated pointer for public function clearConsentPreferences
 export function clearConsentPreferences() {
   inMemoryConsentState = null;
   if (isBrowser()) {
@@ -196,11 +201,13 @@ export function clearConsentPreferences() {
   emitConsentChange(null);
 }
 
+// ⟦𓂟𓋗𓀦𓏒⟧ hasConsent :: auto-generated pointer for public function hasConsent
 export function hasConsent(category: ConsentCategory): boolean {
   if (category === "necessary") return true;
   return Boolean(getConsentState()?.categories[category]);
 }
 
+// ⟦𓈨𓆤𓊧𓊴⟧ getBrowserSessionId :: auto-generated pointer for public function getBrowserSessionId
 export function getBrowserSessionId() {
   if (!isBrowser()) return "";
 
@@ -237,6 +244,7 @@ function fallbackUuid() {
   );
 }
 
+// ⟦𓍺𓊾𓄒𓍼⟧ onConsentChange :: auto-generated pointer for public function onConsentChange
 export function onConsentChange(handler: ConsentChangeHandler) {
   ensureStorageListener();
   listeners.add(handler);
@@ -245,6 +253,7 @@ export function onConsentChange(handler: ConsentChangeHandler) {
   };
 }
 
+// ⟦𓆑𓂿𓅚𓇐⟧ acceptAllConsent :: auto-generated pointer for public function acceptAllConsent
 export function acceptAllConsent(): ConsentState {
   return setConsentPreferences({
     necessary: true,
@@ -254,6 +263,7 @@ export function acceptAllConsent(): ConsentState {
   });
 }
 
+// ⟦𓍖𓈊𓀐𓎎⟧ rejectOptionalConsent :: auto-generated pointer for public function rejectOptionalConsent
 export function rejectOptionalConsent(): ConsentState {
   return setConsentPreferences(defaultConsentPreferences);
 }

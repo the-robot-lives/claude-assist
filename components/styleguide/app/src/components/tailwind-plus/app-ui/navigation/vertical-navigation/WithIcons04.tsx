@@ -24,6 +24,7 @@ function classNames(...classes) {
   return classes.filter(Boolean).join(' ')
 }
 
+// ⟦𓈹𓍵𓂮𓄍⟧ WithIcons04 :: auto-generated pointer for public function WithIcons04
 export function WithIcons04() {
   return (
     <nav aria-label="Sidebar" className="flex flex-1 flex-col">

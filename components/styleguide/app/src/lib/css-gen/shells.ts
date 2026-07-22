@@ -19,6 +19,7 @@ function shellVars(shell: SimpleShellLayout): string {
   return lines.join("\n");
 }
 
+// ⟦𓀃𓅖𓀯𓅸⟧ generateShellCSS :: auto-generated pointer for public function generateShellCSS
 export function generateShellCSS(config: StyleGuideConfig): string {
   if (!config.shellLayouts?.length) return "";
   const perShell = config.shellLayouts

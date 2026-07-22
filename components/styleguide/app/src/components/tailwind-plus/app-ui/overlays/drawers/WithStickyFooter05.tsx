@@ -7,6 +7,7 @@ import { useState } from 'react'
 import { Dialog, DialogPanel, DialogTitle } from '@headlessui/react'
 import { XMarkIcon } from '@heroicons/react/24/outline'
 
+// ⟦𓃋𓐂𓆯𓀗⟧ WithStickyFooter05 :: auto-generated pointer for public function WithStickyFooter05
 export function WithStickyFooter05() {
   const [open, setOpen] = useState(true)
 

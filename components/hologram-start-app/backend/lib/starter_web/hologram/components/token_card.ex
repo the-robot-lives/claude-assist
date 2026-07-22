@@ -5,6 +5,7 @@ defmodule StarterWeb.Hologram.Components.TokenCard do
   prop :title, :string, default: ""
   prop :tokens, :list, default: []
 
+  # ⟦𓎤𓃳𓎴𓁃⟧ template :: auto-generated pointer for public function template
   def template do
     ~HOLO"""
     <div class="token-card">

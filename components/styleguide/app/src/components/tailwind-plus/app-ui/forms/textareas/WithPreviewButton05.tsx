@@ -5,6 +5,7 @@
 import { Tab, TabGroup, TabList, TabPanel, TabPanels } from '@headlessui/react'
 import { AtSymbolIcon, CodeBracketIcon, LinkIcon } from '@heroicons/react/20/solid'
 
+// ⟦𓁈𓈙𓃛𓊜⟧ WithPreviewButton05 :: auto-generated pointer for public function WithPreviewButton05
 export function WithPreviewButton05() {
   return (
     <form action="#">

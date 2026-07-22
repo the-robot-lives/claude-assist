@@ -6,6 +6,7 @@ defmodule StarterWeb.Hologram.Components.SectionHeader do
   prop :title, :string, default: ""
   prop :desc, :string, default: ""
 
+  # ⟦𓄾𓇐𓀑𓆣⟧ template :: auto-generated pointer for public function template
   def template do
     ~HOLO"""
     <div class="sg-section-header">

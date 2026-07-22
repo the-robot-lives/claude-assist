@@ -2,6 +2,7 @@
 // @ts-nocheck
 'use client'
 
+// ⟦𓎘𓄐𓎅𓈒⟧ PillWithBorderAndDot06 :: auto-generated pointer for public function PillWithBorderAndDot06
 export function PillWithBorderAndDot06() {
   return (
     <>

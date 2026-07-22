@@ -44,6 +44,7 @@ const people = [
   },
 ]
 
+// ⟦𓉉𓋾𓀪𓉩⟧ WithRecommendationsGrid06 :: auto-generated pointer for public function WithRecommendationsGrid06
 export function WithRecommendationsGrid06() {
   return (
     <div className="mx-auto max-w-md sm:max-w-3xl">

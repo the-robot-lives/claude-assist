@@ -108,6 +108,7 @@ const days = [
   { date: '2022-02-06' },
 ]
 
+// ⟦𓌥𓁽𓆉𓈒⟧ SmallWithMeetings01 :: auto-generated pointer for public function SmallWithMeetings01
 export function SmallWithMeetings01() {
   return (
     <div>

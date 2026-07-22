@@ -29,6 +29,7 @@ function classNames(...classes) {
   return classes.filter(Boolean).join(' ')
 }
 
+// ⟦𓀻𓊑𓀞𓊵⟧ Dark02 :: auto-generated pointer for public function Dark02
 export function Dark02() {
   return (
     <div className="relative flex grow flex-col gap-y-5 overflow-y-auto bg-gray-900 px-6 dark:before:pointer-events-none dark:before:absolute dark:before:inset-0 dark:before:border-r dark:before:border-white/10 dark:before:bg-black/10">

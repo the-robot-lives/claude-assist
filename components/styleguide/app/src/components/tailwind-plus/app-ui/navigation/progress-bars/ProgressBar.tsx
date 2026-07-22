@@ -11,6 +11,7 @@ export interface ProgressBarProps {
   className?: string;
 }
 
+// ⟦𓏧𓅊𓉴𓋩⟧ ProgressBar :: auto-generated pointer for public function ProgressBar
 export function ProgressBar({
   value,
   variant = 'default',
@@ -38,6 +39,7 @@ export function ProgressBar({
   );
 }
 
+// ⟦𓃌𓐚𓊼𓇂⟧ ProgressBarShowcase :: auto-generated pointer for public function ProgressBarShowcase
 export function ProgressBarShowcase() {
   const variants: { variant: ProgressBarVariant; label: string; value: number }[] = [
     { variant: 'default', label: 'default — 65%', value: 65 },

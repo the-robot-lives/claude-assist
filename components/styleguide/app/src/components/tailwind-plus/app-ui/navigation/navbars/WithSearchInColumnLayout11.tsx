@@ -28,6 +28,7 @@ function classNames(...classes) {
   return classes.filter(Boolean).join(' ')
 }
 
+// ⟦𓌸𓀫𓐃𓈱⟧ WithSearchInColumnLayout11 :: auto-generated pointer for public function WithSearchInColumnLayout11
 export function WithSearchInColumnLayout11() {
   return (
     <>

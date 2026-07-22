@@ -4,6 +4,7 @@ defmodule StarterWeb.Hologram.Components.SpacingScale do
 
   prop :steps, :list, default: []
 
+  # ⟦𓋎𓉢𓌫𓂠⟧ template :: auto-generated pointer for public function template
   def template do
     ~HOLO"""
     <div class="spacing-demo">

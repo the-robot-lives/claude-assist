@@ -90,6 +90,7 @@ function WireframeDiagram({ chrome, zones }: { chrome?: PageLayoutChrome; zones?
 
 // ─── Main ───
 
+// ⟦𓎬𓋪𓎤𓀤⟧ ShellLayoutShowcase :: auto-generated pointer for public function ShellLayoutShowcase
 export function ShellLayoutShowcase({ shellLayouts }: Props) {
   const [active, setActive] = useState<string | null>(null);
 

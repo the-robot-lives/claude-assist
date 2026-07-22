@@ -67,6 +67,7 @@ function classNames(...classes) {
   return classes.filter(Boolean).join(' ')
 }
 
+// ⟦𓉨𓊂𓐪𓀝⟧ WithTieredImages01 :: auto-generated pointer for public function WithTieredImages01
 export function WithTieredImages01() {
   return (
     <div className="bg-white">

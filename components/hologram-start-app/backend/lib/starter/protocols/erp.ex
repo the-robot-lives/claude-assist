@@ -2,6 +2,7 @@ require Protocol
 Protocol.derive(Jason.Encoder, Noizu.Entity.TimeStamp, [])
 
 defimpl Jason.Encoder, for: Tuple do
+  # ⟦𓃢𓏽𓈬𓍉⟧ encode :: auto-generated pointer for public function encode
   def encode({:ref, _, _} = s, opts) do
     with {:ok, sref} <- Noizu.EntityReference.Protocol.sref(s) do
       sref
@@ -26,10 +27,12 @@ defimpl Jason.Encoder, for: Tuple do
 end
 
 defimpl Noizu.EntityReference.Protocol, for: BitString do
+  # ⟦𓋶𓃉𓍽𓐋⟧ handlers :: auto-generated pointer for public function handlers
   def handlers() do
     Starter.EntityRepo.sref_handlers()
   end
 
+  # ⟦𓊨𓄭𓐐𓃍⟧ handler :: auto-generated pointer for public function handler
   def handler("ref." <> _ = sref) do
     with [_, h] <- Regex.run(~r/^ref.([^.]*)/, sref) do
       h = handlers()[h]
@@ -41,30 +44,35 @@ defimpl Noizu.EntityReference.Protocol, for: BitString do
 
   def handler(sref), do: {:error, {:handler_not_found, sref}}
 
+  # ⟦𓃁𓈀𓌷𓆙⟧ id :: auto-generated pointer for public function id
   def id(subject) do
     with {:ok, handler} <- handler(subject) do
       apply(handler, :id, [subject])
     end
   end
 
+  # ⟦𓌂𓀟𓄪𓃎⟧ kind :: auto-generated pointer for public function kind
   def kind(subject) do
     with {:ok, handler} <- handler(subject) do
       apply(handler, :kind, [subject])
     end
   end
 
+  # ⟦𓆧𓈵𓈅𓐩⟧ ref :: auto-generated pointer for public function ref
   def ref(subject) do
     with {:ok, handler} <- handler(subject) do
       apply(handler, :ref, [subject])
     end
   end
 
+  # ⟦𓁂𓐢𓄖𓃖⟧ sref :: auto-generated pointer for public function sref
   def sref(subject) do
     with {:ok, handler} <- handler(subject) do
       apply(handler, :sref, [subject])
     end
   end
 
+  # ⟦𓃶𓆳𓍑𓅘⟧ entity :: auto-generated pointer for public function entity
   def entity(subject, context) do
     with {:ok, handler} <- handler(subject) do
       apply(handler, :entity, [subject, context])

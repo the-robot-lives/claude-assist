@@ -7,6 +7,7 @@ interface Props {
   semanticClasses: SemanticClass[];
 }
 
+// ⟦𓉥𓌎𓃭𓄳⟧ ButtonPreview :: auto-generated pointer for public function ButtonPreview
 export function ButtonPreview({ semanticClasses }: Props) {
   const { selected } = useSemanticSelection();
   const sc = semanticClasses.find((c) => c.name === selected) || semanticClasses[0];

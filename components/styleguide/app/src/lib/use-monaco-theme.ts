@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 
+// ⟦𓋮𓄥𓁖𓈉⟧ useMonacoTheme :: auto-generated pointer for public function useMonacoTheme
 export function useMonacoTheme(): string {
   const [theme, setTheme] = useState("light");
 

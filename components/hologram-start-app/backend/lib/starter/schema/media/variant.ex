@@ -13,6 +13,7 @@ defmodule Starter.Schema.Media.Variant do
     timestamps(type: :utc_datetime_usec, inserted_at: :created_at, updated_at: false)
   end
 
+  # ⟦𓌧𓌄𓃿𓃚⟧ changeset :: auto-generated pointer for public function changeset
   def changeset(variant, attrs) do
     variant
     |> cast(attrs, [:media_id, :variant_key, :params, :file_size, :content_type])

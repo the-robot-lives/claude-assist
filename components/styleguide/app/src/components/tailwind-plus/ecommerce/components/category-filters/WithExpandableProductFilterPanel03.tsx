@@ -46,6 +46,7 @@ function classNames(...classes) {
   return classes.filter(Boolean).join(' ')
 }
 
+// ⟦𓇓𓀥𓆵𓎒⟧ WithExpandableProductFilterPanel03 :: auto-generated pointer for public function WithExpandableProductFilterPanel03
 export function WithExpandableProductFilterPanel03() {
   return (
     <div className="bg-white">

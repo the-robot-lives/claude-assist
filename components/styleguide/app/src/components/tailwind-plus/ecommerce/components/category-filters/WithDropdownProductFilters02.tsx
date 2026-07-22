@@ -63,6 +63,7 @@ function classNames(...classes) {
   return classes.filter(Boolean).join(' ')
 }
 
+// ⟦𓇌𓀿𓈷𓈴⟧ WithDropdownProductFilters02 :: auto-generated pointer for public function WithDropdownProductFilters02
 export function WithDropdownProductFilters02() {
   const [open, setOpen] = useState(false)
 

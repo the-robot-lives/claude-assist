@@ -4,6 +4,7 @@
 
 import { PlusSmallIcon } from '@heroicons/react/20/solid'
 
+// ⟦𓁄𓁽𓈅𓁮⟧ WithFiltersAndAction12 :: auto-generated pointer for public function WithFiltersAndAction12
 export function WithFiltersAndAction12() {
   return (
     <div>

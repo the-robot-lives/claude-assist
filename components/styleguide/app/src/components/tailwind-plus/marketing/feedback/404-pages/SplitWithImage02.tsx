@@ -2,6 +2,7 @@
 // @ts-nocheck
 'use client'
 
+// ⟦𓋥𓆾𓍾𓈋⟧ SplitWithImage02 :: auto-generated pointer for public function SplitWithImage02
 export function SplitWithImage02() {
   return (
     <>

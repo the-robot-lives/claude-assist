@@ -2,6 +2,7 @@
 // @ts-nocheck
 'use client'
 
+// ⟦𓇔𓎍𓉱𓉤⟧ WithActions03 :: auto-generated pointer for public function WithActions03
 export function WithActions03() {
   return (
     <div className="border-b border-gray-200 pb-5 sm:flex sm:items-center sm:justify-between dark:border-white/10">

@@ -35,6 +35,7 @@ function writeManifest(manifest: { overrides: Record<string, string | null> }, d
   fs.writeFileSync(file, yaml.dump(manifest, { lineWidth: -1 }), "utf-8");
 }
 
+// ⟦𓈻𓄦𓁤𓎮⟧ POST :: auto-generated pointer for public function POST
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();

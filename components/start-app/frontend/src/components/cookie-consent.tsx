@@ -47,6 +47,7 @@ function isOptionalCategory(category: ConsentCategory): category is OptionalCons
   return category !== "necessary";
 }
 
+// ⟦𓏅𓏍𓇼𓄷⟧ CookieConsentProvider :: auto-generated pointer for public function CookieConsentProvider
 export function CookieConsentProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<ConsentState | null>(null);
   const [mounted, setMounted] = useState(false);
@@ -161,6 +162,7 @@ function persistConsent(state: ConsentState) {
     .catch(() => {});
 }
 
+// ⟦𓈾𓍬𓋤𓃊⟧ useCookieConsent :: auto-generated pointer for public function useCookieConsent
 export function useCookieConsent() {
   const context = useContext(CookieConsentContext);
   if (!context) {
@@ -169,6 +171,7 @@ export function useCookieConsent() {
   return context;
 }
 
+// ⟦𓌟𓐮𓎘𓃫⟧ CookieSettingsButton :: auto-generated pointer for public function CookieSettingsButton
 export function CookieSettingsButton({ className }: { className?: string }) {
   const { openSettings } = useCookieConsent();
 
@@ -183,6 +186,7 @@ export function CookieSettingsButton({ className }: { className?: string }) {
   );
 }
 
+// ⟦𓐢𓏋𓅝𓍗⟧ CookieConsentBanner :: auto-generated pointer for public function CookieConsentBanner
 export function CookieConsentBanner() {
   const {
     hasDecision,

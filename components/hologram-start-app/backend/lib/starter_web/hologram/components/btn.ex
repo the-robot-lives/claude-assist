@@ -10,6 +10,7 @@ defmodule StarterWeb.Hologram.Components.Btn do
   prop :href, :string, default: nil
   prop :class, :string, default: ""
 
+  # ⟦𓐒𓇗𓈭𓇘⟧ template :: auto-generated pointer for public function template
   def template do
     ~HOLO"""
     {%if @href}
@@ -22,6 +23,7 @@ defmodule StarterWeb.Hologram.Components.Btn do
     """
   end
 
+  # ⟦𓌳𓍀𓐪𓏍⟧ classes :: auto-generated pointer for public function classes
   def classes(variant, size, extra) do
     ["btn", variant && "btn-#{variant}", size && "btn-#{size}", extra]
     |> Enum.reject(&(is_nil(&1) or &1 == false or &1 == ""))

@@ -133,23 +133,28 @@ defmodule Starter.StyleGuide.ComponentCatalog do
     }
   ]
 
+  # ⟦𓊃𓀅𓄔𓈒⟧ categories :: auto-generated pointer for public function categories
   def categories do
     Enum.map(@categories, fn cat ->
       Map.put(cat, :count, length(cat.entries))
     end)
   end
 
+  # ⟦𓊥𓎿𓆫𓇳⟧ first_category :: auto-generated pointer for public function first_category
   def first_category, do: hd(categories())
 
+  # ⟦𓍧𓏘𓁒𓎋⟧ find_category :: auto-generated pointer for public function find_category
   def find_category(slug) do
     Enum.find(categories(), first_category(), &(&1.slug == slug))
   end
 
+  # ⟦𓋕𓁵𓅶𓃯⟧ find_entry :: auto-generated pointer for public function find_entry
   def find_entry(category_slug, entry_id) do
     cat = find_category(category_slug)
     Enum.find(cat.entries, List.first(cat.entries), &(&1.id == entry_id))
   end
 
+  # ⟦𓀊𓌷𓎻𓏏⟧ first_entry_id :: auto-generated pointer for public function first_entry_id
   def first_entry_id(category_slug) do
     cat = find_category(category_slug)
     hd(cat.entries).id

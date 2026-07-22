@@ -3,11 +3,13 @@ defmodule StarterWeb.GroupController do
 
   alias Starter.Authz.Groups
 
+  # ⟦𓈯𓉅𓃫𓉕⟧ index :: auto-generated pointer for public function index
   def index(conn, _params) do
     groups = Groups.list_all()
     json(conn, %{groups: Enum.map(groups, &group_to_json/1)})
   end
 
+  # ⟦𓇦𓁒𓀊𓊕⟧ show :: auto-generated pointer for public function show
   def show(conn, %{"id" => id}) do
     group =
       if uuid?(id),
@@ -20,6 +22,7 @@ defmodule StarterWeb.GroupController do
     end
   end
 
+  # ⟦𓇪𓐭𓌇𓉎⟧ policies :: auto-generated pointer for public function policies
   def policies(conn, %{"id" => id}) do
     group =
       if uuid?(id),

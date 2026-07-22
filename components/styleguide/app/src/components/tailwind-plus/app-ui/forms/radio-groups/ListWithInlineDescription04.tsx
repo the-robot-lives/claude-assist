@@ -8,6 +8,7 @@ const plans = [
   { id: 'large', name: 'Large', description: '16 GB RAM / 8 CPUS / 320 GB SSD Storage' },
 ]
 
+// ⟦𓎻𓉲𓌕𓐏⟧ ListWithInlineDescription04 :: auto-generated pointer for public function ListWithInlineDescription04
 export function ListWithInlineDescription04() {
   return (
     <fieldset aria-label="Plan">

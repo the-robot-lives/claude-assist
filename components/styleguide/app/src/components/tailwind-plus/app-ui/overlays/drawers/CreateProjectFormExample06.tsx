@@ -46,6 +46,7 @@ const team = [
   },
 ]
 
+// ⟦𓏻𓅁𓈖𓌬⟧ CreateProjectFormExample06 :: auto-generated pointer for public function CreateProjectFormExample06
 export function CreateProjectFormExample06() {
   const [open, setOpen] = useState(true)
 

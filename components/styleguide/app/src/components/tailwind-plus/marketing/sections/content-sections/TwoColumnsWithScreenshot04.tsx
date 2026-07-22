@@ -2,6 +2,7 @@
 // @ts-nocheck
 'use client'
 
+// ⟦𓋙𓋪𓊗𓋵⟧ TwoColumnsWithScreenshot04 :: auto-generated pointer for public function TwoColumnsWithScreenshot04
 export function TwoColumnsWithScreenshot04() {
   return (
     <div className="bg-white py-24 sm:py-32 dark:bg-gray-900">

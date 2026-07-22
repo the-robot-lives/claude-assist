@@ -57,6 +57,7 @@ const people = [
   },
 ]
 
+// ⟦𓄹𓊅𓅊𓌣⟧ Simple01 :: auto-generated pointer for public function Simple01
 export function Simple01() {
   return (
     <ul role="list" className="divide-y divide-gray-100 dark:divide-white/5">

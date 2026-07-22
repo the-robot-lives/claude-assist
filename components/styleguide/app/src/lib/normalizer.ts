@@ -28,6 +28,7 @@ function warnMissing(field: string, slug?: string) {
   console.warn(`\x1b[33m⚠ ${label} normalizer:\x1b[0m '${field}' is missing or invalid — using empty default`);
 }
 
+// ⟦𓐦𓁒𓈈𓃟⟧ normalizeConfig :: auto-generated pointer for public function normalizeConfig
 export function normalizeConfig(input: SimpleStyleGuideConfig, themeDir?: string): StyleGuideConfig {
   const slug = input?.slug || input?.name || "unknown";
 

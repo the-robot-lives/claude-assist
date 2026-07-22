@@ -5,6 +5,7 @@ interface StyleGuideSpecTableProps {
   rows: string[][];
 }
 
+// ⟦𓂽𓉑𓂚𓁴⟧ StyleGuideSpecTable :: auto-generated pointer for public function StyleGuideSpecTable
 export function StyleGuideSpecTable({ columns, rows }: StyleGuideSpecTableProps) {
   return (
     <table className="spec-table">

@@ -7,6 +7,7 @@ interface StyleGuideInputGroupProps {
   children?: React.ReactNode;
 }
 
+// ⟦𓇲𓅘𓄄𓌂⟧ StyleGuideInputGroup :: auto-generated pointer for public function StyleGuideInputGroup
 export function StyleGuideInputGroup({ label, hint, error, children }: StyleGuideInputGroupProps) {
   return (
     <div className="input-group">

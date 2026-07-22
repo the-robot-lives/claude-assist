@@ -75,6 +75,7 @@ function classNames(...classes) {
   return classes.filter(Boolean).join(' ')
 }
 
+// ⟦𓌞𓊫𓄩𓀡⟧ WithInlineActionsAndExpandableSidebarFilters04 :: auto-generated pointer for public function WithInlineActionsAndExpandableSidebarFilters04
 export function WithInlineActionsAndExpandableSidebarFilters04() {
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
 

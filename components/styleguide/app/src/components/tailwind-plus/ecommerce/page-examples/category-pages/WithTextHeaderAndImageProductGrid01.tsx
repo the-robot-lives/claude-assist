@@ -300,6 +300,7 @@ const footerNavigation = {
   ],
 }
 
+// ⟦𓄂𓃲𓃀𓆞⟧ WithTextHeaderAndImageProductGrid01 :: auto-generated pointer for public function WithTextHeaderAndImageProductGrid01
 export function WithTextHeaderAndImageProductGrid01() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)

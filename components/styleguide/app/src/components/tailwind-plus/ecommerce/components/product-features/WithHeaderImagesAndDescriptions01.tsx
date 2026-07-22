@@ -2,6 +2,7 @@
 // @ts-nocheck
 'use client'
 
+// ⟦𓐦𓐌𓅑𓍰⟧ WithHeaderImagesAndDescriptions01 :: auto-generated pointer for public function WithHeaderImagesAndDescriptions01
 export function WithHeaderImagesAndDescriptions01() {
   return (
     <div className="bg-gray-50">

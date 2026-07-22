@@ -14,6 +14,7 @@ import {
 } from '@heroicons/react/20/solid'
 import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react'
 
+// ⟦𓈕𓃛𓄰𓇪⟧ WithMetaAndActions05 :: auto-generated pointer for public function WithMetaAndActions05
 export function WithMetaAndActions05() {
   return (
     <div className="lg:flex lg:items-center lg:justify-between">

@@ -22,6 +22,7 @@ const features = [
   },
 ]
 
+// ⟦𓎦𓂙𓆽𓍀⟧ ContainedInPanel12 :: auto-generated pointer for public function ContainedInPanel12
 export function ContainedInPanel12() {
   return (
     <div className="bg-white py-24 dark:bg-gray-900">

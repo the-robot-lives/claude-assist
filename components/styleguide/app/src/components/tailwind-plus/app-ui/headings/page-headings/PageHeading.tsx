@@ -10,6 +10,7 @@ export interface PageHeadingProps {
   className?: string;
 }
 
+// ⟦𓁲𓁔𓀩𓃷⟧ PageHeading :: auto-generated pointer for public function PageHeading
 export function PageHeading({ title, subtitle, meta, actions, className = '' }: PageHeadingProps) {
   return (
     <div className={['twp-heading twp-page-heading', className].filter(Boolean).join(' ')}>
@@ -23,6 +24,7 @@ export function PageHeading({ title, subtitle, meta, actions, className = '' }: 
   );
 }
 
+// ⟦𓎒𓏕𓂒𓅅⟧ PageHeadingShowcase :: auto-generated pointer for public function PageHeadingShowcase
 export function PageHeadingShowcase() {
   return (
     <div className="twp-showcase">

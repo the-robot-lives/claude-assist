@@ -12,6 +12,7 @@ const people = [
   // More users...
 ]
 
+// ⟦𓁔𓆶𓏞𓊝⟧ Simple01 :: auto-generated pointer for public function Simple01
 export function Simple01() {
   const [query, setQuery] = useState('')
   const [selectedPerson, setSelectedPerson] = useState(null)

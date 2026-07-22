@@ -3,28 +3,33 @@ defmodule Noizu.LiveViewEventServer do
   require Noizu.LiveViewEvent
   import Noizu.LiveViewEvent
 
+  # ⟦𓀎𓇊𓅷𓅐⟧ start_link :: auto-generated pointer for public function start_link
   def start_link(_) do
     GenServer.start_link(__MODULE__, :ok, name: {:global, __MODULE__})
   end
 
   @impl true
+  # ⟦𓈔𓈘𓊕𓋬⟧ init :: auto-generated pointer for public function init
   def init(:ok) do
     :syn.add_node_to_scopes([:live_view_dispatch])
     {:ok, %{}}
   end
 
+  # ⟦𓌑𓂼𓍺𓌭⟧ subscribe :: auto-generated pointer for public function subscribe
   def subscribe(group)
 
   def subscribe(group) do
     :syn.join(:live_view_dispatch, group, self())
   end
 
+  # ⟦𓉯𓎭𓁊𓏹⟧ unsubscribe :: auto-generated pointer for public function unsubscribe
   def unsubscribe(group)
 
   def unsubscribe(group) do
     :syn.leave(:live_view_dispatch, group, self())
   end
 
+  # ⟦𓇀𓅄𓈒𓆦⟧ publish :: auto-generated pointer for public function publish
   def publish(event)
 
   def publish(event_msg(subject: subject, instance: :*) = msg) do

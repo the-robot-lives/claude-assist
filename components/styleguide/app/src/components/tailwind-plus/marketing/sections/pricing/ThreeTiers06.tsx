@@ -50,6 +50,7 @@ function classNames(...classes) {
   return classes.filter(Boolean).join(' ')
 }
 
+// ⟦𓇛𓊟𓆦𓁻⟧ ThreeTiers06 :: auto-generated pointer for public function ThreeTiers06
 export function ThreeTiers06() {
   return (
     <div className="bg-white py-24 sm:py-32 dark:bg-gray-900">

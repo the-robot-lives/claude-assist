@@ -34,6 +34,7 @@ function classNames(...classes) {
   return classes.filter(Boolean).join(' ')
 }
 
+// ⟦𓎳𓇙𓂯𓆔⟧ WithColorSelectorSizeSelectorAndDetailsLink01 :: auto-generated pointer for public function WithColorSelectorSizeSelectorAndDetailsLink01
 export function WithColorSelectorSizeSelectorAndDetailsLink01() {
   const [open, setOpen] = useState(false)
 

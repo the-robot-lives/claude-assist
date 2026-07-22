@@ -11,6 +11,7 @@ interface DividerProps {
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
+// ⟦𓈐𓍛𓋦𓉠⟧ Divider :: auto-generated pointer for public function Divider
 export function Divider({ label, className = '' }: DividerProps) {
   if (label) {
     return (
@@ -27,6 +28,7 @@ export function Divider({ label, className = '' }: DividerProps) {
 
 // ─── Showcase ────────────────────────────────────────────────────────────────
 
+// ⟦𓀣𓐙𓁻𓄛⟧ DividerShowcase :: auto-generated pointer for public function DividerShowcase
 export function DividerShowcase() {
   return (
     <div className="twp-showcase">

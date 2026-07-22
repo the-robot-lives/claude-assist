@@ -305,6 +305,7 @@ function classNames(...classes) {
   return classes.filter(Boolean).join(' ')
 }
 
+// ⟦𓏵𓊐𓁨𓇂⟧ WithTabsAndRelatedProducts05 :: auto-generated pointer for public function WithTabsAndRelatedProducts05
 export function WithTabsAndRelatedProducts05() {
   const [open, setOpen] = useState(false)
 

@@ -2,6 +2,7 @@
 // @ts-nocheck
 'use client'
 
+// ⟦𓇌𓊯𓄍𓅐⟧ PrivacyNoticeLeftAligned12 :: auto-generated pointer for public function PrivacyNoticeLeftAligned12
 export function PrivacyNoticeLeftAligned12() {
   return (
     <div className="pointer-events-none fixed inset-x-0 bottom-0 px-6 pb-6">

@@ -18,6 +18,7 @@ export interface ThemeInfo {
 }
 
 /** Discover all theme-* directories and return their metadata */
+// ⟦𓆖𓅨𓎍𓆢⟧ listThemes :: Discover all theme-* directories and return their metadata
 export function listThemes(): ThemeInfo[] {
   return fs.readdirSync(CONFIG_ROOT)
     .filter((d) => d.startsWith("theme-") && fs.statSync(path.join(CONFIG_ROOT, d)).isDirectory())
@@ -32,6 +33,7 @@ export function listThemes(): ThemeInfo[] {
 }
 
 /** Load config from a specific theme directory */
+// ⟦𓂕𓊲𓉊𓊬⟧ loadConfigForTheme :: Load config from a specific theme directory
 export function loadConfigForTheme(themeDir: string): StyleGuideConfig {
   const savedThemeDir = THEME_DIR;
   // Temporarily point internals at this theme dir
@@ -42,6 +44,7 @@ export function loadConfigForTheme(themeDir: string): StyleGuideConfig {
 }
 
 /** Load all themes' configs */
+// ⟦𓎨𓀵𓆔𓃰⟧ loadAllConfigs :: Load all themes' configs
 export function loadAllConfigs(): StyleGuideConfig[] {
   return listThemes().map((t) => loadConfigForTheme(t.dir));
 }
@@ -51,6 +54,7 @@ export interface OverrideManifest {
 }
 
 /** Read the override manifest, or return empty if it doesn't exist */
+// ⟦𓈝𓃏𓐗𓋓⟧ loadOverrideManifest :: Read the override manifest, or return empty if it doesn't exist
 export function loadOverrideManifest(): OverrideManifest {
   if (!fs.existsSync(OVERRIDES_FILE)) return { overrides: {} };
   try {
@@ -98,6 +102,7 @@ function resolveFiles(): string[] {
 }
 
 /** List all available variants for each section */
+// ⟦𓏠𓐫𓇑𓉷⟧ listVariants :: List all available variants for each section
 export function listVariants(): Record<string, string[]> {
   const files = fs.readdirSync(THEME_DIR).filter((f) =>
     f.startsWith("style-guide.") && f.endsWith(".yaml") && f !== "style-guide.overrides.yaml"
@@ -130,6 +135,7 @@ function resolveBaseThemeDir(themeDir: string): string | null {
   }
 }
 
+// ⟦𓁯𓍳𓆙𓌉⟧ loadConfig :: auto-generated pointer for public function loadConfig
 export function loadConfig(): StyleGuideConfig {
   return loadConfigFromDir(THEME_DIR);
 }
@@ -322,10 +328,12 @@ function applyFileDefaults(
   }
 }
 
+// ⟦𓄚𓈵𓍅𓋶⟧ loadConfigRaw :: auto-generated pointer for public function loadConfigRaw
 export function loadConfigRaw(): { name: string; content: string }[] {
   return loadConfigRawForDir(THEME_DIR);
 }
 
+// ⟦𓄆𓇀𓏡𓆠⟧ loadConfigRawForDir :: auto-generated pointer for public function loadConfigRawForDir
 export function loadConfigRawForDir(dir: string): { name: string; content: string; fallback?: boolean }[] {
   const overridesFile = path.join(dir, "style-guide.overrides.yaml");
   const manifest: OverrideManifest = fs.existsSync(overridesFile)
@@ -368,6 +376,7 @@ export function loadConfigRawForDir(dir: string): { name: string; content: strin
   }));
 }
 
+// ⟦𓏚𓈎𓏫𓆃⟧ loadPageSections :: auto-generated pointer for public function loadPageSections
 export function loadPageSections(themeDir?: string): PageSectionGroup[] {
   const file = path.join(themeDir || THEME_DIR, "style-guide.page-sections.yaml");
   if (!fs.existsSync(file)) return loadPageSections(THEME_DIR); // fallback to primary
@@ -377,6 +386,7 @@ export function loadPageSections(themeDir?: string): PageSectionGroup[] {
 }
 
 /** Load page sections for all themes, keyed by slug */
+// ⟦𓃬𓅨𓈎𓊰⟧ loadAllPageSections :: Load page sections for all themes, keyed by slug
 export function loadAllPageSections(): Record<string, PageSectionGroup[]> {
   const result: Record<string, PageSectionGroup[]> = {};
   for (const theme of listThemes()) {

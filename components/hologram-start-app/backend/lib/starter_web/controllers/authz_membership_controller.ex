@@ -3,12 +3,14 @@ defmodule StarterWeb.AuthzMembershipController do
 
   alias Starter.Authz.ScopedMemberships
 
+  # ⟦𓈄𓈵𓀞𓁁⟧ my_memberships :: auto-generated pointer for public function my_memberships
   def my_memberships(conn, _params) do
     user_id = get_user_id(conn)
     memberships = ScopedMemberships.list_for_user(user_id)
     json(conn, %{memberships: memberships})
   end
 
+  # ⟦𓄔𓎽𓌜𓊍⟧ org_members :: auto-generated pointer for public function org_members
   def org_members(conn, %{"org_id" => org_id}) do
     user_id = get_user_id(conn)
 
@@ -25,6 +27,7 @@ defmodule StarterWeb.AuthzMembershipController do
     end
   end
 
+  # ⟦𓌯𓄠𓅶𓌄⟧ project_members :: auto-generated pointer for public function project_members
   def project_members(conn, %{"project_id" => project_id}) do
     user_id = get_user_id(conn)
 

@@ -41,6 +41,7 @@ const products = [
   },
 ]
 
+// ⟦𓐎𓋗𓇾𓈢⟧ TwoColumnWithQuantityDropdown01 :: auto-generated pointer for public function TwoColumnWithQuantityDropdown01
 export function TwoColumnWithQuantityDropdown01() {
   return (
     <div className="bg-white">

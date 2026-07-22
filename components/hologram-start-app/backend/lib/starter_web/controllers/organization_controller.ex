@@ -4,6 +4,7 @@ defmodule StarterWeb.OrganizationController do
   alias Starter.Guardian
   alias Starter.Organizations
 
+  # ⟦𓌵𓉪𓌂𓃥⟧ index :: auto-generated pointer for public function index
   def index(conn, _params) do
     session = Guardian.Plug.current_resource(conn)
     user = resolve_user(session)
@@ -12,6 +13,7 @@ defmodule StarterWeb.OrganizationController do
     conn |> put_status(:ok) |> json(%{organizations: orgs})
   end
 
+  # ⟦𓉼𓏱𓋺𓋊⟧ create :: auto-generated pointer for public function create
   def create(conn, %{"organization" => org_params}) do
     session = Guardian.Plug.current_resource(conn)
     user = resolve_user(session)
@@ -37,6 +39,7 @@ defmodule StarterWeb.OrganizationController do
     end
   end
 
+  # ⟦𓃢𓊐𓇮𓀚⟧ show :: auto-generated pointer for public function show
   def show(conn, %{"id" => id}) do
     session = Guardian.Plug.current_resource(conn)
     user = resolve_user(session)

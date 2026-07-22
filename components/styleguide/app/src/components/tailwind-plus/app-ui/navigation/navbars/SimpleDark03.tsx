@@ -5,6 +5,7 @@
 import { Disclosure, DisclosureButton, DisclosurePanel, Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react'
 import { Bars3Icon, BellIcon, XMarkIcon } from '@heroicons/react/24/outline'
 
+// ⟦𓅗𓁡𓈚𓁲⟧ SimpleDark03 :: auto-generated pointer for public function SimpleDark03
 export function SimpleDark03() {
   return (
     <Disclosure

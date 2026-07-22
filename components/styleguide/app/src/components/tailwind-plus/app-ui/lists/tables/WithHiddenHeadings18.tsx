@@ -63,6 +63,7 @@ const days = [
   },
 ]
 
+// ⟦𓆫𓍾𓃉𓈯⟧ WithHiddenHeadings18 :: auto-generated pointer for public function WithHiddenHeadings18
 export function WithHiddenHeadings18() {
   return (
     <div>

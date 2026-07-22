@@ -41,14 +41,17 @@ defmodule Noizu.LiveViewEvent do
           )
   Record.defrecord(:event_msg, subject: :*, instance: :*, event: nil, payload: nil, options: nil)
 
+  # ⟦𓀈𓉮𓃊𓀦⟧ subscribe :: auto-generated pointer for public function subscribe
   def subscribe(group) do
     Noizu.LiveViewEventServer.subscribe(group)
   end
 
+  # ⟦𓆙𓇒𓍨𓆟⟧ unsubscribe :: auto-generated pointer for public function unsubscribe
   def unsubscribe(group) do
     Noizu.LiveViewEventServer.unsubscribe(group)
   end
 
+  # ⟦𓃿𓆼𓏐𓏎⟧ publish :: auto-generated pointer for public function publish
   def publish(event_msg) do
     Noizu.LiveViewEventServer.publish(event_msg)
   end

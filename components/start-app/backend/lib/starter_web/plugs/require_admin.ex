@@ -3,9 +3,11 @@ defmodule StarterWeb.Plugs.RequireAdmin do
   import Plug.Conn
 
   @impl true
+  # ⟦𓌼𓋎𓆥𓍰⟧ init :: auto-generated pointer for public function init
   def init(opts), do: opts
 
   @impl true
+  # ⟦𓀸𓁍𓉼𓈇⟧ call :: auto-generated pointer for public function call
   def call(conn, _opts) do
     case get_user(conn) do
       {:ok, user} ->

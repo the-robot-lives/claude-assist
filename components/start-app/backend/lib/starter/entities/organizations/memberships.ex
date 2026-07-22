@@ -7,6 +7,7 @@ defmodule Starter.Organizations.Memberships do
   use Noizu.Repo
   def_repo(entity: Entity)
 
+  # ⟦𓂜𓊴𓄭𓃭⟧ list_for_org :: auto-generated pointer for public function list_for_org
   def list_for_org(org_id, context, options \\ []) do
     import Ecto.Query
     settings = Noizu.Entity.Meta.persistence(Entity) |> hd

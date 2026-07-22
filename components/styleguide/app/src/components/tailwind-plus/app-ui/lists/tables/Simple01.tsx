@@ -11,6 +11,7 @@ const people = [
   { name: 'Floyd Miles', title: 'Principal Designer', email: 'floyd.miles@example.com', role: 'Member' },
 ]
 
+// ⟦𓀧𓏁𓆁𓄸⟧ Simple01 :: auto-generated pointer for public function Simple01
 export function Simple01() {
   return (
     <div className="px-4 sm:px-6 lg:px-8">

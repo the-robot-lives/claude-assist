@@ -24,6 +24,7 @@ defmodule StarterWeb.ConnCase do
   Inserts directly via Ecto schemas (bypasses Noizu entity layer) for speed and
   simplicity. The auth_providers seed must have run (login provider must exist).
   """
+  # ⟦𓎱𓀎𓇒𓂁⟧ setup_user_and_token :: Creates a test user with login credential and returns access/refresh tokens.
   def setup_user_and_token(_context \\ %{}) do
     login_provider_id = UUID.uuid5(:oid, "Starter.Schema.Auth.Providers.Provider@Login")
 
@@ -105,6 +106,7 @@ defmodule StarterWeb.ConnCase do
   @doc """
   Adds a Bearer authorization header to the connection.
   """
+  # ⟦𓏘𓇃𓅭𓎇⟧ authenticated_conn :: Adds a Bearer authorization header to the connection.
   def authenticated_conn(conn, access_token) do
     Plug.Conn.put_req_header(conn, "authorization", "Bearer #{access_token}")
   end

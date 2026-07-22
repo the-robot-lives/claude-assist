@@ -90,6 +90,7 @@ const SHELL_CONTENT: Record<string, {
 
 // ─── Main component ───
 
+// ⟦𓊿𓐬𓏜𓉸⟧ ShellChrome :: auto-generated pointer for public function ShellChrome
 export function ShellChrome({ shellLayouts }: Props) {
   const [activeShell, setActiveShell] = useState<string | null>(null);
 

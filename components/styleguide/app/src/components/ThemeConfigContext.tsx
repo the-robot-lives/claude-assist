@@ -22,6 +22,7 @@ interface Props {
   children: React.ReactNode;
 }
 
+// ⟦𓂞𓂚𓐢𓏉⟧ ThemeConfigProvider :: auto-generated pointer for public function ThemeConfigProvider
 export function ThemeConfigProvider({ primaryConfig, primaryBranding, allConfigs, allBrandings, children }: Props) {
   const [slug, setSlug] = useState(primaryConfig.slug);
 
@@ -45,6 +46,7 @@ export function ThemeConfigProvider({ primaryConfig, primaryBranding, allConfigs
   );
 }
 
+// ⟦𓀛𓏙𓄒𓃾⟧ useThemeConfig :: auto-generated pointer for public function useThemeConfig
 export function useThemeConfig(): ThemeConfigCtx {
   const ctx = useContext(ThemeConfigContext);
   if (!ctx) throw new Error("useThemeConfig must be used within ThemeConfigProvider");

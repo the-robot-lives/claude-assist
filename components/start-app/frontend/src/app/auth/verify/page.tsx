@@ -47,6 +47,7 @@ function VerifyMagicLink() {
   );
 }
 
+// ⟦𓏈𓍿𓀥𓄜⟧ VerifyMagicLinkPage :: auto-generated pointer for public function VerifyMagicLinkPage
 export default function VerifyMagicLinkPage() {
   return (
     <Suspense fallback={<div className="content"><main><p>Loading...</p></main></div>}>

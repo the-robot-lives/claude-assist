@@ -36,6 +36,7 @@ defmodule StarterWeb.Hologram.Pages.StyleGuidePage do
   route "/styleguide"
   layout MainLayout, page_title: "Style Guide — Hologram"
 
+  # ⟦𓐮𓐎𓉉𓇂⟧ init :: auto-generated pointer for public function init
   def init(_params, component, server) do
     group_id = Catalog.first_group_id()
     section_id = Catalog.first_section_id()
@@ -67,6 +68,7 @@ defmodule StarterWeb.Hologram.Pages.StyleGuidePage do
     )
   end
 
+  # ⟦𓀴𓐘𓅮𓉃⟧ template :: auto-generated pointer for public function template
   def template do
     ~HOLO"""
     <div class="content">
@@ -493,6 +495,7 @@ defmodule StarterWeb.Hologram.Pages.StyleGuidePage do
     """
   end
 
+  # ⟦𓋫𓍗𓀆𓏪⟧ action :: auto-generated pointer for public function action
   def action(:select_group, params, component) do
     group = Catalog.find_group(params.id)
     section = List.first(group.sections)

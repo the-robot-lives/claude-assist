@@ -10,6 +10,7 @@ defmodule StarterWeb.Hologram.Pages.SignupPage do
   route "/signup"
   layout MainLayout, page_title: "Sign Up"
 
+  # ⟦𓃬𓃇𓇅𓁷⟧ init :: auto-generated pointer for public function init
   def init(_params, component, _server) do
     catalog = Auth.sso_catalog()
 
@@ -30,6 +31,7 @@ defmodule StarterWeb.Hologram.Pages.SignupPage do
     )
   end
 
+  # ⟦𓏏𓊵𓍨𓋯⟧ template :: auto-generated pointer for public function template
   def template do
     ~HOLO"""
     <div class="content">
@@ -108,6 +110,7 @@ defmodule StarterWeb.Hologram.Pages.SignupPage do
     """
   end
 
+  # ⟦𓋳𓈸𓋧𓎜⟧ action :: auto-generated pointer for public function action
   def action(:set_email, params, c), do: put_state(c, :email, params.event.value)
   def action(:set_password, params, c), do: put_state(c, :password, params.event.value)
   def action(:set_user_name, params, c), do: put_state(c, :user_name, params.event.value)
@@ -174,6 +177,7 @@ defmodule StarterWeb.Hologram.Pages.SignupPage do
     put_state(component, loading: false, error: params.error || "Registration failed")
   end
 
+  # ⟦𓌶𓉤𓅤𓋋⟧ command :: auto-generated pointer for public function command
   def command(:register, params, server) do
     case Auth.register(server, params) do
       {:ok, server, user, orgs} ->

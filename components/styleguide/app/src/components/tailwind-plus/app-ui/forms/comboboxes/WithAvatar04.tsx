@@ -18,6 +18,7 @@ const people = [
   // More users...
 ]
 
+// ⟦𓅖𓏸𓉗𓍷⟧ WithAvatar04 :: auto-generated pointer for public function WithAvatar04
 export function WithAvatar04() {
   const [query, setQuery] = useState('')
   const [selectedPerson, setSelectedPerson] = useState(null)

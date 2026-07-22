@@ -14,6 +14,7 @@ const navigation = [
   { name: 'Company', href: '#' },
 ]
 
+// ⟦𓅪𓉼𓋝𓊩⟧ WithAppScreenshot07 :: auto-generated pointer for public function WithAppScreenshot07
 export function WithAppScreenshot07() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 

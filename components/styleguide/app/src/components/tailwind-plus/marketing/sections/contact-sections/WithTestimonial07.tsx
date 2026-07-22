@@ -2,6 +2,7 @@
 // @ts-nocheck
 'use client'
 
+// ⟦𓌸𓅰𓎿𓊗⟧ WithTestimonial07 :: auto-generated pointer for public function WithTestimonial07
 export function WithTestimonial07() {
   return (
     <div className="relative isolate bg-white px-6 py-24 sm:py-32 lg:px-8 dark:bg-gray-900">

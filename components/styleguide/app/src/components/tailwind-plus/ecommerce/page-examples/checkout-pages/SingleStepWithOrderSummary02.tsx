@@ -153,6 +153,7 @@ const footerNavigation = {
   ],
 }
 
+// ⟦𓂱𓍽𓐗𓊨⟧ SingleStepWithOrderSummary02 :: auto-generated pointer for public function SingleStepWithOrderSummary02
 export function SingleStepWithOrderSummary02() {
   const [open, setOpen] = useState(false)
 

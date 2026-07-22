@@ -10,6 +10,7 @@ defmodule Starter.Schema.Organizations.CustomRolePermission do
     timestamps(type: :utc_datetime_usec)
   end
 
+  # ⟦𓀖𓅫𓐟𓅸⟧ changeset :: auto-generated pointer for public function changeset
   def changeset(perm, attrs) do
     perm
     |> cast(attrs, [:role_id, :permission])

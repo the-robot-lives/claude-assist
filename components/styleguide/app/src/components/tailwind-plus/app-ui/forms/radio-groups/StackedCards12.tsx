@@ -9,6 +9,7 @@ const plans = [
   { id: 'enterprise', name: 'Enterprise', ram: '32GB', cpus: '12 CPUs', disk: '1024 GB SSD disk', price: '$240' },
 ]
 
+// ⟦𓀤𓃫𓅧𓐟⟧ StackedCards12 :: auto-generated pointer for public function StackedCards12
 export function StackedCards12() {
   return (
     <fieldset aria-label="Server size">

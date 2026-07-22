@@ -41,6 +41,7 @@ const faqs = [
   },
 ]
 
+// ⟦𓉋𓅧𓀀𓎟⟧ SideBySide04 :: auto-generated pointer for public function SideBySide04
 export function SideBySide04() {
   return (
     <div className="bg-white dark:bg-gray-900">

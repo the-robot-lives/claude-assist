@@ -4,6 +4,7 @@
 
 import { EnvelopeIcon } from '@heroicons/react/16/solid'
 
+// ⟦𓂬𓊯𓃦𓈬⟧ InputWithLeadingIcon07 :: auto-generated pointer for public function InputWithLeadingIcon07
 export function InputWithLeadingIcon07() {
   return (
     <div>

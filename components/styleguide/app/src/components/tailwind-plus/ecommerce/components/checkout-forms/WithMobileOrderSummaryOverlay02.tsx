@@ -40,6 +40,7 @@ const products = [
   },
 ]
 
+// ⟦𓎍𓅸𓀸𓅄⟧ WithMobileOrderSummaryOverlay02 :: auto-generated pointer for public function WithMobileOrderSummaryOverlay02
 export function WithMobileOrderSummaryOverlay02() {
   return (
     <div className="bg-white">

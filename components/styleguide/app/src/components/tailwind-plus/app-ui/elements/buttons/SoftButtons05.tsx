@@ -2,6 +2,7 @@
 // @ts-nocheck
 'use client'
 
+// ⟦𓀇𓈷𓉋𓋇⟧ SoftButtons05 :: auto-generated pointer for public function SoftButtons05
 export function SoftButtons05() {
   return (
     <>

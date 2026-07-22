@@ -59,6 +59,7 @@ const people = [
   },
 ]
 
+// ⟦𓅔𓅵𓃈𓂦⟧ WithAvatarsAndMultilineContent09 :: auto-generated pointer for public function WithAvatarsAndMultilineContent09
 export function WithAvatarsAndMultilineContent09() {
   return (
     <div className="px-4 sm:px-6 lg:px-8">

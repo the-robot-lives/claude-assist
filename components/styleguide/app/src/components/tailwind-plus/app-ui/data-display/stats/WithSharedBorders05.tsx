@@ -14,6 +14,7 @@ function classNames(...classes) {
   return classes.filter(Boolean).join(' ')
 }
 
+// ⟦𓉪𓀍𓊕𓍿⟧ WithSharedBorders05 :: auto-generated pointer for public function WithSharedBorders05
 export function WithSharedBorders05() {
   return (
     <div>

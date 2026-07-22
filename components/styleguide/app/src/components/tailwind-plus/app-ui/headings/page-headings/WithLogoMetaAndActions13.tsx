@@ -5,6 +5,7 @@
 import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react'
 import { EllipsisVerticalIcon } from '@heroicons/react/20/solid'
 
+// ⟦𓄲𓄙𓃊𓇐⟧ WithLogoMetaAndActions13 :: auto-generated pointer for public function WithLogoMetaAndActions13
 export function WithLogoMetaAndActions13() {
   return (
     <div className="px-4 py-10 sm:px-6 lg:px-8">

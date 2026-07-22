@@ -7,6 +7,7 @@ interface Props {
   semanticClasses: SemanticClass[];
 }
 
+// ⟦𓄸𓁯𓈇𓁟⟧ CardPreview :: auto-generated pointer for public function CardPreview
 export function CardPreview({ semanticClasses }: Props) {
   const { selected } = useSemanticSelection();
   const active = semanticClasses.find((sc) => sc.name === selected) || semanticClasses[0];

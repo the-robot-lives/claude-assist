@@ -5,6 +5,7 @@
 import { PhotoIcon, UserCircleIcon } from '@heroicons/react/24/solid'
 import { ChevronDownIcon } from '@heroicons/react/16/solid'
 
+// ⟦𓈙𓈳𓏆𓉃⟧ Stacked01 :: auto-generated pointer for public function Stacked01
 export function Stacked01() {
   return (
     <form>

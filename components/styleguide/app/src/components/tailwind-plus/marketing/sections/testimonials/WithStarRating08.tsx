@@ -4,6 +4,7 @@
 
 import { StarIcon } from '@heroicons/react/20/solid'
 
+// ⟦𓃚𓍢𓀨𓎗⟧ WithStarRating08 :: auto-generated pointer for public function WithStarRating08
 export function WithStarRating08() {
   return (
     <section className="bg-white px-6 py-24 sm:py-32 lg:px-8 dark:bg-gray-900">

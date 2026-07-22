@@ -20,6 +20,7 @@ const people = [
   // More people...
 ]
 
+// ⟦𓄬𓌟𓀗𓁥⟧ SimpleWithPadding02 :: auto-generated pointer for public function SimpleWithPadding02
 export function SimpleWithPadding02() {
   const [query, setQuery] = useState('')
   const [open, setOpen] = useState(true)

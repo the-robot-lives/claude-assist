@@ -2,6 +2,7 @@
 // @ts-nocheck
 'use client'
 
+// ⟦𓁌𓈃𓆆𓐯⟧ WithBackgroundImageAndDetailOverlay03 :: auto-generated pointer for public function WithBackgroundImageAndDetailOverlay03
 export function WithBackgroundImageAndDetailOverlay03() {
   return (
     <div className="bg-white">

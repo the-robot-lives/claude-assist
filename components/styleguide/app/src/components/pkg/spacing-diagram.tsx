@@ -11,6 +11,7 @@ interface StyleGuideSpacingDiagramProps {
   blocks: SpacingBlock[];
 }
 
+// ⟦𓆢𓏑𓂦𓈗⟧ StyleGuideSpacingDiagram :: auto-generated pointer for public function StyleGuideSpacingDiagram
 export function StyleGuideSpacingDiagram({ title, blocks }: StyleGuideSpacingDiagramProps) {
   return (
     <div className="spacing-diagram">

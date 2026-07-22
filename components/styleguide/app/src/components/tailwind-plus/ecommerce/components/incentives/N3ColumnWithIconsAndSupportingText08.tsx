@@ -10,6 +10,7 @@ const perks = [
   { name: 'Free, contactless delivery', description: 'The shipping is on us', icon: TruckIcon },
 ]
 
+// ⟦𓇙𓏛𓉇𓌷⟧ N3ColumnWithIconsAndSupportingText08 :: auto-generated pointer for public function N3ColumnWithIconsAndSupportingText08
 export function N3ColumnWithIconsAndSupportingText08() {
   return (
     <div className="bg-white">

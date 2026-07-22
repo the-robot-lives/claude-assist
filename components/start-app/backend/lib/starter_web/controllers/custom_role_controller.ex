@@ -7,6 +7,7 @@ defmodule StarterWeb.CustomRoleController do
 
   import Ecto.Query
 
+  # ⟦𓇸𓅀𓈻𓂴⟧ index :: auto-generated pointer for public function index
   def index(conn, %{"org_id" => org_id}) do
     user_id = get_user_id(conn)
 
@@ -24,6 +25,7 @@ defmodule StarterWeb.CustomRoleController do
     end
   end
 
+  # ⟦𓅹𓂌𓄿𓃚⟧ create :: auto-generated pointer for public function create
   def create(conn, %{"org_id" => org_id, "role" => role_params}) do
     user_id = get_user_id(conn)
 
@@ -42,6 +44,7 @@ defmodule StarterWeb.CustomRoleController do
     end
   end
 
+  # ⟦𓋥𓌝𓁼𓃈⟧ show :: auto-generated pointer for public function show
   def show(conn, %{"org_id" => org_id, "id" => role_id}) do
     user_id = get_user_id(conn)
 
@@ -67,6 +70,7 @@ defmodule StarterWeb.CustomRoleController do
     end
   end
 
+  # ⟦𓊨𓀍𓍭𓐠⟧ update :: auto-generated pointer for public function update
   def update(conn, %{"org_id" => org_id, "id" => role_id, "role" => role_params}) do
     user_id = get_user_id(conn)
 
@@ -93,6 +97,7 @@ defmodule StarterWeb.CustomRoleController do
     end
   end
 
+  # ⟦𓋵𓉞𓍫𓁱⟧ delete :: auto-generated pointer for public function delete
   def delete(conn, %{"org_id" => org_id, "id" => role_id}) do
     user_id = get_user_id(conn)
 
@@ -119,6 +124,7 @@ defmodule StarterWeb.CustomRoleController do
     end
   end
 
+  # ⟦𓅪𓍖𓄅𓍋⟧ add_permission :: auto-generated pointer for public function add_permission
   def add_permission(conn, %{"org_id" => org_id, "role_id" => role_id, "permission" => permission}) do
     user_id = get_user_id(conn)
 
@@ -142,6 +148,7 @@ defmodule StarterWeb.CustomRoleController do
     end
   end
 
+  # ⟦𓃾𓃒𓀥𓋑⟧ remove_permission :: auto-generated pointer for public function remove_permission
   def remove_permission(conn, %{
         "org_id" => org_id,
         "role_id" => role_id,

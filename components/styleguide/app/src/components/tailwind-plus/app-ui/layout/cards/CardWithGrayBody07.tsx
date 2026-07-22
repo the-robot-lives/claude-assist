@@ -2,6 +2,7 @@
 // @ts-nocheck
 'use client'
 
+// ⟦𓉥𓐗𓃄𓇠⟧ CardWithGrayBody07 :: auto-generated pointer for public function CardWithGrayBody07
 export function CardWithGrayBody07() {
   return (
     <div className="overflow-hidden rounded-lg bg-white shadow-sm dark:divide-white/10 dark:bg-gray-800/50 dark:shadow-none dark:outline dark:-outline-offset-1 dark:outline-white/10">

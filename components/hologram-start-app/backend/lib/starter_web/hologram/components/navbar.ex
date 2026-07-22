@@ -16,6 +16,7 @@ defmodule StarterWeb.Hologram.Components.Navbar do
   prop :brand, :string, default: "Start-App: Tagline"
   prop :loading, :boolean, default: false
 
+  # ⟦𓍕𓊪𓆯𓌌⟧ template :: auto-generated pointer for public function template
   def template do
     ~HOLO"""
     <nav class="sg-navbar" aria-label="Primary">

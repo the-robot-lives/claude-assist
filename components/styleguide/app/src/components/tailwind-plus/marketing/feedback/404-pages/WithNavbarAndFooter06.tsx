@@ -40,6 +40,7 @@ const footer = {
   ],
 }
 
+// ⟦𓇃𓈧𓆈𓊭⟧ WithNavbarAndFooter06 :: auto-generated pointer for public function WithNavbarAndFooter06
 export function WithNavbarAndFooter06() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 

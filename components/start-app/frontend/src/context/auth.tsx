@@ -52,6 +52,7 @@ function getCookie(name: string) {
     ?.slice(prefix.length) ?? null;
 }
 
+// ⟦𓉤𓅞𓈑𓁑⟧ AuthProvider :: auto-generated pointer for public function AuthProvider
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -181,6 +182,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
+// ⟦𓋐𓇏𓊳𓉔⟧ useAuth :: auto-generated pointer for public function useAuth
 export function useAuth() {
   const ctx = useContext(AuthContext);
   if (!ctx) throw new Error("useAuth must be used within AuthProvider");

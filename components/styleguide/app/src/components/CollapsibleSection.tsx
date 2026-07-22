@@ -30,6 +30,7 @@ interface Props {
   children: React.ReactNode;
 }
 
+// ⟦𓅡𓉏𓂓𓇵⟧ CollapsibleSection :: auto-generated pointer for public function CollapsibleSection
 export function CollapsibleSection({
   number,
   id,

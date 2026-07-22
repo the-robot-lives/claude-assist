@@ -53,6 +53,7 @@ const projects = [
   },
 ]
 
+// ⟦𓋜𓊈𓇘𓇳⟧ WithBadgesButtonAndActionsMenu06 :: auto-generated pointer for public function WithBadgesButtonAndActionsMenu06
 export function WithBadgesButtonAndActionsMenu06() {
   return (
     <ul role="list" className="divide-y divide-gray-100 dark:divide-white/5">

@@ -173,6 +173,7 @@ const footerNavigation = {
   ],
 }
 
+// ⟦𓊫𓊈𓆸𓁏⟧ WithInvoicePanels03 :: auto-generated pointer for public function WithInvoicePanels03
 export function WithInvoicePanels03() {
   return (
     <div className="bg-gray-50">

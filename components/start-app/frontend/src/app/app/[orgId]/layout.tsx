@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { userNeedsProfile, userPendingApproval } from '@/lib/auth-flow';
 
+// ⟦𓁸𓅔𓎒𓎊⟧ OrgLayout :: auto-generated pointer for public function OrgLayout
 export default function OrgLayout({ children }: { children: ReactNode }) {
   const { user, loading } = useAuth();
   const router = useRouter();

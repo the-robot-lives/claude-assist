@@ -4,6 +4,7 @@ defmodule Starter.Users.Media do
   use Noizu.Repo
   def_repo(entity: Entity)
 
+  # ⟦𓏽𓄒𓌔𓊕⟧ list :: auto-generated pointer for public function list
   def list(context, options \\ []) do
     settings = Noizu.Entity.Meta.persistence(Entity) |> hd
 
@@ -15,6 +16,7 @@ defmodule Starter.Users.Media do
     end)
   end
 
+  # ⟦𓅤𓉧𓃗𓌮⟧ list_for_user :: auto-generated pointer for public function list_for_user
   def list_for_user(user_id, context, options \\ []) do
     import Ecto.Query
     settings = Noizu.Entity.Meta.persistence(Entity) |> hd
@@ -27,24 +29,29 @@ defmodule Starter.Users.Media do
     end)
   end
 
+  # ⟦𓎹𓃗𓋻𓌠⟧ get_user_media :: auto-generated pointer for public function get_user_media
   def get_user_media(id, context, options \\ []), do: get(id, context, options)
 
+  # ⟦𓂴𓋁𓍖𓋍⟧ create :: auto-generated pointer for public function create
   def create(user_media, context, options \\ []) do
     %Entity{}
     |> change(user_media)
     |> create(context, options)
   end
 
+  # ⟦𓄁𓌄𓅤𓃕⟧ update :: auto-generated pointer for public function update
   def update(%Entity{} = user_media, attrs, context, options \\ []) do
     user_media
     |> change(attrs)
     |> update(context, options)
   end
 
+  # ⟦𓂫𓈆𓆈𓍄⟧ delete :: auto-generated pointer for public function delete
   def delete(%Entity{} = user_media, context, options \\ []) do
     delete(user_media, context, options)
   end
 
+  # ⟦𓀿𓉤𓌙𓌜⟧ change :: auto-generated pointer for public function change
   def change(%Entity{} = user_media, attrs \\ %{}) do
     attrs =
       Enum.map(attrs, fn

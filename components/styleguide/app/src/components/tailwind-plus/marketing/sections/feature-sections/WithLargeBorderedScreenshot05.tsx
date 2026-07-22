@@ -2,6 +2,7 @@
 // @ts-nocheck
 'use client'
 
+// ⟦𓊋𓅞𓂣𓂥⟧ WithLargeBorderedScreenshot05 :: auto-generated pointer for public function WithLargeBorderedScreenshot05
 export function WithLargeBorderedScreenshot05() {
   return (
     <div className="overflow-hidden bg-white py-24 sm:py-32 dark:bg-gray-900">

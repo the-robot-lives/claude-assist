@@ -12,6 +12,7 @@ defmodule Starter.Auth.SSO do
     linkedin: &Starter.Auth.Providers.linkedin/0
   }
 
+  # ⟦𓅷𓊹𓀡𓐓⟧ authenticate_sso :: auto-generated pointer for public function authenticate_sso
   def authenticate_sso(provider_type, %{email: email} = attrs) do
     context = Noizu.Context.system()
     email = email |> String.trim() |> String.downcase()

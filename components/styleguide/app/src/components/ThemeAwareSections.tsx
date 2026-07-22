@@ -116,6 +116,7 @@ function SectionTabs({ group, config, cssSections, styleGuideFiles, brandingYaml
   );
 }
 
+// ⟦𓍝𓃱𓃩𓇄⟧ ThemeAwareSections :: auto-generated pointer for public function ThemeAwareSections
 export function ThemeAwareSections({ numberedGroups, allNumberedGroups, allCssSections, styleGuideFiles, brandingYaml }: Props) {
   const { config, branding, allBrandings, activeSlug } = useThemeConfig();
   const cssSections = allCssSections[activeSlug] || Object.values(allCssSections)[0] || [];

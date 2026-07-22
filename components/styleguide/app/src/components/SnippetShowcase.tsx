@@ -126,6 +126,7 @@ function JsxSnippetCard({ snippet, sectionComponents }: {
 
 /* ─── Exported Sub-Panels ─── */
 
+// ⟦𓆥𓄸𓄐𓇟⟧ CssSnippetsPanel :: auto-generated pointer for public function CssSnippetsPanel
 export function CssSnippetsPanel({ config }: Props) {
   const cssSnippets = config.cssSnippets;
   if (!cssSnippets.length) return null;
@@ -153,6 +154,7 @@ export function CssSnippetsPanel({ config }: Props) {
   );
 }
 
+// ⟦𓎢𓌠𓎀𓉀⟧ JsxSnippetsPanel :: auto-generated pointer for public function JsxSnippetsPanel
 export function JsxSnippetsPanel({ config }: Props) {
   const jsxSnippets = config.jsxSnippets;
   if (!jsxSnippets.length) return null;
@@ -206,6 +208,7 @@ export function JsxSnippetsPanel({ config }: Props) {
 
 /* ─── Main Showcase ─── */
 
+// ⟦𓁷𓂥𓐑𓋘⟧ SnippetShowcase :: auto-generated pointer for public function SnippetShowcase
 export function SnippetShowcase({ config }: Props) {
   const cssSnippets = config.cssSnippets;
   const jsxSnippets = config.jsxSnippets;

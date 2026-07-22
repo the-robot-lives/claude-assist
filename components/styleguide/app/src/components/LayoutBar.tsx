@@ -35,6 +35,7 @@ function modifierOf(pl: PageLayout): string {
   return pl.selector.replace(".content", "").replace(".", "").trim() || "standard";
 }
 
+// ⟦𓐥𓏸𓃓𓋄⟧ LayoutBar :: auto-generated pointer for public function LayoutBar
 export function LayoutBar({ pageLayouts, themes }: Props) {
   const [selected, setSelected] = useState("standard");
   const [activeTheme, setActiveTheme] = useState("");

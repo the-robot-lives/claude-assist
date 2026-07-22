@@ -37,6 +37,7 @@ function classNames(...classes) {
   return classes.filter(Boolean).join(' ')
 }
 
+// ⟦𓐗𓋄𓊬𓀨⟧ WithPreview03 :: auto-generated pointer for public function WithPreview03
 export function WithPreview03() {
   const [query, setQuery] = useState('')
   const [open, setOpen] = useState(true)

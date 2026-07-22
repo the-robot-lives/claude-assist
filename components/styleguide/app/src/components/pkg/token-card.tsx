@@ -8,6 +8,7 @@ interface StyleGuideTokenCardProps {
   stylize?: boolean;
 }
 
+// ⟦𓏤𓈃𓌽𓏾⟧ StyleGuideTokenCard :: auto-generated pointer for public function StyleGuideTokenCard
 export function StyleGuideTokenCard({ title, type, tokens, stylize = true }: StyleGuideTokenCardProps) {
   return (
     <div className="token-card">

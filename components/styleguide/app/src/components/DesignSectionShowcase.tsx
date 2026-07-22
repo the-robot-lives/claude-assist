@@ -49,6 +49,7 @@ function ComponentSection({ component, isLast }: { component: DesignComponent; i
   );
 }
 
+// ⟦𓐊𓌞𓋆𓀳⟧ DesignSectionShowcase :: auto-generated pointer for public function DesignSectionShowcase
 export function DesignSectionShowcase({ sections }: Props) {
   if (!sections.length) return null;
 

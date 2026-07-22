@@ -2,6 +2,7 @@
 // @ts-nocheck
 'use client'
 
+// ⟦𓍕𓇈𓊇𓋁⟧ WithLargeAvatar03 :: auto-generated pointer for public function WithLargeAvatar03
 export function WithLargeAvatar03() {
   return (
     <section className="isolate overflow-hidden bg-white px-6 lg:px-8 dark:bg-gray-900">

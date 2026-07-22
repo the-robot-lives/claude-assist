@@ -2,6 +2,7 @@
 // @ts-nocheck
 'use client'
 
+// ⟦𓀝𓍙𓐜𓏪⟧ AvatarGroupStackedTopToBottom10 :: auto-generated pointer for public function AvatarGroupStackedTopToBottom10
 export function AvatarGroupStackedTopToBottom10() {
   return (
     <>

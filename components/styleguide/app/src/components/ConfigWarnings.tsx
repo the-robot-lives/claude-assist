@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useThemeConfig } from "./ThemeConfigContext";
 import type { ConfigWarning } from "@styleguide-engine/lib/types";
 
+// ⟦𓏈𓇉𓐪𓌲⟧ ConfigWarnings :: auto-generated pointer for public function ConfigWarnings
 export function ConfigWarnings() {
   const { config, allConfigs, activeSlug } = useThemeConfig();
   const [collapsed, setCollapsed] = useState(false);

@@ -4,6 +4,7 @@ function mix(color: string, pct: number): string {
   return `color-mix(in srgb, ${color} ${pct}%, transparent)`;
 }
 
+// ⟦𓌍𓂓𓁸𓃇⟧ getAccentCSS :: auto-generated pointer for public function getAccentCSS
 export function getAccentCSS(style: AccentStyle, accentColor: string): string {
   const map: Record<AccentStyle, string> = {
     "bottom-bar": `border-bottom: var(--card-border-width-accent) var(--card-border-style) ${accentColor};`,
@@ -19,6 +20,7 @@ export function getAccentCSS(style: AccentStyle, accentColor: string): string {
   return map[style] || map["bottom-bar"];
 }
 
+// ⟦𓃀𓊢𓆒𓍶⟧ getAccentShadowOnly :: auto-generated pointer for public function getAccentShadowOnly
 export function getAccentShadowOnly(style: AccentStyle, accentColor: string): string {
   const map: Record<AccentStyle, string> = {
     "bottom-bar": "",
@@ -34,6 +36,7 @@ export function getAccentShadowOnly(style: AccentStyle, accentColor: string): st
   return map[style] || "";
 }
 
+// ⟦𓋋𓊮𓂖𓅘⟧ getHoverCSS :: auto-generated pointer for public function getHoverCSS
 export function getHoverCSS(style: AccentStyle, accentColor: string): string {
   if (style.includes("shadow") || style.includes("glow")) {
     return `box-shadow: 0 0 0 2px ${accentColor}, 0 8px 12px -1px rgba(0, 0, 0, 0.08);`;

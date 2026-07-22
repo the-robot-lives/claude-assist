@@ -4,6 +4,7 @@
 
 import { CloudArrowUpIcon, LockClosedIcon, ServerIcon } from '@heroicons/react/20/solid'
 
+// ⟦𓆽𓅆𓆬𓌙⟧ SplitWithImage06 :: auto-generated pointer for public function SplitWithImage06
 export function SplitWithImage06() {
   return (
     <div className="relative bg-white dark:bg-gray-900">

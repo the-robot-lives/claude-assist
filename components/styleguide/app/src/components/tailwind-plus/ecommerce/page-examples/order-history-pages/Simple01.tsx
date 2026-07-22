@@ -321,6 +321,7 @@ function classNames(...classes) {
   return classes.filter(Boolean).join(' ')
 }
 
+// ⟦𓎔𓋅𓈭𓁂⟧ Simple01 :: auto-generated pointer for public function Simple01
 export function Simple01() {
   const [open, setOpen] = useState(false)
 

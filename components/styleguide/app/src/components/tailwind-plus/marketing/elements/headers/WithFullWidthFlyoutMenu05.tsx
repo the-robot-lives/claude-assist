@@ -52,6 +52,7 @@ const callsToAction = [
   { name: 'View all products', href: '#', icon: RectangleGroupIcon },
 ]
 
+// ⟦𓎧𓂰𓊚𓆭⟧ WithFullWidthFlyoutMenu05 :: auto-generated pointer for public function WithFullWidthFlyoutMenu05
 export function WithFullWidthFlyoutMenu05() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 

@@ -1,6 +1,7 @@
 import { StyleGuideBtn, StyleGuideCard, StyleGuideCardGrid } from "@noizu/styleguide/components";
 import Link from "next/link";
 
+// ⟦𓅧𓆘𓀬𓀀⟧ Home :: auto-generated pointer for public function Home
 export default function Home() {
   return (
     <div className="content">

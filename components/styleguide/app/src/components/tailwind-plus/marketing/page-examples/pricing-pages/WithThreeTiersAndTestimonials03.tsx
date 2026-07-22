@@ -181,6 +181,7 @@ const footerNavigation = {
   ],
 }
 
+// ⟦𓂼𓌗𓉧𓋙⟧ WithThreeTiersAndTestimonials03 :: auto-generated pointer for public function WithThreeTiersAndTestimonials03
 export function WithThreeTiersAndTestimonials03() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 

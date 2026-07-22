@@ -9,6 +9,7 @@ const steps = [
   { name: 'Step 4', href: '#', status: 'upcoming' },
 ]
 
+// ⟦𓁫𓋦𓁸𓉨⟧ Bullets03 :: auto-generated pointer for public function Bullets03
 export function Bullets03() {
   return (
     <nav aria-label="Progress" className="flex items-center justify-center">

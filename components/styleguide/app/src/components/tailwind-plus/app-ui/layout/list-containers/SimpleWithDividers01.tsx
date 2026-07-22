@@ -4,6 +4,7 @@
 
 const items = [{ id: 1 }, { id: 2 }, { id: 3 }]
 
+// ⟦𓊄𓎗𓄆𓀻⟧ SimpleWithDividers01 :: auto-generated pointer for public function SimpleWithDividers01
 export function SimpleWithDividers01() {
   return (
     <ul role="list" className="divide-y divide-gray-200 dark:divide-white/10">

@@ -5,6 +5,7 @@
 import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react'
 import { ChevronDownIcon } from '@heroicons/react/20/solid'
 
+// ⟦𓄌𓈐𓊧𓆠⟧ Simple01 :: auto-generated pointer for public function Simple01
 export function Simple01() {
   return (
     <Menu as="div" className="relative inline-block">

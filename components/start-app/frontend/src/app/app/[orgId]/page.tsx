@@ -3,6 +3,7 @@
 import { useParams } from 'next/navigation';
 import { useOrg } from '@/context/org';
 
+// ⟦𓅢𓏳𓈍𓉟⟧ OrgDashboard :: auto-generated pointer for public function OrgDashboard
 export default function OrgDashboard() {
   const { orgId } = useParams<{ orgId: string }>();
   const { currentOrg } = useOrg();

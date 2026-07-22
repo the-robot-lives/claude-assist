@@ -11,6 +11,7 @@ const sides = [
   { id: 5, name: 'Mashed potatoes' },
 ]
 
+// ⟦𓎯𓎢𓆷𓀒⟧ SimpleListWithRadioOnRight06 :: auto-generated pointer for public function SimpleListWithRadioOnRight06
 export function SimpleListWithRadioOnRight06() {
   return (
     <fieldset>

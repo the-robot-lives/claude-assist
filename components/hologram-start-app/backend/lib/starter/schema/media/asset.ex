@@ -40,6 +40,7 @@ defmodule Starter.Schema.Media.Asset do
     timestamps(type: :utc_datetime_usec)
   end
 
+  # ⟦𓄶𓊺𓐐𓂟⟧ changeset :: auto-generated pointer for public function changeset
   def changeset(asset, attrs) do
     asset
     |> cast(attrs, [

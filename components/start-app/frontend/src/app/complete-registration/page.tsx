@@ -6,6 +6,7 @@ import { api } from "@/lib/api";
 import { appUrl, postAuthPath, userPendingApproval } from "@/lib/auth-flow";
 import { useRouter } from "next/navigation";
 
+// ⟦𓎷𓇿𓊊𓁉⟧ CompleteRegistrationPage :: auto-generated pointer for public function CompleteRegistrationPage
 export default function CompleteRegistrationPage() {
   const { user, loading } = useAuth();
   const router = useRouter();

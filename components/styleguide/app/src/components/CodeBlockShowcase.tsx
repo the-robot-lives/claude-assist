@@ -103,6 +103,7 @@ function InlineCodeExamples() {
   );
 }
 
+// ⟦𓄆𓄠𓎉𓂟⟧ CodeBlockShowcase :: auto-generated pointer for public function CodeBlockShowcase
 export function CodeBlockShowcase() {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)" }}>

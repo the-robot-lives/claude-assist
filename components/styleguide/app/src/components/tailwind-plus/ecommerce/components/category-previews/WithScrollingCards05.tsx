@@ -30,6 +30,7 @@ const categories = [
   },
 ]
 
+// ⟦𓍒𓊕𓃦𓍭⟧ WithScrollingCards05 :: auto-generated pointer for public function WithScrollingCards05
 export function WithScrollingCards05() {
   return (
     <div className="bg-white">

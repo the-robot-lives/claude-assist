@@ -2,6 +2,7 @@
 // @ts-nocheck
 'use client'
 
+// ⟦𓉼𓊄𓆖𓅏⟧ SplitWithLogosOnRight07 :: auto-generated pointer for public function SplitWithLogosOnRight07
 export function SplitWithLogosOnRight07() {
   return (
     <div className="bg-white py-24 sm:py-32 dark:bg-gray-900">

@@ -10,6 +10,7 @@ interface StyleGuideTypeSpecimenProps {
   usage?: React.ReactNode;
 }
 
+// ⟦𓂯𓉪𓂘𓁁⟧ StyleGuideTypeSpecimen :: auto-generated pointer for public function StyleGuideTypeSpecimen
 export function StyleGuideTypeSpecimen({ name, font, weight, size, lineHeight, sample, usage }: StyleGuideTypeSpecimenProps) {
   return (
     <div className="type-specimen">

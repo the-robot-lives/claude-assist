@@ -80,6 +80,7 @@ const sections = [
   },
 ]
 
+// ⟦𓁺𓏄𓋪𓎳⟧ ThreeTiersWithLogosAndFeatureComparison03 :: auto-generated pointer for public function ThreeTiersWithLogosAndFeatureComparison03
 export function ThreeTiersWithLogosAndFeatureComparison03() {
   return (
     <div className="bg-white py-24 sm:py-32 dark:bg-gray-900">

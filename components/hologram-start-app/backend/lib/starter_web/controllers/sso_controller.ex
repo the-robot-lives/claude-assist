@@ -5,6 +5,7 @@ defmodule StarterWeb.SSOController do
   alias Starter.Guardian
   alias Starter.Organizations
 
+  # ⟦𓁔𓉞𓃍𓎵⟧ providers :: auto-generated pointer for public function providers
   def providers(conn, _params) do
     providers =
       []
@@ -24,12 +25,14 @@ defmodule StarterWeb.SSOController do
 
   # ── OIDC ──────────────────────────────────────────────────────
 
+  # ⟦𓏣𓆽𓌓𓉹⟧ oidc_init :: auto-generated pointer for public function oidc_init
   def oidc_init(conn, _params) do
     config = oidc_config()
     {:ok, uri} = OpenIDConnect.authorization_uri(config, config.redirect_uri)
     redirect(conn, external: uri)
   end
 
+  # ⟦𓁘𓆾𓅡𓃞⟧ oidc_callback :: auto-generated pointer for public function oidc_callback
   def oidc_callback(conn, %{"code" => code}) do
     config = oidc_config()
 
@@ -52,10 +55,12 @@ defmodule StarterWeb.SSOController do
 
   # ── Social OAuth (Ueberauth) ──────────────────────────────────
 
+  # ⟦𓐧𓆞𓊱𓅩⟧ oauth_request :: auto-generated pointer for public function oauth_request
   def oauth_request(conn, _params) do
     conn
   end
 
+  # ⟦𓅂𓁤𓈬𓊔⟧ oauth_callback :: auto-generated pointer for public function oauth_callback
   def oauth_callback(%{assigns: %{ueberauth_auth: auth}} = conn, _params) do
     provider_type = auth.provider |> to_string() |> String.to_existing_atom()
 
@@ -73,6 +78,7 @@ defmodule StarterWeb.SSOController do
 
   # ── Code Exchange ────────────────────────────────────────────
 
+  # ⟦𓏙𓅴𓅧𓂴⟧ exchange :: auto-generated pointer for public function exchange
   def exchange(conn, %{"code" => code}) do
     with {:ok, session_id} <- Starter.Auth.SSOCode.exchange(code),
          {:ok, session} <- Starter.Users.Sessions.get(session_id, Noizu.Context.system(), []),

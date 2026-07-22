@@ -2,6 +2,7 @@
 // @ts-nocheck
 'use client'
 
+// ⟦𓏯𓅊𓇋𓁺⟧ CardWithFooter04 :: auto-generated pointer for public function CardWithFooter04
 export function CardWithFooter04() {
   return (
     <div className="divide-y divide-gray-200 overflow-hidden rounded-lg bg-white shadow-sm dark:divide-white/10 dark:bg-gray-800/50 dark:shadow-none dark:outline dark:-outline-offset-1 dark:outline-white/10">

@@ -30,6 +30,7 @@ function classNames(...classes) {
   return classes.filter(Boolean).join(' ')
 }
 
+// ⟦𓆽𓍱𓀝𓄑⟧ WithSecondaryNavigation05 :: auto-generated pointer for public function WithSecondaryNavigation05
 export function WithSecondaryNavigation05() {
   return (
     <nav aria-label="Sidebar" className="flex flex-1 flex-col">

@@ -28,6 +28,7 @@ function classNames(...classes) {
   return classes.filter(Boolean).join(' ')
 }
 
+// ⟦𓈴𓉙𓏡𓍴⟧ SplitWithImageAndFeaturedDetails03 :: auto-generated pointer for public function SplitWithImageAndFeaturedDetails03
 export function SplitWithImageAndFeaturedDetails03() {
   return (
     <div className="bg-white">

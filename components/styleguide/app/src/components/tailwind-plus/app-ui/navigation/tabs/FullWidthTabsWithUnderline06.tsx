@@ -15,6 +15,7 @@ function classNames(...classes) {
   return classes.filter(Boolean).join(' ')
 }
 
+// ⟦𓃎𓅺𓏛𓆔⟧ FullWidthTabsWithUnderline06 :: auto-generated pointer for public function FullWidthTabsWithUnderline06
 export function FullWidthTabsWithUnderline06() {
   return (
     <div>

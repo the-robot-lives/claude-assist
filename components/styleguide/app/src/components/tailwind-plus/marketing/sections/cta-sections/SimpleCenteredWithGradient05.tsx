@@ -2,6 +2,7 @@
 // @ts-nocheck
 'use client'
 
+// ⟦𓍼𓄙𓎑𓂞⟧ SimpleCenteredWithGradient05 :: auto-generated pointer for public function SimpleCenteredWithGradient05
 export function SimpleCenteredWithGradient05() {
   return (
     <div className="relative isolate overflow-hidden bg-white dark:bg-gray-900">

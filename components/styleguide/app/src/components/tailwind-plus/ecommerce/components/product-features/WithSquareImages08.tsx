@@ -29,6 +29,7 @@ const features = [
   },
 ]
 
+// ⟦𓁉𓍿𓋢𓄯⟧ WithSquareImages08 :: auto-generated pointer for public function WithSquareImages08
 export function WithSquareImages08() {
   return (
     <div className="bg-white">

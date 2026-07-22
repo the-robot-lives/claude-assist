@@ -75,6 +75,7 @@ function colorVariants(name: string, varRef: string, textOnColor: string, darkTe
   return rules.join("\n");
 }
 
+// ⟦𓊱𓇩𓋗𓅚⟧ generateUtilityCSS :: auto-generated pointer for public function generateUtilityCSS
 export function generateUtilityCSS(config: StyleGuideConfig): string {
   const textUtils = (config.semanticClasses || [])
     .filter((sc) => sc.name && sc.class && sc.vars)

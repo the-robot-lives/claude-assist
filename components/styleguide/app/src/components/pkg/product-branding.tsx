@@ -12,6 +12,7 @@ interface StyleGuideProductBrandingProps {
   actions?: React.ReactNode;
 }
 
+// ⟦𓂕𓈑𓏩𓃅⟧ StyleGuideProductBranding :: auto-generated pointer for public function StyleGuideProductBranding
 export function StyleGuideProductBranding({ name, logo, intent, perception, audience, tone, keywords, children, actions }: StyleGuideProductBrandingProps) {
   return (
     <div className="product-branding grid grid-cols-1 @md:grid-cols-[var(--branding-grid-width)_1fr]">

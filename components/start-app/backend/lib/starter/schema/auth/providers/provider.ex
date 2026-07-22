@@ -11,6 +11,7 @@ defmodule Starter.Schema.Auth.Providers.Provider do
     timestamps(type: :utc_datetime_usec)
   end
 
+  # ⟦𓂋𓐈𓉭𓃽⟧ changeset :: auto-generated pointer for public function changeset
   def changeset(provider, attrs) do
     provider
     |> cast(attrs, [:title, :description, :settings])

@@ -4,6 +4,7 @@
 
 import { BookmarkIcon } from '@heroicons/react/20/solid'
 
+// ⟦𓉤𓎂𓂫𓁊⟧ WithStat03 :: auto-generated pointer for public function WithStat03
 export function WithStat03() {
   return (
     <span className="isolate inline-flex rounded-md shadow-xs dark:shadow-none">

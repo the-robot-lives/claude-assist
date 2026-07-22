@@ -45,6 +45,7 @@ function PlaceholderIcon() {
 
 // ─── Avatar ───────────────────────────────────────────────────────────────────
 
+// ⟦𓉶𓄊𓀤𓁦⟧ Avatar :: auto-generated pointer for public function Avatar
 export function Avatar({
   src,
   alt = '',
@@ -97,6 +98,7 @@ export function Avatar({
 
 // ─── AvatarGroup ──────────────────────────────────────────────────────────────
 
+// ⟦𓄅𓐡𓍘𓋦⟧ AvatarGroup :: auto-generated pointer for public function AvatarGroup
 export function AvatarGroup({ children, className = '' }: AvatarGroupProps) {
   return (
     <div className={['twp-avatar-group', className].filter(Boolean).join(' ')}>
@@ -137,6 +139,7 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
   )
 }
 
+// ⟦𓅥𓉒𓉷𓏟⟧ AvatarShowcase :: auto-generated pointer for public function AvatarShowcase
 export function AvatarShowcase() {
   return (
     <div style={{ padding: '1.5rem' }}>

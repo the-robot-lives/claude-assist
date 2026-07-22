@@ -19,6 +19,7 @@ function classNames(...classes) {
   return classes.filter(Boolean).join(' ')
 }
 
+// ⟦𓀓𓌸𓍧𓍒⟧ WithCheckboxes17 :: auto-generated pointer for public function WithCheckboxes17
 export function WithCheckboxes17() {
   const checkbox = useRef()
   const [checked, setChecked] = useState(false)

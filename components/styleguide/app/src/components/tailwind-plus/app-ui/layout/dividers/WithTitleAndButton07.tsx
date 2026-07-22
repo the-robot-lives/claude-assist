@@ -4,6 +4,7 @@
 
 import { PlusIcon } from '@heroicons/react/20/solid'
 
+// ⟦𓌣𓆬𓎴𓇓⟧ WithTitleAndButton07 :: auto-generated pointer for public function WithTitleAndButton07
 export function WithTitleAndButton07() {
   return (
     <div className="relative flex items-center justify-between">

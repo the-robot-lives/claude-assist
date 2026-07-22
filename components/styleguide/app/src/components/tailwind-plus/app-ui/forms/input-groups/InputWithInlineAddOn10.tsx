@@ -2,6 +2,7 @@
 // @ts-nocheck
 'use client'
 
+// ⟦𓃫𓀚𓀩𓄖⟧ InputWithInlineAddOn10 :: auto-generated pointer for public function InputWithInlineAddOn10
 export function InputWithInlineAddOn10() {
   return (
     <div>

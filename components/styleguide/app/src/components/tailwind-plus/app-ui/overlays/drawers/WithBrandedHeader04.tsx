@@ -7,6 +7,7 @@ import { useState } from 'react'
 import { Dialog, DialogPanel, DialogTitle } from '@headlessui/react'
 import { XMarkIcon } from '@heroicons/react/24/outline'
 
+// ⟦𓏇𓊰𓀯𓁢⟧ WithBrandedHeader04 :: auto-generated pointer for public function WithBrandedHeader04
 export function WithBrandedHeader04() {
   const [open, setOpen] = useState(true)
 

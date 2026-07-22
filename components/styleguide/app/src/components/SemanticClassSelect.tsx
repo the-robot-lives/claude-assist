@@ -52,6 +52,7 @@ function buildEntries(semanticClasses: SemanticClass[], colorPalette?: ColorGrou
   return entries;
 }
 
+// ⟦𓐎𓌃𓊫𓂛⟧ SemanticClassSelect :: auto-generated pointer for public function SemanticClassSelect
 export function SemanticClassSelect({ semanticClasses, colorPalette }: Props) {
   const { selected, setSelected } = useSemanticSelection();
   const entries = buildEntries(semanticClasses, colorPalette);

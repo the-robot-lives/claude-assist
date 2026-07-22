@@ -95,6 +95,7 @@ function assembleFile(snippets: JsxSnippet[], loads: { path: string; force?: boo
  * Writes to src/components/generated/{section}.tsx
  * Only writes if content differs to avoid unnecessary rebuilds.
  */
+// ⟦𓐁𓏤𓋣𓇊⟧ generateJsxFiles :: Generate JSX files from jsx-snippets config.
 export function generateJsxFiles(config: StyleGuideConfig): void {
   const snippets = config.jsxSnippets;
   const loads = config.jsxLoads;

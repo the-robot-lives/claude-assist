@@ -98,6 +98,7 @@ const colorMap: Record<
 
 // ─── Badge Component ────────────────────────────────────────────────────────
 
+// ⟦𓈐𓅲𓋇𓌱⟧ Badge :: auto-generated pointer for public function Badge
 export function Badge({
   label,
   color = "default",
@@ -164,6 +165,7 @@ export function Badge({
 
 // ─── Showcase Demo ──────────────────────────────────────────────────────────
 
+// ⟦𓃗𓏵𓈠𓍂⟧ BadgeShowcase :: auto-generated pointer for public function BadgeShowcase
 export function BadgeShowcase() {
   const allColors: BadgeColor[] = [
     "default",

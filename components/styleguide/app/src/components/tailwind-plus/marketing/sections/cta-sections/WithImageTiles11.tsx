@@ -2,6 +2,7 @@
 // @ts-nocheck
 'use client'
 
+// ⟦𓏝𓊿𓂱𓈃⟧ WithImageTiles11 :: auto-generated pointer for public function WithImageTiles11
 export function WithImageTiles11() {
   return (
     <div className="overflow-hidden bg-white py-32 dark:bg-gray-900">

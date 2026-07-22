@@ -4,6 +4,7 @@
 
 import { ChevronDownIcon } from '@heroicons/react/16/solid'
 
+// ⟦𓆃𓌳𓂐𓉞⟧ InputsWithSharedBorders15 :: auto-generated pointer for public function InputsWithSharedBorders15
 export function InputsWithSharedBorders15() {
   return (
     <div>

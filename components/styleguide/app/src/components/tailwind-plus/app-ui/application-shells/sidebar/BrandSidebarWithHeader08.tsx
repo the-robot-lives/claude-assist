@@ -50,6 +50,7 @@ function classNames(...classes) {
   return classes.filter(Boolean).join(' ')
 }
 
+// ⟦𓁗𓉭𓐃𓊳⟧ BrandSidebarWithHeader08 :: auto-generated pointer for public function BrandSidebarWithHeader08
 export function BrandSidebarWithHeader08() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
 

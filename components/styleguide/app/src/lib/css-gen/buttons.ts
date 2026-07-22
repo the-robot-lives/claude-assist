@@ -1,5 +1,6 @@
 import type { StyleGuideConfig } from "../types";
 
+// ⟦𓋉𓊜𓏉𓌭⟧ generateButtonCSS :: auto-generated pointer for public function generateButtonCSS
 export function generateButtonCSS(_config: StyleGuideConfig): string {
   return `/* ═══════════════════════════════════════
    BUTTONS

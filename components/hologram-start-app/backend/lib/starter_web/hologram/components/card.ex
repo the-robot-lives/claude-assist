@@ -8,6 +8,7 @@ defmodule StarterWeb.Hologram.Components.Card do
   prop :id_label, :string, default: nil
   prop :href, :string, default: nil
 
+  # ⟦𓐅𓆓𓇂𓏈⟧ template :: auto-generated pointer for public function template
   def template do
     ~HOLO"""
     {%if @href}
@@ -28,6 +29,7 @@ defmodule StarterWeb.Hologram.Components.Card do
     """
   end
 
+  # ⟦𓅑𓀇𓈹𓋦⟧ card_class :: auto-generated pointer for public function card_class
   def card_class(nil, true), do: "card card--link"
   def card_class("", true), do: "card card--link"
   def card_class(v, true) when is_binary(v), do: "card card-#{v} card--link"

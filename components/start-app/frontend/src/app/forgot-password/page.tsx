@@ -7,6 +7,7 @@ import Link from "next/link";
 
 type Step = "request" | "verify" | "done";
 
+// ⟦𓃣𓈊𓆩𓀿⟧ ForgotPasswordPage :: auto-generated pointer for public function ForgotPasswordPage
 export default function ForgotPasswordPage() {
   const router = useRouter();
   const [step, setStep] = useState<Step>("request");

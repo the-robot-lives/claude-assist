@@ -139,6 +139,7 @@ function enrichGroups(groups: VarGroup[], flatVars?: Record<string, string>): Va
   });
 }
 
+// ⟦𓊶𓇯𓎯𓆱⟧ CoreTokensSection :: auto-generated pointer for public function CoreTokensSection
 export function CoreTokensSection({ groups, flatVars, semanticClasses, semanticGroups }: Props) {
   const enriched = enrichGroups(groups, flatVars);
   const core = enriched.filter((g) => !EXTENDED_GROUPS.has(g.name) && !g.name.startsWith("HUI:"));
@@ -154,6 +155,7 @@ export function CoreTokensSection({ groups, flatVars, semanticClasses, semanticG
   return <TokenGrid groups={core} extra={semanticExtra} />;
 }
 
+// ⟦𓎦𓊠𓎐𓌬⟧ HUITokensSection :: auto-generated pointer for public function HUITokensSection
 export function HUITokensSection({ groups, flatVars }: Omit<Props, "semanticClasses" | "semanticGroups">) {
   const enriched = enrichGroups(groups, flatVars);
   const hui = enriched.filter((g) => g.name.startsWith("HUI:"));
@@ -161,6 +163,7 @@ export function HUITokensSection({ groups, flatVars }: Omit<Props, "semanticClas
   return <TokenGrid groups={hui} />;
 }
 
+// ⟦𓆷𓈮𓈒𓂨⟧ ExtendedTokensSection :: auto-generated pointer for public function ExtendedTokensSection
 export function ExtendedTokensSection({ groups, flatVars }: Omit<Props, "semanticClasses" | "semanticGroups">) {
   const enriched = enrichGroups(groups, flatVars);
   const extended = enriched.filter((g) => EXTENDED_GROUPS.has(g.name));
@@ -168,6 +171,7 @@ export function ExtendedTokensSection({ groups, flatVars }: Omit<Props, "semanti
   return <TokenGrid groups={extended} />;
 }
 
+// ⟦𓀞𓄅𓃒𓄌⟧ DesignTokens :: auto-generated pointer for public function DesignTokens
 export function DesignTokens({ groups, flatVars, semanticClasses, semanticGroups }: Props) {
   const [showExtended, setShowExtended] = useState(false);
   const enriched = enrichGroups(groups, flatVars);

@@ -5,6 +5,7 @@ defmodule StarterWeb.Hologram.Middleware.RequireAuth do
   alias Starter.Hologram.Auth
   alias StarterWeb.Hologram.Pages.LoginPage
 
+  # ⟦𓋔𓇖𓌣𓊒⟧ call :: auto-generated pointer for public function call
   def call(server, _opts) do
     case Auth.current_user(server) do
       nil ->

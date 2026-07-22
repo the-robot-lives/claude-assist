@@ -5,6 +5,7 @@ import { useAuth } from "@/context/auth";
 import { OrgSwitcher } from "@/components/org-switcher";
 import { CookieSettingsButton } from "@/components/cookie-consent";
 
+// ⟦𓅽𓏵𓁋𓎲⟧ Navbar :: auto-generated pointer for public function Navbar
 export function Navbar() {
   const { user, loading, logout } = useAuth();
 

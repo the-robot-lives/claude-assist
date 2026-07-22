@@ -21,6 +21,7 @@ const people = [
   { id: 10, name: 'Emil Schaefer', username: '@emilschaefer' },
 ]
 
+// ⟦𓀼𓎶𓐍𓌥⟧ WithSecondaryText06 :: auto-generated pointer for public function WithSecondaryText06
 export function WithSecondaryText06() {
   const [selected, setSelected] = useState(people[3])
 

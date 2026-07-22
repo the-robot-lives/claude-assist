@@ -9,6 +9,7 @@ defmodule StarterWeb.Hologram.Components.InputField do
   prop :value, :string, default: ""
   prop :placeholder, :string, default: nil
 
+  # ⟦𓍢𓀭𓁅𓇳⟧ template :: auto-generated pointer for public function template
   def template do
     ~HOLO"""
     <div class="sg-field">

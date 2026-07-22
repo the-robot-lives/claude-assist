@@ -9,6 +9,7 @@ import { CodeBlockShowcase } from "@styleguide-engine/components/CodeBlockShowca
 import { TerminalShowcase } from "@styleguide-engine/components/TerminalShowcase";
 import type { SectionProps } from "./section-props";
 
+// ⟦𓆵𓃎𓐋𓋕⟧ TypographySection :: auto-generated pointer for public function TypographySection
 export function TypographySection({ number, id, title, desc, config }: SectionProps) {
   if (!config.typography?.length) return null;
   const tabs = [
@@ -24,6 +25,7 @@ export function TypographySection({ number, id, title, desc, config }: SectionPr
   );
 }
 
+// ⟦𓄍𓈇𓐈𓐮⟧ ColorSection :: auto-generated pointer for public function ColorSection
 export function ColorSection({ number, id, title, desc, config }: SectionProps) {
   if (!config.colorPalette?.length) return null;
   const hasSemantics = !!(config.semanticClasses?.length);
@@ -45,6 +47,7 @@ export function ColorSection({ number, id, title, desc, config }: SectionProps) 
   );
 }
 
+// ⟦𓌙𓐯𓈶𓌬⟧ SpacingSection :: auto-generated pointer for public function SpacingSection
 export function SpacingSection({ number, id, title, desc, config }: SectionProps) {
   if (!config.spacingContexts) return null;
   const columns = config.spacingContexts?.grid.columns ?? 12;
@@ -60,6 +63,7 @@ export function SpacingSection({ number, id, title, desc, config }: SectionProps
   );
 }
 
+// ⟦𓁞𓐜𓐩𓆤⟧ DividersSection :: auto-generated pointer for public function DividersSection
 export function DividersSection({ number, id, title, desc }: SectionProps) {
   return (
     <CollapsibleSection number={number} id={id} title={title} desc={desc} defaultOpen={true}>
@@ -68,6 +72,7 @@ export function DividersSection({ number, id, title, desc }: SectionProps) {
   );
 }
 
+// ⟦𓁬𓄓𓅭𓆫⟧ GlyphsSection :: auto-generated pointer for public function GlyphsSection
 export function GlyphsSection({ number, id, title, desc, config }: SectionProps) {
   if (!config.glyphLanguage) return null;
   return (
@@ -77,6 +82,7 @@ export function GlyphsSection({ number, id, title, desc, config }: SectionProps)
   );
 }
 
+// ⟦𓐘𓂪𓂹𓍭⟧ CodeBlocksSection :: auto-generated pointer for public function CodeBlocksSection
 export function CodeBlocksSection({ number, id, title, desc }: SectionProps) {
   return (
     <CollapsibleSection number={number} id={id} title={title} desc={desc} defaultOpen={true}>
@@ -85,6 +91,7 @@ export function CodeBlocksSection({ number, id, title, desc }: SectionProps) {
   );
 }
 
+// ⟦𓁦𓋆𓅰𓍁⟧ TerminalSection :: auto-generated pointer for public function TerminalSection
 export function TerminalSection({ number, id, title, desc }: SectionProps) {
   return (
     <CollapsibleSection number={number} id={id} title={title} desc={desc} defaultOpen={true}>

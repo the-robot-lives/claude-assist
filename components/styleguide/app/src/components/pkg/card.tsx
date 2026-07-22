@@ -15,6 +15,7 @@ interface StyleGuideCardProps {
   children?: React.ReactNode;
 }
 
+// ⟦𓇊𓈿𓏿𓋭⟧ StyleGuideCard :: auto-generated pointer for public function StyleGuideCard
 export function StyleGuideCard({ variant, title, body, tags, id, children }: StyleGuideCardProps) {
   const cls = ['card', variant && `card-${variant}`].filter(Boolean).join(' ');
   return (

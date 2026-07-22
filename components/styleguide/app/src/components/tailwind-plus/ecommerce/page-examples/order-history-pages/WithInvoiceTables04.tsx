@@ -179,6 +179,7 @@ const footerNavigation = {
   ],
 }
 
+// ⟦𓅣𓄥𓉠𓋶⟧ WithInvoiceTables04 :: auto-generated pointer for public function WithInvoiceTables04
 export function WithInvoiceTables04() {
   const [open, setOpen] = useState(false)
 

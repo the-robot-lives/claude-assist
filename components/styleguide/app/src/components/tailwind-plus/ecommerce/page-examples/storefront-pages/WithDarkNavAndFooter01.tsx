@@ -174,6 +174,7 @@ const footerNavigation = {
   ],
 }
 
+// ⟦𓎒𓃅𓄵𓎗⟧ WithDarkNavAndFooter01 :: auto-generated pointer for public function WithDarkNavAndFooter01
 export function WithDarkNavAndFooter01() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 

@@ -2,6 +2,7 @@
 // @ts-nocheck
 'use client'
 
+// ⟦𓋞𓂁𓂧𓅇⟧ SimpleWithHeading01 :: auto-generated pointer for public function SimpleWithHeading01
 export function SimpleWithHeading01() {
   return (
     <div className="bg-white py-24 sm:py-32 dark:bg-gray-900">

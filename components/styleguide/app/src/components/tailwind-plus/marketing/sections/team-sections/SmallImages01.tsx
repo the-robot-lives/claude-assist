@@ -41,6 +41,7 @@ const people = [
   },
 ]
 
+// ⟦𓊂𓅫𓏓𓀏⟧ SmallImages01 :: auto-generated pointer for public function SmallImages01
 export function SmallImages01() {
   return (
     <div className="bg-white py-24 sm:py-32 dark:bg-gray-900">

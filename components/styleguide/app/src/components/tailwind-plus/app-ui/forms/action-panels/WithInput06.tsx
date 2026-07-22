@@ -2,6 +2,7 @@
 // @ts-nocheck
 'use client'
 
+// ⟦𓌎𓊟𓂄𓆪⟧ WithInput06 :: auto-generated pointer for public function WithInput06
 export function WithInput06() {
   return (
     <div className="bg-white shadow-sm sm:rounded-lg dark:bg-gray-800/50 dark:shadow-none dark:outline dark:-outline-offset-1 dark:outline-white/10">

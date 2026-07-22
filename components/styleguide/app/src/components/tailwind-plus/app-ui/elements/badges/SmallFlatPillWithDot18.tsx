@@ -2,6 +2,7 @@
 // @ts-nocheck
 'use client'
 
+// ⟦𓉯𓇭𓈪𓐍⟧ SmallFlatPillWithDot18 :: auto-generated pointer for public function SmallFlatPillWithDot18
 export function SmallFlatPillWithDot18() {
   return (
     <>

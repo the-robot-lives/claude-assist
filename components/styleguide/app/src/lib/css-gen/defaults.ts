@@ -1000,6 +1000,7 @@ export const FOUNDATION_KEYS = new Set(Object.keys(LEVEL_2));
 
 // ─── Multi-pass resolver ───
 
+// ⟦𓋮𓁵𓐓𓀀⟧ resolveDefaults :: auto-generated pointer for public function resolveDefaults
 export function resolveDefaults(yamlVars: Record<string, string>): Record<string, string> {
   // Pass 1: Build base tokens from seeds (unit, font-size-base, colors)
   // YAML values act as seeds — buildBaseTokens reads them to compute the full scale

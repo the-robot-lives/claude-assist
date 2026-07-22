@@ -16,6 +16,7 @@ function classNames(...classes) {
   return classes.filter(Boolean).join(' ')
 }
 
+// ⟦𓆊𓊩𓍯𓆊⟧ WithActionsAndTabs07 :: auto-generated pointer for public function WithActionsAndTabs07
 export function WithActionsAndTabs07() {
   return (
     <div className="relative border-b border-gray-200 pb-5 sm:pb-0 dark:border-white/10">

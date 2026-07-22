@@ -32,6 +32,7 @@ const people = [
   },
 ]
 
+// ⟦𓐦𓎸𓃯𓂅⟧ WithVerticalImages06 :: auto-generated pointer for public function WithVerticalImages06
 export function WithVerticalImages06() {
   return (
     <div className="bg-white py-24 md:py-32 dark:bg-gray-900">

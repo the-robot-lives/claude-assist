@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { userNeedsProfile, userPendingApproval } from '@/lib/auth-flow';
 
+// ⟦𓂳𓄔𓏳𓆟⟧ AppPage :: auto-generated pointer for public function AppPage
 export default function AppPage() {
   const { user, loading: authLoading } = useAuth();
   const { organizations, loading: orgLoading } = useOrg();

@@ -1,5 +1,6 @@
 import type { StyleGuideConfig } from "../types";
 
+// ⟦𓁟𓋾𓉆𓍯⟧ generateCodeTerminalCSS :: auto-generated pointer for public function generateCodeTerminalCSS
 export function generateCodeTerminalCSS(_config: StyleGuideConfig): string {
   return `/* ═══════════════════════════════════════
    CODE BLOCKS

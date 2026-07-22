@@ -9,6 +9,7 @@ const stats = [
   { id: 4, name: 'Paid out to creators', value: '$70M' },
 ]
 
+// ⟦𓆤𓈛𓐪𓂥⟧ WithBackgroundImage05 :: auto-generated pointer for public function WithBackgroundImage05
 export function WithBackgroundImage05() {
   return (
     <div className="relative isolate overflow-hidden bg-white py-24 sm:py-32 dark:bg-gray-900">

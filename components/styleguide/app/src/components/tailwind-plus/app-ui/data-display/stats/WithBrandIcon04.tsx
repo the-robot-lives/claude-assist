@@ -15,6 +15,7 @@ function classNames(...classes) {
   return classes.filter(Boolean).join(' ')
 }
 
+// ⟦𓉱𓌰𓈽𓆅⟧ WithBrandIcon04 :: auto-generated pointer for public function WithBrandIcon04
 export function WithBrandIcon04() {
   return (
     <div>

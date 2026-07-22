@@ -8,6 +8,7 @@ defmodule StarterWeb.Hologram.Components.CookieConsent do
 
   prop :visible, :boolean, default: false
 
+  # ⟦𓍰𓇽𓁷𓎧⟧ template :: auto-generated pointer for public function template
   def template do
     ~HOLO"""
     {%if @visible}

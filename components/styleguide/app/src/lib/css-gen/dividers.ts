@@ -1,5 +1,6 @@
 import type { StyleGuideConfig } from "../types";
 
+// ⟦𓆰𓄤𓏂𓅙⟧ generateDividerCSS :: auto-generated pointer for public function generateDividerCSS
 export function generateDividerCSS(_config: StyleGuideConfig): string {
   return `/* ═══════════════════════════════════════
    DIVIDERS & RULES

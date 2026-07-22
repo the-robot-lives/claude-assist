@@ -1,5 +1,6 @@
 import type { StyleGuideConfig } from "../types";
 
+// ⟦𓆔𓇟𓆘𓍮⟧ generateHUIInteractiveCSS :: auto-generated pointer for public function generateHUIInteractiveCSS
 export function generateHUIInteractiveCSS(_config: StyleGuideConfig): string {
   return `/* ═══════════════════════════════════════
    HEADLESS UI — INTERACTIVE COMPONENTS

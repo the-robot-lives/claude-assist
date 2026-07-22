@@ -14,6 +14,7 @@ defmodule StarterWeb.Hologram.Pages.AdminUsersPage do
   layout MainLayout, page_title: "Admin · Users"
   middleware RequireAdmin
 
+  # ⟦𓍉𓃋𓋦𓏰⟧ init :: auto-generated pointer for public function init
   def init(_params, component, server) do
     {user, organizations} = Auth.current_user_and_orgs(server)
     {users, total} = list_users(1)
@@ -31,6 +32,7 @@ defmodule StarterWeb.Hologram.Pages.AdminUsersPage do
     )
   end
 
+  # ⟦𓁋𓏍𓂏𓐮⟧ template :: auto-generated pointer for public function template
   def template do
     ~HOLO"""
     <AppShell user={@user} organizations={@organizations} active="admin_users" title="Admin · Users">
@@ -98,6 +100,7 @@ defmodule StarterWeb.Hologram.Pages.AdminUsersPage do
     """
   end
 
+  # ⟦𓃀𓏲𓌈𓂞⟧ action :: auto-generated pointer for public function action
   def action(:prev_page, _params, component) do
     page = max(component.state.page - 1, 1)
     load_page(component, page)
@@ -138,6 +141,7 @@ defmodule StarterWeb.Hologram.Pages.AdminUsersPage do
     )
   end
 
+  # ⟦𓌡𓍐𓄕𓉁⟧ command :: auto-generated pointer for public function command
   def command(:approve_user, params, server) do
     case Starter.Repo.get(UserSchema, params.user_id) do
       nil ->

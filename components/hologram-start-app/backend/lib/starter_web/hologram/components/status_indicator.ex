@@ -6,6 +6,7 @@ defmodule StarterWeb.Hologram.Components.StatusIndicator do
   prop :label, :string, default: ""
   prop :desc, :string, default: ""
 
+  # ⟦𓆛𓉵𓋟𓉬⟧ template :: auto-generated pointer for public function template
   def template do
     ~HOLO"""
     <div class="status-item">

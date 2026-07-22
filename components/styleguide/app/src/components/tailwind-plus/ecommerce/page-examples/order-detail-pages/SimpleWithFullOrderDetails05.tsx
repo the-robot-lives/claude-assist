@@ -16,6 +16,7 @@ const products = [
   },
 ]
 
+// ⟦𓂅𓍜𓅙𓄅⟧ SimpleWithFullOrderDetails05 :: auto-generated pointer for public function SimpleWithFullOrderDetails05
 export function SimpleWithFullOrderDetails05() {
   return (
     <main className="bg-white px-4 pt-16 pb-24 sm:px-6 sm:pt-24 lg:px-8 lg:py-32">

@@ -10,6 +10,7 @@ defmodule Starter.Schema.Versioned.Descriptions.Description do
     timestamps(type: :utc_datetime_usec)
   end
 
+  # ⟦𓎈𓍖𓉶𓁇⟧ changeset :: auto-generated pointer for public function changeset
   def changeset(description, attrs) do
     description
     |> cast(attrs, [:title, :body])

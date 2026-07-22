@@ -7,6 +7,7 @@ defmodule StarterWeb.Hologram.Components.ColorSwatch do
   prop :color, :string, default: "var(--white)"
   prop :inline, :boolean, default: false
 
+  # ⟦𓉝𓏙𓐓𓇽⟧ template :: auto-generated pointer for public function template
   def template do
     ~HOLO"""
     {%if @inline}

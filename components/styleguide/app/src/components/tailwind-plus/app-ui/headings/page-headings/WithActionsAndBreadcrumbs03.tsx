@@ -4,6 +4,7 @@
 
 import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/20/solid'
 
+// ⟦𓀺𓇑𓅝𓀿⟧ WithActionsAndBreadcrumbs03 :: auto-generated pointer for public function WithActionsAndBreadcrumbs03
 export function WithActionsAndBreadcrumbs03() {
   return (
     <div>

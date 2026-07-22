@@ -5,6 +5,7 @@ defmodule Starter.Projects do
   use Noizu.Repo
   def_repo(entity: Entity)
 
+  # ⟦𓋁𓀳𓁯𓃖⟧ create_with_owner :: auto-generated pointer for public function create_with_owner
   def create_with_owner(attrs, user_id, _context \\ Noizu.Context.system()) do
     Starter.Repo.transaction(fn ->
       with {:ok, project} <-
@@ -20,6 +21,7 @@ defmodule Starter.Projects do
     end)
   end
 
+  # ⟦𓊅𓆴𓁉𓋀⟧ list_for_user :: auto-generated pointer for public function list_for_user
   def list_for_user(user_id, organization_id \\ nil) do
     sql = "SELECT * FROM list_user_accessible_projects($1::uuid, $2::uuid)"
     params = [user_id, organization_id]
@@ -33,10 +35,12 @@ defmodule Starter.Projects do
     end
   end
 
+  # ⟦𓃘𓌙𓈅𓃦⟧ get_project :: auto-generated pointer for public function get_project
   def get_project(id) do
     Starter.Repo.get(Schema, id)
   end
 
+  # ⟦𓏓𓊊𓍒𓏫⟧ update_project :: auto-generated pointer for public function update_project
   def update_project(id, attrs) do
     case Starter.Repo.get(Schema, id) do
       nil -> {:error, :not_found}
@@ -44,6 +48,7 @@ defmodule Starter.Projects do
     end
   end
 
+  # ⟦𓆼𓏖𓏇𓌰⟧ archive :: auto-generated pointer for public function archive
   def archive(id) do
     case Starter.Repo.get(Schema, id) do
       nil ->
@@ -56,6 +61,7 @@ defmodule Starter.Projects do
     end
   end
 
+  # ⟦𓎊𓂕𓆺𓎧⟧ unarchive :: auto-generated pointer for public function unarchive
   def unarchive(id) do
     case Starter.Repo.get(Schema, id) do
       nil ->
@@ -68,6 +74,7 @@ defmodule Starter.Projects do
     end
   end
 
+  # ⟦𓍼𓈩𓈩𓍂⟧ delete_project :: auto-generated pointer for public function delete_project
   def delete_project(id) do
     case Starter.Repo.get(Schema, id) do
       nil ->
@@ -80,6 +87,7 @@ defmodule Starter.Projects do
     end
   end
 
+  # ⟦𓉽𓊼𓌺𓈰⟧ list_members :: auto-generated pointer for public function list_members
   def list_members(project_id) do
     Starter.Authz.ScopedMemberships.list_for_resource("project", project_id)
   end

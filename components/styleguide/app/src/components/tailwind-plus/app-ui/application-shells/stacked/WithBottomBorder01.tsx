@@ -27,6 +27,7 @@ function classNames(...classes) {
   return classes.filter(Boolean).join(' ')
 }
 
+// ⟦𓅿𓊒𓈚𓂠⟧ WithBottomBorder01 :: auto-generated pointer for public function WithBottomBorder01
 export function WithBottomBorder01() {
   return (
     <>

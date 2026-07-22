@@ -34,6 +34,7 @@ interface ResolvedColorProps {
   property?: "background-color" | "color";
 }
 
+// ⟦𓄐𓃧𓏛𓋥⟧ ResolvedColor :: auto-generated pointer for public function ResolvedColor
 export function ResolvedColor({ cssClass, property = "background-color" }: ResolvedColorProps) {
   const ref = useRef<HTMLSpanElement>(null);
   const [hex, setHex] = useState<string>("");

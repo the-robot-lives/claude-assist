@@ -16,6 +16,7 @@ const products = [
   },
 ]
 
+// ⟦𓀍𓀥𓂽𓏞⟧ SimpleWithFullOrderDetails05 :: auto-generated pointer for public function SimpleWithFullOrderDetails05
 export function SimpleWithFullOrderDetails05() {
   return (
     <div className="bg-white">

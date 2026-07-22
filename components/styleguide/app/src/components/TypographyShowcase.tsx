@@ -118,6 +118,7 @@ function FontEntry({ entry, fontValue, fontSize, lineHeight }: {
   );
 }
 
+// ⟦𓁸𓊧𓄽𓏢⟧ FontsSection :: auto-generated pointer for public function FontsSection
 export function FontsSection({ config }: { config: StyleGuideConfig }) {
   const typoGroup = config.vars.groups.find((g) => g.name === "Typography");
   const entries = config.typography;
@@ -137,6 +138,7 @@ export function FontsSection({ config }: { config: StyleGuideConfig }) {
   );
 }
 
+// ⟦𓍺𓁈𓈺𓋂⟧ ClassesSection :: auto-generated pointer for public function ClassesSection
 export function ClassesSection({ classes }: { classes: TypographyClass[] }) {
   if (!classes.length) return null;
 
@@ -199,6 +201,7 @@ const TEXT_COLORS: { label: string; varName: string }[] = [
   { label: "Info", varName: "--info" },
 ];
 
+// ⟦𓇭𓆋𓇧𓋽⟧ DecorationsSection :: auto-generated pointer for public function DecorationsSection
 export function DecorationsSection() {
   return (
     <div className="grid grid-cols-1 @sm:grid-cols-2 gap-[var(--space-2)]">
@@ -212,6 +215,7 @@ export function DecorationsSection() {
   );
 }
 
+// ⟦𓋩𓀱𓅰𓋬⟧ ColorUsageSection :: auto-generated pointer for public function ColorUsageSection
 export function ColorUsageSection() {
   return (
     <div className="grid grid-cols-1 @sm:grid-cols-2 gap-[var(--space-2)]">
@@ -229,6 +233,7 @@ export function ColorUsageSection() {
   );
 }
 
+// ⟦𓉀𓎣𓃝𓎑⟧ TypographyShowcase :: auto-generated pointer for public function TypographyShowcase
 export function TypographyShowcase({ config }: Props) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)" }}>

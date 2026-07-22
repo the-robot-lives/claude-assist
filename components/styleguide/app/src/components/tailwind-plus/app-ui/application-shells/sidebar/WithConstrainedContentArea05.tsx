@@ -50,6 +50,7 @@ function classNames(...classes) {
   return classes.filter(Boolean).join(' ')
 }
 
+// ⟦𓆓𓎞𓁢𓉫⟧ WithConstrainedContentArea05 :: auto-generated pointer for public function WithConstrainedContentArea05
 export function WithConstrainedContentArea05() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
 

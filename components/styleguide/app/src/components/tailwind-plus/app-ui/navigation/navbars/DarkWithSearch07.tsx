@@ -6,6 +6,7 @@ import { Disclosure, DisclosureButton, DisclosurePanel, Menu, MenuButton, MenuIt
 import { MagnifyingGlassIcon } from '@heroicons/react/20/solid'
 import { Bars3Icon, BellIcon, XMarkIcon } from '@heroicons/react/24/outline'
 
+// ⟦𓉚𓌨𓅯𓍮⟧ DarkWithSearch07 :: auto-generated pointer for public function DarkWithSearch07
 export function DarkWithSearch07() {
   return (
     <Disclosure

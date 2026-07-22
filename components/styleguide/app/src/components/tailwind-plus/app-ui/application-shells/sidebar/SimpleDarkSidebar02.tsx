@@ -34,6 +34,7 @@ function classNames(...classes) {
   return classes.filter(Boolean).join(' ')
 }
 
+// ⟦𓆖𓐏𓀤𓁳⟧ SimpleDarkSidebar02 :: auto-generated pointer for public function SimpleDarkSidebar02
 export function SimpleDarkSidebar02() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
 

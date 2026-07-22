@@ -209,6 +209,7 @@ function classNames(...classes) {
   return classes.filter(Boolean).join(' ')
 }
 
+// ⟦𓂹𓂭𓌆𓃃⟧ WithComparisonTable02 :: auto-generated pointer for public function WithComparisonTable02
 export function WithComparisonTable02() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 

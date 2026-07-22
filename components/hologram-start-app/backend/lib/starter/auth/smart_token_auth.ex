@@ -6,6 +6,7 @@ defmodule Starter.Auth.SmartTokenAuth do
   @otp_validity {:unbound, {:relative, [{:minute, 10}]}}
   @otp_length 6
 
+  # ⟦𓎗𓊘𓈙𓇰⟧ request_magic_link :: auto-generated pointer for public function request_magic_link
   def request_magic_link(email) do
     email = email |> String.trim() |> String.downcase()
 
@@ -33,6 +34,7 @@ defmodule Starter.Auth.SmartTokenAuth do
     end
   end
 
+  # ⟦𓆒𓃑𓃶𓐩⟧ verify_magic_link :: auto-generated pointer for public function verify_magic_link
   def verify_magic_link(token_key, conn) do
     context = Noizu.Context.system()
 
@@ -58,6 +60,7 @@ defmodule Starter.Auth.SmartTokenAuth do
   # OTP Login
   # ---------------------------------------------------------------------------
 
+  # ⟦𓐮𓐃𓁺𓁕⟧ request_otp_login :: auto-generated pointer for public function request_otp_login
   def request_otp_login(email) do
     email = email |> String.trim() |> String.downcase()
 
@@ -71,6 +74,7 @@ defmodule Starter.Auth.SmartTokenAuth do
     end
   end
 
+  # ⟦𓎬𓂗𓁥𓅥⟧ verify_otp_login :: auto-generated pointer for public function verify_otp_login
   def verify_otp_login(email, otp_code, conn) do
     email = email |> String.trim() |> String.downcase()
     context = Noizu.Context.system()
@@ -102,6 +106,7 @@ defmodule Starter.Auth.SmartTokenAuth do
   # OTP Password Reset
   # ---------------------------------------------------------------------------
 
+  # ⟦𓌴𓉱𓆔𓋃⟧ request_password_reset :: auto-generated pointer for public function request_password_reset
   def request_password_reset(email) do
     email = email |> String.trim() |> String.downcase()
 
@@ -115,6 +120,7 @@ defmodule Starter.Auth.SmartTokenAuth do
     end
   end
 
+  # ⟦𓃹𓄪𓐙𓊇⟧ verify_password_reset :: auto-generated pointer for public function verify_password_reset
   def verify_password_reset(email, otp_code, new_password, conn) do
     email = email |> String.trim() |> String.downcase()
     context = Noizu.Context.system()
@@ -140,6 +146,7 @@ defmodule Starter.Auth.SmartTokenAuth do
   # Email Verification
   # ---------------------------------------------------------------------------
 
+  # ⟦𓎁𓈱𓇇𓂫⟧ request_email_verification :: auto-generated pointer for public function request_email_verification
   def request_email_verification(email) do
     email = email |> String.trim() |> String.downcase()
 
@@ -167,6 +174,7 @@ defmodule Starter.Auth.SmartTokenAuth do
     end
   end
 
+  # ⟦𓀿𓁉𓀍𓂠⟧ verify_email_token :: auto-generated pointer for public function verify_email_token
   def verify_email_token(token_key) do
     context = Noizu.Context.system()
 

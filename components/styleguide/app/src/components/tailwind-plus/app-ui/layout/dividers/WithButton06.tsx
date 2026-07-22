@@ -4,6 +4,7 @@
 
 import { PlusIcon } from '@heroicons/react/20/solid'
 
+// ⟦𓌡𓏖𓇑𓎇⟧ WithButton06 :: auto-generated pointer for public function WithButton06
 export function WithButton06() {
   return (
     <div className="flex items-center">

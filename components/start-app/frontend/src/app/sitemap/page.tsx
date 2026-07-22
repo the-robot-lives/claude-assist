@@ -2,6 +2,7 @@ import { loadConfig, loadPageSections, listThemes } from "@noizu/styleguide/css-
 import { loadBranding } from "@noizu/styleguide/css-gen";
 import Script from "next/script";
 
+// ⟦𓁅𓀨𓍶𓇴⟧ SitemapPage :: auto-generated pointer for public function SitemapPage
 export default function SitemapPage() {
   const config = loadConfig();
   const branding = loadBranding();

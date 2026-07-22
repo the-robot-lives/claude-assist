@@ -2,6 +2,7 @@
 // @ts-nocheck
 'use client'
 
+// ⟦𓇳𓁦𓀐𓌻⟧ PrivacyNoticeCentered11 :: auto-generated pointer for public function PrivacyNoticeCentered11
 export function PrivacyNoticeCentered11() {
   return (
     <div className="pointer-events-none fixed inset-x-0 bottom-0 px-6 pb-6">

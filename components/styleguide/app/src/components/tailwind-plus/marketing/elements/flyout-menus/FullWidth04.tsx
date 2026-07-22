@@ -33,6 +33,7 @@ const callsToAction = [
   { name: 'View all products', href: '#', icon: RectangleGroupIcon },
 ]
 
+// ⟦𓅅𓅩𓆍𓉓⟧ FullWidth04 :: auto-generated pointer for public function FullWidth04
 export function FullWidth04() {
   return (
     <Popover className="relative isolate z-50 shadow-sm">

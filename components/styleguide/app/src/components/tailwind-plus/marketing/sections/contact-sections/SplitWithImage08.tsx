@@ -2,6 +2,7 @@
 // @ts-nocheck
 'use client'
 
+// ⟦𓋚𓍃𓄘𓈷⟧ SplitWithImage08 :: auto-generated pointer for public function SplitWithImage08
 export function SplitWithImage08() {
   return (
     <div className="relative bg-white dark:bg-gray-900">

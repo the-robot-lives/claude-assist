@@ -39,6 +39,7 @@ const products = [
   },
 ]
 
+// ⟦𓊀𓀙𓊾𓂵⟧ Dialog05 :: auto-generated pointer for public function Dialog05
 export function Dialog05() {
   const [open, setOpen] = useState(true)
 

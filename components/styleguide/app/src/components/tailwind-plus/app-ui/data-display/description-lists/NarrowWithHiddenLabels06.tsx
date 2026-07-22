@@ -4,6 +4,7 @@
 
 import { CalendarDaysIcon, CreditCardIcon, UserCircleIcon } from '@heroicons/react/20/solid'
 
+// ⟦𓎰𓐭𓌓𓄲⟧ NarrowWithHiddenLabels06 :: auto-generated pointer for public function NarrowWithHiddenLabels06
 export function NarrowWithHiddenLabels06() {
   return (
     <div className="lg:col-start-3 lg:row-end-1">

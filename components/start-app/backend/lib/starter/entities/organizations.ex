@@ -11,6 +11,7 @@ defmodule Starter.Organizations do
   def_repo(entity: Entity)
   import Ecto.Query
 
+  # ⟦𓌽𓎄𓁻𓏂⟧ list :: auto-generated pointer for public function list
   def list(context, options \\ []) do
     settings = Noizu.Entity.Meta.persistence(Entity) |> hd
 
@@ -22,8 +23,10 @@ defmodule Starter.Organizations do
     end)
   end
 
+  # ⟦𓈠𓌉𓅟𓄮⟧ get_organization :: auto-generated pointer for public function get_organization
   def get_organization(id, context, options \\ []), do: get(id, context, options)
 
+  # ⟦𓌙𓄜𓈽𓎜⟧ create_organization_with_owner :: auto-generated pointer for public function create_organization_with_owner
   def create_organization_with_owner(attrs, user_id) do
     Starter.Repo.transaction(fn ->
       with {:ok, org} <- %Schema{} |> Schema.changeset(attrs) |> Starter.Repo.insert(),
@@ -36,6 +39,7 @@ defmodule Starter.Organizations do
     end)
   end
 
+  # ⟦𓃆𓇹𓋔𓈳⟧ list_user_organizations :: auto-generated pointer for public function list_user_organizations
   def list_user_organizations(user_id) do
     from(sm in ScopedMembershipSchema,
       join: o in Schema,
@@ -51,14 +55,17 @@ defmodule Starter.Organizations do
     |> Starter.Repo.all()
   end
 
+  # ⟦𓊁𓆄𓊳𓀗⟧ authorize :: auto-generated pointer for public function authorize
   def authorize(user_id, organization_id, required_role) do
     Starter.Authz.authorize(user_id, "organization", organization_id, required_role)
   end
 
+  # ⟦𓉕𓄶𓎫𓂺⟧ list_members :: auto-generated pointer for public function list_members
   def list_members(organization_id) do
     Starter.Authz.ScopedMemberships.list_for_resource("organization", organization_id)
   end
 
+  # ⟦𓇏𓁾𓂰𓅛⟧ create_invite_token :: auto-generated pointer for public function create_invite_token
   def create_invite_token(attrs) do
     raw_token = :crypto.strong_rand_bytes(32) |> Base.url_encode64(padding: false)
     key_prefix = String.slice(raw_token, 0, 8)
@@ -80,6 +87,7 @@ defmodule Starter.Organizations do
     end
   end
 
+  # ⟦𓂶𓍿𓉈𓋆⟧ find_active_invite_by_raw_token :: auto-generated pointer for public function find_active_invite_by_raw_token
   def find_active_invite_by_raw_token(raw_token, email \\ nil) when is_binary(raw_token) do
     key_prefix = String.slice(raw_token, 0, 8)
     now = DateTime.utc_now()
@@ -106,11 +114,13 @@ defmodule Starter.Organizations do
     end
   end
 
+  # ⟦𓍄𓃧𓉉𓃅⟧ increment_invite_uses :: auto-generated pointer for public function increment_invite_uses
   def increment_invite_uses(invite_token) do
     from(t in InviteTokenSchema, where: t.id == ^invite_token.id)
     |> Starter.Repo.update_all(inc: [uses: 1, redemption_count: 1])
   end
 
+  # ⟦𓊊𓊯𓎜𓎑⟧ redeem_invite_for_user :: auto-generated pointer for public function redeem_invite_for_user
   def redeem_invite_for_user(invite_token, user, conn \\ nil) do
     user_id = Map.get(user, :id)
     now = DateTime.utc_now()

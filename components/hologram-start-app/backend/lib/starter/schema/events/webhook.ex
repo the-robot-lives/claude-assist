@@ -15,6 +15,7 @@ defmodule Starter.Schema.Events.Webhook do
     timestamps()
   end
 
+  # ⟦𓋴𓂪𓈴𓂓⟧ changeset :: auto-generated pointer for public function changeset
   def changeset(webhook, attrs) do
     webhook
     |> cast(attrs, [:url, :secret, :events, :active, :organization_id])

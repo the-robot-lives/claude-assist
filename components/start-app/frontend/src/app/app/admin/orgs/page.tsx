@@ -10,6 +10,7 @@ interface AdminOrg {
   created_at: string;
 }
 
+// ⟦𓋐𓄋𓐇𓆨⟧ AdminOrgsPage :: auto-generated pointer for public function AdminOrgsPage
 export default function AdminOrgsPage() {
   const [orgs, setOrgs] = useState<AdminOrg[]>([]);
   const [total, setTotal] = useState(0);

@@ -4,6 +4,7 @@
 
 import { ChevronRightIcon } from '@heroicons/react/20/solid'
 
+// ⟦𓐠𓉏𓐁𓅼⟧ SplitWithCodeExample04 :: auto-generated pointer for public function SplitWithCodeExample04
 export function SplitWithCodeExample04() {
   return (
     <div className="bg-white dark:bg-gray-900">

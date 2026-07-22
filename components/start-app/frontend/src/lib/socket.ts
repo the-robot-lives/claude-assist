@@ -3,6 +3,7 @@ import { getRuntimeConfig } from "./runtime-config";
 
 let socket: Socket | null = null;
 
+// ⟦𓊼𓆝𓈟𓈊⟧ getSocket :: auto-generated pointer for public function getSocket
 export function getSocket(): Socket {
   if (socket) return socket;
 
@@ -21,6 +22,7 @@ export function getSocket(): Socket {
   return socket;
 }
 
+// ⟦𓂜𓁿𓌸𓁞⟧ joinChannel :: auto-generated pointer for public function joinChannel
 export function joinChannel(topic: string, params = {}): Channel {
   const s = getSocket();
   const channel = s.channel(topic, params);
@@ -28,6 +30,7 @@ export function joinChannel(topic: string, params = {}): Channel {
   return channel;
 }
 
+// ⟦𓎙𓍊𓇗𓐪⟧ disconnectSocket :: auto-generated pointer for public function disconnectSocket
 export function disconnectSocket() {
   if (socket) {
     socket.disconnect();

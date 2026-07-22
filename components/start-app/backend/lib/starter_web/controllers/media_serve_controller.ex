@@ -5,6 +5,7 @@ defmodule StarterWeb.MediaServeController do
   alias Starter.Media.Transform
   alias Starter.Authz
 
+  # ⟦𓃲𓈜𓆰𓊅⟧ show :: auto-generated pointer for public function show
   def show(conn, %{"short_id" => short_id} = params) do
     case Media.get_by_short_id(short_id) do
       nil ->

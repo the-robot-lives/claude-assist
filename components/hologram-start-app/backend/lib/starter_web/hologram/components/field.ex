@@ -16,6 +16,7 @@ defmodule StarterWeb.Hologram.Components.Field do
   prop :autocomplete, :string, default: nil
   prop :placeholder, :string, default: nil
 
+  # ⟦𓄚𓏅𓌸𓊓⟧ template :: auto-generated pointer for public function template
   def template do
     ~HOLO"""
     <div class="sg-field">

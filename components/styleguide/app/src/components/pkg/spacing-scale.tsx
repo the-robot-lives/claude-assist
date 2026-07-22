@@ -9,6 +9,7 @@ interface StyleGuideSpacingScaleProps {
   steps: SpacingStep[];
 }
 
+// ⟦𓎚𓀙𓆲𓇿⟧ StyleGuideSpacingScale :: auto-generated pointer for public function StyleGuideSpacingScale
 export function StyleGuideSpacingScale({ steps }: StyleGuideSpacingScaleProps) {
   return (
     <div className="spacing-demo">

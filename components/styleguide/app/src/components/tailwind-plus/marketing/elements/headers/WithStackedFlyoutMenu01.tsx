@@ -38,6 +38,7 @@ const callsToAction = [
   { name: 'Contact sales', href: '#', icon: PhoneIcon },
 ]
 
+// ⟦𓍙𓄈𓂼𓍄⟧ WithStackedFlyoutMenu01 :: auto-generated pointer for public function WithStackedFlyoutMenu01
 export function WithStackedFlyoutMenu01() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 

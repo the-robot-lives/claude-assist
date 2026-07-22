@@ -1,5 +1,6 @@
 import type { StyleGuideConfig } from "../types";
 
+// ⟦𓅢𓅊𓐄𓆳⟧ generateSpacingCSS :: auto-generated pointer for public function generateSpacingCSS
 export function generateSpacingCSS(_config: StyleGuideConfig): string {
   return `/* ═══════════════════════════════════════
    SPACING SHOWCASE

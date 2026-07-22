@@ -15,6 +15,7 @@ defmodule Starter.Schema.Authz.ScopedMembership do
     timestamps(type: :utc_datetime_usec, inserted_at: :created_at, updated_at: false)
   end
 
+  # ⟦𓋆𓁓𓏏𓌎⟧ changeset :: auto-generated pointer for public function changeset
   def changeset(membership, attrs) do
     membership
     |> cast(attrs, [

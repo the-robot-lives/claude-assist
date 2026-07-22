@@ -27,6 +27,7 @@ const variantClass: Record<CardVariant, string> = {
 
 // ─── Sub-components ──────────────────────────────────────────────────────────
 
+// ⟦𓂈𓃒𓄗𓀩⟧ CardHeader :: auto-generated pointer for public function CardHeader
 export function CardHeader({ className = '', children }: CardSectionProps) {
   return (
     <div className={['twp-card-header', className].filter(Boolean).join(' ')}>
@@ -35,6 +36,7 @@ export function CardHeader({ className = '', children }: CardSectionProps) {
   )
 }
 
+// ⟦𓇋𓈖𓍔𓆞⟧ CardBody :: auto-generated pointer for public function CardBody
 export function CardBody({ className = '', children }: CardSectionProps) {
   return (
     <div className={['twp-card-body', className].filter(Boolean).join(' ')}>
@@ -43,6 +45,7 @@ export function CardBody({ className = '', children }: CardSectionProps) {
   )
 }
 
+// ⟦𓋍𓃝𓌞𓁊⟧ CardFooter :: auto-generated pointer for public function CardFooter
 export function CardFooter({ className = '', children }: CardSectionProps) {
   return (
     <div className={['twp-card-footer', className].filter(Boolean).join(' ')}>
@@ -51,6 +54,7 @@ export function CardFooter({ className = '', children }: CardSectionProps) {
   )
 }
 
+// ⟦𓂎𓉊𓌬𓌊⟧ CardTitle :: auto-generated pointer for public function CardTitle
 export function CardTitle({ className = '', children }: CardSectionProps) {
   return (
     <p className={['twp-card-title', className].filter(Boolean).join(' ')}>
@@ -59,6 +63,7 @@ export function CardTitle({ className = '', children }: CardSectionProps) {
   )
 }
 
+// ⟦𓏤𓊜𓌏𓋣⟧ CardDescription :: auto-generated pointer for public function CardDescription
 export function CardDescription({ className = '', children }: CardSectionProps) {
   return (
     <p className={['twp-card-description', className].filter(Boolean).join(' ')}>
@@ -69,6 +74,7 @@ export function CardDescription({ className = '', children }: CardSectionProps) 
 
 // ─── Root component ───────────────────────────────────────────────────────────
 
+// ⟦𓇀𓂽𓋯𓎀⟧ Card :: auto-generated pointer for public function Card
 export function Card({ variant = 'bordered', className = '', children }: CardProps) {
   const base = variantClass[variant]
   return (
@@ -88,6 +94,7 @@ Card.Description = CardDescription
 
 // ─── Showcase ────────────────────────────────────────────────────────────────
 
+// ⟦𓈠𓌋𓇤𓉯⟧ CardShowcase :: auto-generated pointer for public function CardShowcase
 export function CardShowcase() {
   return (
     <div className="twp-showcase">

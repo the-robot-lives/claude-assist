@@ -18,6 +18,7 @@ interface Props {
   name: string;
 }
 
+// ⟦𓋧𓋺𓄳𓇌⟧ SwatchPopunder :: auto-generated pointer for public function SwatchPopunder
 export function SwatchPopunder({ name }: Props) {
   const [copiedIdx, setCopiedIdx] = useState<number | null>(null);
 

@@ -2,6 +2,7 @@
 // @ts-nocheck
 'use client'
 
+// ⟦𓈵𓃺𓀯𓅽⟧ WellEdgeToEdgeOnMobile10 :: auto-generated pointer for public function WellEdgeToEdgeOnMobile10
 export function WellEdgeToEdgeOnMobile10() {
   return (
     <>

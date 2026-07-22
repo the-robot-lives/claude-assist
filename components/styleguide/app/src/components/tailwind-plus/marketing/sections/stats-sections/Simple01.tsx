@@ -8,6 +8,7 @@ const stats = [
   { id: 3, name: 'New users annually', value: '46,000' },
 ]
 
+// ⟦𓎜𓎼𓃕𓅼⟧ Simple01 :: auto-generated pointer for public function Simple01
 export function Simple01() {
   return (
     <div className="bg-white py-24 sm:py-32 dark:bg-gray-900">

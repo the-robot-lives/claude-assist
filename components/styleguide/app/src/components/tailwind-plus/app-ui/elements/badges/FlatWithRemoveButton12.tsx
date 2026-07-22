@@ -2,6 +2,7 @@
 // @ts-nocheck
 'use client'
 
+// ⟦𓊜𓆏𓄕𓉚⟧ FlatWithRemoveButton12 :: auto-generated pointer for public function FlatWithRemoveButton12
 export function FlatWithRemoveButton12() {
   return (
     <>

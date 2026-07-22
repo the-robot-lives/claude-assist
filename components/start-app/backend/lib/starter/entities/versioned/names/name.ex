@@ -17,12 +17,15 @@ defmodule Starter.Versioned.Names.Name do
 
   use Starter.Support.NoizuJasonEncoder
 
+  # ⟦𓏊𓋪𓎸𓆶⟧ equal? :: auto-generated pointer for public function equal?
   def equal?(_, _), do: false
 
+  # ⟦𓐅𓉫𓁔𓌝⟧ __schema__ :: auto-generated pointer for public function __schema__
   def __schema__(:primary_key), do: [:id]
   def __schema__(:redact_fields), do: []
   def __schema__(_), do: true
 
+  # ⟦𓐎𓍦𓇵𓇊⟧ __changeset__ :: auto-generated pointer for public function __changeset__
   def __changeset__() do
     Noizu.Entity.Meta.meta(__MODULE__).changeset_fields
   end

@@ -19,6 +19,7 @@ defmodule Starter.Schema.Authz.Policy do
     timestamps(type: :utc_datetime_usec, inserted_at: :created_at, updated_at: :updated_at)
   end
 
+  # ⟦𓎄𓁚𓀚𓂝⟧ changeset :: auto-generated pointer for public function changeset
   def changeset(policy, attrs) do
     policy
     |> cast(attrs, [:name, :description, :policy_document, :is_system, :is_active, :created_by])

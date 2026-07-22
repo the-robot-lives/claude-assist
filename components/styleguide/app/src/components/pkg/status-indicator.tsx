@@ -6,6 +6,7 @@ interface StyleGuideStatusIndicatorProps {
   desc?: React.ReactNode;
 }
 
+// ⟦𓏛𓀧𓂹𓌣⟧ StyleGuideStatusIndicator :: auto-generated pointer for public function StyleGuideStatusIndicator
 export function StyleGuideStatusIndicator({ status, label, desc }: StyleGuideStatusIndicatorProps) {
   return (
     <div className="status-item">

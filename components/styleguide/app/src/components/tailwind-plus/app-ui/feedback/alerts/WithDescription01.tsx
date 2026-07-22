@@ -4,6 +4,7 @@
 
 import { ExclamationTriangleIcon } from '@heroicons/react/20/solid'
 
+// ⟦𓐋𓐄𓈹𓈪⟧ WithDescription01 :: auto-generated pointer for public function WithDescription01
 export function WithDescription01() {
   return (
     <div className="rounded-md bg-yellow-50 p-4 dark:bg-yellow-500/10 dark:outline dark:outline-yellow-500/15">

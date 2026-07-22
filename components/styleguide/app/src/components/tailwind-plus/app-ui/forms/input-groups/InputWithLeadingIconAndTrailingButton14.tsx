@@ -4,6 +4,7 @@
 
 import { BarsArrowUpIcon, UsersIcon } from '@heroicons/react/16/solid'
 
+// ⟦𓆻𓐧𓅥𓏶⟧ InputWithLeadingIconAndTrailingButton14 :: auto-generated pointer for public function InputWithLeadingIconAndTrailingButton14
 export function InputWithLeadingIconAndTrailingButton14() {
   return (
     <div>

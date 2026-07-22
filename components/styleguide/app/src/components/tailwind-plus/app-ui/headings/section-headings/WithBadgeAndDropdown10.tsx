@@ -5,6 +5,7 @@
 import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react'
 import { EllipsisVerticalIcon } from '@heroicons/react/20/solid'
 
+// ⟦𓃧𓍯𓊂𓉋⟧ WithBadgeAndDropdown10 :: auto-generated pointer for public function WithBadgeAndDropdown10
 export function WithBadgeAndDropdown10() {
   return (
     <div className="border-b border-gray-200 pb-5 dark:border-white/10">

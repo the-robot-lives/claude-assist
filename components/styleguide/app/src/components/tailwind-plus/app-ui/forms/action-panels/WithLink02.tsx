@@ -2,6 +2,7 @@
 // @ts-nocheck
 'use client'
 
+// ⟦𓍖𓃆𓊃𓏎⟧ WithLink02 :: auto-generated pointer for public function WithLink02
 export function WithLink02() {
   return (
     <div className="bg-white shadow-sm sm:rounded-lg dark:bg-gray-800/50 dark:shadow-none dark:outline dark:-outline-offset-1 dark:outline-white/10">

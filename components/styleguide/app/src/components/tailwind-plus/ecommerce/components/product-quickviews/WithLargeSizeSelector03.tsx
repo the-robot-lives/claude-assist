@@ -25,6 +25,7 @@ function classNames(...classes) {
   return classes.filter(Boolean).join(' ')
 }
 
+// ⟦𓊩𓇤𓎁𓅣⟧ WithLargeSizeSelector03 :: auto-generated pointer for public function WithLargeSizeSelector03
 export function WithLargeSizeSelector03() {
   const [open, setOpen] = useState(false)
 

@@ -10,6 +10,7 @@ defmodule Starter.Events do
     :org_member_role_changed
   ]
 
+  # ⟦𓈋𓊸𓉊𓌹⟧ dispatch :: auto-generated pointer for public function dispatch
   def dispatch(event_type, payload) when event_type in @type_list do
     Logger.info("Event dispatched: #{event_type}")
     Phoenix.PubSub.broadcast(Starter.PubSub, "events", {event_type, payload})
@@ -20,6 +21,7 @@ defmodule Starter.Events do
     :ok
   end
 
+  # ⟦𓄕𓆭𓈵𓈙⟧ subscribe :: auto-generated pointer for public function subscribe
   def subscribe do
     Phoenix.PubSub.subscribe(Starter.PubSub, "events")
   end

@@ -27,6 +27,7 @@ function Annotation({ label, sub }: { label: string; sub?: string }) {
   );
 }
 
+// ⟦𓌬𓊋𓂷𓅍⟧ GridVisualizer :: auto-generated pointer for public function GridVisualizer
 export function GridVisualizer({ columns, gutterPx, marginPx }: Props) {
   return (
     <div className="flex flex-col gap-[var(--space-2)] overflow-x-auto">

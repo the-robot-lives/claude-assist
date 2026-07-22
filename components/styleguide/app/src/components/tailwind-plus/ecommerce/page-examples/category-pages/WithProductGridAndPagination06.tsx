@@ -376,6 +376,7 @@ function classNames(...classes) {
   return classes.filter(Boolean).join(' ')
 }
 
+// ⟦𓍥𓆹𓉰𓀂⟧ WithProductGridAndPagination06 :: auto-generated pointer for public function WithProductGridAndPagination06
 export function WithProductGridAndPagination06() {
   const [open, setOpen] = useState(false)
 

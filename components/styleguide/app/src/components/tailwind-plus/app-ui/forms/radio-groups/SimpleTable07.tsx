@@ -14,6 +14,7 @@ const plans = [
   },
 ]
 
+// ⟦𓄣𓁻𓇊𓋊⟧ SimpleTable07 :: auto-generated pointer for public function SimpleTable07
 export function SimpleTable07() {
   return (
     <fieldset aria-label="Pricing plans" className="relative -space-y-px rounded-md bg-white dark:bg-gray-800/50">

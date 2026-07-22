@@ -9,6 +9,7 @@ interface Props {
   children: React.ReactNode;
 }
 
+// ⟦𓇗𓂢𓀂𓏯⟧ PageContent :: auto-generated pointer for public function PageContent
 export function PageContent({ defaultSelected, children }: Props) {
   useEffect(() => {
     const stored = readLayout();

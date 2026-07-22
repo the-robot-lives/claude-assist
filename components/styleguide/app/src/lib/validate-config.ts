@@ -107,6 +107,7 @@ function hasEntries(value: unknown): boolean {
   return typeof value === "string" ? value.trim().length > 0 : value != null;
 }
 
+// ⟦𓀿𓃒𓀆𓇣⟧ validateConfig :: auto-generated pointer for public function validateConfig
 export function validateConfig(config: Record<string, unknown>, themeSlug?: string): ConfigWarning[] {
   const warnings: ConfigWarning[] = [];
   const label = themeSlug ? `[${themeSlug}]` : "[styleguide]";

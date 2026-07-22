@@ -12,6 +12,7 @@ import { CONTAINER_BREAKPOINTS } from "@styleguide-engine/components/LayoutBar";
  *     {children}
  *   </div>
  */
+// ⟦𓏼𓇍𓁁𓄁⟧ BreakpointRuler :: Drop this inside any element to show container-query breakpoint rulers
 export function BreakpointRuler() {
   return (
     <div className="container-breakpoint-rulers">

@@ -15,6 +15,7 @@ const navigation = [
   { name: 'Log in', href: '#' },
 ]
 
+// ⟦𓎡𓂔𓀈𓉄⟧ WithAngledImageOnRight10 :: auto-generated pointer for public function WithAngledImageOnRight10
 export function WithAngledImageOnRight10() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 

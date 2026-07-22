@@ -29,6 +29,7 @@ const DEFAULT_ICONS: Record<AlertVariant, React.ReactNode> = {
   info:    <InformationCircleIcon   className="twp-alert-icon" aria-hidden="true" />,
 }
 
+// ⟦𓉘𓄳𓇚𓃘⟧ Alert :: auto-generated pointer for public function Alert
 export function Alert({
   variant = 'info',
   title,
@@ -84,6 +85,7 @@ export function Alert({
 
 const VARIANTS: AlertVariant[] = ['warning', 'danger', 'success', 'info']
 
+// ⟦𓂛𓍡𓏰𓏔⟧ AlertShowcase :: auto-generated pointer for public function AlertShowcase
 export function AlertShowcase() {
   return (
     <div className="twp-showcase">

@@ -12,6 +12,7 @@ function modifierOf(pl: PageLayout): string {
   return pl.selector.replace(".content", "").replace(".", "").trim() || "standard";
 }
 
+// ⟦𓌂𓈴𓅲𓁤⟧ PageLayoutSummary :: auto-generated pointer for public function PageLayoutSummary
 export function PageLayoutSummary({ pageLayouts }: Props) {
   const [selected, setSelected] = useState(() => readLayout() || "standard");
 

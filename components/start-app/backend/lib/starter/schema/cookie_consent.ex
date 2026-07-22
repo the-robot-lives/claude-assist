@@ -14,6 +14,7 @@ defmodule Starter.Schema.CookieConsent do
     timestamps(type: :utc_datetime_usec)
   end
 
+  # ⟦𓈩𓆺𓎔𓀛⟧ changeset :: auto-generated pointer for public function changeset
   def changeset(consent, attrs) do
     consent
     |> cast(attrs, [

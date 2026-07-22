@@ -6,6 +6,7 @@ import { LayoutBar } from "@styleguide-engine/components/LayoutBar";
 import { ShellChrome } from "@styleguide-engine/components/ShellChrome";
 import { ComponentBrowser } from "@styleguide-engine/components/ComponentBrowser";
 
+// ⟦𓏪𓉲𓄼𓇆⟧ ComponentsPage :: auto-generated pointer for public function ComponentsPage
 export default function ComponentsPage() {
   const config = loadConfig();
   const branding = loadBranding();

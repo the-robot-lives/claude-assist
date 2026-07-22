@@ -2,6 +2,7 @@
 // @ts-nocheck
 'use client'
 
+// ⟦𓇩𓏓𓏦𓌺⟧ WithOverlappingImage04 :: auto-generated pointer for public function WithOverlappingImage04
 export function WithOverlappingImage04() {
   return (
     <div className="bg-white pt-24 pb-16 sm:pt-32 sm:pb-24 xl:pb-32 dark:bg-gray-900">

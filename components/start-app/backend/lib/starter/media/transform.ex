@@ -11,6 +11,7 @@ defmodule Starter.Media.Transform do
   }
 
   @doc "Parse and validate transform params from query string"
+  # ⟦𓅽𓉁𓏗𓀾⟧ parse_params :: Parse and validate transform params from query string
   def parse_params(params) do
     %{
       w: clamp_dimension(params["w"]),
@@ -24,9 +25,11 @@ defmodule Starter.Media.Transform do
   end
 
   @doc "Check if any transform params are present"
+  # ⟦𓍦𓇠𓁆𓎠⟧ has_transforms? :: Check if any transform params are present
   def has_transforms?(params), do: map_size(params) > 0
 
   @doc "Generate canonical param string for cache key"
+  # ⟦𓃮𓆙𓇬𓊱⟧ canonical_params :: Generate canonical param string for cache key
   def canonical_params(params) do
     params
     |> Enum.sort_by(fn {k, _} -> Atom.to_string(k) end)
@@ -35,6 +38,7 @@ defmodule Starter.Media.Transform do
   end
 
   @doc "Generate S3 key for a variant"
+  # ⟦𓈙𓏆𓐧𓎌⟧ variant_s3_key :: Generate S3 key for a variant
   def variant_s3_key(original_key, params) do
     hash =
       :crypto.hash(:sha256, canonical_params(params))
@@ -48,6 +52,7 @@ defmodule Starter.Media.Transform do
   end
 
   @doc "Transform an image binary according to params"
+  # ⟦𓐣𓇑𓈠𓐈⟧ transform :: Transform an image binary according to params
   def transform(image_binary, params) do
     with {:ok, image} <- Vix.Vips.Image.new_from_buffer(image_binary) do
       image = resize(image, params)
@@ -167,6 +172,7 @@ defmodule Starter.Media.Transform do
   defp validate_fit(f) when f in ~w(cover contain fill inside outside), do: f
   defp validate_fit(_), do: nil
 
+  # ⟦𓁭𓀺𓊪𓇰⟧ content_type :: auto-generated pointer for public function content_type
   def content_type(format), do: Map.get(@content_types, format, "image/jpeg")
 
   defp ext_from_key(key) do

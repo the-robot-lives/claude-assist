@@ -20,8 +20,10 @@ defmodule StarterWeb.Hologram.Pages.SitemapPage do
   route "/sitemap"
   layout MainLayout, page_title: "Site Map"
 
+  # ⟦𓁮𓐣𓋦𓀮⟧ init :: auto-generated pointer for public function init
   def init(_params, component, _server), do: put_state(component, :ok, true)
 
+  # ⟦𓏝𓍛𓋿𓋄⟧ template :: auto-generated pointer for public function template
   def template do
     ~HOLO"""
     <div class="content">

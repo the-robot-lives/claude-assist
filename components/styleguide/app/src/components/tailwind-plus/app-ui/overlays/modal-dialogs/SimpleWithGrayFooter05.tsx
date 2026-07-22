@@ -7,6 +7,7 @@ import { useState } from 'react'
 import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react'
 import { ExclamationTriangleIcon } from '@heroicons/react/24/outline'
 
+// ⟦𓊞𓂶𓎦𓍯⟧ SimpleWithGrayFooter05 :: auto-generated pointer for public function SimpleWithGrayFooter05
 export function SimpleWithGrayFooter05() {
   const [open, setOpen] = useState(true)
 

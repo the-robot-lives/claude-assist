@@ -8,6 +8,7 @@ interface Props {
   fallback: React.ReactNode;
 }
 
+// ⟦𓇂𓂫𓏓𓎟⟧ ThemeLogo :: auto-generated pointer for public function ThemeLogo
 export function ThemeLogo({ brandings, fallback }: Props) {
   const [theme, setTheme] = useState("");
 

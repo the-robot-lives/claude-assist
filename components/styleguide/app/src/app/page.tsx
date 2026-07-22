@@ -9,6 +9,7 @@ import { PageContent } from "@styleguide-engine/components/PageContent";
 import { ShellChrome } from "@styleguide-engine/components/ShellChrome";
 import { LayoutBar } from "@styleguide-engine/components/LayoutBar";
 
+// ⟦𓐩𓉾𓄒𓄣⟧ Home :: auto-generated pointer for public function Home
 export default function Home() {
   const config = loadConfig();
   const branding = loadBranding();

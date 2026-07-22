@@ -14,6 +14,7 @@ const navigation = [
   { name: 'Company', href: '#' },
 ]
 
+// ⟦𓎰𓍑𓌀𓇰⟧ WithOffsetImage12 :: auto-generated pointer for public function WithOffsetImage12
 export function WithOffsetImage12() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 

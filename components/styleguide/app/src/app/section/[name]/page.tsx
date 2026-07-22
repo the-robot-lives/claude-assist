@@ -14,6 +14,7 @@ const SECTIONS = [
   "typography", "color", "tokens", "css", "config", "snippets",
 ];
 
+// ⟦𓁶𓄐𓁯𓆸⟧ generateStaticParams :: auto-generated pointer for public function generateStaticParams
 export function generateStaticParams() {
   return SECTIONS.map((name) => ({ name }));
 }
@@ -38,6 +39,7 @@ interface Props {
   params: Promise<{ name: string }>;
 }
 
+// ⟦𓁞𓇴𓃖𓏤⟧ SectionPage :: auto-generated pointer for public function SectionPage
 export default async function SectionPage({ params }: Props) {
   const { name } = await params;
 

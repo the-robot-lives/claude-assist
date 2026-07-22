@@ -8,6 +8,7 @@ import { ThemeManager } from "@styleguide-engine/components/ThemeManager";
 import { CssSnippetsPanel, JsxSnippetsPanel } from "@styleguide-engine/components/SnippetShowcase";
 import type { SectionProps } from "./section-props";
 
+// ⟦𓁗𓍸𓉕𓌁⟧ DesignTokensSection :: auto-generated pointer for public function DesignTokensSection
 export function DesignTokensSection({ number, id, title, desc, config }: SectionProps) {
   if (!config.vars?.groups?.length) return null;
   const tokenProps = { groups: config.vars.groups, flatVars: config.flatVars, semanticClasses: config.semanticClasses, semanticGroups: config.semanticGroups };
@@ -23,6 +24,7 @@ export function DesignTokensSection({ number, id, title, desc, config }: Section
   );
 }
 
+// ⟦𓃣𓀞𓀧𓊒⟧ GeneratedCssSection :: auto-generated pointer for public function GeneratedCssSection
 export function GeneratedCssSection({ number, id, title, desc, cssSections }: SectionProps) {
   if (!cssSections) return null;
   return (
@@ -32,6 +34,7 @@ export function GeneratedCssSection({ number, id, title, desc, cssSections }: Se
   );
 }
 
+// ⟦𓎋𓃔𓅠𓈆⟧ ThemeConfigSection :: auto-generated pointer for public function ThemeConfigSection
 export function ThemeConfigSection({ number, id, title, desc, styleGuideFiles, brandingYaml }: SectionProps) {
   if (!styleGuideFiles || !brandingYaml) return null;
   return (
@@ -41,6 +44,7 @@ export function ThemeConfigSection({ number, id, title, desc, styleGuideFiles, b
   );
 }
 
+// ⟦𓂔𓇒𓅙𓇘⟧ SnippetsSection :: auto-generated pointer for public function SnippetsSection
 export function SnippetsSection({ number, id, title, desc, config }: SectionProps) {
   if (!config.cssSnippets?.length && !config.jsxSnippets?.length) return null;
   const hasBoth = config.cssSnippets?.length > 0 && config.jsxSnippets?.length > 0;
@@ -62,6 +66,7 @@ export function SnippetsSection({ number, id, title, desc, config }: SectionProp
   );
 }
 
+// ⟦𓌏𓂷𓂧𓇼⟧ OverridesSection :: auto-generated pointer for public function OverridesSection
 export function OverridesSection({ number, id, title, desc }: SectionProps) {
   return (
     <CollapsibleSection number={number} id={id} title={title} desc={desc} defaultOpen={true}>
@@ -70,6 +75,7 @@ export function OverridesSection({ number, id, title, desc }: SectionProps) {
   );
 }
 
+// ⟦𓂆𓊞𓄳𓃞⟧ ThemeManagerSection :: auto-generated pointer for public function ThemeManagerSection
 export function ThemeManagerSection({ number, id, title, desc }: SectionProps) {
   return (
     <CollapsibleSection number={number} id={id} title={title} desc={desc} defaultOpen={true}>

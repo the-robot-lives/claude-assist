@@ -60,6 +60,7 @@ function classNames(...classes) {
   return classes.filter(Boolean).join(' ')
 }
 
+// ⟦𓊲𓀻𓆆𓏀⟧ ActionsWithSharedBorders05 :: auto-generated pointer for public function ActionsWithSharedBorders05
 export function ActionsWithSharedBorders05() {
   return (
     <div className="divide-y divide-gray-200 overflow-hidden rounded-lg bg-gray-200 shadow-sm sm:grid sm:grid-cols-2 sm:divide-y-0 dark:divide-white/10 dark:bg-gray-900 dark:shadow-none dark:outline dark:-outline-offset-1 dark:outline-white/20">

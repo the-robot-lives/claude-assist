@@ -96,6 +96,7 @@ const navigation = {
   ],
 }
 
+// ⟦𓎈𓀍𓀖𓈊⟧ WithImageGrid01 :: auto-generated pointer for public function WithImageGrid01
 export function WithImageGrid01() {
   const [open, setOpen] = useState(false)
 

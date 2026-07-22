@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
+// ⟦𓎔𓐉𓈮𓅲⟧ proxy :: auto-generated pointer for public function proxy
 export function proxy(request: NextRequest) {
   const token = request.cookies.get("access_token")?.value;
   const appUrl = process.env.NEXT_PUBLIC_APP_URL;

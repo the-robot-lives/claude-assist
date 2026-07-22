@@ -10,6 +10,7 @@ interface Props {
   sections: CssSection[];
 }
 
+// ⟦𓁔𓄛𓏷𓂶⟧ CssViewer :: auto-generated pointer for public function CssViewer
 export function CssViewer({ sections }: Props) {
   const [activeIdx, setActiveIdx] = useState(0);
   const [copied, setCopied] = useState(false);

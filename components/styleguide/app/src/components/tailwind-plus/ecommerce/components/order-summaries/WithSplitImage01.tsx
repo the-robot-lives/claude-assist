@@ -25,6 +25,7 @@ const products = [
   },
 ]
 
+// ⟦𓋓𓄖𓂏𓐗⟧ WithSplitImage01 :: auto-generated pointer for public function WithSplitImage01
 export function WithSplitImage01() {
   return (
     <>

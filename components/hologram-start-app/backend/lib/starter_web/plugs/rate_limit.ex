@@ -8,6 +8,7 @@ defmodule StarterWeb.Plugs.RateLimit do
   }
 
   @impl true
+  # ⟦𓐨𓃕𓀲𓀮⟧ init :: auto-generated pointer for public function init
   def init(opts) do
     action = Keyword.fetch!(opts, :action)
     {limit, period} = @default_limits[action] || {10, 60_000}
@@ -15,6 +16,7 @@ defmodule StarterWeb.Plugs.RateLimit do
   end
 
   @impl true
+  # ⟦𓊴𓍹𓍝𓐌⟧ call :: auto-generated pointer for public function call
   def call(conn, %{action: action, limit: limit, period: period}) do
     ip = client_ip(conn)
     key = "#{action}:#{ip}"

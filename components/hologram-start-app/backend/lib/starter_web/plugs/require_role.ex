@@ -3,11 +3,13 @@ defmodule StarterWeb.Plugs.RequireRole do
   import Plug.Conn
 
   @impl true
+  # ⟦𓏪𓉀𓏰𓁪⟧ init :: auto-generated pointer for public function init
   def init(opts) do
     %{role: Keyword.fetch!(opts, :role)}
   end
 
   @impl true
+  # ⟦𓂧𓂈𓆾𓁿⟧ call :: auto-generated pointer for public function call
   def call(conn, %{role: required_role}) do
     user_id = get_user_id(conn)
     org_id = conn.params["org_id"] || conn.params["organization_id"] || conn.path_params["org_id"]

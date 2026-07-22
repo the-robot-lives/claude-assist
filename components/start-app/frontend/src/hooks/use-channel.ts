@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { joinChannel } from "@/lib/socket";
 import type { Channel } from "phoenix";
 
+// ⟦𓌈𓊎𓏩𓋭⟧ useChannel :: auto-generated pointer for public function useChannel
 export function useChannel(topic: string | null) {
   const channelRef = useRef<Channel | null>(null);
   const [connected, setConnected] = useState(false);

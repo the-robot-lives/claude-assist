@@ -54,6 +54,7 @@ function classNames(...classes) {
   return classes.filter(Boolean).join(' ')
 }
 
+// ⟦𓆐𓀩𓊅𓈿⟧ WithComments02 :: auto-generated pointer for public function WithComments02
 export function WithComments02() {
   const [selected, setSelected] = useState(moods[5])
 

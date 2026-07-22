@@ -5,6 +5,7 @@
 import { PhotoIcon, UserCircleIcon } from '@heroicons/react/24/solid'
 import { ChevronDownIcon } from '@heroicons/react/16/solid'
 
+// ⟦𓄬𓆖𓌻𓁐⟧ LabelsOnLeft05 :: auto-generated pointer for public function LabelsOnLeft05
 export function LabelsOnLeft05() {
   return (
     <form>

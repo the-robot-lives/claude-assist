@@ -43,6 +43,7 @@ function VerifyEmailContent() {
   );
 }
 
+// ⟦𓌽𓈡𓀜𓀌⟧ VerifyEmailPage :: auto-generated pointer for public function VerifyEmailPage
 export default function VerifyEmailPage() {
   return (
     <Suspense fallback={<div style={{ maxWidth: 480, margin: "80px auto", textAlign: "center", padding: "0 24px" }}>Loading...</div>}>

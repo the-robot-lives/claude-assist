@@ -12,6 +12,7 @@ defmodule StarterWeb.Hologram.Pages.ForgotPasswordPage do
   route "/forgot-password"
   layout MainLayout, page_title: "Forgot Password"
 
+  # ⟦𓄈𓇾𓐬𓎬⟧ init :: auto-generated pointer for public function init
   def init(_params, component, _server) do
     put_state(component,
       step: "request",
@@ -26,6 +27,7 @@ defmodule StarterWeb.Hologram.Pages.ForgotPasswordPage do
     )
   end
 
+  # ⟦𓄹𓋚𓈶𓈖⟧ template :: auto-generated pointer for public function template
   def template do
     ~HOLO"""
     <div class="content">
@@ -108,6 +110,7 @@ defmodule StarterWeb.Hologram.Pages.ForgotPasswordPage do
     """
   end
 
+  # ⟦𓅅𓎊𓎴𓍛⟧ action :: auto-generated pointer for public function action
   def action(:set_email, params, c), do: put_state(c, :email, params.event.value)
   def action(:set_code, params, c), do: put_state(c, :code, params.event.value)
   def action(:set_new_password, params, c), do: put_state(c, :new_password, params.event.value)
@@ -179,6 +182,7 @@ defmodule StarterWeb.Hologram.Pages.ForgotPasswordPage do
     put_state(component, loading: false, error: params.error || "Invalid or expired code")
   end
 
+  # ⟦𓁤𓏉𓎕𓎓⟧ command :: auto-generated pointer for public function command
   def command(:request_reset, params, server) do
     case Starter.Auth.SmartTokenAuth.request_password_reset(params.email) do
       {:ok, %{otp_code: code}} ->

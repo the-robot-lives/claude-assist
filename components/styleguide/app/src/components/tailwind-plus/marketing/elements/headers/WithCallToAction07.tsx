@@ -14,6 +14,7 @@ const navigation = [
   { name: 'Company', href: '#' },
 ]
 
+// ⟦𓂂𓐣𓊝𓌛⟧ WithCallToAction07 :: auto-generated pointer for public function WithCallToAction07
 export function WithCallToAction07() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 

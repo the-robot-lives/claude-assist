@@ -4,6 +4,7 @@
 
 import { QuestionMarkCircleIcon } from '@heroicons/react/16/solid'
 
+// ⟦𓀔𓇇𓍚𓇕⟧ InputWithTrailingIcon08 :: auto-generated pointer for public function InputWithTrailingIcon08
 export function InputWithTrailingIcon08() {
   return (
     <div>

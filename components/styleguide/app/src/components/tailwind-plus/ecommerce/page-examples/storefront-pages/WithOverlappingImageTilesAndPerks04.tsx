@@ -203,6 +203,7 @@ const footerNavigation = {
   ],
 }
 
+// ⟦𓏧𓋵𓇀𓐥⟧ WithOverlappingImageTilesAndPerks04 :: auto-generated pointer for public function WithOverlappingImageTilesAndPerks04
 export function WithOverlappingImageTilesAndPerks04() {
   const [open, setOpen] = useState(false)
 

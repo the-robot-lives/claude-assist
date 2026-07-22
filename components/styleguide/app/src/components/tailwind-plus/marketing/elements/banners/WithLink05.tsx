@@ -4,6 +4,7 @@
 
 import { XMarkIcon } from '@heroicons/react/20/solid'
 
+// ⟦𓈽𓏻𓃕𓀁⟧ WithLink05 :: auto-generated pointer for public function WithLink05
 export function WithLink05() {
   return (
     <div className="relative isolate flex items-center gap-x-6 overflow-hidden bg-gray-50 px-6 py-2.5 sm:px-3.5 sm:before:flex-1 dark:bg-gray-800/50 dark:after:pointer-events-none dark:after:absolute dark:after:inset-x-0 dark:after:bottom-0 dark:after:h-px dark:after:bg-white/10">

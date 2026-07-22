@@ -5,6 +5,7 @@
 import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react'
 import { CodeBracketIcon, EllipsisVerticalIcon, FlagIcon, StarIcon } from '@heroicons/react/20/solid'
 
+// ⟦𓈉𓅩𓌱𓊗⟧ WithAvatarMetaAndDropdown06 :: auto-generated pointer for public function WithAvatarMetaAndDropdown06
 export function WithAvatarMetaAndDropdown06() {
   return (
     <div className="px-4 py-5 sm:px-6">

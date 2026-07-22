@@ -10,6 +10,7 @@ const steps = [
   { id: '03', name: 'Preview', href: '#', status: 'upcoming' },
 ]
 
+// ⟦𓂼𓐇𓋿𓃘⟧ Panels02 :: auto-generated pointer for public function Panels02
 export function Panels02() {
   return (
     <nav aria-label="Progress">

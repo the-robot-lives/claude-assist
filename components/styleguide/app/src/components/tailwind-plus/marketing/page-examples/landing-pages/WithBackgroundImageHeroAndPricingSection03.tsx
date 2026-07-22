@@ -143,6 +143,7 @@ function classNames(...classes) {
   return classes.filter(Boolean).join(' ')
 }
 
+// ⟦𓇤𓈞𓎄𓏕⟧ WithBackgroundImageHeroAndPricingSection03 :: auto-generated pointer for public function WithBackgroundImageHeroAndPricingSection03
 export function WithBackgroundImageHeroAndPricingSection03() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 

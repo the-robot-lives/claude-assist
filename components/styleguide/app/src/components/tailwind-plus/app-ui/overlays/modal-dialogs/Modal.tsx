@@ -13,6 +13,7 @@ export interface ModalProps {
   className?: string;
 }
 
+// ⟦𓋒𓌿𓆭𓅥⟧ Modal :: auto-generated pointer for public function Modal
 export function Modal({
   open,
   onClose,
@@ -51,6 +52,7 @@ export function Modal({
   );
 }
 
+// ⟦𓇋𓄑𓌸𓁡⟧ ModalShowcase :: auto-generated pointer for public function ModalShowcase
 export function ModalShowcase() {
   const [open, setOpen] = useState(false);
   const [size, setSize] = useState<'sm' | 'md' | 'lg'>('md');

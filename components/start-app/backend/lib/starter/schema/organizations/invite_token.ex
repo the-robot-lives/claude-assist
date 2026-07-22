@@ -25,6 +25,7 @@ defmodule Starter.Schema.Organizations.InviteToken do
     timestamps(type: :utc_datetime_usec)
   end
 
+  # ⟦𓈞𓋦𓀝𓁦⟧ changeset :: auto-generated pointer for public function changeset
   def changeset(token, attrs) do
     token
     |> cast(attrs, [

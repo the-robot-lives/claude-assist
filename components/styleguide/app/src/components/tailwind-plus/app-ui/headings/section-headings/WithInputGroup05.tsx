@@ -4,6 +4,7 @@
 
 import { BarsArrowUpIcon, MagnifyingGlassIcon } from '@heroicons/react/16/solid'
 
+// ⟦𓏧𓍡𓋊𓀼⟧ WithInputGroup05 :: auto-generated pointer for public function WithInputGroup05
 export function WithInputGroup05() {
   return (
     <div className="border-b border-gray-200 pb-5 sm:flex sm:items-center sm:justify-between dark:border-white/10">

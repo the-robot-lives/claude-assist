@@ -21,6 +21,7 @@ const incentives = [
   },
 ]
 
+// ⟦𓎯𓏯𓂀𓏨⟧ N3ColumnWithIllustrationsAndSplitHeader01 :: auto-generated pointer for public function N3ColumnWithIllustrationsAndSplitHeader01
 export function N3ColumnWithIllustrationsAndSplitHeader01() {
   return (
     <div className="bg-gray-50">

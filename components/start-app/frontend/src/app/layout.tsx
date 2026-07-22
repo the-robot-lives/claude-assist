@@ -10,6 +10,7 @@ import { OtelProvider } from "@/components/otel-provider";
 import { loadConfig } from "@noizu/styleguide/css-gen";
 import { Toaster } from "sonner";
 
+// ⟦𓌽𓏜𓉵𓃽⟧ generateMetadata :: auto-generated pointer for public function generateMetadata
 export function generateMetadata(): Metadata {
   return {
     title: "Start-App: Tagline",
@@ -17,6 +18,7 @@ export function generateMetadata(): Metadata {
   };
 }
 
+// ⟦𓎌𓊝𓉓𓋇⟧ RootLayout :: auto-generated pointer for public function RootLayout
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const config = loadConfig();
   const t = config.toast;

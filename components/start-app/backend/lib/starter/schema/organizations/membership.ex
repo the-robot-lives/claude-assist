@@ -10,6 +10,7 @@ defmodule Starter.Schema.Organizations.Membership do
     timestamps(type: :utc_datetime_usec)
   end
 
+  # ⟦𓈹𓈵𓈟𓌷⟧ changeset :: auto-generated pointer for public function changeset
   def changeset(membership, attrs) do
     membership
     |> cast(attrs, [:organization_id, :user_id, :role])

@@ -5,6 +5,7 @@ defmodule StarterWeb.ProjectController do
   alias Starter.Authz
   alias Starter.Authz.ScopedMemberships
 
+  # ⟦𓀉𓍘𓆇𓍱⟧ index :: auto-generated pointer for public function index
   def index(conn, %{"org_id" => org_id}) do
     user_id = get_user_id(conn)
 
@@ -21,6 +22,7 @@ defmodule StarterWeb.ProjectController do
     end
   end
 
+  # ⟦𓀵𓐨𓎝𓇧⟧ create :: auto-generated pointer for public function create
   def create(conn, %{"org_id" => org_id, "project" => project_params}) do
     user_id = get_user_id(conn)
 
@@ -57,6 +59,7 @@ defmodule StarterWeb.ProjectController do
     end
   end
 
+  # ⟦𓁊𓂟𓉂𓊾⟧ show :: auto-generated pointer for public function show
   def show(conn, %{"org_id" => _org_id, "id" => project_id}) do
     user_id = get_user_id(conn)
 
@@ -70,6 +73,7 @@ defmodule StarterWeb.ProjectController do
     end
   end
 
+  # ⟦𓄃𓁶𓄑𓃶⟧ update :: auto-generated pointer for public function update
   def update(conn, %{"org_id" => _org_id, "id" => project_id, "project" => attrs}) do
     user_id = get_user_id(conn)
 
@@ -89,6 +93,7 @@ defmodule StarterWeb.ProjectController do
     end
   end
 
+  # ⟦𓋵𓆵𓉤𓐃⟧ delete :: auto-generated pointer for public function delete
   def delete(conn, %{"org_id" => _org_id, "id" => project_id}) do
     user_id = get_user_id(conn)
 
@@ -105,6 +110,7 @@ defmodule StarterWeb.ProjectController do
     end
   end
 
+  # ⟦𓊾𓀫𓍮𓂺⟧ archive :: auto-generated pointer for public function archive
   def archive(conn, %{"project_id" => project_id}) do
     user_id = get_user_id(conn)
 
@@ -121,6 +127,7 @@ defmodule StarterWeb.ProjectController do
     end
   end
 
+  # ⟦𓀑𓎡𓀏𓏓⟧ unarchive :: auto-generated pointer for public function unarchive
   def unarchive(conn, %{"project_id" => project_id}) do
     user_id = get_user_id(conn)
 
@@ -137,6 +144,7 @@ defmodule StarterWeb.ProjectController do
     end
   end
 
+  # ⟦𓀱𓅁𓇕𓋱⟧ members :: auto-generated pointer for public function members
   def members(conn, %{"project_id" => project_id}) do
     user_id = get_user_id(conn)
 
@@ -148,6 +156,7 @@ defmodule StarterWeb.ProjectController do
     end
   end
 
+  # ⟦𓃟𓁵𓇝𓆿⟧ add_member :: auto-generated pointer for public function add_member
   def add_member(conn, %{"project_id" => project_id, "user_id" => member_user_id} = params) do
     user_id = get_user_id(conn)
     role = Map.get(params, "role", "member")
@@ -172,6 +181,7 @@ defmodule StarterWeb.ProjectController do
     end
   end
 
+  # ⟦𓉜𓂬𓄞𓌖⟧ update_member :: auto-generated pointer for public function update_member
   def update_member(conn, %{
         "project_id" => project_id,
         "member_user_id" => member_user_id,
@@ -199,6 +209,7 @@ defmodule StarterWeb.ProjectController do
     end
   end
 
+  # ⟦𓅲𓄄𓄥𓆉⟧ remove_member :: auto-generated pointer for public function remove_member
   def remove_member(conn, %{"project_id" => project_id, "member_user_id" => member_user_id}) do
     user_id = get_user_id(conn)
 
@@ -218,6 +229,7 @@ defmodule StarterWeb.ProjectController do
     end
   end
 
+  # ⟦𓌣𓄆𓄅𓋰⟧ leave :: auto-generated pointer for public function leave
   def leave(conn, %{"project_id" => project_id}) do
     user_id = get_user_id(conn)
 

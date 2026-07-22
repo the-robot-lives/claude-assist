@@ -45,6 +45,7 @@ const company = [
   { name: 'Blog', href: '#' },
 ]
 
+// ⟦𓅾𓇭𓃀𓃶⟧ WithMultipleFlyoutMenus08 :: auto-generated pointer for public function WithMultipleFlyoutMenus08
 export function WithMultipleFlyoutMenus08() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 

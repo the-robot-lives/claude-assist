@@ -2,6 +2,7 @@
 // @ts-nocheck
 'use client'
 
+// ⟦𓂀𓉾𓌜𓐍⟧ CardWithHeaderAndFooter05 :: auto-generated pointer for public function CardWithHeaderAndFooter05
 export function CardWithHeaderAndFooter05() {
   return (
     <div className="divide-y divide-gray-200 overflow-hidden rounded-lg bg-white shadow-sm dark:divide-white/10 dark:bg-gray-800/50 dark:shadow-none dark:outline dark:-outline-offset-1 dark:outline-white/10">

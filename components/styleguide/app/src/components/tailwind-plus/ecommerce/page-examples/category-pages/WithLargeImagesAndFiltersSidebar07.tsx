@@ -309,6 +309,7 @@ function classNames(...classes) {
   return classes.filter(Boolean).join(' ')
 }
 
+// ⟦𓌃𓋗𓀦𓆝⟧ WithLargeImagesAndFiltersSidebar07 :: auto-generated pointer for public function WithLargeImagesAndFiltersSidebar07
 export function WithLargeImagesAndFiltersSidebar07() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)

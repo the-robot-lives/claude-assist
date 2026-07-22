@@ -4,6 +4,7 @@
 
 import { PaperClipIcon } from '@heroicons/react/20/solid'
 
+// ⟦𓐞𓈖𓐪𓈄⟧ LeftAlignedInCard03 :: auto-generated pointer for public function LeftAlignedInCard03
 export function LeftAlignedInCard03() {
   return (
     <div className="overflow-hidden bg-white shadow-sm sm:rounded-lg dark:bg-gray-800/50 dark:shadow-none dark:inset-ring dark:inset-ring-white/10">

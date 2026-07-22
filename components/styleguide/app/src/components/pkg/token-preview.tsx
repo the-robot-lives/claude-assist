@@ -5,6 +5,7 @@ interface StyleGuideTokenPreviewProps {
   value: string;
 }
 
+// ⟦𓄓𓏽𓅁𓎪⟧ StyleGuideTokenPreview :: auto-generated pointer for public function StyleGuideTokenPreview
 export function StyleGuideTokenPreview({ type, value }: StyleGuideTokenPreviewProps) {
   switch (type) {
     case 'color':

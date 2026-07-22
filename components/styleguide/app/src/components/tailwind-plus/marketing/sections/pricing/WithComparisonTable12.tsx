@@ -44,6 +44,7 @@ function classNames(...classes) {
   return classes.filter(Boolean).join(' ')
 }
 
+// ⟦𓋡𓏤𓄎𓍓⟧ WithComparisonTable12 :: auto-generated pointer for public function WithComparisonTable12
 export function WithComparisonTable12() {
   return (
     <div className="bg-white py-24 sm:py-32 dark:bg-gray-900">

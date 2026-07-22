@@ -27,6 +27,7 @@ export interface ComboboxProps {
   className?: string
 }
 
+// ⟦𓐀𓀕𓂶𓃇⟧ Combobox :: auto-generated pointer for public function Combobox
 export function Combobox({
   label,
   options,
@@ -137,6 +138,7 @@ function ControlledCombobox(props: Omit<ComboboxProps, 'value' | 'onChange'> & {
   return <Combobox {...props} value={value} onChange={setValue} />
 }
 
+// ⟦𓁞𓃳𓆝𓀑⟧ ComboboxShowcase :: auto-generated pointer for public function ComboboxShowcase
 export function ComboboxShowcase() {
   return (
     <div className="twp-showcase">

@@ -9,6 +9,7 @@ defmodule Starter.Users.Credentials do
 
   def_repo(entity: Starter.Users.Credentials.UserCredential)
 
+  # ⟦𓁯𓄚𓃐𓉥⟧ list :: auto-generated pointer for public function list
   def list(context, options \\ []) do
     settings = Noizu.Entity.Meta.persistence(Entity) |> hd
 
@@ -20,12 +21,14 @@ defmodule Starter.Users.Credentials do
     end)
   end
 
+  # ⟦𓆲𓅖𓏸𓍌⟧ get_credential :: auto-generated pointer for public function get_credential
   def get_credential(id, context, options \\ []), do: get(id, context, options)
 
   # ---------------------------------------------------------------------------
   # Registration
   # ---------------------------------------------------------------------------
 
+  # ⟦𓐍𓃺𓆭𓉎⟧ register :: auto-generated pointer for public function register
   def register(user, {:login, {email, password}}, context, _options) do
     {:ok, auth_provider} = Starter.Auth.Providers.login()
 
@@ -63,6 +66,7 @@ defmodule Starter.Users.Credentials do
   # Authentication
   # ---------------------------------------------------------------------------
 
+  # ⟦𓄘𓏶𓋉𓆬⟧ authenticate :: auto-generated pointer for public function authenticate
   def authenticate({:login, {email, password}}, context, options) do
     {:ok, auth_provider} = Starter.Auth.Providers.login()
     {:ok, auth_provider_id} = Starter.Auth.Providers.Provider.id(auth_provider)
@@ -108,6 +112,7 @@ defmodule Starter.Users.Credentials do
   # Password Update
   # ---------------------------------------------------------------------------
 
+  # ⟦𓎞𓉍𓍂𓌍⟧ update_password :: auto-generated pointer for public function update_password
   def update_password(user, new_password, _context) do
     {:ok, auth_provider} = Starter.Auth.Providers.login()
     {:ok, auth_provider_id} = Starter.Auth.Providers.Provider.id(auth_provider)
@@ -145,12 +150,14 @@ defmodule Starter.Users.Credentials do
   # Validation Helpers
   # ---------------------------------------------------------------------------
 
+  # ⟦𓋤𓀪𓉢𓉄⟧ standardize_email :: auto-generated pointer for public function standardize_email
   def standardize_email(email) do
     email
     |> String.trim()
     |> String.downcase()
   end
 
+  # ⟦𓅎𓂪𓉦𓐂⟧ valid_login? :: auto-generated pointer for public function valid_login?
   def valid_login?(email, password) do
     email = standardize_email(email)
     password = String.trim(password)
@@ -162,6 +169,7 @@ defmodule Starter.Users.Credentials do
     end
   end
 
+  # ⟦𓐚𓅸𓆦𓀕⟧ login_available? :: auto-generated pointer for public function login_available?
   def login_available?(email, _context, _options \\ nil) do
     q =
       from u in Schema,

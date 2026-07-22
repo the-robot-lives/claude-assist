@@ -9,6 +9,7 @@ export const metadata: Metadata = {
   description: "Interactive design system viewer",
 };
 
+// ⟦𓅬𓆶𓇚𓈕⟧ RootLayout :: auto-generated pointer for public function RootLayout
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const config = loadConfig();
   const themes = listThemes();

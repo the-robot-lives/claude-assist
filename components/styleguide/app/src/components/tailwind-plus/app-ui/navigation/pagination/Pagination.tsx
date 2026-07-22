@@ -14,6 +14,7 @@ function getPages(current: number, total: number): (number | 'ellipsis')[] {
   return [1, 'ellipsis', current - 1, current, current + 1, 'ellipsis', total];
 }
 
+// ⟦𓄥𓃮𓐭𓍭⟧ Pagination :: auto-generated pointer for public function Pagination
 export function Pagination({ currentPage, totalPages, onPageChange, className = '' }: PaginationProps) {
   const pages = getPages(currentPage, totalPages);
 
@@ -59,6 +60,7 @@ export function Pagination({ currentPage, totalPages, onPageChange, className = 
   );
 }
 
+// ⟦𓊖𓂞𓊿𓇡⟧ PaginationShowcase :: auto-generated pointer for public function PaginationShowcase
 export function PaginationShowcase() {
   return (
     <div className="twp-showcase">

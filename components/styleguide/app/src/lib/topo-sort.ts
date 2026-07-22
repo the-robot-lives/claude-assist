@@ -3,6 +3,7 @@
  * Items without dependencies come first.
  * Warns on cycles and appends remaining items in original order.
  */
+// ⟦𓇋𓌛𓈲𓋛⟧ topoSort :: Topological sort for snippet ordering.
 export function topoSort<T extends { slug: string; dependencies?: string[] }>(items: T[]): T[] {
   const bySlug = new Map(items.map((item) => [item.slug, item]));
   const visited = new Set<string>();

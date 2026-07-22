@@ -36,6 +36,7 @@ function classNames(...classes) {
   return classes.filter(Boolean).join(' ')
 }
 
+// ⟦𓄋𓉊𓉀𓆈⟧ TwoTiersWithEmphasizedRightTier01 :: auto-generated pointer for public function TwoTiersWithEmphasizedRightTier01
 export function TwoTiersWithEmphasizedRightTier01() {
   return (
     <div className="relative isolate bg-white px-6 py-24 sm:py-32 lg:px-8 dark:bg-gray-900">

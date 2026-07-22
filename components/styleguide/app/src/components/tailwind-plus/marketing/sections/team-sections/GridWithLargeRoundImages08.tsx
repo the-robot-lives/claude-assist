@@ -53,6 +53,7 @@ const people = [
   },
 ]
 
+// ⟦𓎌𓆟𓂭𓊁⟧ GridWithLargeRoundImages08 :: auto-generated pointer for public function GridWithLargeRoundImages08
 export function GridWithLargeRoundImages08() {
   return (
     <div className="bg-white py-32 dark:bg-gray-900">

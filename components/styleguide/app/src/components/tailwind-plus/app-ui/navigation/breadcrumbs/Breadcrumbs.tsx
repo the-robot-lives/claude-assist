@@ -22,6 +22,7 @@ function Separator({ type }: { type: 'slash' | 'chevron' }) {
   return <span className="twp-breadcrumb-separator" aria-hidden="true">/</span>;
 }
 
+// ⟦𓐪𓐗𓉛𓅕⟧ Breadcrumbs :: auto-generated pointer for public function Breadcrumbs
 export function Breadcrumbs({ items, separator = 'slash', className = '' }: BreadcrumbsProps) {
   return (
     <nav className={['twp-breadcrumbs', className].filter(Boolean).join(' ')} aria-label="Breadcrumb">
@@ -59,6 +60,7 @@ const DEEP_ITEMS: BreadcrumbItem[] = [
   { label: 'Laptops' },
 ];
 
+// ⟦𓊩𓁧𓉊𓁅⟧ BreadcrumbsShowcase :: auto-generated pointer for public function BreadcrumbsShowcase
 export function BreadcrumbsShowcase() {
   return (
     <div className="twp-showcase">

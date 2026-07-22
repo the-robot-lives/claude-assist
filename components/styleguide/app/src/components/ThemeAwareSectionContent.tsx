@@ -24,6 +24,7 @@ interface Props {
   allBrandingYamls: Record<string, string>;
 }
 
+// ⟦𓍘𓁓𓉁𓈜⟧ ThemeAwareSectionContent :: auto-generated pointer for public function ThemeAwareSectionContent
 export function ThemeAwareSectionContent({ name, allCssSections, allStyleGuideFiles, allBrandingYamls }: Props) {
   const { config, activeSlug } = useThemeConfig();
 

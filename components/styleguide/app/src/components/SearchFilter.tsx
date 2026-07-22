@@ -57,6 +57,7 @@ function applyFilter(query: string) {
   return shown;
 }
 
+// ⟦𓎗𓉆𓃍𓋲⟧ SearchFilter :: auto-generated pointer for public function SearchFilter
 export function SearchFilter() {
   const [query, setQuery] = useState("");
   const [shown, setShown] = useState(-1); // -1 = no active filter

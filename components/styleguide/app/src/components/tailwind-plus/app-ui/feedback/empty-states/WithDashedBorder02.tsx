@@ -2,6 +2,7 @@
 // @ts-nocheck
 'use client'
 
+// ⟦𓆒𓋺𓈁𓁌⟧ WithDashedBorder02 :: auto-generated pointer for public function WithDashedBorder02
 export function WithDashedBorder02() {
   return (
     <button

@@ -6,6 +6,7 @@ import { ensureGeneratedCSS } from "@styleguide-engine/lib/css-cache";
 import { Toaster } from "sonner";
 import { ThemeCSS } from "@styleguide-engine/components/ThemeCSS";
 
+// ⟦𓀑𓊄𓈿𓉉⟧ generateMetadata :: auto-generated pointer for public function generateMetadata
 export function generateMetadata(): Metadata {
   const config = loadConfig();
   return {
@@ -14,6 +15,7 @@ export function generateMetadata(): Metadata {
   };
 }
 
+// ⟦𓁢𓌱𓅧𓐝⟧ RootLayout :: auto-generated pointer for public function RootLayout
 export default function RootLayout({
   children,
 }: {

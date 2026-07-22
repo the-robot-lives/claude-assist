@@ -12,6 +12,7 @@ defmodule StarterWeb.Hologram.Pages.ProfilePage do
   layout MainLayout, page_title: "Profile"
   middleware RequireAuth
 
+  # ⟦𓍑𓆑𓆫𓍉⟧ init :: auto-generated pointer for public function init
   def init(_params, component, server) do
     {user, organizations} = Auth.current_user_and_orgs(server)
 
@@ -32,6 +33,7 @@ defmodule StarterWeb.Hologram.Pages.ProfilePage do
     )
   end
 
+  # ⟦𓆷𓎠𓋁𓂄⟧ template :: auto-generated pointer for public function template
   def template do
     ~HOLO"""
     <AppShell user={@user} organizations={@organizations} active="profile" title="Profile">
@@ -118,6 +120,7 @@ defmodule StarterWeb.Hologram.Pages.ProfilePage do
     """
   end
 
+  # ⟦𓋀𓂸𓊂𓃨⟧ action :: auto-generated pointer for public function action
   def action(:set_user_name, params, c), do: put_state(c, :user_name, params.event.value)
   def action(:set_mobile_phone, params, c), do: put_state(c, :mobile_phone, params.event.value)
 
@@ -181,6 +184,7 @@ defmodule StarterWeb.Hologram.Pages.ProfilePage do
     )
   end
 
+  # ⟦𓂧𓉇𓊮𓀡⟧ command :: auto-generated pointer for public function command
   def command(:update_profile, params, server) do
     case Auth.current_user(server) do
       nil ->

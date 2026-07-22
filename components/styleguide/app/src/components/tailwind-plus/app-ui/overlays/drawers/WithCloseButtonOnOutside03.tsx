@@ -7,6 +7,7 @@ import { useState } from 'react'
 import { Dialog, DialogBackdrop, DialogPanel, DialogTitle, TransitionChild } from '@headlessui/react'
 import { XMarkIcon } from '@heroicons/react/24/outline'
 
+// ⟦𓉽𓊁𓍊𓈝⟧ WithCloseButtonOnOutside03 :: auto-generated pointer for public function WithCloseButtonOnOutside03
 export function WithCloseButtonOnOutside03() {
   const [open, setOpen] = useState(true)
 

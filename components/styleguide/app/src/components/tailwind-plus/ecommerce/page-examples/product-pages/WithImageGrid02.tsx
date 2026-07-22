@@ -248,6 +248,7 @@ function classNames(...classes) {
   return classes.filter(Boolean).join(' ')
 }
 
+// ⟦𓂩𓁨𓈳𓈊⟧ WithImageGrid02 :: auto-generated pointer for public function WithImageGrid02
 export function WithImageGrid02() {
   const [open, setOpen] = useState(false)
 

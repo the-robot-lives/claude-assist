@@ -14,6 +14,7 @@ import {
 
 // ─── TextInputDemo ───
 
+// ⟦𓍏𓄑𓀃𓐥⟧ TextInputDemo :: auto-generated pointer for public function TextInputDemo
 export function TextInputDemo() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("not-an-email");
@@ -64,6 +65,7 @@ export function TextInputDemo() {
 
 // ─── SelectDemo ───
 
+// ⟦𓇩𓃧𓇣𓈗⟧ SelectDemo :: auto-generated pointer for public function SelectDemo
 export function SelectDemo() {
   const [country, setCountry] = useState("us");
   const [plan, setPlan] = useState("");
@@ -109,6 +111,7 @@ export function SelectDemo() {
 
 const MAX = 160;
 
+// ⟦𓎦𓇮𓆇𓋛⟧ TextareaDemo :: auto-generated pointer for public function TextareaDemo
 export function TextareaDemo() {
   const [bio, setBio] = useState(
     "Space Grotesk brings geometric precision without sacrificing warmth. Paired with IBM Plex Mono for code."
@@ -153,6 +156,7 @@ export function TextareaDemo() {
 
 // ─── FormLayoutDemo ───
 
+// ⟦𓋥𓈁𓋠𓎪⟧ FormLayoutDemo :: auto-generated pointer for public function FormLayoutDemo
 export function FormLayoutDemo() {
   const [form, setForm] = useState({ first: "", last: "", email: "", role: "designer" });
   const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
@@ -199,6 +203,7 @@ export function FormLayoutDemo() {
 
 // ─── ValidationDemo ───
 
+// ⟦𓅘𓋲𓐉𓉍⟧ ValidationDemo :: auto-generated pointer for public function ValidationDemo
 export function ValidationDemo() {
   const [fields, setFields] = useState({
     email: "not-an-email",

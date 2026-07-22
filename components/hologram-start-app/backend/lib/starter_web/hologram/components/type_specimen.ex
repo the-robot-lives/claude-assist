@@ -10,6 +10,7 @@ defmodule StarterWeb.Hologram.Components.TypeSpecimen do
   prop :sample, :string, default: "The quick brown fox jumps over the lazy dog."
   prop :usage, :string, default: nil
 
+  # ⟦𓁫𓏧𓃢𓇀⟧ template :: auto-generated pointer for public function template
   def template do
     ~HOLO"""
     <div class="type-specimen">

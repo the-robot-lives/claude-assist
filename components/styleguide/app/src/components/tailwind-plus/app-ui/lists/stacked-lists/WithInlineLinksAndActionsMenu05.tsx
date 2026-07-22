@@ -66,6 +66,7 @@ const people = [
   },
 ]
 
+// ⟦𓄔𓊙𓐔𓆩⟧ WithInlineLinksAndActionsMenu05 :: auto-generated pointer for public function WithInlineLinksAndActionsMenu05
 export function WithInlineLinksAndActionsMenu05() {
   return (
     <ul role="list" className="divide-y divide-gray-100 dark:divide-white/5">

@@ -34,6 +34,7 @@ function classNames(...classes) {
   return classes.filter(Boolean).join(' ')
 }
 
+// ⟦𓈑𓄄𓂂𓎾⟧ WithAvatarAndActions02 :: auto-generated pointer for public function WithAvatarAndActions02
 export function WithAvatarAndActions02() {
   const [selected, setSelected] = useState(moods[5])
 

@@ -12,6 +12,7 @@ defmodule StarterWeb.Hologram.Sections.ShellLayouts do
 
   prop :theme_slug, :string, default: "style-guide"
 
+  # ⟦𓏝𓊊𓂏𓂫⟧ init :: auto-generated pointer for public function init
   def init(props, component, _server), do: do_init(props, component)
   def init(props, component), do: do_init(props, component)
 
@@ -30,6 +31,7 @@ defmodule StarterWeb.Hologram.Sections.ShellLayouts do
     )
   end
 
+  # ⟦𓄣𓅆𓏇𓌧⟧ template :: auto-generated pointer for public function template
   def template do
     ~HOLO"""
     <div class="sg-shell-layouts">
@@ -277,6 +279,7 @@ defmodule StarterWeb.Hologram.Sections.ShellLayouts do
     """
   end
 
+  # ⟦𓏒𓌋𓉜𓈀⟧ action :: auto-generated pointer for public function action
   def action(:set_tab, params, component) do
     put_state(component, tab: params.id)
   end

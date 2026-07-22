@@ -15,10 +15,12 @@ defmodule StarterWeb.Hologram.Pages.HomePage do
   route "/"
   layout MainLayout, page_title: "Start-App: Tagline"
 
+  # ⟦𓃤𓃧𓏁𓏠⟧ init :: auto-generated pointer for public function init
   def init(_params, component, _server) do
     put_state(component, :ready, true)
   end
 
+  # ⟦𓃜𓄗𓆀𓂠⟧ template :: auto-generated pointer for public function template
   def template do
     ~HOLO"""
     <div class="content">

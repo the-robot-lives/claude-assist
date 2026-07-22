@@ -4,12 +4,14 @@ defmodule StarterWeb.PolicyController do
   alias Starter.Authz
   alias Starter.Authz.Policies
 
+  # ⟦𓋕𓄜𓁝𓊀⟧ index :: auto-generated pointer for public function index
   def index(conn, params) do
     opts = if params["system_only"] == "true", do: [system_only: true], else: []
     policies = Policies.list_active(opts)
     json(conn, %{policies: Enum.map(policies, &policy_to_json/1)})
   end
 
+  # ⟦𓌙𓎱𓀶𓎷⟧ create :: auto-generated pointer for public function create
   def create(conn, %{"policy" => attrs}) do
     case Policies.create_policy(attrs) do
       {:ok, policy} ->
@@ -20,6 +22,7 @@ defmodule StarterWeb.PolicyController do
     end
   end
 
+  # ⟦𓎣𓎠𓇷𓄙⟧ show :: auto-generated pointer for public function show
   def show(conn, %{"id" => id}) do
     case Starter.Repo.get(Starter.Schema.Authz.Policy, id) do
       nil -> conn |> put_status(:not_found) |> json(%{error: "Policy not found"})
@@ -27,6 +30,7 @@ defmodule StarterWeb.PolicyController do
     end
   end
 
+  # ⟦𓄪𓐌𓂁𓄉⟧ update :: auto-generated pointer for public function update
   def update(conn, %{"id" => id, "policy" => attrs}) do
     case Policies.update_policy(id, attrs) do
       {:ok, policy} ->
@@ -43,6 +47,7 @@ defmodule StarterWeb.PolicyController do
     end
   end
 
+  # ⟦𓇫𓅧𓌑𓍳⟧ delete :: auto-generated pointer for public function delete
   def delete(conn, %{"id" => id}) do
     case Policies.delete_policy(id) do
       {:ok, _} ->
@@ -56,6 +61,7 @@ defmodule StarterWeb.PolicyController do
     end
   end
 
+  # ⟦𓉓𓌬𓇷𓃿⟧ check :: auto-generated pointer for public function check
   def check(conn, %{
         "resource_type" => resource_type,
         "resource_id" => resource_id,
@@ -72,6 +78,7 @@ defmodule StarterWeb.PolicyController do
     })
   end
 
+  # ⟦𓏜𓂣𓏢𓇬⟧ explain :: auto-generated pointer for public function explain
   def explain(conn, %{
         "resource_type" => resource_type,
         "resource_id" => resource_id,
@@ -82,12 +89,14 @@ defmodule StarterWeb.PolicyController do
     json(conn, result)
   end
 
+  # ⟦𓃪𓌋𓄟𓁽⟧ my_policies :: auto-generated pointer for public function my_policies
   def my_policies(conn, _params) do
     user_id = get_user_id(conn)
     policies = Policies.list_user_policies(user_id)
     json(conn, %{policies: policies})
   end
 
+  # ⟦𓋶𓊥𓄜𓍀⟧ attach_to_user :: auto-generated pointer for public function attach_to_user
   def attach_to_user(conn, %{"user_id" => target_user_id, "policy_id" => policy_id} = params) do
     opts = [
       resource_type: params["resource_type"],
@@ -104,6 +113,7 @@ defmodule StarterWeb.PolicyController do
     end
   end
 
+  # ⟦𓉴𓃨𓇘𓊔⟧ detach_from_user :: auto-generated pointer for public function detach_from_user
   def detach_from_user(conn, %{"user_id" => target_user_id, "policy_id" => policy_id}) do
     case Policies.detach_from_user(target_user_id, policy_id) do
       {:ok, _} ->

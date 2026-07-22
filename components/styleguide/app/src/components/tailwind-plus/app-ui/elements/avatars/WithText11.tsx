@@ -2,6 +2,7 @@
 // @ts-nocheck
 'use client'
 
+// ⟦𓉺𓎷𓇳𓃮⟧ WithText11 :: auto-generated pointer for public function WithText11
 export function WithText11() {
   return (
     <a href="#" className="group block shrink-0">

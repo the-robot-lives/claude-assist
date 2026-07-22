@@ -28,6 +28,7 @@ function classNames(...classes) {
   return classes.filter(Boolean).join(' ')
 }
 
+// ⟦𓐯𓅣𓐓𓈴⟧ DarkWithCenteredSearchAndSecondaryLinks09 :: auto-generated pointer for public function DarkWithCenteredSearchAndSecondaryLinks09
 export function DarkWithCenteredSearchAndSecondaryLinks09() {
   return (
     <Disclosure

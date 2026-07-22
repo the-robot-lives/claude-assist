@@ -2,6 +2,7 @@
 // @ts-nocheck
 'use client'
 
+// ⟦𓃎𓇕𓍈𓌬⟧ SimpleSideBySideOnBrand04 :: auto-generated pointer for public function SimpleSideBySideOnBrand04
 export function SimpleSideBySideOnBrand04() {
   return (
     <div className="bg-indigo-700 py-16 sm:py-24 lg:py-32">

@@ -1,5 +1,6 @@
 import type { StyleGuideConfig } from "../types";
 
+// ⟦𓋻𓇌𓇻𓏝⟧ generateFormsCSS :: auto-generated pointer for public function generateFormsCSS
 export function generateFormsCSS(_config: StyleGuideConfig): string {
   return `/* ═══════════════════════════════════════
    FORM CONTROLS  (HUI-compatible)

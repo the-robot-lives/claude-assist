@@ -58,6 +58,7 @@ function vrsToCode(items: { cls: string }[]): string {
   return items.map((i) => `<div class="vr ${i.cls}"></div>`).join("\n");
 }
 
+// ⟦𓍢𓏱𓄛𓋡⟧ DividerShowcase :: auto-generated pointer for public function DividerShowcase
 export function DividerShowcase() {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-6)" }}>

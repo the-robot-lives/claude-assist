@@ -7,6 +7,7 @@ import { useState } from 'react'
 import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react'
 import { ExclamationTriangleIcon } from '@heroicons/react/24/outline'
 
+// ⟦𓅴𓎚𓎑𓎻⟧ SimpleAlert03 :: auto-generated pointer for public function SimpleAlert03
 export function SimpleAlert03() {
   const [open, setOpen] = useState(true)
 

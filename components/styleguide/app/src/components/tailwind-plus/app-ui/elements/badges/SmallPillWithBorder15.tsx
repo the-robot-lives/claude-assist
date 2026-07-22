@@ -2,6 +2,7 @@
 // @ts-nocheck
 'use client'
 
+// ⟦𓍓𓆢𓊍𓀱⟧ SmallPillWithBorder15 :: auto-generated pointer for public function SmallPillWithBorder15
 export function SmallPillWithBorder15() {
   return (
     <>

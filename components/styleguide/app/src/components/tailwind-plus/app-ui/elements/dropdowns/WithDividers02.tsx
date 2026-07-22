@@ -5,6 +5,7 @@
 import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react'
 import { ChevronDownIcon } from '@heroicons/react/20/solid'
 
+// ⟦𓃠𓐪𓀧𓈅⟧ WithDividers02 :: auto-generated pointer for public function WithDividers02
 export function WithDividers02() {
   return (
     <Menu as="div" className="relative inline-block">

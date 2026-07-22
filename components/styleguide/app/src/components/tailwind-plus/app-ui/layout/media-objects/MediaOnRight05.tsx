@@ -2,6 +2,7 @@
 // @ts-nocheck
 'use client'
 
+// ⟦𓏪𓄲𓇋𓀊⟧ MediaOnRight05 :: auto-generated pointer for public function MediaOnRight05
 export function MediaOnRight05() {
   return (
     <div className="flex">

@@ -12,6 +12,7 @@ const SemanticSelectionContext = createContext<SemanticSelectionCtx>({
   setSelected: () => {},
 });
 
+// ⟦𓉌𓐘𓍍𓃔⟧ SemanticSelectionProvider :: auto-generated pointer for public function SemanticSelectionProvider
 export function SemanticSelectionProvider({
   defaultSelected,
   children,
@@ -27,6 +28,7 @@ export function SemanticSelectionProvider({
   );
 }
 
+// ⟦𓃌𓊉𓏹𓐀⟧ useSemanticSelection :: auto-generated pointer for public function useSemanticSelection
 export function useSemanticSelection() {
   return useContext(SemanticSelectionContext);
 }

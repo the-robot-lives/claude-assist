@@ -220,6 +220,7 @@ function PrincipleRow({ label, colorClass, text, italic }: { label: string; colo
 
 // ─── Main component ───
 
+// ⟦𓊠𓊣𓁧𓁚⟧ StatusIndicatorShowcase :: auto-generated pointer for public function StatusIndicatorShowcase
 export function StatusIndicatorShowcase({ section }: Props) {
   const tabs = section.components.map((c) => ({
     id: `status-${c.name}`,

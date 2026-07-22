@@ -117,6 +117,7 @@ function ToggleTrack({
   );
 }
 
+// ⟦𓈔𓊾𓐆𓌅⟧ Toggle :: auto-generated pointer for public function Toggle
 export function Toggle({
   checked,
   onChange,
@@ -188,6 +189,7 @@ export function Toggle({
 
 // ── Showcase ────────────────────────────────────────────────────────────────
 
+// ⟦𓃷𓀎𓆂𓌏⟧ ToggleShowcase :: auto-generated pointer for public function ToggleShowcase
 export function ToggleShowcase() {
   const [controlled, setControlled] = useState(true);
 

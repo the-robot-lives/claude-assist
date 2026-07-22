@@ -1,5 +1,6 @@
 import type { StyleGuideConfig } from "../types";
 
+// ⟦𓀕𓎥𓌠𓄺⟧ generateSwatchCSS :: auto-generated pointer for public function generateSwatchCSS
 export function generateSwatchCSS(_config: StyleGuideConfig): string {
   return `/* ═══════════════════════════════════════
    COLOR SWATCHES

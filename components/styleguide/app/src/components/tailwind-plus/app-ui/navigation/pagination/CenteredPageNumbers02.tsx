@@ -4,6 +4,7 @@
 
 import { ArrowLongLeftIcon, ArrowLongRightIcon } from '@heroicons/react/20/solid'
 
+// ⟦𓄑𓌀𓃂𓂘⟧ CenteredPageNumbers02 :: auto-generated pointer for public function CenteredPageNumbers02
 export function CenteredPageNumbers02() {
   return (
     <nav className="flex items-center justify-between border-t border-gray-200 px-4 sm:px-0 dark:border-white/10">

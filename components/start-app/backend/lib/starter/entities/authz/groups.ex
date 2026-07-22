@@ -9,14 +9,17 @@ defmodule Starter.Authz.Groups do
 
   import Ecto.Query
 
+  # ⟦𓃕𓉗𓀹𓐇⟧ list_all :: auto-generated pointer for public function list_all
   def list_all do
     Starter.Repo.all(from g in Schema, order_by: g.name)
   end
 
+  # ⟦𓃽𓈯𓀑𓇺⟧ get_by_name :: auto-generated pointer for public function get_by_name
   def get_by_name(name) when is_binary(name) do
     Starter.Repo.one(from g in Schema, where: g.name == ^name)
   end
 
+  # ⟦𓏕𓆤𓇔𓁨⟧ list_policies :: auto-generated pointer for public function list_policies
   def list_policies(group_id) do
     from(gp in GroupPolicySchema,
       join: p in PolicySchema,

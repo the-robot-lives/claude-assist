@@ -7,6 +7,7 @@ import { useState } from 'react'
 import { Dialog, DialogPanel, DialogTitle } from '@headlessui/react'
 import { XMarkIcon } from '@heroicons/react/24/outline'
 
+// ⟦𓆆𓎑𓃔𓆹⟧ Empty01 :: auto-generated pointer for public function Empty01
 export function Empty01() {
   const [open, setOpen] = useState(true)
 

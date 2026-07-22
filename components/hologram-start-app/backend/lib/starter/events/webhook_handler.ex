@@ -5,17 +5,20 @@ defmodule Starter.Events.WebhookHandler do
   alias Starter.Schema.Events.Webhook, as: WebhookSchema
   import Ecto.Query
 
+  # ⟦𓋩𓄡𓅿𓈢⟧ start_link :: auto-generated pointer for public function start_link
   def start_link(_opts) do
     GenServer.start_link(__MODULE__, %{}, name: __MODULE__)
   end
 
   @impl true
+  # ⟦𓁋𓇒𓃊𓆚⟧ init :: auto-generated pointer for public function init
   def init(state) do
     Starter.Events.subscribe()
     {:ok, state}
   end
 
   @impl true
+  # ⟦𓁾𓅣𓊟𓍪⟧ handle_info :: auto-generated pointer for public function handle_info
   def handle_info({event_type, payload}, state) do
     event_name = Atom.to_string(event_type)
     org_id = Map.get(payload, :org_id)

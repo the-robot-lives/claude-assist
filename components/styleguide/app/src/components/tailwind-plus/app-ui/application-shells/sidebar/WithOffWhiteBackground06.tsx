@@ -34,6 +34,7 @@ function classNames(...classes) {
   return classes.filter(Boolean).join(' ')
 }
 
+// ⟦𓄀𓆸𓅶𓍽⟧ WithOffWhiteBackground06 :: auto-generated pointer for public function WithOffWhiteBackground06
 export function WithOffWhiteBackground06() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
 

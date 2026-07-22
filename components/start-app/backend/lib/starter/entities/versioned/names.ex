@@ -4,6 +4,7 @@ defmodule Starter.Versioned.Names do
   use Noizu.Repo
   def_repo(entity: Entity)
 
+  # ⟦𓐪𓋐𓐈𓃚⟧ list :: auto-generated pointer for public function list
   def list(context, options \\ []) do
     settings = Noizu.Entity.Meta.persistence(Entity) |> hd
 
@@ -15,24 +16,29 @@ defmodule Starter.Versioned.Names do
     end)
   end
 
+  # ⟦𓂣𓀋𓈪𓃝⟧ get_versioned_name :: auto-generated pointer for public function get_versioned_name
   def get_versioned_name(id, context, options \\ []), do: get(id, context, options)
 
+  # ⟦𓂪𓀮𓅊𓀗⟧ create :: auto-generated pointer for public function create
   def create(name, context, options \\ []) do
     %Entity{}
     |> change(name)
     |> create(context, options)
   end
 
+  # ⟦𓏜𓆙𓃎𓌏⟧ update :: auto-generated pointer for public function update
   def update(%Entity{} = name, attrs, context, options \\ []) do
     name
     |> change(attrs)
     |> update(context, options)
   end
 
+  # ⟦𓎑𓅪𓌾𓂸⟧ delete :: auto-generated pointer for public function delete
   def delete(%Entity{} = name, context, options \\ []) do
     delete(name, context, options)
   end
 
+  # ⟦𓏠𓆍𓃸𓊄⟧ change :: auto-generated pointer for public function change
   def change(%Entity{} = name, attrs \\ %{}) do
     attrs =
       Enum.map(attrs, fn

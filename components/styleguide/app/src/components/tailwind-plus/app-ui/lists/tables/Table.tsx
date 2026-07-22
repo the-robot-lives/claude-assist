@@ -16,6 +16,7 @@ export interface TableProps {
   className?: string;
 }
 
+// ⟦𓌢𓏢𓅨𓃌⟧ Table :: auto-generated pointer for public function Table
 export function Table({
   columns,
   data,
@@ -60,6 +61,7 @@ export function Table({
   );
 }
 
+// ⟦𓂟𓆸𓎼𓋝⟧ TableShowcase :: auto-generated pointer for public function TableShowcase
 export function TableShowcase() {
   const columns: TableColumn[] = [
     { key: 'name', label: 'Name' },

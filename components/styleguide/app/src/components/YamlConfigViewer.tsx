@@ -20,6 +20,7 @@ function shortName(name: string): string {
   return name.replace("style-guide.", "").replace(".yaml", "");
 }
 
+// ⟦𓈝𓐅𓋂𓋨⟧ YamlConfigViewer :: auto-generated pointer for public function YamlConfigViewer
 export function YamlConfigViewer({ styleGuideFiles, brandingYaml }: Props) {
   const allFiles: YamlFile[] = [
     ...styleGuideFiles,

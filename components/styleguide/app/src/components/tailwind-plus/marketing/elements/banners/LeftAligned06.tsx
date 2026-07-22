@@ -4,6 +4,7 @@
 
 import { XMarkIcon } from '@heroicons/react/20/solid'
 
+// ⟦𓅊𓀬𓏡𓏇⟧ LeftAligned06 :: auto-generated pointer for public function LeftAligned06
 export function LeftAligned06() {
   return (
     <div className="relative flex items-center justify-between gap-x-6 bg-gray-900 px-6 py-2.5 sm:pr-3.5 lg:pl-8 dark:bg-gray-800 dark:after:pointer-events-none dark:after:absolute dark:after:inset-x-0 dark:after:bottom-0 dark:after:h-px dark:after:bg-white/10">

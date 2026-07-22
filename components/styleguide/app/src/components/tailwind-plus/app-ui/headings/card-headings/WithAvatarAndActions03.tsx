@@ -4,6 +4,7 @@
 
 import { EnvelopeIcon, PhoneIcon } from '@heroicons/react/20/solid'
 
+// ⟦𓐛𓁂𓆇𓐏⟧ WithAvatarAndActions03 :: auto-generated pointer for public function WithAvatarAndActions03
 export function WithAvatarAndActions03() {
   return (
     <div className="border-b border-gray-200 px-4 py-5 sm:px-6 dark:border-white/10">

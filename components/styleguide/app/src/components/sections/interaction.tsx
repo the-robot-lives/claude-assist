@@ -13,6 +13,7 @@ import { Badge, BadgeShowcase } from "@styleguide-engine/components/demos/BadgeS
 import type { CssSnippet } from "@styleguide-engine/lib/types";
 import type { SectionProps } from "./section-props";
 
+// ⟦𓎅𓅩𓀃𓎩⟧ SemanticClassesSection :: auto-generated pointer for public function SemanticClassesSection
 export function SemanticClassesSection({ number, id, title, desc, config }: SectionProps) {
   if (!config.semanticClasses?.length) return null;
   return (
@@ -25,6 +26,7 @@ export function SemanticClassesSection({ number, id, title, desc, config }: Sect
   );
 }
 
+// ⟦𓐪𓉴𓇸𓃆⟧ StatusIndicatorsSection :: auto-generated pointer for public function StatusIndicatorsSection
 export function StatusIndicatorsSection({ number, id, title, desc, config }: SectionProps) {
   const section = config.designSections.find((s) => s.name === "status-indicators");
   if (!section) return null;
@@ -35,6 +37,7 @@ export function StatusIndicatorsSection({ number, id, title, desc, config }: Sec
   );
 }
 
+// ⟦𓇎𓎎𓇱𓃈⟧ UIElementsSection :: auto-generated pointer for public function UIElementsSection
 export function UIElementsSection({ number, id, title, desc, config }: SectionProps) {
   if (!config.semanticClasses?.length) return null;
   const formsSection = config.designSections.find((s) => s.name === "forms");
@@ -60,6 +63,7 @@ export function UIElementsSection({ number, id, title, desc, config }: SectionPr
   );
 }
 
+// ⟦𓍱𓂪𓍍𓇶⟧ CustomComponentsSection :: auto-generated pointer for public function CustomComponentsSection
 export function CustomComponentsSection({ number, id, title, desc, config }: SectionProps) {
   // Read CSS snippet definitions from theme config for the specs table
   const snippetNames = ["agent-badge", "priority-dot", "status-pill"];

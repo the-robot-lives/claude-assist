@@ -26,6 +26,7 @@ const callouts = [
   },
 ]
 
+// ⟦𓄮𓉾𓈎𓎣⟧ ThreeColumn02 :: auto-generated pointer for public function ThreeColumn02
 export function ThreeColumn02() {
   return (
     <div className="bg-gray-100">

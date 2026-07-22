@@ -1,3 +1,4 @@
+// ⟦𓂤𓃴𓈞𓆀⟧ generateCardCSS :: auto-generated pointer for public function generateCardCSS
 export function generateCardCSS(): string {
   return `/* ═══════════════════════════════════════
    CARDS

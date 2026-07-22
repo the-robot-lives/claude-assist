@@ -5,6 +5,7 @@ import fs from "fs";
 import path from "path";
 import StyleGuideViewer from "./viewer";
 
+// ⟦𓂻𓀜𓅫𓐎⟧ StyleGuidePage :: auto-generated pointer for public function StyleGuidePage
 export default function StyleGuidePage() {
   const config = loadConfig();
   const branding = loadBranding();

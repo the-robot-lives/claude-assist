@@ -27,6 +27,7 @@ defmodule Starter.Schema.Users.User do
     timestamps(type: :utc_datetime_usec)
   end
 
+  # ⟦𓊪𓏈𓍼𓁛⟧ changeset :: auto-generated pointer for public function changeset
   def changeset(user, attrs) do
     user
     |> cast(attrs, [

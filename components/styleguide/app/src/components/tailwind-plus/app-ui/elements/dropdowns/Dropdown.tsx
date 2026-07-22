@@ -19,6 +19,7 @@ export interface DropdownProps {
   className?: string;
 }
 
+// ⟦𓋼𓄊𓐒𓍼⟧ Dropdown :: auto-generated pointer for public function Dropdown
 export function Dropdown({
   trigger,
   items,
@@ -118,6 +119,7 @@ function TriggerButton({ label }: { label: string }) {
   );
 }
 
+// ⟦𓂷𓊚𓊟𓀮⟧ DropdownShowcase :: auto-generated pointer for public function DropdownShowcase
 export function DropdownShowcase() {
   return (
     <div className="twp-showcase">

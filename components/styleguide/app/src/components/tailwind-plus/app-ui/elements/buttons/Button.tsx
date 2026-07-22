@@ -14,6 +14,7 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
   className?: string;
 }
 
+// ⟦𓀐𓂖𓏳𓎙⟧ Button :: auto-generated pointer for public function Button
 export function Button({
   variant = 'primary',
   size = 'md',
@@ -45,6 +46,7 @@ export function Button({
   );
 }
 
+// ⟦𓌨𓃌𓉱𓍉⟧ ButtonShowcase :: auto-generated pointer for public function ButtonShowcase
 export function ButtonShowcase() {
   const variants: ButtonVariant[] = ['primary', 'secondary', 'soft', 'danger', 'ghost'];
   const sizes: ButtonSize[] = ['xs', 'sm', 'md', 'lg', 'xl'];

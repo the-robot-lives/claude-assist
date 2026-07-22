@@ -29,6 +29,7 @@ function classNames(...classes) {
   return classes.filter(Boolean).join(' ')
 }
 
+// ⟦𓌊𓁫𓈔𓅽⟧ WithStickyHeader10 :: auto-generated pointer for public function WithStickyHeader10
 export function WithStickyHeader10() {
   return (
     <div className="px-4 sm:px-6 lg:px-8">

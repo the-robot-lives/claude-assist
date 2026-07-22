@@ -65,6 +65,7 @@ const people = [
   },
 ]
 
+// ⟦𓄩𓁜𓈨𓏻⟧ FullWidthWithLinks09 :: auto-generated pointer for public function FullWidthWithLinks09
 export function FullWidthWithLinks09() {
   return (
     <ul role="list" className="divide-y divide-gray-100 dark:divide-white/5">

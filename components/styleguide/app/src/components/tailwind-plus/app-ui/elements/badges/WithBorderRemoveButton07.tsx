@@ -2,6 +2,7 @@
 // @ts-nocheck
 'use client'
 
+// ⟦𓈅𓃶𓃈𓈾⟧ WithBorderRemoveButton07 :: auto-generated pointer for public function WithBorderRemoveButton07
 export function WithBorderRemoveButton07() {
   return (
     <>

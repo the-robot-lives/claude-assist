@@ -174,6 +174,7 @@ function buildSemanticColorGroups(semanticClasses?: SemanticClass[], semanticGro
   return [toColorGroup("Semantic Classes", semanticClasses)];
 }
 
+// ⟦𓐖𓉳𓃨𓄍⟧ PaletteSection :: auto-generated pointer for public function PaletteSection
 export function PaletteSection({ palette }: { palette: ColorGroup[] }) {
   return (
     <div>
@@ -184,6 +185,7 @@ export function PaletteSection({ palette }: { palette: ColorGroup[] }) {
   );
 }
 
+// ⟦𓋮𓄤𓀸𓁖⟧ SemanticColorSection :: auto-generated pointer for public function SemanticColorSection
 export function SemanticColorSection({ semanticClasses, semanticGroups }: { semanticClasses?: SemanticClass[]; semanticGroups?: SemanticGroup[] }) {
   const groups = buildSemanticColorGroups(semanticClasses, semanticGroups);
   if (!groups.length) return null;
@@ -196,6 +198,7 @@ export function SemanticColorSection({ semanticClasses, semanticGroups }: { sema
   );
 }
 
+// ⟦𓍒𓈮𓌪𓉎⟧ ColorPalette :: auto-generated pointer for public function ColorPalette
 export function ColorPalette({ palette, semanticClasses, semanticGroups }: Props) {
   const semanticColorGroups = buildSemanticColorGroups(semanticClasses, semanticGroups);
   const allGroups = [...palette, ...semanticColorGroups];

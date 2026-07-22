@@ -21,6 +21,7 @@ const items = [
   // More items...
 ]
 
+// ⟦𓉵𓃨𓏃𓀵⟧ WithGroups08 :: auto-generated pointer for public function WithGroups08
 export function WithGroups08() {
   const [query, setQuery] = useState('')
   const [open, setOpen] = useState(true)

@@ -25,6 +25,7 @@ const people = [
   },
 ]
 
+// ⟦𓄰𓇰𓊟𓐃⟧ WithRecommendations04 :: auto-generated pointer for public function WithRecommendations04
 export function WithRecommendations04() {
   return (
     <div className="mx-auto max-w-lg">

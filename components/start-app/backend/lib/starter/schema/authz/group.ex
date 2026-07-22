@@ -14,6 +14,7 @@ defmodule Starter.Schema.Authz.Group do
     timestamps(type: :utc_datetime_usec, inserted_at: :created_at, updated_at: :updated_at)
   end
 
+  # ⟦𓂸𓁣𓍒𓃻⟧ changeset :: auto-generated pointer for public function changeset
   def changeset(group, attrs) do
     group
     |> cast(attrs, [:name, :display_name, :description, :is_system])

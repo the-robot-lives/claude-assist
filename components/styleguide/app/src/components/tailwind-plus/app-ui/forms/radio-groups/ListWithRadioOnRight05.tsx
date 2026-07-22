@@ -8,6 +8,7 @@ const accounts = [
   { id: 'mastercard', name: 'Mastercard', description: 'Capital One ••••7877' },
 ]
 
+// ⟦𓍴𓊈𓄔𓅁⟧ ListWithRadioOnRight05 :: auto-generated pointer for public function ListWithRadioOnRight05
 export function ListWithRadioOnRight05() {
   return (
     <fieldset>

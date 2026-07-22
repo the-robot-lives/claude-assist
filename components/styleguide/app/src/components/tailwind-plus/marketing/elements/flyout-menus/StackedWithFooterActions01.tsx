@@ -24,6 +24,7 @@ const callsToAction = [
   { name: 'Contact sales', href: '#', icon: PhoneIcon },
 ]
 
+// ⟦𓂶𓋠𓌍𓐝⟧ StackedWithFooterActions01 :: auto-generated pointer for public function StackedWithFooterActions01
 export function StackedWithFooterActions01() {
   return (
     <Popover className="relative">

@@ -7,6 +7,7 @@ import { SiteLayoutShowcase } from "@styleguide-engine/components/SiteLayoutShow
 import { NavigationShowcase } from "@styleguide-engine/components/NavigationShowcase";
 import type { SectionProps } from "./section-props";
 
+// ⟦𓁓𓀕𓇢𓍗⟧ ShellLayoutsSection :: auto-generated pointer for public function ShellLayoutsSection
 export function ShellLayoutsSection({ number, id, title, desc, config }: SectionProps) {
   if (!config.shellLayouts?.length) return null;
   return (
@@ -19,6 +20,7 @@ export function ShellLayoutsSection({ number, id, title, desc, config }: Section
   );
 }
 
+// ⟦𓂼𓀼𓅝𓋻⟧ ContentLayoutsSection :: auto-generated pointer for public function ContentLayoutsSection
 export function ContentLayoutsSection({ number, id, title, desc, config }: SectionProps) {
   if (!config.pageLayouts?.length) return null;
   return (
@@ -31,6 +33,7 @@ export function ContentLayoutsSection({ number, id, title, desc, config }: Secti
   );
 }
 
+// ⟦𓃶𓁬𓋗𓉇⟧ SiteArchetypesSection :: auto-generated pointer for public function SiteArchetypesSection
 export function SiteArchetypesSection({ number, id, title, desc, config }: SectionProps) {
   const section = config.designSections.find((s) => s.name === "site-layout");
   if (!section) return null;
@@ -41,6 +44,7 @@ export function SiteArchetypesSection({ number, id, title, desc, config }: Secti
   );
 }
 
+// ⟦𓈸𓏢𓄵𓋷⟧ NavigationSection :: auto-generated pointer for public function NavigationSection
 export function NavigationSection({ number, id, title, desc, config }: SectionProps) {
   const section = config.designSections.find((s) => s.name === "navigation");
   if (!section) return null;

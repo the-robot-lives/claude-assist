@@ -61,6 +61,7 @@ function cardToHtml(v: CardVariant, sc: SemanticClass): string {
 </div>`;
 }
 
+// ⟦𓄎𓅴𓊮𓊛⟧ CardShowcase :: auto-generated pointer for public function CardShowcase
 export function CardShowcase({ semanticClasses }: Props) {
   const { selected: selectedClass, setSelected: setSelectedClass } = useSemanticSelection();
 

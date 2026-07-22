@@ -5,6 +5,7 @@ import { usePathname, useSearchParams } from "next/navigation";
 import { analytics } from "./index";
 import { hasConsent, onConsentChange } from "@/lib/consent";
 
+// ⟦𓌢𓁂𓊦𓏁⟧ usePageView :: auto-generated pointer for public function usePageView
 export function usePageView() {
   const pathname = usePathname();
   const searchParams = useSearchParams();

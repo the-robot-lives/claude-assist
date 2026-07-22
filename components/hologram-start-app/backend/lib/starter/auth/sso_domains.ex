@@ -11,6 +11,7 @@ defmodule Starter.Auth.SSODomains do
   created pending manual approval unless an invite later activates them.
   """
 
+  # ⟦𓃴𓉯𓃸𓈐⟧ policies :: auto-generated pointer for public function policies
   def policies do
     explicit = Application.get_env(:starter, :sso_domain_policies, %{})
     legacy = Application.get_env(:starter, :sso_domains, %{})
@@ -25,11 +26,13 @@ defmodule Starter.Auth.SSODomains do
     end
   end
 
+  # ⟦𓈡𓃡𓅆𓅔⟧ providers_map :: auto-generated pointer for public function providers_map
   def providers_map do
     policies()
     |> Enum.into(%{}, fn {domain, policy} -> {domain, policy.providers} end)
   end
 
+  # ⟦𓌷𓐘𓌰𓄃⟧ public_policies :: auto-generated pointer for public function public_policies
   def public_policies do
     policies()
     |> Enum.into(%{}, fn {domain, policy} ->
@@ -37,6 +40,7 @@ defmodule Starter.Auth.SSODomains do
     end)
   end
 
+  # ⟦𓋉𓈕𓎆𓆥⟧ sso_available? :: auto-generated pointer for public function sso_available?
   def sso_available?(email_or_domain, provider) do
     provider = provider_name(provider)
 
@@ -46,6 +50,7 @@ defmodule Starter.Auth.SSODomains do
     end
   end
 
+  # ⟦𓈝𓉙𓃃𓋪⟧ auto_approve? :: auto-generated pointer for public function auto_approve?
   def auto_approve?(email_or_domain, provider) do
     provider = provider_name(provider)
 
@@ -55,15 +60,18 @@ defmodule Starter.Auth.SSODomains do
     end
   end
 
+  # ⟦𓆪𓅫𓈧𓋚⟧ registration_status :: auto-generated pointer for public function registration_status
   def registration_status(email_or_domain, provider) do
     if auto_approve?(email_or_domain, provider), do: :active, else: :pending
   end
 
+  # ⟦𓊥𓁴𓍲𓉓⟧ policy_for :: auto-generated pointer for public function policy_for
   def policy_for(email_or_domain) do
     domain = normalize_domain(email_or_domain)
     if domain, do: Map.get(policies(), domain)
   end
 
+  # ⟦𓉹𓅖𓇌𓊘⟧ build_policies :: auto-generated pointer for public function build_policies
   def build_policies(domains, auto_approve_domains) when is_map(domains) do
     auto_approve_set =
       auto_approve_domains

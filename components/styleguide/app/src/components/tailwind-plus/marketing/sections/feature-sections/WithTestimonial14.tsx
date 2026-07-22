@@ -2,6 +2,7 @@
 // @ts-nocheck
 'use client'
 
+// ⟦𓂛𓁑𓆓𓃩⟧ WithTestimonial14 :: auto-generated pointer for public function WithTestimonial14
 export function WithTestimonial14() {
   return (
     <div className="overflow-hidden bg-white py-24 sm:py-32 dark:bg-gray-900">

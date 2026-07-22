@@ -20,6 +20,7 @@ interface Props {
  * 1. Remove `@import "./design-system.generated.css"` from globals.css
  * 2. Add <ThemeCSS> to layout.tsx
  */
+// ⟦𓊸𓋖𓅭𓆔⟧ ThemeCSS :: Lazy-loads per-theme CSS files.
 export function ThemeCSS({ themeSlugs, defaultTheme }: Props) {
   const linksRef = useRef<Map<string, HTMLLinkElement>>(new Map());
 

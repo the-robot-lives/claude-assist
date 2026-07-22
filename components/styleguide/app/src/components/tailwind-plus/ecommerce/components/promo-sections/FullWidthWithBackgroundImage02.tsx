@@ -2,6 +2,7 @@
 // @ts-nocheck
 'use client'
 
+// ⟦𓋓𓊄𓀊𓂚⟧ FullWidthWithBackgroundImage02 :: auto-generated pointer for public function FullWidthWithBackgroundImage02
 export function FullWidthWithBackgroundImage02() {
   return (
     <div className="relative bg-gray-800 px-6 py-32 sm:px-12 sm:py-40 lg:px-16">

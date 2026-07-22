@@ -24,6 +24,7 @@ defmodule StarterWeb.Hologram.Sections.ComponentBrowser do
   }
 
   # SSR (if Component Library is the initial section)
+  # ⟦𓁎𓉔𓁽𓂩⟧ init :: auto-generated pointer for public function init
   def init(props, component, _server), do: do_init(props, component)
 
   # Client mount when navigating to this section after first paint
@@ -56,6 +57,7 @@ defmodule StarterWeb.Hologram.Sections.ComponentBrowser do
     )
   end
 
+  # ⟦𓈞𓏡𓌡𓅗⟧ template :: auto-generated pointer for public function template
   def template do
     ~HOLO"""
     <div class="cb-browser">
@@ -230,6 +232,7 @@ defmodule StarterWeb.Hologram.Sections.ComponentBrowser do
     """
   end
 
+  # ⟦𓁛𓁌𓀮𓄈⟧ action :: auto-generated pointer for public function action
   def action(:select_category, params, component) do
     cat = ComponentCatalog.find_category(params.slug)
     entries = filter_entries(cat.entries, component.state.search)

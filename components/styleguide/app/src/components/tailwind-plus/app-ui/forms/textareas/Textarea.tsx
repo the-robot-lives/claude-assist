@@ -11,6 +11,7 @@ export interface TextareaProps extends Omit<TextareaHTMLAttributes<HTMLTextAreaE
   className?: string;
 }
 
+// ⟦𓃔𓉛𓍒𓂙⟧ Textarea :: auto-generated pointer for public function Textarea
 export function Textarea({
   label,
   rows = 4,
@@ -74,6 +75,7 @@ export function Textarea({
 
 // ─── Showcase ───────────────────────────────────────────────────────────────
 
+// ⟦𓄇𓉌𓀆𓐏⟧ TextareaShowcase :: auto-generated pointer for public function TextareaShowcase
 export function TextareaShowcase() {
   return (
     <div className="twp-showcase">

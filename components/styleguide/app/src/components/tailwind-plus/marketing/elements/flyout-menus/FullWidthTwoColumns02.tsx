@@ -55,6 +55,7 @@ const recentPosts = [
   },
 ]
 
+// ⟦𓋂𓁙𓄕𓐔⟧ FullWidthTwoColumns02 :: auto-generated pointer for public function FullWidthTwoColumns02
 export function FullWidthTwoColumns02() {
   return (
     <Popover className="relative isolate z-50 shadow-sm">

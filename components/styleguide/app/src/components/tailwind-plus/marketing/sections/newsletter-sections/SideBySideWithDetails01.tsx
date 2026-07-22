@@ -4,6 +4,7 @@
 
 import { CalendarDaysIcon, HandRaisedIcon } from '@heroicons/react/24/outline'
 
+// ⟦𓅈𓆐𓌤𓅅⟧ SideBySideWithDetails01 :: auto-generated pointer for public function SideBySideWithDetails01
 export function SideBySideWithDetails01() {
   return (
     <div className="relative isolate overflow-hidden bg-white py-16 sm:py-24 lg:py-32 dark:bg-gray-900">

@@ -24,6 +24,7 @@ const faqs = [
   },
 ]
 
+// ⟦𓂕𓇿𓅡𓁧⟧ OffsetWithSupportingText01 :: auto-generated pointer for public function OffsetWithSupportingText01
 export function OffsetWithSupportingText01() {
   return (
     <div className="bg-white dark:bg-gray-900">

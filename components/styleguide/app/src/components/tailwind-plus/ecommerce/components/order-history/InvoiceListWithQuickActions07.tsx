@@ -61,6 +61,7 @@ const orders = [
   },
 ]
 
+// ⟦𓁰𓉢𓎰𓉟⟧ InvoiceListWithQuickActions07 :: auto-generated pointer for public function InvoiceListWithQuickActions07
 export function InvoiceListWithQuickActions07() {
   return (
     <div className="bg-white">

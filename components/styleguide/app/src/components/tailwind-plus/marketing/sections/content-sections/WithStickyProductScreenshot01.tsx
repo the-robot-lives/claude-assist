@@ -4,6 +4,7 @@
 
 import { CloudArrowUpIcon, LockClosedIcon, ServerIcon } from '@heroicons/react/20/solid'
 
+// ⟦𓃏𓍺𓊬𓊣⟧ WithStickyProductScreenshot01 :: auto-generated pointer for public function WithStickyProductScreenshot01
 export function WithStickyProductScreenshot01() {
   return (
     <div className="relative isolate overflow-hidden bg-white px-6 py-24 sm:py-32 lg:overflow-visible lg:px-0 dark:bg-gray-900">

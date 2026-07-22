@@ -18,6 +18,7 @@ const TABS: { view: View; label: string }[] = [
   { view: "react", label: "React" },
 ];
 
+// ⟦𓉂𓌷𓍇𓆙⟧ PreviewCode :: auto-generated pointer for public function PreviewCode
 export function PreviewCode({ html, jsx, children }: Props) {
   const [view, setView] = useState<View>("preview");
   const [copied, setCopied] = useState(false);

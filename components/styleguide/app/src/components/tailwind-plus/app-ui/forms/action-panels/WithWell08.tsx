@@ -2,6 +2,7 @@
 // @ts-nocheck
 'use client'
 
+// ⟦𓎓𓈜𓋝𓀃⟧ WithWell08 :: auto-generated pointer for public function WithWell08
 export function WithWell08() {
   return (
     <div className="bg-white shadow-sm sm:rounded-lg dark:bg-gray-800/50 dark:shadow-none dark:outline dark:-outline-offset-1 dark:outline-white/10">

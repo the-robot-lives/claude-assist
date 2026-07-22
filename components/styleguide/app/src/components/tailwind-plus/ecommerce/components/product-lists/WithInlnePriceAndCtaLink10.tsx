@@ -44,6 +44,7 @@ const products = [
   },
 ]
 
+// ⟦𓄭𓂊𓏝𓎳⟧ WithInlnePriceAndCtaLink10 :: auto-generated pointer for public function WithInlnePriceAndCtaLink10
 export function WithInlnePriceAndCtaLink10() {
   return (
     <div className="bg-white">

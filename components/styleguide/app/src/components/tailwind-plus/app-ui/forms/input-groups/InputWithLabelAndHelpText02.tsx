@@ -2,6 +2,7 @@
 // @ts-nocheck
 'use client'
 
+// ⟦𓃋𓄀𓋂𓆷⟧ InputWithLabelAndHelpText02 :: auto-generated pointer for public function InputWithLabelAndHelpText02
 export function InputWithLabelAndHelpText02() {
   return (
     <div>

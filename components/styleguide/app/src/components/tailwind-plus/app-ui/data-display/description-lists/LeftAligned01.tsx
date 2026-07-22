@@ -4,6 +4,7 @@
 
 import { PaperClipIcon } from '@heroicons/react/20/solid'
 
+// ⟦𓌜𓂬𓂉𓀙⟧ LeftAligned01 :: auto-generated pointer for public function LeftAligned01
 export function LeftAligned01() {
   return (
     <div>

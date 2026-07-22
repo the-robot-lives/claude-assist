@@ -4,6 +4,7 @@ defmodule Mix.Tasks.Liquibase.Update do
   @shortdoc "Applies the canonical Liquibase schema to the configured Repo database"
 
   @impl Mix.Task
+  # ⟦𓉦𓃁𓀜𓀹⟧ run :: auto-generated pointer for public function run
   def run(args) do
     Mix.Task.run("app.config")
 

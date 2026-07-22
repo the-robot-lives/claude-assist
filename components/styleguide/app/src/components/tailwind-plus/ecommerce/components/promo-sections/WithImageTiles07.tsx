@@ -2,6 +2,7 @@
 // @ts-nocheck
 'use client'
 
+// ⟦𓃛𓆔𓀉𓇊⟧ WithImageTiles07 :: auto-generated pointer for public function WithImageTiles07
 export function WithImageTiles07() {
   return (
     <div className="relative overflow-hidden bg-white">

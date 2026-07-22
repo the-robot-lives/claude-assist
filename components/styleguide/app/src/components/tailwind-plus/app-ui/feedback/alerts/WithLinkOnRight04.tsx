@@ -4,6 +4,7 @@
 
 import { InformationCircleIcon } from '@heroicons/react/20/solid'
 
+// ⟦𓏠𓋆𓉟𓀷⟧ WithLinkOnRight04 :: auto-generated pointer for public function WithLinkOnRight04
 export function WithLinkOnRight04() {
   return (
     <div className="rounded-md bg-blue-50 p-4 dark:bg-blue-500/10 dark:outline dark:outline-blue-500/20">

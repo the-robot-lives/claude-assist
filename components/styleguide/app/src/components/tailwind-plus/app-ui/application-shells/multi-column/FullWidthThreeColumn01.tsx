@@ -34,6 +34,7 @@ function classNames(...classes) {
   return classes.filter(Boolean).join(' ')
 }
 
+// ⟦𓆙𓐅𓁌𓊡⟧ FullWidthThreeColumn01 :: auto-generated pointer for public function FullWidthThreeColumn01
 export function FullWidthThreeColumn01() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
 

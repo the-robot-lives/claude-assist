@@ -29,6 +29,7 @@ function persistSubTab(parentId: string, tabId: string) {
   } catch { /* noop */ }
 }
 
+// ⟦𓄟𓁅𓊳𓊳⟧ SubsectionTabs :: auto-generated pointer for public function SubsectionTabs
 export function SubsectionTabs({ tabs, initialTab }: Props) {
   const parentId = tabs.map((t) => t.id).join(",");
   const defaultTab = (initialTab && tabs.find((t) => t.id === initialTab)) ? initialTab : (tabs[0]?.id || "");

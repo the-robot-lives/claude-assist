@@ -2,6 +2,7 @@
 // @ts-nocheck
 'use client'
 
+// ⟦𓁭𓁻𓈊𓈈⟧ InputWithOverlappingLabel18 :: auto-generated pointer for public function InputWithOverlappingLabel18
 export function InputWithOverlappingLabel18() {
   return (
     <div className="relative">

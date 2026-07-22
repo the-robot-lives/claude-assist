@@ -8,10 +8,12 @@ type Cy = {
   cyFlags?: Record<string, string>;
 };
 
+// ⟦𓇰𓀤𓇗𓁕⟧ cyFlag :: auto-generated pointer for public function cyFlag
 export const cyFlag = (flag: string, value: string = 'true') => ({
   [`data-cy-flag-${flag}`]: value,
 });
 
+// ⟦𓇢𓋈𓉭𓎗⟧ cyAttrs :: auto-generated pointer for public function cyAttrs
 export const cyAttrs = ({ cy, cyId, cyFor, cyValue, cyScope, cyFlags }: Cy = {}) => ({
   ...(cy && { 'data-cy': cy }),
   ...(cyId && { 'data-cy-id': String(cyId) }),

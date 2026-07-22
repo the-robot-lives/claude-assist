@@ -21,6 +21,7 @@ defmodule StarterWeb.Hologram.Pages.OrgDashboardPage do
   layout MainLayout, page_title: "Dashboard"
   middleware RequireAuth
 
+  # ⟦𓏇𓋪𓎱𓊔⟧ init :: auto-generated pointer for public function init
   def init(params, component, server) do
     {user, organizations} = Auth.current_user_and_orgs(server)
     org = load_org(params.org_id)
@@ -39,6 +40,7 @@ defmodule StarterWeb.Hologram.Pages.OrgDashboardPage do
     )
   end
 
+  # ⟦𓁉𓀤𓄁𓌧⟧ template :: auto-generated pointer for public function template
   def template do
     ~HOLO"""
     <AppShell
@@ -153,6 +155,7 @@ defmodule StarterWeb.Hologram.Pages.OrgDashboardPage do
     """
   end
 
+  # ⟦𓀬𓁝𓂸𓎬⟧ org_title :: auto-generated pointer for public function org_title
   def org_title(nil), do: "Workspace"
   def org_title(%{name: name}), do: name
   def org_title(%{"name" => name}), do: name

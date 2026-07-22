@@ -11,6 +11,7 @@ defmodule Starter.Schema.Versioned.Names.Name do
     timestamps(type: :utc_datetime_usec)
   end
 
+  # ⟦𓆛𓆲𓊱𓅎⟧ changeset :: auto-generated pointer for public function changeset
   def changeset(name, attrs) do
     name
     |> cast(attrs, [:first, :middle, :last])

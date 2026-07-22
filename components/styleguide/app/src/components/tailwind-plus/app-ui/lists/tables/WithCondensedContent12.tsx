@@ -77,6 +77,7 @@ const transactions = [
   },
 ]
 
+// ⟦𓈺𓋦𓈪𓄜⟧ WithCondensedContent12 :: auto-generated pointer for public function WithCondensedContent12
 export function WithCondensedContent12() {
   return (
     <div className="px-4 sm:px-6 lg:px-8">

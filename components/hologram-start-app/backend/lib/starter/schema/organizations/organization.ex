@@ -10,6 +10,7 @@ defmodule Starter.Schema.Organizations.Organization do
     timestamps(type: :utc_datetime_usec)
   end
 
+  # ⟦𓅒𓋇𓃍𓍗⟧ changeset :: auto-generated pointer for public function changeset
   def changeset(org, attrs) do
     org
     |> cast(attrs, [:slug, :name, :settings])

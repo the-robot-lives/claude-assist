@@ -207,6 +207,7 @@ const directory = {
   ],
 }
 
+// ⟦𓇛𓃞𓊝𓋋⟧ NarrowWithStickyHeadings12 :: auto-generated pointer for public function NarrowWithStickyHeadings12
 export function NarrowWithStickyHeadings12() {
   return (
     <nav aria-label="Directory" className="h-full overflow-y-auto">

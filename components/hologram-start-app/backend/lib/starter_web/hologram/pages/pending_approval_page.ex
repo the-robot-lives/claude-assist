@@ -9,10 +9,12 @@ defmodule StarterWeb.Hologram.Pages.PendingApprovalPage do
   layout MainLayout, page_title: "Pending approval"
   middleware RequireAuth
 
+  # ⟦𓅶𓍬𓍉𓀎⟧ init :: auto-generated pointer for public function init
   def init(_params, component, server) do
     put_state(component, user: Auth.current_user(server))
   end
 
+  # ⟦𓌬𓊧𓃞𓐒⟧ template :: auto-generated pointer for public function template
   def template do
     ~HOLO"""
     <div class="content">

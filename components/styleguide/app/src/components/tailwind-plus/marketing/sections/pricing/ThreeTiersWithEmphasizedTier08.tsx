@@ -58,6 +58,7 @@ function classNames(...classes) {
   return classes.filter(Boolean).join(' ')
 }
 
+// ⟦𓎔𓌞𓆂𓃏⟧ ThreeTiersWithEmphasizedTier08 :: auto-generated pointer for public function ThreeTiersWithEmphasizedTier08
 export function ThreeTiersWithEmphasizedTier08() {
   return (
     <form className="group/tiers bg-white py-24 sm:py-32 dark:bg-gray-900">

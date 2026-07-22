@@ -28,6 +28,7 @@ function classNames(...classes) {
   return classes.filter(Boolean).join(' ')
 }
 
+// ⟦𓄴𓋸𓆨𓃡⟧ WithOverlap05 :: auto-generated pointer for public function WithOverlap05
 export function WithOverlap05() {
   return (
     <>

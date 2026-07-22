@@ -29,6 +29,7 @@ function classNames(...classes) {
   return classes.filter(Boolean).join(' ')
 }
 
+// ⟦𓈼𓎩𓃣𓎿⟧ Brand05 :: auto-generated pointer for public function Brand05
 export function Brand05() {
   return (
     <div className="relative flex grow flex-col gap-y-5 overflow-y-auto bg-indigo-600 px-6 dark:bg-indigo-800 dark:after:pointer-events-none dark:after:absolute dark:after:inset-y-0 dark:after:right-0 dark:after:w-px dark:after:bg-white/10">

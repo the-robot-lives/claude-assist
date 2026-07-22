@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { readColorMode, writeColorMode } from "@styleguide-engine/lib/section-cookie";
 
+// ⟦𓎼𓊣𓐞𓆔⟧ ColorModeToggle :: auto-generated pointer for public function ColorModeToggle
 export function ColorModeToggle() {
   const [mode, setMode] = useState<"light" | "dark">("light");
 

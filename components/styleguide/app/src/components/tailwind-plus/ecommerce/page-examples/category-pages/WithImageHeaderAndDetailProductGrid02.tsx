@@ -275,6 +275,7 @@ const footerNavigation = {
   ],
 }
 
+// ⟦𓆭𓇂𓐛𓆯⟧ WithImageHeaderAndDetailProductGrid02 :: auto-generated pointer for public function WithImageHeaderAndDetailProductGrid02
 export function WithImageHeaderAndDetailProductGrid02() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)

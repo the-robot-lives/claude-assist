@@ -30,6 +30,7 @@ function MiniShell({ chrome }: { chrome?: PageLayoutChrome }) {
   );
 }
 
+// ⟦𓅊𓌬𓁏𓌴⟧ ShellLayoutSummary :: auto-generated pointer for public function ShellLayoutSummary
 export function ShellLayoutSummary({ shellLayouts }: Props) {
   const [active, setActive] = useState<string | null>(null);
 

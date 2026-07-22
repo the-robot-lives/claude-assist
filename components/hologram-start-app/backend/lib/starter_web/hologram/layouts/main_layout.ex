@@ -19,6 +19,7 @@ defmodule StarterWeb.Hologram.Layouts.MainLayout do
   prop :page_title, :string, default: "Start-App"
   prop :brand, :string, default: "Start-App"
 
+  # ⟦𓆵𓉋𓊍𓏅⟧ init :: auto-generated pointer for public function init
   def init(_props, component, server) do
     {user, organizations} = Auth.current_user_and_orgs(server)
     consent = Hologram.Server.get_session(server, :cookie_consent)
@@ -46,6 +47,7 @@ defmodule StarterWeb.Hologram.Layouts.MainLayout do
     {component, server}
   end
 
+  # ⟦𓀘𓈰𓂌𓂂⟧ template :: auto-generated pointer for public function template
   def template do
     ~HOLO"""
     <!DOCTYPE html>
@@ -96,9 +98,11 @@ defmodule StarterWeb.Hologram.Layouts.MainLayout do
     """
   end
 
+  # ⟦𓏓𓄗𓀲𓆨⟧ html_class :: auto-generated pointer for public function html_class
   def html_class("dark"), do: "dark"
   def html_class(_), do: ""
 
+  # ⟦𓄓𓇌𓈭𓅞⟧ action :: auto-generated pointer for public function action
   def action(:set_theme, params, component) do
     slug = params.event.value
     theme = Catalog.get_theme(slug)
@@ -134,6 +138,7 @@ defmodule StarterWeb.Hologram.Layouts.MainLayout do
     |> put_command(:logout)
   end
 
+  # ⟦𓄒𓋇𓌄𓌐⟧ command :: auto-generated pointer for public function command
   def command(:persist_theme, params, server) do
     Hologram.Server.put_cookie(server, "sg-theme", params.slug,
       http_only: false,

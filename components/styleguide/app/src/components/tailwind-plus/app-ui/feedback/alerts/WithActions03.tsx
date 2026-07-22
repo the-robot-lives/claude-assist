@@ -4,6 +4,7 @@
 
 import { CheckCircleIcon } from '@heroicons/react/20/solid'
 
+// ⟦𓁒𓈵𓎺𓅭⟧ WithActions03 :: auto-generated pointer for public function WithActions03
 export function WithActions03() {
   return (
     <div className="rounded-md bg-green-50 p-4 dark:bg-green-500/10 dark:outline dark:outline-green-500/20">

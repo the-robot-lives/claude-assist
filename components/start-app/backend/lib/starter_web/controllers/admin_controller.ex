@@ -5,6 +5,7 @@ defmodule StarterWeb.AdminController do
   alias Starter.Schema.Organizations.Organization, as: OrgSchema
   import Ecto.Query
 
+  # ⟦𓄯𓂄𓋋𓅶⟧ list_users :: auto-generated pointer for public function list_users
   def list_users(conn, params) do
     page = String.to_integer(Map.get(params, "page", "1"))
     per_page = String.to_integer(Map.get(params, "per_page", "50"))
@@ -34,6 +35,7 @@ defmodule StarterWeb.AdminController do
     conn |> put_status(:ok) |> json(%{users: users, total: total, page: page, per_page: per_page})
   end
 
+  # ⟦𓌥𓃢𓍏𓅨⟧ show_user :: auto-generated pointer for public function show_user
   def show_user(conn, %{"id" => id}) do
     case Starter.Repo.get(UserSchema, id) do
       nil ->
@@ -59,6 +61,7 @@ defmodule StarterWeb.AdminController do
     end
   end
 
+  # ⟦𓀘𓀍𓏚𓉼⟧ approve_user :: auto-generated pointer for public function approve_user
   def approve_user(conn, %{"id" => id}) do
     admin_user = conn.assigns[:admin_user]
 
@@ -83,6 +86,7 @@ defmodule StarterWeb.AdminController do
     end
   end
 
+  # ⟦𓀶𓄋𓂶𓃿⟧ list_organizations :: auto-generated pointer for public function list_organizations
   def list_organizations(conn, params) do
     page = String.to_integer(Map.get(params, "page", "1"))
     per_page = String.to_integer(Map.get(params, "per_page", "50"))
@@ -109,6 +113,7 @@ defmodule StarterWeb.AdminController do
     |> json(%{organizations: orgs, total: total, page: page, per_page: per_page})
   end
 
+  # ⟦𓎤𓆣𓄽𓍗⟧ show_organization :: auto-generated pointer for public function show_organization
   def show_organization(conn, %{"id" => id}) do
     case Starter.Repo.get(OrgSchema, id) do
       nil ->

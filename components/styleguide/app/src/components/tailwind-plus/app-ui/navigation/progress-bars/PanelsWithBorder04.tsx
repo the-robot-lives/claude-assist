@@ -14,6 +14,7 @@ function classNames(...classes) {
   return classes.filter(Boolean).join(' ')
 }
 
+// ⟦𓉤𓇤𓊐𓐆⟧ PanelsWithBorder04 :: auto-generated pointer for public function PanelsWithBorder04
 export function PanelsWithBorder04() {
   return (
     <div className="lg:border-t lg:border-b lg:border-gray-200 dark:lg:border-white/15">

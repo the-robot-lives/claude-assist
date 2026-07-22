@@ -17,6 +17,7 @@ defmodule Starter.Hologram.Auth do
   @type org_map :: map()
 
   @doc "Current serialized user from the Hologram session, or nil."
+  # ⟦𓂧𓃨𓋷𓋫⟧ current_user :: Current serialized user from the Hologram session, or nil.
   def current_user(server) do
     case load_session_user(server) do
       {:ok, user, _orgs} -> serialize_user(user)
@@ -25,6 +26,7 @@ defmodule Starter.Hologram.Auth do
   end
 
   @doc "Current user + organizations from the Hologram session."
+  # ⟦𓏊𓆯𓐓𓎾⟧ current_user_and_orgs :: Current user + organizations from the Hologram session.
   def current_user_and_orgs(server) do
     case load_session_user(server) do
       {:ok, user, orgs} -> {serialize_user(user), orgs}
@@ -33,6 +35,7 @@ defmodule Starter.Hologram.Auth do
   end
 
   @doc "Authenticate with email/password and write tokens into the Hologram session."
+  # ⟦𓃥𓇂𓐖𓏉⟧ login :: Authenticate with email/password and write tokens into the Hologram session.
   def login(server, email, password) do
     case Starter.Users.Credentials.authenticate(
            {:login, {email, password}},
@@ -63,6 +66,7 @@ defmodule Starter.Hologram.Auth do
   end
 
   @doc "Register a password user and issue tokens on success."
+  # ⟦𓏺𓃂𓊈𓊯⟧ register :: Register a password user and issue tokens on success.
   def register(server, attrs) when is_map(attrs) do
     email = Map.get(attrs, :email) || Map.get(attrs, "email")
     password = Map.get(attrs, :password) || Map.get(attrs, "password")
@@ -120,6 +124,7 @@ defmodule Starter.Hologram.Auth do
   end
 
   @doc "Clear auth tokens from the Hologram session."
+  # ⟦𓎺𓉱𓈩𓌲⟧ logout :: Clear auth tokens from the Hologram session.
   def logout(server) do
     server
     |> Hologram.Server.delete_session(:access_token)
@@ -136,6 +141,7 @@ defmodule Starter.Hologram.Auth do
   Profile completion is optional (prompted from the dashboard checklist). SSO
   users previously got stuck on `/complete-registration` and never saw `/app`.
   """
+  # ⟦𓐖𓂔𓐁𓍭⟧ post_auth_path :: Post-auth destination after login / SSO / magic link.
   def post_auth_path(user) when is_map(user) do
     status = Map.get(user, :status) || Map.get(user, "status")
 
@@ -149,6 +155,7 @@ defmodule Starter.Hologram.Auth do
   def post_auth_path(_), do: "/app"
 
   @doc "SSO providers enabled for this deployment + domain policies."
+  # ⟦𓍄𓏕𓃒𓐖⟧ sso_catalog :: SSO providers enabled for this deployment + domain policies.
   def sso_catalog do
     providers =
       []
@@ -167,6 +174,7 @@ defmodule Starter.Hologram.Auth do
   end
 
   @doc "Providers that match an email domain and are enabled."
+  # ⟦𓉿𓄓𓊔𓉒⟧ matching_sso_providers :: Providers that match an email domain and are enabled.
   def matching_sso_providers(email, catalog \\ nil) do
     catalog = catalog || sso_catalog()
     domain = email_domain(email)
@@ -184,6 +192,7 @@ defmodule Starter.Hologram.Auth do
     Enum.filter(domain_providers, &(&1 in catalog.providers))
   end
 
+  # ⟦𓏝𓐛𓏸𓂄⟧ sso_path :: auto-generated pointer for public function sso_path
   def sso_path("oidc"), do: "/auth/oidc"
   def sso_path("google"), do: "/auth/google"
   def sso_path("github"), do: "/auth/github"
@@ -192,6 +201,7 @@ defmodule Starter.Hologram.Auth do
   def sso_path("saml"), do: "/sso/saml/auth/signin"
   def sso_path(provider), do: "/auth/#{provider}"
 
+  # ⟦𓊬𓄖𓇦𓆛⟧ sso_label :: auto-generated pointer for public function sso_label
   def sso_label("oidc"), do: "Sign in with SSO"
   def sso_label("google"), do: "Sign in with Google"
   def sso_label("github"), do: "Sign in with GitHub"
@@ -200,6 +210,7 @@ defmodule Starter.Hologram.Auth do
   def sso_label("saml"), do: "Sign in with SAML"
   def sso_label(provider), do: "Sign in with #{provider}"
 
+  # ⟦𓅴𓄘𓍻𓀵⟧ serialize_user :: auto-generated pointer for public function serialize_user
   def serialize_user(user) do
     admin? =
       Map.get(user, :admin, false) == true or Map.get(user, :is_admin, false) == true
@@ -237,6 +248,7 @@ defmodule Starter.Hologram.Auth do
   end
 
   @doc "Issue tokens for an existing user session entity (magic-link / SSO exchange)."
+  # ⟦𓄛𓋝𓇀𓆝⟧ issue_tokens_from_session :: Issue tokens for an existing user session entity (magic-link / SSO exchange).
   def issue_tokens_from_session(server, session), do: issue_tokens(server, session)
 
   defp issue_tokens(server, session) do

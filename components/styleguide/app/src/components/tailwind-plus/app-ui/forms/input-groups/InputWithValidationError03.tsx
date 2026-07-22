@@ -4,6 +4,7 @@
 
 import { ExclamationCircleIcon } from '@heroicons/react/16/solid'
 
+// ⟦𓎋𓏸𓁇𓎠⟧ InputWithValidationError03 :: auto-generated pointer for public function InputWithValidationError03
 export function InputWithValidationError03() {
   return (
     <div>

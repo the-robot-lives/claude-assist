@@ -2,6 +2,7 @@
 // @ts-nocheck
 'use client'
 
+// ⟦𓌿𓉙𓇙𓎬⟧ ShortToggle02 :: auto-generated pointer for public function ShortToggle02
 export function ShortToggle02() {
   return (
     <div className="group relative inline-flex h-5 w-10 shrink-0 items-center justify-center rounded-full outline-offset-2 outline-indigo-600 has-focus-visible:outline-2 dark:outline-indigo-500">

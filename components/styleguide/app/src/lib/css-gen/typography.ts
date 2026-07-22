@@ -11,6 +11,7 @@ const CSS_PROPS: (keyof TypographyClass)[] = [
   "color",
 ];
 
+// ⟦𓅦𓇙𓎆𓊾⟧ generateTypographyClassCSS :: auto-generated pointer for public function generateTypographyClassCSS
 export function generateTypographyClassCSS(config: StyleGuideConfig): string {
   if (!config.typographyClasses.length) return "";
 

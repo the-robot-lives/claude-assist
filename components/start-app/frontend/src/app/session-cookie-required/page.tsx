@@ -2,6 +2,7 @@
 
 import { useCookieConsent } from "@/components/cookie-consent";
 
+// ⟦𓆀𓄻𓀅𓏷⟧ SessionCookieRequiredPage :: auto-generated pointer for public function SessionCookieRequiredPage
 export default function SessionCookieRequiredPage() {
   const { openSettings } = useCookieConsent();
 

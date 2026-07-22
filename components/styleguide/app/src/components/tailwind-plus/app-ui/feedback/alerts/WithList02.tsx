@@ -4,6 +4,7 @@
 
 import { XCircleIcon } from '@heroicons/react/20/solid'
 
+// ⟦𓌳𓉧𓊫𓏭⟧ WithList02 :: auto-generated pointer for public function WithList02
 export function WithList02() {
   return (
     <div className="rounded-md bg-red-50 p-4 dark:bg-red-500/15 dark:outline dark:outline-red-500/25">

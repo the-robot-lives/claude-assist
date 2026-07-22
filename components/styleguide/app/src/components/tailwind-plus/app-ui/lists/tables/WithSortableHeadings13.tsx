@@ -13,6 +13,7 @@ const people = [
   { name: 'Floyd Miles', title: 'Principal Designer', email: 'floyd.miles@example.com', role: 'Member' },
 ]
 
+// ⟦𓌾𓁩𓅚𓃆⟧ WithSortableHeadings13 :: auto-generated pointer for public function WithSortableHeadings13
 export function WithSortableHeadings13() {
   return (
     <div className="px-4 sm:px-6 lg:px-8">

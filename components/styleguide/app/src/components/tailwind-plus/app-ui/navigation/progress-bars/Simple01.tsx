@@ -8,6 +8,7 @@ const steps = [
   { id: 'Step 3', name: 'Preview', href: '#', status: 'upcoming' },
 ]
 
+// ⟦𓇒𓁔𓎍𓄠⟧ Simple01 :: auto-generated pointer for public function Simple01
 export function Simple01() {
   return (
     <nav aria-label="Progress">

@@ -14,6 +14,7 @@ const navigation = [
   { name: 'Company', href: '#' },
 ]
 
+// ⟦𓂮𓐫𓐒𓁁⟧ WithLeftAlignedNav10 :: auto-generated pointer for public function WithLeftAlignedNav10
 export function WithLeftAlignedNav10() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 

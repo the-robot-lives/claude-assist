@@ -8,6 +8,7 @@ const notificationMethods = [
   { id: 'push', title: 'Push notification' },
 ]
 
+// ⟦𓉏𓃊𓀖𓆬⟧ SimpleList01 :: auto-generated pointer for public function SimpleList01
 export function SimpleList01() {
   return (
     <fieldset>

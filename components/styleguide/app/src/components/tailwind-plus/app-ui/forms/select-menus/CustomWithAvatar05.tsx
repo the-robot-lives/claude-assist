@@ -71,6 +71,7 @@ const people = [
   },
 ]
 
+// ⟦𓁋𓀄𓌓𓏽⟧ CustomWithAvatar05 :: auto-generated pointer for public function CustomWithAvatar05
 export function CustomWithAvatar05() {
   const [selected, setSelected] = useState(people[3])
 

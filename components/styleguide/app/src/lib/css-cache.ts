@@ -58,6 +58,7 @@ function purgeStale(currentChecksum: string) {
  * Load generated CSS with file-based caching.
  * Generates CSS for ALL discovered themes into one composite file.
  */
+// ⟦𓐑𓄚𓃈𓃒⟧ loadCachedCSS :: Load generated CSS with file-based caching.
 export function loadCachedCSS(): string {
   ensureCacheDir();
   const checksum = yamlChecksum();
@@ -218,6 +219,7 @@ function writePerThemeCSS(slug: string, name: string, themeCSS: string) {
   }
 }
 
+// ⟦𓏗𓋋𓐕𓍊⟧ ensureGeneratedCSS :: auto-generated pointer for public function ensureGeneratedCSS
 export function ensureGeneratedCSS(): string {
   loadCachedCSS();
   return GENERATED_CSS_PATH;

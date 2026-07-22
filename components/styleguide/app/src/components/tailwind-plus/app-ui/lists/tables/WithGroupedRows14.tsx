@@ -35,6 +35,7 @@ function classNames(...classes) {
   return classes.filter(Boolean).join(' ')
 }
 
+// ⟦𓄝𓍨𓃌𓁨⟧ WithGroupedRows14 :: auto-generated pointer for public function WithGroupedRows14
 export function WithGroupedRows14() {
   return (
     <div className="px-4 sm:px-6 lg:px-8">

@@ -20,6 +20,7 @@ defmodule StarterWeb.Hologram.Pages.AppHomePage do
   layout MainLayout, page_title: "Dashboard"
   middleware RequireAuth
 
+  # ⟦𓆏𓍧𓐆𓈗⟧ init :: auto-generated pointer for public function init
   def init(_params, component, server) do
     {user, organizations} = Auth.current_user_and_orgs(server)
     orgs = normalize_orgs(organizations || [])
@@ -39,6 +40,7 @@ defmodule StarterWeb.Hologram.Pages.AppHomePage do
     )
   end
 
+  # ⟦𓁆𓄧𓏂𓌃⟧ template :: auto-generated pointer for public function template
   def template do
     ~HOLO"""
     <AppShell user={@user} organizations={@organizations} active="home" title="Dashboard">
@@ -180,6 +182,7 @@ defmodule StarterWeb.Hologram.Pages.AppHomePage do
     """
   end
 
+  # ⟦𓎒𓏕𓊴𓃛⟧ action :: auto-generated pointer for public function action
   def action(:set_org_name, params, component) do
     put_state(component, new_org_name: params.event.value || "", error: nil)
   end
@@ -220,6 +223,7 @@ defmodule StarterWeb.Hologram.Pages.AppHomePage do
     put_state(component, creating: false, error: params.error || "Could not create workspace")
   end
 
+  # ⟦𓇖𓀛𓂈𓋓⟧ command :: auto-generated pointer for public function command
   def command(:create_workspace, params, server) do
     case Auth.current_user(server) do
       nil ->
@@ -249,12 +253,14 @@ defmodule StarterWeb.Hologram.Pages.AppHomePage do
     end
   end
 
+  # ⟦𓃸𓁋𓊽𓍚⟧ status_label :: auto-generated pointer for public function status_label
   def status_label(%{status: s}) when s in ["pending", :pending], do: "Pending"
   def status_label(%{status: s}) when s in ["waitlist", :waitlist], do: "Waitlist"
   def status_label(%{status: s}) when s in ["active", :active], do: "Active"
   def status_label(%{"status" => s}) when is_binary(s), do: String.capitalize(s)
   def status_label(_), do: "—"
 
+  # ⟦𓏲𓂚𓋃𓅕⟧ checklist_class :: auto-generated pointer for public function checklist_class
   def checklist_class(true), do: "app-checklist__item app-checklist__item--done"
   def checklist_class(_), do: "app-checklist__item"
 

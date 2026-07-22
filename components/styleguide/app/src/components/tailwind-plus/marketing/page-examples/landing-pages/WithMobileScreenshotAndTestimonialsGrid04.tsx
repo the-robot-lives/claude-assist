@@ -267,6 +267,7 @@ function classNames(...classes) {
   return classes.filter(Boolean).join(' ')
 }
 
+// ⟦𓀑𓐬𓍒𓅚⟧ WithMobileScreenshotAndTestimonialsGrid04 :: auto-generated pointer for public function WithMobileScreenshotAndTestimonialsGrid04
 export function WithMobileScreenshotAndTestimonialsGrid04() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 

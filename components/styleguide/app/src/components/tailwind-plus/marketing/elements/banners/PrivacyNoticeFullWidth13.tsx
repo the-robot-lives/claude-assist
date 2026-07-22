@@ -2,6 +2,7 @@
 // @ts-nocheck
 'use client'
 
+// ⟦𓆒𓆁𓃆𓏂⟧ PrivacyNoticeFullWidth13 :: auto-generated pointer for public function PrivacyNoticeFullWidth13
 export function PrivacyNoticeFullWidth13() {
   return (
     <div className="fixed inset-x-0 bottom-0 flex flex-col justify-between gap-x-8 gap-y-4 border-t border-gray-900/10 bg-white p-6 shadow-lg md:flex-row md:items-center lg:px-8 dark:border-white/10 dark:bg-gray-800 dark:shadow-none">

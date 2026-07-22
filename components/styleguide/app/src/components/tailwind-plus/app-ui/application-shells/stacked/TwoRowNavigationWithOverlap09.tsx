@@ -31,6 +31,7 @@ function classNames(...classes) {
   return classes.filter(Boolean).join(' ')
 }
 
+// ⟦𓆹𓆂𓀴𓎸⟧ TwoRowNavigationWithOverlap09 :: auto-generated pointer for public function TwoRowNavigationWithOverlap09
 export function TwoRowNavigationWithOverlap09() {
   const [open, setOpen] = useState(false)
 

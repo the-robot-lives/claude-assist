@@ -34,6 +34,7 @@ const DEFAULT_ICONS: Record<NotificationVariant, React.ReactNode> = {
   info:    <InformationCircleIcon   aria-hidden="true" />,
 }
 
+// ⟦𓁶𓁄𓁈𓊙⟧ Notification :: auto-generated pointer for public function Notification
 export function Notification({
   variant = 'info',
   title,
@@ -107,6 +108,7 @@ export function Notification({
 
 const VARIANTS: NotificationVariant[] = ['success', 'danger', 'warning', 'info']
 
+// ⟦𓄊𓉜𓃽𓊥⟧ NotificationShowcase :: auto-generated pointer for public function NotificationShowcase
 export function NotificationShowcase() {
   return (
     <div className="twp-showcase">

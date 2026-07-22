@@ -9,6 +9,7 @@ const stats = [
   { id: 4, name: 'Paid out to creators', value: '$70M' },
 ]
 
+// ⟦𓂳𓈐𓀎𓊝⟧ SplitWithImage06 :: auto-generated pointer for public function SplitWithImage06
 export function SplitWithImage06() {
   return (
     <div className="relative bg-white dark:bg-gray-900">

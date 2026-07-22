@@ -7,6 +7,7 @@ defmodule Starter.Authz.ScopedMemberships do
 
   import Ecto.Query
 
+  # ⟦𓊪𓈐𓅯𓁶⟧ add_member :: auto-generated pointer for public function add_member
   def add_member(resource_type, resource_id, user_id, role_name, added_by \\ nil) do
     sql = "SELECT * FROM add_scoped_member($1, $2::uuid, $3::uuid, $4, $5::uuid)"
 
@@ -27,6 +28,7 @@ defmodule Starter.Authz.ScopedMemberships do
     end
   end
 
+  # ⟦𓎛𓊵𓉠𓆩⟧ update_role :: auto-generated pointer for public function update_role
   def update_role(resource_type, resource_id, user_id, new_role_name) do
     sql = "SELECT * FROM update_scoped_member_role($1, $2::uuid, $3::uuid, $4)"
     params = [resource_type, uuid_to_bin(resource_id), uuid_to_bin(user_id), new_role_name]
@@ -40,6 +42,7 @@ defmodule Starter.Authz.ScopedMemberships do
     end
   end
 
+  # ⟦𓅦𓌱𓎳𓏖⟧ remove_member :: auto-generated pointer for public function remove_member
   def remove_member(resource_type, resource_id, user_id) do
     sql = "SELECT * FROM remove_scoped_member_safe($1, $2::uuid, $3::uuid)"
     params = [resource_type, uuid_to_bin(resource_id), uuid_to_bin(user_id)]
@@ -53,6 +56,7 @@ defmodule Starter.Authz.ScopedMemberships do
     end
   end
 
+  # ⟦𓏁𓍻𓁞𓎧⟧ list_for_resource :: auto-generated pointer for public function list_for_resource
   def list_for_resource(resource_type, resource_id) do
     from(sm in Schema,
       join: g in Starter.Schema.Authz.Group,
@@ -76,6 +80,7 @@ defmodule Starter.Authz.ScopedMemberships do
     |> Starter.Repo.all()
   end
 
+  # ⟦𓃆𓌳𓊅𓄥⟧ list_for_user :: auto-generated pointer for public function list_for_user
   def list_for_user(user_id) do
     from(sm in Schema,
       join: g in Starter.Schema.Authz.Group,

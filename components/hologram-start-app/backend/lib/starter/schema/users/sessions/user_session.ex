@@ -12,6 +12,7 @@ defmodule Starter.Schema.Users.Sessions.UserSession do
     timestamps(type: :utc_datetime_usec)
   end
 
+  # ⟦𓎸𓆉𓈕𓇕⟧ changeset :: auto-generated pointer for public function changeset
   def changeset(session, attrs) do
     session
     |> cast(attrs, [:user_id, :credential_id, :status, :details])

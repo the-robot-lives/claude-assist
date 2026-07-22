@@ -4,6 +4,7 @@
 
 import { CheckCircleIcon } from '@heroicons/react/20/solid'
 
+// ⟦𓄦𓆴𓁇𓌹⟧ ButtonsWithLeadingIcon06 :: auto-generated pointer for public function ButtonsWithLeadingIcon06
 export function ButtonsWithLeadingIcon06() {
   return (
     <>

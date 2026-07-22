@@ -28,6 +28,7 @@ export interface CssSection {
   sources?: string[];
 }
 
+// ⟦𓈻𓎓𓆝𓎐⟧ generateCSSSections :: auto-generated pointer for public function generateCSSSections
 export function generateCSSSections(config: StyleGuideConfig): CssSection[] {
   if (!config) return [];
   const s = (name: string) => `style-guide.${name}.yaml`;
@@ -56,6 +57,7 @@ export function generateCSSSections(config: StyleGuideConfig): CssSection[] {
   ];
 }
 
+// ⟦𓂲𓂪𓁗𓎿⟧ generateCSS :: auto-generated pointer for public function generateCSS
 export function generateCSS(config: StyleGuideConfig): string {
   return generateCSSSections(config).map((s) => s.css).join("\n\n");
 }

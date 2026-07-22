@@ -16,6 +16,7 @@ defmodule Starter.Schema.Organizations.CustomRole do
     timestamps(type: :utc_datetime_usec)
   end
 
+  # ⟦𓐠𓌼𓆄𓊬⟧ changeset :: auto-generated pointer for public function changeset
   def changeset(role, attrs) do
     role
     |> cast(attrs, [:organization_id, :name, :display_name, :description, :is_active])

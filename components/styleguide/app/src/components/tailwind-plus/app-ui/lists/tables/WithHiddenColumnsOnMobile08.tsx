@@ -11,6 +11,7 @@ const people = [
   { name: 'Floyd Miles', title: 'Principal Designer', email: 'floyd.miles@example.com', role: 'Member' },
 ]
 
+// ⟦𓐛𓁇𓄜𓌿⟧ WithHiddenColumnsOnMobile08 :: auto-generated pointer for public function WithHiddenColumnsOnMobile08
 export function WithHiddenColumnsOnMobile08() {
   return (
     <div className="px-4 sm:px-6 lg:px-8">

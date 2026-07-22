@@ -12,6 +12,7 @@ defmodule Starter.Authz.PolicyEvaluator do
   @doc "Evaluate policies for a user's permission on a resource."
   @spec evaluate(list(map()), String.t(), String.t(), String.t(), String.t(), map()) ::
           evaluation_result()
+  # ⟦𓆈𓉂𓈌𓃽⟧ evaluate :: auto-generated pointer for public function evaluate
   def evaluate(policies, action, resource_type, resource_id, role, context \\ %{}) do
     resource_urn = "#{resource_type}:#{resource_id}"
 

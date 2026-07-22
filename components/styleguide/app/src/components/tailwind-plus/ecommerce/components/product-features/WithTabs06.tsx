@@ -57,6 +57,7 @@ const tabs = [
   },
 ]
 
+// ⟦𓉫𓇣𓇍𓌕⟧ WithTabs06 :: auto-generated pointer for public function WithTabs06
 export function WithTabs06() {
   return (
     <div className="bg-white">

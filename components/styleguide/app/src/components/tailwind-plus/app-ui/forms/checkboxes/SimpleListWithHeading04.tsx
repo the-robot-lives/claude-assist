@@ -10,6 +10,7 @@ const people = [
   { id: 5, name: 'Theresa Webb', selected: false },
 ]
 
+// ⟦𓅀𓌜𓋟𓆧⟧ SimpleListWithHeading04 :: auto-generated pointer for public function SimpleListWithHeading04
 export function SimpleListWithHeading04() {
   return (
     <fieldset>

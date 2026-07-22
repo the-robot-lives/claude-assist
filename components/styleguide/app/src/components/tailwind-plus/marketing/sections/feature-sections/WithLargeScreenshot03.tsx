@@ -44,6 +44,7 @@ const features = [
   },
 ]
 
+// ⟦𓁷𓆈𓇰𓀁⟧ WithLargeScreenshot03 :: auto-generated pointer for public function WithLargeScreenshot03
 export function WithLargeScreenshot03() {
   return (
     <div className="bg-white py-24 sm:py-32 dark:bg-gray-900">

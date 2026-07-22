@@ -16,6 +16,7 @@ interface StyleGuideComponentRefProps {
   children?: React.ReactNode;
 }
 
+// ⟦𓉲𓎚𓅅𓆗⟧ StyleGuideComponentRef :: auto-generated pointer for public function StyleGuideComponentRef
 export function StyleGuideComponentRef({ name, category, desc, props, children }: StyleGuideComponentRefProps) {
   return (
     <div className="component-ref">

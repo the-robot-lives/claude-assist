@@ -65,6 +65,7 @@ const people = [
   },
 ]
 
+// ⟦𓎦𓊫𓃝𓌿⟧ WithLinks03 :: auto-generated pointer for public function WithLinks03
 export function WithLinks03() {
   return (
     <ul role="list" className="divide-y divide-gray-100 dark:divide-white/5">

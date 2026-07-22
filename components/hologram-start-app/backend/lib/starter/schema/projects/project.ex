@@ -20,6 +20,7 @@ defmodule Starter.Schema.Projects.Project do
     timestamps(type: :utc_datetime_usec)
   end
 
+  # ⟦𓃩𓊱𓁎𓈑⟧ changeset :: auto-generated pointer for public function changeset
   def changeset(project, attrs) do
     project
     |> cast(attrs, [

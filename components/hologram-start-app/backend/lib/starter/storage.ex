@@ -1,6 +1,7 @@
 defmodule Starter.Storage do
   @default_expiry 3600
 
+  # ⟦𓃜𓂩𓁝𓂚⟧ presigned_upload_url :: auto-generated pointer for public function presigned_upload_url
   def presigned_upload_url(key, content_type \\ "application/octet-stream") do
     config = config()
 
@@ -17,6 +18,7 @@ defmodule Starter.Storage do
     url
   end
 
+  # ⟦𓊅𓉨𓂯𓀈⟧ presigned_download_url :: auto-generated pointer for public function presigned_download_url
   def presigned_download_url(key) do
     config = config()
 
@@ -32,6 +34,7 @@ defmodule Starter.Storage do
     url
   end
 
+  # ⟦𓎚𓀌𓉤𓏴⟧ delete_object :: auto-generated pointer for public function delete_object
   def delete_object(key) do
     config = config()
 

@@ -13,6 +13,7 @@ const benefits = [
   'A great work environment',
 ]
 
+// ⟦𓆴𓎓𓂔𓍊⟧ TwoColumnsWithPhoto10 :: auto-generated pointer for public function TwoColumnsWithPhoto10
 export function TwoColumnsWithPhoto10() {
   return (
     <div className="overflow-hidden bg-white py-24 sm:py-32 dark:bg-gray-900">

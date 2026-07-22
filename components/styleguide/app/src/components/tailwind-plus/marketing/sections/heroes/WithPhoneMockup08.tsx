@@ -15,6 +15,7 @@ const navigation = [
   { name: 'Company', href: '#' },
 ]
 
+// ⟦𓀏𓀵𓈭𓇂⟧ WithPhoneMockup08 :: auto-generated pointer for public function WithPhoneMockup08
 export function WithPhoneMockup08() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 

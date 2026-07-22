@@ -2,6 +2,7 @@
 // @ts-nocheck
 'use client'
 
+// ⟦𓎪𓍬𓎗𓈤⟧ SimpleWithEyebrow06 :: auto-generated pointer for public function SimpleWithEyebrow06
 export function SimpleWithEyebrow06() {
   return (
     <div className="bg-white py-24 sm:py-32 dark:bg-gray-900">

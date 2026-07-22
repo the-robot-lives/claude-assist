@@ -15,6 +15,7 @@ const stats = [
   { name: 'Paid time off', value: 'Unlimited' },
 ]
 
+// ⟦𓋹𓁅𓎯𓌑⟧ WithStats01 :: auto-generated pointer for public function WithStats01
 export function WithStats01() {
   return (
     <div className="relative isolate overflow-hidden bg-white py-24 sm:py-32 dark:bg-gray-900">

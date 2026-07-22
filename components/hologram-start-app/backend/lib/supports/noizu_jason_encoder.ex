@@ -1,9 +1,11 @@
 defmodule Starter.Support.NoizuJasonEncoder do
   @moduledoc false
 
+  # ⟦𓇼𓉳𓈫𓎉⟧ __using__ :: auto-generated pointer for public function __using__
   defmacro __using__(_opts \\ []) do
     quote do
       defimpl Jason.Encoder do
+        # ⟦𓊍𓀃𓋒𓀶⟧ encode :: auto-generated pointer for public function encode
         def encode(entity, {escape, encode_map, user_settings}) do
           json_format = user_settings[:json_format] || :default
 

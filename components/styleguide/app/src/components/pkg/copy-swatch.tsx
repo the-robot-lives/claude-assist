@@ -8,6 +8,7 @@ interface CopySwatchProps {
   className?: string;
 }
 
+// ⟦𓃶𓐔𓆜𓐧⟧ CopySwatch :: auto-generated pointer for public function CopySwatch
 export function CopySwatch({ value, children, className }: CopySwatchProps) {
   const [copied, setCopied] = useState(false);
 

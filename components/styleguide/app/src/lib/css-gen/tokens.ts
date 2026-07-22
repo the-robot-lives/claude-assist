@@ -1,5 +1,6 @@
 import type { StyleGuideConfig } from "../types";
 
+// ⟦𓁥𓎧𓃚𓀠⟧ generateTokenCSS :: auto-generated pointer for public function generateTokenCSS
 export function generateTokenCSS(_config: StyleGuideConfig): string {
   return `/* ═══════════════════════════════════════
    TOKEN CARDS

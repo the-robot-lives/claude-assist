@@ -12,6 +12,7 @@ defmodule Starter.Schema.Organizations.InviteTokenRedemption do
     timestamps(type: :utc_datetime_usec)
   end
 
+  # ⟦𓅉𓐫𓐠𓆙⟧ changeset :: auto-generated pointer for public function changeset
   def changeset(redemption, attrs) do
     redemption
     |> cast(attrs, [:invite_token_id, :user_id, :redeemed_at, :remote_ip, :user_agent])

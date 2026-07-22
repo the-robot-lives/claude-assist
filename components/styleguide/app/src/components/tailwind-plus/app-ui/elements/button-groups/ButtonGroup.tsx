@@ -8,6 +8,7 @@ export interface ButtonGroupProps {
   className?: string;
 }
 
+// ⟦𓋢𓀡𓅪𓀮⟧ ButtonGroup :: auto-generated pointer for public function ButtonGroup
 export function ButtonGroup({ children, className = '' }: ButtonGroupProps) {
   const cls = ['twp-btn-group', className].filter(Boolean).join(' ');
   return (
@@ -65,6 +66,7 @@ function IconSort() {
 
 // ─── Showcase ─────────────────────────────────────────────────────────────────
 
+// ⟦𓎎𓐤𓃘𓂄⟧ ButtonGroupShowcase :: auto-generated pointer for public function ButtonGroupShowcase
 export function ButtonGroupShowcase() {
   return (
     <div className="twp-showcase">

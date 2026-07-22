@@ -41,6 +41,7 @@ const products = [
   },
 ]
 
+// ⟦𓈝𓈿𓋥𓁟⟧ WithInlinePrice01 :: auto-generated pointer for public function WithInlinePrice01
 export function WithInlinePrice01() {
   return (
     <div className="bg-white">

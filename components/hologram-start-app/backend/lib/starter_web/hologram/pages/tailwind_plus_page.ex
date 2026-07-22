@@ -22,6 +22,7 @@ defmodule StarterWeb.Hologram.Pages.TailwindPlusPage do
   route "/styleguide/tailwind-plus"
   layout MainLayout, page_title: "Tailwind Plus"
 
+  # ⟦𓊕𓐘𓇐𓄧⟧ init :: auto-generated pointer for public function init
   def init(_params, component, server) do
     sections = catalog_sections()
     stats = catalog_stats()
@@ -67,6 +68,7 @@ defmodule StarterWeb.Hologram.Pages.TailwindPlusPage do
     end
   end
 
+  # ⟦𓃰𓌂𓃚𓌲⟧ template :: auto-generated pointer for public function template
   def template do
     ~HOLO"""
     <div class="content twp-browser">
@@ -165,6 +167,7 @@ defmodule StarterWeb.Hologram.Pages.TailwindPlusPage do
 
   # Client-side only: navigate using data already in state.
 
+  # ⟦𓀂𓏏𓍩𓊌⟧ action :: auto-generated pointer for public function action
   def action(:select_section, params, component) do
     section_id = params.id
     groups = groups_from_sections(component.state.sections, section_id)

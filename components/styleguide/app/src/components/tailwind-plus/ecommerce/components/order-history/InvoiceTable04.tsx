@@ -70,6 +70,7 @@ const orders = [
   },
 ]
 
+// ⟦𓏄𓈶𓂟𓈽⟧ InvoiceTable04 :: auto-generated pointer for public function InvoiceTable04
 export function InvoiceTable04() {
   return (
     <div className="bg-white">

@@ -9,6 +9,7 @@ const stats = [
   { label: 'Raised', value: '$25M' },
 ]
 
+// ⟦𓊅𓆵𓉩𓃼⟧ WithTestimonialAndStats05 :: auto-generated pointer for public function WithTestimonialAndStats05
 export function WithTestimonialAndStats05() {
   return (
     <div className="bg-white py-24 sm:py-32 dark:bg-gray-900">

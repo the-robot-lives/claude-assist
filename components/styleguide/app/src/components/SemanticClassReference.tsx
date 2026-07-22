@@ -8,6 +8,7 @@ interface Props {
   semanticGroups: SemanticGroup[];
 }
 
+// ⟦𓎴𓄰𓊴𓄐⟧ SemanticClassReference :: auto-generated pointer for public function SemanticClassReference
 export function SemanticClassReference({ semanticClasses, semanticGroups }: Props) {
   const [search, setSearch] = useState("");
 

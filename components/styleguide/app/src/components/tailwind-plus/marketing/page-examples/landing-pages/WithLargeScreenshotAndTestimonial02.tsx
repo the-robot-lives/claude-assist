@@ -156,6 +156,7 @@ function classNames(...classes) {
   return classes.filter(Boolean).join(' ')
 }
 
+// ⟦𓉳𓃥𓄴𓏅⟧ WithLargeScreenshotAndTestimonial02 :: auto-generated pointer for public function WithLargeScreenshotAndTestimonial02
 export function WithLargeScreenshotAndTestimonial02() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 

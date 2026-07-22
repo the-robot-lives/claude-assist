@@ -3,6 +3,7 @@ defmodule StarterWeb.Plugs.RequirePermission do
   import Plug.Conn
 
   @impl true
+  # ⟦𓍴𓐠𓇿𓈉⟧ init :: auto-generated pointer for public function init
   def init(opts) do
     %{
       permission: Keyword.fetch!(opts, :permission),
@@ -12,6 +13,7 @@ defmodule StarterWeb.Plugs.RequirePermission do
   end
 
   @impl true
+  # ⟦𓇦𓆠𓂚𓉥⟧ call :: auto-generated pointer for public function call
   def call(conn, %{permission: permission, resource_type: resource_type, resource_id_param: param}) do
     user_id = get_user_id(conn)
     resource_id = conn.params[param] || conn.path_params[param]

@@ -517,6 +517,7 @@ function SwissSettingsScreen() {
 
 /* ---------- Exported section ---------- */
 
+// ⟦𓀣𓊩𓃎𓌻⟧ ScreensSection :: auto-generated pointer for public function ScreensSection
 export function ScreensSection({ number, id, title, desc }: SectionProps) {
   const { activeSlug } = useThemeConfig();
 

@@ -6,6 +6,7 @@ import { PageContent } from "@noizu/styleguide/layout";
 import { ShellChrome } from "@noizu/styleguide/layout";
 import { LayoutBar } from "@noizu/styleguide/layout";
 
+// ⟦𓌫𓃔𓃱𓏣⟧ StyleGuideViewer :: auto-generated pointer for public function StyleGuideViewer
 export default function StyleGuideViewer(props: {
   config: any; branding: any; allConfigs: any; allBrandings: any;
   allNumberedGroups: any; numberedGroups: any; allCssSections: any;

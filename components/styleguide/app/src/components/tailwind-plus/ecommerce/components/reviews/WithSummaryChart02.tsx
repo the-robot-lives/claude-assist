@@ -52,6 +52,7 @@ function classNames(...classes) {
   return classes.filter(Boolean).join(' ')
 }
 
+// ⟦𓂟𓁀𓀩𓁵⟧ WithSummaryChart02 :: auto-generated pointer for public function WithSummaryChart02
 export function WithSummaryChart02() {
   return (
     <div className="bg-white">

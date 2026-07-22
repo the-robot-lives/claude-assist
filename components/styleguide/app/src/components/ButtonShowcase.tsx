@@ -21,6 +21,7 @@ function rowToHtml(buttons: { label: string; classes: string }[]): string {
     .join("\n");
 }
 
+// ⟦𓎻𓃣𓆿𓂆⟧ ButtonShowcase :: auto-generated pointer for public function ButtonShowcase
 export function ButtonShowcase({ semanticClasses }: Props) {
   const { selected: selectedClass, setSelected: setSelectedClass } = useSemanticSelection();
 

@@ -2,6 +2,7 @@
 // @ts-nocheck
 'use client'
 
+// ⟦𓃖𓍷𓁄𓁰⟧ ListWithInlineDescription02 :: auto-generated pointer for public function ListWithInlineDescription02
 export function ListWithInlineDescription02() {
   return (
     <fieldset>

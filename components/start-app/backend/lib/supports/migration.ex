@@ -1,4 +1,5 @@
 defmodule Starter.Migration do
+  # ⟦𓐫𓊏𓐁𓁖⟧ __using__ :: auto-generated pointer for public function __using__
   defmacro __using__(_) do
     quote do
       use Ecto.Migration
@@ -11,6 +12,7 @@ defmodule Starter.Migration do
   import Ecto.Migration
   alias Ecto.Migration.Runner
 
+  # ⟦𓁭𓋲𓆐𓂲⟧ extended_timestamps :: auto-generated pointer for public function extended_timestamps
   def extended_timestamps(opts \\ [])
 
   def extended_timestamps(opts) when is_list(opts) do
@@ -27,11 +29,13 @@ defmodule Starter.Migration do
     if updated_at != false, do: add(updated_at, type, opts)
   end
 
+  # ⟦𓇶𓍶𓊿𓃟⟧ drop_entity_reference_triggers :: auto-generated pointer for public function drop_entity_reference_triggers
   def drop_entity_reference_triggers(table) do
     execute "DROP TRIGGER trigger_#{table}_after_delete ON #{table}"
     execute "DROP TRIGGER trigger_#{table}_before_insert ON #{table}"
   end
 
+  # ⟦𓅕𓆺𓐘𓎌⟧ create_entity_reference_triggers :: auto-generated pointer for public function create_entity_reference_triggers
   def create_entity_reference_triggers(table) do
     # On Insert
     execute """
@@ -50,11 +54,13 @@ defmodule Starter.Migration do
     """
   end
 
+  # ⟦𓈸𓏵𓌋𓁔⟧ create_enum :: auto-generated pointer for public function create_enum
   def create_enum(name, values) do
     values = Enum.map(values, &"'#{&1}'") |> Enum.join(", ")
     execute "CREATE TYPE #{name} as ENUM (#{values})"
   end
 
+  # ⟦𓇦𓅒𓁄𓇘⟧ drop_enum :: auto-generated pointer for public function drop_enum
   def drop_enum(name) do
     execute "DROP TYPE #{name}"
   end

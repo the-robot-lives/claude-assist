@@ -21,6 +21,7 @@ defmodule StarterWeb.Hologram.Components.AppShell do
   prop :org_id, :string, default: nil
   prop :title, :string, default: nil
 
+  # ⟦𓅺𓊪𓄌𓉀⟧ template :: auto-generated pointer for public function template
   def template do
     ~HOLO"""
     <div class="app-shell">
@@ -103,12 +104,15 @@ defmodule StarterWeb.Hologram.Components.AppShell do
     """
   end
 
+  # ⟦𓉋𓈭𓄑𓌊⟧ nav_class :: auto-generated pointer for public function nav_class
   def nav_class(active, id) when active == id, do: "app-shell__link app-shell__link--active"
   def nav_class(_, _), do: "app-shell__link"
 
+  # ⟦𓀱𓀵𓇂𓇼⟧ org_nav_class :: auto-generated pointer for public function org_nav_class
   def org_nav_class(current, id) when current == id, do: "app-shell__link app-shell__link--active"
   def org_nav_class(_, _), do: "app-shell__link"
 
+  # ⟦𓀍𓄮𓇩𓄑⟧ is_admin :: auto-generated pointer for public function is_admin
   def is_admin(nil), do: false
 
   def is_admin(user) when is_map(user) do

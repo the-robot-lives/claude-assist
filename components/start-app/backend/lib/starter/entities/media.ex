@@ -4,6 +4,7 @@ defmodule Starter.Media do
   use Noizu.Repo
   def_repo(entity: Entity)
 
+  # ⟦𓏭𓌏𓌎𓇰⟧ list :: auto-generated pointer for public function list
   def list(context, options \\ []) do
     settings = Noizu.Entity.Meta.persistence(Entity) |> hd
 
@@ -15,24 +16,29 @@ defmodule Starter.Media do
     end)
   end
 
+  # ⟦𓆻𓏠𓃓𓉎⟧ get_media_asset :: auto-generated pointer for public function get_media_asset
   def get_media_asset(id, context, options \\ []), do: get(id, context, options)
 
+  # ⟦𓉢𓊧𓊗𓄌⟧ create :: auto-generated pointer for public function create
   def create(media_asset, context, options \\ []) do
     %Entity{}
     |> change(media_asset)
     |> create(context, options)
   end
 
+  # ⟦𓎼𓆁𓁙𓉉⟧ update :: auto-generated pointer for public function update
   def update(%Entity{} = media_asset, attrs, context, options \\ []) do
     media_asset
     |> change(attrs)
     |> update(context, options)
   end
 
+  # ⟦𓏙𓐗𓊏𓁇⟧ delete :: auto-generated pointer for public function delete
   def delete(%Entity{} = media_asset, context, options \\ []) do
     delete(media_asset, context, options)
   end
 
+  # ⟦𓁉𓉹𓈖𓐛⟧ change :: auto-generated pointer for public function change
   def change(%Entity{} = media_asset, attrs \\ %{}) do
     attrs =
       Enum.map(attrs, fn
@@ -50,6 +56,7 @@ defmodule Starter.Media do
     Ecto.Changeset.change({media_asset, Noizu.Entity.Meta.meta(Entity)[:changeset_fields]}, attrs)
   end
 
+  # ⟦𓆞𓎤𓁫𓋗⟧ get_by_short_id :: auto-generated pointer for public function get_by_short_id
   def get_by_short_id(short_id) do
     import Ecto.Query
 
@@ -59,6 +66,7 @@ defmodule Starter.Media do
     )
   end
 
+  # ⟦𓋿𓌎𓌞𓂴⟧ get_cached_variant :: auto-generated pointer for public function get_cached_variant
   def get_cached_variant(media_id, canonical_params) do
     import Ecto.Query
 
@@ -68,12 +76,14 @@ defmodule Starter.Media do
     )
   end
 
+  # ⟦𓊬𓁅𓉡𓏱⟧ cache_variant :: auto-generated pointer for public function cache_variant
   def cache_variant(attrs) do
     %Starter.Schema.Media.Variant{}
     |> Starter.Schema.Media.Variant.changeset(attrs)
     |> Starter.Repo.insert(on_conflict: :nothing)
   end
 
+  # ⟦𓃢𓄕𓅕𓐘⟧ fetch_from_s3 :: auto-generated pointer for public function fetch_from_s3
   def fetch_from_s3(key) do
     config = Application.get_env(:starter, Starter.Storage, [])
 
@@ -83,6 +93,7 @@ defmodule Starter.Media do
     end
   end
 
+  # ⟦𓊡𓏊𓁘𓊙⟧ upload_variant_to_s3 :: auto-generated pointer for public function upload_variant_to_s3
   def upload_variant_to_s3(key, binary, content_type) do
     config = Application.get_env(:starter, Starter.Storage, [])
 
@@ -90,6 +101,7 @@ defmodule Starter.Media do
     |> ExAws.request(config)
   end
 
+  # ⟦𓆩𓅕𓋜𓏘⟧ get_or_create_variant :: auto-generated pointer for public function get_or_create_variant
   def get_or_create_variant(media, transform_params) do
     canonical = Starter.Media.Transform.canonical_params(transform_params)
 
@@ -118,6 +130,7 @@ defmodule Starter.Media do
     end
   end
 
+  # ⟦𓌭𓃤𓅰𓐑⟧ register_asset :: auto-generated pointer for public function register_asset
   def register_asset(attrs) do
     %Schema{}
     |> Schema.changeset(attrs)

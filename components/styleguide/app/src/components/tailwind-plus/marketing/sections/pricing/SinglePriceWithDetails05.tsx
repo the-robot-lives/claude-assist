@@ -11,6 +11,7 @@ const includedFeatures = [
   'Official member t-shirt',
 ]
 
+// ⟦𓀀𓎅𓆸𓈂⟧ SinglePriceWithDetails05 :: auto-generated pointer for public function SinglePriceWithDetails05
 export function SinglePriceWithDetails05() {
   return (
     <div className="bg-white py-24 sm:py-32 dark:bg-gray-900">

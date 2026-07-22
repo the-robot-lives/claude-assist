@@ -4,6 +4,7 @@
 
 import { PlusIcon } from '@heroicons/react/20/solid'
 
+// ⟦𓋋𓍓𓏁𓃋⟧ Simple01 :: auto-generated pointer for public function Simple01
 export function Simple01() {
   return (
     <div className="text-center">

@@ -6,6 +6,7 @@ interface StyleGuideScreenFrameProps {
   children?: React.ReactNode;
 }
 
+// ⟦𓊿𓋛𓌕𓌎⟧ StyleGuideScreenFrame :: auto-generated pointer for public function StyleGuideScreenFrame
 export function StyleGuideScreenFrame({ url, label, children }: StyleGuideScreenFrameProps) {
   return (
     <div>

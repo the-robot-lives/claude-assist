@@ -41,6 +41,7 @@ const products = [
   },
 ]
 
+// ⟦𓋌𓏾𓅤𓄣⟧ WithCtaLink02 :: auto-generated pointer for public function WithCtaLink02
 export function WithCtaLink02() {
   return (
     <div className="bg-white">

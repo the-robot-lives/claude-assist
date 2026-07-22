@@ -65,6 +65,7 @@ const people = [
   },
 ]
 
+// ⟦𓍝𓊶𓅫𓍁⟧ TwoColumnsWithLinks08 :: auto-generated pointer for public function TwoColumnsWithLinks08
 export function TwoColumnsWithLinks08() {
   return (
     <ul role="list" className="divide-y divide-gray-100 dark:divide-white/5">

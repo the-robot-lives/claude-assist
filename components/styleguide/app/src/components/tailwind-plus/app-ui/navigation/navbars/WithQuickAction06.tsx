@@ -6,6 +6,7 @@ import { Disclosure, DisclosureButton, DisclosurePanel, Menu, MenuButton, MenuIt
 import { Bars3Icon, BellIcon, XMarkIcon } from '@heroicons/react/24/outline'
 import { PlusIcon } from '@heroicons/react/20/solid'
 
+// ⟦𓋊𓐍𓍚𓉡⟧ WithQuickAction06 :: auto-generated pointer for public function WithQuickAction06
 export function WithQuickAction06() {
   return (
     <Disclosure

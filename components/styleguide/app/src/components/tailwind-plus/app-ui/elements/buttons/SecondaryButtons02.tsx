@@ -2,6 +2,7 @@
 // @ts-nocheck
 'use client'
 
+// ⟦𓀚𓊢𓁏𓈨⟧ SecondaryButtons02 :: auto-generated pointer for public function SecondaryButtons02
 export function SecondaryButtons02() {
   return (
     <>

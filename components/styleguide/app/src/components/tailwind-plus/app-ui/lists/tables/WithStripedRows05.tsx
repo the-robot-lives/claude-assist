@@ -11,6 +11,7 @@ const people = [
   { name: 'Floyd Miles', title: 'Principal Designer', email: 'floyd.miles@example.com', role: 'Member' },
 ]
 
+// ⟦𓋛𓃿𓋭𓇰⟧ WithStripedRows05 :: auto-generated pointer for public function WithStripedRows05
 export function WithStripedRows05() {
   return (
     <div className="px-4 sm:px-6 lg:px-8">

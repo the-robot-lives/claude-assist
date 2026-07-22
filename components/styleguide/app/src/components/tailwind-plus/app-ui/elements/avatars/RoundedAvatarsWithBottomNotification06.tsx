@@ -2,6 +2,7 @@
 // @ts-nocheck
 'use client'
 
+// ⟦𓆘𓀻𓎨𓋸⟧ RoundedAvatarsWithBottomNotification06 :: auto-generated pointer for public function RoundedAvatarsWithBottomNotification06
 export function RoundedAvatarsWithBottomNotification06() {
   return (
     <>

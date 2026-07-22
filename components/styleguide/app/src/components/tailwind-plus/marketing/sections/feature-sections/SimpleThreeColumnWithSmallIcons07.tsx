@@ -28,6 +28,7 @@ const features = [
   },
 ]
 
+// ⟦𓍻𓇆𓄾𓌐⟧ SimpleThreeColumnWithSmallIcons07 :: auto-generated pointer for public function SimpleThreeColumnWithSmallIcons07
 export function SimpleThreeColumnWithSmallIcons07() {
   return (
     <div className="bg-white py-24 sm:py-32 dark:bg-gray-900">

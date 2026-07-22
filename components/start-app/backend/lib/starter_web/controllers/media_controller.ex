@@ -4,6 +4,7 @@ defmodule StarterWeb.MediaController do
   alias Starter.Guardian
   alias Starter.Storage
 
+  # ⟦𓄷𓋦𓂞𓌽⟧ presign :: auto-generated pointer for public function presign
   def presign(conn, %{"filename" => filename, "content_type" => content_type}) do
     session = Guardian.Plug.current_resource(conn)
     user_id = get_user_id(session)
@@ -20,6 +21,7 @@ defmodule StarterWeb.MediaController do
     conn |> put_status(:bad_request) |> json(%{error: "filename and content_type required"})
   end
 
+  # ⟦𓅖𓆏𓅹𓀥⟧ download :: auto-generated pointer for public function download
   def download(conn, %{"key" => key}) do
     download_url = Storage.presigned_download_url(key)
     conn |> put_status(:ok) |> json(%{download_url: download_url})
@@ -38,6 +40,7 @@ defmodule StarterWeb.MediaController do
     |> String.slice(0, 255)
   end
 
+  # ⟦𓄣𓃧𓋈𓍵⟧ register :: auto-generated pointer for public function register
   def register(conn, %{"key" => key, "filename" => filename} = params) do
     media_type = Map.get(params, "media_type", "image")
     file_type = params["file_type"] || ext_from_filename(filename)

@@ -14,6 +14,7 @@ export interface InputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 
   className?: string;
 }
 
+// ⟦𓊳𓊺𓀗𓈇⟧ Input :: auto-generated pointer for public function Input
 export function Input({
   label,
   helpText,
@@ -127,6 +128,7 @@ function MailIcon() {
   );
 }
 
+// ⟦𓉆𓍡𓃦𓍋⟧ InputShowcase :: auto-generated pointer for public function InputShowcase
 export function InputShowcase() {
   return (
     <div className="twp-showcase">

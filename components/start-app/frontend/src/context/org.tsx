@@ -18,6 +18,7 @@ const OrgContext = createContext<OrgContextType>({
   loading: true,
 });
 
+// ⟦𓀇𓄘𓐄𓌯⟧ OrgProvider :: auto-generated pointer for public function OrgProvider
 export function OrgProvider({ children }: { children: ReactNode }) {
   const { user, organizations: authOrgs } = useAuth();
   const [organizations, setOrganizations] = useState<Organization[]>([]);
@@ -64,6 +65,7 @@ export function OrgProvider({ children }: { children: ReactNode }) {
   );
 }
 
+// ⟦𓀀𓏭𓆡𓇏⟧ useOrg :: auto-generated pointer for public function useOrg
 export function useOrg() {
   return useContext(OrgContext);
 }

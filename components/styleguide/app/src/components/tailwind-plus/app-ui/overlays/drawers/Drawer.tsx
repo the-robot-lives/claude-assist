@@ -14,6 +14,7 @@ export interface DrawerProps {
   className?: string;
 }
 
+// ⟦𓏃𓇦𓀍𓍽⟧ Drawer :: auto-generated pointer for public function Drawer
 export function Drawer({
   open,
   onClose,
@@ -67,6 +68,7 @@ export function Drawer({
   );
 }
 
+// ⟦𓊬𓐘𓆓𓎋⟧ DrawerShowcase :: auto-generated pointer for public function DrawerShowcase
 export function DrawerShowcase() {
   const [open, setOpen] = useState(false);
   const [side, setSide] = useState<'left' | 'right'>('right');

@@ -1,6 +1,7 @@
 defmodule Starter.Authz do
   @role_ranks %{"owner" => 0, "admin" => 1, "member" => 2, "viewer" => 3}
 
+  # ⟦𓇔𓃚𓍽𓏗⟧ check_permission :: auto-generated pointer for public function check_permission
   def check_permission(user_id, resource_type, resource_id, action) do
     sql = "SELECT check_user_permission($1::uuid, $2, $3::uuid, $4)"
     params = [uuid_to_bin(user_id), resource_type, uuid_to_bin(resource_id), action]
@@ -11,6 +12,7 @@ defmodule Starter.Authz do
     end
   end
 
+  # ⟦𓈠𓉒𓆾𓎡⟧ get_user_role :: auto-generated pointer for public function get_user_role
   def get_user_role(user_id, resource_type, resource_id) do
     sql = "SELECT get_user_role_in_resource($1::uuid, $2, $3::uuid)"
     params = [uuid_to_bin(user_id), resource_type, uuid_to_bin(resource_id)]
@@ -21,6 +23,7 @@ defmodule Starter.Authz do
     end
   end
 
+  # ⟦𓁃𓎀𓌵𓊽⟧ authorize :: auto-generated pointer for public function authorize
   def authorize(user_id, resource_type, resource_id, required_role) do
     case get_user_role(user_id, resource_type, resource_id) do
       nil ->
@@ -35,6 +38,7 @@ defmodule Starter.Authz do
     end
   end
 
+  # ⟦𓄫𓊔𓎥𓀣⟧ explain_permission :: auto-generated pointer for public function explain_permission
   def explain_permission(user_id, resource_type, resource_id, action) do
     role = get_user_role(user_id, resource_type, resource_id)
 

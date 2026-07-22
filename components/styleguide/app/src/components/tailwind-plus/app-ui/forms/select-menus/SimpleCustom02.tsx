@@ -21,6 +21,7 @@ const people = [
   { id: 10, name: 'Emil Schaefer' },
 ]
 
+// ⟦𓅀𓁬𓉃𓍗⟧ SimpleCustom02 :: auto-generated pointer for public function SimpleCustom02
 export function SimpleCustom02() {
   const [selected, setSelected] = useState(people[3])
 

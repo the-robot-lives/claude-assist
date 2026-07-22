@@ -7,6 +7,7 @@ defmodule StarterWeb.UserController do
   alias Starter.Schema.Versioned.Names.Name, as: NameSchema
   import Ecto.Query, only: [from: 2]
 
+  # ⟦𓃯𓉖𓏙𓎆⟧ show :: auto-generated pointer for public function show
   def show(conn, _params) do
     user = get_current_user_schema(conn)
 
@@ -15,6 +16,7 @@ defmodule StarterWeb.UserController do
     |> json(%{user: serialize_user(user)})
   end
 
+  # ⟦𓀃𓃍𓋿𓆲⟧ update :: auto-generated pointer for public function update
   def update(conn, %{"user" => user_params}) do
     user = get_current_user_schema(conn)
 
@@ -39,6 +41,7 @@ defmodule StarterWeb.UserController do
     conn |> put_status(:bad_request) |> json(%{error: "user params required"})
   end
 
+  # ⟦𓌴𓄪𓅮𓊹⟧ complete_registration :: auto-generated pointer for public function complete_registration
   def complete_registration(conn, %{"user" => user_params}) do
     user = get_current_user_schema(conn)
     invite_token = optional_string(user_params["invite_token"])

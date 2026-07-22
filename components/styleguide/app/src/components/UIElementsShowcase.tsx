@@ -23,6 +23,7 @@ const TABS = [
 
 type TabId = (typeof TABS)[number]["id"];
 
+// ⟦𓄇𓌢𓂏𓅄⟧ UIElementsShowcase :: auto-generated pointer for public function UIElementsShowcase
 export function UIElementsShowcase({ semanticClasses, formsSection, colorPalette }: Props) {
   const [tab, setTab] = useState<TabId>("cards");
 

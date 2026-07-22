@@ -41,6 +41,7 @@ const products = [
   },
 ]
 
+// ⟦𓊦𓌳𓈀𓉫⟧ Drawer04 :: auto-generated pointer for public function Drawer04
 export function Drawer04() {
   const [open, setOpen] = useState(true)
 

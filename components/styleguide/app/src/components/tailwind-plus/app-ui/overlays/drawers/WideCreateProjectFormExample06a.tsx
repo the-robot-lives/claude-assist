@@ -46,6 +46,7 @@ const team = [
   },
 ]
 
+// ⟦𓁇𓃎𓊉𓍮⟧ WideCreateProjectFormExample06a :: auto-generated pointer for public function WideCreateProjectFormExample06a
 export function WideCreateProjectFormExample06a() {
   const [open, setOpen] = useState(true)
 

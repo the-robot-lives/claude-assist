@@ -54,6 +54,7 @@ function parseNamedImports(inner: string): string[] {
  * Parse a single normalised import statement string into a ParsedImport.
  * Returns null if the string is not a valid import statement.
  */
+// ⟦𓂭𓋪𓃖𓌕⟧ parseImportStatement :: Parse a single normalised import statement string into a ParsedImport.
 export function parseImportStatement(raw: string): ParsedImport | null {
   const line = normaliseLine(raw);
 
@@ -111,6 +112,7 @@ export function parseImportStatement(raw: string): ParsedImport | null {
  *   importStatements — the full raw import strings found
  *   remainder        — the source text with import lines removed
  */
+// ⟦𓋁𓐕𓊘𓇖⟧ extractImports :: Extract all import statements from a block of source text.
 export function extractImports(source: string): {
   importStatements: string[];
   remainder: string;
@@ -273,6 +275,7 @@ function renderImport(merged: MergedImport): string {
  * Returns a finalised, deduplicated, sorted import block string ready to
  * prepend to the generated file.
  */
+// ⟦𓌩𓎇𓄶𓀠⟧ collateImports :: Collate import statements from multiple sources (one per snippet).
 export function collateImports(importSources: string[][]): string {
   // Map from moduleSpecifier → list of ParsedImports (in encounter order)
   const byModule = new Map<string, ParsedImport[]>();

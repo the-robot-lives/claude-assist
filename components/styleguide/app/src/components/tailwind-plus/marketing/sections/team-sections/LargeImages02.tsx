@@ -53,6 +53,7 @@ const people = [
   },
 ]
 
+// ⟦𓐞𓀇𓃑𓏊⟧ LargeImages02 :: auto-generated pointer for public function LargeImages02
 export function LargeImages02() {
   return (
     <div className="bg-white py-24 sm:py-32 dark:bg-gray-900">

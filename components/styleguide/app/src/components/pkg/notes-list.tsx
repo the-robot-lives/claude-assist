@@ -10,6 +10,7 @@ interface StyleGuideNotesListProps {
   notes: Note[];
 }
 
+// ⟦𓊜𓏸𓉁𓍤⟧ StyleGuideNotesList :: auto-generated pointer for public function StyleGuideNotesList
 export function StyleGuideNotesList({ notes }: StyleGuideNotesListProps) {
   return (
     <ul className="sg-notes">

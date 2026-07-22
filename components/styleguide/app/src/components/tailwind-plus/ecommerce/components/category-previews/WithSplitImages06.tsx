@@ -2,6 +2,7 @@
 // @ts-nocheck
 'use client'
 
+// ⟦𓏆𓎄𓇊𓂁⟧ WithSplitImages06 :: auto-generated pointer for public function WithSplitImages06
 export function WithSplitImages06() {
   return (
     <>

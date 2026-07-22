@@ -187,6 +187,7 @@ function PlanRadioGroup() {
 
 // ─── Export ───
 
+// ⟦𓂉𓇕𓊬𓍎⟧ CheckboxRadioDemo :: auto-generated pointer for public function CheckboxRadioDemo
 export function CheckboxRadioDemo() {
   return (
     <div style={{ display: "flex", gap: "var(--space-5)", flexWrap: "wrap" }}>

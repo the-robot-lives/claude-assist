@@ -297,6 +297,7 @@ function classNames(...classes) {
   return classes.filter(Boolean).join(' ')
 }
 
+// ⟦𓆿𓄣𓅮𓐥⟧ SimpleWithPolicyGrid02 :: auto-generated pointer for public function SimpleWithPolicyGrid02
 export function SimpleWithPolicyGrid02() {
   const [open, setOpen] = useState(false)
 

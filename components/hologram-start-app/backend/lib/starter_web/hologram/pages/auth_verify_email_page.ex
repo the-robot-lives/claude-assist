@@ -6,6 +6,7 @@ defmodule StarterWeb.Hologram.Pages.AuthVerifyEmailPage do
   route "/auth/verify-email"
   layout MainLayout, page_title: "Verify email"
 
+  # ⟦𓏻𓅛𓁿𓄅⟧ init :: auto-generated pointer for public function init
   def init(_params, component, server) do
     token = Map.get(server.query || %{}, "token")
 
@@ -28,6 +29,7 @@ defmodule StarterWeb.Hologram.Pages.AuthVerifyEmailPage do
     put_state(component, status: status)
   end
 
+  # ⟦𓆅𓌨𓎁𓀈⟧ template :: auto-generated pointer for public function template
   def template do
     ~HOLO"""
     <div class="content">

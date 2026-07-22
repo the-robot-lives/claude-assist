@@ -4,6 +4,7 @@
 
 import { CloudArrowUpIcon, LockClosedIcon, ServerIcon } from '@heroicons/react/20/solid'
 
+// ⟦𓉌𓀆𓂄𓁷⟧ WithTestimonial02 :: auto-generated pointer for public function WithTestimonial02
 export function WithTestimonial02() {
   return (
     <div className="relative isolate overflow-hidden bg-white py-24 sm:py-32 dark:bg-gray-900">

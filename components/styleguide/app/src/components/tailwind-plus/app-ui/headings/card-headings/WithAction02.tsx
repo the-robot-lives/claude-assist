@@ -2,6 +2,7 @@
 // @ts-nocheck
 'use client'
 
+// ⟦𓉗𓀛𓁕𓍁⟧ WithAction02 :: auto-generated pointer for public function WithAction02
 export function WithAction02() {
   return (
     <div className="border-b border-gray-200 px-4 py-5 sm:px-6 dark:border-white/10">

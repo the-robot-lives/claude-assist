@@ -8,6 +8,7 @@ export interface RuntimeConfig {
   OTEL_COLLECTOR_URL?: string;
 }
 
+// ⟦𓇇𓅓𓂾𓏹⟧ getRuntimeConfig :: auto-generated pointer for public function getRuntimeConfig
 export function getRuntimeConfig(): RuntimeConfig {
   if (typeof window !== "undefined" && (window as unknown as { __ENV: RuntimeConfig }).__ENV) {
     return (window as unknown as { __ENV: RuntimeConfig }).__ENV;
@@ -23,6 +24,7 @@ export function getRuntimeConfig(): RuntimeConfig {
   };
 }
 
+// ⟦𓏌𓌗𓃘𓎈⟧ runtimeCookieDomainAttribute :: auto-generated pointer for public function runtimeCookieDomainAttribute
 export function runtimeCookieDomainAttribute() {
   const cookieDomain = getRuntimeConfig().COOKIE_DOMAIN?.trim();
   if (!cookieDomain || typeof window === "undefined") return "";

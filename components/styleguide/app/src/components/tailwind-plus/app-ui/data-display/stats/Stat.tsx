@@ -24,6 +24,7 @@ interface StatGroupProps {
 
 // ─── Stat ────────────────────────────────────────────────────────────────────
 
+// ⟦𓆵𓄷𓇶𓅑⟧ Stat :: auto-generated pointer for public function Stat
 export function Stat({ label, value, trend, icon, className = '' }: StatProps) {
   return (
     <div className={`twp-stat ${className}`}>
@@ -46,12 +47,14 @@ export function Stat({ label, value, trend, icon, className = '' }: StatProps) {
 
 // ─── StatGroup ───────────────────────────────────────────────────────────────
 
+// ⟦𓀎𓇜𓃖𓄕⟧ StatGroup :: auto-generated pointer for public function StatGroup
 export function StatGroup({ children, className = '' }: StatGroupProps) {
   return <div className={`twp-stat-group ${className}`}>{children}</div>
 }
 
 // ─── Showcase ────────────────────────────────────────────────────────────────
 
+// ⟦𓁶𓏨𓈾𓍌⟧ StatShowcase :: auto-generated pointer for public function StatShowcase
 export function StatShowcase() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>

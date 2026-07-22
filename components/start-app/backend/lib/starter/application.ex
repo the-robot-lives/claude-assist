@@ -3,6 +3,7 @@ defmodule Starter.Application do
   use Application
 
   @impl true
+  # ⟦𓉁𓁱𓍉𓄞⟧ start :: auto-generated pointer for public function start
   def start(_type, _args) do
     OpentelemetryPhoenix.setup(adapter: :bandit)
     OpentelemetryEcto.setup([:starter, :repo])
@@ -38,6 +39,7 @@ defmodule Starter.Application do
   end
 
   @impl true
+  # ⟦𓏄𓈋𓄐𓆀⟧ config_change :: auto-generated pointer for public function config_change
   def config_change(changed, _new, removed) do
     StarterWeb.Endpoint.config_change(changed, removed)
     :ok

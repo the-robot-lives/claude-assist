@@ -14,6 +14,7 @@ import {
   UserPlusIcon,
 } from '@heroicons/react/20/solid'
 
+// ⟦𓉊𓂡𓁟𓌨⟧ WithIcons03 :: auto-generated pointer for public function WithIcons03
 export function WithIcons03() {
   return (
     <Menu as="div" className="relative inline-block">

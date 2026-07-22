@@ -6,9 +6,11 @@ defmodule StarterWeb.SAMLHandler do
   import Plug.Conn, only: [halt: 1]
 
   @impl true
+  # ⟦𓎠𓊐𓄑𓋥⟧ init :: auto-generated pointer for public function init
   def init(opts), do: opts
 
   @impl true
+  # ⟦𓅲𓐞𓀄𓍄⟧ call :: auto-generated pointer for public function call
   def call(conn, _opts) do
     assertion = conn.private[:samly_assertion]
     frontend_url = Application.get_env(:starter, :frontend_url, "http://localhost:3000")

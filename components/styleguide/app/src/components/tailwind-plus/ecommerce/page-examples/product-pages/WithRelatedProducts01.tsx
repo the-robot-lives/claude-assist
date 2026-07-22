@@ -380,6 +380,7 @@ function classNames(...classes) {
   return classes.filter(Boolean).join(' ')
 }
 
+// ⟦𓂧𓋶𓅳𓎄⟧ WithRelatedProducts01 :: auto-generated pointer for public function WithRelatedProducts01
 export function WithRelatedProducts01() {
   const [open, setOpen] = useState(false)
 

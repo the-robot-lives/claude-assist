@@ -338,6 +338,7 @@ function PrincipleRow({ label, colorClass, text, italic }: { label: string; colo
 
 // ─── Main component ───
 
+// ⟦𓏐𓌝𓐣𓉐⟧ NavigationShowcase :: auto-generated pointer for public function NavigationShowcase
 export function NavigationShowcase({ section }: Props) {
   const tabs = section.components.map((c) => ({
     id: `nav-${c.name}`,

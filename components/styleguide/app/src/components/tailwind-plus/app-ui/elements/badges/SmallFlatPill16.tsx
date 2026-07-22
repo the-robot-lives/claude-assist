@@ -2,6 +2,7 @@
 // @ts-nocheck
 'use client'
 
+// ⟦𓊎𓁚𓎲𓍀⟧ SmallFlatPill16 :: auto-generated pointer for public function SmallFlatPill16
 export function SmallFlatPill16() {
   return (
     <>

@@ -17,6 +17,7 @@ export interface TabsProps {
   className?: string;
 }
 
+// ⟦𓏤𓂗𓊸𓁵⟧ Tabs :: auto-generated pointer for public function Tabs
 export function Tabs({
   tabs,
   activeKey,
@@ -66,6 +67,7 @@ function TabsDemo({ variant }: { variant: TabsVariant }) {
   return <Tabs tabs={DEMO_TABS} activeKey={active} onChange={setActive} variant={variant} />;
 }
 
+// ⟦𓈭𓂟𓌢𓉃⟧ TabsShowcase :: auto-generated pointer for public function TabsShowcase
 export function TabsShowcase() {
   const variants: { variant: TabsVariant; label: string }[] = [
     { variant: 'underline', label: 'underline (default)' },

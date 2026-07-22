@@ -11,6 +11,7 @@ defmodule Starter.Users do
   use Noizu.Repo
   def_repo(entity: Starter.Users.User)
 
+  # ⟦𓂢𓎡𓆨𓊢⟧ list :: auto-generated pointer for public function list
   def list(context, options \\ []) do
     settings = Noizu.Entity.Meta.persistence(Entity) |> hd
 
@@ -22,8 +23,10 @@ defmodule Starter.Users do
     end)
   end
 
+  # ⟦𓅒𓏏𓈛𓉔⟧ get_user :: auto-generated pointer for public function get_user
   def get_user(id, context, options \\ []), do: get(id, context, options)
 
+  # ⟦𓍓𓊱𓇗𓂮⟧ register :: auto-generated pointer for public function register
   def register(details, auth, context, options \\ [])
 
   def register(details, {:login, {email, password}}, context, options) do
@@ -125,12 +128,14 @@ defmodule Starter.Users do
     end
   end
 
+  # ⟦𓍓𓅍𓅯𓉈⟧ authenticate :: auto-generated pointer for public function authenticate
   def authenticate(auth = {:login, {_email, _password}}, context, options \\ nil) do
     with {:ok, session} <- Starter.Users.Credentials.authenticate(auth, context, options) do
       {:ok, session}
     end
   end
 
+  # ⟦𓏙𓀢𓈌𓎉⟧ by_handle :: auto-generated pointer for public function by_handle
   def by_handle(handle, context, options \\ []) do
     with record = %Schema{} <- Starter.Repo.get_by(Schema, %{handle: handle}) do
       settings = Noizu.Entity.Meta.persistence(Entity) |> hd
@@ -139,6 +144,7 @@ defmodule Starter.Users do
     end
   end
 
+  # ⟦𓆣𓐋𓁻𓆜⟧ user_name_available? :: auto-generated pointer for public function user_name_available?
   def user_name_available?(user_name, _context, _options \\ nil) do
     with %{} <- Starter.Repo.get_by(Schema, %{user_name: user_name}) do
       {:error, {:user_name, :registered}}
@@ -148,6 +154,7 @@ defmodule Starter.Users do
     end
   end
 
+  # ⟦𓂀𓍫𓌭𓏸⟧ change_user :: auto-generated pointer for public function change_user
   def change_user(%Entity{} = user, attrs \\ %{}) do
     attrs =
       Enum.map(
@@ -234,6 +241,7 @@ defmodule Starter.Users do
   # Validation Helpers
   # ---------------------------------------------------------------------------
 
+  # ⟦𓈂𓆐𓆋𓋊⟧ valid_user_name? :: auto-generated pointer for public function valid_user_name?
   def valid_user_name?(user_name) do
     cond do
       is_nil(user_name) -> {:error, {:user_name, :required}}
@@ -244,6 +252,7 @@ defmodule Starter.Users do
     end
   end
 
+  # ⟦𓁞𓃫𓆛𓅗⟧ valid_name? :: auto-generated pointer for public function valid_name?
   def valid_name?(first, middle, last) do
     cond do
       is_nil(first) ->
@@ -279,14 +288,17 @@ defmodule Starter.Users do
     end
   end
 
+  # ⟦𓅜𓅘𓌠𓍴⟧ valid_login? :: auto-generated pointer for public function valid_login?
   def valid_login?(email, password) do
     Starter.Users.Credentials.valid_login?(email, password)
   end
 
+  # ⟦𓂧𓌑𓉔𓆷⟧ login_available? :: auto-generated pointer for public function login_available?
   def login_available?(email, context, options \\ nil) do
     Starter.Users.Credentials.login_available?(email, context, options)
   end
 
+  # ⟦𓌇𓃒𓉮𓄸⟧ generate_handle :: auto-generated pointer for public function generate_handle
   def generate_handle({first, last}, context, options \\ nil) do
     handle = String.slice(first, 0..1) <> String.slice(last, 0..32)
     unique_handle(handle, context, options)

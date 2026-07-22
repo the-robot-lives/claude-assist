@@ -4,6 +4,7 @@
 
 import { ChevronRightIcon } from '@heroicons/react/20/solid'
 
+// ⟦𓁱𓊤𓋷𓅿⟧ SplitWithScreenshot02 :: auto-generated pointer for public function SplitWithScreenshot02
 export function SplitWithScreenshot02() {
   return (
     <div className="relative isolate overflow-hidden bg-white dark:bg-gray-900">

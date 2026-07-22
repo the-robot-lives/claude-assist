@@ -8,6 +8,7 @@ const offers = [
   { name: 'Sign up for our newsletter', description: '15% off your first order', href: '#' },
 ]
 
+// ⟦𓆥𓀻𓎵𓃯⟧ WithOffersAndSplitImage06 :: auto-generated pointer for public function WithOffersAndSplitImage06
 export function WithOffersAndSplitImage06() {
   return (
     <div className="bg-white">

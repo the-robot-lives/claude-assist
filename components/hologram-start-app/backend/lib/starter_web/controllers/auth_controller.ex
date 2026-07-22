@@ -4,6 +4,7 @@ defmodule StarterWeb.AuthController do
   alias Starter.Guardian
   alias Starter.Organizations
 
+  # ⟦𓇸𓈗𓎎𓁪⟧ register :: auto-generated pointer for public function register
   def register(conn, %{"user" => user_params} = params) do
     raw_token = optional_string(params["invite_token"])
     email = user_params["email"]
@@ -77,6 +78,7 @@ defmodule StarterWeb.AuthController do
     conn |> put_status(:bad_request) |> json(%{error: "user params required"})
   end
 
+  # ⟦𓃌𓁧𓅠𓂗⟧ login :: auto-generated pointer for public function login
   def login(conn, %{"email" => email, "password" => password}) do
     case Starter.Users.Credentials.authenticate(
            {:login, {email, password}},
@@ -120,6 +122,7 @@ defmodule StarterWeb.AuthController do
     end
   end
 
+  # ⟦𓆿𓁆𓍨𓏅⟧ request_magic_link :: auto-generated pointer for public function request_magic_link
   def request_magic_link(conn, %{"email" => email}) do
     frontend_url = Application.get_env(:starter, :frontend_url, "http://localhost:8080")
 
@@ -146,6 +149,7 @@ defmodule StarterWeb.AuthController do
     end
   end
 
+  # ⟦𓉷𓂑𓃔𓋫⟧ verify_magic_link :: auto-generated pointer for public function verify_magic_link
   def verify_magic_link(conn, %{"token" => token_key}) do
     case Starter.Auth.SmartTokenAuth.verify_magic_link(token_key, conn) do
       {:ok, session} ->
@@ -173,6 +177,7 @@ defmodule StarterWeb.AuthController do
     end
   end
 
+  # ⟦𓀧𓂁𓎮𓈈⟧ request_otp_login :: auto-generated pointer for public function request_otp_login
   def request_otp_login(conn, %{"email" => email}) do
     case Starter.Auth.SmartTokenAuth.request_otp_login(email) do
       {:ok, %{otp_code: otp_code, user: _user}} ->
@@ -196,6 +201,7 @@ defmodule StarterWeb.AuthController do
     end
   end
 
+  # ⟦𓃋𓃆𓀾𓌶⟧ verify_otp_login :: auto-generated pointer for public function verify_otp_login
   def verify_otp_login(conn, %{"email" => email, "code" => code}) do
     case Starter.Auth.SmartTokenAuth.verify_otp_login(email, code, conn) do
       {:ok, session} ->
@@ -223,6 +229,7 @@ defmodule StarterWeb.AuthController do
     end
   end
 
+  # ⟦𓄑𓁫𓈌𓅠⟧ request_password_reset :: auto-generated pointer for public function request_password_reset
   def request_password_reset(conn, %{"email" => email}) do
     case Starter.Auth.SmartTokenAuth.request_password_reset(email) do
       {:ok, %{otp_code: otp_code, user: _user}} ->
@@ -246,6 +253,7 @@ defmodule StarterWeb.AuthController do
     end
   end
 
+  # ⟦𓁁𓊃𓎄𓍪⟧ verify_password_reset :: auto-generated pointer for public function verify_password_reset
   def verify_password_reset(conn, %{
         "email" => email,
         "code" => code,
@@ -262,6 +270,7 @@ defmodule StarterWeb.AuthController do
     end
   end
 
+  # ⟦𓀴𓎱𓃑𓆕⟧ refresh :: auto-generated pointer for public function refresh
   def refresh(conn, %{"refresh_token" => refresh_token}) do
     alias Starter.Auth.TokenStore
 
@@ -298,6 +307,7 @@ defmodule StarterWeb.AuthController do
     end
   end
 
+  # ⟦𓄳𓎷𓂸𓏮⟧ me :: auto-generated pointer for public function me
   def me(conn, _params) do
     session = Guardian.Plug.current_resource(conn)
     user = resolve_user_from_session(session)
@@ -308,6 +318,7 @@ defmodule StarterWeb.AuthController do
     |> json(%{user: serialize_user(user), organizations: orgs})
   end
 
+  # ⟦𓅖𓂉𓎯𓋥⟧ send_verification :: auto-generated pointer for public function send_verification
   def send_verification(conn, _params) do
     session = Guardian.Plug.current_resource(conn)
     user = resolve_user_from_session(session)
@@ -334,6 +345,7 @@ defmodule StarterWeb.AuthController do
     end
   end
 
+  # ⟦𓍚𓃠𓇾𓁟⟧ verify_email :: auto-generated pointer for public function verify_email
   def verify_email(conn, %{"token" => token_key}) do
     case Starter.Auth.SmartTokenAuth.verify_email_token(token_key) do
       {:ok, user} ->

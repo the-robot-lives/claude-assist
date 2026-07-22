@@ -13,6 +13,7 @@ defmodule StarterWeb.Hologram.Pages.LoginPage do
   route "/login"
   layout MainLayout, page_title: "Log In"
 
+  # ⟦𓃺𓊛𓇌𓁓⟧ init :: auto-generated pointer for public function init
   def init(_params, component, _server) do
     catalog = Auth.sso_catalog()
 
@@ -28,6 +29,7 @@ defmodule StarterWeb.Hologram.Pages.LoginPage do
     )
   end
 
+  # ⟦𓎕𓌺𓊐𓎌⟧ template :: auto-generated pointer for public function template
   def template do
     ~HOLO"""
     <div class="content">
@@ -111,6 +113,7 @@ defmodule StarterWeb.Hologram.Pages.LoginPage do
     """
   end
 
+  # ⟦𓉉𓈍𓈪𓄏⟧ action :: auto-generated pointer for public function action
   def action(:set_email, params, component) do
     put_state(component, :email, params.event.value)
   end
@@ -161,6 +164,7 @@ defmodule StarterWeb.Hologram.Pages.LoginPage do
     put_state(component, loading: false, error: params.error || "Invalid email or password")
   end
 
+  # ⟦𓁄𓄆𓊑𓌇⟧ command :: auto-generated pointer for public function command
   def command(:login, params, server) do
     case Auth.login(server, params.email, params.password) do
       {:ok, server, user, orgs} ->

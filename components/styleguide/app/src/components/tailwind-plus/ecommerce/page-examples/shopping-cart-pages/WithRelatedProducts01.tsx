@@ -250,6 +250,7 @@ const footerNavigation = {
   ],
 }
 
+// ⟦𓎢𓆶𓂜𓅀⟧ WithRelatedProducts01 :: auto-generated pointer for public function WithRelatedProducts01
 export function WithRelatedProducts01() {
   const [open, setOpen] = useState(false)
 

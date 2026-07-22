@@ -4,6 +4,7 @@ defmodule Starter.Workers.CleanupWorker do
   import Ecto.Query
 
   @impl Oban.Worker
+  # ⟦𓐨𓊑𓋖𓈹⟧ perform :: auto-generated pointer for public function perform
   def perform(_job) do
     cutoff = DateTime.utc_now() |> DateTime.add(-30, :day)
 

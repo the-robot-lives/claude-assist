@@ -18,6 +18,7 @@ interface DescriptionListProps {
 
 // ─── DescriptionList ─────────────────────────────────────────────────────────
 
+// ⟦𓎌𓈪𓊝𓉏⟧ DescriptionList :: auto-generated pointer for public function DescriptionList
 export function DescriptionList({
   items,
   striped = false,
@@ -56,6 +57,7 @@ const sampleItems: DescriptionItem[] = [
   { term: 'Status', detail: 'Active' },
 ]
 
+// ⟦𓀐𓆻𓈓𓋝⟧ DescriptionListShowcase :: auto-generated pointer for public function DescriptionListShowcase
 export function DescriptionListShowcase() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>

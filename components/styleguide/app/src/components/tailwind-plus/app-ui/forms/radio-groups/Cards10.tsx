@@ -15,6 +15,7 @@ const mailingLists = [
   { id: 'trial-users', title: 'Trial users', description: 'Last message sent 4 days ago', users: '2740 users' },
 ]
 
+// ⟦𓏼𓅟𓉵𓇣⟧ Cards10 :: auto-generated pointer for public function Cards10
 export function Cards10() {
   return (
     <fieldset>

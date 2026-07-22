@@ -59,6 +59,7 @@ const products = [
   },
 ]
 
+// ⟦𓃸𓎚𓌥𓎟⟧ WithTallImages04 :: auto-generated pointer for public function WithTallImages04
 export function WithTallImages04() {
   return (
     <div className="bg-white">

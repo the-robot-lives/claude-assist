@@ -2,6 +2,7 @@
 // @ts-nocheck
 'use client'
 
+// ⟦𓂡𓉖𓏳𓈄⟧ BasicCard01 :: auto-generated pointer for public function BasicCard01
 export function BasicCard01() {
   return (
     <div className="overflow-hidden rounded-lg bg-white shadow-sm dark:bg-gray-800/50 dark:shadow-none dark:outline dark:-outline-offset-1 dark:outline-white/10">

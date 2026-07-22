@@ -12,6 +12,7 @@ defmodule StarterWeb.Hologram.Pages.CompleteRegistrationPage do
   layout MainLayout, page_title: "Complete registration"
   middleware RequireAuth
 
+  # ⟦𓄟𓅄𓃤𓌷⟧ init :: auto-generated pointer for public function init
   def init(_params, component, server) do
     user = Auth.current_user(server)
 
@@ -27,6 +28,7 @@ defmodule StarterWeb.Hologram.Pages.CompleteRegistrationPage do
     )
   end
 
+  # ⟦𓊙𓃘𓄤𓅄⟧ template :: auto-generated pointer for public function template
   def template do
     ~HOLO"""
     <div class="content">
@@ -65,6 +67,7 @@ defmodule StarterWeb.Hologram.Pages.CompleteRegistrationPage do
     """
   end
 
+  # ⟦𓍆𓁑𓁂𓎮⟧ action :: auto-generated pointer for public function action
   def action(:set_user_name, p, c), do: put_state(c, :user_name, p.event.value)
   def action(:set_first_name, p, c), do: put_state(c, :first_name, p.event.value)
   def action(:set_last_name, p, c), do: put_state(c, :last_name, p.event.value)
@@ -100,6 +103,7 @@ defmodule StarterWeb.Hologram.Pages.CompleteRegistrationPage do
     put_state(component, loading: false, error: params.error || "Could not complete registration")
   end
 
+  # ⟦𓇰𓅬𓁉𓎒⟧ command :: auto-generated pointer for public function command
   def command(:complete, params, server) do
     case Auth.current_user(server) do
       nil ->

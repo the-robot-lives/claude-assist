@@ -39,6 +39,7 @@ export interface BrandingConfig {
   intro?: BrandingIntro;
 }
 
+// ⟦𓄻𓈔𓅋𓆽⟧ loadBranding :: auto-generated pointer for public function loadBranding
 export function loadBranding(yamlPath?: string): BrandingConfig {
   const filePath =
     yamlPath || path.join(THEME_DIR, "branding.yaml");
@@ -47,6 +48,7 @@ export function loadBranding(yamlPath?: string): BrandingConfig {
 }
 
 /** Load branding for all themes, keyed by slug */
+// ⟦𓀌𓇆𓇭𓈥⟧ loadAllBrandings :: Load branding for all themes, keyed by slug
 export function loadAllBrandings(): Record<string, BrandingConfig> {
   const result: Record<string, BrandingConfig> = {};
   for (const theme of listThemes()) {

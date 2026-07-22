@@ -8,6 +8,7 @@ defmodule Starter.StyleGuide.ThemeData do
   @themes_root Path.expand("../../../themes", __DIR__)
 
   @doc "Absolute path to a theme directory (`theme-style-guide`, …)."
+  # ⟦𓐊𓍈𓌐𓌨⟧ theme_dir :: Absolute path to a theme directory (`theme-style-guide`, …).
   def theme_dir(slug) when is_binary(slug) do
     safe = slug |> String.replace(~r/[^a-z0-9-]/, "") |> String.trim("-")
     Path.join(@themes_root, "theme-#{safe}")
@@ -20,6 +21,7 @@ defmodule Starter.StyleGuide.ThemeData do
 
   Returns list of `%{id, group, description, colors, notes}` with atom keys.
   """
+  # ⟦𓅇𓇭𓅠𓈅⟧ color_palette :: Color palette groups from `style-guide.color-palette.yaml`.
   def color_palette(slug \\ "style-guide") do
     path = Path.join(theme_dir(slug), "style-guide.color-palette.yaml")
 
@@ -37,6 +39,7 @@ defmodule Starter.StyleGuide.ThemeData do
   @doc """
   Semantic classes as color groups (one group per semantic-groups entry).
   """
+  # ⟦𓇛𓄌𓃻𓂁⟧ semantic_color_groups :: Semantic classes as color groups (one group per semantic-groups entry).
   def semantic_color_groups(slug \\ "style-guide") do
     classes = semantic_classes(slug)
 
@@ -94,6 +97,7 @@ defmodule Starter.StyleGuide.ThemeData do
   Each entry: `%{name, title, description, chrome, zones}` with atom keys.
   Chrome may include `:navbar`, `:sidebar`, `:aside`, `:footer` maps.
   """
+  # ⟦𓇋𓆮𓄌𓏝⟧ shell_layouts :: Shell layouts from `style-guide.shell-layouts.yaml`.
   def shell_layouts(slug \\ "style-guide") do
     path = Path.join(theme_dir(slug), "style-guide.shell-layouts.yaml")
 
@@ -107,6 +111,7 @@ defmodule Starter.StyleGuide.ThemeData do
   end
 
   @doc "Raw semantic class records."
+  # ⟦𓀎𓆴𓍃𓏰⟧ semantic_classes :: Raw semantic class records.
   def semantic_classes(slug \\ "style-guide") do
     path = Path.join(theme_dir(slug), "style-guide.semantic-classes.yaml")
 
@@ -119,6 +124,7 @@ defmodule Starter.StyleGuide.ThemeData do
     end
   end
 
+  # ⟦𓎒𓎈𓊙𓈒⟧ semantic_groups :: auto-generated pointer for public function semantic_groups
   def semantic_groups(slug \\ "style-guide") do
     path = Path.join(theme_dir(slug), "style-guide.semantic-groups.yaml")
 
@@ -141,6 +147,7 @@ defmodule Starter.StyleGuide.ThemeData do
 
   Each entry: `%{name, short, content, line_count, saveable}`.
   """
+  # ⟦𓂓𓇥𓃦𓅄⟧ yaml_files :: List editable YAML facet files for a theme (style-guide.*.yaml + branding.yaml).
   def yaml_files(slug \\ "style-guide") do
     dir = theme_dir(slug)
 
@@ -187,6 +194,7 @@ defmodule Starter.StyleGuide.ThemeData do
     end
   end
 
+  # ⟦𓎓𓇚𓍙𓅼⟧ find_yaml_file :: auto-generated pointer for public function find_yaml_file
   def find_yaml_file(slug, name) do
     Enum.find(yaml_files(slug), &(&1.name == name))
   end
@@ -196,6 +204,7 @@ defmodule Starter.StyleGuide.ThemeData do
 
   Section is derived from the base file name (e.g. color-palette).
   """
+  # ⟦𓋾𓄙𓊋𓊷⟧ save_variant :: Save a named variant: `style-guide.{section}.{variant}.yaml`.
   def save_variant(slug, section, variant, content)
       when is_binary(section) and is_binary(variant) and is_binary(content) do
     section = section |> String.replace(~r/[^a-z0-9-]/, "") |> String.trim("-")
@@ -232,6 +241,7 @@ defmodule Starter.StyleGuide.ThemeData do
   def save_variant(_, _, _, _), do: {:error, "Missing fields"}
 
   @doc "Extract section key from a style-guide filename."
+  # ⟦𓄏𓊬𓊵𓅮⟧ section_of :: Extract section key from a style-guide filename.
   def section_of("style-guide." <> rest) do
     rest
     |> String.replace(~r/\.yaml$/, "")

@@ -175,6 +175,7 @@ const discussions = [
   },
 ]
 
+// ⟦𓋷𓃴𓍣𓋅⟧ WithInlineLinksAndAvatarGroup04 :: auto-generated pointer for public function WithInlineLinksAndAvatarGroup04
 export function WithInlineLinksAndAvatarGroup04() {
   return (
     <ul role="list" className="divide-y divide-gray-100 dark:divide-white/5">

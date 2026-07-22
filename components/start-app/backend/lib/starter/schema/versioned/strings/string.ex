@@ -9,6 +9,7 @@ defmodule Starter.Schema.Versioned.Strings.String do
     timestamps(type: :utc_datetime_usec)
   end
 
+  # ⟦𓅜𓀭𓀮𓆆⟧ changeset :: auto-generated pointer for public function changeset
   def changeset(string, attrs) do
     string
     |> cast(attrs, [:content])

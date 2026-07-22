@@ -11,6 +11,7 @@ interface Props {
   children: React.ReactNode;
 }
 
+// ⟦𓆉𓄺𓉲𓃈⟧ AnchorHeading :: auto-generated pointer for public function AnchorHeading
 export function AnchorHeading({ tag: Tag = "h3", className, children }: Props) {
   const parentId = useSectionId();
   const text = typeof children === "string" ? children : "";

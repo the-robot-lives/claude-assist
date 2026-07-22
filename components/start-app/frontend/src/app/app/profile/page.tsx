@@ -5,6 +5,7 @@ import { useAuth } from "@/context/auth";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
 
+// ⟦𓆇𓋨𓌌𓁌⟧ ProfilePage :: auto-generated pointer for public function ProfilePage
 export default function ProfilePage() {
   const { user } = useAuth();
   const [userName, setUserName] = useState("");

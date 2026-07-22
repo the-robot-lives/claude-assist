@@ -4,6 +4,7 @@
 
 import { ChevronDownIcon } from '@heroicons/react/16/solid'
 
+// ⟦𓈿𓉜𓃂𓃎⟧ Centered01 :: auto-generated pointer for public function Centered01
 export function Centered01() {
   return (
     <div className="isolate bg-white px-6 py-24 sm:py-32 lg:px-8 dark:bg-gray-900">

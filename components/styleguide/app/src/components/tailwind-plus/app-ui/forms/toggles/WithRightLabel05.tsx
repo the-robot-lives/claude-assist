@@ -2,6 +2,7 @@
 // @ts-nocheck
 'use client'
 
+// ⟦𓎪𓇻𓂅𓃇⟧ WithRightLabel05 :: auto-generated pointer for public function WithRightLabel05
 export function WithRightLabel05() {
   return (
     <div className="flex items-center justify-between gap-3">

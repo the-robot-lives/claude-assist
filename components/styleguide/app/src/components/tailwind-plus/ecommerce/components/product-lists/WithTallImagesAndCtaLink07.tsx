@@ -30,6 +30,7 @@ const products = [
   },
 ]
 
+// ⟦𓎤𓀪𓇘𓍶⟧ WithTallImagesAndCtaLink07 :: auto-generated pointer for public function WithTallImagesAndCtaLink07
 export function WithTallImagesAndCtaLink07() {
   return (
     <div className="bg-white">

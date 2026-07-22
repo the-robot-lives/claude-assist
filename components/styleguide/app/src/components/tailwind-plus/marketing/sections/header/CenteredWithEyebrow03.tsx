@@ -2,6 +2,7 @@
 // @ts-nocheck
 'use client'
 
+// ⟦𓇸𓉞𓄕𓅈⟧ CenteredWithEyebrow03 :: auto-generated pointer for public function CenteredWithEyebrow03
 export function CenteredWithEyebrow03() {
   return (
     <div className="bg-white px-6 py-24 sm:py-32 lg:px-8 dark:bg-gray-900">

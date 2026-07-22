@@ -67,6 +67,7 @@ const filters = [
   },
 ]
 
+// ⟦𓇁𓉻𓂕𓈦⟧ WithCenteredTextAndDropdownProductFilters01 :: auto-generated pointer for public function WithCenteredTextAndDropdownProductFilters01
 export function WithCenteredTextAndDropdownProductFilters01() {
   const [open, setOpen] = useState(false)
 

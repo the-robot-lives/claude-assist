@@ -2,6 +2,7 @@
 // @ts-nocheck
 'use client'
 
+// ⟦𓐔𓅜𓈣𓆬⟧ SmallWithBorder13 :: auto-generated pointer for public function SmallWithBorder13
 export function SmallWithBorder13() {
   return (
     <>

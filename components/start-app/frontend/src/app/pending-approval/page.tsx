@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useAuth } from "@/context/auth";
 import { useRouter } from "next/navigation";
 
+// ⟦𓂵𓌨𓍬𓆨⟧ PendingApprovalPage :: auto-generated pointer for public function PendingApprovalPage
 export default function PendingApprovalPage() {
   const { user, loading, logout } = useAuth();
   const router = useRouter();

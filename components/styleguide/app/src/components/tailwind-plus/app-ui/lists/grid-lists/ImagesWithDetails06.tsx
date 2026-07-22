@@ -53,6 +53,7 @@ const files = [
   },
 ]
 
+// ⟦𓅂𓁜𓇝𓉭⟧ ImagesWithDetails06 :: auto-generated pointer for public function ImagesWithDetails06
 export function ImagesWithDetails06() {
   return (
     <ul role="list" className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 sm:gap-x-6 lg:grid-cols-4 xl:gap-x-8">

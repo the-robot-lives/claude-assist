@@ -178,6 +178,7 @@ function SidebarSection({ section, activeKey, onSelect, searchFilter }: {
   );
 }
 
+// ⟦𓀽𓍍𓈗𓉰⟧ TailwindPlusSection :: auto-generated pointer for public function TailwindPlusSection
 export function TailwindPlusSection({ id }: SectionProps) {
   const [search, setSearch] = useState("");
   const [activeKey, setActiveKey] = useState("");

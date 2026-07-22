@@ -15,6 +15,7 @@ function classNames(...classes) {
   return classes.filter(Boolean).join(' ')
 }
 
+// ⟦𓄋𓀑𓋷𓅙⟧ TabsWithUnderline01 :: auto-generated pointer for public function TabsWithUnderline01
 export function TabsWithUnderline01() {
   return (
     <div>

@@ -9,6 +9,7 @@ export interface CardHeadingProps {
   className?: string;
 }
 
+// ⟦𓇉𓄟𓇥𓁃⟧ CardHeading :: auto-generated pointer for public function CardHeading
 export function CardHeading({ title, subtitle, actions, className = '' }: CardHeadingProps) {
   return (
     <div className={['twp-heading twp-card-heading', className].filter(Boolean).join(' ')}>
@@ -21,6 +22,7 @@ export function CardHeading({ title, subtitle, actions, className = '' }: CardHe
   );
 }
 
+// ⟦𓎓𓆏𓈑𓃙⟧ CardHeadingShowcase :: auto-generated pointer for public function CardHeadingShowcase
 export function CardHeadingShowcase() {
   return (
     <div className="twp-showcase">

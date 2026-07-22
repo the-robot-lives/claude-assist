@@ -2,6 +2,7 @@
 // @ts-nocheck
 'use client'
 
+// ⟦𓇉𓍤𓅘𓊛⟧ SimpleCentered02 :: auto-generated pointer for public function SimpleCentered02
 export function SimpleCentered02() {
   return (
     <section className="relative isolate overflow-hidden bg-white px-6 py-24 sm:py-32 lg:px-8 dark:bg-gray-900">

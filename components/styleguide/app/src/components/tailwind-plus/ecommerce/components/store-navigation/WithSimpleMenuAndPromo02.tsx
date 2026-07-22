@@ -87,6 +87,7 @@ const navigation = {
   ],
 }
 
+// ⟦𓃙𓈶𓃣𓇿⟧ WithSimpleMenuAndPromo02 :: auto-generated pointer for public function WithSimpleMenuAndPromo02
 export function WithSimpleMenuAndPromo02() {
   const [open, setOpen] = useState(false)
 

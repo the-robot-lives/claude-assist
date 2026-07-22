@@ -157,6 +157,7 @@ function classNames(...classes) {
   return classes.filter(Boolean).join(' ')
 }
 
+// ⟦𓐞𓅼𓊜𓅛⟧ Sidebar01 :: auto-generated pointer for public function Sidebar01
 export function Sidebar01() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
 

@@ -21,6 +21,7 @@ const people = [
   { id: 10, name: 'Emil Schaefer' },
 ]
 
+// ⟦𓍇𓄘𓉏𓅷⟧ CustomWithCheckOnLeft03 :: auto-generated pointer for public function CustomWithCheckOnLeft03
 export function CustomWithCheckOnLeft03() {
   const [selected, setSelected] = useState(people[3])
 

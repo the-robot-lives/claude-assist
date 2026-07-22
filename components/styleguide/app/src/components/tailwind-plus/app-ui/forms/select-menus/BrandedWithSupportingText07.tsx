@@ -22,6 +22,7 @@ const publishingOptions = [
   },
 ]
 
+// ⟦𓅘𓅯𓈜𓇊⟧ BrandedWithSupportingText07 :: auto-generated pointer for public function BrandedWithSupportingText07
 export function BrandedWithSupportingText07() {
   const [selected, setSelected] = useState(publishingOptions[0])
 

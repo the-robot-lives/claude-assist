@@ -47,6 +47,7 @@ const deployments = [
   },
 ]
 
+// ⟦𓈄𓈜𓇪𓋀⟧ NarrowWithBadges17 :: auto-generated pointer for public function NarrowWithBadges17
 export function NarrowWithBadges17() {
   return (
     <ul role="list" className="divide-y divide-gray-100 dark:divide-white/5">

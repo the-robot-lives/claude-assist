@@ -10,6 +10,7 @@ defmodule StarterWeb.Hologram.Sections.YamlConfig do
 
   prop :theme_slug, :string, default: "style-guide"
 
+  # ⟦𓏜𓋜𓊏𓊞⟧ init :: auto-generated pointer for public function init
   def init(props, component, _server), do: do_init(props, component)
   def init(props, component), do: do_init(props, component)
 
@@ -18,6 +19,7 @@ defmodule StarterWeb.Hologram.Sections.YamlConfig do
     put_state(component, yaml_state(slug))
   end
 
+  # ⟦𓃍𓉲𓋨𓁆⟧ template :: auto-generated pointer for public function template
   def template do
     ~HOLO"""
     <div class="sg-yaml-config">
@@ -84,6 +86,7 @@ defmodule StarterWeb.Hologram.Sections.YamlConfig do
     """
   end
 
+  # ⟦𓁸𓂮𓍖𓃩⟧ action :: auto-generated pointer for public function action
   def action(:select_file, params, component) do
     apply_file(component, params.event.value)
   end
@@ -147,6 +150,7 @@ defmodule StarterWeb.Hologram.Sections.YamlConfig do
     put_state(component, status: "Error: #{params.msg}")
   end
 
+  # ⟦𓌸𓊪𓈇𓄠⟧ command :: auto-generated pointer for public function command
   def command(:save_yaml_variant, params, server) do
     case ThemeData.save_variant(params.slug, params.section, params.variant, params.content) do
       {:ok, filename} ->

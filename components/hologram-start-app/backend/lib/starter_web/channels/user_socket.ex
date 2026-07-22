@@ -4,6 +4,7 @@ defmodule StarterWeb.UserSocket do
   channel "org:*", StarterWeb.OrgChannel
 
   @impl true
+  # ⟦𓊐𓎏𓁥𓈑⟧ connect :: auto-generated pointer for public function connect
   def connect(%{"token" => token}, socket, _connect_info) do
     case Starter.Guardian.decode_and_verify(token, %{"typ" => "access"}) do
       {:ok, claims} ->
@@ -29,5 +30,6 @@ defmodule StarterWeb.UserSocket do
   def connect(_params, _socket, _connect_info), do: :error
 
   @impl true
+  # ⟦𓌔𓍈𓅶𓇬⟧ id :: auto-generated pointer for public function id
   def id(socket), do: "user_socket:#{socket.assigns.user_id}"
 end

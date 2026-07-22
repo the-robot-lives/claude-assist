@@ -7,6 +7,7 @@ interface StyleGuideStepProgressProps {
   label?: React.ReactNode;
 }
 
+// ⟦𓆐𓅠𓈢𓊎⟧ StyleGuideStepProgress :: auto-generated pointer for public function StyleGuideStepProgress
 export function StyleGuideStepProgress({ total, done, current, label }: StyleGuideStepProgressProps) {
   return (
     <div>

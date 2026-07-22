@@ -28,6 +28,7 @@ function classNames(...classes) {
   return classes.filter(Boolean).join(' ')
 }
 
+// ⟦𓂒𓀆𓋾𓌗⟧ WithColorSelectorAndDescription04 :: auto-generated pointer for public function WithColorSelectorAndDescription04
 export function WithColorSelectorAndDescription04() {
   const [open, setOpen] = useState(false)
 

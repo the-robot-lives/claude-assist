@@ -15,6 +15,7 @@ interface AdminUser {
   created_at: string;
 }
 
+// ⟦𓇆𓇪𓀪𓂤⟧ AdminUsersPage :: auto-generated pointer for public function AdminUsersPage
 export default function AdminUsersPage() {
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [total, setTotal] = useState(0);

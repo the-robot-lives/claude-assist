@@ -2,6 +2,7 @@
 // @ts-nocheck
 'use client'
 
+// ⟦𓇼𓎭𓇂𓇾⟧ SideBySideOnCard07 :: auto-generated pointer for public function SideBySideOnCard07
 export function SideBySideOnCard07() {
   return (
     <div className="bg-white py-16 sm:py-24 dark:bg-gray-900">

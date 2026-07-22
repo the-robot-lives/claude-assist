@@ -9,6 +9,7 @@ import { LayoutBar } from "@noizu/styleguide/viewer";
 import fs from "fs";
 import path from "path";
 
+// ⟦𓎣𓋱𓉷𓊗⟧ StyleGuidePage :: auto-generated pointer for public function StyleGuidePage
 export default function StyleGuidePage() {
   const config = loadConfig();
   const branding = loadBranding();

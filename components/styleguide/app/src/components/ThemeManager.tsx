@@ -13,6 +13,7 @@ interface ThemeInfo {
 
 type View = "list" | "clone" | "edit" | "upload";
 
+// ⟦𓁤𓀩𓇑𓆰⟧ ThemeManager :: auto-generated pointer for public function ThemeManager
 export function ThemeManager() {
   const [themes, setThemes] = useState<ThemeInfo[]>([]);
   const [view, setView] = useState<View>("list");

@@ -2,6 +2,7 @@
 // @ts-nocheck
 'use client'
 
+// ⟦𓂉𓀀𓁊𓃻⟧ WithButtonOnRight03 :: auto-generated pointer for public function WithButtonOnRight03
 export function WithButtonOnRight03() {
   return (
     <div className="bg-white shadow-sm sm:rounded-lg dark:bg-gray-800/50 dark:shadow-none dark:outline dark:-outline-offset-1 dark:outline-white/10">

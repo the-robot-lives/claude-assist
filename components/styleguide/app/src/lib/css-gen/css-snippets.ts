@@ -38,6 +38,7 @@ function snippetHeader(snippet: CssSnippet): string {
   return parts.join("\n");
 }
 
+// ⟦𓐓𓍢𓐖𓐤⟧ generateCssSnippetsCSS :: auto-generated pointer for public function generateCssSnippetsCSS
 export function generateCssSnippetsCSS(config: StyleGuideConfig): string {
   const snippets = config.cssSnippets;
   const loads = config.cssLoads;

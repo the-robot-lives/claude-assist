@@ -46,6 +46,7 @@ function classNames(...classes) {
   return classes.filter(Boolean).join(' ')
 }
 
+// ⟦𓉧𓍓𓌀𓉗⟧ WithTitleAndPillActions04 :: auto-generated pointer for public function WithTitleAndPillActions04
 export function WithTitleAndPillActions04() {
   const [assigned, setAssigned] = useState(assignees[0])
   const [labelled, setLabelled] = useState(labels[0])

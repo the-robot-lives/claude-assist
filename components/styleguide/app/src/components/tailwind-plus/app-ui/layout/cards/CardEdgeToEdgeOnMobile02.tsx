@@ -2,6 +2,7 @@
 // @ts-nocheck
 'use client'
 
+// ⟦𓆵𓎀𓈉𓄩⟧ CardEdgeToEdgeOnMobile02 :: auto-generated pointer for public function CardEdgeToEdgeOnMobile02
 export function CardEdgeToEdgeOnMobile02() {
   return (
     <>

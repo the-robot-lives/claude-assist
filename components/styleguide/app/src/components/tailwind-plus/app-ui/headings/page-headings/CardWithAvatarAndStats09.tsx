@@ -14,6 +14,7 @@ const stats = [
   { label: 'Personal days left', value: 2 },
 ]
 
+// ⟦𓋜𓊶𓎉𓏈⟧ CardWithAvatarAndStats09 :: auto-generated pointer for public function CardWithAvatarAndStats09
 export function CardWithAvatarAndStats09() {
   return (
     <div className="overflow-hidden rounded-lg bg-white shadow-sm dark:bg-gray-900 dark:shadow-none dark:outline dark:-outline-offset-1 dark:outline-white/10">

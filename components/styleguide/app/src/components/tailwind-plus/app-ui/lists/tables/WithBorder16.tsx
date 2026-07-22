@@ -45,6 +45,7 @@ function classNames(...classes) {
   return classes.filter(Boolean).join(' ')
 }
 
+// ⟦𓎡𓃌𓌱𓋧⟧ WithBorder16 :: auto-generated pointer for public function WithBorder16
 export function WithBorder16() {
   return (
     <div className="px-4 sm:px-6 lg:px-8">

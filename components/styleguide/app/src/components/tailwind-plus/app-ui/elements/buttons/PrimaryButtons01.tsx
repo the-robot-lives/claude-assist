@@ -2,6 +2,7 @@
 // @ts-nocheck
 'use client'
 
+// ⟦𓀸𓃆𓎒𓁗⟧ PrimaryButtons01 :: auto-generated pointer for public function PrimaryButtons01
 export function PrimaryButtons01() {
   return (
     <>

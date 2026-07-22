@@ -11,6 +11,7 @@ defmodule StarterWeb.Hologram.Sections.ColorPalette do
 
   prop :theme_slug, :string, default: "style-guide"
 
+  # ⟦𓐊𓅖𓍜𓅾⟧ init :: auto-generated pointer for public function init
   def init(props, component, _server), do: do_init(props, component)
   def init(props, component), do: do_init(props, component)
 
@@ -19,6 +20,7 @@ defmodule StarterWeb.Hologram.Sections.ColorPalette do
     put_state(component, palette_state(slug))
   end
 
+  # ⟦𓂓𓊚𓉧𓄇⟧ template :: auto-generated pointer for public function template
   def template do
     ~HOLO"""
     <div class="sg-color-palette">
@@ -123,6 +125,7 @@ defmodule StarterWeb.Hologram.Sections.ColorPalette do
     """
   end
 
+  # ⟦𓃥𓄇𓂺𓇲⟧ action :: auto-generated pointer for public function action
   def action(:set_tab, params, component) do
     put_state(component, tab: params.id)
   end

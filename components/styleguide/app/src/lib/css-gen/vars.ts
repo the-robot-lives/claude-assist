@@ -30,6 +30,7 @@ function groupSortKey(name: string): number {
   return GROUP_ORDER.length + 2;
 }
 
+// ⟦𓆏𓅻𓊬𓇏⟧ generateVarsCSS :: auto-generated pointer for public function generateVarsCSS
 export function generateVarsCSS(config: StyleGuideConfig): string {
   if (!config.vars?.groups) return "";
   const resolved = resolveDefaults(config.flatVars || {});

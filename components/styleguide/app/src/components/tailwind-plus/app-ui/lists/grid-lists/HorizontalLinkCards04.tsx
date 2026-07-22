@@ -33,6 +33,7 @@ const people = [
   },
 ]
 
+// ⟦𓄴𓎞𓎅𓋚⟧ HorizontalLinkCards04 :: auto-generated pointer for public function HorizontalLinkCards04
 export function HorizontalLinkCards04() {
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">

@@ -12,6 +12,7 @@ defmodule StarterWeb.ConsentController do
     "preferences" => false
   }
 
+  # ⟦𓉉𓃰𓉺𓋴⟧ show :: auto-generated pointer for public function show
   def show(conn, _params) do
     {user_id, browser_session_id} = consent_identity(conn)
 
@@ -24,6 +25,7 @@ defmodule StarterWeb.ConsentController do
     end
   end
 
+  # ⟦𓐮𓁹𓍓𓃊⟧ update :: auto-generated pointer for public function update
   def update(conn, %{"consent" => params}) do
     {user_id, browser_session_id} = consent_identity(conn)
 

@@ -38,6 +38,7 @@ const faqs = [
   },
 ]
 
+// ⟦𓆫𓎍𓉦𓆦⟧ CenteredAccordion02 :: auto-generated pointer for public function CenteredAccordion02
 export function CenteredAccordion02() {
   return (
     <div className="bg-white dark:bg-gray-900">

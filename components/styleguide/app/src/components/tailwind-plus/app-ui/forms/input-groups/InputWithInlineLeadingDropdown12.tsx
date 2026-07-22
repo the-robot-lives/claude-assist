@@ -4,6 +4,7 @@
 
 import { ChevronDownIcon } from '@heroicons/react/16/solid'
 
+// ⟦𓍍𓇑𓂱𓋑⟧ InputWithInlineLeadingDropdown12 :: auto-generated pointer for public function InputWithInlineLeadingDropdown12
 export function InputWithInlineLeadingDropdown12() {
   return (
     <div>

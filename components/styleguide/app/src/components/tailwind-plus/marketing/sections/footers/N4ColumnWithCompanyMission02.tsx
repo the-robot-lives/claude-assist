@@ -91,6 +91,7 @@ const navigation = {
   ],
 }
 
+// ⟦𓅧𓎺𓉵𓂻⟧ N4ColumnWithCompanyMission02 :: auto-generated pointer for public function N4ColumnWithCompanyMission02
 export function N4ColumnWithCompanyMission02() {
   return (
     <footer className="bg-white dark:bg-gray-900">

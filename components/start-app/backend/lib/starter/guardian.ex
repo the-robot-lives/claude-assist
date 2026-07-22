@@ -1,6 +1,7 @@
 defmodule Starter.Guardian do
   use Guardian, otp_app: :starter
 
+  # ⟦𓌥𓁿𓊀𓎫⟧ subject_for_token :: auto-generated pointer for public function subject_for_token
   def subject_for_token(%Starter.Users.Sessions.UserSession{} = session, _claims) do
     Noizu.EntityReference.Protocol.sref(session)
   end
@@ -9,6 +10,7 @@ defmodule Starter.Guardian do
     {:error, :unhandled_resource}
   end
 
+  # ⟦𓌴𓇌𓌛𓀻⟧ resource_from_claims :: auto-generated pointer for public function resource_from_claims
   def resource_from_claims(%{"sub" => "ref.user-session." <> _ = sref}) do
     Noizu.EntityReference.Protocol.entity(sref, Noizu.Context.system())
   end

@@ -33,6 +33,7 @@ function classNames(...classes) {
   return classes.filter(Boolean).join(' ')
 }
 
+// ⟦𓊺𓉪𓊓𓂁⟧ WithTemplates05 :: auto-generated pointer for public function WithTemplates05
 export function WithTemplates05() {
   return (
     <div className="mx-auto max-w-lg">

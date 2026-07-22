@@ -1,8 +1,10 @@
 defmodule StarterWeb.Plugs.CORS do
   import Plug.Conn
 
+  # ⟦𓁖𓆾𓂚𓋜⟧ init :: auto-generated pointer for public function init
   def init(opts), do: opts
 
+  # ⟦𓐇𓆹𓀒𓐂⟧ call :: auto-generated pointer for public function call
   def call(conn, _opts) do
     conn
     |> put_resp_header("access-control-allow-origin", get_origin(conn))

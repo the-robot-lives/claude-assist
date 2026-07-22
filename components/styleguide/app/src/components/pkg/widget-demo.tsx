@@ -7,6 +7,7 @@ interface StyleGuideWidgetDemoProps {
   children?: React.ReactNode;
 }
 
+// ⟦𓊥𓌬𓁑𓌌⟧ StyleGuideWidgetDemo :: auto-generated pointer for public function StyleGuideWidgetDemo
 export function StyleGuideWidgetDemo({ title, badge, desc, children }: StyleGuideWidgetDemoProps) {
   return (
     <div className="widget-card">

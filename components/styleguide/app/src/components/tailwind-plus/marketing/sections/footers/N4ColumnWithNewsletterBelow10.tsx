@@ -91,6 +91,7 @@ const navigation = {
   ],
 }
 
+// ⟦𓊥𓈈𓈬𓀢⟧ N4ColumnWithNewsletterBelow10 :: auto-generated pointer for public function N4ColumnWithNewsletterBelow10
 export function N4ColumnWithNewsletterBelow10() {
   return (
     <footer className="bg-white dark:bg-gray-900">

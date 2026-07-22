@@ -37,6 +37,7 @@ const paymentMethods = [
   { id: 'etransfer', title: 'eTransfer' },
 ]
 
+// ⟦𓇋𓄘𓉸𓉔⟧ SingleStepWithOrderSummary01 :: auto-generated pointer for public function SingleStepWithOrderSummary01
 export function SingleStepWithOrderSummary01() {
   return (
     <div className="bg-gray-50">

@@ -11,6 +11,7 @@ const features = [
   { name: 'Considerations', description: 'Made from natural materials. Grain and color vary with each item.' },
 ]
 
+// ⟦𓃫𓎪𓍤𓂡⟧ WithFadingImage02 :: auto-generated pointer for public function WithFadingImage02
 export function WithFadingImage02() {
   return (
     <div className="bg-white">

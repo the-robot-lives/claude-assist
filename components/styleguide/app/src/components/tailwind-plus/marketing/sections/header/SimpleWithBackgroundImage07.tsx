@@ -2,6 +2,7 @@
 // @ts-nocheck
 'use client'
 
+// ⟦𓎰𓉏𓈙𓌌⟧ SimpleWithBackgroundImage07 :: auto-generated pointer for public function SimpleWithBackgroundImage07
 export function SimpleWithBackgroundImage07() {
   return (
     <div className="relative isolate overflow-hidden bg-white py-24 sm:py-32 dark:bg-gray-900">

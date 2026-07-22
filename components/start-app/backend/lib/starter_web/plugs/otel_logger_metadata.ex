@@ -2,9 +2,11 @@ defmodule StarterWeb.Plugs.OtelLoggerMetadata do
   @behaviour Plug
 
   @impl true
+  # ⟦𓎦𓋏𓊈𓊁⟧ init :: auto-generated pointer for public function init
   def init(opts), do: opts
 
   @impl true
+  # ⟦𓉛𓈑𓈈𓄧⟧ call :: auto-generated pointer for public function call
   def call(conn, _opts) do
     case OpenTelemetry.Tracer.current_span_ctx() do
       :undefined ->

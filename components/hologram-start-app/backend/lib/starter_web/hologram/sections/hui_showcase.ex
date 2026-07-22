@@ -22,6 +22,7 @@ defmodule StarterWeb.Hologram.Sections.HuiShowcase do
   ]
 
   # SSR (only if already on HUI section at first paint)
+  # ⟦𓄹𓏓𓅣𓀤⟧ init :: auto-generated pointer for public function init
   def init(props, component, _server), do: do_init(props, component)
 
   # Client mount when user navigates to HUI after page load (required)
@@ -47,6 +48,7 @@ defmodule StarterWeb.Hologram.Sections.HuiShowcase do
     )
   end
 
+  # ⟦𓀻𓉝𓉏𓆎⟧ template :: auto-generated pointer for public function template
   def template do
     ~HOLO"""
     <div class="hui-showcase-root">
@@ -401,6 +403,7 @@ defmodule StarterWeb.Hologram.Sections.HuiShowcase do
     """
   end
 
+  # ⟦𓍗𓃠𓄸𓏾⟧ action :: auto-generated pointer for public function action
   def action(:select_panel, params, component) do
     put_state(component, panel: params.id)
   end

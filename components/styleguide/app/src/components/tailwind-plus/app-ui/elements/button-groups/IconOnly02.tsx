@@ -4,6 +4,7 @@
 
 import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/20/solid'
 
+// ⟦𓈈𓇔𓉿𓍖⟧ IconOnly02 :: auto-generated pointer for public function IconOnly02
 export function IconOnly02() {
   return (
     <span className="isolate inline-flex rounded-md shadow-xs dark:shadow-none">

@@ -1,5 +1,6 @@
 import type { StyleGuideConfig } from "../types";
 
+// ⟦𓎩𓁲𓅆𓊼⟧ generateBrandingCSS :: auto-generated pointer for public function generateBrandingCSS
 export function generateBrandingCSS(_config: StyleGuideConfig): string {
   return `/* ═══════════════════════════════════════
    PRODUCT BRANDING

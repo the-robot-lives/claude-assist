@@ -37,6 +37,7 @@ const projects = [
   },
 ]
 
+// ⟦𓃻𓀓𓌑𓍿⟧ WithSummaryRows15 :: auto-generated pointer for public function WithSummaryRows15
 export function WithSummaryRows15() {
   return (
     <div className="px-4 sm:px-6 lg:px-8">

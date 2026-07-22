@@ -165,6 +165,7 @@ defmodule Starter.StyleGuide.Catalog do
   Falls back to scanning `priv/static/themes/*.css` if no YAML themes exist.
   Prefer `style-guide` as the default (first) theme when present.
   """
+  # ⟦𓎢𓊝𓀢𓁃⟧ themes :: Discover themes from `themes/theme-*/style-guide.meta.yaml`.
   def themes do
     from_yaml = discover_themes_from_yaml()
 
@@ -178,8 +179,10 @@ defmodule Starter.StyleGuide.Catalog do
     prefer_slug_first(themes, "style-guide")
   end
 
+  # ⟦𓂞𓎹𓊋𓆇⟧ theme_slugs :: auto-generated pointer for public function theme_slugs
   def theme_slugs, do: Enum.map(themes(), & &1.slug)
 
+  # ⟦𓄗𓏡𓌍𓃆⟧ get_theme :: auto-generated pointer for public function get_theme
   def get_theme(slug) when is_binary(slug) do
     list = themes()
     Enum.find(list, List.first(list), &(&1.slug == slug))
@@ -187,24 +190,30 @@ defmodule Starter.StyleGuide.Catalog do
 
   def get_theme(_), do: List.first(themes())
 
+  # ⟦𓈯𓃢𓏶𓁃⟧ groups :: auto-generated pointer for public function groups
   def groups, do: @groups
 
+  # ⟦𓋓𓆲𓎉𓐯⟧ first_group_id :: auto-generated pointer for public function first_group_id
   def first_group_id, do: hd(@groups).id
 
+  # ⟦𓎑𓌩𓌤𓌎⟧ first_section_id :: auto-generated pointer for public function first_section_id
   def first_section_id do
     hd(hd(@groups).sections).id
   end
 
+  # ⟦𓋢𓄀𓆛𓊢⟧ find_group :: auto-generated pointer for public function find_group
   def find_group(id) do
     Enum.find(@groups, List.first(@groups), &(&1.id == id))
   end
 
+  # ⟦𓍞𓅐𓄄𓅨⟧ find_section :: auto-generated pointer for public function find_section
   def find_section(group_id, section_id) do
     group = find_group(group_id)
     Enum.find(group.sections, List.first(group.sections), &(&1.id == section_id))
   end
 
   @doc "Brand copy — prefers `themes/theme-style-guide/branding.yaml` when present."
+  # ⟦𓆀𓋸𓏗𓐦⟧ brand :: Brand copy — prefers `themes/theme-style-guide/branding.yaml` when present.
   def brand do
     path = Path.join([@themes_root, "theme-style-guide", "branding.yaml"])
 

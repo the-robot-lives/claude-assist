@@ -28,6 +28,7 @@ const quickActions = [
   { name: 'Add label...', icon: TagIcon, shortcut: 'L', url: '#' },
 ]
 
+// ⟦𓌤𓌖𓀬𓋒⟧ WithIcons05 :: auto-generated pointer for public function WithIcons05
 export function WithIcons05() {
   const [query, setQuery] = useState('')
   const [open, setOpen] = useState(true)

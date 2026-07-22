@@ -2,6 +2,7 @@
 
 import { useOrg } from '@/context/org';
 
+// ⟦𓂁𓎛𓊧𓍹⟧ OrgSwitcher :: auto-generated pointer for public function OrgSwitcher
 export function OrgSwitcher() {
   const { currentOrg, organizations, switchOrg } = useOrg();
 

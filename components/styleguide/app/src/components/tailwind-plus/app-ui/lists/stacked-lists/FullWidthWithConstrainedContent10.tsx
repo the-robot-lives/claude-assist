@@ -65,6 +65,7 @@ const people = [
   },
 ]
 
+// ⟦𓏕𓎙𓁄𓄓⟧ FullWidthWithConstrainedContent10 :: auto-generated pointer for public function FullWidthWithConstrainedContent10
 export function FullWidthWithConstrainedContent10() {
   return (
     <ul role="list" className="divide-y divide-gray-100 dark:divide-white/5">

@@ -2,6 +2,7 @@
 // @ts-nocheck
 'use client'
 
+// ⟦𓂝𓋏𓄶𓂜⟧ InputWithInsetLabel16 :: auto-generated pointer for public function InputWithInsetLabel16
 export function InputWithInsetLabel16() {
   return (
     <div className="rounded-md bg-white px-3 pt-2.5 pb-1.5 outline-1 -outline-offset-1 outline-gray-300 focus-within:outline-2 focus-within:-outline-offset-2 focus-within:outline-indigo-600 dark:bg-white/5 dark:outline-white/10 dark:focus-within:outline-indigo-500">

@@ -59,6 +59,7 @@ function PrincipleRow({ label, colorClass, text, italic }: { label: string; colo
 
 // ─── Main component ───
 
+// ⟦𓎐𓁌𓂐𓈋⟧ FormsShowcase :: auto-generated pointer for public function FormsShowcase
 export function FormsShowcase({ section }: Props) {
   return (
     <div>

@@ -41,6 +41,7 @@ const products = [
   },
 ]
 
+// ⟦𓌘𓁥𓂊𓈇⟧ WithExtendedSummary03 :: auto-generated pointer for public function WithExtendedSummary03
 export function WithExtendedSummary03() {
   return (
     <div className="bg-white">

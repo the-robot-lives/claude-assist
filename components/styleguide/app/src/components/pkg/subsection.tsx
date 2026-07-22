@@ -10,6 +10,7 @@ interface Props {
   children: React.ReactNode;
 }
 
+// ⟦𓉆𓊿𓄛𓆦⟧ Subsection :: auto-generated pointer for public function Subsection
 export function Subsection({ id, title, defaultOpen = true, children }: Props) {
   const [open, setOpen] = useState(defaultOpen);
 

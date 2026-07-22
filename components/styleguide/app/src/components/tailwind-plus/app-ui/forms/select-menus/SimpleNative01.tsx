@@ -4,6 +4,7 @@
 
 import { ChevronDownIcon } from '@heroicons/react/16/solid'
 
+// ⟦𓊰𓄄𓇁𓀡⟧ SimpleNative01 :: auto-generated pointer for public function SimpleNative01
 export function SimpleNative01() {
   return (
     <>

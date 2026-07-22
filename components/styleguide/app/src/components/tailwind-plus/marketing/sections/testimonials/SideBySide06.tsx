@@ -2,6 +2,7 @@
 // @ts-nocheck
 'use client'
 
+// ⟦𓅮𓉩𓆞𓄋⟧ SideBySide06 :: auto-generated pointer for public function SideBySide06
 export function SideBySide06() {
   return (
     <section className="bg-white py-24 sm:py-32 dark:bg-gray-900">

@@ -45,6 +45,7 @@ const products = [
   },
 ]
 
+// ⟦𓏝𓋃𓀈𓏿⟧ WithOrderSummarySidebar01 :: auto-generated pointer for public function WithOrderSummarySidebar01
 export function WithOrderSummarySidebar01() {
   return (
     <>

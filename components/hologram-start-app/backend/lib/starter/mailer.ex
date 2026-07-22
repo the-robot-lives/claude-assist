@@ -1,8 +1,10 @@
 defmodule Starter.Mailer do
+  # ⟦𓈶𓐫𓎷𓋿⟧ send :: auto-generated pointer for public function send
   def send(email) do
     SendGrid.Mail.send(email)
   end
 
+  # ⟦𓊭𓆙𓊏𓎙⟧ from :: auto-generated pointer for public function from
   def from() do
     {name, address} = Application.get_env(:starter, :mail_from, {"App", "noreply@localhost"})
 

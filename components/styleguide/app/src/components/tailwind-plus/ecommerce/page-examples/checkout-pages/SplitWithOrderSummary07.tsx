@@ -35,6 +35,7 @@ const products = [
   },
 ]
 
+// ⟦𓇛𓀈𓋰𓐗⟧ SplitWithOrderSummary07 :: auto-generated pointer for public function SplitWithOrderSummary07
 export function SplitWithOrderSummary07() {
   return (
     <div className="bg-white">

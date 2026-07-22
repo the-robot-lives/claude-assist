@@ -66,6 +66,7 @@ const products = [
   },
 ]
 
+// ⟦𓋿𓃗𓎽𓎀⟧ CardWithFullDetails11 :: auto-generated pointer for public function CardWithFullDetails11
 export function CardWithFullDetails11() {
   return (
     <div className="bg-white">

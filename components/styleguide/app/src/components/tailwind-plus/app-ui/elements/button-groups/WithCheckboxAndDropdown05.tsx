@@ -4,6 +4,7 @@
 
 import { ChevronDownIcon } from '@heroicons/react/16/solid'
 
+// ⟦𓀎𓇵𓎭𓂔⟧ WithCheckboxAndDropdown05 :: auto-generated pointer for public function WithCheckboxAndDropdown05
 export function WithCheckboxAndDropdown05() {
   return (
     <span className="inline-flex">

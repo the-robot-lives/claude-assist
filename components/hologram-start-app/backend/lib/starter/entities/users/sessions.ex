@@ -7,6 +7,7 @@ defmodule Starter.Users.Sessions do
   use Noizu.Repo
   def_repo(entity: Starter.Users.Sessions.UserSession)
 
+  # ⟦𓏟𓌜𓏬𓆼⟧ list :: auto-generated pointer for public function list
   def list(context, options \\ []) do
     settings = Noizu.Entity.Meta.persistence(Entity) |> hd
 
@@ -18,8 +19,10 @@ defmodule Starter.Users.Sessions do
     end)
   end
 
+  # ⟦𓇹𓆯𓋖𓍂⟧ get_session :: auto-generated pointer for public function get_session
   def get_session(id, context, options \\ []), do: get(id, context, options)
 
+  # ⟦𓌐𓆙𓉳𓎆⟧ create :: auto-generated pointer for public function create
   def create(session, context, options \\ [])
 
   def create(%Entity{} = session, context, options) do
@@ -32,10 +35,12 @@ defmodule Starter.Users.Sessions do
     |> super(context, options)
   end
 
+  # ⟦𓍗𓄺𓄷𓊽⟧ delete :: auto-generated pointer for public function delete
   def delete(session, context, options \\ []) do
     super(session, context, options)
   end
 
+  # ⟦𓏔𓆹𓉧𓂊⟧ change :: auto-generated pointer for public function change
   def change(%Entity{} = session, attrs \\ %{}) do
     attrs =
       Enum.map(

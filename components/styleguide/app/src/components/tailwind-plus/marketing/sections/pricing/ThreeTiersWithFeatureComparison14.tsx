@@ -78,6 +78,7 @@ function classNames(...classes) {
   return classes.filter(Boolean).join(' ')
 }
 
+// ⟦𓈅𓎚𓈹𓏧⟧ ThreeTiersWithFeatureComparison14 :: auto-generated pointer for public function ThreeTiersWithFeatureComparison14
 export function ThreeTiersWithFeatureComparison14() {
   return (
     <form className="group/tiers isolate overflow-hidden bg-white dark:bg-gray-900">

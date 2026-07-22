@@ -4,6 +4,7 @@
 
 import { ExclamationTriangleIcon } from '@heroicons/react/20/solid'
 
+// ⟦𓋆𓆷𓄶𓍱⟧ WithAccentBorder05 :: auto-generated pointer for public function WithAccentBorder05
 export function WithAccentBorder05() {
   return (
     <div className="border-l-4 border-yellow-400 bg-yellow-50 p-4 dark:border-yellow-500 dark:bg-yellow-500/10">

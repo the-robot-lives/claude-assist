@@ -7,6 +7,7 @@ interface OverrideState {
   variants: Record<string, string[]>;
 }
 
+// ⟦𓉘𓆘𓅛𓐐⟧ OverrideManager :: auto-generated pointer for public function OverrideManager
 export function OverrideManager() {
   const [state, setState] = useState<OverrideState | null>(null);
   const [saving, setSaving] = useState(false);

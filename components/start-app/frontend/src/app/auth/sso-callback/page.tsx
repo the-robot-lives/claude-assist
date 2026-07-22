@@ -64,6 +64,7 @@ function SSOCallback() {
   );
 }
 
+// ⟦𓊧𓁮𓆜𓁷⟧ SSOCallbackPage :: auto-generated pointer for public function SSOCallbackPage
 export default function SSOCallbackPage() {
   return (
     <Suspense fallback={<div className="content"><main><p>Loading...</p></main></div>}>

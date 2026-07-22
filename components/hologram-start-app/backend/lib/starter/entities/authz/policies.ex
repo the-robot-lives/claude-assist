@@ -8,6 +8,7 @@ defmodule Starter.Authz.Policies do
 
   import Ecto.Query
 
+  # ⟦𓃉𓍞𓅘𓃹⟧ list_active :: auto-generated pointer for public function list_active
   def list_active(opts \\ []) do
     query = from(p in Schema, where: p.is_active == true, order_by: p.name)
 
@@ -21,16 +22,19 @@ defmodule Starter.Authz.Policies do
     Starter.Repo.all(query)
   end
 
+  # ⟦𓄡𓌒𓏴𓏝⟧ get_by_name :: auto-generated pointer for public function get_by_name
   def get_by_name(name) do
     Starter.Repo.one(from p in Schema, where: p.name == ^name and p.is_active == true)
   end
 
+  # ⟦𓄀𓉄𓎌𓏇⟧ create_policy :: auto-generated pointer for public function create_policy
   def create_policy(attrs) do
     %Schema{}
     |> Schema.changeset(attrs)
     |> Starter.Repo.insert()
   end
 
+  # ⟦𓆮𓎒𓃢𓐈⟧ update_policy :: auto-generated pointer for public function update_policy
   def update_policy(id, attrs) do
     case Starter.Repo.get(Schema, id) do
       nil ->
@@ -45,6 +49,7 @@ defmodule Starter.Authz.Policies do
     end
   end
 
+  # ⟦𓍈𓋯𓏢𓄠⟧ delete_policy :: auto-generated pointer for public function delete_policy
   def delete_policy(id) do
     case Starter.Repo.get(Schema, id) do
       nil ->
@@ -59,6 +64,7 @@ defmodule Starter.Authz.Policies do
     end
   end
 
+  # ⟦𓊊𓊐𓆯𓅋⟧ list_user_policies :: auto-generated pointer for public function list_user_policies
   def list_user_policies(user_id) do
     from(up in UserPolicySchema,
       join: p in Schema,
@@ -77,6 +83,7 @@ defmodule Starter.Authz.Policies do
     |> Starter.Repo.all()
   end
 
+  # ⟦𓌦𓎒𓎯𓄸⟧ attach_to_user :: auto-generated pointer for public function attach_to_user
   def attach_to_user(user_id, policy_id, opts \\ []) do
     %UserPolicySchema{}
     |> UserPolicySchema.changeset(%{
@@ -89,6 +96,7 @@ defmodule Starter.Authz.Policies do
     |> Starter.Repo.insert()
   end
 
+  # ⟦𓐗𓈈𓆍𓊲⟧ detach_from_user :: auto-generated pointer for public function detach_from_user
   def detach_from_user(user_id, policy_id) do
     case Starter.Repo.one(
            from up in UserPolicySchema,

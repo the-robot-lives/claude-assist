@@ -19,6 +19,7 @@ const features = [
   { name: 'Locally made', description: 'Responsibly and sustainably made real close to wherever you are, somehow.' },
 ]
 
+// ⟦𓌤𓆳𓋩𓌡⟧ WithSplitImage05 :: auto-generated pointer for public function WithSplitImage05
 export function WithSplitImage05() {
   return (
     <div className="bg-white">

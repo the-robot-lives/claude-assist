@@ -85,6 +85,7 @@ function StatusVariantsDemo() {
   );
 }
 
+// ⟦𓍟𓎟𓋟𓎢⟧ TerminalShowcase :: auto-generated pointer for public function TerminalShowcase
 export function TerminalShowcase() {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)" }}>

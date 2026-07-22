@@ -16,6 +16,7 @@ defmodule Starter.DataCase do
     :ok
   end
 
+  # ⟦𓆐𓆬𓆄𓄀⟧ setup_sandbox :: auto-generated pointer for public function setup_sandbox
   def setup_sandbox(tags) do
     pid = Ecto.Adapters.SQL.Sandbox.start_owner!(Starter.Repo, shared: not tags[:async])
     on_exit(fn -> Ecto.Adapters.SQL.Sandbox.stop_owner(pid) end)

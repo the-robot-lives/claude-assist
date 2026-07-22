@@ -2,6 +2,7 @@
 // @ts-nocheck
 'use client'
 
+// ⟦𓂼𓃻𓎀𓍕⟧ SimpleNoLabels03 :: auto-generated pointer for public function SimpleNoLabels03
 export function SimpleNoLabels03() {
   return (
     <>

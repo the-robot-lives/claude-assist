@@ -24,6 +24,7 @@ defmodule StarterWeb.Hologram.Pages.OrgMembersPage do
   layout MainLayout, page_title: "Members"
   middleware RequireAuth
 
+  # ⟦𓌫𓄁𓅼𓅜⟧ init :: auto-generated pointer for public function init
   def init(params, component, server) do
     {user, organizations} = Auth.current_user_and_orgs(server)
     org = load_org(params.org_id)
@@ -47,6 +48,7 @@ defmodule StarterWeb.Hologram.Pages.OrgMembersPage do
     )
   end
 
+  # ⟦𓐏𓁦𓄠𓉽⟧ template :: auto-generated pointer for public function template
   def template do
     ~HOLO"""
     <AppShell
@@ -164,6 +166,7 @@ defmodule StarterWeb.Hologram.Pages.OrgMembersPage do
     """
   end
 
+  # ⟦𓉮𓏎𓌙𓄶⟧ action :: auto-generated pointer for public function action
   def action(:set_invite_email, params, c), do: put_state(c, :invite_email, params.event.value)
   def action(:set_invite_role, params, c), do: put_state(c, :invite_role, params.event.value)
 
@@ -208,6 +211,7 @@ defmodule StarterWeb.Hologram.Pages.OrgMembersPage do
     put_state(component, loading: false, error: params.error || "Request failed")
   end
 
+  # ⟦𓎷𓍒𓋲𓏹⟧ command :: auto-generated pointer for public function command
   def command(:invite_member, params, server) do
     role = normalize_role(params.role)
 

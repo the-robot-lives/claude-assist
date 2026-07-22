@@ -660,6 +660,7 @@ interface Props {
   embedded?: boolean;
 }
 
+// ⟦𓋲𓊛𓄉𓍮⟧ ComponentBrowser :: auto-generated pointer for public function ComponentBrowser
 export function ComponentBrowser({ semanticClasses, embedded }: Props) {
   const catalog = buildCatalog(semanticClasses);
   const [activeCategory, setActiveCategory] = useState(catalog[0].slug);

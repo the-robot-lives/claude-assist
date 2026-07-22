@@ -60,6 +60,7 @@ const products = [
   },
 ]
 
+// ⟦𓃰𓈙𓀫𓊎⟧ WithColorSwatchesAndHorizontalScrolling03 :: auto-generated pointer for public function WithColorSwatchesAndHorizontalScrolling03
 export function WithColorSwatchesAndHorizontalScrolling03() {
   return (
     <div className="bg-white">

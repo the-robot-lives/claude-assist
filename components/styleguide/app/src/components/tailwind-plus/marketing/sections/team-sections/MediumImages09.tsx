@@ -61,6 +61,7 @@ const people = [
   },
 ]
 
+// ⟦𓐧𓉨𓅯𓋆⟧ MediumImages09 :: auto-generated pointer for public function MediumImages09
 export function MediumImages09() {
   return (
     <div className="bg-white py-24 sm:py-32 dark:bg-gray-900">

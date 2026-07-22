@@ -172,6 +172,7 @@ const footerNavigation = {
   ],
 }
 
+// ⟦𓋂𓏺𓊢𓄼⟧ WithInvoiceListAndQuickActions02 :: auto-generated pointer for public function WithInvoiceListAndQuickActions02
 export function WithInvoiceListAndQuickActions02() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 

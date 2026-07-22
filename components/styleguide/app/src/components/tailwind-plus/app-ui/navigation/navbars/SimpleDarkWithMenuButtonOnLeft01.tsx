@@ -16,6 +16,7 @@ function classNames(...classes) {
   return classes.filter(Boolean).join(' ')
 }
 
+// ⟦𓁁𓉐𓃬𓂌⟧ SimpleDarkWithMenuButtonOnLeft01 :: auto-generated pointer for public function SimpleDarkWithMenuButtonOnLeft01
 export function SimpleDarkWithMenuButtonOnLeft01() {
   return (
     <Disclosure

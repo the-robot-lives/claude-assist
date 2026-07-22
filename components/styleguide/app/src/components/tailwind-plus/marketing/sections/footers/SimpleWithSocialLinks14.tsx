@@ -66,6 +66,7 @@ const navigation = [
   },
 ]
 
+// ⟦𓍒𓁭𓌏𓇄⟧ SimpleWithSocialLinks14 :: auto-generated pointer for public function SimpleWithSocialLinks14
 export function SimpleWithSocialLinks14() {
   return (
     <footer className="bg-white dark:bg-gray-900">

@@ -16,6 +16,7 @@ function classNames(...classes) {
   return classes.filter(Boolean).join(' ')
 }
 
+// ⟦𓌖𓍅𓎶𓇊⟧ TabsWithUnderlineAndBadges08 :: auto-generated pointer for public function TabsWithUnderlineAndBadges08
 export function TabsWithUnderlineAndBadges08() {
   return (
     <div>

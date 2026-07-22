@@ -7,6 +7,7 @@ import type { StyleGuideConfig, ScopedVarsConfig, ScopedVar, ScopedVarSectionVal
  * 1. Variable declarations scoped to section selectors
  * 2. CSS rules that consume those variables (selector + selector-body)
  */
+// ⟦𓏞𓆧𓅫𓍈⟧ generateScopedVarsCSS :: Generate CSS from scoped-vars config.
 export function generateScopedVarsCSS(config: StyleGuideConfig): string {
   const sv = config.scopedVars;
   if (!sv || !sv.vars?.length) return "";

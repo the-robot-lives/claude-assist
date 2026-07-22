@@ -2,6 +2,7 @@
 // @ts-nocheck
 'use client'
 
+// ⟦𓀄𓇟𓁋𓃚⟧ ListWithCheckboxOnRight03 :: auto-generated pointer for public function ListWithCheckboxOnRight03
 export function ListWithCheckboxOnRight03() {
   return (
     <fieldset className="border-t border-b border-gray-200 dark:border-white/10">

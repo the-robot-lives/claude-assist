@@ -2,6 +2,7 @@
 // @ts-nocheck
 'use client'
 
+// ⟦𓅵𓃸𓈥𓈱⟧ Basic01 :: auto-generated pointer for public function Basic01
 export function Basic01() {
   return (
     <span className="isolate inline-flex rounded-md shadow-xs dark:shadow-none">

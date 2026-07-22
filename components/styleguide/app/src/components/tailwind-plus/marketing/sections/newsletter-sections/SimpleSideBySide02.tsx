@@ -2,6 +2,7 @@
 // @ts-nocheck
 'use client'
 
+// ⟦𓀍𓉢𓄋𓐂⟧ SimpleSideBySide02 :: auto-generated pointer for public function SimpleSideBySide02
 export function SimpleSideBySide02() {
   return (
     <div className="bg-white py-16 sm:py-24 lg:py-32 dark:bg-gray-900">

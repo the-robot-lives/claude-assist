@@ -15,6 +15,7 @@ function classNames(...classes) {
   return classes.filter(Boolean).join(' ')
 }
 
+// ⟦𓄏𓅀𓎺𓄬⟧ TabsInPills03 :: auto-generated pointer for public function TabsInPills03
 export function TabsInPills03() {
   return (
     <div>

@@ -7,6 +7,7 @@ interface StyleGuideColorSwatchProps {
   inline?: boolean;
 }
 
+// ⟦𓃘𓄮𓁴𓉟⟧ StyleGuideColorSwatch :: auto-generated pointer for public function StyleGuideColorSwatch
 export function StyleGuideColorSwatch({ name, hex, color, inline = false }: StyleGuideColorSwatchProps) {
   if (inline) {
     return (

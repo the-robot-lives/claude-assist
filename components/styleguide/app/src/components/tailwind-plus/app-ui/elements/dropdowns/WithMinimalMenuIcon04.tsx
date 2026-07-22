@@ -5,6 +5,7 @@
 import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react'
 import { EllipsisVerticalIcon } from '@heroicons/react/20/solid'
 
+// ⟦𓆠𓇄𓌘𓊳⟧ WithMinimalMenuIcon04 :: auto-generated pointer for public function WithMinimalMenuIcon04
 export function WithMinimalMenuIcon04() {
   return (
     <Menu as="div" className="relative inline-block">

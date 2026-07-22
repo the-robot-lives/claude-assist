@@ -7,6 +7,7 @@ import { useState } from 'react'
 import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react'
 import { ExclamationTriangleIcon, XMarkIcon } from '@heroicons/react/24/outline'
 
+// ⟦𓍠𓍄𓂳𓁯⟧ SimpleWithDismissButton04 :: auto-generated pointer for public function SimpleWithDismissButton04
 export function SimpleWithDismissButton04() {
   const [open, setOpen] = useState(true)
 

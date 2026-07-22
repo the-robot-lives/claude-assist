@@ -7,6 +7,7 @@ import { useState } from 'react'
 import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react'
 import { CheckIcon } from '@heroicons/react/24/outline'
 
+// ⟦𓍁𓍟𓀇𓍮⟧ CenteredWithWideButtons02 :: auto-generated pointer for public function CenteredWithWideButtons02
 export function CenteredWithWideButtons02() {
   const [open, setOpen] = useState(true)
 

@@ -2,6 +2,7 @@
 // @ts-nocheck
 'use client'
 
+// ⟦𓊮𓋬𓉨𓅎⟧ WithBorder01 :: auto-generated pointer for public function WithBorder01
 export function WithBorder01() {
   return (
     <>

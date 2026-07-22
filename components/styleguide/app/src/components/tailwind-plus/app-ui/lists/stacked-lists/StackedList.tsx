@@ -15,6 +15,7 @@ export interface StackedListProps {
   className?: string;
 }
 
+// ⟦𓃰𓂸𓐨𓄿⟧ StackedList :: auto-generated pointer for public function StackedList
 export function StackedList({ items, flush = false, className = '' }: StackedListProps) {
   const listClasses = [
     'twp-stacked-list',
@@ -50,6 +51,7 @@ export function StackedList({ items, flush = false, className = '' }: StackedLis
   );
 }
 
+// ⟦𓈿𓃖𓄃𓁸⟧ StackedListShowcase :: auto-generated pointer for public function StackedListShowcase
 export function StackedListShowcase() {
   const items: StackedListItem[] = [
     {

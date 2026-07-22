@@ -47,6 +47,7 @@ const people = [
   },
 ]
 
+// ⟦𓎌𓋶𓁦𓋚⟧ NarrowWithActions13 :: auto-generated pointer for public function NarrowWithActions13
 export function NarrowWithActions13() {
   return (
     <div>

@@ -8,6 +8,7 @@ import { Transition } from '@headlessui/react'
 import { CheckCircleIcon } from '@heroicons/react/24/outline'
 import { XMarkIcon } from '@heroicons/react/20/solid'
 
+// ⟦𓄖𓄅𓁡𓇡⟧ Simple01 :: auto-generated pointer for public function Simple01
 export function Simple01() {
   const [show, setShow] = useState(true)
 

@@ -1,5 +1,6 @@
 import type { StyleGuideConfig } from "../types";
 
+// ⟦𓏮𓈻𓆡𓆓⟧ generateIndicatorCSS :: auto-generated pointer for public function generateIndicatorCSS
 export function generateIndicatorCSS(_config: StyleGuideConfig): string {
   return `/* ═══════════════════════════════════════
    STATUS INDICATORS

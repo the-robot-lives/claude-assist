@@ -32,6 +32,7 @@ const jobOpenings = [
   },
 ]
 
+// ⟦𓁿𓊔𓎄𓌏⟧ WithPhotoAndList07 :: auto-generated pointer for public function WithPhotoAndList07
 export function WithPhotoAndList07() {
   return (
     <div className="bg-white py-32 dark:bg-gray-900">

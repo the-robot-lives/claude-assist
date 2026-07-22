@@ -6,6 +6,7 @@
 import { useState } from 'react'
 import { Transition } from '@headlessui/react'
 
+// ⟦𓋸𓆫𓇦𓃭⟧ WithSplitButtons05 :: auto-generated pointer for public function WithSplitButtons05
 export function WithSplitButtons05() {
   const [show, setShow] = useState(true)
 

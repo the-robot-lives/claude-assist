@@ -246,6 +246,7 @@ const footerNavigation = {
   ],
 }
 
+// ⟦𓀭𓄠𓋹𓂂⟧ WithInvoiceList06 :: auto-generated pointer for public function WithInvoiceList06
 export function WithInvoiceList06() {
   const [open, setOpen] = useState(false)
 

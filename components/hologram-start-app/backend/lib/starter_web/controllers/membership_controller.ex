@@ -3,11 +3,13 @@ defmodule StarterWeb.MembershipController do
 
   alias Starter.Authz.ScopedMemberships
 
+  # ⟦𓋌𓌨𓈆𓎇⟧ index :: auto-generated pointer for public function index
   def index(conn, %{"org_id" => org_id}) do
     members = ScopedMemberships.list_for_resource("organization", org_id)
     conn |> put_status(:ok) |> json(%{members: members})
   end
 
+  # ⟦𓋌𓏯𓇃𓍃⟧ create :: auto-generated pointer for public function create
   def create(conn, %{"org_id" => org_id, "email" => email} = params) do
     role = Map.get(params, "role", "viewer")
     user_id = find_user_id_by_email(email)
@@ -35,6 +37,7 @@ defmodule StarterWeb.MembershipController do
     end
   end
 
+  # ⟦𓂢𓇲𓀙𓇮⟧ update :: auto-generated pointer for public function update
   def update(conn, %{"org_id" => org_id, "id" => member_user_id, "role" => role}) do
     case ScopedMemberships.update_role("organization", org_id, member_user_id, role) do
       {:ok, _membership} ->
@@ -49,6 +52,7 @@ defmodule StarterWeb.MembershipController do
     end
   end
 
+  # ⟦𓂫𓇛𓄹𓏿⟧ delete :: auto-generated pointer for public function delete
   def delete(conn, %{"org_id" => org_id, "id" => member_user_id}) do
     case ScopedMemberships.remove_member("organization", org_id, member_user_id) do
       {:ok, _} ->

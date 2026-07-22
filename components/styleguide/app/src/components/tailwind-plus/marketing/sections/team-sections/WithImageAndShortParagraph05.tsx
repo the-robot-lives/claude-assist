@@ -41,6 +41,7 @@ const people = [
   },
 ]
 
+// ⟦𓈬𓐀𓏆𓇄⟧ WithImageAndShortParagraph05 :: auto-generated pointer for public function WithImageAndShortParagraph05
 export function WithImageAndShortParagraph05() {
   return (
     <div className="bg-white py-24 md:py-32 lg:py-40 dark:bg-gray-900">

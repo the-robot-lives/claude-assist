@@ -15,6 +15,7 @@ interface StyleGuideStyleCardProps {
   heroStyle?: React.CSSProperties;
 }
 
+// ⟦𓐓𓉵𓆹𓊷⟧ StyleGuideStyleCard :: auto-generated pointer for public function StyleGuideStyleCard
 export function StyleGuideStyleCard({ title, subtitle, epigraph, seal, colors, meta, heroStyle }: StyleGuideStyleCardProps) {
   return (
     <div className="style-card">

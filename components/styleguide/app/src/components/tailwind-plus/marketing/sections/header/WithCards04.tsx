@@ -22,6 +22,7 @@ const cards = [
   },
 ]
 
+// ⟦𓄳𓍃𓇠𓇌⟧ WithCards04 :: auto-generated pointer for public function WithCards04
 export function WithCards04() {
   return (
     <div className="relative isolate overflow-hidden bg-white py-24 sm:py-32 dark:bg-gray-900">

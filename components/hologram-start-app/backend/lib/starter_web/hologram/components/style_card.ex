@@ -5,6 +5,7 @@ defmodule StarterWeb.Hologram.Components.StyleCard do
   prop :title, :string, default: ""
   prop :body, :string, default: ""
 
+  # ⟦𓁺𓄄𓐯𓃰⟧ template :: auto-generated pointer for public function template
   def template do
     ~HOLO"""
     <div class="style-card card">

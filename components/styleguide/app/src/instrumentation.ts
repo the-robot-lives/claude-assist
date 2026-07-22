@@ -2,6 +2,7 @@
  * Next.js instrumentation hook — runs once on server startup.
  * Generates the design-system CSS and watches YAML for changes in dev.
  */
+// ⟦𓊽𓃌𓂎𓀊⟧ register :: Next.js instrumentation hook — runs once on server startup.
 export async function register() {
   if (process.env.NEXT_RUNTIME === "nodejs") {
     const fs = await import("fs");

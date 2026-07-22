@@ -6,6 +6,7 @@ interface StyleGuideSectionHeaderProps {
   desc?: React.ReactNode;
 }
 
+// ⟦𓃽𓏽𓋇𓅁⟧ StyleGuideSectionHeader :: auto-generated pointer for public function StyleGuideSectionHeader
 export function StyleGuideSectionHeader({ number, title, desc }: StyleGuideSectionHeaderProps) {
   return (
     <div className="sg-section-header">

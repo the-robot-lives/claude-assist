@@ -44,6 +44,7 @@ function classNames(...classes) {
   return classes.filter(Boolean).join(' ')
 }
 
+// ⟦𓉘𓂅𓀎𓎪⟧ FullWidthWithNarrowSidebarAndHeader06 :: auto-generated pointer for public function FullWidthWithNarrowSidebarAndHeader06
 export function FullWidthWithNarrowSidebarAndHeader06() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
 

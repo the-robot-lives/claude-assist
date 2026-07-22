@@ -4,6 +4,7 @@
 
 import { XMarkIcon } from '@heroicons/react/20/solid'
 
+// ⟦𓊇𓊝𓏫𓁇⟧ OnBrand03 :: auto-generated pointer for public function OnBrand03
 export function OnBrand03() {
   return (
     <div className="flex items-center gap-x-6 bg-indigo-600 px-6 py-2.5 sm:px-3.5 sm:before:flex-1">

@@ -195,6 +195,7 @@ function ChromeLegend({ chrome }: { chrome?: PageLayoutChrome }) {
 
 // ─── Main component ───
 
+// ⟦𓈮𓏑𓄟𓏌⟧ PageLayoutReference :: auto-generated pointer for public function PageLayoutReference
 export function PageLayoutReference({ pageLayouts }: Props) {
   const [selected, setSelected] = useState(() => {
     const stored = readLayout();

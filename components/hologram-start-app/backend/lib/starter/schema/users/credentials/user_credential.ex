@@ -15,6 +15,7 @@ defmodule Starter.Schema.Users.Credentials.UserCredential do
     timestamps(type: :utc_datetime_usec)
   end
 
+  # ⟦𓄋𓃞𓁕𓈅⟧ changeset :: auto-generated pointer for public function changeset
   def changeset(credential, attrs) do
     credential
     |> cast(attrs, [

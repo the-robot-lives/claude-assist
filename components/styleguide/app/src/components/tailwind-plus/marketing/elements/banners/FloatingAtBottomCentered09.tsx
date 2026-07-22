@@ -4,6 +4,7 @@
 
 import { XMarkIcon } from '@heroicons/react/20/solid'
 
+// ⟦𓄫𓇎𓐙𓎿⟧ FloatingAtBottomCentered09 :: auto-generated pointer for public function FloatingAtBottomCentered09
 export function FloatingAtBottomCentered09() {
   return (
     <>

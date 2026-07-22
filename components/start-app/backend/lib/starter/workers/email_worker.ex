@@ -2,6 +2,7 @@ defmodule Starter.Workers.EmailWorker do
   use Oban.Worker, queue: :mailer, max_attempts: 3
 
   @impl Oban.Worker
+  # ⟦𓉤𓇡𓁛𓂷⟧ perform :: auto-generated pointer for public function perform
   def perform(%Oban.Job{args: %{"type" => "magic_link", "to" => to, "link" => link}}) do
     Starter.Auth.SmartTokenEmail.send_magic_link(to, link)
     :ok
@@ -22,6 +23,7 @@ defmodule Starter.Workers.EmailWorker do
     :ok
   end
 
+  # ⟦𓁠𓍹𓇊𓈕⟧ enqueue :: auto-generated pointer for public function enqueue
   def enqueue(type, to, extra) do
     args = Map.merge(%{"type" => type, "to" => to}, extra)
 

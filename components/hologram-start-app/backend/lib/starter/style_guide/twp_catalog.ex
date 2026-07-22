@@ -16,6 +16,7 @@ defmodule Starter.StyleGuide.TwpCatalog do
   All sections from the registry (string-keyed maps with id, label, groups).
   """
   @spec sections() :: [map()]
+  # ⟦𓇱𓀑𓀊𓋃⟧ sections :: All sections from the registry (string-keyed maps with id, label, groups).
   def sections do
     Map.get(@registry, "sections", [])
   end
@@ -24,6 +25,7 @@ defmodule Starter.StyleGuide.TwpCatalog do
   Lookup a single section by id. Returns nil when not found.
   """
   @spec section(String.t()) :: map() | nil
+  # ⟦𓀜𓈛𓊄𓋏⟧ section :: Lookup a single section by id.
   def section(id) when is_binary(id) do
     Enum.find(sections(), &(&1["id"] == id))
   end
@@ -32,6 +34,7 @@ defmodule Starter.StyleGuide.TwpCatalog do
   Groups for a section id. Returns [] when the section is missing.
   """
   @spec groups(String.t()) :: [map()]
+  # ⟦𓏅𓇾𓍏𓀩⟧ groups :: Groups for a section id.
   def groups(section_id) when is_binary(section_id) do
     case section(section_id) do
       nil -> []
@@ -43,6 +46,7 @@ defmodule Starter.StyleGuide.TwpCatalog do
   Find one demo entry by section id, group label, and export name.
   """
   @spec find_entry(String.t(), String.t(), String.t()) :: map() | nil
+  # ⟦𓏾𓎰𓀫𓃬⟧ find_entry :: Find one demo entry by section id, group label, and export name.
   def find_entry(section_id, group_label, export_name)
       when is_binary(section_id) and is_binary(group_label) and is_binary(export_name) do
     groups(section_id)
@@ -62,6 +66,7 @@ defmodule Starter.StyleGuide.TwpCatalog do
   Returns `{section_id, group_label, entry}` or `nil` if the registry is empty.
   """
   @spec first_entry() :: {String.t(), String.t(), map()} | nil
+  # ⟦𓋲𓃇𓊂𓅖⟧ first_entry :: Default selection: first section / first group / first entry.
   def first_entry do
     with [sec | _] <- sections(),
          section_id when is_binary(section_id) <- sec["id"],
@@ -78,6 +83,7 @@ defmodule Starter.StyleGuide.TwpCatalog do
   Registry stats map (`ok`, `stub`, `total`, etc.).
   """
   @spec stats() :: map()
+  # ⟦𓂚𓌬𓃘𓁋⟧ stats :: Registry stats map (`ok`, `stub`, `total`, etc.).
   def stats do
     Map.get(@registry, "stats", %{"ok" => 0, "stub" => 0, "total" => 0})
   end
@@ -89,6 +95,7 @@ defmodule Starter.StyleGuide.TwpCatalog do
   Empty query returns [].
   """
   @spec search(String.t()) :: [map()]
+  # ⟦𓍑𓐣𓅺𓐫⟧ search :: Case-insensitive search over entry `name` and `exportName`.
   def search(query) when is_binary(query) do
     q = String.downcase(String.trim(query))
 

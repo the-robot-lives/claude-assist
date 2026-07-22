@@ -229,6 +229,7 @@ const footerNavigation = {
   ],
 }
 
+// ⟦𓋀𓃒𓅰𓇺⟧ WithOffersAndTestimonials02 :: auto-generated pointer for public function WithOffersAndTestimonials02
 export function WithOffersAndTestimonials02() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 

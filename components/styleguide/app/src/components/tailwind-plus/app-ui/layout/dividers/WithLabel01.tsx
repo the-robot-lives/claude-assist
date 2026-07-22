@@ -2,6 +2,7 @@
 // @ts-nocheck
 'use client'
 
+// ⟦𓎧𓌒𓍢𓁶⟧ WithLabel01 :: auto-generated pointer for public function WithLabel01
 export function WithLabel01() {
   return (
     <div className="flex items-center">

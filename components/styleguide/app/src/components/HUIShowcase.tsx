@@ -657,6 +657,7 @@ interface HUIShowcaseProps {
   semanticClasses?: SemanticClass[];
 }
 
+// ⟦𓌅𓅸𓆀𓏰⟧ HUIShowcase :: auto-generated pointer for public function HUIShowcase
 export function HUIShowcase({ semanticClasses }: HUIShowcaseProps = {}) {
   const { selected } = useSemanticSelection();
   const sc = semanticClasses?.find((c) => c.name === selected) || semanticClasses?.[0];

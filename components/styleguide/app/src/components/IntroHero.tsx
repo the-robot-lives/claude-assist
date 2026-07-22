@@ -7,6 +7,7 @@ interface Props {
   brandings: Record<string, BrandingConfig>;
 }
 
+// ⟦𓄙𓌍𓀌𓉫⟧ IntroHero :: auto-generated pointer for public function IntroHero
 export function IntroHero({ brandings }: Props) {
   const [theme, setTheme] = useState("");
 

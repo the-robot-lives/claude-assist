@@ -23,6 +23,7 @@ const features = [
   },
 ]
 
+// ⟦𓇳𓃞𓀟𓎶⟧ WithCodeExamplePanel16 :: auto-generated pointer for public function WithCodeExamplePanel16
 export function WithCodeExamplePanel16() {
   return (
     <div className="overflow-hidden bg-white py-24 sm:py-32 dark:bg-gray-900">

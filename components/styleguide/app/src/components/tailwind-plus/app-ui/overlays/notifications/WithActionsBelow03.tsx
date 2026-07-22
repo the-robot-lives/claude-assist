@@ -8,6 +8,7 @@ import { Transition } from '@headlessui/react'
 import { InboxIcon } from '@heroicons/react/24/outline'
 import { XMarkIcon } from '@heroicons/react/20/solid'
 
+// ⟦𓂁𓋜𓆀𓊢⟧ WithActionsBelow03 :: auto-generated pointer for public function WithActionsBelow03
 export function WithActionsBelow03() {
   const [show, setShow] = useState(true)
 

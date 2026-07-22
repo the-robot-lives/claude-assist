@@ -94,6 +94,7 @@ function useDerivedSpacing(config: StyleGuideConfig): SpacingDerivedProps {
   return { allVars, baseVars, steps, columns, gutterPx, marginPx, ctx };
 }
 
+// ⟦𓍁𓉷𓉺𓉦⟧ SpacingScaleAndPrinciples :: auto-generated pointer for public function SpacingScaleAndPrinciples
 export function SpacingScaleAndPrinciples({ config }: Props) {
   const { allVars, baseVars, steps } = useDerivedSpacing(config);
   return (
@@ -121,11 +122,13 @@ export function SpacingScaleAndPrinciples({ config }: Props) {
   );
 }
 
+// ⟦𓀸𓐌𓁟𓐦⟧ SpacingColumnGrid :: auto-generated pointer for public function SpacingColumnGrid
 export function SpacingColumnGrid({ config }: Props) {
   const { columns, gutterPx, marginPx } = useDerivedSpacing(config);
   return <GridVisualizer columns={columns} gutterPx={gutterPx} marginPx={marginPx} />;
 }
 
+// ⟦𓁛𓏅𓆞𓂒⟧ SpacingPageRhythm :: auto-generated pointer for public function SpacingPageRhythm
 export function SpacingPageRhythm({ config }: Props) {
   const { allVars, ctx } = useDerivedSpacing(config);
   if (!ctx) return null;
@@ -206,6 +209,7 @@ export function SpacingPageRhythm({ config }: Props) {
   );
 }
 
+// ⟦𓃽𓏅𓏝𓋈⟧ SpacingShowcase :: auto-generated pointer for public function SpacingShowcase
 export function SpacingShowcase({ config }: Props) {
   const { allVars, baseVars, steps, columns, gutterPx, marginPx, ctx } = useDerivedSpacing(config);
 

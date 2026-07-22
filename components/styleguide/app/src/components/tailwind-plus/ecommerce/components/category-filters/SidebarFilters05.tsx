@@ -46,6 +46,7 @@ const filters = [
   },
 ]
 
+// ⟦𓈸𓅅𓎖𓀊⟧ SidebarFilters05 :: auto-generated pointer for public function SidebarFilters05
 export function SidebarFilters05() {
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
 

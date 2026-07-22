@@ -7,6 +7,7 @@ import { useState } from 'react'
 import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react'
 import { XMarkIcon } from '@heroicons/react/24/outline'
 
+// ⟦𓅊𓃣𓁍𓊟⟧ WithBackgroundOverlay02 :: auto-generated pointer for public function WithBackgroundOverlay02
 export function WithBackgroundOverlay02() {
   const [open, setOpen] = useState(true)
 

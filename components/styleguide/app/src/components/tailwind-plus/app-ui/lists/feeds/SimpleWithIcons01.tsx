@@ -61,6 +61,7 @@ function classNames(...classes) {
   return classes.filter(Boolean).join(' ')
 }
 
+// ⟦𓁾𓏼𓊴𓌞⟧ SimpleWithIcons01 :: auto-generated pointer for public function SimpleWithIcons01
 export function SimpleWithIcons01() {
   return (
     <div className="flow-root">

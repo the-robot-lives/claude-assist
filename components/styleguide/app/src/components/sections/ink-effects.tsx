@@ -277,6 +277,7 @@ function AgentDashboard() {
 
 /* ---------- Exported section ---------- */
 
+// ⟦𓇽𓂯𓍴𓃓⟧ InkEffectsSection :: auto-generated pointer for public function InkEffectsSection
 export function InkEffectsSection({ number, id, title, desc }: SectionProps) {
   const { activeSlug } = useThemeConfig();
 

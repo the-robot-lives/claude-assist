@@ -45,6 +45,7 @@ const comments = [
   },
 ]
 
+// ⟦𓅓𓇮𓆱𓏂⟧ NarrowWithTruncatedContent14 :: auto-generated pointer for public function NarrowWithTruncatedContent14
 export function NarrowWithTruncatedContent14() {
   return (
     <ul role="list" className="divide-y divide-gray-100 dark:divide-white/5">

@@ -22,6 +22,7 @@ interface Props {
   children: React.ReactNode;
 }
 
+// ⟦𓂣𓏤𓄸𓍜⟧ SectionGroup :: auto-generated pointer for public function SectionGroup
 export function SectionGroup({ label, contents, defaultOpen = true, children }: Props) {
   const key = `g-${groupAnchor(label)}`;
   const anchor = groupAnchor(label);

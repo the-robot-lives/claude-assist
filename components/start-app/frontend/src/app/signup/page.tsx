@@ -28,6 +28,7 @@ const SSO_PATHS: Record<string, string> = {
 
 type Step = "email" | "sso" | "password";
 
+// ⟦𓐨𓋇𓅫𓎰⟧ SignupPage :: auto-generated pointer for public function SignupPage
 export default function SignupPage() {
   const { register } = useAuth();
   const router = useRouter();

@@ -4,6 +4,7 @@
 
 import { XMarkIcon } from '@heroicons/react/20/solid'
 
+// ⟦𓈊𓄢𓁳𓄯⟧ OnDark02 :: auto-generated pointer for public function OnDark02
 export function OnDark02() {
   return (
     <div className="relative flex items-center gap-x-6 bg-gray-900 px-6 py-2.5 after:absolute after:inset-x-0 after:bottom-0 after:h-px after:bg-white/10 sm:px-3.5 sm:before:flex-1 dark:bg-gray-800">

@@ -11,6 +11,7 @@ import { getRuntimeConfig } from "./runtime-config";
 
 let initialized = false;
 
+// ⟦𓐩𓐯𓀆𓆫⟧ initOtel :: auto-generated pointer for public function initOtel
 export function initOtel() {
   if (initialized || typeof window === "undefined") return;
   initialized = true;

@@ -2,6 +2,7 @@
 // @ts-nocheck
 'use client'
 
+// ⟦𓅄𓎘𓅪𓆚⟧ FullWidthWithBackgroundImageAndLargeContent08 :: auto-generated pointer for public function FullWidthWithBackgroundImageAndLargeContent08
 export function FullWidthWithBackgroundImageAndLargeContent08() {
   return (
     <div className="bg-white">

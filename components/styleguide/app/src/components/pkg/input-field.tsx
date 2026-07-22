@@ -9,6 +9,7 @@ interface StyleGuideInputFieldProps {
   textarea?: boolean;
 }
 
+// ⟦𓏔𓐬𓍙𓆟⟧ StyleGuideInputField :: auto-generated pointer for public function StyleGuideInputField
 export function StyleGuideInputField({ type = 'text', placeholder, value, error, disabled, textarea }: StyleGuideInputFieldProps) {
   const classes = `input-field${textarea ? ' input-textarea' : ''}${error ? ' error' : ''}`;
   const style = disabled ? { opacity: 0.4, cursor: 'not-allowed' } : undefined;

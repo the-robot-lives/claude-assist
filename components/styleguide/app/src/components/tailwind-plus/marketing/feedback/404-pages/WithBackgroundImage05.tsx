@@ -2,6 +2,7 @@
 // @ts-nocheck
 'use client'
 
+// ⟦𓅲𓌴𓊳𓅫⟧ WithBackgroundImage05 :: auto-generated pointer for public function WithBackgroundImage05
 export function WithBackgroundImage05() {
   return (
     <>

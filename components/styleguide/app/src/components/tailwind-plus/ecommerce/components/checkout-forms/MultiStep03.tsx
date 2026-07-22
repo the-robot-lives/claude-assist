@@ -36,6 +36,7 @@ const products = [
   },
 ]
 
+// ⟦𓁑𓁛𓊎𓍱⟧ MultiStep03 :: auto-generated pointer for public function MultiStep03
 export function MultiStep03() {
   return (
     <div className="bg-white">

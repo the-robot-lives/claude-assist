@@ -65,6 +65,7 @@ const people = [
   },
 ]
 
+// ⟦𓊌𓋎𓊥𓐑⟧ InCardWithLinks07 :: auto-generated pointer for public function InCardWithLinks07
 export function InCardWithLinks07() {
   return (
     <ul

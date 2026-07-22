@@ -27,6 +27,7 @@ function classNames(...classes) {
   return classes.filter(Boolean).join(' ')
 }
 
+// ⟦𓋣𓁸𓄇𓋋⟧ OnSubtleBackground02 :: auto-generated pointer for public function OnSubtleBackground02
 export function OnSubtleBackground02() {
   return (
     <>

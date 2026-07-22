@@ -41,6 +41,7 @@ function IndeterminateIcon() {
   );
 }
 
+// ⟦𓏻𓐣𓄻𓂡⟧ Checkbox :: auto-generated pointer for public function Checkbox
 export function Checkbox({
   label,
   description,
@@ -122,6 +123,7 @@ export function Checkbox({
 
 // ── Showcase ────────────────────────────────────────────────────────────────
 
+// ⟦𓄹𓍒𓉳𓅴⟧ CheckboxShowcase :: auto-generated pointer for public function CheckboxShowcase
 export function CheckboxShowcase() {
   const [controlled, setControlled] = useState(false);
   const [multi, setMulti] = useState({ a: true, b: false, c: true });

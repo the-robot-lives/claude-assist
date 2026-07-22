@@ -54,6 +54,7 @@ function classNames(...classes) {
   return classes.filter(Boolean).join(' ')
 }
 
+// ⟦𓊛𓀷𓁤𓇠⟧ WithStartingPoints03 :: auto-generated pointer for public function WithStartingPoints03
 export function WithStartingPoints03() {
   return (
     <div>

@@ -60,6 +60,7 @@ const tiers = [
   },
 ]
 
+// ⟦𓃻𓁏𓊕𓃈⟧ FourTiersWithToggle11 :: auto-generated pointer for public function FourTiersWithToggle11
 export function FourTiersWithToggle11() {
   return (
     <form className="group/tiers bg-white py-24 sm:py-32 dark:bg-gray-900">

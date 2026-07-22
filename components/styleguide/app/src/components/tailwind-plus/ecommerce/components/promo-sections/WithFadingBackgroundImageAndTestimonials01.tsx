@@ -23,6 +23,7 @@ const testimonials = [
   },
 ]
 
+// ⟦𓂕𓃳𓂔𓎛⟧ WithFadingBackgroundImageAndTestimonials01 :: auto-generated pointer for public function WithFadingBackgroundImageAndTestimonials01
 export function WithFadingBackgroundImageAndTestimonials01() {
   return (
     <div className="relative overflow-hidden bg-white">

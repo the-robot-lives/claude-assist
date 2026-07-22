@@ -7,6 +7,7 @@ import { useState } from 'react'
 import { Transition } from '@headlessui/react'
 import { XMarkIcon } from '@heroicons/react/20/solid'
 
+// ⟦𓇌𓍗𓅕𓇩⟧ WithButtonsBelow06 :: auto-generated pointer for public function WithButtonsBelow06
 export function WithButtonsBelow06() {
   const [show, setShow] = useState(true)
 

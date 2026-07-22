@@ -80,6 +80,7 @@ const navigation = {
   ],
 }
 
+// ⟦𓈹𓎴𓋆𓃑⟧ WithDoubleColumnAndPersistentMobileNav05 :: auto-generated pointer for public function WithDoubleColumnAndPersistentMobileNav05
 export function WithDoubleColumnAndPersistentMobileNav05() {
   return (
     <div className="bg-white">

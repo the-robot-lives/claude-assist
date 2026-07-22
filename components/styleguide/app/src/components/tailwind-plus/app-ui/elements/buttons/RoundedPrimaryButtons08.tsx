@@ -2,6 +2,7 @@
 // @ts-nocheck
 'use client'
 
+// ⟦𓆰𓍳𓀇𓀿⟧ RoundedPrimaryButtons08 :: auto-generated pointer for public function RoundedPrimaryButtons08
 export function RoundedPrimaryButtons08() {
   return (
     <>

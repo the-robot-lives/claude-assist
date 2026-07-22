@@ -34,6 +34,7 @@ function classNames(...classes) {
   return classes.filter(Boolean).join(' ')
 }
 
+// ⟦𓄘𓎨𓉛𓋲⟧ FullWidthSecondaryColumnOnRight02 :: auto-generated pointer for public function FullWidthSecondaryColumnOnRight02
 export function FullWidthSecondaryColumnOnRight02() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
 

@@ -30,6 +30,7 @@ function classNames(...classes) {
   return classes.filter(Boolean).join(' ')
 }
 
+// ⟦𓄦𓋆𓄚𓂛⟧ OnGray06 :: auto-generated pointer for public function OnGray06
 export function OnGray06() {
   return (
     <nav aria-label="Sidebar" className="flex flex-1 flex-col">
