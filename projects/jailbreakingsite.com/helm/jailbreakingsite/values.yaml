@@ -125,8 +125,8 @@ tls:
     projectSlug: k8-infra
     envSlug: prod
     secretsPath: "/apps/tls/jailbreakingsite"
-    crtKey: JAILBREAKING_TLS_CRT
-    keyKey: JAILBREAKING_TLS_KEY
+    crtKey: JAILBREAKINGSITE_TLS_CRT
+    keyKey: JAILBREAKINGSITE_TLS_KEY
 
 otel:
   enabled: false

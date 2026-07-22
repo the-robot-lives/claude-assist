@@ -1,0 +1,701 @@
+user_stories:
+  - id: US-001
+    title: Create workspace
+    slug: create-workspace
+    epic: Onboarding & Auth
+    priority: must-have
+    personas: [P-001, P-002, P-004]
+    file: US-001-create-workspace.md
+  - id: US-002
+    title: Invite team members
+    slug: invite-team-members
+    epic: Onboarding & Auth
+    priority: must-have
+    personas: [P-002]
+    file: US-002-invite-team-members.md
+  - id: US-003
+    title: Accept invitation
+    slug: accept-invitation
+    epic: Onboarding & Auth
+    priority: must-have
+    personas: [P-005, P-007]
+    file: US-003-accept-invitation.md
+  - id: US-004
+    title: Install desktop agent
+    slug: install-desktop-agent
+    epic: Onboarding & Auth
+    priority: must-have
+    personas: [P-001, P-004, P-007]
+    file: US-004-install-desktop-agent.md
+  - id: US-005
+    title: Grant capture permissions
+    slug: grant-capture-permissions
+    epic: Onboarding & Auth
+    priority: must-have
+    personas: [P-001, P-005, P-007]
+    file: US-005-grant-capture-permissions.md
+  - id: US-006
+    title: Run capture test
+    slug: run-capture-test
+    epic: Onboarding & Auth
+    priority: must-have
+    personas: [P-001, P-005]
+    file: US-006-run-capture-test.md
+  - id: US-007
+    title: Create first client project
+    slug: create-first-client-project
+    epic: Onboarding & Auth
+    priority: must-have
+    personas: [P-001, P-002, P-004]
+    file: US-007-create-first-client-project.md
+  - id: US-008
+    title: Import starter task list
+    slug: import-starter-task-list
+    epic: Onboarding & Auth
+    priority: must-have
+    personas: [P-002, P-003]
+    file: US-008-import-starter-task-list.md
+  - id: US-009
+    title: Complete privacy tour
+    slug: complete-privacy-tour
+    epic: Onboarding & Auth
+    priority: must-have
+    personas: [P-005, P-008]
+    file: US-009-complete-privacy-tour.md
+  - id: US-010
+    title: Choose tracking mode
+    slug: choose-tracking-mode
+    epic: Onboarding & Auth
+    priority: must-have
+    personas: [P-001, P-004, P-007]
+    file: US-010-choose-tracking-mode.md
+  - id: US-011
+    title: Start task timer
+    slug: start-task-timer
+    epic: Core Tracking & Evidence
+    priority: must-have
+    personas: [P-001, P-004, P-007]
+    file: US-011-start-task-timer.md
+  - id: US-012
+    title: Stop task timer
+    slug: stop-task-timer
+    epic: Core Tracking & Evidence
+    priority: must-have
+    personas: [P-001, P-004]
+    file: US-012-stop-task-timer.md
+  - id: US-013
+    title: Switch primary task
+    slug: switch-primary-task
+    epic: Core Tracking & Evidence
+    priority: must-have
+    personas: [P-001, P-004]
+    file: US-013-switch-primary-task.md
+  - id: US-014
+    title: Track overlapping task
+    slug: track-overlapping-task
+    epic: Core Tracking & Evidence
+    priority: must-have
+    personas: [P-001, P-004, P-007]
+    file: US-014-track-overlapping-task.md
+  - id: US-015
+    title: Mark task as secondary
+    slug: mark-task-as-secondary
+    epic: Core Tracking & Evidence
+    priority: must-have
+    personas: [P-001, P-004]
+    file: US-015-mark-task-as-secondary.md
+  - id: US-016
+    title: Split captured interval
+    slug: split-captured-interval
+    epic: Core Tracking & Evidence
+    priority: must-have
+    personas: [P-001, P-004]
+    file: US-016-split-captured-interval.md
+  - id: US-017
+    title: Merge adjacent intervals
+    slug: merge-adjacent-intervals
+    epic: Core Tracking & Evidence
+    priority: must-have
+    personas: [P-001, P-004, P-007]
+    file: US-017-merge-adjacent-intervals.md
+  - id: US-018
+    title: Reassign interval project
+    slug: reassign-interval-project
+    epic: Core Tracking & Evidence
+    priority: must-have
+    personas: [P-001, P-004]
+    file: US-018-reassign-interval-project.md
+  - id: US-019
+    title: Add manual interval
+    slug: add-manual-interval
+    epic: Core Tracking & Evidence
+    priority: must-have
+    personas: [P-001, P-004]
+    file: US-019-add-manual-interval.md
+  - id: US-020
+    title: Edit interval confidence
+    slug: edit-interval-confidence
+    epic: Core Tracking & Evidence
+    priority: must-have
+    personas: [P-001, P-004, P-007]
+    file: US-020-edit-interval-confidence.md
+  - id: US-021
+    title: View live capture status
+    slug: view-live-capture-status
+    epic: Core Tracking & Evidence
+    priority: must-have
+    personas: [P-001, P-004]
+    file: US-021-view-live-capture-status.md
+  - id: US-022
+    title: Pause tracking
+    slug: pause-tracking
+    epic: Core Tracking & Evidence
+    priority: must-have
+    personas: [P-001, P-004]
+    file: US-022-pause-tracking.md
+  - id: US-023
+    title: Resume tracking
+    slug: resume-tracking
+    epic: Core Tracking & Evidence
+    priority: must-have
+    personas: [P-001, P-004, P-007]
+    file: US-023-resume-tracking.md
+  - id: US-024
+    title: Capture screenshot
+    slug: capture-screenshot
+    epic: Core Tracking & Evidence
+    priority: must-have
+    personas: [P-001, P-005, P-008]
+    file: US-024-capture-screenshot.md
+  - id: US-025
+    title: Open screenshot detail
+    slug: open-screenshot-detail
+    epic: Core Tracking & Evidence
+    priority: must-have
+    personas: [P-001, P-005, P-008]
+    file: US-025-open-screenshot-detail.md
+  - id: US-026
+    title: Delete screenshot
+    slug: delete-screenshot
+    epic: Core Tracking & Evidence
+    priority: must-have
+    personas: [P-001, P-005, P-008]
+    file: US-026-delete-screenshot.md
+  - id: US-027
+    title: Blur screenshot region
+    slug: blur-screenshot-region
+    epic: Core Tracking & Evidence
+    priority: must-have
+    personas: [P-001, P-005, P-008]
+    file: US-027-blur-screenshot-region.md
+  - id: US-028
+    title: Set app redaction rule
+    slug: set-app-redaction-rule
+    epic: Core Tracking & Evidence
+    priority: must-have
+    personas: [P-001, P-005, P-008]
+    file: US-028-set-app-redaction-rule.md
+  - id: US-029
+    title: Detect app and URL context
+    slug: detect-app-and-url-context
+    epic: Core Tracking & Evidence
+    priority: must-have
+    personas: [P-001, P-004, P-007]
+    file: US-029-detect-app-and-url-context.md
+  - id: US-030
+    title: Attach note to interval
+    slug: attach-note-to-interval
+    epic: Core Tracking & Evidence
+    priority: must-have
+    personas: [P-001, P-004]
+    file: US-030-attach-note-to-interval.md
+  - id: US-031
+    title: Tag interruption
+    slug: tag-interruption
+    epic: Core Tracking & Evidence
+    priority: must-have
+    personas: [P-001, P-004]
+    file: US-031-tag-interruption.md
+  - id: US-032
+    title: Mark billable state
+    slug: mark-billable-state
+    epic: Core Tracking & Evidence
+    priority: must-have
+    personas: [P-001, P-004, P-007]
+    file: US-032-mark-billable-state.md
+  - id: US-033
+    title: Set task rate
+    slug: set-task-rate
+    epic: Core Tracking & Evidence
+    priority: must-have
+    personas: [P-001, P-004]
+    file: US-033-set-task-rate.md
+  - id: US-034
+    title: Pin frequent task
+    slug: pin-frequent-task
+    epic: Core Tracking & Evidence
+    priority: must-have
+    personas: [P-001, P-004]
+    file: US-034-pin-frequent-task.md
+  - id: US-035
+    title: Use keyboard correction flow
+    slug: use-keyboard-correction-flow
+    epic: Core Tracking & Evidence
+    priority: should-have
+    personas: [P-001, P-004, P-007]
+    file: US-035-use-keyboard-correction-flow.md
+  - id: US-036
+    title: Undo timeline edit
+    slug: undo-timeline-edit
+    epic: Core Tracking & Evidence
+    priority: should-have
+    personas: [P-001, P-004]
+    file: US-036-undo-timeline-edit.md
+  - id: US-037
+    title: Bulk edit intervals
+    slug: bulk-edit-intervals
+    epic: Core Tracking & Evidence
+    priority: should-have
+    personas: [P-001, P-004]
+    file: US-037-bulk-edit-intervals.md
+  - id: US-038
+    title: Compare planned vs actual
+    slug: compare-planned-vs-actual
+    epic: Core Tracking & Evidence
+    priority: should-have
+    personas: [P-001, P-004, P-007]
+    file: US-038-compare-planned-vs-actual.md
+  - id: US-039
+    title: View confidence warnings
+    slug: view-confidence-warnings
+    epic: Core Tracking & Evidence
+    priority: should-have
+    personas: [P-001, P-004]
+    file: US-039-view-confidence-warnings.md
+  - id: US-040
+    title: Lock approved day
+    slug: lock-approved-day
+    epic: Core Tracking & Evidence
+    priority: should-have
+    personas: [P-001, P-004]
+    file: US-040-lock-approved-day.md
+  - id: US-041
+    title: Detect idle period
+    slug: detect-idle-period
+    epic: Idle & Resumption Intelligence
+    priority: must-have
+    personas: [P-001, P-004, P-007]
+    file: US-041-detect-idle-period.md
+  - id: US-042
+    title: Prompt after idle return
+    slug: prompt-after-idle-return
+    epic: Idle & Resumption Intelligence
+    priority: must-have
+    personas: [P-001, P-007]
+    file: US-042-prompt-after-idle-return.md
+  - id: US-043
+    title: Discard idle time
+    slug: discard-idle-time
+    epic: Idle & Resumption Intelligence
+    priority: must-have
+    personas: [P-001, P-006]
+    file: US-043-discard-idle-time.md
+  - id: US-044
+    title: Keep idle time with reason
+    slug: keep-idle-time-with-reason
+    epic: Idle & Resumption Intelligence
+    priority: should-have
+    personas: [P-001, P-004]
+    file: US-044-keep-idle-time-with-reason.md
+  - id: US-045
+    title: Set per-project idle threshold
+    slug: set-per-project-idle-threshold
+    epic: Idle & Resumption Intelligence
+    priority: should-have
+    personas: [P-001, P-002]
+    file: US-045-set-per-project-idle-threshold.md
+  - id: US-046
+    title: Detect machine sleep
+    slug: detect-machine-sleep
+    epic: Idle & Resumption Intelligence
+    priority: must-have
+    personas: [P-001, P-007]
+    file: US-046-detect-machine-sleep.md
+  - id: US-047
+    title: Detect session resumption
+    slug: detect-session-resumption
+    epic: Idle & Resumption Intelligence
+    priority: must-have
+    personas: [P-001, P-007]
+    file: US-047-detect-session-resumption.md
+  - id: US-048
+    title: Suggest resume last task
+    slug: suggest-resume-last-task
+    epic: Idle & Resumption Intelligence
+    priority: must-have
+    personas: [P-004, P-007]
+    file: US-048-suggest-resume-last-task.md
+  - id: US-049
+    title: Show where-was-I panel
+    slug: show-where-was-i-panel
+    epic: Idle & Resumption Intelligence
+    priority: should-have
+    personas: [P-004, P-007]
+    file: US-049-show-where-was-i-panel.md
+  - id: US-050
+    title: Review unresolved idle gaps
+    slug: review-unresolved-idle-gaps
+    epic: Idle & Resumption Intelligence
+    priority: must-have
+    personas: [P-001, P-006]
+    file: US-050-review-unresolved-idle-gaps.md
+  - id: US-051
+    title: Open daily timeline
+    slug: open-daily-timeline
+    epic: Timeline Review & Analytics
+    priority: must-have
+    personas: [P-001, P-004, P-007]
+    file: US-051-open-daily-timeline.md
+  - id: US-052
+    title: Zoom timeline scale
+    slug: zoom-timeline-scale
+    epic: Timeline Review & Analytics
+    priority: should-have
+    personas: [P-001]
+    file: US-052-zoom-timeline-scale.md
+  - id: US-053
+    title: Filter timeline by client
+    slug: filter-timeline-by-client
+    epic: Timeline Review & Analytics
+    priority: must-have
+    personas: [P-001, P-006]
+    file: US-053-filter-timeline-by-client.md
+  - id: US-054
+    title: Filter timeline by evidence
+    slug: filter-timeline-by-evidence
+    epic: Timeline Review & Analytics
+    priority: should-have
+    personas: [P-001, P-006]
+    file: US-054-filter-timeline-by-evidence.md
+  - id: US-055
+    title: Navigate screenshot gallery
+    slug: navigate-screenshot-gallery
+    epic: Timeline Review & Analytics
+    priority: must-have
+    personas: [P-001, P-005]
+    file: US-055-navigate-screenshot-gallery.md
+  - id: US-056
+    title: Search screenshots by metadata
+    slug: search-screenshots-by-metadata
+    epic: Timeline Review & Analytics
+    priority: should-have
+    personas: [P-001, P-006]
+    file: US-056-search-screenshots-by-metadata.md
+  - id: US-057
+    title: Open weekly summary
+    slug: open-weekly-summary
+    epic: Timeline Review & Analytics
+    priority: must-have
+    personas: [P-001, P-003, P-004]
+    file: US-057-open-weekly-summary.md
+  - id: US-058
+    title: View focus quality
+    slug: view-focus-quality
+    epic: Timeline Review & Analytics
+    priority: should-have
+    personas: [P-003, P-004, P-007]
+    file: US-058-view-focus-quality.md
+  - id: US-059
+    title: View utilization dashboard
+    slug: view-utilization-dashboard
+    epic: Timeline Review & Analytics
+    priority: should-have
+    personas: [P-002, P-003]
+    file: US-059-view-utilization-dashboard.md
+  - id: US-060
+    title: Explain confidence score
+    slug: explain-confidence-score
+    epic: Timeline Review & Analytics
+    priority: should-have
+    personas: [P-001, P-008]
+    file: US-060-explain-confidence-score.md
+  - id: US-061
+    title: Create invoice report
+    slug: create-invoice-report
+    epic: Reporting & Billing
+    priority: must-have
+    personas: [P-001, P-006]
+    file: US-061-create-invoice-report.md
+  - id: US-062
+    title: Export CSV
+    slug: export-csv
+    epic: Reporting & Billing
+    priority: must-have
+    personas: [P-006]
+    file: US-062-export-csv.md
+  - id: US-063
+    title: Export PDF timesheet
+    slug: export-pdf-timesheet
+    epic: Reporting & Billing
+    priority: should-have
+    personas: [P-001, P-006]
+    file: US-063-export-pdf-timesheet.md
+  - id: US-064
+    title: Include selected screenshots
+    slug: include-selected-screenshots
+    epic: Reporting & Billing
+    priority: should-have
+    personas: [P-001, P-006]
+    file: US-064-include-selected-screenshots.md
+  - id: US-065
+    title: Exclude private evidence
+    slug: exclude-private-evidence
+    epic: Reporting & Billing
+    priority: must-have
+    personas: [P-005, P-008]
+    file: US-065-exclude-private-evidence.md
+  - id: US-066
+    title: Map billing codes
+    slug: map-billing-codes
+    epic: Reporting & Billing
+    priority: should-have
+    personas: [P-006]
+    file: US-066-map-billing-codes.md
+  - id: US-067
+    title: Set approval workflow
+    slug: set-approval-workflow
+    epic: Reporting & Billing
+    priority: should-have
+    personas: [P-002, P-006]
+    file: US-067-set-approval-workflow.md
+  - id: US-068
+    title: Reopen approved report
+    slug: reopen-approved-report
+    epic: Reporting & Billing
+    priority: could-have
+    personas: [P-002, P-006, P-008]
+    file: US-068-reopen-approved-report.md
+  - id: US-069
+    title: Configure screenshot interval
+    slug: configure-screenshot-interval
+    epic: Privacy, Policy & Compliance
+    priority: must-have
+    personas: [P-001, P-005, P-008]
+    file: US-069-configure-screenshot-interval.md
+  - id: US-070
+    title: Configure screenshot retention
+    slug: configure-screenshot-retention
+    epic: Privacy, Policy & Compliance
+    priority: must-have
+    personas: [P-005, P-008]
+    file: US-070-configure-screenshot-retention.md
+  - id: US-071
+    title: Configure local-only storage
+    slug: configure-local-only-storage
+    epic: Privacy, Policy & Compliance
+    priority: should-have
+    personas: [P-005, P-008]
+    file: US-071-configure-local-only-storage.md
+  - id: US-072
+    title: Define app exclusion rule
+    slug: define-app-exclusion-rule
+    epic: Privacy, Policy & Compliance
+    priority: must-have
+    personas: [P-005, P-008]
+    file: US-072-define-app-exclusion-rule.md
+  - id: US-073
+    title: Define domain exclusion rule
+    slug: define-domain-exclusion-rule
+    epic: Privacy, Policy & Compliance
+    priority: must-have
+    personas: [P-005, P-008]
+    file: US-073-define-domain-exclusion-rule.md
+  - id: US-074
+    title: Require consent for team tracking
+    slug: require-consent-for-team-tracking
+    epic: Privacy, Policy & Compliance
+    priority: must-have
+    personas: [P-002, P-005, P-008]
+    file: US-074-require-consent-for-team-tracking.md
+  - id: US-075
+    title: View policy summary
+    slug: view-policy-summary
+    epic: Privacy, Policy & Compliance
+    priority: must-have
+    personas: [P-005, P-008]
+    file: US-075-view-policy-summary.md
+  - id: US-076
+    title: Review audit log
+    slug: review-audit-log
+    epic: Privacy, Policy & Compliance
+    priority: must-have
+    personas: [P-008]
+    file: US-076-review-audit-log.md
+  - id: US-077
+    title: Set role permissions
+    slug: set-role-permissions
+    epic: Privacy, Policy & Compliance
+    priority: must-have
+    personas: [P-002, P-008]
+    file: US-077-set-role-permissions.md
+  - id: US-078
+    title: Redaction preview
+    slug: redaction-preview
+    epic: Privacy, Policy & Compliance
+    priority: should-have
+    personas: [P-005]
+    file: US-078-redaction-preview.md
+  - id: US-079
+    title: Manage clients
+    slug: manage-clients
+    epic: Workspace Administration
+    priority: must-have
+    personas: [P-001, P-002]
+    file: US-079-manage-clients.md
+  - id: US-080
+    title: Manage projects
+    slug: manage-projects
+    epic: Workspace Administration
+    priority: must-have
+    personas: [P-001, P-002]
+    file: US-080-manage-projects.md
+  - id: US-081
+    title: Manage tasks
+    slug: manage-tasks
+    epic: Workspace Administration
+    priority: must-have
+    personas: [P-001, P-004]
+    file: US-081-manage-tasks.md
+  - id: US-082
+    title: Manage team roles
+    slug: manage-team-roles
+    epic: Workspace Administration
+    priority: should-have
+    personas: [P-002, P-008]
+    file: US-082-manage-team-roles.md
+  - id: US-083
+    title: Configure billing rates
+    slug: configure-billing-rates
+    epic: Workspace Administration
+    priority: should-have
+    personas: [P-001, P-006]
+    file: US-083-configure-billing-rates.md
+  - id: US-084
+    title: Configure work schedule
+    slug: configure-work-schedule
+    epic: Workspace Administration
+    priority: could-have
+    personas: [P-003, P-004]
+    file: US-084-configure-work-schedule.md
+  - id: US-085
+    title: Merge duplicate tasks
+    slug: merge-duplicate-tasks
+    epic: Workspace Administration
+    priority: should-have
+    personas: [P-002, P-006]
+    file: US-085-merge-duplicate-tasks.md
+  - id: US-086
+    title: Connect calendar
+    slug: connect-calendar
+    epic: Integrations & API
+    priority: should-have
+    personas: [P-001, P-003, P-004]
+    file: US-086-connect-calendar.md
+  - id: US-087
+    title: Connect GitHub
+    slug: connect-github
+    epic: Integrations & API
+    priority: could-have
+    personas: [P-001, P-003]
+    file: US-087-connect-github.md
+  - id: US-088
+    title: Connect Jira or Linear
+    slug: connect-jira-or-linear
+    epic: Integrations & API
+    priority: could-have
+    personas: [P-001, P-003]
+    file: US-088-connect-jira-or-linear.md
+  - id: US-089
+    title: Connect Slack
+    slug: connect-slack
+    epic: Integrations & API
+    priority: could-have
+    personas: [P-003]
+    file: US-089-connect-slack.md
+  - id: US-090
+    title: Use REST API
+    slug: use-rest-api
+    epic: Integrations & API
+    priority: could-have
+    personas: [P-002, P-006]
+    file: US-090-use-rest-api.md
+  - id: US-091
+    title: Use MCP time context
+    slug: use-mcp-time-context
+    epic: Integrations & API
+    priority: could-have
+    personas: [P-001, P-004]
+    file: US-091-use-mcp-time-context.md
+  - id: US-092
+    title: Webhook export events
+    slug: webhook-export-events
+    epic: Integrations & API
+    priority: could-have
+    personas: [P-006]
+    file: US-092-webhook-export-events.md
+  - id: US-093
+    title: Keyboard navigate timeline
+    slug: keyboard-navigate-timeline
+    epic: Accessibility, Reliability & Edge Cases
+    priority: must-have
+    personas: [P-007]
+    file: US-093-keyboard-navigate-timeline.md
+  - id: US-094
+    title: Use screen reader labels
+    slug: use-screen-reader-labels
+    epic: Accessibility, Reliability & Edge Cases
+    priority: should-have
+    personas: [P-007]
+    file: US-094-use-screen-reader-labels.md
+  - id: US-095
+    title: Reduce motion
+    slug: reduce-motion
+    epic: Accessibility, Reliability & Edge Cases
+    priority: should-have
+    personas: [P-007]
+    file: US-095-reduce-motion.md
+  - id: US-096
+    title: Use high contrast mode
+    slug: use-high-contrast-mode
+    epic: Accessibility, Reliability & Edge Cases
+    priority: should-have
+    personas: [P-007, P-005]
+    file: US-096-use-high-contrast-mode.md
+  - id: US-097
+    title: Handle long task names
+    slug: handle-long-task-names
+    epic: Accessibility, Reliability & Edge Cases
+    priority: must-have
+    personas: [P-001, P-006]
+    file: US-097-handle-long-task-names.md
+  - id: US-098
+    title: Localize date and time formats
+    slug: localize-date-and-time-formats
+    epic: Accessibility, Reliability & Edge Cases
+    priority: should-have
+    personas: [P-001, P-005]
+    file: US-098-localize-date-and-time-formats.md
+  - id: US-099
+    title: Recover from agent crash
+    slug: recover-from-agent-crash
+    epic: Accessibility, Reliability & Edge Cases
+    priority: must-have
+    personas: [P-001, P-004]
+    file: US-099-recover-from-agent-crash.md
+  - id: US-100
+    title: Handle permission revoked
+    slug: handle-permission-revoked
+    epic: Accessibility, Reliability & Edge Cases
+    priority: must-have
+    personas: [P-001, P-005]
+    file: US-100-handle-permission-revoked.md
