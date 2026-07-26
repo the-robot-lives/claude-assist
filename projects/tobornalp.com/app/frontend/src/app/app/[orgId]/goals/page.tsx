@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import { useOrg } from "@/context/org";
 import { api, type Objective } from "@/lib/api";
 import { toast } from "sonner";
-import { ProgressBar, SectionCard, Empty, Button, Input, Select, FieldLabel } from "@/components/ui";
+import { ProgressBar, SectionCard, Empty, Btn, Input, Select, FieldLabel, Chip, StatusTag } from "@/components/ui";
 import { OkrTree } from "@/components/okr/okr-tree";
 
 const LEVELS = ["company", "team", "individual", "personal"];
@@ -21,30 +21,30 @@ export default function GoalsPage() {
   const [reloadKey, setReloadKey] = useState(0);
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-6">
-      <header className="mb-6 flex items-center justify-between">
+    <div className="app-content max-w-4xl">
+      <header className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-text">Goals</h1>
-          <p className="text-sm text-text-secondary">{currentOrg?.name || "Organization"} · OKRs</p>
+          <h1 className="text-[13px] font-bold uppercase tracking-[0.1em] text-ink">goals</h1>
+          <p className="mt-1 text-[11px] text-mut">{currentOrg?.name || "organization"} · okrs</p>
         </div>
         <div className="flex items-center gap-2">
-          <div className="flex overflow-hidden rounded-md border border-border text-xs">
+          <div className="flex overflow-hidden rounded-pill border border-line2 text-[11px] uppercase tracking-wide">
             <button
               onClick={() => setView("tree")}
-              className={`px-2.5 py-1.5 ${view === "tree" ? "bg-surface-alt text-text" : "text-text-muted"}`}
+              className={`px-3 py-1.5 ${view === "tree" ? "bg-acc-bg font-bold text-acc" : "text-faint"}`}
             >
-              Tree
+              tree
             </button>
             <button
               onClick={() => setView("list")}
-              className={`px-2.5 py-1.5 ${view === "list" ? "bg-surface-alt text-text" : "text-text-muted"}`}
+              className={`px-3 py-1.5 ${view === "list" ? "bg-acc-bg font-bold text-acc" : "text-faint"}`}
             >
-              List
+              list
             </button>
           </div>
-          <Button size="sm" onClick={() => setShowCreate((s) => !s)}>
-            {showCreate ? "Cancel" : "+ New objective"}
-          </Button>
+          <Btn variant="primary" onClick={() => setShowCreate((s) => !s)}>
+            {showCreate ? "cancel" : "+ new objective"}
+          </Btn>
         </div>
       </header>
 
@@ -88,7 +88,7 @@ function FlatList({ orgId, reloadKey }: { orgId: string; reloadKey: number }) {
     <div>
       <div className="mb-3 flex gap-2">
         <Select value={level} onChange={(e) => setLevel(e.target.value)} className="w-40">
-          <option value="">All levels</option>
+          <option value="">all levels</option>
           {LEVELS.map((l) => (
             <option key={l} value={l}>
               {l}
@@ -96,7 +96,7 @@ function FlatList({ orgId, reloadKey }: { orgId: string; reloadKey: number }) {
           ))}
         </Select>
         <Select value={status} onChange={(e) => setStatus(e.target.value)} className="w-40">
-          <option value="">All statuses</option>
+          <option value="">all statuses</option>
           {["draft", "active", "at_risk", "off_track", "completed", "archived"].map((s) => (
             <option key={s} value={s}>
               {s}
@@ -106,26 +106,34 @@ function FlatList({ orgId, reloadKey }: { orgId: string; reloadKey: number }) {
       </div>
 
       {loading ? (
-        <p className="text-text-muted">Loading…</p>
+        <p className="text-faint">
+          <StatusTag tone="info" /> loading…
+        </p>
       ) : objectives.length === 0 ? (
-        <SectionCard title="No objectives">
-          <Empty>No objectives match these filters.</Empty>
+        <SectionCard title="no objectives">
+          <Empty>no objectives match these filters.</Empty>
         </SectionCard>
       ) : (
-        <ul className="space-y-2">
-          {objectives.map((o) => (
-            <li key={o.id} className="rounded-lg border border-border bg-surface px-4 py-3">
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-text">{o.title}</span>
-                <span className="rounded border border-border px-1.5 py-0.5 text-[11px] text-text-secondary">{o.level}</span>
-                <span className="text-[11px] text-text-muted">{o.status}</span>
+        <div className="overflow-hidden rounded-panel border border-line bg-panel shadow-card">
+          {objectives.map((o) => {
+            const behind = o.status === "at_risk" || o.status === "off_track";
+            return (
+              <div key={o.id} className="border-b border-line px-4 py-3 last:border-b-0 hover:bg-sel">
+                <div className="flex items-center gap-2">
+                  <span className="text-[13px] font-bold text-ink">{o.title}</span>
+                  <Chip variant="scope">{o.level}</Chip>
+                  <span className="text-[11px] text-faint">{o.status}</span>
+                  <span className={`num ml-auto text-[13px] font-bold ${behind ? "text-warn" : "text-acc"}`}>
+                    {Math.round((parseFloat(String(o.progress ?? "0")) || 0) * 100)}%
+                  </span>
+                </div>
+                <div className="mt-2">
+                  <ProgressBar value={o.progress} tone={behind ? "warned" : "ok"} />
+                </div>
               </div>
-              <div className="mt-2">
-                <ProgressBar value={o.progress} />
-              </div>
-            </li>
-          ))}
-        </ul>
+            );
+          })}
+        </div>
       )}
     </div>
   );
@@ -154,12 +162,12 @@ function CreateObjective({ orgId, onCreated }: { orgId: string; onCreated: (o: O
   };
 
   return (
-    <form onSubmit={submit} className="mb-4 rounded-lg border border-border bg-surface p-4">
-      <FieldLabel label="Objective">
-        <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Ship tobornalp MVP" autoFocus />
+    <form onSubmit={submit} className="mb-4 rounded-panel border border-line bg-panel p-4 shadow-card">
+      <FieldLabel label="objective">
+        <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. ship tobornalp MVP" autoFocus />
       </FieldLabel>
       <div className="mt-3 grid gap-3 sm:grid-cols-2">
-        <FieldLabel label="Level">
+        <FieldLabel label="level">
           <Select value={level} onChange={(e) => setLevel(e.target.value)}>
             {LEVELS.map((l) => (
               <option key={l} value={l}>
@@ -168,14 +176,14 @@ function CreateObjective({ orgId, onCreated }: { orgId: string; onCreated: (o: O
             ))}
           </Select>
         </FieldLabel>
-        <FieldLabel label="Period">
+        <FieldLabel label="period">
           <Input value={period} onChange={(e) => setPeriod(e.target.value)} placeholder="2026-Q3" />
         </FieldLabel>
       </div>
       <div className="mt-3 flex justify-end">
-        <Button type="submit" size="sm" disabled={submitting}>
-          {submitting ? "Creating…" : "Create"}
-        </Button>
+        <Btn variant="primary" type="submit" disabled={submitting}>
+          {submitting ? "creating…" : "create"}
+        </Btn>
       </div>
     </form>
   );

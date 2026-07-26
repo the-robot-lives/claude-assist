@@ -82,11 +82,11 @@ export default function PersonalPage() {
   };
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-6 text-[var(--ink)]">
-      <header className="mb-6">
-        <h1 className="font-mono text-2xl font-bold uppercase tracking-wide text-[var(--ink)]">Personal</h1>
-        <p className="mt-1 font-mono text-sm text-[var(--mut)]">
-          {currentOrg?.name || "organization"} · your private todos
+    <div className="app-content max-w-3xl">
+      <header>
+        <h1 className="text-[13px] font-bold uppercase tracking-[0.1em] text-ink">personal</h1>
+        <p className="mt-1 text-[11px] text-mut">
+          {(currentOrg?.name || "organization").toLowerCase()} · your private todos
         </p>
       </header>
 
@@ -148,7 +148,7 @@ function CreateRow({
   return (
     <form
       onSubmit={submit}
-      className="mb-6 space-y-3 rounded-[var(--r)] border border-[var(--line)] bg-[var(--panel)] p-4 shadow-[var(--card-shadow)]"
+      className="space-y-3 rounded-panel border border-line bg-panel p-4 shadow-card"
     >
       <Input
         value={title}

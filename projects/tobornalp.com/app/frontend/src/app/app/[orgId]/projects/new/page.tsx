@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { useOrg } from "@/context/org";
 import { api, type Methodology } from "@/lib/api";
 import { useMutation } from "@/lib/use-api";
-import { Button, Input, Textarea, FieldLabel } from "@/components/ui";
+import { Btn, Button, Input, Textarea, FieldLabel } from "@/components/ui";
 import { MethodologyPicker, templateFor } from "@/components/pm/methodology-picker";
 
 // Derive a URL slug from a display name: lowercase, non-alnum → hyphen, trimmed.
@@ -67,29 +67,37 @@ export default function NewProjectPage() {
   };
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-6">
-      <header className="mb-6">
-        <Link href={`/app/${orgId}/projects`} className="text-xs text-text-muted hover:text-text">
-          ← Projects
+    <div className="app-content max-w-2xl">
+      <header>
+        <Link href={`/app/${orgId}/projects`} className="text-xs text-faint hover:text-ink">
+          ← projects
         </Link>
-        <h1 className="mt-1 text-2xl font-bold text-text">New project</h1>
-        <ol className="mt-3 flex gap-2 text-xs text-text-muted">
-          {["Details", "Methodology", "Confirm"].map((label, i) => (
-            <li
-              key={label}
-              className={`rounded px-2 py-0.5 ${
-                step === i + 1 ? "bg-surface-alt font-medium text-text" : ""
-              }`}
-            >
-              {i + 1}. {label}
-            </li>
-          ))}
+        <h1 className="mt-1 text-[13px] font-bold uppercase tracking-[0.1em] text-ink">new project</h1>
+        <ol className="mt-3 flex overflow-hidden rounded-pill border border-line text-[11px] uppercase tracking-wide">
+          {["details", "methodology", "confirm"].map((label, i) => {
+            const n = i + 1;
+            const state = n < step ? "done" : n === step ? "current" : "future";
+            return (
+              <li
+                key={label}
+                className={`px-3 py-1 ${
+                  state === "current"
+                    ? "bg-acc font-bold text-black"
+                    : state === "done"
+                      ? "bg-panel2 text-mut"
+                      : "text-faint"
+                }`}
+              >
+                {n}. {label}
+              </li>
+            );
+          })}
         </ol>
       </header>
 
       {step === 1 && (
-        <div className="space-y-4 rounded-lg border border-border bg-surface p-4">
-          <FieldLabel label="Name" required>
+        <div className="space-y-4 rounded-panel border border-line bg-panel p-4 shadow-card">
+          <FieldLabel label="name" required>
             <Input
               value={name}
               autoFocus
@@ -97,7 +105,7 @@ export default function NewProjectPage() {
               onChange={(e) => setName(e.target.value)}
             />
           </FieldLabel>
-          <FieldLabel label="Slug" hint="Lowercase, used in URLs. Auto-derived from the name.">
+          <FieldLabel label="slug" hint="lowercase, used in URLs. auto-derived from the name.">
             <Input
               value={effectiveSlug}
               placeholder="apollo"
@@ -107,7 +115,7 @@ export default function NewProjectPage() {
               }}
             />
           </FieldLabel>
-          <FieldLabel label="Key prefix" hint="2–16 uppercase chars for item keys (e.g. APL-12).">
+          <FieldLabel label="key prefix" hint="2–16 uppercase chars for item keys (e.g. APL-12).">
             <Input
               value={effectivePrefix}
               placeholder="APL"
@@ -117,58 +125,58 @@ export default function NewProjectPage() {
               }}
             />
           </FieldLabel>
-          <FieldLabel label="Description">
+          <FieldLabel label="description">
             <Textarea
               value={description}
               rows={3}
-              placeholder="What is this project for?"
+              placeholder="what is this project for?"
               onChange={(e) => setDescription(e.target.value)}
             />
           </FieldLabel>
           <div className="flex justify-end">
-            <Button size="sm" disabled={!detailsValid} onClick={() => setStep(2)}>
-              Next
-            </Button>
+            <Btn variant="primary" disabled={!detailsValid} onClick={() => setStep(2)}>
+              next
+            </Btn>
           </div>
         </div>
       )}
 
       {step === 2 && (
-        <div className="space-y-4 rounded-lg border border-border bg-surface p-4">
-          <p className="text-sm text-text-secondary">
-            Choose how your team works. This seeds the project&apos;s board — you can change it
+        <div className="space-y-4 rounded-panel border border-line bg-panel p-4 shadow-card">
+          <p className="text-sm text-mut">
+            choose how your team works. this seeds the project&apos;s board — you can change it
             later.
           </p>
           <MethodologyPicker value={methodology} onChange={setMethodology} />
           <div className="flex justify-between">
             <Button size="sm" variant="outline" onClick={() => setStep(1)}>
-              Back
+              back
             </Button>
-            <Button size="sm" onClick={() => setStep(3)}>
-              Next
-            </Button>
+            <Btn variant="primary" onClick={() => setStep(3)}>
+              next
+            </Btn>
           </div>
         </div>
       )}
 
       {step === 3 && (
-        <div className="space-y-4 rounded-lg border border-border bg-surface p-4">
-          <h2 className="text-sm font-semibold text-text">Confirm</h2>
+        <div className="space-y-4 rounded-panel border border-line bg-panel p-4 shadow-card">
+          <h2 className="text-[12px] font-bold uppercase tracking-[0.1em] text-ink">confirm</h2>
           <dl className="grid grid-cols-[8rem_1fr] gap-y-2 text-sm">
-            <dt className="text-text-muted">Name</dt>
-            <dd className="text-text">{name}</dd>
-            <dt className="text-text-muted">Slug</dt>
-            <dd className="text-text">{effectiveSlug}</dd>
+            <dt className="text-faint">name</dt>
+            <dd className="text-ink">{name}</dd>
+            <dt className="text-faint">slug</dt>
+            <dd className="text-ink">{effectiveSlug}</dd>
             {effectivePrefix && (
               <>
-                <dt className="text-text-muted">Key prefix</dt>
-                <dd className="text-text">{effectivePrefix}</dd>
+                <dt className="text-faint">key prefix</dt>
+                <dd className="text-ink">{effectivePrefix}</dd>
               </>
             )}
-            <dt className="text-text-muted">Methodology</dt>
-            <dd className="text-text">
+            <dt className="text-faint">methodology</dt>
+            <dd className="text-ink">
               {template.label}
-              <span className="text-text-muted">
+              <span className="text-faint">
                 {" "}
                 · {template.stages.length} stage{template.stages.length === 1 ? "" : "s"}
                 {template.iteration ? ` + ${template.iteration}` : ""}
@@ -177,11 +185,11 @@ export default function NewProjectPage() {
           </dl>
           <div className="flex justify-between">
             <Button size="sm" variant="outline" onClick={() => setStep(2)}>
-              Back
+              back
             </Button>
-            <Button size="sm" disabled={create.loading} onClick={submit}>
-              {create.loading ? "Creating…" : "Create project"}
-            </Button>
+            <Btn variant="primary" disabled={create.loading} onClick={submit}>
+              {create.loading ? "creating…" : "create project"}
+            </Btn>
           </div>
         </div>
       )}

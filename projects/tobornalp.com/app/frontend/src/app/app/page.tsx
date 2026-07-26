@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useState } from 'react';
 import { api } from '@/lib/api';
 import { userPendingApproval } from '@/lib/auth-flow';
-import { Button, FieldLabel, Input, Spinner } from '@/components/ui';
+import { Btn, FieldLabel, Input, Spinner } from '@/components/ui';
 
 // Derive a URL-safe slug from a free-text org name. Editable by the user; the
 // backend enforces uniqueness and returns a 422 we surface inline.
@@ -21,9 +21,9 @@ function slugify(value: string) {
 
 function LoadingScreen() {
   return (
-    <div className="flex min-h-[40dvh] items-center justify-center gap-2 text-text-muted">
+    <div className="flex min-h-[40dvh] items-center justify-center gap-2 text-faint">
       <Spinner size={20} />
-      <span className="text-sm">Loading…</span>
+      <span className="text-[12px]">loading…</span>
     </div>
   );
 }
@@ -64,18 +64,20 @@ function AppHub() {
 
   return (
     <div className="mx-auto max-w-xl px-4 py-10">
-      <h1 className="mb-6 text-2xl font-bold text-text">{hasOrgs ? 'Your organizations' : 'Welcome'}</h1>
+      <h1 className="mb-6 text-[13px] font-bold uppercase tracking-[0.1em] text-ink">
+        {hasOrgs ? 'your organizations' : 'welcome'}
+      </h1>
 
       {hasOrgs ? (
-        <ul className="mb-8 flex flex-col gap-3">
+        <ul className="mb-8 flex flex-col gap-2.5">
           {organizations.map((org) => (
             <li key={org.id}>
               <a
                 href={`/app/${org.id}`}
-                className="flex items-center justify-between rounded-lg border border-border bg-surface px-4 py-3 text-text shadow-sm transition-colors hover:border-border-strong hover:bg-surface-alt focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue/40"
+                className="flex items-center justify-between rounded-panel border border-line bg-panel px-4 py-3 text-ink no-underline shadow-card transition-colors hover:border-line2 hover:bg-panel2 focus:outline-none focus-visible:ring-2 focus-visible:ring-acc/40"
               >
-                <span className="font-semibold">{org.name}</span>
-                {org.role && <span className="text-sm text-text-muted">{org.role}</span>}
+                <span className="font-bold">{org.name}</span>
+                {org.role && <span className="text-[11px] text-faint">{org.role}</span>}
               </a>
             </li>
           ))}
@@ -104,8 +106,8 @@ function CreateOrgSection({ canCreate, hasOrgs }: { canCreate: boolean; hasOrgs:
 
   if (!canCreate) {
     return (
-      <p className="text-sm text-text-secondary">
-        Your account is registered and waiting for approval. You can create an
+      <p className="text-[12px] text-mut">
+        your account is registered and waiting for approval. you can create an
         organization once it&apos;s approved.
       </p>
     );
@@ -113,9 +115,9 @@ function CreateOrgSection({ canCreate, hasOrgs }: { canCreate: boolean; hasOrgs:
 
   if (hasOrgs && !open) {
     return (
-      <Button variant="outline" onClick={() => setOpen(true)}>
-        + Create organization
-      </Button>
+      <Btn variant="default" onClick={() => setOpen(true)}>
+        + create organization
+      </Btn>
     );
   }
 
@@ -144,23 +146,24 @@ function CreateOrgSection({ canCreate, hasOrgs }: { canCreate: boolean; hasOrgs:
 
   return (
     <div className={hasOrgs ? 'mt-4' : undefined}>
-      <p className="text-sm text-text-secondary">
+      <p className="text-[12px] text-mut">
         {hasOrgs
-          ? 'Create another organization — you’ll be its owner.'
-          : 'You’re not part of an organization yet. Create one to get started — you’ll be its owner and can invite your team.'}
+          ? 'create another organization — you’ll be its owner.'
+          : 'you’re not part of an organization yet. create one to get started — you’ll be its owner and can invite your team.'}
       </p>
       <form onSubmit={submit} className="mt-4 flex flex-col gap-3">
-        <FieldLabel label="Organization name" htmlFor="org-name" required>
+        <FieldLabel label="organization name" htmlFor="org-name" required>
           <Input
             id="org-name"
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="Acme Inc."
+            className="rounded-card border-line2 bg-ground"
             autoFocus
           />
         </FieldLabel>
-        <FieldLabel label="URL slug" htmlFor="org-slug">
+        <FieldLabel label="url slug" htmlFor="org-slug">
           <Input
             id="org-slug"
             type="text"
@@ -170,17 +173,18 @@ function CreateOrgSection({ canCreate, hasOrgs }: { canCreate: boolean; hasOrgs:
               setSlug(slugify(e.target.value));
             }}
             placeholder="acme"
+            className="rounded-card border-line2 bg-ground font-mono"
           />
         </FieldLabel>
-        {error ? <p className="text-sm text-error">{error}</p> : null}
+        {error ? <p className="text-[12px] text-err">[ERR] {error}</p> : null}
         <div className="flex items-center gap-3">
-          <Button type="submit" disabled={submitting || !name.trim()}>
-            {submitting ? 'Creating…' : 'Create organization'}
-          </Button>
+          <Btn variant="primary" type="submit" disabled={submitting || !name.trim()}>
+            {submitting ? 'creating…' : 'create organization'}
+          </Btn>
           {hasOrgs ? (
-            <Button type="button" variant="ghost" onClick={() => setOpen(false)} disabled={submitting}>
-              Cancel
-            </Button>
+            <Btn type="button" variant="default" onClick={() => setOpen(false)} disabled={submitting}>
+              cancel
+            </Btn>
           ) : null}
         </div>
       </form>

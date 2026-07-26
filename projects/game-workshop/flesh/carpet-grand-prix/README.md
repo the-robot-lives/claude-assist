@@ -2,6 +2,13 @@
 
 > The floor is the racetrack. The phone is the floor.
 
+> **Promoted to `stage/` on 2026-07-27.** This file is the origin design record.
+> The live production tree — including a working Swift/Metal iOS implementation —
+> lives at [`stage/carpet-grand-prix/`](../../stage/carpet-grand-prix/README.md).
+> Where the two disagree, `stage/` wins. One known correction: this document
+> originally specified Unity 6; the game is built natively in Swift with a
+> hand-written Metal renderer, and section 12 below has been amended to match.
+
 ---
 
 ## 1. Title & Genre
@@ -11,8 +18,9 @@
 | **Title** | Carpet Grand Prix |
 | **Genre** | Tilt-controlled arcade racer / time-attack |
 | **Sub-genre** | Physical-toy simulation ("diorama racer") |
-| **Engine** | Unity 6 (6000.x), URP 2D Renderer with custom parallax stack |
-| **Prototype** | `prototype/index.html` — single-file HTML5 canvas build, playable now |
+| **Engine** | **None — native Swift + hand-written Metal renderer.** See [`stage/carpet-grand-prix/production/tech-stack.md`](../../stage/carpet-grand-prix/production/tech-stack.md) |
+| **Prototype** | `prototype/index.html` — single-file HTML5 canvas build, used to validate the feel |
+| **Implementation** | [`stage/carpet-grand-prix/app/`](../../stage/carpet-grand-prix/app/) — iOS, Swift + Metal |
 | **Primary platform** | iOS 16+ (iPhone 12 and newer) |
 | **Secondary platform** | Android 12+ (gyro-equipped devices), 6 months post-launch |
 | **Orientation** | Portrait only, one-handed |
@@ -513,7 +521,7 @@ the game and the reason the tilt-diorama look is the marketing asset, not the ra
 | Composer / sound design (contract) | 1 | M6–M10 | $6,000 | 5 | $30,000 |
 | QA (device matrix, sensor testing) | 1 | M7–M12 | $5,000 | 6 | $30,000 |
 | Producer (half-time) | 0.5 | M1–M12 | $4,500 | 12 | $54,000 |
-| **Peak headcount** | **8.5** | | | | **$661,500** |
+| **Peak headcount** | **9.5** | | | | **$661,500** |
 
 ### Timeline
 
@@ -557,6 +565,12 @@ belongs at M3, not M9.
 ---
 
 ## 12. Technical Requirements
+
+> **Amended.** Built natively in Swift with a hand-written Metal renderer — no
+> engine and no third-party dependencies. One mechanic, no asset pipeline, and a
+> hard requirement for direct `CMDeviceMotion` access made an engine pure
+> overhead. Full rationale and decision log:
+> [`production/tech-stack.md`](../../stage/carpet-grand-prix/production/tech-stack.md).
 
 ### Platform targets
 

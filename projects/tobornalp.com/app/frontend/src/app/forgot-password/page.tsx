@@ -7,6 +7,39 @@ import Link from "next/link";
 
 type Step = "request" | "verify" | "done";
 
+const BTN_PRIMARY =
+  "inline-flex w-full items-center justify-center rounded-full bg-[var(--acc)] px-5 py-2.5 font-mono text-sm font-bold text-black transition-colors hover:bg-[var(--acc-hi)] disabled:opacity-60 disabled:cursor-not-allowed";
+
+function Field({
+  label,
+  className,
+  ...inputProps
+}: { label: string; className?: string } & React.InputHTMLAttributes<HTMLInputElement>) {
+  return (
+    <div className="mb-4">
+      <label
+        htmlFor={inputProps.id}
+        className="mb-1.5 block font-mono text-[11px] uppercase tracking-[.08em] text-[var(--mut)]"
+      >
+        {label}
+      </label>
+      <input
+        {...inputProps}
+        className={`w-full rounded-[10px] border border-[var(--line2)] bg-[var(--bg)] px-3.5 py-2.5 font-mono text-sm text-[var(--ink)] outline-none transition-colors placeholder:text-[var(--faint)] focus:border-[var(--acc)] focus:ring-2 focus:ring-[var(--acc-bg)] ${className ?? ""}`}
+      />
+    </div>
+  );
+}
+
+function Brand() {
+  return (
+    <div className="mb-6 flex items-baseline gap-1 font-mono">
+      <span className="text-sm font-bold tracking-tight text-[var(--ink)]">tobornalp</span>
+      <span className="text-sm font-bold text-[var(--acc)] motion-safe:animate-pulse">▮</span>
+    </div>
+  );
+}
+
 export default function ForgotPasswordPage() {
   const router = useRouter();
   const [step, setStep] = useState<Step>("request");
@@ -58,77 +91,112 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div className="content">
-      <main>
-        <h1 className="sg-page-title">Reset Password</h1>
+    <div className="flex min-h-[100dvh] items-center justify-center bg-[var(--bg)] px-6 py-16">
+      <div className="w-full max-w-[420px] rounded-[14px] border border-[var(--line2)] bg-[var(--panel2)] p-8 shadow-[0_2px_10px_rgba(0,0,0,.35)]">
+        <Brand />
+        <h1 className="mb-6 font-mono text-lg font-bold text-[var(--ink)]">reset password</h1>
 
         {step === "request" && (
-          <form onSubmit={handleRequest} style={{ maxWidth: 400 }}>
-            {error && <p className="sg-error">{error}</p>}
-            <p>Enter your email and we&apos;ll send you a reset code.</p>
-            <div className="sg-field">
-              <label htmlFor="email">Email</label>
-              <input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" />
-            </div>
-            <button type="submit" className="sg-btn sg-btn--black" disabled={loading}>
-              {loading ? "Sending..." : "Send Reset Code"}
+          <form onSubmit={handleRequest}>
+            {error && (
+              <p className="mb-4 rounded-[10px] border border-[var(--err)]/30 bg-[var(--err-bg)] px-3 py-2 font-mono text-xs text-[var(--err)]">
+                [err] {error}
+              </p>
+            )}
+            <p className="mb-4 font-mono text-[13px] text-[var(--mut)]">
+              enter your email and we&apos;ll send you a reset code.
+            </p>
+            <Field
+              id="email"
+              label="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              autoComplete="email"
+            />
+            <button type="submit" className={BTN_PRIMARY} disabled={loading}>
+              {loading ? "sending…" : "send reset code"}
             </button>
-            <p style={{ marginTop: "1rem" }}>
-              <Link href="/login">Back to login</Link>
+            <p className="mt-4 font-mono text-xs text-[var(--mut)]">
+              <Link href="/login" className="text-[var(--acc)] hover:text-[var(--acc-hi)]">
+                back to login
+              </Link>
             </p>
           </form>
         )}
 
         {step === "verify" && (
-          <form onSubmit={handleVerify} style={{ maxWidth: 400 }}>
-            {error && <p className="sg-error">{error}</p>}
-            <p>Enter the 6-digit code sent to {email} and your new password.</p>
-            {devCode && (
-              <p style={{ marginBottom: "1rem", padding: "0.75rem", background: "var(--surface-alt, #f5f5f5)", borderRadius: "4px" }}>
-                <strong>Dev mode:</strong> {devCode}
+          <form onSubmit={handleVerify}>
+            {error && (
+              <p className="mb-4 rounded-[10px] border border-[var(--err)]/30 bg-[var(--err-bg)] px-3 py-2 font-mono text-xs text-[var(--err)]">
+                [err] {error}
               </p>
             )}
-            <div className="sg-field">
-              <label htmlFor="reset-code">Code</label>
-              <input
-                id="reset-code"
-                type="text"
-                inputMode="numeric"
-                pattern="[0-9]*"
-                maxLength={6}
-                value={code}
-                onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
-                required
-                autoComplete="one-time-code"
-                style={{ letterSpacing: "0.5em", fontSize: "1.5rem", textAlign: "center" }}
-              />
-            </div>
-            <div className="sg-field">
-              <label htmlFor="new-password">New Password</label>
-              <input id="new-password" type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} required autoComplete="new-password" minLength={8} />
-            </div>
-            <div className="sg-field">
-              <label htmlFor="confirm-password">Confirm Password</label>
-              <input id="confirm-password" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required autoComplete="new-password" minLength={8} />
-            </div>
-            <button type="submit" className="sg-btn sg-btn--black" disabled={loading || code.length !== 6}>
-              {loading ? "Resetting..." : "Reset Password"}
+            <p className="mb-4 font-mono text-[13px] text-[var(--mut)]">
+              enter the 6-digit code sent to {email} and your new password.
+            </p>
+            {devCode && (
+              <p className="mb-4 rounded-[10px] border border-dashed border-[var(--line2)] bg-[var(--bg)] px-3.5 py-2.5 font-mono text-xs text-[var(--mut)]">
+                <span className="text-[var(--info)]">[info]</span> dev mode code:{" "}
+                <span className="text-[var(--ink)]">{devCode}</span>
+              </p>
+            )}
+            <Field
+              id="reset-code"
+              label="code"
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              maxLength={6}
+              value={code}
+              onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
+              required
+              autoComplete="one-time-code"
+              className="text-center text-lg tracking-[0.5em]"
+            />
+            <Field
+              id="new-password"
+              label="new password"
+              type="password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              required
+              autoComplete="new-password"
+              minLength={8}
+            />
+            <Field
+              id="confirm-password"
+              label="confirm password"
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              required
+              autoComplete="new-password"
+              minLength={8}
+            />
+            <button type="submit" className={BTN_PRIMARY} disabled={loading || code.length !== 6}>
+              {loading ? "resetting…" : "reset password"}
             </button>
-            <p style={{ marginTop: "1rem" }}>
-              <Link href="/login">Back to login</Link>
+            <p className="mt-4 font-mono text-xs text-[var(--mut)]">
+              <Link href="/login" className="text-[var(--acc)] hover:text-[var(--acc-hi)]">
+                back to login
+              </Link>
             </p>
           </form>
         )}
 
         {step === "done" && (
-          <div style={{ maxWidth: 400 }}>
-            <p>Your password has been reset.</p>
-            <button className="sg-btn sg-btn--black" onClick={() => router.push("/login")} style={{ marginTop: "1rem" }}>
-              Go to Login
+          <div>
+            <p className="mb-4 font-mono text-[13px] text-[var(--mut)]">
+              <span className="text-[var(--acc)]">[ok]</span> your password has been reset.
+            </p>
+            <button className={BTN_PRIMARY} onClick={() => router.push("/login")}>
+              go to login
             </button>
           </div>
         )}
-      </main>
+      </div>
     </div>
   );
 }

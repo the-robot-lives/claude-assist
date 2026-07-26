@@ -5,7 +5,10 @@ defmodule GottaCc.Schema.Directory.Submission do
   @primary_key {:id, Ecto.UUID, autogenerate: true}
   @foreign_key_type Ecto.UUID
   schema "directory_submissions" do
+    # Null for anonymous suggestions; `contact_email` is the only way back to
+    # the submitter in that case, and it is optional too.
     belongs_to :submitter, GottaCc.Schema.Users.User
+    field :contact_email, :string
     field :name, :string
     field :url, :string
     field :domain, :string
@@ -30,12 +33,18 @@ defmodule GottaCc.Schema.Directory.Submission do
   def changeset(submission, attrs) do
     submission
     |> cast(attrs, [
-      :submitter_id, :name, :url, :domain, :summary, :proposed_category_slug, :tags,
+      :submitter_id, :contact_email, :name, :url, :domain, :summary,
+      :proposed_category_slug, :tags,
       :sug_originality, :sug_human_authorship, :sug_depth, :sug_freshness, :sug_design_quality,
       :status, :reviewer_id, :reviewer_notes, :published_site_id
     ])
-    |> validate_required([:submitter_id, :name, :url, :domain, :status])
+    |> validate_required([:name, :url, :domain, :status])
     |> validate_inclusion(:status, @statuses)
+    |> validate_length(:contact_email, max: 254)
+    |> validate_format(:contact_email, ~r/^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+      message: "must be a valid email address"
+    )
+    |> validate_format(:url, ~r{^https?://}i, message: "must start with http:// or https://")
     |> validate_score(:sug_originality)
     |> validate_score(:sug_human_authorship)
     |> validate_score(:sug_depth)

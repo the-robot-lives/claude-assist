@@ -44,6 +44,19 @@ final class MotionController: ObservableObject {
         didSet { restAverage = nil }
     }
 
+    /// Degrees of tilt that count as full steering authority, driven by the
+    /// accessibility slider. A lower value means a smaller wrist movement
+    /// reaches full lock, which is the whole point for players with limited
+    /// range of motion.
+    var fullLockDegrees: Float = Tuning.fullLockDegrees {
+        didSet {
+            let clamped = min(max(fullLockDegrees, 6), 60)
+            fullLockGravity = sin(clamped * .pi / 180)
+        }
+    }
+
+    private var fullLockGravity: Float = Tuning.fullLockGravity
+
     private let manager = CMMotionManager()
     private var restPose: SIMD2<Float>?
     private var smoothed: SIMD2<Float> = .zero
@@ -104,7 +117,7 @@ final class MotionController: ObservableObject {
         // Screen-space gravity delta. Y is negated: device +Y points up the
         // screen, world +Y points down it.
         let delta = SIMD2<Float>(raw.x - rest.x, -(raw.y - rest.y))
-        let normalised = delta / Tuning.fullLockGravity
+        let normalised = delta / fullLockGravity
 
         smoothed += (normalised - smoothed) * Tuning.tiltSmoothing
         tilt = simd_clamp(smoothed,

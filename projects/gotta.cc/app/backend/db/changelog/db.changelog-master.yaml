@@ -80,3 +80,6 @@ databaseChangeLog:
   - include:
       file: 026-directory-submissions.yaml
       relativeToChangelogFile: true
+  - include:
+      file: 027-anonymous-submissions.yaml
+      relativeToChangelogFile: true

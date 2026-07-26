@@ -3,6 +3,7 @@ import "./globals.css";
 import { AnalyticsProvider } from "@/components/analytics-provider";
 import { CookieConsentProvider } from "@/components/cookie-consent";
 import { OtelProvider } from "@/components/otel-provider";
+import { AdSenseScript } from "@/components/adsense-script";
 import { loadConfig, loadAllBrandings } from "@noizu/styleguide/css-gen";
 import { Toaster } from "sonner";
 
@@ -53,6 +54,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <script src="/__env.js" />
       </head>
       <body>
+        <AdSenseScript />
         <OtelProvider>
           <CookieConsentProvider>
             <AnalyticsProvider>{children}</AnalyticsProvider>

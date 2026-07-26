@@ -2,17 +2,31 @@
 
 import { useState } from "react";
 import { api, type ObjectiveTreeNode, type KeyResult, type RollupStrategy } from "@/lib/api";
-import { Button, Input, Select, ProgressBar, StatusBadge, Spinner } from "@/components/ui";
+import { Btn, Input, Select, ProgressBar, StatusBadge, Spinner, Chip, FieldLabel } from "@/components/ui";
 import { toast } from "sonner";
 import { canReparent } from "./reorder";
 import { KrEditor } from "./kr-editor";
 import { CheckinModal } from "./checkin-modal";
 
 const STRATEGY_LABEL: Record<RollupStrategy, string> = {
-  weighted_avg: "Weighted avg",
-  min_children: "Min child",
-  custom: "Custom",
+  weighted_avg: "weighted avg",
+  min_children: "min child",
+  custom: "custom",
 };
+
+// Destructive pill — coral outline on its own tint, filling solid (with #000 ink)
+// on hover. Written out rather than layered on <Btn> so no colour class collides.
+const DANGER_PILL =
+  "inline-flex items-center justify-center rounded-pill border border-err bg-err-bg px-3.5 py-[5px] text-[12px] font-bold text-err transition-colors hover:bg-err hover:text-black disabled:cursor-not-allowed disabled:opacity-60";
+
+// Terse inline control in a header/footer strip — faint until hovered.
+const GHOST_LINK = "px-1.5 text-[11px] text-faint transition-colors hover:text-ink";
+
+// Objective status reads as "behind pace" for the roll-up % / bar tone —
+// mirrors the meaning FlatList already gives these statuses via StatusBadge.
+function isBehind(status?: string): boolean {
+  return status === "at_risk" || status === "off_track";
+}
 
 // Shared context threaded through the recursive tree. Keeps per-node props small.
 export interface OkrNodeCtx {
@@ -45,6 +59,7 @@ export function OkrNode({
   const isOpen = ctx.expanded.has(node.id);
   const dropOk = ctx.dragId != null && ctx.dragId !== node.id && canReparent(ctx.dragId, node.id, ctx.forest);
   const pct = Math.round((parseFloat(String(node.progress ?? "0")) || 0) * 100);
+  const behind = isBehind(node.status);
 
   return (
     <li>
@@ -64,37 +79,37 @@ export function OkrNode({
           if (ctx.dragId && dropOk) ctx.reparent(ctx.dragId, node.id);
           ctx.setDragId(null);
         }}
-        className={`rounded-lg border bg-surface ${dropOk ? "border-brand-blue ring-1 ring-brand-blue" : "border-border"}`}
+        className={`overflow-hidden rounded-panel border bg-panel shadow-card ${dropOk ? "border-acc ring-1 ring-acc" : "border-line"}`}
         style={{ marginLeft: depth > 0 ? 16 : 0 }}
       >
-        <div className="flex items-center gap-2 px-3 py-2.5">
+        <div className="flex items-center gap-2 bg-panel2 px-[18px] py-3">
           <button
             type="button"
             onClick={() => ctx.toggle(node.id)}
-            className="w-4 shrink-0 text-text-muted"
+            className="w-4 shrink-0 text-faint transition-colors hover:text-ink"
             aria-label={isOpen ? "Collapse" : "Expand"}
           >
             {node.children.length > 0 ? (isOpen ? "▾" : "▸") : "·"}
           </button>
 
           <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2">
-              <span className="truncate text-sm font-medium text-text">{node.title}</span>
-              <span className="shrink-0 rounded border border-border px-1.5 py-0.5 text-[11px] text-text-secondary">
-                {node.level}
-              </span>
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="truncate text-[14.5px] font-bold text-ink">{node.title}</span>
+              <Chip variant="scope">{node.level}</Chip>
               <StatusBadge status={node.status} />
               {node.children.length > 0 && (
-                <span className="shrink-0 text-[11px] text-text-muted">
+                <span className="num shrink-0 text-[11px] text-faint">
                   {node.children.length} child{node.children.length === 1 ? "" : "ren"}
                 </span>
               )}
+              <span className={`num ml-auto shrink-0 text-[16px] font-bold ${behind ? "text-warn" : "text-acc"}`}>
+                {pct}%
+              </span>
             </div>
             <div className="mt-1.5 flex items-center gap-2">
               <div className="flex-1">
-                <ProgressBar value={node.progress} />
+                <ProgressBar value={node.progress} tone={behind ? "warned" : "ok"} />
               </div>
-              <span className="w-9 shrink-0 text-right text-[11px] tabular-nums text-text-muted">{pct}%</span>
             </div>
           </div>
 
@@ -103,7 +118,7 @@ export function OkrNode({
               type="button"
               onClick={() => ctx.reorder(siblings, index, -1)}
               disabled={index === 0}
-              className="px-1 text-text-muted disabled:opacity-30"
+              className="px-1 text-[12px] text-faint transition-colors hover:text-ink disabled:opacity-30 disabled:hover:text-faint"
               aria-label="Move up"
             >
               ↑
@@ -112,24 +127,16 @@ export function OkrNode({
               type="button"
               onClick={() => ctx.reorder(siblings, index, 1)}
               disabled={index === siblings.length - 1}
-              className="px-1 text-text-muted disabled:opacity-30"
+              className="px-1 text-[12px] text-faint transition-colors hover:text-ink disabled:opacity-30 disabled:hover:text-faint"
               aria-label="Move down"
             >
               ↓
             </button>
-            <button
-              type="button"
-              onClick={() => setCheckinsOpen(true)}
-              className="px-1.5 text-xs text-text-muted hover:text-text"
-            >
-              Check-ins
+            <button type="button" onClick={() => setCheckinsOpen(true)} className={GHOST_LINK}>
+              check-ins
             </button>
-            <button
-              type="button"
-              onClick={() => setEditing((s) => !s)}
-              className="px-1.5 text-xs text-text-muted hover:text-text"
-            >
-              {editing ? "Close" : "Edit"}
+            <button type="button" onClick={() => setEditing((s) => !s)} className={GHOST_LINK}>
+              {editing ? "close" : "edit"}
             </button>
           </div>
         </div>
@@ -203,14 +210,12 @@ function NodeEditor({ node, ctx, onDone }: { node: ObjectiveTreeNode; ctx: OkrNo
   };
 
   return (
-    <div className="space-y-3 border-t border-border px-3 py-3">
+    <div className="space-y-3 border-t border-line2 bg-panel2 px-[18px] py-3">
       <div className="grid gap-3 sm:grid-cols-3">
-        <label className="text-sm sm:col-span-3">
-          <span className="mb-1 block text-text-secondary">Title</span>
+        <FieldLabel label="title" className="sm:col-span-3">
           <Input value={title} onChange={(e) => setTitle(e.target.value)} />
-        </label>
-        <label className="text-sm">
-          <span className="mb-1 block text-text-secondary">Rollup</span>
+        </FieldLabel>
+        <FieldLabel label="rollup">
           <Select value={strategy} onChange={(e) => setStrategy(e.target.value as RollupStrategy)}>
             {(Object.keys(STRATEGY_LABEL) as RollupStrategy[]).map((s) => (
               <option key={s} value={s}>
@@ -218,29 +223,27 @@ function NodeEditor({ node, ctx, onDone }: { node: ObjectiveTreeNode; ctx: OkrNo
               </option>
             ))}
           </Select>
-        </label>
-        <label className="text-sm">
-          <span className="mb-1 block text-text-secondary">Weight</span>
+        </FieldLabel>
+        <FieldLabel label="weight">
           <Input value={weight} onChange={(e) => setWeight(e.target.value)} inputMode="decimal" />
-        </label>
+        </FieldLabel>
         <div className="flex items-end">
-          <Button type="button" size="sm" onClick={save} disabled={busy}>
-            Save
-          </Button>
+          <Btn variant="primary" onClick={save} disabled={busy}>
+            save
+          </Btn>
         </div>
       </div>
 
       <div className="flex items-end gap-2">
-        <label className="flex-1 text-sm">
-          <span className="mb-1 block text-text-secondary">Add child objective</span>
-          <Input value={childTitle} onChange={(e) => setChildTitle(e.target.value)} placeholder="Child objective title" />
-        </label>
-        <Button type="button" variant="outline" size="sm" onClick={addChild} disabled={busy}>
-          Add child
-        </Button>
-        <Button type="button" variant="danger" size="sm" onClick={remove} disabled={busy}>
-          Delete
-        </Button>
+        <FieldLabel label="add child objective" className="flex-1">
+          <Input value={childTitle} onChange={(e) => setChildTitle(e.target.value)} placeholder="child objective title" />
+        </FieldLabel>
+        <Btn onClick={addChild} disabled={busy}>
+          add child
+        </Btn>
+        <button type="button" onClick={remove} disabled={busy} className={DANGER_PILL}>
+          delete
+        </button>
       </div>
     </div>
   );
@@ -262,7 +265,7 @@ function NodeBody({ node, ctx }: { node: ObjectiveTreeNode; ctx: OkrNodeCtx }) {
         setKrs([]);
       });
     return (
-      <div className="flex justify-center border-t border-border py-3">
+      <div className="flex justify-center border-t border-line2 py-3">
         <Spinner />
       </div>
     );
@@ -280,14 +283,14 @@ function NodeBody({ node, ctx }: { node: ObjectiveTreeNode; ctx: OkrNodeCtx }) {
   };
 
   return (
-    <div className="space-y-2 border-t border-border px-3 py-3">
+    <div className="border-t border-line2">
       {krs.length === 0 && !adding ? (
-        <p className="text-sm text-text-muted">No key results.</p>
+        <p className="px-[18px] py-3 text-[12px] text-faint">no key results.</p>
       ) : (
-        <ul className="space-y-2">
+        <ul>
           {krs.map((kr) =>
             editingId === kr.id ? (
-              <li key={kr.id}>
+              <li key={kr.id} className="border-b border-line px-[18px] py-3 last:border-b-0">
                 <KrEditor
                   orgId={ctx.orgId}
                   objectiveId={node.id}
@@ -302,40 +305,40 @@ function NodeBody({ node, ctx }: { node: ObjectiveTreeNode; ctx: OkrNodeCtx }) {
                 />
               </li>
             ) : (
-              <li key={kr.id} className="flex items-center gap-2">
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="truncate text-text">{kr.title}</span>
-                    <span className="shrink-0 text-xs text-text-muted">
-                      {String(kr.current_value ?? "0")}/{String(kr.target_value ?? "")}
-                      {kr.unit ? ` ${kr.unit}` : ""}
-                      {kr.auto_progress ? " · auto" : ""}
-                    </span>
-                  </div>
-                  <div className="mt-1">
-                    <ProgressBar value={krFraction(kr)} />
-                  </div>
+              <li
+                key={kr.id}
+                className="grid grid-cols-[minmax(0,5fr)_minmax(120px,2fr)_auto] items-center gap-x-4 gap-y-1.5 border-b border-line px-[18px] py-[11px] last:border-b-0 hover:bg-sel"
+              >
+                <div className="min-w-0">
+                  <span className="text-[12.5px] text-ink">{kr.title}</span>
+                  <span className="num mt-[3px] block text-[10.5px] text-faint">
+                    {String(kr.current_value ?? "0")}/{String(kr.target_value ?? "")}
+                    {kr.unit ? ` ${kr.unit}` : ""}
+                    {kr.auto_progress ? " · auto" : ""}
+                  </span>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setEditingId(kr.id)}
-                  className="shrink-0 text-xs text-text-muted hover:text-text"
-                >
-                  edit
-                </button>
+                <ProgressBar value={krFraction(kr)} />
+                <div className="flex items-center gap-2">
+                  <span className="num min-w-[44px] text-right text-[12.5px] font-bold text-acc">
+                    {Math.round(krFraction(kr) * 100)}%
+                  </span>
+                  <button type="button" onClick={() => setEditingId(kr.id)} className={`shrink-0 ${GHOST_LINK}`}>
+                    edit
+                  </button>
+                </div>
               </li>
             ),
           )}
         </ul>
       )}
 
-      {adding ? (
-        <KrEditor orgId={ctx.orgId} objectiveId={node.id} onSaved={onKrSaved} onCancel={() => setAdding(false)} />
-      ) : (
-        <Button type="button" variant="ghost" size="sm" onClick={() => setAdding(true)}>
-          + Add key result
-        </Button>
-      )}
+      <div className="px-[18px] py-3">
+        {adding ? (
+          <KrEditor orgId={ctx.orgId} objectiveId={node.id} onSaved={onKrSaved} onCancel={() => setAdding(false)} />
+        ) : (
+          <Btn onClick={() => setAdding(true)}>+ add key result</Btn>
+        )}
+      </div>
     </div>
   );
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import { Chip } from "@/components/ui";
 import type { Methodology } from "@/lib/api";
 
 // Client-side mirror of the backend `Queues.default_stages/1` (+ the scrum
@@ -76,23 +77,21 @@ export function templateFor(methodology?: string | null): MethodologyTemplate {
 // A horizontal preview of the columns/phases a methodology provisions.
 export function BoardPreview({ template }: { template: MethodologyTemplate }) {
   return (
-    <div className="rounded-lg border border-border bg-surface p-3">
+    <div className="rounded-card border border-line bg-panel p-3">
       <div className="mb-2 flex items-center gap-2">
-        <span className="text-xs font-medium text-text-secondary">Board preview</span>
+        <span className="text-[10px] uppercase tracking-[0.12em] text-faint">Board preview</span>
         {template.iteration && (
-          <span className="rounded border border-border px-1.5 py-0.5 text-[11px] text-text-muted">
-            + {template.iteration} (active)
-          </span>
+          <Chip variant="scope">+ {template.iteration} (active)</Chip>
         )}
       </div>
       <div className="flex gap-2 overflow-x-auto pb-1">
         {template.stages.map((s) => (
           <div
             key={s.slug}
-            className="min-w-[7rem] shrink-0 rounded border border-border bg-surface-alt px-2 py-1.5"
+            className="min-w-[7rem] shrink-0 rounded-card border border-line bg-panel2 px-2 py-1.5"
           >
-            <div className="text-xs font-medium text-text">{s.name}</div>
-            <div className="text-[10px] uppercase tracking-wide text-text-muted">{s.kind}</div>
+            <div className="text-[12px] font-bold text-ink">{s.name}</div>
+            <div className="text-[10px] uppercase tracking-[0.12em] text-faint">{s.kind}</div>
           </div>
         ))}
       </div>
@@ -121,17 +120,19 @@ export function MethodologyPicker({
               type="button"
               onClick={() => onChange(t.key)}
               aria-pressed={active}
-              className={`rounded-lg border p-3 text-left transition-colors ${
+              className={`rounded-card border p-3 text-left transition-colors ${
                 active
-                  ? "border-text bg-surface-alt"
-                  : "border-border bg-surface hover:bg-surface-alt"
+                  ? "border-acc bg-acc-bg shadow-glow"
+                  : "border-line bg-panel hover:border-line2 hover:bg-panel2"
               }`}
             >
               <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-text">{t.label}</span>
-                {active && <span className="text-xs text-text-muted">selected</span>}
+                <span className={`text-[12px] font-bold ${active ? "text-acc" : "text-ink"}`}>{t.label}</span>
+                {active && (
+                  <span className="text-[10px] uppercase tracking-[0.12em] text-acc">selected</span>
+                )}
               </div>
-              <p className="mt-1 text-xs text-text-secondary">{t.blurb}</p>
+              <p className="mt-1 text-[11px] text-mut">{t.blurb}</p>
             </button>
           );
         })}

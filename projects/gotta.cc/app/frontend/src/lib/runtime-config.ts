@@ -4,6 +4,8 @@ export interface RuntimeConfig {
   POSTHOG_HOST?: string;
   API_URL?: string;
   OTEL_COLLECTOR_URL?: string;
+  /** AdSense publisher ID (`ca-pub-…`). Empty disables ads entirely. */
+  ADSENSE_CLIENT?: string;
 }
 
 export function getRuntimeConfig(): RuntimeConfig {
@@ -16,5 +18,6 @@ export function getRuntimeConfig(): RuntimeConfig {
     POSTHOG_HOST: process.env.NEXT_PUBLIC_POSTHOG_HOST,
     API_URL: process.env.NEXT_PUBLIC_API_URL,
     OTEL_COLLECTOR_URL: process.env.NEXT_PUBLIC_OTEL_COLLECTOR_URL,
+    ADSENSE_CLIENT: process.env.NEXT_PUBLIC_ADSENSE_CLIENT,
   };
 }

@@ -17,7 +17,7 @@ import { DataTable, type ViewSnapshot } from "@/components/console/DataTable";
 import { SavedViewsToolbar } from "@/components/console/saved-views";
 import { itemsDescriptor, itemsSavedViewScope } from "@/lib/console/descriptors/items";
 import { ITEM_TYPE_OPTIONS, ITEM_STATUS_OPTIONS, ITEM_PRIORITY_OPTIONS } from "@/lib/console/options";
-import { Button, Input, Select, Textarea, Dialog } from "@/components/ui";
+import { Button, Input, Select, Textarea, Dialog, FieldLabel, StatusTag } from "@/components/ui";
 
 type Member = { id: string; user_name: string; email: string };
 
@@ -86,33 +86,29 @@ export default function ItemsPage() {
   const ctx = useMemo(() => ({ orgId: orgId ?? "" }), [orgId]);
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-6">
-      <header className="mb-4 flex items-center justify-between">
+    <div className="app-content">
+      <header className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-text">Items</h1>
-          <p className="text-sm text-text-secondary">
-            {currentOrg?.name || "Organization"} · work tracking
-          </p>
+          <h1 className="text-[13px] font-bold uppercase tracking-[0.1em] text-ink">items</h1>
+          <p className="mt-1 text-sm text-mut">{currentOrg?.name || "organization"} · work tracking</p>
         </div>
-        <Button onClick={() => setShowCreate(true)}>+ New item</Button>
+        <Button onClick={() => setShowCreate(true)}>+ item</Button>
       </header>
 
       {orgId && (
-        <div className="mb-3">
-          <SavedViewsToolbar
-            orgId={orgId}
-            scope={{ entity_type: itemsSavedViewScope.entity_type, view_type: itemsSavedViewScope.view_type }}
-            getCurrentSnapshot={() => snapshotRef.current}
-            onApply={(snapshot) => {
-              setAppliedView(snapshot);
-              setAppliedNonce((n) => n + 1);
-            }}
-          />
-        </div>
+        <SavedViewsToolbar
+          orgId={orgId}
+          scope={{ entity_type: itemsSavedViewScope.entity_type, view_type: itemsSavedViewScope.view_type }}
+          getCurrentSnapshot={() => snapshotRef.current}
+          onApply={(snapshot) => {
+            setAppliedView(snapshot);
+            setAppliedNonce((n) => n + 1);
+          }}
+        />
       )}
 
       {orgLoading || !orgId ? (
-        <p className="text-sm text-text-muted">{orgLoading ? "Loading…" : "Select an organization."}</p>
+        <p className="font-mono text-sm text-mut">{orgLoading ? "loading…" : "select an organization."}</p>
       ) : (
         <DataTable
           descriptor={itemsDescriptor}
@@ -198,40 +194,37 @@ function CreateItemDialog({
     <Dialog
       open
       onClose={onClose}
-      title="Create item"
+      title="new item"
       footer={
         <>
           <Button variant="outline" onClick={onClose}>
-            Cancel
+            cancel
           </Button>
           <Button type="submit" form="create-item-form" disabled={saving || !title.trim()}>
-            {saving ? "Creating…" : "Create"}
+            {saving ? "creating…" : "create"}
           </Button>
         </>
       }
     >
       <form id="create-item-form" onSubmit={submit} className="space-y-3">
-        <label className="flex flex-col gap-1.5 text-sm">
-          <span className="font-medium text-text">Title</span>
+        <FieldLabel label="title">
           <Input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="What needs doing?"
+            placeholder="what needs doing?"
             autoFocus
           />
-        </label>
-        <label className="flex flex-col gap-1.5 text-sm">
-          <span className="font-medium text-text">Description</span>
+        </FieldLabel>
+        <FieldLabel label="description">
           <Textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder="Optional markdown description"
+            placeholder="optional markdown description"
             rows={3}
           />
-        </label>
+        </FieldLabel>
         <div className="grid gap-3 sm:grid-cols-2">
-          <label className="flex flex-col gap-1.5 text-sm">
-            <span className="font-medium text-text">Type</span>
+          <FieldLabel label="type">
             <Select value={itemType} onChange={(e) => setItemType(e.target.value)}>
               {ITEM_TYPE_OPTIONS.map((t) => (
                 <option key={t.value} value={t.value}>
@@ -239,9 +232,8 @@ function CreateItemDialog({
                 </option>
               ))}
             </Select>
-          </label>
-          <label className="flex flex-col gap-1.5 text-sm">
-            <span className="font-medium text-text">Priority</span>
+          </FieldLabel>
+          <FieldLabel label="priority">
             <Select value={priority} onChange={(e) => setPriority(e.target.value)}>
               {ITEM_PRIORITY_OPTIONS.map((p) => (
                 <option key={p.value} value={p.value}>
@@ -249,12 +241,11 @@ function CreateItemDialog({
                 </option>
               ))}
             </Select>
-          </label>
+          </FieldLabel>
         </div>
-        <label className="flex flex-col gap-1.5 text-sm">
-          <span className="font-medium text-text">Owner</span>
+        <FieldLabel label="owner">
           <Select value={assignee} onChange={(e) => setAssignee(e.target.value)}>
-            <option value="">Unassigned</option>
+            <option value="">unassigned</option>
             {members
               .filter((m) => Boolean(m.user_name))
               .map((m) => (
@@ -263,19 +254,23 @@ function CreateItemDialog({
                 </option>
               ))}
           </Select>
-        </label>
-        <label className="flex flex-col gap-1.5 text-sm">
-          <span className="font-medium text-text">Project</span>
+        </FieldLabel>
+        <FieldLabel label="project">
           <Select value={projectId} onChange={(e) => setProjectId(e.target.value)}>
-            <option value="">No project</option>
+            <option value="">no project</option>
             {projects.map((p) => (
               <option key={p.id} value={p.id}>
                 {p.name}
               </option>
             ))}
           </Select>
-        </label>
-        {error && <p className="text-sm text-error">{error}</p>}
+        </FieldLabel>
+        {error && (
+          <p className="flex items-baseline gap-1.5 text-sm text-err">
+            <StatusTag tone="err" />
+            {error}
+          </p>
+        )}
       </form>
     </Dialog>
   );

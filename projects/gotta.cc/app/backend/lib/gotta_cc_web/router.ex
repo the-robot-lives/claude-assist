@@ -9,6 +9,12 @@ defmodule GottaCcWeb.Router do
     plug GottaCcWeb.AuthPipeline
   end
 
+  # Attributes the caller when a token is present, but lets anonymous traffic
+  # through instead of returning 401.
+  pipeline :optional_auth do
+    plug GottaCcWeb.OptionalAuthPipeline
+  end
+
   pipeline :sso_session do
     plug Plug.Session,
       store: :cookie,
@@ -25,6 +31,10 @@ defmodule GottaCcWeb.Router do
 
   pipeline :rate_limited_sensitive do
     plug GottaCcWeb.Plugs.RateLimit, action: :auth_sensitive
+  end
+
+  pipeline :rate_limited_submission do
+    plug GottaCcWeb.Plugs.RateLimit, action: :submission
   end
 
   pipeline :org_viewer do
@@ -84,8 +94,8 @@ defmodule GottaCcWeb.Router do
     post "/media/download", MediaController, :download
     post "/media/register", MediaController, :register
 
-    # Directory submissions (authed users propose sites)
-    post "/directory/submissions", DirectorySubmissionController, :create
+    # Directory submissions — creating one is public (see the anonymous scope
+    # below); reading your own history needs a session.
     get "/directory/submissions", DirectorySubmissionController, :index
     get "/directory/submissions/:id", DirectorySubmissionController, :show
 
@@ -111,6 +121,13 @@ defmodule GottaCcWeb.Router do
     get "/directory/submissions", DirectoryModerationController, :index
     post "/directory/submissions/:id/approve", DirectoryModerationController, :approve
     post "/directory/submissions/:id/reject", DirectoryModerationController, :reject
+  end
+
+  # Site suggestions — no account required. Signed-in callers are still
+  # attributed via :optional_auth; everyone is rate limited by IP.
+  scope "/api/v1", GottaCcWeb do
+    pipe_through [:api, :optional_auth, :rate_limited_submission]
+    post "/directory/submissions", DirectorySubmissionController, :create
   end
 
   # Public directory (browse + search, no auth)

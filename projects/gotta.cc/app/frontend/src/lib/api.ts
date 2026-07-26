@@ -29,6 +29,10 @@ export interface DirectorySubmission {
   inserted_at: string;
   // Present only on the admin moderation queue.
   submitter_email?: string;
+  // True when the suggestion came in without an account; `contact_email` is
+  // whatever the visitor volunteered, and is often null.
+  anonymous?: boolean;
+  contact_email?: string | null;
 }
 
 export interface SiteClaim {
@@ -426,12 +430,18 @@ export const api = {
 
   // ── Site submissions ─────────────────────────────────────────────────────
 
+  /**
+   * Open to anonymous callers — the backend accepts a nil submitter and stores
+   * `contact_email` instead. A session token is attached when one exists, which
+   * attributes the submission to the signed-in user.
+   */
   submitSite(input: {
     name: string;
     url: string;
     summary: string;
     category_slug: string;
     tags: string[];
+    contact_email?: string;
   }) {
     return request<{ submission: DirectorySubmission }>("/api/v1/directory/submissions", {
       method: "POST",

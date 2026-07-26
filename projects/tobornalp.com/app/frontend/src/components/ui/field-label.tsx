@@ -16,19 +16,19 @@ export interface FieldLabelProps {
 export function FieldLabel({ label, children, htmlFor, required, hint, error, className }: FieldLabelProps) {
   return (
     <label htmlFor={htmlFor} className={cn("flex flex-col gap-1.5", className)}>
-      <span className="flex items-center gap-1 text-sm font-medium text-text">
+      <span className="flex items-center gap-1 text-[11px] tracking-[0.06em] text-faint">
         {label}
         {required && (
-          <span aria-hidden className="text-brand-red" title="Required">
+          <span aria-hidden className="text-err" title="Required">
             •
           </span>
         )}
       </span>
       {children}
       {error ? (
-        <span className="text-xs text-error">{error}</span>
+        <span className="text-[11px] text-err">{error}</span>
       ) : hint ? (
-        <span className="text-xs text-text-muted">{hint}</span>
+        <span className="text-[11px] text-faint">{hint}</span>
       ) : null}
     </label>
   );

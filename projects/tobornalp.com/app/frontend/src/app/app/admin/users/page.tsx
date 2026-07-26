@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { api } from "@/lib/api";
-import { Button, Spinner, StatusBadge } from "@/components/ui";
+import { Btn, Spinner, StatusBadge, Panel, PanelHeader, StatusTag } from "@/components/ui";
 
 interface AdminUser {
   id: string;
@@ -33,54 +33,63 @@ export default function AdminUsersPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center gap-2 p-16 text-text-muted">
+      <div className="flex items-center justify-center gap-2 p-16 text-faint">
         <Spinner size={20} />
-        <span className="text-sm">Loading…</span>
+        <span className="text-[12px]">loading…</span>
       </div>
     );
   }
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-10">
-      <h1 className="mb-4 text-2xl font-bold text-text">
-        Users <span className="text-text-muted">({total})</span>
-      </h1>
-
-      <div className="overflow-x-auto rounded-lg border border-border bg-surface shadow-sm">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-border text-left text-text-secondary">
-              <th className="px-3 py-2 font-medium">Email</th>
-              <th className="px-3 py-2 font-medium">Username</th>
-              <th className="px-3 py-2 font-medium">Status</th>
-              <th className="px-3 py-2 font-medium">Verified</th>
-              <th className="px-3 py-2 font-medium">Admin</th>
-            </tr>
-          </thead>
-          <tbody>
-            {users.map((u) => (
-              <tr key={u.id} className="border-b border-border last:border-0 text-text">
-                <td className="px-3 py-2">{u.email}</td>
-                <td className="px-3 py-2">{u.user_name}</td>
-                <td className="px-3 py-2">
-                  <StatusBadge status={u.status} />
-                </td>
-                <td className="px-3 py-2 text-text-secondary">{u.verified ? "Yes" : "No"}</td>
-                <td className="px-3 py-2 text-text-secondary">{u.admin ? "Yes" : "No"}</td>
+      <Panel>
+        <PanelHeader title="users" right={`${total} total`} />
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[560px] text-[12px]">
+            <thead>
+              <tr>
+                <th className="whitespace-nowrap border-b border-line2 bg-panel2 px-4 py-2 text-left text-[10px] font-bold uppercase tracking-[0.12em] text-faint">
+                  email
+                </th>
+                <th className="whitespace-nowrap border-b border-line2 bg-panel2 px-4 py-2 text-left text-[10px] font-bold uppercase tracking-[0.12em] text-faint">
+                  username
+                </th>
+                <th className="whitespace-nowrap border-b border-line2 bg-panel2 px-4 py-2 text-left text-[10px] font-bold uppercase tracking-[0.12em] text-faint">
+                  status
+                </th>
+                <th className="whitespace-nowrap border-b border-line2 bg-panel2 px-4 py-2 text-left text-[10px] font-bold uppercase tracking-[0.12em] text-faint">
+                  verified
+                </th>
+                <th className="whitespace-nowrap border-b border-line2 bg-panel2 px-4 py-2 text-left text-[10px] font-bold uppercase tracking-[0.12em] text-faint">
+                  admin
+                </th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              {users.map((u) => (
+                <tr key={u.id} className="border-b border-line last:border-0 hover:bg-sel">
+                  <td className="px-4 py-2 font-bold text-ink">{u.email}</td>
+                  <td className="px-4 py-2 text-mut">{u.user_name}</td>
+                  <td className="px-4 py-2">
+                    <StatusBadge status={u.status} />
+                  </td>
+                  <td className="px-4 py-2">{u.verified ? <StatusTag tone="ok" /> : <span className="text-faint">—</span>}</td>
+                  <td className="px-4 py-2">{u.admin ? <StatusTag tone="ok" /> : <span className="text-faint">—</span>}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </Panel>
 
       <div className="mt-4 flex items-center gap-3">
-        <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage(page - 1)}>
-          Prev
-        </Button>
-        <span className="text-sm text-text-muted">Page {page}</span>
-        <Button variant="outline" size="sm" disabled={users.length < 50} onClick={() => setPage(page + 1)}>
-          Next
-        </Button>
+        <Btn variant="default" disabled={page <= 1} onClick={() => setPage(page - 1)}>
+          prev
+        </Btn>
+        <span className="text-[12px] text-faint">page {page}</span>
+        <Btn variant="default" disabled={users.length < 50} onClick={() => setPage(page + 1)}>
+          next
+        </Btn>
       </div>
     </div>
   );

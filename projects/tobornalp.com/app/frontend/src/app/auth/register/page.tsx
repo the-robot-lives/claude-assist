@@ -7,6 +7,46 @@ import { api } from "@/lib/api";
 import { getConsentPreferences } from "@/lib/consent";
 import { postAuthPath } from "@/lib/auth-flow";
 
+const BTN_PRIMARY =
+  "inline-flex w-full items-center justify-center rounded-full bg-[var(--acc)] px-5 py-2.5 font-mono text-sm font-bold text-black transition-colors hover:bg-[var(--acc-hi)] disabled:opacity-60 disabled:cursor-not-allowed";
+
+function Field({
+  label,
+  className,
+  ...inputProps
+}: { label: React.ReactNode; className?: string } & React.InputHTMLAttributes<HTMLInputElement>) {
+  return (
+    <label className="mb-4 block">
+      <span className="mb-1.5 block font-mono text-[11px] uppercase tracking-[.08em] text-[var(--mut)]">
+        {label}
+      </span>
+      <input
+        {...inputProps}
+        className={`w-full rounded-[10px] border border-[var(--line2)] bg-[var(--bg)] px-3.5 py-2.5 font-mono text-sm text-[var(--ink)] outline-none transition-colors placeholder:text-[var(--faint)] focus:border-[var(--acc)] focus:ring-2 focus:ring-[var(--acc-bg)] disabled:opacity-60 ${className ?? ""}`}
+      />
+    </label>
+  );
+}
+
+function Brand() {
+  return (
+    <div className="mb-6 flex items-baseline gap-1 font-mono">
+      <span className="text-sm font-bold tracking-tight text-[var(--ink)]">tobornalp</span>
+      <span className="text-sm font-bold text-[var(--acc)] motion-safe:animate-pulse">▮</span>
+    </div>
+  );
+}
+
+function Shell({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="flex min-h-[100dvh] items-center justify-center bg-[var(--bg)] px-6 py-16">
+      <div className="w-full max-w-[420px] rounded-[14px] border border-[var(--line2)] bg-[var(--panel2)] p-8 shadow-[0_2px_10px_rgba(0,0,0,.35)]">
+        {children}
+      </div>
+    </div>
+  );
+}
+
 function Register() {
   const { ssoRegister } = useAuth();
   const router = useRouter();
@@ -67,113 +107,91 @@ function Register() {
 
   if (!token) {
     return (
-      <div className="content" style={{ maxWidth: 480, margin: "4rem auto", padding: "0 24px" }}>
-        <h1 style={{ fontFamily: "var(--font-display)", fontSize: 28, fontWeight: 500, color: "var(--text)" }}>
-          Complete Registration
-        </h1>
-        <p style={{ color: "var(--brand-red)", fontFamily: "var(--font-body)" }}>No registration token provided.</p>
-        <p>
-          <a href="/auth/oidc" style={{ color: "var(--brand-blue)" }}>Start sign in again</a>
+      <Shell>
+        <Brand />
+        <h1 className="mb-2 font-mono text-lg font-bold text-[var(--ink)]">complete registration</h1>
+        <p className="mb-4 rounded-[10px] border border-[var(--err)]/30 bg-[var(--err-bg)] px-3 py-2 font-mono text-xs text-[var(--err)]">
+          [err] no registration token provided.
         </p>
-      </div>
+        <a href="/auth/oidc" className="font-mono text-xs text-[var(--acc)] hover:text-[var(--acc-hi)]">
+          start sign in again
+        </a>
+      </Shell>
     );
   }
 
   return (
-    <div className="content" style={{ maxWidth: 480, margin: "4rem auto", padding: "0 24px" }}>
-      <h1 style={{ fontFamily: "var(--font-display)", fontSize: 28, fontWeight: 500, color: "var(--text)" }}>
-        Complete Registration
-      </h1>
-      <p style={{ fontFamily: "var(--font-body)", color: "var(--text-secondary)", marginBottom: "1.5rem" }}>
-        Finish setting up your tobornalp account.
+    <Shell>
+      <Brand />
+      <h1 className="mb-2 font-mono text-lg font-bold text-[var(--ink)]">complete registration</h1>
+      <p className="mb-6 font-mono text-[13px] text-[var(--mut)]">
+        finish setting up your tobornalp account.
       </p>
 
-      <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+      <form onSubmit={handleSubmit}>
         {error && (
-          <p style={{ color: "var(--brand-red)", fontFamily: "var(--font-body)", fontSize: 14, margin: 0 }}>
-            {error}{" "}
-            <a href="/auth/oidc" style={{ color: "var(--brand-blue)" }}>Sign in again</a>
+          <p className="mb-4 rounded-[10px] border border-[var(--err)]/30 bg-[var(--err-bg)] px-3 py-2 font-mono text-xs text-[var(--err)]">
+            [err] {error}{" "}
+            <a href="/auth/oidc" className="text-[var(--acc)] hover:text-[var(--acc-hi)]">
+              sign in again
+            </a>
           </p>
         )}
         {email && (
-          <label style={fieldStyle}>
-            <span style={labelStyle}>Email</span>
-            <input type="email" value={email} readOnly disabled style={inputStyle} />
-          </label>
+          <Field id="email" label="email" type="email" value={email} readOnly disabled />
         )}
-        <label style={fieldStyle}>
-          <span style={labelStyle}>First name</span>
-          <input
-            type="text"
-            value={first}
-            onChange={(e) => setFirst(e.target.value)}
-            required
-            autoComplete="given-name"
-            style={inputStyle}
-          />
-        </label>
-        <label style={fieldStyle}>
-          <span style={labelStyle}>Last name</span>
-          <input
-            type="text"
-            value={last}
-            onChange={(e) => setLast(e.target.value)}
-            required
-            autoComplete="family-name"
-            style={inputStyle}
-          />
-        </label>
-        <label style={fieldStyle}>
-          <span style={labelStyle}>
-            Invite code {inviteRequired ? <span style={{ color: "var(--brand-red)" }}>*</span> : <span style={{ color: "var(--text-muted)" }}>(optional)</span>}
-          </span>
-          <input
-            type="text"
-            value={inviteToken}
-            onChange={(e) => setInviteToken(e.target.value)}
-            placeholder={inviteRequired ? "Required for your email domain" : "If you have one"}
-            style={inputStyle}
-          />
-        </label>
-        <button
-          type="submit"
-          disabled={submitting}
-          style={{
-            background: "var(--brand-blue)",
-            color: "#fff",
-            fontFamily: "var(--font-sans)",
-            fontWeight: 600,
-            fontSize: 15,
-            padding: "12px 20px",
-            border: "none",
-            borderRadius: 11,
-            cursor: submitting ? "not-allowed" : "pointer",
-            opacity: submitting ? 0.6 : 1,
-            marginTop: "0.5rem",
-          }}
-        >
-          {submitting ? "Creating account…" : "Create Account"}
+        <Field
+          id="first-name"
+          label="first name"
+          type="text"
+          value={first}
+          onChange={(e) => setFirst(e.target.value)}
+          required
+          autoComplete="given-name"
+        />
+        <Field
+          id="last-name"
+          label="last name"
+          type="text"
+          value={last}
+          onChange={(e) => setLast(e.target.value)}
+          required
+          autoComplete="family-name"
+        />
+        <Field
+          id="invite-token"
+          label={
+            <>
+              invite code{" "}
+              {inviteRequired ? (
+                <span className="text-[var(--err)]">*</span>
+              ) : (
+                <span className="text-[var(--faint)]">(optional)</span>
+              )}
+            </>
+          }
+          type="text"
+          value={inviteToken}
+          onChange={(e) => setInviteToken(e.target.value)}
+          placeholder={inviteRequired ? "required for your email domain" : "if you have one"}
+        />
+        <button type="submit" disabled={submitting} className={`${BTN_PRIMARY} mt-2`}>
+          {submitting ? "creating account…" : "create account"}
         </button>
       </form>
-    </div>
+    </Shell>
   );
 }
 
-const fieldStyle: React.CSSProperties = { display: "flex", flexDirection: "column", gap: "0.4rem" };
-const labelStyle: React.CSSProperties = { fontFamily: "var(--font-mono)", fontSize: 12, fontWeight: 600, color: "var(--text-secondary)" };
-const inputStyle: React.CSSProperties = {
-  fontFamily: "var(--font-body)",
-  fontSize: 15,
-  padding: "11px 14px",
-  borderRadius: 10,
-  border: "1px solid var(--border)",
-  background: "var(--surface)",
-  color: "var(--text)",
-};
-
 export default function RegisterPage() {
   return (
-    <Suspense fallback={<div className="content"><main><p>Loading…</p></main></div>}>
+    <Suspense
+      fallback={
+        <div className="flex min-h-[100dvh] items-center justify-center bg-[var(--bg)] font-mono text-sm text-[var(--mut)]">
+          loading…
+        </div>
+      }
+    >
       <Register />
     </Suspense>
   );

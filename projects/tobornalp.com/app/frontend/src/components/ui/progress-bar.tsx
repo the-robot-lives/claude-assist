@@ -10,7 +10,7 @@ export function ProgressBar({
   tone = "ok",
   className,
 }: {
-  value?: string | number;
+  value?: string | number | null;
   tone?: ProgressTone;
   className?: string;
 }) {
@@ -37,7 +37,7 @@ export function ProgressBar({
   );
 }
 
-function clampPct(v?: string | number): number {
+function clampPct(v?: string | number | null): number {
   if (v == null) return 0;
   // value may be a fraction (0..1) or already a percentage, or a Decimal string.
   let n = typeof v === "number" ? v : parseFloat(String(v));

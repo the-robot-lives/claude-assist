@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { api, type OkrCheckin } from "@/lib/api";
-import { Dialog, Button, Input, Textarea, FieldLabel, Spinner } from "@/components/ui";
+import { Dialog, Btn, Input, Textarea, FieldLabel, Spinner } from "@/components/ui";
 import { toast } from "sonner";
 
 // Create a check-in (body + optional period) and browse/delete history for one
@@ -61,43 +61,44 @@ export function CheckinModal({
   };
 
   return (
-    <Dialog open={open} onClose={onClose} title="Check-ins" size="lg">
+    <Dialog open={open} onClose={onClose} title="check-ins" size="lg">
       <form onSubmit={submit} className="space-y-3">
-        <FieldLabel label="New check-in">
-          <Textarea value={body} onChange={(e) => setBody(e.target.value)} rows={3} placeholder="Progress, blockers, next steps…" />
+        <FieldLabel label="new check-in">
+          <Textarea value={body} onChange={(e) => setBody(e.target.value)} rows={3} placeholder="progress, blockers, next steps…" />
         </FieldLabel>
         <div className="flex items-end gap-2">
-          <FieldLabel label="Period" className="flex-1">
+          <FieldLabel label="period" className="flex-1">
             <Input value={period} onChange={(e) => setPeriod(e.target.value)} placeholder="2026-Q3" />
           </FieldLabel>
-          <Button type="submit" size="sm" disabled={saving}>
-            {saving ? "Posting…" : "Post"}
-          </Button>
+          <Btn variant="primary" type="submit" disabled={saving}>
+            {saving ? "posting…" : "post"}
+          </Btn>
         </div>
       </form>
 
-      <div className="mt-4 max-h-72 space-y-2 overflow-y-auto border-t border-border pt-3">
+      <div className="mt-4 max-h-72 space-y-2 overflow-y-auto border-t border-line pt-3">
         {loading ? (
           <div className="flex justify-center py-4">
             <Spinner />
           </div>
         ) : checkins.length === 0 ? (
-          <p className="py-4 text-center text-sm text-text-muted">No check-ins yet.</p>
+          <p className="py-4 text-center text-[12px] text-faint">no check-ins yet.</p>
         ) : (
           checkins.map((c) => (
-            <div key={c.id} className="rounded-md border border-border bg-surface-alt p-2.5">
+            <div key={c.id} className="rounded-card border border-line bg-panel2 p-2.5">
               <div className="flex items-start justify-between gap-2">
-                <p className="whitespace-pre-wrap text-sm text-text">{c.body}</p>
+                {/* Free-text body is prose, so it opts back into the system sans face. */}
+                <p className="prose-sans whitespace-pre-wrap text-[12.5px] leading-relaxed text-ink">{c.body}</p>
                 <button
                   type="button"
                   onClick={() => remove(c.id)}
-                  className="shrink-0 text-xs text-text-muted hover:text-error"
+                  className="shrink-0 text-[11px] text-faint transition-colors hover:text-err"
                 >
                   delete
                 </button>
               </div>
               {(c.period || c.inserted_at) && (
-                <div className="mt-1 text-[11px] text-text-muted">
+                <div className="num mt-1 text-[11px] text-faint">
                   {c.period}
                   {c.period && c.inserted_at ? " · " : ""}
                   {c.inserted_at ? new Date(c.inserted_at).toLocaleDateString() : ""}

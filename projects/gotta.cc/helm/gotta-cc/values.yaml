@@ -91,6 +91,12 @@ analytics:
   posthog:
     key: ""
     host: "https://us.i.posthog.com"
+adsense:
+  # AdSense publisher ID, e.g. "ca-pub-1234567890123456". Empty means no ad
+  # script is loaded and every ad slot renders nothing. Also drives the
+  # generated /ads.txt. Per-placement slot IDs live in
+  # app/frontend/src/components/ad-slot.tsx (AD_SLOTS).
+  client: ""
 ingress:
   enabled: true
   className: nginx

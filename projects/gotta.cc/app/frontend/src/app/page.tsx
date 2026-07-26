@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useMemo, useState } from "react";
+import { Fragment, Suspense, useEffect, useMemo, useState } from "react";
 import type { CSSProperties } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -12,9 +12,13 @@ import {
   RUBRIC_DIMENSIONS,
   type RubricKey,
 } from "@/components/site-row";
+import { AdSlot, AD_SLOTS } from "@/components/ad-slot";
 import { api, type DirectoryCategory, type DirectorySite } from "@/lib/api";
 
 const PAGE_SIZE = 24;
+
+/** The in-feed unit sits after this many listing rows. */
+const AD_AFTER_ROW = 6;
 
 const SORTS = [
   { key: "top", label: "Top scored" },
@@ -238,7 +242,14 @@ function Browse() {
                   : "No sites listed here yet — check back soon."}
               </p>
             ) : (
-              visible.map((site) => <SiteRow key={site.id} site={site} />)
+              visible.map((site, i) => (
+                <Fragment key={site.id}>
+                  <SiteRow site={site} />
+                  {i === AD_AFTER_ROW - 1 && (
+                    <AdSlot slot={AD_SLOTS.browseInFeed} format="feed" />
+                  )}
+                </Fragment>
+              ))
             )}
 
             {visible !== null && visible.length > 0 && !exhausted && (
@@ -341,6 +352,8 @@ function Browse() {
                 Submit a site →
               </Link>
             </div>
+
+            <AdSlot slot={AD_SLOTS.browseRail} format="rail" />
           </aside>
         </div>
       </div>

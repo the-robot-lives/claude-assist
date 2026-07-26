@@ -6,12 +6,13 @@ import type { Metadata } from "next";
    ------------------------------------------------------------------
    Public homepage for tobornalp.com, the AI-Native Operational Life
    Platform. Follows the single-page editorial pattern (overline →
-   headline → body → card grid) using the "organic" design theme.
+   headline → body → card grid).
 
-   Styling uses the theme's CSS variables directly (--surface, --text,
-   --brand-blue, --brand-red, --font-display, etc.) so it renders
-   correctly against the generated design system in light & dark mode.
-   The global <Navbar /> from layout.tsx handles top nav + auth CTAs.
+   Dark-neon console styling: true-black ground, mono UI voice, mint
+   accent, rounded-14 panels, pill CTAs. Tokens come from the
+   dark-neon design system defined in globals.css (--bg, --panel,
+   --acc, --r, etc). The global <Navbar /> from layout.tsx handles
+   top nav + auth CTAs.
    ════════════════════════════════════════════════════════════════ */
 
 // Override the layout's default metadata for the public marketing page.
@@ -61,16 +62,28 @@ function Rule() {
 }
 
 /* ──────────────────────────────────────────────────────────────
+   WORDMARK — "tobornalp▮" with blinking mint cursor
+   ────────────────────────────────────────────────────────────── */
+function Wordmark() {
+  return (
+    <div className="tl-wordmark">
+      tobornalp<span className="tl-cursor" aria-hidden="true">▮</span>
+    </div>
+  );
+}
+
+/* ──────────────────────────────────────────────────────────────
    HERO
    ────────────────────────────────────────────────────────────── */
 function Hero() {
   return (
     <section className="tl-section tl-section--hero">
       <div className="tl-container">
-        <p className="tl-overline">AI-Native Operational Life Platform</p>
+        <Wordmark />
+        <p className="tl-overline">[info] ai-native operational life platform</p>
 
         <h1 className="tl-headline">
-          One surface for your entire operational life.
+          one surface for your entire operational life.
         </h1>
 
         <p className="tl-lede">
@@ -84,15 +97,15 @@ function Hero() {
 
         <div className="tl-cta-row">
           <a href="/auth/oidc" className="tl-btn tl-btn--primary">
-            Get Started Free
+            get started free
           </a>
           <Link href="/login" className="tl-btn tl-btn--ghost">
-            Sign In
+            sign in
           </Link>
         </div>
 
         <p className="tl-micro">
-          Sign in with your team account to get started
+          <span className="tag info">[info]</span> sign in with your team account to get started
         </p>
       </div>
     </section>
@@ -105,17 +118,17 @@ function Hero() {
 const PROBLEMS = [
   {
     number: "01",
-    title: "The tool fragmentation tax",
+    title: "the tool fragmentation tax",
     body: "Your day lives across six silos — Todoist, Linear, Notion, GitHub Actions, Datadog, Lattice. Each owns one slice of your life. None of them talk to each other. Every connection is a brittle webhook or a manual copy-paste.",
   },
   {
     number: "02",
-    title: "AI is an afterthought",
+    title: "ai is an afterthought",
     body: "Every PM tool bolted on an “AI feature” — Jira Intelligence, Linear auto-triage, Notion AI. They summarize and suggest. None of them can actually triage a bug, link it to a deploy, and act as a team member with its own tasks and accountability.",
   },
   {
     number: "03",
-    title: "Personal and professional are split",
+    title: "personal and professional are split",
     body: "“Pick up groceries” and “deploy the API” live in different tools, tracked differently. But cognitive load doesn’t respect tool boundaries. You need to see everything competing for your time in one place.",
   },
 ];
@@ -124,9 +137,9 @@ function Problem() {
   return (
     <section className="tl-section">
       <div className="tl-container">
-        <p className="tl-overline">The Problem</p>
+        <p className="tl-overline">the problem</p>
         <h2 className="tl-h2">
-          Your operational stack wasn’t designed for how you actually work.
+          your operational stack wasn’t designed for how you actually work.
         </h2>
 
         <div className="tl-grid tl-grid--3">
@@ -150,9 +163,9 @@ function HowItWorks() {
   return (
     <section className="tl-section" id="how-it-works">
       <div className="tl-container">
-        <p className="tl-overline">How It Works</p>
+        <p className="tl-overline">how it works</p>
         <h2 className="tl-h2">
-          One graph. Every scale. Agents everywhere.
+          one graph. every scale. agents everywhere.
         </h2>
         <p className="tl-section-lede">
           Every item, document, event, and signal feeds a single context
@@ -164,7 +177,7 @@ function HowItWorks() {
         {/* Graph diagram */}
         <div className="tl-graph">
           <div className="tl-graph__layer tl-graph__layer--sources">
-            {["Items", "Docs", "Events", "Signals"].map((s) => (
+            {["items", "docs", "events", "signals"].map((s) => (
               <span key={s} className="tl-graph__chip">
                 {s}
               </span>
@@ -174,15 +187,15 @@ function HowItWorks() {
             ↓
           </div>
           <div className="tl-graph__layer tl-graph__layer--core">
-            Context Graph
-            <span className="tl-graph__sub">RAG substrate · MCP</span>
+            context graph
+            <span className="tl-graph__sub">rag substrate · mcp</span>
           </div>
           <div className="tl-graph__arrow" aria-hidden="true">
             ↓
           </div>
           <div className="tl-graph__layer tl-graph__layer--agents">
-            Agent Layer
-            <span className="tl-graph__sub">virtual team members</span>
+            agent layer
+            <span className="tl-graph__sub">▣ virtual team members</span>
           </div>
         </div>
 
@@ -190,15 +203,15 @@ function HowItWorks() {
         <div className="tl-grid tl-grid--3">
           {[
             {
-              t: "Scale-free primitives",
+              t: "scale-free primitives",
               d: "An “item” is the universal unit. A personal todo, a sprint task, a bug, and an OKR key result are all items. Your grocery list and your deployment checklist use the same engine.",
             },
             {
-              t: "Methodology as a lens",
+              t: "methodology as a lens",
               d: "Scrum, kanban, waterfall, GTD — these aren’t different systems, they’re views on the same items. Switch without migrating. Run scrum for dev, kanban for design, GTD for life.",
             },
             {
-              t: "Personal + professional, unified",
+              t: "personal + professional, unified",
               d: "One inbox captures everything. Your personal OKRs (“exercise 4×/week”) live alongside professional KRs (“reduce p95 by 30%”). Both link to the work that drives them.",
             },
           ].map((p) => (
@@ -217,22 +230,22 @@ function HowItWorks() {
    AGENT ROLES — the differentiator
    ────────────────────────────────────────────────────────────── */
 const AGENTS = [
-  { icon: "📅", name: "Planner", role: "Runs your standup, drafts priorities, tracks OKRs." },
-  { icon: "🔍", name: "Triage", role: "Routes incoming bugs, classifies severity, links context." },
-  { icon: "💻", name: "Coder", role: "Picks up implementation tasks and ships first drafts." },
-  { icon: "👁", name: "Reviewer", role: "Does first-pass reviews, flags blockers before humans." },
-  { icon: "🧪", name: "Tester", role: "Writes and runs tests, verifies fixes in sandboxes." },
-  { icon: "📡", name: "Monitor", role: "Watches metrics 24/7, correlates anomalies with deploys." },
-  { icon: "📚", name: "Docs", role: "Answers questions over your wiki, tickets, and history." },
-  { icon: "🗂", name: "Coordinator", role: "Routes work between agents and humans, resolves conflicts." },
+  { icon: "📅", name: "planner", role: "Runs your standup, drafts priorities, tracks OKRs." },
+  { icon: "🔍", name: "triage", role: "Routes incoming bugs, classifies severity, links context." },
+  { icon: "💻", name: "coder", role: "Picks up implementation tasks and ships first drafts." },
+  { icon: "👁", name: "reviewer", role: "Does first-pass reviews, flags blockers before humans." },
+  { icon: "🧪", name: "tester", role: "Writes and runs tests, verifies fixes in sandboxes." },
+  { icon: "📡", name: "monitor", role: "Watches metrics 24/7, correlates anomalies with deploys." },
+  { icon: "📚", name: "docs", role: "Answers questions over your wiki, tickets, and history." },
+  { icon: "🗂", name: "coordinator", role: "Routes work between agents and humans, resolves conflicts." },
 ];
 
 function AgentRoles() {
   return (
     <section className="tl-section" id="agents">
       <div className="tl-container">
-        <p className="tl-overline">The Difference</p>
-        <h2 className="tl-h2">Agents are teammates, not features.</h2>
+        <p className="tl-overline">the difference</p>
+        <h2 className="tl-h2">agents are teammates, not features.</h2>
         <p className="tl-section-lede">
           AI agents aren’t tools you use — they’re colleagues with roles,
           permissions, and accountability. They’re assigned tasks, report in
@@ -263,32 +276,32 @@ function AgentRoles() {
 const FEATURES = [
   {
     icon: "🌅",
-    title: "Unified Today view",
+    title: "unified today view",
     body: "One daily planner that pulls from every source — assigned tasks, due-soon items, your objectives, key results, and unread notifications. Everything competing for your time.",
   },
   {
     icon: "📥",
-    title: "Universal inbox",
+    title: "universal inbox",
     body: "One feed across the whole graph: assignments, updates, comments, mentions, DMs, pings — each color-coded, with deep links straight into the subject item.",
   },
   {
     icon: "🧩",
-    title: "Methodology-free PM",
+    title: "methodology-free pm",
     body: "Scrum, kanban, waterfall, agile-hybrid, GTD, or your own custom workflow — all views on the same universal item. Scale from a checklist to an enterprise portfolio.",
   },
   {
     icon: "🎯",
-    title: "OKR-driven life planning",
+    title: "okr-driven life planning",
     body: "Multi-level objectives from company down to personal. Key results link to the actual items driving them, so progress auto-computes from completed work.",
   },
   {
     icon: "🚀",
-    title: "CI/CD + monitoring, in-context",
+    title: "ci/cd + monitoring, in-context",
     body: "See build and deploy status inside the task view. Tasks auto-close on deploy. If monitoring detects degradation, an incident ticket is created and rollback suggested.",
   },
   {
     icon: "📖",
-    title: "Wiki + RAG context",
+    title: "wiki + rag context",
     body: "Structured docs, ADRs, runbooks, living docs that flag when they go stale. A knowledge-base agent answers questions by searching your entire operational history.",
   },
 ];
@@ -297,8 +310,8 @@ function Features() {
   return (
     <section className="tl-section" id="features">
       <div className="tl-container">
-        <p className="tl-overline">Features</p>
-        <h2 className="tl-h2">Replace six tools with one graph.</h2>
+        <p className="tl-overline">features</p>
+        <h2 className="tl-h2">replace six tools with one graph.</h2>
 
         <div className="tl-grid tl-grid--3">
           {FEATURES.map((f) => (
@@ -321,7 +334,7 @@ function Features() {
    ────────────────────────────────────────────────────────────── */
 const TIERS = [
   {
-    name: "Personal",
+    name: "personal",
     price: "Free",
     blurb: "The GTD / todo layer.",
     features: [
@@ -330,12 +343,12 @@ const TIERS = [
       "1 planner agent",
       "Basic personal OKRs",
     ],
-    cta: "Start free",
+    cta: "start free",
     href: "/auth/oidc",
     featured: false,
   },
   {
-    name: "Pro",
+    name: "pro",
     price: "$14",
     per: "/mo",
     blurb: "For solo operators & indie hackers.",
@@ -346,12 +359,12 @@ const TIERS = [
       "Basic monitoring (3 endpoints)",
       "Personal wiki",
     ],
-    cta: "Choose Pro",
+    cta: "choose pro",
     href: "/auth/oidc",
     featured: true,
   },
   {
-    name: "Team",
+    name: "team",
     price: "$29",
     per: "/seat",
     blurb: "Small teams who need a PM they can’t hire.",
@@ -362,7 +375,7 @@ const TIERS = [
       "Team wiki + all methodologies",
       "Bug tracking & SLO tracking",
     ],
-    cta: "Choose Team",
+    cta: "choose team",
     href: "/auth/oidc",
     featured: false,
   },
@@ -372,8 +385,8 @@ function Pricing() {
   return (
     <section className="tl-section" id="pricing">
       <div className="tl-container">
-        <p className="tl-overline">Pricing</p>
-        <h2 className="tl-h2">Start free. Scale when you need agents.</h2>
+        <p className="tl-overline">pricing</p>
+        <h2 className="tl-h2">start free. scale when you need agents.</h2>
         <p className="tl-section-lede">
           Agent compute is included in every tier. Personal is the wedge —
           get in with your todos, upgrade when you need team features.
@@ -385,7 +398,7 @@ function Pricing() {
               key={t.name}
               className={`tl-tier${t.featured ? " tl-tier--featured" : ""}`}
             >
-              {t.featured && <span className="tl-tier__badge">Most popular</span>}
+              {t.featured && <span className="tl-tier__badge">most popular</span>}
               <h3 className="tl-tier__name">{t.name}</h3>
               <div className="tl-tier__price">
                 <span className="tl-tier__amount">{t.price}</span>
@@ -427,17 +440,17 @@ function FinalCTA() {
           “Notion + Linear + Todoist + StatusPage + Wiki — but the AI isn’t a
           feature, it’s a co-worker.”
         </p>
-        <h2 className="tl-h2">Run your whole operational life from one graph.</h2>
+        <h2 className="tl-h2">run your whole operational life from one graph.</h2>
         <div className="tl-cta-row tl-cta-row--center">
           <a href="/auth/oidc" className="tl-btn tl-btn--primary">
-            Get Started Free
+            get started free
           </a>
           <Link href="/login" className="tl-btn tl-btn--ghost">
-            Sign In
+            sign in
           </Link>
         </div>
         <p className="tl-micro">
-          Sign in with SSO to create your account
+          <span className="tag info">[info]</span> sign in with sso to create your account
         </p>
       </div>
     </section>
@@ -453,7 +466,7 @@ function Footer() {
       <div className="tl-container tl-footer__inner">
         <span className="tl-footer__brand">tobornalp</span>
         <span className="tl-footer__copy">
-          © 2026 tobornalp &middot; AI-Native Operational Life Platform
+          © 2026 tobornalp · ai-native operational life platform
         </span>
       </div>
     </footer>
@@ -461,13 +474,14 @@ function Footer() {
 }
 
 /* ════════════════════════════════════════════════════════════════
-   STYLES — scoped to .tobornalp-landing, driven by theme CSS vars.
+   STYLES — scoped to .tobornalp-landing, dark-neon console tokens
+   from globals.css (--bg, --panel2, --line, --ink, --acc, --r, …).
    ════════════════════════════════════════════════════════════════ */
 const LANDING_CSS = `
 .tobornalp-landing {
-  background: var(--surface);
-  color: var(--text);
-  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--mono);
 }
 
 /* Layout */
@@ -481,118 +495,140 @@ const LANDING_CSS = `
 .tl-section { padding: 88px 0; }
 .tl-section--hero { padding: 72px 0 64px; }
 .tl-section--cta {
-  background: var(--brand-blue-light, rgba(45,95,45,0.06));
-  border-top: 1px solid var(--border);
-  border-bottom: 1px solid var(--border);
+  background: var(--acc-bg);
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
 }
 
 .tl-rule { padding: 0 24px; }
 .tl-rule__line {
   max-width: 1040px;
   margin: 0 auto;
-  border-top: 1px solid var(--border);
+  border-top: 1px solid var(--line);
+}
+
+/* Brand wordmark */
+.tl-wordmark {
+  display: inline-flex;
+  align-items: baseline;
+  font-family: var(--mono);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  margin-bottom: 22px;
+}
+.tl-wordmark .tl-cursor {
+  color: var(--acc);
+  animation: tl-blink 1.1s steps(1) infinite;
+}
+@keyframes tl-blink { 50% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .tl-wordmark .tl-cursor { animation: none; }
 }
 
 /* Typography */
 .tl-overline {
-  font-family: var(--font-mono);
+  font-family: var(--mono);
   font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
+  font-weight: 700;
   letter-spacing: 0.14em;
-  color: var(--brand-blue);
+  color: var(--acc);
   margin: 0 0 16px;
 }
 .tl-headline {
-  font-family: var(--font-display);
-  font-weight: 500;
-  font-size: clamp(36px, 5.2vw, 60px);
-  line-height: 1.12;
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: clamp(32px, 5vw, 54px);
+  line-height: 1.15;
   letter-spacing: -0.01em;
-  color: var(--text);
+  color: var(--ink);
   margin: 0;
 }
 .tl-h2 {
-  font-family: var(--font-display);
-  font-weight: 500;
-  font-size: clamp(26px, 3vw, 36px);
-  line-height: 1.2;
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: clamp(24px, 2.8vw, 32px);
+  line-height: 1.25;
   letter-spacing: -0.005em;
-  color: var(--text);
+  color: var(--ink);
   margin: 0;
 }
 .tl-lede {
-  font-family: var(--font-body);
-  font-size: 19px;
-  line-height: 1.65;
-  color: var(--text-secondary);
-  max-width: 720px;
-  margin: 24px 0 0;
-}
-.tl-lede em { color: var(--text); font-style: italic; }
-.tl-section-lede {
-  font-family: var(--font-body);
+  font-family: var(--sans);
   font-size: 17px;
   line-height: 1.65;
-  color: var(--text-secondary);
+  color: var(--mut);
   max-width: 680px;
-  margin: 16px 0 0;
+  margin: 20px 0 0;
+}
+.tl-lede em { color: var(--acc); font-style: normal; }
+.tl-section-lede {
+  font-family: var(--sans);
+  font-size: 15.5px;
+  line-height: 1.65;
+  color: var(--mut);
+  max-width: 640px;
+  margin: 14px 0 0;
 }
 
-/* Buttons */
+/* Buttons — pill, mint primary w/ black text */
 .tl-cta-row {
   display: flex;
   gap: 12px;
   flex-wrap: wrap;
-  margin-top: 32px;
+  margin-top: 30px;
 }
 .tl-cta-row--center { justify-content: center; }
 .tl-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-family: var(--font-sans);
-  font-size: 15px;
-  font-weight: 600;
-  padding: 13px 24px;
-  border-radius: 12px;
+  font-family: var(--mono);
+  font-size: 13.5px;
+  font-weight: 700;
+  padding: 12px 24px;
+  border-radius: var(--r-pill);
   text-decoration: none;
   border: 1px solid transparent;
   transition: transform 120ms ease, background 160ms ease, color 160ms ease, border-color 160ms ease;
   cursor: pointer;
 }
 .tl-btn--primary {
-  background: var(--brand-blue);
-  color: #fff;
+  background: var(--acc);
+  color: #000000;
 }
 .tl-btn--primary:hover {
-  background: #244e24;
+  background: var(--acc-hi);
   transform: translateY(-1px);
 }
 .tl-btn--ghost {
   background: transparent;
-  color: var(--text);
-  border-color: var(--border-strong, var(--border));
+  color: var(--ink);
+  border-color: var(--line2);
 }
 .tl-btn--ghost:hover {
-  border-color: var(--brand-blue);
-  color: var(--brand-blue);
+  border-color: var(--acc);
+  color: var(--acc);
 }
 .tl-btn--block { width: 100%; }
 
 .tl-micro {
-  font-family: var(--font-mono);
+  font-family: var(--mono);
   font-size: 12px;
-  color: var(--text-muted);
+  color: var(--faint);
   margin: 16px 0 0;
 }
 .tl-micro--center { text-align: center; }
+.tl-micro .tag { font-weight: 700; }
+.tl-micro .tag.info { color: var(--info); }
+.tl-micro .tag.ok { color: var(--acc); }
 
 /* Grids */
 .tl-grid {
   display: grid;
-  gap: 20px;
-  margin-top: 44px;
+  gap: 18px;
+  margin-top: 40px;
 }
 .tl-grid--3 { grid-template-columns: repeat(3, 1fr); }
 .tl-grid--4 { grid-template-columns: repeat(4, 1fr); }
@@ -607,31 +643,32 @@ const LANDING_CSS = `
 
 /* Cards */
 .tl-card {
-  background: var(--surface-alt, var(--surface));
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  padding: 24px;
+  background: var(--panel2);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  padding: 22px;
+  box-shadow: var(--card-shadow);
 }
 .tl-card__number {
-  font-family: var(--font-display);
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--brand-red);
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--faint);
 }
-.tl-card__icon { font-size: 26px; line-height: 1; }
+.tl-card__icon { font-size: 24px; line-height: 1; }
 .tl-card__title {
-  font-family: var(--font-display);
-  font-weight: 500;
-  font-size: 21px;
-  color: var(--text);
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: 17px;
+  color: var(--ink);
   margin: 10px 0 0;
 }
 .tl-card__body {
-  font-family: var(--font-body);
-  font-size: 15px;
+  font-family: var(--sans);
+  font-size: 14px;
   line-height: 1.6;
-  color: var(--text-secondary);
-  margin: 10px 0 0;
+  color: var(--mut);
+  margin: 8px 0 0;
 }
 
 /* Graph diagram */
@@ -639,8 +676,8 @@ const LANDING_CSS = `
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 14px;
-  margin: 44px 0 8px;
+  gap: 12px;
+  margin: 40px 0 8px;
 }
 .tl-graph__layer {
   display: flex;
@@ -648,161 +685,164 @@ const LANDING_CSS = `
   gap: 10px;
   align-items: center;
   justify-content: center;
-  font-family: var(--font-display);
-  font-size: 17px;
-  color: var(--text);
+  font-family: var(--mono);
+  font-size: 14px;
+  color: var(--ink);
 }
 .tl-graph__chip {
-  font-family: var(--font-mono);
-  font-size: 13px;
-  padding: 8px 16px;
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  background: var(--surface);
-  color: var(--text-secondary);
-}
-.tl-graph__core {
-  padding: 16px 32px;
-  border-radius: 16px;
-  background: var(--brand-blue-light, rgba(45,95,45,0.08));
-  border: 1px solid var(--brand-blue-mid, rgba(45,95,45,0.15));
-  font-weight: 600;
+  font-family: var(--mono);
+  font-size: 12px;
+  padding: 7px 15px;
+  border: 1px solid var(--line2);
+  border-radius: var(--r-pill);
+  background: var(--panel2);
+  color: var(--mut);
 }
 .tl-graph__layer--core, .tl-graph__layer--agents {
   flex-direction: column;
   gap: 4px;
-  padding: 16px 32px;
-  border-radius: 16px;
-  border: 1px solid var(--border);
-  background: var(--surface);
+  padding: 14px 30px;
+  border-radius: var(--r);
+  border: 1px solid var(--acc-line);
+  background: var(--acc-bg);
+  font-weight: 700;
 }
 .tl-graph__layer--agents {
-  background: var(--brand-red-light, rgba(192,86,33,0.06));
-  border-color: var(--brand-red-mid, rgba(192,86,33,0.15));
+  border-style: dashed;
 }
 .tl-graph__sub {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  color: var(--faint);
+  letter-spacing: 0.06em;
 }
 .tl-graph__arrow {
-  font-size: 18px;
-  color: var(--text-muted);
+  font-size: 16px;
+  color: var(--faint);
   line-height: 1;
 }
 
 /* Agent cards */
 .tl-agent {
-  background: var(--surface-alt, var(--surface));
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 20px;
+  background: var(--panel2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  padding: 18px;
   transition: border-color 160ms ease, transform 160ms ease;
 }
 .tl-agent:hover {
-  border-color: var(--brand-blue);
+  border-color: var(--acc-line);
   transform: translateY(-2px);
 }
-.tl-agent__icon { font-size: 26px; line-height: 1; }
+.tl-agent__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  font-size: 17px;
+  line-height: 1;
+  border: 1px dashed var(--acc-line);
+  background: var(--acc-bg);
+  border-radius: 8px;
+}
 .tl-agent__name {
-  font-family: var(--font-display);
-  font-weight: 500;
-  font-size: 18px;
-  color: var(--text);
-  margin: 10px 0 0;
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: 14.5px;
+  color: var(--ink);
+  margin: 12px 0 0;
 }
 .tl-agent__role {
-  font-family: var(--font-body);
-  font-size: 13.5px;
+  font-family: var(--sans);
+  font-size: 13px;
   line-height: 1.55;
-  color: var(--text-secondary);
+  color: var(--mut);
   margin: 6px 0 0;
 }
 
 /* Pricing tiers */
 .tl-tier {
   position: relative;
-  background: var(--surface-alt, var(--surface));
-  border: 1px solid var(--border);
-  border-radius: 18px;
-  padding: 28px;
+  background: var(--panel2);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  padding: 26px;
   display: flex;
   flex-direction: column;
 }
 .tl-tier--featured {
-  border-color: var(--brand-blue);
-  background: var(--brand-blue-light, rgba(45,95,45,0.05));
+  border-color: var(--acc-line);
+  background: var(--acc-bg);
 }
 .tl-tier__badge {
   position: absolute;
   top: -11px;
   left: 50%;
   transform: translateX(-50%);
-  font-family: var(--font-mono);
+  font-family: var(--mono);
   font-size: 10px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  background: var(--brand-blue);
-  color: #fff;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  background: var(--acc);
+  color: #000000;
   padding: 4px 12px;
-  border-radius: 999px;
+  border-radius: var(--r-pill);
   white-space: nowrap;
 }
 .tl-tier__name {
-  font-family: var(--font-display);
-  font-weight: 500;
-  font-size: 20px;
-  color: var(--text);
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--ink);
   margin: 0;
+  letter-spacing: 0.04em;
 }
-.tl-tier__price { display: flex; align-items: baseline; gap: 2px; margin-top: 8px; }
+.tl-tier__price { display: flex; align-items: baseline; gap: 2px; margin-top: 10px; }
 .tl-tier__amount {
-  font-family: var(--font-display);
-  font-size: 40px;
-  font-weight: 600;
-  color: var(--text);
+  font-family: var(--mono);
+  font-size: 34px;
+  font-weight: 700;
+  color: var(--ink);
 }
-.tl-tier__per { font-family: var(--font-body); font-size: 15px; color: var(--text-muted); }
+.tl-tier__per { font-family: var(--mono); font-size: 13px; color: var(--faint); }
 .tl-tier__blurb {
-  font-family: var(--font-body);
-  font-size: 14px;
-  color: var(--text-secondary);
+  font-family: var(--sans);
+  font-size: 13.5px;
+  color: var(--mut);
   margin: 8px 0 0;
 }
 .tl-tier__list {
   list-style: none;
   padding: 0;
-  margin: 20px 0 24px;
-  font-family: var(--font-body);
-  font-size: 14px;
-  line-height: 1.9;
-  color: var(--text-secondary);
+  margin: 18px 0 22px;
+  font-family: var(--sans);
+  font-size: 13.5px;
+  line-height: 1.85;
+  color: var(--mut);
 }
-.tl-tier__list li { position: relative; padding-left: 22px; }
+.tl-tier__list li { position: relative; padding-left: 20px; }
 .tl-tier__list li::before {
   content: "→";
   position: absolute;
   left: 0;
-  color: var(--brand-blue);
+  color: var(--acc);
 }
 
 /* Final CTA */
 .tl-quote {
-  font-family: var(--font-display);
-  font-size: 22px;
+  font-family: var(--sans);
+  font-size: 20px;
   font-style: italic;
-  color: var(--text-secondary);
+  color: var(--mut);
   margin: 0;
   line-height: 1.5;
 }
 
 /* Footer */
 .tl-footer {
-  border-top: 1px solid var(--border);
-  padding: 28px 0;
+  border-top: 1px solid var(--line);
+  padding: 26px 0;
 }
 .tl-footer__inner {
   display: flex;
@@ -812,14 +852,14 @@ const LANDING_CSS = `
   flex-wrap: wrap;
 }
 .tl-footer__brand {
-  font-family: var(--font-display);
-  font-size: 19px;
-  font-weight: 500;
-  color: var(--text);
+  font-family: var(--mono);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink);
 }
 .tl-footer__copy {
-  font-family: var(--font-mono);
-  font-size: 12px;
-  color: var(--text-muted);
+  font-family: var(--mono);
+  font-size: 11.5px;
+  color: var(--faint);
 }
 `;

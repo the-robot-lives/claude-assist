@@ -89,6 +89,10 @@ defmodule GottaCcWeb.DirectoryModerationController do
       reviewer_notes: submission.reviewer_notes,
       submitter_id: submission.submitter_id,
       submitter_email: submitter_email(submission.submitter_id),
+      # Anonymous suggestions have no account; contact_email is whatever the
+      # visitor volunteered, and may be nil.
+      anonymous: is_nil(submission.submitter_id),
+      contact_email: submission.contact_email,
       published_site_slug: published_site_slug(submission),
       suggested_scores: %{
         originality: submission.sug_originality,

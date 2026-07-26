@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/context/auth";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
-import { Button, FieldLabel, Input, SectionCard } from "@/components/ui";
+import { Btn, FieldLabel, Input, SectionCard } from "@/components/ui";
 
 export default function ProfilePage() {
   const { user } = useAuth();
@@ -26,9 +26,9 @@ export default function ProfilePage() {
     setSaving(true);
     try {
       await api.updateProfile({ user_name: userName, email });
-      toast.success("Profile updated");
+      toast.success("profile updated");
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Update failed");
+      toast.error(err instanceof Error ? err.message : "update failed");
     } finally {
       setSaving(false);
     }
@@ -42,9 +42,9 @@ export default function ProfilePage() {
       await api.updateProfile({ current_password: currentPassword, new_password: newPassword });
       setCurrentPassword("");
       setNewPassword("");
-      toast.success("Password updated");
+      toast.success("password updated");
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Password change failed");
+      toast.error(err instanceof Error ? err.message : "password change failed");
     } finally {
       setSaving(false);
     }
@@ -54,59 +54,63 @@ export default function ProfilePage() {
 
   return (
     <div className="mx-auto max-w-lg px-4 py-10">
-      <h1 className="mb-6 text-2xl font-bold text-text">Profile</h1>
+      <h1 className="mb-6 text-[13px] font-bold uppercase tracking-[0.1em] text-ink">profile</h1>
 
-      <div className="flex flex-col gap-6">
-        <SectionCard title="Account">
+      <div className="flex flex-col gap-4">
+        <SectionCard title="account">
           <form onSubmit={handleProfileUpdate} className="flex flex-col gap-4">
-            <FieldLabel label="Username" htmlFor="profile-username">
+            <FieldLabel label="username" htmlFor="profile-username">
               <Input
                 id="profile-username"
                 type="text"
                 value={userName}
                 onChange={(e) => setUserName(e.target.value)}
+                className="rounded-card border-line2 bg-ground"
               />
             </FieldLabel>
-            <FieldLabel label="Email" htmlFor="profile-email">
+            <FieldLabel label="email" htmlFor="profile-email">
               <Input
                 id="profile-email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                className="rounded-card border-line2 bg-ground"
               />
             </FieldLabel>
             <div>
-              <Button type="submit" disabled={saving}>
-                {saving ? "Saving…" : "Save profile"}
-              </Button>
+              <Btn variant="primary" type="submit" disabled={saving}>
+                {saving ? "saving…" : "save profile"}
+              </Btn>
             </div>
           </form>
         </SectionCard>
 
-        <SectionCard title="Change password">
+        <SectionCard title="change password">
           <form onSubmit={handlePasswordChange} className="flex flex-col gap-4">
-            <FieldLabel label="Current password" htmlFor="current-password">
+            <FieldLabel label="current password" htmlFor="current-password">
               <Input
                 id="current-password"
                 type="password"
                 value={currentPassword}
                 onChange={(e) => setCurrentPassword(e.target.value)}
                 autoComplete="current-password"
+                className="rounded-card border-line2 bg-ground"
               />
             </FieldLabel>
-            <FieldLabel label="New password" htmlFor="new-password">
+            <FieldLabel label="new password" htmlFor="new-password">
               <Input
                 id="new-password"
                 type="password"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 autoComplete="new-password"
+                className="rounded-card border-line2 bg-ground"
               />
             </FieldLabel>
             <div>
-              <Button type="submit" disabled={saving || !currentPassword || !newPassword}>
-                {saving ? "Saving…" : "Change password"}
-              </Button>
+              <Btn variant="primary" type="submit" disabled={saving || !currentPassword || !newPassword}>
+                {saving ? "saving…" : "change password"}
+              </Btn>
             </div>
           </form>
         </SectionCard>

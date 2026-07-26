@@ -130,6 +130,7 @@ final class GameSession: ObservableObject {
         resetToStart()
         motion.start()
         motion.vehicleMode = Persistence.shared.vehicleMode
+        motion.fullLockDegrees = Float(Persistence.shared.tiltSensitivity)
         motion.calibrate()
         phase = .countdown(remaining: 3.2)
     }

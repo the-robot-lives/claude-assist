@@ -1,6 +1,6 @@
 "use client";
 
-import { PriorityBadge } from "@/components/ui";
+import { Chip, PriorityDot, toPriorityLevel } from "@/components/ui";
 import { RecurrencePicker } from "./recurrence-picker";
 import type { PersonalItem, RecurrenceInput } from "@/lib/api";
 
@@ -19,38 +19,41 @@ export function PersonalItemRow({
 }) {
   const done = item.status === "done";
 
+  const level = toPriorityLevel(item.priority);
+
   return (
-    <li className="flex items-center gap-2 rounded border border-transparent px-2 py-1.5 text-sm hover:border-border hover:bg-surface-alt">
+    <li className="flex items-center gap-2.5 rounded-card border border-transparent px-2 py-1.5 text-[12px] hover:border-line hover:bg-sel">
       <button
         type="button"
         aria-label={done ? "completed" : "complete"}
         onClick={() => !done && onComplete(item)}
         disabled={done}
         className={
-          "flex h-4 w-4 shrink-0 items-center justify-center rounded border " +
-          (done ? "border-success bg-success text-white" : "border-border hover:border-brand-blue")
+          "flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-[5px] border-[1.5px] " +
+          // A solid mint field always carries black — never white — ink.
+          (done ? "border-acc bg-acc text-black" : "border-line2 bg-panel hover:border-acc")
         }
       >
-        {done && <span className="text-[10px] leading-none">✓</span>}
+        {done && <span className="text-[9px] font-bold leading-none">✓</span>}
       </button>
 
-      <span className={"flex-1 truncate text-text " + (done ? "line-through text-text-muted" : "")}>
+      <span className={"flex-1 truncate " + (done ? "text-faint line-through" : "text-ink")}>
         {item.title}
       </span>
 
-      {item.recurrence && <span title="repeats" className="text-text-muted">↻</span>}
+      {item.recurrence && <span title="repeats" className="text-[11px] text-faint">↻</span>}
 
       {item.tags.slice(0, 3).map((t) => (
-        <span key={t} className="rounded bg-brand-blue/10 px-1.5 py-0.5 text-[11px] text-brand-blue">#{t}</span>
+        <Chip key={t} variant="scope">#{t}</Chip>
       ))}
 
       {item.due_date && (
-        <span className={"whitespace-nowrap text-xs " + (item.overdue ? "font-medium text-brand-red" : "text-text-muted")}>
+        <span className={"whitespace-nowrap text-[11px] " + (item.overdue ? "font-bold text-err" : "text-faint")}>
           {formatDue(item.due_date)}
         </span>
       )}
 
-      <PriorityBadge priority={item.priority} />
+      {level && <PriorityDot level={level} />}
 
       <div className="w-44 shrink-0">
         <RecurrencePicker

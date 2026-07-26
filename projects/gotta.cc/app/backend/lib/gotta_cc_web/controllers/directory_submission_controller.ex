@@ -5,11 +5,17 @@ defmodule GottaCcWeb.DirectorySubmissionController do
   alias GottaCc.Users
   alias GottaCc.Directory.Submissions
 
+  @doc """
+  Accepts a site suggestion. Reachable without an account: when no session is
+  present the submission is stored with a nil submitter and whatever
+  `contact_email` the visitor chose to leave. Signed-in callers are still
+  attributed so the row shows up under `/my-submissions`.
+  """
   def create(conn, params) do
-    user = get_current_user(conn)
+    user = maybe_current_user(conn)
     attrs = params["submission"] || params
 
-    case Submissions.create_submission(user.id, attrs) do
+    case Submissions.create_submission(user && user.id, attrs) do
       {:ok, submission} ->
         conn
         |> put_status(:created)
@@ -49,6 +55,14 @@ defmodule GottaCcWeb.DirectorySubmissionController do
 
       %GottaCc.Users.User{} = user ->
         user
+    end
+  end
+
+  # `create/2` runs behind an optional-auth pipeline, so there may be no session.
+  defp maybe_current_user(conn) do
+    case Guardian.Plug.current_resource(conn) do
+      nil -> nil
+      _session -> get_current_user(conn)
     end
   end
 

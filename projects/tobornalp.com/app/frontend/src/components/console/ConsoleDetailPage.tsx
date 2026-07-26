@@ -65,19 +65,19 @@ export function ConsoleDetailPage({
 
   if (!d)
     return (
-      <p className="px-4 py-6 text-sm text-error" role="alert">
-        Unknown domain “{domain}”.
+      <p className="px-4 py-6 font-mono text-sm text-[var(--err)]" role="alert">
+        unknown domain “{domain}”.
       </p>
     );
   if (loading)
     return (
-      <p className="px-4 py-6 text-sm text-text-muted" role="status">
-        Loading {d.labels.singular.toLowerCase()}…
+      <p className="px-4 py-6 font-mono text-sm text-[var(--faint)]" role="status">
+        loading {d.labels.singular.toLowerCase()}…
       </p>
     );
   if (error || !row)
     return (
-      <div className="flex items-center gap-3 px-4 py-6 text-sm text-error" role="alert">
+      <div className="flex items-center gap-3 px-4 py-6 font-mono text-sm text-[var(--err)]" role="alert">
         <span>{error ?? `${d.labels.singular} not found.`}</span>
         <Button variant="outline" size="sm" onClick={fetchRow}>
           Retry
@@ -87,13 +87,13 @@ export function ConsoleDetailPage({
 
   if (mode === "edit") {
     return (
-      <div className="mx-auto max-w-2xl px-4 py-6">
+      <div className="mx-auto max-w-2xl px-4 py-6 text-[var(--ink)]">
         <button
           type="button"
-          className="mb-3 text-xs text-text-muted hover:text-text hover:underline"
+          className="mb-3 font-mono text-xs text-[var(--faint)] hover:text-[var(--acc)] hover:underline"
           onClick={() => setMode("view")}
         >
-          ← Back to {d.labels.singular}
+          ← back to {d.labels.singular}
         </button>
         <EditForm
           descriptor={d}

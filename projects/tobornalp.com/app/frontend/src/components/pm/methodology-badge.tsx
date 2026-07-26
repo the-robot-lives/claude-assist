@@ -1,5 +1,8 @@
 // Small labeled pill for a project's delivery methodology. Used in the project
-// list and detail. Token-styled, dark-mode aware (tokens carry both themes).
+// list and detail. Wears the shared `Chip` recipe in the `scope` variant — a
+// methodology is context, not a signal, so it must not compete with mint.
+
+import { Chip } from "@/components/ui";
 
 const META: Record<string, { label: string }> = {
   kanban: { label: "Kanban" },
@@ -21,10 +24,8 @@ export function MethodologyBadge({
   if (!meta) return null;
 
   return (
-    <span
-      className={`inline-flex items-center rounded border border-border bg-surface-alt px-1.5 py-0.5 text-[11px] font-medium text-text-secondary ${className}`}
-    >
+    <Chip variant="scope" className={className}>
       {meta.label}
-    </span>
+    </Chip>
   );
 }

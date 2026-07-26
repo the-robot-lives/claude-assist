@@ -9,7 +9,7 @@
 // aria-invalid + aria-describedby, submit error is role=alert.
 import { useId, useMemo, useState } from "react";
 import type { ConsoleDescriptor, EditFieldDef, FacetOption } from "@/lib/console/types";
-import { Input, Select, Textarea, Button } from "@/components/ui";
+import { Input, Select, Textarea, Btn } from "@/components/ui";
 
 export interface EditFormProps<T, TInput> {
   descriptor: ConsoleDescriptor<T, TInput>;
@@ -162,9 +162,10 @@ export function EditForm<T, TInput>({
         return (
           <div className="flex flex-col gap-1.5" role="group" aria-labelledby={`${id}-label`}>
             {options(f).map((o) => (
-              <label key={o.value} className="flex items-center gap-2 text-sm text-text">
+              <label key={o.value} className="flex items-center gap-2 text-[12px] text-text">
                 <input
                   type="checkbox"
+                  className="accent-acc"
                   checked={arr.includes(o.value)}
                   disabled={disabled}
                   onChange={(e) =>
@@ -182,7 +183,7 @@ export function EditForm<T, TInput>({
           <input
             {...common}
             type="checkbox"
-            className="h-4 w-4"
+            className="h-4 w-4 accent-acc"
             checked={Boolean(values[f.key])}
             onChange={(e) => setValue(f, e.target.checked)}
           />
@@ -228,19 +229,23 @@ export function EditForm<T, TInput>({
   return (
     <form className="space-y-5" onSubmit={handleSubmit} noValidate>
       {submitError && (
-        <p className="rounded-md border border-error/30 bg-error/10 px-3 py-2 text-sm text-error" role="alert">
+        <p className="rounded-card border border-error/40 bg-error/10 px-3 py-2 text-[12px] text-error" role="alert">
           {submitError}
         </p>
       )}
       {descriptor.edit.sections.map((section) => (
         <fieldset key={section.title} className="space-y-3" disabled={submitting}>
-          <legend className="text-sm font-semibold text-text-secondary">{section.title}</legend>
+          <legend className="text-[12px] font-bold uppercase tracking-[0.1em] text-ink">{section.title}</legend>
           {section.fields.map((f) => {
             const id = fieldId(f.key);
             const err = (touched.has(f.key) || submitAttempted) && errorFor(f);
             return (
               <div key={f.key} className="flex flex-col gap-1.5">
-                <label id={`${id}-label`} htmlFor={id} className="text-sm font-medium text-text">
+                <label
+                  id={`${id}-label`}
+                  htmlFor={id}
+                  className="text-[11px] tracking-[0.06em] text-text-muted"
+                >
                   {f.label}
                   {f.required && (
                     <span aria-hidden className="text-brand-red">
@@ -251,12 +256,12 @@ export function EditForm<T, TInput>({
                 </label>
                 {renderControl(f)}
                 {f.hint && !err && (
-                  <p id={`${id}-hint`} className="text-xs text-text-muted">
+                  <p id={`${id}-hint`} className="text-[11px] text-faint">
                     {f.hint}
                   </p>
                 )}
                 {err && (
-                  <p id={`${id}-err`} className="text-xs text-error" role="alert">
+                  <p id={`${id}-err`} className="text-[11px] text-error" role="alert">
                     {err}
                   </p>
                 )}
@@ -266,12 +271,12 @@ export function EditForm<T, TInput>({
         </fieldset>
       ))}
       <div className="flex items-center justify-end gap-2">
-        <Button type="button" variant="outline" onClick={handleCancel} disabled={submitting}>
+        <Btn type="button" onClick={handleCancel} disabled={submitting}>
           Cancel
-        </Button>
-        <Button type="submit" disabled={submitting}>
+        </Btn>
+        <Btn type="submit" variant="primary" disabled={submitting}>
           {submitting ? "Saving…" : mode === "create" ? `Create ${descriptor.labels.singular}` : "Save changes"}
-        </Button>
+        </Btn>
       </div>
     </form>
   );

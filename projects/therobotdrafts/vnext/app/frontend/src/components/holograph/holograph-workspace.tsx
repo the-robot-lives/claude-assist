@@ -30,7 +30,15 @@ import {
 } from "@/lib/holograph/document-io";
 import { exportTrdYaml, importTrdYaml, looksLikeTrdYaml } from "@/lib/holograph/trd-yaml";
 import { demoDocument } from "@/lib/holograph/fixture";
+import {
+  DocVersionConflictError,
+  newClientEventId,
+  type DocPatchOperation,
+} from "@/lib/holograph/doc-store";
+import { hasActiveDraft, readActiveDraft, writeActiveDraft } from "@/lib/holograph/local-draft-store";
+import { useDocStore } from "@/lib/holograph/use-doc-store";
 import type { GraphDocument, GraphEdge, GraphNode, NodeKind } from "@/lib/holograph/types";
+import { toast } from "sonner";
 import { TrdThreeScene, type TrdSceneHandle } from "./trd-three-scene";
 import "./chrome/concept-d.css";
 import { BrowserDock, type BrowserTab, type DocumentSummary, type RecentEntry } from "./chrome/BrowserDock";
@@ -50,13 +58,14 @@ import {
   type TrdCommandId,
 } from "./chrome/menu-data";
 
-const autosaveKey = "trd:vnext:active-document";
 const clipboardKey = "trd:vnext:clipboard-node";
 const recentsKey = "trd:vnext:recent-models";
 const commandMruKey = "trd:vnext:command-mru";
 
 const RECENTS_LIMIT = 6;
 const COMMAND_MRU_LIMIT = 12;
+/** Edits settle into one patch batch rather than one per keystroke. */
+const AUTOSAVE_DEBOUNCE_MS = 1200;
 
 /** Derived once: the menu IA is static, so the palette's command catalogue is too. */
 const MENU_COMMANDS = buildPaletteCommands();
@@ -147,6 +156,25 @@ function withDocumentUpdate(document: GraphDocument, patch: Partial<GraphDocumen
   };
 }
 
+/** Identifies the stored document the workspace is currently bound to, and the store
+ * version its pending edits are based on. Null while the open model is unpublished. */
+interface RemoteBinding {
+  id: string;
+  version: number;
+}
+
+/** The inspector edits a node through one generic callback, so the semantic op is read
+ * back off the result — only renames and reparents have one. */
+function inspectorOp(before: GraphNode, after: GraphNode): DocPatchOperation | undefined {
+  if (before.label !== after.label) {
+    return { type: "rename", targetId: after.id, label: after.label };
+  }
+  if (before.parentId !== after.parentId) {
+    return { type: "reparent", targetId: after.id, label: after.parentId ?? "root" };
+  }
+  return undefined;
+}
+
 function readJson<T>(key: string, fallback: T): T {
   try {
     const raw = window.localStorage.getItem(key);
@@ -208,35 +236,57 @@ export function HoloGraphWorkspace() {
   const [commandMru, setCommandMru] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
 
+  // ---- persistence
+  const { store, ready: storeReady, fallbackReason } = useDocStore();
+  const [remote, setRemote] = useState<RemoteBinding | null>(null);
+  const [saveState, setSaveState] = useState<"idle" | "saving" | "error">("idle");
+  // The autosave timer fires outside React's render cycle, so everything it reads has to
+  // be available through a ref rather than a captured render value.
+  const documentRef = useRef(document);
+  documentRef.current = document;
+  const storeRef = useRef(store);
+  storeRef.current = store;
+  const remoteRef = useRef(remote);
+  remoteRef.current = remote;
+  const pendingOpsRef = useRef<DocPatchOperation[]>([]);
+  const autosaveTimerRef = useRef<number | null>(null);
+
   useEffect(() => {
-    const saved = window.localStorage.getItem(autosaveKey);
-    if (saved) {
-      try {
-        const restored = readGraphDocumentJson(saved);
-        setDocument(restored);
-        setSelectedId(restored.nodes[0]?.id ?? null);
-        setHint(`Restored autosaved model: ${restored.title}`);
-      } catch {
-        setHint("Autosave was unreadable; started a new empty 3D UML workspace.");
-      }
+    const restored = readActiveDraft();
+    if (restored) {
+      setDocument(restored);
+      setSelectedId(restored.nodes[0]?.id ?? null);
+      setHint(`Restored autosaved model: ${restored.title}`);
+    } else if (hasActiveDraft()) {
+      setHint("Autosave was unreadable; started a new empty 3D UML workspace.");
     }
     setRecents(readJson<RecentRecord[]>(recentsKey, []));
     setCommandMru(readJson<string[]>(commandMruKey, []));
     setLoadedFromStorage(true);
   }, []);
 
+  // Crash recovery runs in both storage modes: a reload that beats the debounced patch
+  // batch still finds the in-progress model.
   useEffect(() => {
     if (!loadedFromStorage) return;
-    window.localStorage.setItem(autosaveKey, JSON.stringify(document));
+    writeActiveDraft(document);
   }, [document, loadedFromStorage]);
 
+  const refreshDocuments = useCallback(() => {
+    storeRef.current
+      .list()
+      .then(setDocuments)
+      .catch(() => setDocuments([]));
+  }, []);
+
   useEffect(() => {
+    if (!storeReady) return;
     let cancelled = false;
     setBusy(true);
-    fetch("/api/v1/docs")
-      .then((response) => (response.ok ? response.json() : Promise.reject(new Error("docs list failed"))))
-      .then((payload: { data?: DocumentSummary[] }) => {
-        if (!cancelled) setDocuments(payload.data ?? []);
+    store
+      .list()
+      .then((rows) => {
+        if (!cancelled) setDocuments(rows);
       })
       .catch(() => {
         if (!cancelled) setDocuments([]);
@@ -247,7 +297,18 @@ export function HoloGraphWorkspace() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [store, storeReady]);
+
+  useEffect(() => {
+    if (fallbackReason) setHint(`Working offline: ${fallbackReason}. Models stay in this browser.`);
+  }, [fallbackReason]);
+
+  useEffect(
+    () => () => {
+      if (autosaveTimerRef.current !== null) window.clearTimeout(autosaveTimerRef.current);
+    },
+    [],
+  );
 
   const selectedNode = selectedId ? document.nodes.find((node) => node.id === selectedId) ?? null : null;
   // searchNodes is a search primitive and returns nothing for a blank query, but an
@@ -289,10 +350,76 @@ export function HoloGraphWorkspace() {
     setSelectedId((current) => (current && next.nodes.some((node) => node.id === current) ? current : null));
   }
 
+  function cancelAutosave() {
+    if (autosaveTimerRef.current !== null) {
+      window.clearTimeout(autosaveTimerRef.current);
+      autosaveTimerRef.current = null;
+    }
+  }
+
+  /** Last-write-wins recovery: reload whatever the store now holds and say so. There is
+   * deliberately no merge UI — see the plan's conflict policy. */
+  async function reloadAfterConflict(id: string, currentVersion?: number) {
+    pendingOpsRef.current = [];
+    try {
+      const latest = await storeRef.current.load(id);
+      bindDocument(latest, `Reloaded ${latest.title} — another session saved a newer version`, {
+        id,
+        version: latest.version,
+      });
+      setSaveState("idle");
+      toast.warning("Model reloaded from the server", {
+        description: `Another session saved v${currentVersion ?? latest.version}; your unsaved edits were replaced.`,
+      });
+    } catch {
+      setSaveState("error");
+      setHint("Could not reload the server copy — your edits are still in this browser.");
+    }
+  }
+
+  async function flushAutosave() {
+    const target = remoteRef.current;
+    const activeStore = storeRef.current;
+    if (!target || activeStore.kind !== "cloud") return;
+
+    const operations = pendingOpsRef.current;
+    pendingOpsRef.current = [];
+    setSaveState("saving");
+    try {
+      const result = await activeStore.applyPatchBatch(target.id, {
+        clientEventId: newClientEventId(),
+        baseVersion: target.version,
+        operations,
+        document: documentRef.current,
+      });
+      setRemote({ id: result.documentId, version: result.version });
+      setSaveState("idle");
+    } catch (error) {
+      if (error instanceof DocVersionConflictError) {
+        await reloadAfterConflict(target.id, error.currentVersion);
+        return;
+      }
+      setSaveState("error");
+      setHint(error instanceof Error ? `Autosave failed: ${error.message}` : "Autosave failed.");
+    }
+  }
+
+  /** Queues a debounced patch batch for the bound document. Unbound models (a new file,
+   * an import, or a logged-out session) only get the local draft write. */
+  function scheduleAutosave(op?: DocPatchOperation) {
+    if (op) pendingOpsRef.current = [...pendingOpsRef.current, op];
+    if (!remoteRef.current || storeRef.current.kind !== "cloud") return;
+    cancelAutosave();
+    autosaveTimerRef.current = window.setTimeout(() => {
+      autosaveTimerRef.current = null;
+      void flushAutosave();
+    }, AUTOSAVE_DEBOUNCE_MS);
+  }
+
   function commitDocument(
     next: GraphDocument,
     message: string,
-    options?: { pushHistory?: boolean; selectId?: string | null },
+    options?: { pushHistory?: boolean; selectId?: string | null; op?: DocPatchOperation },
   ) {
     setDocument((current) => {
       if (options?.pushHistory ?? true) setHistory((items) => [...items, current].slice(-50));
@@ -303,16 +430,31 @@ export function HoloGraphWorkspace() {
     else retainSelection(next);
     setFocusId(null);
     setHint(message);
+    documentRef.current = next;
+    scheduleAutosave(options?.op);
   }
 
-  function replaceDocument(next: GraphDocument, message: string) {
+  /** Swaps in a different model. The store binding does not follow automatically: an
+   * imported or brand-new model is unpublished until an explicit Save, so autosave can
+   * never write it over whichever document was open before. */
+  function bindDocument(next: GraphDocument, message: string, binding: RemoteBinding | null) {
+    cancelAutosave();
+    pendingOpsRef.current = [];
+    setRemote(binding);
+    remoteRef.current = binding;
     setHistory([]);
     setRedoStack([]);
     setDocument(next);
+    documentRef.current = next;
     setSelectedId(next.nodes[0]?.id ?? null);
     setFocusId(null);
     setHint(message);
+    setSaveState("idle");
     pushRecent(next);
+  }
+
+  function replaceDocument(next: GraphDocument, message: string) {
+    bindDocument(next, message, null);
   }
 
   function addNode(kind: NodeKind, at?: { x: number; y: number; z: number }) {
@@ -354,7 +496,7 @@ export function HoloGraphWorkspace() {
         edges: edge ? [...document.edges, edge] : document.edges,
       }),
       at ? `Placed ${label}` : `Added ${label}`,
-      { selectId: id },
+      { selectId: id, op: { type: "add_node", targetId: id, label } },
     );
   }
 
@@ -380,7 +522,7 @@ export function HoloGraphWorkspace() {
         edges: document.edges.filter((edge) => !removedIds.has(edge.sourceId) && !removedIds.has(edge.targetId)),
       }),
       `Removed ${selectedNode.label} from the model`,
-      { selectId: null },
+      { selectId: null, op: { type: "delete", targetId: selectedNode.id, label: selectedNode.label } },
     );
     if (connectSourceId && removedIds.has(connectSourceId)) setConnectSourceId(null);
   }
@@ -408,7 +550,7 @@ export function HoloGraphWorkspace() {
           nodes: [...document.nodes, { ...node, id, label: `${node.label} Copy`, status: "draft" }],
         }),
         `Pasted ${node.label}`,
-        { selectId: id },
+        { selectId: id, op: { type: "add_node", targetId: id, label: `${node.label} Copy` } },
       );
     } catch {
       setHint("Clipboard did not contain a valid TRD node.");
@@ -426,18 +568,19 @@ export function HoloGraphWorkspace() {
         nodes: [...document.nodes, { ...selectedNode, id, label: `${selectedNode.label} Copy`, status: "draft" }],
       }),
       `Duplicated ${selectedNode.label}`,
-      { selectId: id },
+      { selectId: id, op: { type: "add_node", targetId: id, label: `${selectedNode.label} Copy` } },
     );
   }
 
   function updateSelectedNode(message: string, mutate: (node: GraphNode) => GraphNode) {
     if (!selectedNode) return;
+    const mutated = mutate(selectedNode);
     commitDocument(
       withDocumentUpdate(document, {
-        nodes: document.nodes.map((node) => (node.id === selectedNode.id ? mutate(node) : node)),
+        nodes: document.nodes.map((node) => (node.id === selectedNode.id ? mutated : node)),
       }),
       message,
-      { selectId: selectedNode.id },
+      { selectId: selectedNode.id, op: inspectorOp(selectedNode, mutated) },
     );
   }
 
@@ -489,8 +632,10 @@ export function HoloGraphWorkspace() {
     setRedoStack((items) => [document, ...items].slice(0, 50));
     setHistory((items) => items.slice(0, -1));
     setDocument(previous);
+    documentRef.current = previous;
     retainSelection(previous);
     setHint("Undo applied.");
+    scheduleAutosave();
   }
 
   function redo() {
@@ -502,8 +647,10 @@ export function HoloGraphWorkspace() {
     setHistory((items) => [...items, document].slice(-50));
     setRedoStack((items) => items.slice(1));
     setDocument(next);
+    documentRef.current = next;
     retainSelection(next);
     setHint("Redo applied.");
+    scheduleAutosave();
   }
 
   function readCameraPoseIntoForm() {
@@ -607,7 +754,7 @@ export function HoloGraphWorkspace() {
     commitDocument(
       withDocumentUpdate(document, { edges: [...document.edges, edge] }),
       `Connected ${source.label} → ${target.label} (${relationshipType}) — click the next source`,
-      { selectId: targetId },
+      { selectId: targetId, op: { type: "connect", targetId: id, label: relationshipType } },
     );
   }
 
@@ -690,13 +837,56 @@ export function HoloGraphWorkspace() {
   async function openDocumentById(id: string) {
     setBusy(true);
     try {
-      const response = await fetch(`/api/v1/docs/${id}`);
-      if (!response.ok) throw new Error(`document ${id} not found`);
-      const payload = (await response.json()) as { data?: GraphDocument };
-      if (!payload.data) throw new Error("document payload was empty");
-      replaceDocument(payload.data, `Opened ${payload.data.title}`);
+      const opened = await store.load(id);
+      bindDocument(
+        opened,
+        `Opened ${opened.title}`,
+        store.kind === "cloud" ? { id: opened.id, version: opened.version } : null,
+      );
     } catch (error) {
       setHint(error instanceof Error ? error.message : `Could not open ${id}.`);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  /** Explicit Save (⌘S). Cloud sessions publish a full document — creating the row on
+   * first save, then optimistic-locked on the version the editor loaded. Browser-local
+   * sessions keep the demo's behaviour and write a file. */
+  async function saveNow() {
+    if (store.kind !== "cloud") {
+      exportAs("json");
+      return;
+    }
+
+    cancelAutosave();
+    pendingOpsRef.current = [];
+    const target = remoteRef.current;
+    setBusy(true);
+    setSaveState("saving");
+    try {
+      const saved = target
+        ? await store.save(documentRef.current, { expectedVersion: target.version })
+        : await store.create(documentRef.current);
+      if (!target) {
+        // The server assigns the document's id and a unique slug on create; adopt them so
+        // subsequent autosaves address the row that was just written.
+        setDocument(saved);
+        documentRef.current = saved;
+        pushRecent(saved);
+      }
+      setRemote({ id: saved.id, version: saved.version });
+      remoteRef.current = { id: saved.id, version: saved.version };
+      setSaveState("idle");
+      setHint(`Saved ${saved.title} · v${saved.version}`);
+      refreshDocuments();
+    } catch (error) {
+      if (error instanceof DocVersionConflictError && target) {
+        await reloadAfterConflict(target.id, error.currentVersion);
+        return;
+      }
+      setSaveState("error");
+      setHint(error instanceof Error ? `Save failed: ${error.message}` : "Save failed.");
     } finally {
       setBusy(false);
     }
@@ -735,7 +925,7 @@ export function HoloGraphWorkspace() {
 
   register("file.new", () => replaceDocument(createEmptyDocument(), "Created a new empty 3D UML workspace."));
   register("file.open", () => graphFileInputRef.current?.click());
-  register("file.save", () => exportAs("json"));
+  register("file.save", () => void saveNow());
   register("file.saveAs", () => exportAs("json"));
   register("file.import.plantuml", () => plantUmlInputRef.current?.click());
   register("file.import.sourceFolder", () => codeInputRef.current?.click());
@@ -1164,6 +1354,18 @@ export function HoloGraphWorkspace() {
     : [];
   const breadcrumbText = [document.slug, selectedNode?.label].filter(Boolean).join(" ▸ ");
   const selectionSummary = selectedNode ? `${selectedNode.label} selected` : "No selection";
+  // Browser-local models keep reporting the editor's own version counter; cloud models
+  // report the store's, which is the only number that survives a reload.
+  const savedLabel =
+    store.kind !== "cloud"
+      ? `autosaved · v${document.version}`
+      : saveState === "saving"
+        ? "saving…"
+        : saveState === "error"
+          ? "not saved · draft kept locally"
+          : remote
+            ? `autosaved · v${remote.version}`
+            : "unpublished · ⌘S to save";
   const kindBrowserResults = KIND_BROWSER_ENTRIES.filter(
     (entry) => !kindBrowserFilter || entry.label.toLowerCase().includes(kindBrowserFilter.trim().toLowerCase()),
   );
@@ -1400,7 +1602,7 @@ export function HoloGraphWorkspace() {
         // this slot is for background work, not for model statistics.
         taskLabel={busy ? "loading model" : ""}
         taskActive={busy}
-        savedLabel={`autosaved · v${document.version}`}
+        savedLabel={savedLabel}
         sceneHandleRef={sceneHandleRef}
       />
 

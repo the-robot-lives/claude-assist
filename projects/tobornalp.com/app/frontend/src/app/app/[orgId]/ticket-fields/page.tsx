@@ -27,15 +27,15 @@ import {
   type DefinitionScope,
 } from "@/lib/api";
 import { useOrg } from "@/context/org";
-import { Button, Input, Select, Spinner, Textarea, FieldLabel, Dialog } from "@/components/ui";
+import { Btn, Input, Select, Spinner, Textarea, FieldLabel, Dialog, Panel } from "@/components/ui";
 import { cn } from "@/lib/cn";
 
 const OPTION_TYPES: FieldType[] = ["select", "radio", "multi_select"];
 
 const SCOPE_BADGE: Record<DefinitionScope, string> = {
-  global: "border-border bg-surface-alt text-text-secondary",
-  org: "border-brand-blue/40 bg-brand-blue/10 text-brand-blue",
-  project: "border-brand-blue/40 bg-brand-blue/10 text-brand-blue",
+  global: "border-line2 bg-panel2 text-mut",
+  org: "border-acc-line bg-acc-bg text-acc",
+  project: "border-acc-line bg-acc-bg text-acc",
 };
 
 type ModalState =
@@ -81,7 +81,7 @@ function FieldModal({
       try {
         options = JSON.parse(optionsText);
       } catch {
-        setError("Options must be valid JSON");
+        setError("options must be valid JSON");
         return;
       }
     } else {
@@ -108,20 +108,20 @@ function FieldModal({
           field_type: fieldType,
         });
       }
-      toast.success(isEdit ? "Field updated" : "Field saved");
+      toast.success(isEdit ? "field updated" : "field saved");
       onSaved();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Request failed");
+      setError(err instanceof Error ? err.message : "request failed");
     } finally {
       setSaving(false);
     }
   }
 
   const title = isEdit
-    ? "Edit Field"
+    ? "edit field"
     : prefill
-      ? `Override “${prefill.slug}” at org scope`
-      : "New Field (org)";
+      ? `override "${prefill.slug}" at org scope`
+      : "new field (org)";
 
   return (
     <Dialog
@@ -131,34 +131,42 @@ function FieldModal({
       size="md"
       footer={
         <>
-          <Button variant="outline" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button type="submit" form="field-form" disabled={saving || !label.trim() || (!isEdit && !slug.trim())}>
-            {saving ? "Saving…" : isEdit ? "Save" : "Create"}
-          </Button>
+          <Btn variant="default" onClick={onClose}>
+            cancel
+          </Btn>
+          <Btn variant="primary" type="submit" form="field-form" disabled={saving || !label.trim() || (!isEdit && !slug.trim())}>
+            {saving ? "saving…" : isEdit ? "save" : "create"}
+          </Btn>
         </>
       }
     >
       <form id="field-form" onSubmit={handleSubmit} className="flex flex-col gap-3">
-        <FieldLabel label="Slug" htmlFor="fd-slug">
+        <FieldLabel label="slug" htmlFor="fd-slug">
           <Input
             id="fd-slug"
             value={slug}
             onChange={(e) => setSlug(e.target.value)}
             placeholder="story_points"
             disabled={isEdit || !!prefill}
+            className="rounded-card border-line2 bg-ground"
           />
         </FieldLabel>
-        <FieldLabel label="Label" htmlFor="fd-label">
-          <Input id="fd-label" value={label} onChange={(e) => setLabel(e.target.value)} placeholder="Story Points" />
+        <FieldLabel label="label" htmlFor="fd-label">
+          <Input
+            id="fd-label"
+            value={label}
+            onChange={(e) => setLabel(e.target.value)}
+            placeholder="Story Points"
+            className="rounded-card border-line2 bg-ground"
+          />
         </FieldLabel>
-        <FieldLabel label="Field type" htmlFor="fd-type">
+        <FieldLabel label="field type" htmlFor="fd-type">
           <Select
             id="fd-type"
             value={fieldType}
             onChange={(e) => setFieldType(e.target.value as FieldType)}
             disabled={isEdit}
+            className="rounded-card border-line2 bg-ground"
           >
             {FIELD_TYPES.map((t) => (
               <option key={t} value={t}>
@@ -168,28 +176,35 @@ function FieldModal({
           </Select>
         </FieldLabel>
         {needsOptions && (
-          <FieldLabel label="Options (JSON)" htmlFor="fd-options">
+          <FieldLabel label="options (json)" htmlFor="fd-options">
             <Textarea
               id="fd-options"
               value={optionsText}
               onChange={(e) => setOptionsText(e.target.value)}
               rows={6}
-              className="font-mono"
+              className="rounded-card border-line2 bg-ground font-mono"
             />
           </FieldLabel>
         )}
-        <FieldLabel label="Default value" htmlFor="fd-default">
+        <FieldLabel label="default value" htmlFor="fd-default">
           <Input
             id="fd-default"
             value={defaultValue}
             onChange={(e) => setDefaultValue(e.target.value)}
             placeholder="optional"
+            className="rounded-card border-line2 bg-ground"
           />
         </FieldLabel>
-        <FieldLabel label="Description" htmlFor="fd-desc">
-          <Textarea id="fd-desc" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Help text" />
+        <FieldLabel label="description" htmlFor="fd-desc">
+          <Textarea
+            id="fd-desc"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="help text"
+            className="rounded-card border-line2 bg-ground"
+          />
         </FieldLabel>
-        {error && <p className="text-sm text-error">{error}</p>}
+        {error && <p className="text-[12px] text-err">[ERR] {error}</p>}
       </form>
     </Dialog>
   );
@@ -209,7 +224,7 @@ export default function TicketFieldsPage() {
       const data = await api.listFieldDefinitions(orgId);
       setFields(data.fields ?? []);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to load fields");
+      toast.error(err instanceof Error ? err.message : "failed to load fields");
     } finally {
       setLoading(false);
     }
@@ -241,7 +256,7 @@ export default function TicketFieldsPage() {
       toast.success(`Disabled “${f.slug}” at org scope`);
       fetchData();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to disable");
+      toast.error(err instanceof Error ? err.message : "failed to disable");
     }
   }
 
@@ -251,7 +266,7 @@ export default function TicketFieldsPage() {
       await api.updateFieldDefinition(orgId, f.id, { disabled: !f.disabled });
       fetchData();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to update");
+      toast.error(err instanceof Error ? err.message : "failed to update");
     }
   }
 
@@ -260,72 +275,73 @@ export default function TicketFieldsPage() {
     if (!confirm(`Remove the org-scoped “${f.slug}”?`)) return;
     try {
       await api.deleteFieldDefinition(orgId, f.id);
-      toast.success("Removed");
+      toast.success("removed");
       fetchData();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to remove");
+      toast.error(err instanceof Error ? err.message : "failed to remove");
     }
   }
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center gap-2 p-16 text-text-muted">
+      <div className="flex items-center justify-center gap-2 p-16 text-faint">
         <Spinner size={20} />
-        <span className="text-sm">Loading…</span>
+        <span className="text-[12px]">loading…</span>
       </div>
     );
   }
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-10">
-      <div className="mb-2 flex items-center justify-between gap-4">
-        <h1 className="text-2xl font-bold text-text">Ticket Fields</h1>
-        <Button onClick={() => setModal({ kind: "create" })}>New Field</Button>
-      </div>
-      <p className="mb-6 text-sm text-text-muted">
-        Field definitions resolved for this organization (global → org). Override or disable inherited fields, and add
-        new ones at the org scope.
-      </p>
+    <div className="app-content">
+      <header className="flex flex-wrap items-baseline gap-3">
+        <h1 className="text-[13px] font-bold uppercase tracking-[0.1em] text-ink">ticket fields</h1>
+        <span className="text-[11px] text-faint">
+          resolved global → org · override or disable inherited, add new at org scope
+        </span>
+        <Btn variant="primary" className="ml-auto" onClick={() => setModal({ kind: "create" })}>
+          + new field
+        </Btn>
+      </header>
 
       {rows.length === 0 ? (
-        <div className="rounded-lg border border-border bg-surface p-10 text-center text-sm text-text-muted shadow-sm">
-          No fields visible. Create one at the org scope.
-        </div>
+        <Panel className="p-10 text-center text-[12px] text-faint">
+          no fields visible. create one at the org scope.
+        </Panel>
       ) : (
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           {rows.map((f) => {
             const scope = definitionScope(f);
             const own = isOwn(f);
             return (
-              <div key={f.id} className="flex flex-col rounded-lg border border-border bg-surface p-4 shadow-sm">
+              <Panel key={f.id} className="flex flex-col p-4">
                 <div className="mb-1 flex items-start justify-between gap-2">
                   <div>
-                    <div className="text-sm font-semibold text-text">{f.label || f.slug}</div>
-                    <code className="text-xs text-text-muted">{f.slug}</code>
+                    <div className="text-[12.5px] font-bold text-ink">{f.label || f.slug}</div>
+                    <code className="text-[11px] text-faint">{f.slug}</code>
                   </div>
                   <span
                     className={cn(
-                      "shrink-0 rounded-full border px-2 py-0.5 text-xs font-medium capitalize",
+                      "shrink-0 rounded-pill border px-[9px] py-px text-[10px] font-bold uppercase tracking-[0.04em]",
                       SCOPE_BADGE[scope],
                     )}
                   >
                     {scope}
                   </span>
                 </div>
-                <dl className="mb-3 flex flex-col gap-1 text-sm text-text-secondary">
+                <dl className="mb-3 flex flex-col gap-1 text-[12px] text-mut">
                   <div className="flex gap-2">
-                    <dt className="text-text-muted">Type:</dt>
+                    <dt className="text-faint">type:</dt>
                     <dd className="font-mono">{f.field_type}</dd>
                   </div>
                   {f.description && (
                     <div className="flex gap-2">
-                      <dt className="text-text-muted">Help:</dt>
+                      <dt className="text-faint">help:</dt>
                       <dd>{f.description}</dd>
                     </div>
                   )}
                   {f.default_value != null && f.default_value !== "" && (
                     <div className="flex gap-2">
-                      <dt className="text-text-muted">Default:</dt>
+                      <dt className="text-faint">default:</dt>
                       <dd>{f.default_value}</dd>
                     </div>
                   )}
@@ -333,28 +349,32 @@ export default function TicketFieldsPage() {
                 <div className="mt-auto flex flex-wrap gap-2">
                   {own ? (
                     <>
-                      <Button variant="outline" size="sm" onClick={() => setModal({ kind: "edit", field: f })}>
-                        Edit
-                      </Button>
-                      <Button variant="outline" size="sm" onClick={() => toggleOwnDisabled(f)}>
-                        {f.disabled ? "Enable" : "Disable"}
-                      </Button>
-                      <Button variant="danger" size="sm" onClick={() => removeOwn(f)}>
-                        Remove
-                      </Button>
+                      <Btn variant="default" onClick={() => setModal({ kind: "edit", field: f })}>
+                        edit
+                      </Btn>
+                      <Btn variant="default" onClick={() => toggleOwnDisabled(f)}>
+                        {f.disabled ? "enable" : "disable"}
+                      </Btn>
+                      <Btn
+                        variant="default"
+                        className="border-err/40 text-err hover:border-err hover:text-err"
+                        onClick={() => removeOwn(f)}
+                      >
+                        remove
+                      </Btn>
                     </>
                   ) : (
                     <>
-                      <Button variant="outline" size="sm" onClick={() => setModal({ kind: "override", field: f })}>
-                        Override
-                      </Button>
-                      <Button variant="outline" size="sm" onClick={() => disableHere(f)}>
-                        Disable here
-                      </Button>
+                      <Btn variant="default" onClick={() => setModal({ kind: "override", field: f })}>
+                        override
+                      </Btn>
+                      <Btn variant="default" onClick={() => disableHere(f)}>
+                        disable here
+                      </Btn>
                     </>
                   )}
                 </div>
-              </div>
+              </Panel>
             );
           })}
         </div>

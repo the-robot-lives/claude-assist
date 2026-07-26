@@ -1,0 +1,33 @@
+databaseChangeLog:
+  - changeSet:
+      id: 027-anonymous-directory-submissions
+      author: loom
+      comment: >-
+        Allow site suggestions from visitors without an account. submitter_id
+        becomes nullable and an optional contact_email is captured so moderators
+        can follow up with anonymous submitters.
+      changes:
+        - sql:
+            sql: |
+              ALTER TABLE directory_submissions
+                ALTER COLUMN submitter_id DROP NOT NULL;
+
+              ALTER TABLE directory_submissions
+                ADD COLUMN contact_email citext;
+
+              -- Queue lookup for the anonymous slice of the moderation queue.
+              CREATE INDEX idx_directory_submissions_anonymous
+                ON directory_submissions (inserted_at)
+                WHERE submitter_id IS NULL;
+      rollback:
+        - sql:
+            sql: |
+              DROP INDEX IF EXISTS idx_directory_submissions_anonymous;
+
+              ALTER TABLE directory_submissions
+                DROP COLUMN IF EXISTS contact_email;
+
+              DELETE FROM directory_submissions WHERE submitter_id IS NULL;
+
+              ALTER TABLE directory_submissions
+                ALTER COLUMN submitter_id SET NOT NULL;

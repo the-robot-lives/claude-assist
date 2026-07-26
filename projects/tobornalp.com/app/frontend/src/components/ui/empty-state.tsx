@@ -13,9 +13,9 @@ export interface EmptyStateProps {
 export function EmptyState({ title, icon, children, action, className }: EmptyStateProps) {
   return (
     <div className={cn("flex flex-col items-center justify-center gap-2 px-4 py-10 text-center", className)}>
-      {icon && <div className="text-text-muted [&>svg]:h-8 [&>svg]:w-8">{icon}</div>}
-      <h3 className="text-sm font-semibold text-text">{title}</h3>
-      {children && <p className="max-w-sm text-sm text-text-muted">{children}</p>}
+      {icon && <div className="text-faint [&>svg]:h-8 [&>svg]:w-8">{icon}</div>}
+      <h3 className="text-[12px] font-bold text-mut">{title}</h3>
+      {children && <p className="max-w-sm text-[11.5px] text-faint">{children}</p>}
       {action && <div className="mt-2">{action}</div>}
     </div>
   );

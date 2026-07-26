@@ -400,7 +400,7 @@ struct SettingsView: View {
                     VStack(alignment: .leading) {
                         Text("Parallax depth  \(Int(parallax * 100))%")
                         Slider(value: $parallax, in: 0...1)
-                            .onChange(of: parallax) { _, new in
+                            .onChange(of: parallax) { new in
                                 Persistence.shared.parallaxDepth = new
                             }
                     }
@@ -415,12 +415,12 @@ struct SettingsView: View {
                     VStack(alignment: .leading) {
                         Text("Full lock at \(Int(sensitivity))°")
                         Slider(value: $sensitivity, in: 12...45, step: 1)
-                            .onChange(of: sensitivity) { _, new in
+                            .onChange(of: sensitivity) { new in
                                 Persistence.shared.tiltSensitivity = new
                             }
                     }
                     Toggle("Vehicle mode", isOn: $vehicleMode)
-                        .onChange(of: vehicleMode) { _, new in
+                        .onChange(of: vehicleMode) { new in
                             Persistence.shared.vehicleMode = new
                             session.motion.vehicleMode = new
                         }

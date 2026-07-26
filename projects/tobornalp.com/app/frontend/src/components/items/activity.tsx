@@ -26,39 +26,39 @@ export function ActivitySection({ orgId, itemId }: ActivitySectionProps) {
   return (
     <SectionCard title="Activity" count={events.length}>
       {loading ? (
-        <p className="py-4 text-center text-sm text-text-muted">Loading activity…</p>
+        <p className="py-4 text-center font-mono text-sm text-[var(--faint)]">loading activity…</p>
       ) : error ? (
-        <p className="py-4 text-center text-sm text-error">{error.message}</p>
+        <p className="py-4 text-center font-mono text-sm text-[var(--err)]">{error.message}</p>
       ) : events.length === 0 ? (
         <Empty>No activity recorded.</Empty>
       ) : (
-        <ol className="relative space-y-3 border-l border-border pl-4">
+        <ol className="relative space-y-3 border-l border-[var(--line)] pl-4">
           {events.map((ev) => (
             <li key={ev.id} className="text-sm">
-              <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-text">
-                <span className="font-medium text-text">{ev.actor ?? "someone"}</span>
+              <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 font-mono text-[11.5px] text-[var(--ink)]">
+                <span className="font-semibold text-[var(--acc)]">{ev.actor ?? "someone"}</span>
                 {ev.field ? (
                   <>
-                    <span className="text-text-secondary">changed</span>
-                    <code className="rounded bg-surface-alt px-1 py-0.5 text-xs text-text-secondary">
+                    <span className="text-[var(--mut)]">changed</span>
+                    <code className="rounded border border-[var(--line)] bg-[var(--panel2)] px-1 py-0.5 text-xs text-[var(--mut)]">
                       {ev.field}
                     </code>
-                    <span className="text-text-secondary">from</span>
-                    <code className="rounded bg-surface-alt px-1 py-0.5 text-xs text-text-secondary">
+                    <span className="text-[var(--mut)]">from</span>
+                    <code className="rounded border border-[var(--line)] bg-[var(--panel2)] px-1 py-0.5 text-xs text-[var(--mut)]">
                       {ev.old_value ?? "∅"}
                     </code>
-                    <span className="text-text-secondary">to</span>
-                    <code className="rounded bg-surface-alt px-1 py-0.5 text-xs text-text">
+                    <span className="text-[var(--mut)]">to</span>
+                    <code className="rounded border border-[var(--line)] bg-[var(--panel2)] px-1 py-0.5 text-xs text-[var(--ink)]">
                       {ev.new_value ?? "∅"}
                     </code>
                   </>
                 ) : (
-                  <span className="text-text-secondary">touched this item</span>
+                  <span className="text-[var(--mut)]">touched this item</span>
                 )}
               </div>
               {ev.occurred_at && (
                 <time
-                  className="text-xs text-text-muted"
+                  className="font-mono text-xs text-[var(--faint)]"
                   dateTime={ev.occurred_at}
                   title={new Date(ev.occurred_at).toLocaleString()}
                 >

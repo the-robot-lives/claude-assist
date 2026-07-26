@@ -224,8 +224,8 @@ final class Renderer: NSObject, MTKViewDelegate {
         }
 
         let uniforms = uniformBuffers[frameIndex]
-        encoder.setVertexBuffer(uniforms, offset: 0, index: CGPBufferUniforms.rawValue)
-        encoder.setFragmentBuffer(uniforms, offset: 0, index: CGPBufferUniforms.rawValue)
+        encoder.setVertexBuffer(uniforms, offset: 0, index: Int(CGPBufferUniforms.rawValue))
+        encoder.setFragmentBuffer(uniforms, offset: 0, index: Int(CGPBufferUniforms.rawValue))
         encoder.setFragmentSamplerState(sampler, index: 0)
 
         drawCarpet(encoder)
@@ -330,7 +330,8 @@ final class Renderer: NSObject, MTKViewDelegate {
         let all = shadows + cars
         let buffer = instanceBuffers[frameIndex]
         all.withUnsafeBytes { raw in
-            memcpy(buffer.contents(), raw.baseAddress!, raw.count)
+            guard let source = raw.baseAddress else { return }
+            memcpy(buffer.contents(), source, min(raw.count, buffer.length))
         }
         return (shadows.count, cars.count)
     }
@@ -340,7 +341,7 @@ final class Renderer: NSObject, MTKViewDelegate {
     private func drawCarpet(_ encoder: MTLRenderCommandEncoder) {
         guard let carpetTexture else { return }
         encoder.setRenderPipelineState(carpetPipeline)
-        encoder.setFragmentTexture(carpetTexture, index: CGPTextureAlbedo.rawValue)
+        encoder.setFragmentTexture(carpetTexture, index: Int(CGPTextureAlbedo.rawValue))
         encoder.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount: 3)
     }
 
@@ -356,7 +357,7 @@ final class Renderer: NSObject, MTKViewDelegate {
 
         func layer(_ buffer: MTLBuffer, pipeline: MTLRenderPipelineState) {
             encoder.setRenderPipelineState(pipeline)
-            encoder.setVertexBuffer(buffer, offset: 0, index: CGPBufferVertices.rawValue)
+            encoder.setVertexBuffer(buffer, offset: 0, index: Int(CGPBufferVertices.rawValue))
             encoder.drawPrimitives(type: .triangle,
                                    vertexStart: start,
                                    vertexCount: vertexCount)
@@ -381,7 +382,7 @@ final class Renderer: NSObject, MTKViewDelegate {
 
         if count.shadows > 0 {
             encoder.setRenderPipelineState(shadowPipeline)
-            encoder.setVertexBuffer(buffer, offset: 0, index: CGPBufferInstances.rawValue)
+            encoder.setVertexBuffer(buffer, offset: 0, index: Int(CGPBufferInstances.rawValue))
             encoder.drawPrimitives(type: .triangle,
                                    vertexStart: 0,
                                    vertexCount: 6,
@@ -389,10 +390,10 @@ final class Renderer: NSObject, MTKViewDelegate {
         }
 
         encoder.setRenderPipelineState(spritePipeline)
-        encoder.setFragmentTexture(carTexture, index: CGPTextureAlbedo.rawValue)
+        encoder.setFragmentTexture(carTexture, index: Int(CGPTextureAlbedo.rawValue))
         encoder.setVertexBuffer(buffer,
                                 offset: stride * count.shadows,
-                                index: CGPBufferInstances.rawValue)
+                                index: Int(CGPBufferInstances.rawValue))
         encoder.drawPrimitives(type: .triangle,
                                vertexStart: 0,
                                vertexCount: 6,

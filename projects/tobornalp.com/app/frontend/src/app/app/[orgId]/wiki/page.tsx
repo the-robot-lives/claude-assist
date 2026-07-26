@@ -8,7 +8,7 @@ import { useParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { api, type WikiSpace } from "@/lib/api";
 import { useOrg } from "@/context/org";
-import { Button, Input, Textarea, Dialog } from "@/components/ui";
+import { Btn, Input, Textarea, Dialog, FieldLabel, Key, EmptyState } from "@/components/ui";
 
 function toSlug(name: string) {
   return name
@@ -47,47 +47,53 @@ export default function WikiSpacesPage() {
   }, [fetchSpaces]);
 
   const scopeLabel = useMemo(
-    () => currentOrg?.name || "Organization",
+    () => currentOrg?.name || "organization",
     [currentOrg?.name],
   );
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-6">
-      <header className="mb-4 flex items-center justify-between">
+    <div className="app-content">
+      <header className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-text">Wiki</h1>
-          <p className="text-sm text-text-secondary">{scopeLabel} · knowledge spaces</p>
+          <h1 className="text-[13px] font-bold uppercase tracking-[0.1em] text-ink">wiki</h1>
+          <p className="mt-1 text-[11px] text-mut">{scopeLabel.toLowerCase()} · knowledge spaces</p>
         </div>
-        <Button onClick={() => setShowCreate(true)}>+ New space</Button>
+        <Btn variant="primary" onClick={() => setShowCreate(true)}>
+          + new space
+        </Btn>
       </header>
 
       {orgLoading || !orgId ? (
-        <p className="text-sm text-text-muted">{orgLoading ? "Loading…" : "Select an organization."}</p>
+        <p className="text-[12px] text-faint">{orgLoading ? "loading…" : "select an organization."}</p>
       ) : loading ? (
-        <p className="text-sm text-text-muted" role="status">
-          Loading spaces…
+        <p className="text-[12px] text-faint" role="status">
+          loading spaces…
         </p>
       ) : spaces.length === 0 ? (
-        <p className="text-sm text-text-muted">No spaces yet — create one to start writing.</p>
+        <EmptyState title="no spaces yet" icon={<span className="text-2xl">✎</span>}>
+          create one to start writing.
+        </EmptyState>
       ) : (
         <ul className="grid gap-3 sm:grid-cols-2">
           {spaces.map((s) => (
             <li key={s.id}>
               <button
                 type="button"
-                className="w-full rounded-lg border border-border bg-surface p-4 text-left hover:bg-surface-alt"
+                className="w-full rounded-card border border-line2 bg-panel2 p-4 text-left transition-colors hover:border-faint hover:bg-sel"
                 onClick={() => router.push(`/app/${orgId}/wiki/${s.id}`)}
               >
                 <div className="flex items-baseline justify-between gap-2">
-                  <h2 className="font-semibold text-text">{s.name}</h2>
-                  <code className="text-xs text-text-muted">{s.slug}</code>
+                  <h2 className="font-bold text-ink">{s.name}</h2>
+                  <Key>{s.slug}</Key>
                 </div>
                 {s.description && (
-                  <p className="mt-1 line-clamp-2 text-sm text-text-secondary">{s.description}</p>
+                  <p className="mt-1 line-clamp-2 font-prose text-[12.5px] leading-relaxed text-mut">
+                    {s.description}
+                  </p>
                 )}
                 {s.updated_at && (
-                  <p className="mt-2 text-xs text-text-muted">
-                    Updated {new Date(s.updated_at).toLocaleDateString()}
+                  <p className="mt-2 text-[10.5px] text-faint">
+                    updated {new Date(s.updated_at).toLocaleDateString()}
                   </p>
                 )}
               </button>
@@ -150,33 +156,29 @@ function CreateSpaceDialog({
     <Dialog
       open
       onClose={onClose}
-      title="Create space"
+      title="create space"
       footer={
         <>
-          <Button variant="outline" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button type="submit" form="create-space-form" disabled={saving || !name.trim()}>
-            {saving ? "Creating…" : "Create"}
-          </Button>
+          <Btn onClick={onClose}>cancel</Btn>
+          <Btn variant="primary" type="submit" form="create-space-form" disabled={saving || !name.trim()}>
+            {saving ? "creating…" : "create"}
+          </Btn>
         </>
       }
     >
       <form id="create-space-form" onSubmit={submit} className="space-y-3">
-        <label className="flex flex-col gap-1.5 text-sm">
-          <span className="font-medium text-text">Name</span>
+        <FieldLabel label="name">
           <Input
             value={name}
             onChange={(e) => {
               setName(e.target.value);
               if (!slugTouched) setSlug(toSlug(e.target.value));
             }}
-            placeholder="Engineering"
+            placeholder="engineering"
             autoFocus
           />
-        </label>
-        <label className="flex flex-col gap-1.5 text-sm">
-          <span className="font-medium text-text">Slug</span>
+        </FieldLabel>
+        <FieldLabel label="slug">
           <Input
             value={slug}
             onChange={(e) => {
@@ -185,17 +187,16 @@ function CreateSpaceDialog({
             }}
             placeholder="engineering"
           />
-        </label>
-        <label className="flex flex-col gap-1.5 text-sm">
-          <span className="font-medium text-text">Description</span>
+        </FieldLabel>
+        <FieldLabel label="description">
           <Textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder="Optional"
+            placeholder="optional"
             rows={2}
           />
-        </label>
-        {error && <p className="text-sm text-error">{error}</p>}
+        </FieldLabel>
+        {error && <p className="text-[12px] text-err">[ERR] {error}</p>}
       </form>
     </Dialog>
   );

@@ -80,6 +80,10 @@ spec:
         - name: OTEL_COLLECTOR_URL
           value: {{ .Values.otel.collectorHttpEndpoint | quote }}
         {{- end }}
+        {{- if and .Values.adsense .Values.adsense.client }}
+        - name: ADSENSE_CLIENT
+          value: {{ .Values.adsense.client | quote }}
+        {{- end }}
         {{- if .Values.configMap.enabled }}
         envFrom:
         - configMapRef:

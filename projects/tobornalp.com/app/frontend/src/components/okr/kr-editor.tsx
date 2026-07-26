@@ -2,8 +2,13 @@
 
 import { useState } from "react";
 import { api, type KeyResult } from "@/lib/api";
-import { Button, Input, Select, FieldLabel } from "@/components/ui";
+import { Btn, Input, Select, FieldLabel } from "@/components/ui";
 import { toast } from "sonner";
+
+// Destructive pill — coral outline on its own tint, filling solid (with #000 ink)
+// on hover. Written out rather than layered on <Btn> so no colour class collides.
+const DANGER_PILL =
+  "inline-flex items-center justify-center rounded-pill border border-err bg-err-bg px-3.5 py-[5px] text-[12px] font-bold text-err transition-colors hover:bg-err hover:text-black disabled:cursor-not-allowed disabled:opacity-60";
 
 // Inline create/edit for a single Key Result, plus an item-link sub-panel (US-069).
 // Used for both create (no `kr`) and edit (existing `kr`). For auto_progress KRs the
@@ -79,16 +84,16 @@ export function KrEditor({
   };
 
   return (
-    <form onSubmit={save} className="space-y-3 rounded-md border border-border bg-surface-alt p-3">
-      <FieldLabel label="Key result">
-        <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Reduce p95 latency" />
+    <form onSubmit={save} className="space-y-3 rounded-card border border-line2 bg-panel2 p-3">
+      <FieldLabel label="key result">
+        <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. reduce p95 latency" />
       </FieldLabel>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <FieldLabel label="Target">
+        <FieldLabel label="target">
           <Input value={target} onChange={(e) => setTarget(e.target.value)} inputMode="decimal" />
         </FieldLabel>
-        <FieldLabel label="Current" hint={autoProgress ? "auto" : undefined}>
+        <FieldLabel label="current" hint={autoProgress ? "auto" : undefined}>
           <Input
             value={current}
             onChange={(e) => setCurrent(e.target.value)}
@@ -96,24 +101,29 @@ export function KrEditor({
             disabled={autoProgress}
           />
         </FieldLabel>
-        <FieldLabel label="Unit">
+        <FieldLabel label="unit">
           <Input value={unit} onChange={(e) => setUnit(e.target.value)} placeholder="ms, %, …" />
         </FieldLabel>
-        <FieldLabel label="Weight">
+        <FieldLabel label="weight">
           <Input value={weight} onChange={(e) => setWeight(e.target.value)} inputMode="decimal" />
         </FieldLabel>
       </div>
 
       <div className="grid grid-cols-2 gap-3">
-        <FieldLabel label="Direction">
+        <FieldLabel label="direction">
           <Select value={direction} onChange={(e) => setDirection(e.target.value as "higher_better" | "lower_better")}>
-            <option value="higher_better">Higher is better</option>
-            <option value="lower_better">Lower is better</option>
+            <option value="higher_better">higher is better</option>
+            <option value="lower_better">lower is better</option>
           </Select>
         </FieldLabel>
-        <label className="mt-6 flex items-center gap-2 text-sm text-text">
-          <input type="checkbox" checked={autoProgress} onChange={(e) => setAutoProgress(e.target.checked)} />
-          Auto-progress from linked items
+        <label className="mt-6 flex items-center gap-2 text-[12px] text-ink">
+          <input
+            type="checkbox"
+            checked={autoProgress}
+            onChange={(e) => setAutoProgress(e.target.checked)}
+            className="accent-acc"
+          />
+          auto-progress from linked items
         </label>
       </div>
 
@@ -122,20 +132,20 @@ export function KrEditor({
       <div className="flex items-center justify-between">
         <div>
           {editing && (
-            <Button type="button" variant="danger" size="sm" onClick={remove}>
-              Delete
-            </Button>
+            <button type="button" onClick={remove} className={DANGER_PILL}>
+              delete
+            </button>
           )}
         </div>
         <div className="flex gap-2">
           {onCancel && (
-            <Button type="button" variant="ghost" size="sm" onClick={onCancel}>
-              Cancel
-            </Button>
+            <Btn type="button" onClick={onCancel}>
+              cancel
+            </Btn>
           )}
-          <Button type="submit" size="sm" disabled={saving}>
-            {saving ? "Saving…" : editing ? "Save" : "Add"}
-          </Button>
+          <Btn variant="primary" type="submit" disabled={saving}>
+            {saving ? "saving…" : editing ? "save" : "add"}
+          </Btn>
         </div>
       </div>
     </form>
@@ -178,21 +188,21 @@ function ItemLinkPanel({ orgId, kr }: { orgId: string; kr: KeyResult }) {
   };
 
   return (
-    <div className="rounded-md border border-border bg-surface p-2">
-      <div className="mb-1.5 text-xs font-medium text-text-secondary">Linked items</div>
+    <div className="rounded-card border border-line bg-panel p-2">
+      <div className="mb-1.5 text-[11px] font-bold uppercase tracking-[0.1em] text-mut">linked items</div>
       <div className="flex flex-wrap items-end gap-2">
-        <FieldLabel label="Item ID" className="flex-1">
+        <FieldLabel label="item id" className="flex-1">
           <Input value={itemId} onChange={(e) => setItemId(e.target.value)} placeholder="item UUID" />
         </FieldLabel>
-        <FieldLabel label="Weight">
+        <FieldLabel label="weight">
           <Input value={weight} onChange={(e) => setWeight(e.target.value)} className="w-20" inputMode="decimal" />
         </FieldLabel>
-        <Button type="button" size="sm" onClick={link} disabled={busy}>
-          Link
-        </Button>
-        <Button type="button" variant="outline" size="sm" onClick={unlink} disabled={busy}>
-          Unlink
-        </Button>
+        <Btn onClick={link} disabled={busy}>
+          link
+        </Btn>
+        <Btn onClick={unlink} disabled={busy}>
+          unlink
+        </Btn>
       </div>
     </div>
   );

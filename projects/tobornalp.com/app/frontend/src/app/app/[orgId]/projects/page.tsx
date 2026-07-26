@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import { useOrg } from "@/context/org";
 import { api } from "@/lib/api";
 import { useApi } from "@/lib/use-api";
-import { Button, EmptyState, Spinner } from "@/components/ui";
+import { Btn, EmptyState, Spinner, Chip, StatusTag, Panel } from "@/components/ui";
 import { MethodologyBadge } from "@/components/pm/methodology-badge";
 
 export default function ProjectsPage() {
@@ -17,16 +17,16 @@ export default function ProjectsPage() {
   const projects = data?.projects ?? [];
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-6">
-      <header className="mb-6 flex items-center justify-between">
+    <div className="app-content max-w-4xl">
+      <header className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-text">Projects</h1>
-          <p className="text-sm text-text-secondary">
-            {currentOrg?.name || "Organization"} · delivery projects
+          <h1 className="text-[13px] font-bold uppercase tracking-[0.1em] text-ink">projects</h1>
+          <p className="mt-1 text-[11px] text-mut">
+            {currentOrg?.name || "organization"} · delivery projects
           </p>
         </div>
         <Link href={`/app/${orgId}/projects/new`}>
-          <Button size="sm">+ New project</Button>
+          <Btn variant="primary">+ new project</Btn>
         </Link>
       </header>
 
@@ -35,45 +35,42 @@ export default function ProjectsPage() {
           <Spinner />
         </div>
       ) : error ? (
-        <p className="text-sm text-brand-red">{error.message}</p>
+        <p className="text-sm text-err">
+          <StatusTag tone="err" /> {error.message}
+        </p>
       ) : projects.length === 0 ? (
         <EmptyState
-          title="No projects yet"
+          title="no projects yet"
           action={
             <Link href={`/app/${orgId}/projects/new`}>
-              <Button size="sm">Create project</Button>
+              <Btn variant="primary">create project</Btn>
             </Link>
           }
         >
-          Create a project to declare how your team works and get a ready-to-use board.
+          create a project to declare how your team works and get a ready-to-use board.
         </EmptyState>
       ) : (
-        <ul className="space-y-2">
+        <Panel>
           {projects.map((p) => (
-            <li key={p.id} className="rounded-lg border border-border bg-surface">
-              <Link
-                href={`/app/${orgId}/projects/${p.id}`}
-                className="flex items-center gap-3 px-4 py-3"
-              >
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className="truncate text-sm font-medium text-text">{p.name}</span>
-                    <MethodologyBadge methodology={p.default_methodology} />
-                    {p.key_prefix && (
-                      <span className="rounded border border-border px-1.5 py-0.5 text-[11px] text-text-muted">
-                        {p.key_prefix}
-                      </span>
-                    )}
-                  </div>
-                  {p.description && (
-                    <p className="mt-1 truncate text-xs text-text-secondary">{p.description}</p>
-                  )}
+            <Link
+              key={p.id}
+              href={`/app/${orgId}/projects/${p.id}`}
+              className="flex items-center gap-3 border-b border-line px-4 py-3 last:border-b-0 hover:bg-sel"
+            >
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  <span className="truncate text-[13px] font-bold text-ink">{p.name}</span>
+                  <MethodologyBadge methodology={p.default_methodology} />
+                  {p.key_prefix && <Chip variant="scope">{p.key_prefix}</Chip>}
                 </div>
-                <span className="shrink-0 text-xs text-text-muted">Open →</span>
-              </Link>
-            </li>
+                {p.description && (
+                  <p className="mt-1 truncate text-xs text-mut">{p.description}</p>
+                )}
+              </div>
+              <span className="shrink-0 text-xs text-faint">open →</span>
+            </Link>
           ))}
-        </ul>
+        </Panel>
       )}
     </div>
   );

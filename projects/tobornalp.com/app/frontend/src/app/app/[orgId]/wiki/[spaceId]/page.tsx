@@ -2,14 +2,17 @@
 
 // Wiki space view — custom two-pane page: a flat pages list for the space and a
 // content pane for the selected page. Minimal stub (no page tree, no inline
-// editor, no comments/attachments/reactions — polish comes later). Content is
-// rendered in a <pre>; tobornalp has no Markdown component.
+// editor, no comments/attachments/reactions — polish comes later). Content
+// renders as real markdown via MarkdownDoc (frontmatter block, headings,
+// GFM, code fences, callouts, [[wikilinks]] resolved against `pages`).
 import { useCallback, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { api, type WikiPageDetail, type WikiPageSummary, type WikiSpace } from "@/lib/api";
 import { useOrg } from "@/context/org";
-import { Button, Input, Textarea, Dialog } from "@/components/ui";
+import { Btn, Input, Textarea, Dialog, FieldLabel, Panel, PanelHeader, EmptyState } from "@/components/ui";
+import { MarkdownDoc } from "@/components/wiki/MarkdownDoc";
+import { cn } from "@/lib/cn";
 
 function toSlug(title: string) {
   return title
@@ -77,87 +80,94 @@ export default function WikiSpacePage() {
 
   if (loading) {
     return (
-      <p className="px-4 py-6 text-sm text-text-muted" role="status">
-        Loading space…
+      <p className="px-[18px] py-6 text-[12px] text-faint" role="status">
+        loading space…
       </p>
     );
   }
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-6">
+    <div className="app-content">
       <button
         type="button"
-        className="mb-3 text-xs text-text-muted hover:text-text hover:underline"
+        className="justify-self-start text-[11px] text-faint hover:text-acc"
         onClick={() => router.push(`/app/${orgId}/wiki`)}
       >
-        ← Back to wiki
+        ← back to wiki
       </button>
 
-      <header className="mb-4 flex items-center justify-between">
+      <header className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-text">{space?.name ?? "Wiki space"}</h1>
+          <h1 className="text-[13px] font-bold uppercase tracking-[0.1em] text-ink">
+            {(space?.name ?? "wiki space").toLowerCase()}
+          </h1>
           {space?.description && (
-            <p className="text-sm text-text-secondary">{space.description}</p>
+            <p className="mt-1 font-prose text-[12.5px] text-mut">{space.description}</p>
           )}
         </div>
-        <Button onClick={() => setShowCreate(true)}>+ New page</Button>
+        <Btn variant="primary" onClick={() => setShowCreate(true)}>
+          + new page
+        </Btn>
       </header>
 
-      <div className="grid gap-6 md:grid-cols-[15rem_1fr]">
+      <div className="grid gap-3.5 md:grid-cols-[212px_1fr]">
         {/* Pages list */}
-        <aside className="overflow-hidden rounded-lg border border-border bg-surface">
-          <div className="border-b border-border bg-surface-alt px-3 py-2 text-sm font-medium text-text">
-            Pages
-          </div>
+        <Panel>
+          <PanelHeader title="pages" />
           {pages.length === 0 ? (
-            <p className="px-3 py-3 text-sm text-text-muted">No pages yet.</p>
+            <p className="px-4 py-3 text-[12px] text-faint">no pages yet.</p>
           ) : (
-            <ul className="divide-y divide-border">
-              {pages.map((p) => (
-                <li key={p.id}>
+            <div className="flex flex-col gap-0.5 p-2">
+              {pages.map((p) => {
+                const active = activePageId === p.id;
+                return (
                   <button
+                    key={p.id}
                     type="button"
-                    className={`block w-full px-3 py-2 text-left text-sm hover:bg-surface-alt ${
-                      activePageId === p.id ? "bg-surface-alt font-medium text-text" : "text-text"
-                    }`}
+                    className={cn(
+                      "flex items-center gap-2 rounded-card px-2.5 py-1.5 text-left text-[12.5px]",
+                      active ? "bg-acc-bg font-bold text-acc" : "text-mut hover:bg-sel hover:text-ink",
+                    )}
                     onClick={() => setActivePageId(p.id)}
                   >
-                    {p.title}
+                    <span className="text-faint">·</span>
+                    <span className="truncate">{p.title}</span>
                   </button>
-                </li>
-              ))}
-            </ul>
+                );
+              })}
+            </div>
           )}
-        </aside>
+        </Panel>
 
         {/* Selected page content */}
-        <section className="overflow-hidden rounded-lg border border-border bg-surface">
+        <Panel>
           {!activePageId ? (
-            <p className="px-4 py-6 text-sm text-text-muted">
-              {pages.length === 0
-                ? "Create a page to start writing."
-                : "Select a page from the list."}
-            </p>
+            <EmptyState title={pages.length === 0 ? "nothing to write yet" : "no page selected"}>
+              {pages.length === 0 ? "create a page to start writing." : "select a page from the list."}
+            </EmptyState>
           ) : !page ? (
-            <p className="px-4 py-6 text-sm text-text-muted" role="status">
-              Loading page…
+            <p className="px-4 py-6 text-[12px] text-faint" role="status">
+              loading page…
             </p>
           ) : (
             <>
-              <div className="border-b border-border bg-surface-alt px-4 py-2">
-                <h2 className="text-lg font-semibold text-text">{page.title}</h2>
-                {page.updated_at && (
-                  <p className="text-xs text-text-muted">
-                    Updated {new Date(page.updated_at).toLocaleString()}
-                  </p>
+              <PanelHeader
+                title={page.title}
+                sub="markdown · plain text"
+                right={
+                  page.updated_at ? `updated ${new Date(page.updated_at).toLocaleString()}` : undefined
+                }
+              />
+              <div className="max-h-[36rem] overflow-auto p-4">
+                {page.content ? (
+                  <MarkdownDoc content={page.content} pages={pages} onNavigateToPage={setActivePageId} />
+                ) : (
+                  <p className="text-[12px] text-faint">(no content)</p>
                 )}
               </div>
-              <pre className="max-h-[36rem] overflow-auto whitespace-pre-wrap break-words p-4 text-sm text-text">
-                {page.content || "(no content)"}
-              </pre>
             </>
           )}
-        </section>
+        </Panel>
       </div>
 
       {showCreate && orgId && spaceId && (
@@ -218,33 +228,29 @@ function CreatePageDialog({
     <Dialog
       open
       onClose={onClose}
-      title="Create page"
+      title="create page"
       footer={
         <>
-          <Button variant="outline" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button type="submit" form="create-page-form" disabled={saving || !title.trim()}>
-            {saving ? "Creating…" : "Create"}
-          </Button>
+          <Btn onClick={onClose}>cancel</Btn>
+          <Btn variant="primary" type="submit" form="create-page-form" disabled={saving || !title.trim()}>
+            {saving ? "creating…" : "create"}
+          </Btn>
         </>
       }
     >
       <form id="create-page-form" onSubmit={submit} className="space-y-3">
-        <label className="flex flex-col gap-1.5 text-sm">
-          <span className="font-medium text-text">Title</span>
+        <FieldLabel label="title">
           <Input
             value={title}
             onChange={(e) => {
               setTitle(e.target.value);
               if (!slugTouched) setSlug(toSlug(e.target.value));
             }}
-            placeholder="Page title"
+            placeholder="page title"
             autoFocus
           />
-        </label>
-        <label className="flex flex-col gap-1.5 text-sm">
-          <span className="font-medium text-text">Slug</span>
+        </FieldLabel>
+        <FieldLabel label="slug">
           <Input
             value={slug}
             onChange={(e) => {
@@ -253,17 +259,16 @@ function CreatePageDialog({
             }}
             placeholder="page-slug"
           />
-        </label>
-        <label className="flex flex-col gap-1.5 text-sm">
-          <span className="font-medium text-text">Content</span>
+        </FieldLabel>
+        <FieldLabel label="content" hint="markdown · optional initial content">
           <Textarea
             value={content}
             onChange={(e) => setContent(e.target.value)}
-            placeholder="Optional initial content"
+            placeholder="# heading — body text…"
             rows={6}
           />
-        </label>
-        {error && <p className="text-sm text-error">{error}</p>}
+        </FieldLabel>
+        {error && <p className="text-[12px] text-err">[ERR] {error}</p>}
       </form>
     </Dialog>
   );

@@ -24,9 +24,17 @@
   --line: #1F1F26;        /* default border */
   --line2: #31313B;       /* stronger border / input border */
 
-  --ink: #EDEDF2;         /* primary text */
-  --mut: #9C9CA8;         /* secondary text */
-  --faint: #64646F;       /* tertiary / keys / timestamps */
+  /* The mockup's --mut/--faint (#9C9CA8 / #64646F) are the one place this
+     implementation departs from it. --faint measured 3.09:1 against --panel2
+     and 3.59:1 against --bg, which fails WCAG AA (4.5:1) — and it is used
+     almost exclusively at 10–11.5px, where legibility matters most. Raising
+     --faint alone would have collapsed it into --mut, so both moved and the
+     three-tier ladder was re-spaced. Measured against --panel2 #16161B:
+       --faint 5.29:1   --mut 8.39:1   --ink 15.45:1
+     Adjacent-tier separation: faint→mut 1.59, mut→ink 1.84. */
+  --ink: #EDEDF2;         /* primary text        15.45:1 on --panel2 */
+  --mut: #B0B0BB;         /* secondary text       8.39:1 on --panel2 */
+  --faint: #8A8A96;       /* tertiary / keys / timestamps  5.29:1 on --panel2 */
 
   --acc: #3EF2A6;         /* neon mint — THE accent */
   --acc-hi: #93FAD2;
@@ -110,8 +118,25 @@ html[data-design-theme="organic"].dark {
 
   --card-background: var(--panel2);
   --card-border-color: var(--line);
+
+  /* `.btn` primary is a solid mint field, so its label must be black — the
+     generated default is #FAF7F2, which is unreadable once --btn-background
+     becomes mint. Radius is set here because the base .btn rule has none and
+     the console vocabulary is pills. */
   --btn-background: var(--acc);
   --btn-hover-background: var(--acc-hi);
+  --btn-color: #000000;
+  --btn-border-color: var(--acc);
+  --btn-hover-border-color: var(--acc-hi);
+  --btn-outline-color: var(--ink);
+  --btn-outline-hover-background: var(--sel);
+  --btn-rounded-radius: var(--r-pill);
+
+  /* Headless UI focus/elevation: the generated ring is a dark forest green
+     (rgba(45,95,45,.4)) that disappears against true black. */
+  --hui-focus-ring-color: var(--acc-line);
+  --hui-panel-shadow: var(--shadow);
+  --hui-switch-thumb-shadow: 0 1px 3px rgba(0, 0, 0, .6);
 
   /* Neutral ramp is inverted: pages written as `bg-slate-50` / `text-slate-900`
      stay legible instead of flashing white. */
@@ -126,6 +151,22 @@ html[data-design-theme="organic"].dark {
   --slate-800: #C4C4CE;
   --slate-900: #EDEDF2;
   --slate-950: #FFFFFF;
+
+  /* The generated sheet ships a warm cream ramp (#FAF7F2 … #2C1810) and wires
+     the Headless UI control/field/trigger borders to it. Left alone those
+     render as pale cream hairlines on true black. Inverted to match slate. */
+  --white: #EDEDF2;
+  --black: #000000;
+  --gray-50: #0D0D10;
+  --gray-100: #16161B;
+  --gray-200: #1F1F26;
+  --gray-300: #31313B;
+  --gray-400: #4A4A55;
+  --gray-500: #64646F;
+  --gray-600: #7E7E8B;
+  --gray-700: #9C9CA8;
+  --gray-800: #C4C4CE;
+  --gray-900: #EDEDF2;
 
   /* mono is the UI voice; system sans is reserved for long prose */
   --font-sans: var(--mono);
@@ -238,6 +279,23 @@ a:focus-visible,
 }
 
 ::selection { background: var(--acc-bg); color: var(--acc-hi); }
+
+/* The generated `.btn` base carries no border-radius (only the `.rounded`
+   modifier does). Every button in this world is a pill. */
+html[data-design-theme="organic"] .btn { border-radius: var(--r-pill); }
+
+/* Every solid signal field in the generated sheet pairs its background with
+   `color: var(--white)`. That held for the old palette; here all four signals
+   (mint, amber, cyan, coral) are bright, so light ink on them lands near
+   2.5:1. The console rule is absolute — a solid signal field carries #000 ink.
+   `.card-tag` is matched only through a signal modifier: the unmodified tag
+   sits on --panel2 and must keep its muted foreground. */
+html[data-design-theme="organic"] .btn:is(.danger, .success, .warning, .info),
+html[data-design-theme="organic"]
+  :is(.card, .card-header):is(.danger, .success, .warning, .info, [class*="priority-"])
+  .card-tag {
+  color: #000000;
+}
 
 /* Long-form prose opts back into system sans (item descriptions, wiki body). */
 .prose-sans { font-family: var(--sans); }

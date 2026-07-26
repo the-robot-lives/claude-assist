@@ -9,15 +9,15 @@ export default function OrgDashboard() {
   const { currentOrg } = useOrg();
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-8">
-      <header className="mb-6">
-        <h1 className="text-2xl font-bold text-text">{currentOrg?.name || 'Organization'}</h1>
-        <p className="mt-1 font-mono text-xs text-text-muted">{orgId}</p>
+    <div className="app-content">
+      <header>
+        <h1 className="text-[19px] font-bold leading-snug text-ink">{currentOrg?.name || 'organization'}</h1>
+        <p className="mt-1 text-[11px] text-faint">{orgId}</p>
       </header>
 
-      <SectionCard title="Dashboard">
-        <EmptyState title="Nothing here yet">
-          Your organization dashboard is coming soon. Use the navigation to jump into items,
+      <SectionCard title="dashboard">
+        <EmptyState title="nothing here yet">
+          your organization dashboard is coming soon. use the navigation to jump into items,
           goals, and today’s plan.
         </EmptyState>
       </SectionCard>

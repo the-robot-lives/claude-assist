@@ -11,7 +11,7 @@ import { api, type Artifact } from "@/lib/api";
 import { useOrg } from "@/context/org";
 import { DataTable } from "@/components/console/DataTable";
 import { reviewsDescriptor } from "@/lib/console/descriptors/reviews";
-import { Button, Input, Select, Dialog } from "@/components/ui";
+import { Btn, Input, Select, Dialog, FieldLabel } from "@/components/ui";
 
 export default function ReviewsPage() {
   const params = useParams<{ orgId: string }>();
@@ -39,21 +39,25 @@ export default function ReviewsPage() {
   const ctx = useMemo(() => ({ orgId: orgId ?? "" }), [orgId]);
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-6">
-      <header className="mb-4 flex items-center justify-between">
+    <div className="app-content">
+      <header className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-text">Reviews</h1>
-          <p className="text-sm text-text-secondary">
-            {currentOrg?.name || "Organization"} · code & content reviews
+          <h1 className="text-[13px] font-bold uppercase tracking-[0.1em] text-ink">reviews</h1>
+          <p className="mt-1 text-[11px] text-mut">
+            {(currentOrg?.name || "organization").toLowerCase()} · code &amp; content reviews
           </p>
         </div>
         {/* A review targets an artifact — only offer create when one exists. */}
-        {artifacts.length > 0 && <Button onClick={() => setShowCreate(true)}>+ New review</Button>}
+        {artifacts.length > 0 && (
+          <Btn variant="primary" onClick={() => setShowCreate(true)}>
+            + new review
+          </Btn>
+        )}
       </header>
 
       {orgLoading || !orgId ? (
-        <p className="text-sm text-text-muted">
-          {orgLoading ? "Loading…" : "Select an organization."}
+        <p className="text-[12px] text-faint">
+          {orgLoading ? "loading…" : "select an organization."}
         </p>
       ) : (
         <DataTable
@@ -127,55 +131,48 @@ function CreateReviewDialog({
     <Dialog
       open
       onClose={onClose}
-      title="Start review"
+      title="start review"
       footer={
         <>
-          <Button variant="outline" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button
+          <Btn onClick={onClose}>cancel</Btn>
+          <Btn
+            variant="primary"
             type="submit"
             form="create-review-form"
             disabled={saving || !artifactId || !persona.trim()}
           >
-            {saving ? "Starting…" : "Start"}
-          </Button>
+            {saving ? "starting…" : "start"}
+          </Btn>
         </>
       }
     >
       <form id="create-review-form" onSubmit={submit} className="space-y-3">
-        <label className="flex flex-col gap-1.5 text-sm">
-          <span className="font-medium text-text">Artifact</span>
+        <FieldLabel label="artifact" hint="the latest revision of this artifact will be reviewed.">
           <Select value={artifactId} onChange={(e) => setArtifactId(e.target.value)}>
-            <option value="">Select an artifact…</option>
+            <option value="">select an artifact…</option>
             {artifacts.map((a) => (
               <option key={a.id} value={a.id}>
                 {a.title} ({a.kind})
               </option>
             ))}
           </Select>
-          <span className="text-xs text-text-muted">
-            The latest revision of this artifact will be reviewed.
-          </span>
-        </label>
-        <label className="flex flex-col gap-1.5 text-sm">
-          <span className="font-medium text-text">Reviewer persona</span>
+        </FieldLabel>
+        <FieldLabel label="reviewer persona">
           <Input
             value={persona}
             onChange={(e) => setPersona(e.target.value)}
             placeholder="senior-engineer"
             autoFocus
           />
-        </label>
-        <label className="flex flex-col gap-1.5 text-sm">
-          <span className="font-medium text-text">Title</span>
+        </FieldLabel>
+        <FieldLabel label="title">
           <Input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="Optional review title"
+            placeholder="optional review title"
           />
-        </label>
-        {error && <p className="text-sm text-error">{error}</p>}
+        </FieldLabel>
+        {error && <p className="text-[12px] text-err">[ERR] {error}</p>}
       </form>
     </Dialog>
   );

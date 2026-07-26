@@ -82,31 +82,13 @@ function selectOutlineNode(label: string) {
   cy.get("[aria-label='Outline']").contains("button", label).click();
 }
 
-Given("the canonical HoloGraph walking skeleton fixture is available from the document API", () => {
+Given("the canonical HoloGraph walking skeleton fixture is available from the workspace document store", () => {
   assertGraphDocumentShape();
 
-  cy.intercept("GET", "**/api/v1/docs", {
-    statusCode: 200,
-    body: {
-      data: [
-        {
-          id: graphDocument.id,
-          slug: graphDocument.slug,
-          title: graphDocument.title,
-          version: graphDocument.version,
-          updatedAt: graphDocument.updatedAt,
-          summary: graphDocument.summary,
-          nodeCount: graphDocument.nodes.length,
-          edgeCount: graphDocument.edges.length,
-        },
-      ],
-    },
-  }).as("listHolographDocuments");
-
-  cy.intercept("GET", `**/api/v1/docs/${graphDocument.id}`, {
-    statusCode: 200,
-    body: { data: graphDocument },
-  }).as("loadHolographDocument");
+  // Logged out, the workspace binds to the browser-local DocStore, which serves this same
+  // bundled fixture. The cloud document API is spied on so the scenario can prove the
+  // anonymous path never reaches for it; a signed-in session gets that store instead.
+  cy.intercept("GET", "**/api/v1/projects/*/docs").as("cloudDocumentList");
 });
 
 When("I open the HoloGraph workspace", () => {
@@ -114,16 +96,19 @@ When("I open the HoloGraph workspace", () => {
   cy.clearLocalStorage();
   cy.visit("/");
   dismissCookieBanner();
-  cy.wait("@listHolographDocuments").its("response.statusCode").should("eq", 200);
 
-  // The Files tab lists every model the document API knows about; opening the fixture
+  // The Files tab lists every model the document store knows about; opening the fixture
   // from there is the workspace's real load path.
   cy.contains(".trd-tab", "Files").click();
-  cy.get("[aria-label='Files']").contains("button", graphDocument.slug).click();
-  cy.wait("@loadHolographDocument").its("response.statusCode").should("eq", 200);
+  cy.get("[aria-label='Files']")
+    .contains("button", graphDocument.slug)
+    .should("be.visible")
+    .click();
+  cy.get("[aria-label='Workspace status']").should("contain", graphDocument.slug);
 });
 
 Then("the imported HoloGraph document should render", () => {
+  cy.get("@cloudDocumentList.all").should("have.length", 0);
   cy.get(".trd-shell").should("be.visible");
   cy.get(".trd-three-scene").should("be.visible");
   cy.get("[aria-label='Workspace status']").within(() => {

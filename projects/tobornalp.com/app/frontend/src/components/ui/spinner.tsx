@@ -10,7 +10,7 @@ export interface SpinnerProps {
 export function Spinner({ size = 16, className, label = "Loading" }: SpinnerProps) {
   return (
     <svg
-      className={cn("animate-spin text-text-muted", className)}
+      className={cn("animate-spin text-faint", className)}
       width={size}
       height={size}
       viewBox="0 0 24 24"

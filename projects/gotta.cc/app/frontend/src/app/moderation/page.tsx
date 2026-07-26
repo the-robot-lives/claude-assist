@@ -109,9 +109,14 @@ function ModerationCard({
           >
             {submission.name}
           </h2>
-          {submission.submitter_email && (
+          {submission.submitter_email ? (
             <p className="mt-1 font-ui text-xs text-ink-tertiary">
               from {submission.submitter_email}
+            </p>
+          ) : (
+            <p className="mt-1 font-ui text-xs text-ink-tertiary">
+              anonymous
+              {submission.contact_email ? ` · ${submission.contact_email}` : ""}
             </p>
           )}
         </div>

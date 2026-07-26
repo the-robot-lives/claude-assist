@@ -8,7 +8,7 @@
     "build": "npm run generate-css && next build",
     "start": "next start",
     "regen": "rm -rf .cache && npm run generate-css",
-    "test": "tsx src/lib/auth-flow.test.ts",
+    "test": "tsx src/lib/auth-flow.test.ts && tsx src/lib/holograph/doc-store.test.ts",
     "test:e2e:types": "tsc --noEmit -p cypress/tsconfig.json",
     "test:e2e": "cypress run --e2e",
     "test:e2e:open": "cypress open --e2e"

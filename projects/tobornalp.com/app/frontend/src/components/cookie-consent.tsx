@@ -23,6 +23,7 @@ import {
   type OptionalConsentCategory,
 } from "@/lib/consent";
 import { api } from "@/lib/api";
+import { btnClass } from "@/components/ui";
 
 // When a logged-in user makes a consent choice, persist it to their account so
 // it is authoritative and crosses the apex → app.* subdomain boundary. Anonymous
@@ -133,10 +134,12 @@ export function useCookieConsent() {
 export function CookieSettingsButton({ className }: { className?: string }) {
   const { openSettings } = useCookieConsent();
 
+  // The old default leaned on `.sg-btn`, which has no rule in this app — the
+  // button rendered raw. Fall back to the console pill instead.
   return (
     <button
       type="button"
-      className={className ?? "sg-btn sg-btn--outline sg-btn--sm"}
+      className={className ?? btnClass("default", "text-[11px]")}
       onClick={openSettings}
     >
       Cookie Settings
@@ -253,8 +256,13 @@ export function CookieConsentBanner() {
 /*
  * Consent banner styling — slim footer bar pinned to the bottom of the viewport.
  * The full per-category preferences live in a collapsible panel toggled by
- * "Manage choices", so the default footprint is a one-line strip. Theme CSS
- * variables with safe fallbacks; also styles the raw .sg-btn buttons.
+ * "Manage choices", so the default footprint is a one-line strip.
+ *
+ * Dark-neon console skin: panel surface over the true-black ground, a hairline
+ * --line top edge, mono voice, pill buttons. "Accept all" is the primary — a
+ * solid mint field, and a solid mint field always carries #000 ink, never white.
+ * Fallbacks are the literal dark-theme values so the bar never flashes a light
+ * strip if it paints before the token sheet lands.
  */
 const COOKIE_CSS = `
 .cookie-consent {
@@ -263,11 +271,11 @@ const COOKIE_CSS = `
   right: 0;
   bottom: 0;
   z-index: 60;
-  background: var(--surface, #fbf7f0);
-  color: var(--text, #211);
-  border-top: 1px solid var(--border, rgba(0,0,0,0.14));
-  box-shadow: 0 -6px 20px rgba(0,0,0,0.10);
-  font-family: var(--font-sans, system-ui, -apple-system, sans-serif);
+  background: var(--panel, #0D0D10);
+  color: var(--ink, #EDEDF2);
+  border-top: 1px solid var(--line, #1F1F26);
+  box-shadow: 0 -6px 20px rgba(0,0,0,0.55);
+  font-family: var(--mono, ui-monospace, "SF Mono", Menlo, Consolas, monospace);
 }
 .cookie-consent__bar {
   padding: 8px 16px;
@@ -281,10 +289,10 @@ const COOKIE_CSS = `
   display: none;
 }
 .cookie-consent__copy {
-  font-size: 12.5px;
-  line-height: 1.4;
+  font-size: 12px;
+  line-height: 1.45;
   margin: 0;
-  color: var(--text-muted, #5a544c);
+  color: var(--mut, #9C9CA8);
 }
 .cookie-consent__actions {
   display: flex;
@@ -299,7 +307,7 @@ const COOKIE_CSS = `
   display: flex;
   flex-direction: column;
   gap: 10px;
-  border-top: 1px solid var(--border, rgba(0,0,0,0.10));
+  border-top: 1px solid var(--line, #1F1F26);
   max-height: 60vh;
   overflow-y: auto;
 }
@@ -310,43 +318,72 @@ const COOKIE_CSS = `
   justify-content: space-between;
   gap: 12px;
   padding: 8px 10px;
-  border: 1px solid var(--border, rgba(0,0,0,0.12));
-  border-radius: 8px;
+  background: var(--panel2, #16161B);
+  border: 1px solid var(--line, #1F1F26);
+  border-radius: var(--r-sm, 10px);
 }
-.cookie-consent__category-title { display: block; font-weight: 600; font-size: 12.5px; }
-.cookie-consent__category-copy { display: block; font-size: 11.5px; color: var(--text-muted, #6a645c); margin-top: 2px; }
+.cookie-consent__category-title {
+  display: block;
+  font-weight: 700;
+  font-size: 12px;
+  color: var(--ink, #EDEDF2);
+}
+.cookie-consent__category-copy {
+  display: block;
+  font-size: 11px;
+  color: var(--faint, #64646F);
+  margin-top: 2px;
+}
 .cookie-consent__category input {
   margin-top: 3px;
   width: 16px;
   height: 16px;
-  accent-color: var(--brand-blue, #2d5a2d);
+  accent-color: var(--acc, #3EF2A6);
   flex-shrink: 0;
 }
+.cookie-consent__category input:disabled { opacity: .6; }
 .cookie-consent__panel-actions { display: flex; justify-content: flex-end; }
 .cookie-consent .sg-btn {
-  font-family: var(--font-sans, system-ui, sans-serif);
-  font-weight: 600;
-  font-size: 12.5px;
-  padding: 6px 12px;
-  border-radius: 8px;
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 12px;
+  padding: 5px 14px;
+  border-radius: var(--r-pill, 999px);
   cursor: pointer;
-  border: 1px solid var(--border-strong, var(--border, rgba(0,0,0,0.2)));
-  background: transparent;
-  color: var(--text, #211);
+  border: 1px solid var(--line2, #31313B);
+  background: var(--panel2, #16161B);
+  color: var(--ink, #EDEDF2);
   transition: background 140ms ease, color 140ms ease, border-color 140ms ease;
 }
 .cookie-consent .sg-btn--link {
   border-color: transparent;
-  padding: 6px 4px;
+  background: transparent;
+  padding: 5px 6px;
+  color: var(--mut, #9C9CA8);
   text-decoration: underline;
+  text-underline-offset: 3px;
 }
-.cookie-consent .sg-btn:hover { border-color: var(--brand-blue, #2d5a2d); color: var(--brand-blue, #2d5a2d); }
-.cookie-consent .sg-btn--black { background: var(--brand-blue, #234e23); color: #fff; border-color: transparent; }
-.cookie-consent .sg-btn--black:hover { background: #1c3f1c; color: #fff; }
+.cookie-consent .sg-btn:hover { border-color: var(--acc-line, rgba(62,242,166,.45)); color: var(--acc, #3EF2A6); }
+.cookie-consent .sg-btn--link:hover { border-color: transparent; color: var(--acc, #3EF2A6); }
+/* Primary: solid mint field ⇒ black ink. */
+.cookie-consent .sg-btn--black {
+  background: var(--acc, #3EF2A6);
+  color: #000;
+  border-color: var(--acc, #3EF2A6);
+}
+.cookie-consent .sg-btn--black:hover {
+  background: var(--acc-hi, #93FAD2);
+  border-color: var(--acc-hi, #93FAD2);
+  color: #000;
+}
+.cookie-consent .sg-btn:focus-visible {
+  outline: 2px solid var(--acc, #3EF2A6);
+  outline-offset: 2px;
+}
 @media (max-width: 560px) {
   .cookie-consent__bar { flex-direction: column; align-items: stretch; gap: 6px; padding: 8px 12px; }
   .cookie-consent__actions { justify-content: stretch; }
   .cookie-consent__actions > .sg-btn { flex: 1 1 auto; }
-  .cookie-consent__copy { font-size: 12px; }
+  .cookie-consent__copy { font-size: 11px; }
 }
 `;

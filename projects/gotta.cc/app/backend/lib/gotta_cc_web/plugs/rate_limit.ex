@@ -4,7 +4,9 @@ defmodule GottaCcWeb.Plugs.RateLimit do
 
   @default_limits %{
     auth: {10, 60_000},
-    auth_sensitive: {5, 60_000}
+    auth_sensitive: {5, 60_000},
+    # Anonymous site suggestions: generous for a human, hostile to a script.
+    submission: {5, 600_000}
   }
 
   @impl true

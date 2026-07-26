@@ -45,7 +45,7 @@ export function Dialog({ open, onClose, title, children, footer, size = "md", cl
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
         >
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" aria-hidden="true" />
+          <div className="fixed inset-0 bg-black/70 backdrop-blur-sm" aria-hidden="true" />
         </TransitionChild>
 
         <div className="fixed inset-0 flex items-center justify-center p-4">
@@ -60,13 +60,15 @@ export function Dialog({ open, onClose, title, children, footer, size = "md", cl
           >
             <DialogPanel
               className={cn(
-                "w-full rounded-lg border border-border bg-surface p-5 shadow-xl",
+                "w-full rounded-panel border border-line2 bg-panel p-5 shadow-pop",
                 SIZE[size],
                 className,
               )}
             >
               {title && (
-                <DialogTitle className="text-base font-semibold text-text">{title}</DialogTitle>
+                <DialogTitle className="text-[12px] font-bold uppercase tracking-[0.1em] text-ink">
+                  {title}
+                </DialogTitle>
               )}
               <div className={cn(title && "mt-3")}>{children}</div>
               {footer && <div className="mt-5 flex items-center justify-end gap-2">{footer}</div>}

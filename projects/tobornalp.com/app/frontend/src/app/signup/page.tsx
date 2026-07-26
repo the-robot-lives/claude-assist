@@ -9,12 +9,12 @@ import { emailDomain, matchingSsoProviders, postAuthPath } from "@/lib/auth-flow
 import Link from "next/link";
 
 const SSO_LABELS: Record<string, string> = {
-  oidc: "Continue with SSO",
-  google: "Continue with Google",
-  github: "Continue with GitHub",
-  facebook: "Continue with Facebook",
-  linkedin: "Continue with LinkedIn",
-  saml: "Continue with SAML",
+  oidc: "continue with sso",
+  google: "continue with google",
+  github: "continue with github",
+  facebook: "continue with facebook",
+  linkedin: "continue with linkedin",
+  saml: "continue with saml",
 };
 
 const SSO_PATHS: Record<string, string> = {
@@ -27,6 +27,41 @@ const SSO_PATHS: Record<string, string> = {
 };
 
 type Step = "email" | "sso" | "password";
+
+const BTN_PRIMARY =
+  "inline-flex w-full items-center justify-center rounded-full bg-[var(--acc)] px-5 py-2.5 font-mono text-sm font-bold text-black transition-colors hover:bg-[var(--acc-hi)] disabled:opacity-60 disabled:cursor-not-allowed";
+const BTN_OUTLINE =
+  "inline-flex w-full items-center justify-center rounded-full border border-[var(--line2)] bg-[var(--panel2)] px-5 py-2.5 font-mono text-sm font-semibold text-[var(--ink)] transition-colors hover:border-[var(--faint)]";
+
+function Field({
+  label,
+  className,
+  ...inputProps
+}: { label: string; className?: string } & React.InputHTMLAttributes<HTMLInputElement>) {
+  return (
+    <div className="mb-4">
+      <label
+        htmlFor={inputProps.id}
+        className="mb-1.5 block font-mono text-[11px] uppercase tracking-[.08em] text-[var(--mut)]"
+      >
+        {label}
+      </label>
+      <input
+        {...inputProps}
+        className={`w-full rounded-[10px] border border-[var(--line2)] bg-[var(--bg)] px-3.5 py-2.5 font-mono text-sm text-[var(--ink)] outline-none transition-colors placeholder:text-[var(--faint)] focus:border-[var(--acc)] focus:ring-2 focus:ring-[var(--acc-bg)] ${className ?? ""}`}
+      />
+    </div>
+  );
+}
+
+function Brand() {
+  return (
+    <div className="mb-6 flex items-baseline gap-1 font-mono">
+      <span className="text-sm font-bold tracking-tight text-[var(--ink)]">tobornalp</span>
+      <span className="text-sm font-bold text-[var(--acc)] motion-safe:animate-pulse">▮</span>
+    </div>
+  );
+}
 
 export default function SignupPage() {
   const { register } = useAuth();
@@ -95,132 +130,139 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="content">
-      <main>
-        <h1 className="sg-page-title">Sign Up</h1>
+    <div className="flex min-h-[100dvh] items-center justify-center bg-[var(--bg)] px-6 py-16">
+      <div className="w-full max-w-[420px] rounded-[14px] border border-[var(--line2)] bg-[var(--panel2)] p-8 shadow-[0_2px_10px_rgba(0,0,0,.35)]">
+        <Brand />
+        <h1 className="mb-6 font-mono text-lg font-bold text-[var(--ink)]">sign up</h1>
 
         {step === "email" && (
-          <form onSubmit={handleEmailSubmit} style={{ maxWidth: 400 }}>
-            <div className="sg-field">
-              <label htmlFor="email">Email</label>
-              <input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                autoComplete="email"
-              />
-            </div>
-            <button type="submit" className="sg-btn sg-btn--black">
-              Continue
+          <form onSubmit={handleEmailSubmit}>
+            <Field
+              id="email"
+              label="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              autoComplete="email"
+            />
+            <button type="submit" className={BTN_PRIMARY}>
+              continue
             </button>
-            <p style={{ marginTop: "1rem" }}>
-              Already have an account? <Link href="/login">Log in</Link>
+            <p className="mt-4 font-mono text-xs text-[var(--mut)]">
+              already have an account?{" "}
+              <Link href="/login" className="text-[var(--acc)] hover:text-[var(--acc-hi)]">
+                log in
+              </Link>
             </p>
           </form>
         )}
 
         {step === "sso" && (
-          <div style={{ maxWidth: 400 }}>
-            <p style={{ marginBottom: "1rem" }}>{email}</p>
-            {domainProviders.map((provider) => (
-              <a
-                key={provider}
-                href={SSO_PATHS[provider] || `/auth/${provider}`}
-                className="sg-btn sg-btn--black"
-                style={{ display: "flex", width: "100%", marginBottom: "0.5rem" }}
-              >
-                {SSO_LABELS[provider] || `Continue with ${provider}`}
-              </a>
-            ))}
-            <button
-              type="button"
-              className="sg-btn sg-btn--outline"
-              onClick={() => setStep("password")}
-              style={{ width: "100%", marginTop: "0.5rem" }}
-            >
-              Use email and password instead
-            </button>
-            <button
-              type="button"
-              className="sg-btn sg-btn--outline"
-              onClick={() => setStep("email")}
-              style={{ width: "100%", marginTop: "0.5rem" }}
-            >
-              Change email
-            </button>
+          <div>
+            <p className="mb-4 font-mono text-[13px] text-[var(--mut)]">{email}</p>
+            <div className="flex flex-col gap-2">
+              {domainProviders.map((provider) => (
+                <a
+                  key={provider}
+                  href={SSO_PATHS[provider] || `/auth/${provider}`}
+                  className={BTN_OUTLINE}
+                >
+                  {SSO_LABELS[provider] || `continue with ${provider}`}
+                </a>
+              ))}
+              <button type="button" className={BTN_OUTLINE} onClick={() => setStep("password")}>
+                use email and password instead
+              </button>
+              <button type="button" className={BTN_OUTLINE} onClick={() => setStep("email")}>
+                change email
+              </button>
+            </div>
           </div>
         )}
 
         {step === "password" && (
-          <form onSubmit={handleSubmit} style={{ maxWidth: 400 }}>
-            {error && <p className="sg-error">{error}</p>}
-            <div className="sg-field">
-              <label htmlFor="invite-token">Invite Token</label>
-              <input
-                id="invite-token"
-                type="text"
-                value={inviteToken}
-                onChange={(e) => setInviteToken(e.target.value)}
-                autoComplete="off"
-              />
-            </div>
-            <div className="sg-field">
-              <label htmlFor="email-password">Email</label>
-              <input
-                id="email-password"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                autoComplete="email"
-              />
-            </div>
-            <div className="sg-field">
-              <label htmlFor="user-name">User Name</label>
-              <input
-                id="user-name"
-                type="text"
-                value={userName}
-                onChange={(e) => setUserName(e.target.value)}
-                required
-                autoComplete="username"
-              />
-            </div>
-            <div className="sg-field">
-              <label htmlFor="first-name">First Name</label>
-              <input id="first-name" type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)} required autoComplete="given-name" />
-            </div>
-            <div className="sg-field">
-              <label htmlFor="last-name">Last Name</label>
-              <input id="last-name" type="text" value={lastName} onChange={(e) => setLastName(e.target.value)} required autoComplete="family-name" />
-            </div>
-            <div className="sg-field">
-              <label htmlFor="mobile-phone">Mobile</label>
-              <input id="mobile-phone" type="tel" value={mobilePhone} onChange={(e) => setMobilePhone(e.target.value)} required autoComplete="tel" />
-            </div>
-            <div className="sg-field">
-              <label htmlFor="password">Password</label>
-              <input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                minLength={8}
-                autoComplete="new-password"
-              />
-            </div>
-            <button type="submit" className="sg-btn sg-btn--black" disabled={loading}>
-              {loading ? "Creating account..." : "Sign Up"}
+          <form onSubmit={handleSubmit}>
+            {error && (
+              <p className="mb-4 rounded-[10px] border border-[var(--err)]/30 bg-[var(--err-bg)] px-3 py-2 font-mono text-xs text-[var(--err)]">
+                [err] {error}
+              </p>
+            )}
+            <Field
+              id="invite-token"
+              label="invite token"
+              type="text"
+              value={inviteToken}
+              onChange={(e) => setInviteToken(e.target.value)}
+              autoComplete="off"
+            />
+            <Field
+              id="email-password"
+              label="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              autoComplete="email"
+            />
+            <Field
+              id="user-name"
+              label="user name"
+              type="text"
+              value={userName}
+              onChange={(e) => setUserName(e.target.value)}
+              required
+              autoComplete="username"
+            />
+            <Field
+              id="first-name"
+              label="first name"
+              type="text"
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
+              required
+              autoComplete="given-name"
+            />
+            <Field
+              id="last-name"
+              label="last name"
+              type="text"
+              value={lastName}
+              onChange={(e) => setLastName(e.target.value)}
+              required
+              autoComplete="family-name"
+            />
+            <Field
+              id="mobile-phone"
+              label="mobile"
+              type="tel"
+              value={mobilePhone}
+              onChange={(e) => setMobilePhone(e.target.value)}
+              required
+              autoComplete="tel"
+            />
+            <Field
+              id="password"
+              label="password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              minLength={8}
+              autoComplete="new-password"
+            />
+            <button type="submit" className={BTN_PRIMARY} disabled={loading}>
+              {loading ? "creating account…" : "sign up"}
             </button>
-            <p style={{ marginTop: "1rem" }}>
-              Already have an account? <Link href="/login">Log in</Link>
+            <p className="mt-4 font-mono text-xs text-[var(--mut)]">
+              already have an account?{" "}
+              <Link href="/login" className="text-[var(--acc)] hover:text-[var(--acc-hi)]">
+                log in
+              </Link>
             </p>
           </form>
         )}
-      </main>
+      </div>
     </div>
   );
 }

@@ -13,7 +13,7 @@
 // dismiss + Esc restore-focus) and the shared Dialog/Input/Button primitives.
 import { useCallback, useEffect, useRef, useState } from "react";
 import { api, type SavedView, type SavedViewInput } from "@/lib/api";
-import { Button, Input, Dialog } from "@/components/ui";
+import { Btn, Input, Dialog, FieldLabel } from "@/components/ui";
 import type { ViewSnapshot } from "@/components/console/DataTable";
 import { cn } from "@/lib/cn";
 
@@ -154,10 +154,9 @@ export function SavedViewsToolbar({ orgId, scope, getCurrentSnapshot, onApply }:
   return (
     <div className="flex items-center gap-2">
       <div className="relative inline-block">
-        <button
+        <Btn
           ref={triggerRef}
           type="button"
-          className="inline-flex items-center gap-1 rounded-md border border-border bg-surface px-2.5 py-1.5 text-sm text-text hover:bg-surface-alt"
           aria-haspopup="true"
           aria-expanded={menuOpen}
           onClick={() => setMenuOpen((o) => !o)}
@@ -169,14 +168,14 @@ export function SavedViewsToolbar({ orgId, scope, getCurrentSnapshot, onApply }:
           }}
         >
           Views
-          <span aria-hidden className="text-xs text-text-muted">
+          <span aria-hidden className="text-[11px] text-faint">
             ▾
           </span>
-        </button>
+        </Btn>
         {menuOpen && (
           <div
             ref={menuRef}
-            className="absolute left-0 z-30 mt-1 min-w-[14rem] rounded-md border border-border bg-surface py-1 shadow-lg"
+            className="absolute left-0 z-30 mt-1 min-w-[14rem] rounded-card border border-line2 bg-panel py-1 shadow-pop"
             role="menu"
             aria-label="Saved views"
             onKeyDown={(e) => {
@@ -188,19 +187,19 @@ export function SavedViewsToolbar({ orgId, scope, getCurrentSnapshot, onApply }:
             }}
           >
             {loading ? (
-              <p className="px-3 py-1.5 text-sm text-text-muted">Loading…</p>
+              <p className="px-3 py-1.5 text-[12px] text-faint">Loading…</p>
             ) : views.length === 0 ? (
-              <p className="px-3 py-1.5 text-sm text-text-muted">No saved views yet</p>
+              <p className="px-3 py-1.5 text-[12px] text-faint">No saved views yet</p>
             ) : (
               views.map((v) => (
                 <div
                   key={v.id}
-                  className="group flex items-center justify-between gap-2 px-2 py-1 hover:bg-surface-alt"
+                  className="group flex items-center justify-between gap-2 px-2 py-1 hover:bg-sel"
                 >
                   <button
                     type="button"
                     role="menuitem"
-                    className="flex-1 truncate text-left text-sm text-text"
+                    className="flex-1 truncate text-left text-[12px] text-ink"
                     title={`Apply "${v.name}"`}
                     onClick={() => handleApply(v)}
                   >
@@ -213,7 +212,7 @@ export function SavedViewsToolbar({ orgId, scope, getCurrentSnapshot, onApply }:
                     disabled={busyId === v.id}
                     onClick={() => handleDelete(v.id)}
                     className={cn(
-                      "rounded px-1.5 py-0.5 text-text-muted hover:bg-error/10 hover:text-error focus:outline-none disabled:opacity-50",
+                      "rounded-pill px-1.5 py-0.5 text-[12px] text-faint hover:bg-error/10 hover:text-error focus:outline-none disabled:opacity-50",
                     )}
                   >
                     ×
@@ -221,11 +220,11 @@ export function SavedViewsToolbar({ orgId, scope, getCurrentSnapshot, onApply }:
                 </div>
               ))
             )}
-            <div className="mt-1 border-t border-border">
+            <div className="mt-1 border-t border-line">
               <button
                 type="button"
                 role="menuitem"
-                className="block w-full px-3 py-1.5 text-left text-sm text-text hover:bg-surface-alt"
+                className="block w-full px-3 py-1.5 text-left text-[12px] text-acc hover:bg-sel"
                 onClick={() => {
                   setSaveOpen(true);
                   setMenuOpen(false);
@@ -238,7 +237,7 @@ export function SavedViewsToolbar({ orgId, scope, getCurrentSnapshot, onApply }:
         )}
       </div>
 
-      {error && <span className="text-xs text-error">{error}</span>}
+      {error && <span className="text-[11px] text-error">{error}</span>}
 
       <Dialog
         open={saveOpen}
@@ -249,34 +248,32 @@ export function SavedViewsToolbar({ orgId, scope, getCurrentSnapshot, onApply }:
         title="Save current view"
         footer={
           <>
-            <Button
-              variant="outline"
+            <Btn
               onClick={() => {
                 setSaveOpen(false);
                 setError(null);
               }}
             >
               Cancel
-            </Button>
-            <Button type="submit" form="save-view-form" disabled={saving || !name.trim()}>
+            </Btn>
+            <Btn type="submit" variant="primary" form="save-view-form" disabled={saving || !name.trim()}>
               {saving ? "Saving…" : "Save"}
-            </Button>
+            </Btn>
           </>
         }
       >
         <form id="save-view-form" onSubmit={handleSave} className="space-y-3">
-          <label className="flex flex-col gap-1.5 text-sm">
-            <span className="font-medium text-text">View name</span>
+          <FieldLabel
+            label="View name"
+            hint="Saves the current filters, sort, and search as a personal list view."
+          >
             <Input
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g. Critical bugs this iteration"
               autoFocus
             />
-          </label>
-          <p className="text-xs text-text-muted">
-            Saves the current filters, sort, and search as a personal list view.
-          </p>
+          </FieldLabel>
         </form>
       </Dialog>
     </div>

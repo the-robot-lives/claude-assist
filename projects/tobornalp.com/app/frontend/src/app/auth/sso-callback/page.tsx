@@ -51,26 +51,42 @@ function SSOCallback() {
   }, [searchParams, ssoExchange, router]);
 
   return (
-    <div className="content" style={{ maxWidth: 480, margin: "4rem auto", padding: "0 24px" }}>
-      <h1 style={{ fontFamily: "var(--font-display)", fontSize: 28, fontWeight: 500, color: "var(--text)" }}>
-        Signing In
-      </h1>
-      {verifying && <p style={{ fontFamily: "var(--font-body)", color: "var(--text-secondary)" }}>Completing authentication…</p>}
-      {error && (
-        <>
-          <p style={{ color: "var(--brand-red)", fontFamily: "var(--font-body)" }}>{error}</p>
-          <p>
-            <a href="/auth/oidc" style={{ color: "var(--brand-blue)" }}>Try again</a>
+    <div className="flex min-h-[100dvh] items-center justify-center bg-[var(--bg)] px-6 py-16">
+      <div className="w-full max-w-[420px] rounded-[14px] border border-[var(--line2)] bg-[var(--panel2)] p-8 shadow-[0_2px_10px_rgba(0,0,0,.35)]">
+        <div className="mb-6 flex items-baseline gap-1 font-mono">
+          <span className="text-sm font-bold tracking-tight text-[var(--ink)]">tobornalp</span>
+          <span className="text-sm font-bold text-[var(--acc)] motion-safe:animate-pulse">▮</span>
+        </div>
+        <h1 className="mb-4 font-mono text-lg font-bold text-[var(--ink)]">signing in</h1>
+        {verifying && (
+          <p className="font-mono text-[13px] text-[var(--mut)]">
+            <span className="text-[var(--info)]">[info]</span> completing authentication…
           </p>
-        </>
-      )}
+        )}
+        {error && (
+          <>
+            <p className="mb-4 rounded-[10px] border border-[var(--err)]/30 bg-[var(--err-bg)] px-3 py-2 font-mono text-xs text-[var(--err)]">
+              [err] {error}
+            </p>
+            <a href="/auth/oidc" className="font-mono text-xs text-[var(--acc)] hover:text-[var(--acc-hi)]">
+              try again
+            </a>
+          </>
+        )}
+      </div>
     </div>
   );
 }
 
 export default function SSOCallbackPage() {
   return (
-    <Suspense fallback={<div className="content"><main><p>Loading…</p></main></div>}>
+    <Suspense
+      fallback={
+        <div className="flex min-h-[100dvh] items-center justify-center bg-[var(--bg)] font-mono text-sm text-[var(--mut)]">
+          loading…
+        </div>
+      }
+    >
       <SSOCallback />
     </Suspense>
   );

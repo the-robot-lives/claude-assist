@@ -3,12 +3,14 @@ import { cn } from "@/lib/cn";
 // Avatar — humans are a 22px circle of initials; agents are a dashed mint
 // squircle carrying the ▣ glyph. The two must stay visually distinct: a reader
 // should never have to guess whether a teammate is organic.
+// `null` is accepted throughout because these fields arrive straight off the API,
+// where an unassigned actor is null rather than absent.
 export interface AvatarProps {
   /** Display name or email; initials are derived when `initials` is absent. */
-  name?: string;
+  name?: string | null;
   kind?: "human" | "agent";
-  initials?: string;
-  title?: string;
+  initials?: string | null;
+  title?: string | null;
   className?: string;
 }
 
@@ -16,7 +18,7 @@ export function Avatar({ name, kind = "human", initials, title, className }: Ava
   const agent = kind === "agent";
   return (
     <span
-      title={title ?? name}
+      title={title ?? name ?? undefined}
       aria-hidden={!name && !initials}
       className={cn(
         "inline-flex h-[22px] w-[22px] flex-none items-center justify-center border text-[10px] font-bold",
@@ -31,7 +33,7 @@ export function Avatar({ name, kind = "human", initials, title, className }: Ava
   );
 }
 
-function deriveInitials(name?: string): string {
+function deriveInitials(name?: string | null): string {
   if (!name) return "?";
   const base = name.includes("@") ? name.split("@")[0] : name;
   const parts = base.split(/[\s._-]+/).filter(Boolean);

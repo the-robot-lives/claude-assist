@@ -11,7 +11,7 @@ import { api, type Project } from "@/lib/api";
 import { useOrg } from "@/context/org";
 import { DataTable } from "@/components/console/DataTable";
 import { artifactsDescriptor, ARTIFACT_KIND_OPTIONS } from "@/lib/console/descriptors/artifacts";
-import { Button, Input, Select, Textarea, Dialog } from "@/components/ui";
+import { Btn, Input, Select, Textarea, Dialog, FieldLabel } from "@/components/ui";
 
 export default function ArtifactsPage() {
   const params = useParams<{ orgId: string }>();
@@ -39,20 +39,20 @@ export default function ArtifactsPage() {
   const ctx = useMemo(() => ({ orgId: orgId ?? "" }), [orgId]);
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-6">
-      <header className="mb-4 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-text">Artifacts</h1>
-          <p className="text-sm text-text-secondary">
-            {currentOrg?.name || "Organization"} · versioned typed content
-          </p>
-        </div>
-        <Button onClick={() => setShowCreate(true)}>+ New artifact</Button>
+    <div className="app-content">
+      <header className="flex flex-wrap items-baseline gap-3">
+        <h1 className="text-[13px] font-bold uppercase tracking-[0.1em] text-ink">artifacts</h1>
+        <span className="text-[11px] text-faint">
+          {currentOrg?.name || "organization"} · versioned typed content
+        </span>
+        <Btn variant="primary" className="ml-auto" onClick={() => setShowCreate(true)}>
+          + new artifact
+        </Btn>
       </header>
 
       {orgLoading || !orgId ? (
-        <p className="text-sm text-text-muted">
-          {orgLoading ? "Loading…" : "Select an organization."}
+        <p className="text-[12px] text-faint">
+          {orgLoading ? "loading…" : "select an organization."}
         </p>
       ) : (
         <DataTable
@@ -110,10 +110,10 @@ function CreateArtifactDialog({
         content: content || undefined,
         project_id: projectId || undefined,
       });
-      toast.success("Artifact created");
+      toast.success("artifact created");
       onSaved();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Request failed");
+      setError(err instanceof Error ? err.message : "request failed");
     } finally {
       setSaving(false);
     }
@@ -123,69 +123,80 @@ function CreateArtifactDialog({
     <Dialog
       open
       onClose={onClose}
-      title="Create artifact"
+      title="create artifact"
       footer={
         <>
-          <Button variant="outline" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button type="submit" form="create-artifact-form" disabled={saving || !title.trim()}>
-            {saving ? "Creating…" : "Create"}
-          </Button>
+          <Btn variant="default" onClick={onClose}>
+            cancel
+          </Btn>
+          <Btn variant="primary" type="submit" form="create-artifact-form" disabled={saving || !title.trim()}>
+            {saving ? "creating…" : "create"}
+          </Btn>
         </>
       }
     >
-      <form id="create-artifact-form" onSubmit={submit} className="space-y-3">
-        <label className="flex flex-col gap-1.5 text-sm">
-          <span className="font-medium text-text">Title</span>
+      <form id="create-artifact-form" onSubmit={submit} className="flex flex-col gap-3">
+        <FieldLabel label="title" htmlFor="art-title">
           <Input
+            id="art-title"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="Artifact title"
+            placeholder="artifact title"
+            className="rounded-card border-line2 bg-ground"
             autoFocus
           />
-        </label>
+        </FieldLabel>
         <div className="grid gap-3 sm:grid-cols-2">
-          <label className="flex flex-col gap-1.5 text-sm">
-            <span className="font-medium text-text">Kind</span>
-            <Select value={kind} onChange={(e) => setKind(e.target.value)}>
+          <FieldLabel label="kind" htmlFor="art-kind">
+            <Select
+              id="art-kind"
+              value={kind}
+              onChange={(e) => setKind(e.target.value)}
+              className="rounded-card border-line2 bg-ground"
+            >
               {ARTIFACT_KIND_OPTIONS.map((k) => (
                 <option key={k.value} value={k.value}>
                   {k.label}
                 </option>
               ))}
             </Select>
-          </label>
-          <label className="flex flex-col gap-1.5 text-sm">
-            <span className="font-medium text-text">MIME type</span>
+          </FieldLabel>
+          <FieldLabel label="mime type" htmlFor="art-mime">
             <Input
+              id="art-mime"
               value={mimeType}
               onChange={(e) => setMimeType(e.target.value)}
               placeholder="text/plain (optional)"
+              className="rounded-card border-line2 bg-ground"
             />
-          </label>
+          </FieldLabel>
         </div>
-        <label className="flex flex-col gap-1.5 text-sm">
-          <span className="font-medium text-text">Project</span>
-          <Select value={projectId} onChange={(e) => setProjectId(e.target.value)}>
-            <option value="">No project</option>
+        <FieldLabel label="project" htmlFor="art-project">
+          <Select
+            id="art-project"
+            value={projectId}
+            onChange={(e) => setProjectId(e.target.value)}
+            className="rounded-card border-line2 bg-ground"
+          >
+            <option value="">no project</option>
             {projects.map((p) => (
               <option key={p.id} value={p.id}>
                 {p.name}
               </option>
             ))}
           </Select>
-        </label>
-        <label className="flex flex-col gap-1.5 text-sm">
-          <span className="font-medium text-text">Initial content</span>
+        </FieldLabel>
+        <FieldLabel label="initial content" htmlFor="art-content">
           <Textarea
+            id="art-content"
             value={content}
             onChange={(e) => setContent(e.target.value)}
-            placeholder="Optional seed content for the first revision"
+            placeholder="optional seed content for the first revision"
+            className="rounded-card border-line2 bg-ground"
             rows={5}
           />
-        </label>
-        {error && <p className="text-sm text-error">{error}</p>}
+        </FieldLabel>
+        {error && <p className="text-[12px] text-err">[ERR] {error}</p>}
       </form>
     </Dialog>
   );

@@ -64,7 +64,9 @@ export interface DocVersionEntry {
 }
 
 export interface DocSaveOptions {
-  /** Omit to save unconditionally; supply the loaded version for last-write-wins detection. */
+  /** The store version this save was composed against. Always pass it: the Phoenix store
+   * falls back to the document envelope's own `version` when it is absent, which is the
+   * editor's local counter, not the server's — an unconditional save is not expressible. */
   expectedVersion?: number;
 }
 

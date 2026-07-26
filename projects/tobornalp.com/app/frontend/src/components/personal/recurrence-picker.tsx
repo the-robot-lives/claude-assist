@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Select, Dialog, Button, Input } from "@/components/ui";
+import { Select, Dialog, Btn, Input } from "@/components/ui";
 import type { RecurrenceInput } from "@/lib/api";
 
 const PRESETS: Array<{ value: string; label: string }> = [
@@ -86,14 +86,14 @@ function CustomDialog({
     <Dialog open={open} onClose={onClose} title="Custom recurrence" size="md"
       footer={
         <div className="flex justify-end gap-2">
-          <Button variant="ghost" onClick={onClose}>Cancel</Button>
-          <Button onClick={apply}>Apply</Button>
+          <Btn onClick={onClose}>Cancel</Btn>
+          <Btn variant="primary" onClick={apply}>Apply</Btn>
         </div>
       }
     >
       <div className="space-y-4">
-        <label className="block text-sm">
-          <span className="mb-1 block text-text-secondary">Repeats every</span>
+        <label className="block text-[12px]">
+          <span className="mb-1 block text-[10px] uppercase tracking-[0.12em] text-faint">Repeats every</span>
           <div className="flex items-center gap-2">
             <Input type="number" min={1} value={interval} onChange={(e) => setInterval(parseInt(e.target.value || "1", 10))} className="w-20" />
             <Select value={freq} onChange={(e) => setFreq(e.target.value as typeof freq)} className="w-40">
@@ -105,8 +105,8 @@ function CustomDialog({
         </label>
 
         {freq === "weekly" && (
-          <div className="text-sm">
-            <span className="mb-1 block text-text-secondary">On days</span>
+          <div className="text-[12px]">
+            <span className="mb-1 block text-[10px] uppercase tracking-[0.12em] text-faint">On days</span>
             <div className="flex gap-1">
               {DAYS.map(([code, label], i) => (
                 <button
@@ -114,10 +114,11 @@ function CustomDialog({
                   type="button"
                   onClick={() => toggleDay(code)}
                   className={
-                    "h-8 w-8 rounded-full border text-xs font-medium " +
+                    "h-8 w-8 rounded-pill border text-[11px] font-bold transition-colors " +
+                    // Selected is a solid mint field — black ink, never white.
                     (byDay.includes(code)
-                      ? "border-brand-blue bg-brand-blue text-white"
-                      : "border-border bg-surface text-text-secondary hover:border-brand-blue")
+                      ? "border-acc bg-acc text-black"
+                      : "border-line2 bg-panel2 text-mut hover:border-acc hover:text-ink")
                   }
                 >
                   {label}
@@ -127,13 +128,13 @@ function CustomDialog({
           </div>
         )}
 
-        <div className="grid grid-cols-2 gap-3 text-sm">
+        <div className="grid grid-cols-2 gap-3 text-[12px]">
           <label className="block">
-            <span className="mb-1 block text-text-secondary">Until (optional)</span>
+            <span className="mb-1 block text-[10px] uppercase tracking-[0.12em] text-faint">Until (optional)</span>
             <Input type="date" value={until} onChange={(e) => { setUntil(e.target.value); if (e.target.value) setCount(""); }} />
           </label>
           <label className="block">
-            <span className="mb-1 block text-text-secondary">Or after N times</span>
+            <span className="mb-1 block text-[10px] uppercase tracking-[0.12em] text-faint">Or after N times</span>
             <Input type="number" min={1} value={count} onChange={(e) => { setCount(e.target.value); if (e.target.value) setUntil(""); }} placeholder="∞" />
           </label>
         </div>

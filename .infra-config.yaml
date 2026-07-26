@@ -98,6 +98,7 @@ tiers:
       - noizu
       - noizurpg
       - robotsunite
+      - therobotdrafts
       - therobotknows
       - therobotlearns
       - therobotlives
@@ -216,6 +217,7 @@ namespace_overrides:
   noizu: apps
   noizurpg: apps
   robotsunite: apps
+  therobotdrafts: apps
   therobotknows: apps
   therobotlearns: apps
   therobotlives: apps
@@ -264,6 +266,7 @@ helm_scan_dirs:
 chart_path_overrides:
   infra-portal: projects/infra.noizu.com/helm/infra-portal
   aifighter: projects/aifighter.com/helm/aifighter
+  therobotdrafts: projects/therobotdrafts/vnext/app/helm/therobotdrafts
   therobotknows: projects/therobotknows.com/helm/therobotknows
   therobotlearns: projects/therobotlearns.com/app/helm/therobotlearns
   codefresh: projects/codefre.sh/helm/codefresh
@@ -427,6 +430,33 @@ liquibase_targets:
     changelog_dir: projects/designing.derobot.is/app/backend/db
     changelog_file: changelog/db.changelog-master.yaml
 
+  therobotdrafts:
+    description: "The Robot Drafts (vnext) app database on app-timescaledb"
+    namespace: apps
+    service: svc/app-timescaledb
+    remote_port: 5432
+    local_port: 54341
+    db_type: postgresql
+    db_name: therobotdrafts
+    schema: public
+    secret_name: therobotdrafts-secrets
+    secret_namespace: apps
+    username: therobotdrafts
+    secret_key: THEROBOTDRAFTS_DB_PASSWORD
+    safety: destructive
+    # provision-db: role creds from dc, superuser from the live instance secret
+    role_password_dc: "services apps.therobotdrafts_db_password"
+    admin_secret: app-timescaledb-secrets
+    # Valkey/Redis ACL user on app-valkey (provision: `provision-db therobotdrafts --redis-only`)
+    redis_password_dc: "services apps.therobotdrafts_valkey_password"
+    redis_service: svc/app-valkey
+    redis_user: therobotdrafts
+    redis_admin_secret: app-valkey-secrets
+    # superuser-only extensions the changelog needs pre-created (pgvector et al.)
+    extensions: [citext, uuid-ossp, vector, cube, pg_trgm, earthdistance]
+    changelog_dir: projects/therobotdrafts/vnext/app/backend/db
+    changelog_file: changelog/db.changelog-master.yaml
+
   therobotlearns:
     description: "The Robot Learns app database on app-timescaledb"
     namespace: apps
@@ -542,8 +572,11 @@ liquibase_targets:
 
   gotta-cc:
     description: "GottaCC app database"
-    namespace: data-ns
-    service: svc/shared-postgres
+    # Live DB per gotta-cc deployment DB_HOST (app-timescaledb.apps). The old
+    # shared-postgres/data-ns alias resolves to platform-timescaledb, which
+    # still holds a stale pre-split copy of gotta_cc — do not migrate that one.
+    namespace: apps
+    service: svc/app-timescaledb
     remote_port: 5432
     local_port: 54331
     db_type: postgresql
@@ -553,7 +586,10 @@ liquibase_targets:
     secret_namespace: apps
     username_key: GOTTA_CC_DB_USER
     secret_key: GOTTA_CC_DB_PASSWORD
-    changelog_dir: projects/gotta.cc/app/backend/priv/repo/migrations
+    # Search root must be db/ (not db/changelog/) — DATABASECHANGELOG records
+    # paths as changelog/NNN-*.yaml; a deeper root re-lists everything as pending.
+    changelog_dir: projects/gotta.cc/app/backend/db
+    changelog_file: changelog/db.changelog-master.yaml
 
   iotgo:
     description: "IoTGo app database"
@@ -841,6 +877,10 @@ project:
           registry_path: gotta.cc/frontend
           build_args:
             NEXT_PUBLIC_API_URL: https://gotta.cc
+            # AdSense publisher ID. Prefer the Helm value adsense.client, which
+            # is applied at container start and needs no rebuild; uncomment and
+            # fill this in only to bake the ID into the image instead.
+            # NEXT_PUBLIC_ADSENSE_CLIENT: ca-pub-XXXXXXXXXXXXXXXX
           auto_detect: false
           helm:
             chart_path: projects/gotta.cc/helm/gotta-cc
@@ -958,6 +998,46 @@ project:
         charts:
           - name: therobotknows
             path: projects/therobotknows.com/helm/therobotknows
+    - domain: therobotdrafts.com
+      # vnext lives under the TRD subtree; base_path points at the app root so
+      # the service paths below stay relative to it.
+      base_path: projects/therobotdrafts/vnext/app
+      services:
+        - name: backend
+          dockerfile: backend/Dockerfile
+          context: backend
+          registry_path: therobotdrafts.com/backend
+          platform: linux/amd64
+          auto_detect: false
+          helm:
+            chart_path: projects/therobotdrafts/vnext/app/helm/therobotdrafts
+            values_path: .backend.image
+            format: image
+        - name: frontend
+          dockerfile: frontend/Dockerfile
+          context: frontend
+          registry_path: therobotdrafts.com/frontend
+          platform: linux/amd64
+          auto_detect: false
+          build_args:
+            NEXT_PUBLIC_API_URL: https://therobotdrafts.com
+            NEXT_PUBLIC_APP_URL: https://app.therobotdrafts.com
+          helm:
+            chart_path: projects/therobotdrafts/vnext/app/helm/therobotdrafts
+            values_path: .frontend.image
+            format: image
+        # Liquibase changelog image; applied out-of-band via `liquibase-shell
+        # therobotdrafts update`, so no helm stanza (migrate.liquibase is off).
+        - name: db
+          dockerfile: backend/db/Dockerfile
+          context: backend/db
+          registry_path: therobotdrafts.com/db
+          platform: linux/amd64
+          auto_detect: false
+      helm:
+        charts:
+          - name: therobotdrafts
+            path: projects/therobotdrafts/vnext/app/helm/therobotdrafts
     - domain: therobotlearns.com
       base_path: projects/therobotlearns.com
       services:

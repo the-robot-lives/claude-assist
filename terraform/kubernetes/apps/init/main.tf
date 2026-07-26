@@ -29,6 +29,7 @@ module "app_valkey" {
     jailbreaking = { password_key = "JAILBREAKING_VALKEY_PASSWORD", rules = "~* &* +@all" }
 
     therobotlearns = { password_key = "THEROBOTLEARNS_VALKEY_PASSWORD", rules = "~* &* +@all" }
+    therobotdrafts = { password_key = "THEROBOTDRAFTS_VALKEY_PASSWORD", rules = "~* &* +@all" }
   }
 
   infisical = merge(local.infisical_base, { secrets_path = "/apps/valkey" })
@@ -45,19 +46,20 @@ module "app_timescaledb" {
   initdb_scripts_dir = "${path.module}/files/postgres/initdb.d"
 
   app_db_secrets_map = {
-    AIFIGHTER     = "aifighter-secrets"
-    CODEFRESH     = "apps-app-secrets"
-    DEROBOTIS     = "derobotis-secrets"
-    GOTTA_CC      = "gotta-cc-secrets"
-    IOTGO         = "iotgo-secrets"
-    JAILBREAKING  = "jailbreakingsite-secrets"
-    NOIZU_SITE    = "noizu-site-secrets"
-    START_APP     = "startapp-secrets"
-    THEROBOTKNOWS = "therobotknows-secrets"
-    THEROBOTLIVES = "therobotlives-secrets"
-    THEROBOTPLANS = "therobotplans-secrets"
-    FORYOU        = "foryou-secrets"
-    TOBORNALP     = "tobornalp-secrets"
+    AIFIGHTER      = "aifighter-secrets"
+    CODEFRESH      = "apps-app-secrets"
+    DEROBOTIS      = "derobotis-secrets"
+    GOTTA_CC       = "gotta-cc-secrets"
+    IOTGO          = "iotgo-secrets"
+    JAILBREAKING   = "jailbreakingsite-secrets"
+    NOIZU_SITE     = "noizu-site-secrets"
+    START_APP      = "startapp-secrets"
+    THEROBOTDRAFTS = "therobotdrafts-secrets"
+    THEROBOTKNOWS  = "therobotknows-secrets"
+    THEROBOTLIVES  = "therobotlives-secrets"
+    THEROBOTPLANS  = "therobotplans-secrets"
+    FORYOU         = "foryou-secrets"
+    TOBORNALP      = "tobornalp-secrets"
   }
 
   infisical = merge(local.infisical_base, { secrets_path = "/apps/postgres" })

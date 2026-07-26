@@ -9,7 +9,7 @@ import type { ConsoleDescriptor, ConsoleContext, DetailFieldDef } from "@/lib/co
 import { renderField } from "@/lib/console/render-hints";
 import { getDescriptor } from "@/lib/console/registry";
 import { DataTable } from "./DataTable";
-import { Button } from "@/components/ui";
+import { Btn, Panel, PanelHeader } from "@/components/ui";
 
 export interface DetailViewProps<T, TInput> {
   descriptor: ConsoleDescriptor<T, TInput>;
@@ -34,56 +34,56 @@ export function DetailView<T, TInput>({ descriptor, row, ctx, onBack, onEdit }: 
   }
 
   return (
-    <article className="mx-auto max-w-3xl px-4 py-6" aria-label={`${labels.singular} detail`}>
+    <article className="mx-auto max-w-3xl px-4 py-6 text-ink" aria-label={`${labels.singular} detail`}>
       <header className="mb-6">
         {onBack && (
           <button
             type="button"
-            className="mb-2 text-xs text-text-muted hover:text-text hover:underline"
+            className="mb-2 font-mono text-[11px] text-faint hover:text-acc hover:underline"
             onClick={onBack}
           >
             ← {labels.plural}
           </button>
         )}
         <div className="flex items-center justify-between gap-3">
-          <h1 className="text-2xl font-bold text-text">{title}</h1>
+          <h1 className="text-[19px] font-bold leading-[1.35] text-ink [text-wrap:balance]">{title}</h1>
           {descriptor.api.update && onEdit && (
-            <Button variant="outline" size="sm" onClick={() => onEdit(row)}>
-              Edit
-            </Button>
+            <Btn onClick={() => onEdit(row)}>Edit</Btn>
           )}
         </div>
       </header>
 
-      <div className="space-y-6">
+      <div className="space-y-3.5">
         {detail.sections.map((section) => (
-          <section key={section.title} className="rounded-lg border border-border bg-surface p-4">
-            <h2 className="mb-3 text-sm font-semibold text-text-secondary">{section.title}</h2>
-            <dl className="grid grid-cols-1 gap-x-6 gap-y-2 sm:grid-cols-2">
+          <Panel key={section.title}>
+            <PanelHeader title={section.title} />
+            <dl className="grid grid-cols-1 gap-x-6 gap-y-2.5 p-4 sm:grid-cols-2">
               {section.fields.map((f) => (
                 <div
                   key={f.key}
                   className={f.span ? "sm:col-span-2" : undefined}
                 >
-                  <dt className="text-xs text-text-muted">{f.label}</dt>
-                  <dd className="text-sm text-text">{field(f)}</dd>
+                  <dt className="font-mono text-[10px] uppercase tracking-[0.12em] text-faint">{f.label}</dt>
+                  <dd className="mt-0.5 text-[12px] text-ink">{field(f)}</dd>
                 </div>
               ))}
             </dl>
-          </section>
+          </Panel>
         ))}
 
         {detail.related?.map((rel) => {
           const relDescriptor = getDescriptor(rel.domain);
           return (
-            <section key={rel.title} className="rounded-lg border border-border bg-surface p-4">
-              <h2 className="mb-3 text-sm font-semibold text-text-secondary">{rel.title}</h2>
-              {relDescriptor ? (
-                <DataTable descriptor={relDescriptor} ctx={ctx} embedded scope={rel.query(r)} density="compact" />
-              ) : (
-                <p className="text-sm text-text-muted">No “{rel.domain}” view registered yet.</p>
-              )}
-            </section>
+            <Panel key={rel.title}>
+              <PanelHeader title={rel.title} />
+              <div className="p-4">
+                {relDescriptor ? (
+                  <DataTable descriptor={relDescriptor} ctx={ctx} embedded scope={rel.query(r)} density="compact" />
+                ) : (
+                  <p className="font-mono text-[12px] text-faint">No “{rel.domain}” view registered yet.</p>
+                )}
+              </div>
+            </Panel>
           );
         })}
       </div>

@@ -23,16 +23,19 @@ defmodule GottaCc.Directory.Submissions do
   # ---------------------------------------------------------------------------
 
   @doc """
-  Creates a pending submission for `user_id`. Derives `domain` from the URL when
-  not supplied. Returns `{:ok, submission}` or `{:error, changeset}`.
+  Creates a pending submission for `user_id`, which may be `nil` for an
+  anonymous suggestion — those land in the same moderation queue and carry an
+  optional `contact_email` instead of a submitter. Derives `domain` from the URL
+  when not supplied. Returns `{:ok, submission}` or `{:error, changeset}`.
   """
   def create_submission(user_id, attrs) do
     attrs = normalize_keys(attrs)
-    url = attrs["url"]
+    url = normalize_url(attrs["url"])
     domain = attrs["domain"] || derive_domain(url)
 
     params = %{
       "submitter_id" => user_id,
+      "contact_email" => normalize_email(attrs["contact_email"]),
       "name" => attrs["name"],
       "url" => url,
       "domain" => domain,
@@ -363,6 +366,29 @@ defmodule GottaCc.Directory.Submissions do
   end
 
   defp derive_domain(_), do: ""
+
+  # Visitors routinely type "example.com". Assume https so the row stores a
+  # dereferenceable URL and `derive_domain/1` can parse a host out of it.
+  defp normalize_url(url) when is_binary(url) do
+    trimmed = String.trim(url)
+
+    cond do
+      trimmed == "" -> trimmed
+      Regex.match?(~r{^https?://}i, trimmed) -> trimmed
+      true -> "https://" <> trimmed
+    end
+  end
+
+  defp normalize_url(url), do: url
+
+  defp normalize_email(email) when is_binary(email) do
+    case email |> String.trim() |> String.downcase() do
+      "" -> nil
+      normalized -> normalized
+    end
+  end
+
+  defp normalize_email(_), do: nil
 
   defp derive_slug(domain) do
     domain

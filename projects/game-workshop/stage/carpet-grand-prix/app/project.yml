@@ -1,0 +1,77 @@
+# XcodeGen spec for Carpet Grand Prix.
+#
+# The .xcodeproj is a build artefact, not a source file — it is generated from
+# this spec and gitignored. That keeps the repo free of the merge conflicts a
+# checked-in project.pbxproj guarantees on a multi-person team.
+#
+#   brew install xcodegen
+#   make generate
+
+name: CarpetGrandPrix
+
+options:
+  bundleIdPrefix: com.noizu
+  createIntermediateGroups: true
+  deploymentTarget:
+    iOS: "16.0"
+  groupSortPosition: top
+
+settings:
+  base:
+    SWIFT_VERSION: "5.9"
+    SWIFT_STRICT_CONCURRENCY: complete
+    CLANG_ENABLE_MODULES: YES
+    ENABLE_USER_SCRIPT_SANDBOXING: YES
+    # Metal shaders are compiled into the default library at build time.
+    MTL_FAST_MATH: YES
+    MTL_ENABLE_DEBUG_INFO: INCLUDE_SOURCE
+  configs:
+    Release:
+      MTL_ENABLE_DEBUG_INFO: NO
+      SWIFT_OPTIMIZATION_LEVEL: "-O"
+
+targets:
+  CarpetGrandPrix:
+    type: application
+    platform: iOS
+    sources:
+      - path: CarpetGrandPrix
+    settings:
+      base:
+        PRODUCT_NAME: CarpetGrandPrix
+        PRODUCT_BUNDLE_IDENTIFIER: com.noizu.carpetgrandprix
+        INFOPLIST_FILE: CarpetGrandPrix/App/Info.plist
+        SWIFT_OBJC_BRIDGING_HEADER: CarpetGrandPrix/Render/BridgingHeader.h
+        # ShaderTypes.h is included from both Swift (via the bridging header)
+        # and from Shaders.metal, so the Render directory has to be on the
+        # header search path for the Metal compiler too.
+        HEADER_SEARCH_PATHS: $(SRCROOT)/CarpetGrandPrix/Render
+        MTL_HEADER_SEARCH_PATHS: $(SRCROOT)/CarpetGrandPrix/Render
+        TARGETED_DEVICE_FAMILY: "1,2"
+        CODE_SIGN_STYLE: Automatic
+        GENERATE_INFOPLIST_FILE: NO
+
+  CarpetGrandPrixTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: Tests
+    dependencies:
+      - target: CarpetGrandPrix
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.noizu.carpetgrandprix.tests
+        GENERATE_INFOPLIST_FILE: YES
+
+schemes:
+  CarpetGrandPrix:
+    build:
+      targets:
+        CarpetGrandPrix: all
+        CarpetGrandPrixTests: [test]
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - CarpetGrandPrixTests

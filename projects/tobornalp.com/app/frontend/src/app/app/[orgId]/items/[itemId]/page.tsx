@@ -30,11 +30,11 @@ export default function ItemDetailPage() {
   const ctx = useMemo(() => ({ orgId: orgId ?? "" }), [orgId]);
 
   if (orgLoading || !orgId) {
-    return <p className="px-4 py-6 text-sm text-text-muted">Loading…</p>;
+    return <p className="px-4 py-6 font-mono text-sm text-mut">loading…</p>;
   }
 
   return (
-    <>
+    <div className="app-content max-w-3xl">
       <ConsoleDetailPage
         ctx={ctx}
         id={params.itemId}
@@ -42,16 +42,16 @@ export default function ItemDetailPage() {
         initialMode={initialMode}
       />
 
-      {/* Custom sections sit outside the descriptor's <article>, in a matching
-          max-width container so the column aligns. Hidden in edit mode (deep-link
+      {/* Custom sections sit outside the descriptor's <article>, in the same
+          app-content column so they line up. Hidden in edit mode (deep-link
           ?edit=1) to keep the edit form the focus. */}
       {initialMode === "view" && (
-        <div className="mx-auto max-w-3xl space-y-4 px-4 pb-10">
+        <div className="space-y-4">
           <CommentsSection orgId={orgId} itemId={params.itemId} />
           <ActivitySection orgId={orgId} itemId={params.itemId} />
           <LinksSection orgId={orgId} itemId={params.itemId} />
         </div>
       )}
-    </>
+    </div>
   );
 }

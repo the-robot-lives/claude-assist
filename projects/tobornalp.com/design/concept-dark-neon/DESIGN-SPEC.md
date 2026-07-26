@@ -14,8 +14,8 @@ implementation. Direction: theme-terminal dominant + rounded/neon treatment.
 --line:#1F1F26;          /* default border */
 --line2:#31313B;         /* stronger border / input border */
 --ink:#EDEDF2;           /* primary text */
---mut:#9C9CA8;           /* secondary text */
---faint:#64646F;         /* tertiary / keys / timestamps */
+--mut:#B0B0BB;           /* secondary text (brightened from mockup's #9C9CA8 for WCAG ladder) */
+--faint:#8A8A96;         /* tertiary / keys / timestamps (brightened from mockup's #64646F: 5.29:1 vs --panel2, clears AA at small sizes) */
 --acc:#3EF2A6;           /* neon mint — THE accent (buttons, active nav, agents, progress, [OK]) */
 --acc-hi:#93FAD2;        /* accent hover */
 --acc-bg:rgba(62,242,166,.10);

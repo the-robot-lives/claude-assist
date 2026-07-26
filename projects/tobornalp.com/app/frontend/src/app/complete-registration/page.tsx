@@ -6,6 +6,30 @@ import { api } from "@/lib/api";
 import { appUrl, postAuthPath, userPendingApproval } from "@/lib/auth-flow";
 import { useRouter } from "next/navigation";
 
+const BTN_PRIMARY =
+  "inline-flex w-full items-center justify-center rounded-full bg-[var(--acc)] px-5 py-2.5 font-mono text-sm font-bold text-black transition-colors hover:bg-[var(--acc-hi)] disabled:opacity-60 disabled:cursor-not-allowed";
+
+function Field({
+  label,
+  className,
+  ...inputProps
+}: { label: string; className?: string } & React.InputHTMLAttributes<HTMLInputElement>) {
+  return (
+    <div className="mb-4">
+      <label
+        htmlFor={inputProps.id}
+        className="mb-1.5 block font-mono text-[11px] uppercase tracking-[.08em] text-[var(--mut)]"
+      >
+        {label}
+      </label>
+      <input
+        {...inputProps}
+        className={`w-full rounded-[10px] border border-[var(--line2)] bg-[var(--bg)] px-3.5 py-2.5 font-mono text-sm text-[var(--ink)] outline-none transition-colors placeholder:text-[var(--faint)] focus:border-[var(--acc)] focus:ring-2 focus:ring-[var(--acc-bg)] ${className ?? ""}`}
+      />
+    </div>
+  );
+}
+
 export default function CompleteRegistrationPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
@@ -53,36 +77,68 @@ export default function CompleteRegistrationPage() {
   }
 
   return (
-    <div className="content">
-      <main>
-        <h1 className="sg-page-title">Complete Registration</h1>
-        <form onSubmit={handleSubmit} style={{ maxWidth: 420 }}>
-          {error && <p className="sg-error">{error}</p>}
-          <div className="sg-field">
-            <label htmlFor="invite-token">Invite Token</label>
-            <input id="invite-token" type="text" value={inviteToken} onChange={(e) => setInviteToken(e.target.value)} autoComplete="off" />
-          </div>
-          <div className="sg-field">
-            <label htmlFor="user-name">User Name</label>
-            <input id="user-name" type="text" value={userName} onChange={(e) => setUserName(e.target.value)} required autoComplete="username" />
-          </div>
-          <div className="sg-field">
-            <label htmlFor="first-name">First Name</label>
-            <input id="first-name" type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)} required autoComplete="given-name" />
-          </div>
-          <div className="sg-field">
-            <label htmlFor="last-name">Last Name</label>
-            <input id="last-name" type="text" value={lastName} onChange={(e) => setLastName(e.target.value)} required autoComplete="family-name" />
-          </div>
-          <div className="sg-field">
-            <label htmlFor="mobile-phone">Mobile</label>
-            <input id="mobile-phone" type="tel" value={mobilePhone} onChange={(e) => setMobilePhone(e.target.value)} required autoComplete="tel" />
-          </div>
-          <button type="submit" className="sg-btn sg-btn--black" disabled={saving}>
-            {saving ? "Saving..." : "Continue"}
+    <div className="flex min-h-[100dvh] items-center justify-center bg-[var(--bg)] px-6 py-16">
+      <div className="w-full max-w-[420px] rounded-[14px] border border-[var(--line2)] bg-[var(--panel2)] p-8 shadow-[0_2px_10px_rgba(0,0,0,.35)]">
+        <div className="mb-6 flex items-baseline gap-1 font-mono">
+          <span className="text-sm font-bold tracking-tight text-[var(--ink)]">tobornalp</span>
+          <span className="text-sm font-bold text-[var(--acc)] motion-safe:animate-pulse">▮</span>
+        </div>
+        <h1 className="mb-6 font-mono text-lg font-bold text-[var(--ink)]">complete registration</h1>
+        <form onSubmit={handleSubmit}>
+          {error && (
+            <p className="mb-4 rounded-[10px] border border-[var(--err)]/30 bg-[var(--err-bg)] px-3 py-2 font-mono text-xs text-[var(--err)]">
+              [err] {error}
+            </p>
+          )}
+          <Field
+            id="invite-token"
+            label="invite token"
+            type="text"
+            value={inviteToken}
+            onChange={(e) => setInviteToken(e.target.value)}
+            autoComplete="off"
+          />
+          <Field
+            id="user-name"
+            label="user name"
+            type="text"
+            value={userName}
+            onChange={(e) => setUserName(e.target.value)}
+            required
+            autoComplete="username"
+          />
+          <Field
+            id="first-name"
+            label="first name"
+            type="text"
+            value={firstName}
+            onChange={(e) => setFirstName(e.target.value)}
+            required
+            autoComplete="given-name"
+          />
+          <Field
+            id="last-name"
+            label="last name"
+            type="text"
+            value={lastName}
+            onChange={(e) => setLastName(e.target.value)}
+            required
+            autoComplete="family-name"
+          />
+          <Field
+            id="mobile-phone"
+            label="mobile"
+            type="tel"
+            value={mobilePhone}
+            onChange={(e) => setMobilePhone(e.target.value)}
+            required
+            autoComplete="tel"
+          />
+          <button type="submit" className={BTN_PRIMARY} disabled={saving}>
+            {saving ? "saving…" : "continue"}
           </button>
         </form>
-      </main>
+      </div>
     </div>
   );
 }

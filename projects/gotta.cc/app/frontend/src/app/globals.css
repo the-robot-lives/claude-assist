@@ -1200,6 +1200,36 @@ a.gc-detail-url:hover { color: var(--coral); }
   flex-wrap: wrap;
 }
 
+/* ── Ad slots ─────────────────────────────────────────────────
+   Deliberately quiet: hairline frame, mono caption, and a reserved
+   height so a unit filling in can't shift the listing under it. The
+   frame must never read as a listing row. */
+.gc-ad {
+  display: block;
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  background: var(--sunken);
+  padding: 10px 12px 12px;
+  overflow: hidden;
+}
+.gc-ad-tag {
+  display: block;
+  margin-bottom: 8px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-tertiary);
+}
+.gc-ad-unit { display: block; width: 100%; }
+.gc-ad-feed { margin: 24px 0; }
+.gc-ad-feed .gc-ad-unit { min-height: 100px; }
+.gc-ad-rail { margin-top: 20px; }
+.gc-ad-rail .gc-ad-unit { min-height: 250px; }
+.gc-ad-detail { margin-top: 42px; }
+.gc-ad-detail .gc-ad-unit { min-height: 100px; }
+
 @media (max-width: 1100px) {
   .gc-wordmark-tag { display: none; }
 }

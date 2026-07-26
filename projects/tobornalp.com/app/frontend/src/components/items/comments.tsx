@@ -111,16 +111,16 @@ export function CommentsSection({ orgId, itemId }: CommentsSectionProps) {
     <SectionCard title="Comments" count={comments.length}>
       <form onSubmit={submit} className="mb-4 space-y-2">
         {replyTo && (
-          <div className="flex items-center justify-between rounded border border-border bg-surface-alt px-2 py-1 text-xs text-text-secondary">
+          <div className="flex items-center justify-between rounded-[var(--r-sm)] border border-[var(--line)] bg-[var(--panel2)] px-2 py-1 font-mono text-xs text-[var(--mut)]">
             <span>
-              Replying to{" "}
-              <span className="font-mono text-text">
+              replying to{" "}
+              <span className="font-mono text-[var(--ink)]">
                 {(comments.find((c) => c.id === replyTo)?.content ?? "").slice(0, 60) || "comment"}
               </span>
             </span>
             <button
               type="button"
-              className="text-text-muted hover:text-text hover:underline"
+              className="text-[var(--faint)] hover:text-[var(--ink)] hover:underline"
               onClick={() => setReplyTo(null)}
             >
               cancel
@@ -142,9 +142,9 @@ export function CommentsSection({ orgId, itemId }: CommentsSectionProps) {
       </form>
 
       {loading ? (
-        <p className="py-4 text-center text-sm text-text-muted">Loading comments…</p>
+        <p className="py-4 text-center font-mono text-sm text-[var(--faint)]">loading comments…</p>
       ) : error ? (
-        <p className="py-4 text-center text-sm text-error">{error.message}</p>
+        <p className="py-4 text-center font-mono text-sm text-[var(--err)]">{error.message}</p>
       ) : topLevel.length === 0 ? (
         <Empty>No comments yet.</Empty>
       ) : (
@@ -158,7 +158,7 @@ export function CommentsSection({ orgId, itemId }: CommentsSectionProps) {
                 disabling={delMut.loading}
               />
               {(repliesByParent.get(c.id) ?? []).map((r) => (
-                <div key={r.id} className="ml-6 mt-2 border-l border-border pl-3">
+                <div key={r.id} className="ml-6 mt-2 border-l border-[var(--line)] pl-3">
                   <CommentRow
                     comment={r}
                     onReply={(id) => setReplyTo(id)}
@@ -187,10 +187,10 @@ function CommentRow({
   disabling: boolean;
 }) {
   return (
-    <div className="rounded-md border border-border bg-surface-alt px-3 py-2">
+    <div className="rounded-[var(--r-sm)] border border-[var(--line)] bg-[var(--panel2)] px-3 py-2 hover:bg-[var(--sel)]">
       <div className="mb-1 flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2 text-xs text-text-secondary">
-          <span className="font-medium text-text">{comment.author ?? "anonymous"}</span>
+        <div className="flex items-center gap-2 font-mono text-xs text-[var(--faint)]">
+          <span className="font-mono font-semibold text-[var(--ink)]">{comment.author ?? "anonymous"}</span>
           {comment.inserted_at && (
             <time
               dateTime={comment.inserted_at}
@@ -203,22 +203,22 @@ function CommentRow({
         <div className="flex items-center gap-1">
           <button
             type="button"
-            className="rounded px-1.5 py-0.5 text-xs text-text-muted hover:bg-surface hover:text-text"
+            className="rounded px-1.5 py-0.5 text-xs text-[var(--faint)] hover:bg-[var(--sel)] hover:text-[var(--ink)]"
             onClick={() => onReply(comment.id)}
           >
-            Reply
+            reply
           </button>
           <button
             type="button"
-            className="rounded px-1.5 py-0.5 text-xs text-text-muted hover:bg-surface hover:text-error disabled:opacity-50"
+            className="rounded px-1.5 py-0.5 text-xs text-[var(--faint)] hover:bg-[var(--err-bg)] hover:text-[var(--err)] disabled:opacity-50"
             onClick={() => onDelete(comment.id)}
             disabled={disabling}
           >
-            Delete
+            delete
           </button>
         </div>
       </div>
-      <p className="whitespace-pre-wrap break-words text-sm text-text">{comment.content}</p>
+      <p className="whitespace-pre-wrap break-words text-sm text-[var(--ink)]">{comment.content}</p>
     </div>
   );
 }

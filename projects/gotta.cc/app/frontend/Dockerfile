@@ -19,6 +19,12 @@ COPY . .
 ARG NEXT_PUBLIC_API_URL
 ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
 
+# AdSense publisher ID (ca-pub-…). Baked in as a build-time fallback; the
+# runtime ADSENSE_CLIENT env var (see docker-entrypoint.sh) takes precedence,
+# so changing publishers does not require a rebuild.
+ARG NEXT_PUBLIC_ADSENSE_CLIENT
+ENV NEXT_PUBLIC_ADSENSE_CLIENT=${NEXT_PUBLIC_ADSENSE_CLIENT}
+
 RUN npm run build
 
 FROM node:${NODE_VERSION} AS production

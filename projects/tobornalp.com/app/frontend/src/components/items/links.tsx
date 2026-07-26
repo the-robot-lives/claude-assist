@@ -102,8 +102,8 @@ export function LinksSection({ orgId, itemId }: LinksSectionProps) {
   return (
     <SectionCard title="Links" count={totalCount}>
       <form onSubmit={add} className="mb-4 grid gap-2 sm:grid-cols-[10rem_1fr_auto] sm:items-end">
-        <label className="flex flex-col gap-1 text-xs text-text-secondary">
-          Link type
+        <label className="flex flex-col gap-1 font-mono text-xs uppercase tracking-wide text-[var(--mut)]">
+          link type
           <Select value={linkType} onChange={(e) => setLinkType(e.target.value)}>
             {LINK_TYPES.map((t) => (
               <option key={t.value} value={t.value}>
@@ -112,10 +112,10 @@ export function LinksSection({ orgId, itemId }: LinksSectionProps) {
             ))}
           </Select>
         </label>
-        <label className="flex flex-col gap-1 text-xs text-text-secondary">
-          Target item
+        <label className="flex flex-col gap-1 font-mono text-xs uppercase tracking-wide text-[var(--mut)]">
+          target item
           <Select value={targetId} onChange={(e) => setTargetId(e.target.value)} disabled={itemsIdx.loading}>
-            <option value="">{itemsIdx.loading ? "Loading items…" : "Select an item"}</option>
+            <option value="">{itemsIdx.loading ? "loading items…" : "select an item"}</option>
             {(itemsIdx.data ?? [])
               .filter((it) => it.id !== itemId)
               .map((it) => (
@@ -131,9 +131,9 @@ export function LinksSection({ orgId, itemId }: LinksSectionProps) {
       </form>
 
       {loading ? (
-        <p className="py-4 text-center text-sm text-text-muted">Loading links…</p>
+        <p className="py-4 text-center font-mono text-sm text-[var(--faint)]">loading links…</p>
       ) : error ? (
-        <p className="py-4 text-center text-sm text-error">{error.message}</p>
+        <p className="py-4 text-center font-mono text-sm text-[var(--err)]">{error.message}</p>
       ) : totalCount === 0 ? (
         <Empty>No linked items.</Empty>
       ) : (
@@ -182,41 +182,45 @@ function LinkGroup({
   if (rows.length === 0) return null;
   return (
     <div>
-      <h3 className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-text-muted">
+      <h3 className="mb-1.5 font-mono text-xs font-semibold uppercase tracking-wide text-[var(--faint)]">
         {title}
       </h3>
-      <ul className="space-y-1.5">
+      <ul className="flex flex-col">
         {rows.map((l) => {
           const otherId = dir === "out" ? l.target_item_id : l.source_item_id;
           const label = (otherId && itemById.get(otherId)) || (otherId ?? "—");
           return (
             <li
               key={l.id}
-              className="flex items-center justify-between gap-2 rounded-md border border-border bg-surface-alt px-3 py-1.5 text-sm"
+              className="flex items-center gap-2.5 border-b border-[var(--line)] px-1 py-1.5 text-sm last:border-0 hover:bg-[var(--sel)]"
             >
-              <div className="flex min-w-0 items-center gap-2">
-                <span className="shrink-0 rounded bg-surface px-1.5 py-0.5 text-xs text-text-secondary">
-                  {l.link_type}
-                </span>
+              <span
+                className={`w-[74px] shrink-0 font-mono text-[10px] uppercase tracking-wide ${
+                  l.link_type === "blocks" ? "text-[var(--err)]" : "text-[var(--faint)]"
+                }`}
+              >
+                {l.link_type.replace(/_/g, " ")}
+              </span>
+              <div className="flex min-w-0 flex-1 items-center gap-2">
                 {otherId ? (
                   <Link
                     href={`/app/${orgId}/items/${otherId}`}
-                    className="truncate text-text hover:underline"
+                    className="truncate text-[var(--ink)] hover:text-[var(--acc)] hover:underline"
                     title={label}
                   >
                     {label}
                   </Link>
                 ) : (
-                  <span className="truncate text-text-muted">{label}</span>
+                  <span className="truncate text-[var(--faint)]">{label}</span>
                 )}
               </div>
               <button
                 type="button"
-                className="shrink-0 rounded px-1.5 py-0.5 text-xs text-text-muted hover:bg-surface hover:text-error disabled:opacity-50"
+                className="shrink-0 rounded px-1.5 py-0.5 text-xs text-[var(--faint)] hover:bg-[var(--err-bg)] hover:text-[var(--err)] disabled:opacity-50"
                 onClick={() => onDelete(l.id)}
                 disabled={disabling}
               >
-                Remove
+                remove
               </button>
             </li>
           );

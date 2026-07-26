@@ -243,13 +243,13 @@ export function DataTable<T, TInput>({
 
   if (loading)
     return (
-      <p className="px-3 py-6 text-sm text-text-muted" role="status">
-        Loading {labels.plural.toLowerCase()}…
+      <p className="px-3 py-6 font-mono text-sm text-[var(--faint)]" role="status">
+        loading {labels.plural.toLowerCase()}…
       </p>
     );
   if (error)
     return (
-      <div className="flex items-center gap-3 px-3 py-4 text-sm text-error" role="alert">
+      <div className="flex items-center gap-3 px-3 py-4 font-mono text-sm text-[var(--err)]" role="alert">
         <span>{error}</span>
         <Button variant="outline" size="sm" onClick={() => setFacets((f) => ({ ...f }))}>
           Retry
@@ -258,9 +258,9 @@ export function DataTable<T, TInput>({
     );
 
   return (
-    <div className="overflow-hidden rounded-lg border border-border bg-surface">
+    <div className="overflow-hidden rounded-[var(--r)] border border-[var(--line)] bg-[var(--panel)] shadow-[var(--card-shadow)]">
       {!embedded && (filters?.length ?? 0) > 0 && (
-        <div className="flex flex-wrap items-center gap-2 border-b border-border bg-surface-alt p-3" role="search">
+        <div className="flex flex-wrap items-center gap-2 border-b border-[var(--line)] bg-[var(--panel2)] p-3" role="search">
           {filters!.map((f) => {
             if (f.type === "search") {
               return (
@@ -310,12 +310,12 @@ export function DataTable<T, TInput>({
       )}
 
       {pageRows.length === 0 ? (
-        <p className="px-3 py-6 text-sm text-text-muted">No {labels.plural.toLowerCase()} found.</p>
+        <p className="px-3 py-6 font-mono text-sm text-[var(--faint)]">No {labels.plural.toLowerCase()} found.</p>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full border-collapse text-sm">
             <thead>
-              <tr className="bg-surface-alt">
+              <tr className="bg-[var(--panel2)]">
                 {bulkEnabled && <th scope="col" className="w-8 px-3 py-2" aria-label="Select" />}
                 {columns.map((c) => {
                   const isSorted = sortKey === c.key;
@@ -326,7 +326,7 @@ export function DataTable<T, TInput>({
                       style={c.width ? { width: c.width } : undefined}
                       aria-sort={isSorted ? (sortDir === "asc" ? "ascending" : "descending") : undefined}
                       className={cn(
-                        "px-3 py-2 text-left font-medium text-text-secondary",
+                        "px-3 py-2 text-left font-mono text-[10px] font-semibold uppercase tracking-wider text-[var(--faint)]",
                         c.align === "right" && "text-right",
                         c.align === "center" && "text-center",
                       )}
@@ -334,7 +334,7 @@ export function DataTable<T, TInput>({
                       {c.sortable ? (
                         <button
                           type="button"
-                          className="inline-flex items-center gap-1 hover:text-text"
+                          className="inline-flex items-center gap-1 hover:text-[var(--ink)]"
                           onClick={() => toggleSort(c.key)}
                         >
                           {c.label}
@@ -358,9 +358,9 @@ export function DataTable<T, TInput>({
                   <tr
                     key={id}
                     className={cn(
-                      "border-t border-border outline-none",
+                      "border-t border-[var(--line)] outline-none",
                       compact ? "py-0.5" : "",
-                      i === activeRow ? "bg-surface-alt" : "hover:bg-surface-alt",
+                      i === activeRow ? "bg-[var(--sel)]" : "hover:bg-[var(--sel)]",
                       rowClassName?.(row, ctx),
                     )}
                     tabIndex={i === activeRow ? 0 : -1}
@@ -388,7 +388,7 @@ export function DataTable<T, TInput>({
                       <td
                         key={c.key}
                         className={cn(
-                          "px-3 py-2 text-text",
+                          "px-3 py-2 tabular-nums text-[var(--ink)]",
                           c.align === "right" && "text-right",
                           c.align === "center" && "text-center",
                         )}
@@ -396,7 +396,7 @@ export function DataTable<T, TInput>({
                         {c.primary && onOpenRow ? (
                           <button
                             type="button"
-                            className="text-left text-text hover:text-brand-blue hover:underline"
+                            className="text-left text-[var(--ink)] hover:text-[var(--acc)] hover:underline"
                             onClick={() => onOpenRow(row)}
                           >
                             {renderCell(c, row)}
@@ -431,11 +431,11 @@ export function DataTable<T, TInput>({
       )}
 
       {!embedded && pageCount > 1 && (
-        <nav className="flex items-center justify-center gap-3 border-t border-border p-3 text-sm" aria-label="Pagination">
+        <nav className="flex items-center justify-center gap-3 border-t border-[var(--line)] p-3 text-sm" aria-label="Pagination">
           <Button variant="outline" size="sm" disabled={page === 0} onClick={() => setPage((p) => p - 1)}>
             ← Prev
           </Button>
-          <span className="text-text-muted" aria-live="polite">
+          <span className="font-mono tabular-nums text-[var(--mut)]" aria-live="polite">
             Page {page + 1} of {pageCount}
           </span>
           <Button
@@ -565,7 +565,7 @@ function RowMenu<T, TInput>({
       <button
         ref={triggerRef}
         type="button"
-        className="rounded px-2 py-1 text-text-muted hover:bg-surface hover:text-text focus:outline-none focus:ring-2 focus:ring-brand-blue/40"
+        className="rounded px-2 py-1 text-[var(--faint)] hover:bg-[var(--sel)] hover:text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-[var(--acc-line)]"
         aria-haspopup="true"
         aria-expanded={open}
         aria-label={`${label} actions`}
@@ -583,7 +583,7 @@ function RowMenu<T, TInput>({
       {open && (
         <div
           ref={menuRef}
-          className="absolute right-0 z-20 mt-1 min-w-[10rem] rounded-md border border-border bg-surface py-1 shadow-lg"
+          className="absolute right-0 z-20 mt-1 min-w-[10rem] rounded-[var(--r-sm)] border border-[var(--line)] bg-[var(--panel2)] py-1 shadow-[var(--card-shadow)]"
           role="menu"
           aria-label={`${label} actions`}
           onKeyDown={onMenuKey}
@@ -598,8 +598,8 @@ function RowMenu<T, TInput>({
               role="menuitem"
               tabIndex={open && i === active ? 0 : -1}
               className={cn(
-                "block w-full px-3 py-1.5 text-left text-sm hover:bg-surface-alt focus:outline-none",
-                it.danger ? "text-error hover:bg-error/10" : "text-text",
+                "block w-full px-3 py-1.5 text-left text-sm hover:bg-[var(--sel)] focus:outline-none",
+                it.danger ? "text-[var(--err)] hover:bg-[var(--err-bg)]" : "text-[var(--ink)]",
               )}
               onClick={() => {
                 void it.run();
@@ -655,20 +655,20 @@ function FacetMultiSelect({
       <button
         ref={triggerRef}
         type="button"
-        className="inline-flex items-center gap-1 rounded-md border border-border bg-surface px-2 py-1.5 text-sm text-text hover:bg-surface-alt"
+        className="inline-flex items-center gap-1 rounded-[var(--r-sm)] border border-[var(--line2)] bg-[var(--panel2)] px-2 py-1.5 text-sm text-[var(--ink)] hover:bg-[var(--sel)]"
         aria-haspopup="true"
         aria-expanded={open}
         onClick={() => setOpen((o) => !o)}
       >
         {summary}
-        <span aria-hidden className="text-xs text-text-muted">
+        <span aria-hidden className="text-xs text-[var(--faint)]">
           ▾
         </span>
       </button>
       {open && (
         <div
           ref={menuRef}
-          className="absolute left-0 z-20 mt-1 min-w-[12rem] rounded-md border border-border bg-surface py-1 shadow-lg"
+          className="absolute left-0 z-20 mt-1 min-w-[12rem] rounded-[var(--r-sm)] border border-[var(--line)] bg-[var(--panel2)] py-1 shadow-[var(--card-shadow)]"
           role="group"
           aria-label={label}
           onKeyDown={(e) => {
@@ -680,10 +680,10 @@ function FacetMultiSelect({
           }}
         >
           {options.length === 0 ? (
-            <p className="px-3 py-1.5 text-sm text-text-muted">No options</p>
+            <p className="px-3 py-1.5 text-sm text-[var(--faint)]">No options</p>
           ) : (
             options.map((o) => (
-              <label key={o.value} className="flex cursor-pointer items-center gap-2 px-3 py-1.5 text-sm text-text hover:bg-surface-alt">
+              <label key={o.value} className="flex cursor-pointer items-center gap-2 px-3 py-1.5 text-sm text-[var(--ink)] hover:bg-[var(--sel)]">
                 <input
                   type="checkbox"
                   checked={selected.includes(o.value)}
@@ -696,7 +696,7 @@ function FacetMultiSelect({
           {selected.length > 0 && (
             <button
               type="button"
-              className="mt-1 block w-full border-t border-border px-3 py-1.5 text-left text-xs text-text-muted hover:bg-surface-alt"
+              className="mt-1 block w-full border-t border-[var(--line)] px-3 py-1.5 text-left text-xs text-[var(--faint)] hover:bg-[var(--sel)] hover:text-[var(--ink)]"
               onClick={() => onChange([])}
             >
               Clear

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { api } from "@/lib/api";
-import { Button, Spinner } from "@/components/ui";
+import { Btn, Spinner, Panel, PanelHeader } from "@/components/ui";
 
 interface AdminOrg {
   id: string;
@@ -30,48 +30,53 @@ export default function AdminOrgsPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center gap-2 p-16 text-text-muted">
+      <div className="flex items-center justify-center gap-2 p-16 text-faint">
         <Spinner size={20} />
-        <span className="text-sm">Loading…</span>
+        <span className="text-[12px]">loading…</span>
       </div>
     );
   }
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-10">
-      <h1 className="mb-4 text-2xl font-bold text-text">
-        Organizations <span className="text-text-muted">({total})</span>
-      </h1>
-
-      <div className="overflow-x-auto rounded-lg border border-border bg-surface shadow-sm">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-border text-left text-text-secondary">
-              <th className="px-3 py-2 font-medium">Name</th>
-              <th className="px-3 py-2 font-medium">Slug</th>
-              <th className="px-3 py-2 font-medium">Created</th>
-            </tr>
-          </thead>
-          <tbody>
-            {orgs.map((o) => (
-              <tr key={o.id} className="border-b border-border last:border-0 text-text">
-                <td className="px-3 py-2">{o.name}</td>
-                <td className="px-3 py-2 font-mono text-text-secondary">{o.slug}</td>
-                <td className="px-3 py-2 text-text-secondary">{new Date(o.created_at).toLocaleDateString()}</td>
+      <Panel>
+        <PanelHeader title="organizations" right={`${total} total`} />
+        <div className="overflow-x-auto">
+          <table className="w-full text-[12px]">
+            <thead>
+              <tr>
+                <th className="border-b border-line2 bg-panel2 px-4 py-2 text-left text-[10px] font-bold uppercase tracking-[0.12em] text-faint">
+                  name
+                </th>
+                <th className="border-b border-line2 bg-panel2 px-4 py-2 text-left text-[10px] font-bold uppercase tracking-[0.12em] text-faint">
+                  slug
+                </th>
+                <th className="border-b border-line2 bg-panel2 px-4 py-2 text-left text-[10px] font-bold uppercase tracking-[0.12em] text-faint">
+                  created
+                </th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              {orgs.map((o) => (
+                <tr key={o.id} className="border-b border-line last:border-0 hover:bg-sel">
+                  <td className="px-4 py-2 font-bold text-ink">{o.name}</td>
+                  <td className="px-4 py-2 text-mut">{o.slug}</td>
+                  <td className="px-4 py-2 text-faint">{new Date(o.created_at).toLocaleDateString()}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </Panel>
 
       <div className="mt-4 flex items-center gap-3">
-        <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage(page - 1)}>
-          Prev
-        </Button>
-        <span className="text-sm text-text-muted">Page {page}</span>
-        <Button variant="outline" size="sm" disabled={orgs.length < 50} onClick={() => setPage(page + 1)}>
-          Next
-        </Button>
+        <Btn variant="default" disabled={page <= 1} onClick={() => setPage(page - 1)}>
+          prev
+        </Btn>
+        <span className="text-[12px] text-faint">page {page}</span>
+        <Btn variant="default" disabled={orgs.length < 50} onClick={() => setPage(page + 1)}>
+          next
+        </Btn>
       </div>
     </div>
   );

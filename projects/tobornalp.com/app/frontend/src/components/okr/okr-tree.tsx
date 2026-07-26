@@ -91,7 +91,7 @@ export function OkrTree({ orgId, reloadKey }: { orgId: string; reloadKey?: numbe
   }
 
   if (forest.length === 0) {
-    return <EmptyState title="No objectives">Set your first objective to start the tree.</EmptyState>;
+    return <EmptyState title="no objectives">set your first objective to start the tree.</EmptyState>;
   }
 
   return (
@@ -106,11 +106,11 @@ export function OkrTree({ orgId, reloadKey }: { orgId: string; reloadKey?: numbe
           if (dragId) reparent(dragId, null);
           setDragId(null);
         }}
-        className={`mb-2 rounded-md border border-dashed px-3 py-1.5 text-center text-[11px] ${
-          dragId ? "border-brand-blue text-brand-blue" : "border-border text-text-muted"
+        className={`mb-2 rounded-card border border-dashed px-3 py-1.5 text-center text-[11px] tracking-[0.06em] transition-colors ${
+          dragId ? "border-acc bg-acc-bg text-acc" : "border-line2 text-faint"
         }`}
       >
-        Drop here to make top-level
+        drop here to make top-level
       </div>
 
       <ul className="space-y-1">

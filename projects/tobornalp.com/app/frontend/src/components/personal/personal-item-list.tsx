@@ -34,7 +34,7 @@ export function PersonalItemList({
             key={key}
             title={label}
             count={items.length}
-            action={accent && items.length > 0 ? <span className="text-xs font-medium text-brand-red">needs attention</span> : undefined}
+            action={accent && items.length > 0 ? <span className="text-[11px] font-bold text-err">needs attention</span> : undefined}
           >
             {items.length === 0 ? (
               <Empty>Nothing here.</Empty>

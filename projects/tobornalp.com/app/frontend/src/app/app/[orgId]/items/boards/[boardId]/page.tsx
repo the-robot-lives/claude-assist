@@ -27,7 +27,14 @@ import { useOrg } from "@/context/org";
 import { api, type Item, type ItemInput, type ItemQueue } from "@/lib/api";
 import { useMutation } from "@/lib/use-api";
 import { toast } from "sonner";
-import { PriorityBadge } from "@/components/pm/priority-badge";
+import { PriorityDot, toPriorityLevel, Chip, type ChipVariant, Key, Avatar, StatusTag } from "@/components/ui";
+
+// item_type → chip variant. Unmapped types (todo, subtask, research) fall
+// back to the neutral "default" chip rather than inventing new variants.
+const TYPE_CHIP: Record<string, ChipVariant> = { bug: "bug", story: "story", epic: "epic", task: "task" };
+function chipVariantForType(t: string): ChipVariant {
+  return TYPE_CHIP[t] ?? "default";
+}
 
 // ── Lexicographic rank helpers ───────────────────────────────────────────────
 // The backend stores `rank` as an opaque string and orders lexicographically
@@ -230,21 +237,23 @@ export default function BoardPage() {
       });
   }
 
-  if (loading) return <div className="p-8 text-text-muted">Loading board…</div>;
-  if (!board) return <div className="p-8 text-text-muted">Board not found.</div>;
+  if (loading) return <div className="p-8 font-mono text-sm text-mut">loading board…</div>;
+  if (!board) return <div className="p-8 font-mono text-sm text-mut">board not found.</div>;
 
   return (
     <div className="px-4 py-6">
       <header className="mb-6">
-        <Link href={`/app/${orgId}/items`} className="text-xs text-text-muted hover:underline">
+        <Link href={`/app/${orgId}/items`} className="font-mono text-xs text-mut hover:text-acc">
           ← boards
         </Link>
-        <h1 className="mt-1 text-2xl font-bold text-text">{board.name}</h1>
-        <p className="text-sm text-text-secondary">
-          {board.methodology} · {items.length} items
-        </p>
-        <p className="mt-1 text-xs text-text-muted">
-          Drag cards between columns to change stage; reorder within a column to set rank.
+        <h1 className="mt-1 font-mono text-2xl font-bold tracking-tight text-ink">{board.name}</h1>
+        <div className="mt-1.5 flex flex-wrap items-center gap-2">
+          {board.methodology && <Chip variant="scope">{board.methodology}</Chip>}
+          <span className="text-xs tabular-nums text-mut">{items.length} items</span>
+        </div>
+        <p className="mt-2 flex items-baseline gap-1.5 text-[11.5px] text-mut">
+          <StatusTag tone="info" />
+          drag cards between columns to change stage · reorder within a column to set rank
         </p>
       </header>
 
@@ -262,7 +271,13 @@ export default function BoardPage() {
           })}
         </div>
 
-        <DragOverlay dropAnimation={null}>{activeItem ? <CardView item={activeItem} /> : null}</DragOverlay>
+        <DragOverlay dropAnimation={null}>
+          {activeItem ? (
+            <div className="rounded-card shadow-glow">
+              <CardView item={activeItem} />
+            </div>
+          ) : null}
+        </DragOverlay>
       </DndContext>
     </div>
   );
@@ -273,24 +288,24 @@ function Column({ stage, cards }: { stage: NonNullable<ItemQueue["stages"]>[numb
   const overLimit = stage.wip_limit ? cards.length > stage.wip_limit : false;
   return (
     <div
-      className={`flex w-72 shrink-0 flex-col rounded-lg border bg-surface-alt ${
-        isOver ? "border-brand-blue ring-2 ring-brand-blue/40" : "border-border"
+      className={`flex w-72 shrink-0 flex-col overflow-hidden rounded-panel border bg-panel shadow-card ${
+        isOver ? "border-acc ring-2 ring-acc/30" : "border-line"
       }`}
     >
-      <div className="flex items-center justify-between border-b border-border px-3 py-2">
-        <span className="text-sm font-semibold text-text">{stage.name}</span>
-        <span className={`text-xs ${overLimit ? "font-semibold text-status-red" : "text-text-muted"}`}>
-          {cards.length}
-          {stage.wip_limit ? `/${stage.wip_limit}` : ""}
+      <div className="flex items-baseline gap-2 border-b border-line2 bg-panel2 px-3.5 py-2.5">
+        <h3 className="font-mono text-[11px] font-bold uppercase tracking-[0.12em] text-ink">{stage.name}</h3>
+        <span className="text-[11px] tabular-nums text-faint">{cards.length}</span>
+        <span className={`ml-auto text-[10px] ${overLimit ? "font-bold text-warn" : "text-faint"}`}>
+          {stage.wip_limit ? `wip ${cards.length}/${stage.wip_limit}` : "∞"}
         </span>
       </div>
-      <div ref={setNodeRef} className="flex min-h-[4rem] flex-col gap-2 p-2">
+      <div ref={setNodeRef} className="flex min-h-[4rem] flex-col gap-2.5 p-2.5">
         <SortableContext items={cards.map((c) => c.id)} strategy={verticalListSortingStrategy}>
           {cards.map((it) => (
             <BoardCard key={it.id} item={it} />
           ))}
         </SortableContext>
-        {cards.length === 0 && <p className="px-1 py-4 text-center text-xs text-text-muted">empty</p>}
+        {cards.length === 0 && <p className="px-1 py-4 text-center text-xs text-faint">empty</p>}
       </div>
     </div>
   );
@@ -298,14 +313,19 @@ function Column({ stage, cards }: { stage: NonNullable<ItemQueue["stages"]>[numb
 
 // Presentational card body (shared by the live card and the drag overlay).
 function CardView({ item }: { item: Item }) {
+  const level = toPriorityLevel(item.priority) ?? "lo";
+  const est = item.estimate != null && item.estimate !== "" ? `${item.estimate} pt` : null;
   return (
-    <div className="rounded border border-border bg-surface p-2.5 shadow-sm">
-      <div className="block text-sm text-text">
-        <span className="font-mono text-xs text-text-muted">{item.key || item.id.slice(0, 8)}</span>
-        <div className="mt-0.5 line-clamp-2">{item.title}</div>
+    <div className="rounded-card border border-line bg-panel2 p-2.5 shadow-card">
+      <div className="mb-1.5 flex items-center gap-2">
+        <PriorityDot level={level} />
+        <Key>{item.key || item.id.slice(0, 8)}</Key>
+        <Chip variant={chipVariantForType(item.item_type)}>{item.item_type}</Chip>
       </div>
-      <div className="mt-2 flex items-center justify-between gap-2">
-        <PriorityBadge priority={item.priority} />
+      <div className="mb-2 text-[12.5px] leading-snug text-ink">{item.title}</div>
+      <div className="flex items-center gap-2">
+        <Avatar name={item.assignee} title={item.assignee || "unassigned"} />
+        {est && <span className="ml-auto text-[10.5px] tabular-nums text-faint">{est}</span>}
       </div>
     </div>
   );
@@ -323,7 +343,7 @@ function BoardCard({ item }: { item: Item }) {
       }}
       {...attributes}
       {...listeners}
-      className="touch-none cursor-grab active:cursor-grabbing"
+      className={`touch-none cursor-grab rounded-card active:cursor-grabbing ${isDragging ? "ring-1 ring-acc" : ""}`}
     >
       <CardView item={item} />
     </div>
