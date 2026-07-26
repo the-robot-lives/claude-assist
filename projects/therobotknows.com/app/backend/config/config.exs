@@ -52,6 +52,10 @@ config :therobotknows, :github_enabled, false
 config :therobotknows, :linkedin_enabled, false
 config :therobotknows, :sso_require_invite, false
 
+config :therobotknows, :sso_domains, %{}
+config :therobotknows, :sso_auto_approve_domains, []
+config :therobotknows, :sso_domain_policies, %{}
+
 config :junit_formatter,
   report_file: "results.xml"
 

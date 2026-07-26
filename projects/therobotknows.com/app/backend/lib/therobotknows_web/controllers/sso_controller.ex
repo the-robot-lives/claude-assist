@@ -15,7 +15,11 @@ defmodule TherobotknowsWeb.SSOController do
       |> maybe_add(:linkedin_enabled, "linkedin")
       |> maybe_add(:saml_enabled, "saml")
 
-    json(conn, %{providers: providers})
+    json(conn, %{
+      providers: providers,
+      domains: Therobotknows.Auth.SSODomains.providers_map(),
+      domain_policies: Therobotknows.Auth.SSODomains.public_policies()
+    })
   end
 
   # ── OIDC ──────────────────────────────────────────────────────
@@ -102,6 +106,12 @@ defmodule TherobotknowsWeb.SSOController do
 
       {:error, :user_not_provisioned} ->
         redirect(conn, external: "#{frontend_url}/auth/sso-callback?error=not_provisioned")
+
+      {:error, :sso_not_allowed} ->
+        redirect(conn, external: "#{frontend_url}/auth/sso-callback?error=sso_unavailable")
+
+      {:error, :registration_pending} ->
+        redirect(conn, external: "#{frontend_url}/auth/sso-callback?error=registration_pending")
 
       {:error, _} ->
         redirect(conn, external: "#{frontend_url}/auth/sso-callback?error=sso_failed")

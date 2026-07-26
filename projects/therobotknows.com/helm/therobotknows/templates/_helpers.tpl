@@ -171,6 +171,14 @@ app.kubernetes.io/instance: {{ .Release.Name }}
       name: {{ .Values.secrets.name }}
       key: {{ .Values.secrets.keys.samlSpKey }}
 {{- end }}
+{{- if .Values.sso.domains }}
+- name: SSO_DOMAINS
+  value: {{ .Values.sso.domains | quote }}
+{{- end }}
+{{- if .Values.sso.autoApproveDomains }}
+- name: SSO_AUTO_APPROVE_DOMAINS
+  value: {{ .Values.sso.autoApproveDomains | quote }}
+{{- end }}
 {{- if .Values.sso.requireInvite }}
 - name: SSO_REQUIRE_INVITE
   value: "true"

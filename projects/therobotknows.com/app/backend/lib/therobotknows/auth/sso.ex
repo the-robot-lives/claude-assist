@@ -16,20 +16,25 @@ defmodule Therobotknows.Auth.SSO do
   def authenticate_sso(provider_type, %{email: email} = attrs) do
     context = Noizu.Context.system()
     email = email |> String.trim() |> String.downcase()
-    provider_ref = @provider_map[provider_type].()
-    {:ok, provider_id} = Therobotknows.Auth.Providers.Provider.id(provider_ref)
 
-    case find_user_by_email(email) do
-      {:ok, user} ->
-        ensure_sso_credential(user, provider_ref, provider_id, provider_type, attrs, context)
-        create_sso_session(user, provider_type, context)
+    if Therobotknows.Auth.SSODomains.sso_available?(email, provider_type) do
+      provider_ref = @provider_map[provider_type].()
+      {:ok, provider_id} = Therobotknows.Auth.Providers.Provider.id(provider_ref)
 
-      :not_found ->
-        if Application.get_env(:therobotknows, :sso_require_invite, false) do
-          {:error, :user_not_provisioned}
-        else
-          auto_provision_user(email, attrs, provider_ref, provider_id, provider_type, context)
-        end
+      case find_user_by_email(email) do
+        {:ok, user} ->
+          ensure_sso_credential(user, provider_ref, provider_id, provider_type, attrs, context)
+          create_sso_session(user, provider_type, context)
+
+        :not_found ->
+          if Application.get_env(:therobotknows, :sso_require_invite, false) do
+            {:error, :user_not_provisioned}
+          else
+            auto_provision_user(email, attrs, provider_ref, provider_id, provider_type, context)
+          end
+      end
+    else
+      {:error, :sso_not_allowed}
     end
   end
 
@@ -95,13 +100,15 @@ defmodule Therobotknows.Auth.SSO do
 
     {:ok, name_ref} = Noizu.EntityReference.Protocol.ref(name)
 
+    status = Therobotknows.Auth.SSODomains.registration_status(email, provider_type)
+
     user_schema = %UserSchema{
       id: UUID.uuid4(),
       user_name: handle,
       handle: handle,
       name_id: name.id,
       email: email,
-      status: :active,
+      status: status,
       verified: true,
       flagged: false
     }
@@ -119,7 +126,13 @@ defmodule Therobotknows.Auth.SSO do
     }
     |> Therobotknows.EntityRepo.create(context)
 
-    create_sso_session(user, provider_type, context)
+    # Unlike TheRobotLearns there is no post-session status gate here, so a
+    # registration awaiting approval must not be handed a session.
+    if status == :active do
+      create_sso_session(user, provider_type, context)
+    else
+      {:error, :registration_pending}
+    end
   end
 
   defp sso_settings(:saml, attrs), do: %{email: attrs[:email], name_id: attrs[:name_id]}
