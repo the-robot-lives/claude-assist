@@ -206,7 +206,10 @@ namespace TheRobotDraft.Uml
 
         private void Awake()
         {
-            _font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            // Prefs first: they decide the font and the theme palette that BuildCanvas reads.
+            Chrome.UiPrefs.Load();
+            _font = Chrome.UiPrefs.ResolvedFont
+                    ?? Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             BuildCanvas();
             // Restore the saved diagram if present, else open the sample.
             if (!LoadDiagram())
@@ -965,6 +968,8 @@ namespace TheRobotDraft.Uml
             bool shift = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
             if (ctrl && Input.GetKeyDown(KeyCode.K)) { if (shift) ShowKindBrowser(); else ToggleCommandPalette(); return; }
             if (ctrl && Input.GetKeyDown(KeyCode.Slash)) { ShowHelp(); return; }
+            // ⌘, — the platform-standard Preferences accelerator (IA v2: Settings… ⌘,).
+            if (ctrl && Input.GetKeyDown(KeyCode.Comma)) { ShowPreferences(ScreenCenter); return; }
             if (ctrl && Input.GetKeyDown(KeyCode.S)) { if (shift) SaveDiagramAs(); else SaveDiagram(); return; }
             if (ctrl && Input.GetKeyDown(KeyCode.O)) { OpenDiagramFile(); return; }
             if (ctrl && Input.GetKeyDown(KeyCode.C)) { if (_selectedId.IsValid) CopyElement(_selectedId); return; }
@@ -1560,7 +1565,14 @@ namespace TheRobotDraft.Uml
                 if (kv.Value == null) continue;
                 Vector3 sp = _scene.WorldToScreen(kv.Value.transform.position);
                 if (sp.z <= 0f) continue; // behind the camera
-                if (band.Contains(new Vector2(sp.x, sp.y))) candidates.Add((kv.Key, sp.z));
+                // Key by LAYER (world Z), NOT by sp.z. sp.z is distance along the camera's forward
+                // axis, so at the rig's default 18° pitch two nodes on the SAME layer one row apart
+                // (2 world units) differ by 2·sin18° ≈ 0.62 — far outside MarqueeDepthEpsilon (0.05)
+                // — and the frontmost-layer filter below then discarded every row but the nearest.
+                // Any yaw did the same within a row, collapsing the marquee to a single node.
+                // Negated so that "smaller = nearer", which the filter below assumes.
+                if (band.Contains(new Vector2(sp.x, sp.y)))
+                    candidates.Add((kv.Key, -kv.Value.transform.position.z));
             }
 
             var hits = new List<ElementId>();
@@ -4692,8 +4704,12 @@ namespace TheRobotDraft.Uml
             if (ids != null)
                 foreach (var id in ids)
                     if (id.IsValid && _selection.Add(id) && !_selectedId.IsValid) _selectedId = id;
+            // Mirror SetSelected: a marquee must also drop any region highlight and re-sync the
+            // Outline tree, or both are left showing the previous selection.
+            ClearRegionSelection();
             RefreshSelectionHighlights();
             RefreshInspector();
+            _browseNav?.RefreshSelection(_selectedId);
         }
 
         public bool IsSelected(ElementId id) => _selection.Contains(id);
@@ -4810,6 +4826,22 @@ namespace TheRobotDraft.Uml
             _nodeLayer = NewLayer("NodeLayer");
             _handleLayer = NewLayer("HandleLayer"); // bend handles, above boxes
 
+            BuildShellChrome();
+        }
+
+        /// <summary>
+        /// Build every chrome surface hanging off the canvas root — menu bar, context toolbar,
+        /// status strip, tab row, hint, HUD cluster, nav bar, palette, Outline tree and inspector.
+        /// <para>
+        /// Split out of <see cref="BuildCanvas"/> so Preferences can re-run it after a font or
+        /// theme change. The Canvas / CanvasScaler / GraphicRaycaster, the 3-D scene and the
+        /// node/edge/handle layers are created once by BuildCanvas and are deliberately NOT
+        /// rebuilt here — that is exactly what lets a restyle preserve diagram content, selection
+        /// and camera pose. See <see cref="RebuildShellChrome"/>.
+        /// </para>
+        /// </summary>
+        private void BuildShellChrome()
+        {
             // In-app menu bar (File / Edit / Add / Generate / Layout / Export / Settings) — the tab bar sits below it.
             BuildMenuBar();
 
@@ -4846,7 +4878,7 @@ namespace TheRobotDraft.Uml
             _hint.alignment = TextAnchor.MiddleLeft;
             _hint.supportRichText = false;
             _hint.raycastTarget = false;
-            _hint.text = "Drag empty space → navigate · wheel → zoom · ⌘K palette · drag palette items onto the canvas to place";
+            _hint.text = "Drag empty space → navigate · ⇧drag → marquee select · wheel → zoom · ⌘K palette";
 
             // The old "? Help" button is gone — Help is a real menu now (Help ▸ Documentation, ⌘/).
 
@@ -5969,7 +6001,14 @@ namespace TheRobotDraft.Uml
             rt.sizeDelta = size;
             rt.anchoredPosition = topLeft;
             var t = go.AddComponent<Text>();
-            t.font = _font; t.text = text; t.fontSize = fontSize; t.color = color; t.alignment = align;
+            // Every chrome label funnels through here, so the user's font family and size scale
+            // are applied once at this chokepoint rather than at ~130 call sites. Callers keep
+            // passing their authored (base) size.
+            t.font = _font;
+            t.text = text;
+            t.fontSize = Chrome.UiPrefs.ScaleFont(fontSize);
+            t.color = color;
+            t.alignment = align;
             t.supportRichText = false; t.raycastTarget = false;
             return t;
         }

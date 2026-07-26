@@ -6,7 +6,7 @@ import { Footer } from "@/components/footer";
 export const metadata: Metadata = {
   title: "About — gotta.cc",
   description:
-    "Our manifesto: a human-curated web directory that scores sites for originality, depth, and human authorship — a directory for the post-AI age.",
+    "Our manifesto: a curated web directory that scores sites for originality, depth, and usefulness — a directory for a web worth reading.",
 };
 
 /* ═══════════════════════════════════════════════
@@ -31,7 +31,7 @@ function AsteriskMark({ className = "h-7 w-7" }: { className?: string }) {
 
 export default function About() {
   return (
-    <div className="min-h-screen bg-cream">
+    <div className="gc-page">
       <NavBar />
       <Hero />
       <Rule />
@@ -83,9 +83,9 @@ function Hero() {
         {/* Subheadline — manifesto voice */}
         <p className="mt-6 max-w-2xl font-body text-lg leading-relaxed text-ink-secondary">
           We built gotta.cc because search is SEO-gamed and discovery is broken.
-          It is a curated directory of the post-slop web: personal sites, niche
-          blogs, and indie tools, scored by AI for originality, depth, and human
-          authorship. A directory for a web worth reading.
+          It is a curated directory of personal sites, niche blogs, and indie
+          tools — scored for quality, depth, and usefulness. No SEO farms. No
+          slop. A directory for a web worth reading.
         </p>
 
         <div className="mt-8">
@@ -117,7 +117,7 @@ function Problem() {
       number: "01",
       title: "Search is SEO-gamed",
       description:
-        "74% of newly published English web pages contain AI-generated content. The first page of results for any commercial query is a content farm. You search for \"best standing desk\" and get 10 affiliate sites that have never touched a desk.",
+        "The first page of results for any commercial query is a content farm. You search for \"best standing desk\" and get 10 affiliate pages written by someone who has never touched a desk. Ranking rewards whoever games the algorithm hardest, not whoever knows the most.",
     },
     {
       number: "02",
@@ -129,7 +129,7 @@ function Problem() {
       number: "03",
       title: "The good web is invisible",
       description:
-        "Thousands of excellent personal sites, niche blogs, and indie tools exist but have zero SEO. They don't play the game. The blogroll revival and indie web movement signal the same thing: people want to find real humans making real things.",
+        "Thousands of excellent personal sites, niche blogs, and indie tools exist but have zero SEO. They don't play the game. The blogroll revival and indie web movement signal the same thing: people want to find work made with care, not whatever ranked.",
     },
   ];
 
@@ -183,7 +183,8 @@ const SCORE_DIMENSIONS = [
     name: "Human Authorship",
     weight: "25%",
     score: 99,
-    description: "Written by a human. Personal anecdotes, unique phrasing.",
+    description:
+      "A person's voice comes through — lived detail, unique phrasing.",
   },
   {
     name: "Depth",
@@ -475,7 +476,7 @@ function Features() {
       icon: "🛡",
       title: "Anti-Slop Defense",
       description:
-        "Human authorship scoring detects AI-generated text. Originality scoring catches content farms. Community flagging triggers manual review.",
+        "Originality scoring catches content farms and clones. Human Authorship reads as one signal among five — a mass-produced page scores badly on all of them. Community flagging triggers manual review.",
     },
     {
       icon: "📝",

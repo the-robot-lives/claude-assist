@@ -29,21 +29,24 @@ namespace TheRobotDraft.Uml.Chrome
         public const float PixelsPerUnit = 100f * Density;
 
         // --- Concept D / Nocturne palette (demo tokens; tint multiplies grayscale sprites) ---
-        public static readonly Color PrimaryFill = ConceptDTheme.Primary;
-        public static readonly Color SecondaryFill = ConceptDTheme.Secondary;
-        public static readonly Color TextFieldFill = ConceptDTheme.Field;
-        public static readonly Color PanelFill = ConceptDTheme.Dialog;
-        public static readonly Color PopoverFill = ConceptDTheme.Popover;
-        public static readonly Color MenuRowFill = ConceptDTheme.MenuRow;
-        public static readonly Color MenuRowHover = ConceptDTheme.AccentDim;
-        public static readonly Color CheckboxFill = ConceptDTheme.Checkbox;
-        public static readonly Color CheckboxCheckedFill = ConceptDTheme.CheckboxOn;
-        public static readonly Color SeparatorFill = ConceptDTheme.Line;
-        public static readonly Color ScrollWellFill = ConceptDTheme.ScrollWell;
-        public static readonly Color BackdropFill = ConceptDTheme.Backdrop;
-        public static readonly Color ProgressTrackFill = ConceptDTheme.ProgressTrack;
-        public static readonly Color SegmentIdleFill = ConceptDTheme.SegmentIdle;
-        public static readonly Color SegmentActiveFill = ConceptDTheme.Accent;
+        // Computed, NOT snapshots: Preferences can swap the palette at runtime, and these must
+        // follow it. As static readonly fields they froze at static-init and a theme change left
+        // every control still wearing the startup palette.
+        public static Color PrimaryFill => ConceptDTheme.Primary;
+        public static Color SecondaryFill => ConceptDTheme.Secondary;
+        public static Color TextFieldFill => ConceptDTheme.Field;
+        public static Color PanelFill => ConceptDTheme.Dialog;
+        public static Color PopoverFill => ConceptDTheme.Popover;
+        public static Color MenuRowFill => ConceptDTheme.MenuRow;
+        public static Color MenuRowHover => ConceptDTheme.AccentDim;
+        public static Color CheckboxFill => ConceptDTheme.Checkbox;
+        public static Color CheckboxCheckedFill => ConceptDTheme.CheckboxOn;
+        public static Color SeparatorFill => ConceptDTheme.Line;
+        public static Color ScrollWellFill => ConceptDTheme.ScrollWell;
+        public static Color BackdropFill => ConceptDTheme.Backdrop;
+        public static Color ProgressTrackFill => ConceptDTheme.ProgressTrack;
+        public static Color SegmentIdleFill => ConceptDTheme.SegmentIdle;
+        public static Color SegmentActiveFill => ConceptDTheme.Accent;
 
         private static Sprite _primaryBtn, _secondaryBtn, _textField, _panel, _popover, _menuRow;
         private static Sprite _checkbox, _separator, _scrollWell, _progressTrack, _segment;

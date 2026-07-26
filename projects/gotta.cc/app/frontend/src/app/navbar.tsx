@@ -1,52 +1,42 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { startLogin } from "@/lib/auth";
+import { usePathname, useRouter } from "next/navigation";
 import { isAuthed, clearSession } from "@/lib/session";
-
-function AsteriskMark({ className = "h-7 w-7" }: { className?: string }) {
-  return (
-    <svg
-      className={`shrink-0 ${className}`}
-      viewBox="0 0 200 200"
-      aria-hidden="true"
-    >
-      <g transform="translate(100,100)" style={{ fill: "var(--coral)" }}>
-        <rect x="-8" y="-65" width="16" height="130" rx="8" />
-        <rect x="-8" y="-65" width="16" height="130" rx="8" transform="rotate(60)" />
-        <rect x="-8" y="-65" width="16" height="130" rx="8" transform="rotate(120)" />
-      </g>
-    </svg>
-  );
-}
 
 function NavLink({
   href,
   label,
   active,
+  secondary = false,
 }: {
   href: string;
   label: string;
   active: boolean;
+  secondary?: boolean;
 }) {
   return (
     <Link
       href={href}
-      className={`hidden font-ui text-sm font-semibold transition-colors duration-200 hover:text-ink sm:inline ${
-        active ? "text-ink" : "text-ink-secondary"
-      }`}
+      className={`${active ? "gc-on" : ""} ${secondary ? "gc-nav-secondary" : ""}`}
     >
       {label}
     </Link>
   );
 }
 
-export function NavBar() {
+/**
+ * Sticky masthead. `siteCount`, when known, personalises the search
+ * placeholder ("Search 4,218 sites worth your time…").
+ */
+export function NavBar({ siteCount }: { siteCount?: number } = {}) {
   const pathname = usePathname();
+  const router = useRouter();
+  const searchRef = useRef<HTMLInputElement>(null);
+  const [q, setQ] = useState("");
+
   const browseActive = pathname === "/";
-  const searchActive = pathname?.startsWith("/search") ?? false;
   const aboutActive = pathname?.startsWith("/about") ?? false;
   const submitActive = pathname?.startsWith("/submit") ?? false;
   const mySubmissionsActive = pathname?.startsWith("/my-submissions") ?? false;
@@ -58,65 +48,91 @@ export function NavBar() {
     setAuthed(isAuthed());
   }, [pathname]);
 
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        searchRef.current?.focus();
+        searchRef.current?.select();
+      }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
   function handleSignOut() {
     clearSession();
     setAuthed(false);
     window.location.assign("/");
   }
 
+  function handleSearch(e: React.FormEvent) {
+    e.preventDefault();
+    const trimmed = q.trim();
+    if (trimmed) router.push(`/search?q=${encodeURIComponent(trimmed)}`);
+  }
+
+  const placeholder = siteCount
+    ? `Search ${siteCount.toLocaleString()} sites worth your time…`
+    : "Search sites worth your time…";
+
   return (
-    <nav className="sticky top-0 z-50 border-b border-rule bg-cream/95 backdrop-blur-sm">
-      <div className="mx-auto flex max-w-[960px] items-center justify-between px-6 py-4">
-        <Link href="/" className="flex items-center gap-2.5">
-          <AsteriskMark className="h-7 w-7" />
-          <span
-            className="font-display text-2xl font-bold text-ink"
-            style={{ fontVariationSettings: "'WONK' 1" }}
-          >
-            gotta.cc
-          </span>
+    <header className="gc-masthead">
+      <div className="gc-wrap gc-masthead-inner">
+        <Link href="/" className="gc-wordmark">
+          gotta<span className="gc-tld">.cc</span>
         </Link>
-        <div className="flex items-center gap-8">
+        <span className="gc-wordmark-tag">A directory for a web worth reading</span>
+
+        <form className="gc-searchbar" role="search" onSubmit={handleSearch}>
+          <svg
+            width="15"
+            height="15"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2.2}
+            strokeLinecap="round"
+            aria-hidden="true"
+          >
+            <circle cx="11" cy="11" r="7" />
+            <path d="M21 21l-4.3-4.3" />
+          </svg>
+          <input
+            ref={searchRef}
+            type="search"
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder={placeholder}
+            aria-label="Search sites"
+          />
+          <kbd className="gc-kbd">⌘K</kbd>
+        </form>
+
+        <nav className="gc-nav">
           <NavLink href="/" label="Browse" active={browseActive} />
-          <NavLink href="/search" label="Search" active={searchActive} />
           <NavLink href="/about" label="About" active={aboutActive} />
-          <NavLink href="/submit" label="Submit" active={submitActive} />
           {authed && (
             <NavLink
               href="/my-submissions"
-              label="My Submissions"
+              label="My submissions"
               active={mySubmissionsActive}
+              secondary
             />
           )}
           {authed ? (
-            <button
-              onClick={handleSignOut}
-              className="hidden font-ui text-sm font-semibold text-olive transition-colors duration-200 hover:text-olive-hover sm:inline"
-            >
-              Sign out
-            </button>
+            <button onClick={handleSignOut}>Sign out</button>
           ) : (
-            <Link
-              href="/login"
-              className="hidden font-ui text-sm font-semibold text-olive transition-colors duration-200 hover:text-olive-hover sm:inline"
-            >
-              Log in
-            </Link>
+            <NavLink href="/login" label="Sign in" active={false} />
           )}
-          <button
-            onClick={() => startLogin()}
-            className="font-ui text-sm font-semibold text-olive hover:text-olive-hover transition-colors duration-200"
-          >
-            Sign In
-          </button>
           <Link
-            href="/about#waitlist"
-            className="rounded-xl bg-coral px-5 py-2 font-ui text-sm font-semibold text-white transition-all duration-150 hover:-translate-y-0.5 hover:bg-coral-hover"
+            href="/submit"
+            className={`gc-btn-submit ${submitActive ? "gc-on" : ""}`}
           >
-            Join Waitlist
+            Submit a site
           </Link>
-        </div>
+        </nav>
       </div>
-    </nav>
+    </header>
   );
 }

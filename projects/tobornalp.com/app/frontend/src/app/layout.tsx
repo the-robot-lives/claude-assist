@@ -33,7 +33,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   const t = config.toast;
 
   return (
-    <html lang="en" data-design-theme="organic" suppressHydrationWarning>
+    // Dark-only: the console world commits to one theme, so `.dark` is static
+    // rather than restored from localStorage.
+    <html lang="en" className="dark" data-design-theme="organic" suppressHydrationWarning>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
@@ -41,11 +43,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <link key={url} href={url} rel="stylesheet" />
         ))}
         <script src="/__env.js" />
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `(function(){var s=localStorage.getItem('color-mode');if(s==='dark')document.documentElement.classList.add('dark')})()`,
-          }}
-        />
       </head>
       <body>
         <OtelProvider>

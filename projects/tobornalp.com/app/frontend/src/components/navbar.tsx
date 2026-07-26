@@ -1,11 +1,14 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useAuth } from "@/context/auth";
 import { OrgSwitcher } from "@/components/org-switcher";
 
 /*
- * Global navbar — mounted in layout.tsx, shown on every route.
+ * Global navbar — mounted in layout.tsx, shown on every route except the
+ * org-scoped app shell, which carries its own rail and topbar (see
+ * components/pm/org-nav.tsx). Two stacked bars would just eat vertical space.
  *
  * Uses the organic theme's CSS variables directly (--surface, --text,
  * --brand-blue, --border, --font-display) via the scoped .tn-* class
@@ -15,6 +18,9 @@ import { OrgSwitcher } from "@/components/org-switcher";
  */
 export function Navbar() {
   const { user, loading, logout } = useAuth();
+  const pathname = usePathname();
+
+  if (inOrgShell(pathname)) return null;
 
   return (
     <>
@@ -52,6 +58,13 @@ export function Navbar() {
       </nav>
     </>
   );
+}
+
+// `/app/<orgId>/…` is the org shell. `admin` and `profile` are static siblings
+// of the [orgId] segment, so they route outside it and keep this navbar.
+function inOrgShell(pathname: string | null): boolean {
+  const seg = pathname?.split("/") ?? [];
+  return seg[1] === "app" && !!seg[2] && seg[2] !== "admin" && seg[2] !== "profile";
 }
 
 /* Brand mark — matches the organic theme logo (circle + organic path) */
@@ -141,15 +154,15 @@ const NAV_CSS = `
   font-weight: 600;
   font-size: 15px;
   padding: 11px 20px;
-  border-radius: 11px;
+  border-radius: var(--r-pill);
   text-decoration: none;
   border: 1px solid transparent;
   cursor: pointer;
   transition: transform 120ms ease, background 160ms ease, color 160ms ease, border-color 160ms ease;
 }
-.tn-btn--sm { font-size: 14px; padding: 8px 16px; border-radius: 9px; }
-.tn-btn--primary { background: var(--brand-blue); color: #fff; }
-.tn-btn--primary:hover { background: #244e24; transform: translateY(-1px); }
+.tn-btn--sm { font-size: 13px; padding: 6px 16px; }
+.tn-btn--primary { background: var(--acc); color: #000; }
+.tn-btn--primary:hover { background: var(--acc-hi); transform: translateY(-1px); }
 .tn-btn--ghost {
   background: transparent;
   color: var(--text);

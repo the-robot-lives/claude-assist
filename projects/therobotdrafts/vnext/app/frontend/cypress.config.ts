@@ -25,7 +25,9 @@ export default defineConfig({
       appDomain: process.env.CYPRESS_APP_DOMAIN || "app.therobotdrafts.com",
       apiUrl: process.env.CYPRESS_API_URL || "http://localhost:4000",
       ssoDomain: process.env.CYPRESS_SSO_DOMAIN || "therobotdrafts.com",
-      passwordDomain: process.env.CYPRESS_PASSWORD_DOMAIN || "therobotdrafts.com",
+      // Must stay distinct from ssoDomain: the password scenarios rely on this
+      // domain having no SSO policy so signup falls through to the password step.
+      passwordDomain: process.env.CYPRESS_PASSWORD_DOMAIN || "example.com",
     },
   },
 });

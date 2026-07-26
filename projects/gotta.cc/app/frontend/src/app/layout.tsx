@@ -6,14 +6,14 @@ import { OtelProvider } from "@/components/otel-provider";
 import { loadConfig, loadAllBrandings } from "@noizu/styleguide/css-gen";
 import { Toaster } from "sonner";
 
-const SITE_TITLE = "Gotta.cc — The Web Directory for the Post-AI Age";
+const SITE_TITLE = "gotta.cc — A directory for a web worth reading";
 const SITE_DESC =
-  "Browse curated categories. Read editorial summaries. Discover sites scored for originality, depth, and human authorship.";
+  "Personal sites, niche blogs, and indie tools — scored for quality, depth, and usefulness. No SEO farms. No slop.";
 
 export const metadata: Metadata = {
   title: SITE_TITLE,
   description:
-    "An AI-curated website directory with browsable categories, editorial summaries, and quality scoring. Browse the web by topic, not by keyword.",
+    "A curated directory of sites worth your time: browsable categories, editorial summaries, and a 0–100 quality score for every listing. Browse the web by topic, not by keyword.",
   openGraph: {
     title: SITE_TITLE,
     description: SITE_DESC,

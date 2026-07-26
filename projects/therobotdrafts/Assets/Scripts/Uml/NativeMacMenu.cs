@@ -91,6 +91,7 @@ namespace TheRobotDraft.Uml
         public const int GoFrameAll = 600, GoZUp = 601, GoZDown = 602, GoCycleNav = 603, GoTrace = 604;
         // View 7xx
         public const int ViewToggle2D = 700, ViewHelp = 701, ViewLlmSettings = 702, ViewVisionSettings = 703;
+        public const int ViewPreferences = 704;
         // Window / Help 8xx
         public const int WindowFullScreen = 800, HelpSample = 801;
     }

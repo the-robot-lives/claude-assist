@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { NavBar } from "../navbar";
 import { Footer } from "@/components/footer";
 import { SearchBar } from "@/components/search-bar";
-import { SiteCard } from "@/components/site-card";
+import { SiteRow } from "@/components/site-row";
 import { api, type DirectorySite } from "@/lib/api";
 
 function SearchResults() {
@@ -88,7 +88,7 @@ function SearchResults() {
               onChange={(v) => commit(v)}
               onDebouncedChange={(v) => commit(v)}
               onSubmit={(v) => commit(v)}
-              placeholder="Search sites…"
+              placeholder="Search sites worth your time…"
               autoFocus
             />
           </div>
@@ -114,17 +114,16 @@ function SearchResults() {
                 <p className="mb-6 font-ui text-xs font-bold uppercase tracking-[0.08em] text-olive">
                   Editor&apos;s Picks
                 </p>
-                <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                  {featured === null ? (
-                    Array.from({ length: 6 }).map((_, i) => (
-                      <div
-                        key={i}
-                        className="h-48 animate-pulse rounded-2xl bg-surface"
-                      />
-                    ))
-                  ) : (
-                    featured.map((s) => <SiteCard key={s.id} site={s} />)
-                  )}
+                <div>
+                  {featured === null
+                    ? Array.from({ length: 4 }).map((_, i) => (
+                        <div
+                          key={i}
+                          className="gc-skeleton"
+                          style={{ height: 96, marginBottom: 12 }}
+                        />
+                      ))
+                    : featured.map((s) => <SiteRow key={s.id} site={s} />)}
                 </div>
               </div>
             ) : results && results.length === 0 ? (
@@ -132,8 +131,8 @@ function SearchResults() {
                 No sites matched. Try a different term.
               </p>
             ) : (
-              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                {results?.map((s) => <SiteCard key={s.id} site={s} />)}
+              <div>
+                {results?.map((s) => <SiteRow key={s.id} site={s} />)}
               </div>
             )}
           </div>

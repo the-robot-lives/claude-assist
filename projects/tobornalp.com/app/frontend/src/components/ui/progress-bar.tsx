@@ -1,17 +1,38 @@
-// Thin progress meter — accepts a 0..1 fraction, a 0..100 percentage, or a Decimal string.
-// Moved here from components/pm/priority-badge.tsx.
+import { cn } from "@/lib/cn";
 
-export function ProgressBar({ value }: { value?: string | number }) {
+// Thin progress meter — accepts a 0..1 fraction, a 0..100 percentage, or a Decimal string.
+// 7px pill track on the elevated surface; mint fill, amber when the tone says the
+// work is behind pace.
+export type ProgressTone = "ok" | "warned";
+
+export function ProgressBar({
+  value,
+  tone = "ok",
+  className,
+}: {
+  value?: string | number;
+  tone?: ProgressTone;
+  className?: string;
+}) {
   const pct = clampPct(value);
   return (
     <div
-      className="h-1.5 w-full overflow-hidden rounded-full bg-border"
+      className={cn(
+        "relative h-[7px] w-full overflow-hidden rounded-pill border border-line bg-panel2",
+        className,
+      )}
       role="progressbar"
       aria-valuenow={Math.round(pct)}
       aria-valuemin={0}
       aria-valuemax={100}
     >
-      <div className="h-full rounded-full bg-brand-blue transition-all" style={{ width: `${pct}%` }} />
+      <div
+        className={cn(
+          "absolute inset-y-0 left-0 rounded-pill transition-all",
+          tone === "warned" ? "bg-warn" : "bg-acc",
+        )}
+        style={{ width: `${pct}%` }}
+      />
     </div>
   );
 }

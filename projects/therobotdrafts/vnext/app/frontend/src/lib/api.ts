@@ -64,6 +64,16 @@ interface PasswordResetResponse {
   dev_code?: string;
 }
 
+/** Row shape of `list_user_accessible_projects` — the PBAC view backing
+ * `GET /organizations/:org_id/projects`. Only the fields the workspace needs are declared. */
+export interface Project {
+  id: string;
+  name?: string;
+  slug?: string;
+  organization_id?: string;
+  status?: string;
+}
+
 export interface SsoDomainPolicy {
   providers: string[];
   auto_approve?: boolean;
@@ -75,6 +85,34 @@ interface SsoProvidersResponse {
   providers: string[];
   domains?: Record<string, string[]>;
   domain_policies?: Record<string, SsoDomainPolicy>;
+}
+
+/** Carries the HTTP status and parsed body so callers can branch on them — the document
+ * API needs the 409 conflict payload, not just its message. */
+export class ApiError extends Error {
+  readonly status: number;
+  readonly body: unknown;
+
+  constructor(message: string, status: number, body: unknown) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+    this.body = body;
+  }
+}
+
+function errorMessage(body: unknown, status: number): string {
+  if (body && typeof body === "object") {
+    const { error, errors } = body as { error?: unknown; errors?: { email?: string[] } };
+    if (typeof error === "string") return error;
+    if (error && typeof error === "object") {
+      const message = (error as { message?: unknown }).message;
+      if (typeof message === "string") return message;
+    }
+    const emailError = errors?.email?.[0];
+    if (typeof emailError === "string") return emailError;
+  }
+  return `Request failed: ${status}`;
 }
 
 let refreshPromise: Promise<string | null> | null = null;
@@ -154,7 +192,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 
       if (!retryRes.ok) {
         const body = await retryRes.json().catch(() => ({}));
-        throw new Error(body.error || body.errors?.email?.[0] || `Request failed: ${retryRes.status}`);
+        throw new ApiError(errorMessage(body, retryRes.status), retryRes.status, body);
       }
 
       return retryRes.json();
@@ -171,11 +209,16 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
-    throw new Error(body.error || body.errors?.email?.[0] || `Request failed: ${res.status}`);
+    throw new ApiError(errorMessage(body, res.status), res.status, body);
   }
 
   return res.json();
 }
+
+/** The shared authenticated fetch — same base URL, bearer token and refresh-retry the
+ * `api` surface uses. Exported for clients that live outside this module (the HoloGraph
+ * DocStore). */
+export const apiRequest = request;
 
 export const api = {
   register(payload: RegisterPayload) {
@@ -305,6 +348,10 @@ export const api = {
 
   getOrganization(id: string) {
     return request<{ organization: Organization }>(`/api/v1/organizations/${id}`);
+  },
+
+  listProjects(orgId: string) {
+    return request<{ projects: Project[] }>(`/api/v1/organizations/${orgId}/projects`);
   },
 
   sendVerificationEmail() {

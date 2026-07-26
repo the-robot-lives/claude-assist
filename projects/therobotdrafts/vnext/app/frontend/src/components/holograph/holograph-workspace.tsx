@@ -1,7 +1,16 @@
 "use client";
 
-import { type ChangeEvent, type MouseEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { graphMetrics, riskBandFor, searchNodes, traceNeighbors } from "@/lib/holograph/analysis";
+import {
+  type ChangeEvent,
+  type MouseEvent,
+  type RefObject,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import { searchNodes, traceNeighbors } from "@/lib/holograph/analysis";
 import {
   createEmptyDocument,
   downloadText,
@@ -23,46 +32,34 @@ import { exportTrdYaml, importTrdYaml, looksLikeTrdYaml } from "@/lib/holograph/
 import { demoDocument } from "@/lib/holograph/fixture";
 import type { GraphDocument, GraphEdge, GraphNode, NodeKind } from "@/lib/holograph/types";
 import { TrdThreeScene, type TrdSceneHandle } from "./trd-three-scene";
+import "./chrome/concept-d.css";
+import { BrowserDock, type BrowserTab, type DocumentSummary, type RecentEntry } from "./chrome/BrowserDock";
+import { CommandPalette, type PaletteCommand } from "./chrome/CommandPalette";
+import { ContextToolbar, type ToolMode } from "./chrome/ContextToolbar";
+import { IconRail } from "./chrome/IconRail";
+import { Inspector } from "./chrome/Inspector";
+import { MenuBar } from "./chrome/MenuBar";
+import { PaletteDock, TRD_KIND_DRAG_TYPE } from "./chrome/PaletteDock";
+import { formatCameraPose, StatusStrip, type StatusStripProps } from "./chrome/StatusStrip";
+import {
+  buildPaletteCommands,
+  ELEMENT_KINDS,
+  KIND_BROWSER_ENTRIES,
+  type ElementKindKey,
+  type MenuEntry,
+  type TrdCommandId,
+} from "./chrome/menu-data";
 
-type CommandId =
-  | "file.new"
-  | "file.open"
-  | "file.save"
-  | "file.saveAs"
-  | "file.importPlantUml"
-  | "file.importCode"
-  | "file.loadExample"
-  | "edit.undo"
-  | "edit.redo"
-  | "edit.copy"
-  | "edit.paste"
-  | "edit.delete"
-  | "add.class"
-  | "add.interface"
-  | "add.package"
-  | "add.service"
-  | "add.agent"
-  | "add.database"
-  | "layout.frameSelected"
-  | "layout.frameAll"
-  | "layout.reset"
-  | "export.json"
-  | "export.trdyaml"
-  | "export.plantuml"
-  | "export.mermaid"
-  | "export.dot"
-  | "export.code"
-  | `export.code.${SkeletonLanguage}`;
+const autosaveKey = "trd:vnext:active-document";
+const clipboardKey = "trd:vnext:clipboard-node";
+const recentsKey = "trd:vnext:recent-models";
+const commandMruKey = "trd:vnext:command-mru";
 
-interface MenuItem {
-  label: string;
-  command: CommandId;
-}
+const RECENTS_LIMIT = 6;
+const COMMAND_MRU_LIMIT = 12;
 
-interface MenuGroup {
-  label: string;
-  items: MenuItem[];
-}
+/** Derived once: the menu IA is static, so the palette's command catalogue is too. */
+const MENU_COMMANDS = buildPaletteCommands();
 
 interface ContextMenuState {
   x: number;
@@ -70,12 +67,9 @@ interface ContextMenuState {
   nodeId: string | null;
 }
 
-const autosaveKey = "trd:vnext:active-document";
-const clipboardKey = "trd:vnext:clipboard-node";
-
-type InteractionMode = "select" | "connect";
-
-const relationshipOptions = UML_RELATIONSHIPS;
+interface RecentRecord extends RecentEntry {
+  document: GraphDocument;
+}
 
 const emptyInitialDocument: GraphDocument = {
   id: "trd-local-untitled",
@@ -90,87 +84,33 @@ const emptyInitialDocument: GraphDocument = {
   edges: [],
 };
 
-const menuGroups: MenuGroup[] = [
-  {
-    label: "File",
-    items: [
-      { label: "New", command: "file.new" },
-      { label: "Open...", command: "file.open" },
-      { label: "Save", command: "file.save" },
-      { label: "Save As...", command: "file.saveAs" },
-      { label: "Import PlantUML...", command: "file.importPlantUml" },
-      { label: "Import Code...", command: "file.importCode" },
-      { label: "Load Unity Parity Example", command: "file.loadExample" },
-    ],
-  },
-  {
-    label: "Edit",
-    items: [
-      { label: "Undo", command: "edit.undo" },
-      { label: "Redo", command: "edit.redo" },
-      { label: "Copy", command: "edit.copy" },
-      { label: "Paste", command: "edit.paste" },
-      { label: "Delete", command: "edit.delete" },
-    ],
-  },
-  {
-    label: "Add",
-    items: [
-      { label: "Class", command: "add.class" },
-      { label: "Interface", command: "add.interface" },
-      { label: "Package", command: "add.package" },
-      { label: "Service", command: "add.service" },
-      { label: "Agent", command: "add.agent" },
-      { label: "Datastore", command: "add.database" },
-    ],
-  },
-  {
-    label: "Layout",
-    items: [
-      { label: "Frame Selected", command: "layout.frameSelected" },
-      { label: "Frame All", command: "layout.frameAll" },
-      { label: "Reset View", command: "layout.reset" },
-    ],
-  },
-  {
-    label: "Export",
-    items: [
-      { label: "TRD JSON", command: "export.json" },
-      { label: "TRD YAML", command: "export.trdyaml" },
-      { label: "PlantUML", command: "export.plantuml" },
-      { label: "Mermaid", command: "export.mermaid" },
-      { label: "DOT", command: "export.dot" },
-      ...skeletonLanguages.map((entry) => ({
-        label: `Code Skeleton (${entry.label})`,
-        command: `export.code.${entry.value}` as CommandId,
-      })),
-    ],
-  },
-];
+const SELECT_HINT = "Click a node to select · C for Connect mode · ⌘K for commands";
 
-const paletteGroups = [
-  { label: "UML", items: [{ label: "Class", command: "add.class" }, { label: "Interface", command: "add.interface" }] },
-  { label: "Architecture", items: [{ label: "Package", command: "add.package" }, { label: "Service", command: "add.service" }, { label: "Datastore", command: "add.database" }, { label: "Agent", command: "add.agent" }] },
-  { label: "Round-trip", items: [{ label: "Import code", command: "file.importCode" }, { label: "Export code", command: "export.code" }, { label: "PlantUML", command: "export.plantuml" }] },
-] satisfies Array<{ label: string; items: MenuItem[] }>;
+/** Owns the 4Hz camera poll so the pose ticker re-renders the 26px band, not the shell.
+ * The three.js camera is imperative and exposes no React-facing change event. */
+function LiveStatusStrip({
+  sceneHandleRef,
+  ...rest
+}: Omit<StatusStripProps, "cameraPose"> & { sceneHandleRef: RefObject<TrdSceneHandle | null> }) {
+  const [cameraPose, setCameraPose] = useState("cam — / — · d —");
 
-function scoreLabel(value: number) {
-  return riskBandFor(value);
+  useEffect(() => {
+    function read() {
+      const pose = sceneHandleRef.current?.getCameraPose();
+      if (pose) setCameraPose(formatCameraPose(pose.yaw, pose.pitch, pose.distance));
+    }
+    read();
+    const timer = window.setInterval(read, 250);
+    return () => window.clearInterval(timer);
+  }, [sceneHandleRef]);
+
+  return <StatusStrip {...rest} cameraPose={cameraPose} />;
 }
 
 function nextNode(nodes: GraphNode[], currentId: string, direction: 1 | -1) {
   const index = nodes.findIndex((node) => node.id === currentId);
   const nextIndex = index < 0 ? 0 : (index + direction + nodes.length) % nodes.length;
   return nodes[nextIndex]?.id ?? currentId;
-}
-
-function nodeTone(node: GraphNode) {
-  if (node.kind === "system") return "node-system";
-  if (node.kind === "agent") return "node-agent";
-  if (node.kind === "database") return "node-store";
-  if (node.status === "hot") return "node-hot";
-  if (node.status === "review") return "node-review";
-  return "node-default";
 }
 
 function slugFor(value: string) {
@@ -207,26 +147,66 @@ function withDocumentUpdate(document: GraphDocument, patch: Partial<GraphDocumen
   };
 }
 
+function readJson<T>(key: string, fallback: T): T {
+  try {
+    const raw = window.localStorage.getItem(key);
+    return raw ? (JSON.parse(raw) as T) : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
 export function HoloGraphWorkspace() {
   const graphFileInputRef = useRef<HTMLInputElement | null>(null);
   const plantUmlInputRef = useRef<HTMLInputElement | null>(null);
   const codeInputRef = useRef<HTMLInputElement | null>(null);
+  const sceneHandleRef = useRef<TrdSceneHandle | null>(null);
+  const outlineFilterRef = useRef<HTMLInputElement | null>(null);
+  const inspectorNameRef = useRef<HTMLInputElement | null>(null);
+  // The three.js scene listens on its own canvas, so a node hit lands here before the
+  // React click bubbles to the viewport wrapper — that ordering is what lets Place mode
+  // tell "clicked empty space" from "clicked a node" without touching the scene.
+  const sceneHitAtRef = useRef(0);
+
+  // ---- document + model state
   const [document, setDocument] = useState<GraphDocument>(emptyInitialDocument);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [interactionMode, setInteractionMode] = useState<InteractionMode>("select");
-  const [connectSourceId, setConnectSourceId] = useState<string | null>(null);
-  const sceneHandleRef = useRef<TrdSceneHandle | null>(null);
-  const [cameraForm, setCameraForm] = useState<Record<"yaw" | "pitch" | "roll" | "x" | "y" | "z" | "distance", string> | null>(null);
-  const [relationshipType, setRelationshipType] = useState<UmlRelationship>("association");
   const [focusId, setFocusId] = useState<string | null>(null);
-  const [query, setQuery] = useState("");
-  const [traceEnabled, setTraceEnabled] = useState(true);
-  const [status, setStatus] = useState("New empty 3D UML workspace. Open or import a model to begin.");
-  const [activeMenu, setActiveMenu] = useState<string | null>(null);
-  const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
+  const [connectSourceId, setConnectSourceId] = useState<string | null>(null);
   const [history, setHistory] = useState<GraphDocument[]>([]);
   const [redoStack, setRedoStack] = useState<GraphDocument[]>([]);
   const [loadedFromStorage, setLoadedFromStorage] = useState(false);
+
+  // ---- tool state
+  const [mode, setModeState] = useState<ToolMode>("select");
+  const [armedKind, setArmedKind] = useState<ElementKindKey | null>(null);
+  const [relationshipType, setRelationshipType] = useState<UmlRelationship>("association");
+  const [traceEnabled, setTraceEnabled] = useState(true);
+  const [hint, setHint] = useState(SELECT_HINT);
+
+  // ---- chrome state
+  const [openMenu, setOpenMenu] = useState<string | null>(null);
+  const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
+  const [paletteOpen, setPaletteOpen] = useState(false);
+  const [kindBrowserOpen, setKindBrowserOpen] = useState(false);
+  const [kindBrowserFilter, setKindBrowserFilter] = useState("");
+  const [cameraForm, setCameraForm] = useState<Record<
+    "yaw" | "pitch" | "roll" | "x" | "y" | "z" | "distance",
+    string
+  > | null>(null);
+  const [browserCollapsed, setBrowserCollapsed] = useState(false);
+  const [inspectorCollapsed, setInspectorCollapsed] = useState(false);
+  const [paletteDockCollapsed, setPaletteDockCollapsed] = useState(false);
+  const [statusVisible, setStatusVisible] = useState(true);
+  const [focusMode, setFocusMode] = useState(false);
+  const [browserTab, setBrowserTab] = useState<BrowserTab>("files");
+  const [query, setQuery] = useState("");
+
+  // ---- browser dock data
+  const [documents, setDocuments] = useState<DocumentSummary[]>([]);
+  const [recents, setRecents] = useState<RecentRecord[]>([]);
+  const [commandMru, setCommandMru] = useState<string[]>([]);
+  const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     const saved = window.localStorage.getItem(autosaveKey);
@@ -235,11 +215,13 @@ export function HoloGraphWorkspace() {
         const restored = readGraphDocumentJson(saved);
         setDocument(restored);
         setSelectedId(restored.nodes[0]?.id ?? null);
-        setStatus(`Restored autosaved model: ${restored.title}`);
+        setHint(`Restored autosaved model: ${restored.title}`);
       } catch {
-        setStatus("Autosave was unreadable; started a new empty 3D UML workspace.");
+        setHint("Autosave was unreadable; started a new empty 3D UML workspace.");
       }
     }
+    setRecents(readJson<RecentRecord[]>(recentsKey, []));
+    setCommandMru(readJson<string[]>(commandMruKey, []));
     setLoadedFromStorage(true);
   }, []);
 
@@ -248,29 +230,32 @@ export function HoloGraphWorkspace() {
     window.localStorage.setItem(autosaveKey, JSON.stringify(document));
   }, [document, loadedFromStorage]);
 
-  // Escape must work even when focus sits on <body> (clicking the WebGL canvas does not
-  // move focus into the React tree), so it is handled at the window level.
   useEffect(() => {
-    function onWindowKeyDown(event: KeyboardEvent) {
-      if (event.key !== "Escape") return;
-      const target = event.target;
-      if (target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement || target instanceof HTMLSelectElement) return;
-      if (connectSourceId) {
-        setConnectSourceId(null);
-        setStatus("Connect: source cleared. Pick a source node.");
-      } else if (interactionMode === "connect") {
-        setInteractionMode("select");
-        setStatus("Select mode.");
-      }
-    }
-    window.addEventListener("keydown", onWindowKeyDown);
-    return () => window.removeEventListener("keydown", onWindowKeyDown);
-  }, [connectSourceId, interactionMode]);
+    let cancelled = false;
+    setBusy(true);
+    fetch("/api/v1/docs")
+      .then((response) => (response.ok ? response.json() : Promise.reject(new Error("docs list failed"))))
+      .then((payload: { data?: DocumentSummary[] }) => {
+        if (!cancelled) setDocuments(payload.data ?? []);
+      })
+      .catch(() => {
+        if (!cancelled) setDocuments([]);
+      })
+      .finally(() => {
+        if (!cancelled) setBusy(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
-  const metrics = useMemo(() => graphMetrics(document), [document]);
   const selectedNode = selectedId ? document.nodes.find((node) => node.id === selectedId) ?? null : null;
-  const matchingNodes = useMemo(() => searchNodes(document, query), [document, query]);
-  const matchingIds = new Set(matchingNodes.map((node) => node.id));
+  // searchNodes is a search primitive and returns nothing for a blank query, but an
+  // unfiltered Outline should list the whole loaded model.
+  const matchingNodes = useMemo(
+    () => (query.trim() ? searchNodes(document, query) : document.nodes),
+    [document, query]
+  );
   const trace = useMemo(
     () => (selectedNode ? traceNeighbors(document, selectedNode.id) : null),
     [document, selectedNode],
@@ -279,11 +264,36 @@ export function HoloGraphWorkspace() {
   // would tear down / rebuild the whole WebGL scene on every workspace render.
   const tracedEdgeIds = useMemo(() => new Set(traceEnabled && trace ? trace.edgeIds : []), [traceEnabled, trace]);
 
+  function persistRecents(next: RecentRecord[]) {
+    setRecents(next);
+    try {
+      window.localStorage.setItem(recentsKey, JSON.stringify(next));
+    } catch {
+      /* quota — the MRU is a convenience, never a source of truth */
+    }
+  }
+
+  function pushRecent(next: GraphDocument) {
+    const record: RecentRecord = {
+      id: next.id,
+      slug: next.slug,
+      title: next.title,
+      nodeCount: next.nodes.length,
+      savedAt: new Date().toISOString(),
+      document: next,
+    };
+    persistRecents([record, ...recents.filter((entry) => entry.id !== next.id)].slice(0, RECENTS_LIMIT));
+  }
+
   function retainSelection(next: GraphDocument) {
     setSelectedId((current) => (current && next.nodes.some((node) => node.id === current) ? current : null));
   }
 
-  function commitDocument(next: GraphDocument, message: string, options?: { pushHistory?: boolean; selectId?: string | null }) {
+  function commitDocument(
+    next: GraphDocument,
+    message: string,
+    options?: { pushHistory?: boolean; selectId?: string | null },
+  ) {
     setDocument((current) => {
       if (options?.pushHistory ?? true) setHistory((items) => [...items, current].slice(-50));
       return next;
@@ -292,7 +302,7 @@ export function HoloGraphWorkspace() {
     if (options?.selectId !== undefined) setSelectedId(options.selectId);
     else retainSelection(next);
     setFocusId(null);
-    setStatus(message);
+    setHint(message);
   }
 
   function replaceDocument(next: GraphDocument, message: string) {
@@ -301,7 +311,8 @@ export function HoloGraphWorkspace() {
     setDocument(next);
     setSelectedId(next.nodes[0]?.id ?? null);
     setFocusId(null);
-    setStatus(message);
+    setHint(message);
+    pushRecent(next);
   }
 
   function addNode(kind: NodeKind, at?: { x: number; y: number; z: number }) {
@@ -342,36 +353,14 @@ export function HoloGraphWorkspace() {
         nodes: [...document.nodes, node],
         edges: edge ? [...document.edges, edge] : document.edges,
       }),
-      at ? `Placed ${label} at (${at.x}, ${at.y}, ${at.z})` : `Added ${label}`,
+      at ? `Placed ${label}` : `Added ${label}`,
       { selectId: id },
     );
   }
 
-  const nodeKindDragType = "application/x-trd-node-kind";
-
-  function handlePaletteDragStart(event: React.DragEvent<HTMLElement>, kind: NodeKind) {
-    event.dataTransfer.setData(nodeKindDragType, kind);
-    event.dataTransfer.effectAllowed = "copy";
-    setStatus(`Drag the ${kind} onto the 3D scene to place it.`);
-  }
-
-  function handleCanvasDragOver(event: React.DragEvent<HTMLElement>) {
-    if (!event.dataTransfer.types.includes(nodeKindDragType)) return;
-    event.preventDefault();
-    event.dataTransfer.dropEffect = "copy";
-  }
-
-  function handleCanvasDrop(event: React.DragEvent<HTMLElement>) {
-    const kind = event.dataTransfer.getData(nodeKindDragType) as NodeKind | "";
-    if (!kind) return;
-    event.preventDefault();
-    const at = sceneHandleRef.current?.dropPointAt(event.clientX, event.clientY);
-    addNode(kind, at ?? undefined);
-  }
-
   function deleteSelected() {
     if (!selectedNode) {
-      setStatus("Nothing selected to delete.");
+      setHint("Nothing selected to delete.");
       return;
     }
     const removedIds = new Set<string>([selectedNode.id]);
@@ -390,7 +379,7 @@ export function HoloGraphWorkspace() {
         nodes: document.nodes.filter((node) => !removedIds.has(node.id)),
         edges: document.edges.filter((edge) => !removedIds.has(edge.sourceId) && !removedIds.has(edge.targetId)),
       }),
-      `Deleted ${selectedNode.label}`,
+      `Removed ${selectedNode.label} from the model`,
       { selectId: null },
     );
     if (connectSourceId && removedIds.has(connectSourceId)) setConnectSourceId(null);
@@ -398,17 +387,17 @@ export function HoloGraphWorkspace() {
 
   function copySelected() {
     if (!selectedNode) {
-      setStatus("Nothing selected to copy.");
+      setHint("Nothing selected to copy.");
       return;
     }
     window.localStorage.setItem(clipboardKey, JSON.stringify(selectedNode));
-    setStatus(`Copied ${selectedNode.label}`);
+    setHint(`Copied ${selectedNode.label}`);
   }
 
   function pasteNode() {
     const stored = window.localStorage.getItem(clipboardKey);
     if (!stored) {
-      setStatus("Clipboard is empty.");
+      setHint("Clipboard is empty.");
       return;
     }
     try {
@@ -422,8 +411,23 @@ export function HoloGraphWorkspace() {
         { selectId: id },
       );
     } catch {
-      setStatus("Clipboard did not contain a valid TRD node.");
+      setHint("Clipboard did not contain a valid TRD node.");
     }
+  }
+
+  function duplicateSelected() {
+    if (!selectedNode) {
+      setHint("Nothing selected to duplicate.");
+      return;
+    }
+    const id = `${selectedNode.id}-copy-${Date.now().toString(36)}`;
+    commitDocument(
+      withDocumentUpdate(document, {
+        nodes: [...document.nodes, { ...selectedNode, id, label: `${selectedNode.label} Copy`, status: "draft" }],
+      }),
+      `Duplicated ${selectedNode.label}`,
+      { selectId: id },
+    );
   }
 
   function updateSelectedNode(message: string, mutate: (node: GraphNode) => GraphNode) {
@@ -437,58 +441,75 @@ export function HoloGraphWorkspace() {
     );
   }
 
-  function splitLines(value: string) {
-    return value
-      .split("\n")
-      .map((line) => line.trim())
-      .filter(Boolean);
+  function addMember(kind: "attribute" | "operation") {
+    if (!selectedNode) {
+      setHint(`Select an element to add ${kind === "attribute" ? "an attribute" : "an operation"}.`);
+      return;
+    }
+    const attributes = selectedNode.uml?.attributes ?? [];
+    const operations = selectedNode.uml?.operations ?? [];
+    if (kind === "attribute") {
+      const next = [...attributes, `+ field${attributes.length + 1} : String`];
+      updateSelectedNode(`Added attribute to ${selectedNode.label}`, (node) => ({
+        ...node,
+        uml: { ...node.uml, attributes: next },
+        members: [...next, ...operations],
+      }));
+    } else {
+      const next = [...operations, `+ operation${operations.length + 1}() : void`];
+      updateSelectedNode(`Added operation to ${selectedNode.label}`, (node) => ({
+        ...node,
+        uml: { ...node.uml, operations: next },
+        members: [...attributes, ...next],
+      }));
+    }
   }
 
   function focusSelected() {
     if (!selectedNode) {
-      setStatus("Select an element to frame it.");
+      setHint("Select an element to frame it.");
       return;
     }
     setFocusId(selectedNode.id);
-    setStatus(`Framed ${selectedNode.label}`);
+    setHint(`Framed ${selectedNode.label}`);
   }
 
   function recenter() {
     setFocusId(null);
     setSelectedId(document.nodes[0]?.id ?? null);
-    setStatus("Recentered to whole model.");
+    setHint("Framed the whole model.");
   }
 
   function undo() {
     const previous = history.at(-1);
     if (!previous) {
-      setStatus("Nothing to undo.");
+      setHint("Nothing to undo.");
       return;
     }
     setRedoStack((items) => [document, ...items].slice(0, 50));
     setHistory((items) => items.slice(0, -1));
     setDocument(previous);
     retainSelection(previous);
-    setStatus("Undo applied.");
+    setHint("Undo applied.");
   }
 
   function redo() {
     const next = redoStack[0];
     if (!next) {
-      setStatus("Nothing to redo.");
+      setHint("Nothing to redo.");
       return;
     }
     setHistory((items) => [...items, document].slice(-50));
     setRedoStack((items) => items.slice(1));
     setDocument(next);
     retainSelection(next);
-    setStatus("Redo applied.");
+    setHint("Redo applied.");
   }
 
   function readCameraPoseIntoForm() {
     const pose = sceneHandleRef.current?.getCameraPose();
     if (!pose) {
-      setStatus("Camera is not ready yet.");
+      setHint("Camera is not ready yet.");
       return;
     }
     const fmt = (value: number) => (Math.round(value * 10) / 10).toString();
@@ -516,13 +537,34 @@ export function HoloGraphWorkspace() {
       pivot: { x: num(cameraForm.x), y: num(cameraForm.y), z: num(cameraForm.z) },
       distance: num(cameraForm.distance, 18),
     });
-    setStatus("Applied camera pose.");
+    setHint("Applied camera pose.");
   }
 
-  function setMode(mode: InteractionMode) {
-    setInteractionMode(mode);
+  function hintForMode(next: ToolMode, sourceId: string | null, relationship: UmlRelationship, kind: ElementKindKey | null) {
+    if (next === "connect") {
+      return sourceId
+        ? `Connect (${relationship}): source ${nodeLabel(sourceId)} — pick a target`
+        : `Connect (${relationship}): pick a source node`;
+    }
+    if (next === "place") {
+      const label = kind ? ELEMENT_KINDS.find((entry) => entry.key === kind)?.label ?? kind : null;
+      return label
+        ? `Place: click in the scene to add a ${label} (or drag the chip in)`
+        : "Place: drag an element kind from the palette into the scene";
+    }
+    return SELECT_HINT;
+  }
+
+  /** IA.md law #4 — a mode change echoes in the segmented control, the status chip and
+   * the hint line at once. Those three read `mode` / `hint`, so one setter covers all. */
+  function setMode(next: ToolMode) {
+    setModeState(next);
     setConnectSourceId(null);
-    setStatus(mode === "connect" ? `Connect mode (${relationshipType}): pick a source node.` : "Select mode.");
+    if (next !== "place") {
+      setArmedKind(null);
+      pendingKindRef.current = null;
+    }
+    setHint(hintForMode(next, null, relationshipType, next === "place" ? armedKind : null));
   }
 
   function nodeLabel(nodeId: string) {
@@ -534,7 +576,7 @@ export function HoloGraphWorkspace() {
     const target = document.nodes.find((node) => node.id === targetId);
     if (!source || !target) {
       setConnectSourceId(null);
-      setStatus("Connect: source or target no longer exists. Pick a source node.");
+      setHint("Connect: source or target no longer exists. Pick a source node.");
       return;
     }
     const duplicate = document.edges.some(
@@ -542,7 +584,7 @@ export function HoloGraphWorkspace() {
     );
     if (duplicate) {
       setConnectSourceId(null);
-      setStatus(`Connect: ${relationshipType} from ${source.label} to ${target.label} already exists.`);
+      setHint(`Connect: ${relationshipType} from ${source.label} to ${target.label} already exists.`);
       return;
     }
     const usedIds = new Set(document.edges.map((edge) => edge.id));
@@ -564,33 +606,35 @@ export function HoloGraphWorkspace() {
     setConnectSourceId(null);
     commitDocument(
       withDocumentUpdate(document, { edges: [...document.edges, edge] }),
-      `Connected ${source.label} -> ${target.label} (${relationshipType}). Pick the next source node.`,
+      `Connected ${source.label} → ${target.label} (${relationshipType}) — click the next source`,
       { selectId: targetId },
     );
   }
 
   function handleSceneSelect(nodeId: string | null) {
-    if (interactionMode !== "connect") {
+    sceneHitAtRef.current = Date.now();
+    if (mode !== "connect") {
+      if (mode === "place" && armedKind) return;
       setSelectedId(nodeId);
-      if (nodeId) setStatus(`Selected 3D UML node ${nodeLabel(nodeId)}`);
+      if (nodeId) setHint(`Selected ${nodeLabel(nodeId)}`);
       return;
     }
     if (!nodeId) {
       if (connectSourceId) {
         setConnectSourceId(null);
-        setStatus("Connect: source cleared. Pick a source node.");
+        setHint(`Connect (${relationshipType}): pick a source node`);
       }
       return;
     }
     if (!connectSourceId) {
       setConnectSourceId(nodeId);
       setSelectedId(nodeId);
-      setStatus(`Connect (${relationshipType}): source ${nodeLabel(nodeId)}. Pick a target node.`);
+      setHint(`Connect (${relationshipType}): source ${nodeLabel(nodeId)} — pick a target`);
       return;
     }
     if (nodeId === connectSourceId) {
       setConnectSourceId(null);
-      setStatus("Connect: source cleared. Pick a source node.");
+      setHint("Connect: source cleared. Pick a source node.");
       return;
     }
     createRelationship(connectSourceId, nodeId);
@@ -601,64 +645,435 @@ export function HoloGraphWorkspace() {
   const sceneSelectRef = useRef(handleSceneSelect);
   sceneSelectRef.current = handleSceneSelect;
   const stableSceneSelect = useCallback((nodeId: string) => sceneSelectRef.current(nodeId), []);
+  const sceneStatusRef = useRef(setHint);
+  sceneStatusRef.current = setHint;
+  const stableSceneStatus = useCallback((message: string) => sceneStatusRef.current(message), []);
 
-  function exportDocument(command: CommandId) {
-    if (command === "export.json" || command === "file.save" || command === "file.saveAs") {
+  function exportAs(format: "json" | "trdyaml" | "plantuml" | "mermaid" | "dot" | SkeletonLanguage) {
+    if (format === "json") {
       downloadText(filenameFor(document, "trd.json"), JSON.stringify(document, null, 2), "application/json");
-      setStatus(`Saved ${document.title} as TRD JSON.`);
+      setHint(`Saved ${document.title} as TRD JSON.`);
       return;
     }
-    if (command === "export.trdyaml") {
+    if (format === "trdyaml") {
       downloadText(filenameFor(document, "trd-yaml"), exportTrdYaml(document), "text/yaml");
-      setStatus(`Saved ${document.title} as TRD YAML.`);
+      setHint(`Saved ${document.title} as TRD YAML.`);
       return;
     }
-    if (command === "export.plantuml") {
+    if (format === "plantuml") {
       downloadText(filenameFor(document, "puml"), exportPlantUml(document), "text/plain");
-      setStatus("Exported PlantUML.");
+      setHint("Exported PlantUML.");
       return;
     }
-    if (command === "export.mermaid") {
+    if (format === "mermaid") {
       downloadText(filenameFor(document, "mmd"), exportMermaid(document), "text/plain");
-      setStatus("Exported Mermaid class diagram.");
+      setHint("Exported Mermaid class diagram.");
       return;
     }
-    if (command === "export.dot") {
+    if (format === "dot") {
       downloadText(filenameFor(document, "dot"), exportDot(document), "text/vnd.graphviz");
-      setStatus("Exported DOT graph.");
+      setHint("Exported DOT graph.");
       return;
     }
-    if (command === "export.code" || command.startsWith("export.code.")) {
-      const language = (command === "export.code" ? "csharp" : command.replace("export.code.", "")) as SkeletonLanguage;
-      const entry = skeletonLanguages.find((item) => item.value === language) ?? skeletonLanguages[0];
-      downloadText(filenameFor(document, entry.extension), exportCodeSkeleton(document, entry.value), "text/plain");
-      setStatus(`Exported ${entry.label} code skeleton.`);
+    const entry = skeletonLanguages.find((item) => item.value === format) ?? skeletonLanguages[0];
+    downloadText(filenameFor(document, entry.extension), exportCodeSkeleton(document, entry.value), "text/plain");
+    setHint(`Exported ${entry.label} code skeleton.`);
+  }
+
+  function openOutlineSearch() {
+    setFocusMode(false);
+    setBrowserCollapsed(false);
+    setBrowserTab("outline");
+    window.setTimeout(() => outlineFilterRef.current?.focus(), 0);
+  }
+
+  async function openDocumentById(id: string) {
+    setBusy(true);
+    try {
+      const response = await fetch(`/api/v1/docs/${id}`);
+      if (!response.ok) throw new Error(`document ${id} not found`);
+      const payload = (await response.json()) as { data?: GraphDocument };
+      if (!payload.data) throw new Error("document payload was empty");
+      replaceDocument(payload.data, `Opened ${payload.data.title}`);
+    } catch (error) {
+      setHint(error instanceof Error ? error.message : `Could not open ${id}.`);
+    } finally {
+      setBusy(false);
     }
   }
 
-  function executeCommand(command: CommandId) {
-    setActiveMenu(null);
+  function armKind(key: ElementKindKey) {
+    setArmedKind(key);
+    setModeState("place");
+    setConnectSourceId(null);
+    setHint(hintForMode("place", null, relationshipType, key));
+  }
+
+  function armNodeKind(nodeKind: NodeKind) {
+    const chip = ELEMENT_KINDS.find((entry) => entry.nodeKind === nodeKind);
+    if (chip) {
+      armKind(chip.key);
+      return;
+    }
+    // Kind browser entries with no chip still arm Place mode; the hint carries the label.
+    setArmedKind(null);
+    setModeState("place");
+    setHint(`Place: click in the scene to add a ${nodeKind}`);
+    pendingKindRef.current = nodeKind;
+  }
+
+  const pendingKindRef = useRef<NodeKind | null>(null);
+
+  function armedNodeKind(): NodeKind | null {
+    if (armedKind) return ELEMENT_KINDS.find((entry) => entry.key === armedKind)?.nodeKind ?? null;
+    return pendingKindRef.current;
+  }
+
+  // ---------------------------------------------------------------- command wiring
+  const handlers = new Map<TrdCommandId, () => void>();
+  const register = (id: TrdCommandId, run: () => void) => handlers.set(id, run);
+
+  register("file.new", () => replaceDocument(createEmptyDocument(), "Created a new empty 3D UML workspace."));
+  register("file.open", () => graphFileInputRef.current?.click());
+  register("file.save", () => exportAs("json"));
+  register("file.saveAs", () => exportAs("json"));
+  register("file.import.plantuml", () => plantUmlInputRef.current?.click());
+  register("file.import.sourceFolder", () => codeInputRef.current?.click());
+  register("file.export.trdyaml", () => exportAs("trdyaml"));
+  register("file.export.json", () => exportAs("json"));
+  register("file.export.plantuml", () => exportAs("plantuml"));
+  register("file.export.mermaid", () => exportAs("mermaid"));
+  register("file.export.dot", () => exportAs("dot"));
+  for (const language of skeletonLanguages) {
+    register(`file.export.code.${language.value}`, () => exportAs(language.value));
+  }
+  register("file.closeDiagram", () => replaceDocument(createEmptyDocument(), "Closed the diagram."));
+  recents.forEach((entry, index) => {
+    register(`file.openRecent.${index}`, () => replaceDocument(entry.document, `Reopened ${entry.title}`));
+  });
+
+  register("edit.undo", undo);
+  register("edit.redo", redo);
+  register("edit.copy", copySelected);
+  register("edit.paste", pasteNode);
+  register("edit.cut", () => {
+    copySelected();
+    deleteSelected();
+  });
+  register("edit.duplicate", duplicateSelected);
+  register("edit.delete.removeEverywhere", deleteSelected);
+  register("edit.find", openOutlineSearch);
+  register("edit.rename", () => {
+    if (!selectedNode) {
+      setHint("Select an element to rename.");
+      return;
+    }
+    setInspectorCollapsed(false);
+    setFocusMode(false);
+    window.setTimeout(() => inspectorNameRef.current?.select(), 0);
+  });
+
+  for (const entry of ELEMENT_KINDS) {
+    if (!entry.nodeKind) continue;
+    const nodeKind = entry.nodeKind;
+    register(`model.add.${entry.key}`, () => addNode(nodeKind));
+  }
+  register("model.add.more", () => setKindBrowserOpen(true));
+  register("model.members.addAttribute", () => addMember("attribute"));
+  register("model.members.addOperation", () => addMember("operation"));
+  register("model.connect", () => setMode(mode === "connect" ? "select" : "connect"));
+  for (const kind of UML_RELATIONSHIPS) {
+    register(`model.relationship.${kind}`, () => {
+      setRelationshipType(kind);
+      if (mode === "connect") setHint(hintForMode("connect", connectSourceId, kind, null));
+      else setHint(`Relationship type set to ${kind}.`);
+    });
+  }
+
+  register("go.commandPalette", () => setPaletteOpen(true));
+  register("go.jumpToElement", openOutlineSearch);
+  register("go.frameSelected", focusSelected);
+  register("go.frameAll", recenter);
+  register("go.trace.start", () => {
+    if (!selectedNode) {
+      setHint("Select an element to start a trace.");
+      return;
+    }
+    setTraceEnabled(true);
+    setHint(`Tracing neighbours of ${selectedNode.label}.`);
+  });
+  register("go.trace.close", () => {
+    setTraceEnabled(false);
+    setHint("Trace closed.");
+  });
+
+  register("view.modelBrowser", () => setBrowserCollapsed((current) => !current));
+  register("view.inspector", () => setInspectorCollapsed((current) => !current));
+  register("view.outline", () => {
+    setBrowserCollapsed(false);
+    setBrowserTab((current) => (current === "outline" ? "files" : "outline"));
+  });
+  register("view.elementPalette", () => setPaletteDockCollapsed((current) => !current));
+  register("view.statusBar", () => setStatusVisible((current) => !current));
+  register("view.camera.controls", () => (cameraForm ? setCameraForm(null) : readCameraPoseIntoForm()));
+  register("view.camera.overview", recenter);
+  register("view.camera.focus", focusSelected);
+  register("view.camera.reset", () => {
+    sceneHandleRef.current?.resetCamera();
+    setHint("Camera reset to framed model.");
+  });
+  register("view.appearance.traceNeighbors", () => {
+    setTraceEnabled((current) => {
+      setHint(current ? "Trace neighbours off." : "Trace neighbours on.");
+      return !current;
+    });
+  });
+  register("view.focusMode", () => setFocusMode((current) => !current));
+  register("view.fullScreen", () => {
+    const root = window.document.documentElement;
+    if (window.document.fullscreenElement) void window.document.exitFullscreen();
+    else void root.requestFullscreen?.();
+  });
+
+  register("code.generateForSelection", () => exportAs("csharp"));
+
+  register("help.keyboardShortcuts", () =>
+    setHint("⌘K palette · V/C/P modes · ⌘Z undo · ⌘S save · ⌘F find · F frame · Home frame all · ⌃⌘F focus mode"),
+  );
+  register("help.sample.unityParity", () => replaceDocument(demoDocument, "Loaded the Unity parity example model."));
+
+  function runCommand(id: TrdCommandId) {
+    const run = handlers.get(id);
+    if (!run) return;
+    setOpenMenu(null);
     setContextMenu(null);
-    if (command === "file.new") replaceDocument(createEmptyDocument(), "Created a new empty 3D UML workspace.");
-    else if (command === "file.open") graphFileInputRef.current?.click();
-    else if (command === "file.importPlantUml") plantUmlInputRef.current?.click();
-    else if (command === "file.importCode") codeInputRef.current?.click();
-    else if (command === "file.loadExample") replaceDocument(demoDocument, "Loaded the Unity parity example model.");
-    else if (command === "edit.undo") undo();
-    else if (command === "edit.redo") redo();
-    else if (command === "edit.copy") copySelected();
-    else if (command === "edit.paste") pasteNode();
-    else if (command === "edit.delete") deleteSelected();
-    else if (command.startsWith("add.")) addNode(command.replace("add.", "") as NodeKind);
-    else if (command === "layout.frameSelected") focusSelected();
-    else if (command === "layout.frameAll" || command === "layout.reset") recenter();
-    else exportDocument(command);
+    setCommandMru((current) => {
+      const next = [id, ...current.filter((entry) => entry !== id)].slice(0, COMMAND_MRU_LIMIT);
+      try {
+        window.localStorage.setItem(commandMruKey, JSON.stringify(next));
+      } catch {
+        /* non-critical */
+      }
+      return next;
+    });
+    run();
   }
 
-  async function readTextFile(file: File) {
-    return { name: file.name, text: await file.text() };
-  }
+  const runCommandRef = useRef(runCommand);
+  runCommandRef.current = runCommand;
 
+  // ---------------------------------------------------------------- palette catalogue
+  const paletteCommands = useMemo<PaletteCommand[]>(() => {
+    const rank = new Map(commandMru.map((id, index) => [id, index]));
+    return MENU_COMMANDS.filter((entry) => handlers.has(entry.command))
+      .map((entry) => ({ id: entry.command, category: entry.category, label: entry.label, kbd: entry.kbd }))
+      .sort((a, b) => (rank.get(a.id) ?? Number.MAX_SAFE_INTEGER) - (rank.get(b.id) ?? Number.MAX_SAFE_INTEGER));
+    // `handlers` is rebuilt every render but always carries the same key set, so keying
+    // this on the MRU alone is correct and keeps the list identity stable.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [commandMru, recents.length]);
+
+  // ---------------------------------------------------------------- dynamic menu slots
+  const dynamicItems: Record<"recents" | "windows", MenuEntry[]> = {
+    recents: recents.map((entry, index) => ({
+      label: entry.slug,
+      command: `file.openRecent.${index}` as TrdCommandId,
+    })),
+    windows: [{ label: document.slug, check: "window.current" }],
+  };
+
+  const checks: Record<string, boolean> = {
+    "view.modelBrowser": !browserCollapsed,
+    "view.inspector": !inspectorCollapsed,
+    "view.outline": browserTab === "outline",
+    "view.elementPalette": !paletteDockCollapsed,
+    "view.statusBar": statusVisible,
+    "view.focusMode": focusMode,
+    "appearance.traceNeighbors": traceEnabled,
+    "theme.dark": true,
+    "layout.keepHandPlacements": true,
+    "window.current": true,
+  };
+  for (const kind of UML_RELATIONSHIPS) checks[`relationship.${kind}`] = relationshipType === kind;
+
+  // ---------------------------------------------------------------- keyboard
+  useEffect(() => {
+    function onKeyDown(event: KeyboardEvent) {
+      const target = event.target;
+      const typing =
+        target instanceof HTMLInputElement ||
+        target instanceof HTMLTextAreaElement ||
+        target instanceof HTMLSelectElement;
+      const meta = event.metaKey || event.ctrlKey;
+      const key = event.key.toLowerCase();
+
+      if (meta && key === "k") {
+        event.preventDefault();
+        if (event.shiftKey) setKindBrowserOpen(true);
+        else setPaletteOpen(true);
+        return;
+      }
+
+      // IA.md Escape priority: palette → menu → pending connect source → revert to Select.
+      if (event.key === "Escape") {
+        if (paletteOpen) {
+          setPaletteOpen(false);
+          return;
+        }
+        if (kindBrowserOpen) {
+          setKindBrowserOpen(false);
+          return;
+        }
+        if (openMenu) {
+          setOpenMenu(null);
+          return;
+        }
+        if (contextMenu) {
+          setContextMenu(null);
+          return;
+        }
+        if (connectSourceId) {
+          setConnectSourceId(null);
+          setHint(`Connect (${relationshipType}): pick a source node`);
+          return;
+        }
+        if (mode !== "select") setMode("select");
+        return;
+      }
+
+      if (paletteOpen) return;
+
+      if (meta) {
+        // Leave the native clipboard / select-all bindings alone while a field has focus.
+        if (typing && ["x", "c", "v", "a"].includes(key)) return;
+        if (event.altKey) {
+          if (key === "1") {
+            event.preventDefault();
+            runCommandRef.current("view.modelBrowser");
+          }
+          if (key === "2") {
+            event.preventDefault();
+            runCommandRef.current("view.inspector");
+          }
+          if (key === "3") {
+            event.preventDefault();
+            runCommandRef.current("view.outline");
+          }
+          if (key === "4") {
+            event.preventDefault();
+            runCommandRef.current("view.elementPalette");
+          }
+          return;
+        }
+        if (event.ctrlKey && event.metaKey && key === "f") {
+          event.preventDefault();
+          runCommandRef.current("view.focusMode");
+          return;
+        }
+        if (event.shiftKey) {
+          if (key === "c") {
+            event.preventDefault();
+            runCommandRef.current("view.camera.controls");
+          }
+          if (key === "z") {
+            event.preventDefault();
+            runCommandRef.current("edit.redo");
+          }
+          if (key === "s") {
+            event.preventDefault();
+            runCommandRef.current("file.saveAs");
+          }
+          return;
+        }
+        if (key === "n") {
+          event.preventDefault();
+          runCommandRef.current("file.new");
+        } else if (key === "o") {
+          event.preventDefault();
+          runCommandRef.current("file.open");
+        } else if (key === "s") {
+          event.preventDefault();
+          runCommandRef.current("file.save");
+        } else if (key === "z") {
+          event.preventDefault();
+          runCommandRef.current("edit.undo");
+        } else if (key === "x") {
+          event.preventDefault();
+          runCommandRef.current("edit.cut");
+        } else if (key === "c") {
+          event.preventDefault();
+          runCommandRef.current("edit.copy");
+        } else if (key === "v") {
+          event.preventDefault();
+          runCommandRef.current("edit.paste");
+        } else if (key === "d") {
+          event.preventDefault();
+          runCommandRef.current("edit.duplicate");
+        } else if (key === "f") {
+          event.preventDefault();
+          runCommandRef.current("edit.find");
+        } else if (key === "g") {
+          event.preventDefault();
+          runCommandRef.current("code.generateForSelection");
+        } else if (key === "j") {
+          event.preventDefault();
+          runCommandRef.current("go.jumpToElement");
+        } else if (key === "t") {
+          event.preventDefault();
+          runCommandRef.current("go.trace.start");
+        } else if (key === "w") {
+          event.preventDefault();
+          runCommandRef.current("file.closeDiagram");
+        } else if (key === "/") {
+          event.preventDefault();
+          runCommandRef.current("help.keyboardShortcuts");
+        }
+        return;
+      }
+
+      // Everything below is a bare key: never steal it from a focused field.
+      if (typing) return;
+
+      if (event.altKey && key === "a") {
+        event.preventDefault();
+        runCommandRef.current("model.members.addAttribute");
+        return;
+      }
+      if (event.altKey && key === "o") {
+        event.preventDefault();
+        runCommandRef.current("model.members.addOperation");
+        return;
+      }
+      if (event.altKey && event.key === "Backspace") {
+        event.preventDefault();
+        runCommandRef.current("edit.delete.removeEverywhere");
+        return;
+      }
+      if (event.key === "Backspace") {
+        setHint("Unlink needs multi-diagram support — use ⌥⌫ to remove from the model.");
+        return;
+      }
+      if (event.key === "Delete") {
+        runCommandRef.current("edit.delete.removeEverywhere");
+        return;
+      }
+      if (key === "v") setMode("select");
+      else if (key === "c") setMode("connect");
+      else if (key === "p") setMode("place");
+      else if (key === "f") focusSelected();
+      else if (event.key === "Home") recenter();
+      else if (event.key === "ArrowRight" && document.nodes.length) {
+        setSelectedId(nextNode(document.nodes, selectedId ?? "", 1));
+      } else if (event.key === "ArrowLeft" && document.nodes.length) {
+        setSelectedId(nextNode(document.nodes, selectedId ?? "", -1));
+      }
+    }
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  });
+
+  // ---------------------------------------------------------------- file inputs
   async function handleGraphFile(event: ChangeEvent<HTMLInputElement>) {
     const file = event.currentTarget.files?.[0];
     event.currentTarget.value = "";
@@ -670,7 +1085,7 @@ export function HoloGraphWorkspace() {
         : readGraphDocumentJson(text);
       replaceDocument(restored, `Opened ${file.name}`);
     } catch (error) {
-      setStatus(error instanceof Error ? error.message : `Could not open ${file.name}.`);
+      setHint(error instanceof Error ? error.message : `Could not open ${file.name}.`);
     }
   }
 
@@ -681,7 +1096,7 @@ export function HoloGraphWorkspace() {
     try {
       replaceDocument(importPlantUml(await file.text(), file.name), `Imported PlantUML from ${file.name}`);
     } catch (error) {
-      setStatus(error instanceof Error ? error.message : `Could not import ${file.name}.`);
+      setHint(error instanceof Error ? error.message : `Could not import ${file.name}.`);
     }
   }
 
@@ -690,50 +1105,49 @@ export function HoloGraphWorkspace() {
     event.currentTarget.value = "";
     if (!files.length) return;
     try {
-      const payloads = await Promise.all(files.map(readTextFile));
+      const payloads = await Promise.all(files.map(async (file) => ({ name: file.name, text: await file.text() })));
       replaceDocument(importCodeFiles(payloads), `Imported ${files.length} source file${files.length === 1 ? "" : "s"}.`);
     } catch (error) {
-      setStatus(error instanceof Error ? error.message : "Could not import code files.");
+      setHint(error instanceof Error ? error.message : "Could not import code files.");
     }
   }
 
-  function handleKeyDown(event: React.KeyboardEvent<HTMLDivElement>) {
+  // ---------------------------------------------------------------- viewport interaction
+  function handleCanvasDragOver(event: React.DragEvent<HTMLElement>) {
+    if (!event.dataTransfer.types.includes(TRD_KIND_DRAG_TYPE)) return;
+    event.preventDefault();
+    event.dataTransfer.dropEffect = "copy";
+  }
+
+  function handleCanvasDrop(event: React.DragEvent<HTMLElement>) {
+    const key = event.dataTransfer.getData(TRD_KIND_DRAG_TYPE);
+    if (!key) return;
+    event.preventDefault();
+    // Single resolution point for both entry gestures: drag carries an ElementKindKey,
+    // exactly as click-to-arm does, and NodeKind is derived here.
+    const kind = ELEMENT_KINDS.find((entry) => entry.key === key)?.nodeKind;
+    if (!kind) return;
+    const at = sceneHandleRef.current?.dropPointAt(event.clientX, event.clientY);
+    addNode(kind, at ?? undefined);
+  }
+
+  function handleViewportClick(event: MouseEvent<HTMLElement>) {
+    setContextMenu(null);
+    if (mode !== "place") return;
+    // Overlays live inside the viewport box; a click on one is never a placement.
     const target = event.target;
-    // Typing in a form field must never trigger model shortcuts (Delete, Cmd+Z, ...).
     if (
-      target instanceof HTMLInputElement ||
-      target instanceof HTMLTextAreaElement ||
-      target instanceof HTMLSelectElement
+      target instanceof Element &&
+      target.closest(".trd-popover, .cd-palette-scrim, .trd-viewport-empty, .trd-hint")
     ) {
       return;
     }
-    if (event.metaKey || event.ctrlKey) {
-      if (event.key.toLowerCase() === "o") {
-        event.preventDefault();
-        executeCommand("file.open");
-      }
-      if (event.key.toLowerCase() === "s") {
-        event.preventDefault();
-        executeCommand(event.shiftKey ? "file.saveAs" : "file.save");
-      }
-      if (event.key.toLowerCase() === "z") {
-        event.preventDefault();
-        executeCommand(event.shiftKey ? "edit.redo" : "edit.undo");
-      }
-      if (event.key.toLowerCase() === "c") {
-        event.preventDefault();
-        executeCommand("edit.copy");
-      }
-      if (event.key.toLowerCase() === "v") {
-        event.preventDefault();
-        executeCommand("edit.paste");
-      }
-    }
-    if (event.key === "Delete") deleteSelected();
-    if (event.key === "f" || event.key === "F") focusSelected();
-    if (event.key === "Home") recenter();
-    if (event.key === "ArrowRight" && document.nodes.length) setSelectedId(nextNode(document.nodes, selectedId ?? "", 1));
-    if (event.key === "ArrowLeft" && document.nodes.length) setSelectedId(nextNode(document.nodes, selectedId ?? "", -1));
+    const kind = armedNodeKind();
+    if (!kind) return;
+    // The scene's own canvas listener already ran if a node was hit.
+    if (Date.now() - sceneHitAtRef.current < 60) return;
+    const at = sceneHandleRef.current?.dropPointAt(event.clientX, event.clientY);
+    addNode(kind, at ?? undefined);
   }
 
   function openCanvasContextMenu(event: MouseEvent<HTMLElement>) {
@@ -741,254 +1155,151 @@ export function HoloGraphWorkspace() {
     setContextMenu({ x: event.clientX, y: event.clientY, nodeId: selectedId });
   }
 
+  // ---------------------------------------------------------------- derived chrome data
+  const crumbs = selectedNode
+    ? [
+        ...(selectedNode.packageName ? [{ label: selectedNode.packageName }] : []),
+        { label: selectedNode.label, onClick: focusSelected },
+      ]
+    : [];
+  const breadcrumbText = [document.slug, selectedNode?.label].filter(Boolean).join(" ▸ ");
+  const selectionSummary = selectedNode ? `${selectedNode.label} selected` : "No selection";
+  const kindBrowserResults = KIND_BROWSER_ENTRIES.filter(
+    (entry) => !kindBrowserFilter || entry.label.toLowerCase().includes(kindBrowserFilter.trim().toLowerCase()),
+  );
+
+  const shellClass = [
+    "trd-shell",
+    focusMode ? "is-focus-mode" : "",
+    statusVisible ? "" : "trd-shell--no-status",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
   return (
-    <main className="hg-shell" onKeyDown={handleKeyDown} onClick={() => setContextMenu(null)} tabIndex={-1}>
-      <input ref={graphFileInputRef} type="file" accept=".json,.trd,.trd.json,.trd-yaml,.trd.yaml,.yaml,.yml,application/json" hidden onChange={handleGraphFile} />
+    <div className={shellClass} onClick={() => setContextMenu(null)}>
+      <input
+        ref={graphFileInputRef}
+        type="file"
+        accept=".json,.trd,.trd.json,.trd-yaml,.trd.yaml,.yaml,.yml,application/json"
+        hidden
+        onChange={handleGraphFile}
+      />
       <input ref={plantUmlInputRef} type="file" accept=".puml,.plantuml,.txt,text/plain" hidden onChange={handlePlantUmlFile} />
-      <input ref={codeInputRef} type="file" accept=".cs,.ts,.tsx,.js,.jsx,.java,.kt,.swift,.py,.go,.rs,.cpp,.h,.hpp,.txt" multiple hidden onChange={handleCodeFiles} />
+      <input
+        ref={codeInputRef}
+        type="file"
+        accept=".cs,.ts,.tsx,.js,.jsx,.java,.kt,.swift,.py,.go,.rs,.cpp,.h,.hpp,.txt"
+        multiple
+        hidden
+        onChange={handleCodeFiles}
+      />
 
-      <section className="hg-appbar" aria-label="The Robot Draft application menu">
-        <div className="hg-appbar__brand">
-          <strong>The Robot Draft</strong>
-          <span>{document.title}</span>
-        </div>
-        <nav className="hg-menu" aria-label="Application commands">
-          {menuGroups.map((group) => (
-            <div key={group.label} className="hg-menu__group">
-              <button
-                className="hg-menu__item"
-                type="button"
-                onClick={(event) => {
-                  event.stopPropagation();
-                  setActiveMenu(activeMenu === group.label ? null : group.label);
-                }}
-              >
-                {group.label}
-              </button>
-              {activeMenu === group.label ? (
-                <div className="hg-menu__dropdown" role="menu">
-                  {group.items.map((item) => (
-                    <button key={item.command} type="button" role="menuitem" onClick={() => executeCommand(item.command)}>
-                      {item.label}
-                    </button>
-                  ))}
-                </div>
-              ) : null}
-            </div>
-          ))}
-        </nav>
-        <div className="hg-appbar__status" aria-label="Document metrics">
-          <span>autosaved</span>
-          <span>v{document.version}</span>
-          <span>{document.nodes.length} elements</span>
-        </div>
-      </section>
+      <MenuBar
+        openMenu={openMenu}
+        onOpenMenu={setOpenMenu}
+        isEnabled={(command) => handlers.has(command)}
+        onRun={runCommand}
+        checks={checks}
+        dynamicItems={dynamicItems}
+        appTitle={`TheRobotDrafts — ${document.slug}`}
+      />
 
-      <section className="hg-tabbar" aria-label="Open model tabs">
-        <button className="hg-tab is-active" type="button">
-          {document.slug}
-        </button>
-        <div className="hg-tabbar__hint">{status}</div>
-      </section>
+      <ContextToolbar
+        browserCollapsed={browserCollapsed}
+        onToggleBrowser={() => runCommand("view.modelBrowser")}
+        modelName={document.slug}
+        crumbs={crumbs}
+        mode={mode}
+        onModeChange={setMode}
+        relationshipType={relationshipType}
+        onRelationshipChange={(value) => runCommand(`model.relationship.${value}`)}
+        onCameraControls={() => runCommand("view.camera.controls")}
+        onStartTrace={() => runCommand("go.trace.start")}
+        onCommandPalette={() => runCommand("go.commandPalette")}
+        traceActive={traceEnabled}
+      />
 
-      <section className="hg-workspace" aria-label="3D UML document workspace">
-        <aside className="hg-panel hg-panel--left" aria-label="Creation palette and project controls">
-          <div className="hg-panel__section">
-            <label className="hg-label" htmlFor="graph-search">
-              Search / jump
-            </label>
-            <input
-              id="graph-search"
-              className="hg-input"
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder="class, edge, package"
-            />
-            <p className="hg-help">{query.trim() ? matchingIds.size : document.nodes.length} matching nodes</p>
-          </div>
+      <div className="trd-body">
+        <IconRail
+          browserOpen={!browserCollapsed}
+          onToggleBrowser={() => runCommand("view.modelBrowser")}
+          onSearch={() => runCommand("edit.find")}
+          onAddElement={() => runCommand("model.add.more")}
+          onImportExport={() => setOpenMenu("File")}
+        />
 
-          <div className="hg-panel__section">
-            <p className="hg-label">3D authoring rail</p>
-            <div className="hg-tool-grid" aria-label="3D UML authoring commands">
-              <button
-                className={interactionMode === "select" ? "hg-tool is-active" : "hg-tool"}
-                type="button"
-                onClick={() => setMode("select")}
-                title="Select 3D node"
-              >
-                Select
-              </button>
-              <button
-                className="hg-tool"
-                type="button"
-                draggable
-                onDragStart={(event) => handlePaletteDragStart(event, "class")}
-                onClick={() => executeCommand("add.class")}
-                title="Drag onto the 3D scene to place a UML class (click adds at auto-layout)"
-              >
-                Add
-              </button>
-              <button
-                className={interactionMode === "connect" ? "hg-tool is-active" : "hg-tool"}
-                type="button"
-                onClick={() => setMode(interactionMode === "connect" ? "select" : "connect")}
-                title="Connect nodes: pick a source then a target in the 3D scene"
-              >
-                Connect
-              </button>
-              <button className="hg-tool" type="button" onClick={() => executeCommand("edit.delete")} title="Delete selected element">
-                Delete
-              </button>
-              <button className="hg-tool" type="button" onClick={() => executeCommand("edit.undo")} title="Undo last model edit">
-                Undo
-              </button>
-              <button className="hg-tool" type="button" onClick={() => executeCommand("edit.redo")} title="Redo last model edit">
-                Redo
-              </button>
-              <button className="hg-tool" type="button" onClick={() => executeCommand("export.plantuml")} title="Project 3D model to UML export">
-                Project
-              </button>
-              <button className="hg-tool" type="button" onClick={() => executeCommand("file.importCode")} title="Import source files into model">
-                Import
-              </button>
-            </div>
-            <label className="hg-label" htmlFor="relationship-type">
-              Relationship
-            </label>
-            <select
-              id="relationship-type"
-              className="hg-input"
-              value={relationshipType}
-              onChange={(event) => {
-                const value = event.target.value as UmlRelationship;
-                setRelationshipType(value);
-                if (interactionMode === "connect") {
-                  setStatus(
-                    connectSourceId
-                      ? `Connect (${value}): source ${nodeLabel(connectSourceId)}. Pick a target node.`
-                      : `Connect mode (${value}): pick a source node.`,
-                  );
-                }
-              }}
-            >
-              {relationshipOptions.map((option) => (
-                <option key={option} value={option}>
-                  {option[0].toUpperCase() + option.slice(1)}
-                </option>
-              ))}
-            </select>
-            <button className="hg-command hg-command--primary" type="button" onClick={() => executeCommand("file.open")}>
-              Open TRD model
-            </button>
-            <button className="hg-command" type="button" onClick={() => executeCommand("file.importCode")}>
-              Import code
-            </button>
-            <button className="hg-command" type="button" onClick={() => executeCommand("export.code")}>
-              Export code
-            </button>
-            <button className="hg-command" type="button" onClick={() => executeCommand("layout.frameSelected")} disabled={!selectedNode}>
-              Frame selected
-            </button>
-            <label className="hg-toggle">
-              <input type="checkbox" checked={traceEnabled} onChange={(event) => setTraceEnabled(event.target.checked)} />
-              Trace neighbors
-            </label>
-          </div>
+        <BrowserDock
+          collapsed={browserCollapsed}
+          tab={browserTab}
+          onTabChange={setBrowserTab}
+          document={document}
+          selectedId={selectedId}
+          onSelectNode={(id) => {
+            setSelectedId(id);
+            setHint(`Selected ${nodeLabel(id)}`);
+          }}
+          documents={documents}
+          onOpenDocument={openDocumentById}
+          onFrameNode={(id) => {
+            setSelectedId(id);
+            setFocusId(id);
+            setHint(`Framed ${nodeLabel(id)}`);
+          }}
+          recents={recents}
+          onOpenRecent={(index) => runCommand(`file.openRecent.${index}`)}
+          query={query}
+          onQueryChange={setQuery}
+          matchingNodes={matchingNodes}
+          filterRef={outlineFilterRef}
+        />
 
-          <div className="hg-panel__section">
-            <p className="hg-label">Creation palette</p>
-            <div className="hg-palette">
-              {paletteGroups.map((group) => (
-                <div key={group.label} className="hg-palette__group">
-                  <strong>{group.label}</strong>
-                  {group.items.map((item) => {
-                    const dragKind = item.command.startsWith("add.") ? (item.command.replace("add.", "") as NodeKind) : null;
-                    return (
-                      <button
-                        key={item.command}
-                        className="hg-palette__item"
-                        type="button"
-                        draggable={Boolean(dragKind)}
-                        onDragStart={dragKind ? (event) => handlePaletteDragStart(event, dragKind) : undefined}
-                        onClick={() => executeCommand(item.command)}
-                        title={dragKind ? `Drag onto the 3D scene to place a ${item.label} (click adds at auto-layout)` : item.label}
-                      >
-                        <span aria-hidden="true" />
-                        {item.label}
-                      </button>
-                    );
-                  })}
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="hg-panel__section">
-            <p className="hg-label">Graph health</p>
-            <dl className="hg-health">
-              <div>
-                <dt>Lanes</dt>
-                <dd>{metrics.laneCount}</dd>
-              </div>
-              <div>
-                <dt>Relations</dt>
-                <dd>{metrics.crossLaneEdgeCount}</dd>
-              </div>
-              <div>
-                <dt>Avg risk</dt>
-                <dd>{metrics.averageRisk}</dd>
-              </div>
-            </dl>
-          </div>
-        </aside>
+        <PaletteDock
+          collapsed={paletteDockCollapsed}
+          armedKey={armedKind}
+          onArm={armKind}
+          onOpenKindBrowser={() => runCommand("model.add.more")}
+        />
 
         <section
-          className="hg-canvas-wrap"
+          className="trd-viewport"
           aria-label="Interactive 3D UML renderer"
           onContextMenu={openCanvasContextMenu}
           onDragOver={handleCanvasDragOver}
           onDrop={handleCanvasDrop}
+          onClick={handleViewportClick}
         >
-          <div className="hg-canvas-toolbar">
-            <div>
-              <strong>{focusId ? `Focused: ${document.nodes.find((node) => node.id === focusId)?.label}` : "3D Scene"}</strong>
-              <span>Orbit drag; wheel dolly; WASD/RF free-fly; Q/E roll; right-click opens commands.</span>
-            </div>
-            <div className="hg-hud-actions" aria-label="Scene HUD controls">
-              <button type="button" onClick={() => (cameraForm ? setCameraForm(null) : readCameraPoseIntoForm())}>
-                Camera...
-              </button>
-              <button type="button" onClick={recenter}>Reset</button>
-              <button type="button">3D On</button>
-              <button type="button" onClick={() => setStatus("Shortcuts: Cmd+O open, Cmd+S save, Cmd+Z undo, F frame, Home recenter.")}>
-                ? Help
-              </button>
-            </div>
-          </div>
-          <div className="hg-scene-status" aria-label="Scene mode">
-            <span>
-              {interactionMode === "connect"
-                ? connectSourceId
-                  ? `Connect (${relationshipType}): pick target`
-                  : `Connect (${relationshipType}): pick source`
-                : "Select"}
-            </span>
-            <span>layer {document.view?.activeLayer ?? 0}</span>
-            <span>{metrics.hotNodeCount} hot</span>
-            <strong>3D UML</strong>
-          </div>
+          <TrdThreeScene
+            document={document}
+            selectedId={selectedNode?.id}
+            focusId={focusId}
+            tracedEdgeIds={tracedEdgeIds}
+            onSelect={stableSceneSelect}
+            onStatus={stableSceneStatus}
+            handleRef={sceneHandleRef}
+          />
+
           {!document.nodes.length ? (
-            <div className="hg-empty-state">
+            <div className="trd-viewport-empty">
               <strong>Empty 3D UML workspace</strong>
-              <button type="button" onClick={() => executeCommand("file.open")}>Open TRD JSON</button>
-              <button type="button" onClick={() => executeCommand("file.importCode")}>Import code</button>
-              <button type="button" onClick={() => executeCommand("file.importPlantUml")}>Import PlantUML</button>
+              <div>
+                <button type="button" onClick={() => runCommand("file.open")}>
+                  Open TRD model
+                </button>
+                <button type="button" onClick={() => runCommand("file.import.sourceFolder")}>
+                  Import code
+                </button>
+                <button type="button" onClick={() => runCommand("help.sample.unityParity")}>
+                  Load example
+                </button>
+              </div>
             </div>
           ) : null}
+
           {cameraForm ? (
             <div
-              className="hg-context-menu hg-camera-form"
-              style={{ position: "absolute", right: 14, top: 86, left: "auto" }}
+              className="trd-popover trd-camera-form"
+              style={{ right: 14, top: 14 }}
               role="dialog"
               aria-label="Camera pose form"
               onClick={(event) => event.stopPropagation()}
@@ -1004,10 +1315,9 @@ export function HoloGraphWorkspace() {
                   ["distance", "Distance"],
                 ] as const
               ).map(([field, label]) => (
-                <label key={field} className="hg-label" style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <span style={{ minWidth: 64 }}>{label}</span>
+                <label key={field}>
+                  <span>{label}</span>
                   <input
-                    className="hg-input"
                     type="number"
                     step="1"
                     value={cameraForm[field]}
@@ -1018,14 +1328,7 @@ export function HoloGraphWorkspace() {
               <button type="button" onClick={applyCameraForm}>
                 Apply
               </button>
-              <button
-                type="button"
-                onClick={() => {
-                  sceneHandleRef.current?.resetCamera();
-                  readCameraPoseIntoForm();
-                  setStatus("Camera reset to framed model.");
-                }}
-              >
+              <button type="button" onClick={() => runCommand("view.camera.reset")}>
                 Reset
               </button>
               <button type="button" onClick={() => setCameraForm(null)}>
@@ -1033,216 +1336,109 @@ export function HoloGraphWorkspace() {
               </button>
             </div>
           ) : null}
-          <TrdThreeScene
-            document={document}
-            selectedId={selectedNode?.id}
-            focusId={focusId}
-            tracedEdgeIds={tracedEdgeIds}
-            onSelect={stableSceneSelect}
-            onStatus={setStatus}
-            handleRef={sceneHandleRef}
+
+          {kindBrowserOpen ? (
+            <div
+              className="trd-popover trd-kind-browser"
+              role="dialog"
+              aria-label="Kind browser"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <input
+                className="trd-filter"
+                autoFocus
+                placeholder="Filter kinds…"
+                aria-label="Filter kinds"
+                value={kindBrowserFilter}
+                onChange={(event) => setKindBrowserFilter(event.target.value)}
+              />
+              {kindBrowserResults.map((entry) => (
+                <button
+                  key={`${entry.family}:${entry.label}`}
+                  type="button"
+                  disabled={!entry.nodeKind}
+                  title={entry.nodeKind ? `Arm Place mode with ${entry.label}` : "No document kind for this element yet"}
+                  onClick={() => {
+                    if (!entry.nodeKind) return;
+                    armNodeKind(entry.nodeKind);
+                    setKindBrowserOpen(false);
+                  }}
+                >
+                  <span>{entry.label}</span>
+                  <span className="trd-kbd">{entry.family}</span>
+                </button>
+              ))}
+            </div>
+          ) : null}
+
+          <div className="trd-hint" aria-live="polite">
+            {hint}
+          </div>
+
+          <CommandPalette
+            open={paletteOpen}
+            commands={paletteCommands}
+            onRun={(id) => runCommand(id as TrdCommandId)}
+            onClose={() => setPaletteOpen(false)}
           />
         </section>
 
-        <aside className="hg-panel hg-panel--right" aria-label="Inspector panel">
-          <p className="hg-label">Inspector</p>
-          {selectedNode ? (
-            <>
-              <div className="hg-detail-heading">
-                <span className={`hg-kind-dot ${nodeTone(selectedNode)}`} aria-hidden="true" />
-                <div>
-                  <p className="hg-kicker">{selectedNode.kind}</p>
-                  <input
-                    key={`${selectedNode.id}:label`}
-                    className="hg-input"
-                    aria-label="Element name"
-                    defaultValue={selectedNode.label}
-                    onBlur={(event) => {
-                      const value = event.target.value.trim();
-                      if (value && value !== selectedNode.label) {
-                        updateSelectedNode(`Renamed to ${value}`, (node) => ({ ...node, label: value }));
-                      }
-                    }}
-                  />
-                </div>
-              </div>
-              <div className="hg-panel__section">
-                <label className="hg-label" htmlFor="inspector-stereotype">
-                  Stereotype
-                </label>
-                <input
-                  id="inspector-stereotype"
-                  key={`${selectedNode.id}:stereotype`}
-                  className="hg-input"
-                  defaultValue={selectedNode.stereotype ?? ""}
-                  onBlur={(event) => {
-                    const value = event.target.value.trim();
-                    if (value !== (selectedNode.stereotype ?? "")) {
-                      updateSelectedNode(`Updated stereotype of ${selectedNode.label}`, (node) => ({
-                        ...node,
-                        stereotype: value || undefined,
-                      }));
-                    }
-                  }}
-                />
-                <label className="hg-label" htmlFor="inspector-package">
-                  Package
-                </label>
-                <input
-                  id="inspector-package"
-                  key={`${selectedNode.id}:package`}
-                  className="hg-input"
-                  defaultValue={selectedNode.packageName ?? ""}
-                  onBlur={(event) => {
-                    const value = event.target.value.trim();
-                    if (value !== (selectedNode.packageName ?? "")) {
-                      updateSelectedNode(`Updated package of ${selectedNode.label}`, (node) => ({
-                        ...node,
-                        packageName: value || undefined,
-                      }));
-                    }
-                  }}
-                />
-                <label className="hg-label" htmlFor="inspector-status">
-                  Status
-                </label>
-                <select
-                  id="inspector-status"
-                  className="hg-input"
-                  value={selectedNode.status ?? "draft"}
-                  onChange={(event) => {
-                    const value = event.target.value as NonNullable<GraphNode["status"]>;
-                    updateSelectedNode(`Set ${selectedNode.label} status to ${value}`, (node) => ({ ...node, status: value }));
-                  }}
-                >
-                  {(["stable", "draft", "review", "hot"] as const).map((option) => (
-                    <option key={option} value={option}>
-                      {option}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="hg-panel__section">
-                <label className="hg-label" htmlFor="inspector-notes">
-                  Notes
-                </label>
-                <textarea
-                  id="inspector-notes"
-                  key={`${selectedNode.id}:notes`}
-                  className="hg-input"
-                  rows={3}
-                  defaultValue={selectedNode.description}
-                  onBlur={(event) => {
-                    const value = event.target.value.trim();
-                    if (value !== selectedNode.description) {
-                      updateSelectedNode(`Updated notes of ${selectedNode.label}`, (node) => ({
-                        ...node,
-                        description: value || `${node.label} UML element.`,
-                      }));
-                    }
-                  }}
-                />
-              </div>
-              <div className="hg-panel__section">
-                <label className="hg-label" htmlFor="inspector-attributes">
-                  Attributes (one per line)
-                </label>
-                <textarea
-                  id="inspector-attributes"
-                  key={`${selectedNode.id}:attributes`}
-                  className="hg-input"
-                  rows={4}
-                  defaultValue={(selectedNode.uml?.attributes ?? []).join("\n")}
-                  onBlur={(event) => {
-                    const attributes = splitLines(event.target.value);
-                    if (JSON.stringify(attributes) !== JSON.stringify(selectedNode.uml?.attributes ?? [])) {
-                      updateSelectedNode(`Updated attributes of ${selectedNode.label}`, (node) => ({
-                        ...node,
-                        uml: { ...node.uml, attributes },
-                        members: [...attributes, ...(node.uml?.operations ?? [])],
-                      }));
-                    }
-                  }}
-                />
-                <label className="hg-label" htmlFor="inspector-operations">
-                  Operations (one per line)
-                </label>
-                <textarea
-                  id="inspector-operations"
-                  key={`${selectedNode.id}:operations`}
-                  className="hg-input"
-                  rows={4}
-                  defaultValue={(selectedNode.uml?.operations ?? []).join("\n")}
-                  onBlur={(event) => {
-                    const operations = splitLines(event.target.value);
-                    if (JSON.stringify(operations) !== JSON.stringify(selectedNode.uml?.operations ?? [])) {
-                      updateSelectedNode(`Updated operations of ${selectedNode.label}`, (node) => ({
-                        ...node,
-                        uml: { ...node.uml, operations },
-                        members: [...(node.uml?.attributes ?? []), ...operations],
-                      }));
-                    }
-                  }}
-                />
-              </div>
-              <div className="hg-panel__section">
-                <p className="hg-label">Metrics</p>
-                {(["complexity", "churn", "risk"] as const).map((metric) => (
-                  <div key={metric}>
-                    <label className="hg-label" htmlFor={`inspector-${metric}`}>
-                      {metric[0].toUpperCase() + metric.slice(1)} - {scoreLabel(selectedNode.metrics[metric])}
-                    </label>
-                    <input
-                      id={`inspector-${metric}`}
-                      key={`${selectedNode.id}:${metric}`}
-                      className="hg-input"
-                      type="number"
-                      min={0}
-                      max={100}
-                      defaultValue={selectedNode.metrics[metric]}
-                      onBlur={(event) => {
-                        const value = Math.max(0, Math.min(100, Number.parseInt(event.target.value, 10)));
-                        if (!Number.isNaN(value) && value !== selectedNode.metrics[metric]) {
-                          updateSelectedNode(`Updated ${metric} of ${selectedNode.label}`, (node) => ({
-                            ...node,
-                            metrics: { ...node.metrics, [metric]: value },
-                          }));
-                        }
-                      }}
-                    />
-                  </div>
-                ))}
-              </div>
-              <div className="hg-panel__section">
-                <p className="hg-label">Round-trip</p>
-                <button className="hg-command" type="button" onClick={() => executeCommand("export.plantuml")}>
-                  Export PlantUML
-                </button>
-                <button className="hg-command" type="button" onClick={() => executeCommand("export.code")}>
-                  Export code skeleton
-                </button>
-                <button className="hg-command hg-command--primary" type="button" onClick={() => executeCommand("file.save")}>
-                  Save TRD JSON
-                </button>
-              </div>
-            </>
-          ) : (
-            <p className="hg-description">No element selected. Add an element, open a TRD model, or import code/PlantUML.</p>
-          )}
-        </aside>
-      </section>
+        <Inspector
+          collapsed={inspectorCollapsed}
+          node={selectedNode}
+          onUpdate={updateSelectedNode}
+          nameRef={inspectorNameRef}
+        />
+      </div>
+
+      <LiveStatusStrip
+        mode={mode}
+        breadcrumb={breadcrumbText}
+        selection={selectionSummary}
+        zLayer={document.view?.activeLayer ?? 0}
+        // Empty label collapses the segment via status-strip.css's `:empty` rule —
+        // this slot is for background work, not for model statistics.
+        taskLabel={busy ? "loading model" : ""}
+        taskActive={busy}
+        savedLabel={`autosaved · v${document.version}`}
+        sceneHandleRef={sceneHandleRef}
+      />
 
       {contextMenu ? (
-        <div className="hg-context-menu" style={{ left: contextMenu.x, top: contextMenu.y }} role="menu" onClick={(event) => event.stopPropagation()}>
-          <button type="button" role="menuitem" onClick={() => executeCommand("add.class")}>Add Class</button>
-          <button type="button" role="menuitem" onClick={() => executeCommand("add.interface")}>Add Interface</button>
-          <button type="button" role="menuitem" onClick={() => executeCommand("file.importCode")}>Import Code...</button>
-          <button type="button" role="menuitem" onClick={() => executeCommand("file.importPlantUml")}>Import PlantUML...</button>
-          <button type="button" role="menuitem" onClick={() => executeCommand("export.plantuml")}>Export PlantUML</button>
-          <button type="button" role="menuitem" onClick={() => executeCommand("export.code")}>Export Code Skeleton</button>
-          <button type="button" role="menuitem" disabled={!contextMenu.nodeId} onClick={() => executeCommand("edit.delete")}>Delete Selection</button>
+        <div
+          className="trd-popover"
+          style={{ left: contextMenu.x, top: contextMenu.y, position: "fixed" }}
+          role="menu"
+          onClick={(event) => event.stopPropagation()}
+        >
+          <button type="button" role="menuitem" onClick={() => runCommand("model.add.class")}>
+            Add Class
+          </button>
+          <button type="button" role="menuitem" onClick={() => runCommand("model.add.interface")}>
+            Add Interface
+          </button>
+          <button type="button" role="menuitem" onClick={() => runCommand("file.import.sourceFolder")}>
+            Import Code…
+          </button>
+          <button type="button" role="menuitem" onClick={() => runCommand("file.import.plantuml")}>
+            Import PlantUML…
+          </button>
+          <button type="button" role="menuitem" onClick={() => runCommand("file.export.plantuml")}>
+            Export PlantUML
+          </button>
+          <button type="button" role="menuitem" onClick={() => runCommand("code.generateForSelection")}>
+            Export Code Skeleton
+          </button>
+          <button
+            type="button"
+            role="menuitem"
+            disabled={!contextMenu.nodeId}
+            onClick={() => runCommand("edit.delete.removeEverywhere")}
+          >
+            Remove from Model
+          </button>
         </div>
       ) : null}
-    </main>
+    </div>
   );
 }

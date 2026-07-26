@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import { NavBar } from "../../navbar";
 import { Footer } from "@/components/footer";
-import { SiteCard } from "@/components/site-card";
+import { SiteRow } from "@/components/site-row";
 import { api, type DirectoryCategory, type DirectorySite } from "@/lib/api";
 
 const CATEGORY_TOKENS: Record<
@@ -185,9 +185,9 @@ export default function CategoryPage() {
               </Link>
             </div>
           ) : (
-            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            <div>
               {sites.map((s) => (
-                <SiteCard key={s.id} site={s} />
+                <SiteRow key={s.id} site={s} />
               ))}
             </div>
           )}

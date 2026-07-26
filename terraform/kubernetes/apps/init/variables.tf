@@ -330,31 +330,6 @@ variable "bladeofeternity_chart_path" {
   default     = ""
 }
 
-# --- therobotknows.com --------------------------------------------------------
-variable "therobotknows_domain" {
-  description = "Public host for the therobotknows.com website."
-  type        = string
-  default     = "therobotknows.com"
-}
-
-variable "therobotknows_image" {
-  description = "Container image for the therobotknows.com static website."
-  type        = string
-  default     = "ops.noizu.com/therobotknows.com/web:latest"
-}
-
-variable "therobotknows_tls_secret_name" {
-  description = "TLS secret name consumed by the therobotknows.com ingress."
-  type        = string
-  default     = "therobotknows-com-tls"
-}
-
-variable "therobotknows_chart_path" {
-  description = "Absolute path to the therobotknows.com Helm chart when running through Terragrunt cache. Empty falls back to the in-tree relative path."
-  type        = string
-  default     = ""
-}
-
 # --- derobot.is ---------------------------------------------------------------
 variable "derobotis_domain" {
   type    = string
@@ -419,63 +394,6 @@ variable "tobornalp_tls_secret_name" {
 }
 
 variable "tobornalp_chart_path" {
-  type    = string
-  default = ""
-}
-
-// --- foryou.therobotlives.com (start-app scaffold) ---------------------------
-variable "foryou_domain" {
-  type    = string
-  default = "foryou.therobotlives.com"
-}
-
-variable "foryou_backend_image" {
-  type    = string
-  default = "ops.noizu.com/foryou.therobotlives.com/backend:latest"
-}
-
-variable "foryou_frontend_image" {
-  type    = string
-  default = "ops.noizu.com/foryou.therobotlives.com/frontend:latest"
-}
-
-variable "foryou_tls_secret_name" {
-  type    = string
-  default = "foryou-tls"
-}
-
-variable "foryou_chart_path" {
-  type    = string
-  default = ""
-}
-
-# --- starter.therobotlives.com (start-app scaffold) -------------------------
-variable "start_app_domain" {
-  type    = string
-  default = "starter.therobotlives.com"
-}
-
-variable "start_app_app_domain" {
-  type    = string
-  default = "appstarter.therobotlives.com"
-}
-
-variable "start_app_backend_image" {
-  type    = string
-  default = "ops.noizu.com/start-app/backend:latest"
-}
-
-variable "start_app_frontend_image" {
-  type    = string
-  default = "ops.noizu.com/start-app/frontend:latest"
-}
-
-variable "start_app_tls_secret_name" {
-  type    = string
-  default = "therobotlives-tls"
-}
-
-variable "start_app_chart_path" {
   type    = string
   default = ""
 }

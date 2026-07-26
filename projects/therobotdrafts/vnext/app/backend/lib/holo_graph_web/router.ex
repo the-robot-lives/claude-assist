@@ -63,12 +63,10 @@ defmodule HoloGraphWeb.Router do
     get "/auth/sso/providers", SSOController, :providers
     post "/auth/sso/exchange", SSOController, :exchange
     get "/config/features", ConfigController, :features
-    get "/docs", DocsController, :index
-    post "/docs", DocsController, :import_fixture
-    get "/docs/:id", DocsController, :show
-    get "/holograph/docs", DocsController, :index
-    post "/holograph/docs/import", DocsController, :import_fixture
-    get "/holograph/docs/:id", DocsController, :show
+    # Fixture surface (seed/demo data, no persistence) — the DB-backed document
+    # API lives under /api/v1/docs and /api/v1/projects/:project_id/docs below.
+    get "/holograph/docs", DocsController, :fixture_index
+    get "/holograph/docs/:id", DocsController, :fixture_show
   end
 
   scope "/api/v1", HoloGraphWeb do
@@ -98,6 +96,25 @@ defmodule HoloGraphWeb.Router do
   scope "/api/v1/organizations/:org_id", HoloGraphWeb do
     pipe_through [:api, :authenticated, :org_admin]
     resources "/members", MembershipController, only: [:index, :create, :update, :delete]
+  end
+
+  # HoloGraph documents (DB-backed, project-scoped authorization)
+  scope "/api/v1", HoloGraphWeb do
+    pipe_through [:api, :authenticated]
+
+    get "/projects/:project_id/docs", DocsController, :project_index
+    post "/projects/:project_id/docs", DocsController, :create
+
+    get "/docs/:id", DocsController, :show
+    put "/docs/:id", DocsController, :update
+    post "/docs/:id/patches", DocsController, :patches
+    get "/docs/:id/versions", DocsController, :versions
+    post "/docs/:id/versions/:version/restore", DocsController, :restore
+  end
+
+  scope "/api/v1", HoloGraphWeb do
+    pipe_through [:api, :authenticated, :admin]
+    post "/holograph/docs/import", DocsController, :import_fixture
   end
 
   scope "/api/v1/admin", HoloGraphWeb do

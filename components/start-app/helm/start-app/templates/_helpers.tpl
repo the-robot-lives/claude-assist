@@ -191,6 +191,30 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 {{- end }}
 
+{{/*
+Env for the backend/db Liquibase image. That image renders liquibase.properties
+from a template via envsubst, so it needs the discrete DB_* parts (it builds its
+own jdbc:postgresql:// URL) -- an ecto:// DATABASE_URL is not usable here.
+*/}}
+{{- define "start-app.liquibaseEnv" -}}
+- name: DB_HOST
+  value: {{ .Values.database.host | quote }}
+- name: DB_PORT
+  value: {{ .Values.database.port | quote }}
+- name: DB_NAME
+  value: {{ .Values.database.name | quote }}
+- name: DB_USER
+  valueFrom:
+    secretKeyRef:
+      name: {{ .Values.secrets.name }}
+      key: {{ .Values.secrets.keys.dbUser }}
+- name: DB_PASSWORD
+  valueFrom:
+    secretKeyRef:
+      name: {{ .Values.secrets.name }}
+      key: {{ .Values.secrets.keys.dbPassword }}
+{{- end }}
+
 {{- define "start-app.otelEnv" -}}
 {{- if .Values.otel.enabled }}
 - name: OTEL_EXPORTER_OTLP_ENDPOINT

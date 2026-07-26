@@ -17,9 +17,12 @@ defmodule Therobotknows.Auth.SSO do
     context = Noizu.Context.system()
     email = email |> String.trim() |> String.downcase()
 
-    if Therobotknows.Auth.SSODomains.sso_available?(email, provider_type) do
-      provider_ref = @provider_map[provider_type].()
+    provider_type = provider_type(provider_type)
+
+    if provider_type && Therobotknows.Auth.SSODomains.sso_available?(email, provider_type) do
+      provider_ref = provider_ref(provider_type)
       {:ok, provider_id} = Therobotknows.Auth.Providers.Provider.id(provider_ref)
+      ensure_provider_row(provider_id, provider_type)
 
       case find_user_by_email(email) do
         {:ok, user} ->
@@ -37,6 +40,54 @@ defmodule Therobotknows.Auth.SSO do
       {:error, :sso_not_allowed}
     end
   end
+
+  # Providers.oidc/0 and friends delegate to Entity.ref/1, which returns
+  # {:ok, {:ref, _, uuid}} — every other call site unwraps it before handing the
+  # ref to Provider.id/1 (which only accepts a bare ref tuple).
+  defp provider_ref(provider_type) do
+    case @provider_map[provider_type].() do
+      {:ok, provider_ref} -> provider_ref
+      provider_ref -> provider_ref
+    end
+  end
+
+  defp provider_type(value) when is_atom(value),
+    do: if(Map.has_key?(@provider_map, value), do: value)
+
+  defp provider_type(value) when is_binary(value) do
+    value
+    |> String.trim()
+    |> String.downcase()
+    |> String.to_existing_atom()
+    |> provider_type()
+  rescue
+    ArgumentError -> nil
+  end
+
+  defp provider_type(_), do: nil
+
+  # Provider rows are referenced by deterministic UUID5 id but nothing seeds the
+  # auth_providers table, so the first SSO login per provider would otherwise hit
+  # user_credentials_auth_provider_id_fkey.
+  defp ensure_provider_row(provider_id, provider_type) do
+    title = provider_title(provider_type)
+
+    Therobotknows.Repo.insert(
+      %Therobotknows.Schema.Auth.Providers.Provider{
+        id: provider_id,
+        title: title,
+        description: "#{title} single sign-on"
+      },
+      on_conflict: :nothing,
+      conflict_target: :id
+    )
+  end
+
+  defp provider_title(:oidc), do: "OIDC"
+  defp provider_title(:saml), do: "SAML"
+  defp provider_title(:github), do: "GitHub"
+  defp provider_title(:linkedin), do: "LinkedIn"
+  defp provider_title(type), do: type |> to_string() |> String.capitalize()
 
   defp find_user_by_email(email) do
     q = from u in UserSchema, where: u.email == ^email, where: u.status == :active, limit: 1
@@ -60,7 +111,7 @@ defmodule Therobotknows.Auth.SSO do
     case Therobotknows.Repo.one(q) do
       nil ->
         %Therobotknows.Users.Credentials.UserCredential{
-          user: Therobotknows.Users.User.ref(user.id),
+          user: {:ref, Therobotknows.Users.User, user.id},
           auth_provider: provider_ref,
           status: :active,
           settings: sso_settings(provider_type, attrs),
@@ -76,7 +127,7 @@ defmodule Therobotknows.Auth.SSO do
   end
 
   defp create_sso_session(user, provider_type, context) do
-    user_ref = Therobotknows.Users.User.ref(user.id)
+    user_ref = {:ref, Therobotknows.Users.User, user.id}
 
     %Therobotknows.Users.Sessions.UserSession{
       user: user_ref,
@@ -116,7 +167,7 @@ defmodule Therobotknows.Auth.SSO do
     {:ok, user} = Therobotknows.Repo.insert(user_schema, on_conflict: :nothing, conflict_target: :email)
 
     %Therobotknows.Users.Credentials.UserCredential{
-      user: Therobotknows.Users.User.ref(user.id),
+      user: {:ref, Therobotknows.Users.User, user.id},
       auth_provider: provider_ref,
       status: :active,
       settings: sso_settings(provider_type, attrs),

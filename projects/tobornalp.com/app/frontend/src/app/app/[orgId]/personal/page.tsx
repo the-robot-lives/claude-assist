@@ -82,10 +82,12 @@ export default function PersonalPage() {
   };
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-6">
+    <div className="mx-auto max-w-3xl px-4 py-6 text-[var(--ink)]">
       <header className="mb-6">
-        <h1 className="text-2xl font-bold text-text">Personal</h1>
-        <p className="text-sm text-text-secondary">{currentOrg?.name || "Organization"} · your private todos</p>
+        <h1 className="font-mono text-2xl font-bold uppercase tracking-wide text-[var(--ink)]">Personal</h1>
+        <p className="mt-1 font-mono text-sm text-[var(--mut)]">
+          {currentOrg?.name || "organization"} · your private todos
+        </p>
       </header>
 
       <CreateRow orgId={orgId} tz={tz} suggestions={tagSuggestions} onCreated={onCreated} />
@@ -144,7 +146,10 @@ function CreateRow({
   };
 
   return (
-    <form onSubmit={submit} className="mb-6 space-y-3 rounded-lg border border-border bg-surface p-4">
+    <form
+      onSubmit={submit}
+      className="mb-6 space-y-3 rounded-[var(--r)] border border-[var(--line)] bg-[var(--panel)] p-4 shadow-[var(--card-shadow)]"
+    >
       <Input
         value={title}
         onChange={(e) => setTitle(e.target.value)}

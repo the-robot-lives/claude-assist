@@ -89,6 +89,7 @@ namespace TheRobotDraft.Uml
                 case NativeMacMenu.ViewHelp: ShowHelp(); break;
                 case NativeMacMenu.ViewLlmSettings: ShowLlmSettings(ScreenCenter); break;
                 case NativeMacMenu.ViewVisionSettings: ShowVisionLlmSettings(ScreenCenter); break;
+                case NativeMacMenu.ViewPreferences: ShowPreferences(ScreenCenter); break;
             }
         }
 

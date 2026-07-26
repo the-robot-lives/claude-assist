@@ -1,0 +1,459 @@
+{
+  "id": "trd-demo",
+  "slug": "unity-parity-3d-uml-workspace",
+  "title": "TRD Unity-parity 3D UML workspace",
+  "version": 3,
+  "updatedAt": "2026-07-22T10:30:00Z",
+  "summary": "Canonical vnext fixture for The Robot Draft as a 3D UML tool: slab classifiers, UML compartments, packages, services, persistence, relationships, Z-layers, and camera state.",
+  "modelKind": "uml",
+  "view": {
+    "projection": "trd-3d-uml",
+    "activeLayer": 0,
+    "camera": {
+      "target": { "x": 0, "y": 0.6, "z": 0 },
+      "yaw": 35,
+      "pitch": 22,
+      "distance": 18
+    }
+  },
+  "nodes": [
+    {
+      "id": "root",
+      "label": "RobotDraftModel",
+      "kind": "system",
+      "stereotype": "system",
+      "packageName": "TheRobotDraft",
+      "description": "The root 3D UML model rendered as a navigable spatial scene.",
+      "uml": {
+        "elementType": "Model",
+        "visibility": "public",
+        "attributes": ["+ name : String", "+ activeLayer : Int"],
+        "operations": ["+ frameAll()", "+ project(viewKind)"]
+      },
+      "trd3d": {
+        "position": { "x": 0, "y": 0, "z": -5.6 },
+        "dimensions": { "width": 4.8, "height": 2.1, "depth": 0.32 },
+        "layer": -2,
+        "shape": "slab",
+        "color": "#546a7b"
+      },
+      "metrics": { "complexity": 70, "churn": 35, "risk": 38 },
+      "members": ["packages", "diagrams", "views"],
+      "status": "draft"
+    },
+    {
+      "id": "pkg-authoring",
+      "label": "Authoring Core",
+      "kind": "package",
+      "parentId": "root",
+      "stereotype": "package",
+      "packageName": "TheRobotDraft.Authoring",
+      "description": "UI-agnostic model commands reused by notation exports and the 3D scene.",
+      "uml": {
+        "elementType": "Package",
+        "visibility": "public",
+        "attributes": ["+ elements : Element[*]", "+ relationships : Edge[*]"],
+        "operations": ["+ apply(command)", "+ undo()", "+ redo()"]
+      },
+      "trd3d": {
+        "position": { "x": -5.6, "y": 1.4, "z": -2.8 },
+        "dimensions": { "width": 3.6, "height": 1.6, "depth": 0.26 },
+        "layer": -1,
+        "shape": "package",
+        "color": "#6a7f55"
+      },
+      "metrics": { "complexity": 58, "churn": 28, "risk": 27 },
+      "members": ["CommandStack", "DiagramModel", "PlacementStore"],
+      "status": "stable"
+    },
+    {
+      "id": "pkg-uml3d",
+      "label": "Uml3D Scene",
+      "kind": "package",
+      "parentId": "root",
+      "stereotype": "package",
+      "packageName": "TheRobotDraft.Uml3D",
+      "description": "Unity parity target: real perspective 3D scene with pickable slabs, lit shapes, edges, and camera rig.",
+      "uml": {
+        "elementType": "Package",
+        "visibility": "public",
+        "attributes": ["+ worldScale : Float", "+ layerGap : Float"],
+        "operations": ["+ addNode()", "+ addEdge()", "+ raycast()"]
+      },
+      "trd3d": {
+        "position": { "x": 0, "y": 2.2, "z": 0 },
+        "dimensions": { "width": 3.9, "height": 1.7, "depth": 0.28 },
+        "layer": 0,
+        "shape": "package",
+        "color": "#2f8f83"
+      },
+      "metrics": { "complexity": 64, "churn": 31, "risk": 30 },
+      "members": ["Uml3DScene", "UmlNode3D", "UmlEdge3D"],
+      "status": "hot"
+    },
+    {
+      "id": "pkg-ai",
+      "label": "Drafting Agents",
+      "kind": "package",
+      "parentId": "root",
+      "stereotype": "package",
+      "packageName": "TheRobotDraft.Llm",
+      "description": "Patch proposal and code-generation services that feed reviewed model edits.",
+      "uml": {
+        "elementType": "Package",
+        "visibility": "public",
+        "attributes": ["+ provider : LlmProvider", "+ pendingPatches : Patch[*]"],
+        "operations": ["+ draft(spec)", "+ cancel()", "+ applyReviewed()"]
+      },
+      "trd3d": {
+        "position": { "x": 5.7, "y": 1.3, "z": -2.6 },
+        "dimensions": { "width": 3.8, "height": 1.6, "depth": 0.26 },
+        "layer": -1,
+        "shape": "package",
+        "color": "#8262a8"
+      },
+      "metrics": { "complexity": 54, "churn": 34, "risk": 34 },
+      "members": ["CodeGen", "LlmRefiner", "PatchReview"],
+      "status": "review"
+    },
+    {
+      "id": "uml-scene",
+      "label": "Uml3DScene",
+      "kind": "class",
+      "parentId": "pkg-uml3d",
+      "stereotype": "controller",
+      "packageName": "TheRobotDraft.Uml3D",
+      "description": "Imperative scene manager: owns diagram root, node/edge registries, picking, and camera pass-throughs.",
+      "uml": {
+        "elementType": "Class",
+        "visibility": "public",
+        "attributes": ["+ DiagramRoot : Transform", "- nodes : Dictionary", "- edges : List"],
+        "operations": ["+ AddNode(...)", "+ AddEdge()", "+ Raycast(screen)", "+ FrameAll()"]
+      },
+      "trd3d": {
+        "position": { "x": -3.2, "y": -1.4, "z": 0 },
+        "dimensions": { "width": 3.7, "height": 1.95, "depth": 0.24 },
+        "layer": 0,
+        "shape": "slab",
+        "color": "#3f887d"
+      },
+      "metrics": { "complexity": 66, "churn": 25, "risk": 24 },
+      "members": ["DiagramRoot", "Nodes", "Edges", "FrameAll()"],
+      "status": "stable"
+    },
+    {
+      "id": "uml-node",
+      "label": "UmlNode3D",
+      "kind": "class",
+      "parentId": "pkg-uml3d",
+      "stereotype": "entity",
+      "packageName": "TheRobotDraft.Uml3D",
+      "description": "Pickable 3D UML node: lit slab body plus front-face stereotype/name/attribute/operation compartments.",
+      "uml": {
+        "elementType": "Class",
+        "visibility": "public",
+        "attributes": ["+ Id : ElementId", "+ LocalRotation : Quaternion", "- faceCanvas : Canvas"],
+        "operations": ["+ Init(...)", "+ SetWorldPose()", "+ SetSelected()", "+ SetDepthTint()"]
+      },
+      "trd3d": {
+        "position": { "x": 1.2, "y": -1.45, "z": 0.25 },
+        "dimensions": { "width": 3.85, "height": 2.1, "depth": 0.28 },
+        "layer": 0,
+        "shape": "slab",
+        "color": "#4d9a8f"
+      },
+      "metrics": { "complexity": 72, "churn": 32, "risk": 33 },
+      "members": ["FacePointLocal()", "Resize()", "AddLocalRotation()", "SetImage()"],
+      "status": "hot"
+    },
+    {
+      "id": "uml-edge",
+      "label": "UmlEdge3D",
+      "kind": "class",
+      "parentId": "pkg-uml3d",
+      "stereotype": "relationship",
+      "packageName": "TheRobotDraft.Uml3D",
+      "description": "World-space relationship polyline with dashed kinds and cone arrowheads.",
+      "uml": {
+        "elementType": "Class",
+        "visibility": "public",
+        "attributes": ["- line : LineRenderer", "- arrow : Transform", "- dashed : Boolean"],
+        "operations": ["+ SetRoute(points)", "+ SetArrow(on)", "- ApplyDash()"]
+      },
+      "trd3d": {
+        "position": { "x": 5.1, "y": -1.35, "z": 0.45 },
+        "dimensions": { "width": 3.35, "height": 1.9, "depth": 0.24 },
+        "layer": 0,
+        "shape": "slab",
+        "color": "#5b8fa8"
+      },
+      "metrics": { "complexity": 50, "churn": 20, "risk": 19 },
+      "members": ["SetRoute()", "SetArrow()", "DashPeriod"],
+      "status": "stable"
+    },
+    {
+      "id": "camera-rig",
+      "label": "UmlCameraRig",
+      "kind": "class",
+      "parentId": "pkg-uml3d",
+      "stereotype": "camera",
+      "packageName": "TheRobotDraft.Uml3D",
+      "description": "6-DOF perspective camera with orbit, dolly, pan, roll, free-fly, and frame-to-bounds behavior.",
+      "uml": {
+        "elementType": "Class",
+        "visibility": "public",
+        "attributes": ["+ Pivot : Vector3", "+ Yaw : Float", "+ Pitch : Float", "+ Distance : Float"],
+        "operations": ["+ Orbit()", "+ Dolly()", "+ PanPivot()", "+ MoveLocal()", "+ Frame()"]
+      },
+      "trd3d": {
+        "position": { "x": 0.5, "y": -4.8, "z": 0.9 },
+        "dimensions": { "width": 3.65, "height": 1.95, "depth": 0.24 },
+        "layer": 0,
+        "shape": "slab",
+        "color": "#b07f42"
+      },
+      "metrics": { "complexity": 44, "churn": 18, "risk": 18 },
+      "members": ["Orbit()", "Dolly()", "MoveLocal()", "Frame()"],
+      "status": "review"
+    },
+    {
+      "id": "node-shape",
+      "label": "Uml3DNodeShape",
+      "kind": "class",
+      "parentId": "pkg-uml3d",
+      "stereotype": "factory",
+      "packageName": "TheRobotDraft.Uml3D.Shapes",
+      "description": "ElementKind-to-3D-shape dispatcher for class, package, component, cylinder, actor, state, and other UML silhouettes.",
+      "uml": {
+        "elementType": "Class",
+        "visibility": "public",
+        "attributes": ["+ FaceStyle : enum"],
+        "operations": ["+ Build(kind,w,h,d)", "+ Face(kind)"]
+      },
+      "trd3d": {
+        "position": { "x": -6.5, "y": -4.2, "z": -0.4 },
+        "dimensions": { "width": 3.65, "height": 1.65, "depth": 0.22 },
+        "layer": 0,
+        "shape": "component",
+        "color": "#7d8c3a"
+      },
+      "metrics": { "complexity": 57, "churn": 24, "risk": 23 },
+      "members": ["Build()", "Face()", "HasNonRectSilhouette()"],
+      "status": "draft"
+    },
+    {
+      "id": "diagram-model",
+      "label": "DiagramModel",
+      "kind": "class",
+      "parentId": "pkg-authoring",
+      "stereotype": "aggregate",
+      "packageName": "TheRobotDraft.Authoring.Model",
+      "description": "Authoritative UML graph state that the 3D view projects and edits through commands.",
+      "uml": {
+        "elementType": "Class",
+        "visibility": "public",
+        "attributes": ["+ elements : Element[*]", "+ edges : Relationship[*]", "+ placements : Placement[*]"],
+        "operations": ["+ addElement()", "+ connect()", "+ moveToLayer()"]
+      },
+      "trd3d": {
+        "position": { "x": -7.2, "y": -1.25, "z": -2.9 },
+        "dimensions": { "width": 3.8, "height": 1.95, "depth": 0.24 },
+        "layer": -1,
+        "shape": "slab",
+        "color": "#758456"
+      },
+      "metrics": { "complexity": 61, "churn": 22, "risk": 21 },
+      "members": ["Element", "Relationship", "Placement"],
+      "status": "stable"
+    },
+    {
+      "id": "patch-review",
+      "label": "PatchReviewService",
+      "kind": "service",
+      "parentId": "pkg-ai",
+      "stereotype": "service",
+      "packageName": "TheRobotDraft.Llm",
+      "description": "Proposes, previews, and applies agent-authored UML model patches with user review.",
+      "uml": {
+        "elementType": "Component",
+        "visibility": "public",
+        "attributes": ["+ pending : PatchBatch[*]", "+ lastError : Error?"],
+        "operations": ["+ propose(prompt)", "+ previewDiff()", "+ approve()", "+ reject()"]
+      },
+      "trd3d": {
+        "position": { "x": 7.2, "y": -1.1, "z": -2.8 },
+        "dimensions": { "width": 3.95, "height": 1.8, "depth": 0.26 },
+        "layer": -1,
+        "shape": "component",
+        "color": "#8d6ab3"
+      },
+      "metrics": { "complexity": 48, "churn": 35, "risk": 36 },
+      "members": ["propose()", "previewDiff()", "approve()", "reject()"],
+      "status": "review"
+    },
+    {
+      "id": "plantuml-exporter",
+      "label": "PlantUmlExporter",
+      "kind": "interface",
+      "parentId": "pkg-authoring",
+      "stereotype": "interface",
+      "packageName": "TheRobotDraft.Authoring.Interchange",
+      "description": "Projects the 3D model back into textual UML interchange formats.",
+      "uml": {
+        "elementType": "Interface",
+        "visibility": "public",
+        "attributes": ["+ supportedKinds : Set<DiagramKind>"],
+        "operations": ["+ exportClassDiagram()", "+ exportComponentDiagram()"]
+      },
+      "trd3d": {
+        "position": { "x": -3.5, "y": -6.75, "z": -2.7 },
+        "dimensions": { "width": 3.5, "height": 1.65, "depth": 0.22 },
+        "layer": -1,
+        "shape": "interface",
+        "color": "#6d8fbd"
+      },
+      "metrics": { "complexity": 39, "churn": 17, "risk": 16 },
+      "members": ["exportClassDiagram()", "exportComponentDiagram()"],
+      "status": "stable"
+    },
+    {
+      "id": "model-store",
+      "label": "ModelStore",
+      "kind": "database",
+      "parentId": "root",
+      "stereotype": "repository",
+      "packageName": "HoloGraph.Docs",
+      "description": "Document/version persistence for named 3D UML models and collaborative patch events.",
+      "uml": {
+        "elementType": "Database",
+        "visibility": "public",
+        "attributes": ["+ graph_documents", "+ graph_document_versions", "+ collab_events"],
+        "operations": ["+ load(id)", "+ saveVersion()", "+ appendEvent()"]
+      },
+      "trd3d": {
+        "position": { "x": 4.4, "y": -6.6, "z": -2.5 },
+        "dimensions": { "width": 3.2, "height": 1.65, "depth": 0.35 },
+        "layer": -1,
+        "shape": "cylinder",
+        "color": "#5f7f9d"
+      },
+      "metrics": { "complexity": 43, "churn": 20, "risk": 22 },
+      "members": ["documents", "versions", "events"],
+      "status": "draft"
+    }
+  ],
+  "edges": [
+    {
+      "id": "e-root-authoring",
+      "sourceId": "root",
+      "targetId": "pkg-authoring",
+      "kind": "contains",
+      "label": "owns",
+      "uml": { "relationship": "composition", "arrow": "diamond" }
+    },
+    {
+      "id": "e-root-uml3d",
+      "sourceId": "root",
+      "targetId": "pkg-uml3d",
+      "kind": "contains",
+      "label": "projects",
+      "uml": { "relationship": "composition", "arrow": "diamond" }
+    },
+    {
+      "id": "e-root-ai",
+      "sourceId": "root",
+      "targetId": "pkg-ai",
+      "kind": "contains",
+      "label": "drafts",
+      "uml": { "relationship": "composition", "arrow": "diamond" }
+    },
+    {
+      "id": "e-scene-node",
+      "sourceId": "uml-scene",
+      "targetId": "uml-node",
+      "kind": "depends_on",
+      "label": "creates",
+      "uml": { "relationship": "composition", "arrow": "diamond" }
+    },
+    {
+      "id": "e-scene-edge",
+      "sourceId": "uml-scene",
+      "targetId": "uml-edge",
+      "kind": "depends_on",
+      "label": "creates",
+      "uml": { "relationship": "composition", "arrow": "diamond" }
+    },
+    {
+      "id": "e-scene-camera",
+      "sourceId": "uml-scene",
+      "targetId": "camera-rig",
+      "kind": "calls",
+      "label": "delegates camera",
+      "uml": { "relationship": "association", "arrow": "open" }
+    },
+    {
+      "id": "e-node-shape",
+      "sourceId": "uml-node",
+      "targetId": "node-shape",
+      "kind": "calls",
+      "label": "builds mesh",
+      "uml": { "relationship": "dependency", "dashed": true, "arrow": "open" }
+    },
+    {
+      "id": "e-model-scene",
+      "sourceId": "diagram-model",
+      "targetId": "uml-scene",
+      "kind": "publishes",
+      "label": "renders as 3D",
+      "uml": { "relationship": "realization", "dashed": true, "arrow": "triangle" }
+    },
+    {
+      "id": "e-authoring-model",
+      "sourceId": "pkg-authoring",
+      "targetId": "diagram-model",
+      "kind": "contains",
+      "label": "contains",
+      "uml": { "relationship": "composition", "arrow": "diamond" }
+    },
+    {
+      "id": "e-authoring-exporter",
+      "sourceId": "pkg-authoring",
+      "targetId": "plantuml-exporter",
+      "kind": "publishes",
+      "label": "exports",
+      "uml": { "relationship": "dependency", "dashed": true, "arrow": "open" }
+    },
+    {
+      "id": "e-ai-model",
+      "sourceId": "patch-review",
+      "targetId": "diagram-model",
+      "kind": "patches",
+      "label": "proposes patches",
+      "uml": { "relationship": "dependency", "dashed": true, "arrow": "open" }
+    },
+    {
+      "id": "e-store-model",
+      "sourceId": "model-store",
+      "targetId": "diagram-model",
+      "kind": "stores",
+      "label": "versions",
+      "uml": { "relationship": "association", "arrow": "open" }
+    },
+    {
+      "id": "e-scene-store",
+      "sourceId": "uml-scene",
+      "targetId": "model-store",
+      "kind": "depends_on",
+      "label": "loads document",
+      "uml": { "relationship": "dependency", "dashed": true, "arrow": "open" }
+    },
+    {
+      "id": "e-export-store",
+      "sourceId": "plantuml-exporter",
+      "targetId": "model-store",
+      "kind": "depends_on",
+      "label": "reads versions",
+      "uml": { "relationship": "dependency", "dashed": true, "arrow": "open" }
+    }
+  ]
+}

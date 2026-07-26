@@ -89,6 +89,7 @@ tiers:
       - aifighter
       - bladeofeternity
       - derobotis
+      - accords
       - gotta-cc
       - iotgo
       - jailbreakingsite
@@ -206,6 +207,7 @@ namespace_overrides:
   aifighter: apps
   bladeofeternity: apps
   derobotis: apps
+  accords: apps
   gotta-cc: apps
   iotgo: apps
   jailbreakingsite: apps
@@ -270,6 +272,7 @@ chart_path_overrides:
   robots-unite: projects/robots-unite.com/helm/robots-unite
   gotta-cc: projects/gotta.cc/helm/gotta-cc
   derobotis: projects/derobot.is/helm/derobotis
+  accords: projects/derobot.is/helm/accords
   iotgo: projects/iotgo.io/helm/iotgo
   jailbreakingsite: projects/jailbreakingsite.com/helm/jailbreakingsite
   noizu-site: projects/noizu.com/helm/noizu-site
@@ -583,9 +586,9 @@ liquibase_targets:
     changelog_dir: projects/jailbreakingsite.com/app/backend/priv/repo/migrations
 
   therobotknows:
-    description: "TheRobotKnows app database"
-    namespace: data-ns
-    service: svc/shared-postgres
+    description: "TheRobotKnows app database on app-timescaledb"
+    namespace: apps
+    service: svc/app-timescaledb
     remote_port: 5432
     local_port: 54334
     db_type: postgresql
@@ -595,7 +598,11 @@ liquibase_targets:
     secret_namespace: apps
     username_key: THEROBOTKNOWS_DB_USER
     secret_key: THEROBOTKNOWS_DB_PASSWORD
-    changelog_dir: projects/therobotknows.com/app/backend/priv/repo/migrations
+    # superuser-only extensions the changelog needs pre-created (pgvector et al.)
+    admin_secret: app-timescaledb-secrets
+    extensions: [citext, uuid-ossp, vector, cube, pg_trgm, earthdistance]
+    changelog_dir: projects/therobotknows.com/app/backend/db
+    changelog_file: changelog/db.changelog-master.yaml
 
   therobotlives:
     description: "TheRobotLives app database"
@@ -804,10 +811,19 @@ project:
             chart_path: kubernetes/helm/apps/derobotis
             values_path: .derobotis.teaser.image
             format: image
+        - name: accords
+          dockerfile: app/accords/Dockerfile
+          context: app/accords
+          helm:
+            chart_path: projects/derobot.is/helm/accords
+            values_path: .image
+            format: image
       helm:
         charts:
           - name: derobotis
             path: kubernetes/helm/apps/derobotis
+          - name: accords
+            path: projects/derobot.is/helm/accords
     - domain: gotta.cc
       services:
         - name: backend

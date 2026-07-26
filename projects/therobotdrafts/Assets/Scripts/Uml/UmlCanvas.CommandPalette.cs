@@ -67,6 +67,7 @@ namespace TheRobotDraft.Uml
                 new PaletteCommand("Go", "Camera Z Down", () => JumpCameraZ(-1)),
                 new PaletteCommand("Go", "Cycle Drag-Nav Mode", () => CycleNavMode(false)),
                 new PaletteCommand("View", "Toggle 2D / 3D", () => Toggle2DMode()),
+                new PaletteCommand("View", "Preferences… (font · size · theme)", () => ShowPreferences(ScreenCenter)),
                 new PaletteCommand("View", "LLM Settings…", () => ShowLlmSettings(ScreenCenter)),
                 new PaletteCommand("View", "Vision LLM Settings…", () => ShowVisionLlmSettings(ScreenCenter)),
                 new PaletteCommand("View", "Help & Shortcuts", () => ShowHelp()),

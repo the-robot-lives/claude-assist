@@ -434,7 +434,11 @@ namespace TheRobotDraft.Uml
             rt.sizeDelta = size;
             rt.anchoredPosition = topLeft;
             var t = go.AddComponent<Text>();
-            t.font = _font; t.text = text; t.fontSize = fontSize; t.color = color; t.alignment = align;
+            t.font = _font;
+            t.text = text;
+            t.fontSize = TheRobotDraft.Uml.Chrome.UiPrefs.ScaleFont(fontSize); // user font-size pref
+            t.color = color;
+            t.alignment = align;
             t.supportRichText = false; t.raycastTarget = false;
             return t;
         }

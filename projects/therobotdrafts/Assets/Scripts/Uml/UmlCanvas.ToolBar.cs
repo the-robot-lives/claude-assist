@@ -39,13 +39,14 @@ namespace TheRobotDraft.Uml
         private RectTransform _toolCrumbRt;
         private RectTransform _toolModeChipRt;
 
-        // Concept D demo tokens (design/nav-redesign/demo).
-        private static readonly Color ToolBarBg = ConceptDTheme.Bg2;
-        private static readonly Color ToolAccent = ConceptDTheme.Accent;
-        private static readonly Color ToolAccentWarm = ConceptDTheme.Warm;
-        private static readonly Color ToolIdleBg = ConceptDTheme.Bg;
-        private static readonly Color ToolIdleText = ConceptDTheme.TextDim;
-        private static readonly Color ToolActiveText = ConceptDTheme.AccentOn;
+        // Concept D demo tokens (design/nav-redesign/demo). Computed, not snapshots, so a
+        // Preferences palette swap reaches them.
+        private static Color ToolBarBg => ConceptDTheme.Bg2;
+        private static Color ToolAccent => ConceptDTheme.Accent;
+        private static Color ToolAccentWarm => ConceptDTheme.Warm;
+        private static Color ToolIdleBg => ConceptDTheme.Bg;
+        private static Color ToolIdleText => ConceptDTheme.TextDim;
+        private static Color ToolActiveText => ConceptDTheme.AccentOn;
 
         /// <summary>Alias onto the shell layout budget; see <see cref="ChromeMetrics"/>.</summary>
         internal const float ContextToolbarHeight = ChromeMetrics.ContextToolbarHeight;

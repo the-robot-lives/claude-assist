@@ -21,6 +21,22 @@ namespace TheRobotDraft.Uml.Chrome
         private static string _pending;
         private static UiTooltip _owner;
 
+        /// <summary>
+        /// Drop the cached tooltip widget. Must be called whenever the canvas chrome is torn down
+        /// and rebuilt (e.g. a Preferences font/theme change): the cache is parented into the old
+        /// tree, so without this the next hover would write into a destroyed object.
+        /// </summary>
+        public static void ResetCache()
+        {
+            if (_tipRt != null) Object.Destroy(_tipRt.gameObject);
+            _tipRt = null;
+            _tipText = null;
+            _tipBg = null;
+            _canvas = null;
+            _owner = null;
+            _pending = null;
+        }
+
         public static void Bind(GameObject target, string text, Font font)
         {
             if (target == null || string.IsNullOrEmpty(text)) return;

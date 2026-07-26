@@ -317,7 +317,7 @@ defmodule TherobotknowsWeb.AuthController do
   end
 
   defp create_session_for_user(user) do
-    user_ref = Therobotknows.Users.User.ref(user.id)
+    user_ref = {:ref, Therobotknows.Users.User, user.id}
     session_entity = %Therobotknows.Users.Sessions.UserSession{
       user: user_ref,
       status: :active,

@@ -11,7 +11,7 @@ backend:
       cpu: 500m
       memory: 512Mi
 frontend:
-  image: ops.noizu.com/gotta.cc/frontend:v1.0.8
+  image: ops.noizu.com/gotta.cc/frontend:v1.0.9
   port: 80
   resources:
     requests:

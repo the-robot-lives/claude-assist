@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useOrg } from "@/context/org";
@@ -15,6 +15,14 @@ export default function TodayPage() {
   const [plan, setPlan] = useState<TodayPlan | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Decorative hero date line — purely presentational, computed client-side.
+  const heroDate = useMemo(() => {
+    const d = new Date();
+    return d
+      .toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" })
+      .toLowerCase();
+  }, []);
+
   useEffect(() => {
     if (!orgId) return;
     setLoading(true);
@@ -25,24 +33,30 @@ export default function TodayPage() {
       .finally(() => setLoading(false));
   }, [orgId]);
 
-  if (loading) return <div className="p-8 text-text-muted">Loading your day…</div>;
+  if (loading) return <div className="p-8 font-mono text-sm text-[var(--mut)]">loading your day…</div>;
   if (!plan) return <Empty>Could not load your plan.</Empty>;
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-6">
+    <div className="mx-auto max-w-4xl px-4 py-6 text-[var(--ink)]">
       <header className="mb-6">
-        <h1 className="text-2xl font-bold text-text">Today</h1>
-        <p className="text-sm text-text-secondary">
+        <div className="flex items-baseline gap-3">
+          <h1 className="font-mono text-2xl font-bold uppercase tracking-wide text-[var(--ink)]">Today</h1>
+          <span className="font-mono text-xs text-[var(--faint)]">{heroDate}</span>
+        </div>
+        <p className="mt-1 font-mono text-sm text-[var(--mut)]">
           {currentOrg?.name ? `${currentOrg.name} · ` : ""}everything competing for your time.
           {(plan.unread_notifications ?? 0) > 0 && (
-            <Link href={`/app/${orgId}/inbox`} className="ml-2 text-brand-blue hover:underline">
+            <Link
+              href={`/app/${orgId}/inbox`}
+              className="ml-2 text-[var(--acc)] hover:text-[var(--acc-hi)] hover:underline"
+            >
               {plan.unread_notifications} unread →
             </Link>
           )}
         </p>
       </header>
 
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-[14px] md:grid-cols-2">
         <SectionCard title="Assigned to you" count={plan.assigned?.length}>
           <ItemList items={plan.assigned} orgId={orgId} empty="Nothing assigned — enjoy the calm." />
         </SectionCard>
@@ -55,7 +69,10 @@ export default function TodayPage() {
           title="Your objectives"
           count={plan.objectives?.length}
           action={
-            <Link href={`/app/${orgId}/goals`} className="text-xs text-brand-blue hover:underline">
+            <Link
+              href={`/app/${orgId}/goals`}
+              className="font-mono text-xs text-[var(--acc)] hover:text-[var(--acc-hi)] hover:underline"
+            >
               all
             </Link>
           }
@@ -68,9 +85,9 @@ export default function TodayPage() {
             <ul className="space-y-3">
               {plan.key_results.map((kr) => (
                 <li key={kr.kr_id}>
-                  <div className="flex items-center justify-between text-sm text-text">
+                  <div className="flex items-center justify-between text-sm text-[var(--ink)]">
                     <span className="truncate">{kr.title}</span>
-                    <span className="ml-2 shrink-0 text-text-muted">
+                    <span className="ml-2 shrink-0 font-mono text-[var(--mut)] tabular-nums">
                       {fmt(kr.current)}/{fmt(kr.target)}
                     </span>
                   </div>
@@ -97,10 +114,10 @@ function ItemList({ items, orgId, empty }: { items?: Item[]; orgId: string; empt
         <li key={it.id}>
           <Link
             href={`/app/${orgId}/items/${it.id}`}
-            className="flex items-center gap-2 rounded border border-transparent px-2 py-1.5 text-sm hover:border-border hover:bg-surface-alt"
+            className="flex items-center gap-2 border-b border-[var(--line)] px-2 py-1.5 text-sm last:border-0 hover:bg-[var(--sel)] hover:rounded-[var(--r-sm)]"
           >
-            {it.key && <span className="font-mono text-xs text-text-muted">{it.key}</span>}
-            <span className="flex-1 truncate text-text">{it.title}</span>
+            {it.key && <span className="font-mono text-xs text-[var(--faint)]">{it.key}</span>}
+            <span className="flex-1 truncate text-[var(--ink)]">{it.title}</span>
             <PriorityBadge priority={it.priority} />
             <StatusBadge status={it.status} />
           </Link>
@@ -117,8 +134,8 @@ function ObjectiveList({ objectives }: { objectives?: Objective[] }) {
       {objectives.map((o) => (
         <li key={o.id}>
           <div className="flex items-center justify-between text-sm">
-            <span className="truncate text-text">{o.title}</span>
-            <span className="ml-2 shrink-0 text-text-muted">{o.level}</span>
+            <span className="truncate text-[var(--ink)]">{o.title}</span>
+            <span className="ml-2 shrink-0 font-mono text-xs uppercase tracking-wide text-[var(--faint)]">{o.level}</span>
           </div>
           <div className="mt-1">
             <ProgressBar value={o.progress} />

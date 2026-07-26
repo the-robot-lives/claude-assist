@@ -111,10 +111,23 @@ Then hydrate `helm/<SLUG>/values.yaml`:
 - `secrets.name: <slug>-secrets`, `secrets.keys.*: <UPPERSLUG>_*`
 - `tls` → reuse wildcard cert or set a new path (step 4)
 
-> **Migrations are Ecto (`.exs`), not Liquibase.** start-app runs schema via the
-> chart's migrate hook (`<MODULE>.Release.migrate/0`). Do **not** add a
-> `liquibase_targets` entry — there's no Liquibase changelog and `liquibase-shell`
-> will error with `changelog-master.yaml does not exist`.
+> **Which migration system? Check, don't assume.** The chart's migrate hook runs
+> `<MODULE>.Release.migrate/0`, which is **Ecto**. A bare scaffold with only
+> `priv/repo/migrations/*.exs` is fine with that and needs no `liquibase_targets`
+> entry (`liquibase-shell` would error with `changelog-master.yaml does not exist`).
+>
+> **But every app that has grown a real schema in this repo uses Liquibase**
+> (therobotknows, therobotlearns, tobornalp, gotta.cc, npl…). For those the Ecto
+> hook is a **silent no-op** — it succeeds, creates nothing, and the deploy looks
+> green with an empty database. Decide by looking:
+>
+> ```bash
+> ls projects/<DOMAIN>/app/backend/db/changelog/db.changelog-master.yaml   # Liquibase
+> ls projects/<DOMAIN>/app/backend/priv/repo/migrations/                   # Ecto
+> ```
+>
+> If the changelog exists, add a `liquibase_targets` block (step 5b) and run
+> `liquibase-shell <SLUG> update` explicitly after deploy.
 
 ---
 
@@ -323,8 +336,76 @@ PGPASSWORD=$(kubectl get secret app-timescaledb-secrets -n apps -o jsonpath='{.d
   PGUSER=postgres psql -h 127.0.0.1 -p 54338 -d postgres -f /tmp/<slug>.sql
 ```
 (54338 is just an example local port — pick one free; the infra liquibase
-targets use 54330–54338.) Verify with `liquibase-shell`-style connection or a
+targets use 54330–54340.) Verify with `liquibase-shell`-style connection or a
 plain `psql` as the new role.
+
+### 5b-hook. Applying changelogs at deploy time (`migrate.liquibase`)
+
+The chart's default `migrate` hook is Ecto (`Release.migrate()`) and applies
+**no** changelogs — a fresh deploy otherwise comes up against an empty DB. The
+supported fix is the chart's opt-in Liquibase hook Job (default `false`):
+
+```yaml
+migrate:
+  liquibase:
+    enabled: true
+    image: ops.noizu.com/<slug>/db:v1.0.0
+```
+
+It is a `pre-install,pre-upgrade` hook at weight `-10`, so it runs before the
+Ecto hook at `-5`. DB env is wired from `database.*` + `secrets.keys.dbUser` /
+`dbPassword`; the image (built from `backend/db/Dockerfile`) composes its own
+`jdbc:postgresql://` URL via `envsubst`, so no `DATABASE_URL` is needed.
+
+> **Caveat:** `backend/db` is not a declared build target in
+> `.infra-config.yaml` (only `backend` and `frontend` are). Add a `db` service
+> entry for your app before enabling this, or the Job cannot pull its image.
+
+You still want the `liquibase_targets` entry below for out-of-band/manual runs
+via `liquibase-shell`.
+
+### 5b. If the app uses Liquibase: register a target + pre-create extensions
+
+Add to root `.infra-config.yaml` under `liquibase_targets:` (model on
+`therobotlearns`, the most complete block):
+
+```yaml
+  <SLUG>:
+    description: "<DOMAIN> app database on app-timescaledb"
+    namespace: apps
+    service: svc/app-timescaledb
+    remote_port: 5432
+    local_port: 543NN                 # free port in 54330-54340
+    db_type: postgresql
+    db_name: <DBNAME>
+    schema: public
+    secret_name: <slug>-secrets
+    secret_namespace: apps
+    username: <SLUG>
+    secret_key: <UPPERSLUG>_DB_PASSWORD
+    safety: destructive
+    role_password_dc: "services apps.<slug>_db_password"
+    admin_secret: app-timescaledb-secrets
+    extensions: [citext, uuid-ossp, vector, cube, pg_trgm, earthdistance]
+    changelog_dir: projects/<DOMAIN>/app/backend/db
+    changelog_file: changelog/db.changelog-master.yaml
+```
+
+> **`CREATE EXTENSION vector` (and `cube`, `pg_trgm`, `earthdistance`,
+> `uuid-ossp`) needs a superuser** — the app's login role cannot run them, and a
+> changelog that opens with `CREATE EXTENSION` dies with `permission denied to
+> create extension`. That's what `admin_secret` + `extensions:` are for;
+> `provision-db <SLUG>` pre-creates them as the instance superuser.
+
+```bash
+provision-db <SLUG>              # role + db + extensions
+liquibase-shell <SLUG> status
+liquibase-shell <SLUG> update
+liquibase-shell <SLUG> release-locks   # only if a killed update left a stale lock
+```
+
+Adding OIDC login on top of this? See
+[`docs/authentik-oidc-setup.md`](authentik-oidc-setup.md).
 
 ---
 
@@ -476,7 +557,7 @@ helm-upgrade --include <SLUG>
 - **Lockfiles missing** — generate `mix.lock` (`mix deps.get`) + `package-lock.json` (`npm install --package-lock-only`) before `make build`.
 - **Chart lives at `projects/<DOMAIN>/helm/<SLUG>`**, not `app/helm/start-app`. Promote + copy. If `helm-upgrade` "can't find chart", grep for a stale `app/helm/start-app` path in `.infra-config.yaml`.
 - **Namespace is `apps`**, not `apps-ns` (that's the npl-mcp/tobor stack). Secrets CRD + app pods + DB all in `apps`.
-- **Ecto, not Liquibase** — do not add a `liquibase_targets` entry; no changelog exists and `liquibase-shell` errors. Migrations run via the chart's migrate hook.
+- **Ecto vs Liquibase — check, don't assume.** A bare scaffold is Ecto and needs no `liquibase_targets` entry. Any app with `app/backend/db/changelog/db.changelog-master.yaml` is **Liquibase**, and the chart's Ecto migrate hook is a silent no-op that leaves the DB empty — add the target and run `liquibase-shell <SLUG> update` yourself (step 5b).
 - **Redis index** — pick a free 0–15 on `app-valkey`; check what's taken before choosing.
 - **Secret name is `<slug>-secrets`** — the chart reads runtime secrets from `<slug>-secrets` (values.yaml `secrets.name`); make the TF InfisicalSecret CRD `managedSecretReference.secretName` match exactly. (An earlier draft used `apps-<slug>-secrets` — wrong; the live convention is `<slug>-secrets` in namespace `apps`, e.g. `ddi-secrets`, `tobornalp-secrets`, `aifighter-secrets`.)
 - **Wildcard TLS** — if the zone has a wildcard cert, reuse it; don't mint a per-subdomain cert.

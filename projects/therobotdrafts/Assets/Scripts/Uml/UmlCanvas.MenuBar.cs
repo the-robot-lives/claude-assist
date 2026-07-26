@@ -280,6 +280,8 @@ namespace TheRobotDraft.Uml
             {
                 new MenuItem("⬒ Toggle 2D / 3D view", true, () => { CloseMenu(); RunMenuCommand(NativeMacMenu.Toggle2D); }),
                 MenuItem.Separator(),
+                new MenuItem("⚙ Preferences…   (font · size · theme)   ⌘,", true, () => ShowPreferences(screenPos)),
+                MenuItem.Separator(),
                 new MenuItem("🤖 LLM settings…   (code · layout · audit)", true, () => ShowLlmSettings(screenPos)),
                 new MenuItem("👁 Vision LLM settings…   (image import)", true, () => ShowVisionLlmSettings(screenPos)),
                 MenuItem.Separator(),

@@ -51,11 +51,8 @@ inputs = {
   robotsunite_chart_path      = "${get_terragrunt_dir()}/../../../../projects/robots-unite.com/helm/robots-unite"
   therobotlives_chart_path    = "${get_terragrunt_dir()}/../../../../projects/therobotlives.com/helm/therobotlives"
   bladeofeternity_chart_path  = "${get_terragrunt_dir()}/../../../../projects/bladeofeternity.com/helm/bladeofeternity"
-  therobotknows_chart_path    = "${get_terragrunt_dir()}/../../../../projects/therobotknows.com/helm/therobotknows"
   derobotis_chart_path        = "${get_terragrunt_dir()}/../../../../projects/derobot.is/helm/derobotis"
   therobotmakes_chart_path    = "${get_terragrunt_dir()}/../../../../projects/therobotmakes.com/helm/therobotmakes"
   tobornalp_chart_path        = "${get_terragrunt_dir()}/../../../../projects/tobornalp.com/app/helm/start-app"
-  foryou_chart_path           = "${get_terragrunt_dir()}/../../../../projects/foryou.therobotlives.com/app/helm/foryou"
-  start_app_chart_path        = "${get_terragrunt_dir()}/../../../../components/start-app/helm/start-app"
   infra_portal_chart_path     = "${get_terragrunt_dir()}/../../../../projects/infra.noizu.com/helm/infra-portal"
 }

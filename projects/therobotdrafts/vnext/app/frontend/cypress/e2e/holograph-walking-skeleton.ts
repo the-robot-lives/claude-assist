@@ -6,6 +6,10 @@ import {
   When,
 } from "@badeball/cypress-cucumber-preprocessor";
 import walkingSkeleton from "../../../../fixtures/holograph-m0-m1-walking-skeleton.graph-document.json";
+import { dismissCookieBanner } from "../support/consent";
+
+/** The element the scenario selects, focuses, and inspects. */
+const SUBJECT_LABEL = "Uml3DScene";
 
 interface GraphDocumentFixture {
   id: string;
@@ -40,6 +44,13 @@ interface GraphDocumentFixture {
 
 const graphDocument = walkingSkeleton as GraphDocumentFixture;
 
+/** Mirrors riskBandFor in src/lib/holograph/analysis.ts. */
+function riskBand(value: number) {
+  if (value >= 60) return "high";
+  if (value >= 35) return "medium";
+  return "low";
+}
+
 function requireNode(label: string) {
   const node = graphDocument.nodes.find((candidate) => candidate.label === label);
   expect(node, `fixture node labelled ${label}`).to.exist;
@@ -57,72 +68,116 @@ function assertGraphDocumentShape() {
     expect(nodeIds.has(edge.targetId), `${edge.id} target exists`).to.equal(true);
   }
 
-  requireNode("M0 Contract Lane");
-  requireNode("M0 Import Lane");
-  requireNode("M1 Render Lane");
-  requireNode("M1 Interaction Lane");
-  requireNode("M1 QA Lane");
-  requireNode("Renderer Bridge");
+  requireNode("RobotDraftModel");
+  requireNode("UmlNode3D");
+  requireNode("UmlEdge3D");
+  requireNode("PatchReviewService");
+  requireNode("PlantUmlExporter");
+  requireNode(SUBJECT_LABEL);
+}
+
+/** Open the Outline tab and click the row for a model element. */
+function selectOutlineNode(label: string) {
+  cy.contains(".trd-tab", "Outline").click();
+  cy.get("[aria-label='Outline']").contains("button", label).click();
 }
 
 Given("the canonical HoloGraph walking skeleton fixture is available from the document API", () => {
   assertGraphDocumentShape();
 
-  cy.intercept("GET", "**/api/v1/docs/trd-demo", {
+  cy.intercept("GET", "**/api/v1/docs", {
+    statusCode: 200,
+    body: {
+      data: [
+        {
+          id: graphDocument.id,
+          slug: graphDocument.slug,
+          title: graphDocument.title,
+          version: graphDocument.version,
+          updatedAt: graphDocument.updatedAt,
+          summary: graphDocument.summary,
+          nodeCount: graphDocument.nodes.length,
+          edgeCount: graphDocument.edges.length,
+        },
+      ],
+    },
+  }).as("listHolographDocuments");
+
+  cy.intercept("GET", `**/api/v1/docs/${graphDocument.id}`, {
     statusCode: 200,
     body: { data: graphDocument },
   }).as("loadHolographDocument");
 });
 
 When("I open the HoloGraph workspace", () => {
+  // A previous run's autosave would pre-empt the fixture load under test.
+  cy.clearLocalStorage();
   cy.visit("/");
+  dismissCookieBanner();
+  cy.wait("@listHolographDocuments").its("response.statusCode").should("eq", 200);
+
+  // The Files tab lists every model the document API knows about; opening the fixture
+  // from there is the workspace's real load path.
+  cy.contains(".trd-tab", "Files").click();
+  cy.get("[aria-label='Files']").contains("button", graphDocument.slug).click();
   cy.wait("@loadHolographDocument").its("response.statusCode").should("eq", 200);
 });
 
 Then("the imported HoloGraph document should render", () => {
-  cy.contains("h1", "HoloGraph workspace").should("be.visible");
-  cy.contains("span", `v${graphDocument.version}`).should("be.visible");
-  cy.contains("span", `${graphDocument.nodes.length} nodes`).should("be.visible");
-  cy.contains("span", `${graphDocument.edges.length} edges`).should("be.visible");
-  cy.contains("span", "Loaded /api/v1/docs/trd-demo").should("be.visible");
-  cy.get(".hg-canvas").should("be.visible");
-  cy.get("[aria-label='Select M0 Import Lane']").should("exist");
-  cy.get("[aria-label='Select M1 Render Lane']").should("exist");
-  cy.get("[aria-label='Select Renderer Bridge']").should("exist");
-});
+  cy.get(".trd-shell").should("be.visible");
+  cy.get(".trd-three-scene").should("be.visible");
+  cy.get("[aria-label='Workspace status']").within(() => {
+    cy.contains(graphDocument.slug).should("be.visible");
+    cy.contains(`v${graphDocument.version}`).should("be.visible");
+  });
 
-When("I select the Renderer Bridge node", () => {
-  cy.get("[aria-label='Select Renderer Bridge']").click({ force: true });
-});
-
-Then("the Renderer Bridge details should be shown", () => {
-  const node = requireNode("Renderer Bridge");
-
-  cy.get("[aria-label='Selection detail panel']").within(() => {
-    cy.contains("h2", node.label).should("be.visible");
-    cy.contains(node.description).should("be.visible");
-    cy.contains("li", "aria-label Select").should("be.visible");
-    cy.contains("dd", `${node.metrics.risk} - low`).should("be.visible");
+  cy.contains(".trd-tab", "Outline").click();
+  cy.get("[aria-label='Outline']").within(() => {
+    cy.contains("button", "UmlEdge3D").should("exist");
+    cy.contains("button", "PatchReviewService").should("exist");
+    cy.contains("button", SUBJECT_LABEL).should("exist");
   });
 });
 
-When("I focus the selected HoloGraph node", () => {
-  cy.contains("button", "Focus selected").click();
+When("I select the Uml3DScene node", () => {
+  selectOutlineNode(SUBJECT_LABEL);
 });
 
-Then("the workspace should be focused on Renderer Bridge", () => {
-  cy.contains("strong", "Focused: Renderer Bridge").should("be.visible");
-  cy.contains("span", "Focused Renderer Bridge").should("be.visible");
-  cy.get("[aria-label='Select Renderer Bridge']").should("exist");
+Then("the Uml3DScene details should be shown", () => {
+  const node = requireNode(SUBJECT_LABEL);
+
+  cy.get("[aria-label='Inspector panel']").within(() => {
+    cy.get("[aria-label='Element name']").should("have.value", node.label);
+    cy.contains("label", "Package").should("exist");
+    // Metrics section is collapsed by default; open it to read the risk band.
+    cy.contains("button", "Metrics").click();
+    cy.contains("label", `Risk — ${riskBand(node.metrics.risk)}`).should("exist");
+  });
+
+  cy.get("[aria-label='Workspace status']").contains(`${node.label} selected`).should("be.visible");
+});
+
+When("I focus the selected HoloGraph node", () => {
+  cy.get("[title='Camera Controls (⇧⌘C)']").should("exist");
+  cy.contains(".trd-menu > button", "Go").click();
+  cy.contains(".trd-mi", "Frame Selected").click();
+});
+
+Then("the workspace should be focused on Uml3DScene", () => {
+  cy.get(".trd-hint").should("contain", `Framed ${SUBJECT_LABEL}`);
+  cy.get("[aria-label='Workspace status']").contains(`${SUBJECT_LABEL} selected`).should("be.visible");
 });
 
 When("I recenter the HoloGraph workspace", () => {
-  cy.contains("button", "Recenter").click();
+  cy.contains(".trd-menu > button", "Go").click();
+  cy.contains(".trd-mi", "Frame All").click();
 });
 
 Then("the whole-system HoloGraph overview should be shown", () => {
-  cy.contains("strong", "Whole system").should("be.visible");
-  cy.contains("span", "Recentered to whole-system overview").should("be.visible");
-  cy.get("[aria-label='Select M0 Import Lane']").should("exist");
-  cy.get("[aria-label='Select M1 Render Lane']").should("exist");
+  cy.get(".trd-hint").should("contain", "Framed the whole model");
+  cy.contains(".trd-tab", "Outline").click();
+  cy.get("[aria-label='Outline']").within(() => {
+    cy.contains("button", "UmlEdge3D").should("exist");
+    cy.contains("button", "PatchReviewService").should("exist");
+  });
 });

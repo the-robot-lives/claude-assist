@@ -5,6 +5,7 @@ import {
   Then,
   When,
 } from "@badeball/cypress-cucumber-preprocessor";
+import { dismissCookieBanner } from "../support/consent";
 
 const pendingUser = {
   id: "user-pending",
@@ -22,11 +23,6 @@ function passwordEmail() {
 
 function ssoEmail() {
   return `ada@${Cypress.env("ssoDomain")}`;
-}
-
-function dismissCookieBanner() {
-  cy.contains("button", "Reject optional", { timeout: 10_000 }).click({ force: true });
-  cy.get(".cookie-consent").should("not.exist");
 }
 
 Given("SSO is configured for the generated app", () => {

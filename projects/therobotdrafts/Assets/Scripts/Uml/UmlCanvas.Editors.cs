@@ -21,8 +21,8 @@ namespace TheRobotDraft.Uml
     {
         private static readonly string[] CommonMultiplicities = { "1", "0..1", "0..*", "1..*", "*" };
 
-        // Concept D form labels (demo --text-dim).
-        private static readonly Color LabelColor = TheRobotDraft.Uml.Chrome.ConceptDTheme.TextDim;
+        // Concept D form labels (demo --text-dim). Computed so a theme swap reaches it.
+        private static Color LabelColor => TheRobotDraft.Uml.Chrome.ConceptDTheme.TextDim;
 
         // --- member (attribute / operation) editor ---
 

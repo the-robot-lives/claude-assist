@@ -29,6 +29,18 @@ frontend:
       memory: 256Mi
 
 migrate:
+  # WARNING: this hook does NOT create the application schema.
+  # This app's schema lives in Liquibase changelogs (backend/db/changelog/).
+  # `Starter.Release.migrate()` runs only the Ecto migrations in
+  # priv/repo/migrations (oban tables, smart_token) -- it applies NO changelog.
+  # A fresh deploy therefore comes up against an EMPTY database and fails at
+  # runtime with "relation does not exist".
+  #
+  # THE FIX: set `migrate.liquibase.enabled: true` below. That renders an
+  # additional pre-install/pre-upgrade hook Job at weight -10, which applies the
+  # changelogs BEFORE this Ecto hook (weight -5) runs. It is opt-in and default
+  # false so existing deployments are unaffected; without it you must still
+  # apply changelogs out of band (`make migrate` or `liquibase-shell`).
   enabled: true
   command: ["bin/starter", "eval", "Starter.Release.migrate()"]
   resources:
@@ -38,6 +50,28 @@ migrate:
     limits:
       cpu: 200m
       memory: 256Mi
+
+  liquibase:
+    # Opt-in: run backend/db/changelog against the database at deploy time.
+    enabled: false
+    # Image built from backend/db/Dockerfile. Its CMD renders
+    # liquibase.properties via envsubst and runs `liquibase update`, so it needs
+    # DB_HOST/DB_PORT/DB_NAME/DB_USER/DB_PASSWORD (wired automatically from
+    # database.* and secrets.keys.dbUser/dbPassword) -- NOT an ecto:// URL.
+    # Required when enabled. NOTE: backend/db is not yet a declared build target
+    # in .infra-config.yaml; a derivative adopting this must add one.
+    image: ""
+    # Optional override; leave unset to use the image's own CMD.
+    command: []
+    extraEnv: []
+    backoffLimit: 2
+    resources:
+      requests:
+        cpu: 50m
+        memory: 256Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
 
 database:
   host: app-timescaledb.apps.svc.cluster.local

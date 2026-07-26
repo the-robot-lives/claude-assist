@@ -37,6 +37,7 @@ export default function SignupPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [userName, setUserName] = useState("");
+  const [userNameEdited, setUserNameEdited] = useState(false);
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [mobilePhone, setMobilePhone] = useState("");
@@ -55,10 +56,10 @@ export default function SignupPage() {
   }, []);
 
   useEffect(() => {
-    if (!userName && emailDomain(email)) {
+    if (!userNameEdited && emailDomain(email)) {
       setUserName(email.split("@")[0]?.replace(/[^a-zA-Z0-9_-]/g, "_") ?? "");
     }
-  }, [email, userName]);
+  }, [email, userNameEdited]);
 
   const domainProviders = useMemo(() => {
     const providers = matchingSsoProviders(email, ssoDomains);
@@ -183,7 +184,10 @@ export default function SignupPage() {
                 id="user-name"
                 type="text"
                 value={userName}
-                onChange={(e) => setUserName(e.target.value)}
+                onChange={(e) => {
+                  setUserName(e.target.value);
+                  setUserNameEdited(true);
+                }}
                 required
                 autoComplete="username"
               />

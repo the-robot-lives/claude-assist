@@ -22,6 +22,9 @@ defmodule HoloGraph.Schema.Users.User do
     field :approved_at, :utc_datetime_usec
     field :verified, :boolean, default: false
     field :flagged, :boolean, default: false
+    # Platform-admin flag (changelog 012). Read by HoloGraphWeb.Plugs.RequireAdmin;
+    # deliberately not castable — admin is granted out of band, never via user input.
+    field :admin, :boolean, default: false
     field :deleted_at, :utc_datetime_usec
     timestamps(type: :utc_datetime_usec)
   end
