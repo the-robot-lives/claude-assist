@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TheRobotDraft.Authoring.Model;
+using TheRobotDraft.Uml.Chrome;
 
 namespace TheRobotDraft.Uml
 {
@@ -24,10 +25,10 @@ namespace TheRobotDraft.Uml
             bar.SetParent(_root, false);
             bar.anchorMin = new Vector2(0f, 1f); bar.anchorMax = new Vector2(1f, 1f);
             bar.pivot = new Vector2(0f, 1f);
-            bar.sizeDelta = new Vector2(0f, 30f);
+            bar.sizeDelta = new Vector2(0f, ChromeMetrics.MenuBarHeight);
             bar.anchoredPosition = new Vector2(0f, 0f);
             var bg = barGo.AddComponent<Image>();
-            bg.color = new Color(0.085f, 0.095f, 0.12f, 1f);
+            bg.color = ConceptDTheme.Bg2;
             bg.raycastTarget = false;
 
             float x = 8f;
@@ -73,26 +74,33 @@ namespace TheRobotDraft.Uml
             CreateMenu(screenPos, "Help", items);
         }
 
-        /// <summary>One menu-bar button; opens its dropdown anchored at the button's bottom-left corner.</summary>
+        /// <summary>One menu-bar button; opens its dropdown anchored at the button's bottom-left corner.
+        /// Concept D demo: plain labels (no chevrons), tight macOS-like spacing.</summary>
         private void AddMenuBarButton(RectTransform bar, string label, ref float x, System.Action<Vector2> open)
         {
-            float w = 26f + label.Length * 9f;
+            // ~10px pad + ~7.5px per glyph — closer to SF/macOS menu density than the old wide estimate.
+            float w = Mathf.Max(40f, 20f + label.Length * 7.5f);
             var go = new GameObject("MenuBar:" + label, typeof(RectTransform));
             var rt = (RectTransform)go.transform;
             rt.SetParent(bar, false);
             rt.anchorMin = rt.anchorMax = new Vector2(0f, 1f);
             rt.pivot = new Vector2(0f, 1f);
-            rt.sizeDelta = new Vector2(w, 26f);
-            rt.anchoredPosition = new Vector2(x, -2f);
+            const float h = ChromeMetrics.MenuBarButtonHeight;
+            rt.sizeDelta = new Vector2(w, h);
+            rt.anchoredPosition = new Vector2(x, -(ChromeMetrics.MenuBarHeight - h) * 0.5f);
             var img = go.AddComponent<Image>();
-            img.color = new Color(0.085f, 0.095f, 0.12f, 1f);
+            img.color = ConceptDTheme.Bg2;
             var btn = go.AddComponent<Button>();
             btn.targetGraphic = img;
             var colors = btn.colors;
-            colors.highlightedColor = new Color(1.3f, 1.5f, 1.9f, 1f);
+            // Demo: menu hover → bg3 surface lift.
+            colors.normalColor = Color.white;
+            colors.highlightedColor = new Color(1.25f, 1.28f, 1.32f, 1f);
+            colors.pressedColor = new Color(0.9f, 0.9f, 0.9f, 1f);
             btn.colors = colors;
-            MakeText(rt, label + "  ▾", Vector2.zero, new Vector2(w, 26f), 14,
-                new Color(0.82f, 0.86f, 0.93f, 1f), TextAnchor.MiddleCenter).raycastTarget = false;
+            MakeText(rt, label, Vector2.zero, new Vector2(w, h), ChromeMetrics.FontMenu,
+                ConceptDTheme.Text, TextAnchor.MiddleCenter).raycastTarget = false;
+            UiTooltip.Bind(go, label + " menu", _font);
 
             btn.onClick.AddListener(() =>
             {
@@ -101,7 +109,7 @@ namespace TheRobotDraft.Uml
                 rt.GetWorldCorners(corners);
                 open(new Vector2(corners[0].x, corners[0].y - 2f)); // bottom-left, just under the button
             });
-            x += w + 2f;
+            x += w + 1f;
         }
 
         // ------------------------------------------------------------------ File

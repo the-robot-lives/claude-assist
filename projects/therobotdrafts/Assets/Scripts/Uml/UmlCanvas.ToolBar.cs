@@ -3,6 +3,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TheRobotDraft.Authoring.Model;
 using TheRobotDraft.Authoring.State;
+using TheRobotDraft.Uml.Chrome;
 
 namespace TheRobotDraft.Uml
 {
@@ -22,7 +23,7 @@ namespace TheRobotDraft.Uml
         private ElementKind _toolPlaceKind = ElementKind.Class;
         private ElementId _toolConnectSource = ElementId.None;
 
-        // Toolbar widget refs for state refresh.
+        // Toolbar widget refs for state refresh + chrome reflow.
         private readonly Image[] _toolModeBg = new Image[3];
         private readonly Text[] _toolModeText = new Text[3];
         private GameObject _toolRelGroup;
@@ -31,15 +32,39 @@ namespace TheRobotDraft.Uml
         private Text _toolPlaceText;
         private Text _toolModeChip;
         private Text _toolCrumb;
+        private RectTransform _contextToolbar;
+        private RectTransform _toolModesRt;
+        private RectTransform _toolRelRt;
+        private RectTransform _toolPlaceRt;
+        private RectTransform _toolCrumbRt;
+        private RectTransform _toolModeChipRt;
 
-        private static readonly Color ToolBarBg = new Color(0.075f, 0.085f, 0.105f, 1f);
-        private static readonly Color ToolAccent = new Color(0.216f, 0.784f, 0.765f, 1f);      // cyan-teal
-        private static readonly Color ToolAccentWarm = new Color(1f, 0.85f, 0.63f, 1f);        // connect
-        private static readonly Color ToolIdleBg = new Color(0.10f, 0.115f, 0.14f, 1f);
-        private static readonly Color ToolIdleText = new Color(0.62f, 0.67f, 0.74f, 1f);
-        private static readonly Color ToolActiveText = new Color(0.03f, 0.16f, 0.16f, 1f);
+        // Concept D demo tokens (design/nav-redesign/demo).
+        private static readonly Color ToolBarBg = ConceptDTheme.Bg2;
+        private static readonly Color ToolAccent = ConceptDTheme.Accent;
+        private static readonly Color ToolAccentWarm = ConceptDTheme.Warm;
+        private static readonly Color ToolIdleBg = ConceptDTheme.Bg;
+        private static readonly Color ToolIdleText = ConceptDTheme.TextDim;
+        private static readonly Color ToolActiveText = ConceptDTheme.AccentOn;
 
-        internal const float ContextToolbarHeight = 34f;
+        /// <summary>Alias onto the shell layout budget; see <see cref="ChromeMetrics"/>.</summary>
+        internal const float ContextToolbarHeight = ChromeMetrics.ContextToolbarHeight;
+
+        // Segmented mode control (demo .modes: 2px track padding, .mode-btn 4px/16px pad).
+        private const float SegBtnW = 84f;
+        private const float SegBtnH = 26f;
+        private const float SegPad = 2f;
+        private const float SegTrackW = SegBtnW * 3f + SegPad * 2f;
+        private const float CrumbWidth = 200f;
+        /// <summary>X of the mode segmented control, right of the breadcrumb.</summary>
+        private const float ModesX = 12f + CrumbWidth + 10f;
+        /// <summary>X of the Connect / Place pickers, right of the mode control.</summary>
+        private const float AfterModesX = ModesX + SegTrackW + 10f;
+        /// <summary>
+        /// Width consumed by the toolbar's right cluster (mode chip · ⌘K · Layout ▾), measured from
+        /// the window's right edge. The HUD row continues leftward from here.
+        /// </summary>
+        internal const float ToolbarRightClusterWidth = 326f;
 
         /// <summary>Relationship kinds offered by the Connect picker (the core UML set; context menus
         /// still offer the full <see cref="EdgeKind"/> vocabulary per family).</summary>
@@ -62,29 +87,35 @@ namespace TheRobotDraft.Uml
         {
             var barGo = new GameObject("ContextToolbar", typeof(RectTransform));
             var bar = (RectTransform)barGo.transform;
+            _contextToolbar = bar;
             bar.SetParent(_root, false);
             bar.anchorMin = new Vector2(0f, 1f); bar.anchorMax = new Vector2(1f, 1f);
             bar.pivot = new Vector2(0f, 1f);
             bar.sizeDelta = new Vector2(0f, ContextToolbarHeight);
-            bar.anchoredPosition = new Vector2(0f, -30f); // directly under the 30px menu bar
+            bar.anchoredPosition = new Vector2(0f, -ChromeMetrics.ContextToolbarTop); // directly under the menu bar
             var bg = barGo.AddComponent<Image>();
             bg.color = ToolBarBg;
             bg.raycastTarget = false;
 
-            // Segmented mode control, left-flowed after the breadcrumb (center-anchoring collides with
-            // the right cluster at narrow window widths).
+            // Segmented mode control (demo .modes): dark track + accent pill when active.
             var segGo = new GameObject("ToolModes", typeof(RectTransform));
             var seg = (RectTransform)segGo.transform;
+            _toolModesRt = seg;
             seg.SetParent(bar, false);
             seg.anchorMin = seg.anchorMax = new Vector2(0f, 0.5f);
             seg.pivot = new Vector2(0f, 0.5f);
-            const float segBtnW = 88f, segBtnH = 24f;
-            seg.anchoredPosition = new Vector2(286f, 0f);
-            seg.sizeDelta = new Vector2(segBtnW * 3f + 4f, segBtnH + 4f);
+            seg.anchoredPosition = new Vector2(ModesX, 0f);
+            seg.sizeDelta = new Vector2(SegTrackW, SegBtnH + SegPad * 2f);
             var segBg = segGo.AddComponent<Image>();
-            segBg.color = new Color(0.055f, 0.065f, 0.08f, 1f);
+            MacOsControlKit.ApplyPanel(segBg, ConceptDTheme.Bg);
 
             string[] labels = { "Select", "Connect", "Place" };
+            string[] tips =
+            {
+                "Select (V) — pick and move elements",
+                "Connect (C) — draw relationships",
+                "Place (P) — drop the armed element kind",
+            };
             for (int i = 0; i < 3; i++)
             {
                 int index = i;
@@ -93,83 +124,95 @@ namespace TheRobotDraft.Uml
                 bRt.SetParent(seg, false);
                 bRt.anchorMin = bRt.anchorMax = new Vector2(0f, 0.5f);
                 bRt.pivot = new Vector2(0f, 0.5f);
-                bRt.sizeDelta = new Vector2(segBtnW, segBtnH);
-                bRt.anchoredPosition = new Vector2(2f + i * segBtnW, 0f);
+                bRt.sizeDelta = new Vector2(SegBtnW, SegBtnH);
+                bRt.anchoredPosition = new Vector2(SegPad + i * SegBtnW, 0f);
                 var img = bGo.AddComponent<Image>();
+                MacOsControlKit.ApplySegment(img, false);
                 _toolModeBg[i] = img;
                 var btn = bGo.AddComponent<Button>();
                 btn.targetGraphic = img;
                 btn.onClick.AddListener(() => SetToolMode((ToolMode)index));
-                var txt = MakeText(bRt, labels[i], Vector2.zero, new Vector2(segBtnW, segBtnH), 14,
-                    ToolIdleText, TextAnchor.MiddleCenter);
+                var txt = MakeText(bRt, labels[i], Vector2.zero, new Vector2(SegBtnW, SegBtnH),
+                    ChromeMetrics.FontControl, ToolIdleText, TextAnchor.MiddleCenter);
                 _toolModeText[i] = txt;
+                UiTooltip.Bind(bGo, tips[i], _font);
             }
 
             // Connect relationship picker (visible only in Connect mode).
             _toolRelGroup = new GameObject("RelPicker", typeof(RectTransform));
             var relRt = (RectTransform)_toolRelGroup.transform;
+            _toolRelRt = relRt;
             relRt.SetParent(bar, false);
             relRt.anchorMin = relRt.anchorMax = new Vector2(0f, 0.5f);
             relRt.pivot = new Vector2(0f, 0.5f);
-            relRt.sizeDelta = new Vector2(170f, 24f);
-            relRt.anchoredPosition = new Vector2(286f + segBtnW * 3f + 14f, 0f);
+            relRt.sizeDelta = new Vector2(170f, SegBtnH);
+            relRt.anchoredPosition = new Vector2(AfterModesX, 0f);
             var relImg = _toolRelGroup.AddComponent<Image>();
-            relImg.color = ToolIdleBg;
+            MacOsControlKit.ApplyButton(relImg, ConceptDTheme.Secondary);
             var relBtn = _toolRelGroup.AddComponent<Button>();
             relBtn.targetGraphic = relImg;
+            MacOsControlKit.ApplyButtonInteraction(relBtn, ConceptDTheme.Secondary);
             relBtn.onClick.AddListener(() =>
             {
                 var corners = new Vector3[4];
                 relRt.GetWorldCorners(corners);
                 ShowConnectKindMenu(new Vector2(corners[0].x, corners[0].y - 2f));
             });
-            _toolRelText = MakeText(relRt, RelLabel(_toolConnectKind) + "  ▾", new Vector2(8f, 0f),
-                new Vector2(160f, 24f), 13, ToolAccentWarm, TextAnchor.MiddleLeft);
+            _toolRelText = MakeText(relRt, RelLabel(_toolConnectKind) + " ▾", new Vector2(8f, 0f),
+                new Vector2(160f, SegBtnH), ChromeMetrics.FontControl, ToolAccentWarm, TextAnchor.MiddleLeft);
+            UiTooltip.Bind(_toolRelGroup, "Relationship type for Connect mode", _font);
 
             // Place kind chip (visible only in Place mode).
             _toolPlaceGroup = new GameObject("PlaceKind", typeof(RectTransform));
             var plRt = (RectTransform)_toolPlaceGroup.transform;
+            _toolPlaceRt = plRt;
             plRt.SetParent(bar, false);
             plRt.anchorMin = plRt.anchorMax = new Vector2(0f, 0.5f);
             plRt.pivot = new Vector2(0f, 0.5f);
-            plRt.sizeDelta = new Vector2(150f, 24f);
-            plRt.anchoredPosition = new Vector2(286f + segBtnW * 3f + 14f, 0f);
+            plRt.sizeDelta = new Vector2(150f, SegBtnH);
+            plRt.anchoredPosition = new Vector2(AfterModesX, 0f);
             var plImg = _toolPlaceGroup.AddComponent<Image>();
-            plImg.color = ToolIdleBg;
+            MacOsControlKit.ApplyButton(plImg, ConceptDTheme.Secondary);
             var plBtn = _toolPlaceGroup.AddComponent<Button>();
             plBtn.targetGraphic = plImg;
+            MacOsControlKit.ApplyButtonInteraction(plBtn, ConceptDTheme.Secondary);
             plBtn.onClick.AddListener(() =>
             {
                 var corners = new Vector3[4];
                 plRt.GetWorldCorners(corners);
                 ShowPlaceKindMenu(new Vector2(corners[0].x, corners[0].y - 2f));
             });
-            _toolPlaceText = MakeText(plRt, _toolPlaceKind + "  ▾", new Vector2(8f, 0f),
+            _toolPlaceText = MakeText(plRt, _toolPlaceKind + " ▾", new Vector2(8f, 0f),
                 new Vector2(140f, 24f), 13, ToolAccent, TextAnchor.MiddleLeft);
+            UiTooltip.Bind(_toolPlaceGroup, "Element kind armed for Place mode", _font);
 
             // Breadcrumb on the left edge (model ▸ … ▸ active page), kept fresh by the status poll.
             _toolCrumb = MakeText(bar, "", new Vector2(14f, 0f), new Vector2(264f, ContextToolbarHeight), 12,
-                new Color(0.55f, 0.61f, 0.69f, 1f), TextAnchor.MiddleLeft);
+                ConceptDTheme.TextDim, TextAnchor.MiddleLeft);
+            _toolCrumbRt = (RectTransform)_toolCrumb.transform;
+            UiTooltip.Bind(_toolCrumb.gameObject, "Active package / diagram path", _font);
 
-            // Right cluster (compact): 2D · ⟲ · Cam · Layout ▾ · ⌘K · mode chip.
+            // Right cluster (compact): Layout ▾ · ⌘K · mode chip (Cam/2D live in HUD row; reflowed with inspector).
             float rx = -8f;
             _toolModeChip = MakeText(bar, "SELECT", Vector2.zero, new Vector2(170f, ContextToolbarHeight), 13,
                 ToolAccent, TextAnchor.MiddleRight);
             var chipRt = (RectTransform)_toolModeChip.transform;
+            _toolModeChipRt = chipRt;
             chipRt.anchorMin = chipRt.anchorMax = new Vector2(1f, 1f);
             chipRt.pivot = new Vector2(1f, 1f);
             chipRt.anchoredPosition = new Vector2(rx, 0f);
             rx -= 178f;
 
-            AddToolbarRightButton(bar, "⌘K", 40f, ref rx, () => ToggleCommandPalette());
-            AddToolbarRightButton(bar, "Layout ▾", 84f, ref rx, () =>
+            AddToolbarRightButton(bar, "⌘K", 40f, ref rx, "Command palette", () => ToggleCommandPalette());
+            AddToolbarRightButton(bar, "Layout ▾", 84f, ref rx, "Layout algorithms", () =>
                 ShowCanvasLayoutMenu(new Vector2(Screen.width - 320f * ScaleFactor, (Screen.height / ScaleFactor - 64f) * ScaleFactor)));
 
             BuildSelectionToolbar();
             RefreshToolBar();
         }
 
-        private void AddToolbarRightButton(RectTransform bar, string label, float width, ref float rx, System.Action onClick)
+        private void AddToolbarRightButton(RectTransform bar, string label, float width, ref float rx,
+            string tooltip, System.Action onClick)
         {
             var go = new GameObject("ToolbarBtn:" + label, typeof(RectTransform));
             var rt = (RectTransform)go.transform;
@@ -179,12 +222,14 @@ namespace TheRobotDraft.Uml
             rt.sizeDelta = new Vector2(width, 24f);
             rt.anchoredPosition = new Vector2(rx, 0f);
             var img = go.AddComponent<Image>();
-            img.color = ToolIdleBg;
+            MacOsControlKit.ApplyButton(img, ConceptDTheme.Secondary);
             var btn = go.AddComponent<Button>();
             btn.targetGraphic = img;
+            MacOsControlKit.ApplyButtonInteraction(btn, ConceptDTheme.Secondary);
             btn.onClick.AddListener(() => onClick());
             MakeText(rt, label, Vector2.zero, new Vector2(width, 24f), 12,
-                new Color(0.72f, 0.77f, 0.83f, 1f), TextAnchor.MiddleCenter).raycastTarget = false;
+                ConceptDTheme.Text, TextAnchor.MiddleCenter).raycastTarget = false;
+            UiTooltip.Bind(go, tooltip, _font);
             rx -= width + 8f;
         }
 
@@ -270,8 +315,21 @@ namespace TheRobotDraft.Uml
             {
                 bool active = (int)_toolMode == i;
                 bool warm = active && _toolMode == ToolMode.Connect;
-                _toolModeBg[i].color = active ? (warm ? ToolAccentWarm : ToolAccent) : ToolIdleBg;
-                _toolModeText[i].color = active ? ToolActiveText : ToolIdleText;
+                // Active segment = solid accent (or warm for Connect); idle = transparent track cell.
+                if (active)
+                {
+                    MacOsControlKit.ApplySegment(_toolModeBg[i], true);
+                    if (warm) _toolModeBg[i].color = ToolAccentWarm;
+                    _toolModeText[i].color = warm ? ConceptDTheme.WarmOn : ToolActiveText;
+                    _toolModeText[i].fontStyle = FontStyle.Bold;
+                }
+                else
+                {
+                    MacOsControlKit.ApplySegment(_toolModeBg[i], false);
+                    _toolModeBg[i].color = new Color(0f, 0f, 0f, 0.001f); // invisible but raycastable
+                    _toolModeText[i].color = ToolIdleText;
+                    _toolModeText[i].fontStyle = FontStyle.Normal;
+                }
             }
             if (_toolRelGroup != null) _toolRelGroup.SetActive(_toolMode == ToolMode.Connect);
             if (_toolPlaceGroup != null) _toolPlaceGroup.SetActive(_toolMode == ToolMode.Place);
@@ -316,7 +374,7 @@ namespace TheRobotDraft.Uml
             rt.pivot = new Vector2(0.5f, 1f);
             rt.sizeDelta = new Vector2(w, inputH + maxRows * rowH + 12f);
             rt.anchoredPosition = new Vector2(0f, -100f);
-            panel.AddComponent<Image>().color = new Color(0.10f, 0.115f, 0.14f, 0.99f);
+            TheRobotDraft.Uml.Chrome.MacOsControlKit.ApplyPopover(panel.AddComponent<Image>());
 
             var inputGo = new GameObject("KindInput", typeof(RectTransform));
             var inRt = (RectTransform)inputGo.transform;
@@ -324,7 +382,7 @@ namespace TheRobotDraft.Uml
             inRt.anchorMin = new Vector2(0f, 1f); inRt.anchorMax = new Vector2(1f, 1f);
             inRt.pivot = new Vector2(0f, 1f);
             inRt.sizeDelta = new Vector2(0f, inputH);
-            inputGo.AddComponent<Image>().color = new Color(0.075f, 0.085f, 0.105f, 1f);
+            TheRobotDraft.Uml.Chrome.MacOsControlKit.ApplyTextField(inputGo.AddComponent<Image>());
             var input = inputGo.AddComponent<InputField>();
             var textComp = MakeText(inRt, "", new Vector2(12f, 0f), new Vector2(w - 24f, inputH), 16,
                 new Color(0.95f, 0.97f, 1f, 1f), TextAnchor.MiddleLeft);
@@ -390,7 +448,7 @@ namespace TheRobotDraft.Uml
             _selToolbar.anchorMin = _selToolbar.anchorMax = new Vector2(0f, 0f);
             _selToolbar.pivot = new Vector2(0f, 0.5f);
             _selToolbar.sizeDelta = new Vector2(4f + 4f * 48f, 30f);
-            go.AddComponent<Image>().color = new Color(0.10f, 0.115f, 0.14f, 0.96f);
+            TheRobotDraft.Uml.Chrome.MacOsControlKit.ApplyPopover(go.AddComponent<Image>());
 
             float bx = 2f;
             void Btn(string label, System.Action act)
@@ -403,9 +461,12 @@ namespace TheRobotDraft.Uml
                 brt.sizeDelta = new Vector2(46f, 26f);
                 brt.anchoredPosition = new Vector2(bx, 0f);
                 var img = b.AddComponent<Image>();
-                img.color = new Color(0.118f, 0.137f, 0.161f, 1f);
+                TheRobotDraft.Uml.Chrome.MacOsControlKit.ApplyButton(img,
+                    TheRobotDraft.Uml.Chrome.MacOsControlKit.SecondaryFill);
                 var btn = b.AddComponent<Button>();
                 btn.targetGraphic = img;
+                TheRobotDraft.Uml.Chrome.MacOsControlKit.ApplyButtonInteraction(btn,
+                    TheRobotDraft.Uml.Chrome.MacOsControlKit.SecondaryFill);
                 btn.onClick.AddListener(() => act());
                 MakeText(brt, label, Vector2.zero, brt.sizeDelta, 12,
                     new Color(0.78f, 0.83f, 0.89f, 1f), TextAnchor.MiddleCenter).raycastTarget = false;

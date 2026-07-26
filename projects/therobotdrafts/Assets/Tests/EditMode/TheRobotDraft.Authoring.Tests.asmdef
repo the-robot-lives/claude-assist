@@ -3,6 +3,8 @@
     "rootNamespace": "TheRobotDraft.Authoring.Tests",
     "references": [
         "TheRobotDraft.Authoring",
+        "TheRobotDraft.UmlChrome",
+        "UnityEngine.UI",
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner"
     ],

@@ -108,7 +108,7 @@ namespace TheRobotDraft.Uml
             rt.pivot = new Vector2(0.5f, 1f);
             rt.sizeDelta = new Vector2(w, inputH + maxRows * rowH + 12f);
             rt.anchoredPosition = new Vector2(0f, -110f);
-            panel.AddComponent<Image>().color = new Color(0.10f, 0.115f, 0.145f, 0.99f);
+            TheRobotDraft.Uml.Chrome.MacOsControlKit.ApplyPopover(panel.AddComponent<Image>());
 
             // Input row.
             var inputGo = new GameObject("PaletteInput", typeof(RectTransform));
@@ -118,7 +118,8 @@ namespace TheRobotDraft.Uml
             inRt.pivot = new Vector2(0f, 1f);
             inRt.sizeDelta = new Vector2(0f, inputH);
             inRt.anchoredPosition = Vector2.zero;
-            inputGo.AddComponent<Image>().color = new Color(0.075f, 0.085f, 0.105f, 1f);
+            var paletteImg = inputGo.AddComponent<Image>();
+            TheRobotDraft.Uml.Chrome.MacOsControlKit.ApplyTextField(paletteImg);
             _paletteInput = inputGo.AddComponent<InputField>();
             var textComp = MakeText((RectTransform)inputGo.transform, "", new Vector2(14f, 0f), new Vector2(w - 28f, inputH), 18,
                 new Color(0.95f, 0.97f, 1f, 1f), TextAnchor.MiddleLeft);

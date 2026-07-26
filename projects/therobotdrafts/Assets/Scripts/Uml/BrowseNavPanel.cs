@@ -58,6 +58,10 @@ namespace TheRobotDraft.Uml
         /// on a diagram row (canvas seeds a default position).
         void RequestPlacement(ElementId element, ElementId diagram, Vector2? modelPos);
 
+        /// True when a drop at this screen point lands in the diagram viewport rather than on
+        /// chrome (docks, bars). Guards drag-to-link the same way the palette drag is guarded.
+        bool IsCanvasDropPoint(Vector2 screenPos);
+
         void Flash(string msg);
     }
 
@@ -70,12 +74,9 @@ namespace TheRobotDraft.Uml
     /// </summary>
     public sealed class BrowseNavPanel
     {
-        private const float Width = 248f;
-        private const float CollapsedWidth = 28f;
         private const float RowH = 24f;
         private const float SearchH = 30f;
         private const float IndentPx = 14f;
-        private const float TopClear = 70f; // clears the tab bar + hint line, like the palette
 
         private readonly RectTransform _root;
         private readonly Font _font;
@@ -84,9 +85,9 @@ namespace TheRobotDraft.Uml
         private Canvas _canvas;
 
         private RectTransform _panel, _body, _content;
-        private Text _toggleText;
-        private bool _collapsed;
         private string _search = "";
+        /// <summary>Effective width, supplied by the host panel at build time.</summary>
+        private float _width;
 
         // Per-node disclosure state (keyed by ElementId; cf. palette's _paletteCollapsed by title).
         private readonly HashSet<ElementId> _expanded = new();
@@ -105,36 +106,37 @@ namespace TheRobotDraft.Uml
         }
 
         private float Scale => _canvas != null ? _canvas.scaleFactor : 1f;
-        public float ActiveWidth => _collapsed ? CollapsedWidth : Width;
 
         // ---------------------------------------------------------------
-        // Build — one-time. Right-docked analog of UmlCanvas.BuildPalette().
+        // Build — one-time, into the left palette's Outline tab.
         // ---------------------------------------------------------------
-        public void Build()
+        /// <summary>
+        /// Build the model tree into <paramref name="host"/> — the content area of the left
+        /// palette's Outline tab (IA v2: "Left rail → Model Browser", panel tabs Files · Outline ·
+        /// Recents). The host owns the panel surface, width, collapse state and tab visibility;
+        /// this class owns only the filter box and the scrolling tree.
+        /// </summary>
+        public void Build(RectTransform host, float width)
         {
             _canvas = _root.GetComponentInParent<Canvas>();
+            _width = width;
 
             var container = new GameObject("BrowseNav", typeof(RectTransform));
             _panel = (RectTransform)container.transform;
-            _panel.SetParent(_root, false);
-            _panel.anchorMin = new Vector2(1f, 0f); _panel.anchorMax = new Vector2(1f, 1f);
-            _panel.pivot = new Vector2(1f, 1f);
-            _panel.offsetMin = new Vector2(-Width, 8f);
-            _panel.offsetMax = new Vector2(0f, -TopClear);
-            container.AddComponent<Image>().color = new Color(0.12f, 0.13f, 0.16f, 0.97f);
+            _panel.SetParent(host, false);
+            _panel.anchorMin = Vector2.zero; _panel.anchorMax = Vector2.one;
+            _panel.offsetMin = Vector2.zero; _panel.offsetMax = Vector2.zero;
+            _body = _panel; // the host already supplies the panel surface
 
-            var bodyGo = new GameObject("Body", typeof(RectTransform));
-            _body = (RectTransform)bodyGo.transform;
-            _body.SetParent(_panel, false);
-            _body.anchorMin = Vector2.zero; _body.anchorMax = Vector2.one;
-            _body.offsetMin = Vector2.zero; _body.offsetMax = Vector2.zero;
+            // Invisible but raycastable, so a wheel over blank tree area resolves to THIS
+            // ScrollRect. Without it the event falls through to the palette's outer scroller,
+            // whose content is empty on the Outline tab — the tree would simply refuse to scroll.
+            var catcher = container.AddComponent<Image>();
+            catcher.color = new Color(0f, 0f, 0f, 0f);
+            catcher.raycastTarget = true;
 
-            var title = MakeText(_body, "BROWSE", new Vector2(8f, -6f), new Vector2(Width - 16f, 18f), 12,
-                new Color(0.62f, 0.69f, 0.79f, 1f), TextAnchor.MiddleLeft);
-            title.fontStyle = FontStyle.Bold; title.raycastTarget = false;
-
-            var search = MakeInput(_body, new Vector2(6f, -26f), Width - 12f, _search, "filter…");
-            ((RectTransform)search.transform).sizeDelta = new Vector2(Width - 12f, SearchH);
+            var search = MakeInput(_body, new Vector2(6f, -4f), _width - 12f, _search, "filter model…");
+            ((RectTransform)search.transform).sizeDelta = new Vector2(_width - 12f, SearchH);
             search.onValueChanged.AddListener(v => { _search = v ?? ""; RebuildTree(); });
 
             var viewport = new GameObject("Viewport", typeof(RectTransform));
@@ -143,7 +145,7 @@ namespace TheRobotDraft.Uml
             vrt.anchorMin = Vector2.zero; vrt.anchorMax = Vector2.one;
             vrt.pivot = new Vector2(0f, 1f);
             vrt.offsetMin = Vector2.zero;
-            vrt.offsetMax = new Vector2(0f, -(SearchH + 30f)); // clear title + search box
+            vrt.offsetMax = new Vector2(0f, -(SearchH + 8f)); // clear the filter box
             viewport.AddComponent<RectMask2D>();
 
             var scroll = container.AddComponent<ScrollRect>();
@@ -158,8 +160,6 @@ namespace TheRobotDraft.Uml
             _content.anchoredPosition = Vector2.zero;
             scroll.viewport = vrt; scroll.content = _content;
 
-            BuildCollapseToggle();
-            ApplyCollapse();
             RebuildTree();
         }
 
@@ -169,7 +169,7 @@ namespace TheRobotDraft.Uml
         // ---------------------------------------------------------------
         public void RebuildTree()
         {
-            if (_content == null || _collapsed) return;
+            if (_content == null) return;
             for (int i = _content.childCount - 1; i >= 0; i--) Object.Destroy(_content.GetChild(i).gameObject);
             _rowBg.Clear();
 
@@ -181,7 +181,7 @@ namespace TheRobotDraft.Uml
             if (_rowBg.Count == 0)
             {
                 MakeText(_content, q.Length > 0 ? "no matches" : "no diagrams yet",
-                    new Vector2(8f, y), new Vector2(Width - 16f, 22f), 13,
+                    new Vector2(8f, y), new Vector2(_width - 16f, 22f), 13,
                     new Color(0.55f, 0.60f, 0.68f, 1f), TextAnchor.MiddleLeft).raycastTarget = false;
                 y -= RowH;
             }
@@ -216,7 +216,7 @@ namespace TheRobotDraft.Uml
             rt.SetParent(_content, false);
             rt.anchorMin = rt.anchorMax = new Vector2(0f, 1f);
             rt.pivot = new Vector2(0f, 1f);
-            rt.sizeDelta = new Vector2(Width - 10f, RowH - 1f);
+            rt.sizeDelta = new Vector2(_width - 10f, RowH - 1f);
             rt.anchoredPosition = new Vector2(4f, y);
 
             var bg = go.AddComponent<Image>();
@@ -243,9 +243,13 @@ namespace TheRobotDraft.Uml
             if (!isDiagram && IsShared(id)) prefix = "◆ ";
 
             var label = MakeText(rt, prefix + (el.Name ?? "?"), new Vector2(x + 4f, 0f),
-                new Vector2(Width - x - 18f, RowH - 1f), isDiagram ? 14 : 13,
-                isDiagram ? new Color(0.90f, 0.94f, 1f, 1f) : new Color(0.82f, 0.86f, 0.92f, 1f),
+                new Vector2(_width - x - 18f, RowH - 1f),
+                TheRobotDraft.Uml.Chrome.ChromeMetrics.FontRow,
+                isDiagram
+                    ? TheRobotDraft.Uml.Chrome.ConceptDTheme.Text
+                    : TheRobotDraft.Uml.Chrome.ConceptDTheme.TextDim,
                 TextAnchor.MiddleLeft);
+            if (isDiagram) label.fontStyle = FontStyle.Bold;
             label.raycastTarget = false;
         }
 
@@ -320,7 +324,16 @@ namespace TheRobotDraft.Uml
                 return;
             }
 
-            // Dropped off the tree (canvas): place into the ACTIVE diagram at the drop point.
+            // Dropped off the tree: only the diagram viewport is a valid target. Without this the
+            // drop would land on chrome (tab strip, filter box, status bar) and still place the
+            // element at a model coordinate sitting behind the dock.
+            if (!_actions.IsCanvasDropPoint(screenPos))
+            {
+                _actions.Flash("drop on a diagram row or the canvas to link");
+                return;
+            }
+
+            // Place into the ACTIVE diagram at the drop point.
             if (_source.ActiveDiagram.IsValid)
                 TryPlace(element, _source.ActiveDiagram, _source.ScreenToModel(screenPos));
         }
@@ -341,43 +354,7 @@ namespace TheRobotDraft.Uml
                 prev.color = RowColor(_selected, IsDiagramId(_selected));
             _selected = selected;
             if (_rowBg.TryGetValue(_selected, out var now) && now != null)
-                now.color = new Color(0.20f, 0.42f, 0.52f, 1f);
-        }
-
-        // ---------------------------------------------------------------
-        // Collapse toggle (cf. BuildPaletteToggle / ApplyPaletteCollapse).
-        // ---------------------------------------------------------------
-        private void BuildCollapseToggle()
-        {
-            var go = new GameObject("BrowseCollapse", typeof(RectTransform));
-            var rt = (RectTransform)go.transform;
-            rt.SetParent(_panel, false);
-            rt.anchorMin = rt.anchorMax = new Vector2(0f, 1f);
-            rt.pivot = new Vector2(0f, 1f);
-            rt.sizeDelta = new Vector2(CollapsedWidth, 44f);
-            rt.anchoredPosition = Vector2.zero;
-            var img = go.AddComponent<Image>();
-            img.color = new Color(0.18f, 0.22f, 0.28f, 1f);
-            var btn = go.AddComponent<Button>();
-            btn.targetGraphic = img;
-            btn.onClick.AddListener(() =>
-            {
-                _collapsed = !_collapsed;
-                ApplyCollapse();
-                if (!_collapsed) RebuildTree();
-                _actions.Flash(_collapsed ? "browse panel collapsed" : "browse panel expanded");
-            });
-            _toggleText = MakeText(rt, "", Vector2.zero, rt.sizeDelta, 18,
-                new Color(0.92f, 0.95f, 1f, 1f), TextAnchor.MiddleCenter);
-            _toggleText.raycastTarget = false;
-        }
-
-        private void ApplyCollapse()
-        {
-            if (_panel == null) return;
-            _panel.offsetMin = new Vector2(-ActiveWidth, 8f);
-            if (_body != null) _body.gameObject.SetActive(!_collapsed);
-            if (_toggleText != null) _toggleText.text = _collapsed ? "<" : ">";
+                now.color = TheRobotDraft.Uml.Chrome.ConceptDTheme.SelectionRow;
         }
 
         // ---------------------------------------------------------------
@@ -413,9 +390,16 @@ namespace TheRobotDraft.Uml
             return false;
         }
 
+        /// <summary>
+        /// Row fill. Must stay distinct from the host panel surface (<c>ConceptDTheme.Panel</c>) —
+        /// the tree now sits inside the left palette, which paints that same color, so tinting
+        /// rows with Panel would render them invisible.
+        /// </summary>
         private Color RowColor(ElementId id, bool isDiagram) => id == _selected
-            ? new Color(0.20f, 0.42f, 0.52f, 1f)
-            : new Color(0.15f, 0.17f, 0.21f, isDiagram ? 1f : 0.85f);
+            ? TheRobotDraft.Uml.Chrome.ConceptDTheme.SelectionRow
+            : isDiagram
+                ? TheRobotDraft.Uml.Chrome.ConceptDTheme.Bg3
+                : TheRobotDraft.Uml.Chrome.ConceptDTheme.MenuRow;
 
         private GameObject MakeGhost(string label)
         {
@@ -464,7 +448,8 @@ namespace TheRobotDraft.Uml
             inRt.pivot = new Vector2(0f, 1f);
             inRt.sizeDelta = new Vector2(width, 32f);
             inRt.anchoredPosition = topLeft;
-            inputGo.AddComponent<Image>().color = new Color(0.20f, 0.22f, 0.27f, 1f);
+            var fieldImg = inputGo.AddComponent<Image>();
+            TheRobotDraft.Uml.Chrome.MacOsControlKit.ApplyTextField(fieldImg);
             var input = inputGo.AddComponent<InputField>();
 
             var textComp = MakeText(inRt, "", new Vector2(8f, 0f), new Vector2(width - 16f, 32f), 15,

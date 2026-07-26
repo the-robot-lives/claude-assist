@@ -136,7 +136,9 @@ namespace TheRobotDraft.Uml
             var ort = (RectTransform)overlay.transform;
             ort.SetParent(_root, false);
             Stretch(ort);
-            overlay.AddComponent<Image>().color = new Color(0.05f, 0.06f, 0.08f, 0.92f);
+            TheRobotDraft.Uml.Chrome.MacOsControlKit.ApplyBackdrop(overlay.AddComponent<Image>());
+            // Trace needs a heavier veil than form modals.
+            overlay.GetComponent<Image>().color = new Color(0.05f, 0.06f, 0.08f, 0.92f);
             overlay.AddComponent<UmlModalBackdrop>().Canvas = this; // swallow stray clicks
             _menu = overlay;
             _traceWindow = overlay;
@@ -256,7 +258,8 @@ namespace TheRobotDraft.Uml
             pRt.pivot = new Vector2(0f, 1f);
             pRt.sizeDelta = new Vector2(TraceBubbleW, TraceBubbleH);
             pRt.anchoredPosition = topLeft;
-            panel.AddComponent<Image>().color = new Color(0.13f, 0.15f, 0.19f, 1f);
+            TheRobotDraft.Uml.Chrome.MacOsControlKit.ApplyPanel(panel.AddComponent<Image>(),
+                new Color(0.13f, 0.15f, 0.19f, 1f));
 
             // Header: name + per-bubble actions (open in editor; close this bubble unless it is the root).
             MakeText(pRt, (el != null ? "«" + el.Kind + "»  " : "") + name, new Vector2(10f, -8f),
@@ -278,7 +281,7 @@ namespace TheRobotDraft.Uml
             vpRt.pivot = new Vector2(0f, 1f);
             vpRt.sizeDelta = new Vector2(TraceBubbleW, bodyH);
             vpRt.anchoredPosition = new Vector2(0f, bodyTop);
-            vp.AddComponent<Image>().color = new Color(0.10f, 0.11f, 0.14f, 1f);
+            TheRobotDraft.Uml.Chrome.MacOsControlKit.ApplyScrollWell(vp.AddComponent<Image>());
             vp.AddComponent<RectMask2D>();
             var scroll = vp.AddComponent<ScrollRect>();
             scroll.horizontal = false; scroll.vertical = true; scroll.scrollSensitivity = 24f;

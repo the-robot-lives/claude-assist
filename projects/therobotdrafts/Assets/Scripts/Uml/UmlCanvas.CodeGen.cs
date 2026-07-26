@@ -491,8 +491,6 @@ namespace TheRobotDraft.Uml
             float bodyH = h - 46f - 92f; // leave room for the status line + buttons at the bottom
             float bodyW = w - pad * 2f;
             float viewportW = bodyW - scrollbarW - sbGap;
-            var bg = new Color(0.10f, 0.11f, 0.14f, 1f);
-
             // Scroll view wrapping the highlighted listing so long source scrolls within the dialog.
             var viewportGo = new GameObject("CodeViewport", typeof(RectTransform));
             var vpRt = (RectTransform)viewportGo.transform;
@@ -501,7 +499,7 @@ namespace TheRobotDraft.Uml
             vpRt.pivot = new Vector2(0f, 1f);
             vpRt.sizeDelta = new Vector2(viewportW, bodyH);
             vpRt.anchoredPosition = new Vector2(pad, bodyTop);
-            viewportGo.AddComponent<Image>().color = bg;
+            TheRobotDraft.Uml.Chrome.MacOsControlKit.ApplyScrollWell(viewportGo.AddComponent<Image>());
             viewportGo.AddComponent<RectMask2D>();
             var scroll = viewportGo.AddComponent<ScrollRect>();
             scroll.horizontal = false;
@@ -523,7 +521,7 @@ namespace TheRobotDraft.Uml
             contentRt.pivot = new Vector2(0.5f, 1f);
             contentRt.sizeDelta = new Vector2(0f, bodyH);
             contentRt.anchoredPosition = Vector2.zero;
-            contentGo.AddComponent<Image>().color = bg;
+            TheRobotDraft.Uml.Chrome.MacOsControlKit.ApplyScrollWell(contentGo.AddComponent<Image>());
 
             // Right-aligned line-number gutter, then the code to its right — same font/size/spacing so rows align.
             var gutter = MakeText(contentRt, "", new Vector2(textPadL, -6f), new Vector2(gutterW, bodyH - 12f),
@@ -692,7 +690,7 @@ namespace TheRobotDraft.Uml
             rt.pivot = new Vector2(0f, 1f);
             rt.sizeDelta = size;
             rt.anchoredPosition = topLeft;
-            go.AddComponent<Image>().color = new Color(0.16f, 0.18f, 0.22f, 1f);
+            TheRobotDraft.Uml.Chrome.MacOsControlKit.ApplyProgressTrack(go.AddComponent<Image>());
             var scrollbar = go.AddComponent<Scrollbar>();
             scrollbar.direction = Scrollbar.Direction.BottomToTop;
 
@@ -712,7 +710,8 @@ namespace TheRobotDraft.Uml
             handleRt.sizeDelta = Vector2.zero;
             handleRt.anchoredPosition = Vector2.zero;
             var handleImg = handleGo.AddComponent<Image>();
-            handleImg.color = new Color(0.36f, 0.40f, 0.48f, 1f);
+            TheRobotDraft.Uml.Chrome.MacOsControlKit.ApplyButton(handleImg,
+                TheRobotDraft.Uml.Chrome.MacOsControlKit.SecondaryFill);
 
             scrollbar.targetGraphic = handleImg;
             scrollbar.handleRect = handleRt;
@@ -1094,9 +1093,13 @@ namespace TheRobotDraft.Uml
             rt.sizeDelta = new Vector2(width, 32f);
             rt.anchoredPosition = topLeft;
             var img = go.AddComponent<Image>();
-            img.color = new Color(0.20f, 0.22f, 0.27f, 1f);
+            // Closed dropdown reads as a secondary field/control, not a primary push-button.
+            TheRobotDraft.Uml.Chrome.MacOsControlKit.ApplyButton(img,
+                TheRobotDraft.Uml.Chrome.MacOsControlKit.SecondaryFill);
             var btn = go.AddComponent<Button>();
             btn.targetGraphic = img;
+            TheRobotDraft.Uml.Chrome.MacOsControlKit.ApplyButtonInteraction(btn,
+                TheRobotDraft.Uml.Chrome.MacOsControlKit.SecondaryFill);
             var label = MakeText(rt, value, new Vector2(8f, 0f), new Vector2(width - 26f, 32f), 15,
                 new Color(0.94f, 0.96f, 1f, 1f), TextAnchor.MiddleLeft);
             MakeText(rt, "▾", new Vector2(width - 20f, 0f), new Vector2(16f, 32f), 14,
@@ -1120,7 +1123,7 @@ namespace TheRobotDraft.Uml
                 lrt.pivot = new Vector2(0f, 1f);
                 lrt.sizeDelta = new Vector2(width, lh);
                 lrt.anchoredPosition = new Vector2(0f, -34f);
-                list.AddComponent<Image>().color = new Color(0.13f, 0.15f, 0.19f, 0.99f);
+                TheRobotDraft.Uml.Chrome.MacOsControlKit.ApplyPopover(list.AddComponent<Image>());
                 list.AddComponent<RectMask2D>();
                 var content = new GameObject("C", typeof(RectTransform));
                 var crt = (RectTransform)content.transform;
@@ -1143,9 +1146,10 @@ namespace TheRobotDraft.Uml
                     irt.sizeDelta = new Vector2(width, ih);
                     irt.anchoredPosition = new Vector2(0f, iy);
                     var iimg = igo.AddComponent<Image>();
-                    iimg.color = new Color(0.18f, 0.20f, 0.25f, 1f);
+                    TheRobotDraft.Uml.Chrome.MacOsControlKit.ApplyMenuRow(iimg);
                     var ibtn = igo.AddComponent<Button>();
                     ibtn.targetGraphic = iimg;
+                    TheRobotDraft.Uml.Chrome.MacOsControlKit.ApplyMenuRowInteraction(ibtn);
                     ibtn.onClick.AddListener(() => { value = ov; label.text = ov; CloseList(); onSelect?.Invoke(ov); });
                     MakeText(irt, ov, new Vector2(8f, 0f), new Vector2(width - 12f, ih), 14,
                         new Color(0.9f, 0.93f, 0.98f, 1f), TextAnchor.MiddleLeft);

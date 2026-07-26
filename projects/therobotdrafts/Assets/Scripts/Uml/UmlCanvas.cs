@@ -50,7 +50,10 @@ namespace TheRobotDraft.Uml
             ElementKind.Class, ElementKind.Interface, ElementKind.Enum, ElementKind.Struct,
         };
 
-        private static readonly Color EdgeColor = new Color(0.216f, 0.784f, 0.765f, 0.85f);
+        private static readonly Color EdgeColor = new Color(
+            TheRobotDraft.Uml.Chrome.ConceptDTheme.Accent.r,
+            TheRobotDraft.Uml.Chrome.ConceptDTheme.Accent.g,
+            TheRobotDraft.Uml.Chrome.ConceptDTheme.Accent.b, 0.85f);
         private static readonly Color EdgeSelectedColor = new Color(1f, 0.83f, 0.42f, 1f);
         private const float EdgePickPx = 14f; // screen-space pick radius for selecting a link
 
@@ -633,7 +636,15 @@ namespace TheRobotDraft.Uml
         {
             CloseMenu();
             bool isPackage = kind == ElementKind.Package;
-            if (!isPackage && !_activePackage.IsValid) { Flash("add a package first (palette → Package)"); return; }
+            // Ensure a diagram package exists so Place/drag always has a parent (whiteboard-friendly).
+            if (!isPackage && !_activePackage.IsValid)
+            {
+                _ctl.EnterAddNode(ElementKind.Package);
+                var pkg = _ctl.CommitAddNode(ElementId.None, DefaultName(ElementKind.Package));
+                if (pkg.IsValid) SetActivePackage(pkg);
+                _ctl.EnterSelect();
+                if (!_activePackage.IsValid) { Flash("add a package first (palette → Package)"); return; }
+            }
 
             _ctl.EnterAddNode(kind);
             var id = _ctl.CommitAddNode(isPackage ? ElementId.None : _activePackage, DefaultName(kind));
@@ -841,6 +852,13 @@ namespace TheRobotDraft.Uml
         {
             CloseMenu();
             _paletteDragKind = kind;
+            _paletteDragActive = true;
+            // Prevent the left palette ScrollRect from stealing the drag.
+            if (_palette != null)
+            {
+                var sr = _palette.GetComponent<ScrollRect>();
+                if (sr != null) { _paletteScrollWasEnabled = sr.enabled; sr.enabled = false; }
+            }
             if (_paletteGhost != null) Destroy(_paletteGhost);
             _paletteGhost = new GameObject("PaletteGhost", typeof(RectTransform));
             var rt = (RectTransform)_paletteGhost.transform;
@@ -849,7 +867,8 @@ namespace TheRobotDraft.Uml
             rt.pivot = new Vector2(0.5f, 0.5f);
             rt.sizeDelta = new Vector2(120f, 28f);
             var img = _paletteGhost.AddComponent<Image>();
-            img.color = new Color(0.20f, 0.45f, 0.65f, 0.85f);
+            TheRobotDraft.Uml.Chrome.MacOsControlKit.ApplyButton(img,
+                TheRobotDraft.Uml.Chrome.ConceptDTheme.AccentDim);
             img.raycastTarget = false;
             var tgo = new GameObject("L", typeof(RectTransform));
             var trt = (RectTransform)tgo.transform;
@@ -858,7 +877,8 @@ namespace TheRobotDraft.Uml
             trt.offsetMin = Vector2.zero; trt.offsetMax = Vector2.zero;
             var tx = tgo.AddComponent<Text>();
             tx.font = _font; tx.text = label; tx.fontSize = 14; tx.alignment = TextAnchor.MiddleCenter;
-            tx.color = new Color(0.96f, 0.98f, 1f, 1f); tx.raycastTarget = false;
+            tx.color = TheRobotDraft.Uml.Chrome.ConceptDTheme.Text; tx.raycastTarget = false;
+            UpdatePaletteDrag(Input.mousePosition);
         }
 
         public void UpdatePaletteDrag(Vector2 screenPos)
@@ -870,9 +890,42 @@ namespace TheRobotDraft.Uml
         public void EndPaletteDrag(Vector2 screenPos)
         {
             if (_paletteGhost != null) { Destroy(_paletteGhost); _paletteGhost = null; }
-            if (screenPos.x < (PaletteActiveWidth + 8f) * ScaleFactor) { Flash("drop onto the canvas to create"); return; }
+            _paletteDragActive = false;
+            if (_palette != null)
+            {
+                var sr = _palette.GetComponent<ScrollRect>();
+                if (sr != null) sr.enabled = _paletteScrollWasEnabled;
+            }
+
+            if (!IsCanvasDropPoint(screenPos))
+            {
+                Flash("drop onto the canvas to create");
+                return;
+            }
             CreateNodeFromPalette(_paletteDragKind, screenPos);
         }
+
+        /// <summary>
+        /// True when a drop at <paramref name="screenPos"/> lands in the diagram viewport — clear
+        /// of the left dock, the inspector, and the top/bottom chrome bands. Shared by the palette
+        /// drag and the Outline tree's drag-to-link so both reject the same regions; without it a
+        /// drop onto chrome silently creates geometry underneath a panel.
+        /// </summary>
+        public bool IsCanvasDropPoint(Vector2 screenPos)
+        {
+            float scale = Mathf.Max(ScaleFactor, 0.0001f);
+            float leftEdge = (PaletteActiveWidth + Chrome.ChromeMetrics.EdgeGutter) * scale;
+            float rightEdge = Screen.width
+                - (InspectorActiveWidth + Chrome.ChromeMetrics.EdgeGutter) * scale;
+            if (screenPos.x < leftEdge || screenPos.x > rightEdge) return false;
+
+            float topChrome = Chrome.ChromeMetrics.TopChromeSafeBand * scale;
+            float bottomChrome = Chrome.ChromeMetrics.BottomChromeSafeBand * scale;
+            return screenPos.y <= Screen.height - topChrome && screenPos.y >= bottomChrome;
+        }
+
+        private bool _paletteDragActive;
+        private bool _paletteScrollWasEnabled = true;
 
         private void Update()
         {
@@ -1583,30 +1636,36 @@ namespace TheRobotDraft.Uml
         /// (orbit / pan / X / Y / Z axis moves), each a procedurally-drawn sprite (<see cref="UmlNavIcons"/>).
         /// Clicking a chip sets <see cref="_navMode"/>; the active chip's background is highlighted.
         /// </summary>
+        private RectTransform _navBarRt;
+
         private void BuildNavBar()
         {
             var bar = new GameObject("NavBar", typeof(RectTransform));
             var brt = (RectTransform)bar.transform;
+            _navBarRt = brt;
             brt.SetParent(_root, false);
             brt.anchorMin = brt.anchorMax = new Vector2(1f, 1f);
             brt.pivot = new Vector2(1f, 1f);
             brt.anchoredPosition = new Vector2(-8f, -142f); // below menu bar + toolbar + tabs + hint
             var bg = bar.AddComponent<Image>();
-            bg.color = new Color(0.075f, 0.085f, 0.105f, 0.94f);
+            TheRobotDraft.Uml.Chrome.MacOsControlKit.ApplyPopover(bg);
 
-            var modes = new (NavMode m, Sprite icon)[]
+            var modes = new (NavMode m, Sprite icon, string tip)[]
             {
-                (NavMode.Orbit, UmlNavIcons.Orbit), (NavMode.Pan, UmlNavIcons.Pan), (NavMode.MoveX, UmlNavIcons.AxisX),
-                (NavMode.MoveY, UmlNavIcons.AxisY), (NavMode.MoveZ, UmlNavIcons.AxisZ),
+                (NavMode.Orbit, UmlNavIcons.Orbit, "Orbit camera (drag empty space)"),
+                (NavMode.Pan, UmlNavIcons.Pan, "Pan camera"),
+                (NavMode.MoveX, UmlNavIcons.AxisX, "Move along X"),
+                (NavMode.MoveY, UmlNavIcons.AxisY, "Move along Y"),
+                (NavMode.MoveZ, UmlNavIcons.AxisZ, "Move along Z"),
             };
             const float sz = 34f, gap = 2f, pad = 4f;
             float x = pad;
-            foreach (var it in modes) { MakeNavChip(brt, it.m, it.icon, x, sz); x += sz + gap; }
+            foreach (var it in modes) { MakeNavChip(brt, it.m, it.icon, it.tip, x, sz); x += sz + gap; }
             brt.sizeDelta = new Vector2(x - gap + pad, sz + pad * 2f);
             RefreshNavButtons();
         }
 
-        private void MakeNavChip(RectTransform parent, NavMode mode, Sprite icon, float x, float sz)
+        private void MakeNavChip(RectTransform parent, NavMode mode, Sprite icon, string tip, float x, float sz)
         {
             var go = new GameObject("Nav:" + NavModeLabel(mode), typeof(RectTransform));
             var rt = (RectTransform)go.transform;
@@ -1620,6 +1679,7 @@ namespace TheRobotDraft.Uml
             btn.targetGraphic = img;
             btn.onClick.AddListener(() => SetNavMode(mode));
             _navButtons[mode] = img;
+            TheRobotDraft.Uml.Chrome.UiTooltip.Bind(go, tip, _font);
 
             // The icon image sits on top of the chip, inset, and is not itself a raycast target.
             var ico = new GameObject("Icon", typeof(RectTransform));
@@ -1655,14 +1715,14 @@ namespace TheRobotDraft.Uml
             SetNavMode(NavCycle[((i + (back ? -1 : 1)) % n + n) % n]);
         }
 
-        /// <summary>Tint the active nav chip (blue) and the rest neutral.</summary>
+        /// <summary>Tint the active nav chip (Concept D accent) and the rest neutral.</summary>
         private void RefreshNavButtons()
         {
             foreach (var kv in _navButtons)
                 if (kv.Value != null)
                     kv.Value.color = kv.Key == _navMode
-                        ? new Color(0.216f, 0.784f, 0.765f, 1f)
-                        : new Color(0.118f, 0.137f, 0.161f, 1f);
+                        ? TheRobotDraft.Uml.Chrome.ConceptDTheme.Accent
+                        : TheRobotDraft.Uml.Chrome.ConceptDTheme.Bg3;
         }
 
         /// <summary>The per-frame screen-space mouse delta (Input has no UI delta outside the EventSystem). Computed
@@ -2577,7 +2637,10 @@ namespace TheRobotDraft.Uml
 
             EnsureActivePackage();
             BuildTabBar();
-            _browseNav?.RebuildTree(); // C1: model-derived browse tree (all diagrams), independent of active package
+            // C1: model-derived browse tree (all diagrams), independent of active package. Only
+            // worth rebuilding while the Outline tab is showing — SetPaletteTab rebuilds on
+            // switch-in, so a hidden tree cannot go stale.
+            if (_paletteTab == "outline") _browseNav?.RebuildTree();
 
             if (!_activePackage.IsValid)
             {
@@ -4548,18 +4611,21 @@ namespace TheRobotDraft.Uml
             rt.SetParent(_tabBar, false);
             rt.anchorMin = rt.anchorMax = new Vector2(0f, 0.5f);
             rt.pivot = new Vector2(0f, 0.5f);
-            rt.sizeDelta = new Vector2(w, 30f);
+            const float chipH = Chrome.ChromeMetrics.TabChipHeight;
+            rt.sizeDelta = new Vector2(w, chipH);
             rt.anchoredPosition = new Vector2(x, 0f);
             var img = go.AddComponent<Image>();
-            img.color = active ? new Color(0.20f, 0.42f, 0.52f, 1f) : new Color(0.16f, 0.18f, 0.22f, 1f);
+            // Demo tokens: active tab = accent-dim fill, idle = elevated chip surface.
+            img.color = active ? Chrome.ConceptDTheme.AccentDim : Chrome.ConceptDTheme.Bg3;
             var btn = go.AddComponent<Button>();
             btn.targetGraphic = img;
             btn.onClick.AddListener(() => onClick());
 
             // The caret occupies the right end of the tab when the diagram has pages; clicking it opens the dropdown.
             float caretW = onCaret != null ? 22f : 0f;
-            var t = MakeText(rt, label, new Vector2(10f, 0f), new Vector2(w - 14f - caretW, 30f), 16,
-                active ? new Color(0.95f, 0.98f, 1f) : new Color(0.72f, 0.77f, 0.84f, 1f), TextAnchor.MiddleLeft);
+            var t = MakeText(rt, label, new Vector2(10f, 0f), new Vector2(w - 14f - caretW, chipH),
+                Chrome.ChromeMetrics.FontControl,
+                active ? Chrome.ConceptDTheme.Text : Chrome.ConceptDTheme.TextDim, TextAnchor.MiddleLeft);
             t.raycastTarget = false;
 
             if (onCaret != null)
@@ -4569,15 +4635,16 @@ namespace TheRobotDraft.Uml
                 crt.SetParent(rt, false);
                 crt.anchorMin = crt.anchorMax = new Vector2(0f, 0.5f);
                 crt.pivot = new Vector2(0f, 0.5f);
-                crt.sizeDelta = new Vector2(caretW, 30f);
+                crt.sizeDelta = new Vector2(caretW, chipH);
                 crt.anchoredPosition = new Vector2(w - caretW, 0f);
                 var cImg = cgo.AddComponent<Image>();
                 cImg.color = hasPages ? new Color(1f, 1f, 1f, 0.06f) : new Color(1f, 1f, 1f, 0f);
                 var cBtn = cgo.AddComponent<Button>();
                 cBtn.targetGraphic = cImg;
                 cBtn.onClick.AddListener(() => onCaret());
-                var ct = MakeText(crt, "▾", new Vector2(2f, 0f), new Vector2(caretW - 2f, 30f), 14,
-                    hasPages ? new Color(0.9f, 0.94f, 1f, 1f) : new Color(0.55f, 0.6f, 0.68f, 0.7f), TextAnchor.MiddleCenter);
+                var ct = MakeText(crt, "▾", new Vector2(2f, 0f), new Vector2(caretW - 2f, chipH),
+                    Chrome.ChromeMetrics.FontControl,
+                    hasPages ? Chrome.ConceptDTheme.Text : Chrome.ConceptDTheme.TextFaint, TextAnchor.MiddleCenter);
                 ct.raycastTarget = false;
             }
         }
@@ -4758,64 +4825,110 @@ namespace TheRobotDraft.Uml
             _tabBar.SetParent(_root, false);
             _tabBar.anchorMin = new Vector2(0f, 1f); _tabBar.anchorMax = new Vector2(1f, 1f);
             _tabBar.pivot = new Vector2(0f, 1f);
-            _tabBar.sizeDelta = new Vector2(0f, 38f);
-            _tabBar.anchoredPosition = new Vector2(0f, -32f - ContextToolbarHeight);
+            _tabBar.sizeDelta = new Vector2(0f, Chrome.ChromeMetrics.TabBarHeight);
+            _tabBar.anchoredPosition = new Vector2(0f, -Chrome.ChromeMetrics.TabBarTop);
             var tabBg = tabGo.AddComponent<Image>();
-            tabBg.color = new Color(0.086f, 0.098f, 0.113f, 1f);
+            tabBg.color = TheRobotDraft.Uml.Chrome.ConceptDTheme.Bg2;
             tabBg.raycastTarget = false;
 
             // Hint line under the tabs.
             var hintGo = new GameObject("Hint", typeof(RectTransform));
             var hintRt = (RectTransform)hintGo.transform;
+            _hintRt = hintRt;
             hintRt.SetParent(_root, false);
             hintRt.anchorMin = new Vector2(0f, 1f); hintRt.anchorMax = new Vector2(1f, 1f);
             hintRt.pivot = new Vector2(0f, 1f);
-            hintRt.sizeDelta = new Vector2(0f, 26f);
-            hintRt.anchoredPosition = new Vector2(12f, -74f - ContextToolbarHeight);
+            hintRt.sizeDelta = new Vector2(0f, Chrome.ChromeMetrics.HintHeight);
+            hintRt.anchoredPosition = new Vector2(12f, -Chrome.ChromeMetrics.HintTop);
             _hint = hintGo.AddComponent<Text>();
-            _hint.font = _font; _hint.fontSize = 17;
-            _hint.color = new Color(0.34f, 0.38f, 0.45f, 1f);
+            _hint.font = _font; _hint.fontSize = Chrome.ChromeMetrics.FontStatus;
+            _hint.color = TheRobotDraft.Uml.Chrome.ConceptDTheme.TextFaint;
             _hint.alignment = TextAnchor.MiddleLeft;
             _hint.supportRichText = false;
             _hint.raycastTarget = false;
-            _hint.text = "Drag empty space → navigate (set mode top-right) · wheel → zoom · Alt+wheel → jump Z · Ctrl/Cmd+F → frame · " +
-                         "2D switch → flat canvas / depth ignored · G+click box → center on it · click box → select · Shift-click → multi-select · Ctrl/Cmd-drag box → move · " +
-                         "right-click box → edit element · right-click canvas → add / paste · " +
-                         "Ctrl/Cmd C/V copy · Ctrl/Cmd S save · Ctrl/Cmd Z undo";
+            _hint.text = "Drag empty space → navigate · wheel → zoom · ⌘K palette · drag palette items onto the canvas to place";
 
             // The old "? Help" button is gone — Help is a real menu now (Help ▸ Documentation, ⌘/).
 
-            // Camera / view controls, folded compact into the context-toolbar right cluster (demo layout).
-            MakeHudButton("CameraButton", "Cam", -318f, 48f, () => ShowCameraForm(Input.mousePosition));
-            MakeHudButton("ResetViewButton", "⟲", -374f, 40f, () => CameraReset());
-            Make2DModeSwitch(-422f);
+            // Camera / view controls (reflowed with inspector width via ReflowShellChrome).
+            MakeHudButton("CameraButton", "Cam", HudCameraX, HudCameraWidth, "Camera controls",
+                () => ShowCameraForm(Input.mousePosition));
+            MakeHudButton("ResetViewButton", "⟲", HudResetX, HudResetWidth, "Reset camera",
+                () => CameraReset());
+            Make2DModeSwitch(Hud2DX);
             // Floating glyph toolbar: choose what an empty-space drag controls (orbit / pan / move along an axis).
             BuildNavBar();
 
             BuildPalette();
             BuildBrowseNav();
             BuildInspector();
+            ReflowShellChrome();
         }
 
-        /// <summary>A small top-right HUD button anchored from the right edge. Returns its caption Text.</summary>
-        private Text MakeHudButton(string name, string label, float xFromRight, float width, System.Action onClick)
+        private RectTransform _hintRt;
+
+        // Top-right HUD cluster (camera · reset · 2D switch) rides the context-toolbar band,
+        // continuing leftward from the toolbar's own right cluster. Fixed: the top bars span the
+        // full window, so these sit above the inspector and never need to dodge it.
+        private const float HudButtonHeight = 24f;
+        private const float HudCameraWidth = 48f;
+        private const float HudResetWidth = 40f;
+        private const float Hud2DWidth = 78f;
+        private const float HudCameraX = -ToolbarRightClusterWidth;
+        private const float HudResetX = HudCameraX - HudCameraWidth - 8f;
+        private const float Hud2DX = HudResetX - HudResetWidth - 8f;
+        private static readonly float HudRowY =
+            Chrome.ChromeMetrics.ContextToolbarCenterY(HudButtonHeight);
+
+        /// <summary>
+        /// Re-inset the chrome that floats INSIDE the diagram viewport when a dock resizes.
+        /// <para>
+        /// The top bars — menu, context toolbar, diagram tabs — deliberately span the full window
+        /// and never move. They stack above the docks (see <see cref="Chrome.ChromeMetrics"/>), so
+        /// nothing can cover them; shifting them with the palette only made the breadcrumb and tabs
+        /// jitter sideways every time the left panel collapsed. Only the hint line and the floating
+        /// nav bar actually share space with the docks.
+        /// </para>
+        /// </summary>
+        private void ReflowShellChrome()
+        {
+            float left = PaletteActiveWidth;
+            float right = InspectorActiveWidth;
+
+            if (_hintRt != null)
+            {
+                _hintRt.anchoredPosition = new Vector2(left + 12f, -Chrome.ChromeMetrics.HintTop);
+                _hintRt.sizeDelta = new Vector2(-(left + right + 24f), Chrome.ChromeMetrics.HintHeight);
+            }
+            if (_navBarRt != null)
+                _navBarRt.anchoredPosition = new Vector2(-8f - right, -(Chrome.ChromeMetrics.TopChromeSafeBand + 6f));
+        }
+
+        /// <summary>A small top-right HUD button anchored from the right edge. Returns its RectTransform.</summary>
+        private RectTransform MakeHudButton(string name, string label, float xFromRight, float width,
+            string tooltip, System.Action onClick)
         {
             var go = new GameObject(name, typeof(RectTransform));
             var rt = (RectTransform)go.transform;
             rt.SetParent(_root, false);
             rt.anchorMin = rt.anchorMax = new Vector2(1f, 1f);
             rt.pivot = new Vector2(1f, 1f);
-            rt.sizeDelta = new Vector2(width, 24f);
-            rt.anchoredPosition = new Vector2(xFromRight, -35f);
+            rt.sizeDelta = new Vector2(width, HudButtonHeight);
+            rt.anchoredPosition = new Vector2(xFromRight, -HudRowY);
             var img = go.AddComponent<Image>();
-            img.color = new Color(0.10f, 0.115f, 0.14f, 1f);
+            TheRobotDraft.Uml.Chrome.MacOsControlKit.ApplyButton(img,
+                TheRobotDraft.Uml.Chrome.MacOsControlKit.SecondaryFill);
             var btn = go.AddComponent<Button>();
             btn.targetGraphic = img;
+            TheRobotDraft.Uml.Chrome.MacOsControlKit.ApplyButtonInteraction(btn,
+                TheRobotDraft.Uml.Chrome.MacOsControlKit.SecondaryFill);
             btn.onClick.AddListener(() => onClick());
-            var t = MakeText(rt, label, new Vector2(0f, 0f), new Vector2(width, 24f), 12,
-                new Color(0.72f, 0.77f, 0.83f, 1f), TextAnchor.MiddleCenter);
+            var t = MakeText(rt, label, new Vector2(0f, 0f), new Vector2(width, HudButtonHeight),
+                Chrome.ChromeMetrics.FontControl,
+                TheRobotDraft.Uml.Chrome.ConceptDTheme.Text, TextAnchor.MiddleCenter);
             t.raycastTarget = false;
-            return t;
+            TheRobotDraft.Uml.Chrome.UiTooltip.Bind(go, tooltip, _font);
+            return rt;
         }
 
         private void Make2DModeSwitch(float xFromRight)
@@ -4825,15 +4938,19 @@ namespace TheRobotDraft.Uml
             rt.SetParent(_root, false);
             rt.anchorMin = rt.anchorMax = new Vector2(1f, 1f);
             rt.pivot = new Vector2(1f, 1f);
-            rt.sizeDelta = new Vector2(78f, 24f);
-            rt.anchoredPosition = new Vector2(xFromRight, -35f);
+            rt.sizeDelta = new Vector2(Hud2DWidth, HudButtonHeight);
+            rt.anchoredPosition = new Vector2(xFromRight, -HudRowY);
             _mode2DButtonBg = go.AddComponent<Image>();
+            TheRobotDraft.Uml.Chrome.MacOsControlKit.ApplyButton(_mode2DButtonBg,
+                TheRobotDraft.Uml.Chrome.ConceptDTheme.Secondary);
             var btn = go.AddComponent<Button>();
             btn.targetGraphic = _mode2DButtonBg;
             btn.onClick.AddListener(Toggle2DMode);
-            _mode2DButtonText = MakeText(rt, "", new Vector2(0f, 0f), new Vector2(78f, 24f), 12,
-                new Color(0.85f, 0.89f, 0.94f, 1f), TextAnchor.MiddleCenter);
+            _mode2DButtonText = MakeText(rt, "", new Vector2(0f, 0f),
+                new Vector2(Hud2DWidth, HudButtonHeight), Chrome.ChromeMetrics.FontControl,
+                TheRobotDraft.Uml.Chrome.ConceptDTheme.Text, TextAnchor.MiddleCenter);
             _mode2DButtonText.raycastTarget = false;
+            TheRobotDraft.Uml.Chrome.UiTooltip.Bind(go, "Toggle 2D flat canvas vs 3D depth", _font);
             Refresh2DModeSwitch();
         }
 
@@ -4856,9 +4973,16 @@ namespace TheRobotDraft.Uml
         {
             if (_mode2DButtonBg != null)
                 _mode2DButtonBg.color = _mode2D
-                    ? new Color(0.216f, 0.784f, 0.765f, 1f)
-                    : new Color(0.118f, 0.137f, 0.161f, 1f);
-            if (_mode2DButtonText != null) _mode2DButtonText.text = _mode2D ? "2D On" : "2D Off";
+                    ? Chrome.ConceptDTheme.Accent
+                    : Chrome.ConceptDTheme.Secondary;
+            if (_mode2DButtonText != null)
+            {
+                _mode2DButtonText.text = _mode2D ? "2D On" : "2D Off";
+                // Dark ink on the filled accent chip; normal body text when idle.
+                _mode2DButtonText.color = _mode2D
+                    ? Chrome.ConceptDTheme.AccentOn
+                    : Chrome.ConceptDTheme.Text;
+            }
         }
 
         private void Apply2DModeCamera(bool frame)
@@ -5042,12 +5166,13 @@ namespace TheRobotDraft.Uml
 
         // --- toolbar palette UI ---
 
-        private const float PaletteWidth = 168f;
-        private const float CollapsedSidebarWidth = 28f;
+        private const float PaletteWidth = Chrome.ChromeMetrics.PaletteWidth;
+        private const float CollapsedSidebarWidth = Chrome.ChromeMetrics.CollapsedSidebarWidth;
 
         private RectTransform _palette;
         private RectTransform _paletteBody;
         private RectTransform _paletteContent;
+        private RectTransform _paletteViewport;
         private Text _paletteToggleText;
         private readonly HashSet<string> _paletteCollapsed = new();
         private string _paletteSearch = "";
@@ -5260,7 +5385,7 @@ namespace TheRobotDraft.Uml
             ("Timing", new[] { (ElementKind.TimingLifeline, "Timing Lifeline") }),
         };
 
-        internal const float RailWidth = 44f;
+        internal const float RailWidth = Chrome.ChromeMetrics.RailWidth;
 
         /// <summary>The 44px icon rail on the far-left edge (demo parity): quick jumps into the
         /// left panel's tabs plus aspects / import-export shortcuts.</summary>
@@ -5271,10 +5396,10 @@ namespace TheRobotDraft.Uml
             rail.SetParent(_root, false);
             rail.anchorMin = new Vector2(0f, 0f); rail.anchorMax = new Vector2(0f, 1f);
             rail.pivot = new Vector2(0f, 1f);
-            rail.offsetMin = new Vector2(0f, 8f);
-            rail.offsetMax = new Vector2(RailWidth, -70f - ContextToolbarHeight);
+            rail.offsetMin = new Vector2(0f, Chrome.ChromeMetrics.EdgeGutter);
+            rail.offsetMax = new Vector2(RailWidth, -Chrome.ChromeMetrics.DockTopInset);
             var bg = railGo.AddComponent<Image>();
-            bg.color = new Color(0.062f, 0.070f, 0.086f, 1f);
+            bg.color = TheRobotDraft.Uml.Chrome.ConceptDTheme.Panel;
             bg.raycastTarget = false;
 
             float ry = -8f;
@@ -5288,18 +5413,22 @@ namespace TheRobotDraft.Uml
                 rt.sizeDelta = new Vector2(32f, 32f);
                 rt.anchoredPosition = new Vector2(6f, ry);
                 var img = go.AddComponent<Image>();
-                img.color = new Color(0.075f, 0.085f, 0.105f, 1f);
+                TheRobotDraft.Uml.Chrome.MacOsControlKit.ApplyButton(img,
+                    TheRobotDraft.Uml.Chrome.ConceptDTheme.Panel);
                 var btn = go.AddComponent<Button>();
                 btn.targetGraphic = img;
+                TheRobotDraft.Uml.Chrome.MacOsControlKit.ApplyButtonInteraction(btn,
+                    TheRobotDraft.Uml.Chrome.ConceptDTheme.Panel);
                 btn.onClick.AddListener(() => act());
-                MakeText(rt, glyph, Vector2.zero, rt.sizeDelta, 16,
-                    new Color(0.62f, 0.67f, 0.74f, 1f), TextAnchor.MiddleCenter).raycastTarget = false;
+                MakeText(rt, glyph, Vector2.zero, rt.sizeDelta, Chrome.ChromeMetrics.FontRailGlyph,
+                    TheRobotDraft.Uml.Chrome.ConceptDTheme.TextDim, TextAnchor.MiddleCenter).raycastTarget = false;
+                TheRobotDraft.Uml.Chrome.UiTooltip.Bind(go, tip, _font);
                 ry -= 36f;
             }
-            RailBtn("≡", "Outline", () => SetPaletteTab("outline"));
-            RailBtn("+", "Palette", () => SetPaletteTab("palette"));
-            RailBtn("/", "Search", () => { SetPaletteTab("palette"); if (_paletteSearchGo != null && EventSystem.current != null) EventSystem.current.SetSelectedGameObject(_paletteSearchGo); });
-            RailBtn("◇", "Aspects", () => ShowAspectRegistryModal());
+            RailBtn("≡", "Outline — diagram structure", () => SetPaletteTab("outline"));
+            RailBtn("+", "Element palette", () => SetPaletteTab("palette"));
+            RailBtn("/", "Search kinds", () => { SetPaletteTab("palette"); if (_paletteSearchGo != null && EventSystem.current != null) EventSystem.current.SetSelectedGameObject(_paletteSearchGo); });
+            RailBtn("◇", "Aspect registry", () => ShowAspectRegistryModal());
             RailBtn("↕", "Import / Export", () => ShowImportMenu(new Vector2((RailWidth + 8f) * ScaleFactor, Screen.height * 0.6f)));
         }
 
@@ -5318,9 +5447,10 @@ namespace TheRobotDraft.Uml
             _palette.SetParent(_root, false);
             _palette.anchorMin = new Vector2(0f, 0f); _palette.anchorMax = new Vector2(0f, 1f);
             _palette.pivot = new Vector2(0f, 1f);
-            _palette.offsetMin = new Vector2(RailWidth, 8f);          // left = rail edge, bottom = 8
-            _palette.offsetMax = new Vector2(RailWidth + width, -70f); // top clears the tabs + hint line
-            container.AddComponent<Image>().color = new Color(0.075f, 0.085f, 0.105f, 0.98f);
+            _palette.offsetMin = new Vector2(RailWidth, Chrome.ChromeMetrics.EdgeGutter); // left = rail edge
+            _palette.offsetMax = new Vector2(RailWidth + width, -Chrome.ChromeMetrics.DockTopInset);
+            TheRobotDraft.Uml.Chrome.MacOsControlKit.ApplyPanel(container.AddComponent<Image>(),
+                TheRobotDraft.Uml.Chrome.ConceptDTheme.Panel);
 
             var bodyGo = new GameObject("Body", typeof(RectTransform));
             _paletteBody = (RectTransform)bodyGo.transform;
@@ -5340,6 +5470,7 @@ namespace TheRobotDraft.Uml
             // Scrolling viewport below the tabs + search box; it masks the content.
             var viewport = new GameObject("Viewport", typeof(RectTransform));
             var vrt = (RectTransform)viewport.transform;
+            _paletteViewport = vrt;
             vrt.SetParent(_paletteBody, false);
             vrt.anchorMin = new Vector2(0f, 0f); vrt.anchorMax = new Vector2(1f, 1f);
             vrt.pivot = new Vector2(0f, 1f);
@@ -5381,10 +5512,11 @@ namespace TheRobotDraft.Uml
             rt.SetParent(_palette, false);
             rt.anchorMin = rt.anchorMax = new Vector2(1f, 1f);
             rt.pivot = new Vector2(1f, 1f);
-            rt.sizeDelta = new Vector2(CollapsedSidebarWidth, 44f);
+            // Demo .icon-btn: a square 26px affordance tucked into the panel's top-right corner.
+            rt.sizeDelta = new Vector2(CollapsedSidebarWidth, CollapsedSidebarWidth);
             rt.anchoredPosition = Vector2.zero;
             var img = go.AddComponent<Image>();
-            img.color = new Color(0.118f, 0.137f, 0.161f, 1f);
+            img.color = Chrome.ConceptDTheme.Bg3;
             var btn = go.AddComponent<Button>();
             btn.targetGraphic = img;
             btn.onClick.AddListener(() =>
@@ -5393,20 +5525,25 @@ namespace TheRobotDraft.Uml
                 ApplyPaletteCollapse();
                 Flash(_paletteSidebarCollapsed ? "left toolbar collapsed" : "left toolbar expanded");
             });
-            _paletteToggleText = MakeText(rt, "", Vector2.zero, rt.sizeDelta, 18,
-                new Color(0.92f, 0.95f, 1f, 1f), TextAnchor.MiddleCenter);
+            _paletteToggleText = MakeText(rt, "", Vector2.zero, rt.sizeDelta,
+                Chrome.ChromeMetrics.FontMenu, Chrome.ConceptDTheme.TextDim, TextAnchor.MiddleCenter);
             _paletteToggleText.raycastTarget = false;
+            TheRobotDraft.Uml.Chrome.UiTooltip.Bind(go, "Collapse / expand left palette", _font);
         }
 
         private void ApplyPaletteCollapse()
         {
             if (_palette == null) return;
-            _palette.offsetMax = new Vector2(PaletteActiveWidth, -70f); // PaletteActiveWidth already includes RailWidth
+            // PaletteActiveWidth already includes RailWidth.
+            _palette.offsetMax = new Vector2(PaletteActiveWidth, -Chrome.ChromeMetrics.DockTopInset);
             if (_paletteBody != null) _paletteBody.gameObject.SetActive(!_paletteSidebarCollapsed);
             if (_paletteToggleText != null) _paletteToggleText.text = _paletteSidebarCollapsed ? ">" : "<";
+            ReflowShellChrome();
         }
 
         // Left-browser tab state (Palette | Outline | Recents — demo parity).
+        /// <summary>Height of the tab strip; tab content areas start below it.</summary>
+        internal const float PaletteTabRowHeight = 26f;
         private string _paletteTab = "palette";
         private readonly Dictionary<string, Image> _paletteTabButtons = new();
         private readonly Dictionary<string, Text> _paletteTabTexts = new();
@@ -5414,7 +5551,9 @@ namespace TheRobotDraft.Uml
 
         private void BuildPaletteTabs(float width)
         {
-            float tw = (width - 12f) / 3f;
+            // Reserve the top-right corner for the collapse button, which is a later sibling and
+            // would otherwise win the raycast over the last tab's right edge.
+            float tw = (width - 12f - CollapsedSidebarWidth) / 3f;
             float tx = 6f;
             foreach (var (key, label) in new[] { ("palette", "Palette"), ("outline", "Outline"), ("recents", "Recents") })
             {
@@ -5430,8 +5569,8 @@ namespace TheRobotDraft.Uml
                 btn.targetGraphic = img;
                 var k = key;
                 btn.onClick.AddListener(() => SetPaletteTab(k));
-                var t = MakeText(rt, label, Vector2.zero, rt.sizeDelta, 12,
-                    new Color(0.62f, 0.67f, 0.74f, 1f), TextAnchor.MiddleCenter);
+                var t = MakeText(rt, label, Vector2.zero, rt.sizeDelta, Chrome.ChromeMetrics.FontControl,
+                    Chrome.ConceptDTheme.TextDim, TextAnchor.MiddleCenter);
                 t.raycastTarget = false;
                 _paletteTabButtons[key] = img;
                 _paletteTabTexts[key] = t;
@@ -5443,9 +5582,15 @@ namespace TheRobotDraft.Uml
         private void SetPaletteTab(string tab)
         {
             _paletteTab = tab;
+            bool outline = tab == "outline";
             if (_paletteSearchGo != null) _paletteSearchGo.SetActive(tab == "palette");
+            // Outline is served by BrowseNavPanel in its own host rect; the palette's scroller
+            // backs the other two tabs. Exactly one of the pair is ever visible.
+            if (_browseNavHost != null) _browseNavHost.gameObject.SetActive(outline);
+            if (_paletteViewport != null) _paletteViewport.gameObject.SetActive(!outline);
             RefreshPaletteTabs();
             RebuildPaletteContent();
+            if (outline) _browseNav?.RebuildTree();
         }
 
         private void RefreshPaletteTabs()
@@ -5453,11 +5598,14 @@ namespace TheRobotDraft.Uml
             foreach (var kv in _paletteTabButtons)
             {
                 bool active = kv.Key == _paletteTab;
+                // Demo .tab.active: accent underline color on text; quiet surface behind.
                 if (kv.Value != null) kv.Value.color = active
-                    ? new Color(0.118f, 0.137f, 0.161f, 1f)
-                    : new Color(0.075f, 0.085f, 0.105f, 1f);
+                    ? TheRobotDraft.Uml.Chrome.ConceptDTheme.Bg3
+                    : TheRobotDraft.Uml.Chrome.ConceptDTheme.Panel;
                 if (_paletteTabTexts.TryGetValue(kv.Key, out var t) && t != null)
-                    t.color = active ? new Color(0.216f, 0.784f, 0.765f, 1f) : new Color(0.62f, 0.67f, 0.74f, 1f);
+                    t.color = active
+                        ? TheRobotDraft.Uml.Chrome.ConceptDTheme.Accent
+                        : TheRobotDraft.Uml.Chrome.ConceptDTheme.TextDim;
             }
         }
 
@@ -5470,7 +5618,8 @@ namespace TheRobotDraft.Uml
             const float width = PaletteWidth;
             float y = -8f;
 
-            if (_paletteTab == "outline") { BuildOutlineRows(width, ref y); _paletteContent.sizeDelta = new Vector2(0f, -y + 4f); return; }
+            // Outline is rendered by BrowseNavPanel into its own host rect, not this scroller.
+            if (_paletteTab == "outline") { _paletteContent.sizeDelta = Vector2.zero; return; }
             if (_paletteTab == "recents") { BuildRecentRows(width, ref y); _paletteContent.sizeDelta = new Vector2(0f, -y + 4f); return; }
 
             string q = (_paletteSearch ?? "").Trim();
@@ -5511,47 +5660,6 @@ namespace TheRobotDraft.Uml
                 y -= 6f;
             }
             _paletteContent.sizeDelta = new Vector2(0f, -y + 4f);
-        }
-
-        /// <summary>Outline tab: Diagrams → Pages tree (click = open); the demo's browse-nav.</summary>
-        private void BuildOutlineRows(float width, ref float y)
-        {
-            bool any = false;
-            foreach (var el in _model.Elements)
-            {
-                if (el.Kind != ElementKind.Package || el.Parent.IsValid) continue;
-                any = true;
-                var pages = new List<(ElementId id, int depth)>();
-                CollectPages(el.Id, 0, pages);
-                foreach (var (pid, depth) in pages)
-                {
-                    var id = pid;
-                    bool active = id == _activePackage;
-                    var go = new GameObject("Outline:" + id, typeof(RectTransform));
-                    var rt = (RectTransform)go.transform;
-                    rt.SetParent(_paletteContent, false);
-                    rt.anchorMin = rt.anchorMax = new Vector2(0f, 1f);
-                    rt.pivot = new Vector2(0f, 1f);
-                    rt.sizeDelta = new Vector2(width - 16f, 23f);
-                    rt.anchoredPosition = new Vector2(6f, y);
-                    var img = go.AddComponent<Image>();
-                    img.color = active ? new Color(0.118f, 0.137f, 0.161f, 1f) : new Color(0.075f, 0.085f, 0.105f, 0f);
-                    var btn = go.AddComponent<Button>();
-                    btn.targetGraphic = img;
-                    btn.onClick.AddListener(() => { GoToPackage(id); RebuildPaletteContent(); });
-                    MakeText(rt, PackageName(id), new Vector2(8f + depth * 14f, 0f),
-                        new Vector2(width - 24f - depth * 14f, 23f), 13,
-                        active ? new Color(0.216f, 0.784f, 0.765f, 1f) : new Color(0.78f, 0.83f, 0.89f, 1f),
-                        TextAnchor.MiddleLeft).raycastTarget = false;
-                    y -= 26f;
-                }
-            }
-            if (!any)
-            {
-                MakeText(_paletteContent, "no diagrams yet", new Vector2(8f, y), new Vector2(width - 16f, 22f),
-                    13, new Color(0.55f, 0.60f, 0.68f, 1f), TextAnchor.MiddleLeft).raycastTarget = false;
-                y -= 26f;
-            }
         }
 
         /// <summary>Recents tab: the MRU model files (click = open).</summary>
@@ -5632,11 +5740,14 @@ namespace TheRobotDraft.Uml
             rt.pivot = new Vector2(0f, 1f);
             rt.sizeDelta = new Vector2(width, 23f);
             rt.anchoredPosition = new Vector2(6f, y);
-            go.AddComponent<Image>().color = new Color(0.118f, 0.137f, 0.161f, 1f);
+            var rowImg = go.AddComponent<Image>();
+            TheRobotDraft.Uml.Chrome.MacOsControlKit.ApplyMenuRow(rowImg);
+            rowImg.raycastTarget = true;
             var item = go.AddComponent<UmlPaletteItem>();
             item.Canvas = this; item.Kind = kind; item.Label = label;
             MakeText(rt, label, new Vector2(8f, 0f), new Vector2(width - 12f, 23f), 13,
-                new Color(0.78f, 0.83f, 0.89f, 1f), TextAnchor.MiddleLeft);
+                TheRobotDraft.Uml.Chrome.ConceptDTheme.Text, TextAnchor.MiddleLeft);
+            TheRobotDraft.Uml.Chrome.UiTooltip.Bind(go, "Click to arm Place · drag onto canvas to insert " + label, _font);
         }
 
         private RectTransform NewLayer(string name)
@@ -5694,7 +5805,7 @@ namespace TheRobotDraft.Uml
             var bdRt = (RectTransform)backdrop.transform;
             bdRt.SetParent(_root, false);
             Stretch(bdRt);
-            backdrop.AddComponent<Image>().color = new Color(0f, 0f, 0f, 0.45f);
+            TheRobotDraft.Uml.Chrome.MacOsControlKit.ApplyBackdrop(backdrop.AddComponent<Image>());
             backdrop.AddComponent<UmlModalBackdrop>().Canvas = this;
             _menu = backdrop;
 
@@ -5706,7 +5817,7 @@ namespace TheRobotDraft.Uml
             rt.pivot = new Vector2(0.5f, 0.5f);
             rt.sizeDelta = new Vector2(w, h);
             rt.anchoredPosition = Vector2.zero;
-            panel.AddComponent<Image>().color = new Color(0.10f, 0.115f, 0.14f, 1f);
+            TheRobotDraft.Uml.Chrome.MacOsControlKit.ApplyPanel(panel.AddComponent<Image>());
 
             MakeText(rt, title, new Vector2(16f, -12f), new Vector2(w - 32f, 24f), 16,
                 new Color(0.84f, 0.88f, 0.94f, 1f), TextAnchor.MiddleLeft).fontStyle = FontStyle.Bold;
@@ -5718,7 +5829,7 @@ namespace TheRobotDraft.Uml
             inRt.pivot = new Vector2(0f, 1f);
             inRt.sizeDelta = new Vector2(w - 32f, 38f);
             inRt.anchoredPosition = new Vector2(16f, -48f);
-            inputGo.AddComponent<Image>().color = new Color(0.078f, 0.09f, 0.106f, 1f);
+            TheRobotDraft.Uml.Chrome.MacOsControlKit.ApplyTextField(inputGo.AddComponent<Image>());
             var input = inputGo.AddComponent<InputField>();
 
             var textComp = MakeText(inRt, "", new Vector2(10f, 0f), new Vector2(w - 56f, 38f), 18,
@@ -5767,9 +5878,11 @@ namespace TheRobotDraft.Uml
             rt.sizeDelta = size;
             rt.anchoredPosition = topLeft;
             var img = go.AddComponent<Image>();
-            img.color = color;
+            // From-scratch macOS-lookalike 9-slice chrome (primary vs secondary from fill chroma).
+            TheRobotDraft.Uml.Chrome.MacOsControlKit.ApplyButton(img, color);
             var btn = go.AddComponent<Button>();
             btn.targetGraphic = img;
+            TheRobotDraft.Uml.Chrome.MacOsControlKit.ApplyButtonInteraction(btn, color);
             btn.onClick.AddListener(() => onClick());
             MakeText(rt, label, Vector2.zero, size, 16, new Color(0.95f, 0.97f, 1f), TextAnchor.MiddleCenter);
         }
@@ -5783,7 +5896,7 @@ namespace TheRobotDraft.Uml
             rt.pivot = new Vector2(0f, 1f);
             rt.sizeDelta = size;
             rt.anchoredPosition = ClampPanelTopLeft(new Vector2(screenPos.x, screenPos.y) / ScaleFactor, size);
-            go.AddComponent<Image>().color = color;
+            TheRobotDraft.Uml.Chrome.MacOsControlKit.ApplyPanel(go.AddComponent<Image>(), color);
             return go;
         }
 
@@ -5816,7 +5929,7 @@ namespace TheRobotDraft.Uml
             rt.pivot = new Vector2(0f, 0.5f);
             rt.sizeDelta = new Vector2(width, 1f);
             rt.anchoredPosition = topLeft;
-            go.AddComponent<Image>().color = new Color(0.165f, 0.196f, 0.22f, 1f);
+            TheRobotDraft.Uml.Chrome.MacOsControlKit.ApplySeparator(go.AddComponent<Image>());
         }
 
         private void MakeMenuButton(RectTransform parent, MenuItem item, Vector2 topLeft, Vector2 size)
@@ -5829,11 +5942,14 @@ namespace TheRobotDraft.Uml
             rt.sizeDelta = size;
             rt.anchoredPosition = topLeft;
             var img = go.AddComponent<Image>();
-            img.color = new Color(0.118f, 0.137f, 0.161f, item.Enabled ? 1f : 0.4f);
+            var rowColor = TheRobotDraft.Uml.Chrome.MacOsControlKit.MenuRowFill;
+            if (!item.Enabled) rowColor.a = 0.4f;
+            TheRobotDraft.Uml.Chrome.MacOsControlKit.ApplyMenuRow(img, rowColor);
             if (item.Enabled && item.Action != null)
             {
                 var btn = go.AddComponent<Button>();
                 btn.targetGraphic = img;
+                TheRobotDraft.Uml.Chrome.MacOsControlKit.ApplyMenuRowInteraction(btn);
                 var act = item.Action;
                 btn.onClick.AddListener(() => act());
             }
@@ -5919,17 +6035,34 @@ namespace TheRobotDraft.Uml
     /// <summary>A toolbar palette entry: drag it onto the canvas to drop a new node of its kind, or
     /// click it to arm Place mode with that kind (the next canvas click places — never screen center).</summary>
     public sealed class UmlPaletteItem : MonoBehaviour,
-        IBeginDragHandler, IDragHandler, IEndDragHandler, IPointerClickHandler
+        IBeginDragHandler, IDragHandler, IEndDragHandler, IPointerClickHandler, IInitializePotentialDragHandler
     {
         public UmlCanvas Canvas;
         public ElementKind Kind;
         public string Label;
+        private bool _dragging;
 
-        public void OnBeginDrag(PointerEventData e) => Canvas.BeginPaletteDrag(Kind, Label);
+        public void OnInitializePotentialDrag(PointerEventData e) => e.useDragThreshold = true;
+
+        public void OnBeginDrag(PointerEventData e)
+        {
+            _dragging = true;
+            Canvas.BeginPaletteDrag(Kind, Label);
+        }
+
         public void OnDrag(PointerEventData e) => Canvas.UpdatePaletteDrag(e.position);
-        public void OnEndDrag(PointerEventData e) => Canvas.EndPaletteDrag(e.position);
+
+        public void OnEndDrag(PointerEventData e)
+        {
+            Canvas.EndPaletteDrag(e.position);
+            _dragging = false;
+        }
+
         // A click (no drag) arms Place mode with this kind; EventSystem only fires this when
         // no drag started, so drag-to-drop and click-to-arm coexist cleanly.
-        public void OnPointerClick(PointerEventData e) { if (!e.dragging) Canvas.ArmPlaceKind(Kind); }
+        public void OnPointerClick(PointerEventData e)
+        {
+            if (!_dragging && !e.dragging) Canvas.ArmPlaceKind(Kind);
+        }
     }
 }

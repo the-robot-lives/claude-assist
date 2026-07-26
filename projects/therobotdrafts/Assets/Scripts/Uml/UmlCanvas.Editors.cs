@@ -21,7 +21,8 @@ namespace TheRobotDraft.Uml
     {
         private static readonly string[] CommonMultiplicities = { "1", "0..1", "0..*", "1..*", "*" };
 
-        private static readonly Color LabelColor = new Color(0.62f, 0.68f, 0.78f, 1f);
+        // Concept D form labels (demo --text-dim).
+        private static readonly Color LabelColor = TheRobotDraft.Uml.Chrome.ConceptDTheme.TextDim;
 
         // --- member (attribute / operation) editor ---
 
@@ -543,7 +544,7 @@ namespace TheRobotDraft.Uml
             bdRt.SetParent(_root, false);
             Stretch(bdRt);
             var bdImg = backdrop.AddComponent<Image>();
-            bdImg.color = new Color(0f, 0f, 0f, 0.45f);
+            TheRobotDraft.Uml.Chrome.MacOsControlKit.ApplyBackdrop(bdImg);
             bdImg.raycastTarget = true; // swallow clicks on the dim area without dismissing
 
             void Close() { if (backdrop != null) Destroy(backdrop); }
@@ -556,7 +557,7 @@ namespace TheRobotDraft.Uml
             rt.pivot = new Vector2(0.5f, 0.5f);
             rt.sizeDelta = new Vector2(w, h);
             rt.anchoredPosition = Vector2.zero;
-            panelGo.AddComponent<Image>().color = new Color(0.14f, 0.16f, 0.20f, 1f);
+            TheRobotDraft.Uml.Chrome.MacOsControlKit.ApplyPanel(panelGo.AddComponent<Image>());
 
             MakeText(rt, "Pick colour   —   " + channel, new Vector2(16f, -12f), new Vector2(w - 32f, 24f), 16,
                 new Color(0.86f, 0.90f, 0.96f, 1f), TextAnchor.MiddleLeft).fontStyle = FontStyle.Bold;
@@ -764,7 +765,8 @@ namespace TheRobotDraft.Uml
             inRt.pivot = new Vector2(0f, 1f);
             inRt.sizeDelta = new Vector2(width, height);
             inRt.anchoredPosition = topLeft;
-            inputGo.AddComponent<Image>().color = new Color(0.078f, 0.090f, 0.106f, 1f);
+            var fieldImg = inputGo.AddComponent<Image>();
+            TheRobotDraft.Uml.Chrome.MacOsControlKit.ApplyTextField(fieldImg);
             var input = inputGo.AddComponent<InputField>();
 
             var textComp = MakeText(inRt, "", new Vector2(8f, -4f), new Vector2(width - 16f, height - 8f), 15,
@@ -868,7 +870,7 @@ namespace TheRobotDraft.Uml
             var bdRt = (RectTransform)backdrop.transform;
             bdRt.SetParent(_root, false);
             Stretch(bdRt);
-            backdrop.AddComponent<Image>().color = new Color(0f, 0f, 0f, 0.45f);
+            TheRobotDraft.Uml.Chrome.MacOsControlKit.ApplyBackdrop(backdrop.AddComponent<Image>());
             backdrop.AddComponent<UmlModalBackdrop>().Canvas = this;
             _menu = backdrop;
 
@@ -879,7 +881,7 @@ namespace TheRobotDraft.Uml
             rt.pivot = new Vector2(0.5f, 0.5f);
             rt.sizeDelta = new Vector2(w, h);
             rt.anchoredPosition = Vector2.zero;
-            panelGo.AddComponent<Image>().color = new Color(0.14f, 0.16f, 0.20f, 1f);
+            TheRobotDraft.Uml.Chrome.MacOsControlKit.ApplyPanel(panelGo.AddComponent<Image>());
 
             MakeText(rt, title, new Vector2(16f, -12f), new Vector2(w - 32f, 24f), 16,
                 new Color(0.86f, 0.90f, 0.96f, 1f), TextAnchor.MiddleLeft).fontStyle = FontStyle.Bold;
@@ -902,7 +904,8 @@ namespace TheRobotDraft.Uml
             inRt.pivot = new Vector2(0f, 1f);
             inRt.sizeDelta = new Vector2(width, 32f);
             inRt.anchoredPosition = topLeft;
-            inputGo.AddComponent<Image>().color = new Color(0.078f, 0.090f, 0.106f, 1f);
+            var fieldImg = inputGo.AddComponent<Image>();
+            TheRobotDraft.Uml.Chrome.MacOsControlKit.ApplyTextField(fieldImg);
             var input = inputGo.AddComponent<InputField>();
 
             var textComp = MakeText(inRt, "", new Vector2(8f, 0f), new Vector2(width - 16f, 32f), 16,
@@ -965,7 +968,7 @@ namespace TheRobotDraft.Uml
                 lrt.pivot = new Vector2(0f, 1f);
                 lrt.sizeDelta = new Vector2(inputW, lh);
                 lrt.anchoredPosition = topLeft + new Vector2(0f, -34f);
-                list.AddComponent<Image>().color = new Color(0.13f, 0.15f, 0.19f, 0.99f);
+                TheRobotDraft.Uml.Chrome.MacOsControlKit.ApplyPopover(list.AddComponent<Image>());
                 list.AddComponent<RectMask2D>();
 
                 var content = new GameObject("C", typeof(RectTransform));
@@ -995,9 +998,10 @@ namespace TheRobotDraft.Uml
                     irt.sizeDelta = new Vector2(inputW, ih);
                     irt.anchoredPosition = new Vector2(0f, iy);
                     var iimg = igo.AddComponent<Image>();
-                    iimg.color = new Color(0.18f, 0.20f, 0.25f, 1f);
+                    TheRobotDraft.Uml.Chrome.MacOsControlKit.ApplyMenuRow(iimg);
                     var ibtn = igo.AddComponent<Button>();
                     ibtn.targetGraphic = iimg;
+                    TheRobotDraft.Uml.Chrome.MacOsControlKit.ApplyMenuRowInteraction(ibtn);
                     ibtn.onClick.AddListener(() => { input.text = ov; CloseList(); });
                     MakeText(irt, ov, new Vector2(8f, 0f), new Vector2(inputW - 12f, ih), 14,
                         new Color(0.9f, 0.93f, 0.98f, 1f), TextAnchor.MiddleLeft);
@@ -1034,9 +1038,7 @@ namespace TheRobotDraft.Uml
             void Repaint()
             {
                 for (int i = 0; i < opts.Length; i++)
-                    images[i].color = opts[i] == current
-                        ? new Color(0.20f, 0.42f, 0.52f, 1f)
-                        : new Color(0.18f, 0.20f, 0.25f, 1f);
+                    TheRobotDraft.Uml.Chrome.MacOsControlKit.ApplySegment(images[i], opts[i] == current);
             }
 
             for (int i = 0; i < opts.Length; i++)
@@ -1073,14 +1075,19 @@ namespace TheRobotDraft.Uml
             rt.sizeDelta = new Vector2(22f, 22f);
             rt.anchoredPosition = topLeft;
             var img = go.AddComponent<Image>();
-            img.color = new Color(0.20f, 0.22f, 0.27f, 1f);
+            TheRobotDraft.Uml.Chrome.MacOsControlKit.ApplyCheckbox(img, state);
             var btn = go.AddComponent<Button>();
             btn.targetGraphic = img;
             var mark = MakeText(rt, state ? "✓" : "", new Vector2(2f, 0f), new Vector2(20f, 22f), 16,
                 new Color(0.40f, 0.85f, 0.60f, 1f), TextAnchor.MiddleCenter);
             MakeText(parent, label, topLeft + new Vector2(28f, 0f), new Vector2(120f, 22f), 15,
                 new Color(0.84f, 0.88f, 0.94f, 1f), TextAnchor.MiddleLeft);
-            btn.onClick.AddListener(() => { state = !state; mark.text = state ? "✓" : ""; });
+            btn.onClick.AddListener(() =>
+            {
+                state = !state;
+                mark.text = state ? "✓" : "";
+                TheRobotDraft.Uml.Chrome.MacOsControlKit.ApplyCheckbox(img, state);
+            });
             return () => state;
         }
 

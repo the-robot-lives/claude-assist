@@ -17,12 +17,36 @@ namespace TheRobotDraft.Uml
     public sealed partial class UmlCanvas : IBrowseTreeSource, IBrowseNavActions
     {
         private BrowseNavPanel _browseNav;
+        private RectTransform _browseNavHost;
 
-        /// <summary>Built alongside BuildPalette() during HUD setup.</summary>
+        /// <summary>
+        /// Built immediately after BuildPalette(), into the left panel's Outline tab.
+        /// <para>
+        /// IA v2 puts the model browser on the LEFT ("Left rail → Model Browser"; panel tabs
+        /// Files · Outline · Recents), not in its own dock. It previously built a second
+        /// right-docked panel at the same rect as the inspector — since the inspector is the
+        /// later sibling it drew on top, leaving this tree invisible and unreachable while a
+        /// weaker pages-only outline occupied the tab it belongs in.
+        /// </para>
+        /// </summary>
         private void BuildBrowseNav()
         {
+            // Content area of the palette body, below the tab row.
+            var hostGo = new GameObject("OutlineHost", typeof(RectTransform));
+            _browseNavHost = (RectTransform)hostGo.transform;
+            _browseNavHost.SetParent(_paletteBody, false);
+            _browseNavHost.anchorMin = Vector2.zero;
+            _browseNavHost.anchorMax = Vector2.one;
+            _browseNavHost.offsetMin = Vector2.zero;
+            _browseNavHost.offsetMax = new Vector2(0f, -PaletteTabRowHeight);
+
             _browseNav = new BrowseNavPanel(_root, _font, this, this);
-            _browseNav.Build();
+            _browseNav.Build(_browseNavHost, PaletteWidth);
+
+            // Derive the tri-state (search box / palette scroller / outline host) from the active
+            // tab rather than re-asserting it here, so changing the default tab can't leave the
+            // palette scroller and the tree visible at the same time.
+            SetPaletteTab(_paletteTab);
         }
 
         // ================= IBrowseTreeSource (read) =================
@@ -185,7 +209,7 @@ namespace TheRobotDraft.Uml
             var bdRt = (RectTransform)backdrop.transform;
             bdRt.SetParent(_root, false);
             Stretch(bdRt);
-            backdrop.AddComponent<Image>().color = new Color(0f, 0f, 0f, 0.45f);
+            TheRobotDraft.Uml.Chrome.MacOsControlKit.ApplyBackdrop(backdrop.AddComponent<Image>());
             backdrop.AddComponent<UmlModalBackdrop>().Canvas = this;
             _menu = backdrop;
 
@@ -197,7 +221,7 @@ namespace TheRobotDraft.Uml
             rt.pivot = new Vector2(0.5f, 0.5f);
             rt.sizeDelta = new Vector2(w, h);
             rt.anchoredPosition = Vector2.zero;
-            panel.AddComponent<Image>().color = new Color(0.14f, 0.16f, 0.20f, 1f);
+            TheRobotDraft.Uml.Chrome.MacOsControlKit.ApplyPanel(panel.AddComponent<Image>());
 
             MakeText(rt, "Pick an element", new Vector2(pad, -12f), new Vector2(w - 2 * pad, 24f), 16,
                 new Color(0.84f, 0.88f, 0.94f, 1f), TextAnchor.MiddleLeft).fontStyle = FontStyle.Bold;
@@ -212,7 +236,7 @@ namespace TheRobotDraft.Uml
             vrt.pivot = new Vector2(0f, 1f);
             vrt.offsetMin = new Vector2(pad, pad + 40f);       // leave room for Cancel row
             vrt.offsetMax = new Vector2(-pad, -86f);           // below the search box
-            viewport.AddComponent<Image>().color = new Color(0.10f, 0.11f, 0.14f, 1f);
+            TheRobotDraft.Uml.Chrome.MacOsControlKit.ApplyScrollWell(viewport.AddComponent<Image>());
             viewport.AddComponent<RectMask2D>();
 
             var scroll = panel.AddComponent<ScrollRect>();

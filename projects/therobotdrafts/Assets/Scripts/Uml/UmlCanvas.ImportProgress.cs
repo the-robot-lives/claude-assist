@@ -162,7 +162,7 @@ namespace TheRobotDraft.Uml
             barRt.pivot = new Vector2(0f, 1f);
             barRt.sizeDelta = new Vector2(barW, barH);
             barRt.anchoredPosition = new Vector2(16f, -48f);
-            barBg.AddComponent<Image>().color = new Color(0.18f, 0.20f, 0.25f, 1f);
+            TheRobotDraft.Uml.Chrome.MacOsControlKit.ApplyProgressTrack(barBg.AddComponent<Image>());
 
             var fill = new GameObject("Fill", typeof(RectTransform));
             var fillRt = (RectTransform)fill.transform;
@@ -172,7 +172,8 @@ namespace TheRobotDraft.Uml
             fillRt.sizeDelta = new Vector2(0f, 0f);
             fillRt.anchoredPosition = Vector2.zero;
             var fillImg = fill.AddComponent<Image>();
-            fillImg.color = new Color(0.20f, 0.52f, 0.36f, 1f);
+            // Accent fill on raised track (primary action green).
+            TheRobotDraft.Uml.Chrome.MacOsControlKit.ApplyButton(fillImg, new Color(0.20f, 0.52f, 0.36f, 1f));
 
             var pctText = MakeText(panel, $"0 / {total}", new Vector2(16f, -74f), new Vector2(w - 32f, 18f), 13,
                 new Color(0.84f, 0.88f, 0.94f, 1f), TextAnchor.MiddleLeft);
@@ -260,7 +261,7 @@ namespace TheRobotDraft.Uml
             vpRt.pivot = new Vector2(0f, 1f);
             vpRt.sizeDelta = new Vector2(width, height);
             vpRt.anchoredPosition = topLeft;
-            viewportGo.AddComponent<Image>().color = new Color(0.10f, 0.11f, 0.14f, 1f);
+            TheRobotDraft.Uml.Chrome.MacOsControlKit.ApplyScrollWell(viewportGo.AddComponent<Image>());
             viewportGo.AddComponent<RectMask2D>();
             var scroll = viewportGo.AddComponent<ScrollRect>();
             scroll.horizontal = false; scroll.vertical = true; scroll.movementType = ScrollRect.MovementType.Clamped;

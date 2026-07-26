@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using TheRobotDraft.Uml.Chrome;
 
 namespace TheRobotDraft.Uml
 {
@@ -15,7 +16,7 @@ namespace TheRobotDraft.Uml
         private Text _statusRight;
         private float _statusNextRefresh;
 
-        internal const float StatusStripHeight = 24f;
+        internal const float StatusStripHeight = ChromeMetrics.StatusStripHeight;
 
         private void BuildStatusStrip()
         {
@@ -27,23 +28,23 @@ namespace TheRobotDraft.Uml
             bar.sizeDelta = new Vector2(0f, StatusStripHeight);
             bar.anchoredPosition = Vector2.zero;
             var bg = barGo.AddComponent<Image>();
-            bg.color = new Color(0.075f, 0.085f, 0.105f, 0.97f);
+            bg.color = ConceptDTheme.Bg2;
             bg.raycastTarget = false;
 
-            _statusLeft = MakeText(bar, "SELECT", new Vector2(178f, 0f), new Vector2(360f, StatusStripHeight), 12,
+            _statusLeft = MakeText(bar, "SELECT", new Vector2(12f, 0f), new Vector2(360f, StatusStripHeight), ChromeMetrics.FontStatus,
                 ToolAccent, TextAnchor.MiddleLeft);
             var lRt = (RectTransform)_statusLeft.transform;
             lRt.anchorMin = new Vector2(0f, 1f); lRt.anchorMax = new Vector2(0f, 1f);
 
-            _statusCenter = MakeText(bar, "", Vector2.zero, new Vector2(700f, StatusStripHeight), 12,
-                new Color(0.55f, 0.61f, 0.69f, 1f), TextAnchor.MiddleCenter);
+            _statusCenter = MakeText(bar, "", Vector2.zero, new Vector2(700f, StatusStripHeight),
+                ChromeMetrics.FontStatus, ConceptDTheme.TextDim, TextAnchor.MiddleCenter);
             var cRt = (RectTransform)_statusCenter.transform;
             cRt.anchorMin = cRt.anchorMax = new Vector2(0.5f, 1f);
             cRt.pivot = new Vector2(0.5f, 1f);
             cRt.anchoredPosition = Vector2.zero;
 
-            _statusRight = MakeText(bar, "", Vector2.zero, new Vector2(420f, StatusStripHeight), 12,
-                new Color(0.45f, 0.5f, 0.58f, 1f), TextAnchor.MiddleRight);
+            _statusRight = MakeText(bar, "", Vector2.zero, new Vector2(420f, StatusStripHeight),
+                ChromeMetrics.FontStatus, ConceptDTheme.TextFaint, TextAnchor.MiddleRight);
             var rRt = (RectTransform)_statusRight.transform;
             rRt.anchorMin = rRt.anchorMax = new Vector2(1f, 1f);
             rRt.pivot = new Vector2(1f, 1f);

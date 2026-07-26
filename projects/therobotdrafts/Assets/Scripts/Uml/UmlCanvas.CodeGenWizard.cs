@@ -105,7 +105,7 @@ namespace TheRobotDraft.Uml
             vpRt.pivot = new Vector2(0f, 1f);
             vpRt.sizeDelta = new Vector2(listW, listH);
             vpRt.anchoredPosition = new Vector2(pad, listTop);
-            viewportGo.AddComponent<Image>().color = new Color(0.10f, 0.11f, 0.14f, 1f);
+            TheRobotDraft.Uml.Chrome.MacOsControlKit.ApplyScrollWell(viewportGo.AddComponent<Image>());
             viewportGo.AddComponent<RectMask2D>();
             var scroll = viewportGo.AddComponent<ScrollRect>();
             scroll.horizontal = false; scroll.vertical = true; scroll.movementType = ScrollRect.MovementType.Clamped;

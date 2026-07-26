@@ -8,7 +8,7 @@ namespace TheRobotDraft.Uml
 {
     public sealed partial class UmlCanvas
     {
-        private const float InspectorWidth = 320f;
+        private const float InspectorWidth = Chrome.ChromeMetrics.InspectorWidth;
         private RectTransform _inspector;
         private RectTransform _inspectorBody;
         private RectTransform _inspectorContent;
@@ -25,9 +25,10 @@ namespace TheRobotDraft.Uml
             _inspector.anchorMin = new Vector2(1f, 0f);
             _inspector.anchorMax = new Vector2(1f, 1f);
             _inspector.pivot = new Vector2(1f, 1f);
-            _inspector.offsetMin = new Vector2(-InspectorWidth, 8f);
-            _inspector.offsetMax = new Vector2(0f, -70f);
-            go.AddComponent<Image>().color = new Color(0.075f, 0.085f, 0.105f, 0.98f);
+            _inspector.offsetMin = new Vector2(-InspectorWidth, Chrome.ChromeMetrics.EdgeGutter);
+            _inspector.offsetMax = new Vector2(0f, -Chrome.ChromeMetrics.DockTopInset);
+            TheRobotDraft.Uml.Chrome.MacOsControlKit.ApplyPanel(go.AddComponent<Image>(),
+                TheRobotDraft.Uml.Chrome.ConceptDTheme.Panel);
 
             var bodyGo = new GameObject("Body", typeof(RectTransform));
             _inspectorBody = (RectTransform)bodyGo.transform;
@@ -77,7 +78,7 @@ namespace TheRobotDraft.Uml
             rt.sizeDelta = new Vector2(CollapsedSidebarWidth, 44f);
             rt.anchoredPosition = Vector2.zero;
             var img = go.AddComponent<Image>();
-            img.color = new Color(0.118f, 0.137f, 0.161f, 1f);
+            TheRobotDraft.Uml.Chrome.MacOsControlKit.ApplyMenuRow(img);
             var btn = go.AddComponent<Button>();
             btn.targetGraphic = img;
             btn.onClick.AddListener(() =>
@@ -89,6 +90,7 @@ namespace TheRobotDraft.Uml
             _inspectorToggleText = MakeText(rt, "", Vector2.zero, rt.sizeDelta, 18,
                 new Color(0.92f, 0.95f, 1f, 1f), TextAnchor.MiddleCenter);
             _inspectorToggleText.raycastTarget = false;
+            TheRobotDraft.Uml.Chrome.UiTooltip.Bind(go, "Collapse / expand inspector", _font);
         }
 
         private void ApplyInspectorCollapse()
@@ -97,6 +99,7 @@ namespace TheRobotDraft.Uml
             _inspector.offsetMin = new Vector2(-InspectorActiveWidth, 8f);
             if (_inspectorBody != null) _inspectorBody.gameObject.SetActive(!_inspectorCollapsed);
             if (_inspectorToggleText != null) _inspectorToggleText.text = _inspectorCollapsed ? "<" : ">";
+            ReflowShellChrome();
         }
 
         private void RefreshInspector()
@@ -121,7 +124,7 @@ namespace TheRobotDraft.Uml
 
             InspectorSection("ELEMENT", ref y);
             MakeText(_inspectorContent, el.Kind.ToString(), new Vector2(12f, y), new Vector2(w - 24f, 20f), 12,
-                new Color(0.216f, 0.784f, 0.765f, 1f), TextAnchor.MiddleLeft);
+                TheRobotDraft.Uml.Chrome.ConceptDTheme.Accent, TextAnchor.MiddleLeft);
             y -= 26f;
 
             InspectorLabel("Name", ref y);
@@ -163,7 +166,8 @@ namespace TheRobotDraft.Uml
                         total++;
                         if (shown >= 14) continue;
                         MakeText(_inspectorContent, m.Name, new Vector2(12f, y), new Vector2(w - 24f, 16f), 12,
-                            isOp ? new Color(0.216f, 0.784f, 0.765f, 1f) : new Color(0.72f, 0.77f, 0.83f, 1f),
+                            isOp ? TheRobotDraft.Uml.Chrome.ConceptDTheme.Accent
+                                : TheRobotDraft.Uml.Chrome.ConceptDTheme.TextDim,
                             TextAnchor.MiddleLeft);
                         y -= 18f; shown++;
                     }
@@ -282,7 +286,7 @@ namespace TheRobotDraft.Uml
             ruleRt.pivot = new Vector2(0f, 1f);
             ruleRt.sizeDelta = new Vector2(InspectorWidth - 24f, 1f);
             ruleRt.anchoredPosition = new Vector2(12f, y);
-            rule.AddComponent<Image>().color = new Color(0.165f, 0.196f, 0.22f, 1f);
+            TheRobotDraft.Uml.Chrome.MacOsControlKit.ApplySeparator(rule.AddComponent<Image>());
             y -= 8f;
             var t = MakeText(_inspectorContent, text.ToUpperInvariant(), new Vector2(12f, y),
                 new Vector2(InspectorWidth - 24f, 18f), 11, new Color(0.42f, 0.47f, 0.54f, 1f), TextAnchor.MiddleLeft);
