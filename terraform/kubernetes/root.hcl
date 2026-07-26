@@ -22,6 +22,24 @@ locals {
   # kube_context) and Terraform auto-loads them from TF_VAR_* below.
   kube_config_path    = get_env("KUBE_CONFIG_PATH", "/Users/keithbrings/.kube/noizu/config")
   kube_config_context = get_env("KUBE_CONFIG_CONTEXT", "noizu")
+
+  # MinIO S3 backend endpoint override (Cloudflare Access workaround).
+  # These stacks pin `endpoints = { s3 = "https://minio.noizu.com" }` in their
+  # checked-in provider.tf, which Cloudflare Access answers with a 302 HTML
+  # login page during `tofu init`. ../scripts/tg-minio.sh points this at an HCL
+  # file overriding the endpoint to the local port-forward. Unset (the default)
+  # => no extra init flags => behavior unchanged.
+  #
+  # Harmless for the local-state `init` bootstrap module: OpenTofu only warns
+  # ("-backend-config was used without a backend block") and proceeds.
+  minio_backend_config = get_env("TG_MINIO_BACKEND_CONFIG", "")
+}
+
+terraform {
+  extra_arguments "minio_backend_override" {
+    commands  = ["init"]
+    arguments = local.minio_backend_config == "" ? [] : ["-backend-config=${local.minio_backend_config}"]
+  }
 }
 
 # Surface the cluster target to every module as environment variables so a

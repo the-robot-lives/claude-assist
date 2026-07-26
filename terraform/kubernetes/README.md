@@ -74,6 +74,19 @@ export AWS_SECRET_ACCESS_KEY=<minio_root_password>
 terragrunt run --all apply
 ```
 
+Those backends point at `https://minio.noizu.com`, which is behind Cloudflare
+Access — `tofu init` gets a 302 HTML login page and fails with an S3
+`ListObjectsV2` XML parse error. Run through the port-forward wrapper instead
+(it also sources the credentials above from `dc`):
+
+```bash
+../scripts/tg-minio.sh kubernetes/infra init -reconfigure
+../scripts/tg-minio.sh kubernetes/infra plan
+```
+
+See `terraform/README.md` → "MinIO state backend behind Cloudflare Access" for
+the mechanism and the `-reconfigure` caveat.
+
 ## Cluster target
 
 `root.hcl` passes the kubeconfig to every unit. Override without editing files:

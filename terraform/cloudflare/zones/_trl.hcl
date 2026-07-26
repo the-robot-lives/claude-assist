@@ -35,7 +35,7 @@ generate "backend" {
         bucket = "tfstate"
         key    = "zones/${path_relative_to_include()}/terraform.tfstate"
         region = "us-east-1"
-        endpoints = { s3 = "https://minio.noizu.com" }
+        endpoints = { s3 = "${get_env("TG_MINIO_ENDPOINT", "https://minio.noizu.com")}" }
         skip_credentials_validation = true
         skip_metadata_api_check     = true
         skip_region_validation      = true

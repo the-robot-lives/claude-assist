@@ -8,5 +8,11 @@ include "zone" {
 }
 
 inputs = {
-  domain = "therobotknows.com"
+  domain  = "therobotknows.com"
+  # app.therobotknows.com — authed dashboard host; explicit A record instead of
+  # the zone wildcard, which points at derobot.is and would misroute the app.
+  add_app = true
+  # api.therobotknows.com — API host; explicit A record instead of the zone
+  # wildcard, which points at derobot.is and would misroute the api.
+  add_api = true
 }

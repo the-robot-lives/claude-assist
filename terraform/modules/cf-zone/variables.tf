@@ -37,6 +37,12 @@ variable "add_app" {
   default     = false
 }
 
+variable "add_api" {
+  description = "Whether to add an api.* A record pointing to the server (API subdomain)"
+  type        = bool
+  default     = false
+}
+
 variable "add_wildcard" {
   description = "Whether to add a wildcard CNAME record pointing to the wildcard target"
   type        = bool

@@ -45,6 +45,19 @@ resource "cloudflare_dns_record" "app" {
   ttl     = 1
 }
 
+# api.<domain> — explicit A record to the same origin as root (e.g. the API
+# subdomain). Preferred over relying on the wildcard CNAME so the host resolves
+# directly to the cluster ingress.
+resource "cloudflare_dns_record" "api" {
+  count   = var.add_api ? 1 : 0
+  zone_id = cloudflare_zone.this.id
+  name    = "api"
+  type    = "A"
+  content = var.server_ip
+  proxied = var.proxied
+  ttl     = 1
+}
+
 resource "cloudflare_dns_record" "wildcard" {
   count   = var.add_wildcard ? 1 : 0
   zone_id = cloudflare_zone.this.id
