@@ -1,3 +1,4 @@
+liquibase.properties
 erl_crash.dump
 nohup.*
 .fseventsd

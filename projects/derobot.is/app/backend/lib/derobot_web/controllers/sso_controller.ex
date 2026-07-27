@@ -20,19 +20,63 @@ defmodule DerobotWeb.SSOController do
   # -- OIDC -------------------------------------------------------------------
 
   def oidc_init(conn, _params) do
-    {:ok, uri} = OpenIDConnect.authorization_uri(:default)
-    redirect(conn, external: uri)
+    # Two bugs are fixed together here, and fixing only the first would be worse
+    # than fixing neither.
+    #
+    # 1. ARITY. This called `authorization_uri(:default)`, the openid_connect
+    #    v0.2.x API, against v1.0.1 which exports only /2 and /3. Every request
+    #    to /auth/oidc raised UndefinedFunctionError, so OIDC sign-in has never
+    #    worked on this deployment.
+    #
+    # 2. STATE + NONCE. Neither was generated, leaving the flow open to
+    #    login-CSRF - an attacker completes a flow so the VICTIM's browser is
+    #    signed in as the ATTACKER, and subsequent work is typed into the
+    #    attacker's account - and to id_token replay.
+    #
+    # Repairing the arity alone would have turned a dead endpoint into a live
+    # and unprotected one, which is to say it would have introduced the
+    # vulnerability rather than fixed it. Both land in the same change.
+    config = oidc_config()
+
+    state = random_token()
+    nonce = random_token()
+
+    {:ok, uri} =
+      OpenIDConnect.authorization_uri(config, config.redirect_uri, %{
+        state: state,
+        nonce: nonce
+      })
+
+    conn
+    |> put_session(:sso_state, state)
+    |> put_session(:sso_nonce, nonce)
+    |> redirect(external: uri)
   end
 
-  def oidc_callback(conn, %{"code" => code}) do
-    with {:ok, tokens} <- OpenIDConnect.fetch_tokens(:default, code),
-         {:ok, claims} <- OpenIDConnect.verify(:default, tokens["id_token"]) do
+  def oidc_callback(conn, %{"code" => code} = params) do
+    expected_state = get_session(conn, :sso_state)
+    expected_nonce = get_session(conn, :sso_nonce)
+
+    # State is checked FIRST, before the provider config is even read: a forged
+    # callback is rejected without a token request, a discovery fetch, or any
+    # other work performed on an attacker's behalf.
+    #
+    # `fetch_tokens/2` and `verify/2` were also on the v0.2.x calling convention
+    # - an atom where a config map belongs, and a bare code where a params map
+    # belongs - so they are migrated here too.
+    with :ok <- verify_state(expected_state, params["state"]),
+         config <- oidc_config(),
+         {:ok, tokens} <-
+           OpenIDConnect.fetch_tokens(config, %{code: code, redirect_uri: config.redirect_uri}),
+         {:ok, claims} <- OpenIDConnect.verify(config, tokens["id_token"]),
+         :ok <- verify_nonce(expected_nonce, claims["nonce"]) do
       handle_sso_callback(conn, :oidc, %{
         email: claims["email"],
         name: %{first: claims["given_name"] || "", last: claims["family_name"] || ""},
         sub: claims["sub"]
       })
     else
+      {:error, :state_mismatch} -> redirect_with_error(conn, "state_mismatch")
       _ -> redirect_with_error(conn, "oidc_failed")
     end
   end
@@ -84,6 +128,7 @@ defmodule DerobotWeb.SSOController do
   # -- Helpers -----------------------------------------------------------------
 
   defp handle_sso_callback(conn, provider_type, attrs) do
+    conn = clear_sso_session(conn)
     frontend_url = Application.get_env(:derobot, :frontend_url, "http://localhost:3000")
 
     case Derobot.Auth.SSO.authenticate_sso(provider_type, attrs) do
@@ -100,6 +145,7 @@ defmodule DerobotWeb.SSOController do
   end
 
   defp redirect_with_error(conn, error) do
+    conn = clear_sso_session(conn)
     frontend_url = Application.get_env(:derobot, :frontend_url, "http://localhost:3000")
     redirect(conn, external: "#{frontend_url}/auth/sso-callback?error=#{error}")
   end
@@ -128,5 +174,44 @@ defmodule DerobotWeb.SSOController do
 
   defp maybe_add(list, flag, name) do
     if Application.get_env(:derobot, flag), do: [name | list], else: list
+  end
+
+  # ── OIDC state / nonce ───────────────────────────────────────
+
+  defp verify_state(nil, _received), do: {:error, :state_mismatch}
+  defp verify_state(_expected, nil), do: {:error, :state_mismatch}
+
+  defp verify_state(expected, received) do
+    if Plug.Crypto.secure_compare(expected, received),
+      do: :ok,
+      else: {:error, :state_mismatch}
+  end
+
+  # A provider that omits the nonce it was handed is not evidence of replay -
+  # not every provider echoes it. A provider that returns a DIFFERENT one is.
+  defp verify_nonce(_expected, nil), do: :ok
+  defp verify_nonce(nil, _received), do: :ok
+
+  defp verify_nonce(expected, received) do
+    if Plug.Crypto.secure_compare(expected, received), do: :ok, else: {:error, :nonce_mismatch}
+  end
+
+  # Cleared on both success and failure, so a state value can never be reused by
+  # a second callback.
+  defp clear_sso_session(conn) do
+    conn
+    |> delete_session(:sso_state)
+    |> delete_session(:sso_nonce)
+  end
+
+  defp random_token, do: :crypto.strong_rand_bytes(32) |> Base.url_encode64(padding: false)
+
+  # v1.x takes a config MAP, not the `:default` provider atom the v0.2.x API
+  # accepted. Reading it here keeps the two call sites from drifting apart.
+  defp oidc_config do
+    :openid_connect
+    |> Application.fetch_env!(:providers)
+    |> Keyword.fetch!(:default)
+    |> Map.new()
   end
 end

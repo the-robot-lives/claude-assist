@@ -13,7 +13,6 @@ export default function CompleteRegistrationPage() {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [mobilePhone, setMobilePhone] = useState("");
-  const [inviteToken, setInviteToken] = useState("");
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
 
@@ -35,7 +34,6 @@ export default function CompleteRegistrationPage() {
         firstName,
         lastName,
         mobilePhone,
-        inviteToken,
       });
       router.push(userPendingApproval(res.user) ? "/pending-approval" : appUrl("/app"));
     } catch (err) {
@@ -58,10 +56,6 @@ export default function CompleteRegistrationPage() {
         <h1 className="sg-page-title">Complete Registration</h1>
         <form onSubmit={handleSubmit} style={{ maxWidth: 420 }}>
           {error && <p className="sg-error">{error}</p>}
-          <div className="sg-field">
-            <label htmlFor="invite-token">Invite Token</label>
-            <input id="invite-token" type="text" value={inviteToken} onChange={(e) => setInviteToken(e.target.value)} autoComplete="off" />
-          </div>
           <div className="sg-field">
             <label htmlFor="user-name">User Name</label>
             <input id="user-name" type="text" value={userName} onChange={(e) => setUserName(e.target.value)} required autoComplete="username" />

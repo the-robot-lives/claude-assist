@@ -21,19 +21,48 @@ defmodule IotgoWeb.SSOController do
   # ── OIDC ──────────────────────────────────────────────────────
 
   def oidc_init(conn, _params) do
-    {:ok, uri} = OpenIDConnect.authorization_uri(:default)
-    redirect(conn, external: uri)
+    config = oidc_config()
+
+    # `state` and `nonce` were both absent, which left this flow open to
+    # login-CSRF - an attacker completes a flow so the victim is silently signed
+    # in AS the attacker - and to id_token replay. Both are verified in
+    # `oidc_callback/2`. Ueberauth already does this for the social providers;
+    # OIDC was the gap.
+    state = random_token()
+    nonce = random_token()
+
+    {:ok, uri} =
+      OpenIDConnect.authorization_uri(config, config.redirect_uri, %{
+        state: state,
+        nonce: nonce
+      })
+
+    conn
+    |> put_session(:sso_state, state)
+    |> put_session(:sso_nonce, nonce)
+    |> redirect(external: uri)
   end
 
-  def oidc_callback(conn, %{"code" => code}) do
-    with {:ok, tokens} <- OpenIDConnect.fetch_tokens(:default, code),
-         {:ok, claims} <- OpenIDConnect.verify(:default, tokens["id_token"]) do
+  def oidc_callback(conn, %{"code" => code} = params) do
+    expected_state = get_session(conn, :sso_state)
+    expected_nonce = get_session(conn, :sso_nonce)
+
+    # State is checked before anything else, including reading the provider
+    # config: a forged callback is rejected without a token request, a discovery
+    # fetch, or any other work done on an attacker's behalf.
+    with :ok <- verify_state(expected_state, params["state"]),
+         config <- oidc_config(),
+         {:ok, tokens} <-
+           OpenIDConnect.fetch_tokens(config, %{code: code, redirect_uri: config.redirect_uri}),
+         {:ok, claims} <- OpenIDConnect.verify(config, tokens["id_token"]),
+         :ok <- verify_nonce(expected_nonce, claims["nonce"]) do
       handle_sso_callback(conn, :oidc, %{
         email: claims["email"],
         name: %{first: claims["given_name"] || "", last: claims["family_name"] || ""},
         sub: claims["sub"]
       })
     else
+      {:error, :state_mismatch} -> redirect_with_error(conn, "state_mismatch")
       _ -> redirect_with_error(conn, "oidc_failed")
     end
   end
@@ -131,5 +160,42 @@ defmodule IotgoWeb.SSOController do
 
   defp maybe_add(list, flag, name) do
     if Application.get_env(:iotgo, flag), do: [name | list], else: list
+  end
+
+  # ── OIDC state / nonce ───────────────────────────────────────
+
+  # A missing expected state is a failure, not a pass: it means the callback
+  # arrived without a flow this browser started, which is exactly the forged
+  # case. `secure_compare/2` because a timing oracle on the state is a slow way
+  # to forge one.
+  defp verify_state(nil, _received), do: {:error, :state_mismatch}
+  defp verify_state(_expected, nil), do: {:error, :state_mismatch}
+
+  defp verify_state(expected, received) do
+    if Plug.Crypto.secure_compare(expected, received),
+      do: :ok,
+      else: {:error, :state_mismatch}
+  end
+
+  # A provider that omits the nonce it was given is not proof of replay, but a
+  # provider that returns a DIFFERENT one is.
+  defp verify_nonce(_expected, nil), do: :ok
+  defp verify_nonce(nil, _received), do: :ok
+
+  defp verify_nonce(expected, received) do
+    if Plug.Crypto.secure_compare(expected, received), do: :ok, else: {:error, :nonce_mismatch}
+  end
+
+  defp random_token, do: :crypto.strong_rand_bytes(32) |> Base.url_encode64(padding: false)
+
+  # openid_connect 1.x takes the provider config as a map argument. The 0.2.x
+  # API this module used to call - `authorization_uri(:default)` and friends -
+  # does not exist in 1.0.1, so `/auth/oidc` raised UndefinedFunctionError on
+  # every request and OIDC sign-in has never worked here.
+  defp oidc_config do
+    :openid_connect
+    |> Application.fetch_env!(:providers)
+    |> Keyword.fetch!(:default)
+    |> Map.new()
   end
 end

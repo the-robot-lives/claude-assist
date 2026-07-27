@@ -41,7 +41,6 @@ export default function SignupPage() {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [mobilePhone, setMobilePhone] = useState("");
-  const [inviteToken, setInviteToken] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -85,7 +84,6 @@ export default function SignupPage() {
         firstName,
         lastName,
         mobilePhone,
-        inviteToken,
       });
       router.push(postAuthPath(user));
     } catch (err: unknown) {
@@ -157,16 +155,6 @@ export default function SignupPage() {
         {step === "password" && (
           <form onSubmit={handleSubmit} style={{ maxWidth: 400 }}>
             {error && <p className="sg-error">{error}</p>}
-            <div className="sg-field">
-              <label htmlFor="invite-token">Invite Token</label>
-              <input
-                id="invite-token"
-                type="text"
-                value={inviteToken}
-                onChange={(e) => setInviteToken(e.target.value)}
-                autoComplete="off"
-              />
-            </div>
             <div className="sg-field">
               <label htmlFor="email-password">Email</label>
               <input

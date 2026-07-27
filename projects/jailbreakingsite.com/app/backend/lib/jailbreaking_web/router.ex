@@ -15,7 +15,7 @@ defmodule JailbreakingWeb.Router do
       key: "_jailbreaking_sso",
       signing_salt: "sso_session_salt",
       same_site: "Lax",
-      max_age: 300
+      max_age: 900
     plug :fetch_session
   end
 

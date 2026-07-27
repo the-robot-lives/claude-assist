@@ -28,23 +28,48 @@ defmodule StarterWeb.SSOController do
   # ⟦𓌞𓁽𓏆𓁊⟧ oidc_init :: auto-generated pointer for public function oidc_init
   def oidc_init(conn, _params) do
     config = oidc_config()
-    {:ok, uri} = OpenIDConnect.authorization_uri(config, config.redirect_uri)
-    redirect(conn, external: uri)
+
+    # `state` and `nonce` were both absent before this change, leaving the OIDC
+    # flow open to login-CSRF - an attacker completing a flow so the victim is
+    # signed in as the attacker - and to id_token replay. Both are checked in
+    # `oidc_callback/2`. Ueberauth already does this for the social providers;
+    # OIDC was the gap.
+    state = random_token()
+    nonce = random_token()
+
+    {:ok, uri} =
+      OpenIDConnect.authorization_uri(config, config.redirect_uri, %{
+        state: state,
+        nonce: nonce
+      })
+
+    conn
+    |> put_session(:sso_state, state)
+    |> put_session(:sso_nonce, nonce)
+    |> redirect(external: uri)
   end
 
   # ⟦𓊼𓏾𓌜𓄝⟧ oidc_callback :: auto-generated pointer for public function oidc_callback
-  def oidc_callback(conn, %{"code" => code}) do
-    config = oidc_config()
+  def oidc_callback(conn, %{"code" => code} = params) do
+    expected_state = get_session(conn, :sso_state)
+    expected_nonce = get_session(conn, :sso_nonce)
 
-    with {:ok, tokens} <-
+    # State is checked before anything else, including reading the provider
+    # config: a forged callback is rejected without a token request, a discovery
+    # fetch, or any other work done on an attacker's behalf.
+    with :ok <- verify_state(expected_state, params["state"]),
+         config <- oidc_config(),
+         {:ok, tokens} <-
            OpenIDConnect.fetch_tokens(config, %{code: code, redirect_uri: config.redirect_uri}),
-         {:ok, claims} <- OpenIDConnect.verify(config, tokens["id_token"]) do
+         {:ok, claims} <- OpenIDConnect.verify(config, tokens["id_token"]),
+         :ok <- verify_nonce(expected_nonce, claims["nonce"]) do
       handle_sso_callback(conn, :oidc, %{
         email: claims["email"],
         name: %{first: claims["given_name"] || "", last: claims["family_name"] || ""},
         sub: claims["sub"]
       })
     else
+      {:error, :state_mismatch} -> redirect_with_error(conn, "state_mismatch")
       _ -> redirect_with_error(conn, "oidc_failed")
     end
   end
@@ -106,6 +131,7 @@ defmodule StarterWeb.SSOController do
   # ── Helpers ──────────────────────────────────────────────────
 
   defp handle_sso_callback(conn, provider_type, attrs) do
+    conn = clear_sso_session(conn)
     frontend_url = Application.get_env(:starter, :frontend_url, "http://localhost:3000")
 
     case Starter.Auth.SSO.authenticate_sso(provider_type, attrs) do
@@ -128,9 +154,39 @@ defmodule StarterWeb.SSOController do
   end
 
   defp redirect_with_error(conn, error) do
+    conn = clear_sso_session(conn)
     frontend_url = Application.get_env(:starter, :frontend_url, "http://localhost:3000")
     redirect(conn, external: "#{frontend_url}/auth/sso-callback?error=#{error}")
   end
+
+  # `state`/`nonce` are single-use: clearing them once a flow resolves (success
+  # or failure) means a replayed callback with the same query string has
+  # nothing left in the session to match against.
+  defp clear_sso_session(conn) do
+    conn
+    |> delete_session(:sso_state)
+    |> delete_session(:sso_nonce)
+  end
+
+  defp verify_state(nil, _received), do: {:error, :state_mismatch}
+  defp verify_state(_expected, nil), do: {:error, :state_mismatch}
+
+  defp verify_state(expected, received) do
+    if Plug.Crypto.secure_compare(expected, received),
+      do: :ok,
+      else: {:error, :state_mismatch}
+  end
+
+  # A provider that omits the nonce it was given is not proof of replay, but a
+  # provider that returns a DIFFERENT one is.
+  defp verify_nonce(_expected, nil), do: :ok
+  defp verify_nonce(nil, _received), do: :ok
+
+  defp verify_nonce(expected, received) do
+    if Plug.Crypto.secure_compare(expected, received), do: :ok, else: {:error, :nonce_mismatch}
+  end
+
+  defp random_token, do: :crypto.strong_rand_bytes(32) |> Base.url_encode64(padding: false)
 
   defp oidc_config do
     :openid_connect
