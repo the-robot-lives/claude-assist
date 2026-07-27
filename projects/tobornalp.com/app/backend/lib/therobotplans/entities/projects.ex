@@ -257,8 +257,17 @@ defmodule Therobotplans.Projects do
   end
 
   def list_for_user(user_id, organization_id \\ nil) do
-    sql = "SELECT * FROM list_user_accessible_projects($1::uuid, $2::uuid)"
-    params = [user_id, organization_id]
+    # The uuid params must be dumped to their 16-byte binary form, and the uuid
+    # columns cast back to text, since raw SQL bypasses Ecto's type casting on
+    # both legs and Jason can't encode the binary form.
+    sql = """
+    SELECT id::text AS id,
+           organization_id::text AS organization_id,
+           name, slug, description, status, created_at, role_name, inherited_from_org
+    FROM list_user_accessible_projects($1::uuid, $2::uuid)
+    """
+
+    params = [uuid_to_bin(user_id), uuid_to_bin(organization_id)]
 
     case Ecto.Adapters.SQL.query(Therobotplans.Repo, sql, params) do
       {:ok, %{rows: rows, columns: cols}} ->
@@ -266,6 +275,15 @@ defmodule Therobotplans.Projects do
 
       _ ->
         []
+    end
+  end
+
+  defp uuid_to_bin(nil), do: nil
+
+  defp uuid_to_bin(uuid) when is_binary(uuid) do
+    case Ecto.UUID.dump(uuid) do
+      {:ok, bin} -> bin
+      :error -> uuid
     end
   end
 
