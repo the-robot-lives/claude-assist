@@ -118,6 +118,13 @@ defmodule NoizuSiteWeb.SSOController do
   # ── Helpers ──────────────────────────────────────────────────
 
   defp handle_sso_callback(conn, provider_type, attrs) do
+    # Safe on the social/SAML flows that also land here: `:sso_state` and
+    # `:sso_nonce` are written ONLY by `oidc_init/2` - the single `put_session`
+    # for either key in this app - so for a Ueberauth callback this is a no-op
+    # on keys that were never set. Adding a `put_session(:sso_state, ...)` or
+    # `put_session(:sso_nonce, ...)` anywhere outside `oidc_init/2` would
+    # silently turn that no-op into a real deletion on a flow this was never
+    # meant to touch, and nothing here would fail visibly.
     conn = clear_sso_session(conn)
     frontend_url = Application.get_env(:noizu_site, :frontend_url, "http://localhost:3000")
 
@@ -135,6 +142,8 @@ defmodule NoizuSiteWeb.SSOController do
   end
 
   defp redirect_with_error(conn, error) do
+    # Every provider's failure path routes through here, not just OIDC. A no-op
+    # unless `oidc_init/2` ran - same invariant as in `handle_sso_callback/3`.
     conn = clear_sso_session(conn)
     frontend_url = Application.get_env(:noizu_site, :frontend_url, "http://localhost:3000")
     redirect(conn, external: "#{frontend_url}/auth/sso-callback?error=#{error}")
@@ -190,6 +199,14 @@ defmodule NoizuSiteWeb.SSOController do
 
   # Cleared on both success and failure, so a state value can never be reused by
   # a second callback.
+  #
+  # Called from `handle_sso_callback/3` and `redirect_with_error/2`, which are
+  # shared with the social/SAML flows. That placement matches timely (the
+  # reference implementation) and both start-app scaffolds: 13 of the 23
+  # sso_controller.ex files in this repo clear here. The other 10 instead inline
+  # two `delete_session` calls inside `oidc_callback/2`, scoping the clear to
+  # OIDC alone. Both are correct - a reader comparing files is looking at a
+  # deliberate split, not drift.
   defp clear_sso_session(conn) do
     conn
     |> delete_session(:sso_state)

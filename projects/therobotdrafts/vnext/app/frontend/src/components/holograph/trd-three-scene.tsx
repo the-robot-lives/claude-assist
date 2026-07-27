@@ -137,8 +137,11 @@ function makeRenderNode(node: GraphNode) {
   for (const child of body.children) child.userData.nodeId = node.id;
   group.add(body);
 
+  // 18° threshold: keeps the hard corners that define a silhouette (box 90°, hex prism 60°)
+  // while dropping the facet seams of tessellated shapes. At the default 1° a 40-segment
+  // cylinder outlines every stave and reads as a barrel.
   const outline = new THREE.LineSegments(
-    new THREE.EdgesGeometry(body.geometry),
+    new THREE.EdgesGeometry(body.geometry, 18),
     new THREE.LineBasicMaterial({ color: baseColor.clone().lerp(new THREE.Color("#080b0d"), 0.45), linewidth: 1 }),
   );
   body.add(outline);

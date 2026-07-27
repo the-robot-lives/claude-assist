@@ -4,11 +4,3 @@ dist/
 apps/**/.build/
 apps/android/.gradle/
 apps/android/app/build/
-
-# apps/backend/db/liquibase.properties is a safe, required template
-# (${DB_*} envsubst placeholders only, no secrets) that the db Dockerfile
-# COPYs at build time; sibling projects (gotta.cc, tobornalp.com, start-app)
-# all track the identical file. Root .gitignore's bare `liquibase.properties`
-# basename rule would otherwise silently exclude it from every commit here.
-!apps/backend/db/liquibase.properties
-

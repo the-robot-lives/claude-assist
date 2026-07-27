@@ -13,15 +13,3 @@ npm-debug.log
 /assets/node_modules/
 *.db
 *.db-*
-
-# db/liquibase.properties is safe, required template source (${DB_*}
-# envsubst placeholders only, no secrets) that the db Dockerfile COPYs at
-# build time. This file gets copied verbatim into every project scaffolded
-# from this template, so the negation below is the durable half of the fix -
-# without it, every new project silently loses this file to the monorepo
-# root .gitignore's bare `liquibase.properties` basename rule. The file is
-# currently tracked here by history rather than by this negation (it
-# predates the rule matching it) - delete-and-recreate would hit the bug,
-# which is exactly what happened to `projects/NoizuPromptLingo` (untracked)
-# versus its sibling `NoizuPromptLingo.old` (still tracked).
-!db/liquibase.properties

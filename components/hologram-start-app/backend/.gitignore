@@ -16,13 +16,3 @@ npm-debug.log
 
 # Hologram generated JavaScript bundles.
 /priv/static/hologram/
-
-# db/liquibase.properties is safe, required template source (${DB_*}
-# envsubst placeholders only, no secrets) that the db Dockerfile COPYs at
-# build time. This file gets copied verbatim into every project scaffolded
-# from this template, so the negation below is the durable half of the fix --
-# without it, every new project silently loses this file to the monorepo
-# root .gitignore's bare `liquibase.properties` basename rule the same way
-# this scaffold's own copy just did, and has to rediscover the problem on
-# its own db build.
-!db/liquibase.properties

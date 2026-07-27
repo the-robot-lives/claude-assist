@@ -11,8 +11,6 @@
 # Verified 1:1 with the hosting Cloudflare account — no cross-account domains.
 #
 # Excluded on purpose:
-#   - youngcelebrities.net  : has a Cloudflare zone but is registered at neither
-#                             Namecheap account (registered elsewhere).
 #   - tobor.is, vibeucation.com : registered in TRL Namecheap but have no
 #                                 Cloudflare zone, so nothing to delegate.
 #

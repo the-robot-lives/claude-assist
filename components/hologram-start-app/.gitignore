@@ -16,10 +16,3 @@ frontend/node_modules/
 frontend/.next/
 
 backend/priv/static/hologram/
-
-# backend/db/liquibase.properties is safe, required template source
-# (${DB_*} envsubst placeholders only, no secrets) that the db Dockerfile
-# COPYs at build time. The monorepo root .gitignore's bare `liquibase.properties`
-# basename rule would otherwise silently exclude it from every commit of this
-# template's own working tree.
-!backend/db/liquibase.properties

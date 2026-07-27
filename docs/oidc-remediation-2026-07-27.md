@@ -1,8 +1,10 @@
 # OIDC `state` / `nonce` Remediation — 2026-07-27
 
-**Status:** remediation applied and re-verified across all 23 backends. The
-independent sweep has completed; the rescue of five projects (§6) was still in
-flight at publication.
+**Status:** **CODE SIDE CLOSED. Rescue signed off.** All 23 backends and both scaffolds read
+COMPLETE on a full independent sweep — v1.x arity, `state` generated + stashed +
+verified, verification running before both `oidc_config()` and `fetch_tokens`,
+`nonce` handled, session cleared, `max_age: 900`. **No REDs anywhere.** What
+remains is test coverage, not correctness — see §7.2 and §8.
 **Scope:** 21 project backends + 2 scaffolds (`components/start-app`, `components/hologram-start-app`).
 **Audience:** whoever deploys this. Read §2 and §3 before rolling anything out.
 
@@ -202,11 +204,11 @@ all** — there was no coverage to regress, and none was added.
 | therobotremembers | timelykit-2 | ✅ | ✅ | ✅ | ✅² | yes | ✖ none | author (compile) |
 | therobotsdayjob.com | timelykit-2 | ✅ | ✅ | ✅ | ✅² | yes | ✖ none | author (compile) |
 | tobarnalp.com | timelykit-2 | ✅ | ✅ | ✅ | ✅² | **no** | ✖ none | author (parse only) |
-| gotta.cc | ios → rescue | ✅ | ✅ | ✅ | ✅ | yes | ✖ none | **IN PROGRESS** |
-| iotgo.io | ios → rescue | ✅ | ✅ | ✅ | ✅ | **no** | ✖ none | **IN PROGRESS** |
-| jailbreakingsite.com | ios → rescue | ✅ | ✅ | ✅ | ✅ | **no** | ✖ none | **IN PROGRESS** |
-| noizu.com | ios → rescue | ✅ | ✅ | ✅ | ✅ | **no** | ✖ none | **IN PROGRESS** |
-| therobotlives.com | ios → rescue | ✅ | ✅ | ✅ | ✅ | **no** | ✖ none | **IN PROGRESS** |
+| gotta.cc | ios → rescue | ✅ | ✅ | ✅ | ✅ | yes | ✖ none | rescue: SIGNED OFF³ |
+| iotgo.io | ios → rescue | ✅ | ✅ | ✅ | ✅ | **no** | ✖ none | rescue: SIGNED OFF³ |
+| jailbreakingsite.com | ios → rescue | ✅ | ✅ | ✅ | ✅ | **no** | ✖ none | rescue: SIGNED OFF³ |
+| noizu.com | ios → rescue | ✅ | ✅ | ✅ | ✅ | **no** | ✖ none | rescue: SIGNED OFF³ |
+| therobotlives.com | ios → rescue | ✅ | ✅ | ✅ | ✅ | **no** | ✖ none | rescue: SIGNED OFF³ |
 
 ² Missing for part of the day; closed by a follow-up and re-verified before
 publication. See §7.1 — the cause is worth reading.
@@ -215,10 +217,35 @@ publication. See §7.1 — the cause is worth reading.
 therobotlearns, `sso_domains_test.exs` in therobotknows — but each covers
 domain/provider resolution, not the state/nonce guard.
 
-**On the last five.** The ios agent died mid-batch and a rescue agent is
-repairing them. The code columns above were read directly from the files and are
-accurate as of this writing, but **the batch is not signed off** — treat those
-rows as unconfirmed until the rescue reports.
+³ **On the last five — SIGNED OFF, and the danger was hypothetical.**
+
+The ios agent died mid-batch, which is why these were treated as the highest-risk
+group. **All five were found COMPLETE. No DANGEROUS PARTIAL ever existed.** That
+agent had landed the arity migration and *both* guards in the same commit
+(`1e1edbbdf04`); nothing was left, or committed, in the arity-without-guard state
+that §1.1 warns about.
+
+Verified against the true pre-fix baseline `1e1edbbdf04^`, with the baseline
+confirmed genuinely unpatched rather than assumed — `verify_state` count 0,
+`authorization_uri(:default)` present, `max_age: 300` in all five.
+
+**The limit, stated exactly:** nothing vulnerable was ever *committed*, but a
+transient on-disk window while that agent was mid-write **cannot be ruled out**,
+because no artifact would survive to show it. That is neither "no window existed"
+nor "we can't say" — it is the precise claim the evidence supports.
+
+**Attribution within these five:** `clear_sso_session/1` was added by the
+**rescue** agent — the only piece genuinely missing versus the reference.
+`max_age: 900` was **not** the rescue's doing; all five were already at 900 in
+`1e1edbbdf04`, so the credit belongs to whoever authored that commit.
+
+**Verification ceiling — weaker than every other row.** None of the five achieved
+a compile. They are **inspection-verified plus AST-resolution-checked**: every
+local call (`clear_sso_session`, `verify_state`, `verify_nonce`, `random_token`,
+`oidc_config`, `handle_sso_callback`, `redirect_with_error`) was confirmed to
+resolve to a definition at the right arity. That covers the specific risk of this
+edit; it is not a compile. Four have empty `deps/`; gotta.cc is hydrated but hit
+the toolchain wall in §12.
 
 **On "Verified by: author".** Every ✅ except the scaffolds was verified by the
 agent that wrote it. Self-verification is the weak link, which is why the
@@ -233,9 +260,20 @@ Listed so they are decisions rather than surprises.
 ### 7.1 Session clearing — FOUND AND CLOSED
 
 For part of the day, four projects (`therobotmakes.com`, `therobotremembers`,
-`therobotsdayjob.com`, `tobarnalp.com`) were missing `clear_sso_session/1` while
-the other 19 had it. **Re-verified after the fix landed: all 23 now clear the
-session.**
+`therobotsdayjob.com`, `tobarnalp.com`) did not clear the session while the other
+19 did. **Closed by backend-domain-2** — not by the agent that introduced the gap.
+Re-verified: exactly two `delete_session` calls per file, both inside
+`oidc_callback`, so `handle_sso_callback` and `redirect_with_error` — shared with
+the social OAuth and SAML paths — are provably untouched and those flows cannot
+have moved.
+
+**Severity, and please keep it here:** this was **not a live vulnerability.** The
+state guard worked and ran before the token request, the authorization code is
+single-use at the IdP, and the state sat in the victim's own cookie where an
+attacker has no ordinary way to reach it. What was missing is the one-time
+binding between one initiation and one callback — defence-in-depth, and a
+deviation from the reference. It was fixed for consistency. Do not let a future
+reader inflate it from the diff.
 
 Recorded because the *cause* is reusable. That batch mirrored timely's
 `oidc_init`/`oidc_callback` faithfully; the helper sits elsewhere in that file
@@ -245,18 +283,24 @@ reasoning one, and the same shape as several other near-misses in this effort.
 
 **Effect while it lasted:** `state` and `nonce` survived a completed callback for
 up to the cookie's 900s, so `verify_state` would have accepted the same state
-again inside that window. Defence-in-depth rather than a direct hole — the value
-lives only in the victim's own cookie — but it was a property every sibling had
-and those four lacked, in exactly the window that had just been widened.
+again inside that window.
 
-### 7.2 The guards are untested in the 20 application projects
+### 7.2 Test coverage — the largest remaining gap
 
-Only the two scaffolds (11 tests each) and timely (8 tests) have real
-state/nonce guard tests. No application project has one.
+Every verdict for most projects rests on **reading code**, not on an executed
+test. Current state:
 
-This is the largest remaining gap. The scaffolds' tests are the model to copy —
-they were run **and mutation-checked** (deliberately broken to confirm they
-fail), which is the standard the rest should meet.
+| Where | Coverage |
+|---|---|
+| `components/start-app`, `components/hologram-start-app` | 11 tests each, run **and mutation-checked** |
+| timely.noizu.com | 8 tests, both functions mutation-checked independently; suite 452/453¹ |
+| android-2's five (aifighter, codefre.sh, derobot.is, designing.derobot.is, robotwars) | 14 guard tests each — **3 executed and mutation-checked**, 2 written and byte-identical to the executed ones but **not run** (empty `deps/`) |
+| **The remaining 15 projects** | **None. Code review only.** |
+
+¹ The single failure is the known, unrelated `profile_completed_at` case.
+
+The scaffolds' tests are the model: run *and* deliberately broken to confirm they
+fail. A test that has never been seen to fail is not yet evidence.
 
 ### 7.3 `derobot.is` cannot resolve its OIDC dependency
 
@@ -275,7 +319,54 @@ Their fixes are **parse-checked only** — syntactically valid, not compiled.
 or `_build/`, so hydrating them will fill `git status` with untracked build
 output. Worth fixing the `.gitignore` first.
 
-### 7.5 Nonce mismatch is not distinguished for the user
+### 7.5 The five rescue projects clear the session from *shared* functions
+
+A real divergence worth knowing before comparing files. Eighteen projects call
+`clear_sso_session/1` **inside `oidc_callback`**. The five rescue projects call it
+from **`handle_sso_callback/3` and `redirect_with_error/2` instead** — functions
+shared with the social OAuth path (`oauth_callback` calls both).
+
+**This is harmless, and it was checked rather than assumed.** `:sso_state` and
+`:sso_nonce` are set *only* in `oidc_init`, so deleting them on a social-OAuth
+callback is a no-op on keys that were never present. Confirmed by grep: exactly
+one `put_session(:sso_state, ...)` per file, in `oidc_init`.
+
+It is recorded because the other eighteen were deliberately written to keep those
+two shared functions untouched, which is what let this effort say the social and
+SAML paths were *provably* unaffected. For these five that argument is
+"unaffected because the operation is a no-op" rather than "unaffected because
+nothing shared was edited" — a weaker form of the same conclusion, and a
+distinction a future auditor will otherwise have to re-derive.
+
+### 7.6 `therobotlives.com` has no `mix.lock` at all
+
+Absent and untracked. `mix.exs:46` pins `{:openid_connect, "~> 1.0"}`, so the API
+is right, but the resolved version **floats** — nothing guarantees which 1.x is
+installed. Pre-existing and separate from this remediation. Confirmed by
+inspection; belongs alongside the `derobot.is` lockfile item in §7.3.
+
+### 7.7 `OpenIDConnect.Finch` missing from supervision trees — FALSE ALARM
+
+Recorded specifically so nobody chases it. `OpenIDConnect.Finch` does not appear
+in any supervision tree in these five, nor in timely, aifighter or codefre.sh.
+That is **correct**: openid_connect 1.x declares `mod: {OpenIDConnect.Application,
+[]}` and starts its own Finch pool and document cache. Nothing is missing.
+
+### 7.8 The two "five project" sets are different — easy to conflate
+
+Both are five projects and it is easy to merge them by mistake:
+
+| Set | Projects | What is true of them |
+|---|---|---|
+| **Got tests** | aifighter, codefre.sh, derobot.is, designing.derobot.is, robotwars | 14 guard tests each (§7.2) |
+| **Rescued** | gotta.cc, iotgo.io, jailbreakingsite.com, noizu.com, therobotlives.com | No tests; `verify_state`/`verify_nonce` are `defp` |
+
+The rescued five keep `verify_state/2` and `verify_nonce/2` as **`defp`**
+(confirmed by inspection), so the mutation-checked unit tests used elsewhere are
+**not callable there** without the same `defp` → `def` + `@doc false` change the
+other set required. Budget for that if tests are ported.
+
+### 7.9 Nonce mismatch is not distinguished for the user
 
 A nonce mismatch falls through to the generic `oidc_failed` branch rather than
 getting its own error code, unlike `state_mismatch`. Harmless, but it makes
@@ -294,14 +385,15 @@ replay attempts and ordinary failures indistinguishable in logs.
   project allowed: compile where hydrated, parse-check where not, no suite
   anywhere (no Postgres).
 
-**In flight at the time of writing:**
+**The independent sweep completed and found NO REDs** across all 23 + 2
+scaffolds. Nothing is PARTIAL-DANGEROUS. The failure mode this effort most feared
+— arity migrated without a working guard, converting a dead path into a live
+unprotected one — **does not exist anywhere in the tree.**
 
-- A **rescue** of the ios agent's five projects. Its rows are marked IN PROGRESS
-  rather than guessed.
-
-The **independent sweep** of all 23 + 2 scaffolds completed during authoring.
-Its findings are not transcribed here — where it and this table disagree, prefer
-the sweep.
+**All 32 files parse cleanly.** Hydrated projects compile `rc=0`. Eight are
+**parse-checked only, not compiled**, because they are not hydrated: derobot.is,
+robotwars, iotgo.io, jailbreakingsite.com, noizu.com, therobotlives.com,
+therobotmakes.com, tobarnalp.com.
 
 This document was re-verified against the files immediately before publication,
 and one gap (§7.1) had already been closed by another agent between drafting and
@@ -309,10 +401,53 @@ that re-check. If you are reading this well after 2026-07-27, re-run the checks
 in §9 rather than trusting the table: it was accurate when written and the tree
 moved fast that day.
 
-**The honest summary:** the code is uniform and correct by inspection across all
-23. What is thin is *independent* confirmation — four agents checked their own
-work before the sweep existed. Prefer the sweep's findings over this table where
-they disagree.
+**The honest summary:** the code is uniform and correct across all 23, now
+confirmed by an independent sweep rather than only by its authors. What remains
+thin is *automated* confirmation. Ten of the 25 have executed guard tests; the
+other 15 rest on code review. "Verified" in this document means **a human-or-agent
+read the code and it was correct**, except where §7.2 says a test ran.
+
+That is a real ceiling, not a formality. Every high-confidence wrong answer in
+this effort came from reading — and the sweep's own first pass produced eight
+false REDs (§8.1).
+
+### 8.1 ⚠️ The comment-grep trap — read this before auditing
+
+The sweep's first pass flagged **8 projects as still calling
+`authorization_uri(:default)`** — the dead-endpoint signature, which would have
+meant the fix was never applied. It was a **false RED**, and the cause is
+permanent:
+
+The patching agents wrote good explanatory comments into their own fixes,
+including the old call they were replacing:
+
+```elixir
+# 1. ARITY. This called `authorization_uri(:default)`, the openid_connect
+#    v0.2.x API, against v1.0.1 which exports only /2 and /3.
+```
+
+A regex for the old signature matches **the comment**. Stripping comment lines
+cleared all 8.
+
+> **Anyone auditing this code later MUST strip comments before grepping for the
+> old API signature, or they will conclude the fix was never applied.**
+
+```bash
+# WRONG — matches the explanatory comments
+grep -rn "authorization_uri(:default)" lib/
+
+# RIGHT — live code only
+sed 's/#.*//' path/to/sso_controller.ex | grep -n "authorization_uri(:default)"
+```
+
+**Two independent agents hit this trap.** That is not coincidence — it is a
+property of how this fix was documented. The comments are genuinely valuable and
+should stay, which is exactly why the trap is permanent and worth writing down.
+
+A second, related near-miss: a grep for `max_age` with a 20-line window reported
+five projects as having none, because the new explanatory comment block had
+pushed the setting to line 33. Same root cause — the fix's own documentation
+changed the shape of the file being searched.
 
 ---
 
@@ -344,7 +479,85 @@ Per project:
 
 ---
 
-## 10. Appendix — who did what
+## 10. Lessons — the recurring shape
+
+Five agents worked this remediation. Nearly every wrong answer any of them
+produced had the **same structure**, and it is more transferable than any
+individual finding here:
+
+> **Each verified the thing they were looking at, and not the thing it depended
+> on.** Every one was locally sound and globally incomplete.
+
+Four independent instances:
+
+| Agent | Verified | Didn't ask |
+|---|---|---|
+| A batch owner | that the two functions it copied from the reference were correct | what the reference did *around* them — a `clear_sso_session/1` helper elsewhere in the file (§7.1) |
+| A batch owner | that `put_session` would work on those routes | what the cookie's existing `max_age` now *meant*, once state was stored in it (§4) |
+| The sweeping agent | that its regex matched the old API signature | whether the signature also appeared in comments — 8 false REDs (§8.1) |
+| The doc author | that a `max_age` grep covered the pipeline | whether the window still reached it after the fix added comments (§8.1) |
+
+Reading confirms what you thought to look at. That is why the executed,
+mutation-checked tests on the scaffolds are worth more than the far larger volume
+of careful code review behind everything else in §6.
+
+**The second lesson, from concurrent work:**
+
+> **Judge from current file contents — never from anyone's report, including your
+> own from ten minutes ago.**
+
+Twice in one evening an item reported as "missing" turned out to be **in flight
+rather than absent**: once for the scaffolds' `max_age`, once for the four
+session-clear gaps, which were closed by another agent between this document
+being drafted and being re-checked. Neither was a routing failure; both were
+artifacts of several agents editing the same files concurrently. Every figure in
+this document went stale at least once while it was being written.
+
+That is also the honest caveat on this document: it was accurate against the tree
+at publication. If you are reading it later, run the §9 checks rather than
+trusting §6.
+
+---
+
+## 11. Appendix — Elixir/OTP toolchain on this machine
+
+This cost one agent its compile verification and will cost the next one the same
+unless it is written down.
+
+- **asdf shims ignore `ASDF_*_VERSION`** here — they print a version list instead
+  of running. Invoke the binaries **directly** from
+  `~/.config/asdf/installs/...`.
+- **Working combination: Erlang 26.1.2 + Elixir 1.15.7.**
+- `installs/erlang/28.4.1` is an **empty directory** — it looks installed and is
+  not.
+- **Elixir 1.18 fails** on `noizu_labs_entities 0.3.1` with
+  `:elixir_quote.validate_quote/1 is undefined`. Unrelated to OIDC; it just stops
+  the build.
+- **Do not mix toolchains against one `_build`.** Elixir 1.18 / OTP 28 will
+  rebuild artifacts that OTP 26 then cannot load — the symptom is a **"corrupt
+  atom table"** error. Delete `_build` and rebuild with the working pair. (One
+  contaminated `_build` was removed during this effort so nobody inherits corrupt
+  beams.)
+- **Cold builds take well over ten minutes.** Budget for it before assuming a
+  hang.
+
+---
+
+## 12. Appendix — the `liquibase.properties` question: CLOSED, no incident
+
+Recorded so nobody re-investigates it.
+
+All **23** tracked `liquibase.properties` files — the 15 swept in on 2026-07-27
+and the 8 tracked since June — share a single md5,
+**`da0bf51e2cb61758474eb4ebac878737`**. Byte-identical. They contain
+**`${DB_*}` envsubst placeholders only**: no host, no username, no password.
+
+**Nothing ever leaked through this file.** The question arose during the same
+day's hygiene work and is settled.
+
+---
+
+## 13. Appendix — who did what
 
 | Batch | Owner | Projects |
 |---|---|---|
