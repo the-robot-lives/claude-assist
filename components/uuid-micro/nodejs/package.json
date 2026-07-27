@@ -1,0 +1,11 @@
+{
+  "name": "@noizu/uuid-micro",
+  "version": "0.1.0",
+  "description": "Four-glyph printable Unicode UUID display tokens.",
+  "main": "src/index.js",
+  "type": "commonjs",
+  "scripts": {
+    "test": "node --test"
+  },
+  "license": "MIT"
+}
