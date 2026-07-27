@@ -169,10 +169,17 @@ defmodule StarterWeb.SSOController do
     |> delete_session(:sso_nonce)
   end
 
-  defp verify_state(nil, _received), do: {:error, :state_mismatch}
-  defp verify_state(_expected, nil), do: {:error, :state_mismatch}
+  # Public (not `defp`) so `SSOStateNonceTest` can exercise the actual guard
+  # directly - `nonce` is only checked after a real token exchange, which this
+  # scaffold has no way to fake without a live/mocked IdP, so a unit test
+  # against the real function is the only way to assert the rejection instead
+  # of just its presence. Not part of the router surface; `@doc false` keeps
+  # it out of generated docs.
+  @doc false
+  def verify_state(nil, _received), do: {:error, :state_mismatch}
+  def verify_state(_expected, nil), do: {:error, :state_mismatch}
 
-  defp verify_state(expected, received) do
+  def verify_state(expected, received) do
     if Plug.Crypto.secure_compare(expected, received),
       do: :ok,
       else: {:error, :state_mismatch}
@@ -180,10 +187,11 @@ defmodule StarterWeb.SSOController do
 
   # A provider that omits the nonce it was given is not proof of replay, but a
   # provider that returns a DIFFERENT one is.
-  defp verify_nonce(_expected, nil), do: :ok
-  defp verify_nonce(nil, _received), do: :ok
+  @doc false
+  def verify_nonce(_expected, nil), do: :ok
+  def verify_nonce(nil, _received), do: :ok
 
-  defp verify_nonce(expected, received) do
+  def verify_nonce(expected, received) do
     if Plug.Crypto.secure_compare(expected, received), do: :ok, else: {:error, :nonce_mismatch}
   end
 

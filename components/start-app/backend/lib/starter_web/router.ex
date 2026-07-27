@@ -10,12 +10,20 @@ defmodule StarterWeb.Router do
   end
 
   pipeline :sso_session do
+    # 900s, not 300s: this cookie now carries the OIDC `state`/`nonce` pair
+    # (see SSOController.oidc_init/2), so its expiry gates how long a login
+    # can take, not just how long a redirect can take. 300s is too short for
+    # password + a 2FA code typed on a phone - the flow would still complete,
+    # but only insecurely, since it fails closed to an opaque `state_mismatch`
+    # with no indication it was a timeout rather than an attack. This cookie
+    # carries flow state, never credentials, so 900s is not a
+    # credential-lifetime decision.
     plug Plug.Session,
       store: :cookie,
       key: "_starter_sso",
       signing_salt: "sso_session_salt",
       same_site: "Lax",
-      max_age: 300
+      max_age: 900
 
     plug :fetch_session
   end
