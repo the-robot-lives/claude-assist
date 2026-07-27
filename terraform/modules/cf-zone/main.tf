@@ -58,6 +58,18 @@ resource "cloudflare_dns_record" "api" {
   ttl     = 1
 }
 
+# Ad-hoc subdomain A records (see var.extra_a_records). Keyed by label so adding
+# or removing one never re-indexes the others.
+resource "cloudflare_dns_record" "extra" {
+  for_each = var.extra_a_records
+  zone_id  = cloudflare_zone.this.id
+  name     = each.value
+  type     = "A"
+  content  = var.server_ip
+  proxied  = var.proxied
+  ttl      = 1
+}
+
 resource "cloudflare_dns_record" "wildcard" {
   count   = var.add_wildcard ? 1 : 0
   zone_id = cloudflare_zone.this.id

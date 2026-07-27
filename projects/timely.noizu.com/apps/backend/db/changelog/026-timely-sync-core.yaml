@@ -1,0 +1,163 @@
+databaseChangeLog:
+  # Timely sync core: the per-workspace revision counter and the taxonomy
+  # entities (client / project / ticket). See docs/SYNC-PROTOCOL.md sections
+  # 3 (identity), 4 (sync envelope) and 6 (name -> id resolution).
+  - changeSet:
+      id: 026-create-table-timely-workspace-revisions
+      author: timely-scaffold
+      changes:
+        - sql:
+            sql: |
+              -- One counter row per workspace. `server_revision` is allocated by
+              -- UPDATE ... RETURNING inside the publishing transaction, which takes a
+              -- row-level exclusive lock held until commit. Allocation order therefore
+              -- equals commit order, and an aborted transaction rolls the counter back,
+              -- so the sequence is gap-free. A Postgres SEQUENCE would be wrong here:
+              -- it is non-transactional (gaps on rollback) and a single global sequence
+              -- would leak cross-tenant write volume.
+              CREATE TABLE timely_workspace_revisions (
+                workspace_id uuid PRIMARY KEY REFERENCES organizations(id) ON DELETE CASCADE,
+                current_revision bigint NOT NULL DEFAULT 0,
+                tombstone_horizon_revision bigint NOT NULL DEFAULT 0,
+                horizon_pruned_at timestamptz,
+                created_at timestamptz NOT NULL DEFAULT now(),
+                updated_at timestamptz NOT NULL DEFAULT now(),
+                CONSTRAINT chk_timely_workspace_revisions_monotonic
+                  CHECK (current_revision >= tombstone_horizon_revision)
+              );
+      rollback:
+        - dropTable:
+            tableName: timely_workspace_revisions
+
+  - changeSet:
+      id: 026-create-table-timely-clients
+      author: timely-scaffold
+      changes:
+        - sql:
+            sql: |
+              CREATE TABLE timely_clients (
+                id uuid PRIMARY KEY,
+                workspace_id uuid NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+                name varchar(200) NOT NULL,
+                canonical_name text NOT NULL,
+                notes text NOT NULL DEFAULT '',
+                auto_created boolean NOT NULL DEFAULT false,
+                merged_into_id uuid,
+                review_state varchar(20) NOT NULL DEFAULT 'unreviewed'
+                  CHECK (review_state IN ('unreviewed','needs_review','reviewed','approved','locked','disputed')),
+                created_at timestamptz NOT NULL,
+                updated_at timestamptz NOT NULL,
+                updated_at_effective timestamptz NOT NULL,
+                server_revision bigint NOT NULL,
+                deleted_at timestamptz,
+                origin_device_id uuid
+              );
+
+              -- Convergence key: two offline devices vivifying the same name compute
+              -- the same UUIDv5 id, and this index catches the rename collision
+              -- described in SYNC-PROTOCOL 6.2 (conflict matrix rows 12 and 13).
+              CREATE UNIQUE INDEX uq_timely_clients_canonical
+                ON timely_clients (workspace_id, canonical_name);
+
+              -- The pull query: WHERE workspace_id = $1 AND server_revision > $2
+              -- ORDER BY server_revision. Covering so the page can be served from
+              -- the index for the common "nothing changed" poll.
+              CREATE INDEX idx_timely_clients_sync_cursor
+                ON timely_clients (workspace_id, server_revision) INCLUDE (id, deleted_at);
+      rollback:
+        - dropTable:
+            tableName: timely_clients
+
+  - changeSet:
+      id: 026-create-table-timely-projects
+      author: timely-scaffold
+      changes:
+        - sql:
+            sql: |
+              -- Deliberately `timely_projects`, not `projects`: the scaffold already
+              -- owns a PBAC `projects` resource. This is Timely's domain project
+              -- (billable client work) and the two must not collide.
+              CREATE TABLE timely_projects (
+                id uuid PRIMARY KEY,
+                workspace_id uuid NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+                name varchar(200) NOT NULL,
+                canonical_name text NOT NULL,
+                client_id uuid,
+                client_name text NOT NULL DEFAULT '',
+                notes text NOT NULL DEFAULT '',
+                auto_created boolean NOT NULL DEFAULT false,
+                merged_into_id uuid,
+                review_state varchar(20) NOT NULL DEFAULT 'unreviewed'
+                  CHECK (review_state IN ('unreviewed','needs_review','reviewed','approved','locked','disputed')),
+                created_at timestamptz NOT NULL,
+                updated_at timestamptz NOT NULL,
+                updated_at_effective timestamptz NOT NULL,
+                server_revision bigint NOT NULL,
+                deleted_at timestamptz,
+                origin_device_id uuid
+              );
+
+              -- "a null client_id is its own scope" (SYNC-PROTOCOL 3.3). NULL never
+              -- equals NULL in a Postgres unique index, so the null scope needs its
+              -- own partial index rather than a single three-column one.
+              CREATE UNIQUE INDEX uq_timely_projects_canonical_scoped
+                ON timely_projects (workspace_id, client_id, canonical_name)
+                WHERE client_id IS NOT NULL;
+
+              CREATE UNIQUE INDEX uq_timely_projects_canonical_unscoped
+                ON timely_projects (workspace_id, canonical_name)
+                WHERE client_id IS NULL;
+
+              CREATE INDEX idx_timely_projects_sync_cursor
+                ON timely_projects (workspace_id, server_revision) INCLUDE (id, deleted_at);
+
+              CREATE INDEX idx_timely_projects_client
+                ON timely_projects (workspace_id, client_id) WHERE deleted_at IS NULL;
+      rollback:
+        - dropTable:
+            tableName: timely_projects
+
+  - changeSet:
+      id: 026-create-table-timely-tickets
+      author: timely-scaffold
+      changes:
+        - sql:
+            sql: |
+              CREATE TABLE timely_tickets (
+                id uuid PRIMARY KEY,
+                workspace_id uuid NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+                name varchar(200) NOT NULL,
+                canonical_name text NOT NULL,
+                client_id uuid,
+                project_id uuid,
+                client_name text NOT NULL DEFAULT '',
+                project_name text NOT NULL DEFAULT '',
+                notes text NOT NULL DEFAULT '',
+                auto_created boolean NOT NULL DEFAULT false,
+                merged_into_id uuid,
+                review_state varchar(20) NOT NULL DEFAULT 'unreviewed'
+                  CHECK (review_state IN ('unreviewed','needs_review','reviewed','approved','locked','disputed')),
+                created_at timestamptz NOT NULL,
+                updated_at timestamptz NOT NULL,
+                updated_at_effective timestamptz NOT NULL,
+                server_revision bigint NOT NULL,
+                deleted_at timestamptz,
+                origin_device_id uuid
+              );
+
+              CREATE UNIQUE INDEX uq_timely_tickets_canonical_scoped
+                ON timely_tickets (workspace_id, project_id, canonical_name)
+                WHERE project_id IS NOT NULL;
+
+              CREATE UNIQUE INDEX uq_timely_tickets_canonical_unscoped
+                ON timely_tickets (workspace_id, canonical_name)
+                WHERE project_id IS NULL;
+
+              CREATE INDEX idx_timely_tickets_sync_cursor
+                ON timely_tickets (workspace_id, server_revision) INCLUDE (id, deleted_at);
+
+              CREATE INDEX idx_timely_tickets_project
+                ON timely_tickets (workspace_id, project_id) WHERE deleted_at IS NULL;
+      rollback:
+        - dropTable:
+            tableName: timely_tickets

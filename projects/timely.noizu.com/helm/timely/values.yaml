@@ -1,0 +1,213 @@
+replicas: 1
+domain: timely.noizu.com
+# Single-host app -- there is no sibling app.timely.noizu.com subdomain, so
+# appDomain intentionally equals domain.
+appDomain: timely.noizu.com
+# Scoped to this host only. Do NOT widen to ".noizu.com" -- that zone is
+# shared by dozens of unrelated apps/OSS tools under the same wildcard cert,
+# and a parent-zone cookie would leak across all of them.
+cookieDomain: ".timely.noizu.com"
+
+backend:
+  image: ops.noizu.com/timely.noizu.com/backend:v1.0.0
+  port: 4000
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+# Frontend is served by the Phoenix+Hologram backend (no separate Next.js
+# container/image). The `frontend` stanza below exists only because the
+# shared hologram-start-app chart templates (service.yaml, ingress.yaml)
+# unconditionally reference `.Values.frontend.port` for a second named
+# Service port -- it points at the same single backend process/port, not a
+# second container.
+frontend:
+  port: 4000
+
+migrate:
+  # This hook alone does NOT create the application schema.
+  # This app's schema lives in Liquibase changelogs (apps/backend/db/changelog/).
+  # `Timely.Release.migrate()` runs only the Ecto migrations in
+  # priv/repo/migrations (oban tables, smart_token) -- it applies NO changelog.
+  # `migrate.liquibase.enabled` below is what applies the changelogs; it
+  # renders an additional pre-install/pre-upgrade hook Job at weight -10,
+  # which runs BEFORE this Ecto hook (weight -5).
+  enabled: true
+  command: ["bin/timely", "eval", "Timely.Release.migrate()"]
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+
+  liquibase:
+    # Runs apps/backend/db/changelog against the database at deploy time.
+    # apps/backend/db is a declared docker.images/helm build target
+    # (.infra-config.yaml, timely.noizu.com domain, service `db`), pushed via
+    # `docker-push --release`, which auto-bumps the tag below on publish.
+    enabled: true
+    image: ops.noizu.com/timely.noizu.com/db:v1.0.0
+    # Optional override; leave unset to use the image's own CMD.
+    command: []
+    extraEnv: []
+    backoffLimit: 2
+    resources:
+      requests:
+        cpu: 50m
+        memory: 256Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+
+database:
+  host: app-timescaledb.apps.svc.cluster.local
+  port: 5432
+  name: timely
+
+redis:
+  host: app-valkey.apps.svc.cluster.local
+  port: 6379
+  # db 0 on the shared app-valkey. Verified 2026-07-27 against the *_REDIS_URL
+  # templates in .infisical-secrets.yaml (the authoritative map): indices
+  # 1-15 are all claimed by other apps on this instance, 0 is the only free
+  # index. Keep in sync with TIMELY_REDIS_URL if this ever changes.
+  db: 0
+
+secrets:
+  name: timely-secrets
+  # InfisicalSecret CRD for timely-secrets is Terraform-managed
+  # (terraform/kubernetes/apps/init/timely-site.tf), mirroring foryou-site.tf.
+  # Leave disabled here so this chart doesn't also try to own the resource.
+  infisical:
+    enabled: false
+  keys:
+    dbUser: TIMELY_DB_USER
+    dbPassword: TIMELY_DB_PASSWORD
+    databaseUrl: TIMELY_DATABASE_URL
+    secretKeyBase: TIMELY_SECRET_KEY_BASE
+    guardianSecretKey: TIMELY_GUARDIAN_SECRET_KEY
+    redisUrl: TIMELY_REDIS_URL
+    # No SendGrid entry declared in .infisical-secrets.yaml for this app yet
+    # (not in scope for this pass) -- leave blank so backendEnv's conditional
+    # skips it instead of pointing at a secret key that doesn't exist.
+    sendgridApiKey: ""
+    oidcClientId: TIMELY_OIDC_CLIENT_ID
+    oidcClientSecret: TIMELY_OIDC_CLIENT_SECRET
+    googleClientId: ""
+    googleClientSecret: ""
+    facebookClientId: ""
+    facebookClientSecret: ""
+    githubClientId: ""
+    githubClientSecret: ""
+    linkedinClientId: ""
+    linkedinClientSecret: ""
+    samlSpCert: ""
+    samlSpKey: ""
+
+mail:
+  fromName: ""
+  fromAddress: "noreply@timely.noizu.com"
+
+sso:
+  requireInvite: false
+  # SSO availability by email domain. Format:
+  # "example.com=oidc;corp.example=google,oidc"
+  domains: ""
+  # Domains whose SSO registrations are approved immediately. All other SSO
+  # registrations remain pending unless an invite activates them. Format:
+  # "example.com;corp.example" or "*" for every SSO-enabled domain.
+  autoApproveDomains: ""
+  oidc:
+    # No Authentik application has been provisioned for Timely yet -- leave
+    # empty (disables the OIDC env block) until one exists. Operator TODO.
+    issuer: ""
+  saml:
+    # Samly 1.4 expects raw metadata XML or a local metadata file path; it does
+    # not fetch metadata URLs at runtime.
+    idpMetadata: ""
+    idpMetadataFile: ""
+    # Deprecated. Kept for existing values files that used this as a file path.
+    idpMetadataUrl: ""
+    spEntityId: ""
+
+extraEnv: []
+
+configMap:
+  enabled: false
+  data: {}
+
+imagePullSecrets:
+  - name: ops-registry-secret
+
+analytics:
+  ga:
+    measurementId: ""
+  posthog:
+    key: ""
+    host: "https://us.i.posthog.com"
+
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+  cloudflareOnly: true
+
+tls:
+  enabled: true
+  # timely.noizu.com is under the *.noizu.com wildcard, already synced to
+  # every namespace (incl. apps) as `cloudflare-tls-synced` -- same secret
+  # referenced by argocd/authentik/infisical/posthog/etc. Do NOT provision a
+  # per-domain apps-tls-timely Infisical entry (that's the
+  # foryou/therobotlives own-domain pattern and doesn't apply here).
+  secretName: cloudflare-tls-synced
+  infisical:
+    enabled: false
+
+otel:
+  enabled: false
+  collectorEndpoint: "otel-collector.observability-ns.svc.cluster.local:4317"
+  collectorHttpEndpoint: "http://otel-collector.observability-ns.svc.cluster.local:4318"
+  serviceName: "timely"
+
+storage:
+  enabled: false
+  bucket: ""
+  region: "us-east-1"
+  endpoint: ""
+  scheme: "https://"
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 80
+
+podDisruptionBudget:
+  enabled: false
+  minAvailable: 1
+
+sandbox:
+  enabled: false
+  image: ops.noizu.com/timely.noizu.com/sandbox:v1.0.0
+  resources:
+    requests:
+      cpu: 200m
+      memory: 512Mi
+    limits:
+      cpu: "1"
+      memory: 1Gi
+  persistence:
+    enabled: false
+    size: 5Gi
+    storageClass: ""
+  service:
+    type: ClusterIP

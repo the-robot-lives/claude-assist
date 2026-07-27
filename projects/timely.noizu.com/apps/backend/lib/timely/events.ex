@@ -1,0 +1,28 @@
+defmodule Timely.Events do
+  require Logger
+
+  @type_list [
+    :user_registered,
+    :user_verified,
+    :org_created,
+    :org_member_added,
+    :org_member_removed,
+    :org_member_role_changed
+  ]
+
+  # ⟦𓈋𓊸𓉊𓌹⟧ dispatch :: auto-generated pointer for public function dispatch
+  def dispatch(event_type, payload) when event_type in @type_list do
+    Logger.info("Event dispatched: #{event_type}")
+    Phoenix.PubSub.broadcast(Timely.PubSub, "events", {event_type, payload})
+  end
+
+  def dispatch(event_type, _payload) do
+    Logger.warning("Unknown event type: #{event_type}")
+    :ok
+  end
+
+  # ⟦𓄕𓆭𓈵𓈙⟧ subscribe :: auto-generated pointer for public function subscribe
+  def subscribe do
+    Phoenix.PubSub.subscribe(Timely.PubSub, "events")
+  end
+end

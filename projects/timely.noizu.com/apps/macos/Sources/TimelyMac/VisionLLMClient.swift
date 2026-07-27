@@ -1,4 +1,5 @@
 import Foundation
+import TimelyKit
 
 enum TimelyEnvironmentResolver {
     static func resolve(_ name: String) -> String? {
@@ -104,7 +105,13 @@ actor VisionLLMClient {
         self.settings = settings
     }
 
-    func analyze(screenshotID: UUID, screenshotURL: URL, context: VisionAnalysisContext) async throws -> VisionAnalysisRecord {
+    func analyze(
+        screenshotID: UUID,
+        workspaceID: UUID,
+        deviceID: UUID,
+        screenshotURL: URL,
+        context: VisionAnalysisContext
+    ) async throws -> VisionAnalysis {
         let imageData = try Data(contentsOf: screenshotURL)
         let imageBase64 = imageData.base64EncodedString()
         let prompt = buildPrompt(context: context)
@@ -119,6 +126,8 @@ actor VisionLLMClient {
         return parse(
             raw,
             screenshotID: screenshotID,
+            workspaceID: workspaceID,
+            deviceID: deviceID,
             model: settings.effectiveModel,
             knownProject: context.knownProject,
             previousInferredProject: context.previousInferredProject
@@ -128,10 +137,12 @@ actor VisionLLMClient {
     func parse(
         _ raw: String,
         screenshotID: UUID,
+        workspaceID: UUID,
+        deviceID: UUID,
         model: String,
         knownProject: String,
         previousInferredProject: String?
-    ) -> VisionAnalysisRecord {
+    ) -> VisionAnalysis {
         let cleaned = cleanJSONText(raw)
         let payload: VisionAnalysisPayload?
         if let data = cleaned.data(using: .utf8) {
@@ -141,19 +152,13 @@ actor VisionLLMClient {
         }
 
         guard let payload else {
-            return VisionAnalysisRecord(
-                id: UUID(),
+            return VisionAnalysis(
+                sync: .local(id: UUID.v7(), workspaceID: workspaceID, deviceID: deviceID),
                 screenshotID: screenshotID,
                 analyzedAt: Date(),
                 model: model,
                 statusUpdate: "Vision analysis completed, but the response was not valid JSON.",
-                inferredProject: "",
-                inferredTask: "",
-                projectSwitchDetected: false,
                 confidence: 0,
-                evidence: "",
-                privacySensitive: false,
-                privacyCategory: "none",
                 rawResponse: raw,
                 errorMessage: "Could not parse JSON response."
             )
@@ -173,8 +178,8 @@ actor VisionLLMClient {
         let privacyCategory = payload.privacyCategory?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() ?? "none"
         let privacySensitive = payload.privacySensitive == true || privacyAction == "censor"
 
-        return VisionAnalysisRecord(
-            id: UUID(),
+        return VisionAnalysis(
+            sync: .local(id: UUID.v7(), workspaceID: workspaceID, deviceID: deviceID),
             screenshotID: screenshotID,
             analyzedAt: Date(),
             model: model,
@@ -185,8 +190,15 @@ actor VisionLLMClient {
             confidence: confidence,
             evidence: payload.evidence?.trimmingCharacters(in: .whitespacesAndNewlines) ?? "",
             privacySensitive: privacySensitive,
-            privacyCategory: privacySensitive ? privacyCategory : "none",
+            // An unrecognized category from the model must not decode as `none`;
+            // TimelyKit's fallback is the private one.
+            privacyCategory: privacySensitive
+                ? (PrivacyCategory(rawValue: privacyCategory) ?? .otherPrivate)
+                : .none,
             rawResponse: raw,
+            // Withheld until the double gate has been evaluated. The verbatim
+            // model transcription is image-equivalent.
+            rawResponseWithheld: true,
             errorMessage: nil
         )
     }

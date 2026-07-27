@@ -50,7 +50,7 @@ export default function SitemapPage() {
     PAGE["/ Landing Page"]
     PAGE --> HERO["Hero Section\nh1 brand + tagline\n'AI-native venture lab'"]
     HERO --> HERO_CTA["button-row\nExplore Portfolio → /portfolio\nGet in Touch → /contact"]
-    PAGE --> PORTFOLIO["Portfolio Teaser\n6 featured ProductCards"]
+    PAGE --> PORTFOLIO["Portfolio Teaser\n10 featured ProductCards"]
     PORTFOLIO --> VIEW_ALL["View All → /portfolio"]
     PAGE --> PROCESS["Process Teaser\nPipelineViz + Learn More → /process"]
     PAGE --> ABOUT_T["About Teaser → /about"]
@@ -61,15 +61,16 @@ export default function SitemapPage() {
         {/* ─── /portfolio ─── */}
         <section className="sg-sitemap-section">
           <h2 className="sg-section-heading">/portfolio &mdash; Portfolio</h2>
-          <p>Full portfolio grid with all 11 products, grouped by category. Filterable. Each card links to /portfolio/[domain].</p>
+          <p>Full portfolio grid with all 15 products, grouped by category. Filterable. Each card links to /portfolio/[domain].</p>
           <pre className="mermaid" suppressHydrationWarning>{`graph TD
     PAGE["/portfolio"]
     PAGE --> HEADER["Page Header\nh1 'The Portfolio'"]
-    PAGE --> FILTERS["CategoryFilter\nAll | Gaming | Dev Tools | Social | Infrastructure | Security"]
+    PAGE --> FILTERS["CategoryFilter\nAll | Gaming | Dev Tools | Productivity | Social | Infrastructure | Security"]
     PAGE --> GRID["Portfolio Grid\nbento layout, 3-col desktop"]
     GRID --> CAT_GAMING["Gaming: 3 cards"]
-    GRID --> CAT_DEVTOOLS["Dev Tools: 2 cards"]
-    GRID --> CAT_SOCIAL["Social / Knowledge: 3 cards"]
+    GRID --> CAT_DEVTOOLS["Dev Tools: 3 cards"]
+    GRID --> CAT_PRODUCTIVITY["Productivity: 2 cards"]
+    GRID --> CAT_SOCIAL["Social / Knowledge: 4 cards"]
     GRID --> CAT_INFRA["Infrastructure: 2 cards"]
     GRID --> CAT_SECURITY["Security: 1 card"]`}</pre>
         </section>

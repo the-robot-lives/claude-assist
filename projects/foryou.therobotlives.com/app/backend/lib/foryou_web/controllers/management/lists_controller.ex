@@ -8,6 +8,8 @@ defmodule ForyouWeb.Management.ListsController do
   """
   use ForyouWeb, :controller
 
+  require Logger
+
   alias Foryou.{Lists, Signups}
   alias Foryou.Schema.Lists.{List, ListAttribute}
 
@@ -34,8 +36,8 @@ defmodule ForyouWeb.Management.ListsController do
 
     case Lists.create_list(project_id, attrs) do
       {:ok, list} ->
-        list = upsert_attributes(list, params["attributes"])
-        conn |> put_status(:created) |> json(%{list: serialize(list)})
+        {list, attr_errors} = upsert_attributes(list, params["attributes"])
+        conn |> put_status(:created) |> json(with_attr_errors(%{list: serialize(list)}, attr_errors))
 
       {:error, cs} ->
         conn |> put_status(:unprocessable_entity) |> json(%{errors: format_errors(cs)})
@@ -51,8 +53,8 @@ defmodule ForyouWeb.Management.ListsController do
         meta = Map.take(params, ~w(slug public_slug name description kind settings status))
 
         with {:ok, list} <- maybe_update(list, meta) do
-          list = upsert_attributes(list, params["attributes"])
-          json(conn, %{list: serialize(list)})
+          {list, attr_errors} = upsert_attributes(list, params["attributes"])
+          json(conn, with_attr_errors(%{list: serialize(list)}, attr_errors))
         else
           {:error, cs} ->
             conn |> put_status(:unprocessable_entity) |> json(%{errors: format_errors(cs)})
@@ -122,12 +124,40 @@ defmodule ForyouWeb.Management.ListsController do
   defp maybe_update(list, meta) when meta == %{}, do: {:ok, list}
   defp maybe_update(list, meta), do: Lists.update_list(list, meta)
 
+  # Upsert each declared attribute, collecting per-slug failures instead of
+  # dropping them. A rejected attribute used to vanish silently — the call still
+  # returned 200 with the attribute simply absent, so `tofu apply` reported
+  # success against a half-provisioned List (this is how noizu-contact shipped
+  # missing its three `select` attributes: bare-string `options` fail the
+  # {:array, :map} cast). Errors are logged and echoed back under
+  # `attribute_errors`; the status code is unchanged so existing callers and the
+  # Terraform provider keep working.
   defp upsert_attributes(list, attributes) when is_list(attributes) do
-    Enum.each(attributes, fn attr -> Lists.upsert_attribute(list, attr) end)
-    Lists.get_list(list.id)
+    errors =
+      Enum.reduce(attributes, %{}, fn attr, acc ->
+        case Lists.upsert_attribute(list, attr) do
+          {:error, %Ecto.Changeset{} = cs} ->
+            slug = attr["slug"] || attr[:slug] || "(unknown)"
+            Map.put(acc, slug, format_errors(cs))
+
+          _ ->
+            acc
+        end
+      end)
+
+    if errors != %{} do
+      Logger.warning(
+        "list #{list.id} (#{list.slug}): #{map_size(errors)} attribute(s) rejected: #{inspect(errors)}"
+      )
+    end
+
+    {Lists.get_list(list.id), errors}
   end
 
-  defp upsert_attributes(list, _), do: list
+  defp upsert_attributes(list, _), do: {list, %{}}
+
+  defp with_attr_errors(body, errors) when errors == %{}, do: body
+  defp with_attr_errors(body, errors), do: Map.put(body, :attribute_errors, errors)
 
   defp serialize(%List{} = l) do
     %{

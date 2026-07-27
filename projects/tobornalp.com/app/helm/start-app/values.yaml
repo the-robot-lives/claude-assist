@@ -1,6 +1,6 @@
 replicas: 1
-domain: tobornalp.com
-appDomain: app.tobornalp.com
+domain: therobotplans.com
+appDomain: app.therobotplans.com
 
 backend:
   image: ops.noizu.com/tobornalp.com/backend:v1.0.12
@@ -81,17 +81,17 @@ secrets:
 
 mail:
   fromName: ""
-  fromAddress: "noreply@tobornalp.com"
+  fromAddress: "noreply@therobotplans.com"
 
 sso:
   requireInvite: true
   # SSO availability by email domain. Format:
   # "example.com=oidc;corp.example=google,oidc"
-  domains: "tobornalp.com=oidc;noizu.com=oidc;therobotlives.com=oidc;derobot.is=oidc;greatnonprofits.org=oidc;communityconnectlabs.com=oidc"
+  domains: "therobotplans.com=oidc;tobornalp.com=oidc;noizu.com=oidc;therobotlives.com=oidc;derobot.is=oidc;greatnonprofits.org=oidc;communityconnectlabs.com=oidc"
   # Domains whose SSO registrations are approved immediately. All other SSO
   # registrations remain pending unless an invite activates them. Format:
   # "example.com;corp.example" or "*" for every SSO-enabled domain.
-  autoApproveDomains: "tobornalp.com;noizu.com;therobotlives.com;derobot.is;greatnonprofits.org;communityconnectlabs.com"
+  autoApproveDomains: "therobotplans.com;tobornalp.com;noizu.com;therobotlives.com;derobot.is;greatnonprofits.org;communityconnectlabs.com"
   oidc:
     # Default OIDC issuer for portfolio services (Authentik at auth.noizu.com)
     # Example: https://auth.noizu.com/application/o/{app-slug}/

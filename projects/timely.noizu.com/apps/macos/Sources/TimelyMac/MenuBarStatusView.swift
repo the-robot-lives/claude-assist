@@ -1,4 +1,5 @@
 import SwiftUI
+import TimelyKit
 
 struct MenuBarStatusView: View {
     @ObservedObject var store: TimelyStore

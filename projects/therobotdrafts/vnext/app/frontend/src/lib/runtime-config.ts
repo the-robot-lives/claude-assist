@@ -41,3 +41,35 @@ export function runtimeCookieDomainAttribute() {
 
   return `; Domain=${cookieDomain}`;
 }
+
+export function runtimeAuthCookieClearAttributes() {
+  if (typeof window === "undefined") return [""];
+
+  const candidates = new Set<string>([""]);
+  const configured = getRuntimeConfig().COOKIE_DOMAIN?.trim();
+  const hostname = window.location.hostname.toLowerCase();
+  const names = [configured, hostname].filter((value): value is string => Boolean(value));
+
+  for (const name of names) {
+    const normalized = name.replace(/^\./, "").toLowerCase();
+    const isLocalDomain =
+      normalized === "localhost" ||
+      normalized.includes(":") ||
+      /^[0-9.]+$/.test(normalized);
+
+    if (isLocalDomain) continue;
+    if (hostname !== normalized && !hostname.endsWith(`.${normalized}`)) continue;
+
+    candidates.add(`; Domain=${normalized}`);
+    candidates.add(`; Domain=.${normalized}`);
+
+    const labels = normalized.split(".");
+    if (labels.length > 2) {
+      const parent = labels.slice(1).join(".");
+      candidates.add(`; Domain=${parent}`);
+      candidates.add(`; Domain=.${parent}`);
+    }
+  }
+
+  return [...candidates];
+}

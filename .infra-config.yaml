@@ -108,6 +108,7 @@ tiers:
       - foryou
       - tobornalp
       - ddi
+      - timely
 
   - name: "User-Facing & Creative"
     tier: 4
@@ -227,6 +228,7 @@ namespace_overrides:
   foryou: apps
   tobornalp: apps
   ddi: apps
+  timely: apps
   noizu-site: apps
   remote-access: apps
   # Tier 4 — Creative
@@ -286,6 +288,7 @@ chart_path_overrides:
   therobotplans: projects/therobotplans.com/helm/therobotplans
   tobornalp: projects/tobornalp.com/helm/therobotplans
   ddi: projects/designing.derobot.is/helm/ddi
+  timely: projects/timely.noizu.com/helm/timely
 
 # --- Helm Preserve Values -----------------------------------------------------
 # helm-upgrade passes --reset-values by default so a chart's values.yaml is the
@@ -536,6 +539,33 @@ liquibase_targets:
     # superuser-only extensions the changelog needs pre-created (pgvector et al.)
     extensions: [citext, uuid-ossp, vector, cube, pg_trgm, earthdistance]
     changelog_dir: components/start-app/backend/db
+    changelog_file: changelog/db.changelog-master.yaml
+
+  timely:
+    description: "Timely (Hologram) app database on app-timescaledb"
+    namespace: apps
+    service: svc/app-timescaledb
+    remote_port: 5432
+    local_port: 54342
+    db_type: postgresql
+    db_name: timely
+    schema: public
+    secret_name: timely-secrets
+    secret_namespace: apps
+    username: timely
+    secret_key: TIMELY_DB_PASSWORD
+    safety: destructive
+    # provision-db: role creds from dc, superuser from the live instance secret
+    role_password_dc: "services apps.timely_db_password"
+    admin_secret: app-timescaledb-secrets
+    # Valkey/Redis ACL user on app-valkey (provision: `provision-db timely --redis-only`)
+    redis_password_dc: "services apps.timely_valkey_password"
+    redis_service: svc/app-valkey
+    redis_user: timely
+    redis_admin_secret: app-valkey-secrets
+    # superuser-only extensions the changelog needs pre-created (pgvector et al.)
+    extensions: [citext, uuid-ossp, vector, cube, pg_trgm, earthdistance]
+    changelog_dir: projects/timely.noizu.com/apps/backend/db
     changelog_file: changelog/db.changelog-master.yaml
 
   mermaid:
@@ -998,7 +1028,9 @@ project:
         charts:
           - name: therobotknows
             path: projects/therobotknows.com/helm/therobotknows
-    - domain: therobotdrafts.com
+    # The Robot Drafts rides the existing therobotplans.com zone as the `draft`
+    # subdomain; the apex and api. belong to tobornalp and are untouched.
+    - domain: draft.therobotplans.com
       # vnext lives under the TRD subtree; base_path points at the app root so
       # the service paths below stay relative to it.
       base_path: projects/therobotdrafts/vnext/app
@@ -1006,7 +1038,7 @@ project:
         - name: backend
           dockerfile: backend/Dockerfile
           context: backend
-          registry_path: therobotdrafts.com/backend
+          registry_path: draft.therobotplans.com/backend
           platform: linux/amd64
           auto_detect: false
           helm:
@@ -1016,12 +1048,14 @@ project:
         - name: frontend
           dockerfile: frontend/Dockerfile
           context: frontend
-          registry_path: therobotdrafts.com/frontend
+          registry_path: draft.therobotplans.com/frontend
           platform: linux/amd64
           auto_detect: false
+          # Single host, path-routed (foryou pattern): API and app share an
+          # origin, so both URLs point at draft.therobotplans.com.
           build_args:
-            NEXT_PUBLIC_API_URL: https://therobotdrafts.com
-            NEXT_PUBLIC_APP_URL: https://app.therobotdrafts.com
+            NEXT_PUBLIC_API_URL: https://draft.therobotplans.com
+            NEXT_PUBLIC_APP_URL: https://draft.therobotplans.com
           helm:
             chart_path: projects/therobotdrafts/vnext/app/helm/therobotdrafts
             values_path: .frontend.image
@@ -1031,7 +1065,7 @@ project:
         - name: db
           dockerfile: backend/db/Dockerfile
           context: backend/db
-          registry_path: therobotdrafts.com/db
+          registry_path: draft.therobotplans.com/db
           platform: linux/amd64
           auto_detect: false
       helm:
@@ -1153,7 +1187,7 @@ project:
           build_args:
             # Origin only — api.ts paths already include the /api/v1 prefix.
             # A trailing /api here produces double /api/api/v1 → backend 404s.
-            NEXT_PUBLIC_API_URL: "https://tobornalp.com"
+            NEXT_PUBLIC_API_URL: "https://therobotplans.com"
           auto_detect: false
           helm:
             chart_path: projects/tobornalp.com/helm/therobotplans
@@ -1213,6 +1247,40 @@ project:
         charts:
           - name: ddi
             path: projects/designing.derobot.is/helm/ddi
+
+    # Timely — Phoenix+Hologram backend renders the web UI itself, so there is
+    # exactly one image (no separate Next.js frontend service).
+    - domain: timely.noizu.com
+      services:
+        - name: backend
+          dockerfile: apps/backend/Dockerfile
+          context: apps/backend
+          registry_path: timely.noizu.com/backend
+          auto_detect: false
+          helm:
+            chart_path: projects/timely.noizu.com/helm/timely
+            values_path: .backend.image
+            format: image
+        # Liquibase changelog image (apps/backend/db). Schema lives in these
+        # changelogs, not in Ecto migrations - see migrate.liquibase in
+        # values.yaml. Helm stanza wired and migrate.liquibase.enabled: true,
+        # so this build target is load-bearing: without it the pre-upgrade
+        # Liquibase Job (hook weight -10) has no image and a deploy either
+        # fails the `required` check or, if left disabled, comes up green
+        # against an empty database.
+        - name: db
+          dockerfile: apps/backend/db/Dockerfile
+          context: apps/backend/db
+          registry_path: timely.noizu.com/db
+          auto_detect: false
+          helm:
+            chart_path: projects/timely.noizu.com/helm/timely
+            values_path: .migrate.liquibase.image
+            format: image
+      helm:
+        charts:
+          - name: timely
+            path: projects/timely.noizu.com/helm/timely
     - domain: npl-mcp
       name: mcp.derobot.is
       base_path: projects/NoizuPromptLingo

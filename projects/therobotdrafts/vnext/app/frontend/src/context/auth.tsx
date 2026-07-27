@@ -3,7 +3,7 @@
 import { createContext, useContext, useEffect, useMemo, useState, useCallback } from "react";
 import { api, type Organization, type RegisterPayload, type User } from "@/lib/api";
 import { analytics } from "@/lib/analytics";
-import { runtimeCookieDomainAttribute } from "@/lib/runtime-config";
+import { runtimeAuthCookieClearAttributes, runtimeCookieDomainAttribute } from "@/lib/runtime-config";
 
 interface AuthContextType {
   user: User | null;
@@ -35,7 +35,9 @@ function setAuthCookie(token: string | null) {
     if (token) {
       document.cookie = `access_token=${token}; path=/; max-age=${60 * 60}; SameSite=Lax${domain}`;
     } else {
-      document.cookie = `access_token=; path=/; max-age=0; SameSite=Lax${domain}`;
+      for (const clearDomain of runtimeAuthCookieClearAttributes()) {
+        document.cookie = `access_token=; path=/; max-age=0; SameSite=Lax${clearDomain}`;
+      }
     }
   } catch {
     // Localhost or strict browser policies can reject Domain cookies; localStorage remains canonical.

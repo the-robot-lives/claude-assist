@@ -113,19 +113,25 @@ People who need to understand where their day went and which activities are cons
 
 ## Status
 
-Concept
+In active development, past the concept stage. Product design (personas, user stories, screens, UX brief, roadmap) is complete. A Phoenix + Hologram backend at `apps/backend` implements the domain model, authentication, and a versioned `/api/v1` JSON and offline-sync API; its schema is owned by Liquibase changelogs, not Ecto migrations. Deploy config for timely.noizu.com (build targets, Helm chart, an Infisical Terraform resource) has been written and locally verified, but **nothing has been applied yet** - no image build/push, no `terraform apply`, no `helm upgrade`, no DNS. See `tomorrow.md` for the exact state and the order of operations to bring it up.
+
+The sync protocol - the deterministic, cross-platform name-canonicalization and conflict-resolution rules every client must implement identically - is specified in [docs/SYNC-PROTOCOL.md](docs/SYNC-PROTOCOL.md) and pinned by executable conformance fixtures in [apps/shared/contracts/](apps/shared/contracts/) (`canon-fixtures.json` for name canonicalization, `wire-fixtures.json` for wire-format request/response pairs recorded from the real server). `apps/shared/TimelyKit` (a shared Swift package used by macOS and iOS) and the Android app each implement that contract independently.
+
+Client state varies by surface; see [apps/README.md](apps/README.md) for specifics. In short: the backend's sync API is implemented and tested; TimelyKit, Android, and iOS are all complete and passing their own test suites; the macOS app has been retrofitted onto TimelyKit for sync; the web app and web portal remain early scaffolds/prototypes.
 
 ## Key Documents
 
 - [docs/UX-BRIEF.md](docs/UX-BRIEF.md) - Product positioning, UX principles, workflows, and IA summary
 - [docs/ROADMAP.md](docs/ROADMAP.md) - Phased product and UX roadmap from design foundation through paid production
 - [docs/MACOS-STYLEGUIDE.md](docs/MACOS-STYLEGUIDE.md) - macOS visual system, layout rules, components, and screen UX standards
-- [apps/](apps/) - Initial macOS, iOS, Android, web app, and web portal implementation scaffolds
+- [docs/SYNC-PROTOCOL.md](docs/SYNC-PROTOCOL.md) - Normative cross-platform contract: identity, revisions, the push/pull loop, conflict resolution, idempotency, and offline auth
+- [apps/shared/contracts/](apps/shared/contracts/) - The OpenAPI wire contract and the executable `canon()`/taxonomy-id conformance fixture every implementation must pass before it syncs
+- [apps/](apps/) - macOS, iOS, Android, web app, and web portal client surfaces, the Phoenix backend, and the shared TimelyKit package - see [apps/README.md](apps/README.md) for the state of each
 - [design/SITEMAP.md](design/SITEMAP.md) - Route map and overlay/navigation model
 - [project-management/personas/](project-management/personas/) - 8 target personas
 - [project-management/user-stories/](project-management/user-stories/) - 100 prioritized user stories
-- [project-management/screens/](project-management/screens/) - 20 screen definitions
-- [project-management/components/](project-management/components/) - 36 reusable component definitions
+- [project-management/screens/](project-management/screens/) - 21 screen definitions
+- [project-management/components/](project-management/components/) - 37 reusable component definitions
 
 ## App Commands
 

@@ -9,7 +9,8 @@ export function Navbar() {
   const { user, loading, logout } = useAuth();
   const pathname = usePathname();
 
-  if (pathname === "/") return null;
+  // The studio owns its whole viewport, and the landing page carries its own header.
+  if (pathname === "/" || pathname === "/studio") return null;
 
   return (
     <nav className="sg-navbar">

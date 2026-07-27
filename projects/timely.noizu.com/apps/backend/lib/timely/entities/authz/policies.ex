@@ -1,0 +1,109 @@
+defmodule Timely.Authz.Policies do
+  alias Timely.Authz.Policies.Policy, as: Entity
+  alias Timely.Schema.Authz.Policy, as: Schema
+  alias Timely.Schema.Authz.UserPolicy, as: UserPolicySchema
+
+  use Noizu.Repo
+  def_repo(entity: Entity)
+
+  import Ecto.Query
+
+  # ⟦𓃉𓍞𓅘𓃹⟧ list_active :: auto-generated pointer for public function list_active
+  def list_active(opts \\ []) do
+    query = from(p in Schema, where: p.is_active == true, order_by: p.name)
+
+    query =
+      if Keyword.get(opts, :system_only, false) do
+        from(p in query, where: p.is_system == true)
+      else
+        query
+      end
+
+    Timely.Repo.all(query)
+  end
+
+  # ⟦𓄡𓌒𓏴𓏝⟧ get_by_name :: auto-generated pointer for public function get_by_name
+  def get_by_name(name) do
+    Timely.Repo.one(from p in Schema, where: p.name == ^name and p.is_active == true)
+  end
+
+  # ⟦𓄀𓉄𓎌𓏇⟧ create_policy :: auto-generated pointer for public function create_policy
+  def create_policy(attrs) do
+    %Schema{}
+    |> Schema.changeset(attrs)
+    |> Timely.Repo.insert()
+  end
+
+  # ⟦𓆮𓎒𓃢𓐈⟧ update_policy :: auto-generated pointer for public function update_policy
+  def update_policy(id, attrs) do
+    case Timely.Repo.get(Schema, id) do
+      nil ->
+        {:error, :not_found}
+
+      policy ->
+        if policy.is_system do
+          {:error, :cannot_modify_system_policy}
+        else
+          policy |> Schema.changeset(attrs) |> Timely.Repo.update()
+        end
+    end
+  end
+
+  # ⟦𓍈𓋯𓏢𓄠⟧ delete_policy :: auto-generated pointer for public function delete_policy
+  def delete_policy(id) do
+    case Timely.Repo.get(Schema, id) do
+      nil ->
+        {:error, :not_found}
+
+      policy ->
+        if policy.is_system do
+          {:error, :cannot_delete_system_policy}
+        else
+          Timely.Repo.delete(policy)
+        end
+    end
+  end
+
+  # ⟦𓊊𓊐𓆯𓅋⟧ list_user_policies :: auto-generated pointer for public function list_user_policies
+  def list_user_policies(user_id) do
+    from(up in UserPolicySchema,
+      join: p in Schema,
+      on: p.id == up.policy_id,
+      where: up.user_id == ^user_id,
+      order_by: up.priority,
+      select: %{
+        id: up.id,
+        policy_id: p.id,
+        policy_name: p.name,
+        resource_type: up.resource_type,
+        resource_id: up.resource_id,
+        priority: up.priority
+      }
+    )
+    |> Timely.Repo.all()
+  end
+
+  # ⟦𓌦𓎒𓎯𓄸⟧ attach_to_user :: auto-generated pointer for public function attach_to_user
+  def attach_to_user(user_id, policy_id, opts \\ []) do
+    %UserPolicySchema{}
+    |> UserPolicySchema.changeset(%{
+      user_id: user_id,
+      policy_id: policy_id,
+      resource_type: Keyword.get(opts, :resource_type),
+      resource_id: Keyword.get(opts, :resource_id),
+      priority: Keyword.get(opts, :priority, 0)
+    })
+    |> Timely.Repo.insert()
+  end
+
+  # ⟦𓐗𓈈𓆍𓊲⟧ detach_from_user :: auto-generated pointer for public function detach_from_user
+  def detach_from_user(user_id, policy_id) do
+    case Timely.Repo.one(
+           from up in UserPolicySchema,
+             where: up.user_id == ^user_id and up.policy_id == ^policy_id
+         ) do
+      nil -> {:error, :not_found}
+      user_policy -> Timely.Repo.delete(user_policy)
+    end
+  end
+end

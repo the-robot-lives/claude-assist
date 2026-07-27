@@ -1,4 +1,5 @@
 import SwiftUI
+import TimelyKit
 
 struct SettingsView: View {
     @ObservedObject var store: TimelyStore
@@ -172,7 +173,7 @@ private struct CensoredHistoryCard: View {
                                 tint: record.deletedLocalFile ? TimelyTheme.success : TimelyTheme.warning
                             )
                         }
-                        Text(record.category.replacingOccurrences(of: "_", with: " ").capitalized)
+                        Text(record.category.rawValue.replacingOccurrences(of: "_", with: " ").capitalized)
                             .font(.body.weight(.medium))
                         Text(record.reason)
                             .font(.caption)

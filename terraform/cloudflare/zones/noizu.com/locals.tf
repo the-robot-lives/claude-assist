@@ -60,6 +60,7 @@ locals {
     "seonaut",
     "serpbear",
     "taiga",
+    "timely",
     "weaviate",
     "webstudio",
     "webui",

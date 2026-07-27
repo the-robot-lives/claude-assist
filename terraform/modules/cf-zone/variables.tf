@@ -49,6 +49,15 @@ variable "add_wildcard" {
   default     = true
 }
 
+# Escape hatch for zones that host an extra app on a subdomain without needing a
+# dedicated boolean per name (e.g. draft.therobotplans.com). An explicit A record
+# beats the wildcard CNAME, so the host resolves straight to the cluster ingress.
+variable "extra_a_records" {
+  description = "Additional subdomain labels to publish as A records pointing at server_ip (e.g. [\"draft\"])"
+  type        = set(string)
+  default     = []
+}
+
 variable "wildcard_target" {
   description = "Target for the wildcard CNAME record"
   type        = string

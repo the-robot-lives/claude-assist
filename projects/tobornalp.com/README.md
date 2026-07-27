@@ -1,6 +1,6 @@
 # tobornalp — AI-Native Operational Life Platform
 
-**Domain:** [tobornalp.com](https://tobornalp.com)
+**Domain:** [therobotplans.com](https://therobotplans.com) &mdash; `tobornalp.com` still resolves here as a legacy alias.
 
 ## Elevator Pitch
 

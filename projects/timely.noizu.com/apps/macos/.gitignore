@@ -1,2 +1,10 @@
 .build/
 
+# Local SQLite store and its WAL/SHM sidecars (none exist yet, but the
+# first local run of the app will create them).
+*.sqlite
+*.sqlite3
+*.db
+*-wal
+*-shm
+

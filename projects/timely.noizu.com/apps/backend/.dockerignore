@@ -1,0 +1,16 @@
+# Sandbox / image build — exclude build artifacts from source seed
+_build/
+deps/
+cover/
+doc/
+.fetch
+tmp/
+**/.git
+**/.DS_Store
+**/npm-debug.log*
+**/*.db
+**/*.db-*
+**/erl_crash.dump
+.gitignore
+Dockerfile
+.dockerignore

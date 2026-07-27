@@ -144,15 +144,25 @@ decision, not an omission.
 - [x] XcodeGen project spec + Makefile
 - [x] Unit tests for track generation, physics, medals, ghosts
 
-### Verified
-- [x] `swiftc -typecheck` passes against the iOS 16 simulator SDK (Xcode 26.4.1)
-- [ ] **`Shaders.metal` has never been compiled** — Xcode 26 moved the MSL
-      compiler into a separate component (`xcodebuild -downloadComponent
-      MetalToolchain`) that is not installed on the dev machine
-- [ ] Test target has never been built (`@testable import` needs a real build)
-- [ ] `make generate` / `make build` never run — `xcodegen` not installed
-- [ ] **The app has never rendered a frame.** The renderer is unproven.
+### Verified — 2026-07-27, Xcode 26.4.1
+- [x] `swiftc -typecheck` passes against the iOS simulator SDK
+- [x] `MetalToolchain` component installed
+- [x] iOS 26.4 platform installed (~8.5 GB)
+- [x] `xcodegen` installed; `xcodegen generate` produces a valid project
+- [x] **`Shaders.metal` compiles clean — zero errors, zero warnings**
+- [x] **`xcodebuild build` → BUILD SUCCEEDED** for `generic/platform=iOS Simulator`
+- [x] The connected iPhone is now an eligible build destination
+
+### Still unverified
+- [ ] **The app has never rendered a frame.** Compiling is not working — the
+      parallax could still be mis-scaled, inverted or invisible.
 - [ ] Never run on a physical device, so the tilt feel is entirely untested
+- [ ] Test target never built or run (`@testable import` needs a real build)
+- [ ] No simulator runtime installed — the 8.5 GB image was staged but would not
+      mount, and was lost during troubleshooting. Re-download with
+      `xcodebuild -downloadPlatform iOS` if a simulator is wanted.
+- [ ] No code-signing identity on the machine — device install needs an Apple ID
+      signed into Xcode. Steps in `app/README.md` → "Running on a device".
 
 ### Not started
 - [ ] Audio (engine sound, music stems, Audio Course Mode)

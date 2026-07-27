@@ -699,3 +699,59 @@ user_stories:
     priority: must-have
     personas: [P-001, P-005]
     file: US-100-handle-permission-revoked.md
+  - id: US-101
+    title: Work fully offline
+    slug: work-fully-offline
+    epic: Sync & Multi-Device
+    priority: must-have
+    personas: [P-001, P-004, P-007]
+    file: US-101-work-fully-offline.md
+  - id: US-102
+    title: Keep working with an expired session
+    slug: keep-working-with-expired-session
+    epic: Sync & Multi-Device
+    priority: must-have
+    personas: [P-001, P-003, P-004]
+    file: US-102-keep-working-with-expired-session.md
+  - id: US-103
+    title: Use the same workspace across devices
+    slug: use-same-workspace-across-devices
+    epic: Sync & Multi-Device
+    priority: must-have
+    personas: [P-001, P-003, P-004]
+    file: US-103-use-same-workspace-across-devices.md
+  - id: US-104
+    title: Review and correct time from a phone
+    slug: review-and-correct-time-from-phone
+    epic: Sync & Multi-Device
+    priority: must-have
+    personas: [P-001, P-004, P-007]
+    file: US-104-review-and-correct-time-from-phone.md
+  - id: US-105
+    title: Resolve a suspected duplicate flag
+    slug: resolve-suspected-duplicate-flag
+    epic: Sync & Multi-Device
+    priority: must-have
+    personas: [P-001, P-002, P-006]
+    file: US-105-resolve-suspected-duplicate-flag.md
+  - id: US-106
+    title: Resolve a billing overlap flag
+    slug: resolve-billing-overlap-flag
+    epic: Sync & Multi-Device
+    priority: must-have
+    personas: [P-001, P-002, P-006]
+    file: US-106-resolve-billing-overlap-flag.md
+  - id: US-107
+    title: Sign in on a new device and pull history
+    slug: sign-in-on-new-device-pull-history
+    epic: Sync & Multi-Device
+    priority: must-have
+    personas: [P-001, P-004, P-005]
+    file: US-107-sign-in-on-new-device-pull-history.md
+  - id: US-108
+    title: Recognize a lost edit from a sync conflict
+    slug: recognize-lost-edit-from-sync-conflict
+    epic: Sync & Multi-Device
+    priority: should-have
+    personas: [P-001, P-003, P-007]
+    file: US-108-recognize-lost-edit-from-sync-conflict.md

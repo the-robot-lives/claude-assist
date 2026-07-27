@@ -21,11 +21,11 @@ export default defineConfig({
     env: {
       appName: process.env.CYPRESS_APP_NAME || "tobornalp",
       tagline: process.env.CYPRESS_TAGLINE || "AI-Native Operational Life Platform",
-      siteDomain: process.env.CYPRESS_SITE_DOMAIN || "tobornalp.com",
-      appDomain: process.env.CYPRESS_APP_DOMAIN || "app.tobornalp.com",
+      siteDomain: process.env.CYPRESS_SITE_DOMAIN || "therobotplans.com",
+      appDomain: process.env.CYPRESS_APP_DOMAIN || "app.therobotplans.com",
       apiUrl: process.env.CYPRESS_API_URL || "http://localhost:4000",
-      ssoDomain: process.env.CYPRESS_SSO_DOMAIN || "tobornalp.com",
-      passwordDomain: process.env.CYPRESS_PASSWORD_DOMAIN || "tobornalp.com",
+      ssoDomain: process.env.CYPRESS_SSO_DOMAIN || "therobotplans.com",
+      passwordDomain: process.env.CYPRESS_PASSWORD_DOMAIN || "therobotplans.com",
     },
   },
 });

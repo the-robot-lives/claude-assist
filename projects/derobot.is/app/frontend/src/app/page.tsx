@@ -3,15 +3,27 @@ import Link from "next/link";
 import { RobotPoses } from "@/components/robot-poses";
 import { Logo } from "@/components/logo";
 import { HeroSection } from "@/components/hero-section";
+import { getProductByDomain, products, type Product } from "@/lib/products";
 
-const featured = [
-  { name: "Blade of Eternity", domain: "bladeofeternity.com", category: "Gaming", oneLiner: "Accessibility-first text RPG with AI narrative and physics" },
-  { name: "CodeFre.sh", domain: "codefre.sh", category: "Dev Tools", oneLiner: "Agent evaluation with fuzzy state machines" },
-  { name: "TheRobotLives", domain: "therobotlives.com", category: "Social / Knowledge", oneLiner: "Social network where AI agents are first-class citizens" },
-  { name: "IoTGo", domain: "iotgo.io", category: "Infrastructure", oneLiner: "Autonomous AI agents for IoT fleet management" },
-  { name: "JailbreakingSite", domain: "jailbreakingsite.com", category: "Security", oneLiner: "Living catalog of LLM jailbreak techniques and CTF labs" },
-  { name: "Gotta.cc", domain: "gotta.cc", category: "Social / Knowledge", oneLiner: "AI-curated website directory for post-slop discovery" },
+// Teaser selection only — copy lives in src/lib/products.ts so the home page and
+// /portfolio can never drift apart. Order here is the order cards render in.
+const featuredDomains = [
+  "aifighter.com",
+  "therobotplans.com",
+  "codefre.sh",
+  "therobotlearns.com",
+  "gotta.cc",
+  "therobotlives.com",
+  "draft.therobotplans.com",
+  "iotgo.io",
+  "jailbreakingsite.com",
+  "bladeofeternity.com",
 ];
+
+const featured: Product[] = featuredDomains.flatMap((domain) => {
+  const product = getProductByDomain(domain);
+  return product ? [product] : [];
+});
 
 const steps = [
   { title: "Concept", desc: "Domain secured. README written. The idea has a shape." },
@@ -75,7 +87,7 @@ export default function Home() {
               href="/portfolio"
               className="text-[var(--text-link)] font-[family-name:var(--font-mono)] text-sm hover:underline"
             >
-              View all 11 products &rarr;
+              View all {products.length} products &rarr;
             </Link>
           </div>
         </div>

@@ -23,13 +23,18 @@ command -v jq >/dev/null || { echo "ERROR: jq required" >&2; exit 1; }
 
 EMAIL_ATTR='[{"slug":"email","name":"Email","type":"email","required":true,"is_identity":true,"sort_order":0}]'
 
+# NOTE: select/multiselect `options` MUST be {label,value} objects, not bare
+# strings — ListAttribute types the column as {:array, :map}, so a string array
+# fails the changeset cast, and the management controller drops per-attribute
+# upsert errors on the floor (the call still returns 200 with the attribute
+# missing). Keep these as objects.
 CONTACT_ATTR='[
   {"slug":"email","name":"Email","type":"email","required":true,"is_identity":true,"sort_order":0},
   {"slug":"name","name":"Name","type":"string","required":false,"sort_order":1},
   {"slug":"company","name":"Company","type":"string","required":false,"sort_order":2},
-  {"slug":"project_type","name":"Project type","type":"select","required":false,"options":["Consulting","Product/App","AI/ML","Infrastructure","Collaboration","Other"],"sort_order":3},
-  {"slug":"budget_range","name":"Budget range","type":"select","required":false,"options":["<$10k","$10–50k","$50–100k","$100k+","Not sure"],"sort_order":4},
-  {"slug":"timeline","name":"Timeline","type":"select","required":false,"options":["ASAP","1–3 months","3–6 months","6+ months","Exploring"],"sort_order":5},
+  {"slug":"project_type","name":"Project type","type":"select","required":false,"options":[{"label":"Consulting","value":"Consulting"},{"label":"Product/App","value":"Product/App"},{"label":"AI/ML","value":"AI/ML"},{"label":"Infrastructure","value":"Infrastructure"},{"label":"Collaboration","value":"Collaboration"},{"label":"Other","value":"Other"}],"sort_order":3},
+  {"slug":"budget_range","name":"Budget range","type":"select","required":false,"options":[{"label":"<$10k","value":"<$10k"},{"label":"$10–50k","value":"$10–50k"},{"label":"$50–100k","value":"$50–100k"},{"label":"$100k+","value":"$100k+"},{"label":"Not sure","value":"Not sure"}],"sort_order":4},
+  {"slug":"timeline","name":"Timeline","type":"select","required":false,"options":[{"label":"ASAP","value":"ASAP"},{"label":"1–3 months","value":"1–3 months"},{"label":"3–6 months","value":"3–6 months"},{"label":"6+ months","value":"6+ months"},{"label":"Exploring","value":"Exploring"}],"sort_order":5},
   {"slug":"inquiry","name":"Inquiry","type":"text","required":false,"sort_order":6}
 ]'
 

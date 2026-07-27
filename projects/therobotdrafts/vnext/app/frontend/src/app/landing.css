@@ -1,0 +1,373 @@
+/* Public landing surface for `/`.
+ *
+ * The Concept D palette is mirrored here rather than imported from
+ * components/holograph/chrome/concept-d.css: that sheet pins `.trd-shell` to
+ * `position: fixed; inset: 0`, which a scrolling marketing page cannot inherit.
+ * Every rule below is scoped under `.trd-landing` so nothing leaks into the
+ * styleguide-generated surfaces the rest of the app renders on.
+ */
+
+.trd-landing {
+  --bg: #14181b;
+  --bg2: #1a1f23;
+  --panel: #171c20;
+  --line: #2a3238;
+  --line2: #333c43;
+  --text: #d7dee2;
+  --text-dim: #8a969e;
+  --text-faint: #5b666d;
+  --accent: #37c8c3;
+  --accent-dim: #2a807d;
+  --accent-glow: rgba(55, 200, 195, 0.35);
+  --accent-on: #062a29;
+  --warm: #ffd9a0;
+  --font: -apple-system, "SF Pro Text", Inter, ui-sans-serif, system-ui, sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, monospace;
+
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background:
+    radial-gradient(80rem 40rem at 78% -10%, rgba(55, 200, 195, 0.13), transparent 60%),
+    radial-gradient(60rem 34rem at 8% 12%, rgba(255, 205, 130, 0.07), transparent 62%),
+    var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+.trd-landing *,
+.trd-landing *::before,
+.trd-landing *::after {
+  box-sizing: border-box;
+}
+
+.trd-landing a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.trd-landing__wrap {
+  width: 100%;
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+/* ============ top bar ============ */
+.trd-landing__bar {
+  border-bottom: 1px solid var(--line);
+  background: rgba(20, 24, 27, 0.72);
+  backdrop-filter: blur(8px);
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+.trd-landing__bar-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 58px;
+}
+
+.trd-landing__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+
+.trd-landing__brand-mark {
+  display: block;
+  flex: none;
+}
+
+.trd-landing__bar-links {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.trd-landing__bar-link {
+  padding: 6px 10px;
+  border-radius: 6px;
+  color: var(--text-dim);
+  font-size: 13px;
+}
+
+.trd-landing__bar-link:hover {
+  color: var(--text);
+  background: var(--bg2);
+}
+
+/* ============ buttons ============ */
+.trd-landing__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border: 1px solid var(--line2);
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  color: var(--text);
+  background: var(--bg2);
+  transition: border-color 120ms ease, background 120ms ease, color 120ms ease;
+}
+
+.trd-landing__btn:hover {
+  border-color: var(--accent-dim);
+  color: #fff;
+}
+
+.trd-landing__btn--primary {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--accent-on);
+  box-shadow: 0 0 0 1px rgba(55, 200, 195, 0.18), 0 8px 26px -12px var(--accent-glow);
+}
+
+.trd-landing__btn--primary:hover {
+  background: #45d8d3;
+  border-color: #45d8d3;
+  color: var(--accent-on);
+}
+
+.trd-landing__btn--sm {
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+/* ============ hero ============ */
+.trd-landing__hero {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 40px;
+  align-items: center;
+  /* Block-axis only: the shared `__wrap` gutter owns the inline padding. */
+  padding-block: 64px 56px;
+}
+
+.trd-landing__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 18px;
+  padding: 4px 10px;
+  border: 1px solid var(--line2);
+  border-radius: 999px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--warm);
+}
+
+.trd-landing__eyebrow::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 8px var(--accent-glow);
+}
+
+.trd-landing__title {
+  margin: 0;
+  font-size: clamp(2.4rem, 6vw, 3.6rem);
+  font-weight: 700;
+  line-height: 1.06;
+  letter-spacing: -0.025em;
+  color: #f0f5f7;
+}
+
+.trd-landing__title em {
+  font-style: normal;
+  color: var(--accent);
+}
+
+.trd-landing__pitch {
+  margin: 20px 0 0;
+  max-width: 46ch;
+  font-size: clamp(1rem, 2.2vw, 1.15rem);
+  color: var(--text-dim);
+}
+
+.trd-landing__cta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 30px;
+}
+
+.trd-landing__cta-note {
+  margin: 16px 0 0;
+  font-size: 13px;
+  color: var(--text-faint);
+}
+
+/* ============ hero mock ============ */
+.trd-landing__mock {
+  position: relative;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--panel);
+  box-shadow: 0 30px 80px -40px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(55, 200, 195, 0.06);
+  overflow: hidden;
+}
+
+.trd-landing__mock svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* ============ features ============ */
+.trd-landing__features {
+  padding-block: 8px 72px;
+}
+
+.trd-landing__section-title {
+  margin: 0 0 6px;
+  font-size: 1.35rem;
+  font-weight: 650;
+  letter-spacing: -0.015em;
+  color: #eaf1f3;
+}
+
+.trd-landing__section-sub {
+  margin: 0 0 28px;
+  max-width: 60ch;
+  color: var(--text-dim);
+  font-size: 14px;
+}
+
+.trd-landing__grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+.trd-landing__card {
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: linear-gradient(180deg, var(--bg2), var(--panel));
+}
+
+.trd-landing__card h3 {
+  margin: 14px 0 6px;
+  font-size: 1rem;
+  font-weight: 620;
+  color: #eaf1f3;
+}
+
+.trd-landing__card p {
+  margin: 0;
+  font-size: 14px;
+  color: var(--text-dim);
+}
+
+.trd-landing__card-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--line2);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--accent);
+}
+
+.trd-landing__card-icon svg {
+  display: block;
+}
+
+/* ============ footer ============ */
+.trd-landing__foot {
+  margin-top: auto;
+  border-top: 1px solid var(--line);
+  background: rgba(23, 28, 32, 0.6);
+}
+
+.trd-landing__foot-inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 20px;
+  padding-bottom: 24px;
+  font-size: 13px;
+  color: var(--text-faint);
+}
+
+.trd-landing__foot-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.trd-landing__foot-links a:hover {
+  color: var(--text);
+}
+
+/* ============ responsive ============ */
+/* Phone widths cannot hold brand + three entry points; the hero CTA row still carries
+   sign-in, so the bar keeps only the two buttons. */
+@media (max-width: 559px) {
+  .trd-landing__bar-link {
+    display: none;
+  }
+
+  .trd-landing__brand {
+    font-size: 14px;
+  }
+
+  .trd-landing__bar-links {
+    gap: 6px;
+  }
+}
+
+@media (min-width: 720px) {
+  .trd-landing__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1000px) {
+  .trd-landing__hero {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+    gap: 48px;
+    padding-block: 88px 72px;
+  }
+
+  .trd-landing__grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .trd-landing__mock-pulse {
+    animation: trd-landing-pulse 3.6s ease-in-out infinite;
+  }
+}
+
+@keyframes trd-landing-pulse {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 0.9;
+  }
+}

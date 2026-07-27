@@ -1,4 +1,8 @@
-import { getRuntimeConfig, runtimeCookieDomainAttribute } from "@/lib/runtime-config";
+import {
+  getRuntimeConfig,
+  runtimeAuthCookieClearAttributes,
+  runtimeCookieDomainAttribute,
+} from "@/lib/runtime-config";
 
 function apiUrl() {
   return getRuntimeConfig().API_URL || process.env.NEXT_PUBLIC_API_URL || "";
@@ -124,7 +128,9 @@ function authCookie(value: string | null) {
     if (value) {
       document.cookie = `access_token=${value}; path=/; max-age=${60 * 60}; SameSite=Lax${domain}`;
     } else {
-      document.cookie = `access_token=; path=/; max-age=0; SameSite=Lax${domain}`;
+      for (const clearDomain of runtimeAuthCookieClearAttributes()) {
+        document.cookie = `access_token=; path=/; max-age=0; SameSite=Lax${clearDomain}`;
+      }
     }
   } catch {
     // Localhost or strict browser policies can reject Domain cookies; localStorage remains canonical.

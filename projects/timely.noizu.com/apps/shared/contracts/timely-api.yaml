@@ -1,0 +1,2210 @@
+openapi: 3.1.0
+
+info:
+  title: Timely Sync API
+  version: 1.0.0-draft.1
+  summary: Offline-first sync contract for the Timely capture agent and its companion apps.
+  description: |
+    Timely is an evidence-backed activity ledger for interrupt-driven knowledge work.
+    This document is the normative wire contract shared by three independent
+    implementations:
+
+    | Consumer | Role |
+    |----------|------|
+    | Elixir/Phoenix backend | Server. Assigns `server_revision`, resolves names, flags reviews. |
+    | Swift package (iOS + macOS) | macOS is the **only** capture agent. iOS is a companion. |
+    | Kotlin/Compose Android app | Companion only. |
+
+    Companions perform day review, idle prompts, interval correction
+    (split / merge / reassign / retitle / rebill), manual entry, and reports.
+    Companions never capture screenshots and never run background capture.
+
+    ## Privacy invariant
+
+    Screenshot **image bytes** default to never leaving the device. Screenshot
+    **metadata** always syncs. Byte upload is opt-in and gated on BOTH
+    `workspace_policy.screenshot_upload_allowed` AND
+    `device.local_only_screenshots == false`. Every read surface in this API is
+    designed so that a client which never uploads a single byte is still fully
+    functional: the recall surface for a local-only screenshot is its metadata
+    plus the `vision_analysis.status_update` / `evidence` text.
+
+    `vision_analysis.raw_response` is a verbatim model transcription of the
+    screen and is treated as image-equivalent: it is withheld under the same
+    double gate (see `workspace_policy.sync_vision_raw_response`).
+
+    ## Identity and ordering
+
+    All primary keys are client-generatable UUIDs encoded as lowercase strings.
+    Event-like entities use UUIDv7. Name-keyed taxonomy entities
+    (`client`, `project`, `ticket`) use a deterministic UUIDv5 so that two
+    devices which auto-create the same name while offline converge on the same
+    id without a server round-trip. See `docs/SYNC-PROTOCOL.md` section 6.
+
+    The sync cursor is the per-workspace `server_revision` watermark, never wall
+    clock. Client clocks skew, drift, jump across time zones, and freeze across
+    laptop sleep; `updated_at` is therefore informational and advisory only.
+
+    ## Field presence convention
+
+    A property marked `readOnly: true` is server-owned. It is **always present in
+    responses** (and is therefore listed in `required`), and MUST NOT be sent in
+    request payloads - the server ignores it if you do. Clients may decode
+    `readOnly` fields as non-optional.
+
+    ## Companion documents
+
+    - `docs/SYNC-PROTOCOL.md` - normative prose spec, conflict matrix, worked example.
+    - `apps/shared/contracts/canon-fixtures.json` - executable conformance suite for
+      `canon()` and the deterministic UUIDv5 taxonomy ids. **Passing it is a hard gate
+      before a platform may sync.** See SYNC-PROTOCOL section 14.
+    - `apps/shared/contracts/README.md` - how each client consumes these files.
+
+    ## Relationship to the scaffold
+
+    Authentication is provided by the `hologram-start-app` scaffold and is
+    **not redefined here**: `POST /api/v1/auth/register`, `POST /api/v1/auth/login`,
+    `POST /api/v1/auth/refresh`, `GET /api/v1/auth/me`. Access tokens live 1 hour,
+    refresh tokens 7 days, presented as `Authorization: Bearer <access_token>`.
+    A Timely `workspace_id` is the scaffold's organization id.
+
+  contact:
+    name: Noizu Labs
+    url: https://timely.noizu.com
+  license:
+    name: Proprietary
+
+servers:
+  - url: https://timely.noizu.com
+    description: Production
+  - url: http://localhost:4000
+    description: Local development
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: devices
+    description: Device registration and per-device privacy flags.
+  - name: sync
+    description: The pull/push loop. All state replication happens here.
+  - name: screenshots
+    description: Opt-in binary blob transfer. Metadata moves through /sync.
+  - name: reports
+    description: Read-only rollups for the companion apps' report tab.
+
+paths:
+
+  /api/v1/devices:
+    post:
+      tags: [devices]
+      operationId: registerDevice
+      summary: Register or re-register a device
+      description: |
+        Idempotent by client-supplied `device_id`. A device that re-registers
+        after reinstall SHOULD reuse its persisted `device_id` so that
+        `origin_device_id` history stays intact; a device that cannot recover its
+        id mints a fresh UUIDv7.
+
+        `local_only_screenshots` defaults to `true`. A device MUST NOT be able to
+        weaken the workspace policy: the effective upload gate is the logical AND
+        of the workspace flag and the device flag.
+
+        ## Re-registration is a full replace, not a partial merge
+
+        Despite the name, calling this endpoint again for an existing
+        `device_id` does **not** behave like `PATCH /api/v1/devices/{device_id}`.
+        Every optional field omitted from the request is reset to its schema
+        default - it is **not** left at its previously stored value. A client
+        that re-registers sending only `device_id`, `workspace_id`, `platform`,
+        `name`, and `app_version` will silently flip `is_capture_agent` back to
+        `false` and clear `os_version` to `null`, even if a prior registration
+        had set them.
+
+        `created_at` and `origin_device_id` are the only things guaranteed to
+        survive a re-registration unchanged - the row is reused, not recreated,
+        specifically so LWW tie-breaks that depend on `origin_device_id` history
+        keep working across a reinstall. Every other optional field must be
+        resent on every call if it is to persist. This is the opposite
+        convention from the presence-sensitive fields on `time_span` (`end`,
+        `locked_at`, see `TimeSpan.end` below) and from `PATCH` on this same
+        resource, where omission means "leave alone" - do not assume the same
+        rule applies here.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeviceRegistration'
+            examples:
+              macos_agent:
+                summary: macOS capture agent, local-only screenshots
+                value:
+                  device_id: 019318a0-7f3c-7c21-9b4e-2f6a1c3d5e70
+                  workspace_id: 0192f7a1-2b44-7000-8a10-9d3e4f5a6b7c
+                  platform: macos
+                  name: Keith's MacBook Pro
+                  app_version: 1.0.0
+                  os_version: "26.1"
+                  local_only_screenshots: true
+                  is_capture_agent: true
+              android_companion:
+                summary: Android companion
+                value:
+                  device_id: 019318a0-8b12-7f45-a003-11c9de4477aa
+                  workspace_id: 0192f7a1-2b44-7000-8a10-9d3e4f5a6b7c
+                  platform: android
+                  name: Pixel 9
+                  app_version: 1.0.0
+                  local_only_screenshots: true
+                  is_capture_agent: false
+      responses:
+        '200':
+          description: Device registered (or re-registered; the row already existed).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeviceEnvelope'
+              examples:
+                registered:
+                  value:
+                    device:
+                      id: 019318a0-7f3c-7c21-9b4e-2f6a1c3d5e70
+                      workspace_id: 0192f7a1-2b44-7000-8a10-9d3e4f5a6b7c
+                      user_id: 0192f7a1-3c55-7000-b111-0011223344ff
+                      platform: macos
+                      name: Keith's MacBook Pro
+                      app_version: 1.0.0
+                      os_version: "26.1"
+                      local_only_screenshots: true
+                      is_capture_agent: true
+                      last_seen_at: 2026-07-27T14:02:11Z
+                      last_sync_revision: 0
+                      revoked_at: null
+                      created_at: 2026-07-27T14:02:11Z
+                      updated_at: 2026-07-27T14:02:11Z
+                      server_revision: 1841
+                      deleted_at: null
+                      origin_device_id: 019318a0-7f3c-7c21-9b4e-2f6a1c3d5e70
+                    workspace_policy:
+                      id: 0192f7a1-2b44-7000-8a10-9d3e4f5a6b7c
+                      workspace_id: 0192f7a1-2b44-7000-8a10-9d3e4f5a6b7c
+                      kind: workspace_policy
+                      screenshot_upload_allowed: false
+                      sync_vision_raw_response: false
+                      default_local_only_screenshots: true
+                      screenshot_retention_days: 0
+                      blob_retention_days: 30
+                      require_approval_before_export: false
+                      idle_threshold_minutes: 5
+                      locked_through: null
+                      created_at: 2026-07-01T00:00:00Z
+                      updated_at: 2026-07-01T00:00:00Z
+                      server_revision: 12
+                      deleted_at: null
+                      origin_device_id: null
+                    server_time: 2026-07-27T14:02:11Z
+                    sync_cursor: 1841
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+
+  /api/v1/devices/{device_id}:
+    parameters:
+      - $ref: '#/components/parameters/DeviceIdPath'
+    patch:
+      tags: [devices]
+      operationId: updateDevice
+      summary: Update a device's name, version, or privacy flag
+      description: |
+        Only the owning device may mutate its own row. Any other device receives
+        `403 not_device_owner`. Included because `local_only_screenshots` is half
+        of the screenshot upload gate and must be togglable from the device that
+        holds the bytes.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeviceUpdate'
+            examples:
+              opt_in_upload:
+                summary: User opts this device in to blob upload
+                value:
+                  local_only_screenshots: false
+      responses:
+        '200':
+          description: Updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeviceEnvelope'
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /api/v1/sync/changes:
+    get:
+      tags: [sync]
+      operationId: pullChanges
+      summary: Pull every row changed since a revision watermark
+      description: |
+        Returns all rows in the workspace whose `server_revision` is strictly
+        greater than `since`, ordered by `server_revision` ascending, capped at
+        `limit` rows **across all buckets combined**. Tombstones
+        (`deleted_at != null`) are included and MUST be applied by the client.
+
+        `next_cursor` is the highest gap-free committed revision represented by
+        this page. The server MUST NOT advance `next_cursor` past a revision that
+        may still be uncommitted, otherwise a concurrent transaction can commit
+        "behind" the watermark and its row will never be delivered.
+
+        Loop while `has_more` is true, feeding `next_cursor` back as `since`.
+        `since=0` performs a full bootstrap.
+
+        If `since` is older than `tombstone_horizon_revision` the server responds
+        `410 cursor_too_old` and the client MUST re-bootstrap from 0.
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceIdQuery'
+        - name: since
+          in: query
+          required: true
+          description: Exclusive lower bound on `server_revision`. Use 0 to bootstrap.
+          schema: { type: integer, format: int64, minimum: 0, default: 0 }
+        - name: limit
+          in: query
+          required: false
+          description: Max rows returned across all buckets.
+          schema: { type: integer, minimum: 1, maximum: 2000, default: 500 }
+        - name: entities
+          in: query
+          required: false
+          description: |
+            Optional comma-separated bucket filter. Omit for all buckets. A
+            companion that does not render vision output may pull a narrower set.
+          schema:
+            type: string
+            examples: ["time_spans,clients,projects,tickets"]
+      responses:
+        '200':
+          description: A page of changes.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChangesResponse'
+              examples:
+                incremental:
+                  summary: Small incremental page with one span and its auto-created project
+                  value:
+                    changes:
+                      clients: []
+                      projects:
+                        - id: 5f2a9c11-4d3b-51e6-9a77-0b1c2d3e4f50
+                          workspace_id: 0192f7a1-2b44-7000-8a10-9d3e4f5a6b7c
+                          name: Redesign
+                          canonical_name: redesign
+                          client_id: 3a1b7d02-9e44-5c11-8f20-aabbccdd0011
+                          notes: ""
+                          auto_created: true
+                          merged_into_id: null
+                          review_state: needs_review
+                          created_at: 2026-07-27T09:14:02Z
+                          updated_at: 2026-07-27T09:14:02Z
+                          server_revision: 1902
+                          deleted_at: null
+                          origin_device_id: 019318a0-7f3c-7c21-9b4e-2f6a1c3d5e70
+                      tickets: []
+                      time_spans:
+                        - id: 019318b4-1a2b-7c3d-8e4f-506172839400
+                          workspace_id: 0192f7a1-2b44-7000-8a10-9d3e4f5a6b7c
+                          title: Timeline canvas keyboard pass
+                          client_id: 3a1b7d02-9e44-5c11-8f20-aabbccdd0011
+                          project_id: 5f2a9c11-4d3b-51e6-9a77-0b1c2d3e4f50
+                          ticket_id: null
+                          client_name: Acme
+                          project_name: Redesign
+                          ticket_name: ""
+                          start: 2026-07-27T09:02:00Z
+                          end: 2026-07-27T10:47:30Z
+                          source: timer
+                          is_billable: true
+                          notes: ""
+                          review_state: unreviewed
+                          review_reasons: []
+                          derived_from_span_ids: []
+                          locked_at: null
+                          created_at: 2026-07-27T09:02:00Z
+                          updated_at: 2026-07-27T10:47:30Z
+                          updated_at_effective: 2026-07-27T10:47:30Z
+                          server_revision: 1903
+                          deleted_at: null
+                          origin_device_id: 019318a0-7f3c-7c21-9b4e-2f6a1c3d5e70
+                      screenshots: []
+                      vision_analyses: []
+                      censored_screenshots: []
+                      devices: []
+                      settings: []
+                    next_cursor: 1903
+                    has_more: false
+                    tombstone_horizon_revision: 40
+                    server_time: 2026-07-27T14:05:00Z
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '410': { $ref: '#/components/responses/CursorTooOld' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+
+  /api/v1/sync/mutations:
+    post:
+      tags: [sync]
+      operationId: pushMutations
+      summary: Push a batch of queued local mutations
+      description: |
+        The client push queue is **ordered, at-least-once, and batch-capped**:
+
+        - FIFO, persisted across app restarts, one in-flight batch per device.
+        - Max 200 mutations or 1 MiB serialized per batch (50 when `atomic` is true).
+        - Every mutation carries a client-generated `mutation_id`. The server
+          persists applied `mutation_id`s for at least 30 days; a replay returns
+          the **original** recorded result with `replayed: true` and does not
+          re-apply or re-bump `server_revision`.
+        - The server applies mutations in array order. Clients SHOULD order
+          creates before the rows that reference them, but MUST NOT depend on it:
+          references are resolved lazily and reported via `unresolved_refs`.
+        - Results are per-mutation. `applied`, `conflict`, and `rejected` are all
+          terminal - dequeue them. Only transport failures, 5xx, and 429 are
+          retried, with full-jitter exponential backoff (base 2s, cap 5m).
+        - After a successful push the client MUST pull, because the server
+          produces side effects the pusher did not ask for (auto-created
+          projects, duplicate flags raised on *other* spans).
+
+        `atomic: true` makes the batch all-or-nothing. Use it for split and merge,
+        which are expressed as ordinary create/update/delete mutations sharing a
+        `derived_from_span_ids` lineage.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MutationRequest'
+            examples:
+              offline_create:
+                summary: Device A pushes a span created offline against a project name it never synced
+                value:
+                  workspace_id: 0192f7a1-2b44-7000-8a10-9d3e4f5a6b7c
+                  device_id: 019318a0-7f3c-7c21-9b4e-2f6a1c3d5e70
+                  atomic: false
+                  mutations:
+                    - mutation_id: 019318c0-0001-7000-8000-000000000001
+                      entity: time_span
+                      op: create
+                      base_revision: null
+                      payload:
+                        id: 019318b4-1a2b-7c3d-8e4f-506172839400
+                        workspace_id: 0192f7a1-2b44-7000-8a10-9d3e4f5a6b7c
+                        title: Timeline canvas keyboard pass
+                        client_name: Acme
+                        project_name: Redesign
+                        ticket_name: ""
+                        start: 2026-07-27T09:02:00Z
+                        end: 2026-07-27T10:47:30Z
+                        source: timer
+                        is_billable: true
+                        notes: ""
+                        created_at: 2026-07-27T09:02:00Z
+                        updated_at: 2026-07-27T10:47:30Z
+                        origin_device_id: 019318a0-7f3c-7c21-9b4e-2f6a1c3d5e70
+              split_atomic:
+                summary: Companion splits one span into two (atomic batch)
+                value:
+                  workspace_id: 0192f7a1-2b44-7000-8a10-9d3e4f5a6b7c
+                  device_id: 019318a0-8b12-7f45-a003-11c9de4477aa
+                  atomic: true
+                  mutations:
+                    - mutation_id: 019318c0-0002-7000-8000-000000000002
+                      entity: time_span
+                      op: create
+                      base_revision: null
+                      payload:
+                        id: 019318d1-0aa1-7000-8000-0000000000a1
+                        workspace_id: 0192f7a1-2b44-7000-8a10-9d3e4f5a6b7c
+                        title: Timeline canvas keyboard pass
+                        project_id: 5f2a9c11-4d3b-51e6-9a77-0b1c2d3e4f50
+                        start: 2026-07-27T09:02:00Z
+                        end: 2026-07-27T09:55:00Z
+                        source: manual
+                        is_billable: true
+                        notes: ""
+                        derived_from_span_ids: [019318b4-1a2b-7c3d-8e4f-506172839400]
+                        created_at: 2026-07-27T15:00:00Z
+                        updated_at: 2026-07-27T15:00:00Z
+                        origin_device_id: 019318a0-8b12-7f45-a003-11c9de4477aa
+                    - mutation_id: 019318c0-0003-7000-8000-000000000003
+                      entity: time_span
+                      op: create
+                      base_revision: null
+                      payload:
+                        id: 019318d1-0aa2-7000-8000-0000000000a2
+                        workspace_id: 0192f7a1-2b44-7000-8a10-9d3e4f5a6b7c
+                        title: Standup and triage
+                        project_id: 5f2a9c11-4d3b-51e6-9a77-0b1c2d3e4f50
+                        start: 2026-07-27T09:55:00Z
+                        end: 2026-07-27T10:47:30Z
+                        source: manual
+                        is_billable: false
+                        notes: ""
+                        derived_from_span_ids: [019318b4-1a2b-7c3d-8e4f-506172839400]
+                        created_at: 2026-07-27T15:00:00Z
+                        updated_at: 2026-07-27T15:00:00Z
+                        origin_device_id: 019318a0-8b12-7f45-a003-11c9de4477aa
+                    - mutation_id: 019318c0-0004-7000-8000-000000000004
+                      entity: time_span
+                      op: delete
+                      base_revision: 1903
+                      payload:
+                        id: 019318b4-1a2b-7c3d-8e4f-506172839400
+                        workspace_id: 0192f7a1-2b44-7000-8a10-9d3e4f5a6b7c
+                        deleted_at: 2026-07-27T15:00:00Z
+                        updated_at: 2026-07-27T15:00:00Z
+                        origin_device_id: 019318a0-8b12-7f45-a003-11c9de4477aa
+      responses:
+        '200':
+          description: |
+            Per-mutation results. A 200 does **not** mean every mutation
+            succeeded; inspect each `status`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MutationResponse'
+              examples:
+                applied_with_autovivify:
+                  summary: Applied, with a server-created project returned as a side effect
+                  value:
+                    results:
+                      - mutation_id: 019318c0-0001-7000-8000-000000000001
+                        status: applied
+                        reason: null
+                        message: null
+                        replayed: false
+                        stale_base: false
+                        unresolved_refs: []
+                        entity:
+                          id: 019318b4-1a2b-7c3d-8e4f-506172839400
+                          workspace_id: 0192f7a1-2b44-7000-8a10-9d3e4f5a6b7c
+                          title: Timeline canvas keyboard pass
+                          client_id: 3a1b7d02-9e44-5c11-8f20-aabbccdd0011
+                          project_id: 5f2a9c11-4d3b-51e6-9a77-0b1c2d3e4f50
+                          ticket_id: null
+                          client_name: Acme
+                          project_name: Redesign
+                          ticket_name: ""
+                          start: 2026-07-27T09:02:00Z
+                          end: 2026-07-27T10:47:30Z
+                          source: timer
+                          is_billable: true
+                          notes: ""
+                          review_state: unreviewed
+                          review_reasons: []
+                          derived_from_span_ids: []
+                          locked_at: null
+                          created_at: 2026-07-27T09:02:00Z
+                          updated_at: 2026-07-27T10:47:30Z
+                          updated_at_effective: 2026-07-27T10:47:30Z
+                          server_revision: 1903
+                          deleted_at: null
+                          origin_device_id: 019318a0-7f3c-7c21-9b4e-2f6a1c3d5e70
+                        side_effects:
+                          - entity: client
+                            row:
+                              id: 3a1b7d02-9e44-5c11-8f20-aabbccdd0011
+                              workspace_id: 0192f7a1-2b44-7000-8a10-9d3e4f5a6b7c
+                              name: Acme
+                              canonical_name: acme
+                              notes: ""
+                              auto_created: true
+                              merged_into_id: null
+                              review_state: needs_review
+                              created_at: 2026-07-27T14:06:00Z
+                              updated_at: 2026-07-27T14:06:00Z
+                              server_revision: 1901
+                              deleted_at: null
+                              origin_device_id: 019318a0-7f3c-7c21-9b4e-2f6a1c3d5e70
+                          - entity: project
+                            row:
+                              id: 5f2a9c11-4d3b-51e6-9a77-0b1c2d3e4f50
+                              workspace_id: 0192f7a1-2b44-7000-8a10-9d3e4f5a6b7c
+                              name: Redesign
+                              canonical_name: redesign
+                              client_id: 3a1b7d02-9e44-5c11-8f20-aabbccdd0011
+                              notes: ""
+                              auto_created: true
+                              merged_into_id: null
+                              review_state: needs_review
+                              created_at: 2026-07-27T14:06:00Z
+                              updated_at: 2026-07-27T14:06:00Z
+                              server_revision: 1902
+                              deleted_at: null
+                              origin_device_id: 019318a0-7f3c-7c21-9b4e-2f6a1c3d5e70
+                    next_cursor: 1903
+                    server_time: 2026-07-27T14:06:00Z
+                duplicate_name_conflict:
+                  summary: Client-minted taxonomy id lost to an existing canonical name
+                  value:
+                    results:
+                      - mutation_id: 019318c0-0011-7000-8000-000000000011
+                        status: conflict
+                        reason: duplicate_name
+                        message: "canonical_name 'acme' already maps to 3a1b7d02-9e44-5c11-8f20-aabbccdd0011"
+                        replayed: false
+                        stale_base: false
+                        unresolved_refs: []
+                        entity:
+                          id: 3a1b7d02-9e44-5c11-8f20-aabbccdd0011
+                          workspace_id: 0192f7a1-2b44-7000-8a10-9d3e4f5a6b7c
+                          name: Acme
+                          canonical_name: acme
+                          notes: ""
+                          auto_created: false
+                          merged_into_id: null
+                          review_state: reviewed
+                          created_at: 2026-07-01T10:00:00Z
+                          updated_at: 2026-07-01T10:00:00Z
+                          server_revision: 88
+                          deleted_at: null
+                          origin_device_id: 019318a0-7f3c-7c21-9b4e-2f6a1c3d5e70
+                        side_effects: []
+                    next_cursor: 1903
+                    server_time: 2026-07-27T14:06:00Z
+                reopen_rejected:
+                  summary: Stale update tried to reopen a closed span
+                  value:
+                    results:
+                      - mutation_id: 019318c0-0021-7000-8000-000000000021
+                        status: rejected
+                        reason: span_reopen_forbidden
+                        message: "span closed at 2026-07-27T10:47:30Z; base_revision 1880 is behind current 1903"
+                        replayed: false
+                        stale_base: true
+                        unresolved_refs: []
+                        entity:
+                          id: 019318b4-1a2b-7c3d-8e4f-506172839400
+                          workspace_id: 0192f7a1-2b44-7000-8a10-9d3e4f5a6b7c
+                          title: Timeline canvas keyboard pass
+                          client_id: 3a1b7d02-9e44-5c11-8f20-aabbccdd0011
+                          project_id: 5f2a9c11-4d3b-51e6-9a77-0b1c2d3e4f50
+                          ticket_id: null
+                          client_name: Acme
+                          project_name: Redesign
+                          ticket_name: ""
+                          start: 2026-07-27T09:02:00Z
+                          end: 2026-07-27T10:47:30Z
+                          source: timer
+                          is_billable: true
+                          notes: ""
+                          review_state: unreviewed
+                          review_reasons: []
+                          derived_from_span_ids: []
+                          locked_at: null
+                          created_at: 2026-07-27T09:02:00Z
+                          updated_at: 2026-07-27T10:47:30Z
+                          updated_at_effective: 2026-07-27T10:47:30Z
+                          server_revision: 1903
+                          deleted_at: null
+                          origin_device_id: 019318a0-7f3c-7c21-9b4e-2f6a1c3d5e70
+                        side_effects: []
+                    next_cursor: 1903
+                    server_time: 2026-07-27T14:08:00Z
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409':
+          description: |
+            The whole batch failed. Only returned when `atomic: true` and at least
+            one mutation was not applicable. Nothing was written.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MutationResponse'
+        '413': { $ref: '#/components/responses/PayloadTooLarge' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+
+  /api/v1/screenshots/{screenshot_id}/blob:
+    # KNOWN CONTRACT GAP - the only endpoint with no workspace identifier.
+    #
+    # Every other Timely endpoint takes `workspace_id` explicitly, as a query
+    # parameter or in the request body, so the caller states which tenant it
+    # means and the server authorizes that claim. These two do not: there is
+    # nowhere to put it, because the request body is raw image bytes and adding
+    # a query parameter would mean the workspace could contradict the row.
+    #
+    # So the server inverts the usual order. It looks the screenshot up by its
+    # globally-unique id, reads the `workspace_id` off the row, and *then*
+    # authorizes the caller's membership in that workspace. The caller never
+    # asserts a tenant; it is derived.
+    #
+    # That is safe - an id from another workspace resolves to a row the caller
+    # is not a member of, and 404s exactly as an unknown id would, so it is not
+    # an enumeration oracle. But it is a genuinely different authorization shape
+    # from the rest of the API, and anyone adding an endpoint here should not
+    # copy this pattern without understanding why it exists.
+    parameters:
+      - $ref: '#/components/parameters/ScreenshotIdPath'
+    post:
+      tags: [screenshots]
+      operationId: uploadScreenshotBlob
+      summary: Upload screenshot image bytes (opt-in, double-gated)
+      description: |
+        Uploading image bytes is **never** required. The screenshot metadata row
+        must already exist (pushed through `/sync/mutations`) before its bytes can
+        be uploaded; the server will not create a metadata row from a blob.
+
+        The upload is permitted only when **both** gates are open:
+
+        1. `workspace_policy.screenshot_upload_allowed == true`
+        2. the uploading device's `local_only_screenshots == false`
+
+        If either gate is closed the server responds `409` with
+        `code: blob_upload_forbidden` and a `gates` object naming the closed
+        gate(s). The server does not buffer, quarantine, or retain the rejected
+        body.
+
+        On success the screenshot's `upload_state` becomes `uploaded` and its
+        `server_revision` is bumped, so the metadata change reaches other devices
+        through the ordinary pull loop.
+      parameters:
+        - name: X-Timely-Device-Id
+          in: header
+          required: true
+          description: The uploading device. Must be a registered, non-revoked device owned by the caller.
+          schema: { $ref: '#/components/schemas/Uuid' }
+        - name: X-Timely-Content-Sha256
+          in: header
+          required: false
+          description: Lowercase hex SHA-256 of the body. Verified when present; mismatch is a 400.
+          schema: { type: string, pattern: '^[0-9a-f]{64}$' }
+      requestBody:
+        required: true
+        content:
+          image/png:
+            schema: { type: string, format: binary }
+          image/jpeg:
+            schema: { type: string, format: binary }
+          application/octet-stream:
+            schema: { type: string, format: binary }
+      responses:
+        '201':
+          description: Bytes stored.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/BlobUploadResult' }
+              examples:
+                stored:
+                  value:
+                    screenshot_id: 019318b9-3c4d-7000-8000-0000000000f1
+                    upload_state: uploaded
+                    blob_byte_size: 812394
+                    blob_content_hash: 9f2c1a7bd44e0c58b1a3f60d9e77c21b4a5e6f708192a3b4c5d6e7f8091a2b3c4
+                    blob_url: /api/v1/screenshots/019318b9-3c4d-7000-8000-0000000000f1/blob
+                    blob_uploaded_at: 2026-07-27T14:20:00Z
+                    server_revision: 1950
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404':
+          description: No screenshot metadata row with this id, or it is tombstoned.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '409':
+          description: Upload forbidden by policy or device flag.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/BlobForbiddenError' }
+              examples:
+                policy_closed:
+                  value:
+                    code: blob_upload_forbidden
+                    message: Screenshot image upload is disabled for this workspace.
+                    gates:
+                      workspace_screenshot_upload_allowed: false
+                      device_local_only_screenshots: true
+                censored:
+                  value:
+                    code: blob_upload_forbidden
+                    message: This screenshot was censored by privacy analysis and cannot accept bytes.
+                    gates:
+                      workspace_screenshot_upload_allowed: true
+                      device_local_only_screenshots: false
+                      screenshot_censored: true
+        '413': { $ref: '#/components/responses/PayloadTooLarge' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+    get:
+      tags: [screenshots]
+      operationId: downloadScreenshotBlob
+      summary: Download previously uploaded screenshot bytes
+      description: |
+        Returns `404 blob_not_available` for any screenshot whose
+        `upload_state` is not `uploaded` - including every local-only screenshot.
+        Clients MUST treat this as the normal case and render the metadata-only
+        recall surface instead.
+      responses:
+        '200':
+          description: Image bytes.
+          content:
+            image/png:
+              schema: { type: string, format: binary }
+            image/jpeg:
+              schema: { type: string, format: binary }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404':
+          description: Bytes are not on the server (never uploaded, purged, or censored).
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+              examples:
+                local_only:
+                  value:
+                    code: blob_not_available
+                    message: Image bytes for this screenshot live only on the originating device.
+
+  /api/v1/reports/summary:
+    get:
+      tags: [reports]
+      operationId: reportSummary
+      summary: Date-range rollup for the companion report tab
+      description: |
+        Server-side rollup so a companion does not have to hold a full history
+        locally. All arithmetic is defined on **live** spans (`deleted_at` null).
+
+        Four distinct time figures are reported because the ROADMAP treats
+        conflating them as a credibility risk:
+
+        - `elapsed_seconds` - raw sum of span durations. Overlapping parallel work
+          is counted once per span, so this can exceed wall-clock time.
+        - `billable_seconds` - the same sum restricted to `is_billable`.
+        - `weighted_billable_seconds` - overlap-corrected. For every instant
+          covered by N live billable spans, each of those spans accrues 1/N of
+          that instant. Summing `weighted_billable_seconds` across every group
+          never exceeds wall-clock time in the range.
+        - `evidence_coverage` - fraction of spans with at least one live
+          screenshot row attached (metadata counts; bytes are not required).
+
+        Open spans (`end` null) are clipped to `min(now, to)`.
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceIdQuery'
+        - name: from
+          in: query
+          required: true
+          description: Inclusive start instant.
+          schema: { type: string, format: date-time }
+        - name: to
+          in: query
+          required: true
+          description: Exclusive end instant.
+          schema: { type: string, format: date-time }
+        - name: group_by
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [client, project, ticket, day, source, none]
+            default: project
+        - name: client_id
+          in: query
+          required: false
+          schema: { $ref: '#/components/schemas/Uuid' }
+        - name: project_id
+          in: query
+          required: false
+          schema: { $ref: '#/components/schemas/Uuid' }
+        - name: billable
+          in: query
+          required: false
+          description: Restrict to billable or non-billable spans. Omit for both.
+          schema: { type: boolean }
+        - name: include_unreviewed
+          in: query
+          required: false
+          description: |
+            When false, spans whose `review_state` is `unreviewed` or
+            `needs_review` are excluded from totals but still counted in
+            `needs_review_count` and surfaced as a warning.
+          schema: { type: boolean, default: true }
+        - name: time_zone
+          in: query
+          required: false
+          description: IANA zone used for `group_by=day` bucketing. Defaults to UTC.
+          schema: { type: string, examples: ["America/Chicago"] }
+      responses:
+        '200':
+          description: Rollup.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ReportSummary' }
+              examples:
+                by_project:
+                  value:
+                    range:
+                      from: 2026-07-20T00:00:00Z
+                      to: 2026-07-27T00:00:00Z
+                      time_zone: UTC
+                    group_by: project
+                    totals:
+                      elapsed_seconds: 143400
+                      billable_seconds: 118200
+                      non_billable_seconds: 25200
+                      weighted_billable_seconds: 110940
+                      span_count: 87
+                      needs_review_count: 4
+                      evidence_coverage: 0.83
+                    groups:
+                      - key: project
+                        key_id: 5f2a9c11-4d3b-51e6-9a77-0b1c2d3e4f50
+                        label: Redesign
+                        parent_label: Acme
+                        elapsed_seconds: 88200
+                        billable_seconds: 84600
+                        weighted_billable_seconds: 80100
+                        span_count: 51
+                        evidence_coverage: 0.9
+                      - key: project
+                        key_id: null
+                        label: Unassigned
+                        parent_label: null
+                        elapsed_seconds: 55200
+                        billable_seconds: 33600
+                        weighted_billable_seconds: 30840
+                        span_count: 36
+                        evidence_coverage: 0.72
+                    warnings:
+                      - code: spans_need_review
+                        message: 4 spans in this range are flagged for review.
+                        count: 4
+                      - code: billing_overlap
+                        message: 2 billable spans for different clients overlap.
+                        count: 2
+                    generated_at: 2026-07-27T14:30:00Z
+                    server_revision: 1955
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+
+components:
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        Access token from the scaffold's `POST /api/v1/auth/login` or
+        `POST /api/v1/auth/refresh`. Lifetime 1 hour. On `401` with
+        `code: token_expired`, refresh once and retry the original request once.
+
+        ## Token field names
+
+        The auth endpoints live in the scaffold rather than in this contract, so
+        their field names are pinned here. Getting this wrong has already cost
+        one client a needlessly tolerant DTO.
+
+        **Every auth response returns exactly two token fields:**
+
+        | Field | Meaning |
+        |-------|---------|
+        | `access_token` | Bearer credential. Lifetime 1 hour. |
+        | `refresh_token` | Long-lived. Exchanged at `POST /api/v1/auth/refresh`. |
+
+        **No response anywhere returns a bare `token`.** This holds for every
+        response in `auth_controller.ex` and `sso_controller.ex` - login,
+        refresh, magic-link verify, OTP verify, password-reset verify,
+        email verify, and the SSO exchange and callbacks.
+
+        `token` appears **only as an inbound request parameter**, on exactly two
+        endpoints, where it names the single-use credential from an email link:
+
+        - `POST /api/v1/auth/magic-link/verify` - body `{ "token": "..." }`
+        - `POST /api/v1/auth/verify-email/confirm` - body `{ "token": "..." }`
+
+        `POST /api/v1/auth/refresh` takes `refresh_token`, not `token`.
+
+        A client SHOULD decode `access_token` and `refresh_token` as required
+        fields and treat their absence as a protocol error, rather than falling
+        back to a `token` key that this server never sends.
+
+  parameters:
+    WorkspaceIdQuery:
+      name: workspace_id
+      in: query
+      required: true
+      description: The Timely workspace. Equal to the scaffold's organization id.
+      schema: { $ref: '#/components/schemas/Uuid' }
+    DeviceIdPath:
+      name: device_id
+      in: path
+      required: true
+      schema: { $ref: '#/components/schemas/Uuid' }
+    ScreenshotIdPath:
+      name: screenshot_id
+      in: path
+      required: true
+      schema: { $ref: '#/components/schemas/Uuid' }
+
+  schemas:
+
+    Uuid:
+      type: string
+      format: uuid
+      pattern: '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+      description: Lowercase canonical UUID. Client-generatable; never server-allocated for entity ids.
+      examples: ["019318b4-1a2b-7c3d-8e4f-506172839400"]
+
+    NullableUuid:
+      type: [string, "null"]
+      format: uuid
+      examples: ["019318b4-1a2b-7c3d-8e4f-506172839400", null]
+
+    Revision:
+      type: integer
+      format: int64
+      minimum: 0
+      description: |
+        Server-assigned, strictly monotonic **per workspace**. Assigned inside the
+        same transaction that publishes the row. The one and only sync cursor.
+
+    SyncEnvelope:
+      type: object
+      description: |
+        Carried by every syncable entity. Present on both the wire and in each
+        client's local store.
+
+        **One `required` list serves both directions, and that is a structural
+        gap worth naming rather than a one-off.** This schema (and every entity
+        schema built on it) is used to describe both the response shape - where
+        `required` correctly means "always present" - and, informally, the
+        request shape, where a reader could take the same list as "the client
+        must send this." For most of these seven fields that reading happens to
+        be harmless (`id`/`workspace_id` genuinely must be sent; `created_at`/
+        `updated_at` are ordinary client input either way; `server_revision`/
+        `deleted_at` are already flagged server-owned elsewhere). `origin_device_id`
+        is required on read and safely omittable on write, and it is the field
+        that shows what to check when adding another like it.
+
+        The hazard is a field that is server-derived on write but whose RAW
+        payload value is also read somewhere else - most importantly by conflict
+        resolution. `origin_device_id` was in exactly that state before the
+        derivation and the LWW comparison were unified: storage substituted a
+        fallback while `wins?/3` compared the raw payload, so an omitted value
+        was adjudicated as `""` and lost every exact-`updated_at_effective` tie.
+        Both paths now use the same derived value, so omission is safe.
+
+        If a future field is added here that is server-derived on write, check
+        every place the server reads it - not just where it is stored - before
+        assuming the `server-owned-fields` table's "omit it" guidance applies.
+        That guidance holds only when the derived value is the single value the
+        server ever acts on.
+      required: [id, workspace_id, created_at, updated_at, server_revision, deleted_at, origin_device_id]
+      properties:
+        id:
+          $ref: '#/components/schemas/Uuid'
+        workspace_id:
+          $ref: '#/components/schemas/Uuid'
+        created_at:
+          type: string
+          format: date-time
+          description: Client wall clock at creation. Informational only; never used for ordering.
+        updated_at:
+          type: string
+          format: date-time
+          description: |
+            Client wall clock at last local edit. Advisory LWW input, never a cursor.
+            The server clamps it to `min(updated_at, received_at)` before comparing;
+            the clamped value is exposed as `updated_at_effective` where relevant.
+        server_revision:
+          $ref: '#/components/schemas/Revision'
+        deleted_at:
+          type: [string, "null"]
+          format: date-time
+          description: |
+            Soft-delete tombstone. Rows are never hard-deleted while inside the
+            tombstone horizon. A non-null value always wins over a concurrent update.
+        origin_device_id:
+          oneOf:
+            - $ref: '#/components/schemas/Uuid'
+            - type: "null"
+          description: |
+            Device that last authored the row, and the deterministic LWW
+            tie-break key: on equal `updated_at_effective`, the lexically
+            greater `origin_device_id` wins.
+
+            **Safely omittable.** The server derives the value once -
+            the payload's value if present, otherwise the pushing device -
+            and uses that single derived value both to STORE the row and to
+            ADJUDICATE the tie. An omitted field and an explicit `null`
+            behave identically, and neither loses a tie it was entitled to
+            win.
+
+            The tie-break is computed on the STORED value, never on the raw
+            payload, and that is what makes it client-independent: what a
+            client can see of another device's write is the value it pulled,
+            never that device's request body. Adjudicating on the payload
+            would compare something no client can observe, so two clients
+            with different serialization habits would compute different
+            winners from the same two versions.
+
+            Not unforgeable, and not claimed to be: device identity is
+            client-asserted throughout this protocol - the bearer token
+            identifies a user and a session, never a device, and
+            `MutationRequest.device_id` is client-supplied too, so ignoring
+            the payload would move the assertion rather than remove it. The
+            value must be a well-formed uuid (an arbitrary high-sorting
+            string is rejected `validation_failed`), but because genuine ids
+            are UUIDv7 and therefore timestamp-led, an all-`f` uuid outranks
+            every real one. A client that stamps one wins ties it would
+            otherwise lose.
+            This is accepted and is not a tenancy hole; workspace isolation
+            is enforced separately, so only that client's own rows in its own
+            workspace are affected. Convergence is unconditional;
+            attribution is asserted.
+
+            Pinned by wire-090..092 and wire-095 in wire-fixtures.json.
+    ReviewReason:
+      type: object
+      description: |
+        A non-destructive flag the server or a user attaches to a row. The server
+        raises flags; it never resolves them and never merges or trims data on the
+        user's behalf. "Review beats recall" is a product principle, not a fallback.
+      required: [code, raised_at, raised_by, resolution]
+      properties:
+        code:
+          type: string
+          enum:
+            - suspected_duplicate
+            - billing_overlap
+            - unresolved_idle_gap
+            - low_confidence
+            - unresolved_reference
+            - auto_created_entity
+            - privacy_censored
+            - reopened_after_approval
+        detail:
+          type: [string, "null"]
+        related_id:
+          $ref: '#/components/schemas/NullableUuid'
+        raised_at:
+          type: string
+          format: date-time
+        raised_by:
+          type: string
+          enum: [server, device, user]
+        resolution:
+          type: string
+          enum: [pending, accepted, dismissed, merged]
+          default: pending
+        resolved_at:
+          type: [string, "null"]
+          format: date-time
+
+    ReviewState:
+      type: string
+      description: |
+        Mirrors the ROADMAP's interval states. `source` records how a span was
+        produced (captured/manual); `review_state` records where it sits in the
+        review lifecycle.
+      enum: [unreviewed, needs_review, reviewed, approved, locked, disputed]
+      default: unreviewed
+
+    SpanSource:
+      type: string
+      description: Mirrors `SpanSource` in `apps/macos/Sources/TimelyMac/Models.swift`.
+      enum: [manual, timer, pomodoro]
+
+    TimeSpan:
+      type: object
+      description: |
+        Mirrors `TrackedTimeSpan`. Timely models time as overlapping intervals,
+        not one linear stopwatch, so two live spans covering the same instant are
+        legal and expected.
+
+        The macOS model references client/project/ticket by **name string**. This
+        contract carries both the resolved UUID (`*_id`, authoritative) and the
+        raw name (`*_name`). On write, a name is a resolution input when the id is
+        absent. On read, the name is a denormalized convenience mirroring the
+        current name of the referenced row. See SYNC-PROTOCOL section 6.
+      allOf:
+        - $ref: '#/components/schemas/SyncEnvelope'
+        - type: object
+          required:
+            - title
+            - start
+            - source
+            - is_billable
+            - notes
+            - review_state
+            - updated_at_effective
+          properties:
+            title: { type: string, maxLength: 500 }
+            client_id: { $ref: '#/components/schemas/NullableUuid' }
+            project_id: { $ref: '#/components/schemas/NullableUuid' }
+            ticket_id: { $ref: '#/components/schemas/NullableUuid' }
+            client_name:
+              type: string
+              default: ""
+              description: |
+                Resolution input on write when `client_id` is absent; denormalized
+                name on read.
+
+                **The `""` default applies only to a fresh row - never read it as
+                "omitting this key on an update clears the reference."** The
+                client/project/ticket reference group (`*_id` and `*_name`
+                together) is presence-sensitive on update, the same as `end` and
+                `locked_at` above: the server resolves it only when the payload
+                mentions at least one of the two keys (SYNC-PROTOCOL §6.1). An
+                update that omits both `client_id` and `client_name` entirely
+                leaves the span's existing client reference untouched; it does
+                **not** unassign it. This was a real, shipped defect - a partial
+                title-only update was silently clearing `client_id`/`client_name`
+                (and the project/ticket equivalents) because the server treated
+                "neither key present" the same as "present and empty." See
+                SYNC-PROTOCOL §8.2's note on presence-sensitivity for the general
+                rule, and the fixture cases pinning omitted-field preservation on
+                `time_span` (the merge-only-present-keys rule applies uniformly
+                to every entity kind, not just this one).
+
+                To genuinely clear the reference, send an explicit empty
+                `client_name` (with `client_id` absent). Omitting both keys is
+                silence, not a claim.
+            project_name:
+              type: string
+              default: ""
+              description: Same presence-sensitivity as `client_name` above, for the project reference.
+            ticket_name:
+              type: string
+              default: ""
+              description: Same presence-sensitivity as `client_name` above, for the ticket reference.
+            start:
+              type: string
+              format: date-time
+              description: |
+                The wire name is `start`. `start_at` is the SQL column name and
+                MUST NOT appear in a payload - see the note on `end`.
+            end:
+              type: [string, "null"]
+              format: date-time
+              description: |
+                Null means the span is open. A **closed** span (non-null `end`)
+                may never be reopened by a stale update - see the conflict matrix.
+
+                **`"end": null` and an absent `end` are different instructions,
+                and the server acts on the difference.** JSON Schema cannot
+                express this, so it is stated here:
+
+                - `"end": null` present in the payload is an assertion that the
+                  span is open. Against a row the server holds **closed**, that
+                  is a deliberate **reopen** - allowed only when `base_revision`
+                  equals the row's current `server_revision` (matrix row 7), and
+                  rejected with `span_reopen_forbidden` otherwise (matrix row 6).
+                - `end` **absent** is a partial update that does not touch the
+                  field. It never reopens anything.
+
+                ### Client requirement
+
+                | Situation | Send |
+                |-----------|------|
+                | The span is closed | the timestamp |
+                | The user just reopened it | explicit `null` |
+                | Anything else - including an ordinary edit of a span already open | **omit the key** |
+
+                `locked_at` follows the identical rule (present-and-null clears
+                an approval lock, matrix row 11), so a payload builder should
+                handle both together.
+
+                Deriving the middle row needs the **prior** state: "the user
+                reopened this" and "this was already open" produce identical
+                entities and differ only in what the row looked like before.
+
+                Two failure modes, in opposite directions:
+
+                - **Always serializing the key** asserts a reopen - and a
+                  lock-clear - on every edit. It looks correct in testing,
+                  because the guards also require the *server's* copy to be
+                  closed or locked. The bug appears only once another device
+                  closes a span or locks a day and this client has not pulled it
+                  yet: an innocent title edit becomes a `span_reopen_forbidden`
+                  rejection that also loses the title, or, for an admin, a
+                  silently cleared approval lock.
+                - **Omitting nulls globally** - `encodeIfPresent` in Swift,
+                  `explicitNulls = false` in Kotlin, `omitempty` in Go - makes a
+                  genuine reopen inexpressible, because the key vanishes at
+                  exactly the moment it carries meaning. It also drops
+                  `deleted_at`, `ticket_id` and `origin_device_id`, which are
+                  nullable **and** required, producing bodies that fail this
+                  schema.
+
+                The correct shape is one deliberate conditional in the payload
+                builder, covering `end` and `locked_at` and nothing else,
+                commented so nobody generalizes it into a serializer setting.
+
+                Assert it at the **byte level**. A decode/encode/decode cycle is
+                green either way, because both forms decode to the same value -
+                which is what lets this class of bug survive an otherwise healthy
+                test suite.
+
+                **Naming:** the wire names are `start` and `end`. `start_at` and
+                `end_at` are SQL column names and MUST NOT appear on the wire.
+                Reading the payload under the column name silently never matches
+                and waves every stale reopen through - a bug this project has
+                already hit once, on the server side of this exact guard.
+            source: { $ref: '#/components/schemas/SpanSource' }
+            is_billable: { type: boolean, default: false }
+            notes: { type: string, default: "" }
+            review_state: { $ref: '#/components/schemas/ReviewState' }
+            review_reasons:
+              type: array
+              items: { $ref: '#/components/schemas/ReviewReason' }
+              default: []
+            derived_from_span_ids:
+              type: array
+              items: { $ref: '#/components/schemas/Uuid' }
+              default: []
+              description: |
+                Lineage for split and merge. A split emits N creates each citing
+                the original plus one delete of the original, in one atomic batch.
+                A merge emits one create citing all sources plus their deletes.
+            locked_at:
+              type: [string, "null"]
+              format: date-time
+              description: Set when a reviewed day is locked (US-040). Updates to a locked span are rejected with `locked_day`.
+            updated_at_effective:
+              type: string
+              format: date-time
+              readOnly: true
+              description: Server-clamped `updated_at`. The value actually compared during LWW.
+      examples:
+        - id: 019318b4-1a2b-7c3d-8e4f-506172839400
+          workspace_id: 0192f7a1-2b44-7000-8a10-9d3e4f5a6b7c
+          title: Timeline canvas keyboard pass
+          client_id: 3a1b7d02-9e44-5c11-8f20-aabbccdd0011
+          project_id: 5f2a9c11-4d3b-51e6-9a77-0b1c2d3e4f50
+          ticket_id: null
+          client_name: Acme
+          project_name: Redesign
+          ticket_name: ""
+          start: 2026-07-27T09:02:00Z
+          end: 2026-07-27T10:47:30Z
+          source: timer
+          is_billable: true
+          notes: ""
+          review_state: unreviewed
+          review_reasons: []
+          derived_from_span_ids: []
+          locked_at: null
+          created_at: 2026-07-27T09:02:00Z
+          updated_at: 2026-07-27T10:47:30Z
+          updated_at_effective: 2026-07-27T10:47:30Z
+          server_revision: 1903
+          deleted_at: null
+          origin_device_id: 019318a0-7f3c-7c21-9b4e-2f6a1c3d5e70
+
+    ClientRecord:
+      type: object
+      description: >-
+        Mirrors `ClientRecord`. Name-keyed, unique on
+        `(workspace_id, canonical_name)`.
+      allOf:
+        - $ref: '#/components/schemas/SyncEnvelope'
+        - type: object
+          required: [name, canonical_name, notes]
+          properties:
+            name: { type: string, minLength: 1, maxLength: 200 }
+            canonical_name:
+              type: string
+              readOnly: true
+              description: >-
+                `canon(name)` - see SYNC-PROTOCOL section 3.3 and the executable
+                fixture `canon-fixtures.json`. The uniqueness key. Lowercased,
+                not case-folded.
+            notes: { type: string, default: "" }
+            auto_created:
+              type: boolean
+              default: false
+              description: True when the row was vivified from a name reference rather than created deliberately.
+            merged_into_id:
+              $ref: '#/components/schemas/NullableUuid'
+              readOnly: true
+              description: Server-owned. Set only by taxonomy merge (6.3); see the note on `Mutation.payload`'s server-owned-fields table - a client-sent value, including `null`, un-merges the row.
+            review_state: { $ref: '#/components/schemas/ReviewState' }
+
+    ProjectRecord:
+      type: object
+      description: |
+        Mirrors `ProjectRecord`. The macOS model scopes a project by `clientName`;
+        here it is scoped by `client_id`, which may be null for a client-less
+        project. Unique on `(workspace_id, client_id, canonical_name)` with a null
+        `client_id` treated as its own scope.
+
+        This is Timely's **domain** project (billable client work). It is not the
+        scaffold's PBAC `project` resource.
+      allOf:
+        - $ref: '#/components/schemas/SyncEnvelope'
+        - type: object
+          required: [name, canonical_name, notes]
+          properties:
+            name: { type: string, minLength: 1, maxLength: 200 }
+            canonical_name: { type: string, readOnly: true }
+            client_id: { $ref: '#/components/schemas/NullableUuid' }
+            client_name: { type: string, default: "" }
+            notes: { type: string, default: "" }
+            auto_created: { type: boolean, default: false }
+            merged_into_id: { $ref: '#/components/schemas/NullableUuid', readOnly: true }
+            review_state: { $ref: '#/components/schemas/ReviewState' }
+
+    TicketRecord:
+      type: object
+      description: |
+        Mirrors `TicketRecord`. Unique on `(workspace_id, project_id, canonical_name)`.
+      allOf:
+        - $ref: '#/components/schemas/SyncEnvelope'
+        - type: object
+          required: [name, canonical_name, notes]
+          properties:
+            name: { type: string, minLength: 1, maxLength: 200 }
+            canonical_name: { type: string, readOnly: true }
+            client_id: { $ref: '#/components/schemas/NullableUuid' }
+            project_id: { $ref: '#/components/schemas/NullableUuid' }
+            client_name: { type: string, default: "" }
+            project_name: { type: string, default: "" }
+            notes: { type: string, default: "" }
+            auto_created: { type: boolean, default: false }
+            merged_into_id: { $ref: '#/components/schemas/NullableUuid', readOnly: true }
+            review_state: { $ref: '#/components/schemas/ReviewState' }
+
+    ScreenshotUploadState:
+      type: string
+      description: |
+        Server-owned. Clients never set this through `/sync/mutations`; the server
+        derives it from the gates and from `POST .../blob`.
+
+        - `local_only` - bytes will not be offered. Default.
+        - `eligible` - both gates open; the origin device may upload.
+        - `pending` - the origin device intends to upload; bytes not received yet.
+        - `uploaded` - bytes are on the server.
+        - `refused` - upload attempted and denied by policy.
+        - `purge_pending` - policy revoked; stored bytes queued for deletion.
+        - `purged` - bytes deleted; metadata retained.
+      enum: [local_only, eligible, pending, uploaded, refused, purge_pending, purged]
+      default: local_only
+
+    Screenshot:
+      type: object
+      description: |
+        Mirrors `ScreenshotRecord` - **metadata only**. This row always syncs.
+        Image bytes never do unless both privacy gates are open.
+
+        `file_name` is a path on the originating device
+        (`~/Library/Application Support/Timely/Screenshots/timely-yyyyMMdd-HHmmss.png`).
+        It is advisory provenance; a companion MUST NOT try to resolve it. Second
+        resolution means it is not unique - never key on it.
+      allOf:
+        - $ref: '#/components/schemas/SyncEnvelope'
+        - type: object
+          required: [captured_at, file_name, active_app_name, upload_state]
+          properties:
+            span_id: { $ref: '#/components/schemas/NullableUuid' }
+            captured_at: { type: string, format: date-time }
+            file_name:
+              type: string
+              description: Device-local file name. Advisory only, not unique, not resolvable off-device.
+            active_app_name: { type: string, default: "" }
+            upload_state:
+              $ref: '#/components/schemas/ScreenshotUploadState'
+              readOnly: true
+              description: |
+                Server-owned, like `blob_available` below - moved only by the
+                blob endpoints and the censorship cascade (see the server-owned
+                fields table on `Mutation.payload`). A client-sent value is
+                silently ignored on write, matching every other `blob_*` field
+                on this row (conflict matrix row 17).
+            blob_available:
+              type: boolean
+              readOnly: true
+              default: false
+              description: |
+                **Derived, never stored.** The server computes it as
+                `upload_state == "uploaded"`; there is no column behind it.
+
+                Clients MUST NOT set it - it is ignored on write like every other
+                `blob_*` field (matrix row 17) - and MUST NOT treat it as
+                independent of `upload_state`. A client that caches this row
+                locally should either persist `upload_state` and recompute, or
+                persist both and accept that `upload_state` is the authority.
+            blob_content_hash:
+              type: [string, "null"]
+              pattern: '^[0-9a-f]{64}$'
+            blob_byte_size: { type: [integer, "null"], minimum: 0 }
+            blob_uploaded_at: { type: [string, "null"], format: date-time }
+            blob_url:
+              type: [string, "null"]
+              readOnly: true
+              description: Relative path to `GET .../blob`. Null whenever bytes are not on the server.
+      examples:
+        - id: 019318b9-3c4d-7000-8000-0000000000f1
+          workspace_id: 0192f7a1-2b44-7000-8a10-9d3e4f5a6b7c
+          span_id: 019318b4-1a2b-7c3d-8e4f-506172839400
+          captured_at: 2026-07-27T09:20:00Z
+          file_name: timely-20260727-092000.png
+          active_app_name: Xcode
+          upload_state: local_only
+          blob_available: false
+          blob_content_hash: null
+          blob_byte_size: null
+          blob_uploaded_at: null
+          blob_url: null
+          created_at: 2026-07-27T09:20:00Z
+          updated_at: 2026-07-27T09:20:00Z
+          server_revision: 1910
+          deleted_at: null
+          origin_device_id: 019318a0-7f3c-7c21-9b4e-2f6a1c3d5e70
+
+    PrivacyCategory:
+      type: string
+      description: Mirrors the `privacy_category` vocabulary in the macOS vision prompt.
+      enum: [none, secret, private_email, personal_chat, adult_material, financial, identity, medical, other_private]
+      default: none
+
+    VisionAnalysis:
+      type: object
+      description: |
+        Mirrors `VisionAnalysisRecord`. **Append-only**: `update` mutations are
+        rejected with `immutable_entity`; only `create` and `delete` are accepted.
+        Re-analysis produces a new row.
+
+        For a local-only screenshot this row *is* the recall surface - it is what
+        makes a companion app useful with zero image bytes.
+
+        `raw_response` is the model's verbatim transcription of screen contents
+        and is therefore image-equivalent. It is withheld (`null`) unless
+        `workspace_policy.sync_vision_raw_response` is true AND the origin device
+        has `local_only_screenshots == false`. `status_update`, `evidence`, and
+        the `inferred_*` fields are bounded summaries and always sync.
+      allOf:
+        - $ref: '#/components/schemas/SyncEnvelope'
+        - type: object
+          required: [screenshot_id, analyzed_at, model, status_update, confidence]
+          properties:
+            screenshot_id: { $ref: '#/components/schemas/Uuid' }
+            analyzed_at: { type: string, format: date-time }
+            model: { type: string, examples: ["gpt-4o"] }
+            status_update: { type: string, default: "" }
+            inferred_project: { type: string, default: "" }
+            inferred_task: { type: string, default: "" }
+            project_switch_detected: { type: boolean, default: false }
+            confidence: { type: number, minimum: 0, maximum: 1 }
+            evidence: { type: string, default: "" }
+            privacy_sensitive: { type: boolean, default: false }
+            privacy_category: { $ref: '#/components/schemas/PrivacyCategory' }
+            raw_response:
+              type: [string, "null"]
+              description: |
+                Verbatim model output. Image-equivalent; double-gated. Null when withheld.
+            raw_response_withheld:
+              type: boolean
+              readOnly: true
+              default: true
+              description: True when `raw_response` was suppressed by policy rather than absent at the source.
+            error_message: { type: [string, "null"] }
+
+    CensoredScreenshot:
+      type: object
+      description: |
+        Mirrors `CensoredScreenshotRecord`. **Append-only** (create + delete).
+
+        Creating this row is an *assertion of censorship*, and the server applies
+        it as such: the referenced `screenshot` row is tombstoned, any matching
+        `vision_analysis` rows are tombstoned, and any stored blob is deleted and
+        its state set to `purged`. Those side effects come back in the mutation
+        result. This is how the macOS agent's local hard-delete is expressed
+        without violating the never-hard-delete rule.
+
+        `deleted_local_file` is the origin device's report about its own disk. It
+        is not a claim about any other device.
+      allOf:
+        - $ref: '#/components/schemas/SyncEnvelope'
+        - type: object
+          required: [screenshot_id, captured_at, censored_at, category, confidence]
+          properties:
+            screenshot_id: { $ref: '#/components/schemas/Uuid' }
+            span_id: { $ref: '#/components/schemas/NullableUuid' }
+            file_name: { type: string, default: "" }
+            active_app_name: { type: string, default: "" }
+            captured_at: { type: string, format: date-time }
+            censored_at: { type: string, format: date-time }
+            model: { type: string, default: "" }
+            category: { $ref: '#/components/schemas/PrivacyCategory' }
+            reason: { type: string, default: "" }
+            confidence: { type: number, minimum: 0, maximum: 1 }
+            deleted_local_file:
+              type: boolean
+              default: false
+              description: Origin device's report that it removed its own copy. Device-scoped truth.
+
+    DevicePlatform:
+      type: string
+      enum: [macos, ios, android, web]
+
+    Device:
+      type: object
+      description: |
+        A registered client install. Devices sync so that companions can render
+        `origin_device_id` as a human name ("captured on Keith's MacBook Pro")
+        and so that the privacy gate is inspectable from any surface.
+
+        Only the owning device may mutate its own row.
+      allOf:
+        - $ref: '#/components/schemas/SyncEnvelope'
+        - type: object
+          required:
+            - user_id
+            - platform
+            - name
+            - app_version
+            - local_only_screenshots
+            - is_capture_agent
+            - last_sync_revision
+          properties:
+            user_id: { $ref: '#/components/schemas/Uuid', readOnly: true }
+            platform: { $ref: '#/components/schemas/DevicePlatform' }
+            name: { type: string, maxLength: 200 }
+            app_version: { type: string }
+            os_version: { type: [string, "null"] }
+            local_only_screenshots:
+              type: boolean
+              default: true
+              description: |
+                Half of the screenshot upload gate. Defaults to the privacy-preserving
+                value. A device can only tighten the effective gate, never loosen the
+                workspace policy.
+            is_capture_agent:
+              type: boolean
+              default: false
+              description: |
+                True only for macOS. Companions MUST register false; the server
+                rejects a capture-agent claim from a non-macOS platform.
+            last_seen_at: { type: [string, "null"], format: date-time }
+            last_sync_revision: { $ref: '#/components/schemas/Revision', readOnly: true }
+            revoked_at: { type: [string, "null"], format: date-time }
+
+    DeviceRegistration:
+      type: object
+      required: [device_id, workspace_id, platform, name, app_version]
+      properties:
+        device_id:
+          $ref: '#/components/schemas/Uuid'
+        workspace_id: { $ref: '#/components/schemas/Uuid' }
+        platform: { $ref: '#/components/schemas/DevicePlatform' }
+        name: { type: string, maxLength: 200 }
+        app_version: { type: string }
+        os_version: { type: [string, "null"] }
+        local_only_screenshots: { type: boolean, default: true }
+        is_capture_agent: { type: boolean, default: false }
+
+    DeviceUpdate:
+      type: object
+      minProperties: 1
+      properties:
+        name: { type: string, maxLength: 200 }
+        app_version: { type: string }
+        os_version: { type: [string, "null"] }
+        local_only_screenshots: { type: boolean }
+
+    DeviceEnvelope:
+      type: object
+      required: [device, workspace_policy, server_time, sync_cursor]
+      properties:
+        device: { $ref: '#/components/schemas/Device' }
+        workspace_policy:
+          $ref: '#/components/schemas/WorkspacePolicy'
+        server_time: { type: string, format: date-time }
+        sync_cursor:
+          $ref: '#/components/schemas/Revision'
+          description: |
+            Current workspace watermark. A freshly registered device may start its
+            pull loop from 0 to bootstrap, or from this value to skip history.
+
+    VisionSyncSettings:
+      type: object
+      description: |
+        Mirrors `VisionLLMSettings` **minus `apiKey`**. The API key is a device
+        secret and is deliberately absent from this contract; it lives in the
+        device keychain and is never transmitted.
+      properties:
+        analysis_enabled: { type: boolean, default: false }
+        notify_on_project_switch: { type: boolean, default: true }
+        privacy_redaction_enabled: { type: boolean, default: true }
+        notify_on_censored_screenshot: { type: boolean, default: true }
+        provider: { type: string, enum: [openai, litellm, ollama, custom], default: openai }
+        model: { type: string, default: "gpt-4o" }
+        base_url: { type: string, format: uri }
+        prompt: { type: string }
+        confidence_threshold: { type: number, minimum: 0, maximum: 1, default: 0.72 }
+
+    UserSettings:
+      type: object
+      description: |
+        Per-user, per-workspace preferences. Derived from macOS `AppSettings`,
+        with two classes of field removed:
+
+        - **Device-local** (never synced): `pomodoro` runtime state, `CaptureMode`,
+          `lastInferredProject`, the vision API key, screenshot directory paths.
+        - **Workspace-governed** (see `WorkspacePolicy`): `localOnlyScreenshots`
+          and `retentionDays` become *floors* set by policy; the user setting may
+          only be more restrictive.
+
+        `id` is deterministic: UUIDv5(workspace_id, "user_settings:" + user_id).
+      allOf:
+        - $ref: '#/components/schemas/SyncEnvelope'
+        - type: object
+          required: [kind, user_id]
+          properties:
+            kind: { type: string, const: user_settings }
+            user_id: { $ref: '#/components/schemas/Uuid' }
+            screenshot_interval_minutes: { type: number, minimum: 0.5, default: 5 }
+            screenshot_capture_enabled: { type: boolean, default: true }
+            pomodoro_work_minutes: { type: number, minimum: 1, default: 25 }
+            pomodoro_break_minutes: { type: number, minimum: 1, default: 5 }
+            local_only_screenshots:
+              type: boolean
+              default: true
+              description: User preference. Effective value is `policy OR user OR device` (most restrictive wins).
+            retention_days:
+              type: integer
+              minimum: 0
+              default: 0
+              description: 0 means forever. Clamped down by `workspace_policy.screenshot_retention_days` when that is non-zero.
+            idle_threshold_minutes: { type: number, minimum: 1, default: 5 }
+            vision: { $ref: '#/components/schemas/VisionSyncSettings' }
+
+    WorkspacePolicy:
+      type: object
+      description: |
+        Workspace-wide governance. Only a workspace owner or admin may mutate it;
+        every other actor receives `permission_denied`. Defaults are the
+        privacy-preserving values.
+
+        `id` equals `workspace_id`.
+      allOf:
+        - $ref: '#/components/schemas/SyncEnvelope'
+        - type: object
+          required: [kind, screenshot_upload_allowed]
+          properties:
+            kind: { type: string, const: workspace_policy }
+            screenshot_upload_allowed:
+              type: boolean
+              default: false
+              description: Gate 1 of 2 for image byte upload. Flipping this to false purges existing blobs.
+            sync_vision_raw_response:
+              type: boolean
+              default: false
+              description: Whether verbatim model transcriptions of the screen may leave the device.
+            default_local_only_screenshots: { type: boolean, default: true }
+            screenshot_retention_days: { type: integer, minimum: 0, default: 0 }
+            blob_retention_days: { type: integer, minimum: 0, default: 30 }
+            require_approval_before_export: { type: boolean, default: false }
+            idle_threshold_minutes: { type: number, minimum: 1, default: 5 }
+            locked_through:
+              type: [string, "null"]
+              format: date
+              description: Spans starting on or before this date are locked against edits (US-040).
+
+    SettingsRow:
+      description: |
+        The `settings` bucket carries a discriminated union so that user
+        preferences and workspace policy share one revision stream.
+
+        **The row is flattened on the wire - but only one level, and only the
+        `document` wrapper.** Server-side these rows store their body in a
+        `document` jsonb column. That column is merged to the top level before it
+        is sent: a `user_settings` row has `screenshot_interval_minutes` as a
+        sibling of `kind` and `server_revision`, **not** nested under `document`.
+        There is no `document` key on the wire, in either direction.
+
+        **`vision` is still a nested object, and must stay one.** The flattening
+        removes the `document` wrapper and nothing else. `UserSettings.vision` is
+        a `VisionSyncSettings` object one level down, exactly as declared in this
+        schema:
+
+            { "kind": "user_settings",
+              "screenshot_interval_minutes": 5,
+              "vision": { "analysis_enabled": true, "model": "gpt-4o", ... } }
+
+        A client that reads "SettingsRow is flattened" as "everything is at the
+        top level" will hoist `vision`'s fields into the row and regress. The
+        rule is precisely: *the `document` wrapper is removed; the shape inside
+        it is untouched.*
+
+        `kind` is the discriminator and is the row's own field - distinct from
+        `MutationResult.entity_kind`, which discriminates the envelope of a
+        mutation result. A `settings` row therefore carries `kind`; a mutation
+        result about one carries `entity_kind: "user_settings"` on the envelope
+        *and* `kind: "user_settings"` inside `entity`. They agree, and both are
+        deliberate - see the note on `MutationResult.entity_kind`.
+      oneOf:
+        - $ref: '#/components/schemas/UserSettings'
+        - $ref: '#/components/schemas/WorkspacePolicy'
+      discriminator:
+        propertyName: kind
+        mapping:
+          user_settings: '#/components/schemas/UserSettings'
+          workspace_policy: '#/components/schemas/WorkspacePolicy'
+
+    EntityKind:
+      type: string
+      enum:
+        - client
+        - project
+        - ticket
+        - time_span
+        - screenshot
+        - vision_analysis
+        - censored_screenshot
+        - device
+        - user_settings
+        - workspace_policy
+
+    Mutation:
+      type: object
+      required: [mutation_id, entity, op, payload]
+      properties:
+        mutation_id:
+          $ref: '#/components/schemas/Uuid'
+          description: |
+            Client-generated UUIDv7, globally unique. The idempotency key. Retained
+            server-side for at least 30 days; a replay inside that window returns
+            the original result verbatim.
+        entity: { $ref: '#/components/schemas/EntityKind' }
+        op:
+          type: string
+          enum: [create, update, delete]
+        base_revision:
+          oneOf:
+            - $ref: '#/components/schemas/Revision'
+            - type: "null"
+          description: |
+            `server_revision` the client believed current when it composed this
+            mutation. Null for rows the client has never seen from the server.
+            Advisory for ordinary LWW (the result is marked `stale_base: true`),
+            but **decisive** for the closed-span reopen guard and for locked days.
+        payload:
+          type: object
+          description: |
+            The entity body. Must contain `id` and `workspace_id`. For `delete`,
+            only `id`, `workspace_id`, `deleted_at`, `updated_at`, and
+            `origin_device_id` are read.
+
+            ## Server-owned fields MUST NOT appear in a payload
+
+            These are written by the server and only by the server. They are
+            `readOnly` in every schema that declares them, and the server ignores
+            them on write (conflict matrix row 17) - but "ignored" is a weaker
+            guarantee than it sounds, because a client that *sends* them has a
+            model that believes it may set them, and that belief is the bug:
+
+            | Field | Owner |
+            |-------|-------|
+            | `server_revision` | allocated by the server, per workspace |
+            | `updated_at_effective` | the server's clamp of `updated_at`; the value LWW actually compares |
+            | `canonical_name` | derived by the server via `canon()`, never trusted from a client |
+            | `merged_into_id` (`client`/`project`/`ticket`) | set only by the taxonomy merge operation (6.3). A client-sent `null` **un-merges the row** and breaks the reference redirection `Sync.Resolver` relies on to follow a merged row one hop to its winner - clients have nothing to say about taxonomy merge state and MUST NOT send this field at all, present or null. |
+            | `upload_state` | moved only by the blob endpoints and the censorship cascade |
+            | `blob_available` | derived: `upload_state == "uploaded"` |
+            | `blob_content_hash`, `blob_byte_size`, `blob_uploaded_at`, `blob_url` | set by the server on a successful upload |
+            | `raw_response_withheld` | set by the server from the privacy gate |
+
+            **`origin_device_id` is NOT in this table, and that is deliberate -
+            but it IS safely omittable.** It is absent from the table because a
+            client MAY legitimately send it (the value it sends is honoured),
+            which is not true of anything listed above; the server derives the
+            pushing device only when it is missing. Omitting it costs nothing:
+            the same derived value is used both to store the row and to
+            adjudicate the LWW tie-break. See `SyncEnvelope.origin_device_id`
+            for why the tie-break must read the stored value.
+
+            This is a **general rule, not a per-schema footnote**: any entity
+            added to this contract later inherits it, and any field marked
+            `readOnly` joins the list. A client sending `blob_available: true`
+            is asserting bytes exist that it has never uploaded; the server
+            ignoring it is a courtesy, not a design.
+
+            Clients are encouraged to assert this at the byte level - encode a
+            payload, then check none of these keys is present. That test also
+            catches the case where a *new* field is added to a model and someone
+            forgets it is server-owned.
+          additionalProperties: true
+
+    MutationRequest:
+      type: object
+      required: [workspace_id, device_id, mutations]
+      properties:
+        workspace_id: { $ref: '#/components/schemas/Uuid' }
+        device_id: { $ref: '#/components/schemas/Uuid' }
+        atomic:
+          type: boolean
+          default: false
+          description: |
+            All-or-nothing. Used for split and merge. Limited to 50 mutations.
+            On any non-applied result the server responds 409 and writes nothing.
+        mutations:
+          type: array
+          minItems: 1
+          maxItems: 200
+          items: { $ref: '#/components/schemas/Mutation' }
+
+    MutationStatus:
+      type: string
+      description: |
+        - `applied` - written; `entity` is the authoritative row.
+        - `conflict` - the server holds a different authoritative state. The client
+          MUST adopt the returned `entity` and drop its local version. Terminal.
+        - `rejected` - the mutation is invalid and will never succeed. Drop it and
+          surface an error. Terminal.
+      enum: [applied, conflict, rejected]
+
+    MutationReason:
+      type: string
+      enum:
+        - stale_write
+        - duplicate_name
+        - tombstoned
+        - span_reopen_forbidden
+        - immutable_entity
+        - not_device_owner
+        - unknown_entity
+        - validation_failed
+        - workspace_mismatch
+        - clock_skew_rejected
+        - locked_day
+        - permission_denied
+        - batch_rolled_back
+
+    SideEffect:
+      type: object
+      description: |
+        A row the server created or changed that the client did not ask for -
+        most often an auto-vivified client/project/ticket, or the tombstone
+        cascade from a censorship assertion. Returned inline so the client can
+        apply it without waiting for the next pull.
+      required: [entity, row]
+      properties:
+        entity: { $ref: '#/components/schemas/EntityKind' }
+        row:
+          type: object
+          additionalProperties: true
+
+    MutationResult:
+      type: object
+      required: [mutation_id, status, replayed, stale_base, unresolved_refs, side_effects]
+      properties:
+        mutation_id: { $ref: '#/components/schemas/Uuid' }
+        status: { $ref: '#/components/schemas/MutationStatus' }
+        reason:
+          oneOf:
+            - $ref: '#/components/schemas/MutationReason'
+            - type: "null"
+        message: { type: [string, "null"] }
+        entity_kind:
+          oneOf:
+            - $ref: '#/components/schemas/EntityKind'
+            - type: "null"
+          description: |
+            Which kind of row `entity` is.
+
+            `results` is one flat array - unlike `/sync/changes`, where every row
+            already sits in a named bucket that discriminates it. Without this
+            field a client has to infer the type from the shape of `entity`, and
+            the failure mode of guessing wrong is writing a `time_span` into the
+            clients table.
+
+            **Present even when `entity` is `null`** - that is, on every
+            `rejected` result. That is precisely the case where a client most
+            needs it: to route the failure back to the queued mutation it came
+            from without having to keep its own side table.
+
+            It sits on the **envelope**, as a sibling of `entity`, rather than
+            inside the row. Two reasons, both load-bearing:
+
+            - it must survive `entity: null`, which an in-row field cannot; and
+            - `SettingsRow` already has its own `kind` field
+              (`user_settings` | `workspace_policy`) as its discriminator, so an
+              in-row `kind` would do double duty there and mean two different
+              things depending on the bucket.
+
+            This mirrors how `SideEffect` already pairs `entity` (the kind) with
+            `row` (the payload). Do not "simplify" it into the row.
+
+            `null` only when the request named an entity kind this server does
+            not recognize.
+        entity:
+          type: [object, "null"]
+          additionalProperties: true
+          description: |
+            The authoritative row after the attempt. Present for `applied` and
+            `conflict`; `null` for `rejected`. See `entity_kind` for which kind
+            of row it is - the shape alone is not a reliable discriminator.
+        side_effects:
+          type: array
+          items: { $ref: '#/components/schemas/SideEffect' }
+          default: []
+        replayed:
+          type: boolean
+          default: false
+          description: True when this result was replayed from the mutation log rather than freshly applied.
+        stale_base:
+          type: boolean
+          default: false
+          description: True when `base_revision` was behind current. The client should pull.
+        unresolved_refs:
+          type: array
+          items: { type: string }
+          default: []
+          description: |
+            Field names whose referenced id does not (yet) exist server-side. The
+            write still succeeded; the reference is deferred, and a
+            `unresolved_reference` review flag is raised if it stays dangling.
+
+    MutationResponse:
+      type: object
+      required: [results, next_cursor, server_time]
+      properties:
+        results:
+          type: array
+          items: { $ref: '#/components/schemas/MutationResult' }
+        next_cursor:
+          $ref: '#/components/schemas/Revision'
+          description: Watermark hint. The client MUST still run a pull to collect side effects on rows it did not touch.
+        server_time: { type: string, format: date-time }
+
+    ChangeSet:
+      type: object
+      description: |
+        One page of changed rows, bucketed by entity. Every bucket is present even
+        when empty, so clients can iterate a fixed key set. Within a bucket, rows
+        are ordered by ascending `server_revision`.
+      required:
+        - clients
+        - projects
+        - tickets
+        - time_spans
+        - screenshots
+        - vision_analyses
+        - censored_screenshots
+        - devices
+        - settings
+      properties:
+        clients:
+          type: array
+          items: { $ref: '#/components/schemas/ClientRecord' }
+        projects:
+          type: array
+          items: { $ref: '#/components/schemas/ProjectRecord' }
+        tickets:
+          type: array
+          items: { $ref: '#/components/schemas/TicketRecord' }
+        time_spans:
+          type: array
+          items: { $ref: '#/components/schemas/TimeSpan' }
+        screenshots:
+          type: array
+          items: { $ref: '#/components/schemas/Screenshot' }
+        vision_analyses:
+          type: array
+          items: { $ref: '#/components/schemas/VisionAnalysis' }
+        censored_screenshots:
+          type: array
+          items: { $ref: '#/components/schemas/CensoredScreenshot' }
+        devices:
+          type: array
+          items: { $ref: '#/components/schemas/Device' }
+        settings:
+          type: array
+          items: { $ref: '#/components/schemas/SettingsRow' }
+
+    ChangesResponse:
+      type: object
+      required: [changes, next_cursor, has_more, tombstone_horizon_revision, server_time]
+      properties:
+        changes: { $ref: '#/components/schemas/ChangeSet' }
+        next_cursor:
+          $ref: '#/components/schemas/Revision'
+          description: Highest gap-free committed revision in this page. Feed back as `since`.
+        has_more: { type: boolean }
+        tombstone_horizon_revision:
+          $ref: '#/components/schemas/Revision'
+          description: |
+            Oldest revision for which tombstones are still guaranteed present. A
+            client whose watermark falls below this must re-bootstrap from 0.
+        server_time: { type: string, format: date-time }
+
+    BlobUploadResult:
+      type: object
+      required: [screenshot_id, upload_state, server_revision]
+      properties:
+        screenshot_id: { $ref: '#/components/schemas/Uuid' }
+        upload_state: { $ref: '#/components/schemas/ScreenshotUploadState' }
+        blob_byte_size: { type: integer, minimum: 0 }
+        blob_content_hash: { type: string, pattern: '^[0-9a-f]{64}$' }
+        blob_url: { type: string }
+        blob_uploaded_at: { type: string, format: date-time }
+        server_revision: { $ref: '#/components/schemas/Revision' }
+
+    Error:
+      type: object
+      required: [code, message]
+      properties:
+        code: { type: string }
+        message: { type: string }
+        details:
+          type: [object, "null"]
+          additionalProperties: true
+
+    BlobForbiddenError:
+      type: object
+      required: [code, message, gates]
+      properties:
+        code: { type: string, const: blob_upload_forbidden }
+        message: { type: string }
+        gates:
+          type: object
+          description: Which gate closed. Both flags must be permissive for an upload to succeed.
+          properties:
+            workspace_screenshot_upload_allowed: { type: boolean }
+            device_local_only_screenshots: { type: boolean }
+            screenshot_censored: { type: boolean }
+
+    ReportGroup:
+      type: object
+      required: [key, label, elapsed_seconds, billable_seconds, weighted_billable_seconds, span_count]
+      properties:
+        key: { type: string, enum: [client, project, ticket, day, source, none] }
+        key_id: { $ref: '#/components/schemas/NullableUuid' }
+        label: { type: string }
+        parent_label: { type: [string, "null"] }
+        elapsed_seconds: { type: integer, minimum: 0 }
+        billable_seconds: { type: integer, minimum: 0 }
+        weighted_billable_seconds: { type: integer, minimum: 0 }
+        span_count: { type: integer, minimum: 0 }
+        evidence_coverage: { type: number, minimum: 0, maximum: 1 }
+
+    ReportSummary:
+      type: object
+      required: [range, group_by, totals, groups, generated_at]
+      properties:
+        range:
+          type: object
+          required: [from, to]
+          properties:
+            from: { type: string, format: date-time }
+            to: { type: string, format: date-time }
+            time_zone: { type: string, default: UTC }
+        group_by: { type: string, enum: [client, project, ticket, day, source, none] }
+        totals:
+          type: object
+          required: [elapsed_seconds, billable_seconds, weighted_billable_seconds, span_count]
+          properties:
+            elapsed_seconds: { type: integer, minimum: 0 }
+            billable_seconds: { type: integer, minimum: 0 }
+            non_billable_seconds: { type: integer, minimum: 0 }
+            weighted_billable_seconds: { type: integer, minimum: 0 }
+            span_count: { type: integer, minimum: 0 }
+            needs_review_count: { type: integer, minimum: 0 }
+            evidence_coverage: { type: number, minimum: 0, maximum: 1 }
+        groups:
+          type: array
+          items: { $ref: '#/components/schemas/ReportGroup' }
+        warnings:
+          type: array
+          default: []
+          items:
+            type: object
+            required: [code, message]
+            properties:
+              code:
+                type: string
+                enum: [spans_need_review, billing_overlap, suspected_duplicate, open_spans, low_evidence_coverage, locked_range]
+              message: { type: string }
+              count: { type: integer, minimum: 0 }
+        generated_at: { type: string, format: date-time }
+        server_revision: { $ref: '#/components/schemas/Revision' }
+
+  responses:
+    BadRequest:
+      description: Malformed request.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+          examples:
+            bad:
+              value:
+                code: validation_failed
+                message: "since must be a non-negative integer"
+                details: null
+    Unauthorized:
+      description: |
+        Missing, malformed, or expired access token. On `code: token_expired` the
+        client refreshes once via `POST /api/v1/auth/refresh` and retries once.
+        A client MUST remain fully usable offline with an expired token: the local
+        store serves reads and accepts writes, which queue until reauth.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+          examples:
+            expired:
+              value:
+                code: token_expired
+                message: Access token expired.
+    Forbidden:
+      description: Authenticated but not permitted (wrong workspace, wrong device, insufficient role).
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+          examples:
+            wrong_device:
+              value:
+                code: not_device_owner
+                message: Only the owning device may update this device row.
+    NotFound:
+      description: No such resource in this workspace.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    CursorTooOld:
+      description: |
+        `since` predates the tombstone horizon, so deletions cannot be replayed
+        safely. The client MUST discard its local mirror of server state and
+        re-bootstrap from `since=0`. Unpushed local mutations are preserved and
+        replayed after the bootstrap completes.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+          examples:
+            too_old:
+              value:
+                code: cursor_too_old
+                message: Cursor 12 predates tombstone horizon 40. Re-bootstrap from 0.
+                details:
+                  tombstone_horizon_revision: 40
+    PayloadTooLarge:
+      description: Batch exceeded 200 mutations / 1 MiB, or a blob exceeded the workspace limit.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    RateLimited:
+      description: Too many requests. Retry after the indicated interval with full-jitter backoff.
+      headers:
+        Retry-After:
+          schema: { type: integer }
+          description: Seconds to wait.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }

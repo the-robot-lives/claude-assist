@@ -12,6 +12,16 @@ locals {
     { slug = "email", name = "Email", type = "email", required = true, is_identity = true, sort_order = 0 },
   ])
 
+  # `select`/`multiselect` options must be objects, not bare strings: the
+  # ListAttribute schema types the column as {:array, :map}, so a plain string
+  # array fails the changeset cast — and the management controller discards
+  # per-attribute upsert results, so the failure is SILENT (the apply succeeds
+  # and the attribute is just missing). Build {label, value} pairs from a plain
+  # list of labels so callers keep writing bare strings.
+  contact_project_types = ["Consulting", "Product/App", "AI/ML", "Infrastructure", "Collaboration", "Other"]
+  contact_budget_ranges = ["<$10k", "$10–50k", "$50–100k", "$100k+", "Not sure"]
+  contact_timelines     = ["ASAP", "1–3 months", "3–6 months", "6+ months", "Exploring"]
+
   # Email-only waitlist Lists. Map key = public_slug (globally unique).
   # `project` selects the owning foryou_project (projects.tf).
   waitlists = {
@@ -53,11 +63,11 @@ resource "foryou_list" "noizu_contact" {
     { slug = "name", name = "Name", type = "string", required = false, sort_order = 1 },
     { slug = "company", name = "Company", type = "string", required = false, sort_order = 2 },
     { slug = "project_type", name = "Project type", type = "select", required = false,
-    options = ["Consulting", "Product/App", "AI/ML", "Infrastructure", "Collaboration", "Other"], sort_order = 3 },
+    options = [for o in local.contact_project_types : { label = o, value = o }], sort_order = 3 },
     { slug = "budget_range", name = "Budget range", type = "select", required = false,
-    options = ["<$10k", "$10–50k", "$50–100k", "$100k+", "Not sure"], sort_order = 4 },
+    options = [for o in local.contact_budget_ranges : { label = o, value = o }], sort_order = 4 },
     { slug = "timeline", name = "Timeline", type = "select", required = false,
-    options = ["ASAP", "1–3 months", "3–6 months", "6+ months", "Exploring"], sort_order = 5 },
+    options = [for o in local.contact_timelines : { label = o, value = o }], sort_order = 5 },
     { slug = "inquiry", name = "Inquiry", type = "text", required = false, sort_order = 6 },
   ])
 }

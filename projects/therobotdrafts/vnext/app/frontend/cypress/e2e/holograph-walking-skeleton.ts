@@ -94,7 +94,7 @@ Given("the canonical HoloGraph walking skeleton fixture is available from the wo
 When("I open the HoloGraph workspace", () => {
   // A previous run's autosave would pre-empt the fixture load under test.
   cy.clearLocalStorage();
-  cy.visit("/");
+  cy.visit("/studio");
   dismissCookieBanner();
 
   // The Files tab lists every model the document store knows about; opening the fixture

@@ -4,6 +4,6 @@
 provider "registry.opentofu.org/noizu/foryou" {
   version = "0.1.0"
   hashes = [
-    "h1:ZxjQtCwNUqLfKV+nL9ry037JM2tIgvcY7CaLLsPOfyU=",
+    "h1:X36Ff4PHyevqPLShAuSK31OccuW4rRp6BTt84neB8x0=",
   ]
 }

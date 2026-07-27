@@ -1,7 +1,7 @@
 replicas: 1
 domain: gotta.cc
 backend:
-  image: ops.noizu.com/gotta.cc/backend:v1.0.4
+  image: ops.noizu.com/gotta.cc/backend:v1.0.5
   port: 4000
   resources:
     requests:
@@ -11,7 +11,7 @@ backend:
       cpu: 500m
       memory: 512Mi
 frontend:
-  image: ops.noizu.com/gotta.cc/frontend:v1.0.9
+  image: ops.noizu.com/gotta.cc/frontend:v1.0.10
   port: 80
   resources:
     requests:

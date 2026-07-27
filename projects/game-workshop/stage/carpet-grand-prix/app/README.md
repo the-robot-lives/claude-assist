@@ -98,24 +98,62 @@ tilt is recorded alongside it for display only.
 | Piece | State |
 |---|---|
 | Track generation, physics, medals, ghosts | Implemented, unit-tested |
-| Metal renderer, parallax, diorama mesh | Implemented — **not yet run** |
-| CoreMotion input, rest pose, Vehicle Mode | Implemented — **not yet run on device** |
+| Metal renderer, parallax, diorama mesh | Implemented, compiles — **never executed** |
+| CoreMotion input, rest pose, Vehicle Mode | Implemented — **never run on device** |
 | SwiftUI shell, HUD, settings | Implemented |
 | Audio | Not started |
 | Rooms 2–7, cars beyond the first 8, story vignettes | Not started |
 
-**Verified:** `swiftc -typecheck` passes against the iOS 16 simulator SDK
-(Xcode 26.4.1).
+### Verified (2026-07-27, Xcode 26.4.1)
 
-**Not verified:** `Shaders.metal` has never been compiled — Xcode 26 moved the
-MSL compiler into a separate component that is not installed on this machine.
-Run this once, then `make build`:
+- `xcodegen generate` produces a valid project
+- `Shaders.metal` compiles clean — **zero errors, zero warnings**
+- `xcodebuild build -destination 'generic/platform=iOS Simulator'` →
+  **BUILD SUCCEEDED**, zero errors, zero real warnings
+
+Prerequisites, both of which had to be installed:
 
 ```
-xcodebuild -downloadComponent MetalToolchain
-xcrun -sdk iphonesimulator metal -c CarpetGrandPrix/Render/Shaders.metal \
-  -I CarpetGrandPrix/Render -o /tmp/cgp-shaders.air
+xcodebuild -downloadComponent MetalToolchain   # Xcode 26 split out the MSL compiler
+xcodebuild -downloadPlatform iOS               # ~8.5 GB
+brew install xcodegen
 ```
 
-Nobody has seen this app render a frame yet. Treat the renderer as unproven
-until it has been on a device.
+### Not verified
+
+**The app has never rendered a frame.** Compiling and linking is not the same
+as working: the parallax could still be mis-scaled, inverted, or invisible, and
+none of the tuning constants have been felt by a human.
+
+- No simulator runtime is currently installed (see note below), so nothing has
+  been launched.
+- Device install requires an Apple ID signed into Xcode — there is no signing
+  identity on this machine. See "Running on a device".
+- The test target has never been built or run.
+
+## Running on a device
+
+The Simulator has no gyroscope, so it can only ever prove the renderer works,
+never how the game feels. Every tuning judgement has to happen on hardware.
+
+1. **Xcode → Settings → Accounts → +** → Apple ID. A free account is enough.
+2. **On the iPhone:** Settings → Privacy & Security → Developer Mode → on,
+   then restart the phone.
+3. `open CarpetGrandPrix.xcodeproj` → target **CarpetGrandPrix** → *Signing &
+   Capabilities* → tick *Automatically manage signing* → pick your team. If
+   `com.noizu.carpetgrandprix` is taken, change the bundle identifier.
+4. Select your device as the destination and press ⌘R.
+5. First launch only: iPhone Settings → General → VPN & Device Management →
+   trust the developer certificate.
+
+Apps signed with a free personal team expire after 7 days and need reinstalling.
+
+Once signed in, the whole thing works headlessly:
+
+```
+xcodebuild build -project CarpetGrandPrix.xcodeproj -scheme CarpetGrandPrix \
+  -destination 'id=<device-udid>' -allowProvisioningUpdates \
+  DEVELOPMENT_TEAM=<your-team-id>
+```
+
+Add `DEVELOPMENT_TEAM` to `project.yml` to make that permanent.

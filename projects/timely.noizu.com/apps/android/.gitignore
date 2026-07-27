@@ -2,3 +2,17 @@
 build/
 app/build/
 
+# Machine-local SDK path, standard Android convention - never committed.
+local.properties
+
+# Ephemeral Kotlin compiler-daemon session state; regenerates on every build.
+.kotlin/
+
+# Local Room/SQLite databases and their WAL/SHM sidecars (none exist yet,
+# but the first local run of the app will create them).
+*.sqlite
+*.sqlite3
+*.db
+*-wal
+*-shm
+

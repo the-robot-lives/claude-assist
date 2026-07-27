@@ -1,0 +1,139 @@
+databaseChangeLog:
+  - changeSet:
+      id: 030-create-table-applied-mutations
+      author: timely-scaffold
+      changes:
+        - sql:
+            sql: |
+              -- The idempotency ledger (SYNC-PROTOCOL 9.1). A replayed mutation_id
+              -- returns the ORIGINAL recorded result with replayed: true -- it does not
+              -- re-apply, does not bump server_revision, and does not re-run duplicate
+              -- detection.
+              --
+              -- mutation_id is a client-generated UUIDv7 and globally unique, so it is
+              -- the primary key; the (workspace_id, mutation_id) unique index required
+              -- by the protocol is kept as well, because that is the constraint whose
+              -- violation answers a concurrent duplicate delivery.
+              CREATE TABLE applied_mutations (
+                mutation_id uuid PRIMARY KEY,
+                workspace_id uuid NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+                device_id uuid,
+                status varchar(10) NOT NULL CHECK (status IN ('applied','conflict','rejected')),
+                reason varchar(32),
+                entity_kind varchar(24),
+                entity_id uuid,
+                resulting_server_revision bigint,
+                -- The verbatim MutationResult, replayed as-is on a duplicate delivery.
+                result jsonb NOT NULL DEFAULT '{}'::jsonb,
+                applied_at timestamptz NOT NULL DEFAULT now()
+              );
+
+              CREATE UNIQUE INDEX uq_applied_mutations_workspace_mutation
+                ON applied_mutations (workspace_id, mutation_id);
+
+              -- Retention sweep support. The protocol requires at least 30 days;
+              -- Timely.Workers.MutationLogPruner keeps 45 so that a device offline
+              -- for a month still lands inside the window.
+              CREATE INDEX idx_applied_mutations_applied_at
+                ON applied_mutations (applied_at);
+      rollback:
+        - dropTable:
+            tableName: applied_mutations
+
+  - changeSet:
+      id: 030-create-prune-applied-mutations-function
+      author: timely-scaffold
+      changes:
+        - sql:
+            splitStatements: false
+            sql: |
+              -- Deletes in bounded batches so the sweep never holds a long lock on the
+              -- ledger while a push is trying to insert into it.
+              CREATE OR REPLACE FUNCTION prune_applied_mutations(retention_days int DEFAULT 45,
+                                                                 batch_limit int DEFAULT 5000)
+              RETURNS bigint AS $$
+              DECLARE
+                removed bigint;
+              BEGIN
+                IF retention_days < 30 THEN
+                  RAISE EXCEPTION 'applied_mutations retention must be at least 30 days (got %)', retention_days;
+                END IF;
+
+                WITH doomed AS (
+                  SELECT mutation_id FROM applied_mutations
+                  WHERE applied_at < now() - make_interval(days => retention_days)
+                  ORDER BY applied_at
+                  LIMIT batch_limit
+                )
+                DELETE FROM applied_mutations a USING doomed d
+                WHERE a.mutation_id = d.mutation_id;
+
+                GET DIAGNOSTICS removed = ROW_COUNT;
+                RETURN removed;
+              END;
+              $$ LANGUAGE plpgsql;
+      rollback:
+        - sql:
+            sql: DROP FUNCTION IF EXISTS prune_applied_mutations(int, int);
+
+  - changeSet:
+      id: 030-create-prune-tombstones-function
+      author: timely-scaffold
+      changes:
+        - sql:
+            splitStatements: false
+            sql: |
+              -- Tombstones are retained for at least 90 days (SYNC-PROTOCOL 5.1). Once
+              -- a workspace's tombstones older than that are hard-deleted, its
+              -- tombstone_horizon_revision advances and any client whose cursor sits
+              -- below it receives 410 cursor_too_old and re-bootstraps.
+              CREATE OR REPLACE FUNCTION prune_timely_tombstones(target_workspace uuid,
+                                                                 retention_days int DEFAULT 90)
+              RETURNS bigint AS $$
+              DECLARE
+                cutoff timestamptz;
+                horizon bigint := 0;
+                candidate bigint;
+                removed bigint := 0;
+                affected bigint;
+                tbl text;
+              BEGIN
+                IF retention_days < 90 THEN
+                  RAISE EXCEPTION 'tombstone retention must be at least 90 days (got %)', retention_days;
+                END IF;
+
+                cutoff := now() - make_interval(days => retention_days);
+
+                FOREACH tbl IN ARRAY ARRAY['timely_clients','timely_projects','timely_tickets',
+                                           'time_spans','screenshots','vision_analyses',
+                                           'censored_screenshots','devices','settings']
+                LOOP
+                  EXECUTE format(
+                    'SELECT max(server_revision) FROM %I WHERE workspace_id = $1 AND deleted_at IS NOT NULL AND deleted_at < $2',
+                    tbl)
+                    INTO candidate USING target_workspace, cutoff;
+
+                  IF candidate IS NOT NULL AND candidate > horizon THEN
+                    horizon := candidate;
+                  END IF;
+
+                  EXECUTE format(
+                    'DELETE FROM %I WHERE workspace_id = $1 AND deleted_at IS NOT NULL AND deleted_at < $2',
+                    tbl) USING target_workspace, cutoff;
+
+                  GET DIAGNOSTICS affected = ROW_COUNT;
+                  removed := removed + affected;
+                END LOOP;
+
+                UPDATE timely_workspace_revisions
+                   SET tombstone_horizon_revision = GREATEST(tombstone_horizon_revision, horizon),
+                       horizon_pruned_at = now(),
+                       updated_at = now()
+                 WHERE workspace_id = target_workspace;
+
+                RETURN removed;
+              END;
+              $$ LANGUAGE plpgsql;
+      rollback:
+        - sql:
+            sql: DROP FUNCTION IF EXISTS prune_timely_tombstones(uuid, int);

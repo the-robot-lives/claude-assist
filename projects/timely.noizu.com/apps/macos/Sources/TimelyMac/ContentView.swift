@@ -1,5 +1,6 @@
 import AppKit
 import SwiftUI
+import TimelyKit
 
 struct ContentView: View {
     @ObservedObject var store: TimelyStore
@@ -246,7 +247,7 @@ struct FocusSessionCard: View {
 
     private var activeAssignment: String {
         guard let span = store.activeSpan else { return "No client, project, or ticket selected" }
-        let parts = [span.client, span.project, span.ticket].filter { !$0.isEmpty }
+        let parts = [span.clientName, span.projectName, span.ticketName].filter { !$0.isEmpty }
         return parts.isEmpty ? "No client, project, or ticket selected" : parts.joined(separator: " / ")
     }
 }
@@ -584,7 +585,7 @@ struct ManualEntryTabContent: View {
 
 struct TimelineTabContent: View {
     @ObservedObject var store: TimelyStore
-    @State private var evidenceSpan: TrackedTimeSpan?
+    @State private var evidenceSpan: TimeSpan?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -632,26 +633,26 @@ struct TimelineTabContent: View {
         }
     }
 
-    private func screenshotsForSpan(_ span: TrackedTimeSpan) -> [ScreenshotRecord] {
+    private func screenshotsForSpan(_ span: TimeSpan) -> [Screenshot] {
         store.screenshots.filter { $0.spanID == span.id }
     }
 
-    private func spanAssignment(_ span: TrackedTimeSpan) -> String {
-        let parts = [span.client, span.project, span.ticket].filter { !$0.isEmpty }
+    private func spanAssignment(_ span: TimeSpan) -> String {
+        let parts = [span.clientName, span.projectName, span.ticketName].filter { !$0.isEmpty }
         return parts.isEmpty ? "No client, project, or ticket" : parts.joined(separator: " / ")
     }
 }
 
 struct SpanEvidenceSheet: View {
     @ObservedObject var store: TimelyStore
-    let span: TrackedTimeSpan
+    let span: TimeSpan
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             TimelyPageHeader(
                 eyebrow: "Evidence",
                 title: span.title,
-                subtitle: span.project.isEmpty ? "Screenshot evidence attached to this span." : span.project
+                subtitle: span.projectName.isEmpty ? "Screenshot evidence attached to this span." : span.projectName
             ) {
                 Button("Open folder", systemImage: "folder") { store.openScreenshotsFolder() }
                     .buttonStyle(TimelySecondaryButtonStyle())
@@ -676,7 +677,7 @@ struct SpanEvidenceSheet: View {
         .frame(width: 760, height: 560)
     }
 
-    private func screenshotsForSpan() -> [ScreenshotRecord] {
+    private func screenshotsForSpan() -> [Screenshot] {
         store.screenshots.filter { $0.spanID == span.id }
     }
 }
@@ -769,8 +770,8 @@ struct TimelineScreen: View {
         }
     }
 
-    private func spanAssignment(_ span: TrackedTimeSpan) -> String {
-        let parts = [span.client, span.project, span.ticket].filter { !$0.isEmpty }
+    private func spanAssignment(_ span: TimeSpan) -> String {
+        let parts = [span.clientName, span.projectName, span.ticketName].filter { !$0.isEmpty }
         return parts.isEmpty ? "No client, project, or ticket" : parts.joined(separator: " / ")
     }
 }
@@ -1150,8 +1151,8 @@ struct RecentSpansCard: View {
         .timelyCard()
     }
 
-    private func spanAssignment(_ span: TrackedTimeSpan) -> String {
-        let parts = [span.client, span.project, span.ticket].filter { !$0.isEmpty }
+    private func spanAssignment(_ span: TimeSpan) -> String {
+        let parts = [span.clientName, span.projectName, span.ticketName].filter { !$0.isEmpty }
         return parts.isEmpty ? span.source.label : parts.joined(separator: " / ")
     }
 }
@@ -1292,8 +1293,8 @@ struct VisionResultCard: View {
 }
 
 struct EvidenceRow: View {
-    let screenshot: ScreenshotRecord
-    let analysis: VisionAnalysisRecord?
+    let screenshot: Screenshot
+    let analysis: VisionAnalysis?
     let screenshotURL: URL
 
     var body: some View {

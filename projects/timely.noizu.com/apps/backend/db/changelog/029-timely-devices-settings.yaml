@@ -1,0 +1,88 @@
+databaseChangeLog:
+  - changeSet:
+      id: 029-create-table-devices
+      author: timely-scaffold
+      changes:
+        - sql:
+            sql: |
+              -- One row per client install. `local_only_screenshots` is half of the
+              -- screenshot upload gate (SYNC-PROTOCOL 10.1) and defaults to the
+              -- privacy-preserving value, so a device can only ever tighten the
+              -- effective gate.
+              CREATE TABLE devices (
+                id uuid PRIMARY KEY,
+                workspace_id uuid NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+                user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                platform varchar(10) NOT NULL CHECK (platform IN ('macos','ios','android','web')),
+                name varchar(200) NOT NULL DEFAULT '',
+                app_version text NOT NULL DEFAULT '',
+                os_version text,
+                local_only_screenshots boolean NOT NULL DEFAULT true,
+                is_capture_agent boolean NOT NULL DEFAULT false,
+                last_seen_at timestamptz,
+                last_sync_revision bigint NOT NULL DEFAULT 0,
+                revoked_at timestamptz,
+                created_at timestamptz NOT NULL,
+                updated_at timestamptz NOT NULL,
+                updated_at_effective timestamptz NOT NULL,
+                server_revision bigint NOT NULL,
+                deleted_at timestamptz,
+                origin_device_id uuid,
+                -- Only macOS captures (SYNC-PROTOCOL section 1). Companions MUST
+                -- register false and the server refuses the claim outright.
+                CONSTRAINT chk_devices_capture_agent_is_macos
+                  CHECK (is_capture_agent = false OR platform = 'macos')
+              );
+
+              CREATE INDEX idx_devices_sync_cursor
+                ON devices (workspace_id, server_revision) INCLUDE (id, deleted_at);
+
+              CREATE INDEX idx_devices_user
+                ON devices (workspace_id, user_id) WHERE deleted_at IS NULL;
+      rollback:
+        - dropTable:
+            tableName: devices
+
+  - changeSet:
+      id: 029-create-table-settings
+      author: timely-scaffold
+      changes:
+        - sql:
+            sql: |
+              -- The `settings` bucket carries a discriminated union so that user
+              -- preferences and workspace policy share one revision stream
+              -- (contract: SettingsRow, discriminated on `kind`).
+              --
+              -- The body lives in `document` jsonb rather than in columns because
+              -- conflict matrix row 20 resolves user_settings by LWW on the whole
+              -- document -- there are no per-field semantics to model.
+              CREATE TABLE settings (
+                id uuid PRIMARY KEY,
+                workspace_id uuid NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+                kind varchar(20) NOT NULL CHECK (kind IN ('user_settings','workspace_policy')),
+                user_id uuid REFERENCES users(id) ON DELETE CASCADE,
+                document jsonb NOT NULL DEFAULT '{}'::jsonb,
+                created_at timestamptz NOT NULL,
+                updated_at timestamptz NOT NULL,
+                updated_at_effective timestamptz NOT NULL,
+                server_revision bigint NOT NULL,
+                deleted_at timestamptz,
+                origin_device_id uuid,
+                -- workspace_policy.id equals workspace_id and is a singleton;
+                -- user_settings is a singleton per (workspace, user).
+                CONSTRAINT chk_settings_user_id_presence
+                  CHECK ((kind = 'user_settings' AND user_id IS NOT NULL)
+                      OR (kind = 'workspace_policy' AND user_id IS NULL))
+              );
+
+              CREATE UNIQUE INDEX uq_settings_user
+                ON settings (workspace_id, user_id) WHERE kind = 'user_settings';
+
+              CREATE UNIQUE INDEX uq_settings_workspace_policy
+                ON settings (workspace_id) WHERE kind = 'workspace_policy';
+
+              CREATE INDEX idx_settings_sync_cursor
+                ON settings (workspace_id, server_revision) INCLUDE (id, deleted_at);
+      rollback:
+        - dropTable:
+            tableName: settings

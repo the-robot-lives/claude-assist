@@ -1,0 +1,143 @@
+databaseChangeLog:
+  # Screenshot metadata, vision analyses and censorship records.
+  # SYNC-PROTOCOL section 10: image bytes default to never leaving the device,
+  # metadata always syncs, and `raw_response` is treated as image-equivalent.
+  - changeSet:
+      id: 028-create-table-screenshots
+      author: timely-scaffold
+      changes:
+        - sql:
+            sql: |
+              CREATE TABLE screenshots (
+                id uuid PRIMARY KEY,
+                workspace_id uuid NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+                span_id uuid,
+                captured_at timestamptz NOT NULL,
+                -- Advisory provenance only. Formatted at second resolution by the
+                -- macOS agent, so it is NOT unique: nothing may key on it.
+                file_name text NOT NULL DEFAULT '',
+                active_app_name text NOT NULL DEFAULT '',
+                -- Server-owned (conflict matrix row 17). Client writes are ignored.
+                upload_state varchar(20) NOT NULL DEFAULT 'local_only'
+                  CHECK (upload_state IN ('local_only','eligible','pending','uploaded','refused','purge_pending','purged')),
+                blob_storage_key text,
+                blob_content_hash varchar(64)
+                  CHECK (blob_content_hash IS NULL OR blob_content_hash ~ '^[0-9a-f]{64}$'),
+                blob_byte_size bigint CHECK (blob_byte_size IS NULL OR blob_byte_size >= 0),
+                blob_uploaded_at timestamptz,
+                censored boolean NOT NULL DEFAULT false,
+                created_at timestamptz NOT NULL,
+                updated_at timestamptz NOT NULL,
+                updated_at_effective timestamptz NOT NULL,
+                server_revision bigint NOT NULL,
+                deleted_at timestamptz,
+                origin_device_id uuid
+              );
+
+              CREATE INDEX idx_screenshots_sync_cursor
+                ON screenshots (workspace_id, server_revision) INCLUDE (id, deleted_at);
+
+              -- evidence_coverage in GET /reports/summary counts live screenshot rows
+              -- per span; bytes are not required.
+              CREATE INDEX idx_screenshots_span
+                ON screenshots (workspace_id, span_id) WHERE deleted_at IS NULL;
+
+              -- Blob purge sweep when workspace_policy.screenshot_upload_allowed flips off.
+              CREATE INDEX idx_screenshots_purge_pending
+                ON screenshots (workspace_id) WHERE upload_state = 'purge_pending';
+      rollback:
+        - dropTable:
+            tableName: screenshots
+
+  - changeSet:
+      id: 028-create-table-vision-analyses
+      author: timely-scaffold
+      changes:
+        - sql:
+            sql: |
+              -- Append-only: conflict matrix row 14 rejects every `update` with
+              -- immutable_entity. Re-analysis produces a new row.
+              CREATE TABLE vision_analyses (
+                id uuid PRIMARY KEY,
+                workspace_id uuid NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+                screenshot_id uuid NOT NULL,
+                analyzed_at timestamptz NOT NULL,
+                model text NOT NULL DEFAULT '',
+                status_update text NOT NULL DEFAULT '',
+                inferred_project text NOT NULL DEFAULT '',
+                inferred_task text NOT NULL DEFAULT '',
+                project_switch_detected boolean NOT NULL DEFAULT false,
+                confidence double precision NOT NULL DEFAULT 0
+                  CHECK (confidence >= 0 AND confidence <= 1),
+                evidence text NOT NULL DEFAULT '',
+                privacy_sensitive boolean NOT NULL DEFAULT false,
+                privacy_category varchar(20) NOT NULL DEFAULT 'none'
+                  CHECK (privacy_category IN ('none','secret','private_email','personal_chat',
+                                              'adult_material','financial','identity','medical','other_private')),
+                -- Image-equivalent (SYNC-PROTOCOL 10.3). Stored only when the double
+                -- gate is open at write time; withheld rows keep NULL here and report
+                -- raw_response_withheld = true so clients can distinguish "policy
+                -- suppressed this" from "the source never had it".
+                raw_response text,
+                raw_response_withheld boolean NOT NULL DEFAULT true,
+                error_message text,
+                created_at timestamptz NOT NULL,
+                updated_at timestamptz NOT NULL,
+                updated_at_effective timestamptz NOT NULL,
+                server_revision bigint NOT NULL,
+                deleted_at timestamptz,
+                origin_device_id uuid
+              );
+
+              CREATE INDEX idx_vision_analyses_sync_cursor
+                ON vision_analyses (workspace_id, server_revision) INCLUDE (id, deleted_at);
+
+              -- The censorship cascade tombstones every analysis of a screenshot.
+              CREATE INDEX idx_vision_analyses_screenshot
+                ON vision_analyses (workspace_id, screenshot_id) WHERE deleted_at IS NULL;
+      rollback:
+        - dropTable:
+            tableName: vision_analyses
+
+  - changeSet:
+      id: 028-create-table-censored-screenshots
+      author: timely-scaffold
+      changes:
+        - sql:
+            sql: |
+              -- Append-only (conflict matrix row 15). Creating one of these rows is an
+              -- assertion of censorship; the server cascades per row 16.
+              CREATE TABLE censored_screenshots (
+                id uuid PRIMARY KEY,
+                workspace_id uuid NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+                screenshot_id uuid NOT NULL,
+                span_id uuid,
+                file_name text NOT NULL DEFAULT '',
+                active_app_name text NOT NULL DEFAULT '',
+                captured_at timestamptz NOT NULL,
+                censored_at timestamptz NOT NULL,
+                model text NOT NULL DEFAULT '',
+                category varchar(20) NOT NULL DEFAULT 'none'
+                  CHECK (category IN ('none','secret','private_email','personal_chat',
+                                      'adult_material','financial','identity','medical','other_private')),
+                reason text NOT NULL DEFAULT '',
+                confidence double precision NOT NULL DEFAULT 0
+                  CHECK (confidence >= 0 AND confidence <= 1),
+                -- Origin device's report about its own disk. Not a workspace-wide fact.
+                deleted_local_file boolean NOT NULL DEFAULT false,
+                created_at timestamptz NOT NULL,
+                updated_at timestamptz NOT NULL,
+                updated_at_effective timestamptz NOT NULL,
+                server_revision bigint NOT NULL,
+                deleted_at timestamptz,
+                origin_device_id uuid
+              );
+
+              CREATE INDEX idx_censored_screenshots_sync_cursor
+                ON censored_screenshots (workspace_id, server_revision) INCLUDE (id, deleted_at);
+
+              CREATE INDEX idx_censored_screenshots_screenshot
+                ON censored_screenshots (workspace_id, screenshot_id) WHERE deleted_at IS NULL;
+      rollback:
+        - dropTable:
+            tableName: censored_screenshots

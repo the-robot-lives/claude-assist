@@ -8,8 +8,16 @@ let package = Package(
     products: [
         .executable(name: "TimelyMac", targets: ["TimelyMac"])
     ],
+    dependencies: [
+        // The shared domain. macOS is the canonical implementation of this
+        // domain and the only capture agent, but the *types* now live in
+        // TimelyKit so macOS and the companions cannot drift apart.
+        .package(path: "../shared/TimelyKit")
+    ],
     targets: [
-        .executableTarget(name: "TimelyMac")
+        .executableTarget(
+            name: "TimelyMac",
+            dependencies: [.product(name: "TimelyKit", package: "TimelyKit")]
+        )
     ]
 )
-

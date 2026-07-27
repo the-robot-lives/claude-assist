@@ -7,6 +7,12 @@ ifeq ($(_CURNAME),app)
 else
   PROJECT_DIR := $(_CURNAME)
 endif
+
+# TRD lives at projects/therobotdrafts/vnext/app, so the generic parent-dir rule
+# above yields "vnext" — which matches no map entry and would silently fall back
+# to slug=starter/redis=0/port=8080. Pin the identity instead.
+PROJECT_DIR := draft.therobotplans.com
+
 COMPOSE_NAME := $(subst .,-,$(PROJECT_DIR))
 REGISTRY     ?= ops.noizu.com
 TAG          ?= latest
@@ -34,7 +40,8 @@ PORT_MAP := \
   therobotplans.com=8092 \
   noizu.com=8093 \
   tobornalp.com=8094 \
-  foryou.therobotlives.com=8096
+  foryou.therobotlives.com=8096 \
+  draft.therobotplans.com=8097
 
 # ── Redis DB assignment ──────────────────────────────────────────
 REDIS_DB_MAP := \
@@ -49,11 +56,11 @@ REDIS_DB_MAP := \
   robots-unite.com=8 \
   therobotknows.com=9 \
   therobotlives.com=10 \
-  therobotmakes.com=11 \
   therobotplans.com=12 \
   noizu.com=13 \
   tobornalp.com=14 \
-  foryou.therobotlives.com=15
+  foryou.therobotlives.com=15 \
+  draft.therobotplans.com=11
 
 # ── Slug derivation ─────────────────────────────────────────────
 SLUG_MAP := \
@@ -72,7 +79,8 @@ SLUG_MAP := \
   therobotplans.com=therobotplans \
   noizu.com=noizu_site \
   tobornalp.com=tobornalp \
-  foryou.therobotlives.com=foryou
+  foryou.therobotlives.com=foryou \
+  draft.therobotplans.com=therobotdrafts
 
 PROJECT_SLUG = $(or $(patsubst $(PROJECT_DIR)=%,%,$(filter $(PROJECT_DIR)=%,$(SLUG_MAP))),starter)
 REDIS_DB     = $(or $(patsubst $(PROJECT_DIR)=%,%,$(filter $(PROJECT_DIR)=%,$(REDIS_DB_MAP))),0)
@@ -82,7 +90,8 @@ DB_NAME      = $(subst .,_,$(subst -,_,$(PROJECT_DIR)))_dev
 # ── Shared build fragments ──────────────────────────────────────
 FRONTEND_BUILD_ARGS = \
 	--build-arg NEXT_PUBLIC_API_URL=$$(grep NEXT_PUBLIC_API_URL .env 2>/dev/null | cut -d= -f2- || echo "") \
-	--secret id=github_token,env=GITHUB_TOKEN
+	--secret id=github_token,env=GITHUB_TOKEN \
+	--secret id=npm_token,env=NPM_TOKEN
 
 # ══════════════════════════════════════════════════════════════════
 
