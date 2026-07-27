@@ -1,8 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Node">
-  <title>Node</title>
-  <rect x="11.00" y="16.00" width="42.00" height="32.00" rx="3.00" fill="#5AB28A" stroke="#3D7061" stroke-width="2.0" stroke-linejoin="round"/>
-  <line x1="21.50" y1="32.00" x2="42.50" y2="32.00" stroke="#FFFFFF" stroke-width="3.0" stroke-linecap="round"/>
-  <polygon points="40.00,24.00 43.00,21.00 51.00,21.00 48.00,24.00" fill="none" stroke="#FFFFFF" stroke-width="1.2" stroke-linejoin="round" stroke-linecap="round"/>
-  <polygon points="48.00,24.00 51.00,21.00 51.00,29.00 48.00,32.00" fill="none" stroke="#FFFFFF" stroke-width="1.2" stroke-linejoin="round" stroke-linecap="round"/>
-  <rect x="40.00" y="24.00" width="8.00" height="8.00" fill="none" stroke="#FFFFFF" stroke-width="1.2" stroke-linejoin="round"/>
-</svg>

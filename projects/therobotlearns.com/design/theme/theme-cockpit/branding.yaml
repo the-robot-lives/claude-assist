@@ -1,8 +1,0 @@
-name: "Cockpit"
-logo-text: "TRL"
-font-url: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap"
-intent: "A modern, dense TUI mission control in the lineage of k9s, btop, and lazygit — cool graphite panes, box-drawing dividers, meter/spark bars, a single electric-magenta signal for focus and selection, and a disciplined four-color status set. Every pixel is instrumentation; nothing is decoration."
-perception: "In five seconds: a professional instrument panel — many live panes, one signal color, everything measured and current. Competent, cool, awake."
-audience: "Power users running dashboards and consoles in a terminal — the maintainer watching KB health, the team lead scanning a fleet, anyone who reaches for htop reflexively."
-tone: "Clipped instrument labels and status-first copy. 'IDX 4.2k · SYNC ok · 3 stale', not 'Your index has 4,200 entries and everything looks great.'"
-keywords: [instrument, dense, signal, mission-control, measured]

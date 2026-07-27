@@ -1,6 +1,0 @@
-# .trd-yaml — TheRobotDrafts native model (IxModel serialization)
-name: Example SysML Block BDD (Variant) - Block vs Class
-elements:
-  - { id: PumpClass, type: Class, name: PumpClass, members: [{ name: flowRate, isOperation: false, visibility: Private, type: double, rawText: '-flowRate : double' }, { name: start, isOperation: true, visibility: Public, type: void, rawText: '+start() : void' }, { name: stop, isOperation: true, visibility: Public, type: void, rawText: '+stop() : void' }] }
-diagrams:
-  - { id: d1, name: Example SysML Block BDD (Variant) - Block vs Class, kind: class, layoutProvenance: Synthesized }

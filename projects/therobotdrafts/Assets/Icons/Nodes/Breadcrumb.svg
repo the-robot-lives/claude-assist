@@ -1,8 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Breadcrumb">
-  <title>Breadcrumb</title>
-  <text x="18.00" y="32.00" font-family="Helvetica,Arial,sans-serif" font-size="10" font-weight="700" fill="#292F35" text-anchor="middle" dominant-baseline="central">a</text>
-  <text x="25.00" y="32.00" font-family="Helvetica,Arial,sans-serif" font-size="11" font-weight="700" fill="#4B535A" text-anchor="middle" dominant-baseline="central">›</text>
-  <text x="32.00" y="32.00" font-family="Helvetica,Arial,sans-serif" font-size="10" font-weight="700" fill="#292F35" text-anchor="middle" dominant-baseline="central">b</text>
-  <text x="39.00" y="32.00" font-family="Helvetica,Arial,sans-serif" font-size="11" font-weight="700" fill="#4B535A" text-anchor="middle" dominant-baseline="central">›</text>
-  <text x="46.00" y="32.00" font-family="Helvetica,Arial,sans-serif" font-size="10" font-weight="700" fill="#292F35" text-anchor="middle" dominant-baseline="central">c</text>
-</svg>

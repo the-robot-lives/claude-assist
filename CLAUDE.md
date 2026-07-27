@@ -1,1 +1,0 @@
-.claude/CLAUDE.md/shorthand-c2.md

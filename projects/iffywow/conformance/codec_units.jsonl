@@ -1,8 +1,0 @@
-{"kind": "term", "term": ["nat", 0], "bytes": "0000", "integer": "257"}
-{"kind": "term", "term": ["nat", 1], "bytes": "0001", "integer": "258"}
-{"kind": "term", "term": ["nat", 127], "bytes": "007f", "integer": "384"}
-{"kind": "term", "term": ["nat", 128], "bytes": "008001", "integer": "98562"}
-{"kind": "term", "term": ["pair", ["nat", 0], ["nat", 0]], "bytes": "0100000000", "integer": "8606777601"}
-{"kind": "term", "term": ["list", []], "bytes": "0200", "integer": "769"}
-{"kind": "term", "term": ["bytes", ""], "bytes": "0300", "integer": "1025"}
-{"kind": "term", "term": ["bytes", "41"], "bytes": "030141", "integer": "262722"}

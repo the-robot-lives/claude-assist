@@ -1,5 +1,0 @@
-name: "Cockpit"
-slug: "cockpit"
-title: "The Robot Learns — Cockpit TUI"
-description: "A modern dense TUI mission-control: cool graphite panes, one electric-magenta signal, a disciplined four-color status set — every pixel is instrumentation."
-base-theme: "theme-style-guide"

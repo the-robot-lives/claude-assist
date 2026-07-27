@@ -1,6 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Business Process">
-  <title>Business Process</title>
-  <rect x="11.00" y="16.00" width="42.00" height="32.00" rx="3.00" fill="#E69F00" stroke="#6C541D" stroke-width="2.0" stroke-linejoin="round"/>
-  <line x1="21.50" y1="32.00" x2="42.50" y2="32.00" stroke="#382D12" stroke-width="3.0" stroke-linecap="round"/>
-  <polygon points="40.00,22.00 47.00,22.00 52.00,26.50 47.00,31.00 40.00,31.00 44.00,26.50" fill="none" stroke="#382D12" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round"/>
-</svg>

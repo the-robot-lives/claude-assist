@@ -1,6 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Field">
-  <title>Field</title>
-  <rect x="16.00" y="27.00" width="32.00" height="10.00" rx="2.00" fill="#BCBD22" stroke="#5B602A" stroke-width="2.0" stroke-linejoin="round"/>
-  <circle cx="21.00" cy="32.00" r="2.20" fill="#303318"/>
-  <line x1="26.00" y1="32.00" x2="44.00" y2="32.00" stroke="#303318" stroke-width="2.0" stroke-linecap="round"/>
-</svg>

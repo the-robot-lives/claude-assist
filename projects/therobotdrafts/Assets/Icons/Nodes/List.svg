@@ -1,8 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="List">
-  <title>List</title>
-  <rect x="15.00" y="17.00" width="34.00" height="30.00" rx="2.00" fill="#9AA7B0" stroke="#4E5763" stroke-width="2.0" stroke-linejoin="round"/>
-  <line x1="19.00" y1="23.00" x2="44.00" y2="23.00" stroke="#292F35" stroke-width="1.6" stroke-linecap="round"/>
-  <line x1="19.00" y1="30.00" x2="44.00" y2="30.00" stroke="#292F35" stroke-width="1.6" stroke-linecap="round"/>
-  <line x1="19.00" y1="37.00" x2="44.00" y2="37.00" stroke="#292F35" stroke-width="1.6" stroke-linecap="round"/>
-  <line x1="19.00" y1="44.00" x2="44.00" y2="44.00" stroke="#292F35" stroke-width="1.6" stroke-linecap="round"/>
-</svg>

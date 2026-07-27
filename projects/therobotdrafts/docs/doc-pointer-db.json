@@ -1,8 +1,0 @@
-{
-  "DPTR": {
-    "path": "docs/specs/doc-pointers.md",
-    "line": 3,
-    "name": "Documentation pointer convention",
-    "description": "Defines hard pointer markers, pointer database generation, and markdown deeplink expansion."
-  }
-}

@@ -1,7 +1,0 @@
-service: gemini
-model: imagen-4.0-generate-001
-timestamp: 1784746789
-prompt: |
-  Professional macOS desktop application UI mockup for a 3D UML modeling tool, "cockpit" layout: native macOS menu bar at very top (File Edit Model Diagram View Window Help), below it a slim dark mode-toolbar with segmented mode switcher (Select, Connect, Place) and a relationship dropdown; left edge has a narrow icon-only vertical dock rail of authoring verbs that expands on hover; right side a stacked inspector panel with collapsible sections (Element, Members, Metrics); bottom a thin status strip with breadcrumbs and camera coordinates; center dominated by a large dark 3D viewport showing floating UML class boxes connected by glowing edges in perspective, subtle grid floor. Dark charcoal theme (#14181b), single cyan-teal accent color, crisp 1px panel borders, SF Pro style typography, flat minimal design, high-end professional creative instrument aesthetic. Clean legible UI labels.
-negative: |
-  photograph, hands, people, watermark, blurry text, light theme, skeuomorphism, gradients everywhere

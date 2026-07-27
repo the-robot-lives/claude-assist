@@ -1,7 +1,0 @@
-node_modules/
-.next/
-out/
-.cache/
-src/app/design-system.generated.css
-*.tsbuildinfo
-.DS_Store

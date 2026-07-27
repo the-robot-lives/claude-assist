@@ -1,7 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Note">
-  <title>Note</title>
-  <path d="M14,12 H37 L50,25 V52 H14 Z" fill="#F2E2A0" stroke="#716F5D" stroke-width="2.0" stroke-linejoin="round" stroke-linecap="round"/>
-  <path d="M37,12 V25 H50" fill="#C6B983" stroke="#716F5D" stroke-width="2.0" stroke-linejoin="round" stroke-linecap="round"/>
-  <line x1="19.00" y1="31.00" x2="44.00" y2="31.00" stroke="#3B3B32" stroke-width="1.5" stroke-linecap="round"/>
-  <line x1="19.00" y1="37.00" x2="44.00" y2="37.00" stroke="#3B3B32" stroke-width="1.5" stroke-linecap="round"/>
-</svg>

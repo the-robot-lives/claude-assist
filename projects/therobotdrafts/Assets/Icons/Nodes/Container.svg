@@ -1,6 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Container">
-  <title>Container</title>
-  <rect x="12.00" y="18.00" width="40.00" height="28.00" rx="6.00" fill="#438DD5" stroke="#315C89" stroke-width="2.0" stroke-linejoin="round"/>
-  <line x1="22.00" y1="29.00" x2="42.00" y2="29.00" stroke="#FFFFFF" stroke-width="3.0" stroke-linecap="round"/>
-  <line x1="20.00" y1="37.00" x2="44.00" y2="37.00" stroke="#C7DDF2" stroke-width="1.6" stroke-linecap="round"/>
-</svg>

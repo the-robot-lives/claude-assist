@@ -1,6 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Card">
-  <title>Card</title>
-  <rect x="14.00" y="16.00" width="36.00" height="32.00" rx="2.00" fill="#DDE3EA" stroke="#696F7A" stroke-width="2.0" stroke-linejoin="round"/>
-  <line x1="18.00" y1="24.00" x2="45.00" y2="24.00" stroke="#373B40" stroke-width="1.6" stroke-linecap="round"/>
-  <line x1="18.00" y1="31.00" x2="42.00" y2="31.00" stroke="#373B40" stroke-width="1.4" stroke-linecap="round"/>
-</svg>

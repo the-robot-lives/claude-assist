@@ -1,8 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Decision Tree Node">
-  <title>Decision Tree Node</title>
-  <polygon points="32.00,12.00 42.00,22.00 32.00,32.00 22.00,22.00" fill="#E69F00" stroke="#6C541D" stroke-width="2.0" stroke-linejoin="round" stroke-linecap="round"/>
-  <line x1="27.00" y1="27.00" x2="18.00" y2="40.00" stroke="#6C541D" stroke-width="1.6" stroke-linecap="round"/>
-  <line x1="37.00" y1="27.00" x2="46.00" y2="40.00" stroke="#6C541D" stroke-width="1.6" stroke-linecap="round"/>
-  <circle cx="18.00" cy="44.00" r="4.00" fill="#E69F00" stroke="#6C541D" stroke-width="2.0"/>
-  <circle cx="46.00" cy="44.00" r="4.00" fill="#E69F00" stroke="#6C541D" stroke-width="2.0"/>
-</svg>

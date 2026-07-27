@@ -1,7 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Image">
-  <title>Image</title>
-  <rect x="14.00" y="18.00" width="36.00" height="28.00" rx="2.00" fill="#B0A878" stroke="#57584D" stroke-width="2.0" stroke-linejoin="round"/>
-  <circle cx="23.00" cy="26.00" r="3.00" fill="#2E2F2A"/>
-  <polyline points="17.00,42.00 29.00,29.00 38.00,42.00" fill="none" stroke="#2E2F2A" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
-  <polyline points="32.00,42.00 41.00,32.00 47.00,42.00" fill="none" stroke="#2E2F2A" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
-</svg>

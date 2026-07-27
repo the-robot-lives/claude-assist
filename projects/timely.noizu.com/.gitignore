@@ -1,6 +1,0 @@
-dist/
-# ** covers arbitrary nesting depth - apps/macos, apps/ios, and
-# apps/shared/TimelyKit (two segments deep) must all match.
-apps/**/.build/
-apps/android/.gradle/
-apps/android/app/build/

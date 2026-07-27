@@ -1,6 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Dropdown">
-  <title>Dropdown</title>
-  <rect x="13.00" y="26.00" width="38.00" height="13.00" rx="2.00" fill="#7FA6B0" stroke="#435763" stroke-width="2.0" stroke-linejoin="round"/>
-  <line x1="18.00" y1="33.00" x2="34.00" y2="33.00" stroke="#242F35" stroke-width="1.6" stroke-linecap="round"/>
-  <polygon points="42.00,30.00 48.00,30.00 45.00,35.00" fill="#242F35" stroke-linejoin="round" stroke-linecap="round"/>
-</svg>

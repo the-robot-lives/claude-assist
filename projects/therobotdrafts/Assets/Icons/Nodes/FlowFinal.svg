@@ -1,6 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Flow Final">
-  <title>Flow Final</title>
-  <circle cx="32.00" cy="32.00" r="13.00" fill="none" stroke="#232832" stroke-width="2.2"/>
-  <line x1="26.00" y1="26.00" x2="38.00" y2="38.00" stroke="#232832" stroke-width="2.6" stroke-linecap="round"/>
-  <line x1="38.00" y1="26.00" x2="26.00" y2="38.00" stroke="#232832" stroke-width="2.6" stroke-linecap="round"/>
-</svg>
