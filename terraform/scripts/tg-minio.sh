@@ -60,6 +60,15 @@ REMOTE_PORT="9000"
 PF_PID=""
 OVERRIDE_DIR=""
 
+minio_health_check() {
+  curl -sf -o /dev/null --max-time 2 "http://127.0.0.1:${LOCAL_PORT}/minio/health/live" 2>/dev/null
+}
+
+port_listener_info() {
+  command -v lsof >/dev/null 2>&1 || return 1
+  lsof -nP -iTCP:"${LOCAL_PORT}" -sTCP:LISTEN 2>/dev/null
+}
+
 cleanup() {
   if [[ -n "$PF_PID" ]]; then
     kill "$PF_PID" 2>/dev/null || true
@@ -112,8 +121,26 @@ export AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY
 
 # --- Port-forward ----------------------------------------------------------
 
-if curl -sf -o /dev/null --max-time 2 "http://127.0.0.1:${LOCAL_PORT}/minio/health/live" 2>/dev/null; then
+if minio_health_check; then
   echo "→ MinIO already reachable on 127.0.0.1:${LOCAL_PORT}; reusing it"
+elif listener_info="$(port_listener_info)"; then
+  echo "→ Port ${LOCAL_PORT} is already bound; waiting for MinIO health before reusing it"
+  ready=false
+  for _ in $(seq 1 10); do
+    if minio_health_check; then
+      ready=true
+      break
+    fi
+    sleep 1
+  done
+
+  if [[ "$ready" == true ]]; then
+    echo "→ MinIO became reachable on 127.0.0.1:${LOCAL_PORT}; reusing it"
+  else
+    echo "✗ Port ${LOCAL_PORT} is already bound, but MinIO health is not responding:" >&2
+    echo "$listener_info" >&2
+    exit 75
+  fi
 else
   echo "→ Starting port-forward ${NAMESPACE}/${SERVICE}:${REMOTE_PORT} → 127.0.0.1:${LOCAL_PORT}"
   kubectl port-forward -n "$NAMESPACE" "$SERVICE" "${LOCAL_PORT}:${REMOTE_PORT}" >/dev/null 2>&1 &
@@ -125,7 +152,7 @@ else
       echo "✗ Port-forward died on startup (is ${LOCAL_PORT} already bound?)" >&2
       exit 75
     fi
-    if curl -sf -o /dev/null --max-time 2 "http://127.0.0.1:${LOCAL_PORT}/minio/health/live" 2>/dev/null; then
+    if minio_health_check; then
       ready=true
       break
     fi
