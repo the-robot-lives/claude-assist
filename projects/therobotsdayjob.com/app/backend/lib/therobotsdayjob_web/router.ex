@@ -15,7 +15,17 @@ defmodule TherobotsdayjobWeb.Router do
       key: "_starter_sso",
       signing_salt: "sso_session_salt",
       same_site: "Lax",
-      max_age: 300
+      # 900s, not 300s. This cookie now carries the OIDC `state` and `nonce`
+      # (see SSOController.oidc_init/2), so its lifetime bounds how long a user
+      # has to finish signing in. Five minutes is not enough for a password plus
+      # a 2FA prompt on a second device, and running out produces an opaque
+      # `state_mismatch` rather than anything a user can act on.
+      #
+      # Widening is one-directional and safe: the cookie holds flow state, never
+      # credentials, and a longer window cannot break a flow that already
+      # worked. It is shared with the SAML and social-OAuth flows, which get the
+      # same benefit.
+      max_age: 900
     plug :fetch_session
   end
 

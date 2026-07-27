@@ -8,14 +8,20 @@ namespace TheRobotDraft.Authoring.Model
 {
     /// <summary>
     /// UUIDv5-backed documentation pointer identity. The Unicode token alphabet matches the repo's
-    /// <c>misc-git-utils doc-pointers</c> utility: four code points from U+13000..U+1342F, wrapped as ⟦code⟧.
+    /// <c>misc-git-utils doc-pointers</c> utility: four code points from curated printable
+    /// hieroglyphic Unicode blocks, wrapped as ⟦code⟧.
     /// </summary>
     public static class DeepLinkIdentity
     {
         public const string NamespaceUuid = "64e9408c-37a7-5f92-8893-f149cbde01c0";
-        public const int TokenStart = 0x13000;
-        public const int TokenEnd = 0x1342F;
-        private const int TokenSize = TokenEnd - TokenStart + 1;
+        private static readonly int[,] TokenRanges = new int[,]
+        {
+            { 0x10980, 0x1099F }, // Meroitic Hieroglyphs
+            { 0x13000, 0x1342F }, // Egyptian Hieroglyphs
+            { 0x13460, 0x143FF }, // Egyptian Hieroglyphs Extended-A; skips format controls
+            { 0x14400, 0x1467F }, // Anatolian Hieroglyphs
+        };
+        private static readonly int TokenSize = ComputeTokenSize();
         private const int TokenLength = 4;
 
         private static readonly Regex MarkerRegex = new Regex("⟦(?<code>[^⟦⟧\\s/?#:%]+)⟧",
@@ -71,7 +77,7 @@ namespace TheRobotDraft.Authoring.Model
             for (int i = 0; i < TokenLength; i++)
             {
                 int rem = DivRem(number, TokenSize);
-                chars.Add(char.ConvertFromUtf32(TokenStart + rem));
+                chars.Add(char.ConvertFromUtf32(TokenCodePoint(rem)));
             }
             chars.Reverse();
             return string.Concat(chars);
@@ -131,6 +137,27 @@ namespace TheRobotDraft.Authoring.Model
                 rem = value % divisor;
             }
             return rem;
+        }
+
+        private static int ComputeTokenSize()
+        {
+            int total = 0;
+            for (int i = 0; i < TokenRanges.GetLength(0); i++)
+                total += TokenRanges[i, 1] - TokenRanges[i, 0] + 1;
+            return total;
+        }
+
+        private static int TokenCodePoint(int index)
+        {
+            for (int i = 0; i < TokenRanges.GetLength(0); i++)
+            {
+                int start = TokenRanges[i, 0];
+                int end = TokenRanges[i, 1];
+                int size = end - start + 1;
+                if (index < size) return start + index;
+                index -= size;
+            }
+            throw new ArgumentOutOfRangeException("index");
         }
 
         private static byte[] UuidStringToBytes(string uuid)

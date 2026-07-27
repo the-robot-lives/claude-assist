@@ -2,6 +2,7 @@
 
 import type { DragEvent } from "react";
 import "./docks.css";
+import { KindMark, MoreMark } from "./KindMark";
 import { ELEMENT_KINDS, type ElementKindKey } from "./menu-data";
 
 /** DataTransfer type for a dragged palette chip. The payload is an `ElementKindKey`,
@@ -48,13 +49,17 @@ export function PaletteDock({ collapsed, armedKey, onArm, onOpenKindBrowser }: P
             onDragStart={supported ? (event) => handleDragStart(event, entry.key) : undefined}
             onClick={() => supported && onArm(entry.key)}
           >
-            <span className="trd-glyph">{entry.glyph}</span>
+            <span className="trd-glyph trd-glyph-mark">
+              <KindMark kind={entry.key} />
+            </span>
             {entry.label}
           </button>
         );
       })}
       <button type="button" className="trd-chip" title="Kind browser (⇧⌘K)" onClick={onOpenKindBrowser}>
-        <span className="trd-glyph">…</span>
+        <span className="trd-glyph trd-glyph-mark">
+          <MoreMark />
+        </span>
         More
       </button>
     </aside>

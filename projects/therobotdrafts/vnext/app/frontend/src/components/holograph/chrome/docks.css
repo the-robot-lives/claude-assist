@@ -202,6 +202,19 @@
   font-weight: 600;
 }
 
+/* SVG marks carry their own UML outline, so the boxed-glyph chrome would read as a second,
+   competing border. Drop it and let the notation be the icon. */
+.trd-chip .trd-glyph-mark {
+  border: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 0;
+}
+
+.trd-chip:disabled .trd-glyph-mark {
+  color: var(--text-faint);
+}
+
 .trd-chip:hover:not(:disabled) {
   background: var(--bg3);
   color: var(--text);

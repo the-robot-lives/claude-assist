@@ -47,6 +47,17 @@ defmodule TheRobotRemembersWeb.SSOController do
     expected_state = get_session(conn, :sso_state)
     expected_nonce = get_session(conn, :sso_nonce)
 
+    # One-time use: the state is cleared before the exchange, so a single value
+    # cannot serve a second callback. Its absence was not a live vulnerability -
+    # the authorization code is single-use at the IdP, and the state lives in the
+    # caller's own cookie where an attacker cannot read it - but clearing it
+    # restores the one-to-one binding between an initiation and its callback,
+    # which is the whole point of the parameter.
+    conn =
+      conn
+      |> delete_session(:sso_state)
+      |> delete_session(:sso_nonce)
+
     # State is checked before anything else, including reading the provider
     # config: a forged callback is rejected without a token request, a discovery
     # fetch, or any other work done on an attacker's behalf.

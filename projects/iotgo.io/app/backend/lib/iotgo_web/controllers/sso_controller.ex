@@ -118,6 +118,7 @@ defmodule IotgoWeb.SSOController do
   # ── Helpers ──────────────────────────────────────────────────
 
   defp handle_sso_callback(conn, provider_type, attrs) do
+    conn = clear_sso_session(conn)
     frontend_url = Application.get_env(:iotgo, :frontend_url, "http://localhost:3000")
 
     case Iotgo.Auth.SSO.authenticate_sso(provider_type, attrs) do
@@ -134,6 +135,7 @@ defmodule IotgoWeb.SSOController do
   end
 
   defp redirect_with_error(conn, error) do
+    conn = clear_sso_session(conn)
     frontend_url = Application.get_env(:iotgo, :frontend_url, "http://localhost:3000")
     redirect(conn, external: "#{frontend_url}/auth/sso-callback?error=#{error}")
   end
@@ -184,6 +186,14 @@ defmodule IotgoWeb.SSOController do
 
   defp verify_nonce(expected, received) do
     if Plug.Crypto.secure_compare(expected, received), do: :ok, else: {:error, :nonce_mismatch}
+  end
+
+  # Cleared on both success and failure, so a state value can never be reused by
+  # a second callback.
+  defp clear_sso_session(conn) do
+    conn
+    |> delete_session(:sso_state)
+    |> delete_session(:sso_nonce)
   end
 
   defp random_token, do: :crypto.strong_rand_bytes(32) |> Base.url_encode64(padding: false)

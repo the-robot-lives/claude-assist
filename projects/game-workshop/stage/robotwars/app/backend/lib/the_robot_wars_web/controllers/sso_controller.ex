@@ -181,10 +181,19 @@ defmodule TheRobotWarsWeb.SSOController do
 
   # ── OIDC state / nonce ───────────────────────────────────────
 
-  defp verify_state(nil, _received), do: {:error, :state_mismatch}
-  defp verify_state(_expected, nil), do: {:error, :state_mismatch}
+  # Public, and `@doc false`, solely so the guards can be unit-tested against the
+  # REAL functions with no database, no HTTP and no identity provider. They are
+  # not routed and are not part of the controller's action surface.
+  #
+  # The nonce guard in particular has no other way to be tested: it only runs
+  # after a successful token exchange, which no suite here can reach without a
+  # live or mocked IdP. Calling it directly is the only way to assert that a
+  # replayed nonce is actually refused.
+  @doc false
+  def verify_state(nil, _received), do: {:error, :state_mismatch}
+  def verify_state(_expected, nil), do: {:error, :state_mismatch}
 
-  defp verify_state(expected, received) do
+  def verify_state(expected, received) do
     if Plug.Crypto.secure_compare(expected, received),
       do: :ok,
       else: {:error, :state_mismatch}
@@ -192,10 +201,11 @@ defmodule TheRobotWarsWeb.SSOController do
 
   # A provider that omits the nonce it was handed is not evidence of replay -
   # not every provider echoes it. A provider that returns a DIFFERENT one is.
-  defp verify_nonce(_expected, nil), do: :ok
-  defp verify_nonce(nil, _received), do: :ok
+  @doc false
+  def verify_nonce(_expected, nil), do: :ok
+  def verify_nonce(nil, _received), do: :ok
 
-  defp verify_nonce(expected, received) do
+  def verify_nonce(expected, received) do
     if Plug.Crypto.secure_compare(expected, received), do: :ok, else: {:error, :nonce_mismatch}
   end
 

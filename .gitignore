@@ -3,6 +3,8 @@ erl_crash.dump
 nohup.*
 .fseventsd
 .Spotlight-V100
+.Trashes
+._*
 liquibase.properties
 .infisical-secrets.yaml
 infisical-secrets.yaml

@@ -173,7 +173,7 @@ namespace TheRobotDraft.Authoring.Tests
             var uuid = DeepLinkIdentity.Uuid5(DeepLinkIdentity.NamespaceUuid, "doc-pointers:TestPointer");
 
             Assert.AreEqual("5c692577-ad0c-51f1-992c-759b5e5fffb5", uuid);
-            Assert.AreEqual("𓆴𓎲𓋝𓁅", DeepLinkIdentity.EncodeToken(uuid));
+            Assert.AreEqual("𓳔𔐮𔘟𔄵", DeepLinkIdentity.EncodeToken(uuid));
         }
 
         [Test]

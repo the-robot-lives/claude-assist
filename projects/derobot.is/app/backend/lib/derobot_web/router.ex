@@ -10,12 +10,27 @@ defmodule DerobotWeb.Router do
   end
 
   pipeline :sso_session do
+    # max_age was 300 and is now 900.
+    #
+    # This cookie used to be dead weight for OIDC: the flow generated no state
+    # and no nonce, so nothing depended on the cookie surviving the round trip.
+    # It now carries both, which makes the expiry load-bearing for the first
+    # time -- and 300 seconds is not long enough for a real sign-in. A password
+    # plus a 2FA code typed from a phone routinely exceeds five minutes, and
+    # that user would land on an opaque `state_mismatch` for doing nothing
+    # wrong. Shipping the state check on a 300s window would have swapped a
+    # security hole for an availability bug.
+    #
+    # Widening is one-directional and safe: a longer window cannot break a flow
+    # that already completed inside a shorter one. The cookie holds flow state
+    # (state, nonce, redirect target) and never a credential, so this is not a
+    # credential-lifetime decision.
     plug Plug.Session,
       store: :cookie,
       key: "_derobot_sso",
       signing_salt: "sso_session_salt",
       same_site: "Lax",
-      max_age: 300
+      max_age: 900
 
     plug :fetch_session
   end

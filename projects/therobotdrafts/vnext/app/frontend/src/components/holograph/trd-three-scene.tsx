@@ -4,6 +4,9 @@ import { type MutableRefObject, useEffect, useRef } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { buildTrd3dScene, type Trd3dNodeShapeKind } from "@/lib/trd-3d";
+import { buildNodeBody } from "@/lib/trd-3d/node-geometry";
+import { nodeVisual, type NodeSilhouette } from "@/lib/holograph/node-visuals";
+import { paintNodeFace } from "@/lib/holograph/node-face";
 import type { GraphDocument, GraphEdge, GraphNode } from "@/lib/holograph/types";
 
 export interface TrdCameraPose {
@@ -77,103 +80,35 @@ function nodeDimensions(node: GraphNode) {
 
 function nodeColor(node: GraphNode) {
   if (node.trd3d?.color) return new THREE.Color(node.trd3d.color);
-  if (node.kind === "database") return new THREE.Color("#5f7f9d");
-  if (node.kind === "interface") return new THREE.Color("#6d8fbd");
-  if (node.kind === "package") return new THREE.Color("#6a7f55");
-  if (node.kind === "service") return new THREE.Color("#8262a8");
-  return new THREE.Color("#4d9a8f");
+  return new THREE.Color(nodeVisual(node.kind).body);
 }
 
-function escapeLabel(value: string | undefined) {
-  return (value ?? "").replace(/[<>]/g, "");
+/** Explicit `trd3d.shape` hints override the kind's default silhouette. The hint union is
+ * coarser than the silhouette vocabulary, so unmapped values fall back to the kind default
+ * rather than collapsing to a box -- which is what the old `buildBody` did with `actor`
+ * and `interface`. */
+const SHAPE_HINT_SILHOUETTE: Partial<Record<NonNullable<GraphNode["trd3d"]>["shape"] & string, NodeSilhouette>> = {
+  package: "namespace-slab",
+  component: "component-capsule",
+  cylinder: "database-cylinder",
+  sphere: "method-pill",
+  actor: "actor-hex",
+  interface: "interface-card",
+};
+
+function nodeSilhouette(node: GraphNode): NodeSilhouette {
+  // `"slab"` is deliberately absent above: `shapeHint()` funnels both `class-box` and
+  // `compound-slab` into it, so honouring it would strip `system` of its compound form.
+  // Every other hint is unambiguous and wins over the kind default.
+  const hint = node.trd3d?.shape;
+  return (hint && SHAPE_HINT_SILHOUETTE[hint]) || nodeVisual(node.kind).silhouette;
 }
 
 function labelTexture(node: GraphNode, compact = false) {
-  const width = 768;
-  const height = compact ? 192 : 448;
-  const canvas = document.createElement("canvas");
-  canvas.width = width;
-  canvas.height = height;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) throw new Error("Canvas unavailable for TRD 3D label texture.");
-
-  const bg = nodeColor(node);
-  const fill = `rgb(${Math.round(bg.r * 255)}, ${Math.round(bg.g * 255)}, ${Math.round(bg.b * 255)})`;
-  ctx.clearRect(0, 0, width, height);
-  ctx.fillStyle = "rgba(255, 253, 248, 0.96)";
-  ctx.fillRect(0, 0, width, height);
-  ctx.strokeStyle = fill;
-  ctx.lineWidth = 16;
-  ctx.strokeRect(8, 8, width - 16, height - 16);
-
-  ctx.fillStyle = "rgba(24, 29, 30, 0.92)";
-  ctx.textAlign = "center";
-  ctx.textBaseline = "top";
-  ctx.font = "700 38px ui-monospace, Menlo, monospace";
-  const stereotype = node.stereotype ? `<<${escapeLabel(node.stereotype)}>>` : node.uml?.elementType ?? node.kind;
-  ctx.fillText(stereotype, width / 2, 32);
-
-  ctx.font = "900 58px Inter, ui-sans-serif, system-ui";
-  ctx.fillText(escapeLabel(node.label), width / 2, compact ? 94 : 88);
-  if (compact) {
-    const texture = new THREE.CanvasTexture(canvas);
-    texture.colorSpace = THREE.SRGBColorSpace;
-    texture.needsUpdate = true;
-    return texture;
-  }
-
-  ctx.strokeStyle = "rgba(24, 29, 30, 0.24)";
-  ctx.lineWidth = 4;
-  ctx.beginPath();
-  ctx.moveTo(40, 168);
-  ctx.lineTo(width - 40, 168);
-  ctx.stroke();
-
-  ctx.textAlign = "left";
-  ctx.font = "600 30px ui-monospace, Menlo, monospace";
-  const attrs = node.uml?.attributes?.length ? node.uml.attributes : node.members ?? [];
-  const ops = node.uml?.operations ?? [];
-  let y = 196;
-  for (const attr of attrs.slice(0, 4)) {
-    ctx.fillText(escapeLabel(attr), 52, y);
-    y += 36;
-  }
-  if (ops.length) {
-    ctx.beginPath();
-    ctx.moveTo(40, y + 8);
-    ctx.lineTo(width - 40, y + 8);
-    ctx.stroke();
-    y += 28;
-    for (const op of ops.slice(0, 4)) {
-      ctx.fillText(escapeLabel(op), 52, y);
-      y += 36;
-    }
-  }
-
-  const texture = new THREE.CanvasTexture(canvas);
+  const texture = new THREE.CanvasTexture(paintNodeFace(node, compact));
   texture.colorSpace = THREE.SRGBColorSpace;
   texture.needsUpdate = true;
   return texture;
-}
-
-function buildBody(node: GraphNode, dims: { width: number; height: number; depth: number }, material: THREE.Material) {
-  const shape = node.trd3d?.shape;
-  if (shape === "cylinder" || node.kind === "database") {
-    const geometry = new THREE.CylinderGeometry(dims.width * 0.42, dims.width * 0.42, dims.height, 36, 1);
-    const mesh = new THREE.Mesh(geometry, material);
-    mesh.rotation.z = Math.PI / 2;
-    return mesh;
-  }
-
-  if (shape === "sphere" || node.kind === "function") {
-    return new THREE.Mesh(new THREE.SphereGeometry(Math.max(dims.width, dims.height) * 0.42, 36, 18), material);
-  }
-
-  const geometry =
-    shape === "component" || node.kind === "service"
-      ? new THREE.BoxGeometry(dims.width, dims.height, dims.depth, 1, 1, 1)
-      : new THREE.BoxGeometry(dims.width, dims.height, dims.depth);
-  return new THREE.Mesh(geometry, material);
 }
 
 function makeRenderNode(node: GraphNode) {
@@ -197,22 +132,23 @@ function makeRenderNode(node: GraphNode) {
   const r = node.trd3d?.rotation;
   if (r) group.rotation.set(THREE.MathUtils.degToRad(r.x), THREE.MathUtils.degToRad(r.y), THREE.MathUtils.degToRad(r.z));
 
-  const body = buildBody(node, dims, material);
+  const { mesh: body, labelZ, labelScale } = buildNodeBody(nodeSilhouette(node), dims, material);
   body.userData.nodeId = node.id;
+  for (const child of body.children) child.userData.nodeId = node.id;
   group.add(body);
 
   const outline = new THREE.LineSegments(
-    new THREE.EdgesGeometry((body as THREE.Mesh).geometry),
+    new THREE.EdgesGeometry(body.geometry),
     new THREE.LineBasicMaterial({ color: baseColor.clone().lerp(new THREE.Color("#080b0d"), 0.45), linewidth: 1 }),
   );
   body.add(outline);
 
   const faceTexture = labelTexture(node);
   const label = new THREE.Mesh(
-    new THREE.PlaneGeometry(dims.width * 0.94, dims.height * 0.9),
+    new THREE.PlaneGeometry(dims.width * labelScale, dims.height * labelScale * 0.96),
     new THREE.MeshBasicMaterial({ map: faceTexture, transparent: true, depthTest: true }),
   );
-  label.position.z = dims.depth * 0.5 + 0.012;
+  label.position.z = labelZ + 0.012;
   label.userData.nodeId = node.id;
   group.add(label);
 
