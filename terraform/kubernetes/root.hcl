@@ -30,9 +30,10 @@ locals {
   # file overriding the endpoint to the local port-forward. Unset (the default)
   # => no extra init flags => behavior unchanged.
   #
-  # Harmless for the local-state `init` bootstrap module: OpenTofu only warns
-  # ("-backend-config was used without a backend block") and proceeds.
-  minio_backend_config = get_env("TG_MINIO_BACKEND_CONFIG", "")
+  # Do not pass S3 backend overrides to the local-state bootstrap unit. OpenTofu
+  # rejects S3-specific backend arguments when the generated backend is local.
+  is_bootstrap_init    = get_terragrunt_dir() == "${get_parent_terragrunt_dir()}/init"
+  minio_backend_config = local.is_bootstrap_init ? "" : get_env("TG_MINIO_BACKEND_CONFIG", "")
 }
 
 terraform {

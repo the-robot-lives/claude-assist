@@ -75,6 +75,17 @@ backend state, so it should be an explicit choice.
 The script reuses an existing healthy forward on the port instead of starting a
 second one.
 
+The installed `tf-plan-all` utility detects this Terragrunt tree and delegates
+through `scripts/tg-minio.sh` automatically. When cached backend metadata was
+initialized against the public MinIO endpoint, use:
+
+```bash
+tf-plan-all --reconfigure
+```
+
+That runs `terragrunt run --all -- init -reconfigure` through the MinIO wrapper
+before planning.
+
 ## Other prerequisites
 
 ```bash
