@@ -1,0 +1,1691 @@
+version: 1
+generated_at: 2026-07-27
+source_root: projects/game-workshop/flesh
+rubric:
+  scoring_scale: 1-10
+  dimensions:
+    complexity: Higher means larger implementation scope, more systems, more content, more platforms, or harder technology.
+    monetization: Higher means stronger ethical revenue fit for the concept and audience.
+    novelty: Higher means more differentiated mechanics, fantasy, or market position.
+    marketability: Higher means clearer audience, pitch, genre demand, and store-page legibility.
+    prototype_fit: Higher means easier to validate with a focused small prototype.
+    production_risk: Higher means more schedule, content, technical, compliance, or live-ops risk.
+  grade_formula: Rewards novelty, marketability, monetization, and prototype fit; penalizes complexity and production risk.
+  grades:
+    A: Prioritize for prototype or stage promotion.
+    B: Worth keeping warm; needs scope control or a sharper vertical slice.
+    C: Interesting but currently heavy, risky, or under-positioned.
+    D: Park unless a strategic reason emerges.
+games:
+  - slug: aether-bloom
+    title: Aether Bloom
+    categories: [match-3, puzzle, simulation, garden-sim, narrative]
+    description: "Aether Bloom is a serene match-3 puzzle game where the player nurtures golden essence plants by matching elemental crystal patterns, transforming withered shadow gardens into flourishing."
+    tags: [mobile, pc, premium, f2p, cosmetics, dlc, narrative, procedural, collection, crafting]
+    source: aether-bloom/README.md
+    genre: Casual Match-3 Puzzle / Zen Garden Simulator
+    engine: "Unity 2023 LTS (2D URP, custom particle system for bloom effects)"
+    platform: "Mobile (iOS 14+, Android 10+), PC (Steam — Windows/Mac/Linux), Nintendo Switch"
+    monetization_model: "Free-to-play, cosmetic-only DLC, no FOMO mechanics, no energy system"
+    scores:
+      complexity: 4
+      monetization: 7
+      novelty: 5
+      marketability: 9
+      prototype_fit: 9
+      production_risk: 4
+    grade: A
+    rationale: "Fast prototype, broad audience, clean ethical monetization."
+  - slug: amber-goblin-caravan
+    title: Amber Goblin Caravan
+    categories: [simulation, cozy, mobile, pc, premium]
+    description: "Amber Goblin Caravan is a warm, hand-painted trading simulation where the player commands a crew of goblin merchants across a whimsical 60-day journey through the continent."
+    tags: [mobile, pc, premium, cosmetics, dlc, multiplayer, narrative, collection, crafting, base-building]
+    source: amber-goblin-caravan/README.md
+    genre: Cozy Social Trading Simulation
+    engine: "Unity 2024 LTS (2D URP, cross-platform)"
+    platform: "PC (Steam), Nintendo Switch, PlayStation 5, iOS, Android"
+    monetization_model: "Premium ($24.99 base), cosmetic wagon skins ($2.99-$7.99 each), seasonal skin bundles ($12.99)"
+    scores:
+      complexity: 7
+      monetization: 8
+      novelty: 7
+      marketability: 8
+      prototype_fit: 5
+      production_risk: 7
+    grade: B
+    rationale: "Commercially readable, but economy plus co-op adds risk."
+  - slug: amber-prophets-loom
+    title: Amber Prophet's Loom
+    categories: [rpg, strategy, tactics, card-battler, narrative]
+    description: Amber Prophet's Loom is a narrative strategy RPG where a fractured prophet exiled to an amber-hued desert canyon weaves possible futures from the threads of fate.
+    tags: [mobile, pc, premium, cosmetics, dlc, narrative, procedural, collection, crafting, base-building]
+    source: amber-prophets-loom/README.md
+    genre: Narrative Strategy RPG (tactical grid combat + fate-weaving progression)
+    engine: "Unreal Engine 5 — Nanite/Lumen for amber desert canyons, large open map, high-fidelity VFX for tri-vision timeline rendering"
+    platform: "PC (Steam, GOG), PlayStation 5, Xbox Series X"
+    monetization_model: "Premium $39.99 — complete standalone experience, no IAP, no microtransactions"
+    scores:
+      complexity: 8
+      monetization: 7
+      novelty: 9
+      marketability: 7
+      prototype_fit: 5
+      production_risk: 8
+    grade: B
+    rationale: "Distinctive tactics idea, risky systems burden."
+  - slug: amber-rift
+    title: Amber Rift
+    categories: [rpg, horror, narrative, metroidvania, pc]
+    description: "Amber Rift is a dual-plane action RPG set in the Bayou of Fractured Echoes, where the player -- a twilight shaman wielding a fractal katana --."
+    tags: [mobile, pc, premium, f2p, dlc, battle-pass, multiplayer, narrative, collection, crafting]
+    source: amber-rift/README.md
+    genre: Action RPG / Narrative
+    engine: "Unreal Engine 5 (Nanite for environment density, Lumen for dynamic bayou lighting)"
+    platform: Unspecified
+    monetization_model: Premium single purchase ($59.99) with two paid post-launch story DLC chapters
+    scores:
+      complexity: 9
+      monetization: 7
+      novelty: 7
+      marketability: 7
+      prototype_fit: 4
+      production_risk: 9
+    grade: C
+    rationale: "Strong mood, too much AAA-like surface area."
+  - slug: amber-treasure-sanctuary
+    title: Amber Treasure Sanctuary
+    categories: [simulation, cozy, mobile, pc, premium]
+    description: Amber Treasure Sanctuary is a cozy building-crafting simulation where the player inherits a crumbling sanctuary in a golden grove and restores it using an amber crystal.
+    tags: [mobile, pc, premium, cosmetics, dlc, multiplayer, narrative, collection, crafting, base-building]
+    source: amber-treasure-sanctuary/README.md
+    genre: Building Crafting / Cozy Simulation
+    engine: "Unity 2023 LTS (2D isometric rendering, URP for particle effects)"
+    platform: "PC (Steam), Nintendo Switch, iOS, Android"
+    monetization_model: Premium ($24.99 base) with seasonal decoration DLC ($7.99 each)
+    scores:
+      complexity: 5
+      monetization: 7
+      novelty: 6
+      marketability: 8
+      prototype_fit: 8
+      production_risk: 5
+    grade: A
+    rationale: Focused cozy builder with easy vertical-slice path.
+  - slug: ancient-mimic-detective
+    title: Ancient Mimic Detective
+    categories: [puzzle, detective, mystery, rpg, adventure]
+    description: "You are a retired inquisitor dragged back into service in Oakhaven, a decaying port city where mimics have evolved sentience and begun replacing citizens one by."
+    tags: [mobile, pc, premium, f2p, dlc, battle-pass, multiplayer, narrative, collection, crafting]
+    source: ancient-mimic-detective/README.md
+    genre: Detective Mystery Adventure / Narrative Puzzle
+    engine: Unity 2023 LTS (2D/3D hybrid with isometric exploration)
+    platform: "PC (Steam/GOG), Nintendo Switch, PlayStation 5"
+    monetization_model: Premium $34.99 base + 3 case DLC at $9.99 each
+    scores:
+      complexity: 6
+      monetization: 8
+      novelty: 9
+      marketability: 8
+      prototype_fit: 7
+      production_risk: 6
+    grade: A
+    rationale: Memorable premise with a testable case prototype.
+  - slug: ash-and-aspersion
+    title: Ash and Aspersion
+    categories: [detective, tactics, narrative, extraction, pc]
+    description: Ash and Aspersion is a tactical extraction shooter set in a dieselpunk metropolis where mythological creatures live as undocumented immigrants under the oppressive oversight of divine.
+    tags: [pc, premium, f2p, cosmetics, dlc, battle-pass, multiplayer, narrative, procedural, collection]
+    source: ash-and-aspersion/README.md
+    genre: Tactical Extraction Shooter / Mythological Noir
+    engine: "Unreal Engine 5.4 (Nanite for high-fidelity environments, Lumen for noir lighting)"
+    platform: Unspecified
+    monetization_model: Premium ($49.99 base) + cosmetic operative skin DLC ($4.99-$9.99 per pack)
+    scores:
+      complexity: 9
+      monetization: 7
+      novelty: 9
+      marketability: 7
+      prototype_fit: 4
+      production_risk: 9
+    grade: C
+    rationale: "Excellent thematic angle, but production stack is severe."
+  - slug: aurora-garden
+    title: Aurora Garden
+    categories: [puzzle, simulation, garden-sim, narrative, mobile]
+    description: "Aurora Garden is a meditative rooftop gardening game where color-matching puzzles paint aurora ribbons across the night sky, attracting celestial creatures from East Asian mythology to."
+    tags: [mobile, pc, premium, f2p, dlc, narrative, procedural, collection, physics, deckbuilder]
+    source: aurora-garden/README.md
+    genre: Casual Zen / Puzzle / Simulation
+    engine: "Unity 2023 LTS (2D URP, cross-platform shader graph for aurora effects)"
+    platform: Unspecified
+    monetization_model: "Premium ($14.99) on PC/Console. Free-to-play on mobile with one-time $4.99 unlock for full content (no ads, no energy system, no gacha). Soundtrack available separately ($7.99)."
+    scores:
+      complexity: 4
+      monetization: 7
+      novelty: 7
+      marketability: 8
+      prototype_fit: 9
+      production_risk: 4
+    grade: A
+    rationale: Clear audience and low-risk prototype loop.
+  - slug: aurora-transcendence
+    title: Aurora Transcendence
+    categories: [puzzle, horror, rhythm, adventure, metroidvania]
+    description: "Aurora Transcendence is a single-player action-adventure in which the player inhabits an ethereal shadowmancer who must master dual-reality traversal, temporal manipulation, and void-resistant combat to prevent."
+    tags: [mobile, pc, premium, f2p, cosmetics, dlc, narrative, procedural, collection, crafting]
+    source: aurora-transcendence/README.md
+    genre: Action-Adventure / Cosmic Horror
+    engine: Unreal Engine 5.4 (Nanite + Lumen for volumetric aurora rendering)
+    platform: Unspecified
+    monetization_model: Premium ($39.99 base) with cosmetic-only post-launch DLC
+    scores:
+      complexity: 10
+      monetization: 7
+      novelty: 7
+      marketability: 7
+      prototype_fit: 3
+      production_risk: 10
+    grade: C
+    rationale: "Pitchable, but very expensive to prove properly."
+  - slug: banshees-bazaar
+    title: Banshee's Bazaar
+    categories: [detective, mystery, adventure, narrative, pc]
+    description: "Banshee's Bazaar is a noir-fantasy detective adventure set in a supernatural marketplace where banshees sell prophecies, goblins run pawn shops for cursed items, and every stall."
+    tags: [pc, premium, f2p, dlc, multiplayer, narrative, collection, crafting, base-building, physics]
+    source: banshees-bazaar/README.md
+    genre: Narrative Adventure / Detective Mystery
+    engine: Unity 2024 LTS (URP)
+    platform: Unspecified
+    monetization_model: "Premium $24.99 base, episodic case DLC at $7.99 each"
+    scores:
+      complexity: 7
+      monetization: 8
+      novelty: 9
+      marketability: 8
+      prototype_fit: 6
+      production_risk: 7
+    grade: A
+    rationale: Best mystery pitch in the slice despite content load.
+  - slug: behemoth-ranch
+    title: Behemoth Ranch
+    categories: [simulation, cozy, adventure, narrative, mobile]
+    description: Behemoth Ranch is a creature-rehabilitation sanctuary sim where the "monsters" of a high-fantasy world arrive traumatized by adventurers and find healing under the player's care.
+    tags: [mobile, pc, premium, f2p, cosmetics, dlc, multiplayer, narrative, collection, crafting]
+    source: behemoth-ranch/README.md
+    genre: Cozy Simulation / Monster Ranching
+    engine: "Unity 2023 LTS (C#) -- chosen for cross-platform reach, 2D/3D hybrid support, and mature mobile pipeline"
+    platform: Unspecified
+    monetization_model: Premium ($24.99 base) + creature DLC packs ($7.99 each)
+    scores:
+      complexity: 6
+      monetization: 8
+      novelty: 8
+      marketability: 9
+      prototype_fit: 7
+      production_risk: 6
+    grade: A
+    rationale: Emotionally sharp cozy hook with strong DLC fit.
+  - slug: berserkers-weave
+    title: Berserker's Weave
+    categories: [rpg, strategy, tactics, roguelite, rhythm]
+    description: Berserker's Weave is a tactical RPG about commanding warriors who grow stronger as they lose control.
+    tags: [mobile, pc, premium, f2p, cosmetics, dlc, multiplayer, narrative, procedural, collection]
+    source: berserkers-weave/README.md
+    genre: Strategy RPG / Tactical Grid Combat
+    engine: "Unity 2023 LTS (URP) — mature 2D/3D hybrid pipeline, strong grid combat plugin ecosystem, proven cross-platform deployment"
+    platform: Unspecified
+    monetization_model: "Premium ($39.99 base), paid expansion campaigns, cosmetic skin packs"
+    scores:
+      complexity: 7
+      monetization: 7
+      novelty: 8
+      marketability: 7
+      prototype_fit: 6
+      production_risk: 7
+    grade: B
+    rationale: "Good mechanic identity, moderate tactics-market ceiling."
+  - slug: blood-bard-odyssey
+    title: Blood Bard Odyssey
+    categories: [rpg, strategy, rhythm, music, narrative]
+    description: Blood Bard Odyssey is a rhythm-driven dark fantasy RPG where combat is music and music is magic.
+    tags: [mobile, pc, premium, f2p, dlc, narrative, procedural, collection, crafting, cozy]
+    source: blood-bard-odyssey/README.md
+    genre: Rhythm Action RPG
+    engine: Unity 2023 LTS (custom FMOD audio middleware)
+    platform: Unspecified
+    monetization_model: Premium ($29.99 base) + paid DLC song packs ($7.99 each)
+    scores:
+      complexity: 7
+      monetization: 8
+      novelty: 7
+      marketability: 8
+      prototype_fit: 7
+      production_risk: 7
+    grade: B
+    rationale: "Strong monetization, but audio quality bar is high."
+  - slug: blood-katana-bayou
+    title: Blood Katana Bayou
+    categories: [survival, arena, rhythm, idle, pc]
+    description: Blood Katana Bayou is a 2.
+    tags: [mobile, pc, premium, f2p, cosmetics, dlc, battle-pass, narrative, crafting, physics]
+    source: blood-katana-bayou/README.md
+    genre: 2.5D Fighting Game / Character Action
+    engine: "Unreal Engine 5.4 (Niagara for blood/bayou particles, custom 2.5D camera lock system)"
+    platform: "PC (Steam), PlayStation 5, Xbox Series X/S, Nintendo Switch 2"
+    monetization_model: "Premium ($49.99) with seasonal character passes (2 fighters per season, $7.99 each or $14.99/season pass)"
+    scores:
+      complexity: 8
+      monetization: 8
+      novelty: 7
+      marketability: 7
+      prototype_fit: 5
+      production_risk: 8
+    grade: C
+    rationale: "Interesting combat economy, punishing genre economics."
+  - slug: blood-mage-space-station
+    title: Blood Mage Space Station
+    categories: [simulation, strategy, survival, narrative, 4x]
+    description: Blood Mage Space Station is a grand strategy game where you command a blood mage dynasty aboard a colossal generation ship orbiting a dying star.
+    tags: [mobile, pc, premium, f2p, dlc, multiplayer, narrative, procedural, collection, crafting]
+    source: blood-mage-space-station/README.md
+    genre: Grand Strategy / 4X with Dynasty Simulation
+    engine: "Unity 2024 LTS (ECS + DOTS for simulation scale, URP for station visualization)"
+    platform: "PC (Steam/Epic), macOS, Linux"
+    monetization_model: "Premium -- $39.99 base, dynasty scenario DLCs ($9.99-$14.99)"
+    scores:
+      complexity: 10
+      monetization: 8
+      novelty: 8
+      marketability: 7
+      prototype_fit: 3
+      production_risk: 10
+    grade: C
+    rationale: "Great strategy fantasy, massive simulation burden."
+  - slug: bone-colossus-farm
+    title: Bone Colossus Farm
+    categories: [puzzle, simulation, cozy, farming, rhythm]
+    description: Bone Colossus Farm is a farming simulation where every crop is a living skeleton creature and the soil beneath your fields is an ancient ossuary steeped.
+    tags: [mobile, pc, premium, f2p, cosmetics, dlc, multiplayer, narrative, procedural, collection]
+    source: bone-colossus-farm/README.md
+    genre: Farming Simulation / Monster Collection
+    engine: "Unity 2023 LTS (C#) -- cross-platform 2D/3D hybrid pipeline, mature particle system for bone-magic effects, proven console SDK support"
+    platform: Unspecified
+    monetization_model: Premium ($24.99 base) + creature pack DLCs ($7.99 each)
+    scores:
+      complexity: 8
+      monetization: 8
+      novelty: 9
+      marketability: 9
+      prototype_fit: 6
+      production_risk: 8
+    grade: B
+    rationale: "Very marketable, but five loops compete for scope."
+  - slug: carpet-grand-prix
+    title: Carpet Grand Prix
+    categories: [racing, simulation, card-battler, mobile, premium]
+    description: "Carpet Grand Prix is what it feels like to be eight years old, lying on the living-room"
+    tags: [mobile, pc, premium, f2p, cosmetics, dlc, narrative, base-building, physics, deckbuilder]
+    source: carpet-grand-prix/README.md
+    genre: Tilt-controlled arcade racer / time-attack
+    engine: "None — native Swift + hand-written Metal renderer. See [stage/carpet-grand-prix/production/tech-stack.md](../../stage/carpet-grand-prix/production/tech-stack.md)"
+    platform: iOS 16+ (iPhone 12 and newer)
+    monetization_model: "Premium — $4.99, no ads, no IAP. One paid expansion at $2.99."
+    scores:
+      complexity: 4
+      monetization: 6
+      novelty: 9
+      marketability: 8
+      prototype_fit: 9
+      production_risk: 5
+    grade: A
+    rationale: Excellent prototype fit with an instantly demonstrable hook.
+  - slug: Celestial-Forge
+    title: Celestial Forge
+    categories: [rhythm, extraction, mobile, pc]
+    description: "Celestial Forge is a meditative crafting sandbox where players extract soul fragments from ethereal environments, transmute them into obsidian soul-binding constructs in the Prism Forge, and."
+    tags: [mobile, pc, premium, f2p, cosmetics, dlc, multiplayer, narrative, procedural, collection]
+    source: Celestial-Forge/README.md
+    genre: Crafting Sandbox / Base-Builder with Timeline Mechanics
+    engine: Unity 2023 LTS (URP with custom voxel-chunk renderer)
+    platform: "PC (Steam), Nintendo Switch, Mobile (iOS 14+ / Android 8.0+)"
+    monetization_model: "Freemium -- base game free; cosmetic packs, timeline slots, and Prism Forge skins available for purchase"
+    scores:
+      complexity: 8
+      monetization: 6
+      novelty: 8
+      marketability: 7
+      prototype_fit: 5
+      production_risk: 8
+    grade: C
+    rationale: "Great hook, but timeline sandbox scope is heavy."
+  - slug: celestial-shadowmancer
+    title: Celestial Shadowmancer
+    categories: [rpg, strategy, tactics, rhythm, pc]
+    description: "Celestial Shadowmancer is a strategy-action RPG where you command cosmic energy through an evolving spell-chaining system across eight celestial planes, each governed by a mythical phoenix."
+    tags: [mobile, pc, premium, f2p, cosmetics, dlc, narrative, collection, crafting, physics]
+    source: celestial-shadowmancer/README.md
+    genre: Strategy RPG / Action Combat
+    engine: "Unreal Engine 5.4 (Niagara VFX for aurora/cosmic effects, Lumen for volumetric nebulae)"
+    platform: "PC (Steam/Epic), PlayStation 5, Xbox Series X/S, Nintendo Switch 2 (cloud)"
+    monetization_model: "Premium — $49.99 base, cosmetic DLC post-launch"
+    scores:
+      complexity: 9
+      monetization: 7
+      novelty: 6
+      marketability: 6
+      prototype_fit: 4
+      production_risk: 9
+    grade: C
+    rationale: "Stylish, but less differentiated than its cost."
+  - slug: chaos-summoner
+    title: Chaos Summoner
+    categories: [rpg, tactics, survival, horror, pc]
+    description: Chaos Summoner is a horror survival action RPG where a dying archaeologist descends into the Ancient Void -- a dimension of pure chaos leaking into reality.
+    tags: [mobile, pc, premium, f2p, dlc, multiplayer, narrative, procedural, collection, crafting]
+    source: chaos-summoner/README.md
+    genre: Horror Survival / Action RPG
+    engine: Unreal Engine 5.4 (Nanite + Lumen for void volumetrics and spectral lighting)
+    platform: "PC (Steam/Epic), PlayStation 5, Xbox Series X/S"
+    monetization_model: "Premium -- $39.99 base, no microtransactions"
+    scores:
+      complexity: 8
+      monetization: 7
+      novelty: 8
+      marketability: 7
+      prototype_fit: 5
+      production_risk: 8
+    grade: B
+    rationale: "Strong resource tension, still heavy to build."
+  - slug: charm-and-calculus
+    title: Charm and Calculus
+    categories: [puzzle, rpg, arena, adventure, narrative]
+    description: "You are a first-year summoner at the Ethereal Academy, a floating-island school where monsters are summoned through -- and defeated by -- solving puzzles rooted in."
+    tags: [mobile, pc, premium, f2p, cosmetics, dlc, battle-pass, multiplayer, narrative, procedural]
+    source: charm-and-calculus/README.md
+    genre: Puzzle RPG with educational math mechanics
+    engine: "Unity (URP) -- cross-platform reach, proven mobile optimization, strong Switch 2 support"
+    platform: "PC (Steam/Epic), Nintendo Switch 2, iOS, Android"
+    monetization_model: "Free-to-play with seasonal cosmetic battle pass ($9.99/season) and optional cosmetic familiars; no pay-to-win, no content paywalls"
+    scores:
+      complexity: 6
+      monetization: 8
+      novelty: 9
+      marketability: 9
+      prototype_fit: 8
+      production_risk: 6
+    grade: A
+    rationale: Strong market wedge and measurable learning prototype.
+  - slug: chimeric-garden-sovereign
+    title: Chimeric Garden Sovereign
+    categories: [simulation, tactics, garden-sim, farming, music]
+    description: Chimeric Garden Sovereign is a farming simulation where you tend a magical garden on the back of a colossal sleeping chimera.
+    tags: [mobile, pc, premium, f2p, cosmetics, dlc, multiplayer, narrative, procedural, collection]
+    source: chimeric-garden-sovereign/README.md
+    genre: Farming Simulation / Monster Collection / Sandbox
+    engine: "Unity 6 (URP) — broad platform support, tilemap/2D toolkit, performant on mobile and Switch"
+    platform: "PC (Steam), Nintendo Switch, iOS, Android"
+    monetization_model: "Premium — $24.99 base game, cosmetic garden decoration DLC at $3.99 each"
+    scores:
+      complexity: 7
+      monetization: 8
+      novelty: 9
+      marketability: 8
+      prototype_fit: 7
+      production_risk: 7
+    grade: A
+    rationale: Distinct cozy-systems hook with prototypeable tension.
+  - slug: chrome-wyvern-cyberpunk
+    title: Chrome Wyvern Cyberpunk
+    categories: [horror, arena, roguelite, deckbuilder, card-battler]
+    description: Chrome Wyvern Cyberpunk is a roguelite deckbuilder where you pilot a chrome-plated mechanical wyvern through the rain-soaked skyscraper canyons of a cyberpunk megacity.
+    tags: [mobile, pc, premium, f2p, cosmetics, dlc, multiplayer, narrative, procedural, collection]
+    source: chrome-wyvern-cyberpunk/README.md
+    genre: Roguelite Deckbuilder
+    engine: Unity 2023 LTS (2D card rendering + 3D wyvern combat arena)
+    platform: "PC (Steam), Nintendo Switch, iOS, Android, PlayStation 5"
+    monetization_model: "Premium ($19.99), cosmetic wyvern skins"
+    scores:
+      complexity: 5
+      monetization: 7
+      novelty: 8
+      marketability: 8
+      prototype_fit: 8
+      production_risk: 5
+    grade: A
+    rationale: Clean mechanical novelty in a proven format.
+  - slug: chronicle-of-flight
+    title: Chronicle of Flight
+    categories: [rhythm, music, adventure, narrative, colony-sim]
+    description: Chronicle of Flight is a contemplative narrative adventure where the last phoenix-wraith navigates seven time-dilated sanctuaries suspended between collapse and eternity.
+    tags: [mobile, pc, premium, f2p, dlc, narrative, procedural, collection, crafting, base-building]
+    source: chronicle-of-flight/README.md
+    genre: Narrative Adventure / Metroidvania-Adjacent Exploration
+    engine: Unity 2023 LTS (URP with custom volumetric lighting)
+    platform: "PC (Steam), Nintendo Switch, PlayStation 5, Xbox Series X/S"
+    monetization_model: "Premium -- $24.99 USD base, no microtransactions"
+    scores:
+      complexity: 6
+      monetization: 6
+      novelty: 8
+      marketability: 6
+      prototype_fit: 6
+      production_risk: 6
+    grade: B
+    rationale: "Beautiful concept, narrower commercial lane."
+  - slug: Chronomancer-Ascension
+    title: Chronomancer's Ascension
+    categories: [puzzle, rpg, rhythm, adventure, narrative]
+    description: "Chronomancer's Ascension is a premium single-player Action RPG where the player manipulates time as a weapon, a puzzle-solving tool, and a narrative lens."
+    tags: [pc, premium, f2p, dlc, battle-pass, multiplayer, narrative, collection, crafting, base-building]
+    source: Chronomancer-Ascension/README.md
+    genre: Action RPG / Temporal Puzzle-Combat
+    engine: Unspecified
+    platform: Unspecified
+    monetization_model: Unspecified
+    scores:
+      complexity: 9
+      monetization: 6
+      novelty: 6
+      marketability: 6
+      prototype_fit: 4
+      production_risk: 9
+    grade: C
+    rationale: Familiar pitch with expensive execution needs.
+  - slug: chronomancer-reflection
+    title: Chronomancer's Reflection
+    categories: [puzzle, rpg, arena, pc, premium]
+    description: "Chronomancer's Reflection is an action RPG where a time-wielding mage ascends through seven abandoned celestial planes to defeat the shadow dragon Vythraxis, who drains the essence."
+    tags: [mobile, pc, premium, f2p, cosmetics, dlc, multiplayer, narrative, collection, base-building]
+    source: chronomancer-reflection/README.md
+    genre: Action RPG / Puzzle-Combat Hybrid
+    engine: "Unreal Engine 5.4 (Niagara for temporal VFX, Lumen for celestial lighting)"
+    platform: "PC (Steam/Epic/Game Pass), Cross-platform with Cloud Saves"
+    monetization_model: "Premium -- $29.99 base, no microtransactions"
+    scores:
+      complexity: 8
+      monetization: 7
+      novelty: 6
+      marketability: 6
+      prototype_fit: 5
+      production_risk: 8
+    grade: C
+    rationale: "Playable hook exists, but concept overlaps heavily."
+  - slug: chronomancer-workshop
+    title: Chronomancer Workshop
+    categories: [puzzle, simulation, strategy, tactics, automation]
+    description: Chronomancer Workshop is a time-bending simulation where you manage a workshop of chronomancers crafting temporal artifacts across multiple eras while defending against paradox monsters that threaten.
+    tags: [mobile, pc, premium, f2p, dlc, multiplayer, narrative, procedural, collection, crafting]
+    source: chronomancer-workshop/README.md
+    genre: Simulation / Strategy (Time-Management Crafting)
+    engine: Unity 2024 LTS (2D hand-painted art with procedural temporal VFX)
+    platform: "PC (Steam), iOS 14+, Android 10+ (Cross-platform cloud saves)"
+    monetization_model: "Premium — $14.99 base, optional expansion DLC"
+    scores:
+      complexity: 7
+      monetization: 7
+      novelty: 8
+      marketability: 7
+      prototype_fit: 6
+      production_risk: 7
+    grade: B
+    rationale: Good systems premise with contained prototype path.
+  - slug: chronomancers-blink
+    title: Chronomancer's Blink
+    categories: [puzzle, rpg, survival, narrative, metroidvania]
+    description: "Chronomancer's Blink is a narrative action RPG where a chronomancer navigates time-fractured realms, manipulating temporal anomalies to solve puzzles, resurrect lost souls, and evade the ethereal."
+    tags: [mobile, pc, premium, f2p, cosmetics, dlc, multiplayer, narrative, procedural, collection]
+    source: chronomancers-blink/README.md
+    genre: Narrative Action RPG / Metroidvania
+    engine: Unreal Engine 5.4 (Nanite + Lumen for temporal VFX volumetrics)
+    platform: "PC (Steam/Epic), PlayStation 5, Xbox Series X/S"
+    monetization_model: "Premium — $59.99 base, optional cosmetic DLC"
+    scores:
+      complexity: 10
+      monetization: 7
+      novelty: 6
+      marketability: 6
+      prototype_fit: 3
+      production_risk: 10
+    grade: C
+    rationale: Ambitious but crowded and expensive.
+  - slug: chronomancers-respite
+    title: Chronomancer's Respite
+    categories: [puzzle, tactics, adventure, metroidvania, mobile]
+    description: Chronomancer's Respite is a time-bending action-adventure where the last chronomancer navigates collapsing interdimensional spaces to collect temporal fragments and reconstruct the forbidden paradox before a tarrasque's.
+    tags: [mobile, pc, premium, f2p, cosmetics, dlc, battle-pass, narrative, collection, crafting]
+    source: chronomancers-respite/README.md
+    genre: Action-Adventure / Metroidvania-Adjacent Exploration
+    engine: "Unreal Engine 5.4 (Nanite for dimensional geometry, Lumen for temporal lighting shifts)"
+    platform: "PC (Steam/Epic), PlayStation 5, Xbox Series X/S"
+    monetization_model: "Premium — $59.99 base, story DLC expansions ($14.99 each, 2 planned)"
+    scores:
+      complexity: 10
+      monetization: 7
+      novelty: 7
+      marketability: 6
+      prototype_fit: 3
+      production_risk: 10
+    grade: C
+    rationale: "Interesting, but likely too broad for first slice."
+  - slug: chronos-orb
+    title: Chronos Orb
+    categories: [rpg, strategy, tactics, roguelike, card-battler]
+    description: "Chronos Orb is a roguelike card battler where you manipulate time to reshape the battlefield, then battle leviathans using time-bending tactics inside procedurally generated crystalline palaces."
+    tags: [mobile, pc, premium, f2p, cosmetics, dlc, multiplayer, narrative, procedural, collection]
+    source: chronos-orb/README.md
+    genre: Roguelike / Card Battler / Strategy RPG
+    engine: Unity 2023 LTS (2D tile-based with 3D lighting pass)
+    platform: "PC (Steam, GOG), Nintendo Switch"
+    monetization_model: "Premium — $29.99 base, $14.99 DLC expansions"
+    scores:
+      complexity: 6
+      monetization: 8
+      novelty: 8
+      marketability: 8
+      prototype_fit: 8
+      production_risk: 6
+    grade: A
+    rationale: Strong validation path in a proven indie genre.
+  - slug: cinnabar-circuit
+    title: Cinnabar Circuit
+    categories: [racing, rhythm, platformer, pc, premium]
+    description: Cinnabar Circuit is a high-velocity aerial racing game where phoenix-mounted riders tear through floating volcanic track circuits suspended above a sea of magma.
+    tags: [mobile, pc, premium, f2p, cosmetics, dlc, multiplayer, narrative, procedural, collection]
+    source: cinnabar-circuit/README.md
+    genre: Racing / Aerial Platformer
+    engine: "Unreal Engine 5.4 (Niagara for volumetric fire/lava, Nanite for track geometry)"
+    platform: "PC (Steam), PlayStation 5, Xbox Series X/S, Nintendo Switch (cloud-native port)"
+    monetization_model: "Premium — $29.99 base, track pack DLC"
+    scores:
+      complexity: 8
+      monetization: 7
+      novelty: 8
+      marketability: 8
+      prototype_fit: 5
+      production_risk: 8
+    grade: B
+    rationale: "Strong visual pitch, tough racing production bar."
+  - slug: cobalt-crusade
+    title: Cobalt Crusade
+    categories: [puzzle, survival, extraction, pc, premium]
+    description: "Cobalt Crusade answers a question no extraction shooter has asked: what if your squad's most powerful weapon was each other?"
+    tags: [pc, premium, f2p, cosmetics, battle-pass, multiplayer, narrative, procedural, collection, crafting]
+    source: cobalt-crusade/README.md
+    genre: Co-op Extraction Shooter
+    engine: Unspecified
+    platform: "PC (Steam), PlayStation 5, Xbox Series X/S"
+    monetization_model: Unspecified
+    scores:
+      complexity: 9
+      monetization: 8
+      novelty: 7
+      marketability: 9
+      prototype_fit: 5
+      production_risk: 9
+    grade: B
+    rationale: "Marketable co-op hook, but online execution risk is high."
+  - slug: cockatrice-jam-studio
+    title: Cockatrice Jam Studio
+    categories: [mystery, simulation, rhythm, music, mobile]
+    description: "You are a cockatrice -- half chicken, half dragon, all chef -- piloting a magical food truck across floating sky islands, cooking fantasy dishes by performing."
+    tags: [mobile, pc, premium, cosmetics, dlc, narrative, collection, crafting, physics, deckbuilder]
+    source: cockatrice-jam-studio/README.md
+    genre: Unspecified
+    engine: Unspecified
+    platform: Unspecified
+    monetization_model: Unspecified
+    scores:
+      complexity: 5
+      monetization: 6
+      novelty: 8
+      marketability: 8
+      prototype_fit: 8
+      production_risk: 5
+    grade: A
+    rationale: "Compact, charming, and easy to test quickly."
+  - slug: coral-displacer-pack
+    title: Coral Displacer Pack
+    categories: [strategy, tactics, survival, pc, premium]
+    description: "Coral Displacer Pack is an open-world monster collection game where a berserker exile bonds with coral-mutated creatures in a primordial bayou, building a pack whose abilities."
+    tags: [mobile, pc, premium, f2p, cosmetics, dlc, battle-pass, multiplayer, narrative, collection]
+    source: coral-displacer-pack/README.md
+    genre: Monster Collection / Open World Survival
+    engine: "Unreal Engine 5.4 (Nanite for dense bayou foliage, Lumen for volumetric coral glow)"
+    platform: "PC (Steam/Epic), PlayStation 5, Xbox Series X/S, Nintendo Switch (cloud version)"
+    monetization_model: "Premium $49.99 base, cosmetic DLC only, no microtransactions"
+    scores:
+      complexity: 10
+      monetization: 7
+      novelty: 8
+      marketability: 7
+      prototype_fit: 3
+      production_risk: 10
+    grade: C
+    rationale: Novel ecology angle buried under huge scope.
+  - slug: coral-necromancers-tide
+    title: Coral Necromancer's Tide
+    categories: [mystery, simulation, strategy, tactics, survival]
+    description: "Coral Necromancer's Tide is an underwater colony simulation where the player commands a marine necromancer who raises skeletal sea creatures to build, sustain, and defend a."
+    tags: [mobile, pc, premium, f2p, cosmetics, dlc, multiplayer, narrative, procedural, collection]
+    source: coral-necromancers-tide/README.md
+    genre: Colony Sim / Survival Strategy
+    engine: "Unity 6 (DOTS ECS for skeleton AI, VFX Graph for underwater volumetrics)"
+    platform: "PC (Steam), macOS (Apple Silicon native)"
+    monetization_model: "Premium -- $29.99 base, free biome updates, paid cosmetic DLC"
+    scores:
+      complexity: 9
+      monetization: 7
+      novelty: 8
+      marketability: 7
+      prototype_fit: 4
+      production_risk: 9
+    grade: C
+    rationale: "Strong theme, but colony simulation is unforgiving."
+  - slug: coral-tycoon-abyss
+    title: Coral Tycoon of the Abyss
+    categories: [tycoon, simulation, strategy, idle, mobile]
+    description: Coral Tycoon of the Abyss is a meditative idle tycoon where you build and manage an underwater resort city at the edge of a kraken-inhabited abyss.
+    tags: [mobile, pc, premium, f2p, cosmetics, dlc, battle-pass, multiplayer, narrative, collection]
+    source: coral-tycoon-abyss/README.md
+    genre: Idle Tycoon / Simulation
+    engine: "Unity 2023 LTS (URP) — lightweight mobile rendering, shader graph for bioluminescence, addressables for content streaming"
+    platform: "Mobile (iOS 14+ / Android 10+), PC (Steam), Web Browser (WebGL)"
+    monetization_model: "Free-to-play — optional ad-removal ($4.99), cosmetic building skins ($0.99–$4.99), premium coral packs ($1.99–$9.99)"
+    scores:
+      complexity: 5
+      monetization: 8
+      novelty: 7
+      marketability: 8
+      prototype_fit: 9
+      production_risk: 5
+    grade: A
+    rationale: Best low-risk monetization fit in C.
+  - slug: coral-wyrms-judgment
+    title: Coral Wyrm's Judgment
+    categories: [rpg, tactics, pc, premium]
+    description: "Coral Wyrm's Judgment is a turn-based tactical RPG where you command a fractured order of aquatic knights across submerged coral citadels, fighting grid-based battles against leviathan-class."
+    tags: [mobile, pc, premium, f2p, cosmetics, dlc, narrative, procedural, collection, crafting]
+    source: coral-wyrms-judgment/README.md
+    genre: Turn-Based Tactical RPG
+    engine: "Unity 6 (URP) — strong multi-platform support, proven grid-based combat frameworks, efficient 2D/3D hybrid rendering for coral biomes"
+    platform: "PC (Steam), Nintendo Switch, PlayStation 5"
+    monetization_model: "Premium — $34.99 base, cosmetic DLC armor sets post-launch"
+    scores:
+      complexity: 7
+      monetization: 7
+      novelty: 7
+      marketability: 7
+      prototype_fit: 6
+      production_risk: 7
+    grade: B
+    rationale: Solid but less explosive than top tactics concepts.
+  - slug: crimson-auction
+    title: Crimson Auction
+    categories: [tycoon, strategy, narrative, mobile, pc]
+    description: "Crimson Auction is a narrative strategy game where you manage an underground auction house in Aethermere, a floating sky city that caters exclusively to monsters, spirits,."
+    tags: [mobile, pc, premium, f2p, cosmetics, dlc, multiplayer, narrative, collection, crafting]
+    source: crimson-auction/README.md
+    genre: Narrative Strategy / Social Deduction Tycoon
+    engine: Unity 6 (URP for cross-platform UI scalability)
+    platform: "PC (Steam), Nintendo Switch, iOS, Android"
+    monetization_model: Premium $24.99 (PC/Switch) / Free prologue + $9.99 unlock (Mobile)
+    scores:
+      complexity: 6
+      monetization: 8
+      novelty: 9
+      marketability: 8
+      prototype_fit: 8
+      production_risk: 6
+    grade: A
+    rationale: "Sharp hook, compact loop, good premium/mobile path."
+  - slug: crimson-forge-spellsword
+    title: Crimson Forge Spellsword
+    categories: [rpg, tactics, arena, soulslike, pc]
+    description: Crimson Forge Spellsword is a methodical action RPG where a spellsword operates across two planes of existence simultaneously -- a physical warrior swinging a crimson grappling.
+    tags: [mobile, pc, premium, dlc, narrative, procedural, collection, crafting, base-building, physics]
+    source: crimson-forge-spellsword/README.md
+    genre: Action RPG / Soulslike with Crafting
+    engine: "Unreal Engine 5.4 (Nanite for underworld environments, Lumen for volumetric rift lighting)"
+    platform: "PC (Steam/Epic), PlayStation 5, Xbox Series X/S"
+    monetization_model: "Premium -- $49.99 base, no microtransactions"
+    scores:
+      complexity: 10
+      monetization: 7
+      novelty: 8
+      marketability: 7
+      prototype_fit: 3
+      production_risk: 10
+    grade: C
+    rationale: "Compelling systems, but production risk dominates."
+  - slug: crimson-spell-blade
+    title: Crimson Spellblade
+    categories: [roguelite, card-battler, rhythm, pc, premium]
+    description: Crimson Spellblade is a roguelite action game where every kill rewires your weapon.
+    tags: [pc, premium, f2p, cosmetics, dlc, battle-pass, multiplayer, narrative, collection, crafting]
+    source: crimson-spell-blade/README.md
+    genre: Unspecified
+    engine: Unspecified
+    platform: Unspecified
+    monetization_model: Unspecified
+    scores:
+      complexity: 6
+      monetization: 7
+      novelty: 7
+      marketability: 7
+      prototype_fit: 8
+      production_risk: 6
+    grade: B
+    rationale: "Good prototype shape, needs sharper market distinction."
+  - slug: crystal-wyvern-symphony
+    title: Crystal Wyvern Symphony
+    categories: [rhythm, music, mobile, pc, premium]
+    description: "Crystal Wyvern Symphony is a rhythm action game where you conduct an orchestra of five crystal wyverns, each embodying an instrument family -- strings, brass, percussion,."
+    tags: [mobile, pc, premium, dlc, battle-pass, multiplayer, narrative, crafting, base-building, physics]
+    source: crystal-wyvern-symphony/README.md
+    genre: Rhythm Action / Music Creation
+    engine: "Unity (URP) -- strong multi-platform support, Audio DSP graph, shader graph for crystal resonance visuals"
+    platform: "PC (Steam/Epic), Nintendo Switch, PlayStation 5, Mobile (iOS/Android)"
+    monetization_model: "Premium -- $29.99 base, song pack DLC at $7.99 per 10-song pack"
+    scores:
+      complexity: 7
+      monetization: 8
+      novelty: 8
+      marketability: 8
+      prototype_fit: 7
+      production_risk: 7
+    grade: B
+    rationale: "Strong DLC fit, but audio tooling raises risk."
+  - slug: cursed-paladin-bayou
+    title: Cursed Paladin Bayou
+    categories: [rpg, 4x, soulslike, pc, premium]
+    description: "Cursed Paladin Bayou is a methodical action RPG where a cursed holy warrior navigates a flooded, rotting Louisiana bayou using a shield that drinks the blood."
+    tags: [mobile, pc, premium, f2p, dlc, multiplayer, narrative, procedural, collection, crafting]
+    source: cursed-paladin-bayou/README.md
+    genre: Action RPG / Soulslike
+    engine: Unreal Engine 5.4 (Nanite + Lumen for bayou volumetrics)
+    platform: "PC (Steam/Epic), PlayStation 5, Xbox Series X/S"
+    monetization_model: "Premium — $44.99 base, no microtransactions"
+    scores:
+      complexity: 9
+      monetization: 7
+      novelty: 6
+      marketability: 7
+      prototype_fit: 4
+      production_risk: 9
+    grade: C
+    rationale: "Cool tone, but derivative and costly."
+  - slug: displacer-beast-garden
+    title: Displacer Beast Garden
+    categories: [simulation, garden-sim, music, pc, premium]
+    description: Displacer Beast Garden is a meditative simulation where you play as a druid who claims a fractured floating island phasing between three parallel realities — a.
+    tags: [mobile, pc, premium, cosmetics, dlc, multiplayer, narrative, procedural, collection, crafting]
+    source: displacer-beast-garden/README.md
+    genre: Simulation / Building / Creature Collection
+    engine: "Unity 6 (URP) — tri-phase rendering pipeline, cross-platform Switch 2 optimization"
+    platform: "PC (Steam), Nintendo Switch 2, PlayStation 5"
+    monetization_model: "Premium $34.99, free creature and biome updates, cosmetic structure packs ($4.99–$9.99)"
+    scores:
+      complexity: 8
+      monetization: 8
+      novelty: 8
+      marketability: 8
+      prototype_fit: 6
+      production_risk: 7
+    grade: B
+    rationale: "Strong cozy hook, but tri-phase simulation and large creature scope raise cost."
+  - slug: displacer-beast-sanctuary
+    title: Displacer Beast Sanctuary
+    categories: [mystery, simulation, cozy, garden-sim, music]
+    description: "Displacer Beast Sanctuary is a meditative creature-care simulation where you inherit an abandoned sky realm sanctuary dedicated to rehabilitating injured displacer beasts -- majestic, shy creatures."
+    tags: [mobile, pc, premium, f2p, cosmetics, dlc, narrative, collection, crafting, base-building]
+    source: displacer-beast-sanctuary/README.md
+    genre: Cozy Simulation / Monster Sanctuary Builder
+    engine: "Unity 6 (URP) -- cross-platform, mobile-optimized rendering, dynamic sky system"
+    platform: "PC (Steam), Nintendo Switch 2, iOS, Android"
+    monetization_model: Premium $24.99 on PC and console. Free-to-play on mobile with one-time $9.99 unlock for full sanctuary. Cosmetic DLC only.
+    scores:
+      complexity: 7
+      monetization: 8
+      novelty: 7
+      marketability: 9
+      prototype_fit: 7
+      production_risk: 6
+    grade: A
+    rationale: Clear cozy audience and validateable care loop if species count is constrained.
+  - slug: djinni-gravity-wells
+    title: Djinni Gravity Wells
+    categories: [puzzle, platformer, pc, premium]
+    description: "Djinni Gravity Wells is a spatial puzzle platformer where a freed djinni, trapped in mortal form as punishment, navigates collapsed celestial temples by placing temporary gravity."
+    tags: [mobile, pc, premium, f2p, cosmetics, dlc, multiplayer, narrative, procedural, collection]
+    source: djinni-gravity-wells/README.md
+    genre: Puzzle Platformer / Physics Manipulation
+    engine: "Unity 6 (URP) — deterministic physics via custom fixed-step solver, strong Switch support"
+    platform: "PC (Steam/Epic), Nintendo Switch, PlayStation 5, Xbox Series X/S"
+    monetization_model: "Premium — $29.99 base, no microtransactions"
+    scores:
+      complexity: 6
+      monetization: 7
+      novelty: 7
+      marketability: 7
+      prototype_fit: 9
+      production_risk: 5
+    grade: A
+    rationale: Core mechanic is easy to prototype and has a clean player promise.
+  - slug: djinns-empire
+    title: Djinn's Empire
+    categories: [simulation, strategy, pc, premium]
+    description: "Djinn's Empire is a grand strategy city builder where you play as a newly freed djinn building a desert kingdom from nothing, armed with wish-granting powers."
+    tags: [mobile, pc, premium, f2p, cosmetics, dlc, multiplayer, narrative, procedural, crafting]
+    source: djinns-empire/README.md
+    genre: Grand Strategy / City Builder
+    engine: "Unity 2023 LTS (HDRP for desert volumetrics, DOTS for simulation scale)"
+    platform: "PC (Steam), macOS"
+    monetization_model: "Premium -- $29.99 base, expansion packs"
+    scores:
+      complexity: 9
+      monetization: 7
+      novelty: 7
+      marketability: 7
+      prototype_fit: 4
+      production_risk: 8
+    grade: C
+    rationale: "Good theme, but grand strategy scope is slow to validate and expensive to finish."
+  - slug: dread-moth-labs
+    title: Dread Moth Labs
+    categories: [puzzle, tactics, survival, horror, card-battler]
+    description: Dread Moth Labs is a survival horror game where your emotions are a weapon turned against you.
+    tags: [mobile, pc, premium, cosmetics, dlc, narrative, collection, crafting, base-building, physics]
+    source: dread-moth-labs/README.md
+    genre: "Survival Horror / Base Building & Crafting"
+    engine: Unreal Engine 5.4 (Nanite + Lumen for volumetric fog and bioluminescence)
+    platform: "PC (Steam/Epic), PlayStation 5, Xbox Series X/S"
+    monetization_model: "Premium — $39.99 base, optional cosmetic shelter themes ($4.99–$9.99)"
+    scores:
+      complexity: 8
+      monetization: 8
+      novelty: 8
+      marketability: 8
+      prototype_fit: 5
+      production_risk: 8
+    grade: B
+    rationale: "Memorable survival hook, but emotional AI and premium horror polish are risky."
+  - slug: dread-pollen-collective
+    title: Dread Pollen Collective
+    categories: [tactics, survival, horror, colony-sim, extraction]
+    description: "Dread Pollen Collective is a horror colony management game where you command a settlement of beekeepers trapped inside a primeval forest whose flowers have become sentient,."
+    tags: [mobile, pc, premium, dlc, battle-pass, multiplayer, narrative, procedural, collection, crafting]
+    source: dread-pollen-collective/README.md
+    genre: Horror Survival / Colony Management
+    engine: "Unreal Engine 5.4 (Nanite for dense forest geometry, Lumen for volumetric fog and bioluminescent pollen lighting)"
+    platform: "PC (Steam), PlayStation 5, Xbox Series X/S"
+    monetization_model: "Premium $34.99, free difficulty modes and challenge maps post-launch"
+    scores:
+      complexity: 9
+      monetization: 8
+      novelty: 8
+      marketability: 8
+      prototype_fit: 4
+      production_risk: 9
+    grade: C
+    rationale: "Compelling pitch, but colony AI, mutation systems, and horror presentation compound risk."
+  - slug: dreadbotanist
+    title: Dreadbotanist
+    categories: [puzzle, tycoon, simulation, strategy, horror]
+    description: Dreadbotanist is a greenhouse management simulation where the player cultivates and sells rift-corrupted flora on a floating island positioned directly above a luminous kraken rift.
+    tags: [mobile, pc, premium, f2p, cosmetics, dlc, multiplayer, narrative, procedural, collection]
+    source: dreadbotanist/README.md
+    genre: Simulation Tycoon / Base Building with Horror Elements
+    engine: Unity 6 (URP — 2D isometric with layered depth lighting)
+    platform: "PC (Steam), Nintendo Switch 2, PlayStation 5, Mobile (iOS/Android)"
+    monetization_model: "Premium — $19.99 base, cosmetic greenhouse DLC"
+    scores:
+      complexity: 7
+      monetization: 7
+      novelty: 8
+      marketability: 8
+      prototype_fit: 7
+      production_risk: 6
+    grade: A
+    rationale: Cozy farm plus contained horror is distinctive and prototypeable with a small loop.
+  - slug: dryads-monsoon-requiem
+    title: Dryad's Monsoon Requiem
+    categories: [tactics, rhythm, music, adventure, mobile]
+    description: "Dryad's Monsoon Requiem is a rhythm-action adventure where you play as Sylvari, a dryad bard whose songs reshape the living rainforest around her."
+    tags: [mobile, pc, premium, f2p, cosmetics, dlc, multiplayer, narrative, procedural, collection]
+    source: dryads-monsoon-requiem/README.md
+    genre: Rhythm / Action Adventure
+    engine: "Unity 6 (URP) — custom audio-reactive shader pipeline, strong multi-platform audio latency control"
+    platform: "PC (Steam), PlayStation 5, Nintendo Switch"
+    monetization_model: "Premium $24.99 base, cosmetic instrument skins ($2.99-$4.99), soundtrack expansion packs ($7.99)"
+    scores:
+      complexity: 8
+      monetization: 7
+      novelty: 8
+      marketability: 7
+      prototype_fit: 6
+      production_risk: 8
+    grade: B
+    rationale: "Strong identity, but rhythm latency and dynamic music increase execution risk."
+  - slug: dryads-ritual-arena
+    title: Dryad's Ritual Arena
+    categories: [puzzle, rpg, tactics, arena, pc]
+    description: "Dryad's Ritual Arena is a four-player co-op dungeon crawler where each player embodies a dryad bound to a sacred tree -- Oak, Willow, Birch, or Thorn."
+    tags: [mobile, pc, premium, f2p, cosmetics, dlc, battle-pass, multiplayer, narrative, procedural]
+    source: dryads-ritual-arena/README.md
+    genre: Social Co-op Dungeon Crawler / Action RPG
+    engine: "Unreal Engine 5.4 (Nanite for organic environments, Lumen for bioluminescent lighting)"
+    platform: "PC (Steam/Epic), PlayStation 5, Xbox Series X/S, Nintendo Switch"
+    monetization_model: Premium $34.99 base with seasonal dungeon expansions ($9.99 each)
+    scores:
+      complexity: 9
+      monetization: 8
+      novelty: 7
+      marketability: 8
+      prototype_fit: 4
+      production_risk: 9
+    grade: C
+    rationale: "Social co-op is marketable, but networking, content cadence, and party balance are heavy."
+  - slug: echo-of-manifestation
+    title: Echo of Manifestation
+    categories: [tactics, survival, horror, roguelite, narrative]
+    description: Echo of Manifestation is a survival horror roguelite where every item you transmute spawns a shadowy chimera wielding a warped version of your own creation against.
+    tags: [mobile, pc, premium, f2p, dlc, narrative, procedural, collection, crafting, base-building]
+    source: echo-of-manifestation/README.md
+    genre: Survival Horror / Roguelite
+    engine: Unreal Engine 5.4 (Nanite + Lumen for twilight volumetrics and shadow rendering)
+    platform: "PC (Steam/Epic), PlayStation 5, Xbox Series X/S, Nintendo Switch"
+    monetization_model: "Premium — $34.99 base, no microtransactions"
+    scores:
+      complexity: 7
+      monetization: 8
+      novelty: 9
+      marketability: 8
+      prototype_fit: 8
+      production_risk: 6
+    grade: A
+    rationale: Excellent core mechanic with a small prototype path and strong trailer logic.
+  - slug: echoes-of-the-abyss
+    title: Echoes of the Abyss
+    categories: [puzzle, detective, mystery, racing, survival]
+    description: "Echoes of the Abyss is a first-person survival horror game set in a cursed deep-sea research station where sanity-eroding entities hunt you through pitch-black corridors, flooded."
+    tags: [mobile, pc, premium, f2p, cosmetics, dlc, narrative, collection, crafting, deckbuilder]
+    source: echoes-of-the-abyss/README.md
+    genre: Survival Horror / Detective Mystery
+    engine: "Unreal Engine 5.4 (Nanite for environment density, Lumen for dynamic underwater lighting)"
+    platform: "PC (Steam/Epic), PlayStation 5, Xbox Series X/S"
+    monetization_model: "Premium $39.99 — complete standalone experience, no microtransactions"
+    scores:
+      complexity: 8
+      monetization: 8
+      novelty: 7
+      marketability: 8
+      prototype_fit: 5
+      production_risk: 8
+    grade: B
+    rationale: "Pitch is clear, but underwater horror needs expensive atmosphere and encounter tuning."
+  - slug: ember-owlbear-sanctuary
+    title: Ember Owlbear Sanctuary
+    categories: [simulation, cozy, garden-sim, farming, rhythm]
+    description: Ember Owlbear Sanctuary is a volcanic creature-rehabilitation sim where the player inherits a crumbling caldera sanctuary and transforms it into a refuge for ember owlbears --.
+    tags: [mobile, pc, premium, f2p, cosmetics, dlc, narrative, procedural, collection, crafting]
+    source: ember-owlbear-sanctuary/README.md
+    genre: Cozy Simulation / Creature Sanctuary Builder
+    engine: "Unity 2023 LTS (C#) -- cross-platform support, 2D/3D hybrid rendering for creature animations against 3D volcanic environments, mature mobile pipeline"
+    platform: Unspecified
+    monetization_model: Premium ($19.99) + cosmetic den decoration packs ($4.99 each)
+    scores:
+      complexity: 6
+      monetization: 8
+      novelty: 7
+      marketability: 9
+      prototype_fit: 8
+      production_risk: 5
+    grade: A
+    rationale: Very clear cozy niche with low-friction prototype and ethical cosmetic upside.
+  - slug: emerald-puzzle-colosseum
+    title: Emerald Puzzle Colosseum
+    categories: [puzzle, rpg, arena, deckbuilder, mobile]
+    description: "Emerald Puzzle Colosseum is a competitive puzzle brawler where two players share one board in real-time, matching emerald crystals, jade tiles, and enchanted stones to charge."
+    tags: [mobile, pc, premium, f2p, cosmetics, dlc, battle-pass, multiplayer, narrative, procedural]
+    source: emerald-puzzle-colosseum/README.md
+    genre: Puzzle RPG / Competitive Multiplayer
+    engine: Unity 2023 LTS (2D tile-based renderer + Netcode for GameObjects)
+    platform: "PC (Steam), iOS/Android (cross-play), Nintendo Switch"
+    monetization_model: "Free-to-play — cosmetic battle pass ($9.99/season), optional gear unlock packs"
+    scores:
+      complexity: 6
+      monetization: 6
+      novelty: 7
+      marketability: 8
+      prototype_fit: 8
+      production_risk: 7
+    grade: B
+    rationale: "Core match validates fast, but F2P economy and live PvP add risk."
+  - slug: essence-garrison
+    title: Essence Garrison
+    categories: [puzzle, simulation, rpg, strategy, tactics]
+    description: "Essence Garrison is a strategy simulation where a luminous berserker commands a coral fortress on the edge of a withering bayou, building organic defenses from harvested."
+    tags: [mobile, pc, premium, f2p, dlc, narrative, procedural, collection, crafting, physics]
+    source: essence-garrison/README.md
+    genre: Strategy Simulation / Tower Defense RPG
+    engine: "Unity 2023 LTS (2D/3D hybrid — tactical overworld in 3D, fortress defense in isometric 2D)"
+    platform: "PC (Steam), Nintendo Switch"
+    monetization_model: "Premium — $29.99 base, no microtransactions"
+    scores:
+      complexity: 8
+      monetization: 7
+      novelty: 8
+      marketability: 7
+      prototype_fit: 6
+      production_risk: 7
+    grade: B
+    rationale: "Paranoia layered onto defense is sharp, but systems density is meaningful."
+  - slug: forge-of-elegance
+    title: Forge of Elegance
+    categories: [simulation, survival, rhythm, mobile, pc]
+    description: Forge of Elegance is a couture atelier simulation set in a magical steampunk city where you design enchanted garments for mythical clientele.
+    tags: [mobile, pc, premium, cosmetics, dlc, multiplayer, narrative, procedural, collection, crafting]
+    source: forge-of-elegance/README.md
+    genre: Simulation / Crafting / Building
+    engine: "Unity 6 (URP) — strong multi-platform support, shader graph for fabric simulation, proven mobile pipeline"
+    platform: "PC (Steam, GOG), Nintendo Switch, Mobile (iOS/Android)"
+    monetization_model: Premium $29.99 with optional cosmetic DLC
+    scores:
+      complexity: 6
+      monetization: 8
+      novelty: 9
+      marketability: 9
+      prototype_fit: 8
+      production_risk: 5
+    grade: A
+    rationale: Underserved fantasy-fashion angle has strong audience clarity and contained prototype scope.
+  - slug: fractal-berserker
+    title: Fractal Berserker
+    categories: [strategy, horror, roguelike, deckbuilder, card-battler]
+    description: Fractal Berserker is a roguelike deckbuilder where a berserker who has absorbed a fractal rift builds gravity-etched combat rune decks across runs that nest infinitely.
+    tags: [mobile, pc, premium, f2p, cosmetics, dlc, multiplayer, narrative, procedural, collection]
+    source: fractal-berserker/README.md
+    genre: Roguelike Deckbuilder / Action Strategy
+    engine: "Unity 6 (URP) — cross-platform reach, 2D card rendering pipeline, proven on mobile and Switch"
+    platform: "PC (Steam), Nintendo Switch 2, iOS, Android"
+    monetization_model: "Premium $24.99 — cosmetic rune skin DLC only, no gameplay-affecting purchases"
+    scores:
+      complexity: 6
+      monetization: 7
+      novelty: 8
+      marketability: 8
+      prototype_fit: 8
+      production_risk: 6
+    grade: A
+    rationale: "Deckbuilder prototype is cheap, and fractal maps give it a useful differentiator."
+  - slug: fractal-druids-crimson-scar
+    title: Fractal Druid's Crimson Scar
+    categories: [rpg, rhythm, metroidvania, pc, premium]
+    description: Fractal Druid's Crimson Scar is a combat-first action RPG where a luminous druid wields a cursed katana through a fractal floating island that rewrites itself every.
+    tags: [mobile, pc, premium, f2p, cosmetics, dlc, multiplayer, narrative, procedural, collection]
+    source: fractal-druids-crimson-scar/README.md
+    genre: Action RPG / Metroidvania
+    engine: "Godot 4.3 (custom fractal map generator, 2D skeletal animation)"
+    platform: "PC (Steam), PlayStation 5, Nintendo Switch 2"
+    monetization_model: "Premium -- $29.99 base, free content updates, cosmetic DLC only"
+    scores:
+      complexity: 8
+      monetization: 7
+      novelty: 7
+      marketability: 7
+      prototype_fit: 5
+      production_risk: 8
+    grade: C
+    rationale: "Cool combat fantasy, but 200 combos and reshaping maps are large-scope promises."
+  - slug: fractured-melody-bayou
+    title: Fractured Melody Bayou
+    categories: [puzzle, survival, horror, rhythm, music]
+    description: Fractured Melody Bayou is a survival horror metroidvania where a fractured oracle navigates a sentient bayou that rewrites itself in response to her emotional state.
+    tags: [mobile, pc, premium, f2p, dlc, narrative, procedural, collection, crafting, base-building]
+    source: fractured-melody-bayou/README.md
+    genre: Survival Horror / Metroidvania
+    engine: Unreal Engine 5.4 (Nanite + Lumen for bayou volumetrics and dual-layer rendering)
+    platform: "PC (Steam/Epic), PlayStation 5, Xbox Series X/S"
+    monetization_model: "Premium — $34.99 base, no microtransactions"
+    scores:
+      complexity: 9
+      monetization: 8
+      novelty: 8
+      marketability: 7
+      prototype_fit: 5
+      production_risk: 9
+    grade: C
+    rationale: "Distinctive, but dual-layer world, music systems, and horror scope make it risky."
+  - slug: fractured-sky-spellblade
+    title: "Fractured Sky: Spellblade"
+    categories: [puzzle, rpg, music, narrative, metroidvania]
+    description: "Fractured Sky: Spellblade is a momentum-driven action RPG where a berserker-spellsword swings through a shattered sky realm using a plasma grappling hook that is simultaneously a."
+    tags: [mobile, pc, premium, f2p, cosmetics, dlc, narrative, collection, crafting, base-building]
+    source: fractured-sky-spellblade/README.md
+    genre: Action RPG / Metroidvania
+    engine: "Unreal Engine 5.4 (Nanite for island geometry, Lumen for volumetric sky lighting)"
+    platform: "PC (Steam), PlayStation 5, Nintendo Switch 2"
+    monetization_model: "Premium -- $29.99 base, free demo covering first two sky islands"
+    scores:
+      complexity: 8
+      monetization: 8
+      novelty: 8
+      marketability: 8
+      prototype_fit: 6
+      production_risk: 8
+    grade: B
+    rationale: "High-pitch movement hook, but traversal combat polish is unforgiving."
+  - slug: frost-bard-reckoning
+    title: Frost Bard's Reckoning
+    categories: [rpg, tactics, arena, rhythm, music]
+    description: Frost Bard's Reckoning is a rhythm action RPG where you play a wandering frost bard whose songs literally freeze reality.
+    tags: [mobile, pc, premium, cosmetics, dlc, multiplayer, narrative, collection, crafting, physics]
+    source: frost-bard-reckoning/README.md
+    genre: Rhythm Action RPG
+    engine: "Unity (URP) — cross-platform rhythm input pipeline, audio-visual sync, mobile cloud support"
+    platform: "PC (Steam/Epic), PlayStation 5, Nintendo Switch, iOS/Android (cloud streaming via GeForce NOW / Xbox Cloud)"
+    monetization_model: "Premium — $39.99 base, cosmetic instrument skins DLC"
+    scores:
+      complexity: 8
+      monetization: 8
+      novelty: 7
+      marketability: 8
+      prototype_fit: 6
+      production_risk: 8
+    grade: B
+    rationale: "Marketable music combat, but rhythm RPG production needs excellent audio and content."
+  - slug: gilded-leviathan
+    title: Gilded Leviathan
+    categories: [rpg, arena, pc, premium]
+    description: "Gilded Leviathan is a monster-hunting action RPG where you track, fight, and harvest mythic sea leviathans across a shattered archipelago of volcanic islands, coral atolls, and."
+    tags: [mobile, pc, premium, f2p, cosmetics, dlc, narrative, procedural, collection, crafting]
+    source: gilded-leviathan/README.md
+    genre: Action RPG / Monster Hunting
+    engine: Unreal Engine 5.4 (Nanite + Lumen for ocean volumetrics and underwater caustics)
+    platform: "PC (Steam/Epic), PlayStation 5, Xbox Series X/S, Nintendo Switch 2"
+    monetization_model: "Premium -- $49.99 base, cosmetic DLC only, no pay-to-win, no gacha"
+    scores:
+      complexity: 10
+      monetization: 9
+      novelty: 7
+      marketability: 9
+      prototype_fit: 3
+      production_risk: 10
+    grade: C
+    rationale: "Very pitchable, but ocean monster hunting is the most expensive kind of promise."
+  - slug: gilded-phantom-revue
+    title: Gilded Phantom Revue
+    categories: [mystery, rpg, strategy, tactics, narrative]
+    description: "Gilded Phantom Revue is a narrative tactical RPG where you manage a supernatural theater troupe in a 1920s-inspired fantasy metropolis, staging productions that double as tactical."
+    tags: [mobile, pc, premium, f2p, cosmetics, dlc, multiplayer, narrative, procedural, collection]
+    source: gilded-phantom-revue/README.md
+    genre: Narrative Tactical RPG / Social Multiplayer
+    engine: Unity 6 (URP with custom spectral shader pipeline)
+    platform: "PC (Steam), PlayStation 5, Nintendo Switch"
+    monetization_model: "Premium — $29.99 base, phantom character DLCs ($7.99 each)"
+    scores:
+      complexity: 8
+      monetization: 8
+      novelty: 9
+      marketability: 8
+      prototype_fit: 6
+      production_risk: 7
+    grade: B
+    rationale: "Excellent theme, though tactical depth plus character writing creates real content load."
+  - slug: gilded-phoenix-forge
+    title: Gilded Phoenix Forge
+    categories: [rpg, roguelite, pc, premium]
+    description: Gilded Phoenix Forge is a cyclical crafting-action RPG where you play as a phoenix-blacksmith who dies and is reborn every 20 minutes.
+    tags: [mobile, pc, premium, f2p, dlc, multiplayer, narrative, crafting, base-building, cozy]
+    source: gilded-phoenix-forge/README.md
+    genre: Crafting-Focused Action RPG / Roguelite
+    engine: Unity 6 (URP with custom voxel-mesh hybrid rendering)
+    platform: "PC (Steam/Epic), PlayStation 5, Xbox Series X/S, Nintendo Switch"
+    monetization_model: "Premium — $29.99 base, no microtransactions"
+    scores:
+      complexity: 7
+      monetization: 8
+      novelty: 9
+      marketability: 8
+      prototype_fit: 8
+      production_risk: 6
+    grade: A
+    rationale: "Death-as-crafting is novel, readable, and validateable with one loop."
+  - slug: glitch-grimoire
+    title: Glitch Grimoire
+    categories: [simulation, strategy, roguelike, deckbuilder, card-battler]
+    description: Glitch Grimoire is a single-player roguelike deckbuilder where you play as a technomancer trapped inside a sentient magical mainframe called the Lattice.
+    tags: [mobile, pc, premium, f2p, cosmetics, dlc, narrative, procedural, collection, crafting]
+    source: glitch-grimoire/README.md
+    genre: Unspecified
+    engine: Unspecified
+    platform: Unspecified
+    monetization_model: Unspecified
+    scores:
+      complexity: 5
+      monetization: 7
+      novelty: 8
+      marketability: 8
+      prototype_fit: 9
+      production_risk: 5
+    grade: A
+    rationale: "Best small-team fit: cheap to prototype, strong systems hook, clear deckbuilder market."
+  - slug: golden-nagas-bounty
+    title: Golden Naga's Bounty
+    categories: [mystery, rpg, strategy, arena, mobile]
+    description: "Golden Naga's Bounty is an action RPG where a vibrant biomancer hunts, tames, and bonds with golden nagas across an unbound wilderness -- then merges them."
+    tags: [mobile, pc, premium, f2p, cosmetics, dlc, battle-pass, multiplayer, narrative, procedural]
+    source: golden-nagas-bounty/README.md
+    genre: Action RPG / Monster Collection
+    engine: "Unreal Engine 5.4 (Nanite for biome density, Lumen for elemental lighting)"
+    platform: "PC (Steam/Epic), PlayStation 5, Nintendo Switch 2"
+    monetization_model: "Premium — $49.99 base, free post-launch gestalt discovery updates"
+    scores:
+      complexity: 9
+      monetization: 9
+      novelty: 8
+      marketability: 8
+      prototype_fit: 4
+      production_risk: 9
+    grade: C
+    rationale: "Fusion discovery sells, but creature breadth and action RPG scope are expensive."
+  - slug: grappling-hook-prophet
+    title: Grappling Hook Prophet
+    categories: [puzzle, simulation, platformer, pc, premium]
+    description: Grappling Hook Prophet is a physics puzzle platformer where a vibrant prophet armed with a plasma-powered grappling hook and three seconds of precognition navigates fractured sky.
+    tags: [mobile, pc, premium, f2p, cosmetics, dlc, multiplayer, narrative, procedural, collection]
+    source: grappling-hook-prophet/README.md
+    genre: Physics Puzzle Platformer / Speedrun Sandbox
+    engine: "Unity 6 (DOTS physics for rope simulation, Burst compiler for parallel constraint solving)"
+    platform: "PC (Steam), Nintendo Switch 2, PlayStation 5, Xbox Series X"
+    monetization_model: Premium -- $19.99 base. Free level editor. Community levels free. Cosmetic hook skins sold individually ($1.99) or in packs ($4.99 for 5).
+    scores:
+      complexity: 6
+      monetization: 8
+      novelty: 8
+      marketability: 8
+      prototype_fit: 9
+      production_risk: 6
+    grade: A
+    rationale: "One mechanic can prove the game fast, with community levels extending value."
+  - slug: gravewake-island
+    title: Gravewake Island
+    categories: [strategy, tactics, survival, horror, narrative]
+    description: "Gravewake Island is a survival horror open-world game where a stranded biomancer awakens on a floating island suspended above an endless abyss, stalked by a kraken."
+    tags: [mobile, pc, premium, f2p, cosmetics, dlc, multiplayer, narrative, procedural, collection]
+    source: gravewake-island/README.md
+    genre: Survival Horror / Open-World Exploration
+    engine: "Unreal Engine 5.4 (Nanite for fractured terrain, Lumen for bioluminescent lighting)"
+    platform: "PC (Steam/Epic), PlayStation 5, Xbox Series X/S"
+    monetization_model: "Premium — $39.99 base, optional cosmetic DLC packs"
+    scores:
+      complexity: 10
+      monetization: 8
+      novelty: 8
+      marketability: 8
+      prototype_fit: 4
+      production_risk: 10
+    grade: C
+    rationale: "Strong fantasy, but adaptive open-world horror is too broad for backlog priority."
+  - slug: gravity-shaman
+    title: Gravity Shaman
+    categories: [puzzle, tactics, survival, arena, music]
+    description: Gravity Shaman is a fluid-movement Metroidvania where a lone shaman navigates a shattered sky realm by bending gravitational fields in four directions.
+    tags: [mobile, pc, premium, f2p, cosmetics, dlc, narrative, procedural, collection, base-building]
+    source: gravity-shaman/README.md
+    genre: Metroidvania / Puzzle Platformer
+    engine: Unity 6 (URP with custom gravity-physics plugin)
+    platform: "PC (Steam), PlayStation 5, Nintendo Switch 2, Xbox Series X/S"
+    monetization_model: "Premium — $39.99 base, no microtransactions"
+    scores:
+      complexity: 8
+      monetization: 8
+      novelty: 7
+      marketability: 8
+      prototype_fit: 6
+      production_risk: 8
+    grade: B
+    rationale: "Good movement-market fit, but precision platforming and broad world scope need polish."
+  - slug: grudge-stew-cafe
+    title: Grudge Stew Cafe
+    categories: [puzzle, simulation, cozy, adventure, pc]
+    description: "Grudge Stew Cafe is a cozy tavern management game where you inherit a rotting swamp inn and must keep goblin clans, bugbear raiders, and bog-dwelling hags."
+    tags: [pc, premium, cosmetics, dlc, multiplayer, narrative, procedural, collection, crafting, base-building]
+    source: grudge-stew-cafe/README.md
+    genre: Cozy Simulation / Creature Management / Social Puzzle
+    engine: "Unity 6 (URP) — strong 2D/3D hybrid support, proven Switch performance for cozy titles"
+    platform: "PC (Steam), Nintendo Switch, PlayStation 5, Xbox Series X/S"
+    monetization_model: Premium $19.99 — complete base game. Seasonal recipe DLC at $4.99 each (2-3 per year)
+    scores:
+      complexity: 6
+      monetization: 8
+      novelty: 9
+      marketability: 9
+      prototype_fit: 8
+      production_risk: 5
+    grade: A
+    rationale: Excellent compact premise with immediate prototype path and clear cozy-comedy appeal.
+  - slug: indigo-golems-grasp
+    title: Indigo Golem's Grasp
+    categories: [puzzle, tactics, adventure, metroidvania, mobile]
+    description: Indigo Golem's Grasp is a puzzle-driven Metroidvania where you play as a shattered crystal golem reassembling yourself from indigo fragments scattered across a labyrinthine underground nexus.
+    tags: [mobile, pc, premium, f2p, dlc, narrative, collection, crafting, base-building, physics]
+    source: indigo-golems-grasp/README.md
+    genre: Puzzle Adventure / Metroidvania
+    engine: "Unity 6 (URP) — lightweight 2.5D rendering, strong multi-platform support, shader graph for crystal refraction effects"
+    platform: "PC (Steam/Epic), PlayStation 5, Xbox Series X/S, Nintendo Switch"
+    monetization_model: "Premium — $24.99 base, free demo with first 3 wings"
+    scores:
+      complexity: 8
+      monetization: 7
+      novelty: 8
+      marketability: 7
+      prototype_fit: 6
+      production_risk: 8
+    grade: B
+    rationale: "Strong systemic hook, but full Metroidvania scope and emergent physics make delivery expensive."
+  - slug: iron-djinn-protocol
+    title: Iron Djinn Protocol
+    categories: [strategy, arena, pc, premium]
+    description: Iron Djinn Protocol is a competitive 2.
+    tags: [mobile, pc, premium, f2p, cosmetics, dlc, battle-pass, narrative, collection, crafting]
+    source: iron-djinn-protocol/README.md
+    genre: Competitive Fighting Game / Esports
+    engine: "Unreal Engine 5.4 (custom rollback netcode, 1-frame input latency)"
+    platform: "PC (Steam), PlayStation 5, Xbox Series X/S (cross-play, cross-progression)"
+    monetization_model: "Premium $39.99 base, character season pass ($19.99/year), cosmetic outfit packs ($4.99-$9.99)"
+    scores:
+      complexity: 9
+      monetization: 8
+      novelty: 7
+      marketability: 7
+      prototype_fit: 4
+      production_risk: 9
+    grade: C
+    rationale: "Monetizable and distinctive, but fighting-game feel, balance, roster, and netcode are high-risk."
+  - slug: iron-siren-ocean-racing
+    title: Iron Siren Ocean Racing
+    categories: [racing, tactics, pc, premium]
+    description: Iron Siren Ocean Racing is a supernatural naval racer where pirate galleons infused with siren magic thunder across living oceans that reshape themselves between laps.
+    tags: [mobile, pc, premium, cosmetics, dlc, multiplayer, narrative, collection, crafting, base-building]
+    source: iron-siren-ocean-racing/README.md
+    genre: Racing / Action
+    engine: "Unreal Engine 5.4 (Niagara for ocean FX, Water System 2.0 for dynamic surfaces)"
+    platform: "PC (Steam/Epic), PlayStation 5, Xbox Series X/S, Nintendo Switch 2"
+    monetization_model: "Premium -- $34.99 base, cosmetic ship skins DLC, track expansion DLC"
+    scores:
+      complexity: 9
+      monetization: 7
+      novelty: 8
+      marketability: 8
+      prototype_fit: 5
+      production_risk: 9
+    grade: B
+    rationale: "Very pitchable spectacle, but dynamic water racing plus multiplayer pushes scope sharply upward."
+  - slug: jade-hydras-gambit
+    title: Jade Hydra's Gambit
+    categories: [simulation, tactics, arena, deckbuilder, 4x]
+    description: "Jade Hydra's Gambit is a competitive auto-battler where eight players draft sentient jade hydra heads from a rotating shared pool, fuse duplicates into Ascended heads with."
+    tags: [mobile, pc, premium, f2p, cosmetics, battle-pass, narrative, collection, crafting, physics]
+    source: jade-hydras-gambit/README.md
+    genre: Competitive Auto-Battler with Deckbuilding
+    engine: Unity 2023 LTS (DOTS Entity Component System for 8-player server authoritative simulation)
+    platform: "PC (Steam), iOS, Android (cross-play)"
+    monetization_model: "Free-to-Play with season pass ($9.99/season) for cosmetic hydra skins, arena backgrounds, and emotes"
+    scores:
+      complexity: 7
+      monetization: 9
+      novelty: 7
+      marketability: 8
+      prototype_fit: 7
+      production_risk: 7
+    grade: A
+    rationale: "Good revenue fit and prototype path, with balance and live-meta maintenance as the main risks."
+  - slug: krakens-call
+    title: Kraken's Call
+    categories: [racing, rpg, rhythm, adventure, pc]
+    description: Kraken's Call is a unspecified concept from the game workshop backlog.
+    tags: [pc, premium, battle-pass, multiplayer, narrative, collection, physics, cozy, racing, action]
+    source: krakens-call/README.md
+    genre: Unspecified
+    engine: Unspecified
+    platform: Unspecified
+    monetization_model: Unspecified
+    scores:
+      complexity: 10
+      monetization: 6
+      novelty: 4
+      marketability: 6
+      prototype_fit: 3
+      production_risk: 10
+    grade: D
+    rationale: Reads like broad AAA scope with familiar systems and weak small-prototype focus.
+  - slug: krakens-depth-survival
+    title: Kraken's Depth Survival
+    categories: [tactics, survival, horror, extraction, pc]
+    description: Kraken's Depth Survival is a tactical extraction shooter set in a flooded underground city that a kraken has colonized from below.
+    tags: [mobile, pc, premium, f2p, cosmetics, dlc, battle-pass, multiplayer, narrative, procedural]
+    source: krakens-depth-survival/README.md
+    genre: Extraction Shooter / Survival Horror
+    engine: Unreal Engine 5.4 (Nanite + Lumen for underwater volumetrics and caustics)
+    platform: "PC (Steam), PlayStation 5, Xbox Series X/S"
+    monetization_model: "Premium $39.99 base, seasonal content updates (battle pass cosmetic-only, no P2W)"
+    scores:
+      complexity: 8
+      monetization: 8
+      novelty: 8
+      marketability: 8
+      prototype_fit: 7
+      production_risk: 8
+    grade: B
+    rationale: "Excellent tension engine and pitch, but extraction production, AI, and environment destruction are costly."
+  - slug: lavender-sprout-dynasty
+    title: Lavender Sprout Dynasty
+    categories: [puzzle, simulation, farming, rhythm, music]
+    description: "Lavender Sprout Dynasty is a pastoral farming simulation where you tend a magical lavender farm on the edge of a fairy-infested meadow, and your crops develop."
+    tags: [mobile, pc, premium, cosmetics, dlc, multiplayer, narrative, procedural, collection, crafting]
+    source: lavender-sprout-dynasty/README.md
+    genre: Farming Simulation / Life Sim
+    engine: "Unity 2023 LTS (2D hand-painted watercolor pipeline, custom shader graph for field sway)"
+    platform: "PC (Steam), Nintendo Switch, iOS, Android"
+    monetization_model: "Premium $19.99, cosmetic DLC for farm decorations and outfits"
+    scores:
+      complexity: 7
+      monetization: 7
+      novelty: 8
+      marketability: 8
+      prototype_fit: 7
+      production_risk: 6
+    grade: A
+    rationale: "Clear cozy audience and distinctive music-cultivation hook, with manageable risk if NPC/content scope is staged."
+  - slug: leviathans-garden
+    title: Leviathan's Garden
+    categories: [puzzle, simulation, cozy, garden-sim, farming]
+    description: Leviathan's Garden is a meditative underwater farming simulation where you inherit a derelict garden farm strapped to the back of a sleeping leviathan and slowly coax.
+    tags: [mobile, pc, premium, dlc, multiplayer, narrative, procedural, collection, crafting, base-building]
+    source: leviathans-garden/README.md
+    genre: Cozy Farming Sim / Monster Taming
+    engine: Unity 2023 LTS (URP with custom water rendering)
+    platform: "PC (Steam), Nintendo Switch, iOS, Android"
+    monetization_model: "Premium — $19.99 base, free seasonal content updates"
+    scores:
+      complexity: 8
+      monetization: 7
+      novelty: 9
+      marketability: 8
+      prototype_fit: 7
+      production_risk: 7
+    grade: A
+    rationale: "Highly differentiated cozy hook with a testable flow-puzzle core, though content breadth remains significant."
+  - slug: luminous-golem-caravan
+    title: Luminous Golem Caravan
+    categories: [puzzle, strategy, tactics, roguelite, rhythm]
+    description: "Luminous Golem Caravan is a roguelite where you shepherd self-aware stone constructs across an endless twilight steppe, scavenging luminous crystals from ancient ruins to keep your."
+    tags: [mobile, pc, premium, f2p, cosmetics, dlc, battle-pass, multiplayer, narrative, procedural]
+    source: luminous-golem-caravan/README.md
+    genre: Roguelite Caravan Management Sim
+    engine: Unity 2023 LTS (URP with custom crystal shader pipeline)
+    platform: "PC (Steam), Nintendo Switch, Mobile (iOS/Android)"
+    monetization_model: Premium $24.99 (PC/Console) -- F2P with cosmetic golem skins (Mobile)
+    scores:
+      complexity: 7
+      monetization: 8
+      novelty: 8
+      marketability: 7
+      prototype_fit: 8
+      production_risk: 6
+    grade: A
+    rationale: Strong systems-first prototype candidate with reusable loops and contained content compared with bigger console pitches.
+  - slug: luminous-mimic-isle
+    title: Luminous Mimic Isle
+    categories: [puzzle, mystery, garden-sim, narrative, mobile]
+    description: "Luminous Mimic Isle is a meditative puzzle game about a floating island where every object might be a mimic -- treasure chests, doors, bridges, even the."
+    tags: [mobile, pc, premium, f2p, cosmetics, dlc, multiplayer, narrative, collection, crafting]
+    source: luminous-mimic-isle/README.md
+    genre: Puzzle / Casual / Narrative
+    engine: Unity 2024 LTS (URP — lightweight rendering for cross-platform including mobile)
+    platform: "PC (Steam), Nintendo Switch 2, iOS, Android"
+    monetization_model: Premium $19.99 PC/console; $4.99 mobile episode 1 + $4.99 IAP unlock for full game
+    scores:
+      complexity: 4
+      monetization: 8
+      novelty: 8
+      marketability: 8
+      prototype_fit: 10
+      production_risk: 4
+    grade: A
+    rationale: "Best small-prototype fit: sharp mechanic, clear mobile structure, modest scope, and forgiving narrative progression."
+  - slug: mantle-of-the-titan
+    title: Mantle of the Titan
+    categories: [strategy, tactics, roguelike, narrative, 4x]
+    description: Mantle of the Titan is a turn-based 4X grand strategy game where the player leads a civilization bonded to a juvenile titan -- a creature of.
+    tags: [mobile, pc, premium, f2p, cosmetics, dlc, battle-pass, multiplayer, narrative, procedural]
+    source: mantle-of-the-titan/README.md
+    genre: 4X Grand Strategy / Kaiju Cultivation
+    engine: "Unity 6 (URP, DOTS for late-game entity counts)"
+    platform: "PC (Steam), iPad (M1+ for map fidelity)"
+    monetization_model: Premium $39.99 base + faction DLC ($12.99 each)
+    scores:
+      complexity: 10
+      monetization: 7
+      novelty: 8
+      marketability: 7
+      prototype_fit: 3
+      production_risk: 9
+    grade: C
+    rationale: "Excellent high-concept strategy design, but far too large for fast validation."
+  - slug: melody-of-the-fractal-druid
+    title: Melody of the Fractal Druid
+    categories: [rhythm, music, adventure, narrative, mobile]
+    description: "Melody of the Fractal Druid is a rhythm-adventure where a druid communicates with nature exclusively through music, wielding a katana strung with light that functions as."
+    tags: [mobile, pc, premium, f2p, cosmetics, dlc, multiplayer, narrative, procedural, collection]
+    source: melody-of-the-fractal-druid/README.md
+    genre: Rhythm / Adventure / Narrative
+    engine: "Unity (URP) -- lightweight rendering for multi-platform, shader graph for bioluminescence and fractal geometry, strong Switch 2 and iOS support"
+    platform: "PC (Steam), Nintendo Switch 2, PlayStation 5, iOS"
+    monetization_model: "Premium $29.99, includes full soundtrack. DLC: additional creature songs and fractal biomes."
+    scores:
+      complexity: 7
+      monetization: 8
+      novelty: 9
+      marketability: 8
+      prototype_fit: 6
+      production_risk: 7
+    grade: A
+    rationale: "Distinctive emotional hook and soundtrack-friendly monetization, with a prototypeable core rhythm loop."
+  - slug: midnight-cerberus-protocol
+    title: Midnight Cerberus Protocol
+    categories: [survival, horror, extraction, pc, premium]
+    description: Midnight Cerberus Protocol is a high-stakes extraction shooter where you descend into the Midnight Gate -- an underground research facility that tore a hole into a.
+    tags: [mobile, pc, premium, cosmetics, dlc, narrative, procedural, collection, crafting, base-building]
+    source: midnight-cerberus-protocol/README.md
+    genre: Extraction Shooter / Horror Survival
+    engine: Unreal Engine 5.4 (Nanite + Lumen for shadow-dimension volumetrics)
+    platform: "PC (Steam/Epic), PlayStation 5, Xbox Series X/S"
+    monetization_model: Premium ($49.99 base) + seasonal content passes ($14.99/season)
+    scores:
+      complexity: 10
+      monetization: 8
+      novelty: 6
+      marketability: 8
+      prototype_fit: 4
+      production_risk: 10
+    grade: C
+    rationale: "Commercially legible, but multiplayer-grade shooter expectations and content demands are punishing."
+  - slug: midnight-displacer-arena
+    title: Midnight Displacer Arena
+    categories: [strategy, horror, arena, extraction, pc]
+    description: Midnight Displacer Arena is a 1v4 asymmetric multiplayer horror game where information is the primary weapon.
+    tags: [mobile, pc, premium, f2p, cosmetics, dlc, battle-pass, multiplayer, narrative, collection]
+    source: midnight-displacer-arena/README.md
+    genre: Asymmetric Multiplayer Horror / Information Warfare
+    engine: "Unreal Engine 5.4 (Nanite for arena geometry, Lumen for flashlight/IR rendering)"
+    platform: "PC (Steam), PlayStation 5, Xbox Series X/S"
+    monetization_model: "Premium — $39.99 base, seasonal arena map DLC at $7.99 each"
+    scores:
+      complexity: 9
+      monetization: 8
+      novelty: 7
+      marketability: 8
+      prototype_fit: 5
+      production_risk: 10
+    grade: C
+    rationale: "Clear audience and streamable premise, but balance, matchmaking, and live content raise risk sharply."
+  - slug: midnight-tyranny
+    title: Midnight Tyranny
+    categories: [simulation, strategy, 4x, pc, premium]
+    description: Midnight Tyranny is a grand strategy game where you command a cabal of vampire lords vying for dominance across a gothic continent perpetually trapped in twilight.
+    tags: [mobile, pc, premium, cosmetics, dlc, battle-pass, multiplayer, narrative, procedural, crafting]
+    source: midnight-tyranny/README.md
+    genre: Grand Strategy / 4X
+    engine: "Unity 2023 LTS (ECS for entity-heavy simulations, DOTS for map-scale calculations)"
+    platform: "PC (Steam, GOG)"
+    monetization_model: "Premium $39.99, expansion DLC adding new bloodlines and continents"
+    scores:
+      complexity: 10
+      monetization: 7
+      novelty: 6
+      marketability: 7
+      prototype_fit: 3
+      production_risk: 9
+    grade: C
+    rationale: "Strong niche appeal, but grand strategy scope makes it slow and expensive to prove."
+  - slug: mimic-bayou
+    title: Mimic Bayou
+    categories: [strategy, tactics, survival, horror, roguelite]
+    description: Mimic Bayou is a survival horror roguelite where a lone berserker is trapped in an ever-shifting twilight bayou where every surface could be a predator.
+    tags: [mobile, pc, premium, f2p, cosmetics, dlc, narrative, procedural, collection, crafting]
+    source: mimic-bayou/README.md
+    genre: Survival Horror / Roguelite
+    engine: "Unity 6 (URP with custom volumetric fog, 2.5D side-scrolling perspective with parallax depth layers)"
+    platform: "PC (Steam), PlayStation 5, Nintendo Switch 2"
+    monetization_model: "Premium — $34.99 base, cosmetic microtransactions (skins, trail effects, gravity hook visuals) with zero gameplay impact"
+    scores:
+      complexity: 8
+      monetization: 7
+      novelty: 8
+      marketability: 8
+      prototype_fit: 6
+      production_risk: 8
+    grade: B
+    rationale: "Strong feel-first prototype path, though adaptive AI and content variety increase production load."
+  - slug: whispering-grottos
+    title: Whispering Grottos
+    categories: [puzzle, music, adventure, narrative, pc]
+    description: "A peaceful narrative puzzle game where you heal wounded creatures with herbal remedies in a bioluminescent cave system, slowly restoring a corrupted ecosystem while uncovering the."
+    tags: [mobile, pc, premium, dlc, narrative, collection, crafting, base-building, cozy, strategy]
+    source: whispering-grottos/README.md
+    genre: Unspecified
+    engine: Unspecified
+    platform: Unspecified
+    monetization_model: Unspecified
+    scores:
+      complexity: 5
+      monetization: 7
+      novelty: 7
+      marketability: 8
+      prototype_fit: 9
+      production_risk: 4
+    grade: A
+    rationale: "Best small-prototype fit: clear loop, gentle audience, low combat burden, and strong visual transformation hook."

@@ -136,6 +136,7 @@ ExUnit runs, so a fresh `starter_test` database receives the canonical schema.
 cd backend && mix test
 cd frontend && npm run test
 cd frontend && npm run test:e2e
+cd mobile/ios && make test
 ```
 
 The frontend E2E suite uses Cypress with Cucumber feature files under
@@ -176,6 +177,7 @@ When placed at `projects/{domain}/app/`, the Makefile derives the project slug, 
 start-app/
 ├── frontend/              # Next.js 15
 ├── backend/               # Phoenix 1.8 API
+├── mobile/ios/            # Native SwiftUI iPhone/iPad client
 ├── nginx/                 # Reverse proxy
 ├── sandbox/               # Live-sandbox configs (smb, supervisor, entrypoint)
 ├── helm/start-app/        # Helm chart
