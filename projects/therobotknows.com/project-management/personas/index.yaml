@@ -39,3 +39,13 @@ personas:
     archetype: "The Webcomic Creator"
     segment: "tertiary"
     file: P-008-robin-the-webcomic-creator.md
+  - id: P-009
+    name: "Priya Raghavan"
+    archetype: "The Documentation Lead"
+    segment: "primary"
+    file: P-009-priya-the-documentation-lead.md
+  - id: P-010
+    name: "Tomás Reyes"
+    archetype: "The Technical Book Author"
+    segment: "secondary"
+    file: P-010-tomas-the-technical-author.md

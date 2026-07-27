@@ -139,17 +139,16 @@ defmodule Therobotknows.Auth.SSO do
   end
 
   defp auto_provision_user(email, attrs, provider_ref, provider_id, provider_type, context) do
-    first = attrs[:name][:first] || ""
-    last = attrs[:name][:last] || ""
     handle = email |> String.split("@") |> hd() |> String.replace(~r/[^a-z0-9_]/, "_")
+    first = get_in(attrs, [:name, :first]) || attrs[:given_name] || handle
+    last = get_in(attrs, [:name, :last]) || attrs[:family_name] || "User"
 
+    # Insert the schema row directly. Versioned.Names.create/3 expects *attrs*,
+    # not an %Entity{} — passing a struct makes its change/2 Enum.map over it and
+    # raise Protocol.UndefinedError. TheRobotLearns does the same thing here.
     {:ok, name} =
-      Therobotknows.EntityRepo.create(
-        %Therobotknows.Versioned.Names.Name{first: first, last: last, time_stamp: Noizu.Entity.TimeStamp.now()},
-        context
-      )
-
-    {:ok, name_ref} = Noizu.EntityReference.Protocol.ref(name)
+      %Name{first: first, last: last}
+      |> Therobotknows.Repo.insert()
 
     status = Therobotknows.Auth.SSODomains.registration_status(email, provider_type)
 

@@ -5,7 +5,7 @@ domain: therobotknows.com
 appDomain: app.therobotknows.com
 apiDomain: api.therobotknows.com
 backend:
-  image: ops.noizu.com/therobotknows.com/backend:v1.0.9
+  image: ops.noizu.com/therobotknows.com/backend:v1.0.11
   port: 4000
   resources:
     requests:

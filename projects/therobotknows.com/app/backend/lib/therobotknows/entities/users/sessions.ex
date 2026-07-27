@@ -20,7 +20,16 @@ defmodule Therobotknows.Users.Sessions do
 
   def get_session(id, context, options \\ []), do: get(id, context, options)
 
-  def create(session, context, options \\ []) do
+  def create(session, context, options \\ [])
+
+  # An already-built %UserSession{} entity goes straight to the def_repo create/3.
+  # Routing it through change/2 would Enum.map over the struct and raise
+  # Protocol.UndefinedError. Mirrors TheRobotLearns.Users.Sessions.
+  def create(%Entity{} = session, context, options) do
+    super(session, context, options)
+  end
+
+  def create(session, context, options) do
     %Entity{}
     |> change(session)
     |> super(context, options)
