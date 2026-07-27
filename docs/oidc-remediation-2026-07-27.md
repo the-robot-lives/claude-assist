@@ -235,9 +235,10 @@ because no artifact would survive to show it. That is neither "no window existed
 nor "we can't say" — it is the precise claim the evidence supports.
 
 **Attribution within these five:** `clear_sso_session/1` was added by the
-**rescue** agent — the only piece genuinely missing versus the reference.
-`max_age: 900` was **not** the rescue's doing; all five were already at 900 in
-`1e1edbbdf04`, so the credit belongs to whoever authored that commit.
+**rescue** agent in **`f3d8fe3127a`** — the only piece genuinely missing versus
+the reference. `max_age: 900` was **not** the rescue's doing; all five were
+already at 900 in `1e1edbbdf04`, so that credit belongs to whoever authored that
+commit.
 
 **Verification ceiling — weaker than every other row.** None of the five achieved
 a compile. They are **inspection-verified plus AST-resolution-checked**: every
@@ -319,24 +320,42 @@ Their fixes are **parse-checked only** — syntactically valid, not compiled.
 or `_build/`, so hydrating them will fill `git status` with untracked build
 output. Worth fixing the `.gitignore` first.
 
-### 7.5 The five rescue projects clear the session from *shared* functions
+### 7.5 Two session-clearing placements exist — both correct, 13 vs 10
 
-A real divergence worth knowing before comparing files. Eighteen projects call
-`clear_sso_session/1` **inside `oidc_callback`**. The five rescue projects call it
-from **`handle_sso_callback/3` and `redirect_with_error/2` instead** — functions
-shared with the social OAuth path (`oauth_callback` calls both).
+An earlier revision of this section claimed the rescue's five projects deviated
+from a majority pattern. **That was wrong**, and the correction is worth reading
+because the false claim was more alarming than the truth.
 
-**This is harmless, and it was checked rather than assumed.** `:sso_state` and
-`:sso_nonce` are set *only* in `oidc_init`, so deleting them on a social-OAuth
-callback is a no-op on keys that were never present. Confirmed by grep: exactly
-one `put_session(:sso_state, ...)` per file, in `oidc_init`.
+Enumerating all 23 controllers — not sampling two, which is how the wrong version
+was produced:
 
-It is recorded because the other eighteen were deliberately written to keep those
-two shared functions untouched, which is what let this effort say the social and
-SAML paths were *provably* unaffected. For these five that argument is
-"unaffected because the operation is a no-op" rather than "unaffected because
-nothing shared was edited" — a weaker form of the same conclusion, and a
-distinction a future auditor will otherwise have to re-derive.
+| Placement | Count | Projects |
+|---|---|---|
+| `clear_sso_session/1` helper, called from `handle_sso_callback/3` and `redirect_with_error/2` | **13** | **timely (the reference)**, **both scaffolds**, aifighter, codefre.sh, derobot.is, designing.derobot.is, robotwars, gotta.cc, iotgo.io, jailbreakingsite, noizu.com, therobotlives |
+| Two `delete_session` calls inlined directly in `oidc_callback/2`, under no helper name | **10** | foryou, NoizuPromptLingo, therobotdrafts, therobotknows, therobotlearns, therobotmakes, therobotremembers, therobotsdayjob, tobarnalp, tobornalp |
+
+**Zero files call a named `clear_sso_session` from inside `oidc_callback`.** The
+pattern the earlier revision described as the majority exists nowhere.
+
+So the rescue's placement is **not a deviation** — it is the reference
+implementation's placement and both scaffolds', which makes it the house pattern
+if anything is. The split is 13/10, it **predates this remediation**, and both
+forms are correct.
+
+**Why the 13-file form is safe.** `clear_sso_session/1` runs on the social OAuth
+and SAML paths too, since `oauth_callback` reaches both functions. That is a
+**no-op**: `:sso_state` and `:sso_nonce` are written **only** by `oidc_init/2`.
+Verified across each entire backend `lib/` tree rather than just the controller —
+exactly one `put_session` per key, at lines 41–42, in every one of the 13.
+
+**The invariant that keeps it safe, and it is fragile:**
+
+> Any `put_session(:sso_state, ...)` or `put_session(:sso_nonce, ...)` added
+> **outside `oidc_init/2`** silently converts the no-op into a real deletion on
+> the social and SAML paths — **and nothing fails visibly.**
+
+That invariant is now commented at every call site in the rescue's five. The
+10-file form is narrower by construction and does not depend on it.
 
 ### 7.6 `therobotlives.com` has no `mix.lock` at all
 
@@ -440,14 +459,29 @@ grep -rn "authorization_uri(:default)" lib/
 sed 's/#.*//' path/to/sso_controller.ex | grep -n "authorization_uri(:default)"
 ```
 
-**Two independent agents hit this trap.** That is not coincidence — it is a
-property of how this fix was documented. The comments are genuinely valuable and
-should stay, which is exactly why the trap is permanent and worth writing down.
+**This happened four times, to three different agents.** That is not coincidence
+— it is a property of how well this fix was documented, which makes the trap
+permanent. The comments are genuinely valuable and should stay.
 
-A second, related near-miss: a grep for `max_age` with a 20-line window reported
-five projects as having none, because the new explanatory comment block had
-pushed the setting to line 33. Same root cause — the fix's own documentation
-changed the shape of the file being searched.
+| # | The grep | What it reported | What was true |
+|---|---|---|---|
+| 1 | `authorization_uri(:default)` | 8 projects never patched | Matched the fix's own comment describing the old call |
+| 2 | `max_age` within 20 lines of the pipeline | 5 projects have no `max_age` | The new comment block pushed the value to line 33 |
+| 3 | `clear_sso_session` | 9 projects don't clear the session | They clear inline via `delete_session`, under no helper name |
+| 4 | `put_session(:sso_state\|:sso_nonce)` | 5 projects write the keys twice | Two of the four hits were the comment *documenting this very invariant* |
+
+Three distinct failure modes, one shape: **the grep matched text, not behaviour.**
+#1 and #4 matched prose about the code; #2 matched the right thing in the wrong
+place; #3 matched a *name* rather than the *effect*, and the effect had two
+spellings.
+
+> **Rule: anchor on parsed structure or a bounded function body — never on line
+> proximity, and never on a helper's name when the behaviour has more than one
+> spelling.** Strip comments before any structural claim. If a count looks
+> alarming, read the file before reporting it.
+
+Every one of the four was caught by opening the file. None would have been caught
+by a more careful regex.
 
 ---
 
@@ -496,10 +530,18 @@ Four independent instances:
 | A batch owner | that `put_session` would work on those routes | what the cookie's existing `max_age` now *meant*, once state was stored in it (§4) |
 | The sweeping agent | that its regex matched the old API signature | whether the signature also appeared in comments — 8 false REDs (§8.1) |
 | The doc author | that a `max_age` grep covered the pipeline | whether the window still reached it after the fix added comments (§8.1) |
+| The doc author, again | two controllers, and generalised the placement pattern from them | whether the other twenty-one agreed — they did not, and §7.5 shipped a 18-vs-5 split that was really 13-vs-10 |
 
 Reading confirms what you thought to look at. That is why the executed,
 mutation-checked tests on the scaffolds are worth more than the far larger volume
 of careful code review behind everything else in §6.
+
+The §7.5 instance is the clearest of the five, because the wrong answer was not
+merely incomplete — it was **more alarming than the truth**. It reported the
+rescue's five as deviating from a majority, when they in fact match the reference
+implementation and both scaffolds, and the "majority pattern" they supposedly
+deviated from existed in **zero** files. A sample of two produced a confident
+claim about twenty-three. Enumerate before you characterise.
 
 **The second lesson, from concurrent work:**
 
