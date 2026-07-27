@@ -1,5 +1,17 @@
+/* Layer order is declared up front so the styleguide sheet lands in a named
+   layer instead of the implicit unlayered bucket. Unlayered declarations
+   outrank every named layer regardless of specificity, so an unlayered
+   `@import` of the generated sheet let its `*{margin:0;padding:0}` reset
+   (design-system.generated.css, "── GLOBALS ──") beat every Tailwind spacing
+   utility in `@layer utilities` — silently zeroing px-/py-/mx-/gap- across the
+   whole app shell. Slotting it between `components` and `utilities` keeps the
+   styleguide's component styling authoritative over Tailwind's component layer
+   while making utility classes win, which is the precedence people expect.
+   globals.css's own rules below stay unlayered and still top everything. */
+@layer theme, base, components, styleguide, utilities;
+
 @import "tailwindcss";
-@import "./design-system.generated.css";
+@import "./design-system.generated.css" layer(styleguide);
 
 /* Scan styleguide package components for Tailwind utility classes */
 @source "../../node_modules/@noizu/styleguide/dist/engine-src";
@@ -258,6 +270,15 @@ html[data-design-theme="organic"].dark {
 html {
   color-scheme: dark;
   background: var(--bg);
+  /* Pin the rem base. The generated sheet sets `font-size:var(--base-font-size)`
+     and the `organic` theme this app opts into (layout.tsx <html
+     data-design-theme>) resolves that to 15px — which silently shrank every
+     rem-based Tailwind spacing utility by 6.25%. The shell's classes are
+     authored against a 16px root and land exactly on the mockup's numbers there
+     (pt-3.5=14px rail, px-2.5=10px nav, px-4/py-2.5=16/10px panel header,
+     mx-3/mb-3.5=12/14px org card). Do not "fix" this to 13px — that is the
+     *body text* size (set on body below), not the rem base. */
+  font-size: 16px;
 }
 
 body {

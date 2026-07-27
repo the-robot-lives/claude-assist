@@ -8,6 +8,10 @@ import {
   id = "9793b9931a64f208b725d39ab70740e0/5472765032811d21fab86a388439701d"
 }
 import {
+  to = cloudflare_dns_record.foryou
+  id = "9793b9931a64f208b725d39ab70740e0/c1f4e600135cb787ac4d04cb6199142c"
+}
+import {
   to = cloudflare_dns_record.mail
   id = "9793b9931a64f208b725d39ab70740e0/2f9999bef39db3021f12f1df41337a35"
 }

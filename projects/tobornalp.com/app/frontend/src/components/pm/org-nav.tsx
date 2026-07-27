@@ -135,7 +135,11 @@ export function OrgNav({ children }: { children: ReactNode }) {
             </button>
           )}
 
-          <span className="text-mut">
+          {/* min-w-0 + truncate: the org name is unbounded user data and this row
+              is a nowrap flex line whose ⌘K placeholder carries a hard
+              min-w-[220px] floor. Without a shrink allowance a long org name
+              pushes the trailing "+ org" control past the right edge. */}
+          <span className="min-w-0 truncate text-mut">
             {currentOrg?.name ?? "org"} / <b className="font-bold text-ink">{current?.label ?? section ?? "app"}</b>
           </span>
 
@@ -151,7 +155,7 @@ export function OrgNav({ children }: { children: ReactNode }) {
             </span>
           </div>
 
-          <Link href="/app?create=1" className={btnClass("default", "ml-auto min-[900px]:ml-0")}>
+          <Link href="/app?create=1" className={btnClass("default", "ml-auto shrink-0 min-[900px]:ml-0")}>
             + org
           </Link>
         </div>
