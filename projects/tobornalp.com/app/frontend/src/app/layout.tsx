@@ -14,7 +14,8 @@ export function generateMetadata(): Metadata {
   // whose no-arg default resolves to the base theme ("Style Guide — Base Theme")
   // instead of the active organic theme.
   return {
-    title: "tobornalp — AI-Native Operational Life Platform",
+    metadataBase: new URL("https://therobotplans.com"),
+    title: "therobotplans — AI-Native Operational Life Platform",
     description:
       "One surface for personal todos, team projects, CI/CD, bug tracking, monitoring, docs, and OKR-driven life planning — with AI agents that are teammates, not tools.",
   };

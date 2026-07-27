@@ -1,55 +1,24 @@
 # ---------------------------------------------------------------------------
-# therobotdrafts.com (vnext) — Phoenix API + Next.js frontend (start-app scaffold).
+# The Robot Drafts (vnext) — Phoenix API + Next.js frontend (start-app scaffold).
+# Served at draft.therobotplans.com, riding the existing therobotplans.com zone.
+# The apex, app. and api. hosts on that zone serve the therobotplans app and are
+# untouched here.
 # ---------------------------------------------------------------------------
 # Deployed by hand via deploy-service/helm-upgrade (chart
 # projects/therobotdrafts/vnext/app/helm/therobotdrafts); no helm_release here,
 # matching the retired foryou pattern.
 #
-# The chart also declares an InfisicalSecret for /apps/therobotdrafts. This
-# resource exists so the Secret is present *before* the app-timescaledb rollout
-# that app_db_secrets_map["THEROBOTDRAFTS"] triggers — the StatefulSet mounts
-# THEROBOTDRAFTS_DB_USER / _DB_PASSWORD from it with no `optional` fallback.
-
-# App secrets (/apps/therobotdrafts) -> therobotdrafts-secrets.
-resource "kubectl_manifest" "infisical_therobotdrafts_secrets" {
-  yaml_body = yamlencode({
-    apiVersion = "secrets.infisical.com/v1alpha1"
-    kind       = "InfisicalSecret"
-    metadata = {
-      name      = "infisical-therobotdrafts-secrets"
-      namespace = kubernetes_namespace_v1.apps.metadata[0].name
-      labels = {
-        "app.kubernetes.io/name"       = "therobotdrafts-secrets"
-        "app.kubernetes.io/component"  = "therobotdrafts"
-        "app.kubernetes.io/managed-by" = "terraform"
-      }
-    }
-    spec = {
-      resyncInterval = local.infisical_base.resync_interval
-      hostAPI        = local.infisical_base.host_api
-      authentication = {
-        universalAuth = {
-          credentialsRef = {
-            secretName      = local.infisical_base.credentials_secret
-            secretNamespace = local.infisical_base.credentials_namespace
-          }
-          secretsScope = {
-            projectSlug = local.infisical_base.project_slug
-            envSlug     = local.infisical_base.env_slug
-            secretsPath = "/apps/therobotdrafts"
-          }
-        }
-      }
-      managedSecretReference = {
-        secretName      = "therobotdrafts-secrets"
-        secretNamespace = kubernetes_namespace_v1.apps.metadata[0].name
-        creationPolicy  = "Owner"
-        template = {
-          includeAllSecrets = true
-        }
-      }
-    }
-  })
-
-  depends_on = [kubernetes_namespace_v1.apps]
-}
+# The InfisicalSecret for /apps/therobotdrafts (-> therobotdrafts-secrets) is
+# owned by the CHART, not terraform: the chart templates the same
+# `infisical-therobotdrafts-secrets` object, and the first helm install
+# (2026-07-27) refused to adopt a terraform-labeled copy. The TF resource that
+# briefly lived here was deleted from the cluster and must be removed from
+# state (`state rm kubectl_manifest.infisical_therobotdrafts_secrets`) if it
+# still lingers there.
+#
+# The app-timescaledb app_db_secrets_map["THEROBOTDRAFTS"] mount therefore
+# depends on the chart being installed before any timescaledb rollout that
+# consumes THEROBOTDRAFTS_DB_USER / _DB_PASSWORD.
+#
+# TLS (/apps/tls/therobotdrafts -> therobotdrafts-tls) is likewise declared by
+# the chart's own tls-secret.yaml template — same as foryou-site.tf.

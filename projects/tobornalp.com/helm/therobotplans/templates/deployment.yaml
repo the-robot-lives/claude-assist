@@ -4,6 +4,10 @@ metadata:
   name: {{ include "start-app.fullname" . }}
   labels:
     {{- include "start-app.labels" . | nindent 4 }}
+  {{- if and .Values.secrets.infisical .Values.secrets.infisical.enabled }}
+  annotations:
+    secrets.infisical.com/auto-reload: "true"
+  {{- end }}
 spec:
   replicas: {{ .Values.replicas }}
   selector:

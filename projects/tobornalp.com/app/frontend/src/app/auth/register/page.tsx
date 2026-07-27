@@ -31,7 +31,7 @@ function Field({
 function Brand() {
   return (
     <div className="mb-6 flex items-baseline gap-1 font-mono">
-      <span className="text-sm font-bold tracking-tight text-[var(--ink)]">tobornalp</span>
+      <span className="text-sm font-bold tracking-tight text-[var(--ink)]">therobotplans</span>
       <span className="text-sm font-bold text-[var(--acc)] motion-safe:animate-pulse">▮</span>
     </div>
   );
@@ -125,7 +125,7 @@ function Register() {
       <Brand />
       <h1 className="mb-2 font-mono text-lg font-bold text-[var(--ink)]">complete registration</h1>
       <p className="mb-6 font-mono text-[13px] text-[var(--mut)]">
-        finish setting up your tobornalp account.
+        finish setting up your therobotplans account.
       </p>
 
       <form onSubmit={handleSubmit}>

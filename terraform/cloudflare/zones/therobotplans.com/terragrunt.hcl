@@ -9,4 +9,10 @@ include "zone" {
 
 inputs = {
   domain = "therobotplans.com"
+
+  # draft.therobotplans.com -> The Robot Drafts (chart `therobotdrafts`, ns apps).
+  # The apex and api. records serve the therobotplans app and are managed by the
+  # module defaults above; this adds the `draft` label and the `app` host.
+  extra_a_records = ["draft"]
+  add_app         = true
 }

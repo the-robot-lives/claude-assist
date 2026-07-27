@@ -193,6 +193,18 @@ app.kubernetes.io/instance: {{ .Release.Name }}
   value: {{ .Values.otel.serviceName | quote }}
 - name: OTEL_RESOURCE_ATTRIBUTES
   value: "deployment.environment={{ .Release.Namespace }}"
+{{- else }}
+{{/*
+  No OTLP collector is configured. The backend's opentelemetry_phoenix/
+  opentelemetry_ecto/opentelemetry_bandit setup runs unconditionally at boot
+  (lib/therobotplans/application.ex), so the Erlang OTel SDK still spins up
+  its default batch span processor and tries to export to its built-in
+  default endpoint (http://localhost:4318/v1/traces) every 5s, logging
+  econnrefused. OTEL_TRACES_EXPORTER=none is the OTel-spec env var the SDK
+  reads at boot to disable exporting without any code/config.exs change.
+*/}}
+- name: OTEL_TRACES_EXPORTER
+  value: "none"
 {{- end }}
 {{- end }}
 

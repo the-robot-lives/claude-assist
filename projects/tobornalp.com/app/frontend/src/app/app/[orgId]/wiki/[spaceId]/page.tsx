@@ -4,7 +4,8 @@
 // content pane for the selected page. Minimal stub (no page tree, no inline
 // editor, no comments/attachments/reactions — polish comes later). Content
 // renders as real markdown via MarkdownDoc (frontmatter block, headings,
-// GFM, code fences, callouts, [[wikilinks]] resolved against `pages`).
+// GFM, code fences, callouts, [[wikilinks]] resolved against `pages`,
+// [[ITEM-KEY]] links into the item console, and live ```query embeds).
 import { useCallback, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -79,15 +80,23 @@ export default function WikiSpacePage() {
   }, [orgId, activePageId]);
 
   if (loading) {
+    // Same container as the loaded view so the copy doesn't shift sideways the
+    // moment the space arrives.
     return (
-      <p className="px-[18px] py-6 text-[12px] text-faint" role="status">
-        loading space…
-      </p>
+      <div className="app-content max-w-5xl">
+        <p className="text-[12px] text-faint" role="status">
+          loading space…
+        </p>
+      </div>
     );
   }
 
   return (
-    <div className="app-content">
+    // Wider than the spaces index: this page carries a 212px pages rail beside
+    // the doc column (whose prose is capped at 68ch by MarkdownDoc), and query
+    // embeds render tables that want the room. Still bounded, so the header
+    // action stays next to its title instead of at the viewport edge.
+    <div className="app-content max-w-5xl">
       <button
         type="button"
         className="justify-self-start text-[11px] text-faint hover:text-acc"
@@ -96,7 +105,7 @@ export default function WikiSpacePage() {
         ← back to wiki
       </button>
 
-      <header className="flex items-center justify-between">
+      <header className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
         <div>
           <h1 className="text-[13px] font-bold uppercase tracking-[0.1em] text-ink">
             {(space?.name ?? "wiki space").toLowerCase()}
@@ -160,7 +169,12 @@ export default function WikiSpacePage() {
               />
               <div className="max-h-[36rem] overflow-auto p-4">
                 {page.content ? (
-                  <MarkdownDoc content={page.content} pages={pages} onNavigateToPage={setActivePageId} />
+                  <MarkdownDoc
+                    content={page.content}
+                    pages={pages}
+                    onNavigateToPage={setActivePageId}
+                    orgId={orgId}
+                  />
                 ) : (
                   <p className="text-[12px] text-faint">(no content)</p>
                 )}

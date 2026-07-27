@@ -8,7 +8,7 @@ import { useParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { api, type WikiSpace } from "@/lib/api";
 import { useOrg } from "@/context/org";
-import { Btn, Input, Textarea, Dialog, FieldLabel, Key, EmptyState } from "@/components/ui";
+import { Btn, Input, Textarea, Dialog, FieldLabel, Key, EmptyState, Panel } from "@/components/ui";
 
 function toSlug(name: string) {
   return name
@@ -52,8 +52,11 @@ export default function WikiSpacesPage() {
   );
 
   return (
-    <div className="app-content">
-      <header className="flex items-center justify-between">
+    // max-w matches the other card-grid pages (projects, goals, today). Without
+    // it the header row stretches to the viewport and parks "+ new space" off
+    // in the far corner, a screen away from the title it belongs to.
+    <div className="app-content max-w-4xl">
+      <header className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
         <div>
           <h1 className="text-[13px] font-bold uppercase tracking-[0.1em] text-ink">wiki</h1>
           <p className="mt-1 text-[11px] text-mut">{scopeLabel.toLowerCase()} · knowledge spaces</p>
@@ -70,11 +73,13 @@ export default function WikiSpacesPage() {
           loading spaces…
         </p>
       ) : spaces.length === 0 ? (
-        <EmptyState title="no spaces yet" icon={<span className="text-2xl">✎</span>}>
-          create one to start writing.
-        </EmptyState>
+        <Panel>
+          <EmptyState title="no spaces yet" icon={<span className="text-2xl">✎</span>}>
+            create one to start writing.
+          </EmptyState>
+        </Panel>
       ) : (
-        <ul className="grid gap-3 sm:grid-cols-2">
+        <ul className="grid gap-3.5 sm:grid-cols-2">
           {spaces.map((s) => (
             <li key={s.id}>
               <button

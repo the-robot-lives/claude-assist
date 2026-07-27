@@ -17,11 +17,11 @@ import type { Metadata } from "next";
 
 // Override the layout's default metadata for the public marketing page.
 export const metadata: Metadata = {
-  title: "tobornalp — Your Entire Operational Life, Managed by AI Agents",
+  title: "therobotplans — Your Entire Operational Life, Managed by AI Agents",
   description:
     "One surface for personal todos, team projects, CI/CD, bug tracking, monitoring, docs, and OKR-driven life planning — with AI agents that are teammates, not tools.",
   openGraph: {
-    title: "tobornalp — Your Entire Operational Life, Managed by AI Agents",
+    title: "therobotplans — Your Entire Operational Life, Managed by AI Agents",
     description:
       "Replace six siloed tools with one graph. AI agents are teammates, not features. Free to start.",
     type: "website",
@@ -62,12 +62,12 @@ function Rule() {
 }
 
 /* ──────────────────────────────────────────────────────────────
-   WORDMARK — "tobornalp▮" with blinking mint cursor
+   WORDMARK — "therobotplans▮" with blinking mint cursor
    ────────────────────────────────────────────────────────────── */
 function Wordmark() {
   return (
     <div className="tl-wordmark">
-      tobornalp<span className="tl-cursor" aria-hidden="true">▮</span>
+      therobotplans<span className="tl-cursor" aria-hidden="true">▮</span>
     </div>
   );
 }
@@ -464,9 +464,9 @@ function Footer() {
   return (
     <footer className="tl-footer">
       <div className="tl-container tl-footer__inner">
-        <span className="tl-footer__brand">tobornalp</span>
+        <span className="tl-footer__brand">therobotplans</span>
         <span className="tl-footer__copy">
-          © 2026 tobornalp · ai-native operational life platform
+          © 2026 therobotplans · ai-native operational life platform
         </span>
       </div>
     </footer>

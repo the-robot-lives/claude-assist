@@ -308,5 +308,11 @@ html[data-design-theme="organic"]
 
 /* Standard page container inside the app shell. Section pages should use this
    instead of their own `mx-auto max-w-6xl px-4 py-6` wrapper so gutters and
-   inter-panel gaps stay identical across every route. */
-.app-content { display: grid; gap: 14px; align-content: start; padding: 18px; }
+   inter-panel gaps stay identical across every route. Values mirror the
+   concept mockup's `.content` rule (padding:18px; gap:14px) with two
+   deliberate departures: horizontal gutter opened to 20px (the mockup was
+   authored/reviewed at a fixed viewport; on the app's uncapped full-bleed
+   width 18px reads as tight) and bottom padding extended to 24px so the
+   last panel in a scrolling page doesn't end flush with the viewport edge.
+   Top stays 18px — already enough clearance under the topbar. */
+.app-content { display: grid; gap: 14px; align-content: start; padding: 18px 20px 24px; }

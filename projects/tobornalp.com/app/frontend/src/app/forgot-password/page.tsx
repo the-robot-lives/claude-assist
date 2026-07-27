@@ -34,7 +34,7 @@ function Field({
 function Brand() {
   return (
     <div className="mb-6 flex items-baseline gap-1 font-mono">
-      <span className="text-sm font-bold tracking-tight text-[var(--ink)]">tobornalp</span>
+      <span className="text-sm font-bold tracking-tight text-[var(--ink)]">therobotplans</span>
       <span className="text-sm font-bold text-[var(--acc)] motion-safe:animate-pulse">▮</span>
     </div>
   );

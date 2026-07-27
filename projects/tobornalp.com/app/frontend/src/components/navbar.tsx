@@ -27,9 +27,9 @@ export function Navbar() {
       <style>{NAV_CSS}</style>
       <nav className="tn-nav">
         <div className="tn-nav__inner">
-          <Link href="/" className="tn-nav__brand" aria-label="tobornalp home">
+          <Link href="/" className="tn-nav__brand" aria-label="therobotplans home">
             <BrandMark />
-            <span className="tn-nav__brand-text">tobornalp</span>
+            <span className="tn-nav__brand-text">therobotplans</span>
           </Link>
 
           <div className="tn-nav__links">

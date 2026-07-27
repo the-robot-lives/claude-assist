@@ -1,8 +1,8 @@
 replicas: 1
-domain: tobornalp.com
-appDomain: app.tobornalp.com
+domain: therobotplans.com
+appDomain: app.therobotplans.com
 backend:
-  image: ops.noizu.com/tobornalp.com/backend:v1.0.21
+  image: ops.noizu.com/tobornalp.com/backend:v1.0.22
   port: 4000
   resources:
     requests:
@@ -12,7 +12,7 @@ backend:
       cpu: 500m
       memory: 512Mi
 frontend:
-  image: ops.noizu.com/tobornalp.com/frontend:v1.0.20
+  image: ops.noizu.com/tobornalp.com/frontend:v1.0.21
   port: 3000
   resources:
     requests:
@@ -74,16 +74,16 @@ secrets:
     secretsPath: "/apps/tobornalp"
 mail:
   fromName: ""
-  fromAddress: "noreply@tobornalp.com"
+  fromAddress: "noreply@therobotplans.com"
 sso:
   requireInvite: true
   # SSO availability by email domain. Format:
   # "example.com=oidc;corp.example=google,oidc"
-  domains: "tobornalp.com=oidc;noizu.com=oidc;therobotlives.com=oidc;derobot.is=oidc;greatnonprofits.org=oidc;communityconnectlabs.com=oidc"
+  domains: "therobotplans.com=oidc;tobornalp.com=oidc;noizu.com=oidc;therobotlives.com=oidc;derobot.is=oidc;greatnonprofits.org=oidc;communityconnectlabs.com=oidc"
   # Domains whose SSO registrations are approved immediately. All other SSO
   # registrations remain pending unless an invite activates them. Format:
   # "example.com;corp.example" or "*" for every SSO-enabled domain.
-  autoApproveDomains: "tobornalp.com;noizu.com;therobotlives.com;derobot.is;greatnonprofits.org;communityconnectlabs.com"
+  autoApproveDomains: "therobotplans.com;tobornalp.com;noizu.com;therobotlives.com;derobot.is;greatnonprofits.org;communityconnectlabs.com"
   oidc:
     # Default OIDC issuer for portfolio services (Authentik at auth.noizu.com)
     # Example: https://auth.noizu.com/application/o/{app-slug}/
@@ -112,7 +112,7 @@ ingress:
   cloudflareOnly: true
 tls:
   enabled: true
-  secretName: tobornalp-tls
+  secretName: therobotplans-tls
   infisical:
     enabled: true
     resyncInterval: 300
@@ -121,7 +121,18 @@ tls:
     credentialsNamespace: infra
     projectSlug: k8-infra
     envSlug: prod
-    secretsPath: "/apps/tls/tobornalp"
+    secretsPath: "/apps/tls/therobotplans"
+    crtKey: THEROBOTPLANS_TLS_CRT
+    keyKey: THEROBOTPLANS_TLS_KEY
+# Additional certificates served by the same ingress. Each entry gets its own
+# ingress tls block + host rules and its own InfisicalSecret sync. The legacy
+# tobornalp.com hosts stay live here so existing links keep resolving.
+extraTls:
+  - hosts:
+      - tobornalp.com
+      - app.tobornalp.com
+    secretName: tobornalp-tls
+    infisicalPath: "/apps/tls/tobornalp"
     crtKey: TOBORNALP_TLS_CRT
     keyKey: TOBORNALP_TLS_KEY
 otel:

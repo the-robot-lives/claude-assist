@@ -26,7 +26,7 @@ config :therobotplans, TherobotplansWeb.Endpoint,
 config :noizu_sendgrid,
   api_key: System.get_env("SENDGRID_API_KEY") || "SG.dev-placeholder"
 
-config :therobotplans, :mail_from, {"Therobotplans", "noreply@tobornalp.com"}
+config :therobotplans, :mail_from, {"Therobotplans", "noreply@therobotplans.com"}
 
 config :logger, :default_formatter,
   format: "$time $metadata[$level] $message\n",

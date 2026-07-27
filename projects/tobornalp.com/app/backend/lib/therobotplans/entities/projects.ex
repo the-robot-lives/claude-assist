@@ -263,7 +263,8 @@ defmodule Therobotplans.Projects do
     sql = """
     SELECT id::text AS id,
            organization_id::text AS organization_id,
-           name, slug, description, status, created_at, role_name, inherited_from_org
+           name, slug, description, status, created_at, role_name, inherited_from_org,
+           default_methodology, key_prefix
     FROM list_user_accessible_projects($1::uuid, $2::uuid)
     """
 

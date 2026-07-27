@@ -121,7 +121,7 @@ if config_env() == :prod do
   config :therobotplans,
          :mail_from,
          {System.get_env("MAIL_FROM_NAME", "Therobotplans"),
-          System.get_env("MAIL_FROM_ADDRESS", "noreply@tobornalp.com")}
+          System.get_env("MAIL_FROM_ADDRESS", "noreply@therobotplans.com")}
 
   # ── Storage (S3/MinIO) ──────────────────────────────────────────
   if s3_bucket = System.get_env("S3_BUCKET") do
@@ -256,8 +256,25 @@ if config_env() == :prod do
     config :ueberauth, Ueberauth, providers: oauth_providers
   end
 
+  # Both the therobotplans.com and legacy tobornalp.com host pairs are served by
+  # the same ingress, so every one of them is a legitimate origin.
+  check_origin =
+    case System.get_env("CHECK_ORIGIN") do
+      nil ->
+        [
+          "https://therobotplans.com",
+          "https://app.therobotplans.com",
+          "https://tobornalp.com",
+          "https://app.tobornalp.com"
+        ]
+
+      origins ->
+        origins |> String.split(",", trim: true) |> Enum.map(&String.trim/1)
+    end
+
   config :therobotplans, TherobotplansWeb.Endpoint,
     url: [host: host, port: 443, scheme: "https"],
+    check_origin: check_origin,
     http: [
       ip: {0, 0, 0, 0, 0, 0, 0, 0},
       port: port

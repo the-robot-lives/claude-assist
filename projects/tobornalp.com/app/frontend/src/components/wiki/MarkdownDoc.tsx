@@ -13,10 +13,18 @@
 //     or title): a match renders mint + dashed-underline and switches the
 //     active page via `onNavigateToPage` (this app has no per-page route —
 //     page selection is client state, so that IS the page's "route" here);
-//     a target shaped like an item key (`^[A-Z]+-\d+$`) renders cyan but
-//     inert (no item lookup is wired into this component); anything else
-//     renders as a muted stub with a "will create" tooltip. No click-to-create
-//     is implemented — the backend has no such endpoint yet.
+//     a target shaped like an item key (`^[A-Z]+-\d+$`) renders cyan and links
+//     to that item's detail route — the backend resolves `:id` as either a
+//     UUID or a human key (item_controller `fetch_item/2`), so the key goes
+//     straight in the URL with no lookup round-trip; anything else renders as
+//     a muted stub with a "will create" tooltip. No click-to-create is
+//     implemented — the backend has no such endpoint yet.
+//   - ```query fences render as live item tables via QueryEmbed (ADR-002
+//     inline databases). See queryBlock.ts for the grammar.
+//
+// Item links and query embeds both need an org to address, so they only
+// activate when `orgId` is supplied; without it they degrade to the inert span
+// and a plain code fence respectively.
 //
 // `[[...]]` isn't CommonMark, so it's rewritten to a `wikilink://` link
 // target in a pre-tokenization pass over the raw string, then the `a`
@@ -24,10 +32,12 @@
 // and, if the dependency is ever unavailable, a hand-rolled fallback) must
 // never dump raw HTML via dangerouslySetInnerHTML.
 import { useMemo } from "react";
+import Link from "next/link";
 import ReactMarkdown, { type Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import type { WikiPageSummary } from "@/lib/api";
 import { cn } from "@/lib/cn";
+import { QueryEmbed } from "./QueryEmbed";
 
 export interface MarkdownDocProps {
   /** Raw page body — may start with a `---` YAML frontmatter block. */
@@ -36,6 +46,11 @@ export interface MarkdownDocProps {
   pages?: WikiPageSummary[];
   /** Fired when a resolved wikilink to a page is activated. */
   onNavigateToPage?: (pageId: string) => void;
+  /**
+   * Organization UUID. Enables `[[ITEM-KEY]]` links and ```query embeds, both
+   * of which address org-scoped routes/APIs.
+   */
+  orgId?: string;
   className?: string;
 }
 
@@ -43,11 +58,14 @@ const ITEM_KEY_RE = /^[A-Z]+-\d+$/;
 const WIKILINK_RE = /\[\[([^[\]]+)\]\]/g;
 const WIKILINK_SCHEME = "wikilink://";
 
-export function MarkdownDoc({ content, pages, onNavigateToPage, className }: MarkdownDocProps) {
+export function MarkdownDoc({ content, pages, onNavigateToPage, orgId, className }: MarkdownDocProps) {
   const { frontmatter, body } = useMemo(() => splitFrontmatter(content ?? ""), [content]);
   const tokenized = useMemo(() => tokenizeWikilinks(body), [body]);
 
-  const components = useMemo<Components>(() => buildComponents(pages, onNavigateToPage), [pages, onNavigateToPage]);
+  const components = useMemo<Components>(
+    () => buildComponents(pages, onNavigateToPage, orgId),
+    [pages, onNavigateToPage, orgId],
+  );
 
   return (
     <div className={cn("prose-sans max-w-none text-[14px] leading-[1.7] text-ink", className)}>
@@ -107,10 +125,12 @@ function WikiLink({
   raw,
   pages,
   onNavigate,
+  orgId,
 }: {
   raw: string;
   pages?: WikiPageSummary[];
   onNavigate?: (pageId: string) => void;
+  orgId?: string;
 }) {
   const norm = raw.trim().toLowerCase();
   const match = pages?.find((p) => p.slug.toLowerCase() === norm || p.title.toLowerCase() === norm);
@@ -130,12 +150,23 @@ function WikiLink({
       </a>
     );
   }
-  if (ITEM_KEY_RE.test(raw.trim())) {
+  const itemKey = raw.trim();
+  if (ITEM_KEY_RE.test(itemKey)) {
+    // The detail route's :itemId is handed to the API verbatim, and the backend
+    // accepts a human key there, so no key→uuid resolution is needed.
+    if (orgId) {
+      return (
+        <Link
+          href={`/app/${orgId}/items/${encodeURIComponent(itemKey)}`}
+          title={`item ${itemKey}`}
+          className="border-b border-dashed border-info text-info no-underline hover:text-acc-hi"
+        >
+          {raw}
+        </Link>
+      );
+    }
     return (
-      <span
-        title={`item ${raw.trim()} — not linked from this view`}
-        className="border-b border-dashed border-info text-info"
-      >
+      <span title={`item ${itemKey} — not linked from this view`} className="border-b border-dashed border-info text-info">
         {raw}
       </span>
     );
@@ -174,7 +205,36 @@ function heading(level: 1 | 2 | 3 | 4 | 5 | 6) {
 
 // ── Component map ───────────────────────────────────────────────────────────
 
-function buildComponents(pages?: WikiPageSummary[], onNavigateToPage?: (pageId: string) => void): Components {
+// Reads the language + literal text off the `<code>` inside a fenced block,
+// working from react-markdown's hast node rather than its rendered children —
+// the node still carries the raw source, and walking React children to
+// reconstruct it is guesswork. Shaped structurally so no `hast` type import is
+// needed; anything unexpected returns null and the block renders normally.
+interface FenceNodeShape {
+  children?: Array<{
+    tagName?: string;
+    properties?: { className?: unknown };
+    children?: Array<{ value?: string }>;
+  }>;
+}
+
+function readFence(node: unknown): { lang: string | null; text: string } | null {
+  const code = (node as FenceNodeShape | undefined)?.children?.find((c) => c.tagName === "code");
+  if (!code) return null;
+
+  const raw = code.properties?.className;
+  const classes = Array.isArray(raw) ? raw.map(String) : typeof raw === "string" ? raw.split(/\s+/) : [];
+  const langClass = classes.find((c) => c.startsWith("language-"));
+  const text = (code.children ?? []).map((c) => (typeof c.value === "string" ? c.value : "")).join("");
+
+  return { lang: langClass ? langClass.slice("language-".length) : null, text };
+}
+
+function buildComponents(
+  pages?: WikiPageSummary[],
+  onNavigateToPage?: (pageId: string) => void,
+  orgId?: string,
+): Components {
   return {
     h1: heading(1),
     h2: heading(2),
@@ -195,7 +255,7 @@ function buildComponents(pages?: WikiPageSummary[], onNavigateToPage?: (pageId: 
     a: ({ href, children }) => {
       if (typeof href === "string" && href.startsWith(WIKILINK_SCHEME)) {
         const raw = decodeURIComponent(href.slice(WIKILINK_SCHEME.length));
-        return <WikiLink raw={raw} pages={pages} onNavigate={onNavigateToPage} />;
+        return <WikiLink raw={raw} pages={pages} onNavigate={onNavigateToPage} orgId={orgId} />;
       }
       const external = typeof href === "string" && /^https?:\/\//.test(href);
       return (
@@ -209,11 +269,19 @@ function buildComponents(pages?: WikiPageSummary[], onNavigateToPage?: (pageId: 
         </a>
       );
     },
-    pre: ({ children }) => (
-      <pre className="my-3 max-w-[68ch] overflow-x-auto rounded-card border border-line bg-ground p-3 font-mono text-[12px] leading-[1.5] text-ink">
-        {children}
-      </pre>
-    ),
+    // Intercepted at `pre` rather than `code` so the embed replaces the whole
+    // block — a <div> nested inside a <pre> is invalid HTML.
+    pre: ({ children, node }) => {
+      const fence = readFence(node);
+      if (fence && fence.lang === "query" && orgId) {
+        return <QueryEmbed orgId={orgId} source={fence.text} />;
+      }
+      return (
+        <pre className="my-3 max-w-[68ch] overflow-x-auto rounded-card border border-line bg-ground p-3 font-mono text-[12px] leading-[1.5] text-ink">
+          {children}
+        </pre>
+      );
+    },
     code: ({ className, children }) => {
       const text = String(children).replace(/\n$/, "");
       const isBlock = (typeof className === "string" && className.includes("language-")) || text.includes("\n");

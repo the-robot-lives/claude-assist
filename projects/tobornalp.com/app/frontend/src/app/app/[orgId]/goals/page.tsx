@@ -164,7 +164,7 @@ function CreateObjective({ orgId, onCreated }: { orgId: string; onCreated: (o: O
   return (
     <form onSubmit={submit} className="mb-4 rounded-panel border border-line bg-panel p-4 shadow-card">
       <FieldLabel label="objective">
-        <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. ship tobornalp MVP" autoFocus />
+        <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. ship therobotplans MVP" autoFocus />
       </FieldLabel>
       <div className="mt-3 grid gap-3 sm:grid-cols-2">
         <FieldLabel label="level">
